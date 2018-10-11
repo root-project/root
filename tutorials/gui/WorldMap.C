@@ -70,8 +70,8 @@ WorldMap::WorldMap(const char* picName)
    fMain->MapSubwindows();
    InitMap();
 
-   fImageMap->Connect("RegionClicked(Int_t)", "WorldMap", this,
-                      "PrintCode(Int_t)");
+   fImageMap->Connect("RegionClicked(Int_t)", "ROOT::GUITutorials::WorldMap",
+                      this, "PrintCode(Int_t)");
 }
 
 //__________________________________________________________________________

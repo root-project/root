@@ -35,7 +35,9 @@
 #include <vector>
 #include <map>
 #include "TMVA/Event.h"
+
 #include "TMVA/Types.h"
+
 
 namespace TMVA {
 
@@ -132,6 +134,7 @@ namespace TMVA {
       virtual void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap) = 0;
       virtual Double_t Target(LossFunctionEventInfo& e) = 0;
       virtual Double_t Fit(std::vector<LossFunctionEventInfo>& evs) = 0;
+
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +160,7 @@ namespace TMVA {
       // Functions needed beyond the interface
       void Init(std::vector<LossFunctionEventInfo>& evs);
       Double_t CalculateQuantile(std::vector<LossFunctionEventInfo>& evs, Double_t whichQuantile, Double_t sumOfWeights, bool abs);
-      Double_t CalculateSumOfWeights(std::vector<LossFunctionEventInfo>& evs);
+      Double_t CalculateSumOfWeights(const std::vector<LossFunctionEventInfo>& evs);
       void SetTransitionPoint(std::vector<LossFunctionEventInfo>& evs);
       void SetSumOfWeights(std::vector<LossFunctionEventInfo>& evs);
 

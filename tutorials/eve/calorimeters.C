@@ -47,10 +47,10 @@ void calorimeters()
 
    // event data
    TFile::SetCacheFileDir(".");
-   TFile* hf = TFile::Open(histFile, "CACHEREAD");
-   TH2F* ecalHist = (TH2F*)hf->Get("ecalLego");
-   TH2F* hcalHist = (TH2F*)hf->Get("hcalLego");
-   TEveCaloDataHist* data = new TEveCaloDataHist();
+   auto hf = TFile::Open(histFile, "CACHEREAD");
+   auto ecalHist = (TH2F*)hf->Get("ecalLego");
+   auto hcalHist = (TH2F*)hf->Get("hcalLego");
+   auto data = new TEveCaloDataHist();
    data->AddHistogram(ecalHist);
    data->RefSliceInfo(0).Setup("ECAL", 0.3, kBlue);
    data->AddHistogram(hcalHist);
@@ -64,34 +64,33 @@ void calorimeters()
 
 
    // first tab
-   TEveCaloLego* lego = MakeCaloLego(data, 0);
+   auto lego = MakeCaloLego(data, 0);
 
    //
    // second tab
    //
 
    // frames
-   TEveWindowSlot* slot =
-      TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
-   TEveWindowPack* packH = slot->MakePack();
+   auto slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+   auto packH = slot->MakePack();
    packH->SetElementName("Projections");
    packH->SetHorizontal();
    packH->SetShowTitleBar(kFALSE);
 
    slot = packH->NewSlot();
-   TEveWindowPack* pack0 = slot->MakePack();
+   auto pack0 = slot->MakePack();
    pack0->SetShowTitleBar(kFALSE);
-   TEveWindowSlot*  slotLeftTop   = pack0->NewSlot();
-   TEveWindowSlot* slotLeftBottom = pack0->NewSlot();
+   auto  slotLeftTop   = pack0->NewSlot();
+   auto slotLeftBottom = pack0->NewSlot();
 
    slot = packH->NewSlot();
-   TEveWindowPack* pack1 = slot->MakePack();
+   auto pack1 = slot->MakePack();
    pack1->SetShowTitleBar(kFALSE);
-   TEveWindowSlot* slotRightTop    = pack1->NewSlot();
-   TEveWindowSlot* slotRightBottom = pack1->NewSlot();
+   auto slotRightTop    = pack1->NewSlot();
+   auto slotRightBottom = pack1->NewSlot();
 
    // viewers ans scenes in second tab
-   TEveCalo3D* calo3d = MakeCalo3D(data, slotRightTop);
+   auto calo3d = MakeCalo3D(data, slotRightTop);
    MakeCalo2D(calo3d, slotLeftTop, TEveProjection::kPT_RPhi);
    MakeCalo2D(calo3d, slotLeftBottom, TEveProjection::kPT_RhoZ);
    lego = MakeCaloLego(data, slotRightBottom);
@@ -108,8 +107,7 @@ TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot)
 
    TEveViewer* v;
    TEveScene* s;
-   if (slot)
-   {
+   if (slot) {
       MakeViewerScene(slot, v, s);
    } else {
       v = gEve->GetDefaultViewer();
@@ -118,7 +116,7 @@ TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot)
    v->SetElementName("Viewer - Lego");
    s->SetElementName("Scene - Lego");
 
-   TEveCaloLego* lego = new TEveCaloLego(data);
+   auto lego = new TEveCaloLego(data);
    s->AddElement(lego);
 
    // By the default lego extends is (1x1x1). Resize it to put in 'natural'
@@ -128,7 +126,7 @@ TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot)
    lego->RefMainTrans().SetScale(TMath::TwoPi(), TMath::TwoPi(), TMath::Pi());
 
    // draws scales and axis on borders of window
-   TGLViewer* glv = v->GetGLViewer();
+   auto glv = v->GetGLViewer();
    TEveCaloLegoOverlay* overlay = new TEveCaloLegoOverlay();
    glv->AddOverlayElement(overlay);
    overlay->SetCaloLego(lego);
@@ -145,14 +143,14 @@ TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot)
 //______________________________________________________________________________
 TEveCalo3D* MakeCalo3D(TEveCaloData* data, TEveWindowSlot* slot)
 {
-   // 3D catersian view.
+   // 3D cartesian view.
 
    TEveViewer* v; TEveScene* s;
    MakeViewerScene(slot, v, s);
    v->SetElementName("Viewer - 3D");
    s->SetElementName("Scene - 3D");
 
-   TEveCalo3D* calo3d = new TEveCalo3D(data);
+   auto calo3d = new TEveCalo3D(data);
    calo3d->SetBarrelRadius(129.00);
    calo3d->SetEndCapPos(268.36);
    s->AddElement(calo3d);
@@ -174,10 +172,10 @@ TEveCalo2D* MakeCalo2D(TEveCalo3D* calo3d, TEveWindowSlot* slot,
    v->SetElementName("Viewer - 2D");
    s->SetElementName("Scene - 2D");
 
-   TEveProjectionManager* mng = new TEveProjectionManager();
+   auto mng = new TEveProjectionManager();
    mng->SetProjection(t);
 
-   TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
+   auto axes = new TEveProjectionAxes(mng);
    s->AddElement(axes);
    TEveCalo2D* calo2d = (TEveCalo2D*) mng->ImportElements(calo3d);
    s->AddElement(calo2d);
@@ -208,7 +206,7 @@ void add_jet(TEveElement* parent, const char* name,
              Float_t eta, Float_t phi,
              Float_t deta, Float_t dphi)
 {
-   TEveJetCone* jet = new TEveJetCone(name, name);
+   auto jet = new TEveJetCone(name, name);
    jet->SetMainTransparency(60);
    jet->SetLineColor(kRed);
    jet->SetCylinder(129 - 10, 268.36 - 10);

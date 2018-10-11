@@ -24,6 +24,7 @@
 #include <sstream>
 #include <stdlib.h>
 #include <vector>
+#include <TCHAR.H>
 
 #ifndef WIN32_LEAN_AND_MEAN
  #define WIN32_LEAN_AND_MEAN
@@ -56,7 +57,7 @@ inline namespace windows {
 static void GetErrorAsString(DWORD Err, std::string& ErrStr, const char* Prefix) {
   llvm::raw_string_ostream Strm(ErrStr);
   if (Prefix)
-    Strm << Prefix << ": returned " << Err << " ";
+    Strm << Prefix << ": returned " << Err;
 
   LPTSTR Message = nullptr;
   const DWORD Size = ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
@@ -65,7 +66,10 @@ static void GetErrorAsString(DWORD Err, std::string& ErrStr, const char* Prefix)
             (LPTSTR)&Message, 0, nullptr);
 
   if (Size && Message) {
-    Strm << Message;
+    size_t size = wcstombs(NULL, Message, 0);
+    char* CharStr = new char[size + 1];
+    wcstombs( CharStr, Message, size + 1 );
+    Strm << ": " << CharStr;
     ::LocalFree(Message);
     ErrStr = llvm::StringRef(Strm.str()).rtrim().str();
   }
@@ -74,7 +78,7 @@ static void GetErrorAsString(DWORD Err, std::string& ErrStr, const char* Prefix)
 static void ReportError(DWORD Err, const char* Prefix) {
   std::string Message;
   GetErrorAsString(Err, Message, Prefix);
-  cling::errs() << Err << '\n';
+  cling::errs() << Message << '\n';
 }
 
 bool GetLastErrorAsString(std::string& ErrStr, const char* Prefix) {
@@ -128,7 +132,10 @@ static bool readFullStringValue(HKEY hkey, const char *valueName,
     }
   }
 
-  ReportError(result, "RegQueryValueEx");
+  std::string prefix("RegQueryValueEx(");
+  prefix += valueName;
+  prefix += ")";
+  ReportError(result, prefix.c_str());
   return false;
 }
 
@@ -185,12 +192,13 @@ static bool getVSEnvironmentString(int VSVersion, std::string& Path,
 
 static bool getVisualStudioVer(int VSVersion, std::string& Path,
                                const char* Verbose) {
-  if (getVSRegistryString("VisualStudio", VSVersion, Path, Verbose))
-    return true;
+  if (VSVersion < 15) {
+    if (getVSRegistryString("VisualStudio", VSVersion, Path, Verbose))
+      return true;
 
-  if (getVSRegistryString("VCExpress", VSVersion, Path, Verbose))
-    return true;
-
+    if (getVSRegistryString("VCExpress", VSVersion, Path, Verbose))
+      return true;
+  }
   if (getVSEnvironmentString(VSVersion, Path, Verbose))
     return true;
 
@@ -278,6 +286,11 @@ bool GetSystemRegistryString(const char *keyPath, const char *valueName,
   long lResult;
   bool returnValue = false;
   HKEY hKey = NULL;
+  std::string prefix("RegOpenKeyEx(");
+  prefix += keyPath;
+  prefix += "\\";
+  prefix += valueName;
+  prefix += ")";
 
   // If we have a $VERSION placeholder, do the highest-version search.
   if (const char *placeHolder = ::strstr(subKey, "$VERSION")) {
@@ -343,7 +356,7 @@ bool GetSystemRegistryString(const char *keyPath, const char *valueName,
       }
       ::RegCloseKey(hTopKey);
     } else
-      ReportError(lResult, "RegOpenKeyEx");
+      ReportError(lResult, prefix.c_str());
   } else {
     // If subKey is empty, then valueName is subkey, and we retreive that
     if (subKey[0]==0) {
@@ -356,7 +369,7 @@ bool GetSystemRegistryString(const char *keyPath, const char *valueName,
       returnValue = readFullStringValue(hKey, valueName, outValue);
       ::RegCloseKey(hKey);
     } else
-      ReportError(lResult, "RegOpenKeyEx");
+      ReportError(lResult, prefix.c_str());
   }
   return returnValue;
 }
@@ -442,6 +455,7 @@ bool GetVisualStudioDirs(std::string& Path, std::string* WinSDK,
     return true;
   }
 
+#if (_MSC_VER < 1910)
   // Try for any other version we can get
   Msg = Verbose ? "highest" : nullptr;
   const int Versions[] = { 14, 12, 11, 10, 9, 8, 0 };
@@ -451,6 +465,7 @@ bool GetVisualStudioDirs(std::string& Path, std::string* WinSDK,
       return true;
     }
   }
+#endif
   return false;
 }
 
@@ -463,9 +478,15 @@ bool IsDLL(const std::string& Path) {
     ReportLastError("CreateFile");
     return false;
   }
+  DWORD dwFileSize = GetFileSize(hFile,  NULL);
+  if (dwFileSize == 0) {
+    ::CloseHandle(hFile);
+    return false;
+  }
+
   HANDLE hFileMapping = ::CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 0,
                                             NULL);
-  if (hFileMapping == INVALID_HANDLE_VALUE) {
+  if (!hFileMapping || hFileMapping == INVALID_HANDLE_VALUE) {
     ReportLastError("CreateFileMapping");
     ::CloseHandle(hFile);
     return false;
@@ -515,6 +536,11 @@ std::string NormalizePath(const std::string& Path) {
 }
 
 bool IsMemoryValid(const void *P) {
+  // Calling VirtualQuery() is very expansive. For example, the testUnfold5a
+  // tutorial (interpreted) times out after 3600 seconds, and runs in about
+  // 60 seconds without calling VirtualQuery(). So just bypass it and return
+  // true for the time being
+  return true;
   MEMORY_BASIC_INFORMATION MBI;
   if (::VirtualQuery(P, &MBI, sizeof(MBI)) == 0) {
     ReportLastError("VirtualQuery");
@@ -561,6 +587,8 @@ const void* DLSym(const std::string& Name, std::string* Err) {
   // remove the leading '_' from the symbol
   if (s.compare(0, 1, "_") == 0)
     s.replace(0, 1, "");
+  if (s.compare("_CxxThrowException@8") == 0)
+    s = "_CxxThrowException";
 
   DWORD Bytes;
   std::string ErrStr;
@@ -571,13 +599,19 @@ const void* DLSym(const std::string& Name, std::string* Err) {
     // Search the modules we got
     const DWORD NumNeeded = Bytes/sizeof(HMODULE);
     const DWORD NumFirst = Modules.size();
+    TCHAR lpFilename[MAX_PATH];
     if (NumNeeded < NumFirst)
       Modules.resize(NumNeeded);
 
     // In reverse so user loaded modules are searched first
-    for (auto It = Modules.rbegin(), End = Modules.rend(); It < End; ++It) {
-      if (void* Addr = ::GetProcAddress(*It, s.c_str()))
-        return CheckImp(Addr, dllimp);
+    for (auto It = Modules.begin(), End = Modules.end(); It < End; ++It) {
+      GetModuleFileName(*It, lpFilename, MAX_PATH);
+      if (!_tcsstr(lpFilename, _T("msvcp_")) &&
+          !_tcsstr(lpFilename, _T("VCRUNTIME"))) {
+        if (void* Addr = ::GetProcAddress(*It, s.c_str())) {
+          return CheckImp(Addr, dllimp);
+        }
+      }
     }
     if (NumNeeded > NumFirst) {
       // The number of modules was too small to get them all, so call again

@@ -1,40 +1,40 @@
 #include "gtest/gtest.h"
-#include "ROOT/THist.hxx"
-#include "ROOT/TCanvas.hxx"
-#include "ROOT/TColor.hxx"
+#include "ROOT/RHist.hxx"
+#include "ROOT/RCanvas.hxx"
+#include "ROOT/RColor.hxx"
 
 using namespace ROOT::Experimental;
 
 // Test drawing of histograms.
 TEST(DrawTest, OneD)
 {
-   TAxisConfig xaxis{10, 0., 1.};
-   auto h = std::make_shared<TH1D>(xaxis);
-   TCanvas canv;
+   RAxisConfig xaxis{10, 0., 1.};
+   auto h = std::make_shared<RH1D>(xaxis);
+   RCanvas canv;
    canv.Draw(h);
    EXPECT_EQ(canv.GetPrimitives().size(), 1u);
 }
 
 TEST(DrawTest, TwoD)
 {
-   TAxisConfig xaxis{10, 0., 1.};
-   TAxisConfig yaxis{{0., 1., 10., 100.}};
-   auto h = std::make_shared<TH2I>(xaxis, yaxis);
-   TCanvas canv;
+   RAxisConfig xaxis{10, 0., 1.};
+   RAxisConfig yaxis{{0., 1., 10., 100.}};
+   auto h = std::make_shared<RH2I>(xaxis, yaxis);
+   RCanvas canv;
    canv.Draw(h);
-   // No THist copt c'tor:
-   // canv.Draw(TH2F(xaxis, yaxis));
-   canv.Draw(std::make_unique<TH2C>(xaxis, yaxis));
+   // No RHist copt c'tor:
+   // canv.Draw(RH2F(xaxis, yaxis));
+   canv.Draw(std::make_unique<RH2C>(xaxis, yaxis));
    EXPECT_EQ(canv.GetPrimitives().size(), 2u);
 }
 
 TEST(DrawTest, ThreeD)
 {
-   TAxisConfig xaxis{{0., 1.}};
-   TAxisConfig yaxis{10, 0., 1.};
-   TAxisConfig zaxis{{0., 1., 10., 100.}};
-   auto h = std::make_shared<TH3F>(xaxis, yaxis, zaxis);
-   TCanvas canv;
+   RAxisConfig xaxis{{0., 1.}};
+   RAxisConfig yaxis{10, 0., 1.};
+   RAxisConfig zaxis{{0., 1., 10., 100.}};
+   auto h = std::make_shared<RH3F>(xaxis, yaxis, zaxis);
+   RCanvas canv;
    canv.Draw(h);
    EXPECT_EQ(canv.GetPrimitives().size(), 1u);
 }
@@ -42,11 +42,11 @@ TEST(DrawTest, ThreeD)
 // Drawing options:
 TEST(DrawOptTest, OneD)
 {
-   TAxisConfig xaxis{10, 0., 1.};
-   auto h = std::make_shared<TH1D>(xaxis);
-   TCanvas canv;
-   auto &Opts = canv.Draw(h);
-   Opts.SetLineColor(TColor::kRed);
-   TColor shouldBeRed = Opts.GetLineColor();
-   EXPECT_EQ(shouldBeRed, TColor::kRed);
+   RAxisConfig xaxis{10, 0., 1.};
+   auto h = std::make_shared<RH1D>(xaxis);
+   RCanvas canv;
+   auto optsPtr = canv.Draw(h);
+   optsPtr->SetLineColor(RColor::kRed);
+   RColor shouldBeRed = (RColor)optsPtr->GetLineColor();
+   EXPECT_EQ(shouldBeRed, RColor::kRed);
 }

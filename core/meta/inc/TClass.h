@@ -64,6 +64,9 @@ namespace ROOT {
       class TSchemaRuleSet;
       class TCollectionProxyInfo;
    }
+   namespace Internal {
+      class TCheckHashRecursiveRemoveConsistency;
+   }
 }
 
 typedef ROOT::TMapTypeToTClass IdMap_t;
@@ -75,6 +78,7 @@ friend class TCling;
 friend void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
 friend class ROOT::TGenericClassInfo;
 friend class TProtoClass;
+friend class ROOT::Internal::TCheckHashRecursiveRemoveConsistency;
 
 public:
    // TClass status bits

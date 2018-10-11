@@ -18,23 +18,18 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Lookup.h"
 
 #include <bitset>
-#include <map>
 
 using namespace clang;
 
-namespace cling {
-  NullDerefProtectionTransformer::NullDerefProtectionTransformer(Interpreter* I)
-    : ASTTransformer(&I->getCI()->getSema()), m_Interp(I) {
-  }
+namespace {
+using namespace cling;
 
-  NullDerefProtectionTransformer::~NullDerefProtectionTransformer()
-  { }
-
-  class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
+class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
   private:
     Interpreter& m_Interp;
     Sema& m_Sema;
@@ -223,10 +218,59 @@ namespace cling {
               "Lookup of cling_runtime_internal_throwIfInvalidPointer failed!");
     }
   };
+}
+
+namespace cling {
+  NullDerefProtectionTransformer::NullDerefProtectionTransformer(Interpreter* I)
+    : ASTTransformer(&I->getCI()->getSema()), m_Interp(I) {
+  }
+
+  NullDerefProtectionTransformer::~NullDerefProtectionTransformer()
+  { }
+
+  bool NullDerefProtectionTransformer::shouldTransform(const clang::Decl* D) {
+    if (D->isFromASTFile())
+      return false;
+    if (D->isTemplateDecl())
+      return false;
+
+    auto Loc = D->getLocation();
+    if (Loc.isInvalid())
+      return false;
+
+    SourceManager& SM = m_Interp->getSema().getSourceManager();
+    auto Characteristic = SM.getFileCharacteristic(Loc);
+    if (Characteristic != clang::SrcMgr::C_User)
+      return false;
+
+    auto FID = SM.getFileID(Loc);
+    if (FID.isInvalid())
+      return false;
+
+    auto FE = SM.getFileEntryForID(FID);
+    if (!FE)
+      return false;
+
+    auto Dir = FE->getDir();
+    if (!Dir)
+      return false;
+
+    auto IterAndInserted = m_ShouldVisitDir.try_emplace(Dir, true);
+    if (IterAndInserted.second == false)
+      return IterAndInserted.first->second;
+
+    if (llvm::sys::fs::can_write(Dir->getName()))
+      return true; // `true` is already emplaced above.
+
+    // Remember that this dir is not writable and should not be visited.
+    IterAndInserted.first->second = false;
+    return false;
+  }
+
 
   ASTTransformer::Result
   NullDerefProtectionTransformer::Transform(clang::Decl* D) {
-    if (getCompilationOpts().CheckPointerValidity) {
+    if (getCompilationOpts().CheckPointerValidity && shouldTransform(D)) {
       PointerCheckInjector injector(*m_Interp);
       injector.TraverseDecl(D);
     }

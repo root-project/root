@@ -13,8 +13,12 @@
 #define ROOT_TMemFile
 
 #include "TFile.h"
+#include <vector>
+#include <memory>
 
 class TMemFile : public TFile {
+public:
+   using ExternalDataPtr_t = std::shared_ptr<const std::vector<char>>;
 
 private:
    struct TMemBlock {
@@ -24,6 +28,7 @@ private:
    public:
       TMemBlock();
       TMemBlock(Long64_t size, TMemBlock *previous = 0);
+      TMemBlock(UChar_t* externalBuffer, Long64_t size);
       ~TMemBlock();
 
       void CreateNext(Long64_t size);
@@ -33,11 +38,12 @@ private:
       UChar_t   *fBuffer;
       Long64_t   fSize;
    };
-   TMemBlock    fBlockList;   ///< Colletion of memory blocks of size fBlockSize
-   Long64_t     fSize;        ///< Total file size (sum of the size of the chunks)
-   Long64_t     fSysOffset;   ///< Seek offset in file
-   TMemBlock   *fBlockSeek;   ///< Pointer to the block we seeked to.
-   Long64_t     fBlockOffset; ///< Seek offset within the block
+   TMemBlock    fBlockList;               ///< Collection of memory blocks of size fgDefaultBlockSize
+   const ExternalDataPtr_t fExternalData; ///< shared file data / content
+   Long64_t     fSize;                    ///< Total file size (sum of the size of the chunks)
+   Long64_t     fSysOffset;               ///< Seek offset in file
+   TMemBlock   *fBlockSeek;               ///< Pointer to the block we seeked to.
+   Long64_t     fBlockOffset;             ///< Seek offset within the block
 
    static Long64_t fgDefaultBlockSize;
 
@@ -56,11 +62,24 @@ private:
 
    void ResetObjects(TDirectoryFile *, TFileMergeInfo *) const;
 
+   enum class EMode {
+      kCreate,
+      kRecreate,
+      kUpdate,
+      kRead
+   };
+
+   bool NeedsToWrite(EMode mode) const { return mode != EMode::kRead; }
+   bool NeedsExistingFile(EMode mode) const { return mode == EMode::kUpdate || mode == EMode::kRead; }
+
+   EMode ParseOption(Option_t *option);
+
    TMemFile &operator=(const TMemFile&); // Not implemented.
 
 public:
-   TMemFile(const char *name, Option_t *option="", const char *ftitle="", Int_t compress=1);
-   TMemFile(const char *name, char *buffer, Long64_t size, Option_t *option="", const char *ftitle="", Int_t compress=1);
+   TMemFile(const char *name, Option_t *option="", const char *ftitle="", Int_t compress=4);
+   TMemFile(const char *name, char *buffer, Long64_t size, Option_t *option="", const char *ftitle="", Int_t compress=4);
+   TMemFile(const char *name, ExternalDataPtr_t data);
    TMemFile(const TMemFile &orig);
    virtual ~TMemFile();
 
@@ -73,7 +92,7 @@ public:
 
    virtual void        Print(Option_t *option="") const;
 
-   ClassDef(TMemFile, 0) // A ROOT file that reads/writes via HDFS
+   ClassDef(TMemFile, 0) // A ROOT file that reads/writes on a chunk of memory
 };
 
 #endif

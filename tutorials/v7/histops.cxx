@@ -16,7 +16,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/THist.hxx"
+#include "ROOT/RHist.hxx"
 #include <iostream>
 
 void histops()
@@ -25,12 +25,12 @@ void histops()
    using namespace ROOT;
    // Create a 2D histogram with an X axis with equidistant bins, and a y axis
    // with irregular binning.
-   Experimental::TH2D hist1({100, 0., 1.}, {{0., 1., 2., 3., 10.}});
+   Experimental::RH2D hist1({100, 0., 1.}, {{0., 1., 2., 3., 10.}});
 
    // Fill weight 1. at the coordinate 0.01, 1.02.
    hist1.Fill({0.01, 1.02});
 
-   Experimental::TH2D hist2({{{10, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
+   Experimental::RH2D hist2({{{10, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
    // Fill weight 1. at the coordinate 0.01, 1.02.
    hist2.Fill({0.01, 1.02});
 

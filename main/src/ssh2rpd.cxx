@@ -13,6 +13,12 @@
 //                                                                      //
 // ssh2rpd                                                              //
 //                                                                      //
+//-------------------------- Nota Bene ---------------------------------//
+// The ssh2rpd tool is deprecated and not maintained any longer and     //
+// will be removed in ROOT v6.16/00. Please contact the ROOT team in    //
+// the unlikely event this change is disruptive for your workflow.      //
+//----------------------------------------------------------------------//
+//                                                                      //
 // Small program to communicate successful result of sshd auth to the   //
 // relevant rootd and proofd daemons                                    //
 //                                                                      //
@@ -33,9 +39,6 @@
 #include "Varargs.h"
 #include "Rtypes.h"
 #include <string.h>
-#ifdef R__GLOBALSTL
-namespace std { using ::string; }
-#endif
 
 int gDebug;
 
@@ -61,6 +64,14 @@ void Info(const char *va_(fmt), ...)
 
 }
 
+void PrintDeprecation(bool withctx = true)
+{
+   if (withctx) printf(" \n");
+   printf(" NB: The ssh2rpd tool is deprecated and not maintained any longer and will be removed in ROOT v6.16/00\n");
+   printf("     Please contact the ROOT team in the unlikely event this change is disruptive for your workflow.\n");
+   if (withctx) printf(" \n");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Small program to communicate successful result of sshd auth to the
 /// relevant root server daemons.
@@ -69,6 +80,8 @@ int main(int argc, char **argv)
 {
    char *pipeId = 0;
    char *tmpDir = 0;
+
+   PrintDeprecation();
 
    if (argc < 3) {
       Info("ssh2rpd: argc=%d"

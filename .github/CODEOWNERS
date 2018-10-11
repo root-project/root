@@ -36,6 +36,7 @@
 /tmva/ @lmoneta
 /tree/ @pcanal
 /tutorials/ @couet
+/tree/dataframe @dpiparo @bluehood
 
 # Projects that span over several code modules:
 /bindings/r/ @omazapa
@@ -46,14 +47,10 @@
 /core/lzma/ @pcanal
 /core/multiproc/ @gganis
 /core/thread/ @pcanal
-/core/multiproc/ @gganis
 /graf2d/qt/ @bellenot
 /graf2d/cocoa/ @TimurP
-/graf2d/ios/ @TimurP
 /graf3d/eve/ @osschar
 /net/http/ @linev
-/tree/treeplayer/**/TDataFrame.* @dpiparo @bluehood
-/tree/treeplayer/**/TDF* @dpiparo @bluehood
 
 /cmake/ @amadio
 *.cmake @amadio

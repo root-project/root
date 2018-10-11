@@ -90,6 +90,13 @@ def exec_subprocess_check_output(cmd, cwd):
     finally:
         return out
 
+def travis_fold_start(tag):
+    if os.environ.get('TRAVIS_BUILD_DIR', None):
+       print('travis_fold:start:cpt-%s:' % (tag))
+
+def travis_fold_end(tag):
+   if os.environ.get('TRAVIS_BUILD_DIR', None):
+      print('travis_fold:end:cpt-%s:' % (tag))
 
 def box_draw_header():
     msg = 'cling (' + platform.machine() + ')' + formatdate(time.time(), tzinfo())
@@ -461,6 +468,7 @@ class Build(object):
                                  LLVM_OBJ_ROOT)
 
 def compile(arg, build_libcpp):
+    travis_fold_start("compile")
     global prefix, EXTRA_CMAKE_FLAGS
     prefix = arg
     PYTHON = sys.executable
@@ -553,8 +561,10 @@ def compile(arg, build_libcpp):
                                   + ' -v ".I"', shell=True)
         except Exception as e:
             print(e)
+    travis_fold_end("compile")
 
 def install_prefix():
+    travis_fold_start("install")
     global prefix
     set_vars()
 
@@ -579,6 +589,7 @@ def install_prefix():
                         os.makedirs(os.path.join(prefix, os.path.dirname(f)))
                     shutil.copy(os.path.join(TMP_PREFIX, f), os.path.join(prefix, f))
                     break
+    travis_fold_end("install")
 
 
 def runSingleTest(test, Idx = 2, Recurse = True):
@@ -676,6 +687,16 @@ def cleanup():
             shutil.rmtree(os.path.join(workdir, 'Install'))
     gInCleanup = False
 
+def check_version_string_ge(vstring, min_vstring):
+    version_fields = [int(x) for x in vstring.split('.')]
+    min_versions = [int(x) for x in min_vstring.split('.')]
+    for i in range(0,len(min_versions)):
+        if version_fields[i] < min_versions[i]:
+            return False
+        elif version_fields[i] > min_versions[i]:
+            return True
+    return True
+
 
 ###############################################################################
 #            Debian specific functions (ported from debianize.sh)             #
@@ -695,7 +716,7 @@ def check_ubuntu(pkg):
             print(pkg.ljust(20) + '[OK]'.ljust(30))
     elif pkg == "cmake":
         CMAKE = os.environ.get('CMAKE', 'cmake')
-        if exec_subprocess_check_output('{cmake} --version'.format(cmake=CMAKE), '/').strip().split('\n')[0].split()[-1] < '3.4.3':
+        if not check_version_string_ge(exec_subprocess_check_output('{cmake} --version'.format(cmake=CMAKE), '/').strip().split('\n')[0].split()[-1], '3.4.3'):
             print(pkg.ljust(20) + '[OUTDATED VERSION (<3.4.3)]'.ljust(30))
         else:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
@@ -975,7 +996,7 @@ def check_redhat(pkg):
             print(pkg.ljust(20) + '[OK]'.ljust(30))
     elif pkg == "cmake":
         CMAKE = os.environ.get('CMAKE', 'cmake')
-        if exec_subprocess_check_output('{cmake} --version'.format(cmake=CMAKE), '/').strip().split('\n')[0].split()[-1] < '3.4.3':
+        if not check_version_string_ge(exec_subprocess_check_output('{cmake} --version'.format(cmake=CMAKE), '/').strip().split('\n')[0].split()[-1], '3.4.3'):
             print(pkg.ljust(20) + '[OUTDATED VERSION (<3.4.3)]'.ljust(30))
         else:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
@@ -1477,7 +1498,7 @@ def check_mac(pkg):
             print(pkg.ljust(20) + '[OK]'.ljust(30))
     elif pkg == "cmake":
         CMAKE = os.environ.get('CMAKE', 'cmake')
-        if exec_subprocess_check_output('{cmake} --version'.format(cmake=CMAKE), '/').strip().split('\n')[0].split()[-1] < '3.4.3':
+        if not check_version_string_ge(exec_subprocess_check_output('{cmake} --version'.format(cmake=CMAKE), '/').strip().split('\n')[0].split()[-1], '3.4.3'):
             print(pkg.ljust(20) + '[OUTDATED VERSION (<3.4.3)]'.ljust(30))
         else:
             print(pkg.ljust(20) + '[OK]'.ljust(30))
@@ -1929,6 +1950,7 @@ Install/update the required packages by:
                 continue
 
 if args['current_dev']:
+    travis_fold_start("git-clone")
     llvm_revision = urlopen(
         "https://raw.githubusercontent.com/root-project/cling/master/LastKnownGoodLLVMSVNRevision.txt").readline().strip().decode(
         'utf-8')
@@ -1958,6 +1980,7 @@ if args['current_dev']:
         print('\n')
     else:
         fetch_cling(CLING_BRANCH if CLING_BRANCH else 'master')
+    travis_fold_end("git-clone")
 
     set_version()
     if args['current_dev'] == 'tar':

@@ -206,7 +206,6 @@ TTreeReader::~TTreeReader()
       (*i)->MarkTreeReaderUnavailable();
    }
    delete fDirector;
-   fProxies.SetOwner();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -235,7 +234,7 @@ void TTreeReader::Initialize()
 /// If end <= begin, `end` is ignored (set to `-1`) and only `begin` is used.
 /// Example:
 ///
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 /// reader.SetEntriesRange(3, 5);
 /// while (reader.Next()) {
 ///   // Will load entries 3 and 4.
@@ -356,6 +355,20 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
    TTree* treeToCallLoadOn = local ? fTree->GetTree() : fTree;
    Long64_t loadResult = treeToCallLoadOn->LoadTree(entryAfterList);
 
+   // ROOT-9628 We cover here the case when:
+   // - We deal with a TChain
+   // - The last file is opened
+   // - The TTree is not correctly loaded
+   // The system is robust against issues with TTrees associated to the chain
+   // when they are not at the end of it.
+   if (loadResult == -3 && TestBit(kBitIsChain) && !fTree->GetTree()) {
+      Warning("SetEntryBase()",
+              "There was an issue opening the last file associated to the TChain "
+              "being processed.");
+      fEntryStatus = kEntryChainFileError;
+      return fEntryStatus;
+   }
+
    if (loadResult == -2) {
       fDirector->SetTree(nullptr);
       fEntryStatus = kEntryNotFound;
@@ -392,12 +405,14 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
    fMostRecentTreeNumber = fTree->GetTreeNumber();
 
    if (!fProxiesSet) {
-      // Tell readers we now have a tree
-      for (std::deque<ROOT::Internal::TTreeReaderValueBase*>::const_iterator
-              i = fValues.begin(); i != fValues.end(); ++i) { // Iterator end changes when parameterized arrays are read
-         (*i)->CreateProxy();
+      // Tell readers we now have a tree.
+      // fValues gets insertions during this loop (when parameterized arrays are read),
+      // invalidating iterators. Use old-school counting instead.
+      for (size_t i = 0; i < fValues.size(); ++i) {
+         ROOT::Internal::TTreeReaderValueBase* reader = fValues[i];
+         reader->CreateProxy();
 
-         if (!(*i)->GetProxy()){
+         if (!reader->GetProxy()){
             fEntryStatus = kEntryDictionaryError;
             return fEntryStatus;
          }

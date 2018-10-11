@@ -187,7 +187,7 @@ int XrdProofdAdmin::Config(bool rcf)
    if (fExportPaths.size() > 0) {
       TRACE(ALL, "additional paths which can be browsed by all users: ");
       std::list<XrdOucString>::iterator is = fExportPaths.begin();
-      while (is != fExportPaths.end()) { TRACE(ALL, "   "<<*is); is++; }
+      while (is != fExportPaths.end()) { TRACE(ALL, "   "<<*is); ++is; }
    }
    // Allowed / supported copy commands
    TRACE(ALL, "allowed/supported copy commands: "<<fCpCmds);
@@ -1746,7 +1746,7 @@ int XrdProofdAdmin::CheckPath(bool superuser, const char *sbdir,
             notfound = 0;
             break;
          }
-         si++;
+         ++si;
       }
       if (notfound) {
          emsg = "CheckPath: not allowed to run the requested action on ";

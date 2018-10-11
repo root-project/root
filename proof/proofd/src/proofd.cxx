@@ -14,6 +14,13 @@
 // Proofd                                                               //
 //                                                                      //
 // PROOF, Parallel ROOT Facility, front-end daemon.                     //
+//                                                                      //
+//-------------------------- Nota Bene ---------------------------------//
+// The proofd daemon is deprecated and not maintained any longer and    //
+// will be removed in ROOT v6.16/00. Please contact the ROOT team in    //
+// the unlikely event this change is disruptive for your workflow.      //
+//----------------------------------------------------------------------//
+//                                                                      //
 // This small server is started either by inetd when a client requests  //
 // a connection to a PROOF server or by hand (i.e. from the command     //
 // line). By default proofd uses port 1093 (allocated by IANA,          //
@@ -155,7 +162,7 @@
 // 14: add env setup message
 
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -781,6 +788,14 @@ void Usage(const char* name, int rc)
    exit(rc);
 }
 
+void PrintDeprecation(bool withctx = true)
+{
+   if (withctx) printf(" \n");
+   printf(" NB: The proofd daemon is deprecated and not maintained any longer and will be removed in ROOT v6.16/00\n");
+   printf("     Please contact the ROOT team in the unlikely event this change is disruptive for your workflow.\n");
+   if (withctx) printf(" \n");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char **argv)
@@ -810,6 +825,8 @@ int main(int argc, char **argv)
 
    // Output to syslog ...
    RpdSetSysLogFlag(1);
+
+   PrintDeprecation();
 
    // ... unless we are running in the foreground and we are
    // attached to terminal; make also sure that "-i" and "-f"

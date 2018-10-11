@@ -249,6 +249,7 @@ in order to enhance rays.
 #include "THashList.h"
 #include "TClass.h"
 #include "ThreadLocalStorage.h"
+#include "TBufferText.h"
 
 #include "TGeoVoxelFinder.h"
 #include "TGeoElement.h"
@@ -297,6 +298,7 @@ Int_t  TGeoManager::fgMaxLevel = 1;
 Int_t  TGeoManager::fgMaxDaughters = 1;
 Int_t  TGeoManager::fgMaxXtruVert = 1;
 Int_t  TGeoManager::fgNumThreads   = 0;
+UInt_t TGeoManager::fgExportPrecision = 17;
 TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3758,7 +3760,20 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
          fStreamVoxels = kFALSE;
          if (fgVerboseLevel>0) Info("Export","Exporting %s %s as root file. Optimizations not streamed.", GetName(), GetTitle());
       }
+
+      const char *precision_dbl = TBufferText::GetDoubleFormat();
+      const char *precision_flt = TBufferText::GetFloatFormat();
+      TString new_format_dbl = TString::Format("%%.%dg", TGeoManager::GetExportPrecision());
+      if (sfile.Contains(".xml")) {
+        TBufferText::SetDoubleFormat(new_format_dbl.Data());
+        TBufferText::SetFloatFormat(new_format_dbl.Data());
+      }
       Int_t nbytes = Write(keyname);
+      if (sfile.Contains(".xml")) {
+        TBufferText::SetFloatFormat(precision_dbl);
+        TBufferText::SetDoubleFormat(precision_flt);
+      }
+
       fStreamVoxels = kFALSE;
       delete f;
       return nbytes;

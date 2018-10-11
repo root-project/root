@@ -968,6 +968,10 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
     return 0;
   }
 
+  if(projected->InheritsFrom(RooRealIntegral::Class())){
+    ((RooRealIntegral*)projected)->setAllowComponentSelection(true);
+  }
+
   projected->SetName(name.Data()) ;
   projected->SetTitle(title.Data()) ;
 
@@ -2821,7 +2825,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     // Cleanup
     delete paramPdf ;
     delete cloneFunc ;
-    for (vector<RooCurve*>::iterator i=cvec.begin() ; i!=cvec.end() ; i++) {
+    for (vector<RooCurve*>::iterator i=cvec.begin() ; i!=cvec.end() ; ++i) {
       delete (*i) ;
     }
 
@@ -2916,10 +2920,10 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
 
     // Cleanup
     delete cloneFunc ;
-    for (vector<RooCurve*>::iterator i=plusVar.begin() ; i!=plusVar.end() ; i++) {
+    for (vector<RooCurve*>::iterator i=plusVar.begin() ; i!=plusVar.end() ; ++i) {
       delete (*i) ;
     }
-    for (vector<RooCurve*>::iterator i=minusVar.begin() ; i!=minusVar.end() ; i++) {
+    for (vector<RooCurve*>::iterator i=minusVar.begin() ; i!=minusVar.end() ; ++i) {
       delete (*i) ;
     }
 
@@ -3248,7 +3252,7 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 
     if (branch->GetCompressionLevel()<0) {
       // cout << "RooAbsReal::attachToTree(" << GetName() << ") Fixing compression level of branch " << cleanName << endl ;
-      branch->SetCompressionLevel(1) ;
+      branch->SetCompressionLevel(4) ;
     }
 
 //      cout << "RooAbsReal::attachToTree(" << cleanName << "): branch already exists in tree " << (void*)&t << ", changing address" << endl ;
@@ -3258,7 +3262,7 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
     TString format(cleanName);
     format.Append("/D");
     branch = t.Branch(cleanName, &_value, (const Text_t*)format, bufSize);
-    branch->SetCompressionLevel(1) ;
+    branch->SetCompressionLevel(4) ;
     //      cout << "RooAbsReal::attachToTree(" << cleanName << "): creating new branch in tree " << (void*)&t << endl ;
   }
 

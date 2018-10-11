@@ -15,15 +15,15 @@ void geom_atlas()
    gGeoManager = gEve->GetGeometry("http://root.cern.ch/files/atlas.root");
    gGeoManager->DefaultColors();
 
-   TGeoNode* node1 = gGeoManager->GetTopVolume()->FindNode("INNE_1");
+   auto node1 = gGeoManager->GetTopVolume()->FindNode("INNE_1");
    TEveGeoTopNode* inn = new TEveGeoTopNode(gGeoManager, node1);
    gEve->AddGlobalElement(inn);
 
-   TGeoNode* node2 = gGeoManager->GetTopVolume()->FindNode("CENT_1");
+   auto node2 = gGeoManager->GetTopVolume()->FindNode("CENT_1");
    TEveGeoTopNode* cnt = new TEveGeoTopNode(gGeoManager, node2);
    gEve->AddGlobalElement(cnt);
 
-   TGeoNode* node3 = gGeoManager->GetTopVolume()->FindNode("OUTE_1");
+   auto node3 = gGeoManager->GetTopVolume()->FindNode("OUTE_1");
    TEveGeoTopNode* out = new TEveGeoTopNode(gGeoManager, node3);
    gEve->AddGlobalElement(out);
 
@@ -31,7 +31,7 @@ void geom_atlas()
 
    // EClipType not exported to CINT (see TGLUtil.h):
    // 0 - no clip, 1 - clip plane, 2 - clip box
-   TGLViewer *v = gEve->GetDefaultGLViewer();
+   auto v = gEve->GetDefaultGLViewer();
    v->GetClipSet()->SetClipType(TGLClip::EType(1));
    v->RefreshPadEditor(v);
 

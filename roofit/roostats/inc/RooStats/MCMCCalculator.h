@@ -76,6 +76,10 @@ namespace RooStats {
       /// so the pdf's will not be normalized on the conditional observables when computing the NLL
       virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
 
+      /// set the global observables which will be used when creating the NLL
+      /// so the constraint pdf's will be normalized correctly on the global observables when computing the NLL
+      virtual void SetGlobalObservables(const RooArgSet& set) {fGlobalObs.removeAll(); fGlobalObs.add(set);}
+
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize(Double_t size) {fSize = size;}
 
@@ -165,6 +169,7 @@ namespace RooStats {
       RooArgSet   fNuisParams; // nuisance parameters for interval (not really used)
       RooArgSet   fChainParams; // parameters to store in the chain (if not specified they are all of them )
       RooArgSet   fConditionalObs; // conditional observables
+      RooArgSet   fGlobalObs;     // global observables
       mutable ProposalFunction* fPropFunc; // Proposal function for MCMC integration
       RooAbsPdf * fPdf;        // pointer to common PDF (owned by the workspace)
       RooAbsPdf * fPriorPdf;   // pointer to prior  PDF (owned by the workspace)
@@ -198,7 +203,7 @@ namespace RooStats {
          delete it;
       }
 
-      ClassDef(MCMCCalculator,3) // Markov Chain Monte Carlo calculator for Bayesian credible intervals
+      ClassDef(MCMCCalculator,4) // Markov Chain Monte Carlo calculator for Bayesian credible intervals
    };
 }
 

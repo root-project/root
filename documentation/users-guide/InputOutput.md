@@ -1314,8 +1314,8 @@ MyObject **objs; //[fDatas]
 Math operations very often require double precision, but on saving
 single usually precision is sufficient. For this purpose we support the
 typedef Double32\_t which is stored in memory as a double and on disk as
-a float or interger. The actual size of disk (before compression) is
-determined by the parameter next to the data member declartion. For
+a float or integer. The actual size of disk (before compression) is
+determined by the parameter next to the data member declaration. For
 example:
 
 ``` {.cpp}

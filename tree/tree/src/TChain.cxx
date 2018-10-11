@@ -261,27 +261,35 @@ Int_t TChain::Add(TChain* chain)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a new file to this chain.
 ///
-/// Argument name may have either of two formats. The first:
+/// Argument name may have either of two set of formats. The first:
 /// ~~~ {.cpp}
-///     [//machine]/path/file_name.root[/tree_name]
+///     [//machine]/path/file_name[?query[#tree_name]]
+///  or [//machine]/path/file_name.root[.oext][/tree_name]
 /// ~~~
-/// If tree_name is missing the chain name will be assumed.
+/// If tree_name is missing the chain name will be assumed. Tagging the
+/// tree_name with a slash [/tree_name] is only supported for backward
+/// compatibility; it requires the file name to contain the string '.root'
+/// and its use is deprecated.
 /// Wildcard treatment is triggered by the any of the special characters []*?
 /// which may be used in the file name, eg. specifying "xxx*.root" adds
 /// all files starting with xxx in the current file system directory.
 ///
 /// Alternatively name may have the format of a url, eg.
 /// ~~~ {.cpp}
-///         root://machine/path/file_name.root
-///     or  root://machine/path/file_name.root/tree_name
-///     or  root://machine/path/file_name.root/tree_name?query
+///         root://machine/path/file_name[?query[#tree_name]]
+///     or  root://machine/path/file_name
+///     or  root://machine/path/file_name.root[.oext]/tree_name
+///     or  root://machine/path/file_name.root[.oext]/tree_name?query
 /// ~~~
 /// where "query" is to be interpreted by the remote server. Wildcards may be
 /// supported in urls, depending on the protocol plugin and the remote server.
 /// http or https urls can contain a query identifier without tree_name, but
 /// generally urls can not be written with them because of ambiguity with the
 /// wildcard character. (Also see the documentation for TChain::AddFile,
-/// which does not support wildcards but allows the url to contain query)
+/// which does not support wildcards but allows the url name to contain query).
+/// Again, tagging the tree_name with a slash [/tree_name] is only supported
+/// for backward compatibility; it requires the file name ot contain the string
+/// '.root' and its use is deprecated.
 ///
 /// NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
 ///
@@ -396,13 +404,17 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = TTree::kMaxEntries */
 ///
 /// eg.
 /// ~~~ {.cpp}
-///     root://machine/path/file_name.root?query#tree_name
+///     root://machine/path/file_name[?query[#tree_name]]
+///     root://machine/path/file_name.root[.oext]/tree_name[?query]
 /// ~~~
 /// If tree_name is given as a part of the file name it is used to
 /// as the name of the tree to load from the file. Otherwise if tname
 /// argument is specified the chain will load the tree named tname from
 /// the file, otherwise the original treename specified in the TChain
 /// constructor will be used.
+/// Tagging the tree_name with a slash [/tree_name] is only supported for
+/// backward compatibility; it requires the file name ot contain the string
+/// '.root' and its use is deprecated.
 ///
 /// A. If nentries <= 0, the file is opened and the tree header read
 ///    into memory to get the number of entries.
@@ -1479,7 +1491,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
       returnCode = -3;
    } else {
       // Note: We do *not* own fTree after this, the file does!
-      fTree = (TTree*) fFile->Get(element->GetName());
+      fTree = dynamic_cast<TTree*>(fFile->Get(element->GetName()));
       if (!fTree) {
          // Now that we do not check during the addition, we need to check here!
          Error("LoadTree", "Cannot find tree with name %s in file %s", element->GetName(), element->GetTitle());
@@ -2056,17 +2068,24 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 /// both the url query identifier and a wildcard. Wildcard matching is not
 /// done in this method itself.
 /// ~~~ {.cpp}
-///     [xxx://host]/a/path/file.root[/treename]
-///     [xxx://host]/a/path/file.root[/treename][?query]
-///     [xxx://host]/a/path/file.root[?query[#treename]]
+///     [xxx://host]/a/path/file_name[?query[#treename]]
+/// ~~~
+///
+/// The following way to specify the treename is still supported with the
+/// constrain that the file name contains the sub-string '.root'.
+/// This is now deprecated and will be removed in future versions.
+/// ~~~ {.cpp}
+///     [xxx://host]/a/path/file.root[.oext][/treename]
+///     [xxx://host]/a/path/file.root[.oext][/treename][?query]
 /// ~~~
 ///
 /// Note that in a case like this
 /// ~~~ {.cpp}
 ///     [xxx://host]/a/path/file#treename
 /// ~~~
-/// i.e. anchor but no options (query), the filename will be the full path, as the
-/// ancho may be the internal file name of an archive.
+/// i.e. anchor but no options (query), the filename will be the full path, as
+/// the anchor may be the internal file name of an archive. Use '?#treename' to
+/// pass the treename if the query field is empty.
 ///
 /// \param[in] name        is the original name
 /// \param[in] wildcards   indicates if the resulting filename will be treated for
@@ -2076,13 +2095,13 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 ///                        where the tree name is given as a trailing slash-separated
 ///                        string at the end of the file name.
 /// \param[out] filename   the url or filename to be opened or matched
-/// \param[out] treename   the treename, which may be found as a trailing part of the
-///                        name or in a url fragment section. If not found this will
-///                        be empty.
+/// \param[out] treename   the treename, which may be found in a url fragment section
+///                        as a trailing part of the name (deprecated).
+///                        If not found this will be empty.
 /// \param[out] query      is the url query section, including the leading question
 ///                        mark. If not found or the query section is only followed by
 ///                        a fragment this will be empty.
-/// \param[out] suffix     the portion of name which was removed to form filename.
+/// \param[out] suffix     the portion of name which was removed to from filename.
 
 void TChain::ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix,
                                Bool_t) const
@@ -2097,20 +2116,28 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
    TUrl url(name, kTRUE);
 
    TString fn = url.GetFile();
-   // Extract query (and treename, if any)
-   if (url.GetOptions() && (strlen(url.GetOptions()) > 0)) {
+   // Extract query, if any
+   if (url.GetOptions() && (strlen(url.GetOptions()) > 0))
       query.Form("?%s", url.GetOptions());
-      // The treename can be passed as anchor in this case
-      treename = url.GetAnchor();
-      // Suffix
-      suffix = url.GetFileAndOptions();
-      suffix.Replace(suffix.Index(fn), fn.Length(), "");
-      // Remove it from the file name
-      filename.Remove(filename.Index(fn) + fn.Length());
+   // The treename can be passed as anchor
+   if (url.GetAnchor() && (strlen(url.GetAnchor()) > 0)) {
+      // Support "?#tree_name" and "?query#tree_name"
+      // "#tree_name" (no '?' is for tar archives)
+      if (!query.IsNull() || strstr(name, "?#")) {
+         treename = url.GetAnchor();
+      } else {
+         // The anchor is part of the file name
+         fn = url.GetFileAndOptions();
+      }
    }
+   // Suffix
+   suffix = url.GetFileAndOptions();
+   suffix.Replace(suffix.Index(fn), fn.Length(), "");
+   // Remove it from the file name
+   filename.Remove(filename.Index(fn) + fn.Length());
 
    // Special case: [...]file.root/treename
-   static const char *dotr = ".root/";
+   static const char *dotr = ".root";
    static Ssiz_t dotrl = strlen(dotr);
    // Find the last one
    Ssiz_t js = filename.Index(dotr);
@@ -2119,11 +2146,14 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
       js = filename.Index(dotr, js + 1);
    }
    if (pIdx != kNPOS) {
-      TString tn = filename(pIdx + dotrl, filename.Length());
-      if (!tn.EndsWith(".root")) {
-         // Good treename
-         treename = tn;
-         filename.Remove(pIdx + dotrl - 1);
+      static const char *slash = "/";
+      static Ssiz_t slashl = strlen(slash);
+      // Find the last one
+      Ssiz_t ppIdx = filename.Index(slash, pIdx + dotrl);
+      if (ppIdx != kNPOS) {
+         // Good treename with the old receipe
+         treename = filename(ppIdx + slashl, filename.Length());
+         filename.Remove(ppIdx + slashl - 1);
          suffix.Insert(0, TString::Format("/%s", treename.Data()));
       }
    }
@@ -2726,6 +2756,29 @@ void TChain::SetEventList(TEventList *evlist)
    enlist->SetBit(kCanDelete, kTRUE);
    enlist->SetReapplyCut(evlist->GetReapplyCut());
    SetEntryList(enlist);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change the name of this TChain.
+
+void TChain::SetName(const char* name)
+{
+   {
+      // Should this be extended to include the call to TTree::SetName?
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex); // Take the lock once rather than 3 times.
+      gROOT->GetListOfCleanups()->Remove(this);
+      gROOT->GetListOfSpecials()->Remove(this);
+      gROOT->GetListOfDataSets()->Remove(this);
+   }
+   TTree::SetName(name);
+   {
+      // Should this be extended to include the call to TTree::SetName?
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex); // Take the lock once rather than 3 times.
+      gROOT->GetListOfCleanups()->Add(this);
+      gROOT->GetListOfSpecials()->Add(this);
+      gROOT->GetListOfDataSets()->Add(this);
+   }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

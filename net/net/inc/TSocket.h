@@ -71,6 +71,10 @@ public:
    enum EServiceType { kSOCKD, kROOTD, kPROOFD };
 
 protected:
+   enum ESocketErrors {
+     kInvalid = -1,
+     kInvalidStillInList = -2
+   };
    TInetAddress  fAddress;        // remote internet address and port #
    UInt_t        fBytesRecv;      // total bytes received over this socket
    UInt_t        fBytesSent;      // total bytes sent using this socket
@@ -106,6 +110,7 @@ protected:
    Bool_t       RecvStreamerInfos(TMessage *mess);
    void         SendProcessIDs(const TMessage &mess);
    Bool_t       RecvProcessIDs(TMessage *mess);
+   void         MarkBrokenConnection();
 
 private:
    TSocket&      operator=(const TSocket &);  // not implemented
@@ -159,8 +164,8 @@ public:
    virtual Int_t         SendRaw(const void *buffer, Int_t length,
                                  ESendRecvOptions opt = kDefault);
    void                  SetCompressionAlgorithm(Int_t algorithm=0);
-   void                  SetCompressionLevel(Int_t level=1);
-   void                  SetCompressionSettings(Int_t settings=1);
+   void                  SetCompressionLevel(Int_t level=4);
+   void                  SetCompressionSettings(Int_t settings=4);
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
    void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }

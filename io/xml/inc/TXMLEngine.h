@@ -66,6 +66,7 @@ public:
    const char *GetNSReference(XMLNsPointer_t ns);
    void AddChild(XMLNodePointer_t parent, XMLNodePointer_t child);
    void AddChildFirst(XMLNodePointer_t parent, XMLNodePointer_t child);
+   void AddChildAfter(XMLNodePointer_t parent, XMLNodePointer_t child, XMLNodePointer_t afternode);
    Bool_t AddComment(XMLNodePointer_t parent, const char *comment);
    Bool_t AddDocComment(XMLDocPointer_t xmldoc, const char *comment);
    Bool_t AddRawLine(XMLNodePointer_t parent, const char *line);

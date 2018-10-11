@@ -43,7 +43,8 @@ Int_t mt001_fillHistos()
    }
 
    // Now join them
-   for (auto && worker : workers) worker.join();
+   for (auto &&worker : workers)
+      worker.join();
 
    return 0;
 }

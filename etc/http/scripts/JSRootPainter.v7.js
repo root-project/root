@@ -28,7 +28,33 @@
 
    JSROOT.v7 = {}; // placeholder for all v7-relevant code
 
+   JSROOT.TObjectPainter.prototype.GetCoordinate = function(pnt) {
+      var res = { x: 0, y: 0 };
 
+      if (!pnt) return res;
+
+      var w = this.pad_width(),
+          h = this.pad_height(),
+          pp = this.pad_painter();
+
+      function CalcCoord(val, coord, grsize) {
+         var res = val.fNormal.fVal * grsize + val.fPixel.fVal;
+
+         if (val.fUser.fVal)
+            res += (val.fUser.fVal - coord.fBegin) / (coord.fEnd - coord.fBegin) * grsize;
+
+         return res;
+      }
+
+      if (!pp.pad_frame) {
+         res.x = pnt.fHoriz.fNormal.fVal*w;
+         res.y = h - pnt.fVert.fNormal.fVal*h;
+      } else {
+         res.x = CalcCoord(pnt.fHoriz, pp.pad_frame.fUserCoord[0], w);
+         res.y = h - CalcCoord(pnt.fVert, pp.pad_frame.fUserCoord[1], h);
+      }
+      return res;
+   }
 
    function TAxisPainter(axis, embedded) {
       JSROOT.TObjectPainter.call(this, axis);
@@ -135,15 +161,15 @@
          if ((this.scale_max < 300) && (this.scale_min > 0.3)) this.noexp = true;
          this.moreloglabels = axis ? axis.TestBit(JSROOT.EAxisBits.kMoreLogLabels) : false;
 
-         this.format = function(d, asticks, notickexp) {
+         this.format = function(d, asticks, notickexp_fmt) {
             var val = parseFloat(d), rnd = Math.round(val);
             if (!asticks)
-               return ((rnd === val) && (Math.abs(rnd)<1e9)) ? rnd.toString() : val.toExponential(4);
+               return ((rnd === val) && (Math.abs(rnd)<1e9)) ? rnd.toString() : JSROOT.FFormat(val, notickexp_fmt || JSROOT.gStyle.fStatFormat);
 
             if (val <= 0) return null;
             var vlog = JSROOT.log10(val);
             if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog))<0.001)) {
-               if (!this.noexp && !notickexp)
+               if (!this.noexp && !notickexp_fmt)
                   return this.format10Exp(Math.floor(vlog+0.01), val);
 
                return (vlog<0) ? val.toFixed(Math.round(-vlog+0.5)) : val.toFixed(0);
@@ -157,14 +183,26 @@
             this.nticks = Math.round(scale_range);
          this.nticks2 = 1;
 
+         this.regular_labels = true;
+
+         if (axis && axis.fNbins && axis.fLabels) {
+            if ((axis.fNbins != Math.round(axis.fXmax - axis.fXmin)) ||
+                (axis.fXmin != 0) || (axis.fXmax != axis.fNbins)) {
+               this.regular_labels = false;
+            }
+         }
+
          this.axis = axis;
 
          this.format = function(d) {
-            var indx = Math.round(parseInt(d)) + 1;
-            if ((indx<1) || (indx>this.axis.fNbins)) return null;
+            var indx = parseFloat(d);
+            if (!this.regular_labels)
+               indx = (indx - this.axis.fXmin)/(this.axis.fXmax - this.axis.fXmin) * this.axis.fNbins;
+            indx = Math.round(indx);
+            if ((indx<0) || (indx>=this.axis.fNbins)) return null;
             for (var i = 0; i < this.axis.fLabels.arr.length; ++i) {
                var tstr = this.axis.fLabels.arr[i];
-               if (tstr.fUniqueID == indx) return tstr.fString;
+               if (tstr.fUniqueID === indx+1) return tstr.fString;
             }
             return null;
          }
@@ -173,14 +211,16 @@
          this.order = 0;
          this.ndig = 0;
 
-         this.format = function(d, asticks) {
+         this.format = function(d, asticks, fmt) {
             var val = parseFloat(d);
             if (asticks && this.order) val = val / Math.pow(10, this.order);
 
             if (val === Math.round(val))
                return (Math.abs(val)<1e9) ? val.toFixed(0) : val.toExponential(4);
 
-            return (this.ndig>10) ? val.toExponential(4) : val.toFixed(this.ndig + (asticks ? 0 : 2));
+            if (asticks) return (this.ndig>10) ? val.toExponential(this.ndig-11) : val.toFixed(this.ndig);
+
+            return JSROOT.FFormat(val, fmt || JSROOT.gStyle.fStatFormat);
          }
       }
    }
@@ -209,6 +249,14 @@
          if (res[0] > this.scale_min + delta) res.unshift(this.scale_min);
          if (res[res.length-1] < this.scale_max - delta) res.push(this.scale_max);
          return res;
+      }
+
+      if ((this.kind == 'labels') && !this.regular_labels) {
+         handle.lbl_pos = [];
+         for (var n=0;n<this.axis.fNbins;++n) {
+            var x = this.axis.fXmin + n / this.axis.fNbins * (this.axis.fXmax - this.axis.fXmin);
+            if ((x >= this.scale_min) && (x < this.scale_max)) handle.lbl_pos.push(x);
+         }
       }
 
       if (this.nticks2 > 1) {
@@ -435,13 +483,13 @@
       if (this.invert_side) second_shift = -second_shift;
 
       if (is_gaxis) {
-         if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(axis);
+         this.createAttLine({ attr: axis });
          draw_lines = axis.fLineColor != 0;
          chOpt = axis.fChopt;
          tickSize = axis.fTickSize;
          scaling_size = (vertical ? 1.7*h : 0.6*w);
       } else {
-         if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(axis.fAxisColor, 1);
+         this.createAttLine({ color: axis.fAxisColor, width: 1, style: 1 });
          chOpt = myXor(vertical, this.invert_side) ? "-S" : "+S";
          tickSize = axis.fTickLength;
          scaling_size = (vertical ? pad_w : pad_h);
@@ -536,10 +584,7 @@
          axis_g.append("svg:path").attr("d", res2).call(this.lineatt.func);
 
       var labelsize = Math.round( (axis.fLabelSize < 1) ? axis.fLabelSize * text_scaling_size : axis.fLabelSize);
-      // if (axis.fLabelFont % 10 != 3) labelsize*=0.6666;
       if ((labelsize <= 0) || (Math.abs(axis.fLabelOffset) > 1.1)) optionUnlab = true; // disable labels when size not specified
-
-      var labelfont = JSROOT.Painter.getFontDetails(axis.fLabelFont, labelsize);
 
       // draw labels (on both sides, when needed)
       if (!disable_axis_drawing && !optionUnlab) {
@@ -548,8 +593,9 @@
              labeloffset = Math.round(axis.fLabelOffset*text_scaling_size /*+ 0.5*labelsize*/),
              center_lbls = this.IsCenterLabels(),
              rotate_lbls = axis.TestBit(JSROOT.EAxisBits.kLabelsVert),
-             textscale = 1, maxtextlen = 0, lbls_tilt = false,
-             label_g = [ axis_g.append("svg:g").attr("class","axis_labels") ];
+             textscale = 1, maxtextlen = 0, lbls_tilt = false, labelfont = null,
+             label_g = [ axis_g.append("svg:g").attr("class","axis_labels") ],
+             lbl_pos = handle.lbl_pos || handle.major;
 
          if (this.lbls_both_sides)
             label_g.push(axis_g.append("svg:g").attr("class","axis_labels").attr("transform", vertical ? "translate(" + w + ",0)" : "translate(0," + (-h) + ")"));
@@ -561,16 +607,18 @@
             var lastpos = 0,
                 fix_coord = vertical ? -labeloffset*side : (labeloffset+2)*side + ticks_plusminus*tickSize;
 
+            labelfont = JSROOT.Painter.getFontDetails(axis.fLabelFont, labelsize);
+
             this.StartTextDrawing(labelfont, 'font', label_g[lcnt]);
 
-            for (var nmajor=0;nmajor<handle.major.length;++nmajor) {
+            for (var nmajor=0;nmajor<lbl_pos.length;++nmajor) {
 
-               var lbl = this.format(handle.major[nmajor], true);
+               var lbl = this.format(lbl_pos[nmajor], true);
                if (lbl === null) continue;
 
-               var pos = Math.round(this.func(handle.major[nmajor])),
-                   gap_before = (nmajor>0) ? Math.abs(Math.round(pos - this.func(handle.major[nmajor-1]))) : 0,
-                   gap_after = (nmajor<handle.major.length-1) ? Math.abs(Math.round(this.func(handle.major[nmajor+1])-pos)) : 0;
+               var pos = Math.round(this.func(lbl_pos[nmajor])),
+                   gap_before = (nmajor>0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor-1]))) : 0,
+                   gap_after = (nmajor<lbl_pos.length-1) ? Math.abs(Math.round(this.func(lbl_pos[nmajor+1])-pos)) : 0;
 
                if (center_lbls) {
                   var gap = gap_after || gap_before;
@@ -643,6 +691,8 @@
          }
 
          if (label_g.length > 1) side = -side;
+
+         if (labelfont) labelsize = labelfont.size; // use real font size
       }
 
       if (JSROOT.gStyle.Zooming && !this.disable_zooming) {
@@ -652,13 +702,13 @@
                         .style("cursor", "crosshair");
 
          if (vertical)
-            r.attr("x", (side>0) ? (-2*labelfont.size - 3) : 3)
+            r.attr("x", (side>0) ? (-2*labelsize - 3) : 3)
              .attr("y", 0)
-             .attr("width", 2*labelfont.size + 3)
+             .attr("width", 2*labelsize + 3)
              .attr("height", h)
          else
-            r.attr("x", 0).attr("y", (side>0) ? 0 : -labelfont.size-3)
-             .attr("width", w).attr("height", labelfont.size + 3);
+            r.attr("x", 0).attr("y", (side>0) ? 0 : -labelsize-3)
+             .attr("width", w).attr("height", labelsize + 3);
       }
 
       if ((axis.fTitle.length > 0) && !disable_axis_drawing) {
@@ -797,6 +847,7 @@
       this.ymin = this.ymax = 0; // no scale specified, wait for objects drawing
       this.axes_drawn = false;
       this.keys_handler = null;
+      this.mode3d = false;
    }
 
    TFramePainter.prototype = Object.create(JSROOT.TooltipHandler.prototype);
@@ -823,19 +874,30 @@
    }
 
    TFramePainter.prototype.UpdateAttributes = function(force) {
-      // var tframe = this.GetObject();
+      var tframe = this.GetObject();
 
       if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
          JSROOT.extend(this, JSROOT.gStyle.FrameNDC);
+
+         if (tframe && tframe.fPos && tframe.fSize) {
+            this.fX1NDC = tframe.fPos.fHoriz.fNormal.fVal;
+            this.fX2NDC = this.fX1NDC + tframe.fSize.fHoriz.fNormal.fVal;
+            this.fY1NDC = tframe.fPos.fVert.fNormal.fVal;
+            this.fY2NDC = this.fY1NDC + tframe.fSize.fVert.fNormal.fVal;
+         }
       }
 
       if (this.fillatt === undefined) {
-         this.fillatt = this.createAttFill(null, 1001, 0);
-         this.fillatt.color = 'white';
+         this.createAttFill({ pattern: 1001, color: 0 });
+
+         var fillcolor = 'white';
+         if (tframe && tframe.fFillColor)
+            fillcolor = this.canv_painter().GetNewColor(tframe.fFillColor, true);
+
+         this.fillatt.SetSolidColor(fillcolor);
       }
 
-      if (this.lineatt === undefined)
-         this.lineatt = new JSROOT.TAttLineHandler('black');
+      this.createAttLine({ color: 'black' });
    }
 
    TFramePainter.prototype.ProjectAitoff2xy = function(l, b) {
@@ -973,7 +1035,7 @@
                .attr("class", "xgrid")
                .attr("d", grid)
                .style('stroke',grid_color).style("stroke-width",JSROOT.gStyle.fGridWidth)
-               .style("stroke-dasharray",JSROOT.Painter.root_line_styles[grid_style]);
+               .style("stroke-dasharray", JSROOT.Painter.root_line_styles[grid_style]);
       }
 
       // add a grid on y axis, if the option is set
@@ -999,15 +1061,15 @@
          if (this.x_kind == 'time')
             value = this.ConvertX(value);
          if (this.x_handle && ('format' in this.x_handle))
-            return this.x_handle.format(value);
+            return this.x_handle.format(value, false, JSROOT.gStyle.XValuesFormat);
       } else if (axis == "y") {
          if (this.y_kind == 'time')
             value = this.ConvertY(value);
          if (this.y_handle && ('format' in this.y_handle))
-            return this.y_handle.format(value);
+            return this.y_handle.format(value, false, JSROOT.gStyle.YValuesFormat);
       } else {
          if (this.z_handle && ('format' in this.z_handle))
-            return this.z_handle.format(value);
+            return this.z_handle.format(value, false, JSROOT.gStyle.ZValuesFormat);
       }
 
       return value.toPrecision(4);
@@ -1033,6 +1095,9 @@
 
       if ((this.xmin==this.xmax) || (this.ymin==this.ymax)) return false;
 
+      this.CleanupAxes();
+      this.CleanXY();
+
       this.CreateXY();
 
       var layer = this.svg_frame().select(".axis_layer"),
@@ -1050,7 +1115,7 @@
                                   this.x, this.xmin, this.xmax, this.scale_xmin, this.scale_xmax);
       this.x_handle.invert_side = false;
       this.x_handle.lbls_both_sides = false;
-      this.x_handle.has_obstacle = false; // (this.options.Zscale > 0);
+      this.x_handle.has_obstacle = false;
 
       this.y_handle = new JSROOT.TAxisPainter(axisy, true);
       this.y_handle.SetDivId(this.divid, -1);
@@ -1119,13 +1184,17 @@
       this.RedrawPad();
    }
 
-   TFramePainter.prototype.CleanupAxes = function() {
+   TFramePainter.prototype.CleanXY = function() {
+      // remove all kinds of X/Y function for axes transformation
       delete this.x; delete this.grx;
       delete this.ConvertX; delete this.RevertX;
       delete this.y; delete this.gry;
       delete this.ConvertY; delete this.RevertY;
       delete this.z; delete this.grz;
+   }
 
+   TFramePainter.prototype.CleanupAxes = function() {
+      // remove all axes drawings
       if (this.x_handle) {
          this.x_handle.Cleanup();
          delete this.x_handle;
@@ -1147,9 +1216,37 @@
       this.axes_drawn = false;
    }
 
-   TFramePainter.prototype.Cleanup = function() {
+   TFramePainter.prototype.CleanDrawings = function() {
+      // cleanup all 3D drawings if any
+      if (typeof this.Create3DScene === 'function')
+         this.Create3DScene(-1);
+
+      this.CleanupAxes();
+      this.CleanXY();
+
+      this.xmin = this.xmax = 0;
+      this.ymin = this.ymax = 0;
+      this.zmin = this.zmax = 0;
+
+      this.zoom_xmin = this.zoom_xmax = 0;
+      this.zoom_ymin = this.zoom_ymax = 0;
+      this.zoom_zmin = this.zoom_zmax = 0;
+
+      this.scale_xmin = this.scale_xmax = 0;
+      this.scale_ymin = this.scale_ymax = 0;
+      this.scale_zmin = this.scale_zmax = 0;
+
       if (this.draw_g) {
-         this.CleanupAxes();
+         this.draw_g.select(".main_layer").selectAll("*").remove();
+         this.draw_g.select(".upper_layer").selectAll("*").remove();
+      }
+   }
+
+   TFramePainter.prototype.Cleanup = function() {
+
+      this.CleanDrawings();
+
+      if (this.draw_g) {
          this.draw_g.selectAll("*").remove();
          this.draw_g.on("mousedown", null)
                     .on("dblclick", null)
@@ -1157,11 +1254,23 @@
                     .on("contextmenu", null)
                     .property('interactive_set', null);
       }
+
+      if (this.keys_handler) {
+         window.removeEventListener('keydown', this.keys_handler, false);
+         this.keys_handler = null;
+      }
+
       this.draw_g = null;
+
       JSROOT.TooltipHandler.prototype.Cleanup.call(this);
    }
 
    TFramePainter.prototype.Redraw = function() {
+
+      var pp = this.pad_painter();
+      if (pp) pp.frame_painter_ref = this;
+
+      if (this.mode3d) return;
 
       // first update all attributes from objects
       this.UpdateAttributes();
@@ -1172,7 +1281,7 @@
           w = Math.round(width * (this.fX2NDC - this.fX1NDC)),
           tm = Math.round(height * (1 - this.fY2NDC)),
           h = Math.round(height * (this.fY2NDC - this.fY1NDC)),
-          rotate = false, fixpos = false, pp = this.pad_painter();
+          rotate = false, fixpos = false;
 
       if (pp && pp.options) {
          if (pp.options.RotateFrame) rotate = true;
@@ -1208,8 +1317,6 @@
       } else {
          top_rect = this.draw_g.select("rect");
          main_svg = this.draw_g.select(".main_layer");
-
-         this.CleanupAxes();
       }
 
       this.axes_drawn = false;
@@ -1220,12 +1327,12 @@
          var d = w; w = h; h = d;
       }
 
-      this.draw_g.property('frame_painter', this) // simple way to access painter via frame container
-                 .property('draw_x', lm)
-                 .property('draw_y', tm)
-                 .property('draw_width', w)
-                 .property('draw_height', h)
-                 .attr("transform", trans);
+      this._frame_x = lm;
+      this._frame_y = tm;
+      this._frame_width = w;
+      this._frame_height = h;
+
+      this.draw_g.attr("transform", trans);
 
       top_rect.attr("x", 0)
               .attr("y", 0)
@@ -1251,28 +1358,11 @@
          this.AddDrag({ obj: this, only_resize: true, minwidth: 20, minheight: 20,
                         redraw: this.SizeChanged.bind(this) });
 
-      var painter = this;
-
-      function MouseMoveEvent() {
-         var pnt = d3.mouse(tooltip_rect.node());
-         painter.ProcessTooltipEvent({ x: pnt[0], y: pnt[1], touch: false });
-      }
-
-      function MouseCloseEvent() {
-         painter.ProcessTooltipEvent(null);
-      }
-
-      function TouchMoveEvent() {
-         var pnt = d3.touches(tooltip_rect.node());
-         if (!pnt || pnt.length !== 1) return painter.ProcessTooltipEvent(null);
-         painter.ProcessTooltipEvent({ x: pnt[0][0], y: pnt[0][1], touch: true });
-      }
-
-      function TouchCloseEvent() {
-         painter.ProcessTooltipEvent(null);
-      }
-
       if (tooltip_rect.empty()) {
+
+         var close_handler = this.ProcessTooltipEvent.bind(this, null),
+             mouse_handler = this.ProcessTooltipEvent.bind(this, { handler: true, touch: false });
+
          tooltip_rect =
             this.draw_g
                 .append("rect")
@@ -1280,15 +1370,17 @@
                 .style('opacity',0)
                 .style('fill',"none")
                 .style("pointer-events","visibleFill")
-                .on('mouseenter', MouseMoveEvent)
-                .on('mousemove', MouseMoveEvent)
-                .on('mouseleave', MouseCloseEvent);
+                .on('mouseenter', mouse_handler)
+                .on('mousemove', mouse_handler)
+                .on('mouseleave', close_handler);
 
-         if (JSROOT.touches)
-            tooltip_rect.on("touchstart", TouchMoveEvent)
-                        .on("touchmove", TouchMoveEvent)
-                        .on("touchend", TouchCloseEvent)
-                        .on("touchcancel", TouchCloseEvent);
+         if (JSROOT.touches) {
+            var touch_handler = this.ProcessTooltipEvent.bind(this, { handler: true, touch: true });
+            tooltip_rect.on("touchstart", touch_handler)
+                        .on("touchmove", touch_handler)
+                        .on("touchend", close_handler)
+                        .on("touchcancel", close_handler);
+         }
       }
 
       tooltip_rect.attr("x", 0)
@@ -1298,7 +1390,7 @@
 
       var hintsg = this.hints_layer().select(".objects_hints");
       // if tooltips were visible before, try to reconstruct them after short timeout
-      if (!hintsg.empty() && this.tooltip_allowed)
+      if (!hintsg.empty() && this.tooltip_allowed && (hintsg.property("hints_pad") == this.pad_name))
          setTimeout(this.ProcessTooltipEvent.bind(this, hintsg.property('last_point')), 10);
    }
 
@@ -1320,7 +1412,7 @@
       // function called when frame is clicked and object selection can be performed
       // such event can be used to select
 
-      var pp = this.pad_painter(true);
+      var pp = this.pad_painter();
       if (!pp) return;
 
       pnt.painters = true; // provide painters reference in the hints
@@ -1351,8 +1443,8 @@
           unzoom_x = false, unzoom_y = false, unzoom_z = false;
 
       if (zoom_x) {
-         var cnt = 0, main_xmin = this.xmin;
-         if (xmin <= main_xmin) { xmin = main_xmin; cnt++; }
+         var cnt = 0;
+         if (xmin <= this.xmin) { xmin = this.xmin; cnt++; }
          if (xmax >= this.xmax) { xmax = this.xmax; cnt++; }
          if (cnt === 2) { zoom_x = false; unzoom_x = true; }
       } else {
@@ -1360,8 +1452,8 @@
       }
 
       if (zoom_y) {
-         var cnt = 0, main_ymin = this.ymin;
-         if (ymin <= main_ymin) { ymin = main_ymin; cnt++; }
+         var cnt = 0;
+         if (ymin <= this.ymin) { ymin = this.ymin; cnt++; }
          if (ymax >= this.ymax) { ymax = this.ymax; cnt++; }
          if (cnt === 2) { zoom_y = false; unzoom_y = true; }
       } else {
@@ -1369,9 +1461,9 @@
       }
 
       if (zoom_z) {
-         var cnt = 0, main_zmin = this.zmin;
+         var cnt = 0;
          // if (this.logz && this.ymin_nz && this.Dimension()===2) main_zmin = 0.3*this.ymin_nz;
-         if (zmin <= main_zmin) { zmin = main_zmin; cnt++; }
+         if (zmin <= this.zmin) { zmin = this.zmin; cnt++; }
          if (zmax >= this.zmax) { zmax = this.zmax; cnt++; }
          if (cnt === 2) { zoom_z = false; unzoom_z = true; }
       } else {
@@ -1424,6 +1516,10 @@
       return changed;
    }
 
+   TFramePainter.prototype.IsAxisZoomed = function(axis) {
+      return this['zoom_'+axis+'min'] !== this['zoom_'+axis+'max'];
+   }
+
    TFramePainter.prototype.Unzoom = function(dox, doy, doz) {
       if (typeof dox === 'undefined') { dox = true; doy = true; doz = true; } else
       if (typeof dox === 'string') { doz = dox.indexOf("z")>=0; doy = dox.indexOf("y")>=0; dox = dox.indexOf("x")>=0; }
@@ -1446,7 +1542,7 @@
 
    TFramePainter.prototype.clearInteractiveElements = function() {
       JSROOT.Painter.closeMenu();
-      if (this.zoom_rect != null) { this.zoom_rect.remove(); this.zoom_rect = null; }
+      if (this.zoom_rect) { this.zoom_rect.remove(); this.zoom_rect = null; }
       this.zoom_kind = 0;
 
       // enable tooltip in frame painter
@@ -1464,7 +1560,7 @@
    }
 
    TFramePainter.prototype.FindAlternativeClickHandler = function(pos) {
-      var pp = this.pad_painter(true);
+      var pp = this.pad_painter();
       if (!pp) return false;
 
       var pnt = { x: pos[0], y: pos[1], painters: true, disabled: true, click_handler: true };
@@ -1605,19 +1701,18 @@
                if (fp) fp.ProcessFrameClick(pnt);
                break;
             case 2:
-               this.pad_painter().SelectObjectPainter(this.x_handle);
+               var pp = this.pad_painter();
+               if (pp) pp.SelectObjectPainter(this.x_handle);
                break;
             case 3:
-               this.pad_painter().SelectObjectPainter(this.y_handle);
+               var pp = this.pad_painter();
+               if (pp) pp.SelectObjectPainter(this.y_handle);
                break;
          }
       }
 
       this.zoom_kind = 0;
-
    }
-
-
 
    TFramePainter.prototype.startTouchZoom = function() {
       // in case when zooming was started, block any other kind of events
@@ -1635,13 +1730,12 @@
       if (arr.length == 1) {
          // this is touch with single element
 
-         var now = new Date();
-         var diff = now.getTime() - this.last_touch.getTime();
+         var now = new Date(), diff = now.getTime() - this.last_touch.getTime();
          this.last_touch = now;
 
-         if ((diff < 300) && (this.zoom_curr != null)
-               && (Math.abs(this.zoom_curr[0] - arr[0][0]) < 30)
-               && (Math.abs(this.zoom_curr[1] - arr[0][1]) < 30)) {
+         if ((diff < 300) && this.zoom_curr
+              && (Math.abs(this.zoom_curr[0] - arr[0][0]) < 30)
+              && (Math.abs(this.zoom_curr[1] - arr[0][1]) < 30)) {
 
             d3.event.preventDefault();
             d3.event.stopPropagation();
@@ -1817,7 +1911,7 @@
          if (kind === undefined) {
             var ms = d3.mouse(this.svg_frame().node()),
                 tch = d3.touches(this.svg_frame().node()),
-                pp = this.pad_painter(true),
+                pp = this.pad_painter(),
                 pnt = null, sel = null;
 
             if (tch.length === 1) pnt = { x: tch[0][0], y: tch[0][1], touch: true }; else
@@ -1877,10 +1971,10 @@
          if (this[kind+"_kind"] == "normal")
            menu.addchk(this["log"+kind], "SetLog"+kind, this.ToggleLog.bind(this, kind) );
 
-         // if ((kind === "z") && (this.options.Zscale > 0))
+         // if ((kind === "z") && this.options.Zscale)
          //   if (this.FillPaletteMenu) this.FillPaletteMenu(menu);
 
-         if (faxis != null) {
+         if (faxis) {
             menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kMoreLogLabels), "More log",
                   function() { faxis.InvertBit(JSROOT.EAxisBits.kMoreLogLabels); this.RedrawPad(); });
             menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kNoExponent), "No exponent",
@@ -1950,10 +2044,8 @@
       });
       this.FillAttContextMenu(menu,alone ? "" : "Frame ");
       menu.add("separator");
-      menu.add("Save as frame.png", function(arg) {
-         var top = this.svg_frame();
-         if (!top.empty())
-            JSROOT.saveSvgAsPng(top.node(), { name: "frame.png" } );
+      menu.add("Save as frame.png", function() {
+         this.pad_painter().SaveAsPng('frame', 'frame.png');
       });
 
       return true;
@@ -1992,6 +2084,9 @@
 
       if (svg.empty() || svg.property('interactive_set')) return;
 
+      var svg_x = svg.selectAll(".xaxis_container"),
+          svg_y = svg.selectAll(".yaxis_container");
+
       this.AddKeysHandler();
 
       this.last_touch = new Date(0);
@@ -2016,22 +2111,16 @@
 
       if (JSROOT.gStyle.ContextMenu) {
          if (JSROOT.touches) {
-            svg.selectAll(".xaxis_container")
-               .on("touchstart", this.startTouchMenu.bind(this,"x"));
-            svg.selectAll(".yaxis_container")
-                .on("touchstart", this.startTouchMenu.bind(this,"y"));
+            svg_x.on("touchstart", this.startTouchMenu.bind(this,"x"));
+            svg_y.on("touchstart", this.startTouchMenu.bind(this,"y"));
          }
          svg.on("contextmenu", this.ShowContextMenu.bind(this));
-         svg.selectAll(".xaxis_container")
-             .on("contextmenu", this.ShowContextMenu.bind(this,"x"));
-         svg.selectAll(".yaxis_container")
-             .on("contextmenu", this.ShowContextMenu.bind(this,"y"));
+         svg_x.on("contextmenu", this.ShowContextMenu.bind(this,"x"));
+         svg_y.on("contextmenu", this.ShowContextMenu.bind(this,"y"));
       }
 
-      svg.selectAll(".xaxis_container")
-         .on("mousemove", this.ShowAxisStatus.bind(this,"x"));
-      svg.selectAll(".yaxis_container")
-         .on("mousemove", this.ShowAxisStatus.bind(this,"y"));
+      svg_x.on("mousemove", this.ShowAxisStatus.bind(this,"x"));
+      svg_y.on("mousemove", this.ShowAxisStatus.bind(this,"y"));
 
       svg.property('interactive_set', true);
    }
@@ -2061,11 +2150,11 @@
       // it is typically for 2-Dim histograms or
       // when histogram not draw, defined by other painters
 
-      var pad_painter = this.pad_painter(true);
+      var pad_painter = this.pad_painter();
       if (pad_painter &&  pad_painter.painters)
          for (var k = 0; k < pad_painter.painters.length; ++k) {
             var subpainter = pad_painter.painters[k];
-            if ((subpainter!==this) && subpainter.wheel_zoomy!==undefined)
+            if (subpainter && (subpainter.wheel_zoomy!==undefined))
                return subpainter.wheel_zoomy;
          }
 
@@ -2201,7 +2290,7 @@
          evnt.stopPropagation();
          evnt.preventDefault();
       } else {
-         var pp = this.pad_painter(true),
+         var pp = this.pad_painter(),
              func = pp ? pp.FindButton(key) : "";
          if (func) {
             pp.PadButtonClick(func);
@@ -2224,7 +2313,10 @@
       //    this.Revert[X/Y]  converts graphical coordinates to root scale value
 
       this.swap_xy = false;
-      // if (this.options.Bar>=20) this.swap_xy = true;
+      this.reverse_x = false;
+      this.reverse_y = false;
+
+      // if (this.options.BarStyle>=20) this.swap_xy = true;
       this.logx = this.logy = false;
 
       var w = this.frame_width(), h = this.frame_height();
@@ -2266,8 +2358,11 @@
          this.x = d3.scaleLinear();
       }
 
+      var gr_range_x = this.reverse_x ? [ w, 0 ] : [ 0, w ],
+          gr_range_y = this.reverse_y ? [ 0, h ] : [ h, 0 ];
+
       this.x.domain([this.ConvertX(this.scale_xmin), this.ConvertX(this.scale_xmax)])
-            .range(this.swap_xy ? [ h, 0 ] : [ 0, w ]);
+            .range(this.swap_xy ? gr_range_y : gr_range_x);
 
       if (this.x_kind == 'time') {
          // we emulate scale functionality
@@ -2307,7 +2402,7 @@
       }
 
       this.y.domain([ this.ConvertY(this.scale_ymin), this.ConvertY(this.scale_ymax) ])
-            .range(this.swap_xy ? [ 0, w ] : [ h, 0 ]);
+            .range(this.swap_xy ? gr_range_x : gr_range_y);
 
       if (this.y_kind=='time') {
          // we emulate scale functionality
@@ -2378,7 +2473,7 @@
          if (kind === "labels") return;
       }
 
-      var pp = this.pad_painter(true), canp = this.pad_painter();
+      var pp = this.pad_painter(), canp = this.canv_painter();
       if (pp && pp.snapid && canp && canp._websocket) {
          canp.SendWebsocket("OBJEXEC:" + pp.snapid + ":SetLog" + axis + (curr ? "(0)" : "(1)"));
       } else {
@@ -2387,8 +2482,9 @@
       }
    }
 
-   function drawFrame(divid, obj) {
+   function drawFrame(divid, obj, opt) {
       var p = new TFramePainter(obj);
+      if (opt == "3d") p.mode3d = true;
       p.SetDivId(divid, 2);
       p.Redraw();
       return p.DrawingReady();
@@ -2396,16 +2492,16 @@
 
    // ===========================================================================
 
-
    function TPadPainter(pad, iscan) {
       JSROOT.TObjectPainter.call(this, pad);
       this.pad = pad;
       this.iscan = iscan; // indicate if working with canvas
       this.this_pad_name = "";
-      if (!this.iscan && (pad !== null) && ('fName' in pad)) {
-         this.this_pad_name = pad.fName.replace(" ", "_"); // avoid empty symbol in pad name
-         var regexp = new RegExp("^[A-Za-z][A-Za-z0-9_]*$");
-         if (!regexp.test(this.this_pad_name)) this.this_pad_name = 'jsroot_pad_' + JSROOT.id_counter++;
+      if (!this.iscan && (pad !== null)) {
+         if (pad.fObjectID)
+            this.this_pad_name = "pad" + pad.fObjectID; // use objectid as padname
+         else
+            this.this_pad_name = "ppp" + JSROOT.id_counter++; // artificical name
       }
       this.painters = []; // complete list of all painters in the pad
       this.has_canvas = true;
@@ -2426,8 +2522,11 @@
          if (!this.iscan) svg_p.remove();
       }
 
+      delete this.frame_painter_ref;
       this.painters = [];
       this.pad = null;
+      this.draw_object = null;
+      this.pad_frame = null;
       this.this_pad_name = "";
       this.has_canvas = false;
 
@@ -2446,21 +2545,18 @@
       }
    }
 
-   TPadPainter.prototype.GetCurrentPrimitiveIndx = function() {
-      return this._current_primitive_indx || 0;
-   }
-
-   TPadPainter.prototype.GetNumPrimitives = function() {
-      return this._num_primitives || 1;
-   }
-
-   TPadPainter.prototype.ForEachPainterInPad = function(userfunc, onlypadpainters) {
-      userfunc(this);
+   /// call function for each painter
+   /// kind == "all" for all objects (default)
+   /// kind == "pads" only pads and subpads
+   /// kind == "objects" only for object in current pad
+   TPadPainter.prototype.ForEachPainterInPad = function(userfunc, kind) {
+      if (!kind) kind = "all";
+      if (kind!="objects") userfunc(this);
       for (var k = 0; k < this.painters.length; ++k) {
          var sub = this.painters[k];
-         if (typeof sub.ForEachPainterInPad === 'function')
-            sub.ForEachPainterInPad(userfunc, onlypadpainters);
-         else if (!onlypadpainters) userfunc(sub);
+         if (typeof sub.ForEachPainterInPad === 'function') {
+            if (kind!="objects") sub.ForEachPainterInPad(userfunc, kind);
+         } else if (kind != "pads") userfunc(sub);
       }
    }
 
@@ -2473,7 +2569,7 @@
       this.ForEachPainterInPad(function(fp) {
          if ((res===undefined) && (fp.tooltip_allowed!==undefined)) res = fp.tooltip_allowed;
       });
-      return res !== undefined ? res : false;
+      return res;
    }
 
    TPadPainter.prototype.SetTooltipAllowed = function(on) {
@@ -2482,13 +2578,30 @@
       });
    }
 
-   TPadPainter.prototype.SelectObjectPainter = function(painter) {
+   TPadPainter.prototype.RegisterForPadEvents = function(receiver) {
+      this.pad_events_receiver = receiver;
+   }
+
+   TPadPainter.prototype.SelectObjectPainter = function(_painter, pos) {
       // dummy function, redefined in the TCanvasPainter
+
+      var istoppad = (this.iscan || !this.has_canvas),
+          canp = istoppad ? this : this.canv_painter(),
+          pp = _painter instanceof TPadPainter ? _painter : _painter.pad_painter();
+
+      if (pos && !istoppad)
+          this.CalcAbsolutePosition(this.svg_pad(this.this_pad_name), pos);
+
+      if (typeof canp.SelectActivePad == "function")
+          canp.SelectActivePad(pp, _painter, pos);
+
+      if (canp.pad_events_receiver)
+         canp.pad_events_receiver({ what: "select", padpainter: pp, painter: _painter, position: pos });
    }
 
    TPadPainter.prototype.CreateCanvasSvg = function(check_resize, new_size) {
 
-      var factor = null, svg = null, lmt = 5, rect = null;
+      var factor = null, svg = null, lmt = 5, rect = null, btns;
 
       if (check_resize > 0) {
 
@@ -2503,6 +2616,8 @@
          rect = this.check_main_resize(check_resize, null, factor);
 
          if (!rect.changed) return false;
+
+         btns = this.svg_layer("btns_layer");
 
       } else {
 
@@ -2529,7 +2644,9 @@
 
          svg.append("svg:g").attr("class","primitives_layer");
          svg.append("svg:g").attr("class","info_layer");
-         svg.append("svg:g").attr("class","btns_layer");
+         btns = svg.append("svg:g").attr("class","btns_layer")
+                                   .property('leftside', JSROOT.gStyle.ToolBarSide == 'left')
+                                   .property('vertical', JSROOT.gStyle.ToolBarVert);
 
          if (JSROOT.gStyle.ContextMenu)
             svg.select(".canvas_fillrect").on("contextmenu", this.ShowContextMenu.bind(this));
@@ -2548,8 +2665,7 @@
          }
       }
 
-      //if (!this.fillatt || !this.fillatt.changed)
-      //   this.fillatt = this.createAttFill(this.pad);
+      // this.createAttFill({ attr: this.pad });
 
       if ((rect.width<=lmt) || (rect.height<=lmt)) {
          svg.style("display", "none");
@@ -2592,9 +2708,7 @@
       //   .attr("height", rect.height)
       //   .call(this.fillatt.func);
 
-      this.svg_layer("btns_layer")
-          .attr("transform","translate(2," + (rect.height - this.ButtonSize(1.25)) + ")")
-          .attr("display", svg.property("pad_enlarged") ? "none" : null); // hide buttons when sub-pad is enlarged
+      this.AlignBtns(btns, rect.width, rect.height, svg);
 
       return true;
    }
@@ -2613,17 +2727,14 @@
          if (this._fixed_size) return; // canvas cannot be enlarged in such mode
          if (!this.enlarge_main('toggle')) return;
          if (this.enlarge_main('state')=='off') svg_can.property("pad_enlarged", null);
+      } else if (!pad_enlarged) {
+         this.enlarge_main(true, true);
+         svg_can.property("pad_enlarged", this.pad);
+      } else if (pad_enlarged === this.pad) {
+         this.enlarge_main(false);
+         svg_can.property("pad_enlarged", null);
       } else {
-         if (!pad_enlarged) {
-            this.enlarge_main(true);
-            svg_can.property("pad_enlarged", this.pad);
-         } else
-         if (pad_enlarged === this.pad) {
-            this.enlarge_main(false);
-            svg_can.property("pad_enlarged", null);
-         } else {
-            console.error('missmatch with pad double click events');
-         }
+         console.error('missmatch with pad double click events');
       }
 
       this.CheckResize({ force: true });
@@ -2637,16 +2748,21 @@
          return true;
       }
 
-      var svg_can = this.svg_canvas(),
-          width = svg_can.property("draw_width"),
-          height = svg_can.property("draw_height"),
+      var svg_parent = this.svg_pad(),
+          svg_can = this.svg_canvas(),
+          width = svg_parent.property("draw_width"),
+          height = svg_parent.property("draw_height"),
           pad_enlarged = svg_can.property("pad_enlarged"),
           pad_visible = !pad_enlarged || (pad_enlarged === this.pad),
-          w = Math.round(this.pad.fAbsWNDC * width),
-          h = Math.round(this.pad.fAbsHNDC * height),
-          x = Math.round(this.pad.fAbsXlowNDC * width),
-          y = Math.round(height * (1 - this.pad.fAbsYlowNDC)) - h,
+          w = width, h = height, x = 0, y = 0,
           svg_pad = null, svg_rect = null, btns = null;
+
+      if (this.pad && this.pad.fDrawOpts && this.pad.fSize) {
+         w = Math.round(width * this.pad.fSize.fHoriz.fNormal.fVal);
+         h = Math.round(height * this.pad.fSize.fVert.fNormal.fVal);
+         x = Math.round(width * this.pad.fDrawOpts.fPos.fAttr.fHoriz.fNormal.fVal);
+         y = Math.round(height * this.pad.fDrawOpts.fPos.fAttr.fVert.fNormal.fVal);
+      }
 
       if (pad_enlarged === this.pad) { w = width; h = height; x = y = 0; }
 
@@ -2655,16 +2771,18 @@
          svg_rect = svg_pad.select(".root_pad_border");
          btns = this.svg_layer("btns_layer", this.this_pad_name);
       } else {
-         svg_pad = svg_can.select(".primitives_layer")
+         svg_pad = svg_parent.select(".primitives_layer")
              .append("svg:svg") // here was g before, svg used to blend all drawin outside
-             .attr("class", "root_pad")
+             .classed("__root_pad_" + this.this_pad_name, true)
              .attr("pad", this.this_pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this) // this is custom property
              .property('mainpainter', null); // this is custom property
          svg_rect = svg_pad.append("svg:rect").attr("class", "root_pad_border");
 
          svg_pad.append("svg:g").attr("class","primitives_layer");
-         btns = svg_pad.append("svg:g").attr("class","btns_layer");
+         btns = svg_pad.append("svg:g").attr("class","btns_layer")
+                                       .property('leftside', JSROOT.gStyle.ToolBarSide != 'left')
+                                       .property('vertical', JSROOT.gStyle.ToolBarVert);
 
          if (JSROOT.gStyle.ContextMenu)
             svg_rect.on("contextmenu", this.ShowContextMenu.bind(this));
@@ -2676,12 +2794,9 @@
                     .on("mouseenter", this.ShowObjectStatus.bind(this));
       }
 
-      if (!this.fillatt || !this.fillatt.changed)
-         this.fillatt = this.createAttFill(this.pad);
-      if (!this.lineatt || !this.lineatt.changed) {
-         this.lineatt = new JSROOT.TAttLineHandler(this.pad);
-         if (this.pad.fBorderMode == 0) this.lineatt.color = 'none';
-      }
+      this.createAttFill({ attr: this.pad });
+
+      this.createAttLine({ attr: this.pad, color0: this.pad.fBorderMode == 0 ? 'none' : '' });
 
       svg_pad
               //.attr("transform", "translate(" + x + "," + y + ")") // is not handled for SVG
@@ -2710,11 +2825,10 @@
               .select(".draw3d_" + this.this_pad_name)
               .style('display', pad_visible ? '' : 'none');
 
-      btns.attr("transform","translate("+ (w - (btns.property('nextx') || 0) - this.ButtonSize(1.25)) + "," + (h - this.ButtonSize(1.25)) + ")");
+      this.AlignBtns(btns, w, h);
 
       return pad_visible;
    }
-
 
    TPadPainter.prototype.RemovePrimitive = function(obj) {
       if (!this.pad || !this.pad.fPrimitives) return;
@@ -2745,10 +2859,11 @@
    TPadPainter.prototype.HasObjectsToDraw = function() {
       // return true if any objects beside sub-pads exists in the pad
 
-      if (!this.pad || !this.pad.fPrimitives) return false;
+      var arr = this.pad ? this.pad.fPrimitives : null;
 
-      for (var n=0;n<this.pad.fPrimitives.arr.length;++n)
-         if (this.pad.fPrimitives.arr[n] && this.pad.fPrimitives.arr[n]._typename != "TPad") return true;
+      if (arr)
+         for (var n=0;n<arr.length;++n)
+            if (arr[n] && arr[n]._typename != "ROOT::Experimental::RPadDisplayItem") return true;
 
       return false;
    }
@@ -2759,15 +2874,27 @@
          // flag used to prevent immediate pad redraw during normal drawing sequence
          this._doing_pad_draw = true;
 
+         if (this.iscan)
+            this._start_tm = this._lasttm_tm =  new Date().getTime();
+
          // set number of primitves
          this._num_primitives = this.pad && this.pad.fPrimitives ? this.pad.fPrimitives.length : 0;
       }
 
       while (true) {
-         if (ppainter) ppainter._primitive = true; // mark painter as belonging to primitives
+         if (ppainter && (typeof ppainter=='object')) ppainter._primitive = true; // mark painter as belonging to primitives
 
          if (!this.pad || (indx >= this.pad.fPrimitives.length)) {
             delete this._doing_pad_draw;
+            delete this._current_primitive_indx;
+
+            if (this._start_tm) {
+               var spenttm = new Date().getTime() - this._start_tm;
+               if (spenttm > 3000) console.log("Canvas drawing took " + (spenttm*1e-3).toFixed(2) + "s");
+               delete this._start_tm;
+               delete this._lasttm_tm;
+            }
+
             return JSROOT.CallBack(callback);
          }
 
@@ -2779,8 +2906,18 @@
 
          ppainter = JSROOT.draw(this.divid, this.pad.fPrimitives[indx], "", handle);
 
-         if (!handle.completed) return;
          indx++;
+
+         if (!handle.completed) return;
+
+         if (!JSROOT.BatchMode && this.iscan) {
+            var curtm = new Date().getTime();
+            if (curtm > this._lasttm_tm + 500) {
+               this._lasttm_tm = curtm;
+               ppainter._primitive = true; // mark primitive ourself
+               return requestAnimationFrame(handle.func);
+            }
+         }
       }
    }
 
@@ -2812,7 +2949,8 @@
          menu.add("header: Canvas");
 
       var tooltipon = this.IsTooltipAllowed();
-      menu.addchk(tooltipon, "Show tooltips", this.SetTooltipAllowed.bind(this, !tooltipon));
+      if (tooltipon !== undefined)
+         menu.addchk(tooltipon, "Show tooltips", this.SetTooltipAllowed.bind(this, !tooltipon));
 
       if (!this._websocket) {
 
@@ -2937,6 +3075,8 @@
 
       if (!this.iscan && this.has_canvas) return false;
 
+      if ((size === true) || (size === false)) { force = size; size = null; }
+
       if (size && (typeof size === 'object') && size.force) force = true;
 
       if (!force) force = this.RedrawByResize();
@@ -2955,6 +3095,10 @@
    TPadPainter.prototype.UpdateObject = function(obj) {
       if (!obj) return false;
 
+      this.pad.fCw = obj.fCw;
+      this.pad.fCh = obj.fCh;
+      this.pad.fTitle = obj.fTitle;
+
       return true;
    }
 
@@ -2962,12 +3106,15 @@
       // function called when drawing next snapshot from the list
       // it is also used as callback for drawing of previous snap
 
-      if (indx===0) {
+      if (indx===-1) {
          // flag used to prevent immediate pad redraw during first draw
          this._doing_pad_draw = true;
          this._snaps_map = {}; // to control how much snaps are drawn
          this._num_primitives = lst ? lst.length : 0;
       }
+
+      // workaround to insert v6 frame in list of primitives
+      if (objpainter === "workaround") { --indx; objpainter = null; }
 
       while (true) {
 
@@ -2984,6 +3131,7 @@
          if (!lst || indx >= lst.length) {
             delete this._doing_pad_draw;
             delete this._snaps_map;
+            delete this._current_primitive_indx;
             return JSROOT.CallBack(call_back, this);
          }
 
@@ -3008,47 +3156,26 @@
 
          if (objpainter) {
 
-            if (snap.fKind === 1) { // object itself
-               if (objpainter.UpdateObject(snap.fSnapshot, snap.fOption)) objpainter.Redraw();
-               continue; // call next
-            }
-
-            if (snap.fKind === 2) { // update SVG
-               if (objpainter.UpdateObject(snap.fSnapshot)) objpainter.Redraw();
-               continue; // call next
-            }
-
-            if (snap.fKind === 3) { // subpad
+            if (snap._typename == "ROOT::Experimental::RPadDisplayItem")  // subpad
                return objpainter.RedrawPadSnap(snap, draw_callback);
-            }
+
+            if (objpainter.UpdateObject(snap.fObject, snap.fOption || "")) objpainter.Redraw();
 
             continue; // call next
          }
 
-         if (snap.fKind === 4) { // specials like list of colors
-            this.CheckSpecial(snap.fSnapshot);
-            continue;
-         }
+         if (snap._typename == "ROOT::Experimental::RPadDisplayItem") { // subpad
 
-         if (snap.fKind === 3) { // subpad
-
-            if (snap.fPrimitives._typename) {
-               alert("Problem in JSON I/O with primitves for sub-pad");
-               snap.fPrimitives = [ snap.fPrimitives ];
-            }
-
-            var subpad = snap.fPrimitives[0].fSnapshot;
-
-            subpad.fPrimitives = null; // clear primitives, they just because of I/O
+            var subpad = snap; // not subpad, but just attributes
 
             var padpainter = new TPadPainter(subpad, false);
-            padpainter.DecodeOptions(snap.fPrimitives[0].fOption);
+            padpainter.DecodeOptions("");
             padpainter.SetDivId(this.divid); // pad painter will be registered in the canvas painters list
             padpainter.snapid = snap.fObjectID;
 
             padpainter.CreatePadSvg();
 
-            if (padpainter.MatchObjectType("TPad") && snap.fPrimitives.length > 1) {
+            if (snap.fPrimitives && snap.fPrimitives.length > 0) {
                padpainter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "PadSnapShot");
                padpainter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge pad", "EnlargePad");
 
@@ -3058,7 +3185,7 @@
 
             // we select current pad, where all drawing is performed
             var prev_name = padpainter.CurrentPadName(padpainter.this_pad_name);
-            padpainter.DrawNextSnap(snap.fPrimitives, 0, function() {
+            padpainter.DrawNextSnap(snap.fPrimitives, -1, function() {
                padpainter.CurrentPadName(prev_name);
                draw_callback(padpainter);
             });
@@ -3067,12 +3194,14 @@
 
          var handle = { func: draw_callback };
 
-         // here the case of normal drawing, can be improved
-         if (snap.fKind === 1)
-            objpainter = JSROOT.draw(this.divid, snap.fSnapshot, snap.fOption, handle);
+         if (snap._typename === "ROOT::Experimental::RObjectDisplayItem")
+            if (!this.frame_painter())
+               return JSROOT.draw(this.divid, { _typename: "TFrame", $dummy: true }, "", function() {
+                  handle.func("workaround"); // call function with "workaround" as argument
+               });
 
-         if (snap.fKind === 2)
-            objpainter = JSROOT.draw(this.divid, snap.fSnapshot, snap.fOption, handle);
+         // here the case of normal drawing, can be improved
+         objpainter = JSROOT.draw(this.divid, snap.fObject, snap.fOption || "", handle);
 
          if (!handle.completed) return; // if callback will be invoked, break while loop
       }
@@ -3096,55 +3225,52 @@
       return null;
    }
 
+   TPadPainter.prototype.AddOnlineButtons = function() {
+      this.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "CanvasSnapShot", "Ctrl PrintScreen");
+      if (JSROOT.gStyle.ContextMenu)
+         this.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
+
+      if (this.enlarge_main('verify'))
+         this.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
+   }
+
    TPadPainter.prototype.RedrawPadSnap = function(snap, call_back) {
-      // for the canvas snapshot contains list of objects
-      // as first entry, graphical properties of canvas itself is provided
-      // in ROOT6 it also includes primitives, but we ignore them
+      // for the pad/canvas display item contains list of primitives plus pad attributes
 
       if (!snap || !snap.fPrimitives) return;
 
-      var first = snap.fPrimitives[0].fSnapshot;
-      first.fPrimitives = null; // primitives are not interesting, just cannot disable it in IO
+      // for the moment only window size attributes are provided
+      var padattr = { fCw: snap.fWinSize[0].fVal, fCh: snap.fWinSize[1].fVal, fTitle: snap.fTitle };
+
+      // if canvas size not specified in batch mode, temporary use 900x700 size
+      if (this.batch_mode && this.iscan && (!padattr.fCw || !padattr.fCh)) { padattr.fCw = 900; padattr.fCh = 700; }
+
+      if (this.iscan && snap.fTitle && document)
+         document.title = snap.fTitle;
 
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
 
-         console.log('Get first canvas ' + first._typename);
+         this.snapid = snap.fObjectID;
 
-         this.snapid = snap.fPrimitives[0].fObjectID;
+         this.draw_object = padattr;
+         this.pad = padattr;
+         this.pad_frame = snap.fFrame;
 
-         this.draw_object = first;
-         this.pad = first;
-         // this._fixed_size = true;
-
-         // if canvas size not specified in batch mode, temporary use 900x700 size
-         if (this.batch_mode && (!first.fCw || !first.fCh)) { first.fCw = 900; first.fCh = 700; }
-
-         // case of ROOT7 with always dummy TPad as first entry
-         if (!first.fCw || !first.fCh) this._fixed_size = false;
+         if (this.batch_mode && this.iscan)
+             this._fixed_size = true;
 
          this.CreateCanvasSvg(0);
          this.SetDivId(this.divid);  // now add to painters list
+         this.AddOnlineButtons();
 
-         this.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "CanvasSnapShot", "Ctrl PrintScreen");
-         if (JSROOT.gStyle.ContextMenu)
-            this.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
-
-         if (this.enlarge_main('verify'))
-            this.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
-
-         var pthis = this;
-
-         this.DrawNextSnap(snap.fPrimitives, 0, function() {
-            var fp = pthis.frame_painter();
-            if (fp) fp.AddInteractive(); // TODO: do it directly in the frame painter
-            JSROOT.CallBack(call_back);
-         });
+         this.DrawNextSnap(snap.fPrimitives, -1, call_back);
 
          return;
       }
 
-      this.UpdateObject(first); // update only object attributes
+      // update only pad/canvas attributes
+      this.UpdateObject(padattr);
 
       // apply all changes in the object (pad or canvas)
       if (this.iscan) {
@@ -3160,7 +3286,7 @@
          var sub = this.painters[k];
          if (sub.snapid===undefined) continue; // look only for painters with snapid
 
-         for (var i=1;i<snap.fPrimitives.length;++i)
+         for (var i=0;i<snap.fPrimitives.length;++i)
             if (snap.fPrimitives[i].fObjectID === sub.snapid) { sub = null; isanyfound = true; break; }
 
          if (sub) {
@@ -3171,90 +3297,45 @@
       }
 
       if (!isanyfound) {
-         var svg_p = this.svg_pad(this.this_pad_name);
+         var svg_p = this.svg_pad(this.this_pad_name),
+             fp = this.frame_painter();
          if (svg_p && !svg_p.empty())
             svg_p.property('mainpainter', null);
          for (var k=0;k<this.painters.length;++k)
-            this.painters[k].Cleanup();
+            if (fp !== this.painters[k])
+               this.painters[k].Cleanup();
          this.painters = [];
+         if (fp) {
+            this.painters.push(fp);
+            fp.CleanDrawings();
+         }
+         this.RemoveButtons();
+         this.AddOnlineButtons();
       }
 
       var padpainter = this,
           prev_name = padpainter.CurrentPadName(padpainter.this_pad_name);
 
-      padpainter.DrawNextSnap(snap.fPrimitives, 0, function() {
+      padpainter.DrawNextSnap(snap.fPrimitives, -1, function() {
          padpainter.CurrentPadName(prev_name);
          call_back(padpainter);
       });
    }
 
    TPadPainter.prototype.CreateImage = function(format, call_back) {
-      if (format=="svg") {
-         JSROOT.CallBack(call_back, btoa(this.CreateSvg()));
-      } else if ((format=="png") || (format=="jpeg")) {
-         this.ProduceImage(true, 'any.' + format, function(can) {
-            var res = can.toDataURL('image/' + format),
-                separ = res.indexOf("base64,");
+      if (format=="pdf") {
+         // use https://github.com/MrRio/jsPDF in the future here
+         JSROOT.CallBack(call_back, btoa("dummy PDF file"));
+      } else if ((format=="png") || (format=="jpeg") || (format=="svg")) {
+         this.ProduceImage(true, format, function(res) {
+            if ((format=="svg") || !res)
+               return JSROOT.CallBack(call_back, res);
+            var separ = res.indexOf("base64,");
             JSROOT.CallBack(call_back, (separ>0) ? res.substr(separ+7) : "");
          });
       } else {
          JSROOT.CallBack(call_back, "");
       }
-   }
-
-   TPadPainter.prototype.GetAllRanges = function() {
-      var res = "";
-
-      if (this.snapid) {
-         res = this.GetPadRanges();
-         if (res) res = "id=" + this.snapid + ":" + res + ";";
-      }
-
-      for (var k=0;k<this.painters.length;++k)
-         if (typeof this.painters[k].GetAllRanges == "function")
-            res += this.painters[k].GetAllRanges();
-
-      return res;
-   }
-
-   TPadPainter.prototype.GetPadRanges = function() {
-      // function returns actual ranges in the pad, which can be applied to the server
-      var main = this.main_painter(true, this.this_pad_name),
-          p = this.svg_pad(this.this_pad_name),
-          f = this.svg_frame(this.this_pad_name);
-
-      if (!main) return "";
-
-      var res1 = main.scale_xmin + ":" +
-                 main.scale_xmax + ":" +
-                 main.scale_ymin + ":" +
-                 main.scale_ymax;
-
-      if (f.empty() || p.empty()) return res1 + ":" + res1;
-
-      var res2 = "";
-
-      // calculate user range for full pad
-      var same = function(x) { return x; },
-          exp10 = function(x) { return Math.pow(10, x); };
-
-      var func = main.logx ? JSROOT.log10 : same,
-          func2 = main.logx ? exp10 : same;
-
-      var k = (func(main.scale_xmax) - func(main.scale_xmin))/f.property("draw_width");
-      var x1 = func(main.scale_xmin) - k*f.property("draw_x");
-      var x2 = x1 + k*p.property("draw_width");
-      res2 += func2(x1) + ":" + func2(x2);
-
-      func = main.logy ? JSROOT.log10 : same;
-      func2 = main.logy ? exp10 : same;
-
-      var k = (func(main.scale_ymax) - func(main.scale_ymin))/f.property("draw_height");
-      var y2 = func(main.scale_ymax) + k*f.property("draw_y");
-      var y1 = y2 - k*p.property("draw_height");
-      res2 += ":" + func2(y1) + ":" + func2(y2);
-
-      return res1 + ":" + res2;
    }
 
    TPadPainter.prototype.ItemContextMenu = function(name) {
@@ -3291,98 +3372,171 @@
        });
    }
 
-   TPadPainter.prototype.CreateSvg = function() {
-      var main = this.svg_canvas(),
-          svg = main.html();
-
-      svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g,"url(#$1)")        // decode all URL
-               .replace(/ class=\"\w*\"/g,"")                                // remove all classes
-               .replace(/<g transform=\"translate\(\d+\,\d+\)\"><\/g>/g,"")  // remove all empty groups with transform
-               .replace(/<g><\/g>/g,"");                                     // remove all empty groups
-
-      svg = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"' +
-            ' viewBox="0 0 ' + main.property('draw_width') + ' ' + main.property('draw_height') + '"' +
-            ' width="' + main.property('draw_width') + '"' +
-            ' height="' + main.property('draw_height') + '">' + svg + '</svg>';
-
-       return svg;
-   }
-
-
    TPadPainter.prototype.SaveAsPng = function(full_canvas, filename) {
       if (!filename) {
          filename = this.this_pad_name;
          if (filename.length === 0) filename = this.iscan ? "canvas" : "pad";
          filename += ".png";
       }
-      this.ProduceImage(full_canvas, filename)
+      this.ProduceImage(full_canvas, "png", function(pngdata) {
+         var a = document.createElement('a');
+         a.download = filename;
+         a.href = pngdata;
+         // a.style.display = 'none';
+
+         document.body.appendChild(a);
+         a.addEventListener("click", function(e) {
+            a.parentNode.removeChild(a);
+         });
+         a.click();
+      });
    }
 
-   TPadPainter.prototype.ProduceImage = function(full_canvas, filename, call_back) {
+   TPadPainter.prototype.ProduceImage = function(full_canvas, file_format, call_back) {
 
-      var elem = full_canvas ? this.svg_canvas() : this.svg_pad(this.this_pad_name);
+      var use_frame = (full_canvas === "frame");
 
-      if (elem.empty()) return;
+      var elem = use_frame ? this.svg_frame() : (full_canvas ? this.svg_canvas() : this.svg_pad(this.this_pad_name));
 
-      var painter = full_canvas ? this.pad_painter() : this;
+      if (elem.empty()) return JSROOT.CallBack(call_back);
 
-      document.body.style.cursor = 'wait';
+      var painter = (full_canvas && !use_frame) ? this.canv_painter() : this;
 
+      var items = []; // keep list of replaced elements, which should be moved back at the end
+
+//      document.body.style.cursor = 'wait';
+
+      if (!use_frame) // do not make transformations for the frame
       painter.ForEachPainterInPad(function(pp) {
 
-         var main = pp.main_painter(true, pp.this_pad_name);
+         // console.log('Check painter pp', pp.this_pad_name);
+
+         var item = { prnt: pp.svg_pad(pp.this_pad_name) };
+         items.push(item);
+
+         // remove buttons from each subpad
+         var btns = pp.svg_layer("btns_layer", pp.this_pad_name);
+         item.btns_node = btns.node();
+         if (item.btns_node) {
+            item.btns_prnt = item.btns_node.parentNode;
+            item.btns_next = item.btns_node.nextSibling;
+            btns.remove();
+         }
+
+         var main = pp.frame_painter_ref;
          if (!main || (typeof main.Render3D !== 'function')) return;
 
          var can3d = main.access_3d_kind();
+
          if ((can3d !== 1) && (can3d !== 2)) return;
 
-         var sz = main.size_for_3d(3); // get size for SVG canvas
+         var sz2 = main.size_for_3d(2); // get size of DOM element as it will be embed
 
-         var svg3d = main.Render3D(-1111); // render SVG
+         var sz = (can3d == 2) ? sz : main.size_for_3d(1);
 
-         //var rrr = new THREE.SVGRenderer({precision:0});
-         //rrr.setSize(sz.width, sz.height);
-         //rrr.render(main.scene, main.camera);
+         // console.log('Render 3D', sz2);
 
-          main
-              .insert("g",".primitives_layer")             // create special group
-              .attr("class","temp_saveaspng")
-              .attr("transform", "translate(" + sz.x + "," + sz.y + ")")
-              .node().appendChild(svg3d);      // add code
-      }, true);
+         var canvas = main.renderer.domElement;
+         main.Render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
+         var dataUrl = canvas.toDataURL("image/png");
 
-//      if (((can3d === 1) || (can3d === 2)) && main && main.Render3D) {
-           // this was saving of image buffer from 3D render
-//         var canvas = main.renderer.domElement;
-//         main.Render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
-//         var dataUrl = canvas.toDataURL("image/png");
-//         dataUrl.replace("image/png", "image/octet-stream");
-//         var link = document.createElement('a');
-//         if (typeof link.download === 'string') {
-//            document.body.appendChild(link); //Firefox requires the link to be in the body
-//            link.download = filename;
-//            link.href = dataUrl;
-//            link.click();
-//            document.body.removeChild(link); //remove the link when done
-//         }
-//      } else
+         // console.log('canvas width height', canvas.width, canvas.height);
 
+         // console.log('produced png image len = ', dataUrl.length, 'begin', dataUrl.substr(0,100));
 
-      var options = { name: filename, removeClass: "btns_layer" };
-      if (call_back) options.result = "canvas";
+         // remove 3D drawings
 
-      JSROOT.saveSvgAsPng(elem.node(), options, function(res) {
+         if (can3d == 2) {
+            item.foreign = item.prnt.select("." + sz2.clname);
+            item.foreign.remove();
+         }
 
-         if (res===null) console.warn('problem when produce image');
+         var svg_frame = main.svg_frame();
+         item.frame_node = svg_frame.node();
+         if (item.frame_node) {
+            item.frame_next = item.frame_node.nextSibling;
+            svg_frame.remove();
+         }
 
-         elem.selectAll(".temp_saveaspng").remove();
+         //var origin = main.apply_3d_size(sz3d, true);
+         //origin.remove();
 
-         document.body.style.cursor = 'auto';
+         // add svg image
+         item.img = item.prnt.insert("image",".primitives_layer")     // create image object
+                        .attr("x", sz2.x)
+                        .attr("y", sz2.y)
+                        .attr("width", canvas.width)
+                        .attr("height", canvas.height)
+                        .attr("href", dataUrl);
 
-         if (call_back) JSROOT.CallBack(call_back, res);
-      });
+      }, "pads");
 
+      function reEncode(data) {
+         data = encodeURIComponent(data);
+         data = data.replace(/%([0-9A-F]{2})/g, function(match, p1) {
+           var c = String.fromCharCode('0x'+p1);
+           return c === '%' ? '%25' : c;
+         });
+         return decodeURIComponent(data);
+      }
+
+      function reconstruct(res) {
+         for (var k=0;k<items.length;++k) {
+            var item = items[k];
+
+            if (item.img)
+               item.img.remove(); // delete embed image
+
+            var prim = item.prnt.select(".primitives_layer");
+
+            if (item.foreign) // reinsert foreign object
+               item.prnt.node().insertBefore(item.foreign.node(), prim.node());
+
+            if (item.frame_node) // reinsert frame as first in list of primitives
+               prim.node().insertBefore(item.frame_node, item.frame_next);
+
+            if (item.btns_node) // reinsert buttons
+               item.btns_prnt.insertBefore(item.btns_node, item.btns_next);
+         }
+
+         JSROOT.CallBack(call_back, res);
+      }
+
+      var width = elem.property('draw_width'), height = elem.property('draw_height');
+      if (use_frame) { width = this.frame_width(); height = this.frame_height(); }
+
+      var svg = '<svg width="' + width + '" height="' + height + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">' +
+                 elem.node().innerHTML +
+                 '</svg>';
+
+      if (file_format == "svg")
+         return reconstruct(svg); // return SVG file as is
+
+      var doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+
+      var image = new Image();
+      image.onload = function() {
+         // if (options.result==="image") return JSROOT.CallBack(call_back, image);
+
+         // console.log('GOT IMAGE', image.width, image.height);
+
+         var canvas = document.createElement('canvas');
+         canvas.width = image.width;
+         canvas.height = image.height;
+         var context = canvas.getContext('2d');
+         context.drawImage(image, 0, 0);
+
+         reconstruct(canvas.toDataURL('image/' + file_format));
+      }
+
+      image.onerror = function(arg) {
+         console.log('IMAGE ERROR', arg);
+         reconstruct(null);
+      }
+
+      image.src = 'data:image/svg+xml;base64,' + window.btoa(reEncode(doctype + svg));
    }
+
 
    TPadPainter.prototype.PadButtonClick = function(funcname) {
 
@@ -3458,18 +3612,13 @@
    }
 
    TPadPainter.prototype.FindButton = function(keyname) {
-      var group = this.svg_layer("btns_layer", this.this_pad_name);
-      if (group.empty()) return;
-
-      var found_func = "";
-
-      group.selectAll("svg").each(function() {
-         if (d3.select(this).attr("key") === keyname)
-            found_func = d3.select(this).attr("name");
-      });
-
+      var group = this.svg_layer("btns_layer", this.this_pad_name), found_func = "";
+      if (!group.empty())
+         group.selectAll("svg").each(function() {
+            if (d3.select(this).attr("key") === keyname)
+               found_func = d3.select(this).attr("name");
+         });
       return found_func;
-
    }
 
    TPadPainter.prototype.toggleButtonsVisibility = function(action) {
@@ -3507,6 +3656,22 @@
       });
    }
 
+   TPadPainter.prototype.RemoveButtons = function() {
+      var group = this.svg_layer("btns_layer", this.this_pad_name);
+      if (!group.empty()) {
+         group.selectAll("*").remove();
+         group.property("nextx", null);
+      }
+   }
+
+   TPadPainter.prototype.RemoveButtons = function() {
+      var group = this.svg_layer("btns_layer", this.this_pad_name);
+      if (!group.empty()) {
+         group.selectAll("*").remove();
+         group.property("nextx", null);
+      }
+   }
+
    TPadPainter.prototype.AddButton = function(btn, tooltip, funcname, keyname) {
 
       // do not add buttons when not allowed
@@ -3518,27 +3683,32 @@
       // avoid buttons with duplicate names
       if (!group.select("[name='" + funcname + "']").empty()) return;
 
-      var iscan = this.iscan || !this.has_canvas, ctrl;
+      var iscan = this.iscan || !this.has_canvas, ctrl,
+          x = group.property("nextx"), y = 0;
 
-      var x = group.property("nextx");
       if (!x) {
          ctrl = JSROOT.ToolbarIcons.CreateSVG(group, JSROOT.ToolbarIcons.rect, this.ButtonSize(), "Toggle tool buttons");
 
-         ctrl.attr("name", "Toggle").attr("x", 0).attr("y", 0).attr("normalx",0)
+         ctrl.attr("name", "Toggle").attr("x", 0).attr("y", 0)
              .property("buttons_state", (JSROOT.gStyle.ToolBar!=='popup'))
              .on("click", this.toggleButtonsVisibility.bind(this, 'toggle'))
              .on("mouseenter", this.toggleButtonsVisibility.bind(this, 'enable'))
              .on("mouseleave", this.toggleButtonsVisibility.bind(this, 'disable'));
 
-         x = iscan ? this.ButtonSize(1.25) : 0;
+         x = group.property('leftside') ? this.ButtonSize(1.25) : 0;
       } else {
          ctrl = group.select("[name='Toggle']");
       }
 
       var svg = JSROOT.ToolbarIcons.CreateSVG(group, btn, this.ButtonSize(),
-            tooltip + (iscan ? "" : (" on pad " + this.this_pad_name)) + (keyname ? " (keyshortcut " + keyname + ")" : ""));
+                    tooltip + (iscan ? "" : (" on pad " + this.this_pad_name)) + (keyname ? " (keyshortcut " + keyname + ")" : ""));
 
-      svg.attr("name", funcname).attr("x", x).attr("y", 0).attr("normalx",x)
+      if (group.property('vertical'))
+         svg.attr("x", y).attr("y", x);
+      else
+         svg.attr("x", x).attr("y", y);
+
+      svg.attr("name", funcname)
          .style('display', (ctrl.property("buttons_state") ? '' : 'none'))
          .on("mouseenter", this.toggleButtonsVisibility.bind(this, 'enterbtn'))
          .on("mouseleave", this.toggleButtonsVisibility.bind(this, 'leavebtn'));
@@ -3549,13 +3719,30 @@
 
       group.property("nextx", x + this.ButtonSize(1.25));
 
-      if (!iscan) {
-         group.attr("transform","translate("+ (this.pad_width(this.this_pad_name) - group.property('nextx') - this.ButtonSize(1.25)) + "," + (this.pad_height(this.this_pad_name)-this.ButtonSize(1.25)) + ")");
+      this.AlignBtns(group, this.pad_width(this.this_pad_name), this.pad_height(this.this_pad_name));
+
+      if (group.property('vertical'))
+         ctrl.attr("y", group.property('nextx'));
+      else if (!group.property('leftside'))
          ctrl.attr("x", group.property('nextx'));
+
+      if (!iscan && (funcname.indexOf("Pad")!=0) && (this.canv_painter()!==this) && (funcname !== "EnlargePad"))
+          this.canv_painter().AddButton(btn, tooltip, funcname);
+   }
+
+   TPadPainter.prototype.AlignBtns = function(btns, width, height, svg) {
+      var sz0 = this.ButtonSize(1.25), nextx = (btns.property('nextx') || 0) + sz0,
+          btns_x = 0, btns_y = 0;
+      if (btns.property('vertical')) {
+          btns_x = btns.property('leftside') ? 2 : (width - sz0);
+          btns_y = height - nextx;
+      } else {
+          btns_x = btns.property('leftside') ? 2 : (width - nextx);
+          btns_y = height - sz0;
       }
 
-      if (!iscan && (funcname.indexOf("Pad")!=0) && (this.pad_painter()!==this) && (funcname !== "EnlargePad"))
-         this.pad_painter().AddButton(btn, tooltip, funcname);
+      btns.attr("transform","translate("+btns_x+","+btns_y+")");
+      if (svg) btns.attr("display", svg.property("pad_enlarged") ? "none" : null); // hide buttons when sub-pad is enlarged
    }
 
 //   TPadPainter.prototype.DrawingReady = function(res_painter) {
@@ -3571,8 +3758,9 @@
       var d = new JSROOT.DrawOptions(opt);
 
       if (d.check('WEBSOCKET')) this.OpenWebsocket();
+      if (!this.options) this.options = {};
 
-      this.options = { GlobalColors: true, LocalColors: false, IgnorePalette: false, RotateFrame: false, FixFrame: false };
+      JSROOT.extend(this.options, { GlobalColors: true, LocalColors: false, IgnorePalette: false, RotateFrame: false, FixFrame: false });
 
       if (d.check('NOCOLORS') || d.check('NOCOL')) this.options.GlobalColors = this.options.LocalColors = false;
       if (d.check('LCOLORS') || d.check('LCOL')) { this.options.GlobalColors = false; this.options.LocalColors = true; }
@@ -3789,6 +3977,15 @@
       this._websocket.Connect();
    }
 
+   TCanvasPainter.prototype.UseWebsocket = function(handle) {
+      this.CloseWebsocket();
+
+      this._websocket = handle;
+      console.log('Use websocket', this._websocket.key);
+      this._websocket.SetReceiver(this);
+      this._websocket.Connect();
+   }
+
    TCanvasPainter.prototype.WindowBeforeUnloadHanlder = function() {
       // when window closed, close socket
       this.CloseWebsocket(true);
@@ -3799,10 +3996,12 @@
    }
 
    TCanvasPainter.prototype.OnWebsocketClosed = function(handle) {
-      if (window) window.close(); // close window when socket disapper
+      JSROOT.CloseCurrentWindow();
    }
 
    TCanvasPainter.prototype.OnWebsocketMsg = function(handle, msg) {
+      console.log("GET MSG " + msg.substr(0,30));
+
       if (msg == "CLOSE") {
          this.OnWebsocketClosed();
          this.CloseWebsocket(true);
@@ -3944,17 +4143,22 @@
       return this.has_event_status;
    }
 
-   TCanvasPainter.prototype.GetNewColor = function(indx) {
-       var obj = this.GetObject();
-       if (!obj || !obj.fColorTable || !obj.fColorTable.fTable) return null;
 
-       var item = obj.fColorTable.fTable[indx];
-       if (!item || !item.fVal) return null;
+////////////////////////////////////////////////////////////////////////////////
+/// Return the color in a string ready for SVG from the value found in `RGBa`
+/// If `fKind` == 0 the color `RGBa` contains the Red Green Blue and alpha values.
+/// Otherwise the `fRedOrPalettePos` member of RGBa contains the color index in
+/// the current palette
 
-       var col = "rgb(" + Math.round(item.fVal.fRedOrPalettePos*255) + "," +
-                          Math.round(item.fVal.fGreen*255) + "," +
-                          Math.round(item.fVal.fBlue*255) + ")";
-       return col;
+   TCanvasPainter.prototype.GetNewColor = function(attr, direct) {
+      if (!attr) return;
+
+      var tcol = direct ? attr : attr.fAttr; // this is TColor instance
+      if (!tcol.fKind)
+         return "rgb(" + Math.round(tcol.fRedOrPalettePos*255) + "," +
+                         Math.round(tcol.fGreen*255) + "," +
+                         Math.round(tcol.fBlue*255) + ")";
+      return col;
    }
 
    function drawCanvas(divid, can, opt) {
@@ -3979,22 +4183,20 @@
       if (painter.enlarge_main('verify'))
          painter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
 
-      // if (nocanvas && opt.indexOf("noframe") < 0)
-      // var fp = drawFrame(divid, null);
-
       painter.DrawPrimitives(0, function() {
-         var fp = painter.frame_painter();
-         if (fp) fp.AddInteractive();
          painter.DrawingReady();
       });
 
       return painter;
    }
 
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::THistDrawable<1>", icon: "img_histo1d", prereq: "v7hist", func: "JSROOT.v7.drawHist1", opt: "" });
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::THistDrawable<2>", icon: "img_histo2d", prereq: "v7hist", func: "JSROOT.v7.drawHist2", opt: "" });
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::TTextDrawable", icon: "img_text", prereq: "v7more", func: "JSROOT.v7.drawText", opt: "", direct: true });
+   // JSROOT.addDrawFunc({ name: "ROOT::Experimental::RPadDisplayItem", icon: "img_canvas", func: drawPad, opt: "" });
 
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RHistDrawable<1>", icon: "img_histo1d", prereq: "v7hist", func: "JSROOT.v7.drawHist1", opt: "" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RHistDrawable<2>", icon: "img_histo2d", prereq: "v7hist", func: "JSROOT.v7.drawHist2", opt: "" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RText", icon: "img_text", prereq: "v7more", func: "JSROOT.v7.drawText", opt: "", direct: true });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLine", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLine", opt: "", direct: true });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true });
 
    JSROOT.v7.TAxisPainter = TAxisPainter;
    JSROOT.v7.TFramePainter = TFramePainter;

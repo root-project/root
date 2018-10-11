@@ -64,7 +64,7 @@ TMVA::VariableDecorrTransform::VariableDecorrTransform( DataSetInfo& dsi )
 
 TMVA::VariableDecorrTransform::~VariableDecorrTransform()
 {
-   for (std::vector<TMatrixD*>::iterator it = fDecorrMatrices.begin(); it != fDecorrMatrices.end(); it++) {
+   for (std::vector<TMatrixD*>::iterator it = fDecorrMatrices.begin(); it != fDecorrMatrices.end(); ++it) {
       if ((*it) != 0) delete (*it);
    }
 }
@@ -245,7 +245,7 @@ void TMVA::VariableDecorrTransform::CalcSQRMats( const std::vector< Event*>& eve
 {
    // delete old matrices if any
    for (std::vector<TMatrixD*>::iterator it = fDecorrMatrices.begin();
-        it != fDecorrMatrices.end(); it++)
+        it != fDecorrMatrices.end(); ++it)
       if (0 != (*it) ) { delete (*it); *it=0; }
 
 
@@ -273,7 +273,7 @@ void TMVA::VariableDecorrTransform::WriteTransformationToStream( std::ostream& o
 {
    Int_t cls = 0;
    Int_t dp = o.precision();
-   for (std::vector<TMatrixD*>::const_iterator itm = fDecorrMatrices.begin(); itm != fDecorrMatrices.end(); itm++) {
+   for (std::vector<TMatrixD*>::const_iterator itm = fDecorrMatrices.begin(); itm != fDecorrMatrices.end(); ++itm) {
       o << "# correlation matrix " << std::endl;
       TMatrixD* mat = (*itm);
       o << cls << " " << mat->GetNrows() << " x " << mat->GetNcols() << std::endl;
@@ -299,7 +299,7 @@ void TMVA::VariableDecorrTransform::AttachXMLTo(void* parent)
 
    VariableTransformBase::AttachXMLTo( trf );
 
-   for (std::vector<TMatrixD*>::const_iterator itm = fDecorrMatrices.begin(); itm != fDecorrMatrices.end(); itm++) {
+   for (std::vector<TMatrixD*>::const_iterator itm = fDecorrMatrices.begin(); itm != fDecorrMatrices.end(); ++itm) {
       TMatrixD* mat = (*itm);
       /*void* decmat = gTools().xmlengine().NewChild(trf, 0, "Matrix");
         gTools().xmlengine().NewAttr(decmat,0,"Rows", gTools().StringFromInt(mat->GetNrows()) );
@@ -322,7 +322,7 @@ void TMVA::VariableDecorrTransform::AttachXMLTo(void* parent)
 void TMVA::VariableDecorrTransform::ReadFromXML( void* trfnode )
 {
    // first delete the old matrices
-   for( std::vector<TMatrixD*>::iterator it = fDecorrMatrices.begin(); it != fDecorrMatrices.end(); it++ )
+   for( std::vector<TMatrixD*>::iterator it = fDecorrMatrices.begin(); it != fDecorrMatrices.end(); ++it )
       if( (*it) != 0 ) delete (*it);
    fDecorrMatrices.clear();
 
@@ -413,7 +413,7 @@ void TMVA::VariableDecorrTransform::ReadTransformationFromStream( std::istream& 
 void TMVA::VariableDecorrTransform::PrintTransformation( std::ostream& )
 {
    Int_t cls = 0;
-   for (std::vector<TMatrixD*>::iterator itm = fDecorrMatrices.begin(); itm != fDecorrMatrices.end(); itm++) {
+   for (std::vector<TMatrixD*>::iterator itm = fDecorrMatrices.begin(); itm != fDecorrMatrices.end(); ++itm) {
       Log() << kINFO << "Transformation matrix "<< cls <<":" << Endl;
       (*itm)->Print();
    }

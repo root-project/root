@@ -2,10 +2,10 @@
 /// \ingroup tutorial_tree
 /// \notebook
 /// This example illustrates how to make a Tree from variables or arrays
-/// in a C struct. **Use of C structs is strongly discouraged and one should
-/// use classes instead**. However support for C structs is important for
-/// legacy applications written in C or Fortran.
-/// See tree2a.C for the same example using a class instead of a C-struct.
+/// in a C struct - without a dictionary, by creating the branches for
+/// builtin types (int, float, double) and arrays explicitly.
+/// See tree2a.C for the same example using a class with dictionary
+/// instead of a C-struct.
 ///
 /// In this example, we are mapping a C struct to one of the Geant3
 /// common blocks /gctrak/. In the real life, this common will be filled
@@ -23,12 +23,10 @@
 
 #include "TFile.h"
 #include "TTree.h"
-#include "TBrowser.h"
 #include "TH2.h"
 #include "TRandom.h"
 #include "TCanvas.h"
 #include "TMath.h"
-#include "TROOT.h"
 
 const Int_t MAXMEC = 30;
 
@@ -92,12 +90,12 @@ void tree2w()
    TTree t2("t2","a Tree with data from a fake Geant3");
    Gctrak_t gstep;
    t2.Branch("vect",gstep.vect,"vect[7]/F");
-   t2.Branch("getot",&gstep.getot,"getot/F");
-   t2.Branch("gekin",&gstep.gekin,"gekin/F");
-   t2.Branch("nmec",&gstep.nmec,"nmec/I");
+   t2.Branch("getot",&gstep.getot);
+   t2.Branch("gekin",&gstep.gekin);
+   t2.Branch("nmec",&gstep.nmec);
    t2.Branch("lmec",gstep.lmec,"lmec[nmec]/I");
-   t2.Branch("destep",&gstep.destep,"destep/F");
-   t2.Branch("pid",&gstep.pid,"pid/I");
+   t2.Branch("destep",&gstep.destep);
+   t2.Branch("pid",&gstep.pid);
 
    //Initialize particle parameters at first point
    Float_t px,py,pz,p,charge=0;
@@ -196,10 +194,6 @@ void tree2r()
    gPad->SetFillColor(37);
    t2->SetMarkerColor(kRed);
    t2->Draw("vect[0]:vect[1]:vect[2]");
-   if (gROOT->IsBatch()) return;
-
-   // invoke the x3d viewer
-   gPad->GetViewer3D("x3d");
 }
 
 void tree2() {

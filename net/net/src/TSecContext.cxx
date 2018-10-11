@@ -32,6 +32,8 @@
 ClassImp(TSecContext);
 ClassImp(TSecContextCleanup);
 
+const TDatime kROOTTZERO = 788914800;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor for SecContext object.
 

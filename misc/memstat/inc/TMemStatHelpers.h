@@ -48,7 +48,7 @@ namespace Memstat {
 
       iterator_t iter(&_Container);
       iterator_t found(
-         std::find_if(iter.Begin(), iterator_t::End(), bind2nd(SFind_t(), _ToFind))
+         std::find_if(iter.Begin(), iterator_t::End(), std::bind(SFind_t(), std::placeholders::_1, _ToFind))
       );
       return ((!(*found)) ? -1 : std::distance(iter.Begin(), found));
    }

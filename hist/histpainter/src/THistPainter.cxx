@@ -130,6 +130,8 @@
    - [Box](#HP29n)
    - [Iso](#HP29o)
    - [Parametric plot](#HP29p)
+- [Highlight mode for histogram](#HP30)
+   - [Highlight mode and user function](#HP30a)
 
 
 ## <a name="HP00"></a> Introduction
@@ -982,7 +984,6 @@ Begin_Macro(source)
       gRandom->Rannor(px,py);
       hcol1->Fill(px,5*py);
    }
-   gStyle->SetPalette(kBird);
    hcol1->Draw("COLZ");
    return c1;
 }
@@ -1007,7 +1008,6 @@ Begin_Macro(source)
    }
    hcol23->Fill(0.,0.,-200.);
    hcol24->Fill(0.,0.,-200.);
-   gStyle->SetPalette(kBird);
    c1->cd(1); hcol23->Draw("COLZ");
    c1->cd(2); hcol24->Draw("COLZ1");
    return c1;
@@ -1038,7 +1038,6 @@ Begin_Macro(source)
    }
    hcol21->SetBit(TH1::kNoStats);
    hcol22->SetBit(TH1::kNoStats);
-   gStyle->SetPalette(kBird);
    c1->cd(1); hcol21->Draw("COLZ");
    c1->cd(2); hcol22->Draw("COLZ0");
    hcol22->SetMaximum(100);
@@ -1088,7 +1087,6 @@ Begin_Macro(source)
       gRandom->Rannor(px,py);
       hcol1->Fill(px,py);
    }
-   gStyle->SetPalette(kBird);
    hcol1->Draw("COLZPOL");
    return c1;
 }
@@ -1116,6 +1114,10 @@ sessions where the user is forwarding X11 windows through an `ssh` connection.
 For the most part, the COL2 and COLZ2 options are a drop in replacement to the COL
 and COLZ options. There is one major difference and that concerns the treatment of
 bins with zero content. The COL2 and COLZ2 options color these bins the color of zero.
+
+COL2 option renders the histogram as a bitmap. Therefore it cannot be saved in vector
+graphics file format like PostScript or PDF (an empty image will be generated). It can
+be saved only in bitmap files like PNG format for instance.
 
 
 ### <a name="HP140"></a> The CANDLE and VIOLIN options
@@ -1678,7 +1680,6 @@ Begin_Macro(source)
       hcontz->Fill(px-1,5*py);
       hcontz->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(kBird);
    hcontz->Draw("CONTZ");
    return c1;
 }
@@ -1700,7 +1701,6 @@ Begin_Macro(source)
       hcont1->Fill(px-1,5*py);
       hcont1->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(kBird);
    hcont1->Draw("CONT1Z");
    return c1;
 }
@@ -1760,7 +1760,6 @@ Begin_Macro(source)
       hcont4->Fill(px-1,5*py);
       hcont4->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(kBird);
    hcont4->Draw("CONT4Z");
    return c1;
 }
@@ -1920,7 +1919,6 @@ Begin_Macro(source)
       hlego2->Fill(px-1,5*py);
       hlego2->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(kBird);
    hlego2->Draw("LEGO2Z");
    return c2;
 }
@@ -1977,7 +1975,6 @@ the option `Z` allows to display the color palette defined by
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(kBird);
    TH2F *hsurf1 = new TH2F("hsurf1","Option SURF1 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -1999,7 +1996,6 @@ to show the cell contents. Combined with the option `SURF2`, the option
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(kBird);
    TH2F *hsurf2 = new TH2F("hsurf2","Option SURF2 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -2021,7 +2017,6 @@ to display the color palette defined by `gStyle->SetPalette()`.
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(kBird);
    TH2F *hsurf3 = new TH2F("hsurf3","Option SURF3 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -2061,7 +2056,6 @@ The following example shows a 2D histogram plotted with the option
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(kBird);
    TH2F *hsurf5 = new TH2F("hsurf4","Option SURF5 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -2069,7 +2063,6 @@ Begin_Macro(source)
       hsurf5->Fill(px-1,5*py);
       hsurf5->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   hsurf5->SetFillColor(kOrange);
    hsurf5->Draw("SURF5 CYL");
    return c2;
 }
@@ -2084,7 +2077,6 @@ to display the color palette defined by `gStyle->SetPalette()`.
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(kBird);
    TH2F *hsurf7 = new TH2F("hsurf3","Option SURF7 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -2114,7 +2106,6 @@ Begin_Macro(source)
          hsc->SetBinContent(bx, by, exp(-x*x)*exp(-y*y));
       }
    }
-   gStyle->SetPalette(kBird);
    hsc->Draw("surf2");
    hsc->Draw("CONT1 SAME");
    return c20;
@@ -2179,7 +2170,6 @@ Begin_Macro(source)
       hscc->Fill(px-1,5*py);
       hscc->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(kBird);
    c4->cd(1); hscc->Draw("SURF1 CYL");
    c4->cd(2); TH2F *hspc = (TH2F*) hscc->DrawClone("SURF1 POL");
    hspc->SetTitle("Polar coordinates");
@@ -2321,7 +2311,6 @@ Begin_Macro(source)
    Double_t fy[] = {0.01, -0.5, -0.5, 3};
    Double_t fw[] = {3, 1, 1, 1.5};
    h2p->FillN(4, fx, fy, fw);
-   gStyle->SetPalette(kBird);
    h2p->Draw("col");
 }
 End_Macro
@@ -2390,7 +2379,6 @@ Begin_Macro(source)
    for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
 
    gStyle->SetOptStat(11);
-   gStyle->SetPalette(kBird);
    p->Draw("COLZ L");
 }
 End_Macro
@@ -2975,6 +2963,99 @@ about 20 color schemes supported ('s' for "scheme"); 'l' or 'L' to
 increase number of polygons ('l' for "level" of details), 'w' or 'W'
 to show outlines ('w' for "wireframe").
 
+#### <a name="HP30"></a> Highlight mode for histogram
+
+\since **ROOT version 6.15/01**
+
+\image html hlHisto3_top.gif "Highlight mode"
+
+Highlight mode is implemented for `TH1` (and for `TGraph`) class. When
+highlight mode is on, mouse movement over the bin will be represented
+graphically. Bin will be highlighted as "bin box" (presented by box
+object). Moreover, any highlight (change of bin) emits signal
+`TCanvas::Highlighted()` which allows the user to react and call their own
+function. For a better understanding see also the tutorials
+`$ROOTSYS/tutorials/hist/hlHisto*.C` files.
+
+Highlight mode is switched on/off by `TH1::SetHighlight()` function
+or interactively from `TH1` context menu. `TH1::IsHighlight()` to verify
+whether the highlight mode enabled or disabled, default it is disabled.
+
+~~~ {.cpp}
+    root [0] .x $ROOTSYS/tutorials/hsimple.C
+    root [1] hpx->SetHighlight(kTRUE)   // or interactively from TH1 context menu
+    root [2] hpx->IsHighlight()
+    (bool) true
+~~~
+
+\image html hlsimple_nofun.gif "Highlight mode for histogram"
+
+#### <a name="HP30a"></a> Highlight mode and user function
+
+The user can use (connect) `TCanvas::Highlighted()` signal, which is always
+emitted if there is a highlight bin and call user function via signal
+and slot communication mechanism. `TCanvas::Highlighted()` is similar
+`TCanvas::Picked()`
+
+-  when selected object (histogram as a whole) is different from previous
+then emit `Picked()` signal
+-  when selected (highlighted) bin from histogram is different from previous
+then emit `Highlighted()` signal
+
+Any user function (or functions) has to be defined
+`UserFunction(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)`.
+In example (see below) has name `PrintInfo()`. All parameters of user
+function are taken from
+
+    void TCanvas::Highlighted(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)
+
+-  `pad` is pointer to pad with highlighted histogram
+-  `obj` is pointer to highlighted histogram
+-  `x` is highlighted x bin for 1D histogram
+-  `y` is highlighted y bin for 2D histogram (for 1D histogram not in use)
+
+Example how to create a connection from any `TCanvas` object to a user
+`UserFunction()` slot (see also `TQObject::Connect()` for additional info)
+
+    TQObject::Connect("TCanvas", "Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)",
+                          0, 0, "UserFunction(TVirtualPad*,TObject*,Int_t,Int_t)");
+
+or use non-static "simplified" function
+`TCanvas::HighlightConnect(const char *slot)`
+
+    c1->HighlightConnect("UserFunction(TVirtualPad*,TObject*,Int_t,Int_t)");
+
+NOTE the signal and slot string must have a form
+"(TVirtualPad*,TObject*,Int_t,Int_t)"
+
+    root [0] .x $ROOTSYS/tutorials/hsimple.C
+    root [1] hpx->SetHighlight(kTRUE)
+    root [2] .x hlprint.C
+
+file `hlprint.C`
+~~~ {.cpp}
+void PrintInfo(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)
+{
+   TH1F *h = (TH1F *)obj;
+   if (!h->IsHighlight()) // after highlight disabled
+      h->SetTitle("highlight disable");
+   else
+      h->SetTitle(TString::Format("bin[%03d] (%5.2f) content %g", x,
+                                  h->GetBinCenter(x), h->GetBinContent(x)));
+   pad->Update();
+}
+
+void hlprint()
+{
+   if (!gPad) return;
+   gPad->GetCanvas()->HighlightConnect("PrintInfo(TVirtualPad*,TObject*,Int_t,Int_t)");
+}
+~~~
+
+\image html hlsimple.gif "Highlight mode and simple user function"
+
+For more complex demo please see for example `$ROOTSYS/tutorials/tree/temperature.C` file.
+
 */
 
 TH1 *gCurrentHist = 0;
@@ -2986,6 +3067,9 @@ const Int_t kNMAX = 2000;
 
 const Int_t kMAXCONTOUR  = 104;
 const UInt_t kCannotRotate = BIT(11);
+
+static TBox *gXHighlightBox = 0;   // highlight X box
+static TBox *gYHighlightBox = 0;   // highlight Y box
 
 static TString gStringEntries;
 static TString gStringMean;
@@ -3035,6 +3119,8 @@ THistPainter::THistPainter()
       fCuts[i] = 0;
       fCutsOpt[i] = 0;
    }
+   fXHighlightBin = -1;
+   fYHighlightBin = -1;
 
    gStringEntries          = gEnv->GetValue("Hist.Stats.Entries",          "Entries");
    gStringMean             = gEnv->GetValue("Hist.Stats.Mean",             "Mean");
@@ -3164,6 +3250,11 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
             return 0;
          }
       }
+   }
+
+   if (fH->IsHighlight()) { // only if highlight is enable
+      if ((px > puxmin) && (py < puymin) && (px < puxmax) && (py > puymax))
+         HighlightBin(px, py);
    }
 
    //     if object is 2D or 3D return this object
@@ -3657,6 +3748,143 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set highlight (enable/disable) mode for fH
+
+void THistPainter::SetHighlight()
+{
+   if (fH->IsHighlight()) return;
+
+   fXHighlightBin = -1;
+   fYHighlightBin = -1;
+   // delete previous highlight box
+   if (gXHighlightBox) { gXHighlightBox->Delete(); gXHighlightBox = 0; }
+   if (gYHighlightBox) { gYHighlightBox->Delete(); gYHighlightBox = 0; }
+   // emit Highlighted() signal (user can check on disabled)
+   if (gPad->GetCanvas()) gPad->GetCanvas()->Highlighted(gPad, fH, fXHighlightBin, fYHighlightBin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check on highlight bin
+
+void THistPainter::HighlightBin(Int_t px, Int_t py)
+{
+   // call from DistancetoPrimitive (only if highlight is enable)
+
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+   Int_t binx = fXaxis->FindFixBin(x);
+   Int_t biny = fYaxis->FindFixBin(y);
+   if (!gPad->IsVertical()) binx = fXaxis->FindFixBin(y);
+
+   Bool_t changedBin = kFALSE;
+   if (binx != fXHighlightBin) {
+      fXHighlightBin = binx;
+      changedBin = kTRUE;
+   } else if (fH->GetDimension() == 1) return;
+   if (biny != fYHighlightBin) {
+      fYHighlightBin = biny;
+      changedBin = kTRUE;
+   }
+   if (!changedBin) return;
+
+   //   Info("HighlightBin", "histo: %p '%s'\txbin: %d, ybin: %d",
+   //        (void *)fH, fH->GetName(), fXHighlightBin, fYHighlightBin);
+
+   // paint highlight bin as box (recursive calls PaintHighlightBin)
+   gPad->Modified(kTRUE);
+   gPad->Update();
+
+   // emit Highlighted() signal
+   if (gPad->GetCanvas()) gPad->GetCanvas()->Highlighted(gPad, fH, fXHighlightBin, fYHighlightBin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint highlight bin as TBox object
+
+void THistPainter::PaintHighlightBin(Option_t * /*option*/)
+{
+   // call from PaintTitle
+
+   if (!fH->IsHighlight()) return;
+
+   Double_t uxmin = gPad->GetUxmin();
+   Double_t uxmax = gPad->GetUxmax();
+   Double_t uymin = gPad->GetUymin();
+   Double_t uymax = gPad->GetUymax();
+   if (gPad->GetLogx()) {
+      uxmin = TMath::Power(10.0, uxmin);
+      uxmax = TMath::Power(10.0, uxmax);
+   }
+   if (gPad->GetLogy()) {
+      uymin = TMath::Power(10.0, uymin);
+      uymax = TMath::Power(10.0, uymax);
+   }
+
+   // testing specific possibility (after zoom, draw with "same", log, etc.)
+   Double_t hcenter;
+   if (gPad->IsVertical()) {
+      hcenter = fXaxis->GetBinCenter(fXHighlightBin);
+      if ((hcenter < uxmin) || (hcenter > uxmax)) return;
+   } else {
+      hcenter = fYaxis->GetBinCenter(fXHighlightBin);
+      if ((hcenter < uymin) || (hcenter > uymax)) return;
+   }
+   if (fH->GetDimension() == 2) {
+      hcenter = fYaxis->GetBinCenter(fYHighlightBin);
+      if ((hcenter < uymin) || (hcenter > uymax)) return;
+   }
+
+   // paint X highlight bin (for 1D or 2D)
+   Double_t hbx1, hbx2, hby1, hby2;
+   if (gPad->IsVertical()) {
+      hbx1 = fXaxis->GetBinLowEdge(fXHighlightBin);
+      hbx2 = fXaxis->GetBinUpEdge(fXHighlightBin);
+      hby1 = uymin;
+      hby2 = uymax;
+   } else {
+      hbx1 = uxmin;
+      hbx2 = uxmax;
+      hby1 = fYaxis->GetBinLowEdge(fXHighlightBin);
+      hby2 = fYaxis->GetBinUpEdge(fXHighlightBin);
+   }
+
+   if (!gXHighlightBox) {
+      gXHighlightBox = new TBox(hbx1, hby1, hbx2, hby2);
+      gXHighlightBox->SetBit(kCannotPick);
+      gXHighlightBox->SetFillColor(TColor::GetColor("#9797ff"));
+      if (!TCanvas::SupportAlpha()) gXHighlightBox->SetFillStyle(3001);
+      else gROOT->GetColor(gXHighlightBox->GetFillColor())->SetAlpha(0.5);
+   }
+   gXHighlightBox->SetX1(hbx1);
+   gXHighlightBox->SetX2(hbx2);
+   gXHighlightBox->SetY1(hby1);
+   gXHighlightBox->SetY2(hby2);
+   gXHighlightBox->Paint();
+
+   //   Info("PaintHighlightBin", "histo: %p '%s'\txbin: %d, ybin: %d",
+   //        (void *)fH, fH->GetName(), fXHighlightBin, fYHighlightBin);
+
+   // paint Y highlight bin (only for 2D)
+   if (fH->GetDimension() != 2) return;
+   hbx1 = uxmin;
+   hbx2 = uxmax;
+   hby1 = fYaxis->GetBinLowEdge(fYHighlightBin);
+   hby2 = fYaxis->GetBinUpEdge(fYHighlightBin);
+
+   if (!gYHighlightBox) {
+      gYHighlightBox = new TBox(hbx1, hby1, hbx2, hby2);
+      gYHighlightBox->SetBit(kCannotPick);
+      gYHighlightBox->SetFillColor(gXHighlightBox->GetFillColor());
+      gYHighlightBox->SetFillStyle(gXHighlightBox->GetFillStyle());
+   }
+   gYHighlightBox->SetX1(hbx1);
+   gYHighlightBox->SetX2(hbx2);
+   gYHighlightBox->SetY1(hby1);
+   gYHighlightBox->SetY2(hby2);
+   gYHighlightBox->Paint();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return `kTRUE` if the cell `ix`, `iy` is inside one of the graphical cuts.
 
 Bool_t THistPainter::IsInside(Int_t ix, Int_t iy)
@@ -3734,15 +3962,16 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    char *l3 = strstr(chopt,"PMC"); // Automatic Marker Color
    if (l1 || l2 || l3) {
       Int_t i = gPad->NextPaletteColor();
-      if (l1) {strncpy(l1,"   ",3); fH->SetFillColor(i);}
-      if (l2) {strncpy(l2,"   ",3); fH->SetLineColor(i);}
-      if (l3) {strncpy(l3,"   ",3); fH->SetMarkerColor(i);}
+      if (l1) {memcpy(l1,"   ",3); fH->SetFillColor(i);}
+      if (l2) {memcpy(l2,"   ",3); fH->SetLineColor(i);}
+      if (l3) {memcpy(l3,"   ",3); fH->SetMarkerColor(i);}
+      Hoption.Hist = 1; // Make sure something is drawn in case there is no drawing option specified.
    }
 
    l = strstr(chopt,"SPEC");
    if (l) {
       Hoption.Scat = 0;
-      strncpy(l,"    ",4);
+      memcpy(l,"    ",4);
       Int_t bs=0;
       l = strstr(chopt,"BF(");
       if (l) {
@@ -3761,17 +3990,17 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"GL");
    if (l) {
-      strncpy(l,"  ",2);
+      memcpy(l,"  ",2);
    }
    l = strstr(chopt,"X+");
    if (l) {
       Hoption.AxisPos = 10;
-      strncpy(l,"  ",2);
+      memcpy(l,"  ",2);
    }
    l = strstr(chopt,"Y+");
    if (l) {
       Hoption.AxisPos += 1;
-      strncpy(l,"  ",2);
+      memcpy(l,"  ",2);
    }
    if ((Hoption.AxisPos == 10 || Hoption.AxisPos == 1) && (nch == 2)) Hoption.Hist = 1;
    if (Hoption.AxisPos == 11 && nch == 4) Hoption.Hist = 1;
@@ -3780,19 +4009,19 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (l) {
       if (nch == 5) Hoption.Hist = 1;
       Hoption.Same = 2;
-      strncpy(l,"     ",5);
+      memcpy(l,"     ",5);
    }
    l = strstr(chopt,"SAME");
    if (l) {
       if (nch == 4) Hoption.Hist = 1;
       Hoption.Same = 1;
-      strncpy(l,"    ",4);
+      memcpy(l,"    ",4);
    }
 
    l = strstr(chopt,"PIE");
    if (l) {
       Hoption.Pie = 1;
-      strncpy(l,"   ",3);
+      memcpy(l,"   ",3);
    }
 
 
@@ -3813,21 +4042,21 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"LEGO");
    if (l) {
       Hoption.Scat = 0;
-      Hoption.Lego = 1; strncpy(l,"    ",4);
+      Hoption.Lego = 1; memcpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Lego = 11; l[4] = ' '; }
       if (l[4] == '2') { Hoption.Lego = 12; l[4] = ' '; }
       if (l[4] == '3') { Hoption.Lego = 13; l[4] = ' '; }
       if (l[4] == '4') { Hoption.Lego = 14; l[4] = ' '; }
       if (l[4] == '9') { Hoption.Lego = 19; l[4] = ' '; }
-      l = strstr(chopt,"FB"); if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
-      l = strstr(chopt,"BB"); if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
-      l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strncpy(l," ",1); }
+      l = strstr(chopt,"FB"); if (l) { Hoption.FrontBox = 0; memcpy(l,"  ",2); }
+      l = strstr(chopt,"BB"); if (l) { Hoption.BackBox = 0;  memcpy(l,"  ",2); }
+      l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  memcpy(l," ",1); }
    }
 
    l = strstr(chopt,"SURF");
    if (l) {
       Hoption.Scat = 0;
-      Hoption.Surf = 1; strncpy(l,"    ",4);
+      Hoption.Surf = 1; memcpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Surf = 11; l[4] = ' '; }
       if (l[4] == '2') { Hoption.Surf = 12; l[4] = ' '; }
       if (l[4] == '3') { Hoption.Surf = 13; l[4] = ' '; }
@@ -3835,27 +4064,27 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[4] == '5') { Hoption.Surf = 15; l[4] = ' '; }
       if (l[4] == '6') { Hoption.Surf = 16; l[4] = ' '; }
       if (l[4] == '7') { Hoption.Surf = 17; l[4] = ' '; }
-      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
-      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; memcpy(l,"  ",2); }
+      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  memcpy(l,"  ",2); }
    }
 
    l = strstr(chopt,"TF3");
    if (l) {
-      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
-      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; memcpy(l,"  ",2); }
+      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  memcpy(l,"  ",2); }
    }
 
    l = strstr(chopt,"ISO");
    if (l) {
-      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
-      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; memcpy(l,"  ",2); }
+      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  memcpy(l,"  ",2); }
    }
 
-   l = strstr(chopt,"LIST");    if (l) { Hoption.List = 1;  strncpy(l,"    ",4);}
+   l = strstr(chopt,"LIST");    if (l) { Hoption.List = 1;  memcpy(l,"    ",4);}
 
    l = strstr(chopt,"CONT");
    if (l) {
-      strncpy(l,"    ",4);
+      memcpy(l,"    ",4);
       if (hdim>1) {
          Hoption.Scat = 0;
          Hoption.Contour = 1;
@@ -3871,7 +4100,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"HBAR");
    if (l) {
       Hoption.Hist = 0;
-      Hoption.Bar = 20; strncpy(l,"    ",4);
+      Hoption.Bar = 20; memcpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Bar = 21; l[4] = ' '; }
       if (l[4] == '2') { Hoption.Bar = 22; l[4] = ' '; }
       if (l[4] == '3') { Hoption.Bar = 23; l[4] = ' '; }
@@ -3880,7 +4109,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"BAR");
    if (l) {
       Hoption.Hist = 0;
-      Hoption.Bar = 10; strncpy(l,"   ",3);
+      Hoption.Bar = 10; memcpy(l,"   ",3);
       if (l[3] == '1') { Hoption.Bar = 11; l[3] = ' '; }
       if (l[3] == '2') { Hoption.Bar = 12; l[3] = ' '; }
       if (l[3] == '3') { Hoption.Bar = 13; l[3] = ' '; }
@@ -3889,7 +4118,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"ARR" );
    if (l) {
-      strncpy(l,"   ", 3);
+      memcpy(l,"   ", 3);
       if (hdim>1) {
          Hoption.Arrow  = 1;
          Hoption.Scat = 0;
@@ -3899,7 +4128,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    }
    l = strstr(chopt,"BOX" );
    if (l) {
-      strncpy(l,"   ", 3);
+      memcpy(l,"   ", 3);
       if (hdim>1) {
          Hoption.Scat = 0;
          Hoption.Box  = 1;
@@ -3912,37 +4141,37 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    }
    l = strstr(chopt,"COLZ");
    if (l) {
-      strncpy(l,"    ",4);
+      memcpy(l,"    ",4);
       if (hdim>1) {
          Hoption.Color  = 1;
          Hoption.Scat   = 0;
          Hoption.Zscale = 1;
          if (l[4] == '2') { Hoption.Color = 3; l[4] = ' '; }
-         l = strstr(chopt,"0");  if (l) { Hoption.Zero  = 1;  strncpy(l," ",1); }
-         l = strstr(chopt,"1");  if (l) { Hoption.Color = 2;  strncpy(l," ",1); }
+         l = strstr(chopt,"0");  if (l) { Hoption.Zero  = 1;  memcpy(l," ",1); }
+         l = strstr(chopt,"1");  if (l) { Hoption.Color = 2;  memcpy(l," ",1); }
       } else {
          Hoption.Hist = 1;
       }
    }
    l = strstr(chopt,"COL" );
    if (l) {
-      strncpy(l,"   ", 3);
+      memcpy(l,"   ", 3);
       if (hdim>1) {
          Hoption.Color = 1;
          Hoption.Scat  = 0;
          if (l[3] == '2') { Hoption.Color = 3; l[3] = ' '; }
-         l = strstr(chopt,"0");  if (l) { Hoption.Zero  = 1;  strncpy(l," ",1); }
-         l = strstr(chopt,"1");  if (l) { Hoption.Color = 2;  strncpy(l," ",1); }
+         l = strstr(chopt,"0");  if (l) { Hoption.Zero  = 1;  memcpy(l," ",1); }
+         l = strstr(chopt,"1");  if (l) { Hoption.Color = 2;  memcpy(l," ",1); }
       } else {
          Hoption.Hist = 1;
       }
    }
-   l = strstr(chopt,"CHAR"); if (l) { Hoption.Char   = 1; strncpy(l,"    ",4); Hoption.Scat = 0; }
-   l = strstr(chopt,"FUNC"); if (l) { Hoption.Func   = 2; strncpy(l,"    ",4); Hoption.Hist = 0; }
-   l = strstr(chopt,"HIST"); if (l) { Hoption.Hist   = 2; strncpy(l,"    ",4); Hoption.Func = 0; Hoption.Error = 0;}
-   l = strstr(chopt,"AXIS"); if (l) { Hoption.Axis   = 1; strncpy(l,"    ",4); }
-   l = strstr(chopt,"AXIG"); if (l) { Hoption.Axis   = 2; strncpy(l,"    ",4); }
-   l = strstr(chopt,"SCAT"); if (l) { Hoption.Scat   = 1; strncpy(l,"    ",4); }
+   l = strstr(chopt,"CHAR"); if (l) { Hoption.Char   = 1; memcpy(l,"    ",4); Hoption.Scat = 0; }
+   l = strstr(chopt,"FUNC"); if (l) { Hoption.Func   = 2; memcpy(l,"    ",4); Hoption.Hist = 0; }
+   l = strstr(chopt,"HIST"); if (l) { Hoption.Hist   = 2; memcpy(l,"    ",4); Hoption.Func = 0; Hoption.Error = 0;}
+   l = strstr(chopt,"AXIS"); if (l) { Hoption.Axis   = 1; memcpy(l,"    ",4); }
+   l = strstr(chopt,"AXIG"); if (l) { Hoption.Axis   = 2; memcpy(l,"    ",4); }
+   l = strstr(chopt,"SCAT"); if (l) { Hoption.Scat   = 1; memcpy(l,"    ",4); }
    l = strstr(chopt,"TEXT");
    if (l) {
       Int_t angle;
@@ -3953,41 +4182,41 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       } else {
          Hoption.Text = 1;
       }
-      strncpy(l,"    ", 4);
+      memcpy(l,"    ", 4);
       l = strstr(chopt,"N");
       if (l && fH->InheritsFrom(TH2Poly::Class())) Hoption.Text += 3000;
       Hoption.Scat = 0;
    }
-   l = strstr(chopt,"POL");  if (l) { Hoption.System = kPOLAR;       strncpy(l,"   ",3); }
-   l = strstr(chopt,"CYL");  if (l) { Hoption.System = kCYLINDRICAL; strncpy(l,"   ",3); }
-   l = strstr(chopt,"SPH");  if (l) { Hoption.System = kSPHERICAL;   strncpy(l,"   ",3); }
-   l = strstr(chopt,"PSR");  if (l) { Hoption.System = kRAPIDITY;    strncpy(l,"   ",3); }
+   l = strstr(chopt,"POL");  if (l) { Hoption.System = kPOLAR;       memcpy(l,"   ",3); }
+   l = strstr(chopt,"CYL");  if (l) { Hoption.System = kCYLINDRICAL; memcpy(l,"   ",3); }
+   l = strstr(chopt,"SPH");  if (l) { Hoption.System = kSPHERICAL;   memcpy(l,"   ",3); }
+   l = strstr(chopt,"PSR");  if (l) { Hoption.System = kRAPIDITY;    memcpy(l,"   ",3); }
 
    l = strstr(chopt,"TRI");
    if (l) {
       Hoption.Scat = 0;
       Hoption.Color  = 0;
-      Hoption.Tri = 1; strncpy(l,"   ",3);
-      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
-      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
-      l = strstr(chopt,"ERR");  if (l) strncpy(l,"   ",3);
+      Hoption.Tri = 1; memcpy(l,"   ",3);
+      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; memcpy(l,"  ",2); }
+      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  memcpy(l,"  ",2); }
+      l = strstr(chopt,"ERR");  if (l) memcpy(l,"   ",3);
    }
 
    l = strstr(chopt,"AITOFF");
    if (l) {
-      Hoption.Proj = 1; strncpy(l,"     ",6);       //Aitoff projection
+      Hoption.Proj = 1; memcpy(l,"     ",6);       //Aitoff projection
    }
    l = strstr(chopt,"MERCATOR");
    if (l) {
-      Hoption.Proj = 2; strncpy(l,"       ",8);     //Mercator projection
+      Hoption.Proj = 2; memcpy(l,"       ",8);     //Mercator projection
    }
    l = strstr(chopt,"SINUSOIDAL");
    if (l) {
-      Hoption.Proj = 3; strncpy(l,"         ",10);  //Sinusoidal projection
+      Hoption.Proj = 3; memcpy(l,"         ",10);  //Sinusoidal projection
    }
    l = strstr(chopt,"PARABOLIC");
    if (l) {
-      Hoption.Proj = 4; strncpy(l,"        ",9);    //Parabolic projection
+      Hoption.Proj = 4; memcpy(l,"        ",9);    //Parabolic projection
    }
    if (Hoption.Proj > 0) {
       Hoption.Scat = 0;
@@ -9768,6 +9997,9 @@ void THistPainter::PaintTF3()
 
 void THistPainter::PaintTitle()
 {
+   // probably best place for calls PaintHighlightBin
+   // calls after paint histo (1D or 2D) and before paint title and stats
+   if (!gPad->GetView()) PaintHighlightBin();
 
    if (Hoption.Same) return;
    if (fH->TestBit(TH1::kNoTitle)) return;
@@ -9787,7 +10019,16 @@ void THistPainter::PaintTitle()
    }
    Double_t ht = gStyle->GetTitleH();
    Double_t wt = gStyle->GetTitleW();
-   if (ht <= 0) ht = 1.1*gStyle->GetTitleFontSize();
+
+   if (ht <= 0) {
+      if (gStyle->GetTitleFont("")%10 == 3) {
+         Double_t hw = TMath::Max((Double_t)gPad->XtoPixel(gPad->GetX2()),
+                                  (Double_t)gPad->YtoPixel(gPad->GetY1()));
+         ht = 1.1*(gStyle->GetTitleSize("")/hw);
+      } else {
+         ht = 1.1*gStyle->GetTitleFontSize();
+      }
+   }
    if (ht <= 0) ht = 0.05;
    if (wt <= 0) {
       TLatex l;

@@ -270,7 +270,7 @@ bool TMinuitMinimizer::SetVariable(unsigned int ivar, const std::string & name, 
    // set a free variable.
    if (!CheckMinuitInstance()) return false;
 
-   fUsed = fgUsed;
+   if (fgUseStaticMinuit) fUsed = fgUsed;
 
    // clear after minimization when setting params
    if (fUsed) DoClear();
@@ -286,7 +286,7 @@ bool TMinuitMinimizer::SetLimitedVariable(unsigned int ivar, const std::string &
    // set a limited variable.
    if (!CheckMinuitInstance()) return false;
 
-   fUsed = fgUsed;
+   if (fgUseStaticMinuit) fUsed = fgUsed;
 
    // clear after minimization when setting params
    if (fUsed) DoClear();
@@ -337,7 +337,7 @@ bool TMinuitMinimizer::SetFixedVariable(unsigned int ivar, const std::string & n
    if (!CheckMinuitInstance()) return false;
 
    // clear after minimization when setting params
-   fUsed = fgUsed;
+   if (fgUseStaticMinuit) fUsed = fgUsed;
 
    // clear after minimization when setting params
    if (fUsed) DoClear();
@@ -454,7 +454,7 @@ std::string TMinuitMinimizer::VariableName(unsigned int ivar) const {
    // return the variable name
    if (!CheckMinuitInstance()) return std::string();
    if (!CheckVarIndex(ivar)) return std::string();
-   return std::string(fMinuit->fCpnam[ivar]);
+   return fMinuit->fCpnam[ivar].Data();
 }
 
 int TMinuitMinimizer::VariableIndex(const std::string & ) const {
@@ -1060,7 +1060,23 @@ bool TMinuitMinimizer::Hesse() {
    return true;
 }
 
+bool TMinuitMinimizer::SetDebug(bool on) {
+   // set debug mode
 
+   if (fMinuit == 0) {
+      Error("TMinuitMinimizer::SetDebug","invalid TMinuit pointer. Need to call first SetFunction and SetVariable");
+      return false;
+   }
+   int ierr = 0;
+   double arglist[1];
+   arglist[0] = 1;
+   if (on) 
+      fMinuit->mnexcm("SET DEBUG",arglist,1,ierr);
+   else
+      fMinuit->mnexcm("SET NODEBUG",arglist,1,ierr);
+
+   return (ierr == 0); 
+}
 //    } // end namespace Fit
 
 // } // end namespace ROOT

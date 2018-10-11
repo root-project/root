@@ -340,7 +340,7 @@ void TBackCompFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t
       return;
    }
 
-   fFitter->Result().GetConfidenceIntervals(n,ndim,1,x,ci,cl);
+   fFitter->Result().GetConfidenceIntervals(n,ndim,1,x,ci,cl,false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -427,7 +427,7 @@ void TBackCompFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
 
    std::vector<double> ci( n );
 
-   fFitter->Result().GetConfidenceIntervals(data,&ci[0],cl);
+   fFitter->Result().GetConfidenceIntervals(data,&ci[0],cl,false);
 
    const ROOT::Math::IParamMultiFunction * func =  fFitter->Result().FittedFunction();
    assert(func != 0);

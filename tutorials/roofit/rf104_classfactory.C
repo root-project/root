@@ -73,21 +73,25 @@ void rf104_classfactory()
    // U s e   i n s t a n c e   o f   c r e a t e d   c l a s s
    // ---------------------------------------------------------
 
-   // Compile MyPdfV3 class (only when running in CINT)
+   // Compile MyPdfV3 class
    gROOT->ProcessLineSync(".x MyPdfV3.cxx+") ;
 
    // Create instance of MyPdfV3 class
    RooRealVar a("a","a",1) ;
-   RooRealVar b("b","b",2,-10,10) ;
+   RooRealVar b("b","b",2,-10,10);
    RooRealVar y("y","y",-10,10);
-   MyPdfV3 pdf("pdf","pdf",y,a,b) ;
+
+   // We need to hide the type to run in a ROOT macro
+   RooWorkspace w("w");
+   w.factory("MyPdfV3::pdf(y[-10,10], a[1], b[2,-10,10])");
+   auto pdf = w.pdf("pdf");
 
    // Generate toy data from pdf and plot data and p.d.f on frame
    RooPlot* frame1 = y.frame(Title("Compiled class MyPdfV3")) ;
-   RooDataSet* data = pdf.generate(y,1000) ;
-   pdf.fitTo(*data) ;
+   RooDataSet* data = pdf->generate(y,1000) ;
+   pdf->fitTo(*data) ;
    data->plotOn(frame1) ;
-   pdf.plotOn(frame1) ;
+   pdf->plotOn(frame1) ;
 
 
    // -----------------------------------------------------------------

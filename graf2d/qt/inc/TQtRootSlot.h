@@ -25,7 +25,7 @@
 #define ROOT_TQRootSlot
 
 #ifndef __CINT__
-#include <qobject.h>
+#include <TQtIncludes.h>
 #else
 class QObject;
 #ifndef Q_OBJECT

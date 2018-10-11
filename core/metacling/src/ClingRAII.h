@@ -25,12 +25,14 @@ namespace ROOT {
           decltype(clang::Sema::ExprCleanupObjects) fExprCleanupObjects;
           decltype(clang::Sema::MaybeODRUseExprs) fMaybeODRUseExprs;
           decltype(clang::Sema::FunctionScopes) fFunctionScopes;
+          decltype(clang::Sema::UndefinedButUsed) fUndefinedButUsed;
           clang::Sema& fSema;
           void Swapem() {
              std::swap(fCleanup, fSema.Cleanup);
              std::swap(fExprCleanupObjects, fSema.ExprCleanupObjects);
              std::swap(fMaybeODRUseExprs, fSema.MaybeODRUseExprs);
              std::swap(fFunctionScopes, fSema.FunctionScopes);
+             std::swap(fUndefinedButUsed, fSema.UndefinedButUsed);
           }
           SemaExprCleanupsRAII(clang::Sema& S): fSema(S) {
              fFunctionScopes.push_back(new clang::sema::FunctionScopeInfo(S.Diags));
@@ -72,6 +74,9 @@ namespace ROOT {
 
        SemaParsingInitForAutoVarsRAII fSemaParsingInitForAutoVarsRAII;
 
+       clang::Sema::SavePendingInstantiationsRAII fPendingInstantiations;
+
+
        ParsingStateRAII(clang::Parser& parser, clang::Sema& sema):
           fCleanupRAII(sema.getPreprocessor()),
           fSavedCurToken(parser),
@@ -79,7 +84,8 @@ namespace ROOT {
           fSemaInfoRAII(sema), fSemaExprCleanupsRAII(sema),
           fPushedDCAndS(sema, sema.getASTContext().getTranslationUnitDecl(),
                         sema.TUScope),
-          fSemaParsingInitForAutoVarsRAII(sema.ParsingInitForAutoVars)
+          fSemaParsingInitForAutoVarsRAII(sema.ParsingInitForAutoVars),
+          fPendingInstantiations(sema)
        {
           // After we have saved the token reset the current one to something which
           // is safe (semi colon usually means empty decl)

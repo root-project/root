@@ -12,13 +12,13 @@ void candledecay()
 {
    TCanvas *c1 = new TCanvas("c1","Candle Decay",800,600);
    c1->Divide(2,1);
-   TRandom *rand = new TRandom();
+   TRandom *rng = new TRandom();
    TH2I *h1 = new TH2I("h1","Decay",1000,0,1000,20,0,20);
 
    float myRand;
    for (int i = 0; i < 19; i++) {
       for (int j = 0; j < 1000000; j++) {
-         myRand = rand->Gaus(350+i*8,20+2*i);
+         myRand = rng->Gaus(350+i*8,20+2*i);
          h1->Fill(myRand,i);
       }
    }

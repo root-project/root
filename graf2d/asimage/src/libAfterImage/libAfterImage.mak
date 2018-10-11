@@ -116,18 +116,6 @@ LIB32_OBJS= \
 	"$(INTDIR)\jquant1.obj" \
 	"$(INTDIR)\jquant2.obj" \
 	"$(INTDIR)\jutils.obj" \
-	"$(INTDIR)\adler32.obj" \
-	"$(INTDIR)\compress.obj" \
-	"$(INTDIR)\crc32.obj" \
-	"$(INTDIR)\deflate.obj" \
-	"$(INTDIR)\gzio.obj" \
-	"$(INTDIR)\infback.obj" \
-	"$(INTDIR)\inffast.obj" \
-	"$(INTDIR)\inflate.obj" \
-	"$(INTDIR)\inftrees.obj" \
-	"$(INTDIR)\trees.obj" \
-	"$(INTDIR)\uncompr.obj" \
-	"$(INTDIR)\zutil.obj" \
 	"$(INTDIR)\dgif_lib.obj" \
 	"$(INTDIR)\egif_lib.obj" \
 	"$(INTDIR)\gif_err.obj" \
@@ -251,18 +239,6 @@ LIB32_OBJS= \
 	"$(INTDIR)\jquant1.obj" \
 	"$(INTDIR)\jquant2.obj" \
 	"$(INTDIR)\jutils.obj" \
-	"$(INTDIR)\adler32.obj" \
-	"$(INTDIR)\compress.obj" \
-	"$(INTDIR)\crc32.obj" \
-	"$(INTDIR)\deflate.obj" \
-	"$(INTDIR)\gzio.obj" \
-	"$(INTDIR)\infback.obj" \
-	"$(INTDIR)\inffast.obj" \
-	"$(INTDIR)\inflate.obj" \
-	"$(INTDIR)\inftrees.obj" \
-	"$(INTDIR)\trees.obj" \
-	"$(INTDIR)\uncompr.obj" \
-	"$(INTDIR)\zutil.obj" \
 	"$(INTDIR)\dgif_lib.obj" \
 	"$(INTDIR)\egif_lib.obj" \
 	"$(INTDIR)\gif_err.obj" \
@@ -713,78 +689,6 @@ SOURCE=.\libjpeg\jquant2.c
 SOURCE=.\libjpeg\jutils.c
 
 "$(INTDIR)\jutils.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\zlib\adler32.c
-
-"$(INTDIR)\adler32.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\zlib\compress.c
-
-"$(INTDIR)\compress.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\zlib\crc32.c
-
-"$(INTDIR)\crc32.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\zlib\deflate.c
-
-"$(INTDIR)\deflate.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\zlib\gzio.c
-
-"$(INTDIR)\gzio.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\zlib\infback.c
-
-"$(INTDIR)\infback.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\zlib\inffast.c
-
-"$(INTDIR)\inffast.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\zlib\inflate.c
-
-"$(INTDIR)\inflate.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\zlib\inftrees.c
-
-"$(INTDIR)\inftrees.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\zlib\trees.c
-
-"$(INTDIR)\trees.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\zlib\uncompr.c
-
-"$(INTDIR)\uncompr.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
-SOURCE=.\zlib\zutil.c
-
-"$(INTDIR)\zutil.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 

@@ -1627,7 +1627,8 @@ CompilerInstance::loadModule(SourceLocation ImportLoc,
     Known = KnownModules.insert(std::make_pair(Path[0].first, Module)).first;
   } else {
     // Search for a module with the given name.
-    Module = PP->getHeaderSearchInfo().lookupModule(ModuleName);
+    Module = PP->getHeaderSearchInfo().lookupModule(ModuleName, true,
+                                                    !IsInclusionDirective);
     HeaderSearchOptions &HSOpts =
         PP->getHeaderSearchInfo().getHeaderSearchOpts();
 
@@ -1703,7 +1704,8 @@ CompilerInstance::loadModule(SourceLocation ImportLoc,
                                    ImportLoc, ARRFlags)) {
     case ASTReader::Success: {
       if (Source != ModuleCache && !Module) {
-        Module = PP->getHeaderSearchInfo().lookupModule(ModuleName);
+        Module = PP->getHeaderSearchInfo().lookupModule(ModuleName, true,
+                                                        !IsInclusionDirective);
         if (!Module || !Module->getASTFile() ||
             FileMgr->getFile(ModuleFileName) != Module->getASTFile()) {
           // Error out if Module does not refer to the file in the prebuilt

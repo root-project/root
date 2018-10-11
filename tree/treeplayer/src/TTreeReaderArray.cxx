@@ -24,6 +24,7 @@
 #include "TTreeReader.h"
 #include "TGenCollectionProxy.h"
 #include "TRegexp.h"
+#include "ROOT/RMakeUnique.hxx"
 
 #include <memory>
 
@@ -63,7 +64,7 @@ namespace {
    };
 
    // Reader interface for STL
-   class TSTLReader: public TVirtualCollectionReader {
+   class TSTLReader final: public TVirtualCollectionReader {
    public:
       ~TSTLReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::Detail::TBranchProxy* proxy) {
@@ -98,7 +99,7 @@ namespace {
       }
    };
 
-   class TCollectionLessSTLReader : public TVirtualCollectionReader {
+   class TCollectionLessSTLReader final: public TVirtualCollectionReader {
    private:
       TVirtualCollectionProxy *fLocalCollection;
    public:
@@ -121,14 +122,21 @@ namespace {
       virtual size_t GetSize(ROOT::Detail::TBranchProxy* proxy) {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
-         TVirtualCollectionProxy::TPushPop ppRaii(myCollectionProxy, proxy->GetWhere());
+         /// In the case of std::vector<bool> `PushProxy` also creates a temporary bool variable the address of which
+         /// is returned from these calls.
+         myCollectionProxy->PopProxy();
+         myCollectionProxy->PushProxy(proxy->GetWhere());
          return myCollectionProxy->Size();
       }
 
       virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
-         TVirtualCollectionProxy::TPushPop ppRaii(myCollectionProxy, proxy->GetWhere());
+         // Here we do not use a RAII but we empty the proxy to then fill it.
+         // This is done because we are returning a pointer and we need to keep
+         // alive the memory it points to.
+         myCollectionProxy->PopProxy();
+         myCollectionProxy->PushProxy(proxy->GetWhere());
          if (myCollectionProxy->HasPointers()){
             return *(void**)myCollectionProxy->At(idx);
          } else {
@@ -238,7 +246,7 @@ namespace {
       virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) { return fSize; }
    };
 
-   class TBasicTypeArrayReader : public TVirtualCollectionReader {
+   class TBasicTypeArrayReader final: public TVirtualCollectionReader {
    public:
       ~TBasicTypeArrayReader() {}
 
@@ -265,7 +273,7 @@ namespace {
       }
    };
 
-   class TBasicTypeClonesReader : public TClonesReader {
+   class TBasicTypeClonesReader final: public TClonesReader {
    private:
       Int_t fOffset;
    public:
@@ -404,8 +412,8 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
             membername = branch->GetName();
          }
       }
-      namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, membername);
-      fTreeReader->GetProxies()->Add(namedProxy);
+      namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, fBranchName, membername);
+      fTreeReader->AddProxy(namedProxy);
       fProxy = namedProxy->GetProxy();
       if (fProxy)
          fSetupStatus = kSetupMatch;
@@ -539,13 +547,13 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch* branch, TLeaf* myLea
 
    if (myLeaf){
       if (!myLeaf->GetLeafCount()){
-         fImpl = new TLeafReader(this);
+         fImpl = std::make_unique<TLeafReader>(this);
       }
       else {
          TString leafFullName = myLeaf->GetBranch()->GetName();
          leafFullName += ".";
          leafFullName += myLeaf->GetLeafCount()->GetName();
-         fImpl = new TLeafParameterSizeReader(fTreeReader, leafFullName.Data(), this);
+         fImpl = std::make_unique<TLeafParameterSizeReader>(fTreeReader, leafFullName.Data(), this);
       }
       fSetupStatus = kSetupMatchLeaf;
    }
@@ -564,39 +572,39 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch* branch, TLeaf* myLea
          if (fSetupStatus == kSetupInternalError)
             fSetupStatus = kSetupMatch;
          if (element->IsA() == TStreamerSTL::Class()){
-            fImpl = new TSTLReader();
+            fImpl = std::make_unique<TSTLReader>();
          }
          else if (element->IsA() == TStreamerObject::Class()){
             //fImpl = new TObjectArrayReader(); // BArray[12]
 
             if (element->GetClass() == TClonesArray::Class()){
-               fImpl = new TClonesReader();
+               fImpl = std::make_unique<TClonesReader>();
             }
             else {
-               fImpl = new TArrayFixedSizeReader(element->GetArrayLength());
+               fImpl = std::make_unique<TArrayFixedSizeReader>(element->GetArrayLength());
             }
          }
          else if (element->IsA() == TStreamerLoop::Class()) {
-            fImpl = new TArrayParameterSizeReader(fTreeReader, branchElement->GetBranchCount()->GetName());
+            fImpl = std::make_unique<TArrayParameterSizeReader>(fTreeReader, branchElement->GetBranchCount()->GetName());
          }
          else if (element->IsA() == TStreamerBasicType::Class()){
             if (branchElement->GetType() == TBranchElement::kSTLMemberNode){
-               fImpl = new TBasicTypeArrayReader();
+               fImpl = std::make_unique<TBasicTypeArrayReader>();
             }
             else if (branchElement->GetType() == TBranchElement::kClonesMemberNode){
-               fImpl = new TBasicTypeClonesReader(element->GetOffset());
+               fImpl = std::make_unique<TBasicTypeClonesReader>(element->GetOffset());
             }
             else {
-               fImpl = new TArrayFixedSizeReader(element->GetArrayLength());
-               ((TObjectArrayReader*)fImpl)->SetBasicTypeSize(((TDataType*)fDict)->Size());
+               fImpl = std::make_unique<TArrayFixedSizeReader>(element->GetArrayLength());
+               ((TObjectArrayReader*)fImpl.get())->SetBasicTypeSize(((TDataType*)fDict)->Size());
             }
          }
          else if (element->IsA() == TStreamerBasicPointer::Class()) {
-            fImpl = new TArrayParameterSizeReader(fTreeReader, branchElement->GetBranchCount()->GetName());
-            ((TArrayParameterSizeReader*)fImpl)->SetBasicTypeSize(((TDataType*)fDict)->Size());
+            fImpl = std::make_unique<TArrayParameterSizeReader>(fTreeReader, branchElement->GetBranchCount()->GetName());
+            ((TArrayParameterSizeReader*)fImpl.get())->SetBasicTypeSize(((TDataType*)fDict)->Size());
          }
          else if (element->IsA() == TStreamerBase::Class()){
-            fImpl = new TClonesReader();
+            fImpl = std::make_unique<TClonesReader>();
          } else {
             Error("TTreeReaderArrayBase::SetImpl()",
                   "Cannot read branch %s: unhandled streamer element type %s",
@@ -606,7 +614,7 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch* branch, TLeaf* myLea
       }
       else { // We are at root node?
          if (branchElement->GetClass()->GetCollectionProxy()){
-            fImpl = new TCollectionLessSTLReader(branchElement->GetClass()->GetCollectionProxy());
+            fImpl = std::make_unique<TCollectionLessSTLReader>(branchElement->GetClass()->GetCollectionProxy());
          }
       }
    } else if (branch->IsA() == TBranch::Class()) {
@@ -621,12 +629,12 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch* branch, TLeaf* myLea
       if (fSetupStatus == kSetupInternalError)
          fSetupStatus = kSetupMatch;
       if (!sizeLeaf) {
-         fImpl = new TArrayFixedSizeReader(size);
+         fImpl = std::make_unique<TArrayFixedSizeReader>(size);
       }
       else {
-         fImpl = new TArrayParameterSizeReader(fTreeReader, sizeLeaf->GetName());
+         fImpl = std::make_unique<TArrayParameterSizeReader>(fTreeReader, sizeLeaf->GetName());
       }
-      ((TObjectArrayReader*)fImpl)->SetBasicTypeSize(((TDataType*)fDict)->Size());
+      ((TObjectArrayReader*)fImpl.get())->SetBasicTypeSize(((TDataType*)fDict)->Size());
    } else if (branch->IsA() == TBranchClones::Class()) {
       Error("TTreeReaderArrayBase::SetImpl", "Support for branches of type TBranchClones not implemented");
       fSetupStatus = kSetupInternalError;
@@ -635,7 +643,7 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch* branch, TLeaf* myLea
       fSetupStatus = kSetupInternalError;
    } else if (branch->IsA() == TBranchSTL::Class()) {
       Error("TTreeReaderArrayBase::SetImpl", "Support for branches of type TBranchSTL not implemented");
-      fImpl = new TSTLReader();
+      fImpl = std::make_unique<TSTLReader>();
       fSetupStatus = kSetupInternalError;
    } else if (branch->IsA() == TBranchRef::Class()) {
       Error("TTreeReaderArrayBase::SetImpl", "Support for branches of type TBranchRef not implemented");

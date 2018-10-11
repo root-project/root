@@ -2,5 +2,5 @@
 \ingroup Graphics3D
 \brief The basic 3D classes.
 
-  - [Shapes.](tutorials/geom/shapes.C.html)
-  - [TPolyMarker3D example.](tutorials/graphics/tornado.C.html)
+  - [Shapes.](https://root.cern.ch/doc/master/shapes_8C.html)
+  - [TPolyMarker3D example.](https://root.cern.ch/doc/master/tornado_8C.html)

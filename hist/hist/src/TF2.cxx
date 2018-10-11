@@ -25,16 +25,36 @@
 ClassImp(TF2);
 
 /** \class TF2
-    \ingroup Hist 
-A 2-Dim function with parameters
+    \ingroup Hist
+A 2-Dim function with parameters.
 
-TF2 graphics function is via the TH1 drawing functions.
-Example of a function
+### Expression using variables x and y
 
+Begin_Macro (source)
+{
     TF2 *f2 = new TF2("f2","sin(x)*sin(y)/(x*y)",0,5,0,5);
     f2->Draw();
+}
+End_Macro
 
-\image html tf2_function2.png
+### Expression using a user defined function
+
+~~~~{.cpp}
+Double_t func(Double_t *val, Double_t *par)
+{
+   Float_t x = val[0];
+   Float_t y = val[1];
+   Double_t f = x*x-y*y;
+   return f;
+}
+
+void fplot()
+{
+   TF2 *f = new TF2("f",func,-1,1,-1,1);
+   f->Draw("surf1");
+}
+~~~~
+
 See TF1 class for the list of functions formats
 */
 
@@ -68,7 +88,11 @@ TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
    fNpx    = 30;
    fNpy    = 30;
    fContour.Set(0);
-   if (GetNdim() != 2 && xmin < xmax && ymin < ymax) {
+   // accept 1-d formula
+   if (GetNdim() < 2) fNdim = 2;
+   // dimension is obtained by TFormula
+   // accept cases where formula dim is less than 2
+   if (GetNdim() > 2 && xmin < xmax && ymin < ymax) {
       Error("TF2","function: %s/%s has dimension %d instead of 2",name,formula,GetNdim());
       MakeZombie();
    }
@@ -119,7 +143,7 @@ TF2::TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// F2 constructor using a ParamFunctor,
-///          a functor class implementing operator() (double *, double *)  
+///          a functor class implementing operator() (double *, double *)
 ///
 /// npar is the number of free parameters used by the function
 ///
@@ -305,10 +329,10 @@ Double_t TF2::GetContourLevel(Int_t level) const
 /// Return minimum/maximum value of the function
 ///
 /// To find the minimum on a range, first set this range via the SetRange function.
-/// If a vector x of coordinate is passed it will be used as starting point for the minimum. 
+/// If a vector x of coordinate is passed it will be used as starting point for the minimum.
 /// In addition on exit x will contain the coordinate values at the minimuma
 ///
-/// If x is NULL or x is inifinity or NaN, first, a grid search is performed to find the initial estimate of the 
+/// If x is NULL or x is infinity or NaN, first, a grid search is performed to find the initial estimate of the
 /// minimum location. The range of the function is divided into fNpx and fNpy
 /// sub-ranges. If the function is "good" (or "bad"), these values can be changed
 /// by SetNpx and SetNpy functions
@@ -322,11 +346,11 @@ Double_t TF2::FindMinMax(Double_t *x, Bool_t findmax) const
 {
    //First do a grid search with step size fNpx and fNpy
 
-   Double_t xx[2]; 
+   Double_t xx[2];
    Double_t rsign = (findmax) ? -1. : 1.;
    TF2 & function = const_cast<TF2&>(*this); // needed since EvalPar is not const
-   Double_t xxmin = 0, yymin = 0, zzmin = 0; 
-   if (x == NULL || ( (x!= NULL) && ( !TMath::Finite(x[0]) || !TMath::Finite(x[1]) ) ) ){ 
+   Double_t xxmin = 0, yymin = 0, zzmin = 0;
+   if (x == NULL || ( (x!= NULL) && ( !TMath::Finite(x[0]) || !TMath::Finite(x[1]) ) ) ){
       Double_t dx = (fXmax - fXmin)/fNpx;
       Double_t dy = (fYmax - fYmin)/fNpy;
       xxmin = fXmin;
@@ -340,20 +364,20 @@ Double_t TF2::FindMinMax(Double_t *x, Bool_t findmax) const
             if (rsign*zz < rsign*zzmin) {xxmin = xx[0], yymin = xx[1]; zzmin = zz;}
          }
       }
-      
+
       xxmin = TMath::Min(fXmax, xxmin);
       yymin = TMath::Min(fYmax, yymin);
    }
    else {
-      xxmin = x[0]; 
+      xxmin = x[0];
       yymin = x[1];
       zzmin = function(xx);
    }
-   xx[0] = xxmin; 
-   xx[1] = yymin; 
-      
+   xx[0] = xxmin;
+   xx[1] = yymin;
+
    double fmin = GetMinMaxNDim(xx,findmax);
-   if (rsign*fmin < rsign*zzmin) { 
+   if (rsign*fmin < rsign*zzmin) {
       if (x) {x[0] = xx[0]; x[1] = xx[1]; }
       return fmin;
    }
@@ -369,7 +393,7 @@ Double_t TF2::FindMinMax(Double_t *x, Bool_t findmax) const
 /// To find the minimum on a range, first set this range via the SetRange function
 ///
 /// Method:
-///   First, a grid search is performed to find the initial estimate of the 
+///   First, a grid search is performed to find the initial estimate of the
 ///   minimum location. The range of the function is divided into fNpx and fNpy
 ///   sub-ranges. If the function is "good" (or "bad"), these values can be changed
 ///   by SetNpx and SetNpy functions
@@ -409,9 +433,9 @@ Double_t TF2::GetMaximumXY(Double_t &x, Double_t &y) const
 /// Return minimum/maximum value of the function
 ///
 /// To find the minimum on a range, first set this range via the SetRange function
-/// If a vector x of coordinate is passed it will be used as starting point for the minimum. 
+/// If a vector x of coordinate is passed it will be used as starting point for the minimum.
 /// In addition on exit x will contain the coordinate values at the minimuma
-/// If x is NULL or x is inifinity or NaN, first, a grid search is performed to find the initial estimate of the 
+/// If x is NULL or x is infinity or NaN, first, a grid search is performed to find the initial estimate of the
 /// minimum location. The range of the function is divided into fNpx and fNpy
 /// sub-ranges. If the function is "good" (or "bad"), these values can be changed
 /// by SetNpx and SetNpy functions
@@ -422,7 +446,7 @@ Double_t TF2::GetMaximumXY(Double_t &x, Double_t &y) const
 
 Double_t TF2::GetMinimum(Double_t *x) const
 {
-   return FindMinMax(x, false); 
+   return FindMinMax(x, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -431,7 +455,7 @@ Double_t TF2::GetMinimum(Double_t *x) const
 
 Double_t TF2::GetMaximum(Double_t *x) const
 {
-   return FindMinMax(x, true); 
+   return FindMinMax(x, true);
 }
 
 
@@ -497,9 +521,9 @@ Double_t TF2::GetRandom(Double_t, Double_t)
 ///
 ///  IMPORTANT NOTE
 ///
-///  The integral of the function is computed at fNpx * fNpy points. 
-///  If the function has sharp peaks, you should increase the number of 
-///  points (SetNpx, SetNpy) such that the peak is correctly tabulated 
+///  The integral of the function is computed at fNpx * fNpy points.
+///  If the function has sharp peaks, you should increase the number of
+///  points (SetNpx, SetNpy) such that the peak is correctly tabulated
 ///  at several points.
 
 void TF2::GetRandom2(Double_t &xrandom, Double_t &yrandom)
@@ -581,7 +605,7 @@ Double_t TF2::GetSave(const Double_t *xx)
 {
    //if (fNsave <= 0) return 0;
    if (fSave.empty()) return 0;
-   Int_t fNsave = fSave.size(); 
+   Int_t fNsave = fSave.size();
    Int_t np = fNsave - 6;
    Double_t xmin = Double_t(fSave[np+0]);
    Double_t xmax = Double_t(fSave[np+1]);
@@ -751,7 +775,7 @@ void TF2::Paint(Option_t *option)
 
 void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t, Double_t)
 {
-   if (!fSave.empty()) fSave.clear(); 
+   if (!fSave.empty()) fSave.clear();
    //if (fSave != 0) {delete [] fSave; fSave = 0;}
    Int_t nsave = (fNpx+1)*(fNpy+1);
    Int_t fNsave = nsave+6;
@@ -812,7 +836,7 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       if (GetFillColor() > 228) {
          TColor::SaveColor(out, GetFillColor());
          out<<"   "<<GetName()<<"->SetFillColor(ci);" << std::endl;
-      } else 
+      } else
          out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
    }
    if (GetFillStyle() != 1001) {
@@ -822,7 +846,7 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       if (GetMarkerColor() > 228) {
          TColor::SaveColor(out, GetMarkerColor());
          out<<"   "<<GetName()<<"->SetMarkerColor(ci);" << std::endl;
-      } else 
+      } else
          out<<"   "<<GetName()<<"->SetMarkerColor("<<GetMarkerColor()<<");"<<std::endl;
    }
    if (GetMarkerStyle() != 1) {
@@ -835,7 +859,7 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       if (GetLineColor() > 228) {
          TColor::SaveColor(out, GetLineColor());
          out<<"   "<<GetName()<<"->SetLineColor(ci);" << std::endl;
-      } else 
+      } else
          out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
    }
    if (GetLineWidth() != 4) {
@@ -902,7 +926,7 @@ void TF2::SetContourLevel(Int_t level, Double_t value)
 ///
 /// The default number of points along x is 30 for 2-d/3-d functions.
 /// You can increase this value to get a better resolution when drawing
-/// pictures with sharp peaks or to get a better result when using TF2::GetRandom2   
+/// pictures with sharp peaks or to get a better result when using TF2::GetRandom2
 /// the minimum number of points is 4, the maximum is 10000 for 2-d/3-d functions
 
 void TF2::SetNpy(Int_t npy)

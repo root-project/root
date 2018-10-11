@@ -46,7 +46,6 @@
 //   root> gSystem->Load("libTree");
 //   root> gSystem->Load("libHist");
 //   root> gSystem->Load("libReflex");
-//   root> gSystem->Load("libCintex");
 //   root> gSystem->SetIncludePath("-DUSE_REFLEX");
 //   root> .x stressMathCore.cxx+
 //
@@ -1366,7 +1365,7 @@ int testSMatrix(int ngen, bool testio=false) {
    typeName = "ROOT::Math::"+name0+ "," + Rep::name32()  + ">";
 
 
-   estSize = ngen* 4 * Dim + 10000;
+   estSize = ngen* 4 * Dim + 60158;
    scale = 0.1 / std::numeric_limits<double>::epsilon();
    fsize32 = a.testWrite(v1,typeName);     iret |= a.check(name+" write",fsize32,estSize,scale);
    ir = a.testRead(v1);   iret |= a.check(name+" read",ir,0);
@@ -1488,17 +1487,15 @@ int testCompositeObj(int ngen) {
    std::cout << "\tTest of a Composite Object (containing Vector's and Matrices)\n";
    std::cout <<"******************************************************************************\n";
 
-
-
-#ifndef USE_REFLEX
-
    std::cout << "Test Using CINT library\n\n";
 
    // put path relative to LD_LIBRARY_PATH
 
-   const char* dynPath = gSystem->DynamicPathName("../test/libTrackMathCoreDict",
-                                                  /*quiet*/ true);
+   std::unique_ptr<const char> dynPath(gSystem->DynamicPathName("../test/libTrackMathCoreDict",
+                                                  /*quiet*/ true));
+
    int iret = -1;
+
    if (dynPath)
       iret = gSystem->Load("../test/libTrackMathCoreDict");
    if (iret < 0) {
@@ -1509,26 +1506,7 @@ int testCompositeObj(int ngen) {
          return iret;
       }
    }
-#else
 
-   std::cout << "Test Using Reflex library\n\n";
-
-#ifdef DEBUG
-   ROOT::Cintex::Cintex::SetDebug(1);
-#endif
-   ROOT::Cintex::Cintex::Enable();
-
-   iret = gSystem->Load("../test/libTrackMathCoreRflx");
-   if (iret < 0) {
-      // if not assume running from top ROOT dir (case of roottest)
-      iret = gSystem->Load("test/libTrackMathCoreRflx");
-      if (iret < 0) {
-         std::cerr <<"Error Loading libTrackMathCoreRflx" << std::endl;
-         return iret;
-      }
-   }
-
-#endif
    iret = 0;
 
    iret |= testTrack<TrackD>(ngen);

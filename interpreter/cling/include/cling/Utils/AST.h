@@ -20,9 +20,10 @@ namespace clang {
   class Decl;
   class DeclContext;
   class DeclarationName;
-  class GlobalDecl;
   class FunctionDecl;
+  class GlobalDecl;
   class IntegerLiteral;
+  class LookupResult;
   class NamedDecl;
   class NamespaceDecl;
   class NestedNameSpecifier;
@@ -236,6 +237,59 @@ namespace utils {
     clang::NamedDecl* Named(clang::Sema* S,
                             const clang::DeclarationName& Name,
                             const clang::DeclContext* Within = 0);
+
+    ///\brief Quick lookup for a single named tag declaration ( enums, classes,
+    /// structs, and unions) in a given declaration context.
+    ///
+    ///\param[in] S - Semantic Analysis object doing the lookup.
+    ///\param[in] Name - The name we are looking up.
+    ///\param[in] Within - The context within the lookup is done. If 0 the
+    ///                    TranslationUnitDecl is used.
+    ///\returns the found result if single, -1 if multiple or 0 if not found.
+    ///
+    clang::TagDecl* Tag(clang::Sema* S,
+                        llvm::StringRef Name,
+                        const clang::DeclContext* Within = 0);
+
+    ///\brief Quick lookup for a single named tag declaration ( enums, classes,
+    /// structs, and unions) in a given declaration context.
+    ///
+    ///\param[in] S - Semantic Analysis object doing the lookup.
+    ///\param[in] Name - The name we are looking up.
+    ///\param[in] Within - The context within the lookup is done. If 0 the
+    ///                    TranslationUnitDecl is used.
+    ///\returns the found result if single, -1 if multiple or 0 if not found.
+    ///
+    clang::TagDecl* Tag(clang::Sema* S,
+                        const char* Name,
+                        const clang::DeclContext* Within = 0);
+
+    ///\brief Quick lookup for a single named tag declaration ( enums, classes,
+    /// structs, and unions) in a given declaration context.
+    ///
+    ///\param[in] S - Semantic Analysis object doing the lookup.
+    ///\param[in] Name - The name we are looking up.
+    ///\param[in] Within - The context within the lookup is done. If 0 the
+    ///                    TranslationUnitDecl is used.
+    ///\returns the found result if single, -1 if multiple or 0 if not found.
+    ///
+    clang::TagDecl* Tag(clang::Sema* S,
+                        const clang::DeclarationName& Name,
+                        const clang::DeclContext* Within = 0);
+
+    ///\brief Quick lookup for a name in possible a declaration context.
+    ///
+    /// The overload gives the caller a \c LookupResult object delegating the
+    /// ambiguity resolution.
+    ///
+    ///\param[in] S - Semantic Analysis object doing the lookup.
+    ///\param[in] R - The name we are looking up.
+    ///\param[in] Within - The context within the lookup is done. If 0 the
+    ///                    TranslationUnitDecl is used.
+    ///\returns the found result if single, -1 if multiple or 0 if not found.
+    ///
+    void Named(clang::Sema* S, clang::LookupResult& R,
+               const clang::DeclContext* Within = 0);
 
   }
 

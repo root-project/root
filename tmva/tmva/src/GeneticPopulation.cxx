@@ -83,7 +83,7 @@ TMVA::GeneticPopulation::~GeneticPopulation()
    if (fRandomGenerator != NULL) delete fRandomGenerator;
 
    std::vector<GeneticRange*>::iterator it = fRanges.begin();
-   for (;it!=fRanges.end(); it++) delete *it;
+   for (;it!=fRanges.end(); ++it) delete *it;
 
    delete fLogger;
 }
@@ -214,7 +214,7 @@ void TMVA::GeneticPopulation::Print( Int_t untilIndex )
          }
          Log() << "fitness: " << fGenePool[it].GetFitness() << "    ";
          for (vector< Double_t >::iterator vec = fGenePool[it].GetFactors().begin();
-              vec < fGenePool[it].GetFactors().end(); vec++ ) {
+              vec < fGenePool[it].GetFactors().end(); ++vec ) {
             Log() << "f_" << n++ << ": " << (*vec) << "     ";
          }
          Log() << Endl;
@@ -235,7 +235,7 @@ void TMVA::GeneticPopulation::Print( ostream & out, Int_t untilIndex )
       }
       out << "fitness: " << fGenePool[it].GetFitness() << "    ";
       for (vector< Double_t >::iterator vec = fGenePool[it].GetFactors().begin();
-           vec < fGenePool[it].GetFactors().end(); vec++ ) {
+           vec < fGenePool[it].GetFactors().end(); ++vec ) {
          out << "f_" << n++ << ": " << (*vec) << "     ";
       }
       out << std::endl;
@@ -283,7 +283,7 @@ vector<Double_t> TMVA::GeneticPopulation::VariableDistribution( Int_t /*varNumbe
 void TMVA::GeneticPopulation::AddPopulation( GeneticPopulation *strangers )
 {
    for (std::vector<TMVA::GeneticGenes>::iterator it = strangers->fGenePool.begin();
-        it != strangers->fGenePool.end(); it++ ) {
+        it != strangers->fGenePool.end(); ++it ) {
       GiveHint( it->GetFactors(), it->GetFitness() );
    }
 }

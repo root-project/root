@@ -24,7 +24,7 @@
 
 #include "TDictionary.h"
 
-#include "TVirtualMutex.h"
+#include "TVirtualRWMutex.h"
 
 #include <map>
 #include <typeinfo>
@@ -40,6 +40,22 @@ class TEnum;
 class TListOfEnums;
 
 R__EXTERN TVirtualMutex *gInterpreterMutex;
+
+#if defined (_REENTRANT) || defined (WIN32)
+# define R__LOCKGUARD_CLING(mutex)  ::ROOT::Internal::InterpreterMutexRegistrationRAII _R__UNIQUE_(R__guard)(mutex); { }
+#else
+# define R__LOCKGUARD_CLING(mutex)  (void)(mutex); { }
+#endif
+
+namespace ROOT {
+namespace Internal {
+struct InterpreterMutexRegistrationRAII {
+   TLockGuard fLockGuard;
+   InterpreterMutexRegistrationRAII(TVirtualMutex* mutex);
+   ~InterpreterMutexRegistrationRAII();
+};
+}
+}
 
 class TInterpreter : public TNamed {
 
@@ -136,6 +152,7 @@ public:
    virtual void     Initialize() = 0;
    virtual void     InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient) = 0;
    virtual Bool_t   IsLoaded(const char *filename) const = 0;
+   virtual Bool_t   IsLibraryLoaded(const char *libname) const = 0;
    virtual Int_t    Load(const char *filenam, Bool_t system = kFALSE) = 0;
    virtual void     LoadMacro(const char *filename, EErrorCode *error = 0) = 0;
    virtual Int_t    LoadLibraryMap(const char *rootmapfile = 0) = 0;
@@ -154,7 +171,8 @@ public:
                                    void (* /*triggerFunc*/)(),
                                    const FwdDeclArgsToKeepCollection_t& fwdDeclArgsToKeep,
                                    const char** classesHeaders,
-                                   Bool_t lateRegistration = false) = 0;
+                                   Bool_t lateRegistration = false,
+                                   Bool_t hasCxxModule = false) = 0;
    virtual void     RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict) = 0;
    virtual void     UnRegisterTClassUpdate(const TClass *oldcl) = 0;
    virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0;
@@ -203,6 +221,10 @@ public:
    virtual Bool_t   IsProcessLineLocked() const = 0;
    virtual void     SetProcessLineLock(Bool_t lock = kTRUE) = 0;
    virtual const char *TypeName(const char *s) = 0;
+   virtual std::string ToString(const char *type, void *obj) = 0;
+
+   virtual void     SnapshotMutexState(ROOT::TVirtualRWMutex* mtx) = 0;
+   virtual void     ForgetMutexState() = 0;
 
    // All the functions below must be virtual with a dummy implementation
    // These functions are redefined in TCling.
@@ -500,7 +522,7 @@ public:
 };
 
 
-typedef TInterpreter *CreateInterpreter_t(void* shlibHandle);
+typedef TInterpreter *CreateInterpreter_t(void* shlibHandle, const char* argv[]);
 typedef void *DestroyInterpreter_t(TInterpreter*);
 
 #ifndef __CINT__
@@ -508,5 +530,17 @@ typedef void *DestroyInterpreter_t(TInterpreter*);
 R__EXTERN TInterpreter* (*gPtr2Interpreter)();
 R__EXTERN TInterpreter* gCling;
 #endif
+
+inline ROOT::Internal::InterpreterMutexRegistrationRAII::InterpreterMutexRegistrationRAII(TVirtualMutex* mutex):
+   fLockGuard(mutex)
+{
+   if (gCoreMutex)
+      ::gCling->SnapshotMutexState(gCoreMutex);
+}
+inline ROOT::Internal::InterpreterMutexRegistrationRAII::~InterpreterMutexRegistrationRAII()
+{
+   if (gCoreMutex)
+      ::gCling->ForgetMutexState();
+}
 
 #endif

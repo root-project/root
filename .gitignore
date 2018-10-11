@@ -35,6 +35,7 @@ project.xcworkspace
 
 # CLion
 .idea/*
+cmake-build-*/
 
 # QtCreator
 CMakeLists.txt.user
@@ -507,3 +508,8 @@ tags
 /tutorials/tree/cernstaff.root
 /tutorials/tree/staff.root
 /tutorials/tree/basic.root
+
+# TMVA datasets
+/tmva/tmva/test/DNN/CNN/dataset/SingleElectronPt50_FEVTDEBUG_n250k_IMG_CROPS32.root
+/tmva/tmva/test/DNN/CNN/dataset/SinglePhotonPt50_FEVTDEBUG_n250k_IMG_CROPS32.root
+/tmva/tmva/test/DNN/CNN/dataset/tmva_class_example.root

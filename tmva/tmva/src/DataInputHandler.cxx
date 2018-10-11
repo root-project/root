@@ -195,7 +195,7 @@ void TMVA::DataInputHandler::ClearTreeList( const TString& className )
 std::vector< TString >* TMVA::DataInputHandler::GetClassList() const
 {
    std::vector< TString >* ret = new std::vector< TString >();
-   for ( std::map< TString, std::vector<TreeInfo> >::iterator it = fInputTrees.begin(); it != fInputTrees.end(); it++ ){
+   for ( std::map< TString, std::vector<TreeInfo> >::iterator it = fInputTrees.begin(); it != fInputTrees.end(); ++it ){
       ret->push_back( it->first );
    }
    return ret;
@@ -208,7 +208,7 @@ UInt_t TMVA::DataInputHandler::GetEntries(const std::vector<TreeInfo>& tiV) cons
 {
    UInt_t entries = 0;
    std::vector<TreeInfo>::const_iterator tiIt = tiV.begin();
-   for (;tiIt != tiV.end(); tiIt++) entries += tiIt->GetEntries();
+   for (;tiIt != tiV.end();++tiIt) entries += tiIt->GetEntries();
    return entries;
 }
 
@@ -218,7 +218,7 @@ UInt_t TMVA::DataInputHandler::GetEntries(const std::vector<TreeInfo>& tiV) cons
 UInt_t TMVA::DataInputHandler::GetEntries() const
 {
    UInt_t number = 0;
-   for (std::map< TString, std::vector<TreeInfo> >::iterator it = fInputTrees.begin(); it != fInputTrees.end(); it++) {
+   for (std::map< TString, std::vector<TreeInfo> >::iterator it = fInputTrees.begin(); it != fInputTrees.end(); ++it) {
       number += GetEntries( it->second );
    }
    return number;

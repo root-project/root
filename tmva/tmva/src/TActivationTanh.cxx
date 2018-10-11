@@ -99,8 +99,20 @@ TString TMVA::TActivationTanh::GetExpression()
 
 void TMVA::TActivationTanh::MakeFunction( std::ostream& fout, const TString& fncName )
 {
-   fout << "double " << fncName << "(double x) const {" << std::endl;
-   fout << "   // hyperbolic tan" << std::endl;
-   fout << "   return tanh(x);" << std::endl;
-   fout << "}" << std::endl;
+   if (fFAST) {
+      fout << "double " << fncName << "(double x) const {" << std::endl;
+      fout << "   // fast hyperbolic tan approximation" << std::endl;
+      fout << "   if (x > 4.97) return 1;" << std::endl;
+      fout << "   if (x < -4.97) return -1;" << std::endl;
+      fout << "   float x2 = x * x;" << std::endl;
+      fout << "   float a = x * (135135.0f + x2 * (17325.0f + x2 * (378.0f + x2)));" << std::endl;
+      fout << "   float b = 135135.0f + x2 * (62370.0f + x2 * (3150.0f + x2 * 28.0f));" << std::endl;
+      fout << "   return a / b;" << std::endl;
+      fout << "}" << std::endl;
+   } else {
+      fout << "double " << fncName << "(double x) const {" << std::endl;
+      fout << "   // hyperbolic tan" << std::endl;
+      fout << "   return tanh(x);" << std::endl;
+      fout << "}" << std::endl;
+   }
 }

@@ -13,14 +13,16 @@
 #define ROOT_THttpServer
 
 #include "TObject.h"
-
 #include "TList.h"
-
 #include "TNamed.h"
-
 #include "THttpCallArg.h"
 
 #include <mutex>
+#include <map>
+#include <string>
+#include <memory>
+#include <queue>
+#include <thread>
 
 class THttpEngine;
 class THttpTimer;
@@ -29,29 +31,42 @@ class TRootSniffer;
 class THttpServer : public TNamed {
 
 protected:
-   TList fEngines;         ///<! engines which runs http server
-   THttpTimer *fTimer;     ///<! timer used to access main thread
-   TRootSniffer *fSniffer; ///<! sniffer provides access to ROOT objects hierarchy
-   Bool_t fTerminated;     ///<! termination flag, disables all requests processing
+   TList fEngines;                      ///<! engines which runs http server
+   THttpTimer *fTimer{nullptr};         ///<! timer used to access main thread
+   TRootSniffer *fSniffer{nullptr};     ///<! sniffer provides access to ROOT objects hierarchy
+   Bool_t fTerminated{kFALSE};          ///<! termination flag, disables all requests processing
+   Long_t fMainThrdId{0};               ///<! id of the thread for processing requests
+   Bool_t fOwnThread{kFALSE};           ///<! true when specialized thread allocated for processing requests
+   std::thread fThrd;                   ///<! own thread
 
-   Long_t fMainThrdId; ///<! id of the main ROOT process
+   TString fJSROOTSYS;       ///<! location of local JSROOT files
+   TString fTopName{"ROOT"}; ///<! name of top folder, default - "ROOT"
+   TString fJSROOT;          ///<! location of external JSROOT files
 
-   TString fJSROOTSYS; ///<! location of local JSROOT files
-   TString fTopName;   ///<! name of top folder, default - "ROOT"
-   TString fJSROOT;    ///<! location of external JSROOT files
-   TList fLocations;   ///<! list of local directories, which could be accessed via server
+   std::map<std::string, std::string> fLocations; ///<! list of local directories, which could be accessed via server
 
-   TString fDefaultPage;     ///<! file name for default page name
-   TString fDefaultPageCont; ///<! content of the file content
-   TString fDrawPage;        ///<! file name for drawing of single element
-   TString fDrawPageCont;    ///<! content of draw page
-   TString fCors;            ///<! CORS: sets Access-Control-Allow-Origin header for ProcessRequest responses
+   std::string fDefaultPage;     ///<! file name for default page name
+   std::string fDefaultPageCont; ///<! content of default html page
+   std::string fDrawPage;        ///<! file name for drawing of single element
+   std::string fDrawPageCont;    ///<! content of draw html page
+   std::string fCors;            ///<! CORS: sets Access-Control-Allow-Origin header for ProcessRequest responses
 
-   std::mutex fMutex; ///<! mutex to protect list with arguments
-   TList fCallArgs;   ///<! submitted arguments
+   std::mutex fMutex;                                        ///<! mutex to protect list with arguments
+   TList fCallArgs;                                          ///<! submitted arguments (deprecated)
+   std::queue<std::shared_ptr<THttpCallArg>> fArgs;          ///<! submitted arguments
 
-   /** Function called for every processed request */
+   std::mutex fWSMutex;                                      ///<! mutex to protect WS handler lists
+   std::vector<std::shared_ptr<THttpWSHandler>> fWSHandlers; ///<! list of WS handlers
+
+   virtual void MissedRequest(THttpCallArg *arg);
+
+   virtual void ProcessRequest(std::shared_ptr<THttpCallArg> arg);
+
+   virtual void ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg);
+
    virtual void ProcessRequest(THttpCallArg *arg);
+
+   void StopServerThread();
 
    static Bool_t VerifyFilePath(const char *fname);
 
@@ -66,27 +81,27 @@ public:
    /** returns pointer on objects sniffer */
    TRootSniffer *GetSniffer() const { return fSniffer; }
 
-   /** set termination flag, no any further requests will be processed */
-   void SetTerminate();
-
-   /** returns kTRUE, if server was terminated */
-   Bool_t IsTerminated() const { return fTerminated; }
-
    void SetSniffer(TRootSniffer *sniff);
 
    Bool_t IsReadOnly() const;
 
    void SetReadOnly(Bool_t readonly);
 
+   /** set termination flag, no any further requests will be processed */
+   void SetTerminate();
+
+   /** returns kTRUE, if server was terminated */
+   Bool_t IsTerminated() const { return fTerminated; }
+
    /** Enable CORS header to ProcessRequests() responses
     * Specified location (typically "*") add as "Access-Control-Allow-Origin" header */
-   void SetCors(const char *domain = "*") { fCors = domain; }
+   void SetCors(const std::string &domain = "*") { fCors = domain; }
 
    /** Returns kTRUE if CORS was configured */
-   Bool_t IsCors() const { return fCors.Length() > 0; }
+   Bool_t IsCors() const { return !fCors.empty(); }
 
    /** Returns specified CORS domain */
-   const char *GetCors() const { return fCors.Data(); }
+   const char *GetCors() const { return fCors.c_str(); }
 
    /** set name of top item in objects hierarchy */
    void SetTopName(const char *top) { fTopName = top; }
@@ -98,29 +113,49 @@ public:
 
    void AddLocation(const char *prefix, const char *path);
 
-   void SetDefaultPage(const char *filename);
+   void SetDefaultPage(const std::string &filename = "");
 
-   void SetDrawPage(const char *filename);
+   void SetDrawPage(const std::string &filename = "");
 
    void SetTimer(Long_t milliSec = 100, Bool_t mode = kTRUE);
+
+   void CreateServerThread();
 
    /** Check if file is requested, thread safe */
    Bool_t IsFileRequested(const char *uri, TString &res) const;
 
    /** Execute HTTP request */
-   Bool_t ExecuteHttp(THttpCallArg *arg);
+   Bool_t ExecuteHttp(THttpCallArg *arg) _R__DEPRECATED_618("Please use ExecuteHttp(std::shared_ptr<THttpCallArg>)");
+
+   /** Execute HTTP request */
+   Bool_t ExecuteHttp(std::shared_ptr<THttpCallArg> arg);
 
    /** Submit HTTP request */
-   Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE);
+   Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE) _R__DEPRECATED_618("Please use SubmitHttp(std::shared_ptr<THttpCallArg>,bool)");
 
-   /** Process submitted requests, must be called from main thread */
-   void ProcessRequests();
+   /** Submit HTTP request */
+   Bool_t SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run_immediately = kFALSE);
+
+   /** Process submitted requests, must be called from appropriate thread */
+   Int_t ProcessRequests();
 
    /** Register object in subfolder */
    Bool_t Register(const char *subfolder, TObject *obj);
 
    /** Unregister object */
    Bool_t Unregister(TObject *obj);
+
+   /** Register WS handler*/
+   void RegisterWS(std::shared_ptr<THttpWSHandler> ws);
+
+   /** Unregister WS handler*/
+   void UnregisterWS(std::shared_ptr<THttpWSHandler> ws);
+
+   /** Find web-socket handler with given name */
+   std::shared_ptr<THttpWSHandler> FindWS(const char *name);
+
+   /** Execute WS request */
+   Bool_t ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t external_thrd = kFALSE, Bool_t wait_process = kFALSE);
 
    /** Restrict access to specified object */
    void Restrict(const char *path, const char *options);
@@ -142,6 +177,9 @@ public:
 
    /** Reads content of file from the disk */
    static char *ReadFileContent(const char *filename, Int_t &len);
+
+   /** Reads content of file from the disk, use std::string in return value */
+   static std::string ReadFileContent(const std::string &filename);
 
    ClassDef(THttpServer, 0) // HTTP server for ROOT analysis
 };

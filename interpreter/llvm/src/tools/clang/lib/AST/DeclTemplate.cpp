@@ -16,6 +16,7 @@
 #include "clang/AST/ASTMutationListener.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/ODRHash.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/TypeLoc.h"
 #include "clang/Basic/Builtins.h"
@@ -165,14 +166,58 @@ RedeclarableTemplateDecl::CommonBase *RedeclarableTemplateDecl::getCommonPtr() c
   return Common;
 }
 
+void RedeclarableTemplateDecl::loadLazySpecializationsImpl(
+                                             bool OnlyPartial/*=false*/) const {
+  // Grab the most recent declaration to ensure we've loaded any lazy
+  // redeclarations of this template.
+  CommonBase *CommonBasePtr = getMostRecentDecl()->getCommonPtr();
+  if (auto *Specs = CommonBasePtr->LazySpecializations) {
+    if (!OnlyPartial)
+      CommonBasePtr->LazySpecializations = nullptr;
+    for (uint32_t I = 0, N = Specs[0].DeclID; I != N; ++I) {
+      // Skip over already loaded specializations.
+      if (!Specs[I+1].ODRHash)
+        continue;
+      if (!OnlyPartial || Specs[I+1].IsPartial)
+        (void)loadLazySpecializationImpl(Specs[I+1]);
+    }
+  }
+}
+
+Decl *RedeclarableTemplateDecl::loadLazySpecializationImpl(
+                                   LazySpecializationInfo &LazySpecInfo) const {
+  uint32_t ID = LazySpecInfo.DeclID;
+  assert(ID && "Loading already loaded specialization!");
+  // Note that we loaded the specialization.
+  LazySpecInfo.DeclID = LazySpecInfo.ODRHash = LazySpecInfo.IsPartial = 0;
+  return getASTContext().getExternalSource()->GetExternalDecl(ID);
+}
+
+bool
+RedeclarableTemplateDecl::loadLazySpecializationsImpl(ArrayRef<TemplateArgument>
+                                                      Args) const {
+  bool LoadedSpecialization = false;
+  CommonBase *CommonBasePtr = getMostRecentDecl()->getCommonPtr();
+  if (auto *Specs = CommonBasePtr->LazySpecializations) {
+    unsigned Hash = TemplateArgumentList::ComputeODRHash(Args);
+    for (uint32_t I = 0, N = Specs[0].DeclID; I != N; ++I)
+      if (Specs[I+1].ODRHash && Specs[I+1].ODRHash == Hash)
+        LoadedSpecialization |= (bool)loadLazySpecializationImpl(Specs[I+1]);
+  }
+  return LoadedSpecialization;
+}
+
 template<class EntryType>
 typename RedeclarableTemplateDecl::SpecEntryTraits<EntryType>::DeclType *
 RedeclarableTemplateDecl::findSpecializationImpl(
     llvm::FoldingSetVector<EntryType> &Specs, ArrayRef<TemplateArgument> Args,
     void *&InsertPos) {
   typedef SpecEntryTraits<EntryType> SETraits;
+
+  (void)loadLazySpecializationsImpl(Args);
+
   llvm::FoldingSetNodeID ID;
-  EntryType::Profile(ID,Args, getASTContext());
+  EntryType::Profile(ID, Args, getASTContext());
   EntryType *Entry = Specs.FindNodeOrInsertPos(ID, InsertPos);
   return Entry ? SETraits::getDecl(Entry)->getMostRecentDecl() : nullptr;
 }
@@ -184,10 +229,11 @@ void RedeclarableTemplateDecl::addSpecializationImpl(
   typedef SpecEntryTraits<EntryType> SETraits;
   if (InsertPos) {
 #ifndef NDEBUG
+    auto Args = SETraits::getTemplateArgs(Entry);
+    assert(!loadLazySpecializationsImpl(Args) &&
+           "Specialization is already registered as lazy");
     void *CorrectInsertPos;
-    assert(!findSpecializationImpl(Specializations,
-                                   SETraits::getTemplateArgs(Entry),
-                                   CorrectInsertPos) &&
+    assert(!findSpecializationImpl(Specializations, Args, CorrectInsertPos) &&
            InsertPos == CorrectInsertPos &&
            "given incorrect InsertPos for specialization");
 #endif
@@ -232,18 +278,7 @@ FunctionTemplateDecl::newCommon(ASTContext &C) const {
 }
 
 void FunctionTemplateDecl::LoadLazySpecializations() const {
-  // Grab the most recent declaration to ensure we've loaded any lazy
-  // redeclarations of this template.
-  //
-  // FIXME: Avoid walking the entire redeclaration chain here.
-  Common *CommonPtr = getMostRecentDecl()->getCommonPtr();
-  if (CommonPtr->LazySpecializations) {
-    ASTContext &Context = getASTContext();
-    uint32_t *Specs = CommonPtr->LazySpecializations;
-    CommonPtr->LazySpecializations = nullptr;
-    for (uint32_t I = 0, N = *Specs++; I != N; ++I)
-      (void)Context.getExternalSource()->GetExternalDecl(Specs[I]);
-  }
+  loadLazySpecializationsImpl();
 }
 
 llvm::FoldingSetVector<FunctionTemplateSpecializationInfo> &
@@ -255,12 +290,14 @@ FunctionTemplateDecl::getSpecializations() const {
 FunctionDecl *
 FunctionTemplateDecl::findSpecialization(ArrayRef<TemplateArgument> Args,
                                          void *&InsertPos) {
-  return findSpecializationImpl(getSpecializations(), Args, InsertPos);
+  auto *Common = getCommonPtr();
+  return findSpecializationImpl(Common->Specializations, Args, InsertPos);
 }
 
 void FunctionTemplateDecl::addSpecialization(
       FunctionTemplateSpecializationInfo *Info, void *InsertPos) {
-  addSpecializationImpl<FunctionTemplateDecl>(getSpecializations(), Info,
+  auto *Common = getCommonPtr();
+  addSpecializationImpl<FunctionTemplateDecl>(Common->Specializations, Info,
                                               InsertPos);
 }
 
@@ -310,19 +347,9 @@ ClassTemplateDecl *ClassTemplateDecl::CreateDeserialized(ASTContext &C,
                                        DeclarationName(), nullptr, nullptr);
 }
 
-void ClassTemplateDecl::LoadLazySpecializations() const {
-  // Grab the most recent declaration to ensure we've loaded any lazy
-  // redeclarations of this template.
-  //
-  // FIXME: Avoid walking the entire redeclaration chain here.
-  Common *CommonPtr = getMostRecentDecl()->getCommonPtr();
-  if (CommonPtr->LazySpecializations) {
-    ASTContext &Context = getASTContext();
-    uint32_t *Specs = CommonPtr->LazySpecializations;
-    CommonPtr->LazySpecializations = nullptr;
-    for (uint32_t I = 0, N = *Specs++; I != N; ++I)
-      (void)Context.getExternalSource()->GetExternalDecl(Specs[I]);
-  }
+void ClassTemplateDecl::LoadLazySpecializations(
+                                             bool OnlyPartial/*=false*/) const {
+  loadLazySpecializationsImpl(OnlyPartial);
 }
 
 llvm::FoldingSetVector<ClassTemplateSpecializationDecl> &
@@ -333,7 +360,7 @@ ClassTemplateDecl::getSpecializations() const {
 
 llvm::FoldingSetVector<ClassTemplatePartialSpecializationDecl> &
 ClassTemplateDecl::getPartialSpecializations() {
-  LoadLazySpecializations();
+  LoadLazySpecializations(/*PartialOnly = */ true);
   return getCommonPtr()->PartialSpecializations;
 }  
 
@@ -347,12 +374,15 @@ ClassTemplateDecl::newCommon(ASTContext &C) const {
 ClassTemplateSpecializationDecl *
 ClassTemplateDecl::findSpecialization(ArrayRef<TemplateArgument> Args,
                                       void *&InsertPos) {
-  return findSpecializationImpl(getSpecializations(), Args, InsertPos);
+  auto *Common = getCommonPtr();
+  return findSpecializationImpl(Common->Specializations, Args, InsertPos);
 }
 
 void ClassTemplateDecl::AddSpecialization(ClassTemplateSpecializationDecl *D,
                                           void *InsertPos) {
-  addSpecializationImpl<ClassTemplateDecl>(getSpecializations(), D, InsertPos);
+  auto *Common = getCommonPtr();
+  addSpecializationImpl<ClassTemplateDecl>(Common->Specializations, D,
+                                           InsertPos);
 }
 
 ClassTemplatePartialSpecializationDecl *
@@ -643,6 +673,14 @@ TemplateArgumentList::CreateCopy(ASTContext &Context,
   return new (Mem) TemplateArgumentList(Args);
 }
 
+unsigned TemplateArgumentList::ComputeODRHash(ArrayRef<TemplateArgument> Args) {
+  ODRHash Hasher;
+  for (TemplateArgument TA : Args)
+    Hasher.AddTemplateArgument(TA);
+
+  return Hasher.CalculateHash();
+}
+
 FunctionTemplateSpecializationInfo *
 FunctionTemplateSpecializationInfo::Create(ASTContext &C, FunctionDecl *FD,
                                            FunctionTemplateDecl *Template,
@@ -927,21 +965,9 @@ VarTemplateDecl *VarTemplateDecl::CreateDeserialized(ASTContext &C,
                                      DeclarationName(), nullptr, nullptr);
 }
 
-// TODO: Unify across class, function and variable templates?
-//       May require moving this and Common to RedeclarableTemplateDecl.
-void VarTemplateDecl::LoadLazySpecializations() const {
-  // Grab the most recent declaration to ensure we've loaded any lazy
-  // redeclarations of this template.
-  //
-  // FIXME: Avoid walking the entire redeclaration chain here.
-  Common *CommonPtr = getMostRecentDecl()->getCommonPtr();
-  if (CommonPtr->LazySpecializations) {
-    ASTContext &Context = getASTContext();
-    uint32_t *Specs = CommonPtr->LazySpecializations;
-    CommonPtr->LazySpecializations = nullptr;
-    for (uint32_t I = 0, N = *Specs++; I != N; ++I)
-      (void)Context.getExternalSource()->GetExternalDecl(Specs[I]);
-  }
+void VarTemplateDecl::LoadLazySpecializations(
+                                             bool OnlyPartial/*=false*/) const {
+  loadLazySpecializationsImpl(OnlyPartial);
 }
 
 llvm::FoldingSetVector<VarTemplateSpecializationDecl> &
@@ -952,7 +978,7 @@ VarTemplateDecl::getSpecializations() const {
 
 llvm::FoldingSetVector<VarTemplatePartialSpecializationDecl> &
 VarTemplateDecl::getPartialSpecializations() {
-  LoadLazySpecializations();
+  LoadLazySpecializations(/*PartialOnly = */ true);
   return getCommonPtr()->PartialSpecializations;
 }
 
@@ -966,12 +992,14 @@ VarTemplateDecl::newCommon(ASTContext &C) const {
 VarTemplateSpecializationDecl *
 VarTemplateDecl::findSpecialization(ArrayRef<TemplateArgument> Args,
                                     void *&InsertPos) {
-  return findSpecializationImpl(getSpecializations(), Args, InsertPos);
+  auto *Common = getCommonPtr();
+  return findSpecializationImpl(Common->Specializations, Args, InsertPos);
 }
 
 void VarTemplateDecl::AddSpecialization(VarTemplateSpecializationDecl *D,
                                         void *InsertPos) {
-  addSpecializationImpl<VarTemplateDecl>(getSpecializations(), D, InsertPos);
+  auto *Common = getCommonPtr();
+  addSpecializationImpl<VarTemplateDecl>(Common->Specializations, D, InsertPos);
 }
 
 VarTemplatePartialSpecializationDecl *

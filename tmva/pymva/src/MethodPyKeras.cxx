@@ -13,6 +13,8 @@
 #include "TMVA/Results.h"
 #include "TMVA/TransformationHandler.h"
 #include "TMVA/VariableTransformBase.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Timer.h"
 
 using namespace TMVA;
 
@@ -30,6 +32,7 @@ MethodPyKeras::MethodPyKeras(const TString &jobName, const TString &methodTitle,
    fTriesEarlyStopping = -1;
    fLearningRateSchedule = ""; // empty string deactivates learning rate scheduler
    fFilenameTrainedModel = ""; // empty string sets output model filename to default (in weights/)
+   fTensorBoard = "";          // empty string deactivates TensorBoard callback
 }
 
 MethodPyKeras::MethodPyKeras(DataSetInfo &theData, const TString &theWeightFile)
@@ -42,6 +45,7 @@ MethodPyKeras::MethodPyKeras(DataSetInfo &theData, const TString &theWeightFile)
    fTriesEarlyStopping = -1;
    fLearningRateSchedule = ""; // empty string deactivates learning rate scheduler
    fFilenameTrainedModel = ""; // empty string sets output model filename to default (in weights/)
+   fTensorBoard = "";          // empty string deactivates TensorBoard callback
 }
 
 MethodPyKeras::~MethodPyKeras() {
@@ -66,6 +70,8 @@ void MethodPyKeras::DeclareOptions() {
    DeclareOptionRef(fSaveBestOnly, "SaveBestOnly", "Store only weights with smallest validation loss");
    DeclareOptionRef(fTriesEarlyStopping, "TriesEarlyStopping", "Number of epochs with no improvement in validation loss after which training will be stopped. The default or a negative number deactivates this option.");
    DeclareOptionRef(fLearningRateSchedule, "LearningRateSchedule", "Set new learning rate during training at specific epochs, e.g., \"50,0.01;70,0.005\"");
+   DeclareOptionRef(fTensorBoard, "TensorBoard",
+                    "Write a log during training to visualize and monitor the training performance with TensorBoard");
 }
 
 void MethodPyKeras::ProcessOptions() {
@@ -280,8 +286,18 @@ void MethodPyKeras::Train() {
       Log() << kINFO << "Option LearningRateSchedule: Set learning rate during training: " << fLearningRateSchedule << Endl;
    }
 
+   // Callback: TensorBoard
+   if (fTensorBoard != "") {
+      TString logdir = TString("'") + fTensorBoard + TString("'");
+      PyRunString(
+         "callbacks.append(keras.callbacks.TensorBoard(log_dir=" + logdir +
+            ", histogram_freq=0, batch_size=batchSize, write_graph=True, write_grads=False, write_images=False))",
+         "Failed to setup training callback: TensorBoard");
+      Log() << kINFO << "Option TensorBoard: Log files for training monitoring are stored in: " << logdir << Endl;
+   }
+
    // Train model
-   PyRunString("history = model.fit(trainX, trainY, sample_weight=trainWeights, batch_size=batchSize, nb_epoch=numEpochs, verbose=verbose, validation_data=(valX, valY, valWeights), callbacks=callbacks)",
+   PyRunString("history = model.fit(trainX, trainY, sample_weight=trainWeights, batch_size=batchSize, epochs=numEpochs, verbose=verbose, validation_data=(valX, valY, valWeights), callbacks=callbacks)",
                "Failed to train model");
 
    /*
@@ -331,7 +347,7 @@ Double_t MethodPyKeras::GetMvaValue(Double_t *errLower, Double_t *errUpper) {
    return fOutput[TMVA::Types::kSignal];
 }
 
-std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t) {
+std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress) {
    // Check whether the model is setup
    // NOTE: Unfortunately this is needed because during evaluation ProcessOptions is not called again
    if (!fModelIsSetup) {
@@ -344,6 +360,15 @@ std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t la
    if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
    if (firstEvt < 0) firstEvt = 0;
    nEvents = lastEvt-firstEvt;
+
+   // use timer
+   Timer timer( nEvents, GetName(), kTRUE );
+
+   if (logProgress)
+      Log() << kHEADER << Form("[%s] : ",DataInfo().GetName())
+            << "Evaluation of " << GetMethodName() << " on "
+            << (Data()->GetCurrentType() == Types::kTraining ? "training" : "testing")
+            << " sample (" << nEvents << " events)" << Endl;
 
    float* data = new float[nEvents*fNVars];
    for (UInt_t i=0; i<nEvents; i++) {
@@ -372,6 +397,13 @@ std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t la
    for (UInt_t i=0; i<nEvents; i++) {
       mvaValues[i] = (double) predictionsData[i*fNOutputs + TMVA::Types::kSignal];
    }
+
+   if (logProgress) {
+      Log() << kINFO
+            << "Elapsed time for evaluation of " << nEvents <<  " events: "
+            << timer.GetElapsedTime() << "       " << Endl;
+   }
+
 
    return mvaValues;
 }

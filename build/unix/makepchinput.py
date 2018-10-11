@@ -66,7 +66,7 @@ def getSTLIncludes():
    """
    Here we include the list of c++11 stl headers
    From http://en.cppreference.com/w/cpp/header
-   regex is removed until ROOT-7004 is fixed
+   valarray is removed because it causes lots of compilation at startup.
    """
    stlHeadersList = ("cstdlib",
                      "csignal",
@@ -117,7 +117,7 @@ def getSTLIncludes():
                      "iterator",
                      "cmath",
                      "complex",
-                     "valarray",
+#                     "valarray",
                      "random",
                      "numeric",
                      "ratio",
@@ -138,15 +138,14 @@ def getSTLIncludes():
                      "atomic",
                      "thread",
                      "mutex",
+                     "future",
                      "condition_variable",
                      "ciso646",
                      "ccomplex",
                      "ctgmath",
                      "cstdalign",
+                     "regex",
                      "cstdbool")
-
-   if sys.platform != 'win32':
-      stlHeadersList += ("future",)
 
    allHeadersPartContent = "// STL headers\n"
 
@@ -221,7 +220,7 @@ def isAnyPatternInString(patterns,theString):
    Check if any of the patterns is contained in the string
    """
    for pattern in patterns:
-      if pattern in theString: return True
+      if os.path.normpath(pattern) in theString: return True
    return False
 
 #-------------------------------------------------------------------------------
@@ -230,7 +229,7 @@ def isDirForPCH(dirName):
    Check if the directory corresponds to a module whose headers must belong to
    the PCH
    """
-   PCHPatternsWhitelist = ("interpreter/",
+   PCHPatternsWhitelist = ["interpreter/",
                            "core/",
                            "io/io",
                            "net/net",
@@ -247,8 +246,8 @@ def isDirForPCH(dirName):
                            "bindings/pyroot",
                            "roofit/",
                            "tmva",
-                           "main")
-   PCHPatternsBlacklist = ("graf2d/qt",
+                           "main"]
+   PCHPatternsBlacklist = ["graf2d/qt",
                            "gui/guihtml",
                            "gui/guibuilder",
                            "math/fftw",
@@ -256,11 +255,14 @@ def isDirForPCH(dirName):
                            "math/fumili",
                            "math/mlp",
                            "math/quadp",
-                           "math/rtools"
+                           "math/rtools",
                            "math/splot",
                            "math/unuran",
                            "math/vdt",
-                           "tmva/rmva")
+                           "tmva/rmva"]
+
+   if (sys.platform != 'win32' and sys.maxsize <= 2**32): # https://docs.python.org/3/library/platform.html#cross-platform
+      PCHPatternsBlacklist.append("tree/dataframe")
 
    accepted = isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
                not isAnyPatternInString(PCHPatternsBlacklist,dirName)

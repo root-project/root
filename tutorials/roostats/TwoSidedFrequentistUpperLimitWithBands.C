@@ -19,8 +19,8 @@
 /// ~~~{.cpp}
 ///   double confidenceLevel=0.95;
 ///   double additionalToysFac = 1.;
-///   int nPointsToScan = 30;
-///   int nToyMC = 500;
+///   int nPointsToScan = 12;
+///   int nToyMC = 200;
 /// ~~~
 ///
 /// This uses a modified version of the profile likelihood ratio as

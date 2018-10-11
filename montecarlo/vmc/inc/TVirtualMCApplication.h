@@ -51,6 +51,9 @@ public:
    /// Define parameters for optical processes (optional)
    virtual void ConstructOpGeometry() {}
 
+   /// Define sensitive detectors (optional)
+   virtual void ConstructSensitiveDetectors() {}
+
    /// Initialize geometry
    /// (Usually used to define sensitive volumes IDs)
    virtual void InitGeometry() = 0;

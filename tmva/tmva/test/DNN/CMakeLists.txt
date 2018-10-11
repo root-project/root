@@ -3,14 +3,17 @@
 # @author Simon Pfreundschuh
 ############################################################################
 
-project(tmva-tests)
-find_package(ROOT REQUIRED)
-
 set(Libraries Core MathCore Matrix TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
 
+ROOT_ADD_TEST_SUBDIRECTORY(CNN)
+ROOT_ADD_TEST_SUBDIRECTORY(DAE)
+ROOT_ADD_TEST_SUBDIRECTORY(RNN)
 #--- CUDA tests. ---------------------------
-if (CUDA_FOUND)
+if (CUDA_FOUND AND tmva-gpu)
+
+  include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+
 
   SET(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
 
@@ -34,6 +37,11 @@ if (CUDA_FOUND)
   TARGET_LINK_LIBRARIES(testBackpropagationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-BackpropagationCuda COMMAND testBackpropagationCuda)
 
+  # DNN - Backpropagation DL Cuda
+  ROOT_EXECUTABLE(testBackpropagationDLCuda TestBackpropagationDLCuda.cxx LIBRARIES ${Libraries})
+  TARGET_LINK_LIBRARIES(testBackpropagationDLCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+  ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DLCuda COMMAND testBackpropagationDLCuda)
+
   # DNN - Minimization Cuda
   CUDA_ADD_EXECUTABLE(testMinimizationCuda TestMinimizationCuda.cxx)
   TARGET_LINK_LIBRARIES(testMinimizationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
@@ -48,11 +56,12 @@ if (CUDA_FOUND)
   CUDA_ADD_EXECUTABLE(testDataLoaderCuda TestDataLoaderCuda.cxx)
   TARGET_LINK_LIBRARIES(testDataLoaderCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-DataLoaderCuda COMMAND testDataLoaderCuda)
-endif (CUDA_FOUND)
+
+endif ()
 
 #--- CPU tests. ----------------------------
-if (BLAS_FOUND AND imt)
-  include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
+if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
+  include_directories(${TBB_INCLUDE_DIRS})
 
   # DNN - Arithmetic Functions CPU
   ROOT_EXECUTABLE(testArithmeticCpu TestMatrixArithmeticCpu.cxx
@@ -79,6 +88,11 @@ if (BLAS_FOUND AND imt)
     LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Backpropagation-Cpu COMMAND testBackpropagationCpu)
 
+  # DNN - BackpropagationDL CPU
+  ROOT_EXECUTABLE(testBackpropagationDLCpu TestBackpropagationDLCpu.cxx
+    LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DL-Cpu COMMAND testBackpropagationDLCpu)
+
   # DNN - DataLoader CPU
   ROOT_EXECUTABLE(testDataLoaderCpu TestDataLoaderCpu.cxx
     LIBRARIES ${Libraries})
@@ -89,7 +103,37 @@ if (BLAS_FOUND AND imt)
     LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Minimization-Cpu COMMAND testMinimizationCpu)
 
-endif (BLAS_FOUND AND imt)
+  # DNN - Optimization CPU
+  ROOT_EXECUTABLE(testOptimizationCpu TestOptimizationCpu.cxx
+    LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-Optimization-Cpu COMMAND testOptimizationCpu)
+
+  # DNN - MethodDL SGD Optimization CPU
+  ROOT_EXECUTABLE(testMethodDLSGDOptimizationCpu TestMethodDLSGDOptimizationCpu.cxx
+    LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-MethodDL-SGD-Optimization-Cpu COMMAND testMethodDLSGDOptimizationCpu)
+
+  # DNN - MethodDL Adam Optimization CPU
+  ROOT_EXECUTABLE(testMethodDLAdamOptimizationCpu TestMethodDLAdamOptimizationCpu.cxx
+    LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-MethodDL-Adam-Optimization-Cpu COMMAND testMethodDLAdamOptimizationCpu)
+
+  # DNN - MethodDL Adagrad Optimization CPU
+  ROOT_EXECUTABLE(testMethodDLAdagradOptimizationCpu TestMethodDLAdagradOptimizationCpu.cxx
+    LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-MethodDL-Adagrad-Optimization-Cpu COMMAND testMethodDLAdagradOptimizationCpu)
+
+  # DNN - MethodDL RMSProp Optimization CPU
+  ROOT_EXECUTABLE(testMethodDLRMSPropOptimizationCpu TestMethodDLRMSPropOptimizationCpu.cxx
+    LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-MethodDL-RMSProp-Optimization-Cpu COMMAND testMethodDLRMSPropOptimizationCpu)
+
+  # DNN - MethodDL Adadelta Optimization CPU
+  ROOT_EXECUTABLE(testMethodDLAdadeltaOptimizationCpu TestMethodDLAdadeltaOptimizationCpu.cxx
+    LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-MethodDL-Adadelta-Optimization-Cpu COMMAND testMethodDLAdadeltaOptimizationCpu)
+  
+endif ()
 
   # DNN - Activation Functions
   ROOT_EXECUTABLE(testActivationFunctions TestActivationFunctions.cxx LIBRARIES ${Libraries})
@@ -106,6 +150,10 @@ endif (BLAS_FOUND AND imt)
   # DNN - Backpropagation
   ROOT_EXECUTABLE(testBackpropagation TestBackpropagation.cxx LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Backpropagation COMMAND testBackpropagation)
+
+  # DNN - Backpropagation DL
+  ROOT_EXECUTABLE(testBackpropagationDL TestBackpropagationDL.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DL COMMAND testBackpropagationDL)
 
   # DNN - DataLoader
   ROOT_EXECUTABLE(testDataLoader TestDataLoader.cxx LIBRARIES ${Libraries})

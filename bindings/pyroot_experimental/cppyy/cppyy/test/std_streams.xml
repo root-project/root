@@ -1,0 +1,12 @@
+<lcgdict>
+
+  <namespace name = "std" />
+
+  <class name = "std::ostream"/>
+  <class name = "std::ios_base"/>
+  <class name = "std::basic_ios<char,std::char_traits<char> >"/>
+
+  <class name = "std::basic_ostream<char,char_traits<char> >" />
+  <variable name="std::cout" />
+
+</lcgdict>

@@ -76,14 +76,18 @@ void TMVARegression( TString myMethodList = "" )
    Use["LD"]		        = 1;
    //
    // Function Discriminant analysis
-   Use["FDA_GA"]          = 1;
+   Use["FDA_GA"]          = 0;
    Use["FDA_MC"]          = 0;
    Use["FDA_MT"]          = 0;
    Use["FDA_GAMT"]        = 0;
    //
    // Neural Network
-   Use["MLP"]             = 1;
+   Use["MLP"]             = 0;
+#ifdef R__HAS_TMVACPU
+   Use["DNN_CPU"] = 1;
+#else
    Use["DNN_CPU"] = 0;
+#endif
    //
    // Support Vector Machine
    Use["SVM"]             = 0;
@@ -102,7 +106,7 @@ void TMVARegression( TString myMethodList = "" )
 
       std::vector<TString> mlist = gTools().SplitString( myMethodList, ',' );
       for (UInt_t i=0; i<mlist.size(); i++) {
-         std::string regMethod(mlist[i]);
+         std::string regMethod(mlist[i].Data());
 
          if (Use.find(regMethod) == Use.end()) {
             std::cout << "Method \"" << regMethod << "\" not known in TMVA under this name. Choose among the following:" << std::endl;
@@ -269,21 +273,19 @@ void TMVARegression( TString myMethodList = "" )
           TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|20,LINEAR");
           TString layoutString ("Layout=TANH|100,TANH|30,LINEAR");
        */
-      TString layoutString("Layout=TANH|100,LINEAR");
+      TString layoutString("Layout=TANH|50,Layout=TANH|50,Layout=TANH|50,LINEAR");
 
-      TString training0("LearningRate=1e-5,Momentum=0.5,Repetitions=1,ConvergenceSteps=500,BatchSize=50,"
-                        "TestRepetitions=7,WeightDecay=0.01,Regularization=NONE,DropConfig=0.5+0.5+0.5+0.5,"
+      TString training0("LearningRate=1e-2,Momentum=0.5,Repetitions=1,ConvergenceSteps=20,BatchSize=50,"
+                        "TestRepetitions=10,WeightDecay=0.01,Regularization=NONE,DropConfig=0.2+0.2+0.2+0.,"
                         "DropRepetitions=2");
-      TString training1("LearningRate=1e-5,Momentum=0.9,Repetitions=1,ConvergenceSteps=170,BatchSize=30,"
-                        "TestRepetitions=7,WeightDecay=0.01,Regularization=L2,DropConfig=0.1+0.1+0.1,DropRepetitions="
+      TString training1("LearningRate=1e-3,Momentum=0.9,Repetitions=1,ConvergenceSteps=20,BatchSize=50,"
+                        "TestRepetitions=5,WeightDecay=0.01,Regularization=L2,DropConfig=0.1+0.1+0.1,DropRepetitions="
                         "1");
-      TString training2("LearningRate=1e-5,Momentum=0.3,Repetitions=1,ConvergenceSteps=150,BatchSize=40,"
-                        "TestRepetitions=7,WeightDecay=0.01,Regularization=NONE");
-      TString training3("LearningRate=1e-6,Momentum=0.1,Repetitions=1,ConvergenceSteps=500,BatchSize=100,"
-                        "TestRepetitions=7,WeightDecay=0.0001,Regularization=NONE");
+      TString training2("LearningRate=1e-4,Momentum=0.3,Repetitions=1,ConvergenceSteps=10,BatchSize=50,"
+                        "TestRepetitions=5,WeightDecay=0.01,Regularization=NONE");
 
       TString trainingStrategyString("TrainingStrategy=");
-      trainingStrategyString += training0 + "|" + training1 + "|" + training2 + "|" + training3;
+      trainingStrategyString += training0 + "|" + training1 + "|" + training2;
 
       //       TString trainingStrategyString
       //       ("TrainingStrategy=LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=20,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,L1=false,DropFraction=0.0,DropRepetitions=5");

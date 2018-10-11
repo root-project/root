@@ -1156,14 +1156,12 @@ void EventTranslator::GenerateConfigureNotifyEvent(NSView<X11Window> *view, cons
 
    newEvent.fX = newFrame.origin.x;
    newEvent.fY = newFrame.origin.y;
-   //fXRoot?
-   //fYRoot?
+
    newEvent.fWidth = newFrame.size.width;
    newEvent.fHeight = newFrame.size.height;
 
    TGWindow * const window = gClient->GetWindowById(view.fID);
-   assert(window != 0 && "GenerateConfigureNotifyEvent, window was not found");
-   window->HandleEvent(&newEvent);
+   if (window) window->HandleEvent(&newEvent);
 }
 
 //______________________________________________________________________________

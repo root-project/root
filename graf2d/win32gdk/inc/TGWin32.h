@@ -52,7 +52,7 @@ struct MSG;
 
 typedef unsigned long KeySym;
 
-#define None 0 /* universal null resource or null atom */
+//#define None 0 /* universal null resource or null atom */
 
 struct XWindow_t;
 

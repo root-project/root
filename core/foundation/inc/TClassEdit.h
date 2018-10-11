@@ -13,7 +13,7 @@
 #ifndef ROOT_TClassEdit
 #define ROOT_TClassEdit
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "RConfigure.h"
 #include <stdlib.h>
 #ifdef R__WIN32
@@ -62,7 +62,7 @@ namespace ROOT {
       class TNormalizedCtxt;
    }
 }
-#include "RStringView.h"
+#include "ROOT/RStringView.hxx"
 
 // TClassEdit is used to manipulate class and type names.
 //
@@ -221,6 +221,30 @@ namespace TClassEdit {
    return demangled_name;
    }
    char* DemangleTypeIdName(const std::type_info& ti, int& errorCode);
+
+
+   /// Result of splitting a function declaration into
+   /// fReturnType fScopeName::fFunctionName<fFunctionTemplateArguments>(fFunctionParameters)
+   struct FunctionSplitInfo {
+      /// Return type of the function, might be empty if the function declaration string did not provide it.
+      std::string fReturnType;
+
+      /// Name of the scope qualification of the function, possibly empty
+      std::string fScopeName;
+
+      /// Name of the function
+      std::string fFunctionName;
+
+      /// Template arguments of the function template specialization, if any; will contain one element "" for
+      /// `function<>()`
+      std::vector<std::string> fFunctionTemplateArguments;
+
+      /// Function parameters.
+      std::vector<std::string> fFunctionParameters;
+   };
+
+   /// Split a function declaration into its different parts.
+   bool SplitFunction(std::string_view decl, FunctionSplitInfo &result);
 }
 
 #endif

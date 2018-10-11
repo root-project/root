@@ -23,8 +23,6 @@
 // output state label.
 
 #include <cstdio>
-#include <memory>
-#include <cstdlib>
 
 #include "RooMappedCategory.h"
 
@@ -197,7 +195,7 @@ void RooMappedCategory::printMultiline(std::ostream& os, Int_t content, Bool_t v
     _defCat->printStream(os,kName|kValue,kSingleLine);
 
     os << indent << "  Mapping rules:" << std::endl;
-    for (std::map<std::string,Entry>::const_iterator iter = _mapArray.begin() ; iter!=_mapArray.end() ; iter++) {
+    for (std::map<std::string,Entry>::const_iterator iter = _mapArray.begin() ; iter!=_mapArray.end() ; ++iter) {
       os << indent << "  " << iter->first << " -> " << iter->second.outCat().GetName() << std::endl ;
     }
   }
@@ -270,7 +268,7 @@ void RooMappedCategory::printMetaArgs(std::ostream& os) const
   RooCatType prevOutCat ;
   Bool_t first(kTRUE) ;
   os << "map=(" ;
-  for (std::map<std::string,Entry>::const_iterator iter = _mapArray.begin() ; iter!=_mapArray.end() ; iter++) {
+  for (std::map<std::string,Entry>::const_iterator iter = _mapArray.begin() ; iter!=_mapArray.end() ; ++iter) {
     if (iter->second.outCat().getVal()!=prevOutCat.getVal()) {
       if (!first) { os << " " ; }
       first=kFALSE ;
@@ -303,7 +301,7 @@ void RooMappedCategory::writeToStream(std::ostream& os, Bool_t compact) const
     // Scan array of regexps
     RooCatType prevOutCat ;
     Bool_t first(kTRUE) ;
-    for (std::map<std::string,Entry>::const_iterator iter = _mapArray.begin() ; iter!=_mapArray.end() ; iter++) {
+    for (std::map<std::string,Entry>::const_iterator iter = _mapArray.begin() ; iter!=_mapArray.end() ; ++iter) {
       if (iter->second.outCat().getVal()!=prevOutCat.getVal()) {
         if (!first) { os << " " ; }
         first=kFALSE ;

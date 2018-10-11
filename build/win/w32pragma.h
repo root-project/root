@@ -61,7 +61,7 @@
 
 #define WIN32 1
 #define _WINDOWS 1
-#define WINVER 0x0400
+#define WINVER 0x0500
 #define CRTAPI1 _cdecl 
 #define CRTAPI2 _cdecl
 #define _X86_ 1 

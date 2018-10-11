@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_eve
-/// Demonstates usage of geometry aliases - merge ALICE ITS with ATLAS MUON.
+/// Demonstrates usage of geometry aliases - merge ALICE ITS with ATLAS MUON.
 ///
 /// \image html eve_geom_alias.png
 /// \macro_code
@@ -17,23 +17,21 @@ void geom_alias()
 
    gGeoManager = gEve->GetGeometryByAlias("ALICE");
 
-   TGeoNode* node1 = gGeoManager->GetTopVolume()->FindNode("ITSV_1");
-   TEveGeoTopNode* its = new TEveGeoTopNode(gGeoManager, node1);
+   auto node1 = gGeoManager->GetTopVolume()->FindNode("ITSV_1");
+   auto its   = new TEveGeoTopNode(gGeoManager, node1);
    gEve->AddGlobalElement(its);
-
 
    gGeoManager = gEve->GetGeometryByAlias("ATLAS");
 
-   TGeoNode* node2 = gGeoManager->GetTopVolume()->FindNode("OUTE_1");
-   TEveGeoTopNode* atlas = new TEveGeoTopNode(gGeoManager, node2);
+   auto node2 = gGeoManager->GetTopVolume()->FindNode("OUTE_1");
+   auto atlas = new TEveGeoTopNode(gGeoManager, node2);
    gEve->AddGlobalElement(atlas);
-
 
    gEve->FullRedraw3D(kTRUE);
 
    // EClipType not exported to CINT (see TGLUtil.h):
    // 0 - no clip, 1 - clip plane, 2 - clip box
-   TGLViewer *v = gEve->GetDefaultGLViewer();
+   auto v = gEve->GetDefaultGLViewer();
    v->GetClipSet()->SetClipType(TGLClip::EType(2));
    v->RefreshPadEditor(v);
 

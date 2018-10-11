@@ -396,7 +396,7 @@ void TMVA::MethodFDA::Train( void )
 
    // starting values (not used by all fitters)
    fBestPars.clear();
-   for (std::vector<Interval*>::const_iterator parIt = fParRange.begin(); parIt != fParRange.end(); parIt++) {
+   for (std::vector<Interval*>::const_iterator parIt = fParRange.begin(); parIt != fParRange.end(); ++parIt) {
       fBestPars.push_back( (*parIt)->GetMean() );
    }
 
@@ -596,9 +596,6 @@ void TMVA::MethodFDA::CalculateMulticlassValues( const TMVA::Event*& evt, std::v
       values.push_back( value );
       sum += value;
    }
-
-   //    // normalize to sum of value (commented out, .. have to think of how to treat negative classifier values)
-   //    std::transform( fMulticlassReturnVal.begin(), fMulticlassReturnVal.end(), fMulticlassReturnVal.begin(), bind2nd( std::divides<float>(), sum) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

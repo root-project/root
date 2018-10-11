@@ -4,6 +4,13 @@
 .TH PQ2-INFO-SERVER 1 "Version 5" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
 .\" other parms are allowed: see man(7), man(1)
+.SH NOTA BENE
+.B The PQ2 tools are deprecated and will be removed in ROOT v6.16/00.
+.PP
+Please contact the ROOT team at
+.UR http://root.cern.ch/
+.I http://root.cern.ch
+in the unlikely event this change is disruptive for your workflow.
 .SH NAME
 pq2-info-server \- Display info about the datasets on a given server from a dataset meta-repository based on ROOT files
 .SH SYNOPSIS
@@ -45,7 +52,7 @@ URL of the PROOF master or data server providing the information; for data serve
 Can also be specified via the environment variables PQ2PROOFURL or PQ2DSSRVURL (see ENVIRONMENT VARIABLES)."
 .TP
 \fB-t\fR <\fIdir\fR>, \fB--tmpdir\fR=<\fIdir\fR>
-Directory for temporary files; defualt is /tmp/<username>.
+Directory for temporary files; default is /tmp/<username>.
 .SH "ENVIRONMENT VARIABLES"
 See \fIsetup-pq2\fR(1).
 .SH "SEE ALSO"

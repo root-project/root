@@ -1176,6 +1176,7 @@ bool ASTReader::ParseLineTable(ModuleFile &F,
 
   // Parse the file names
   std::map<int, int> FileIDs;
+  FileIDs[-1] = -1; // For unspecified filenames.
   for (unsigned I = 0; Record[Idx]; ++I) {
     // Extract the file name
     auto Filename = ReadPath(F, Record, Idx);
@@ -1657,9 +1658,6 @@ bool HeaderFileInfoTrait::EqualKey(internal_key_ref a, internal_key_ref b) {
     return false;
 
   if (llvm::sys::path::is_absolute(a.Filename) && a.Filename == b.Filename)
-    return true;
-
-  if (StringRef(b.Filename).endswith(a.Filename))
     return true;
 
   // Determine whether the actual files are equivalent.
@@ -2244,9 +2242,7 @@ ASTReader::ASTReadResult ASTReader::ReadOptionsBlock(
     }
 
     case TARGET_OPTIONS: {
-      // Work around ROOT-6966
-      //bool Complain = (ClientLoadCapabilities & ARR_ConfigurationMismatch) == 0;
-      bool Complain = false;
+      bool Complain = (ClientLoadCapabilities & ARR_ConfigurationMismatch) == 0;
       if (ParseTargetOptions(Record, Complain, Listener,
                              AllowCompatibleConfigurationMismatch))
         Result = ConfigurationMismatch;
@@ -2564,11 +2560,15 @@ ASTReader::ReadControlBlock(ModuleFile &F,
              "MODULE_DIRECTORY found before MODULE_NAME");
       // If we've already loaded a module map file covering this module, we may
       // have a better path for it (relative to the current build).
-      Module *M = PP.getHeaderSearchInfo().lookupModule(F.ModuleName);
+      Module *M = PP.getHeaderSearchInfo().lookupModule(
+          F.ModuleName, /*AllowSearch*/ true,
+          /*AllowExtraModuleMapSearch*/ true);
       if (M && M->Directory) {
         // If we're implicitly loading a module, the base directory can't
         // change between the build and use.
-        if (F.Kind != MK_ExplicitModule && F.Kind != MK_PrebuiltModule) {
+        // Don't emit module relocation error if we have -fno-validate-pch
+        if (!PP.getPreprocessorOpts().DisablePCHValidation &&
+            F.Kind != MK_ExplicitModule && F.Kind != MK_PrebuiltModule) {
           const DirectoryEntry *BuildDir =
               PP.getFileManager().getDirectory(Blob);
           if (!BuildDir || BuildDir != M->Directory) {
@@ -3507,7 +3507,8 @@ ASTReader::ReadModuleMapFileBlock(RecordData &Record, ModuleFile &F,
     Module *M = PP.getHeaderSearchInfo().lookupModule(F.ModuleName);
     auto &Map = PP.getHeaderSearchInfo().getModuleMap();
     const FileEntry *ModMap = M ? Map.getModuleMapFileForUniquing(M) : nullptr;
-    if (!ModMap) {
+    // Don't emit module relocation error if we have -fno-validate-pch
+    if (!PP.getPreprocessorOpts().DisablePCHValidation && !ModMap) {
       assert(ImportedBy && "top-level import should be verified");
       if ((ClientLoadCapabilities & ARR_OutOfDate) == 0) {
         if (auto *ASTFE = M ? M->getASTFile() : nullptr)
@@ -4947,7 +4948,9 @@ ASTReader::ReadSubmoduleBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
 
       if (!ParentModule) {
         if (const FileEntry *CurFile = CurrentModule->getASTFile()) {
-          if (CurFile != F.File) {
+          // Don't emit module relocation error if we have -fno-validate-pch
+          if (!PP.getPreprocessorOpts().DisablePCHValidation &&
+              CurFile != F.File) {
             if (!Diags.isDiagnosticInFlight()) {
               Diag(diag::err_module_file_conflict)
                 << CurrentModule->getTopLevelModuleName()
@@ -6909,14 +6912,23 @@ void ASTReader::CompleteRedeclChain(const Decl *D) {
     }
   }
 
-  if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(D))
-    CTSD->getSpecializedTemplate()->LoadLazySpecializations();
-  if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(D))
-    VTSD->getSpecializedTemplate()->LoadLazySpecializations();
-  if (auto *FD = dyn_cast<FunctionDecl>(D)) {
-    if (auto *Template = FD->getPrimaryTemplate())
-      Template->LoadLazySpecializations();
+  RedeclarableTemplateDecl *Template = nullptr;
+  ArrayRef<TemplateArgument> Args;
+  if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(D)) {
+    Template = CTSD->getSpecializedTemplate();
+    Args = CTSD->getTemplateArgs().asArray();
+  } else if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(D)) {
+    Template = VTSD->getSpecializedTemplate();
+    Args = VTSD->getTemplateArgs().asArray();
+  } else if (auto *FD = dyn_cast<FunctionDecl>(D)) {
+    if (auto *Tmplt = FD->getPrimaryTemplate()) {
+      Template = Tmplt;
+      Args = FD->getTemplateSpecializationArgs()->asArray();
+    }
   }
+
+  if (Template)
+    Template->loadLazySpecializationsImpl(Args);
 }
 
 CXXCtorInitializer **

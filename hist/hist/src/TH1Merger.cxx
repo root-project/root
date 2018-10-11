@@ -240,6 +240,10 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
 
    isAutoP2 = fH0->TestBit(TH1::kAutoBinPTwo) ? kTRUE : kFALSE;
 
+   // if the option alphanumeric merge is set
+   // we assume we do not have labels 
+   if (fNoLabelMerge)  allHaveLabels = kFALSE; 
+
    // start looping on the histograms 
 
    do  {
@@ -540,10 +544,12 @@ void TH1Merger::DefineNewAxes() {
 void TH1Merger::CopyBuffer(TH1 *hsrc, TH1 *hdes)
 {
    // Check inputs
-   if (!hsrc || !hsrc->fBuffer || !hdes || !hdes->fBuffer) {
+   //if (!hsrc || !hsrc->fBuffer || !hdes || !hdes->fBuffer) {
+   if (!hsrc || !hsrc->fBuffer || !hdes ) {
       void *p1 = hsrc ? hsrc->fBuffer : 0;
-      void *p2 = hdes ? hdes->fBuffer : 0;
-      Warning("TH1Merger::CopyMerge", "invalid inputs: %p, %p, %p, %p -> do nothing", hsrc, hdes, p1, p2);
+      //void *p2 = hdes ? hdes->fBuffer : 0;
+      //Warning("TH1Merger::CopyMerge", "invalid inputs: %p, %p, %p, %p -> do nothing", hsrc, hdes, p1, p2);
+      Warning("TH1Merger::CopyMerge", "invalid inputs: %p, %p, %p, -> do nothing", hsrc, hdes, p1);
    }
 
    // Entries from buffers have to be filled one by one
@@ -875,24 +881,82 @@ Bool_t TH1Merger::DifferentAxesMerge() {
    return kTRUE;
 }
 
+/**
+   Find a duplicate labels in an axis label list
+*/
+Bool_t TH1Merger::HasDuplicateLabels(const THashList * labels) {
+   
+   if (!labels) return kFALSE; 
+
+   for (const auto * obj: *labels) {
+      auto objList = labels->GetListForObject(obj);
+      //objList->ls();
+      if (objList->GetSize() > 1 ) {
+         // check here if in the list we have duplicates
+         std::unordered_set<std::string> s;
+         for ( const auto * o: *objList) {
+            auto ret = s.insert(std::string(o->GetName() ));
+            if (!ret.second) return kTRUE; 
+         }
+      }
+   }
+   return kFALSE;
+}
+
+/**
+ Check if histogram has duplicate labels
+ Return an integer with bit set correponding 
+  on the axis that has duplicate labels 
+  e.g. duplicate labels on x axis : return 1
+       duplicate labels on x and z axis : return 5
+
+*/
+Int_t TH1Merger::CheckForDuplicateLabels(const TH1 * hist) {
+   
+   R__ASSERT(hist != nullptr);
+
+   auto labelsX = hist->GetXaxis()->GetLabels();
+   auto labelsY = hist->GetYaxis()->GetLabels();
+   auto labelsZ = hist->GetZaxis()->GetLabels();
+
+   Int_t res = 0; 
+   if (HasDuplicateLabels(labelsX) ) {
+      Warning("TH1Merger::CheckForDuplicateLabels","Histogram %s has duplicate labels in the x axis. "
+              "Bin contents will be merged in a single bin",hist->GetName());
+      res |= 1;
+   }
+   if (HasDuplicateLabels(labelsY) ) {
+      Warning("TH1Merger::CheckForDuplicateLabels","Histogram %s has duplicate labels in the y axis. "
+              "Bin contents will be merged in a single bin",hist->GetName());
+      res |= 2;
+   }
+   if (HasDuplicateLabels(labelsZ) ) {
+      Warning("TH1Merger::CheckForDuplicateLabels","Histogram %s has duplicate labels in the z axis. "
+              "Bin contents will be merged in a single bin",hist->GetName());
+      res |= 4;
+   }
+   return res; 
+}
 
 /**
    Merge histograms with labels 
 */
 Bool_t TH1Merger::LabelMerge() { 
 
-   
    Double_t stats[TH1::kNstat], totstats[TH1::kNstat];
    for (Int_t i=0;i<TH1::kNstat;i++) {totstats[i] = stats[i] = 0;}
    fH0->GetStats(totstats);
    Double_t nentries = fH0->GetEntries();
+
+   // check for duplicate labels
+   if (!fNoCheck && nentries > 0) CheckForDuplicateLabels(fH0); 
 
    TIter next(&fInputList); 
    while (TH1* hist=(TH1*)next()) {
 
       if (gDebug)
          Info("TH1Merger::LabelMerge","Merging histogram %s into %s",hist->GetName(), fH0->GetName() );
-      
+
       // skip empty histograms
       if (hist->IsEmpty()) continue; 
 
@@ -906,6 +970,9 @@ Bool_t TH1Merger::LabelMerge() {
       auto labelsY = hist->GetYaxis()->GetLabels();
       auto labelsZ = hist->GetZaxis()->GetLabels();
       R__ASSERT(!( labelsX == nullptr  && labelsY == nullptr && labelsZ == nullptr));
+
+      // check if histogram has duplicate labels
+      if (!fNoCheck && hist->GetEntries() > 0) CheckForDuplicateLabels(hist); 
 
       // loop on bins of the histogram and do the merge
       for (Int_t ibin = 0; ibin < hist->fNcells; ibin++) {

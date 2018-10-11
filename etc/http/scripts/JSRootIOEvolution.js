@@ -173,11 +173,42 @@
 
          if (getChar(curr) == 'Z' && getChar(curr+1) == 'L' && getCode(curr+2) == 8) { fmt = "new"; off = 2; } else
          if (getChar(curr) == 'C' && getChar(curr+1) == 'S' && getCode(curr+2) == 8) { fmt = "old"; off = 0; } else
-         if (getChar(curr) == 'X' && getChar(curr+1) == 'Z') fmt = "LZMA";
+         if (getChar(curr) == 'X' && getChar(curr+1) == 'Z') fmt = "LZMA"; else
+         if (getChar(curr) == 'L' && getChar(curr+1) == '4') { fmt = "LZ4"; off = 0; HDRSIZE = 17; }
+
+/*
+         if (fmt == "LZMA") {
+            console.log('find LZMA');
+            console.log('chars', getChar(curr), getChar(curr+1), getChar(curr+2));
+
+            for(var n=0;n<20;++n)
+               console.log('codes',n,getCode(curr+n));
+
+            var srcsize = HDRSIZE + ((getCode(curr+3) & 0xff) | ((getCode(curr+4) & 0xff) << 8) | ((getCode(curr+5) & 0xff) << 16));
+
+            var tgtsize0 = ((getCode(curr+6) & 0xff) | ((getCode(curr+7) & 0xff) << 8) | ((getCode(curr+8) & 0xff) << 16));
+
+
+            console.log('srcsize',srcsize, tgtsize0, tgtsize);
+
+            off = 0;
+
+            var uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off, arr.byteLength - curr - HDRSIZE - off);
+
+            JSROOT.LZMA.decompress(uint8arr, function on_decompress_complete(result) {
+                console.log("Decompressed done", typeof result, result);
+             }, function on_decompress_progress_update(percent) {
+                /// Decompressing progress code goes here.
+                console.log("Decompressing: " + (percent * 100) + "%");
+             });
+
+            return null;
+         }
+*/
 
          /*   C H E C K   H E A D E R   */
-         if ((fmt !== "new") && (fmt !== "old")) {
-            if (!noalert) JSROOT.alert("R__unzip: " + fmt + " zlib format is not supported!");
+         if ((fmt !== "new") && (fmt !== "old") && (fmt !== "LZ4")) {
+            if (!noalert) JSROOT.alert("R__unzip: " + fmt + " format is not supported!");
             return null;
          }
 
@@ -188,7 +219,10 @@
          //  place for unpacking
          if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
 
-         var reslen = JSROOT.ZIP.inflate(uint8arr, new Uint8Array(tgtbuf, fullres));
+         var tgt8arr = new Uint8Array(tgtbuf, fullres);
+
+         var reslen = (fmt === "LZ4") ? JSROOT.LZ4.uncompress(uint8arr, tgt8arr)
+                                      : JSROOT.ZIP.inflate(uint8arr, tgt8arr);
          if (reslen<=0) break;
 
          fullres += reslen;
@@ -758,6 +792,10 @@
       return null;
    }
 
+   TDirectory.prototype.ReadObject = function(obj_name, cycle, user_call_back) {
+      this.fFile.ReadObject(this.dir_name + "/" + obj_name, cycle, user_call_back);
+   }
+
    TDirectory.prototype.ReadKeys = function(objbuf, readkeys_callback) {
 
       objbuf.ClassStreamer(this, 'TDirectory');
@@ -811,7 +849,15 @@
    //    ----->          DATA      = Data bytes associated to the object
    //
 
-   // ctor
+   /**
+    * @summary Interface to read objects from ROOT files.
+    *
+    * @desc Use {@link JSROOT.OpenFile} to create instance of the class
+    * @constructor
+    * @memberof JSROOT
+    * @param {string} url - file URL
+    * @param {function} newfile_callback - function called when file header is read
+    */
    function TFile(url, newfile_callback) {
       this._typename = "TFile";
       this.fEND = 0;
@@ -858,7 +904,7 @@
       } else {
          var file = this;
          JSROOT.NewHttpRequest(this.fURL, "head", function(res) {
-            if (res==null)
+            if (!res)
                return JSROOT.CallBack(newfile_callback, null);
 
             var accept_ranges = res.getResponseHeader("Accept-Ranges");
@@ -873,6 +919,8 @@
       return this;
    }
 
+   /** @summary read buffer(s) from the file
+    * @private */
    TFile.prototype.ReadBuffer = function(place, result_callback, filename, progress_callback) {
 
       if ((this.fFileContent!==null) && !filename && (!this.fAcceptRanges || this.fFileContent.can_extract(place)))
@@ -1018,8 +1066,12 @@
          // multipart messages requires special handling
 
          var indx = hdr.indexOf("boundary="), boundary = "", n = first, o = 0;
-         if (indx > 0) boundary = "--" + hdr.substr(indx+9);
-                  else console.error('Did not found boundary id in the response header');
+         if (indx > 0) {
+            boundary = hdr.substr(indx+9);
+            if ((boundary[0] == '"') && (boundary[boundary.length-1] == '"'))
+               boundary = boundary.substr(1, boundary.length-2);
+            boundary = "--" + boundary;
+         } else console.error('Did not found boundary id in the response header');
 
          while (n<last) {
 
@@ -1087,12 +1139,14 @@
       send_new_request(true);
    }
 
+   /** @summary Get directory with given name and cycle
+    * @desc Function only can be used for already read directories, which are preserved in the memory
+    * @private */
    TFile.prototype.GetDir = function(dirname, cycle) {
-      // check first that directory with such name exists
 
-      if ((cycle==null) && (typeof dirname == 'string')) {
+      if ((cycle === undefined) && (typeof dirname == 'string')) {
          var pos = dirname.lastIndexOf(';');
-         if (pos>0) { cycle = dirname.substr(pos+1); dirname = dirname.substr(0,pos); }
+         if (pos>0) { cycle = parseInt(dirname.substr(pos+1)); dirname = dirname.substr(0,pos); }
       }
 
       for (var j=0; j < this.fDirectories.length; ++j) {
@@ -1104,9 +1158,10 @@
       return null;
    }
 
+   /** @summary Retrieve a key by its name and cycle in the list of keys
+    * @desc callback used when keys must be read first from the directory
+    * @private */
    TFile.prototype.GetKey = function(keyname, cycle, getkey_callback) {
-      // retrieve a key by its name and cycle in the list of keys
-      // one should call_back when keys must be read first from the directory
 
       if (typeof cycle != 'number') cycle = -1;
       var bestkey = null;
@@ -1145,8 +1200,9 @@
       return null;
    }
 
+   /** @summary Read and inflate object buffer described by its key
+    * @private */
    TFile.prototype.ReadObjBuffer = function(key, callback) {
-      // read and inflate object buffer described by its key
 
       var file = this;
 
@@ -1170,8 +1226,9 @@
       });
    }
 
+   /** @summary Method called when TTree object is streamed
+    * @private */
    TFile.prototype.AddReadTree = function(obj) {
-      // method called when TTree object is streamed
 
       if (JSROOT.TreeMethods)
          return JSROOT.extend(obj, JSROOT.TreeMethods);
@@ -1181,11 +1238,15 @@
       if (this.readTrees.indexOf(obj)<0) this.readTrees.push(obj);
    }
 
-   TFile.prototype.ReadObject = function(obj_name, cycle, user_call_back) {
-      // Read any object from a root file
-      // One could specify cycle number in the object name or as separate argument
-      // Last argument should be callback function, while data reading from file is asynchron
-
+   /** @summary Read any object from a root file
+    * @desc One could specify cycle number in the object name or as separate argument
+    * Last argument should be callback function, while data reading from file is asynchron
+    * @param {string} obj_name - name of object, may include cycle number like "hpxpy;1"
+    * @param {number} [cycle=undefined] - cycle number
+    * @param {function} user_call_back - function called when object read from the file
+    * @param {boolean} [only_dir=false] - if true, only TDirectory derived class will be read
+    */
+   TFile.prototype.ReadObject = function(obj_name, cycle, user_call_back, only_dir) {
       if (typeof cycle == 'function') { user_call_back = cycle; cycle = -1; }
 
       var pos = obj_name.lastIndexOf(";");
@@ -1205,7 +1266,7 @@
       // in such situation calls are asynchrone
       this.GetKey(obj_name, cycle, function(key) {
 
-         if (key == null)
+         if (!key)
             return JSROOT.CallBack(user_call_back, null);
 
          if ((obj_name=="StreamerInfo") && (key.fClassName=="TList"))
@@ -1217,6 +1278,9 @@
             var dir = file.GetDir(obj_name, cycle);
             if (dir) return JSROOT.CallBack(user_call_back, dir);
          }
+
+         if (!isdir && only_dir)
+            return JSROOT.CallBack(user_call_back, null);
 
          file.ReadObjBuffer(key, function(buf) {
             if (!buf) return JSROOT.CallBack(user_call_back, null);
@@ -1248,6 +1312,8 @@
       }); // end of GetKey callback
    }
 
+   /** @summary read formulas from the file
+    * @private */
    TFile.prototype.ReadFormulas = function(tf1, user_call_back, cnt) {
 
       var indx = cnt;
@@ -1266,6 +1332,8 @@
       });
    }
 
+   /** @summary extract streamer infos
+    * @private */
    TFile.prototype.ExtractStreamerInfos = function(buf) {
       if (!buf) return;
 
@@ -1322,9 +1390,9 @@
       }
    }
 
-
+   /** @summary Read file keys
+    * @private */
    TFile.prototype.ReadKeys = function(readkeys_callback) {
-      // read keys only in the root file
 
       var file = this;
 
@@ -1426,14 +1494,17 @@
             });
          });
       });
-   };
+   }
 
+   /** @summary Read the directory content from  a root file
+    * @desc If directory was already read - return previously read object
+    * Same functionality as {@link TFile.ReadObject}
+    * @param {string} dir_name - directory name
+    * @param {number} cycle - directory cycle
+    * @param {function} readdir_callback - callback with read directory */
    TFile.prototype.ReadDirectory = function(dir_name, cycle, readdir_callback) {
-      // read the directory content from  a root file
-      // do not read directory if it is already exists
-
-      return this.ReadObject(dir_name, cycle, readdir_callback);
-   };
+      this.ReadObject(dir_name, cycle, readdir_callback, true);
+   }
 
    JSROOT.IO.AddClassMethods = function(clname, streamer) {
       // create additional entries in the streamer, which sets all methods of the class
@@ -1454,6 +1525,8 @@
       return streamer;
    }
 
+   /** @summary Search for class streamer info
+    * @private */
    TFile.prototype.FindStreamerInfo = function(clname, clversion, clchecksum) {
       if (this.fStreamerInfos)
          for (var i=0; i < this.fStreamerInfos.arr.length; ++i) {
@@ -1819,7 +1892,7 @@
                   return buf.ClassStreamer({}, handle.typename);
                });
                buf.CheckBytecount(ver, this.typename + "[]");
-            }
+            };
             break;
          case JSROOT.IO.kStreamLoop:
          case JSROOT.IO.kOffsetL+JSROOT.IO.kStreamLoop:
@@ -1838,14 +1911,12 @@
                member.readitem = function(buf) { return buf.ReadObjectAny(); }
             } else {
                member.arrkind = JSROOT.IO.GetArrayKind(member.typename);
-               if (member.arrkind > 0) {
-                  member.readitem = function(buf) { return buf.ReadFastArray(buf.ntou4(), this.arrkind); };
-               } else
-               if (member.arrkind === 0) {
+               if (member.arrkind > 0)
+                  member.readitem = function(buf) { return buf.ReadFastArray(buf.ntou4(), this.arrkind); }
+               else if (member.arrkind === 0)
                   member.readitem = function(buf) { return buf.ReadTString(); }
-               } else {
+               else
                   member.readitem = function(buf) { return buf.ClassStreamer({}, this.typename); }
-               }
             }
 
             if (member.readitem !== undefined) {
@@ -1923,12 +1994,12 @@
                member.typeid = JSROOT.IO.GetTypeId(member.conttype);
                if ((member.typeid<0) && file.fBasicTypes[member.conttype]) {
                   member.typeid = file.fBasicTypes[member.conttype];
-                  console.log('!!! Reuse basic type ',member.conttype,' from file streamer infos');
+                  console.log('!!! Reuse basic type', member.conttype, 'from file streamer infos');
                }
 
                // check
                if (element.fCtype && (element.fCtype < 20) && (element.fCtype !== member.typeid)) {
-                  console.warn('Contained type ', member.conttype, 'not recognized as basic type', element.fCtype, 'FORCE');
+                  console.warn('Contained type', member.conttype, 'not recognized as basic type', element.fCtype, 'FORCE');
                   member.typeid = element.fCtype;
                }
 
@@ -2066,9 +2137,10 @@
       return member;
    }
 
+   /** @summary Returns streamer for the class 'clname',
+    * @desc From the list of streamers or generate it from the streamer infos and add it to the list
+    * @private */
    TFile.prototype.GetStreamer = function(clname, ver, s_i) {
-      // return the streamer for the class 'clname', from the list of streamers
-      // or generate it from the streamer infos and add it to the list
 
       // these are special cases, which are handled separately
       if (clname == 'TQObject' || clname == "TBasket") return null;
@@ -2121,9 +2193,9 @@
       return JSROOT.IO.AddClassMethods(clname, streamer);
    }
 
+   /** @summary Here we produce list of members, resolving all base classes
+    * @private */
    TFile.prototype.GetSplittedStreamer = function(streamer, tgt) {
-      // here we produce list of members, resolving all base classes
-
       if (!streamer) return tgt;
 
       if (!tgt) tgt = [];
@@ -2567,17 +2639,17 @@
       cs['TStreamerString'] = cs['TStreamerObjectPointer'] = function(buf, elem) {
          if (buf.last_read_version > 1)
             buf.ClassStreamer(elem, "TStreamerElement");
-      };
+      }
 
       cs['TStreamerObjectAnyPointer'] = function(buf, elem) {
          if (buf.last_read_version > 0)
             buf.ClassStreamer(elem, "TStreamerElement");
-      };
+      }
 
       cs['TTree'] = {
          name: '$file',
          func: function(buf,obj) { obj.$kind = "TTree"; obj.$file = buf.fFile; buf.fFile.AddReadTree(obj); }
-      };
+      }
 
       cs['TVirtualPerfStats'] = "TObject"; // use directly TObject streamer
 
@@ -2596,7 +2668,7 @@
       cs['RooAbsBinning'] = function(buf,obj) {
          buf.ClassStreamer(obj, (buf.last_read_version==1) ? "TObject" : "TNamed");
          buf.ClassStreamer(obj, "RooPrintable");
-      };
+      }
 
       cs['RooCategory'] = function(buf,obj) {
          var v = buf.last_read_version;
@@ -2622,13 +2694,31 @@
          if (v>1) obj._name = buf.ReadTString();
       };
 
+      cs['TASImage'] = function(buf,obj) {
+         if ((buf.last_read_version==1) && (buf.fFile.fVersion>0) && (buf.fFile.fVersion<50000)) {
+            return console.warn("old TASImage version - not yet supported");
+         }
+
+         buf.ClassStreamer(obj, "TNamed");
+
+         if (buf.ntou1() != 0) {
+            var size = buf.ntoi4();
+            obj.fPngBuf = buf.ReadFastArray(size, JSROOT.IO.kUChar);
+         } else {
+            buf.ClassStreamer(obj, "TAttImage");
+            obj.fWidth = buf.ntoi4();
+            obj.fHeight = buf.ntoi4();
+            obj.fImgBuf = buf.ReadFastArray(obj.fWidth*obj.fHeight, JSROOT.IO.kDouble);
+         }
+      }
+
       // these are direct streamers - not follow version/checksum logic
 
       var ds = JSROOT.IO.DirectStreamers;
 
       ds['TQObject'] = ds['TGraphStruct'] = ds['TGraphNode'] = ds['TGraphEdge'] = function(buf,obj) {
          // do nothing
-      };
+      }
 
       ds['TDatime'] = function(buf,obj) {
          obj.fDatime = buf.ntou4();
@@ -2741,6 +2831,7 @@
             for (var j=i;j<obj.fNcols;++j)
                obj.fElements[j*obj.fNcols+i] = obj.fElements[i*obj.fNcols+j] = arr[cnt++];
       }
+
    }
 
    JSROOT.IO.CreateStreamerElement = function(name, typename, file) {
@@ -2886,6 +2977,21 @@
 
       return res;
    }
+
+   /**
+    * @summary Open ROOT file for reading
+    *
+    * @desc depending from file location, different class will be created to provide
+    * access to objects from the file
+    * @param {string} filename - name of file to open
+    * @param {File} filename - JS object to access local files, see https://developer.mozilla.org/en-US/docs/Web/API/File
+    * @param {function} callback - function called with file handle
+    * @example
+    * JSROOT.OpenFile("https://root.cern/js/files/hsimple.root", function(f) {
+    *    console.log("Open file", f.fFileName);
+    * });
+    */
+
 
    JSROOT.OpenFile = function(filename, callback) {
       if (JSROOT.nodejs) {

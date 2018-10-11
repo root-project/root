@@ -72,6 +72,21 @@ TMethodCall *TLeafElement::GetMethodCall(const char * /*name*/)
    return 0;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy/set fMinimum and fMaximum to include/be wide than those of the parameter
+
+Bool_t TLeafElement::IncludeRange(TLeaf *input)
+{
+    if (input) {
+        if (input->GetMaximum() > this->GetMaximum())
+            ((TBranchElement*)fBranch)->fMaximum = input->GetMaximum();
+        return kTRUE;
+    } else {
+        return kFALSE;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if this leaf is does not have any sub-branch/leaf.
 

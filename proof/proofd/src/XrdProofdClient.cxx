@@ -696,7 +696,7 @@ void XrdProofdClient::ResetSessions()
 
    XrdSysMutexHelper mh(fMutex);
    std::vector<XrdProofdProofServ *>::iterator ip;
-   for (ip = fProofServs.begin(); ip != fProofServs.end(); ip++) {
+   for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
       // Reset (invalidate) the server instance
       if (*ip) (*ip)->Reset();
    }

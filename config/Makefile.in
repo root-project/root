@@ -268,9 +268,6 @@ BUILDHDFS      := @buildhdfs@
 HDFSLIBDIR     := @hdfslibdir@
 HDFSCLILIB     := @hdfslib@
 HDFSINCDIR     := $(filter-out /usr/include, @hdfsincdir@)
-JNIINCDIR      := $(filter-out /usr/include, @jniincdir@) $(filter-out /usr/include, @jniincdir@/linux)
-JVMCLILIB      := @jvmlib@
-JVMLIBDIR      := @jvmlibdir@
 
 BUILDALIEN     := @buildalien@
 ALIENLIBDIR    := @alienlibdir@
@@ -402,8 +399,6 @@ LZMAINCDIR     := $(filter-out /usr/include, @lzmaincdir@)
 SHADOWFLAGS    := @shadowpw@
 SHADOWLIB      :=
 SHADOWLIBDIR   :=
-
-BUILDGENVECTOR := @buildgenvector@
 
 BUILDMATHMORE  := @buildmathmore@
 GSLFLAGS       := $(filter-out -I/usr/include, @gslflags@)

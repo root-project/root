@@ -31,7 +31,6 @@ category modifies its list of states
 #include "Riostream.h"
 #include "Riostream.h"
 #include <stdlib.h>
-#include <stdio.h>
 #include "TString.h"
 #include "RooMultiCategory.h"
 #include "RooStreamParser.h"

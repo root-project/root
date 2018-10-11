@@ -708,9 +708,9 @@ void THStack::Paint(Option_t *choptin)
    char *l3 = strstr(option,"pmc"); // Automatic Marker Color
    if (l1 || l2 || l3) {
       TString opt1 = option;
-      if (l1) strncpy(l1,"   ",3);
-      if (l2) strncpy(l2,"   ",3);
-      if (l3) strncpy(l3,"   ",3);
+      if (l1) memcpy(l1,"   ",3);
+      if (l2) memcpy(l2,"   ",3);
+      if (l3) memcpy(l3,"   ",3);
       TString ws = option;
       if (ws.IsWhitespace()) strncpy(option,"\0",1);
       TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
@@ -789,7 +789,7 @@ void THStack::Paint(Option_t *choptin)
       if (h->GetYaxis()->GetXmax() > ymax) ymax = h->GetYaxis()->GetXmax();
    }
 
-   char loption[32];
+   char loption[40];
    snprintf(loption,31,"%s",opt.Data());
    char *nostack  = strstr(loption,"nostack");
    char *nostackb = strstr(loption,"nostackb");
@@ -903,14 +903,14 @@ void THStack::Paint(Option_t *choptin)
       Double_t bw = (1.-(2*bo))/nhists;
       for (Int_t i=0;i<nhists;i++) {
          if (strstr(lnk->GetOption(),"same")) {
-            if (nostackb) snprintf(loption,31,"%s%s b",noption,lnk->GetOption());
-            else          snprintf(loption,31,"%s%s",noption,lnk->GetOption());
+            if (nostackb) snprintf(loption,34,"%s%s b",noption,lnk->GetOption());
+            else          snprintf(loption,32,"%s%s",noption,lnk->GetOption());
          } else {
             TString indivOpt = lnk->GetOption();
             indivOpt.ToLower();
-            if (nostackb) snprintf(loption,31,"%ssame%s b",noption,lnk->GetOption());
+            if (nostackb) snprintf(loption,38,"%ssame%s b",noption,lnk->GetOption());
             else if (candle && (indivOpt.Contains("candle") || indivOpt.Contains("violin"))) snprintf(loption,31,"%ssame",lnk->GetOption());
-            else          snprintf(loption,31,"%ssame%s",noption,lnk->GetOption());
+            else          snprintf(loption,36,"%ssame%s",noption,lnk->GetOption());
          }
          hAti = (TH1F*)(fHists->At(i));
          if (nostackb) {
@@ -934,9 +934,9 @@ void THStack::Paint(Option_t *choptin)
       Int_t h1col, h1fill;
       for (Int_t i=0;i<nhists;i++) {
          if (strstr(lnk->GetOption(),"same")) {
-            snprintf(loption,31,"%s%s",noption,lnk->GetOption());
+            snprintf(loption,32,"%s%s",noption,lnk->GetOption());
          } else {
-            snprintf(loption,31,"%ssame%s",noption,lnk->GetOption());
+            snprintf(loption,36,"%ssame%s",noption,lnk->GetOption());
          }
          h1 = (TH1*)fStack->At(nhists-i-1);
          if (i>0 && lclear) {

@@ -48,20 +48,20 @@ ClassImp(TEfficiency);
 
 ## I. Overview
 This class handles the calculation of efficiencies and their uncertainties. It
-provides several statistical methods for calculating frequentist and bayesian
+provides several statistical methods for calculating frequentist and Bayesian
 confidence intervals as well as a function for combining several efficiencies.
 
-Efficiencies have a lot of applications and meanings but in principle they can
+Efficiencies have a lot of applications and meanings but in principle, they can
 be described by the fraction of good/passed events k out of sample containing
 N events. One is usually interested in the dependency of the efficiency on other
 (binned) variables. The number of passed and total events is therefore stored
 internally in two histograms (TEfficiency::fTotalHistogram and TEfficiency::fPassedHistogram).
-Then the efficiency as well as its upper and lower error an be calculated for each bin
+Then the efficiency, as well as its upper and lower error, can be calculated for each bin
 individually.
 
 As the efficiency can be regarded as a parameter of a binomial distribution, the
-number of pass ed and total events must always be integer numbers. Therefore a
-filling with weights is not possible however you can assign a global weight to each
+number of passed and total events must always be integer numbers. Therefore a
+filling with weights is not possible. However, you can assign a global weight to each
 TEfficiency object (TEfficiency::SetWeight).
 It is necessary to create one TEfficiency object
 for each weight if you investigate a process involving different weights. This
@@ -74,27 +74,27 @@ If you start a new analysis, it is highly recommended to use the TEfficiency cla
 from the beginning. You can then use one of the constructors for fixed or
 variable bin size and your desired dimension. These constructors append the
 created TEfficiency object to the current directory. So it will be written
-automatically to a file during the next TFile:Write command.
+automatically to a file during the next TFile::Write command.
 
-Example: create a twodimensional TEfficiency object with
+Example: create a two-dimensional TEfficiency object with
 - name = "eff"
 - title = "my efficiency"
-- axistitles: x, y and LaTeX formated epsilon as label for Z axis
+- axis titles: x, y and LaTeX-formatted epsilon as a label for Z axis
 - 10 bins with constant bin width (= 1) along X axis starting at 0 (lower edge
-  from first bin) upto 10 (upper edge of last bin)
+  from the first bin) up to 10 (upper edge of last bin)
 - 20 bins with constant bin width (= 0.5) along Y axis starting at -5 (lower
-  edge from first bin) upto 5 (upper edge of last bin)
+  edge from the first bin) up to 5 (upper edge of last bin)
 
         TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;y;#epsilon",10,0,10,20,-5,5);
 
 If you already have two histograms filled with the number of passed and total
 events, you will use the constructor TEfficiency(const TH1& passed,const TH1& total)
 to construct the TEfficiency object. The histograms "passed" and "total" have
-to fulfill the conditions  mentioned in TEfficiency::CheckConsistency, otherwise the construction will fail.
+to fulfill the conditions mentioned in TEfficiency::CheckConsistency, otherwise the construction will fail.
 As the histograms already exist, the new TEfficiency is by default **not** attached
 to the current directory to avoid duplication of data. If you want to store the
 new object anyway, you can either write it directly by calling TObject::Write or attach it to a directory using TEfficiency::SetDirectory.
-This also applies for TEfficiency objects created by the copy constructor TEfficiency::TEfficiency(const TEfficiency& rEff).
+This also applies to TEfficiency objects created by the copy constructor TEfficiency::TEfficiency(const TEfficiency& rEff).
 
 
 ### Example 1
@@ -130,15 +130,15 @@ if(TEfficiency::CheckConsistency(h_pass,h_total))
 }
 ~~~~~~~~~~~~~~~
 
-In the case that you already have two filled histograms and you only want to
+In case you already have two filled histograms and you only want to
 plot them as a graph, you should rather use TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass,const TH1* total,Option_t* opt)
 to create a graph object.
 
 ## III. Filling with events
 You can fill the TEfficiency object by calling the TEfficiency::Fill(Bool_t bPassed,Double_t x,Double_t y,Double_t z) method.
-The boolean flag "bPassed" indicates whether the current event is a good
-   (both histograms are filled) or not (only TEfficiency::fTotalHistogram is filled).
-The variables x,y and z determine the bin which is filled. For lower dimensions the z- or even the y-value may be omitted.
+The "bPassed" boolean flag indicates whether the current event is good
+(both histograms are filled) or not (only TEfficiency::fTotalHistogram is filled).
+The x, y and z variables determine the bin which is filled. For lower dimensions, the z- or even the y-value may be omitted.
 
 Begin_Macro(source)
 {
@@ -188,7 +188,7 @@ passed events.
 \f]
 
 ### Bayesian methods
-In bayesian statistics a likelihood-function (how probable is it to get the
+In Bayesian statistics a likelihood-function (how probable is it to get the
 observed data assuming a true efficiency) and a prior probability (what is the
 probability that a certain true efficiency is actually realised) are used to
 determine a posterior probability by using Bayes theorem. At the moment, only
@@ -202,14 +202,14 @@ probabilities.
  \Rightarrow P(\epsilon | k ; N) &=& \frac{1}{norm'} \times \epsilon^{k + \alpha - 1} \times (1 - \epsilon)^{N - k + \beta - 1} \equiv Beta(\epsilon; k + \alpha, N - k + \beta)
 \f}
 
-By default the expectation value of this posterior distribution is used as estimator for the efficiency:
+By default the expectation value of this posterior distribution is used as an estimator for the efficiency:
 
 \f[
       \hat{\varepsilon} = \frac{k + \alpha}{N + \alpha + \beta}
 \f]
 
-Optionally the mode can also be used as value for the estimated efficiency. This can be done by calling
-SetBit(kPosteriorMode) or TEfficiency::SetPosteriorMode. In this case the estimated efficiency is:
+Optionally the mode can also be used as a value for the estimated efficiency. This can be done by calling
+SetBit(kPosteriorMode) or TEfficiency::SetPosteriorMode. In this case, the estimated efficiency is:
 
 \f[
        \hat{\varepsilon} = \frac{k + \alpha -1}{N + \alpha + \beta - 2}
@@ -228,9 +228,9 @@ calculation:
 - **kShortestInterval:** flag whether shortest interval (instead of central one) are used in case of Bayesian statistics  (TEfficiency::UsesShortestInterval). Normally shortest interval should be used in combination with the mode (see TEfficiency::UsesPosteriorMode)
 - **fWeight:** global weight for this TEfficiency object which is used during combining or merging with other TEfficiency objects(TEfficiency::GetWeight / TEfficiency::SetWeight)
 
-In the following table the implemented confidence intervals are listed
+In the following table, the implemented confidence intervals are listed
 with their corresponding statistic option. For more details on the calculation,
-please have a look at the the mentioned functions.
+please have a look at the mentioned functions.
 
 
 | name             | statistic option | function            | kIsBayesian | parameters |
@@ -324,8 +324,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-The prior probability of the efficiency in bayesian statistics can be given
-in terms of a beta distribution. The beta distribution has to positive shape
+The prior probability of the efficiency in Bayesian statistics can be given
+in terms of a beta distribution. The beta distribution has two positive shape
 parameters. The resulting priors for different combinations of these shape
 parameters are shown in the plot below.
 
@@ -395,7 +395,7 @@ different number of total events is shown in the next picture.
 \image html av_cov.png "Average Coverage"
 
 ## V. Merging and combining TEfficiency objects
-In many applications the efficiency should be calculated for an inhomogeneous
+In many applications, the efficiency should be calculated for an inhomogeneous
 sample in the sense that it contains events with different weights. In order
 to be able to determine the correct overall efficiency, it is necessary to
 use for each subsample (= all events with the same weight) a different
@@ -403,10 +403,10 @@ TEfficiency object. After finishing your analysis you can then construct the
 overall efficiency with its uncertainty.
 
 This procedure has the advantage that you can change the weight of one
-subsample easily without rerunning the whole analysis. On the other hand more
+subsample easily without rerunning the whole analysis. On the other hand, more
 effort is needed to handle several TEfficiency objects instead of one
 histogram. In the case of many different or even continuously distributed
-weights this approach becomes cumbersome. One possibility to overcome this
+weights, this approach becomes cumbersome. One possibility to overcome this
 problem is the usage of binned weights.
 
 ### Example
@@ -436,7 +436,7 @@ should either merge or combine them to get the overall efficiency.
 ### V.1 When should I use merging?
 If the weights are artificial and do not represent real alternative hypotheses,
 you should merge the different TEfficiency objects. That means especially for
-the bayesian case that the prior probability should be the same for all merged
+the Bayesian case that the prior probability should be the same for all merged
 TEfficiency objects. The merging can be done by invoking one of the following
 operations:
 - eff1.Add(eff2)
@@ -471,14 +471,14 @@ objects is not always consistent with the representation by two internal
 histograms, the result is not stored in a TEfficiency object but a TGraphAsymmErrors
 is returned which shows the estimated combined efficiency and its uncertainty
 for each bin.
-At the moment the combination method TEfficiency::Combine only supports combination of 1-dimensional
-efficiencies in a bayesian approach.
+At the moment the combination method TEfficiency::Combine only supports a combination of 1-dimensional
+efficiencies in a Bayesian approach.
 
 
 For calculating the combined efficiency and its uncertainty for each bin only Bayesian statistics
 is used. No frequentists methods are presently supported for computing the combined efficiency and
 its confidence interval.
-In the case of the Bayesian statistics a combined posterior is constructed taking into account the
+In the case of the Bayesian statistics, a combined posterior is constructed taking into account the
 weight of each TEfficiency object. The same prior is used for all the TEfficiency objects.
 
 \f{eqnarray*}{
@@ -511,7 +511,7 @@ p_{2} = \frac{\sigma_{2}}{\sigma_{1} + \sigma_{2}} = \frac{N_{2}w_{2}}{N_{1}w_{1
 ### VI.Information about the internal histograms
 The methods TEfficiency::GetPassedHistogram and TEfficiency::GetTotalHistogram
 return a constant pointer to the internal histograms. They can be used to
-obtain information about the internal histograms (e.g. the binning, number of passed / total events in a bin, mean values...).
+obtain information about the internal histograms (e.g., the binning, number of passed / total events in a bin, mean values...).
 One can obtain a clone of the internal histograms by calling TEfficiency::GetCopyPassedHisto or TEfficiency::GetCopyTotalHisto.
 The returned histograms are completely independent from the current
 TEfficiency object. By default, they are not attached to a directory to
@@ -544,15 +544,15 @@ It is also possible to set the internal total or passed histogram by using the
 methods TEfficiency::SetPassedHistogram or TEfficiency::SetTotalHistogram.
 
 In order to ensure the validity of the TEfficiency object, the consistency of the
-new histogram and the stored histogram is checked. It sometimes might be
-impossible to change the histograms in a consistent way. Therefore one can force
-the replacement by passing the option "f". Then the user has to ensure that the
+new histogram and the stored histogram is checked. It might be
+impossible sometimes to change the histograms in a consistent way. Therefore one can force
+the replacement by passing the "f" option. Then the user has to ensure that the
 other internal histogram is replaced as well and that the TEfficiency object is
 in a valid state.
 
 ### VI.2 Fitting
-The efficiency can be fitted using the TEfficiency::Fit function which uses
-internally the TBinomialEfficiencyFitter::Fit method.
+The efficiency can be fitted using the TEfficiency::Fit function which internally uses
+the TBinomialEfficiencyFitter::Fit method.
 As this method is using a maximum-likelihood-fit, it is necessary to initialise
 the given fit function with reasonable start values.
 The resulting fit function is attached to the list of associated functions and
@@ -604,8 +604,8 @@ End_Macro
 ### VI.3 Draw a TEfficiency object
 A TEfficiency object can be drawn by calling the usual TEfficiency::Draw method.
 At the moment drawing is only supported for 1- and 2-dimensional TEfficiency objects.
-In the 1-dimensional case you can use the same options as for the TGraphAsymmErrors::Draw
-method. For 2-dimensional TEfficiency objects you can pass the same options as
+In the 1-dimensional case, you can use the same options as for the TGraphAsymmErrors::Draw
+method. For 2-dimensional TEfficiency objects, you can pass the same options as
 for a TH2::Draw object.
 
 ********************************************************************************/
@@ -2277,7 +2277,7 @@ void TEfficiency::FillWeighted(Bool_t bPassed,Double_t weight,Double_t x,Double_
 {
    if(!TestBit(kUseWeights))
    {
-      Info("FillWeighted","call SetUseWeightedEvents() manually to ensure correct storage of sum of weights squared");
+      // Info("FillWeighted","call SetUseWeightedEvents() manually to ensure correct storage of sum of weights squared");
       SetUseWeightedEvents();
    }
 
@@ -2512,8 +2512,8 @@ Double_t TEfficiency::GetEfficiency(Int_t bin) const
 
 Double_t TEfficiency::GetEfficiencyErrorLow(Int_t bin) const
 {
-   Int_t total = (Int_t)fTotalHistogram->GetBinContent(bin);
-   Int_t passed = (Int_t)fPassedHistogram->GetBinContent(bin);
+   Double_t total = fTotalHistogram->GetBinContent(bin);
+   Double_t passed = fPassedHistogram->GetBinContent(bin);
 
    Double_t eff = GetEfficiency(bin);
 
@@ -2592,8 +2592,8 @@ Double_t TEfficiency::GetEfficiencyErrorLow(Int_t bin) const
 
 Double_t TEfficiency::GetEfficiencyErrorUp(Int_t bin) const
 {
-   Int_t total = (Int_t)fTotalHistogram->GetBinContent(bin);
-   Int_t passed = (Int_t)fPassedHistogram->GetBinContent(bin);
+   Double_t total = fTotalHistogram->GetBinContent(bin);
+   Double_t passed = fPassedHistogram->GetBinContent(bin);
 
    Double_t eff = GetEfficiency(bin);
 
@@ -3585,14 +3585,14 @@ Bool_t TEfficiency::SetTotalHistogram(const TH1& rTotal,Option_t* opt)
 void TEfficiency::SetUseWeightedEvents(bool on)
 {
    if (on && !TestBit(kUseWeights) )
-       gROOT->Info("TEfficiency::SetUseWeightedEvents","Histograms are filled with weights");
+       gROOT->Info("TEfficiency::SetUseWeightedEvents","Handle weighted events for computing efficiency");
 
    SetBit(kUseWeights,on);
 
-   // no need to set sumw2 should be already there
-   if (on) assert(fTotalHistogram->GetSumw2N() > 0 && fPassedHistogram->GetSumw2N() > 0 );
-   //fTotalHistogram->Sumw2(on);
-   //fPassedHistogram->Sumw2(on);
+   if (on && fTotalHistogram->GetSumw2N() != fTotalHistogram->GetNcells())
+      fTotalHistogram->Sumw2();
+   if (on && fPassedHistogram->GetSumw2N() != fTotalHistogram->GetNcells() )
+      fPassedHistogram->Sumw2();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

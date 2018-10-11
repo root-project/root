@@ -1170,6 +1170,11 @@ Tesselator::Tesselator(Bool_t dump)
    if (!tess)
       throw std::runtime_error("tesselator creation failed");
 
+#if defined(__GNUC__) && __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+
    if (!dump) {
       gluTessCallback(tess, (GLenum)GLU_BEGIN,  (tess_t) glBegin);
       gluTessCallback(tess, (GLenum)GLU_END,    (tess_t) glEnd);
@@ -1179,6 +1184,10 @@ Tesselator::Tesselator(Bool_t dump)
       gluTessCallback(tess, (GLenum)GLU_END,    (tess_t) End);
       gluTessCallback(tess, (GLenum)GLU_VERTEX, (tess_t) Vertex);
    }
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
 
    gluTessProperty(tess, GLU_TESS_TOLERANCE, 1e-10);
    fTess = tess;

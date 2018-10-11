@@ -16,7 +16,7 @@
 #ifndef ROO_LINEAR_VAR
 #define ROO_LINEAR_VAR
 
-#include <math.h>
+#include <cmath>
 #include <float.h>
 #include "TString.h"
 #include "RooAbsRealLValue.h"

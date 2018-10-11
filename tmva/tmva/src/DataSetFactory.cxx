@@ -43,6 +43,7 @@ Class that contains all the data information
 #include <algorithm>
 #include <functional>
 #include <numeric>
+#include <random>
 
 #include "TMVA/DataSetFactory.h"
 
@@ -67,6 +68,7 @@ Class that contains all the data information
 #include "TMVA/DataInputHandler.h"
 #include "TMVA/Event.h"
 
+#include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"
 
@@ -108,11 +110,11 @@ TMVA::DataSetFactory::~DataSetFactory()
 {
    std::vector<TTreeFormula*>::const_iterator formIt;
 
-   for (formIt = fInputFormulas.begin()    ; formIt!=fInputFormulas.end()    ; formIt++) if (*formIt) delete *formIt;
-   for (formIt = fTargetFormulas.begin()   ; formIt!=fTargetFormulas.end()   ; formIt++) if (*formIt) delete *formIt;
-   for (formIt = fCutFormulas.begin()      ; formIt!=fCutFormulas.end()      ; formIt++) if (*formIt) delete *formIt;
-   for (formIt = fWeightFormula.begin()    ; formIt!=fWeightFormula.end()    ; formIt++) if (*formIt) delete *formIt;
-   for (formIt = fSpectatorFormulas.begin(); formIt!=fSpectatorFormulas.end(); formIt++) if (*formIt) delete *formIt;
+   for (formIt = fInputFormulas.begin()    ; formIt!=fInputFormulas.end()    ; ++formIt) if (*formIt) delete *formIt;
+   for (formIt = fTargetFormulas.begin()   ; formIt!=fTargetFormulas.end()   ; ++formIt) if (*formIt) delete *formIt;
+   for (formIt = fCutFormulas.begin()      ; formIt!=fCutFormulas.end()      ; ++formIt) if (*formIt) delete *formIt;
+   for (formIt = fWeightFormula.begin()    ; formIt!=fWeightFormula.end()    ; ++formIt) if (*formIt) delete *formIt;
+   for (formIt = fSpectatorFormulas.begin(); formIt!=fSpectatorFormulas.end(); ++formIt) if (*formIt) delete *formIt;
 
    delete fLogger;
 }
@@ -140,7 +142,7 @@ TMVA::DataSet* TMVA::DataSetFactory::CreateDataSet( TMVA::DataSetInfo& dsi,
       //Log() << kHEADER <<  Endl;
       Log() << kHEADER << Form("[%s] : ",dsi.GetName()) << " " << Endl << Endl;
    }
-
+   
    return ds;
 }
 
@@ -175,7 +177,7 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
 
    std::vector<VariableInfo>& spectatorinfos = dsi.GetSpectatorInfos();
    it = spectatorinfos.begin();
-   for (;it!=spectatorinfos.end();it++) evdyn->push_back( (Float_t*)(*it).GetExternalLink() );
+   for (;it!=spectatorinfos.end();++it) evdyn->push_back( (Float_t*)(*it).GetExternalLink() );
 
    TMVA::Event * ev = new Event((const std::vector<Float_t*>*&)evdyn, varinfos.size());
    std::vector<Event*>* newEventVector = new std::vector<Event*>;
@@ -203,7 +205,7 @@ TMVA::DataSetFactory::BuildInitialDataSet( DataSetInfo& dsi,
    // register the classes in the datasetinfo-object
    // information comes from the trees in the dataInputHandler-object
    std::vector< TString >* classList = dataInput.GetClassList();
-   for (std::vector<TString>::iterator it = classList->begin(); it< classList->end(); it++) {
+   for (std::vector<TString>::iterator it = classList->begin(); it< classList->end(); ++it) {
       dsi.AddClass( (*it) );
    }
    delete classList;
@@ -297,7 +299,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    // 1) the input variable formulas
    Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "transform input variables" << Endl;
    std::vector<TTreeFormula*>::const_iterator formIt, formItEnd;
-   for (formIt = fInputFormulas.begin(), formItEnd=fInputFormulas.end(); formIt!=formItEnd; formIt++) if (*formIt) delete *formIt;
+   for (formIt = fInputFormulas.begin(), formItEnd=fInputFormulas.end(); formIt!=formItEnd; ++formIt) if (*formIt) delete *formIt;
    fInputFormulas.clear();
    TTreeFormula* ttf = 0;
 
@@ -312,7 +314,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    // targets
    //
    Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "transform regression targets" << Endl;
-   for (formIt = fTargetFormulas.begin(), formItEnd = fTargetFormulas.end(); formIt!=formItEnd; formIt++) if (*formIt) delete *formIt;
+   for (formIt = fTargetFormulas.begin(), formItEnd = fTargetFormulas.end(); formIt!=formItEnd; ++formIt) if (*formIt) delete *formIt;
    fTargetFormulas.clear();
    for (UInt_t i=0; i<dsi.GetNTargets(); i++) {
       ttf = new TTreeFormula( Form( "Formula%s", dsi.GetTargetInfo(i).GetInternalName().Data() ),
@@ -325,7 +327,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    // spectators
    //
    Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "transform spectator variables" << Endl;
-   for (formIt = fSpectatorFormulas.begin(), formItEnd = fSpectatorFormulas.end(); formIt!=formItEnd; formIt++) if (*formIt) delete *formIt;
+   for (formIt = fSpectatorFormulas.begin(), formItEnd = fSpectatorFormulas.end(); formIt!=formItEnd; ++formIt) if (*formIt) delete *formIt;
    fSpectatorFormulas.clear();
    for (UInt_t i=0; i<dsi.GetNSpectators(); i++) {
       ttf = new TTreeFormula( Form( "Formula%s", dsi.GetSpectatorInfo(i).GetInternalName().Data() ),
@@ -338,7 +340,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    // the cuts (one per class, if non-existent: formula pointer = 0)
    //
    Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "transform cuts" << Endl;
-   for (formIt = fCutFormulas.begin(), formItEnd = fCutFormulas.end(); formIt!=formItEnd; formIt++) if (*formIt) delete *formIt;
+   for (formIt = fCutFormulas.begin(), formItEnd = fCutFormulas.end(); formIt!=formItEnd; ++formIt) if (*formIt) delete *formIt;
    fCutFormulas.clear();
    for (UInt_t clIdx=0; clIdx<dsi.GetNClasses(); clIdx++) {
       const TCut& tmpCut = dsi.GetClassInfo(clIdx)->GetCut();
@@ -359,7 +361,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    // the weights (one per class, if non-existent: formula pointer = 0)
    //
    Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "transform weights" << Endl;
-   for (formIt = fWeightFormula.begin(), formItEnd = fWeightFormula.end(); formIt!=formItEnd; formIt++) if (*formIt) delete *formIt;
+   for (formIt = fWeightFormula.begin(), formItEnd = fWeightFormula.end(); formIt!=formItEnd; ++formIt) if (*formIt) delete *formIt;
    fWeightFormula.clear();
    for (UInt_t clIdx=0; clIdx<dsi.GetNClasses(); clIdx++) {
       const TString tmpWeight = dsi.GetClassInfo(clIdx)->GetWeight();
@@ -390,7 +392,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
       tr->SetBranchStatus("*",0);
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "enable branches: input variables" << Endl;
       // input vars
-      for (formIt = fInputFormulas.begin(); formIt!=fInputFormulas.end(); formIt++) {
+      for (formIt = fInputFormulas.begin(); formIt!=fInputFormulas.end(); ++formIt) {
          ttf = *formIt;
          for (Int_t bi = 0; bi<ttf->GetNcodes(); bi++) {
             tr->SetBranchStatus( ttf->GetLeaf(bi)->GetBranch()->GetName(), 1 );
@@ -398,21 +400,21 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
       }
       // targets
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "enable branches: targets" << Endl;
-      for (formIt = fTargetFormulas.begin(); formIt!=fTargetFormulas.end(); formIt++) {
+      for (formIt = fTargetFormulas.begin(); formIt!=fTargetFormulas.end(); ++formIt) {
          ttf = *formIt;
          for (Int_t bi = 0; bi<ttf->GetNcodes(); bi++)
             tr->SetBranchStatus( ttf->GetLeaf(bi)->GetBranch()->GetName(), 1 );
       }
       // spectators
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "enable branches: spectators" << Endl;
-      for (formIt = fSpectatorFormulas.begin(); formIt!=fSpectatorFormulas.end(); formIt++) {
+      for (formIt = fSpectatorFormulas.begin(); formIt!=fSpectatorFormulas.end(); ++formIt) {
          ttf = *formIt;
          for (Int_t bi = 0; bi<ttf->GetNcodes(); bi++)
             tr->SetBranchStatus( ttf->GetLeaf(bi)->GetBranch()->GetName(), 1 );
       }
       // cuts
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "enable branches: cuts" << Endl;
-      for (formIt = fCutFormulas.begin(); formIt!=fCutFormulas.end(); formIt++) {
+      for (formIt = fCutFormulas.begin(); formIt!=fCutFormulas.end(); ++formIt) {
          ttf = *formIt;
          if (!ttf) continue;
          for (Int_t bi = 0; bi<ttf->GetNcodes(); bi++)
@@ -420,7 +422,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
       }
       // weights
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "enable branches: weights" << Endl;
-      for (formIt = fWeightFormula.begin(); formIt!=fWeightFormula.end(); formIt++) {
+      for (formIt = fWeightFormula.begin(); formIt!=fWeightFormula.end(); ++formIt) {
          ttf = *formIt;
          if (!ttf) continue;
          for (Int_t bi = 0; bi<ttf->GetNcodes(); bi++)
@@ -476,7 +478,7 @@ void TMVA::DataSetFactory::CalcMinMax( DataSet* ds, TMVA::DataSetInfo& dsi )
       dsi.GetVariableInfo(ivar).SetMin(min[ivar]);
       dsi.GetVariableInfo(ivar).SetMax(max[ivar]);
       if( TMath::Abs(max[ivar]-min[ivar]) <= FLT_MIN )
-         Log() << kFATAL << Form("Dataset[%s] : ",dsi.GetName()) << "Variable " << dsi.GetVariableInfo(ivar).GetExpression().Data() << " is constant. Please remove the variable." << Endl;
+         Log() << kWARNING << Form("Dataset[%s] : ",dsi.GetName()) << "Variable " << dsi.GetVariableInfo(ivar).GetExpression().Data() << " is constant. Please remove the variable." << Endl;
    }
    for (UInt_t ivar=0; ivar<ntgts; ivar++) {
       dsi.GetTargetInfo(ivar).SetMin(tgmin[ivar]);
@@ -730,7 +732,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
       TString currentFileName("");
 
       std::vector<TreeInfo>::const_iterator treeIt(dataInput.begin(dsi.GetClassInfo(cl)->GetName()));
-      for (;treeIt!=dataInput.end(dsi.GetClassInfo(cl)->GetName()); treeIt++) {
+      for (;treeIt!=dataInput.end(dsi.GetClassInfo(cl)->GetName()); ++treeIt) {
 
          // read first the variables
          std::vector<Float_t> vars(nvars);
@@ -825,6 +827,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                // the input variable
                for (UInt_t ivar=0; ivar<nvars; ivar++) {
                   formula = fInputFormulas[ivar];
+                  formula->SetQuickLoad(true);
                   Int_t ndata = formula->GetNdata();
                   vars[ivar] = (ndata == 1 ?
                                 formula->EvalInstance(0) :
@@ -984,7 +987,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
                                  const TString& normMode,
                                  UInt_t splitSeed)
 {
-   TMVA::RandomGenerator rndm( splitSeed );
+   TMVA::RandomGenerator<TRandom3> rndm(splitSeed);
 
    // ==== splitting of undefined events to kTraining and kTesting
 
@@ -998,9 +1001,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
                   << unspecifiedEvents.size()
                   << " events of class " << cls
                   << " which are not yet associated to testing or training" << Endl;
-            std::random_shuffle( unspecifiedEvents.begin(),
-                                 unspecifiedEvents.end(),
-                                 rndm );
+            std::shuffle(unspecifiedEvents.begin(), unspecifiedEvents.end(), rndm);
          }
       }
    }
@@ -1225,7 +1226,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
             // make indices
             std::generate( indicesTraining.begin(), indicesTraining.end(), TMVA::Increment<UInt_t>(0) );
             // shuffle indices
-            std::random_shuffle( indicesTraining.begin(), indicesTraining.end(), rndm );
+            std::shuffle(indicesTraining.begin(), indicesTraining.end(), rndm);
             // erase indices of not needed events
             indicesTraining.erase( indicesTraining.begin()+sizeTraining-UInt_t(requestedTraining), indicesTraining.end() );
             // delete all events with the given indices
@@ -1243,7 +1244,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
             // make indices
             std::generate( indicesTesting.begin(), indicesTesting.end(), TMVA::Increment<UInt_t>(0) );
             // shuffle indices
-            std::random_shuffle( indicesTesting.begin(), indicesTesting.end(), rndm );
+            std::shuffle(indicesTesting.begin(), indicesTesting.end(), rndm);
             // erase indices of not needed events
             indicesTesting.erase( indicesTesting.begin()+sizeTesting-UInt_t(requestedTesting), indicesTesting.end() );
             // delete all events with the given indices
@@ -1348,30 +1349,12 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
             }
          }
       }
-
-      // debugging output: classnumbers of all events in training and testing vectors
-      //       std::cout << std::endl;
-      //       std::cout << "TRAINING VECTOR" << std::endl;
-      //       std::transform( trainingEventVector->begin(), trainingEventVector->end(), ostream_iterator<Int_t>(std::cout, "|"), std::mem_fun(&TMVA::Event::GetClass) );
-
-      //       std::cout << std::endl;
-      //       std::cout << "TESTING VECTOR" << std::endl;
-      //       std::transform( testingEventVector->begin(), testingEventVector->end(), ostream_iterator<Int_t>(std::cout, "|"), std::mem_fun(&TMVA::Event::GetClass) );
-      //       std::cout << std::endl;
-
    }else{
       for( UInt_t cls = 0; cls < dsi.GetNClasses(); ++cls ){
          trainingEventVector->insert( trainingEventVector->end(), tmpEventVector[Types::kTraining].at(cls).begin(), tmpEventVector[Types::kTraining].at(cls).end() );
          testingEventVector->insert ( testingEventVector->end(),  tmpEventVector[Types::kTesting].at(cls).begin(),  tmpEventVector[Types::kTesting].at(cls).end()  );
       }
    }
-
-   //    std::cout << "trainingEventVector " << trainingEventVector->size() << std::endl;
-   //    std::cout << "testingEventVector  " << testingEventVector->size() << std::endl;
-
-   //    std::transform( trainingEventVector->begin(), trainingEventVector->end(), ostream_iterator<Int_t>(std::cout, "> \n"), std::mem_fun(&TMVA::Event::GetNVariables) );
-   //    std::transform( testingEventVector->begin(), testingEventVector->end(), ostream_iterator<Int_t>(std::cout, "> \n"), std::mem_fun(&TMVA::Event::GetNVariables) );
-
    // delete the tmpEventVector (but not the events therein)
    tmpEventVector[Types::kTraining].clear();
    tmpEventVector[Types::kTesting].clear();
@@ -1381,8 +1364,8 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
    if (mixMode == "RANDOM") {
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "shuffling events"<<Endl;
 
-      std::random_shuffle( trainingEventVector->begin(), trainingEventVector->end(), rndm );
-      std::random_shuffle( testingEventVector->begin(),  testingEventVector->end(),  rndm  );
+      std::shuffle(trainingEventVector->begin(), trainingEventVector->end(), rndm);
+      std::shuffle(testingEventVector->begin(),  testingEventVector->end(),  rndm);
    }
 
    Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "trainingEventVector " << trainingEventVector->size() << Endl;
@@ -1462,22 +1445,17 @@ TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
       //     compose_binary creates a BinaryFunction of ...
       //         std::plus<Double_t>() knows how to sum up two doubles
       //         null<Double_t>() leaves the first argument (the running sum) unchanged and returns it
-      //         std::mem_fun knows how to call a member function (type and member-function given as argument) and return the result
       //
       // all together sums up all the event-weights of the events in the vector and returns it
-      trainingSumWeightsPerClass.at(cls) = std::accumulate( tmpEventVector[Types::kTraining].at(cls).begin(),
-                                                            tmpEventVector[Types::kTraining].at(cls).end(),
-                                                            Double_t(0),
-                                                            compose_binary( std::plus<Double_t>(),
-                                                                            null<Double_t>(),
-                                                                            std::mem_fun(&TMVA::Event::GetOriginalWeight) ) );
+      trainingSumWeightsPerClass.at(cls) =
+         std::accumulate(tmpEventVector[Types::kTraining].at(cls).begin(),
+                         tmpEventVector[Types::kTraining].at(cls).end(),
+                         Double_t(0), [](Double_t w, const TMVA::Event *E) { return w + E->GetOriginalWeight(); });
 
-      testingSumWeightsPerClass.at(cls)  = std::accumulate( tmpEventVector[Types::kTesting].at(cls).begin(),
-                                                            tmpEventVector[Types::kTesting].at(cls).end(),
-                                                            Double_t(0),
-                                                            compose_binary( std::plus<Double_t>(),
-                                                                            null<Double_t>(),
-                                                                            std::mem_fun(&TMVA::Event::GetOriginalWeight) ) );
+      testingSumWeightsPerClass.at(cls) =
+         std::accumulate(tmpEventVector[Types::kTesting].at(cls).begin(),
+                         tmpEventVector[Types::kTesting].at(cls).end(),
+                         Double_t(0), [](Double_t w, const TMVA::Event *E) { return w + E->GetOriginalWeight(); });
 
       if ( cls == dsi.GetSignalClassIndex()){
          trainingSumSignalWeights += trainingSumWeightsPerClass.at(cls);
@@ -1588,21 +1566,15 @@ TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
    testingSumBackgrWeights  = 0; // Backgr. includes all classes that are not signal
 
    for( UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls < clsEnd; ++cls ){
+      trainingSumWeightsPerClass.at(cls) =
+         std::accumulate(tmpEventVector[Types::kTraining].at(cls).begin(),
+                         tmpEventVector[Types::kTraining].at(cls).end(),
+                         Double_t(0), [](Double_t w, const TMVA::Event *E) { return w + E->GetOriginalWeight(); });
 
-      trainingSumWeightsPerClass.at(cls) = (std::accumulate( tmpEventVector[Types::kTraining].at(cls).begin(),  // accumulate --> start at begin
-                                                             tmpEventVector[Types::kTraining].at(cls).end(),    //    until end()
-                                                             Double_t(0),                                       // values are of type double
-                                                             compose_binary( std::plus<Double_t>(),             // define addition for doubles
-                                                                             null<Double_t>(),                  // take the argument, don't do anything and return it
-                                                                             std::mem_fun(&TMVA::Event::GetOriginalWeight) ) )); // take the value from GetOriginalWeight
-
-      testingSumWeightsPerClass.at(cls)  = std::accumulate( tmpEventVector[Types::kTesting].at(cls).begin(),
-                                                            tmpEventVector[Types::kTesting].at(cls).end(),
-                                                            Double_t(0),
-                                                            compose_binary( std::plus<Double_t>(),
-                                                                            null<Double_t>(),
-                                                                            std::mem_fun(&TMVA::Event::GetOriginalWeight) ) );
-
+      testingSumWeightsPerClass.at(cls) =
+         std::accumulate(tmpEventVector[Types::kTesting].at(cls).begin(),
+                         tmpEventVector[Types::kTesting].at(cls).end(),
+                         Double_t(0), [](Double_t w, const TMVA::Event *E) { return w + E->GetOriginalWeight(); });
 
       if ( cls == dsi.GetSignalClassIndex()){
          trainingSumSignalWeights += trainingSumWeightsPerClass.at(cls);

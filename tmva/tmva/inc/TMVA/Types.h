@@ -98,6 +98,7 @@ namespace TMVA {
          kPlugins        ,
          kCategory       ,
          kDNN            ,
+         kDL             ,
          kPyRandomForest ,
          kPyAdaBoost     ,
          kPyGTB          ,
@@ -106,6 +107,7 @@ namespace TMVA {
          kRSNNS          ,
          kRSVM           ,
          kRXGB           ,
+         kCrossValidation,
          kMaxMethod
       };
 

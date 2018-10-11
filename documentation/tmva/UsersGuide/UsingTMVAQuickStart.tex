@@ -11,57 +11,9 @@ evaluation phases, and will be treated in parallel in the following.
 \subsection{How to download and build TMVA}
 \label{sec:download}
 
-TMVA is built upon ROOT (\urlsm{http://root.cern.ch/}), so that for TMVA to run ROOT must be 
-installed. Since ROOT version 5.11/06, TMVA
-comes as integral part of ROOT and can be used from the ROOT prompt 
-without further preparation. For older ROOT versions 
-or {\em if the latest TMVA features are desired}, the TMVA source code can either be \href{http://sourceforge.net/project/showfiles.php?group_id=152074}{downloaded}
-as a gzipped tarfile from Sourceforge.net\index{Download!from Sourceforge.net}
-.%or directly be checked out via (anonymous) SVN from the ROOT repository. 
-%\begin{codeexample}
-%\begin{tmvacode}
-%~> svn co https://root.cern.ch/svn/root/branches/dev/tmvapatches/V04-01-00 \ 
-%tmva_4.1.0
-%\end{tmvacode}
-%\caption[.]{\codeexampleCaptionSize DEPRECATED! (root has moved recently to Git and ...for the moment
-%we don't know how to get the latest TMVA version (only) from the Git repository.) And we don't know how
-%long the SVN repository is still available: Source code download via SVN. The latest version 
-%         (SVN trunk) can be always be obtained by typing:
-%         \spacecode{svn co https://root.cern.ch/svn/root/trunk/tmva}. For the latest TMVA 
-%         version see \url{http://root.cern.ch/} or \url{http://tmva.sourceforge.net/}.}
-%\end{codeexample}
-Since we do not provide prebuilt libraries for any platform,
-the library must be built by the user (easy -- see below).
-While the source code is known to compile with VisualC++ on Windows (which is
-a requirement for ROOT), we do not provide project support for this platform yet.
-For Unix and most Linux flavours custom Makefiles\index{Makefile} are provided 
-with the TMVA distribution, so that the library can be built by typing:
-\begin{codeexample}
-\begin{tmvacode}
-~> cd tmva
-~/tmva> make 
-~/tmva> cd test
-~/tmva/test> source setup.sh # for c-shell family: source setup.csh
-\end{tmvacode}
-\caption[.]{\codeexampleCaptionSize Building the TMVA library under Linux/Unix using the provided
-         Makefile. The \code{setup.[c]sh} script must be executed to 
-         ensure the correct setting of symbolic links and library paths required by TMVA.}
-\end{codeexample}
-After compilation, the library \code{tmva/lib/libTMVA.1.so} should be present.
+TMVA is built upon ROOT (\urlsm{https://root.cern}), so that for TMVA to run ROOT must be installed. Since ROOT version 5.11/06, TMVA is distributed as an integral part of ROOT and can be used from the ROOT prompt without further preparation.
 
-If you run TMVA in a working directory other than \code{~/tmva/test}, then you
-simply need to copy the \code{setup.[c]sh} file into your work directory and ``source'' it
-while giving it as an argument the TMVA installation directory:
-
-\begin{codeexample}
-\begin{tmvacode}
-~> cd MyWorkDir
-~/MyWorkDir> cp ~/tmva/test/setup.[c]sh . 
-~/MyWorkDir> source setup.[c]sh <Your TMVA installation path>
-\end{tmvacode}
-\caption[.]{\codeexampleCaptionSize Using the built TMVA library under Linux/Unix from an arbritrary work directory. The \code{setup.[c]sh <pathToYourTMVAInstallation>} script must be executed to 
-         ensure the correct setting of symbolic links and library paths required by TMVA.}
-\end{codeexample}
+The latest version of ROOT can be found at \urlsm{https://root.cern/downloading-root}. The advanced user, should she require it, can build ROOT and TMVA from the source distribution. Instructions are found at \urlsm{https://root.cern/building-root}.
 
 \subsection{Version compatibility}
 \label{sec:intro:compat}
@@ -70,28 +22,13 @@ TMVA can be run with any ROOT version equal or above v5.08\index{ROOT!compatibil
 The few occurring conflicts due to ROOT source code evolution after v5.08 are 
 intercepted in TMVA via C++ preprocessor conditions.
 
-\subsection{Avoiding conflicts between external TMVA and ROOT's internal one}
-
-A ROOT installation typcially comes a TMVA version already.
-To use a more recent version of TMVA than the one present in the local ROOT 
-installation, one needs to download the desired TMVA release as described above,
-compile it against the local ROOT version and make sure the newly built library 
-\code{tmva/lib/libTMVA.1.so} is used instead of ROOT's internal one.
-While executing the \code{setup.[c]sh} script is usually sufficient to ensure the latter,
-on MAC OSX systems it may be neccessary to load the library exlicitly when running TMVA in CINT:  
-\code{gSystem}{\tt ->}\code{Load("tmva/lib/libTMVA.1")}. This can be done 
-directly in the macro or in a file that is automatically loaded at the start 
-of CINT (for an example, see the files \code{.rootrc} and \code{TMVAlogon.C} 
-in the \code{tmva/test/} directory).  When running TMVA in an executable, 
-the corresponding shared library needs to be linked.
-Once this is done, ROOT's own \code{libTMVA.so} library will not be invoked anymore.
-
 \subsection{The TMVA namespace}
 \label{sec:quickstart:namespace}
 
 All TMVA classes are embedded in the namespace \code{TMVA}. For interactive access, or 
-use in macros the classes must thus be preceded by \code{TMVA::}, or one may use the 
-command \code{using} \code{namespace} \code{TMVA} instead. 
+use in macros, the classes must thus be preceded by \code{TMVA::}.
+
+One may also use the command \code{using} \code{namespace} \code{TMVA;} instead. However, this approach is not preferred since it can lead to ambiguities.
 
 \subsection{Example jobs\index{Examples}}
 \label{sec:examplejob}
@@ -100,24 +37,25 @@ TMVA comes with example jobs for the training phase (this phase actually
 includes training, testing and evaluation) using the TMVA {\em Factory}\index{Factory}, 
 as well as the application of the training results in a classification or regression analysis
 using the TMVA {\em Reader}\index{Reader}. The training examples are
-\code{TMVAClassification}\index{TMVAClassification},
+\code{TMVAClassification.C}\index{TMVAClassification},
 \code{TMVAMulticlass.C}\index{TMVAMulticlass} and
-\code{TMVARegression}\index{TMVARegression}, and the application examples are 
-\code{TMVAClassificationApplication}\index{TMVAClassificationApplication},
+\code{TMVARegression.C}\index{TMVARegression}, and the application examples are 
+\code{TMVAClassificationApplication.C}\index{TMVAClassificationApplication},
 \code{TMVAMulticlassApplication.C}\index{TMVAMulticlassApplication} and
-\code{TMVARegressionApplication}\index{TMVARegressionApplication}.
+\code{TMVARegressionApplication.C}\index{TMVARegressionApplication}.
 
-The above macros (extension \code{.C})
-are located in the directory \code{tmva/test/}. 
+Additionally \code{TMVACrossValidation.C}\index{TMVACrossvalidation} shows how cross validation is performed in TMVA, and examples in \TmvaKerasTutorialDir shows how to use TMVA with keras.
 
-All examples are also provided in form of C++ executables
+The above macros (extension \code{.C}) are located in the directory \TmvaTutorialDir.
+
+Some examples are also provided in form of C++ executables
 (replace \code{.C} by \code{.cxx}). To build the executables, go to
-\code{tmva/test/}, type \code{make} and then simply execute them by typing
+\TmvaTutorialDir, type \code{make} and then simply execute them by typing
 \code{./TMVAClassification}, \code{./TMVAMulticlass} or \code{./TMVARegression} (and similarly for the 
-applications). To illustrate how TMVA can be used 
-in a python script via PyROOT we also provide the script \code{TMVAClassification.py} located 
-in \code{TMVA/python/}, which has the same functionality as the macro \code{TMVAClassification.C}
-(the other macros are not provided as python scripts).
+applications).
+
+% This is not true anymore. This file does not exist.
+% To illustrate how TMVA can be used in a python script via PyROOT we also provide the script \code{TMVAClassification.py} located in \code{TMVA/python/}, which has the same functionality as the macro \code{TMVAClassification.C} (the other macros are not provided as python scripts).
 
 \subsection{Running the example}
 \label{sec:qs:example}
@@ -137,14 +75,15 @@ A detailed description is given in Sec.~\ref{sec:usingtmva}.
 
 The macros automatically fetch the data file from 
 the web using the corresponding \code{TFile} constructor, \eg,
-\code{TFile::Open("http://root.cern.ch/files/tmva_class_example.root")} (\code{tmva_reg_example.root} for regression). The example %ToDo: insert this code into our example execs and macros. 
-ROOT macros can be run directly in the \code{tmva/test/} directory,
-or in any designated test directory \code{workdir}, after adding the macro directory 
+\code{TFile::Open("http://root.cern/files/tmva_class_example.root")} (\code{tmva_reg_example.root} for regression). The example %ToDo: insert this code into our example execs and macros. 
+ROOT macros can be run directly in the \TmvaTutorialDir directory,
+or from anywhere after adding the macro directory 
 to ROOT's macro search path:
 \begin{codeexample}
 \begin{tmvacode}
-~/workdir> echo "Unix.*.Root.MacroPath: $ROOTSYS/tmva/test" >> .rootrc
-~/workdir> root -l $ROOTSYS/tmva/test/TMVAClassification.C
+> root -l $ROOTSYS/tutorials/tmva/TMVAClassification.C
+> echo "Unix.*.Root.MacroPath: $ROOTSYS/tutorials/tmva" >> ~/.rootrc
+> root -l TMVAClassification.C
 \end{tmvacode}
 \caption[.]{\codeexampleCaptionSize Running the example \code{TMVAClassification.C}.}
 \end{codeexample}
@@ -152,15 +91,11 @@ to ROOT's macro search path:
 It is also possible to explicitly select the MVA methods to be processed: 
 \begin{codeexample}
 \begin{tmvacode}
-~/workdir> root -l $ROOTSYS/tmva/test/TMVAClassification.C\(\"Fisher\"\)
+> root -l '$ROOTSYS/tutorials/tmva/TMVAClassification.C("Fisher","BDT")'
 \end{tmvacode}
-\caption[.]{\codeexampleCaptionSize Running the example \code{TMVAClassification.C} 
-            and processing only the Fisher classifier. Note that
-            the backslashes are mandatory. Multiple classifiers are separated by commas.
-            The others macros can be 
-            called accordingly. }
+\caption[.]{\codeexampleCaptionSize Running the example \code{TMVAClassification.C} and processing only the Fisher and BDTclassifier. Multiple classifiers are separated by commas. The others macros can be called accordingly.}
 \end{codeexample}
-where the names of the MVA methods are predifined in the macro. 
+where the names of the MVA methods are predefined in the macro. 
 
 The training job provides formatted output logging containing analysis information
 such as: linear correlation matrices for the input variables, correlation ratios 
@@ -173,8 +108,8 @@ at benchmark background rejection rates (classification) or deviations from targ
 for training and independent test samples provides overtraining validation.
 \begin{figure}[p]
   \begin{center}
-	  \includegraphics[width=0.47\textwidth]{plots/TMVAGui}\hspace{0.3cm}
-	  \includegraphics[width=0.47\textwidth]{plots/TMVARegGui}
+     \includegraphics[width=0.47\textwidth]{plots/TMVAGui}\hspace{0.3cm}
+     \includegraphics[width=0.47\textwidth]{plots/TMVARegGui}
   \end{center}
   \vspace{-0.1cm}
   \caption[.]{Graphical user interfaces (GUI) to execute  
@@ -219,6 +154,27 @@ for training and independent test samples provides overtraining validation.
 \label{fig:tmvagui}
 \end{figure}
 
+\begin{figure}[h]
+  \begin{center}
+     \includegraphics[width=0.47\textwidth]{plots/multiclass/TMVAMulticlassGui}\hspace{0.3cm}
+     \includegraphics[width=0.47\textwidth]{plots/multiclass/TMVAMulticlassRoc1vsAll}
+  \end{center}
+  \vspace{-0.1cm}
+  \caption[.]{Graphical user interfaces (GUI) to execute macros displaying training, test and evaluation results (\cf\  Tables~\ref{pgr:scripttable1} and \ref{pgr:scripttable2} on page \pageref{pgr:scripttable1}) for multiclass classification(left). The multiclass classification GUI can be started by exectuing \code{root -e 'TMVA::TMVAMultiClassGui()'} at the prompt.
+  To the right a sample output from the 1 vs. Rest ROC macro can be seen.
+  {\footnotesize
+     \\
+     \underline{Multiclass classification (left)}. The main difference between the multiclass GUI and the binary one is the splitting of button (5b) of \code{TMVAGui.C} into button (5) and (6) in \code{TMVAMultiClassGui.C}.
+     Button (5) draws 1 vs. Rest ROC curves where each class, in turn, is considered signal while the remaining are considered background.
+     Button (6) instead considers all pairs of classes in turn, ignoring events belonging to other classes.
+     These two visualisation provide a simplified view of of the high-dimensional ROC surface of multiclass problems.
+     \\
+     \underline{1 vs. 1 ROC curve (right)}. Example of one of the plots generated for the 1 vs. Rest ROC curve button (5).
+  }
+  }
+\label{fig:tmva:multiclass:gui}
+\end{figure}
+
 \subsection{Displaying the results}
 \label{sec:displayingResults}
 
@@ -237,15 +193,27 @@ for training and independent test samples provides overtraining validation.
             Code Example~\ref{ce:gconfig}). }
 \label{fig:usingtmva:variables}
 \end{figure}
-Besides so-called ``weight'' files containing the
-method-specific training results, TMVA also provides a variety of
-control and performance plots that can be displayed via a set of ROOT
-macros available in {\tt \$}\code{ROOTSYS/tmva/test/}. The macros are summarized in
-Tables~\ref{pgr:scripttable1} and \ref{pgr:scripttable2} on 
-page~\pageref{pgr:scripttable1}.  At the end of the example jobs a graphical 
-user interface (GUI)\index{Graphical user interface (GUI)}
-is displayed, which conveniently allows to run these macros (see
-Fig.~\ref{fig:tmvagui}).  
+
+After a successful training, TMVA provides so called ``weight''-files that contain all information necessary to recreate the method without retraining. For further information, see the \code{TMVA::Reader} in Section~\ref{sec:usingtmva:reader}. TMVA also provides a variety of control and performance plots that can be displayed via a dedicated GUI (see Fig.~\ref{fig:tmvagui}). The GUI can be launched with 
+\begin{codeexample}\begin{tmvacode}
+> root -l -e 'TMVA::TMVAGui("path/to/tmva/output/file.root")'
+> root -l -e 'TMVA::TMVAMultiClassGui("path/to/tmva/output/file.root")'
+> root -l -e 'TMVA::TMVARegGui("path/to/tmva/output/file.root")'
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Running the TMVA GUI's from the command line.}
+\end{codeexample}
+or through the adding line 
+\begin{codeexample}\begin{tmvacode}
+if (not gROOT->IsBatch()) {
+   TMVA::TMVAGui("path/to/tmva/output/file.root");
+}
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Automatically running a GUI when doing training/testing/evaluation.}
+\end{codeexample}
+to your training file. See the last lines of \code{TMVAClassification.C} for an example.
+
+% This is not true anymore
+% TMVA also provides a variety of control and performance plots that can be displayed via a set of ROOT macros available in {\tt \$}\code{ROOTSYS/tmva/test/}. The macros are summarized in Tables~\ref{pgr:scripttable1} and \ref{pgr:scripttable2} on  page~\pageref{pgr:scripttable1}.  At the end of the example jobs a graphical  user interface (GUI)\index{Graphical user interface (GUI)} is displayed, which conveniently allows to run these macros (see Fig.~\ref{fig:tmvagui}).
  
 Examples for plots produced by these macros are given in 
 Figs.~\ref{fig:usingtmva:correlations}--\ref{fig:usingtmva:rejBvsS} for a 
@@ -275,6 +243,13 @@ class of {\em Receiver Operating Characteristic} (ROC)\index{Receiver
 Operating Characteristic (ROC)} diagrams,
 which in its standard form shows the true positive rate versus the false 
 positive rate for the different possible cutpoints of a hypothesis test.
+
+For multiclass classification the corresponding GUI is show in Figure~\ref{fig:tmva:multiclass:gui} (left). Some differences to the binary classification GUI exists.
+% In multiclass classification there is one output per class, each proportional to the likliehood of the event belonging to that class.
+The ROC space is $C(C-1)$-dimensional, i.e. proportional to the number of classes squared. Visualising this potentially high dimensional space quickly becomes intractable as the number of dimensions increases. To still gain insight in the performance of the classifier, TMVA offers two projections of the ROC surface into 2D.
+In 1 vs. Rest, $C$ plots are generated where each class, in turn, is considered signal while the remaining are considered background.
+In 1 vs. 1, $C(C-1)$ plots are generated where each pair of classes are considered. Events which do not belong to either of the two classes are ignored for the calculation of that ROC curve.
+Example output for one classes in 1 vs. Rest is shown in Figure~\ref{fig:tmva:multiclass:gui} (right).
 
 As an example for multivariate regression, Fig.~\ref{fig:usingtmva:deviation} displays
 the deviation between the regression output and target values for linear and 
@@ -360,37 +335,29 @@ Several help sources exist for TMVA (all web address given below are also linked
 TMVA home page \urlsm{http://tmva.sourceforge.net}).
 \begin{itemize}
 
-\item Information on how to download and install TMVA, and the TMVA {\em Quick-start} commands 
-      are also available on the web at: \urlsm{http://tmva.sourceforge.net/howto.shtml}.
+%\item Information on how to download and install TMVA, and the TMVA {\em Quick-start} commands 
+%      are also available on the web at: \urlsm{http://tmva.sourceforge.net/howto.shtml}.
 
 \item TMVA tutorial: \urlsm{https://twiki.cern.ch/twiki/bin/view/TMVA}.
 
-\item An up-to-date reference of all configuration options for the TMVA Factory, the fitters,
-      and all the MVA methods: \urlsm{http://tmva.sourceforge.net/optionRef.html}.
+%\item An up-to-date reference of all configuration options for the TMVA Factory, the fitters,
+%      and all the MVA methods: \urlsm{http://tmva.sourceforge.net/optionRef.html}.
 
 \item On request, the TMVA methods provide a help message with a brief description of the 
       method, and hints for improving the performance by tuning the available configuration 
       options. The message is printed when the option "\code{H}" is added to the configuration 
-      string while booking the method (switch off by setting "\code{!H}"). The very same help
-      messages are also obtained by clicking the ``info'' button on the top of the reference
-      tables on the options reference web page: \urlsm{http://tmva.sourceforge.net/optionRef.html}.      
+      string while booking the method (switch off by setting "\code{!H}").
 
 \item The web address of this Users Guide:
-      \urlsm{http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf}.
+      \urlsm{https://root.cern/download/doc/tmva/TMVAUsersGuide.pdf}.
 
-\item The TMVA talk collection: \urlsm{http://tmva.sourceforge.net/talks.shtml}.
+%\item The TMVA talk collection: \urlsm{http://tmva.sourceforge.net/talks.shtml}.
 
-\item TMVA versions in ROOT releases: 
-      \urlsm{http://tmva.sourceforge.net/versionRef.html}.
+\item Source code: \urlsm{https://github.com/root-project/root/tree/master/tmva}.
 
-\item Direct code views via ViewVC: \urlsm{http://tmva.svn.sourceforge.net/viewvc/tmva/trunk/TMVA}.
+% \item Class index of TMVA in ROOT: \urlsm{http://root.cern/root/htmldoc/TMVA_Index.html}.
 
-\item Class index of TMVA in ROOT: \urlsm{http://root.cern.ch/root/htmldoc/TMVA_Index.html}.
-
-\item Please send questions and/or report problems to the {\em tmva-users} mailing list: \\
-      \urlsm{http://sourceforge.net/mailarchive/forum.php?forum_name=tmva-users} (posting 
-      messages requires prior subscription: 
-      \urlsm{https://lists.sourceforge.net/lists/listinfo/tmva-users}).
+\item Please ask questions and/or report problems in the ROOT forum \urlsm{https://root-forum.cern.ch}.
 
 \end{itemize}
 
@@ -398,4 +365,3 @@ TMVA home page \urlsm{http://tmva.sourceforge.net}).
 %%% mode: latex
 %%% TeX-master: "TMVAUsersGuide"
 %%% End: 
-

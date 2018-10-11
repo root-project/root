@@ -19,11 +19,12 @@
 #define TMVA_DNN_DATALOADER
 
 #include "TMatrix.h"
-#include <vector>
-#include <iostream>
-#include <algorithm>
-
 #include "TMVA/Event.h"
+
+#include <algorithm>
+#include <iostream>
+#include <random>
+#include <vector>
 
 namespace TMVA {
 
@@ -267,7 +268,7 @@ TBatch<AArchitecture> TDataLoader<Data_t, AArchitecture>::GetBatch()
 template<typename Data_t, typename AArchitecture>
 void TDataLoader<Data_t, AArchitecture>::Shuffle()
 {
-   std::random_shuffle(fSampleIndices.begin(), fSampleIndices.end());
+   std::shuffle(fSampleIndices.begin(), fSampleIndices.end(), std::default_random_engine{});
 }
 
 } // namespace DNN

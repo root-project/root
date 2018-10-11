@@ -348,9 +348,10 @@ const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
       for (Int_t jvar=0; jvar<nvar; jvar++) {
          if (ivar != jvar) {
             Double_t d = (*covMat)(ivar, ivar)*(*covMat)(jvar, jvar);
-            if (d > 1E-20) (*corrMat)(ivar, jvar) = (*covMat)(ivar, jvar)/TMath::Sqrt(d);
-    else {
-      Log() <<  "<GetCorrelationMatrix> zero variances for variables "
+            if (d > 1E-20) {
+               (*corrMat)(ivar, jvar) = (*covMat)(ivar, jvar)/TMath::Sqrt(d);
+            } else {
+               Log() <<  "<GetCorrelationMatrix> zero variances for variables "
                      << "(" << ivar << ", " << jvar << ")" << Endl;
                (*corrMat)(ivar, jvar) = 0;
             }
@@ -724,7 +725,7 @@ Bool_t TMVA::Tools::CheckForVerboseOption( const TString& cs ) const
    s.ToLower();
    s.ReplaceAll(" ","");
    std::vector<TString> v = SplitString( s, ':' );
-   for (std::vector<TString>::iterator it = v.begin(); it != v.end(); it++) {
+   for (std::vector<TString>::iterator it = v.begin(); it != v.end(); ++it) {
       if ((*it == "v" || *it == "verbose") && !it->Contains("!")) isVerbose = kTRUE;
    }
 

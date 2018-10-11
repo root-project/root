@@ -85,7 +85,7 @@ void RooDataSet::cleanup()
   while(iter!=_memPoolList.end()) {
     free(iter->_base) ;
     iter->_base=0 ;
-    iter++ ;
+    ++iter ;
   }
   _memPoolList.clear() ;
 }
@@ -959,7 +959,7 @@ RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVa
 {
   checkInit() ;
 
-  cout << "reduceEng varSubset = " << varSubset << " _wgtVar = " << (_wgtVar ? _wgtVar->GetName() : "") << endl;
+  //cout << "reduceEng varSubset = " << varSubset << " _wgtVar = " << (_wgtVar ? _wgtVar->GetName() : "") << endl;
 
   RooArgSet tmp(varSubset) ;
   if (_wgtVar) {
@@ -1260,7 +1260,7 @@ Bool_t RooDataSet::merge(list<RooDataSet*>dsetList)
 
   checkInit() ;
   // Sanity checks: data sets must have the same size
-  for (list<RooDataSet*>::iterator iter = dsetList.begin() ; iter != dsetList.end() ; iter++) {
+  for (list<RooDataSet*>::iterator iter = dsetList.begin() ; iter != dsetList.end() ; ++iter) {
     if (numEntries()!=(*iter)->numEntries()) {
       coutE(InputArguments) << "RooDataSet::merge(" << GetName() << ") ERROR: datasets have different size" << endl ;
       return kTRUE ;    
@@ -1269,7 +1269,7 @@ Bool_t RooDataSet::merge(list<RooDataSet*>dsetList)
 
   // Extend vars with elements of other dataset
   list<RooAbsDataStore*> dstoreList ;
-  for (list<RooDataSet*>::iterator iter = dsetList.begin() ; iter != dsetList.end() ; iter++) {
+  for (list<RooDataSet*>::iterator iter = dsetList.begin() ; iter != dsetList.end() ; ++iter) {
     _vars.addClone((*iter)->_vars,kTRUE) ;
     dstoreList.push_back((*iter)->store()) ;
   }

@@ -43,7 +43,7 @@
            while (++this.indx < this.lst.arr.length) {
               var handle = { func: this.draw_bind },
                   item = this.lst.arr[this.indx],
-                  opt = this.lst.opt ? this.lst.opt[this.indx] : this.opt;
+                  opt = (this.lst.opt && this.lst.opt[this.indx]) ? this.lst.opt[this.indx] : this.opt;
               if (!item) continue;
               JSROOT.draw(this.divid, item, opt, handle);
               if (!handle.completed) return;
@@ -62,7 +62,7 @@
 
    function FolderHierarchy(item, obj) {
 
-      if ((obj==null) || !('fFolders' in obj) || (obj.fFolders==null)) return false;
+      if (!obj || !('fFolders' in obj) || (obj.fFolders===null)) return false;
 
       if (obj.fFolders.arr.length===0) { item._more = false; return true; }
 
@@ -83,7 +83,7 @@
       // function can be used for different derived classes
       // we show not only child tasks, but all complex data members
 
-      if ((obj==null) || !('fTasks' in obj) || (obj.fTasks==null)) return false;
+      if (!obj || !('fTasks' in obj) || (obj.fTasks === null)) return false;
 
       ObjectHierarchy(item, obj, { exclude: ['fTasks', 'fName'] } );
 
@@ -482,6 +482,102 @@
       return true;
    }
 
+   // =================================================================================================
+
+   /// special layout with three different areas for browser (left), status line (bottom) and central drawing
+   /// Main application is normal browser in JSROOT, but later one should be able to use it in ROOT6 canvas
+   function BrowserLayout(id, hpainter, objpainter) {
+      this.gui_div = id;
+      this.hpainter = hpainter; // painter for brwoser area (if any)
+      this.objpainter = objpainter; // painter for object area (if any)
+      this.browser_kind = null; // should be 'float' or 'fix'
+   }
+
+   BrowserLayout.prototype.main = function() {
+      return d3.select("#" + this.gui_div);
+   }
+
+   BrowserLayout.prototype.drawing_divid = function() {
+      return this.gui_div + "_drawing";
+   }
+
+   BrowserLayout.prototype.CheckResize = function() {
+      if (this.hpainter && (typeof this.hpainter.CheckResize == 'function'))
+         this.hpainter.CheckResize();
+      else if (this.objpainter && (typeof this.objpainter.CheckResize == 'function')) {
+         this.objpainter.CheckResize(true);
+      }
+   }
+
+   /// method used to create basic elements
+   /// should be called only once
+   BrowserLayout.prototype.Create = function(with_browser) {
+      var main = this.main();
+
+      main.append("div").attr("id", this.drawing_divid())
+                        .classed("jsroot_draw_area", true)
+                        .style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0);
+
+      if (with_browser) main.append("div").classed("jsroot_browser", true);
+   }
+
+   BrowserLayout.prototype.CreateBrowserBtns = function() {
+      var br = this.main().select(".jsroot_browser");
+      if (br.empty()) return;
+      var btns = br.append("div").classed("jsroot_browser_btns", true).classed("jsroot", true);
+      btns.style('position',"absolute").style("left","7px").style("top","7px");
+      if (JSROOT.touches) btns.style('opacity','0.2'); // on touch devices should be always visible
+      return btns;
+   }
+
+   BrowserLayout.prototype.RemoveBrowserBtns = function() {
+      this.main().select(".jsroot_browser").select(".jsroot_browser_btns").remove();
+   }
+
+   BrowserLayout.prototype.SetBrowserContent = function(guiCode) {
+      var main = d3.select("#" + this.gui_div + " .jsroot_browser");
+      if (main.empty()) return;
+
+      main.insert('div', ".jsroot_browser_btns").classed('jsroot_browser_area', true)
+          .style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('width','250px')
+          .style('padding-left','5px')
+          .style('display','flex').style('flex-direction', 'column')   /* use the flex model */
+          .html("<p class='jsroot_browser_title'>title</p>" +  guiCode);
+   }
+
+   BrowserLayout.prototype.HasContent = function() {
+      var main = d3.select("#" + this.gui_div + " .jsroot_browser");
+      if (main.empty()) return false;
+      return !main.select(".jsroot_browser_area").empty();
+   }
+
+   BrowserLayout.prototype.DeleteContent = function() {
+      var main = d3.select("#" + this.gui_div + " .jsroot_browser");
+      if (main.empty()) return;
+
+      main.selectAll("*").remove();
+      delete this.browser_visible;
+   }
+
+   BrowserLayout.prototype.HasStatus = function() {
+      var main = d3.select("#"+this.gui_div+" .jsroot_browser");
+      if (main.empty()) return false;
+
+      var id = this.gui_div + "_status",
+          line = d3.select("#"+id);
+
+      return !line.empty();
+   }
+
+   BrowserLayout.prototype.CreateStatusLine = function(height, mode) {
+      if (!this.gui_div) return '';
+      var pthis = this;
+      JSROOT.AssertPrerequisites('jq2d', function() {
+         pthis.CreateStatusLine(height, mode);
+      });
+      return this.gui_div + "_status";
+   }
+
    // =========== painter of hierarchical structures =================================
 
    JSROOT.hpainter = null; // global pointer
@@ -537,14 +633,14 @@
             if (item!=null) itemname = painter.itemFullName(item, fff);
 
             function ReadFileObject(file) {
-               if (fff._file==null) fff._file = file;
+               if (!fff._file) fff._file = file;
 
                if (file == null) return JSROOT.CallBack(callback, item, null);
 
                file.ReadObject(itemname, function(obj) {
 
                   // if object was read even when item did not exist try to reconstruct new hierarchy
-                  if ((item==null) && (obj!=null)) {
+                  if (!item && obj) {
                      // first try to found last read directory
                      var d = painter.Find({name:itemname, top:fff, last_exists:true, check_keys:true });
                      if ((d!=null) && ('last' in d) && (d.last!=fff)) {
@@ -562,7 +658,7 @@
                      item = painter.Find({name:itemname, top: fff});
                   }
 
-                  if (item!=null) {
+                  if (item) {
                      item._readobj = obj;
                      // remove cycle number for objects supporting expand
                      if ('_expand' in item) item._name = item._keyname;
@@ -585,8 +681,8 @@
 
    HierarchyPainter.prototype.ForEach = function(callback, top) {
 
-      if (top==null) top = this.h;
-      if ((top==null) || (typeof callback != 'function')) return;
+      if (!top) top = this.h;
+      if (!top || (typeof callback != 'function')) return;
       function each_item(item) {
          callback(item);
          if ('_childs' in item)
@@ -599,14 +695,17 @@
       each_item(top);
    }
 
+   /** @summary Ssearch item in the hierarchy
+    * @param {object|string} arg - item name or object with arguments
+    * @param {string} arg.name -  item to search
+    * @param {boolean} [arg.force = false] - specified elements will be created when not exists
+    * @param {boolean} [arg.last_exists = false] -  when specified last parent element will be returned
+    * @param {boolean} [arg.check_keys = false] - check TFile keys with cycle suffix
+    * @param {object} [arg.top = null] - element to start search from
+    * @private
+    */
+
    HierarchyPainter.prototype.Find = function(arg) {
-      // search item in the hierarchy
-      // One could specify simply item name or object with following arguments
-      //   name:  item to search
-      //   force: specified elements will be created when not exists
-      //   last_exists: when specified last parent element will be returned
-      //   check_keys: check TFile keys with cycle suffix
-      //   top:   element to start search from
 
       function find_in_hierarchy(top, fullname) {
 
@@ -701,6 +800,8 @@
 
       if (itemname === "__top_folder__") return top;
 
+      if ((typeof itemname == 'string') && (itemname.indexOf("img:")==0)) return null;
+
       return find_in_hierarchy(top, itemname);
    }
 
@@ -729,19 +830,18 @@
       // If command requires additional arguments, they could be specified as extra arguments
       // Or they will be requested interactive
 
-      var hitem = this.Find(itemname);
-      var url = this.GetOnlineItemUrl(hitem) + "/cmd.json";
-      var pthis = this;
-      var d3node = d3.select((typeof callback == 'function') ? undefined : callback);
+      var hitem = this.Find(itemname),
+          url = this.GetOnlineItemUrl(hitem) + "/cmd.json",
+          pthis = this,
+          d3node = d3.select((typeof callback == 'function') ? undefined : callback);
 
       if ('_numargs' in hitem)
          for (var n = 0; n < hitem._numargs; ++n) {
-            var argname = "arg" + (n+1);
-            var argvalue = null;
+            var argname = "arg" + (n+1), argvalue = null;
             if (n+2<arguments.length) argvalue = arguments[n+2];
-            if ((argvalue==null) && (typeof callback == 'object'))
-               argvalue = prompt("Input argument " + argname + " for command " + hitem._name,"");
-            if (argvalue==null) return;
+            if (!argvalue && (typeof callback == 'object'))
+               argvalue = prompt("Input argument " + argname + " for command " + hitem._name, "");
+            if (!argvalue) return;
             url += ((n==0) ? "?" : "&") + argname + "=" + argvalue;
          }
 
@@ -780,13 +880,18 @@
 
       if (typeof arg === 'string') {
          itemname = arg;
-      } else
-      if (typeof arg === 'object') {
+      } else if (typeof arg === 'object') {
          if ((arg._parent!==undefined) && (arg._name!==undefined) && (arg._kind!==undefined)) item = arg; else
          if (arg.name!==undefined) itemname = arg.name; else
          if (arg.arg!==undefined) itemname = arg.arg; else
          if (arg.item!==undefined) item = arg.item;
       }
+
+      if ((typeof itemname == 'string') && (itemname.indexOf("img:")==0))
+         return JSROOT.CallBack(call_back, null, {
+            _typename: "TJSImage", // artificial class, can be created by users
+            fName: itemname.substr(4)
+         });
 
       if (item) itemname = this.itemFullName(item);
            else item = this.Find( { name: itemname, allow_index: true, check_keys: true } );
@@ -818,7 +923,7 @@
 
       // normally search _get method in the parent items
       var curr = item;
-      while (curr != null) {
+      while (curr) {
          if (('_get' in curr) && (typeof curr._get == 'function'))
             return curr._get(item, null, call_back, options);
          curr = ('_parent' in curr) ? curr._parent : null;
@@ -840,20 +945,17 @@
    HierarchyPainter.prototype.player = function(itemname, option, call_back) {
       var item = this.Find(itemname);
 
-      if (!item || !('_player' in item)) return JSROOT.CallBack(call_back, null);
+      if (!item || !item._player) return JSROOT.CallBack(call_back, null);
 
       var hpainter = this;
 
-      var prereq = ('_prereq' in item) ? item['_prereq'] : '';
-
-      JSROOT.AssertPrerequisites(prereq, function() {
+      JSROOT.AssertPrerequisites(item._prereq || '', function() {
 
          var player_func = JSROOT.findFunction(item._player);
-         if (player_func == null) return JSROOT.CallBack(call_back, null);
+         if (!player_func) return JSROOT.CallBack(call_back, null);
 
          hpainter.CreateDisplay(function(mdi) {
-            var res = null;
-            if (mdi) res = player_func(hpainter, itemname, option);
+            var res = mdi ? player_func(hpainter, itemname, option) : null;
             JSROOT.CallBack(call_back, res);
          });
       });
@@ -861,8 +963,8 @@
 
    HierarchyPainter.prototype.canDisplay = function(item, drawopt) {
       if (!item) return false;
-      if ('_player' in item) return true;
-      if (item._can_draw === true) return true;
+      if (item._player) return true;
+      if (item._can_draw !== undefined) return item._can_draw;
       if (drawopt == 'inspect') return true;
       var handle = JSROOT.getDrawHandle(item._kind, drawopt);
       return handle && (('func' in handle) || ('draw_field' in handle));
@@ -995,12 +1097,17 @@
          JSROOT.CallBack(call_back);
       }
 
+      if (itemname == "$legend")
+         return JSROOT.AssertPrerequisites("v6;hist", function() {
+            var res = JSROOT.Painter.produceLegend(divid, opt);
+            JSROOT.CallBack(drop_callback, res);
+         });
+
       h.get(itemname, function(item, obj) {
+
          if (!obj) return JSROOT.CallBack(call_back);
 
-         var dummy = new JSROOT.TObjectPainter();
-         dummy.SetDivId(divid, -1);
-         var main_painter = dummy.main_painter(true);
+         var main_painter = JSROOT.GetMainPainter(divid);
 
          if (main_painter && (typeof main_painter.PerformDrop === 'function'))
             return main_painter.PerformDrop(obj, itemname, item, opt, drop_callback);
@@ -1019,13 +1126,13 @@
       // argument is item name or array of string with items name
       // only already drawn items will be update with same draw option
 
-      if ((this.disp == null) || (items==null)) return;
+      if (!this.disp || !items) return;
 
       var draw_items = [], draw_options = [];
 
       this.disp.ForEachPainter(function(p) {
          var itemname = p.GetItemName();
-         if ((itemname==null) || (draw_items.indexOf(itemname)>=0)) return;
+         if (!itemname || (draw_items.indexOf(itemname)>=0)) return;
          if (typeof items == 'array') {
             if (items.indexOf(itemname) < 0) return;
          } else {
@@ -1044,7 +1151,7 @@
       // method can be used to fetch new objects and update all existing drawings
       // if only_auto_items specified, only automatic items will be updated
 
-      if (this.disp == null) return;
+      if (!this.disp) return;
 
       if (only_auto_items === "monitoring") only_auto_items = !this._monitoring_on;
 
@@ -1054,7 +1161,7 @@
       this.disp.ForEachPainter(function(p) {
          var itemname = p.GetItemName(),
              drawopt = p.GetItemDrawOpt();
-         if ((itemname==null) || (allitems.indexOf(itemname)>=0)) return;
+         if ((typeof itemname != 'string') || (allitems.indexOf(itemname)>=0)) return;
 
          var item = hpainter.Find(itemname), forced = false;
          if (!item || ('_not_monitor' in item) || ('_player' in item)) return;
@@ -1110,13 +1217,15 @@
          });
       }
 
-      var dropitems = new Array(items.length), dropopts = new Array(items.length);
+      var dropitems = new Array(items.length), dropopts = new Array(items.length), images = new Array(items.length);
 
       // First of all check that items are exists, look for cycle extension and plus sign
       for (var i = 0; i < items.length; ++i) {
          dropitems[i] = dropopts[i] = null;
 
          var item = items[i], can_split = true;
+
+         if (item && item.indexOf("img:")==0) { images[i] = true; continue; }
 
          if (item && (item.length>1) && (item[0]=='\'') && (item[item.length-1]=='\'')) {
             items[i] = item.substr(1, item.length-2);
@@ -1139,7 +1248,7 @@
             // allow to specify _same_ item in different file
             for (var j = 0; j < dropitems[i].length; ++j) {
                var pos = dropitems[i][j].indexOf("_same_");
-               if ((pos>0) && (h.Find(dropitems[i][j])==null))
+               if ((pos>0) && (h.Find(dropitems[i][j])===null))
                   dropitems[i][j] = dropitems[i][j].substr(0,pos) + items[i].substr(pos);
 
                elem = h.Find({ name: dropitems[i][j], check_keys: true });
@@ -1171,6 +1280,7 @@
 
       // now check that items can be displayed
       for (var n = items.length-1; n>=0; --n) {
+         if (images[n]) continue;
          var hitem = h.Find(items[n]);
          if (!hitem || h.canDisplay(hitem, options[n])) continue;
          // try to expand specified item
@@ -1187,9 +1297,14 @@
          items_wait[n] = 0;
          var fname = items[n], k = 0;
          if (items.indexOf(fname) < n) items_wait[n] = true; // if same item specified, one should wait first drawing before start next
-
-         while (frame_names.indexOf(fname)>=0)
-            fname = items[n] + "_" + k++;
+         var p = options[n].indexOf("frameid:");
+         if (p>=0) {
+            fname = options[n].substr(p+8);
+            options[n] = options[n].substr(0,p);
+         } else {
+            while (frame_names.indexOf(fname)>=0)
+               fname = items[n] + "_" + k++;
+         }
          frame_names[n] = fname;
       }
 
@@ -1332,9 +1447,9 @@
          find_next();
       }
 
-      if (force) {
-         if (!this.browser_kind) return this.CreateBrowser('float', true, find_next);
-         if (!this.browser_visible) this.ToggleBrowserVisisbility();
+      if (force && this.brlayout) {
+         if (!this.brlayout.browser_kind) return this.CreateBrowser('float', true, find_next);
+         if (!this.brlayout.browser_visible) this.brlayout.ToggleBrowserVisisbility();
       }
 
       // use recursion
@@ -1423,24 +1538,24 @@
    }
 
    HierarchyPainter.prototype.GetTopOnlineItem = function(item) {
-      if (item!=null) {
-         while ((item!=null) && (!('_online' in item))) item = item._parent;
+      if (item) {
+         while (item && (!('_online' in item))) item = item._parent;
          return item;
       }
 
-      if (this.h==null) return null;
+      if (!this.h) return null;
       if ('_online' in this.h) return this.h;
-      if ((this.h._childs!=null) && ('_online' in this.h._childs[0])) return this.h._childs[0];
+      if (this.h._childs && ('_online' in this.h._childs[0])) return this.h._childs[0];
       return null;
    }
 
 
    HierarchyPainter.prototype.ForEachJsonFile = function(call_back) {
-      if (this.h==null) return;
+      if (!this.h) return;
       if ('_jsonfile' in this.h)
          return JSROOT.CallBack(call_back, this.h);
 
-      if (this.h._childs!=null)
+      if (this.h._childs)
          for (var n = 0; n < this.h._childs.length; ++n) {
             var item = this.h._childs[n];
             if ('_jsonfile' in item) JSROOT.CallBack(call_back, item);
@@ -1476,11 +1591,11 @@
    }
 
    HierarchyPainter.prototype.ForEachRootFile = function(call_back) {
-      if (this.h==null) return;
-      if ((this.h._kind == "ROOT.TFile") && (this.h._file!=null))
+      if (!this.h) return;
+      if ((this.h._kind == "ROOT.TFile") && this.h._file)
          return JSROOT.CallBack(call_back, this.h);
 
-      if (this.h._childs != null)
+      if (this.h._childs)
          for (var n = 0; n < this.h._childs.length; ++n) {
             var item = this.h._childs[n];
             if ((item._kind == 'ROOT.TFile') && ('_fullurl' in item))
@@ -1596,7 +1711,7 @@
 
       if (option === 'hierarchy_expand') { h_get = true; option = undefined; }
 
-      if (item != null) {
+      if (item) {
          url = this.GetOnlineItemUrl(item);
          var func = null;
          if ('_kind' in item) draw_handle = JSROOT.getDrawHandle(item._kind);
@@ -1627,7 +1742,7 @@
            req = 'item.json.gz?compact=3';
       }
 
-      if ((itemname==null) && (item!=null) && ('_cached_draw_object' in this) && (req.length == 0)) {
+      if (!itemname && item && ('_cached_draw_object' in this) && (req.length == 0)) {
          // special handling for drawGUI when cashed
          var obj = this._cached_draw_object;
          delete this._cached_draw_object;
@@ -1643,10 +1758,9 @@
 
          var func = null;
 
-         if (!h_get && (item!=null) && ('_after_request' in item)) {
+         if (!h_get && item && ('_after_request' in item)) {
             func = JSROOT.findFunction(item._after_request);
-         } else
-         if ((draw_handle!=null) && ('after_request' in draw_handle))
+         } else if (draw_handle && ('after_request' in draw_handle))
             func = draw_handle.after_request;
 
          if (typeof func == 'function') {
@@ -1663,7 +1777,7 @@
    JSROOT.Painter.OnlineHierarchy = function(node, obj) {
       // central function for expand of all online items
 
-      if ((obj != null) && (node != null) && ('_childs' in obj)) {
+      if (obj && node && ('_childs' in obj)) {
 
          for (var n=0;n<obj._childs.length;++n)
             if (obj._childs[n]._more || obj._childs[n]._childs)
@@ -1748,7 +1862,7 @@
       if (!item) return null;
 
       var subname = item._name;
-      while (item._parent != null) {
+      while (item._parent) {
          item = item._parent;
 
          if ('_online' in item) {
@@ -1769,30 +1883,29 @@
           node = this.Find(itemname),
           sett = JSROOT.getDrawSettings(node._kind, 'nosame;noinspect'),
           handle = JSROOT.getDrawHandle(node._kind),
-          root_type = ('_kind' in node) ? node._kind.indexOf("ROOT.") == 0 : false;
+          root_type = (typeof node._kind == 'string') ? node._kind.indexOf("ROOT.") == 0 : false;
 
-      if (sett.opts) {
+      if (sett.opts && (node._can_draw !== false)) {
          sett.opts.push('inspect');
          menu.addDrawMenu("Draw", sett.opts, function(arg) { painter.display(itemname, arg); });
       }
 
-      if (!node._childs && (node._more || root_type || sett.expand))
+      if (!node._childs && (node._more !== false) && (node._more || root_type || sett.expand))
          menu.add("Expand", function() { painter.expand(itemname); });
 
       if (handle && ('execute' in handle))
          menu.add("Execute", function() { painter.ExecuteCommand(itemname, menu.tree_node); });
 
-      var drawurl = onlineprop.server + onlineprop.itemname + "/draw.htm";
-      var separ = "?";
+      var drawurl = onlineprop.server + onlineprop.itemname + "/draw.htm", separ = "?";
       if (this.IsMonitoring()) {
          drawurl += separ + "monitoring=" + this.MonitoringInterval();
          separ = "&";
       }
 
-      if (sett.opts)
+      if (sett.opts && (node._can_draw !== false))
          menu.addDrawMenu("Draw in new window", sett.opts, function(arg) { window.open(drawurl+separ+"opt=" +arg); });
 
-      if (sett.opts && (sett.opts.length > 0) && root_type)
+      if (sett.opts && (sett.opts.length > 0) && root_type && (node._can_draw !== false))
          menu.addDrawMenu("Draw as png", sett.opts, function(arg) {
             window.open(onlineprop.server + onlineprop.itemname + "/root.png?w=400&h=300&opt=" + arg);
          });
@@ -1844,8 +1957,7 @@
    }
 
    HierarchyPainter.prototype.SetDisplay = function(layout, frameid) {
-
-      if ((frameid==null) && (typeof layout == 'object')) {
+      if (!frameid && (typeof layout == 'object')) {
          this.disp = layout;
          this.disp_kind = 'custom';
          this.disp_frameid = null;
@@ -1915,6 +2027,10 @@
          });
    }
 
+   /** \brief Creates configured JSROOT.MDIDisplay object
+    *
+    * @param callback - called when mdi object created
+    */
    HierarchyPainter.prototype.CreateDisplay = function(callback) {
 
       if ('disp' in this) {
@@ -1928,15 +2044,40 @@
          return JSROOT.CallBack(callback, null);
 
       if ((this.disp_kind == "simple") ||
-          (this.disp_kind.indexOf("grid") == 0) && (this.disp_kind.indexOf("gridi") < 0))
+          ((this.disp_kind.indexOf("grid") == 0) && (this.disp_kind.indexOf("gridi") < 0)))
            this.disp = new GridDisplay(this.disp_frameid, this.disp_kind);
       else
-         return JSROOT.AssertPrerequisites('jq2d', this.CreateDisplay.bind(this,callback));
+         return JSROOT.AssertPrerequisites('jq2d', this.CreateDisplay.bind(this, callback));
 
       if (this.disp)
          this.disp.CleanupFrame = this.CleanupFrame.bind(this);
 
       JSROOT.CallBack(callback, this.disp);
+   }
+
+   /** \brief If possible, creates custom JSROOT.MDIDisplay for given item
+   *
+   * @param itemname - name of item, for which drawing is created
+   * @param custom_kind - display kind
+   * @param callback - callback function, called when mdi object created
+   */
+   HierarchyPainter.prototype.CreateCustomDisplay = function(itemname, custom_kind, callback) {
+
+      if (this.disp_kind != "simple")
+         return this.CreateDisplay(callback);
+
+      this.disp_kind = custom_kind;
+
+      // check if display can be erased
+      if (this.disp) {
+         var num = this.disp.NumDraw();
+         if ((num>1) || ((num==1) && !this.disp.FindFrame(itemname)))
+            return this.CreateDisplay(callback);
+         this.disp.Reset();
+         delete this.disp;
+      }
+
+      this.CreateDisplay(callback);
    }
 
    HierarchyPainter.prototype.updateOnOtherFrames = function(painter, obj) {
@@ -1964,7 +2105,7 @@
 
       function GetOption(opt) {
          var res = JSROOT.GetUrlOption(opt, url);
-         if ((res===null) && gui_div && !gui_div.empty() && gui_div.node().hasAttribute(opt)) res = gui_div.attr(opt);
+         if (!res && gui_div && !gui_div.empty() && gui_div.node().hasAttribute(opt)) res = gui_div.attr(opt);
          return res;
       }
 
@@ -2002,12 +2143,13 @@
           monitor = GetOption("monitoring"),
           layout = GetOption("layout"),
           style = GetOptionAsArray("#style"),
-          status = GetOption("status"),
+          statush = 0, status = GetOption("status"),
           browser_kind = GetOption("browser"),
+          browser_configured = !!browser_kind,
           title = GetOption("title");
 
-      if (GetOption("float")!==null) browser_kind='float'; else
-      if (GetOption("fix")!==null) browser_kind='fix';
+      if (GetOption("float")!==null) { browser_kind='float'; browser_configured = true; } else
+      if (GetOption("fix")!==null) { browser_kind='fix'; browser_configured = true; }
 
       this.no_select = GetOption("noselect");
 
@@ -2050,7 +2192,8 @@
 
       if (status==="no") status = null; else
       if (status==="off") { this.status_disabled = true; status = null; } else
-      if ((status!==null) && (status!=='on')) { status = parseInt(status); if (isNaN(status) || (status<5)) status = 'on'; }
+      if (status==="on") status = true; else
+      if (status!==null) { statush = parseInt(status); if (isNaN(statush) || (statush<5)) statush = 0; status = true; }
       if (this.no_select==="") this.no_select = true;
 
       if (!browser_kind) browser_kind = "fix"; else
@@ -2064,12 +2207,9 @@
 
       this._topname = GetOption("topname");
 
-      if (gui_div)
-         this.PrepareGuiDiv(gui_div, this.disp_kind);
-
       function OpenAllFiles(res) {
          if (browser_kind) { hpainter.CreateBrowser(browser_kind); browser_kind = ""; }
-         if (status) { hpainter.CreateStatusLine(status,"toggle"); status = null; }
+         if (status!==null) { hpainter.CreateStatusLine(statush, status); status = null; }
          if (jsonarr.length>0)
             hpainter.OpenJsonFile(jsonarr.shift(), OpenAllFiles);
          else if (filesarr.length>0)
@@ -2091,10 +2231,15 @@
       function AfterOnlineOpened() {
          // check if server enables monitoring
 
+         if (('_browser' in hpainter.h) && !browser_configured) {
+            browser_kind = hpainter.h._browser;
+            if (browser_kind==="off") { browser_kind = ""; status = null; hpainter.exclude_browser = true; }
+         }
+
          if (('_monitoring' in hpainter.h) && !monitor)
             monitor = hpainter.h._monitoring;
 
-         if (('_layout' in hpainter.h) && (layout==null))
+         if (('_layout' in hpainter.h) && !layout)
             hpainter.disp_kind = hpainter.h._layout;
 
          if (('_loadfile' in hpainter.h) && (filesarr.length==0))
@@ -2105,6 +2250,12 @@
             optionsarr = JSROOT.ParseAsArray(hpainter.h._drawopt);
          }
 
+         if (('_toptitle' in hpainter.h) && hpainter.exclude_browser && document)
+            document.title = hpainter.h._toptitle;
+
+         if (gui_div)
+            hpainter.PrepareGuiDiv(gui_div, hpainter.disp_kind);
+
          OpenAllFiles();
       }
 
@@ -2114,26 +2265,26 @@
          if (typeof h0 !== 'object') h0 = "";
       }
 
-      if (h0!==null) hpainter.OpenOnline(h0, AfterOnlineOpened);
-      else if (prereq.length>0) JSROOT.AssertPrerequisites(prereq, OpenAllFiles);
+      if (h0!==null)
+         return this.OpenOnline(h0, AfterOnlineOpened);
+
+      if (gui_div)
+         this.PrepareGuiDiv(gui_div, this.disp_kind);
+
+      if (prereq.length>0) JSROOT.AssertPrerequisites(prereq, OpenAllFiles);
       else OpenAllFiles();
    }
 
    HierarchyPainter.prototype.PrepareGuiDiv = function(myDiv, layout) {
+
       this.gui_div = myDiv.attr('id');
 
-      myDiv.append("div").attr("id",this.gui_div + "_drawing")
-                         .classed("jsroot_draw_area", true)
-                         .style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0);
+      this.brlayout = new BrowserLayout(this.gui_div, this);
+
+      this.brlayout.Create(!this.exclude_browser);
 
       if (!this.exclude_browser) {
-         var br = myDiv.append("div").classed("jsroot_browser", true);
-
-         var btns = br.append("div").classed("jsroot_browser_btns", true)
-                                    .classed("jsroot", true);
-
-         btns.style('position',"absolute").style("left","7px").style("top","7px");
-         if (JSROOT.touches) btns.style('opacity','0.2'); // on touch devices should be always visible
+         var btns = this.brlayout.CreateBrowserBtns();
 
          JSROOT.ToolbarIcons.CreateSVG(btns, JSROOT.ToolbarIcons.diamand, 15, "toggle fix-pos browser")
                             .style("margin","3px").on("click", this.CreateBrowser.bind(this, "fix", true));
@@ -2144,19 +2295,15 @@
 
          if (!this.status_disabled)
             JSROOT.ToolbarIcons.CreateSVG(btns, JSROOT.ToolbarIcons.three_circles, 15, "toggle status line")
-                               .style("margin","3px").on("click", this.CreateStatusLine.bind(this, 'on', "toggle"));
+                               .style("margin","3px").on("click", this.CreateStatusLine.bind(this, 0, "toggle"));
       }
 
-      this.SetDisplay(layout, this.gui_div + "_drawing");
+      this.SetDisplay(layout, this.brlayout.drawing_divid());
    }
 
    HierarchyPainter.prototype.CreateStatusLine = function(height, mode) {
-      if (!this.gui_div) return;
-
-      var hpainter = this;
-      JSROOT.AssertPrerequisites('jq2d', function() {
-          hpainter.CreateStatusLine(height, mode);
-      });
+      if (this.status_disabled || !this.gui_div || !this.brlayout) return '';
+      return this.brlayout.CreateStatusLine(height, mode);
    }
 
    HierarchyPainter.prototype.CreateBrowser = function(browser_kind, update_html, call_back) {
@@ -2186,10 +2333,19 @@
 
       JSROOT.Painter.readStyleFromURL();
 
-      d3.select('html').style('height','100%');
-      d3.select('body').style('min-height','100%').style('margin',0).style('overflow',"hidden");
+      var guisize = JSROOT.GetUrlOption("divsize");
+      if (guisize) {
+         guisize = guisize.split("x");
+         if (guisize.length != 2) guisize = null;
+      }
 
-      myDiv.style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0).style('padding',1);
+      if (guisize) {
+         myDiv.style('position',"relative").style('width', guisize[0] + "px").style('height', guisize[1] + "px");
+      } else {
+         d3.select('html').style('height','100%');
+         d3.select('body').style('min-height','100%').style('margin',0).style('overflow',"hidden");
+         myDiv.style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0).style('padding',1);
+      }
 
       var hpainter = new JSROOT.HierarchyPainter('root', null);
 
@@ -2332,7 +2488,6 @@
    MDIDisplay.prototype = Object.create(JSROOT.TBasePainter.prototype);
 
    MDIDisplay.prototype.BeforeCreateFrame = function(title) {
-
       this.active_frame_title = title;
    }
 
@@ -2669,13 +2824,20 @@
    GridDisplay.prototype.CreateFrame = function(title) {
       this.BeforeCreateFrame(title);
 
-      var frame = this.GetFrame(this.getcnt);
-      if (!this.simple_layout && this.framecnt)
-         this.getcnt = (this.getcnt+1) % this.framecnt;
+      var frame = null, maxloop = this.framecnt || 2;
 
-      d3.select(frame).attr('frame_title', title);
+      while (!frame && maxloop--) {
+         frame = this.GetFrame(this.getcnt);
+         if (!this.simple_layout && this.framecnt)
+            this.getcnt = (this.getcnt+1) % this.framecnt;
 
-      JSROOT.cleanup(frame);
+         if (d3.select(frame).classed("jsroot_fixed_frame")) frame = null;
+      }
+
+      if (frame) {
+         this.CleanupFrame(frame);
+         d3.select(frame).attr('frame_title', title);
+      }
 
       return frame;
    }
@@ -2691,6 +2853,7 @@
    JSROOT.Painter.ListHierarchy = ListHierarchy;
    JSROOT.Painter.KeysHierarchy = KeysHierarchy;
 
+   JSROOT.BrowserLayout = BrowserLayout;
    JSROOT.HierarchyPainter = HierarchyPainter;
 
    JSROOT.MDIDisplay = MDIDisplay;

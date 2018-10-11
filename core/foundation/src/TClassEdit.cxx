@@ -8,11 +8,13 @@
 #include <string.h>
 #include "TClassEdit.h"
 #include <ctype.h>
+#include <cctype>
 #include "Rstrstream.h"
 #include <set>
+#include <stack>
 // for shared_ptr
 #include <memory>
-#include "RStringView.h"
+#include "ROOT/RStringView.hxx"
 #include <algorithm>
 
 namespace {
@@ -1900,7 +1902,7 @@ public:
       auto argsEnd = v.end();
       auto argsBeginPlusOne = ++v.begin();
       auto argPos = std::find_if(argsBeginPlusOne, argsEnd,
-                              [](std::string& arg){return arg.front() == ':';});
+           [](std::string& arg){return (!arg.empty() && arg.front() == ':');});
       if (argPos != argsEnd) {
          const int lenght = clName.size();
          int wedgeBalance = 0;
@@ -2041,4 +2043,192 @@ char* TClassEdit::DemangleTypeIdName(const std::type_info& ti, int& errorCode)
 {
    const char* mangled_name = ti.name();
    return DemangleName(mangled_name, errorCode);
+}
+/*
+/// Result of splitting a function declaration into
+/// fReturnType fScopeName::fFunctionName<fFunctionTemplateArguments>(fFunctionParameters)
+struct FunctionSplitInfo {
+   /// Return type of the function, might be empty if the function declaration string did not provide it.
+   std::string fReturnType;
+
+   /// Name of the scope qualification of the function, possibly empty
+   std::string fScopeName;
+
+   /// Name of the function
+   std::string fFunctionName;
+
+   /// Template arguments of the function template specialization, if any; will contain one element "" for
+   /// `function<>()`
+   std::vector<std::string> fFunctionTemplateArguments;
+
+   /// Function parameters.
+   std::vector<std::string> fFunctionParameters;
+};
+*/
+
+namespace {
+   /// Find the first occurrence of any of needle's characters in haystack that
+   /// is not nested in a <>, () or [] pair.
+   std::size_t FindNonNestedNeedles(std::string_view haystack, string_view needles)
+   {
+      std::stack<char> expected;
+      for (std::size_t pos = 0, end = haystack.length(); pos < end; ++pos) {
+         char c = haystack[pos];
+         if (expected.empty()) {
+            if (needles.find(c) != std::string_view::npos)
+               return pos;
+         } else {
+            if (c == expected.top()) {
+               expected.pop();
+               continue;
+            }
+         }
+         switch (c) {
+            case '<': expected.emplace('>'); break;
+            case '(': expected.emplace(')'); break;
+            case '[': expected.emplace(']'); break;
+         }
+      }
+      return std::string_view::npos;
+   }
+
+   /// Find the first occurrence of `::` that is not nested in a <>, () or [] pair.
+   std::size_t FindNonNestedDoubleColons(std::string_view haystack)
+   {
+      std::size_t lenHaystack = haystack.length();
+      std::size_t prevAfterColumn = 0;
+      while (true) {
+         std::size_t posColumn = FindNonNestedNeedles(haystack.substr(prevAfterColumn), ":");
+         if (posColumn == std::string_view::npos)
+            return std::string_view::npos;
+         prevAfterColumn += posColumn;
+         // prevAfterColumn must have "::", i.e. two characters:
+         if (prevAfterColumn + 1 >= lenHaystack)
+            return std::string_view::npos;
+
+         ++prevAfterColumn; // done with first (or only) ':'
+         if (haystack[prevAfterColumn] == ':')
+            return prevAfterColumn - 1;
+         ++prevAfterColumn; // That was not a ':'.
+      }
+
+      return std::string_view::npos;
+   }
+
+   std::string_view StripSurroundingSpace(std::string_view str)
+   {
+      while (!str.empty() && std::isspace(str[0]))
+         str.remove_prefix(1);
+      while (!str.empty() && std::isspace(str.back()))
+         str.remove_suffix(1);
+      return str;
+   }
+
+   std::string ToString(std::string_view sv)
+   {
+      // ROOT's string_view backport doesn't add the new std::string contructor and assignment;
+      // convert to std::string instead and assign that.
+      return std::string(sv.data(), sv.length());
+   }
+} // unnamed namespace
+
+/// Split a function declaration into its different parts.
+bool TClassEdit::SplitFunction(std::string_view decl, TClassEdit::FunctionSplitInfo &result)
+{
+   // General structure:
+   // `...` last-space `...` (`...`)
+   // The first `...` is the return type.
+   // The second `...` is the (possibly scoped) function name.
+   // The third `...` are the parameters.
+   // The function name can be of the form `...`<`...`>
+   std::size_t posArgs = FindNonNestedNeedles(decl, "(");
+   std::string_view declNoArgs = decl.substr(0, posArgs);
+
+   std::size_t prevAfterWhiteSpace = 0;
+   static const char whitespace[] = " \t\n";
+   while (declNoArgs.length() > prevAfterWhiteSpace) {
+      std::size_t posWS = FindNonNestedNeedles(declNoArgs.substr(prevAfterWhiteSpace), whitespace);
+      if (posWS == std::string_view::npos)
+         break;
+      prevAfterWhiteSpace += posWS + 1;
+      while (declNoArgs.length() > prevAfterWhiteSpace
+             && strchr(whitespace, declNoArgs[prevAfterWhiteSpace]))
+         ++prevAfterWhiteSpace;
+   }
+
+   /// Include any '&*' in the return type:
+   std::size_t endReturn = prevAfterWhiteSpace;
+   while (declNoArgs.length() > endReturn
+          && strchr("&* \t \n", declNoArgs[endReturn]))
+          ++endReturn;
+
+   result.fReturnType = ToString(StripSurroundingSpace(declNoArgs.substr(0, endReturn)));
+
+   /// scope::anotherscope::functionName<tmplt>:
+   std::string_view scopeFunctionTmplt = declNoArgs.substr(endReturn);
+   std::size_t prevAtScope = FindNonNestedDoubleColons(scopeFunctionTmplt);
+   while (prevAtScope != std::string_view::npos
+          && scopeFunctionTmplt.length() > prevAtScope + 2) {
+      std::size_t posScope = FindNonNestedDoubleColons(scopeFunctionTmplt.substr(prevAtScope + 2));
+      if (posScope == std::string_view::npos)
+         break;
+      prevAtScope += posScope + 2;
+   }
+
+   std::size_t afterScope = prevAtScope + 2;
+   if (prevAtScope == std::string_view::npos) {
+      afterScope = 0;
+      prevAtScope = 0;
+   }
+
+   result.fScopeName = ToString(StripSurroundingSpace(scopeFunctionTmplt.substr(0, prevAtScope)));
+   std::string_view funcNameTmplArgs = scopeFunctionTmplt.substr(afterScope);
+
+   result.fFunctionTemplateArguments.clear();
+   std::size_t posTmpltOpen = FindNonNestedNeedles(funcNameTmplArgs, "<");
+   if (posTmpltOpen != std::string_view::npos) {
+      result.fFunctionName = ToString(StripSurroundingSpace(funcNameTmplArgs.substr(0, posTmpltOpen)));
+
+      // Parse template parameters:
+      std::string_view tmpltArgs = funcNameTmplArgs.substr(posTmpltOpen + 1);
+      std::size_t posTmpltClose = FindNonNestedNeedles(tmpltArgs, ">");
+      if (posTmpltClose != std::string_view::npos) {
+         tmpltArgs = tmpltArgs.substr(0, posTmpltClose);
+         std::size_t prevAfterArg = 0;
+         while (tmpltArgs.length() > prevAfterArg) {
+            std::size_t posComma = FindNonNestedNeedles(tmpltArgs.substr(prevAfterArg), ",");
+            if (posComma == std::string_view::npos) {
+               break;
+            }
+            result.fFunctionTemplateArguments.emplace_back(ToString(StripSurroundingSpace(tmpltArgs.substr(prevAfterArg, posComma))));
+            prevAfterArg += posComma + 1;
+         }
+         // Add the trailing arg.
+         result.fFunctionTemplateArguments.emplace_back(ToString(StripSurroundingSpace(tmpltArgs.substr(prevAfterArg))));
+      }
+   } else {
+      result.fFunctionName = ToString(StripSurroundingSpace(funcNameTmplArgs));
+   }
+
+   result.fFunctionParameters.clear();
+   if (posArgs != std::string_view::npos) {
+      /// (params)
+      std::string_view params = decl.substr(posArgs + 1);
+      std::size_t posEndArgs = FindNonNestedNeedles(params, ")");
+      if (posEndArgs != std::string_view::npos) {
+         params = params.substr(0, posEndArgs);
+         std::size_t prevAfterArg = 0;
+         while (params.length() > prevAfterArg) {
+            std::size_t posComma = FindNonNestedNeedles(params.substr(prevAfterArg), ",");
+            if (posComma == std::string_view::npos) {
+               result.fFunctionParameters.emplace_back(ToString(StripSurroundingSpace(params.substr(prevAfterArg))));
+               break;
+            }
+            result.fFunctionParameters.emplace_back(ToString(StripSurroundingSpace(params.substr(prevAfterArg, posComma))));
+            prevAfterArg += posComma + 1; // skip ','
+         }
+      }
+   }
+
+   return true;
 }

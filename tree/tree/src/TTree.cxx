@@ -333,7 +333,7 @@ End_Macro
 ~~~
 */
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "TTree.h"
 
 #include "ROOT/TIOFeatures.hxx"
@@ -385,7 +385,6 @@ End_Macro
 #include "TTreeCacheUnzip.h"
 #include "TVirtualCollectionProxy.h"
 #include "TEmulatedCollectionProxy.h"
-#include "TVirtualFitter.h"
 #include "TVirtualIndex.h"
 #include "TVirtualPerfStats.h"
 #include "TVirtualPad.h"
@@ -524,12 +523,9 @@ TTree::TFriendLock::~TFriendLock()
 /// Regular constructor.
 /// TTree is not set as const, since we might modify if it is a TChain.
 
-TTree::TClusterIterator::TClusterIterator(TTree *tree, Long64_t firstEntry) : fTree(tree), fClusterRange(0), fStartEntry(0), fNextEntry(0)
+TTree::TClusterIterator::TClusterIterator(TTree *tree, Long64_t firstEntry) : fTree(tree), fClusterRange(0), fStartEntry(0), fNextEntry(0), fEstimatedSize(-1)
 {
-   if ( fTree->GetAutoFlush() <= 0 ) {
-      // Case of old files before November 9 2009
-      fStartEntry = firstEntry;
-   } else if (fTree->fNClusterRange) {
+   if (fTree->fNClusterRange) {
       // Find the correct cluster range.
       //
       // Since fClusterRangeEnd contains the inclusive upper end of the range, we need to search for the
@@ -552,10 +548,13 @@ TTree::TClusterIterator::TClusterIterator(TTree *tree, Long64_t firstEntry) : fT
       } else {
          autoflush = fTree->fClusterSize[fClusterRange];
       }
-      if (autoflush == 0) {
+      if (autoflush <= 0) {
          autoflush = GetEstimatedClusterSize();
       }
       fStartEntry = pedestal + entryInRange - entryInRange%autoflush;
+   } else if ( fTree->GetAutoFlush() <= 0 ) {
+      // Case of old files before November 9 2009 *or* small tree where AutoFlush was never set.
+      fStartEntry = firstEntry;
    } else {
       fStartEntry = firstEntry - firstEntry%fTree->GetAutoFlush();
    }
@@ -563,15 +562,27 @@ TTree::TClusterIterator::TClusterIterator(TTree *tree, Long64_t firstEntry) : fT
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// In the case where the cluster size was not fixed (old files and
-/// case where autoflush was explicitly set to zero, we need estimate
+/// Estimate the cluster size.
+///
+/// In almost all cases, this quickly returns the size of the auto-flush
+/// in the TTree.
+///
+/// However, in the case where the cluster size was not fixed (old files and
+/// case where autoflush was explicitly set to zero), we need estimate
 /// a cluster size in relation to the size of the cache.
+///
+/// After this value is calculated once for the TClusterIterator, it is
+/// cached and reused in future calls.
 
 Long64_t TTree::TClusterIterator::GetEstimatedClusterSize()
 {
+   auto autoFlush = fTree->GetAutoFlush();
+   if (autoFlush > 0) return autoFlush;
+   if (fEstimatedSize > 0) return fEstimatedSize;
+
    Long64_t zipBytes = fTree->GetZipBytes();
    if (zipBytes == 0) {
-      return fTree->GetEntries() - 1;
+      fEstimatedSize = fTree->GetEntries() - 1;
    } else {
       Long64_t clusterEstimate = 1;
       Long64_t cacheSize = fTree->GetCacheSize();
@@ -585,13 +596,15 @@ Long64_t TTree::TClusterIterator::GetEstimatedClusterSize()
             }
          }
       }
-      if (cacheSize > 0) {
-         clusterEstimate = fTree->GetEntries() * cacheSize / zipBytes;
-         if (clusterEstimate == 0)
-            clusterEstimate = 1;
+      // If neither file nor tree has a cache, use the current default.
+      if (cacheSize <= 0) {
+         cacheSize = 30000000;
       }
-      return clusterEstimate;
+      clusterEstimate = fTree->GetEntries() * cacheSize / zipBytes;
+      // If there are no entries, then just default to 1.
+      fEstimatedSize = clusterEstimate ? clusterEstimate : 1;
    }
+   return fEstimatedSize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -601,15 +614,11 @@ Long64_t TTree::TClusterIterator::GetEstimatedClusterSize()
 Long64_t TTree::TClusterIterator::Next()
 {
    fStartEntry = fNextEntry;
-   if ( fTree->GetAutoFlush() <= 0 ) {
-      // Case of old files before November 9 2009
-      Long64_t clusterEstimate = GetEstimatedClusterSize();
-      fNextEntry = fStartEntry + clusterEstimate;
-   } else {
+   if (fTree->fNClusterRange || fTree->GetAutoFlush() > 0) {
       if (fClusterRange == fTree->fNClusterRange) {
          // We are looking at a range which size
          // is defined by AutoFlush itself and goes to the GetEntries.
-         fNextEntry += fTree->GetAutoFlush();
+         fNextEntry += GetEstimatedClusterSize();
       } else {
          if (fStartEntry > fTree->fClusterRangeEnd[fClusterRange]) {
             ++fClusterRange;
@@ -617,7 +626,7 @@ Long64_t TTree::TClusterIterator::Next()
          if (fClusterRange == fTree->fNClusterRange) {
             // We are looking at the last range which size
             // is defined by AutoFlush itself and goes to the GetEntries.
-            fNextEntry += fTree->GetAutoFlush();
+            fNextEntry += GetEstimatedClusterSize();
          } else {
             Long64_t clusterSize = fTree->fClusterSize[fClusterRange];
             if (clusterSize == 0) {
@@ -632,6 +641,9 @@ Long64_t TTree::TClusterIterator::Next()
             }
          }
       }
+   } else {
+      // Case of old files before November 9 2009
+      fNextEntry = fStartEntry + GetEstimatedClusterSize();
    }
    if (fNextEntry > fTree->GetEntries()) {
       fNextEntry = fTree->GetEntries();
@@ -646,15 +658,11 @@ Long64_t TTree::TClusterIterator::Next()
 Long64_t TTree::TClusterIterator::Previous()
 {
    fNextEntry = fStartEntry;
-   if (fTree->GetAutoFlush() <= 0) {
-      // Case of old files before November 9 2009
-      Long64_t clusterEstimate = GetEstimatedClusterSize();
-      fStartEntry = fNextEntry - clusterEstimate;
-   } else {
+   if (fTree->fNClusterRange || fTree->GetAutoFlush() > 0) {
       if (fClusterRange == 0 || fTree->fNClusterRange == 0) {
          // We are looking at a range which size
          // is defined by AutoFlush itself.
-         fStartEntry -= fTree->GetAutoFlush();
+         fStartEntry -= GetEstimatedClusterSize();
       } else {
          if (fNextEntry <= fTree->fClusterRangeEnd[fClusterRange]) {
             --fClusterRange;
@@ -670,6 +678,9 @@ Long64_t TTree::TClusterIterator::Previous()
             fStartEntry -= clusterSize;
          }
       }
+   } else {
+      // Case of old files before November 9 2009 or trees that never auto-flushed.
+      fStartEntry = fNextEntry - GetEstimatedClusterSize();
    }
    if (fStartEntry < 0) {
       fStartEntry = 0;
@@ -870,6 +881,13 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */,
 
 TTree::~TTree()
 {
+   if (fAllocationCount && (gDebug > 0)) {
+      Info("TTree::~TTree", "For tree %s, allocation count is %u.", GetName(), fAllocationCount.load());
+#ifdef R__TRACK_BASKET_ALLOC_TIME
+      Info("TTree::~TTree", "For tree %s, allocation time is %lluus.", GetName(), fAllocationTime.load());
+#endif
+   }
+
    if (fDirectory) {
       // We are in a directory, which may possibly be a file.
       if (fDirectory->GetList()) {
@@ -1393,7 +1411,7 @@ Long64_t TTree::AutoSave(Option_t* option)
 
    if (opt.Contains("flushbaskets")) {
       if (gDebug > 0) Info("AutoSave", "calling FlushBaskets \n");
-      FlushBaskets();
+      FlushBasketsImpl();
    }
 
    fSavedBytes = GetZipBytes();
@@ -1648,11 +1666,11 @@ Int_t TTree::Branch(TList* li, Int_t bufsize /* = 32000 */ , Int_t splitlevel /*
 /// identical branch names. By default collections have a name equal to
 /// the corresponding class name, e.g. the default name for a TList is "TList".
 ///
-/// And in general in any cases two or more master branches contain subbranches
+/// And in general, in case two or more master branches contain subbranches
 /// with identical names, one must add a "." (dot) character at the end
-/// of the master branch name. This will force the name of the subbranch
-/// to be master.subbranch instead of simply subbranch.
-/// This situation happens when the top level object (say event)
+/// of the master branch name. This will force the name of the subbranches
+/// to be of the form `master.subbranch` instead of simply `subbranch`.
+/// This situation happens when the top level object
 /// has two or more members referencing the same class.
 /// For example, if a Tree has two branches B1 and B2 corresponding
 /// to objects of the same class MyClass, one can do:
@@ -1908,11 +1926,11 @@ TBranch* TTree::Branch(const char* name, const char* classname, void* addobj, In
 ///
 /// IMPORTANT NOTE about branch names:
 ///
-/// In case two or more master branches contain subbranches with
-/// identical names, one must add a "." (dot) character at the end
-/// of the master branch name. This will force the name of the subbranch
-/// to be master.subbranch instead of simply subbranch.
-/// This situation happens when the top level object (say event)
+/// And in general, in case two or more master branches contain subbranches
+/// with identical names, one must add a "." (dot) character at the end
+/// of the master branch name. This will force the name of the subbranches
+/// to be of the form `master.subbranch` instead of simply `subbranch`.
+/// This situation happens when the top level object
 /// has two or more members referencing the same class.
 /// For example, if a Tree has two branches B1 and B2 corresponding
 /// to objects of the same class MyClass, one can do:
@@ -2232,11 +2250,11 @@ TBranch* TTree::BranchRef()
 ///
 /// IMPORTANT NOTE about branch names:
 ///
-/// In case two or more master branches contain subbranches with
-/// identical names, one must add a "." (dot) character at the end
-/// of the master branch name. This will force the name of the subbranch
-/// to be master.subbranch instead of simply subbranch.
-/// This situation happens when the top level object (say event)
+/// And in general, in case two or more master branches contain subbranches
+/// with identical names, one must add a "." (dot) character at the end
+/// of the master branch name. This will force the name of the subbranches
+/// to be of the form `master.subbranch` instead of simply `subbranch`.
+/// This situation happens when the top level object
 /// has two or more members referencing the same class.
 /// For example, if a Tree has two branches B1 and B2 corresponding
 /// to objects of the same class MyClass, one can do:
@@ -2426,20 +2444,6 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    }
 
    //
-   // Do we have a final dot in our name?
-   //
-
-   // Note: The branch constructor which takes a folder as input
-   //       creates top-level branch names with dots in them to
-   //       indicate the folder hierarchy.
-   char* dot = (char*) strchr(name, '.');
-   Int_t nch = strlen(name);
-   Bool_t dotlast = kFALSE;
-   if (nch && (name[nch-1] == '.')) {
-      dotlast = kTRUE;
-   }
-
-   //
    // Create a dummy top level branch object.
    //
 
@@ -2455,85 +2459,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    //
 
    if (splitlevel%kSplitCollectionOfPointers > 0) {
-      // Loop on all public data members of the class and its base classes and create branches for each one.
-      TObjArray* blist = branch->GetListOfBranches();
-      TIter next(sinfo->GetElements());
-      TStreamerElement* element = 0;
-      TString bname;
-      for (id = 0; (element = (TStreamerElement*) next()); ++id) {
-         if (element->IsA() == TStreamerArtificial::Class()) {
-            continue;
-         }
-         if (element->TestBit(TStreamerElement::kRepeat)) {
-            continue;
-         }
-         if (element->TestBit(TStreamerElement::kCache) && !element->TestBit(TStreamerElement::kWrite)) {
-            continue;
-         }
-         char* pointer = (char*) (objptr + element->GetOffset());
-         // FIXME: This is not good enough, an STL container can be
-         //        a base, and the test will fail.
-         //        See TBranchElement::InitializeOffsets() for the
-         //        correct test.
-         Bool_t isBase = (element->IsA() == TStreamerBase::Class());
-         if (isBase) {
-            TClass* clbase = element->GetClassPointer();
-            if ((clbase == TObject::Class()) && cl->CanIgnoreTObjectStreamer()) {
-               // Note: TStreamerInfo::Compile() leaves this element
-               //       out of the optimized info, although it does
-               //       exists in the non-compiled  and non-optimized info.
-               // FIXME: The test that TStreamerInfo::Compile() uses
-               //        is element->GetType() < 0, so that is what
-               //        we should do as well.
-               continue;
-            }
-            if (clbase->GetListOfRealData()->GetSize() == 0) {
-               // Do not create a branch for empty bases.
-               continue;
-            }
-         }
-         if (dot) {
-            if (dotlast) {
-               bname.Form("%s%s", name, element->GetFullName());
-            } else {
-               // FIXME: We are in the case where we have a top-level
-               //        branch name that was created by the branch
-               //        constructor which takes a folder as input.
-               //        The internal dots in the name are in place of
-               //        of the original slashes and represent the
-               //        folder hierarchy.
-               if (isBase) {
-                  // FIXME: This is very strange, this is the only case where
-                  //        we create a branch for a base class that does
-                  //        not have the base class name in the branch name.
-                  // FIXME: This is also quite bad since classes with two
-                  //        or more base classes end up with sub-branches
-                  //        that have the same name.
-                  bname = name;
-               } else {
-                  bname.Form("%s.%s", name, element->GetFullName());
-               }
-            }
-         } else {
-            // Note: For a base class element, this results in the branchname
-            //       being the name of the base class.
-            bname.Form("%s", element->GetFullName());
-         }
-
-         if( splitlevel > kSplitCollectionOfPointers && element->GetClass() &&
-             element->GetClass()->GetCollectionProxy() &&
-             element->GetClass()->GetCollectionProxy()->HasPointers() )
-         {
-            TBranchSTL* brSTL = new TBranchSTL( branch, bname, element->GetClass()->GetCollectionProxy(), bufsize, splitlevel-1, sinfo, id );
-            blist->Add(brSTL);
-         }
-         else
-         {
-            TBranchElement* bre = new TBranchElement(branch, bname, sinfo, id, pointer, bufsize, splitlevel - 1);
-            bre->SetParentClass(cl);
-            blist->Add(bre);
-         }
-      }
+      branch->Unroll(name, cl, sinfo, objptr, bufsize, splitlevel);
    }
 
    //
@@ -3276,6 +3202,21 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
          // Now we know whether the address has been transfered
          tree->ResetBranchAddress(tbranch);
       } else {
+         TBranchElement *mother = dynamic_cast<TBranchElement*>(leaf->GetBranch()->GetMother());
+         if (leaf->GetLeafCount() && (leaf->TestBit(TLeaf::kNewValue) || !leaf->GetValuePointer() || (mother && mother->IsObjectOwner())) && tleaf->GetLeafCount())
+         {
+            // If it is an array and it was allocated by the leaf itself,
+            // let's make sure it is large enough for the incoming data.
+            if (leaf->GetLeafCount()->GetMaximum() < tleaf->GetLeafCount()->GetMaximum()) {
+               leaf->GetLeafCount()->IncludeRange( tleaf->GetLeafCount() );
+               if (leaf->GetValuePointer()) {
+                  if (leaf->IsA() == TLeafElement::Class() && mother)
+                     mother->ResetAddress();
+                  else
+                     leaf->SetAddress(nullptr);
+               }
+            }
+         }
          if (!branch->GetAddress() && !leaf->GetValuePointer()) {
             // We should attempts to set the address of the branch.
             // something like:
@@ -4453,8 +4394,9 @@ Int_t TTree::Fill()
       fBranchRef->Clear();
 
 #ifdef R__USE_IMT
+   const auto useIMT = ROOT::IsImplicitMTEnabled() && fIMTEnabled;
    ROOT::Internal::TBranchIMTHelper imtHelper;
-   if (fIMTEnabled) {
+   if (useIMT) {
       fIMTFlush = true;
       fIMTZipBytes.store(0);
       fIMTTotBytes.store(0);
@@ -4471,7 +4413,7 @@ Int_t TTree::Fill()
 #ifndef R__USE_IMT
       nwrite = branch->FillImpl(nullptr);
 #else
-      nwrite = branch->FillImpl(fIMTEnabled ? &imtHelper : nullptr);
+      nwrite = branch->FillImpl(useIMT ? &imtHelper : nullptr);
 #endif
       if (nwrite < 0) {
          if (nerror < 2) {
@@ -4538,14 +4480,18 @@ Int_t TTree::Fill()
 
          if (autoFlush || autoSave) {
             // First call FlushBasket to make sure that fTotBytes is up to date.
-            FlushBaskets();
-            OptimizeBaskets(GetTotBytes(), 1, "");
+            FlushBasketsImpl();
             autoFlush = false; // avoid auto flushing again later
 
-            if (gDebug > 0)
-               Info("TTree::Fill", "OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",
-                    fEntries, GetZipBytes(), fFlushedBytes);
-
+            // When we are in one-basket-per-cluster mode, there is no need to optimize basket:
+            // they will automatically grow to the size needed for an event cluster (with the basket
+            // shrinking preventing them from growing too much larger than the actually-used space).
+            if (!TestBit(TTree::kOnlyFlushAtCluster)) {
+               OptimizeBaskets(GetTotBytes(), 1, "");
+               if (gDebug > 0)
+                  Info("TTree::Fill", "OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",
+                       fEntries, GetZipBytes(), fFlushedBytes);
+            }
             fFlushedBytes = GetZipBytes();
             fAutoFlush = fEntries; // Use test on entries rather than bytes
 
@@ -4581,7 +4527,7 @@ Int_t TTree::Fill()
             if (fNClusterRange == 0)
                autoFlush = fEntries > 1 && fEntries % fAutoFlush == 0;
             else
-               autoFlush = (fEntries - fClusterRangeEnd[fNClusterRange - 1]) % fAutoFlush == 0;
+               autoFlush = (fEntries - (fClusterRangeEnd[fNClusterRange - 1] + 1)) % fAutoFlush == 0;
          }
          // Check if we need to auto save
          if (fAutoSave)
@@ -4590,7 +4536,7 @@ Int_t TTree::Fill()
    }
 
    if (autoFlush) {
-      FlushBaskets();
+      FlushBasketsImpl();
       if (gDebug > 0)
          Info("TTree::Fill", "FlushBaskets() called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n", fEntries,
               GetZipBytes(), fFlushedBytes);
@@ -4598,7 +4544,7 @@ Int_t TTree::Fill()
    }
 
    if (autoSave) {
-      AutoSave(); // does not call FlushBaskets() again
+      AutoSave(); // does not call FlushBasketsImpl() again
       if (gDebug > 0)
          Info("TTree::Fill", "AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n", fEntries,
               GetZipBytes(), fSavedBytes);
@@ -4771,6 +4717,8 @@ TLeaf* TTree::FindLeaf(const char* searchname)
    TString longname;
    TString longtitle;
 
+   const bool searchnameHasDot = strchr(searchname, '.') != nullptr;
+
    // For leaves we allow for one level up to be prefixed to the name.
    TIter next(GetListOfLeaves());
    TLeaf* leaf = 0;
@@ -4797,6 +4745,8 @@ TLeaf* TTree::FindLeaf(const char* searchname)
       if (subsearchname && leaftitle == subsearchname) {
          return leaf;
       }
+      if (!searchnameHasDot)
+         continue;
       TBranch* branch = leaf->GetBranch();
       if (branch) {
          longname.Form("%s.%s",branch->GetName(),leafname.Data());
@@ -4915,7 +4865,11 @@ struct BoolRAIIToggle {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write to disk all the basket that have not yet been individually written.
+/// Write to disk all the basket that have not yet been individually written and
+/// create an event cluster boundary (by default).
+///
+/// If the caller wishes to flush the baskets but not create an event cluster,
+/// then set create_cluster to false.
 ///
 /// If ROOT has IMT-mode enabled, this will launch multiple TBB tasks in parallel
 /// via TThreadExecutor to do this operation; one per basket compression.  If the
@@ -4942,8 +4896,24 @@ struct BoolRAIIToggle {
 /// locks when they invoke ROOT.
 ///
 /// Return the number of bytes written or -1 in case of write error.
+Int_t TTree::FlushBaskets(Bool_t create_cluster) const
+{
+    Int_t retval = FlushBasketsImpl();
+    if (retval == -1) return retval;
 
-Int_t TTree::FlushBaskets() const
+    if (create_cluster) const_cast<TTree *>(this)->MarkEventCluster();
+    return retval;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Internal implementation of the FlushBaskets algorithm.
+/// Unlike the public interface, this does NOT create an explicit event cluster
+/// boundary; it is up to the (internal) caller to determine whether that should
+/// done.
+///
+/// Otherwise, the comments for FlushBaskets applies.
+///
+Int_t TTree::FlushBasketsImpl() const
 {
    if (!fDirectory) return 0;
    Int_t nbytes = 0;
@@ -4952,7 +4922,8 @@ Int_t TTree::FlushBaskets() const
    Int_t nb = lb->GetEntriesFast();
 
 #ifdef R__USE_IMT
-   if (fIMTEnabled) {
+   const auto useIMT = ROOT::IsImplicitMTEnabled() && fIMTEnabled;
+   if (useIMT) {
       if (fSortedBranches.empty()) { const_cast<TTree*>(this)->InitializeBranchLists(false); }
 
       BoolRAIIToggle sentry(fIMTFlush);
@@ -4961,7 +4932,7 @@ Int_t TTree::FlushBaskets() const
       std::atomic<Int_t> nerrpar(0);
       std::atomic<Int_t> nbpar(0);
       std::atomic<Int_t> pos(0);
-         
+
       auto mapFunction  = [&]() {
         // The branch to process is obtained when the task starts to run.
         // This way, since branches are sorted, we make sure that branches
@@ -5072,6 +5043,9 @@ TBranch* TTree::GetBranch(const char* name)
    Int_t nb = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nb; i++) {
       TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
+      if (!branch) {
+         continue;
+      }
       if (!strcmp(branch->GetName(), name)) {
          return branch;
       }
@@ -5234,7 +5208,8 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
 TTree::TClusterIterator TTree::GetClusterIterator(Long64_t firstentry)
 {
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    return TClusterIterator(this,firstentry);
 }
@@ -5413,7 +5388,8 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    fReadEntry = entry;
 
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    Int_t nbranches = fBranches.GetEntriesFast();
    Int_t nb=0;
@@ -5429,8 +5405,10 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    };
 
 #ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
-      if (fSortedBranches.empty()) InitializeBranchLists(true);
+   const auto nBranches = GetListOfBranches()->GetEntries();
+   if (nBranches > 1 && ROOT::IsImplicitMTEnabled() && fIMTEnabled && !TTreeCacheUnzip::IsParallelUnzip()) {
+      if (fSortedBranches.empty())
+         InitializeBranchLists(true);
 
       // Count branches are processed first and sequentially
       for (auto branch : fSeqBranches) {
@@ -5692,7 +5670,8 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
       return -1;
    }
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    Int_t i;
    Int_t nbytes = 0;
@@ -5954,31 +5933,25 @@ TLeaf* TTree::GetLeaf(const char* branchname, const char *leafname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to the 1st Leaf named name in any Branch of this
-/// Tree or any branch in the list of friend trees.
+/// Return pointer to first leaf named \param[name] in any branch of this
+/// tree or its friend trees.
 ///
-/// aname may be of the form branchname/leafname
+/// \param[name] may be in the form 'branch/leaf'
+///
 
-TLeaf* TTree::GetLeaf(const char* aname)
+TLeaf* TTree::GetLeaf(const char *name)
 {
-   if (aname == 0) return 0;
+   // Return nullptr if name is invalid or if we have
+   // already been visited while searching friend trees
+   if (!name || (kGetLeaf & fFriendLockStatus))
+      return nullptr;
 
-   // We already have been visited while recursively looking
-   // through the friends tree, let return
-   if (kGetLeaf & fFriendLockStatus) {
-      return 0;
-   }
-   char* slash = (char*) strrchr(aname, '/');
-   char* name = 0;
-   UInt_t nbch = 0;
-   if (slash) {
-      name = slash + 1;
-      nbch = slash - aname;
-      TString brname(aname,nbch);
-      return GetLeafImpl(brname.Data(),name);
-   } else {
-      return GetLeafImpl(0,aname);
-   }
+   std::string path(name);
+   const auto sep = path.find_last_of("/");
+   if (sep != std::string::npos)
+      return GetLeafImpl(path.substr(0, sep).c_str(), name+sep+1);
+
+   return GetLeafImpl(nullptr, name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5994,7 +5967,8 @@ Double_t TTree::GetMaximum(const char* columname)
    }
 
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    TBranch* branch = leaf->GetBranch();
    Double_t cmax = -DBL_MAX;
@@ -6033,7 +6007,8 @@ Double_t TTree::GetMinimum(const char* columname)
    }
 
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    TBranch* branch = leaf->GetBranch();
    Double_t cmin = DBL_MAX;
@@ -6073,7 +6048,8 @@ TTreeCache *TTree::GetReadCache(TFile *file, Bool_t create /* = kFALSE */ )
    TTreeCache *pe = dynamic_cast<TTreeCache*>(file->GetCacheRead(this));
    if (pe && pe->GetTree() != this) pe = 0;
    if (create && !pe) {
-      if (fCacheDoAutoInit) SetCacheSizeAux(kTRUE, -1);
+      if (fCacheDoAutoInit)
+         SetCacheSizeAux(kTRUE, -1);
       pe = dynamic_cast<TTreeCache*>(file->GetCacheRead(this));
       if (pe && pe->GetTree() != this) pe = 0;
    }
@@ -6112,7 +6088,9 @@ TList* TTree::GetUserInfo()
 void TTree::ImportClusterRanges(TTree *fromtree)
 {
    Long64_t autoflush = fromtree->GetAutoFlush();
-   if (fNClusterRange || fromtree->fNClusterRange) {
+   if (fromtree->fNClusterRange == 0 && fromtree->fAutoFlush == fAutoFlush) {
+      // nothing to do
+   } else if (fNClusterRange || fromtree->fNClusterRange) {
       Int_t newsize = fNClusterRange + 1 + fromtree->fNClusterRange;
       if (newsize > fMaxClusterRange) {
          if (fMaxClusterRange) {
@@ -6127,9 +6105,11 @@ void TTree::ImportClusterRanges(TTree *fromtree)
             fClusterSize = new Long64_t[fMaxClusterRange];
          }
       }
-      fClusterRangeEnd[fNClusterRange] = fEntries - 1;
-      fClusterSize[fNClusterRange] = fAutoFlush<0 ? 0 : fAutoFlush;
-      ++fNClusterRange;
+      if (fEntries) {
+         fClusterRangeEnd[fNClusterRange] = fEntries - 1;
+         fClusterSize[fNClusterRange] = fAutoFlush<0 ? 0 : fAutoFlush;
+         ++fNClusterRange;
+      }
       for (Int_t i = 0 ; i < fromtree->fNClusterRange; ++i) {
          fClusterRangeEnd[fNClusterRange] = fEntries + fromtree->fClusterRangeEnd[i];
          fClusterSize[fNClusterRange] = fromtree->fClusterSize[i];
@@ -6214,6 +6194,10 @@ Long64_t TTree::LoadTree(Long64_t entry)
       // to think that there is always an entry somewhere in the list.
       return -1;
    }
+
+   // create cache if wanted
+   if (fCacheDoAutoInit && entry >=0)
+      SetCacheSizeAux();
 
    if (fNotify) {
       if (fReadEntry < 0) {
@@ -6778,7 +6762,7 @@ Bool_t TTree::Notify()
 void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *option)
 {
    //Flush existing baskets if the file is writable
-   if (this->GetDirectory()->IsWritable()) this->FlushBaskets();
+   if (this->GetDirectory()->IsWritable()) this->FlushBasketsImpl();
 
    TString opt( option );
    opt.ToLower();
@@ -6831,7 +6815,14 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          if (bsize > bmax) bsize = bmax;
          UInt_t newBsize = UInt_t(bsize);
          if (pass) { // only on the second pass so that it doesn't interfere with scaling
-            newBsize = newBsize + (branch->GetEntries() * sizeof(Int_t) * 2); // make room for meta data
+            // If there is an entry offset, it will be stored in the same buffer as the object data; hence,
+            // we must bump up the size of the branch to account for this extra footprint.
+            // If fAutoFlush is not set yet, let's assume that it is 'in the process of being set' to
+            // the value of GetEntries().
+            Long64_t clusterSize = (fAutoFlush > 0) ? fAutoFlush : branch->GetEntries();
+            if (branch->GetEntryOffsetLen()) {
+               newBsize = newBsize + (clusterSize * sizeof(Int_t) * 2);
+            }
             // We used ATLAS fully-split xAOD for testing, which is a rather unbalanced TTree, 10K branches,
             // with 8K having baskets smaller than 512 bytes. To achieve good I/O performance ATLAS uses auto-flush 100,
             // resulting in the smallest baskets being ~300-400 bytes, so this change increases their memory by about 8k*150B =~ 1MB,
@@ -6965,7 +6956,11 @@ void TTree::Print(Option_t* option) const
    Printf("*        :          : Tree compression factor = %6.2f                       *", cx);
    Printf("******************************************************************************");
 
-   if (strncmp(option,"clusterRange",strlen("clusters"))==0) {
+   // Avoid many check of option validity
+   if (option == nullptr)
+      option = "";
+
+   if (strncmp(option,"clusters",strlen("clusters"))==0) {
       Printf("%-16s %-16s %-16s %5s",
              "Cluster Range #", "Entry Start", "Last Entry", "Size");
       Int_t index= 0;
@@ -7881,30 +7876,54 @@ void TTree::SetAutoFlush(Long64_t autof /* = -30000000 */ )
    // rather than its start in order to avoid using the array if the cluster
    // size never varies (If there is only one value of AutoFlush for the whole TTree).
 
-   if (fAutoFlush > 0 || autof > 0) {
-      // The mechanism was already enabled, let's record the previous
-      // cluster if needed.
-      if (fFlushedBytes) {
-         if ( (fNClusterRange+1) > fMaxClusterRange ) {
-            if (fMaxClusterRange) {
-               Int_t newsize = TMath::Max(10,Int_t(2*fMaxClusterRange));
-               fClusterRangeEnd = (Long64_t*)TStorage::ReAlloc(fClusterRangeEnd,
-                                                               newsize*sizeof(Long64_t),fMaxClusterRange*sizeof(Long64_t));
-               fClusterSize = (Long64_t*)TStorage::ReAlloc(fClusterSize,
-                                                           newsize*sizeof(Long64_t),fMaxClusterRange*sizeof(Long64_t));
-               fMaxClusterRange = newsize;
-            } else {
-               fMaxClusterRange = 2;
-               fClusterRangeEnd = new Long64_t[fMaxClusterRange];
-               fClusterSize = new Long64_t[fMaxClusterRange];
-            }
-         }
-         fClusterRangeEnd[fNClusterRange] = fEntries - 1;
-         fClusterSize[fNClusterRange] = fAutoFlush<0 ? 0 : fAutoFlush;
-         ++fNClusterRange;
+   if( fAutoFlush != autof) {
+      if ((fAutoFlush > 0 || autof > 0) && fFlushedBytes) {
+         // The mechanism was already enabled, let's record the previous
+         // cluster if needed.
+         MarkEventCluster();
       }
+      fAutoFlush = autof;
    }
-   fAutoFlush = autof;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Mark the previous event as being at the end of the event cluster.
+///
+/// So, if fEntries is set to 10 (and this is the first cluster) when MarkEventCluster
+/// is called, then the first cluster has 9 events.
+void TTree::MarkEventCluster()
+{
+    if (!fEntries) return;
+
+    if ( (fNClusterRange+1) > fMaxClusterRange ) {
+        if (fMaxClusterRange) {
+            // Resize arrays to hold a larger event cluster.
+            Int_t newsize = TMath::Max(10,Int_t(2*fMaxClusterRange));
+            fClusterRangeEnd = (Long64_t*)TStorage::ReAlloc(fClusterRangeEnd,
+                                                            newsize*sizeof(Long64_t),fMaxClusterRange*sizeof(Long64_t));
+            fClusterSize = (Long64_t*)TStorage::ReAlloc(fClusterSize,
+                                                        newsize*sizeof(Long64_t),fMaxClusterRange*sizeof(Long64_t));
+            fMaxClusterRange = newsize;
+        } else {
+            // Cluster ranges have never been initialized; create them now.
+            fMaxClusterRange = 2;
+            fClusterRangeEnd = new Long64_t[fMaxClusterRange];
+            fClusterSize = new Long64_t[fMaxClusterRange];
+        }
+    }
+    fClusterRangeEnd[fNClusterRange] = fEntries - 1;
+    // If we are auto-flushing, then the cluster size is the same as the current auto-flush setting.
+    if (fAutoFlush > 0) {
+        // Even if the user triggers MarkEventRange prior to fAutoFlush being present, the TClusterIterator
+        // will appropriately go to the next event range.
+        fClusterSize[fNClusterRange] = fAutoFlush;
+    // Otherwise, assume there is one cluster per event range (e.g., user is manually controlling the flush).
+    } else if (fNClusterRange == 0) {
+        fClusterSize[fNClusterRange] = fEntries;
+    } else {
+        fClusterSize[fNClusterRange] = fClusterRangeEnd[fNClusterRange] - fClusterRangeEnd[fNClusterRange-1];
+    }
+    ++fNClusterRange;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8376,9 +8395,11 @@ Int_t TTree::SetCacheSizeAux(Bool_t autocache /* = kTRUE */, Long64_t cacheSize 
       return 0;
    }
 
+#ifdef R__USE_IMT
    if(TTreeCacheUnzip::IsParallelUnzip() && file->GetCompressionLevel() > 0)
       pf = new TTreeCacheUnzip(this, cacheSize);
    else
+#endif
       pf = new TTreeCache(this, cacheSize);
 
    pf->SetAutoCreated(autocache);
@@ -9083,6 +9104,12 @@ void TTree::Streamer(TBuffer& b)
          if (fEstimate <= 10000) {
             fEstimate = 1000000;
          }
+
+         if (fNClusterRange) {
+            // The I/O allocated just enough memory to hold the
+            // current set of ranges.
+            fMaxClusterRange = fNClusterRange;
+         }
          if (GetCacheAutoSize() != 0) {
             // a cache will be automatically created.
             // No need for TTreePlayer::Process to enable the cache
@@ -9258,11 +9285,11 @@ void TTree::UseCurrentStyle()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write this object to the current directory. For more see TObject::Write
-/// Write calls TTree::FlushBaskets before writing the tree.
+/// If option & kFlushBasket, call FlushBasket before writing the tree.
 
 Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize) const
 {
-   FlushBaskets();
+   FlushBasketsImpl();
    return TObject::Write(name, option, bufsize);
 }
 

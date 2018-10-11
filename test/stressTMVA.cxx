@@ -1974,10 +1974,12 @@ using namespace std;
 using namespace UnitTesting;
 using namespace TMVA;
 
-MethodUnitTestWithROCLimits::MethodUnitTestWithROCLimits(const Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
-                                                         double lowLimit, double upLimit,
-                                                         const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */ ) :
-   UnitTest((string)methodTitle, __FILE__), _methodType(theMethod) , _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit), _VariableNames(0), _TreeVariableNames(0)
+MethodUnitTestWithROCLimits::MethodUnitTestWithROCLimits(const Types::EMVA &theMethod, const TString &methodTitle,
+                                                         const TString &theOption, double lowLimit, double upLimit,
+                                                         const std::string & /* xname */,
+                                                         const std::string & /* filename */, std::ostream * /* sptr */)
+   : UnitTest(string(methodTitle.Data()), __FILE__), _methodType(theMethod), _methodTitle(methodTitle),
+     _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit), _VariableNames(0), _TreeVariableNames(0)
 {
    _VariableNames  = new std::vector<TString>(0);
    _TreeVariableNames = new std::vector<TString>(0);
@@ -2407,11 +2409,14 @@ using namespace std;
 using namespace UnitTesting;
 using namespace TMVA;
 
-RegressionUnitTestWithDeviation::RegressionUnitTestWithDeviation(const Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
-                                                                 double lowFullLimit, double upFullLimit,double low90PercentLimit, double up90PercentLimit,
-                                                                 const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */)
-   : UnitTest(string("Regression_")+(string)methodTitle, __FILE__), _methodType(theMethod) , _methodTitle(methodTitle), _methodOption(theOption),
-                                                                                                                                  _lowerFullDeviationLimit(lowFullLimit),  _upperFullDeviationLimit(upFullLimit), _lower90PercentDeviationLimit(low90PercentLimit), _upper90PercentDeviationLimit(up90PercentLimit)
+RegressionUnitTestWithDeviation::RegressionUnitTestWithDeviation(
+   const Types::EMVA &theMethod, const TString &methodTitle, const TString &theOption, double lowFullLimit,
+   double upFullLimit, double low90PercentLimit, double up90PercentLimit, const std::string & /* xname */,
+   const std::string & /* filename */, std::ostream * /* sptr */)
+   : UnitTest(string("Regression_") + string(methodTitle.Data()), __FILE__), _methodType(theMethod),
+     _methodTitle(methodTitle), _methodOption(theOption), _lowerFullDeviationLimit(lowFullLimit),
+     _upperFullDeviationLimit(upFullLimit), _lower90PercentDeviationLimit(low90PercentLimit),
+     _upper90PercentDeviationLimit(up90PercentLimit)
 {
 }
 
@@ -2649,10 +2654,15 @@ using namespace std;
 using namespace UnitTesting;
 using namespace TMVA;
 
-MethodUnitTestWithComplexData::MethodUnitTestWithComplexData(const TString& treestring, const TString& preparestring, const Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
-                                                             double lowLimit, double upLimit,
-                                                             const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */) :
-   UnitTest(string("ComplexData_")+(string)methodTitle+(string)treestring, __FILE__),  _methodType(theMethod) , _treeString(treestring), _prepareString(preparestring), _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit)
+MethodUnitTestWithComplexData::MethodUnitTestWithComplexData(const TString &treestring, const TString &preparestring,
+                                                             const Types::EMVA &theMethod, const TString &methodTitle,
+                                                             const TString &theOption, double lowLimit, double upLimit,
+                                                             const std::string & /* xname */,
+                                                             const std::string & /* filename */,
+                                                             std::ostream * /* sptr */)
+   : UnitTest(string("ComplexData_") + string(methodTitle.Data()) + string(treestring.Data()), __FILE__),
+     _methodType(theMethod), _treeString(treestring), _prepareString(preparestring), _methodTitle(methodTitle),
+     _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit)
 {
     theTree = nullptr;
     _theMethod = nullptr;
@@ -3039,12 +3049,12 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
    TString configCpu      = "Architecture=CPU:" + config;
    TString configGpu      = "Architecture=GPU:" + config;
 
-#ifdef DNNCPU
+#ifdef R__HAS_TMVACPU
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
                          TMVA::Types::kDNN, "DNN CPU", configCpu, 0.85, 0.98)
                      );
 #endif
-#ifdef DNNCUDA
+#ifdef R__HAS_TMVAGPU
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
                          TMVA::Types::kDNN, "DNN GPU", configGpu, 0.85, 0.98)
                      );

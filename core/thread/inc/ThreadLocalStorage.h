@@ -58,10 +58,10 @@
 #include <stddef.h>
 
 #ifdef __cplusplus
-#include "Rtypes.h"
+#include "RtypesCore.h"
 #endif
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #include "RConfigure.h"
 

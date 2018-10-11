@@ -127,7 +127,7 @@
 #pragma link C++ function RooStats::GetAsTTree(TString, TString, const RooDataSet&);
 
 
-// need for auto_ptr object in Likelihoodinterval since they are forwd declared
+// need for unique_ptr object in Likelihoodinterval since they are forwd declared
 #pragma extra_include "Math/IFunction.h";
 #pragma extra_include "Math/Minimizer.h";
 #pragma extra_include "RooFunctor.h";

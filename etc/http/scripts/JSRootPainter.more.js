@@ -34,7 +34,7 @@
           tcolor = this.get_color(text.fTextColor),
           use_frame = false,
           fact = 1., textsize = text.fTextSize || 0.05,
-          main = this.main_painter();
+          main = this.frame_painter();
 
       if (text.TestBit(JSROOT.BIT(14))) {
          // NDC coordinates
@@ -110,9 +110,9 @@
                 this.AxisToSvg("x", polyline.fX[n], isndc) + "," +
                 this.AxisToSvg("y", polyline.fY[n], isndc);
 
-      if (polyline._typename != "TPolyLine") fillatt.color = "none";
+      if (polyline._typename != "TPolyLine") fillatt.SetSolidColor("none");
 
-      if (fillatt.color!=='none') cmd+="Z";
+      if (!fillatt.empty()) cmd+="Z";
 
       this.draw_g
           .append("svg:path")
@@ -127,8 +127,8 @@
 
       var ellipse = this.GetObject();
 
-      if(!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(ellipse);
-      if (!this.fillatt) this.fillatt = this.createAttFill(ellipse);
+      this.createAttLine({ attr: ellipse });
+      this.createAttFill({ attr: ellipse });
 
       // create svg:g container for ellipse drawing
       this.CreateG();
@@ -227,10 +227,9 @@
       this.draw_g.attr("transform","translate("+xc+","+yc+")");
 
       // Draw the slices
-      var nb, slice, title, value, total, lineatt, fillatt;
-      nb = pie.fPieSlices.length;
+      var nb = pie.fPieSlices.length,
+          slice, title, value, total = 0, lineatt, fillatt;
 
-      total = 0;
       for (var n=0;n<nb; n++) {
          slice = pie.fPieSlices[n];
          total = total + slice.fValue;
@@ -252,8 +251,8 @@
          title   = slice.fTitle;
          this.draw_g
              .append("svg:path")
-             .attr("d", "M0,0L"+x1+","+y1+"A"+
-                         rx+","+ry+",0,0,0,"+x2+","+y2+
+             .attr("d", "M0,0L"+x1.toFixed(1)+","+y1.toFixed(1)+"A"+
+                         rx.toFixed(1)+","+ry.toFixed(1)+",0,0,0,"+x2.toFixed(1)+","+y2.toFixed(1)+
                         "Z")
              .call(lineatt.func)
              .call(fillatt.func);
@@ -264,11 +263,12 @@
 
    // =============================================================================
 
-   function drawBox(divid, obj, opt) {
+   function drawBox() {
 
       var box = this.GetObject(),
-          draw_line = (typeof this._drawopt == 'string') && (this._drawopt.toUpperCase().indexOf("L")>=0),
-          lineatt = new JSROOT.TAttLineHandler(box),
+          opt = this.OptionsAsString(),
+          draw_line = (opt.toUpperCase().indexOf("L")>=0),
+          lineatt = this.createAttLine(box),
           fillatt = this.createAttFill(box);
 
       // create svg:g container for box drawing
@@ -282,7 +282,7 @@
           ww = Math.abs(x2-x1), hh = Math.abs(y1-y2);
 
       // if box filled, contour line drawn only with "L" draw option:
-      if ((fillatt.color != 'none') && !draw_line) lineatt.color = "none";
+      if (!fillatt.empty() && !draw_line) lineatt.color = "none";
 
       this.draw_g
           .append("svg:rect")
@@ -365,8 +365,8 @@
           wsize = Math.max(3, Math.round(Math.max(this.pad_width(), this.pad_height()) * arrow.fArrowSize)),
           hsize = Math.round(wsize * Math.tan(arrow.fAngle/2*Math.PI/180));
 
-      if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(arrow);
-      if (!this.fillatt) this.fillatt = this.createAttFill(arrow);
+      this.createAttLine({ attr: arrow });
+      this.createAttFill({ attr: arrow });
 
       // create svg:g container for line drawing
       this.CreateG();
@@ -435,7 +435,7 @@
                             .call(this.lineatt.func);
          if (midkind > 10) {
             pmid.call(this.fillatt.func);
-            if ((this.fillatt.color == this.lineatt.color) && this.fillatt.isSolid()) pmid.style('stroke-width',1);
+            if (this.fillatt.isSolid(this.lineatt.color)) pmid.style('stroke-width',1);
          }
       }
 
@@ -457,7 +457,7 @@
                        .call(this.lineatt.func);
          if (closed) {
             pend.call(this.fillatt.func);
-            if ((this.fillatt.color == this.lineatt.color) && this.fillatt.isSolid()) pend.style('stroke-width',1);
+            if (this.fillatt.isSolid(this.lineatt.color)) pend.style('stroke-width',1);
             var dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx + dy*dy);
             if (len>wsize) {
                var ratio = wsize/len;
@@ -499,6 +499,15 @@
 
    // ===================================================================================
 
+   /**
+    * @summary Painter for TF1 object.
+    *
+    * @constructor
+    * @memberof JSROOT
+    * @augments JSROOT.TObjectPainter
+    * @param {object} tf1 - TF1 object to draw
+    */
+
    function TF1Painter(tf1) {
       JSROOT.TObjectPainter.call(this, tf1);
       this.bins = null;
@@ -511,9 +520,10 @@
    }
 
    TF1Painter.prototype.CreateBins = function(ignore_zoom) {
-      var main = this.main_painter(), gxmin = 0, gxmax = 0, tf1 = this.GetObject();
+      var main = this.frame_painter(),
+          gxmin = 0, gxmax = 0, tf1 = this.GetObject();
 
-      if ((main!==null) && !ignore_zoom)  {
+      if (main && !ignore_zoom)  {
          if (main.zoom_xmin !== main.zoom_xmax) {
             gxmin = main.zoom_xmin;
             gxmax = main.zoom_xmax;
@@ -550,7 +560,7 @@
          if (gxmax < xmax) xmax = gxmax;
       }
 
-      if ((main!==null) && main.logx && (xmin>0) && (xmax>0)) {
+      if (main && main.logx && (xmin>0) && (xmax>0)) {
          logx = true;
          xmin = Math.log(xmin);
          xmax = Math.log(xmax);
@@ -646,7 +656,7 @@
                   x: bin.grx,
                   y: bin.gry,
                   color1: this.lineatt.color,
-                  color2: this.fillatt.color,
+                  color2: this.fillatt.fillcolor(),
                   lines: [],
                   exact: (Math.abs(bin.grx - pnt.x) < radius) && (Math.abs(bin.gry - pnt.y) < radius) };
 
@@ -662,8 +672,8 @@
       var name = this.GetTipName();
       if (name.length > 0) res.lines.push(name);
 
-      var pmain = this.main_painter();
-      if (pmain!==null)
+      var pmain = this.frame_painter();
+      if (pmain)
          res.lines.push("x = " + pmain.AxisAsText("x",bin.x) + " y = " + pmain.AxisAsText("y",bin.y));
 
       return res;
@@ -671,8 +681,11 @@
 
    TF1Painter.prototype.Redraw = function() {
 
-      var w = this.frame_width(), h = this.frame_height(),
-          tf1 = this.GetObject(), pmain = this.main_painter(),
+      var w = this.frame_width(),
+          h = this.frame_height(),
+          tf1 = this.GetObject(),
+          fp = this.frame_painter(),
+          pmain = this.main_painter(),
           name = this.GetTipName("\n");
 
       this.CreateG(true);
@@ -680,26 +693,24 @@
       // recalculate drawing bins when necessary
       this.bins = this.CreateBins(false);
 
-      if (!this.lineatt)
-         this.lineatt = new JSROOT.TAttLineHandler(tf1);
+      this.createAttLine({ attr: tf1 });
       this.lineatt.used = false;
 
-      if (!this.fillatt)
-         this.fillatt = this.createAttFill(tf1, undefined, undefined, 1);
+      this.createAttFill({ attr: tf1, kind: 1 });
       this.fillatt.used = false;
 
       // first calculate graphical coordinates
       for(var n=0; n<this.bins.length; ++n) {
          var bin = this.bins[n];
-         bin.grx = pmain.grx(bin.x);
-         bin.gry = pmain.gry(bin.y);
+         bin.grx = fp.grx(bin.x);
+         bin.gry = fp.gry(bin.y);
       }
 
       if (this.bins.length > 2) {
 
          var h0 = h;  // use maximal frame height for filling
          if ((pmain.hmin!==undefined) && (pmain.hmin>=0)) {
-            h0 = Math.round(pmain.gry(0));
+            h0 = Math.round(fp.gry(0));
             if ((h0 > h) || (h0 < 0)) h0 = h;
          }
 
@@ -712,7 +723,7 @@
                .style("fill", "none")
                .call(this.lineatt.func);
 
-         if (this.fillatt.color != "none")
+         if (!this.fillatt.empty())
             this.draw_g.append("svg:path")
                .attr("class", "area")
                .attr("d", path.path + path.close)
@@ -774,9 +785,18 @@
 
    // =======================================================================
 
+   /**
+    * @summary Painter for TGraph object.
+    *
+    * @constructor
+    * @memberof JSROOT
+    * @augments JSROOT.TObjectPainter
+    * @param {object} graph - TGraph object to draw
+    */
+
    function TGraphPainter(graph) {
       JSROOT.TObjectPainter.call(this, graph);
-      this.ownhisto = false; // indicate if graph histogram was drawn for axes
+      this.axes_draw = false; // indicate if graph histogram was drawn for axes
       this.bins = null;
       this.xmin = this.ymin = this.xmax = this.ymax = 0;
       this.wheel_zoomy = true;
@@ -794,24 +814,34 @@
 
    TGraphPainter.prototype.DecodeOptions = function(opt) {
 
-      var graph = this.GetObject(),
-          d = new JSROOT.DrawOptions(opt),
-          res = { Line:0, Curve:0, Rect:0, Mark:0, Bar:0, OutRange: 0,  EF:0, Fill:0,
-                  Errors: 0, MainError: 1, Ends: 1, Axis: "", original: opt };
+      if (!opt) opt = this.main_painter() ? "lp" : "alp";
 
-      if (this.has_errors) res.Errors = 1;
+      if ((typeof opt == "string") && (opt.indexOf("same ")==0))
+         opt = opt.substr(5);
+
+      var graph = this.GetObject(),
+          d = new JSROOT.DrawOptions(opt);
+
+      if (!this.options) this.options = {};
+
+      JSROOT.extend(this.options, { Line: 0, Curve: 0, Rect: 0, Mark: 0, Bar: 0, OutRange: 0,  EF:0, Fill: 0, NoOpt: 0,
+                                   MainError: 1, Ends: 1, Axis: "", original: opt });
+
+      var res = this.options;
 
       res._pfc = d.check("PFC");
       res._plc = d.check("PLC");
       res._pmc = d.check("PMC");
 
+      if (d.check('NOOPT')) res.NoOpt = 1;
       if (d.check('L')) res.Line = 1;
       if (d.check('F')) res.Fill = 1;
-      if (d.check('IA')) res.Axis = "A"; else
-      if (d.check('A')) res.Axis = "AXIS";
+      if (d.check('A')) res.Axis = d.check("I") ? "A" : "AXIS"; // I means invisible axis
       if (d.check('X+')) res.Axis += "X+";
       if (d.check('Y+')) res.Axis += "Y+";
-      if (d.check('C')) { res.Curve = 1; if (!res.Fill) res.Line = 1; }
+      if (d.check('RX')) res.Axis += "RX";
+      if (d.check('RY')) res.Axis += "RY";
+      if (d.check('C')) res.Curve = res.Line = 1;
       if (d.check('*')) res.Mark = 103;
       if (d.check('P0')) res.Mark = 104;
       if (d.check('P')) res.Mark = 1;
@@ -823,14 +853,18 @@
       if (d.check('>')) { res.Errors = 1; res.Ends = 4; }
       if (d.check('0')) { res.Mark = 1; res.Errors = 1; res.OutRange = 1; }
       if (d.check('1')) { if (res.Bar == 1) res.Bar = 2; }
-      if (d.check('2')) { res.Rect = 1; res.Line = 0; res.Errors = 0; }
-      if (d.check('3')) { res.EF = 1; res.Line = 0; res.Errors = 0; }
-      if (d.check('4')) { res.EF = 2; res.Line = 0; res.Errors = 0; }
-      if (d.check('5')) { res.Rect = 2; res.Line = 0; res.Errors = 0; }
+      if (d.check('2')) { res.Rect = 1; res.Errors = 0; }
+      if (d.check('3')) { res.EF = 1; res.Errors = 0;  }
+      if (d.check('4')) { res.EF = 2; res.Errors = 0; }
+      if (d.check('5')) { res.Rect = 2; res.Errors = 0; }
       if (d.check('X')) res.Errors = 0;
+      // if (d.check('E')) res.Errors = 1; // E option only defined for TGraphPolar
+
+      if (res.Errors === undefined)
+         res.Errors = this.has_errors ? 1 : 0;
 
       // special case - one could use svg:path to draw many pixels (
-      if ((res.Mark==1) && (graph.fMarkerStyle==1)) res.Mark = 101;
+      if ((res.Mark == 1) && (graph.fMarkerStyle==1)) res.Mark = 101;
 
       // if no drawing option is selected and if opt=='' nothing is done.
       if (res.Line + res.Fill + res.Mark + res.Bar + res.EF + res.Rect + res.Errors == 0) {
@@ -848,9 +882,9 @@
          // graph is first object in list of primitives
          var pad = this.root_pad();
          if (!pad || !pad.fPrimitives || (pad.fPrimitives.arr[0] === graph)) res.Axis = "AXIS";
+      } else if (res.Axis.indexOf("A")<0) {
+         res.Axis = "AXIS," + res.Axis;
       }
-
-      return res;
    }
 
    TGraphPainter.prototype.CreateBins = function() {
@@ -870,12 +904,12 @@
          var bin = { x: gr.fX[p], y: gr.fY[p], indx: p };
          switch(kind) {
             case 1:
-              bin.exlow = bin.exhigh = gr.fEX[p];
-              bin.eylow = bin.eyhigh = gr.fEY[p];
-              break;
+               bin.exlow = bin.exhigh = gr.fEX[p];
+               bin.eylow = bin.eyhigh = gr.fEY[p];
+               break;
             case 2:
                bin.exlow  = gr.fEXlow[p];
-               bin.exhigh  = gr.fEXhigh[p];
+               bin.exhigh = gr.fEXhigh[p];
                bin.eylow  = gr.fEYlow[p];
                bin.eyhigh = gr.fEYhigh[p];
                break;
@@ -902,7 +936,7 @@
    }
 
    TGraphPainter.prototype.CreateHistogram = function() {
-      // bins should be created
+      // bins should be created when calling this function
 
       var xmin = this.xmin, xmax = this.xmax, ymin = this.ymin, ymax = this.ymax;
 
@@ -921,37 +955,56 @@
       if (graph.fMaximum != -1111) maximum = ymax = graph.fMaximum;
       if ((minimum < 0) && (ymin >=0)) minimum = 0.9*ymin;
 
-      var histo = JSROOT.CreateHistogram("TH1I", 100);
-      histo.fName = graph.fName + "_h";
-      histo.fTitle = graph.fTitle;
+      var kResetHisto = JSROOT.BIT(17);   ///< fHistogram must be reset in GetHistogram
+
+      var histo = graph.fHistogram;
+
+      if (histo) {
+         // make logic like in the TGraph::GetHistogram
+         if (!graph.TestBit(kResetHisto)) return histo;
+         graph.InvertBit(kResetHisto);
+      } else {
+         graph.fHistogram = histo = JSROOT.CreateHistogram("TH1F", 100);
+         histo.fName = graph.fName + "_h";
+         histo.fTitle = graph.fTitle;
+         histo.fBits = histo.fBits | JSROOT.TH1StatusBits.kNoStats;
+      }
+
       histo.fXaxis.fXmin = uxmin;
       histo.fXaxis.fXmax = uxmax;
       histo.fYaxis.fXmin = minimum;
       histo.fYaxis.fXmax = maximum;
       histo.fMinimum = minimum;
       histo.fMaximum = maximum;
-      histo.fBits = histo.fBits | JSROOT.TH1StatusBits.kNoStats;
+
       return histo;
    }
 
-   TGraphPainter.prototype.OptimizeBins = function(filter_func) {
+   /** Returns true if graph drawing can be optimize */
+   TGraphPainter.prototype.CanOptimize = function() {
+      return JSROOT.gStyle.OptimizeDraw > 0 && !this.options.NoOpt;
+   }
+
+   /** Returns optimized bins - if optimization enabled */
+   TGraphPainter.prototype.OptimizeBins = function(maxpnt, filter_func) {
       if ((this.bins.length < 30) && !filter_func) return this.bins;
 
       var selbins = null;
       if (typeof filter_func == 'function') {
          for (var n = 0; n < this.bins.length; ++n) {
             if (filter_func(this.bins[n],n)) {
-               if (selbins==null)
-                  selbins = (n==0) ? [] : this.bins.slice(0, n);
+               if (!selbins) selbins = (n==0) ? [] : this.bins.slice(0, n);
             } else {
-               if (selbins != null) selbins.push(this.bins[n]);
+               if (selbins) selbins.push(this.bins[n]);
             }
          }
       }
-      if (selbins == null) selbins = this.bins;
+      if (!selbins) selbins = this.bins;
 
-      if ((selbins.length < 5000) || (JSROOT.gStyle.OptimizeDraw == 0)) return selbins;
-      var step = Math.floor(selbins.length / 5000);
+      if (!maxpnt) maxpnt = 500000;
+
+      if ((selbins.length < maxpnt) || !this.CanOptimize()) return selbins;
+      var step = Math.floor(selbins.length / maxpnt);
       if (step < 2) step = 2;
       var optbins = [];
       for (var n = 0; n < selbins.length; n+=step)
@@ -961,7 +1014,7 @@
    }
 
    TGraphPainter.prototype.TooltipText = function(d) {
-      var pmain = this.main_painter(), lines = [];
+      var pmain = this.frame_painter(), lines = [];
 
       lines.push(this.GetTipName());
 
@@ -979,7 +1032,7 @@
    }
 
    TGraphPainter.prototype.get_main = function() {
-      var pmain = this.main_painter();
+      var pmain = this.frame_painter();
 
       if (pmain && pmain.grx && pmain.gry) return pmain;
 
@@ -1014,35 +1067,26 @@
           w = this.frame_width(),
           h = this.frame_height(),
           graph = this.GetObject(),
-          excl_width = 0;
+          excl_width = 0,
+          pp = this.pad_painter();
 
       if (!pmain) return;
 
       this.CreateG(!pmain.pad_layer);
 
-      if (this.options._pfc || this.options._plc || this.options._pmc) {
-         if (!this.pallette && JSROOT.Painter.GetColorPalette)
-            this.palette = JSROOT.Painter.GetColorPalette();
+      if (pp && (this.options._pfc || this.options._plc || this.options._pmc)) {
+         var icolor = pp.CreateAutoColor(this);
 
-         var pp = this.pad_painter(true);
-         if (this.palette && pp) {
-            var indx = pp.GetCurrentPrimitiveIndx(), num = pp.GetNumPrimitives();
-
-            var color = this.palette.calcColor(indx, num);
-            var icolor = this.add_color(color);
-
-            if (this.options._pfc) { graph.fFillColor = icolor; delete this.fillatt; }
-            if (this.options._plc) { graph.fLineColor = icolor; delete this.lineatt; }
-            if (this.options._pmc) { graph.fMarkerColor = icolor; delete this.markeratt; }
-         }
+         if (this.options._pfc) { graph.fFillColor = icolor; delete this.fillatt; }
+         if (this.options._plc) { graph.fLineColor = icolor; delete this.lineatt; }
+         if (this.options._pmc) { graph.fMarkerColor = icolor; delete this.markeratt; }
 
          this.options._pfc = this.options._plc = this.options._pmc = false;
       }
 
-      if (!this.lineatt)
-         this.lineatt = new JSROOT.TAttLineHandler(graph, undefined, true);
-      if (!this.fillatt)
-         this.fillatt = this.createAttFill(graph, undefined, undefined, 1);
+      this.createAttLine({ attr: graph, can_excl: true });
+
+      this.createAttFill({ attr: graph, kind: 1 });
       this.fillatt.used = false; // mark used only when really used
 
       this.draw_kind = "none"; // indicate if special svg:g were created for each bin
@@ -1057,7 +1101,7 @@
 
       if (this.options.EF) {
 
-         drawbins = this.OptimizeBins();
+         drawbins = this.OptimizeBins((this.options.EF > 1) ? 5000 : 0);
 
          // build lower part
          for (var n=0;n<drawbins.length;++n) {
@@ -1066,7 +1110,7 @@
             bin.gry = pmain.gry(bin.y - bin.eylow);
          }
 
-         var path1 = JSROOT.Painter.BuildSvgPath(this.options.EF > 1 ? "bezier" : "line", drawbins),
+         var path1 = JSROOT.Painter.BuildSvgPath((this.options.EF > 1) ? "bezier" : "line", drawbins),
              bins2 = [];
 
          for (var n=drawbins.length-1;n>=0;--n) {
@@ -1076,7 +1120,7 @@
          }
 
          // build upper part (in reverse direction)
-         var path2 = JSROOT.Painter.BuildSvgPath(this.options.EF > 1 ? "Lbezier" : "Lline", bins2);
+         var path2 = JSROOT.Painter.BuildSvgPath((this.options.EF > 1) ? "Lbezier" : "Lline", bins2);
 
          this.draw_g.append("svg:path")
                     .attr("d", path1.path + path2.path + "Z")
@@ -1092,10 +1136,10 @@
 
          if (this.options.Fill == 1) {
             close_symbol = "Z"; // always close area if we want to fill it
-            excl_width=0;
+            excl_width = 0;
          }
 
-         if (drawbins===null) drawbins = this.OptimizeBins();
+         if (!drawbins) drawbins = this.OptimizeBins(this.options.Curve ? 5000 : 0);
 
          for (var n=0;n<drawbins.length;++n) {
             var bin = drawbins[n];
@@ -1150,7 +1194,7 @@
 
       if (this.options.Errors || this.options.Rect || this.options.Bar) {
 
-         drawbins = this.OptimizeBins(function(pnt,i) {
+         drawbins = this.OptimizeBins(5000, function(pnt,i) {
 
             var grx = pmain.grx(pnt.x);
 
@@ -1290,26 +1334,28 @@
 
       if (this.options.Mark) {
          // for tooltips use markers only if nodes where not created
-         var step = Math.max(1, Math.round(this.bins.length / 50000)),
-             path = "", n, pnt, grx, gry;
+         var path = "", pnt, grx, gry;
 
-         if (!this.markeratt)
-            this.markeratt = new JSROOT.TAttMarkerHandler(graph, this.options.Mark - 100);
-         else
-            this.markeratt.Change(undefined, this.options.Mark - 100);
+         this.createAttMarker({ attr: graph, style: this.options.Mark - 100 });
 
          this.marker_size = this.markeratt.GetFullSize();
 
          this.markeratt.reset_pos();
 
-         for (n=0;n<this.bins.length;n+=step) {
-            pnt = this.bins[n];
+         // let produce SVG at maximum 1MB
+         var maxnummarker = 1000000 / (this.markeratt.MarkerLength() + 7), step = 1;
+
+         if (!drawbins) drawbins = this.OptimizeBins(maxnummarker); else
+            if (this.CanOptimize() && (drawbins.length > 1.5*maxnummarker))
+               step = Math.min(2, Math.round(drawbins.length/maxnummarker));
+
+         for (var n=0;n<drawbins.length;n+=step) {
+            pnt = drawbins[n];
             grx = pmain.grx(pnt.x);
-            if ((grx > -this.marker_size) && (grx < w+this.marker_size)) {
+            if ((grx > -this.marker_size) && (grx < w + this.marker_size)) {
                gry = pmain.gry(pnt.y);
-               if ((gry >-this.marker_size) && (gry < h+this.marker_size)) {
+               if ((gry > -this.marker_size) && (gry < h + this.marker_size))
                   path += this.markeratt.create(grx, gry);
-               }
             }
          }
 
@@ -1334,9 +1380,10 @@
 
       var width = this.frame_width(),
           height = this.frame_height(),
-          pmain = this.main_painter(),
+          pmain = this.frame_painter(),
           painter = this,
-          findbin = null, best_dist2 = 1e10, best = null;
+          findbin = null, best_dist2 = 1e10, best = null,
+          msize = this.marker_size ? Math.round(this.marker_size/2 + 1.5) : 0;
 
       this.draw_g.selectAll('.grpoint').each(function() {
          var d = d3.select(this).datum();
@@ -1348,12 +1395,11 @@
          var rect = null;
 
          if (d.error || d.rect || d.marker) {
-            rect = { x1: Math.min(-painter.error_size, d.grx0),
-                     x2: Math.max(painter.error_size, d.grx2),
-                     y1: Math.min(-painter.error_size, d.gry2),
-                     y2: Math.max(painter.error_size, d.gry0) };
-         } else
-         if (d.bar) {
+            rect = { x1: Math.min(-painter.error_size, d.grx0, -msize),
+                     x2: Math.max(painter.error_size, d.grx2, msize),
+                     y1: Math.min(-painter.error_size, d.gry2, -msize),
+                     y2: Math.max(painter.error_size, d.gry0, msize) };
+         } else if (d.bar) {
              rect = { x1: -d.width/2, x2: d.width/2, y1: 0, y2: height - d.gry1 };
 
              if (painter.options.Bar===1) {
@@ -1364,8 +1410,8 @@
           } else {
              rect = { x1: -5, x2: 5, y1: -5, y2: 5 };
           }
-          var matchx = (pnt.x >= d.grx1 + rect.x1) && (pnt.x <= d.grx1 + rect.x2);
-          var matchy = (pnt.y >= d.gry1 + rect.y1) && (pnt.y <= d.gry1 + rect.y2);
+          var matchx = (pnt.x >= d.grx1 + rect.x1) && (pnt.x <= d.grx1 + rect.x2),
+              matchy = (pnt.y >= d.gry1 + rect.y1) && (pnt.y <= d.gry1 + rect.y2);
 
           if (matchx && (matchy || (pnt.nproc > 1))) {
              best_dist2 = dist2;
@@ -1385,7 +1431,7 @@
                   lines: this.TooltipText(d),
                   rect: best, d3bin: findbin  };
 
-      if (this.fillatt && this.fillatt.used) res.color2 = this.fillatt.color;
+      if (this.fillatt && this.fillatt.used && !this.fillatt.empty()) res.color2 = this.fillatt.fillcolor();
 
       if (best.exact) res.exact = true;
       res.menu = res.exact; // activate menu only when exactly locate bin
@@ -1442,7 +1488,7 @@
           bestindx = -1,
           bestbin = null,
           bestdist = 1e10,
-          pmain = this.main_painter(),
+          pmain = this.frame_painter(),
           dist, grx, gry, n, bin;
 
       for (n=0;n<this.bins.length;++n) {
@@ -1542,9 +1588,9 @@
 
       var islines = (this.draw_kind=="lines"),
           ismark = (this.draw_kind=="mark"),
-          pmain = this.main_painter();
-
-      var res = { name: this.GetObject().fName, title: this.GetObject().fTitle,
+          pmain = this.frame_painter(),
+          gr = this.GetObject(),
+          res = { name: gr.fName, title: gr.fTitle,
                   x: best.bin ? pmain.grx(best.bin.x) : best.linex,
                   y: best.bin ? pmain.gry(best.bin.y) : best.liney,
                   color1: this.lineatt.color,
@@ -1579,10 +1625,10 @@
             res.click_handler = this.InvokeClickHandler.bind(this);
       }
 
-      if (this.fillatt && this.fillatt.used) res.color2 = this.fillatt.color;
+      if (this.fillatt && this.fillatt.used && !this.fillatt.empty()) res.color2 = this.fillatt.fillcolor();
 
       if (!islines) {
-         res.color1 = this.get_color(this.GetObject().fMarkerColor);
+         res.color1 = this.get_color(gr.fMarkerColor);
          if (!res.color2) res.color2 = res.color1;
       }
 
@@ -1643,9 +1689,9 @@
    }
 
    TGraphPainter.prototype.movePntHandler = function(first_time) {
-      var pos = d3.mouse(this.svg_frame().node());
+      var pos = d3.mouse(this.svg_frame().node()),
+          main = this.frame_painter();
 
-      var main = this.main_painter();
       if (!main || !this.interactive_bin) return;
 
       this.interactive_bin.x = main.RevertX(pos[0] + this.interactive_delta_x);
@@ -1656,7 +1702,7 @@
    TGraphPainter.prototype.endPntHandler = function() {
       if (this.snapid && this.interactive_bin) {
          var exec = "SetPoint(" + this.interactive_bin.indx + "," + this.interactive_bin.x + "," + this.interactive_bin.y + ")";
-         var canp = this.pad_painter();
+         var canp = this.canv_painter();
          if (canp) canp.SendWebsocket("OBJEXEC:" + this.snapid + ":" + exec);
       }
 
@@ -1673,11 +1719,11 @@
       d3.select(window).on("mousemove.graphPnt", this.movePntHandler.bind(this))
                        .on("mouseup.graphPnt", this.endPntHandler.bind(this), true);
 
-      var pos = d3.mouse(this.svg_frame().node());
-      var main = this.main_painter();
+      var pos = d3.mouse(this.svg_frame().node()),
+          main = this.frame_painter();
 
-      this.interactive_delta_x = main ? main.x(this.interactive_bin.x)-pos[0] : 0;
-      this.interactive_delta_y = main ? main.y(this.interactive_bin.y)-pos[1] : 0;
+      this.interactive_delta_x = main ? main.x(this.interactive_bin.x) - pos[0] : 0;
+      this.interactive_delta_y = main ? main.y(this.interactive_bin.y) - pos[1] : 0;
    }
 
    TGraphPainter.prototype.FillContextMenu = function(menu) {
@@ -1692,7 +1738,7 @@
    TGraphPainter.prototype.ExecuteMenuCommand = function(method, args) {
       if (JSROOT.TObjectPainter.prototype.ExecuteMenuCommand.call(this,method,args)) return true;
 
-      var canp = this.pad_painter(), fp = this.frame_painter();
+      var canp = this.canv_painter(), fp = this.frame_painter();
 
       if ((method.fName == 'RemovePoint') || (method.fName == 'InsertPoint')) {
          var pnt = fp ? fp.GetLastEventPos() : null;
@@ -1702,7 +1748,7 @@
          var hint = this.ExtractTooltip(pnt);
 
          if (method.fName == 'InsertPoint') {
-            var main = this.main_painter(),
+            var main = this.frame_painter(),
                 userx = main && main.RevertX ? main.RevertX(pnt.x) : 0,
                 usery = main && main.RevertY ? main.RevertY(pnt.y) : 0;
             canp.ShowMessage('InsertPoint(' + userx.toFixed(3) + ',' + usery.toFixed(3) + ') not yet implemented');
@@ -1723,7 +1769,7 @@
       if (!this.MatchObjectType(obj)) return false;
 
       if ((opt !== undefined) && (opt != this.options.original))
-         this.options = this.DecodeOptions(opt);
+         this.DecodeOptions(opt);
 
       var graph = this.GetObject();
       // TODO: make real update of TGraph object content
@@ -1735,9 +1781,9 @@
       this.CreateBins();
 
       // if our own histogram was used as axis drawing, we need update histogram  as well
-      if (this.ownhisto) {
+      if (this.axes_draw) {
          var main = this.main_painter();
-         if (obj.fHistogram) main.UpdateObject(obj.fHistogram);
+         main.UpdateObject(obj.fHistogram || this.CreateHistogram());
          main.GetObject().fTitle = graph.fTitle; // copy title
       }
 
@@ -1760,8 +1806,8 @@
 
       if (funcname !== "ToggleZoom") return false;
 
-      var main = this.main_painter();
-      if (main === null) return false;
+      var main = this.frame_painter();
+      if (!main) return false;
 
       if ((this.xmin===this.xmax) && (this.ymin = this.ymax)) return false;
 
@@ -1777,7 +1823,7 @@
             var func = gr.fFunctions.arr[i];
             if ((func._typename == 'TF1') || (func._typename == 'TF2')) return func;
          }
-      return func;
+      return null;
    }
 
    TGraphPainter.prototype.FindStat = function() {
@@ -1799,7 +1845,7 @@
       if (stats) return stats;
 
       // do not create stats box when drawing canvas
-      var pp = this.pad_painter();
+      var pp = this.canv_painter();
       if (pp && pp.normal_canvas) return null;
 
       this.create_stats = true;
@@ -1866,7 +1912,7 @@
    }
 
    TGraphPainter.prototype.PerformDrawing = function(divid, hpainter) {
-      if (hpainter) this.ownhisto = true;
+      if (hpainter) { this.axes_draw = true; hpainter.$secondary = true; }
       this.SetDivId(divid);
       this.DrawBins();
       this.DrawNextFunction(0, this.DrawingReady.bind(this));
@@ -1879,16 +1925,14 @@
 
       painter.SetDivId(divid, -1); // just to get access to existing elements
 
-      painter.options = painter.DecodeOptions(opt);
+      painter.DecodeOptions(opt);
 
       painter.CreateBins();
 
       painter.CreateStat();
 
       if (!painter.main_painter() && painter.options.Axis) {
-         if (!graph.fHistogram)
-            graph.fHistogram = painter.CreateHistogram();
-         JSROOT.draw(divid, graph.fHistogram, painter.options.Axis, painter.PerformDrawing.bind(painter, divid));
+         JSROOT.draw(divid, painter.CreateHistogram(), painter.options.Axis, painter.PerformDrawing.bind(painter, divid));
       } else {
          painter.PerformDrawing(divid);
       }
@@ -2039,8 +2083,8 @@
       var ticks = this.r.ticks(5),
           nminor = Math.floor((polar.fNdivRad % 10000) / 100);
 
-      if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(polar);
-      if (!this.gridatt) this.gridatt = new JSROOT.TAttLineHandler({ fLineColor: polar.fLineColor, fLineStyle: 2, fLineWidth: 1 });
+      this.createAttLine({ attr: polar });
+      if (!this.gridatt) this.gridatt = new JSROOT.TAttLineHandler({ color: polar.fLineColor, style: 2, width: 1 });
 
       var range = Math.abs(polar.fRwrmax - polar.fRwrmin);
       this.ndig = (range <= 0) ? -3 : Math.round(JSROOT.log10(ticks.length / range));
@@ -2182,6 +2226,7 @@
              console.error('Cannot superimpose TGraphPolargram with any other drawings');
           return null;
       }
+
       painter.SetDivId(divid, 4); // main object without need of frame
       painter.Redraw();
       return painter.DrawingReady();
@@ -2203,13 +2248,17 @@
 
       var d = new JSROOT.DrawOptions(opt || "L");
 
-      this.options = {
+      if (!this.options) this.options = {};
+
+      JSROOT.extend(this.options, {
           mark: d.check("P"),
           err: d.check("E"),
           fill: d.check("F"),
           line: d.check("L"),
           curve: d.check("C")
-      }
+      });
+
+      this.OptionsStore(opt);
    }
 
    TGraphPolarPainter.prototype.DrawBins = function() {
@@ -2218,9 +2267,9 @@
 
       if (!graph || !main || !main.$polargram) return;
 
-      if (this.options.mark && !this.markeratt) this.markeratt = new JSROOT.TAttMarkerHandler(graph);
-      if ((this.options.err || this.options.line || this.options.curve) && !this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(graph);
-      if (this.options.fill && !this.fillatt) this.fillatt = this.createAttFill(graph);
+      if (this.options.mark) this.createAttMarker({ attr: graph });
+      if (this.options.err || this.options.line || this.options.curve) this.createAttLine({ attr: graph });
+      if (this.options.fill) this.createAttFill({ attr: graph });
 
       this.CreateG();
 
@@ -2403,13 +2452,13 @@
             return null;
          }
          painter.PerformDrawing(divid);
-      } else {
-         if (!graph.fPolargram) graph.fPolargram = painter.CreatePolargram();
 
-         JSROOT.draw(divid, graph.fPolargram, "", painter.PerformDrawing.bind(painter, divid));
+         return painter;
       }
 
-      return painter;
+      if (!graph.fPolargram) graph.fPolargram = painter.CreatePolargram();
+
+      return JSROOT.draw(divid, graph.fPolargram, "", painter.PerformDrawing.bind(painter, divid));
    }
 
    // ==============================================================
@@ -2510,7 +2559,7 @@
 
       var cleanup = false,
           spline = this.GetObject(),
-          main = this.main_painter(),
+          main = this.frame_painter(),
           xx, yy, knot = null, indx = 0;
 
       if ((pnt === null) || !spline || !main) {
@@ -2588,14 +2637,14 @@
       var w = this.frame_width(),
           h = this.frame_height(),
           spline = this.GetObject(),
-          pmain = this.main_painter(),
+          pmain = this.frame_painter(),
           name = this.GetTipName("\n");
 
       this.CreateG(true);
 
       this.knot_size = 5; // used in tooltip handling
 
-      if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(spline);
+      this.createAttLine({ attr: spline });
 
       if (this.options.Line || this.options.Curve) {
 
@@ -2642,8 +2691,7 @@
          // for tooltips use markers only if nodes where not created
          var path = "";
 
-         if (!this.markeratt)
-            this.markeratt = new JSROOT.TAttMarkerHandler(spline);
+         this.createAttMarker({ attr: spline })
 
          this.markeratt.reset_pos();
 
@@ -2681,12 +2729,16 @@
    TSplinePainter.prototype.DecodeOptions = function(opt) {
       var d = new JSROOT.DrawOptions(opt);
 
-      this.options = {
+      if (!this.options) this.options = {};
+
+      JSROOT.extend(this.options, {
          Same: d.check('SAME'),
          Line: d.check('L'),
          Curve: d.check('C'),
          Mark: d.check('P')
-      }
+      });
+
+      this.OptionsStore(opt);
    }
 
    TSplinePainter.prototype.FirstDraw = function() {
@@ -2731,11 +2783,15 @@
 
       var d = new JSROOT.DrawOptions(opt || "REPEAT");
 
-      this.options = {
+      if (!this.options) this.options = {};
+
+      JSROOT.extend(this.options, {
           once: d.check("ONCE"),
           repeat: d.check("REPEAT"),
           first: d.check("FIRST")
-      }
+      });
+
+      this.OptionsStore(opt);
    }
 
    TGraphTimePainter.prototype.DrawPrimitives = function(indx, callback, ppainter) {
@@ -2769,6 +2825,8 @@
    }
 
    TGraphTimePainter.prototype.ContineDrawing = function() {
+      if (!this.options) return;
+
       var gr = this.GetObject();
 
       if (!this.ready_called) {
@@ -2786,7 +2844,7 @@
          delete this.wait_animation_frame;
 
          // clear pad
-         var pp = this.pad_painter(true);
+         var pp = this.pad_painter();
          if (!pp) {
             // most probably, pad is cleared
             delete this.step;
@@ -3039,9 +3097,10 @@
    TMultiGraphPainter.prototype.ScanGraphsRange = function(graphs, histo, pad) {
       var mgraph = this.GetObject(),
           maximum, minimum, dx, dy, uxmin = 0, uxmax = 0, logx = false, logy = false,
+          time_display = false, time_format = "",
           rw = {  xmin: 0, xmax: 0, ymin: 0, ymax: 0, first: true };
 
-      if (pad!=null) {
+      if (pad) {
          logx = pad.fLogx;
          logy = pad.fLogy;
          rw.xmin = pad.fUxmin;
@@ -3050,10 +3109,10 @@
          rw.ymax = pad.fUymax;
          rw.first = false;
       }
-      if (histo!=null) {
+      if (histo) {
          minimum = histo.fYaxis.fXmin;
          maximum = histo.fYaxis.fXmax;
-         if (pad!=null) {
+         if (pad) {
             uxmin = this.padtoX(pad, rw.xmin);
             uxmax = this.padtoX(pad, rw.xmax);
          }
@@ -3062,6 +3121,11 @@
 
          for (var i = 0; i < graphs.arr.length; ++i)
             this.ComputeGraphRange(rw, graphs.arr[i]);
+
+         if (graphs.arr[0] && graphs.arr[0].fHistogram && graphs.arr[0].fHistogram.fXaxis.fTimeDisplay) {
+            time_display = true;
+            time_format = graphs.arr[0].fHistogram.fXaxis.fTimeFormat;
+         }
 
          if (rw.xmin == rw.xmax) rw.xmax += 1.;
          if (rw.ymin == rw.ymax) rw.ymax += 1.;
@@ -3106,7 +3170,9 @@
          histo.fTitle = mgraph.fTitle;
          histo.fXaxis.fXmin = uxmin;
          histo.fXaxis.fXmax = uxmax;
-      }
+         histo.fXaxis.fTimeDisplay = time_display;
+         if (time_display) histo.fXaxis.fTimeFormat = time_format;
+     }
 
       histo.fYaxis.fXmin = minimum;
       histo.fYaxis.fXmax = maximum;
@@ -3137,7 +3203,7 @@
                   this.DrawNextFunction.bind(this, indx+1, callback));
    }
 
-   TMultiGraphPainter.prototype.DrawNextGraph = function(indx, opt, subp) {
+   TMultiGraphPainter.prototype.DrawNextGraph = function(indx, opt, subp, used_timeout) {
       if (subp) this.painters.push(subp);
 
       var graphs = this.GetObject().fGraphs;
@@ -3147,6 +3213,10 @@
          this._pfc = this._plc = this._pmc = false; // disable auto coloring at the end
          return this.DrawNextFunction(0, this.DrawingReady.bind(this));
       }
+
+      // when too many graphs are drawn, avoid deep stack with timeout
+      if ((indx % 500 === 499) && !used_timeout)
+         return setTimeout(this.DrawNextGraph.bind(this,indx,opt,null,true),0);
 
       // if there is auto colors assignment, try to provide it
       if (this._pfc || this._plc || this._pmc) {
@@ -3344,6 +3414,248 @@
 
       return painter.DrawingReady();
    }
+
+   JSROOT.Painter.drawASImage = function(divid, obj, opt) {
+      var painter = new JSROOT.TBasePainter();
+      painter.SetDivId(divid, -1);
+
+      var main = painter.select_main(); // this is d3 selection of main element for image drawing
+
+      // from here one should insert PNG image
+
+      // this is example how external image can be inserted
+      // main.append("img").attr("src","https://root.cern/js/files/img/tf1.png");
+
+      // this is potential example how image can be generated
+      // one could use TASImage member like obj.fPngBuf
+      // main.append("img").attr("src","data:image/png;base64,xxxxxxxxx..");
+
+      painter.SetDivId(divid);
+
+      return painter.DrawingReady();
+   }
+
+   JSROOT.Painter.drawJSImage = function(divid, obj, opt) {
+      var painter = new JSROOT.TBasePainter();
+      painter.SetDivId(divid, -1);
+
+      var main = painter.select_main();
+
+      // this is example how external image can be inserted
+      var img = main.append("img").attr("src", obj.fName).attr("title", obj.fTitle || obj.fName);
+
+      if (opt && opt.indexOf("scale")>=0) {
+         img.style("width","100%").style("height","100%");
+      } else if (opt && opt.indexOf("center")>=0) {
+         main.style("position", "relative");
+         img.attr("style", "margin: 0; position: absolute;  top: 50%; left: 50%; transform: translate(-50%, -50%);");
+      }
+
+      painter.SetDivId(divid);
+
+      return painter.DrawingReady();
+   }
+
+
+   // ==================================================================================================
+
+   JSROOT.Painter.CreateBranchItem = function(node, branch, tree, parent_branch) {
+      if (!node || !branch) return false;
+
+      var nb_branches = branch.fBranches ? branch.fBranches.arr.length : 0,
+          nb_leaves = branch.fLeaves ? branch.fLeaves.arr.length : 0;
+
+      function ClearName(arg) {
+         var pos = arg.indexOf("[");
+         if (pos>0) arg = arg.substr(0, pos);
+         if (parent_branch && arg.indexOf(parent_branch.fName)==0) {
+            arg = arg.substr(parent_branch.fName.length);
+            if (arg[0]===".") arg = arg.substr(1);
+         }
+         return arg;
+      }
+
+      branch.$tree = tree; // keep tree pointer, later do it more smart
+
+      var subitem = {
+            _name : ClearName(branch.fName),
+            _kind : "ROOT." + branch._typename,
+            _title : branch.fTitle,
+            _obj : branch
+      };
+
+      if (!node._childs) node._childs = [];
+
+      node._childs.push(subitem);
+
+      if (branch._typename==='TBranchElement')
+         subitem._title += " from " + branch.fClassName + ";" + branch.fClassVersion;
+
+      if (nb_branches > 0) {
+         subitem._more = true;
+         subitem._expand = function(bnode,bobj) {
+            // really create all sub-branch items
+            if (!bobj) return false;
+
+            if (!bnode._childs) bnode._childs = [];
+
+            if (bobj.fLeaves && (bobj.fLeaves.arr.length === 1) &&
+                ((bobj.fType === JSROOT.BranchType.kClonesNode) || (bobj.fType === JSROOT.BranchType.kSTLNode))) {
+                 bobj.fLeaves.arr[0].$branch = bobj;
+                 bnode._childs.push({
+                    _name: "@size",
+                    _title: "container size",
+                    _kind: "ROOT.TLeafElement",
+                    _icon: "img_leaf",
+                    _obj: bobj.fLeaves.arr[0],
+                    _more : false
+                 });
+              }
+
+            for (var i=0; i<bobj.fBranches.arr.length; ++i)
+               JSROOT.Painter.CreateBranchItem(bnode, bobj.fBranches.arr[i], bobj.$tree, bobj);
+
+            var object_class = JSROOT.IO.GetBranchObjectClass(bobj, bobj.$tree, true),
+                methods = object_class ? JSROOT.getMethods(object_class) : null;
+
+            if (methods && (bobj.fBranches.arr.length>0))
+               for (var key in methods) {
+                  if (typeof methods[key] !== 'function') continue;
+                  var s = methods[key].toString();
+                  if ((s.indexOf("return")>0) && (s.indexOf("function ()")==0))
+                     bnode._childs.push({
+                        _name: key+"()",
+                        _title: "function " + key + " of class " + object_class,
+                        _kind: "ROOT.TBranchFunc", // fictional class, only for drawing
+                        _obj: { _typename: "TBranchFunc", branch: bobj, func: key },
+                        _more : false
+                     });
+
+               }
+
+            return true;
+         }
+         return true;
+      } else if (nb_leaves === 1) {
+         subitem._icon = "img_leaf";
+         subitem._more = false;
+      } else if (nb_leaves > 1) {
+         subitem._childs = [];
+         for (var j = 0; j < nb_leaves; ++j) {
+            branch.fLeaves.arr[j].$branch = branch; // keep branch pointer for drawing
+            var leafitem = {
+               _name : ClearName(branch.fLeaves.arr[j].fName),
+               _kind : "ROOT." + branch.fLeaves.arr[j]._typename,
+               _obj: branch.fLeaves.arr[j]
+            }
+            subitem._childs.push(leafitem);
+         }
+      }
+
+      return true;
+   }
+
+   JSROOT.Painter.TreeHierarchy = function(node, obj) {
+      if (obj._typename != 'TTree' && obj._typename != 'TNtuple' && obj._typename != 'TNtupleD' ) return false;
+
+      node._childs = [];
+      node._tree = obj;  // set reference, will be used later by TTree::Draw
+
+      for (var i=0; i<obj.fBranches.arr.length; ++i)
+         JSROOT.Painter.CreateBranchItem(node, obj.fBranches.arr[i], obj);
+
+      return true;
+   }
+
+   /** @summary function called from JSROOT.draw()
+    * @desc just envelope for real TTree::Draw method which do the main job
+    * Can be also used for the branch and leaf object
+    * @private */
+   JSROOT.Painter.drawTree = function(divid, obj, opt) {
+
+      var painter = new JSROOT.TObjectPainter(obj),
+          tree = obj, args = opt;
+
+      if (obj._typename == "TBranchFunc") {
+         // fictional object, created only in browser
+         args = { expr: "." + obj.func + "()", branch: obj.branch };
+         if (opt && opt.indexOf("dump")==0) args.expr += ">>" + opt; else
+         if (opt) args.expr += opt;
+         tree = obj.branch.$tree;
+      } else if (obj.$branch) {
+         // this is drawing of the single leaf from the branch
+         args = { expr: "." + obj.fName + (opt || ""), branch: obj.$branch };
+         if ((args.branch.fType === JSROOT.BranchType.kClonesNode) || (args.branch.fType === JSROOT.BranchType.kSTLNode)) {
+            // special case of size
+            args.expr = opt;
+            args.direct_branch = true;
+         }
+
+         tree = obj.$branch.$tree;
+      } else if (obj.$tree) {
+         // this is drawing of the branch
+
+         // if generic object tried to be drawn without specifying any options, it will be just dump
+         if (!opt && obj.fStreamerType && (obj.fStreamerType !== JSROOT.IO.kTString) &&
+             (obj.fStreamerType >= JSROOT.IO.kObject) && (obj.fStreamerType <= JSROOT.IO.kAnyP)) opt = "dump";
+
+         args = { expr: opt, branch: obj };
+         tree = obj.$tree;
+      } else {
+
+         if ((args==='player') || !args) {
+            JSROOT.AssertPrerequisites("jq2d", function() {
+               JSROOT.CreateTreePlayer(painter);
+               painter.ConfigureTree(tree);
+               painter.Show(divid);
+               painter.DrawingReady();
+            });
+            return painter;
+         }
+
+         if (typeof args === 'string') args = { expr: args };
+      }
+
+      if (!tree) {
+         console.error('No TTree object available for TTree::Draw');
+         return painter.DrawingReady();
+      }
+
+      var callback = painter.DrawingReady.bind(painter);
+      painter._return_res_painter = true; // indicate that TTree::Draw painter returns not itself but drawing of result object
+
+      JSROOT.cleanup(divid);
+
+      tree.Draw(args, function(histo, hopt, intermediate) {
+
+         var drawid = "";
+
+         if (!args.player) drawid = divid; else
+         if (args.create_player === 2) drawid = painter.drawid;
+
+         if (drawid)
+            return JSROOT.redraw(drawid, histo, hopt, intermediate ? null : callback);
+
+         if (args.create_player === 1) { args.player_intermediate = intermediate; return; }
+
+         // redirect drawing to the player
+         args.player_create = 1;
+         args.player_intermediate = intermediate;
+         JSROOT.AssertPrerequisites("jq2d", function() {
+            JSROOT.CreateTreePlayer(painter);
+            painter.ConfigureTree(tree);
+            painter.Show(divid, args);
+            args.create_player = 2;
+            JSROOT.redraw(painter.drawid, histo, hopt, args.player_intermediate ? null : callback);
+            painter.SetItemName("TreePlayer"); // item name used by MDI when process resize
+         });
+      });
+
+      return painter;
+   }
+
+   // ==================================================================================================
+
 
    JSROOT.Painter.drawText = drawText;
    JSROOT.Painter.drawLine = drawLine;

@@ -112,20 +112,20 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
    Double_t *pO = ortho.GetMatrixArray();
    Double_t *pH = H.GetMatrixArray();
 
-   const Int_t n = v.GetNrows();
+   const UInt_t n = v.GetNrows();
 
-   const Int_t low  = 0;
-   const Int_t high = n-1;
+   const UInt_t low  = 0;
+   const UInt_t high = n-1;
 
-   Int_t i,j,m;
+   UInt_t i,j,m;
    for (m = low+1; m <= high-1; m++) {
-      const Int_t off_m = m*n;
+      const UInt_t off_m = m*n;
 
       // Scale column.
 
       Double_t scale = 0.0;
       for (i = m; i <= high; i++) {
-         const Int_t off_i = i*n;
+         const UInt_t off_i = i*n;
          scale = scale + TMath::Abs(pH[off_i+m-1]);
       }
       if (scale != 0.0) {
@@ -134,7 +134,7 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
 
          Double_t h = 0.0;
          for (i = high; i >= m; i--) {
-            const Int_t off_i = i*n;
+            const UInt_t off_i = i*n;
             pO[i] = pH[off_i+m-1]/scale;
             h += pO[i]*pO[i];
          }
@@ -150,18 +150,18 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
          for (j = m; j < n; j++) {
             Double_t f = 0.0;
             for (i = high; i >= m; i--) {
-               const Int_t off_i = i*n;
+               const UInt_t off_i = i*n;
                f += pO[i]*pH[off_i+j];
             }
             f = f/h;
             for (i = m; i <= high; i++) {
-               const Int_t off_i = i*n;
+               const UInt_t off_i = i*n;
                pH[off_i+j] -= f*pO[i];
             }
          }
 
          for (i = 0; i <= high; i++) {
-            const Int_t off_i = i*n;
+            const UInt_t off_i = i*n;
             Double_t f = 0.0;
             for (j = high; j >= m; j--)
                f += pO[j]*pH[off_i+j];
@@ -177,28 +177,28 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
    // Accumulate transformations (Algol's ortran).
 
    for (i = 0; i < n; i++) {
-      const Int_t off_i = i*n;
+      const UInt_t off_i = i*n;
       for (j = 0; j < n; j++)
          pV[off_i+j] = (i == j ? 1.0 : 0.0);
    }
 
    for (m = high-1; m >= low+1; m--) {
-      const Int_t off_m = m*n;
+      const UInt_t off_m = m*n;
       if (pH[off_m+m-1] != 0.0) {
          for (i = m+1; i <= high; i++) {
-            const Int_t off_i = i*n;
+            const UInt_t off_i = i*n;
             pO[i] = pH[off_i+m-1];
          }
          for (j = m; j <= high; j++) {
             Double_t g = 0.0;
             for (i = m; i <= high; i++) {
-               const Int_t off_i = i*n;
+               const UInt_t off_i = i*n;
                g += pO[i]*pV[off_i+j];
             }
             // Double division avoids possible underflow
             g = (g/pO[m])/pH[off_m+m-1];
             for (i = m; i <= high; i++) {
-               const Int_t off_i = i*n;
+               const UInt_t off_i = i*n;
                pV[off_i+j] += g*pO[i];
             }
          }

@@ -523,6 +523,15 @@ void TGLHistPainter::ProcessMessage(const char *m, const TObject *o)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set highlight mode
+
+void TGLHistPainter::SetHighlight()
+{
+   if (fDefaultPainter.get())
+      fDefaultPainter->SetHighlight();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set histogram.
 
 void TGLHistPainter::SetHistogram(TH1 *h)

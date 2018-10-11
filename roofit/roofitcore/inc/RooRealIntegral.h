@@ -77,9 +77,13 @@ public:
 
   virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const ;  
 
+  void setAllowComponentSelection(Bool_t allow);
+  Bool_t getAllowComponentSelection() const;
+
 protected:
 
   mutable Bool_t _valid;
+  Bool_t _respectCompSelect;
 
   const RooArgSet& parameters() const ;
 
@@ -146,7 +150,7 @@ public:
 private:
   mutable Bool_t _timeNumInt ; //! do not persist
 
-  ClassDef(RooRealIntegral,2) // Real-valued function representing an integral over a RooAbsReal object
+  ClassDef(RooRealIntegral,3) // Real-valued function representing an integral over a RooAbsReal object
 };
 
 #endif

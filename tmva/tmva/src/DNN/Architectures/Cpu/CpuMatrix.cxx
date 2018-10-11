@@ -24,11 +24,16 @@ TCpuMatrix<AReal>::TCpuMatrix(size_t nRows, size_t nCols)
     : fBuffer(nRows * nCols), fNCols(nCols), fNRows(nRows)
 {
    Initialize();
+   for (size_t j = 0; j < fNCols; j++) {
+      for (size_t i = 0; i < fNRows; i++) {
+         (*this)(i, j) = 0;
+      }
+   }
 }
 
 //____________________________________________________________________________
 template<typename AReal>
-TCpuMatrix<AReal>::TCpuMatrix(const TMatrixT<Double_t> & B)
+TCpuMatrix<AReal>::TCpuMatrix(const TMatrixT<AReal> & B)
     : fBuffer(B.GetNoElements()), fNCols(B.GetNcols()), fNRows(B.GetNrows())
 {
    Initialize();
@@ -51,7 +56,7 @@ TCpuMatrix<AReal>::TCpuMatrix(const TCpuBuffer<AReal> & buffer,
 
 //____________________________________________________________________________
 template<typename AReal>
-TCpuMatrix<AReal>::operator TMatrixT<Double_t>() const
+TCpuMatrix<AReal>::operator TMatrixT<AReal>() const
 {
    TMatrixT<AReal> B(fNRows, fNCols);
 
@@ -70,7 +75,21 @@ void TCpuMatrix<AReal>::Initialize()
 {
    if (fNRows > fOnes.size()) {
       fOnes.reserve(fNRows);
-      for (size_t i = fOnes.size(); i < fNRows; i++) {
+      size_t ifirst = fOnes.size();
+      for (size_t i = ifirst; i < fNRows; i++) {
+         fOnes.push_back(1.0);
+      }
+   }
+}
+
+//____________________________________________________________________________
+template<typename AReal>
+void TCpuMatrix<AReal>::InitializeOneVector(size_t n)
+{
+   if (n > fOnes.size()) {
+      fOnes.reserve(n);
+      size_t ifirst = fOnes.size();
+      for (size_t i =  ifirst; i < n; i++) {
          fOnes.push_back(1.0);
       }
    }

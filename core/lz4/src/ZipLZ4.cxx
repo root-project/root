@@ -1,7 +1,7 @@
 // Original Author: Brian Bockelman
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -9,31 +9,16 @@
  *************************************************************************/
 
 #include "ZipLZ4.h"
-#include "lz4.h"
-#include "lz4hc.h"
-#include <stdio.h>
+
+#include "ROOT/RConfig.h"
+
 #include <cinttypes>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
-
-#include "RConfig.h"
-
-// Pulled from liblz4; upstream library explicitly exposes the symbol but the default build
-// excludes the header.
-typedef unsigned long long XXH64_hash_t;
-typedef struct {
-   unsigned char digest[8];
-} XXH64_canonical_t;
-
-#ifdef BUILTIN_LZ4
-#define XXH64 LZ4_XXH64
-#define XXH64_canonicalFromHash LZ4_XXH64_canonicalFromHash
-#define XXH64_hashFromCanonical LZ4_XXH64_hashFromCanonical
-#endif
-
-extern "C" XXH64_hash_t XXH64(const void *input, size_t length, unsigned long long seed);
-extern "C" void XXH64_canonicalFromHash(XXH64_canonical_t *dst, XXH64_hash_t hash);
-extern "C" XXH64_hash_t XXH64_hashFromCanonical(const XXH64_canonical_t *src);
+#include <lz4.h>
+#include <lz4hc.h>
+#include <xxhash.h>
 
 // Header consists of:
 // - 2 byte identifier "L4"

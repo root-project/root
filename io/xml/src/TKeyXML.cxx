@@ -29,7 +29,7 @@ ClassImp(TKeyXML);
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
 
-TKeyXML::TKeyXML() : TKey(), fKeyNode(0), fKeyId(0), fSubdir(kFALSE)
+TKeyXML::TKeyXML() : TKey(), fKeyNode(nullptr), fKeyId(0), fSubdir(kFALSE)
 {
 }
 
@@ -37,11 +37,11 @@ TKeyXML::TKeyXML() : TKey(), fKeyNode(0), fKeyId(0), fSubdir(kFALSE)
 /// Creates TKeyXML and convert object data to xml structures
 
 TKeyXML::TKeyXML(TDirectory *mother, Long64_t keyid, const TObject *obj, const char *name, const char *title)
-   : TKey(mother), fKeyNode(0), fKeyId(keyid), fSubdir(kFALSE)
+   : TKey(mother), fKeyNode(nullptr), fKeyId(keyid), fSubdir(kFALSE)
 {
-   if (name)
+   if (name) {
       SetName(name);
-   else if (obj != 0) {
+   } else if (obj) {
       SetName(obj->GetName());
       fClassName = obj->ClassName();
    } else
@@ -53,12 +53,12 @@ TKeyXML::TKeyXML(TDirectory *mother, Long64_t keyid, const TObject *obj, const c
    fCycle = GetMotherDir()->AppendKey(this);
 
    TXMLEngine *xml = XMLEngine();
-   if (xml != 0)
-      fKeyNode = xml->NewChild(0, 0, xmlio::Xmlkey, 0);
+   if (xml)
+      fKeyNode = xml->NewChild(nullptr, nullptr, xmlio::Xmlkey);
 
    fDatime.Set();
 
-   StoreObject(obj, 0, kTRUE);
+   StoreObject(obj, nullptr, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +66,7 @@ TKeyXML::TKeyXML(TDirectory *mother, Long64_t keyid, const TObject *obj, const c
 
 TKeyXML::TKeyXML(TDirectory *mother, Long64_t keyid, const void *obj, const TClass *cl, const char *name,
                  const char *title)
-   : TKey(mother), fKeyNode(0), fKeyId(keyid), fSubdir(kFALSE)
+   : TKey(mother), fKeyNode(nullptr), fKeyId(keyid), fSubdir(kFALSE)
 {
    if (name && *name)
       SetName(name);
@@ -79,8 +79,8 @@ TKeyXML::TKeyXML(TDirectory *mother, Long64_t keyid, const void *obj, const TCla
    fCycle = GetMotherDir()->AppendKey(this);
 
    TXMLEngine *xml = XMLEngine();
-   if (xml != 0)
-      fKeyNode = xml->NewChild(0, 0, xmlio::Xmlkey, 0);
+   if (xml)
+      fKeyNode = xml->NewChild(nullptr, nullptr, xmlio::Xmlkey);
 
    fDatime.Set();
 
@@ -138,7 +138,7 @@ void TKeyXML::Delete(Option_t * /*option*/)
    TXMLEngine *xml = XMLEngine();
    if (fKeyNode && xml) {
       xml->FreeNode(fKeyNode);
-      fKeyNode = 0;
+      fKeyNode = nullptr;
    }
 
    fMotherDir->GetListOfKeys()->Remove(this);
@@ -151,17 +151,17 @@ void TKeyXML::StoreKeyAttributes()
 {
    TXMLEngine *xml = XMLEngine();
    TXMLFile *f = (TXMLFile *)GetFile();
-   if ((f == 0) || (xml == 0) || (fKeyNode == 0))
+   if (!f || !xml || !fKeyNode)
       return;
 
-   xml->NewAttr(fKeyNode, 0, xmlio::Name, GetName());
+   xml->NewAttr(fKeyNode, nullptr, xmlio::Name, GetName());
 
    xml->NewIntAttr(fKeyNode, xmlio::Cycle, fCycle);
 
    if (f->GetIOVersion() > 1) {
       if (strlen(GetTitle()) > 0)
-         xml->NewAttr(fKeyNode, 0, xmlio::Title, GetTitle());
-      xml->NewAttr(fKeyNode, 0, xmlio::CreateTm, fDatime.AsSQLString());
+         xml->NewAttr(fKeyNode, nullptr, xmlio::Title, GetTitle());
+      xml->NewAttr(fKeyNode, nullptr, xmlio::CreateTm, fDatime.AsSQLString());
    }
 }
 
@@ -172,14 +172,14 @@ void TKeyXML::StoreObject(const void *obj, const TClass *cl, Bool_t check_tobj)
 {
    TXMLFile *f = (TXMLFile *)GetFile();
    TXMLEngine *xml = XMLEngine();
-   if ((f == 0) || (xml == 0) || (fKeyNode == 0))
+   if (!f || !xml || !fKeyNode)
       return;
 
    if (obj && check_tobj) {
       TClass *actual = TObject::Class()->GetActualClass((TObject *)obj);
-      if (!actual)
+      if (!actual) {
          actual = TObject::Class();
-      else if (actual != TObject::Class())
+      } else if (actual != TObject::Class())
          obj = (void *)((Long_t)obj - actual->GetBaseClassOffset(TObject::Class()));
       cl = actual;
    }
@@ -187,12 +187,13 @@ void TKeyXML::StoreObject(const void *obj, const TClass *cl, Bool_t check_tobj)
    StoreKeyAttributes();
 
    TBufferXML buffer(TBuffer::kWrite, f);
+   buffer.InitMap();
    if (f->GetIOVersion() == 1)
       buffer.SetBit(TBuffer::kCannotHandleMemberWiseStreaming, kFALSE);
 
    XMLNodePointer_t node = buffer.XmlWriteAny(obj, cl);
 
-   if (node != 0)
+   if (node)
       xml->AddChildFirst(fKeyNode, node);
 
    buffer.XmlWriteBlock(fKeyNode);
@@ -207,7 +208,7 @@ void TKeyXML::StoreObject(const void *obj, const TClass *cl, Bool_t check_tobj)
 void TKeyXML::UpdateAttributes()
 {
    TXMLEngine *xml = XMLEngine();
-   if ((xml == 0) || (fKeyNode == 0))
+   if (!xml || !fKeyNode)
       return;
 
    xml->FreeAllAttr(fKeyNode);
@@ -223,13 +224,13 @@ void TKeyXML::UpdateObject(TObject *obj)
 {
    TXMLFile *f = (TXMLFile *)GetFile();
    TXMLEngine *xml = XMLEngine();
-   if ((f == 0) || (xml == 0) || (obj == 0) || (fKeyNode == 0))
+   if (!f || !xml || !obj || !fKeyNode)
       return;
 
    XMLNodePointer_t objnode = xml->GetChild(fKeyNode);
    xml->SkipEmpty(objnode);
 
-   if (objnode == 0)
+   if (!objnode)
       return;
 
    xml->UnlinkNode(objnode);
@@ -237,7 +238,7 @@ void TKeyXML::UpdateObject(TObject *obj)
 
    xml->FreeAllAttr(fKeyNode);
 
-   StoreObject(obj, 0, kTRUE);
+   StoreObject(obj, nullptr, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -248,23 +249,23 @@ void TKeyXML::UpdateObject(TObject *obj)
 
 Int_t TKeyXML::Read(TObject *tobj)
 {
-   if (tobj == 0)
+   if (!tobj)
       return 0;
 
-   void *res = XmlReadAny(tobj, 0);
+   void *res = XmlReadAny(tobj, nullptr);
 
-   return res == 0 ? 0 : 1;
+   return !res ? 0 : 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// read object derived from TObject class, from key
-/// if it is not TObject or in case of error, return 0
+/// if it is not TObject or in case of error, return nullptr
 
 TObject *TKeyXML::ReadObj()
 {
-   TObject *tobj = (TObject *)XmlReadAny(0, TObject::Class());
+   TObject *tobj = (TObject *)XmlReadAny(nullptr, TObject::Class());
 
-   if (tobj != 0) {
+   if (tobj) {
       if (gROOT->GetForceStyle())
          tobj->UseCurrentStyle();
       if (tobj->IsA() == TDirectoryFile::Class()) {
@@ -285,13 +286,13 @@ TObject *TKeyXML::ReadObj()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// read object derived from TObject class, from key
-/// if it is not TObject or in case of error, return 0
+/// if it is not TObject or in case of error, return nullptr
 
 TObject *TKeyXML::ReadObjWithBuffer(char * /*bufferRead*/)
 {
-   TObject *tobj = (TObject *)XmlReadAny(0, TObject::Class());
+   TObject *tobj = (TObject *)XmlReadAny(nullptr, TObject::Class());
 
-   if (tobj != 0) {
+   if (tobj) {
       if (gROOT->GetForceStyle())
          tobj->UseCurrentStyle();
       if (tobj->IsA() == TDirectoryFile::Class()) {
@@ -315,7 +316,7 @@ TObject *TKeyXML::ReadObjWithBuffer(char * /*bufferRead*/)
 
 void *TKeyXML::ReadObjectAny(const TClass *expectedClass)
 {
-   void *res = XmlReadAny(0, expectedClass);
+   void *res = XmlReadAny(nullptr, expectedClass);
 
    if (res && (expectedClass == TDirectoryFile::Class())) {
       TDirectoryFile *dir = (TDirectoryFile *)res;
@@ -337,21 +338,22 @@ void *TKeyXML::ReadObjectAny(const TClass *expectedClass)
 
 void *TKeyXML::XmlReadAny(void *obj, const TClass *expectedClass)
 {
-   if (fKeyNode == 0)
+   if (!fKeyNode)
       return obj;
 
    TXMLFile *f = (TXMLFile *)GetFile();
    TXMLEngine *xml = XMLEngine();
-   if ((f == 0) || (xml == 0))
+   if (!f || !xml)
       return obj;
 
    TBufferXML buffer(TBuffer::kRead, f);
+   buffer.InitMap();
    if (f->GetIOVersion() == 1)
       buffer.SetBit(TBuffer::kCannotHandleMemberWiseStreaming, kFALSE);
 
    XMLNodePointer_t blocknode = xml->GetChild(fKeyNode);
    xml->SkipEmpty(blocknode);
-   while (blocknode != 0) {
+   while (blocknode) {
       if (strcmp(xml->GetNodeName(blocknode), xmlio::XmlBlock) == 0)
          break;
       xml->ShiftToNext(blocknode);
@@ -361,20 +363,20 @@ void *TKeyXML::XmlReadAny(void *obj, const TClass *expectedClass)
    XMLNodePointer_t objnode = xml->GetChild(fKeyNode);
    xml->SkipEmpty(objnode);
 
-   TClass *cl = 0;
+   TClass *cl = nullptr;
    void *res = buffer.XmlReadAny(objnode, obj, &cl);
 
-   if ((cl == 0) || (res == 0))
+   if (!cl || !res)
       return obj;
 
    Int_t delta = 0;
 
-   if (expectedClass != 0) {
+   if (expectedClass) {
       delta = cl->GetBaseClassOffset(expectedClass);
       if (delta < 0) {
-         if (obj == 0)
+         if (!obj)
             cl->Destructor(res);
-         return 0;
+         return nullptr;
       }
       if (cl->GetState() > TClass::kEmulated && expectedClass->GetState() <= TClass::kEmulated) {
          // we cannot mix a compiled class with an emulated class in the inheritance
@@ -392,5 +394,5 @@ void *TKeyXML::XmlReadAny(void *obj, const TClass *expectedClass)
 TXMLEngine *TKeyXML::XMLEngine()
 {
    TXMLFile *f = (TXMLFile *)GetFile();
-   return f == 0 ? 0 : f->XML();
+   return f ? f->XML() : nullptr;
 }

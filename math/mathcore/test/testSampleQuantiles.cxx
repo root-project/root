@@ -7,6 +7,8 @@
 
 #include <iostream>
 #include <algorithm>
+#include <random>
+
 using std::cout;
 using std::endl;
 
@@ -37,7 +39,7 @@ bool testQuantiles(int type = 0, bool sorted = true) {
 
    if (!sorted) {
       // shuffle the data
-      std::random_shuffle(x, x+10);
+      std::shuffle(x, x+10, std::default_random_engine{});
       if (debug) {
          std::cout << "shuffle data " << std::endl;
          std::cout << " data = { ";

@@ -18,8 +18,8 @@
 /// You may want to control:
 /// ~~~{.cpp}
 ///   double confidenceLevel=0.95;
-///   int nPointsToScan = 30;
-///   int nToyMC = 200;
+///   int nPointsToScan = 12;
+///   int nToyMC = 150;
 /// ~~~
 /// This uses a modified version of the profile likelihood ratio as
 /// a test statistic for upper limits (eg. test stat = 0 if muhat>mu).
@@ -139,8 +139,8 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
 
 
    double confidenceLevel=0.95;
-   int nPointsToScan = 20;
-   int nToyMC = 200;
+   int nPointsToScan = 12;
+   int nToyMC = 150;
 
    // -------------------------------------------------------
    // First part is just to access a user-defined file
@@ -218,7 +218,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
    // so this is NOT a Feldman-Cousins interval
    FeldmanCousins fc(*data,*mc);
    fc.SetConfidenceLevel(confidenceLevel);
-   /*  fc.AdditionalNToysFactor(0.25); // degrade/improve sampling that defines confidence belt*/
+   fc.AdditionalNToysFactor(0.5); // degrade/improve sampling that defines confidence belt: in this case makes the example faster
    /*  fc.UseAdaptiveSampling(true); // speed it up a bit, don't use for expected limits*/
    fc.SetNBins(nPointsToScan); // set how many points per parameter of interest to scan
    fc.CreateConfBelt(true); // save the information in the belt for plotting

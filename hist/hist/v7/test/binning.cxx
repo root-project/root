@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "ROOT/THist.hxx"
-#include "ROOT/THistBinIter.hxx"
+#include "ROOT/RHist.hxx"
+#include "ROOT/RHistBinIter.hxx"
 #include <cmath>
 #include <limits>
 
@@ -10,7 +10,7 @@ using namespace ROOT::Experimental;
 
 // Basic binning on a Equidistant axis.
 TEST(AxisBinning, EquidistBasic) {
-   TAxisEquidistant ax("TITLE", 10, -1., 1.);
+   RAxisEquidistant ax("RITLE", 10, -1., 1.);
    EXPECT_EQ(1, ax.FindBin(-.999));
    EXPECT_EQ(5, ax.FindBin(-.001));
    EXPECT_EQ(10, ax.FindBin(0.999));
@@ -30,7 +30,7 @@ TEST(AxisBinning, EquidistBasic) {
 // Epsilon bin widths.
 TEST(AxisBinning, EquidistEpsBins) {
    static constexpr auto eps = std::numeric_limits<double>::min();
-   TAxisEquidistant ax("TITLE", 10, 0., eps * 10.);
+   RAxisEquidistant ax("RITLE", 10, 0., eps * 10.);
    EXPECT_LE(0, ax.FindBin(0.5*eps));
    EXPECT_GE(1, ax.FindBin(0.5*eps));
 
@@ -53,7 +53,7 @@ TEST(AxisBinning, EquidistEpsBins) {
 
 // Basic binning on an Irregular axis.
 TEST(AxisBinning, IrregularBasic) {
-   TAxisIrregular ax("TITLE", {-5., 0., 0.1, 1., 10., 100.});
+   RAxisIrregular ax("RITLE", {-5., 0., 0.1, 1., 10., 100.});
    EXPECT_EQ(2, ax.FindBin(.001));
    EXPECT_EQ(1, ax.FindBin(-.001));
    EXPECT_EQ(5, ax.FindBin(99.));
@@ -73,7 +73,7 @@ TEST(AxisBinning, IrregularBasic) {
 // Limit bin widths on an Irregular axis.
 TEST(AxisBinning, IrregularEpsBins) {
    static constexpr auto eps = std::numeric_limits<double>::min();
-   TAxisIrregular ax("TITLE", {0., eps, 2.*eps, 3.*eps, 4.*eps, 5.*eps});
+   RAxisIrregular ax("RITLE", {0., eps, 2.*eps, 3.*eps, 4.*eps, 5.*eps});
    EXPECT_LE(0, ax.FindBin(0.5*eps));
    EXPECT_GE(1, ax.FindBin(0.5*eps));
 
@@ -93,8 +93,8 @@ TEST(AxisBinning, IrregularEpsBins) {
 
 // Histogram binning on a Equidistant axis.
 TEST(HistImplBinning, Equidist1D) {
-   Detail::THistImpl<Detail::THistData<1, double, Detail::THistDataDefaultStorage, THistStatContent>,
-                     TAxisEquidistant> hist(TAxisEquidistant(10, 0., 1.));
+   Detail::RHistImpl<Detail::RHistData<1, double, std::vector<double>, RHistStatContent>,
+                     RAxisEquidistant> hist(RAxisEquidistant(10, 0., 1.));
 
    EXPECT_EQ(5, hist.GetBinIndex({.45}));
    EXPECT_EQ(10, hist.GetBinIndex({.999}));
@@ -112,9 +112,9 @@ TEST(HistImplBinning, Equidist1D) {
 }
 
 TEST(HistImplBinning, EquiDist2D) {
-   Detail::THistImpl<Detail::THistData<2, double, Detail::THistDataDefaultStorage, THistStatContent>,
-                     TAxisEquidistant, TAxisEquidistant>
-      hist(TAxisEquidistant(2, 0., 2.), TAxisEquidistant(2, -1., 1.));
+   Detail::RHistImpl<Detail::RHistData<2, double, std::vector<double>, RHistStatContent>,
+                     RAxisEquidistant, RAxisEquidistant>
+      hist(RAxisEquidistant(2, 0., 2.), RAxisEquidistant(2, -1., 1.));
 
    EXPECT_EQ( 0, hist.GetBinIndex({-100., -100.}));
    EXPECT_EQ( 1, hist.GetBinIndex({0.5, -100.}));

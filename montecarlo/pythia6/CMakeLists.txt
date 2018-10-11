@@ -18,5 +18,21 @@ else()
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(EGPythia6
-                              LIBRARIES ${PYTHIA6_LIBRARIES}
-                              DEPENDENCIES Core EG Graf VMC Physics)
+  HEADERS
+    TMCParticle.h
+    TPythia6Calls.h
+    TPythia6Decayer.h
+    TPythia6.h
+  SOURCES
+    src/TMCParticle.cxx
+    src/TPythia6.cxx
+    src/TPythia6Decayer.cxx
+  LIBRARIES
+    ${PYTHIA6_LIBRARIES}
+  DEPENDENCIES
+    Core
+    EG
+    Graf
+    Physics
+    VMC
+)

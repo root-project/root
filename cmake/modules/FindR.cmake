@@ -37,8 +37,13 @@ set(R_INCLUDE_DIRS ${R_INCLUDE_DIR})
 foreach(_cpt ${R_FIND_COMPONENTS})
   execute_process(COMMAND echo "cat(find.package('${_cpt}'))"
                   COMMAND ${R_EXECUTABLE} --vanilla --slave
+                  RESULT_VARIABLE _rc
+                  ERROR_QUIET
                   OUTPUT_VARIABLE _cpt_path
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(NOT _rc)
+    set(R_${_cpt}_FOUND 1)
+  endif()
 
   find_library(R_${_cpt}_LIBRARY
                lib${_cpt}.so lib${_cpt}.dylib
@@ -54,13 +59,10 @@ foreach(_cpt ${R_FIND_COMPONENTS})
     list(APPEND R_INCLUDE_DIRS ${R_${_cpt}_INCLUDE_DIR})
   endif()
 
-  if(R_${_cpt}_INCLUDE_DIR AND R_${_cpt}_LIBRARY)
-    list(REMOVE_ITEM R_FIND_COMPONENTS ${_cpt})
-  endif()
 endforeach()
 
 # Handle the QUIETLY and REQUIRED arguments and set R_FOUND to TRUE if all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(R DEFAULT_MSG R_EXECUTABLE R_INCLUDE_DIR R_LIBRARY)
+find_package_handle_standard_args(R HANDLE_COMPONENTS REQUIRED_VARS R_EXECUTABLE R_INCLUDE_DIR R_LIBRARY)
 mark_as_advanced(R_FOUND R_EXECUTABLE R_INCLUDE_DIR R_LIBRARY)
 

@@ -158,13 +158,13 @@ Bool_t TMVA::DecisionTreeNode::GoesRight(const TMVA::Event & e) const
    // first check if the fisher criterium is used or ordinary cuts:
    if (GetNFisherCoeff() == 0){
 
-      result = (e.GetValue(this->GetSelector()) >= this->GetCutValue() );
+      result = (e.GetValueFast(this->GetSelector()) >= this->GetCutValue() );
 
    }else{
 
       Double_t fisher = this->GetFisherCoeff(fFisherCoeff.size()-1); // the offset
       for (UInt_t ivar=0; ivar<fFisherCoeff.size()-1; ivar++)
-         fisher += this->GetFisherCoeff(ivar)*(e.GetValue(ivar));
+         fisher += this->GetFisherCoeff(ivar)*(e.GetValueFast(ivar));
 
       result = fisher > this->GetCutValue();
    }

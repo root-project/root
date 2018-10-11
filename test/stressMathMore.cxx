@@ -210,15 +210,11 @@ public:
 
 private:
 
-
    double DoEvalPar(double x, const double * ) const {
       // use esplicity cached param values
       return (*fPdf)(x, *fParams, *(fParams+1));
    }
 
-//    std::auto_ptr<Func>  fPdf;
-//    std::auto_ptr<Func>  fCdf;
-//    std::auto_ptr<Func>  fQuant;
    Func * fPdf;
    Func *  fCdf;
    Func *  fQuant;

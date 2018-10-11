@@ -26,7 +26,7 @@
 
 ClassImp(TPolyMarker3D);
 
-const Int_t kDimension = 3;
+constexpr Int_t kDimension = 3;
 
 /** \class TPolyMarker3D
 \ingroup g3d

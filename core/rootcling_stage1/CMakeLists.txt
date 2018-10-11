@@ -12,12 +12,25 @@ else()
   endif()
 endif()
 
+if(NOT builtin_clang)
+  set(prefixed_link_libraries)
+  foreach(dep ${CLING_DEPEND_LIBS})
+    if("${dep}" MATCHES "^clang")
+      set(dep "${LLVM_LIBRARY_DIR}/lib${dep}.a")
+     endif()
+     list(APPEND prefixed_link_libraries "${dep}")
+   endforeach()
+  set(LINK_LIBS "${prefixed_link_libraries}")
+  link_directories("${LLVM_LIBRARY_DIR}")
+endif()
+
 ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
                               $<TARGET_OBJECTS:Clib>
                               $<TARGET_OBJECTS:ClingUtils>
                               $<TARGET_OBJECTS:Dictgen>
                               $<TARGET_OBJECTS:Foundation_Stage1>
-                              LIBRARIES ${CLING_LIBRARIES}  ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
+                              LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                               NOINSTALL)
 set_target_properties(rootcling_stage1 PROPERTIES RUNTIME_OUTPUT_DIRECTORY src)
 add_dependencies(rootcling_stage1 CLING LLVMRES)
+

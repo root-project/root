@@ -100,7 +100,7 @@ namespace {
             if ( ! attr && ! PyRootType_CheckExact( pyclass ) && PyType_Check( pyclass ) ) {
                PyErr_Clear();
                PyObject* pycppname = PyObject_GetAttr( pyclass, PyStrings::gCppName );
-               char* cppname = PyROOT_PyUnicode_AsString(pycppname);
+               const char* cppname = PyROOT_PyUnicode_AsString(pycppname);
                Py_DECREF(pycppname);
                Cppyy::TCppScope_t scope = Cppyy::GetScope( cppname );
                TClass* klass = TClass::GetClass( cppname );

@@ -263,14 +263,14 @@ Bool_t RooRandomizeParamMCSModule::initializeInstance()
   }
   
   // Loop over all gaussian smearing parameters
-  std::list<UniParam>::iterator giter ;
-  for (giter= _unifParams.begin() ; giter!= _unifParams.end() ; ++giter) {
+  std::list<GausParam>::iterator giter ;
+  for (giter= _gausParams.begin() ; giter!= _gausParams.end() ; ++giter) {
 
     // Check that listed variable is actual generator model parameter
     RooRealVar* actualPar = static_cast<RooRealVar*>(genParams()->find(giter->_param->GetName())) ;
     if (!actualPar) {
       oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::initializeInstance: variable " << giter->_param->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;
-      giter = _unifParams.erase(giter) ;
+      giter = _gausParams.erase(giter) ;
       continue ;
     }
     giter->_param = actualPar ;

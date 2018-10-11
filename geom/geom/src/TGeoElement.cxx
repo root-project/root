@@ -175,6 +175,8 @@ void TGeoElement::ComputeLradTsaiFactor()
    static const Double_t Lrad_light[]  = {5.31  , 4.79  , 4.74 ,  4.71} ;
    static const Double_t Lprad_light[] = {6.144 , 5.621 , 5.805 , 5.924} ;
 
+   fRadTsai = 0.0;
+   if (fZ == 0) return;
    const Double_t logZ3 = TMath::Log(fZ)/3.;
 
    Double_t Lrad, Lprad;

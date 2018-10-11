@@ -44,6 +44,23 @@ TClingValue& TClingValue::operator=(TClingValue &Other) {
    return *this;
 }
 
+std::pair<std::string, std::string> TClingValue::ToTypeAndValueString() const {
+  std::string output = ToString();
+  int paren_level = 0;
+
+  for (size_t pos = 0; pos < output.size(); ++pos) {
+    if (output[pos] == '(')
+      ++paren_level;
+    else if (output[pos] == ')') {
+      --paren_level;
+      if (!paren_level)
+        return std::make_pair(output.substr(0, pos + 1), output.substr(pos + 2));
+    }
+  }
+
+  return std::make_pair("", output);
+}
+
 Bool_t TClingValue::IsValid() const {
    return ToCV().isValid();
 }

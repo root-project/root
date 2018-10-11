@@ -38,7 +38,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#include <stdlib.h>
 
 #include "TString.h"
 #include "TTree.h"
@@ -63,20 +62,6 @@ namespace TMVA {
    // =============== maybe move these elswhere (e.g. into the tools )
 
    // =============== functors =======================
-
-
-   class RandomGenerator {
-   public:
-      RandomGenerator( UInt_t seed ){
-         fRandom.SetSeed( seed );
-      }
-      UInt_t operator() ( UInt_t n ) {
-         return fRandom.Integer(n);
-      }
-   private:
-      TRandom3 fRandom; // random generator
-   };
-
 
    // delete-functor (to be used in e.g. for_each algorithm)
    template<class T>

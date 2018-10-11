@@ -10,9 +10,9 @@
 
 #ifndef ROOT_TQTRCONFIG
 #define ROOT_TQTRCONFIG
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #ifndef __CINT__
-#  include "qglobal.h"
+#  include "TQtIncludes.h"
 #endif
 
 // defined the CPP symbols to create the different versions

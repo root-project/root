@@ -43,6 +43,7 @@ public:
    const char     *GetTypeName() const;
    Double_t        GetValue(Int_t i=0) const;
    virtual void   *GetValuePointer() const {return fValue;}
+   virtual Bool_t  IncludeRange(TLeaf *);
    virtual void    Import(TClonesArray *list, Int_t n);
    virtual void    PrintValue(Int_t i=0) const;
    virtual void    ReadBasket(TBuffer &b);

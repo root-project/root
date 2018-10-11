@@ -168,7 +168,7 @@ public:
 
    PosteriorCdfFunction(RooAbsReal & nll,  RooArgList & bindParams, RooAbsReal * prior = 0, const char * integType = 0, double nllMinimum = 0) :
       fFunctor(nll, bindParams, RooArgList() ),              // functor
-      fPriorFunc(std::shared_ptr<RooFunctor>((RooFunctor*)0)),
+      fPriorFunc(nullptr),
       fLikelihood(fFunctor, 0, nllMinimum),         // integral of exp(-nll) function
       fIntegrator(ROOT::Math::IntegratorMultiDim::GetType(integType) ),  // integrator
       fXmin(bindParams.getSize() ),               // vector of parameters (min values)
@@ -178,7 +178,7 @@ public:
    {
 
       if (prior) {
-         fPriorFunc = std::shared_ptr<RooFunctor>(new RooFunctor(*prior, bindParams, RooArgList() ));
+         fPriorFunc = std::make_shared<RooFunctor>(*prior, bindParams, RooArgList());
          fLikelihood.SetPrior(fPriorFunc.get() );
       }
 
@@ -272,7 +272,7 @@ private:
       if (fHasNorm && fUseOldValues) {
          // look in the map of the stored cdf values the closes one
          std::map<double,double>::iterator itr = fNormCdfValues.upper_bound(x);
-         itr--;   // upper bound returns a position 1 up of the value we want
+         --itr;   // upper bound returns a position 1 up of the value we want
          if (itr != fNormCdfValues.end() ) {
             fXmin[0] = itr->first;
             normcdf0 = itr->second;
@@ -354,7 +354,7 @@ public:
    PosteriorFunction(RooAbsReal & nll, RooRealVar & poi, RooArgList & nuisParams, RooAbsReal * prior = 0, const char * integType = 0, double
                      norm = 1.0,  double nllOffset = 0, int niter = 0) :
       fFunctor(nll, nuisParams, RooArgList() ),
-      fPriorFunc(std::shared_ptr<RooFunctor>((RooFunctor*)0)),
+      fPriorFunc(nullptr),
       fLikelihood(fFunctor, 0, nllOffset),
       fPoi(&poi),
       fXmin(nuisParams.getSize() ),
@@ -364,7 +364,7 @@ public:
    {
 
       if (prior) {
-         fPriorFunc = std::shared_ptr<RooFunctor>(new RooFunctor(*prior, nuisParams, RooArgList() ));
+         fPriorFunc = std::make_shared<RooFunctor>(*prior, nuisParams, RooArgList());
          fLikelihood.SetPrior(fPriorFunc.get() );
       }
 
@@ -470,7 +470,7 @@ public:
    PosteriorFunctionFromToyMC(RooAbsReal & nll, RooAbsPdf & pdf, RooRealVar & poi, RooArgList & nuisParams, RooAbsReal * prior = 0, double
                               nllOffset = 0, int niter = 0, bool redoToys = true ) :
       fFunctor(nll, nuisParams, RooArgList() ),
-      fPriorFunc(std::shared_ptr<RooFunctor>((RooFunctor*)0)),
+      fPriorFunc(nullptr),
       fLikelihood(fFunctor, 0, nllOffset),
       fPdf(&pdf),
       fPoi(&poi),
@@ -483,7 +483,7 @@ public:
       if (niter == 0) fNumIterations = 100; // default value
 
       if (prior) {
-         fPriorFunc = std::shared_ptr<RooFunctor>(new RooFunctor(*prior, nuisParams, RooArgList() ));
+         fPriorFunc = std::make_shared<RooFunctor>(*prior, nuisParams, RooArgList());
          fLikelihood.SetPrior(fPriorFunc.get() );
       }
 
@@ -757,9 +757,11 @@ void BayesianCalculator::SetModel(const ModelConfig & model) {
    fPOI.removeAll();
    fNuisanceParameters.removeAll();
    fConditionalObs.removeAll();
+   fGlobalObs.removeAll();
    if (model.GetParametersOfInterest()) fPOI.add( *(model.GetParametersOfInterest()) );
    if (model.GetNuisanceParameters())  fNuisanceParameters.add( *(model.GetNuisanceParameters() ) );
    if (model.GetConditionalObservables())  fConditionalObs.add( *(model.GetConditionalObservables() ) );
+   if (model.GetGlobalObservables())  fGlobalObs.add( *(model.GetGlobalObservables() ) );
    // remove constant nuisance parameters
    RemoveConstantParameters(&fNuisanceParameters);
 
@@ -805,7 +807,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    //constrainedParams->Print("V");
 
    // use RooFit::Constrain() to be sure constraints terms are taken into account
-   fLogLike = fPdf->createNLL(*fData, RooFit::Constrain(*constrainedParams), RooFit::ConditionalObservables(fConditionalObs) );
+   fLogLike = fPdf->createNLL(*fData, RooFit::Constrain(*constrainedParams), RooFit::ConditionalObservables(fConditionalObs), RooFit::GlobalObservables(fGlobalObs) );
 
 
 
@@ -900,7 +902,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
       RooArgSet* constrParams = fPdf->getParameters(*fData);
       // remove the constant parameters
       RemoveConstantParameters(constrParams);
-      fLogLike = pdfAndPrior->createNLL(*fData, RooFit::Constrain(*constrParams),RooFit::ConditionalObservables(fConditionalObs) );
+      fLogLike = pdfAndPrior->createNLL(*fData, RooFit::Constrain(*constrParams),RooFit::ConditionalObservables(fConditionalObs),RooFit::GlobalObservables(fGlobalObs) );
       delete constrParams;
 
       TString likeName = TString("likelihood_times_prior_") + TString(pdfAndPrior->GetName());

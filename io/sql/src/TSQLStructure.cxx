@@ -140,21 +140,11 @@ const char *cfg_ModifyCounter = "ModifyCounter";
 
 //________________________________________________________________________
 
-#ifdef R__VISUAL_CPLUSPLUS
-#define FLong64 "%I64d"
-#define FULong64 "%I64u"
-#else
-#define FLong64 "%lld"
-#define FULong64 "%llu"
-#endif
-
 Long64_t sqlio::atol64(const char *value)
 {
-   if ((value == 0) || (*value == 0))
+   if (!value || (*value == 0))
       return 0;
-   Long64_t res = 0;
-   sscanf(value, FLong64, &res);
-   return res;
+   return TString(value).Atoll();
 }
 
 /**
@@ -1930,7 +1920,7 @@ Bool_t TSQLStructure::RecognizeTString(const char *&value)
 
    if (len == 0)
       return kFALSE;
-   if ((lenbig != 0) && ((chars == 0) || (len == 0)))
+   if ((lenbig != 0) && (chars == 0))
       return kFALSE;
 
    if (chars != 0)

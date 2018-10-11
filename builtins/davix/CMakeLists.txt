@@ -1,0 +1,74 @@
+include(ExternalProject)
+
+find_package(libuuid REQUIRED)
+find_package(LibXml2 REQUIRED)
+find_package(OpenSSL REQUIRED)
+
+set(DAVIX_VERSION "0.6.7")
+set(DAVIX_URL "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix")
+set(DAVIX_URLHASH "SHA256=1694152a20a5c5e692c4bc545b2efbacec5274fb799e60725412ebae40cced3d")
+set(DAVIX_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/DAVIX-prefix)
+set(DAVIX_LIBNAME ${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+foreach(lib davix neon)
+  set(libname ${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX})
+  list(APPEND DAVIX_LIBRARIES ${DAVIX_PREFIX}/lib/${libname})
+endforeach()
+
+ExternalProject_Add(DAVIX
+  URL ${DAVIX_URL}/${DAVIX_VERSION}/davix-embedded-${DAVIX_VERSION}.tar.gz
+  URL_HASH ${DAVIX_URLHASH}
+  CMAKE_CACHE_ARGS
+    -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
+    -DUUID_INCLUDE_DIR:STRING=${UUID_INCLUDE_DIR}
+    -DUUID_LIBRARY:STRING=${UUID_LIBRARY}
+  CMAKE_ARGS
+    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DENABLE_HTML_DOCS=OFF
+    -DENABLE_IPV6=OFF
+    -DSTATIC_LIBRARY=ON
+    -DSHARED_LIBRARY=OFF
+    -DENABLE_TOOLS=OFF
+    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+    -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}\ -fPIC
+    -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+    -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+    -DLIB_SUFFIX=
+  LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
+  BUILD_BYPRODUCTS ${DAVIX_LIBRARIES})
+
+if(builtin_openssl)
+  add_dependencies(DAVIX OPENSSL)
+endif()
+
+list(APPEND DAVIX_LIBRARIES uuid::uuid OpenSSL::SSL ${LIBXML2_LIBRARIES} ${CMAKE_DL_LIBS})
+
+check_cxx_symbol_exists("clock_gettime" "time.h" _have_clock_gettime)
+
+if(NOT _have_clock_gettime)
+  check_library_exists(rt clock_gettime "" _have_rt_library)
+  if(_have_rt_library)
+    list(APPEND DAVIX_LIBRARIES rt)
+  endif()
+endif()
+
+unset(DAVIX_FOUND CACHE)
+unset(DAVIX_FOUND PARENT_SCOPE)
+set(DAVIX_FOUND TRUE CACHE BOOL "" FORCE)
+
+set(DAVIX_INCLUDE_DIR  ${DAVIX_PREFIX}/include/davix CACHE INTERNAL "" FORCE)
+set(DAVIX_INCLUDE_DIRS ${DAVIX_PREFIX}/include/davix CACHE INTERNAL "" FORCE)
+set(DAVIX_LIBRARY ${DAVIX_PREFIX}/lib/${DAVIX_LIBNAME} CACHE INTERNAL "" FORCE)
+set(DAVIX_LIBRARIES ${DAVIX_LIBRARIES} CACHE INTERNAL "" FORCE)
+
+add_library(davix INTERFACE)
+target_include_directories(davix INTERFACE $<BUILD_INTERFACE:${DAVIX_INCLUDE_DIR}>)
+target_link_libraries(davix INTERFACE $<BUILD_INTERFACE:${DAVIX_LIBRARIES}>)
+add_dependencies(davix DAVIX)
+
+add_library(Davix::Davix ALIAS davix)
+
+set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS DAVIX)

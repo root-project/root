@@ -22,9 +22,13 @@ ClassImp(TF12);
 It has the same behaviour as a TF1
 
 Example of a function
+
+~~~ {.cpp}
     TF2 *f2 = new TF2("f2","sin(x)*sin(y)/(x*y)",0,5,0,5);
     TF12 *f12 = new TF12("f12",f2,0.1,"y");
     f12->Draw();
+~~~
+
 */
 
 ////////////////////////////////////////////////////////////////////////////////

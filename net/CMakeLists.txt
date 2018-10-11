@@ -1,6 +1,9 @@
-
 add_subdirectory(net)
-add_subdirectory(auth)  # special CMakeListst.txt
+add_subdirectory(auth)
+
+if(afs)
+  add_subdirectory(afs)
+endif()
 
 if(bonjour)
   add_subdirectory(bonjour)
@@ -45,5 +48,6 @@ endif()
 
 if(http)
    add_subdirectory(http)
+   add_subdirectory(httpsniff)
 endif()
 

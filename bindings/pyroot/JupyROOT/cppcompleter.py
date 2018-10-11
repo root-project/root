@@ -54,18 +54,13 @@ class CppCompleter(object):
     TH1I
     TH1K
     TH1S
-    >>> for suggestion in comp._completeImpl("TH2"):
+    >>> for suggestion in comp._completeImpl("TProfile"):
     ...     print(suggestion)
-    TH2
-    TH2C
-    TH2D
-    TH2Editor
-    TH2F
-    TH2GL
-    TH2I
-    TH2Poly
-    TH2PolyBin
-    TH2S
+    TProfile
+    TProfile2D
+    TProfile2Poly
+    TProfile2PolyBin
+    TProfile3D
     >>> garbage = ROOT.gInterpreter.ProcessLine("TH1F* h")
     >>> for suggestion in comp._completeImpl("h->GetA"):
     ...     print(suggestion)
@@ -95,6 +90,8 @@ class CppCompleter(object):
     TROOT::IsProofServ
     TROOT::IsRootFile
     TROOT::IsSortable
+    TROOT::IsWebDisplay
+    TROOT::IsWebDisplayBatch
     TROOT::IsWritable
     TROOT::IsZombie
     >>> comp.deactivate()

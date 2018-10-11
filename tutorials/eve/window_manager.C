@@ -16,6 +16,10 @@
 #include "TCanvas.h"
 #include "TGTab.h"
 
+void PackTest();
+void DetailTest();
+void TabsTest();
+
 void window_manager()
 {
    TEveManager::Create();
@@ -73,9 +77,11 @@ void PackTest()
 
 void DetailTest()
 {
+   TEveWindowFrame *frame = 0;
+
    TEveWindowSlot* slot =
       TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
-   pack1 = slot->MakePack();
+   TEveWindowPack* pack1 = slot->MakePack();
    pack1->SetShowTitleBar(kFALSE);
    pack1->SetElementName("Detail");
    pack1->SetHorizontal();

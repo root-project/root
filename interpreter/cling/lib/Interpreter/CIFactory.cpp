@@ -24,7 +24,9 @@
 #include "clang/Driver/Driver.h"
 #include "clang/Driver/Job.h"
 #include "clang/Driver/Tool.h"
+#include "clang/Frontend/FrontendAction.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
+#include "clang/Frontend/FrontendPluginRegistry.h"
 #include "clang/Frontend/MultiplexConsumer.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 #include "clang/Frontend/VerifyDiagnosticConsumer.h"
@@ -125,7 +127,7 @@ namespace {
               cling::utils::LogNonExistantDirectory(Path);
           }
           else
-            Args.addArgument("-I", Path.str());
+            Args.addArgument("-cxx-isystem", Path.str());
         }
       }
       ::pclose(PF);
@@ -164,7 +166,7 @@ namespace {
     }
 
     for (llvm::StringRef Path : Paths)
-      Args.addArgument("-I", Path.str());
+      Args.addArgument("-cxx-isystem", Path.str());
 
     return true;
   }
@@ -262,6 +264,8 @@ namespace {
       sArguments.addArgument("-Wno-microsoft-unqualified-friend");
       sArguments.addArgument("-Wno-deprecated-declarations");
 
+      //sArguments.addArgument("-fno-threadsafe-statics");
+
       //sArguments.addArgument("-Wno-dllimport-static-field-def");
       //sArguments.addArgument("-Wno-microsoft-template");
 
@@ -335,17 +339,9 @@ namespace {
           sArguments.addArgument("-nostdinc++");
       }
 
-  #if defined(__APPLE__)
-
-      if (!opts.NoBuiltinInc && !opts.SysRoot) {
-        std::string sysRoot;
-        if (platform::GetISysRoot(sysRoot, Verbose)) {
-          if (Verbose)
-            cling::log() << "Using SDK \"" << sysRoot << "\"\n";
-          sArguments.addArgument("-isysroot", std::move(sysRoot));
-        }
-      }
-  #endif // __APPLE__
+  #ifdef CLING_OSX_SYSROOT
+    sArguments.addArgument("-isysroot", CLING_OSX_SYSROOT);
+  #endif
 
 #endif // _MSC_VER
 
@@ -564,10 +560,16 @@ namespace {
 
 #if defined(_MSC_VER) || defined(NDEBUG)
 static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
-                                    const char* Name, int Val) {
+                                    const std::string &Name, int Val) {
   smallstream Strm;
   Strm << Name << "=" << Val;
-  PPOpts.addMacroDef(Strm.str());
+  if (std::find(PPOpts.Macros.begin(), PPOpts.Macros.end(),
+                std::make_pair(Name, true))
+      == PPOpts.Macros.end()
+      && std::find(PPOpts.Macros.begin(), PPOpts.Macros.end(),
+                   std::make_pair(Name, false))
+      == PPOpts.Macros.end())
+    PPOpts.addMacroDef(Strm.str());
 }
 
 #define STRINGIFY_PREPROC_SETTING(PP, name) \
@@ -609,6 +611,9 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
 
 #if defined(LLVM_ON_WIN32)
     PPOpts.addMacroDef("CLING_EXPORT=__declspec(dllimport)");
+    // prevent compilation error G47C585C4: STL1000: Unexpected compiler
+    // version, expected Clang 6 or newer.
+    PPOpts.addMacroDef("_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH");
 #else
     PPOpts.addMacroDef("CLING_EXPORT=");
 #endif
@@ -655,8 +660,18 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       P.resize(ExeIncl.size());
       // Get foo/include
       llvm::sys::path::append(P, "include");
-      if (llvm::sys::fs::is_directory(P.str()))
+      if (llvm::sys::fs::is_directory(P.str())) {
         utils::AddIncludePaths(P.str(), HOpts, nullptr);
+        llvm::sys::path::append(P, "clang");
+        if (!llvm::sys::fs::is_directory(P.str())) {
+          // LLVM is not installed. Try resolving clang from its usual location.
+          llvm::SmallString<512> PParent = llvm::sys::path::parent_path(P);
+          P = PParent;
+          llvm::sys::path::append(P, "..", "tools", "clang", "include");
+          if (llvm::sys::fs::is_directory(P.str()))
+            utils::AddIncludePaths(P.str(), HOpts, nullptr);
+        }
+      }
     }
   }
 
@@ -842,6 +857,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       argvCompile.push_back("-x");
       argvCompile.push_back( "c++");
     }
+
     if (COpts.DefaultLanguage()) {
       // By default, set the standard to what cling was compiled with.
       // clang::driver::Compilation will do various things while initializing
@@ -854,6 +870,13 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
         default: llvm_unreachable("Unrecognized C++ version");
       }
     }
+
+    // This argument starts the cling instance with the x86 target. Otherwise,
+    // the first job in the joblist starts the cling instance with the nvptx
+    // target.
+    if(COpts.CUDA)
+      argvCompile.push_back("--cuda-host-only");
+
     // argv[0] already inserted, get the rest
     argvCompile.insert(argvCompile.end(), argv+1, argv + argc);
 
@@ -927,7 +950,6 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     CI->setDiagnostics(Diags.get()); // Diags is ref-counted
     if (!OnlyLex)
       CI->getDiagnosticOpts().ShowColors = cling::utils::ColorizeOutput();
-
 
     // Copied from CompilerInstance::createDiagnostics:
     // Chain in -verify checker, if requested.
@@ -1031,6 +1053,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       auto& HS = CI->getHeaderSearchOpts();
       addPrebuiltModulePaths(HS, getPathsFromEnv(getenv("LD_LIBRARY_PATH")));
       addPrebuiltModulePaths(HS, getPathsFromEnv(getenv("DYLD_LIBRARY_PATH")));
+      HS.AddPrebuiltModulePath(".");
     }
 
     // Set up compiler language and target
@@ -1072,6 +1095,15 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     if (!Buffer)
       Buffer = llvm::MemoryBuffer::getMemBuffer("/*CLING DEFAULT MEMBUF*/;\n");
     const_cast<SrcMgr::ContentCache*>(MainFileCC)->setBuffer(std::move(Buffer));
+
+    // Create TargetInfo for the other side of CUDA and OpenMP compilation.
+    if ((CI->getLangOpts().CUDA || CI->getLangOpts().OpenMPIsDevice) &&
+        !CI->getFrontendOpts().AuxTriple.empty()) {
+          auto TO = std::make_shared<TargetOptions>();
+          TO->Triple = CI->getFrontendOpts().AuxTriple;
+          TO->HostTriple = CI->getTarget().getTriple().str();
+          CI->setAuxTarget(TargetInfo::CreateTargetInfo(CI->getDiagnostics(), TO));
+    }
 
     // Set up the preprocessor
     CI->createPreprocessor(TU_Complete);
@@ -1161,6 +1193,10 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     CGOpts.UnrollLoops = 1;
     CGOpts.VectorizeLoop = 1;
     CGOpts.VectorizeSLP = 1;
+
+    CGOpts.setInlining((CGOpts.OptimizationLevel == 0)
+                       ? CodeGenOptions::OnlyAlwaysInlining
+                       : CodeGenOptions::NormalInlining);
 
     // CGOpts.setDebugInfo(clang::CodeGenOptions::FullDebugInfo);
     // CGOpts.EmitDeclMetadata = 1; // For unloading, for later

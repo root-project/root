@@ -130,6 +130,10 @@ namespace RooStats {
      // so the pdf's will not be normalized on the conditional observables when computing the NLL
      virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
 
+     // set the global observables which will be used when creating the NLL
+     // so the constraint pdf's will be normalized correctly on the global observables when computing the NLL
+     virtual void SetGlobalObservables(const RooArgSet& set) {fGlobalObs.removeAll(); fGlobalObs.add(set);}
+
      virtual void SetVarName(const char* name) { fVarName = name; }
      virtual const TString GetVarName() const {return fVarName;}
 
@@ -158,6 +162,7 @@ namespace RooStats {
       bool fDetailedOutputWithErrorsAndPulls;
       RooArgSet* fDetailedOutput; //!
       RooArgSet fConditionalObs;    // conditional observables
+      RooArgSet fGlobalObs;    // global observables
 
       TString fVarName;
 
@@ -171,7 +176,7 @@ namespace RooStats {
 
    protected:
 
-      ClassDef(ProfileLikelihoodTestStat,9)   // implements the profile likelihood ratio as a test statistic to be used with several tools
+      ClassDef(ProfileLikelihoodTestStat,10)   // implements the profile likelihood ratio as a test statistic to be used with several tools
    };
 }
 

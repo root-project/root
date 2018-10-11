@@ -111,11 +111,8 @@ public :
    Scalar Perp2() const { return fX*fX + fY*fY ;}
    Scalar Rho() const { return sqrt(Perp2()); }
    Scalar R() const { return sqrt(Mag2()); }
-   Scalar Theta() const
-   {
-      return (fX == Scalar(0) && fY == Scalar(0) && fZ == Scalar(0)) ? Scalar(0) : atan2(Rho(), Z());
-   }
-   Scalar Phi() const { return (fX == Scalar(0) && fY == Scalar(0)) ? Scalar(0) : atan2(fY, fX); }
+   Scalar Theta() const { return atan2(Rho(), Z()); }
+   Scalar Phi() const { return atan2(fY, fX); }
 
    // pseudorapidity
    Scalar Eta() const {

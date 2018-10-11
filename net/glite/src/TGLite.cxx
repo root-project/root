@@ -202,7 +202,7 @@ struct SAddMapElementFunc: public binary_function<SLFCFileInfo_t, TGLiteResult*,
       // Add replication info
       for_each(_lfc_info.m_LFCRepInfoVector.begin(),
                _lfc_info.m_LFCRepInfoVector.end(),
-               bind2nd(SAddRepInfo(), map));
+               std::bind(SAddRepInfo(), std::placeholders::_1, map));
 
       _Result->Add(map);
       return true;
@@ -321,7 +321,7 @@ TGridResult* TGLite::Query(const char *_path, const char *_pattern /*= NULL*/, c
 
    // Creating ROOT containers to store the resultset
    TGLiteResult *result = new TGLiteResult();
-   for_each(container.begin(), container.end(), bind2nd(SAddMapElementFunc(), result));
+   for_each(container.begin(), container.end(), std::bind(SAddMapElementFunc(), std::placeholders::_1, result));
 
    return result;
 }
@@ -369,7 +369,7 @@ TGridResult* TGLite::Ls(const char *_ldn, Option_t* /*options*/, Bool_t /*verbos
 
    // Creating a ROOT container to store the resultset
    TGLiteResult *result = new TGLiteResult();
-   for_each(container.begin(), container.end(), bind2nd(SAddMapElementFunc(), result));
+   for_each(container.begin(), container.end(), std::bind(SAddMapElementFunc(), std::placeholders::_1, result));
 
    return result;
 }

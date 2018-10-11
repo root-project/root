@@ -62,7 +62,7 @@ a 'using namespace std;' has been applied to and with:
 #include "TProtoClass.h"
 #include "TROOT.h"
 #include "TRealData.h"
-#include "TCheckHashRecurveRemoveConsistency.h" // Private header
+#include "TCheckHashRecursiveRemoveConsistency.h" // Private header
 #include "TStreamer.h"
 #include "TStreamerElement.h"
 #include "TVirtualStreamerInfo.h"
@@ -317,11 +317,7 @@ namespace ROOT {
      // This wrapper class allow to avoid putting #include <map> in the
      // TROOT.h header file.
    public:
-#ifdef R__GLOBALSTL
-      typedef map<string,TClass*>                 IdMap_t;
-#else
       typedef std::map<std::string,TClass*>       IdMap_t;
-#endif
       typedef IdMap_t::key_type                   key_type;
       typedef IdMap_t::const_iterator             const_iterator;
       typedef IdMap_t::size_type                  size_type;
@@ -649,7 +645,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
             }
          }
          if (isPrintable) {
-            strncpy(line + kvalue, *ppointer, i);
+            strncpy(line + kvalue, *ppointer, std::min( i, kline - kvalue));
             line[kvalue+i] = 0;
          } else {
             line[kvalue] = 0;
@@ -2898,10 +2894,21 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    if (!gROOT->GetListOfClasses())  return 0;
 
+   // FindObject will take the read lock before actually getting the
+   // TClass pointer so we will need not get a partially initialized
+   // object.
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
 
    // Early return to release the lock without having to execute the
    // long-ish normalization.
+   if (cl && (cl->IsLoaded() || cl->TestBit(kUnloading))) return cl;
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   // Now that we got the write lock, another thread may have constructed the
+   // TClass while we were waiting, so we need to do the checks again.
+
+   cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
    if (cl) {
       if (cl->IsLoaded() || cl->TestBit(kUnloading)) return cl;
 
@@ -2910,7 +2917,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       //    if (cl->GetState() == kInterpreter) return cl
       //
       // In this case, if a ROOT dictionary was available when the TClass
-      // was first request it would have been used and if a ROOT dictionary is
+      // was first requested it would have been used and if a ROOT dictionary is
       // loaded later on TClassTable::Add will take care of updating the TClass.
       // So as far as ROOT dictionary are concerned, if the current TClass is
       // in interpreted state, we are sure there is nothing to load.
@@ -2918,14 +2925,12 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       // However (see TROOT::LoadClass), the TClass can also be loaded/provided
       // by a user provided TClassGenerator.  We have no way of knowing whether
       // those do (or even can) behave the same way as the ROOT dictionary and
-      // have the 'dictionary is now available for use' step informa the existing
+      // have the 'dictionary is now available for use' step informs the existing
       // TClass that their dictionary is now available.
 
       //we may pass here in case of a dummy class created by TVirtualStreamerInfo
       load = kTRUE;
    }
-
-   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    // To avoid spurious auto parsing, let's check if the name as-is is
    // known in the TClassTable.
@@ -3099,12 +3104,22 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
 TClass *TClass::GetClass(const std::type_info& typeinfo, Bool_t load, Bool_t /* silent */)
 {
-   //protect access to TROOT::GetListOfClasses
-   R__LOCKGUARD(gInterpreterMutex);
+   if (!gROOT->GetListOfClasses())
+      return 0;
 
-   if (!gROOT->GetListOfClasses())    return 0;
+   //protect access to TROOT::GetIdMap
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
 
    TClass* cl = GetIdMap()->Find(typeinfo.name());
+
+   if (cl && cl->IsLoaded()) return cl;
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   // Now that we got the write lock, another thread may have constructed the
+   // TClass while we were waiting, so we need to do the checks again.
+
+   cl = GetIdMap()->Find(typeinfo.name());
 
    if (cl) {
       if (cl->IsLoaded()) return cl;
@@ -3836,6 +3851,15 @@ void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, TColl
    // Special treatment for pair.
    if (strncmp(fName, "pair<", 5) == 0) {
       GetMissingDictionariesForPairElements(result, visited, recurse);
+      return;
+   }
+
+   if (TClassEdit::IsUniquePtr(fName)) {
+      const auto uniquePtrClName = TClassEdit::GetUniquePtrType(fName);
+      auto uniquePtrCl = TClass::GetClass(uniquePtrClName.c_str());
+      if (uniquePtrCl && !uniquePtrCl->HasDictionary()) {
+         uniquePtrCl->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
+      }
       return;
    }
 
@@ -5390,7 +5414,7 @@ void TClass::SetClassVersion(Version_t version)
 TVirtualStreamerInfo* TClass::DetermineCurrentStreamerInfo()
 {
    if(!fCurrentInfo.load()) {
-      R__LOCKGUARD(gInterpreterMutex);
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
       fCurrentInfo = (TVirtualStreamerInfo *)(fStreamerInfo->At(fClassVersion));
    }
    return fCurrentInfo;
@@ -5860,7 +5884,7 @@ void TClass::SetRuntimeProperties()
 
    UChar_t properties = static_cast<UChar_t>(ERuntimeProperties::kSet);
 
-   if (ROOT::Internal::TCheckHashRecurveRemoveConsistency::Check(*this))
+   if (ROOT::Internal::TCheckHashRecursiveRemoveConsistency::Check(*this))
       properties |= static_cast<UChar_t>(ERuntimeProperties::kConsistentHash);
 
    const_cast<TClass *>(this)->fRuntimeProperties = properties;
@@ -6974,9 +6998,10 @@ Bool_t ROOT::Internal::HasConsistentHashMember(const char *cname)
    // cross-checked in testHashRecursiveRemove.cxx
    static const char *handVerified[] = {
       "TEnvRec",    "TDataType",      "TObjArray",    "TList",   "THashList",
-      "TClass",     "TCling",         "TInterpreter", "TMethod", "ROOT::Internal::TCheckHashRecurveRemoveConsistency",
-      "TCheckHashRecurveRemoveConsistency",
-      "TDirectory", "TDirectoryFile", "TObject",      "TH1"};
+      "TClass",     "TCling",         "TInterpreter", "TMethod", "ROOT::Internal::TCheckHashRecursiveRemoveConsistency",
+      "TCheckHashRecursiveRemoveConsistency", "TGWindow",
+      "TDirectory", "TDirectoryFile", "TObject",      "TH1",
+      "TQClass" };
 
    if (cname && cname[0]) {
       for (auto cursor : handVerified) {

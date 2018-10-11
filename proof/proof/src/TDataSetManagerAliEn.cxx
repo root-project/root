@@ -959,7 +959,7 @@ std::vector<Int_t> *TDataSetManagerAliEn::ExpandRunSpec(TString &runSpec) {
     while (itr != runNums.end()) {
       if ((itr == runNums.begin()) || (prevVal != *itr)) {
         prevVal = *itr;
-        itr++;
+        ++itr;
       }
       else {
         itr = runNums.erase(itr);

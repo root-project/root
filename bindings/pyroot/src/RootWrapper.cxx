@@ -170,51 +170,6 @@ namespace {
          }
       }
    } initSTLTypes_;
-
-   Bool_t LoadDictionaryForSTLType( const std::string& tname, void* /* klass */ )
-   {
-   // if name is of a known STL class, tell CINT to load the dll(s), always reset klass
-
-      std::string sub = tname.substr( 0, tname.find( "<" ) );
-      if ( gSTLTypes.find( sub ) != gSTLTypes.end() ) {
-
-      // strip std:: part as needed to form proper file name
-         if ( sub.substr( 0, 5 ) == "std::" )
-            sub = sub.substr( 5, std::string::npos );
-
-      // tell CINT to go for it
-         gROOT->ProcessLine( (std::string( "#include <" ) + sub + ">").c_str() );
-
-      // prevent second attempt to load by erasing name
-         gSTLTypes.erase( gSTLTypes.find( sub ) );
-         gSTLTypes.erase( gSTLTypes.find( "std::" + sub ) );
-
-         return kTRUE;
-
-      } else if ( gSTLExceptions.find( sub ) != gSTLExceptions.end() ) {
-      // removal is required or the dictionary can't be updated properly
-         // TODO: WORK HERE if ( klass != 0 )
-         //            TClass::RemoveClass( (TClass*)klass );
-
-      // load stdexcept, which contains all std exceptions
-         gROOT->ProcessLine( "#include <stdexcept>" );
-         gSTLExceptions.clear();   // completely done with std exceptions
-
-      // <stdexcept> will load <exception> for the std::exception base class
-         std::set< std::string >::iterator excpos = gSTLTypes.find( "exception" );
-         if ( excpos != gSTLTypes.end() ) {
-            gSTLTypes.erase( excpos );
-            gSTLTypes.erase( gSTLTypes.find( "std::exception" ) );
-         }
-
-         return kTRUE;
-      }
-
-   // this point is only reached if this is not an STL class, notify that no
-   // changes were made
-      return kFALSE;
-   }
-
 } // unnamed namespace
 
 
@@ -588,15 +543,6 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
 // retrieve ROOT class (this verifies name, and is therefore done first)
    const std::string& lookup = parent ? (scName+"::"+name) : name;
    Cppyy::TCppScope_t klass = Cppyy::GetScope( lookup );
-
-   if ( ! (Bool_t)klass || Cppyy::GetNumMethods( klass ) == 0 ) {
-   // special action for STL classes to enforce loading dict lib
-   // TODO: LoadDictionaryForSTLType should not be necessary with Cling
-      if ( LoadDictionaryForSTLType( name, (void*)klass /* TODO: VERY WRONG */ ) ) {
-      // lookup again, we (may) now have a full dictionary
-         klass = Cppyy::GetScope( lookup );
-      }
-   }
 
    if ( ! (Bool_t)klass && gInterpreter->CheckClassTemplate( lookup.c_str() ) ) {
    // a "naked" templated class is requested: return callable proxy for instantiations

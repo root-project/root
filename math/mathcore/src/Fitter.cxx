@@ -25,7 +25,6 @@
 #include "Fit/FitConfig.h"
 #include "Fit/FitResult.h"
 #include "Math/Error.h"
-#include "TF1.h"
 
 #include <memory>
 
@@ -318,7 +317,7 @@ bool Fitter::EvalFCN() {
       return false;
    }
    // create a Fit result from the fit configuration
-   fResult = std::shared_ptr<ROOT::Fit::FitResult>(new ROOT::Fit::FitResult(fConfig) );
+   fResult = std::make_shared<ROOT::Fit::FitResult>(fConfig);
    // evaluate one time the FCN
    double fcnval = (*fObjFunction)(fResult->GetParams() );
    // update fit result
@@ -811,7 +810,7 @@ bool Fitter::DoMinimization(const ROOT::Math::IMultiGenFunction * chi2func) {
    // unsigned int ncalls =  ObjFuncTrait<ObjFunc>::NCalls(*fcn);
    // int fitType =  ObjFuncTrait<ObjFunc>::Type(objFunc);
 
-   if (!fResult) fResult =  std::shared_ptr<FitResult> ( new FitResult() );
+   if (!fResult) fResult = std::make_shared<FitResult>();
    fResult->FillResult(fMinimizer,fConfig, fFunc, ret, fDataSize, fBinFit, chi2func );
 
    // when possible get ncalls from FCN and set in fit result

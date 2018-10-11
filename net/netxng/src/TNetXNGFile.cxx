@@ -132,6 +132,11 @@ TNetXNGFile::TNetXNGFile(const char *url,
 {
    using namespace XrdCl;
 
+   // Set the log level
+   TString val = gSystem->Getenv("XRD_LOGLEVEL");
+   if (val.IsNull()) val = gEnv->GetValue("NetXNG.Debug",     "");
+   if (!val.IsNull()) XrdCl::DefaultEnv::SetLogLevel(val.Data());
+
    // Remove any anchor from the url. It may have been used by the base TFile
    // constructor to setup a TArchiveFile but we should not pass it to the xroot
    // client as a part of the filename

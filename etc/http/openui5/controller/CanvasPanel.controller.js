@@ -10,10 +10,10 @@ sap.ui.define([
       },
 
       onAfterRendering: function() {
-         if (this.canvas_painter && this.canvas_painter._configured_socket_kind) {
+         if (this.canvas_painter && this.canvas_painter._window_handle) {
             this.canvas_painter.SetDivId(this.getView().getDomRef(), -1);
-            this.canvas_painter.OpenWebsocket(this.canvas_painter._configured_socket_kind);
-            delete this.canvas_painter._configured_socket_kind;
+            this.canvas_painter.UseWebsocket(this.canvas_painter._window_handle);
+            delete this.canvas_painter._window_handle;
          }
       },
 

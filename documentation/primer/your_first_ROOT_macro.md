@@ -225,7 +225,7 @@ If
 , then the
 [TMathText interface](http://root.cern.ch/root/htmldoc/TMathText.html)
 is invoked. It provides the plain TeX syntax and allow to access character's
-set like Russian and Japenese.
+set like Russian and Japanese.
 
 ## Interpretation and Compilation
 

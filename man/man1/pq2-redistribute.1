@@ -4,6 +4,13 @@
 .TH PQ2-REDISTRIBUTE 1 "Version 5" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
 .\" other parms are allowed: see man(7), man(1)
+.SH NOTA BENE
+.B The PQ2 tools are deprecated and will be removed in ROOT v6.16/00.
+.PP
+Please contact the ROOT team at
+.UR http://root.cern.ch/
+.I http://root.cern.ch
+in the unlikely event this change is disruptive for your workflow.
 .SH NAME
 pq2-redistribute \- Execute the file movements as determined by pq2-ana-dist
 .SH SYNOPSIS
@@ -37,7 +44,7 @@ File with the file movement directives produced by pq2-ana-dist .
 URL of the redirector from where the files should be copied and deleted.
 .TP
 \fB-t\fR <\fIdir\fR>, \fB--tmpdir\fR=<\fIdir\fR>
-Directory for temporary files; default is /tmp/<username>. Thsi is used to store temporary copies of the
+Directory for temporary files; default is /tmp/<username>. This is used to store temporary copies of the
 files during transfers.
 .SH "ENVIRONMENT VARIABLES"
 See \fIsetup-pq2\fR(1).

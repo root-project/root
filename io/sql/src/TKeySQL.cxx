@@ -194,8 +194,6 @@ void TKeySQL::StoreKeyObject(const void *obj, const TClass *cl)
 
    if (GetDBObjId() < 0)
       GetMotherDir()->GetListOfKeys()->Remove(this);
-   // fix me !!! One should delete object by other means
-   // delete this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -291,12 +289,14 @@ void *TKeySQL::ReadKeyObject(void *obj, const TClass *expectedClass)
 {
    TSQLFile *f = (TSQLFile *)GetFile();
 
-   if ((GetDBKeyId() <= 0) || (f == 0))
+   if ((GetDBKeyId() <= 0) || !f)
       return obj;
 
    TBufferSQL2 buffer(TBuffer::kRead, f);
 
-   TClass *cl = 0;
+   buffer.InitMap();
+
+   TClass *cl = nullptr;
 
    void *res = buffer.SqlReadAny(GetDBKeyId(), GetDBObjId(), &cl, obj);
 

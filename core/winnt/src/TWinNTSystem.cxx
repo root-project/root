@@ -886,16 +886,17 @@ namespace {
    bool NeedSplash()
    {
       static bool once = true;
-      if (!once || gROOT->IsBatch() || !gApplication) return false;
-      TString arg = gSystem->BaseName(gApplication->Argv(0));
-      if ((arg != "root") && (arg != "rootn") &&
-          (arg != "root.exe") && (arg != "rootn.exe")) return false;
-      for(int i=1; i<gApplication->Argc(); i++) {
-         arg = gApplication->Argv(i);
+      TString arg;
+
+      if (!once || gROOT->IsBatch()) return false;
+      TString cmdline(::GetCommandLine());
+      Int_t i = 0, from = 0;
+      while (cmdline.Tokenize(arg, from, " ")) {
          arg.Strip(TString::kBoth);
-         if ((arg == "-l") || (arg == "-b")) {
-            return false;
-         }
+         if (i == 0 && ((arg != "root") && (arg != "rootn") &&
+             (arg != "root.exe") && (arg != "rootn.exe"))) return false;
+         else if ((arg == "-l") || (arg == "-b")) return false;
+         ++i;
       }
       if (once) {
          once = false;
@@ -993,7 +994,7 @@ fGUIThreadHandle(0), fGUIThreadId(0)
    char *buf = new char[MAX_MODULE_NAME32 + 1];
 
 #ifdef ROOTPREFIX
-   if (gSystem->Getenv("ROOTIGNOREPREFIX") {
+   if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
 #endif
    // set ROOTSYS
    HMODULE hModCore = ::GetModuleHandle("libCore.dll");
@@ -2090,6 +2091,8 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
       if (!(entry[strlen(dir)-1] == '/' || entry[strlen(dir)-1] == '\\' )) {
          strlcat(entry,"\\",nche);
       }
+      if (entry[strlen(dir)-1] == ' ')
+         entry[strlen(dir)-1] = '\0';
       strlcat(entry,"*",nche);
 
       HANDLE searchFile;
@@ -2490,10 +2493,13 @@ Bool_t TWinNTSystem::IsAbsoluteFileName(const char *dir)
 
 const char *TWinNTSystem::UnixPathName(const char *name)
 {
-   static char temp[1024];
-   strlcpy(temp, name,1024);
+   const int kBufSize = 1024;
+   TTHREAD_TLS_ARRAY(char, kBufSize, temp);
+
+   strlcpy(temp, name, kBufSize);
    char *currentChar = temp;
 
+   // This can not change the size of the string.
    while (*currentChar != '\0') {
       if (*currentChar == '\\') *currentChar = '/';
       currentChar++;
@@ -2844,6 +2850,9 @@ int TWinNTSystem::Symlink(const char *from, const char *to)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Unlink, i.e. remove, a file or directory.
+///
+/// If the file is currently open by the current or another process Windows does not allow the file to be deleted and
+/// the operation is a no-op.
 
 int TWinNTSystem::Unlink(const char *name)
 {
@@ -2895,6 +2904,13 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
 
    Int_t old_level = gErrorIgnoreLevel;
    gErrorIgnoreLevel = kFatal; // Explicitly remove all messages
+   if (patbuf0.BeginsWith("\\")) {
+      const char driveletter = DriveName(patbuf);
+      if (driveletter) {
+         patbuf0.Prepend(":");
+         patbuf0.Prepend(driveletter);
+      }
+   }
    TUrl urlpath(patbuf0, kTRUE);
    TString proto = urlpath.GetProtocol();
    gErrorIgnoreLevel = old_level;
@@ -3857,12 +3873,18 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
       if (gROOT->GetListOfBrowsers()) {
          // GetListOfBrowsers()->Delete() creates problems when a browser is
          // created on the stack, calling CloseWindow() solves the problem
-         //gROOT->GetListOfBrowsers()->Delete();
-         TBrowser *b;
-         TIter next(gROOT->GetListOfBrowsers());
-         while ((b = (TBrowser*) next()))
-            gROOT->ProcessLine(TString::Format("((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()->CloseWindow();",
-                                               (ULong_t)b));
+         if (gROOT->IsBatch())
+            gROOT->GetListOfBrowsers()->Delete();
+         else {
+            TBrowser *b;
+            TIter next(gROOT->GetListOfBrowsers());
+            while ((b = (TBrowser*) next()))
+               gROOT->ProcessLine(TString::Format("\
+                  if (((TBrowser*)0x%lx)->GetBrowserImp() &&\
+                      ((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()) \
+                     ((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()->CloseWindow();\
+                  else delete (TBrowser*)0x%lx", (ULong_t)b, (ULong_t)b, (ULong_t)b, (ULong_t)b));
+         }
       }
       gROOT->EndOfProcessCleanups();
    }
@@ -5031,8 +5053,8 @@ int TWinNTSystem::GetSockOpt(int socket, int opt, int *val)
          if (sock == INVALID_SOCKET) {
             ::SysError("GetSockOpt", "INVALID_SOCKET");
          }
-         return -1;
          *val = flg; //  & O_NDELAY;  It is not been defined for WIN32
+         return -1;
       }
       break;
 #if 0

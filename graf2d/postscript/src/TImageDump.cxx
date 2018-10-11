@@ -299,7 +299,7 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
    // Define the marker size
    const Int_t kBASEMARKER = 8;
-   Double_t msize = fMarkerSize * kBASEMARKER;
+   Double_t msize = fMarkerSize * kBASEMARKER * gStyle->GetImageScaling();
    if (ms == 6) msize *= 0.2;
    if (ms == 7) msize *= 0.3;
    Double_t m  = msize;
@@ -821,8 +821,8 @@ void TImageDump::DrawDashPolyLine(Int_t nn, TPoint *xy, UInt_t nDash,
 void TImageDump::NewPage()
 {
    if (gPad && fImage) {
-      UInt_t w = UInt_t(gPad->GetWw()*gPad->GetWNDC());
-      UInt_t h = UInt_t(gPad->GetWh()*gPad->GetHNDC());
+      UInt_t w = UInt_t(gPad->GetWw()*gPad->GetWNDC()) * gStyle->GetImageScaling();
+      UInt_t h = UInt_t(gPad->GetWh()*gPad->GetHNDC()) * gStyle->GetImageScaling();
       fImage->DrawRectangle(0, 0, w, h, "#ffffffff");
    }
    return;
@@ -843,7 +843,7 @@ void TImageDump::Text(Double_t x, Double_t y, const char *chars)
    fImage->BeginPaint();
 
    TText t(x, y, chars);
-   t.SetTextSize(fTextSize);
+   t.SetTextSize(fTextSize*gStyle->GetImageScaling());
    t.SetTextFont(fTextFont);
    t.SetTextAlign(fTextAlign);
    t.SetTextAngle(fTextAngle);
@@ -866,7 +866,7 @@ void TImageDump::Text(Double_t x, Double_t y, const wchar_t *chars)
    fImage->BeginPaint();
 
    TText t(x, y, chars);
-   t.SetTextSize(fTextSize);
+   t.SetTextSize(fTextSize*gStyle->GetImageScaling());
    t.SetTextFont(fTextFont);
    t.SetTextAlign(fTextAlign);
    t.SetTextAngle(fTextAngle);
@@ -970,7 +970,7 @@ void TImageDump::SetColor(Float_t /*r*/, Float_t /*g*/, Float_t /*b*/)
 
 Int_t TImageDump::XtoPixel(Double_t x)
 {
-   return  gPad->XtoAbsPixel(x);
+   return  gPad->XtoAbsPixel(x)*gStyle->GetImageScaling();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -978,5 +978,5 @@ Int_t TImageDump::XtoPixel(Double_t x)
 
 Int_t TImageDump::YtoPixel(Double_t y)
 {
-   return  gPad->YtoAbsPixel(y);
+   return  gPad->YtoAbsPixel(y)*gStyle->GetImageScaling();
 }

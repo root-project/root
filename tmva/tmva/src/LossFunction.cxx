@@ -36,13 +36,19 @@ Huber Loss Function.
 */
 
 #include "TMVA/LossFunction.h"
+#include "TMVA/Config.h"
 
 #include "TMVA/MsgLogger.h"
 
 #include "Rtypes.h"
 #include "TMath.h"
-
 #include <iostream>
+
+// multithreading only if the compilation flag is turned on
+#ifdef R__USE_IMT
+#include <ROOT/TThreadExecutor.hxx>
+#include "ROOT/TSeq.hxx"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// huber constructor
@@ -79,9 +85,22 @@ void TMVA::HuberLossFunction::Init(std::vector<LossFunctionEventInfo>& evs){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// huber, determine the quantile for a given input
+/// huber, calculate the sum of weights for the events in the vector
 
-Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunctionEventInfo>& evs){
+// Multithreaded version of HuberLossFunction::CalculateSumOfWeights
+#ifdef R__USE_IMT
+Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(const std::vector<LossFunctionEventInfo>& evs){
+   // need a lambda function to pass to TThreadExecutor::MapReduce
+   auto mapFunc = [&evs](UInt_t i) { return evs[i].weight; };
+   auto redFunc = [](const std::vector<Double_t> &a) { return std::accumulate(a.begin(), a.end(), 0.0); };
+
+   return TMVA::Config::Instance().GetThreadExecutor().MapReduce(
+      mapFunc, ROOT::TSeqU(evs.size()), redFunc, TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
+}
+
+// Standard version of HuberLossFunction::CalculateSumOfWeights
+#else 
+Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(const std::vector<LossFunctionEventInfo>& evs){
 
    // Calculate the sum of the weights
    Double_t sumOfWeights = 0;
@@ -90,6 +109,7 @@ Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunction
 
    return sumOfWeights;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// huber, determine the quantile for a given input
@@ -162,9 +182,7 @@ Double_t TMVA::HuberLossFunction::CalculateLoss(LossFunctionEventInfo& e){
    // If the huber loss function is uninitialized then assume a group of one
    // and initialize the transition point and weights for this single event
    if(fSumOfWeights == -9999){
-      std::vector<LossFunctionEventInfo> evs;
-      evs.push_back(e);
-
+      std::vector<LossFunctionEventInfo> evs{e};
       SetSumOfWeights(evs);
       SetTransitionPoint(evs);
    }
@@ -228,7 +246,7 @@ TMVA::HuberLossFunctionBDT::HuberLossFunctionBDT(){
 void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
 // Run this once before building the forest. Set initial prediction to weightedMedian.
 
-   std::vector<LossFunctionEventInfo> evinfovec;
+   std::vector<LossFunctionEventInfo> evinfovec(evinfomap.size());
    for (auto &e: evinfomap){
       evinfovec.push_back(LossFunctionEventInfo(e.second.trueValue, e.second.predictedValue, e.first->GetWeight()));
    }
@@ -248,9 +266,41 @@ void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionE
 ////////////////////////////////////////////////////////////////////////////////
 /// huber BDT, set the targets for a collection of events
 
+// Multithreaded version of HuberLossFunctionBDT::SetTargets
+#ifdef R__USE_IMT
 void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
-   std::vector<LossFunctionEventInfo> eventvec;
+   std::vector<LossFunctionEventInfo> eventvec(evs.size());
+
+   // first we need to copy the events from evs into eventvec since we require a vector of LossFunctionEventInfo
+   // for SetSumOfWeights and SetTransitionPoint. We use TThreadExecutor to implement the copy in parallel
+   // need a lambda function to pass to TThreadExecutor::Map
+   auto fcopy = [&eventvec, &evs, &evinfomap](UInt_t i) {
+      eventvec[i] = LossFunctionEventInfo(evinfomap[evs[i]].trueValue, evinfomap[evs[i]].predictedValue, evs[i]->GetWeight());
+   };
+
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(fcopy, ROOT::TSeqU(evs.size()), TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
+
+   // Recalculate the residual that separates the "core" of the data and the "tails"
+   // This residual is the quantile given by fQuantile, defaulted to 0.7
+   // the quantile corresponding to 0.5 would be the usual median
+   SetSumOfWeights(eventvec); // This was already set in init, but may change if there is subsampling for each tree
+   SetTransitionPoint(eventvec);
+
+   // ok now set the targets in parallel
+   // need a lambda function to pass to TThreadExecutor::Map
+   auto f = [this, &evinfomap](const TMVA::Event* ev) {
+      const_cast<TMVA::Event*>(ev)->SetTarget(0, Target(evinfomap[ev]));
+   };
+
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(f, evs, TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
+}
+
+// Standard version of HuberLossFunctionBDT::SetTargets
+#else
+void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
+
+   std::vector<LossFunctionEventInfo> eventvec(evs.size());
    for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++){
       eventvec.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
    }
@@ -265,6 +315,7 @@ void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs
          const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
    }
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// huber BDT, set the target for a single event
@@ -362,7 +413,7 @@ Least Squares BDT Loss Function.
 void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
 // Run this once before building the forest. Set initial prediction to the weightedMean
 
-   std::vector<LossFunctionEventInfo> evinfovec;
+   std::vector<LossFunctionEventInfo> evinfovec(evinfomap.size());
    for (auto &e: evinfomap){
       evinfovec.push_back(LossFunctionEventInfo(e.second.trueValue, e.second.predictedValue, e.first->GetWeight()));
    }
@@ -381,17 +432,26 @@ void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFu
 ////////////////////////////////////////////////////////////////////////////////
 /// least squares BDT, set the targets for a collection of events
 
-void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
+// Multithreaded version of LeastSquaresLossFunctionBDT::SetTargets
+#ifdef R__USE_IMT
+void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap) {
 
-   std::vector<LossFunctionEventInfo> eventvec;
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++){
-      eventvec.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
-   }
+   // need a lambda function to pass to TThreadExecutor::Map
+   auto f = [this, &evinfomap](const TMVA::Event* ev) {
+      const_cast<TMVA::Event*>(ev)->SetTarget(0, Target(evinfomap[ev]));
+   };
+
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(f, evs, TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
+}
+// Standard version of LeastSquaresLossFunctionBDT::SetTargets
+#else
+void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
    for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++) {
          const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
    }
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// least squares BDT, set the target for a single event
@@ -476,7 +536,7 @@ Absolute Deviation BDT Loss Function.
 void TMVA::AbsoluteDeviationLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
 // Run this once before building the forest. Set initial prediction to weightedMedian.
 
-   std::vector<LossFunctionEventInfo> evinfovec;
+   std::vector<LossFunctionEventInfo> evinfovec(evinfomap.size());
    for (auto &e: evinfomap){
       evinfovec.push_back(LossFunctionEventInfo(e.second.trueValue, e.second.predictedValue, e.first->GetWeight()));
    }
@@ -494,17 +554,25 @@ void TMVA::AbsoluteDeviationLossFunctionBDT::Init(std::map<const TMVA::Event*, L
 ////////////////////////////////////////////////////////////////////////////////
 /// absolute deviation BDT, set the targets for a collection of events
 
+// Multithreaded version of AbsoluteDeviationLossFunctionBDT::SetTargets
+#ifdef R__USE_IMT
 void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
+   // need a lambda function to pass to TThreadExecutor::Map
+   auto f = [this, &evinfomap](const TMVA::Event* ev) {
+         const_cast<TMVA::Event*>(ev)->SetTarget(0, Target(evinfomap[ev]));
+   };
 
-   std::vector<LossFunctionEventInfo> eventvec;
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++){
-      eventvec.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
-   }
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(f, evs, TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
+}
+// Standard version of AbsoluteDeviationLossFunctionBDT::SetTargets
+#else
+void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
    for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++) {
          const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
    }
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// absolute deviation BDT, set the target for a single event
@@ -545,4 +613,3 @@ Double_t TMVA::AbsoluteDeviationLossFunctionBDT::Fit(std::vector<LossFunctionEve
    // return the median residual
    return evs[i].trueValue-evs[i].predictedValue;
 }
-

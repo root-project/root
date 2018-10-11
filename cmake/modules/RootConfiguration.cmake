@@ -219,8 +219,10 @@ set(davixlibdir ${DAVIX_LIBRARY_DIR})
 set(davixlib ${DAVIX_LIBRARY})
 set(davixincdir ${DAVIX_INCLUDE_DIR})
 if(davix)
+  set(hasdavix define)
   set(useoldwebfile no)
 else()
+  set(hasdavix undef)
   set(useoldwebfile yes)
 endif()
 
@@ -263,24 +265,20 @@ set(dnssdlibdir ${BONJOUR_LIBRARY_DIR})
 set(dnssdlib ${BONJOUR_LIBRARY})
 set(dnsdincdir ${BONJOUR_INCLUDE_DIR})
 
-set(buildchirp ${value${chirp}})
-set(chirplibdir ${CHIRP_LIBRARY_DIR})
-set(chirplib ${CHIRP_LIBRARY})
-set(chirpincdir ${CHIRP_INCLUDE_DIR})
-
 set(buildhdfs ${value${hdfs}})
 set(hdfslibdir ${HDFS_LIBRARY_DIR})
 set(hdfslib ${HDFS_LIBRARY})
 set(hdfsincdir ${HDFS_INCLUDE_DIR})
 
-set(jniincdir ${Java_INCLUDE_DIRS})
-set(jvmlib ${Java_LIBRARIES})
-set(jvmlibdir ${Java_LIBRARY_DIR})
-
 set(buildalien ${value${alien}})
 set(alienlibdir ${ALIEN_LIBRARY_DIR})
 set(alienlib ${ALIEN_LIBRARY})
 set(alienincdir ${ALIEN_INCLUDE_DIR})
+
+set(buildarrow ${value${arrow}})
+set(arrowlibdir ${ARROW_LIBRARY_DIR})
+set(arrowlib ${ARROW_LIBRARY})
+set(arrowincdir ${ARROW_INCLUDE_DIR})
 
 set(buildasimage ${value${asimage}})
 set(builtinafterimage ${builtin_afterimage})
@@ -325,10 +323,9 @@ set(pythonlib ${PYTHON_LIBRARY})
 set(pythonincdir ${PYTHON_INCLUDE_DIR})
 set(pythonlibflags)
 
-set(buildruby ${value${ruby}})
-set(rubylibdir ${RUBY_LIBRARY_DIR})
-set(rubylib ${RUBY_LIBRARY})
-set(rubyincdir ${RUBY_INCLUDE_DIR})
+if (ruby)
+  message(FATAL_ERROR "Ruby bindings are discontinued; please report to root-dev@cern.ch should you still need them!")
+endif()
 
 set(buildxml ${value${xml}})
 set(xmllibdir ${LIBXML2_LIBRARY_DIR})
@@ -394,7 +391,6 @@ set(gslincdir ${GSL_INCLUDE_DIR})
 set(gslflags)
 
 set(shadowpw ${value${shadowpw}})
-set(buildgenvector ${value${genvector}})
 set(buildmathmore ${value${mathmore}})
 set(buildcling ${value${cling}})
 set(buildroofit ${value${roofit}})
@@ -416,6 +412,21 @@ set(dicttype ${ROOT_DICTTYPE})
 
 find_program(PERL_EXECUTABLE perl)
 set(perl ${PERL_EXECUTABLE})
+
+find_program(CHROME_EXECUTABLE NAMES chrome.exe chromium chromium-browser chrome chrome-browser Google\ Chrome
+             PATHS "$ENV{PROGRAMFILES}/Google/Chrome/Application"
+             "$ENV{PROGRAMFILES\(X86\)}/Google/Chrome/Application")
+if(CHROME_EXECUTABLE)
+  set(chromeexe ${CHROME_EXECUTABLE})
+endif()
+
+find_program(FIREFOX_EXECUTABLE NAMES firefox firefox.exe
+             PATHS "$ENV{PROGRAMFILES}/Mozilla Firefox"
+             "$ENV{PROGRAMFILES\(X86\)}/Mozilla Firefox")
+if(FIREFOX_EXECUTABLE)
+  set(firefoxexe ${FIREFOX_EXECUTABLE})
+endif()
+
 
 #---RConfigure-------------------------------------------------------------------------------------------------
 # set(setresuid undef)
@@ -472,6 +483,11 @@ if(vc)
 else()
   set(hasvc undef)
 endif()
+if(vdt)
+  set(hasvdt define)
+else()
+  set(hasvdt undef)
+endif()
 if(veccore)
   set(hasveccore define)
 else()
@@ -495,6 +511,19 @@ if(cxx17)
 else()
   set(usec++17 undef)
 endif()
+if(compression_default STREQUAL "lz4")
+  set(uselz4 define)
+  set(usezlib undef)
+  set(uselzma undef)
+elseif(compression_default STREQUAL "zlib")
+  set(uselz4 undef)
+  set(usezlib define)
+  set(uselzma undef)
+elseif(compression_default STREQUAL "lzma")
+  set(uselz4 undef)
+  set(usezlib undef)
+  set(uselzma define)
+endif()
 if(runtime_cxxmodules)
   set(usecxxmodules define)
 else()
@@ -517,6 +546,27 @@ if(memory_termination)
 else()
   set(memory_term undef)
 endif()
+if(cefweb)
+  set(hascefweb define)
+else()
+  set(hascefweb undef)
+endif()
+if(qt5web)
+  set(hasqt5webengine define)
+else()
+  set(hasqt5webengine undef)
+endif()
+if (tmva-cpu)
+  set(hastmvacpu define)
+else()
+  set(hastmvacpu undef)
+endif()  
+if (tmva-gpu)
+  set(hastmvagpu define)
+else()
+  set(hastmvagpu undef)
+endif()  
+
 
 CHECK_CXX_SOURCE_COMPILES("#include <string_view>
   int main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}" found_stdstringview)
@@ -564,6 +614,18 @@ if(found_stdinvoke)
   set(hasstdinvoke define)
 else()
   set(hasstdinvoke undef)
+endif()
+
+CHECK_CXX_SOURCE_COMPILES("#include <utility>
+#include <type_traits>
+int main() {
+  static_assert(std::is_same<std::integer_sequence<std::size_t, 0, 1, 2>, std::make_index_sequence<3>>::value, \"\");
+  return 0;
+}" found_stdindexsequence)
+if(found_stdindexsequence)
+  set(hasstdindexsequence define)
+else()
+  set(hasstdindexsequence undef)
 endif()
 
 CHECK_CXX_SOURCE_COMPILES("
@@ -622,6 +684,16 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in
 #---Compiler flags (because user apps are a bit dependent on them...)----------------------------------------
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cxxflags "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cflags "${CMAKE_C_FLAGS}")
+
+if (cxxmodules)
+  # Re-add the -Wno-module-import-in-extern-c which we just filtered out.
+  # We want it because it changes the module cache hash and causes modules to be
+  # rebuilt.
+  # FIXME: We should review how we do the regex.
+  set(ROOT_CXX_FLAGS "${ROOT_CXX_FLAGS} -Wno-module-import-in-extern-c")
+  set(ROOT_C_FLAGS "${ROOT_C_FLAGS} -Wno-module-import-in-extern-c")
+endif()
+
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __fflags "${CMAKE_Fortran_FLAGS}")
 string(REGEX MATCHALL "-(D|U)[^ ]*" __defs "${CMAKE_CXX_FLAGS}")
 set(ROOT_COMPILER_FLAG_HINTS "#
@@ -634,8 +706,7 @@ set(ROOT_EXE_LINKER_FLAGS \"${CMAKE_EXE_LINKER_FLAGS}\")")
 #---To be used from the binary tree--------------------------------------------------------------------------
 set(ROOT_INCLUDE_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
-set(ROOT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include
-    ${CMAKE_BINARY_DIR}/externals/${CMAKE_INSTALL_PREFIX}/include)
+set(ROOT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
 ")
 set(ROOT_LIBRARY_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
@@ -711,6 +782,7 @@ configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_BINARY_DIR}/ins
 configure_file(${CMAKE_SOURCE_DIR}/config/memprobe.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.fish ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.fish @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY NEWLINE_STYLE UNIX)
@@ -735,6 +807,7 @@ configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_
 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh
+              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.fish
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh
               ${thisrootbat}

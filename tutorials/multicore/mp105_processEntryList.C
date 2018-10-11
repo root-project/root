@@ -75,10 +75,12 @@ int mp105_processEntryList()
    auto hListFun = pool.Process(files, doH1useList, *sumElist, "h42");
 
    // Check the output
-   if (checkH1(hListFun) < 0) return -1;
+   if (checkH1(hListFun) < 0)
+      return -1;
 
    // Do the fit
-   if (doFit(hListFun, logfile.c_str()) < 0) return -1;
+   if (doFit(hListFun, logfile.c_str()) < 0)
+      return -1;
 
    stp.Print();
    stp.Start();
@@ -96,10 +98,12 @@ int mp105_processEntryList()
    gSystem->RedirectOutput(0, 0, &gRH);
 
    // Check the output
-   if (checkH1(hListSel) < 0) return -1;
+   if (checkH1(hListSel) < 0)
+      return -1;
 
    // Do the fit
-   if (doFit(hListSel, logfile.c_str()) < 0) return -1;
+   if (doFit(hListSel, logfile.c_str()) < 0)
+      return -1;
 
    stp.Print();
    stp.Start();

@@ -13,7 +13,7 @@
 
 #include <string.h>
 #include "RZip.h"
-#include "TNamed.h"
+#include "THttpWSEngine.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -27,34 +27,10 @@
 ClassImp(THttpCallArg);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor
-
-THttpCallArg::THttpCallArg()
-   : TObject(), fTopName(), fMethod(), fPathName(), fFileName(), fUserName(), fQuery(), fPostData(0),
-     fPostDataLength(0), fWSHandle(0), fWSId(0), fContentType(), fRequestHeader(), fHeader(), fContent(), fZipping(0),
-     fBinData(0), fBinDataLength(0), fNotifyFlag(kFALSE)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
 THttpCallArg::~THttpCallArg()
 {
-   if (fPostData) {
-      free(fPostData);
-      fPostData = 0;
-   }
-
-   if (fWSHandle) {
-      delete fWSHandle;
-      fWSHandle = 0;
-   }
-
-   if (fBinData) {
-      free(fBinData);
-      fBinData = 0;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,9 +65,11 @@ TString THttpCallArg::AccessHeader(TString &buf, const char *name, const char *v
       }
 
       curr += strlen(name);
-      while ((curr < next) && (buf[curr] != ':')) curr++;
+      while ((curr < next) && (buf[curr] != ':'))
+         curr++;
       curr++;
-      while ((curr < next) && (buf[curr] == ' ')) curr++;
+      while ((curr < next) && (buf[curr] == ' '))
+         curr++;
 
       if (value == 0)
          return buf(curr, next - curr);
@@ -123,7 +101,8 @@ TString THttpCallArg::CountHeader(const TString &buf, Int_t number) const
       if (cnt == number) {
          // we should extract name of header
          Int_t separ = curr + 1;
-         while ((separ < next) && (buf[separ] != ':')) separ++;
+         while ((separ < next) && (buf[separ] != ':'))
+            separ++;
          return buf(curr, separ - curr);
       }
 
@@ -137,69 +116,175 @@ TString THttpCallArg::CountHeader(const TString &buf, Int_t number) const
    return TString();
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// set data, posted with the request
-/// buffer should be allocated with malloc(length+1) call,
-/// while last byte will be set to 0
-/// Than one could use post data as null-terminated string
-
-void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
+/// Set content as text.
+/// Content will be copied by THttpCallArg
+void THttpCallArg::SetContent(const char *cont)
 {
-   if (fPostData) {
-      free(fPostData);
-      fPostData = 0;
-      fPostDataLength = 0;
-   }
-
-   if (length <= 0)
-      return;
-
-   if (make_copy && data && length) {
-      void *newdata = malloc(length + 1);
-      memcpy(newdata, data, length);
-      data = newdata;
-   }
-
-   if (data != 0)
-      *(((char *)data) + length) = 0;
-
-   fPostData = data;
-   fPostDataLength = length;
+   if (cont)
+      fContent = cont;
+   else
+      fContent.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// assign websocket handle with HTTP call
+/// Set text or binary content directly
+/// After method call argument cont will be in undefined state
 
-void THttpCallArg::SetWSHandle(TNamed *handle)
+void THttpCallArg::SetContent(std::string &&cont)
 {
-   if (fWSHandle)
-      delete fWSHandle;
-   fWSHandle = handle;
+   fContent = cont;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "text/plain"
+
+void THttpCallArg::SetText()
+{
+   SetContentType("text/plain");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "text/plain" and also assigns content
+/// After method call argument \param txt will be in undefined state
+
+void THttpCallArg::SetTextContent(std::string &&txt)
+{
+   SetText();
+   fContent = txt;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "text/xml"
+
+void THttpCallArg::SetXml()
+{
+   SetContentType("text/xml");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "text/xml" and also assigns content
+/// After method call argument \param xml will be in undefined state
+
+void THttpCallArg::SetXmlContent(std::string &&xml)
+{
+   SetXml();
+   fContent = xml;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "application/json"
+
+void THttpCallArg::SetJson()
+{
+   SetContentType("application/json");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "application/json" and also assigns content
+/// After method call argument \param json will be in undefined state
+
+void THttpCallArg::SetJsonContent(std::string &&json)
+{
+   SetJson();
+   fContent = json;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "application/x-binary"
+
+void THttpCallArg::SetBinary()
+{
+   SetContentType("application/x-binary");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "application/x-binary" and also assigns content
+/// After method call argument \param bin will be in undefined state
+
+void THttpCallArg::SetBinaryContent(std::string &&bin)
+{
+   SetBinary();
+   fContent = bin;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \deprecated  Use signature with std::string
+/// Set data, posted with the request
+/// If make_copy==kFALSE, data will be released with free(data) call
+
+void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
+{
+   fPostData.resize(length);
+
+   if (data && length) {
+      std::copy((const char *)data, (const char *)data + length, fPostData.begin());
+      if (!make_copy) free(data); // it supposed to get ownership over the buffer
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// set data, which is posted with the request
+/// Although std::string is used, not only text data can be assigned -
+/// std::string can contain any sequence of symbols
+
+void THttpCallArg::SetPostData(std::string &&data)
+{
+   fPostData = data;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Assign websocket identifier from the engine
+
+void THttpCallArg::AssignWSId()
+{
+   SetWSId(fWSEngine->GetId());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// takeout websocket handle with HTTP call
 /// can be done only once
 
-TNamed *THttpCallArg::TakeWSHandle()
+std::shared_ptr<THttpWSEngine> THttpCallArg::TakeWSEngine()
 {
-   TNamed *res = fWSHandle;
-   fWSHandle = 0;
+   auto res = fWSEngine;
+   fWSEngine.reset();
    return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Replace all occurrences of \param from by \param to in content
+/// Used only internally
+
+void THttpCallArg::ReplaceAllinContent(const std::string &from, const std::string &to)
+{
+   std::size_t start_pos = 0;
+   while((start_pos = fContent.find(from, start_pos)) != std::string::npos) {
+      fContent.replace(start_pos, from.length(), to);
+      start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \deprecated use SetContent(std::string &&arg) signature instead
 /// set binary data, which will be returned as reply body
+/// Memory should be allocated with std::malloc().
+/// THttpCallArg take over ownership over specified memory.
+/// Memory will be released by calling std::free() function.
 
 void THttpCallArg::SetBinData(void *data, Long_t length)
 {
-   if (fBinData)
-      free(fBinData);
-   fBinData = data;
-   fBinDataLength = length;
-
    // string content must be cleared in any case
-   fContent.Clear();
+   if (length <= 0) {
+      fContent.clear();
+   } else {
+      fContent.resize(length);
+      if (data) {
+         std::copy((const char *)data, (const char *)data + length, fContent.begin());
+         free(data);
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,7 +305,8 @@ void THttpCallArg::SetPathAndFileName(const char *fullpath)
    if (rslash == 0) {
       fFileName = fullpath;
    } else {
-      while ((fullpath != rslash) && (*fullpath == '/')) fullpath++;
+      while ((fullpath != rslash) && (*fullpath == '/'))
+         fullpath++;
       fPathName.Append(fullpath, rslash - fullpath);
       if (fPathName == "/")
          fPathName.Clear();
@@ -261,26 +347,44 @@ void THttpCallArg::AddHeader(const char *name, const char *value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// fill HTTP header
+/// Set CacheControl http header to disable browser caching
 
-void THttpCallArg::FillHttpHeader(TString &hdr, const char *kind)
+void THttpCallArg::AddNoCacheHeader()
 {
-   if (kind == 0)
-      kind = "HTTP/1.1";
+   AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
+}
 
-   if ((fContentType.Length() == 0) || Is404()) {
-      hdr.Form("%s 404 Not Found\r\n"
-               "Content-Length: 0\r\n"
-               "Connection: close\r\n\r\n",
-               kind);
-   } else {
-      hdr.Form("%s 200 OK\r\n"
-               "Content-Type: %s\r\n"
-               "Connection: keep-alive\r\n"
-               "Content-Length: %ld\r\n"
-               "%s\r\n",
-               kind, GetContentType(), GetContentLength(), fHeader.Data());
-   }
+////////////////////////////////////////////////////////////////////////////////
+/// Fills HTTP header, which can be send at the beggining of reply on the http request
+/// \param name is HTTP protocol name (default "HTTP/1.1")
+
+std::string THttpCallArg::FillHttpHeader(const char *name)
+{
+   std::string hdr(name ? name : "HTTP/1.1");
+
+   if ((fContentType.Length() == 0) || Is404())
+      hdr.append(" 404 Not Found\r\n"
+                 "Content-Length: 0\r\n"
+                 "Connection: close\r\n\r\n");
+   else
+      hdr.append(Form(" 200 OK\r\n"
+                      "Content-Type: %s\r\n"
+                      "Connection: keep-alive\r\n"
+                      "Content-Length: %ld\r\n"
+                      "%s\r\n",
+                      GetContentType(), GetContentLength(), fHeader.Data()));
+
+   return hdr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \depricated use FillHttpHeader with other signature
+/// Fills HTTP header, which can be send at the beggining of reply on the http request
+/// \param name is HTTP protocol name (default "HTTP/1.1")
+
+void THttpCallArg::FillHttpHeader(TString &hdr, const char *name)
+{
+    hdr = FillHttpHeader(name).c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -299,9 +403,10 @@ Bool_t THttpCallArg::CompressWithGzip()
    if (buflen < 512)
       buflen = 512;
 
-   void *buffer = malloc(buflen);
+   std::string buffer;
+   buffer.resize(buflen);
 
-   char *bufcur = (char *)buffer;
+   char *bufcur = (char *)buffer.data();
 
    *bufcur++ = 0x1f; // first byte of ZIP identifier
    *bufcur++ = 0x8b; // second byte of ZIP identifier
@@ -338,7 +443,9 @@ Bool_t THttpCallArg::CompressWithGzip()
    *bufcur++ = (objlen >> 16) & 0xff;
    *bufcur++ = (objlen >> 24) & 0xff;
 
-   SetBinData(buffer, bufcur - (char *)buffer);
+   buffer.resize(bufcur - (char *)buffer.data());
+
+   SetContent(std::move(buffer));
 
    SetEncoding("gzip");
 

@@ -5,5 +5,5 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Postscript
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES  ${ZLIB_LIBRARIES} mathtext
+                              LIBRARIES  ZLIB::ZLIB mathtext
                               DEPENDENCIES Graf)

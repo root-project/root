@@ -82,6 +82,14 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
    , fBufferSize(0), fSeekDir(0), fSeekParent(0), fSeekKeys(0)
    , fFile(0), fKeys(0)
 {
+   // We must not publish this objects to the list of RecursiveRemove (indirectly done
+   // by 'Appending' this object to it's mother) before the object is completely
+   // initialized.
+   // However a better option would be to delay the publishing until the very end,
+   // but it is currently done in the middle of the initialization (by Build which
+   // is a public interface) ....
+   R__LOCKGUARD(gROOTMutex);
+
    fName = name;
    fTitle = title;
 
@@ -127,8 +135,12 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
 
    fModified = kFALSE;
 
-   R__LOCKGUARD(gROOTMutex);
+   // Temporarily redundant, see comment on lock early in the function.
+   // R__LOCKGUARD(gROOTMutex);
    gROOT->GetUUIDs()->AddUUID(fUUID,this);
+   // We should really be doing this now rather than in Build, see
+   // comment at the start of the function.
+   // if (initMotherDir && strlen(GetName()) != 0) initMotherDir->Append(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -226,6 +238,11 @@ void TDirectoryFile::Append(TObject *obj, Bool_t replace /* = kFALSE */)
 
 Int_t TDirectoryFile::AppendKey(TKey *key)
 {
+   if (!fKeys) {
+      Error("AppendKey","TDirectoryFile not initialized yet.");
+      return 0;
+   }
+
    fModified = kTRUE;
 
    key->SetMotherDir(this);
@@ -1075,6 +1092,8 @@ Int_t TDirectoryFile::GetBufferSize() const
 
 TKey *TDirectoryFile::GetKey(const char *name, Short_t cycle) const
 {
+   if (!fKeys) return nullptr;
+
    // TIter::TIter() already checks for null pointers
    TIter next( ((THashList *)(GetListOfKeys()))->GetListForObject(name) );
 
@@ -1297,7 +1316,7 @@ void TDirectoryFile::ReadAll(Option_t* opt)
 
 Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
 {
-   if (fFile==0) return 0;
+   if (fFile==0 || fKeys==0) return 0;
 
    if (!fFile->IsBinary())
       return fFile->DirReadKeys(this);
@@ -1418,7 +1437,7 @@ void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
    fSeekParent = 0; // updated by Init
    fSeekKeys = 0;   // updated by Init
    // Does not change: fFile
-   TKey *key = (TKey*)fKeys->FindObject(fName);
+   TKey *key = fKeys ? (TKey*)fKeys->FindObject(fName) : nullptr;
    TClass *cl = IsA();
    if (key) {
       cl = TClass::GetClass(key->GetClassName());

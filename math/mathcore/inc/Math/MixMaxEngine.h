@@ -156,7 +156,7 @@ namespace ROOT {
          Result_t IntRndm();
 
          /// get name of the generator
-         static std::string Name();
+         static const char *Name();
 
       protected:
          // protected functions used for tesing the generator

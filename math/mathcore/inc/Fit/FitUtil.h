@@ -19,8 +19,7 @@
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif
-
-// #include "ROOT/TProcessExecutor.hxx"
+#include "ROOT/TSequentialExecutor.hxx"
 
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
@@ -382,8 +381,8 @@ namespace FitUtil {
          //Info("EvalChi2","Using vecorized implementation %d",(int) data.Opt().fIntegral);
 
          unsigned int n = data.Size();
+         nPoints = data.Size();  // npoints
 
-         nPoints = 0; // count the effective non-zero points
          // set parameters of the function to cache integral value
 #ifdef USE_PARAMCACHE
          (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
@@ -431,7 +430,6 @@ namespace FitUtil {
 #else
             fval = func(x, p);
 #endif
-            nPoints++;
 
             T tmp = (y - fval) * invErrorVec;
             T chi2 = tmp * tmp;
@@ -445,11 +443,11 @@ namespace FitUtil {
             return chi2;
          };
 
-#ifdef R__USE_IMT
          auto redFunction = [](const std::vector<T> &objs) {
             return std::accumulate(objs.begin(), objs.end(), T{});
          };
-#else
+
+#ifndef R__USE_IMT
          (void)nChunks;
 
          // If IMT is disabled, force the execution policy to the serial case
@@ -462,27 +460,22 @@ namespace FitUtil {
 
          T res{};
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
-            for (unsigned int i = 0; i < (data.Size() / vecSize); i++) {
-               res += mapFunction(i);
-            }
-
+            ROOT::TSequentialExecutor pool;
+            res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
 #ifdef R__USE_IMT
          } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
             ROOT::TThreadExecutor pool;
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
             res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
-            // } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
-            //   ROOT::TProcessExecutor pool;
-            //   res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
          } else {
             Error("FitUtil::EvaluateChi2", "Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
          }
-         nPoints = n;
 
          // Last SIMD vector of elements (if padding needed)
-         vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
-                               res + mapFunction(data.Size() / vecSize));
+         if (data.Size() % vecSize != 0) 
+            vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
+                                  res + mapFunction(data.Size() / vecSize));
 
          return vecCore::ReduceAdd(res);
       }
@@ -493,6 +486,7 @@ namespace FitUtil {
       {
          // evaluate the LogLikelihood
          unsigned int n = data.Size();
+         nPoints = data.Size();  // npoints
 
          //unsigned int nRejected = 0;
          bool normalizeFunc = false;
@@ -615,18 +609,17 @@ namespace FitUtil {
             }
 #endif
 
-            nPoints++;
             return LikelihoodAux<T>(logval, W, W2);
          };
 
-#ifdef R__USE_IMT
          auto redFunction = [](const std::vector<LikelihoodAux<T>> &objs) {
             return std::accumulate(objs.begin(), objs.end(), LikelihoodAux<T>(),
             [](const LikelihoodAux<T> &l1, const LikelihoodAux<T> &l2) {
                return l1 + l2;
             });
          };
-#else
+
+#ifndef R__USE_IMT
          (void)nChunks;
 
          // If IMT is disabled, force the execution policy to the serial case
@@ -640,28 +633,23 @@ namespace FitUtil {
          T logl_v{};
          T sumW_v{};
          T sumW2_v{};
+         ROOT::Fit::FitUtil::LikelihoodAux<T> resArray;
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
-            for (unsigned int i = 0; i < numVectors; ++i) {
-               auto resArray = mapFunction(i);
-               logl_v += resArray.logvalue;
-               sumW_v += resArray.weight;
-               sumW2_v += resArray.weight2;
-            }
+            ROOT::TSequentialExecutor pool;
+            resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction);
 #ifdef R__USE_IMT
          } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking( numVectors);
             ROOT::TThreadExecutor pool;
-            auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
-            logl_v = resArray.logvalue;
-            sumW_v = resArray.weight;
-            sumW2_v = resArray.weight2;
-        //  } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess) {
-            // ROOT::TProcessExecutor pool;
-            // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking( numVectors);
+            resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
          } else {
             Error("FitUtil::EvaluateLogL", "Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
          }
+
+         logl_v = resArray.logvalue;
+         sumW_v = resArray.weight;
+         sumW2_v = resArray.weight2;
 
          // Compute the contribution from the remaining points ( Last padded SIMD vector of elements )
          unsigned int remainingPoints = n % vecSize;
@@ -676,15 +664,9 @@ namespace FitUtil {
 
 
          //reduce vector type to double.
-         double logl  = 0.;
-         double sumW  = 0.;
-         double sumW2 = 0;;
-
-         for (unsigned vIt = 0; vIt < vecSize; vIt++) {
-            logl += logl_v[vIt];
-            sumW += sumW_v[vIt];
-            sumW2 += sumW2_v[vIt];
-         }
+         double logl  = vecCore::ReduceAdd(logl_v);
+         double sumW  = vecCore::ReduceAdd(sumW_v);
+         double sumW2 = vecCore::ReduceAdd(sumW2_v);
 
          if (extended) {
             // add Poisson extended term
@@ -744,10 +726,6 @@ namespace FitUtil {
          std::cout << ")  nll = " << -logl << std::endl;
 #endif
          
-         // reset the number of fitting data points
-         //  nPoints = n;
-         // std::cout<<", n: "<<nPoints<<std::endl;
-         nPoints = 0;
          return -logl;
 
       }
@@ -865,13 +843,10 @@ namespace FitUtil {
             }
 #ifdef R__USE_IMT
          } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
             ROOT::TThreadExecutor pool;
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
             res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
-            // } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
-            //   ROOT::TProcessExecutor pool;
-            //   res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
          } else {
             Error(
                "FitUtil::Evaluate<T>::EvalPoissonLogL",
@@ -879,8 +854,9 @@ namespace FitUtil {
          }
 
          // Last padded SIMD vector of elements
-         vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
-                               res + mapFunction(data.Size() / vecSize));
+         if (data.Size() % vecSize != 0) 
+            vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
+                                  res + mapFunction(data.Size() / vecSize));
 
          return vecCore::ReduceAdd(res);
       }
@@ -981,13 +957,6 @@ namespace FitUtil {
             fval = func(x, p);
             func.ParameterGradient(x, p, &gradFunc[0]);
 
-// #ifdef DEBUG_FITUTIL
-//             std::cout << x[0] << "  " << y << "  " << 1. / invError << " params : ";
-//             for (unsigned int ipar = 0; ipar < npar; ++ipar)
-//                std::cout << p[ipar] << "\t";
-//             std::cout << "\tfval = " << fval << std::endl;
-// #endif
-
             validPointsMasks[i] = CheckInfNaNValues(fval);
             if (vecCore::MaskEmpty(validPointsMasks[i])) {
                // Return a zero contribution to all partial derivatives on behalf of the current points
@@ -1041,24 +1010,16 @@ namespace FitUtil {
 #endif
 
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
-            std::vector<std::vector<T>> allGradients(numVectors);
-            for (unsigned int i = 0; i < numVectors; ++i) {
-               allGradients[i] = mapFunction(i);
-            }
-
-            gVec = redFunction(allGradients);
+            ROOT::TSequentialExecutor pool;
+            gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction);
          }
 #ifdef R__USE_IMT
          else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
             ROOT::TThreadExecutor pool;
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
 #endif
-         // else if(executionPolicy == ROOT::Fit::kMultiprocess){
-         //    ROOT::TProcessExecutor pool;
-         //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
-         // }
          else {
             Error(
                "FitUtil::EvaluateChi2Gradient",
@@ -1232,24 +1193,16 @@ namespace FitUtil {
 #endif
 
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
-            std::vector<std::vector<T>> allGradients(numVectors);
-            for (unsigned int i = 0; i < numVectors; ++i) {
-               allGradients[i] = mapFunction(i);
-            }
-
-            gVec = redFunction(allGradients);
+            ROOT::TSequentialExecutor pool;
+            gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction);
          }
 #ifdef R__USE_IMT
          else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
             ROOT::TThreadExecutor pool;
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
 #endif
-         // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
-         //    ROOT::TProcessExecutor pool;
-         //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
-         // }
          else {
             Error("FitUtil::EvaluatePoissonLogLGradient", "Execution policy unknown. Avalaible choices:\n "
                                                           "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
@@ -1390,23 +1343,16 @@ namespace FitUtil {
 #endif
 
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
-            std::vector<std::vector<T>> allGradients(numVectors);
-            for (unsigned int i = 0; i < numVectors; ++i) {
-               allGradients[i] = mapFunction(i);
-            }
-            gVec = redFunction(allGradients);
+            ROOT::TSequentialExecutor pool;
+            gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction);
          }
 #ifdef R__USE_IMT
          else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
             ROOT::TThreadExecutor pool;
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
 #endif
-         // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
-         //    ROOT::TProcessExecutor pool;
-         //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
-         // }
          else {
             Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Avalaible choices:\n "
                                                    "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
@@ -1443,7 +1389,7 @@ namespace FitUtil {
 #endif
 
       static double EvalChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &nPoints,
-                             ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
+                             ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
       {
          // evaluate the chi2 given a  function reference, the data and returns the value and also in nPoints
          // the actual number of used points
@@ -1458,14 +1404,14 @@ namespace FitUtil {
 
       static double EvalLogL(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p,
                              int iWeight, bool extended, unsigned int &nPoints,
-                             ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
+                             ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
       {
          return FitUtil::EvaluateLogL(func, data, p, iWeight, extended, nPoints, executionPolicy, nChunks);
       }
 
       static double EvalPoissonLogL(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                                     int iWeight, bool extended, unsigned int &nPoints,
-                                    ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
+                                    ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
       {
          return FitUtil::EvaluatePoissonLogL(func, data, p, iWeight, extended, nPoints, executionPolicy, nChunks);
       }
@@ -1476,7 +1422,7 @@ namespace FitUtil {
       }
       static void EvalChi2Gradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                                    double *g, unsigned int &nPoints,
-                                   ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                                   ::ROOT::Fit::ExecutionPolicy executionPolicy = ::ROOT::Fit::ExecutionPolicy::kSerial,
                                    unsigned nChunks = 0)
       {
          FitUtil::EvaluateChi2Gradient(func, data, p, g, nPoints, executionPolicy, nChunks);
@@ -1495,7 +1441,7 @@ namespace FitUtil {
       static void
       EvalPoissonLogLGradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g,
                               unsigned int &nPoints,
-                              ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                              ::ROOT::Fit::ExecutionPolicy executionPolicy = ::ROOT::Fit::ExecutionPolicy::kSerial,
                               unsigned nChunks = 0)
       {
          FitUtil::EvaluatePoissonLogLGradient(func, data, p, g, nPoints, executionPolicy, nChunks);
@@ -1503,7 +1449,7 @@ namespace FitUtil {
 
       static void EvalLogLGradient(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p,
                                    double *g, unsigned int &nPoints,
-                                   ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                                   ::ROOT::Fit::ExecutionPolicy executionPolicy = ::ROOT::Fit::ExecutionPolicy::kSerial,
                                    unsigned nChunks = 0)
       {
          FitUtil::EvaluateLogLGradient(func, data, p, g, nPoints, executionPolicy, nChunks);

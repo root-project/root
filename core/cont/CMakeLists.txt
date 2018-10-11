@@ -2,9 +2,7 @@
 # CMakeLists.txt file for building ROOT core/cont package
 ############################################################################
 
-if(testing)
-  add_subdirectory(test)
-endif()
+ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
 

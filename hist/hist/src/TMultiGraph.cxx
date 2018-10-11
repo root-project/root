@@ -106,7 +106,7 @@ End_Macro
 
 The number of graphs in a multigraph can be retrieve with:
 ~~~ {.cpp}
-mg->GetListOfGraphs()->GetSize();
+mg->GetListOfGraphs()->GetEntries();
 ~~~
 
 The drawing option for each TGraph may be specified as an optional
@@ -958,10 +958,15 @@ Int_t TMultiGraph::IsInside(Double_t x, Double_t y) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns a pointer to the histogram used to draw the axis.
-/// Takes into account the two following cases.
+/// Takes into account following cases.
 ///
-///    1. option 'A' was specified in TMultiGraph::Draw. Return fHistogram
-///    2. user had called TPad::DrawFrame. return pointer to hframe histogram
+///    1. if `fHistogram` exists it is returned
+///    2. if `fHistogram` doesn't exists and `gPad` exists `gPad` is updated. That
+///       may trigger the creation of `fHistogram`. If `fHistogram` still does not
+///       exit but `hframe` does (if user called `TPad::DrawFrame`) the pointer to
+///       `hframe` histogram is returned
+///    3. if after the two previous points if `fHistogram` still doesn't exist then
+///       it is created.
 
 TH1F *TMultiGraph::GetHistogram()
 {
@@ -972,37 +977,37 @@ TH1F *TMultiGraph::GetHistogram()
       gPad->Update();
       if (fHistogram) return fHistogram;
       TH1F *h1 = (TH1F*)gPad->FindObject("hframe");
-      return h1;
-   } else {
-      Bool_t initialrangeset = kFALSE;
-      Double_t rwxmin = 0.,rwxmax = 0.,rwymin = 0.,rwymax = 0.;
-      TGraph *g;
-      Int_t npt = 100 ;
-      TIter   next(fGraphs);
-      while ((g = (TGraph*) next())) {
-         if (g->GetN() <= 0) continue;
-         if (initialrangeset) {
-            Double_t rx1,ry1,rx2,ry2;
-            g->ComputeRange(rx1, ry1, rx2, ry2);
-            if (rx1 < rwxmin) rwxmin = rx1;
-            if (ry1 < rwymin) rwymin = ry1;
-            if (rx2 > rwxmax) rwxmax = rx2;
-            if (ry2 > rwymax) rwymax = ry2;
-         } else {
-            g->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
-            initialrangeset = kTRUE;
-         }
-         if (g->GetN() > npt) npt = g->GetN();
-      }
-      fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
-      if (!fHistogram) return 0;
-      fHistogram->SetMinimum(rwymin);
-      fHistogram->SetBit(TH1::kNoStats);
-      fHistogram->SetMaximum(rwymax);
-      fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
-      fHistogram->SetDirectory(0);
-      return fHistogram;
+      if (h1) return h1;
    }
+
+   Bool_t initialrangeset = kFALSE;
+   Double_t rwxmin = 0.,rwxmax = 0.,rwymin = 0.,rwymax = 0.;
+   TGraph *g;
+   Int_t npt = 100 ;
+   TIter   next(fGraphs);
+   while ((g = (TGraph*) next())) {
+      if (g->GetN() <= 0) continue;
+      if (initialrangeset) {
+         Double_t rx1,ry1,rx2,ry2;
+         g->ComputeRange(rx1, ry1, rx2, ry2);
+         if (rx1 < rwxmin) rwxmin = rx1;
+         if (ry1 < rwymin) rwymin = ry1;
+         if (rx2 > rwxmax) rwxmax = rx2;
+         if (ry2 > rwymax) rwymax = ry2;
+      } else {
+         g->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
+         initialrangeset = kTRUE;
+      }
+      if (g->GetN() > npt) npt = g->GetN();
+   }
+   fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
+   if (!fHistogram) return 0;
+   fHistogram->SetMinimum(rwymin);
+   fHistogram->SetBit(TH1::kNoStats);
+   fHistogram->SetMaximum(rwymax);
+   fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
+   fHistogram->SetDirectory(0);
+   return fHistogram;
 }
 
 
@@ -1074,9 +1079,9 @@ void TMultiGraph::Paint(Option_t *choptin)
    char *l3 = strstr(option,"PMC"); // Automatic Marker Color
    if (l1 || l2 || l3) {
       TString opt1 = option; opt1.ToLower();
-      if (l1) strncpy(l1,"   ",3);
-      if (l2) strncpy(l2,"   ",3);
-      if (l3) strncpy(l3,"   ",3);
+      if (l1) memcpy(l1,"   ",3);
+      if (l2) memcpy(l2,"   ",3);
+      if (l3) memcpy(l3,"   ",3);
       TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
       TGraph* gAti;
       Int_t ngraphs = fGraphs->GetSize();

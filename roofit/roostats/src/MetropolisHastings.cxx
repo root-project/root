@@ -169,6 +169,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
       } else
          // for now the only 2 types are kLog and kRegular (won't get here)
          hadEvalError = false;
+      ++i;
    }
 
    if(hadEvalError) {

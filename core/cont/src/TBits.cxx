@@ -212,12 +212,14 @@ void TBits::DoFlip()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the left shift operation.
+/// Note: This does extent the number of bits (i.e. no data loss)
 
 void TBits::DoLeftShift(UInt_t shift)
 {
    if (shift==0) return;
    const UInt_t wordshift = shift / 8;
    const UInt_t offset = shift % 8;
+   Resize(fNbits + shift);
    if (offset==0) {
       for(UInt_t n = fNbytes - 1; n >= wordshift; --n) {
          fAllBits[n] = fAllBits[ n - wordshift ];
@@ -231,6 +233,7 @@ void TBits::DoLeftShift(UInt_t shift)
       fAllBits[wordshift] = fAllBits[0] << offset;
    }
    memset(fAllBits,0,wordshift);
+   fNbits += shift;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -241,21 +244,29 @@ void TBits::DoRightShift(UInt_t shift)
    if (shift==0) return;
    const UInt_t wordshift = shift / 8;
    const UInt_t offset = shift % 8;
-   const UInt_t limit = fNbytes - wordshift - 1;
+   if (fNbytes < (wordshift + 1)) {
+      memset(fAllBits, 0, fNbytes);
+      fNbits = 0;
+   } else {
+      const UInt_t limit = fNbytes - wordshift - 1;
 
-   if (offset == 0)
-      for (UInt_t n = 0; n <= limit; ++n)
-         fAllBits[n] = fAllBits[n + wordshift];
-   else
-   {
-      const UInt_t sub_offset = 8 - offset;
-      for (UInt_t n = 0; n < limit; ++n)
-         fAllBits[n] = (fAllBits[n + wordshift] >> offset) |
-                       (fAllBits[n + wordshift + 1] << sub_offset);
-      fAllBits[limit] = fAllBits[fNbytes-1] >> offset;
+      if (offset == 0)
+         for (UInt_t n = 0; n <= limit; ++n)
+            fAllBits[n] = fAllBits[n + wordshift];
+      else {
+         const UInt_t sub_offset = 8 - offset;
+         for (UInt_t n = 0; n < limit; ++n)
+            fAllBits[n] = (fAllBits[n + wordshift] >> offset) |
+                          (fAllBits[n + wordshift + 1] << sub_offset);
+         fAllBits[limit] = fAllBits[fNbytes - 1] >> offset;
+      }
+
+      memset(&(fAllBits[limit + 1]), 0, fNbytes - limit - 1);
+      if (fNbits < shift)
+         fNbits = 0;
+      else
+         fNbits -= shift;
    }
-
-   memset(&(fAllBits[limit + 1]),0, fNbytes - limit - 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

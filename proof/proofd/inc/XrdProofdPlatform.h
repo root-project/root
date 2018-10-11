@@ -23,7 +23,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 // 32 or 64 bits
 #if ((defined(__hpux) && defined(__LP64__)) || \

@@ -28,6 +28,7 @@
 
 #include <deque>
 #include <iterator>
+#include <unordered_map>
 
 class TDictionary;
 class TDirectory;
@@ -221,10 +222,26 @@ public:
    Iterator_t end() const { return Iterator_t(); }
 
 protected:
+   using NamedProxies_t = std::unordered_map<std::string, std::unique_ptr<ROOT::Internal::TNamedBranchProxy>>;
    void Initialize();
-   ROOT::Internal::TNamedBranchProxy* FindProxy(const char* branchname) const {
-      return (ROOT::Internal::TNamedBranchProxy*) fProxies.FindObject(branchname); }
-   TCollection* GetProxies() { return &fProxies; }
+   ROOT::Internal::TNamedBranchProxy* FindProxy(const char* branchname) const
+   {
+      const auto proxyIt = fProxies.find(branchname);
+      return fProxies.end() != proxyIt ? proxyIt->second.get() : nullptr;
+   }
+
+   void AddProxy(ROOT::Internal::TNamedBranchProxy *p)
+   {
+      auto bpName = p->GetName();
+#ifndef NDEBUG
+      if (fProxies.end() != fProxies.find(bpName)) {
+         std::string err = "A proxy with key " + std::string(bpName) + " was already stored!";
+         throw std::runtime_error(err);
+      }
+#endif
+
+      fProxies[bpName].reset(p);
+   }
 
    Bool_t RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
    void DeregisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
@@ -232,6 +249,13 @@ protected:
    EEntryStatus SetEntryBase(Long64_t entry, Bool_t local);
 
 private:
+
+   std::string GetProxyKey(const char *branchname)
+   {
+      std::string key(branchname);
+      //key += reinterpret_cast<std::uintptr_t>(fTree);
+      return key;
+   }
 
    enum EStatusBits {
       kBitIsChain = BIT(14), ///< our tree is a chain
@@ -244,7 +268,7 @@ private:
    Int_t fMostRecentTreeNumber = -1; ///< TTree::GetTreeNumber() of the most recent tree
    ROOT::Internal::TBranchProxyDirector* fDirector = nullptr; ///< proxying director, owned
    std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director
-   THashTable   fProxies; ///< attached ROOT::TNamedBranchProxies; owned
+   NamedProxies_t fProxies; ///< attached ROOT::TNamedBranchProxies; owned
 
    Long64_t fEntry = -1; ///< Current (non-local) entry of fTree or of fEntryList if set.
 

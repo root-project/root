@@ -120,6 +120,7 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
 : Configurable          ( theOption ),
    fTransformations      ( "I" ),
    fVerbose              ( kFALSE ),
+   fVerboseLevel         ( kINFO ),
    fCorrelations         ( kFALSE ),
    fROC                  ( kTRUE ),
    fSilentFile           ( kFALSE ),
@@ -151,6 +152,10 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    Bool_t drawProgressBar = kTRUE;
 #endif
    DeclareOptionRef( fVerbose, "V", "Verbose flag" );
+   DeclareOptionRef( fVerboseLevel=TString("Info"), "VerboseLevel", "VerboseLevel (Debug/Verbose/Info)" );
+   AddPreDefVal(TString("Debug"));
+   AddPreDefVal(TString("Verbose"));
+   AddPreDefVal(TString("Info"));
    DeclareOptionRef( color,    "Color", "Flag for coloured screen output (default: True, if in batch mode: False)" );
    DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations" );
    DeclareOptionRef( fCorrelations, "Correlations", "boolean to show correlation in output" );
@@ -173,7 +178,10 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    ParseOptions();
    CheckForUnusedOptions();
 
-   if (Verbose()) Log().SetMinType( kVERBOSE );
+   if (Verbose()) fLogger->SetMinType( kVERBOSE );
+   if (fVerboseLevel.CompareTo("Debug")   ==0) fLogger->SetMinType( kDEBUG );
+   if (fVerboseLevel.CompareTo("Verbose") ==0) fLogger->SetMinType( kVERBOSE );
+   if (fVerboseLevel.CompareTo("Info")    ==0) fLogger->SetMinType( kINFO );
 
    // global settings
    gConfig().SetUseColor( color );
@@ -228,6 +236,10 @@ TMVA::Factory::Factory( TString jobName, TString theOption )
    Bool_t drawProgressBar = kTRUE;
 #endif
    DeclareOptionRef( fVerbose, "V", "Verbose flag" );
+   DeclareOptionRef( fVerboseLevel=TString("Info"), "VerboseLevel", "VerboseLevel (Debug/Verbose/Info)" );
+   AddPreDefVal(TString("Debug"));
+   AddPreDefVal(TString("Verbose"));
+   AddPreDefVal(TString("Info"));
    DeclareOptionRef( color,    "Color", "Flag for coloured screen output (default: True, if in batch mode: False)" );
    DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations" );
    DeclareOptionRef( fCorrelations, "Correlations", "boolean to show correlation in output" );
@@ -250,7 +262,10 @@ TMVA::Factory::Factory( TString jobName, TString theOption )
    ParseOptions();
    CheckForUnusedOptions();
 
-   if (Verbose()) Log().SetMinType( kVERBOSE );
+   if (Verbose()) fLogger->SetMinType( kVERBOSE );
+   if (fVerboseLevel.CompareTo("Debug")   ==0) fLogger->SetMinType( kDEBUG );
+   if (fVerboseLevel.CompareTo("Verbose") ==0) fLogger->SetMinType( kVERBOSE );
+   if (fVerboseLevel.CompareTo("Info")    ==0) fLogger->SetMinType( kINFO );
 
    // global settings
    gConfig().SetUseColor( color );
@@ -297,7 +312,7 @@ Bool_t TMVA::Factory::IsModelPersistence()
 TMVA::Factory::~Factory( void )
 {
    std::vector<TMVA::VariableTransformBase*>::iterator trfIt = fDefaultTrfs.begin();
-   for (;trfIt != fDefaultTrfs.end(); trfIt++) delete (*trfIt);
+   for (;trfIt != fDefaultTrfs.end(); ++trfIt) delete (*trfIt);
 
    this->DeleteAllMethods();
 
@@ -316,12 +331,12 @@ void TMVA::Factory::DeleteAllMethods( void )
 {
    std::map<TString,MVector*>::iterator itrMap;
 
-   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();itrMap++)
+   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();++itrMap)
    {
       MVector *methods=itrMap->second;
       // delete methods
       MVector::iterator itrMethod = methods->begin();
-      for (; itrMethod != methods->end(); itrMethod++) {
+      for (; itrMethod != methods->end(); ++itrMethod) {
      Log() << kDEBUG << "Delete method: " << (*itrMethod)->GetName() << Endl;
      delete (*itrMethod);
       }
@@ -392,30 +407,24 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    // initialize methods
    IMethod* im;
    if (!boostNum) {
-      im = ClassifierFactory::Instance().Create( std::string(theMethodName),
-                                                 fJobName,
-                                                 methodTitle,
-                                                 loader->DefaultDataSetInfo(),
-                                                 theOption );
+      im = ClassifierFactory::Instance().Create(theMethodName.Data(), fJobName, methodTitle,
+                                                loader->DefaultDataSetInfo(), theOption);
    }
    else {
       // boosted classifier, requires a specific definition, making it transparent for the user
      Log() << kDEBUG <<"Boost Number is " << boostNum << " > 0: train boosted classifier" << Endl;
-      im = ClassifierFactory::Instance().Create( std::string("Boost"),
-                                                 fJobName,
-                                                 methodTitle,
-                                                 loader->DefaultDataSetInfo(),
-                                                 theOption );
-      MethodBoost* methBoost = dynamic_cast<MethodBoost*>(im); // DSMTEST divided into two lines
-      if (!methBoost) // DSMTEST
-         Log() << kFATAL << "Method with type kBoost cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
+     im = ClassifierFactory::Instance().Create("Boost", fJobName, methodTitle, loader->DefaultDataSetInfo(), theOption);
+     MethodBoost *methBoost = dynamic_cast<MethodBoost *>(im); // DSMTEST divided into two lines
+     if (!methBoost)                                           // DSMTEST
+        Log() << kFATAL << "Method with type kBoost cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
 
-      if(fModelPersistence) methBoost->SetWeightFileDir(fFileDir);
-      methBoost->SetModelPersistence(fModelPersistence);
-      methBoost->SetBoostedMethodName( theMethodName ); // DSMTEST divided into two lines
-      methBoost->fDataSetManager = loader->fDataSetManager; // DSMTEST
-      methBoost->SetFile(fgTargetFile);
-      methBoost->SetSilentFile(IsSilentFile());
+     if (fModelPersistence)
+        methBoost->SetWeightFileDir(fFileDir);
+     methBoost->SetModelPersistence(fModelPersistence);
+     methBoost->SetBoostedMethodName(theMethodName);       // DSMTEST divided into two lines
+     methBoost->fDataSetManager = loader->fDataSetManager; // DSMTEST
+     methBoost->SetFile(fgTargetFile);
+     methBoost->SetSilentFile(IsSilentFile());
    }
 
    MethodBase *method = dynamic_cast<MethodBase*>(im);
@@ -484,6 +493,69 @@ TMVA::MethodBase* TMVA::Factory::BookMethod(TMVA::DataLoader *loader, Types::EMV
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Adds an already constructed method to be managed by this factory.
+/// 
+/// \note Private.
+/// \note Know what you are doing when using this method. The method that you
+/// are loading could be trained already. 
+/// 
+
+TMVA::MethodBase* TMVA::Factory::BookMethodWeightfile(DataLoader *loader, TMVA::Types::EMVA methodType, const TString &weightfile)
+{
+   TString datasetname = loader->GetName();
+   std::string methodTypeName = std::string(Types::Instance().GetMethodName(methodType).Data());
+   DataSetInfo &dsi = loader->DefaultDataSetInfo();
+   
+   IMethod *im = ClassifierFactory::Instance().Create(methodTypeName, dsi, weightfile );
+   MethodBase *method = (dynamic_cast<MethodBase*>(im));
+
+   if (method == nullptr) return nullptr;
+
+   if( method->GetMethodType() == Types::kCategory ){
+      Log() << kERROR << "Cannot handle category methods for now." << Endl;
+   }
+
+   TString fFileDir;
+   if(fModelPersistence) {
+      fFileDir=loader->GetName();
+      fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
+   }
+
+   if(fModelPersistence) method->SetWeightFileDir(fFileDir);
+   method->SetModelPersistence(fModelPersistence);
+   method->SetAnalysisType( fAnalysisType );
+   method->SetupMethod();
+   method->SetFile(fgTargetFile);
+   method->SetSilentFile(IsSilentFile());
+
+   method->DeclareCompatibilityOptions();
+
+   // read weight file
+   method->ReadStateFromFile();
+
+   //method->CheckSetup();
+
+   TString methodTitle = method->GetName();
+   if (HasMethod(datasetname, methodTitle) != 0) {
+    Log() << kFATAL << "Booking failed since method with title <"
+     << methodTitle <<"> already exists "<< "in with DataSet Name <"<< loader->GetName()<<">  "
+     << Endl;
+   }
+
+   Log() << kINFO << "Booked classifier \"" << method->GetMethodName()
+         << "\" of type: \"" << method->GetMethodTypeName() << "\"" << Endl;
+
+   if(fMethodsMap.count(datasetname) == 0) {
+      MVector *mvector = new MVector;
+      fMethodsMap[datasetname] = mvector;
+   }
+
+   fMethodsMap[datasetname]->push_back( method );
+
+   return method;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns pointer to MVA that corresponds to given method title.
 
 TMVA::IMethod* TMVA::Factory::GetMethod(const TString& datasetname,  const TString &methodTitle ) const
@@ -494,7 +566,7 @@ TMVA::IMethod* TMVA::Factory::GetMethod(const TString& datasetname,  const TStri
 
    MVector::const_iterator itrMethod;
    //
-   for (itrMethod    = methods->begin(); itrMethod != methods->end(); itrMethod++) {
+   for (itrMethod    = methods->begin(); itrMethod != methods->end(); ++itrMethod) {
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if ( (mva->GetMethodName())==methodTitle ) return mva;
    }
@@ -583,7 +655,7 @@ void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
 
    std::vector<TString> trfsDef = gTools().SplitString(processTrfs,';');
    std::vector<TString>::iterator trfsDefIt = trfsDef.begin();
-   for (; trfsDefIt!=trfsDef.end(); trfsDefIt++) {
+   for (; trfsDefIt!=trfsDef.end(); ++trfsDefIt) {
       trfs.push_back(new TMVA::TransformationHandler(fDataSetInfo, "Factory"));
       TString trfS = (*trfsDefIt);
 
@@ -602,7 +674,7 @@ void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
    // apply all transformations
    std::vector<TMVA::TransformationHandler*>::iterator trfIt = trfs.begin();
 
-   for (;trfIt != trfs.end(); trfIt++) {
+   for (;trfIt != trfs.end(); ++trfIt) {
       // setting a Root dir causes the variables distributions to be saved to the root file
       (*trfIt)->SetRootDir(RootBaseDir()->GetDirectory(fDataSetInfo.GetName()));// every dataloader have its own dir
       (*trfIt)->CalcTransformations(inputEvents);
@@ -610,7 +682,7 @@ void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
    if(identityTrHandler) identityTrHandler->PrintVariableRanking();
 
    // clean up
-   for (trfIt = trfs.begin(); trfIt != trfs.end(); trfIt++) delete *trfIt;
+   for (trfIt = trfs.begin(); trfIt != trfs.end(); ++trfIt) delete *trfIt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -624,14 +696,14 @@ std::map<TString,Double_t> TMVA::Factory::OptimizeAllMethods(TString fomType, TS
 
    std::map<TString,MVector*>::iterator itrMap;
    std::map<TString,Double_t> TunedParameters;
-   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();itrMap++)
+   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();++itrMap)
    {
       MVector *methods=itrMap->second;
 
       MVector::iterator itrMethod;
 
       // iterate over methods and optimize
-      for( itrMethod = methods->begin(); itrMethod != methods->end(); itrMethod++ ) {
+      for( itrMethod = methods->begin(); itrMethod != methods->end(); ++itrMethod ) {
      Event::SetIsTraining(kTRUE);
      MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
      if (!mva) {
@@ -1038,13 +1110,13 @@ void TMVA::Factory::TrainAllMethods()
 
    std::map<TString,MVector*>::iterator itrMap;
 
-   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();itrMap++)
+   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();++itrMap)
    {
       MVector *methods=itrMap->second;
       MVector::iterator itrMethod;
 
       // iterate over methods and train
-      for( itrMethod = methods->begin(); itrMethod != methods->end(); itrMethod++ ) {
+      for( itrMethod = methods->begin(); itrMethod != methods->end(); ++itrMethod ) {
      Event::SetIsTraining(kTRUE);
      MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
 
@@ -1084,7 +1156,7 @@ void TMVA::Factory::TrainAllMethods()
      // variable ranking
      //Log() << Endl;
      Log() << kINFO << "Ranking input variables (method specific)..." << Endl;
-     for (itrMethod = methods->begin(); itrMethod != methods->end(); itrMethod++) {
+     for (itrMethod = methods->begin(); itrMethod != methods->end(); ++itrMethod) {
        MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
        if (mva && mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
 
@@ -1124,9 +1196,8 @@ void TMVA::Factory::TrainAllMethods()
        delete m; //itrMethod[i];
 
        // recreate
-       m = dynamic_cast<MethodBase*>( ClassifierFactory::Instance()
-                   .Create( std::string(Types::Instance().GetMethodName(methodType)),
-                      dataSetInfo, weightfile ) );
+       m = dynamic_cast<MethodBase *>(ClassifierFactory::Instance().Create(
+          Types::Instance().GetMethodName(methodType).Data(), dataSetInfo, weightfile));
        if( m->GetMethodType() == Types::kCategory ){
       MethodCategory *methCat = (dynamic_cast<MethodCategory*>(m));
       if( !methCat ) Log() << kFATAL << "Method with type kCategory cannot be casted to MethodCategory. /Factory" << Endl;
@@ -1153,6 +1224,9 @@ void TMVA::Factory::TrainAllMethods()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Evaluates all booked methods on the testing data and adds the output to the
+/// Results in the corresponiding DataSet.
+///
 
 void TMVA::Factory::TestAllMethods()
 {
@@ -1165,13 +1239,13 @@ void TMVA::Factory::TestAllMethods()
    }
    std::map<TString,MVector*>::iterator itrMap;
 
-   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();itrMap++)
+   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();++itrMap)
    {
       MVector *methods=itrMap->second;
       MVector::iterator itrMethod;
 
       // iterate over methods and test
-      for( itrMethod = methods->begin(); itrMethod != methods->end(); itrMethod++ ) {
+      for( itrMethod = methods->begin(); itrMethod != methods->end(); ++itrMethod ) {
      Event::SetIsTraining(kFALSE);
      MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
      if(mva==0) continue;
@@ -1201,7 +1275,7 @@ void TMVA::Factory::MakeClass(const TString& datasetname , const TString& method
       // no classifier specified, print all help messages
       MVector *methods=fMethodsMap.find(datasetname)->second;
       MVector::const_iterator itrMethod;
-      for (itrMethod    = methods->begin(); itrMethod != methods->end(); itrMethod++) {
+      for (itrMethod    = methods->begin(); itrMethod != methods->end(); ++itrMethod) {
          MethodBase* method = dynamic_cast<MethodBase*>(*itrMethod);
          if(method==0) continue;
          Log() << kINFO << "Make response class for classifier: " << method->GetMethodName() << Endl;
@@ -1229,7 +1303,7 @@ void TMVA::Factory::PrintHelpMessage(const TString& datasetname , const TString&
       // no classifier specified, print all help messages
       MVector *methods=fMethodsMap.find(datasetname)->second;
       MVector::const_iterator itrMethod ;
-      for (itrMethod    = methods->begin(); itrMethod != methods->end(); itrMethod++) {
+      for (itrMethod    = methods->begin(); itrMethod != methods->end(); ++itrMethod) {
          MethodBase* method = dynamic_cast<MethodBase*>(*itrMethod);
          if(method==0) continue;
          Log() << kINFO << "Print help message for classifier: " << method->GetMethodName() << Endl;
@@ -1267,7 +1341,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
    }
    std::map<TString,MVector*>::iterator itrMap;
 
-   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();itrMap++)
+   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();++itrMap)
    {
       MVector *methods=itrMap->second;
 
@@ -1328,7 +1402,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
       Bool_t doMulticlass = kFALSE;
 
       // iterate over methods and evaluate
-      for (MVector::iterator itrMethod =methods->begin(); itrMethod != methods->end(); itrMethod++) {
+      for (MVector::iterator itrMethod =methods->begin(); itrMethod != methods->end(); ++itrMethod) {
      Event::SetIsTraining(kFALSE);
      MethodBase* theMethod = dynamic_cast<MethodBase*>(*itrMethod);
      if(theMethod==0) continue;
@@ -1344,6 +1418,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
        Double_t biasT, devT, rmsT, mInfT;
        Double_t rho;
 
+       Log() << kINFO << "TestRegression (testing)" << Endl;
        theMethod->TestRegression( bias, biasT, dev, devT, rms, rmsT, mInf, mInfT, rho, TMVA::Types::kTesting  );
        biastest[0]  .push_back( bias );
        devtest[0]   .push_back( dev );
@@ -1355,6 +1430,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
        rmstestT[0]  .push_back( rmsT );
        minftestT[0] .push_back( mInfT );
 
+       Log() << kINFO << "TestRegression (training)" << Endl;
        theMethod->TestRegression( bias, biasT, dev, devT, rms, rmsT, mInf, mInfT, rho, TMVA::Types::kTraining  );
        biastrain[0] .push_back( bias );
        devtrain[0]  .push_back( dev );
@@ -1386,6 +1462,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
         // Find approximate optimal working point w.r.t. signalEfficiency * signalPurity.
         // theMethod->TestMulticlass(); // This is where the actual GA calc is done
         // multiclass_testEff.push_back(theMethod->GetMulticlassEfficiency(multiclass_testPur));
+
+        theMethod->TestMulticlass();
 
         // Confusion matrix at three background efficiency levels
         multiclass_trainConfusionEffB01.push_back(theMethod->GetMulticlassConfusionMatrix(0.01, Types::kTraining));
@@ -1551,7 +1629,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
       Int_t ivar = 0;
       std::vector<TString>* theVars = new std::vector<TString>;
       std::vector<ResultsClassification*> mvaRes;
-      for (MVector::iterator itrMethod = methodsNoCuts.begin(); itrMethod != methodsNoCuts.end(); itrMethod++, ivar++) {
+      for (MVector::iterator itrMethod = methodsNoCuts.begin(); itrMethod != methodsNoCuts.end(); ++itrMethod, ++ivar) {
           MethodBase* m = dynamic_cast<MethodBase*>(*itrMethod);
           if(m==0) continue;
           theVars->push_back( m->GetTestvarName() );

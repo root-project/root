@@ -18,7 +18,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "TUnixSystem.h"
 #include "TROOT.h"
 #include "TError.h"
@@ -609,6 +609,7 @@ Bool_t TUnixSystem::Init()
    UnixSignal(kSigUrgent,                SigHandler);
    UnixSignal(kSigFloatingException,     SigHandler);
    UnixSignal(kSigWindowChanged,         SigHandler);
+   UnixSignal(kSigUser2,                 SigHandler);
 
 #if defined(R__MACOSX)
    // trap loading of all dylibs to register dylib name,
@@ -689,13 +690,13 @@ void TUnixSystem::SetDisplay()
                memset(&addr.sin_zero[0], 0, sizeof(addr.sin_zero));
                struct sockaddr *sa = (struct sockaddr *) &addr;    // input
 
-               char hbuf[NI_MAXHOST];
+               char hbuf[NI_MAXHOST + 4];
                if (getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, NI_NAMEREQD) == 0) {
-                  char disp[64];
-                  snprintf(disp, sizeof(disp), "%s:0.0", hbuf);
-                  Setenv("DISPLAY", disp);
+                  assert( strlen(hbuf) < NI_MAXHOST );
+                  strcat(hbuf, ":0.0");
+                  Setenv("DISPLAY", hbuf);
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
-                          disp);
+                          hbuf);
                }
             }
 #endif
@@ -3656,6 +3657,10 @@ void TUnixSystem::DispatchSignals(ESignals sig)
    case kSigWindowChanged:
       Gl_windowchanged();
       break;
+   case kSigUser2:
+      Break("TUnixSystem::DispatchSignals", "%s: printing stacktrace", UnixSigname(sig));
+      StackTrace();
+      // Intentional fall-through; pass the signal to handlers (or terminate):
    default:
       fSignals->Set(sig);
       fSigcnt++;

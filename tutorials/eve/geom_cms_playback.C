@@ -5,7 +5,7 @@
 ///
 /// Script:
 /// - type: .x geom_cms.C
-/// - demonstratate rotation (left-mouse), zoom (right-mouse left-right)
+/// - demonstrate rotation (left-mouse), zoom (right-mouse left-right)
 /// - show GL window Help Window
 /// - show wireframe (w), smooth (r, default) and outline (t) render modes
 /// - show flip of background color dark-light-dark (e pressed twice)
@@ -21,5 +21,5 @@
 
 void geom_cms_playback()
 {
-   TRecorder* r = new TRecorder("http://root.cern.ch/files/geom_cms_recording.root");
+   auto r = new TRecorder("http://root.cern.ch/files/geom_cms_recording.root");
 }

@@ -11,14 +11,15 @@
 
 #include "ROOT/TBufferMerger.hxx"
 
-#include "TArrayC.h"
 #include "TBufferFile.h"
 
 namespace ROOT {
 namespace Experimental {
 
 TBufferMergerFile::TBufferMergerFile(TBufferMerger &m)
-   : TMemFile(m.fFile->GetName(), "recreate", "", m.fFile->GetCompressionSettings()), fMerger(m)
+   : TMemFile(m.fMerger.GetOutputFile()->GetName(), "RECREATE", "",
+              m.fMerger.GetOutputFile()->GetCompressionSettings()),
+     fMerger(m)
 {
 }
 
@@ -31,12 +32,10 @@ Int_t TBufferMergerFile::Write(const char *name, Int_t opt, Int_t bufsize)
    Int_t nbytes = TMemFile::Write(name, opt, bufsize);
 
    if (nbytes) {
-      TBufferFile *fBuffer = new TBufferFile(TBuffer::kWrite);
-
-      fBuffer->WriteLong64(GetEND());
-      CopyTo(*fBuffer);
-
-      fMerger.Push(fBuffer);
+      TBufferFile *buffer = new TBufferFile(TBuffer::kWrite);
+      CopyTo(*buffer);
+      buffer->SetReadMode();
+      fMerger.Push(buffer);
       ResetAfterMerge(0);
    }
    return nbytes;

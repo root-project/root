@@ -59,7 +59,7 @@ public:
    inline Float_t   ReactionQ()      const   { return QI; }
 
    // --- Input/Output routines ---
-   Bool_t      LoadENDF(char *filename);
+   Bool_t      LoadENDF(const char *filename);
 
    // --- Interpolation routines ---
    Int_t      BinSearch( Float_t e);

@@ -1,12 +1,12 @@
 # ROOT in Python #
 
-ROOT offers the possibility to interface to Python via a set of bindings called 
+ROOT offers the possibility to interface to Python via a set of bindings called
 PyROOT.
-Python is used in a wide variety of application areas and one of the most used 
-scripting languages today. 
+Python is used in a wide variety of application areas and one of the most used
+scripting languages today.
 With the help of PyROOT it becomes possible to combine the power of a scripting
 language with ROOT tools. Introductory material to Python is available from many
-sources on the web, see e. g. http://docs.python.org. 
+sources on the web, see e. g. http://docs.python.org.
 
 ## PyROOT ##
 
@@ -69,7 +69,7 @@ functionality similar to ROOT classes, which fit more seamlessly into your
 Python code.
 
 A more “pythonic” version of the above macro3 would use a replacement of the
-ROOT class TMath for the provisoining of data to TGraphPolar. With the math
+ROOT class TMath for the provisioning of data to TGraphPolar. With the math
 package, the part of the code becomes
 
 ``` {.cpp}
@@ -137,6 +137,6 @@ void printA(const A& a ){
 The value of A instance is 123.
 ```
 
-This example might seem trivial, but it shows a powerful ROOT feature. 
-C++ code can be JITted within PyROOT and the entities defined in C++ can be 
+This example might seem trivial, but it shows a powerful ROOT feature.
+C++ code can be JITted within PyROOT and the entities defined in C++ can be
 transparently used in Python!

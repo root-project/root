@@ -1,35 +1,18 @@
 <core:FragmentDefinition
        xmlns="sap.m"
        xmlns:l="sap.ui.layout"
-       xmlns:f="sap.ui.layout.form"
+       xmlns:jsroot="sap.ui.jsroot"
        xmlns:core="sap.ui.core">
-       <VBox class="sapUiSmallMargin">
-          <f:SimpleForm id="TAttLine"
-             editable="true"
-             layout="ResponsiveGridLayout"
-             title="TAttLine"
-             labelSpanXL="1"
-             labelSpanL="2"
-             labelSpanM="4"
-             labelSpanS="6"
-             adjustLabelSpan="false"
-             emptySpanXL="0"
-             emptySpanL="0"
-             emptySpanM="0"
-             emptySpanS="0"
-             columnsXL="1"
-             columnsL="1"
-             columnsM="1"
-             breakpointXL="800"
-             breakpointL="500"
-             breakpointM="300"
-             singleContainerFullSize="false" >
-             <f:content>
-                <Label text="Style" />
-                <Select selectedKey="{/style}" title="Line style">
+        <FlexBox renderType="Bare" width="100%">
+          <items>
+             <jsroot:ColorButton text="line" attrcolor="{/attline/color}" tooltip="Line color"/>
+             <Select selectedKey="{/attline/style}" tooltip="Line style">
+                <layoutData>
+                   <FlexItemData growFactor="2"/>
+                </layoutData>
                  <items>
                    <core:Item text="none" key="0"/>
-                   <core:Item text="1" key="1"/>
+                   <core:Item text="solid" key="1"/>
                    <core:Item text="2" key="2"/>
                    <core:Item text="3" key="3"/>
                    <core:Item text="4" key="4"/>
@@ -39,22 +22,29 @@
                    <core:Item text="8" key="8"/>
                    <core:Item text="9" key="9"/>
                    <core:Item text="10" key="10"/>
+                   <core:Item text="11" key="11"/>
                  </items>
-               </Select>
-                <Label text="Width"/>
-                <Select selectedKey="{/width}" title="Line width">
-                 <items>
-                   <core:Item text="1" key="1"/>
-                   <core:Item text="2" key="2"/>
-                   <core:Item text="3" key="3"/>
-                   <core:Item text="4" key="4"/>
-                   <core:Item text="5" key="5"/>
-                   <core:Item text="6" key="6"/>
-                 </items>
-               </Select>
-                <Label text="Color"/>
-                <Button text="{/color}" title="Line color" press="processTAttLine_Color"/>
-             </f:content>
-          </f:SimpleForm>
-       </VBox>
+             </Select>
+             <Select selectedKey="{/attline/width}" tooltip="Line width">
+               <layoutData>
+                 <FlexItemData growFactor="2"/>
+               </layoutData>
+               <items>
+                 <core:Item text="1" key="1"/>
+                 <core:Item text="2" key="2"/>
+                 <core:Item text="3" key="3"/>
+                 <core:Item text="4" key="4"/>
+                 <core:Item text="5" key="5"/>
+                 <core:Item text="6" key="6"/>
+                 <core:Item text="7" key="7"/>
+                 <core:Item text="8" key="8"/>
+               </items>
+             </Select>
+             <jsroot:SVGSample svgsample="{/attline}" tooltip="Line pattern sample">
+                <jsroot:layoutData>
+                  <FlexItemData growFactor="2"/>
+                </jsroot:layoutData>
+             </jsroot:SVGSample>
+          </items>
+     </FlexBox>
 </core:FragmentDefinition>

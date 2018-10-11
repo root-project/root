@@ -12,7 +12,7 @@
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
 
-#include <QtCore/QObject>
+#include "TQtIncludes.h"
 
 class QPainter;
 class QPaintEvent;

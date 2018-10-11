@@ -1,15 +1,13 @@
-LATEX = pdflatex
+LATEX = pdflatex -interaction=batchmode
 
-all: TMVAUsersGuide.pdf
+all: pdf toc
 
-TMVAUsersGuide.pdf: TMVAUsersGuide.tex *.tex plots/*.pdf optiontables/*.tex
+toc: TMVAUsersGuide.tex *.tex plots/*.pdf optiontables/*.tex
 	$(LATEX) TMVAUsersGuide.tex
 	makeindex TMVAUsersGuide.idx
-	$(LATEX) TMVAUsersGuide.tex	
+
+pdf: toc *.tex plots/*.pdf optiontables/*.tex
 	$(LATEX) TMVAUsersGuide.tex
 
-#TMVAUsersGuide.pdf: TMVAUsersGuide.dvi
-#	dvipdf TMVAUsersGuide.dvi
-
-clean: 
-	rm TMVAUsersGuide.pdf
+clean:
+	rm *.pdf *.out *.aux *.idx *.log *.toc

@@ -18,7 +18,7 @@ for the underlying connection technology.
 */
 
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "Riostream.h"
 
 #ifdef WIN32

@@ -16,27 +16,32 @@
 
 // need to correctly generate dictionary for display items, used in v7 histpainter,
 // but currently histpainter does not creates dictionary at all
-#pragma extra_include "ROOT/TDisplayItem.hxx";
+#pragma extra_include "ROOT/RDisplayItem.hxx";
 
-#pragma link C++ class ROOT::Experimental::THistCoreAttrs+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<1>>+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<2>>+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<3>>+;
-#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<1>>+;
-#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<2>>+;
-#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<3>>+;
-#pragma link C++ class ROOT::Experimental::THistDrawingOpts<1>+;
-#pragma link C++ class ROOT::Experimental::THistDrawingOpts<2>+;
-#pragma link C++ class ROOT::Experimental::THistDrawingOpts<3>+;
-#pragma link C++ class ROOT::Experimental::THistDrawableBase+;
-#pragma link C++ class ROOT::Experimental::THistDrawable<1>+;
-#pragma link C++ class ROOT::Experimental::THistDrawable<2>+;
-#pragma link C++ class ROOT::Experimental::THistDrawable<3>+;
-#pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::THistDrawable<1>>+;
-#pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::THistDrawable<2>>+;
-#pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::THistDrawable<3>>+;
-#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<1> >+;
-#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<2>>+;
-#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<3>>+;
+#pragma link C++ class ROOT::Experimental::RHistDrawingOpts<1>+;
+#pragma link C++ class ROOT::Experimental::RHistDrawingOpts<2>+;
+#pragma link C++ class ROOT::Experimental::RHistDrawingOpts<3>+;
+#pragma link C++ class ROOT::Experimental::RHistDrawable<1>+;
+#pragma link C++ class ROOT::Experimental::RHistDrawable<2>+;
+#pragma link C++ class ROOT::Experimental::RHistDrawable<3>+;
+#pragma link C++ class ROOT::Experimental::RDrawableBase<ROOT::Experimental::RHistDrawable<1>>+;
+#pragma link C++ class ROOT::Experimental::RDrawableBase<ROOT::Experimental::RHistDrawable<2>>+;
+#pragma link C++ class ROOT::Experimental::RDrawableBase<ROOT::Experimental::RHistDrawable<3>>+;
+#pragma link C++ class ROOT::Experimental::RHistDrawableBase<ROOT::Experimental::RHistDrawable<1>>+;
+#pragma link C++ class ROOT::Experimental::RHistDrawableBase<ROOT::Experimental::RHistDrawable<2>>+;
+#pragma link C++ class ROOT::Experimental::RHistDrawableBase<ROOT::Experimental::RHistDrawable<3>>+;
+#pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RHistDrawable<1>>+;
+#pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RHistDrawable<2>>+;
+#pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RHistDrawable<3>>+;
+#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<1> >+;
+#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<2>>+;
+#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<3>>+;
+#pragma link C++ class ROOT::Experimental::RStringEnumAttr<ROOT::Experimental::RHistDrawingOpts<1>::EStyle>+;
+#pragma link C++ class ROOT::Experimental::RStringEnumAttr<ROOT::Experimental::RHistDrawingOpts<2>::EStyle>+;
+#pragma link C++ class ROOT::Experimental::RStringEnumAttr<ROOT::Experimental::RHistDrawingOpts<3>::EStyle>+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr<ROOT::Experimental::RStringEnumAttr<ROOT::Experimental::RHistDrawingOpts<1>::EStyle>>+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr<ROOT::Experimental::RStringEnumAttr<ROOT::Experimental::RHistDrawingOpts<2>::EStyle>>+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr<ROOT::Experimental::RStringEnumAttr<ROOT::Experimental::RHistDrawingOpts<3>::EStyle>>+;
+
 
 #endif

@@ -66,12 +66,12 @@ public:
 
    typedef std::vector<AnnotatedNamespaceDecl> NamespaceColl_t;
    typedef std::vector<ROOT::TMetaUtils::AnnotatedRecordDecl>   ClassColl_t;
-   typedef std::vector<clang::TypedefNameDecl*> TypedefColl_t;
-   typedef std::vector<clang::FunctionDecl*> FunctionColl_t;
-   typedef std::vector<clang::VarDecl*> VariableColl_t;
-   typedef std::vector<clang::EnumDecl*> EnumColl_t;
+   typedef std::vector<const clang::TypedefNameDecl*> TypedefColl_t;
+   typedef std::vector<const clang::FunctionDecl*> FunctionColl_t;
+   typedef std::vector<const clang::VarDecl*> VariableColl_t;
+   typedef std::vector<const clang::EnumDecl*> EnumColl_t;
    typedef void (*DeclCallback)(const char *type);
-   typedef std::map<clang::Decl*,const BaseSelectionRule*> DeclsSelRulesMap_t;
+   typedef std::map<const clang::Decl*,const BaseSelectionRule*> DeclsSelRulesMap_t;
 
    enum class EScanType : char {kNormal, kTwoPasses, kOnePCM};
 
@@ -99,6 +99,7 @@ public:
    bool VisitVarDecl(clang::VarDecl* D); //Visitor for every VarDecl i.e. variable node in the AST
 
    bool TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl); //Function called by VisitTypedefNameDecl and VisitRecordDecl
+   void AddDelayedAnnotatedRecordDecls();
 
    bool TraverseDeclContextHelper(clang::DeclContext *DC); // Here is the code magic :) - every Decl
    // according to its type is processed by the corresponding Visitor method
@@ -127,7 +128,14 @@ public:
    VariableColl_t  fSelectedVariables;
    EnumColl_t      fSelectedEnums;
 
-   virtual ~ RScanner ();
+   struct DelayedAnnotatedRecordDeclInfo {
+      const ClassSelectionRule *fSelected;
+      const clang::ClassTemplateSpecializationDecl *fDecl;
+      const clang::TypedefNameDecl* fTypedefNameDecl;
+   };
+   std::vector<DelayedAnnotatedRecordDeclInfo> fDelayedAnnotatedRecordDecls;
+
+   virtual ~RScanner ();
 
 
 

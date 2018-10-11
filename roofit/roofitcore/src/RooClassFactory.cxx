@@ -39,8 +39,6 @@ instantiate objects.
 #include "RooGlobalFunc.h"
 #include "RooAbsPdf.h"
 #include <fstream>
-#include <vector>
-#include <string>
 
 using namespace std ;
 
@@ -783,7 +781,7 @@ std::string RooClassFactory::ClassFacIFace::create(RooFactoryWSTool& ft, const c
 	  varList.add(ft.asARG(args[i].c_str())) ;
 	}
       }
-    } catch (string err) {
+    } catch (const string &err) {
       throw string(Form("RooClassFactory::ClassFacIFace::create() ERROR: %s",err.c_str())) ;
     }
 

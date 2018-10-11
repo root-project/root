@@ -18,6 +18,7 @@
 
 #ifdef MPIPROC
 #include "mpi.h"
+#include <iostream>
 #endif
 
 

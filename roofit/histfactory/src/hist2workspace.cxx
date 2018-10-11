@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     try {
       RooStats::HistFactory::fastDriver(input);
     }
-    catch(std::string str) {
+    catch(const std::string &str) {
       std::cerr << "hist2workspace - Caught exception: " << str << std::endl ;
       exit(1);
     }
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
       try {
 	RooStats::HistFactory::fastDriver(input);
       }
-      catch(std::string str) {
+      catch(const std::string &str) {
 	std::cerr << "hist2workspace - Caught exception: " << str << std::endl ;
 	exit(1);
       }

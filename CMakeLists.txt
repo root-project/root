@@ -1,5 +1,3 @@
-#---Check if cmake has the required version-----------------------------------------------------
-
 cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
 
 set(policy_new CMP0068)
@@ -11,9 +9,7 @@ endforeach()
 
 include(cmake/modules/CaptureCommandLine.cmake)
 
-#---Set name of the project to "ROOT". Has to be done after check of cmake version--------------
 project(ROOT)
-set(IntegratedBuild ON)
 
 #---Set the locale to default C to prevent issued due to localization of commands---------------
 # This is necessary as we for example call `clang -v` and parse its output. But on a localized
@@ -26,6 +22,17 @@ set(ENV{LANG} C)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Before setting ROOTSYS, make sure that the environment isn't polluted by a different
+# ROOT build. This is significant e,g. for roottest, which will otherwise have libraries
+# of a different ROOT build available / visible / reachable.
+if($ENV{ROOTSYS})
+  string(REPLACE "$ENV{ROOTSYS}/bin" "" ENV{PATH}, $ENV{PATH})
+  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV{LD_LIBRARY_PATH} $ENV{LD_LIBRARY_PATH})
+  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV{PYTHONPATH} $ENV{PYTHONPATH})
+  set(ENV{"ROOTSYS"} ${CMAKE_BINARY_DIR})
+endif()
+
 set(ROOTSYS ${CMAKE_BINARY_DIR})
 set(HEADER_OUTPUT_PATH ${CMAKE_BINARY_DIR}/include)
 set(ROOT_INCLUDE_DIR ${HEADER_OUTPUT_PATH})
@@ -48,24 +55,21 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 include(RootBuildOptions)
 include(RootNewMacros)
 include(CheckCompiler)
-include(MacroEnsureVersion)
 
 #---Enable CCache ------------------------------------------------------------------------------
 if(ccache)
-   set(CMAKE_IGNORE_PATH_TMP ${CMAKE_IGNORE_PATH})
-   unset(CMAKE_IGNORE_PATH)
+  find_program(CCACHE_COMMAND NAMES ccache ccache-swig)
+  mark_as_advanced(CCACHE_COMMAND ${CCACHE_COMMAND})
 
-   find_program(ccache_cmd NAMES ccache ccache-swig)
-   mark_as_advanced(ccache_cmd ${ccache_cmd})
-
-   set(CMAKE_IGNORE_PATH ${CMAKE_IGNORE_PATH_TMP})
-
-   if(ccache_cmd)
-      message(STATUS "Using ccache for building")
-      set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-   else()
-      message(STATUS "Could NOT find ccache")
-   endif()
+  if(EXISTS ${CCACHE_COMMAND})
+    message(STATUS "Found ccache: ${CCACHE_COMMAND}")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_COMMAND})
+    execute_process(COMMAND ${CCACHE_COMMAND} "-V" OUTPUT_VARIABLE CCACHE_VERSION)
+    string(REGEX REPLACE "ccache version ([0-9\\.]+).*" "\\1" CCACHE_VERSION ${CCACHE_VERSION})
+  else()
+    message(STATUS "Could NOT find ccache")
+    set(ccache OFF CACHE BOOL "Use ccache (disabled since ccache was not found)" FORCE)
+  endif()
 endif()
 
 #---Enable test coverage -----------------------------------------------------------------------
@@ -101,14 +105,14 @@ ROOT_SHOW_OPTIONS()
 
 #---Here we add tcmalloc to the linker flags if needed------------------------------------------
 if (TCMALLOC_FOUND)
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -L ${TCMALLOC_LIBRARY_PATH}")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ltcmalloc -L ${TCMALLOC_LIBRARY_PATH}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -L${TCMALLOC_LIBRARY_PATH}")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ltcmalloc -L${TCMALLOC_LIBRARY_PATH}")
 endif()
 
 #---Here we add jemalloc to the linker flags if needed------------------------------------------
 if (JEMALLOC_FOUND)
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -L ${JEMALLOC_LIBRARY_PATH}")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ljemalloc -L ${JEMALLOC_LIBRARY_PATH}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -L${JEMALLOC_LIBRARY_PATH}")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ljemalloc -L${JEMALLOC_LIBRARY_PATH}")
 endif()
 
 #---Populate the configure arguments returned by 'root-config --config'-------------------------
@@ -133,31 +137,26 @@ endforeach()
 #---Move (copy) directories to binary tree------------------------------------------------------
 set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
 add_custom_command(OUTPUT ${stamp_file}
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/test ${CMAKE_BINARY_DIR}/test
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${CMAKE_BINARY_DIR}/LICENSE
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/README ${CMAKE_BINARY_DIR}/README
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
                    COMMENT "Copying directories such as etc, icons, fonts, etc. to build area")
 
-#---Copy the the tutorials to the build area, with dependency---------------------------------
-file(GLOB_RECURSE tutorial_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/*)
-set(tutorial_files_builddir)
-foreach(tutorial_file ${tutorial_files})
+#---Copy files to the build area, with dependency---------------------------------
+file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/*)
+set(artifact_files_builddir)
+foreach(artifact_file ${artifact_files})
   # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
   # target below will interfere.
-  if (NOT (tutorial_file STREQUAL "tutorials/hsimple.root"))
-    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${tutorial_file}
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${tutorial_file} ${CMAKE_BINARY_DIR}/${tutorial_file}
-      COMMENT "Copying ${CMAKE_SOURCE_DIR}/${tutorial_file}"
-      DEPENDS ${CMAKE_SOURCE_DIR}/${tutorial_file})
-    list(APPEND tutorial_files_builddir ${CMAKE_BINARY_DIR}/${tutorial_file})
+  if (NOT (artifact_file STREQUAL "tutorials/hsimple.root"))
+    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
+      COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
+      DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
+    list(APPEND artifact_files_builddir ${CMAKE_BINARY_DIR}/${artifact_file})
   endif()
 endforeach()
-add_custom_target(move_artifacts DEPENDS ${stamp_file} ${tutorial_files_builddir})
+add_custom_target(move_artifacts DEPENDS ${stamp_file} ${artifact_files_builddir})
 
 add_subdirectory (interpreter)
 # Add the compilation flags from LLVM to the flags we use to compile cling-based tools.
@@ -181,7 +180,7 @@ if(cxxmodules)
     message(FATAL_ERROR "cxxmodules is not supported by this compiler")
   endif()
 
-  set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack -Wno-module-import-in-extern-c")
+  set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -Xclang -fno-validate-pch -fno-autolink -fdiagnostics-show-note-include-stack -Wno-module-import-in-extern-c")
 
   # FIXME: We should remove this once libc++ supports -fmodules-local-submodule-visibility.
   if (APPLE)
@@ -235,9 +234,14 @@ if (NOT WIN32 AND NOT libcxx)
     list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
 
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap-installed.overlay.yaml.in ${CMAKE_BINARY_DIR}/build/modulemap.overlay.yaml @ONLY)
+    install(FILES "${CMAKE_BINARY_DIR}/build/modulemap.overlay.yaml" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.modulemap ${CMAKE_BINARY_DIR}/include/stl.modulemap)
+    install(FILES "${CMAKE_BINARY_DIR}/include/stl.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
+    install(FILES "${CMAKE_BINARY_DIR}/include/libc.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+
   else()
     message(SEND_ERROR "Couldn't find c++ library paths, no modulemap overlay will be installed! (__libcpp_full_paths = '${__libcpp_full_paths}')")
   endif()
@@ -246,11 +250,12 @@ endif()
 if (cxxmodules)
   # These vars are useful when we want to compile things without cxxmodules.
   set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules" CACHE STRING "Useful to filter out the modules-related cxxflags.")
+  set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")
   if (NOT APPLE)
     set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -Xclang -fmodules-local-submodule-visibility" CACHE STRING "Useful to filter out the modules-related cxxflags." FORCE)
-  endif()
-  set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")
+    set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -Xclang -fmodules-local-submodule-visibility" CACHE STRING "Useful to filter out the modules-related cflags." FORCE)
 
+  endif()
 
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_CFLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_CXXFLAGS}")
@@ -299,7 +304,8 @@ file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_e
 set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
-add_custom_target(move_headers ALL DEPENDS ${__allHeaders})
+get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
+add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins})
 
 #---Global PCH-----------------------------------------------------------------------------------
 get_property(__allTargets GLOBAL PROPERTY ROOT_DICTIONARY_TARGETS)
@@ -321,6 +327,7 @@ if(MSVC)
   string(REPLACE "-nologo" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-EHsc-" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-GR" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+  string(REPLACE "-MDd" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
 endif()
 
 add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
@@ -343,7 +350,14 @@ endif()
 
 if(runtime_cxxmodules)
   # Dummy target that does nothing, we don't need a PCH for modules.
+  # Onepcm target has all dependencies needed for allDict.cxx.pch, which allow
+  # to test hsimple.C after all C++ modules are updated.
   add_custom_target(onepcm)
+  foreach(target_dependency ${ROOT_LIBRARY_TARGETS})
+    add_dependencies(onepcm ${target_dependency})
+  endforeach()
+  unset(ROOT_LIBRARY_TARGETS CACHE)
+  set(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES On)
 else()
   add_custom_command(OUTPUT etc/allDict.cxx.pch
                     COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
@@ -360,7 +374,6 @@ else()
 endif()
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
-if(NOT WIN32)
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
 if(WIN32)
@@ -379,7 +392,6 @@ else()
                      DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 endif()
 install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
-endif()
 
 #---version--------------------------------------------------------------------------------------
 if(NOT WIN32)
@@ -405,15 +417,15 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
     install(DIRECTORY README DESTINATION ${CMAKE_INSTALL_DOCDIR})
   endif()
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
-                         REGEX system.rootrc EXCLUDE
-                         REGEX system.rootauthrc EXCLUDE
-                         REGEX system.rootdaemonrc EXCLUDE
-                         REGEX rootd.rc.d EXCLUDE
-                         REGEX proofd.rc.d EXCLUDE
-                         REGEX rootd.xinetd EXCLUDE
-                         REGEX proofd.xinetd EXCLUDE
-                         REGEX root.mimes EXCLUDE
-                         REGEX cmake EXCLUDE )
+                         PATTERN "system.rootrc" EXCLUDE
+                         PATTERN "system.rootauthrc" EXCLUDE
+                         PATTERN "system.rootdaemonrc" EXCLUDE
+                         PATTERN "rootd.rc.d" EXCLUDE
+                         PATTERN "proofd.rc.d" EXCLUDE
+                         PATTERN "rootd.xinetd" EXCLUDE
+                         PATTERN "proofd.xinetd" EXCLUDE
+                         PATTERN "root.mimes" EXCLUDE
+                         PATTERN "cmake" EXCLUDE )
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})
@@ -436,19 +448,24 @@ if(testing)
     #---Is the roottest source directory around?
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
       set(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../roottest)
-      get_filename_component(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/../roottest ABSOLUTE)
+    else()
+      # Need to break into two steps in case the source dir is a symlink
+      get_filename_component(_source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
+      set(roottestdir ${_source_dir}/../roottest)
     endif()
-    if(roottestdir)
+
+    if(IS_DIRECTORY ${roottestdir})
       file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
       add_subdirectory(${roottestdir} roottest)
     else()
       message("-- Could not find roottest directory! Cloning from the repository...")
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} http://root.cern.ch/git/roottest.git
+      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
+                      https://github.com/root-project/roottest.git
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(roottest)
     endif()
   endif()
+
   if(rootbench)
     find_package(Git REQUIRED)
     execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
@@ -457,15 +474,19 @@ if(testing)
     #---Is the rootbench source directory around?
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
       set(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
-    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../rootbench)
-      get_filename_component(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/../rootbench ABSOLUTE)
+    else()
+      # Need to break into two steps in case the source dir is a symlink
+      get_filename_component(_source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
+      set(rootbenchdir ${_source_dir}/../rootbench)
     endif()
-    if(rootbenchdir)
+
+    if(IS_DIRECTORY ${rootbenchdir})
       file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/rootbench)
       add_subdirectory(${rootbenchdir} rootbench)
     else()
       message("-- Could not find rootbench directory! Cloning from the repository...")
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} https://github.com/root-project/rootbench.git
+      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
+                      https://github.com/root-project/rootbench.git
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(rootbench)
     endif()

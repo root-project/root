@@ -40,7 +40,6 @@
 
 #include "Riostream.h"
 #include <iomanip>
-#include <fstream>
 #include "TClass.h"
 #include "RooArgList.h"
 #include "RooErrorHandler.h"

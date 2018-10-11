@@ -1,6 +1,3 @@
-/// @file JSRootPainter.js
-/// JavaScript ROOT graphics
-
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootCore', 'd3'], factory );
@@ -32,12 +29,37 @@
    if ( typeof define === "function" && define.amd )
       JSROOT.loadScript('$$$style/JSRootPainter.css');
 
-   // list of user painters, called with arguments func(vis, obj, opt)
-   JSROOT.DrawFuncs = {lst:[], cache:{}};
+   if (!JSROOT._test_d3_) {
+      if ((typeof d3 == 'object') && d3.version && (d3.version[0]==="4"))  {
+         if (d3.version !== '4.4.4')
+            console.log('Reuse existing d3.js ' + d3.version + ", expected 4.4.4");
+         JSROOT._test_d3_ = 4;
+      } else if ((typeof d3 == 'object') && d3.version && (d3.version[0]==="3")) {
+         console.log("Older d3.js version " + d3.version + " found, try to adjust");
+         d3.timeFormat = d3.time.format;
+         d3.scaleTime = d3.time.scale;
+         d3.scaleLog = d3.scale.log;
+         d3.scaleLinear = d3.scale.linear;
+         JSROOT._test_d3_ = 3;
+      } else {
+         console.error('Fail to identify d3.js version '  + (d3 ? d3.version : "???"));
+      }
+   }
 
-   // add draw function for the class
-   // List of supported draw options could be provided, separated  with ';'
-   // Several different draw functions for the same class or kind could be specified
+   // list of user painters, called with arguments func(vis, obj, opt)
+   JSROOT.DrawFuncs = { lst:[], cache:{} };
+
+   /** @summary Register draw function for the class
+    * @desc List of supported draw options could be provided, separated  with ';'
+    * Several different draw functions for the same class or kind could be specified
+    * @param {object} args - arguments
+    * @param {string} args.name - class name
+    * @param {string} [args.prereq] - prerequicities to load before search for the draw function
+    * @param {string} args.func - name of draw function for the class
+    * @param {string} [args.direct=false] - if true, function is just Redraw() method of TObjectPainter
+    * @param {string} args.opt - list of supported draw options (separated with semicolon) like "col;scat;"
+    * @param {string} [args.icon] - icon name shown for the class in hierarchy browser
+    */
    JSROOT.addDrawFunc = function(_name, _func, _opt) {
       if ((arguments.length == 1) && (typeof arguments[0] == 'object')) {
          JSROOT.DrawFuncs.lst.push(arguments[0]);
@@ -48,17 +70,17 @@
       return handle;
    }
 
-    // icons taken from http://uxrepo.com/
+   // icons taken from http://uxrepo.com/
 
    JSROOT.ToolbarIcons = {
       camera: { path: 'M 152.00,304.00c0.00,57.438, 46.562,104.00, 104.00,104.00s 104.00-46.562, 104.00-104.00s-46.562-104.00-104.00-104.00S 152.00,246.562, 152.00,304.00z M 480.00,128.00L 368.00,128.00 c-8.00-32.00-16.00-64.00-48.00-64.00L 192.00,64.00 c-32.00,0.00-40.00,32.00-48.00,64.00L 32.00,128.00 c-17.60,0.00-32.00,14.40-32.00,32.00l0.00,288.00 c0.00,17.60, 14.40,32.00, 32.00,32.00l 448.00,0.00 c 17.60,0.00, 32.00-14.40, 32.00-32.00L 512.00,160.00 C 512.00,142.40, 497.60,128.00, 480.00,128.00z M 256.00,446.00c-78.425,0.00-142.00-63.574-142.00-142.00c0.00-78.425, 63.575-142.00, 142.00-142.00c 78.426,0.00, 142.00,63.575, 142.00,142.00 C 398.00,382.426, 334.427,446.00, 256.00,446.00z M 480.00,224.00l-64.00,0.00 l0.00-32.00 l 64.00,0.00 L 480.00,224.00 z' },
       disk: { path: 'M384,0H128H32C14.336,0,0,14.336,0,32v448c0,17.656,14.336,32,32,32h448c17.656,0,32-14.344,32-32V96L416,0H384z M352,160   V32h32v128c0,17.664-14.344,32-32,32H160c-17.664,0-32-14.336-32-32V32h128v128H352z M96,288c0-17.656,14.336-32,32-32h256   c17.656,0,32,14.344,32,32v192H96V288z' },
       question: { path: 'M256,512c141.375,0,256-114.625,256-256S397.375,0,256,0S0,114.625,0,256S114.625,512,256,512z M256,64   c63.719,0,128,36.484,128,118.016c0,47.453-23.531,84.516-69.891,110.016C300.672,299.422,288,314.047,288,320   c0,17.656-14.344,32-32,32c-17.664,0-32-14.344-32-32c0-40.609,37.25-71.938,59.266-84.031   C315.625,218.109,320,198.656,320,182.016C320,135.008,279.906,128,256,128c-30.812,0-64,20.227-64,64.672   c0,17.664-14.336,32-32,32s-32-14.336-32-32C128,109.086,193.953,64,256,64z M256,449.406c-18.211,0-32.961-14.75-32.961-32.969   c0-18.188,14.75-32.953,32.961-32.953c18.219,0,32.969,14.766,32.969,32.953C288.969,434.656,274.219,449.406,256,449.406z' },
       undo: { path: 'M450.159,48.042c8.791,9.032,16.983,18.898,24.59,29.604c7.594,10.706,14.146,22.207,19.668,34.489  c5.509,12.296,9.82,25.269,12.92,38.938c3.113,13.669,4.663,27.834,4.663,42.499c0,14.256-1.511,28.863-4.532,43.822  c-3.009,14.952-7.997,30.217-14.953,45.795c-6.955,15.577-16.202,31.52-27.755,47.826s-25.88,32.9-42.942,49.807  c-5.51,5.444-11.787,11.67-18.834,18.651c-7.033,6.98-14.496,14.366-22.39,22.168c-7.88,7.802-15.955,15.825-24.187,24.069  c-8.258,8.231-16.333,16.203-24.252,23.888c-18.3,18.13-37.354,37.016-57.191,56.65l-56.84-57.445  c19.596-19.472,38.54-38.279,56.84-56.41c7.75-7.685,15.772-15.604,24.108-23.757s16.438-16.163,24.33-24.057  c7.894-7.893,15.356-15.33,22.402-22.312c7.034-6.98,13.312-13.193,18.821-18.651c22.351-22.402,39.165-44.648,50.471-66.738  c11.279-22.09,16.932-43.567,16.932-64.446c0-15.785-3.217-31.005-9.638-45.671c-6.422-14.665-16.229-28.504-29.437-41.529  c-3.282-3.282-7.358-6.395-12.217-9.325c-4.871-2.938-10.381-5.503-16.516-7.697c-6.121-2.201-12.815-3.992-20.058-5.373  c-7.242-1.374-14.9-2.064-23.002-2.064c-8.218,0-16.802,0.834-25.788,2.507c-8.961,1.674-18.053,4.429-27.222,8.271  c-9.189,3.842-18.456,8.869-27.808,15.089c-9.358,6.219-18.521,13.819-27.502,22.793l-59.92,60.271l93.797,94.058H0V40.91  l93.27,91.597l60.181-60.532c13.376-15.018,27.222-27.248,41.536-36.697c14.308-9.443,28.608-16.776,42.89-21.992  c14.288-5.223,28.505-8.74,42.623-10.557C294.645,0.905,308.189,0,321.162,0c13.429,0,26.389,1.185,38.84,3.562  c12.478,2.377,24.2,5.718,35.192,10.029c11.006,4.311,21.126,9.404,30.374,15.265C434.79,34.724,442.995,41.119,450.159,48.042z' },
-      arrow_right : { path : 'M30.796,226.318h377.533L294.938,339.682c-11.899,11.906-11.899,31.184,0,43.084c11.887,11.899,31.19,11.893,43.077,0  l165.393-165.386c5.725-5.712,8.924-13.453,8.924-21.539c0-8.092-3.213-15.84-8.924-21.551L338.016,8.925  C332.065,2.975,324.278,0,316.478,0c-7.802,0-15.603,2.968-21.539,8.918c-11.899,11.906-11.899,31.184,0,43.084l113.391,113.384  H30.796c-16.822,0-30.463,13.645-30.463,30.463C0.333,212.674,13.974,226.318,30.796,226.318z' },
-      arrow_up : { path : 'M295.505,629.446V135.957l148.193,148.206c15.555,15.559,40.753,15.559,56.308,0c15.555-15.538,15.546-40.767,0-56.304  L283.83,11.662C276.372,4.204,266.236,0,255.68,0c-10.568,0-20.705,4.204-28.172,11.662L11.333,227.859  c-7.777,7.777-11.666,17.965-11.666,28.158c0,10.192,3.88,20.385,11.657,28.158c15.563,15.555,40.762,15.555,56.317,0  l148.201-148.219v493.489c0,21.993,17.837,39.82,39.82,39.82C277.669,669.267,295.505,651.439,295.505,629.446z' },
-      arrow_diag : { path : 'M279.875,511.994c-1.292,0-2.607-0.102-3.924-0.312c-10.944-1.771-19.333-10.676-20.457-21.71L233.97,278.348  L22.345,256.823c-11.029-1.119-19.928-9.51-21.698-20.461c-1.776-10.944,4.031-21.716,14.145-26.262L477.792,2.149  c9.282-4.163,20.167-2.165,27.355,5.024c7.201,7.189,9.199,18.086,5.024,27.356L302.22,497.527  C298.224,506.426,289.397,511.994,279.875,511.994z M118.277,217.332l140.534,14.294c11.567,1.178,20.718,10.335,21.878,21.896  l14.294,140.519l144.09-320.792L118.277,217.332z' },
-      auto_zoom: { path : 'M505.441,242.47l-78.303-78.291c-9.18-9.177-24.048-9.171-33.216,0c-9.169,9.172-9.169,24.045,0.006,33.217l38.193,38.188  H280.088V80.194l38.188,38.199c4.587,4.584,10.596,6.881,16.605,6.881c6.003,0,12.018-2.297,16.605-6.875  c9.174-9.172,9.174-24.039,0.011-33.217L273.219,6.881C268.803,2.471,262.834,0,256.596,0c-6.229,0-12.202,2.471-16.605,6.881  l-78.296,78.302c-9.178,9.172-9.178,24.045,0,33.217c9.177,9.171,24.051,9.171,33.21,0l38.205-38.205v155.4H80.521l38.2-38.188  c9.177-9.171,9.177-24.039,0.005-33.216c-9.171-9.172-24.039-9.178-33.216,0L7.208,242.464c-4.404,4.403-6.881,10.381-6.881,16.611  c0,6.227,2.477,12.207,6.881,16.61l78.302,78.291c4.587,4.581,10.599,6.875,16.605,6.875c6.006,0,12.023-2.294,16.61-6.881  c9.172-9.174,9.172-24.036-0.005-33.211l-38.205-38.199h152.593v152.063l-38.199-38.211c-9.171-9.18-24.039-9.18-33.216-0.022  c-9.178,9.18-9.178,24.059-0.006,33.222l78.284,78.302c4.41,4.404,10.382,6.881,16.611,6.881c6.233,0,12.208-2.477,16.611-6.881  l78.302-78.296c9.181-9.18,9.181-24.048,0-33.205c-9.174-9.174-24.054-9.174-33.21,0l-38.199,38.188v-152.04h152.051l-38.205,38.199  c-9.18,9.175-9.18,24.037-0.005,33.211c4.587,4.587,10.596,6.881,16.604,6.881c6.01,0,12.024-2.294,16.605-6.875l78.303-78.285  c4.403-4.403,6.887-10.378,6.887-16.611C512.328,252.851,509.845,246.873,505.441,242.47z' },
+      arrow_right : { path: 'M30.796,226.318h377.533L294.938,339.682c-11.899,11.906-11.899,31.184,0,43.084c11.887,11.899,31.19,11.893,43.077,0  l165.393-165.386c5.725-5.712,8.924-13.453,8.924-21.539c0-8.092-3.213-15.84-8.924-21.551L338.016,8.925  C332.065,2.975,324.278,0,316.478,0c-7.802,0-15.603,2.968-21.539,8.918c-11.899,11.906-11.899,31.184,0,43.084l113.391,113.384  H30.796c-16.822,0-30.463,13.645-30.463,30.463C0.333,212.674,13.974,226.318,30.796,226.318z' },
+      arrow_up : { path: 'M295.505,629.446V135.957l148.193,148.206c15.555,15.559,40.753,15.559,56.308,0c15.555-15.538,15.546-40.767,0-56.304  L283.83,11.662C276.372,4.204,266.236,0,255.68,0c-10.568,0-20.705,4.204-28.172,11.662L11.333,227.859  c-7.777,7.777-11.666,17.965-11.666,28.158c0,10.192,3.88,20.385,11.657,28.158c15.563,15.555,40.762,15.555,56.317,0  l148.201-148.219v493.489c0,21.993,17.837,39.82,39.82,39.82C277.669,669.267,295.505,651.439,295.505,629.446z' },
+      arrow_diag : { path: 'M279.875,511.994c-1.292,0-2.607-0.102-3.924-0.312c-10.944-1.771-19.333-10.676-20.457-21.71L233.97,278.348  L22.345,256.823c-11.029-1.119-19.928-9.51-21.698-20.461c-1.776-10.944,4.031-21.716,14.145-26.262L477.792,2.149  c9.282-4.163,20.167-2.165,27.355,5.024c7.201,7.189,9.199,18.086,5.024,27.356L302.22,497.527  C298.224,506.426,289.397,511.994,279.875,511.994z M118.277,217.332l140.534,14.294c11.567,1.178,20.718,10.335,21.878,21.896  l14.294,140.519l144.09-320.792L118.277,217.332z' },
+      auto_zoom: { path: 'M505.441,242.47l-78.303-78.291c-9.18-9.177-24.048-9.171-33.216,0c-9.169,9.172-9.169,24.045,0.006,33.217l38.193,38.188  H280.088V80.194l38.188,38.199c4.587,4.584,10.596,6.881,16.605,6.881c6.003,0,12.018-2.297,16.605-6.875  c9.174-9.172,9.174-24.039,0.011-33.217L273.219,6.881C268.803,2.471,262.834,0,256.596,0c-6.229,0-12.202,2.471-16.605,6.881  l-78.296,78.302c-9.178,9.172-9.178,24.045,0,33.217c9.177,9.171,24.051,9.171,33.21,0l38.205-38.205v155.4H80.521l38.2-38.188  c9.177-9.171,9.177-24.039,0.005-33.216c-9.171-9.172-24.039-9.178-33.216,0L7.208,242.464c-4.404,4.403-6.881,10.381-6.881,16.611  c0,6.227,2.477,12.207,6.881,16.61l78.302,78.291c4.587,4.581,10.599,6.875,16.605,6.875c6.006,0,12.023-2.294,16.61-6.881  c9.172-9.174,9.172-24.036-0.005-33.211l-38.205-38.199h152.593v152.063l-38.199-38.211c-9.171-9.18-24.039-9.18-33.216-0.022  c-9.178,9.18-9.178,24.059-0.006,33.222l78.284,78.302c4.41,4.404,10.382,6.881,16.611,6.881c6.233,0,12.208-2.477,16.611-6.881  l78.302-78.296c9.181-9.18,9.181-24.048,0-33.205c-9.174-9.174-24.054-9.174-33.21,0l-38.199,38.188v-152.04h152.051l-38.205,38.199  c-9.18,9.175-9.18,24.037-0.005,33.211c4.587,4.587,10.596,6.881,16.604,6.881c6.01,0,12.024-2.294,16.605-6.875l78.303-78.285  c4.403-4.403,6.887-10.378,6.887-16.611C512.328,252.851,509.845,246.873,505.441,242.47z' },
       statbox : {
          path : 'M28.782,56.902H483.88c15.707,0,28.451-12.74,28.451-28.451C512.331,12.741,499.599,0,483.885,0H28.782   C13.074,0,0.331,12.741,0.331,28.451C0.331,44.162,13.074,56.902,28.782,56.902z' +
                 'M483.885,136.845H28.782c-15.708,0-28.451,12.741-28.451,28.451c0,15.711,12.744,28.451,28.451,28.451H483.88   c15.707,0,28.451-12.74,28.451-28.451C512.331,149.586,499.599,136.845,483.885,136.845z' +
@@ -69,6 +91,7 @@
       three_circles: { path: "M256,85 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0  M256,255 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0  M256,425 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0 " },
       diamand: { path: "M256,0L384,256L256,511L128,256z" },
       rect: { path: "M80,80h352v352h-352z" },
+      cross: { path: "M80,40l176,176l176,-176l40,40l-176,176l176,176l-40,40l-176,-176l-176,176l-40,-40l176,-176l-176,-176z" },
 
       CreateSVG : function(group,btn,size,title) {
          var svg = group.append("svg:svg")
@@ -101,21 +124,26 @@
 
    // ==========================================================================================
 
+   /** @summary Draw options interpreter.
+    * @constructor
+    * @memberof JSROOT
+    */
    var DrawOptions = function(opt) {
       this.opt = opt && (typeof opt=="string") ? opt.toUpperCase().trim() : "";
       this.part = "";
    }
 
-   /// returns true if remaining options are empty
+   /** @summary Returns true if remaining options are empty. */
    DrawOptions.prototype.empty = function() {
       return this.opt.length === 0;
    }
 
-   /// returns remaining part of the draw options
+   /** @summary Returns remaining part of the draw options. */
    DrawOptions.prototype.remain = function() {
       return this.opt;
    }
 
+   /** @summary Checks if given option exists */
    DrawOptions.prototype.check = function(name,postpart) {
       var pos = this.opt.indexOf(name);
       if (pos < 0) return false;
@@ -132,13 +160,15 @@
       return true;
    }
 
+   /** @summary Returns remaining part of found option as integer. */
    DrawOptions.prototype.partAsInt = function(offset, dflt) {
       var val = this.part.replace( /^\D+/g, '');
       val = val ? parseInt(val,10) : Number.NaN;
       return isNaN(val) ? (dflt || 0) : val + (offset || 0);
    }
 
-   /** @class JSROOT.Painter Holder of different functions and classes for drawing */
+   // ============================================================================================
+
    var Painter = {
          Coord: {
             kCARTESIAN : 1,
@@ -403,6 +433,11 @@
 
    JSROOT.Painter = Painter; // export here to avoid ambiguity
 
+   Painter.convertSymbol = function(charactere) {
+     // example: '#pi' will give '\u03A0'
+     return Painter.symbols_map[charactere];
+   }
+
    Painter.createMenu = function(painter, maincallback) {
       // dummy functions, forward call to the jquery function
       document.body.style.cursor = 'wait';
@@ -427,14 +462,23 @@
       }
 
       var inter = JSROOT.GetUrlOption("interactive", url);
-      if ((inter=="") || (inter=="1")) inter = "11111"; else
-      if (inter=="0") inter = "00000";
-      if ((inter!==null) && (inter.length==5)) {
-         JSROOT.gStyle.Tooltip =     parseInt(inter[0]);
-         JSROOT.gStyle.ContextMenu = (inter[1] != '0');
-         JSROOT.gStyle.Zooming  =    (inter[2] != '0');
-         JSROOT.gStyle.MoveResize =  (inter[3] != '0');
-         JSROOT.gStyle.DragAndDrop = (inter[4] != '0');
+      if (inter === "nomenu") JSROOT.gStyle.ContextMenu = false;
+      else if (inter !== null) {
+         if (!inter || (inter=="1")) inter = "111111"; else
+         if (inter=="0") inter = "000000";
+         if (inter.length === 6) {
+            if (inter[0] == "0") JSROOT.gStyle.ToolBar = false; else
+            if (inter[0] == "1") JSROOT.gStyle.ToolBar = 'popup'; else
+            if (inter[0] == "2") JSROOT.gStyle.ToolBar = true;
+            inter = inter.substr(1);
+         }
+         if (inter.length==5) {
+            JSROOT.gStyle.Tooltip =     parseInt(inter[0]);
+            JSROOT.gStyle.ContextMenu = (inter[1] != '0');
+            JSROOT.gStyle.Zooming  =    (inter[2] != '0');
+            JSROOT.gStyle.MoveResize =  (inter[3] != '0');
+            JSROOT.gStyle.DragAndDrop = (inter[4] != '0');
+         }
       }
 
       var tt = JSROOT.GetUrlOption("tooltip", url);
@@ -446,20 +490,28 @@
       if ((mathjax!==null) && (mathjax!="0") && (latex===null)) latex = "math";
       if (latex!==null) JSROOT.gStyle.Latex = latex; // decoding will be performed with the first text drawing
 
-      if (JSROOT.GetUrlOption("nomenu", url)!=null) JSROOT.gStyle.ContextMenu = false;
-      if (JSROOT.GetUrlOption("noprogress", url)!=null) JSROOT.gStyle.ProgressBox = false;
-      if (JSROOT.GetUrlOption("notouch", url)!=null) JSROOT.touches = false;
-      if (JSROOT.GetUrlOption("adjframe", url)!=null) JSROOT.gStyle.CanAdjustFrame = true;
+      if (JSROOT.GetUrlOption("nomenu", url)!==null) JSROOT.gStyle.ContextMenu = false;
+      if (JSROOT.GetUrlOption("noprogress", url)!==null) JSROOT.gStyle.ProgressBox = false;
+      if (JSROOT.GetUrlOption("notouch", url)!==null) JSROOT.touches = false;
+      if (JSROOT.GetUrlOption("adjframe", url)!==null) JSROOT.gStyle.CanAdjustFrame = true;
 
-      JSROOT.gStyle.fOptStat = JSROOT.GetUrlOption("optstat", url, JSROOT.gStyle.fOptStat);
-      JSROOT.gStyle.fOptFit = JSROOT.GetUrlOption("optfit", url, JSROOT.gStyle.fOptFit);
+      var optstat = JSROOT.GetUrlOption("optstat", url);
+      if (optstat!==null) JSROOT.gStyle.fOptStat = parseInt(optstat);
+      var optfit = JSROOT.GetUrlOption("optfit", url);
+      if (optfit!==null) JSROOT.gStyle.fOptFit = parseInt(optfit);
       JSROOT.gStyle.fStatFormat = JSROOT.GetUrlOption("statfmt", url, JSROOT.gStyle.fStatFormat);
       JSROOT.gStyle.fFitFormat = JSROOT.GetUrlOption("fitfmt", url, JSROOT.gStyle.fFitFormat);
 
       var toolbar = JSROOT.GetUrlOption("toolbar", url);
-      if (toolbar !== null)
-         if (toolbar==='popup') JSROOT.gStyle.ToolBar = 'popup';
-                           else JSROOT.gStyle.ToolBar = (toolbar !== "0") && (toolbar !== "false");
+      if (toolbar !== null) {
+         var val = null;
+         if (toolbar.indexOf('popup')>=0) val = 'popup';
+         if (toolbar.indexOf('left')>=0) { JSROOT.gStyle.ToolBarSide = 'left'; val = 'popup'; }
+         if (toolbar.indexOf('right')>=0) { JSROOT.gStyle.ToolBarSide = 'right'; val = 'popup'; }
+         if (toolbar.indexOf('vert')>=0) { JSROOT.gStyle.ToolBarVert = true; val = 'popup'; }
+         if (toolbar.indexOf('show')>=0) val = true;
+         JSROOT.gStyle.ToolBar = val || ((toolbar.indexOf("0")<0) && (toolbar.indexOf("false")<0) && (toolbar.indexOf("off")<0));
+      }
 
       var palette = JSROOT.GetUrlOption("palette", url);
       if (palette!==null) {
@@ -529,7 +581,7 @@
       return rgb;
    }
 
-   // add new colors from object array
+   /** Add new colors from object array. */
    Painter.extendRootColors = function(jsarr, objarr) {
       if (!objarr || !objarr.arr) return;
 
@@ -545,45 +597,60 @@
       }
    }
 
-   /// Use TObjArray of TColor instances, typically stored together with TCanvas primitives
+   /** Use TObjArray of TColor instances, typically stored together with TCanvas primitives
+    * @private */
    Painter.adoptRootColors = function(objarr) {
       Painter.extendRootColors(Painter.root_colors, objarr);
    }
+
+   // =====================================================================
+
+   /**
+    * Color palette handle.
+    * @constructor
+    * @memberof JSROOT
+    * @private
+    */
 
    function ColorPalette(arr) {
       this.palette = arr;
    }
 
-   /// returns color index which correspond to contour index of provided length
+   /** @summary Returns color index which correspond to contour index of provided length */
    ColorPalette.prototype.calcColorIndex = function(i,len) {
       var theColor = Math.floor((i+0.99)*this.palette.length/(len-1));
       if (theColor > this.palette.length-1) theColor = this.palette.length-1;
       return theColor;
    }
 
-   /// returns color with provided index
+   /** @summary Returns color with provided index */
    ColorPalette.prototype.getColor = function(indx) {
       return this.palette[indx];
    }
 
-   /// returns number of colors in the palette
+   /** @summary Returns number of colors in the palette */
    ColorPalette.prototype.getLength = function() {
       return this.palette.length;
    }
 
-   // calculate color for given i and len
+   /** @summary Calculate color for given i and len */
    ColorPalette.prototype.calcColor = function(i,len) {
       var indx = this.calcColorIndex(i,len);
       return this.getColor(indx);
    }
 
-   function TAttMarkerHandler(attmarker, style) {
-      var marker_color = Painter.root_colors[attmarker.fMarkerColor];
-      if (!style || (style<0)) style = attmarker.fMarkerStyle;
+   // =============================================================================
 
+   /**
+    * @summary Handle for marker attributes.
+    * @constructor
+    * @memberof JSROOT
+    */
+
+   function TAttMarkerHandler(args) {
       this.x0 = this.y0 = 0;
-      this.color = marker_color;
-      this.style = style;
+      this.color = 'black';
+      this.style = 1;
       this.size = 8;
       this.scale = 1;
       this.stroke = true;
@@ -595,23 +662,72 @@
 
       this.func = this.Apply.bind(this);
 
-      this.Change(marker_color, style, attmarker.fMarkerSize);
+      this.SetArgs(args);
 
       this.changed = false;
    }
 
+   /** @summary Set marker attributes.
+    *
+    * @param {object} args - arguments can be
+    * @param {object} args.attr - instance of TAttrMarker (or derived class) or
+    * @param {string} args.color - color in HTML form like grb(1,4,5) or 'green'
+    * @param {number} args.style - marker style
+    * @param {number} args.size - marker size
+    */
+   TAttMarkerHandler.prototype.SetArgs = function(args) {
+      if ((typeof args == 'object') && (typeof args.fMarkerStyle == 'number')) args = { attr: args };
+
+      if (args.attr) {
+         if (args.color === undefined) args.color = Painter.root_colors[args.attr.fMarkerColor];
+         if (!args.style || (args.style<0)) args.style = args.attr.fMarkerStyle;
+         if (!args.size) args.size = args.attr.fMarkerSize;
+      }
+
+      this.Change(args.color, args.style, args.size);
+   }
+
+   /** @summary Reset position, used for optimization of drawing of multiple markers
+    * @private */
    TAttMarkerHandler.prototype.reset_pos = function() {
       this.lastx = this.lasty = null;
    }
 
+   /** @summary Create marker path for given position.
+    *
+    * @desc When drawing many elementary points, created path may depend from previously produced markers.
+    *
+    * @param {number} x - first coordinate
+    * @param {number} y - second coordinate
+    * @returns {string} path string
+    */
    TAttMarkerHandler.prototype.create = function(x,y) {
-      return "M" + (x+this.x0).toFixed(this.ndig)+ "," + (y+this.y0).toFixed(this.ndig) + this.marker;
+      if (!this.optimized)
+         return "M" + (x+this.x0).toFixed(this.ndig)+ "," + (y+this.y0).toFixed(this.ndig) + this.marker;
+
+      // use optimized handling with relative position
+      var xx = Math.round(x), yy = Math.round(y), m1 = "M"+xx+","+yy+"h1",
+          m2 = (this.lastx===null) ? m1 : ("m"+(xx-this.lastx)+","+(yy-this.lasty)+"h1");
+      this.lastx = xx+1; this.lasty = yy;
+      return (m2.length < m1.length) ? m2 : m1;
    }
 
+   /** @summary Returns full size of marker */
    TAttMarkerHandler.prototype.GetFullSize = function() {
       return this.scale*this.size;
    }
 
+   /** @summary Returns approximate length of produced marker string */
+   TAttMarkerHandler.prototype.MarkerLength = function() {
+      return this.marker ? this.marker.length : 10;
+   }
+
+   /** @summary Change marker attributes.
+    *
+    *  @param {string} color - marker color
+    *  @param {number} style - marker style
+    *  @param {number} size - marker size
+    */
    TAttMarkerHandler.prototype.Change = function(color, style, size) {
       this.changed = true;
 
@@ -625,18 +741,12 @@
          this.fill = false;
          this.marker = "h1";
          this.size = 1;
-
-         // use special create function to handle relative position movements
-         this.create = function(x,y) {
-            var xx = Math.round(x), yy = Math.round(y), m1 = "M"+xx+","+yy+"h1";
-            var m2 = (this.lastx===null) ? m1 : ("m"+(xx-this.lastx)+","+(yy-this.lasty)+"h1");
-            this.lastx = xx+1; this.lasty = yy;
-            return (m2.length < m1.length) ? m2 : m1;
-         }
-
+         this.optimized = true;
          this.reset_pos();
          return true;
       }
+
+      this.optimized = false;
 
       var marker_kind = Painter.root_markers[this.style];
       if (marker_kind === undefined) marker_kind = 100;
@@ -714,34 +824,77 @@
       return true;
    }
 
+   /** @summary Apply marker styles to created element */
    TAttMarkerHandler.prototype.Apply = function(selection) {
       selection.style('stroke', this.stroke ? this.color : "none");
       selection.style('fill', this.fill ? this.color : "none");
    }
 
-   function TAttLineHandler(attline, borderw, can_excl, direct_line_color) {
-      var color = 'black', _width = 0, style = 0;
-      if (typeof attline == 'string') {
-         color = attline;
-         if (color!=='none') _width = 1;
-      } else
-      if (typeof attline == 'object') {
-         if ('fLineColor' in attline) color = direct_line_color || Painter.root_colors[attline.fLineColor];
-         if ('fLineWidth' in attline) _width = attline.fLineWidth;
-         if ('fLineStyle' in attline) style = attline.fLineStyle;
-      } else
-      if ((attline !== undefined) && !isNaN(attline)) {
-         color = Painter.root_colors[attline];
-         if (color) { _width = 1; style = 1; }
+   /** Method used when color or pattern were changed with OpenUi5 widgets.
+    * @private */
+   TAttMarkerHandler.prototype.verifyDirectChange = function(painter) {
+      this.Change(this.color, parseInt(this.style), parseFloat(this.size));
+   }
+
+   /** @summary Create sample with marker in given SVG element
+    *
+    * @param {selection} svg - SVG element
+    * @param {number} width - width of sample SVG
+    * @param {number} height - height of sample SVG
+    * @private
+    */
+   TAttMarkerHandler.prototype.CreateSample = function(svg, width, height) {
+      this.reset_pos();
+
+      svg.append("path")
+         .attr("d", this.create(width/2, height/2))
+         .call(this.func);
+   }
+
+   // =======================================================================
+
+   /**
+    * Handle for line attributes.
+    * @constructor
+    * @memberof JSROOT
+    */
+
+   function TAttLineHandler(args) {
+      this.func = this.Apply.bind(this);
+      this.used = true;
+      if (args._typename && (args.fLineStyle!==undefined)) args = { attr: args };
+
+      this.SetArgs(args);
+   }
+
+   /**
+    * @summary Set line attributes.
+    *
+    * @param {object} args - specify attributes by different ways
+    * @param {object} args.attr - TAttLine object with appropriate data members or
+    * @param {string} args.color - color in html like rgb(10,0,0) or "red"
+    * @param {number} args.style - line style number
+    * @param {number} args.width - line width
+    */
+   TAttLineHandler.prototype.SetArgs = function(args) {
+      if (args.attr) {
+         args.color = args.color0 || Painter.root_colors[args.attr.fLineColor];
+         if (args.width===undefined) args.width = args.attr.fLineWidth;
+         args.style = args.attr.fLineStyle;
+      } else if (typeof args.color == 'string') {
+         if ((args.color !== 'none') && !args.width) args.width = 1;
+      } else if (typeof args.color == 'number') {
+         args.color = Painter.root_colors[args.color];
       }
 
-      if (borderw!==undefined) _width = borderw;
+      if (args.width===undefined)
+         args.width = (args.color && args.color!='none') ? 1 : 0;
 
-      this.used = true; // can mark object if it used or not,
-      this.color = (_width==0) ? 'none' : color;
-      this.width = _width;
-      this.style = style;
-      if (can_excl) {
+      this.color = (args.width===0) ? 'none' : args.color;
+      this.width = args.width;
+      this.style = args.style;
+
+      if (args.can_excl) {
          this.excl_side = this.excl_width = 0;
          if (Math.abs(this.width) > 99) {
             // exclusion graph
@@ -752,11 +905,14 @@
       }
 
       // if custom color number used, use lightgrey color to show lines
-      if ((this.color === undefined) && (this.width > 0))
+      if (!this.color && (this.width > 0))
          this.color = 'lightgrey';
-
-      this.func = this.Apply.bind(this);
    }
+
+   /**
+    * @summary Change exclusion attributes.
+    * @private
+    */
 
    TAttLineHandler.prototype.ChangeExcl = function(side,width) {
       if (width !== undefined) this.excl_width = width;
@@ -767,16 +923,36 @@
       this.changed = true;
    }
 
+   /**
+    * @summary Returns true if line attribute is empty and will not be applied.
+    */
+
+   TAttLineHandler.prototype.empty = function() {
+      return this.color == 'none';
+   }
+
+   /**
+    * @summary Applies line attribute to selection.
+    *
+    * @param {object} selection - d3.js selection
+    */
+
    TAttLineHandler.prototype.Apply = function(selection) {
       this.used = true;
-      if (this.color=='none') {
-         selection.style('stroke',null).style('stroke-width',null).style('stroke-dasharray',null);
-      } else {
+      if (this.empty())
+         selection.style('stroke', null)
+                  .style('stroke-width', null)
+                  .style('stroke-dasharray', null);
+      else
          selection.style('stroke', this.color)
                   .style('stroke-width', this.width)
                   .style('stroke-dasharray', Painter.root_line_styles[this.style] || null);
-      }
    }
+
+   /**
+    * @summary Change line attributes
+    * @private
+    */
 
    TAttLineHandler.prototype.Change = function(color, width, style) {
       if (color !== undefined) this.color = color;
@@ -785,33 +961,55 @@
       this.changed = true;
    }
 
-   function TAttFillHandler(attfill, pattern, color, kind, main_svg) {
-      // fill kind can be 1 or 2
-      // 1 means object drawing where combination fillcolor==0 and fillstyle==1001 means no filling
-      // 2 means all other objects where such combination is white-color filling
-      // object painter required when special fill pattern should be registered in central canvas def section
+   /**
+    * Create sample element inside primitive SVG - used in context menu
+    * @private
+    */
+
+   TAttLineHandler.prototype.CreateSample = function(svg, width, height) {
+      svg.append("path")
+         .attr("d","M0," + height/2+"h"+width)
+         .call(this.func);
+   }
+
+   // =======================================================================
+
+
+   /**
+    * @summary Handle for fill attributes.
+    * @constructor
+    * @memberof JSROOT
+    * @param {object} args - different arguments to set fill attributes
+    * @param {number} [args.kind = 2] - 1 means object drawing where combination fillcolor==0 and fillstyle==1001 means no filling,  2 means all other objects where such combination is white-color filling
+    */
+
+   function TAttFillHandler(args) {
 
       this.color = "none";
       this.colorindx = 0;
       this.pattern = 0;
       this.used = true;
-      this.kind = (kind!==undefined) ? kind : 2;
+      this.kind = args.kind || 2;
       this.changed = false;
       this.func = this.Apply.bind(this);
-
-      if (attfill && (typeof attfill == 'object')) {
-         if ((pattern===undefined) && ('fFillStyle' in attfill)) pattern = attfill.fFillStyle;
-         if ((color==undefined) && ('fFillColor' in attfill)) color = attfill.fFillColor;
-      }
-
-      this.Change(color, pattern, main_svg);
+      this.SetArgs(args);
       this.changed = false; // unset change property that
    }
 
+   /** @summary Set fill style as arguments */
+   TAttFillHandler.prototype.SetArgs = function(args) {
+      if (args.attr && (typeof args.attr == 'object')) {
+         if ((args.pattern===undefined) && (args.attr.fFillStyle!==undefined)) args.pattern = args.attr.fFillStyle;
+         if ((args.color===undefined) && (args.attr.fFillColor!==undefined)) args.color = args.attr.fFillColor;
+      }
+      this.Change(args.color, args.pattern, args.svg, args.color_as_svg);
+   }
+
+   /** @summary Apply fill style to selection */
    TAttFillHandler.prototype.Apply = function(selection) {
       this.used = true;
 
-      selection.style('fill', this.color);
+      selection.style('fill', this.fillcolor());
 
       if ('opacity' in this)
          selection.style('opacity', this.opacity);
@@ -820,57 +1018,97 @@
          selection.style('antialias', this.antialias);
    }
 
+   /** @summary Returns fill color (or pattern url) */
+   TAttFillHandler.prototype.fillcolor = function() {
+      return this.pattern_url || this.color;
+   }
+
+   /** @summary Returns fill color without pattern url.
+    *
+    * @desc If empty, alternative color will be provided
+    * @param {string} [altern=undefined] - alternative color which returned when fill color not exists
+    * @private */
+   TAttFillHandler.prototype.fillcoloralt = function(altern) {
+      return this.color && (this.color!="none") ? this.color : altern;
+   }
+
+   /** @summary Returns true if color not specified or fill style not specified */
    TAttFillHandler.prototype.empty = function() {
-      // return true if color not specified or fill style not specified
-      return (this.color == 'none');
+      var fill = this.fillcolor();
+      return !fill || (fill == 'none');
    }
 
-   TAttFillHandler.prototype.isSolid = function() {
-      return this.pattern === 1001;
+   /** @summary Set solid fill color as fill pattern
+    * @param {string} col - solid color */
+   TAttFillHandler.prototype.SetSolidColor = function(col) {
+      delete this.pattern_url;
+      this.color = col;
+      this.pattern = 1001;
    }
 
-   // method used when color or pattern were changed with OpenUi5 widgets
+   /** @summary Check if solid fill is used, also color can be checked
+    * @param {string} [solid_color = undefined] - when specified, checks if fill color matches */
+   TAttFillHandler.prototype.isSolid = function(solid_color) {
+      if (this.pattern !== 1001) return false;
+      return !solid_color || solid_color==this.color;
+   }
+
+   /** @summary Method used when color or pattern were changed with OpenUi5 widgets
+    * @private */
    TAttFillHandler.prototype.verifyDirectChange = function(painter) {
-      if ((this.color !== 'none') && (this.pattern < 1001)) this.color = 'none';
-      var indx = this.colorindx;
-      if (this.color !== 'none') {
-         indx = JSROOT.Painter.root_colors.indexOf(this.color);
-         if (indx<0) {
-            indx = JSROOT.Painter.root_colors.length;
-            JSROOT.Painter.root_colors.push(this.color);
-         }
-      }
-      this.Change(indx, this.pattern, painter ? painter.svg_canvas() : null);
+      if (typeof this.pattern == 'string') this.pattern = parseInt(this.pattern);
+      if (isNaN(this.pattern)) this.pattern = 0;
+
+      this.Change(this.color, this.pattern, painter ? painter.svg_canvas() : null, true);
    }
 
-   TAttFillHandler.prototype.Change = function(color, pattern, svg) {
+   /** @summary Method to change fill attributes.
+    *
+    * @param {number} color - color index
+    * @param {number} pattern - pattern index
+    * @param {selection} svg - top canvas element for pattern storages
+    * @param {string} [color_as_svg = undefined] - color as HTML string index
+    */
+   TAttFillHandler.prototype.Change = function(color, pattern, svg, color_as_svg) {
+
+      delete this.pattern_url;
       this.changed = true;
 
-      if ((color !== undefined) && !isNaN(color))
-         this.colorindx = color;
+      if ((color !== undefined) && !isNaN(color) && !color_as_svg)
+         this.colorindx = parseInt(color);
 
       if ((pattern !== undefined) && !isNaN(pattern)) {
-         this.pattern = pattern;
+         this.pattern = parseInt(pattern);
          delete this.opacity;
          delete this.antialias;
       }
 
-      if ((this.pattern == 1000) && (this.colorindx===0)) {
-         this.color = 'white';
+      if ((this.pattern == 1000) && (this.colorindx === 0)) {
+         this.pattern_url = 'white';
          return true;
       }
+
+      if (this.pattern == 1000) this.pattern = 1001;
 
       if (this.pattern < 1001) {
-         this.color = 'none';
+         this.pattern_url = 'none';
          return true;
       }
 
-      if (this.isSolid() && (this.colorindx===0) && (this.kind===1)) {
-         this.color = 'none';
+      if (this.isSolid() && (this.colorindx===0) && (this.kind===1) && !color_as_svg) {
+         this.pattern_url = 'none';
          return true;
       }
 
-      this.color = JSROOT.Painter.root_colors[this.colorindx];
+      var indx = this.colorindx;
+
+      if (color_as_svg) {
+         this.color = color;
+         indx = 10000 + JSROOT.id_counter++; // use fictial unique index far away from existing color indexes
+      } else {
+         this.color = JSROOT.Painter.root_colors[indx];
+      }
+
       if (typeof this.color != 'string') this.color = "none";
 
       if (this.isSolid()) return true;
@@ -883,17 +1121,19 @@
 
       if (!svg || svg.empty() || (this.pattern < 3000)) return false;
 
-      var id = "pat_" + this.pattern + "_" + this.colorindx;
+      var id = "pat_" + this.pattern + "_" + indx,
+          defs = svg.select('.canvas_defs');
 
-      var defs = svg.select('.canvas_defs');
       if (defs.empty())
          defs = svg.insert("svg:defs",":first-child").attr("class","canvas_defs");
 
-      var line_color = this.color;
-      this.color = "url(#" + id + ")";
+      this.pattern_url = "url(#" + id + ")";
       this.antialias = false;
 
-      if (!defs.select("."+id).empty()) return true;
+      if (!defs.select("."+id).empty()) {
+         if (color_as_svg) console.log('find id in def', id);
+         return true;
+      }
 
       var lines = "", lfill = null, fills = "", fills2 = "", w = 2, h = 2;
 
@@ -1002,33 +1242,29 @@
                      .attr("width", w).attr("height", h);
 
       if (fills2) {
-         var col = d3.rgb(line_color);
+         var col = d3.rgb(this.color);
          col.r = Math.round((col.r+255)/2); col.g = Math.round((col.g+255)/2); col.b = Math.round((col.b+255)/2);
          patt.append("svg:path").attr("d", fills2).style("fill", col);
       }
-      if (fills) patt.append("svg:path").attr("d", fills).style("fill", line_color);
-      if (lines) patt.append("svg:path").attr("d", lines).style('stroke', line_color).style("stroke-width", 1).style("fill", lfill);
+      if (fills) patt.append("svg:path").attr("d", fills).style("fill", this.color);
+      if (lines) patt.append("svg:path").attr("d", lines).style('stroke', this.color).style("stroke-width", 1).style("fill", lfill);
 
       return true;
    }
 
-   /** Function returns the ready to use marker for drawing */
-   Painter.createAttMarker = function(attmarker, style) {
-      return new TAttMarkerHandler(attmarker, style);
+   /** @summary Create sample of fill pattern inside SVG
+    * @private */
+   TAttFillHandler.prototype.CreateSample = function(sample_svg, width, height) {
+
+      // we need to create extra handle to change
+      var sample = new TAttFillHandler({ svg: sample_svg, pattern: this.pattern, color: this.color, color_as_svg: true });
+
+      sample_svg.append("path")
+                .attr("d","M0,0h" + width+"v"+height+"h-" + width + "z")
+                .call(sample.func);
    }
 
-   Painter.createAttLine = function(attline, borderw, can_excl) {
-      return new TAttLineHandler(attline, borderw, can_excl);
-   }
-
-   Painter.clearCuts = function(chopt) {
-      /* decode string "chopt" and remove graphical cuts */
-      var left = chopt.indexOf('['),
-          right = chopt.indexOf(']');
-      if ((left>=0) && (right>=0) && (left<right))
-          for (var i = left; i <= right; ++i) chopt[i] = ' ';
-      return chopt;
-   }
+   // ===========================================================================
 
    Painter.getFontDetails = function(fontIndex, size) {
 
@@ -1066,7 +1302,7 @@
    }
 
    Painter.chooseTimeFormat = function(awidth, ticks) {
-      if (awidth < .5) return ticks ? "%S.%L" : "%M:%S.%L";
+      if (awidth < .5) return ticks ? "%S.%L" : "%H:%M:%S.%L";
       if (awidth < 30) return ticks ? "%Mm%S" : "%H:%M:%S";
       awidth /= 60; if (awidth < 30) return ticks ? "%Hh%M" : "%d/%m %H:%M";
       awidth /= 60; if (awidth < 12) return ticks ? "%d-%Hh" : "%d/%m/%y %Hh";
@@ -1133,10 +1369,14 @@
       while ((str.length>2) && (str[0]=='{') && (str[str.length-1]=='}'))
          str = str.substr(1,str.length-2);
 
-      // str = str.replace(/\^2/gi, '^{2}').replace(/\^3/gi,'^{3}');
+      if (!Painter.symbolsRegexCache) {
+        // Create a single regex to detect any symbol to replace
+        Painter.symbolsRegexCache = new RegExp('(' + Object.keys(Painter.symbols_map).join('|').replace(/\{/g, '\{').replace(/\\}/g, '\\}') + ')', 'g');
+      }
 
-      for (var i in this.symbols_map)
-         str = str.replace(new RegExp(i,'g'), this.symbols_map[i]);
+      str = str.replace(Painter.symbolsRegexCache, Painter.convertSymbol);
+
+      str = str.replace(/\{\}/g, "");
 
       return str;
    }
@@ -1151,15 +1391,16 @@
       return (str.indexOf("#")>=0) || (str.indexOf("\\")>=0) || (str.indexOf("{")>=0);
    }
 
+   /** Function translates ROOT TLatex into MathJax format */
    Painter.translateMath = function(str, kind, color, painter) {
-      // function translate ROOT TLatex into MathJax format
 
       if (kind != 2) {
          for (var x in Painter.math_symbols_map)
             str = str.replace(new RegExp(x,'g'), Painter.math_symbols_map[x]);
 
          for (var x in Painter.symbols_map)
-            str = str.replace(new RegExp(x,'g'), "\\" + x.substr(1));
+            if (x.length > 2)
+               str = str.replace(new RegExp(x,'g'), "\\" + x.substr(1));
 
          // replace all #color[]{} occurances
          var clean = "", first = true;
@@ -1178,10 +1419,13 @@
             if (p<=0) break;
             var colindx = parseInt(str.substr(0,p));
             if (isNaN(colindx)) break;
-            var col = painter.get_color(colindx);
+            var col = painter.get_color(colindx), cnt = 1;
             str = str.substr(p+2);
-            p = str.indexOf("}");
-            if (p<0) break;
+            p = -1;
+            while (cnt && (++p<str.length)) {
+               if (str[p]=='{') cnt++; else if (str[p]=='}') cnt--;
+            }
+            if (cnt!=0) break;
 
             var part = str.substr(0,p);
             str = str.substr(p+1);
@@ -1201,14 +1445,17 @@
       //   color = color.replace(/rgb/g, "[RGB]")
       //                .replace(/\(/g, '{')
       //                .replace(/\)/g, '}');
-      return "\\(\\color{" + color + '}' + str + "\\)";
+      return "\\(\\color{" + color + '}{' + str + "}\\)";
    }
 
+   /** Function used to provide svg:path for the smoothed curves.
+    *
+    * reuse code from d3.js. Used in TH1, TF1 and TGraph painters
+    * kind should contain "bezier" or "line".
+    * If first symbol "L", then it used to continue drawing
+    * @private
+    */
    Painter.BuildSvgPath = function(kind, bins, height, ndig) {
-      // function used to provide svg:path for the smoothed curves
-      // reuse code from d3.js. Used in TH1, TF1 and TGraph painters
-      // kind should contain "bezier" or "line".
-      // If first symbol "L", than it used to continue drawing
 
       var smooth = kind.indexOf("bezier") >= 0;
 
@@ -1251,93 +1498,199 @@
          }
       }
 
-      var res = {}, bin = bins[0], prev, maxy = Math.max(bin.gry, height+5),
-          currx = Math.round(bin.grx), curry = Math.round(bin.gry), dx, dy;
+      var res = { path: "", close: "" }, bin = bins[0], prev, maxy = Math.max(bin.gry, height+5),
+          currx = Math.round(bin.grx), curry = Math.round(bin.gry), dx, dy, npnts = bins.length;
 
-      res.path = ((kind[0] == "L") ? "L" : "M") +
-                  bin.grx.toFixed(ndig) + "," + bin.gry.toFixed(ndig);
+      function conv(val) {
+         var vvv = Math.round(val);
+         if ((ndig==0) || (vvv===val)) return vvv.toString();
+         var str = val.toFixed(ndig);
+         while ((str[str.length-1] == '0') && (str.lastIndexOf(".") < str.length-1))
+            str = str.substr(0,str.length-1);
+         if (str[str.length-1] == '.')
+            str = str.substr(0,str.length-1);
+         if (str == "-0") str = "0";
+         return str;
+      }
+
+      res.path = ((kind[0] == "L") ? "L" : "M") + conv(bin.grx) + "," + conv(bin.gry);
 
       // just calculate all deltas, can be used to build exclusion
       if (smooth || kind.indexOf('calc')>=0)
          jsroot_d3_svg_lineMonotoneTangents(bins);
 
-      if (smooth)
-         res.path +=  "c" + bin.dgrx.toFixed(ndig) + "," + bin.dgry.toFixed(ndig) + ",";
+      if (smooth) {
+         // build smoothed curve
+         res.path += "c" + conv(bin.dgrx) + "," + conv(bin.dgry) + ",";
+         for(var n=1; n<npnts; ++n) {
+            var prev = bin;
+            bin = bins[n];
+            if (n > 1) res.path += "s";
+            res.path += conv(bin.grx-bin.dgrx-prev.grx) + "," + conv(bin.gry-bin.dgry-prev.gry) + "," + conv(bin.grx-prev.grx) + "," + conv(bin.gry-prev.gry);
+            maxy = Math.max(maxy, prev.gry);
+         }
+      } else if (npnts < 10000) {
+         // build simple curve
+         for(var n=1; n<npnts; ++n) {
+            bin = bins[n];
+            dx = Math.round(bin.grx) - currx;
+            dy = Math.round(bin.gry) - curry;
+            if (dx && dy) res.path += "l"+dx+","+dy;
+            else if (!dx && dy) res.path += "v"+dy;
+            else if (dx && !dy) res.path += "h"+dx;
+            currx += dx; curry += dy;
+            maxy = Math.max(maxy, curry);
+         }
+      } else {
+         // build line with trying optimize many vertical moves
+         var lastx, lasty, cminy = curry, cmaxy = curry, prevy = curry;
+         for(var n=1; n<npnts; ++n) {
+            bin = bins[n];
+            lastx = Math.round(bin.grx);
+            lasty = Math.round(bin.gry);
+            maxy = Math.max(maxy, lasty);
+            dx = lastx - currx;
+            if (dx===0) {
+               // if X not change, just remember amplitude and
+               cminy = Math.min(cminy, lasty);
+               cmaxy = Math.max(cmaxy, lasty);
+               prevy = lasty;
+               continue;
+            }
 
-      for(var n=1; n<bins.length; ++n) {
-          prev = bin;
-          bin = bins[n];
-          if (smooth) {
-             if (n > 1) res.path += "s";
-             res.path += (bin.grx-bin.dgrx-prev.grx).toFixed(ndig) + "," + (bin.gry-bin.dgry-prev.gry).toFixed(ndig) + "," + (bin.grx-prev.grx).toFixed(ndig) + "," + (bin.gry-prev.gry).toFixed(ndig);
-             maxy = Math.max(maxy, prev.gry);
-          } else {
-             dx = Math.round(bin.grx - currx);
-             dy = Math.round(bin.gry - curry);
-             res.path += "l" + dx + "," + dy;
-             currx+=dx; curry+=dy;
-             maxy = Math.max(maxy, curry);
-          }
+            if (cminy !== cmaxy) {
+               if (cminy != curry) res.path += "v" + (cminy-curry);
+               res.path += "v" + (cmaxy-cminy);
+               if (cmaxy != prevy) res.path += "v" + (prevy-cmaxy);
+               curry = prevy;
+            }
+            dy = lasty - curry;
+            if (dy) res.path += "l"+dx+","+dy;
+               else res.path += "h"+dx;
+            currx = lastx; curry = lasty;
+            prevy = cminy = cmaxy = lasty;
+         }
+
+         if (cminy != cmaxy) {
+            if (cminy != curry) res.path += "v"+(cminy-curry);
+            res.path += "v"+(cmaxy-cminy);
+            if (cmaxy != prevy) res.path += "v"+(prevy-cmaxy);
+            curry = prevy;
+         }
+
       }
 
       if (height>0)
-         res.close = "L" + bin.grx.toFixed(ndig) +"," + maxy.toFixed(ndig) +
-                     "L" + bins[0].grx.toFixed(ndig) +"," + maxy.toFixed(ndig) + "Z";
+         res.close = "L"+conv(bin.grx)+","+conv(maxy) +
+                     "h"+conv(bins[0].grx-bin.grx) + "Z";
 
       return res;
    }
 
    // ==============================================================================
 
-   function LongPollSocket(addr) {
+   function LongPollSocket(addr, _raw, _args) {
       this.path = addr;
       this.connid = null;
       this.req = null;
+      this.raw = _raw;
+      this.args = _args;
 
       this.nextrequest("", "connect");
    }
 
    LongPollSocket.prototype.nextrequest = function(data, kind) {
-      var url = this.path, sync = "";
+      var url = this.path, reqmode = "buf", post = null;
       if (kind === "connect") {
-         url+="?connect";
+         url += this.raw ? "?raw_connect" : "?txt_connect";
+         if (this.args) url += "&" + this.args;
+         console.log('longpoll connect ' + url + ' raw = ' + this.raw);
          this.connid = "connect";
-      } else
-         if (kind === "close") {
-            if ((this.connid===null) || (this.connid==="close")) return;
-            url+="?connection="+this.connid + "&close";
-            this.connid = "close";
-            if (JSROOT.browser.qt5) sync = ";sync"; // use sync mode to close qt5 webengine
-         } else
-            if ((this.connid===null) || (typeof this.connid!=='number')) {
-               return console.error("No connection");
-            } else {
-               url+="?connection="+this.connid;
-               if (kind==="dummy") url+="&dummy";
-            }
-
-      if (data) {
-         // special workaround to avoid POST request, which is not supported in WebEngine
-         var post = "&post=";
-         for (var k=0;k<data.length;++k) post+=data.charCodeAt(k).toString(16);
-         url += post;
+      } else if (kind === "close") {
+         if ((this.connid===null) || (this.connid==="close")) return;
+         url+="?connection="+this.connid + "&close";
+         this.connid = "close";
+         reqmode += ";sync"; // use sync mode to close connection before browser window closed
+      } else if ((this.connid===null) || (typeof this.connid!=='number')) {
+         return console.error("No connection");
+      } else {
+         url+="?connection="+this.connid;
+         if (kind==="dummy") url+="&dummy";
       }
 
-      var req = JSROOT.NewHttpRequest(url, "text" + sync, function(res) {
-         if (res===null) res = this.response; // workaround for WebEngine - it does not handle content correctly
-         if (this.handle.req === this) {
-            this.handle.req = null; // get response for existing dummy request
-            if (res == "<<nope>>") res = "";
+      if (data) {
+         if (this.raw) {
+            // special workaround to avoid POST request, use base64 coding
+            url += "&post=" + btoa(data);
+         } else {
+            // send data with post request - most efficient way
+            reqmode = "post";
+            post = data;
          }
-         this.handle.processreq(res);
+      }
+
+      var req = JSROOT.NewHttpRequest(url, reqmode, function(res) {
+         // this set to the request itself, res is response
+
+         if (this.handle.req === this)
+            this.handle.req = null; // get response for existing dummy request
+
+         if (res === null)
+            return this.handle.processreq(null);
+
+         if (this.handle.raw) {
+            // raw mode - all kind of reply data packed into binary buffer
+            // first 4 bytes header "txt:" or "bin:"
+            // after the "bin:" there is length of optional text argument like "bin:14  :optional_text"
+            // and immedaitely after text binary data. Server sends binary data so, that offset should be multiple of 8
+
+            var str = "", i = 0, u8Arr = new Uint8Array(res), offset = u8Arr.length;
+            if (offset < 4) {
+               console.error('longpoll got short message in raw mode ' + offset);
+               return this.handle.processreq(null);
+            }
+
+            while(i<4) str += String.fromCharCode(u8Arr[i++]);
+            if (str != "txt:") {
+               str = "";
+               while ((i<offset) && (String.fromCharCode(u8Arr[i]) != ':')) str += String.fromCharCode(u8Arr[i++]);
+               ++i;
+               offset = i + parseInt(str.trim());
+            }
+
+            str = "";
+            while (i<offset) str += String.fromCharCode(u8Arr[i++]);
+
+            if (str) {
+               if (str == "<<nope>>") str = "";
+               this.handle.processreq(str);
+            }
+            if (offset < u8Arr.length)
+               this.handle.processreq(res, offset);
+         } else if (this.getResponseHeader("Content-Type") == "application/x-binary") {
+            // binary reply with optional header
+            var extra_hdr = this.getResponseHeader("LongpollHeader");
+            if (extra_hdr) this.handle.processreq(extra_hdr);
+            this.handle.processreq(res, 0);
+         } else {
+            // text reply
+            if (res && typeof res !== "string") {
+               var str = "", u8Arr = new Uint8Array(res);
+               for (var i = 0; i < u8Arr.length; ++i)
+                  str += String.fromCharCode(u8Arr[i]);
+               res = str;
+            }
+            if (res == "<<nope>>") res = "";
+            this.handle.processreq(res);
+         }
       });
 
       req.handle = this;
       if (kind==="dummy") this.req = req; // remember last dummy request, wait for reply
-      req.send();
+      req.send(post);
    }
 
-   LongPollSocket.prototype.processreq = function(res) {
+   LongPollSocket.prototype.processreq = function(res, _offset) {
       if (res===null) {
          if (typeof this.onerror === 'function') this.onerror("receive data with connid " + (this.connid || "---"));
          // if (typeof this.onclose === 'function') this.onclose();
@@ -1346,6 +1699,12 @@
       }
 
       if (this.connid==="connect") {
+         if (!res) {
+            this.connid = null;
+            if (typeof this.onerror === 'function') this.onerror("connection rejected");
+            return;
+         }
+
          this.connid = parseInt(res);
          console.log('Get new longpoll connection with id ' + this.connid);
          if (typeof this.onopen == 'function') this.onopen();
@@ -1354,8 +1713,9 @@
          return;
       } else {
          if ((typeof this.onmessage==='function') && res)
-            this.onmessage({ data: res });
+            this.onmessage({ data: res, offset: _offset });
       }
+
       if (!this.req) this.nextrequest("","dummy"); // send new poll request when necessary
    }
 
@@ -1367,113 +1727,87 @@
       this.nextrequest("", "close");
    }
 
-   function Cef3QuerySocket(addr) {
-      // make very similar to longpoll
-      // create persistent CEF requests which could be use from client application at eny time
-
-      if (!window || !('cefQuery' in window)) return null;
-
-      this.path = addr;
-      this.connid = null;
-      this.nextrequest("","connect");
-   }
-
-   Cef3QuerySocket.prototype.nextrequest = function(data, kind) {
-      var req = { request: "", persistent: false };
-      if (kind === "connect") {
-         req.request = "connect";
-         req.persistent = true; // this initial request will be used for all messages from the server
-         this.connid = "connect";
-      } else if (kind === "close") {
-         if ((this.connid===null) || (this.connid==="close")) return;
-         req.request = this.connid + '::close';
-         this.connid = "close";
-      } else if ((this.connid===null) || (typeof this.connid!=='number')) {
-         return console.error("No connection");
-      } else {
-         req.request = this.connid + '::post';
-         if (data) req.request += "::" + data;
-      }
-
-      if (!req.request) return console.error("No CEF request");
-
-      req.request = this.path + "::" + req.request; // URL always preceed any command
-
-      req.onSuccess = this.onSuccess.bind(this);
-      req.onFailure = this.onFailure.bind(this);
-
-      this.cefid = window.cefQuery(req); // equvalent to req.send
-
-      return this;
-   }
-
-   Cef3QuerySocket.prototype.onFailure = function(error_code, error_message) {
-      console.log("CEF_ERR: " + error_code);
-      if (typeof this.onerror === 'function') this.onerror("failure with connid " + (this.connid || "---"));
-      this.connid = null;
-   }
-
-   Cef3QuerySocket.prototype.onSuccess = function(response) {
-      if (!response) return; // normal situation when request does not send any reply
-
-      if (this.connid==="connect") {
-         this.connid = parseInt(response);
-         console.log('Get new CEF connection with id ' + this.connid);
-         if (typeof this.onopen == 'function') this.onopen();
-      } else if (this.connid==="close") {
-         if (typeof this.onclose == 'function') this.onclose();
-      } else {
-         if ((typeof this.onmessage==='function') && response)
-            this.onmessage({ data: response });
-      }
-   }
-
-   Cef3QuerySocket.prototype.send = function(str) {
-      this.nextrequest(str);
-   }
-
-   Cef3QuerySocket.prototype.close = function() {
-      this.nextrequest("", "close");
-      if (this.cefid) window.cefQueryCancel(this.cefid);
-      delete this.cefid;
-   }
-
    // ========================================================================================
 
 
-   // client communication handle for TWebWindow
-
+   /** Client communication handle for TWebWindow.
+    *
+    * Should be created with {@link JSROOT.ConnectWebWindow} function
+    *
+    * @constructor
+    * @memberof JSROOT
+    */
    function WebWindowHandle(socket_kind) {
-      if (socket_kind=='cefquery' && (!window || !('cefQuery' in window))) socket_kind = 'longpoll';
-
       this.kind = socket_kind;
       this.state = 0;
       this.cansend = 10;
       this.ackn = 10;
    }
 
-   /// Set object which hanldes different socket callbacks like OnWebsocketMsg, OnWebsocketOpened, OnWebsocketClosed
+   /** Set callbacks receiever.
+    *
+    * Following function can be defined in receiver object:
+    *    - OnWebsocketMsg
+    *    - OnWebsocketOpened,
+    *    - OnWebsocketClosed
+    */
    WebWindowHandle.prototype.SetReceiver = function(obj) {
       this.receiver = obj;
    }
 
+   /** Cleanup and close connection. */
    WebWindowHandle.prototype.Cleanup = function() {
       delete this.receiver;
       this.Close(true);
    }
 
-   WebWindowHandle.prototype.InvokeReceiver = function(method, arg) {
+   /** Invoke method in the receiver.
+    * @private */
+   WebWindowHandle.prototype.InvokeReceiver = function(method, arg, arg2) {
       if (this.receiver && (typeof this.receiver[method] == 'function'))
-         this.receiver[method](this, arg);
+         this.receiver[method](this, arg, arg2);
    }
 
+   /** Provide data for receiver. When no queue - do it directly.
+    * @private */
+   WebWindowHandle.prototype.ProvideData = function(_msg, _len) {
+      if (!this.msgqueue)
+         return this.InvokeReceiver("OnWebsocketMsg", _msg, _len);
+      this.msgqueue.push({ ready: true, msg: _msg, len: _len});
+   }
+
+   /** Reserver entry in queue for data, which is not yet decoded.
+    * @private */
+   WebWindowHandle.prototype.ReserveQueueItem = function() {
+      if (!this.msgqueue) this.msgqueue = [];
+      var item = { ready: false, msg: null, len: 0 };
+      this.msgqueue.push(item);
+      return item;
+   }
+
+   /** Reserver entry in queue for data, which is not yet decoded.
+    * @private */
+   WebWindowHandle.prototype.DoneItem = function(item, _msg, _len) {
+      item.ready = true;
+      item.msg = _msg;
+      item.len = _len;
+      while ((this.msgqueue.length > 0) && this.msgqueue[0].ready) {
+         this.InvokeReceiver("OnWebsocketMsg", this.msgqueue[0].msg, this.msgqueue[0].len);
+         this.msgqueue.shift();
+      }
+      if (this.msgqueue.length == 0)
+         delete this.msgqueue;
+   }
+
+   /** Close connection. */
    WebWindowHandle.prototype.Close = function(force) {
+
       if (this.timerid) {
          clearTimeout(this.timerid);
          delete this.timerid;
       }
 
-      if (this._websocket && this.state > 0) {
+      if (this._websocket && (this.state > 0)) {
          this.state = force ? -1 : 0; // -1 prevent socket from reopening
          this._websocket.onclose = null; // hide normal handler
          this._websocket.close();
@@ -1481,12 +1815,13 @@
       }
    }
 
+   /** Send text message via the connection. */
    WebWindowHandle.prototype.Send = function(msg, chid) {
       if (!this._websocket || (this.state<=0)) return false;
 
       if (isNaN(chid) || (chid===undefined)) chid = 1; // when not configured, channel 1 is used - main widget
 
-      if (this.cansend <= 0) console.error('should be queued before sending');
+      if (this.cansend <= 0) console.error('should be queued before sending cansend: ' + this.cansend);
 
       var prefix = this.ackn + ":" + this.cansend + ":" + chid + ":";
       this.ackn = 0;
@@ -1497,15 +1832,20 @@
          if (this.timerid) clearTimeout(this.timerid);
          this.timerid = setTimeout(this.KeepAlive.bind(this), 10000);
       }
+
       return true;
    }
 
+   /** Send keepalive message.
+    * @private */
    WebWindowHandle.prototype.KeepAlive = function() {
       delete this.timerid;
       this.Send("KEEPALIVE", 0);
    }
 
-   /// method opens relative path with the same kind of socket
+   /** Method opens relative path with the same kind of socket.
+    * @private
+    */
    WebWindowHandle.prototype.CreateRelative = function(relative) {
       if (!relative || !this.kind || !this.href) return null;
 
@@ -1515,44 +1855,45 @@
       return handle;
    }
 
+   /** Create configured socket for current object. */
    WebWindowHandle.prototype.Connect = function(href) {
-      // create websocket for current object (canvas)
-      // via websocket one recieved many extra information
 
       this.Close();
 
-      var pthis = this;
+      var pthis = this, ntry = 0, args = (this.key ? ("key=" + this.key) : "");
 
       function retry_open(first_time) {
 
          if (pthis.state != 0) return;
 
-         if (!first_time) console.log("try open websocket again");
+         // if (!first_time) console.log("try connect window again" + (new Date()).getTime());
 
          if (pthis._websocket) pthis._websocket.close();
          delete pthis._websocket;
 
-         var path = window.location.href, conn = null;
-
-         if (path && path.lastIndexOf("/")>0) path = path.substr(0, path.lastIndexOf("/")+1);
-         if (!href) href = path;
+         var conn = null;
+         if (!href) {
+            href = window.location.href;
+            if (href && href.lastIndexOf("/")>0) href = href.substr(0, href.lastIndexOf("/")+1);
+         }
          pthis.href = href;
+         ntry++;
 
-         console.log('Opening web socket at ' + href);
+         if (first_time) console.log('Opening web socket at ' + href);
 
-         if (pthis.kind == 'cefquery') {
-            if (href.indexOf("rootscheme://rootserver")==0) href = href.substr(23);
-            console.log('configure cefquery ' + href);
-            conn = new Cef3QuerySocket(href);
-         } else if ((pthis.kind !== 'longpoll') && first_time) {
-            href = href.replace("http://", "ws://").replace("https://", "wss://");
-            href += "root.websocket";
-            console.log('configure websocket ' + href);
-            conn = new WebSocket(href);
+         if (ntry>2) JSROOT.progress("Trying to connect " + href);
+
+         var path = href;
+
+         if ((pthis.kind === 'websocket') && first_time) {
+            path = path.replace("http://", "ws://").replace("https://", "wss://") + "root.websocket";
+            if (args) path += "?" + args;
+            console.log('configure websocket ' + path);
+            conn = new WebSocket(path);
          } else {
-            href += "root.longpoll";
-            console.log('configure longpoll ' + href);
-            conn = new LongPollSocket(href);
+            path += "root.longpoll";
+            console.log('configure longpoll ' + path);
+            conn = new LongPollSocket(path, (pthis.kind === 'rawlongpoll'), args);
          }
 
          if (!conn) return;
@@ -1560,14 +1901,39 @@
          pthis._websocket = conn;
 
          conn.onopen = function() {
-            console.log('websocket initialized');
+            if (ntry > 2) JSROOT.progress();
             pthis.state = 1;
-            pthis.Send("READY", 0); // need to confirm connection
+
+            var key = pthis.key || "";
+
+            pthis.Send("READY=" + key, 0); // need to confirm connection
             pthis.InvokeReceiver('OnWebsocketOpened');
          }
 
          conn.onmessage = function(e) {
             var msg = e.data;
+
+            if (pthis.next_binary) {
+               delete pthis.next_binary;
+
+               if (msg instanceof Blob) {
+                  // this is case of websocket
+                  // console.log('Get Blob object - convert to buffer array');
+                  var reader = new FileReader, qitem = pthis.ReserveQueueItem();
+                  reader.onload = function(event) {
+                     // The file's text will be printed here
+                     pthis.DoneItem(qitem, event.target.result, 0);
+                  }
+                  reader.readAsArrayBuffer(msg, e.offset || 0);
+               } else {
+                  // console.log('got array ' + (typeof msg) + ' len = ' + msg.byteLength);
+                  // this is from CEF or LongPoll handler
+                  pthis.ProvideData(msg, e.offset || 0);
+               }
+
+               return;
+            }
+
             if (typeof msg != 'string') return console.log("unsupported message kind: " + (typeof msg));
 
             var i1 = msg.indexOf(":"),
@@ -1590,8 +1956,10 @@
                   pthis.Close(true); // force closing of socket
                   pthis.InvokeReceiver('OnWebsocketClosed');
                }
+            } else if (msg == "$$binary$$") {
+               pthis.next_binary = true;
             } else {
-               pthis.InvokeReceiver('OnWebsocketMsg', msg);
+               pthis.ProvideData(msg);
             }
 
             if (pthis.ackn > 7)
@@ -1608,28 +1976,139 @@
          }
 
          conn.onerror = function (err) {
-            console.log("err "+err);
-            pthis.InvokeReceiver('OnWebsocketError', err);
+            console.log("websocket error " + err);
+            if (pthis.state > 0) {
+               pthis.InvokeReceiver('OnWebsocketError', err);
+               pthis.state = 0;
+            }
          }
 
-         setTimeout(retry_open, 3000); // after 3 seconds try again
+         // only in interactive mode try to reconnect
+         if (!JSROOT.BatchMode)
+            setTimeout(retry_open, 3000); // after 3 seconds try again
 
       } // retry_open
 
       retry_open(true); // call for the first time
    }
 
+   /** @summary Method used to initialize connection to web window.
+    *
+    * @param {object} arg - arguemnts
+    * @param {string} [arg.prereq] - prerequicities, which should be loaded
+    * @param {string} [arg.socket_kind] - kind of connection longpoll|websocket, detected automatically from URL
+    * @param {object} arg.receiver - instance of receiver for websocket events, allows to initiate connection immediately
+    * @param {string} arg.first_recv - required prefix in the first message from TWebWindow, remain part of message will be returned as arg.first_msg
+    * @param {string} [arg.prereq2] - second part of prerequcities, which is loaded parallel to connecting with WebWindow
+    * @param {function} arg.callback - function which is called with WebWindowHandle or when establish connection and get first portion of data
+    */
+
+   JSROOT.ConnectWebWindow = function(arg) {
+      if (typeof arg == 'function') arg = { callback: arg }; else
+      if (!arg || (typeof arg != 'object')) arg = {};
+
+      if (arg.prereq)
+         return JSROOT.AssertPrerequisites(arg.prereq, function() {
+            delete arg.prereq; JSROOT.ConnectWebWindow(arg);
+         }, arg.prereq_logdiv);
+
+      // special hold script, prevents headless browser from too early exit
+      if ((JSROOT.GetUrlOption("batch_mode")!==null) && JSROOT.GetUrlOption("key") && (JSROOT.browser.isChromeHeadless || JSROOT.browser.isChrome))
+         JSROOT.loadScript("root_batch_holder.js?key=" + JSROOT.GetUrlOption("key"));
+
+      if (!arg.platform)
+         arg.platform = JSROOT.GetUrlOption("platform");
+
+      if (arg.platform == "qt5") JSROOT.browser.qt5 = true; else
+      if (arg.platform == "cef3") JSROOT.browser.cef3 = true;
+
+      if (arg.batch === undefined)
+         arg.batch = (JSROOT.GetUrlOption("batch_mode")!==null); //  && (JSROOT.browser.qt5 || JSROOT.browser.cef3 || JSROOT.browser.isChrome);
+
+      if (arg.batch) JSROOT.BatchMode = true;
+
+      if (!arg.socket_kind)
+         arg.socket_kind = JSROOT.GetUrlOption("ws");
+
+      if (!arg.socket_kind) {
+         if (JSROOT.browser.qt5) arg.socket_kind = "rawlongpoll"; else
+         if (JSROOT.browser.cef3) arg.socket_kind = "longpoll"; else arg.socket_kind = "websocket";
+      }
+
+      // only for debug purposes
+      // arg.socket_kind = "longpoll";
+
+      var handle = new WebWindowHandle(arg.socket_kind);
+
+      if (window) {
+         window.onbeforeunload = handle.Close.bind(handle, true);
+         if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
+      }
+
+      if (arg.first_recv) {
+         arg.receiver = {
+            OnWebsocketOpened: function(handle) {
+               console.log('Connected');
+            },
+
+            OnWebsocketMsg: function(handle, msg) {
+                // console.log('Get message ' + msg + ' handle ' + !!handle);
+                if (msg.indexOf(arg.first_recv)!=0)
+                   return handle.Close();
+                arg.first_msg = msg.substr(arg.first_recv.length);
+
+                if (!arg.prereq2) JSROOT.CallBack(arg.callback, handle, arg);
+            },
+
+            OnWebsocketClosed: function(handle) {
+               // when connection closed, close panel as well
+               JSROOT.CloseCurrentWindow();
+            }
+         };
+      }
+
+      handle.key = JSROOT.GetUrlOption("key");
+
+      if (!arg.receiver)
+         return JSROOT.CallBack(arg.callback, handle, arg);
+
+      // when receiver is exists, it handles itself callbacks
+      handle.SetReceiver(arg.receiver);
+      handle.Connect();
+
+      if (arg.prereq2) {
+         JSROOT.AssertPrerequisites(arg.prereq2, function() {
+            delete arg.prereq2; // indicate that func is loaded
+            if (!arg.first_recv || arg.first_msg) JSROOT.CallBack(arg.callback, handle, arg);
+         });
+      } else if (!arg.first_recv) {
+         JSROOT.CallBack(arg.callback, handle, arg);
+      }
+
+   }
+
    // ========================================================================================
+
+   /**
+    * @summary Basic painter class.
+    * @constructor
+    * @memberof JSROOT
+    */
 
    function TBasePainter() {
       this.divid = null; // either id of element (preferable) or element itself
    }
 
+   /** @summary Access painter reference, stored in first child element.
+    *
+    *    - on === true - set *this* as painter
+    *    - on === false - delete painter reference
+    *    - on === undefined - return painter
+    *
+    * @param {boolean} on - that to perfrom
+    * @private
+    */
    TBasePainter.prototype.AccessTopPainter = function(on) {
-      // access painter in the first child element
-      // on === true - set this as painter
-      // on === false - delete painter
-      // on === undefined - return painter
       var main = this.select_main().node(),
          chld = main ? main.firstChild : null;
       if (!chld) return null;
@@ -1638,25 +2117,28 @@
       return chld.painter;
    }
 
+   /** @summary Generic method to cleanup painter */
    TBasePainter.prototype.Cleanup = function(keep_origin) {
-      // generic method to cleanup painter
 
       var origin = this.select_main('origin');
       if (!origin.empty() && !keep_origin) origin.html("");
-      this.set_layout_kind('simple');
+      if (this._changed_layout)
+         this.set_layout_kind('simple');
       this.AccessTopPainter(false);
       this.divid = null;
 
       if (this._hpainter && typeof this._hpainter.ClearPainter === 'function') this._hpainter.ClearPainter(this);
 
+      delete this._changed_layout;
       delete this._hitemname;
       delete this._hdrawopt;
       delete this._hpainter;
    }
 
-   TBasePainter.prototype.DrawingReady = function(res_painter) {
-      // function should be called by the painter when first drawing is completed
+   /** @summary Function should be called by the painter when first drawing is completed
+    * @private */
 
+   TBasePainter.prototype.DrawingReady = function(res_painter) {
       this._ready_called_ = true;
       if (this._ready_callback_ !== undefined) {
          var callbacks = this._ready_callback_;
@@ -1671,29 +2153,56 @@
       return this;
    }
 
+   /** @summary Call back will be called when painter ready with the drawing
+    * @private
+    */
    TBasePainter.prototype.WhenReady = function(callback) {
-      // call back will be called when painter ready with the drawing
       if (typeof callback !== 'function') return;
       if ('_ready_called_' in this) return JSROOT.CallBack(callback, this);
       if (this._ready_callback_ === undefined) this._ready_callback_ = [];
       this._ready_callback_.push(callback);
    }
 
+   /** @summary Reset ready state - painter should again call DrawingReady to signal readyness
+   * @private
+   */
+   TBasePainter.prototype.ResetReady = function() {
+      delete this._ready_called_;
+      delete this._ready_callback_;
+   }
+
+   /** @summary Returns drawn object
+    *
+    * @abstract
+    */
    TBasePainter.prototype.GetObject = function() {
       return null;
    }
 
+   /** @summary Returns true if type match with drawn object type
+    * @abstract
+    * @private
+    */
    TBasePainter.prototype.MatchObjectType = function(typ) {
       return false;
    }
 
+   /** @summary Called to update drawn object content
+    * @abstract
+    * @private */
    TBasePainter.prototype.UpdateObject = function(obj) {
       return false;
    }
 
+   /** @summary Redraw all objects in current pad
+    * @abstract
+    * @private */
    TBasePainter.prototype.RedrawPad = function(resize) {
    }
 
+   /** @summary Updates object and readraw it
+    * @param {object} obj - new version of object, values will be updated in original object
+    * @returns {boolean} true if object updated and redrawn */
    TBasePainter.prototype.RedrawObject = function(obj) {
       if (!this.UpdateObject(obj)) return false;
       var current = document.body.style.cursor;
@@ -1703,13 +2212,26 @@
       return true;
    }
 
+   /** @summary Checks if draw elements were resized and drawing should be updated
+    * @abstract
+    * @private */
    TBasePainter.prototype.CheckResize = function(arg) {
-      return false; // indicate if resize is processed
+      return false;
    }
 
+   /** @summary Method called when interactively changes attribute in given class
+    * @abstract
+    * @private */
+   TBasePainter.prototype.AttributeChange = function(class_name, member_name, new_value) {
+      // function called when user interactively changes attribute in given class
+
+      // console.log("Changed attribute", class_name, member_name, new_value);
+   }
+
+   /** @summary Returns d3.select for main element for drawing, defined with this.divid.
+    *
+    * @desc if main element was layouted, returns main element inside layout */
    TBasePainter.prototype.select_main = function(is_direct) {
-      // return d3.select for main element for drawing, defined with divid
-      // if main element was layouted, returns main element inside layout
 
       if (!this.divid) return d3.select(null);
       var id = this.divid;
@@ -1729,6 +2251,9 @@
       return res;
    }
 
+   /** @summary Returns layout kind
+    * @private
+    */
    TBasePainter.prototype.get_layout_kind = function() {
       var origin = this.select_main('origin'),
           layout = origin.empty() ? "" : origin.property('layout');
@@ -1736,6 +2261,9 @@
       return layout || 'simple';
    }
 
+   /** @summary Set layout kind
+    * @private
+    */
    TBasePainter.prototype.set_layout_kind = function(kind, main_selector) {
       // change layout settings
       var origin = this.select_main('origin');
@@ -1743,13 +2271,18 @@
          if (!kind) kind = 'simple';
          origin.property('layout', kind);
          origin.property('layout_selector', (kind!='simple') && main_selector ? main_selector : null);
+         this._changed_layout = (kind !== 'simple'); // use in cleanup
       }
    }
 
+   /** @summary Function checks if geometry of main div was changed.
+    *
+    * @desc returns size of area when main div is drawn
+    * take into account enlarge state
+    *
+    * @private
+    */
    TBasePainter.prototype.check_main_resize = function(check_level, new_size, height_factor) {
-      // function checks if geometry of main div changed
-      // returns size of area when main div is drawn
-      // take into account enlarge state
 
       var enlarge = this.enlarge_main('state'),
           main_origin = this.select_main('origin'),
@@ -1762,9 +2295,8 @@
                        .style('height',new_size.height+"px");
       }
 
-      var rect_origin = this.get_visible_rect(main_origin, true);
-
-      var can_resize = main_origin.attr('can_resize'),
+      var rect_origin = this.get_visible_rect(main_origin, true),
+          can_resize = main_origin.attr('can_resize'),
           do_resize = false;
 
       if (can_resize == "height")
@@ -1801,9 +2333,21 @@
       return rect;
    }
 
-   TBasePainter.prototype.enlarge_main = function(action) {
-      // action can be:  true, false, 'toggle', 'state', 'verify'
-      // if action not specified, just return possibility to enlarge main div
+   /** @summary Try enlarge main drawing element to full HTML page.
+    *
+    * @desc Possible values for parameter:
+    *
+    *    - true - try to enlarge
+    *    - false - cancel enlarge state
+    *    - 'toggle' - toggle enlarge state
+    *    - 'state' - return current state
+    *    - 'verify' - check if element can be enlarged
+    *
+    * if action not specified, just return possibility to enlarge main div
+    *
+    * @private
+    */
+   TBasePainter.prototype.enlarge_main = function(action, skip_warning) {
 
       var main = this.select_main(true),
           origin = this.select_main('origin');
@@ -1835,7 +2379,8 @@
          // if new enlarge area not big enough, do not do it
          if ((rect2.width <= rect1.width) || (rect2.height <= rect1.height))
             if (rect2.width*rect2.height < rect1.width*rect1.height) {
-               console.log('Enlarged area ' + rect2.width+"x"+rect2.height + ' smaller then original drawing ' + rect1.width+"x"+rect1.height);
+               if (!skip_warning)
+                  console.log('Enlarged area ' + rect2.width+"x"+rect2.height + ' smaller then original drawing ' + rect1.width+"x"+rect1.height);
                enlarge.remove();
                return false;
             }
@@ -1860,6 +2405,8 @@
       return false;
    }
 
+   /** @summary Return CSS value in given HTML element
+    * @private */
    TBasePainter.prototype.GetStyleValue = function(elem, name) {
       if (!elem || elem.empty()) return 0;
       var value = elem.style(name);
@@ -1868,8 +2415,9 @@
       return isNaN(value) ? 0 : Math.round(value);
    }
 
+   /** @summary Returns rect with width/height which correspond to the visible area of drawing region of element.
+    * @private */
    TBasePainter.prototype.get_visible_rect = function(elem, fullsize) {
-      // return rect with width/height which correspond to the visible area of drawing region
 
       if (JSROOT.nodejs)
          return { width : parseInt(elem.attr("width")), height: parseInt(elem.attr("height")) };
@@ -1886,15 +2434,25 @@
       return res;
    }
 
+   /** @summary Assign painter to specified element
+    *
+    * @desc base painter does not creates canvas or frames
+    * it registered in the first child element
+    *
+    * @param {string|object} divid - element ID or DOM Element
+    */
    TBasePainter.prototype.SetDivId = function(divid) {
-      // base painter does not creates canvas or frames
-      // it registered in the first child element
       if (arguments.length > 0)
          this.divid = divid;
 
       this.AccessTopPainter(true);
    }
 
+   /** @summary Set item name, associated with the painter
+    *
+    * @desc Used by {@link JSROOT.HiearchyPainter}
+    * @private
+    */
    TBasePainter.prototype.SetItemName = function(name, opt, hpainter) {
       if (typeof name === 'string') this._hitemname = name;
                                else delete this._hitemname;
@@ -1904,41 +2462,67 @@
       this._hpainter = hpainter;
    }
 
+   /** @summary Returns assigned item name
+    * @private */
    TBasePainter.prototype.GetItemName = function() {
       return ('_hitemname' in this) ? this._hitemname : null;
    }
 
+   /** @summary Returns assigned item draw option
+    * @private */
    TBasePainter.prototype.GetItemDrawOpt = function() {
       return ('_hdrawopt' in this) ? this._hdrawopt : "";
    }
 
+   /** @summary Check if it makes sense to zoom inside specified axis range
+    *
+    * @param {string} axis - name of axis like 'x', 'y', 'z'
+    * @param {number} left - left axis range
+    * @param {number} right - right axis range
+    * @returns true is zooming makes sense
+    * @abstract
+    * @private
+    */
    TBasePainter.prototype.CanZoomIn = function(axis,left,right) {
-      // check if it makes sense to zoom inside specified axis range
       return false;
    }
 
    // ==============================================================================
 
+   /**
+    * Basic painter for objects inside TCanvas/TPad.
+    *
+    * @constructor
+    * @memberof JSROOT
+    * @augments JSROOT.TBasePainter
+    * @param {object} obj - object to draw
+    */
    function TObjectPainter(obj) {
       TBasePainter.call(this);
       this.draw_g = null; // container for all drawn objects
       this.pad_name = ""; // name of pad where object is drawn
       this.main = null;  // main painter, received from pad
-      this.draw_object = ((obj!==undefined) && (typeof obj == 'object')) ? obj : null;
+      this.AssignObject(obj);
    }
 
    TObjectPainter.prototype = Object.create(TBasePainter.prototype);
 
+   TObjectPainter.prototype.AssignObject = function(obj) {
+      this.draw_object = ((obj!==undefined) && (typeof obj == 'object')) ? obj : null;
+   }
+
+   /** @summary Generic method to cleanup painter.
+    *
+    * @desc Remove object drawing and in case of main painter - also main HTML components
+    */
    TObjectPainter.prototype.Cleanup = function() {
-      // generic method to cleanup painters
-      // first of all, remove object drawing and in case of main painter - also main HTML components
 
       this.RemoveDrawG();
 
       var keep_origin = true;
 
       if (this.is_main_painter()) {
-         var pp = this.pad_painter(true);
+         var pp = this.pad_painter();
          if (!pp || pp.normal_canvas === false) keep_origin = false;
       }
 
@@ -1952,21 +2536,29 @@
       delete this.lineatt;
       delete this.markeratt;
       delete this.bins;
-      delete this._drawopt;
       delete this.root_colors;
+      delete this.options;
+      delete this.options_store;
 
       TBasePainter.prototype.Cleanup.call(this, keep_origin);
    }
 
+   /** @summary Returns drawn object */
    TObjectPainter.prototype.GetObject = function() {
       return this.draw_object;
    }
 
+   /** @summary Returns drawn object class name */
    TObjectPainter.prototype.GetClassName = function() {
       var res = this.draw_object ? this.draw_object._typename : "";
       return res || "";
    }
 
+   /** @summary Checks if drawn object matches with provided typename
+    *
+    * @param {string} arg - typename
+    * @param {string} arg._typename - if arg is object, use its typename
+    */
    TObjectPainter.prototype.MatchObjectType = function(arg) {
       if (!arg || !this.draw_object) return false;
       if (typeof arg === 'string') return (this.draw_object._typename === arg);
@@ -1974,6 +2566,10 @@
       return this.draw_object._typename.match(arg);
    }
 
+   /** @summary Changes item name.
+    *
+    * @desc When available, used for svg:title proprty
+    * @private */
    TObjectPainter.prototype.SetItemName = function(name, opt, hpainter) {
       TBasePainter.prototype.SetItemName.call(this, name, opt, hpainter);
       if (this.no_default_title || (name=="")) return;
@@ -1982,44 +2578,100 @@
                    else this.select_main().attr("title", name);
    }
 
+   /** @summary Store actual options together with original string
+    * @private */
+   TObjectPainter.prototype.OptionsStore = function(original) {
+      if (!this.options) return;
+      this.options.original = original || "";
+      this.options_store = JSROOT.extend({}, this.options);
+   }
+
+   /** @summary Checks if any draw options were changed
+    *
+    * @private
+    */
+   TObjectPainter.prototype.OptionesChanged = function() {
+      if (!this.options) return false;
+      if (!this.options_store) return true;
+
+      for (var k in this.options)
+         if (this.options[k] !== this.options_store[k]) return true;
+
+      return false;
+   }
+
+   /** @summary Return actual draw options as string
+    * @private
+    */
+   TObjectPainter.prototype.OptionsAsString = function() {
+      if (!this.options) return "";
+
+      if (!this.OptionesChanged())
+         return this.options.original || "";
+
+      if (typeof this.options.asString == "function")
+         return this.options.asString();
+
+      return this.options.original || ""; // nothing better, return original draw option
+   }
+
+   /** @summary Generic method to update object content.
+    *
+    * @desc Just copy all members from source object
+    * @param {object} obj - object with new data
+    */
    TObjectPainter.prototype.UpdateObject = function(obj) {
-      // generic method to update object
-      // just copy all members from source object
       if (!this.MatchObjectType(obj)) return false;
       JSROOT.extend(this.GetObject(), obj);
       return true;
    }
 
+   /** @summary Returns string which either item or object name.
+    *
+    * @desc Such string can be used as tooltip. If result string larger than 20 symbols, it will be cutted.
+    * @private
+    */
    TObjectPainter.prototype.GetTipName = function(append) {
       var res = this.GetItemName(), obj = this.GetObject();
-      if (res===null) res = "";
-      if ((res.length === 0) && obj && obj.fName)
-         res = this.GetObject().fName;
+      if (!res) res = obj && obj.fName ? obj.fName : "";
       if (res.lenght > 20) res = res.substr(0,17) + "...";
-      if ((res.length > 0) && (append!==undefined)) res += append;
+      if (res && append) res += append;
       return res;
    }
 
-   TObjectPainter.prototype.pad_painter = function(active_pad) {
-      var can = active_pad ? this.svg_pad() : this.svg_canvas();
-      return can.empty() ? null : can.property('pad_painter');
+   /** @summary returns pad painter for specified pad
+    * @private */
+   TObjectPainter.prototype.pad_painter = function(pad_name) {
+      var elem = this.svg_pad(typeof pad_name == "string" ? pad_name : undefined);
+      return elem.empty() ? null : elem.property('pad_painter');
    }
 
+   /** @summary returns canvas painter
+    * @private */
+   TObjectPainter.prototype.canv_painter = function() {
+      var elem = this.svg_canvas();
+      return elem.empty() ? null : elem.property('pad_painter');
+   }
+
+   /** @summary returns color from current list of colors
+    * @private */
    TObjectPainter.prototype.get_color = function(indx) {
       var jsarr = this.root_colors;
 
       if (!jsarr) {
-         var pp = this.pad_painter();
+         var pp = this.canv_painter();
          jsarr = this.root_colors = (pp && pp.root_colors) ? pp.root_colors : JSROOT.Painter.root_colors;
       }
 
       return jsarr[indx];
    }
 
+   /** @summary add color to list of colors
+    * @private */
    TObjectPainter.prototype.add_color = function(color) {
       var jsarr = this.root_colors;
       if (!jsarr) {
-         var pp = this.pad_painter();
+         var pp = this.canv_painter();
          jsarr = this.root_colors = (pp && pp.root_colors) ? pp.root_colors : JSROOT.Painter.root_colors;
       }
       var indx = jsarr.indexOf(color);
@@ -2028,9 +2680,12 @@
       return jsarr.length-1;
    }
 
+   /** @summary Checks if draw elements were resized and drawing should be updated.
+    *
+    * @desc Redirects to {@link TPadPainter.CheckCanvasResize}
+    * @private */
    TObjectPainter.prototype.CheckResize = function(arg) {
-      // no painter - no resize
-      var pad_painter = this.pad_painter();
+      var pad_painter = this.canv_painter();
       if (!pad_painter) return false;
 
       // only canvas should be checked
@@ -2038,30 +2693,36 @@
       return true;
    }
 
+   /** @summary removes <g> element with object drawing
+    * @desc generic method to delete all graphical elements, associated with painter */
    TObjectPainter.prototype.RemoveDrawG = function() {
-      // generic method to delete all graphical elements, associated with painter
-      if (this.draw_g != null) {
+      if (this.draw_g) {
          this.draw_g.remove();
          this.draw_g = null;
       }
    }
 
+   /** @summary recreates <g> element for object drawing
+    * @desc obsolete function, will be removed soon
+    * @private */
    TObjectPainter.prototype.RecreateDrawG = function(usepad, layer) {
       // keep old function for a while - later
       console.warn("Obsolete RecreateDrawG is used, will be removed soon. Change to CreateG");
       return this.CreateG(usepad ? undefined : layer);
    }
 
-   /** function (re)creates svg:g element used for specific object drawings
-     *  either one attach svg:g to pad list of primitives (default)
-     *  or svg:g element created in specified frame layer (default main_layer) */
+   /** @summary (re)creates svg:g element for object drawings
+    *
+    * @desc either one attach svg:g to pad list of primitives (default)
+    * or svg:g element created in specified frame layer (default main_layer)
+    * @param {string} [frame_layer=undefined] - when specified, <g> element will be created inside frame layer, otherwise in pad primitives list
+    */
    TObjectPainter.prototype.CreateG = function(frame_layer) {
       if (this.draw_g) {
          // one should keep svg:g element on its place
          // d3.selectAll(this.draw_g.node().childNodes).remove();
          this.draw_g.selectAll('*').remove();
-      } else
-      if (frame_layer) {
+      } else if (frame_layer) {
          var frame = this.svg_frame();
          if (frame.empty()) return frame;
          if (typeof frame_layer != 'string') frame_layer = "main_layer";
@@ -2089,21 +2750,32 @@
       return this.draw_g;
    }
 
-   /** This is main graphical SVG element, where all drawings are performed */
+   /** @summary This is main graphical SVG element, where all drawings are performed
+    * @private */
    TObjectPainter.prototype.svg_canvas = function() {
       return this.select_main().select(".root_canvas");
    }
 
-   /** This is SVG element, correspondent to current pad */
+   /** @summary This is SVG element, correspondent to current pad
+    * @private */
    TObjectPainter.prototype.svg_pad = function(pad_name) {
-      var c = this.svg_canvas();
       if (pad_name === undefined) pad_name = this.pad_name;
-      if (pad_name && !c.empty())
-         c = c.select(".primitives_layer").select("[pad=" + pad_name + ']');
+      //if (pad_name && this._pads_cache) {
+      //   var d = this._pads_cache[pad_name];
+      //   if (d) return d3.select(d);
+      //}
+
+      var c = this.svg_canvas();
+      if (pad_name && !c.empty()) {
+         c = c.select(".primitives_layer .__root_pad_" + pad_name);
+         // if (!this._pads_cache) this._pads_cache = {};
+         // this._pads_cache[pad_name] = c.node();
+      }
       return c;
    }
 
-   /** Method selects immediate layer under canvas/pad main element */
+   /** @summary Method selects immediate layer under canvas/pad main element
+    * @private */
    TObjectPainter.prototype.svg_layer = function(name, pad_name) {
       var svg = this.svg_pad(pad_name);
       if (svg.empty()) return svg;
@@ -2123,6 +2795,9 @@
       return d3.select(null);
    }
 
+   /** @summary Method returns current pad name
+    * @param {string} [new_name = undefined] - when specified, new current pad name will be configured
+    * @private */
    TObjectPainter.prototype.CurrentPadName = function(new_name) {
       var svg = this.svg_canvas();
       if (svg.empty()) return "";
@@ -2131,12 +2806,15 @@
       return curr;
    }
 
+   /** @summary Returns ROOT TPad object
+    * @private */
    TObjectPainter.prototype.root_pad = function() {
-      var pad_painter = this.pad_painter(true);
+      var pad_painter = this.pad_painter();
       return pad_painter ? pad_painter.pad : null;
    }
 
-   /** Converts pad x or y coordinate into NDC value */
+   /** @summary Converts pad x or y coordinate into NDC value
+    * @private */
    TObjectPainter.prototype.ConvertToNDC = function(axis, value, isndc) {
       if (isndc) return value;
       var pad = this.root_pad();
@@ -2152,16 +2830,16 @@
       return (value - pad.fX1) / (pad.fX2 - pad.fX1);
    }
 
-   /** Converts x or y coordinate into SVG pad coordinates,
-    *  which could be used directly for drawing in the pad.
-    *  Parameters: axis should be "x" or "y", value to convert.
-    *  \par kind can be:
-    *  undefined or false - this is coordinate inside frame
-    *  true - when NDC coordinates are used
-    *  "pad" - when pad coordinates relative to pad ranges are specified
-    *  Always return rounded values */
+   /** @summary Converts x or y coordinate into SVG pad or frame coordinates.
+    *
+    *  @param {string} axis - name like "x" or "y"
+    *  @param {number} value - axis value to convert.
+    *  @param {boolean} kind - false or undefined is coordinate inside frame, true - when NDC pad coordinates are used, "pad" - when pad coordinates relative to pad ranges are specified
+    *  @returns {number} rounded value of requested coordiantes
+    *  @private
+    */
    TObjectPainter.prototype.AxisToSvg = function(axis, value, kind) {
-      var main = this.main_painter();
+      var main = this.frame_painter();
       if (main && !kind) {
          // this is frame coordinates
          value = (axis=="y") ? main.gry(value) + main.frame_y()
@@ -2173,68 +2851,94 @@
       return Math.round(value);
    }
 
-   /** This is SVG element with current frame */
+   /** @summary Returns svg element for the frame.
+    *
+    * @param {string} [pad_name = undefined] - optional pad name, otherwise where object painter is drawn
+    * @private */
    TObjectPainter.prototype.svg_frame = function(pad_name) {
       return this.svg_layer("primitives_layer", pad_name).select(".root_frame");
    }
 
-   TObjectPainter.prototype.frame_painter = function() {
-      var elem = this.svg_frame();
-      var res = elem.empty() ? null : elem.property('frame_painter');
-      return res ? res : null;
-   }
-
+   /** @summary Returns pad width.
+    *
+    * @param {string} [pad_name = undefined] - optional pad name, otherwise where object painter is drawn
+    * @private
+    */
    TObjectPainter.prototype.pad_width = function(pad_name) {
       var res = this.svg_pad(pad_name);
       res = res.empty() ? 0 : res.property("draw_width");
       return isNaN(res) ? 0 : res;
    }
 
+   /** @summary Returns pad height
+    *
+    * @param {string} [pad_name = undefined] - optional pad name, otherwise where object painter is drawn
+    * @private
+    */
    TObjectPainter.prototype.pad_height = function(pad_name) {
       var res = this.svg_pad(pad_name);
       res = res.empty() ? 0 : res.property("draw_height");
       return isNaN(res) ? 0 : res;
    }
 
+   /** @summary Returns frame painter in current pad
+    * @private */
+   TObjectPainter.prototype.frame_painter = function() {
+      var pp = this.pad_painter();
+      return pp ? pp.frame_painter_ref : null;
+   }
+
+   /** @summary Returns property of the frame painter
+    * @private */
    TObjectPainter.prototype.frame_property = function(name) {
-      var res = this.svg_frame();
-      if (res.empty()) return 0;
-      res = res.property(name);
-      return ((res===undefined) || isNaN(res)) ? 0 : res;
+      var pp = this.frame_painter();
+      return pp && pp[name] ? pp[name] : 0;
    }
 
+   /** @summary Returns frame X coordinate relative to current pad */
    TObjectPainter.prototype.frame_x = function() {
-      return this.frame_property("draw_x");
+      return this.frame_property("_frame_x");
    }
 
+   /** @summary Returns frame Y coordinate relative to current pad */
    TObjectPainter.prototype.frame_y = function() {
-      return this.frame_property("draw_y");
+      return this.frame_property("_frame_y");
    }
 
+   /** @summary Returns frame width */
    TObjectPainter.prototype.frame_width = function() {
-      return this.frame_property("draw_width");
+      return this.frame_property("_frame_width");
    }
 
+   /** @summary Returns frame height */
    TObjectPainter.prototype.frame_height = function() {
-      return this.frame_property("draw_height");
+      return this.frame_property("_frame_height");
    }
 
+   /** @summary Returns embed mode for 3D drawings (three.js) inside SVG.
+    *
+    *    - 0  no embedding, 3D drawing take full size of canvas
+    *    - 1  no embedding, canvas placed over svg with proper size (resize problem may appear)
+    *    - 2  normall embedding via ForeginObject, works only with Firefox
+    *    - 3  embedding 3D drawing as SVG canvas, requires SVG renderer
+    *    - 4  embed 3D drawing as <image> element
+    *
+    *  @private
+    */
    TObjectPainter.prototype.embed_3d = function() {
-      // returns embed mode for 3D drawings (three.js) inside SVG
-      // 0 - no embedding, 3D drawing take full size of canvas
-      // 1 - no embedding, canvas placed over svg with proper size (resize problem may appear)
-      // 2 - normall embedding via ForeginObject, works only with Firefox
-      // 3 - embedding 3D drawing as SVG canvas, requires SVG renderer
-
-      if (JSROOT.BatchMode) return 3;
+      if (JSROOT.BatchMode) return 4; // in batch - directly create svg::image after rendering
       if (JSROOT.gStyle.Embed3DinSVG < 2) return JSROOT.gStyle.Embed3DinSVG;
       if (JSROOT.browser.isFirefox /*|| JSROOT.browser.isWebKit*/)
          return JSROOT.gStyle.Embed3DinSVG; // use specified mode
       return 1; // default is overlay
    }
 
+   /** @summary Access current 3d mode
+    *
+    * @param {string} [new_value = undefined] - when specified, set new 3d mode
+    * @private
+    */
    TObjectPainter.prototype.access_3d_kind = function(new_value) {
-
       var svg = this.svg_pad(this.this_pad_name);
       if (svg.empty()) return -1;
 
@@ -2244,8 +2948,12 @@
       return ((kind===null) || (kind===undefined)) ? -1 : kind;
    }
 
+   /** @summary Returns size which availble for 3D drawing.
+    *
+    * @desc One uses frame sizes for the 3D drawing - like TH2/TH3 objects
+    * @private
+    */
    TObjectPainter.prototype.size_for_3d = function(can3d) {
-      // one uses frame sizes for the 3D drawing - like TH2/TH3 objects
 
       if (can3d === undefined) can3d = this.embed_3d();
 
@@ -2265,12 +2973,12 @@
          return rect;
       }
 
-      var elem = pad;
+      var elem = pad, fp = this.frame_painter();
       if (can3d === 0) elem = this.svg_canvas();
 
       var size = { x: 0, y: 0, width: 100, height: 100, clname: clname, can3d: can3d };
 
-      if (this.frame_painter()!==null) {
+      if (fp && !fp.mode3d) {
          elem = this.svg_frame();
          size.x = elem.property("draw_x");
          size.y = elem.property("draw_y");
@@ -2279,7 +2987,7 @@
       size.width = elem.property("draw_width");
       size.height = elem.property("draw_height");
 
-      if ((this.frame_painter()===null) && (can3d > 0)) {
+      if ((!fp || fp.mode3d) && (can3d > 0)) {
          size.x = Math.round(size.x + size.width*JSROOT.gStyle.fPadLeftMargin);
          size.y = Math.round(size.y + size.height*JSROOT.gStyle.fPadTopMargin);
          size.width = Math.round(size.width*(1 - JSROOT.gStyle.fPadLeftMargin - JSROOT.gStyle.fPadRightMargin));
@@ -2303,6 +3011,8 @@
       return size;
    }
 
+   /** @summary Clear all 3D drawings
+    * @private */
    TObjectPainter.prototype.clear_3d_canvas = function() {
       var can3d = this.access_3d_kind(null);
       if (can3d < 0) return;
@@ -2321,6 +3031,8 @@
       }
    }
 
+   /** @summary Add 3D canvas
+    * @private */
    TObjectPainter.prototype.add_3d_canvas = function(size, canv) {
 
       if (!canv || (size.can3d < -1)) return;
@@ -2355,6 +3067,8 @@
       }
    }
 
+   /** @summary Apply size to 3D elements
+    * @private */
    TObjectPainter.prototype.apply_3d_size = function(size, onlyget) {
 
       if (size.can3d < 0) return d3.select(null);
@@ -2370,8 +3084,8 @@
 
          var svg = this.svg_pad();
 
-         if (size.can3d === 3) {
-            // this is SVG mode
+         if ((size.can3d === 3) || (size.can3d === 4)) {
+            // this is SVG mode or image mode - just create group to hold element
 
             if (elem.empty())
                elem = svg.insert("g",".primitives_layer").attr("class", size.clname);
@@ -2430,7 +3144,11 @@
       return elem;
    }
 
-   /** Returns main pad painter - normally TH1/TH2 painter, which draws all axis */
+   /** @summary Returns main object painter on the pad.
+    *
+    * @desc Normally this is first histogram drawn on the pad, which also draws all axes
+    * @param {boolean} [not_store = undefined] - if true, prevent temporary store of main painter reference
+    * @param {string} [pad_name = undefined] - when specified, returns main painter from specified pad */
    TObjectPainter.prototype.main_painter = function(not_store, pad_name) {
       var res = this.main;
       if (!res) {
@@ -2446,27 +3164,42 @@
       return res;
    }
 
+   /** @summary Returns true if this is main painter */
    TObjectPainter.prototype.is_main_painter = function() {
       return this === this.main_painter();
    }
 
+   /** @summary Assigns id of top element (normally div where drawing is done).
+    *
+    * @desc In some situations canvas may not exists - for instance object drawn as html, not as svg.
+    * In such case the only painter will be assigned to the first element
+    *
+    * Following value of is_main parameter is allowed:
+    *    -1 - only assign id, this painter not add to painters list,
+    *     0 - normal painter (default),
+    *     1 - major objects like TH1/TH2 (required canvas with frame)
+    *     2 - if canvas missing, create it, but not set as main object
+    *     3 - if canvas and (or) frame missing, create them, but not set as main object
+    *     4 - major objects like TH3 (required canvas and frame in 3d mode)
+    *     5 - major objects like TGeoVolume (do not require canvas)
+    *
+    *  @param {string|object} divid - id of div element or directly DOMElement
+    *  @param {number} [kind = 0] - kind of object drawn with painter
+    *  @param {string} [pad_name = undefined] - when specified, subpad name used for object drawin
+    */
    TObjectPainter.prototype.SetDivId = function(divid, is_main, pad_name) {
-      // Assigns id of top element (normally <div></div> where drawing is done
-      // is_main - -1 - not add to painters list,
-      //            0 - normal painter (default),
-      //            1 - major objects like TH1/TH2 (required canvas with frame)
-      //            2 - if canvas missing, create it, but not set as main object
-      //            3 - if canvas and (or) frame missing, create them, but not set as main object
-      //            4 - major objects like TH3 (required canvas, but no frame)
-      //            5 - major objects like TGeoVolume (do not require canvas)
-      // pad_name - when specified, subpad name used for object drawin
-      // In some situations canvas may not exists - for instance object drawn as html, not as svg.
-      // In such case the only painter will be assigned to the first element
 
       if (divid !== undefined)
          this.divid = divid;
 
       if (!is_main) is_main = 0;
+
+      // check if element really exists
+      if ((is_main >= 0) && this.select_main(true).empty()) {
+         if (typeof divid == 'string') console.error('element with id ' + divid + ' not exists');
+                                  else console.error('specified HTML element can not be selected with d3.select()');
+         return;
+      }
 
       this.create_canvas = false;
 
@@ -2493,9 +3226,10 @@
       if (is_main < 0) return;
 
       // create TFrame element if not exists
-      if (this.svg_frame().select(".main_layer").empty() && ((is_main == 1) || (is_main == 3))) {
-         JSROOT.Painter.drawFrame(divid, null);
-         if (this.svg_frame().empty()) return alert("Fail to draw dummy TFrame");
+      if (this.svg_frame().select(".main_layer").empty() && ((is_main == 1) || (is_main == 3) || (is_main == 4))) {
+         if (typeof JSROOT.Painter.drawFrame == 'function')
+            JSROOT.Painter.drawFrame(divid, null, (is_main == 4) ? "3d" : "");
+         if ((is_main != 4) && this.svg_frame().empty()) return alert("Fail to draw dummy TFrame");
       }
 
       var svg_p = this.svg_pad();
@@ -2509,47 +3243,150 @@
          svg_p.property('mainpainter', this);
    }
 
+   /** @summary Calculate absolute position of provided selection.
+    * @private */
    TObjectPainter.prototype.CalcAbsolutePosition = function(sel, pos) {
       while (!sel.empty() && !sel.classed('root_canvas')) {
-         if (sel.classed('root_frame') || sel.classed('root_pad')) {
-           pos.x += sel.property("draw_x");
-           pos.y += sel.property("draw_y");
+         var cl = sel.attr("class");
+         if (cl && ((cl.indexOf("root_frame")>=0) || (cl.indexOf("__root_pad_")>=0))) {
+            pos.x += sel.property("draw_x") || 0;
+            pos.y += sel.property("draw_y") || 0;
          }
          sel = d3.select(sel.node().parentNode);
       }
       return pos;
    }
 
-   TObjectPainter.prototype.createAttFill = function(attfill, pattern, color, kind) {
-      return new TAttFillHandler(attfill, pattern, color, kind, this.svg_canvas());
+   /** @summary Creates marker attributes object.
+    *
+    * @desc Can be used to produce markers in painter.
+    * See {@link JSROOT.TAttMarkerHandler} for more info.
+    * Instance assigned as this.markeratt data member, recognized by GED editor
+    * @param {object} args - either TAttMarker or see arguments of {@link JSROOT.TAttMarkerHandler}
+    * @returns created handler
+    */
+   TObjectPainter.prototype.createAttMarker = function(args) {
+      if (!args || (typeof args !== 'object')) args = { std: true }; else
+      if (args.fMarkerColor!==undefined && args.fMarkerStyle!==undefined && args.fMarkerSize!==undefined) args = { attr: args, std: false };
+
+      if (args.std === undefined) args.std = true;
+
+      var handler = args.std ? this.markeratt : null;
+
+      if (!handler) handler = new TAttMarkerHandler(args);
+      else if (!handler.changed) handler.SetArgs(args);
+
+      if (args.std) this.markeratt = handler;
+
+      // handler.used = false; // mark that line handler is not yet used
+      return handler;
    }
 
-   TBasePainter.prototype.AttributeChange = function(class_name, member_name, new_value) {
-      // function called when user interactively changes attribute in given class
 
-      // console.log("Changed attribute", class_name, member_name, new_value);
+   /** @summary Creates line attributes object.
+   *
+   * @desc Can be used to produce lines in painter.
+   * See {@link JSROOT.TAttLineHandler} for more info.
+   * Instance assigned as this.lineatt data member, recognized by GED editor
+   * @param {object} args - either TAttLine or see constructor arguments of {@link JSROOT.TAttLineHandler}
+   */
+   TObjectPainter.prototype.createAttLine = function(args) {
+      if (!args || (typeof args !== 'object')) args = { std: true }; else
+      if (args.fLineColor!==undefined && args.fLineStyle!==undefined && args.fLineWidth!==undefined) args = { attr: args, std: false };
+
+      if (args.std === undefined) args.std = true;
+
+      var handler = args.std ? this.lineatt : null;
+
+      if (!handler) handler = new TAttLineHandler(args);
+      else if (!handler.changed) handler.SetArgs(args);
+
+      if (args.std) this.lineatt = handler;
+
+      // handler.used = false; // mark that line handler is not yet used
+      return handler;
    }
 
-   TObjectPainter.prototype.ForEachPainter = function(userfunc) {
+   /** @summary Creates fill attributes object.
+    *
+    * @desc Method dedicated to create fill attributes, bound to canvas SVG
+    * otherwise newly created patters will not be usable in the canvas
+    * See {@link JSROOT.TAttFillHandler} for more info.
+    * Instance assigned as this.fillatt data member, recognized by GED editor
+
+    * @param {object} args - for special cases one can specify TAttFill as args or number of parameters
+    * @param {boolean} [args.std = true] - this is standard fill attribute for object and should be used as this.fillatt
+    * @param {object} [args.attr = null] - object, derived from TAttFill
+    * @param {number} [args.pattern = undefined] - integer index of fill pattern
+    * @param {number} [args.color = undefined] - integer index of fill color
+    * @param {string} [args.color_as_svg = undefined] - color will be specified as SVG string, not as index from color palette
+    * @param {number} [args.kind = undefined] - some special kind which is handled differently from normal patterns
+    * @returns created handle
+   */
+   TObjectPainter.prototype.createAttFill = function(args) {
+      if (!args || (typeof args !== 'object')) args = { std: true }; else
+      if (args._typename && args.fFillColor!==undefined && args.fFillStyle!==undefined) args = { attr: args, std: false };
+
+      if (args.std === undefined) args.std = true;
+
+      var handler = args.std ? this.fillatt : null;
+
+      if (!args.svg) args.svg = this.svg_canvas();
+
+      if (!handler) handler = new TAttFillHandler(args);
+      else if (!handler.changed) handler.SetArgs(args);
+
+      if (args.std) this.fillatt = handler;
+
+      // handler.used = false; // mark that fill handler is not yet used
+
+      return handler;
+   }
+
+   /** @summary call function for each painter in the pad
+    * @private */
+   TObjectPainter.prototype.ForEachPainter = function(userfunc, kind) {
       // Iterate over all known painters
 
       // special case of the painter set as pointer of first child of main element
       var painter = this.AccessTopPainter();
-      if (painter) return userfunc(painter);
+      if (painter) {
+         if (kind !== "pads") userfunc(painter);
+         return;
+      }
 
       // iterate over all painters from pad list
-      var pad_painter = this.pad_painter(true);
-      if (pad_painter)
-         pad_painter.ForEachPainterInPad(userfunc);
+      var pp = this.pad_painter();
+      if (pp) pp.ForEachPainterInPad(userfunc, kind);
    }
 
+   /** @summary indicate that redraw was invoked via interactive action (like context menu)
+    * desc  use to catch such action by GED
+    * @private */
+   TObjectPainter.prototype.InteractiveRedraw = function(arg, info) {
+
+      if (arg == "pad") this.RedrawPad(); else
+      if (arg !== true) this.Redraw();
+
+      // inform GED that something changes
+      var pad_painter = this.pad_painter();
+      if (pad_painter && pad_painter.InteractiveObjectRedraw)
+         pad_painter.InteractiveObjectRedraw(this);
+
+      // inform server that drawopt changes
+      var canp = this.canv_painter();
+      if (canp && canp.ProcessChanges)
+         canp.ProcessChanges(info, this.pad_painter());
+   }
+
+   /** @summary Redraw all objects in correspondent pad */
    TObjectPainter.prototype.RedrawPad = function() {
-      // call Redraw methods for each painter in the frame
-      // if selobj specified, painter with selected object will be redrawn
-      var pad_painter = this.pad_painter(true);
+      var pad_painter = this.pad_painter();
       if (pad_painter) pad_painter.Redraw();
    }
 
+   /** @summary Switch tooltip mode in frame painter
+    * @private */
    TObjectPainter.prototype.SwitchTooltip = function(on) {
       var fp = this.frame_painter();
       if (fp) fp.ProcessTooltipEvent(null, on);
@@ -2558,6 +3395,8 @@
          this.control.SwitchTooltip(on);
    }
 
+   /** @summary Add drag interactive elements
+    * @private */
    TObjectPainter.prototype.AddDrag = function(callback) {
       if (!JSROOT.gStyle.MoveResize) return;
 
@@ -2712,9 +3551,8 @@
                      var rrr = resize_se.node().getBoundingClientRect();
                      pthis.ShowContextMenu('main', { clientX: rrr.left, clientY: rrr.top } );
                   } else if (callback.canselect && (spent <= 600)) {
-                     pthis.pad_painter().SelectObjectPainter(pthis);
+                     pthis.canv_painter().SelectObjectPainter(pthis);
                   }
-
                }
             });
 
@@ -2784,6 +3622,8 @@
       MakeResizeElements(this.draw_g, rect_width(), rect_height(), drag_resize);
    }
 
+   /** @summary Activate context menu via touch events
+    * @private */
    TObjectPainter.prototype.startTouchMenu = function(kind) {
       // method to let activate context menu via touch handler
 
@@ -2802,6 +3642,8 @@
                       .on("touchend", this.endTouchMenu.bind(this, kind));
    }
 
+   /** @summary Close context menu, started via touch events
+    * @private */
    TObjectPainter.prototype.endTouchMenu = function(kind) {
       var fld = "touch_" + kind;
 
@@ -2824,6 +3666,8 @@
       delete this[fld];
    }
 
+   /** @summary Add color selection menu entries
+    * @private */
    TObjectPainter.prototype.AddColorMenuEntry = function(menu, name, value, set_func, fill_kind) {
       if (value === undefined) return;
       menu.add("sub:"+name, function() {
@@ -2851,6 +3695,8 @@
       menu.add("endsub:");
    }
 
+   /** @summary Add size selection menu entries
+    * @private */
    TObjectPainter.prototype.AddSizeMenuEntry = function(menu, name, min, max, step, value, set_func) {
       if (value === undefined) return;
 
@@ -2873,15 +3719,16 @@
       menu.add("endsub:");
    }
 
+   /** @summary execute selected menu command, either locally or remotely
+    * @private */
    TObjectPainter.prototype.ExecuteMenuCommand = function(method) {
-      // execute selected menu command, either locally or remotely
 
       if (method.fName == "Inspect") {
          this.ShowInpsector();
          return true;
       }
 
-      var canvp = this.pad_painter();
+      var canvp = this.canv_painter();
       if (!canvp) return false;
 
       if ((method.fName == "FitPanel") && canvp.ActivateFitPanel) {
@@ -2898,15 +3745,17 @@
       return false;
    }
 
+   /** @summary Fill object menu in web canvas
+    * @private */
    TObjectPainter.prototype.FillObjectExecMenu = function(menu, kind, call_back) {
 
-      var canvp = this.pad_painter();
+      var canvp = this.canv_painter();
 
       if (!this.snapid || !canvp || !canvp._websocket || canvp._getmenu_callback)
          return JSROOT.CallBack(call_back);
 
       function DoExecMenu(arg) {
-         var canvp = this.pad_painter(),
+         var canvp = this.canv_painter(),
              item = this.args_menu_items[parseInt(arg)];
 
          if (!item || !item.fName) return;
@@ -2968,13 +3817,16 @@
       setTimeout(canvp._getmenu_callback, 2000); // set timeout to avoid menu hanging
    }
 
+   /** @summary remove all created draw attributes
+    * @private */
    TObjectPainter.prototype.DeleteAtt = function() {
-      // remove all created draw attributes
       delete this.lineatt;
       delete this.fillatt;
       delete this.markeratt;
    }
 
+   /** @summary Fill context menu for graphical attributes
+    * @private */
    TObjectPainter.prototype.FillAttContextMenu = function(menu, preffix) {
       // this method used to fill entries for different attributes of the object
       // like TAttFill, TAttLine, ....
@@ -2985,16 +3837,16 @@
       if (this.lineatt && this.lineatt.used) {
          menu.add("sub:"+preffix+"Line att");
          this.AddSizeMenuEntry(menu, "width", 1, 10, 1, this.lineatt.width,
-                               function(arg) { this.lineatt.Change(undefined, parseInt(arg)); this.Redraw(); }.bind(this));
+                               function(arg) { this.lineatt.Change(undefined, parseInt(arg)); this.InteractiveRedraw(); }.bind(this));
          this.AddColorMenuEntry(menu, "color", this.lineatt.color,
-                          function(arg) { this.lineatt.Change(arg); this.Redraw(); }.bind(this));
+                          function(arg) { this.lineatt.Change(arg); this.InteractiveRedraw(); }.bind(this));
          menu.add("sub:style", function() {
             var id = prompt("Enter line style id (1-solid)", 1);
             if (id == null) return;
             id = parseInt(id);
             if (isNaN(id) || !JSROOT.Painter.root_line_styles[id]) return;
             this.lineatt.Change(undefined, undefined, id);
-            this.Redraw();
+            this.InteractiveRedraw();
          }.bind(this));
          for (var n=1;n<11;++n) {
 
@@ -3002,7 +3854,7 @@
 
             var svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + n + "</text><line x1='30' y1='8' x2='100' y2='8' stroke='black' stroke-width='3' stroke-dasharray='" + dash + "'></line></svg>";
 
-            menu.addchk((this.lineatt.style==n), svg, n, function(arg) { this.lineatt.Change(undefined, undefined, parseInt(arg)); this.Redraw(); }.bind(this));
+            menu.addchk((this.lineatt.style==n), svg, n, function(arg) { this.lineatt.Change(undefined, undefined, parseInt(arg)); this.InteractiveRedraw(); }.bind(this));
          }
          menu.add("endsub:");
          menu.add("endsub:");
@@ -3013,12 +3865,12 @@
             for (var side=-1;side<=1;++side)
                menu.addchk((this.lineatt.excl_side==side), side, side, function(arg) {
                   this.lineatt.ChangeExcl(parseInt(arg));
-                  this.Redraw();
+                  this.InteractiveRedraw();
                }.bind(this));
             menu.add("endsub:");
 
             this.AddSizeMenuEntry(menu, "width", 10, 100, 10, this.lineatt.excl_width,
-                  function(arg) { this.lineatt.ChangeExcl(undefined, parseInt(arg)); this.Redraw(); }.bind(this));
+                  function(arg) { this.lineatt.ChangeExcl(undefined, parseInt(arg)); this.InteractiveRedraw(); }.bind(this));
 
             menu.add("endsub:");
          }
@@ -3027,30 +3879,26 @@
       if (this.fillatt && this.fillatt.used) {
          menu.add("sub:"+preffix+"Fill att");
          this.AddColorMenuEntry(menu, "color", this.fillatt.colorindx,
-               function(arg) { this.fillatt.Change(parseInt(arg), undefined, this.svg_canvas()); this.Redraw(); }.bind(this), this.fillatt.kind);
+               function(arg) { this.fillatt.Change(parseInt(arg), undefined, this.svg_canvas()); this.InteractiveRedraw(); }.bind(this), this.fillatt.kind);
          menu.add("sub:style", function() {
             var id = prompt("Enter fill style id (1001-solid, 3000..3010)", this.fillatt.pattern);
             if (id == null) return;
             id = parseInt(id);
             if (isNaN(id)) return;
             this.fillatt.Change(undefined, id, this.svg_canvas());
-            this.Redraw();
+            this.InteractiveRedraw();
          }.bind(this));
 
          var supported = [1, 1001, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3010, 3021, 3022];
 
-         var clone = JSROOT.clone(this.fillatt);
-         if (clone.colorindx<=0) clone.colorindx = 1;
-
          for (var n=0; n<supported.length; ++n) {
 
-            clone.Change(undefined, supported[n], this.svg_canvas());
-
-            var svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><rect x='40' y='0' width='60' height='18' stroke='none' fill='" + clone.color + "'></rect></svg>";
+            var sample = this.createAttFill({ std: false, pattern: supported[n], color: this.fillatt.colorindx || 1 }),
+                svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><rect x='40' y='0' width='60' height='18' stroke='none' fill='" + sample.fillcolor() + "'></rect></svg>";
 
             menu.addchk(this.fillatt.pattern == supported[n], svg, supported[n], function(arg) {
                this.fillatt.Change(undefined, parseInt(arg), this.svg_canvas());
-               this.Redraw();
+               this.InteractiveRedraw();
             }.bind(this));
          }
          menu.add("endsub:");
@@ -3060,27 +3908,28 @@
       if (this.markeratt && this.markeratt.used) {
          menu.add("sub:"+preffix+"Marker att");
          this.AddColorMenuEntry(menu, "color", this.markeratt.color,
-                   function(arg) { this.markeratt.Change(arg); this.Redraw(); }.bind(this));
+                   function(arg) { this.markeratt.Change(arg); this.InteractiveRedraw(); }.bind(this));
          this.AddSizeMenuEntry(menu, "size", 0.5, 6, 0.5, this.markeratt.size,
-               function(arg) { this.markeratt.Change(undefined, undefined, parseFloat(arg)); this.Redraw(); }.bind(this));
+               function(arg) { this.markeratt.Change(undefined, undefined, parseFloat(arg)); this.InteractiveRedraw(); }.bind(this));
 
          menu.add("sub:style");
          var supported = [1,2,3,4,5,6,7,8,21,22,23,24,25,26,27,28,29,30,31,32,33,34];
 
-         var clone = JSROOT.clone(this.markeratt);
          for (var n=0; n<supported.length; ++n) {
-            clone.Change(undefined, supported[n], 1.7);
-            clone.reset_pos();
-            var svg = "<svg width='60' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><path stroke='black' fill='" + (clone.fill ? "black" : "none") + "' d='" + clone.create(40,8) + "'></path></svg>";
+
+            var clone = new TAttMarkerHandler({ style: supported[n], color: this.markeratt.color, size: 1.7 }),
+                svg = "<svg width='60' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><path stroke='black' fill='" + (clone.fill ? "black" : "none") + "' d='" + clone.create(40,8) + "'></path></svg>";
 
             menu.addchk(this.markeratt.style == supported[n], svg, supported[n],
-                     function(arg) { this.markeratt.Change(undefined, parseInt(arg)); this.Redraw(); }.bind(this));
+                     function(arg) { this.markeratt.Change(undefined, parseInt(arg)); this.InteractiveRedraw(); }.bind(this));
          }
          menu.add("endsub:");
          menu.add("endsub:");
       }
    }
 
+   /** @summary Fill context menu for text attributes
+    * @private */
    TObjectPainter.prototype.TextAttContextMenu = function(menu, prefix) {
       // for the moment, text attributes accessed directly from objects
 
@@ -3089,7 +3938,7 @@
 
       menu.add("sub:" + (prefix ? prefix : "Text"));
       this.AddColorMenuEntry(menu, "color", obj.fTextColor,
-            function(arg) { this.GetObject().fTextColor = parseInt(arg); this.Redraw(); }.bind(this));
+            function(arg) { this.GetObject().fTextColor = parseInt(arg); this.InteractiveRedraw(); }.bind(this));
 
       var align = [11, 12, 13, 21, 22, 23, 31, 32, 33],
           hnames = ['left', 'centered' , 'right'],
@@ -3100,24 +3949,27 @@
          menu.addchk(align[n] == obj.fTextAlign,
                   align[n], align[n],
                   // align[n].toString() + "_h:" + hnames[Math.floor(align[n]/10) - 1] + "_v:" + vnames[align[n]%10-1], align[n],
-                  function(arg) { this.GetObject().fTextAlign = parseInt(arg); this.Redraw(); }.bind(this));
+                  function(arg) { this.GetObject().fTextAlign = parseInt(arg); this.InteractiveRedraw(); }.bind(this));
       }
       menu.add("endsub:");
 
       menu.add("sub:font");
       for (var n=1; n<16; ++n) {
          menu.addchk(n == Math.floor(obj.fTextFont/10), n, n,
-                  function(arg) { this.GetObject().fTextFont = parseInt(arg)*10+2; this.Redraw(); }.bind(this));
+                  function(arg) { this.GetObject().fTextFont = parseInt(arg)*10+2; this.InteractiveRedraw(); }.bind(this));
       }
       menu.add("endsub:");
 
       menu.add("endsub:");
    }
 
+   /** @symmary Show object in inspector */
    TObjectPainter.prototype.ShowInpsector = function() {
       JSROOT.draw(this.divid, this.GetObject(), 'inspect');
    }
 
+   /** @symmary Fill context menu for the object
+    * @private */
    TObjectPainter.prototype.FillContextMenu = function(menu) {
 
       var title = this.GetTipName();
@@ -3133,19 +3985,23 @@
       return menu.size() > 0;
    }
 
+   /** @symmary returns function used to display object status
+    * @private */
    TObjectPainter.prototype.GetShowStatusFunc = function() {
       // return function used to display object status
       // automatically disabled when drawing is enlarged - status line will be invisible
 
-      var pp = this.pad_painter(), res = JSROOT.Painter.ShowStatus;
+      var pp = this.canv_painter(), res = JSROOT.Painter.ShowStatus;
 
-      if (pp && (typeof pp.ShowStatus === 'function')) res = pp.ShowStatus;
+      if (pp && pp.use_openui && (typeof pp.fullShowStatus === 'function')) res = pp.fullShowStatus.bind(pp);
 
       if (res && (this.enlarge_main('state')==='on')) res = null;
 
       return res;
    }
 
+   /** @symmary shows objects status
+    * @private */
    TObjectPainter.prototype.ShowObjectStatus = function() {
       // method called normally when mouse enter main object element
 
@@ -3156,14 +4012,15 @@
    }
 
 
+   /** @summary try to find object by name in list of pad primitives
+    * @desc used to find title drawing
+    * @private */
    TObjectPainter.prototype.FindInPrimitives = function(objname) {
-      // try to find object by name in list of pad primitives
-      // used to find title drawing
 
-      var painter = this.pad_painter(true);
+      var painter = this.pad_painter();
       if ((painter === null) || (painter.pad === null)) return null;
 
-      if (painter.pad.fPrimitives !== null)
+      if (painter.pad.fPrimitives)
          for (var n=0;n<painter.pad.fPrimitives.arr.length;++n) {
             var prim = painter.pad.fPrimitives.arr[n];
             if (('fName' in prim) && (prim.fName === objname)) return prim;
@@ -3172,14 +4029,15 @@
       return null;
    }
 
+   /** @summary Try to find painter for specified object
+    * @desc can be used to find painter for some special objects, registered as
+    * histogram functions
+    * @private */
    TObjectPainter.prototype.FindPainterFor = function(selobj,selname,seltype) {
-      // try to find painter for specified object
-      // can be used to find painter for some special objects, registered as
-      // histogram functions
 
-      var painter = this.pad_painter(true);
+      var painter = this.pad_painter();
       var painters = (painter === null) ? null : painter.painters;
-      if (painters === null) return null;
+      if (!painters) return null;
 
       for (var n = 0; n < painters.length; ++n) {
          var pobj = painters[n].GetObject();
@@ -3195,10 +4053,26 @@
       return null;
    }
 
+   /** @summary Remove painter from list of painters and cleanup all drawings */
+   TObjectPainter.prototype.DeleteThis = function() {
+      var pp = this.pad_painter();
+      if (pp) {
+         var k = pp.painters.indexOf(this);
+         if (k>=0) pp.painters.splice(k,1);
+      }
+
+      this.Cleanup();
+   }
+
+   /** @summary Configure user-defined tooltip callback
+    *
+    * @desc Hook for the users to get tooltip information when mouse cursor moves over frame area
+    * call_back function will be called every time when new data is selected
+    * when mouse leave frame area, call_back(null) will be called
+    * @private
+    */
+
    TObjectPainter.prototype.ConfigureUserTooltipCallback = function(call_back, user_timeout) {
-      // hook for the users to get tooltip information when mouse cursor moves over frame area
-      // call_back function will be called every time when new data is selected
-      // when mouse leave frame area, call_back(null) will be called
 
       if ((call_back === undefined) || (typeof call_back !== 'function')) {
          delete this.UserTooltipCallback;
@@ -3211,10 +4085,16 @@
       this.UserTooltipTimeout = user_timeout;
    }
 
+   /** @summary Check if user-defined tooltip callback is configured
+    * @returns {Boolean}
+    * @private */
    TObjectPainter.prototype.IsUserTooltipCallback = function() {
       return typeof this.UserTooltipCallback == 'function';
    }
 
+   /** @summary Provide tooltips data to user-defained function
+    * @param {object} data - tooltip data
+    * @private */
    TObjectPainter.prototype.ProvideUserTooltip = function(data) {
 
       if (!this.IsUserTooltipCallback()) return;
@@ -3237,11 +4117,20 @@
       }.bind(this, data), this.UserTooltipTimeout);
    }
 
+   /** @summary Redraw object
+    *
+    * @desc Basic method, should be reimplemented in all derived objects
+    * for the case when drawing should be repeated
+    * @abstract
+    */
+
    TObjectPainter.prototype.Redraw = function() {
-      // basic method, should be reimplemented in all derived objects
-      // for the case when drawing should be repeated
    }
 
+   /** @summary Start text drawing
+    *
+    * @desc required before any text can be drawn
+    */
    TObjectPainter.prototype.StartTextDrawing = function(font_face, font_size, draw_g, max_font_size) {
       // we need to preserve font to be able rescale at the end
 
@@ -3259,17 +4148,18 @@
             .property('max_font_size', max_font_size);
    }
 
+   /** @summary function used to remember maximal text scaling factor
+    * @private */
    TObjectPainter.prototype.TextScaleFactor = function(value, draw_g) {
-      // function used to remember maximal text scaling factor
       if (!draw_g) draw_g = this.draw_g;
       if (value && (value > draw_g.property('text_factor'))) draw_g.property('text_factor', value);
    }
 
+   /** @summary getBBox does not work in mozilla when object is not displayed or not visible :(
+    * getBoundingClientRect() returns wrong sizes for MathJax
+    * are there good solution?
+    * @private */
    TObjectPainter.prototype.GetBoundarySizes = function(elem) {
-      // getBBox does not work in mozilla when object is not displayed or not visible :(
-      // getBoundingClientRect() returns wrong sizes for MathJax
-      // are there good solution?
-
       if (elem===null) { console.warn('empty node in GetBoundarySizes'); return { width:0, height:0 }; }
       var box = elem.getBoundingClientRect(); // works always, but returns sometimes results in ex values, which is difficult to use
       if (parseFloat(box.width) > 0) box = elem.getBBox(); // check that elements visible, request precise value
@@ -3279,6 +4169,10 @@
       return res;
    }
 
+   /** @summary Finish text drawing
+    *
+    * @desc Should be called to complete all text drawing operations
+    */
    TObjectPainter.prototype.FinishTextDrawing = function(draw_g, call_ready) {
       if (!draw_g) draw_g = this.draw_g;
 
@@ -3506,8 +4400,12 @@
       return draw_g.property('max_text_width');
    }
 
+   /** @ummary draw TLatex inside element
+    *
+    * @desc attempt to implement subset of TLatex with plain SVG text and tspan elements
+    * @private
+    */
    TObjectPainter.prototype.produceLatex = function(node, label, arg, curr) {
-      // attempt to implement subset of TLatex with plain SVG text and tspan elements
 
       if (!curr) {
          // initial dy = -0.1 is to move complete from very bottom line like with normal text drawing
@@ -4052,17 +4950,23 @@
       return true;
    }
 
+   /** @summary draw text
+    *
+    *  @param {object} arg - different text draw options
+    *  @param {string} arg.text - text to draw
+    *  @param {number} [arg.align = 12] - int value like 12 or 31
+    *  @param {string} [arg.align = undefined] - end;bottom
+    *  @param {number} [arg.x = 0] - x position
+    *  @param {number} [arg.y = 0] - y position
+    *  @param {number} [arg.width = undefined] - when specified, adjust font size in the specified box
+    *  @param {number} [arg.height = undefined] - when specified, adjust font size in the specified box
+    *  @param {number} arg.latex - 0 - plain text, 1 - normal TLatex, 2 - math
+    *  @param {string} [arg.color=black] - text color
+    *  @param {number} [arg.rotate = undefined] - rotaion angle
+    *  @param {number} [arg.font_size = undefined] - fixed font size
+    *  @param {object} [arg.draw_g = this.draw_g] - element where to place text, if not specified central painter container is used
+    */
    TObjectPainter.prototype.DrawText = function(arg) {
-      // following arguments can be supplied
-      //  align - either int value or text
-      //  x,y - position
-      //  width, height - dimension (optional)
-      //  text - text to draw
-      //  latex - 0 - plain text, 1 - normal TLatex, 2 - math
-      //  color - text color
-      //  rotate - rotaion angle (optional)
-      //  font_size - fixed font size (optional)
-      //  draw_g - element where to place text
 
       var label = arg.text || "",
           align = ['start', 'middle'];
@@ -4140,10 +5044,8 @@
          }
 
          // complete rectangle with very rougth size estimations
-         arg.box = JSROOT.nodejs ? (arg.text_rect || { height: arg.font_size*1.2, width: JSROOT.Painter.approxTextWidth(font, label) })
-                                 : this.GetBoundarySizes(txt.node());
-
-         // if (label.length>20) console.log('label', label, 'box', arg.box);
+         arg.box = !JSROOT.nodejs && !JSROOT.gStyle.ApproxTextSize ? this.GetBoundarySizes(txt.node()) :
+                     (arg.text_rect || { height: arg.font_size*1.2, width: JSROOT.Painter.approxTextWidth(font, label) });
 
          txt.attr('class','hidden_text')
              .attr('visibility','hidden') // hide elements until text drawing is finished
@@ -4223,8 +5125,12 @@
       return 0;
    }
 
+   /** @summary Finish MathJax drawing
+    * @desc function should be called when processing of element is completed
+    * @private
+    */
+
    TObjectPainter.prototype.FinishMathjax = function(draw_g, fo_g, id) {
-      // function should be called when processing of element is completed
 
       if (fo_g.node().parentNode !== draw_g.node()) return;
 
@@ -4268,7 +5174,6 @@
       this.FinishTextDrawing(draw_g); // check if all other elements are completed
    }
 
-
    // ===========================================================
 
    function TooltipHandler(obj) {
@@ -4283,14 +5188,15 @@
       // return layer where frame tooltips are shown
       // only canvas info_layer can be used while other pads can overlay
 
-      var canp = this.pad_painter();
-      return canp ? canp.svg_layer("info_layer") : d3.select(null);
+      var pp = this.canv_painter();
+      return pp ? pp.svg_layer("info_layer") : d3.select(null);
    }
 
    TooltipHandler.prototype.IsTooltipShown = function() {
       // return true if tooltip is shown, use to prevent some other action
       if (!this.tooltip_allowed || !this.tooltip_enabled) return false;
-      return ! (this.hints_layer().select(".objects_hints").empty());
+      var hintsg = this.hints_layer().select(".objects_hints");
+      return hintsg.empty() ? false : hintsg.property("hints_pad") == this.pad_name;
    }
 
    TooltipHandler.prototype.ProcessTooltipEvent = function(pnt, enabled) {
@@ -4298,11 +5204,25 @@
 
       if (enabled !== undefined) this.tooltip_enabled = enabled;
 
+      if (pnt && pnt.handler) {
+         // special use of interactive handler in the frame painter
+         var rect = this.draw_g ? this.draw_g.select(".interactive_rect") : null;
+         if (!rect || rect.empty()) {
+            pnt = null; // disable
+         } else if (pnt.touch) {
+            var pos = d3.touches(rect.node());
+            pnt = (pos && pos.length == 1) ? { touch: true, x: pos[0][0], y: pos[0][1] } : null;
+         } else {
+            var pos = d3.mouse(rect.node());
+            pnt = { touch: false, x: pos[0], y: pos[1] };
+         }
+      }
+
       var hints = [], nhints = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false,
           textheight = 11, hmargin = 3, wmargin = 3, hstep = 1.2,
           frame_rect = this.GetFrameRect(),
           pad_width = this.pad_width(),
-          pp = this.pad_painter(true),
+          pp = this.pad_painter(),
           font = JSROOT.Painter.getFontDetails(160, textheight),
           status_func = this.GetShowStatusFunc(),
           disable_tootlips = !this.tooltip_allowed || !this.tooltip_enabled;
@@ -4349,21 +5269,20 @@
           hintsg = layer.select(".objects_hints"); // group with all tooltips
 
       if (status_func) {
-         var title = "", name = "", coordinates = "", info = "";
-         if (pnt) coordinates = Math.round(pnt.x)+","+Math.round(pnt.y);
-         var hint = null, best_dist2 = 1e10, best_hint = null;
+         var title = "", name = "", info = "",
+             hint = null, best_dist2 = 1e10, best_hint = null,
+             coordinates = pnt ? Math.round(pnt.x)+","+Math.round(pnt.y) : "";
          // try to select hint with exact match of the position when several hints available
-         if (hints && hints.length>0)
-            for (var k=0;k<hints.length;++k) {
-               if (!hints[k]) continue;
-               if (!hint) hint = hints[k];
-               if (hints[k].exact && (!hint || !hint.exact)) { hint = hints[k]; break; }
+         for (var k=0; k < (hints ? hints.length : 0); ++k) {
+            if (!hints[k]) continue;
+            if (!hint) hint = hints[k];
+            if (hints[k].exact && (!hint || !hint.exact)) { hint = hints[k]; break; }
 
-               if (!pnt || (hints[k].x===undefined) || (hints[k].y===undefined)) continue;
+            if (!pnt || (hints[k].x===undefined) || (hints[k].y===undefined)) continue;
 
-               var dist2 = (pnt.x-hints[k].x)*(pnt.x-hints[k].x) + (pnt.y-hints[k].y)*(pnt.y-hints[k].y);
-               if (dist2<best_dist2) { best_dist2 = dist2; best_hint = hints[k]; }
-            }
+            var dist2 = (pnt.x-hints[k].x)*(pnt.x-hints[k].x) + (pnt.y-hints[k].y)*(pnt.y-hints[k].y);
+            if (dist2<best_dist2) { best_dist2 = dist2; best_hint = hints[k]; }
+         }
 
          if ((!hint || !hint.exact) && (best_dist2 < 400)) hint = best_hint;
 
@@ -4398,9 +5317,9 @@
       }
 
       // copy transform attributes from frame itself
-      hintsg.attr("transform", trans);
-
-      hintsg.property("last_point", pnt);
+      hintsg.attr("transform", trans)
+            .property("last_point", pnt)
+            .property("hints_pad", this.pad_name);
 
       var viewmode = hintsg.property('viewmode') || "",
           actualw = 0, posx = pnt.x + frame_rect.hint_delta_x;
@@ -4504,24 +5423,22 @@
                r.attr("stroke", col).attr("stroke-width", hint.exact ? 3 : 1);
          }
 
-         if (hint.lines != null) {
-            for (var l=0;l<hint.lines.length;l++)
-               if (hint.lines[l]!==null) {
-                  var txt = group.append("svg:text")
-                                 .attr("text-anchor", "start")
-                                 .attr("x", wmargin)
-                                 .attr("y", hmargin + l*textheight*hstep)
-                                 .attr("dy", ".8em")
-                                 .attr("fill","black")
-                                 .style("pointer-events","none")
-                                 .call(font.func)
-                                 .text(hint.lines[l]);
+         for (var l=0; l < (hint.lines ? hint.lines.length : 0); l++)
+            if (hint.lines[l]!==null) {
+               var txt = group.append("svg:text")
+                              .attr("text-anchor", "start")
+                              .attr("x", wmargin)
+                              .attr("y", hmargin + l*textheight*hstep)
+                              .attr("dy", ".8em")
+                              .attr("fill","black")
+                              .style("pointer-events","none")
+                              .call(font.func)
+                              .text(hint.lines[l]);
 
-                  var box = this.GetBoundarySizes(txt.node());
+               var box = this.GetBoundarySizes(txt.node());
 
-                  actualw = Math.max(actualw, box.width);
-               }
-         }
+               actualw = Math.max(actualw, box.width);
+            }
 
          function translateFn() {
             // We only use 'd', but list d,i,a as params just to show can have them as params.
@@ -4571,1985 +5488,35 @@
       hintsg.property('startx', posx);
    }
 
-   // ===============================================
-
-
-   function TFramePainter(tframe) {
-      TooltipHandler.call(this, tframe);
-   }
-
-   TFramePainter.prototype = Object.create(TooltipHandler.prototype);
-
-   TFramePainter.prototype.GetTipName = function(append) {
-      var res = TooltipHandler.prototype.GetTipName.call(this) || "TFrame";
-      if (append) res+=append;
-      return res;
-   }
-
-   TFramePainter.prototype.Shrink = function(shrink_left, shrink_right) {
-      this.fX1NDC += shrink_left;
-      this.fX2NDC -= shrink_right;
-   }
-
-   TFramePainter.prototype.SetLastEventPos = function(pnt) {
-      // set position of last context menu event, can be
-      this.fLastEventPnt = pnt;
-   }
-
-   TFramePainter.prototype.GetLastEventPos = function() {
-      // return position of last event
-      return this.fLastEventPnt;
-   }
-
-   TFramePainter.prototype.UpdateAttributes = function(force) {
-      var pad = this.root_pad(),
-          tframe = this.GetObject();
-
-      if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
-         if (!pad) {
-            JSROOT.extend(this, JSROOT.gStyle.FrameNDC);
-         } else {
-            JSROOT.extend(this, {
-               fX1NDC: pad.fLeftMargin,
-               fX2NDC: 1 - pad.fRightMargin,
-               fY1NDC: pad.fBottomMargin,
-               fY2NDC: 1 - pad.fTopMargin
-            });
-         }
-      }
-
-      if (this.fillatt === undefined) {
-         if (tframe) this.fillatt = this.createAttFill(tframe);
-         else if (pad) this.fillatt = pad.fFrameFillColor ? this.createAttFill(null, pad.fFrameFillStyle, pad.fFrameFillColor) : this.createAttFill(pad);
-         else this.fillatt = this.createAttFill(null, 1001, 0);
-
-         // force white color for the frame
-         if (!tframe && (this.fillatt.color == 'none') && this.pad_painter(true) && this.pad_painter(true).iscan) {
-            this.fillatt.color = 'white';
-         }
-      }
-
-      if (this.lineatt === undefined)
-         if (pad) this.lineatt = new TAttLineHandler({ fLineColor: pad.fFrameLineColor, fLineWidth: pad.fFrameLineWidth, fLineStyle: pad.fFrameLineStyle });
-             else this.lineatt = new TAttLineHandler(tframe ? tframe : 'black');
-   }
-
-   TFramePainter.prototype.SizeChanged = function() {
-      // function called at the end of resize of frame
-      // One should apply changes to the pad
-
-      var pad = this.root_pad(),
-          main = this.main_painter();
-
-      if (pad) {
-         pad.fLeftMargin = this.fX1NDC;
-         pad.fRightMargin = 1 - this.fX2NDC;
-         pad.fBottomMargin = this.fY1NDC;
-         pad.fTopMargin = 1 - this.fY2NDC;
-         if (main) main.SetRootPadRange(pad);
-      }
-
-      this.RedrawPad();
-   }
-
-   TFramePainter.prototype.Cleanup = function() {
-      if (this.draw_g) {
-         this.draw_g.selectAll("*").remove();
-         this.draw_g.on("mousedown", null)
-                    .on("dblclick", null)
-                    .on("wheel", null)
-                    .on("contextmenu", null)
-                    .property('interactive_set', null);
-      }
-      this.draw_g = null;
-      TooltipHandler.prototype.Cleanup.call(this);
-   }
-
-   TFramePainter.prototype.Redraw = function() {
-
-      // first update all attributes from objects
-      this.UpdateAttributes();
-
-      var width = this.pad_width(),
-          height = this.pad_height(),
-          lm = Math.round(width * this.fX1NDC),
-          w = Math.round(width * (this.fX2NDC - this.fX1NDC)),
-          tm = Math.round(height * (1 - this.fY2NDC)),
-          h = Math.round(height * (this.fY2NDC - this.fY1NDC)),
-          rotate = false, fixpos = false, pp = this.pad_painter();
-
-      if (pp && pp.options) {
-         if (pp.options.RotateFrame) rotate = true;
-         if (pp.options.FixFrame) fixpos = true;
-      }
-
-      // this is svg:g object - container for every other items belonging to frame
-      this.draw_g = this.svg_layer("primitives_layer").select(".root_frame");
-
-      var top_rect, main_svg;
-
-      if (this.draw_g.empty()) {
-
-         var layer = this.svg_layer("primitives_layer");
-
-         this.draw_g = layer.append("svg:g").attr("class", "root_frame");
-
-         this.draw_g.append("svg:title").text("");
-
-         top_rect = this.draw_g.append("svg:rect");
-
-         // append for the moment three layers - for drawing and axis
-         this.draw_g.append('svg:g').attr('class','grid_layer');
-
-         main_svg = this.draw_g.append('svg:svg')
-                           .attr('class','main_layer')
-                           .attr("x", 0)
-                           .attr("y", 0)
-                           .attr('overflow', 'hidden');
-
-         this.draw_g.append('svg:g').attr('class','axis_layer');
-         this.draw_g.append('svg:g').attr('class','upper_layer');
-      } else {
-         top_rect = this.draw_g.select("rect");
-         main_svg = this.draw_g.select(".main_layer");
-      }
-
-      var trans = "translate(" + lm + "," + tm + ")";
-      if (rotate) {
-         trans += " rotate(-90) " + "translate(" + -h + ",0)";
-         var d = w; w = h; h = d;
-      }
-
-      this.draw_g.property('frame_painter', this) // simple way to access painter via frame container
-                 .property('draw_x', lm)
-                 .property('draw_y', tm)
-                 .property('draw_width', w)
-                 .property('draw_height', h)
-                 .attr("transform", trans);
-
-      top_rect.attr("x", 0)
-              .attr("y", 0)
-              .attr("width", w)
-              .attr("height", h)
-              .call(this.fillatt.func)
-              .call(this.lineatt.func);
-
-      main_svg.attr("width", w)
-              .attr("height", h)
-              .attr("viewBox", "0 0 " + w + " " + h);
-
-      var tooltip_rect = this.draw_g.select(".interactive_rect");
-
-      if (JSROOT.BatchMode) return tooltip_rect.remove();
-
-      this.draw_g.attr("x", lm)
-                 .attr("y", tm)
-                 .attr("width", w)
-                 .attr("height", h);
-
-      if (!rotate && !fixpos)
-         this.AddDrag({ obj: this, only_resize: true, minwidth: 20, minheight: 20,
-                        redraw: this.SizeChanged.bind(this) });
-
-      var painter = this;
-
-      function MouseMoveEvent() {
-         var pnt = d3.mouse(tooltip_rect.node());
-         painter.ProcessTooltipEvent({ x: pnt[0], y: pnt[1], touch: false });
-      }
-
-      function MouseCloseEvent() {
-         painter.ProcessTooltipEvent(null);
-      }
-
-      function TouchMoveEvent() {
-         var pnt = d3.touches(tooltip_rect.node());
-         if (!pnt || pnt.length !== 1) return painter.ProcessTooltipEvent(null);
-         painter.ProcessTooltipEvent({ x: pnt[0][0], y: pnt[0][1], touch: true });
-      }
-
-      function TouchCloseEvent() {
-         painter.ProcessTooltipEvent(null);
-      }
-
-      if (tooltip_rect.empty()) {
-         tooltip_rect =
-            this.draw_g
-                .append("rect")
-                .attr("class","interactive_rect")
-                .style('opacity',0)
-                .style('fill',"none")
-                .style("pointer-events","visibleFill")
-                .on('mouseenter', MouseMoveEvent)
-                .on('mousemove', MouseMoveEvent)
-                .on('mouseleave', MouseCloseEvent);
-
-         if (JSROOT.touches)
-            tooltip_rect.on("touchstart", TouchMoveEvent)
-                        .on("touchmove", TouchMoveEvent)
-                        .on("touchend", TouchCloseEvent)
-                        .on("touchcancel", TouchCloseEvent);
-      }
-
-      tooltip_rect.attr("x", 0)
-                  .attr("y", 0)
-                  .attr("width", w)
-                  .attr("height", h);
-
-      var hintsg = this.hints_layer().select(".objects_hints");
-      // if tooltips were visible before, try to reconstruct them after short timeout
-      if (!hintsg.empty() && this.tooltip_allowed)
-         setTimeout(this.ProcessTooltipEvent.bind(this, hintsg.property('last_point')), 10);
-   }
-
-   TFramePainter.prototype.FillContextMenu = function(menu) {
-      // fill context menu for the frame
-      // it could be appended to the histogram menus
-
-      var main = this.main_painter(), alone = menu.size()==0, pad = this.root_pad();
-
-      if (alone)
-         menu.add("header:Frame");
-      else
-         menu.add("separator");
-
-      if (main) {
-         if (main.zoom_xmin !== main.zoom_xmax)
-            menu.add("Unzoom X", main.Unzoom.bind(main,"x"));
-         if (main.zoom_ymin !== main.zoom_ymax)
-            menu.add("Unzoom Y", main.Unzoom.bind(main,"y"));
-         if (main.zoom_zmin !== main.zoom_zmax)
-            menu.add("Unzoom Z", main.Unzoom.bind(main,"z"));
-         menu.add("Unzoom all", main.Unzoom.bind(main,"xyz"));
-
-         if (pad) {
-            menu.addchk(pad.fLogx, "SetLogx", main.ToggleLog.bind(main,"x"));
-
-            menu.addchk(pad.fLogy, "SetLogy", main.ToggleLog.bind(main,"y"));
-
-            if (main.Dimension() == 2)
-               menu.addchk(pad.fLogz, "SetLogz", main.ToggleLog.bind(main,"z"));
-         }
-         menu.add("separator");
-      }
-
-      menu.addchk(this.tooltip_allowed, "Show tooltips", function() {
-         var fp = this.frame_painter();
-         if (fp) fp.tooltip_allowed = !fp.tooltip_allowed;
-      });
-      this.FillAttContextMenu(menu,alone ? "" : "Frame ");
-      menu.add("separator");
-      menu.add("Save as frame.png", function(arg) {
-         var top = this.svg_frame();
-         if (!top.empty())
-            JSROOT.saveSvgAsPng(top.node(), { name: "frame.png" } );
-      });
-
-      return true;
-   }
-
-   TFramePainter.prototype.GetFrameRect = function() {
-      // returns frame rectangle plus extra info for hint display
-
-      return {
-         x: this.frame_x(),
-         y: this.frame_y(),
-         width: this.frame_width(),
-         height: this.frame_height(),
-         transform: this.draw_g ? this.draw_g.attr("transform") : "",
-         hint_delta_x: 0,
-         hint_delta_y: 0
-      }
-   }
-
-   TFramePainter.prototype.ProcessFrameClick = function(pnt) {
-      // function called when frame is clicked and object selection can be performed
-      // such event can be used to select
-
-      var pp = this.pad_painter(true);
-      if (!pp) return;
-
-      pnt.painters = true; // provide painters reference in the hints
-      pnt.disabled = true; // do not invoke graphics
-
-      // collect tooltips from pad painter - it has list of all drawn objects
-      var hints = pp.GetTooltips(pnt), exact = null;
-      for (var k=0; (k<hints.length) && !exact; ++k)
-         if (hints[k] && hints[k].exact) exact = hints[k];
-      //if (exact) console.log('Click exact', pnt, exact.painter.GetTipName());
-      //      else console.log('Click frame', pnt);
-
-      pp.SelectObjectPainter(exact ? exact.painter : this, pnt);
-   }
-
-   Painter.drawFrame = function(divid, obj) {
-      var p = new TFramePainter(obj);
-      p.SetDivId(divid, 2);
-      p.Redraw();
-      return p.DrawingReady();
-   }
-
-   // ===========================================================================
-
-   function TPadPainter(pad, iscan) {
-      TObjectPainter.call(this, pad);
-      this.pad = pad;
-      this.iscan = iscan; // indicate if working with canvas
-      this.this_pad_name = "";
-      if (!this.iscan && (pad !== null) && ('fName' in pad)) {
-         this.this_pad_name = pad.fName.replace(" ", "_"); // avoid empty symbol in pad name
-         var regexp = new RegExp("^[A-Za-z][A-Za-z0-9_]*$");
-         if (!regexp.test(this.this_pad_name)) this.this_pad_name = 'jsroot_pad_' + JSROOT.id_counter++;
-      }
-      this.painters = []; // complete list of all painters in the pad
-      this.has_canvas = true;
-   }
-
-   TPadPainter.prototype = Object.create(TObjectPainter.prototype);
-
-   TPadPainter.prototype.Cleanup = function() {
-      // cleanup only pad itself, all child elements will be collected and cleanup separately
-
-      for (var k=0;k<this.painters.length;++k)
-         this.painters[k].Cleanup();
-
-      var svg_p = this.svg_pad(this.this_pad_name);
-      if (!svg_p.empty()) {
-         svg_p.property('pad_painter', null);
-         svg_p.property('mainpainter', null);
-         if (!this.iscan) svg_p.remove();
-      }
-
-      this.painters = [];
-      this.pad = null;
-      this.this_pad_name = "";
-      this.has_canvas = false;
-
-      TObjectPainter.prototype.Cleanup.call(this);
-   }
-
-   TPadPainter.prototype.CleanPrimitives = function(selector) {
-      if (!selector || (typeof selector !== 'function')) return;
-
-      for (var k=this.painters.length-1;k>=0;--k) {
-         var p = this.painters[k];
-         if (selector(p)) {
-            p.Cleanup();
-            this.painters.splice(k--, 1);
-         }
-      }
-   }
-
-   TPadPainter.prototype.GetCurrentPrimitiveIndx = function() {
-      return this._current_primitive_indx || 0;
-   }
-
-   TPadPainter.prototype.GetNumPrimitives = function() {
-      return this._num_primitives || 1;
-   }
-
-   TPadPainter.prototype.ForEachPainterInPad = function(userfunc, onlypadpainters) {
-      userfunc(this);
-      for (var k = 0; k < this.painters.length; ++k) {
-         var sub = this.painters[k];
-         if (typeof sub.ForEachPainterInPad === 'function')
-            sub.ForEachPainterInPad(userfunc, onlypadpainters);
-         else if (!onlypadpainters) userfunc(sub);
-      }
-   }
-
-   TPadPainter.prototype.ButtonSize = function(fact) {
-      return Math.round((!fact ? 1 : fact) * (this.iscan || !this.has_canvas ? 16 : 12));
-   }
-
-   TPadPainter.prototype.IsTooltipAllowed = function() {
-      var res = undefined;
-      this.ForEachPainterInPad(function(fp) {
-         if ((res===undefined) && (fp.tooltip_allowed!==undefined)) res = fp.tooltip_allowed;
-      });
-      return res !== undefined ? res : false;
-   }
-
-   TPadPainter.prototype.SetTooltipAllowed = function(on) {
-      this.ForEachPainterInPad(function(fp) {
-         if (fp.tooltip_allowed!==undefined) fp.tooltip_allowed = on;
-      });
-   }
-
-   TPadPainter.prototype.SelectObjectPainter = function(painter) {
-      // dummy function, redefined in the TCanvasPainter
-   }
-
-   TPadPainter.prototype.CreateCanvasSvg = function(check_resize, new_size) {
-
-      var factor = null, svg = null, lmt = 5, rect = null;
-
-      if (check_resize > 0) {
-
-         if (this._fixed_size) return (check_resize > 1); // flag used to force re-drawing of all subpads
-
-         svg = this.svg_canvas();
-
-         if (svg.empty()) return false;
-
-         factor = svg.property('height_factor');
-
-         rect = this.check_main_resize(check_resize, null, factor);
-
-         if (!rect.changed) return false;
-
-      } else {
-
-         var render_to = this.select_main();
-
-         if (render_to.style('position')=='static')
-            render_to.style('position','relative');
-
-         svg = render_to.append("svg")
-             .attr("class", "jsroot root_canvas")
-             .property('pad_painter', this) // this is custom property
-             .property('mainpainter', null) // this is custom property
-             .property('current_pad', "") // this is custom property
-             .property('redraw_by_resize', false); // could be enabled to force redraw by each resize
-
-         svg.append("svg:title").text("ROOT canvas");
-         var frect = svg.append("svg:rect").attr("class","canvas_fillrect")
-                               .attr("x",0).attr("y",0);
-         if (!JSROOT.BatchMode)
-            frect.style("pointer-events", "visibleFill")
-                 .on("dblclick", this.EnlargePad.bind(this))
-                 .on("click", this.SelectObjectPainter.bind(this, this))
-                 .on("mouseenter", this.ShowObjectStatus.bind(this));
-
-         svg.append("svg:g").attr("class","primitives_layer");
-         svg.append("svg:g").attr("class","info_layer");
-         svg.append("svg:g").attr("class","btns_layer");
-
-         if (JSROOT.gStyle.ContextMenu)
-            svg.select(".canvas_fillrect").on("contextmenu", this.ShowContextMenu.bind(this));
-
-         factor = 0.66;
-         if (this.pad && this.pad.fCw && this.pad.fCh && (this.pad.fCw > 0)) {
-            factor = this.pad.fCh / this.pad.fCw;
-            if ((factor < 0.1) || (factor > 10)) factor = 0.66;
-         }
-
-         if (this._fixed_size) {
-            render_to.style("overflow","auto");
-            rect = { width: this.pad.fCw, height: this.pad.fCh };
-         } else {
-            rect = this.check_main_resize(2, new_size, factor);
-         }
-      }
-
-      if (!this.fillatt || !this.fillatt.changed)
-         this.fillatt = this.createAttFill(this.pad);
-
-      if ((rect.width<=lmt) || (rect.height<=lmt)) {
-         svg.style("display", "none");
-         console.warn("Hide canvas while geometry too small w=",rect.width," h=",rect.height);
-         rect.width = 200; rect.height = 100; // just to complete drawing
-      } else {
-         svg.style("display", null);
-      }
-
-      if (this._fixed_size) {
-         svg.attr("x", 0)
-            .attr("y", 0)
-            .attr("width", rect.width)
-            .attr("height", rect.height)
-            .style("position", "absolute");
-      } else {
-        svg.attr("x", 0)
-           .attr("y", 0)
-           .style("width", "100%")
-           .style("height", "100%")
-           .style("position", "absolute")
-           .style("left", 0)
-           .style("top", 0)
-           .style("right", 0)
-           .style("bottom", 0);
-      }
-
-      // console.log('CANVAS SVG width = ' + rect.width + " height = " + rect.height);
-
-      svg.attr("viewBox", "0 0 " + rect.width + " " + rect.height)
-         .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
-         .property('height_factor', factor)
-         .property('draw_x', 0)
-         .property('draw_y', 0)
-         .property('draw_width', rect.width)
-         .property('draw_height', rect.height);
-
-      svg.select(".canvas_fillrect")
-         .attr("width", rect.width)
-         .attr("height", rect.height)
-         .call(this.fillatt.func);
-
-      this.svg_layer("btns_layer")
-          .attr("transform","translate(2," + (rect.height - this.ButtonSize(1.25)) + ")")
-          .attr("display", svg.property("pad_enlarged") ? "none" : null); // hide buttons when sub-pad is enlarged
-
-      return true;
-   }
-
-   TPadPainter.prototype.EnlargePad = function() {
-
-      if (d3.event) {
-         d3.event.preventDefault();
-         d3.event.stopPropagation();
-      }
-
-      var svg_can = this.svg_canvas(),
-          pad_enlarged = svg_can.property("pad_enlarged");
-
-      if (this.iscan || !this.has_canvas || (!pad_enlarged && !this.HasObjectsToDraw() && !this.painters)) {
-         if (this._fixed_size) return; // canvas cannot be enlarged in such mode
-         if (!this.enlarge_main('toggle')) return;
-         if (this.enlarge_main('state')=='off') svg_can.property("pad_enlarged", null);
-      } else {
-         if (!pad_enlarged) {
-            this.enlarge_main(true);
-            svg_can.property("pad_enlarged", this.pad);
-         } else
-         if (pad_enlarged === this.pad) {
-            this.enlarge_main(false);
-            svg_can.property("pad_enlarged", null);
-         } else {
-            console.error('missmatch with pad double click events');
-         }
-      }
-
-      this.CheckResize({ force: true });
-   }
-
-   TPadPainter.prototype.CreatePadSvg = function(only_resize) {
-      // returns true when pad is displayed and all its items should be redrawn
-
-      if (!this.has_canvas) {
-         this.CreateCanvasSvg(only_resize ? 2 : 0);
-         return true;
-      }
-
-      var svg_can = this.svg_canvas(),
-          width = svg_can.property("draw_width"),
-          height = svg_can.property("draw_height"),
-          pad_enlarged = svg_can.property("pad_enlarged"),
-          pad_visible = !pad_enlarged || (pad_enlarged === this.pad),
-          w = Math.round(this.pad.fAbsWNDC * width),
-          h = Math.round(this.pad.fAbsHNDC * height),
-          x = Math.round(this.pad.fAbsXlowNDC * width),
-          y = Math.round(height * (1 - this.pad.fAbsYlowNDC)) - h,
-          svg_pad = null, svg_rect = null, btns = null;
-
-      if (pad_enlarged === this.pad) { w = width; h = height; x = y = 0; }
-
-      if (only_resize) {
-         svg_pad = this.svg_pad(this.this_pad_name);
-         svg_rect = svg_pad.select(".root_pad_border");
-         btns = this.svg_layer("btns_layer", this.this_pad_name);
-      } else {
-         svg_pad = svg_can.select(".primitives_layer")
-             .append("svg:svg") // here was g before, svg used to blend all drawin outside
-             .attr("class", "root_pad")
-             .attr("pad", this.this_pad_name) // set extra attribute  to mark pad name
-             .property('pad_painter', this) // this is custom property
-             .property('mainpainter', null); // this is custom property
-         svg_rect = svg_pad.append("svg:rect").attr("class", "root_pad_border");
-
-         svg_pad.append("svg:g").attr("class","primitives_layer");
-         btns = svg_pad.append("svg:g").attr("class","btns_layer");
-
-         if (JSROOT.gStyle.ContextMenu)
-            svg_rect.on("contextmenu", this.ShowContextMenu.bind(this));
-
-         if (!JSROOT.BatchMode)
-            svg_rect.attr("pointer-events", "visibleFill") // get events also for not visible rect
-                    .on("dblclick", this.EnlargePad.bind(this))
-                    .on("click", this.SelectObjectPainter.bind(this, this))
-                    .on("mouseenter", this.ShowObjectStatus.bind(this));
-      }
-
-      if (!this.fillatt || !this.fillatt.changed)
-         this.fillatt = this.createAttFill(this.pad);
-      if (!this.lineatt || !this.lineatt.changed) {
-         this.lineatt = new TAttLineHandler(this.pad);
-         if (this.pad.fBorderMode == 0) this.lineatt.color = 'none';
-      }
-
-      svg_pad
-              //.attr("transform", "translate(" + x + "," + y + ")") // is not handled for SVG
-             .attr("display", pad_visible ? null : "none")
-             .attr("viewBox", "0 0 " + w + " " + h) // due to svg
-             .attr("preserveAspectRatio", "none")   // due to svg, we do not preserve relative ratio
-             .attr("x", x)    // due to svg
-             .attr("y", y)   // due to svg
-             .attr("width", w)    // due to svg
-             .attr("height", h)   // due to svg
-             .property('draw_x', x) // this is to make similar with canvas
-             .property('draw_y', y)
-             .property('draw_width', w)
-             .property('draw_height', h);
-
-      svg_rect.attr("x", 0)
-              .attr("y", 0)
-              .attr("width", w)
-              .attr("height", h)
-              .call(this.fillatt.func)
-              .call(this.lineatt.func);
-
-      if (svg_pad.property('can3d') === 1)
-         // special case of 3D canvas overlay
-          this.select_main()
-              .select(".draw3d_" + this.this_pad_name)
-              .style('display', pad_visible ? '' : 'none');
-
-      btns.attr("transform","translate("+ (w - (btns.property('nextx') || 0) - this.ButtonSize(1.25)) + "," + (h - this.ButtonSize(1.25)) + ")");
-
-      return pad_visible;
-   }
-
-   TPadPainter.prototype.CheckSpecial = function(obj) {
-
-      if (!obj || (obj._typename!=="TObjArray")) return false;
-
-      if (obj.name == "ListOfColors") {
-         if (!this.options || this.options.GlobalColors) // set global list of colors
-            Painter.adoptRootColors(obj);
-         if (this.options && this.options.LocalColors) {
-            // copy existing colors and extend with new values
-            this.root_colors = [];
-            for (var n=0;n<JSROOT.Painter.root_colors.length;++n)
-               this.root_colors[n] = JSROOT.Painter.root_colors[n];
-            Painter.extendRootColors(this.root_colors, obj);
-         }
-         return true;
-      }
-
-      if (obj.name == "CurrentColorPalette") {
-         var arr = [], missing = false;
-         for (var n = 0; n < obj.arr.length; ++n) {
-            var col = obj.arr[n];
-            if (col && (col._typename == 'TColor')) {
-               arr[n] = Painter.MakeColorRGB(col);
-            } else {
-               console.log('Missing color with index ' + n); missing = true;
-            }
-         }
-         if (!this.options || (!missing && !this.options.IgnorePalette)) this.CanvasPalette = new ColorPalette(arr);
-         return true;
-      }
-
-      return false;
-   }
-
-   TPadPainter.prototype.CheckSpecialsInPrimitives = function(can) {
-      var lst = can ? can.fPrimitives : null;
-      if (!lst) return;
-      for (var i = 0; i < lst.arr.length; ++i) {
-         if (this.CheckSpecial(lst.arr[i])) {
-            lst.arr.splice(i,1);
-            lst.opt.splice(i,1);
-            i--;
-         }
-      }
-   }
-
-   TPadPainter.prototype.RemovePrimitive = function(obj) {
-      if (!this.pad || !this.pad.fPrimitives) return;
-      var indx = this.pad.fPrimitives.arr.indexOf(obj);
-      if (indx>=0) this.pad.fPrimitives.RemoveAt(indx);
-   }
-
-   TPadPainter.prototype.FindPrimitive = function(exact_obj, classname, name) {
-      if (!this.pad || !this.pad.fPrimitives) return null;
-
-      for (var i=0; i < this.pad.fPrimitives.arr.length; i++) {
-         var obj = this.pad.fPrimitives.arr[i];
-
-         if ((exact_obj!==null) && (obj !== exact_obj)) continue;
-
-         if ((classname !== undefined) && (classname !== null))
-            if (obj._typename !== classname) continue;
-
-         if ((name !== undefined) && (name !== null))
-            if (obj.fName !== name) continue;
-
-         return obj;
-      }
-
-      return null;
-   }
-
-   TPadPainter.prototype.HasObjectsToDraw = function() {
-      // return true if any objects beside sub-pads exists in the pad
-
-      if (!this.pad || !this.pad.fPrimitives) return false;
-
-      for (var n=0;n<this.pad.fPrimitives.arr.length;++n)
-         if (this.pad.fPrimitives.arr[n] && this.pad.fPrimitives.arr[n]._typename != "TPad") return true;
-
-      return false;
-   }
-
-   TPadPainter.prototype.DrawPrimitives = function(indx, callback, ppainter) {
-
-      if (indx===0) {
-         // flag used to prevent immediate pad redraw during normal drawing sequence
-         this._doing_pad_draw = true;
-
-         // set number of primitves
-         this._num_primitives = this.pad && this.pad.fPrimitives ? this.pad.fPrimitives.arr.length : 0;
-      }
-
-      while (true) {
-         if (ppainter) ppainter._primitive = true; // mark painter as belonging to primitives
-
-         if (!this.pad || (indx >= this.pad.fPrimitives.arr.length)) {
-            delete this._doing_pad_draw;
-            return JSROOT.CallBack(callback);
-         }
-
-         // handle use to invoke callback only when necessary
-         var handle = { func: this.DrawPrimitives.bind(this, indx+1, callback) };
-
-         // set current index
-         this._current_primitive_indx = indx;
-
-         ppainter = JSROOT.draw(this.divid, this.pad.fPrimitives.arr[indx], this.pad.fPrimitives.opt[indx], handle);
-
-         if (!handle.completed) return;
-         indx++;
-      }
-   }
-
-   TPadPainter.prototype.GetTooltips = function(pnt) {
-      var painters = [], hints = [];
-
-      // first count - how many processors are there
-      if (this.painters !== null)
-         this.painters.forEach(function(obj) {
-            if ('ProcessTooltip' in obj) painters.push(obj);
-         });
-
-      if (pnt) pnt.nproc = painters.length;
-
-      painters.forEach(function(obj) {
-         var hint = obj.ProcessTooltip(pnt);
-         hints.push(hint);
-         if (hint && pnt && pnt.painters) hint.painter = obj;
-      });
-
-      return hints;
-   }
-
-   TPadPainter.prototype.FillContextMenu = function(menu) {
-
-      if (this.pad)
-         menu.add("header: " + this.pad._typename + "::" + this.pad.fName);
-      else
-         menu.add("header: Canvas");
-
-      var tooltipon = this.IsTooltipAllowed();
-      menu.addchk(tooltipon, "Show tooltips", this.SetTooltipAllowed.bind(this, !tooltipon));
-
-      if (!this._websocket) {
-
-         function ToggleGridField(arg) {
-            this.pad[arg] = this.pad[arg] ? 0 : 1;
-            var main = this.svg_pad(this.this_pad_name).property('mainpainter');
-            if (main && (typeof main.DrawGrids == 'function')) main.DrawGrids();
-         }
-
-         function SetTickField(arg) {
-            this.pad[arg.substr(1)] = parseInt(arg[0]);
-
-            var main = this.svg_pad(this.this_pad_name).property('mainpainter');
-            if (main && (typeof main.DrawAxes == 'function')) main.DrawAxes();
-         }
-
-         menu.addchk(this.pad.fGridx, 'Grid x', 'fGridx', ToggleGridField);
-         menu.addchk(this.pad.fGridy, 'Grid y', 'fGridy', ToggleGridField);
-         menu.add("sub:Ticks x");
-         menu.addchk(this.pad.fTickx == 0, "normal", "0fTickx", SetTickField);
-         menu.addchk(this.pad.fTickx == 1, "ticks on both sides", "1fTickx", SetTickField);
-         menu.addchk(this.pad.fTickx == 2, "labels on both sides", "2fTickx", SetTickField);
-         menu.add("endsub:");
-         menu.add("sub:Ticks y");
-         menu.addchk(this.pad.fTicky == 0, "normal", "0fTicky", SetTickField);
-         menu.addchk(this.pad.fTicky == 1, "ticks on both sides", "1fTicky", SetTickField);
-         menu.addchk(this.pad.fTicky == 2, "labels on both sides", "2fTicky", SetTickField);
-         menu.add("endsub:");
-
-         //menu.addchk(this.pad.fTickx, 'Tick x', 'fTickx', ToggleField);
-         //menu.addchk(this.pad.fTicky, 'Tick y', 'fTicky', ToggleField);
-
-         this.FillAttContextMenu(menu);
-      }
-
-      menu.add("separator");
-
-      if (this.ToggleEventStatus)
-         menu.addchk(this.HasEventStatus(), "Event status", this.ToggleEventStatus.bind(this));
-
-      if (this.enlarge_main() || (this.has_canvas && this.HasObjectsToDraw()))
-         menu.addchk((this.enlarge_main('state')=='on'), "Enlarge " + (this.iscan ? "canvas" : "pad"), this.EnlargePad.bind(this));
-
-      var fname = this.this_pad_name;
-      if (fname.length===0) fname = this.iscan ? "canvas" : "pad";
-      fname += ".png";
-
-      menu.add("Save as "+fname, fname, this.SaveAsPng.bind(this, false));
-
-      return true;
-   }
-
-   TPadPainter.prototype.ShowContextMenu = function(evnt) {
-      if (!evnt) {
-         // for debug purposes keep original context menu for small region in top-left corner
-         var pos = d3.mouse(this.svg_pad(this.this_pad_name).node());
-
-         if (pos && (pos.length==2) && (pos[0]>0) && (pos[0]<10) && (pos[1]>0) && pos[1]<10) return;
-
-         d3.event.stopPropagation(); // disable main context menu
-         d3.event.preventDefault();  // disable browser context menu
-
-         // one need to copy event, while after call back event may be changed
-         evnt = d3.event;
-
-         var fp = this.frame_painter();
-         if (fp) fp.SetLastEventPos();
-      }
-
-      JSROOT.Painter.createMenu(this, function(menu) {
-
-         menu.painter.FillContextMenu(menu);
-
-         menu.painter.FillObjectExecMenu(menu, "", function() { menu.show(evnt); });
-      }); // end menu creation
-   }
-
-   TPadPainter.prototype.Redraw = function(resize) {
-
-      // prevent redrawing
-      if (this._doing_pad_draw) return console.log('Prevent redrawing', this.pad.fName);
-
-      var showsubitems = true;
-
-      if (this.iscan) {
-         this.CreateCanvasSvg(2);
-      } else {
-         showsubitems = this.CreatePadSvg(true);
-      }
-
-      // even sub-pad is not visible, we should redraw sub-sub-pads to hide them as well
-      for (var i = 0; i < this.painters.length; ++i) {
-         var sub = this.painters[i];
-         if (showsubitems || sub.this_pad_name) sub.Redraw(resize);
-      }
-   }
-
-   TPadPainter.prototype.NumDrawnSubpads = function() {
-      if (this.painters === undefined) return 0;
-
-      var num = 0;
-
-      for (var i = 0; i < this.painters.length; ++i) {
-         var obj = this.painters[i].GetObject();
-         if (obj && (obj._typename === "TPad")) num++;
-      }
-
-      return num;
-   }
-
-   TPadPainter.prototype.RedrawByResize = function() {
-      if (this.access_3d_kind() === 1) return true;
-
-      for (var i = 0; i < this.painters.length; ++i)
-         if (typeof this.painters[i].RedrawByResize === 'function')
-            if (this.painters[i].RedrawByResize()) return true;
-
-      return false;
-   }
-
-   TPadPainter.prototype.CheckCanvasResize = function(size, force) {
-
-      if (!this.iscan && this.has_canvas) return false;
-
-      if (size && (typeof size === 'object') && size.force) force = true;
-
-      if (!force) force = this.RedrawByResize();
-
-      var changed = this.CreateCanvasSvg(force ? 2 : 1, size);
-
-      // if canvas changed, redraw all its subitems.
-      // If redrawing was forced for canvas, same applied for sub-elements
-      if (changed)
-         for (var i = 0; i < this.painters.length; ++i)
-            this.painters[i].Redraw(force ? false : true);
-
-      return changed;
-   }
-
-   TPadPainter.prototype.UpdateObject = function(obj) {
-      if (!obj) return false;
-
-      this.pad.fBits = obj.fBits;
-      this.pad.fTitle = obj.fTitle;
-
-      this.pad.fGridx = obj.fGridx;
-      this.pad.fGridy = obj.fGridy;
-      this.pad.fTickx = obj.fTickx;
-      this.pad.fTicky = obj.fTicky;
-      this.pad.fLogx  = obj.fLogx;
-      this.pad.fLogy  = obj.fLogy;
-      this.pad.fLogz  = obj.fLogz;
-
-      this.pad.fUxmin = obj.fUxmin;
-      this.pad.fUxmax = obj.fUxmax;
-      this.pad.fUymin = obj.fUymin;
-      this.pad.fUymax = obj.fUymax;
-
-      this.pad.fLeftMargin   = obj.fLeftMargin;
-      this.pad.fRightMargin  = obj.fRightMargin;
-      this.pad.fBottomMargin = obj.fBottomMargin
-      this.pad.fTopMargin    = obj.fTopMargin;
-
-      this.pad.fFillColor = obj.fFillColor;
-      this.pad.fFillStyle = obj.fFillStyle;
-      this.pad.fLineColor = obj.fLineColor;
-      this.pad.fLineStyle = obj.fLineStyle;
-      this.pad.fLineWidth = obj.fLineWidth;
-
-      if (this.iscan) this.CheckSpecialsInPrimitives(obj);
-
-      var fp = this.frame_painter();
-      if (fp) fp.UpdateAttributes(!fp.modified_NDC);
-
-      if (!obj.fPrimitives) return false;
-
-      var isany = false, p = 0;
-      for (var n = 0; n < obj.fPrimitives.arr.length; ++n) {
-         while (p < this.painters.length) {
-            var pp = this.painters[p++];
-            if (!pp._primitive) continue;
-            if (pp.UpdateObject(obj.fPrimitives.arr[n])) isany = true;
-            break;
-         }
-      }
-
-      return isany;
-   }
-
-   TPadPainter.prototype.DrawNextSnap = function(lst, indx, call_back, objpainter) {
-      // function called when drawing next snapshot from the list
-      // it is also used as callback for drawing of previous snap
-
-      if (indx===0) {
-         // flag used to prevent immediate pad redraw during first draw
-         this._doing_pad_draw = true;
-         this._snaps_map = {}; // to control how much snaps are drawn
-         this._num_primitives = lst ? lst.length : 0;
-      }
-
-      while (true) {
-
-         if (objpainter && lst && lst[indx] && objpainter.snapid === undefined) {
-            // keep snap id in painter, will be used for the
-            if (this.painters.indexOf(objpainter)<0) this.painters.push(objpainter);
-            objpainter.snapid = lst[indx].fObjectID;
-         }
-
-         objpainter = null;
-
-         ++indx; // change to the next snap
-
-         if (!lst || indx >= lst.length) {
-            delete this._doing_pad_draw;
-            delete this._snaps_map;
-            return JSROOT.CallBack(call_back, this);
-         }
-
-         var snap = lst[indx],
-             snapid = snap.fObjectID,
-             cnt = this._snaps_map[snapid];
-
-         if (cnt) cnt++; else cnt=1;
-         this._snaps_map[snapid] = cnt; // check how many objects with same snapid drawn, use them again
-
-         this._current_primitive_indx = indx;
-
-         // first appropriate painter for the object
-         // if same object drawn twice, two painters will exists
-         for (var k=0; k<this.painters.length; ++k) {
-            if (this.painters[k].snapid === snapid)
-               if (--cnt === 0) { objpainter = this.painters[k]; break;  }
-         }
-
-         // function which should be called when drawing of next item finished
-         var draw_callback = this.DrawNextSnap.bind(this, lst, indx, call_back);
-
-         if (objpainter) {
-
-            if (snap.fKind === 1) { // object itself
-               if (objpainter.UpdateObject(snap.fSnapshot, snap.fOption)) objpainter.Redraw();
-               continue; // call next
-            }
-
-            if (snap.fKind === 2) { // update SVG
-               if (objpainter.UpdateObject(snap.fSnapshot)) objpainter.Redraw();
-               continue; // call next
-            }
-
-            if (snap.fKind === 3) { // subpad
-               return objpainter.RedrawPadSnap(snap, draw_callback);
-            }
-
-            continue; // call next
-         }
-
-         if (snap.fKind === 4) { // specials like list of colors
-            this.CheckSpecial(snap.fSnapshot);
-            continue;
-         }
-
-         if (snap.fKind === 3) { // subpad
-
-            if (snap.fPrimitives._typename) {
-               alert("Problem in JSON I/O with primitves for sub-pad");
-               snap.fPrimitives = [ snap.fPrimitives ];
-            }
-
-            var subpad = snap.fPrimitives[0].fSnapshot;
-
-            subpad.fPrimitives = null; // clear primitives, they just because of I/O
-
-            var padpainter = new TPadPainter(subpad, false);
-            padpainter.DecodeOptions(snap.fPrimitives[0].fOption);
-            padpainter.SetDivId(this.divid); // pad painter will be registered in the canvas painters list
-            padpainter.snapid = snap.fObjectID;
-
-            padpainter.CreatePadSvg();
-
-            if (padpainter.MatchObjectType("TPad") && snap.fPrimitives.length > 1) {
-               padpainter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "PadSnapShot");
-               padpainter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge pad", "EnlargePad");
-
-               if (JSROOT.gStyle.ContextMenu)
-                  padpainter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
-            }
-
-            // we select current pad, where all drawing is performed
-            var prev_name = padpainter.CurrentPadName(padpainter.this_pad_name);
-            padpainter.DrawNextSnap(snap.fPrimitives, 0, function() {
-               padpainter.CurrentPadName(prev_name);
-               draw_callback(padpainter);
-            });
-            return;
-         }
-
-         var handle = { func: draw_callback };
-
-         // here the case of normal drawing, can be improved
-         if (snap.fKind === 1)
-            objpainter = JSROOT.draw(this.divid, snap.fSnapshot, snap.fOption, handle);
-
-         if (snap.fKind === 2)
-            objpainter = JSROOT.draw(this.divid, snap.fSnapshot, snap.fOption, handle);
-
-         if (!handle.completed) return; // if callback will be invoked, break while loop
-      }
-   }
-
-   TPadPainter.prototype.FindSnap = function(snapid) {
-
-      if (this.snapid === snapid) return this;
-
-      if (!this.painters) return null;
-
-      for (var k=0;k<this.painters.length;++k) {
-         var sub = this.painters[k];
-
-         if (typeof sub.FindSnap === 'function') sub = sub.FindSnap(snapid);
-         else if (sub.snapid !== snapid) sub = null;
-
-         if (sub) return sub;
-      }
-
-      return null;
-   }
-
-   TPadPainter.prototype.RedrawPadSnap = function(snap, call_back) {
-      // for the canvas snapshot contains list of objects
-      // as first entry, graphical properties of canvas itself is provided
-      // in ROOT6 it also includes primitives, but we ignore them
-
-      if (!snap || !snap.fPrimitives) return;
-
-      // VERY BAD, NEED TO BE FIXED IN TBufferJSON - should be fixed now in master
-      // Should be fixed now in ROOT
-      // if (snap.fPrimitives._typename) snap.fPrimitives = [ snap.fPrimitives ];
-
-      var first = snap.fPrimitives[0].fSnapshot;
-      first.fPrimitives = null; // primitives are not interesting, just cannot disable it in IO
-
-      if (this.snapid === undefined) {
-         // first time getting snap, create all gui elements first
-
-         this.snapid = snap.fPrimitives[0].fObjectID;
-
-         this.draw_object = first;
-         this.pad = first;
-         // this._fixed_size = true;
-
-         // if canvas size not specified in batch mode, temporary use 900x700 size
-         if (this.batch_mode && (!first.fCw || !first.fCh)) { first.fCw = 900; first.fCh = 700; }
-
-         // case of ROOT7 with always dummy TPad as first entry
-         if (!first.fCw || !first.fCh) this._fixed_size = false;
-
-         this.CreateCanvasSvg(0);
-         this.SetDivId(this.divid);  // now add to painters list
-
-         this.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "CanvasSnapShot", "Ctrl PrintScreen");
-         if (JSROOT.gStyle.ContextMenu)
-            this.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
-
-         if (this.enlarge_main('verify'))
-            this.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
-
-         this.DrawNextSnap(snap.fPrimitives, 0, call_back);
-
-         return;
-      }
-
-      this.UpdateObject(first); // update only object attributes
-
-      // apply all changes in the object (pad or canvas)
-      if (this.iscan) {
-         this.CreateCanvasSvg(2);
-      } else {
-         this.CreatePadSvg(true);
-      }
-
-      var isanyfound = false;
-
-      // find and remove painters which no longer exists in the list
-      for (var k=0;k<this.painters.length;++k) {
-         var sub = this.painters[k];
-         if (sub.snapid===undefined) continue; // look only for painters with snapid
-
-         for (var i=1;i<snap.fPrimitives.length;++i)
-            if (snap.fPrimitives[i].fObjectID === sub.snapid) { sub = null; isanyfound = true; break; }
-
-         if (sub) {
-            // remove painter which does not found in the list of snaps
-            this.painters.splice(k--,1);
-            sub.Cleanup(); // cleanup such painter
-         }
-      }
-
-      if (!isanyfound) {
-         var svg_p = this.svg_pad(this.this_pad_name);
-         if (svg_p && !svg_p.empty())
-            svg_p.property('mainpainter', null);
-         for (var k=0;k<this.painters.length;++k)
-            this.painters[k].Cleanup();
-         this.painters = [];
-      }
-
-      var padpainter = this,
-          prev_name = padpainter.CurrentPadName(padpainter.this_pad_name);
-
-      padpainter.DrawNextSnap(snap.fPrimitives, 0, function() {
-         padpainter.CurrentPadName(prev_name);
-         call_back(padpainter);
-      });
-   }
-
-   TPadPainter.prototype.CreateImage = function(format, call_back) {
-      if (format=="svg") {
-         JSROOT.CallBack(call_back, btoa(this.CreateSvg()));
-      } else if ((format=="png") || (format=="jpeg")) {
-         this.ProduceImage(true, 'any.' + format, function(can) {
-            var res = can.toDataURL('image/' + format),
-                separ = res.indexOf("base64,");
-            JSROOT.CallBack(call_back, (separ>0) ? res.substr(separ+7) : "");
-         });
-      } else {
-         JSROOT.CallBack(call_back, "");
-      }
-   }
-
-   TPadPainter.prototype.GetAllRanges = function() {
-      var res = "";
-
-      if (this.snapid) {
-         res = this.GetPadRanges();
-         if (res) res = "id=" + this.snapid + ":" + res + ";";
-      }
-
-      for (var k=0;k<this.painters.length;++k)
-         if (typeof this.painters[k].GetAllRanges == "function")
-            res += this.painters[k].GetAllRanges();
-
-      return res;
-   }
-
-   TPadPainter.prototype.GetPadRanges = function() {
-      // function returns actual ranges in the pad, which can be applied to the server
-      var main = this.main_painter(true, this.this_pad_name),
-          p = this.svg_pad(this.this_pad_name),
-          f = this.svg_frame(this.this_pad_name);
-
-      if (!main) return "";
-
-      var res1 = main.scale_xmin + ":" +
-                 main.scale_xmax + ":" +
-                 main.scale_ymin + ":" +
-                 main.scale_ymax;
-
-      if (f.empty() || p.empty()) return res1 + ":" + res1;
-
-      var res2 = "";
-
-      // calculate user range for full pad
-      var same = function(x) { return x; },
-          exp10 = function(x) { return Math.pow(10, x); };
-
-      var func = main.logx ? JSROOT.log10 : same,
-          func2 = main.logx ? exp10 : same;
-
-      var k = (func(main.scale_xmax) - func(main.scale_xmin))/f.property("draw_width");
-      var x1 = func(main.scale_xmin) - k*f.property("draw_x");
-      var x2 = x1 + k*p.property("draw_width");
-      res2 += func2(x1) + ":" + func2(x2);
-
-      func = main.logy ? JSROOT.log10 : same;
-      func2 = main.logy ? exp10 : same;
-
-      var k = (func(main.scale_ymax) - func(main.scale_ymin))/f.property("draw_height");
-      var y2 = func(main.scale_ymax) + k*f.property("draw_y");
-      var y1 = y2 - k*p.property("draw_height");
-      res2 += ":" + func2(y1) + ":" + func2(y2);
-
-      return res1 + ":" + res2;
-   }
-
-   TPadPainter.prototype.ItemContextMenu = function(name) {
-       var rrr = this.svg_pad(this.this_pad_name).node().getBoundingClientRect();
-       var evnt = { clientX: rrr.left+10, clientY: rrr.top + 10 };
-
-       // use timeout to avoid conflict with mouse click and automatic menu close
-       if (name=="pad")
-          return setTimeout(this.ShowContextMenu.bind(this, evnt), 50);
-
-       var selp = null, selkind;
-
-       switch(name) {
-          case "xaxis":
-          case "yaxis":
-          case "zaxis":
-             selp = this.main_painter();
-             selkind = name[0];
-             break;
-          case "frame":
-             selp = this.frame_painter();
-             break;
-          default: {
-             var indx = parseInt(name);
-             if (!isNaN(indx)) selp = this.painters[indx];
-          }
-       }
-
-       if (!selp || (typeof selp.FillContextMenu !== 'function')) return;
-
-       JSROOT.Painter.createMenu(selp, function(menu) {
-          if (selp.FillContextMenu(menu,selkind))
-             setTimeout(menu.show.bind(menu, evnt), 50);
-       });
-   }
-
-   TPadPainter.prototype.CreateSvg = function() {
-      var main = this.svg_canvas(),
-          svg = main.html();
-
-      svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g,"url(#$1)")        // decode all URL
-               .replace(/ class=\"\w*\"/g,"")                                // remove all classes
-               .replace(/<g transform=\"translate\(\d+\,\d+\)\"><\/g>/g,"")  // remove all empty groups with transform
-               .replace(/<g><\/g>/g,"");                                     // remove all empty groups
-
-      svg = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"' +
-            ' viewBox="0 0 ' + main.property('draw_width') + ' ' + main.property('draw_height') + '"' +
-            ' width="' + main.property('draw_width') + '"' +
-            ' height="' + main.property('draw_height') + '">' + svg + '</svg>';
-
-       return svg;
-   }
-
-   TPadPainter.prototype.SaveAsPng = function(full_canvas, filename) {
-      if (!filename) {
-         filename = this.this_pad_name;
-         if (filename.length === 0) filename = this.iscan ? "canvas" : "pad";
-         filename += ".png";
-      }
-      this.ProduceImage(full_canvas, filename)
-   }
-
-   TPadPainter.prototype.ProduceImage = function(full_canvas, filename, call_back) {
-
-      var elem = full_canvas ? this.svg_canvas() : this.svg_pad(this.this_pad_name);
-
-      if (elem.empty()) return;
-
-      var painter = full_canvas ? this.pad_painter() : this;
-
-      document.body.style.cursor = 'wait';
-
-      painter.ForEachPainterInPad(function(pp) {
-
-         var main = pp.main_painter(true, pp.this_pad_name);
-         if (!main || (typeof main.Render3D !== 'function')) return;
-
-         var can3d = main.access_3d_kind();
-         if ((can3d !== 1) && (can3d !== 2)) return;
-
-         var sz = main.size_for_3d(3); // get size for SVG canvas
-
-         var svg3d = main.Render3D(-1111); // render SVG
-
-         //var rrr = new THREE.SVGRenderer({precision:0});
-         //rrr.setSize(sz.width, sz.height);
-         //rrr.render(main.scene, main.camera);
-
-          main
-              .insert("g",".primitives_layer")             // create special group
-              .attr("class","temp_saveaspng")
-              .attr("transform", "translate(" + sz.x + "," + sz.y + ")")
-              .node().appendChild(svg3d);      // add code
-      }, true);
-
-//      if (((can3d === 1) || (can3d === 2)) && main && main.Render3D) {
-           // this was saving of image buffer from 3D render
-//         var canvas = main.renderer.domElement;
-//         main.Render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
-//         var dataUrl = canvas.toDataURL("image/png");
-//         dataUrl.replace("image/png", "image/octet-stream");
-//         var link = document.createElement('a');
-//         if (typeof link.download === 'string') {
-//            document.body.appendChild(link); //Firefox requires the link to be in the body
-//            link.download = filename;
-//            link.href = dataUrl;
-//            link.click();
-//            document.body.removeChild(link); //remove the link when done
-//         }
-//      } else
-
-
-      var options = { name: filename, removeClass: "btns_layer" };
-      if (call_back) options.result = "canvas";
-
-      JSROOT.saveSvgAsPng(elem.node(), options, function(res) {
-
-         if (res===null) console.warn('problem when produce image');
-
-         elem.selectAll(".temp_saveaspng").remove();
-
-         document.body.style.cursor = 'auto';
-
-         if (call_back) JSROOT.CallBack(call_back, res);
-      });
-
-   }
-
-   TPadPainter.prototype.PadButtonClick = function(funcname) {
-
-      if (funcname == "CanvasSnapShot") return this.SaveAsPng(true);
-
-      if (funcname == "EnlargePad") return this.EnlargePad();
-
-      if (funcname == "PadSnapShot") return this.SaveAsPng(false);
-
-      if (funcname == "PadContextMenus") {
-
-         d3.event.preventDefault();
-         d3.event.stopPropagation();
-
-         if (JSROOT.Painter.closeMenu()) return;
-
-         var pthis = this, evnt = d3.event;
-
-         JSROOT.Painter.createMenu(pthis, function(menu) {
-            menu.add("header:Menus");
-
-            if (pthis.iscan)
-               menu.add("Canvas", "pad", pthis.ItemContextMenu);
-            else
-               menu.add("Pad", "pad", pthis.ItemContextMenu);
-
-            if (pthis.frame_painter())
-               menu.add("Frame", "frame", pthis.ItemContextMenu);
-
-            var main = pthis.main_painter();
-
-            if (main) {
-               menu.add("X axis", "xaxis", pthis.ItemContextMenu);
-               menu.add("Y axis", "yaxis", pthis.ItemContextMenu);
-               if ((typeof main.Dimension === 'function') && (main.Dimension() > 1))
-                  menu.add("Z axis", "zaxis", pthis.ItemContextMenu);
-            }
-
-            if (pthis.painters && (pthis.painters.length>0)) {
-               menu.add("separator");
-               var shown = [];
-               for (var n=0;n<pthis.painters.length;++n) {
-                  var pp = pthis.painters[n];
-                  var obj = pp ? pp.GetObject() : null;
-                  if (!obj || (shown.indexOf(obj)>=0)) continue;
-
-                  var name = ('_typename' in obj) ? (obj._typename + "::") : "";
-                  if ('fName' in obj) name += obj.fName;
-                  if (name.length==0) name = "item" + n;
-                  menu.add(name, n, pthis.ItemContextMenu);
-               }
-            }
-
-            menu.show(evnt);
-         });
-
-         return;
-      }
-
-      // click automatically goes to all sub-pads
-      // if any painter indicates that processing completed, it returns true
-      var done = false;
-
-      for (var i = 0; i < this.painters.length; ++i) {
-         var pp = this.painters[i];
-
-         if (typeof pp.PadButtonClick == 'function')
-            pp.PadButtonClick(funcname);
-
-         if (!done && (typeof pp.ButtonClick == 'function'))
-            done = pp.ButtonClick(funcname);
-      }
-   }
-
-   TPadPainter.prototype.FindButton = function(keyname) {
-      var group = this.svg_layer("btns_layer", this.this_pad_name);
-      if (group.empty()) return;
-
-      var found_func = "";
-
-      group.selectAll("svg").each(function() {
-         if (d3.select(this).attr("key") === keyname)
-            found_func = d3.select(this).attr("name");
-      });
-
-      return found_func;
-
-   }
-
-   TPadPainter.prototype.toggleButtonsVisibility = function(action) {
-      var group = this.svg_layer("btns_layer", this.this_pad_name),
-          btn = group.select("[name='Toggle']");
-
-      if (btn.empty()) return;
-
-      var state = btn.property('buttons_state');
-
-      if (btn.property('timout_handler')) {
-         if (action!=='timeout') clearTimeout(btn.property('timout_handler'));
-         btn.property('timout_handler', null);
-      }
-
-      var is_visible = false;
-      switch(action) {
-         case 'enable': is_visible = true; break;
-         case 'enterbtn': return; // do nothing, just cleanup timeout
-         case 'timeout': is_visible = false; break;
-         case 'toggle':
-            state = !state;
-            btn.property('buttons_state', state);
-            is_visible = state;
-            break;
-         case 'disable':
-         case 'leavebtn':
-            if (!state) btn.property('timout_handler', setTimeout(this.toggleButtonsVisibility.bind(this,'timeout'), 500));
-            return;
-      }
-
-      group.selectAll('svg').each(function() {
-         if (this===btn.node()) return;
-         d3.select(this).style('display', is_visible ? "" : "none");
-      });
-   }
-
-   TPadPainter.prototype.AddButton = function(btn, tooltip, funcname, keyname) {
-
-      // do not add buttons when not allowed
-      if (!JSROOT.gStyle.ToolBar) return;
-
-      var group = this.svg_layer("btns_layer", this.this_pad_name);
-      if (group.empty()) return;
-
-      // avoid buttons with duplicate names
-      if (!group.select("[name='" + funcname + "']").empty()) return;
-
-      var iscan = this.iscan || !this.has_canvas, ctrl;
-
-      var x = group.property("nextx");
-      if (!x) {
-         ctrl = JSROOT.ToolbarIcons.CreateSVG(group, JSROOT.ToolbarIcons.rect, this.ButtonSize(), "Toggle tool buttons");
-
-         ctrl.attr("name", "Toggle").attr("x", 0).attr("y", 0).attr("normalx",0)
-             .property("buttons_state", (JSROOT.gStyle.ToolBar!=='popup'))
-             .on("click", this.toggleButtonsVisibility.bind(this, 'toggle'))
-             .on("mouseenter", this.toggleButtonsVisibility.bind(this, 'enable'))
-             .on("mouseleave", this.toggleButtonsVisibility.bind(this, 'disable'));
-
-         x = iscan ? this.ButtonSize(1.25) : 0;
-      } else {
-         ctrl = group.select("[name='Toggle']");
-      }
-
-      var svg = JSROOT.ToolbarIcons.CreateSVG(group, btn, this.ButtonSize(),
-            tooltip + (iscan ? "" : (" on pad " + this.this_pad_name)) + (keyname ? " (keyshortcut " + keyname + ")" : ""));
-
-      svg.attr("name", funcname).attr("x", x).attr("y", 0).attr("normalx",x)
-         .style('display', (ctrl.property("buttons_state") ? '' : 'none'))
-         .on("mouseenter", this.toggleButtonsVisibility.bind(this, 'enterbtn'))
-         .on("mouseleave", this.toggleButtonsVisibility.bind(this, 'leavebtn'));
-
-      if (keyname) svg.attr("key", keyname);
-
-      svg.on("click", this.PadButtonClick.bind(this, funcname));
-
-      group.property("nextx", x + this.ButtonSize(1.25));
-
-      if (!iscan) {
-         group.attr("transform","translate("+ (this.pad_width(this.this_pad_name) - group.property('nextx') - this.ButtonSize(1.25)) + "," + (this.pad_height(this.this_pad_name)-this.ButtonSize(1.25)) + ")");
-         ctrl.attr("x", group.property('nextx'));
-      }
-
-      if (!iscan && (funcname.indexOf("Pad")!=0) && (this.pad_painter()!==this) && (funcname !== "EnlargePad"))
-         this.pad_painter().AddButton(btn, tooltip, funcname);
-   }
-
-   TPadPainter.prototype.DrawingReady = function(res_painter) {
-
-      var main = this.main_painter();
-
-      if (main && main.mode3d && typeof main.Render3D == 'function') main.Render3D(-2222);
-
-      TBasePainter.prototype.DrawingReady.call(this, res_painter);
-   }
-
-   TPadPainter.prototype.DecodeOptions = function(opt) {
-      var pad = this.GetObject();
-      if (!pad) return;
-
-      var d = new JSROOT.DrawOptions(opt);
-
-      if (d.check('WEBSOCKET')) this.OpenWebsocket();
-
-      this.options = { GlobalColors: true, LocalColors: false, IgnorePalette: false, RotateFrame: false, FixFrame: false };
-
-      if (d.check('NOCOLORS') || d.check('NOCOL')) this.options.GlobalColors = this.options.LocalColors = false;
-      if (d.check('LCOLORS') || d.check('LCOL')) { this.options.GlobalColors = false; this.options.LocalColors = true; }
-      if (d.check('NOPALETTE') || d.check('NOPAL')) this.options.IgnorePalette = true;
-      if (d.check('ROTATE')) this.options.RotateFrame = true;
-      if (d.check('FIXFRAME')) this.options.FixFrame = true;
-
-      if (d.check('WHITE')) pad.fFillColor = 0;
-      if (d.check('LOGX')) pad.fLogx = 1;
-      if (d.check('LOGY')) pad.fLogy = 1;
-      if (d.check('LOGZ')) pad.fLogz = 1;
-      if (d.check('LOG')) pad.fLogx = pad.fLogy = pad.fLogz = 1;
-      if (d.check('GRIDX')) pad.fGridx = 1;
-      if (d.check('GRIDY')) pad.fGridy = 1;
-      if (d.check('GRID')) pad.fGridx = pad.fGridy = 1;
-      if (d.check('TICKX')) pad.fTickx = 1;
-      if (d.check('TICKY')) pad.fTicky = 1;
-      if (d.check('TICK')) pad.fTickx = pad.fTicky = 1;
-   }
-
-   Painter.drawPad = function(divid, pad, opt) {
-      var painter = new TPadPainter(pad, false);
-      painter.DecodeOptions(opt);
-
-      painter.SetDivId(divid); // pad painter will be registered in the canvas painters list
-
-      if (painter.svg_canvas().empty()) {
-         painter.has_canvas = false;
-         painter.this_pad_name = "";
-      }
-
-      painter.CreatePadSvg();
-
-      if (painter.MatchObjectType("TPad") && (!painter.has_canvas || painter.HasObjectsToDraw())) {
-         painter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "PadSnapShot");
-
-         if ((painter.has_canvas && painter.HasObjectsToDraw()) || painter.enlarge_main('verify'))
-            painter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge pad", "EnlargePad");
-
-         if (JSROOT.gStyle.ContextMenu)
-            painter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
-      }
-
-      // we select current pad, where all drawing is performed
-      var prev_name = painter.has_canvas ? painter.CurrentPadName(painter.this_pad_name) : undefined;
-
-      // flag used to prevent immediate pad redraw during first draw
-      painter.DrawPrimitives(0, function() {
-         // we restore previous pad name
-         painter.CurrentPadName(prev_name);
-         painter.DrawingReady();
-      });
-
-      return painter;
-   }
-
-   // ==========================================================================================
-
-   function TCanvasPainter(canvas) {
-      // used for online canvas painter
-      TPadPainter.call(this, canvas, true);
-      this._websocket = null;
-   }
-
-   TCanvasPainter.prototype = Object.create(TPadPainter.prototype);
-
-   TCanvasPainter.prototype.ChangeLayout = function(layout_kind, call_back) {
-      var current = this.get_layout_kind();
-      if (current == layout_kind) return JSROOT.CallBack(call_back, true);
-
-      var origin = this.select_main('origin'),
-          sidebar = origin.select('.side_panel'),
-          main = this.select_main(), lst = [];
-
-      while (main.node().firstChild)
-         lst.push(main.node().removeChild(main.node().firstChild));
-
-      if (!sidebar.empty()) JSROOT.cleanup(sidebar.node());
-
-      this.set_layout_kind("simple"); // restore defaults
-      origin.html(""); // cleanup origin
-
-      if (layout_kind == 'simple') {
-         main = origin;
-         for (var k=0;k<lst.length;++k)
-            main.node().appendChild(lst[k]);
-         this.set_layout_kind(layout_kind);
-         // JSROOT.resize(main.node());
-         return JSROOT.CallBack(call_back, true);
-      }
-
-      var pthis = this;
-
-      JSROOT.AssertPrerequisites("jq2d", function() {
-
-         var grid = new JSROOT.GridDisplay(origin.node(), layout_kind);
-
-         if (layout_kind.indexOf("vert")==0) {
-            main = d3.select(grid.GetFrame(0));
-            sidebar = d3.select(grid.GetFrame(1));
-         } else {
-            main = d3.select(grid.GetFrame(1));
-            sidebar = d3.select(grid.GetFrame(0));
-         }
-
-         main.classed("central_panel", true).style('position','relative');
-         sidebar.classed("side_panel", true).style('position','relative');
-
-         // now append all childs to the new main
-         for (var k=0;k<lst.length;++k)
-            main.node().appendChild(lst[k]);
-
-         pthis.set_layout_kind(layout_kind, ".central_panel");
-
-         JSROOT.CallBack(call_back, true);
-      });
-   }
-
-   TCanvasPainter.prototype.ToggleProjection = function(kind, call_back) {
-      delete this.proj_painter;
-
-      if (kind) this.proj_painter = 1; // just indicator that drawing can be preformed
-
-      if (this.use_openui && this.ShowUI5ProjectionArea)
-         return this.ShowUI5ProjectionArea(kind, call_back);
-
-      var layout = 'simple';
-
-      if (kind == "X") layout = 'vert2_31'; else
-      if (kind == "Y") layout = 'horiz2_13';
-
-      this.ChangeLayout(layout, call_back);
-   }
-
-   TCanvasPainter.prototype.DrawProjection = function(kind,hist) {
-      if (!this.proj_painter) return; // ignore drawing if projection not configured
-
-      if (this.proj_painter === 1) {
-
-         var canv = JSROOT.Create("TCanvas"), pthis = this, pad = this.root_pad(), main = this.main_painter(), drawopt;
-
-         if (kind == "X") {
-            canv.fLeftMargin = pad.fLeftMargin;
-            canv.fRightMargin = pad.fRightMargin;
-            canv.fLogx = main.logx ? 1 : 0;
-            canv.fUxmin = main.logx ? JSROOT.log10(main.scale_xmin) : main.scale_xmin;
-            canv.fUxmax = main.logx ? JSROOT.log10(main.scale_xmax) : main.scale_xmax;
-            drawopt = "fixframe";
-         } else {
-            canv.fBottomMargin = pad.fBottomMargin;
-            canv.fTopMargin = pad.fTopMargin;
-            canv.fLogx = main.logy ? 1 : 0;
-            canv.fUxmin = main.logy ? JSROOT.log10(main.scale_ymin) : main.scale_ymin;
-            canv.fUxmax = main.logy ? JSROOT.log10(main.scale_ymax) : main.scale_ymax;
-            drawopt = "rotate";
-         }
-
-         canv.fPrimitives.Add(hist, "hist");
-
-         if (this.use_openui && this.DrawInUI5ProjectionArea ) {
-            // copy frame attributes
-            this.DrawInUI5ProjectionArea(canv, drawopt, function(painter) { pthis.proj_painter = painter; })
-         } else {
-            this.DrawInSidePanel(canv, drawopt, function(painter) { pthis.proj_painter = painter; })
-         }
-      } else {
-         var hp = this.proj_painter.main_painter();
-         if (hp) hp.UpdateObject(hist, "hist");
-         this.proj_painter.RedrawPad();
-      }
-   }
-
-
-   TCanvasPainter.prototype.DrawInSidePanel = function(canv, opt, call_back) {
-      var side = this.select_main('origin').select(".side_panel");
-      if (side.empty()) return JSROOT.CallBack(call_back, null);
-      JSROOT.draw(side.node(), canv, opt, call_back);
-   }
-
-
-   TCanvasPainter.prototype.ShowMessage = function(msg) {
-      JSROOT.progress(msg, 7000);
-   }
-
-   /// function called when canvas menu item Save is called
-   TCanvasPainter.prototype.SaveCanvasAsFile = function(fname) {
-      var pthis = this, pnt = fname.indexOf(".");
-      this.CreateImage(fname.substr(pnt+1), function(res) {
-         pthis.SendWebsocket("SAVE:" + fname + ":" + res);
-      })
-   }
-
-   TCanvasPainter.prototype.WindowBeforeUnloadHanlder = function() {
-      // when window closed, close socket
-      this.CloseWebsocket(true);
-   }
-
-   TCanvasPainter.prototype.SendWebsocket = function(msg, chid) {
-      if (this._websocket)
-         this._websocket.Send(msg, chid);
-   }
-
-   TCanvasPainter.prototype.CloseWebsocket = function(force) {
-      if (this._websocket) {
-         this._websocket.Close(force);
-         this._websocket.Cleanup();
-         delete this._websocket;
-      }
-   }
-
-   TCanvasPainter.prototype.OpenWebsocket = function(socket_kind) {
-      // create websocket for current object (canvas)
-      // via websocket one recieved many extra information
-
-      this.CloseWebsocket();
-
-      this._websocket = new JSROOT.WebWindowHandle(socket_kind);
-      this._websocket.SetReceiver(this);
-      this._websocket.Connect();
-   }
-
-   TCanvasPainter.prototype.OnWebsocketOpened = function(handle) {
-      // indicate that we are ready to recieve any following commands
-   }
-
-   TCanvasPainter.prototype.OnWebsocketClosed = function(handle) {
-      if (window) window.close(); // close window when socket disapper
-   }
-
-   TCanvasPainter.prototype.OnWebsocketMsg = function(handle, msg) {
-
-      if (msg == "CLOSE") {
-         this.OnWebsocketClosed();
-         this.CloseWebsocket(true);
-      } else if (msg.substr(0,5)=='SNAP:') {
-         msg = msg.substr(5);
-         var p1 = msg.indexOf(":"),
-             snapid = msg.substr(0,p1),
-             snap = JSROOT.parse(msg.substr(p1+1));
-         this.RedrawPadSnap(snap, function() {
-            handle.Send("SNAPDONE:" + snapid); // send ready message back when drawing completed
-         });
-      } else if (msg.substr(0,6)=='SNAP6:') {
-         // This is snapshot, produced with ROOT6, handled slighly different
-
-         this.root6_canvas = true; // indicate that drawing of root6 canvas is peformed
-         // if (!this.snap_cnt) this.snap_cnt = 1; else this.snap_cnt++;
-
-         msg = msg.substr(6);
-         var p1 = msg.indexOf(":"),
-             snapid = msg.substr(0,p1),
-             snap = JSROOT.parse(msg.substr(p1+1)),
-             pthis = this;
-
-         // console.log('Get SNAP6', this.snap_cnt);
-
-         this.RedrawPadSnap(snap, function() {
-            // console.log('Complete SNAP6', pthis.snap_cnt);
-            pthis.CompeteCanvasSnapDrawing();
-            var ranges = pthis.GetAllRanges();
-            if (ranges) ranges = ":" + ranges;
-            // if (ranges) console.log("ranges: " + ranges);
-            handle.Send("RREADY:" + snapid + ranges); // send ready message back when drawing completed
-         });
-
-      } else if (msg.substr(0,4)=='JSON') {
-         var obj = JSROOT.parse(msg.substr(4));
-         // console.log("get JSON ", msg.length-4, obj._typename);
-         this.RedrawObject(obj);
-
-      } else if (msg.substr(0,5)=='MENU:') {
-         // this is menu with exact identifier for object
-         msg = msg.substr(5);
-         var p1 = msg.indexOf(":"),
-             menuid = msg.substr(0,p1),
-             lst = JSROOT.parse(msg.substr(p1+1));
-         // console.log("get MENUS ", typeof lst, 'nitems', lst.length, msg.length-4);
-         if (typeof this._getmenu_callback == 'function')
-            this._getmenu_callback(lst, menuid);
-      } else if (msg.substr(0,4)=='CMD:') {
-         msg = msg.substr(4);
-         var p1 = msg.indexOf(":"),
-             cmdid = msg.substr(0,p1),
-             cmd = msg.substr(p1+1),
-             reply = "REPLY:" + cmdid + ":";
-         if ((cmd == "SVG") || (cmd == "PNG") || (cmd == "JPEG")) {
-            this.CreateImage(cmd.toLowerCase(), function(res) {
-               handle.Send(reply + res);
-            });
-         } else {
-            console.log('Unrecognized command ' + cmd);
-            handle.Send(reply);
-         }
-      } else if ((msg.substr(0,7)=='DXPROJ:') || (msg.substr(0,7)=='DYPROJ:')) {
-         var kind = msg[1],
-             hist = JSROOT.parse(msg.substr(7));
-         this.DrawProjection(kind, hist);
-      } else if (msg.substr(0,5)=='SHOW:') {
-         var that = msg.substr(5),
-             on = that[that.length-1] == '1';
-         this.ShowSection(that.substr(0,that.length-2), on);
-      } else {
-         console.log("unrecognized msg " + msg);
-      }
-   }
-
-   TCanvasPainter.prototype.ShowSection = function(that, on) {
-      switch(that) {
-         case "Menu": break;
-         case "StatusBar": break;
-         case "Editor": break;
-         case "ToolBar": break;
-         case "ToolTips": this.SetTooltipAllowed(on); break;
-      }
-   }
-
    JSROOT.TCanvasStatusBits = {
-      kShowEventStatus  : JSROOT.BIT(15),
-      kAutoExec         : JSROOT.BIT(16),
-      kMenuBar          : JSROOT.BIT(17),
-      kShowToolBar      : JSROOT.BIT(18),
-      kShowEditor       : JSROOT.BIT(19),
-      kMoveOpaque       : JSROOT.BIT(20),
-      kResizeOpaque     : JSROOT.BIT(21),
-      kIsGrayscale      : JSROOT.BIT(22),
-      kShowToolTips     : JSROOT.BIT(23)
+         kShowEventStatus  : JSROOT.BIT(15),
+         kAutoExec         : JSROOT.BIT(16),
+         kMenuBar          : JSROOT.BIT(17),
+         kShowToolBar      : JSROOT.BIT(18),
+         kShowEditor       : JSROOT.BIT(19),
+         kMoveOpaque       : JSROOT.BIT(20),
+         kResizeOpaque     : JSROOT.BIT(21),
+         kIsGrayscale      : JSROOT.BIT(22),
+         kShowToolTips     : JSROOT.BIT(23)
+      };
+
+   JSROOT.EAxisBits = {
+         kTickPlus      : JSROOT.BIT(9),
+         kTickMinus     : JSROOT.BIT(10),
+         kAxisRange     : JSROOT.BIT(11),
+         kCenterTitle   : JSROOT.BIT(12),
+         kCenterLabels  : JSROOT.BIT(14),
+         kRotateTitle   : JSROOT.BIT(15),
+         kPalette       : JSROOT.BIT(16),
+         kNoExponent    : JSROOT.BIT(17),
+         kLabelsHori    : JSROOT.BIT(18),
+         kLabelsVert    : JSROOT.BIT(19),
+         kLabelsDown    : JSROOT.BIT(20),
+         kLabelsUp      : JSROOT.BIT(21),
+         kIsInteger     : JSROOT.BIT(22),
+         kMoreLogLabels : JSROOT.BIT(23),
+         kDecimals      : JSROOT.BIT(11)
    };
-
-   TCanvasPainter.prototype.CompeteCanvasSnapDrawing = function() {
-      if (!this.pad) return;
-
-      if (document) document.title = this.pad.fTitle;
-
-      if (this._all_sections_showed) return;
-      this._all_sections_showed = true;
-      this.ShowSection("Menu", this.pad.TestBit(JSROOT.TCanvasStatusBits.kMenuBar));
-      this.ShowSection("StatusBar", this.pad.TestBit(JSROOT.TCanvasStatusBits.kShowEventStatus));
-      this.ShowSection("ToolBar", this.pad.TestBit(JSROOT.TCanvasStatusBits.kShowToolBar));
-      this.ShowSection("Editor", this.pad.TestBit(JSROOT.TCanvasStatusBits.kShowEditor));
-      this.ShowSection("ToolTips", this.pad.TestBit(JSROOT.TCanvasStatusBits.kShowToolTips));
-   }
-
-   TCanvasPainter.prototype.HasEventStatus = function() {
-      return this.has_event_status;
-   }
-
-   Painter.drawCanvas = function(divid, can, opt) {
-      var nocanvas = (can===null);
-      if (nocanvas) can = JSROOT.Create("TCanvas");
-
-      var painter = new TCanvasPainter(can);
-      painter.DecodeOptions(opt);
-      painter.normal_canvas = !nocanvas;
-
-      painter.SetDivId(divid, -1); // just assign id
-      painter.CheckSpecialsInPrimitives(can);
-      painter.CreateCanvasSvg(0);
-      painter.SetDivId(divid);  // now add to painters list
-
-      painter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "CanvasSnapShot", "Ctrl PrintScreen");
-      if (JSROOT.gStyle.ContextMenu)
-         painter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
-
-      if (painter.enlarge_main('verify'))
-         painter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
-
-      if (nocanvas && opt.indexOf("noframe") < 0)
-         JSROOT.Painter.drawFrame(divid, null);
-
-      painter.DrawPrimitives(0, function() { painter.DrawingReady(); });
-      return painter;
-   }
-
-   Painter.drawPadSnapshot = function(divid, snap, opt) {
-      // just for debugging without running web canvas
-
-      var can = JSROOT.Create("TCanvas");
-
-      var painter = new TCanvasPainter(can);
-      painter.normal_canvas = false;
-
-      painter.SetDivId(divid, -1); // just assign id
-
-      painter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "CanvasSnapShot", "Ctrl PrintScreen");
-      if (JSROOT.gStyle.ContextMenu)
-         painter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
-
-      if (painter.enlarge_main('verify'))
-         painter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
-
-      // JSROOT.Painter.drawFrame(divid, null);
-
-      painter.RedrawPadSnap(snap, function() { painter.DrawingReady(); });
-
-      return painter;
-   }
 
    // ================= painter of raw text ========================================
 
@@ -6567,7 +5534,7 @@
       }
 
       painter.Draw = function() {
-         var txt = this.txt.value;
+         var txt = (this.txt._typename && (this.txt._typename == "TObjString")) ? this.txt.fString : this.txt.value;
          if (typeof txt != 'string') txt = "<undefined>";
 
          var mathjax = this.txt.mathjax || (JSROOT.gStyle.Latex == 4);
@@ -6575,7 +5542,7 @@
          if (!mathjax && !('as_is' in this.txt)) {
             var arr = txt.split("\n"); txt = "";
             for (var i = 0; i < arr.length; ++i)
-               txt += "<pre>" + arr[i] + "</pre>";
+               txt += "<pre style='margin:0'>" + arr[i] + "</pre>";
          }
 
          var frame = this.select_main(),
@@ -6597,14 +5564,16 @@
       return painter.DrawingReady();
    }
 
-   // =========================================================================
-
+   /** @summary Register handle to react on window resize
+    *
+    * @desc function used to react on browser window resize event
+    * While many resize events could come in short time,
+    * resize will be handled with delay after last resize event
+    * handle can be function or object with CheckResize function
+    * one could specify delay after which resize event will be handled
+    * @private
+    */
    JSROOT.RegisterForResize = function(handle, delay) {
-      // function used to react on browser window resize event
-      // While many resize events could come in short time,
-      // resize will be handled with delay after last resize event
-      // handle can be function or object with CheckResize function
-      // one could specify delay after which resize event will be handled
 
       if (!handle) return;
 
@@ -6640,34 +5609,35 @@
       window.addEventListener('resize', ProcessResize);
    }
 
-   JSROOT.addDrawFunc({ name: "TCanvas", icon: "img_canvas", func: JSROOT.Painter.drawCanvas, opt: ";grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz", expand_item: "fPrimitives" });
-   JSROOT.addDrawFunc({ name: "TPad", icon: "img_canvas", func: JSROOT.Painter.drawPad, opt: ";grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz", expand_item: "fPrimitives" });
-   JSROOT.addDrawFunc({ name: "TSlider", icon: "img_canvas", func: JSROOT.Painter.drawPad });
-   JSROOT.addDrawFunc({ name: "TFrame", icon: "img_frame", func: JSROOT.Painter.drawFrame });
-   JSROOT.addDrawFunc({ name: "TPaveText", icon: "img_pavetext", prereq: "hist", func: "JSROOT.Painter.drawPave" });
-   JSROOT.addDrawFunc({ name: "TPavesText", icon: "img_pavetext", prereq: "hist", func: "JSROOT.Painter.drawPave" });
-   JSROOT.addDrawFunc({ name: "TPaveStats", icon: "img_pavetext", prereq: "hist", func: "JSROOT.Painter.drawPave" });
-   JSROOT.addDrawFunc({ name: "TPaveLabel", icon: "img_pavelabel", prereq: "hist", func: "JSROOT.Painter.drawPave" });
-   JSROOT.addDrawFunc({ name: "TDiamond", icon: "img_pavelabel", prereq: "hist", func: "JSROOT.Painter.drawPave" });
+   JSROOT.addDrawFunc({ name: "TCanvas", icon: "img_canvas", prereq: "v6", func: "JSROOT.Painter.drawCanvas", opt: ";grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz", expand_item: "fPrimitives" });
+   JSROOT.addDrawFunc({ name: "TPad", icon: "img_canvas", prereq: "v6", func: "JSROOT.Painter.drawPad", opt: ";grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz", expand_item: "fPrimitives" });
+   JSROOT.addDrawFunc({ name: "TSlider", icon: "img_canvas", prereq: "v6", func: "JSROOT.Painter.drawPad" });
+   JSROOT.addDrawFunc({ name: "TFrame", icon: "img_frame", prereq: "v6", func: "JSROOT.Painter.drawFrame" });
+   JSROOT.addDrawFunc({ name: "TPave", icon: "img_pavetext", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
+   JSROOT.addDrawFunc({ name: "TPaveText", icon: "img_pavetext", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
+   JSROOT.addDrawFunc({ name: "TPavesText", icon: "img_pavetext", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
+   JSROOT.addDrawFunc({ name: "TPaveStats", icon: "img_pavetext", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
+   JSROOT.addDrawFunc({ name: "TPaveLabel", icon: "img_pavelabel", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
+   JSROOT.addDrawFunc({ name: "TDiamond", icon: "img_pavelabel", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
    JSROOT.addDrawFunc({ name: "TLatex", icon: "img_text", prereq: "more2d", func: "JSROOT.Painter.drawText", direct: true });
    JSROOT.addDrawFunc({ name: "TMathText", icon: "img_text", prereq: "more2d", func: "JSROOT.Painter.drawText", direct: true });
    JSROOT.addDrawFunc({ name: "TText", icon: "img_text", prereq: "more2d", func: "JSROOT.Painter.drawText", direct: true });
-   JSROOT.addDrawFunc({ name: /^TH1/, icon: "img_histo1d", prereq: "hist", func: "JSROOT.Painter.drawHistogram1D", opt:";hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;B;B1;A;TEXT;LEGO;same", ctrl: "l" });
-   JSROOT.addDrawFunc({ name: "TProfile", icon: "img_profile", prereq: "hist", func: "JSROOT.Painter.drawHistogram1D", opt:";E0;E1;E2;p;AH;hist"});
-   JSROOT.addDrawFunc({ name: "TH2Poly", icon: "img_histo2d", prereq: "hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;same", expand_item: "fBins", theonly: true });
+   JSROOT.addDrawFunc({ name: /^TH1/, icon: "img_histo1d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram1D", opt:";hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;B;B1;A;TEXT;LEGO;same", ctrl: "l" });
+   JSROOT.addDrawFunc({ name: "TProfile", icon: "img_profile", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram1D", opt:";E0;E1;E2;p;AH;hist"});
+   JSROOT.addDrawFunc({ name: "TH2Poly", icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;same", expand_item: "fBins", theonly: true });
    JSROOT.addDrawFunc({ name: "TH2PolyBin", icon: "img_histo2d", draw_field: "fPoly" });
-   JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;SCAT;TEXT;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same", ctrl: "colz" });
+   JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;SCAT;TEXT;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same", ctrl: "colz" });
    JSROOT.addDrawFunc({ name: "TProfile2D", sameas: "TH2" });
-   JSROOT.addDrawFunc({ name: /^TH3/, icon: 'img_histo3d', prereq: "hist3d", func: "JSROOT.Painter.drawHistogram3D", opt:";SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL" });
-   JSROOT.addDrawFunc({ name: "THStack", icon: "img_histo1d", prereq: "hist", func: "JSROOT.Painter.drawHStack", expand_item: "fHists", opt: "PFC;PLC" });
-   JSROOT.addDrawFunc({ name: "TPolyMarker3D", icon: 'img_histo3d', prereq: "hist3d", func: "JSROOT.Painter.drawPolyMarker3D" });
+   JSROOT.addDrawFunc({ name: /^TH3/, icon: 'img_histo3d', prereq: "v6;hist3d", func: "JSROOT.Painter.drawHistogram3D", opt:";SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL" });
+   JSROOT.addDrawFunc({ name: "THStack", icon: "img_histo1d", prereq: "v6;hist", func: "JSROOT.Painter.drawHStack", expand_item: "fHists", opt: "NOSTACK;HIST;E;PFC;PLC" });
+   JSROOT.addDrawFunc({ name: "TPolyMarker3D", icon: 'img_histo3d', prereq: "v6;hist3d", func: "JSROOT.Painter.drawPolyMarker3D" });
    JSROOT.addDrawFunc({ name: "TPolyLine3D", icon: 'img_graph', prereq: "3d", func: "JSROOT.Painter.drawPolyLine3D", direct: true });
    JSROOT.addDrawFunc({ name: "TGraphStruct" });
    JSROOT.addDrawFunc({ name: "TGraphNode" });
    JSROOT.addDrawFunc({ name: "TGraphEdge" });
    JSROOT.addDrawFunc({ name: "TGraphTime", icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraphTime", opt: "once;repeat;first", theonly: true });
-   JSROOT.addDrawFunc({ name: "TGraph2D", icon:"img_graph", prereq: "hist3d", func: "JSROOT.Painter.drawGraph2D", opt: ";P;PCOL", theonly: true });
-   JSROOT.addDrawFunc({ name: "TGraph2DErrors", icon:"img_graph", prereq: "hist3d", func: "JSROOT.Painter.drawGraph2D", opt: ";P;PCOL;ERR", theonly: true });
+   JSROOT.addDrawFunc({ name: "TGraph2D", icon:"img_graph", prereq: "v6;hist3d", func: "JSROOT.Painter.drawGraph2D", opt: ";P;PCOL", theonly: true });
+   JSROOT.addDrawFunc({ name: "TGraph2DErrors", icon:"img_graph", prereq: "v6;hist3d", func: "JSROOT.Painter.drawGraph2D", opt: ";P;PCOL;ERR", theonly: true });
    JSROOT.addDrawFunc({ name: "TGraphPolargram", icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraphPolargram", theonly: true });
    JSROOT.addDrawFunc({ name: "TGraphPolar", icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraphPolar", opt: ";F;L;P;PE", theonly: true });
    JSROOT.addDrawFunc({ name: /^TGraph/, icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraph", opt: ";L;P" });
@@ -6678,10 +5648,11 @@
    JSROOT.addDrawFunc({ name: "RooPlot", icon: "img_canvas", prereq: "more2d", func: "JSROOT.Painter.drawRooPlot" });
    JSROOT.addDrawFunc({ name: "TMultiGraph", icon: "img_mgraph", prereq: "more2d", func: "JSROOT.Painter.drawMultiGraph", expand_item: "fGraphs" });
    JSROOT.addDrawFunc({ name: "TStreamerInfoList", icon: 'img_question', prereq: "hierarchy",  func: "JSROOT.Painter.drawStreamerInfo" });
-   JSROOT.addDrawFunc({ name: "TPaletteAxis", icon: "img_colz", prereq: "hist", func: "JSROOT.Painter.drawPaletteAxis" });
+   JSROOT.addDrawFunc({ name: "TPaletteAxis", icon: "img_colz", prereq: "v6;hist", func: "JSROOT.Painter.drawPaletteAxis" });
    JSROOT.addDrawFunc({ name: "TWebPainting", icon: "img_graph", prereq: "more2d", func: "JSROOT.Painter.drawWebPainting" });
    JSROOT.addDrawFunc({ name: "TPadWebSnapshot", icon: "img_canvas", func: JSROOT.Painter.drawPadSnapshot });
    JSROOT.addDrawFunc({ name: "kind:Text", icon: "img_text", func: JSROOT.Painter.drawRawText });
+   JSROOT.addDrawFunc({ name: "TObjString", icon: "img_text", func: JSROOT.Painter.drawRawText });
    JSROOT.addDrawFunc({ name: "TF1", icon: "img_tf1", prereq: "math;more2d", func: "JSROOT.Painter.drawFunction" });
    JSROOT.addDrawFunc({ name: "TF2", icon: "img_tf2", prereq: "math;hist", func: "JSROOT.Painter.drawTF2" });
    JSROOT.addDrawFunc({ name: "TSpline3", icon: "img_tf1", prereq: "more2d", func: "JSROOT.Painter.drawSpline" });
@@ -6695,28 +5666,31 @@
    JSROOT.addDrawFunc({ name: "TPolyLine", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawPolyLine", direct: true });
    JSROOT.addDrawFunc({ name: "TCurlyLine", sameas: 'TPolyLine' });
    JSROOT.addDrawFunc({ name: "TCurlyArc", sameas: 'TPolyLine' });
-   JSROOT.addDrawFunc({ name: "TGaxis", icon: "img_graph", prereq: "hist", func: "JSROOT.Painter.drawGaxis" });
-   JSROOT.addDrawFunc({ name: "TLegend", icon: "img_pavelabel", prereq: "hist", func: "JSROOT.Painter.drawPave" });
+   JSROOT.addDrawFunc({ name: "TGaxis", icon: "img_graph", prereq: "v6", func: "JSROOT.Painter.drawGaxis" });
+   JSROOT.addDrawFunc({ name: "TLegend", icon: "img_pavelabel", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
    JSROOT.addDrawFunc({ name: "TBox", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawBox", direct: true });
    JSROOT.addDrawFunc({ name: "TWbox", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawBox", direct: true });
    JSROOT.addDrawFunc({ name: "TSliderBox", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawBox", direct: true });
-   JSROOT.addDrawFunc({ name: "TAxis3D", prereq: "hist3d", func: "JSROOT.Painter.drawAxis3D" });
+   JSROOT.addDrawFunc({ name: "TAxis3D", prereq: "v6;hist3d", func: "JSROOT.Painter.drawAxis3D" });
    JSROOT.addDrawFunc({ name: "TMarker", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawMarker", direct: true });
    JSROOT.addDrawFunc({ name: "TPolyMarker", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawPolyMarker", direct: true });
+   JSROOT.addDrawFunc({ name: "TASImage", icon: 'img_mgraph', prereq: "more2d", func: "JSROOT.Painter.drawASImage" });
+   JSROOT.addDrawFunc({ name: "TJSImage", icon: 'img_mgraph', prereq: "more2d", func: "JSROOT.Painter.drawJSImage", opt: ";scale;center" });
    JSROOT.addDrawFunc({ name: "TGeoVolume", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt:";more;all;count;projx;projz;dflt", ctrl: "dflt" });
    JSROOT.addDrawFunc({ name: "TEveGeoShapeExtract", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt: ";more;all;count;projx;projz;dflt", ctrl: "dflt"  });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::TEveGeoShapeExtract", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt: ";more;all;count;projx;projz;dflt", ctrl: "dflt"  });
    JSROOT.addDrawFunc({ name: "TGeoManager", icon: 'img_histo3d', prereq: "geom", expand: "JSROOT.GEO.expandObject", func: "JSROOT.Painter.drawGeoObject", opt: ";more;all;count;projx;projz;dflt", dflt: "expand", ctrl: "dflt" });
    JSROOT.addDrawFunc({ name: /^TGeo/, icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", opt: ";more;all;axis;compa;count;projx;projz;dflt", ctrl: "dflt" });
    // these are not draw functions, but provide extra info about correspondent classes
    JSROOT.addDrawFunc({ name: "kind:Command", icon: "img_execute", execute: true });
    JSROOT.addDrawFunc({ name: "TFolder", icon: "img_folder", icon2: "img_folderopen", noinspect: true, prereq: "hierarchy", expand: "JSROOT.Painter.FolderHierarchy" });
    JSROOT.addDrawFunc({ name: "TTask", icon: "img_task", prereq: "hierarchy", expand: "JSROOT.Painter.TaskHierarchy", for_derived: true });
-   JSROOT.addDrawFunc({ name: "TTree", icon: "img_tree", prereq: "tree", expand: 'JSROOT.Painter.TreeHierarchy', func: 'JSROOT.Painter.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" });
-   JSROOT.addDrawFunc({ name: "TNtuple", icon: "img_tree", prereq: "tree", expand: 'JSROOT.Painter.TreeHierarchy', func: 'JSROOT.Painter.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" });
-   JSROOT.addDrawFunc({ name: "TNtupleD", icon: "img_tree", prereq: "tree", expand: 'JSROOT.Painter.TreeHierarchy', func: 'JSROOT.Painter.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" });
-   JSROOT.addDrawFunc({ name: "TBranchFunc", icon: "img_leaf_method", prereq: "tree", func: 'JSROOT.Painter.drawTree', opt: ";dump", noinspect: true });
-   JSROOT.addDrawFunc({ name: /^TBranch/, icon: "img_branch", prereq: "tree", func: 'JSROOT.Painter.drawTree', dflt: "expand", opt: ";dump", ctrl: "dump", shift: "inspect", ignore_online: true });
-   JSROOT.addDrawFunc({ name: /^TLeaf/, icon: "img_leaf", prereq: "tree", noexpand: true, func: 'JSROOT.Painter.drawTree', opt: ";dump", ctrl: "dump", ignore_online: true });
+   JSROOT.addDrawFunc({ name: "TTree", icon: "img_tree", prereq: "tree;more2d", expand: 'JSROOT.Painter.TreeHierarchy', func: 'JSROOT.Painter.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" });
+   JSROOT.addDrawFunc({ name: "TNtuple", icon: "img_tree", prereq: "tree;more2d", expand: 'JSROOT.Painter.TreeHierarchy', func: 'JSROOT.Painter.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" });
+   JSROOT.addDrawFunc({ name: "TNtupleD", icon: "img_tree", prereq: "tree;more2d", expand: 'JSROOT.Painter.TreeHierarchy', func: 'JSROOT.Painter.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" });
+   JSROOT.addDrawFunc({ name: "TBranchFunc", icon: "img_leaf_method", prereq: "tree;more2d", func: 'JSROOT.Painter.drawTree', opt: ";dump", noinspect: true });
+   JSROOT.addDrawFunc({ name: /^TBranch/, icon: "img_branch", prereq: "tree;more2d", func: 'JSROOT.Painter.drawTree', dflt: "expand", opt: ";dump", ctrl: "dump", shift: "inspect", ignore_online: true });
+   JSROOT.addDrawFunc({ name: /^TLeaf/, icon: "img_leaf", prereq: "tree;more2d", noexpand: true, func: 'JSROOT.Painter.drawTree', opt: ";dump", ctrl: "dump", ignore_online: true });
    JSROOT.addDrawFunc({ name: "TList", icon: "img_list", prereq: "hierarchy", func: "JSROOT.Painter.drawList", expand: "JSROOT.Painter.ListHierarchy", dflt: "expand" });
    JSROOT.addDrawFunc({ name: "THashList", sameas: "TList" });
    JSROOT.addDrawFunc({ name: "TObjArray", sameas: "TList" });
@@ -6748,9 +5722,7 @@
       if ((selector === null) && (kind in JSROOT.DrawFuncs.cache))
          return JSROOT.DrawFuncs.cache[kind];
 
-      var search = (kind.indexOf("ROOT.")==0) ? kind.substr(5) : "kind:"+kind;
-
-      var counter = 0;
+      var search = (kind.indexOf("ROOT.")==0) ? kind.substr(5) : "kind:"+kind, counter = 0;
       for (var i=0; i < JSROOT.DrawFuncs.lst.length; ++i) {
          var h = JSROOT.DrawFuncs.lst[i];
          if (typeof h.name == "string") {
@@ -6762,12 +5734,11 @@
          if (h.sameas !== undefined)
             return JSROOT.getDrawHandle("ROOT."+h.sameas, selector);
 
-         if (selector==null) {
+         if ((selector === null) || (selector === undefined)) {
             // store found handle in cache, can reuse later
             if (!(kind in JSROOT.DrawFuncs.cache)) JSROOT.DrawFuncs.cache[kind] = h;
             return h;
-         } else
-         if (typeof selector == 'string') {
+         } else if (typeof selector == 'string') {
             if (!first) first = h;
             // if drawoption specified, check it present in the list
 
@@ -6779,8 +5750,8 @@
                for (var j=0; j < opts.length; ++j) opts[j] = opts[j].toLowerCase();
                if (opts.indexOf(selector.toLowerCase())>=0) return h;
             }
-         } else {
-            if (selector === counter) return h;
+         } else if (selector === counter) {
+            return h;
          }
          ++counter;
       }
@@ -6788,8 +5759,11 @@
       return first;
    }
 
+   /** @summary Scan streamer infos for derived classes
+    * @desc Assign draw functions for such derived classes
+    * @private */
    JSROOT.addStreamerInfos = function(lst) {
-      if (lst === null) return;
+      if (!lst) return;
 
       function CheckBaseClasses(si, lvl) {
          if (si.fElements == null) return null;
@@ -6831,6 +5805,9 @@
       }
    }
 
+   /** @summary Provide draw settings for specified class or kind
+    * @private
+    */
    JSROOT.getDrawSettings = function(kind, selector) {
       var res = { opts: null, inspect: false, expand: false, draw: false, handle: null };
       if (typeof kind != 'string') return res;
@@ -6874,17 +5851,38 @@
       return res;
    }
 
-   // returns array with supported draw options for the specified class
+   /** Returns array with supported draw options for the specified kind
+    * @private */
    JSROOT.getDrawOptions = function(kind, selector) {
       return JSROOT.getDrawSettings(kind).opts;
    }
 
+   /** @summary Returns true if provided object class can be drawn
+    * @private */
    JSROOT.canDraw = function(classname) {
       return JSROOT.getDrawSettings("ROOT." + classname).opts !== null;
    }
 
-   /** @fn JSROOT.draw(divid, obj, opt, callback)
-    * Draw object in specified HTML element with given draw options  */
+   /**
+    * @summary Draw object in specified HTML element with given draw options.
+    *
+    * @param {string|object} divid - id of div element to draw or directly DOMElement
+    * @param {object} obj - object to draw, object type should be registered before in JSROOT
+    * @param {string} opt - draw options separated by space, comma or semicolon
+    * @param {function} drawcallback - function called when drawing is completed, first argument is object painter instance
+    *
+    * @desc
+    * A complete list of options can be found depending of the object's ROOT class to draw: {@link https://root.cern/js/latest/examples.htm}
+    *
+    * @example
+    * var filename = "https://root.cern/js/files/hsimple.root";
+    * JSROOT.OpenFile(filename, function(file) {
+    *    file.ReadObject("hpxpy;1", function(obj) {
+    *       JSROOT.draw("drawing", obj, "colz;logx;gridx;gridy");
+    *    });
+    * });
+    *
+    */
    JSROOT.draw = function(divid, obj, opt, drawcallback) {
 
       var isdirectdraw = true; // indicates if extra callbacks (via AssertPrerequisites) was invoked to process
@@ -6909,7 +5907,7 @@
          return painter;
       }
 
-      if ((obj===null) || (typeof obj !== 'object')) return completeDraw(null);
+      if ((obj === null) || (typeof obj !== 'object')) return completeDraw(null);
 
       if (opt == 'inspect') {
          var func = JSROOT.findFunction("JSROOT.Painter.drawInspector");
@@ -6929,18 +5927,28 @@
       if (handle.draw_field && obj[handle.draw_field])
          return JSROOT.draw(divid, obj[handle.draw_field], opt, drawcallback);
 
-      if (!handle.func) return completeDraw(null);
+      if (!handle.func) {
+         if (opt && (opt.indexOf("same")>=0)) {
+            var main_painter = JSROOT.GetMainPainter(divid);
+            if (main_painter && (typeof main_painter.PerformDrop === 'function'))
+               return main_painter.PerformDrop(obj, "", null, opt, completeDraw);
+         }
+
+         return completeDraw(null);
+      }
 
       function performDraw() {
          if (handle.direct) {
             painter = new TObjectPainter(obj);
             painter.SetDivId(divid, 2);
             painter.Redraw = handle.func;
-            painter._drawopt = opt;
+            painter.options = { original: opt || "" };
             painter.Redraw();
             painter.DrawingReady();
          } else {
             painter = handle.func(divid, obj, opt);
+
+            if (painter && !painter.options) painter.options = { original: opt || "" };
          }
 
          return completeDraw(painter);
@@ -6987,17 +5995,22 @@
       return painter;
    }
 
-   /** @fn JSROOT.redraw(divid, obj, opt)
-    * Redraw object in specified HTML element with given draw options
-    * If drawing was not exists, it will be performed with JSROOT.draw.
-    * If drawing was already done, that content will be updated */
-
+   /**
+    * @summary Redraw object in specified HTML element with given draw options.
+    *
+    * @desc If drawing was not drawn before, it will be performed with {@link JSROOT.draw}.
+    * If drawing was already done, that content will be updated
+    * @param {string|object} divid - id of div element to draw or directly DOMElement
+    * @param {object} obj - object to draw, object type should be registered before in JSROOT
+    * @param {string} opt - draw options
+    * @param {function} callback - function called when drawing is completed, first argument will be object painter instance
+    */
    JSROOT.redraw = function(divid, obj, opt, callback) {
       if (!obj) return JSROOT.CallBack(callback, null);
 
       var dummy = new TObjectPainter();
       dummy.SetDivId(divid, -1);
-      var can_painter = dummy.pad_painter();
+      var can_painter = dummy.canv_painter();
 
       var handle = null;
       if (obj._typename) handle = JSROOT.getDrawHandle("ROOT." + obj._typename);
@@ -7030,10 +6043,34 @@
       return JSROOT.draw(divid, obj, opt, callback);
    }
 
-   /** @fn JSROOT.MakeSVG(args, callback)
-    * Create SVG for specified args.object and args.option
-    * One could provide args.width and args.height as size options.
-    * As callback argument one gets SVG code */
+   /** @summary Save object, drawn in specified element, as JSON.
+    *
+    * @desc Normally it is TCanvas object with list of primitives
+    * @param {string|object} divid - id of top div element or directly DOMElement
+    * @returns {string} produced JSON string
+    */
+
+   JSROOT.StoreJSON = function(divid) {
+      var p = new TObjectPainter;
+      p.SetDivId(divid,-1);
+
+      var canp = p.canv_painter();
+      return canp ? canp.ProduceJSON() : "";
+   }
+
+
+   /** @summary Create SVG image for provided object.
+    *
+    * @desc Function especially useful in Node.js environment to generate images for
+    * supported ROOT classes
+    *
+    * @param {object} args - contains different settings
+    * @param {object} args.object - object for the drawing
+    * @param {string} [args.option] - draw options
+    * @param {number} [args.width = 1200] - image width
+    * @param {number} [args.height = 800] - image height
+    * @param {function} callback called with svg code as string argument
+    */
    JSROOT.MakeSVG = function(args, callback) {
 
       if (!args) args = {};
@@ -7053,19 +6090,21 @@
 
          JSROOT.draw(main.node(), args.object, args.option || "", function(painter) {
 
+            var has_workarounds = JSROOT.Painter.ProcessSVGWorkarounds && JSROOT.svg_workaround;
+
             main.select('svg').attr("xmlns", "http://www.w3.org/2000/svg")
+                              .attr("xmlns:xlink", "http://www.w3.org/1999/xlink")
                               .attr("width", args.width)
                               .attr("height", args.height)
-                              .attr("style", "").attr("style", null)
-                              .attr("class", null).attr("x", null).attr("y", null);
+                              .attr("style", null).attr("class", null).attr("x", null).attr("y", null);
 
             var svg = main.html();
 
-            if (JSROOT.svg_workaround) {
-               for (var k=0;k<JSROOT.svg_workaround.length;++k)
-                 svg = svg.replace('<path jsroot_svg_workaround="' + k + '"></path>', JSROOT.svg_workaround[k]);
-               JSROOT.svg_workaround = undefined;
-            }
+            if (JSROOT.nodejs)
+               svg = svg.replace(/xlink_href_nodejs=/g,"xlink:href=");
+
+            if (has_workarounds)
+               svg = JSROOT.Painter.ProcessSVGWorkarounds(svg);
 
             svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g,"url(#$1)")        // decode all URL
                      .replace(/ class=\"\w*\"/g,"")                                // remove all classes
@@ -7080,11 +6119,17 @@
 
       if (!JSROOT.nodejs) {
          build(d3.select(window.document).append("div").style("visible", "hidden"));
-      } else
-      if (JSROOT.nodejs_document) {
+      } else if (JSROOT.nodejs_document) {
          build(JSROOT.nodejs_window.d3.select('body').append('div'));
       } else {
-         var jsdom = require('jsdom');
+
+         var jsdom;
+         try {
+           jsdom = require("jsdom/lib/old-api.js"); // jsdom >= 10.x
+         } catch (e) {
+           jsdom = require("jsdom"); // jsdom <= 9.x
+         }
+
          jsdom.env({
             html:'',
             features:{ QuerySelector:true }, //you need query selector for D3 to work
@@ -7099,12 +6144,20 @@
       }
    }
 
-   // Check resize of drawn element
-   // As first argument divid one should use same argument as for the drawing
-   // As second argument, one could specify "true" value to force redrawing of
-   // the element even after minimal resize of the element
-   // Or one just supply object with exact sizes like { width:300, height:200, force:true };
-
+   /**
+    * @summary Check resize of drawn element
+    *
+    * @desc As first argument divid one should use same argument as for the drawing
+    * As second argument, one could specify "true" value to force redrawing of
+    * the element even after minimal resize of the element
+    * Or one just supply object with exact sizes like { width:300, height:200, force:true };
+    * @param {string|object} divid - id or DOM element
+    * @param {boolean|object} arg - options on how to resize
+    *
+    * @example
+    * JSROOT.resize("drawing", { width: 500, height: 200 } );
+    * JSROOT.resize(document.querySelector("#drawing"), true);
+    */
    JSROOT.resize = function(divid, arg) {
       if (arg === true) arg = { force: true }; else
       if (typeof arg !== 'object') arg = null;
@@ -7117,10 +6170,31 @@
       return done;
    }
 
-   // for compatibility, keep old name
+   /**
+    * For compatibility, see {@link JSROOT.resize}
+    * @private
+    */
    JSROOT.CheckElementResize = JSROOT.resize;
 
-   // safely remove all JSROOT objects from specified element
+   /** @summary Returns main painter object for specified HTML element
+    * @param {string|object} divid - id or DOM element
+    */
+
+   JSROOT.GetMainPainter = function(divid) {
+      var dummy = new JSROOT.TObjectPainter();
+      dummy.SetDivId(divid, -1);
+      return dummy.main_painter(true);
+   }
+
+   /**
+    * @summary Safely remove all JSROOT objects from specified element
+    *
+    * @param {string|object} divid - id or DOM element
+    *
+    * @example
+    * JSROOT.cleanup("drawing");
+    * JSROOT.cleanup(document.querySelector("#drawing"));
+    */
    JSROOT.cleanup = function(divid) {
       var dummy = new TObjectPainter(), lst = [];
       dummy.SetDivId(divid, -1);
@@ -7132,11 +6206,16 @@
       return lst;
    }
 
-   // function to display progress message in the left bottom corner
-   // previous message will be overwritten
-   // if no argument specified, any shown messages will be removed
+   /** Display progress message in the left bottom corner.
+    *
+    * Previous message will be overwritten
+    * if no argument specified, any shown messages will be removed
+    * @param {string} msg - message to display
+    * @param {number} tmout - optional timeout in milliseconds, after message will disappear
+    * @private
+    */
    JSROOT.progress = function(msg, tmout) {
-      if (JSROOT.BatchMode || !document) return;
+      if (JSROOT.BatchMode || (typeof document === 'undefined')) return;
       var id = "jsroot_progressbox",
           box = d3.select("#"+id);
 
@@ -7169,10 +6248,21 @@
       }
    }
 
+   /** Tries to close current browser tab
+   *
+   * Many browsers do not allow simple window.close() call,
+   * therefore try several workarounds
+   */
+
+   JSROOT.CloseCurrentWindow = function() {
+      if (!window) return;
+      window.close();
+      window.open('','_self').close();
+   }
+
    Painter.createRootColors();
 
    JSROOT.LongPollSocket = LongPollSocket;
-   JSROOT.Cef3QuerySocket = Cef3QuerySocket;
    JSROOT.WebWindowHandle = WebWindowHandle;
    JSROOT.DrawOptions = DrawOptions;
    JSROOT.ColorPalette = ColorPalette;
@@ -7182,9 +6272,6 @@
    JSROOT.TBasePainter = TBasePainter;
    JSROOT.TObjectPainter = TObjectPainter;
    JSROOT.TooltipHandler = TooltipHandler;
-   JSROOT.TFramePainter = TFramePainter;
-   JSROOT.TPadPainter = TPadPainter;
-   JSROOT.TCanvasPainter = TCanvasPainter;
 
    return JSROOT;
 

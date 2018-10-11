@@ -26,8 +26,6 @@ the user to add single bin boundaries, mirrored pairs, or sets of
 uniformly spaced boundaries.
 **/
 
-#include <cmath>
-#include <algorithm>
 #include "RooFit.h"
 
 #include "Riostream.h"
@@ -39,6 +37,9 @@ uniformly spaced boundaries.
 #include "RooMsgService.h"
 #include "TBuffer.h"
 #include "TList.h"
+
+#include <algorithm>
+#include <cmath>
 
 using namespace std;
 

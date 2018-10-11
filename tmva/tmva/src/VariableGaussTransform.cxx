@@ -337,7 +337,7 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>
          vsForBinning[icl][ivar].push_back(ev_value-eps);
          vsForBinning[icl][ivar].push_back(ev_value);
 
-         for (it=listsForBinning[icl][ivar].begin(); it != listsForBinning[icl][ivar].end(); it++){
+         for (it=listsForBinning[icl][ivar].begin(); it != listsForBinning[icl][ivar].end(); ++it){
             sum+= it->GetWeight();
             if (sum >= sumPerBin) {
                ev_value=it->GetValue();
@@ -748,7 +748,7 @@ void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TStri
                if( type != 'v' ){
                   Log() << kWARNING << "MakeClass for the Gauss transformation works only for the transformation of variables. The transformation of targets/spectators is not implemented." << Endl;
                }
-            }catch( std::out_of_range except ){
+            }catch( std::out_of_range &){
                Log() << kWARNING << "MakeClass for the Gauss transformation searched for a non existing variable index (" << ivar << ")" << Endl;
             }
 

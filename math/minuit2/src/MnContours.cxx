@@ -150,7 +150,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
       double dy = idist1->second - (idist2)->second;
       double bigdis = scalx*scalx*dx*dx + scaly*scaly*dy*dy;
 
-      for(std::vector<std::pair<double,double> >::iterator ipair = result.begin(); ipair != result.end()-1; ipair++) {
+      for(std::vector<std::pair<double,double> >::iterator ipair = result.begin(); ipair != result.end()-1; ++ipair) {
          double distx = ipair->first - (ipair+1)->first;
          double disty = ipair->second - (ipair+1)->second;
          double dist = scalx*scalx*distx*distx + scaly*scaly*disty*disty;

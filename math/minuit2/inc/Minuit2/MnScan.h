@@ -54,6 +54,7 @@ public:
 
    ~MnScan() {}
 
+   ModularFunctionMinimizer& Minimizer() {return fMinimizer;}
    const ModularFunctionMinimizer& Minimizer() const {return fMinimizer;}
 
    std::vector<std::pair<double, double> > Scan(unsigned int par, unsigned int maxsteps = 41, double low = 0., double high = 0.);

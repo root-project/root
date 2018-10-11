@@ -61,6 +61,7 @@ public:
 
    virtual ~MnFumiliMinimize() { }
 
+   FumiliMinimizer& Minimizer() {return fMinimizer;}
    const FumiliMinimizer& Minimizer() const {return fMinimizer;}
 
    const FumiliFCNBase & Fcnbase() const { return fFCN; }

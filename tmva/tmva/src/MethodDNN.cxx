@@ -551,6 +551,9 @@ void TMVA::MethodDNN::ProcessOptions()
    KeyValueVector_t strategyKeyValues = ParseKeyValueString(fTrainingStrategyString,
                                                             TString ("|"),
                                                             TString (","));
+
+   std::cout << "Parsed Training DNN string " << fTrainingStrategyString << std::endl;
+   std::cout << "STring has size " << strategyKeyValues.size() << std::endl;
    for (auto& block : strategyKeyValues) {
       TTrainingSettings settings;
 
@@ -569,6 +572,8 @@ void TMVA::MethodDNN::ProcessOptions()
          settings.regularization = DNN::ERegularization::kL1;
       } else if (regularization == "L2") {
          settings.regularization = DNN::ERegularization::kL2;
+      } else {
+         settings.regularization = DNN::ERegularization::kNone;
       }
 
       TString strMultithreading = fetchValue(block, "Multithreading",
@@ -653,6 +658,24 @@ void TMVA::MethodDNN::Train()
       // JsMVA progress bar maximum (100%)
       fIPyMaxIter = 100;
    }
+
+   for (TTrainingSettings & settings : fTrainingSettings) {
+      size_t nValidationSamples = GetNumValidationSamples();
+      size_t nTrainingSamples = GetEventCollection(Types::kTraining).size() - nValidationSamples;
+      size_t nTestSamples = nValidationSamples;
+
+      if (nTrainingSamples < settings.batchSize or
+          nValidationSamples < settings.batchSize or
+          nTestSamples < settings.batchSize) {
+         Log() << kFATAL << "Number of samples in the datasets are train: "
+                         << nTrainingSamples << " valid: " << nValidationSamples
+                         << " test: " << nTestSamples << ". "
+                         << "One of these is smaller than the batch size of "
+                         << settings.batchSize << ". Please increase the batch"
+                         << " size to be at least the same size as the smallest"
+                         << " of these values." << Endl;
+      }
+  }
 
    if (fArchitectureString == "GPU") {
        TrainGpu();
@@ -1039,8 +1062,8 @@ void TMVA::MethodDNN::TrainGpu()
          }
       }
       for (size_t l = 0; l < net.GetDepth(); l++) {
-         fNet.GetLayer(l).GetWeights() = (TMatrixT<Double_t>) net.GetLayer(l).GetWeights();
-         fNet.GetLayer(l).GetBiases()  = (TMatrixT<Double_t>) net.GetLayer(l).GetBiases();
+         fNet.GetLayer(l).GetWeights() = (TMatrixT<Scalar_t>) net.GetLayer(l).GetWeights();
+         fNet.GetLayer(l).GetBiases()  = (TMatrixT<Scalar_t>) net.GetLayer(l).GetBiases();
       }
    }
 
@@ -1090,7 +1113,6 @@ void TMVA::MethodDNN::TrainCpu()
          p = 1.0 - p;
       }
       net.SetDropoutProbabilities(dropoutVector);
-      //net.SetDropoutProbabilities(settings.dropoutProbabilities);
       net.InitializeGradients();
       auto testNet = net.CreateClone(settings.batchSize);
 
@@ -1198,7 +1220,7 @@ void TMVA::MethodDNN::TrainCpu()
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
 
-       if (fInteractive){
+            if (fInteractive){
                fInteractive->AddPoint(stepCount, trainingError, testError);
                fIPyCurrentIter = 100*(double)minimizer.GetConvergenceCount() /(double)settings.convergenceSteps;
                if (fExitFromTraining) break;
@@ -1234,8 +1256,8 @@ void TMVA::MethodDNN::TrainCpu()
 
       for (size_t l = 0; l < net.GetDepth(); l++) {
          auto & layer = fNet.GetLayer(l);
-         layer.GetWeights() = (TMatrixT<Double_t>) net.GetLayer(l).GetWeights();
-         layer.GetBiases()  = (TMatrixT<Double_t>) net.GetLayer(l).GetBiases();
+         layer.GetWeights() = (TMatrixT<Scalar_t>) net.GetLayer(l).GetWeights();
+         layer.GetBiases()  = (TMatrixT<Scalar_t>) net.GetLayer(l).GetBiases();
       }
    }
 

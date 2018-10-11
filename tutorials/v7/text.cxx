@@ -16,30 +16,28 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-R__LOAD_LIBRARY(libGpad);
-
-// #include "ROOT/TFile.hxx"
-#include "ROOT/TCanvas.hxx"
-#include "ROOT/TColor.hxx"
-#include "ROOT/TText.hxx"
-#include "ROOT/TDirectory.hxx"
+#include "ROOT/RCanvas.hxx"
+#include "ROOT/RColor.hxx"
+#include "ROOT/RText.hxx"
+#include "ROOT/RPadPos.hxx"
 
 void text()
 {
-   using namespace ROOT;
+   using namespace ROOT::Experimental;
 
    // Create a canvas to be displayed.
-   auto canvas = Experimental::TCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("Canvas Title");
 
-  auto text = std::make_shared<ROOT::Experimental::TText>("Hello World");
-  canvas->Draw(text).SetFillColor(Experimental::TColor::kRed);
+   for (int i=0; i<=360; i+=10) {
+      auto opts = canvas->Draw(RText({0.5_normal, 0.6_normal}, "____  Hello World"));
 
-  // Register the text with ROOT: now it lives even after draw() ends.
-  Experimental::TDirectory::Heap().Add("text", text);
+      RColor col(0.0015*i, 0.0025*i ,0.003*i);
+      opts->SetTextColor(col);
+      opts->SetTextSize(10+i/10);
+      opts->SetTextAngle(i);
+      opts->SetTextAlign(13);
+      opts->SetTextFont(42);
+   }
 
-  canvas->Show();
-
-  // TFile *f = TFile::Open("canv7.root", "recreate");
-  // f->WriteObject(canvas.get(), "canv_text");
-  // delete f;
+   canvas->Show();
 }

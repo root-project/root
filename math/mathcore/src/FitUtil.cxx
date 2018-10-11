@@ -390,8 +390,8 @@ namespace ROOT {
     }
 #ifdef R__USE_IMT
   } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-    auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     ROOT::TThreadExecutor pool;
+    auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
 #endif
 //   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
@@ -802,8 +802,8 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    }
 #ifdef R__USE_IMT
    else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
 #endif
@@ -911,6 +911,9 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
 #ifdef USE_PARAMCACHE
    (const_cast<IModelFunctionTempl<double> &>(func)).SetParameters(p);
 #endif
+
+   nPoints = data.Size();  // npoints
+
 #ifdef R__USE_IMT
          // in case parameter needs to be propagated to user function use trick to set parameters by calling one time the function
          // this will be done in sequential mode and parameters can be set in a thread safe manner
@@ -998,12 +1001,6 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
                   }
                }
             }
-            nPoints++;
-            // {
-            //     R__LOCKGUARD(gROOTMutex);
-            //     std::cout << "compute Log-l for point  " << i << "  nPoints  " << nPoints << " = " << logval <<
-            //     std::endl;
-            // }
             return LikelihoodAux<double>(logval, W, W2);
          };
 
@@ -1045,8 +1042,8 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
     }
 #ifdef R__USE_IMT
   } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-    auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     ROOT::TThreadExecutor pool;
+    auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
     logl=resArray.logvalue;
     sumW=resArray.weight;
@@ -1107,11 +1104,6 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
       logl += extendedTerm;
 
    }
-
-   // reset the number of fitting data points
-   //  nPoints = n;
-   // std::cout<<", n: "<<nPoints<<std::endl;
-   nPoints = 0;
 
 #ifdef DEBUG  
    std::cout << "Evaluated log L for parameters (";
@@ -1227,8 +1219,8 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
    }
 #ifdef R__USE_IMT
    else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
 #endif
@@ -1395,7 +1387,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
    (const_cast<IModelFunction &>(func)).SetParameters(p);
 #endif
 
-   nPoints = 0;  // npoints
+   nPoints = data.Size();  // npoints
 
 
    // get fit option and check case of using integral of bins
@@ -1522,7 +1514,6 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
 
          if (y >  0) {
             nloglike += y * (ROOT::Math::Util::EvalLog(y) - ROOT::Math::Util::EvalLog(fval));
-            nPoints++;
          }
       }
       return nloglike;
@@ -1550,8 +1541,8 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       }
 #ifdef R__USE_IMT
    } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size());
       ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size());
       res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
 #endif
       //   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
@@ -1721,8 +1712,8 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
    }
 #ifdef R__USE_IMT
    else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
 #endif
@@ -1754,9 +1745,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
 
 
 unsigned FitUtil::setAutomaticChunking(unsigned nEvents){
-      SysInfo_t s;
-      gSystem->GetSysInfo(&s);
-      auto ncpu  = s.fCpus;
+      auto ncpu  = ROOT::GetImplicitMTPoolSize();
       if (nEvents/ncpu < 1000) return ncpu;
       return nEvents/1000;
       //return ((nEvents/ncpu + 1) % 1000) *40 ; //arbitrary formula

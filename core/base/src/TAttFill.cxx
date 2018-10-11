@@ -47,6 +47,7 @@ Begin_Macro
 {
    TCanvas *c = new TCanvas("c","Fill Area colors",0,0,500,200);
    c->DrawColorTable();
+   return c;
 }
 End_Macro
 
@@ -90,6 +91,8 @@ in your code instead of hardcoded color numbers, eg:
 Begin_Macro
 {
    TColorWheel *w = new TColorWheel();
+   cw = new TCanvas("cw","cw",0,0,400,400);
+   w->SetCanvas(cw);
    w->Draw();
 }
 End_Macro
@@ -160,7 +163,7 @@ customized using:
   -  `gStyle->SetHatchesLineWidth()` to define the hatches line width.
 
 Begin_Macro
-fillpatterns.C
+fillpatterns.C(500,700)
 End_Macro
 */
 

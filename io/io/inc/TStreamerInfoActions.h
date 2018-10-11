@@ -13,8 +13,10 @@
 #define ROOT_TStreamerInfoActions
 
 #include <vector>
+#include <ROOT/RMakeUnique.hxx>
 
 #include "TStreamerInfo.h"
+#include "TVirtualArray.h"
 #include <assert.h>
 
 /**
@@ -50,12 +52,17 @@ namespace TStreamerInfoActions {
    /// Base class of the Configurations for the member wise looping routines.
    class TLoopConfiguration {
    public:
-      TLoopConfiguration() {};
+      TVirtualCollectionProxy *fProxy = nullptr;
+   public:
+      TLoopConfiguration() = default;
+      TLoopConfiguration(TVirtualCollectionProxy *proxy) : fProxy(proxy) {}
+
       // virtual void PrintDebug(TBuffer &buffer, void *object) const;
       virtual ~TLoopConfiguration() {};
       virtual void Print() const;
       virtual void *GetFirstAddress(void *start, const void *end) const = 0;
-      virtual TLoopConfiguration* Copy() = 0; // { return new TLoopConfiguration(*this); }
+      virtual TLoopConfiguration* Copy() const = 0; // { return new TLoopConfiguration(*this); }
+      virtual TVirtualCollectionProxy* GetCollectionProxy() const { return fProxy; }
    };
 
    typedef TVirtualCollectionProxy::Next_t Next_t;
@@ -127,10 +134,47 @@ namespace TStreamerInfoActions {
       ClassDef(TConfiguredAction,0); // A configured action
    };
 
+   struct TIDNode;
+   using TIDs = std::vector<TIDNode>;
+
+   // Hold information about unfolded/extracted StreamerElement for
+   // a sub-object
+   struct TNestedIDs {
+      TNestedIDs() = default;
+      TNestedIDs(TStreamerInfo *info, Int_t offset) : fInfo(info), fOffset(offset) {}
+      ~TNestedIDs() {
+         if (fOwnOnfileObject)
+            delete fOnfileObject;
+      }
+      TStreamerInfo *fInfo = nullptr; ///< Not owned.
+      TVirtualArray *fOnfileObject = nullptr;
+      Bool_t         fOwnOnfileObject = kFALSE;
+      Int_t          fOffset;
+      TIDs           fIDs;
+   };
+
+   // A 'node' in the list of StreamerElement ID, either
+   // the index of the element in the current streamerInfo
+   // or a set of unfolded/extracted StreamerElement for a sub-object.
+   struct TIDNode {
+      TIDNode() = default;
+      TIDNode(Int_t id) : fElemID(id), fElement(nullptr), fInfo(nullptr) {}
+      TIDNode(TStreamerInfo *info, Int_t offset) : fElemID(-1), fElement(nullptr), fInfo(nullptr)  {
+         fNestedIDs = std::make_unique<TNestedIDs>(info, offset);
+      }
+      Int_t fElemID = -1;
+      TStreamerElement *fElement = nullptr;
+      TStreamerInfo *fInfo = nullptr;
+      std::unique_ptr<TNestedIDs> fNestedIDs;
+   };
+
    typedef std::vector<TConfiguredAction> ActionContainer_t;
    class TActionSequence : public TObject {
       TActionSequence() {};
    public:
+      struct SequencePtr;
+      using SequenceGetter_t = SequencePtr(*)(TStreamerInfo *info, TVirtualCollectionProxy *collectionProxy, TClass *originalClass);
+
       TActionSequence(TVirtualStreamerInfo *info, UInt_t maxdata) : fStreamerInfo(info), fLoopConfig(0) { fActions.reserve(maxdata); };
       ~TActionSequence() {
          delete fLoopConfig;
@@ -155,8 +199,85 @@ namespace TStreamerInfoActions {
       static TActionSequence *CreateWriteMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy);
       TActionSequence *CreateSubSequence(const std::vector<Int_t> &element_ids, size_t offset);
 
+      TActionSequence *CreateSubSequence(const TIDs &element_ids, size_t offset, SequenceGetter_t create);
+      void AddToSubSequence(TActionSequence *sequence, const TIDs &element_ids, Int_t offset, SequenceGetter_t create);
+
       void Print(Option_t * = "") const;
 
+      // Maybe owner unique_ptr
+      struct SequencePtr {
+         TStreamerInfoActions::TActionSequence *fSequence = nullptr;
+         Bool_t fOwner = kFALSE;
+
+         SequencePtr() = default;
+
+         SequencePtr(SequencePtr &&from) : fSequence(from.fSequence), fOwner(from.fOwner) {
+            from.fOwner = false;
+         }
+
+         SequencePtr(TStreamerInfoActions::TActionSequence *sequence,  Bool_t owner) : fSequence(sequence), fOwner(owner) {}
+
+         ~SequencePtr() {
+            if (fOwner) delete fSequence;
+         }
+
+         // Accessor to the pointee.
+         TStreamerInfoActions::TActionSequence &operator*() const {
+            return *fSequence;
+         }
+
+         // Accessor to the pointee
+         TStreamerInfoActions::TActionSequence *operator->() const {
+            return fSequence;
+         }
+
+         // Return true is the pointee is not nullptr.
+         operator bool() {
+            return fSequence != nullptr;
+         }
+      };
+
+      // SequenceGetter_t implementations
+
+      static SequencePtr ReadMemberWiseActionsCollectionGetter(TStreamerInfo *info, TVirtualCollectionProxy * /* collectionProxy */, TClass * /* originalClass */) {
+         auto seq = info->GetReadMemberWiseActions(kTRUE);
+         return {seq, kFALSE};
+      }
+      static SequencePtr ConversionReadMemberWiseActionsViaProxyGetter(TStreamerInfo *info, TVirtualCollectionProxy *collectionProxy, TClass *originalClass) {
+         auto seq = collectionProxy->GetConversionReadMemberWiseActions(originalClass, info->GetClassVersion());
+         return {seq, kFALSE};
+      }
+      static SequencePtr ReadMemberWiseActionsViaProxyGetter(TStreamerInfo *info, TVirtualCollectionProxy *collectionProxy, TClass * /* originalClass */) {
+         auto seq = collectionProxy->GetReadMemberWiseActions(info->GetClassVersion());
+         return {seq, kFALSE};
+      }
+      static SequencePtr ReadMemberWiseActionsCollectionCreator(TStreamerInfo *info, TVirtualCollectionProxy *collectionProxy, TClass * /* originalClass */) {
+         auto seq = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(info,*collectionProxy);
+         return {seq, kTRUE};
+      }
+      // Creator5() = Creator1;
+      static SequencePtr ReadMemberWiseActionsGetter(TStreamerInfo *info, TVirtualCollectionProxy * /* collectionProxy */, TClass * /* originalClass */) {
+         auto seq = info->GetReadMemberWiseActions(kFALSE);
+         return {seq, kFALSE};
+      }
+
+      static SequencePtr WriteMemberWiseActionsCollectionGetter(TStreamerInfo *info, TVirtualCollectionProxy * /* collectionProxy */, TClass * /* originalClass */) {
+         auto seq = info->GetWriteMemberWiseActions(kTRUE);
+         return {seq, kFALSE};
+      }
+      static SequencePtr WriteMemberWiseActionsViaProxyGetter(TStreamerInfo *, TVirtualCollectionProxy *collectionProxy, TClass * /* originalClass */) {
+         auto seq = collectionProxy->GetWriteMemberWiseActions();
+         return {seq, kFALSE};
+      }
+      static SequencePtr WriteMemberWiseActionsCollectionCreator(TStreamerInfo *info, TVirtualCollectionProxy *collectionProxy, TClass * /* originalClass */) {
+         auto seq = TStreamerInfoActions::TActionSequence::CreateWriteMemberWiseActions(info,*collectionProxy);
+         return {seq, kTRUE};
+      }
+      // Creator5() = Creator1;
+      static SequencePtr WriteMemberWiseActionsGetter(TStreamerInfo *info, TVirtualCollectionProxy * /* collectionProxy */, TClass * /* originalClass */) {
+         auto seq = info->GetWriteMemberWiseActions(kFALSE);
+         return {seq, kFALSE};
+      }
       ClassDef(TActionSequence,0);
    };
 

@@ -71,7 +71,7 @@ End_Macro
 The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 */
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #ifdef R__LINUX
 // for posix_fadvise
@@ -132,7 +132,8 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TSchemaRuleSet.h"
 #include "TThreadSlots.h"
 #include "TGlobal.h"
-#include "TMath.h"
+#include "ROOT/RMakeUnique.hxx"
+#include "ROOT/RConcurrentHashColl.hxx"
 
 using std::sqrt;
 
@@ -150,6 +151,7 @@ UInt_t   TFile::fgOpenTimeout = TFile::kEternalTimeout;
 Bool_t   TFile::fgOnlyStaged = 0;
 #ifdef R__USE_IMT
 ROOT::TRWSpinLock TFile::fgRwLock;
+ROOT::Internal::RConcurrentHashColl TFile::fgTsSIHashes;
 #endif
 
 const Int_t kBEGIN = 100;
@@ -164,7 +166,7 @@ AddPseudoGlobals() {
    // User "gCling" as synonym for "libCore static initialization has happened".
    // This code here must not trigger it.
    TGlobalMappedFunction::Add(new TGlobalMappedFunction("gFile", "TFile*",
-                                 (TGlobalMappedFunction::GlobalFunc_t)&TFile::CurrentFile));
+            (TGlobalMappedFunction::GlobalFunc_t)((void*)&TFile::CurrentFile)));
 }
 } gAddPseudoGlobals;
 }
@@ -1318,6 +1320,58 @@ const TList *TFile::GetStreamerInfoCache()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// See documentation of GetStreamerInfoList for more details.
+/// This is an internal method which returns the list of streamer infos and also
+/// information about the success of the operation.
+
+TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
+{
+   ROOT::Internal::RConcurrentHashColl::HashValue hash;
+
+   if (fIsPcmFile) return {nullptr, 1, hash}; // No schema evolution for ROOT PCM files.
+
+   TList *list = 0;
+   if (fSeekInfo) {
+      TDirectory::TContext ctxt(this); // gFile and gDirectory used in ReadObj
+      auto key = std::make_unique<TKey>(this);
+      std::vector<char> buffer(fNbytesInfo+1);
+      auto buf = buffer.data();
+      Seek(fSeekInfo);
+      if (ReadBuffer(buf,fNbytesInfo)) {
+         // ReadBuffer returns kTRUE in case of failure.
+         Warning("GetRecordHeader","%s: failed to read the StreamerInfo data from disk.",
+                 GetName());
+         return {nullptr, 1, hash};
+      }
+
+#ifdef R__USE_IMT
+      if (lookupSICache) {
+         hash = fgTsSIHashes.Hash(buf, fNbytesInfo);
+         if (fgTsSIHashes.Find(hash)) {
+            if (gDebug > 0) Info("GetStreamerInfo", "The streamer info record for file %s has already been treated, skipping it.", GetName());
+            return {nullptr, 0, hash};
+         }
+      }
+#else
+      (void) lookupSICache;
+#endif
+      key->ReadKeyBuffer(buf);
+      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer.data()));
+      if (list) list->SetOwner();
+   } else {
+      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
+   }
+
+   if (list == 0) {
+      Info("GetStreamerInfoList", "cannot find the StreamerInfo record in file %s",
+           GetName());
+      return {nullptr, 1, hash};
+   }
+
+   return {list, 0, hash};
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Read the list of TStreamerInfo objects written to this file.
 ///
 /// The function returns a TList. It is the user's responsibility
@@ -1339,37 +1393,7 @@ const TList *TFile::GetStreamerInfoCache()
 
 TList *TFile::GetStreamerInfoList()
 {
-   if (fIsPcmFile) return 0; // No schema evolution for ROOT PCM files.
-
-   TList *list = 0;
-   if (fSeekInfo) {
-      TDirectory::TContext ctxt(this); // gFile and gDirectory used in ReadObj
-      TKey *key = new TKey(this);
-      char *buffer = new char[fNbytesInfo+1];
-      char *buf    = buffer;
-      Seek(fSeekInfo);
-      if (ReadBuffer(buf,fNbytesInfo)) {
-         // ReadBuffer returns kTRUE in case of failure.
-         Warning("GetRecordHeader","%s: failed to read the StreamerInfo data from disk.",
-                 GetName());
-         return 0;
-      }
-      key->ReadKeyBuffer(buf);
-      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer));
-      if (list) list->SetOwner();
-      delete [] buffer;
-      delete key;
-   } else {
-      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
-   }
-
-   if (list == 0) {
-      Info("GetStreamerInfoList", "cannot find the StreamerInfo record in file %s",
-           GetName());
-      return 0;
-   }
-
-   return list;
+   return GetStreamerInfoListImpl(/*lookupSICache*/ false).fList;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1497,7 +1521,7 @@ void TFile::Map(Option_t *opt)
    char header[kBEGIN];
    char classname[512];
 
-   unsigned char nDigits = TMath::Log10(fEND) + 1;
+   unsigned char nDigits = std::log10(fEND) + 1;
 
    while (idcur < fEND) {
       Seek(idcur);
@@ -1748,7 +1772,7 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
             fgBytesRead     -= extra;
             n = 0;
          }
-         curbegin = pos[i];
+         curbegin = i < nbuf ? pos[i] : 0;
       }
    }
    if (buf2) delete [] buf2;
@@ -2181,8 +2205,8 @@ void TFile::SetCompressionAlgorithm(Int_t algorithm)
 {
    if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
    if (fCompress < 0) {
-      // if the level is not defined yet use 1 as a default
-      fCompress = 100 * algorithm + 1;
+      // if the level is not defined yet use 4 as a default (was 1 for ZLIB)
+      fCompress = 100 * algorithm + 4;
    } else {
       int level = fCompress % 100;
       fCompress = 100 * algorithm + level;
@@ -2920,7 +2944,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          fprintf(fpMAKE,"genreflex %sProjectHeaders.h -o %sProjectDict.cxx --comments --iocomments %s ",subdirname.Data(),subdirname.Data(),gSystem->GetIncludePath());
          path.Form("%s/%sSelection.xml",clean_dirname.Data(),subdirname.Data());
       } else {
-         fprintf(fpMAKE,"rootcint -v1 -f %sProjectDict.cxx -c %s ",subdirname.Data(),gSystem->GetIncludePath());
+         fprintf(fpMAKE,"rootcint -v1 -f %sProjectDict.cxx -c %s ", subdirname.Data(), gSystem->GetIncludePath());
          path.Form("%s/%sLinkDef.h",clean_dirname.Data(),subdirname.Data());
       }
    } else {
@@ -3474,9 +3498,11 @@ Int_t TFile::MakeProjectParProofInf(const char *pack, const char *proofinf)
 
 void TFile::ReadStreamerInfo()
 {
-   TList *list = GetStreamerInfoList();
+   auto listRetcode = GetStreamerInfoListImpl(/*lookupSICache*/ true);
+   TList *list = listRetcode.fList;
+   auto retcode = listRetcode.fReturnCode;
    if (!list) {
-      MakeZombie();
+      if (retcode) MakeZombie();
       return;
    }
 
@@ -3576,6 +3602,12 @@ void TFile::ReadStreamerInfo()
    fClassIndex->fArray[0] = 0;
    list->Clear();  //this will delete all TStreamerInfo objects with kCanDelete bit set
    delete list;
+
+#ifdef R__USE_IMT
+   // We are done processing the record, let future calls and other threads that it
+   // has been done.
+   fgTsSIHashes.Insert(listRetcode.fHash);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3710,10 +3742,6 @@ void TFile::WriteStreamerInfo()
       list.Add(&listOfRules);
    }
 
-   // always write with compression on
-   Int_t compress = fCompress;
-   fCompress = 1;
-
    //free previous StreamerInfo record
    if (fSeekInfo) MakeFree(fSeekInfo,fSeekInfo+fNbytesInfo-1);
    //Create new key
@@ -3725,7 +3753,6 @@ void TFile::WriteStreamerInfo()
    key.WriteFile(0);
 
    fClassIndex->fArray[0] = 0;
-   fCompress = compress;
 
    list.RemoveLast(); // remove the listOfRules.
 }

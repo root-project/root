@@ -846,6 +846,11 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
             case ROOT::kSTLunorderedmultiset:
             case ROOT::kSTLbitset: // not really an associate container but it has no real iterator.
                fProperties |= kIsAssociative;
+               if (num > 3 && !inside[3].empty()) {
+                  if (! TClassEdit::IsDefAlloc(inside[3].c_str(),inside[0].c_str())) {
+                     fProperties |= kCustomAlloc;
+                  }
+               }
                break;
          };
 
@@ -885,6 +890,11 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
                if ( 0 == fValDiff ) {
                   fValDiff = fVal->fSize;
                   fValDiff += (slong - fValDiff%slong)%slong;
+               }
+               if (num > 2 && !inside[2].empty()) {
+                  if (! TClassEdit::IsDefAlloc(inside[2].c_str(),inside[0].c_str())) {
+                     fProperties |= kCustomAlloc;
+                  }
                }
                break;
          }

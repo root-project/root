@@ -139,7 +139,7 @@ TString TMVA::Types::GetMethodName( TMVA::Types::EMVA method ) const
    std::lock_guard<std::mutex> guard(gTypesMutex);
 #endif
    std::map<TString, EMVA>::const_iterator it = fStr2type.begin();
-   for (; it!=fStr2type.end(); it++) if (it->second == method) return it->first;
+   for (; it!=fStr2type.end(); ++it) if (it->second == method) return it->first;
    Log() << kFATAL << "Unknown method index in map: " << method << Endl;
    return "";
 }

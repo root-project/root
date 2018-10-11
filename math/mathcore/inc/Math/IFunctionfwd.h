@@ -13,8 +13,6 @@
 #ifndef ROOT_Math_IFunctionfwd
 #define ROOT_Math_IFunctionfwd
 
-#include "Types.h"
-
 namespace ROOT {
 
    namespace Math {

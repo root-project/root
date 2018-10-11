@@ -207,7 +207,8 @@ extern "C" {
 /* Define some of the X11 constants also here, again just for laziness */
 
 /* Generic null resource */
-#define None 0
+//#define None 0
+static const unsigned long None = 0;
 
 /* Error codes */
 #define Success            0

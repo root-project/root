@@ -167,7 +167,7 @@ const char *rootClingHelp =
 #include "rootcling_impl.h"
 
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #include <iostream>
 #include <iomanip>
@@ -225,6 +225,7 @@ const char *rootClingHelp =
 #include "clang/Basic/MemoryBufferCache.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
+#include "clang/Frontend/FrontendDiagnostic.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/ModuleMap.h"
@@ -312,14 +313,14 @@ void EmitStreamerInfo(const char *normName)
    if (gDriverConfig->fAddStreamerInfoToROOTFile)
       gDriverConfig->fAddStreamerInfoToROOTFile(normName);
 }
-static void EmitTypedefs(const std::vector<clang::TypedefNameDecl *> &tdvec)
+static void EmitTypedefs(const std::vector<const clang::TypedefNameDecl *> &tdvec)
 {
    if (!gDriverConfig->fAddTypedefToROOTFile)
       return;
    for (const auto td : tdvec)
       gDriverConfig->fAddTypedefToROOTFile(td->getQualifiedNameAsString().c_str());
 }
-static void EmitEnums(const std::vector<clang::EnumDecl *> &enumvec)
+static void EmitEnums(const std::vector<const clang::EnumDecl *> &enumvec)
 {
    if (!gDriverConfig->fAddEnumToROOTFile)
       return;
@@ -454,7 +455,7 @@ void AnnotateFieldDecl(clang::FieldDecl &decl,
    // We may look for a smarter algorithm.
 
    // Nothing to do then ...
-   if (fieldSelRules.size() == 0) return;
+   if (fieldSelRules.empty()) return;
 
    clang::ASTContext &C = decl.getASTContext();
    clang::SourceRange commentRange; // Empty: this is a fake comment
@@ -2268,21 +2269,10 @@ static bool IncludeHeaders(const std::vector<std::string> &headers, cling::Inter
 static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *module,
                                   std::vector<std::string> &missingHeaders)
 {
-   // Make a list of modules and submodules that we can check for headers.
-   // We use a SetVector to prevent an infinite loop in unlikely case the
-   // modules somehow are messed up and don't form a tree...
-   llvm::SetVector<clang::Module *> modules;
-   modules.insert(module);
-   for (size_t i = 0; i < modules.size(); ++i) {
-      clang::Module *M = modules[i];
-      for (clang::Module *subModule : M->submodules()) modules.insert(subModule);
-   }
    // Now we collect all header files from the previously collected modules.
    std::set<std::string> moduleHeaders;
-   for (clang::Module *module : modules) {
-      ROOT::TMetaUtils::foreachHeaderInModule(
-         *module, [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.insert(h.NameAsWritten); });
-   }
+   ROOT::TMetaUtils::foreachHeaderInModule(
+      *module, [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.insert(h.NameAsWritten); });
 
    // Go through the list of headers that are required by the ModuleGenerator
    // and check for each header if it's in one of the modules we loaded.
@@ -2298,9 +2288,8 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *modul
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generates a module from the given ModuleGenerator and CompilerInstance.
-/// Returns true iff the PCM was succesfully generated.
-static bool GenerateModule(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
+/// Check moduleName validity from modulemap. Check if this module is defined or not.
+static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
                            StringRef LinkdefPath, const std::string &moduleName)
 {
    clang::CompilerInstance *CI = interpreter.getCI();
@@ -2312,7 +2301,7 @@ static bool GenerateModule(TModuleGenerator &modGen, const std::string &resource
 
    // Inform the user and abort if we can't find a module with a given name.
    if (!module) {
-      ROOT::TMetaUtils::Error("GenerateModule", "Couldn't find module with name '%s' in modulemap!\n",
+      ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't find module with name '%s' in modulemap!\n",
                               moduleName.c_str());
       return false;
    }
@@ -2330,10 +2319,10 @@ static bool GenerateModule(TModuleGenerator &modGen, const std::string &resource
          msgStream << "  " << H << "\n";
       }
       std::string warningMessage = msgStream.str();
-      ROOT::TMetaUtils::Warning("GenerateModule", warningMessage.c_str());
+      ROOT::TMetaUtils::Warning("CheckModuleValid", warningMessage.c_str());
       // We include the missing headers to fix the module for the user.
       if (!IncludeHeaders(missingHeaders, interpreter)) {
-         ROOT::TMetaUtils::Error("GenerateModule", "Couldn't include missing module headers for module '%s'!\n",
+         ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't include missing module headers for module '%s'!\n",
                                  module->Name.c_str());
       }
    }
@@ -2752,15 +2741,16 @@ bool ProcessAndAppendIfNotThere(const std::string &el,
 {
    std::stringstream elStream(el);
    std::string tmp;
+   bool added = false;
    while (getline(elStream, tmp, '\n')) {
       // Add if not there
       if (el_set.insert(tmp).second && !tmp.empty()) {
          el_list.push_back(tmp);
-         return true;
+         added = true;
       }
    }
 
-   return false;
+   return added;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3744,9 +3734,13 @@ bool IsImplementationName(const std::string &filename)
 
 int ShouldIgnoreClingArgument(const std::string& argument)
 {
-   if (argument == "-pipe") return 1;
-   if (argument == "-fPIC") return 1;
-   if (argument == "-fpic") return 1;
+   auto vetos = {"-pipe", "-fPIC", "-fpic",
+                 "-fno-plt", "--save-temps" };
+
+   for (auto veto : vetos) {
+      if (argument == veto) return 1;
+   }
+
    if (ROOT::TMetaUtils::BeginsWith(argument, "--gcc-toolchain="))
       return 1;
 
@@ -3863,6 +3857,106 @@ static bool FileExists(const char *file)
    struct stat buf;
    return (stat(file, &buf) == 0);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Custom diag client for clang that verifies that each implicitly build module
+/// is a system module. If not, it will let the current rootcling invocation
+/// fail with an error. All other diags beside module build remarks will be
+/// forwarded to the passed child diag client.
+///
+/// The reason why we need this is that if we built implicitly a C++ module
+/// that belongs to a ROOT dictionary, then we will miss information generated
+/// by rootcling in this file (e.g. the source code comments to annotation
+/// attributes transformation will be missing in the module file).
+class CheckModuleBuildClient : public clang::DiagnosticConsumer {
+   clang::DiagnosticConsumer *fChild;
+   bool fOwnsChild;
+   clang::ModuleMap &fMap;
+
+public:
+   CheckModuleBuildClient(clang::DiagnosticConsumer *Child, bool OwnsChild, clang::ModuleMap &Map)
+      : fChild(Child), fOwnsChild(OwnsChild), fMap(Map)
+   {
+   }
+
+   ~CheckModuleBuildClient()
+   {
+      if (fOwnsChild)
+         delete fChild;
+   }
+
+   virtual void HandleDiagnostic(clang::DiagnosticsEngine::Level DiagLevel, const clang::Diagnostic &Info) override
+   {
+      using namespace clang::diag;
+
+      // This method catches the module_build remark from clang and checks if
+      // the implicitly built module is a system module or not. We only support
+      // building system modules implicitly.
+
+      std::string moduleName;
+      const clang::Module *module = nullptr;
+
+      // Extract the module from the diag argument with index 0.
+      const auto &ID = Info.getID();
+      if (ID == remark_module_build || ID == remark_module_build_done) {
+         moduleName = Info.getArgStdStr(0);
+         module = fMap.findModule(moduleName);
+         // We should never be able to build a module without having it in the
+         // modulemap. Still, let's print a warning that we at least tell the
+         // user that this could lead to problems.
+         if (!module) {
+            ROOT::TMetaUtils::Warning(0,
+                                      "Couldn't find module %s in the available modulemaps. This"
+                                      "prevents us from correctly diagnosing wrongly built modules.\n",
+                                      moduleName.c_str());
+         }
+      }
+
+      // Skip the diag only if we build a ROOT system module or a system module. We still print the diag
+      // when building a non-system module as we will print an error below and the
+      // user should see the detailed default clang diagnostic.
+      bool isROOTSystemModuleDiag = module && llvm::StringRef(moduleName).startswith("ROOT_");
+      bool isSystemModuleDiag = module && module && module->IsSystem;
+      if (!isROOTSystemModuleDiag && !isSystemModuleDiag)
+         fChild->HandleDiagnostic(DiagLevel, Info);
+
+      if (ID == remark_module_build && !isROOTSystemModuleDiag && !isSystemModuleDiag) {
+         ROOT::TMetaUtils::Error(0,
+                                 "Had to build non-system module %s implicitly. You first need to\n"
+                                 "generate the dictionary for %s or mark the C++ module as a system\n"
+                                 "module if you provided your own system modulemap file:\n"
+                                 "%s [system] { ... }\n",
+                                 moduleName.c_str(), moduleName.c_str(), moduleName.c_str());
+      }
+   }
+
+   // All methods below just forward to the child and the default method.
+   virtual void clear() override
+   {
+      fChild->clear();
+      DiagnosticConsumer::clear();
+   }
+
+   virtual void BeginSourceFile(const clang::LangOptions &LangOpts, const clang::Preprocessor *PP) override
+   {
+      fChild->BeginSourceFile(LangOpts, PP);
+      DiagnosticConsumer::BeginSourceFile(LangOpts, PP);
+   }
+
+   virtual void EndSourceFile() override
+   {
+      fChild->EndSourceFile();
+      DiagnosticConsumer::EndSourceFile();
+   }
+
+   virtual void finish() override
+   {
+      fChild->finish();
+      DiagnosticConsumer::finish();
+   }
+
+   virtual bool IncludeInDiagnosticCounts() const override { return fChild->IncludeInDiagnosticCounts(); }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4069,6 +4163,7 @@ int RootClingMain(int argc,
    bool writeEmptyRootPCM = false;
    bool selSyntaxOnly = false;
    bool noIncludePaths = false;
+   bool cxxmodule = getenv("ROOT_MODULES") != nullptr;
 
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
@@ -4089,6 +4184,12 @@ int RootClingMain(int argc,
             // name for the rootmap file
             rootmapFileName = argv[ic + 1];
             ic += 2;
+            continue;
+         }
+
+         if (strcmp("-cxxmodule", argv[ic]) == 0) {
+            cxxmodule = true;
+            ic += 1;
             continue;
          }
 
@@ -4187,6 +4288,12 @@ int RootClingMain(int argc,
             continue;
          }
 
+         if ((ic + 1) < argc && strcmp("-isysroot", argv[ic]) == 0) {
+            clingArgs.push_back(argv[ic++]);
+            clingArgs.push_back(argv[ic++]);
+            continue;
+         }
+
          if (int skip = ShouldIgnoreClingArgument(argv[ic])) {
             ic += skip;
             continue;
@@ -4269,7 +4376,7 @@ int RootClingMain(int argc,
       sharedLibraryPathName = dictpathname;
    }
 
-   if (!isPCH && getenv("ROOT_MODULES")) {
+   if (!isPCH && cxxmodule) {
       // We just pass -fmodules, the CIFactory will do the rest and configure
       // clang correctly once it sees this flag.
       clingArgsInterpreter.push_back("-fmodules");
@@ -4296,10 +4403,6 @@ int RootClingMain(int argc,
       // the shared library.
       clingArgsInterpreter.push_back("-fmodules-cache-path=" +
                                      llvm::sys::path::parent_path(sharedLibraryPathName).str());
-
-      // We enable remarks in clang for building on-demand modules. This is
-      // useful to figure out when and why on-demand modules are built by clang.
-      clingArgsInterpreter.push_back("-Rmodule-build");
    }
 
    // Convert arguments to a C array and check if they are sane
@@ -4346,9 +4449,27 @@ int RootClingMain(int argc,
       interpPtr = owningInterpPtr.get();
    }
    cling::Interpreter &interp = *interpPtr;
+   clang::CompilerInstance *CI = interp.getCI();
    // FIXME: Remove this once we switch cling to use the driver. This would handle  -fmodules-embed-all-files for us.
-   interp.getCI()->getFrontendOpts().ModulesEmbedAllFiles = true;
-   interp.getCI()->getSourceManager().setAllFilesAreTransient(true);
+   CI->getFrontendOpts().ModulesEmbedAllFiles = true;
+   CI->getSourceManager().setAllFilesAreTransient(true);
+
+   clang::Preprocessor &PP = CI->getPreprocessor();
+   clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
+   clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
+   auto &diags = interp.getDiagnostics();
+
+   // Manually enable the module build remarks. We don't enable them via the
+   // normal clang command line arg because otherwise we would get remarks for
+   // building STL/libc when starting the interpreter in rootcling_stage1.
+   // We can't prevent these diags in any other way because we can only attach
+   // our own diag client now after the interpreter has already started.
+   diags.setSeverity(clang::diag::remark_module_build, clang::diag::Severity::Remark, clang::SourceLocation());
+
+   // Attach our own diag client that listens to the module_build remarks from
+   // clang to check that we don't build dictionary C++ modules implicitly.
+   auto recordingClient = new CheckModuleBuildClient(diags.getClient(), diags.ownsClient(), moduleMap);
+   diags.setClient(recordingClient, true);
 
    if (ROOT::TMetaUtils::GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo) {
       ROOT::TMetaUtils::Info(0, "\n");
@@ -4541,7 +4662,6 @@ int RootClingMain(int argc,
 
    // Ignore these #pragmas to suppress "unknown pragma" warnings.
    // See LinkdefReader.cxx.
-   clang::Preprocessor& PP = interp.getCI()->getPreprocessor();
    PP.AddPragmaHandler(new IgnoringPragmaHandler("link"));
    PP.AddPragmaHandler(new IgnoringPragmaHandler("extra_include"));
    PP.AddPragmaHandler(new IgnoringPragmaHandler("read"));
@@ -4556,9 +4676,10 @@ int RootClingMain(int argc,
 
    TModuleGenerator modGen(interp.getCI(),
                            inlineInputHeader,
-                           sharedLibraryPathName);
+                           sharedLibraryPathName,
+                           writeEmptyRootPCM);
 
-   if (!gDriverConfig->fBuildingROOTStage1 && filesIncludedByLinkdef.size() !=0) {
+   if (!gDriverConfig->fBuildingROOTStage1 && !filesIncludedByLinkdef.empty()) {
       pcmArgs.push_back(argv[linkdefLoc]);
    }
 
@@ -4654,7 +4775,6 @@ int RootClingMain(int argc,
    ROOT::TMetaUtils::RConstructorTypes constructorTypes;
 
    // Select using DictSelection
-   clang::CompilerInstance *CI = interp.getCI();
    const unsigned int selRulesInitialSize = selectionRules.Size();
    if (dictSelection && !onepcm)
       DictSelectionReader dictSelReader(interp, selectionRules, CI->getASTContext(), normCtxt);
@@ -4945,8 +5065,8 @@ int RootClingMain(int argc,
          // Write the module/PCH depending on what mode we are on
          if (modGen.IsPCH()) {
             if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
-         } else if (getenv("ROOT_MODULES")) {
-            if (!GenerateModule(modGen, resourceDir, interp, linkdefFilename, moduleName.str()))
+         } else if (cxxmodule) {
+            if (!CheckModuleValid(modGen, resourceDir, interp, linkdefFilename, moduleName.str()))
                return 1;
          }
       }

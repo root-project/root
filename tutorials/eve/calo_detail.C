@@ -17,28 +17,27 @@ void calo_detail()
    TEveManager::Create();
 
    // data
-   TEveCaloDataVec* data = MakeVecData(20);
+   auto data = MakeVecData(20);
    data->IncDenyDestroy(); // don't delete if zero parent
 
    // frames
-   TEveWindowSlot* slot =
-      TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
-   TEveWindowPack* packH = slot->MakePack();
+   auto slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+   auto packH = slot->MakePack();
    packH->SetElementName("Projections");
    packH->SetHorizontal();
    packH->SetShowTitleBar(kFALSE);
 
    slot = packH->NewSlot();
-   TEveWindowPack* pack0 = slot->MakePack();
+   auto pack0 = slot->MakePack();
    pack0->SetShowTitleBar(kFALSE);
-   TEveWindowSlot*  slotLeftTop   = pack0->NewSlot();
-   TEveWindowSlot* slotLeftBottom = pack0->NewSlot();
+   auto slotLeftTop   = pack0->NewSlot();
+   auto slotLeftBottom = pack0->NewSlot();
 
    slot = packH->NewSlot();
-   TEveWindowPack* pack1 = slot->MakePack();
+   auto pack1 = slot->MakePack();
    pack1->SetShowTitleBar(kFALSE);
-   TEveWindowSlot* slotRightTop    = pack1->NewSlot();
-   TEveWindowSlot* slotRightBottom = pack1->NewSlot();
+   auto slotRightTop    = pack1->NewSlot();
+   auto slotRightBottom = pack1->NewSlot();
 
    // viewers ans scenes in second tab
    Float_t maxH = 300;
@@ -66,21 +65,21 @@ void calo_detail()
 //______________________________________________________________________________
 TEveCaloDataVec* MakeVecData(Int_t ncells)
 {
-   // Example how to fill data when bins can be iregular.
+   // Example how to fill data when bins can be irregular.
    // If ncells = 0 (default) whole histogram is taken,
    // otherwise just ncells cells around the maximum.
 
    TFile::SetCacheFileDir(".");
-   TFile* hf = TFile::Open(histFile, "CACHEREAD");
+   auto hf = TFile::Open(histFile, "CACHEREAD");
    TH2F* h1 = (TH2F*)hf->Get("ecalLego");
    TH2F* h2 = (TH2F*)hf->Get("hcalLego");
 
-   TEveCaloDataVec* data = new TEveCaloDataVec(2);
+   auto data = new TEveCaloDataVec(2);
    data->RefSliceInfo(0).Setup("ECAL", 0.3, kRed);
    data->RefSliceInfo(1).Setup("HCAL", 0.1, kBlue);
 
-   TAxis *ax =  h1->GetXaxis();
-   TAxis *ay =  h1->GetYaxis();
+   auto ax =  h1->GetXaxis();
+   auto ay =  h1->GetYaxis();
 
    Int_t xm = 1, xM = ax->GetNbins();
    Int_t ym = 1, yM = ay->GetNbins();
@@ -95,19 +94,14 @@ TEveCaloDataVec* MakeVecData(Int_t ncells)
    }
 
    // Take every second cell and set a random size.
-   for(Int_t i=xm; i<=xM; i+=2)
-   {
-      for(Int_t j=ym; j<=yM; j+=2)
-      {
-         if ( (i+j) % 3)
-         {
+   for (Int_t i=xm; i<=xM; i+=2) {
+      for (Int_t j=ym; j<=yM; j+=2) {
+         if ( (i+j) % 3) {
             data->AddTower(ax->GetBinLowEdge(i), ax->GetBinUpEdge(i),
                            ay->GetBinLowEdge(j), ay->GetBinUpEdge(j));
             data->FillSlice(0, h1->GetBinContent(i, j));
             data->FillSlice(1, h2->GetBinContent(i, j));
-         }
-         else
-         {
+         } else {
             data->AddTower(ax->GetBinLowEdge(i),
                            2 * ax->GetBinWidth(i) + ax->GetBinLowEdge(i),
                            ay->GetBinLowEdge(j),

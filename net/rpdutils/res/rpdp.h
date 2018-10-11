@@ -26,9 +26,6 @@
 #include "MessageTypes.h"
 #include "rpderr.h"
 #include <string>
-#ifdef R__GLOBALSTL
-namespace std { using ::string; }
-#endif
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //

@@ -455,9 +455,9 @@ TYPED_TEST_CASE(LogLikelihoodGradientTest, TestTypes);
 // Test EvalChi2Gradient and outputs its speedup against the scalar serial case.
 TYPED_TEST(LogLikelihoodGradientTest, LogLikelihoodGradient)
 {
-   Double_t solution[TestFixture::fNumParams];
+   std::vector<Double_t> solution(TestFixture::fNumParams);
 
-   Double_t benchmarkTime = TestFixture::BenchmarkSolution(solution);
+   Double_t benchmarkTime = TestFixture::BenchmarkSolution(solution.data());
 
    std::cout << std::fixed << std::setprecision(4);
    std::cout << "Speed-up with respect to scalar serial case: " << TestFixture::fReferenceTime / benchmarkTime;
@@ -474,9 +474,9 @@ TYPED_TEST_CASE(Chi2GradientTest, TestTypes);
 // Test EvalChi2Gradient and outputs its speedup against the scalar serial case.
 TYPED_TEST(Chi2GradientTest, Chi2Gradient)
 {
-   Double_t solution[TestFixture::fNumParams];
+   std::vector<Double_t> solution(TestFixture::fNumParams);
 
-   Double_t benchmarkTime = TestFixture::BenchmarkSolution(solution);
+   Double_t benchmarkTime = TestFixture::BenchmarkSolution(solution.data());
 
    std::cout << std::fixed << std::setprecision(4);
    std::cout << "Speed-up with respect to scalar serial case: " << TestFixture::fReferenceTime / benchmarkTime;
@@ -492,9 +492,9 @@ TYPED_TEST_CASE(PoissonLikelihoodGradientTest, TestTypes);
 // Test EvalChi2Gradient and outputs its speedup against the scalar serial case.
 TYPED_TEST(PoissonLikelihoodGradientTest, PoissonLikelihoodGradient)
 {
-   Double_t solution[TestFixture::fNumParams];
+   std::vector<Double_t> solution(TestFixture::fNumParams);
 
-   Double_t benchmarkTime = TestFixture::BenchmarkSolution(solution);
+   Double_t benchmarkTime = TestFixture::BenchmarkSolution(solution.data());
 
    std::cout << std::fixed << std::setprecision(4);
    std::cout << "Speed-up with respect to scalar serial case: " << TestFixture::fReferenceTime / benchmarkTime;

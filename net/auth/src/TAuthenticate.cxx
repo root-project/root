@@ -80,11 +80,16 @@ extern "C" char *crypt(const char *, const char *);
 #   include <openssl/rand.h>
 #   include <openssl/rsa.h>
 #   include <openssl/ssl.h>
+#   include <openssl/blowfish.h>
 #endif
 
 struct R__rsa_KEY: rsa_KEY { R__rsa_KEY(): rsa_KEY() {} };
 struct R__rsa_KEY_export: rsa_KEY_export {};
 struct R__rsa_NUMBER: rsa_NUMBER {};
+
+#ifdef R__SSL
+   static BF_KEY fgBFKey; // Blowfish symmetric key
+#endif
 
 // Statics initialization
 TList          *TAuthenticate::fgAuthInfo = 0;
@@ -110,9 +115,6 @@ R__rsa_KEY         TAuthenticate::fgRSAPriKey;
 R__rsa_KEY_export R__fgRSAPubExport[2] = {{}, {}};
 R__rsa_KEY_export* TAuthenticate::fgRSAPubExport = R__fgRSAPubExport;
 R__rsa_KEY         TAuthenticate::fgRSAPubKey;
-#ifdef R__SSL
-BF_KEY          TAuthenticate::fgBFKey;
-#endif
 SecureAuth_t    TAuthenticate::fgSecAuthHook;
 Bool_t          TAuthenticate::fgSRPPwd;
 TString         TAuthenticate::fgUser;
@@ -4202,6 +4204,7 @@ Int_t TAuthenticate::ReadRootAuthrc()
       if (!tmp) {
          ::Error("TAuthenticate::ReadRootAuthrc",
                  "could not allocate temporary buffer");
+         fclose(fd);
          return 0;
       }
       strlcpy(tmp, line, tmpSize);

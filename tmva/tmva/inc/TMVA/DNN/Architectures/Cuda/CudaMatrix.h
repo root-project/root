@@ -119,7 +119,7 @@ public:
 
    TCudaMatrix();
    TCudaMatrix(size_t i, size_t j);
-   TCudaMatrix(const TMatrixT<Double_t> &);
+   TCudaMatrix(const TMatrixT<AFloat> &);
    TCudaMatrix(TCudaDeviceBuffer<AFloat> buffer, size_t m, size_t n);
 
    TCudaMatrix(const TCudaMatrix  &) = default;
@@ -129,7 +129,7 @@ public:
    ~TCudaMatrix() = default;
 
    /** Convert cuda matrix to Root TMatrix. Performs synchronous data transfer. */
-   operator TMatrixT<Double_t>() const;
+   operator TMatrixT<AFloat>() const;
 
    inline cudaStream_t GetComputeStream() const;
    inline void         SetComputeStream(cudaStream_t stream);
@@ -151,6 +151,7 @@ public:
    size_t GetNrows() const {return fNRows;}
    size_t GetNcols() const {return fNCols;}
    size_t GetNoElements() const {return fNRows * fNCols;}
+    
    const AFloat * GetDataPointer() const {return fElementBuffer;}
    AFloat *       GetDataPointer()       {return fElementBuffer;}
    const cublasHandle_t & GetCublasHandle() const    {return fCublasHandle;}
@@ -159,6 +160,16 @@ public:
     *  class. Note that access is synchronous end enforces device synchronization
     *  on all streams. Only used for testing. */
    TCudaDeviceReference<AFloat> operator()(size_t i, size_t j) const;
+
+   void Print() const { 
+      TMatrixT<AFloat> mat(*this); 
+      mat.Print(); 
+   }
+
+   void Zero() {
+      cudaMemset(GetDataPointer(), 0, sizeof(AFloat) * GetNoElements());
+   }
+
 
 private:
 

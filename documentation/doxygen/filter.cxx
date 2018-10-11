@@ -16,7 +16,10 @@
 /// `Begin_Macro(source)`. This parameter allows to show the macro's code in addition.
 /// `Begin_Macro` also accept the image file type as option. "png" or "svg".
 /// "png" is the default value. For example: `Begin_Macro(source, svg)` will show
-/// the code of the macro and the image will be is svg format.
+/// the code of the macro and the image will be is svg format. The "width" keyword
+/// can be added to define the width of the picture in pixel: "width=400" will
+/// scale a picture to 400 pixel width. This allow to define large picture which
+/// can then be scale done to have a better definition.
 ///
 /// ## In the ROOT tutorials
 ///
@@ -47,7 +50,10 @@
 ///
 ///  1. `\macro_image`
 ///  The images produced by this macro are shown. A caption can be added to document
-///  the pictures: `\macro_image This is a picture`
+///  the pictures: `\macro_image This is a picture`. When the option `(nobatch)`
+///  is passed, the macro is executed without the batch option.
+///  Some tutorials generate pictures (png or pdf) with `Print` or `SaveAs`.
+///  Such pictures can be displayed with `\macro_image (picture_name.png[.pdf])`
 ///
 ///  2. `\macro_code`
 ///  The macro code is shown.  A caption can be added: `\macro_code This is code`
@@ -96,6 +102,7 @@ string gClassName;     // Current class name
 string gImageName;     // Current image name
 string gMacroName;     // Current macro name
 string gImageType;     // Type of image used to produce pictures (png, svg ...)
+string gImageWidth;    // Width of image
 string gCwd;           // Current working directory
 string gOutDir;        // Output directory
 string gSourceDir;     // Source directory
@@ -125,6 +132,7 @@ int main(int argc, char *argv[])
    gMacroID       = 0;
    gOutputName    = "stdout.dat";
    gImageType     = "png";
+   gImageWidth    = "";
    if (EndsWith(gFileName,".cxx")) gSource = true;
    if (EndsWith(gFileName,".h"))   gHeader = true;
    if (EndsWith(gFileName,".py"))  gPython = true;
@@ -174,7 +182,6 @@ void FilterClass()
          gLineString = gLine;
 
          if (gInMacro && gLineString.find("End_Macro") != string::npos) {
-            ReplaceAll(gLineString,"End_Macro","");
             gImageSource = false;
             gInMacro = 0;
             spos = 0;
@@ -187,6 +194,13 @@ void FilterClass()
                                               , gOutDir.c_str()));
                ExecuteCommand(StringFormat("rm %s_%3.3d.C", gClassName.c_str(), gMacroID));
             }
+            int ImageSize = 300;
+            FILE *f = fopen("ImagesSizes.dat", "r");
+            fscanf(f, "%d", &ImageSize);
+            fclose(f);
+            remove("ImagesSizes.dat");
+            ReplaceAll(gImageWidth,"IMAGESIZE",StringFormat("%d",ImageSize));
+            ReplaceAll(gLineString,"End_Macro", StringFormat("\\image html pict1_%s_%3.3d.%s %s", gClassName.c_str(), gImageID, gImageType.c_str(), gImageWidth.c_str()));
          }
 
          if (gInMacro) {
@@ -214,7 +228,7 @@ void FilterClass()
             } else {
                if (m) fprintf(m,"%s",gLineString.c_str());
                if (BeginsWith(gLineString,"}")) {
-                  ReplaceAll(gLineString,"}", StringFormat("\\image html pict1_%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()));
+                  ReplaceAll(gLineString,"}","");
                } else {
                   gLineString = "\n";
                }
@@ -234,6 +248,14 @@ void FilterClass()
                gImageType = "svg";
             } else {
                gImageType = "png";
+            }
+            gImageWidth = "";
+            int wpos1 = gLineString.find("\"width=");
+            if (wpos1 != string::npos) {
+               int wpos2 = gLineString.find_first_of("\"", wpos1+1);
+               gImageWidth = gLineString.substr(wpos1+1, wpos2-wpos1-1);
+             } else {
+                gImageWidth = "width=IMAGESIZE";
             }
             gImageID++;
             gInMacro++;
@@ -294,25 +316,39 @@ void FilterTutorial()
       if (gLineString.find("\\macro_image") != string::npos) {
          bool nobatch = (gLineString.find("(nobatch)") != string::npos);
          ReplaceAll(gLineString,"(nobatch)","");
-         if (gPython) {
-            if (nobatch) {
-               ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 0",
-                                          gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
-            } else {
-               ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 1",
-                                          gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
-            }
+         bool image_created_by_macro = (gLineString.find(".png)") != string::npos) ||
+                                       (gLineString.find(".svg)") != string::npos) ||
+                                       (gLineString.find(".pdf)") != string::npos);
+         if (image_created_by_macro) {
+            string image_name = gLineString;
+            ReplaceAll(image_name, " ", "");
+            ReplaceAll(image_name, "///\\macro_image(", "");
+            ReplaceAll(image_name, ")\n", "");
+            ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()));
+            ExecuteCommand(StringFormat("mv %s %s/html", image_name.c_str(), gOutDir.c_str()));
+            ReplaceAll(gLineString, "macro_image (", "image html ");
+            ReplaceAll(gLineString, ")", "");
          } else {
-            if (nobatch) {
-               ExecuteCommand(StringFormat("root -l -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                            gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+            if (gPython) {
+               if (nobatch) {
+                  ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 0",
+                                             gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+               } else {
+                  ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 1",
+                                             gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+               }
             } else {
-               ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                            gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+               if (nobatch) {
+                  ExecuteCommand(StringFormat("root -l -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                               gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+               } else {
+                  ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                               gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+               }
             }
+            ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName));
+            remove(gOutputName.c_str());
          }
-         ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName));
-         remove(gOutputName.c_str());
       }
 
       // \macro_code found
@@ -338,8 +374,10 @@ void FilterTutorial()
       }
       // \macro_output found
       if (gLineString.find("\\macro_output") != string::npos) {
+         remove(gOutputName.c_str());
          if (!gPython) ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()).c_str());
          else          ExecuteCommand(StringFormat("python %s", gFileName.c_str()).c_str());
+         ExecuteCommand(StringFormat("sed -i '/Processing/d' %s", gOutputName.c_str()).c_str());
          rename(gOutputName.c_str(), StringFormat("%s/macros/%s",gOutDir.c_str(), gOutputName.c_str()).c_str());
          ReplaceAll(gLineString, "\\macro_output", StringFormat("\\include %s",gOutputName.c_str()));
       }
@@ -417,12 +455,9 @@ void ExecuteMacro()
    // Execute the macro
    ExecuteCommand(gLineString);
 
-   // Inline the directives to show the picture and/or the code
-   if (gImageSource) {
-      gLineString = StringFormat("\\include %s\n\\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
-   } else {
-      gLineString = StringFormat("\n\\image html pict1_%s\n", gImageName.c_str());
-   }
+   // Inline the directives to show the code
+   if (gImageSource) gLineString = StringFormat("\\include %s\n", gMacroName.c_str());
+   else gLineString = "";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -497,11 +532,24 @@ string ImagesList(string& name) {
 
    char val[300];
    int len = 0;
+
+   int ImageSize = 300;
+   FILE *f = fopen("ImagesSizes.dat", "r");
+
    for (int i = 1; i <= N; i++){
-      if (i>1) sprintf(&val[len]," \n/// \\image html pict%d_%s",i,name.c_str());
-      else     sprintf(&val[len],"\\image html pict%d_%s",i,name.c_str());
+      fscanf(f, "%d", &ImageSize);
+      if (i>1) {
+         if (gPython) sprintf(&val[len]," \n## \\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
+         else         sprintf(&val[len]," \n/// \\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
+      } else {
+         sprintf(&val[len],"\\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
+      }
       len = (int)strlen(val);
    }
+
+   fclose(f);
+   remove("ImagesSizes.dat");
+
    return (string)val;
 }
 

@@ -41,10 +41,6 @@
 #include <map>
 #include <mutex>
 
-#ifdef R__GLOBALSTL
-namespace std { using ::map; }
-#endif
-
 #define CANNOTUSE(x) Info(x,"Not manager: cannot use this method")
 
 class TChain;

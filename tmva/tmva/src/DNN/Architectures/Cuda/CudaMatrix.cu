@@ -65,7 +65,7 @@ TCudaMatrix<AFloat>::TCudaMatrix(size_t m, size_t n)
 
 //____________________________________________________________________________
 template<typename AFloat>
-TCudaMatrix<AFloat>::TCudaMatrix(const TMatrixT<Double_t> & Host)
+TCudaMatrix<AFloat>::TCudaMatrix(const TMatrixT<AFloat> & Host)
     : fNRows(Host.GetNrows()), fNCols(Host.GetNcols()),
       fElementBuffer(Host.GetNoElements(), 0)
 {
@@ -138,9 +138,9 @@ void TCudaMatrix<AFloat>::InitializeCurandStates()
 // Conversion to TMatrixT.
 //____________________________________________________________________________
 template<typename AFloat>
-TCudaMatrix<AFloat>::operator TMatrixT<Double_t>() const
+TCudaMatrix<AFloat>::operator TMatrixT<AFloat>() const
 {
-   TMatrixT<Double_t> hostMatrix(GetNrows(), GetNcols());
+   TMatrixT<AFloat> hostMatrix(GetNrows(), GetNcols());
 
    AFloat * buffer = new AFloat[fNRows * fNCols];
    cudaMemcpy(buffer, fElementBuffer, fNRows * fNCols * sizeof(AFloat),

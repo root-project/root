@@ -26,6 +26,7 @@
 #include "TDirectoryFile.h"
 #include "TMap.h"
 #include "TUrl.h"
+#include "ROOT/RConcurrentHashColl.hxx"
 
 #ifdef R__USE_IMT
 #include "ROOT/TRWSpinLock.hxx"
@@ -106,8 +107,9 @@ protected:
    TList           *fOpenPhases;     ///<!Time info about open phases
 
 #ifdef R__USE_IMT
-   static ROOT::TRWSpinLock fgRwLock;    ///<!Read-write lock to protect global PID list
-   std::mutex               fWriteMutex; ///<!Lock for writing baskets / keys into the file.
+   static ROOT::TRWSpinLock                   fgRwLock;     ///<!Read-write lock to protect global PID list
+   std::mutex                                 fWriteMutex;  ///<!Lock for writing baskets / keys into the file.
+   static ROOT::Internal::RConcurrentHashColl fgTsSIHashes; ///<!TS Set of hashes built from read streamer infos
 #endif
 
    static TList    *fgAsyncOpenRequests; //List of handles for pending open requests
@@ -126,9 +128,19 @@ protected:
    static Bool_t    fgReadInfo;              ///<if true (default) ReadStreamerInfo is called when opening a file
    virtual EAsyncOpenStatus GetAsyncOpenStatus() { return fAsyncOpenStatus; }
    virtual void  Init(Bool_t create);
-   Bool_t        FlushWriteCache();
-   Int_t         ReadBufferViaCache(char *buf, Int_t len);
-   Int_t         WriteBufferViaCache(const char *buf, Int_t len);
+   Bool_t                    FlushWriteCache();
+   Int_t                     ReadBufferViaCache(char *buf, Int_t len);
+   Int_t                     WriteBufferViaCache(const char *buf, Int_t len);
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// \brief Simple struct of the return value of GetStreamerInfoListImpl
+   struct InfoListRet {
+      TList *fList;
+      Int_t  fReturnCode;
+      ROOT::Internal::RConcurrentHashColl::HashValue fHash;
+   };
+
+   virtual InfoListRet GetStreamerInfoListImpl(bool lookupSICache);
 
    // Creating projects
    Int_t         MakeProjectParMake(const char *packname, const char *filename);
@@ -174,7 +186,7 @@ public:
    enum EFileType { kDefault = 0, kLocal = 1, kNet = 2, kWeb = 3, kFile = 4, kMerge = 5};
 
    TFile();
-   TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress=1);
+   TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress=4);
    virtual ~TFile();
    virtual void        Close(Option_t *option=""); // *MENU*
    virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
@@ -223,7 +235,7 @@ public:
    virtual Long64_t    GetSeekFree() const {return fSeekFree;}
    virtual Long64_t    GetSeekInfo() const {return fSeekInfo;}
    virtual Long64_t    GetSize() const;
-   virtual TList      *GetStreamerInfoList();
+   virtual TList      *GetStreamerInfoList() final; // Note: to override behavior, please override GetStreamerInfoListImpl
    const   TList      *GetStreamerInfoCache();
    virtual void        IncrementProcessIDs() { fNProcessIDs++; }
    virtual Bool_t      IsArchive() const { return fIsArchive; }
@@ -253,8 +265,8 @@ public:
    virtual void        SetCacheRead(TFileCacheRead *cache, TObject* tree = 0, ECacheAction action = kDisconnect);
    virtual void        SetCacheWrite(TFileCacheWrite *cache);
    virtual void        SetCompressionAlgorithm(Int_t algorithm=0);
-   virtual void        SetCompressionLevel(Int_t level=1);
-   virtual void        SetCompressionSettings(Int_t settings=1);
+   virtual void        SetCompressionLevel(Int_t level=4);
+   virtual void        SetCompressionSettings(Int_t settings=4);
    virtual void        SetEND(Long64_t last) { fEND = last; }
    virtual void        SetOffset(Long64_t offset, ERelativeTo pos = kBeg);
    virtual void        SetOption(Option_t *option=">") { fOption = option; }

@@ -377,7 +377,14 @@ TPad::~TPad()
    Close();
    CloseToolTip(fTip);
    DeleteToolTip(fTip);
-   SafeDelete(fPrimitives);
+   auto primitives = fPrimitives;
+   // In some cases, fPrimitives has the kMustCleanup bit set which will lead
+   // its destructor to call RecursiveRemove and since this pad is still
+   // likely to be (indirectly) in the list of cleanups, we must set
+   // fPrimitives to nullptr to avoid TPad::RecursiveRemove from calling
+   // a member function of a partially destructed object.
+   fPrimitives = nullptr;
+   delete primitives;
    SafeDelete(fExecs);
    delete fViewer3D;
    if (fCollideGrid) delete [] fCollideGrid;
@@ -466,6 +473,8 @@ void TPad::Browse(TBrowser *b)
 /// Only those deriving from TAttLine, TAttMarker and TAttFill are added, excluding
 /// TPave and TFrame derived classes.
 ///
+/// \return    The built TLegend
+///
 /// \param[in] x1, y1, x2, y2       The TLegend coordinates
 /// \param[in] title                The legend title. By default it is " "
 /// \param[in] option               The TLegend option
@@ -474,6 +483,13 @@ void TPad::Browse(TBrowser *b)
 ///
 /// If the pad contains some TMultiGraph or THStack the individual
 /// graphs or histograms in them are added to the TLegend.
+///
+/// ### Automatic placement of the legend
+/// If `x1` is equal to `x2` and `y1` is equal to `y2` the legend will be automatically
+/// placed to avoid overlapping with the existing primitives already displayed.
+/// `x1` is considered as the width of the legend and `y1` the height. By default
+/// the legend is automatically placed with width = `x1`= `x2` = 0.3 and
+/// height = `y1`= `y2` = 0.21.
 
 TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                            const char* title, Option_t *option)
@@ -1536,6 +1552,8 @@ void TPad::DrawCrosshair()
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Draw an empty pad frame with X and Y axis.
+///
+///   \return   The pointer to the histogram used to draw the frame.
 ///
 ///   \param[in] xmin      X axis lower limit
 ///   \param[in] xmax      X axis upper limit
@@ -3037,6 +3055,13 @@ Bool_t TPad::Collide(Int_t i, Int_t j, Int_t w, Int_t h)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Place a box in NDC space
+///
+/// \return `true` if the box could be placed, `false` if not.
+///
+/// \param[in]  w        box width to be placed
+/// \param[in]  h        box height to be placed
+/// \param[out] xl       x position of the bottom left corner of the placed box
+/// \param[out] yb       y position of the bottom left corner of the placed box
 
 Bool_t TPad::PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb)
 {
@@ -3840,6 +3865,22 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Paint fill area in CurrentPad NDC coordinates.
+
+void TPad::PaintFillAreaNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option)
+{
+   auto xw = new Double_t[n];
+   auto yw = new Double_t[n];
+   for (int i=0; i<n; i++) {
+      xw[i] = fX1 + x[i]*(fX2 - fX1);
+      yw[i] = fY1 + y[i]*(fY2 - fY1);
+   }
+   PaintFillArea(n, xw, yw, option);
+   delete [] xw;
+   delete [] yw;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// This function paints hatched fill area according to the FillStyle value
 /// The convention for the Hatch is the following:
 ///
@@ -4620,26 +4661,27 @@ static Bool_t ContainsTImage(TList *li)
 ///
 /// option can be:
 ///  -           0  as "ps"
-///  -        "ps"  Postscript file is produced (see special cases below)
-///  -  "Portrait"  Postscript file is produced (Portrait)
-///  - "Landscape"  Postscript file is produced (Landscape)
-///  -    "Title:"  The character string after "Title:" becomes a table
-///                 of content entry (for PDF files).
-///  -       "eps"  an Encapsulated Postscript file is produced
-///  -   "Preview"  an Encapsulated Postscript file with preview is produced.
-///  -       "pdf"  a PDF file is produced
-///  -       "svg"  a SVG file is produced
-///  -       "tex"  a TeX file is produced
-///  -       "gif"  a GIF file is produced
-///  -    "gif+NN"  an animated GIF file is produced, where NN is delay in 10ms units NOTE: See other variants for looping animation in TASImage::WriteImage
-///  -       "xpm"  a XPM file is produced
-///  -       "png"  a PNG file is produced
-///  -       "jpg"  a JPEG file is produced. NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
-///  -      "tiff"  a TIFF file is produced
-///  -       "cxx"  a C++ macro file is produced
-///  -       "xml"  a XML file
-///  -      "json"  a JSON file
-///  -      "root"  a ROOT binary file
+///  -         "ps"  Postscript file is produced (see special cases below)
+///  -   "Portrait"  Postscript file is produced (Portrait)
+///  -  "Landscape"  Postscript file is produced (Landscape)
+///  -     "Title:"  The character string after "Title:" becomes a table
+///                  of content entry (for PDF files).
+///  -        "eps"  an Encapsulated Postscript file is produced
+///  -    "Preview"  an Encapsulated Postscript file with preview is produced.
+///  - "EmbedFonts"  a PDF file with embedded fonts is generated.
+///  -        "pdf"  a PDF file is produced
+///  -        "svg"  a SVG file is produced
+///  -        "tex"  a TeX file is produced
+///  -        "gif"  a GIF file is produced
+///  -     "gif+NN"  an animated GIF file is produced, where NN is delay in 10ms units NOTE: See other variants for looping animation in TASImage::WriteImage
+///  -        "xpm"  a XPM file is produced
+///  -        "png"  a PNG file is produced
+///  -        "jpg"  a JPEG file is produced. NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
+///  -       "tiff"  a TIFF file is produced
+///  -        "cxx"  a C++ macro file is produced
+///  -        "xml"  a XML file
+///  -       "json"  a JSON file
+///  -       "root"  a ROOT binary file
 ///
 ///     filename = 0 - filename  is defined by the GetName and its
 ///                    extension is defined with the option
@@ -4668,17 +4710,27 @@ static Bool_t ContainsTImage(TList *li)
 /// ~~~
 ///   The above numbers take into account some margins and are in centimeters.
 ///
-///  The "Preview" option allows to generate a preview (in the TIFF format) within
-///  the Encapsulated Postscript file. This preview can be used by programs like
-///  MSWord to visualize the picture on screen. The "Preview" option relies on the
-///  epstool command (http://www.cs.wisc.edu/~ghost/gsview/epstool.htm).
+/// ### The "Preview" option
 ///
-///  Example:
+/// The "Preview" option allows to generate a preview (in the TIFF format) within
+/// the Encapsulated Postscript file. This preview can be used by programs like
+/// MSWord to visualize the picture on screen. The "Preview" option relies on the
+/// "epstool" command (http://www.cs.wisc.edu/~ghost/gsview/epstool.htm).
+///
+/// Example:
 /// ~~~ {.cpp}
 ///     canvas->Print("example.eps","Preview");
 /// ~~~
-///  To generate a Postscript file containing more than one picture, see
-///  class TPostScript.
+///
+/// ### The "EmbedFonts" option
+///
+/// The "EmbedFonts" option allows to embed the fonts used in a PDF file inside
+/// that file. This option relies on the "gs" command (https://ghostscript.com).
+///
+/// Example:
+/// ~~~ {.cpp}
+///     canvas->Print("example.pdf","EmbedFonts");
+/// ~~~
 ///
 /// ### Writing several canvases to the same Postscript or PDF file:
 ///
@@ -4839,7 +4891,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          gPad->GetCanvas()->SetHighLightColor(-1);
          gPad->Modified();
          gPad->Update();
-         if (gVirtualX->InheritsFrom("TGQt")) {
+         if (TClass::GetClass("TGQt", kFALSE) && gVirtualX->InheritsFrom("TGQt")) {
             wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
             gVirtualX->WritePixmap(wid,UtoPixel(1.),VtoPixel(0.),(char *)psname.Data());
          } else {
@@ -5010,7 +5062,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    if (!gVirtualPS || mustOpen) {
       // Plugin Postscript driver
       TPluginHandler *h;
-      if (strstr(opt,"pdf") || strstr(opt,"Title:")) {
+      if (strstr(opt,"pdf") || strstr(opt,"Title:") || strstr(opt,"EmbedFonts")) {
          if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "pdf"))) {
             if (h->LoadPlugin() == -1) return;
             h->ExecPlugin(0);
@@ -5084,6 +5136,11 @@ void TPad::Print(const char *filenam, Option_t *option)
    }
 
    if (strstr(opt,"Preview")) gSystem->Exec(Form("epstool --quiet -t6p %s %s",psname.Data(),psname.Data()));
+   if (strstr(opt,"EmbedFonts")) {
+      gSystem->Exec(Form("gs -quiet -dSAFER -dNOPLATFONTS -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dUseCIEColor -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dCompatibilityLevel=1.4 -dMaxSubsetPct=100 -dSubsetFonts=true -dEmbedAllFonts=true -sOutputFile=pdf_temp.pdf -f %s",
+                          psname.Data()));
+      gSystem->Rename("pdf_temp.pdf", psname.Data());
+   }
 
    padsav->cd();
 }

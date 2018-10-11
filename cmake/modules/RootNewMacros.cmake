@@ -262,6 +262,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endforeach()
   string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  headerfiles "${headerfiles}")
+  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/" ""  headerfiles "${headerfiles}")
+
   # Replace the non-standard folder layout of Core.
   if (ARG_STAGE1 AND ARG_MODULE STREQUAL "Core")
     # FIXME: Glob these folders.
@@ -273,9 +275,25 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endforeach()
   endif()
 
+  # Check that each path here is relative so that it no longer points to the build folder.
+  # If we don't do this, then for example the modulemap might contain absolute paths to the
+  # build folder which would break module compilation.
+  if(PROJECT_NAME STREQUAL ROOT)
+    foreach(hf ${headerfiles})
+      string(REPLACE "${PROJECT_SOURCE_DIR}" "" hfrel "${hf}")
+      # Test folders don't follow this pattern and need absolute paths,
+      # so we don't run our sanity check on them.
+      if(NOT "${hfrel}" MATCHES "/test/")
+        if(IS_ABSOLUTE "${hf}")
+          message(SEND_ERROR "Header path '${hf}' ${hfrel} is not relative!")
+        endif()
+      endif()
+    endforeach()
+  endif()
+
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(includedirs -I${CMAKE_SOURCE_DIR}
-                    -I${CMAKE_SOURCE_DIR}/interpreter/cling/include # This is for the RuntimeUniverse
+                    -I${CMAKE_BINARY_DIR}/etc/cling/ # This is for the RuntimeUniverse
                     -I${CMAKE_BINARY_DIR}/include)
     set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
@@ -294,7 +312,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endforeach()
 
-  list(REMOVE_DUPLICATES includedirs)
+  if(includedirs)
+    list(REMOVE_DUPLICATES includedirs)
+  endif()
+
   #---Get the list of definitions---------------------------
   get_directory_property(defs COMPILE_DEFINITIONS)
   foreach( d ${defs})
@@ -366,24 +387,23 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endforeach()
   endif()
 
-  if(runtime_cxxmodules AND ARG_MODULE)
-    # FIXME: Once modules work better, we should use some other value like "1"
-    # to disable the module-build remarks from clang.
-    set(runtime_cxxmodules_env "ROOT_MODULES=DEBUG")
+  if(cpp_module_file)
+    set(newargs -cxxmodule ${newargs})
   endif()
+
   #---what rootcling command to use--------------------------
   if(ARG_STAGE1)
-    set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" "${runtime_cxxmodules_env}" $<TARGET_FILE:rootcling_stage1>)
+    set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:rootcling_stage1>)
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
-                  "ROOTIGNOREPREFIX=1" "${runtime_cxxmodules_env}" $<TARGET_FILE:rootcling> -rootbuild)
+                  "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
       set(ROOTCINTDEP rootcling)
     elseif(TARGET ROOT::rootcling)
-      set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${ROOT_LIBRARY_DIR}:$ENV{LD_LIBRARY_PATH}" "${runtime_cxxmodules_env}" $<TARGET_FILE:ROOT::rootcling>)
+      set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${ROOT_LIBRARY_DIR}:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:ROOT::rootcling>)
     else()
-      set(command ${CMAKE_COMMAND} -E env "${runtime_cxxmodules_env}" rootcling)
+      set(command ${CMAKE_COMMAND} -E env rootcling)
     endif()
   endif()
 
@@ -411,6 +431,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(NOT ARG_NOINSTALL AND NOT CMAKE_ROOTTEST_DICT AND DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_TARGETS ${dictname})
     set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.cxx)
+
+    # Install the C++ module if we generated one.
+    if (cpp_module_file)
+      install(FILES ${cpp_module_file}
+                    DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+    endif()
 
     if(ARG_STAGE1)
       install(FILES ${rootmap_name}
@@ -470,12 +496,11 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     endif()
   endif(APPLE)
 
-  set(excluded_headers RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
-                        Rtypes.h RtypesCore.h TClassEdit.h
+  set(excluded_headers RConfig.h RVersion.h RtypesImp.h
+                        RtypesCore.h TClassEdit.h
                         TIsAProxy.h TVirtualIsAProxy.h
-                        DllImport.h TGenericClassInfo.h
-                        TSchemaHelper.h ESTLType.h RStringView.h Varargs.h
-                        RootMetaSelection.h libcpp_string_view.h
+                        DllImport.h ESTLType.h ROOT/RStringView.hxx Varargs.h
+                        libcpp_string_view.h
                         RWrap_libcpp_string_view.h
                         ThreadLocalStorage.h
                         TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h
@@ -485,6 +510,16 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   set (excluded_headers "${excluded_headers}")
 
   set(modulemap_entry "module \"${library}\" {")
+
+  # Add a `use` directive to Core/Thread to signal that they use some
+  # split out submodules and we pass the rootcling integrity check.
+  if ("${library}" STREQUAL Core)
+    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Foundation_Stage1_NoRTTI\n")
+    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Foundation_C\n")
+  elseif ("${library}" STREQUAL Thread)
+    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Foundation_C\n")
+  endif()
+
   # For modules GCocoa and GQuartz we need objc context.
   if (${library} MATCHES "(GCocoa|GQuartz)")
     set (modulemap_entry "${modulemap_entry}\n  requires objc\n")
@@ -607,7 +642,7 @@ function(ROOT_LINKER_LIBRARY library)
     endif()
     #---create a shared library with the .def file------------------------
     add_library(${library} ${_all} SHARED ${lib_srcs})
-    target_link_libraries(${library} ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
+    target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
     set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   else()
     #---Need to add a dummy source file if all sources are OBJECT libraries (Xcode, ...)
@@ -620,9 +655,9 @@ function(ROOT_LINKER_LIBRARY library)
       set_target_properties(${library} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
     endif()
     if(explicitlink OR ROOT_explicitlink_FOUND)
-      target_link_libraries(${library} ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
+      target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
     else()
-      target_link_libraries(${library} ${ARG_LIBRARIES})
+      target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES})
     endif()
   endif()
   if(TARGET G__${library})
@@ -640,6 +675,7 @@ function(ROOT_LINKER_LIBRARY library)
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
   set_target_properties(${library} PROPERTIES INTERFACE_LINK_LIBRARIES "${ARG_DEPENDENCIES}")
+  target_include_directories(${library} INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
   # Do not add -Dname_EXPORTS to the command-line when building files in this
   # target. Doing so is actively harmful for the modules build because it
   # creates extra module variants, and not useful because we don't use these
@@ -881,10 +917,11 @@ endfunction()
 #                                 LINKDEF LinkDef.h LinkDef2.h : linkdef files, default value is "LinkDef.h"
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
 #                                 INSTALL_OPTIONS option       : options passed to install headers
+#                                 NO_MODULE                    : don't generate a C++ module for this package
 #                                )
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
-  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY)
+  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_MODULE)
   set(oneValueArgs)
   set(multiValueArgs DEPENDENCIES HEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS LINKDEF INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -917,8 +954,20 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     set(STAGE1_FLAG "STAGE1")
   endif()
 
+  # Don't pass the MODULE arg to ROOT_GENERATE_DICTIONARY when
+  # NO_MODULE is set.
+  set(MODULE_GEN_ARG MODULE ${libname})
+  if(ARG_NO_MODULE)
+    set(MODULE_GEN_ARG)
+  endif()
+
+  if(runtime_cxxmodules)
+    # Record ROOT targets to be used as a dependency targets for "onepcm" target.
+    set(ROOT_LIBRARY_TARGETS "${ROOT_LIBRARY_TARGETS};${libname}" CACHE STRING "List of ROOT targets generated from ROOT_STANDARD_LIBRARY_PACKAGE()" FORCE)
+  endif()
+
   ROOT_GENERATE_DICTIONARY(G__${libname} ${ARG_HEADERS}
-                          MODULE ${libname}
+                          ${MODULE_GEN_ARG}
                           ${STAGE1_FLAG}
                           LINKDEF ${ARG_LINKDEF}
                           OPTIONS ${ARG_DICTIONARY_OPTIONS}
@@ -1287,8 +1336,12 @@ function(ROOT_ADD_GTEST test_suite)
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
-  set_property(TARGET ${test_suite} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
   target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
+  if(MSVC)
+    set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
+        /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index")
+    set_property(TARGET ${test_suite} APPEND_STRING PROPERTY LINK_FLAGS ${test_exports})
+  endif()
 
   ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
   ROOT_ADD_TEST(gtest${mangled_name} COMMAND ${test_suite} WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR})
@@ -1313,7 +1366,7 @@ function(ROOT_ADD_PYUNITTESTS name)
       PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE} -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
+                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
                 ENVIRONMENT ${ROOT_ENV})
 endfunction()
 
@@ -1321,6 +1374,8 @@ endfunction()
 # ROOT_ADD_PYUNITTEST( <name> <file>)
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTEST name file)
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "COPY_TO_BUILDDIR" ${ARGN})
+
   set(ROOT_ENV ROOTSYS=${ROOTSYS}
       PATH=${ROOTSYS}/bin:$ENV{PATH}
       LD_LIBRARY_PATH=${ROOTSYS}/lib:$ENV{LD_LIBRARY_PATH}
@@ -1328,9 +1383,19 @@ function(ROOT_ADD_PYUNITTEST name file)
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   get_filename_component(file_name ${file} NAME)
   get_filename_component(file_dir ${file} DIRECTORY)
+
+  if(ARG_COPY_TO_BUILDDIR)
+    foreach(copy_file ${ARG_COPY_TO_BUILDDIR})
+      get_filename_component(abs_path ${copy_file} ABSOLUTE)
+      set(copy_files ${copy_files} ${abs_path})
+    endforeach()
+    set(copy_to_builddir COPY_TO_BUILDDIR ${copy_files})
+  endif()
+
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE} -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
-                ENVIRONMENT ${ROOT_ENV})
+                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+                ENVIRONMENT ${ROOT_ENV}
+                ${copy_to_builddir})
 endfunction()
 
 #----------------------------------------------------------------------------

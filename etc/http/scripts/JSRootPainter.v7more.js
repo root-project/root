@@ -30,22 +30,22 @@
 
 
    function drawText() {
-      var drawable = this.GetObject(),
-          pp = this.pad_painter(),
-          w = this.pad_width(),
-          h = this.pad_height(),
-          use_frame = false,
-          text_font = 42,
-          text_size = 40;
-
-      var text = drawable && drawable.fText ? drawable.fText.fWeakForIO : null,
-          opts = drawable.fOpts;
-
-      var fillcolor = pp.GetNewColor(opts.fFill.fColor.fIdx);
+      var text         = this.GetObject(),
+          opts         = text.fOpts,
+          pp           = this.canv_painter(),
+          w            = this.pad_width(),
+          h            = this.pad_height(),
+          use_frame    = false,
+          text_size    = opts.fTextSize.fAttr,
+          text_angle   = -opts.fTextAngle.fAttr,
+          text_align   = opts.fTextAlign.fAttr,
+          text_color   = pp.GetNewColor(opts.fTextColor),
+          text_font    = opts.fTextFont.fAttr,
+          p            = this.GetCoordinate(text.fP);
 
       this.CreateG(use_frame);
 
-      var arg = { align: 13, x: Math.round(text.fX*w), y: Math.round(text.fY*h), text: text.fText, color: fillcolor, latex: 1 };
+      var arg = { align: text_align, x: p.x, y: p.y, text: text.fText, rotate: text_angle, color: text_color, latex: 1 };
 
       // if (text.fTextAngle) arg.rotate = -text.fTextAngle;
       // if (text._typename == 'TLatex') { arg.latex = 1; fact = 0.9; } else
@@ -58,9 +58,61 @@
       this.FinishTextDrawing();
    }
 
+   
+   function drawLine() {
+
+       var line         = this.GetObject(),
+           opts         = line.fOpts,
+           pp           = this.canv_painter(),
+           line_width   = opts.fWidth.fAttr,
+           line_opacity = opts.fOpacity.fAttr,
+           line_style   = opts.fStyle.fAttr,
+           line_color   = pp.GetNewColor(opts.fColor),
+           p1           = this.GetCoordinate(line.fP1),
+           p2           = this.GetCoordinate(line.fP2);
+
+    this.CreateG();
+
+    this.draw_g
+        .append("svg:line")
+        .attr("x1", p1.x)
+        .attr("y1", p1.y)
+        .attr("x2", p2.x)
+        .attr("y2", p2.y)
+        .style("stroke", line_color)
+        .attr("stroke-width", line_width)
+        .attr("stroke-opacity", line_opacity)
+        .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style]);
+   }
+
+
+   function drawMarker() {
+       var marker         = this.GetObject(),
+           opts           = marker.fOpts,
+           pp             = this.canv_painter(),
+           marker_size    = opts.fSize.fAttr,
+           marker_opacity = opts.fOpacity.fAttr,
+           marker_style   = opts.fStyle.fAttr,
+           marker_color   = pp.GetNewColor(opts.fColor),
+           p              = this.GetCoordinate(marker.fP);
+
+           var att = new JSROOT.TAttMarkerHandler({ style: marker_style, color: marker_color, size: marker_size });
+
+           this.CreateG();
+
+           var  path = att.create(p.x, p.y);
+
+           if (path)
+              this.draw_g.append("svg:path")
+                  .attr("d", path)
+                  .call(att.func);
+   }
+
    // ================================================================================
 
    JSROOT.v7.drawText = drawText;
+   JSROOT.v7.drawLine = drawLine;
+   JSROOT.v7.drawMarker = drawMarker;
 
    return JSROOT;
 

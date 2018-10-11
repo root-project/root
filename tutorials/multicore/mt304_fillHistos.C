@@ -7,21 +7,6 @@
 ///
 /// \author Gerardo Ganis
 /// \date November 2017
-#include "TH1D.h"
-#include "TH2D.h"
-#include "TH3D.h"
-#include "TList.h"
-#include "TRandom3.h"
-#include "TDirectory.h"
-#include "TROOT.h"
-#include "TCanvas.h"
-#include "TString.h"
-#include "TStyle.h"
-#include "ROOT/TSeq.hxx"
-#include "ROOT/TThreadedObject.hxx"
-
-#include <thread>
-#include <iostream>
 
 // The number of workers
 const UInt_t nWorkers = 8U;
@@ -75,7 +60,7 @@ Int_t mt304_fillHistos(UInt_t nNumbers = 1001)
    auto fh1dr = h1dr.Merge();
 
    // Make the canvas
-   TCanvas *c = new TCanvas("c", "c", 800, 800);
+   auto c = new TCanvas("c", "c", 800, 800);
    c->Divide(1, 2);
 
    gStyle->SetOptStat(111110);
@@ -85,8 +70,6 @@ Int_t mt304_fillHistos(UInt_t nNumbers = 1001)
    fh1dr->DrawCopy();
 
    c->Update();
-
-   gROOTMutex = 0;
 
    return 0;
 }

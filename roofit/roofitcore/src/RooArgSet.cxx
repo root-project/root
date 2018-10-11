@@ -41,8 +41,6 @@
 
 #include "Riostream.h"
 #include <iomanip>
-#include <fstream>
-#include <list>
 #include "TClass.h"
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
@@ -86,7 +84,7 @@ void RooArgSet::cleanup()
   while(iter!=_memPoolList.end()) {
     free(iter->_base) ;
     iter->_base=0 ;
-    iter++ ;
+    ++iter ;
   }
   _memPoolList.clear() ;
 }

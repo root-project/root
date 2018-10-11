@@ -57,6 +57,7 @@ J Friedman's RuleFit method
 
 #include <algorithm>
 #include <list>
+#include <random>
 
 using std::min;
 
@@ -433,7 +434,7 @@ void TMVA::MethodRuleFit::InitEventSample( void )
    }
    if (fTreeEveFrac>1.0) fTreeEveFrac=1.0;
    //
-   std::random_shuffle(fEventSample.begin(), fEventSample.end());
+   std::shuffle(fEventSample.begin(), fEventSample.end(), std::default_random_engine{});
    //
    Log() << kDEBUG << "Set sub-sample fraction to " << fTreeEveFrac << Endl;
 }
@@ -679,7 +680,7 @@ void TMVA::MethodRuleFit::MakeClassRuleCuts( std::ostream& fout ) const
    fout << "   //" << std::endl;
    //
    for ( std::list< std::pair<double,int> >::reverse_iterator itpair = sortedRules.rbegin();
-         itpair != sortedRules.rend(); itpair++ ) {
+         itpair != sortedRules.rend(); ++itpair ) {
       UInt_t ir     = itpair->second;
       Double_t impr = itpair->first;
       ruleCut = (*rules)[ir]->GetRuleCut();

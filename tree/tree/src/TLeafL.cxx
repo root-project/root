@@ -122,6 +122,22 @@ LongDouble_t TLeafL::GetValueLongDouble(Int_t i) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy/set fMinimum and fMaximum to include/be wide than those of the parameter
+
+Bool_t TLeafL::IncludeRange(TLeaf *input)
+{
+    if (input) {
+        if (input->GetMaximum() > this->GetMaximum())
+            this->SetMaximum( input->GetMaximum() );
+        if (input->GetMinimum() < this->GetMinimum())
+            this->SetMinimum( input->GetMinimum() );
+        return kTRUE;
+    } else {
+        return kFALSE;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Import element from ClonesArray into local leaf buffer.
 
 void TLeafL::Import(TClonesArray *list, Int_t n)

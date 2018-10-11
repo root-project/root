@@ -95,7 +95,7 @@ public:
    }
 
    const double * Parameters() const {
-      return  &(fParams.front());
+      return fParams.empty() ? nullptr : &fParams.front();
    }
 
    void SetParameters(const double * p)  {
@@ -172,7 +172,7 @@ public:
 
    /// clone the function
    IMultiGenFunction * Clone() const {
-      return new WrappedParamFunctionGen(fFunc, fDim, fParams.size() , &fParams.front(), &fParIndices.front());
+      return new WrappedParamFunctionGen(fFunc, fDim, fParams.size(), fParams.empty() ? nullptr : &fParams.front(), fParIndices.empty() ? nullptr : &fParIndices.front());
    }
 
 private:
@@ -183,7 +183,7 @@ private:
 public:
 
    const double * Parameters() const {
-      return  &(fParams.front());
+      return fParams.empty() ? nullptr : &fParams.front();
    }
 
    void SetParameters(const double * p)  {
@@ -227,7 +227,7 @@ private:
 //       std::copy(fX.begin(), fX.end(), oi);
 //       std::cout << std::endl;
 
-      return (*fFunc)( &fX.front() );
+      return (*fFunc)( fX.empty() ? nullptr : &fX.front() );
    }
 
 
@@ -264,7 +264,7 @@ private:
 //       std::cout << this << std::endl;
 
       // set parameter values in fX
-      SetParValues(npar, &fParams.front() );
+      SetParValues(npar, fParams.empty() ? nullptr : &fParams.front());
       for (unsigned int i = 0; i < npar; ++i) {
          unsigned int j = fParIndices[i];
          assert ( j  < npar + fDim);

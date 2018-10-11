@@ -13,31 +13,33 @@
 
 R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
 
-void copytree3() {
-
-   //Get old file, old tree and set top branch address
-   TFile *oldfile;
+void copytree3()
+{
+   // Get old file, old tree and set top branch address
    TString dir = "$ROOTSYS/test/Event.root";
    gSystem->ExpandPathName(dir);
-   if (!gSystem->AccessPathName(dir))
-       {oldfile = new TFile("$ROOTSYS/test/Event.root");}
-   else {oldfile = new TFile("./Event.root");}
-   TTree *oldtree = (TTree*)oldfile->Get("T");
-   Long64_t nentries = oldtree->GetEntries();
-   Event *event   = 0;
-   oldtree->SetBranchAddress("event",&event);
+   const auto filename = gSystem->AccessPathName(dir) ? "./Event.root" : "$ROOTSYS/test/Event.root";
 
-   //Create a new file + a clone of old tree in new file
-   TFile *newfile = new TFile("small.root","recreate");
-   TTree *newtree = oldtree->CloneTree(0);
+   TFile oldfile(filename);
+   TTree *oldtree;
+   oldfile.GetObject("T", oldtree);
 
-   for (Long64_t i=0;i<nentries; i++) {
+   const auto nentries = oldtree->GetEntries();
+
+   Event *event = nullptr;
+   oldtree->SetBranchAddress("event", &event);
+
+   // Create a new file + a clone of old tree in new file
+   TFile newfile("small.root", "recreate");
+   auto newtree = oldtree->CloneTree(0);
+
+   for (auto i : ROOT::TSeqI(nentries)) {
       oldtree->GetEntry(i);
-      if (event->GetNtrack() > 605) newtree->Fill();
+      if (event->GetNtrack() > 605)
+         newtree->Fill();
       event->Clear();
    }
+
    newtree->Print();
-   newtree->AutoSave();
-   delete oldfile;
-   delete newfile;
+   newfile.Write();
 }

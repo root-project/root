@@ -25,11 +25,8 @@ The concrete implementation of TBuffer for writing/reading to/from a ROOT file o
 #include "TBufferFile.h"
 #include "TExMap.h"
 #include "TClass.h"
-#include "TProcessID.h"
-#include "TRefTable.h"
 #include "TStorage.h"
 #include "TError.h"
-#include "TClonesArray.h"
 #include "TStreamer.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
@@ -37,7 +34,6 @@ The concrete implementation of TBuffer for writing/reading to/from a ROOT file o
 #include "TStreamerInfoActions.h"
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
-#include "TArrayC.h"
 #include "TROOT.h"
 
 #if (defined(__linux) || defined(__APPLE__)) && defined(__i386__) && \
@@ -50,7 +46,6 @@ The concrete implementation of TBuffer for writing/reading to/from a ROOT file o
 #endif
 
 
-const UInt_t kNullTag           = 0;
 const UInt_t kNewClassTag       = 0xFFFFFFFF;
 const UInt_t kClassMask         = 0x80000000;  // OR the class index with this
 const UInt_t kByteCountMask     = 0x40000000;  // OR the byte count with this
@@ -59,18 +54,8 @@ const Version_t kByteCountVMask = 0x4000;      // OR the version byte count with
 const Version_t kMaxVersion     = 0x3FFF;      // highest possible version number
 const Int_t  kMapOffset         = 2;   // first 2 map entries are taken by null obj and self obj
 
-Int_t TBufferFile::fgMapSize   = kMapSize;
-
 
 ClassImp(TBufferFile);
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return hash value for this object.
-
-static inline ULong_t Void_Hash(const void *ptr)
-{
-   return TString::Hash(&ptr, sizeof(void*));
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Thread-safe check on StreamerInfos of a TClass
@@ -90,16 +75,9 @@ static inline bool Class_Has_StreamerInfo(const TClass* cl)
 /// TBuffer::kInitialSize (1024) bytes.
 
 TBufferFile::TBufferFile(TBuffer::EMode mode)
-            :TBuffer(mode),
-             fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
-             fInfo(0), fInfoStack()
+            :TBufferIO(mode),
+             fInfo(nullptr), fInfoStack()
 {
-   fMapCount     = 0;
-   fMapSize      = fgMapSize;
-   fMap          = 0;
-   fClassMap     = 0;
-   fParent       = 0;
-   fDisplacement = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,15 +85,9 @@ TBufferFile::TBufferFile(TBuffer::EMode mode)
 /// TBuffer::kWrite.
 
 TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
-            :TBuffer(mode,bufsiz),
-             fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
-             fInfo(0), fInfoStack()
+            :TBufferIO(mode,bufsiz),
+             fInfo(nullptr), fInfoStack()
 {
-   fMapCount = 0;
-   fMapSize  = fgMapSize;
-   fMap      = 0;
-   fClassMap = 0;
-   fDisplacement = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,15 +102,9 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
 /// expand.
 
 TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
-   TBuffer(mode,bufsiz,buf,adopt,reallocfunc),
-   fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
-   fInfo(0), fInfoStack()
+   TBufferIO(mode,bufsiz,buf,adopt,reallocfunc),
+   fInfo(nullptr), fInfoStack()
 {
-   fMapCount = 0;
-   fMapSize  = fgMapSize;
-   fMap      = 0;
-   fClassMap = 0;
-   fDisplacement = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,40 +112,6 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t ad
 
 TBufferFile::~TBufferFile()
 {
-   delete fMap;
-   delete fClassMap;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the version number of the owner file.
-
-Int_t TBufferFile::GetVersionOwner() const
-{
-   TFile *file = (TFile*)GetParent();
-   if (file) return file->GetVersion();
-   else return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Mark the classindex of the current file as using this TStreamerInfo
-
-void TBufferFile::TagStreamerInfo(TVirtualStreamerInfo* info)
-{
-   TFile *file = (TFile*)GetParent();
-   if (file) {
-      TArrayC *cindex = file->GetClassIndex();
-      Int_t nindex = cindex->GetSize();
-      Int_t number = info->GetNumber();
-      if (number < 0 || number >= nindex) {
-         Error("TagStreamerInfo","StreamerInfo: %s number: %d out of range[0,%d] in file: %s",
-               info->GetName(),number,nindex,file->GetName());
-         return;
-      }
-      if (cindex->fArray[number] == 0) {
-         cindex->fArray[0]       = 1;
-         cindex->fArray[number] = 1;
-      }
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,7 +229,7 @@ void TBufferFile::WriteTString(const TString &s)
 
 void TBufferFile::ReadStdString(std::string *obj)
 {
-   if (obj == 0) {
+   if (obj == nullptr) {
       Error("TBufferFile::ReadStdString","The std::string address is nullptr but should not");
       return;
    }
@@ -353,7 +285,7 @@ void TBufferFile::WriteStdString(const std::string *obj)
 void TBufferFile::ReadCharStar(char* &s)
 {
    delete [] s;
-   s = 0;
+   s = nullptr;
 
    Int_t nch;
    *this >> nch;
@@ -477,7 +409,7 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
 Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss)
 {
    if (!bcnt) return 0;
-   return CheckByteCount( startpos, bcnt, clss, 0);
+   return CheckByteCount( startpos, bcnt, clss, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -491,7 +423,7 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
 Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname)
 {
    if (!bcnt) return 0;
-   return CheckByteCount( startpos, bcnt, 0, classname);
+   return CheckByteCount( startpos, bcnt, nullptr, classname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2388,7 +2320,7 @@ Int_t TBufferFile::WriteFastArray(void **start, const TClass *cl, Int_t n,
 
 TObject *TBufferFile::ReadObject(const TClass * /*clReq*/)
 {
-   return (TObject*) ReadObjectAny(0);
+   return (TObject*) ReadObjectAny(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2427,7 +2359,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
    // attempt to load next object as TClass clCast
    UInt_t tag;       // either tag or byte count
    TClass *clRef = ReadClass(clCast, &tag);
-   TClass *clOnfile = 0;
+   TClass *clOnfile = nullptr;
    Int_t baseOffset = 0;
    if (clRef && (clRef!=(TClass*)(-1)) && clCast) {
       //baseOffset will be -1 if clRef does not inherit from clCast.
@@ -2442,7 +2374,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
             Error("ReadObject", "got object of wrong class! requested %s but got %s",
                   clCast->GetName(), clRef->GetName());
 
-            CheckByteCount(startpos, tag, (TClass*)0); // avoid mis-leading byte count error message
+            CheckByteCount(startpos, tag, (TClass *)nullptr); // avoid mis-leading byte count error message
             return 0; // We better return at this point
          }
          baseOffset = 0; // For now we do not support requesting from a class that is the base of one of the class for which there is transformation to ....
@@ -2455,7 +2387,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
          //we cannot mix a compiled class with an emulated class in the inheritance
          Error("ReadObject", "trying to read an emulated class (%s) to store in a compiled pointer (%s)",
                clRef->GetName(),clCast->GetName());
-         CheckByteCount(startpos, tag, (TClass*)0); // avoid mis-leading byte count error message
+         CheckByteCount(startpos, tag, (TClass *)nullptr); // avoid mis-leading byte count error message
          return 0;
       }
    }
@@ -2465,10 +2397,10 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
    char *obj;
    if (fVersion > 0) {
       obj = (char *) (Long_t)fMap->GetValue(startpos+kMapOffset);
-      if (obj == (void*) -1) obj = 0;
+      if (obj == (void*) -1) obj = nullptr;
       if (obj) {
-         CheckByteCount(startpos, tag, (TClass*)0);
-         return (obj+baseOffset);
+         CheckByteCount(startpos, tag, (TClass *)nullptr);
+         return (obj + baseOffset);
       }
    }
 
@@ -2478,8 +2410,8 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
       if (fVersion > 0)
          MapObject((TObject*) -1, startpos+kMapOffset);
       else
-         MapObject((void*)0, 0, fMapCount);
-      CheckByteCount(startpos, tag, (TClass*)0);
+         MapObject((void*)nullptr, nullptr, fMapCount);
+      CheckByteCount(startpos, tag, (TClass *)nullptr);
       return 0;
    }
 
@@ -2546,25 +2478,22 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object to I/O buffer.
-
-void TBufferFile::WriteObject(const TObject *obj)
-{
-   WriteObjectAny(obj, TObject::Class());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write object to I/O buffer.
 /// This function assumes that the value of 'actualObjectStart' is the actual start of
 /// the object of class 'actualClass'
+/// If 'cacheReuse' is true (default) upon seeing an object address a second time,
+/// we record the offset where its was written the first time rather than streaming
+/// the object a second time.
+/// If 'cacheReuse' is false, we always stream the object.  This allows the (re)use
+/// of temporary object to store different data in the same buffer.
 
-void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *actualClass)
+void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *actualClass, Bool_t cacheReuse)
 {
    R__ASSERT(IsWriting());
 
    if (!actualObjectStart) {
 
       // save kNullTag to represent NULL pointer
-      *this << kNullTag;
+      *this << (UInt_t) kNullTag;
 
    } else {
 
@@ -2588,7 +2517,7 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
 
          // A warning to let the user know it will need to change the class code
          // to  be able to read this back.
-         if (actualClass->HasDefaultConstructor() == 0) {
+         if (!actualClass->HasDefaultConstructor()) {
             Warning("WriteObjectAny", "since %s has no public constructor\n"
                "\twhich can be called without argument, objects of this class\n"
                "\tcan not be read with the current library. You will need to\n"
@@ -2604,80 +2533,27 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
          Int_t mapsize = fMap->Capacity(); // The slot depends on the capacity and WriteClass might induce an increase.
          WriteClass(actualClass);
 
-         // add to map before writing rest of object (to handle self reference)
-         // (+kMapOffset so it's != kNullTag)
-         //MapObject(actualObjectStart, actualClass, cntpos+kMapOffset);
-         UInt_t offset = cntpos+kMapOffset;
-         if (mapsize == fMap->Capacity()) {
-            fMap->AddAt(slot, hash, (Long_t)actualObjectStart, offset);
-         } else {
-            // The slot depends on the capacity and WriteClass has induced an increase.
-            fMap->Add(hash, (Long_t)actualObjectStart, offset);
+         if (cacheReuse) {
+            // add to map before writing rest of object (to handle self reference)
+            // (+kMapOffset so it's != kNullTag)
+            //MapObject(actualObjectStart, actualClass, cntpos+kMapOffset);
+            UInt_t offset = cntpos+kMapOffset;
+            if (mapsize == fMap->Capacity()) {
+               fMap->AddAt(slot, hash, (Long_t)actualObjectStart, offset);
+            } else {
+               // The slot depends on the capacity and WriteClass has induced an increase.
+               fMap->Add(hash, (Long_t)actualObjectStart, offset);
+            }
+            // No need to keep track of the class in write mode
+            // fClassMap->Add(hash, (Long_t)obj, (Long_t)((TObject*)obj)->IsA());
+            fMapCount++;
          }
-         // No need to keep track of the class in write mode
-         // fClassMap->Add(hash, (Long_t)obj, (Long_t)((TObject*)obj)->IsA());
-         fMapCount++;
 
          ((TClass*)actualClass)->Streamer((void*)actualObjectStart,*this);
 
          // write byte count
          SetByteCount(cntpos);
       }
-   }
-}
-
-namespace {
-   struct DynamicType {
-      // Helper class to enable typeid on any address
-      // Used in code similar to:
-      //    typeid( * (DynamicType*) void_ptr );
-      virtual ~DynamicType() {}
-   };
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write object to I/O buffer.
-///
-/// This function assumes that the value in 'obj' is the value stored in
-/// a pointer to a "ptrClass". The actual type of the object pointed to
-/// can be any class derived from "ptrClass".
-/// Return:
-///   - 0: failure
-///   - 1: success
-///   - 2: truncated success (i.e actual class is missing. Only ptrClass saved.)
-
-Int_t TBufferFile::WriteObjectAny(const void *obj, const TClass *ptrClass)
-{
-   if (!obj) {
-      WriteObjectClass(0, 0);
-      return 1;
-   }
-
-   if (!ptrClass) {
-      Error("WriteObjectAny", "ptrClass argument may not be 0");
-      return 0;
-   }
-
-   TClass *clActual = ptrClass->GetActualClass(obj);
-
-   if (clActual==0 || clActual->GetState() == TClass::kForwardDeclared) {
-      // The ptrClass is a class with a virtual table and we have no
-      // TClass with the actual type_info in memory.
-
-      DynamicType* d_ptr = (DynamicType*)obj;
-      Warning("WriteObjectAny",
-              "An object of type %s (from type_info) passed through a %s pointer was truncated (due a missing dictionary)!!!",
-              typeid(*d_ptr).name(),ptrClass->GetName());
-      WriteObjectClass(obj, ptrClass);
-      return 2;
-   } else if (clActual && (clActual != ptrClass)) {
-      const char *temp = (const char*) obj;
-      temp -= clActual->GetBaseClassOffset(ptrClass);
-      WriteObjectClass(temp, clActual);
-      return 1;
-   } else {
-      WriteObjectClass(obj, ptrClass);
-      return 1;
    }
 }
 
@@ -3283,215 +3159,6 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
    return offset;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object is already in the buffer.
-/// Returns kTRUE if object already in the buffer, kFALSE otherwise
-/// (also if obj is 0 or TBuffer not in writing mode).
-
-Bool_t TBufferFile::CheckObject(const TObject *obj)
-{
-   return CheckObject(obj, TObject::Class());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object of the specified class is already in
-/// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is 0 ).
-
-Bool_t TBufferFile::CheckObject(const void *obj, const TClass *ptrClass)
-{
-   if (!obj || !fMap || !ptrClass) return kFALSE;
-
-   TClass *clActual = ptrClass->GetActualClass(obj);
-
-   ULong_t idx;
-
-   if (clActual && (ptrClass != clActual)) {
-      const char *temp = (const char*) obj;
-      temp -= clActual->GetBaseClassOffset(ptrClass);
-      idx = (ULong_t)fMap->GetValue(Void_Hash(temp), (Long_t)temp);
-   } else {
-      idx = (ULong_t)fMap->GetValue(Void_Hash(obj), (Long_t)obj);
-   }
-
-   return idx ? kTRUE : kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// This offset is used when a key (or basket) is transfered from one
-/// file to the other.  In this case the TRef and TObject might have stored a
-/// pid index (to retrieve TProcessIDs) which referred to their order on the original
-/// file, the fPidOffset is to be added to those values to correctly find the
-/// TProcessID.  This fPidOffset needs to be increment if the key/basket is copied
-/// and need to be zero for new key/basket.
-
-void TBufferFile::SetPidOffset(UShort_t offset)
-{
-   fPidOffset = offset;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Retrieve the object stored in the buffer's object map at 'tag'
-/// Set ptr and ClassPtr respectively to the address of the object and
-/// a pointer to its TClass.
-
-void TBufferFile::GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const
-{
-   if (tag > (UInt_t)fMap->GetSize()) {
-      ptr = 0;
-      ClassPtr = 0;
-   } else {
-      ptr = (void*)(Long_t)fMap->GetValue(tag);
-      ClassPtr = (TClass*) (Long_t)fClassMap->GetValue(tag);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add object to the fMap container.
-///
-/// If obj is not 0 add object to the map (in read mode also add 0 objects to
-/// the map). This method may only be called outside this class just before
-/// calling obj->Streamer() to prevent self reference of obj, in case obj
-/// contains (via via) a pointer to itself. In that case offset must be 1
-/// (default value for offset).
-
-void TBufferFile::MapObject(const TObject *obj, UInt_t offset)
-{
-   if (IsWriting()) {
-      if (!fMap) InitMap();
-
-      if (obj) {
-         CheckCount(offset);
-         ULong_t hash = Void_Hash(obj);
-         fMap->Add(hash, (Long_t)obj, offset);
-         // No need to keep track of the class in write mode
-         // fClassMap->Add(hash, (Long_t)obj, (Long_t)((TObject*)obj)->IsA());
-         fMapCount++;
-      }
-   } else {
-      if (!fMap || !fClassMap) InitMap();
-
-      fMap->Add(offset, (Long_t)obj);
-      fClassMap->Add(offset,
-             (obj && obj != (TObject*)-1) ? (Long_t)((TObject*)obj)->IsA() : 0);
-      fMapCount++;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add object to the fMap container.
-///
-/// If obj is not 0 add object to the map (in read mode also add 0 objects to
-/// the map). This method may only be called outside this class just before
-/// calling obj->Streamer() to prevent self reference of obj, in case obj
-/// contains (via via) a pointer to itself. In that case offset must be 1
-/// (default value for offset).
-
-void TBufferFile::MapObject(const void *obj, const TClass* cl, UInt_t offset)
-{
-   if (IsWriting()) {
-      if (!fMap) InitMap();
-
-      if (obj) {
-         CheckCount(offset);
-         ULong_t hash = Void_Hash(obj);
-         fMap->Add(hash, (Long_t)obj, offset);
-         // No need to keep track of the class in write mode
-         // fClassMap->Add(hash, (Long_t)obj, (Long_t)cl);
-         fMapCount++;
-      }
-   } else {
-      if (!fMap || !fClassMap) InitMap();
-
-      fMap->Add(offset, (Long_t)obj);
-      fClassMap->Add(offset, (Long_t)cl);
-      fMapCount++;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the initial size of the map used to store object and class
-/// references during reading. The default size is TBufferFile::kMapSize.
-/// Increasing the default has the benefit that when reading many
-/// small objects the map does not need to be resized too often
-/// (the system is always dynamic, even with the default everything
-/// will work, only the initial resizing will cost some time).
-/// This method can only be called directly after the creation of
-/// the TBuffer, before any reading is done. Globally this option
-/// can be changed using SetGlobalReadParam().
-
-void TBufferFile::SetReadParam(Int_t mapsize)
-{
-   R__ASSERT(IsReading());
-   R__ASSERT(fMap == 0);
-
-   fMapSize = mapsize;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the initial size of the hashtable used to store object and class
-/// references during writing. The default size is TBufferFile::kMapSize.
-/// Increasing the default has the benefit that when writing many
-/// small objects the hashtable does not get too many collisions
-/// (the system is always dynamic, even with the default everything
-/// will work, only a large number of collisions will cost performance).
-/// For optimal performance hashsize should always be a prime.
-/// This method can only be called directly after the creation of
-/// the TBuffer, before any writing is done. Globally this option
-/// can be changed using SetGlobalWriteParam().
-
-void TBufferFile::SetWriteParam(Int_t mapsize)
-{
-   R__ASSERT(IsWriting());
-   R__ASSERT(fMap == 0);
-
-   fMapSize = mapsize;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create the fMap container and initialize them
-/// with the null object.
-
-void TBufferFile::InitMap()
-{
-   if (IsWriting()) {
-      if (!fMap) {
-         fMap = new TExMap(fMapSize);
-         // No need to keep track of the class in write mode
-         // fClassMap = new TExMap(fMapSize);
-         fMapCount = 0;
-      }
-   } else {
-      if (!fMap) {
-         fMap = new TExMap(fMapSize);
-         fMap->Add(0, kNullTag);      // put kNullTag in slot 0
-         fMapCount = 1;
-      } else if (fMapCount==0) {
-         fMap->Add(0, kNullTag);      // put kNullTag in slot 0
-         fMapCount = 1;
-      }
-      if (!fClassMap) {
-         fClassMap = new TExMap(fMapSize);
-         fClassMap->Add(0, kNullTag);      // put kNullTag in slot 0
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delete existing fMap and reset map counter.
-
-void TBufferFile::ResetMap()
-{
-   if (fMap) fMap->Delete();
-   if (fClassMap) fClassMap->Delete();
-   fMapCount     = 0;
-   fDisplacement = 0;
-
-   // reset user bits
-   ResetBit(kUser1);
-   ResetBit(kUser2);
-   ResetBit(kUser3);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read max bytes from the I/O buffer into buf. The function returns
@@ -3565,122 +3232,6 @@ void TBufferFile::WriteString(const char *s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the last TProcessID in the file.
-
-TProcessID *TBufferFile::GetLastProcessID(TRefTable *reftable) const
-{
-   TFile *file = (TFile*)GetParent();
-   // warn if the file contains > 1 PID (i.e. if we might have ambiguity)
-   if (file && !reftable->TestBit(TRefTable::kHaveWarnedReadingOld) && file->GetNProcessIDs()>1) {
-      Warning("ReadBuffer", "The file was written during several processes with an "
-         "older ROOT version; the TRefTable entries might be inconsistent.");
-      reftable->SetBit(TRefTable::kHaveWarnedReadingOld);
-   }
-
-   // the file's last PID is the relevant one, all others might have their tables overwritten
-   TProcessID *fileProcessID = TProcessID::GetProcessID(0);
-   if (file && file->GetNProcessIDs() > 0) {
-      // take the last loaded PID
-      fileProcessID = (TProcessID *) file->GetListOfProcessIDs()->Last();
-   }
-   return fileProcessID;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// The TProcessID with number pidf is read from file.
-/// If the object is not already entered in the gROOT list, it is added.
-
-TProcessID *TBufferFile::ReadProcessID(UShort_t pidf)
-{
-   TFile *file = (TFile*)GetParent();
-   if (!file) {
-      if (!pidf) return TProcessID::GetPID(); //may happen when cloning an object
-      return 0;
-   }
-
-   TProcessID *pid = nullptr;
-   {
-      R__LOCKGUARD_IMT(gInterpreterMutex); // Lock for parallel TTree I/O
-      pid = file->ReadProcessID(pidf);
-   }
-
-   return pid;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the exec id stored in the current TStreamerInfo element.
-/// The execid has been saved in the unique id of the TStreamerElement
-/// being read by TStreamerElement::Streamer.
-/// The current element (fgElement) is set as a static global
-/// by TStreamerInfo::ReadBuffer (Clones) when reading this TRef.
-
-UInt_t TBufferFile::GetTRefExecId()
-{
-   return TStreamerInfo::GetCurrentElement()->GetUniqueID();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the ProcessID pid is already in the file.
-/// If not, add it and return the index number in the local file list.
-
-UShort_t TBufferFile::WriteProcessID(TProcessID *pid)
-{
-   TFile *file = (TFile*)GetParent();
-   if (!file) return 0;
-   return file->WriteProcessID(pid);
-}
-
-//---- Utilities for TStreamerInfo ----------------------------------------------
-
-////////////////////////////////////////////////////////////////////////////////
-/// force writing the TStreamerInfo to the file
-
-void TBufferFile::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force)
-{
-   if (info) info->ForceWriteInfo((TFile*)GetParent(),force);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Make sure TStreamerInfo is not optimized, otherwise it will not be
-/// possible to support schema evolution in read mode.
-/// In case the StreamerInfo has already been computed and optimized,
-/// one must disable the option BypassStreamer.
-
-void TBufferFile::ForceWriteInfoClones(TClonesArray *a)
-{
-   TStreamerInfo *sinfo = (TStreamerInfo*)a->GetClass()->GetStreamerInfo();
-   ForceWriteInfo(sinfo,kFALSE);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface to TStreamerInfo::ReadBufferClones.
-
-Int_t TBufferFile::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers)
-{
-   char **arr = (char **)a->GetObjectRef(0);
-   char **end = arr + nobjects;
-   //a->GetClass()->GetStreamerInfo()->ReadBufferClones(*this,a,nobjects,-1,0);
-   TStreamerInfo *info = (TStreamerInfo*)a->GetClass()->GetStreamerInfo(objvers);
-   //return info->ReadBuffer(*this,arr,-1,nobjects,0,1);
-   return ApplySequenceVecPtr(*(info->GetReadMemberWiseActions(kTRUE)),arr,end);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface to TStreamerInfo::WriteBufferClones.
-
-Int_t TBufferFile::WriteClones(TClonesArray *a, Int_t nobjects)
-{
-   char **arr = reinterpret_cast<char**>(a->GetObjectRef(0));
-   //a->GetClass()->GetStreamerInfo()->WriteBufferClones(*this,(TClonesArray*)a,nobjects,-1,0);
-   TStreamerInfo *info = (TStreamerInfo*)a->GetClass()->GetStreamerInfo();
-   //return info->WriteBufferAux(*this,arr,-1,nobjects,0,1);
-   char **end = arr + nobjects;
-   // No need to tell call ForceWriteInfo as it by ForceWriteInfoClones.
-   return ApplySequenceVecPtr(*(info->GetWriteMemberWiseActions(kTRUE)),arr,end);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Read emulated class.
 
 Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClass *onFileClass)
@@ -3691,7 +3242,7 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
    Version_t v = ReadVersion(&start,&count);
 
    if (count) {
-      TStreamerInfo *sinfo = 0;
+      TStreamerInfo *sinfo = nullptr;
       if( onFileClass ) {
          sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, v );
          if( !sinfo )
@@ -3730,7 +3281,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    // The ondisk class has been specified so get foreign streamer info
    /////////////////////////////////////////////////////////////////////////////
 
-   TStreamerInfo *sinfo = 0;
+   TStreamerInfo *sinfo = nullptr;
    if( onFileClass ) {
       sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, version );
       if( !sinfo ) {
@@ -3751,13 +3302,13 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
       auto infos = cl->GetStreamerInfos();
       auto ninfos = infos->GetSize();
       if (version < -1 || version >= ninfos) {
-         Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+         Error("ReadClassBuffer", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
                cl->GetName(), version, Length() );
          CheckByteCount(start, count, cl);
          return 0;
       }
       sinfo = (TStreamerInfo*)infos->At(version);
-      if (sinfo == 0) {
+      if (sinfo == nullptr) {
          // Unless the data is coming via a socket connection from with schema evolution
          // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
          // one for the current version, otherwise let's complain ...
@@ -3769,7 +3320,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
             // current 'locked' section.
             sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
             const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
-            if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
+            if (gDebug > 0) Info("ReadClassBuffer", "Creating StreamerInfo for class: %s, version: %d", cl->GetName(), version);
             sinfo->Build();
          } else if (version==0) {
             // When the object was written the class was version zero, so
@@ -3830,7 +3381,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    // The ondisk class has been specified so get foreign streamer info
    /////////////////////////////////////////////////////////////////////////////
 
-   TStreamerInfo *sinfo = 0;
+   TStreamerInfo *sinfo = nullptr;
    if( onFileClass ) {
       sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, version );
       if( !sinfo ) {
@@ -3881,7 +3432,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             }
          }
 
-         if (sinfo == 0) {
+         if (sinfo == nullptr) {
             // Unless the data is coming via a socket connection from with schema evolution
             // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
             // one for the current version, otherwise let's complain ...
@@ -3904,14 +3455,12 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
                   sinfo->SetClassVersion(version);
                   const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
                   if (gDebug > 0)
-                     printf(
-                           "Creating StreamerInfo for class: %s, version: %d\n",
+                     Info("ReadClassBuffer", "Creating StreamerInfo for class: %s, version: %d",
                            cl->GetName(), version);
                   if (v2file) {
-                     sinfo->Build(); // Get the elements.
-                     sinfo->Clear("build"); // Undo compilation.
-                     sinfo->BuildEmulated(
-                           file); // Fix the types and redo compilation.
+                     sinfo->Build();             // Get the elements.
+                     sinfo->Clear("build");      // Undo compilation.
+                     sinfo->BuildEmulated(file); // Fix the types and redo compilation.
                   } else {
                      sinfo->Build();
                   }
@@ -3939,7 +3488,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    // Check that the buffer position corresponds to the byte count.
    CheckByteCount(R__s, R__c, cl);
 
-   if (gDebug > 2) printf(" ReadBuffer for class: %s has read %d bytes\n", cl->GetName(), R__c);
+   if (gDebug > 2) Info("ReadClassBuffer", "For class: %s has read %d bytes", cl->GetName(), R__c);
 
    return 0;
 }
@@ -3955,16 +3504,16 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
 {
    //build the StreamerInfo if first time for the class
    TStreamerInfo *sinfo = (TStreamerInfo*)const_cast<TClass*>(cl)->GetCurrentStreamerInfo();
-   if (sinfo == 0) {
+   if (sinfo == nullptr) {
       //Have to be sure between the check and the taking of the lock if the current streamer has changed
       R__LOCKGUARD(gInterpreterMutex);
       sinfo = (TStreamerInfo*)const_cast<TClass*>(cl)->GetCurrentStreamerInfo();
-      if(sinfo == 0) {
+      if (sinfo == nullptr) {
          const_cast<TClass*>(cl)->BuildRealData(pointer);
          sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
          const_cast<TClass*>(cl)->SetCurrentStreamerInfo(sinfo);
          const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
-         if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",cl->GetName(),cl->GetClassVersion());
+         if (gDebug > 0) Info("WritedClassBuffer", "Creating StreamerInfo for class: %s, version: %d",cl->GetName(),cl->GetClassVersion());
          sinfo->Build();
       }
    } else if (!sinfo->IsCompiled()) {
@@ -3983,11 +3532,10 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
    TagStreamerInfo(sinfo);
    ApplySequence(*(sinfo->GetWriteObjectWiseActions()), (char*)pointer);
 
-
    //write the byte count at the start of the buffer
    SetByteCount(R__c, kTRUE);
 
-   if (gDebug > 2) printf(" WriteBuffer for class: %s version %d has written %d bytes\n",cl->GetName(),cl->GetClassVersion(),UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t));
+   if (gDebug > 2) Info("WritedClassBuffer", "For class: %s version %d has written %d bytes",cl->GetName(),cl->GetClassVersion(),UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t));
    return 0;
 }
 
@@ -4081,54 +3629,4 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
    }
 
    return 0;
-}
-
-//---- Static functions --------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the initial size of the map used to store object and class
-/// references during reading.
-///
-/// The default size is kMapSize.
-/// Increasing the default has the benefit that when reading many
-/// small objects the array does not need to be resized too often
-/// (the system is always dynamic, even with the default everything
-/// will work, only the initial resizing will cost some time).
-/// Per TBuffer object this option can be changed using SetReadParam().
-
-void TBufferFile::SetGlobalReadParam(Int_t mapsize)
-{
-   fgMapSize = mapsize;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the initial size of the map used to store object and class
-/// references during reading.
-///
-/// The default size is kMapSize.
-/// Increasing the default has the benefit that when reading many
-/// small objects the array does not need to be resized too often
-/// (the system is always dynamic, even with the default everything
-/// will work, only the initial resizing will cost some time).
-/// Per TBuffer object this option can be changed using SetReadParam().
-
-void TBufferFile::SetGlobalWriteParam(Int_t mapsize)
-{
-   fgMapSize = mapsize;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get default read map size.
-
-Int_t TBufferFile::GetGlobalReadParam()
-{
-   return fgMapSize;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get default write map size.
-
-Int_t TBufferFile::GetGlobalWriteParam()
-{
-   return fgMapSize;
 }

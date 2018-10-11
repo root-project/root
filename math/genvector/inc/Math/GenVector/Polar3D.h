@@ -115,7 +115,7 @@ public :
    Scalar Y() const { return Rho() * sin(fPhi); }
    Scalar Z() const { return fR * cos(fTheta); }
    Scalar Mag2()  const { return fR*fR;}
-   Scalar Perp2() const { return pow(Rho(), 2); }
+   Scalar Perp2() const { return Rho() * Rho(); }
 
    // pseudorapidity
    Scalar Eta() const

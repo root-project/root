@@ -192,26 +192,6 @@ typedef std::atomic<TClass*> atomic_TClass_ptr;
 #include "TIsAProxy.h"
 
 namespace ROOT { namespace Internal {
-struct TTypeNameExtractionBase {
-   // Implemented in TGenericClassInfo.cxx
-   static std::string GetImpl(const char* derived_funcname);
-};
-/// \class TypeNameExtraction
-/// Extracts the fully qualified type name by checking for the name of a
-/// member function as determined by the __PRETTY_FUNCTION__ macro.
-template <class T>
-   struct TTypeNameExtraction: TTypeNameExtractionBase {
-      static std::string Get() {
-#ifdef _MSC_VER // Visual Studio
-# define R__TNE_PRETTY_FUNCTION __FUNCSIG__
-#else
-# define R__TNE_PRETTY_FUNCTION __PRETTY_FUNCTION__
-#endif
-         return GetImpl(R__TNE_PRETTY_FUNCTION);
-#undef R__TNE_PRETTY_FUNCTION
-      }
-   };
-
 
 class TCDGIILIBase {
 public:
@@ -253,7 +233,7 @@ class ClassDefGenerateInitInstanceLocalInjector:
       static const char* Name() {
          static std::string gName;
          if (gName.empty())
-            SetName(TTypeNameExtraction<T>::Get(), gName);
+            SetName(GetDemangledTypeName(typeid(T)), gName);
          return gName.c_str();
       }
    };
@@ -466,16 +446,13 @@ namespace ROOT {                                                     \
 // prevent compilation errors with complex diagnostics due to
 //   TString BAD_DO_NOT_TRY = "lib";
 //   R__LOAD_LIBRARY(BAD_DO_NOT_TRY + "BAD_DO_NOT_TRY.so") // ERROR!
-#ifdef _MSC_VER // Visual Studio
-#define _R_PragmaStr(x) __pragma(#x)
-#else
-#define _R_PragmaStr(x) _Pragma(#x)
-#endif
 #ifdef __CLING__
+# define _R_PragmaStr(x) _Pragma(#x)
 # define R__LOAD_LIBRARY(LIBRARY) _R_PragmaStr(cling load ( #LIBRARY ))
 # define R__ADD_INCLUDE_PATH(PATH) _R_PragmaStr(cling add_include_path ( #PATH ))
 # define R__ADD_LIBRARY_PATH(PATH) _R_PragmaStr(cling add_library_path ( #PATH ))
 #elif defined(R__WIN32)
+# define _R_PragmaStr(x) __pragma(#x)
 # define R__LOAD_LIBRARY(LIBRARY) _R_PragmaStr(comment(lib, #LIBRARY))
 # define R__ADD_INCLUDE_PATH(PATH) _R_PragmaStr(comment(path, #PATH))
 # define R__ADD_LIBRARY_PATH(PATH) _R_PragmaStr(comment(path, #PATH))

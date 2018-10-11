@@ -26,34 +26,18 @@
 
 namespace ROOT {
 namespace Internal {
-   std::string TTypeNameExtractionBase::GetImpl(const char* derived_funcname) {
-      constexpr static const char tag[] = "TypeNameExtraction<";
-      const char* start = strstr(derived_funcname, tag);
-      if (!start)
-         return "";
-      start += sizeof(tag) - 1;
-      const char* end = strstr(start, ">::Get(");
-      if (!end)
-         return "";
 
-      if (std::string_view(start, end - start).compare("T") == 0) {
-         // PRETTY_FUNCTION with gcc 7.1.0 gives :
-         //   "static std::__cxx11::string ROOT::Internal::TTypeNameExtraction<T>::Get()
-         //    [with T = ROOT::Internal::TCheckHashRecurveRemoveConsistency; std::__cxx11::string =
-         //    std::__cxx11::basic_string<char>]")
+   std::string GetDemangledTypeName(const std::type_info &t)
+   {
+      int status = 0;
+      char *name = TClassEdit::DemangleName(t.name(), status);
 
-         constexpr static const char withTtag[] = "[with T = ";
-         const char *startWithT = strstr(start, withTtag);
-         startWithT += sizeof(withTtag) - 1;
-         const char *endWithT = strstr(startWithT, ";");
-         if (!endWithT)
-            return "";
-         start = startWithT;
-         end = endWithT;
-      }
+      if (!name || status != 0)
+         return "";
 
       std::string ret;
-      TClassEdit::GetNormalizedName(ret, std::string_view(start, end - start));
+      TClassEdit::GetNormalizedName(ret, name);
+      free(name);
       return ret;
    }
 

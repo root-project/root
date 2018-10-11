@@ -74,28 +74,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, Bool_t all)
 {
    TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
-   // Could trigger deserialization of decls.
-   cling::Interpreter::PushTransactionRAII RAII(interp);
-   if (fIterAll)
-      fIter = TU->decls_begin();
-   else
-      fIter = TU->noload_decls_begin();
-
-   // Set
-   InternalNext();
    fFirstTime = true;
-   // CINT had this odd behavior where a ClassInfo created without any
-   // argument/input was set as an iterator that was ready to be iterated
-   // on but was set an not IsValid *BUT* a few routine where using this
-   // state as representing the global namespace (These routines include the
-   // GetMethod routines and CallFunc::SetFunc, but do not include many others
-   // (such as Property etc).  To be somewhat backward compatible, let's make
-   // this state actually valid (i.e., representing both the ready-for-first-
-   // iteration iterator *and* the global namespace) so that code that was
-   // working with CINT (grabbing the default initialized ClassInfo
-   // to look at the global namespace) is working again (and, yes, things that
-   // used to not work like 'asking' the filename on this will go 'further'
-   // but oh well).
    fDecl = TU;
    fType = 0;
 }
@@ -140,6 +119,14 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
      fIsIter(false), fDecl(0), fType(0), fTitle(""), fOffsetCache(0)
 {
    Init(tag);
+}
+
+TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
+                                 const Decl *D)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE),
+     fIsIter(false), fDecl(0), fType(0), fTitle(""), fOffsetCache(0)
+{
+   Init(D);
 }
 
 void TClingClassInfo::AddBaseOffsetValue(const clang::Decl* decl, ptrdiff_t offset)
@@ -619,27 +606,30 @@ long TClingClassInfo::GetOffset(const CXXMethodDecl* md) const
 ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address, bool isDerivedObject)
 {
 
-   R__LOCKGUARD(gInterpreterMutex);
+   {
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
 
-   // Check for the offset in the cache.
-   auto iter = fOffsetCache.find(base->GetDecl());
-   if (iter != fOffsetCache.end()) {
-      std::pair<ptrdiff_t, OffsetPtrFunc_t> offsetCache = (*iter).second;
-      if (OffsetPtrFunc_t executableFunc = offsetCache.second) {
-         if (address) {
-            return (*executableFunc)(address, isDerivedObject);
+      // Check for the offset in the cache.
+      auto iter = fOffsetCache.find(base->GetDecl());
+      if (iter != fOffsetCache.end()) {
+         std::pair<ptrdiff_t, OffsetPtrFunc_t> offsetCache = (*iter).second;
+         if (OffsetPtrFunc_t executableFunc = offsetCache.second) {
+            if (address) {
+               return (*executableFunc)(address, isDerivedObject);
+            }
+            else {
+               Error("TClingBaseClassInfo::Offset", "The address of the object for virtual base offset calculation is not valid.");
+               return -1;
+            }
          }
          else {
-            Error("TClingBaseClassInfo::Offset", "The address of the object for virtual base offset calculation is not valid.");
-            return -1;
+            return offsetCache.first;
          }
-      }
-      else {
-         return offsetCache.first;
       }
    }
 
    // Compute the offset.
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
    TClingBaseClassInfo binfo(fInterp, this, base);
    return binfo.Offset(address, isDerivedObject);
 }
@@ -835,8 +825,17 @@ bool TClingClassInfo::IsValidMethod(const char *method, const char *proto,
 
 int TClingClassInfo::InternalNext()
 {
-
    R__LOCKGUARD(gInterpreterMutex);
+
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+   if (fFirstTime) {
+      // fDecl must be a DeclContext in order to iterate.
+      const clang::DeclContext *DC = cast<DeclContext>(fDecl);
+      if (fIterAll)
+         fIter = DC->decls_begin();
+      else
+         fIter = DC->noload_decls_begin();
+   }
 
    if (!fIsIter) {
       // Object was not setup for iteration.
@@ -857,7 +856,6 @@ int TClingClassInfo::InternalNext()
       }
       return 0;
    }
-   cling::Interpreter::PushTransactionRAII pushedT(fInterp);
    while (true) {
       // Advance to next usable decl, or return if there is no next usable decl.
       if (fFirstTime) {

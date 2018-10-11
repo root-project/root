@@ -9,6 +9,7 @@
 set( LLVM_LINK_COMPONENTS
   core
   support
+  binaryformat
 )
 
 add_cling_library(clingMetaProcessor OBJECT
@@ -18,9 +19,6 @@ add_cling_library(clingMetaProcessor OBJECT
   MetaParser.cpp
   MetaProcessor.cpp
   MetaSema.cpp
-
-  DEPENDS
-  ClangDriverOptions
 
   LINK_LIBS
   clangLex

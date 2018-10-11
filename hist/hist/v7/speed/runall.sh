@@ -11,7 +11,7 @@ set -x
 
 function run {
    echo "Data Class: $1" | tee $1.1e6.$$.speedlog | tee $1.1e8.$$.speedlog
-   ${CXX} -o speedtest speedtest.cxx `root-config --cflags --libs` -O3 "-DSTATCLASSES=$1"
+   ${CXX} -o speedtest histspeedtest.cxx `root-config --cflags --libs` -O3 "-DSTATCLASSES=$1"
    # ${prefix} ./speedtest 1e6 > $1.1e6.$$.log
    # rvalgrind --tool=callgrind --callgrind-out-file=callgrind.out.$1.%p --dump-instr=yes ./speedtest 1e6 > $1.1e6.$$.vallog
    ./speedtest 1e6 $what >> $1.1e6.$$.speedlog

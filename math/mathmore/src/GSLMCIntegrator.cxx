@@ -100,6 +100,7 @@ GSLMCIntegrator::GSLMCIntegrator(MCIntegration::Type type, double absTol, double
 }
 
 GSLMCIntegrator::GSLMCIntegrator(const char * type, double absTol, double relTol, unsigned int calls):
+   fType(MCIntegration::kDEFAULT),
    fDim(0),
    fCalls(calls),
    fAbsTol(absTol),
@@ -316,7 +317,8 @@ void GSLMCIntegrator::SetTypeName(const char * type)
    }
 
    // create the fWorkspace object
-   if (integType != fType) SetType(integType);
+   // if it exists already with the same type it will not be re-created
+   SetType(integType);
 }
 
 

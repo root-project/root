@@ -29,7 +29,7 @@
 #include "TObject.h"
 #include "TString.h"
 #ifndef __CINT__
-#  include "qglobal.h"
+#  include "TQtIncludes.h"
 #endif
 
 class QFileIconProvider;

@@ -3104,7 +3104,7 @@
       if ((obj._typename === 'TGeoVolumeAssembly') || (obj._typename === 'TGeoVolume')) {
          shape = obj.fShape;
       } else
-      if (obj._typename === "TEveGeoShapeExtract") {
+      if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::TEveGeoShapeExtract")  ) {
          shape = obj.fShape;
       } else
       if (obj._typename === 'TGeoManager') {

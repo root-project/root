@@ -66,7 +66,7 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode( const Event* e, UInt_t /* sign
 {
    if (e!=0) {
       for (UInt_t ivar=0; ivar<e->GetNVariables(); ivar++) fEventV.push_back(e->GetValue(ivar));
-      for (std::vector<Float_t>::const_iterator it = e->GetTargets().begin(); it < e->GetTargets().end(); it++ ) {
+      for (std::vector<Float_t>::const_iterator it = e->GetTargets().begin(); it < e->GetTargets().end(); ++it ) {
          fTargets.push_back( (*it) );
       }
    }
@@ -153,7 +153,7 @@ void TMVA::BinarySearchTreeNode::Print( std::ostream& os ) const
    os << "< ***  " << std::endl << " node.Data: ";
    std::vector<Float_t>::const_iterator it=fEventV.begin();
    os << fEventV.size() << " vars: ";
-   for (;it!=fEventV.end(); it++) os << " " << std::setw(10) << *it;
+   for (;it!=fEventV.end(); ++it) os << " " << std::setw(10) << *it;
    os << "  EvtWeight " << std::setw(10) << fWeight;
    os << std::setw(10) << "Class: " << GetClass() << std::endl;
 
@@ -175,7 +175,7 @@ void TMVA::BinarySearchTreeNode::PrintRec( std::ostream& os ) const
       << " data: " <<  std::endl;
    std::vector<Float_t>::const_iterator it=fEventV.begin();
    os << fEventV.size() << " vars: ";
-   for (;it!=fEventV.end(); it++) os << " " << std::setw(10) << *it;
+   for (;it!=fEventV.end(); ++it) os << " " << std::setw(10) << *it;
    os << "  EvtWeight " << std::setw(10) << fWeight;
    os << std::setw(10) << "Class: " << GetClass() << std::endl;
 

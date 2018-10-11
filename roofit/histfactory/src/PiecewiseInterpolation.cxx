@@ -452,8 +452,8 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
   CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
 
   
- std::auto_ptr<RooArgSet> vars2( getParameters(RooArgSet()) );
- std::auto_ptr<RooArgSet> iset(  _normIntMgr.nameSet2ByIndex(code-1)->select(*vars2) );            
+ std::unique_ptr<RooArgSet> vars2( getParameters(RooArgSet()) );
+ std::unique_ptr<RooArgSet> iset(  _normIntMgr.nameSet2ByIndex(code-1)->select(*vars2) );            
  cout <<"iset = "<<endl;
  iset->Print("v");
 

@@ -13,6 +13,12 @@ if(NOT WIN32)
   ROOT_EXECUTABLE(xpdtest xpdtest.cxx LIBRARIES Proof Tree Hist RIO Net Thread Matrix MathCore)
 endif()
 ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
+if(MSVC)
+  set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
+      /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index
+      /STACK:4000000")
+  set_property(TARGET root.exe APPEND_STRING PROPERTY LINK_FLAGS ${root_exports})
+endif()
 ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
 if(MSVC)
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore)
@@ -23,6 +29,7 @@ ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
 
 if(fortran AND CMAKE_Fortran_COMPILER)
   ROOT_EXECUTABLE(g2root g2root.f LIBRARIES minicern)
+  set_target_properties(g2root PROPERTIES COMPILE_FLAGS "-w")
   ROOT_EXECUTABLE(h2root h2root.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore Thread minicern)
 endif()
 
@@ -65,7 +72,7 @@ else()
 endif()
 
 ROOT_EXECUTABLE(rootcling src/rootcling.cxx
-                          LIBRARIES RIO Core Cling ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARIES}
+                          LIBRARIES RIO Core Cling ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ZLIB::ZLIB
                                     ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                                     ${corelinklibs})
 # rootcling includes the ROOT complex header which would build the complex
@@ -100,8 +107,14 @@ if(CMAKE_HOST_UNIX)
   install(CODE "execute_process(COMMAND ln -f rootcling rootcint WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
   install(CODE "execute_process(COMMAND ln -f rootcling genreflex WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
 else()
-  install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
-                    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
-                    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rlibmap
-                    DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+  if(MSVC)
+    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcling.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+  else()
+    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
+                      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
+                      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rlibmap
+                      DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+  endif()
 endif()

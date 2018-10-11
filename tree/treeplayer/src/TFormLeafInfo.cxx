@@ -54,6 +54,7 @@ The following method are available from the TFormLeafInfo interface:
 #include "TMethodCall.h"
 #include "TTree.h"
 #include "TVirtualCollectionProxy.h"
+#include "TClassEdit.h"
 
 
 #define INSTANTIATE_READVAL(CLASS) \
@@ -2132,6 +2133,7 @@ TFormLeafInfoMethod::TFormLeafInfoMethod(const TFormLeafInfoMethod& orig)
    fIsByValue = orig.fIsByValue;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Exception safe swap.
 
@@ -2178,6 +2180,40 @@ TFormLeafInfo* TFormLeafInfoMethod::DeepCopy() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the TClass corresponding to the return type of the function
+/// if it is an object type or if the return type is a reference (&) then
+/// return the TClass corresponding to the referencee.
+
+TClass *TFormLeafInfoMethod::ReturnTClass(TMethodCall *mc)
+{
+   if (!mc || !mc->GetMethod())
+      return nullptr;
+
+   std::string return_type;
+
+   if (0 == strcmp(mc->GetMethod()->GetReturnTypeName(), "void"))
+      return nullptr;
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   int oldAutoloadVal = gCling->SetClassAutoloading(false);
+   TClassEdit::GetNormalizedName(return_type, mc->GetMethod()->GetReturnTypeName());
+   gCling->SetClassAutoloading(oldAutoloadVal);
+
+   // Beyhond this point we no longer 'need' the lock.
+   // How TClass::GetClass will take at least the read lock to search
+   // So keeping it just a little longer is likely to be faster
+   // than releasing and retaking it.
+
+   return_type = gInterpreter->TypeName(return_type.c_str());
+
+   if (return_type == "void")
+      return nullptr;
+
+   return TClass::GetClass(return_type.c_str());
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the type of the underlying return value
 
 TClass* TFormLeafInfoMethod::GetClass() const
@@ -2185,8 +2221,8 @@ TClass* TFormLeafInfoMethod::GetClass() const
    if (fNext) return fNext->GetClass();
    TMethodCall::EReturnType r = fMethod->ReturnType();
    if (r!=TMethodCall::kOther) return 0;
-   TString return_type = gInterpreter->TypeName(fMethod->GetMethod()->GetReturnTypeName());
-   return TClass::GetClass(return_type.Data());
+
+   return ReturnTClass(fMethod);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

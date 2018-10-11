@@ -111,6 +111,7 @@ private: // Data Members
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
    Bool_t          fLockProcessLine;  // True if ProcessLine should lock gInterpreterMutex.
    Bool_t          fAllowLibLoad;     // True if library load is allowed (i.e. not in rootcling)
+   Bool_t          fCxxModulesEnabled;// True if C++ modules was enabled
 
    cling::Interpreter*   fInterpreter;   // The interpreter.
    cling::MetaProcessor* fMetaProcessor; // The metaprocessor.
@@ -137,12 +138,27 @@ private: // Data Members
    typedef std::unordered_map<std::string, TObject*> SpecialObjectMap_t;
    std::map<SpecialObjectLookupCtx_t, SpecialObjectMap_t> fSpecialObjectMaps;
 
+   struct MutexStateAndRecurseCount {
+      /// State of gCoreMutex when the first interpreter-related function was invoked.
+      std::unique_ptr<ROOT::TVirtualRWMutex::State> fState;
+
+      /// Interpreter-related functions will push the "entry" lock state to *this.
+      /// Recursive calls will do that, too - but we must only forget about the lock
+      /// state once this recursion count went to 0.
+      Int_t fRecurseCount = 0;
+
+      operator bool() const { return (bool)fState; }
+   };
+
+   std::vector<MutexStateAndRecurseCount> fInitialMutex{1};
+
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
 
    Bool_t fHeaderParsingOnDemand;
    Bool_t fIsAutoParsingSuspended;
 
    UInt_t AutoParseImplRecurse(const char *cls, bool topLevel);
+   constexpr static const char* kNullArgv[] = {nullptr};
 
 protected:
    Bool_t SetSuspendAutoParsing(Bool_t value);
@@ -150,7 +166,8 @@ protected:
 public: // Public Interface
 
    virtual ~TCling();
-   TCling(const char* name, const char* title);
+   TCling(const char* name, const char* title, const char* const argv[]);
+   TCling(const char* name, const char* title): TCling(name, title, kNullArgv) {}
 
    cling::Interpreter *GetInterpreterImpl() { return fInterpreter; }
 
@@ -161,6 +178,7 @@ public: // Public Interface
    Int_t   AutoLoad(const std::type_info& typeinfo, Bool_t knowDictNotLoaded = kFALSE);
    Int_t   AutoParse(const char* cls);
    void*   LazyFunctionCreatorAutoload(const std::string& mangled_name);
+   bool   LibraryLoadingFailed(const std::string&, const std::string&, bool, bool);
    Bool_t  IsAutoLoadNamespaceCandidate(const char* name);
    Bool_t  IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl);
    void    ClearFileBusy();
@@ -174,7 +192,7 @@ public: // Public Interface
    Int_t   GetMore() const { return fMore; }
    TClass *GenerateTClass(const char *classname, Bool_t emulation, Bool_t silent = kFALSE);
    TClass *GenerateTClass(ClassInfo_t *classinfo, Bool_t silent = kFALSE);
-   Int_t   GenerateDictionary(const char* classes, const char* includes = 0, const char* options = 0);
+   Int_t   GenerateDictionary(const char* classes, const char* includes = "", const char* options = 0);
    char*   GetPrompt() { return fPrompt; }
    const char* GetSharedLibs();
    const char* GetClassSharedLibs(const char* cls);
@@ -186,6 +204,7 @@ public: // Public Interface
    virtual void Initialize();
    void    InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient);
    Bool_t  IsLoaded(const char* filename) const;
+   Bool_t  IsLibraryLoaded(const char* libname) const;
    Int_t   Load(const char* filenam, Bool_t system = kFALSE);
    void    LoadMacro(const char* filename, EErrorCode* error = 0);
    Int_t   LoadLibraryMap(const char* rootmapfile = 0);
@@ -205,7 +224,8 @@ public: // Public Interface
                           void (*triggerFunc)(),
                           const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                           const char** classesHeaders,
-                          Bool_t lateRegistration = false);
+                          Bool_t lateRegistration = false,
+                          Bool_t hasCxxModule = false);
    void    RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict);
    void    UnRegisterTClassUpdate(const TClass *oldcl);
 
@@ -244,6 +264,7 @@ public: // Public Interface
    virtual TEnum*   CreateEnum(void *VD, TClass *cl) const;
    virtual void     UpdateEnumConstants(TEnum* enumObj, TClass* cl) const;
    virtual void     LoadEnums(TListOfEnums& cl) const;
+   virtual std::string ToString(const char* type, void *obj);
    TString GetMangledName(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
    TString GetMangledNameWithPrototype(TClass* cl, const char* method, const char* proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void*   GetInterfaceMethod(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
@@ -272,6 +293,12 @@ public: // Public Interface
       fLockProcessLine = lock;
    }
    const char* TypeName(const char* typeDesc);
+
+   void     SnapshotMutexState(ROOT::TVirtualRWMutex* mtx);
+   void     ForgetMutexState();
+
+   void     ApplyToInterpreterMutex(void* delta);
+   void    *RewindInterpreterMutex();
 
    static void  UpdateClassInfo(char* name, Long_t tagnum);
    static void  UpdateClassInfoWork(const char* name);

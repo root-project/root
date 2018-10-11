@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class ROOT::Detail::TBranchProxy
-Base class for all the proxy object. It includes the imeplemtation
+Base class for all the proxy object. It includes the implementation
 of the autoloading of branches as well as all the generic setup routine.
 */
 
@@ -91,6 +91,38 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBr
 ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername) :
    fDirector(boss), fInitialized(false), fIsMember(membername != 0 && membername[0]), fIsClone(false), fIsaPointer(false),
    fHasLeafCount(false), fBranchName(branch->GetName()), fParent(0), fDataMember(membername),
+   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
+   fBranch(0), fBranchCount(0),
+   fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
+{
+   // Constructor.
+
+   boss->Attach(this);
+}
+
+/// For a fullBranchName that might contain a leading friend tree path (but
+/// access elements designating a leaf), but the leaf name such that it matches
+/// the "path" to branch.
+static std::string GetFriendBranchName(TTree* directorTree, TBranch* branch, const char* fullBranchName)
+{
+   if (directorTree == branch->GetTree())
+      return branch->GetName();
+
+   // Friend case:
+   std::string sFullBranchName = fullBranchName;
+   std::string::size_type pos = sFullBranchName.rfind(branch->GetName());
+   if (pos != std::string::npos) {
+      sFullBranchName.erase(pos);
+      sFullBranchName += branch->GetName();
+   }
+   return sFullBranchName;
+}
+
+/// Constructor taking the branch name, possibly of a friended tree.
+/// Used by TTreeReaderValue in place of TFriendProxy.
+ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char* branchname, TBranch* branch, const char* membername) :
+   fDirector(boss), fInitialized(false), fIsMember(membername != 0 && membername[0]), fIsClone(false), fIsaPointer(false),
+   fHasLeafCount(false), fBranchName(GetFriendBranchName(boss->GetTree(), branch, branchname)), fParent(0), fDataMember(membername),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)

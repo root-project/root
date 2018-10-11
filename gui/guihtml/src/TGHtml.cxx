@@ -72,6 +72,8 @@ int HtmlDepth = 0;
 
 TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
 {
+   SetBit(kIsHtmlView);
+
    int i;
 
    fExiting = 0;

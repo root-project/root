@@ -55,6 +55,8 @@ protected:
    virtual void DirWriteKeys(TDirectory *);
    virtual void DirWriteHeader(TDirectory *);
 
+   InfoListRet GetStreamerInfoListImpl(bool lookupSICache);
+
    // functions to manipulate basic tables (Configurations, Objects, Keys) in database
    void SaveToDatabase();
    Bool_t ReadConfigurations();
@@ -193,6 +195,7 @@ public:
    void SetUseIndexes(Int_t use_type = kIndexesBasic);
    Int_t GetUseIndexes() const { return fUseIndexes; }
    Int_t GetQuerisCounter() const { return fQuerisCounter; }
+   Int_t GetIOVersion() const { return fSQLIOversion; }
 
    TString MakeSelectQuery(TClass *cl);
    Bool_t StartTransaction();
@@ -221,7 +224,6 @@ public:
    virtual Long64_t GetSeekFree() const { return 0; }
    virtual Long64_t GetSeekInfo() const { return 0; }
    virtual Long64_t GetSize() const { return 0; }
-   virtual TList *GetStreamerInfoList();
 
    Bool_t IsMySQL() const;
    virtual Bool_t IsOpen() const;

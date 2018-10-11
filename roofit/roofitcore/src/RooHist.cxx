@@ -37,7 +37,6 @@ a RooPlot.
 #include "TClass.h"
 #include "Riostream.h"
 #include <iomanip>
-#include <math.h>
 
 using namespace std;
 

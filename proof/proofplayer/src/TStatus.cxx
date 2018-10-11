@@ -191,7 +191,7 @@ void TStatus::Streamer(TBuffer &R__b)
             return;
          }
          std::set<std::string>::const_iterator it;
-         for (it = msgs.begin(); it != msgs.end(); it++) {
+         for (it = msgs.begin(); it != msgs.end(); ++it) {
             fMsgs.Add(new TObjString((*it).c_str()));
          }
          if (R__v > 2) {

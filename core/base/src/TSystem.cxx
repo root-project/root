@@ -65,7 +65,8 @@ static Int_t *gLibraryVersion    = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionIdx = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionMax = 256;
 
-
+// Pin vtable
+ProcInfo_t::~ProcInfo_t() {}
 ClassImp(TProcessEventTimer);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1353,6 +1354,10 @@ int TSystem::Symlink(const char *, const char *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Unlink, i.e. remove, a file.
+///
+/// If the file is currently open by the current or another process, the behavior of this function is
+/// implementation-defined (in particular, POSIX systems unlink the file name, while Windows does not allow the
+/// file to be deleted and the operation is a no-op).
 
 int TSystem::Unlink(const char *)
 {
@@ -2581,11 +2586,7 @@ static void R__FixLink(TString &cmd)
 }
 #endif
 
-#ifndef WIN32
-static void R__AddPath(TString &target, const TString &path) {
-   target += path;
-}
-#else
+#if defined(__CYGWIN__)
 static void R__AddPath(TString &target, const TString &path) {
    if (path.Length() > 2 && path[1]==':') {
       target += TString::Format("/cygdrive/%c",path[0]) + path(2,path.Length()-2);
@@ -2593,15 +2594,14 @@ static void R__AddPath(TString &target, const TString &path) {
       target += path;
    }
 }
+#else
+static void R__AddPath(TString &target, const TString &path) {
+   target += path;
+}
 #endif
 
-#ifndef WIN32
 static void R__WriteDependencyFile(const TString & build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
                                    const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath)
-#else
-static void R__WriteDependencyFile(const TString &build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
-                                   const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath)
-#endif
 {
    // Generate the dependency via standard output, not searching the
    // standard include directories,
@@ -2698,11 +2698,11 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
          char *rootVersion = gSystem->Which(incPath,dictHeaders[h]);
          if (rootVersion) {
             R__AddPath(adddictdep,rootVersion);
-            adddictdep += " ";
             delete [] rootVersion;
          } else {
             R__AddPath(adddictdep,rootsysInclude + "/" + dictHeaders[h]);
          }
+         adddictdep += " ";
       }
    }
    {
@@ -2922,6 +2922,16 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       incPath.Append(fromConfig);
    }
    incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
+   auto posISysRoot = incPath.Index(" -isysroot \"");
+   if (posISysRoot != kNPOS) {
+      auto posISysRootEnd = incPath.Index('"', posISysRoot + 12);
+      if (posISysRootEnd != kNPOS) {
+         // NOTE: should probably just skip isysroot for dependency analysis.
+         // (And will, in the future - once we rely on compiler-generated .d files.)
+         incPath.Insert(posISysRootEnd - 1, "/usr/include/");
+         incPath.Replace(posISysRoot, 12, ":\"");
+      }
+   }
    while ( incPath.Index(" :") != -1 ) {
       incPath.ReplaceAll(" :",":");
    }
@@ -2931,6 +2941,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // ======= Get the right file names for the dictionary and the shared library
    TString expFileName(filename);
    ExpandPathName( expFileName );
+   expFileName = gSystem->UnixPathName(expFileName);
    TString library = expFileName;
    if (! IsAbsoluteFileName(library) )
    {
@@ -2954,6 +2965,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          library.Remove(pos, 1);
       }
    }
+   library = gSystem->UnixPathName(library);
    TString filename_fullpath = library;
 
    TString file_dirname = DirName( filename_fullpath );
@@ -2990,6 +3002,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
       library = TString(library) + "." + fSoExt;
    }
+   library = gSystem->UnixPathName(library);
 
    TString libname_ext ( libname );
    libname_ext +=  "." + fSoExt;
@@ -3046,10 +3059,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          }
       }
    }
+   library = gSystem->UnixPathName(library);
 
    // ======= Check if the library need to loaded or compiled
-   if ( gInterpreter->IsLoaded(expFileName) &&
-       !gInterpreter->IsLoaded(library) ) {
+   if (!gInterpreter->IsLibraryLoaded(library) && gInterpreter->IsLoaded(expFileName)) {
       // the script has already been loaded in interpreted mode
       // Let's warn the user and unload it.
 
@@ -3232,7 +3245,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                   if (current==sz-1) {
                      sz = 2*sz;
                      char *newline = new char[sz];
-                     strcpy(newline,line);
+                     memcpy(newline,line, current);
                      delete [] line;
                      line = newline;
                   }
@@ -3252,7 +3265,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
 
-   if ( gInterpreter->IsLoaded(library)
+   if ( gInterpreter->IsLibraryLoaded(library)
         || strlen(GetLibraries(library,"D",kFALSE)) != 0 ) {
       // The library has already been built and loaded.
 
@@ -3446,7 +3459,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       lookup.Append(extensions[i]);
       name = Which(incPath,lookup);
       if (name) {
-         linkdefFile << "#pragma link C++ defined_in "<<name<<";"<< std::endl;
+         linkdefFile << "#pragma link C++ defined_in "<<gSystem->UnixPathName(name)<<";"<< std::endl;
          delete [] name;
       }
    }
@@ -3454,7 +3467,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    linkdefFile << std::endl;
    linkdefFile << "#endif" << std::endl;
    linkdefFile.close();
-
    // ======= Generate the list of rootmap files to be looked at
 
    TString mapfile;
@@ -3503,7 +3515,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    rcling += " -v0 \"--lib-list-prefix=";
    rcling += mapfile;
    rcling += "\" -f \"";
-   rcling.Append(dict).Append("\" -c -p ");
+   rcling.Append(dict).Append("\" ");
    if (produceRootmap) {
       rcling += " -rml " + libname + " -rmf \"" + libmapfilename + "\" ";
    }
@@ -3615,7 +3627,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
 
+#ifdef _MSC_VER
+   linkLibraries.Prepend(linkLibrariesNoQuotes);
+#else
    linkLibraries.Prepend(librariesWithQuotes);
+#endif
 
    // ======= Generate the build command lines
    TString cmd = fMakeSharedLib;
@@ -3647,6 +3663,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
 #ifdef WIN32
    R__FixLink(cmd);
+   cmd.ReplaceAll("-std=", "-std:");
 #endif
 
    TString testcmd = fMakeExe;
@@ -3685,6 +3702,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
 #ifdef WIN32
    R__FixLink(testcmd);
+   testcmd.ReplaceAll("-std=", "-std:");
 #endif
 
    // ======= Build the library

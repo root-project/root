@@ -29,6 +29,17 @@ endif()
 # to keep the primary Clang repository small and focused.
 # It also may be included by LLVM_EXTERNAL_CLANG_TOOLS_EXTRA_SOURCE_DIR.
 add_llvm_external_project(clang-tools-extra extra)
+if(NOT builtin_llvm)
+  # FIXME: Builtin llvm does not provide utils such as FileCheck and not.
+  # Let's add them from our builtin llvm.
+  if (NOT TARGET FileCheck)
+    add_clang_subdirectory(../../../utils/FileCheck)
+  endif()
+  if (NOT TARGET not)
+    add_clang_subdirectory(../../../utils/not)
+  endif()
+  add_llvm_external_project(cling)
+endif(NOT builtin_llvm)
 
 # libclang may require clang-tidy in clang-tools-extra.
 add_clang_subdirectory(libclang)

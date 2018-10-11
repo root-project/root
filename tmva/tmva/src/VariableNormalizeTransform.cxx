@@ -233,7 +233,7 @@ void TMVA::VariableNormalizeTransform::CalcNormalizationParams( const std::vecto
    }
 
    std::vector<Event*>::const_iterator evIt = events.begin();
-   for (;evIt!=events.end();evIt++) { // loop over all events
+   for (;evIt!=events.end();++evIt) { // loop over all events
       const TMVA::Event* event = (*evIt);   // get the event
 
       UInt_t cls = (*evIt)->GetClass(); // get the class of this event
@@ -564,49 +564,57 @@ void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const T
 {
    UInt_t nVar = fGet.size();
    UInt_t numC = fMin.size();
-   if (part==1) {
+   if (part == 1) {
       fout << std::endl;
-      fout << "   double fMin_"<<trCounter<<"["<<numC<<"]["<<nVar<<"];" << std::endl;
-      fout << "   double fMax_"<<trCounter<<"["<<numC<<"]["<<nVar<<"];" << std::endl;
+      fout << "   double fOff_" << trCounter << "[" << numC << "][" << nVar << "];" << std::endl;
+      fout << "   double fScal_" << trCounter << "[" << numC << "][" << nVar << "];" << std::endl;
    }
 
-   if (part==2) {
+   if (part == 2) {
       fout << std::endl;
       fout << "//_______________________________________________________________________" << std::endl;
-      fout << "inline void " << fcncName << "::InitTransform_"<<trCounter<<"()" << std::endl;
+      fout << "inline void " << fcncName << "::InitTransform_" << trCounter << "()" << std::endl;
       fout << "{" << std::endl;
+      fout << "   double fMin_" << trCounter << "[" << numC << "][" << nVar << "];" << std::endl;
+      fout << "   double fMax_" << trCounter << "[" << numC << "][" << nVar << "];" << std::endl;
       fout << "   // Normalization transformation, initialisation" << std::endl;
-      for (UInt_t ivar=0; ivar<nVar; ivar++) {
+      for (UInt_t ivar = 0; ivar < nVar; ivar++) {
          for (UInt_t icls = 0; icls < numC; icls++) {
-            Double_t min = TMath::Min( FLT_MAX, fMin.at(icls).at(ivar) );
-            Double_t max = TMath::Max(-FLT_MAX, fMax.at(icls).at(ivar) );
-            fout << "   fMin_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = " << std::setprecision(12)
-                 << min << ";" << std::endl;
-            fout << "   fMax_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = " << std::setprecision(12)
-                 << max << ";" << std::endl;
+            Double_t min = TMath::Min(FLT_MAX, fMin.at(icls).at(ivar));
+            Double_t max = TMath::Max(-FLT_MAX, fMax.at(icls).at(ivar));
+            fout << "   fMin_" << trCounter << "[" << icls << "][" << ivar << "] = " << std::setprecision(12) << min
+                 << ";" << std::endl;
+            fout << "   fMax_" << trCounter << "[" << icls << "][" << ivar << "] = " << std::setprecision(12) << max
+                 << ";" << std::endl;
+            fout << "   fScal_" << trCounter << "[" << icls << "][" << ivar << "] = 2.0/(fMax_" << trCounter << "["
+                 << icls << "][" << ivar << "]-fMin_" << trCounter << "[" << icls << "][" << ivar << "]);" << std::endl;
+            fout << "   fOff_" << trCounter << "[" << icls << "][" << ivar << "] = fMin_" << trCounter << "[" << icls
+                 << "][" << ivar << "]*fScal_" << trCounter << "[" << icls << "][" << ivar << "]+1.;" << std::endl;
          }
       }
       fout << "}" << std::endl;
       fout << std::endl;
       fout << "//_______________________________________________________________________" << std::endl;
-      fout << "inline void " << fcncName << "::Transform_"<<trCounter<<"( std::vector<double>& iv, int cls) const" << std::endl;
+      fout << "inline void " << fcncName << "::Transform_" << trCounter << "( std::vector<double>& iv, int cls) const"
+           << std::endl;
       fout << "{" << std::endl;
       fout << "   // Normalization transformation" << std::endl;
-      fout << "   if (cls < 0 || cls > "<<GetNClasses()<<") {"<< std::endl;
-      fout << "   if ("<<GetNClasses()<<" > 1 ) cls = "<<GetNClasses()<<";"<< std::endl;
-      fout << "      else cls = "<<(fMin.size()==1?0:2)<<";"<< std::endl;
-      fout << "   }"<< std::endl;
+      fout << "   if (cls < 0 || cls > " << GetNClasses() << ") {" << std::endl;
+      fout << "   if (" << GetNClasses() << " > 1 ) cls = " << GetNClasses() << ";" << std::endl;
+      fout << "      else cls = " << (fMin.size() == 1 ? 0 : 2) << ";" << std::endl;
+      fout << "   }" << std::endl;
       fout << "   const int nVar = " << nVar << ";" << std::endl << std::endl;
       fout << "   // get indices of used variables" << std::endl;
-      VariableTransformBase::MakeFunction(fout, fcncName, 0, trCounter, 0 );
-      fout << "   static std::vector<double> dv;" << std::endl; // simply made it static so it doesn't need to be re-booked every time
+      VariableTransformBase::MakeFunction(fout, fcncName, 0, trCounter, 0);
+      fout << "   static std::vector<double> dv;"
+           << std::endl; // simply made it static so it doesn't need to be re-booked every time
       fout << "   dv.resize(nVar);" << std::endl;
       fout << "   for (int ivar=0; ivar<nVar; ivar++) dv[ivar] = iv[indicesGet.at(ivar)];" << std::endl;
 
-      fout << "   for (int ivar=0;ivar<"<<nVar<<";ivar++) {" << std::endl;
-      fout << "      double offset = fMin_"<<trCounter<<"[cls][ivar];" << std::endl;
-      fout << "      double scale  = 1.0/(fMax_"<<trCounter<<"[cls][ivar]-fMin_"<<trCounter<<"[cls][ivar]);" << std::endl;
-      fout << "      iv[indicesPut.at(ivar)] = (dv[ivar]-offset)*scale * 2 - 1;" << std::endl;
+      fout << "   for (int ivar=0;ivar<" << nVar << ";ivar++) {" << std::endl;
+      fout << "      double offset = fOff_" << trCounter << "[cls][ivar];" << std::endl;
+      fout << "      double scale  = fScal_" << trCounter << "[cls][ivar];" << std::endl;
+      fout << "      iv[indicesPut.at(ivar)] = scale*dv[ivar]-offset;" << std::endl;
       fout << "   }" << std::endl;
       fout << "}" << std::endl;
    }

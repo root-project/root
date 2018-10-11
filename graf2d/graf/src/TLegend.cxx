@@ -187,36 +187,7 @@ The following example illustrate this facility. Only the width and height of the
 legend is specified in percentage of the pad size.
 
 Begin_Macro(source)
-{
-   auto c4 = new TCanvas("c", "c", 600,500);
-   auto hpx = new TH1D("hpx","This is the hpx distribution",100,-4.,4.);
-   hpx->FillRandom("gaus", 50000);
-   hpx->Draw("E");
-   hpx->GetYaxis()->SetTitle("Y Axis title");
-   hpx->GetXaxis()->SetTitle("X Axis title");
-
-   auto h1 = new TH1D("h1","A green histogram",100,-2.,2.);
-   h1->FillRandom("gaus", 10000);
-   h1->SetLineColor(kGreen);
-   h1->Draw("same");
-
-   auto g = new TGraph();
-   g->SetPoint(0, -3.5, 100 );
-   g->SetPoint(1, -3.0, 300 );
-   g->SetPoint(2, -2.0, 1000 );
-   g->SetPoint(3,  1.0, 800 );
-   g->SetPoint(4,  0.0, 200 );
-   g->SetPoint(5,  3.0, 200 );
-   g->SetPoint(6,  3.0, 700 );
-   g->Draw("L");
-   g->SetTitle("This is a TGraph");
-   g->SetLineColor(kRed);
-   g->SetFillColor(0);
-
-   // TPad::BuildLegend() default placement values are such that they trigger
-   // the automatic placement.
-   c4->BuildLegend();
-}
+../../../tutorials/hist/legendautoplaced.C
 End_Macro
 
 */
@@ -929,31 +900,32 @@ void TLegend::PaintPrimitives()
                   entry->TAttLine::Copy(entryline2);
                   entryline2.Paint();
                }
+               Double_t barw = boxw*0.1*gStyle->GetEndErrorSize();
                if (endcaps == 1) {
-                  TLine entrytop1(xsym-boxw*0.15, ysym + yspace*0.30, xsym+boxw*0.15, ysym + yspace*0.30);
+                  TLine entrytop1(xsym-barw, ysym + yspace*0.30, xsym+barw, ysym + yspace*0.30);
                   entrytop1.SetBit(TLine::kLineNDC);
                   entry->TAttLine::Copy(entrytop1);
                   entrytop1.Paint();
-                  TLine entrytop2(xsym-boxw*0.15, ysym - yspace*0.30, xsym+boxw*0.15, ysym - yspace*0.30);
+                  TLine entrytop2(xsym-barw, ysym - yspace*0.30, xsym+barw, ysym - yspace*0.30);
                   entrytop2.SetBit(TLine::kLineNDC);
                   entry->TAttLine::Copy(entrytop2);
                   entrytop2.Paint();
                } else if (endcaps == 2) {
-                  Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t xe1[3] = {xsym-barw, xsym ,xsym+barw};
                   Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
                   TPolyLine ple1(3,xe1,ye1);
                   ple1.SetBit(TLine::kLineNDC);
                   entry->TAttLine::Copy(ple1);
                   ple1.Paint();
-                  Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t xe2[3] = {xsym-barw, xsym ,xsym+barw};
                   Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
                   TPolyLine ple2(3,xe2,ye2);
                   ple2.SetBit(TLine::kLineNDC);
                   entry->TAttLine::Copy(ple2);
                } else if (endcaps == 3) {
-                  Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t xe1[3] = {xsym-barw, xsym ,xsym+barw};
                   Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
-                  Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t xe2[3] = {xsym-barw, xsym ,xsym+barw};
                   Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
                   for (Int_t i=0;i<3;i++) {
                      xe1[i] = gPad->GetX1() + xe1[i]*(gPad->GetX2()-gPad->GetX1());
@@ -997,32 +969,33 @@ void TLegend::PaintPrimitives()
             entry->TAttLine::Copy(entryline2);
             entryline2.Paint();
          }
+         Double_t barw = boxw*0.1*gStyle->GetEndErrorSize();
          if (endcaps == 1) {
-            TLine entrytop1(xsym-boxw*0.15, ysym + yspace*0.30, xsym+boxw*0.15, ysym + yspace*0.30);
+            TLine entrytop1(xsym-barw, ysym + yspace*0.30, xsym+barw, ysym + yspace*0.30);
             entrytop1.SetBit(TLine::kLineNDC);
             entry->TAttLine::Copy(entrytop1);
             entrytop1.Paint();
-            TLine entrytop2(xsym-boxw*0.15, ysym - yspace*0.30, xsym+boxw*0.15, ysym - yspace*0.30);
+            TLine entrytop2(xsym-barw, ysym - yspace*0.30, xsym+barw, ysym - yspace*0.30);
             entrytop2.SetBit(TLine::kLineNDC);
             entry->TAttLine::Copy(entrytop2);
             entrytop2.Paint();
          } else if (endcaps == 2) {
-            Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t xe1[3] = {xsym-barw, xsym ,xsym+barw};
             Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
             TPolyLine ple1(3,xe1,ye1);
             ple1.SetBit(TLine::kLineNDC);
             entry->TAttLine::Copy(ple1);
             ple1.Paint();
-            Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t xe2[3] = {xsym-barw, xsym ,xsym+barw};
             Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
             TPolyLine ple2(3,xe2,ye2);
             ple2.SetBit(TLine::kLineNDC);
             entry->TAttLine::Copy(ple2);
             ple2.Paint();
          } else if (endcaps == 3) {
-            Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t xe1[3] = {xsym-barw, xsym ,xsym+barw};
             Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
-            Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t xe2[3] = {xsym-barw, xsym ,xsym+barw};
             Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
             for (Int_t i=0;i<3;i++) {
                xe1[i] = gPad->GetX1() + xe1[i]*(gPad->GetX2()-gPad->GetX1());

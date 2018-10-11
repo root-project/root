@@ -137,7 +137,7 @@ RooAbsReal *  ProfileLikelihoodCalculator::DoGlobalFit() const {
    RemoveConstantParameters(constrainedParams);
 
 
-   RooAbsReal * nll = pdf->createNLL(*data, CloneData(true), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), Offset(RooStats::IsNLLOffset() ) );
+   RooAbsReal * nll = pdf->createNLL(*data, CloneData(true), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), GlobalObservables(fGlobalObs), Offset(RooStats::IsNLLOffset() ) );
 
    // check if global fit has been already done
    if (fFitResult && fGlobalFitDone) {

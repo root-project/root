@@ -80,7 +80,8 @@ public:
       kRead         = BIT(11),
       kWrite        = BIT(12),
       kDoNotDelete  = BIT(13),
-      kWholeObject  = BIT(14)
+      kWholeObject  = BIT(14),
+      kWarned       = BIT(21)
    };
 
    enum class EStatusBitsDupExceptions {
@@ -388,10 +389,6 @@ public:
 
 //________________________________________________________________________
 class TStreamerSTL : public TStreamerElement {
-
-   enum EStatusBits {
-      kWarned       = BIT(21)
-   };
 
 private:
    TStreamerSTL(const TStreamerSTL&);          // Not implemented

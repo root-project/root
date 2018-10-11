@@ -1411,10 +1411,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                      break;
                   case TMethodCall::kOther:
                      {
-                        TString return_type =
-                          gInterpreter->TypeName(method->GetMethod()->GetReturnTypeName());
                         leafinfo = new TFormLeafInfoMethod(cl,method);
-                        cl = (return_type == "void") ? 0 : TClass::GetClass(return_type.Data());
+                        cl = TFormLeafInfoMethod::ReturnTClass(method);
                      }
                      break;
                   default:
@@ -1640,6 +1638,10 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
 
                TClass * inside_cl = cl->GetCollectionProxy()->GetValueClass();
 
+               if (!inside_cl) {
+                  Error("DefinedVariable","Could you not find the inner class for %s with coll type = %d",
+                        cl->GetName(),cl->GetCollectionProxy()->GetType());
+               }
                if (!inside_cl && cl->GetCollectionProxy()->GetType() > 0) {
                   Warning("DefinedVariable","No data member in content of %s in %s\n",
                            cl->GetName(),name.Data());
@@ -1649,6 +1651,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             }
 
             if (!cl) {
+               if (leaf) leaf->GetBranch()->Print();
                Warning("DefinedVariable","Missing class for %s!",name.Data());
             } else {
                element = ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(work,offset);
@@ -2100,9 +2103,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
       if (method->IsValid()
           && method->ReturnType() == TMethodCall::kOther) {
 
-         TClass *rcl = 0;
-         TFunction *f = method->GetMethod();
-         if (f) rcl = TClass::GetClass(gInterpreter->TypeName(f->GetReturnTypeName()));
+         TClass *rcl = TFormLeafInfoMethod::ReturnTClass(method);
          if ((rcl == TString::Class() || rcl == stdStringClass) ) {
 
             TFormLeafInfo *last = 0;

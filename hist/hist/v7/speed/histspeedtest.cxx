@@ -13,8 +13,8 @@
 #include "TH2.h"
 #include "TH3.h"
 
-#include "ROOT/THist.hxx"
-#include "ROOT/THistBufferedFill.hxx"
+#include "ROOT/RHist.hxx"
+#include "ROOT/RHistBufferedFill.hxx"
 
 using namespace ROOT;
 using namespace std;
@@ -49,7 +49,7 @@ GetUncertainty() const { return GetStat().GetUncertainty(); }
  */
 
 #ifndef STATCLASSES
-#define STATCLASSES Experimental::THistStatContent, Experimental::THistStatUncertainty
+#define STATCLASSES Experimental::RHistStatContent, Experimental::RHistStatUncertainty
 #endif
 
 struct Timer {
@@ -99,10 +99,10 @@ struct BinEdges {
          fYBins[i] = minValue + range * y[i];
    }
 
-   using AConf_t = Experimental::TAxisConfig;
+   using AConf_t = Experimental::RAxisConfig;
 
-   AConf_t GetConfigX() const { return AConf_t(std::array_view<double>(fXBins).to_vector()); }
-   AConf_t GetConfigY() const { return AConf_t(std::array_view<double>(fYBins).to_vector()); }
+   AConf_t GetConfigX() const { return AConf_t(std::span<double>(fXBins).to_vector()); }
+   AConf_t GetConfigY() const { return AConf_t(std::span<double>(fYBins).to_vector()); }
 };
 
 template <typename T>
@@ -163,7 +163,7 @@ template <typename T>
 struct Dim<T, 2> {
 
    constexpr static unsigned short kNDim = 2;
-   using ExpTH2 = Experimental::THist<kNDim, T, STATCLASSES>;
+   using ExpTH2 = Experimental::RHist<kNDim, T, STATCLASSES>;
 
    using FillFunc_t = std::add_pointer_t<long(ExpTH2 &hist, std::vector<double> &input, std::string_view type)>;
 
@@ -195,7 +195,7 @@ struct Dim<T, 2> {
    inline static long fillN(ExpTH2 &hist, std::vector<double> &input, std::string_view gType)
    {
 
-      using array_t = Experimental::Hist::TCoordArray<2>;
+      using array_t = Experimental::Hist::RCoordArray<2>;
       array_t *values = (array_t *)(&input[0]);
       constexpr size_t stride = gStride;
 
@@ -203,7 +203,7 @@ struct Dim<T, 2> {
       {
          Timer t(title.c_str(), input.size() / 2);
          for (size_t i = 0; i < (input.size() - (stride * 2 - 1)); i += (stride * 2), values += 32) {
-            std::array_view<array_t> coords(values, 32);
+            std::span<array_t> coords(values, 32);
             hist.FillN(coords);
          }
       }
@@ -212,7 +212,7 @@ struct Dim<T, 2> {
 
    inline static long fillBuffered(ExpTH2 &hist, std::vector<double> &input, std::string_view gType)
    {
-      Experimental::THistBufferedFill<ExpTH2> filler(hist);
+      Experimental::RHistBufferedFill<ExpTH2> filler(hist);
       std::string title = MakeTitle(gVersion, GetHist<kNDim, T>(), "fills (buffered)   ", gType);
       {
          Timer t(title.c_str(), input.size() / 2);
@@ -238,7 +238,7 @@ template <typename T>
 struct Dim<T, 1> {
 
    constexpr static unsigned short kNDim = 1;
-   using ExpTH1 = Experimental::THist<kNDim, T, STATCLASSES>;
+   using ExpTH1 = Experimental::RHist<kNDim, T, STATCLASSES>;
 
    using FillFunc_t = std::add_pointer_t<long(ExpTH1 &hist, std::vector<double> &input, std::string_view type)>;
 
@@ -277,7 +277,7 @@ struct Dim<T, 1> {
    inline static long fillN(ExpTH1 &hist, std::vector<double> &input, std::string_view gType)
    {
 
-      using array_t = Experimental::Hist::TCoordArray<1>;
+      using array_t = Experimental::Hist::RCoordArray<1>;
       array_t *values = (array_t *)(&input[0]);
       constexpr size_t stride = gStride;
 
@@ -285,7 +285,7 @@ struct Dim<T, 1> {
       {
          Timer t(title.c_str(), input.size());
          for (size_t i = 0; i < (input.size() - (stride - 1)); i += (stride), values += 32) {
-            std::array_view<array_t> coords(values, 32);
+            std::span<array_t> coords(values, 32);
             hist.FillN(coords);
          }
       }
@@ -294,7 +294,7 @@ struct Dim<T, 1> {
 
    inline static long fillBuffered(ExpTH1 &hist, std::vector<double> &input, std::string_view gType)
    {
-      Experimental::THistBufferedFill<ExpTH1> filler(hist);
+      Experimental::RHistBufferedFill<ExpTH1> filler(hist);
       std::string title = MakeTitle(gVersion, GetHist<kNDim, T>(), "fills (buffered)   ", gType);
       {
          Timer t(title.c_str(), input.size());

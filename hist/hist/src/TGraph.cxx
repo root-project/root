@@ -67,7 +67,7 @@ The picture below gives an example:
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","A Simple Graph Example",200,10,700,500);
+   TCanvas *c1 = new TCanvas("c1","A Simple Graph Example",200,10,500,300);
    Double_t x[100], y[100];
    Int_t n = 20;
    for (Int_t i=0;i<n;i++) {
@@ -83,7 +83,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph default constructor.
 
-TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(1, 1001), TAttMarker()
+TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(0, 1000), TAttMarker()
 {
    fNpoints = -1;  //will be reset to 0 in CtorAllocate
    if (!CtorAllocate()) return;
@@ -94,7 +94,7 @@ TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(1, 1001), TAttMarker()
 /// the arrays x and y will be set later
 
 TGraph::TGraph(Int_t n)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(1, 1001), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
 {
    fNpoints = n;
    if (!CtorAllocate()) return;
@@ -105,7 +105,7 @@ TGraph::TGraph(Int_t n)
 /// Graph normal constructor with ints.
 
 TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(1, 1001), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
 {
    if (!x || !y) {
       fNpoints = 0;
@@ -123,7 +123,7 @@ TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
 /// Graph normal constructor with floats.
 
 TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(1, 1001), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
 {
    if (!x || !y) {
       fNpoints = 0;
@@ -141,7 +141,7 @@ TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
 /// Graph normal constructor with doubles.
 
 TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(1, 1001), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
 {
    if (!x || !y) {
       fNpoints = 0;
@@ -246,7 +246,7 @@ TGraph& TGraph::operator=(const TGraph &gr)
 /// in vx and vy.
 
 TGraph::TGraph(const TVectorF &vx, const TVectorF &vy)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(1, 1001), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
 {
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!CtorAllocate()) return;
@@ -265,7 +265,7 @@ TGraph::TGraph(const TVectorF &vx, const TVectorF &vy)
 /// in vx and vy.
 
 TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(1, 1001), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
 {
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!CtorAllocate()) return;
@@ -281,7 +281,7 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
 /// Graph constructor importing its parameters from the TH1 object passed as argument
 
 TGraph::TGraph(const TH1 *h)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(1, 1001), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
 {
    if (!h) {
       Error("TGraph", "Pointer to histogram is null");
@@ -323,7 +323,7 @@ TGraph::TGraph(const TH1 *h)
 ///                at the fNpx+1 points of f and the integral is normalized to 1.
 
 TGraph::TGraph(const TF1 *f, Option_t *option)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(1, 1001), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
 {
    char coption = ' ';
    if (!f) {
@@ -382,7 +382,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 /// Note in that case, the instantiation is about 2 times slower.
 
 TGraph::TGraph(const char *filename, const char *format, Option_t *option)
-   : TNamed("Graph", filename), TAttLine(), TAttFill(1, 1001), TAttMarker()
+   : TNamed("Graph", filename), TAttLine(), TAttFill(0, 1000), TAttMarker()
 {
    Double_t x, y;
    TString fname = filename;
@@ -1490,9 +1490,9 @@ TH1F *TGraph::GetHistogram() const
             return fHistogram;
          }
       } else {
-         historg = fHistogram;
          const_cast <TGraph*>(this)->ResetBit(kResetHisto);
       }
+      historg = fHistogram;
    }
 
    if (rwxmin == rwxmax) rwxmax += 1.;
@@ -2161,6 +2161,20 @@ void TGraph::SetEditable(Bool_t editable)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set highlight (enable/disble) mode for the graph
+/// by default highlight mode is disable
+
+void TGraph::SetHighlight(Bool_t set)
+{
+   if (IsHighlight() == set) return;
+
+   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
+   if (!painter) return;
+   SetBit(kIsHighlight, set);
+   painter->SetHighlight(this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set the maximum of the graph.
 
 void TGraph::SetMaximum(Double_t maximum)
@@ -2203,12 +2217,29 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set graph name.
+void TGraph::SetName(const char *name)
+{
+   fName = name;
+   if (fHistogram) fHistogram->SetName(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set graph title.
 
 void TGraph::SetTitle(const char* title)
 {
    fTitle = title;
    if (fHistogram) fHistogram->SetTitle(title);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set graph name and title
+
+void TGraph::SetNameTitle(const char *name, const char *title)
+{
+   SetName(name);
+   SetTitle(title);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

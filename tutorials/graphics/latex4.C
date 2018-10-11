@@ -8,7 +8,14 @@
 /// command name. Some letter have two representations. The name of the
 /// second one (the "variation") starts with "var".
 ///
+/// ### png output:
 /// \macro_image
+///
+/// ### pdf output:
+/// \macro_image (greek.pdf)
+///
+/// ### svg output:
+/// \macro_image (greek.svg)
 ///
 /// \author Rene Brun
 

@@ -8,16 +8,17 @@
 /// \date August 2017
 /// \author Danilo Piparo
 
-int Fibonacci(int n) {
-   if( n<2 ) {
+int Fibonacci(int n)
+{
+   if (n < 2) {
       return n;
    } else {
       int x, y;
       ROOT::Experimental::TTaskGroup tg;
-      tg.Run([&]{x=Fibonacci(n-1);});
-      tg.Run([&]{y=Fibonacci(n-2);});
+      tg.Run([&] { x = Fibonacci(n - 1); });
+      tg.Run([&] { y = Fibonacci(n - 2); });
       tg.Wait();
-      return x+y;
+      return x + y;
    }
 }
 
@@ -27,6 +28,4 @@ void mt302_TTaskGroupNested()
    ROOT::EnableImplicitMT(4);
 
    cout << "Fibonacci(33) = " << Fibonacci(33) << endl;
-
 }
-

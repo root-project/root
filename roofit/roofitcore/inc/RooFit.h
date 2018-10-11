@@ -16,7 +16,7 @@
 #ifndef ROO_FIT
 #define ROO_FIT
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 // Global include file to fix occasional compiler issues
 // An error in the construction of the system and C++ header files on

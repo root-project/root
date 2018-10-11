@@ -106,6 +106,8 @@ void TMVA::Results::Store( TObject* obj, const char* alias )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns a stored object if it exists. If it does not, a nullptr is returned.
+///
 
 TObject* TMVA::Results::GetObject(const TString & alias) const
 {
@@ -114,15 +116,19 @@ TObject* TMVA::Results::GetObject(const TString & alias) const
    if (it != fHistAlias->end()) return it->second;
 
    // alias does not exist
-   return 0;
+   return nullptr;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if there is an object stored in the result for a given alias,
+/// false otherwise.
+///
 
 Bool_t TMVA::Results::DoesExist(const TString & alias) const
 {
    TObject* test = GetObject(alias);
 
-   return test;
+   return (test != nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

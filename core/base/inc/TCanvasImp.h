@@ -38,7 +38,7 @@ protected:
    TCanvasImp& operator=(const TCanvasImp& ci)
      {if(this!=&ci) fCanvas=ci.fCanvas; return *this;}
 
-   virtual void   Lock() { }
+   virtual void   Lock();
    virtual void   Unlock() { }
    virtual Bool_t IsLocked() { return kFALSE; }
 

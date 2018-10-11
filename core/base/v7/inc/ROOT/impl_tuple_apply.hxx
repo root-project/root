@@ -20,14 +20,11 @@
 #include <functional>
 
 // std::experimental::apply, invoke until it's there...
-
-namespace std {
 // from http://en.cppreference.com/w/cpp/utility/functional/invoke
 
-inline namespace __ROOT {
-
 #ifndef R__HAS_STD_INVOKE
-namespace detail {
+namespace ROOT {
+namespace Detail {
 template <class F, class... Args>
 inline auto INVOKE(F&& f, Args&&... args) ->
 decltype(std::forward<F>(f)(std::forward<Args>(args)...)) {
@@ -57,34 +54,45 @@ inline auto INVOKE(PMF pmf, Pointer&& ptr, Args&&... args) ->
 decltype(((*std::forward<Pointer>(ptr)).*pmf)(std::forward<Args>(args)...)) {
   return ((*std::forward<Pointer>(ptr)).*pmf)(std::forward<Args>(args)...);
 }
-} // namespace detail
+} // namespace Detail
+} // namespace ROOT
+
+namespace std {
+inline namespace __ROOT {
 
 template< class F, class... ArgTypes>
 decltype(auto) invoke(F&& f, ArgTypes&&... args) {
-  return detail::INVOKE(std::forward<F>(f), std::forward<ArgTypes>(args)...);
+  return ROOT::Detail::INVOKE(std::forward<F>(f), std::forward<ArgTypes>(args)...);
 }
+
+} // inline namespace __ROOT {
+} // namespace std
 #endif // ndef R__HAS_STD_INVOKE
 
 #ifndef R__HAS_STD_APPLY
 // From http://en.cppreference.com/w/cpp/experimental/apply
-namespace detail {
+namespace ROOT {
+namespace Detail {
 template<class F, class Tuple, std::size_t... I>
 constexpr decltype(auto) apply_impl(F &&f, Tuple &&t,
                                     std::index_sequence<I...>) {
-  return invoke(std::forward<F>(f),
+  return std::invoke(std::forward<F>(f),
                      std::get<I>(std::forward<Tuple>(t))...);
   // Note: std::invoke is a C++17 feature
 }
-} // namespace detail
+} // namespace Detail
+} // namespace ROOT
 
+namespace std {
+inline namespace __ROOT {
 template<class F, class Tuple>
 constexpr decltype(auto) apply(F &&f, Tuple &&t) {
-  return detail::apply_impl(std::forward<F>(f), std::forward<Tuple>(t),
+  return ROOT::Detail::apply_impl(std::forward<F>(f), std::forward<Tuple>(t),
                             std::make_index_sequence < std::tuple_size <
                             std::decay_t < Tuple >> {} > {});
 }
-#endif // ndef R__HAS_STD_APPLY
-} // namespace __ROOT
+} // inline namespace __ROOT
 } // namespace std
+#endif // ndef R__HAS_STD_APPLY
 
 #endif //ROOT7_TUPLE_APPLY_H

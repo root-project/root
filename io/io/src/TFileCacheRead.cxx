@@ -30,7 +30,7 @@
 #include "TFileCacheRead.h"
 #include "TFileCacheWrite.h"
 #include "TFilePrefetch.h"
-#include "TMath.h"
+#include "TMathBase.h"
 
 ClassImp(TFileCacheRead);
 
@@ -560,7 +560,7 @@ void TFileCacheRead::SetFile(TFile *file, TFile::ECacheAction action)
    if (fPrefetch) {
       if (action == TFile::kDisconnect)
          SecondPrefetch(0, 0);
-      fPrefetch->SetFile(file);
+      fPrefetch->SetFile(file, action);
    }
 }
 

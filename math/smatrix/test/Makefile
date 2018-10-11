@@ -40,11 +40,6 @@ endif
 ifneq ($(USE_REFLEX),)
 GCCXML=yes
 CXXFLAGS+=-DUSE_REFLEX
-ifeq ($(PLATFORM),win32)
-EXTRALIBS += "$(ROOTSYS)/lib/libReflex.lib"  "$(ROOTSYS)/lib/libCintex.lib"  
-else
-EXTRALIBS += -lReflex -lCintex
-endif
 endif
 
 

@@ -188,7 +188,7 @@ void MethodRSNNS::Train()
       //if model persistence is enabled saving it is R serialziation.
       if (IsModelPersistence())  
       {
-            TString path = GetWeightFileDir() + "/RMLPModel.RData";
+            TString path = GetWeightFileDir() +  "/" + GetName() + ".RData";
             Log() << Endl;
             Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
             Log() << Endl;
@@ -332,7 +332,7 @@ std::vector<Double_t> MethodRSNNS::GetMvaValues(Long64_t firstEvt, Long64_t last
 void TMVA::MethodRSNNS::ReadModelFromFile()
 {
    ROOT::R::TRInterface::Instance().Require("RSNNS");
-   TString path = GetWeightFileDir() + "/RMLPModel.RData";
+   TString path = GetWeightFileDir() +  "/" + GetName() + ".RData";
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;

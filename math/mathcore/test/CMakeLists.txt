@@ -39,15 +39,6 @@ set(TestSource
     fit/testLogLExecPolicy.cxx )
 
 set(testMathRandom_LABELS longtest)
-set(testFitPerf_LABELS longtest)
-
-if(ROOT_roofit_FOUND)
-  list(APPEND TestSource fit/testRooFit.cxx)
-  list(APPEND Libraries RooFit)
-  if(ROOT_mathmore_FOUND)
-    list(APPEND TestSource fit/testFitPerf.cxx)
-  endif()
-endif()
 
 if(ROOT_mathmore_FOUND)
   list(APPEND TestSource stressGoFTest.cxx)
@@ -74,6 +65,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreUnitDict
                               LINKDEF stress/TrackMathCoreLinkDef.h
                               DEPENDENCIES Core MathCore RIO GenVector)
 
+if(MSVC)
+  add_custom_command(TARGET TrackMathCoreUnitDict POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreUnitDict.dll
+                                     ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreUnitDict.dll)
+endif()
+
 ROOT_ADD_GTEST(stressMathCoreUnit stress/testSMatrix.cxx stress/testGenVector.cxx
         stress/testStat.cxx stress/testSVector.cxx stress/testVector.cxx stress/testVector34.cxx
         stress/TestHelper.cxx
@@ -83,4 +80,8 @@ ROOT_ADD_GTEST(GradientUnit testGradient.cxx
        LIBRARIES Core MathCore Hist RIO Tree GenVector)
 
 ROOT_ADD_GTEST(GradientFittingUnit testGradientFitting.cxx
-      LIBRARIES Core MathCore Hist RIO Tree GenVector)
+  LIBRARIES Core MathCore Hist RIO Tree GenVector)
+
+if(ROOT_clad_FOUND)
+  ROOT_ADD_GTEST(CladDerivatorTests CladDerivatorTests.cxx LIBRARIES MathCore)
+endif()

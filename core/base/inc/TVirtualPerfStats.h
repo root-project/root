@@ -26,7 +26,8 @@
 
 
 class TFile;
-
+class TBranch;
+class TList;
 
 class TVirtualPerfStats : public TObject {
 
@@ -70,6 +71,17 @@ public:
    virtual Long64_t GetBytesRead() const = 0;
    virtual void SetNumEvents(Long64_t num) = 0;
    virtual Long64_t GetNumEvents() const = 0;
+
+   virtual void PrintBasketInfo(Option_t *option = "") const = 0;
+   virtual void SetLoaded(TBranch *b, size_t basketNumber) = 0;
+   virtual void SetLoaded(size_t bi, size_t basketNumber) = 0;
+   virtual void SetLoadedMiss(TBranch *b, size_t basketNumber) = 0;
+   virtual void SetLoadedMiss(size_t bi, size_t basketNumber) = 0;
+   virtual void SetMissed(TBranch *b, size_t basketNumber) = 0;
+   virtual void SetMissed(size_t bi, size_t basketNumber) = 0;
+   virtual void SetUsed(TBranch *b, size_t basketNumber) = 0;
+   virtual void SetUsed(size_t bi, size_t basketNumber) = 0;
+   virtual void UpdateBranchIndices(TObjArray *branches) = 0;
 
    static const char *EventType(EEventType type);
 

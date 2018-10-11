@@ -15,7 +15,7 @@
 #include "TGraph.h"
 #include "TPolyLine.h"
 #include "TPolyMarker.h"
-#include "TVirtualPad.h"
+#include "TCanvas.h"
 #include "TView.h"
 #include "TStyle.h"
 #include "TH1.h"
@@ -30,10 +30,15 @@
 #include "TLatex.h"
 #include "TArrow.h"
 #include "TFrame.h"
+#include "TMarker.h"
 #include "TVirtualPadEditor.h"
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 Int_t TGraphPainter::fgMaxPointsPerLine = 50;
+
+static Int_t    gHighlightPoint  = -1;   // highlight point of graph
+static TGraph  *gHighlightGraph  = 0;    // pointer to graph with highlight point
+static TMarker *gHighlightMarker = 0;    // highlight marker
 
 ClassImp(TGraphPainter);
 
@@ -55,6 +60,7 @@ ClassImp(TGraphPainter);
 - [Colors automatically picked in palette](#GP05)
 - [Reverse graphs' axis](#GP06)
 - [Graphs in logarithmic scale](#GP07)
+- [Highlight mode for graph](#GP08)
 
 
 ### <a name="GP00"></a> Introduction
@@ -527,6 +533,47 @@ Begin_Macro(source)
 }
 
 End_Macro
+
+#### <a name="GP08"></a> Highlight mode for graph
+
+\since **ROOT version 6.15/01**
+
+\image html hlGraph1.gif "Highlight mode"
+
+Highlight mode is implemented for `TGraph` (and for `TH1`) class. When
+highlight mode is on, mouse movement over the point will be represented
+graphically. Point will be highlighted as "point circle" (presented by
+marker object). Moreover, any highlight (change of point) emits signal
+`TCanvas::Highlighted()` which allows the user to react and call their own
+function. For a better understanding please see also the tutorials
+`$ROOTSYS/tutorials/graphs/hlGraph*.C` files.
+
+Highlight mode is switched on/off by `TGraph::SetHighlight()` function
+or interactively from `TGraph` context menu. `TGraph::IsHighlight()` to verify
+whether the highlight mode enabled or disabled, default it is disabled.
+
+~~~ {.cpp}
+    root [0] .x $ROOTSYS/tutorials/graphs/gerrors2.C
+    root [1] // try SetHighlight() interactively from TGraph context menu
+~~~
+
+\image html hlgerrors2.gif "Highlight mode for graph"
+
+See how it is used
+<a href="classTHistPainter.html#HP30a">highlight mode and user function</a>
+(is fully equivalent as for histogram).
+
+NOTE all parameters of user function are taken from
+
+    void TCanvas::Highlighted(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)
+
+  - `pad` is pointer to pad with highlighted graph
+  - `obj` is pointer to highlighted graph
+  - `x` is highlighted x-th (i-th) point for graph
+  - `y` not in use (only for 2D histogram)
+
+For more complex demo please see for example `$ROOTSYS/tutorials/math/hlquantiles.C` file.
+
 */
 
 
@@ -623,12 +670,19 @@ Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t
       theY   = theGraph->GetY();
    }
 
+   Int_t hpoint = -1;
    for (i=0;i<theNpoints;i++) {
       pxp = gPad->XtoAbsPixel(gPad->XtoPad(theX[i]));
       pyp = gPad->YtoAbsPixel(gPad->YtoPad(theY[i]));
       d   = TMath::Abs(pxp-px) + TMath::Abs(pyp-py);
-      if (d < distance) distance = d;
+      if (d < distance) {
+         distance = d;
+         hpoint = i;
+      }
    }
+
+   if (theGraph->IsHighlight()) // only if highlight is enable
+      HighlightPoint(theGraph, hpoint, distance);
    if (distance < kMaxDiff) return distance;
 
    for (i=0;i<theNpoints-1;i++) {
@@ -979,6 +1033,107 @@ char *TGraphPainter::GetObjectInfoHelper(TGraph * /*theGraph*/, Int_t /*px*/, In
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the highlighted point for theGraph
+
+Int_t TGraphPainter::GetHighlightPoint(TGraph *theGraph) const
+{
+   if (theGraph == gHighlightGraph) return gHighlightPoint;
+   else return -1;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set highlight (enable/disable) mode for theGraph
+
+void TGraphPainter::SetHighlight(TGraph *theGraph)
+{
+   gHighlightPoint = -1; // must be -1
+   gHighlightGraph = 0;
+   if (theGraph->IsHighlight()) return;
+
+   // delete previous highlight marker
+   if (gHighlightMarker) { gHighlightMarker->Delete(); gHighlightMarker = 0; }
+   // emit Highlighted() signal (user can check on disabled)
+   if (gPad->GetCanvas()) gPad->GetCanvas()->Highlighted(gPad, theGraph, gHighlightPoint, -1);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check on highlight point
+
+void TGraphPainter::HighlightPoint(TGraph *theGraph, Int_t hpoint, Int_t distance)
+{
+   // call from DistancetoPrimitiveHelper (only if highlight is enable)
+
+   const Int_t kHighlightRange = 50; // maybe as fgHighlightRange and Set/Get
+   static Int_t distanceOld = kHighlightRange;
+   if (gHighlightPoint == -1) distanceOld = kHighlightRange; // reset
+
+   if ((distance < kHighlightRange) && (distance < distanceOld)) { // closest point
+      if ((gHighlightPoint != hpoint) || (gHighlightGraph != theGraph)) { // was changed
+         //   Info("HighlightPoint", "graph: %p\tpoint: %d", (void *)theGraph, hpoint);
+         gHighlightPoint = hpoint;
+         gHighlightGraph = theGraph;
+
+         // paint highlight point as marker (recursive calls PaintHighlightPoint)
+         gPad->Modified(kTRUE);
+         gPad->Update();
+
+         // emit Highlighted() signal
+         if (gPad->GetCanvas()) gPad->GetCanvas()->Highlighted(gPad, theGraph, gHighlightPoint, -1);
+      }
+   }
+   if (gHighlightGraph == theGraph) distanceOld = distance;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint highlight point as TMarker object (open circle)
+
+void TGraphPainter::PaintHighlightPoint(TGraph *theGraph, Option_t * /*option*/)
+{
+   // call from PaintGraphSimple
+
+   if ((!theGraph->IsHighlight()) || (gHighlightGraph != theGraph)) return;
+
+   Double_t hx, hy;
+   if (theGraph->GetPoint(gHighlightPoint, hx, hy) == -1) {
+      // special case, e.g. after interactive remove last point
+      if (gHighlightMarker) { gHighlightMarker->Delete(); gHighlightMarker = 0; }
+      return;
+   }
+   // testing specific possibility (after zoom, draw with "same", log, etc.)
+   Double_t uxmin = gPad->GetUxmin();
+   Double_t uxmax = gPad->GetUxmax();
+   Double_t uymin = gPad->GetUymin();
+   Double_t uymax = gPad->GetUymax();
+   if (gPad->GetLogx()) {
+      uxmin = TMath::Power(10.0, uxmin);
+      uxmax = TMath::Power(10.0, uxmax);
+   }
+   if (gPad->GetLogy()) {
+      uymin = TMath::Power(10.0, uymin);
+      uymax = TMath::Power(10.0, uymax);
+   }
+   if ((hx < uxmin) || (hx > uxmax)) return;
+   if ((hy < uymin) || (hy > uymax)) return;
+
+   if (!gHighlightMarker) {
+      gHighlightMarker = new TMarker(hx, hy, 24);
+      gHighlightMarker->SetBit(kCannotPick);
+   }
+   gHighlightMarker->SetX(hx);
+   gHighlightMarker->SetY(hy);
+   gHighlightMarker->SetMarkerSize(theGraph->GetMarkerSize()*2.0);
+   if (gHighlightMarker->GetMarkerSize() < 1.0) gHighlightMarker->SetMarkerSize(1.0); // always visible
+   gHighlightMarker->SetMarkerColor(theGraph->GetMarkerColor());
+   gHighlightMarker->Paint();
+   //   Info("PaintHighlightPoint", "graph: %p\tpoint: %d",
+   //        (void *)gHighlightGraph, gHighlightPoint);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint a any kind of TGraph
 
 void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
@@ -993,9 +1148,9 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
       char *l3 = strstr(chopt,"pmc"); // Automatic Marker Color
       if (l1 || l2 || l3) {
          Int_t i = gPad->NextPaletteColor();
-         if (l1) {strncpy(l1,"   ",3); theGraph->SetFillColor(i);}
-         if (l2) {strncpy(l2,"   ",3); theGraph->SetLineColor(i);}
-         if (l3) {strncpy(l3,"   ",3); theGraph->SetMarkerColor(i);}
+         if (l1) {memcpy(l1,"   ",3); theGraph->SetFillColor(i);}
+         if (l2) {memcpy(l2,"   ",3); theGraph->SetLineColor(i);}
+         if (l3) {memcpy(l3,"   ",3); theGraph->SetMarkerColor(i);}
       }
 
       SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
@@ -1023,6 +1178,26 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
       } else {
          PaintGraphSimple(theGraph,chopt);
       }
+
+      // Paint the fit parameters if needed.
+      TF1 *fit = 0;
+      TList *functions = theGraph->GetListOfFunctions();
+      TObject *f;
+      if (functions) {
+         f = (TF1*)functions->First();
+         if (f) {
+            if (f->InheritsFrom(TF1::Class())) fit = (TF1*)f;
+         }
+         TIter   next(functions);
+         while ((f = (TObject*) next())) {
+            if (f->InheritsFrom(TF1::Class())) {
+               fit = (TF1*)f;
+               break;
+            }
+         }
+      }
+      if (fit) PaintStats(theGraph, fit);
+
    }
 }
 
@@ -1140,9 +1315,9 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
       // Create a temporary histogram and fill each bin with the
       // function value.
       char chopth[8] = " ";
-      if (strstr(chopt,"x+")) strncat(chopth, "x+",2);
-      if (strstr(chopt,"y+")) strncat(chopth, "y+",2);
-      if (optionIAxis) strncat(chopth, "A",1);
+      if (strstr(chopt,"x+")) strncat(chopth, "x+",3);
+      if (strstr(chopt,"y+")) strncat(chopth, "y+",3);
+      if (optionIAxis) strncat(chopth, "A",2);
       if (!theGraph->GetHistogram()) {
          // the graph is created with at least as many bins as there are
          // points to permit zooming on the full range.
@@ -1158,6 +1333,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
          theGraph->GetHistogram()->GetYaxis()->SetLimits(rwymin,rwymax);
          theGraph->GetHistogram()->SetBit(TH1::kNoStats);
          theGraph->GetHistogram()->SetDirectory(0);
+         theGraph->GetHistogram()->Sumw2(kFALSE);
          theGraph->GetHistogram()->Paint(chopth); // Draw histogram axis, title and grid
       } else {
          if (gPad->GetLogy()) {
@@ -1165,30 +1341,13 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
             theGraph->GetHistogram()->SetMaximum(rwymax);
             theGraph->GetHistogram()->GetYaxis()->SetLimits(rwymin,rwymax);
          }
+         theGraph->GetHistogram()->Sumw2(kFALSE);
          theGraph->GetHistogram()->Paint(chopth); // Draw histogram axis, title and grid
       }
    }
 
    // Set Clipping option
    gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
-
-   TF1 *fit = 0;
-   TList *functions = theGraph->GetListOfFunctions();
-   TObject *f;
-   if (functions) {
-      f = (TF1*)functions->First();
-      if (f) {
-         if (f->InheritsFrom(TF1::Class())) fit = (TF1*)f;
-      }
-      TIter   next(functions);
-      while ((f = (TObject*) next())) {
-         if (f->InheritsFrom(TF1::Class())) {
-            fit = (TF1*)f;
-            break;
-         }
-      }
-   }
-   if (fit) PaintStats(theGraph, fit);
 
    rwxmin   = gPad->GetUxmin();
    rwxmax   = gPad->GetUxmax();
@@ -1380,6 +1539,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
             xlow  = x[i-1] - dbar;
             xhigh = x[i-1] + dbar;
             yhigh = y[i-1];
+            if (xlow  < uxmin && xhigh < uxmin) continue;
+            if (xhigh > uxmax && xlow  > uxmax) continue;
             if (xlow  < uxmin) xlow = uxmin;
             if (xhigh > uxmax) xhigh = uxmax;
             if (!optionOne) ylow = TMath::Max((Double_t)0,gPad->GetUymin());
@@ -3048,7 +3209,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
       }
       if (theEX) {
          for (i=0; i<theNpoints; i++) {
-            Double_t rad    = c*(theY[i]-rwrmin)/radiusNDC;
+            Double_t rad    = (theY[i]-rwrmin)/radiusNDC;
             Double_t phimin = c*(theX[i]-theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
             Double_t phimax = c*(theX[i]+theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
             theGraphPolar->TAttLine::Modify();
@@ -3421,6 +3582,8 @@ void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
    } else {
       PaintGraph(theGraph, theGraph->GetN(), theGraph->GetX(), theGraph->GetY(), option);
    }
+
+   PaintHighlightPoint(theGraph, option);
 
    // Paint associated objects in the list of functions (for instance
    // the fit function).

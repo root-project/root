@@ -156,9 +156,9 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
       PrintLogo(lite);
    }
 
-   // Explicitly load libMathCore as CINT will not auto load it when using one
-   // of its globals. Once moved to Cling, which should work correctly, we
-   // can remove this statement.
+   // Explicitly load libMathCore it cannot be auto-loaded it when using one
+   // of its freestanding functions. Once functions can trigger autoloading we
+   // can get rid of this.
    if (!gClassTable->GetDict("TRandom"))
       gSystem->Load("libMathCore");
 
@@ -377,8 +377,13 @@ void TRint::Run(Bool_t retrn)
       RETRY {
          retval = 0; error = 0;
          Int_t nfile = 0;
-         TObjString *file;
-         while ((file = (TObjString *)next())) {
+         while (TObject *fileObj = next()) {
+            if (dynamic_cast<TNamed*>(fileObj)) {
+               // A file that TApplication did not find. Note the error.
+               retval = 1;
+               continue;
+            }
+            TObjString *file = (TObjString *)fileObj;
             char cmd[kMAXPATHLEN+50];
             if (!fNcmd)
                printf("\n");
@@ -470,10 +475,10 @@ void TRint::PrintLogo(Bool_t lite)
       // replaced by spaces needed to make all lines as long as the longest line.
       std::vector<TString> lines;
       // Here, %%s results in %s after TString::Format():
-      lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttp://root.cern.ch",
+      lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttps://root.cern",
                                          gROOT->GetVersion()));
-      lines.emplace_back(TString::Format("%%s(c) 1995-2017, The ROOT Team"));
-      lines.emplace_back(TString::Format("Built for %s%%s", gSystem->GetBuildArch()));
+      lines.emplace_back(TString::Format("%%s(c) 1995-2018, The ROOT Team"));
+      lines.emplace_back(TString::Format("Built for %s on %s%%s", gSystem->GetBuildArch(), gROOT->GetGitDate()));
       if (!strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
          static const char *months[] = {"January","February","March","April","May",
                                         "June","July","August","September","October",
@@ -489,9 +494,9 @@ void TRint::PrintLogo(Bool_t lite)
       } else {
          // If branch and commit are identical - e.g. "v5-34-18" - then we have
          // a release build. Else specify the git hash this build was made from.
-         lines.emplace_back(TString::Format("From %s@%s, %s%%s",
+         lines.emplace_back(TString::Format("From %s@%s %%s",
                                             gROOT->GetGitBranch(),
-                                            gROOT->GetGitCommit(), gROOT->GetGitDate()));
+                                            gROOT->GetGitCommit()));
       }
       lines.emplace_back(TString("Try '.help', '.demo', '.license', '.credits', '.quit'/'.q'%s"));
 

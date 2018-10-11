@@ -27,15 +27,15 @@ an open system that can be dynamically extended by linking external
 libraries. This makes ROOT a premier platform on which to build data
 acquisition, simulation and data analysis systems.
 
-[![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](http://www.gnu.org/licenses/lgpl-2.1) [![Test coverage](https://root.cern/files/img/coverage-badge.svg)](https://epsft-jenkins.cern.ch/job/root-nightly-master-coverage/cobertura)
+[![License: LGPL v2.1+](https://img.shields.io/badge/License-LGPL%20v2.1+-blue.svg)](https://www.gnu.org/licenses/lgpl.html) [![Test coverage](https://root.cern/files/img/coverage-badge.svg)](https://epsft-jenkins.cern.ch/job/root-nightly-master-coverage/cobertura)
 
 ## Build Status
 | Branch | Continuous | Nightly |
 |--------|------------|---------|
 | master | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-master)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-master/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master/) |
 | master-noimt | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-master-noimt)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-master-noimt/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master-noimt)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master-noimt/) |
-| v5-34-00-patches | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-v5-34-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-v5-34-00-patches/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v5-34-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v5-34-00-patches/) |
-| v6-10-00-patches |  [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-v6-10-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-v6-10-00-patches/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-10-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-10-00-patches/) |
+| v6-14-00-patches |  [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-v6-14-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-v6-14-00-patches/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-14-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-14-00-patches/) |
+| v6-12-00-patches |  [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-v6-12-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-v6-12-00-patches/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-12-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-12-00-patches/) |
 
 ## Cite
 We are [![DOI](https://zenodo.org/badge/10994345.svg)](https://zenodo.org/badge/latestdoi/10994345)
@@ -46,7 +46,7 @@ Please cite us as
     Proceedings AIHENP'96 Workshop, Lausanne, Sep. 1996,
     Nucl. Inst. & Meth. in Phys. Res. A 389 (1997) 81-86.
     See also "ROOT" [software], Release vX.YY/ZZ, dd/mm/yyyy,
-    https://doi.org/10.5281/zenodo.848819.
+    (Select the right link for your release here: https://zenodo.org/search?page=1&size=20&q=conceptrecid:848818&all_versions&sort=-version).
 
 ## Live Demo for CERN Users
 [![](https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
@@ -61,7 +61,7 @@ These screenshots shows some of the plots (produced using ROOT) presented when t
 See more screenshots on our [gallery](https://root.cern/gallery).
 
 ## Download and Getting Started
-See [root.cern download page](https://root.cern/downloading-root) for the latest binary releases. 
+See [root.cern download page](https://root.cern/downloading-root) for the latest binary releases.
 
 [Getting started with ROOT.](https://root.cern/getting-started)
 
@@ -69,12 +69,12 @@ See [root.cern download page](https://root.cern/downloading-root) for the latest
 Clone the repo
 
     $ git clone https://github.com/root-project/root.git
-    
+
 Make a directory for building
 
     $ mkdir build
     $ cd build
-    
+
 Run cmake and make
 
     $ cmake ../root
@@ -84,7 +84,7 @@ Setup and run ROOT
 
     $ source bin/thisroot.sh
     $ root
-    
+
 [More information](https://root.cern/building-root) regarding building.
 
 ## Help and Support

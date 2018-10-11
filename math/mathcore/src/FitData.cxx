@@ -22,7 +22,7 @@ namespace ROOT {
          fMaxPoints(maxpoints),
          fNPoints(0),
          fDim(dim),
-         fpTmpCoordVector(NULL)
+         fpTmpCoordVector(nullptr)
       {
          assert(fDim >= 1);
          InitCoordsVector();
@@ -35,7 +35,7 @@ namespace ROOT {
          fMaxPoints(maxpoints),
          fNPoints(0),
          fDim(dim),
-         fpTmpCoordVector(NULL)
+         fpTmpCoordVector(nullptr)
       {
          assert(fDim >= 1);
          InitCoordsVector();
@@ -49,7 +49,7 @@ namespace ROOT {
          fMaxPoints(maxpoints),
          fNPoints(0),
          fDim(dim),
-         fpTmpCoordVector(NULL)
+         fpTmpCoordVector(nullptr)
       {
          assert(fDim >= 1);
          InitCoordsVector();
@@ -66,7 +66,7 @@ namespace ROOT {
          fDim(dim),
          fCoords(fDim),
          fCoordsPtr(fDim),
-         fpTmpCoordVector(NULL)
+         fpTmpCoordVector(nullptr)
       {
          assert(fDim >= 1);
          InitCoordsVector();
@@ -79,14 +79,14 @@ namespace ROOT {
          fNPoints(n),
          fDim(1),
          fCoordsPtr(fDim),
-         fpTmpCoordVector(NULL)
+         fpTmpCoordVector(nullptr)
       {
          assert(dataX);
          fCoordsPtr[0] = dataX;
 
          if (fpTmpCoordVector) {
             delete[] fpTmpCoordVector;
-            fpTmpCoordVector = NULL;
+            fpTmpCoordVector = nullptr;
          }
 
          fpTmpCoordVector = new double [fDim];
@@ -99,7 +99,7 @@ namespace ROOT {
          fNPoints(n),
          fDim(2),
          fCoordsPtr(fDim),
-         fpTmpCoordVector(NULL)
+         fpTmpCoordVector(nullptr)
       {
          assert(dataX && dataY);
          fCoordsPtr[0] = dataX;
@@ -107,7 +107,7 @@ namespace ROOT {
 
          if (fpTmpCoordVector) {
             delete[] fpTmpCoordVector;
-            fpTmpCoordVector = NULL;
+            fpTmpCoordVector = nullptr;
          }
 
          fpTmpCoordVector = new double [fDim];
@@ -121,7 +121,7 @@ namespace ROOT {
          fNPoints(fMaxPoints),
          fDim(3),
          fCoordsPtr(fDim),
-         fpTmpCoordVector(NULL)
+         fpTmpCoordVector(nullptr)
       {
          assert(dataX && dataY && dataZ);
          fCoordsPtr[0] = dataX;
@@ -130,7 +130,7 @@ namespace ROOT {
 
          if (fpTmpCoordVector) {
             delete[] fpTmpCoordVector;
-            fpTmpCoordVector = NULL;
+            fpTmpCoordVector = nullptr;
          }
 
          fpTmpCoordVector = new double [fDim];
@@ -147,7 +147,7 @@ namespace ROOT {
          fMaxPoints(maxpoints),
          fNPoints(0),
          fDim(1),
-         fpTmpCoordVector(NULL)
+         fpTmpCoordVector(nullptr)
       {
          InitCoordsVector();
 
@@ -167,7 +167,7 @@ namespace ROOT {
          fMaxPoints(maxpoints),
          fNPoints(0),
          fDim(2),
-         fpTmpCoordVector(NULL)
+         fpTmpCoordVector(nullptr)
       {
          InitCoordsVector();
 
@@ -188,7 +188,7 @@ namespace ROOT {
          fMaxPoints(maxpoints),
          fNPoints(0),
          fDim(3),
-         fpTmpCoordVector(NULL)
+         fpTmpCoordVector(nullptr)
       {
          InitCoordsVector();
 
@@ -231,13 +231,13 @@ namespace ROOT {
             fCoordsPtr.resize(fDim);
 
             for (unsigned int i = 0; i < fDim; i++) {
-               fCoordsPtr[i] = &fCoords[i].front();
+               fCoordsPtr[i] = fCoords[i].empty() ? nullptr : &fCoords[i].front();
             }
          }
 
          if (fpTmpCoordVector) {
             delete[] fpTmpCoordVector;
-            fpTmpCoordVector = NULL;
+            fpTmpCoordVector = nullptr;
          }
 
          fpTmpCoordVector = new double [fDim];

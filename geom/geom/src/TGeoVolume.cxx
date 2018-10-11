@@ -1082,7 +1082,7 @@ void TGeoVolume::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat,
    node->SetNumber(copy_no);
    node->SetOverlapping();
    if (vol->GetMedium() == fMedium)
-   node->SetVirtual();
+      node->SetVirtual();
    vol->Grab();
 }
 
@@ -1431,6 +1431,8 @@ void TGeoVolume::SaveAs(const char *filename, Option_t *option) const
    if (ind>0) fname.Remove(ind);
    out << "void "<<fname<<"() {" << std::endl;
    out << "   gSystem->Load(\"libGeom\");" << std::endl;
+   const UInt_t prec = TGeoManager::GetExportPrecision();
+   out << std::setprecision(prec);
    ((TGeoVolume*)this)->SavePrimitive(out,option);
    out << "}" << std::endl;
 }
@@ -1492,8 +1494,6 @@ TGeoExtension *TGeoVolume::GrabFWExtension() const
 
 void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   out.precision(6);
-   out.setf(std::ios::fixed);
    Int_t i,icopy;
    Int_t nd = GetNdaughters();
    TGeoVolume *dvol;

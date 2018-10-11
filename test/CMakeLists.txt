@@ -92,9 +92,9 @@ ROOT_EXECUTABLE(bench bench.cxx LIBRARIES Core TBench)
 ROOT_ADD_TEST(test-bench COMMAND bench LABELS longtest)
 
 #--stress------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(stress stress.cxx LIBRARIES Event Core Hist RIO Tree Gpad Postscript)
-ROOT_ADD_TEST(test-stress COMMAND stress -b FAILREGEX "FAILED|Error in"
-                          DEPENDS test-event LABELS longtest)
+  ROOT_EXECUTABLE(stress stress.cxx LIBRARIES Event Core Hist RIO Tree Gpad Postscript)
+  ROOT_ADD_TEST(test-stress COMMAND stress -b FAILREGEX "FAILED|Error in"
+                            DEPENDS test-event LABELS longtest)
 
 #--stressShapes------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressShapes stressShapes.cxx LIBRARIES  Geom Tree GenVector Gpad)
@@ -117,6 +117,9 @@ ROOT_ADD_TEST(test-stresslinear-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${
 
 #--stressGraphics------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressGraphics stressGraphics.cxx LIBRARIES Graf Gpad Postscript)
+if(MSVC)
+  set_property(TARGET stressGraphics APPEND_STRING PROPERTY LINK_FLAGS "/STACK:4000000")
+endif()
 configure_file(stressGraphics.ref stressGraphics.ref COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat COPYONLY)
 ROOT_ADD_TEST(test-stressgraphics ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH} COMMAND stressGraphics -b -k FAILREGEX "FAILED|Error in" LABELS longtest)
@@ -164,7 +167,7 @@ endif()
 
 #--stressMathMore----------------------------------------------------------------------------------
 if(ROOT_mathmore_FOUND)
-  ROOT_EXECUTABLE(stressMathMore stressMathMore.cxx LIBRARIES MathMore)
+  ROOT_EXECUTABLE(stressMathMore stressMathMore.cxx LIBRARIES MathMore Smatrix)
   ROOT_ADD_TEST(test-stressmathmore COMMAND stressMathMore FAILREGEX "FAILED|Error in")
   ROOT_ADD_TEST(test-stressmathmore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathMore.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressmathmore TIMEOUT 1800)
@@ -177,6 +180,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreDict
                               HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/TrackMathCore.h
                               LINKDEF TrackMathCoreLinkDef.h
                               DEPENDENCIES Core MathCore RIO GenVector Smatrix)
+if(MSVC)
+  add_custom_command(TARGET TrackMathCoreDict POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreDict.dll
+                                     ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreDict.dll)
+endif()
 ROOT_EXECUTABLE(stressMathCore stressMathCore.cxx LIBRARIES MathCore Hist RIO Tree GenVector)
 ROOT_ADD_TEST(test-stressmathcore COMMAND stressMathCore FAILREGEX "FAILED|Error in")
 ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathCore.cxx
@@ -189,6 +197,8 @@ if(ROOT_roofit_FOUND)
   ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressroofit LABELS longtest)
+
+  add_subdirectory(fit)
 endif()
 
 #--stressRooStats----------------------------------------------------------------------------------
@@ -238,6 +248,8 @@ ROOT_ADD_TEST(test-stressiterators-interpreted COMMAND ${ROOT_root_CMD} -b -q -l
               FAILREGEX "FAILED|Error in" DEPENDS test-stressiterators)
 
 #--stressInterpreter-------------------------------------------------------------------------
+# FIXME: Temporary workaround for runtime_cxxmodule
+if(NOT FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
 ROOT_EXECUTABLE(stressInterpreter stressInterpreter.cxx LIBRARIES Core)
 if(WIN32)
   set(cleantmpfiles POSTCMD cmd /c del AutoDict_*)
@@ -247,6 +259,7 @@ ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
                                               $<TARGET_FILE_DIR:stressInterpreter>/stressInterpreter.cxx
               ${cleantmpfiles}
               FAILREGEX Error|FAILED)
+endif()
 
 #--stressHepix-------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)
@@ -295,11 +308,14 @@ ROOT_ADD_TEST(test-delaunay COMMAND delaunayTriangulation)
 
 #--TestTformula------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(TFormulaTests TFormulaTests.cxx LIBRARIES Hist RIO)
+if(MSVC)
+  set_property(TARGET TFormulaTests APPEND_STRING PROPERTY LINK_FLAGS "/STACK:4000000")
+endif()
 ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error in")
 
 #--TBB basic test----------------------------------------------------------------------------------
 if(ROOT_imt_FOUND)
-  include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
+  include_directories(${TBB_INCLUDE_DIRS})
   ROOT_EXECUTABLE(testTBB testTBB.cxx LIBRARIES ${TBB_LIBRARIES} BUILTINS TBB)
   ROOT_ADD_TEST(test-TBB COMMAND testTBB FAILREGEX "FAILED|Error in")
 endif()
@@ -314,7 +330,7 @@ endif()
 #--VecCore basic test------------------------------------------------------------------------------
 if(ROOT_veccore_FOUND)
   ROOT_EXECUTABLE(test-veccore test-veccore.cxx LIBRARIES ${VecCore_LIBRARIES} BUILTINS VECCORE)
-  target_include_directories(test-veccore SYSTEM BEFORE PRIVATE ${VecCore_INCLUDE_DIRS})
+  target_include_directories(test-veccore BEFORE PRIVATE ${VecCore_INCLUDE_DIRS})
   target_compile_definitions(test-veccore PRIVATE ${VecCore_DEFINITIONS})
   if(VecCore_Vc_FOUND)
     ROOT_ADD_TEST(VecCore COMMAND test-veccore REGEX "Vc")
@@ -333,4 +349,25 @@ endif()
 #--g2root------------------------------------------------------------------------------------------
 if(TARGET g2root)
   ROOT_ADD_TEST(test-g2root COMMAND g2root)
+endif()
+
+#--periodic----------------------------------------------------------------------------------------
+if (NOT cxxmodules)
+  # There are two problems with this test and cxxmodules. First, it picks up a
+  # header files from $ROOTSYS/include and builds a library. Naturally, we should
+  # build pcm files, however, building module MathCore requires specific -I to
+  # build the needed VecCore and Vc components. This test does not have access
+  # to the include relevant include paths. Secondly, if we want to reuse the
+  # modules from ROOT which makes most sense we can't because we get a hard
+  # error such as: fatal error: malformed or corrupted AST file:
+  # 'SourceLocation remap refers to unknown module, cannot find include/pcms/1WYSNQV9VBZK7/stl-2OZGQN92C38MI.pcm
+  #
+  # FIXME: We can fix the first point by moving out all VecCore-related headers
+  # such as Math/Types.h and all of its includers in a separate module. Thus,
+  # the current test will not require the VecCore (as in the textual case).
+  # Alternatively, we can trace the origin of the fatal error and try to remap
+  # the source locations.
+  ROOT_ADD_TEST(test-periodic-build COMMAND ${CMAKE_CTEST_COMMAND}
+                                    --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
+                                    --build-generator ${CMAKE_GENERATOR})
 endif()

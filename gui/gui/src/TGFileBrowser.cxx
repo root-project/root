@@ -232,8 +232,9 @@ void TGFileBrowser::CreateBrowser()
 
    fDblClick = kFALSE;
 
-   TQObject::Connect("TGHtmlBrowser", "Clicked(char*)",
-                     "TGFileBrowser", this, "Selected(char*)");
+   if (TClass::GetClass("TGHtmlBrowser"))
+      TQObject::Connect("TGHtmlBrowser", "Clicked(char*)",
+                        "TGFileBrowser", this, "Selected(char*)");
 
    TQObject::Connect("TPad", "Modified()",
                      "TGFileBrowser", this, "PadModified()");
@@ -249,7 +250,8 @@ void TGFileBrowser::CreateBrowser()
 
 TGFileBrowser::~TGFileBrowser()
 {
-   TQObject::Disconnect("TGHtmlBrowser", "Clicked(char*)");
+   if (TClass::GetClass("TGHtmlBrowser"))
+      TQObject::Disconnect("TGHtmlBrowser", "Clicked(char*)");
    TQObject::Disconnect("TPad", "Modified()");
 
    delete fContextMenu;

@@ -1,5 +1,3 @@
-/**
-
 \defgroup Math Math
 
 \brief The %ROOT Mathematical Libraries.

@@ -419,9 +419,8 @@ Bool_t TClassDocOutput::ClassDotCharts(std::ostream& out)
    gSystem->PrependPathName("inh", filenameInh);
    gSystem->PrependPathName(fHtml->GetOutputDir(), filenameInh);
    filenameInh += "_Inh";
-   if (!CreateDotClassChartInh(filenameInh + ".dot") ||
-      !RunDot(filenameInh, &out))
-   return kFALSE;
+   if (!CreateDotClassChartInh(filenameInh + ".dot") || !RunDot(filenameInh, &out))
+      return kFALSE;
 
    TString filenameInhMem(title);
    gSystem->PrependPathName("inhmem", filenameInhMem);

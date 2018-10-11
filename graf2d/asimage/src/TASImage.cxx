@@ -5767,10 +5767,11 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
    Bool_t noClip = kTRUE;
 
    if (gPad) {
-      clipx1 = gPad->XtoAbsPixel(gPad->GetX1());
-      clipx2 = gPad->XtoAbsPixel(gPad->GetX2());
-      clipy1 = gPad->YtoAbsPixel(gPad->GetY1());
-      clipy2 = gPad->YtoAbsPixel(gPad->GetY2());
+      Float_t is = gStyle->GetImageScaling();
+      clipx1 = gPad->XtoAbsPixel(gPad->GetX1())*is;
+      clipx2 = gPad->XtoAbsPixel(gPad->GetX2())*is;
+      clipy1 = gPad->YtoAbsPixel(gPad->GetY1())*is;
+      clipy2 = gPad->YtoAbsPixel(gPad->GetY2())*is;
       noClip = kFALSE;
    }
 

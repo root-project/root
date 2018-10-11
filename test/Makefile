@@ -127,9 +127,9 @@ STRESSMATHS   = stressMathCore.$(SrcSuf)
 ifneq ($(USE_REFLEX),)
 CXXFLAGS += -DUSE_REFLEX
 ifeq ($(PLATFORM),win32)
-STRESSMATHLIBS = '$(ROOTSYS)/lib/libGenVector.lib' '$(ROOTSYS)/lib/libReflex.lib' '$(ROOTSYS)/lib/libCintex.lib'
+STRESSMATHLIBS = '$(ROOTSYS)/lib/libGenVector.lib'
 else
-STRESSMATHLIBS = -lGenVector -lReflex -lCintex
+STRESSMATHLIBS = -lGenVector
 endif
 
 TRACKMATHSRC = TrackMathCoreRflx.$(SrcSuf)

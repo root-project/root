@@ -294,12 +294,12 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
       }
       for (Int_t i=0;i<nb;i++)  {
 
-         TLeaf *fromleaf_gen = (TLeaf*)from->GetListOfLeaves()->At(i);
-         TLeaf *toleaf_gen = (TLeaf*)to->GetListOfLeaves()->At(i);
-         if (toleaf_gen->IsA() != fromleaf_gen->IsA() ) {
+         TLeaf *fromleaf = (TLeaf*)from->GetListOfLeaves()->At(i);
+         TLeaf *toleaf = (TLeaf*)to->GetListOfLeaves()->At(i);
+         if (toleaf->IsA() != fromleaf->IsA() ) {
             // The data type do not match, we can not do a fast merge.
             fWarningMsg.Form("The export leaf and the import leaf (%s.%s) do not have the data type (%s vs %s)",
-                              from->GetName(),fromleaf_gen->GetName(),fromleaf_gen->GetTypeName(),toleaf_gen->GetTypeName());
+                              from->GetName(),fromleaf->GetName(),fromleaf->GetTypeName(),toleaf->GetTypeName());
             if (! (fOptions & kNoWarnings) ) {
                Warning("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
             }
@@ -307,51 +307,7 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
             fNeedConversion = kTRUE;
             return 0;
          }
-         if (fromleaf_gen->IsA()==TLeafI::Class()) {
-            TLeafI *fromleaf = (TLeafI*)fromleaf_gen;
-            TLeafI *toleaf   = (TLeafI*)toleaf_gen;
-            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
-               toleaf->SetMaximum( fromleaf->GetMaximum() );
-            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
-               toleaf->SetMinimum( fromleaf->GetMinimum() );
-         } else if (fromleaf_gen->IsA()==TLeafL::Class()) {
-            TLeafL *fromleaf = (TLeafL*)fromleaf_gen;
-            TLeafL *toleaf   = (TLeafL*)toleaf_gen;
-            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
-               toleaf->SetMaximum( fromleaf->GetMaximum() );
-            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
-               toleaf->SetMinimum( fromleaf->GetMinimum() );
-         } else if (fromleaf_gen->IsA()==TLeafB::Class()) {
-            TLeafB *fromleaf = (TLeafB*)fromleaf_gen;
-            TLeafB *toleaf   = (TLeafB*)toleaf_gen;
-            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
-               toleaf->SetMaximum( fromleaf->GetMaximum() );
-            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
-               toleaf->SetMinimum( fromleaf->GetMinimum() );
-         } else if (fromleaf_gen->IsA()==TLeafS::Class()) {
-            TLeafS *fromleaf = (TLeafS*)fromleaf_gen;
-            TLeafS *toleaf   = (TLeafS*)toleaf_gen;
-            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
-               toleaf->SetMaximum( fromleaf->GetMaximum() );
-            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
-               toleaf->SetMinimum( fromleaf->GetMinimum() );
-         } else if (fromleaf_gen->IsA()==TLeafO::Class()) {
-            TLeafO *fromleaf = (TLeafO*)fromleaf_gen;
-            TLeafO *toleaf   = (TLeafO*)toleaf_gen;
-            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
-               toleaf->SetMaximum( fromleaf->GetMaximum() );
-            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
-               toleaf->SetMinimum( fromleaf->GetMinimum() );
-         } else if (fromleaf_gen->IsA()==TLeafC::Class()) {
-            TLeafC *fromleaf = (TLeafC*)fromleaf_gen;
-            TLeafC *toleaf   = (TLeafC*)toleaf_gen;
-            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
-               toleaf->SetMaximum( fromleaf->GetMaximum() );
-            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
-               toleaf->SetMinimum( fromleaf->GetMinimum() );
-            if (fromleaf->GetLenStatic() > toleaf->GetLenStatic())
-               toleaf->SetLen(fromleaf->GetLenStatic());
-         }
+         toleaf->IncludeRange( fromleaf );
       }
 
    }
@@ -639,6 +595,11 @@ void TTreeCloner::ImportClusterRanges()
    fToTree->SetEntries(fToTree->GetEntries() - fFromTree->GetTree()->GetEntries());
 
    fToTree->ImportClusterRanges( fFromTree->GetTree() );
+
+   // This is only updated by TTree::Fill upon seeing a Flush event in TTree::Fill
+   // So we need to propagate (this has also the advantage of turning on the
+   // history recording feature of SetAutoFlush for the next iteration)
+   fToTree->fFlushedBytes += fFromTree->fFlushedBytes;
 
    fToTree->SetEntries(fToTree->GetEntries() + fFromTree->GetTree()->GetEntries());
 }

@@ -33,10 +33,9 @@ Begin_Macro(source)
       theta[ipt] = fp1->Eval(r[ipt]);
    }
    TGraphPolar * grP1 = new TGraphPolar(1000,r,theta);
+   grP1->SetTitle("");
    grP1->SetLineColor(2);
    grP1->Draw("AOL");
-
-   return CPol;
 }
 End_Macro
 */
@@ -648,8 +647,8 @@ void TGraphPolargram::PaintRadialDivisions(Bool_t drawaxis)
       Int_t ndivminor = 0;
 
       chopt[0] = 0;
-      strncat(chopt, "SDH", 3);
-      if (fNdivRad < 0) strncat(chopt, "N",1);
+      strncat(chopt, "SDH", 4);
+      if (fNdivRad < 0) strncat(chopt, "N",2);
       if(drawaxis){
       // Paint axis.
          TGaxis axis;

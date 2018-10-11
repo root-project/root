@@ -17,10 +17,7 @@
 #include "Rtypes.h"
 
 #ifndef __CINT__
-#  include <QEvent>
-#  include <QMouseEvent>
-#  include <QList>
-#  include <QApplication>
+#  include "TQtIncludes.h"
 #else
    class TQtClientWidget;
    class QObject;

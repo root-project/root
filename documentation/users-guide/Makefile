@@ -6,7 +6,7 @@ MDFILES=ROOTUsersGuide.md Preface.md Introduction.md GettingStarted.md \
 	Trees.md MathLibraries.md LinearAlgebra.md AddingaClass.md \
 	CollectionClasses.md PhysicsVectors.md Geometry.md PythonRuby.md \
 	TutorialsandTests.md ExampleAnalysis.md Networking.md Threads.md \
-	PROOF.md WritingGUI.md ROOTandQt.md HTMLDoc.md InstallandBuild.md
+	PROOF.md WritingGUI.md SignalSlot.md ROOTandQt.md HTMLDoc.md InstallandBuild.md
 
 HTMLFILES=$(addprefix $(OUTDIR)/,$(MDFILES:.md=.html))
 PDFFILES=$(addprefix $(OUTDIR)/,$(MDFILES:.md=.pdf))
@@ -14,7 +14,14 @@ PDFFILES=$(addprefix $(OUTDIR)/,$(MDFILES:.md=.pdf))
 LATEXA4PREFIX=ROOTUsersGuideA4
 LATEXLETTERPREFIX=ROOTUsersGuideLetter
 
+# define the pandoc options according to the pandoc version.
+PANDOC_VERSION=$(shell pandoc -v | grep "pandoc "  | sed -e "s/pandoc //")
+ifeq ($(PANDOC_VERSION),2.2)
+OPTIONS=-s -f markdown+smart --toc --toc-depth=2 --top-level-division=chapter --number-sections
+else
 OPTIONS=-s -S -f markdown --toc --toc-depth=2 --chapters --number-sections
+endif
+
 OPTIONSHTML=-H css/github.css --mathjax
 OPTIONSEPUB=--mathml
 OPTIONSLATEXA4=--template=./template.tex --variable=geometry:a4paper -V geometry:margin=1.5cm
@@ -56,7 +63,9 @@ pdfletter: $(MDFILES) $(LATEXLETTERPREFIX).toc $(LATEXLETTERPREFIX).ind
 
 html: $(MDFILES)
 	@mkdir -p $(OUTDIR)
-	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) \
+	@mkdir -p $(OUTDIR)/pictures
+	@cp -r pictures/* $(OUTDIR)/pictures
+	pandoc --quiet $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) \
 	-o $(OUTDIR)/ROOTUsersGuide.html
 
 epub: $(MDFILES) metadata.xml title.txt
@@ -75,16 +84,17 @@ pdf_chapters: $(PDFFILES)
 $(OUTDIR)/%.html: %.md
 	@mkdir -p $(OUTDIR)
 	@echo Generating HTML chapter: $@
+	@echo % Chapter: $^ | sed -e "s/.md//" | sed -e "s/and/ and /" > $@.txt
 	@( OFFSET=$$( for F in $(MDFILES) ; do echo $$F ; done | \
 	   grep -n "^$^$$" | head -n1 | cut -d: -f1 ) && \
 	   OFFSET=`expr $$OFFSET - 1` && \
-	   pandoc $(OPTIONS) $(OPTIONSHTML) --number-offset $$OFFSET $^ -o $@ )
+	   pandoc $(OPTIONS) $(OPTIONSHTML) -t html $@.txt --number-offset $$OFFSET $^ -o $@ )
 
 html_chapters: $(HTMLFILES)
 
 clean:
-	rm -f $(LATEXA4PREFIX).pdf $(LATEXLETTERPREFIX).pdf \
+	rm -rf $(LATEXA4PREFIX).pdf $(LATEXLETTERPREFIX).pdf \
 	ROOTUsersGuide.html ROOTUsersGuide.epub \
 	$(LATEXA4PREFIX).{tex,dvi,ind,toc,out,log,idx,aux,ilg} \
 	$(LATEXLETTERPREFIX).{tex,dvi,ind,toc,out,log,idx,aux,ilg} \
-	$(PDFFILES) $(HTMLFILES)
+	$(PDFFILES) $(HTMLFILES) $(OUTDIR)

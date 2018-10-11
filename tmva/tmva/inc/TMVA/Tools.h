@@ -268,19 +268,66 @@ namespace TMVA {
       const char* GetName     ( void* node );
 
       TXMLEngine& xmlengine() { return *fXMLEngine; }
-      int xmlenginebuffersize() { return 10000000; }
+      int xmlenginebuffersize() { return fXMLBufferSize;}
+      void SetXMLEngineBufferSize(int buffer) { fXMLBufferSize = buffer; }
       TXMLEngine* fXMLEngine;
 
       TH1*       GetCumulativeDist( TH1* h);
 
    private:
 
+      int fXMLBufferSize = 10000000; 
       // utilities for correlation ratio
       Double_t GetYMean_binX( const TH2& , Int_t bin_x );
 
    }; // Common tools
 
    Tools& gTools(); // global accessor
+
+   //
+   // Adapts a TRandom random number generator to the interface of the ones in the
+   // standard library (STL) so that TRandom derived generators can be used with
+   // STL algorithms such as `std::shuffle`.
+   //
+   // Example:
+   // ```
+   // std::vector<double> v {0, 1, 2, 3, 4, 5};
+   // TRandom3StdEngine rng(seed);
+   // std::shuffle(v.begin(), v.end(), rng);
+   // ```
+   //
+   // Or at a lower level:
+   // ```
+   // std::vector<double> v {0, 1, 2, 3, 4, 5};
+   // RandomGenerator<TRandom3> rng(seed);
+   // std::shuffle(v.begin(), v.end(), rng);
+   // ```
+   //
+   template <typename TRandomLike, typename UIntType = UInt_t, UIntType max_val = kMaxUInt>
+   class RandomGenerator {
+   public:
+      using result_type = UIntType;
+
+      RandomGenerator(UIntType s = 0) { fRandom.SetSeed(s); }
+
+      static constexpr UIntType min() { return 0; }
+      static constexpr UIntType max() { return max_val; }
+
+      void seed(UIntType s = 0) { fRandom.SetSeed(s); }
+
+      UIntType operator()() { return fRandom.Integer(max()); }
+
+      void discard(unsigned long long z)
+      {
+         double r;
+         for (unsigned long long i = 0; i < z; ++i)
+            r = fRandom.Rndm();
+         (void) r; /* avoid unused variable warning */
+      }
+
+   private:
+      TRandomLike fRandom; // random generator
+   };
 
 } // namespace TMVA
 

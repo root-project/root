@@ -25,35 +25,35 @@ namespace ROOT {
 
       template<class Generator>
       struct StdEngineType {
-         static std::string Name() { return "std_random_eng";}
+         static const char *  Name() { return "std_random_eng";}
       };
       template<>
          struct StdEngineType<std::minstd_rand> {
-         static std::string Name() { return "std_minstd_rand";}
+         static const char *  Name() { return "std_minstd_rand";}
       };
       template<>
       struct StdEngineType<std::mt19937> {
-         static std::string Name() { return "std_mt19937";}
+         static const char *  Name() { return "std_mt19937";}
       };
       template<>
       struct StdEngineType<std::mt19937_64> {
-         static std::string Name() { return "std_mt19937_64";}
+         static const char *  Name() { return "std_mt19937_64";}
       };
       template<>
       struct StdEngineType<std::ranlux24> {
-         static std::string Name() { return "std_ranlux24";}
+         static const char *  Name() { return "std_ranlux24";}
       };
       template<>
       struct StdEngineType<std::ranlux48> {
-         static std::string Name() { return "std_ranlux48";}
+         static const char *  Name() { return "std_ranlux48";}
       };
       template<>
       struct StdEngineType<std::knuth_b> {
-         static std::string Name() { return "std_knuth_b";}
+         static const char *  Name() { return "std_knuth_b";}
       };
       template<>
       struct StdEngineType<std::random_device> {
-         static std::string Name() { return "std_random_device";}
+         static const char *  Name() { return "std_random_device";}
       };
       
       
@@ -100,7 +100,7 @@ namespace ROOT {
             return Rndm(); 
          }
 
-         static std::string Name()  {
+         static const char * Name()  {
             return StdEngineType<Generator>::Name(); 
          }
 

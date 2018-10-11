@@ -11,7 +11,7 @@ import cmdLineUtils
 import sys
 
 # Help strings
-COMMAND_HELP = "Add directories in ROOT files"
+description = "Add directories in ROOT files"
 
 PARENT_HELP = "make parent directories as needed, no error if existing."
 
@@ -29,15 +29,20 @@ EPILOG="""Examples:
   Create an empty ROOT file named 'example.root'
 """
 
+def get_argparse():
+	# Collect arguments with the module argparse
+	parser = cmdLineUtils.getParserFile(description, EPILOG)
+	parser.prog = 'rootmkdir'
+	parser.add_argument("-p", "--parents", help=PARENT_HELP, action="store_true")
+	return parser
+
 def execute():
-    # Collect arguments with the module argparse
-    parser = cmdLineUtils.getParserFile(COMMAND_HELP, EPILOG)
-    parser.add_argument("-p", "--parents", help=PARENT_HELP, action="store_true")
+	parser = get_argparse()
 
-    # Put arguments in shape
-    sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser, wildcards = False)
+	# Put arguments in shape
+	sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser, wildcards = False)
 
-    # Process rootMkdir
-    return cmdLineUtils.rootMkdir(sourceList, parents=optDict["parents"])
-
-sys.exit(execute())
+	# Process rootMkdir
+	return cmdLineUtils.rootMkdir(sourceList, parents=optDict["parents"])
+if __name__ == "__main__":
+	sys.exit(execute())

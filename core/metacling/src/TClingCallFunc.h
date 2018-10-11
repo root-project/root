@@ -37,6 +37,7 @@
 #include <llvm/ADT/SmallVector.h>
 
 namespace clang {
+class BuiltinType;
 class Expr;
 class FunctionDecl;
 class CXXMethodDecl;
@@ -76,13 +77,21 @@ private:
    bool fReturnIsRecordType : 1;
 
 private:
+   enum EReferenceType {
+      kNotReference,
+      kLValueReference,
+      kRValueReference
+   };
+
+   using ExecWithRetFunc_t =  std::function<void(void* address, cling::Value &ret)>;
+
    void* compile_wrapper(const std::string& wrapper_name,
                          const std::string& wrapper,
                          bool withAccessControl = true);
 
    void collect_type_info(clang::QualType& QT, std::ostringstream& typedefbuf,
                           std::ostringstream& callbuf, std::string& type_name,
-                          bool& isReference, bool& isPointer, int indent_level,
+                          EReferenceType& refType, bool& isPointer, int indent_level,
                           bool forArgument);
 
    void make_narg_call(const std::string &return_type, const unsigned N, std::ostringstream &typedefbuf,
@@ -111,10 +120,17 @@ private:
    // Implemented in source file.
    template <typename T>
    void execWithLL(void* address, cling::Value* val);
-   // Implemented in source file.
    template <typename T>
    void execWithULL(void* address, cling::Value* val);
+   template <class T>
+   ExecWithRetFunc_t InitRetAndExecIntegral(clang::QualType QT, cling::Value &ret);
+
+   ExecWithRetFunc_t InitRetAndExecBuiltin(clang::QualType QT, const clang::BuiltinType *BT, cling::Value &ret);
+   ExecWithRetFunc_t InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret);
+   ExecWithRetFunc_t InitRetAndExec(const clang::FunctionDecl *FD, cling::Value &ret);
+
    void exec(void* address, void* ret);
+
    void exec_with_valref_return(void* address,
                                 cling::Value* ret);
    void EvaluateArgList(const std::string& ArgList);

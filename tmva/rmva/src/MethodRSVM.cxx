@@ -169,7 +169,7 @@ void MethodRSVM::Train()
    fModel = new ROOT::R::TRObject(Model);
    if (IsModelPersistence())
    {
-        TString path = GetWeightFileDir() + "/RSVMModel.RData";
+        TString path = GetWeightFileDir() +  "/" + GetName() + ".RData";
         Log() << Endl;
         Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
         Log() << Endl;
@@ -212,8 +212,8 @@ void MethodRSVM::DeclareOptions()
    DeclareOptionRef(fTolerance, "Tolerance", "tolerance of termination criterion (default: 0.001)");
    DeclareOptionRef(fEpsilon, "Epsilon", "epsilon in the insensitive-loss function (default: 0.1)");
    DeclareOptionRef(fShrinking, "Shrinking", "option whether to use the shrinking-heuristics (default:‘TRUE’)");
-   DeclareOptionRef(fCross, "Cross", "if a integer value k>0 is specified, a k-fold cross validation on the training data is performed to assess the\
-                                       quality of the model: the accuracy rate for classification and the Mean Squared Error for regression");
+   DeclareOptionRef(fCross, "Cross", "if a integer value k>0 is specified, a k-fold cross validation on the training data is performed to assess the quality of the model: the accuracy rate for classification and the Mean Squared Error for regression");
+   DeclareOptionRef(fProbability, "Probability", "logical indicating whether the model should allow for probability predictions");
    DeclareOptionRef(fFitted, "Fitted", "logical indicating whether the fitted values should be computed and included in the model or not (default: ‘TRUE’)");
 
 }
@@ -356,7 +356,7 @@ std::vector<Double_t> MethodRSVM::GetMvaValues(Long64_t firstEvt, Long64_t lastE
 void TMVA::MethodRSVM::ReadModelFromFile()
 {
    ROOT::R::TRInterface::Instance().Require("e1071");
-   TString path = GetWeightFileDir() + "/RSVMModel.RData";
+   TString path = GetWeightFileDir() +  "/" + GetName() + ".RData";
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;

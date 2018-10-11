@@ -9,6 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "TBranchCacheInfo.h"
+
 #include "TBranch.h"
 
 #include "Compression.h"
@@ -39,6 +41,7 @@
 #include "TTreeCacheUnzip.h"
 #include "TVirtualMutex.h"
 #include "TVirtualPad.h"
+#include "TVirtualPerfStats.h"
 
 #include "TBranchIMTHelper.h"
 
@@ -596,6 +599,63 @@ void TBranch::AddLastBasket(Long64_t startEntry)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Loop on all leaves of this branch to back fill Basket buffer.
+///
+/// Use this routine instead of TBranch::Fill when filling a branch individually
+/// to catch up with the number of entries already in the TTree.
+///
+/// First it calls TBranch::Fill and then if the number of entries of the branch
+/// reach one of TTree cluster's boundary, the basket is flushed.
+///
+/// The function returns the number of bytes committed to the memory basket.
+/// If a write error occurs, the number of bytes returned is -1.
+/// If no data are written, because e.g. the branch is disabled,
+/// the number of bytes returned is 0.
+///
+/// To insure that the baskets of each cluster are located close by in the
+/// file, when back-filling multiple branches make sure to call BackFill
+/// for the same entry for all the branches consecutively
+/// ~~~ {.cpp}
+///   for( auto e = 0; e < tree->GetEntries(); ++e ) { // loop over entries.
+///     for( auto branch : branchCollection) {
+///        ... Make change to the data associated with the branch ...
+///        branch->BackFill();
+///     }
+///   }
+///   // Since we loop over all the branches for each new entry
+///   // all the baskets for a cluster are consecutive in the file.
+/// ~~~
+/// rather than doing all the entries of one branch at a time.
+/// ~~~ {.cpp}
+///   // Do NOT do things in the following order, it will lead to
+///   // poorly clustered files.
+///   for(auto branch : branchCollection) {
+///     for( auto e = 0; e < tree->GetEntries(); ++e ) { // loop over entries.
+///        ... Make change to the data associated with the branch ...
+///        branch->BackFill();
+///     }
+///   }
+///   // Since we loop over all the entries for one branch
+///   // all the baskets for that branch are consecutive.
+/// ~~~
+
+Int_t TBranch::BackFill() {
+
+   // Get the end of the next cluster.
+   auto cluster  = GetTree()->GetClusterIterator( GetEntries() );
+   cluster.Next();
+   auto endCluster = cluster.GetNextEntry();
+
+   auto result = FillImpl(nullptr);
+
+   if ( result && GetEntries() >= endCluster ) {
+      FlushBaskets();
+   }
+
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Browser interface.
 
 void TBranch::Browse(TBrowser* b)
@@ -761,7 +821,7 @@ Int_t TBranch::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
       return 0;
    }
 
-   TBasket* basket = GetBasket(fWriteBasket);
+   TBasket* basket = (TBasket*)fBaskets.UncheckedAt(fWriteBasket);
    if (!basket) {
       basket = fTree->CreateBasket(this); //  create a new basket
       if (!basket) return 0;
@@ -778,7 +838,9 @@ Int_t TBranch::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
       basket->SetWriteMode();
    }
 
-   buf->ResetMap();
+   if (!TestBit(kDoNotUseBufferMap)) {
+     buf->ResetMap();
+   }
 
    Int_t lnew = 0;
    Int_t nbytes = 0;
@@ -813,10 +875,15 @@ Int_t TBranch::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
    // fSkipZip force one entry per buffer (old stuff still maintained for CDF)
    // Transfer full compressed buffer only
 
-   if ((fSkipZip && (lnew >= TBuffer::kMinimalSize)) || (buf->TestBit(TBufferFile::kNotDecompressed)) || ((lnew + (2 * nsize) + nbytes) >= fBasketSize)) {
-      if (fTree->TestBit(TTree::kCircular)) {
-         return nbytes;
-      }
+   // If GetAutoFlush() is less than zero, then we are determining the end of the autocluster
+   // based upon the number of bytes already flushed.  This is incompatible with one-basket-per-cluster
+   // (since we will grow the basket indefinitely and never flush!).  Hence, we wait until the
+   // first event cluster is written out and *then* enable one-basket-per-cluster mode.
+   bool noFlushAtCluster = !fTree->TestBit(TTree::kOnlyFlushAtCluster) || (fTree->GetAutoFlush() < 0);
+
+   if (noFlushAtCluster && !fTree->TestBit(TTree::kCircular) &&
+       ((fSkipZip && (lnew >= TBuffer::kMinimalSize)) || (buf->TestBit(TBufferFile::kNotDecompressed)) ||
+        ((lnew + (2 * nsize) + nbytes) >= fBasketSize))) {
       Int_t nout = WriteBasketImpl(basket, fWriteBasket, imtHelper);
       if (nout < 0) Error("TBranch::Fill", "Failed to write out basket.\n");
       return (nout >= 0) ? nbytes : -1;
@@ -1147,7 +1214,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    }
    //add branch to cache (if any)
    {
-      R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
+      R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
       TFileCacheRead *pf = file->GetCacheRead(fTree);
       if (pf){
          if (pf->IsLearning()) pf->AddBranch(this);
@@ -1177,6 +1244,12 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    }
 
    ++fNBaskets;
+
+   fCacheInfo.SetUsed(basketnumber);
+   auto perfStats = GetTree()->GetPerfStats();
+   if (perfStats)
+      perfStats->SetUsed(this, basketnumber);
+
    fBaskets.AddAt(basket,basketnumber);
    return basket;
 }
@@ -1736,7 +1809,7 @@ Long64_t TBranch::GetTotBytes(Option_t *option) const
    Int_t len = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < len; ++i) {
       TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
-      if (branch) totbytes += branch->GetTotBytes();
+      if (branch) totbytes += branch->GetTotBytes(option);
    }
    return totbytes;
 }
@@ -1754,7 +1827,7 @@ Long64_t TBranch::GetZipBytes(Option_t *option) const
    Int_t len = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < len; ++i) {
       TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
-      if (branch) zipbytes += branch->GetZipBytes();
+      if (branch) zipbytes += branch->GetZipBytes(option);
    }
    return zipbytes;
 }
@@ -1844,8 +1917,11 @@ Int_t TBranch::LoadBaskets()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print TBranch parameters
+///
+/// If options contains "basketsInfo" print the entry number, location and size
+/// of each baskets.
 
-void TBranch::Print(Option_t*) const
+void TBranch::Print(Option_t *option) const
 {
    const int kLINEND = 77;
    Float_t cx = 1;
@@ -1916,6 +1992,7 @@ void TBranch::Print(Option_t*) const
       delete[] tmp;
    }
    Printf("%s", bline);
+
    if (fTotBytes > 2000000000) {
       Printf("*Entries :%lld : Total  Size=%11lld bytes  File Size  = %lld *",fEntries,totBytes,fZipBytes);
    } else {
@@ -1923,16 +2000,34 @@ void TBranch::Print(Option_t*) const
          Printf("*Entries :%9lld : Total  Size=%11lld bytes  File Size  = %10lld *",fEntries,totBytes,fZipBytes);
       } else {
          if (fWriteBasket > 0) {
-            Printf("*Entries :%9lld : Total  Size=%11lld bytes  All baskets in memory   *",fEntries,totBytes);
+               Printf("*Entries :%9lld : Total  Size=%11lld bytes  All baskets in memory   *",fEntries,totBytes);
          } else {
-            Printf("*Entries :%9lld : Total  Size=%11lld bytes  One basket in memory    *",fEntries,totBytes);
+               Printf("*Entries :%9lld : Total  Size=%11lld bytes  One basket in memory    *",fEntries,totBytes);
          }
       }
    }
    Printf("*Baskets :%9d : Basket Size=%11d bytes  Compression= %6.2f     *",fWriteBasket,fBasketSize,cx);
+
+   if (strncmp(option,"basketsInfo",strlen("basketsInfo"))==0) {
+      Int_t nbaskets = fWriteBasket;
+      for (Int_t i=0;i<nbaskets;i++) {
+         Printf("*Basket #%4d  entry=%6lld  pos=%6lld  size=%5d",
+                i, fBasketEntry[i], fBasketSeek[i], fBasketBytes[i]);
+      }
+   }
+
    Printf("*............................................................................*");
    delete [] bline;
    fgCount++;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print the information we have about which basket is currently cached and
+/// whether they have been 'used'/'read' from the cache.
+
+void TBranch::PrintCacheInfo() const
+{
+   fCacheInfo.Print(GetName(), fBasketEntry);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2252,7 +2347,7 @@ void TBranch::SetCompressionAlgorithm(Int_t algorithm)
 {
    if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
    if (fCompress < 0) {
-      fCompress = 100 * algorithm + 1;
+      fCompress = 100 * algorithm + 4;
    } else {
       int level = fCompress % 100;
       fCompress = 100 * algorithm + level;
@@ -2716,6 +2811,10 @@ Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBr
          fTotBytes += addbytes;
          fTree->AddTotBytes(addbytes);
          fTree->AddZipBytes(nout);
+#ifdef R__TRACK_BASKET_ALLOC_TIME
+         fTree->AddAllocationTime(reusebasket->GetResetAllocationTime());
+#endif
+         fTree->AddAllocationCount(reusebasket->GetResetAllocationCount());
       }
 
       if (where==fWriteBasket) {

@@ -20,7 +20,7 @@
 
 #include "TClingUtils.h"
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #include "cling/Interpreter/CIFactory.h"
 #include "clang/Basic/SourceManager.h"
@@ -44,9 +44,11 @@ using namespace clang;
 
 TModuleGenerator::TModuleGenerator(CompilerInstance *CI,
                                    bool inlineInputHeaders,
-                                   const std::string &shLibFileName):
+                                   const std::string &shLibFileName,
+                                   bool writeEmptyRootPCM):
    fCI(CI),
    fIsPCH(shLibFileName == "allDict.cxx"),
+   fIsInPCH(writeEmptyRootPCM),
    fInlineInputHeaders(inlineInputHeaders),
    fDictionaryName(llvm::sys::path::stem(shLibFileName)),
    fDemangledDictionaryName(llvm::sys::path::stem(shLibFileName)),
@@ -375,6 +377,9 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
       fwdDeclStringRAW += ")DICTFWDDCLS\"";
    }
 
+   if (fIsInPCH)
+      fwdDeclStringRAW = "nullptr";
+
    std::string payloadCode;
 
    // Increase the value of the diagnostics pointing out from which
@@ -451,18 +456,23 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
    } else {
       WriteHeaderArray(out);
    };
+
+   std::string payloadcodeWrapped = "nullptr";
+   if (!fIsInPCH)
+      payloadcodeWrapped = "R\"DICTPAYLOAD(\n" + payloadCode + ")DICTPAYLOAD\"";
+
    out << "    };\n"
-       "    static const char* includePaths[] = {\n";
+       << "    static const char* includePaths[] = {\n";
    WriteIncludePathArray(out) <<
                               "    };\n"
                               "    static const char* fwdDeclCode = " << fwdDeclStringRAW << ";\n"
-                              "    static const char* payloadCode = R\"DICTPAYLOAD(\n" << payloadCode << ")DICTPAYLOAD\";\n"
+                              "    static const char* payloadCode = " << payloadcodeWrapped << ";\n"
                               "    " << headersClassesMapString << "\n"
                               "    static bool isInitialized = false;\n"
                               "    if (!isInitialized) {\n"
                               "      TROOT::RegisterModule(\"" << GetDemangledDictionaryName() << "\",\n"
                               "        headers, includePaths, payloadCode, fwdDeclCode,\n"
-                              "        TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl, " << fwdDeclnArgsToKeepString << ", classesHeaders);\n"
+                              "        TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl, " << fwdDeclnArgsToKeepString << ", classesHeaders, " << (fCI->getLangOpts().Modules ? "/*has C++ module*/true" : "/*has no C++ module*/false") << ");\n"
                               "      isInitialized = true;\n"
                               "    }\n"
                               "  }\n"

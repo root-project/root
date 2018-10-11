@@ -45,6 +45,11 @@ foreach(_lib PYTHIA8_LIBRARY PYTHIA8_hepmcinterface_LIBRARY PYTHIA8_lhapdfdummy_
 endforeach()
 set(PYTHIA8_INCLUDE_DIRS ${PYTHIA8_INCLUDE_DIR} ${PYTHIA8_INCLUDE_DIR}/Pythia8 )
 
+find_path(PYTHIA8_DATA 
+          NAMES MainProgramSettings.xml
+          HINTS ${_pythia8dirs}
+          PATH_SUFFIXES xmldoc)
+
 # handle the QUIETLY and REQUIRED arguments and set PYTHIA8_FOUND to TRUE if
 # all listed variables are TRUE
 

@@ -47,6 +47,93 @@ This class includes functions to set some of the following object attributes.
   - Markers
   - Functions
   - Histogram Statistics and Titles
+
+All objects that can be drawn in a pad inherit from one or more attribute classes
+like TAttLine, TAttFill, TAttText, TAttMarker. When the objects are created, their
+default attributes are taken from the current style. The current style is an object
+of the class[TStyle](https://root.cern.ch/doc/master/classTStyle.html) and can be
+referenced via the global variable `gStyle` (in TStyle.h).
+
+ROOT provides two styles called "Default" and "Plain". The "Default"
+style is created simply by:
+
+~~~ .cpp
+auto default = new TStyle("Default","Default Style");
+~~~
+
+The "**Plain**" style can be used if you are working on a monochrome display or
+if you want to get a "conventional" Postscript output. These are the instructions
+in the ROOT constructor to create the "Plain*" style.
+
+```
+auto plain  = new TStyle("Plain","Plain Style (no colors/fill areas)");
+
+   plain->SetCanvasBorderMode(0);
+   plain->SetPadBorderMode(0);
+   plain->SetPadColor(0);
+   plain->SetCanvasColor(0);
+   plain->SetTitleColor(0);
+   plain->SetStatColor(0);
+```
+
+You can set the current style with:
+
+```
+gROOT->SetStyle(style_name);
+```
+
+You can get a pointer to an existing style with:
+
+```
+auto style = gROOT->GetStyle(style_name);
+```
+
+You can create additional styles with:
+
+```
+ TStyle *st1 = new TStyle("st1","my style");
+    st1->Set....
+    st1->cd();  this becomes now the current style gStyle
+```
+
+In your [rootlogon.C](https://root.cern.ch/doc/master/classexamples/startsession.log.html)
+file, you can redefine the default parameters via statements like:
+
+```
+  gStyle->SetStatX(0.7);
+  gStyle->SetStatW(0.2);
+  gStyle->SetLabelOffset(1.2);
+  gStyle->SetLabelFont(72);
+```
+
+Note that when an object is created, its attributes are taken from the current
+style. For example, you may have created an histogram in a previous session,
+saved it in a file. Meanwhile, if you have changed the style, the histogram will
+be drawn with the old attributes. You can force the current style attributes to
+be set when you read an object from a file by calling:
+
+```
+gROOT->ForceStyle();
+```
+
+before reading the objects from the file.
+
+Let's assume you have a canvas or pad with your histogram or any other object,
+you can force these objects to get the attributes of the current style via:
+
+```
+canvas->UseCurrentStyle();
+```
+
+The description of the style functions should be clear from the name of the
+TStyle Setters or Getters. Some functions have an extended description, in particular:
+
+  - TStyle:SetLabelFont.
+  - TStyle:SetLineStyleString, to set the format of dashed lines.
+  - TStyle:SetOptStat.
+  - TStyle:SetPalette to change the colors palette.
+  - TStyle:SetTitleOffset.
+
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,12 +147,13 @@ TStyle::TStyle() :TNamed()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new TStyle.
 /// The following names are reserved to create special styles
-///   -Classic: the default style set in TStyle::Reset
-///   -Plain: a black&white oriented style
-///   -Bold:
-///   -Video;
-///   -Pub:
-///   -Modern:
+///   - `Classic`: the default style set in TStyle::Reset
+///   - `Plain`: a black&white oriented style
+///   - `Bold`
+///   - `Video`
+///   - `Pub`
+///   - `Modern`
+///   - `ATLAS`: style used by the ATLAS experiment
 ///     (see the definition of these styles below).
 ///
 /// Note a side-effect of calling gStyle->SetFillColor(0). This is nearly
@@ -255,7 +343,50 @@ TStyle::TStyle(const char *name, const char *title)
       SetTitleTextColor(kBlue);
       return;
    }
-
+   if (strcmp(style_name,"ATLAS") == 0) {
+      // Author: M.Sutton - Atlas Collaboration 2010
+      SetFrameBorderMode(0);
+      SetFrameFillColor(0);
+      SetCanvasBorderMode(0);
+      SetCanvasColor(0);
+      SetPadBorderMode(0);
+      SetPadColor(0);
+      SetStatColor(0);
+      SetPaperSize(20,26);
+      SetPadTopMargin(0.05);
+      SetPadRightMargin(0.05);
+      SetPadBottomMargin(0.16);
+      SetPadLeftMargin(0.16);
+      SetTitleXOffset(1.4);
+      SetTitleYOffset(1.4);
+      Int_t font = 42;
+      Double_t tsize=0.05;
+      SetTextFont(font);
+      SetTextSize(tsize);
+      SetLabelFont(font,"x");
+      SetTitleFont(font,"x");
+      SetLabelFont(font,"y");
+      SetTitleFont(font,"y");
+      SetLabelFont(font,"z");
+      SetTitleFont(font,"z");
+      SetLabelSize(tsize,"x");
+      SetTitleSize(tsize,"x");
+      SetLabelSize(tsize,"y");
+      SetTitleSize(tsize,"y");
+      SetLabelSize(tsize,"z");
+      SetTitleSize(tsize,"z");
+      SetMarkerStyle(20);
+      SetMarkerSize(1.2);
+      SetHistLineWidth(2.);
+      SetLineStyleString(2,"[12 12]");
+      SetErrorX(0.0001);   // get rid of X error bars (as recommended in ATLAS figure guidelines)
+      SetEndErrorSize(0.); // get rid of error bar caps
+      SetOptTitle(0);
+      SetOptStat(0);
+      SetOptFit(0);
+      SetPadTickX(1);
+      SetPadTickY(1);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,6 +428,7 @@ void TStyle::BuildStyles()
    new TStyle("Classic","Classic Style");
    new TStyle("Default","Equivalent to Classic");
    new TStyle("Modern", "Modern Style");
+   new TStyle("ATLAS",  "ATLAS Style");
    delete col;
 }
 
@@ -425,6 +557,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fJoinLinePS     = fJoinLinePS;
    ((TStyle&)obj).fColorModelPS   = fColorModelPS;
    ((TStyle&)obj).fTimeOffset     = fTimeOffset;
+   ((TStyle&)obj).fImageScaling   = fImageScaling;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -544,6 +677,7 @@ void TStyle::Reset(Option_t *opt)
    fLegendFont      = 62;
    fLegendTextSize  = 0.,
    fLegendFillColor = 0;
+   fImageScaling    = 1.;
 
    SetDateX();
    SetDateY();
@@ -701,6 +835,50 @@ void TStyle::Reset(Option_t *opt)
       SetTitleOffset(1.3,"y");
       SetTitleFillColor(10);
       SetTitleTextColor(kBlue);
+      return;
+   }
+   if (strcmp(style_name,"ATLAS") == 0) {
+      SetFrameBorderMode(0);
+      SetFrameFillColor(0);
+      SetCanvasBorderMode(0);
+      SetCanvasColor(0);
+      SetPadBorderMode(0);
+      SetPadColor(0);
+      SetStatColor(0);
+      SetPaperSize(20,26);
+      SetPadTopMargin(0.05);
+      SetPadRightMargin(0.05);
+      SetPadBottomMargin(0.16);
+      SetPadLeftMargin(0.16);
+      SetTitleXOffset(1.4);
+      SetTitleYOffset(1.4);
+      Int_t font = 42;
+      Double_t tsize=0.05;
+      SetTextFont(font);
+      SetTextSize(tsize);
+      SetLabelFont(font,"x");
+      SetTitleFont(font,"x");
+      SetLabelFont(font,"y");
+      SetTitleFont(font,"y");
+      SetLabelFont(font,"z");
+      SetTitleFont(font,"z");
+      SetLabelSize(tsize,"x");
+      SetTitleSize(tsize,"x");
+      SetLabelSize(tsize,"y");
+      SetTitleSize(tsize,"y");
+      SetLabelSize(tsize,"z");
+      SetTitleSize(tsize,"z");
+      SetMarkerStyle(20);
+      SetMarkerSize(1.2);
+      SetHistLineWidth(2.);
+      SetLineStyleString(2,"[12 12]");
+      SetErrorX(0.0001);
+      SetEndErrorSize(0.);
+      SetOptTitle(0);
+      SetOptStat(0);
+      SetOptFit(0);
+      SetPadTickX(1);
+      SetPadTickY(1);
       return;
    }
 }

@@ -12,7 +12,7 @@
          (targetfile is overwritten if it exists)
 
   When the -f option is specified, one can also specify the compression
-  level of the target file. By default the compression level is 1, but
+  level of the target file. By default the compression level is 4, but
   if "-f0" is specified, the target file will not be compressed.
   if "-f6" is specified, the compression level 6 will be used.
 
@@ -70,7 +70,7 @@
            Toby Burnett implemented the possibility to use indirect files.
  */
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "ROOT/TIOFeatures.hxx"
 #include <string>
 #include "TFile.h"
@@ -124,7 +124,8 @@ int main( int argc, char **argv )
       std::cout << "If the option -experimental-io-features is used (and an argument provided), then\n"
                    "   the corresponding experimental feature will be enabled for output trees." << std::endl;
       std::cout << "When -the -f option is specified, one can also specify the compression level of\n"
-                   "   the target file.  By default the compression level is 1." <<std::endl;
+                   "   the target file.  By default the compression level is 4."
+                << std::endl;
       std::cout << "If \"-fk\" is specified, the target file contain the baskets with the same\n"
                    "   compression as in the input files unless -O is specified.  The meta data will\n"
                    "   be compressed using the compression level specified in the first input or the\n"
@@ -420,9 +421,9 @@ int main( int argc, char **argv )
          if (firstInput && !firstInput->IsZombie())
             newcomp = firstInput->GetCompressionSettings();
          else
-            newcomp = 1;
+            newcomp = 4;
          delete firstInput;
-      } else newcomp = 1; // default compression level.
+      } else newcomp = 4; // default compression level.
    }
    if (verbosity > 1) {
       if (keepCompressionAsIs && !reoptimize)
@@ -503,8 +504,8 @@ int main( int argc, char **argv )
                std::cerr << "hadd skipping file with error: " << argv[i] << std::endl;
             } else {
                std::cerr << "hadd exiting due to error in " << argv[i] << std::endl;
+               return kFALSE;
             }
-            return kFALSE;
          }
       }
       return mergeFiles(merger);
@@ -525,7 +526,7 @@ int main( int argc, char **argv )
    };
 
    auto reductionFunc = [&]() {
-      for (auto pf : partialFiles) {
+      for (const auto &pf : partialFiles) {
          fileMerger.AddFile(pf.c_str());
       }
       return mergeFiles(fileMerger);
@@ -544,7 +545,7 @@ int main( int argc, char **argv )
          std::cout << "hadd failed at the parallel stage" << std::endl;
       }
       if (!debug) {
-         for (auto pf : partialFiles) {
+         for (const auto &pf : partialFiles) {
             gSystem->Unlink(pf.c_str());
          }
       }

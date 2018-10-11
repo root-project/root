@@ -69,19 +69,17 @@ fi
 
 ### ROOT libraries ###
 
-if test "$platform" = "ios"; then
-   newlib=
-   rootglibs=
-   rootevelibs=
-   rootlibs="-lRoota"
-else
-   newlib="-lNew"
-   rootglibs="-lGui"
-   rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
-   rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lTreePlayer\
-             -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
-             -lMultiProc"
+newlib="-lNew"
+rootglibs="-lGui"
+rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
+rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer\
+          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
+          -lMultiProc"
+
+if [ `uname -m` != 'i686' ]; then
+   rootlibs="$rootlibs -lROOTDataFrame"
 fi
+
 
 if test "$platform" = "win32"; then
    rootulibs="-include:_G__cpp_setupG__Net        \
@@ -124,18 +122,18 @@ elif test "$platform" = "aix5"; then
                  -Wl,-u,.G__cpp_setupG__GL         \
                  -Wl,-u,.G__cpp_setupG__Eve1"
 else
-   rootulibs="-Wl,-u,_G__cpp_setupG__Net        \
-              -Wl,-u,_G__cpp_setupG__IO         \
-              -Wl,-u,_G__cpp_setupG__Hist       \
-              -Wl,-u,_G__cpp_setupG__Graf       \
-              -Wl,-u,_G__cpp_setupG__G3D        \
-              -Wl,-u,_G__cpp_setupG__GPad       \
-              -Wl,-u,_G__cpp_setupG__Tree       \
-              -Wl,-u,_G__cpp_setupG__TreePlayer \
-              -Wl,-u,_G__cpp_setupG__Thread     \
-              -Wl,-u,_G__cpp_setupG__Rint       \
-              -Wl,-u,_G__cpp_setupG__PostScript \
-              -Wl,-u,_G__cpp_setupG__Matrix     \
+   rootulibs="-Wl,-u,_G__cpp_setupG__Net           \
+              -Wl,-u,_G__cpp_setupG__IO            \
+              -Wl,-u,_G__cpp_setupG__Hist          \
+              -Wl,-u,_G__cpp_setupG__Graf          \
+              -Wl,-u,_G__cpp_setupG__G3D           \
+              -Wl,-u,_G__cpp_setupG__GPad          \
+              -Wl,-u,_G__cpp_setupG__Tree          \
+              -Wl,-u,_G__cpp_setupG__TreePlayer    \
+              -Wl,-u,_G__cpp_setupG__Thread        \
+              -Wl,-u,_G__cpp_setupG__Rint          \
+              -Wl,-u,_G__cpp_setupG__PostScript    \
+              -Wl,-u,_G__cpp_setupG__Matrix        \
               -Wl,-u,_G__cpp_setupG__Physics"
    rootuglibs="-Wl,-u,_G__cpp_setupG__Gui1"
    rootuevelibs="-Wl,-u,_G__cpp_setupG__EG         \
@@ -319,11 +317,6 @@ macosx64)
    fi
    auxcflags="${cxxversionflag} -m64"
    auxldflags="-m64"
-   auxlibs="-lm -ldl"
-   ;;
-ios*)
-   auxcflags="${cxxversionflag} -m32"
-   auxldflags="-m32"
    auxlibs="-lm -ldl"
    ;;
 hiux)
@@ -824,7 +817,7 @@ while test $# -gt 0; do
       echo "  --noauxlibs           Do not print auxiliary/system libraries"
       echo "  --noauxcflags         Do not print auxiliary compiler flags"
       echo "  --noldflags           Do not print linker flags"
-      echo "  --config              Print arguments used for ./configure"
+      echo "  --config              Print arguments used for configuration with CMake"
       echo "  --features            Print list of all supported features"
       echo "  --has-<feature>       Test if <feature> is compiled in"
       echo "  --version             Print the ROOT version"

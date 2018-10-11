@@ -38,13 +38,13 @@ class TVirtualCollectionIterators;
 class TVirtualCollectionPtrIterators;
 class TVirtualArray;
 
-namespace TStreamerInfoActions { class TActionSequence; }
-
+#include "TStreamerInfoActions.h"
 
 class TBranchElement : public TBranch {
 
 // Friends
    friend class TTreeCloner;
+   friend class TLeafElement;
 
 // Types
 protected:
@@ -89,8 +89,9 @@ protected:
    TStreamerInfo           *fInfo;          ///<! Pointer to StreamerInfo
    char                    *fObject;        ///<! Pointer to object at *fAddress
    TVirtualArray           *fOnfileObject;  ///<! Place holder for the onfile representation of data members.
-   Bool_t                   fInit;          ///<! Initialization flag for branch assignment
-   Bool_t                   fInitOffsets;   ///<! Initialization flag to not endlessly recalculate offsets
+   Bool_t                   fInit : 1;      ///<! Initialization flag for branch assignment
+   Bool_t                   fInInitInfo : 1;///<! True during the 2nd part of InitInfo (cut recursion).
+   Bool_t                   fInitOffsets: 1;///<! Initialization flag to not endlessly recalculate offsets
    TClassRef                fTargetClass;   ///<! Reference to the target in-memory class
    TClassRef                fCurrentClass;  ///<! Reference to current (transient) class definition
    TClassRef                fParentClass;   ///<! Reference to class definition in fParentName
@@ -98,7 +99,7 @@ protected:
    TClassRef                fClonesClass;   ///<! Reference to class definition in fClonesName
    Int_t                   *fBranchOffset;  ///<! Sub-Branch offsets with respect to current transient class
    Int_t                    fBranchID;      ///<! ID number assigned by a TRefTable.
-   std::vector<Int_t>       fIDs;           ///<! List of the serial number of all the StreamerInfo to be used.
+   TStreamerInfoActions::TIDs fNewIDs; ///<! Nested List of the serial number of all the StreamerInfo to be used.
    TStreamerInfoActions::TActionSequence *fReadActionSequence;  ///<! Set of actions to be executed to extract the data from the basket.
    TStreamerInfoActions::TActionSequence *fFillActionSequence;  ///<! Set of actions to be executed to write the data to the basket.
    TVirtualCollectionIterators           *fIterators;      ///<! holds the iterators when the branch is of fType==4.
@@ -118,9 +119,11 @@ protected:
    virtual void             InitializeOffsets();
    virtual void             InitInfo();
    Bool_t                   IsMissingCollection() const;
+   TStreamerInfo           *FindOnfileInfo(TClass *valueClass, const TObjArray &branches) const;
    TClass                  *GetParentClass(); // Class referenced by fParentName
    TStreamerInfo           *GetInfoImp() const;
    void                     ReleaseObject();
+   void                     SetupInfo();
    void                     SetBranchCount(TBranchElement* bre);
    void                     SetBranchCount2(TBranchElement* bre) { fBranchCount2 = bre; }
    Int_t                    Unroll(const char* name, TClass* cltop, TClass* cl, char* ptr, Int_t basketsize, Int_t splitlevel, Int_t btype);
@@ -130,6 +133,7 @@ protected:
    void Init(TTree *tree, TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
    void Init(TTree *tree, TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
 
+   void SetActionSequence(TClass *originalClass, TStreamerInfo *localInfo, TStreamerInfoActions::TActionSequence::SequenceGetter_t create, TStreamerInfoActions::TActionSequence *&actionSequence);
    void ReadLeavesImpl(TBuffer& b);
    void ReadLeavesMakeClass(TBuffer& b);
    void ReadLeavesCollection(TBuffer& b);
@@ -161,6 +165,7 @@ protected:
    void FillLeavesMember(TBuffer& b);
    void SetFillLeavesPtr();
    void SetFillActionSequence();
+
 // Public Interface.
 public:
    TBranchElement();
@@ -193,6 +198,7 @@ public:
            TStreamerInfo   *GetInfo() const;
            Bool_t           GetMakeClass() const;
            char            *GetObject() const;
+           TVirtualArray   *GetOnfileObject() const { return fOnfileObject; }
    virtual const char      *GetParentName() const { return fParentName.Data(); }
    virtual Int_t            GetMaximum() const;
            Int_t            GetNdata() const { return fNdata; }
@@ -214,6 +220,7 @@ public:
    virtual void             ResetAfterMerge(TFileMergeInfo *);
    virtual void             ResetAddress();
    virtual void             ResetDeleteObject();
+   virtual void             ResetInitInfo(bool recurse);
    virtual void             SetAddress(void* addobj);
    virtual Bool_t           SetMakeClass(Bool_t decomposeObj = kTRUE);
    virtual void             SetObject(void *objadd);
@@ -227,6 +234,7 @@ public:
    virtual void             SetupAddresses();
    virtual void             SetType(Int_t btype) { fType = btype; }
    virtual void             UpdateFile();
+           void             Unroll(const char *name, TClass *cl, TStreamerInfo *sinfo, char* objptr, Int_t bufsize, Int_t splitlevel);
 
    enum EBranchElementType {
       kLeafNode = 0,

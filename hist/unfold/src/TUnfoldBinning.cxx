@@ -1415,7 +1415,7 @@ TH1 *TUnfoldBinning::ExtractHistogram
          }
       }
    }
-   delete binMap;
+   delete[] binMap;
    return r;
 }
 
@@ -1906,10 +1906,10 @@ Bool_t TUnfoldBinning::HasUnconnectedBins(void) const
 /// \param[in] bin local bin number
 
 const TObjString *TUnfoldBinning::GetUnconnectedBinName(Int_t bin) const {
-   TObjString *r=0;
+   TObjString const *r = nullptr;
    if(HasUnconnectedBins()) {
       if(bin<fAxisLabelList->GetEntriesFast()) {
-         r=((TObjString * const)fAxisLabelList->At(bin));
+         r = ((TObjString const *)fAxisLabelList->At(bin));
       }
    }
    return r;
@@ -2142,7 +2142,7 @@ void TUnfoldBinning::DecodeAxisSteering
      Int_t nPattern=patterns->GetEntries();
      Int_t nAxis=fAxisLabelList->GetEntries();
      for(Int_t i=0;i<nPattern;i++) {
-        TString const &pattern=((TObjString * const)patterns->At(i))
+        TString const &pattern=((TObjString const *)patterns->At(i))
            ->GetString();
         Int_t bracketBegin=pattern.Last('[');
         Int_t len=pattern.Length();

@@ -168,7 +168,7 @@ if not _builtin_cppyy:
 
 ### configuration ---------------------------------------------------------------
 class _Configuration( object ):
-   __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', 'ExposeCppMacros', 
+   __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', 'ExposeCppMacros',
                  '_gts', 'DisableRootLogon' ]
 
    def __init__( self ):
@@ -225,6 +225,8 @@ sys.modules['ROOT.std'] = cppyy.gbl.std
 
 
 ### special case pythonization --------------------------------------------------
+
+# TTree iterator
 def _TTree__iter__( self ):
    i = 0
    bytes_read = self.GetEntry(i)
@@ -237,6 +239,149 @@ def _TTree__iter__( self ):
       raise RuntimeError( "TTree I/O error" )
 
 _root.CreateScopeProxy( "TTree" ).__iter__    = _TTree__iter__
+
+# Array interface
+def _proxy__array_interface__(self):
+    getter_array_interface = "_get__array_interface__"
+    if hasattr(self, getter_array_interface):
+        return self._get__array_interface__()
+    else:
+        raise Exception("Class {} does not have method {}.".format(
+            type(self), getter_array_interface))
+
+for pyclass in [
+        "std::vector<{dtype}>",
+        "ROOT::VecOps::RVec<{dtype}>"
+        ]:
+    dtypes = ["float", "double", "int", "unsigned int", "long", "unsigned long"]
+    for dtype in dtypes:
+        class_scope = _root.CreateScopeProxy(pyclass.format(dtype=dtype))
+        class_scope._proxy__array_interface__ = _proxy__array_interface__
+        class_scope.__array_interface__ = property(class_scope._proxy__array_interface__)
+
+# TTree.AsMatrix functionality
+def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labels=False):
+    """Read-out the TTree as a numpy array.
+
+    Note that the reading is performed in multiple threads if the implicit
+    multi-threading of ROOT is enabled.
+
+    Parameters:
+        columns: If None return all branches as columns, otherwise specify names in iterable.
+        exclude: Exclude branches from selection.
+        dtype: Set return data-type of numpy array.
+        return_labels: Return additionally to the numpy array the names of the columns.
+
+    Returns:
+        array(, labels): Numpy array(, labels of columns)
+    """
+
+    # Import numpy lazily
+    try:
+        import numpy as np
+    except:
+        raise ImportError("Failed to import numpy during call of TTree.AsMatrix.")
+
+    # Check that tree has entries
+    if self.GetEntries() == 0:
+        raise Exception("Tree {} has no entries.".format(self.GetName()))
+
+    # Get all columns of the tree if no columns are specified
+    if columns is None:
+        columns = [branch.GetName() for branch in self.GetListOfBranches()]
+
+    # Exclude columns
+    if exclude == None:
+        exclude = []
+    columns = [col for col in columns if not col in exclude]
+
+    if not columns:
+        raise Exception("Arguments resulted in no selected branches.")
+
+    # Check validity of branches
+    supported_branch_dtypes = ["Float_t", "Double_t", "Char_t", "UChar_t", "Short_t", "UShort_t",
+            "Int_t", "UInt_t", "Long64_t", "ULong64_t"]
+    col_dtypes = []
+    invalid_cols_notfound = []
+    invalid_cols_dtype = {}
+    invalid_cols_multipleleaves = {}
+    invalid_cols_leafname = {}
+    for col in columns:
+        # Check that column exists
+        branch = self.GetBranch(col)
+        if branch == None:
+            invalid_cols_notfound.append(col)
+            continue
+
+        # Check that the branch has only one leaf with the name of the branch
+        leaves = [leaf.GetName() for leaf in branch.GetListOfLeaves()]
+        if len(leaves) != 1:
+            invalid_cols_multipleleaves[col] = len(leaves)
+            continue
+        if leaves[0] != col:
+            invalid_cols_leafname[col] = len(leaves[0])
+            continue
+
+        # Check that the leaf of the branch has an arithmetic data-type
+        col_dtype = self.GetBranch(col).GetLeaf(col).GetTypeName()
+        col_dtypes.append(col_dtype)
+        if not col_dtype in supported_branch_dtypes:
+            invalid_cols_dtype[col] = col_dtype
+
+    exception_template = "Reading of branch {} is not supported ({})."
+    if invalid_cols_notfound:
+        raise Exception(exception_template.format(invalid_cols_notfound, "branch not existent"))
+    if invalid_cols_multipleleaves:
+        raise Exception(exception_template.format([k for k in invalid_cols_multipleleaves], "branch has multiple leaves"))
+    if invalid_cols_leafname:
+        raise Exception(exception_template.format(
+            [k for k in invalid_cols_leafname], "name of leaf is different from name of branch {}".format(
+                [invalid_cols_leafname[k] for k in invalid_cols_leafname])))
+    if invalid_cols_dtype:
+        raise Exception(exception_template.format(
+            [k for k in invalid_cols_dtype], "branch has unsupported data-type {}".format(
+                [invalid_cols_dtype[k] for k in invalid_cols_dtype])))
+
+    # Check that given data-type is supported
+    supported_output_dtypes = ["int", "unsigned int", "long", "unsigned long", "float", "double"]
+    if not dtype in supported_output_dtypes:
+        raise Exception("Data-type {} is not supported, select from {}.".format(
+            dtype, supported_output_dtypes))
+
+    # Convert columns iterable to std.vector("string")
+    columns_vector = _root.std.vector("string")(len(columns))
+    for i, col in enumerate(columns):
+        columns_vector[i] = col
+
+    # Allocate memory for the read-out
+    flat_matrix = _root.std.vector(dtype)(self.GetEntries()*len(columns))
+
+    # Read the tree as flat std.vector(dtype)
+    tree_ptr = _root.PyROOT.GetAddress(self)
+    columns_vector_ptr = _root.PyROOT.GetAddress(columns_vector)
+    flat_matrix_ptr = _root.PyROOT.GetVectorAddress(dtype)(flat_matrix)
+    jit_code = "PyROOT::TTreeAsFlatMatrixHelper<{dtype}, {col_dtypes}>(*reinterpret_cast<TTree*>({tree_ptr}), *reinterpret_cast<std::vector<{dtype}>* >({flat_matrix_ptr}), *reinterpret_cast<std::vector<string>* >({columns_vector_ptr}));".format(
+            col_dtypes = ", ".join(col_dtypes),
+            dtype = dtype,
+            tree_ptr = tree_ptr,
+            flat_matrix_ptr = flat_matrix_ptr,
+            columns_vector_ptr = columns_vector_ptr)
+    _root.gInterpreter.Calc(jit_code)
+
+    # Convert the std.vector(dtype) to a numpy array by memory-adoption and
+    # reshape the flat array to the correct shape of the matrix
+    flat_matrix_np = np.asarray(flat_matrix)
+    reshaped_matrix_np = np.reshape(flat_matrix_np,
+            (int(len(flat_matrix)/len(columns)), len(columns)))
+
+    if return_labels:
+        return (reshaped_matrix_np, columns)
+    else:
+        return reshaped_matrix_np
+
+# This Pythonisation is there only for 64 bits builds
+if (sys.maxsize > 2**32): # https://docs.python.org/3/library/platform.html#cross-platform
+    _root.CreateScopeProxy( "TTree" ).AsMatrix = _TTreeAsMatrix
 
 
 ### RINT command emulation ------------------------------------------------------
@@ -559,7 +704,7 @@ class ModuleFacade( types.ModuleType ):
             import time
             def _inputhook(context):
                while not context.input_is_ready():
-                  _root.gSystem.ProcessEvents()  
+                  _root.gSystem.ProcessEvents()
                   time.sleep( 0.01 )
             pt_inputhooks.register('ROOT',_inputhook)
             if get_ipython() : get_ipython().run_line_magic('gui', 'ROOT')

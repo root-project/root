@@ -464,7 +464,7 @@ int XrdProofdSandbox::GuessTag(XrdOucString &tag, int ridx)
       }
       found = (rc == 1) ? 1 : 0;
 
-      if (!found && staglst.size() > 0) {
+      if (!found && !staglst.empty()) {
          // Take last one, if required
          if (last) {
             tag = staglst.front()->c_str();
@@ -474,7 +474,7 @@ int XrdProofdSandbox::GuessTag(XrdOucString &tag, int ridx)
                int itag = ridx;
                // Reiterate back
                std::list<XrdOucString *>::iterator i;
-               for (i = staglst.begin(); i != staglst.end(); i++) {
+               for (i = staglst.begin(); i != staglst.end(); ++i) {
                   if (itag == 0) {
                      tag = (*i)->c_str();
                      found = 1;
@@ -568,7 +568,7 @@ int XrdProofdSandbox::RemoveSession(const char *tag)
 
    // If active sessions still exist, write out new composition
    bool unlk = 1;
-   if (actln.size() > 0) {
+   if (!actln.empty()) {
       unlk = 0;
       std::list<XrdOucString *>::iterator i;
       for (i = actln.begin(); i != actln.end(); ++i) {

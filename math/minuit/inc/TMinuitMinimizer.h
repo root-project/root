@@ -230,6 +230,9 @@ public:
    /// By default they are suppressed only when the printlevel is <= 0
    void SuppressMinuitWarnings(bool nowarn=true);
 
+   /// set debug mode. Return true if setting was successfull
+   bool SetDebug(bool on = true); 
+
 protected:
 
    /// implementation of FCN for Minuit
@@ -257,6 +260,7 @@ protected:
 
    ///check parameter
    bool CheckVarIndex(unsigned int ivar) const;
+
 
 private:
 

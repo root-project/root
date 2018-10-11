@@ -11,6 +11,8 @@
 
 #include "THttpWSEngine.h"
 
+#include "THttpCallArg.h"
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // THttpWSEngine                                                        //
@@ -21,28 +23,28 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-ClassImp(THttpWSEngine);
-
-////////////////////////////////////////////////////////////////////////////////
-/// normal constructor
-
-THttpWSEngine::THttpWSEngine(const char *name, const char *title)
-   : TNamed(name, title)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
-THttpWSEngine::~THttpWSEngine()
-{
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Envelope for sending string via the websocket
 
 void THttpWSEngine::SendCharStar(const char *str)
 {
-   if (str) Send(str, strlen(str));
+   if (str)
+      Send(str, strlen(str));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Method should be invoked before processing data coming from websocket
+/// If method returns kTRUE, data is processed internally and
+/// not dedicated for further usage
+
+Bool_t THttpWSEngine::PreProcess(std::shared_ptr<THttpCallArg> &)
+{
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Method invoked after user process data received via websocket
+
+void THttpWSEngine::PostProcess(std::shared_ptr<THttpCallArg> &)
+{
+}

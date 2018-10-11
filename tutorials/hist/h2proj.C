@@ -17,7 +17,7 @@ TPad *right_pad, *top_pad;
 
 void h2proj()
 {
-   auto *c1 = new TCanvas("c1", "c1",900,900);
+   auto c1 = new TCanvas("c1", "c1",900,900);
    gStyle->SetOptStat(0);
 
    TPad *center_pad = new TPad("center_pad", "center_pad",0.0,0.0,0.6,0.6);
@@ -57,7 +57,7 @@ void h2proj()
    t->DrawLatex(0.6,0.88,"This example demonstrates how to display");
    t->DrawLatex(0.6,0.85,"a histogram and its two projections.");
 
-   auto *ex = new TExec("zoom","ZoomExec()");
+   auto ex = new TExec("zoom","ZoomExec()");
    h2->GetListOfFunctions()->Add(ex);
 }
 

@@ -60,6 +60,7 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 
 using namespace clang;
 
@@ -165,7 +166,7 @@ namespace cling {
            m_DyLibManager && m_LookupHelper &&
            (isInSyntaxOnlyMode() || m_Executor);
   }
-  
+
   namespace internal { void symbol_requester(); }
 
   const char* Interpreter::getVersion() {
@@ -257,6 +258,14 @@ namespace cling {
       setupCallbacks(*this, parentInterp);
     }
 
+    if(m_Opts.CompilerOpts.CUDA){
+       if(m_DyLibManager->loadLibrary("libcudart.so", true) ==
+         cling::DynamicLibraryManager::LoadLibResult::kLoadLibNotFound){
+           llvm::errs() << "Error: libcudart.so not found!\n" <<
+             "Please add the cuda lib path to LD_LIBRARY_PATH or set it via -L argument.\n";
+       }
+    }
+
     llvm::SmallVector<IncrementalParser::ParseResultTransaction, 2>
       IncrParserTransactions;
     if (!m_IncrParser->Initialize(IncrParserTransactions, parentInterp)) {
@@ -290,7 +299,7 @@ namespace cling {
         if (auto M = T->getModule()) {
           for (const llvm::StringRef& Sym : Syms) {
             const llvm::GlobalValue* GV = M->getNamedValue(Sym);
-  #if defined(__GLIBCXX__) && !defined(__APPLE__)
+  #if defined(__linux__)
             // libstdc++ mangles at_quick_exit on Linux when g++ < 5
             if (!GV && Sym.equals("at_quick_exit"))
               GV = M->getNamedValue("_Z13at_quick_exitPFvvE");
@@ -404,13 +413,17 @@ namespace cling {
 
     // Intercept all atexit calls, as the Interpreter and functions will be long
     // gone when the -native- versions invoke them.
-#if defined(__GLIBCXX__) && !defined(__APPLE__)
+#if defined(__linux__)
     const char* LinkageCxx = "extern \"C++\"";
     const char* Attr = LangOpts.CPlusPlus ? " throw () " : "";
-    const char* cxa_atexit_is_noexcept = LangOpts.CPlusPlus ? " noexcept" : "";
 #else
     const char* LinkageCxx = Linkage;
     const char* Attr = "";
+#endif
+
+#if defined(__GLIBCXX__)
+    const char* cxa_atexit_is_noexcept = LangOpts.CPlusPlus ? " noexcept" : "";
+#else
     const char* cxa_atexit_is_noexcept = "";
 #endif
 
@@ -488,6 +501,18 @@ namespace cling {
                             utils::FunctionToVoidPtr(&local_cxa_atexit), true);
       // __dso_handle is inserted for the link phase, as macro is useless then
       m_Executor->addSymbol("__dso_handle", this, true);
+
+#ifdef _MSC_VER
+      // According to the PE Format spec, in "The .tls Section"
+      // (http://www.microsoft.com/whdc/system/platform/firmware/PECOFF.mspx):
+      //   2. When a thread is created, the loader communicates the address
+      //   of the thread's TLS array by placing the address of the thread
+      //   environment block (TEB) in the FS register. A pointer to the TLS
+      //   array is at the offset of 0x2C from the beginning of TEB. This
+      //   behavior is Intel x86-specific.
+      static const unsigned long _tls_array = 0x2C;
+      m_Executor->addSymbol("_tls_array", (void *)&_tls_array, true);
+#endif
 
 #ifdef CLING_WIN_SEH_EXCEPTIONS
       // Windows C++ SEH handler
@@ -583,6 +608,22 @@ namespace cling {
     ClangInternalState::printIncludedFiles(Out, getCI()->getSourceManager());
   }
 
+  namespace valuePrinterInternal {
+    void declarePrintValue(Interpreter &Interp);
+  }
+
+  std::string Interpreter::toString(const char* type, void* obj) {
+    LockCompilationDuringUserCodeExecutionRAII LCDUCER(*this);
+    cling::valuePrinterInternal::declarePrintValue(*this);
+    std::string ret;
+    std::stringstream ss;
+    ss << "*((std::string*)" << &ret << ") = cling::printValue((" << type << "*)" << obj << ");";
+    CompilationResult result = process(ss.str().c_str());
+    if (result != cling::Interpreter::kSuccess)
+      llvm::errs() << "Error in Interpreter::toString: the input " << ss.str() << " cannot be evaluated";
+
+    return ret;
+  }
 
   void Interpreter::GetIncludePaths(llvm::SmallVectorImpl<std::string>& incpaths,
                                    bool withSystem, bool withFlags) {
@@ -649,7 +690,7 @@ namespace cling {
     }
     return Value;
   }
-  
+
   ///\brief Maybe transform the input line to implement cint command line
   /// semantics (declarations are global) and compile to produce a module.
   ///
@@ -845,11 +886,11 @@ namespace cling {
     // Ignore diagnostics when we tab complete.
     // This is because we get redefinition errors due to the import of the decls.
     clang::IgnoringDiagConsumer* ignoringDiagConsumer =
-                                            new clang::IgnoringDiagConsumer();                      
+                                            new clang::IgnoringDiagConsumer();
     childSemaRef.getDiagnostics().setClient(ignoringDiagConsumer, true);
     DiagnosticsEngine& parentDiagnostics = this->getCI()->getSema().getDiagnostics();
 
-    std::unique_ptr<DiagnosticConsumer> ownerDiagConsumer = 
+    std::unique_ptr<DiagnosticConsumer> ownerDiagConsumer =
                                                 parentDiagnostics.takeClient();
     auto clientDiagConsumer = parentDiagnostics.getClient();
     parentDiagnostics.setClient(ignoringDiagConsumer, /*owns*/ false);
@@ -1225,15 +1266,20 @@ namespace cling {
       V = &resultV;
     if (!lastT->getWrapperFD()) // no wrapper to run
       return Interpreter::kSuccess;
-    else if (RunFunction(lastT->getWrapperFD(), V) < kExeFirstError){
-      if (lastT->getCompilationOpts().ValuePrinting
-          != CompilationOptions::VPDisabled
-          && V->isValid()
-          // the !V->needsManagedAllocation() case is handled by
-          // dumpIfNoStorage.
-          && V->needsManagedAllocation())
-        V->dump();
-      return Interpreter::kSuccess;
+    else {
+      ExecutionResult res = RunFunction(lastT->getWrapperFD(), V);
+      if (res < kExeFirstError) {
+         if (lastT->getCompilationOpts().ValuePrinting
+            != CompilationOptions::VPDisabled
+            && V->isValid()
+            // the !V->needsManagedAllocation() case is handled by
+            // dumpIfNoStorage.
+            && V->needsManagedAllocation())
+         V->dump();
+         return Interpreter::kSuccess;
+      } else {
+        return Interpreter::kFailure;
+      }
     }
     return Interpreter::kSuccess;
   }

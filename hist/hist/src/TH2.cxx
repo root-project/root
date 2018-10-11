@@ -301,7 +301,7 @@ Int_t TH2::Fill(Double_t )
 ///
 ///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
 ///    the Underflow cell is incremented.
-///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///  - if x or/and y is equal to or greater than the upper edge of corresponding axis last bin,
 ///    the Overflow cell is incremented.
 ///
 /// -  If the storage of the sum of squares of weights has been triggered,
@@ -324,10 +324,10 @@ Int_t TH2::Fill(Double_t x,Double_t y)
    AddBinContent(bin);
    if (fSumw2.fN) ++fSumw2.fArray[bin];
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    ++fTsumw;
    ++fTsumw2;
@@ -345,7 +345,7 @@ Int_t TH2::Fill(Double_t x,Double_t y)
 ///
 ///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
 ///    the Underflow cell is incremented.
-///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///  - if x or/and y is equal to or greater than the upper edge of corresponding axis last bin,
 ///    the Overflow cell is incremented.
 ///
 ///   - If the weight is not equal to 1, the storage of the sum of squares of
@@ -369,10 +369,10 @@ Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    Double_t z= w;
    fTsumw   += z;
@@ -391,7 +391,7 @@ Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
 ///
 ///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
 ///    the Underflow cell is incremented.
-///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///  - if x or/and y is equal to or greater than the upper edge of corresponding axis last bin,
 ///    the Overflow cell is incremented.
 ///
 ///   - If the weight is not equal to 1, the storage of the sum of squares of
@@ -433,7 +433,7 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
 ///
 ///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
 ///    the Underflow cell is incremented.
-///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///  - if x or/and y is equal to or greater than the upper edge of corresponding axis last bin,
 ///    the Overflow cell is incremented.
 ///
 ///  - If the weight is not equal to 1, the storage of the sum of squares of
@@ -456,7 +456,7 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    Double_t x = fXaxis.GetBinCenter(binx);
    Double_t z= w; //(w > 0 ? w : -w);
@@ -476,7 +476,7 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
 ///
 ///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
 ///    the Underflow cell is incremented.
-///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///  - if x or/and y is equal to or greater than the upper edge of corresponding axis last bin,
 ///    the Overflow cell is incremented.
 ///
 ///  - If the weight is not equal to 1, the storage of the sum of squares of
@@ -498,7 +498,7 @@ Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    Double_t y = fYaxis.GetBinCenter(biny);
@@ -563,10 +563,10 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
       if (fSumw2.fN) fSumw2.fArray[bin] += ww*ww;
       AddBinContent(bin,ww);
       if (binx == 0 || binx > fXaxis.GetNbins()) {
-         if (!fgStatOverflows) continue;
+         if (!GetStatOverflowsBehaviour()) continue;
       }
       if (biny == 0 || biny > fYaxis.GetNbins()) {
-         if (!fgStatOverflows) continue;
+         if (!GetStatOverflowsBehaviour()) continue;
       }
       Double_t z= ww; //(ww > 0 ? ww : -ww);
       fTsumw   += z;
@@ -602,12 +602,27 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
    TObject *fobj = gROOT->GetFunction(fname);
    if (!fobj) { Error("FillRandom", "Unknown function: %s",fname); return; }
    TF2 * f1 = dynamic_cast<TF2*>(fobj);
-   if (!f1) { Error("FillRandom", "Function: %s is not a TF2",fname); return; }
+   if (!f1) { Error("FillRandom", "Function: %s is not a TF2, is a %s",fname,fobj->IsA()->GetName()); return; }
+
+
+   TAxis & xAxis = fXaxis;
+   TAxis & yAxis = fYaxis;
+   
+   // in case axes of histogram are not defined use the function axis
+   if (fXaxis.GetXmax() <= fXaxis.GetXmin()  || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+      Double_t xmin,xmax,ymin,ymax;
+      f1->GetRange(xmin,ymin,xmax,ymax);
+      Info("FillRandom","Using function axis and range ([%g,%g],[%g,%g])",xmin, xmax,ymin,ymax);
+      xAxis = *(f1->GetHistogram()->GetXaxis());
+      yAxis = *(f1->GetHistogram()->GetYaxis());
+   }
+
 
    // Allocate temporary space to store the integral and compute integral
-   Int_t nbinsx = GetNbinsX();
-   Int_t nbinsy = GetNbinsY();
+   Int_t nbinsx = xAxis.GetNbins();
+   Int_t nbinsy = yAxis.GetNbins();
    Int_t nbins  = nbinsx*nbinsy;
+
 
    Double_t *integral = new Double_t[nbins+1];
    ibin = 0;
@@ -615,7 +630,7 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
    for (biny=1;biny<=nbinsy;biny++) {
       for (binx=1;binx<=nbinsx;binx++) {
          ibin++;
-         Double_t fint = f1->Integral(fXaxis.GetBinLowEdge(binx), fXaxis.GetBinUpEdge(binx), fYaxis.GetBinLowEdge(biny), fYaxis.GetBinUpEdge(biny));
+         Double_t fint = f1->Integral(xAxis.GetBinLowEdge(binx), xAxis.GetBinUpEdge(binx), yAxis.GetBinLowEdge(biny), yAxis.GetBinUpEdge(biny));
          integral[ibin] = integral[ibin-1] + fint;
       }
    }
@@ -634,8 +649,8 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
       biny = ibin/nbinsx;
       binx = 1 + ibin - nbinsx*biny;
       biny++;
-      x    = fXaxis.GetBinCenter(binx);
-      y    = fYaxis.GetBinCenter(biny);
+      x    = xAxis.GetBinCenter(binx);
+      y    = yAxis.GetBinCenter(biny);
       Fill(x,y);
    }
    delete [] integral;
@@ -1137,7 +1152,7 @@ void TH2::GetStats(Double_t *stats) const
       Int_t firstBinY = fYaxis.GetFirst();
       Int_t lastBinY  = fYaxis.GetLast();
       // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
-      if (fgStatOverflows) {
+      if (GetStatOverflowsBehaviour()) {
         if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
             if (firstBinX == 1) firstBinX = 0;
             if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
@@ -1527,7 +1542,21 @@ TH2 *TH2::RebinY(Int_t ngroup, const char *newname)
    return Rebin2D(1, ngroup, newname);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Override TH1::Rebin as TH2::RebinX
+/// Rebinning in variable binning as for TH1 is not allowed
+/// If a non-null pointer is given an error is flagged
+/// see RebinX and Rebin2D
 
+TH2 * TH2::Rebin( Int_t ngroup, const char*newname, const Double_t *xbins)
+{
+   if (xbins != nullptr) {
+      Error("Rebin","Rebinning a 2-d histogram into variable bins is not supported (it is possible only for 1-d histograms). Return a nullptr");
+      return nullptr; 
+   }
+   Info("Rebin","Rebinning only the x-axis. Use Rebin2D for rebinning both axes");
+   return RebinX(ngroup, newname); 
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// Rebin this histogram grouping nxgroup/nygroup bins along the xaxis/yaxis together.
 ///
@@ -1845,8 +1874,9 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
 
    // check if histogram is weighted
    // in case need to store sum of weight square/bin for the profile
+   TArrayD & binSumw2 = *(h1->GetBinSumw2());
    bool useWeights = (GetSumw2N() > 0);
-   if (useWeights) h1->Sumw2();
+   if (useWeights && (binSumw2.fN != h1->GetNcells()) ) h1->Sumw2();
    // we need to set this bit because we fill the profile using a single Fill for many entries
    // This is needed for the changes applied to make automatically the histogram weighted in ROOT 6 versions
    else h1->SetBit(TH1::kIsNotW);
@@ -1854,7 +1884,6 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    // Fill the profile histogram
    // no entries/bin is available so can fill only using bin content as weight
    Double_t totcont = 0;
-   TArrayD & binSumw2 = *(h1->GetBinSumw2());
 
    // implement filling of projected histogram
    // outbin is bin number of outAxis (the projected axis). Loop is done on all bin of TH2 histograms
@@ -2190,8 +2219,8 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
 
    // check if we can re-use the original statistics from  the previous histogram
    bool reuseStats = false;
-   if ( ( fgStatOverflows == false && firstbin == 1 && lastbin == inNbin     ) ||
-        ( fgStatOverflows == true  && firstbin == 0 && lastbin == inNbin + 1 ) )
+   if ( ( GetStatOverflowsBehaviour() == false && firstbin == 1 && lastbin == inNbin     ) ||
+        ( GetStatOverflowsBehaviour() == true  && firstbin == 0 && lastbin == inNbin + 1 ) )
       reuseStats = true;
    else {
       // also if total content match we can re-use

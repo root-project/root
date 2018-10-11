@@ -47,10 +47,20 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   string(REGEX REPLACE "^.*[ ]version[ ][0-9]+\\.([0-9]+).*" "\\1" CLANG_MINOR "${_clang_version_info}")
   message(STATUS "Found Clang. Major version ${CLANG_MAJOR}, minor version ${CLANG_MINOR}")
   set(COMPILER_VERSION clang${CLANG_MAJOR}${CLANG_MINOR})
-  if(ccache)
-    # https://bugzilla.samba.org/show_bug.cgi?id=8118 and color.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments -fcolor-diagnostics")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Qunused-arguments -fcolor-diagnostics")
+  if(CMAKE_GENERATOR STREQUAL "Ninja")
+    # LLVM/Clang are automatically checking if we are in interactive terminal mode.
+    # We use color output only for Ninja, because Ninja by default is buffering the output,
+    # so Clang disables colors as it is sure whether the output goes to a file or to a terminal.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fcolor-diagnostics")
+  endif()
+  if(ccache AND CCACHE_VERSION VERSION_LESS "3.2.0")
+    # https://bugzilla.samba.org/show_bug.cgi?id=8118
+    # Call to 'ccache clang' is triggering next warning (valid for ccache 3.1.x, fixed in 3.2):
+    # "clang: warning: argument unused during compilation: '-c"
+    # Adding -Qunused-arguments provides a workaround for the bug.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Qunused-arguments")
   endif()
 else()
   set(CLANG_MAJOR 0)
@@ -80,19 +90,8 @@ else()
   set(GCC_MINOR 0)
 endif()
 
-#---Set a default build type for single-configuration CMake generators if no build type is set------
-if(WIN32)
-  set(CMAKE_CONFIGURATION_TYPES Release MinSizeRel Debug RelWithDebInfo)
-else()
-  set(CMAKE_CONFIGURATION_TYPES Release MinSizeRel Debug RelWithDebInfo Optimized)
-endif()
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build, options are: Release, MinSizeRel, Debug, RelWithDebInfo, Optimized." FORCE)
-endif()
-string(TOUPPER "${CMAKE_BUILD_TYPE}" uppercase_CMAKE_BUILD_TYPE)
-string(TOUPPER "${CMAKE_CONFIGURATION_TYPES}" uppercase_CMAKE_CONFIGURATION_TYPES)
-if(NOT "${uppercase_CMAKE_CONFIGURATION_TYPES}" MATCHES "${uppercase_CMAKE_BUILD_TYPE}")
-  message(FATAL_ERROR "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} needs to be one of known build types: ${CMAKE_CONFIGURATION_TYPES}")
+  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build, options are: Release, MinSizeRel, Debug, RelWithDebInfo." FORCE)
 endif()
 
 include(CheckCXXCompilerFlag)

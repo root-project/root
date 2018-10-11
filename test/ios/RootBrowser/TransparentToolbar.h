@@ -1,3 +1,0 @@
-@interface TransparentToolbar : UIToolbar
-
-@end

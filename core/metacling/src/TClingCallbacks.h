@@ -58,6 +58,8 @@ public:
    void SetAutoParsingSuspended(bool val = true) { fIsAutoParsingSuspended = val; }
    bool IsAutoParsingSuspended() { return fIsAutoParsingSuspended; }
 
+   virtual bool LibraryLoadingFailed(const std::string&, const std::string&, bool, bool);
+
    virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/,
                                    const clang::Token &/*IncludeTok*/,
                                    llvm::StringRef FileName,

@@ -29,6 +29,9 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#ifdef _MSC_VER
+#define sleep(s) _sleep(s)
+#endif
 
 
 //////////////////////////////////////////////////////////////////////////

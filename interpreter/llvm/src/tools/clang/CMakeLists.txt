@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.4.3)
 
+if(POLICY CMP0075)
+  cmake_policy(SET CMP0075 NEW)
+endif()
+
 # If we are not building as a part of LLVM, build Clang as an
 # standalone project, using LLVM as an external library:
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
@@ -186,8 +190,6 @@ if (LIBXML2_FOUND)
   set(CLANG_HAVE_LIBXML 1)
 endif()
 
-find_package(Z3 4.5)
-
 include(CheckIncludeFile)
 check_include_file(sys/resource.h CLANG_HAVE_RLIMITS)
 
@@ -286,6 +288,7 @@ if(NOT DEFINED CLANG_VERSION_PATCHLEVEL)
   set(CLANG_VERSION_PATCHLEVEL ${LLVM_VERSION_PATCH})
 endif()
 # Unlike PACKAGE_VERSION, CLANG_VERSION does not include LLVM_VERSION_SUFFIX.
+set(CLANG_VERSION "${CLANG_VERSION_MAJOR}.${CLANG_VERSION_MINOR}.${CLANG_VERSION_PATCHLEVEL}" PARENT_SCOPE)
 set(CLANG_VERSION "${CLANG_VERSION_MAJOR}.${CLANG_VERSION_MINOR}.${CLANG_VERSION_PATCHLEVEL}")
 message(STATUS "Clang version: ${CLANG_VERSION}")
 
@@ -381,6 +384,7 @@ if(NOT CLANG_ENABLE_STATIC_ANALYZER AND (CLANG_ENABLE_ARCMT OR CLANG_ANALYZER_BU
 endif()
 
 if(CLANG_ANALYZER_BUILD_Z3)
+  find_package(Z3 4.5)
   if(Z3_FOUND)
     set(CLANG_ANALYZER_WITH_Z3 1)
   else()

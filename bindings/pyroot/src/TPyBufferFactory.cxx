@@ -112,6 +112,8 @@ namespace {
       Py_buffer bufinfo;
       (*(PyBuffer_Type.tp_as_buffer->bf_getbuffer))( self, &bufinfo, PyBUF_SIMPLE );
       buf = (char*)bufinfo.buf;
+      (*(PyBuffer_Type.tp_as_buffer->bf_releasebuffer))(self, &bufinfo);
+      Py_DECREF(bufinfo.obj);
 #endif
 
       if ( ! buf )

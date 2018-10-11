@@ -28,13 +28,6 @@ an optional hash-table lookup mechanism for fast indexing of large
 collections.
 **/
 
-#include <iomanip>
-#include <fstream>
-#include <vector>
-#include <string>
-#include <sstream>
-#include <algorithm>
-
 #include "Riostream.h"
 #include "TClass.h"
 #include "TStopwatch.h"
@@ -52,7 +45,11 @@ collections.
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
-using namespace std ;
+
+#include <algorithm>
+#include <iomanip>
+
+using namespace std;
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( streampos&, char* );

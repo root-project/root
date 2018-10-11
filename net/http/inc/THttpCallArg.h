@@ -17,50 +17,63 @@
 #include "TString.h"
 
 #include <condition_variable>
+#include <string>
+#include <memory>
 
 class THttpServer;
-class TNamed;
+class THttpWSEngine;
+class THttpWSHandler;
 
 class THttpCallArg : public TObject {
+   friend class THttpServer;
+   friend class THttpWSEngine;
+   friend class THttpWSHandler;
+
+public:
+   enum {
+      kNoZip     = 0,             // no zipping
+      kZip       = 1,             // zip content if "Accept-Encoding" header contains "gzip"
+      kZipLarge  = 2,             // zip if content larger than 10K and "Accept-Encoding" contains "gzip"
+      kZipAlways = 3              // zip always
+   };
 
 protected:
-   friend class THttpServer;
+   TString fTopName;              ///<! top item name
+   TString fMethod;               ///<! request method like GET or POST
+   TString fPathName;             ///<! item path
+   TString fFileName;             ///<! file name
+   TString fUserName;             ///<! authenticated user name (if any)
+   TString fQuery;                ///<! additional arguments
 
-   TString fTopName;  ///<! top item name
-   TString fMethod;   ///<! request method like GET or POST
-   TString fPathName; ///<! item path
-   TString fFileName; ///<! file name
-   TString fUserName; ///<! authenticated user name (if any)
-   TString fQuery;    ///<! additional arguments
-
-   void *fPostData;        ///<! binary data received with post request
-   Long_t fPostDataLength; ///<! length of binary data
-
-   TNamed *fWSHandle; ///<!  web-socket handle, derived from TNamed class
-   UInt_t fWSId;      ///<! websocket identifier, used in web-socket related operations
+   UInt_t fWSId{0};               ///<! websocket identifier, used in web-socket related operations
 
    std::condition_variable fCond; ///<! condition used to wait for processing
 
-   TString fContentType;   ///<! type of content
-   TString fRequestHeader; ///<! complete header, provided with request
-   TString fHeader;        ///<! response header like ContentEncoding, Cache-Control and so on
-   TString fContent;       ///<! text content (if any)
-   Int_t fZipping;         ///<! indicate if content should be zipped
+   TString fContentType;          ///<! type of content
+   TString fRequestHeader;        ///<! complete header, provided with request
+   TString fHeader;               ///<! response header like ContentEncoding, Cache-Control and so on
+   Int_t fZipping{kNoZip};        ///<! indicate if and when content should be compressed
 
-   void *fBinData;        ///<! binary data, assigned with http call
-   Long_t fBinDataLength; ///<! length of binary data
+   Bool_t fNotifyFlag{kFALSE};    ///<!  indicate that notification called
 
-   Bool_t fNotifyFlag; ///<!  indicate that notification called
-
-   Bool_t IsBinData() const { return fBinData && fBinDataLength > 0; }
-
-   TString AccessHeader(TString &buf, const char *name, const char *value = 0, Bool_t doing_set = kFALSE);
+   TString AccessHeader(TString &buf, const char *name, const char *value = nullptr, Bool_t doing_set = kFALSE);
 
    TString CountHeader(const TString &buf, Int_t number = -1111) const;
 
+private:
+   std::shared_ptr<THttpWSEngine> fWSEngine; ///<!  web-socket engine, which supplied to run created web socket
+
+   std::string  fContent;  ///!< content - text or binary
+   std::string  fPostData; ///<! data received with post request - text - or binary
+
+   void AssignWSId();
+   std::shared_ptr<THttpWSEngine> TakeWSEngine();
+
+   void ReplaceAllinContent(const std::string &from, const std::string &to);
+
 public:
-   THttpCallArg();
-   ~THttpCallArg();
+   explicit THttpCallArg() = default;
+   virtual ~THttpCallArg();
 
    // these methods used to set http request arguments
 
@@ -86,9 +99,7 @@ public:
 
    void SetPostData(void *data, Long_t length, Bool_t make_copy = kFALSE);
 
-   void SetWSHandle(TNamed *handle);
-
-   TNamed *TakeWSHandle();
+   void SetPostData(std::string &&data);
 
    /** set web-socket id */
    void SetWSId(UInt_t id) { fWSId = id; }
@@ -97,7 +108,7 @@ public:
    UInt_t GetWSId() const { return fWSId; }
 
    /** set full set of request header */
-   void SetRequestHeader(const char *h) { fRequestHeader = h ? h : ""; }
+   void SetRequestHeader(const char *h) { fRequestHeader = (h ? h : ""); }
 
    /** returns number of fields in request header */
    Int_t NumRequestHeader() const { return CountHeader(fRequestHeader).Atoi(); }
@@ -121,13 +132,14 @@ public:
    Bool_t IsPostMethod() const { return IsMethod("POST"); }
 
    /** return pointer on posted with request data */
-   void *GetPostData() const { return fPostData; }
+   const void *GetPostData() const { return fPostData.data(); }
 
    /** return length of posted with request data */
-   Long_t GetPostDataLength() const { return fPostDataLength; }
+   Long_t GetPostDataLength() const { return (Long_t) fPostData.length(); }
 
    /** returns post data as TString */
-   TString GetPostDataAsString() const { return TString((const char *) GetPostData(), GetPostDataLength()); }
+   TString GetPostDataAsString() const _R__DEPRECATED_618("Use other methods to access POST data")
+   { return TString(fPostData.c_str()); }
 
    /** returns path name from request URL */
    const char *GetPathName() const { return fPathName.Data(); }
@@ -136,7 +148,7 @@ public:
    const char *GetFileName() const { return fFileName.Data(); }
 
    /** return authenticated user name (0 - when no authentication) */
-   const char *GetUserName() const { return fUserName.Length() > 0 ? fUserName.Data() : 0; }
+   const char *GetUserName() const { return fUserName.Length() > 0 ? fUserName.Data() : nullptr; }
 
    /** returns request query (string after ? in request URL) */
    const char *GetQuery() const { return fQuery.Data(); }
@@ -149,24 +161,32 @@ public:
    /** mark reply as 404 error - page/request not exists or refused */
    void Set404() { SetContentType("_404_"); }
 
-   /** mark reply as postponed - submitting thread will not be inform */
+   /** mark as postponed - reply will not be send to client immediately */
    void SetPostponed() { SetContentType("_postponed_"); }
 
    /** indicate that http request should response with file content */
-   void SetFile(const char *filename = 0)
+   void SetFile(const char *filename = nullptr)
    {
       SetContentType("_file_");
-      if (filename != 0)
+      if (filename)
          fContent = filename;
    }
 
-   /** set content type as XML */
-   void SetXml() { SetContentType("text/xml"); }
+   void SetText();
+   void SetTextContent(std::string &&txt);
 
-   /** set content type as JSON */
-   void SetJson() { SetContentType("application/json"); }
+   void SetXml();
+   void SetXmlContent(std::string &&xml);
+
+   void SetJson();
+   void SetJsonContent(std::string &&json);
+
+   void SetBinary();
+   void SetBinaryContent(std::string &&bin);
 
    void AddHeader(const char *name, const char *value);
+
+   void AddNoCacheHeader();
 
    /** returns number of fields in header */
    Int_t NumHeader() const { return CountHeader(fHeader).Atoi(); }
@@ -179,44 +199,48 @@ public:
    /** Set Content-Encoding header like gzip */
    void SetEncoding(const char *typ) { AccessHeader(fHeader, "Content-Encoding", typ, kTRUE); }
 
-   /** Set content directly */
-   void SetContent(const char *c) { fContent = c; }
+   void SetContent(const char *cont);
+   void SetContent(std::string &&cont);
 
    Bool_t CompressWithGzip();
 
-   /** Set kind of content zipping
-     * 0 - none
-     * 1 - only when supported in request header
-     * 2 - if supported and content size bigger than 10K
-     * 3 - always */
-   void SetZipping(Int_t kind) { fZipping = kind; }
-
-   /** return kind of content zipping */
+   void SetZipping(Int_t mode = kZipLarge) { fZipping = mode; }
    Int_t GetZipping() const { return fZipping; }
 
    /** add extra http header value to the reply */
    void SetExtraHeader(const char *name, const char *value) { AddHeader(name, value); }
 
-   // Fill http header
-   void FillHttpHeader(TString &buf, const char *header = 0);
+   void FillHttpHeader(TString &buf, const char *header = nullptr) _R__DEPRECATED_618("Use method returning std::string");
+   std::string FillHttpHeader(const char *header = nullptr);
 
    // these methods used to return results of http request processing
 
    Bool_t IsContentType(const char *typ) const { return fContentType == typ; }
+   const char *GetContentType() const { return fContentType.Data(); }
+
    Bool_t Is404() const { return IsContentType("_404_"); }
    Bool_t IsFile() const { return IsContentType("_file_"); }
    Bool_t IsPostponed() const { return IsContentType("_postponed_"); }
-   const char *GetContentType() const { return fContentType.Data(); }
+   Bool_t IsText() const { return IsContentType("text/plain"); }
+   Bool_t IsXml() const { return IsContentType("text/xml"); }
+   Bool_t IsJson() const { return IsContentType("application/json"); }
+   Bool_t IsBinary() const { return IsContentType("application/x-binary"); }
 
-   void SetBinData(void *data, Long_t length);
+   void SetBinData(void *data, Long_t length) _R__DEPRECATED_618("Use SetContent(std::string &&)");
 
-   Long_t GetContentLength() const { return IsBinData() ? fBinDataLength : fContent.Length(); }
-
-   const void *GetContent() const { return IsBinData() ? fBinData : fContent.Data(); }
+   Long_t GetContentLength() const { return (Long_t) fContent.length(); }
+   const void *GetContent() const { return fContent.data(); }
 
    void NotifyCondition();
 
    virtual void HttpReplied();
+
+   template <class T, typename... Args>
+   void CreateWSEngine(Args... args)
+   {
+      fWSEngine = std::make_shared<T>(args...);
+      AssignWSId();
+   }
 
    ClassDef(THttpCallArg, 0) // Arguments for single HTTP call
 };

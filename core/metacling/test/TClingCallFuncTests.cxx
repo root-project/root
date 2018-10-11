@@ -106,6 +106,26 @@ TEST(TClingCallFunc, FunctionWrapperVoid)
    gInterpreter->ClassInfo_Delete(GlobalNamespace);
 }
 
+TEST(TClingCallFunc, FunctionWrapperRValueRefArg)
+{
+   gInterpreter->Declare(R"cpp(
+                           void FunctionWrapperFuncRValueRefArg(int&& j) {}
+                           )cpp");
+
+   ClassInfo_t *GlobalNamespace = gInterpreter->ClassInfo_Factory("");
+   CallFunc_t *mc = gInterpreter->CallFunc_Factory();
+   long offset = 0;
+
+   gInterpreter->CallFunc_SetFuncProto(mc, GlobalNamespace, "FunctionWrapperFuncRValueRefArg", "int&&", &offset);
+   std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
+
+   ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
+
+   // Cleanup
+   gInterpreter->CallFunc_Delete(mc);
+   gInterpreter->ClassInfo_Delete(GlobalNamespace);
+}
+
 TEST(TClingCallFunc, FunctionWrapperVariadic)
 {
    gInterpreter->Declare(R"cpp(

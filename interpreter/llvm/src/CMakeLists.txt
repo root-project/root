@@ -6,17 +6,21 @@ if(POLICY CMP0022)
   cmake_policy(SET CMP0022 NEW) # automatic when 2.8.12 is required
 endif()
 
-if (POLICY CMP0051)
-  # CMake 3.1 and higher include generator expressions of the form
-  # $<TARGETLIB:obj> in the SOURCES property.  These need to be
-  # stripped everywhere that access the SOURCES property, so we just
-  # defer to the OLD behavior of not including generator expressions
-  # in the output for now.
-  cmake_policy(SET CMP0051 OLD)
-endif()
+# if (POLICY CMP0051)
+#   # CMake 3.1 and higher include generator expressions of the form
+#   # $<TARGETLIB:obj> in the SOURCES property.  These need to be
+#   # stripped everywhere that access the SOURCES property, so we just
+#   # defer to the OLD behavior of not including generator expressions
+#   # in the output for now.
+#   cmake_policy(SET CMP0051 OLD)
+# endif()
 
 if(POLICY CMP0057)
   cmake_policy(SET CMP0057 NEW)
+endif()
+
+if(POLICY CMP0075)
+  cmake_policy(SET CMP0075 NEW)
 endif()
 
 if(NOT DEFINED LLVM_VERSION_MAJOR)
@@ -42,13 +46,6 @@ endif()
 if (NOT PACKAGE_VERSION)
   set(PACKAGE_VERSION
     "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}${LLVM_VERSION_SUFFIX}")
-endif()
-
-if ((CMAKE_GENERATOR MATCHES "Visual Studio") AND (CMAKE_GENERATOR_TOOLSET STREQUAL ""))
-  message(WARNING "Visual Studio generators use the x86 host compiler by "
-                  "default, even for 64-bit targets. This can result in linker "
-                  "instability and out of memory errors. To use the 64-bit "
-                  "host compiler, pass -Thost=x64 on the CMake command line.")
 endif()
 
 project(LLVM

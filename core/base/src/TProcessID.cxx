@@ -53,9 +53,13 @@ of TUUIDs.
 
 TObjArray  *TProcessID::fgPIDs   = 0; //pointer to the list of TProcessID
 TProcessID *TProcessID::fgPID    = 0; //pointer to the TProcessID of the current session
-UInt_t      TProcessID::fgNumber = 0; //Current referenced object instance count
+std::atomic_uint TProcessID::fgNumber(0); //Current referenced object instance count
 TExMap     *TProcessID::fgObjPIDs= 0; //Table (pointer,pids)
 ClassImp(TProcessID);
+
+static std::atomic<TProcessID *> gIsValidCache;
+using PIDCacheContent_t = std::pair<Int_t, TProcessID*>;
+static std::atomic<PIDCacheContent_t *> gGetProcessWithUIDCache;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return hash value for this object.
@@ -90,7 +94,17 @@ TProcessID::~TProcessID()
 {
    delete fObjects;
    fObjects = 0;
-   R__LOCKGUARD(gROOTMutex);
+
+   TProcessID *This = this; // We need a referencable value for the 1st argument
+   gIsValidCache.compare_exchange_strong(This, nullptr);
+
+   auto current = gGetProcessWithUIDCache.load();
+   if (current && current->second == this) {
+      gGetProcessWithUIDCache.compare_exchange_strong(current, nullptr);
+      delete current;
+   }
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
    fgPIDs->Remove(this);
 }
 
@@ -99,7 +113,7 @@ TProcessID::~TProcessID()
 
 TProcessID *TProcessID::AddProcessID()
 {
-   R__LOCKGUARD(gROOTMutex);
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    if (fgPIDs && fgPIDs->GetEntriesFast() >= 65534) {
       if (fgPIDs->GetEntriesFast() == 65534) {
@@ -138,7 +152,7 @@ TProcessID *TProcessID::AddProcessID()
 
 UInt_t TProcessID::AssignID(TObject *obj)
 {
-   R__LOCKGUARD(gROOTMutex);
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    UInt_t uid = obj->GetUniqueID() & 0xffffff;
    if (obj == fgPID->GetObjectWithID(uid)) return uid;
@@ -187,7 +201,7 @@ void TProcessID::CheckInit()
 
 void TProcessID::Cleanup()
 {
-   R__LOCKGUARD(gROOTMutex);
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    fgPIDs->Delete();
    gROOT->GetListOfCleanups()->Remove(fgPIDs);
@@ -248,16 +262,30 @@ UInt_t TProcessID::GetNProcessIDs()
 
 TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, const void *obj)
 {
-   R__LOCKGUARD(gROOTMutex);
 
    Int_t pid = (uid>>24)&0xff;
    if (pid==0xff) {
       // Look up the pid in the table (pointer,pid)
       if (fgObjPIDs==0) return 0;
       ULong_t hash = Void_Hash(obj);
+
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
       pid = fgObjPIDs->GetValue(hash,(Long_t)obj);
+      return (TProcessID*)fgPIDs->At(pid);
+   } else {
+      auto current = gGetProcessWithUIDCache.load();
+      if (current && current->first == pid)
+         return current->second;
+
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
+      auto res = (TProcessID*)fgPIDs->At(pid);
+
+      auto next = new PIDCacheContent_t(pid, res);
+      auto old = gGetProcessWithUIDCache.exchange(next);
+      delete old;
+
+      return res;
    }
-   return (TProcessID*)fgPIDs->At(pid);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -329,11 +357,20 @@ TObjArray *TProcessID::GetPIDs()
 
 Bool_t TProcessID::IsValid(TProcessID *pid)
 {
-   R__LOCKGUARD(gROOTMutex);
+   if (gIsValidCache == pid)
+      return kTRUE;
+
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
 
    if (fgPIDs==0) return kFALSE;
-   if (fgPIDs->IndexOf(pid) >= 0) return kTRUE;
-   if (pid == (TProcessID*)gROOT->GetUUIDs())  return kTRUE;
+   if (fgPIDs->IndexOf(pid) >= 0) {
+      gIsValidCache = pid;
+      return kTRUE;
+   }
+    if (pid == (TProcessID*)gROOT->GetUUIDs()) {
+      gIsValidCache = pid;
+      return kTRUE;
+   }
    return kFALSE;
 }
 
@@ -343,7 +380,7 @@ Bool_t TProcessID::IsValid(TProcessID *pid)
 
 void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
 {
-   R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
+   R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
 
    if (uid == 0) uid = obj->GetUniqueID() & 0xffffff;
 
@@ -376,6 +413,7 @@ void TProcessID::RecursiveRemove(TObject *obj)
    if (!obj->TestBit(kIsReferenced)) return;
    UInt_t uid = obj->GetUniqueID() & 0xffffff;
    if (obj == GetObjectWithID(uid)) {
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
       if (fgObjPIDs) {
          ULong64_t hash = Void_Hash(obj);
          fgObjPIDs->Remove(hash,(Long64_t)obj);

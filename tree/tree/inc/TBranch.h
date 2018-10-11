@@ -35,6 +35,8 @@
 
 #include "ROOT/TIOFeatures.hxx"
 
+#include "TBranchCacheInfo.h"
+
 class TTree;
 class TBasket;
 class TLeaf;
@@ -43,6 +45,7 @@ class TDirectory;
 class TFile;
 class TClonesArray;
 class TTreeCloner;
+class TTreeCache;
 
    const Int_t kDoNotProcess = BIT(10); // Active bit for branches
    const Int_t kIsClone      = BIT(11); // to indicate a TBranchClones
@@ -60,6 +63,7 @@ class TBranch : public TNamed , public TAttFill {
    using TIOFeatures = ROOT::TIOFeatures;
 
 protected:
+   friend class TTreeCache;
    friend class TTreeCloner;
    friend class TTree;
 
@@ -114,6 +118,9 @@ protected:
 
    Bool_t      fSkipZip;          ///<! After being read, the buffer will not be unzipped.
 
+   using CacheInfo_t = ROOT::Internal::TBranchCacheInfo;
+   CacheInfo_t fCacheInfo;        ///<! Hold info about which basket are in the cache and if they have been retrieved from the cache.
+
    typedef void (TBranch::*ReadLeaves_t)(TBuffer &b);
    ReadLeaves_t fReadLeaves;      ///<! Pointer to the ReadLeaves implementation to use.
    typedef void (TBranch::*FillLeaves_t)(TBuffer &b);
@@ -147,6 +154,7 @@ public:
 
    virtual void      AddBasket(TBasket &b, Bool_t ondisk, Long64_t startEntry);
    virtual void      AddLastBasket(Long64_t startEntry);
+           Int_t     BackFill();
    virtual void      Browse(TBrowser *b);
    virtual void      DeleteBaskets(Option_t* option="");
    virtual void      DropBaskets(Option_t *option = "");
@@ -207,6 +215,7 @@ public:
    virtual void      KeepCircular(Long64_t maxEntries);
    virtual Int_t     LoadBaskets();
    virtual void      Print(Option_t *option="") const;
+           void      PrintCacheInfo() const;
    virtual void      ReadBasket(TBuffer &b);
    virtual void      Refresh(TBranch *b);
    virtual void      Reset(Option_t *option="");
@@ -219,8 +228,8 @@ public:
    virtual void      SetBasketSize(Int_t buffsize);
    virtual void      SetBufferAddress(TBuffer *entryBuffer);
    void              SetCompressionAlgorithm(Int_t algorithm=0);
-   void              SetCompressionLevel(Int_t level=1);
-   void              SetCompressionSettings(Int_t settings=1);
+   void              SetCompressionLevel(Int_t level=4);
+   void              SetCompressionSettings(Int_t settings=4);
    virtual void      SetEntries(Long64_t entries);
    virtual void      SetEntryOffsetLen(Int_t len, Bool_t updateSubBranches = kFALSE);
    virtual void      SetFirstEntry( Long64_t entry );

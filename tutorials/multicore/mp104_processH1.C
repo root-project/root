@@ -58,10 +58,12 @@ int mp104_processH1()
    auto hListFun = pool.Process(files, doH1, "h42");
 
    // Check the output
-   if (checkH1(hListFun) < 0) return -1;
+   if (checkH1(hListFun) < 0)
+      return -1;
 
    // Do the fit
-   if (doFit(hListFun, logfile.c_str()) < 0) return -1;
+   if (doFit(hListFun, logfile.c_str()) < 0)
+      return -1;
 
    stp.Print();
    stp.Start();
@@ -71,7 +73,7 @@ int mp104_processH1()
    TString selectorPath = gROOT->GetTutorialDir();
    selectorPath += "/tree/h1analysisTreeReader.C+";
    std::cout << tutname << "processing the H1 dataset with selector '" << selectorPath << "'\n";
-   TSelector *sel = TSelector::GetSelector(selectorPath);
+   auto sel = TSelector::GetSelector(selectorPath);
 
    // In a second run we use sel
    gSystem->RedirectOutput(logfile.c_str(), "w", &gRH);
@@ -79,10 +81,12 @@ int mp104_processH1()
    gSystem->RedirectOutput(0, 0, &gRH);
 
    // Check the output
-   if (checkH1(hListSel) < 0) return -1;
+   if (checkH1(hListSel) < 0)
+      return -1;
 
    // Do the fit
-   if (doFit(hListSel, logfile.c_str()) < 0) return -1;
+   if (doFit(hListSel, logfile.c_str()) < 0)
+      return -1;
 
    stp.Print();
    stp.Start();

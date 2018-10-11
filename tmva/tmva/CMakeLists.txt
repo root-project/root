@@ -2,52 +2,176 @@
 # CMakeLists.txt file for building ROOT tmva package
 # @author Pere Mato, CERN
 ############################################################################
-#---The following is needed because client codes of TMVA (in ROOT itself) assumes to find header files under /TMVA
-#execute_process(COMMAND cmake -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/TMVA)
 
-if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
-  cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-  project(TMVA)
-  include(${ROOTSYS}/cmake/modules/StandaloneBuild.cmake)
-endif()
-
-set(headers1 Configurable.h Factory.h  MethodBase.h MethodCompositeBase.h
-	     MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h
-	     MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h
-	     MethodHMatrix.h MethodPDERS.h MethodBDT.h MethodDT.h MethodSVM.h MethodBayesClassifier.h
-	     MethodFDA.h MethodMLP.h MethodBoost.h
-	     MethodPDEFoam.h MethodLD.h MethodCategory.h MethodDNN.h)
-set(headers2 TSpline2.h TSpline1.h PDF.h BinaryTree.h BinarySearchTreeNode.h BinarySearchTree.h 
-	     Timer.h RootFinder.h CrossEntropy.h DecisionTree.h DecisionTreeNode.h MisClassificationError.h 
-	     Node.h SdivSqrtSplusB.h SeparationBase.h RegressionVariance.h Tools.h Reader.h 
-	     GeneticAlgorithm.h GeneticGenes.h GeneticPopulation.h GeneticRange.h GiniIndex.h 
-	     GiniIndexWithLaplace.h SimulatedAnnealing.h QuickMVAProbEstimator.h)
-set(headers3 Config.h KDEKernel.h Interval.h LogInterval.h FitterBase.h MCFitter.h GeneticFitter.h 
-         SimulatedAnnealingFitter.h MinuitFitter.h MinuitWrapper.h IFitterTarget.h
-         PDEFoam.h PDEFoamDecisionTree.h PDEFoamDensityBase.h PDEFoamDiscriminantDensity.h
-         PDEFoamEventDensity.h PDEFoamTargetDensity.h PDEFoamDecisionTreeDensity.h PDEFoamMultiTarget.h
-         PDEFoamVect.h PDEFoamCell.h PDEFoamDiscriminant.h PDEFoamEvent.h PDEFoamTarget.h
-         PDEFoamKernelBase.h PDEFoamKernelTrivial.h PDEFoamKernelLinN.h PDEFoamKernelGauss.h
-         BDTEventWrapper.h CCTreeWrapper.h
-         CCPruner.h CostComplexityPruneTool.h SVEvent.h OptimizeConfigParameters.h)
-set(headers4 NeuralNet.h TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivationSigmoid.h TActivationIdentity.h
-         TActivationTanh.h TActivationRadial.h TActivationReLU.h TNeuronInputChooser.h TNeuronInput.h TNeuronInputSum.h
-	     TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h
-	     VariableTransformBase.h VarTransformHandler.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h
-	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h VariableTransform.h ROCCalc.h ROCCurve.h)
-
-set(headers5 Envelope.h VariableImportance.h CrossValidation.h HyperParameterOptimisation.h Classification.h Event.h Results.h ResultsClassification.h ResultsRegression.h ResultsMulticlass.h VariableInfo.h ClassInfo.h DataLoader.h DataSet.h DataSetInfo.h DataInputHandler.h DataSetManager.h DataSetFactory.h LossFunction.h )
-
-#---Need to suffix each header name by TMVA/  -----------------
-foreach(hs headers1 headers2 headers3 headers4 headers5)
-  foreach(h ${${hs}})
-    set(t${hs} ${t${hs}} TMVA/${h})
-  endforeach()
-endforeach()
+set(TMVA_HEADERS
+  TMVA/BDTEventWrapper.h
+  TMVA/BinarySearchTree.h
+  TMVA/BinarySearchTreeNode.h
+  TMVA/BinaryTree.h
+  TMVA/CCPruner.h
+  TMVA/CCTreeWrapper.h
+  TMVA/Classification.h
+  TMVA/ClassifierFactory.h
+  TMVA/ClassInfo.h
+  TMVA/Config.h
+  TMVA/Configurable.h
+  TMVA/ConvergenceTest.h
+  TMVA/CostComplexityPruneTool.h
+  TMVA/CrossEntropy.h
+  TMVA/CrossValidation.h
+  TMVA/CvSplit.h
+  TMVA/DataInputHandler.h
+  TMVA/DataLoader.h
+  TMVA/DataSetFactory.h
+  TMVA/DataSet.h
+  TMVA/DataSetInfo.h
+  TMVA/DataSetManager.h
+  TMVA/DecisionTree.h
+  TMVA/DecisionTreeNode.h
+  TMVA/Envelope.h
+  TMVA/Event.h
+  TMVA/ExpectedErrorPruneTool.h
+  TMVA/Factory.h
+  TMVA/FitterBase.h
+  TMVA/GeneticAlgorithm.h
+  TMVA/GeneticFitter.h
+  TMVA/GeneticGenes.h
+  TMVA/GeneticPopulation.h
+  TMVA/GeneticRange.h
+  TMVA/GiniIndex.h
+  TMVA/GiniIndexWithLaplace.h
+  TMVA/HyperParameterOptimisation.h
+  TMVA/IFitterTarget.h
+  TMVA/IMethod.h
+  TMVA/Interval.h
+  TMVA/IPruneTool.h
+  TMVA/KDEKernel.h
+  TMVA/LDA.h
+  TMVA/LogInterval.h
+  TMVA/LossFunction.h
+  TMVA/MCFitter.h
+  TMVA/MethodANNBase.h
+  TMVA/MethodBase.h
+  TMVA/MethodBayesClassifier.h
+  TMVA/MethodBDT.h
+  TMVA/MethodBoost.h
+  TMVA/MethodCategory.h
+  TMVA/MethodCFMlpANN_def.h
+  TMVA/MethodCFMlpANN.h
+  TMVA/MethodCFMlpANN_Utils.h
+  TMVA/MethodCompositeBase.h
+  TMVA/MethodCrossValidation.h
+  TMVA/MethodCuts.h
+  TMVA/MethodDL.h
+  TMVA/MethodDNN.h
+  TMVA/MethodDT.h
+  TMVA/MethodFDA.h
+  TMVA/MethodFisher.h
+  TMVA/MethodHMatrix.h
+  TMVA/MethodKNN.h
+  TMVA/MethodLD.h
+  TMVA/MethodLikelihood.h
+  TMVA/MethodMLP.h
+  TMVA/MethodPDEFoam.h
+  TMVA/MethodPDERS.h
+  TMVA/MethodRuleFit.h
+  TMVA/MethodSVM.h
+  TMVA/MethodTMlpANN.h
+  TMVA/MinuitFitter.h
+  TMVA/MinuitWrapper.h
+  TMVA/MisClassificationError.h
+  TMVA/ModulekNN.h
+  TMVA/Monitoring.h
+  TMVA/MsgLogger.h
+  TMVA/NeuralNet.h
+  TMVA/Node.h
+  TMVA/NodekNN.h
+  TMVA/OptimizeConfigParameters.h
+  TMVA/Option.h
+  TMVA/OptionMap.h
+  TMVA/Pattern.h
+  TMVA/PDEFoamCell.h
+  TMVA/PDEFoamDecisionTreeDensity.h
+  TMVA/PDEFoamDecisionTree.h
+  TMVA/PDEFoamDensityBase.h
+  TMVA/PDEFoamDiscriminantDensity.h
+  TMVA/PDEFoamDiscriminant.h
+  TMVA/PDEFoamEventDensity.h
+  TMVA/PDEFoamEvent.h
+  TMVA/PDEFoam.h
+  TMVA/PDEFoamKernelBase.h
+  TMVA/PDEFoamKernelGauss.h
+  TMVA/PDEFoamKernelLinN.h
+  TMVA/PDEFoamKernelTrivial.h
+  TMVA/PDEFoamMultiTarget.h
+  TMVA/PDEFoamTargetDensity.h
+  TMVA/PDEFoamTarget.h
+  TMVA/PDEFoamVect.h
+  TMVA/PDF.h
+  TMVA/QuickMVAProbEstimator.h
+  TMVA/Ranking.h
+  TMVA/Reader.h
+  TMVA/RegressionVariance.h
+  TMVA/ResultsClassification.h
+  TMVA/Results.h
+  TMVA/ResultsMulticlass.h
+  TMVA/ResultsRegression.h
+  TMVA/ROCCalc.h
+  TMVA/ROCCurve.h
+  TMVA/RootFinder.h
+  TMVA/RuleCut.h
+  TMVA/RuleEnsemble.h
+  TMVA/RuleFitAPI.h
+  TMVA/RuleFit.h
+  TMVA/RuleFitParams.h
+  TMVA/Rule.h
+  TMVA/SdivSqrtSplusB.h
+  TMVA/SeparationBase.h
+  TMVA/SimulatedAnnealingFitter.h
+  TMVA/SimulatedAnnealing.h
+  TMVA/SVEvent.h
+  TMVA/SVKernelFunction.h
+  TMVA/SVKernelMatrix.h
+  TMVA/SVWorkingSet.h
+  TMVA/TActivationChooser.h
+  TMVA/TActivation.h
+  TMVA/TActivationIdentity.h
+  TMVA/TActivationRadial.h
+  TMVA/TActivationReLU.h
+  TMVA/TActivationSigmoid.h
+  TMVA/TActivationTanh.h
+  TMVA/Timer.h
+  TMVA/TNeuron.h
+  TMVA/TNeuronInputAbs.h
+  TMVA/TNeuronInputChooser.h
+  TMVA/TNeuronInput.h
+  TMVA/TNeuronInputSqSum.h
+  TMVA/TNeuronInputSum.h
+  TMVA/Tools.h
+  TMVA/TransformationHandler.h
+  TMVA/TSpline1.h
+  TMVA/TSpline2.h
+  TMVA/TSynapse.h
+  TMVA/Types.h
+  TMVA/VariableDecorrTransform.h
+  TMVA/VariableGaussTransform.h
+  TMVA/VariableIdentityTransform.h
+  TMVA/VariableImportance.h
+  TMVA/VariableInfo.h
+  TMVA/VariableNormalizeTransform.h
+  TMVA/VariablePCATransform.h
+  TMVA/VariableRearrangeTransform.h
+  TMVA/VariableTransformBase.h
+  TMVA/VariableTransform.h
+  TMVA/VarTransformHandler.h
+  TMVA/Version.h
+  TMVA/Volume.h
+)
 
 #---Assign source files to the implementations -----------------
 SET(DNN_FILES      src/DNN/Architectures/Reference.cxx
-                   src/DNN/Architectures/Reference/DataLoader.cxx)
+                   src/DNN/Architectures/Reference/DataLoader.cxx
+                   src/DNN/Architectures/Reference/TensorDataLoader.cxx)
 SET(DNN_CUDA_FILES src/DNN/Architectures/Cuda.cu
                    src/DNN/Architectures/Cuda/CudaBuffers.cxx
                    src/DNN/Architectures/Cuda/CudaMatrix.cu)
@@ -57,11 +181,16 @@ SET(DNN_CPU_FILES  src/DNN/Architectures/Cpu.cxx
 
 #---Handle CUDA dependent code. -----------------
 if(CUDA_FOUND)
+  message(STATUS "Using TMVA-DNN with CUDA installation") 
+  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --compiler-options -fPIC")
   CUDA_INCLUDE_DIRECTORIES("${CMAKE_BINARY_DIR}/include")	
   CUDA_ADD_LIBRARY(dnn_cuda ${DNN_CUDA_FILES})
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
+  set_property(TARGET dnn_cuda PROPERTY POSITION_INDEPENDENT_CODE ON)	
   set(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNNCUDA")
   add_dependencies(dnn_cuda move_headers)
+  include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} )
+  message("Cuda include ${CUDA_INCLUDE_DIRS}")
 else()
   set(DNN_CUDA_LIBRARIES)
   set(installoptions ${installoptions} FILTER "Cuda")
@@ -69,36 +198,46 @@ endif()
 
 #---Handle BLAS dependent code. -----------------
 if(BLAS_FOUND AND imt)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCPU")
-  set(DNN_CPU_LIBRARIES MathCore Matrix ${BLAS_LIBRARIES} ${TBB_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-  include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
+   message(STATUS "Using TMVA-DNN with BLAS installation: ${BLAS_LIBRARIES}") 
+  set(DNN_CPU_LIBRARIES MathCore Matrix ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES} ${TBB_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}) 
+  include_directories(${TBB_INCLUDE_DIRS})
+  if (CUDA_FOUND)
+     include_directories(${TBB_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+  endif()
 else()
+if (tmva-cpu AND mathmore AND imt)
+#use GSL cblas installation
+  message(STATUS "Using TMVA-DNN with gslcblas installation") 
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNN_USE_CBLAS")
+  set(DNN_CPU_LIBRARIES MathCore Matrix ${TBB_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  include_directories(${TBB_INCLUDE_DIRS} ${GSL_INCLUDE_DIR} )
+  if (CUDA_FOUND)
+     include_directories(${TBB_INCLUDE_DIRS} ${GSL_INCLUDE_DIR} ${CUDA_INCLUDE_DIRS})
+  endif()
+else()
+  message(STATUS "No blas or cblas found . TMVA-DNN-CPU is disabled")  
   set(DNN_CPU_LIBRARIES)
   set(DNN_CPU_FILES)
   set(installoptions ${installoptions} FILTER "Cpu")
 endif()
-
-ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
-                              HEADERS ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}
-                              SOURCES *.cxx ${DNN_FILES} ${DNN_CPU_FILES} DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES Core MathCore Matrix ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
-                              DEPENDENCIES Core RIO Hist Tree TreePlayer MLP Minuit XMLIO
-                              INSTALL_OPTIONS ${installoptions})
-
-if(NOT gnuinstall)
-  install(DIRECTORY test DESTINATION tmva 
-  FILES_MATCHING PATTERN "*.C" 
-                 PATTERN "*.gif" 
-                 PATTERN "*.png" 
-                 PATTERN "README"
-                 PATTERN "data" EXCLUDE)
 endif()
 
+if(imt)
+  set(TMVA_DEPENDENCIES Imt)
+endif()
+
+ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
+                              HEADERS ${TMVA_HEADERS}
+                              SOURCES *.cxx ${DNN_FILES} ${DNN_CPU_FILES} DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              LIBRARIES Core MathCore Matrix ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
+                              DEPENDENCIES Core RIO Hist Tree TreePlayer MLP Minuit XMLIO ${TMVA_DEPENDENCIES}
+                              INSTALL_OPTIONS ${installoptions})
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
+ROOT_ADD_TEST_SUBDIRECTORY(test/crossvalidation)
 ROOT_ADD_TEST_SUBDIRECTORY(test/DNN)
 ROOT_ADD_TEST_SUBDIRECTORY(test/Method)
 ROOT_ADD_TEST_SUBDIRECTORY(test/ROC)
 ROOT_ADD_TEST_SUBDIRECTORY(test/envelope)
-
-
-
-
+ROOT_ADD_TEST_SUBDIRECTORY(test/DNN/CNN)
+ROOT_ADD_TEST_SUBDIRECTORY(test/DNN/RNN)

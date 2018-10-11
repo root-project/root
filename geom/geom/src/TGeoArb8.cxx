@@ -369,8 +369,8 @@ void TGeoArb8::ComputeTwist()
    illegal_cross = TGeoShape::IsSegCrossing(fXY[0][0],fXY[0][1],fXY[1][0],fXY[1][1],
                                             fXY[2][0],fXY[2][1],fXY[3][0],fXY[3][1]);
    if (!illegal_cross)
-   illegal_cross = TGeoShape::IsSegCrossing(fXY[4][0],fXY[4][1],fXY[5][0],fXY[5][1],
-                                            fXY[6][0],fXY[6][1],fXY[7][0],fXY[7][1]);
+      illegal_cross = TGeoShape::IsSegCrossing(fXY[4][0],fXY[4][1],fXY[5][0],fXY[5][1],
+                                               fXY[6][0],fXY[6][1],fXY[7][0],fXY[7][1]);
    if (illegal_cross) {
       Error("ComputeTwist", "Shape %s type Arb8: Malformed polygon with crossing opposite segments", GetName());
       InspectShape();

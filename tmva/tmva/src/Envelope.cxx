@@ -1,5 +1,13 @@
 // @(#)root/tmva $Id$
-// Author: Omar Zapata
+// Author: Omar Zapata, Kim Albertsson
+
+/*************************************************************************
+ * Copyright (C) 2018, Rene Brun and Fons Rademakers.                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include <TMVA/Envelope.h>
 
@@ -119,8 +127,10 @@ DataLoader *Envelope::GetDataLoader(){    return fDataLoader.get();}
 Method to set the pointer to TMVA::DataLoader object.
 \param dalaloader pointer to TMVA::DataLoader object.
 */
-void Envelope::SetDataLoader(DataLoader *dalaloader){
-        fDataLoader=std::shared_ptr<DataLoader>(dalaloader) ;
+
+void Envelope::SetDataLoader(DataLoader *dataloader)
+{
+   fDataLoader = std::shared_ptr<DataLoader>(dataloader);
 }
 
 //_______________________________________________________________________
@@ -290,7 +300,7 @@ void TMVA::Envelope::WriteDataInformation(TMVA::DataSetInfo &fDataSetInfo, TMVA:
 
    std::vector<TString> trfsDef = gTools().SplitString(processTrfs, ';');
    std::vector<TString>::iterator trfsDefIt = trfsDef.begin();
-   for (; trfsDefIt != trfsDef.end(); trfsDefIt++) {
+   for (; trfsDefIt != trfsDef.end(); ++trfsDefIt) {
       trfs.push_back(new TMVA::TransformationHandler(fDataSetInfo, "Envelope"));
       TString trfS = (*trfsDefIt);
 
@@ -307,7 +317,7 @@ void TMVA::Envelope::WriteDataInformation(TMVA::DataSetInfo &fDataSetInfo, TMVA:
    // apply all transformations
    std::vector<TMVA::TransformationHandler *>::iterator trfIt = trfs.begin();
 
-   for (; trfIt != trfs.end(); trfIt++) {
+   for (; trfIt != trfs.end(); ++trfIt) {
       // setting a Root dir causes the variables distributions to be saved to the root file
       (*trfIt)->SetRootDir(RootBaseDir()->GetDirectory(fDataSetInfo.GetName())); // every dataloader have its own dir
       (*trfIt)->CalcTransformations(inputEvents);
@@ -316,6 +326,6 @@ void TMVA::Envelope::WriteDataInformation(TMVA::DataSetInfo &fDataSetInfo, TMVA:
       identityTrHandler->PrintVariableRanking();
 
    // clean up
-   for (trfIt = trfs.begin(); trfIt != trfs.end(); trfIt++)
+   for (trfIt = trfs.begin(); trfIt != trfs.end(); ++trfIt)
       delete *trfIt;
 }

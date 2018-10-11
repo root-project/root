@@ -292,9 +292,9 @@ To execute a **`TTask`**, you call the `ExecuteTask` method.
 - the `TTask::ExecuteTasks` to execute for each task the list of its
 subtasks;
 
-If the top level task is added to the list of ROOT browseable objects,
+If the top level task is added to the list of ROOT browsable objects,
 the tree of tasks can be seen in the ROOT browser. To add it to the
-browser, get the list of browseable objects first and add it to the
+browser, get the list of browsable objects first and add it to the
 collection.
 
 ``` {.cpp}

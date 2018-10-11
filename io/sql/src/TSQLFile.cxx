@@ -868,6 +868,8 @@ TObject *TSQLFile::ReadSpecialObject(Long64_t keyid, TObject *obj)
 
    TBufferSQL2 buffer(TBuffer::kRead, this);
 
+   buffer.InitMap();
+
    TClass *cl = 0;
 
    void *res = buffer.SqlReadAny(key->GetDBKeyId(), key->GetDBObjId(), &cl, obj);
@@ -887,22 +889,24 @@ TObject *TSQLFile::ReadSpecialObject(Long64_t keyid, TObject *obj)
 /// List of streamer infos is always stored with key:id 0,
 /// which is not shown in normal keys list
 
-TList *TSQLFile::GetStreamerInfoList()
+TFile::InfoListRet TSQLFile::GetStreamerInfoListImpl(bool /* lookupSICache */)
 {
    //   return new TList;
 
    if (gDebug > 1)
       Info("GetStreamerInfoList", "Start reading of streamer infos");
 
+   ROOT::Internal::RConcurrentHashColl::HashValue hash;
+
    TObject *obj = ReadSpecialObject(sqlio::Ids_StreamerInfos);
 
    TList *list = dynamic_cast<TList *>(obj);
    if (list == 0) {
       delete obj;
-      list = new TList;
+      return {nullptr, 1, hash};
    }
 
-   return list;
+   return {list, 0, hash};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2529,6 +2533,8 @@ Long64_t TSQLFile::StoreObjectInTables(Long64_t keyid, const void *obj, const TC
       objid++;
 
    TBufferSQL2 buffer(TBuffer::kWrite, this);
+
+   buffer.InitMap();
 
    TSQLStructure *s = buffer.SqlWriteAny(obj, cl, objid);
 

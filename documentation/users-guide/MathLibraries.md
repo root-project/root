@@ -47,7 +47,7 @@ which are provided in the `ROOT::Math` namespace are:
 - Fitting classes: set of classes for fitting generic data sets. These classes are provided in the namespace `ROOT::Fit`.
    They are describing separately in the Fitting chapter.
 
-The sets described above is independednt of ROOT libraries and can be built as a set of standalone classes.
+The sets described above is independent of ROOT libraries and can be built as a set of standalone classes.
 In addition `MathCore` provides the following classes (depending on ROOT *libCore* library):
 
 -  `TMath`: namespace with mathematical functions and basic function algorithms.
@@ -276,7 +276,7 @@ Pseudo-random numbers are generated using a linear congruential random
 generator. The multipliers used are the same of the BSD `rand()` random
 generator. Its sequence is:
 
-$x_{n+1} = (ax_n + c) \bmod{m}$ with $a =1103515245$,
+$x_{n+1} = (ax_n + c) mod m$ with $a =1103515245$,
 $c = 12345$ and $m =2^{31}$.
 
 This type of generator uses a state of only a 32 bit integer and it has
@@ -805,7 +805,7 @@ double ROOT::Math::gaussian_cdf(double x,double sigma,double x0=0);
 ```
 evaluates the lower tail of the Gaussian distribution:
 $$
-D(x) = \int_{-\infty}^{x} {1 \over \sqrt{2 \pi \sigma^2}} e^{-(x'-x_0)^2 / 2\sigma^2} dx'
+D(x) = \int_{-\infty}^{x} {\frac{1}{\sqrt{2 \pi \sigma^2}}} e^{-(x'-x_0)^2 / 2\sigma^2} dx'
 $$
 
 while the function:
@@ -815,7 +815,7 @@ double ROOT::Math::gaussian_cdf_c(double x, double sigma, double x0=0);
 ```
 evaluates the upper tail of the Gaussian distribution:
 $$
-D(x) = \int_{x}^{+\infty} {1 \over \sqrt{2 \pi \sigma^2}} e^{-(x'-x_0)^2 / 2\sigma^2} dx'
+D(x) = \int_{x}^{+\infty} {\frac{1}{\sqrt{2 \pi \sigma^2}}} e^{-(x'-x_0)^2 / 2\sigma^2} dx'
 $$
 
 The cumulative distributions functions are defined in the header file
@@ -890,7 +890,7 @@ class MyFunction: public ROOT::Math::IBaseFunctionOneDim
 ```
 
 
-* `ROOT::Math::IGradientFunctionOneDim`: Some of the numerical algorithm will need to calculate the derivatives of the function. In these cases, the user will have to provide the neccesary code for
+* `ROOT::Math::IGradientFunctionOneDim`: Some of the numerical algorithm will need to calculate the derivatives of the function. In these cases, the user will have to provide the necessary code for
   this to happen. The interface defined in `IGradientFunctionOneDim` introduced the method `double Derivative(double x)` that will return the derivative of the function at the point `x`. The class
   inherit by the user will have to implement the abstract method `double DoDerivative(double x)`, leaving the rest of the class untouched.
 
@@ -924,7 +924,7 @@ public:
 
 
 The most generic case of a multidimensional function has similar approach. Some examples will be shown next. It is important to notice, that one dimensional functions can be also implemented through
-the interfaces that will be presented here. Nevertheless, the user needs to implement those following the indications of the previous chapter, for algorithm woring exclusivly on one-dimensional
+the interfaces that will be presented here. Nevertheless, the user needs to implement those following the indications of the previous chapter, for algorithm working exclusivly on one-dimensional
 functions. For algorithms working on both one-dimensional and multi-dimensional functions they should instead use this interface.
 
 * `ROOT::Math::IBaseFunctionMultiDim`: This interface provides the `double operator() (const double*)` that takes an array of doubles with all the values for the different dimensions. In this case,
@@ -957,7 +957,7 @@ public:
 };
 ```
 
-* `ROOT::Math::IGradientFunctionMultiDim`: This interface offers the same functionality as the base function plus the calcualtion of the derivative.
+* `ROOT::Math::IGradientFunctionMultiDim`: This interface offers the same functionality as the base function plus the calculation of the derivative.
 It only adds the `double Derivative(double* x, uint ivar)` method for the user to implement. This method must implement the derivative of the function with respect to the variable indicated with the
 second parameter.
 
@@ -999,7 +999,7 @@ public:
 
 These interfaces, for evaluating multi-dimensional functions are used for fitting. These interfaces are defined in the header file
 `Math/IParamFunction.h`.
-See also the documentation of the `ROOT::Fit` classes in the Fitting chaper for more information.
+See also the documentation of the `ROOT::Fit` classes in the Fitting chapter for more information.
 
 * **`ROOT::Math::IParametricFunctionMultiDim`**: Describes a multi dimensional parametric function. Similarly to the one dimensional version, the user needs to provide the
 method `void SetParameters(double* p)` as well as the getter methods `const double * Parameters()` and `uint NPar()`.
@@ -1108,7 +1108,7 @@ public:
 
 To facilitate the user to insert their own type of function in the needed function interface, helper classes, wrapping the user interface in the
 `ROOT::Math` function interfaces are provided.
-this will avoid the user to re-implement dedicated funcition classes, following the code example shown in the previous paragraphs.
+this will avoid the user to re-implement dedicated function classes, following the code example shown in the previous paragraphs.
 
 There is one possible wrapper for every interface explained in the previous section.
 The following table indicates the wrapper for the most basic ones:
@@ -1131,7 +1131,7 @@ Thee functor wrapper are defined in the header file `Math/Functor.h`.
 
 The `ROOT::Math::Functor1D` is used to wrap one-dimensional functions It can wrap all the following types:
 * A free C function of type `double ()(double )`.
-* Any C++ callable object implemention `double operator()( double )`.
+* Any C++ callable object implementation `double operator()( double )`.
 * A class member function with the correct signature like `double Foo::Eval(double )`. In this case one pass the object pointer and a pointer to the member function `(&Foo::Eval)`.
 
 Example:
@@ -1406,7 +1406,7 @@ implemented as separate classes. The algorithms can be instantiated using the fo
 #### ROOT::Math:::GaussIntegrator
 
 It uses the most basic Gaussian integration algorithm, it uses the 8-point and the 16-point Gaussian
-quadrature approximations. It is derived from the `DGAUSS` rountine of the *CERNLIB* by S. Kolbig.
+quadrature approximations. It is derived from the `DGAUSS` routine of the *CERNLIB* by S. Kolbig.
 This class
 Here is an example of using directly  the `GaussIntegrator` class
 
@@ -1627,7 +1627,7 @@ In the `Minimize` call, the maximum number of function calls, the relative and a
 #### `ROOT::Math::GSLMInimizer1D`
 
 This class wraps two different methods from the GSL.
-The algorithms which can be choosen at construction time are *GOLDENSECTION*, which is the simplest method
+The algorithms which can be chosen at construction time are *GOLDENSECTION*, which is the simplest method
 but the slowest and *BRENT* (the default one) which combines the golden section with a parabolic interpolation.
 The algorithm can be chosen as a different enumeration in the constructor:
 * `ROOT::Math::Minim1D::kBRENT` for the Brent algorithm (default)
@@ -2358,7 +2358,7 @@ float, int, etc.) .
 
 
 Transformation classes are grouped in rotations (in three dimensions),
-Lorentz transformations and Poincarre transformations, which are
+Lorentz transformations and Poincaré transformations, which are
 translation`/`rotation combinations. Each group has several members
 which may model physically equivalent transformations but with
 different internal representations. All the classes are non-template
@@ -3138,7 +3138,7 @@ fit parameters. Some special care needs to be taken in the case of bins
 with zero content.
 
 **`TMultiDimFit`** implements multi-dimensional function
-parameterization for multi-dimensional data by fitting them to
+parametrization for multi-dimensional data by fitting them to
 multi-dimensional data using polynomial or Chebyshev or Legendre
 polynomial
 

@@ -41,9 +41,9 @@ SYSV process control initializer).
 .PP
 In other words:
 .RS
-.I Be very VERY carefull when installing \fBxproofd\fR
+.I Be very VERY careful when installing \fBxproofd\fR
 .RE
-There, I said it. And ofcourse, no warrenties what so ever.
+There, I said it. And of course, no warranties what so ever.
 .TP
 1
 Make sure every node has \fBROOT\fR installed. We'll assume you
@@ -88,7 +88,7 @@ Restart \fBinetd\fR or force it to re-read the config file:
   kill \-1 <\fIinetd pid\fR>
 
 .fi
-If you use \fBSYSV\fR \fIinit\fR(8) scripts, you can probaly just do
+If you use \fBSYSV\fR \fIinit\fR(8) scripts, you can probably just do
 .nf
 
   /etc/init.d/inetd restart
@@ -146,7 +146,7 @@ Restart syslogd or force it to re-read the config file:
   kill \-1 <\fIsyslogd pid\fR>.
 
 .fi
-If you use \fBSYSV\fR \fIinit\fR(8) scripts, you can probaly just do
+If you use \fBSYSV\fR \fIinit\fR(8) scripts, you can probably just do
 .nf
 
   /etc/init.d/sysklogd restart
@@ -168,7 +168,7 @@ If you're running \fBLinux\fR, Steps 5 to 7 can be somewhat automated
 using the script \fIproof-facility\fR in <\fIxproofdir\fR> of your
 distribution. This script uses \fIsyslog-facility\fR(1), from the
 \fBLinux\fR \fIsyslog\fR(1) distribution, and may run on other
-platforms as well \- but no warrenties mind you!
+platforms as well \- but no warranties mind you!
 .PP
 Step 9 is completely up to the user.
 .SH "EXAMPLE"
@@ -203,7 +203,7 @@ This is Message-Of-The-Day file. See
 <\fIxproofdir\fB>/etc/motd.sample\fR for an example.
 .TP
 <\fIxproofdir\fB>/etc/noproof\fR
-If this file is present, all \fBPROOF\fR services will be diabled. See
+If this file is present, all \fBPROOF\fR services will be disabled. See
 <\fIxproofdir\fB>/etc/noproof.sample\fR for an example.
 .TP
 <\fIxproofdir\fB>/etc/proof.conf\fR

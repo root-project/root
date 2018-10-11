@@ -12919,11 +12919,32 @@ bool Sema::CheckEnumRedeclaration(
   } else if (!IsFixed && Prev->isFixed() && !Prev->getIntegerTypeSourceInfo()) {
     ;
   } else if (IsFixed != Prev->isFixed()) {
-#if 0
+    // Determine whether this is a cling fwd decl.
+    auto hasFwdDeclAnnotation = [](const Decl *Prev) -> bool {
+      for(auto attr = Prev->specific_attr_begin<AnnotateAttr>(),
+               end = Prev->specific_attr_end<AnnotateAttr> ();
+          attr != end;
+          ++attr)
+      {
+        if (!attr->isInherited()) {
+          llvm::StringRef annotation = attr->getAnnotation();
+          assert(!annotation.empty() && "Empty annotation!");
+          static const char annoTag[] = "$clingAutoload$";
+          if (annotation.startswith(llvm::StringRef(annoTag, strlen(annoTag)))) {
+            // autoload annotation.
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    if (hasFwdDeclAnnotation(Prev))
+      return false;
+
     Diag(EnumLoc, diag::err_enum_redeclare_fixed_mismatch)
       << Prev->isFixed();
     Diag(Prev->getLocation(), diag::note_previous_declaration);
-#endif
     return true;
   }
 

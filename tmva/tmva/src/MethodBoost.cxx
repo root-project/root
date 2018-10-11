@@ -393,11 +393,9 @@ void TMVA::MethodBoost::Train()
       // the first classifier shows the option string output, the rest not
       if (fCurrentMethodIdx>0) TMVA::MsgLogger::InhibitOutput();
 
-      IMethod* method = ClassifierFactory::Instance().Create(std::string(fBoostedMethodName),
-                                                             GetJobName(),
-                                                             Form("%s_B%04i", fBoostedMethodTitle.Data(),fCurrentMethodIdx),
-                                                             DataInfo(),
-                                                             fBoostedMethodOptions);
+      IMethod *method = ClassifierFactory::Instance().Create(
+         fBoostedMethodName.Data(), GetJobName(), Form("%s_B%04i", fBoostedMethodTitle.Data(), fCurrentMethodIdx),
+         DataInfo(), fBoostedMethodOptions);
       TMVA::MsgLogger::EnableOutput();
 
       // suppressing the rest of the classifier output the right way

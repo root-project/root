@@ -512,10 +512,12 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
 
   list<Double_t>* hint = new list<Double_t> ;
 
+  Double_t delta = (xhi-xlo)*1e-8 ;
+
   // Construct array with pairs of points positioned epsilon to the left and
   // right of the bin boundaries
   for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
-    if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
+    if (boundaries[i]>xlo-delta && boundaries[i]<xhi+delta) {
       
       Double_t boundary = boundaries[i] ;
       if (transform) {

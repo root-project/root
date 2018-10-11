@@ -920,27 +920,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     nll = new RooAddition(baseName.c_str(),"-log(likelihood)",nllList,kTRUE) ;
   }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
-
+  
   // Collect internal and external constraint specifications
   RooArgSet allConstraints ;
-
-////LM:   This code below has been removed in ab6de0cac6f9d37b48be1a86e4e043bfc24bc298
-///      re-added now
-  if (cPars && cPars->getSize()>0) {
-    RooArgSet* constraints = getAllConstraints(*data.get(),*cPars,doStripDisconnected) ;
-    allConstraints.add(*constraints) ;
-    delete constraints ;
-    
-  }
-  if (extCons) {
-    allConstraints.add(*extCons) ;
-  }
-
-/// LM: remove changes in https://github.com/root-project/root/commit/ab6de0cac6f9d37b48be1a86e4e043bfc24bc298#diff-0ffabaeb842dbfd09c09e55b4c7b40c5
-/// which  make stressRooStats failing for computing significance in a simultaneous model.
-/// Error is caused by a wrong value of constraint term in nll when doing a second fit
-#if 0
-
 
   if (_myws && _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()))) {
 
@@ -972,8 +954,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
            Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()), allConstraints);
      }
   }
-#endif
-  
+
   // Include constraints, if any, in likelihood
   RooAbsReal* nllCons(0) ;
   if (allConstraints.getSize()>0 && cPars) {   
@@ -1422,13 +1403,13 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	
 	// Calculated corrected errors for weighted likelihood fits
 	RooFitResult* rw = m.save() ;
-	for (list<RooNLLVar*>::iterator iter1=nllComponents.begin() ; iter1!=nllComponents.end() ; iter1++) {
+	for (list<RooNLLVar*>::iterator iter1=nllComponents.begin() ; iter1!=nllComponents.end() ; ++iter1) {
 	  (*iter1)->applyWeightSquared(kTRUE) ;
 	}
 	coutI(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") Calculating sum-of-weights-squared correction matrix for covariance matrix" << endl ;
 	m.hesse() ;
 	RooFitResult* rw2 = m.save() ;
-	for (list<RooNLLVar*>::iterator iter2=nllComponents.begin() ; iter2!=nllComponents.end() ; iter2++) {
+	for (list<RooNLLVar*>::iterator iter2=nllComponents.begin() ; iter2!=nllComponents.end() ; ++iter2) {
 	  (*iter2)->applyWeightSquared(kFALSE) ;
 	}
 	

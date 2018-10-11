@@ -45,6 +45,7 @@ template <typename T> class TStdBitsetHelper {
 }
 
 namespace Detail {
+
    class TCollectionProxyInfo {
       // This class is a place holder for the information needed
       // to create the proper Collection Proxy.
@@ -613,16 +614,18 @@ namespace Detail {
 
    };
 
-   template <> struct TCollectionProxyInfo::Type<std::vector<Bool_t> >
-   : public TCollectionProxyInfo::Address<std::vector<Bool_t>::const_reference>
+   // This specialization is chosen if T is a vector<bool, A>, irrespective of the nature
+   // of the allocator A represents.
+   template <class A> struct TCollectionProxyInfo::Type<std::vector<Bool_t, A>>
+   : public TCollectionProxyInfo::Address<typename std::vector<Bool_t, A>::const_reference>
    {
-      typedef std::vector<Bool_t>             Cont_t;
-      typedef std::vector<Bool_t>::iterator   Iter_t;
-      typedef std::vector<Bool_t>::value_type Value_t;
-      typedef Environ<Iter_t>                 Env_t;
-      typedef Env_t                          *PEnv_t;
-      typedef Cont_t                         *PCont_t;
-      typedef Value_t                        *PValue_t;
+      typedef std::vector<Bool_t, A>       Cont_t;
+      typedef typename Cont_t::iterator    Iter_t;
+      typedef typename Cont_t::value_type  Value_t;
+      typedef Environ<Iter_t>              Env_t;
+      typedef Env_t                       *PEnv_t;
+      typedef Cont_t                      *PCont_t;
+      typedef Value_t                     *PValue_t;
 
       virtual ~Type() {}
 
@@ -675,7 +678,7 @@ namespace Detail {
       //typedef Iterators<Cont_t,fgLargeIterator> Iterators_t;
 
       struct Iterators {
-         typedef Cont_t::iterator iterator;
+         typedef typename Cont_t::iterator iterator;
 
          static void create(void *coll, void **begin_arena, void **end_arena, TVirtualCollectionProxy*) {
             PCont_t c = PCont_t(coll);
@@ -713,14 +716,14 @@ namespace Detail {
 
    };
 
-   template <> struct TCollectionProxyInfo::Pushback<std::vector<bool> > : public TCollectionProxyInfo::Type<std::vector<Bool_t> > {
-      typedef std::vector<Bool_t>    Cont_t;
-      typedef Cont_t::iterator       Iter_t;
-      typedef Cont_t::value_type     Value_t;
-      typedef Environ<Iter_t>        Env_t;
-      typedef Env_t                 *PEnv_t;
-      typedef Cont_t                *PCont_t;
-      typedef Value_t               *PValue_t;
+   template <class A> struct TCollectionProxyInfo::Pushback<std::vector<Bool_t, A> > : public TCollectionProxyInfo::Type<std::vector<Bool_t, A> > {
+      typedef std::vector<Bool_t, A>       Cont_t;
+      typedef typename Cont_t::iterator    Iter_t;
+      typedef typename Cont_t::value_type  Value_t;
+      typedef Environ<Iter_t>              Env_t;
+      typedef Env_t                       *PEnv_t;
+      typedef Cont_t                      *PCont_t;
+      typedef Value_t                     *PValue_t;
 
       static void resize(void* obj,size_t n) {
          PCont_t c = PCont_t(obj);
@@ -739,10 +742,14 @@ namespace Detail {
    };
 
    // Need specialization for boolean references due to stupid STL std::vector<bool>
-   template<> inline void* TCollectionProxyInfo::Address<std::vector<Bool_t>::const_reference>::address(std::vector<Bool_t>::const_reference ) {
-      R__ASSERT(0);
-      return 0;
-   }
+   template <class A> struct TCollectionProxyInfo::Address<std::vector<Bool_t, A>> {
+      virtual ~Address() {}
+      static void* address(typename std::vector<Bool_t, A>::const_reference ref) {
+         (void) ref; // This is to prevent the unused variable warning.
+         R__ASSERT(0);
+         return 0;
+      }
+   };
 
    template <typename Bitset_t> struct TCollectionProxyInfo::Type<Internal::TStdBitsetHelper<Bitset_t> > : public TCollectionProxyInfo::Address<const Bool_t &>
    {

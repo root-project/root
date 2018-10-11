@@ -525,7 +525,7 @@ Int_t stressGoFTest(Int_t argc = 1 , Char_t* argv[] = 0) {
    return RunTests(argc, argv);
 }
 
-#if not defined(__CINT__) && not defined(__MAKECINT__)
+#if !defined(__CINT__) && !defined(__MAKECINT__)
 Int_t main(Int_t argc, Char_t* argv[]) {
    return RunTests(argc, argv);
 }

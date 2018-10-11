@@ -1091,8 +1091,8 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
             hxmin = -0.01;
             hxmax =  0.01;
          } else {
-            hxmin = hxmin-hxmin*0.01;
-            hxmax = hxmax+hxmax*0.01;
+            hxmin = hxmin-TMath::Abs(hxmin)*0.01;
+            hxmax = hxmax+TMath::Abs(hxmax)*0.01;
          }
       }
       if (TMath::Abs(hymax - hymin) < 0.0001) {
@@ -1100,8 +1100,8 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
             hymin = -0.01;
             hymax =  0.01;
          } else {
-            hymin = hymin-hymin*0.01;
-            hymax = hymax+hymax*0.01;
+            hymin = hymin-TMath::Abs(hymin)*0.01;
+            hymax = hymax+TMath::Abs(hymax)*0.01;
          }
       }
       if (fHistogram) {
@@ -1256,6 +1256,19 @@ Double_t TGraph2D::GetZmin() const
    return v;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get x, y and z values for point number i.
+/// The function returns -1 in case of an invalid request or the point number otherwise
+
+Int_t TGraph2D::GetPoint(Int_t i, Double_t &x, Double_t &y, Double_t &z) const
+{
+   if (i < 0 || i >= fNpoints) return -1;
+   if (!fX || !fY || !fZ) return -1;
+   x = fX[i];
+   y = fY[i];
+   z = fZ[i];
+   return i;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Finds the z value at the position (x,y) thanks to
@@ -1334,6 +1347,17 @@ void TGraph2D::Paint(Option_t *option)
    fHistogram->SetMarkerStyle(GetMarkerStyle());
    fHistogram->SetMarkerSize(GetMarkerSize());
    fHistogram->Paint(opt.Data());
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print 2D graph values.
+
+void TGraph2D::Print(Option_t *) const
+{
+   for (Int_t i = 0; i < fNpoints; i++) {
+      printf("x[%d]=%g, y[%d]=%g, z[%d]=%g\n", i, fX[i], i, fY[i], i, fZ[i]);
+   }
 }
 
 

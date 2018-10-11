@@ -7,10 +7,15 @@ find_package(ROOT REQUIRED)
 
 if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
   set(ROOT_root_CMD root.exe)
-  set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
-                   ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
-                   ROOTSYS=${CMAKE_BINARY_DIR}
-                   PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
+  if(NOT MSVC)  # Ignore environment on Windows
+    set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
+                     ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
+                     ROOTSYS=${CMAKE_BINARY_DIR}
+                     PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
+  else()
+    set(ROOT_environ ROOTSYS=${CMAKE_BINARY_DIR}
+                     PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
+  endif()
 else()                       # testing using an installation
   include(${ROOT_USE_FILE})
   if(DEFINED ROOT_CONFIG_EXECUTABLE) #---If ROOT was built with the classic configure/make---
@@ -32,6 +37,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BIN
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogon.C "{
   // Needed by ACLiC to use the current dicrectory for scratch area
   gSystem->SetBuildDir(\".\", kTRUE);
+  gROOT->SetWebDisplay(\"batch\");
 }")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootalias.C "")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogoff.C "{}")
@@ -56,12 +62,19 @@ if(NOT ROOT_minuit2_FOUND)
                    fit/minuit2FitBench.C fit/minuit2GausFit.C
                    fit/minuit2GausFit.C fit/NumericalMinimization.C
                    fit/combinedFit.C fit/TestBinomial.C
-                   fit/fitNormSum.C fit/vectorizedFit.C)
+                   fit/fitNormSum.C fit/vectorizedFit.C
+                   tutorials/roostats/rs_bernsteinCorrection.C)
+endif()
+
+# FIXME: Temporary workaround for runtime_cxxmodule
+if(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
+  set(runtime_cxxmodules_veto tutorials/roostats/rs_numberCountingCombination.C)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
   set(roofit_veto  fit/RoofitDemo.C
-                   roofit/*.C roostats/*.C histfactory/*.C)
+                   roofit/*.C roostats/*.C histfactory/*.C
+                   roofit/*.py)
 endif()
 
 if(NOT ROOT_unuran_FOUND)
@@ -128,6 +141,11 @@ endif()
 
 if(NOT ROOT_imt_FOUND)
   set(imt_veto multicore/imt*.C multicore/mt*.C)
+else()
+  if(MSVC)
+    #---Multiproc is not supported on Windows
+    set(imt_veto ${imt_veto} multicore/mp*.C multicore/mtbb201_parallelHistoFill.C)
+  endif()
 endif()
 
 if(ROOT_CLASSIC_BUILD)
@@ -168,10 +186,19 @@ else()
     get_filename_component(pythia8dir "${PYTHIA8_INCLUDE_DIR}" DIRECTORY)
     list(APPEND ROOT_environ PYTHIA8=${pythia8dir})
   endif()
+  if("$ENV{PYTHIA8DATA}" STREQUAL "" AND PYTHIA8_DATA)
+    list(APPEND ROOT_environ PYTHIA8DATA=${PYTHIA8_DATA})
+  endif()
 endif()
 
-if(ROOT_root7_FOUND)
-  set(root7_veto dataframe/tdf013_InspectAnalysis.C)
+if(root7)
+  set(root7_veto dataframe/df013_InspectAnalysis.C
+                 v7/fitpanel.cxx
+      )
+endif()
+
+if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
+  set(bits32_veto dataframe/*.C graphs/timeSeriesFrom*.C)
 endif()
 
 #---These ones are disabled !!! ------------------------------------
@@ -192,7 +219,6 @@ set(extra_veto
   tree/tree2a.C
   tree/tree4.C
   roostats/rs401d_FeldmanCousins.C  # Takes too much time
-  roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
   tree/copytree2.C
   tree/copytree3.C
@@ -207,6 +233,7 @@ set(all_veto hsimple.C
              ${extra_veto}
              ${gui_veto}
              ${minuit2_veto}
+             ${runtime_cxxmodules_veto}
              ${roofit_veto}
              ${unuran_veto}
              ${xml_veto}
@@ -223,11 +250,12 @@ set(all_veto hsimple.C
              ${classic_veto}
              ${pythia_veto}
              ${root7_veto}
+             ${bits32_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
-if(ROOT_root7_FOUND)
-  file(GLOB_RECURSE tutorials_v7 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/v7 *.cxx)
+if(root7)
+  file(GLOB_RECURSE tutorials_v7 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/*.cxx)
   list(APPEND tutorials ${tutorials_v7})
 endif()
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
@@ -365,15 +393,23 @@ if(ROOT_python_FOUND)
              histfactory/example.py # not a tutorial
              histfactory/makeQuickModel.py # not a tutorial
              eve/lineset.py         # requires GUI
+             sql/sqlcreatedb.py     # same as the C++ case
+             sql/sqlfilldb.py       # same as the C++ case
+             sql/sqlselect.py       # same as the C++ case
              )
   if(NOT ROOT_mathmore_FOUND)
     list(APPEND pyveto math/Legendre.py)
+    list(APPEND pyveto math/Bessel.py)
+    list(APPEND pyveto math/tStudent.py)
   endif()
-  
+
   list(REMOVE_ITEM pytutorials ${pyveto})
-  if(ROOT_CLASSIC_BUILD)
-    set(classic_veto_py dataframe/tdf*.py)
-    list(REMOVE_ITEM pytutorials ${classic_veto_py})
+
+  if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
+    set(bits32_veto_py dataframe/*.py)
+    file(GLOB bits32_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py)
+    list(REMOVE_ITEM pytutorials ${bits32_veto_py})
+    list(REMOVE_ITEM pytutorials pyroot/pyroot002_TTreeAsMatrix.py)
   endif()
 
   #---Python tutorials dependencies--------------------------------------
@@ -410,6 +446,6 @@ endif()
 #---Download files for tutorials---------
 set(rootsite http://root.cern.ch/files)
 set(csvtimeout 60)
-set (tdf014_csv tdf014_CsvDataSource_MuRun2010B.csv)
-file(DOWNLOAD ${rootsite}/tutorials/${tdf014_csv} ${CMAKE_CURRENT_BINARY_DIR}/${tdf014_csv} TIMEOUT ${csvtimeout})
+set (df014_csv df014_CsvDataSource_MuRun2010B.csv)
+file(DOWNLOAD ${rootsite}/tutorials/${df014_csv} ${CMAKE_CURRENT_BINARY_DIR}/${df014_csv} TIMEOUT ${csvtimeout})
 

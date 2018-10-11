@@ -46,9 +46,6 @@ public:
    Int_t  UnLock();
    Int_t  TryLock();
 
-   std::unique_ptr<TVirtualMutex::State> Reset();
-   void Restore(std::unique_ptr<TVirtualMutex::State> &&);
-
    ClassDef(TWin32Mutex,0)  // Win32 mutex lock
 };
 

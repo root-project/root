@@ -543,7 +543,7 @@ void TAxis::GetCenter(Double_t *center) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return an array with the lod edge of all bins
+/// Return an array with the low edge of all bins
 
 void TAxis::GetLowEdge(Double_t *edge) const
 {

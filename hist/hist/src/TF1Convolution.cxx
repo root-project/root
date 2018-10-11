@@ -304,6 +304,11 @@ void TF1Convolution::MakeFFTConv()
    }
    fGraphConv->SetBit(TGraph::kIsSortedX); // indicate that points are sorted in X to speed up TGraph::Eval
    fFlagGraph = true; // we can use the graph
+
+   // delete the fft objects
+   delete fft1;
+   delete fft2;
+   delete fftinverse; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -315,6 +320,7 @@ Double_t TF1Convolution::EvalFFTConv(Double_t t)
    if (fGraphConv)
       return  fGraphConv -> Eval(t);
    else
+
       return EvalNumConv(t);
 }
 

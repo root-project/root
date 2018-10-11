@@ -50,6 +50,11 @@
 #include "TMVA/RegressionVariance.h"
 #include "TMVA/DataSetInfo.h"
 
+#ifdef R__USE_IMT
+#include <ROOT/TThreadExecutor.hxx>
+#include "TSystem.h"
+#endif
+
 class TRandom3;
 
 namespace TMVA {
@@ -187,7 +192,6 @@ namespace TMVA {
       inline void SetUseExclusiveVars(Bool_t t=kTRUE){fUseExclusiveVars = t;}
       inline void SetNVars(Int_t n){fNvars = n;}
 
-
    private:
       // utility functions
      
@@ -234,7 +238,6 @@ namespace TMVA {
       Types::EAnalysisType  fAnalysisType;   // kClassification(=0=false) or kRegression(=1=true)
 
       DataSetInfo*  fDataSetInfo;
-
 
       ClassDef(DecisionTree,0);               // implementation of a Decision Tree
    };

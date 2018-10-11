@@ -143,7 +143,7 @@ void MethodC50::Train()
    fModel = new ROOT::R::TRObject(Model);
    if (IsModelPersistence())  
    {
-        TString path = GetWeightFileDir() + "/C50Model.RData";
+        TString path = GetWeightFileDir() +  "/" + GetName() + ".RData";
         Log() << Endl;
         Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
         Log() << Endl;
@@ -324,7 +324,7 @@ void MethodC50::GetHelpMessage() const
 void TMVA::MethodC50::ReadModelFromFile()
 {
    ROOT::R::TRInterface::Instance().Require("C50");
-   TString path = GetWeightFileDir() + "/C50Model.RData";
+   TString path = GetWeightFileDir() +  "/" + GetName() + ".RData";
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;

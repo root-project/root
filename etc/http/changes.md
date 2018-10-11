@@ -1,17 +1,134 @@
 # JSROOT changelog
 
 ## Changes in dev
-1. Tooltips and zooming in TGraphPolar drawings
-2. Support border draws for TWbox
-3. Support TPavesText with multiple underlying paves 
-4. Correctly draw filled TArrow endings
-5. Implement drawing of TDiamond, TArc, TCurlyLine, TCurlyArc, TCrown
-6. Implement most existing fill styles
-7. Support line option for TGraph2D
-8. Let enable/disable highligh of extra objects in geometry viewer 
-9. Draw all objectes from TList/TObjArray is they appear in list of primitives
-10. Draw axis labels on both sides when pad.fTick[x/y] > 1
-11. Disable automatic frame adjustment, can be enabled with "&adjframe" parameter in URL 
+1. Fix drawing and update v7 histograms 
+2. Provide workaround for standard THREE.SVGRenderer. 
+   This will allows to use standard three.js version in the future 
+3. When producing graphical images, use normal three.js renderer for 3D.
+   Before SVGRenderer was used, which is not optimal for complex drawings.
+4. Let use WebGL renderer in Chrome headless mode for generation of images
+
+
+## Changes in 5.5.0
+1. Introduce JSROOT.StoreJSON() function. It creates JSON code for the 
+   TCanvas with all drawn objects inside. Allows to store current canvas state
+2. Support "item=img:file.png" parameter to insert images in existing layout (#151)
+3. Support TTree drawing into TGraph (#153), thanks @cozzyd
+4. Let configure "&toolbar=right" in URL to change position of tool buttons
+5. Let configure "&divsize=500x400" in URL of size of main div element (default - full browser)  
+6. Implement "optstat1001" and "optfit101" draw options for histograms
+7. Remove "autocol" options - standard "plc" should be used instead
+8. Provide drawing of artificial "$legend" item - it creates TLegend for all primitives in pad
+   Can be used when several histograms or several graphs superimposed
+9. Let configure "&toolbar=vert" in URL to change orientation of tool buttons
+10. Improve markers and error bars drawing for TH1/TProfile
+
+
+## Changes in 5.4.3
+1. Fix - draw functions also when histogram "same" option used (#159)
+2. Fix - when draw histogram as markers improve optimization algorithm
+3. Fix - correct histogram Y-axis range selection in logarithmic scale
+4. Fix - for TH2 draw options allow combination "colztext" (#162)
+5. Fix - PNG file generation with 3D drawings inside
+
+
+## Changes in 5.4.2
+1. Fix - take into account extra quotes in multipart http reply (#157)
+2. Fix - display of labels on X axis with TProfile
+3. Fix - support time display in TMultiGraph
+4. Fix - correctly parse "optstat" and "optfit" in URL
+5. Fix - correctly update TGraph drawing when X range is changing
+6. Fix - return only TF1/TF2 object when searching function (#158)
+
+
+## Changes in 5.4.1
+1. Fix - monitoring mode in draw.htm page
+2. Fix - zooming in colz palette
+3. Fix - support both 9.x and 10.x jsdom version in Node.js (#149)
+4. Fix - draw axis main line with appropriate attributes (#150)
+5. Fix - use axis color when drawing grids lines (#150)
+6. Fix - when set pad logx/logy, reset existing user ranges in pad
+7. Fix - avoid too deep calling stack when drawing many graphs or histos (#154)
+8. Fix - correctly (re)draw tooltips on canvas with many subpads
+
+
+## Changes in 5.4.0
+1. New supported classes:
+   - TDiamond
+   - TArc
+   - TCurlyLine
+   - TCurlyArc
+   - TCrown
+2. New draw options:
+   - "RX" and "RY" for TGraph to reverse axis
+   - "noopt" for TGraph to disable drawing optimization
+   - "CPN" for TCanvas to create color palette from N last colors
+   - "line" for TGraph2D
+3. New features:
+   - support LZ4 compression
+   - tooltips and zooming in TGraphPolar drawings
+   - TPavesText with multiple underlying paves
+   - implement all fill styles
+   - draw borders for TWbox
+   - draw all objects from TList/TObjArray as they appear in list of primitives
+   - let enable/disable highlight of extra objects in geometry viewer
+   - draw axis labels on both sides when pad.fTick[x/y] > 1
+   - make drawing of TCanvas with many primitives smoother
+   - add fOptTitle, fOptLogx/y/z fields in JSROOT.gStyle
+4. Behavior changes:
+   - disable automatic frame adjustment, can be enabled with "&adjframe" parameter in URL
+   - when drawing TH2/TH3 scatter plots, always generate same "random" pattern
+   - use barwidth/baroffset parameters in lego plots
+5. Bug fixes:
+   - use same number of points to draw lines and markers on the TGraph
+   - correctly draw filled TArrow endings
+   - let combine "L" or "C" TGraph draw option with others
+   - correct positioning of custom axis labels
+   - correctly toggle lin/log axes in lego plot
+   - let correctly change marker attributes interactively 
+
+
+## Changes in 5.3.5
+1. Fix - correctly show histogram with negative bins and fill attributes (#143)
+2. Fix - correct animation for status line (when visible)
+3. Fix - correctly set lin/log settings back top TPad object
+4. Fix - correctly use preloaded d3.js in notebooks/require.js environment
+5. Cached Latex regex to improve drawing speed (#145)
+
+
+## Changes in 5.3.4
+1. Fix - several problem in TLatex preprocessing for MathJax.js
+2. Fix - use "E" draw options for THStack only when no any other specified
+
+
+## Changes in 5.3.3
+1. Use latest jsdom and mathjax-node packages (Node.js only) 
+
+
+## Changes in 5.3.2
+1. Fix - use FontSize when draw TLegend entries
+2. Fix - correctly show TH2 overflow stats
+3. Fix - tooltips handling for TH1 hbar drawings
+4. Implement JSROOT.toJSON() function to produce ROOT JSON string
+
+
+## Changes in 5.3.1
+1. Fix - show TH2 projections also when tooltip is disabled
+2. Fix - use z_handle to format Z-axis labels
+3. Fix - support labels on TH3 Z axis
+4. Fix - TH1 zooming in 3D mode
+5. Fix - suppress empty {} in TLatex
+6. Add several math symbols for TLatex
+7. Fix - font kind 1 is italic times roman
+8. Fix - do not let expand parent item in hierarchy
+9. Fix - use correct painter to check range
+10. Fix - change proper axis attributes in context menu
+11. Fix - correctly show axis labels on 3D plot
+12. Fix - correctly handle circle (marker style 24) as marker kind
+13. Fix - correct circle drawing with coordinates rounding
+14. Fix - TLatex #frac and #splitline, adjust vertical position
+15. Fix - workaround for y range when fMinimum==fMaximum!=-1111
+16. Fix - correct tooltips for graph with marker drawing
 
 
 ## Changes in 5.3.0
@@ -95,7 +212,7 @@
 3. Implement projection of geometry on given plane.
    One could reuse drawing of geometry in other div (should be drawn with main option).
    In control GUI one could change position of the projection plane
-4. On of the TGeo drawing can be assigned as main. When same object drawn next time,
+4. One of the TGeo drawing can be assigned as main. When same object drawn next time,
    its drawing will be derived from the main. Useful for geometry projections.
    Also all tracks and hits will be imported from main drawing.
 5. Let change background color of geo drawing.

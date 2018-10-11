@@ -44,7 +44,7 @@ Note that for the TGFALFile plugin to work, all these pathnames
 should be prepended by gfal:.
 */
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "TROOT.h"
 #include "TUrl.h"
 

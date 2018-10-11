@@ -47,6 +47,8 @@ private:
    Int_t       GetHashValue(TString &s) const { return s.Hash() % fSize; }
    Int_t       GetHashValue(const char *str) const { return ::Hash(str) % fSize; }
 
+   void        AddImpl(Int_t slot, TObject *object);
+
    THashTable(const THashTable&);             // not implemented
    THashTable& operator=(const THashTable&);  // not implemented
 
@@ -69,6 +71,8 @@ public:
    Int_t         GetRehashLevel() const { return fRehashLevel; }
    Int_t         GetSize() const { return fEntries; }
    TIterator    *MakeIterator(Bool_t dir = kIterForward) const;
+   void          Print(Option_t *option, Int_t recurse) const;
+   using TCollection::Print;
    void          Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
    TObject      *Remove(TObject *obj);
    TObject      *RemoveSlow(TObject *obj);
@@ -80,7 +84,7 @@ public:
 inline Float_t THashTable::AverageCollisions() const
 {
    if (fUsedSlots)
-      return ((Float_t)fEntries)/fUsedSlots;
+      return ((Float_t)fEntries)/((Float_t)fUsedSlots);
    else
       return 0.0;
 }

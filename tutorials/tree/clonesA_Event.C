@@ -17,7 +17,8 @@
 #ifndef CLONESA_EVENT_SECOND_RUN
 
 void clonesA_Event() {
-   TString dir = gSystem->DirName(__FILE__);
+   std::string s1(__FILE__);
+   TString dir = gSystem->UnixPathName(s1.substr(0, s1.find_last_of("\\/")).c_str());
    gROOT->ProcessLine(TString(".L ")+dir+"/clonesA_Event.cxx+");
 #define CLONESA_EVENT_SECOND_RUN yes
    gROOT->ProcessLine("#include \"" __FILE__ "\"");

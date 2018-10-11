@@ -9,7 +9,7 @@
 // This program is called "root" in the $ROOTSYS/bin directory and the  //
 // real ROOT executable is now called "root.exe" (formerly "root").     //
 // Rootx puts up a splash screen giving some info about the current     //
-// version of ROOT and, more importanly, it sets up the required        //
+// version of ROOT and, more importantly, it sets up the required       //
 // LD_LIBRARY_PATH, SHLIB_PATH and LIBPATH environment variables        //
 // (depending on the platform).                                         //
 //                                                                      //
@@ -17,6 +17,8 @@
 
 #include "RConfigure.h"
 #include "Rtypes.h"
+
+#include "CommandLineOptionsHelp.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -276,8 +278,9 @@ static void SetDisplay()
          STRUCT_UTMP *utmp_entry = SearchEntry(ReadUtmp(), tty);
          if (utmp_entry) {
             char *display = new char[sizeof(utmp_entry->ut_host) + 15];
-            char *host = new char[sizeof(utmp_entry->ut_host) + 1];
-            strncpy(host, utmp_entry->ut_host, sizeof(utmp_entry->ut_host));
+            constexpr size_t hostsize = sizeof(utmp_entry->ut_host) + 1;
+            char *host = new char[ hostsize ];
+            strncpy(host, utmp_entry->ut_host, hostsize - 1);
             host[sizeof(utmp_entry->ut_host)] = 0;
             if (host[0]) {
                if (strchr(host, ':')) {
@@ -435,24 +438,7 @@ static void WaitChild()
 
 static void PrintUsage(char *pname)
 {
-   // This is a copy of the text in TApplication::GetOptions().
-
-   fprintf(stderr, "Usage: %s [-l] [-b] [-n] [-q] [dir] [[file:]data.root] [file1.C ... fileN.C]\n", pname);
-   fprintf(stderr, "Options:\n");
-   fprintf(stderr, "  -b : run in batch mode without graphics\n");
-   fprintf(stderr, "  -n : do not execute logon and logoff macros as specified in .rootrc\n");
-   fprintf(stderr, "  -q : exit after processing command line macro files\n");
-   fprintf(stderr, "  -l : do not show splash screen\n");
-   fprintf(stderr, "  -x : exit on exception\n");
-   fprintf(stderr, " dir : if dir is a valid directory cd to it before executing\n");
-   fprintf(stderr, " --notebook : execute ROOT notebook\n");
-   fprintf(stderr, "\n");
-   fprintf(stderr, "  -?       : print usage\n");
-   fprintf(stderr, "  -h       : print usage\n");
-   fprintf(stderr, "  --help   : print usage\n");
-   fprintf(stderr, "  -config  : print ./configure options\n");
-   fprintf(stderr, "  -memstat : run with memory usage monitoring\n");
-   fprintf(stderr, "\n");
+   fprintf(stderr, kCommandLineOptionsHelp, pname);
 }
 
 int main(int argc, char **argv)
@@ -491,6 +477,7 @@ int main(int argc, char **argv)
       if (!strcmp(argv[i], "-ll"))        gNoLogo  = true;
       if (!strcmp(argv[i], "-a"))         about    = true;
       if (!strcmp(argv[i], "-config"))    gNoLogo  = true;
+      if (!strcmp(argv[i], "--version"))    gNoLogo  = true;
       if (!strcmp(argv[i], "--notebook")) notebook = true;
    }
 

@@ -11,8 +11,8 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
   set(ROOT_ARCHITECTURE win32gcc)
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe  -Wall -W -Woverloaded-virtual -fPIC")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -Wall -W -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe  -Wall -W -Woverloaded-virtual")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -Wall -W")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy")
 
   set(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")

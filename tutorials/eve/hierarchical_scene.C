@@ -13,9 +13,8 @@ void add_blobs(TEveElement* p, Float_t rad, Float_t height, Float_t size,
 {
   if (level <= 0) return;
 
-  for (Int_t i = 0; i < Ns; ++i)
-  {
-    TEveGeoShape* x = new TEveGeoShape("SS");
+  for (Int_t i = 0; i < Ns; ++i) {
+    auto x = new TEveGeoShape("SS");
     x->SetShape(new TGeoSphere(0, size));
     Double_t phi = TMath::TwoPi() * i / Ns;
     x->RefMainTrans().SetPos(rad*TMath::Cos(phi),
@@ -36,7 +35,7 @@ void hierarchical_scene()
   TColor::SetPalette(1, 0);
   gRandom = new TRandom3(0);
 
-  TEveScene *s = gEve->SpawnNewScene("Hierachical Scene", "OoogaDooga");
+  auto s = gEve->SpawnNewScene("Hierarchical Scene", "OoogaDooga");
   s->SetHierarchical(kTRUE);
 
   gEve->GetDefaultViewer()->AddScene(s);

@@ -20,7 +20,7 @@ void box(Int_t pat, Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    l.DrawLatex((x1+x2)/2, (y1+y2)/2, Form("%d",pat));
 }
 
-TCanvas * fillpatterns()
+TCanvas * fillpatterns(int w=500, int h=700)
 {
    // Fill patterns example. This macro shows the available fill patterns.
    // The first table displays the 25 fixed patterns. They cannot be
@@ -31,7 +31,7 @@ TCanvas * fillpatterns()
    //
    // Author: Olivier Couet.
 
-   TCanvas *Pat = new TCanvas("Fill Patterns", "",0,0,500,700);
+   TCanvas *Pat = new TCanvas("Fill Patterns", "",0,0,w,h);
    Pat->Range(0,0,1,1);
    Pat->SetBorderSize(2);
    Pat->SetFrameFillColor(0);

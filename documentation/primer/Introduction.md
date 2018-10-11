@@ -18,7 +18,7 @@ should be provided - think for example of an integral or peak-search or
 a Fourier transformation applied to an input spectrum to obtain the
 actual measurement described by the model.
 
-One specialty of experimental physics are the inevitable uncertaintes
+One specialty of experimental physics are the inevitable uncertainties
 affecting each measurement, and visualisation tools have to include
 these. In subsequent analysis, the statistical nature of the errors must
 be handled properly.

@@ -107,6 +107,8 @@ Redo is Undo for undo action. Use TQUndoManager::Redo method for that
 #include "TDataType.h"
 #include "stdarg.h"
 #include "TROOT.h"
+#include "ThreadLocalStorage.h"
+#include "TVirtualRWMutex.h"
 
 ClassImp(TQCommand);
 ClassImp(TQUndoManager);
@@ -292,7 +294,7 @@ void TQCommand::Delete(Option_t *opt)
    decltype(lnk) sav;
 
    while (lnk) {
-      sav = lnk->Next()->shared_from_this();
+      sav = lnk->NextSP();
       TString ostr = lnk->GetOption();
       if (ostr.Contains(opt)) {   // remove command
          TObject *obj = lnk->GetObject();
@@ -609,7 +611,7 @@ void TQCommand::Redo(Option_t *)
       TQCommand *c = (TQCommand *)lnk->GetObject();
       c->Redo();
       done = kTRUE;
-      lnk = lnk->Next()->shared_from_this();
+      lnk = lnk->NextSP();
    }
 
    if (done) Emit("Redo()");
@@ -634,14 +636,14 @@ void TQCommand::Undo(Option_t *)
    while (lnk) {
       TQCommand *c = (TQCommand *)lnk->GetObject();
       TString opt = lnk->GetOption();
-      TObjLink *sav = lnk->Prev();
+      auto sav = lnk->PrevSP();
       c->Undo();
       done = kTRUE;
       if (opt.Contains("remove")) {   // remove  command
          delete lnk->GetObject();
          Remove(lnk);
       }
-      lnk = sav->shared_from_this();
+      lnk = sav;
    }
    if (fNUargs > 0) {
       if (fUndo) {
@@ -670,7 +672,15 @@ const char *TQCommand::GetName() const
 {
    const Int_t maxname = 100;
 
-   if (!fName.IsNull()) return fName.Data();
+   if (!fName.IsNull())
+      return fName.Data();
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   // In case another thread already did the work while
+   // we were waiting.
+   if (!fName.IsNull())
+      return fName.Data();
 
    TString name;
 
@@ -691,11 +701,10 @@ const char *TQCommand::GetName() const
       lnk = lnk->Next();
    }
 
-   // trick against "constness"
-   TQCommand *m = (TQCommand *)this;
+   TQCommand *m = const_cast<TQCommand*>(this);
    m->fName = name;
 
-   return name.Data();
+   return fName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -704,17 +713,22 @@ const char *TQCommand::GetName() const
 
 const char *TQCommand::GetTitle() const
 {
-   if (!fTitle.IsNull()) return fTitle.Data();
-
-   TString title = GetName();
+   if (!fTitle.IsNull())
+      return fTitle.Data();
 
    if (fUndo) {
+      TTHREAD_TLS_DECL_ARG(TString, title, GetName());
+
       title += "_";
       title += fUndo->GetClassName();
       title += "::";
-      if (fUndo->GetName())  title += fUndo->GetName();
+      if (fUndo->GetName())
+         title += fUndo->GetName();
+
+      return title.Data();
+   } else {
+      return GetName();
    }
-   return title.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

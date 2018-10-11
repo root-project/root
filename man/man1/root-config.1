@@ -3,31 +3,33 @@
 .\"
 .TH ROOT-CONFIG 1 "Version 3" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
-.\" other parms are allowed: see man(7), man(1)
+.\" other params are allowed: see man(7), man(1)
 .SH NAME
 root-config \- ROOT utility for your Makefiles
 .SH SYNOPSIS
 .B root-config
 .I "[options]"
 .SH "DESCRIPTION"
-Put lines like 
+\fIroot-config\fP is a tool that is used to configure and determine
+the compiler and linker flags that should be used to compile
+and link programs that use \fIROOT\fP.
 .RS 
 .nf 
 
-CFLAGS = $(shell root-config \-\-cflags)
-LIBS   = $(shell root-config \-\-libs)
-GLIBS  = $(shell root-config \-\-glibs)
+CPPFLAGS  += $(shell root-config \-\-cflags)
+LDLIBS    += $(shell root-config \-\-libs)
+LDFLAGS   += $(shell root-config \-\-ldflags)
 
 %Cint.cxx:Include.h LinkDef.h
         rootcint \-f $@ \-c $^ 
 
 .fi
 .RE
-in you Makefile.
+in your Makefile to use the built-in rules of GNU make. For GUIs, replace \fI\-\-libs\fR by \fI\-\-glibs\fR.
 .PP
 You may also find the \fIautomake\fR(1), \fIautoconf\fR(1), and
 \fIlibtool\fR(1) macro file \fI/usr/share/aclocal/root.m4\fR
-useful.  If that macro file isn't installed where \dIaclocal\fR will
+useful.  If that macro file isn't installed where \fIaclocal\fR will
 find it, copy the contents to your local \fIacinclude.m4\fR file.  In
 the directories you use \fBROOT\fR libraries, have in your
 \fIMakefile.am\fR file: 
@@ -97,9 +99,9 @@ And then in some \fIMakefile.am\fR
 .RS
 .nf
 
-EXTRA_SOURCES		= root_depenent_source.cc
+EXTRA_SOURCES		= root_dependent_source.cc
 if GOT_ROOT
-LIBFOOXTRA              = root_depenent_source.cc
+LIBFOOXTRA              = root_dependent_source.cc
 else
 LIBFOOXTRA              =
 endif
@@ -136,26 +138,26 @@ Extra compiler flags
 \fBROOT\fR basic + GUI libraries
 .TP
 .B ROOTAUXLIBS
-Auxilary libraries and linker flags for \fBROOT\fR
+Auxiliary libraries and linker flags for \fBROOT\fR
 .TP
 .B ROOTAUXCFLAGS
-Auxilary compiler flags 
+Auxiliary compiler flags 
 .TP
 .B ROOTRPATH
 Same as \fBROOTLIBDIR\fR
 .SH OPTIONS 
 .TP 
 .B \-\-help
-Gives a short list of options available, and exit
+Give a short list of options available, and exit
 .TP
 .B \-\-version 
 Report the version number of installed \fBROOT\fR, and exit. 
 .TP
 .BI \-\-prefix =<prefix>
-If no arguments is given, reports where \fBROOT\fR is installed. With
+If no arguments are given, reports where \fBROOT\fR is installed. With
 an argument of =\fI<prefix>\fR, set the base of the subsequent options
-to \fI<prefix>\fR. If \fB\\-\-exec-prefix\fR is passedwith an argument,
-that argument overrides the argument given to \fB\\-\-prefix\fR for the
+to \fI<prefix>\fR. If \fB\\-\-exec-prefix\fR is passed with an argument,
+it overrides the argument given to \fB\\-\-prefix\fR for the
 library path. 
 .TP
 .BI \-\-exec-prefix =<prefix>
@@ -170,22 +172,25 @@ Print the directory where the ROOT libraries are installed.
 Print the directory where the ROOT headers are installed. 
 .TP
 .B \-\-libs
-Output a line suitable for linking a program agains the \fBROOT\fR
-libraries. No graphics libraries are output. 
+Output a line suitable for linking a program against the \fBROOT\fR
+libraries. No graphics libraries are included. 
 .TP
 .B \-\-glibs
-As above, but also output for the graphics libraries. 
+As above, but also output for the graphics (GUI) libraries. 
+.TP
+.B \-\-evelibs
+As above, but also output for the graphics libraries and Eve libraries.
 .TP
 .B \-\-cflags
-Output a line suitable for compiling a source file againd the
-\fBROOT\fR header (class declararion) files. 
+Output a line suitable for compiling a source file against the
+\fBROOT\fR header (class declararion) files.
 .TP
 .B \-\-new 
 Put the \fBlibNew.so\fR library in the library lists.  This option
 \fImust\fR be given before options \fB\-\-libs\fR and \fB\-\-glibs\fR. 
 .TP
 .B \-\-nonew 
-Compatiblity option. Does nothing. 
+Compatiblity option, does nothing. 
 .TP
 .B \-\-auxlibs
 Print auxiliary libraries and/or system linker flags.
@@ -201,8 +206,53 @@ Do not print auxiliary compiler flags in the output of
 \fB\-\-cflags\fR.
 .TP
 .B \-\-noldflags
-Do not print library path link option in output of \fB\-\-libs\fR and
+Do not print library path link option in output of \fB\-\-libs\fR, \fB\-\-evelibs\fR and
 \fB\-\-glibs\fR. 
+.TP
+.B \-\-ldflags
+Print additional linker flags (eg. \fB\-m64\fR)
+.TP
+.B \-\-arch
+Print the architecture (compiler/OS)
+.TP
+.B \-\-platform
+Print the platform (OS)
+.TP
+.B \-\-bindir
+Print the binary directory of the root installation (location of the root executable)
+.TP
+.B \-\-etcdir
+Print the configuration directory (place of system.rootrc, mime type, valgrind suppression files and .desktop files)
+.TP
+.B \-\-config
+Print arguments used for ./configure as used when building root. These cannot be used for ./configure if root was built with CMake.
+.TP
+.B \-\-git-revision
+Print the ROOT git revision number from which root was built.
+.TP
+.B \-\-has-<feature>
+Test if <feature> has been enabled in the build process.
+.TP
+.B \-\-features
+Print list of all supported features
+.TP
+.B \-\-ncpu
+Print number of available (hyperthreaded) cores
+.TP
+.B \-\-python-version
+Print the Python version used by ROOT
+.TP
+.B \-\-cc
+Print alternative C compiler specified when ROOT was built
+.TP
+.B \-\-cxx
+Print alternative C++ compiler specified when ROOT was built
+.TP
+.B \-\-f77
+Print alternative Fortran compiler specified when ROOT was built
+.TP
+.B \-\-ld
+Print alternative Linker specified when ROOT was built
 .SH "SEE ALSO"
 \fIroot\fR(1), \fIroot-cint\fR(1)
 .PP

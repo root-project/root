@@ -19,16 +19,18 @@
 
 #include "Reference/Propagation.cxx"
 #include "Reference/ActivationFunctions.cxx"
+#include "Reference/Arithmetic.cxx"
 #include "Reference/OutputFunctions.cxx"
 #include "Reference/LossFunctions.cxx"
 #include "Reference/Regularization.cxx"
 #include "Reference/Initialization.cxx"
 #include "Reference/Dropout.cxx"
+#include "Reference/DenoisePropagation.cxx"
+#include "Reference/RecurrentPropagation.cxx"
 
 namespace TMVA {
 namespace DNN  {
-
-template class TReference<Real_t>;
-template class TReference<Double_t>;
+   template class TReference<Real_t>;
+   template class TReference<Double_t>;
 } // namespace TMVA
 } // namespace DNN

@@ -10,28 +10,277 @@
 #include "TMVA/DNN/Architectures/Reference.h"
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/Net.h"
+#include "TMVA/DNN/DeepNet.h"
+#include "TMVA/DNN/CNN/ConvLayer.h"
+#include "TMVA/DNN/CNN/MaxPoolLayer.h"
+#include "TMVA/DNN/DenseLayer.h"
 
-namespace TMVA
+namespace TMVA {
+namespace DNN {
+
+/** Construct a convolutional neural network with one convolutional layer,
+ *  one pooling layer and two fully connected layers. The dimensions are
+ *  predetermined. The activation functions are chosen randomly. */
+//______________________________________________________________________________
+template <typename AArchitecture>
+void constructConvNet(TDeepNet<AArchitecture> &net)
 {
-namespace DNN
+   /* For random selection */
+   std::vector<EActivationFunction> ActivationFunctions = {EActivationFunction::kIdentity, EActivationFunction::kRelu,
+                                                           EActivationFunction::kSigmoid, EActivationFunction::kTanh};
+
+   size_t depth1 = 12;
+   size_t filterHeightConv1 = 4;
+   size_t filterWidthConv1 = 4;
+   size_t strideRowsConv1 = 1;
+   size_t strideColsConv1 = 1;
+   size_t zeroPaddingHeight1 = 1;
+   size_t zeroPaddingWidth1 = 1;
+
+   EActivationFunction fConv1 = EActivationFunction::kIdentity;
+
+   //EActivationFunction fConv1 = ActivationFunctions[rand() % ActivationFunctions.size()];
+
+   net.AddConvLayer(depth1, filterHeightConv1, filterWidthConv1, strideRowsConv1, strideColsConv1, zeroPaddingHeight1,
+                    zeroPaddingWidth1, fConv1);
+
+   std::cout << "added Conv layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
+             << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
+
+
+   size_t depth2 = 6;
+   size_t filterHeightConv2 = 3;
+   size_t filterWidthConv2 = 3;
+   size_t strideRowsConv2 = 1;
+   size_t strideColsConv2 = 1;
+   size_t zeroPaddingHeight2 = 0;
+   size_t zeroPaddingWidth2 = 0;
+
+   EActivationFunction fConv2 = EActivationFunction::kIdentity;
+//   EActivationFunction fConv2 = ActivationFunctions[rand() % ActivationFunctions.size()];
+
+   net.AddConvLayer(depth2, filterHeightConv2, filterWidthConv2, strideRowsConv2, strideColsConv2, zeroPaddingHeight2,
+                    zeroPaddingWidth2, fConv2);
+
+   std::cout << "added Conv layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
+             << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
+
+
+   size_t filterHeightPool = 3;
+   size_t filterWidthPool = 3;
+   size_t strideRowsPool = 1;
+   size_t strideColsPool = 1;
+
+   net.AddMaxPoolLayer(filterHeightPool, filterWidthPool, strideRowsPool, strideColsPool);
+
+   std::cout << "added MaxPool layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
+             << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
+
+
+   size_t depthReshape = 1;
+   size_t heightReshape = 1;
+   size_t widthReshape = net.GetLayerAt(net.GetDepth() - 1)->GetDepth() *
+                         net.GetLayerAt(net.GetDepth() - 1)->GetHeight() *
+                         net.GetLayerAt(net.GetDepth() - 1)->GetWidth();
+
+   net.AddReshapeLayer(depthReshape, heightReshape, widthReshape, true);
+
+   size_t widthFC1 = 20;
+
+   EActivationFunction fFC1 = EActivationFunction::kIdentity;
+
+   //EActivationFunction fFC1 = ActivationFunctions[rand() % ActivationFunctions.size()];
+   net.AddDenseLayer(widthFC1, fFC1);
+
+   size_t widthFC2 = 2;
+   EActivationFunction fFC2 = EActivationFunction::kIdentity;
+   net.AddDenseLayer(widthFC2, fFC2);
+}
+
+/** Construct a linear convolutional neural network with one convolutional layer,
+ *  one pooling layer and two fully connected layers. The dimensions are
+ *  predetermined. The activation functions are all linear.  */
+//______________________________________________________________________________
+template <typename AArchitecture>
+void constructLinearConvNet(TDeepNet<AArchitecture> &net)
 {
+   
+   size_t depth1 = 2;
+   size_t filterHeightConv1 = 2;
+   size_t filterWidthConv1 = 2;
+   size_t strideRowsConv1 = 1;
+   size_t strideColsConv1 = 1;
+   size_t zeroPaddingHeight1 = 1;
+   size_t zeroPaddingWidth1 = 1;
+
+   EActivationFunction fConv1 = EActivationFunction::kIdentity;
+
+   net.AddConvLayer(depth1, filterHeightConv1, filterWidthConv1, strideRowsConv1, strideColsConv1, zeroPaddingHeight1,
+                    zeroPaddingWidth1, fConv1);
+
+   std::cout << "added Conv layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
+             << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
+
+
+
+   size_t depth2 = 2;
+   size_t filterHeightConv2 = 3;
+   size_t filterWidthConv2 = 3;
+   size_t strideRowsConv2 = 1;
+   size_t strideColsConv2 = 1;
+   size_t zeroPaddingHeight2 = 0;
+   size_t zeroPaddingWidth2 = 0;
+
+   EActivationFunction fConv2 = EActivationFunction::kIdentity;
+
+   net.AddConvLayer(depth2, filterHeightConv2, filterWidthConv2, strideRowsConv2, strideColsConv2, zeroPaddingHeight2,
+                    zeroPaddingWidth2, fConv2);
+
+   std::cout << "added Conv layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
+             << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
+
+   // size_t depth3 = 12;
+   // size_t filterHeightConv3 = 3;
+   // size_t filterWidthConv3 = 3;
+   // size_t strideRowsConv3 = 1;
+   // size_t strideColsConv3 = 1;
+   // size_t zeroPaddingHeight3 = 1;
+   // size_t zeroPaddingWidth3 = 1;
+
+   // EActivationFunction fConv3 = EActivationFunction::kIdentity;
+
+   // net.AddConvLayer(depth3, filterHeightConv3, filterWidthConv3, strideRowsConv3, strideColsConv3, zeroPaddingHeight3,
+   //                 zeroPaddingWidth3, fConv3);
+
+
+   size_t filterHeightPool = 2;
+   size_t filterWidthPool = 2;
+   size_t strideRowsPool = 1;
+   size_t strideColsPool = 1;
+
+   net.AddMaxPoolLayer(filterHeightPool, filterWidthPool, strideRowsPool, strideColsPool);
+
+   std::cout << "added MaxPool layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
+             << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
+
+   size_t depthReshape = 1;
+   size_t heightReshape = 1;
+   size_t widthReshape = net.GetLayerAt(net.GetDepth() - 1)->GetDepth() *
+                         net.GetLayerAt(net.GetDepth() - 1)->GetHeight() *
+                         net.GetLayerAt(net.GetDepth() - 1)->GetWidth();
+
+   net.AddReshapeLayer(depthReshape, heightReshape, widthReshape, true);
+
+   size_t widthFC1 = 3;
+   EActivationFunction fFC1 = EActivationFunction::kIdentity;
+   net.AddDenseLayer(widthFC1, fFC1);
+
+   size_t widthFC2 = 1;
+   EActivationFunction fFC2 = EActivationFunction::kIdentity;
+   net.AddDenseLayer(widthFC2, fFC2);
+}
+
+//______________________________________________________________________________
+template <typename AArchitecture>
+void constructMasterSlaveConvNets(TDeepNet<AArchitecture> &master, std::vector<TDeepNet<AArchitecture>> &nets)
+{
+   /* For random selection */
+   std::vector<EActivationFunction> ActivationFunctions = {EActivationFunction::kIdentity, EActivationFunction::kRelu,
+                                                           EActivationFunction::kSigmoid, EActivationFunction::kTanh};
+
+   // Add Convolutional Layer
+   size_t depth = 12;
+   size_t filterHeightConv = 2;
+   size_t filterWidthConv = 2;
+   size_t strideRowsConv = 1;
+   size_t strideColsConv = 1;
+   size_t zeroPaddingHeight = 1;
+   size_t zeroPaddingWidth = 1;
+
+   EActivationFunction fConv = ActivationFunctions[rand() % ActivationFunctions.size()];
+
+   TConvLayer<AArchitecture> *convLayer =
+      master.AddConvLayer(depth, filterHeightConv, filterWidthConv, strideRowsConv, strideColsConv, zeroPaddingHeight,
+                          zeroPaddingWidth, fConv);
+
+   convLayer->Initialize();
+   TConvLayer<AArchitecture> *copyConvLayer = new TConvLayer<AArchitecture>(*convLayer);
+
+   // add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddConvLayer(copyConvLayer);
+   }
+
+   // Add Max Pooling Layer
+   size_t filterHeightPool = 6;
+   size_t filterWidthPool = 6;
+   size_t strideRowsPool = 1;
+   size_t strideColsPool = 1;
+
+   // Add the Max pooling layer
+   TMaxPoolLayer<AArchitecture> *maxPoolLayer =
+      master.AddMaxPoolLayer(filterHeightPool, filterWidthPool, strideRowsPool, strideColsPool);
+   TMaxPoolLayer<AArchitecture> *copyMaxPoolLayer = new TMaxPoolLayer<AArchitecture>(*maxPoolLayer);
+
+   // Add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddMaxPoolLayer(copyMaxPoolLayer);
+   }
+
+   // Add the reshape layer
+   size_t depthReshape = 1;
+   size_t heightReshape = 1;
+   size_t widthReshape = master.GetLayerAt(master.GetDepth() - 1)->GetDepth() *
+                         master.GetLayerAt(master.GetDepth() - 1)->GetHeight() *
+                         master.GetLayerAt(master.GetDepth() - 1)->GetWidth();
+
+   TReshapeLayer<AArchitecture> *reshapeLayer = master.AddReshapeLayer(depthReshape, heightReshape, widthReshape, true);
+   TReshapeLayer<AArchitecture> *copyReshapeLayer = new TReshapeLayer<AArchitecture>(*reshapeLayer);
+
+   // Add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddReshapeLayer(copyReshapeLayer);
+   }
+
+   // Add Dense Layer
+   size_t widthFC1 = 20;
+   EActivationFunction fFC1 = ActivationFunctions[rand() % ActivationFunctions.size()];
+   TDenseLayer<AArchitecture> *denseLayer = master.AddDenseLayer(widthFC1, fFC1);
+   denseLayer->Initialize();
+   TDenseLayer<AArchitecture> *copyDenseLayer = new TDenseLayer<AArchitecture>(*denseLayer);
+
+   // add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddDenseLayer(copyDenseLayer);
+   }
+
+   // Add the final Dense Layer
+   size_t widthFC2 = 5;
+   EActivationFunction fFC2 = EActivationFunction::kIdentity;
+   TDenseLayer<AArchitecture> *finalDenseLayer = master.AddDenseLayer(widthFC2, fFC2);
+   finalDenseLayer->Initialize();
+   TDenseLayer<AArchitecture> *copyFinalDenseLayer = new TDenseLayer<AArchitecture>(*finalDenseLayer);
+
+   // add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddDenseLayer(copyFinalDenseLayer);
+   }
+}
 
 /** Construct a random linear neural network with up to five layers.*/
 //______________________________________________________________________________
 template <typename AArchitecture>
-void constructRandomLinearNet(TNet<AArchitecture> & net)
+void constructRandomLinearNet(TNet<AArchitecture> &net)
 {
-    int nlayers = rand() % 5 + 1;
+   int nlayers = rand() % 5 + 1;
 
-    std::vector<EActivationFunction> ActivationFunctions
-    = {EActivationFunction::kIdentity};
+   std::vector<EActivationFunction> ActivationFunctions = {EActivationFunction::kIdentity};
 
-    for (int i = 0; i < nlayers; i++) {
-        int width = rand() % 20 + 1;
-        EActivationFunction f =
-        ActivationFunctions[rand() % ActivationFunctions.size()];
-        net.AddLayer(width, f);
-    }
+   for (int i = 0; i < nlayers; i++) {
+      int width = rand() % 20 + 1;
+      EActivationFunction f = ActivationFunctions[rand() % ActivationFunctions.size()];
+      net.AddLayer(width, f);
+   }
 }
 
 /*! Set matrix to the identity matrix */
@@ -39,19 +288,18 @@ void constructRandomLinearNet(TNet<AArchitecture> & net)
 template <typename AMatrix>
 void identityMatrix(AMatrix &X)
 {
-    size_t m, n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        X(i,j) = 0.0;
-        }
-        if (i < n) {
-        X(i,i) = 1.0;
-        }
-    }
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         X(i, j) = 0.0;
+      }
+      if (i < n) {
+         X(i, i) = 1.0;
+      }
+   }
 }
 
 /*! Fill matrix with given value.*/
@@ -73,21 +321,33 @@ void fillMatrix(AMatrix &X, AReal x)
 /*! Fill matrix with random, Gaussian-distributed values. */
 //______________________________________________________________________________
 template <typename AMatrix>
-void randomMatrix(AMatrix &X)
+void randomMatrix(AMatrix &X, double mean = 0.0, double sigma = 1.0,
+                  TRandom & rand = *gRandom)
 {
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m = X.GetNrows();
+   size_t n = X.GetNcols();
 
-    TRandom rand(clock());
+   for (size_t i = 0; i < m; ++i)
+      for (size_t j = 0; j < n; ++j)
+         X(i,j) = rand.Gaus(mean, sigma);
+}
 
-    Double_t sigma = sqrt(10.0);
+/*! Fill matrix with random, uniform-distributed values in [-1, 1] */
+//______________________________________________________________________________
+template <typename AMatrix>
+void uniformMatrix(AMatrix &X)
+{
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        X(i,j) = rand.Gaus(0.0, sigma);
-        }
-    }
+   TRandom & rand = *gRandom; 
+
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         X(i, j) = rand.Uniform(-1, 1);
+      }
+   }
 }
 
 /*! Generate a random batch as input for a neural net. */
@@ -95,7 +355,7 @@ void randomMatrix(AMatrix &X)
 template <typename AMatrix>
 void randomBatch(AMatrix &X)
 {
-    randomMatrix(X);
+   randomMatrix(X);
 }
 
 /*! Generate a random batch as input for a neural net. */
@@ -103,15 +363,15 @@ void randomBatch(AMatrix &X)
 template <typename AMatrix>
 void copyMatrix(AMatrix &X, const AMatrix &Y)
 {
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        X(i,j) = Y(i,j);
-        }
-    }
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         X(i, j) = Y(i, j);
+      }
+   }
 }
 
 /*! Apply functional to each element in the matrix. */
@@ -119,35 +379,32 @@ void copyMatrix(AMatrix &X, const AMatrix &Y)
 template <typename AMatrix, typename F>
 void applyMatrix(AMatrix &X, F f)
 {
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        X(i,j) = f(X(i,j));
-        }
-    }
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         X(i, j) = f(X(i, j));
+      }
+   }
 }
 
 /*! Combine elements of two given matrices into a single matrix using
  *  the given function f. */
 //______________________________________________________________________________
 template <typename AMatrix, typename F>
-void zipWithMatrix(AMatrix &Z,
-                    F f,
-                    const AMatrix &X,
-                    const AMatrix &Y)
+void zipWithMatrix(AMatrix &Z, F f, const AMatrix &X, const AMatrix &Y)
 {
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        Z(i,j) = f(X(i,j), Y(i,j));
-        }
-    }
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         Z(i, j) = f(X(i, j), Y(i, j));
+      }
+   }
 }
 
 /** Generate a random batch as input for a neural net. */
@@ -155,18 +412,18 @@ void zipWithMatrix(AMatrix &Z,
 template <typename AMatrix, typename AFloat, typename F>
 AFloat reduce(F f, AFloat start, const AMatrix &X)
 {
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-    AFloat result = start;
+   AFloat result = start;
 
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        result = f(result, X(i,j));
-        }
-    }
-    return result;
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         result = f(result, X(i, j));
+      }
+   }
+   return result;
 }
 
 /** Apply function to matrix element-wise and compute the mean of the resulting
@@ -175,18 +432,18 @@ AFloat reduce(F f, AFloat start, const AMatrix &X)
 template <typename AMatrix, typename AFloat, typename F>
 AFloat reduceMean(F f, AFloat start, const AMatrix &X)
 {
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-    AFloat result = start;
+   AFloat result = start;
 
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        result = f(result, X(i,j));
-        }
-    }
-    return result / (AFloat) (m * n);
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         result = f(result, X(i, j));
+      }
+   }
+   return result / (AFloat)(m * n);
 }
 
 /** Compute the relative error of x and y. If their difference is too small,
@@ -195,17 +452,15 @@ AFloat reduceMean(F f, AFloat start, const AMatrix &X)
 template <typename T>
 inline T relativeError(const T &x, const T &y)
 {
-  using std::abs;
+   using std::abs;
 
-  if (x == y)
-    return T(0.0);
+   if (x == y) return T(0.0);
 
-  T diff = abs(x - y);
+   T diff = abs(x - y);
 
-  if (x * y == T(0.0) || diff * diff < std::numeric_limits<T>::epsilon())
-    return diff;
+   if (x * y == T(0.0) || diff < std::numeric_limits<T>::epsilon()) return diff;
 
-  return diff / (abs(x) + abs(y));
+   return diff / (abs(x) + abs(y));
 }
 
 /*! Compute the maximum, element-wise relative error of the matrices
@@ -228,9 +483,35 @@ auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> Double_t
          curError = relativeError<Double_t>(X(i, j), Y(i, j));
          maxError = std::max(curError, maxError);
       }
-    }
+   }
 
-    return maxError;
+   return maxError;
+}
+
+/** Compute the average element-wise absolute error of the matrices
+ *  X and Y.
+ */
+
+//______________________________________________________________________________
+template <typename Matrix1, typename Matrix2>
+auto meanAbsoluteError(const Matrix1 &X, const Matrix2 &Y) -> Double_t
+{
+   Double_t avgError = 0;
+
+   Int_t m = X.GetNrows();
+   Int_t n = X.GetNcols();
+
+   assert(m == Y.GetNrows());
+   assert(n == Y.GetNcols());
+
+   for (Int_t i = 0; i < m; i++) {
+      for (Int_t j = 0; j < n; j++) {
+         avgError += std::abs(X(i, j) - Y(i, j));
+      }
+   }
+
+   avgError /= (n * m);
+   return avgError;
 }
 
 /*! Numerically compute the derivative of the functional f using finite
@@ -239,7 +520,7 @@ auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> Double_t
 template <typename F, typename AFloat>
 inline AFloat finiteDifference(F f, AFloat dx)
 {
-    return f(dx) - f(0.0 - dx);
+   return f(dx) - f(-dx);
 }
 
 /*! Color code error. */
@@ -247,23 +528,22 @@ inline AFloat finiteDifference(F f, AFloat dx)
 template <typename AFloat>
 std::string print_error(AFloat &e)
 {
-    std::ostringstream out{};
+   std::ostringstream out{};
 
-    out << ("\e[");
+   out << ("\e[");
 
-    if (e > 1e-5)
-        out << "31m";
-    else if (e > 1e-9)
-        out << "33m";
-    else
-        out << "32m";
+   if (e > 1e-5)
+      out << "31m";
+   else if (e > 1e-9)
+      out << "33m";
+   else
+      out << "32m";
 
-    out << e;
-    out << "\e[39m";
+   out << e;
+   out << "\e[39m";
 
-    return out.str();
+   return out.str();
 }
-
 }
 }
 

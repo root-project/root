@@ -281,7 +281,7 @@ int XrdProofSched::Enqueue(XrdProofdProofServ *xps, XrdProofQuery *query)
 
    if (xps->Enqueue(query) == 1) {
       std::list<XrdProofdProofServ *>::iterator ii;
-      for (ii = fQueue.begin(); ii != fQueue.end(); ii++) {
+      for (ii = fQueue.begin(); ii != fQueue.end(); ++ii) {
          if ((*ii)->Status() == kXPD_running) break;
       }
       if (ii != fQueue.end()) {
@@ -307,7 +307,7 @@ void XrdProofSched::DumpQueues(const char *prefix)
    TRACE(ALL," +++ # of waiting sessions: "<<fQueue.size());
    std::list<XrdProofdProofServ *>::iterator ii;
    int i = 0;
-   for (ii = fQueue.begin(); ii != fQueue.end(); ii++) {
+   for (ii = fQueue.begin(); ii != fQueue.end(); ++ii) {
       TRACE(ALL," +++ #"<<++i<<" client:"<< (*ii)->Client()<<" # of queries: "<< (*ii)->Queries()->size());
    }
    TRACE(ALL," ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ");
@@ -473,7 +473,7 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
 
          std::list<XrdProofWorker *>::iterator nxWrk = acws->begin();
          while (nw--) {
-            nxWrk++;
+            ++nxWrk;
             // Add export version of the info
             // (stats are updated in XrdProofdProtocol::GetWorkers)
             wrks->push_back(*nxWrk);
@@ -510,8 +510,8 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
          std::list<XrdProofWorker *>::iterator xWrk = acws->begin();
          if ((*xWrk)->Active() < maxnum) {
             acwseff->push_back(*xWrk);
-            xWrk++;
-            for (; xWrk != acws->end(); xWrk++) {
+            ++xWrk;
+            for (; xWrk != acws->end(); ++xWrk) {
                if ((*xWrk)->Active() < maxnum) {
                   acwseff->push_back(*xWrk);
                   ok = 1;
@@ -597,8 +597,8 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
          int namx = -1;
          int i = 1;
          std::list<XrdProofWorker *>::iterator iwk = acws->begin();
-         iwk++; // Skip master
-         for ( ; iwk != acws->end(); iwk++) {
+         ++iwk; // Skip master
+         for ( ; iwk != acws->end(); ++iwk) {
             vwrk[i] = *iwk;
             int na = (*iwk)->Active();
             printf(" %d", na);
@@ -657,7 +657,7 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
          int nw = fWorkerMax;
          while (nw--) {
             while (iw != fNextWrk) {
-               nxWrk++;
+               ++nxWrk;
                iw++;
             }
             // Add export version of the info
@@ -675,11 +675,11 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
    } else {
       // The full list
       std::list<XrdProofWorker *>::iterator iw = acws->begin();
-      iw++;
+      ++iw;
       while (iw != acws->end()) {
          // Add to the list (stats are updated in XrdProofdProtocol::GetWorkers)
          wrks->push_back(*iw);
-         iw++;
+         ++iw;
       }
    }
 

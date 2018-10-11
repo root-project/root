@@ -120,7 +120,7 @@ TMVA::MethodLD::~MethodLD( void )
    if (fSumValMatx) { delete fSumValMatx; fSumValMatx = 0; }
    if (fCoeffMatx)  { delete fCoeffMatx;  fCoeffMatx  = 0; }
    if (fLDCoeff) {
-      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++){
+      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); ++vi){
          if (*vi) { delete *vi; *vi = 0; }
       }
       delete fLDCoeff; fLDCoeff = 0;
@@ -389,7 +389,7 @@ void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode )
 
    // create vector with coefficients (double vector due to arbitrary output dimension)
    if (fLDCoeff) {
-      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++){
+      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); ++vi){
          if (*vi) { delete *vi; *vi = 0; }
       }
       delete fLDCoeff; fLDCoeff = 0;

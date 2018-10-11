@@ -81,8 +81,10 @@ void rs_bernsteinCorrection(){
    wks->import(*data, Rename("data"));
    wks->import(nominal);
 
-   // use Minuit2
-   ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+   if (TClass::GetClass("ROOT::Minuit2::Minuit2Minimizer")) {
+      // use Minuit2 if ROOT was built with support for it:
+      ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+   }
 
    // The tolerance sets the probability to add an unnecessary term.
    // lower tolerance will add fewer terms, while higher tolerance

@@ -13,7 +13,7 @@
 #include "TString.h"
 
 #ifndef __CINT__
-#  include <QFont>
+#include "TQtIncludes.h"
 #else
    class  QFont;
 #endif

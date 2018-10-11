@@ -181,6 +181,9 @@ protected:
 public:
    char *fCurrent;
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// constructor
+
    TXMLInputStream(Bool_t isfilename, const char *filename, Int_t ibufsize)
       : fInp(0), fInpStr(0), fInpStrLen(0), fBuf(0), fBufSize(0), fMaxAddr(0), fLimitAddr(0), fTotalPos(0),
         fCurrentLine(0), fEntities(), fCurrent(0)
@@ -212,6 +215,9 @@ public:
       fEntities.SetOwner(kTRUE);
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// destructor
+
    virtual ~TXMLInputStream()
    {
       delete fInp;
@@ -220,13 +226,28 @@ public:
       fBuf = 0;
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// return true if end of file is achieved
+
    inline Bool_t EndOfFile() { return (fInp != 0) ? fInp->eof() : (fInpStrLen <= 0); }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// return true if end of file and all data from buffer are processed
 
    inline Bool_t EndOfStream() { return EndOfFile() && (fCurrent >= fMaxAddr); }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// Add new entity
+
    void AddEntity(TXMLEntity *ent) { fEntities.Add(ent); }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// Returns number of entity
+
    Int_t NumEntities() const { return fEntities.GetLast() + 1; }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// Search for the entity
 
    TXMLEntity *FindEntity(const char *beg, Int_t len)
    {
@@ -241,6 +262,9 @@ public:
       }
       return 0;
    }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// Read new data into buffer
 
    int DoRead(char *buf, int maxsize)
    {
@@ -259,19 +283,23 @@ public:
       return maxsize;
    }
 
-   Bool_t ExpandStream()
+   ////////////////////////////////////////////////////////////////////////////
+   /// Allocate more data for the buffer, preserving content
+
+   Bool_t ExpandStream(char *&curr)
    {
       if (EndOfFile())
          return kFALSE;
       fBufSize *= 2;
       int curlength = fMaxAddr - fBuf;
       char *newbuf = (char *)realloc(fBuf, fBufSize);
-      if (newbuf == 0)
+      if (!newbuf)
          return kFALSE;
 
       fMaxAddr = newbuf + (fMaxAddr - fBuf);
       fCurrent = newbuf + (fCurrent - fBuf);
       fLimitAddr = newbuf + (fLimitAddr - fBuf);
+      curr = newbuf + (curr - fBuf);
       fBuf = newbuf;
 
       int len = DoRead(fMaxAddr, fBufSize - curlength);
@@ -281,6 +309,9 @@ public:
       fLimitAddr += int(len * 0.75);
       return kTRUE;
    }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// read next portion of data from the stream in the buffer
 
    Bool_t ShiftStream()
    {
@@ -298,9 +329,18 @@ public:
       return kTRUE;
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// returns absolute byte position in the stream
+
    Int_t TotalPos() { return fTotalPos; }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// returns current line number in the input stream
+
    Int_t CurrentLine() { return fCurrentLine; }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// shift current position on provided number of symbol
 
    Bool_t ShiftCurrent(Int_t sz = 1)
    {
@@ -318,6 +358,9 @@ public:
       return kTRUE;
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// Skip spaces at the current position
+
    Bool_t SkipSpaces(Bool_t tillendl = kFALSE)
    {
       while (fCurrent < fMaxAddr) {
@@ -334,24 +377,29 @@ public:
       return kFALSE;
    }
 
+   /////////////////////////////////////////////////////////////
+   /// Check if in current position we see specified string
+
    Bool_t CheckFor(const char *str)
    {
-      // Check if in current position we see specified string
       int len = strlen(str);
-      while (fCurrent + len > fMaxAddr)
-         if (!ExpandStream())
-            return kFALSE;
       char *curr = fCurrent;
+      while (curr + len > fMaxAddr) {
+         if (!ExpandStream(curr))
+            return kFALSE;
+      }
       while (*str != 0)
          if (*str++ != *curr++)
             return kFALSE;
       return ShiftCurrent(len);
    }
 
+   /////////////////////////////////////////////////////////////////////
+   /// Search for specified string in the stream
+   /// return number of symbols before string was found, -1 if error
+
    Int_t SearchFor(const char *str)
    {
-      // Serach for specified string in the stream
-      // return number of symbols before string was found, -1 if error
       int len = strlen(str);
 
       char *curr = fCurrent;
@@ -359,7 +407,7 @@ public:
       do {
          curr++;
          while (curr + len > fMaxAddr)
-            if (!ExpandStream())
+            if (!ExpandStream(curr))
                return -1;
          char *chk0 = curr;
          const char *chk = str;
@@ -376,9 +424,17 @@ public:
       return -1;
    }
 
-#define GoodStartSymbol(symb)                                                                \
-   (((symb >= 'a') && (symb <= 'z')) || ((symb >= 'A') && (symb <= 'Z')) || (symb == '_') || \
-    ((symb >= 0xc0) && (symb <= 0xd6)) || ((symb >= 0xd8) && (symb <= 0xf6)) || (symb > 0xf8))
+   ////////////////////////////////////////////////////////////////////////////
+   /// returns true if symbol can be used as starting in the node name
+
+   inline Bool_t GoodStartSymbol(unsigned char symb)
+   {
+      return (((symb >= 'a') && (symb <= 'z')) || ((symb >= 'A') && (symb <= 'Z')) || (symb == '_') ||
+              ((symb >= 0xc0) && (symb <= 0xd6)) || ((symb >= 0xd8) && (symb <= 0xf6)) || (symb > 0xf8));
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// locate identifier in the stream, returns length of the identifier (or 0 if fails)
 
    Int_t LocateIdentifier()
    {
@@ -393,7 +449,7 @@ public:
       do {
          curr++;
          if (curr >= fMaxAddr)
-            if (!ExpandStream())
+            if (!ExpandStream(curr))
                return 0;
          symb = (unsigned char)*curr;
          ok = GoodStartSymbol(symb) || ((symb >= '0') && (symb <= '9')) || (symb == ':') || (symb == '-') ||
@@ -404,6 +460,9 @@ public:
       return 0;
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// locate node content, returns length (or -1 if fails)
+
    Int_t LocateContent()
    {
       char *curr = fCurrent;
@@ -413,24 +472,27 @@ public:
             return curr - fCurrent;
          curr++;
          if (curr >= fMaxAddr)
-            if (!ExpandStream())
+            if (!ExpandStream(curr))
                return -1;
       }
       return -1;
    }
 
-   Int_t LocateValue(char *start, bool withequalsign = true)
+   ////////////////////////////////////////////////////////////////////////////
+   /// locate attribute value, returns length (or 0 if fails)
+
+   Int_t LocateValue(unsigned curr_offset, bool withequalsign = true)
    {
-      char *curr = start;
+      char *curr = fCurrent + curr_offset;
       if (curr >= fMaxAddr)
-         if (!ExpandStream())
+         if (!ExpandStream(curr))
             return 0;
       if (withequalsign) {
          if (*curr != '=')
             return 0;
          curr++;
          if (curr >= fMaxAddr)
-            if (!ExpandStream())
+            if (!ExpandStream(curr))
                return 0;
       }
       if ((*curr != '\"') && (*curr != '\''))
@@ -439,10 +501,10 @@ public:
       do {
          curr++;
          if (curr >= fMaxAddr)
-            if (!ExpandStream())
+            if (!ExpandStream(curr))
                return 0;
          if (*curr == quote)
-            return curr - start + 1;
+            return curr - (fCurrent + curr_offset) + 1;
       } while (curr < fMaxAddr);
       return 0;
    }
@@ -732,6 +794,10 @@ void TXMLEngine::AddChild(XMLNodePointer_t parent, XMLNodePointer_t child)
       return;
    SXmlNode_t *pnode = (SXmlNode_t *)parent;
    SXmlNode_t *cnode = (SXmlNode_t *)child;
+
+   if (cnode->fParent)
+      UnlinkNode(child);
+
    cnode->fParent = pnode;
    if (pnode->fLastChild == 0) {
       pnode->fChild = cnode;
@@ -753,12 +819,48 @@ void TXMLEngine::AddChildFirst(XMLNodePointer_t parent, XMLNodePointer_t child)
       return;
    SXmlNode_t *pnode = (SXmlNode_t *)parent;
    SXmlNode_t *cnode = (SXmlNode_t *)child;
+
+   if (cnode->fParent)
+      UnlinkNode(child);
+
    cnode->fParent = pnode;
 
    cnode->fNext = pnode->fChild;
    pnode->fChild = cnode;
 
    if (pnode->fLastChild == 0)
+      pnode->fLastChild = cnode;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert new child node after already existing node
+
+void TXMLEngine::AddChildAfter(XMLNodePointer_t parent, XMLNodePointer_t child, XMLNodePointer_t afternode)
+{
+   if (afternode == 0) {
+      AddChild(parent, child);
+      return;
+   }
+
+   SXmlNode_t *pnode = (SXmlNode_t *)parent;
+   SXmlNode_t *cnode = (SXmlNode_t *)child;
+   SXmlNode_t *anode = (SXmlNode_t *)afternode;
+
+   if (anode->fParent != pnode) {
+      Error("InsertChildAfter", "Specified afternode is not in childs list of parent node");
+      AddChild(parent, child);
+      return;
+   }
+
+   if (cnode->fParent)
+      UnlinkNode(child);
+
+   cnode->fParent = pnode;
+
+   cnode->fNext = anode->fNext;
+   anode->fNext = cnode;
+
+   if (pnode->fLastChild == anode)
       pnode->fLastChild = cnode;
 }
 
@@ -890,14 +992,14 @@ Bool_t TXMLEngine::AddDocStyleSheet(XMLDocPointer_t xmldoc, const char *href, co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// unlink (detach) xml node from parent
+/// unlink (detach) xmlnode from parent
 
 void TXMLEngine::UnlinkNode(XMLNodePointer_t xmlnode)
 {
    if (xmlnode == 0)
       return;
-   SXmlNode_t *node = (SXmlNode_t *)xmlnode;
 
+   SXmlNode_t *node = (SXmlNode_t *)xmlnode;
    SXmlNode_t *parent = node->fParent;
 
    if (parent == 0)
@@ -915,6 +1017,9 @@ void TXMLEngine::UnlinkNode(XMLNodePointer_t xmlnode)
       if (parent->fLastChild == node)
          parent->fLastChild = ch;
    }
+
+   node->fParent = 0;
+   node->fNext = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -965,7 +1070,7 @@ const char *TXMLEngine::GetNodeName(XMLNodePointer_t xmlnode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get contents (if any) of xml node
+/// get contents (if any) of xmlnode
 
 const char *TXMLEngine::GetNodeContent(XMLNodePointer_t xmlnode)
 {
@@ -982,7 +1087,7 @@ const char *TXMLEngine::GetNodeContent(XMLNodePointer_t xmlnode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set content of the xml node
+/// set content of the xmlnode
 /// if old node content was exists, it will be replaced
 
 void TXMLEngine::SetNodeContent(XMLNodePointer_t xmlnode, const char *content, Int_t len)
@@ -1009,7 +1114,7 @@ void TXMLEngine::SetNodeContent(XMLNodePointer_t xmlnode, const char *content, I
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// add new content of the xml node
+/// add new content of the xmlnode
 /// old content will be preserved, one could mix content with child nodes
 
 void TXMLEngine::AddNodeContent(XMLNodePointer_t xmlnode, const char *content, Int_t len)
@@ -1028,7 +1133,7 @@ void TXMLEngine::AddNodeContent(XMLNodePointer_t xmlnode, const char *content, I
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// returns first child of xml node
+/// returns first child of xmlnode
 
 XMLNodePointer_t TXMLEngine::GetChild(XMLNodePointer_t xmlnode, Bool_t realnode)
 {
@@ -1076,7 +1181,7 @@ void TXMLEngine::ShiftToNext(XMLNodePointer_t &xmlnode, Bool_t realnode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return kTRUE is this is normal xml node
+/// return kTRUE is this is normal xmlnode
 
 Bool_t TXMLEngine::IsXmlNode(XMLNodePointer_t xmlnode)
 {
@@ -1257,7 +1362,7 @@ XMLDocPointer_t TXMLEngine::ParseString(const char *xmlstring)
 {
    if ((xmlstring == 0) || (strlen(xmlstring) == 0))
       return 0;
-   TXMLInputStream inp(false, xmlstring, 2 * strlen(xmlstring));
+   TXMLInputStream inp(false, xmlstring, 100000);
    return ParseStream(&inp);
 }
 
@@ -1328,7 +1433,7 @@ Bool_t TXMLEngine::ValidateVersion(XMLDocPointer_t xmldoc, const char *version)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// convert single xml node (and its child node) to string
+/// convert single xmlnode (and its child node) to string
 /// if layout<=0, no any spaces or newlines will be placed between
 /// xmlnodes. Xml file will have minimum size, but non-readable structure
 /// if (layout>0) each node will be started from new line,
@@ -1345,7 +1450,7 @@ void TXMLEngine::SaveSingleNode(XMLNodePointer_t xmlnode, TString *res, Int_t la
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read single xml node from provided string
+/// read single xmlnode from provided string
 
 XMLNodePointer_t TXMLEngine::ReadSingleNode(const char *src)
 {
@@ -1694,7 +1799,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
          resvalue = -1;
          return node;
       }
-      if (!inp->SkipSpaces()) {
+      if (!inp->SkipSpaces() && !inp->EndOfStream()) {
          resvalue = -1;
          return node;
       }
@@ -1750,7 +1855,6 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
             if (lastentity != beg)
                AddNodeContent(xmlparent, lastentity, beg - lastentity);
 
-            // printf("Find entity %s in content\n", entity->GetName());
             if (entity->IsSystem()) {
                XMLDocPointer_t entitydoc = ParseFile(entity->GetTitle());
                if (entitydoc == 0) {
@@ -1896,14 +2000,13 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
                   is_system = kTRUE;
                }
 
-               char *valuestart = inp->fCurrent;
-               Int_t valuelen = inp->LocateValue(valuestart, false);
+               Int_t valuelen = inp->LocateValue(0, false);
                if (valuelen < 2) {
                   resvalue = -13;
                   return 0;
                }
 
-               TString entity_value(valuestart + 1, valuelen - 2);
+               TString entity_value(inp->fCurrent + 1, valuelen - 2);
 
                if (!inp->ShiftCurrent(valuelen)) {
                   resvalue = -13;
@@ -1922,9 +2025,6 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
 
                inp->AddEntity(new TXMLEntity(entity_name, entity_value, is_system));
                continue;
-
-               // printf("Entity:%s system:%s value:%s\n", entity_name.Data(), is_system ? "true" : "false",
-               // entity_value.Data());
             }
 
             if (inp->CheckFor("<!ELEMENT")) {
@@ -2071,9 +2171,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
             return 0;
          }
 
-         char *valuestart = inp->fCurrent + attrlen;
-
-         int valuelen = inp->LocateValue(valuestart, true);
+         int valuelen = inp->LocateValue(attrlen, true);
          if (valuelen < 3) {
             resvalue = -7;
             return 0;
@@ -2086,7 +2184,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
          attrname += attrlen;
          *attrname = 0;
          attrname++;
-         UnpackSpecialCharacters(attrname, valuestart + 2, valuelen - 3);
+         UnpackSpecialCharacters(attrname, inp->fCurrent + attrlen + 2, valuelen - 3);
 
          if (!inp->ShiftCurrent(attrlen + valuelen))
             return 0;
@@ -2125,7 +2223,7 @@ void TXMLEngine::DisplayError(Int_t error, Int_t linenumber)
    case -10:
       Error("ParseFile", "Error in xml comments definition at line %d, must be <!-- comments -->", linenumber);
       break;
-   case -9: Error("ParseFile", "Multiple name space definitions not allowed, line %d", linenumber); break;
+   case -9: Error("ParseFile", "Multiple namespace definitions not allowed, line %d", linenumber); break;
    case -8: Error("ParseFile", "Invalid namespace specification, line %d", linenumber); break;
    case -7: Error("ParseFile", "Invalid attribute value, line %d", linenumber); break;
    case -6: Error("ParseFile", "Invalid identifier for node attribute, line %d", linenumber); break;

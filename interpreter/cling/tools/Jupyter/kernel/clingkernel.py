@@ -97,32 +97,42 @@ class ClingKernel(Kernel):
 
     def __init__(self, **kwargs):
         super(ClingKernel, self).__init__(**kwargs)
+        clingInPath = shutil.which('cling')
+        if not clingInPath:
+            from distutils.spawn import find_executable
+            clingInPath = find_executable('cling')
+        if not clingInPath:
+            raise RuntimeError('Cannot find cling in $PATH. No cling, no fun.')
+
         try:
-            whichCling = os.readlink(shutil.which('cling'))
+            whichCling = os.readlink(clingInPath)
+            whichCling = os.path.join(os.path.dirname(clingInPath), whichCling)
         except OSError as e:
             #If cling is not a symlink try a regular file
             #readlink returns POSIX error EINVAL (22) if the
             #argument is not a symlink
             if e.args[0] == 22:
-                whichCling = shutil.which('cling')
+                whichCling = clingInPath
             else:
                 raise e
-        except AttributeError:
-            from distutils.spawn import find_executable
-            whichCling = find_executable('cling')
 
         if whichCling:
-            clingInstDir = os.path.dirname(os.path.dirname(whichCling))
+            clingInstDir = os.path.abspath(os.path.dirname(os.path.dirname(whichCling)))
             llvmResourceDir = clingInstDir
         else:
-            raise RuntimeError('Cannot find cling in $PATH. No cling, no fun.')
+            raise RuntimeError('cling at ' + clingInPath + ' is unusable. No cling, no fun.')
 
-        for ext in ['so', 'dylib', 'dll']:
-            libFilename = clingInstDir + "/lib/libclingJupyter." + ext
-            if os.access(libFilename, os.R_OK):
-                self.libclingJupyter = ctypes.CDLL(clingInstDir + "/lib/libclingJupyter." + ext,
-                                                   mode = ctypes.RTLD_GLOBAL)
-                break
+        for libFolder in ["/lib/libclingJupyter.", "/libexec/lib/libclingJupyter."]:
+
+            for ext in ['so', 'dylib', 'dll']:
+                libFilename = clingInstDir + libFolder + ext
+                if os.access(libFilename, os.R_OK):
+                    self.libclingJupyter = ctypes.CDLL(clingInstDir + libFolder + ext,
+                                                    mode = ctypes.RTLD_GLOBAL)
+                    break
+            else:
+                continue
+            break
 
         if not getattr(self, 'libclingJupyter', None):
             raise RuntimeError('Cannot find ' + clingInstDir + '/lib/libclingJupyter.{so,dylib,dll}')
@@ -134,13 +144,23 @@ class ClingKernel(Kernel):
         self.log.info("Using {}".format(stdopt.decode('utf-8')))
         #from IPython.utils import io
         #io.rprint("DBG: Using {}".format(stdopt.decode('utf-8')))
-        strarr = ctypes.c_char_p*5
-        argv = strarr(b"clingJupyter",stdopt, b"-I" + clingInstDir.encode('utf-8') + b"/include/",b"",b"")
+        argv = [b"clingJupyter", stdopt, b"-I" + clingInstDir.encode('utf-8') + b"/include/"]
+
+        # Environment variable CLING_OPTS used to pass arguments to cling
+        extra_opts = os.getenv('CLING_OPTS')
+        if extra_opts:
+            for x in extra_opts.split():
+                argv.append(x.encode('utf-8'))
+                self.log.info("Passing extra argument {} to cling".format(x))
+
+        argc = len(argv)
+        CharPtrArrayType = ctypes.c_char_p * argc
+
         llvmResourceDirCP = ctypes.c_char_p(llvmResourceDir.encode('utf8'))
 
         # The sideband_pipe is used by cling::Jupyter::pushOutput() to publish MIME data to Jupyter.
         self.sideband_pipe, pipe_in = os.pipe()
-        self.interp = self.libclingJupyter.cling_create(5, argv, llvmResourceDirCP, pipe_in)
+        self.interp = self.libclingJupyter.cling_create(ctypes.c_int(argc), CharPtrArrayType(*argv), llvmResourceDirCP, pipe_in)
 
         self.libclingJupyter.cling_complete_start.restype = my_void_p
         self.libclingJupyter.cling_complete_next.restype = my_void_p #c_char_p

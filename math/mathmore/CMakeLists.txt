@@ -3,7 +3,7 @@
 ############################################################################
 
 include_directories(${GSL_INCLUDE_DIR} ${CMAKE_SOURCE_DIR})
-add_definitions(-DUSE_ROOT_ERROR ${GSL_CFLAGS})
+add_definitions(${GSL_CFLAGS})
 
 set(headers Math/DistFuncMathMore.h Math/SpecFuncMathMore.h Math/PdfFuncMathMore.h
             Math/Polynomial.h Math/Derivator.h Math/Interpolator.h

@@ -919,7 +919,7 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLo
         // ok, finally, clear the failbit
         m_flags &= ~failbit;
         // all done
-    } catch (const BidirMMapPipe::Exception& e) {
+    } catch (BidirMMapPipe::Exception&) {
         if (0 != m_childPid) kill(m_childPid, SIGTERM);
         for (int i = 0; i < 4; ++i)
             if (-1 != fds[i] && 0 != fds[i]) ::close(fds[i]);
@@ -931,7 +931,7 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLo
             delete s_pagepool;
             s_pagepool = 0;
         }
-        throw e;
+        throw;
     }
 }
 
@@ -997,8 +997,8 @@ int BidirMMapPipe::doClose(bool force, bool holdlock)
             delete s_pagepool;
             s_pagepool = 0;
         }
-    } catch (const std::exception& e) {
-        if (!force) throw e;
+    } catch (std::exception&) {
+        if (!force) throw;
     }
     m_busylist = m_freelist = m_dirtylist = 0;
     // wait for child process
@@ -1421,9 +1421,9 @@ BidirMMapPipe::size_type BidirMMapPipe::read(void* addr, size_type sz)
                 feedPageLists(p);
             }
         }
-    } catch (const Exception& e) {
+    } catch (Exception&) {
         m_flags |= rderrbit;
-        if (m_flags & exceptionsbit) throw e;
+        if (m_flags & exceptionsbit) throw;
     }
     return nread;
 }
@@ -1456,9 +1456,9 @@ BidirMMapPipe::size_type BidirMMapPipe::write(const void* addr, size_type sz)
                     doFlush(false);
             }
         }
-    } catch (const Exception& e) {
+    } catch (Exception&) {
         m_flags |= wrerrbit;
-        if (m_flags & exceptionsbit) throw e;
+        if (m_flags & exceptionsbit) throw;
     }
     return written;
 }
@@ -1910,6 +1910,7 @@ childcloses:
             int retVal = pipe->close();
             if (retVal) {
                 std::cout << "[PARENT]: child exited with code " << retVal << std::endl;
+                delete[] s;
                 return retVal;
             }
             delete pipe;

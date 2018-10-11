@@ -8,6 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <chrono>
+
 #include "TBasket.h"
 #include "TBuffer.h"
 #include "TBufferFile.h"
@@ -128,6 +130,10 @@ void TBasket::AdjustSize(Int_t newsize)
    }
    fBranch->GetTree()->IncrementTotalBuffers(newsize-fBufferSize);
    fBufferSize  = newsize;
+   fLastWriteBufferSize[0] = newsize;
+   fLastWriteBufferSize[1] = 0;
+   fLastWriteBufferSize[2] = 0;
+   fNextBufferSizeRecord = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -464,7 +470,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // See if the cache has already unzipped the buffer for us.
    TFileCacheRead *pf = nullptr;
    {
-      R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
+      R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
       pf = file->GetCacheRead(fBranch->GetTree());
    }
    if (pf) {
@@ -506,7 +512,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       if (fBranch->GetTree()->GetPerfStats() != 0) gPerfStats = fBranch->GetTree()->GetPerfStats();
       Int_t st = 0;
       {
-         R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
+         R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
          st = pf->ReadBuffer(readBufferRef->Buffer(),pos,len);
       }
       if (st < 0) {
@@ -515,7 +521,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          // Read directly from file, not from the cache
          // If we are using a TTreeCache, disable reading from the default cache
          // temporarily, to force reading directly from file
-         R__LOCKGUARD_IMT2(gROOTMutex);  // Lock for parallel TTree I/O
+         R__LOCKGUARD_IMT(gROOTMutex);  // Lock for parallel TTree I/O
          TTreeCache *fc = dynamic_cast<TTreeCache*>(file->GetCacheRead());
          if (fc) fc->Disable();
          Int_t ret = file->ReadBuffer(readBufferRef->Buffer(),pos,len);
@@ -531,7 +537,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       // Read from the file and unstream the header information.
       TVirtualPerfStats* temp = gPerfStats;
       if (fBranch->GetTree()->GetPerfStats() != 0) gPerfStats = fBranch->GetTree()->GetPerfStats();
-      R__LOCKGUARD_IMT2(gROOTMutex);  // Lock for parallel TTree I/O
+      R__LOCKGUARD_IMT(gROOTMutex);  // Lock for parallel TTree I/O
       if (file->ReadBuffer(readBufferRef->Buffer(),pos,len)) {
          gPerfStats = temp;
          return 1;
@@ -700,10 +706,19 @@ Int_t TBasket::ReadBasketBytes(Long64_t pos, TFile *file)
 
 void TBasket::Reset()
 {
+   // By default, we don't reallocate.
+   fResetAllocation = false;
+#ifdef R__TRACK_BASKET_ALLOC_TIME
+   fResetAllocationTime = 0;
+#endif
+
    // Name, Title, fClassName, fBranch
    // stay the same.
 
    // Downsize the buffer if needed.
+   // See if our current buffer size is significantly larger (>2x) than the historical average.
+   // If so, try decreasing it at this flush boundary to closer to the size from OptimizeBaskets
+   // (or this historical average).
    Int_t curSize = fBufferRef->BufferSize();
    // fBufferLen at this point is already reset, so use indirect measurements
    Int_t curLen = (GetObjlen() + GetKeylen());
@@ -725,19 +740,47 @@ void TBasket::Reset()
          }
       }
    }
-   /*
-      Philippe has asked us to keep this turned off until we finish memory fragmentation studies.
-   // If fBufferRef grew since we last saw it, shrink it to 105% of the occupied size
-   if (curSize > fLastWriteBufferSize) {
-      if (newSize == -1) {
-         newSize = Int_t(1.05*Float_t(fBufferRef->Length()));
+   // If fBufferRef grew since we last saw it, shrink it to "target memory ratio" of the occupied size
+   // This discourages us from having poorly-occupied buffers on branches with little variability.
+   //
+   // Does not help protect against a burst in event sizes, but does help in the cases where the basket
+   // size jumps from 4MB to 8MB while filling the basket, but we only end up utilizing 4.1MB.
+   //
+   // The above code block is meant to protect against extremely large events.
+
+   Float_t target_mem_ratio = fBranch->GetTree()->GetTargetMemoryRatio();
+   Int_t max_size = TMath::Max(fLastWriteBufferSize[0], std::max(fLastWriteBufferSize[1], fLastWriteBufferSize[2]));
+   Int_t target_size = static_cast<Int_t>(target_mem_ratio * Float_t(max_size));
+   if (max_size && (curSize > target_size) && (newSize == -1)) {
+      newSize = target_size;
+      newSize = newSize + 512 - newSize % 512; // Wiggle room and alignment, as above.
+      // We only bother with a resize if it saves 8KB (two normal memory pages).
+      if ((newSize > curSize - 8 * 1024) ||
+          (static_cast<Float_t>(curSize) / static_cast<Float_t>(newSize) < target_mem_ratio)) {
+         newSize = -1;
+      } else if (gDebug > 0) {
+         Info("Reset", "Resizing to %ld bytes (was %d); last three sizes were [%d, %d, %d].", newSize, curSize,
+              fLastWriteBufferSize[0], fLastWriteBufferSize[1], fLastWriteBufferSize[2]);
       }
-      fLastWriteBufferSize = newSize;
    }
-   */
+
    if (newSize != -1) {
+      fResetAllocation = true;
+#ifdef R__TRACK_BASKET_ALLOC_TIME
+      std::chrono::time_point<std::chrono::system_clock> start, end;
+      start = std::chrono::high_resolution_clock::now();
+#endif
       fBufferRef->Expand(newSize,kFALSE);     // Expand without copying the existing data.
+#ifdef R__TRACK_BASKET_ALLOC_TIME
+      end = std::chrono::high_resolution_clock::now();
+      auto us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+      fResetAllocationTime = us.count();
+#endif
    }
+
+   // Record the actual occupied size of the buffer.
+   fLastWriteBufferSize[fNextBufferSizeRecord] = curLen;
+   fNextBufferSizeRecord = (fNextBufferSizeRecord + 1) % 3;
 
    TKey::Reset();
 
@@ -849,7 +892,7 @@ void TBasket::Streamer(TBuffer &b)
       b >> flag;
       if (fLast > fBufferSize) fBufferSize = fLast;
       Bool_t mustGenerateOffsets = false;
-      if (flag && (flag >= 80)) {
+      if (flag >= 80) {
          mustGenerateOffsets = true;
          flag -= 80;
       }

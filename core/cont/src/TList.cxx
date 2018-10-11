@@ -775,6 +775,9 @@ void TList::RecursiveRemove(TObject *obj)
       }
    }
 
+   if (!fFirst.get())
+      return;
+
    auto lnk  = fFirst;
    decltype(lnk) next;
    while (lnk.get()) {
@@ -782,6 +785,7 @@ void TList::RecursiveRemove(TObject *obj)
       TObject *ob = lnk->GetObject();
       if (ob && ob->TestBit(kNotDeleted)) {
          if (ob->IsEqual(obj)) {
+            lnk->SetObject(nullptr);
             if (lnk == fFirst) {
                fFirst = next;
                if (lnk == fLast)
@@ -828,20 +832,24 @@ TObject *TList::Remove(TObject *obj)
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    TObject *ob = lnk->GetObject();
+   lnk->SetObject(nullptr);
    if (lnk == fFirst.get()) {
-      if (lnk == fLast.get())
-         fLast = fFirst;
-      else
-         fFirst->fPrev.reset();
       fFirst = lnk->fNext;
+      // lnk is still alive as we have either fLast
+      // or the 'new' fFirst->fPrev pointing to it.
+      if (lnk == fLast.get()) {
+         fLast.reset();
+         fFirst.reset();
+      } else
+         fFirst->fPrev.reset();
       //DeleteLink(lnk);
    } else if (lnk == fLast.get()) {
       fLast = lnk->fPrev.lock();
       fLast->fNext.reset();
       //DeleteLink(lnk);
    } else {
-    lnk->Next()->fPrev = lnk->fPrev;
-    lnk->Prev()->fNext = lnk->fNext;
+      lnk->Next()->fPrev = lnk->fPrev;
+      lnk->Prev()->fNext = lnk->fNext;
       //DeleteLink(lnk);
    }
    fSize--;
@@ -864,13 +872,16 @@ TObject *TList::Remove(TObjLink *lnk)
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    TObject *obj = lnk->GetObject();
-
+   lnk->SetObject(nullptr);
    if (lnk == fFirst.get()) {
-      if (lnk == fLast.get())
-         fLast = fFirst;
-      else
-         fFirst->fPrev.reset();
       fFirst = lnk->fNext;
+      // lnk is still alive as we have either fLast
+      // or the 'new' fFirst->fPrev pointing to it.
+      if (lnk == fLast.get()) {
+         fLast.reset();
+         fFirst.reset();
+      } else
+         fFirst->fPrev.reset();
       // DeleteLink(lnk);
    } else if (lnk == fLast.get()) {
       fLast = lnk->fPrev.lock();
@@ -899,6 +910,7 @@ void TList::RemoveLast()
    TObjLink *lnk = fLast.get();
    if (!lnk) return;
 
+   lnk->SetObject(nullptr);
    if (lnk == fFirst.get()) {
       fFirst.reset();
       fLast.reset();

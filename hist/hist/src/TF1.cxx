@@ -573,6 +573,8 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fParMin.resize(fNpar);
       fParMax.resize(fNpar);
    }
+   // do we want really to have this un-documented feature where we accept cases where dim > 1
+   // by setting xmin >= xmax ??
    if (fNdim > 1 && xmin < xmax) {
       Error("TF1", "function: %s/%s has dimension %d instead of 1", name, formula, fNdim);
       MakeZombie();
@@ -1226,6 +1228,8 @@ void TF1::Draw(Option_t *option)
    if (gPad && !opt.Contains("same")) gPad->Clear();
 
    AppendPad(option);
+
+   gPad->IncrementPaletteColor(1, opt);
 }
 
 
@@ -1892,7 +1896,7 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    Int_t intNegative = 0;
    Int_t i;
    for (i = 0; i < npx; i++) {
-      Double_t integ = Integral(Double_t(xMin + i * dx), Double_t(xMin + i * dx + dx));
+      Double_t integ = Integral(Double_t(xMin + i * dx), Double_t(xMin + i * dx + dx), 0.0);
       if (integ < 0) {
          intNegative++;
          integ = -integ;
@@ -1916,7 +1920,7 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    for (i = 0; i < npx; i++) {
       const Double_t x0 = xMin + dx * i;
       const Double_t r2 = integral[i + 1] - integral[i];
-      const Double_t r1 = Integral(x0, x0 + 0.5 * dx) / total;
+      const Double_t r1 = Integral(x0, x0 + 0.5 * dx, 0.0) / total;
       gamma[i] = (2 * r2 - 4 * r1) / (dx * dx);
       beta[i]  = r2 / dx - gamma[i] * dx;
       alpha[i] = x0;
@@ -1928,6 +1932,11 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    for (i = 0; i < nprobSum; i++) {
       const Double_t r = probSum[i];
       Int_t bin  = TMath::Max(TMath::BinarySearch(npx + 1, integral.GetArray(), r), (Long64_t)0);
+      // in case the prob is 1
+      if (bin == npx) {
+         q[i] = xMax;
+         continue;
+      }
       // LM use a tolerance 1.E-12 (integral precision)
       while (bin < npx - 1 && TMath::AreEqualRel(integral[bin + 1], r, 1E-12)) {
          if (TMath::AreEqualRel(integral[bin + 2], r, 1E-12)) bin++;
@@ -2001,9 +2010,9 @@ Double_t TF1::GetRandom()
       xx[fNpx] = xmax;
       for (i = 0; i < fNpx; i++) {
          if (logbin) {
-            integ = Integral(TMath::Power(10, xx[i]), TMath::Power(10, xx[i + 1]));
+            integ = Integral(TMath::Power(10, xx[i]), TMath::Power(10, xx[i + 1]), 0.0);
          } else {
-            integ = Integral(xx[i], xx[i + 1]);
+            integ = Integral(xx[i], xx[i + 1], 0.0);
          }
          if (integ < 0) {
             intNegative++;
@@ -2030,8 +2039,8 @@ Double_t TF1::GetRandom()
       for (i = 0; i < fNpx; i++) {
          x0 = xx[i];
          r2 = fIntegral[i + 1] - fIntegral[i];
-         if (logbin) r1 = Integral(TMath::Power(10, x0), TMath::Power(10, x0 + 0.5 * dx)) / total;
-         else        r1 = Integral(x0, x0 + 0.5 * dx) / total;
+         if (logbin) r1 = Integral(TMath::Power(10, x0), TMath::Power(10, x0 + 0.5 * dx), 0.0) / total;
+         else        r1 = Integral(x0, x0 + 0.5 * dx, 0.0) / total;
          r3 = 2 * r2 - 4 * r1;
          if (TMath::Abs(r3) > 1e-8) fGamma[i] = r3 / (dx * dx);
          else           fGamma[i] = 0;
@@ -2095,7 +2104,7 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
       Int_t intNegative = 0;
       Int_t i;
       for (i = 0; i < fNpx; i++) {
-         integ = Integral(Double_t(fXmin + i * dx), Double_t(fXmin + i * dx + dx));
+         integ = Integral(Double_t(fXmin + i * dx), Double_t(fXmin + i * dx + dx), 0.0);
          if (integ < 0) {
             intNegative++;
             integ = -integ;
@@ -2120,7 +2129,7 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
       for (i = 0; i < fNpx; i++) {
          x0 = fXmin + i * dx;
          r2 = fIntegral[i + 1] - fIntegral[i];
-         r1 = Integral(x0, x0 + 0.5 * dx) / total;
+         r1 = Integral(x0, x0 + 0.5 * dx, 0.0) / total;
          r3 = 2 * r2 - 4 * r1;
          if (TMath::Abs(r3) > 1e-8) fGamma[i] = r3 / (dx * dx);
          else           fGamma[i] = 0;
@@ -2493,6 +2502,8 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
    TF1_EvalWrapper wf1(this, 0, fgAbsValue);
    Double_t result = 0;
    Int_t status = 0;
+   if (epsrel <= 0) epsrel = ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance();
+   if (epsabs <= 0) epsabs = ROOT::Math::IntegratorOneDimOptions::DefaultAbsTolerance();
    if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS) {
       ROOT::Math::GaussIntegrator iod(epsabs, epsrel);
       iod.SetFunction(wf1);
@@ -2719,6 +2730,8 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
    ROOT::Math::WrappedMultiFunction<TF1 &> wf1(*this, n);
 
    double result = 0;
+   if (epsrel <= 0) epsrel = ROOT::Math::IntegratorMultiDimOptions::DefaultRelTolerance();
+   if (epsabs <= 0) epsabs = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance();
    if (ROOT::Math::IntegratorMultiDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationMultiDim::kADAPTIVE) {
       ROOT::Math::AdaptiveIntegratorMultiDim aimd(wf1, epsabs, epsrel, maxpts);
       //aimd.SetMinPts(minpts); // use default minpts ( n^2 + 2 * n * (n+1) +1 )
@@ -2749,7 +2762,8 @@ Bool_t TF1::IsValid() const
    if (fMethodCall) return fMethodCall->IsValid();
    // function built on compiled functors are always valid by definition
    // (checked at compiled time)
-   if (fFunctor && fSave.empty()) return kFALSE;
+   // invalid is a TF1 where the functor is null pointer and has not been saved
+   if (!fFunctor && fSave.empty()) return kFALSE;
    return kTRUE;
 }
 
@@ -2813,14 +2827,22 @@ void TF1::Print(Option_t *option) const
 /// histogram is painted.
 /// The painted histogram can be retrieved calling afterwards the method TF1::GetHistogram()
 
-void TF1::Paint(Option_t *option)
+void TF1::Paint(Option_t *choptin)
 {
    fgCurrent = this;
 
+   char option[32];
+   strlcpy(option,choptin,32);
+
    TString opt = option;
    opt.ToLower();
+
    Bool_t optSAME = kFALSE;
-   if (opt.Contains("same")) optSAME = kTRUE;
+   if (opt.Contains("same")) {
+      opt.ReplaceAll("same","");
+      optSAME = kTRUE;
+   }
+   opt.ReplaceAll(' ', "");
 
    Double_t xmin = fXmin, xmax = fXmax, pmin = fXmin, pmax = fXmax;
    if (gPad) {
@@ -2836,6 +2858,16 @@ void TF1::Paint(Option_t *option)
 
    // create an histogram using the function content (re-use it if already existing)
    fHistogram = DoCreateHistogram(xmin, xmax, kFALSE);
+
+   char *l1 = strstr(option,"PFC"); // Automatic Fill Color
+   char *l2 = strstr(option,"PLC"); // Automatic Line Color
+   char *l3 = strstr(option,"PMC"); // Automatic Marker Color
+   if (l1 || l2 || l3) {
+      Int_t i = gPad->NextPaletteColor();
+      if (l1) {memcpy(l1,"   ",3); fHistogram->SetFillColor(i);}
+      if (l2) {memcpy(l2,"   ",3); fHistogram->SetLineColor(i);}
+      if (l3) {memcpy(l3,"   ",3); fHistogram->SetMarkerColor(i);}
+   }
 
    // set the optimal minimum and maximum
    Double_t minimum   = fHistogram->GetMinimumStored();
@@ -2880,9 +2912,12 @@ void TF1::Paint(Option_t *option)
 
    // Draw the histogram.
    if (!gPad) return;
-   if (opt.Length() == 0) fHistogram->Paint("lf");
-   else if (optSAME)      fHistogram->Paint("lfsame");
-   else                   fHistogram->Paint(option);
+   if (opt.Length() == 0) {
+      if (optSAME) fHistogram->Paint("lfsame");
+      else         fHistogram->Paint("lf");
+   } else {
+      fHistogram->Paint(option);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3550,7 +3585,7 @@ void TF1::Update()
    if (fNormalized) {
       // need to compute the integral of the not-normalized function
       fNormalized = false;
-      fNormIntegral = Integral(fXmin, fXmax, ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance());
+      fNormIntegral = Integral(fXmin, fXmax, 0.0);
       fNormalized = true;
    } else
       fNormIntegral = 0;

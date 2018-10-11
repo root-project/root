@@ -71,7 +71,18 @@ enum class EInitialization {
     kGauss    = 'G',
     kUniform  = 'U',
     kIdentity = 'I',
-    kZero = 'Z'
+    kZero = 'Z',
+    kGlorotNormal = 'X',
+    kGlorotUniform = 'F',
+};
+
+/// Enum representing the optimizer used for training.
+enum class EOptimizer {
+   kSGD = 0,
+   kAdam = 1,
+   kAdagrad = 2,
+   kRMSProp = 3,
+   kAdadelta = 4,
 };
 
 //______________________________________________________________________________
@@ -257,6 +268,10 @@ inline void initialize(typename Architecture_t::Matrix_t & A,
    case EInitialization::kIdentity : Architecture_t::InitializeIdentity(A);
        break;
    case EInitialization::kZero     : Architecture_t::InitializeZero(A);
+       break;
+   case EInitialization::kGlorotNormal    : Architecture_t::InitializeGlorotNormal(A);
+       break;
+   case EInitialization::kGlorotUniform  : Architecture_t::InitializeGlorotUniform(A);
        break;
    }
 }

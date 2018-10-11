@@ -886,7 +886,7 @@ void VavilovTest::GetCdfTestParams (const Vavilov& v, double& maxabsdiff, double
    }
    else {
       maxabsdiff = 1E-5;
-      maxcdfdiff = 5E-15;
+      maxcdfdiff = 7E-15;
    }
 }
 

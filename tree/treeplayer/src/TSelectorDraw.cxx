@@ -376,8 +376,8 @@ void TSelectorDraw::Begin(TTree *tree)
          if (!fOldHistogram && oldObject && !oldObject->InheritsFrom(TH1::Class())) {
             abrt.Form("An object of type '%s' has the same name as the requested histo (%s)", oldObject->IsA()->GetName(), hname);
             Abort(abrt);
-            return;
             delete[] varexp;
+            return;
          }
          if (fOldHistogram && !hnameplus) fOldHistogram->Reset();  // reset unless adding is wanted
 

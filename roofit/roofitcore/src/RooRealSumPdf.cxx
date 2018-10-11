@@ -37,6 +37,7 @@ In the present version \f$coef_i\f$ may not depend on x, but this limitation may
 #include "RooFit.h"
 #include "Riostream.h"
 
+#include "TError.h"
 #include "TIterator.h"
 #include "TList.h"
 #include "RooRealSumPdf.h"
@@ -48,10 +49,9 @@ In the present version \f$coef_i\f$ may not depend on x, but this limitation may
 #include "RooRealIntegral.h"
 #include "RooMsgService.h"
 #include "RooNameReg.h"
-#include <memory>
-#include <algorithm>
 
-#include "TError.h"
+#include <algorithm>
+#include <memory>
 
 using namespace std;
 
@@ -346,6 +346,7 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
   RooAbsReal *func ;
   while((func=(RooAbsReal*)_funcIter->Next())) {
     RooAbsReal* funcInt = func->createIntegral(analVars,rangeName) ;
+    if(funcInt->InheritsFrom(RooRealIntegral::Class())) ((RooRealIntegral*)funcInt)->setAllowComponentSelection(true);
     cache->_funcIntList.addOwned(*funcInt) ;
     if (normSet && normSet->getSize()>0) {
       RooAbsReal* funcNorm = func->createIntegral(*normSet) ;

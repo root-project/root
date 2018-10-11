@@ -66,7 +66,7 @@ of a main program creating an interactive version is shown below:
 ~~~
 */
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
 #include "RVersion.h"
@@ -114,7 +114,6 @@ FARPROC dlsym(void *library, const char *function_name)
 #endif
 
 #include "Riostream.h"
-#include "Gtypes.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
@@ -258,7 +257,8 @@ namespace {
                          const char* fwdDeclCode,
                          void (*triggerFunc)(),
                          const TROOT::FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
-                         const char** classesHeaders):
+                         const char **classesHeaders,
+                         bool hasCxxModule):
                            fModuleName(moduleName),
                            fHeaders(headers),
                            fPayloadCode(payloadCode),
@@ -266,7 +266,8 @@ namespace {
                            fIncludePaths(includePaths),
                            fTriggerFunc(triggerFunc),
                            fClassesHeaders(classesHeaders),
-                           fFwdNargsToKeepColl(fwdDeclsArgToSkip){}
+                           fFwdNargsToKeepColl(fwdDeclsArgToSkip),
+                           fHasCxxModule(hasCxxModule) {}
 
       const char* fModuleName; // module name
       const char** fHeaders; // 0-terminated array of header files
@@ -277,6 +278,7 @@ namespace {
       const char** fClassesHeaders; // 0-terminated list of classes and related header files
       const TROOT::FwdDeclArgsToKeepCollection_t fFwdNargsToKeepColl; // Collection of
                                                                       // pairs of template fwd decls and number of
+      bool fHasCxxModule; // Whether this module has a C++ module alongside it.
    };
 
    std::vector<ModuleHeaderInfo_t>& GetModuleHeaderInfoBuffer() {
@@ -523,8 +525,23 @@ namespace Internal {
       return macroPath;
    }
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////////
    /// Enables the global mutex to make ROOT thread safe/aware.
+   ///
+   /// The following becomes safe:
+   /// - concurrent construction and destruction of TObjects, including the ones registered in ROOT's global lists (e.g. gROOT->GetListOfCleanups(), gROOT->GetListOfFiles())
+   /// - concurrent usage of _different_ ROOT objects from different threads, including ones with global state (e.g. TFile, TTree, TChain) with the exception of graphics classes (e.g. TCanvas)
+   /// - concurrent calls to ROOT's type system classes, e.g. TClass and TEnum
+   /// - concurrent calls to the interpreter through gInterpreter
+   /// - concurrent loading of ROOT plug-ins
+   ///
+   /// In addition, gDirectory, gFile and gPad become a thread-local variable.
+   /// In all threads, gDirectory defaults to gROOT, a singleton which supports thread-safe insertion and deletion of contents.
+   /// gFile and gPad default to nullptr, as it is for single-thread programs.
+   ///
+   /// Note that there is no `DisableThreadSafety()`. ROOT's thread-safety features cannot be disabled once activated.
+   // clang-format on
    void EnableThreadSafety()
    {
       static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TThread_Initialize");
@@ -542,9 +559,13 @@ namespace Internal {
    /// The following objects and methods automatically take advantage of
    /// multi-threading if a call to `EnableImplicitMT` has been made before usage:
    ///
-   ///  - TDataFrame internally runs the event-loop by parallelizing over clusters of entries
+   ///  - RDataFrame internally runs the event-loop by parallelizing over clusters of entries
    ///  - TTree::GetEntry reads multiple branches in parallel
    ///  - TTree::FlushBaskets writes multiple baskets to disk in parallel
+   ///  - TTreeCacheUnzip decompresses the baskets contained in a TTreeCache in parallel
+   ///  - THx::Fit performs in parallel the evaluation of the objective function over the data
+   ///  - TMVA::DNN trains the deep neural networks in parallel
+   ///  - TMVA::BDT trains the classifier in parallel and multiclass BDTs are evaluated in parallel
    ///
    /// EnableImplicitMT calls in turn EnableThreadSafety.
    /// The 'numthreads' parameter allows to control the number of threads to
@@ -555,11 +576,13 @@ namespace Internal {
    void EnableImplicitMT(UInt_t numthreads)
    {
 #ifdef R__USE_IMT
+      if (ROOT::Internal::IsImplicitMTEnabledImpl())
+         return;
       EnableThreadSafety();
       static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableImplicitMT");
       if (sym)
          sym(numthreads);
-      ROOT::Internal::IsImplicitMTEnabledImpl() = kTRUE;
+      ROOT::Internal::IsImplicitMTEnabledImpl() = true;
 #else
       ::Warning("EnableImplicitMT", "Cannot enable implicit multi-threading with %d threads, please build ROOT with -Dimt=ON", numthreads);
 #endif
@@ -620,7 +643,8 @@ ClassImp(TROOT);
 TROOT::TROOT() : TDirectory(),
      fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fEditHistograms(kTRUE),
+     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
+     fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
@@ -653,7 +677,8 @@ TROOT::TROOT() : TDirectory(),
 TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    : TDirectory(), fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fEditHistograms(kTRUE),
+     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
+     fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
@@ -1620,7 +1645,7 @@ TListOfFunctions *TROOT::GetGlobalFunctions()
 
 TCollection *TROOT::GetListOfFunctionOverloads(const char* name) const
 {
-   return ((TListOfFunctions*)fFunctions)->GetListForObject(name);
+   return ((TListOfFunctions*)fGlobalFunctions)->GetListForObject(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1745,7 +1770,7 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
                                             (TGlobalMappedFunction::GlobalFunc_t)&TVirtualPad::Pad));
       fGlobals->Add(new TGlobalMappedFunction("gInterpreter", "TInterpreter*",
                                             (TGlobalMappedFunction::GlobalFunc_t)&TInterpreter::Instance));
-      fGlobals->Add(new TGlobalMappedFunction("gVirtualX", "TTVirtualX*",
+      fGlobals->Add(new TGlobalMappedFunction("gVirtualX", "TVirtualX*",
                                             (TGlobalMappedFunction::GlobalFunc_t)&TVirtualX::Instance));
       fGlobals->Add(new TGlobalMappedFunction("gDirectory", "TDirectory*",
                                             (TGlobalMappedFunction::GlobalFunc_t)&TDirectory::CurrentDirectory));
@@ -1939,9 +1964,25 @@ void TROOT::InitSystem()
       if (!gEnv->GetValue("Root.ErrorHandlers", 1))
          gSystem->ResetSignals();
 
-      // by default the zipmode is 1 (see Bits.h)
-      Int_t zipmode = gEnv->GetValue("Root.ZipMode", 1);
-      if (zipmode != 1) R__SetZipMode(zipmode);
+      // The old "Root.ZipMode" had a discrepancy between documentation vs actual meaning.
+      // Also, a value with the meaning "default" wasn't available. To solved this,
+      // "Root.ZipMode" was replaced by "Root.CompressionAlgorithm". Warn about usage of
+      // the old value, if it's set to 0, but silently translate the setting to
+      // "Root.CompressionAlgorithm" for values > 1.
+      Int_t oldzipmode = gEnv->GetValue("Root.ZipMode", -1);
+      if (oldzipmode == 0) {
+         fprintf(stderr, "Warning in <TROOT::InitSystem>: ignoring old rootrc entry \"Root.ZipMode = 0\"!\n");
+      } else {
+         if (oldzipmode == -1 || oldzipmode == 1) {
+            // Not set or default value, use "default" for "Root.CompressionAlgorithm":
+            oldzipmode = 0;
+         }
+         // else keep the old zipmode (e.g. "3") as "Root.CompressionAlgorithm"
+         // if "Root.CompressionAlgorithm" isn't set; see below.
+      }
+
+      Int_t zipmode = gEnv->GetValue("Root.CompressionAlgorithm", oldzipmode);
+      if (zipmode != 0) R__SetZipMode(zipmode);
 
       const char *sdeb;
       if ((sdeb = gSystem->Getenv("ROOTDEBUG")))
@@ -2044,7 +2085,25 @@ void TROOT::InitInterpreter()
       exit(1);
    }
 
-   fInterpreter = CreateInterpreter(gInterpreterLib);
+   const char *interpArgs[] = {
+#ifdef NDEBUG
+      "-DNDEBUG",
+#else
+      "-UNDEBUG",
+#endif
+#ifdef DEBUG
+      "-DDEBUG",
+#else
+      "-UDEBUG",
+#endif
+#ifdef _DEBUG
+      "-D_DEBUG",
+#else
+      "-U_DEBUG",
+#endif
+      nullptr};
+
+   fInterpreter = CreateInterpreter(gInterpreterLib, interpArgs);
 
    fCleanups->Add(fInterpreter);
    fInterpreter->SetBit(kMustCleanup);
@@ -2068,7 +2127,8 @@ void TROOT::InitInterpreter()
                                    li->fTriggerFunc,
                                    li->fFwdNargsToKeepColl,
                                    li->fClassesHeaders,
-                                   kTRUE /*lateRegistration*/);
+                                   kTRUE /*lateRegistration*/,
+                                   li->fHasCxxModule);
    }
    GetModuleHeaderInfoBuffer().clear();
 
@@ -2100,12 +2160,9 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if class "classname" is known to the interpreter (in fact,
 /// this check is not needed anymore, so classname is ignored). If
-/// not it will load library "libname". If the library name does
-/// not start with "lib", "lib" will be prepended and a search will
-/// be made in the DynamicPath (see .rootrc). If not found a search
-/// will be made on libname (without "lib" prepended) and if not found
-/// a direct try of libname will be made (in case it contained an
-/// absolute path).
+/// not it will load library "libname". If the library couldn't be found with original
+/// libname and if the name was not prefixed with lib, try to prefix with "lib" and search again.
+/// If DynamicPathName still couldn't find the library, return -1.
 /// If check is true it will only check if libname exists and is
 /// readable.
 /// Returns 0 on successful loading, -1 in case libname does not
@@ -2114,46 +2171,45 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
 Int_t TROOT::LoadClass(const char * /*classname*/, const char *libname,
                        Bool_t check)
 {
-   Int_t err = -1;
+   TString lib(libname);
 
-   char *path;
-   TString lib = libname;
-   if (!lib.BeginsWith("lib"))
-      lib = "lib" + lib;
-   if ((path = gSystem->DynamicPathName(lib, kTRUE))) {
-      if (check)
-         err = 0;
-      else {
-         err = gSystem->Load(path, 0, kTRUE);
+   // Check if libname exists in path or not
+   if (char *path = gSystem->DynamicPathName(lib, kTRUE)) {
+      // If check == true, only check if it exists and if it's readable
+      if (check) {
+         delete [] path;
+         return 0;
       }
-      delete [] path;
+
+      // If check == false, try to load the library
+      else {
+         int err = gSystem->Load(path, 0, kTRUE);
+         delete [] path;
+
+         // TSystem::Load returns 1 when the library was already loaded, return success in this case.
+         if (err == 1)
+            err = 0;
+         return err;
+      }
    } else {
+      // This is the branch where libname didn't exist
       if (check) {
          FileStat_t stat;
-         if (!gSystem->GetPathInfo(libname, stat)) {
-            if (R_ISREG(stat.fMode) &&
-                !gSystem->AccessPathName(libname, kReadPermission))
-               err = 0;
-            else
-               err = -1;
-         } else
-            err = -1;
-      } else {
-         err = gSystem->Load(libname, 0, kTRUE);
+         if (!gSystem->GetPathInfo(libname, stat) && (R_ISREG(stat.fMode) &&
+             !gSystem->AccessPathName(libname, kReadPermission)))
+            return 0;
+      }
+
+      // Take care of user who didn't write the whole name
+      if (!lib.BeginsWith("lib")) {
+         lib = "lib" + lib;
+         return LoadClass("", lib.Data(), check);
       }
    }
 
-   if (err == -1) {
-      //Error("LoadClass", "library %s could not be loaded", libname);
-   }
-
-   if (err == 1) {
-      //Error("LoadClass", "library %s already loaded, but class %s unknown",
-      //      libname, classname);
-      err = 0;
-   }
-
-   return err;
+   // Execution reaches here when library was prefixed with lib, check is false and couldn't find
+   // the library name.
+   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2477,7 +2533,8 @@ void TROOT::RegisterModule(const char* modulename,
                            const char* fwdDeclCode,
                            void (*triggerFunc)(),
                            const TInterpreter::FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
-                           const char** classesHeaders)
+                           const char** classesHeaders,
+                           bool hasCxxModule)
 {
 
    // First a side track to insure proper end of process behavior.
@@ -2539,12 +2596,12 @@ void TROOT::RegisterModule(const char* modulename,
 
    // Now register with TCling.
    if (gCling) {
-      gCling->RegisterModule(modulename, headers, includePaths, payloadCode, fwdDeclCode,
-                             triggerFunc, fwdDeclsArgToSkip, classesHeaders);
+      gCling->RegisterModule(modulename, headers, includePaths, payloadCode, fwdDeclCode, triggerFunc,
+                             fwdDeclsArgToSkip, classesHeaders, false, hasCxxModule);
    } else {
-      GetModuleHeaderInfoBuffer()
-         .push_back(ModuleHeaderInfo_t (modulename, headers, includePaths, payloadCode, fwdDeclCode,
-                                        triggerFunc, fwdDeclsArgToSkip,classesHeaders));
+      GetModuleHeaderInfoBuffer().push_back(ModuleHeaderInfo_t(modulename, headers, includePaths, payloadCode,
+                                                               fwdDeclCode, triggerFunc, fwdDeclsArgToSkip,
+                                                               classesHeaders, hasCxxModule));
    }
 }
 
@@ -2733,6 +2790,48 @@ void TROOT::SetMacroPath(const char *newpath)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// The input parameter `webdisplay` defines where web graphics should be rendered.
+///
+/// if `webdisplay` may contains:
+///
+///  - "off": turns off the web display and come back to normal graphics in
+///    interactive mode.
+///  - "batch":  turns the web display in batch mode. It can be prepend with an
+///    other string which will be considered as the new current web display
+///  - "nobatch": turns the web display in interactive mode. It can be prepend with an
+///    other string which will be considered as the new current web display
+///
+/// If the option "off" is not set, this method turns the normal graphics to
+/// "Batch" to avoid the loading of local graphics libraries.
+
+void TROOT::SetWebDisplay(const char *webdisplay)
+{
+   const char *wd = webdisplay;
+   if (!wd)
+      wd = "";
+
+   if (!strcmp(wd, "off")) {
+      fIsWebDisplay = kFALSE;
+      fIsWebDisplayBatch = kFALSE;
+      fWebDisplay = "";
+      gROOT->SetBatch(kFALSE);
+   } else {
+      fIsWebDisplay = kTRUE;
+      if (!strncmp(wd, "batch", 5)) {
+         fIsWebDisplayBatch = kTRUE;
+         wd += 5;
+      } else if (!strncmp(wd, "nobatch", 7)) {
+         fIsWebDisplayBatch = kFALSE;
+         wd += 7;
+      } else {
+         fIsWebDisplayBatch = kFALSE;
+      }
+      fWebDisplay = wd;
+      gROOT->SetBatch(kTRUE);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Increase the indentation level for ls().
 
 Int_t TROOT::IncreaseDirLevel()
@@ -2824,7 +2923,7 @@ const TString& TROOT::GetRootSys() {
 #endif
       static TString rootsys;
       if (rootsys.IsNull())
-         rootsys = gSystem->Getenv("ROOTSYS");
+         rootsys = gSystem->UnixPathName(gSystem->Getenv("ROOTSYS"));
       if (rootsys.IsNull())
          rootsys = gRootDir;
       return rootsys;

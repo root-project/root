@@ -4,6 +4,10 @@ module "libc" [system] {
     export *
     textual header "assert.h"
   }
+  module "string.h" {
+    export *
+    header "string.h"
+  }
   module "ctype.h" {
     export *
     header "ctype.h"
@@ -20,14 +24,13 @@ module "libc" [system] {
     export *
     header "inttypes.h"
   }
-
-  module "setjmp.h" {
-    export *
-    header "setjmp.h"
-  }
   module "math.h" {
     export *
     header "math.h"
+  }
+  module "setjmp.h" {
+    export *
+    header "setjmp.h"
   }
   module "stdio.h" {
     export *
@@ -46,6 +49,11 @@ module "xlocale.h" [system] {
 module "sys_types.h" [system] {
   export *
   header "sys/types.h"
+}
+
+module "signal.h" [system] {
+  export *
+  header "signal.h"
 }
 
 module "stdlib.h" [system] {

@@ -2,21 +2,31 @@
 # CMakeLists.txt file for building ROOT core/base package
 ############################################################################
 
-if(testing)
-    add_subdirectory(test)
-endif()
+ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
 
 ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef?.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Rtypes.h
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Gtypes.h
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Riostream.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/GuiTypes.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/MessageTypes.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/KeySymbols.h
-                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Buttons.h)
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Buttons.h
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Bytes.h
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Byteswap.h
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TExecutor.hxx
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TSequentialExecutor.hxx
+                                    )
 if(root7)
     set(root7src v7/src/*.cxx)
-    ROOT_GLOB_HEADERS(Base_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/T*.hxx)
+    set(Base_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/RDrawable.hxx
+                             ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TDirectoryEntry.hxx
+                             ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TIndexIter.hxx
+                             ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TLogger.hxx
+    )
 endif()
 ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx ${root7src})
 

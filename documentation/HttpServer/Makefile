@@ -1,6 +1,13 @@
 MDFILES=titlepage.md HttpServer.md
 
-OPTIONS=-s -S -f markdown --toc --chapters --number-sections
+# define the pandoc options according to the pandoc version.
+PANDOC_VERSION=$(shell pandoc -v | grep "pandoc "  | sed -e "s/pandoc //")
+ifeq ($(PANDOC_VERSION),2.2)
+OPTIONS=-s -f markdown+smart --toc --toc-depth=2 --top-level-division=chapter --number-sections
+else
+OPTIONS=-s -S -f markdown --toc --toc-depth=2 --chapters --number-sections
+endif
+
 OPTIONSHTML=-H css/github.css --mathjax
 OPTIONSEPUB=--mathml --epub-cover-image=figures/cover.png
 OPTIONSPDFA4=--variable=geometry:a4paper -V geometry:margin=1.5cm
@@ -16,8 +23,8 @@ pdfa4: $(MDFILES)
 pdfletter: $(MDFILES)
 	pandoc $(OPTIONS) $(OPTIONSPDFLETTER) $(MDFILES) -o HttpServerLetter.pdf
 
-html: $(MDFILES)
-	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) -o HttpServer.html
+html: $(MDFILES) title.txt
+	pandoc $(OPTIONS) $(OPTIONSHTML) -t html title.txt $(MDFILES) -o HttpServer.html
 
 tex: $(MDFILES)
 	pandoc $(OPTIONS) -t latex $(MDFILES) -o HttpServer.tex

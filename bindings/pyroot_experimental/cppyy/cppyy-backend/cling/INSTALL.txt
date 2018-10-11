@@ -1,0 +1,17 @@
+Download ROOT sources, strip and patch them:
+
+  $ python setup.py egg_info
+  $ python create_src_directory.py
+
+Build wheel (optional: use --keep-temp during development):
+
+  $ MAKE_NPROCS=32 python setup.py bdist_wheel
+
+Build source distribution:
+
+  $ python setup.py sdist
+
+Sign:
+
+  $ gpg --detach-sign -a dist/*cppyy*.tar.gz
+

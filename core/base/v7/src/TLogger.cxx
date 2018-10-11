@@ -15,6 +15,9 @@
 
 #include "ROOT/TLogger.hxx"
 #include <iostream>
+#include <sstream>
+
+#include "TError.h"
 
 // pin vtable
 ROOT::Experimental::TLogHandler::~TLogHandler() {}
@@ -29,17 +32,21 @@ public:
 bool TLogHandlerDefault::Emit(const ROOT::Experimental::TLogEntry &entry)
 {
    constexpr static std::array<const char *, 5> sTag{{"Debug", "Info", "Warning", "Log", "FATAL"}};
-   std::cerr << "ROOT ";
+   std::stringstream strm;
+   strm << "ROOT ";
    if (!entry.fGroup.empty())
-      std::cerr << '[' << entry.fGroup << "] ";
-   std::cerr << sTag[static_cast<int>(entry.fLevel)];
+      strm << '[' << entry.fGroup << "] ";
+   strm << sTag[static_cast<int>(entry.fLevel)];
 
    if (!entry.fFile.empty())
-      std::cerr << " " << entry.fFile << ':' << entry.fLine;
+      strm << " " << entry.fFile << ':' << entry.fLine;
    if (!entry.fFuncName.empty())
-      std::cerr << " in " << entry.fFuncName;
-   std::cerr << ":\n"
-             << "   " << entry.str() << '\n';
+      strm << " in " << entry.fFuncName;
+
+   static constexpr const int errorLevelOld[] = {0, 1000, 2000, 3000, 6000};
+   (*::GetErrorHandler())(errorLevelOld[static_cast<int>(entry.fLevel)],
+                           entry.fLevel == ROOT::Experimental::ELogLevel::kFatal,
+                           strm.str().c_str(), entry.str().c_str());
    return true;
 }
 } // unnamed namespace

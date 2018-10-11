@@ -580,7 +580,8 @@ void stress_binary_ebe_op(Int_t rsize, Int_t csize)
   ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
   if (gVerbose)
     std::cout << "  subtracting the matrix from itself" << std::endl;
-  m1 -= m1;
+  // Hiding the self-subtraction from the compiler, causing warning by -Wself-assign-overloaded in clang 7.0
+  m1 -= static_cast<TMatrixD&>(m1);
   ok &= VerifyMatrixValue(m1,0.,gVerbose,EPSILON);
   if (gVerbose)
     std::cout << "  adding two matrices together" << std::endl;
@@ -601,7 +602,8 @@ void stress_binary_ebe_op(Int_t rsize, Int_t csize)
   ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
   if (gVerbose)
     std::cout << "   clear both m and m1, by subtracting from itself and via add()" << std::endl;
-  m1 -= m1;
+  // Hiding the self-subtraction from the compiler, causing warning by -Wself-assign-overloaded in clang 7.0
+  m1 -= static_cast<TMatrixD&>(m1);
   Add(m,-3.,mp);
   ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
 

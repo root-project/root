@@ -132,13 +132,13 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
       std::list<Double_t>::iterator biter = boundaries->begin() ;
       _binw.resize(boundaries->size()-1) ;
       Double_t lastBound = (*biter) ;
-      biter++ ;
+      ++biter ;
       int ibin=0 ;
       while (biter!=boundaries->end()) {
 	_binw[ibin] = (*biter) - lastBound ;
 	lastBound = (*biter) ;
 	ibin++ ;
-	biter++ ;
+	++biter ;
       }
     }
   }
@@ -174,13 +174,13 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
       std::list<Double_t>::iterator biter = boundaries->begin() ;
       _binw.resize(boundaries->size()-1) ;
       Double_t lastBound = (*biter) ;
-      biter++ ;
+      ++biter ;
       int ibin=0 ;
       while (biter!=boundaries->end()) {
 	_binw[ibin] = (*biter) - lastBound ;
 	lastBound = (*biter) ;
 	ibin++ ;
-	biter++ ;
+	++biter ;
       }
     }
   }

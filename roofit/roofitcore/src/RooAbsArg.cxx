@@ -66,11 +66,9 @@ setting/clearing/testing named attributes.
 #include "RooVectorDataStore.h"
 #include "RooTreeDataStore.h"
 
-#include <string.h>
-#include <iomanip>
-#include <fstream>
-#include <algorithm>
 #include <sstream>
+#include <string.h>
+#include <algorithm>
 
 using namespace std ;
 
@@ -242,14 +240,14 @@ Bool_t RooAbsArg::isCloneOf(const RooAbsArg& other) const
 
 void RooAbsArg::setAttribute(const Text_t* name, Bool_t value)
 {
-  // Preserve backward compatibility - any strong 
+  // Preserve backward compatibility - any strong
   if(string("Constant")==name) {
     _isConstant = value ;
   }
-  
+
   if (value) {
     _boolAttrib.insert(name) ;
-  } else {    
+  } else {
     set<string>::iterator iter = _boolAttrib.find(name) ;
     if (iter != _boolAttrib.end()) {
       _boolAttrib.erase(iter) ;
@@ -277,9 +275,7 @@ void RooAbsArg::setStringAttribute(const Text_t* key, const Text_t* value)
   if (value) {
     _stringAttrib[key] = value ;
   } else {
-    if (_stringAttrib.find(key)!=_stringAttrib.end()) {
-      _stringAttrib.erase(key) ;
-    }
+    _stringAttrib.erase(key) ;
   }
 }
 
@@ -676,7 +672,7 @@ RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly
 //     branch->getObservablesHook(dataList, depList) ;
 //   }
 //   //delete bIter ;
-  
+
   return depList ;
 }
 
@@ -762,9 +758,9 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg
 {
   if (this==ignoreArg) return kFALSE ;
 
-  // First check if testArg is self    
+  // First check if testArg is self
   //if (!TString(testArg.GetName()).CompareTo(GetName())) return kTRUE ;
-  if (testArg.namePtr()==namePtr()) return kTRUE ; 
+  if (testArg.namePtr()==namePtr()) return kTRUE ;
 
 
   // Next test direct dependence
@@ -939,7 +935,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
     while((arg=iter.next())) {
 
       if (string("REMOVAL_DUMMY")==arg->GetName()) {
-	
+
 	if (arg->getAttribute("REMOVE_ALL")) {
 // 	  cout << "RooAbsArg::redir including remove_all node " << arg->GetName() << endl ;
 	  newSet->add(*arg) ;
@@ -988,7 +984,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
       cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
 			     << " redirected from " << oldServer << " to " << newServer << endl ;
     }
-    
+
     if (!newServer) {
       if (mustReplaceAll) {
 	cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
@@ -997,7 +993,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
       }
       continue ;
     }
-    
+
     propValue=origServerValue.findArg(oldServer)?kTRUE:kFALSE ;
     propShape=origServerShape.findArg(oldServer)?kTRUE:kFALSE ;
     // cout << "replaceServer with name " << oldServer->GetName() << " old=" << oldServer << " new=" << newServer << endl ;
@@ -1015,10 +1011,10 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
   for (int i=0 ; i<numProxies() ; i++) {
     RooAbsProxy* p = getProxy(i) ;
     if (!p) continue ;
-    Bool_t ret2 = p->changePointer(*newSet,nameChange,kFALSE) ; 
+    Bool_t ret2 = p->changePointer(*newSet,nameChange,kFALSE) ;
     allReplaced &= ret2 ;
   }
-  
+
   if (mustReplaceAll && !allReplaced) {
     coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName()
 			 << "): ERROR, some proxies could not be adjusted" << endl ;
@@ -1693,9 +1689,9 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
 
   // If yes, list node eligible for caching, if not test nodes one level down
   if (canOpt||getAttribute("CacheAndTrack")) {
-    
+
     if (!cacheList.find(*this) && dependsOnValue(observables) && !observables.find(*this) ) {
-      
+
       // Add to cache list
       cxcoutD(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << ") adding self to list of constant nodes" << endl ;
 
@@ -1705,7 +1701,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
   }
 
   if (!canOpt) {
-    
+
     // If not, see if next level down can be cached
     RooFIter sIter = serverMIterator() ;
     RooAbsArg* server ;
@@ -1715,7 +1711,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
       }
     }
   }
-  
+
   // Forward call to all cached contained in current object
   for (Int_t i=0 ;i<numCaches() ; i++) {
     getCache(i)->findConstantNodes(observables,cacheList,processedNodes) ;
@@ -2322,7 +2318,7 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooAbsArg::attachToStore(RooAbsDataStore& store) 
+void RooAbsArg::attachToStore(RooAbsDataStore& store)
 {
   if (dynamic_cast<RooTreeDataStore*>(&store)) {
     attachToTree(((RooTreeDataStore&)store).tree()) ;
@@ -2365,7 +2361,7 @@ const char* RooAbsArg::aggregateCacheUniqueSuffix() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooAbsArg::wireAllCaches() 
+void RooAbsArg::wireAllCaches()
 {
   RooArgSet branches ;
   branchNodeServerList(&branches) ;
@@ -2383,7 +2379,7 @@ void RooAbsArg::wireAllCaches()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooAbsArg::SetName(const char* name) 
+void RooAbsArg::SetName(const char* name)
 {
   TNamed::SetName(name) ;
   TNamed* newPtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
@@ -2420,7 +2416,7 @@ void RooAbsArg::Streamer(TBuffer &R__b)
      _ioReadStack.push(this) ;
      R__b.ReadClassBuffer(RooAbsArg::Class(),this);
      _ioReadStack.pop() ;
-     _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;  
+     _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
      _isConstant = getAttribute("Constant") ;
    } else {
      R__b.WriteClassBuffer(RooAbsArg::Class(),this);
@@ -2438,7 +2434,7 @@ void RooAbsArg::Streamer(TBuffer &R__b)
 /// Classes may overload this function, but must call the base method in the
 /// overloaded call to ensure base evolution is handled properly
 
-void RooAbsArg::ioStreamerPass2() 
+void RooAbsArg::ioStreamerPass2()
 {
 
   // Handling of v5-v6 migration (TRefArray _proxyList --> RooRefArray _proxyList)
@@ -2463,18 +2459,18 @@ void RooAbsArg::ioStreamerPass2()
 ////////////////////////////////////////////////////////////////////////////////
 /// Method called by workspace container to finalize schema evolution issues
 /// that cannot be handled in a single ioStreamer pass. This static finalize method
-/// is called after ioStreamerPass2() is called on each directly listed object 
+/// is called after ioStreamerPass2() is called on each directly listed object
 /// in the workspace. It's purpose is to complete schema evolution of any
 /// objects in the workspace that are not directly listed as content elements
 /// (e.g. analytical convolution tokens )
 
-void RooAbsArg::ioStreamerPass2Finalize() 
+void RooAbsArg::ioStreamerPass2Finalize()
 {
 
   // Handling of v5-v6 migration (TRefArray _proxyList --> RooRefArray _proxyList)
   map<RooAbsArg*,TRefArray*>::iterator iter = _ioEvoList.begin() ;
   while (iter != _ioEvoList.end()) {
-    
+
     // Transfer contents of saved TRefArray to RooRefArray now
     if (!iter->first->_proxyList.GetEntriesFast())
        iter->first->_proxyList.Expand(iter->second->GetEntriesFast());
@@ -2484,13 +2480,13 @@ void RooAbsArg::ioStreamerPass2Finalize()
 
     // Save iterator position for deletion after increment
     map<RooAbsArg*,TRefArray*>::iterator iter_tmp = iter ;
-    
-    iter++ ;
-    
+
+    ++iter ;
+
     // Delete TRefArray and remove from list
     delete iter_tmp->second ;
     _ioEvoList.erase(iter_tmp) ;
-    
+
   }
 
 }
@@ -2504,32 +2500,45 @@ void RooRefArray::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
 
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }      
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
 
-      // Make temporary refArray and read that from the streamer 
+      // Make temporary refArray and read that from the streamer
       TRefArray* refArray = new TRefArray ;
       refArray->Streamer(R__b) ;
       R__b.CheckByteCount(R__s, R__c, refArray->IsA());
-      
+
       // Schedule deferred processing of TRefArray into proxy list
       RooAbsArg::_ioEvoList[RooAbsArg::_ioReadStack.top()] = refArray ;
-      
+
    } else {
 
      R__c = R__b.WriteVersion(RooRefArray::IsA(), kTRUE);
 
      // Make a temporary refArray and write that to the streamer
      TRefArray refArray(GetEntriesFast());
-     TIterator* iter = MakeIterator() ; 
-     TObject* tmpObj ; while ((tmpObj = iter->Next())) { 
-       refArray.Add(tmpObj) ; 
-     } 
-     delete iter ; 
+     TIterator* iter = MakeIterator() ;
+     TObject* tmpObj ; while ((tmpObj = iter->Next())) {
+       refArray.Add(tmpObj) ;
+     }
+     delete iter ;
 
      refArray.Streamer(R__b) ;
      R__b.SetByteCount(R__c, kTRUE) ;
-     
+
    }
 }
 
+/// Print a RDataFrame at the prompt
+namespace cling {
+std::string printValue(RooAbsArg *raa)
+{
+   std::stringstream s;
+   if (0 == *raa->GetName() && 0 == *raa->GetTitle()) {
+      s << "An instance of " << raa->ClassName() << ".";
+      return s.str();
+   }
+   raa->printStream(s, raa->defaultPrintContents(""), raa->defaultPrintStyle(""));
+   return s.str();
+}
+} // namespace cling
 

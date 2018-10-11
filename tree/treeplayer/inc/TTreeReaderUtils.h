@@ -38,13 +38,13 @@ namespace Internal {
    class TBranchProxyDirector;
    class TTreeReaderArrayBase;
 
-   class TNamedBranchProxy: public TObject {
+   class TNamedBranchProxy {
    public:
       TNamedBranchProxy(): fDict(0), fContentDict(0) {}
-      TNamedBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername):
-         fProxy(boss, branch, membername), fDict(0), fContentDict(0) {}
+      TNamedBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* fullname, const char* membername):
+         fProxy(boss, fullname, branch, membername), fDict(0), fContentDict(0), fFullName(fullname) {}
 
-      const char* GetName() const { return fProxy.GetBranchName(); }
+      const char* GetName() const { return fFullName.c_str(); }
       const Detail::TBranchProxy* GetProxy() const { return &fProxy; }
       Detail::TBranchProxy* GetProxy() { return &fProxy; }
       TDictionary* GetDict() const { return fDict; }
@@ -54,9 +54,9 @@ namespace Internal {
 
    private:
       Detail::TBranchProxy fProxy;
-      TDictionary*       fDict;
-      TDictionary*       fContentDict; // type of content, if a collection
-      ClassDef(TNamedBranchProxy, 0); // branch proxy with a name
+      TDictionary*         fDict;
+      TDictionary*         fContentDict; // type of content, if a collection
+      std::string          fFullName;
    };
 
    // Used by TTreeReaderArray

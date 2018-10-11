@@ -121,7 +121,11 @@ int main(int argc, char **argv)
    Int_t arg4   = 1;
    Int_t arg5   = 600;     //default number of tracks per event
    Int_t enable_imt = 0;   // Whether to enable IMT mode.
-   Int_t compAlg = 1;      // Allow user to specify underlying compression algorithm.
+#ifdef R__HAS_DEFAULT_LZ4
+   Int_t compAlg = 4; // Allow user to specify underlying compression algorithm.
+#else
+   Int_t compAlg = 1;
+#endif
    Int_t netf   = 0;
    Int_t punzip = 0;
 

@@ -4,6 +4,13 @@
 .TH SETUP-PQ2 1 "Version 5" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
 .\" other parms are allowed: see man(7), man(1)
+.SH NOTA BENE
+.B The PQ2 tools are deprecated and will be removed in ROOT v6.16/00.
+.PP
+Please contact the ROOT team at
+.UR http://root.cern.ch/
+.I http://root.cern.ch
+in the unlikely event this change is disruptive for your workflow.
 .SH NAME
 setup-pq2 \- Script defining the environment for the PQ2 tools
 .SH SYNOPSIS
@@ -30,9 +37,9 @@ Add the path to the PQ2 scripts to the execution path so that they are picked-up
 .TP
 PQ2DSSRVURL
 Path to the dataset repository when working via a local or remote file system; the value specified here is
-superseeded by '-u srvurl'; the path must contain the full directory spefication. To test the goodness of the
+superseded by '-u srvurl'; the path must contain the full directory specification. To test the goodness of the
 path run gSystem->AccessPathName("$PQ2DSSRVURL", kReadPermissions) in a ROOT shell: this command will return
-0 is the path is good. The PQ2DSSRVURL settings are superseeded by '-u srvurl'. If not specified, PQ2DSSRVURL defaults
+0 is the path is good. The PQ2DSSRVURL settings are superseded by '-u srvurl'. If not specified, PQ2DSSRVURL defaults
 to PQ2PROOFURL (see below).
 .TP
 PQ2PROOFURL
@@ -48,7 +55,7 @@ Controls the use of the cache when working via a remote file system; set to 'no'
 the cache is enabled.
 .TP
 DATASETLOCALCACHEDIR
-Location of the local cache the default is a path derived from $PQ2DSSRVURL (replacemente of '/' and ':' with %) and
+Location of the local cache the default is a path derived from $PQ2DSSRVURL (replacement of '/' and ':' with %) and
 created under $TMPDIR, e.g. for PQ2DSSRVURL set to root://alicecaf.cern.ch:11094//dataset-xpd, the default cache
 directory is /tmp/<user>/dataset.cache/root%%%alicecaf.cern.ch%11094%%dataset-xpd .
 .TP
@@ -86,7 +93,7 @@ The format is "<action-tag>:" where the action tags are:
 .RE
 .TP
 TMPDIR
-Directory used for temporary files or directories; the actual temporary directory is required to end witt the
+Directory used for temporary files or directories; the actual temporary directory is required to end with the
 username (in some cases TMPDIR already ends with the username).
 .SH "SEE ALSO"
 \fIpq2\fR(1), \fIpq2-ls\fR(1), \fIpq2-ls-files\fR(1), \fIpq2-ls-files-server\fR(1),

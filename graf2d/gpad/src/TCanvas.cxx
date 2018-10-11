@@ -1529,6 +1529,38 @@ void TCanvas::Picked(TPad *pad, TObject *obj, Int_t event)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Emit Highlighted() signal.
+///
+///  - pad is pointer to pad with highlighted histogram or graph
+///  - obj is pointer to highlighted histogram or graph
+///  - x is highlighted x bin for 1D histogram or highlighted x-th point for graph
+///  - y is highlighted y bin for 2D histogram (for 1D histogram or graph not in use)
+
+void TCanvas::Highlighted(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)
+{
+   Long_t args[4];
+
+   args[0] = (Long_t) pad;
+   args[1] = (Long_t) obj;
+   args[2] = x;
+   args[3] = y;
+
+   Emit("Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)", args);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// This is "simplification" for function TCanvas::Connect with Highlighted
+/// signal for specific slot.
+///
+/// Slot has to be defined "UserFunction(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)"
+/// all parameters of UserFunction are taken from TCanvas::Highlighted
+
+void TCanvas::HighlightConnect(const char *slot)
+{
+   Connect("Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)", 0, 0, slot);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Emit Selected() signal.
 
 void TCanvas::Selected(TVirtualPad *pad, TObject *obj, Int_t event)
@@ -1739,7 +1771,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
       }
       fname = new char[nch+3];
       strlcpy(fname,cname,nch+3);
-      strncat(fname,".C",2);
+      strncat(fname,".C",3);
       out.open(fname, std::ios::out);
    }
    if (!out.good ()) {

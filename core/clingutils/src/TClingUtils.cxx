@@ -24,7 +24,7 @@
 #include <unordered_set>
 
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "Rtypes.h"
 
 #include "RStl.h"
@@ -978,7 +978,7 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
       cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
 
       if (auto* Ctor = interpreter.getCI()->getSema().LookupDefaultConstructor(ncCl)) {
-         if (Ctor->getAccess() == clang::AS_public) {
+         if (Ctor->getAccess() == clang::AS_public && !Ctor->isDeleted()) {
             return EIOCtorCategory::kDefault;
          }
       }
@@ -2558,8 +2558,12 @@ int ROOT::TMetaUtils::IsSTLContainer(const clang::CXXBaseSpecifier &base)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calls the given lambda on every header in the given module.
+/// includeDirectlyUsedModules designates if the foreach should also loop over
+/// the headers in all modules that are directly used via a `use` declaration
+/// in the modulemap.
 void ROOT::TMetaUtils::foreachHeaderInModule(const clang::Module &module,
-                                             const std::function<void(const clang::Module::Header &)> &closure)
+                                             const std::function<void(const clang::Module::Header &)> &closure,
+                                             bool includeDirectlyUsedModules)
 {
    // Iterates over all headers in a module and calls the closure on each.
 
@@ -2575,10 +2579,29 @@ void ROOT::TMetaUtils::foreachHeaderInModule(const clang::Module &module,
    static_assert(publicHeaderIndex + 1 == maxArrayLength,
                  "'Headers' has changed it's size, we need to update publicHeaderIndex");
 
-   for (std::size_t i = 0; i < publicHeaderIndex; i++) {
-      auto &headerList = module.Headers[i];
-      for (const clang::Module::Header &moduleHeader : headerList) {
-         closure(moduleHeader);
+   // Make a list of modules and submodules that we can check for headers.
+   // We use a SetVector to prevent an infinite loop in unlikely case the
+   // modules somehow are messed up and don't form a tree...
+   llvm::SetVector<const clang::Module *> modules;
+   modules.insert(&module);
+   for (size_t i = 0; i < modules.size(); ++i) {
+      const clang::Module *M = modules[i];
+      for (const clang::Module *subModule : M->submodules())
+         modules.insert(subModule);
+   }
+
+   for (const clang::Module *m : modules) {
+      if (includeDirectlyUsedModules) {
+         for (clang::Module *used : m->DirectUses) {
+            foreachHeaderInModule(*used, closure, true);
+         }
+      }
+
+      for (std::size_t i = 0; i < publicHeaderIndex; i++) {
+         auto &headerList = m->Headers[i];
+         for (const clang::Module::Header &moduleHeader : headerList) {
+            closure(moduleHeader);
+         }
       }
    }
 }
@@ -3360,6 +3383,11 @@ void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
                                                  const clang::QualType &qtype,
                                                  const cling::Interpreter &interpreter)
 {
+   // We need this because GetFullyQualifiedTypeName is triggering deserialization
+   // This calling the same name function GetFullyQualifiedTypeName, but this should stay here because
+   // callee doesn't have an interpreter pointer
+   cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interpreter));
+
    GetFullyQualifiedTypeName(typenamestr,
                              qtype,
                              interpreter.getCI()->getASTContext());
@@ -3905,6 +3933,9 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    // strip both the anonymous and the inline namespace names (and we probably do not want the later to be suppressed).
 
    std::string normalizedNameStep1;
+
+   // getAsStringInternal can trigger deserialization
+   cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
    normalizedType.getAsStringInternal(normalizedNameStep1,policy);
 
    // Still remove the std:: and default template argument for STL container and
@@ -4004,75 +4035,6 @@ std::string ROOT::TMetaUtils::GetModuleFileName(const char* moduleName)
    std::string dictFileName(moduleName);
    dictFileName += "_rdict.pcm";
    return dictFileName;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Declare a virtual module.map to clang. Returns Module on success.
-
-clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
-                                                  const char* moduleFileName,
-                                                  const char* headers[])
-{
-   clang::Preprocessor& PP = CI->getPreprocessor();
-   clang::ModuleMap& ModuleMap = PP.getHeaderSearchInfo().getModuleMap();
-
-   // Set the patch for searching for modules
-   clang::HeaderSearch& HS = CI->getPreprocessor().getHeaderSearchInfo();
-   HS.setModuleCachePath(llvm::sys::path::parent_path(moduleFileName));
-
-   llvm::StringRef moduleName = llvm::sys::path::filename(moduleFileName);
-   moduleName = llvm::sys::path::stem(moduleName);
-
-   std::pair<clang::Module*, bool> modCreation;
-
-   modCreation
-      = ModuleMap.findOrCreateModule(moduleName.str(),
-                                     0 /*Parent*/,
-                                     false /*Framework*/, false /*Explicit*/);
-   if (!modCreation.second && !strstr(moduleFileName, "/allDict_rdict.pcm")) {
-      std::cerr << "TMetaUtils::declareModuleMap: "
-         "Duplicate definition of dictionary module "
-                << moduleFileName << std::endl;
-            /*"\nOriginal module was found in %s.", - if only we could...*/
-      // Go on, add new headers nonetheless.
-   }
-
-   clang::HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
-   for (const char** hdr = headers; hdr && *hdr; ++hdr) {
-      const clang::DirectoryLookup* CurDir;
-      const clang::FileEntry* hdrFileEntry
-         =  HdrSearch.LookupFile(*hdr, clang::SourceLocation(),
-                                 false /*isAngled*/, 0 /*FromDir*/, CurDir,
-                                 llvm::ArrayRef<std::pair<const clang::FileEntry *,
-                                    const clang::DirectoryEntry *>>(),
-                                 0/*IsMapped*/, 0 /*SearchPath*/, 0 /*RelativePath*/,
-                                 0 /*RequestingModule*/, 0 /*SuggestedModule*/,
-                                 false /*SkipCache*/, false /*BuildSystemModule*/,
-                                 false /*OpenFile*/, true /*CacheFailures*/);
-      if (!hdrFileEntry) {
-         std::cerr << "TMetaUtils::declareModuleMap: "
-            "Cannot find header file " << *hdr
-                   << " included in dictionary module "
-                   << moduleName.str()
-                   << " in include search path!";
-         hdrFileEntry = PP.getFileManager().getFile(*hdr, /*OpenFile=*/false,
-                                                    /*CacheFailure=*/false);
-      } else if (getenv("ROOT_MODULES")) {
-         // Tell HeaderSearch that the header's directory has a module.map
-         llvm::StringRef srHdrDir(hdrFileEntry->getName());
-         srHdrDir = llvm::sys::path::parent_path(srHdrDir);
-         const clang::DirectoryEntry* Dir
-            = PP.getFileManager().getDirectory(srHdrDir);
-         if (Dir) {
-            HdrSearch.setDirectoryHasModuleMap(Dir);
-         }
-      }
-
-      ModuleMap.addHeader(modCreation.first,
-                          clang::Module::Header{*hdr,hdrFileEntry},
-                          clang::ModuleMap::NormalHeader);
-   } // for headers
-   return modCreation.first;
 }
 
 int dumpDeclForAssert(const clang::Decl& D, const char* commentStart) {
@@ -4631,11 +4593,21 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
          } else {
             replacedCtxt = decl->getDescribedClassTemplate();
          }
+      } else if (auto const declguide = llvm::dyn_cast<clang::CXXDeductionGuideDecl>(replacedDeclCtxt)) {
+         replacedCtxt = llvm::dyn_cast<clang::ClassTemplateDecl>(declguide->getDeducedTemplate());
+      } else if (auto const ctdecl = llvm::dyn_cast<clang::ClassTemplateDecl>(replacedDeclCtxt)) {
+         replacedCtxt = ctdecl;
       } else {
-         replacedCtxt = llvm::dyn_cast<clang::ClassTemplateDecl>(replacedDeclCtxt);
+         std::string astDump;
+         llvm::raw_string_ostream ostream(astDump);
+         instance->dump(ostream);
+         ostream.flush();
+         ROOT::TMetaUtils::Warning("ReSubstTemplateArg","Unexpected type of declaration context for template parameter: %s.\n\tThe responsible class is:\n\t%s\n",
+                                   replacedDeclCtxt->getDeclKindName(), astDump.c_str());
+         replacedCtxt = nullptr;
       }
 
-      if (replacedCtxt->getCanonicalDecl() == TSTdecl->getSpecializedTemplate()->getCanonicalDecl()
+      if ((replacedCtxt && replacedCtxt->getCanonicalDecl() == TSTdecl->getSpecializedTemplate()->getCanonicalDecl())
           || /* the following is likely just redundant */
           substType->getReplacedParameter()->getDecl()
           == TSTdecl->getSpecializedTemplate ()->getTemplateParameters()->getParam(index))
@@ -4793,7 +4765,7 @@ void ROOT::TMetaUtils::ExtractEnclosingNameSpaces(const clang::Decl& decl,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Extract enclosing namespaces recusrively
+/// Extract enclosing namespaces recursively
 
 void ROOT::TMetaUtils::ExtractCtxtEnclosingNameSpaces(const clang::DeclContext& ctxt,
                                                       std::list<std::pair<std::string,bool> >& enclosingNamespaces)

@@ -10,7 +10,7 @@
 
 constexpr int paramSize = 6;
 
-bool compareResult(double v1, double v2, std::string s = "", double tol = 0.01)
+bool compareResult(double v1, double v2, const std::string &s = "", double tol = 0.01)
 {
    // compare v1 with reference v2
    //  // give 1% tolerance
@@ -150,7 +150,7 @@ public:
 
 
 
-   double testFitSeq()
+   bool testFitSeq()
    {
       std::cout << "\n////////////////////////////SEQUENTIAL TEST////////////////////////////" << std::endl << std::endl;
       wfSeq->SetParameters(p);
@@ -170,7 +170,7 @@ public:
       return  ret;
    }
 
-   double testMTFit()
+   bool testMTFit()
    {
       std::cout << "\n///////////////////////////////MT TEST////////////////////////////" << std::endl << std::endl;
       wfSeq->SetParameters(p);
@@ -184,7 +184,7 @@ public:
       return ret;
    }
 
-   double testMPFit()
+   bool testMPFit()
    {
       std::cout << "\n///////////////////////////////MP TEST////////////////////////////\n\n";
       wfSeq->SetParameters(p);
@@ -199,7 +199,7 @@ public:
    }
 
 #ifdef R__HAS_VECCORE
-   double testFitVec()
+   bool testFitVec()
    {
       std::cout << "\n////////////////////////////VECTOR TEST////////////////////////////" << std::endl << std::endl;
       wfVec->SetParameters(p);
@@ -213,7 +213,7 @@ public:
       return ret;
    }
 
-   double testMTFitVec()
+   bool testMTFitVec()
    {
       std::cout << "\n///////////////////////////////MT+VEC TEST////////////////////////////\n\n";
       wfVec->SetParameters(p);
@@ -227,7 +227,7 @@ public:
       return ret;
    }
 
-   double testMPFitVec()
+   bool testMPFitVec()
    {
       std::cout << "\n///////////////////////////////MP+VEC TEST////////////////////////////\n\n";
       wfVec->SetParameters(p);
@@ -267,7 +267,7 @@ int main()
 {
    TestVector test(200000);
 
-   ROOT::EnableImplicitMT(0);  
+   ROOT::EnableImplicitMT();
    ROOT::EnableThreadSafety();
 
    //Sequential

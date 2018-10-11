@@ -33,6 +33,7 @@ of local objects so it is exception safe.
 */
 
 #include "TVirtualMutex.h"
+#include "TVirtualRWMutex.h"
 
 ClassImp(TVirtualMutex);
 ClassImp(TLockGuard);
@@ -43,5 +44,6 @@ ClassImp(TLockGuard);
 // lockup of the system (see TMutex::Factory)
 TVirtualMutex *gGlobalMutex = 0;
 
-// Pin that vtable.
-TVirtualMutex::State::~State() = default;
+// From TVirtualRWMutex.h:
+ROOT::TVirtualRWMutex::State::~State() = default;
+ROOT::TVirtualRWMutex::StateDelta::~StateDelta() = default;

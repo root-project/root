@@ -18,21 +18,21 @@
 
 #include "Rtypes.h"
 
-R__LOAD_LIBRARY(libGpad);
+R__LOAD_LIBRARY(libROOTHistDraw);
 
-#include "ROOT/THist.hxx"
-#include "ROOT/TCanvas.hxx"
-#include "ROOT/TColor.hxx"
+#include "ROOT/RHist.hxx"
+#include "ROOT/RCanvas.hxx"
+#include "ROOT/RColor.hxx"
 #include "ROOT/TDirectory.hxx"
 
 void draw()
 {
-   using namespace ROOT;
+   using namespace ROOT::Experimental;
 
    // Create the histogram.
-   Experimental::TAxisConfig xaxis("x", 10, 0., 1.);
-   Experimental::TAxisConfig yaxis("y", {0., 1., 2., 3., 10.});
-   auto pHist = std::make_shared<Experimental::TH2D>(xaxis, yaxis);
+   RAxisConfig xaxis("x", 10, 0., 1.);
+   RAxisConfig yaxis("y", {0., 1., 2., 3., 10.});
+   auto pHist = std::make_shared<RH2D>(xaxis, yaxis);
 
    // Fill a few points.
    pHist->Fill({0.01, 1.02});
@@ -42,11 +42,11 @@ void draw()
    pHist->Fill({0.75, -0.02});
 
    // Register the histogram with ROOT: now it lives even after draw() ends.
-   Experimental::TDirectory::Heap().Add("hist", pHist);
+   ROOT::Experimental::TDirectory::Heap().Add("hist", pHist);
 
    // Create a canvas to be displayed.
-   auto canvas = Experimental::TCanvas::Create("Canvas Title");
-   canvas->Draw(pHist).SetLineColor(Experimental::TColor::kRed);
+   auto canvas = RCanvas::Create("Canvas Title");
+   canvas->Draw(pHist)->SetLineColor(RColor::kRed);
 
    canvas->Show();
 }

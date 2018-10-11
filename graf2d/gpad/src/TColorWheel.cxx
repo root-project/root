@@ -52,6 +52,8 @@ in your code instead of hardcoded color numbers, e.g.:
 Begin_Macro
 {
    TColorWheel *w = new TColorWheel();
+   cw = new TCanvas("cw","cw",0,0,400,400);
+   w->SetCanvas(cw);
    w->Draw();
 }
 End_Macro

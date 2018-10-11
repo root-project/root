@@ -598,7 +598,7 @@ namespace ROOT {
        */
        Scalar Gamma() const {
           const Scalar v2 = P2();
-          const Scalar t2 = pow(E(), 2);
+          const Scalar t2 = E() * E();
           if (E() == 0) {
              if ( P2() == 0) {
                 return 1;

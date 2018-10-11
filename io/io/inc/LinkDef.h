@@ -14,7 +14,9 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class TBufferIO;
 #pragma link C++ class TBufferFile;
+#pragma link C++ class TBufferText;
 #pragma link C++ class TBufferJSON;
 #pragma link C++ class TDirectoryFile-;
 #pragma link C++ class TFile-;

@@ -59,9 +59,6 @@ importClassCode() method.
 #include "TFile.h"
 #include "TH1.h"
 #include <map>
-#include <string>
-#include <list>
-#include <set>
 
 using namespace std ;
 
@@ -74,7 +71,6 @@ using namespace std ;
 #include "TClass.h"
 #include "Riostream.h"
 #include <string.h>
-#include <assert.h>
 
 ClassImp(RooWorkspace);
 ;
@@ -2467,7 +2463,7 @@ void RooWorkspace::Print(Option_t* opts) const
   if (_namedSets.size()>0) {
     cout << "named sets" << endl ;
     cout << "----------" << endl ;
-    for (map<string,RooArgSet>::const_iterator it = _namedSets.begin() ; it != _namedSets.end() ; it++) {
+    for (map<string,RooArgSet>::const_iterator it = _namedSets.begin() ; it != _namedSets.end() ; ++it) {
        if (verbose || !TString(it->first.c_str()).BeginsWith("CACHE_")) {
           cout << it->first << ":" << it->second << endl;
        }
@@ -2729,20 +2725,20 @@ void RooWorkspace::Streamer(TBuffer &R__b)
      // Reinstate clients here
 
      
-     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iterx = extClients.begin() ; iterx!=extClients.end() ; iterx++) {
-       for (list<RooAbsArg*>::iterator citer = iterx->second.begin() ; citer!=iterx->second.end() ; citer++) {
+     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iterx = extClients.begin() ; iterx!=extClients.end() ; ++iterx) {
+       for (list<RooAbsArg*>::iterator citer = iterx->second.begin() ; citer!=iterx->second.end() ; ++citer) {
 	 iterx->first->_clientList.Add(*citer) ;
        }
      }
 
-     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iterx = extValueClients.begin() ; iterx!=extValueClients.end() ; iterx++) {
-       for (list<RooAbsArg*>::iterator citer = iterx->second.begin() ; citer!=iterx->second.end() ; citer++) {
+     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iterx = extValueClients.begin() ; iterx!=extValueClients.end() ; ++iterx) {
+       for (list<RooAbsArg*>::iterator citer = iterx->second.begin() ; citer!=iterx->second.end() ; ++citer) {
 	 iterx->first->_clientListValue.Add(*citer) ;
        }
      }
 
-     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iterx = extShapeClients.begin() ; iterx!=extShapeClients.end() ; iterx++) {
-       for (list<RooAbsArg*>::iterator citer = iterx->second.begin() ; citer!=iterx->second.end() ; citer++) {
+     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iterx = extShapeClients.begin() ; iterx!=extShapeClients.end() ; ++iterx) {
+       for (list<RooAbsArg*>::iterator citer = iterx->second.begin() ; citer!=iterx->second.end() ; ++citer) {
 	 iterx->first->_clientListShape.Add(*citer) ;
        }
      }
@@ -2866,7 +2862,7 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
       fdecl << eiter->second._hfile.Data();
       fdecl.close();
    }
-   eiter++;
+   ++eiter;
       }
     }
     

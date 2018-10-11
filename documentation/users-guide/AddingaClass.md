@@ -228,7 +228,7 @@ ClassImp(TLine)
 Note that you should provide a default constructor for your classes,
 i.e. a constructor with zero parameters or with one or more parameters
 all with default values in case you want to use object I/O. If do not
-provide such a default contructor, you MUST implement an I/O
+provide such a default constructor, you MUST implement an I/O
 constructor. If not you will get a compile time error. See the "The
 Default Constructor" paragraph in this chapter. The `ClassDef` and
 `ClassImp` macros are defined in the file `Rtypes.h`. This file is

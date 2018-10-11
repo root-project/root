@@ -54,6 +54,7 @@
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TBrowser.h"
+#include "TClass.h"
 #include "TGClient.h"
 #include "TGFrame.h"
 #include "TGTab.h"
@@ -212,6 +213,9 @@ void TRootBrowser::CreateBrowser(const char *name)
                       "HandleMenu(Int_t)");
    fPreMenuFrame->AddFrame(fMenuBar, fLH2);
    fTopMenuFrame->AddFrame(fPreMenuFrame, fLH0);
+
+   if (!TClass::GetClass("TGHtmlBrowser"))
+      fMenuFile->DisableEntry(kNewHtml);
 
    fMenuFrame = new TGHorizontalFrame(fTopMenuFrame, 100, 20, kRaisedFrame);
    fTopMenuFrame->AddFrame(fMenuFrame, fLH5);

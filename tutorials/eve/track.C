@@ -10,13 +10,13 @@
 /// ~~~
 /// void track(Int_t mode = 5, Bool_t isRungeKutta = kTRUE)
 /// Modes are
-///  0. B = 0, no difference btween signed and charge particles;
+///  0. B = 0, no difference between signed and charge particles;
 ///  1. constant B field (along z, but could have arbitrary direction);
 ///  2. variable B field, sign change at  R = 200 cm;
 ///  3. magnetic field with a zero-field region;
 ///  4. CMS magnetic field - simple track;
 ///  5. CMS magnetic field - track with different path-marks.
-///  6. Concpetual ILC detector, problematic track
+///  6. Conceptual ILC detector, problematic track
 ///
 /// \image html eve_track.png
 /// \macro_code
@@ -100,7 +100,7 @@ public:
       {
          //inside solenoid
          if ( R < 300) return TEveVectorD(0,0,field);
-         // outside solinoid
+         // outside solenoid
          if ( m_simpleModel ||
               ( R>461.0 && R<490.5 ) ||
               ( R>534.5 && R<597.5 ) ||
@@ -142,19 +142,19 @@ TEveTrack* make_track(TEveTrackPropagator* prop, Int_t sign)
   // Make track with given propagator.
   // Add to math-marks to test fit.
 
-  TEveRecTrackD *rc = new TEveRecTrackD();
+  auto rc = new TEveRecTrackD();
   rc->fV.Set(0.028558, -0.000918, 3.691919);
   rc->fP.Set(0.767095, -2.400006, -0.313103);
   rc->fSign = sign;
 
-  TEveTrack* track = new TEveTrack(rc, prop);
+  auto track = new TEveTrack(rc, prop);
   track->SetName(Form("Charge %d", sign));
   // daughter 0
-  TEvePathMarkD* pm1 = new TEvePathMarkD(TEvePathMarkD::kDaughter);
+  auto pm1 = new TEvePathMarkD(TEvePathMarkD::kDaughter);
   pm1->fV.Set(1.479084, -4.370661, 3.119761);
   track->AddPathMark(*pm1);
   // daughter 1
-  TEvePathMarkD* pm2 = new TEvePathMarkD(TEvePathMarkD::kDaughter);
+  auto pm2 = new TEvePathMarkD(TEvePathMarkD::kDaughter);
   pm2->fV.Set(57.72345, -89.77011, -9.783746);
   track->AddPathMark(*pm2);
 
@@ -168,8 +168,8 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
    gSystem->IgnoreSignal(kSigSegmentationViolation, true);
    TEveManager::Create();
 
-   TEveTrackList *list = new TEveTrackList();
-   TEveTrackPropagator* prop = g_prop = list->GetPropagator();
+   auto list = new TEveTrackList();
+   auto prop = g_prop = list->GetPropagator();
    prop->SetFitDaughters(kFALSE);
    prop->SetMaxZ(1000);
 
@@ -188,7 +188,7 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
    {
       case 0:
       {
-         // B = 0 no difference btween signed and charge particles
+         // B = 0 no difference between signed and charge particles
          prop->SetMagField(0.);
          list->SetElementName(Form("%s, zeroB", list->GetElementName()));
          track = make_track(prop, 1);
@@ -220,13 +220,13 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
          list->SetElementName(Form("%s, gappedB", list->GetElementName()));
 
 
-         TEveRecTrackD *rc = new TEveRecTrackD();
+         auto rc = new TEveRecTrackD();
          rc->fV.Set(0.028558, -0.000918, 3.691919);
          rc->fP.Set(0.767095, -0.400006, 2.313103);
          rc->fSign = 1;
          track = new TEveTrack(rc, prop);
 
-         TEvePointSet* marker = new TEvePointSet(2);
+         auto marker = new TEvePointSet(2);
          marker->SetElementName("B field break points");
          marker->SetPoint(0, 0., 0., 300.f);
          marker->SetPoint(1, 0., 0., 600.f);
@@ -238,7 +238,7 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
       case 4:
       {
          // Magnetic field of CMS I.
-         CmsMagField* mf = new CmsMagField;
+         auto mf = new CmsMagField;
          mf->setReverseState(true);
 
          prop->SetMagFieldObj(mf);
@@ -250,7 +250,7 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
          list->SetElementName(Form("%s, CMS field", list->GetElementName()));
 
 
-         TEveRecTrackD *rc = new TEveRecTrackD();
+         auto rc = new TEveRecTrackD();
          rc->fV.Set(0.027667, 0.007919, 0.895964);
          rc->fP.Set(3.903134, 2.252232, -3.731366);
          rc->fSign = -1;
@@ -276,7 +276,7 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
       case 5:
       {
          // Magnetic field of CMS I.
-         CmsMagField* mf = new CmsMagField;
+         auto mf = new CmsMagField;
          mf->setReverseState(true);
          mf->setSimpleModel(false);
 
@@ -289,7 +289,7 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
          prop->RefPMAtt().SetMarkerStyle(4);
          list->SetElementName(Form("%s, CMS field", list->GetElementName()));
 
-         TEveRecTrackD *rc = new TEveRecTrackD();
+         auto rc = new TEveRecTrackD();
          rc->fV.Set(-16.426592, 16.403185, -19.782692);
          rc->fP.Set(3.631100, 3.643450, 0.682254);
          rc->fSign = -1;
@@ -332,7 +332,7 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
          list->SetElementName(Form("%s, Some ILC Detector field",
                                    list->GetElementName()));
 
-         TEveRecTrackD *rc = new TEveRecTrackD();
+         auto rc = new TEveRecTrackD();
          rc->fV.Set(57.1068, 31.2401, -7.07629);
          rc->fP.Set(4.82895, 2.35083, -0.611757);
          rc->fSign = 1;
@@ -374,5 +374,3 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
    gv->CurrentCamera().RotateRad(-0.5, 1.4);
    gv->RequestDraw();
 }
-
-#endif

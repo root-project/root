@@ -455,6 +455,11 @@ N: Burt Holzman
 E: burt@fnal.gov
 D: Contribution to TWebFile,rpdutils and sockets.
 
+N: Raphael Isemann
+E: teemperor@gmail.com
+D: c++ modules and runtime c++ modules co-author, integration in the CMS experiment
+D: contributions to rootcling, cling and cmake
+
 N: Marian Ivanov
 E: m.ivanov@gsi.de
 D: memory leak checker
@@ -526,7 +531,7 @@ D: Integrating Minuit2 in Roofit and adding support for MPI
 
 N: Wim Lavrijsen
 E: WLavrijsen@lbl.gov
-D: PyRoot package
+D: PyROOT package, Cppyy package
 
 N: Kerry Lee
 E: kerry.t.lee@nasa.gov
@@ -616,7 +621,7 @@ D: pioneer on many fronts, installation, support
 
 N: Pere Mato
 E: Pere.Mato@cern.ch
-D: PyRoot package
+D: PyROOT package
 D: cmake build system
 
 N: Richard Maunder
@@ -912,7 +917,7 @@ D: Paint3DAlgorithms used by the LEGO and SURF options
 
 N: Enric Tejedor
 E: enric.tejedor@cern.ch
-D: IO, Parallelisation, Jupyter integration, TDataFrame
+D: IO, Parallelisation, Jupyter integration, TDataFrame, PyROOT
 
 N: Jan Therhaag
 E: therhaag@users.sourceforge.net
@@ -973,6 +978,7 @@ D: author of the TMVA package
 N: Vassil Vassilev
 E: vasil.georgiev.vasilev@cern.ch
 D: cling co-author
+D: c++ modules and runtime c++ modules co-author, integration in experiments
 
 N: Helge Voss
 E: Helge.Voss@cern.ch
@@ -993,3 +999,7 @@ D: contributed to TStyle::CreateGradientColorTable()
 N: Omar Andres Zapata Mesa
 E: Omar.Zapata@cern.ch
 D: ROOT-R, JupyROOT, TMVA
+
+N: Jan Musinsky
+E: musinsky@gmail.com
+D: Highlight mechanism for histograms an graphs

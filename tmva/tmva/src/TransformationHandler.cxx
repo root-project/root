@@ -86,7 +86,7 @@ TMVA::TransformationHandler::TransformationHandler( DataSetInfo& dsi, const TStr
 TMVA::TransformationHandler::~TransformationHandler()
 {
    std::vector<Ranking*>::const_iterator it = fRanking.begin();
-   for (; it != fRanking.end(); it++) delete *it;
+   for (; it != fRanking.end(); ++it) delete *it;
 
    fTransformations.SetOwner();
    delete fLogger;
@@ -112,13 +112,22 @@ TMVA::VariableTransformBase* TMVA::TransformationHandler::AddTransformation( Var
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Caches calculated summary statistics of transformed variables.
+///
+/// \param[in] k index of class
+/// \param[in] ivar index of variable
+/// \param[in] mean the mean value of the variable
+/// \param[in] rms the root-mean-square value of the variable
+/// \param[in] min the minimum value of the variable
+/// \param[in] max the maximum value of the variable
 
 void TMVA::TransformationHandler::AddStats( Int_t k, UInt_t ivar, Double_t mean, Double_t rms, Double_t min, Double_t max )
 {
-   if (rms <= 0) {
+   if (rms <= 0 || TMath::IsNaN(rms)) {
       Log() << kWARNING << "Variable \"" << Variable(ivar).GetExpression()
-            << "\" has zero or negative RMS^2 "
-            << "==> set to zero. Please check the variable content" << Endl;
+            << "\" has zero, negative, or NaN RMS^2: "
+            << rms
+            << " ==> set to zero. Please check the variable content" << Endl;
       rms = 0;
    }
 
@@ -148,7 +157,7 @@ const TMVA::Event* TMVA::TransformationHandler::Transform( const Event* ev ) con
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt()) {
       if (rClsIt == fTransformationsReferenceClasses.end()) Log() << kFATAL<< "invalid read in TransformationHandler::Transform " <<Endl;
       trEv = trf->Transform(trEv, (*rClsIt) );
-      rClsIt++;
+      ++rClsIt;
    }
    return trEv;
 }
@@ -164,7 +173,7 @@ const TMVA::Event* TMVA::TransformationHandler::InverseTransform( const Event* e
    // the inverse transformation
    TListIter trIt(&fTransformations, kIterBackward);
    std::vector< Int_t >::const_iterator rClsIt = fTransformationsReferenceClasses.end();
-   rClsIt--;
+   --rClsIt;
    const Event* trEv = ev;
    UInt_t nvars = 0, ntgts = 0, nspcts = 0;
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt() ) { // shouldn't be the transformation called in the inverse order for the inversetransformation?????
@@ -220,7 +229,7 @@ const std::vector<TMVA::Event*>* TMVA::TransformationHandler::CalcTransformation
          for (UInt_t ievt = 0; ievt<transformedEvents->size(); ievt++) {  // loop through all events
             *(*transformedEvents)[ievt] = *trf->Transform((*transformedEvents)[ievt],(*rClsIt));
          }
-         rClsIt++;
+         ++rClsIt;
       }
    }
 
@@ -383,7 +392,7 @@ void TMVA::TransformationHandler::MakeFunction( std::ostream& fout, const TStrin
    UInt_t trCounter=1;
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt() ) {
       trf->MakeFunction(fout, fncName, part, trCounter++, (*rClsIt) );
-      rClsIt++;
+      ++rClsIt;
    }
    if (part==1) {
       for (Int_t i=0; i<fTransformations.GetSize(); i++) {
@@ -842,7 +851,7 @@ void TMVA::TransformationHandler::WriteToStream( std::ostream& o ) const
       if (ci == 0 ) clsName = "AllClasses";
       else clsName = ci->GetName();
       o << "ReferenceClass " << clsName << std::endl;
-      rClsIt++;
+      ++rClsIt;
    }
 }
 
@@ -917,7 +926,7 @@ void TMVA::TransformationHandler::PrintVariableRanking() const
   //Log() << kINFO << " " << Endl;
    Log() << kINFO << "Ranking input variables (method unspecific)..." << Endl;
    std::vector<Ranking*>::const_iterator it = fRanking.begin();
-   for (; it != fRanking.end(); it++) (*it)->Print();
+   for (; it != fRanking.end(); ++it) (*it)->Print();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

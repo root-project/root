@@ -208,7 +208,7 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
    gGeoManager->SetTopVolume(fTopVolume);
    gGeoManager->SetNsegments(40);
 
-   fCanvas = new TCanvas("", "", 0, 0);
+   fCanvas = new TCanvas("c", "c", 0, 0);
    // drawing after creating canvas to avoid drawing in default canvas
    fGLViewer = new TGLEmbeddedViewer(this, fCanvas);
    AddFrame(fGLViewer->GetFrame(), new TGLayoutHints(kLHintsExpandX| kLHintsExpandY, 10,10,10,10));

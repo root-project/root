@@ -13,22 +13,20 @@
 
 #include "TBufferFile.h"
 #include "TError.h"
-#include "TFileMerger.h"
 #include "TROOT.h"
 #include "TVirtualMutex.h"
+
+#include <utility>
 
 namespace ROOT {
 namespace Experimental {
 
 TBufferMerger::TBufferMerger(const char *name, Option_t *option, Int_t compress)
 {
-   // NOTE: We cannot use ctor chaining or in-place initialization because we want this operation to have no effect on
-   // ROOT's gDirectory.
+   // We cannot chain constructors or use in-place initialization here because
+   // instantiating a TBufferMerger should not alter gDirectory's state.
    TDirectory::TContext ctxt;
-   if (TFile *output = TFile::Open(name, option, /*title*/ name, compress))
-      Init(std::unique_ptr<TFile>(output));
-   else
-      Error("OutputFile", "cannot open the MERGER output file %s", name);
+   Init(std::unique_ptr<TFile>(TFile::Open(name, option, /* title */ name, compress)));
 }
 
 TBufferMerger::TBufferMerger(std::unique_ptr<TFile> output)
@@ -38,18 +36,19 @@ TBufferMerger::TBufferMerger(std::unique_ptr<TFile> output)
 
 void TBufferMerger::Init(std::unique_ptr<TFile> output)
 {
-   fFile = output.release();
-   fAutoSave = 0;
-   fMergingThread.reset(new std::thread([&]() { this->WriteOutputFile(); }));
+   if (!output || !output->IsWritable() || output->IsZombie())
+      Error("TBufferMerger", "cannot write to output file");
+
+   fMerger.OutputFile(std::move(output));
 }
 
 TBufferMerger::~TBufferMerger()
 {
-   for (auto f : fAttachedFiles)
+   for (const auto &f : fAttachedFiles)
       if (!f.expired()) Fatal("TBufferMerger", " TBufferMergerFiles must be destroyed before the server");
 
-   this->Push(nullptr);
-   fMergingThread->join();
+   if (!fQueue.empty())
+      Merge();
 }
 
 std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
@@ -66,18 +65,16 @@ size_t TBufferMerger::GetQueueSize() const
    return fQueue.size();
 }
 
-void TBufferMerger::RegisterCallback(const std::function<void(void)> &f)
-{
-   fCallback = f;
-}
-
 void TBufferMerger::Push(TBufferFile *buffer)
 {
    {
       std::lock_guard<std::mutex> lock(fQueueMutex);
+      fBuffered += buffer->BufferSize();
       fQueue.push(buffer);
    }
-   fDataAvailable.notify_one();
+
+   if (fBuffered > fAutoSave)
+      Merge();
 }
 
 size_t TBufferMerger::GetAutoSave() const
@@ -90,58 +87,27 @@ void TBufferMerger::SetAutoSave(size_t size)
    fAutoSave = size;
 }
 
-void TBufferMerger::WriteOutputFile()
+void TBufferMerger::Merge()
 {
-   size_t buffered = 0;
-   std::vector<TMemFile *> memfiles;
-   std::unique_ptr<TBufferFile> buffer;
-   TFileMerger merger;
-
-   merger.ResetBit(kMustCleanup);
-
-   {
-      R__LOCKGUARD(gROOTMutex);
-      merger.OutputFile(std::unique_ptr<TFile>(fFile));
-   }
-
-   while (true) {
-      std::unique_lock<std::mutex> lock(fQueueMutex);
-      fDataAvailable.wait(lock, [this]() { return !this->fQueue.empty(); });
-
-      buffer.reset(fQueue.front());
-      fQueue.pop();
-      lock.unlock();
-
-      if (!buffer)
-         break;
-
-      Long64_t length;
-      buffer->SetReadMode();
-      buffer->SetBufferOffset();
-      buffer->ReadLong64(length);
-      buffered += length;
-
+   if (fMergeMutex.try_lock()) {
+      std::queue<TBufferFile *> queue;
       {
-         R__LOCKGUARD(gROOTMutex);
-         memfiles.push_back(new TMemFile(fFile->GetName(), buffer->Buffer() + buffer->Length(), length, "read"));
-         buffer->SetBufferOffset(buffer->Length() + length);
-         merger.AddFile(memfiles.back(), false);
-
-         if (buffered > fAutoSave) {
-            buffered = 0;
-            merger.PartialMerge();
-            merger.Reset();
-            memfiles.clear();
-         }
+         std::lock_guard<std::mutex> q(fQueueMutex);
+         std::swap(queue, fQueue);
+         fBuffered = 0;
       }
 
-      if (fCallback)
-         fCallback();
-   }
+      while (!queue.empty()) {
+         std::unique_ptr<TBufferFile> buffer{queue.front()};
+         fMerger.AddAdoptFile(
+            new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer(), buffer->BufferSize(), "READ"));
+         queue.pop();
+      }
 
-   R__LOCKGUARD(gROOTMutex);
-   merger.PartialMerge();
-   merger.Reset();
+      fMerger.PartialMerge();
+      fMerger.Reset();
+      fMergeMutex.unlock();
+   }
 }
 
 } // namespace Experimental

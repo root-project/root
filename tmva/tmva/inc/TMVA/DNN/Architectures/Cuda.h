@@ -18,11 +18,17 @@
 #ifndef TMVA_DNN_ARCHITECTURES_CUDA
 #define TMVA_DNN_ARCHITECTURES_CUDA
 
+#include "TMVA/DNN/Functions.h"
+#include "TMVA/DNN/CNN/ConvLayer.h"
+
 #include "cuda.h"
 #include "Cuda/CudaBuffers.h"
 #include "Cuda/CudaMatrix.h"
 #include "TMVA/DNN/DataLoader.h"
 #include <utility>
+#include <vector>
+
+class TRandom;
 
 namespace TMVA
 {
@@ -39,7 +45,8 @@ namespace DNN
 template<typename AFloat = Real_t>
 class TCuda
 {
-
+private:
+   static TRandom * fgRandomGen;
 public:
 
     using Scalar_t       = AFloat;
@@ -87,6 +94,17 @@ public:
                         const TCudaMatrix<AFloat> & activationGradients,
                         const TCudaMatrix<AFloat> & weights,
                         const TCudaMatrix<AFloat> & activationBackward);
+   /** Backward pass for Recurrent Networks */
+  static Matrix_t & RecurrentLayerBackward(TCudaMatrix<AFloat> & state_gradients_backward, // BxH
+                                           TCudaMatrix<AFloat> & input_weight_gradients,
+                                           TCudaMatrix<AFloat> & state_weight_gradients,
+                                           TCudaMatrix<AFloat> & bias_gradients,
+                                           TCudaMatrix<AFloat> & df, //DxH
+                                           const TCudaMatrix<AFloat> & state, // BxH
+                                           const TCudaMatrix<AFloat> & weights_input, // HxD 
+                                           const TCudaMatrix<AFloat> & weights_state, // HxH
+                                           const TCudaMatrix<AFloat> & input,  // BxD
+                                           TCudaMatrix<AFloat> & input_gradient);
    /** Adds a the elements in matrix B scaled by c to the elements in
     *  the matrix A. This is required for the weight update in the gradient
     *  descent step.*/
@@ -96,6 +114,25 @@ public:
    /** Copy the elements of matrix A into matrix B. */
    static void Copy(TCudaMatrix<AFloat> & B,
                     const TCudaMatrix<AFloat> & A);
+
+   // copy from another type of matrix
+   template<typename AMatrix_t>
+   static void CopyDiffArch(TCudaMatrix<Scalar_t> & B, const AMatrix_t & A); 
+
+
+   /** Above functions extended to vectors */
+   static void ScaleAdd(std::vector<TCudaMatrix<Scalar_t>> & A,
+                        const std::vector<TCudaMatrix<Scalar_t>> & B,
+                        Scalar_t beta = 1.0);
+
+   static void Copy(std::vector<TCudaMatrix<Scalar_t>> & A,
+                    const std::vector<TCudaMatrix<Scalar_t>> & B);
+
+   // copy from another architecture
+   template<typename AMatrix_t>
+   static void CopyDiffArch(std::vector<TCudaMatrix<Scalar_t>> & A,
+                    const std::vector<AMatrix_t> & B);
+
    ///@}
 
    //____________________________________________________________________________
@@ -234,6 +271,15 @@ public:
    static void InitializeUniform(TCudaMatrix<AFloat> & A);
    static void InitializeIdentity(TCudaMatrix<AFloat> & A);
    static void InitializeZero(TCudaMatrix<AFloat> & A);
+   static void InitializeGlorotUniform(TCudaMatrix<AFloat> & A);
+   static void InitializeGlorotNormal(TCudaMatrix<AFloat> & A);
+   // return static instance of random generator used for initialization
+   // if generator does not exist it is created the first time with a random seed (e.g. seed = 0)
+   static TRandom & GetRandomGenerator(); 
+   // set random seed for the static geenrator
+   // if the static geneerator does not exists it is created
+   static void SetRandomSeed(size_t seed); 
+
 
    ///@}
 
@@ -249,6 +295,164 @@ public:
    /** Apply dropout with activation probability \p p to the given
     *  matrix \p A and scale the result by reciprocal of \p p. */
    static void Dropout(TCudaMatrix<AFloat> & A, AFloat p);
+
+   ///@}
+
+   //____________________________________________________________________________
+   //
+   //  Convolutional Layer Propagation
+   //____________________________________________________________________________
+
+   /** @name Forward Propagation in Convolutional Layer
+    */
+   ///@{
+
+   /** Attaches a cuda stream to each matrix in order to accomodate parallel kernel launches. */
+   static void PrepareInternals(std::vector<TCudaMatrix<AFloat>> & inputPrime);
+
+   /** Calculate how many neurons "fit" in the output layer, given the input as well as the layer's hyperparameters. */
+   static size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride);
+
+   /** Transform the matrix \p B in local view format, suitable for
+    *  convolution, and store it in matrix \p A. */
+   static void Im2col(TCudaMatrix<AFloat> &A,
+                      const TCudaMatrix<AFloat> &B,
+                      size_t imgHeight,
+                      size_t imgWidth,
+                      size_t fltHeight,
+                      size_t fltWidth,
+                      size_t strideRows,
+                      size_t strideCols,
+                      size_t zeroPaddingHeight,
+                      size_t zeroPaddingWidth);
+
+   static void Im2colIndices(std::vector<int> & /* V */, const TCudaMatrix<AFloat> & /* B */, size_t /* nLocalViews */,
+                             size_t /* imgHeight */, size_t /* imgWidth */, size_t /* fltHeight */,
+                             size_t /* fltWidth */, size_t /* strideRows */, size_t /* strideCols */,
+                             size_t /* zeroPaddingHeight */, size_t /* zeroPaddingWidth */) {}
+   static void Im2colFast(TCudaMatrix<AFloat> & /* A */, const TCudaMatrix<AFloat> & /* B */,
+                          const std::vector<int> & /* V */) {}
+
+
+   /** Rotates the matrix \p B, which is representing a weights,
+    *  and stores them in the matrix \p A. */
+   static void RotateWeights(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, size_t filterDepth,
+                             size_t filterHeight, size_t filterWidth, size_t numFilters);
+
+   /** Add the biases in the Convolutional Layer.  */
+   static void AddConvBiases(TCudaMatrix<AFloat> &output, const TCudaMatrix<AFloat> &biases);
+
+   ///@}
+   /** Forward propagation in the Convolutional layer */
+   static void ConvLayerForward(std::vector<TCudaMatrix<AFloat>> & output,
+                                std::vector<TCudaMatrix<AFloat>> & derivatives,
+                                const std::vector<TCudaMatrix<AFloat>> &input,
+                                const TCudaMatrix<AFloat> &weights, const TCudaMatrix<AFloat> & biases,
+                                const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
+                                std::vector<TCudaMatrix<AFloat>> & inputPrime);
+
+   /** @name Backward Propagation in Convolutional Layer
+    */
+   ///@{
+
+   /** Perform the complete backward propagation step in a Convolutional Layer.
+    *  If the provided \p activationGradientsBackward matrix is not empty, compute the
+    *  gradients of the objective function with respect to the activations
+    *  of the previous layer (backward direction).
+    *  Also compute the weight and the bias gradients. Modifies the values
+    *  in \p df and thus produces only a valid result, if it is applied the
+    *  first time after the corresponding forward propagation has been per-
+    *  formed. */
+   static void ConvLayerBackward(std::vector<TCudaMatrix<AFloat>> &activationGradientsBackward,
+                                 TCudaMatrix<AFloat> &weightGradients, TCudaMatrix<AFloat> &biasGradients,
+                                 std::vector<TCudaMatrix<AFloat>> &df,
+                                 const std::vector<TCudaMatrix<AFloat>> &activationGradients,
+                                 const TCudaMatrix<AFloat> &weights,
+                                 const std::vector<TCudaMatrix<AFloat>> &activationBackward, size_t batchSize,
+                                 size_t inputHeight, size_t inputWidth, size_t depth, size_t height, size_t width,
+                                 size_t filterDepth, size_t filterHeight, size_t filterWidth, size_t nLocalViews);
+
+   /** Utility function for calculating the activation gradients of the layer
+    *  before the convolutional layer. */
+   static void CalculateConvActivationGradients(std::vector<TCudaMatrix<AFloat>> &activationGradientsBackward,
+                                                std::vector<TCudaMatrix<AFloat>> &df,
+                                                const TCudaMatrix<AFloat> &weights, size_t batchSize,
+                                                size_t inputHeight, size_t inputWidth, size_t depth, size_t height,
+                                                size_t width, size_t filterDepth, size_t filterHeight,
+                                                size_t filterWidth);
+
+   /** Utility function for calculating the weight gradients of the convolutional
+    * layer. */
+   static void CalculateConvWeightGradients(TCudaMatrix<AFloat> &weightGradients, std::vector<TCudaMatrix<AFloat>> &df,
+                                            const std::vector<TCudaMatrix<AFloat>> &activations_backward,
+                                            size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth,
+                                            size_t height, size_t width, size_t filterDepth, size_t filterHeight,
+                                            size_t filterWidth, size_t nLocalViews);
+
+   /** Utility function for calculating the bias gradients of the convolutional
+    *  layer */
+   static void CalculateConvBiasGradients(TCudaMatrix<AFloat> &biasGradients, std::vector<TCudaMatrix<AFloat>> &df,
+                                          size_t batchSize, size_t depth, size_t nLocalViews);
+
+   ///@}
+
+   //____________________________________________________________________________
+   //
+   //  Max Pooling Layer Propagation
+   //____________________________________________________________________________
+   /** @name Forward Propagation in Max Pooling Layer
+    */
+   ///@{
+
+   /** Downsample the matrix \p C to the matrix \p A, using max
+    *  operation, such that the winning indices are stored in matrix
+    *  \p B. */
+   static void Downsample(TCudaMatrix<AFloat> &A, TCudaMatrix<AFloat> &B, const TCudaMatrix<AFloat> &C,
+                          size_t imgHeight, size_t imgWidth, size_t fltHeight, size_t fltWidth,
+                          size_t strideRows, size_t strideCols);
+   ///@}
+
+   /** @name Backward Propagation in Max Pooling Layer
+    */
+   ///@{
+       
+   /** Perform the complete backward propagation step in a Pooling Layer. Based on the
+    *  winning idices stored in the index matrix, it just forwards the actiovation
+    *  gradients to the previous layer. */
+   static void MaxPoolLayerBackward(TCudaMatrix<AFloat> &activationGradientsBackward,
+                                    const TCudaMatrix<AFloat> &activationGradients,
+                                    const TCudaMatrix<AFloat> &indexMatrix,
+                                    size_t imgHeight,
+                                    size_t imgWidth,
+                                    size_t fltHeight,
+                                    size_t fltWidth,
+                                    size_t strideRows,
+                                    size_t strideCols,
+                                    size_t nLocalViews);
+
+   ///@}
+
+   //____________________________________________________________________________
+   //
+   //  Reshape Layer Propagation
+   //____________________________________________________________________________
+   /** @name Forward and Backward Propagation in Reshape Layer
+    */
+   ///@{
+
+   /** Transform the matrix \p B to a matrix with different dimensions \p A */
+   static void Reshape(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B);
+
+   /** Flattens the tensor \p B, such that each matrix, is stretched in
+    *  one row, resulting with a matrix \p A. */
+   static void Flatten(TCudaMatrix<AFloat> &A, const std::vector<TCudaMatrix<AFloat>> &B, size_t size, size_t nRows,
+                       size_t nCols);
+
+   /** Transforms each row of \p B to a matrix and stores it in the tensor \p B. */
+   static void Deflatten(std::vector<TCudaMatrix<AFloat>> &A, const TCudaMatrix<AFloat> &B, size_t index, size_t nRows,
+                         size_t nCols);
+   /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
+   static void Rearrange(std::vector<TCudaMatrix<AFloat>> &out, const std::vector<TCudaMatrix<AFloat>> &in); 
 
    ///@}
 
@@ -281,14 +485,70 @@ public:
     */
    static void Hadamard(TCudaMatrix<AFloat> & A, const TCudaMatrix<AFloat> & B);
 
-   /** Sum columns of (m x n) matrixx \p A and write the results into the first
-    * m elements in \p A.
+   /** Sum columns of (m x n) matrix \p A and write the results into the first
+    * m elements in \p B.
     */
    static void SumColumns(TCudaMatrix<AFloat> & B, const TCudaMatrix<AFloat> & A);
 
+   /** Sum rows of (m x n) matrix \p A and write the results into the first
+   * m elements in \p B.
+   */
+   static void SumRows(TCudaMatrix<AFloat> & B, const TCudaMatrix<AFloat> & A);
+
    /** Compute the sum of all elements in \p A */
    static AFloat Sum(const TCudaMatrix<AFloat> &A);
+
+   /** Check two matrices for equality, taking floating point arithmetic errors into account. */
+   static bool AlmostEquals(const TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, double epsilon = 0.1);
+
+   /** Add the constant \p beta to all the elements of matrix \p A and write the
+    * result into \p A.
+    */
+   static void ConstAdd(TCudaMatrix<AFloat> &A, AFloat beta);
+
+   /** Multiply the constant \p beta to all the elements of matrix \p A and write the
+    * result into \p A.
+    */
+   static void ConstMult(TCudaMatrix<AFloat> &A, AFloat beta);
+
+   /** Reciprocal each element of the matrix \p A and write the result into
+    * \p A
+    */
+   static void ReciprocalElementWise(TCudaMatrix<AFloat> &A);
+
+   /** Square each element of the matrix \p A and write the result into
+    * \p A
+    */
+   static void SquareElementWise(TCudaMatrix<AFloat> &A);
+
+   /** Square root each element of the matrix \p A and write the result into
+    * \p A
+    */
+   static void SqrtElementWise(TCudaMatrix<AFloat> &A);
 };
+
+//____________________________________________________________________________
+template <typename AFloat>
+template <typename AMatrix_t>
+void TCuda<AFloat>::CopyDiffArch(TCudaMatrix<AFloat> &B,
+                        const AMatrix_t &A)
+{
+   // copy from another architecture using the reference one
+   // this is not very efficient since creates temporary objects
+   TMatrixT<AFloat> tmp = A;
+   Copy(B, TCudaMatrix<AFloat>(tmp) ); 
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
+template <typename AMatrix_t>
+void TCuda<AFloat>::CopyDiffArch(std::vector<TCudaMatrix<AFloat>> &B,
+                            const std::vector<AMatrix_t> &A)
+{
+   for (size_t i = 0; i < B.size(); ++i) {
+      CopyDiffArch(B[i], A[i]);
+   }
+}
 
 } // namespace DNN
 } // namespace TMVA

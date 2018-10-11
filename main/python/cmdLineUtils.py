@@ -598,8 +598,19 @@ def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,re
     """
     retcode = 0
     replaceOption = replace
+    seen = {}
     for key in getKeyList(sourceFile,sourcePathSplit):
         objectName = key.GetName()
+
+        # write keys only if the cycle is higher than before
+        if objectName not in seen.keys():
+            seen[objectName] = key
+        else:
+            if seen[objectName].GetCycle() < key.GetCycle():
+                seen[objectName] = key
+            else:
+                continue
+
         if isDirectoryKey(key):
             if not isExisting(destFile,destPathSplit+[objectName]):
                 createDirectory(destFile,destPathSplit+[objectName])
@@ -648,6 +659,8 @@ def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,re
             else:
                 if setName != "":
                     obj.SetName(setName)
+                else:
+                    obj.SetName(objectName)
                 changeDirectory(destFile,destPathSplit)
                 obj.Write()
             obj.Delete()
@@ -1068,7 +1081,7 @@ def _rootLsPrintSimpleLs(keyList,indent,oneColumn):
     if max_element_width >= term_width: ncol,col_widths = 1,[1]
     else:
         # Start with max possible number of columns and reduce until it fits
-        ncol = 1 if oneColumn else min( len(keyList), term_width / min_element_width  )
+        ncol = 1 if oneColumn else min( len(keyList), term_width // min_element_width  )
         while True:
             col_widths = \
                 [ max( len(key.GetName()) + min_chars_between \

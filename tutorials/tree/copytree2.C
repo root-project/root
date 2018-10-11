@@ -11,36 +11,33 @@
 ///
 /// \author Rene Brun
 
+// Load the library at macro parsing time: we need this to use its content in the code
 R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
 
-void copytree2() {
+void copytree2()
+{
 
-   //Get old file, old tree and set top branch address
-   TFile *oldfile;
    TString dir = "$ROOTSYS/test/Event.root";
    gSystem->ExpandPathName(dir);
-   if (!gSystem->AccessPathName(dir))
-       {oldfile = new TFile("$ROOTSYS/test/Event.root");}
-   else {oldfile = new TFile("./Event.root");}   TTree *oldtree = (TTree*)oldfile->Get("T");
-   Event *event   = new Event();
-   oldtree->SetBranchAddress("event",&event);
-   oldtree->SetBranchStatus("*",0);
-   oldtree->SetBranchStatus("event",1);
-   oldtree->SetBranchStatus("fNtrack",1);
-   oldtree->SetBranchStatus("fNseg",1);
-   oldtree->SetBranchStatus("fH",1);
+   const auto filename = gSystem->AccessPathName(dir) ? "./Event.root" : "$ROOTSYS/test/Event.root";
 
+   TFile oldfile(filename);
+   TTree *oldtree;
+   oldfile.GetObject("T", oldtree);
 
-   //Create a new file + a clone of old tree header. Do not copy events
-   TFile *newfile = new TFile("small.root","recreate");
-   TTree *newtree = oldtree->CloneTree(0);
+   // Activate only four of them
+   for (auto activeBranchName : {"event", "fNtrack", "fNseg", "fH"}) {
+      oldtree->SetBranchStatus(activeBranchName, 1);
+   }
 
-   //Divert branch fH to a separate file and copy all events
+   // Create a new file + a clone of old tree header. Do not copy events
+   TFile newfile("small.root", "recreate");
+   auto newtree = oldtree->CloneTree(0);
+
+   // Divert branch fH to a separate file and copy all events
    newtree->GetBranch("fH")->SetFile("small_fH.root");
    newtree->CopyEntries(oldtree);
 
    newtree->Print();
-   newfile->Write();
-   delete oldfile;
-   delete newfile;
+   newfile.Write();
 }

@@ -23,12 +23,19 @@
 #include "Cuda/Regularization.cu"
 #include "Cuda/Initialization.cu"
 #include "Cuda/Dropout.cu"
+#include "Cuda/RecurrentPropagation.cu"
 
 namespace TMVA {
 namespace DNN  {
 
 template class TCuda<Real_t>;
 template class TCuda<Double_t>;
+
+#ifndef R__HAS_TMVAGPU
+   // if R__HAS_TMVAGPU is not defined this file should not be compiled 
+   static_assert(false,"GPU/CUDA architecture is not enabled"); 
+#endif
+
 
 } // namespace tmva
 } // namespace dnn
