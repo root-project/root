@@ -34,6 +34,11 @@
 #pragma link C++ class ROOT::Experimental::RDrawableBase<ROOT::Experimental::RLine>+;
 #pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::RLine>+;
 #pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RLine>+;
+#pragma link C++ class ROOT::Experimental::RBox+;
+#pragma link C++ class ROOT::Experimental::RBox::DrawingOpts+;
+#pragma link C++ class ROOT::Experimental::RDrawableBase<ROOT::Experimental::RBox>+;
+#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::RBox>+;
+#pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RBox>+;
 #pragma link C++ class ROOT::Experimental::RMarker+;
 #pragma link C++ class ROOT::Experimental::RMarker::DrawingOpts+;
 #pragma link C++ class ROOT::Experimental::RDrawableBase<ROOT::Experimental::RMarker>+;
