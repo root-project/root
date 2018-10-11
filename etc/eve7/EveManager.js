@@ -327,10 +327,8 @@
 
                   // rename updateGED to checkGED???
                   this.InvokeReceivers("elem_update", null, 0, em.fElementId);
-               } else if (this.map[em.fElementId]) {
-                  // seems to be error
-                  console.log("ERROR - why create ", em.fElementId);
-               } else {
+               }
+               else {
                   // create new
                   this.map[em.fElementId] = em;
                   var parent = this.map[em.fMotherId];
