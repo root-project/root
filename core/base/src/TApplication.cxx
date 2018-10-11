@@ -427,8 +427,8 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          // used when started by front-end program to signal that
          // splash screen can be popped down (TRint::PrintLogo())
          argv[i] = null;
-      } else if (strstr(argv[i], "--web") == argv[i]) {
-         // the web mode is requested.
+      } else if (strncmp(argv[i], "--web", 5) == 0) {
+         // the web mode is requested
          const char *opt = argv[i] + 5;
          argv[i] = null;
          TString argw;
