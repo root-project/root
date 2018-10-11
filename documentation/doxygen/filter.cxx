@@ -386,7 +386,10 @@ void FilterTutorial()
       if (gLineString.find("\\author") != string::npos) {
          if (gPython) printf("%s",StringFormat("%s \n## \\cond \n",gLineString.c_str()).c_str());
          else         printf("%s",StringFormat("%s \n/// \\cond \n",gLineString.c_str()).c_str());
-         if (showTutSource == 1) showTutSource = 2;
+         if (showTutSource == 1) {
+            showTutSource = 2;
+            m = fopen(StringFormat("%s/macros/%s",gOutDir.c_str(),gMacroName.c_str()).c_str(), "w");
+         }
          incond = 1;
       } else {
          printf("%s",gLineString.c_str());
