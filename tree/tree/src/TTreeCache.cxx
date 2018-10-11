@@ -1519,7 +1519,7 @@ Bool_t TTreeCache::FillBuffer()
                b->fCacheInfo.SetIsInCache(j);
 
                if (showMore || gDebug > 6)
-                  Info("FillBuffer", "*** Registering branch %d basket %d", i, j);
+                  Info("FillBuffer", "*** Registering branch %d basket %d %s", i, j, b->GetName());
 
                if (!cursor[i].fLoadedOnce) {
                   cursor[i].fLoadedOnce = kTRUE;
