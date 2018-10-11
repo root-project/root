@@ -1220,7 +1220,7 @@ Bool_t TTreeCache::FillBuffer()
       if (fCurrentClusterStart != -1 || fNextClusterStart != -1) {
          if (!(fEntryCurrent < fCurrentClusterStart || fEntryCurrent >= fNextClusterStart)) {
             Error("FillBuffer", "Inconsistency: fCurrentClusterStart=%lld fEntryCurrent=%lld fNextClusterStart=%lld "
-                                "but fCurrentEntry should not be in between the two",
+                                "but fEntryCurrent should not be in between the two",
                   fCurrentClusterStart, fEntryCurrent, fNextClusterStart);
          }
       }
