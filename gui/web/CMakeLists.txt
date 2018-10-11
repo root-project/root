@@ -2,7 +2,7 @@
 # CMakeLists.txt file for building ROOT gui/web package
 ############################################################################
 
-ROOT_STANDARD_LIBRARY_PACKAGE(WebGui
+ROOT_STANDARD_LIBRARY_PACKAGE(WebGui6
   HEADERS
     TWebCanvas.h
     TWebGuiFactory.h
