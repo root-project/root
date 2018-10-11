@@ -30,6 +30,7 @@
 #@usec++11@ R__USE_CXX11    /**/
 #@usec++14@ R__USE_CXX14    /**/
 #@usec++17@ R__USE_CXX17    /**/
+#@useroot7@ R__USE_ROOT7    /**/
 #@usecxxmodules@ R__USE_CXXMODULES   /**/
 #@uselibc++@ R__USE_LIBCXX    /**/
 #@hasstdstringview@ R__HAS_STD_STRING_VIEW   /**/
