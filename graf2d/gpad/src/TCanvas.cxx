@@ -1470,7 +1470,11 @@ void TCanvas::MoveOpaque(Int_t set)
 
 void TCanvas::Paint(Option_t *option)
 {
-   if (fCanvas) TPad::Paint(option);
+   if (fCanvasImp && fCanvasImp->IsWeb()) {
+      Update();
+   } else if (fCanvas) {
+      TPad::Paint(option);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
