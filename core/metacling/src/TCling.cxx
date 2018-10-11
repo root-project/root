@@ -1765,6 +1765,7 @@ void TCling::RegisterModule(const char* modulename,
 
    // When we cannot provide a module for the library we should enable header
    // parsing. This 'mixed' mode ensures gradual migration to modules.
+   llvm::SaveAndRestore<bool> SaveHeaderParsing(fHeaderParsingOnDemand);
    fHeaderParsingOnDemand = !hasCxxModule;
 
    // Treat Aclic Libs in a special way. Do not delay the parsing.
