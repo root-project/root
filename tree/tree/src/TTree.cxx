@@ -591,7 +591,7 @@ Long64_t TTree::TClusterIterator::GetEstimatedClusterSize()
          // Humm ... let's double check on the file.
          TFile *file = fTree->GetCurrentFile();
          if (file) {
-            TFileCacheRead *cache = file->GetCacheRead(fTree);
+            TFileCacheRead *cache = fTree->GetReadCache(file);
             if (cache) {
                cacheSize = cache->GetBufferSize();
             }
@@ -6032,13 +6032,24 @@ TVirtualTreePlayer* TTree::GetPlayer()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find and return the TTreeCache registered with the file and which may
+/// contain branches for us.
+
+TTreeCache *TTree::GetReadCache(TFile *file) const
+{
+   TTreeCache *pe = dynamic_cast<TTreeCache*>(file->GetCacheRead(this));
+   if (pe && pe->GetTree() != this)
+      pe = nullptr;
+   return pe;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find and return the TTreeCache registered with the file and which may
 /// contain branches for us. If create is true and there is no cache
 /// a new cache is created with default size.
 
-TTreeCache *TTree::GetReadCache(TFile *file, Bool_t create /* = kFALSE */ )
+TTreeCache *TTree::GetReadCache(TFile *file, Bool_t create)
 {
-   TTreeCache *pe = dynamic_cast<TTreeCache*>(file->GetCacheRead(this));
-   if (pe && pe->GetTree() != this) pe = 0;
+   TTreeCache *pe = GetReadCache(file);
    if (create && !pe) {
       if (fCacheDoAutoInit)
          SetCacheSizeAux(kTRUE, -1);
@@ -7033,7 +7044,7 @@ void TTree::PrintCacheStats(Option_t* option) const
 {
    TFile *f = GetCurrentFile();
    if (!f) return;
-   TTreeCache *tc = (TTreeCache*)f->GetCacheRead(const_cast<TTree*>(this));
+   TTreeCache *tc = GetReadCache(f);
    if (tc) tc->Print(option);
 }
 
