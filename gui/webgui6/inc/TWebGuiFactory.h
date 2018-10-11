@@ -23,14 +23,16 @@
 
 #include "TGuiFactory.h"
 
+#include <memory>
+
 class TWebGuiFactory : public TGuiFactory {
 
 private:
-   TGuiFactory *fGuiProxy;
+   std::unique_ptr<TGuiFactory> fGuiProxy;
 
 public:
    TWebGuiFactory();
-   virtual ~TWebGuiFactory();
+   virtual ~TWebGuiFactory() = default;
 
    virtual TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv);
 

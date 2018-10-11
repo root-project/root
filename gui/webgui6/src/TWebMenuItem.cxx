@@ -20,8 +20,8 @@
 
 void TWebMenuItems::Cleanup()
 {
-   for (unsigned n = 0; n < fItems.size(); ++n)
-      delete fItems[n];
+   for (auto &&item : fItems)
+      delete item;
 
    fItems.clear();
 }
@@ -34,9 +34,9 @@ void TWebMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
    cl->GetMenuItems(lst);
 
    TIter iter(lst);
-   TMethod *m = 0;
+   TMethod *m = nullptr;
 
-   while ((m = (TMethod *)iter()) != 0) {
+   while ((m = (TMethod *)iter()) != nullptr) {
 
       if (m->IsMenuItem() == kMenuToggle) {
          TString getter;
@@ -101,12 +101,5 @@ void TWebMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
 
 TString TWebMenuItems::ProduceJSON()
 {
-   TClass *cl = gROOT->GetClass("std::vector<TWebMenuItem*>");
-
-   // FIXME: got problem with std::list<TMenuItem>, can be generic TBufferJSON
-   TString res = TBufferJSON::ConvertToJSON(&fItems, cl);
-
-   // printf("Got JSON %s\n", res.Data());
-
-   return res;
+   return TBufferJSON::ToJSON(&fItems);
 }

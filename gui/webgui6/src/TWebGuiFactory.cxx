@@ -23,21 +23,18 @@
 #include "TWebCanvas.h"
 #include "TWebVirtualX.h"
 
-// #include "TCanvas.h"
-// #include "TSystem.h"
-// #include "TRandom.h"
+#include <ROOT/RMakeUnique.hxx>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TWebGuiFactory ctor.
 /// Restore the right TVirtualX pointer
 
 TWebGuiFactory::TWebGuiFactory() :
-   TGuiFactory("WebRootProxy","web-based ROOT GUI Factory"),
-   fGuiProxy(0)
+   TGuiFactory("WebRootProxy","web-based ROOT GUI Factory")
 {
    //if (TGQt::GetVirtualX())  gVirtualX = TGQt::GetVirtualX();
    // gSystem->Load("libGui");
-   fGuiProxy = new TRootGuiFactory();
+   fGuiProxy = std::make_unique<TRootGuiFactory>();
 
    if (!gVirtualX || gVirtualX->IsA() != TWebVirtualX::Class()) {
       TWebVirtualX *vx = new TWebVirtualX("webx", "redirection to native X", gVirtualX);
@@ -47,18 +44,9 @@ TWebGuiFactory::TWebGuiFactory() :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TWebGuiFactory::~TWebGuiFactory()
-{
-   delete fGuiProxy;
-   fGuiProxy = 0;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
 TApplicationImp *TWebGuiFactory::CreateApplicationImp(const char *classname, int *argc, char **argv)
 {
-   return fGuiProxy ? fGuiProxy->CreateApplicationImp(classname, argc, argv) : 0;
+   return fGuiProxy->CreateApplicationImp(classname, argc, argv);
 }
 
 
@@ -94,40 +82,40 @@ TBrowserImp *TWebGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, In
 
 TBrowserImp *TWebGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt)
 {
-   return fGuiProxy ? fGuiProxy->CreateBrowserImp(b, title, width, height, opt) : 0;
+   return fGuiProxy->CreateBrowserImp(b, title, width, height, opt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TBrowserImp *TWebGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height,Option_t *opt)
 {
-   return fGuiProxy ? fGuiProxy->CreateBrowserImp(b, title, x, y, width, height, opt) : 0;
+   return fGuiProxy->CreateBrowserImp(b, title, x, y, width, height, opt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TContextMenuImp *TWebGuiFactory::CreateContextMenuImp(TContextMenu *c, const char *name, const char *title)
 {
-   return fGuiProxy ? fGuiProxy->CreateContextMenuImp(c, name, title): 0;
+   return fGuiProxy->CreateContextMenuImp(c, name, title);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TControlBarImp *TWebGuiFactory::CreateControlBarImp(TControlBar *c, const char *title)
 {
-   return fGuiProxy ? fGuiProxy->CreateControlBarImp(c,title) : 0;
+   return fGuiProxy->CreateControlBarImp(c,title);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TControlBarImp *TWebGuiFactory::CreateControlBarImp(TControlBar *c, const char *title, Int_t x, Int_t y)
 {
-   return fGuiProxy ? fGuiProxy->CreateControlBarImp(c, title, x, y):0;
+   return fGuiProxy->CreateControlBarImp(c, title, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TInspectorImp *TWebGuiFactory::CreateInspectorImp(const TObject *obj, UInt_t width, UInt_t height)
 {
-   return fGuiProxy ? fGuiProxy->CreateInspectorImp(obj, width, height) :0 ;
+   return fGuiProxy->CreateInspectorImp(obj, width, height);
 }
