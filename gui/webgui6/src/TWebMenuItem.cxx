@@ -1,7 +1,7 @@
 // Author:  Sergey Linev, GSI  29/06/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -20,7 +20,8 @@
 
 void TWebMenuItems::Cleanup()
 {
-   for (unsigned n = 0; n < fItems.size(); ++n) delete fItems[n];
+   for (unsigned n = 0; n < fItems.size(); ++n)
+      delete fItems[n];
 
    fItems.clear();
 }

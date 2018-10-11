@@ -1,11 +1,13 @@
-// Author: Sergey Linev   7/12/2016
-/****************************************************************************
-**
-** Copyright (C) 2016 by Sergey Linev.  All rights reserved.
-**
-*****************************************************************************/
+// Author: Sergey Linev, GSI   7/12/2016
 
-//________________________________________________________________________
+/*************************************************************************
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TWebGuiFactory                                                       //
@@ -21,12 +23,9 @@
 #include "TWebCanvas.h"
 #include "TWebVirtualX.h"
 
-#include "TCanvas.h"
-#include "TSystem.h"
-#include "TRandom.h"
-
-ClassImp(TWebGuiFactory)
-
+// #include "TCanvas.h"
+// #include "TSystem.h"
+// #include "TRandom.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TWebGuiFactory ctor.
@@ -38,9 +37,6 @@ TWebGuiFactory::TWebGuiFactory() :
 {
    //if (TGQt::GetVirtualX())  gVirtualX = TGQt::GetVirtualX();
    // gSystem->Load("libGui");
-
-   printf("Creating TWebGuiFactory\n");
-
    fGuiProxy = new TRootGuiFactory();
 
    if (!gVirtualX || gVirtualX->IsA() != TWebVirtualX::Class()) {

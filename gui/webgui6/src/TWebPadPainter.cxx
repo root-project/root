@@ -1,7 +1,7 @@
 // Author:  Sergey Linev, GSI  10/04/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -19,9 +19,6 @@
 #include "TPad.h"
 #include "TWebVirtualX.h"
 #include "TWebCanvas.h"
-
-
-ClassImp(TWebPadPainter)
 
 /** \class TWebPadPainter
 \ingroup gpad
@@ -51,9 +48,11 @@ TWebPadPainter::TWebPadPainter() :
 TWebPadPainter::~TWebPadPainter()
 {
    ResetPainting();
-   if (fAttr) { delete fAttr; fAttr = 0; }
+   if (fAttr) {
+      delete fAttr;
+      fAttr = nullptr;
+   }
 }
-
 
 void TWebPadPainter::SetWebCanvasSize(UInt_t w, UInt_t h)
 {
@@ -67,14 +66,14 @@ void TWebPadPainter::SetWebCanvasSize(UInt_t w, UInt_t h)
 TWebPainting *TWebPadPainter::TakePainting()
 {
    TWebPainting *res = fPainting;
-   fPainting = 0;
+   fPainting = nullptr;
    return res;
 }
 
 void TWebPadPainter::ResetPainting()
 {
    if (fPainting) delete fPainting;
-   fPainting = 0;
+   fPainting = nullptr;
    if (fAttr) fAttrChanged = kTRUE;
 }
 

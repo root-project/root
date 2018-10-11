@@ -1,7 +1,7 @@
 // Author: Sergey Linev, GSI   7/12/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -33,8 +33,6 @@
 
 #include <stdio.h>
 #include <string.h>
-
-ClassImp(TWebCanvas);
 
 TWebCanvas::TWebCanvas() : TCanvasImp(), fWebConn(), fHasSpecials(kFALSE), fCanvVersion(1), fWaitNewConnection(kFALSE), fClientBits(0)
 {
@@ -108,8 +106,6 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
       if (supported_classes[i].with_derived)
          if (obj->InheritsFrom(supported_classes[i].name))
             return kTRUE;
-
-   // printf("Unsupported class %s\n", obj->ClassName());
 
    return kFALSE;
 }
@@ -409,7 +405,6 @@ void TWebCanvas::CheckDataToSend()
 
 void TWebCanvas::Close()
 {
-   printf("Call TWebCanvas::Close\n");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -485,8 +480,6 @@ void TWebCanvas::ActivateInEditor(TPad *pad, TObject *obj)
       UInt_t hash = TString::Hash(&obj, sizeof(obj));
 
       conn->fSend.Form("EDIT:%u", (unsigned) hash);
-
-      printf("TWEBCANVAS:: SEND %s\n", conn->fSend.Data());
    }
 
    CheckDataToSend();
@@ -628,15 +621,12 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       is_first = false;
    }
 
-   if (!conn) {
-      printf("Get data without not existing connection %u\n", connid);
+   if (!conn)
       return;
-   }
 
    const char *cdata = arg.c_str();
 
    if (arg == "CONN_CLOSED") {
-      printf("Connection closed\n");
       fWebConn.erase(iter);
    } else if (arg == "KEEPALIVE") {
       // do nothing

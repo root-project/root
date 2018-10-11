@@ -1,4 +1,4 @@
-// Author:  Sergey Linev, GSI  10/10/2018
+// Author:  Sergey Linev, GSI  7/12/2016
 
 /*************************************************************************
  * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
@@ -8,16 +8,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #include "TWebVirtualX.h"
 
 #include "TWebPadPainter.h"
 
-ClassImp(TWebVirtualX);
-
 TWebVirtualX::TWebVirtualX() :
    TVirtualX(),
-   fX11(0),
+   fX11(nullptr),
    fPainter(nullptr),
    fWindowId(0),
    fCw(800),
@@ -42,8 +39,10 @@ TWebVirtualX::~TWebVirtualX()
    Info("TWebVirtualX", "TWebVirtualX destructor");
 }
 
-Bool_t TWebVirtualX::IsCmdThread() const { return fX11->IsCmdThread(); }
-
+Bool_t TWebVirtualX::IsCmdThread() const
+{
+   return fX11->IsCmdThread();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The WindowAttributes_t structure is set to default.
@@ -77,14 +76,6 @@ Bool_t TWebVirtualX::ParseColor(Colormap_t cmap, const char * cname,
                              ColorStruct_t &color)
 {
    return fX11->ParseColor(cmap, cname, color);
-
-   color.fPixel = 0;
-   color.fRed   = 0;
-   color.fGreen = 0;
-   color.fBlue  = 0;
-   color.fMask  = kDoRed | kDoGreen | kDoBlue;
-
-   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,9 +92,6 @@ Bool_t TWebVirtualX::ParseColor(Colormap_t cmap, const char * cname,
 Bool_t TWebVirtualX::AllocColor(Colormap_t cmap, ColorStruct_t &color)
 {
    return fX11->AllocColor(cmap, color);
-
-   color.fPixel = 0;
-   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,8 +106,6 @@ Bool_t TWebVirtualX::AllocColor(Colormap_t cmap, ColorStruct_t &color)
 void TWebVirtualX::QueryColor(Colormap_t cmap, ColorStruct_t &color)
 {
    return fX11->QueryColor(cmap, color);
-
-   color.fRed = color.fGreen = color.fBlue = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,19 +115,6 @@ void TWebVirtualX::QueryColor(Colormap_t cmap, ColorStruct_t &color)
 void TWebVirtualX::NextEvent(Event_t &event)
 {
    return fX11->NextEvent(event);
-
-   event.fType   = kButtonPress;
-   event.fWindow = 0;
-   event.fTime   = 0;
-   event.fX      = 0;
-   event.fY      = 0;
-   event.fXRoot  = 0;
-   event.fYRoot  = 0;
-   event.fState  = 0;
-   event.fCode   = 0;
-   event.fWidth  = 0;
-   event.fHeight = 0;
-   event.fCount  = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -153,9 +126,6 @@ void TWebVirtualX::GetPasteBuffer(Window_t id, Atom_t atom, TString &text,
                                Int_t &nchar, Bool_t del)
 {
    return fX11->GetPasteBuffer(id, atom, text, nchar, del);
-
-   text = "";
-   nchar = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,8 +135,6 @@ void TWebVirtualX::GetPasteBuffer(Window_t id, Atom_t atom, TString &text,
 Bool_t TWebVirtualX::Init(void *display)
 {
    return fX11->Init(display);
-
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -210,8 +178,6 @@ void TWebVirtualX::CopyPixmap(Int_t wid, Int_t xpos, Int_t ypos)
 Double_t TWebVirtualX::GetOpenGLScalingFactor()
 {
    return fX11->GetOpenGLScalingFactor();
-
-   return 1.;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,7 +186,6 @@ Double_t TWebVirtualX::GetOpenGLScalingFactor()
 void TWebVirtualX::CreateOpenGLContext(Int_t wid)
 {
    return fX11->CreateOpenGLContext(wid);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,8 +202,6 @@ void TWebVirtualX::DeleteOpenGLContext(Int_t wid)
 Window_t TWebVirtualX::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format)
 {
    return fX11->CreateOpenGLWindow(parentID, width, height, format);
-
-   return Window_t();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -247,8 +210,6 @@ Window_t TWebVirtualX::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_
 Handle_t TWebVirtualX::CreateOpenGLContext(Window_t windowID, Handle_t shareWith)
 {
    return fX11->CreateOpenGLContext(windowID, shareWith);
-
-   return Handle_t();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -257,8 +218,6 @@ Handle_t TWebVirtualX::CreateOpenGLContext(Window_t windowID, Handle_t shareWith
 Bool_t TWebVirtualX::MakeOpenGLContextCurrent(Handle_t ctx, Window_t windowID)
 {
    return fX11->MakeOpenGLContextCurrent(ctx, windowID);
-
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,8 +226,6 @@ Bool_t TWebVirtualX::MakeOpenGLContextCurrent(Handle_t ctx, Window_t windowID)
 Handle_t TWebVirtualX::GetCurrentOpenGLContext()
 {
    return fX11->GetCurrentOpenGLContext();
-
-   return Handle_t();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -398,8 +355,6 @@ void TWebVirtualX::DrawText(Int_t x, Int_t y, Float_t angle,
 UInt_t TWebVirtualX::ExecCommand(TGWin32Command *code)
 {
    return fX11->ExecCommand(code);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -408,8 +363,6 @@ UInt_t TWebVirtualX::ExecCommand(TGWin32Command *code)
 Int_t TWebVirtualX::GetDoubleBuffer(Int_t wid)
 {
    return fX11->GetDoubleBuffer(wid);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -418,8 +371,6 @@ Int_t TWebVirtualX::GetDoubleBuffer(Int_t wid)
 void TWebVirtualX::GetCharacterUp(Float_t &chupx, Float_t &chupy)
 {
    return fX11->GetCharacterUp(chupx, chupy);
-
-   chupx = chupy = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -435,10 +386,6 @@ void TWebVirtualX::GetGeometry(Int_t wid, Int_t &x, Int_t &y,
 {
    if (!IsWeb(wid))
       return fX11->GetGeometry(wid, x, y,w, h);
-
-   x = y = 0;
-   w = fCw;
-   h = fCh;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -447,8 +394,6 @@ void TWebVirtualX::GetGeometry(Int_t wid, Int_t &x, Int_t &y,
 const char *TWebVirtualX::DisplayName(const char *arg)
 {
    return fX11->DisplayName(arg);
-
-   return "batch";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -457,8 +402,6 @@ const char *TWebVirtualX::DisplayName(const char *arg)
 Handle_t  TWebVirtualX::GetNativeEvent() const
 {
    return fX11->GetNativeEvent();
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -467,8 +410,6 @@ Handle_t  TWebVirtualX::GetNativeEvent() const
 ULong_t TWebVirtualX::GetPixel(Color_t cindex)
 {
    return fX11->GetPixel(cindex);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -477,8 +418,6 @@ ULong_t TWebVirtualX::GetPixel(Color_t cindex)
 void TWebVirtualX::GetPlanes(Int_t &nplanes)
 {
    return fX11->GetPlanes(nplanes);
-
-   nplanes = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

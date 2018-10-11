@@ -19,20 +19,17 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TCanvasImp
 #include "TCanvasImp.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
+
+#include <ROOT/RWebWindow.hxx>
 
 #include <list>
 #include <vector>
 #include <string>
 #include <functional>
 
-#include <ROOT/RWebWindow.hxx>
 
 class TVirtualPad;
 class TPad;
