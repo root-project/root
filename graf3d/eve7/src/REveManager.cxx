@@ -829,11 +829,7 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
    }
    else
    {
-      for (REveElement::List_i it = fScenes->BeginChildren(); it != fScenes->EndChildren(); ++it)
-      {
-         REveScene* scene = dynamic_cast<REveScene*>(*it);
-         scene->BeginAcceptingChanges();
-      }
+      fScenes->AcceptChanges(true);
 
       // MIR
       nlohmann::json cj =  nlohmann::json::parse(arg.c_str());
@@ -848,12 +844,7 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
       printf("MIR cmd %s\n", cmd);
       gROOT->ProcessLine(cmd);
 
-
-      for (REveElement::List_i it = fScenes->BeginChildren(); it != fScenes->EndChildren(); ++it)
-      {
-         REveScene* scene = dynamic_cast<REveScene*>(*it);
-         scene->EndAcceptingChanges();
-      }
+      fScenes->AcceptChanges(false);
       Redraw3D();
 
 
@@ -884,6 +875,8 @@ void REveManager::SendBinary(unsigned connid, const void *data, std::size_t len)
 
 void REveManager::DestroyElementsOf(REveElement::List_t& els)
 {
+   fScenes->AcceptChanges(false);
+   
    nlohmann::json jarr = nlohmann::json::array();
 
    nlohmann::json jhdr = {};
@@ -933,4 +926,7 @@ void REveManager::BroadcastElementsOf(REveElement::List_t& els)
          fWebWindow->SendBinary(i->fId, &scene->fOutputBinary[0], scene->fTotalBinarySize);
       }
    }
+
+   // AMT: This call may not be necessary
+   fScenes->AcceptChanges(true);
 }
