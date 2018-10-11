@@ -204,7 +204,7 @@ public:
    Long64_t            GetArchiveOffset() const { return fArchiveOffset; }
    Int_t               GetBestBuffer() const;
    virtual Int_t       GetBytesToPrefetch() const;
-   TFileCacheRead     *GetCacheRead(TObject* tree = 0) const;
+   TFileCacheRead     *GetCacheRead(const TObject* tree = 0) const;
    TFileCacheWrite    *GetCacheWrite() const;
    TArrayC            *GetClassIndex() const { return fClassIndex; }
    Int_t               GetCompressionAlgorithm() const;

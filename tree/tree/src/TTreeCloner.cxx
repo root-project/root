@@ -34,6 +34,7 @@ Class implementing or helping  the various TTree cloning method
 #include "TLeafO.h"
 #include "TLeafC.h"
 #include "TFileCacheRead.h"
+#include "TTreeCache.h"
 
 #include <algorithm>
 
@@ -561,7 +562,7 @@ void TTreeCloner::CreateCache()
 {
    if (fCacheSize && fFromTree->GetCurrentFile()) {
       TFile *f = fFromTree->GetCurrentFile();
-      auto prev = f->GetCacheRead(fFromTree);
+      auto prev = fFromTree->GetReadCache(f);
       if (fFileCache && prev == fFileCache) {
          return;
       }
