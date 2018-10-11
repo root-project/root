@@ -2,8 +2,6 @@
 # CMakeLists.txt file for building ROOT gui/web package
 ############################################################################
 
-# target_include_directories(WebGui PUBLIC res)
-
 ROOT_STANDARD_LIBRARY_PACKAGE(WebGui
   HEADERS
     TWebCanvas.h
@@ -21,11 +19,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(WebGui
     src/TWebPadPainter.cxx
     src/TWebPainting.cxx
     src/TWebSnapshot.cxx
-  LINKDEF
-    LinkDef.h
   LIBRARIES
     Core
-  DEPENDENCIES
     Gui 
     ROOTWebDisplay
 )
