@@ -29,11 +29,11 @@ class TWebSnapshot : public TObject {
 
 protected:
 
-   TString    fObjectID;   ///<   object identifier
-   TString    fOption;     ///<   object draw option
-   Int_t      fKind;       ///<   kind of snapshots
-   TObject*   fSnapshot;   ///<   snapshot data
-   Bool_t     fOwner;      ///<!  if objected owned
+   TString    fObjectID;            ///<   object identifier
+   TString    fOption;              ///<   object draw option
+   Int_t      fKind{0};             ///<   kind of snapshots
+   TObject*   fSnapshot{nullptr};   ///<   snapshot data
+   Bool_t     fOwner{kFALSE};       ///<!  if objected owned
 
    void SetKind(Int_t kind) { fKind = kind; }
 
@@ -47,7 +47,6 @@ public:
      kSpecial = 4       // special object like list of colors or palette
    };
 
-   TWebSnapshot();
    virtual ~TWebSnapshot();
 
    void SetObjectIDAsPtr(void* ptr);
@@ -67,10 +66,10 @@ public:
 
 class TPadWebSnapshot : public TWebSnapshot {
 protected:
-   bool fActive;                             ///< true when pad is active
+   bool fActive{false};                      ///< true when pad is active
    std::vector<TWebSnapshot*> fPrimitives;   ///< list of all primitives, drawn in the pad
 public:
-   TPadWebSnapshot() : TWebSnapshot(), fActive(false), fPrimitives() { SetKind(kSubPad); }
+   TPadWebSnapshot() { SetKind(kSubPad); }
    virtual ~TPadWebSnapshot();
 
    void SetActive(bool on = true) { fActive = on; }

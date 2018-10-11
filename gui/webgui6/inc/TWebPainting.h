@@ -21,29 +21,28 @@
 /** Class to store actual drawing attributes */
 class TWebPainterAttributes : public TObject, public TAttFill, public TAttLine, public TAttMarker, public TAttText  {
    public:
-      TWebPainterAttributes() = default;
-
-      virtual ~TWebPainterAttributes() {}
+      virtual ~TWebPainterAttributes() = default;
 
       ClassDef(TWebPainterAttributes,1) // different draw attributes used by the painter
 };
-
 
 /** Object used to store paint operations and deliver them to JSROOT */
 class TWebPainting : public TObject {
 
    protected:
       TList   fOper;                /// list of last draw operations
-      Int_t   fSize;                ///!< filled buffer size
+      Int_t   fSize{0};             ///!< filled buffer size
       TArrayF fBuf;                 /// array of points for all operations
 
    public:
 
-      TWebPainting() : TObject(), fOper(), fSize(0), fBuf() { fOper.SetOwner(kTRUE); }
+      TWebPainting()  { fOper.SetOwner(kTRUE); }
       virtual ~TWebPainting() { fOper.Delete(); }
 
       void Add(TObject *obj, const char *opt) { fOper.Add(obj, opt); }
       Float_t *Reserve(Int_t sz);
+
+      // Set actual filled size
       void FixSize() { fBuf.Set(fSize); }
 
    ClassDef(TWebPainting, 1)// store for all paint operation of TVirtualPadPainter

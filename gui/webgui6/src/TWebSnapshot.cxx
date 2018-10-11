@@ -13,24 +13,11 @@
 #include "TString.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-/// constructor
-
-TWebSnapshot::TWebSnapshot() :
-   TObject(),
-   fObjectID(),
-   fOption(),
-   fKind(0),
-   fSnapshot(nullptr),
-   fOwner(kFALSE)
-{
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
 TWebSnapshot::~TWebSnapshot()
 {
-   SetSnapshot(0, nullptr);
+   SetSnapshot(kNone, nullptr);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -59,8 +46,8 @@ void TWebSnapshot::SetObjectIDAsPtr(void *ptr)
 
 TPadWebSnapshot::~TPadWebSnapshot()
 {
-   for (unsigned n=0; n<fPrimitives.size(); ++n)
-      delete fPrimitives[n];
+   for (auto &&item: fPrimitives)
+      delete item;
    fPrimitives.clear();
 }
 

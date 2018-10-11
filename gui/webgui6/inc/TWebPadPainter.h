@@ -29,22 +29,25 @@ class TWebPadPainter : public TVirtualPadPainter {
 friend class TWebCanvas;
 
 protected:
-   TWebPainterAttributes *fAttr; ///!< current attributes
-   Bool_t fAttrChanged;          ///!< flag that attributes are changed after last paint operation
-   TWebPainting *fPainting;      ///!< object to store all painting
-   UInt_t fCw, fCh;              ///!< canvas dimensions, need for back pixel conversion
-   Float_t fKx, fKy;             ///!< coefficient to recalculate pixel coordinates
+
+   TWebPainterAttributes *fAttr{nullptr}; ///!< current attributes
+   bool fAttrChanged{false};              ///!< flag that attributes are changed after last paint operation
+   TWebPainting *fPainting{nullptr};      ///!< object to store all painting
+   UInt_t fCw{0}, fCh{0};                 ///!< canvas dimensions, need for back pixel conversion
+   Float_t fKx{1.}, fKy{1.};              ///!< coefficient to recalculate pixel coordinates
+
+   enum { attrLine = 0x1, attrFill = 0x2, attrMarker = 0x4, attrText = 0x8, attrAll = 0xf };
 
    TWebPainterAttributes *Attr();
 
-   void GetAttributes(Int_t attrmask = 0xf);
+   void AcquireXAttributes(unsigned attrmask = attrAll);
 
-   void StoreOperation(const char* opt, TObject* obj = 0, Int_t attrmask = 0xf);
+   void StoreOperation(const char* opt, TObject* obj = nullptr, unsigned attrmask = attrAll);
 
    Float_t *Reserve(Int_t sz);
 
 public:
-   TWebPadPainter();
+   TWebPadPainter() = default;
    virtual ~TWebPadPainter();
 
    TWebPainting *TakePainting();

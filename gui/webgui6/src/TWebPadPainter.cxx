@@ -29,20 +29,6 @@ Implement TVirtualPadPainter which abstracts painting operations.
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///Empty ctor. We need it only because of explicit copy ctor.
-
-TWebPadPainter::TWebPadPainter() :
-   fAttr(0),
-   fAttrChanged(kFALSE),
-   fPainting(0),
-   fCw(0),
-   fCh(0),
-   fKx(1),
-   fKy(1)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 ///Destructor. We should destruct all primitives.
 
 TWebPadPainter::~TWebPadPainter()
@@ -90,24 +76,28 @@ Float_t *TWebPadPainter::Reserve(Int_t sz)
    return fPainting->Reserve(sz);
 }
 
-void TWebPadPainter::GetAttributes(Int_t attrmask)
+//////////////////////////////////////////////////////////////////////////
+/// Extract X11 attributes and store them
+/// With the mask one could specify which attributes are interested
+
+void TWebPadPainter::AcquireXAttributes(unsigned attrmask)
 {
    if (gVirtualX) {
-      if (attrmask & 1) {
+      if (attrmask & attrLine) {
          SetLineColor(gVirtualX->GetLineColor());
          SetLineStyle(gVirtualX->GetLineStyle());
          SetLineWidth(gVirtualX->GetLineWidth());
       }
-      if (attrmask & 2) {
+      if (attrmask & attrFill) {
          SetFillColor(gVirtualX->GetFillColor());
          SetFillStyle(gVirtualX->GetFillStyle());
       }
-      if (attrmask & 4) {
+      if (attrmask & attrMarker) {
          SetMarkerColor(gVirtualX->GetMarkerColor());
          SetMarkerSize(gVirtualX->GetMarkerSize());
          SetMarkerStyle(gVirtualX->GetMarkerStyle());
       }
-      if (attrmask & 8) {
+      if (attrmask & attrText) {
          SetTextAlign(gVirtualX->GetTextAlign());
          SetTextAngle(gVirtualX->GetTextAngle());
          SetTextColor(gVirtualX->GetTextColor());
@@ -118,11 +108,11 @@ void TWebPadPainter::GetAttributes(Int_t attrmask)
 }
 
 
-void TWebPadPainter::StoreOperation(const char* opt, TObject* obj, Int_t attrmask)
+void TWebPadPainter::StoreOperation(const char* opt, TObject* obj, unsigned attrmask)
 {
    if (!fPainting) fPainting = new TWebPainting();
 
-   GetAttributes(attrmask);
+   AcquireXAttributes(attrmask);
 
    if (fAttrChanged) {
       fPainting->Add(fAttr->Clone(), "attr");
@@ -192,11 +182,11 @@ void TWebPadPainter::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*wi
 
 void TWebPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   GetAttributes(1);
+   AcquireXAttributes(attrLine);
 
    if (GetLineWidth()<=0) return;
 
-   StoreOperation("line", 0, 1);
+   StoreOperation("line", nullptr, attrLine);
 
    Float_t *buf = Reserve(4);
    buf[0] = x1;
@@ -211,11 +201,11 @@ void TWebPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2
 
 void TWebPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
-   GetAttributes(1);
+   AcquireXAttributes(attrLine);
 
    if (GetLineWidth()<=0) return;
 
-   StoreOperation("linendc", 0, 1);
+   StoreOperation("linendc", nullptr, attrLine);
 
    Float_t *buf = Reserve(4);
    buf[0] = u1;
@@ -232,14 +222,14 @@ void TWebPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 {
    // printf("PAINT BOX %4.2f %4.2f %4.2f %4.2f mode %d linecol %d\n", x1, y1, x2, y2, (int) mode, gVirtualX->GetLineColor());
 
-   // GetAttributes(1); // get only line attributes
+   // AcquireXAttributes(attrLine); // get only line attributes
 
    if (GetLineWidth()<=0 && mode == TVirtualPadPainter::kHollow) return;
 
    if (mode == TVirtualPadPainter::kHollow)
-      StoreOperation("rect", 0, 1); // only border
+      StoreOperation("rect", nullptr, attrLine); // only border
    else
-      StoreOperation("box", 0, 2); // only fill
+      StoreOperation("box", nullptr, attrFill); // only fill
 
    Float_t *buf = Reserve(4);
    buf[0] = x1;
@@ -258,7 +248,7 @@ void TWebPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Doubl
       return;
    }
 
-   StoreOperation("fillarea", new TObjString(TString::Itoa(nPoints, 10)), 2);
+   StoreOperation("fillarea", new TObjString(TString::Itoa(nPoints, 10)), attrFill);
 
    Float_t *buf = Reserve(nPoints*2);
    for (Int_t n=0;n<nPoints;++n) {
@@ -278,7 +268,7 @@ void TWebPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_
       return;
    }
 
-   StoreOperation("fillarea", new TObjString(TString::Itoa(nPoints, 10)), 2);
+   StoreOperation("fillarea", new TObjString(TString::Itoa(nPoints, 10)), attrFill);
 
    Float_t *buf = Reserve(nPoints*2);
    for (Int_t n=0;n<nPoints;++n) {
@@ -292,8 +282,7 @@ void TWebPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_
 
 void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Double_t *xs, const Double_t *ys)
 {
-
-   GetAttributes(1); // get only line attributes
+   AcquireXAttributes(attrLine); // get only line attributes
 
    if (GetLineWidth()<=0) return;
 
@@ -302,7 +291,7 @@ void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Double_t *xs, const Doubl
       return;
    }
 
-   StoreOperation("polyline", new TObjString(TString::Itoa(nPoints, 10)), 1);
+   StoreOperation("polyline", new TObjString(TString::Itoa(nPoints, 10)), attrLine);
 
    Float_t *buf = Reserve(nPoints*2);
    for (Int_t n=0;n<nPoints;++n) {
@@ -317,7 +306,7 @@ void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Double_t *xs, const Doubl
 
 void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Float_t *xs, const Float_t *ys)
 {
-   GetAttributes(1); // get only line attributes
+   AcquireXAttributes(attrLine); // get only line attributes
 
    if (GetLineWidth()<=0) return;
 
@@ -326,7 +315,7 @@ void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Float_t *xs, const Float_
       return;
    }
 
-   StoreOperation("polyline", new TObjString(TString::Itoa(nPoints, 10)), 1);
+   StoreOperation("polyline", new TObjString(TString::Itoa(nPoints, 10)), attrLine);
 
    Float_t *buf = Reserve(nPoints*2);
    for (Int_t n=0;n<nPoints;++n) {
@@ -341,7 +330,7 @@ void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Float_t *xs, const Float_
 
 void TWebPadPainter::DrawPolyLineNDC(Int_t nPoints, const Double_t *u, const Double_t *v)
 {
-   GetAttributes(1); // get only line attributes
+   AcquireXAttributes(attrLine); // get only line attributes
 
    if (GetLineWidth()<=0) return;
 
@@ -350,7 +339,7 @@ void TWebPadPainter::DrawPolyLineNDC(Int_t nPoints, const Double_t *u, const Dou
       return;
    }
 
-   StoreOperation("polylinendc", new TObjString(TString::Itoa(nPoints, 10)), 1);
+   StoreOperation("polylinendc", new TObjString(TString::Itoa(nPoints, 10)), attrLine);
 
    Float_t *buf = Reserve(nPoints*2);
    for (Int_t n=0;n<nPoints;++n) {
@@ -370,7 +359,7 @@ void TWebPadPainter::DrawPolyMarker(Int_t nPoints, const Double_t *x, const Doub
       return;
    }
 
-   StoreOperation("polymarker", new TObjString(TString::Itoa(nPoints, 10)), 5);
+   StoreOperation("polymarker", new TObjString(TString::Itoa(nPoints, 10)), attrLine | attrMarker);
 
    Float_t *buf = Reserve(nPoints*2);
    for (Int_t n=0;n<nPoints;++n) {
@@ -390,7 +379,7 @@ void TWebPadPainter::DrawPolyMarker(Int_t nPoints, const Float_t *x, const Float
       return;
    }
 
-   StoreOperation("polymarker", new TObjString(TString::Itoa(nPoints, 10)), 5);
+   StoreOperation("polymarker", new TObjString(TString::Itoa(nPoints, 10)), attrLine | attrMarker);
 
    Float_t *buf = Reserve(nPoints*2);
    for (Int_t n=0;n<nPoints;++n) {
@@ -405,7 +394,7 @@ void TWebPadPainter::DrawPolyMarker(Int_t nPoints, const Float_t *x, const Float
 
 void TWebPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode /*mode*/)
 {
-   StoreOperation("text", new TObjString(text), 8);
+   StoreOperation("text", new TObjString(text), attrText);
 
    Float_t *buf = Reserve(2);
    buf[0] = x;
@@ -418,7 +407,7 @@ void TWebPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMod
 
 void TWebPadPainter::DrawText(Double_t x, Double_t y, const wchar_t * /*text*/, ETextMode /*mode*/)
 {
-   StoreOperation("text", new TObjString("wchar_t"), 8);
+   StoreOperation("text", new TObjString("wchar_t"), attrText);
 
    Float_t *buf = Reserve(2);
    buf[0] = x;
@@ -431,7 +420,7 @@ void TWebPadPainter::DrawText(Double_t x, Double_t y, const wchar_t * /*text*/, 
 
 void TWebPadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode /*mode*/)
 {
-   StoreOperation("textndc", new TObjString(text), 8);
+   StoreOperation("textndc", new TObjString(text), attrText);
 
    Float_t *buf = Reserve(2);
    buf[0] = u;
@@ -452,7 +441,7 @@ void TWebPadPainter::SaveImage(TVirtualPad * /*pad*/, const char * /*fileName*/,
 
 void TWebPadPainter::DrawTextNDC(Double_t  u , Double_t v, const wchar_t * /*text*/, ETextMode /*mode*/)
 {
-   StoreOperation("textndc", new TObjString("wchar_t"), 8);
+   StoreOperation("textndc", new TObjString("wchar_t"), attrText);
 
    Float_t *buf = Reserve(2);
    buf[0] = u;
@@ -470,7 +459,7 @@ void TWebPadPainter::DrawFillArea(Int_t np, TPoint *xy)
       return;
    }
 
-   StoreOperation("fillarea", new TObjString(TString::Itoa(np, 10)), 2);
+   StoreOperation("fillarea", new TObjString(TString::Itoa(np, 10)), attrFill);
 
    Float_t *buf = Reserve(np*2);
    for (Int_t n=0;n<np;++n) {
