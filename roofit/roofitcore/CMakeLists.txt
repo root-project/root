@@ -248,8 +248,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         MultiProcess/Vector.h
         MultiProcess/messages.h
   SOURCES
-    src/BidirMMapPipe.cxx
-    src/BidirMMapPipe.h
     src/Roo1DTable.cxx
     src/RooAbsAnaConvPdf.cxx
     src/RooAbsArg.cxx
@@ -471,12 +469,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         src/RooGaussMinimizer.cxx
         src/RooGaussMinimizerFcn.cxx
         src/NumericalDerivatorMinuit2.cxx
-        src/RooGradMinimizer.cxx
         src/RooGradMinimizerFcn.cxx
         src/RooGradientFunction.cxx
         src/RooMinimizerType.cxx
         src/MultiProcess/BidirMMapPipe.cxx
-        src/MultiProcess/GradMinimizer.cxx
+        src/MultiProcess/GradMinimizerFcn.cxx
         src/MultiProcess/Job.cxx
         src/MultiProcess/NLLVar.cxx
         src/MultiProcess/TaskManager.cxx
