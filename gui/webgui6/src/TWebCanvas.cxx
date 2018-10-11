@@ -360,46 +360,42 @@ void TWebCanvas::CheckDataToSend()
    if (!Canvas())
       return;
 
-   for (WebConnList::iterator citer = fWebConn.begin(); citer != fWebConn.end(); ++citer) {
-      WebConn &conn = *citer;
+   for (auto &&conn: fWebConn) {
 
       // check if direct data sending is possible
       if (!fWindow->CanSend(conn.fConnId, true))
          continue;
 
-      TString buf;
+      std::string buf;
 
-      if (conn.fGetMenu.Length() > 0) {
+      if (conn.fGetMenu.length() > 0) {
 
-         TObject *obj = FindPrimitive(conn.fGetMenu.Data());
+         TObject *obj = FindPrimitive(conn.fGetMenu.c_str());
          if (!obj)
             obj = Canvas();
 
          TWebMenuItems items;
          items.PopulateObjectMenu(obj, obj->IsA());
          buf = "MENU:";
-         buf.Append(conn.fGetMenu);
-         buf.Append(":");
-         buf += items.ProduceJSON();
+         buf.append(conn.fGetMenu);
+         buf.append(":");
+         buf.append(items.ProduceJSON().Data());
 
-         conn.fGetMenu.Clear();
+         conn.fGetMenu.clear();
       } else if (conn.fDrawVersion < fCanvVersion) {
          buf = "SNAP6:";
-         buf.Append(TString::LLtoa(fCanvVersion, 10));
-         buf.Append(":");
-         buf += CreateSnapshot(Canvas());
+         buf.append(std::to_string(fCanvVersion));
+         buf.append(":");
+         buf.append(CreateSnapshot(Canvas()).Data());
 
          // printf("Snapshot created %d\n", buf.Length());
          // if (buf.Length() < 10000) printf("Snapshot %s\n", buf.Data());
-      } else if (conn.fSend.Length() > 0) {
-         buf = conn.fSend;
-         conn.fSend.Clear();
+      } else if (!conn.fSend.empty()) {
+         std::swap(buf, conn.fSend);
       }
 
-      if (buf.Length() > 0) {
-         // sending of data can be moved into separate thread - not to block user code
-         fWindow->Send(conn.fConnId, buf.Data());
-      }
+      if (!buf.empty())
+         fWindow->Send(conn.fConnId, buf);
    }
 }
 
@@ -453,14 +449,14 @@ void TWebCanvas::Show()
 void TWebCanvas::ShowCmd(const char *arg, Bool_t show)
 {
    // command used to toggle showing of menu, toolbar, editors, ...
-   for (auto conn = fWebConn.begin(); conn != fWebConn.end(); ++conn) {
-      if (!conn->fConnId)
+   for (auto &&conn : fWebConn) {
+      if (!conn.fConnId)
          continue;
 
-      if (conn->fSend.Length() > 0)
+      if (!conn.fSend.empty())
          Warning("ShowCmd", "Send operation not empty when try show %s", arg);
 
-      conn->fSend.Form("SHOW:%s:%d", arg, show ? 1 : 0);
+      conn.fSend = Form("SHOW:%s:%d", arg, show ? 1 : 0);
    }
 
    CheckDataToSend();
@@ -470,16 +466,16 @@ void TWebCanvas::ActivateInEditor(TPad *pad, TObject *obj)
 {
    if (!pad || !obj) return;
 
-   for (auto conn = fWebConn.begin(); conn != fWebConn.end(); ++conn) {
-      if (!conn->fConnId || !pad)
+   for (auto &&conn: fWebConn) {
+      if (!conn.fConnId)
          continue;
 
-      if (conn->fSend.Length() > 0)
+      if (!conn.fSend.empty())
          Warning("ActivateInEditor", "Send operation not empty");
 
       UInt_t hash = TString::Hash(&obj, sizeof(obj));
 
-      conn->fSend.Form("EDIT:%u", (unsigned) hash);
+      conn.fSend = Form("EDIT:%u", (unsigned) hash);
    }
 
    CheckDataToSend();
@@ -708,9 +704,9 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          Long_t res = gROOT->ProcessLine(exec);
          TObject *resobj = (TObject *)res;
          if (resobj) {
-            conn->fSend = reply;
-            conn->fSend.Append(":");
-            conn->fSend.Append(TBufferJSON::ConvertToJSON(resobj, 23));
+            conn->fSend = reply.Data();
+            conn->fSend.append(":");
+            conn->fSend.append(TBufferJSON::ConvertToJSON(resobj, 23).Data());
             if (reply[0] == 'D')
                delete resobj; // delete object if first symbol in reply is D
          }

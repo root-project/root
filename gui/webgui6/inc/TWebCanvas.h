@@ -45,7 +45,6 @@ class TWebObjectOptions {
 public:
    std::string snapid; ///< id of the object
    std::string opt;    ///< drawing options
-   TWebObjectOptions() = default;
 };
 
 /// Class used to transport ranges from JSROOT canvas
@@ -62,7 +61,6 @@ public:
    Double_t ux1{0}, uy1{0}, ux2{0}, uy2{0};   ///< pad axis range
    unsigned bits{0};                          ///< canvas status bits like tool editor
    std::vector<TWebObjectOptions> primitives; ///< drawing options for primitives
-   TWebPadRange() = default;
 };
 
 
@@ -76,7 +74,6 @@ public:
    int x{-1};                                 ///< x coordinate of click event
    int y{-1};                                 ///< y coordinate of click event
    bool dbl{false};                           ///< when double-click was performed
-   TWebPadClick() = default;
 };
 
 /////////////////////////////////////////////////////////
@@ -98,11 +95,10 @@ public:
 
 protected:
    struct WebConn {
-      unsigned fConnId;      ///<! websocket handle
-      TString fGetMenu;      ///<! object id for menu request
-      Long64_t fDrawVersion; ///<! canvas version drawn by client
-      TString fSend;         ///<! extra data which should be send to the client
-      WebConn() : fConnId(0), fGetMenu(), fDrawVersion(0), fSend() {}
+      unsigned fConnId{0};       ///<! connection id
+      std::string fGetMenu;      ///<! object id for menu request
+      Long64_t fDrawVersion{0};  ///<! canvas version drawn by client
+      std::string fSend;         ///<! extra data which should be send to the client
    };
 
    typedef std::list<WebConn> WebConnList;
