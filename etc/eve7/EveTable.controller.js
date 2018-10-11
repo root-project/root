@@ -36,22 +36,26 @@ sap.ui.define([
             var scene = element.childs[k];
             console.log("FOUND scene", scene.fSceneId);
 
-            this.mgr.Register(scene.fSceneId, this, "onElementChanged")
+            this.mgr.Register(scene.fSceneId, this, "onElementChanged");
+            
+            this.setEveData();
          }
-
+         
+         this.mgr.RegisterUpdate(this, "setEveData");
       },
+      
+      
       setEveData: function() {
-         var mgr = this.mgr;
-         var element = mgr.GetElement(this.elementid);
+         var element = this.mgr.GetElement(this.elementid);
          console.log("table ", element);
          for (var k=0;k<element.childs.length;++k) {
             var sceneInfo = element.childs[k];
-            var abc = mgr.GetElement(sceneInfo.fSceneId);
+            var abc = this.mgr.GetElement(sceneInfo.fSceneId);
             this.tableEveElement = abc.childs[0];
             this.setupTable(this.tableEveElement);
          }
-
       },
+      
       setupTable: function(eveData) {
          var oTable = this.getView().byId("table");
          console.log(oTable);
@@ -91,21 +95,21 @@ sap.ui.define([
          var uuu= this;
 
          oTable.bindColumns("/columns", function(sId, oContext) {
-       var columnName = oContext.getObject().columnName;
-       var oColumn = new sap.ui.table.Column({
+            var columnName = oContext.getObject().columnName;
+            var oColumn = new sap.ui.table.Column({
 
-          label: columnName,
-          template: columnName,
+               label: columnName,
+               template: columnName,
                sortProperty: columnName,
                showFilterMenuEntry: true
-       });
+            });
 
             return oColumn;
-    });
+         });
 
-    oTable.bindRows("/rows");
-
+         oTable.bindRows("/rows");
       },
+      
       onLoadScripts: function() {
          this._load_scripts = true;
          this.checkScences();

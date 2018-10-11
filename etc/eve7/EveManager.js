@@ -58,7 +58,7 @@
          return;
       }
 
-      console.log("msg len=", msg.length, " txt:", msg.substr(0,50), "...");
+      console.log("msg len=", msg.length, " txt:", msg.substr(0,120), "...");
       
       var resp = JSON.parse(msg);
 
