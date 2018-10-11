@@ -13,35 +13,33 @@
 
 #include "TWebPadPainter.h"
 
-#include <stdio.h>
-
 ClassImp(TWebVirtualX);
 
 TWebVirtualX::TWebVirtualX() :
    TVirtualX(),
    fX11(0),
-   fPainter(0),
+   fPainter(nullptr),
    fWindowId(0),
    fCw(800),
    fCh(600)
 {
-   printf("Creating TWebVirtualX \n");
+   Info("TWebVirtualX", "Creating TWebVirtualX");
 }
 
 TWebVirtualX::TWebVirtualX(const char *name, const char *title, TVirtualX *vx) :
    TVirtualX(name, title),
    fX11(vx),
-   fPainter(0),
+   fPainter(nullptr),
    fWindowId(0),
    fCw(800),
    fCh(600)
 {
-   printf("Creating TWebVirtualX %s %s \n", name, title);
+   Info("TWebVirtualX", "Creating TWebVirtualX %s %s", name, title);
 }
 
 TWebVirtualX::~TWebVirtualX()
 {
-   printf("TWebVirtualX destructor\n");
+   Info("TWebVirtualX", "TWebVirtualX destructor");
 }
 
 Bool_t TWebVirtualX::IsCmdThread() const { return fX11->IsCmdThread(); }
@@ -195,7 +193,6 @@ void TWebVirtualX::CloseWindow()
 void TWebVirtualX::ClosePixmap()
 {
    return fX11->ClosePixmap();
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -204,7 +201,6 @@ void TWebVirtualX::ClosePixmap()
 void TWebVirtualX::CopyPixmap(Int_t wid, Int_t xpos, Int_t ypos)
 {
    return fX11->CopyPixmap(wid, xpos, ypos);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2628,8 +2624,6 @@ void TWebVirtualX::DeleteImage(Drawable_t img)
 Window_t TWebVirtualX::GetCurrentWindow() const
 {
    return fX11->GetCurrentWindow();
-
-   return (Window_t)0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2649,8 +2643,6 @@ unsigned char *TWebVirtualX::GetColorBits(Drawable_t wid, Int_t x, Int_t y,
                                        UInt_t w, UInt_t h)
 {
    return fX11->GetColorBits(wid, x, y, w, h);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2667,8 +2659,6 @@ Pixmap_t TWebVirtualX::CreatePixmapFromData(unsigned char *bits, UInt_t width,
                                        UInt_t height)
 {
    return fX11->CreatePixmapFromData(bits, width, height);
-
-   return (Pixmap_t)0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2687,8 +2677,6 @@ void TWebVirtualX::ShapeCombineMask(Window_t wid, Int_t arg1, Int_t arg2, Pixmap
 UInt_t TWebVirtualX::ScreenWidthMM() const
 {
    return fX11->ScreenWidthMM();
-
-   return 400;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2711,8 +2699,6 @@ Int_t TWebVirtualX::GetProperty(Window_t wid, Atom_t atom1, Long_t arg1, Long_t 
                              Atom_t* atom3, Int_t* arg4, ULong_t* arg5, ULong_t* arg6, unsigned char** arg7)
 {
    return fX11->GetProperty(wid, atom1, arg1, arg2, arg3, atom2, atom3, arg4, arg5, arg6, arg7);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2740,8 +2726,6 @@ void TWebVirtualX::ConvertSelection(Window_t wid, Atom_t &arg1, Atom_t &arg2, At
 Bool_t TWebVirtualX::SetSelectionOwner(Window_t wid, Atom_t &atom)
 {
    return fX11->SetSelectionOwner(wid, atom);
-
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2777,8 +2761,6 @@ void TWebVirtualX::SetTypeList(Window_t wid, Atom_t arg1, Atom_t *arg2)
 Window_t TWebVirtualX::FindRWindow(Window_t wid1, Window_t wid2, Window_t wid3, int arg1, int arg2, int arg3)
 {
    return fX11->FindRWindow(wid1, wid2, wid3, arg1, arg2, arg3);
-
-   return kNone;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2788,8 +2770,6 @@ Window_t TWebVirtualX::FindRWindow(Window_t wid1, Window_t wid2, Window_t wid3, 
 Bool_t TWebVirtualX::IsDNDAware(Window_t wid, Atom_t *atom)
 {
    return fX11->IsDNDAware(wid, atom);
-
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2808,8 +2788,6 @@ void TWebVirtualX::BeginModalSessionFor(Window_t wid)
 Int_t TWebVirtualX::SupportsExtension(const char *arg) const
 {
    return fX11->SupportsExtension(arg);
-
-   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
