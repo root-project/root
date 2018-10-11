@@ -7,7 +7,7 @@
 ## \macro_image
 ##
 ## \date July 2018
-## \author Enrico Guiraud, Danilo Piparo, Massimo Tumolo
+## \authors Enrico Guiraud, Danilo Piparo, Massimo Tumolo
 
 import ROOT
 
