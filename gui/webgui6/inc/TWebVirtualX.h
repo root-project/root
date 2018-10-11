@@ -23,10 +23,10 @@ class TWebPadPainter;
 
 class TWebVirtualX : public TVirtualX {
 protected:
-   TVirtualX        *fX11;      ///<! pointer on original virtual X
-   TWebPadPainter   *fPainter;  ///<! pad painter which should handle current drawing
-   Int_t             fWindowId; ///<! currently selected window id
-   UInt_t            fCw, fCh;  ///<! selected dimensions for the web canvas
+   TVirtualX *fX11{nullptr};          ///<! pointer on original virtual X
+   TWebPadPainter *fPainter{nullptr}; ///<! pad painter which should handle current drawing
+   Int_t fWindowId{0};                ///<! currently selected window id
+   UInt_t fCw{800}, fCh{600};         ///<! selected dimensions for the web canvas
 
    Bool_t     IsWeb(Int_t id) const { return id == WebId; }
 
@@ -35,14 +35,13 @@ public:
    // fictional ID, used to identify web-managed windows from normal VirtualX windows
    enum { WebId = 777111777 };
 
-   TWebVirtualX();
    TWebVirtualX(const char *name, const char *title, TVirtualX *vx);
-   virtual ~TWebVirtualX();
+   virtual ~TWebVirtualX() = default;
 
    void SetWebCanvasSize(UInt_t w, UInt_t h) { fCw = w; fCh = h; }
-   void SetWebPainter(TWebPadPainter *p = 0) { fPainter = p; }
+   void SetWebPainter(TWebPadPainter *p = nullptr) { fPainter = p; }
 
-   virtual Bool_t    Init(void *display=0);
+   virtual Bool_t    Init(void *display=nullptr);
    virtual void      ClearWindow();
    virtual void      ClosePixmap();
    virtual void      CloseWindow();

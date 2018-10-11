@@ -12,32 +12,14 @@
 
 #include "TWebPadPainter.h"
 
-TWebVirtualX::TWebVirtualX() :
-   TVirtualX(),
-   fX11(nullptr),
-   fPainter(nullptr),
-   fWindowId(0),
-   fCw(800),
-   fCh(600)
-{
-   Info("TWebVirtualX", "Creating TWebVirtualX");
-}
-
 TWebVirtualX::TWebVirtualX(const char *name, const char *title, TVirtualX *vx) :
    TVirtualX(name, title),
-   fX11(vx),
-   fPainter(nullptr),
-   fWindowId(0),
-   fCw(800),
-   fCh(600)
+   fX11(vx)
 {
-   Info("TWebVirtualX", "Creating TWebVirtualX %s %s", name, title);
 }
 
-TWebVirtualX::~TWebVirtualX()
-{
-   Info("TWebVirtualX", "TWebVirtualX destructor");
-}
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if main X11 thread
 
 Bool_t TWebVirtualX::IsCmdThread() const
 {
@@ -49,13 +31,7 @@ Bool_t TWebVirtualX::IsCmdThread() const
 
 void TWebVirtualX::GetWindowAttributes(Window_t id, WindowAttributes_t &attr)
 {
-   return fX11->GetWindowAttributes(id, attr);
-
-   attr.fX = attr.fY = 0;
-   attr.fWidth = attr.fHeight = 0;
-   attr.fVisual   = 0;
-   attr.fMapState = kIsUnmapped;
-   attr.fScreen   = 0;
+   fX11->GetWindowAttributes(id, attr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +81,7 @@ Bool_t TWebVirtualX::AllocColor(Colormap_t cmap, ColorStruct_t &color)
 
 void TWebVirtualX::QueryColor(Colormap_t cmap, ColorStruct_t &color)
 {
-   return fX11->QueryColor(cmap, color);
+   fX11->QueryColor(cmap, color);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +90,7 @@ void TWebVirtualX::QueryColor(Colormap_t cmap, ColorStruct_t &color)
 
 void TWebVirtualX::NextEvent(Event_t &event)
 {
-   return fX11->NextEvent(event);
+   fX11->NextEvent(event);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +101,7 @@ void TWebVirtualX::NextEvent(Event_t &event)
 void TWebVirtualX::GetPasteBuffer(Window_t id, Atom_t atom, TString &text,
                                Int_t &nchar, Bool_t del)
 {
-   return fX11->GetPasteBuffer(id, atom, text, nchar, del);
+   fX11->GetPasteBuffer(id, atom, text, nchar, del);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -426,8 +402,6 @@ void TWebVirtualX::GetPlanes(Int_t &nplanes)
 void TWebVirtualX::GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b)
 {
    return fX11->GetRGB(index, r, g, b);
-
-   r = g = b = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -440,8 +414,6 @@ void TWebVirtualX::GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b)
 void TWebVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char *mess)
 {
    return fX11->GetTextExtent(w, h, mess);
-
-   w = h = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -454,8 +426,6 @@ void TWebVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char *mess)
 void TWebVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess)
 {
    return fX11->GetTextExtent(w, h, mess);
-
-   w = h = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -466,8 +436,6 @@ void TWebVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess)
 Int_t   TWebVirtualX::GetFontAscent() const
 {
    return fX11->GetFontAscent();
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -477,8 +445,6 @@ Int_t   TWebVirtualX::GetFontAscent() const
 Int_t   TWebVirtualX::GetFontAscent(const char *mess) const
 {
    return fX11->GetFontAscent(mess);
-
-   return GetFontAscent();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -489,8 +455,6 @@ Int_t   TWebVirtualX::GetFontAscent(const char *mess) const
 Int_t   TWebVirtualX::GetFontDescent() const
 {
    return fX11->GetFontDescent();
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -500,8 +464,6 @@ Int_t   TWebVirtualX::GetFontDescent() const
 Int_t   TWebVirtualX::GetFontDescent(const char *mess) const
 {
    return fX11->GetFontDescent(mess);
-
-   return GetFontDescent();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -510,8 +472,6 @@ Int_t   TWebVirtualX::GetFontDescent(const char *mess) const
 Float_t TWebVirtualX::GetTextMagnitude()
 {
    return fX11->GetTextMagnitude();
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -520,8 +480,6 @@ Float_t TWebVirtualX::GetTextMagnitude()
 Bool_t TWebVirtualX::HasTTFonts() const
 {
    return fX11->HasTTFonts();
-
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -532,8 +490,6 @@ Bool_t TWebVirtualX::HasTTFonts() const
 Window_t TWebVirtualX::GetWindowID(Int_t wid)
 {
    return fX11->GetWindowID(wid);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -543,8 +499,6 @@ Window_t TWebVirtualX::GetWindowID(Int_t wid)
 Int_t TWebVirtualX::InitWindow(ULong_t window)
 {
    return fX11->InitWindow(window);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -556,8 +510,6 @@ Int_t TWebVirtualX::InitWindow(ULong_t window)
 Int_t TWebVirtualX::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
 {
    return fX11->AddWindow(qwid, w, h);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -569,10 +521,7 @@ Int_t TWebVirtualX::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
 Int_t TWebVirtualX::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h)
 {
    return fX11->AddPixmap(pixid, w, h);
-
-   return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Removes the created by Qt window "qwid".
@@ -580,9 +529,7 @@ Int_t TWebVirtualX::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h)
 void TWebVirtualX::RemoveWindow(ULong_t qwid)
 {
    return fX11->RemoveWindow(qwid);
-
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Moves the window "wid" to the specified x and y coordinates.
@@ -596,7 +543,6 @@ void TWebVirtualX::RemoveWindow(ULong_t qwid)
 void TWebVirtualX::MoveWindow(Int_t wid, Int_t x, Int_t y)
 {
    return fX11->MoveWindow(wid, x, y);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -605,8 +551,6 @@ void TWebVirtualX::MoveWindow(Int_t wid, Int_t x, Int_t y)
 Int_t TWebVirtualX::OpenPixmap(UInt_t w, UInt_t h)
 {
    return fX11->OpenPixmap(w, h);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -615,8 +559,6 @@ Int_t TWebVirtualX::OpenPixmap(UInt_t w, UInt_t h)
 void TWebVirtualX::QueryPointer(Int_t &ix, Int_t &iy)
 {
    return fX11->QueryPointer(ix, iy);
-
-   ix = iy = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -626,8 +568,6 @@ void TWebVirtualX::QueryPointer(Int_t &ix, Int_t &iy)
 Pixmap_t TWebVirtualX::ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t id)
 {
    return fX11->ReadGIF(x0, y0, file, id);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -661,9 +601,6 @@ Pixmap_t TWebVirtualX::ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t id
 Int_t TWebVirtualX::RequestLocator(Int_t mode, Int_t ctyp, Int_t &x, Int_t &y)
 {
    return fX11->RequestLocator(mode, ctyp, x, y);
-
-   x = y = 0;
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -676,9 +613,6 @@ Int_t TWebVirtualX::RequestLocator(Int_t mode, Int_t ctyp, Int_t &x, Int_t &y)
 Int_t TWebVirtualX::RequestString(Int_t x, Int_t y, char *text)
 {
    return fX11->RequestString(x, y, text);
-
-   if (text) *text = 0;
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -690,7 +624,7 @@ Int_t TWebVirtualX::RequestString(Int_t x, Int_t y, char *text)
 
 void TWebVirtualX::RescaleWindow(Int_t wid, UInt_t w, UInt_t h)
 {
-   return fX11->RescaleWindow(wid, w, h);
+   fX11->RescaleWindow(wid, w, h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -701,10 +635,7 @@ void TWebVirtualX::RescaleWindow(Int_t wid, UInt_t w, UInt_t h)
 
 Int_t TWebVirtualX::ResizePixmap(Int_t wid, UInt_t w, UInt_t h)
 {
-   if (!IsWeb(wid))
-      return fX11->ResizePixmap(wid, w, h);
-
-   return 0;
+   return IsWeb(wid)? 0 : fX11->ResizePixmap(wid, w, h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -713,7 +644,7 @@ Int_t TWebVirtualX::ResizePixmap(Int_t wid, UInt_t w, UInt_t h)
 void TWebVirtualX::ResizeWindow(Int_t wid)
 {
    if (!IsWeb(wid))
-      return fX11->ResizeWindow(wid);
+      fX11->ResizeWindow(wid);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -723,7 +654,7 @@ void TWebVirtualX::SelectWindow(Int_t wid)
 {
    fWindowId = wid;
    if (!IsWeb(wid))
-      return fX11->SelectWindow(wid);
+      fX11->SelectWindow(wid);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -731,7 +662,7 @@ void TWebVirtualX::SelectWindow(Int_t wid)
 
 void TWebVirtualX::SelectPixmap(Int_t qpixid)
 {
-   return fX11->SelectPixmap(qpixid);
+   fX11->SelectPixmap(qpixid);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -739,8 +670,7 @@ void TWebVirtualX::SelectPixmap(Int_t qpixid)
 
 void TWebVirtualX::SetCharacterUp(Float_t chupx, Float_t chupy)
 {
-   return fX11->SetCharacterUp(chupx, chupy);
-
+   fX11->SetCharacterUp(chupx, chupy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -771,7 +701,7 @@ void TWebVirtualX::SetClipRegion(Int_t wid, Int_t x, Int_t y,
 void TWebVirtualX::SetCursor(Int_t win, ECursor cursor)
 {
    if (!IsWeb(win))
-      return fX11->SetCursor(win, cursor);
+      fX11->SetCursor(win, cursor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -786,7 +716,7 @@ void TWebVirtualX::SetCursor(Int_t win, ECursor cursor)
 void TWebVirtualX::SetDoubleBuffer(Int_t wid, Int_t mode)
 {
    if (!IsWeb(wid))
-      return fX11->SetDoubleBuffer(wid, mode);
+      fX11->SetDoubleBuffer(wid, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -794,7 +724,7 @@ void TWebVirtualX::SetDoubleBuffer(Int_t wid, Int_t mode)
 
 void TWebVirtualX::SetDoubleBufferOFF()
 {
-   return fX11->SetDoubleBufferOFF();
+   fX11->SetDoubleBufferOFF();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -802,7 +732,7 @@ void TWebVirtualX::SetDoubleBufferOFF()
 
 void TWebVirtualX::SetDoubleBufferON()
 {
-   return fX11->SetDoubleBufferON();
+   fX11->SetDoubleBufferON();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -816,7 +746,7 @@ void TWebVirtualX::SetDoubleBufferON()
 
 void TWebVirtualX::SetDrawMode(EDrawMode mode)
 {
-   return fX11->SetDrawMode(mode);
+   fX11->SetDrawMode(mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -825,7 +755,7 @@ void TWebVirtualX::SetDrawMode(EDrawMode mode)
 void TWebVirtualX::SetFillColor(Color_t cindex)
 {
    TAttFill::SetFillColor(cindex);
-   return fX11->SetFillColor(cindex);
+   fX11->SetFillColor(cindex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -837,7 +767,7 @@ void TWebVirtualX::SetFillColor(Color_t cindex)
 void TWebVirtualX::SetFillStyle(Style_t style)
 {
    TAttFill::SetFillStyle(style);
-   return fX11->SetFillStyle(style);
+   fX11->SetFillStyle(style);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -846,7 +776,7 @@ void TWebVirtualX::SetFillStyle(Style_t style)
 void TWebVirtualX::SetLineColor(Color_t cindex)
 {
    TAttLine::SetLineColor(cindex);
-   return fX11->SetLineColor(cindex);
+   fX11->SetLineColor(cindex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -861,7 +791,7 @@ void TWebVirtualX::SetLineColor(Color_t cindex)
 
 void TWebVirtualX::SetLineType(Int_t n, Int_t *dash)
 {
-   return fX11->SetLineType(n, dash);
+   fX11->SetLineType(n, dash);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -876,7 +806,7 @@ void TWebVirtualX::SetLineType(Int_t n, Int_t *dash)
 void TWebVirtualX::SetLineStyle(Style_t linestyle)
 {
    TAttLine::SetLineStyle(linestyle);
-   return fX11->SetLineStyle(linestyle);
+   fX11->SetLineStyle(linestyle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -887,8 +817,7 @@ void TWebVirtualX::SetLineStyle(Style_t linestyle)
 void TWebVirtualX::SetLineWidth(Width_t width)
 {
    TAttLine::SetLineWidth(width);
-
-   return fX11->SetLineWidth(width);
+   fX11->SetLineWidth(width);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -897,7 +826,7 @@ void TWebVirtualX::SetLineWidth(Width_t width)
 void TWebVirtualX::SetMarkerColor(Color_t cindex)
 {
    TAttMarker::SetMarkerColor(cindex);
-   return fX11->SetMarkerColor(cindex);
+   fX11->SetMarkerColor(cindex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -908,7 +837,7 @@ void TWebVirtualX::SetMarkerColor(Color_t cindex)
 void TWebVirtualX::SetMarkerSize(Float_t markersize)
 {
    TAttMarker::SetMarkerSize(markersize);
-   return fX11->SetMarkerSize(markersize);
+   fX11->SetMarkerSize(markersize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -917,7 +846,7 @@ void TWebVirtualX::SetMarkerSize(Float_t markersize)
 void TWebVirtualX::SetMarkerStyle(Style_t markerstyle)
 {
    TAttMarker::SetMarkerStyle(markerstyle);
-   return fX11->SetMarkerStyle(markerstyle);
+   fX11->SetMarkerStyle(markerstyle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -929,7 +858,7 @@ void TWebVirtualX::SetMarkerStyle(Style_t markerstyle)
 
 void TWebVirtualX::SetOpacity(Int_t percent)
 {
-   return fX11->SetOpacity(percent);
+   fX11->SetOpacity(percent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -940,7 +869,7 @@ void TWebVirtualX::SetOpacity(Int_t percent)
 
 void TWebVirtualX::SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b)
 {
-   return fX11->SetRGB(cindex, r, g, b);
+   fX11->SetRGB(cindex, r, g, b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -953,7 +882,7 @@ void TWebVirtualX::SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b)
 void TWebVirtualX::SetTextAlign(Short_t talign)
 {
    TAttText::SetTextAlign(talign);
-   return fX11->SetTextAlign(talign);
+   fX11->SetTextAlign(talign);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -962,7 +891,7 @@ void TWebVirtualX::SetTextAlign(Short_t talign)
 void TWebVirtualX::SetTextColor(Color_t cindex)
 {
    TAttText::SetTextColor(cindex);
-   return fX11->SetTextColor(cindex);
+   fX11->SetTextColor(cindex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -977,8 +906,6 @@ void TWebVirtualX::SetTextColor(Color_t cindex)
 Int_t TWebVirtualX::SetTextFont(char *fontname, ETextSetMode mode)
 {
    return fX11->SetTextFont(fontname, mode);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -987,7 +914,7 @@ Int_t TWebVirtualX::SetTextFont(char *fontname, ETextSetMode mode)
 void TWebVirtualX::SetTextFont(Font_t fontnumber)
 {
    TAttText::SetTextFont(fontnumber);
-   return fX11->SetTextFont(fontnumber);
+   fX11->SetTextFont(fontnumber);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -995,7 +922,7 @@ void TWebVirtualX::SetTextFont(Font_t fontnumber)
 
 void TWebVirtualX::SetTextMagnitude(Float_t mgn)
 {
-   return fX11->SetTextMagnitude(mgn);
+   fX11->SetTextMagnitude(mgn);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1004,7 +931,7 @@ void TWebVirtualX::SetTextMagnitude(Float_t mgn)
 void TWebVirtualX::SetTextSize(Float_t textsize)
 {
    TAttText::SetTextSize(textsize);
-   return fX11->SetTextSize(textsize);
+   fX11->SetTextSize(textsize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1016,7 +943,7 @@ void TWebVirtualX::SetTextSize(Float_t textsize)
 
 void TWebVirtualX::Sync(Int_t mode)
 {
-   return fX11->Sync(mode);
+   fX11->Sync(mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1030,7 +957,7 @@ void TWebVirtualX::Sync(Int_t mode)
 void TWebVirtualX::UpdateWindow(Int_t mode)
 {
    if (!IsWeb(fWindowId))
-      return fX11->UpdateWindow(mode);
+      fX11->UpdateWindow(mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1045,7 +972,7 @@ void TWebVirtualX::UpdateWindow(Int_t mode)
 
 void TWebVirtualX::Warp(Int_t ix, Int_t iy, Window_t id)
 {
-   return fX11->Warp(ix, iy,id);
+   fX11->Warp(ix, iy,id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1055,8 +982,6 @@ void TWebVirtualX::Warp(Int_t ix, Int_t iy, Window_t id)
 Int_t TWebVirtualX::WriteGIF(char *name)
 {
    return fX11->WriteGIF(name);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1068,7 +993,7 @@ Int_t TWebVirtualX::WriteGIF(char *name)
 
 void TWebVirtualX::WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname)
 {
-   return fX11->WritePixmap(wid, w, h, pxname);
+   fX11->WritePixmap(wid, w, h, pxname);
 }
 
 //---- Methods used for GUI -----
@@ -1078,7 +1003,7 @@ void TWebVirtualX::WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname)
 
 void TWebVirtualX::MapWindow(Window_t id)
 {
-   return fX11->MapWindow(id);
+   fX11->MapWindow(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1087,7 +1012,7 @@ void TWebVirtualX::MapWindow(Window_t id)
 
 void TWebVirtualX::MapSubwindows(Window_t id)
 {
-   return fX11->MapSubwindows(id);
+   fX11->MapSubwindows(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1097,7 +1022,7 @@ void TWebVirtualX::MapSubwindows(Window_t id)
 
 void TWebVirtualX::MapRaised(Window_t id)
 {
-   return fX11->MapRaised(id);
+   fX11->MapRaised(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1108,7 +1033,7 @@ void TWebVirtualX::MapRaised(Window_t id)
 
 void TWebVirtualX::UnmapWindow(Window_t id)
 {
-   return fX11->UnmapWindow(id);
+   fX11->UnmapWindow(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1118,7 +1043,7 @@ void TWebVirtualX::UnmapWindow(Window_t id)
 
 void TWebVirtualX::DestroyWindow(Window_t id)
 {
-   return fX11->DestroyWindow(id);
+   fX11->DestroyWindow(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1127,7 +1052,7 @@ void TWebVirtualX::DestroyWindow(Window_t id)
 
 void TWebVirtualX::DestroySubwindows(Window_t id)
 {
-   return fX11->DestroySubwindows(id);
+   fX11->DestroySubwindows(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1136,7 +1061,7 @@ void TWebVirtualX::DestroySubwindows(Window_t id)
 
 void TWebVirtualX::RaiseWindow(Window_t id)
 {
-   return fX11->RaiseWindow(id);
+   fX11->RaiseWindow(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1145,7 +1070,7 @@ void TWebVirtualX::RaiseWindow(Window_t id)
 
 void TWebVirtualX::LowerWindow(Window_t id)
 {
-   return fX11->LowerWindow(id);
+   fX11->LowerWindow(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1159,7 +1084,7 @@ void TWebVirtualX::LowerWindow(Window_t id)
 
 void TWebVirtualX::MoveWindow(Window_t id, Int_t x, Int_t y)
 {
-   return fX11->MoveWindow(id, x, y);
+   fX11->MoveWindow(id, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1175,7 +1100,7 @@ void TWebVirtualX::MoveWindow(Window_t id, Int_t x, Int_t y)
 void TWebVirtualX::MoveResizeWindow(Window_t id, Int_t x, Int_t y,
                                    UInt_t w, UInt_t h)
 {
-   return fX11->MoveResizeWindow(id, x, y,w, h);
+   fX11->MoveResizeWindow(id, x, y,w, h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1189,7 +1114,7 @@ void TWebVirtualX::MoveResizeWindow(Window_t id, Int_t x, Int_t y,
 
 void TWebVirtualX::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
 {
-   return fX11->ResizeWindow(id, w, h);
+   fX11->ResizeWindow(id, w, h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1197,7 +1122,7 @@ void TWebVirtualX::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
 
 void TWebVirtualX::IconifyWindow(Window_t id)
 {
-   return fX11->IconifyWindow(id);
+   fX11->IconifyWindow(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1218,8 +1143,6 @@ void TWebVirtualX::IconifyWindow(Window_t id)
 Bool_t TWebVirtualX::NeedRedraw(ULong_t tgwindow, Bool_t force)
 {
    return fX11->NeedRedraw(tgwindow, force);
-
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1232,7 +1155,7 @@ Bool_t TWebVirtualX::NeedRedraw(ULong_t tgwindow, Bool_t force)
 void TWebVirtualX::ReparentWindow(Window_t id, Window_t pid,
                                   Int_t x, Int_t y)
 {
-   return fX11->ReparentWindow(id, pid,x, y);
+   fX11->ReparentWindow(id, pid,x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1251,7 +1174,7 @@ void TWebVirtualX::SetWindowBackground(Window_t id, ULong_t color)
 
 void TWebVirtualX::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
 {
-   return fX11->SetWindowBackgroundPixmap(id,pxm);
+   fX11->SetWindowBackgroundPixmap(id,pxm);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1282,8 +1205,6 @@ Window_t TWebVirtualX::CreateWindow(Window_t parent, Int_t x, Int_t y,
                                  UInt_t wtype)
 {
    return fX11->CreateWindow(parent, x, y,w, h,border,depth,clss, visual,attr,wtype);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1298,8 +1219,6 @@ Window_t TWebVirtualX::CreateWindow(Window_t parent, Int_t x, Int_t y,
 Int_t TWebVirtualX::OpenDisplay(const char *dpyName)
 {
    return fX11->OpenDisplay(dpyName);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1307,7 +1226,7 @@ Int_t TWebVirtualX::OpenDisplay(const char *dpyName)
 
 void TWebVirtualX::CloseDisplay()
 {
-   return fX11->CloseDisplay();
+   fX11->CloseDisplay();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1318,8 +1237,6 @@ void TWebVirtualX::CloseDisplay()
 Display_t TWebVirtualX::GetDisplay() const
 {
    return fX11->GetDisplay();
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1331,8 +1248,6 @@ Display_t TWebVirtualX::GetDisplay() const
 Visual_t TWebVirtualX::GetVisual() const
 {
    return fX11->GetVisual();
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1344,8 +1259,6 @@ Visual_t TWebVirtualX::GetVisual() const
 Int_t TWebVirtualX::GetScreen() const
 {
    return fX11->GetScreen();
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1355,8 +1268,6 @@ Int_t TWebVirtualX::GetScreen() const
 Int_t TWebVirtualX::GetDepth() const
 {
    return fX11->GetDepth();
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1368,8 +1279,6 @@ Int_t TWebVirtualX::GetDepth() const
 Colormap_t TWebVirtualX::GetColormap() const
 {
    return fX11->GetColormap();
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1379,8 +1288,6 @@ Colormap_t TWebVirtualX::GetColormap() const
 Window_t TWebVirtualX::GetDefaultRootWindow() const
 {
    return fX11->GetDefaultRootWindow();
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1394,8 +1301,6 @@ Window_t TWebVirtualX::GetDefaultRootWindow() const
 Atom_t  TWebVirtualX::InternAtom(const char *atom_name, Bool_t only_if_exist)
 {
    return fX11->InternAtom(atom_name, only_if_exist);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1404,8 +1309,6 @@ Atom_t  TWebVirtualX::InternAtom(const char *atom_name, Bool_t only_if_exist)
 Window_t TWebVirtualX::GetParent(Window_t id) const
 {
    return fX11->GetParent(id);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1416,8 +1319,6 @@ Window_t TWebVirtualX::GetParent(Window_t id) const
 FontStruct_t TWebVirtualX::LoadQueryFont(const char *font_name)
 {
    return fX11->LoadQueryFont(font_name);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1426,8 +1327,6 @@ FontStruct_t TWebVirtualX::LoadQueryFont(const char *font_name)
 FontH_t TWebVirtualX::GetFontHandle(FontStruct_t fs)
 {
    return fX11->GetFontHandle(fs);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1435,7 +1334,7 @@ FontH_t TWebVirtualX::GetFontHandle(FontStruct_t fs)
 
 void TWebVirtualX::DeleteFont(FontStruct_t fs)
 {
-   return fX11->DeleteFont(fs);
+   fX11->DeleteFont(fs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1448,8 +1347,6 @@ void TWebVirtualX::DeleteFont(FontStruct_t fs)
 GContext_t TWebVirtualX::CreateGC(Drawable_t id, GCValues_t *gval)
 {
    return fX11->CreateGC(id, gval);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1462,7 +1359,7 @@ GContext_t TWebVirtualX::CreateGC(Drawable_t id, GCValues_t *gval)
 
 void TWebVirtualX::ChangeGC(GContext_t gc, GCValues_t *gval)
 {
-   return fX11->ChangeGC(gc, gval);
+   fX11->ChangeGC(gc, gval);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1472,7 +1369,7 @@ void TWebVirtualX::ChangeGC(GContext_t gc, GCValues_t *gval)
 
 void TWebVirtualX::CopyGC(GContext_t org, GContext_t dest, Mask_t mask)
 {
-   return fX11->CopyGC(org, dest, mask);
+   fX11->CopyGC(org, dest, mask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1480,7 +1377,7 @@ void TWebVirtualX::CopyGC(GContext_t org, GContext_t dest, Mask_t mask)
 
 void TWebVirtualX::DeleteGC(GContext_t gc)
 {
-   return fX11->DeleteGC(gc);
+   fX11->DeleteGC(gc);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1497,8 +1394,6 @@ void TWebVirtualX::DeleteGC(GContext_t gc)
 Cursor_t TWebVirtualX::CreateCursor(ECursor cursor)
 {
    return fX11->CreateCursor(cursor);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1507,7 +1402,7 @@ Cursor_t TWebVirtualX::CreateCursor(ECursor cursor)
 
 void TWebVirtualX::SetCursor(Window_t id, Cursor_t curid)
 {
-   return fX11->SetCursor(id, curid);
+   fX11->SetCursor(id, curid);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1517,9 +1412,8 @@ void TWebVirtualX::SetCursor(Window_t id, Cursor_t curid)
 Pixmap_t TWebVirtualX::CreatePixmap(Drawable_t id, UInt_t w, UInt_t h)
 {
    return fX11->CreatePixmap(id, w, h);
-
-   return kNone;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates a pixmap from bitmap data of the width, height, and depth you
 /// specified and returns a pixmap that identifies it. The width and height
@@ -1539,8 +1433,6 @@ Pixmap_t TWebVirtualX::CreatePixmap(Drawable_t id, const char *bitmap,
                                  Int_t depth)
 {
    return fX11->CreatePixmap(id, bitmap,width, height,forecolor, backcolor,depth);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1554,8 +1446,6 @@ Pixmap_t TWebVirtualX::CreateBitmap(Drawable_t id, const char *bitmap,
                                  UInt_t width, UInt_t height)
 {
    return fX11->CreateBitmap(id, bitmap,width, height);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1563,7 +1453,7 @@ Pixmap_t TWebVirtualX::CreateBitmap(Drawable_t id, const char *bitmap,
 
 void TWebVirtualX::DeletePixmap(Pixmap_t pmap)
 {
-   return fX11->DeletePixmap(pmap);
+   fX11->DeletePixmap(pmap);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1579,8 +1469,6 @@ Bool_t TWebVirtualX::CreatePictureFromFile(Drawable_t id,
                                         PictureAttributes_t &attr)
 {
    return fX11->CreatePictureFromFile(id,filename,pict,pict_mask,attr);
-
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1595,9 +1483,8 @@ Bool_t TWebVirtualX::CreatePictureFromData(Drawable_t id, char **data,
                                         PictureAttributes_t &attr)
 {
    return fX11->CreatePictureFromData(id, data,pict,pict_mask,attr);
-
-   return kFALSE;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads picture data from file "filename" and store it in "ret_data".
 /// Returns kTRUE in case of success, kFALSE otherwise.
@@ -1606,8 +1493,6 @@ Bool_t TWebVirtualX::ReadPictureDataFromFile(const char *filename,
                                           char ***ret_data)
 {
    return fX11->ReadPictureDataFromFile(filename,ret_data);
-
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1615,7 +1500,7 @@ Bool_t TWebVirtualX::ReadPictureDataFromFile(const char *filename,
 
 void TWebVirtualX::DeletePictureData(void *data)
 {
-   return fX11->DeletePictureData(data);
+   fX11->DeletePictureData(data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1637,7 +1522,7 @@ void TWebVirtualX::DeletePictureData(void *data)
 void TWebVirtualX::SetDashes(GContext_t gc, Int_t offset,
                              const char *dash_list, Int_t n)
 {
-   return fX11->SetDashes(gc, offset,dash_list, n);
+   fX11->SetDashes(gc, offset,dash_list, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1645,7 +1530,7 @@ void TWebVirtualX::SetDashes(GContext_t gc, Int_t offset,
 
 void TWebVirtualX::FreeColor(Colormap_t cmap, ULong_t pixel)
 {
-   return fX11->FreeColor(cmap, pixel);
+   fX11->FreeColor(cmap, pixel);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1655,8 +1540,6 @@ void TWebVirtualX::FreeColor(Colormap_t cmap, ULong_t pixel)
 Int_t TWebVirtualX::EventsPending()
 {
    return fX11->EventsPending();
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1664,7 +1547,7 @@ Int_t TWebVirtualX::EventsPending()
 
 void TWebVirtualX::Bell(Int_t percent)
 {
-   return fX11->Bell(percent);
+   fX11->Bell(percent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1691,7 +1574,7 @@ void TWebVirtualX::CopyArea(Drawable_t src, Drawable_t dest,
                          UInt_t width, UInt_t height,
                          Int_t dest_x, Int_t dest_y)
 {
-   return fX11->CopyArea(src, dest,gc, src_x, src_y,width, height,dest_x, dest_y);
+   fX11->CopyArea(src, dest,gc, src_x, src_y,width, height,dest_x, dest_y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1704,7 +1587,7 @@ void TWebVirtualX::CopyArea(Drawable_t src, Drawable_t dest,
 void TWebVirtualX::ChangeWindowAttributes(Window_t id,
                                        SetWindowAttributes_t *attr)
 {
-   return fX11->ChangeWindowAttributes(id,attr);
+   fX11->ChangeWindowAttributes(id,attr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1724,7 +1607,7 @@ void TWebVirtualX::ChangeProperty(Window_t id, Atom_t property,
                                   Atom_t type, UChar_t *data,
                                   Int_t len)
 {
-   return fX11->ChangeProperty(id, property,type, data,len);
+   fX11->ChangeProperty(id, property,type, data,len);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1742,7 +1625,7 @@ void TWebVirtualX::ChangeProperty(Window_t id, Atom_t property,
 void TWebVirtualX::DrawLine(Drawable_t id, GContext_t gc,
                          Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
-   return fX11->DrawLine(id, gc,x1, y1, x2, y2);
+   fX11->DrawLine(id, gc,x1, y1, x2, y2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1755,7 +1638,7 @@ void TWebVirtualX::DrawLine(Drawable_t id, GContext_t gc,
 
 void TWebVirtualX::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   return fX11->ClearArea(id, x, y, w, h);
+   fX11->ClearArea(id, x, y, w, h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1766,8 +1649,6 @@ void TWebVirtualX::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
 Bool_t TWebVirtualX::CheckEvent(Window_t id, EGEventType type, Event_t &ev)
 {
    return fX11->CheckEvent(id, type, ev);
-
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1776,7 +1657,7 @@ Bool_t TWebVirtualX::CheckEvent(Window_t id, EGEventType type, Event_t &ev)
 
 void TWebVirtualX::SendEvent(Window_t id, Event_t *ev)
 {
-   return fX11->SendEvent(id, ev);
+   fX11->SendEvent(id, ev);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1784,7 +1665,7 @@ void TWebVirtualX::SendEvent(Window_t id, Event_t *ev)
 
 void TWebVirtualX::DispatchClientMessage(UInt_t messageID)
 {
-   return fX11->DispatchClientMessage(messageID);
+   fX11->DispatchClientMessage(messageID);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1792,7 +1673,7 @@ void TWebVirtualX::DispatchClientMessage(UInt_t messageID)
 
 void TWebVirtualX::WMDeleteNotify(Window_t id)
 {
-   return fX11->WMDeleteNotify(id);
+   fX11->WMDeleteNotify(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1800,7 +1681,7 @@ void TWebVirtualX::WMDeleteNotify(Window_t id)
 
 void TWebVirtualX::SetKeyAutoRepeat(Bool_t on)
 {
-   return fX11->SetKeyAutoRepeat(on);
+   fX11->SetKeyAutoRepeat(on);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1830,7 +1711,7 @@ void TWebVirtualX::SetKeyAutoRepeat(Bool_t on)
 
 void TWebVirtualX::GrabKey(Window_t id, Int_t keycode, UInt_t modifier, Bool_t grab)
 {
-   return fX11->GrabKey(id, keycode, modifier, grab);
+   fX11->GrabKey(id, keycode, modifier, grab);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1844,7 +1725,7 @@ void TWebVirtualX::GrabButton(Window_t id, EMouseButton button,
                            Window_t confine, Cursor_t cursor,
                            Bool_t grab)
 {
-   return fX11->GrabButton(id, button, modifier, evmask, confine, cursor,grab);
+   fX11->GrabButton(id, button, modifier, evmask, confine, cursor,grab);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1856,7 +1737,7 @@ void TWebVirtualX::GrabPointer(Window_t id, UInt_t evmask,
                             Window_t confine, Cursor_t cursor,
                             Bool_t grab, Bool_t owner_events)
 {
-   return fX11->GrabPointer(id, evmask,confine, cursor,grab, owner_events);
+   fX11->GrabPointer(id, evmask,confine, cursor,grab, owner_events);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1864,7 +1745,7 @@ void TWebVirtualX::GrabPointer(Window_t id, UInt_t evmask,
 
 void TWebVirtualX::SetWindowName(Window_t id, char *name)
 {
-   return fX11->SetWindowName(id, name);
+   fX11->SetWindowName(id, name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1872,7 +1753,7 @@ void TWebVirtualX::SetWindowName(Window_t id, char *name)
 
 void TWebVirtualX::SetIconName(Window_t id, char *name)
 {
-   return fX11->SetIconName(id, name);
+   fX11->SetIconName(id, name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1880,7 +1761,7 @@ void TWebVirtualX::SetIconName(Window_t id, char *name)
 
 void TWebVirtualX::SetIconPixmap(Window_t id, Pixmap_t pix)
 {
-   return fX11->SetIconPixmap(id, pix);
+   fX11->SetIconPixmap(id, pix);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1888,7 +1769,7 @@ void TWebVirtualX::SetIconPixmap(Window_t id, Pixmap_t pix)
 
 void TWebVirtualX::SetClassHints(Window_t id, char *className, char *resourceName)
 {
-   return fX11->SetClassHints(id, className,resourceName);
+   fX11->SetClassHints(id, className,resourceName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1904,7 +1785,7 @@ void TWebVirtualX::SetMWMHints(Window_t id, UInt_t value, UInt_t funcs, UInt_t i
 
 void TWebVirtualX::SetWMPosition(Window_t id, Int_t x, Int_t y)
 {
-   return fX11->SetWMPosition(id, x, y);
+   fX11->SetWMPosition(id, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1916,7 +1797,7 @@ void TWebVirtualX::SetWMPosition(Window_t id, Int_t x, Int_t y)
 
 void TWebVirtualX::SetWMSize(Window_t id, UInt_t w, UInt_t h)
 {
-   return fX11->SetWMSize(id, w, h);
+   fX11->SetWMSize(id, w, h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1942,7 +1823,7 @@ void TWebVirtualX::SetWMSizeHints(Window_t id, UInt_t wmin, UInt_t hmin,
 
 void TWebVirtualX::SetWMState(Window_t id, EInitialState state)
 {
-   return fX11->SetWMState(id, state);
+   fX11->SetWMState(id, state);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1952,7 +1833,7 @@ void TWebVirtualX::SetWMState(Window_t id, EInitialState state)
 
 void TWebVirtualX::SetWMTransientHint(Window_t id, Window_t main_id)
 {
-   return fX11->SetWMTransientHint(id,main_id);
+   fX11->SetWMTransientHint(id,main_id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1975,7 +1856,7 @@ void TWebVirtualX::SetWMTransientHint(Window_t id, Window_t main_id)
 void TWebVirtualX::DrawString(Drawable_t id, GContext_t gc, Int_t x,
                            Int_t y, const char *s, Int_t len)
 {
-   return fX11->DrawString(id, gc, x,y, s,len);
+   fX11->DrawString(id, gc, x,y, s,len);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1985,8 +1866,6 @@ Int_t TWebVirtualX::TextWidth(FontStruct_t font, const char *s,
                              Int_t len)
 {
    return fX11->TextWidth(font, s,len);
-
-   return 5;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1995,10 +1874,7 @@ Int_t TWebVirtualX::TextWidth(FontStruct_t font, const char *s,
 void TWebVirtualX::GetFontProperties(FontStruct_t font, Int_t &max_ascent,
                                   Int_t &max_descent)
 {
-   return fX11->GetFontProperties(font, max_ascent,max_descent);
-
-   max_ascent = 5;
-   max_descent = 5;
+   fX11->GetFontProperties(font, max_ascent,max_descent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2007,9 +1883,7 @@ void TWebVirtualX::GetFontProperties(FontStruct_t font, Int_t &max_ascent,
 
 void TWebVirtualX::GetGCValues(GContext_t gc, GCValues_t &gval)
 {
-   return fX11->GetGCValues(gc, gval);
-
-   gval.fMask = 0;
+   fX11->GetGCValues(gc, gval);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2018,8 +1892,6 @@ void TWebVirtualX::GetGCValues(GContext_t gc, GCValues_t &gval)
 FontStruct_t TWebVirtualX::GetGCFont(GContext_t gc)
 {
    return fX11->GetGCFont(gc);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2031,8 +1903,6 @@ FontStruct_t TWebVirtualX::GetGCFont(GContext_t gc)
 FontStruct_t TWebVirtualX::GetFontStruct(FontH_t fh)
 {
    return fX11->GetFontStruct(fh);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2041,7 +1911,7 @@ FontStruct_t TWebVirtualX::GetFontStruct(FontH_t fh)
 
 void TWebVirtualX::FreeFontStruct(FontStruct_t fs)
 {
-   return fX11->FreeFontStruct(fs);
+   fX11->FreeFontStruct(fs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2050,7 +1920,7 @@ void TWebVirtualX::FreeFontStruct(FontStruct_t fs)
 
 void TWebVirtualX::ClearWindow(Window_t id)
 {
-   return fX11->ClearWindow(id);
+   fX11->ClearWindow(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2062,8 +1932,6 @@ void TWebVirtualX::ClearWindow(Window_t id)
 Int_t TWebVirtualX::KeysymToKeycode(UInt_t keysym)
 {
    return fX11->KeysymToKeycode(keysym);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2080,7 +1948,7 @@ void TWebVirtualX::FillRectangle(Drawable_t id, GContext_t gc,
                               Int_t x, Int_t y,
                               UInt_t w, UInt_t h)
 {
-   return fX11->FillRectangle(id, gc, x, y, w, h);
+   fX11->FillRectangle(id, gc, x, y, w, h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2097,7 +1965,7 @@ void TWebVirtualX::DrawRectangle(Drawable_t id, GContext_t gc,
                               Int_t x, Int_t y,
                               UInt_t w, UInt_t h)
 {
-   return fX11->DrawRectangle(id, gc, x, y, w, h);
+   fX11->DrawRectangle(id, gc, x, y, w, h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2119,7 +1987,7 @@ void TWebVirtualX::DrawRectangle(Drawable_t id, GContext_t gc,
 void TWebVirtualX::DrawSegments(Drawable_t id, GContext_t gc,
                              Segment_t *seg, Int_t nseg)
 {
-   return fX11->DrawSegments(id, gc,seg, nseg);
+   fX11->DrawSegments(id, gc,seg, nseg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2130,7 +1998,7 @@ void TWebVirtualX::DrawSegments(Drawable_t id, GContext_t gc,
 
 void TWebVirtualX::SelectInput(Window_t id, UInt_t evmask)
 {
-   return fX11->SelectInput(id, evmask);
+   fX11->SelectInput(id, evmask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2139,8 +2007,6 @@ void TWebVirtualX::SelectInput(Window_t id, UInt_t evmask)
 Window_t TWebVirtualX::GetInputFocus()
 {
    return fX11->GetInputFocus();
-
-   return kNone;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2148,7 +2014,7 @@ Window_t TWebVirtualX::GetInputFocus()
 
 void TWebVirtualX::SetInputFocus(Window_t id)
 {
-   return fX11->SetInputFocus(id);
+   fX11->SetInputFocus(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2158,8 +2024,6 @@ void TWebVirtualX::SetInputFocus(Window_t id)
 Window_t TWebVirtualX::GetPrimarySelectionOwner()
 {
    return fX11->GetPrimarySelectionOwner();
-
-   return kNone;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2168,7 +2032,7 @@ Window_t TWebVirtualX::GetPrimarySelectionOwner()
 
 void TWebVirtualX::SetPrimarySelectionOwner(Window_t id)
 {
-   return fX11->SetPrimarySelectionOwner(id);
+   fX11->SetPrimarySelectionOwner(id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2183,7 +2047,7 @@ void TWebVirtualX::SetPrimarySelectionOwner(Window_t id)
 
 void TWebVirtualX::ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t when)
 {
-   return fX11->ConvertPrimarySelection(id, clipboard, when);
+   fX11->ConvertPrimarySelection(id, clipboard, when);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2201,9 +2065,7 @@ void TWebVirtualX::ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t
 void TWebVirtualX::LookupString(Event_t *event, char *buf,
                              Int_t buflen, UInt_t &keysym)
 {
-   return fX11->LookupString(event, buf,buflen, keysym);
-
-   keysym = 0;
+   fX11->LookupString(event, buf,buflen, keysym);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2225,10 +2087,7 @@ void TWebVirtualX::TranslateCoordinates(Window_t src, Window_t dest,
                                      Int_t &dest_x, Int_t &dest_y,
                                      Window_t &child)
 {
-   return fX11->TranslateCoordinates(src, dest,src_x,src_y,dest_x,dest_y,child);
-
-   dest_x = dest_y = 0;
-   child = 0;
+   fX11->TranslateCoordinates(src, dest,src_x,src_y,dest_x,dest_y,child);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2243,9 +2102,6 @@ void TWebVirtualX::GetWindowSize(Drawable_t id, Int_t &x, Int_t &y,
                               UInt_t &w, UInt_t &h)
 {
    return fX11->GetWindowSize(id, x,y,w, h);
-
-   x = y = 0;
-   w = h = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2266,7 +2122,7 @@ void TWebVirtualX::GetWindowSize(Drawable_t id, Int_t &x, Int_t &y,
 
 void TWebVirtualX::FillPolygon(Window_t id, GContext_t gc, Point_t *points, Int_t npnt)
 {
-   return fX11->FillPolygon(id, gc, points, npnt);
+   fX11->FillPolygon(id, gc, points, npnt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2287,11 +2143,7 @@ void TWebVirtualX::QueryPointer(Window_t id, Window_t &rootw, Window_t &childw,
                              Int_t &root_x, Int_t &root_y, Int_t &win_x,
                              Int_t &win_y, UInt_t &mask)
 {
-   return fX11->QueryPointer(id, rootw, childw, root_x, root_y, win_x,win_y, mask);
-
-   rootw = childw = kNone;
-   root_x = root_y = win_x = win_y = 0;
-   mask = 0;
+   fX11->QueryPointer(id, rootw, childw, root_x, root_y, win_x,win_y, mask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2305,8 +2157,7 @@ void TWebVirtualX::QueryPointer(Window_t id, Window_t &rootw, Window_t &childw,
 
 void TWebVirtualX::SetForeground(GContext_t gc, ULong_t foreground)
 {
-   return fX11->SetForeground(gc, foreground);
-
+   fX11->SetForeground(gc, foreground);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2318,7 +2169,7 @@ void TWebVirtualX::SetForeground(GContext_t gc, ULong_t foreground)
 void TWebVirtualX::SetClipRectangles(GContext_t gc, Int_t x, Int_t y,
                                   Rectangle_t *recs, Int_t n)
 {
-   return fX11->SetClipRectangles(gc, x, y, recs, n);
+   fX11->SetClipRectangles(gc, x, y, recs, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2328,7 +2179,7 @@ void TWebVirtualX::SetClipRectangles(GContext_t gc, Int_t x, Int_t y,
 
 void TWebVirtualX::Update(Int_t mode)
 {
-   return fX11->Update(mode);
+   fX11->Update(mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2337,8 +2188,6 @@ void TWebVirtualX::Update(Int_t mode)
 Region_t TWebVirtualX::CreateRegion()
 {
    return fX11->CreateRegion();
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2346,7 +2195,7 @@ Region_t TWebVirtualX::CreateRegion()
 
 void TWebVirtualX::DestroyRegion(Region_t reg)
 {
-   return fX11->DestroyRegion(reg);
+   fX11->DestroyRegion(reg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2359,7 +2208,7 @@ void TWebVirtualX::DestroyRegion(Region_t reg)
 
 void TWebVirtualX::UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest)
 {
-   return fX11->UnionRectWithRegion(rect, src, dest);
+   fX11->UnionRectWithRegion(rect, src, dest);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2372,8 +2221,6 @@ void TWebVirtualX::UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t
 Region_t TWebVirtualX::PolygonRegion(Point_t *points, Int_t np, Bool_t winding)
 {
    return fX11->PolygonRegion(points, np, winding);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2385,7 +2232,7 @@ Region_t TWebVirtualX::PolygonRegion(Point_t *points, Int_t np, Bool_t winding)
 
 void TWebVirtualX::UnionRegion(Region_t rega, Region_t regb, Region_t result)
 {
-   return fX11->UnionRegion(rega, regb, result);
+   fX11->UnionRegion(rega, regb, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2397,7 +2244,7 @@ void TWebVirtualX::UnionRegion(Region_t rega, Region_t regb, Region_t result)
 
 void TWebVirtualX::IntersectRegion(Region_t rega, Region_t regb, Region_t result)
 {
-   return fX11->IntersectRegion(rega, regb, result);
+   fX11->IntersectRegion(rega, regb, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2405,7 +2252,7 @@ void TWebVirtualX::IntersectRegion(Region_t rega, Region_t regb, Region_t result
 
 void TWebVirtualX::SubtractRegion(Region_t rega, Region_t regb, Region_t result)
 {
-   return fX11->SubtractRegion(rega, regb, result);
+   fX11->SubtractRegion(rega, regb, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2418,7 +2265,7 @@ void TWebVirtualX::SubtractRegion(Region_t rega, Region_t regb, Region_t result)
 
 void TWebVirtualX::XorRegion(Region_t rega, Region_t regb, Region_t result)
 {
-   return fX11->XorRegion(rega, regb, result);
+   fX11->XorRegion(rega, regb, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2427,8 +2274,6 @@ void TWebVirtualX::XorRegion(Region_t rega, Region_t regb, Region_t result)
 Bool_t  TWebVirtualX::EmptyRegion(Region_t reg)
 {
    return fX11->EmptyRegion(reg);
-
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2437,8 +2282,6 @@ Bool_t  TWebVirtualX::EmptyRegion(Region_t reg)
 Bool_t  TWebVirtualX::PointInRegion(Int_t x, Int_t y, Region_t reg)
 {
    return fX11->PointInRegion(x, y, reg);
-
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2447,8 +2290,6 @@ Bool_t  TWebVirtualX::PointInRegion(Int_t x, Int_t y, Region_t reg)
 Bool_t  TWebVirtualX::EqualRegion(Region_t rega, Region_t regb)
 {
    return fX11->EqualRegion(rega, regb);
-
-   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2456,7 +2297,7 @@ Bool_t  TWebVirtualX::EqualRegion(Region_t rega, Region_t regb)
 
 void TWebVirtualX::GetRegionBox(Region_t reg, Rectangle_t *rect)
 {
-   return fX11->GetRegionBox(reg, rect);
+   fX11->GetRegionBox(reg, rect);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2476,8 +2317,6 @@ void TWebVirtualX::GetRegionBox(Region_t reg, Rectangle_t *rect)
 char **TWebVirtualX::ListFonts(const char *fontname, Int_t max, Int_t &count)
 {
    return fX11->ListFonts(fontname, max, count);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2485,7 +2324,7 @@ char **TWebVirtualX::ListFonts(const char *fontname, Int_t max, Int_t &count)
 
 void TWebVirtualX::FreeFontNames(char ** fontlist)
 {
-   return fX11->FreeFontNames(fontlist);
+   fX11->FreeFontNames(fontlist);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2497,8 +2336,6 @@ void TWebVirtualX::FreeFontNames(char ** fontlist)
 Drawable_t TWebVirtualX::CreateImage(UInt_t width, UInt_t height)
 {
    return fX11->CreateImage(width, height);
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2506,7 +2343,7 @@ Drawable_t TWebVirtualX::CreateImage(UInt_t width, UInt_t height)
 
 void TWebVirtualX::GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height)
 {
-   return fX11->GetImageSize(id, width, height);
+   fX11->GetImageSize(id, width, height);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2519,7 +2356,7 @@ void TWebVirtualX::GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height)
 
 void TWebVirtualX::PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel)
 {
-   return fX11->PutPixel(id, x, y, pixel);
+   fX11->PutPixel(id, x, y, pixel);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2546,7 +2383,7 @@ void TWebVirtualX::PutImage(Drawable_t id, GContext_t gc,
                          Drawable_t img, Int_t dx, Int_t dy,
                          Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   return fX11->PutImage(id, gc,img, dx, dy, x, y, w, h);
+   fX11->PutImage(id, gc,img, dx, dy, x, y, w, h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2554,7 +2391,7 @@ void TWebVirtualX::PutImage(Drawable_t id, GContext_t gc,
 
 void TWebVirtualX::DeleteImage(Drawable_t img)
 {
-   return fX11->DeleteImage(img);
+   fX11->DeleteImage(img);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2607,7 +2444,7 @@ Pixmap_t TWebVirtualX::CreatePixmapFromData(unsigned char *bits, UInt_t width,
 
 void TWebVirtualX::ShapeCombineMask(Window_t wid, Int_t arg1, Int_t arg2, Pixmap_t map)
 {
-   return fX11->ShapeCombineMask(wid, arg1, arg2, map);
+   fX11->ShapeCombineMask(wid, arg1, arg2, map);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2625,7 +2462,7 @@ UInt_t TWebVirtualX::ScreenWidthMM() const
 
 void TWebVirtualX::DeleteProperty(Window_t wid, Atom_t &atom)
 {
-   return fX11->DeleteProperty(wid, atom);
+   fX11->DeleteProperty(wid, atom);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2647,7 +2484,7 @@ Int_t TWebVirtualX::GetProperty(Window_t wid, Atom_t atom1, Long_t arg1, Long_t 
 
 void TWebVirtualX::ChangeActivePointerGrab(Window_t wid, UInt_t arg1, Cursor_t curs)
 {
-   return fX11->ChangeActivePointerGrab(wid, arg1, curs);
+   fX11->ChangeActivePointerGrab(wid, arg1, curs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2656,7 +2493,7 @@ void TWebVirtualX::ChangeActivePointerGrab(Window_t wid, UInt_t arg1, Cursor_t c
 
 void TWebVirtualX::ConvertSelection(Window_t wid, Atom_t &arg1, Atom_t &arg2, Atom_t &arg3, Time_t &tm)
 {
-   return fX11->ConvertSelection(wid, arg1, arg2, arg3, tm);
+   fX11->ConvertSelection(wid, arg1, arg2, arg3, tm);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2673,7 +2510,7 @@ Bool_t TWebVirtualX::SetSelectionOwner(Window_t wid, Atom_t &atom)
 
 void TWebVirtualX::ChangeProperties(Window_t wid, Atom_t atom1, Atom_t atom2, Int_t arg1, UChar_t *arg2, Int_t arg3)
 {
-   return fX11->ChangeProperties(wid, atom1, atom2, arg1, arg2, arg3);
+   fX11->ChangeProperties(wid, atom1, atom2, arg1, arg2, arg3);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2682,7 +2519,7 @@ void TWebVirtualX::ChangeProperties(Window_t wid, Atom_t atom1, Atom_t atom2, In
 
 void TWebVirtualX::SetDNDAware(Window_t wid, Atom_t *atom)
 {
-   return fX11->SetDNDAware(wid, atom);
+   fX11->SetDNDAware(wid, atom);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2690,7 +2527,7 @@ void TWebVirtualX::SetDNDAware(Window_t wid, Atom_t *atom)
 
 void TWebVirtualX::SetTypeList(Window_t wid, Atom_t arg1, Atom_t *arg2)
 {
-   return fX11->SetTypeList(wid, arg1, arg2);
+   fX11->SetTypeList(wid, arg1, arg2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2716,7 +2553,7 @@ Bool_t TWebVirtualX::IsDNDAware(Window_t wid, Atom_t *atom)
 
 void TWebVirtualX::BeginModalSessionFor(Window_t wid)
 {
-   return fX11->BeginModalSessionFor(wid);
+   fX11->BeginModalSessionFor(wid);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2734,5 +2571,5 @@ Int_t TWebVirtualX::SupportsExtension(const char *arg) const
 
 void TWebVirtualX::MapGCFont(GContext_t cont, FontStruct_t font)
 {
-   return fX11->MapGCFont(cont, font);
+   fX11->MapGCFont(cont, font);
 }
