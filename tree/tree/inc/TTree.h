@@ -166,7 +166,6 @@ protected:
 
    Long64_t         GetCacheAutoSize(Bool_t withDefault = kFALSE) const;
    char             GetNewlineValue(std::istream &inputStream);
-   TTreeCache      *GetReadCache(TFile *file, Bool_t create = kFALSE);
    void             ImportClusterRanges(TTree *fromtree);
    void             MoveReadCache(TFile *src, TDirectory *dir);
    Int_t            SetCacheSizeAux(Bool_t autocache = kTRUE, Long64_t cacheSize = 0);
@@ -445,6 +444,8 @@ public:
    TVirtualTreePlayer     *GetPlayer();
    virtual Int_t           GetPacketSize() const { return fPacketSize; }
    virtual TVirtualPerfStats *GetPerfStats() const { return fPerfStats; }
+           TTreeCache     *GetReadCache(TFile *file) const;
+           TTreeCache     *GetReadCache(TFile *file, Bool_t create);
    virtual Long64_t        GetReadEntry()  const { return fReadEntry; }
    virtual Long64_t        GetReadEvent()  const { return fReadEntry; }
    virtual Int_t           GetScanField()  const { return fScanField; }

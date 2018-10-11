@@ -1212,7 +1212,7 @@ void TFile::ResetErrno() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to the current read cache.
 
-TFileCacheRead *TFile::GetCacheRead(TObject* tree) const
+TFileCacheRead *TFile::GetCacheRead(const TObject* tree) const
 {
    if (!tree) {
       if (!fCacheRead && fCacheReadMap->GetSize() == 1) {
