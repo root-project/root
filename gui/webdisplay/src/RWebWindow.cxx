@@ -16,7 +16,15 @@
 #include <ROOT/RWebWindow.hxx>
 
 #include <ROOT/RWebWindowsManager.hxx>
+
+#ifdef R__USE_ROOT7
 #include <ROOT/TLogger.hxx>
+#else
+#include <iostream>
+#define R__ERROR_HERE(arg) std::cerr << arg << ": "
+#define R__WARNING_HERE(arg) std::cout << arg << ": "
+#define R__DEBUG_HERE(arg) std::cout << arg << ": "
+#endif
 
 #include "RWebWindowWSHandler.hxx"
 #include "THttpCallArg.h"
