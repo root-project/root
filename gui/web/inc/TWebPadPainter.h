@@ -134,7 +134,6 @@ public:
    //jpg, png, bmp, gif output.
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const;
 
-
    // reimplementing some direct X11 calls, which are not fetched
    void     DrawFillArea(Int_t n, TPoint *xy);
 

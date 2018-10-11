@@ -116,7 +116,7 @@ protected:
    Bool_t fHasSpecials;   ///<! has special objects which may require pad ranges
    Long64_t fCanvVersion; ///<! actual canvas version, changed with every new Modified() call
    Bool_t fWaitNewConnection; ///<! when true, Update() will wait for a new connection
-   UInt_t fClientBits; ///<! latest status bits from client like editor visisble or not
+   UInt_t fClientBits; ///<! latest status bits from client like editor visible or not
 
    TWebCanvasUpdatedSignal_t  fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
 

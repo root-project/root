@@ -21,7 +21,7 @@
 /** Class to store actual drawing attributes */
 class TWebPainterAttributes : public TObject, public TAttFill, public TAttLine, public TAttMarker, public TAttText  {
    public:
-      TWebPainterAttributes() : TObject(), TAttFill(), TAttLine(), TAttMarker(), TAttText() { }
+      TWebPainterAttributes() = default;
 
       virtual ~TWebPainterAttributes() {}
 

@@ -145,6 +145,4 @@ public:
    TString ProduceJSON();
 };
 
-
-
 #endif
