@@ -218,7 +218,7 @@ void REveElement::PreDeleteElement()
 {
    if (fElementId != 0) {
       REX::gEve->PreDeleteElement(this);
-      fScene->SceneElementRemoved( fElementId);
+      if (fScene->IsAcceptingChanges()) fScene->SceneElementRemoved( fElementId);
    }
 }
 
