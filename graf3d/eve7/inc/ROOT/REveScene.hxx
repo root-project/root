@@ -138,6 +138,7 @@ public:
    // void RepaintAllScenes(Bool_t dropLogicals);
 
    // void DestroyElementRenderers(REveElement* element);
+   void AcceptChanges(bool);
 
    void ProcessSceneChanges();
 

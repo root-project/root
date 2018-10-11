@@ -479,6 +479,20 @@ void REveSceneList::DestroyScenes()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set accept changes flag on all scenes.
+
+void REveSceneList::AcceptChanges(bool on)
+{
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      REveScene* s = (REveScene*) *i;
+      if (on)
+         s->BeginAcceptingChanges();
+      else
+         s->EndAcceptingChanges();
+   }
+}
 /*
 ////////////////////////////////////////////////////////////////////////////////
 /// Repaint scenes that are tagged as changed.
