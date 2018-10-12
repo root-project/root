@@ -23,7 +23,12 @@ class TTreeIterable(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         ROOT.gInterpreter.Declare('#include "TreeHelper.h"')                                          
-        ROOT.CreateTTree(cls.filename, cls.treename, cls.nentries, cls.arraysize, cls.more)
+        ROOT.CreateTTree(cls.filename,
+                         cls.treename,
+                         cls.nentries,
+                         cls.arraysize,
+                         cls.more,
+                         "RECREATE")
 
     # Helper
     def get_file_and_tree(self):
