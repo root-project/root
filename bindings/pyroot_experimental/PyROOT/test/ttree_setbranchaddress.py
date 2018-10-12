@@ -8,10 +8,13 @@ import numpy as np
 
 class TTreeSetBranchAddress(unittest.TestCase):
     """
-    Test for the pythonization of TTree/TChain::SetBranchAddress, which allows to pass proxy
+    Test for the pythonization of TTree::SetBranchAddress, which allows to pass proxy
     references as arguments from the Python side. Example:
     `v = ROOT.std.vector('int')()`
     `t.SetBranchAddress("my_vector_branch", v)`
+
+    Since this pythonization is common to TTree and its subclasses, other classes like
+    TChain are also tested here.
     """
 
     filename  = 'treesetbranchaddress.root'
