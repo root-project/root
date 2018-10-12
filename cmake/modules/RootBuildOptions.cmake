@@ -90,7 +90,7 @@ ROOT_BUILD_OPTION(builtin_xrootd OFF "Build the XROOTD internally (downloading t
 ROOT_BUILD_OPTION(builtin_xxhash OFF "Build included xxHash library")
 ROOT_BUILD_OPTION(builtin_zlib OFF "Build included libz, or use system libz")
 ROOT_BUILD_OPTION(castor ON "CASTOR support, requires libshift from CASTOR >= 1.5.2")
-ROOT_BUILD_OPTION(ccache ON "Enable ccache usage for speeding up builds")
+ROOT_BUILD_OPTION(ccache OFF "Enable ccache usage for speeding up builds")
 ROOT_BUILD_OPTION(cefweb OFF "Chromium Embedded Framework web-based display")
 ROOT_BUILD_OPTION(clad ON "Enable clad, the cling automatic differentiation plugin.")
 ROOT_BUILD_OPTION(cling ON "Enable new CLING C++ interpreter")
