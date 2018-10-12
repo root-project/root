@@ -3,6 +3,8 @@ from libROOTPython import AddBranchAttrSyntax, SetBranchAddressPyz
 
 from ROOT import pythonization
 
+from cppyy.gbl import TClass
+
 # TTree iterator
 def _TTree__iter__(self):
     i = 0
@@ -31,7 +33,12 @@ def pythonize_ttree(klass, name):
     # klass: class to be pythonized
     # name: string containing the name of the class
 
-    if name == 'TTree':
+    if TClass.GetClass(name).InheritsFrom('TTree'):
+        # Pythonizations that are common to TTree and its subclasses.
+        # To avoid duplicating the same logic in the pythonizors of
+        # the subclasses, inject the pythonizations for all of them
+        # here as well.
+
         # Pythonic iterator
         klass.__iter__ = _TTree__iter__
 
