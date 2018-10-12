@@ -832,7 +832,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
       if (arg->fFileName == "default.htm") {
 
-         arg->fContent = ReadFileContent(fJSROOTSYS + "/files/online.htm");
+         arg->fContent = ReadFileContent((fJSROOTSYS + "/files/online.htm").Data());
 
       } else {
          auto wsptr = FindWS(arg->GetPathName());
