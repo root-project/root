@@ -39,12 +39,12 @@ REX::REvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
    return ps;
 }
 
-void makeProjectedViewsAndSceneRPhi(bool scale)
+void makeProjectedViewsAndScene(REX::REveProjection::EPType_e type, bool scale)
 {
-   auto rPhiGeomScene  = REX::gEve->SpawnNewScene(Form("RPhi%s Geo", scale ? "PreScaled" : ""),"RPhi");
-   auto  rPhiEventScene = REX::gEve->SpawnNewScene(Form("RPhi%s Event", scale ? "PreScaled" : ""),"RPhi");
+   auto rPhiGeomScene  = REX::gEve->SpawnNewScene(Form("Project%s Geo", scale ? "PreScaled" : ""));
+   auto  rPhiEventScene = REX::gEve->SpawnNewScene(Form("Project%s Event", scale ? "PreScaled" : ""));
 
-   auto mngRhoPhi = new REX::REveProjectionManager(REX::REveProjection::kPT_RPhi);
+   auto mngRhoPhi = new REX::REveProjectionManager(type);
    if (scale) {
       REX::REveProjection* p = mngRhoPhi->GetProjection();
       p->AddPreScaleEntry(0, 0,   4);    // r scale 4 from 0
@@ -52,30 +52,7 @@ void makeProjectedViewsAndSceneRPhi(bool scale)
       p->AddPreScaleEntry(0, 310, 0.5);
       p->SetUsePreScale(kTRUE);
    }
-   auto rphiView = REX::gEve->SpawnNewViewer("RPhi View", "");
-   rphiView->AddScene(rPhiGeomScene);
-   rphiView->AddScene(rPhiEventScene);
-
-   for (auto & ie : REX::gEve->GetGlobalScene()->RefChildren())
-      mngRhoPhi->ImportElements(ie, rPhiGeomScene);
-
-   for (auto & ie : REX::gEve->GetEventScene()->RefChildren())
-      mngRhoPhi->ImportElements(ie, rPhiEventScene);
-}
-void makeProjectedViewsAndSceneRhoZ(bool scale)
-{
-   auto rPhiGeomScene  = REX::gEve->SpawnNewScene(Form("RhoZ%s Geo", scale ? "PreScaled" : ""),"RhoZ");
-   auto  rPhiEventScene = REX::gEve->SpawnNewScene(Form("RhoZ%s Event", scale ? "PreScaled" : ""),"RhoZ");
-
-   auto mngRhoPhi = new REX::REveProjectionManager(REX::REveProjection::kPT_RhoZ);
-   if (scale) {
-      REX::REveProjection* p = mngRhoPhi->GetProjection();
-      p->AddPreScaleEntry(0, 0,   4);    // r scale 4 from 0
-      p->AddPreScaleEntry(0, 45,  1);    // r scale 1 from 45
-      p->AddPreScaleEntry(0, 310, 0.5);
-      p->SetUsePreScale(kTRUE);
-   }
-   auto rphiView = REX::gEve->SpawnNewViewer("RhoZ View", "");
+   auto rphiView = REX::gEve->SpawnNewViewer("Projected View", "");
    rphiView->AddScene(rPhiGeomScene);
    rphiView->AddScene(rPhiEventScene);
 
@@ -98,7 +75,7 @@ TGeoNode* getNodeFromPath( TGeoNode* top, std::string path)
 }
 
 
-void projection_prescale(std::string type = "RhoZ")
+void projection_prescale(std::string type = "RhPhi")
 {
    REX::REveManager::Create();
 
@@ -145,15 +122,14 @@ void projection_prescale(std::string type = "RhoZ")
    auto points = getPointSet(10, 30);
    REX::gEve->GetEventScene()->AddElement(points);
 
+   // make scaled and plain projected views
    if (type == "RPhi") {
-      makeProjectedViewsAndSceneRPhi(true);
-      makeProjectedViewsAndSceneRPhi(false);
+      makeProjectedViewsAndScene(REX::REveProjection::kPT_RPhi, true);
+      makeProjectedViewsAndScene(REX::REveProjection::kPT_RPhi, false);
    }
    else {
-      makeProjectedViewsAndSceneRhoZ(true);
-      makeProjectedViewsAndSceneRhoZ(false);
-
+      makeProjectedViewsAndScene(REX::REveProjection::kPT_RhoZ, true);
+      makeProjectedViewsAndScene(REX::REveProjection::kPT_RhoZ, false);
    }
-      
 }
  
