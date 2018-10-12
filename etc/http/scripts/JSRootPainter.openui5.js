@@ -69,7 +69,7 @@
    // element.setAttribute('src', "https://openui5.hana.ondemand.com/1.38.21/resources/sap-ui-core-nojQuery.js"); // some previous version
 //   element.setAttribute('data-sap-ui-trace', "true");
 
-   element.setAttribute('data-sap-ui-libs', JSROOT.openui5libs || "sap.m, sap.ui.layout, sap.ui.unified");
+   element.setAttribute('data-sap-ui-libs', JSROOT.openui5libs || "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.commons");
 
 //   element.setAttribute('data-sap-ui-areas', "uiArea1");
 
