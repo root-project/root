@@ -2814,7 +2814,6 @@ void TROOT::SetWebDisplay(const char *webdisplay)
       fIsWebDisplay = kFALSE;
       fIsWebDisplayBatch = kFALSE;
       fWebDisplay = "";
-      gROOT->SetBatch(kFALSE);
    } else {
       fIsWebDisplay = kTRUE;
       if (!strncmp(wd, "batch", 5)) {
@@ -2827,7 +2826,6 @@ void TROOT::SetWebDisplay(const char *webdisplay)
          fIsWebDisplayBatch = kFALSE;
       }
       fWebDisplay = wd;
-      gROOT->SetBatch(kTRUE);
    }
 }
 

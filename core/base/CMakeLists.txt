@@ -6,6 +6,22 @@ ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
 
+if(cxx14 OR cxx17 OR root7)
+    set(Base_cxx14_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TLogger.hxx)
+    set(Base_cxx14src ${CMAKE_CURRENT_SOURCE_DIR}/v7/src/TLogger.cxx)
+# while TLogger.hxx may be used without root7 flag but placed in v7/inc/, 
+# we need to explicitly provide dirs where search for it
+    set(install_dirs inc/ v7/inc/)
+endif()
+
+if(root7)
+    set(Base_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/RDrawable.hxx
+                             ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TDirectoryEntry.hxx
+                             ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TIndexIter.hxx)
+    set(Base_root7src ${CMAKE_CURRENT_SOURCE_DIR}/v7/src/RDrawable.cxx)
+endif()
+
+
 ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef?.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/Rtypes.h
@@ -19,16 +35,9 @@ ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef?.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/Byteswap.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TExecutor.hxx
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TSequentialExecutor.hxx
-                                    )
-if(root7)
-    set(root7src v7/src/*.cxx)
-    set(Base_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/RDrawable.hxx
-                             ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TDirectoryEntry.hxx
-                             ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TIndexIter.hxx
-                             ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TLogger.hxx
-    )
-endif()
-ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx ${root7src})
+                                   )
+
+ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx ${Base_cxx14src} ${Base_root7src})
 
 # libCore is linked against zlib (based on the location returned by find_package or builtin_zlib). The dictionary of
 # libCore, G__Core.cxx, should contain the include path to zlib.h in order to keep the symbol and header files in sync.
@@ -45,6 +54,7 @@ include_directories(${ZLIB_INCLUDE_DIR})
 
 ROOT_GENERATE_DICTIONARY(G__Core
                          ${Base_dict_headers}
+                         ${Base_cxx14_dict_headers}
                          ${Base_v7_dict_headers}
                          ${Clib_dict_headers}
                          ${Cont_dict_headers}
@@ -66,7 +76,7 @@ set_property(TARGET G__Core PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
 list(REMOVE_ITEM sources TROOT.cxx roota.cxx)
 ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${sources} BUILTINS PCRE)
 
-ROOT_INSTALL_HEADERS()
+ROOT_INSTALL_HEADERS(${install_dirs})
 
 #---Extra options-----------------------------------------------------------------------
 set_source_files_properties(src/TPRegexp.cxx COMPILE_FLAGS -I${PCRE_INCLUDE_DIR})

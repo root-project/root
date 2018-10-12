@@ -66,7 +66,8 @@ Options:
   -q : exit after processing command line macro files
   -l : do not show splash screen
   -t : enable thread-safety and implicit multi-threading (IMT)
- --web: display graphics in a web browser
+ --web: display graphics in a default web browser
+ --web=<browser>: display graphics in specified web browser
  --notebook : execute ROOT notebook
  dir : if dir is a valid directory cd to it before executing
 
