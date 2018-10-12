@@ -46,7 +46,6 @@ def pythonize_ttree(klass, name):
         AddBranchAttrSyntax(klass)
 
         # SetBranchAddress
-        klass._OriginalSetBranchAddress = klass.SetBranchAddress
         klass.SetBranchAddress = _SetBranchAddress
 
     return True
