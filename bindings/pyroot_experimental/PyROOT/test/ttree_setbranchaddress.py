@@ -6,7 +6,7 @@ from libcppyy import SetOwnership
 import numpy as np
 
 
-class TTreeTChainSetBranchAddress(unittest.TestCase):
+class TTreeSetBranchAddress(unittest.TestCase):
     """
     Test for the pythonization of TTree/TChain::SetBranchAddress, which allows to pass proxy
     references as arguments from the Python side. Example:
