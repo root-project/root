@@ -6,7 +6,7 @@ add_subdirectory(guihtml)
 add_subdirectory(recorder)
 add_subdirectory(sessionviewer)
 
-if(cxx14 OR root7)
+if(cxx14 OR cxx17 OR root7)
    add_subdirectory(webdisplay)
    if(cefweb)
       add_subdirectory(cefdisplay)

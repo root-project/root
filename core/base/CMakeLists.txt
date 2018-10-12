@@ -6,7 +6,7 @@ ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
 
-if(cxx14 OR root7)
+if(cxx14 OR cxx17 OR root7)
     set(Base_cxx14_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TLogger.hxx)
     set(Base_cxx14src ${CMAKE_CURRENT_SOURCE_DIR}/v7/src/TLogger.cxx)
 endif()
@@ -32,8 +32,7 @@ ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef?.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/Byteswap.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TExecutor.hxx
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TSequentialExecutor.hxx
-                                    ${Base_cxx14_dict_headers}
-                                    ${Base_v7_dict_headers})
+                                   )
 
 ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx ${Base_cxx14src} ${Base_root7src})
 
