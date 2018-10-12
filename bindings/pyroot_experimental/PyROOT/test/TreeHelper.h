@@ -11,9 +11,10 @@ struct MyStruct {
 // - vectorb: branch of type `std::vector<double>`, size `arraysize`
 // - structb: struct branch of type `MyStruct`
 // - structleafb: struct branch of type `MyStruct`, created as a leaf list
-void CreateTTree(const char *filename, const char *treename, int nentries, int arraysize, int more)
+void CreateTTree(const char *filename, const char *treename, int nentries, int arraysize, int more,
+                 const char* openmode)
 {
-   TFile f(filename, "RECREATE");
+   TFile f(filename, openmode);
    TTree t(treename, "Test tree");
 
    // Float branch
