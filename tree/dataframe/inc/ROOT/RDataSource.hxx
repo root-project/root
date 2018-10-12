@@ -156,6 +156,7 @@ public:
    /// \brief Return ranges of entries to distribute to tasks.
    /// They are required to be contiguous intervals with no entries skipped. Supposing a dataset with nEntries, the
    /// intervals must start at 0 and end at nEntries, e.g. [0-5],[5-10] for 10 entries.
+   /// Returning an empty collection of ranges signals to RDataFrame that the processing can stop.
    // clang-format on
    virtual std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() = 0;
 
