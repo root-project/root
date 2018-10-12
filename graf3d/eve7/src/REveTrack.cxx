@@ -541,11 +541,8 @@ void REveTrack::PrintPathMarks()
 
 Int_t REveTrack::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-   Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
-
-   j["fLineWidth"] = GetLineWidth();
-   j["fLineColor"] = GetLineColor();
-
+   // TODO: missing streaming of fitting points
+   Int_t ret = REveLine::WriteCoreJson(j, rnr_offset);
    return ret;
 }
 
@@ -554,14 +551,8 @@ Int_t REveTrack::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
 void REveTrack::BuildRenderData()
 {
-   fRenderData = std::make_unique<REveRenderData>("makeTrack", 3*fN);
-
-   // XXXX Do this for whole array at a time.
-   Float_t x, y, z;
-   for (int i = 0; i < fN; ++i) {
-      GetPoint(i, x, y,z);
-      fRenderData->PushV(x, y, z);
-   }
+   // TODO: missing streaming o fitting points
+   REveLine::BuildRenderData();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

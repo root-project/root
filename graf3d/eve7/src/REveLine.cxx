@@ -11,6 +11,9 @@
 
 #include <ROOT/REveLine.hxx>
 #include <ROOT/REveProjectionManager.hxx>
+#include <ROOT/REveRenderData.hxx>
+
+#include "json.hpp"
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -285,6 +288,34 @@ void REveLine::WriteVizParams(std::ostream& out, const TString& var)
 TClass* REveLine::ProjectedClass(const REveProjection*) const
 {
    return REveLineProjected::Class();
+}
+
+//------------------------------------------------------------------------------
+
+Int_t REveLine::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
+
+   j["fLineWidth"] = GetLineWidth();
+   j["fLineStyle"] = GetLineStyle();
+   j["fLineColor"] = GetLineColor();
+
+   return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from REveElement. Prepares render data for binary streaming to client
+
+void REveLine::BuildRenderData()
+{
+   fRenderData = std::make_unique<REveRenderData>("makeTrack", 3*fN);
+
+   // XXXX Do this for whole array at a time.
+   Float_t x, y, z;
+   for (int i = 0; i < fN; ++i) {
+      GetPoint(i, x, y,z);
+      fRenderData->PushV(x, y, z);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

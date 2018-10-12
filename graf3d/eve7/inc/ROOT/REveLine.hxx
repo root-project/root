@@ -66,6 +66,9 @@ public:
 
    virtual TClass *ProjectedClass(const REveProjection *p) const;
 
+   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset); // override
+   void BuildRenderData();                                    // override {}
+
    static Bool_t GetDefaultSmooth();
    static void SetDefaultSmooth(Bool_t r);
 
