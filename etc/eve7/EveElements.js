@@ -96,11 +96,21 @@
          // console.log(" vertex ", buf[pos],buf[pos+1], buf[pos+2],buf[pos+3], buf[pos+4],  buf[pos+5]);
          pos+=6;
       }
-      var lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width });
+      
+      var lineMaterial;
+      if (track.fLineStyle == 1) {
+         lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width });
+      }
+      else
+      {
+         //lineMaterial = new THREE.LineDashedMaterial({ color: track_color, linewidth: track_width, gapSize: parseInt(track.fLineStyle) });
+         lineMaterial = new THREE.LineDashedMaterial({ color: track_color, linewidth: track_width, dashSize:3, gapSize: 1 });
+      }
+
       var geom = new THREE.BufferGeometry();
       geom.addAttribute( 'position', new THREE.BufferAttribute( buf, 3 )  );
       var line = new THREE.LineSegments(geom, lineMaterial);
-      
+
       line.object = track;
       line.geo_name = track.fName;
       line.geo_object = track.fMasterId || track.fElementId;
@@ -109,7 +119,7 @@
          line.hightlightLineWidth = track_width*3;
          line.normalLineWidth = track_width;
       }
-      
+
       // console.log("make track ", track, line.visible);
       return line;
    }
