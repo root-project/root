@@ -597,7 +597,7 @@ void TCanvas::Build()
       Int_t dum1, dum2;
       gVirtualX->GetGeometry(fCanvasID, dum1, dum2, fCw, fCh);
 
-      if (!fCanvasImp->IsWeb())
+      if (!fCanvasImp || !fCanvasImp->IsWeb())
          fContextMenu = new TContextMenu("ContextMenu");
    } else {
       // Make sure that batch interactive canvas sizes are the same
