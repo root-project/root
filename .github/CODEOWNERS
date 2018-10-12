@@ -47,9 +47,14 @@
 /core/lzma/ @pcanal
 /core/multiproc/ @gganis
 /core/thread/ @pcanal
+/etc/http/ @linev
 /graf2d/qt/ @bellenot
 /graf2d/cocoa/ @TimurP
 /graf3d/eve/ @osschar
+/gui/cefdisplay/ @linev
+/gui/qt5webdisplay/ @linev
+/gui/webdisplay/ @linev
+/gui/webgui6/ @linev
 /net/http/ @linev
 
 /cmake/ @amadio
