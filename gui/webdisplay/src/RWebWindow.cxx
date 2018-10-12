@@ -604,7 +604,7 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
             return false;
          }
 
-         if (!key.empty() && (conn->fKey != key)) {
+         if (!key.empty() && !conn->fKey.empty() && (conn->fKey != key)) {
             R__ERROR_HERE("webgui") << "Key mismatch after established connection " << key << " != " << conn->fKey;
             RemoveConnection(conn->fWSId);
             return false;
@@ -723,7 +723,6 @@ bool ROOT::Experimental::RWebWindow::CheckDataToSend(std::shared_ptr<WebConn> &c
          conn->fQueue.pop();
       } else if ((conn->fClientCredits < 3) && (conn->fRecvCount > 1)) {
          // give more credits to the client
-         R__DEBUG_HERE("webgui") << "Send keep alive to client";
          hdr = _MakeSendHeader(conn, true, "KEEPALIVE", 0);
       }
 
