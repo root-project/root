@@ -26,13 +26,20 @@ sap.ui.define([
                                      StatusLbl1:"", StatusLbl2:"", StatusLbl3:"", StatusLbl4:"" });
          this.getView().setModel(model);
 
+         var data = this.getView().getViewData();
+
+         if (data) {
+            this.getView().byId("MainPanel").getController().setPainter(data.canvas_painter);
+            delete data.canvas_painter;
+         }
+
          // this.toggleGedEditor();
       },
 
       getCanvasPainter : function(also_without_websocket) {
          var elem = this.getView().byId("MainPanel");
 
-         var p = elem ? elem.getController().canvas_painter : null;
+         var p = elem ? elem.getController().getPainter() : null;
 
          return (p && (p._websocket || also_without_websocket)) ? p : null;
       },
@@ -404,7 +411,6 @@ sap.ui.define([
          this._Page.setShowHeader(new_state);
       },
 
-
       onViewMenuAction : function (oEvent) {
 
          var item = oEvent.getParameter("item");
@@ -442,11 +448,7 @@ sap.ui.define([
             case "ToolTips": this.toggleToolTip(on); break;
          }
       }
-
-
    });
-
-
    return CController;
 
 });

@@ -58,7 +58,7 @@
       this.FinishTextDrawing();
    }
 
-   
+
    function drawLine() {
 
        var line         = this.GetObject(),
@@ -82,6 +82,44 @@
         .style("stroke", line_color)
         .attr("stroke-width", line_width)
         .attr("stroke-opacity", line_opacity)
+        .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style]);
+   }
+
+
+   function drawBox() {
+
+       var box          = this.GetObject(),
+           opts         = box.fOpts,
+           pp           = this.canv_painter(),
+           line_width   = opts.fLineWidth.fAttr,
+           line_opacity = opts.fLineOpacity.fAttr,
+           line_style   = opts.fLineStyle.fAttr,
+           line_color   = pp.GetNewColor(opts.fLineColor),
+           fill_opacity = opts.fFillOpacity.fAttr,
+           fill_color   = pp.GetNewColor(opts.fFillColor),
+           fill_style   = opts.fFillStyle.fAttr,
+           round_width  = opts.fRoundWidth.fAttr,
+           round_height = opts.fRoundHeight.fAttr,
+           p1           = this.GetCoordinate(box.fP1),
+           p2           = this.GetCoordinate(box.fP2);
+
+    this.CreateG();
+
+    if (fill_style == 0 ) fill_color = "none";
+
+    this.draw_g
+        .append("svg:rect")
+        .attr("x", p1.x)
+        .attr("width", p2.x-p1.x)
+        .attr("y", p2.y)
+        .attr("height", p1.y-p2.y)
+        .attr("rx", round_width)
+        .attr("ry", round_height)
+        .style("stroke", line_color)
+        .attr("stroke-width", line_width)
+        .attr("stroke-opacity", line_opacity)
+        .attr("fill", fill_color)
+        .attr("fill-opacity", fill_opacity)
         .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style]);
    }
 
@@ -110,8 +148,9 @@
 
    // ================================================================================
 
-   JSROOT.v7.drawText = drawText;
-   JSROOT.v7.drawLine = drawLine;
+   JSROOT.v7.drawText   = drawText;
+   JSROOT.v7.drawLine   = drawLine;
+   JSROOT.v7.drawBox    = drawBox;
    JSROOT.v7.drawMarker = drawMarker;
 
    return JSROOT;

@@ -700,7 +700,7 @@
              title_offest_k = 1.6*(axis.fTitleSize<1 ? axis.fTitleSize : axis.fTitleSize/(this.pad_height("") || 10)),
              center = axis.TestBit(JSROOT.EAxisBits.kCenterTitle),
              rotate = axis.TestBit(JSROOT.EAxisBits.kRotateTitle) ? -1 : 1,
-             title_color = this.get_color(axis.fTitleColor),
+             title_color = this.get_color(is_gaxis ? axis.fTextColor : axis.fTitleColor),
              shift_x = 0, shift_y = 0;
 
          this.StartTextDrawing(axis.fTitleFont, title_fontsize, title_g);
@@ -1818,9 +1818,8 @@
       });
       this.FillAttContextMenu(menu,alone ? "" : "Frame ");
       menu.add("separator");
-      menu.add("Save as frame.png", function() {
-         this.pad_painter().SaveAsPng('frame', 'frame.png');
-      });
+      menu.add("Save as frame.png", function() { this.pad_painter().SaveAs("png", 'frame', 'frame.png'); });
+      menu.add("Save as frame.svg", function() { this.pad_painter().SaveAs("svg", 'frame', 'frame.svg'); });
 
       return true;
    }
@@ -2629,26 +2628,28 @@
 
    TFramePainter.prototype.AddInteractive = function() {
 
-      if (!JSROOT.gStyle.Zooming && !JSROOT.gStyle.ContextMenu) return;
+      if (JSROOT.BatchMode || (!JSROOT.gStyle.Zooming && !JSROOT.gStyle.ContextMenu)) return;
 
       var pp = this.pad_painter();
       if (pp && pp._fast_drawing) return;
 
       var svg = this.svg_frame();
 
-      if (svg.empty() || svg.property('interactive_set')) return;
+      if (svg.empty()) return;
 
       var svg_x = svg.selectAll(".xaxis_container"),
           svg_y = svg.selectAll(".yaxis_container");
 
-      this.AddKeysHandler();
+      if (!svg.property('interactive_set')) {
+         this.AddKeysHandler();
 
-      this.last_touch = new Date(0);
-      this.zoom_kind = 0; // 0 - none, 1 - XY, 2 - only X, 3 - only Y, (+100 for touches)
-      this.zoom_rect = null;
-      this.zoom_origin = null;  // original point where zooming started
-      this.zoom_curr = null;    // current point for zooming
-      this.touch_cnt = 0;
+         this.last_touch = new Date(0);
+         this.zoom_kind = 0; // 0 - none, 1 - XY, 2 - only X, 3 - only Y, (+100 for touches)
+         this.zoom_rect = null;
+         this.zoom_origin = null;  // original point where zooming started
+         this.zoom_curr = null;    // current point for zooming
+         this.touch_cnt = 0;
+      }
 
       if (JSROOT.gStyle.Zooming && !this.projection) {
          if (JSROOT.gStyle.ZoomMouse) {
@@ -3296,9 +3297,9 @@
 
       var fname = this.this_pad_name;
       if (fname.length===0) fname = this.iscan ? "canvas" : "pad";
-      fname += ".png";
 
-      menu.add("Save as "+fname, fname, this.SaveAsPng.bind(this, false));
+      menu.add("Save as "+ fname+".png", fname+".png", this.SaveAs.bind(this, "png", false));
+      menu.add("Save as "+ fname+".svg", fname+".svg", this.SaveAs.bind(this, "svg", false));
 
       return true;
    }
@@ -3605,7 +3606,7 @@
       this.is_active_pad = !!snap.fActive; // enforce boolean flag
 
       var first = snap.fSnapshot;
-      first.fPrimitives = null; // primitives are not interesting, just cannot disable it in IO
+      first.fPrimitives = null; // primitives are not interesting, they are disabled in IO
 
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
@@ -3655,7 +3656,7 @@
          var sub = this.painters[k];
          if (sub.snapid===undefined) continue; // look only for painters with snapid
 
-         for (var i=9;i<snap.fPrimitives.length;++i)
+         for (var i=0;i<snap.fPrimitives.length;++i)
             if (snap.fPrimitives[i].fObjectID === sub.snapid) { sub = null; isanyfound = true; break; }
 
          if (sub) {
@@ -3825,18 +3826,16 @@
        });
    }
 
-   TPadPainter.prototype.SaveAsPng = function(full_canvas, filename) {
+   TPadPainter.prototype.SaveAs = function(kind, full_canvas, filename) {
       if (!filename) {
          filename = this.this_pad_name;
          if (filename.length === 0) filename = this.iscan ? "canvas" : "pad";
-         filename += ".png";
+         filename += "." + kind;
       }
-      this.ProduceImage(full_canvas, "png", function(pngdata) {
+      this.ProduceImage(full_canvas, kind, function(imgdata) {
          var a = document.createElement('a');
          a.download = filename;
-         a.href = pngdata;
-         // a.style.display = 'none';
-
+         a.href = (kind != "svg") ? imgdata : "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(imgdata);
          document.body.appendChild(a);
          a.addEventListener("click", function(e) {
             a.parentNode.removeChild(a);
@@ -3992,11 +3991,11 @@
 
    TPadPainter.prototype.PadButtonClick = function(funcname) {
 
-      if (funcname == "CanvasSnapShot") return this.SaveAsPng(true);
+      if (funcname == "CanvasSnapShot") return this.SaveAs("png", true);
 
       if (funcname == "EnlargePad") return this.EnlargePad();
 
-      if (funcname == "PadSnapShot") return this.SaveAsPng(false);
+      if (funcname == "PadSnapShot") return this.SaveAs("png", false);
 
       if (funcname == "PadContextMenus") {
 
@@ -4735,7 +4734,7 @@
    }
 
    function drawCanvas(divid, can, opt) {
-      var nocanvas = (can===null);
+      var nocanvas = !can;
       if (nocanvas) can = JSROOT.Create("TCanvas");
 
       var painter = new TCanvasPainter(can);
