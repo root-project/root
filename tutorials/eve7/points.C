@@ -29,7 +29,7 @@ REX::REvePointSet *createPointSet(int npoints = 2, float s = 2, int color = 28)
    return ps;
 }
 
-void points(bool mapNewWindow = true)
+void points()
 {
    auto eveMng = REX::REveManager::Create();
 
