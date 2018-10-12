@@ -597,7 +597,8 @@ void TCanvas::Build()
       Int_t dum1, dum2;
       gVirtualX->GetGeometry(fCanvasID, dum1, dum2, fCw, fCh);
 
-      fContextMenu = new TContextMenu("ContextMenu");
+      if (!fCanvasImp || !fCanvasImp->IsWeb())
+         fContextMenu = new TContextMenu("ContextMenu");
    } else {
       // Make sure that batch interactive canvas sizes are the same
       fCw -= 4;
@@ -1470,7 +1471,11 @@ void TCanvas::MoveOpaque(Int_t set)
 
 void TCanvas::Paint(Option_t *option)
 {
-   if (fCanvas) TPad::Paint(option);
+   if (fCanvasImp && fCanvasImp->IsWeb()) {
+      Update();
+   } else if (fCanvas) {
+      TPad::Paint(option);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
