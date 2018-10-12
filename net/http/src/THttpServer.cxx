@@ -828,25 +828,31 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       return;
    }
 
-   if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm")) {
+   if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm") || (arg->fFileName == "default.htm")) {
 
-      auto wsptr = FindWS(arg->GetPathName());
+      if (arg->fFileName == "default.htm") {
 
-      auto handler = wsptr.get();
+         arg->fContent = ReadFileContent(fJSROOTSYS + "/files/online.htm");
 
-      if (!handler)
-         handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+      } else {
+         auto wsptr = FindWS(arg->GetPathName());
 
-      if (handler) {
+         auto handler = wsptr.get();
 
-         arg->fContent = handler->GetDefaultPageContent().Data();
+         if (!handler)
+            handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
 
-         if (arg->fContent.find("file:") == 0) {
-            TString fname = arg->fContent.c_str() + 5;
-            fname.ReplaceAll("$jsrootsys", fJSROOTSYS);
+         if (handler) {
 
-            arg->fContent = ReadFileContent(fname.Data());
-            arg->AddNoCacheHeader();
+            arg->fContent = handler->GetDefaultPageContent().Data();
+
+            if (arg->fContent.find("file:") == 0) {
+               TString fname = arg->fContent.c_str() + 5;
+               fname.ReplaceAll("$jsrootsys", fJSROOTSYS);
+
+               arg->fContent = ReadFileContent(fname.Data());
+               arg->AddNoCacheHeader();
+            }
          }
       }
 
