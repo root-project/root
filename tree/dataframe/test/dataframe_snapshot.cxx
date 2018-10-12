@@ -105,8 +105,8 @@ protected:
          }
          t.Write();
 
-         delete varSizeArr;
-         delete varSizeBoolArr;
+         delete[] varSizeArr;
+         delete[] varSizeBoolArr;
       }
    }
 
