@@ -362,7 +362,7 @@
       return false;
    }
 
-   THistPainter.prototype.FillToolbar = function() {
+   THistPainter.prototype.FillToolbar = function(not_shown) {
       var pp = this.pad_painter();
       if (!pp) return;
 
@@ -373,6 +373,7 @@
          pp.AddButton(JSROOT.ToolbarIcons.arrow_diag, "Toggle log z", "ToggleLogZ");
       if (this.draw_content)
          pp.AddButton(JSROOT.ToolbarIcons.statbox, 'Toggle stat box', "ToggleStatBox");
+      if (!not_shown) pp.ShowButtons();
    }
 
    THistPainter.prototype.Get3DToolTip = function(indx) {
@@ -1894,7 +1895,7 @@
    }
 
    TH2Painter.prototype.FillToolbar = function() {
-      THistPainter.prototype.FillToolbar.call(this);
+      THistPainter.prototype.FillToolbar.call(this, true);
 
       var pp = this.pad_painter();
       if (!pp) return;
@@ -1903,6 +1904,7 @@
          pp.AddButton(JSROOT.ToolbarIcons.th2color, "Toggle color", "ToggleColor");
       pp.AddButton(JSROOT.ToolbarIcons.th2colorz, "Toggle color palette", "ToggleColorZ");
       pp.AddButton(JSROOT.ToolbarIcons.th2draw3d, "Toggle 3D mode", "Toggle3D");
+      pp.ShowButtons();
    }
 
    TH2Painter.prototype.ToggleColor = function() {

@@ -9,6 +9,14 @@ sap.ui.define([
       onBeforeRendering: function() {
       },
 
+      setPainter: function(painter) {
+         this.canvas_painter = painter;
+      },
+
+      getPainter: function() {
+         return this.canvas_painter;
+      },
+
       onAfterRendering: function() {
          if (this.canvas_painter && this.canvas_painter._window_handle) {
             this.canvas_painter.SetDivId(this.getView().getDomRef(), -1);
@@ -48,6 +56,11 @@ sap.ui.define([
          // this.canvas_painter = JSROOT.openui5_canvas_painter;
          // delete JSROOT.openui5_canvas_painter;
 
+         console.log("INIT CANVAS PANEL");
+
+/*
+         console.log(sap.ui.getCore().byId("TopCanvasId").getViewData());
+
          var oModel = sap.ui.getCore().getModel(this.getView().getId());
          if (oModel) {
             var oData = oModel.getData();
@@ -56,7 +69,7 @@ sap.ui.define([
                this.canvas_painter = oData.canvas_painter;
                delete oData.canvas_painter;
             }
-         }
+         }*/
 
          ResizeHandler.register(this.getView(), this.onResize.bind(this));
       },

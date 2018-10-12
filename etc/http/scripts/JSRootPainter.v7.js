@@ -2089,9 +2089,9 @@
       });
       this.FillAttContextMenu(menu,alone ? "" : "Frame ");
       menu.add("separator");
-      menu.add("Save as frame.png", function() {
-         this.pad_painter().SaveAsPng('frame', 'frame.png');
-      });
+      menu.add("Save as frame.png", function() { this.pad_painter().SaveAs("png", 'frame', 'frame.png'); });
+      menu.add("Save as frame.svg", function() { this.pad_painter().SaveAs("svg", 'frame', 'frame.svg'); });
+
 
       return true;
    }
@@ -2123,26 +2123,28 @@
    TFramePainter.prototype.AddInteractive = function() {
       // only first painter in list allowed to add interactive functionality to the frame
 
-      if (!JSROOT.gStyle.Zooming && !JSROOT.gStyle.ContextMenu) return;
+      if (JSROOT.BatchMode || (!JSROOT.gStyle.Zooming && !JSROOT.gStyle.ContextMenu)) return;
 
       var pp = this.pad_painter();
       if (pp && pp._fast_drawing) return;
 
       var svg = this.svg_frame();
 
-      if (svg.empty() || svg.property('interactive_set')) return;
+      if (svg.empty()) return;
 
       var svg_x = svg.selectAll(".xaxis_container"),
           svg_y = svg.selectAll(".yaxis_container");
 
-      this.AddKeysHandler();
+      if (!svg.property('interactive_set')) {
+         this.AddKeysHandler();
 
-      this.last_touch = new Date(0);
-      this.zoom_kind = 0; // 0 - none, 1 - XY, 2 - only X, 3 - only Y, (+100 for touches)
-      this.zoom_rect = null;
-      this.zoom_origin = null;  // original point where zooming started
-      this.zoom_curr = null;    // current point for zooming
-      this.touch_cnt = 0;
+         this.last_touch = new Date(0);
+         this.zoom_kind = 0; // 0 - none, 1 - XY, 2 - only X, 3 - only Y, (+100 for touches)
+         this.zoom_rect = null;
+         this.zoom_origin = null;  // original point where zooming started
+         this.zoom_curr = null;    // current point for zooming
+         this.touch_cnt = 0;
+      }
 
       if (JSROOT.gStyle.Zooming && (!this.options || !this.options.Proj)) {
          if (JSROOT.gStyle.ZoomMouse) {
@@ -3063,9 +3065,8 @@
 
       var fname = this.this_pad_name;
       if (fname.length===0) fname = this.iscan ? "canvas" : "pad";
-      fname += ".png";
-
-      menu.add("Save as "+fname, fname, this.SaveAsPng.bind(this, false));
+      menu.add("Save as "+fname+".png", fname+".png", this.SaveAs.bind(this, "png", false));
+      menu.add("Save as "+fname+".svg", fname+".svg", this.SaveAs.bind(this, "svg", false));
 
       return true;
    }
@@ -3439,18 +3440,16 @@
        });
    }
 
-   TPadPainter.prototype.SaveAsPng = function(full_canvas, filename) {
+   TPadPainter.prototype.SaveAs = function(kind, full_canvas, filename) {
       if (!filename) {
          filename = this.this_pad_name;
          if (filename.length === 0) filename = this.iscan ? "canvas" : "pad";
-         filename += ".png";
+         filename += "." + kind;
       }
-      this.ProduceImage(full_canvas, "png", function(pngdata) {
+      this.ProduceImage(full_canvas, kind, function(imgdata) {
          var a = document.createElement('a');
          a.download = filename;
-         a.href = pngdata;
-         // a.style.display = 'none';
-
+         a.href = (kind != "svg") ? imgdata : "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(imgdata);
          document.body.appendChild(a);
          a.addEventListener("click", function(e) {
             a.parentNode.removeChild(a);
@@ -3607,11 +3606,11 @@
 
    TPadPainter.prototype.PadButtonClick = function(funcname) {
 
-      if (funcname == "CanvasSnapShot") return this.SaveAsPng(true);
+      if (funcname == "CanvasSnapShot") return this.SaveAs("png", true);
 
       if (funcname == "EnlargePad") return this.EnlargePad();
 
-      if (funcname == "PadSnapShot") return this.SaveAsPng(false);
+      if (funcname == "PadSnapShot") return this.SaveAs("png", false);
 
       if (funcname == "PadContextMenus") {
 
@@ -4248,7 +4247,7 @@
       var nocanvas = !can;
       if (nocanvas) {
          console.log("No canvas specified");
-         return null,
+         return null;
          can = JSROOT.Create("ROOT::Experimental::TCanvas");
       }
 
@@ -4280,6 +4279,7 @@
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RHistDrawable<2>", icon: "img_histo2d", prereq: "v7hist", func: "JSROOT.v7.drawHist2", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RText", icon: "img_text", prereq: "v7more", func: "JSROOT.v7.drawText", opt: "", direct: true });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLine", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLine", opt: "", direct: true });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RBox", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawBox", opt: "", direct: true });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true });
 
    JSROOT.v7.TAxisPainter = TAxisPainter;

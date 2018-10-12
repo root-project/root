@@ -598,6 +598,7 @@
          this.stored = JSROOT.extend({}, pt); // store coordinates to use them when updating
          pt.fInit = 1;
          var pad = this.root_pad();
+
          if (opt.indexOf("NDC")>=0) {
             pt.fX1NDC = pt.fX1; pt.fX2NDC = pt.fX2;
             pt.fY1NDC = pt.fY1; pt.fY2NDC = pt.fY2;
@@ -617,6 +618,14 @@
          } else {
             pt.fX1NDC = pt.fY1NDC = 0.1;
             pt.fX2NDC = pt.fY2NDC = 0.9;
+         }
+
+         if ((pt.fX1NDC == pt.fX2NDC) && (pt.fY1NDC == pt.fY2NDC) && (pt._typename == "TLegend")) {
+            pt.fX1NDC = Math.max(pad ? pad.fLeftMargin : 0, pt.fX2NDC - 0.3);
+            pt.fX2NDC = Math.min(pt.fX1NDC + 0.3, pad ? 1-pad.fRightMargin : 1);
+            var h0 = Math.max(pt.fPrimitives ? pt.fPrimitives.arr.length*0.05 : 0, 0.2);
+            pt.fY2NDC = Math.min(pad ? 1-pad.fTopMargin : 1, pt.fY1NDC + h0);
+            pt.fY1NDC = Math.max(pt.fY2NDC - h0, pad ? pad.fBottomMargin : 0);
          }
       }
 
@@ -2843,7 +2852,7 @@
       return false;
    }
 
-   THistPainter.prototype.FillToolbar = function() {
+   THistPainter.prototype.FillToolbar = function(not_shown) {
       var pp = this.pad_painter();
       if (!pp) return;
 
@@ -2854,6 +2863,7 @@
          pp.AddButton(JSROOT.ToolbarIcons.arrow_diag, "Toggle log z", "ToggleLogZ");
       if (this.draw_content)
          pp.AddButton(JSROOT.ToolbarIcons.statbox, 'Toggle stat box', "ToggleStatBox");
+      if (!not_shown) pp.ShowButtons();
    }
 
    THistPainter.prototype.Get3DToolTip = function(indx) {
@@ -3092,9 +3102,11 @@
          JSROOT.extend(pal, { _typename: "TPaletteAxis", fName: "TPave", fH: null, fAxis: JSROOT.Create('TGaxis'),
                                fX1NDC: 0.91, fX2NDC: 0.95, fY1NDC: 0.1, fY2NDC: 0.9, fInit: 1 } );
 
-         JSROOT.extend(pal.fAxis, { fTitle: this.GetObject().fZaxis.fTitle, fChopt: "+",
-                                    fLineColor: 1, fLineSyle: 1, fLineWidth: 1,
-                                    fTextAngle: 0, fTextSize: 0.04, fTextAlign: 11, fTextColor: 1, fTextFont: 42 });
+         var zaxis = this.GetHisto().fZaxis;
+
+         JSROOT.extend(pal.fAxis, { fTitle: zaxis.fTitle, fTitleSize: zaxis.fTitleSize, fTextColor: zaxis.fTitleColor, fChopt: "+",
+                                    fLineColor: zaxis.fAxisColor, fLineSyle: 1, fLineWidth: 1,
+                                    fTextAngle: 0, fTextSize: zaxis.fLabelSize, fTextAlign: 11, fTextColor: zaxis.fLabelColor, fTextFont: zaxis.fLabelFont });
 
          // place colz in the beginning, that stat box is always drawn on the top
          this.AddFunction(pal, true);
@@ -4576,7 +4588,7 @@
    }
 
    TH2Painter.prototype.FillToolbar = function() {
-      THistPainter.prototype.FillToolbar.call(this);
+      THistPainter.prototype.FillToolbar.call(this, true);
 
       var pp = this.pad_painter();
       if (!pp) return;
@@ -4585,6 +4597,7 @@
          pp.AddButton(JSROOT.ToolbarIcons.th2color, "Toggle color", "ToggleColor");
       pp.AddButton(JSROOT.ToolbarIcons.th2colorz, "Toggle color palette", "ToggleColorZ");
       pp.AddButton(JSROOT.ToolbarIcons.th2draw3d, "Toggle 3D mode", "Toggle3D");
+      pp.ShowButtons();
    }
 
    TH2Painter.prototype.ToggleColor = function() {
