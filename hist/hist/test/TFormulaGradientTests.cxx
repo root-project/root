@@ -277,3 +277,13 @@ TEST(TFormulaGradientPar, BreitWignerCrossCheckAccuracyDemo)
 
 // FIXME: Add more: crystalball, cheb3, bigaus?
 
+TEST(TFormulaGradientPar, GetGradFormula)
+{
+   TFormula f("f", "gaus");
+   double p[] = {3, 1, 2};
+   f.SetParameters(p);
+   ASSERT_TRUE(f.GenerateGradientPar());
+   std::string s = f.GetGradientFormula().Data();
+   ASSERT_THAT(s, testing::ContainsRegex("void TFormula____id[0-9]*_grad"));
+}
+
