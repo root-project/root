@@ -23,7 +23,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TDictionary.h"
-
+#include "TInterpreterValue.h"
 #include "TVirtualRWMutex.h"
 
 #include <map>
@@ -33,7 +33,6 @@
 class TClass;
 class TEnv;
 class TFunction;
-class TInterpreterValue;
 class TMethod;
 class TObjArray;
 class TEnum;
@@ -249,7 +248,13 @@ public:
    virtual void   SetErrmsgcallback(void * /* p */) const {;}
    virtual void   SetTempLevel(int /* val */) const {;}
    virtual int    UnloadFile(const char * /* path */) const {return 0;}
-   virtual TInterpreterValue *CreateTemporary() { return 0; }
+
+   /// The created temporary must be deleted by the caller.
+   /// Deprecated! Please use MakeInterpreterValue().
+   TInterpreterValue *CreateTemporary() const {
+      return MakeInterpreterValue().release();
+   }
+   virtual std::unique_ptr<TInterpreterValue> MakeInterpreterValue() const { return 0; }
    virtual void   CodeComplete(const std::string&, size_t&,
                                std::vector<std::string>&) {;}
    virtual int Evaluate(const char*, TInterpreterValue&) {return 0;}

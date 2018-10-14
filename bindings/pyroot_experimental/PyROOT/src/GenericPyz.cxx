@@ -21,11 +21,10 @@ PyObject *ClingPrintValue(CPPInstance *self)
    std::stringstream code;
    code << "*((" << className << "*)" << self->GetObject() << ")";
 
-   auto value = gInterpreter->CreateTemporary();
+   auto value = gInterpreter->MakeInterpreterValue();
    std::string pprint = "";
    if (gInterpreter->Evaluate(code.str().c_str(), *value) == 1 /*success*/)
       pprint = value->ToTypeAndValueString().second;
-   delete value;
    pprint.erase(std::remove(pprint.begin(), pprint.end(), '\n'), pprint.end());
    return CPyCppyy_PyUnicode_FromString(pprint.c_str());
 }
