@@ -22,6 +22,7 @@
 #include <TBenchmark.h>
 #include "TError.h"
 #include "TInterpreter.h"
+#include "TInterpreterValue.h"
 #include "TFormula.h"
 #include "TRegexp.h"
 #include <array>
@@ -3527,6 +3528,12 @@ TString TFormula::GetExpFormula(Option_t *option) const
    return fFormula;
 }
 
+TString TFormula::GetGradientFormula() const {
+   std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
+   gInterpreter->Evaluate(GetGradientFuncName().c_str(), *v);
+   return v->ToString();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the formula and its attributes.
 
@@ -3562,8 +3569,8 @@ void TFormula::Print(Option_t *option) const
       printf("\t%s\n",fClingInput.Data() );
       printf("Generated Gradient:\n");
       if (fGradFuncPtr) {
-         printf("\t%s\n",fGradGenerationInput.c_str());
-         gInterpreter->ProcessLine(GetGradientFuncName().c_str());
+         printf("%s\n", fGradGenerationInput.c_str());
+         printf("%s\n", GetGradientFormula().Data());
       }
    }
    if(!fReadyToExecute)

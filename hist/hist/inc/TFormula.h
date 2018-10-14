@@ -216,6 +216,7 @@ public:
    ROOT::Double_v EvalParVec(const ROOT::Double_v *x, const Double_t *params = 0) const;
 #endif
    TString        GetExpFormula(Option_t *option="") const;
+   TString        GetGradientFormula() const;
    const TObject *GetLinearPart(Int_t i) const;
    Int_t          GetNdim() const {return fNdim;}
    Int_t          GetNpar() const {return fNpar;}
