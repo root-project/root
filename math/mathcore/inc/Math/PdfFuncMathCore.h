@@ -82,13 +82,13 @@ namespace Math {
   inline double beta_pdf(double x, double a, double b) {
     if (x < 0 || x > 1.0) return 0;
     if (x == 0 ) {
-      // need this wor Windows
+      // need this work Windows
       if (a < 1) return  std::numeric_limits<double>::infinity();
       else if (a > 1) return  0;
       else if ( a == 1) return b; // to avoid a nan from log(0)*0
     }
     if (x == 1 ) {
-      // need this wor Windows
+      // need this work Windows
       if (b < 1) return  std::numeric_limits<double>::infinity();
       else if (b > 1) return  0;
       else if ( b == 1) return a; // to avoid a nan from log(0)*0
@@ -114,13 +114,11 @@ namespace Math {
   */
 
   inline double binomial_pdf(unsigned int k, double p, unsigned int n) {
-
-    if (k > n) {
+    if (k > n)
       return 0.0;
-    } else {
-      double coeff = ROOT::Math::lgamma(n+1) - ROOT::Math::lgamma(k+1) - ROOT::Math::lgamma(n-k+1);
-      return std::exp(coeff + k * std::log(p) + (n - k) * ROOT::Math::log1p(-p));
-    }
+
+    double coeff = ROOT::Math::lgamma(n+1) - ROOT::Math::lgamma(k+1) - ROOT::Math::lgamma(n-k+1);
+    return std::exp(coeff + k * std::log(p) + (n - k) * ROOT::Math::log1p(-p));
   }
 
 
@@ -269,13 +267,9 @@ namespace Math {
   */
 
   inline double exponential_pdf(double x, double lambda, double x0 = 0) {
-
-    if ((x-x0) < 0) {
+    if ((x-x0) < 0)
       return 0.0;
-    } else {
-      return lambda * std::exp (-lambda * (x-x0));
-    }
-
+    return lambda * std::exp (-lambda * (x-x0));
   }
 
 
@@ -438,14 +432,11 @@ namespace Math {
   */
 
   inline double lognormal_pdf(double x, double m, double s, double x0 = 0) {
-
-    if ((x-x0) <= 0) {
+    if ((x-x0) <= 0)
       return 0.0;
-    } else {
-      double tmp = (std::log((x-x0)) - m)/s;
-      return 1.0 / ((x-x0) * std::fabs(s) * std::sqrt(2 * M_PI)) * std::exp(-(tmp * tmp) /2);
-    }
-   }
+    double tmp = (std::log((x-x0)) - m)/s;
+    return 1.0 / ((x-x0) * std::fabs(s) * std::sqrt(2 * M_PI)) * std::exp(-(tmp * tmp) /2);
+  }
 
 
 
@@ -489,15 +480,15 @@ namespace Math {
 
   inline double poisson_pdf(unsigned int n, double mu) {
 
-    if (n >  0)
+    if (n > 0)
       return std::exp (n*std::log(mu) - ROOT::Math::lgamma(n+1) - mu);
-    else  {
-      //  when  n = 0 and mu = 0,  1 is returned
-      if (mu >= 0) return std::exp(-mu);
-      // return a nan for mu < 0 since it does not make sense
-      return std::log(mu);
-    }
 
+    //  when  n = 0 and mu = 0,  1 is returned
+    if (mu >= 0)
+      return std::exp(-mu);
+
+    // return a nan for mu < 0 since it does not make sense
+    return std::log(mu);
   }
 
 
@@ -545,11 +536,9 @@ namespace Math {
 
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! when a=b
 
-    if ((x-x0) < b && (x-x0) >= a) {
+    if ((x-x0) < b && (x-x0) >= a)
       return 1.0/(b - a);
-    } else {
-      return 0.0;
-    }
+    return 0.0;
 
   }
 
