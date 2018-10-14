@@ -111,3 +111,12 @@ TEST_F(TClingTests, GetEnumWithSameVariableName)
    auto en = gInterpreter->GetEnum(nullptr, "en");
    ASSERT_TRUE(en != nullptr);
 }
+
+// Check if we can get the source code of function definitions.
+TEST_F(TClingTests, MakeInterpreterValue)
+{
+   gInterpreter->Declare("void my_func_to_print() {}");
+   std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
+   gInterpreter->Evaluate("my_func_to_print", *v);
+   ASSERT_THAT(v->ToString(), testing::HasSubstr("void my_func_to_print"));
+}

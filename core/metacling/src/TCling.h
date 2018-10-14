@@ -329,7 +329,7 @@ public: // Public Interface
    void               CodeComplete(const std::string&, size_t&,
                                    std::vector<std::string>&);
    virtual int Evaluate(const char*, TInterpreterValue&);
-   TInterpreterValue *CreateTemporary();
+   virtual std::unique_ptr<TInterpreterValue> MakeInterpreterValue() const;
    void               RegisterTemporary(const TInterpreterValue& value);
    void               RegisterTemporary(const cling::Value& value);
    const ROOT::TMetaUtils::TNormalizedCtxt& GetNormalizedContext() const {return *fNormalizedCtxt;};

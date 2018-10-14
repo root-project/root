@@ -6950,13 +6950,8 @@ int TCling::UnloadFile(const char* path) const
    return compRes == cling::Interpreter::kFailure;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// The created temporary must be deleted by the caller.
-
-TInterpreterValue *TCling::CreateTemporary()
-{
-   TClingValue *val = new TClingValue;
-   return val;
+std::unique_ptr<TInterpreterValue> TCling::MakeInterpreterValue() const {
+   return std::unique_ptr<TInterpreterValue>(new TClingValue);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
