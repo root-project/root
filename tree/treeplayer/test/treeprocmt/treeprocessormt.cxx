@@ -65,9 +65,49 @@ TEST(TreeProcessorMT, ManyFiles)
 
    ROOT::TTreeProcessorMT proc(fnames, treename);
    proc.Process(sumValues);
-   
+
    EXPECT_EQ(count.load(), int(nFiles*10)); // 10 entries per file
    EXPECT_EQ(sum.load(), 500500); // sum 1..nFiles*10
 
    DeleteFiles(filenames);
 }
+
+TEST(TreeProcessorMT, TreeInSubDirectory)
+{
+   auto filename = "fileTreeInSubDirectory.root";
+   auto procLambda = [](TTreeReader &r) { while (r.Next()); };
+
+   {
+      TFile f(filename, "RECREATE");
+      auto dir0 = f.mkdir("dir0");
+      dir0->cd();
+      auto dir1 = dir0->mkdir("dir1");
+      dir1->cd();
+      TTree t("tree", "tree");
+      t.Write();
+   }
+
+   ROOT::EnableThreadSafety();
+
+   auto fullPath = "dir0/dir1/tree";
+
+   // With a TTree
+   TFile f(filename);
+   auto t = (TTree *)f.Get(fullPath);
+   ROOT::TTreeProcessorMT tp(*t);
+   tp.Process(procLambda);
+
+   // With a TChain
+   std::string chainElementName = filename;
+   chainElementName += "/";
+   chainElementName += fullPath;
+   TChain chain;
+   chain.Add(chainElementName.c_str());
+   ROOT::TTreeProcessorMT tpc(chain);
+   tpc.Process(procLambda);
+
+   gSystem->Unlink(filename);
+}
+
+
+
