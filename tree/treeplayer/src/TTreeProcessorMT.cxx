@@ -107,6 +107,32 @@ std::vector<std::vector<Long64_t>> GetFriendEntries(const std::vector<std::pair<
 
    return friendEntries;
 }
+
+////////////////////////////////////////////////////////////////////////
+/// Return the full path of the tree
+static std::string GetTreeFullPath(const TTree &tree)
+{
+   // Case 1: this is a TChain: we get the name out of the first TChainElement
+   if (0 == strcmp("TChain", tree.ClassName())) {
+      auto &chain = dynamic_cast<const TChain&>(tree);
+      auto files = chain.GetListOfFiles();
+      if (files && 0 != files->GetEntries()) {
+         return files->At(0)->GetName();
+      }
+   }
+
+   // Case 2: this is a TTree: we get the full path of it
+   if (auto motherDir = tree.GetDirectory()) {
+      std::string fullPath(motherDir->GetPath());
+      fullPath += "/";
+      fullPath += tree.GetName();
+      return fullPath;
+   }
+
+   // We do our best and return the name of the tree
+   return tree.GetName();
+}
+
 }
 }
 
@@ -242,7 +268,7 @@ std::vector<std::string> GetFilesFromTree(TTree &tree)
 /// \param[in] tree Tree or chain of files containing the tree to process.
 /// \param[in] entries List of entry numbers to process.
 TTreeProcessorMT::TTreeProcessorMT(TTree &tree, const TEntryList &entries)
-   : fFileNames(GetFilesFromTree(tree)), fTreeName(tree.GetName()), fEntryList(entries),
+   : fFileNames(GetFilesFromTree(tree)), fTreeName(ROOT::Internal::GetTreeFullPath(tree)), fEntryList(entries),
      fFriendInfo(GetFriendInfo(tree)) {}
 
 ////////////////////////////////////////////////////////////////////////
