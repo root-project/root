@@ -13,12 +13,13 @@ class TTreeSetBranchAddress(unittest.TestCase):
     `v = ROOT.std.vector('int')()`
     `t.SetBranchAddress("my_vector_branch", v)`
 
-    Since this pythonization is common to TTree and its subclasses, other classes like
-    TChain are also tested here.
+    Since this pythonization is common to TTree and its subclasses, TChain and TNtuple
+    are also tested here.
     """
 
     filename  = 'treesetbranchaddress.root'
     treename  = 'mytree'
+    tuplename = 'mytuple'
     nentries  = 1
     arraysize = 10
     more      = 10
@@ -33,9 +34,14 @@ class TTreeSetBranchAddress(unittest.TestCase):
                          cls.arraysize,
                          cls.more,
                          "RECREATE")
+        ROOT.CreateTNtuple(cls.filename,
+                           cls.tuplename,
+                           cls.nentries,
+                           cls.more,
+                           "UPDATE")
 
     # Helper
-    def get_file_tree_and_chain(self):
+    def get_file_objects(self):
         f = ROOT.TFile(self.filename)
         t = f.Get(self.treename)
         # Prevent double deletion of the tree (Python and C++ TFile)
@@ -45,14 +51,18 @@ class TTreeSetBranchAddress(unittest.TestCase):
         c.Add(self.filename)
         c.Add(self.filename)
 
-        return f,t,c
+        nt = f.Get(self.tuplename)
+        SetOwnership(nt, False)
+
+        return f,t,c,nt
 
     # Tests
     # Basic type, array and struct leaf list do not actually need the pythonization,
     # but testing anyway for the sake of completeness
     def test_basic_type_branch(self):
-        f,t,c = self.get_file_tree_and_chain()
-
+        f,t,c,nt = self.get_file_objects()
+        
+        # TTree, TChain
         for ds in t,c:
             n = array('f', [ 0. ])
             ds.SetBranchAddress('floatb', n)
@@ -60,8 +70,18 @@ class TTreeSetBranchAddress(unittest.TestCase):
 
             self.assertEqual(n[0], self.more)
 
+        # TNtuple
+        colnames = ['x','y','z']
+        cols = [ array('f', [ 0. ]) for _ in colnames ]
+        ncols = len(cols)
+        for i in range(ncols):
+            nt.SetBranchAddress(colnames[i], cols[i])
+        nt.GetEntry(0)
+        for i in range(ncols):
+            self.assertEqual(cols[i][0], i*self.more)
+
     def test_array_branch(self):
-        f,t,c = self.get_file_tree_and_chain()
+        f,t,c,_ = self.get_file_objects()
 
         for ds in t,c:
             a = array('d', self.arraysize*[ 0. ])
@@ -72,7 +92,7 @@ class TTreeSetBranchAddress(unittest.TestCase):
                 self.assertEqual(a[j], j)
 
     def test_numpy_array_branch(self):
-        f,t,c = self.get_file_tree_and_chain()
+        f,t,c,_ = self.get_file_objects()
 
         for ds in t,c:
             a = np.array(self.arraysize*[ 0. ]) # dtype='float64'
@@ -83,7 +103,7 @@ class TTreeSetBranchAddress(unittest.TestCase):
                 self.assertEqual(a[j], j)
 
     def test_struct_branch_leaflist(self):
-        f,t,c = self.get_file_tree_and_chain()
+        f,t,c,_ = self.get_file_objects()
 
         for ds in t,c:
             ms = ROOT.MyStruct()
@@ -95,7 +115,7 @@ class TTreeSetBranchAddress(unittest.TestCase):
 
     # Vector and struct do benefit from the pythonization
     def test_vector_branch(self):
-        f,t,c = self.get_file_tree_and_chain()
+        f,t,c,_ = self.get_file_objects()
 
         for ds in t,c:
             v = ROOT.std.vector('double')()
@@ -106,7 +126,7 @@ class TTreeSetBranchAddress(unittest.TestCase):
                 self.assertEqual(v[j], j)
 
     def test_struct_branch(self):
-        f,t,c = self.get_file_tree_and_chain()
+        f,t,c,_ = self.get_file_objects()
 
         for ds in t,c:
             ms = ROOT.MyStruct()
