@@ -134,8 +134,8 @@ static std::string GetTreeFullPath(const TTree &tree)
    return tree.GetName();
 }
 
-}
-}
+} // End NS Internal
+} // End NS ROOT
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get and store the names, aliases and file names of the friends of the tree.
