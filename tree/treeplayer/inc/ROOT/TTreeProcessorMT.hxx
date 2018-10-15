@@ -64,10 +64,6 @@ namespace ROOT {
          std::vector<std::vector<std::string>> fFriendFileNames;
       };
 
-      // EntryClusters and number of entries per file
-      using ClustersAndEntries = std::pair<std::vector<std::vector<EntryCluster>>, std::vector<Long64_t>>;
-      ClustersAndEntries MakeClusters(const std::string &treename, const std::vector<std::string> &filenames);
-
       class TTreeView {
       private:
          using TreeReaderEntryListPair = std::pair<std::unique_ptr<TTreeReader>, std::unique_ptr<TEntryList>>;
