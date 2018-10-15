@@ -33,12 +33,12 @@ class TTreeSetBranchAddress(unittest.TestCase):
                          cls.nentries,
                          cls.arraysize,
                          cls.more,
-                         "RECREATE")
+                         'RECREATE')
         ROOT.CreateTNtuple(cls.filename,
                            cls.tuplename,
                            cls.nentries,
                            cls.more,
-                           "UPDATE")
+                           'UPDATE')
 
     # Helper
     def get_file_objects(self):
