@@ -28,7 +28,7 @@ class TTreeIterable(unittest.TestCase):
                          cls.nentries,
                          cls.arraysize,
                          cls.more,
-                         "RECREATE")
+                         'RECREATE')
 
     # Helper
     def get_file_and_tree(self):
