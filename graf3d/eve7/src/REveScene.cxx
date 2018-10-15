@@ -15,7 +15,7 @@
 #include <ROOT/REveTrans.hxx>
 #include <ROOT/REveRenderData.hxx>
 #include <ROOT/REveClient.hxx>
-#include <ROOT/TWebWindow.hxx>
+#include <ROOT/RWebWindow.hxx>
 
 #include "json.hpp"
 

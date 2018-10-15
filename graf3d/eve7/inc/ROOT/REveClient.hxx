@@ -17,7 +17,7 @@
 namespace ROOT {
 namespace Experimental {
 
-class TWebWindow;
+class RWebWindow;
 class REveScene;
 
 class REveClient {
@@ -25,11 +25,11 @@ class REveClient {
    friend class REveScene;
 
    unsigned fId{0};
-   std::shared_ptr<TWebWindow> fWebWindow;
+   std::shared_ptr<RWebWindow> fWebWindow;
 
 public:
    REveClient() = default;
-   REveClient(unsigned int cId, std::shared_ptr<TWebWindow> &win) : fId(cId), fWebWindow(win) {}
+   REveClient(unsigned int cId, std::shared_ptr<RWebWindow> &win) : fId(cId), fWebWindow(win) {}
 };
 
 } // namespace Experimental

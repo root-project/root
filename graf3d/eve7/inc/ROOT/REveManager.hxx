@@ -35,7 +35,7 @@ class REveViewerList;
 class REveScene;
 class REveSceneList;
 
-class TWebWindow;
+class RWebWindow;
 
 class REveManager
 {
@@ -126,7 +126,7 @@ protected:
    REveElementList          *fOrphanage;
    Bool_t                    fUseOrphanage;
 
-   std::shared_ptr<ROOT::Experimental::TWebWindow>  fWebWindow;
+   std::shared_ptr<ROOT::Experimental::RWebWindow>  fWebWindow;
    std::vector<Conn>                                fConnList;
 
 public:

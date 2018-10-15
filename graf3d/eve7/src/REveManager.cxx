@@ -15,7 +15,7 @@
 #include <ROOT/REveViewer.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveClient.hxx>
-#include <ROOT/TWebWindowsManager.hxx>
+#include <ROOT/RWebWindowsManager.hxx>
 
 #include "TGeoManager.h"
 #include "TObjString.h"
@@ -148,7 +148,7 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
    // !!! AMT increase threshold to enable color pick on client
    TColor::SetColorThreshold(0.1);
 
-   fWebWindow =  ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow();
+   fWebWindow =  ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
 
    TString evedir = TString::Format("%s/eve7", TROOT::GetEtcDir().Data());
    if (gSystem->ExpandPathName(evedir)) {
