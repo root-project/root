@@ -34,8 +34,9 @@ namespace ROOT {
 namespace Internal {
 ////////////////////////////////////////////////////////////////////////
 /// Return a vector of cluster boundaries for the given tree and files.
-ClustersAndEntries
-MakeClusters(const std::string &treeName, const std::vector<std::string> &fileNames)
+// EntryClusters and number of entries per file
+using ClustersAndEntries = std::pair<std::vector<std::vector<EntryCluster>>, std::vector<Long64_t>>;
+static ClustersAndEntries MakeClusters(const std::string &treeName, const std::vector<std::string> &fileNames)
 {
    // Note that as a side-effect of opening all files that are going to be used in the
    // analysis once, all necessary streamers will be loaded into memory.
@@ -87,7 +88,7 @@ MakeClusters(const std::string &treeName, const std::vector<std::string> &fileNa
 
 ////////////////////////////////////////////////////////////////////////
 /// Return a vector containing the number of entries of each file of each friend TChain
-std::vector<std::vector<Long64_t>> GetFriendEntries(const std::vector<std::pair<std::string, std::string>> &friendNames,
+static std::vector<std::vector<Long64_t>> GetFriendEntries(const std::vector<std::pair<std::string, std::string>> &friendNames,
                                                     const std::vector<std::vector<std::string>> &friendFileNames)
 {
    std::vector<std::vector<Long64_t>> friendEntries;
@@ -138,7 +139,7 @@ static std::string GetTreeFullPath(const TTree &tree)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get and store the names, aliases and file names of the friends of the tree.
-/// \param[in] tree The main tree whose friends to 
+/// \param[in] tree The main tree whose friends to
 ///
 /// Note that "friends of friends" and circular references in the lists of friends are not supported.
 Internal::FriendInfo TTreeProcessorMT::GetFriendInfo(TTree &tree)
