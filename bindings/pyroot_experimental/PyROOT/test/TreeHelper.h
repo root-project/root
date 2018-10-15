@@ -52,3 +52,22 @@ void CreateTTree(const char *filename, const char *treename, int nentries, int a
 
    delete[] a;
 }
+
+// Writes a `TNtuple` on a file. The `TNtuple` has three branches (x,y,z) of type float
+void CreateTNtuple(const char *filename, const char *tuplename, int nentries, int more,
+                   const char* openmode)
+{
+   TFile f(filename, openmode);
+   TNtuple ntuple(tuplename, "Test tuple", "x:y:z");
+
+   float x, y, z;
+   for (int i = 0; i < nentries; ++i) {
+      x = i;
+      y = i + more;
+      z = i + 2 * more;
+      ntuple.Fill(x, y, z);
+   }
+
+   f.Write();
+   f.Close();
+}
