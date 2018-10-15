@@ -86,6 +86,60 @@ std::vector<std::vector<Long64_t>> GetFriendEntries(const std::vector<std::pair<
 
    return friendEntries;
 }
+
+////////////////////////////////////////////////////////////////////////
+/// Return the full path of the tree
+static std::string GetTreeFullPath(const TTree &tree)
+{
+   // Case 1: this is a TChain: we get the name out of the first TChainElement
+   if (0 == strcmp("TChain", tree.ClassName())) {
+      auto &chain = dynamic_cast<const TChain&>(tree);
+      auto files = chain.GetListOfFiles();
+      if (files && 0 != files->GetEntries()) {
+         return files->At(0)->GetName();
+      }
+   }
+
+   // Case 2: this is a TTree: we get the full path of it
+   if (auto motherDir = tree.GetDirectory()) {
+      std::string fullPath(motherDir->GetPath());
+      fullPath += "/";
+      fullPath += tree.GetName();
+      return fullPath;
+   }
+
+   // We do our best and return the name of the tree
+   return tree.GetName();
+}
+
+TTreeView::TTreeView(TTree& tree) : fTreeName(GetTreeFullPath(tree))
+{
+   static const TClassRef clRefTChain("TChain");
+   if (clRefTChain == tree.IsA()) {
+      TObjArray* filelist = static_cast<TChain&>(tree).GetListOfFiles();
+      if (filelist->GetEntries() > 0) {
+         for (auto f : *filelist)
+            fFileNames.emplace_back(f->GetTitle());
+         StoreFriends(tree, false);
+      }
+      else {
+         auto msg = "The provided chain of files is empty, cannot process tree " + fTreeName;
+         throw std::runtime_error(msg);
+      }
+   }
+   else {
+      TFile *f = tree.GetCurrentFile();
+      if (f) {
+         fFileNames.emplace_back(f->GetName());
+         StoreFriends(tree, true);
+      }
+      else {
+         auto msg = "The specified TTree is not linked to any file, in-memory-only trees are not supported. Cannot process tree " + fTreeName;
+         throw std::runtime_error(msg);
+      }
+   }
+}
+
 }
 }
 

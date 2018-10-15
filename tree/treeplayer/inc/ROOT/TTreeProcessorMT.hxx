@@ -218,33 +218,7 @@ namespace ROOT {
          //////////////////////////////////////////////////////////////////////////
          /// Constructor based on a TTree.
          /// \param[in] tree Tree or chain of files containing the tree to process.
-         TTreeView(TTree& tree) : fTreeName(tree.GetName())
-         {
-            static const TClassRef clRefTChain("TChain");
-            if (clRefTChain == tree.IsA()) {
-               TObjArray* filelist = static_cast<TChain&>(tree).GetListOfFiles();
-               if (filelist->GetEntries() > 0) { 
-                  for (auto f : *filelist)
-                     fFileNames.emplace_back(f->GetTitle());
-                  StoreFriends(tree, false);
-               }
-               else {
-                  auto msg = "The provided chain of files is empty, cannot process tree " + fTreeName;
-                  throw std::runtime_error(msg);
-               }
-            }
-            else {
-               TFile *f = tree.GetCurrentFile();
-               if (f) {
-                  fFileNames.emplace_back(f->GetName());
-                  StoreFriends(tree, true);
-               }
-               else {
-                  auto msg = "The specified TTree is not linked to any file, in-memory-only trees are not supported. Cannot process tree " + fTreeName;
-                  throw std::runtime_error(msg);
-               } 
-            }
-         }
+         TTreeView(TTree& tree);
 
          //////////////////////////////////////////////////////////////////////////
          /// Constructor based on a TTree and a TEntryList.
