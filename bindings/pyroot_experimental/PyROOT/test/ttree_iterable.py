@@ -12,12 +12,13 @@ class TTreeIterable(unittest.TestCase):
     `for event in mytree:`
          `...`
 
-    Since this pythonization is common to TTree and its subclasses, TChain is
-    also tested here.
+    Since this pythonization is common to TTree and its subclasses, TChain and TNtuple
+    are also tested here.
     """
 
     filename  = 'treeiterable.root'
     treename  = 'mytree'
+    tuplename = 'mytuple'
     nentries  = 10
     arraysize = 10
     more      = 10
@@ -32,6 +33,11 @@ class TTreeIterable(unittest.TestCase):
                          cls.arraysize,
                          cls.more,
                          'RECREATE')
+        ROOT.CreateTNtuple(cls.filename,
+                           cls.tuplename,
+                           cls.nentries,
+                           cls.more,
+                           'UPDATE')
 
     # Helper
     def get_file_objects(self):
@@ -44,12 +50,16 @@ class TTreeIterable(unittest.TestCase):
         c.Add(self.filename)
         c.Add(self.filename)
 
-        return f,t,c
+        nt = f.Get(self.tuplename)
+        SetOwnership(nt, False)
+
+        return f,t,c,nt
 
     # Tests
     def test_basic_type_branch(self):
-        f,t,c = self.get_file_objects()
+        f,t,c,nt = self.get_file_objects()
 
+        # TTree, TChain
         for ds in t,c:
             n = array('f', [ 0. ])
             ds.SetBranchAddress('floatb', n)
@@ -59,8 +69,20 @@ class TTreeIterable(unittest.TestCase):
                 self.assertEqual(n[0], i+self.more)
                 i = (i + 1) % self.nentries
 
+        # TNtuple
+        colnames = ['x','y','z']
+        cols = [ array('f', [ 0. ]) for _ in colnames ]
+        ncols = len(cols)
+        for i in range(ncols):
+            nt.SetBranchAddress(colnames[i], cols[i])
+        numentry = 0
+        for entry in nt:
+            for i in range(ncols):
+                self.assertEqual(cols[i][0], numentry + i*self.more)
+            numentry += 1
+
     def test_array_branch(self):
-        f,t,c = self.get_file_objects()
+        f,t,c,_ = self.get_file_objects()
 
         for ds in t,c:
             a = array('d', self.arraysize*[ 0. ])
@@ -73,7 +95,7 @@ class TTreeIterable(unittest.TestCase):
                 i = (i + 1) % self.nentries
 
     def test_struct_branch(self):
-        f,t,c = self.get_file_objects()
+        f,t,c,_ = self.get_file_objects()
 
         for ds in t,c:
             ms = ROOT.MyStruct()
