@@ -34,6 +34,19 @@ void DeleteFiles(const std::vector<std::string> &filenames)
       gSystem->Unlink(f.c_str());
 }
 
+
+TEST(TreeProcessorMT, EmptyTChain)
+{
+   TChain c("mytree");
+   auto exceptionFired(false);
+   try {
+      ROOT::TTreeProcessorMT proc(c);
+   } catch(...) {
+      exceptionFired = true;
+   }
+   EXPECT_TRUE(exceptionFired);
+}
+
 TEST(TreeProcessorMT, ManyFiles)
 {
    const auto nFiles = 100u;
