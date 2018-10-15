@@ -1060,7 +1060,7 @@ Bool_t TTreeCache::FillBuffer()
    Long64_t entry = tree->GetReadEntry();
    Long64_t fEntryCurrentMax = 0;
 
-   if (entry < fEntryMin || fEntryMax < entry)
+   if (entry != -1 && (entry < fEntryMin || fEntryMax < entry))
       return kFALSE;
 
    if (fEnablePrefetching) { // Prefetching mode
