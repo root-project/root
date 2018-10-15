@@ -11,6 +11,9 @@ class TTreeIterable(unittest.TestCase):
     For example, this allows to do:
     `for event in mytree:`
          `...`
+
+    Since this pythonization is common to TTree and its subclasses, TChain is
+    also tested here.
     """
 
     filename  = 'treeiterable.root'
@@ -31,49 +34,56 @@ class TTreeIterable(unittest.TestCase):
                          'RECREATE')
 
     # Helper
-    def get_file_and_tree(self):
+    def get_file_objects(self):
         f = ROOT.TFile(self.filename)
         t = f.Get(self.treename)
         # Prevent double deletion of the tree (Python and C++ TFile)
         SetOwnership(t, False)
 
-        return f,t
+        c = ROOT.TChain(self.treename)
+        c.Add(self.filename)
+        c.Add(self.filename)
+
+        return f,t,c
 
     # Tests
     def test_basic_type_branch(self):
-        f,t = self.get_file_and_tree()
+        f,t,c = self.get_file_objects()
 
-        n = array('f', [ 0. ])
-        t.SetBranchAddress('floatb', n)
+        for ds in t,c:
+            n = array('f', [ 0. ])
+            ds.SetBranchAddress('floatb', n)
 
-        i = 0
-        for entry in t:
-            self.assertEqual(n[0], i+self.more)
-            i += 1
+            i = 0
+            for entry in ds:
+                self.assertEqual(n[0], i+self.more)
+                i = (i + 1) % self.nentries
 
     def test_array_branch(self):
-        f,t = self.get_file_and_tree()
+        f,t,c = self.get_file_objects()
 
-        a = array('d', self.arraysize*[ 0. ])
-        t.SetBranchAddress('arrayb', a)
+        for ds in t,c:
+            a = array('d', self.arraysize*[ 0. ])
+            ds.SetBranchAddress('arrayb', a)
 
-        i = 0
-        for entry in t:
-            for j in range(self.arraysize):
-                self.assertEqual(a[j], i+j)
-            i += 1
+            i = 0
+            for entry in ds:
+                for j in range(self.arraysize):
+                    self.assertEqual(a[j], i+j)
+                i = (i + 1) % self.nentries
 
     def test_struct_branch(self):
-        f,t = self.get_file_and_tree()
+        f,t,c = self.get_file_objects()
 
-        ms = ROOT.MyStruct()
-        t.SetBranchAddress('structleaflistb', ms)
+        for ds in t,c:
+            ms = ROOT.MyStruct()
+            ds.SetBranchAddress('structleaflistb', ms)
 
-        i = 0
-        for entry in t:
-            self.assertEqual(ms.myint1, i+self.more)
-            self.assertEqual(ms.myint2, i*self.more)
-            i += 1
+            i = 0
+            for entry in ds:
+                self.assertEqual(ms.myint1, i+self.more)
+                self.assertEqual(ms.myint2, i*self.more)
+                i = (i + 1) % self.nentries
 
 
 if __name__ == '__main__':
