@@ -45,6 +45,7 @@ class RColumn {
 public:
    RColumn(const RColumnModel &model, RPageSource &source);
    RColumn(const RColumnModel &model, RPageSink &sink);
+   // TODO(jblomer) move constructor
 
    void Append(const RColumnElementBase &/*element*/) {/*...*/}
    void Flush();
@@ -58,8 +59,6 @@ public:
 
    TreeIndex_t GetNElements();
 };
-
-using RColumnCollection_t = std::vector<std::unique_ptr<RColumn>>;
 
 } // namespace Detail
 

@@ -103,8 +103,8 @@ public:
 
    /// Fills a page starting with index rangeStart; the corresponding column is taken from the page object
    void MapSlice(TreeIndex_t /*rangeStart*/, RPage * /*page*/) {/* Make me abstract */}
-   virtual TreeIndex_t GetNentries() {/* Make me abstract */ return 0;}
-   virtual TreeIndex_t GetNelements(RColumn * /*column*/) {/* Make me abstract */ return 0;}
+   virtual TreeIndex_t GetNEntries() {/* Make me abstract */ return 0;}
+   virtual TreeIndex_t GetNElements(RColumn * /*column*/) {/* Make me abstract */ return 0;}
 };
 
 } // namespace Detail
