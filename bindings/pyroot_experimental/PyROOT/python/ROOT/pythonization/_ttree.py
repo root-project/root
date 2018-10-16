@@ -33,11 +33,12 @@ def pythonize_ttree(klass, name):
     # klass: class to be pythonized
     # name: string containing the name of the class
 
-    if TClass.GetClass(name).InheritsFrom('TTree'):
+    to_pythonize = [ 'TTree', 'TChain', 'TNtuple', 'TNtupleD' ]
+    if name in to_pythonize:
         # Pythonizations that are common to TTree and its subclasses.
         # To avoid duplicating the same logic in the pythonizors of
-        # the subclasses, inject the pythonizations for all of them
-        # here as well.
+        # the subclasses, inject the pythonizations for all the target
+        # classes here.
 
         # Pythonic iterator
         klass.__iter__ = _TTree__iter__
