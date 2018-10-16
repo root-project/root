@@ -6,7 +6,6 @@
 if(root7)
   ROOT_STANDARD_LIBRARY_PACKAGE(ROOTForest
   HEADERS
-    ROOT/RBranch.hxx
     ROOT/RColumn.hxx
     ROOT/RColumnElement.hxx
     ROOT/RForestUtil.hxx
@@ -15,13 +14,14 @@ if(root7)
     ROOT/RPageStorage.hxx
     ROOT/RTree.hxx
     ROOT/RTreeEntry.hxx
+    ROOT/RTreeField.hxx
     ROOT/RTreeModel.hxx
     ROOT/RTreeValue.hxx
     ROOT/RTreeView.hxx
   SOURCES
-    RBranch.cxx
     RPageStorage.cxx
     RTree.cxx
+    RTreeField.cxx
     RTreeModel.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM

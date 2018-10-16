@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
