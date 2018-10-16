@@ -4477,7 +4477,7 @@
    }
 
    TCanvasPainter.prototype.OnWebsocketMsg = function(handle, msg) {
-      console.log("GET MSG " + msg.substr(0,30));
+      console.log("GET MSG len:" + msg.length + " " + msg.substr(0,60));
 
       if (msg == "CLOSE") {
          this.OnWebsocketClosed();

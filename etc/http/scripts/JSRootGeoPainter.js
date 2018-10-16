@@ -835,30 +835,32 @@
 
    TGeoPainter.prototype.HighlightMesh = function(active_mesh, color, geo_object, geo_stack, no_recursive) {
 
+      // if selected mesh has geo_object property, try to highligh all correspondent objects from extras
+      if (!geo_object && active_mesh && active_mesh.geo_object)
+         geo_object = active_mesh.geo_object;
+
       if (geo_object) {
-         active_mesh = [];
+         active_mesh = active_mesh ? [ active_mesh ] : [];
          var extras = this.getExtrasContainer();
          if (extras && extras.children)
             for (var k=0;k<extras.children.length;++k)
                if (extras.children[k].geo_object === geo_object) {
-                  active_mesh.push(extras.children[k].geo_highlight || extras.children[k]);
+                  var elem = extras.children[k].geo_highlight || extras.children[k];
+                  if (active_mesh.indexOf(elem)<0) active_mesh.push(elem);
                }
       } else if (geo_stack && this._toplevel) {
          active_mesh = [];
          this._toplevel.traverse(function(mesh) {
             if ((mesh instanceof THREE.Mesh) && (mesh.stack===geo_stack)) active_mesh.push(mesh);
          });
-      } else if (active_mesh) {
-         active_mesh = [ active_mesh ];
+      } else {
+         active_mesh = active_mesh ? [ active_mesh ] : [];
       }
 
-      if (active_mesh && !active_mesh.length) active_mesh = null;
+      if (!active_mesh.length) active_mesh = null;
 
       if (active_mesh) {
          // check if highlight is disabled for correspondent objects kinds
-         if (!active_mesh[0]) console.log("GOT", active_mesh)
-
-
          if (active_mesh[0].geo_object) {
             if (!this.options.highlight_scene) active_mesh = null;
          } else {
