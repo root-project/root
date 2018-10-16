@@ -579,7 +579,10 @@ void TCanvas::Build()
       // Make sure that batch interactive canvas sizes are the same
       fCw -= 4;
       fCh -= 28;
-   } else if (!IsWeb()) {
+   } else if (IsWeb()) {
+      // mark canvas as batch - avoid virtualx in many places
+      SetBatch(kTRUE);
+   } else {
       //normal mode with a screen window
       // Set default physical canvas attributes
       //Should be done via gVirtualX, not via fPainter (at least now). No changes here.
@@ -694,7 +697,7 @@ TVirtualPad *TCanvas::cd(Int_t subpadnumber)
    TPad::cd(subpadnumber);
 
    // in case doublebuffer is off, draw directly onto display window
-   if (!IsBatch() && !IsWeb()) {
+   if (!IsBatch()) {
       if (!fDoubleBuffer)
          gVirtualX->SelectWindow(fCanvasID);//Ok, does not matter for glpad.
    }
@@ -778,8 +781,7 @@ void TCanvas::Close(Option_t *option)
       TPad::Close(option);
 
       if (!IsBatch()) {
-         if (!IsWeb())
-            gVirtualX->SelectWindow(fCanvasID);    //select current canvas
+         gVirtualX->SelectWindow(fCanvasID);    //select current canvas
 
          DeleteCanvasPainter();
 
@@ -1073,7 +1075,6 @@ void TCanvas::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TCanvas::FeedbackMode(Bool_t set)
 {
-   if (IsWeb()) return;
    if (set) {
       SetDoubleBuffer(0);             // turn off double buffer mode
       gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
@@ -1251,7 +1252,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
          gPad = fSelectedPad;
 
          fSelected->ExecuteEvent(event, px, py);
-         if (!IsWeb()) gVirtualX->Update();
+         gVirtualX->Update();
          if (fSelected && !fSelected->InheritsFrom(TAxis::Class())) {
             Bool_t resize = kFALSE;
             if (fSelected->InheritsFrom(TBox::Class()))
@@ -1901,7 +1902,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
 void TCanvas::SetBatch(Bool_t batch)
 {
-   if (gROOT->IsBatch())
+   if (gROOT->IsBatch() || IsWeb())
       fBatch = kTRUE;
    else
       fBatch = batch;
@@ -1930,7 +1931,7 @@ void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
 
 void TCanvas::SetCursor(ECursor cursor)
 {
-   if (IsBatch() || IsWeb()) return;
+   if (IsBatch()) return;
    gVirtualX->SetCursor(fCanvasID, cursor);
 }
 
@@ -1939,7 +1940,7 @@ void TCanvas::SetCursor(ECursor cursor)
 
 void TCanvas::SetDoubleBuffer(Int_t mode)
 {
-   if (IsBatch() || IsWeb()) return;
+   if (IsBatch()) return;
    fDoubleBuffer = mode;
    gVirtualX->SetDoubleBuffer(fCanvasID, mode);
 
