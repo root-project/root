@@ -27,7 +27,7 @@ namespace Experimental {
 \ingroup Forest
 \brief The available trivial, native content types of a column
 
-More complex types, such as classes, get translated into columns of such simple types by the RBranch.
+More complex types, such as classes, get translated into columns of such simple types by the RTreeField.
 */
 // clang-format on
 enum class EColumnType {
