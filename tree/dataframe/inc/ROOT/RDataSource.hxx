@@ -98,6 +98,7 @@ The sequence of calls that RDataFrame (or any other client of a RDataSource) per
 RDataSource implementations must support running multiple event-loops consecutively (although sequentially) on the same dataset.
  - \b SetNSlots() is called once per RDataSource object, typically when it is associated to a RDataFrame.
  - \b GetColumnReaders() can be called several times, potentially with the same arguments, also in-between event-loops, but not during an event-loop.
+ - \b GetEntryRanges() will be called several times, including during an event loop, as additional ranges are needed.  It will not be called concurrently.
  - \b Initialise() and \b Finalise() are called once per event-loop,  right before starting and right after finishing.
  - \b InitSlot(), \b SetEntry(), and \b FinaliseSlot() can be called concurrently from multiple threads, multiple times per event-loop.
 */
@@ -156,6 +157,8 @@ public:
    /// \brief Return ranges of entries to distribute to tasks.
    /// They are required to be contiguous intervals with no entries skipped. Supposing a dataset with nEntries, the
    /// intervals must start at 0 and end at nEntries, e.g. [0-5],[5-10] for 10 entries.
+   /// This function will be invoked repeatedly by RDataFrame as it needs additional entries to process.
+   /// The same entry range should not be returned more than once.
    /// Returning an empty collection of ranges signals to RDataFrame that the processing can stop.
    // clang-format on
    virtual std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() = 0;
