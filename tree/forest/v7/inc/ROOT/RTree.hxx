@@ -30,8 +30,8 @@ class RTreeEntry;
 class RTreeModel;
 
 namespace Detail {
-class RTreeSink;
-class RTreeSource;
+class RPageSink;
+class RPageSource;
 }
 
 namespace Detail {
@@ -83,13 +83,13 @@ Individual branches can be read as well by instantiating a tree view.
 // clang-format on
 class RInputTree : public Detail::RTree {
 private:
-   std::unique_ptr<Detail::RTreeSource> fSource;
+   std::unique_ptr<Detail::RPageSource> fSource;
 
 public:
    /// The user imposes a tree model, which must be compatible with the model found in the data on storage
-   RInputTree(std::shared_ptr<RTreeModel> model, std::unique_ptr<Detail::RTreeSource> source);
+   RInputTree(std::shared_ptr<RTreeModel> model, std::unique_ptr<Detail::RPageSource> source);
    /// The model is generated from the tree metadata on storage
-   RInputTree(std::unique_ptr<Detail::RTreeSource> source);
+   RInputTree(std::unique_ptr<Detail::RPageSource> source);
    ~RInputTree();
 
    /// Analogous to Fill(), fills the default entry of the model
@@ -126,10 +126,10 @@ triggered by Flush() or by destructing the tree.  On I/O errors, an exception is
 // clang-format on
 class ROutputTree : public Detail::RTree {
 private:
-   std::unique_ptr<Detail::RTreeSink> fSink;
+   std::unique_ptr<Detail::RPageSink> fSink;
 
 public:
-   ROutputTree(std::shared_ptr<RTreeModel> model, std::unique_ptr<Detail::RTreeSink> sink);
+   ROutputTree(std::shared_ptr<RTreeModel> model, std::unique_ptr<Detail::RPageSink> sink);
    ~ROutputTree();
 
    /// The simplest user interface if the default entry that comes with the tree model is used
