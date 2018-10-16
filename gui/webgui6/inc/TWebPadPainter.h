@@ -15,6 +15,8 @@
 
 #include "TWebPainting.h"
 
+#include <memory>
+
 class TVirtualPad;
 class TWebCanvas;
 class TPoint;
@@ -30,7 +32,7 @@ friend class TWebCanvas;
 
 protected:
 
-   TWebPainterAttributes *fAttr{nullptr}; ///!< current attributes
+   std::unique_ptr<TWebPainterAttributes> fAttr; ///!< current attributes
    bool fAttrChanged{false};              ///!< flag that attributes are changed after last paint operation
    TWebPainting *fPainting{nullptr};      ///!< object to store all painting
    UInt_t fCw{0}, fCh{0};                 ///!< canvas dimensions, need for back pixel conversion
