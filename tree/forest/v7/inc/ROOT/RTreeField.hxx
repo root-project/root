@@ -1,4 +1,4 @@
-/// \file ROOT/RBranch.hxx
+/// \file ROOT/RTreeField.hxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
@@ -13,11 +13,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RBranch
-#define ROOT7_RBranch
+#ifndef ROOT7_RTreeField
+#define ROOT7_RTreeField
 
-#include <ROOT/RForestUtil.hxx>
 #include <ROOT/RColumn.hxx>
+#include <ROOT/RForestUtil.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RTreeValue.hxx>
 
@@ -34,22 +34,22 @@ class RPageStorage;
 
 // clang-format off
 /**
-\class ROOT::Experimental::RBranchBase
+\class ROOT::Experimental::RTreeFieldBase
 \ingroup Forest
-\brief An RBranchBase translates read and write calls from/to underlying columns to/from tere values
+\brief An field translates read and write calls from/to underlying columns to/from tere values
 
-The RBranchBase and its type-safe descendants provide the object to column mapper. They map C++ objects
-to primitive columns, where the mapping is trivial for simple types such as 'double'. The branch knows
-based on its type and the branch name the type(s) and name(s) of the columns.
+A field is a serializable C++ type. The RTreeFieldBase and its type-safe descendants provide the object
+to column mapper. They map C++ objects to primitive columns, where the mapping is trivial for simple types
+such as 'double'. The field knows based on its type and the field name the type(s) and name(s) of the columns.
 */
 // clang-format on
-class RBranchBase {
+class RTreeFieldBase {
 private:
-   /// A branch on a trivial type that maps as-is to a single column
+   /// A field on a trivial type that maps as-is to a single column
    bool fIsSimple;
-   /// All branches have a main column. For nested branches, the main column is the index branch. Points into fColumns.
+   /// All fields have a main column. For collection fields, the main column is the index field. Points into fColumns.
    RColumn *fPrincipalColumn;
-   /// The columns are connected either to a sink or to a source (not to both); they are owned by the branch.
+   /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
    std::vector<RColumn> fColumns;
 
 protected:
@@ -61,16 +61,16 @@ protected:
 
 public:
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
-   RBranchBase(std::string_view name);
-   virtual ~RBranchBase();
+   RTreeFieldBase(std::string_view name);
+   virtual ~RTreeFieldBase();
 
    /// Registeres the backing columns with the physical storage
    virtual void GenerateColumns(Detail::RPageStorage &storage) = 0;
 
-   /// Generates a tree value of the branch type.
+   /// Generates a tree value of the field type.
    virtual std::unique_ptr<RTreeValueBase> GenerateValue() = 0;
 
-   /// Write the given value to a tree. The value object has to be of the same type as the branch.
+   /// Write the given value to a tree. The value object has to be of the same type as the field.
    void Append(const RTreeValueBase &value) {
      if (!fIsSimple) {
         DoAppend(value);
@@ -89,7 +89,7 @@ public:
       fPrincipalColumn->Read(index, value.fPrincipalElement);
    }
 
-   /// Type unsafe bulk read interface; dst must point to a vector of objects of the branch type.
+   /// Type unsafe bulk read interface; dst must point to a vector of objects of the field type.
    /// TODO(jblomer): can this be type safe?
    void ReadV(TreeIndex_t index, TreeIndex_t count, void *dst)
    {
@@ -101,9 +101,9 @@ public:
    }
 
    /// Only for simple types, let the pointer wrapped by the tree value simply point into the page buffer.
-   /// The resulting tree value may only be used for as long as no request to another item of this branch is made
+   /// The resulting tree value may only be used for as long as no request to another item of this field is made
    /// because another index might trigger a swap of the page buffer.
-   /// The dst location must be an object of the branch type.
+   /// The dst location must be an object of the field type.
    void Map(TreeIndex_t index, void** dst) {
       if (!fIsSimple) {
          // TODO(jblomer)
@@ -111,7 +111,7 @@ public:
       fPrincipalColumn->Map(index, dst);
    }
 
-   /// The number of elements in the principal column. For top level branches, the number of entries.
+   /// The number of elements in the principal column. For top level fields, the number of entries.
    TreeIndex_t GetNItems();
 
    /// Ensure that all received items are written from page buffers to the storage.
@@ -122,26 +122,26 @@ public:
 
 } // namespace Detail
 
-/// A Branch covering a subtree containing a collection of values
-class RBranchCollection : public Detail::RBranchBase {
+/// A Field covering a subtree containing a collection of sub fields (like std::vector<Jet>)
+class RTreeFieldCollection : public Detail::RTreeFieldBase {
 protected:
    void DoAppend(const Detail::RTreeValueBase& value) final;
    void DoRead(TreeIndex_t index, const Detail::RTreeValueBase& value) final;
    void DoReadV(TreeIndex_t index, TreeIndex_t count, void *dst) final;
 
 public:
-   RBranchCollection(std::string_view name);
-   ~RBranchCollection();
+   RTreeFieldCollection(std::string_view name);
+   ~RTreeFieldCollection();
 
    void GenerateColumns(Detail::RPageStorage &storage) final;
    std::unique_ptr<Detail::RTreeValueBase> GenerateValue() final;
-   void Attach(RBranchBase* child);
+   void Attach(RTreeFieldBase* child);
 };
 
 
 /// Supported types are implemented as template specializations
 template <typename T>
-class RBranch : public Detail::RBranchBase {
+class RTreeField : public Detail::RTreeFieldBase {
 };
 
 /// TODO(jblomer): template specializations for simple types and TClass
