@@ -68,7 +68,7 @@ public:
      std::memcpy(fRawContent, source, fSize);
    }
 
-   /// Used to map directly from slices
+   /// Used to map directly from pages
    void SetRawContent(void *source) {
      if (!fIsMovable) {
        Deserialize(source);
@@ -83,9 +83,7 @@ class RColumnElement : public RColumnElementBase {
    T* fValue;
 
 public:
-   template<typename... ArgsT>
-   explicit RColumnElement(T *value) : fValue(value) {
-   }
+   explicit RColumnElement(T* value);
 };
 
 } // namespace Detail
