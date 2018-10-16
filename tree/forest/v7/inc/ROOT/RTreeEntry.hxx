@@ -16,7 +16,7 @@
 #ifndef ROOT7_RTreeEntry
 #define ROOT7_RTreeEntry
 
-#include <ROOT/RCargo.hxx>
+#include <ROOT/RTreeValue.hxx>
 
 #include <memory>
 #include <utility>
@@ -28,22 +28,22 @@ namespace Experimental {
 /**
 \class ROOT::Experimental::RTreeEntry
 \ingroup Forest
-\brief The RTreeEntry is a collection of cargo objects corresponding to a complete row in the data set
+\brief The RTreeEntry is a collection of tree values corresponding to a complete row in the data set
 
 */
 // clang-format on
 class RTreeEntry {
-   std::vector<Detail::RCargoBase> fCargoCollection;
+   std::vector<Detail::RTreeValueBase> fTreeValues;
 
 public:
    RTreeEntry() = default;
 
-   /// While building the entry, adds a new cargo object to the list and return the cargo's value pointer
+   /// While building the entry, adds a new value to the list and return the value's shared pointer
    template <typename T, typename... ArgsT>
-   std::shared_ptr<T> AddCargo(ArgsT&&... args) {
-     auto cargo = std::make_shared<RCargo<T>>(std::forward<ArgsT>(args)...);
-     auto value_ptr = cargo->Get();
-     fCargoCollection.emplace_back(std::move(cargo));
+   std::shared_ptr<T> AddField(ArgsT&&... args) {
+     auto value = std::make_shared<RTreeValue<T>>(std::forward<ArgsT>(args)...);
+     auto value_ptr = value->Get();
+     fTreeValues.emplace_back(std::move(value));
      return value_ptr;
    }
 };

@@ -1,4 +1,4 @@
-/// \file ROOT/RCargo.hxx
+/// \file ROOT/RTreeValue.hxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RCargo
-#define ROOT7_RCargo
+#ifndef ROOT7_RTreeValue
+#define ROOT7_RTreeValue
 
 #include <ROOT/RColumnElement.hxx>
 
@@ -28,15 +28,15 @@ namespace Detail {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RCargoBase
+\class ROOT::Experimental::TreeValueBase
 \ingroup Forest
-\brief The "cargo" represents transient storage of simple or complex C++ values.
+\brief Represents transient storage of simple or complex C++ values.
 
-The data carried by the cargo is used by the computational code and it supposed to be serialized on Fill
+The data carried by the tree value is used by the computational code and it is supposed to be serialized on Fill
 or deserialized into by tree reading.
 */
 // clang-format on
-class RCargoBase {
+class RTreeValueBase {
 public:
    RColumnElementBase* fPrincipalElement;
 };
@@ -46,20 +46,20 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RCargo
+\class ROOT::Experimental::RTreeValue
 \ingroup Forest
 
-For simple cargo types, no more template specialization is necessary.
+For simple C++ types, no more template specialization is necessary.
 */
 // clang-format on
 template <typename T>
-class RCargo : public Detail::RCargoBase {
+class RTreeValue : public Detail::RTreeValueBase {
 private:
    std::shared_ptr<T> fValue;
 
 public:
    template <typename... ArgsT>
-   RCargo(ArgsT&&... args) : fValue(std::make_shared<T>(std::forward<ArgsT>(args)...))
+   RTreeValue(ArgsT&&... args) : fValue(std::make_shared<T>(std::forward<ArgsT>(args)...))
    {
    }
 
@@ -68,19 +68,19 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RCargoCaptured
+\class ROOT::Experimental::RTreeValueCaptured
 \ingroup Forest
 
 Allows the user to handle storage allocation.
 */
 // clang-format on
 template <typename T>
-class RCargoCaptured : public Detail::RCargoBase {
+class RTreeValueCaptured : public Detail::RTreeValueBase {
 private:
    T *fValue;
 
 public:
-   RCargoCaptured(T *value) : fValue(value)
+   RTreeValueCaptured(T *value) : fValue(value)
    {
    }
 
@@ -89,13 +89,13 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RCargoSubtree
+\class ROOT::Experimental::RTreeValueCollection
 \ingroup Forest
 
-A cargo object that behaves like a tree.
+A value that behaves like a tree and represents the entire collection in its subtree
 */
 // clang-format on
-class RCargoSubtree : public Detail::RCargoBase {
+class RTreeValueCollection : public Detail::RTreeValueBase {
 };
 
 } // namespace Experimental

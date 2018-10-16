@@ -7,7 +7,6 @@ if(root7)
   ROOT_STANDARD_LIBRARY_PACKAGE(ROOTForest
   HEADERS
     ROOT/RBranch.hxx
-    ROOT/RCargo.hxx
     ROOT/RColumn.hxx
     ROOT/RColumnElement.hxx
     ROOT/RPage.hxx
@@ -17,6 +16,7 @@ if(root7)
     ROOT/RTreeEntry.hxx
     ROOT/RTreeModel.hxx
     ROOT/RTreeUtil.hxx
+    ROOT/RTreeValue.hxx
     ROOT/RTreeView.hxx
   SOURCES
     RBranch.cxx

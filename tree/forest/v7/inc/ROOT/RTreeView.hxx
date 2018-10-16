@@ -17,9 +17,9 @@
 #define ROOT7_RTreeView
 
 #include <ROOT/RBranch.hxx>
-#include <ROOT/RCargo.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RTreeUtil.hxx>
+#include <ROOT/RTreeView.hxx>
 
 #include <memory>
 #include <utility>
@@ -35,7 +35,7 @@ namespace Experimental {
 
 (NB(jblomer): The tree view is very close to TTreeReader. Do we simply want to teach TTreeReader to deal with Forest?)
 
-The view owns a branch and its underlying columns in order to fill a cargo object with values from the
+The view owns a branch and its underlying columns in order to fill a tree value object with values from the
 given branch. Branch elements can be accessed by index. For top level branches, the index refers to the entry number.
 Branches that are part of nested collections have global index numbers that are derived from their parent indexes.
 
@@ -48,12 +48,12 @@ template <typename T>
 class RTreeView {
 private:
    std::unique_ptr<RBranch<T>> fBranch;
-   RCargo<T> fCargo;
+   RTreeValue<T> fTreeValue;
 
 public:
    RTreeView(std::unique_ptr<RBranch<T>> branch);
 
-   /// Use the branch to read the referenced element into the cargo object. To be inlined
+   /// Use the branch to read the referenced element into the tree value object. To be inlined
    const T& operator ()(TreeIndex_t index);
 };
 
@@ -69,12 +69,12 @@ template <>
 class RTreeView<TreeIndex_t> {
 protected:
    std::unique_ptr<RBranch<TreeIndex_t>> fBranch;
-   RCargo<TreeIndex_t> fCargo;
+   RTreeValue<TreeIndex_t> fTreeValue;
 
 public:
    RTreeView(std::unique_ptr<RBranch<TreeIndex_t>> branch);
 
-   /// Use the branch to read the referenced element into the cargo object. To be inlined
+   /// Use the branch to read the referenced element into the tree value object. To be inlined
    TreeIndex_t operator ()(TreeIndex_t index);
 };
 

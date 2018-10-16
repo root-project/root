@@ -16,10 +16,10 @@
 #ifndef ROOT7_RBranch
 #define ROOT7_RBranch
 
-#include <ROOT/RCargo.hxx>
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RTreeUtil.hxx>
+#include <ROOT/RTreeValue.hxx>
 
 #include <memory>
 #include <vector>
@@ -29,14 +29,14 @@ namespace Experimental {
 
 namespace Detail {
 
-class RCargoBase;
+class RTreeValueBase;
 class RPageStorage;
 
 // clang-format off
 /**
 \class ROOT::Experimental::RBranchBase
 \ingroup Forest
-\brief An RBranchBase translates read and write calls from/to underlying columns to/from cargo objects
+\brief An RBranchBase translates read and write calls from/to underlying columns to/from tere values
 
 The RBranchBase and its type-safe descendants provide the object to column mapper. They map C++ objects
 to primitive columns, where the mapping is trivial for simple types such as 'double'. The branch knows
@@ -55,9 +55,9 @@ private:
 protected:
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
-   virtual void DoAppend(const RCargoBase &cargo) = 0;
-   virtual void DoRead(TreeIndex_t index, const RCargoBase &cargo) = 0;
-   virtual void DoReadV(TreeIndex_t index, TreeIndex_t count, void *dst) = 0;
+   virtual void DoAppend(const RTreeValueBase& value) = 0;
+   virtual void DoRead(TreeIndex_t index, const RTreeValueBase& value) = 0;
+   virtual void DoReadV(TreeIndex_t index, TreeIndex_t count, void* dst) = 0;
 
 public:
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
@@ -67,26 +67,26 @@ public:
    /// Registeres the backing columns with the physical storage
    virtual void GenerateColumns(Detail::RPageStorage &storage) = 0;
 
-   /// Generates a cargo object of the branch type.
-   virtual std::unique_ptr<RCargoBase> GenerateCargo() = 0;
+   /// Generates a tree value of the branch type.
+   virtual std::unique_ptr<RTreeValueBase> GenerateValue() = 0;
 
-   /// Write the value stored in cargo to a tree. The cargo object has to be of the same type as the branch.
-   void Append(const RCargoBase &cargo) {
+   /// Write the given value to a tree. The value object has to be of the same type as the branch.
+   void Append(const RTreeValueBase &value) {
      if (!fIsSimple) {
-        DoAppend(cargo);
+        DoAppend(value);
         return;
      }
-     fPrincipalColumn->Append(*(cargo.fPrincipalElement));
+     fPrincipalColumn->Append(*(value.fPrincipalElement));
    }
 
-   /// Populate a single cargo object with data from the tree, which needs to be of the fitting type.
-   /// Reading copies data into the memory given by cargo.
-   void Read(TreeIndex_t index, RCargoBase &cargo) {
+   /// Populate a single value with data from the tree, which needs to be of the fitting type.
+   /// Reading copies data into the memory wrapped by the tree value.
+   void Read(TreeIndex_t index, RTreeValueBase &value) {
       if (!fIsSimple) {
-         DoRead(index, cargo);
+         DoRead(index, value);
          return;
       }
-      fPrincipalColumn->Read(index, cargo.fPrincipalElement);
+      fPrincipalColumn->Read(index, value.fPrincipalElement);
    }
 
    /// Type unsafe bulk read interface; dst must point to a vector of objects of the branch type.
@@ -100,11 +100,11 @@ public:
       fPrincipalColumn->ReadV(index, count, dst);
    }
 
-   /// Only for simple types, let the memory enclosed in cargo simply point into the page buffer.
-   /// The resulting cargo object may only be used for as long as no request to another item of this branch is made
+   /// Only for simple types, let the pointer wrapped by the tree value simply point into the page buffer.
+   /// The resulting tree value may only be used for as long as no request to another item of this branch is made
    /// because another index might trigger a swap of the page buffer.
    /// The dst location must be an object of the branch type.
-   void Map(TreeIndex_t index, void **dst) {
+   void Map(TreeIndex_t index, void** dst) {
       if (!fIsSimple) {
          // TODO(jblomer)
       }
@@ -122,19 +122,19 @@ public:
 
 } // namespace Detail
 
-/// A Branch representing a collection
-class RBranchSubtree : public Detail::RBranchBase {
+/// A Branch covering a subtree containing a collection of values
+class RBranchCollection : public Detail::RBranchBase {
 protected:
-   void DoAppend(const Detail::RCargoBase &cargo) final;
-   void DoRead(TreeIndex_t index, const Detail::RCargoBase &cargo) final;
+   void DoAppend(const Detail::RTreeValueBase& value) final;
+   void DoRead(TreeIndex_t index, const Detail::RTreeValueBase& value) final;
    void DoReadV(TreeIndex_t index, TreeIndex_t count, void *dst) final;
 
 public:
-   RBranchSubtree(std::string_view name);
-   ~RBranchSubtree();
+   RBranchCollection(std::string_view name);
+   ~RBranchCollection();
 
    void GenerateColumns(Detail::RPageStorage &storage) final;
-   std::unique_ptr<Detail::RCargoBase> GenerateCargo() final;
+   std::unique_ptr<Detail::RTreeValueBase> GenerateValue() final;
    void Attach(RBranchBase* child);
 };
 
