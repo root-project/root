@@ -12,7 +12,6 @@
 
 #include "TWebSnapshot.h"
 #include "TWebPadPainter.h"
-#include "TWebVirtualX.h"
 #include "TWebMenuItem.h"
 
 #include "TSystem.h"
@@ -42,7 +41,7 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
 Int_t TWebCanvas::InitWindow()
 {
    // at this place canvas is not yet register to the list of canvases - we cannot start browser
-   return TWebVirtualX::WebId; // magic number, should be catch by TWebVirtualX
+   return 111222333; // should not be used at all
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,23 +174,21 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TObject *obj, const char *opt)
 
    if (!IsJSSupportedClass(obj)) {
       TWebPadPainter *painter = dynamic_cast<TWebPadPainter *>(Canvas()->GetCanvasPainter());
-      if (painter) {
+      if (!painter) {
+         Error("CreateObjectSnapshot", "Not found WebPadPainter when paint class %s", obj->ClassName());
+      } else {
          painter->ResetPainting();                                        // ensure painter is created
          painter->SetWebCanvasSize(Canvas()->GetWw(), Canvas()->GetWh()); // provide canvas dimension
-      }
 
-      TWebVirtualX vx;
-      vx.SetWebPainter(painter); // redirect virtualx back to pad painter
+         // calling Paint function for the object
+         obj->Paint(opt);
 
-      // calling Paint function for the object
-      obj->Paint(opt);
-
-      if (painter)
          p = painter->TakePainting();
-      fHasSpecials = kTRUE;
+         fHasSpecials = kTRUE;
+      }
    }
 
-   // when paint method was used and resultative,
+   // when paint method was used and produce output
 
    if (p) {
       p->FixSize();
