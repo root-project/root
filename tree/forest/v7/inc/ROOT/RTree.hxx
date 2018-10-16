@@ -92,10 +92,11 @@ public:
    RInputTree(std::unique_ptr<Detail::RPageSource> source);
    ~RInputTree();
 
-   /// Analogous to Fill(), fills the default entry of the model
-   void GetEntry();
+   /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the tree.
+   /// On I/O errors, raises an expection.
+   bool GetEntry();
    /// Fills a user provided entry after checking that the entry has been instantiated from the tree's model
-   void GetEntry(RTreeEntry &entry);
+   bool GetEntry(RTreeEntry &entry);
 
    /// Provides access to an individual branch that can be either a leaf or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<RVec<double>>("particle").  It can as well be the offset

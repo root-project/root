@@ -25,7 +25,9 @@ namespace Experimental {
 /**
 \class ROOT::Experimental::EColumnType
 \ingroup Forest
-\brief The possible trivial, native content types of a column
+\brief The available trivial, native content types of a column
+
+More complex types, such as classes, get translated into columns of such simple types by the RBranch.
 */
 // clang-format on
 enum class EColumnType {
