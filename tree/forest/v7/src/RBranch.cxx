@@ -24,35 +24,35 @@ ROOT::Experimental::Detail::RBranchBase::~RBranchBase()
 }
 
 
-ROOT::Experimental::RBranchSubtree::RBranchSubtree(std::string_view name)
+ROOT::Experimental::RBranchCollection::RBranchCollection(std::string_view name)
    : ROOT::Experimental::Detail::RBranchBase(name)
 {
 }
 
 
-ROOT::Experimental::RBranchSubtree::~RBranchSubtree()
+ROOT::Experimental::RBranchCollection::~RBranchCollection()
 {
 }
 
 
-void ROOT::Experimental::RBranchSubtree::GenerateColumns(ROOT::Experimental::Detail::RPageStorage& /*storage*/)
+void ROOT::Experimental::RBranchCollection::GenerateColumns(ROOT::Experimental::Detail::RPageStorage& /*storage*/)
 {
 }
 
 
-std::unique_ptr<ROOT::Experimental::Detail::RCargoBase> ROOT::Experimental::RBranchSubtree::GenerateCargo()
+std::unique_ptr<ROOT::Experimental::Detail::RTreeValueBase> ROOT::Experimental::RBranchCollection::GenerateValue()
 {
    return nullptr;
 }
 
-void ROOT::Experimental::RBranchSubtree::DoAppend(const ROOT::Experimental::Detail::RCargoBase& /*cargo*/)
+void ROOT::Experimental::RBranchCollection::DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& /*value*/)
 {
 }
 
-void ROOT::Experimental::RBranchSubtree::DoRead(TreeIndex_t /*index*/, const ROOT::Experimental::Detail::RCargoBase& /*cargo*/)
+void ROOT::Experimental::RBranchCollection::DoRead(TreeIndex_t /*index*/, const ROOT::Experimental::Detail::RTreeValueBase& /*value*/)
 {
 }
 
-void ROOT::Experimental::RBranchSubtree::DoReadV(TreeIndex_t /*index*/, TreeIndex_t /*count*/, void* /*dst*/)
+void ROOT::Experimental::RBranchCollection::DoReadV(TreeIndex_t /*index*/, TreeIndex_t /*count*/, void* /*dst*/)
 {
 }

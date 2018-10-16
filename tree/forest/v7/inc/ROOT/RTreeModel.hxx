@@ -19,6 +19,7 @@
 #include <ROOT/RBranch.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RTreeEntry.hxx>
+#include <ROOT/RTreeValue.hxx>
 
 #include <memory>
 
@@ -38,23 +39,23 @@ A model needs to be frozen before it can be used to create an RTree.
 */
 // clang-format on
 class RTreeModel {
-  RBranchSubtree fRootBranch;
+  RBranchCollection fRootBranch;
   RTreeEntry fDefaultEntry;
 
 public:
    RTreeModel();
 
-   /// Creates a new branch and corresponding cargo object
+   /// Creates a new branch and corresponding tree value.
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> Branch(std::string_view branchName, ArgsT&&... args) {
      RBranch<T> *branch = new RBranch<T>(branchName);
      fRootBranch.Attach(branch);
 
-     return fDefaultEntry.AddCargo<T>(branch, std::forward<ArgsT>(args)...);
+     return fDefaultEntry.AddField<T>(branch, std::forward<ArgsT>(args)...);
    }
 
    /// Mounts an existing model as a sub tree, which allows for composing of tree models
-   std::shared_ptr<RCargoSubtree> BranchCollection(std::string_view branchName, std::shared_ptr<RTreeModel> subModel);
+   std::shared_ptr<RTreeValueCollection> BranchCollection(std::string_view branchName, std::shared_ptr<RTreeModel> subModel);
 };
 
 } // namespace Exerimental
