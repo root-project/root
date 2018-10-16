@@ -1,4 +1,4 @@
-/// \file ROOT/RTreeUtil.hxx
+/// \file ROOT/RForestUtil.hxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
@@ -13,19 +13,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RTreeUtil
-#define ROOT7_RTreeUtil
+#ifndef ROOT7_RForestUtil
+#define ROOT7_RForestUtil
 
 #include <cstdint>
 
 namespace ROOT {
 namespace Experimental {
 
-namespace Detail {
-/// Helper class for template specializaions that indicate subtrees rather than final values
-class RSubtreeTag {};
-} // namespace Detail
-
+/// Integer types long enough to hold the maximum number of entries in a tree
 using TreeIndex_t = std::uint64_t;
 using TreeOffset_t = std::int64_t;
 

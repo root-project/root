@@ -17,7 +17,7 @@
 #define ROOT7_RPagePool
 
 #include <ROOT/RPage.hxx>
-#include <ROOT/RTreeUtil.hxx>
+#include <ROOT/RForestUtil.hxx>
 
 #include <cstddef>
 

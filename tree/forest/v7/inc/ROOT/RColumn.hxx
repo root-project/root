@@ -17,7 +17,7 @@
 #define ROOT7_RColumn
 
 #include <ROOT/RColumnElement.hxx>
-#include <ROOT/RTreeUtil.hxx>
+#include <ROOT/RForestUtil.hxx>
 
 #include <memory>
 #include <vector>
