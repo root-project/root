@@ -15,7 +15,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(nestedClasses
                                     nestedClasses.h
                                     SELECTION nestedClasses_selection.xml)
 
-ROOTTEST_ADD_TEST(execNestedClasses
+ROOTTEST_ADD_TEST(nestedClasses
                   MACRO execNestedClasses.C
                   OUTREF execNestedClasses.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
