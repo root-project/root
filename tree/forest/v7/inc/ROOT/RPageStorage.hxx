@@ -28,7 +28,7 @@ namespace Experimental {
 
 namespace Detail {
 
-class RBranchBase;
+class RTreeFieldBase;
 class RColumn;
 
 // clang-format off
@@ -37,7 +37,7 @@ class RColumn;
 \ingroup Forest
 \brief Manages tree meta-data, which is common for sinks and sources.
 
-The tree meta-data contains of a list of branches, a unique identifier, and provenance information.
+The tree meta-data contains of a list of fields, a unique identifier, and provenance information.
 */
 // clang-format on
 class RPageStorage {
@@ -96,9 +96,9 @@ public:
 
    /// Open the physical storage container for the tree
    virtual void Attach() {/* Make me abstract */}
-   /// Return a top-level branch that can be iterated and contains as children all the branches stored in the tree.
+   /// Return a top-level field that can be iterated and contains as children all the fields stored in the tree.
 
-   // TODO(jblomer): virtual std::unique_ptr<RBranchBase> ListBranches() {/* Make me abstract */ return nullptr;}
+   // TODO(jblomer): virtual std::unique_ptr<RTreeFieldBase> ListFields() {/* Make me abstract */ return nullptr;}
    // TODO(jblomer): ListClusters()
 
    /// Fills a page starting with index rangeStart; the corresponding column is taken from the page object

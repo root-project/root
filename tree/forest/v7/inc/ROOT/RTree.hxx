@@ -46,7 +46,7 @@ RTree connects the static information of the RTreeModel to a source or sink on p
 Reading and writing requires use of the corresponding derived class RInputTree or ROutputTree.
 RTree writes only complete entries (rows of the data set).  The entry itself is not kept within the
 RTree, which allows for multiple concurrent entries for the same RTree.  Besides reading an entire entry,
-the RTree can expose tree views that read only specific branches.
+the RTree can expose tree views that read only specific fields.
 */
 // clang-format on
 class RTree {
@@ -77,8 +77,8 @@ public:
 
 An input tree provides data from storage as C++ objects. The tree model can be created from the data on storage
 or it can be imposed by the user. The latter case allows users to read into a specialized tree model that covers
-only a subset of the branches in the tree. The tree model is used when reading complete entries.
-Individual branches can be read as well by instantiating a tree view.
+only a subset of the fields in the tree. The tree model is used when reading complete entries.
+Individual fields can be read as well by instantiating a tree view.
 */
 // clang-format on
 class RInputTree : public Detail::RTree {
@@ -98,19 +98,19 @@ public:
    /// Fills a user provided entry after checking that the entry has been instantiated from the tree's model
    bool GetEntry(RTreeEntry &entry);
 
-   /// Provides access to an individual branch that can be either a leaf or a collection, e.g.
-   /// GetView<double>("particles.pt") or GetView<RVec<double>>("particle").  It can as well be the offset
-   /// branch of a collection itself, like GetView<TreeIndex_t>("particle")
+   /// Provides access to an individual field that can contain either a skalar value or a collection, e.g.
+   /// GetView<double>("particles.pt") or GetView<RVec<double>>("particle").  It can as well be the index
+   /// field of a collection itself, like GetView<TreeIndex_t>("particle")
    template <typename T>
-   RTreeView<T> GetView(std::string_view branchName) {
-      auto branch = std::make_unique<RBranch<T>>(branchName, fSource.get());
+   RTreeView<T> GetView(std::string_view fieldName) {
+      auto field = std::make_unique<RTreeField<T>>(fieldName, fSource.get());
       // ...
-      return RTreeView<T>(std::move(branch));
+      return RTreeView<T>(std::move(field));
    }
 
-   /// Returns a tree view on which one can call again GetView() and GetViewCollection.  The branch name
+   /// Returns a tree view on which one can call again GetView() and GetViewCollection.  The field name
    /// has refer to a collection
-   RTreeViewCollection GetViewCollection(std::string_view branchName);
+   RTreeViewCollection GetViewCollection(std::string_view fieldName);
 };
 
 // clang-format off

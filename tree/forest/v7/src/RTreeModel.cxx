@@ -15,6 +15,6 @@
 
 #include "ROOT/RTreeModel.hxx"
 
-ROOT::Experimental::RTreeModel::RTreeModel() : fRootBranch("")
+ROOT::Experimental::RTreeModel::RTreeModel() : fRootField("")
 {
 }
