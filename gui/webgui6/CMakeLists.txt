@@ -1,12 +1,11 @@
 ############################################################################
-# CMakeLists.txt file for building ROOT gui/web package
+# CMakeLists.txt file for building ROOT gui/webgui6 package
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(WebGui6
   HEADERS
     TWebCanvas.h
     TWebGuiFactory.h
-    TWebVirtualX.h
     TWebMenuItem.h
     TWebPadPainter.h
     TWebPainting.h
@@ -14,7 +13,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(WebGui6
   SOURCES
     src/TWebCanvas.cxx
     src/TWebGuiFactory.cxx
-    src/TWebVirtualX.cxx
     src/TWebMenuItem.cxx
     src/TWebPadPainter.cxx
     src/TWebPainting.cxx
@@ -24,5 +22,3 @@ ROOT_STANDARD_LIBRARY_PACKAGE(WebGui6
     Gui 
     ROOTWebDisplay
 )
-
-
