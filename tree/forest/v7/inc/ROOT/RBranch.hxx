@@ -16,9 +16,9 @@
 #ifndef ROOT7_RBranch
 #define ROOT7_RBranch
 
+#include <ROOT/RForestUtil.hxx>
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RTreeUtil.hxx>
 #include <ROOT/RTreeValue.hxx>
 
 #include <memory>

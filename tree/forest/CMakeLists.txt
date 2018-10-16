@@ -9,13 +9,13 @@ if(root7)
     ROOT/RBranch.hxx
     ROOT/RColumn.hxx
     ROOT/RColumnElement.hxx
+    ROOT/RForestUtil.hxx
     ROOT/RPage.hxx
     ROOT/RPagePool.hxx
     ROOT/RPageStorage.hxx
     ROOT/RTree.hxx
     ROOT/RTreeEntry.hxx
     ROOT/RTreeModel.hxx
-    ROOT/RTreeUtil.hxx
     ROOT/RTreeValue.hxx
     ROOT/RTreeView.hxx
   SOURCES

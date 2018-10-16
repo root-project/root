@@ -16,8 +16,8 @@
 #ifndef ROOT7_RTree
 #define ROOT7_RTree
 
+#include <ROOT/RForestUtil.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RTreeUtil.hxx>
 #include <ROOT/RTreeView.hxx>
 
 #include <memory>
