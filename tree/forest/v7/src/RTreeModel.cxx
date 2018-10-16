@@ -1,7 +1,7 @@
-/// \file ROOT/RTreeUtil.hxx
+/// \file RTreeModel.cxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
-/// \date 2018-10-04
+/// \date 2018-10-15
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
@@ -13,23 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RTreeUtil
-#define ROOT7_RTreeUtil
+#include "ROOT/RTreeModel.hxx"
 
-#include <cstdint>
-
-namespace ROOT {
-namespace Experimental {
-
-namespace Detail {
-/// Helper class for template specializaions that indicate subtrees rather than final values
-class RSubtreeTag {};
-} // namespace Detail
-
-using TreeIndex_t = std::uint64_t;
-using TreeOffset_t = std::int64_t;
-
-} // namespace Experimental
-} // namespace ROOT
-
-#endif
+ROOT::Experimental::RTreeModel::RTreeModel() : fRootBranch("")
+{
+}

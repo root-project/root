@@ -16,10 +16,45 @@
 #ifndef ROOT7_RTreeModel
 #define ROOT7_RTreeModel
 
+#include <ROOT/RBranch.hxx>
+#include <ROOT/RStringView.hxx>
+#include <ROOT/RTreeEntry.hxx>
+
+#include <memory>
+
 namespace ROOT {
 namespace Experimental {
 
+// clang-format off
+/**
+\class ROOT::Experimental::RTreeModel
+\ingroup Forest
+\brief The RTreeModel encapulates the schema of a tree.
+
+The tree model comprises a collection of hierarchically organized branches. From a frozen model, "entries"
+can be extracted. As a convenience, the model provides a default entry. Models have a unique model identifier
+that faciliates checking whether entries are compatible with it (i.e.: have been extracted from that model).
+A model needs to be frozen before it can be used to create an RTree.
+*/
+// clang-format on
 class RTreeModel {
+  RBranchSubtree fRootBranch;
+  RTreeEntry fDefaultEntry;
+
+public:
+   RTreeModel();
+
+   /// Creates a new branch and corresponding cargo object
+   template <typename T, typename... ArgsT>
+   std::shared_ptr<T> Branch(std::string_view branchName, ArgsT&&... args) {
+     RBranch<T> *branch = new RBranch<T>(branchName);
+     fRootBranch.Attach(branch);
+
+     return fDefaultEntry.AddCargo<T>(branch, std::forward<ArgsT>(args)...);
+   }
+
+   /// Mounts an existing model as a sub tree, which allows for composing of tree models
+   std::shared_ptr<RCargoSubtree> BranchCollection(std::string_view branchName, std::shared_ptr<RTreeModel> subModel);
 };
 
 } // namespace Exerimental

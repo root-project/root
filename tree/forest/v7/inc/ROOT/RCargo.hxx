@@ -87,6 +87,17 @@ public:
    T *Get() { return fValue; }
 };
 
+// clang-format off
+/**
+\class ROOT::Experimental::RCargoSubtree
+\ingroup Forest
+
+A cargo object that behaves like a tree.
+*/
+// clang-format on
+class RCargoSubtree : public Detail::RCargoBase {
+};
+
 } // namespace Experimental
 } // namespace ROOT
 
