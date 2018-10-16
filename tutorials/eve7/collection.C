@@ -279,4 +279,6 @@ void collection()
    createProjectionStuff();
    projectScenes(true, true);
    makeTableScene(col);
+
+   eveMng->Show();
 }

@@ -120,4 +120,6 @@ void geom_cms()
          holder->AddElement(b1s);
       }
    }
+
+   eveMng->Show();
 }

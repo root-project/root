@@ -109,4 +109,6 @@ void table()
    eveMng->GetWorld()->AddElement(col);
 
    makeTableScene(col);
+
+   eveMng->Show();
 }

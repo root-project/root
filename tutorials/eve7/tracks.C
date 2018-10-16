@@ -23,7 +23,7 @@ void makeTracks(int N_Tracks, REX::REveElement* trackHolder)
    prop->SetMaxR(300);
    prop->SetMaxZ(600);
    prop->SetMaxOrbs(6);
-   
+
    double v = 0.5;
    double m = 5;
 
@@ -49,6 +49,8 @@ void tracks()
    auto eveMng = REX::REveManager::Create();
 
    REX::REveElement* trackHolder = new REX::REveElementList("Tracks");
-eveMng->GetEventScene()->AddElement(trackHolder);
-makeTracks(10, trackHolder);
+   eveMng->GetEventScene()->AddElement(trackHolder);
+   makeTracks(10, trackHolder);
+
+   eveMng->Show();
 }

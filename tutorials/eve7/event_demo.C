@@ -259,4 +259,6 @@ void event_demo()
       createProjectionStuff();
       projectScenes(true, true);
    }
+
+   eveMng->Show();
 }

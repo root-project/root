@@ -55,4 +55,6 @@ void compound()
    cmp->CloseCompound();
 
    eveMng->GetEventScene()->AddElement(cmp);
+
+   eveMng->Show();
 }
