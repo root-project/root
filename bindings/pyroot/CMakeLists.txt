@@ -8,19 +8,15 @@ set(PYROOT_HEADERS inc/TPyFitFunction.h    inc/TPython.h
                    inc/TPyReturn.h         inc/TPyException.h
                    inc/TPySelector.h)
 
-set(PYROOT_PKG_DEPENDENCIES Core MathCore Net Rint Tree ROOTVecOps ROOTDataFrame)
-
-if( CMAKE_SIZEOF_VOID_P EQUAL 4 ) # With this we exclude ROOTDataFrame on 32 bits builds
+if(UNIX AND CMAKE_SIZEOF_VOID_P EQUAL 4)
   list(REMOVE_ITEM PYROOT_HEADERS inc/TTreeAsFlatMatrix.h)
-  list(REMOVE_ITEM PYROOT_PKG_DEPENDENCIES ROOTDataFrame)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
                               NO_INSTALL_HEADERS
                               HEADERS ${PYROOT_HEADERS}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES Core MathCore Net Rint Tree
-                              DEPENDENCIES ${PYROOT_PKG_DEPENDENCIES})
+                              LIBRARIES Core Tree)
 ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core CMAKENOEXPORT)
 
 ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -fno-strict-aliasing)
