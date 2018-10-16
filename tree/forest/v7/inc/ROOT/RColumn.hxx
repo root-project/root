@@ -28,8 +28,8 @@ namespace Experimental {
 namespace Detail {
 
 class RColumnModel;
-class RTreeSink;
-class RTreeSource;
+class RPageSink;
+class RPageSource;
 
 // clang-format off
 /**
@@ -43,8 +43,8 @@ logical data layer.
 // clang-format on
 class RColumn {
 public:
-   RColumn(const RColumnModel &model, RTreeSource &source);
-   RColumn(const RColumnModel &model, RTreeSink &sink);
+   RColumn(const RColumnModel &model, RPageSource &source);
+   RColumn(const RColumnModel &model, RPageSink &sink);
 
    void Append(const RColumnElementBase &/*element*/) {/*...*/}
    void Flush();
