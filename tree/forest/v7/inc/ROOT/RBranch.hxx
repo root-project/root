@@ -22,6 +22,7 @@
 #include <ROOT/RTreeUtil.hxx>
 
 #include <memory>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
@@ -49,7 +50,7 @@ private:
    /// All branches have a main column. For nested branches, the main column is the index branch. Points into fColumns.
    RColumn *fPrincipalColumn;
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the branch.
-   RColumnCollection_t fColumns;
+   std::vector<RColumn> fColumns;
 
 protected:
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
