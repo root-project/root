@@ -35,7 +35,7 @@ ROOT::Experimental::RBranchSubtree::~RBranchSubtree()
 }
 
 
-void ROOT::Experimental::RBranchSubtree::GenerateColumns(ROOT::Experimental::Detail::RTreeStorage& /*storage*/)
+void ROOT::Experimental::RBranchSubtree::GenerateColumns(ROOT::Experimental::Detail::RPageStorage& /*storage*/)
 {
 }
 

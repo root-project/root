@@ -1,4 +1,4 @@
-/// \file ROOT/RTreeStorage.hxx
+/// \file ROOT/RPageStorage.hxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-07-19
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RTreeStorage
-#define ROOT7_RTreeStorage
+#ifndef ROOT7_RPageStorage
+#define ROOT7_RPageStorage
 
 #include <ROOT/RPage.hxx>
 #include <ROOT/RStringView.hxx>
@@ -33,14 +33,14 @@ class RColumn;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RTreeStorage
+\class ROOT::Experimental::Detail::RPageStorage
 \ingroup Forest
 \brief Manages tree meta-data, which is common for sinks and sources.
 
 The tree meta-data contains of a list of branches, a unique identifier, and provenance information.
 */
 // clang-format on
-class RTreeStorage {
+class RPageStorage {
    /// Register a new column.  When reading, the column must exist in the tree on disk corresponding to the meta-data.
    /// When writing, every column can only be attached once.
    virtual void AddColumn(RColumn *column) = 0;
@@ -48,19 +48,19 @@ class RTreeStorage {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RTreeSink
+\class ROOT::Experimental::Detail::RPageSink
 \ingroup Forest
 \brief Abstract interface to write data into a tree
 
-The tree sink takes the list of columns and afterwards a series of page commits and cluster commits.
+The page sink takes the list of columns and afterwards a series of page commits and cluster commits.
 The user is responsible to commit clusters at consistent point, i.e. when all pages corresponding to data
 up to the given entry number are committed.
 */
 // clang-format on
-class RTreeSink : public RTreeStorage {
+class RPageSink : public RPageStorage {
 public:
-   RTreeSink(std::string_view treeName);
-   virtual ~RTreeSink();
+   RPageSink(std::string_view treeName);
+   virtual ~RPageSink();
 
    /// TODO(jblomer): keep abtract and let derived classed define
    virtual void AddColumn(RColumn * /*column*/) { }
@@ -77,18 +77,18 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RTreeSource
+\class ROOT::Experimental::Detail::RPageSource
 \ingroup Forest
 \brief Abstract interface to read data from a tree
 
-The tree source is initialized with the columns of interest. Pages from those columns can then be
-mapped into pages. The tree source also gives access to its meta-data.
+The page source is initialized with the columns of interest. Pages from those columns can then be
+mapped into pages. The page source also gives access to its meta-data.
 */
 // clang-format on
-class RTreeSource : public RTreeStorage {
+class RPageSource : public RPageStorage {
 public:
-   RTreeSource(std::string_view treeName);
-   virtual ~RTreeSource();
+   RPageSource(std::string_view treeName);
+   virtual ~RPageSource();
    /// TODO: copy/assignment for creating clones in multiple threads.
 
    /// TODO(jblomer): keep abtract and let derived classed define

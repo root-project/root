@@ -1,6 +1,6 @@
 #include "ROOT/RTree.hxx"
 #include "ROOT/RTreeModel.hxx"
-#include "ROOT/RTreeStorage.hxx"
+#include "ROOT/RPageStorage.hxx"
 
 #include "gtest/gtest.h"
 
@@ -9,11 +9,11 @@
 
 using RInputTree = ROOT::Experimental::RInputTree;
 using RTreeModel = ROOT::Experimental::RTreeModel;
-using RTreeSource = ROOT::Experimental::Detail::RTreeSource;
+using RPageSource = ROOT::Experimental::Detail::RPageSource;
 
 TEST(RForestTree, Basics)
 {
    auto model = std::make_shared<RTreeModel>();
-   RInputTree tree(model, std::make_unique<RTreeSource>("T"));
-   RInputTree tree2(std::make_unique<RTreeSource>("T"));
+   RInputTree tree(model, std::make_unique<RPageSource>("T"));
+   RInputTree tree2(std::make_unique<RPageSource>("T"));
 }

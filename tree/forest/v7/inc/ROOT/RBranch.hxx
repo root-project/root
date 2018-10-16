@@ -29,7 +29,7 @@ namespace Experimental {
 namespace Detail {
 
 class RCargoBase;
-class RTreeStorage;
+class RPageStorage;
 
 // clang-format off
 /**
@@ -64,7 +64,7 @@ public:
    virtual ~RBranchBase();
 
    /// Registeres the backing columns with the physical storage
-   virtual void GenerateColumns(Detail::RTreeStorage &storage) = 0;
+   virtual void GenerateColumns(Detail::RPageStorage &storage) = 0;
 
    /// Generates a cargo object of the branch type.
    virtual std::unique_ptr<RCargoBase> GenerateCargo() = 0;
@@ -116,7 +116,7 @@ public:
    /// Ensure that all received items are written from page buffers to the storage.
    void Flush();
 
-   RTreeSource* GetSource();
+   RPageSource* GetSource();
 };
 
 } // namespace Detail
@@ -132,7 +132,7 @@ public:
    RBranchSubtree(std::string_view name);
    ~RBranchSubtree();
 
-   void GenerateColumns(Detail::RTreeStorage &storage) final;
+   void GenerateColumns(Detail::RPageStorage &storage) final;
    std::unique_ptr<Detail::RCargoBase> GenerateCargo() final;
    void Attach(RBranchBase* child);
 };

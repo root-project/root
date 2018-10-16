@@ -1,4 +1,4 @@
-/// \file RTreeStorage.cxx
+/// \file RPageStorage.cxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
@@ -13,23 +13,23 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RTreeStorage.hxx"
+#include "ROOT/RPageStorage.hxx"
 
 #include <ROOT/RStringView.hxx>
 
 
-ROOT::Experimental::Detail::RTreeSource::RTreeSource(std::string_view /*treeName*/)
+ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view /*treeName*/)
 {
 }
 
-ROOT::Experimental::Detail::RTreeSource::~RTreeSource()
+ROOT::Experimental::Detail::RPageSource::~RPageSource()
 {
 }
 
-ROOT::Experimental::Detail::RTreeSink::RTreeSink(std::string_view /*treeName*/)
+ROOT::Experimental::Detail::RPageSink::RPageSink(std::string_view /*treeName*/)
 {
 }
 
-ROOT::Experimental::Detail::RTreeSink::~RTreeSink()
+ROOT::Experimental::Detail::RPageSink::~RPageSink()
 {
 }

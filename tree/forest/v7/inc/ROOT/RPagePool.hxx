@@ -52,7 +52,7 @@ public:
    /// Registers a page that has previously been acquired by ReservePage() and was meanwhile filled with content.
    void CommitPage(RPage* page);
    /// Tries to find the page corresponding to column and index in the cache. On cache miss, load the page
-   /// from the TreeSource attached to the column and put it in the cache.
+   /// from the PageSource attached to the column and put it in the cache.
    RPage* GetPage(RColumn *column, TreeIndex_t index);
    /// Give back a page to the pool. There must not be any pointers anymore into this page.
    void ReleasePage(RPage *page);
