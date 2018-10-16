@@ -53,8 +53,7 @@ class RTree {
 private:
    /// All trees that use the same model share its ownership
    std::shared_ptr<RTreeModel> fModel;
-   /// The number of entries is constant for reading and reflects the current number of Fill() operations
-   /// when writing
+   /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
    TreeIndex_t fNentries;
 
 protected:

@@ -41,7 +41,9 @@ The tree meta-data contains of a list of branches, a unique identifier, and prov
 */
 // clang-format on
 class RTreeStorage {
-   // TODO(jblomer)
+   /// Register a new column.  When reading, the column must exist in the tree on disk corresponding to the meta-data.
+   /// When writing, every column can only be attached once.
+   virtual void AddColumn(RColumn *column) = 0;
 };
 
 // clang-format off
@@ -60,10 +62,11 @@ public:
    RTreeSink(std::string_view treeName);
    virtual ~RTreeSink();
 
+   /// TODO(jblomer): keep abtract and let derived classed define
+   virtual void AddColumn(RColumn * /*column*/) { }
+
    /// Physically creates the storage container to hold the tree (e.g., a directory in a TFile or a S3 bucket)
    virtual void Create() = 0;
-   /// Register a new column
-   virtual void AddColumn(RColumn *column) = 0;
    /// Write a page to the storage. The column attached to the page must have been added before.
    virtual void CommitPage(RPage *page) = 0;
    /// Finalize the current cluster and create a new one for the following data.
@@ -88,11 +91,11 @@ public:
    virtual ~RTreeSource();
    /// TODO: copy/assignment for creating clones in multiple threads.
 
+   /// TODO(jblomer): keep abtract and let derived classed define
+   virtual void AddColumn(RColumn * /*column*/) { }
+
    /// Open the physical storage container for the tree
    virtual void Attach() {/* Make me abstract */}
-   /// Register a column for reading values. The column must exist in the tree on disk corresponding to the meta-data
-   /// provided by the column object.
-   virtual void AddColumn(RColumn * /*column*/) {/* Make me abstract */}
    /// Return a top-level branch that can be iterated and contains as children all the branches stored in the tree.
 
    // TODO(jblomer): virtual std::unique_ptr<RBranchBase> ListBranches() {/* Make me abstract */ return nullptr;}
