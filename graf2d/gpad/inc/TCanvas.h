@@ -179,6 +179,7 @@ public:
    Bool_t            IsFolder() const;
    Bool_t            IsGrayscale();
    Bool_t            IsRetained() const { return fRetained; }
+   Bool_t            IsWeb() const { return fCanvasImp ? fCanvasImp->IsWeb() : kFALSE; }
    virtual void      ls(Option_t *option="") const;
    void              MoveOpaque(Int_t set=1);
    Bool_t            OpaqueMoving() const { return TestBit(kMoveOpaque); }
