@@ -19,6 +19,8 @@
 #include "TPad.h"
 #include "TWebCanvas.h"
 
+#include "ROOT/RMakeUnique.hxx"
+
 /** \class TWebPadPainter
 \ingroup gpad
 
@@ -33,10 +35,6 @@ Implement TVirtualPadPainter which abstracts painting operations.
 TWebPadPainter::~TWebPadPainter()
 {
    ResetPainting();
-   if (fAttr) {
-      delete fAttr;
-      fAttr = nullptr;
-   }
 }
 
 void TWebPadPainter::SetWebCanvasSize(UInt_t w, UInt_t h)
@@ -65,8 +63,8 @@ void TWebPadPainter::ResetPainting()
 TWebPainterAttributes *TWebPadPainter::Attr()
 {
    fAttrChanged = kTRUE;
-   if (!fAttr) fAttr = new TWebPainterAttributes();
-   return fAttr;
+   if (!fAttr) fAttr = std::make_unique<TWebPainterAttributes>();
+   return fAttr.get();
 }
 
 Float_t *TWebPadPainter::Reserve(Int_t sz)
