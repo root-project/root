@@ -21,7 +21,6 @@
 #include "TRootGuiFactory.h"
 
 #include "TWebCanvas.h"
-#include "TWebVirtualX.h"
 
 #include <ROOT/RMakeUnique.hxx>
 
@@ -35,11 +34,6 @@ TWebGuiFactory::TWebGuiFactory() :
    //if (TGQt::GetVirtualX())  gVirtualX = TGQt::GetVirtualX();
    // gSystem->Load("libGui");
    fGuiProxy = std::make_unique<TRootGuiFactory>();
-
-   if (!gVirtualX || gVirtualX->IsA() != TWebVirtualX::Class()) {
-      TWebVirtualX *vx = new TWebVirtualX("webx", "redirection to native X", gVirtualX);
-      gVirtualX = vx;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

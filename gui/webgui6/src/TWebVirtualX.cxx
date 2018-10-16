@@ -12,11 +12,24 @@
 
 #include "TWebPadPainter.h"
 
-TWebVirtualX::TWebVirtualX(const char *name, const char *title, TVirtualX *vx) :
-   TVirtualX(name, title),
-   fX11(vx)
+////////////////////////////////////////////////////////////////////////////////
+/// constructor - assign gVirtualX pointer
+
+TWebVirtualX::TWebVirtualX() :
+   TVirtualX("WebVirtualX", "wrapper for TVirtaulX")
 {
+   fX11 = gVirtualX;
+   gVirtualX = this;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// destructor - set back gVirtualX pointer
+
+TWebVirtualX::~TWebVirtualX()
+{
+   gVirtualX = fX11;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns true if main X11 thread
@@ -635,7 +648,7 @@ void TWebVirtualX::RescaleWindow(Int_t wid, UInt_t w, UInt_t h)
 
 Int_t TWebVirtualX::ResizePixmap(Int_t wid, UInt_t w, UInt_t h)
 {
-   return IsWeb(wid)? 0 : fX11->ResizePixmap(wid, w, h);
+   return IsWeb(wid) ? 0 : fX11->ResizePixmap(wid, w, h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

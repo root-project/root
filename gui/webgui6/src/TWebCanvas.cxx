@@ -41,10 +41,6 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
 
 Int_t TWebCanvas::InitWindow()
 {
-   TWebVirtualX *vx = dynamic_cast<TWebVirtualX *>(gVirtualX);
-   if (vx)
-      vx->SetWebCanvasSize(Canvas()->GetWw(), Canvas()->GetWh());
-
    // at this place canvas is not yet register to the list of canvases - we cannot start browser
    return TWebVirtualX::WebId; // magic number, should be catch by TWebVirtualX
 }
@@ -184,17 +180,11 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TObject *obj, const char *opt)
          painter->SetWebCanvasSize(Canvas()->GetWw(), Canvas()->GetWh()); // provide canvas dimension
       }
 
-      TWebVirtualX *vx = dynamic_cast<TWebVirtualX *>(gVirtualX);
-      if (vx) {
-         vx->SetWebCanvasSize(Canvas()->GetWw(), Canvas()->GetWh());
-         vx->SetWebPainter(painter); // redirect virtualx back to pad painter
-      }
+      TWebVirtualX vx;
+      vx.SetWebPainter(painter); // redirect virtualx back to pad painter
 
       // calling Paint function for the object
       obj->Paint(opt);
-
-      if (vx)
-         vx->SetWebPainter(nullptr);
 
       if (painter)
          p = painter->TakePainting();
@@ -841,10 +831,6 @@ Bool_t TWebCanvas::IsAnyPadModified(TPad *pad)
 UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 {
    // reset dimension in gVirtualX  - it will be requested immediately
-   TWebVirtualX *vx = dynamic_cast<TWebVirtualX *>(gVirtualX);
-   if (vx)
-      vx->SetWebCanvasSize(Canvas()->GetWw(), Canvas()->GetWh());
-
    x = 0;
    y = 0;
    w = Canvas()->GetWw() + 4;
