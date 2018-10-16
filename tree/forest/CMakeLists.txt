@@ -4,15 +4,30 @@
 ############################################################################
 
 if(root7)
-  ROOT_GLOB_HEADERS(dictHeaders v7/inc/ROOT/*.hxx)
-
-  ROOT_GLOB_SOURCES(sources v7/src/*.cxx)
-
   ROOT_STANDARD_LIBRARY_PACKAGE(ROOTForest
-                                HEADERS ${dictHeaders}
-                                SOURCES ${sources}
-                                DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                                DEPENDENCIES RIO)
+  HEADERS
+    ROOT/RBranch.hxx
+    ROOT/RCargo.hxx
+    ROOT/RColumn.hxx
+    ROOT/RColumnElement.hxx
+    ROOT/RPage.hxx
+    ROOT/RPagePool.hxx
+    ROOT/RPageStorage.hxx
+    ROOT/RTree.hxx
+    ROOT/RTreeEntry.hxx
+    ROOT/RTreeModel.hxx
+    ROOT/RTreeUtil.hxx
+    ROOT/RTreeView.hxx
+  SOURCES
+    RBranch.cxx
+    RPageStorage.cxx
+    RTree.cxx
+    RTreeModel.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  DEPENDENCIES
+    RIO
+  )
 
   ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
 endif()
