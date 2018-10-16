@@ -23,6 +23,9 @@ REX::REveGeoShape *eve_shape  = 0;
 
 void show_extract(const char* file="csg.root")
 {
+   // disable browser cache - all scripts and html files will be loaded every time, useful for development
+   // gEnv->SetValue("WebGui.HttpMaxAge", 0);
+
    REX::REveManager::Create();
 
    TFile::Open(file);

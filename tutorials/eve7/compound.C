@@ -24,6 +24,9 @@ REX::REveLine* random_line(TRandom& rnd, Int_t n, Float_t delta)
 
 void compound()
 {
+   // disable browser cache - all scripts and html files will be loaded every time, useful for development
+   // gEnv->SetValue("WebGui.HttpMaxAge", 0);
+
    auto eveMng = REX::REveManager::Create();
    TRandom rnd(0);
    /*
@@ -40,7 +43,7 @@ void compound()
    cmp->OpenCompound();
    cmp->AddElement(random_line(rnd, 20, 10));
    cmp->AddElement(random_line(rnd, 20, 10));
-   
+
    auto line = random_line(rnd, 20, 12);
    line->SetMainColor(kRed);
    line->SetLineStyle(2);

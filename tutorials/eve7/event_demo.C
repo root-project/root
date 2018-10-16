@@ -239,6 +239,9 @@ public:
 
 void event_demo()
 {
+   // disable browser cache - all scripts and html files will be loaded every time, useful for development
+   // gEnv->SetValue("WebGui.HttpMaxAge", 0);
+
    gRandom->SetSeed(0); // make random seed
 
    eveMng = REX::REveManager::Create();
