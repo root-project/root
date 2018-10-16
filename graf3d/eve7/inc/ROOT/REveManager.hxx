@@ -232,9 +232,11 @@ public:
    void Send(unsigned connid, const std::string &data);
    void SendBinary(unsigned connid, const void *data, std::size_t len);
 
-   void DestroyElementsOf(REveElement::List_t& els);
+   void DestroyElementsOf(REveElement::List_t &els);
 
-   void BroadcastElementsOf(REveElement::List_t& els);
+   void BroadcastElementsOf(REveElement::List_t &els);
+
+   void Show(const std::string &where = "");
 
    ClassDef(REveManager, 0); // Eve application manager.
 };

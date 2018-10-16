@@ -161,8 +161,8 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->HttpServerCallback(connid, arg); });
-   fWebWindow->SetGeometry(300, 500); // configure predefined geometry
-   fWebWindow->SetConnLimit(100);
+   fWebWindow->SetGeometry(900, 700); // configure predefined window geometry
+   fWebWindow->SetConnLimit(100); // maximal number of connections
    std::string url = fWebWindow->GetUrl(true);
    printf("URL %s\n", url.c_str());
 }
@@ -181,12 +181,12 @@ REveManager::~REveManager()
    fScenes->DestroyScenes();
    fScenes->DecDenyDestroy();
    // Not needed - no more top-items: fScenes->Destroy();
-   fScenes = 0;
+   fScenes = nullptr;
 
    fViewers->DestroyElements();
    fViewers->DecDenyDestroy();
    // Not needed - no more top-items: fViewers->Destroy();
-   fViewers = 0;
+   fViewers = nullptr;
 
    // fWindowManager->DestroyWindows();
    // fWindowManager->DecDenyDestroy();
@@ -876,7 +876,7 @@ void REveManager::SendBinary(unsigned connid, const void *data, std::size_t len)
 void REveManager::DestroyElementsOf(REveElement::List_t& els)
 {
    fScenes->AcceptChanges(false);
-   
+
    nlohmann::json jarr = nlohmann::json::array();
 
    nlohmann::json jhdr = {};
@@ -930,3 +930,12 @@ void REveManager::BroadcastElementsOf(REveElement::List_t& els)
    // AMT: This call may not be necessary
    fScenes->AcceptChanges(true);
 }
+
+//////////////////////////////////////////////////////////////////
+/// Show eve manager in specified browser
+
+void REveManager::Show(const std::string &where)
+{
+   fWebWindow->Show(where);
+}
+
