@@ -16,7 +16,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
                               NO_INSTALL_HEADERS
                               HEADERS ${PYROOT_HEADERS}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES Core Tree VecOps)
+                              LIBRARIES Core Tree ROOTVecOps)
 ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core CMAKENOEXPORT)
 
 ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -fno-strict-aliasing)
