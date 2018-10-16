@@ -29,8 +29,7 @@ namespace Experimental {
 namespace Detail {
 
 class RCargoBase;
-class RTreeSink;
-class RTreeSource;
+class RTreeStorage;
 
 // clang-format off
 /**
@@ -39,7 +38,8 @@ class RTreeSource;
 \brief An RBranchBase translates read and write calls from/to underlying columns to/from cargo objects
 
 The RBranchBase and its type-safe descendants provide the object to column mapper. They map C++ objects
-to primitive columns, where the mapping is trivial for simple types such as 'double'.
+to primitive columns, where the mapping is trivial for simple types such as 'double'. The branch knows
+based on its type and the branch name the type(s) and name(s) of the columns.
 */
 // clang-format on
 class RBranchBase {
@@ -48,7 +48,7 @@ private:
    bool fIsSimple;
    /// All branches have a main column. For nested branches, the main column is the index branch. Points into fColumns.
    RColumn *fPrincipalColumn;
-   /// The columns are connected either to a sink or to a source (not to both)
+   /// The columns are connected either to a sink or to a source (not to both); they are owned by the branch.
    RColumnCollection_t fColumns;
 
 protected:
@@ -60,9 +60,11 @@ protected:
 
 public:
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
-   RBranchBase(std::string_view name, RTreeSink &sink);
-   RBranchBase(std::string_view name, RTreeSource &source);
+   RBranchBase(std::string_view name);
    virtual ~RBranchBase();
+
+   /// Registeres the backing columns with the physical storage
+   virtual void GenerateColumns(Detail::RTreeStorage &storage) = 0;
 
    /// Generates a cargo object of the branch type.
    virtual std::unique_ptr<RCargoBase> GenerateCargo() = 0;
@@ -111,7 +113,7 @@ public:
    /// The number of elements in the principal column. For top level branches, the number of entries.
    TreeIndex_t GetNItems();
 
-   /// Ensure that all written items are written from page buffers to the storage.
+   /// Ensure that all received items are written from page buffers to the storage.
    void Flush();
 
    RTreeSource* GetSource();
@@ -119,13 +121,29 @@ public:
 
 } // namespace Detail
 
+/// A Branch representing a collection
+class RBranchSubtree : public Detail::RBranchBase {
+protected:
+   void DoAppend(const Detail::RCargoBase &cargo) final;
+   void DoRead(TreeIndex_t index, const Detail::RCargoBase &cargo) final;
+   void DoReadV(TreeIndex_t index, TreeIndex_t count, void *dst) final;
+
+public:
+   RBranchSubtree(std::string_view name);
+   ~RBranchSubtree();
+
+   void GenerateColumns(Detail::RTreeStorage &storage) final;
+   std::unique_ptr<Detail::RCargoBase> GenerateCargo() final;
+   void Attach(RBranchBase* child);
+};
+
 
 /// Supported types are implemented as template specializations
 template <typename T>
 class RBranch : public Detail::RBranchBase {
 };
 
-/// TODO(jblomer): template specializations
+/// TODO(jblomer): template specializations for simple types and TClass
 
 } // namespace Experimental
 } // namespace ROOT
