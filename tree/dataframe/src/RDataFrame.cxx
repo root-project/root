@@ -43,6 +43,9 @@ multi-thread parallelisation and caching.
 alt="DOI"></a>
 \endhtmlonly
 
+## For the impatient user
+You can directly see RDataFrame in action through its [code examples](https://root.cern.ch/doc/master/group__tutorial__dataframe.html), both in C++ and Python.
+
 ## Table of Contents
 - [Cheat sheet](#cheatsheet)
 - [Introduction](#introduction)
