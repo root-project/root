@@ -29,6 +29,7 @@
 #include <numeric> // for inner_product
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
 #include <utility>
 
@@ -188,8 +189,13 @@ hpt->Draw();
 // clang-format on
 template <typename T>
 class RVec {
+   // Here we check if T is a bool. This is done in order to decide what type
+   // to use as a storage. If T is anything but bool, we use a vector<T, RAdoptAllocator<T>>.
+   // If T is a bool, we opt for a plain vector<bool> otherwise we'll not be able
+   // to write the data type given the shortcomings of TCollectionProxy design.
+   static constexpr const auto IsVecBool = std::is_same<bool, T>::value;
 public:
-   using Impl_t = typename std::vector<T, ::ROOT::Detail::VecOps::RAdoptAllocator<T>>;
+   using Impl_t = typename std::conditional<IsVecBool, std::vector<bool>, std::vector<T, ::ROOT::Detail::VecOps::RAdoptAllocator<T>>>::type;
    using value_type = typename Impl_t::value_type;
    using size_type = typename Impl_t::size_type;
    using difference_type = typename Impl_t::difference_type;
@@ -197,6 +203,10 @@ public:
    using const_reference = typename Impl_t::const_reference;
    using pointer = typename Impl_t::pointer;
    using const_pointer = typename Impl_t::const_pointer;
+   // The data_t and const_data_t types are chosen to be void in case T is a bool.
+   // This way we can as elegantly as in the STL return void upon calling the data() method.
+   using data_t = typename std::conditional<IsVecBool, void, typename Impl_t::pointer>::type;
+   using const_data_t = typename std::conditional<IsVecBool, void, typename Impl_t::const_pointer>::type;
    using iterator = typename Impl_t::iterator;
    using const_iterator = typename Impl_t::const_iterator;
    using reverse_iterator = typename Impl_t::reverse_iterator;
@@ -254,8 +264,8 @@ public:
       return ret;
    }
 
-   const std::vector<T, ::ROOT::Detail::VecOps::RAdoptAllocator<T>> &AsVector() const { return fData; }
-   std::vector<T, ::ROOT::Detail::VecOps::RAdoptAllocator<T>> &AsVector() { return fData; }
+   const Impl_t &AsVector() const { return fData; }
+   Impl_t &AsVector() { return fData; }
 
    // accessors
    reference at(size_type pos) { return fData.at(pos); }
@@ -283,8 +293,8 @@ public:
    const_reference front() const { return fData.front(); }
    reference back() { return fData.back(); }
    const_reference back() const { return fData.back(); }
-   T *data() noexcept { return fData.data(); }
-   const T *data() const noexcept { return fData.data(); }
+   data_t data() noexcept { return fData.data(); }
+   const_data_t data() const noexcept { return fData.data(); }
    // iterators
    iterator begin() noexcept { return fData.begin(); }
    const_iterator begin() const noexcept { return fData.begin(); }
