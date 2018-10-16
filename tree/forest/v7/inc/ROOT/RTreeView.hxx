@@ -17,8 +17,8 @@
 #define ROOT7_RTreeView
 
 #include <ROOT/RBranch.hxx>
+#include <ROOT/RForestUtil.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RTreeUtil.hxx>
 #include <ROOT/RTreeView.hxx>
 
 #include <memory>
