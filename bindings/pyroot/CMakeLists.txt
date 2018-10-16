@@ -8,15 +8,21 @@ set(PYROOT_HEADERS inc/TPyFitFunction.h    inc/TPython.h
                    inc/TPyReturn.h         inc/TPyException.h
                    inc/TPySelector.h)
 
+set(RDATAFRAME_LIB ROOTDataFrame)
+
 if(UNIX AND CMAKE_SIZEOF_VOID_P EQUAL 4)
   list(REMOVE_ITEM PYROOT_HEADERS inc/TTreeAsFlatMatrix.h)
+# RDataFrame is disabled on 32-bit UNIX platforms due to ROOT-9236
+  list(REMOVE_ITEM RDATAFRAME_LIB ROOTDataFrame)
 endif()
+
 
 ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
                               NO_INSTALL_HEADERS
                               HEADERS ${PYROOT_HEADERS}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES Core Tree ROOTVecOps)
+                              LIBRARIES Core Tree ROOTVecOps
+                              DEPENDENCIES Core Tree ROOTVecOps ${RDATAFRAME_LIB} MathCore)
 ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core CMAKENOEXPORT)
 
 ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -fno-strict-aliasing)
