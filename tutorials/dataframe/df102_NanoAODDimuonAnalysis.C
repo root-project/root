@@ -2,12 +2,13 @@
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
 /// This tutorial illustrates how NanoAOD files can be processed with ROOT
-/// dataframes. The NanoAOD-like input file is filled with events from
-/// CMS OpenData containing muon candidates from 2011 data
-/// ([DOI: 10.7483/OPENDATA.CMS.RZ34.QR6N](http://opendata.cern.ch/record/17)).
-/// The script matches muon pairs
-/// and produces an histogram of the dimuon mass spectrum showing resonances
-/// up to the Z mass.
+/// dataframes. The NanoAOD-like input files are filled with 66 mio. events
+/// from CMS OpenData containing muon candidates from 2012 data
+/// ([DOI: 10.7483/OPENDATA.CMS.YLIC.86ZZ](http://opendata.cern.ch/record/6004)
+/// and [DOI: 10.7483/OPENDATA.CMS.M5AD.Y3V3](http://opendata.cern.ch/record/6030)).
+/// The script matches muon pairs and produces an histogram of the dimuon mass
+/// spectrum showing resonances up to the Z mass.
+/// Note that the bump at 30 GeV is not a resonance but a trigger effect.
 ///
 /// \macro_image
 /// \macro_code
@@ -30,84 +31,58 @@ void df102_NanoAODDimuonAnalysis()
    // Enable multi-threading
    ROOT::EnableImplicitMT();
 
-   // Create dataframe from NanoAOD file
-   ROOT::RDataFrame df("Events", "http://root.cern.ch/files/NanoAOD_DoubleMuon_CMS2011OpenData.root");
+   // Create dataframe from NanoAOD files
+   ROOT::RDataFrame df("Events",
+                      {"root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012B_DoubleMuParked.root",
+                       "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012C_DoubleMuParked.root"});
 
-   // Select events with more than two muons
-   auto df_filtered = df.Filter("nMuon>=2", "More than two muons");
+   // For simplicity, select only events with exactly two muons and require opposite charge
+   auto df_2mu = df.Filter("nMuon == 2", "Events with exactly two muons");
+   auto df_os = df_2mu.Filter("Muon_charge[0] != Muon_charge[1]", "Muons with opposite charge");
 
-   // Find muon pair with highest pt and opposite charge
-   auto find_pair = [](const RVec<float> &pt, const RVec<int> &charge) {
-      // Get indices that sort the muon pts in descending order
-      const auto idx = Reverse(Argsort(pt));
-
-      // Find muon with second-highest pt and opposite charge
-      const auto i1 = idx[0];
-      for (size_t i = 1; i < idx.size(); i++) {
-         const auto i2 = idx[i];
-         if (charge[i1] != charge[i2]) {
-            return RVec<size_t>({i1, i2});
-         }
-      }
-
-      // Return empty selection if no candidate matches
-      return RVec<size_t>({});
-   };
-   auto df_pair = df_filtered.Define("Muon_pair", find_pair, {"Muon_pt", "Muon_charge"})
-                             .Filter("Muon_pair.size() == 2", "Found valid pair");
-
-   // Compute invariant mass of the di-muon system
-   auto compute_mass = [](RVec<float> &pt, RVec<float> &eta, RVec<float> &phi,
-                          RVec<float> &mass, RVec<size_t> &idx) {
+   // Compute invariant mass of the dimuon system
+   auto compute_mass = [](RVec<float> &pt, RVec<float> &eta, RVec<float> &phi, RVec<float> &mass) {
       // Compose four-vectors of both muons
-      TLorentzVector p1;
-      const auto i1 = idx[0];
-      p1.SetPtEtaPhiM(pt[i1], eta[i1], phi[i1], mass[i1]);
+      TLorentzVector p1, p2;
+      p1.SetPtEtaPhiM(pt[0], eta[0], phi[0], mass[0]);
+      p2.SetPtEtaPhiM(pt[1], eta[1], phi[1], mass[1]);
 
-      TLorentzVector p2;
-      const auto i2 = idx[1];
-      p2.SetPtEtaPhiM(pt[i2], eta[i2], phi[i2], mass[i2]);
-
-      // Add four-vectors to build di-muon system and return the invariant mass
+      // Add four-vectors to build dimuon system and return the invariant mass
       return (p1 + p2).M();
    };
-   auto df_mass = df_pair.Define("Dimuon_mass", compute_mass,
-                                 {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass", "Muon_pair"});
+   auto df_mass = df_os.Define("Dimuon_mass", compute_mass, {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass"});
 
-   // Produce histogram of di-muon mass spectrum
-   auto h = df_mass.Histo1D({"Dimuon_mass", "Dimuon_mass", 20000, 0.25, 300}, "Dimuon_mass")
-                   .GetValue();
+   // Make histogram of dimuon mass spectrum
+   auto h = df_mass.Histo1D({"Dimuon_mass", "Dimuon_mass", 30000, 0.25, 300}, "Dimuon_mass");
 
-   // Make plot
-   gStyle->SetOptStat(0);
-   gStyle->SetTextFont(42);
-   auto c = new TCanvas("c", "c", 800, 600);
-   c->SetLogx();
-   c->SetLogy();
+   // Request cut-flow report
+   auto report = df_mass.Report();
 
-   h.SetTitle("");
-   h.GetXaxis()->SetTitle("Invariant di-muon mass (GeV)");
-   h.GetXaxis()->SetTitleSize(0.04);
-   h.GetYaxis()->SetTitle("N_{Events}");
-   h.GetYaxis()->SetTitleSize(0.04);
-   h.DrawClone();
+   // Produce plot
+   gStyle->SetOptStat(0); gStyle->SetTextFont(42);
+   auto c = new TCanvas("c", "", 800, 700);
+   c->SetLogx(); c->SetLogy();
 
-   TLatex label;
-   label.SetNDC(true);
+   h->SetTitle("");
+   h->GetXaxis()->SetTitle("m_{#mu#mu} (GeV)"); h->GetXaxis()->SetTitleSize(0.04);
+   h->GetYaxis()->SetTitle("N_{Events}"); h->GetYaxis()->SetTitleSize(0.04);
+   h->DrawClone();
+
+   TLatex label; label.SetNDC(true);
    label.DrawLatex(0.175, 0.740, "#eta");
-   label.DrawLatex(0.205, 0.785, "#rho,#omega");
-   label.DrawLatex(0.270, 0.750, "#phi");
+   label.DrawLatex(0.205, 0.775, "#rho,#omega");
+   label.DrawLatex(0.270, 0.740, "#phi");
    label.DrawLatex(0.400, 0.800, "J/#psi");
-   label.DrawLatex(0.415, 0.680, "#psi'");
-   label.DrawLatex(0.485, 0.760, "Y(1,2,3S)");
-   label.DrawLatex(0.755, 0.620, "Z");
-   label.DrawLatex(0.170, 0.350, "#bf{CMS Open Data}");
-   label.DrawLatex(0.170, 0.275, "#bf{#sqrt{s} = 7 TeV}");
-   label.DrawLatex(0.170, 0.200, "#bf{L_{int} = 2.4 fb^{-1}}");
-   label.SetTextSize(0.032);
-   label.DrawLatex(0.10, 0.920, "Run2011A Double Muon Dataset (DOI: 10.7483/OPENDATA.CMS.RZ34.QR6N)");
+   label.DrawLatex(0.415, 0.670, "#psi'");
+   label.DrawLatex(0.485, 0.700, "Y(1,2,3S)");
+   label.DrawLatex(0.755, 0.680, "Z");
+   label.SetTextSize(0.040); label.DrawLatex(0.100, 0.920, "#bf{CMS Open Data}");
+   label.SetTextSize(0.030); label.DrawLatex(0.630, 0.920, "#sqrt{s} = 8 TeV, L_{int} = 11.6 fb^{-1}");
 
-   c->SaveAs("nanoaod_dimuon_spectrum.pdf");
+   c->SaveAs("dimuon_spectrum.pdf");
+
+   // Print cut-flow report
+   report->Print();
 }
 
 int main()
