@@ -357,10 +357,10 @@ def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labe
     flat_matrix = _root.std.vector(dtype)(self.GetEntries()*len(columns))
 
     # Read the tree as flat std.vector(dtype)
-    tree_ptr = _root.PyROOT.GetAddress(self)
-    columns_vector_ptr = _root.PyROOT.GetAddress(columns_vector)
-    flat_matrix_ptr = _root.PyROOT.GetVectorAddress(dtype)(flat_matrix)
-    jit_code = "PyROOT::TTreeAsFlatMatrixHelper<{dtype}, {col_dtypes}>(*reinterpret_cast<TTree*>({tree_ptr}), *reinterpret_cast<std::vector<{dtype}>* >({flat_matrix_ptr}), *reinterpret_cast<std::vector<string>* >({columns_vector_ptr}));".format(
+    tree_ptr = _root.ROOT.Detail.RDF.GetAddress(self)
+    columns_vector_ptr = _root.ROOT.Detail.RDF.GetAddress(columns_vector)
+    flat_matrix_ptr = _root.ROOT.Detail.RDF.GetVectorAddress(dtype)(flat_matrix)
+    jit_code = "ROOT::Detail::RDF::TTreeAsFlatMatrixHelper<{dtype}, {col_dtypes}>(*reinterpret_cast<TTree*>({tree_ptr}), *reinterpret_cast<std::vector<{dtype}>* >({flat_matrix_ptr}), *reinterpret_cast<std::vector<string>* >({columns_vector_ptr}));".format(
             col_dtypes = ", ".join(col_dtypes),
             dtype = dtype,
             tree_ptr = tree_ptr,
