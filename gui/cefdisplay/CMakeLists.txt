@@ -41,6 +41,6 @@ configure_file(${CEF_BLOBS}/v8_context_snapshot.bin "../../bin/v8_context_snapsh
 
 ROOT_LINKER_LIBRARY(${libname} ${CEF_sources} ${CEF_platform} 
                     LIBRARIES ${CMAKE_DL_LIBS} ${CEF_LIBRARY} ${CEF_DLL_WRAPPER} ${CEF_LIB_DEPENDENCY}
-                    DEPENDENCIES RHTTP)
+                    DEPENDENCIES RHTTP ROOTWebDisplay)
 
 ROOT_EXECUTABLE(cef_main ${CEF_MAIN} LIBRARIES ${CEF_LIBRARY} ${CEF_DLL_WRAPPER})

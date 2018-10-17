@@ -115,35 +115,17 @@ unsigned ROOT::Experimental::RWebDisplayHandle::DisplayWindow(RWebWindow &win, b
    else
       kind = kCustom; // all others kinds, normally name of alternative web browser
 
-#ifdef R__HAS_CEFWEB
+   if ((kind == kLocal) || (kind == kCEF)) {
 
-   const char *cef_path = gSystem->Getenv("CEF_PATH");
-   const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (cef_path && !gSystem->AccessPathName(cef_path) && rootsys && ((kind == kLocal) || (kind == kCEF))) {
+      auto &creator = FindCreator("cef", "libROOTCefDisplay");
 
-      Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
-
-      if (!symbol_cef) {
-         gSystem->Load("libROOTCefDisplay");
-         // TODO: make minimal C++ interface here
-         symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
-      }
-
-      if (symbol_cef) {
-
-         if (batch_mode) {
-            const char *displ = gSystem->Getenv("DISPLAY");
-            if (!displ || !*displ) {
-                R__ERROR_HERE("WebDisplay") << "To use CEF in batch mode DISPLAY variable should be set."
-                                               " See gui/cefdisplay/Readme.md for more info";
-                return 0;
-             }
+      if (creator) {
+         auto handle = creator->Make(win.fMgr->GetServer(), addr, batch_mode, win.GetWidth(), win.GetHeight());
+         if (!handle) {
+            R__ERROR_HERE("WebDisplay") << "Cannot create CEF Web window";
+            return 0;
          }
 
-         typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
-         R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in CEF";
-         FunctionCef3 func = (FunctionCef3)symbol_cef;
-         func(addr.c_str(), win.fMgr->GetServer(), batch_mode, rootsys, cef_path, win.GetWidth(), win.GetHeight());
          return win.AddProcId(batch_mode, key, "cef");
       }
 
@@ -152,9 +134,6 @@ unsigned ROOT::Experimental::RWebDisplayHandle::DisplayWindow(RWebWindow &win, b
          return 0;
       }
    }
-#endif
-
-#ifdef R__HAS_QT5WEB
 
    if ((kind == kLocal) || (kind == kQt5)) {
 
@@ -175,7 +154,6 @@ unsigned ROOT::Experimental::RWebDisplayHandle::DisplayWindow(RWebWindow &win, b
          return 0;
       }
    }
-#endif
 
    if ((kind == kLocal) || (kind == kQt5) || (kind == kCEF)) {
       R__ERROR_HERE("WebDisplay") << "Neither Qt5 nor CEF libraries were found to provide local display";
