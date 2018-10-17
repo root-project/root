@@ -1,3 +1,4 @@
+#include "ROOT/RMakeUnique.hxx"
 #include "TFile.h"
 #include "TInterpreter.h"
 #include "TTree.h"
@@ -28,7 +29,7 @@ TEST(TTreeReaderLeafs, LeafListCaseA) {
    unsigned long long ULL = 11;
    bool Bool = true;
 
-   TTree* tree = new TTree("T", "In-memory test tree");
+   auto tree = std::make_unique<TTree>("T", "In-memory test tree");
    tree->Branch("C", &str, "C/C");
    tree->Branch("B", &SChar, "B/B");
    tree->Branch("b", &UChar, "b/b");
@@ -46,7 +47,7 @@ TEST(TTreeReaderLeafs, LeafListCaseA) {
    tree->Fill();
    tree->Fill();
 
-   TTreeReader TR(tree);
+   TTreeReader TR(tree.get());
    //TTreeReaderValue<const char*> trStr(TR, "C");
    TTreeReaderValue<signed char> trSChar(TR, "B");
    TTreeReaderValue<unsigned char> trUChar(TR, "b");
@@ -85,7 +86,7 @@ std::unique_ptr<TTree> CreateTree() {
       return {};
 
    Data data;
-   std::unique_ptr<TTree> tree(new TTree("T", "test tree"));
+   auto tree = std::make_unique<TTree>("T", "test tree");
    tree->Branch("Data", &data);
    data.fArray = new double[4]{12., 13., 14., 15.};
    data.fSize = 4;
@@ -144,7 +145,7 @@ TEST(TTreeReaderLeafs, LeafList) {
 
 TEST(TTreeReaderLeafs, TArrayD) {
    // https://root-forum.cern.ch/t/tarrayd-in-ttreereadervalue/24495
-   TTree* tree = new TTree("TTreeReaderLeafsTArrayD", "In-memory test tree");
+   auto tree = std::make_unique<TTree>("TTreeReaderLeafsTArrayD", "In-memory test tree");
    TArrayD arrD(7);
    for (int i = 0; i < arrD.GetSize(); ++i)
       arrD.SetAt(i + 2., i);
@@ -156,7 +157,7 @@ TEST(TTreeReaderLeafs, TArrayD) {
 
    tree->ResetBranchAddresses();
 
-   TTreeReader tr(tree);
+   TTreeReader tr(tree.get());
    TTreeReaderValue<TArrayD> arr(tr, "arrD");
 
    tr.SetEntry(1);
@@ -170,7 +171,7 @@ TEST(TTreeReaderLeafs, ArrayWithReaderValue)
 {
    // reading a float[] with a TTreeReaderValue should cause an error
 
-   std::unique_ptr<TTree> tree(new TTree("arraywithreadervaluetree", "test tree"));
+   auto tree = std::make_unique<TTree>("arraywithreadervaluetree", "test tree");
    std::vector<double> arr = {42., 84.};
    tree->Branch("arr", arr.data(), "arr[2]/D");
    tree->Fill();
