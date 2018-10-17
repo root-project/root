@@ -18,4 +18,4 @@ ROOT_OBJECT_LIBRARY(RootQt5WebObjs rootwebview.cpp rootwebpage.cpp rooturlscheme
 
 ROOT_LINKER_LIBRARY(ROOTQt5WebDisplay $<TARGET_OBJECTS:RootQt5WebObjs>
                     LIBRARIES Qt5::WebEngine Qt5::WebEngineWidgets
-                    DEPENDENCIES Core RHTTP)
+                    DEPENDENCIES Core RHTTP ROOTWebDisplay)

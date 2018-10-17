@@ -35,36 +35,29 @@ class RWebDisplayHandle {
 
 protected:
    class Creator {
+   public:
       virtual std::unique_ptr<RWebDisplayHandle>
       Make(THttpServer *serv, const std::string &url, bool batch, int width, int height) = 0;
+      virtual ~Creator() = default;
    };
 
    std::string fUrl; ///!< URL used to launch display
 
-   static std::map<std::string, std::unique_ptr<Creator>> &GetMap()
-   {
-      static std::map<std::string, std::unique_ptr<Creator>> sMap;
-      return sMap;
-   }
+   static std::map<std::string, std::unique_ptr<Creator>> &GetMap();
 
-   static std::unique_ptr<Creator> &FindCreator(const std::string &name)
-   {
-      auto &m = GetMap();
-      auto search = m.find(name);
-      if (search != m.end())
-         return search->second;
-      static std::unique_ptr<Creator> dummy;
-      return dummy;
-   }
+   static std::unique_ptr<Creator> &FindCreator(const std::string &name, const std::string &libname = "");
 
    static void TestProg(TString &prog, const std::string &nexttry);
 
    static unsigned DisplayWindow(RWebWindow &win, bool batch_mode, const std::string &where);
 
 public:
-   RWebDisplayHandle() = default;
+
+   RWebDisplayHandle(const std::string &url) : fUrl(url) {}
 
    std::string GetUrl() const { return fUrl; }
+
+   virtual ~RWebDisplayHandle() = default;
 };
 
 }
