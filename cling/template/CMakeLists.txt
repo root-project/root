@@ -11,7 +11,9 @@ ROOTTEST_ADD_TEST(templateSingleton
                   DEPENDS Singleton.h
                   LABELS roottest regression cling)
 
-ROOTTEST_GENERATE_DICTIONARY(slaveDict        slave.h        LINKDEF slaveLinkDef.h)
+if(NOT ROOT_runtime_cxxmodules_FOUND)
+  ROOTTEST_GENERATE_DICTIONARY(slaveDict        slave.h        LINKDEF slaveLinkDef.h)
+endif()
 ROOTTEST_GENERATE_DICTIONARY(masterDict       master.h       LINKDEF masterLinkDef.h)
 ROOTTEST_GENERATE_DICTIONARY(forwardDict      forward.C      LINKDEF linkdef.h)
 ROOTTEST_GENERATE_DICTIONARY(constructorDict  constructor.hh LINKDEF linkdef.h)
