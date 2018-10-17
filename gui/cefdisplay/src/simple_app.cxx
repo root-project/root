@@ -23,7 +23,14 @@
 #include "TTimer.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TBase64.h"
+
+#include <memory>
+
+#include <ROOT/RWebDisplayHandle.hxx>
+#include <ROOT/RMakeUnique.hxx>
+
 
 THttpServer *gHandlingServer = nullptr;
 
@@ -448,83 +455,130 @@ public:
    }
 };
 
-extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, bool batch_mode, const char *rootsys,
-                                             const char *cef_path, unsigned width, unsigned height)
-{
-   if (gCefApp) {
-      // printf("Starting next CEF window\n");
 
-      if (gHandlingServer != (THttpServer *)http_serv) {
-         printf("CEF plugin do not allow to use other THttpServer instance\n");
-      } else {
-         CefRect rect(0, 0, width, height);
-         gCefApp->get()->StartWindow(url, batch_mode, rect);
+namespace ROOT {
+namespace Experimental {
+
+class RCefWebDisplayHandle : public RWebDisplayHandle {
+protected:
+   class CefCreator : public Creator {
+   public:
+
+      CefCreator() = default;
+
+      virtual std::unique_ptr<RWebDisplayHandle>
+      Make(THttpServer *serv, const std::string &url, bool batch, int width, int height)
+      {
+         if (gCefApp) {
+            // printf("Starting next CEF window\n");
+
+            if (gHandlingServer != serv) {
+               printf("CEF plugin do not allow to use other THttpServer instance\n");
+            } else {
+               CefRect rect(0, 0, width, height);
+               gCefApp->get()->StartWindow(url.c_str(), batch, rect);
+            }
+            return std::make_unique<RCefWebDisplayHandle>(url);
+         }
+
+         TApplication *root_app = gROOT->GetApplication();
+
+      #if defined(OS_WIN)
+         CefMainArgs main_args(GetModuleHandle(nullptr));
+      #else
+         CefMainArgs main_args(root_app->Argc(), root_app->Argv());
+      #endif
+
+         // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
+         // that share the same executable. This function checks the command-line and,
+         // if this is a sub-process, executes the appropriate logic.
+
+         /*         int exit_code = CefExecuteProcess(main_args, nullptr, nullptr);
+                 if (exit_code >= 0) {
+                   // The sub-process has completed so return here.
+                   return exit_code;
+                 }
+         */
+
+         // Install xlib error handlers so that the application won't be terminated
+         // on non-fatal errors.
+         //         XSetErrorHandler(XErrorHandlerImpl);
+         //         XSetIOErrorHandler(XIOErrorHandlerImpl);
+
+
+         const char *cef_path = gSystem->Getenv("CEF_PATH");
+         const char *rootsys = gSystem->Getenv("ROOTSYS");
+
+         if (!cef_path) {
+            printf("CEF_PATH not configured to use CEF\n");
+            return nullptr;
+         }
+
+         if (!rootsys) {
+            printf("ROOTSYS not configured to use cef_main\n");
+            return nullptr;
+         }
+
+         // Specify CEF global settings here.
+         CefSettings settings;
+
+         TString path, path2, cef_main;
+         path.Form("%s/Resources/", cef_path);
+         path2.Form("%s/Resources/locales/", cef_path);
+         cef_main.Form("%s/bin/cef_main", rootsys);
+
+         cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.resources_dir_path);
+
+         cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
+
+         settings.no_sandbox = true;
+         // if (gROOT->IsWebDisplayBatch()) settings.single_process = true;
+
+         //if (batch_mode)
+         settings.windowless_rendering_enabled = true;
+
+         TString plog = "cef.log";
+         cef_string_ascii_to_utf16(plog.Data(), plog.Length(), &settings.log_file);
+         settings.log_severity = LOGSEVERITY_INFO; // LOGSEVERITY_VERBOSE;
+         // settings.uncaught_exception_stack_size = 100;
+         // settings.ignore_certificate_errors = true;
+         // settings.remote_debugging_port = 7890;
+
+         // SimpleApp implements application-level callbacks for the browser process.
+         // It will create the first browser instance in OnContextInitialized() after
+         // CEF has initialized.
+         gCefApp = new CefRefPtr<SimpleApp>(new SimpleApp(url, cef_main.Data(), serv, batch));
+         gCefApp->get()->SetRect(width, height);
+
+         // Initialize CEF for the browser process.
+         CefInitialize(main_args, settings, gCefApp->get(), nullptr);
+
+         // let run CEF message loop, should be improved later
+         TCefTimer *timer = new TCefTimer(10, kTRUE);
+         timer->TurnOn();
+
+         return std::make_unique<RCefWebDisplayHandle>(url);
       }
-      return;
+
+      virtual ~CefCreator() = default;
+   };
+
+public:
+   RCefWebDisplayHandle(const std::string &url) : RWebDisplayHandle(url) {}
+
+   static void AddCreator()
+   {
+      auto &entry = FindCreator("cef");
+      if (!entry)
+         GetMap().emplace("cef", std::make_unique<CefCreator>());
    }
 
-   TApplication *root_app = gROOT->GetApplication();
+};
 
-#if defined(OS_WIN)
-   CefMainArgs main_args(GetModuleHandle(nullptr));
-#else
-   CefMainArgs main_args(root_app->Argc(), root_app->Argv());
-#endif
+struct RCefCreatorReg {
+   RCefCreatorReg() { RCefWebDisplayHandle::AddCreator(); }
+} newRCefCreatorReg;
 
-   // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
-   // that share the same executable. This function checks the command-line and,
-   // if this is a sub-process, executes the appropriate logic.
-
-   /*         int exit_code = CefExecuteProcess(main_args, nullptr, nullptr);
-           if (exit_code >= 0) {
-             // The sub-process has completed so return here.
-             return exit_code;
-           }
-   */
-
-   // Install xlib error handlers so that the application won't be terminated
-   // on non-fatal errors.
-   //         XSetErrorHandler(XErrorHandlerImpl);
-   //         XSetIOErrorHandler(XIOErrorHandlerImpl);
-
-   // Specify CEF global settings here.
-   CefSettings settings;
-
-   TString path, path2, cef_main;
-   path.Form("%s/Resources/", cef_path);
-   path2.Form("%s/Resources/locales/", cef_path);
-   cef_main.Form("%s/bin/cef_main", rootsys);
-
-   cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.resources_dir_path);
-
-   cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
-
-   settings.no_sandbox = true;
-   // if (gROOT->IsWebDisplayBatch()) settings.single_process = true;
-
-   //if (batch_mode)
-   settings.windowless_rendering_enabled = true;
-
-   TString plog = "cef.log";
-   cef_string_ascii_to_utf16(plog.Data(), plog.Length(), &settings.log_file);
-   settings.log_severity = LOGSEVERITY_INFO; // LOGSEVERITY_VERBOSE;
-   // settings.uncaught_exception_stack_size = 100;
-   // settings.ignore_certificate_errors = true;
-   // settings.remote_debugging_port = 7890;
-
-   // SimpleApp implements application-level callbacks for the browser process.
-   // It will create the first browser instance in OnContextInitialized() after
-   // CEF has initialized.
-   gCefApp = new CefRefPtr<SimpleApp>(new SimpleApp(url, cef_main.Data(), (THttpServer *)http_serv, batch_mode));
-   gCefApp->get()->SetRect(width, height);
-
-   // Initialize CEF for the browser process.
-   CefInitialize(main_args, settings, gCefApp->get(), nullptr);
-
-   // let run CEF message loop, should be improved later
-   TCefTimer *timer = new TCefTimer(10, kTRUE);
-   timer->TurnOn();
-
-   // Shut down CEF.
-   // CefShutdown();
 }
+}
+
