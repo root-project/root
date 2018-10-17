@@ -258,7 +258,7 @@ void RooStats::HistFactory::Measurement::PrintTree( std::ostream& stream )
 
 
 
-void RooStats::HistFactory::Measurement::PrintXML( std::string directory, std::string newOutputPrefix )
+void RooStats::HistFactory::Measurement::PrintXML(const std::string& directory, const std::string& newOutputPrefix ) const
 {
   // create XML files for this measurement in the given directory
   // XML files can be configured with a different output prefix
