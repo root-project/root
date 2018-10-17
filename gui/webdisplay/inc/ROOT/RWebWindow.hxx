@@ -45,11 +45,13 @@ using WebWindowWaitFunc_t = std::function<int(double)>;
 
 class RWebWindowsManager;
 class RWebWindowWSHandler;
+class RWebDisplayHandle;
 
 class RWebWindow {
 
    friend class RWebWindowsManager;
    friend class RWebWindowWSHandler;
+   friend class RWebDisplayHandle;
 
 private:
    using timestamp_t = std::chrono::time_point<std::chrono::system_clock>;

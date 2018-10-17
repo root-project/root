@@ -20,18 +20,26 @@
 #include <map>
 #include <memory>
 
+#include "TString.h"
+
 class THttpServer;
 
 namespace ROOT {
 namespace Experimental {
 
+class RWebWindow;
+class RWebWindowsManager;
+
 class RWebDisplayHandle {
+   friend class RWebWindowsManager;
+
 protected:
    class Creator {
-      virtual std::unique_ptr<RWebDisplayHandle> Make(THttpServer *serv, const std::string &url, bool batch, int width, int height) = 0;
+      virtual std::unique_ptr<RWebDisplayHandle>
+      Make(THttpServer *serv, const std::string &url, bool batch, int width, int height) = 0;
    };
 
-   std::string fUrl;   ///!< URL used to launch display
+   std::string fUrl; ///!< URL used to launch display
 
    static std::map<std::string, std::unique_ptr<Creator>> &GetMap()
    {
@@ -48,6 +56,10 @@ protected:
       static std::unique_ptr<Creator> dummy;
       return dummy;
    }
+
+   static void TestProg(TString &prog, const std::string &nexttry);
+
+   static unsigned DisplayWindow(RWebWindow &win, bool batch_mode, const std::string &where);
 
 public:
    RWebDisplayHandle() = default;

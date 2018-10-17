@@ -53,11 +53,7 @@ private:
    /// Returns timeout for launching new browser process
    float GetLaunchTmout() const { return fLaunchTmout; }
 
-   bool CreateServer(bool with_http = false);
-
    void Unregister(RWebWindow &win);
-
-   std::string GetUrl(const RWebWindow &win, bool batch_mode, bool remote = false);
 
    /// Returns window URL, running in batch mode
    std::string GetBatchUrl(const RWebWindow &win, bool remote = false) { return GetUrl(win, true, remote); }
@@ -88,6 +84,13 @@ public:
 
    /// Returns THttpServer instance
    THttpServer *GetServer() const { return fServer.get(); }
+
+   /// Returns http address of the server, empty string when not available
+   std::string GetServerAddr() const { return fAddr; }
+
+   std::string GetUrl(const RWebWindow &win, bool batch_mode, bool remote = false);
+
+   bool CreateServer(bool with_http = false);
 
    static std::shared_ptr<RWebWindowsManager> &Instance();
 
