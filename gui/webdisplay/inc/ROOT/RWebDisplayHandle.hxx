@@ -41,6 +41,32 @@ protected:
       virtual ~Creator() = default;
    };
 
+   class BrowserCreator : public Creator {
+   protected:
+      std::string fProg;  ///< browser executable
+      std::string fExec;  ///< standard execute line
+      std::string fBatchExec; ///< batch execute line
+
+      void TestProg(const std::string &nexttry, bool check_std_paths = false);
+
+   public:
+
+      BrowserCreator(bool dflt = true);
+
+      std::unique_ptr<RWebDisplayHandle>
+      Make(THttpServer *serv, const std::string &url, bool batch, int width, int height) override;
+
+      virtual ~BrowserCreator() = default;
+   };
+
+   class ChromeCreator : public BrowserCreator {
+   public:
+
+      ChromeCreator();
+      virtual ~ChromeCreator() = default;
+   };
+
+
    std::string fUrl; ///!< URL used to launch display
 
    static std::map<std::string, std::unique_ptr<Creator>> &GetMap();
