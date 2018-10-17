@@ -258,7 +258,7 @@ void RooStats::HistFactory::Measurement::PrintTree( std::ostream& stream )
 
 
 
-void RooStats::HistFactory::Measurement::PrintXML( std::string directory, std::string newOutputPrefix )
+void RooStats::HistFactory::Measurement::PrintXML(const std::string& directory, const std::string& newOutputPrefix ) const
 {
   // create XML files for this measurement in the given directory
   // XML files can be configured with a different output prefix
@@ -268,8 +268,8 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string directory, std::s
   // Then, create xml files for each channel
 
   // First, check that the directory exists:
-  auto testExists = [](const std::string& directory) {
-    void* dir = gSystem->OpenDirectory(directory.c_str());
+  auto testExists = [](const std::string& theDir) {
+    void* dir = gSystem->OpenDirectory(theDir.c_str());
     bool exists = dir != nullptr;
     if (exists)
       gSystem->FreeDirectory(dir);

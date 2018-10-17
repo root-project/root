@@ -100,7 +100,7 @@ public:
 
 
   void PrintTree( std::ostream& = std::cout ); // Print to a stream
-  void PrintXML( std::string Directory="", std::string NewOutputPrefix="" );
+  void PrintXML(const std::string& Directory="", const std::string& NewOutputPrefix="" );
 
   std::vector< RooStats::HistFactory::Channel >& GetChannels() { return fChannels; }
   RooStats::HistFactory::Channel& GetChannel( std::string );
