@@ -14,8 +14,9 @@ ROOTTEST_ADD_TEST(nestedTemplate
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(nestedClasses
                                     nestedClasses.h
                                     SELECTION nestedClasses_selection.xml)
-
+if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_ADD_TEST(nestedClasses
                   MACRO execNestedClasses.C
                   OUTREF execNestedClasses.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
+endif()
