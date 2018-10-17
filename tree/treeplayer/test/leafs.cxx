@@ -9,6 +9,8 @@
 
 #include "data.h"
 
+#include "RErrorIgnoreRAII.hxx"
+
 #include <fstream>
 
 TEST(TTreeReaderLeafs, LeafListCaseA) {
@@ -176,8 +178,11 @@ TEST(TTreeReaderLeafs, ArrayWithReaderValue)
 
    TTreeReader tr(tree.get());
    TTreeReaderValue<double> valueOfArr(tr, "arr");
-   tr.Next();
-   *valueOfArr;
+   {
+      RErrorIgnoreRAII errorIgnRAII;
+      tr.Next();
+      *valueOfArr;
+   }
    EXPECT_FALSE(valueOfArr.IsValid());
 }
 
