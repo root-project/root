@@ -42,6 +42,29 @@
 #include <process.h>
 #endif
 
+std::map<std::string, std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator>> &ROOT::Experimental::RWebDisplayHandle::GetMap()
+{
+   static std::map<std::string, std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator>> sMap;
+   return sMap;
+}
+
+std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator> &ROOT::Experimental::RWebDisplayHandle::FindCreator(const std::string &name, const std::string &libname)
+{
+   auto &m = GetMap();
+   auto search = m.find(name);
+   if (search != m.end())
+      return search->second;
+
+   if (!libname.empty()) {
+      gSystem->Load(libname.c_str());
+      search = m.find(name);
+      if (search != m.end())
+         return search->second;
+   }
+
+   static std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator> dummy;
+   return dummy;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// checks if provided executable exists
@@ -134,23 +157,19 @@ unsigned ROOT::Experimental::RWebDisplayHandle::DisplayWindow(RWebWindow &win, b
 #ifdef R__HAS_QT5WEB
 
    if ((kind == kLocal) || (kind == kQt5)) {
-      Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
 
-      if (!symbol_qt5) {
-         gSystem->Load("libROOTQt5WebDisplay");
-         symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
-      }
-      if (symbol_qt5) {
-         if (batch_mode) {
-            R__ERROR_HERE("WebDisplay") << "Qt5 does not support batch mode";
+      auto &creator = FindCreator("qt5", "libROOTQt5WebDisplay");
+
+      if (creator) {
+         auto handle = creator->Make(win.fMgr->GetServer(), addr, batch_mode, win.GetWidth(), win.GetHeight());
+         if (!handle) {
+            R__ERROR_HERE("WebDisplay") << "Cannot create Qt5 Web window";
             return 0;
          }
-         typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
-         R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in Qt5 WebEngine";
-         FunctionQt5 func = (FunctionQt5)symbol_qt5;
-         func(addr.c_str(),  win.fMgr->GetServer(), batch_mode, win.GetWidth(), win.GetHeight());
+
          return win.AddProcId(batch_mode, key, "qt5");
       }
+
       if (kind == kQt5) {
          R__ERROR_HERE("WebDisplay") << "Qt5 libraries not found";
          return 0;
