@@ -2,22 +2,59 @@
 # CMakeLists.txt file for building ROOT bindings/pyroot package
 ############################################################################
 
-set(PYROOT_HEADERS inc/TPyFitFunction.h    inc/TPython.h
-                   inc/TPyArg.h            inc/TPyROOTApplication.h
-                   inc/TTreeAsFlatMatrix.h inc/TPyDispatcher.h
-                   inc/TPyReturn.h         inc/TPyException.h
-                   inc/TPySelector.h)
-
-if(UNIX AND CMAKE_SIZEOF_VOID_P EQUAL 4)
-  list(REMOVE_ITEM PYROOT_HEADERS inc/TTreeAsFlatMatrix.h)
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
-                              NO_INSTALL_HEADERS
-                              HEADERS ${PYROOT_HEADERS}
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES Core Tree ROOTVecOps)
-ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core CMAKENOEXPORT)
+  NO_INSTALL_HEADERS
+  HEADERS
+    TPyArg.h
+    TPyDispatcher.h
+    TPyException.h
+    TPyFitFunction.h
+    TPyReturn.h
+    TPyROOTApplication.h
+    TPySelector.h
+    TPython.h
+  SOURCES
+    src/Converters.cxx
+    src/Cppyy.cxx
+    src/Executors.cxx
+    src/MethodProxy.cxx
+    src/ObjectProxy.cxx
+    src/PropertyProxy.cxx
+    src/PyRootType.cxx
+    src/PyStrings.cxx
+    src/Pythonize.cxx
+    src/RootModule.cxx
+    src/RootWrapper.cxx
+    src/TCallContext.cxx
+    src/TClassMethodHolder.cxx
+    src/TConstructorHolder.cxx
+    src/TCustomPyTypes.cxx
+    src/TemplateProxy.cxx
+    src/TFunctionHolder.cxx
+    src/TMemoryRegulator.cxx
+    src/TMethodHolder.cxx
+    src/TPyArg.cxx
+    src/TPyBufferFactory.cxx
+    src/TPyClassGenerator.cxx
+    src/TPyDispatcher.cxx
+    src/TPyException.cxx
+    src/TPyFitFunction.cxx
+    src/TPyReturn.cxx
+    src/TPyROOTApplication.cxx
+    src/TPySelector.cxx
+    src/TPython.cxx
+    src/TSetItemHolder.cxx
+    src/TTupleOfInstances.cxx
+    src/Utility.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  LIBRARIES
+    Core
+  DEPENDENCIES
+    MathCore
+    ROOTVecOps
+    Tree
+)
 
 ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -fno-strict-aliasing)
 ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -Wno-parentheses-equality)
@@ -29,6 +66,8 @@ separate_arguments(_PyROOT_FLAGS)
 target_compile_options(PyROOT PRIVATE ${_PyROOT_FLAGS})
 target_link_libraries(PyROOT PRIVATE ${PYTHON_LIBRARIES})
 target_include_directories(PyROOT PRIVATE ${PYTHON_INCLUDE_DIRS})
+
+ROOT_LINKER_LIBRARY(JupyROOT JupyROOT/src/IOHandler.cxx DEPENDENCIES Core CMAKENOEXPORT)
 
 if(MSVC)
   if(${PYTHON_VERSION_MAJOR} GREATER_EQUAL 3)
