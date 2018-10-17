@@ -4783,6 +4783,8 @@ int RootClingMain(int argc,
 
    bool isSelXML = IsSelectionXml(linkdefFilename.c_str());
 
+   int rootclingRetCode(0);
+
    if (requestAllSymbols && !isSelXML) {
       selectionRules.SetDeep(true);
    } else if (!linkdefLoc) {
@@ -4795,6 +4797,7 @@ int RootClingMain(int argc,
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        resourceDir.c_str())) {
          ROOT::TMetaUtils::Error(0, "Parsing #pragma failed %s\n", linkdefFilename.c_str());
+         rootclingRetCode += 1;
       } else {
          ROOT::TMetaUtils::Info(0, "#pragma successfully parsed.\n");
       }
@@ -4841,6 +4844,7 @@ int RootClingMain(int argc,
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        resourceDir.c_str())) {
          ROOT::TMetaUtils::Error(0, "Parsing Linkdef file %s\n", linkdefFilename.c_str());
+         rootclingRetCode += 1;
       } else {
          ROOT::TMetaUtils::Info(0, "Linkdef file successfully parsed.\n");
       }
@@ -4934,8 +4938,6 @@ int RootClingMain(int argc,
          !selectionRules.AreAllSelectionRulesUsed()) {
       ROOT::TMetaUtils::Warning(0, "Not all selection rules are used!\n");
    }
-
-   int rootclingRetCode(0);
 
    if (!onepcm){
       rootclingRetCode += CheckForUnsupportedClasses(scan.fSelectedClasses);
