@@ -1,4 +1,5 @@
 #include "TEntryListArray.h"
+
 #include "TLeaf.h"
 #include "TROOT.h"
 #include "TTree.h"
@@ -8,6 +9,8 @@
 
 #include "gtest/gtest.h"
 #include <stdlib.h>
+
+#include "RErrorIgnoreRAII.hxx"
 
 TTree* MakeTree() {
    double x[3]{};
@@ -176,7 +179,10 @@ TEST(TTreeReaderBasic, InvalidRange) {
    TTree *tree = MakeTree();
    TTreeReader tr(tree);
 
-   EXPECT_EQ(TTreeReader::kEntryNotFound, tr.SetEntriesRange(tree->GetEntries(), 0));
+   {
+      RErrorIgnoreRAII errIgnRAAII;
+      EXPECT_EQ(TTreeReader::kEntryNotFound, tr.SetEntriesRange(tree->GetEntries(), 0));
+   }
 
    // Is SetEntriesRange() simply ignored as it should be?
    EXPECT_TRUE(tr.Next());
