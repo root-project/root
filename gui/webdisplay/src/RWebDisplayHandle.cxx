@@ -56,6 +56,8 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator> &ROOT::Experimen
 
       if (libname == "ChromeCreator") {
          m.emplace(name, std::make_unique<ChromeCreator>());
+      } else if (libname == "FirefoxCreator") {
+         m.emplace(name, std::make_unique<FirefoxCreator>());
       } else if (!libname.empty()) {
          gSystem->Load(libname.c_str());
       }
@@ -113,11 +115,25 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::RWebDisplayHandle::BrowserCreator::BrowserCreator(bool dflt)
+ROOT::Experimental::RWebDisplayHandle::BrowserCreator::BrowserCreator(bool dflt, const std::string &where_arg)
 {
    if (!dflt) return;
-}
 
+   if (!where_arg.empty()) {
+      if (where_arg.find("$") != std::string::npos) {
+         fExec = where_arg;
+      } else {
+         fExec = "$prog $url &";
+         fProg = where_arg;
+      }
+   } else if (gSystem->InheritsFrom("TMacOSXSystem")) {
+      fExec = "open \'$url\'";
+   } else if (gSystem->InheritsFrom("TWinNTSystem")) {
+      fExec = "start $url";
+   } else {
+      fExec = "xdg-open \'$url\' &";
+   }
+}
 
 void ROOT::Experimental::RWebDisplayHandle::BrowserCreator::TestProg(const std::string &nexttry, bool check_std_paths)
 {
@@ -150,7 +166,7 @@ void ROOT::Experimental::RWebDisplayHandle::BrowserCreator::TestProg(const std::
 
 
 std::unique_ptr<ROOT::Experimental::RWebDisplayHandle>
-ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Make(THttpServer *serv, const std::string &url, bool batch, int width, int height)
+ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Make(THttpServer *, const std::string &url, bool batch, int width, int height)
 {
    TString exec = batch ? fBatchExec.c_str() : fExec.c_str();
 
@@ -159,7 +175,8 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Make(THttpServer *serv, c
 
    std::string swidth = std::to_string(width > 0 ? width : 800);
    std::string sheight = std::to_string(height > 0 ? height : 600);
-   std::string rmdir;
+
+   std::string rmdir = MakeProfile(exec, batch);
 
    exec.ReplaceAll("$url", url.c_str());
    exec.ReplaceAll("$width", swidth.c_str());
@@ -260,7 +277,7 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Make(THttpServer *serv, c
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator()
+ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserCreator(false)
 {
    TestProg(gEnv->GetValue("WebGui.Chrome", ""));
 
@@ -284,6 +301,78 @@ ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator()
    fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
 #endif
 }
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(false)
+{
+   TestProg(gEnv->GetValue("WebGui.Firefox", ""));
+
+#ifdef _MSC_VER
+   TestProg("\\Mozilla Firefox\\firefox.exe", true);
+#endif
+#ifdef R__MACOSX
+   TestProg("/Applications/Firefox.app/Contents/MacOS/firefox");
+#endif
+#ifdef R__LINUX
+   TestProg("/usr/bin/firefox");
+#endif
+
+#ifdef _MSC_VER
+   // there is a problem when specifying the window size with wmic on windows:
+   // It gives: Invalid format. Hint: <paramlist> = <param> [, <paramlist>].
+   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: -headless -no-remote $profile $url");
+   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width=$width -height=$height $profile $url");
+#else
+   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:-headless -no-remote $profile $url");
+   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width $width -height $height $profile \'$url\' &");
+#endif
+}
+
+std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(TString &exec, bool batch_mode)
+{
+   std::string rmdir;
+
+   if (exec.Index("$profile") == kNPOS)
+      return rmdir;
+
+   TString profile_arg;
+
+   const char *ff_profile = gEnv->GetValue("WebGui.FirefoxProfile", "");
+   const char *ff_profilepath = gEnv->GetValue("WebGui.FirefoxProfilePath", "");
+   Int_t ff_randomprofile = gEnv->GetValue("WebGui.FirefoxRandomProfile", 0);
+   if (ff_profile && *ff_profile) {
+      profile_arg.Form("-P %s", ff_profile);
+   } else if (ff_profilepath && *ff_profilepath) {
+      profile_arg.Form("-profile %s", ff_profilepath);
+   } else if ((ff_randomprofile > 0) || (batch_mode && (ff_randomprofile >= 0))) {
+
+      gRandom->SetSeed(0);
+
+      TString rnd_profile = TString::Format("root_ff_profile_%d", gRandom->Integer(0x100000));
+      TString profile_dir = TString::Format("%s/%s", gSystem->TempDirectory(), rnd_profile.Data());
+
+      profile_arg.Form("-profile %s", profile_dir.Data());
+      if (!batch_mode)
+         profile_arg.Prepend("-no-remote ");
+
+      if (!fProg.empty()) {
+         gSystem->Exec(Form("%s %s -no-remote -CreateProfile \"%s %s\"", fProg.c_str(), (batch_mode ? "-headless" : ""),
+                            rnd_profile.Data(), profile_dir.Data()));
+
+         rmdir = profile_dir.Data();
+      } else {
+         R__ERROR_HERE("WebDisplay") << "Cannot create Firefox profile without assigned executable, check WebGui.Firefox variable";
+      }
+   }
+
+   exec.ReplaceAll("$profile", profile_arg.Data());
+
+   return rmdir;
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -380,19 +469,6 @@ unsigned ROOT::Experimental::RWebDisplayHandle::DisplayWindow(RWebWindow &win, b
       return 0;
    }
 
-#ifdef _MSC_VER
-   std::string ProgramFiles = gSystem->Getenv("ProgramFiles");
-   size_t pos = ProgramFiles.find(" (x86)");
-   if (pos != std::string::npos)
-      ProgramFiles.erase(pos, 6);
-   std::string ProgramFilesx86 = gSystem->Getenv("ProgramFiles(x86)");
-#endif
-
-   TString exec;
-
-   std::string swidth = std::to_string(win.GetWidth() ? win.GetWidth() : 800);
-   std::string sheight = std::to_string(win.GetHeight() ? win.GetHeight() : 600);
-   TString prog;
 
    if ((kind == kNative) || (kind == kChrome)) {
       auto &creator = FindCreator("chrome", "ChromeCreator");
@@ -408,7 +484,7 @@ unsigned ROOT::Experimental::RWebDisplayHandle::DisplayWindow(RWebWindow &win, b
 
          auto handle = creator->Make(win.fMgr->GetServer(), addr, batch_mode, win.GetWidth(), win.GetHeight());
          if (!handle) {
-            R__ERROR_HERE("WebDisplay") << "Cannot create Qt5 Web window";
+            R__ERROR_HERE("WebDisplay") << "Cannot create Chrome browser window";
             return 0;
          }
 
@@ -416,10 +492,53 @@ unsigned ROOT::Experimental::RWebDisplayHandle::DisplayWindow(RWebWindow &win, b
       }
 
       if (kind == kChrome) {
-         R__ERROR_HERE("WebDisplay") << "Qt5 libraries not found";
+         R__ERROR_HERE("WebDisplay") << "Chrome browser cannot be started";
          return 0;
       }
    }
+
+
+   if ((kind == kNative) || (kind == kFirefox)) {
+      auto &creator = FindCreator("firefox", "FirefoxCreator");
+
+      if (creator) {
+
+         if (!win.fMgr->CreateServer(true)) {
+            R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server";
+            return 0;
+         }
+
+         addr = win.fMgr->GetServerAddr() + addr;
+
+         auto handle = creator->Make(win.fMgr->GetServer(), addr, batch_mode, win.GetWidth(), win.GetHeight());
+         if (!handle) {
+            R__ERROR_HERE("WebDisplay") << "Cannot create Firefox browser window";
+            return 0;
+         }
+
+         return win.AddProcId(batch_mode, key, "firefox");
+      }
+
+      if (kind == kFirefox) {
+         R__ERROR_HERE("WebDisplay") << "Firefox browser cannot be started";
+         return 0;
+      }
+   }
+
+
+#ifdef _MSC_VER
+   std::string ProgramFiles = gSystem->Getenv("ProgramFiles");
+   size_t pos = ProgramFiles.find(" (x86)");
+   if (pos != std::string::npos)
+      ProgramFiles.erase(pos, 6);
+   std::string ProgramFilesx86 = gSystem->Getenv("ProgramFiles(x86)");
+#endif
+
+   TString exec;
+
+   std::string swidth = std::to_string(win.GetWidth() ? win.GetWidth() : 800);
+   std::string sheight = std::to_string(win.GetHeight() ? win.GetHeight() : 600);
+   TString prog;
 
 
    if ((kind == kNative) || (kind == kChrome)) {

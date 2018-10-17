@@ -49,9 +49,11 @@ protected:
 
       void TestProg(const std::string &nexttry, bool check_std_paths = false);
 
+      virtual std::string MakeProfile(TString &, bool) { return ""; }
+
    public:
 
-      BrowserCreator(bool dflt = true);
+      BrowserCreator(bool dflt = true, const std::string &where_arg = "");
 
       std::unique_ptr<RWebDisplayHandle>
       Make(THttpServer *serv, const std::string &url, bool batch, int width, int height) override;
@@ -61,11 +63,17 @@ protected:
 
    class ChromeCreator : public BrowserCreator {
    public:
-
       ChromeCreator();
       virtual ~ChromeCreator() = default;
    };
 
+   class FirefoxCreator : public BrowserCreator {
+   public:
+      FirefoxCreator();
+      virtual ~FirefoxCreator() = default;
+
+      std::string MakeProfile(TString &exec, bool batch) override;
+   };
 
    std::string fUrl; ///!< URL used to launch display
 
