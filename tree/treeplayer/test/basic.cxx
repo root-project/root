@@ -1,4 +1,6 @@
+#include "ROOT/RMakeUnique.hxx"
 #include "TEntryListArray.h"
+
 #include "TLeaf.h"
 #include "TROOT.h"
 #include "TTree.h"
@@ -9,7 +11,9 @@
 #include "gtest/gtest.h"
 #include <stdlib.h>
 
-TTree* MakeTree() {
+#include "RErrorIgnoreRAII.hxx"
+
+std::unique_ptr<TTree> MakeTree() {
    double x[3]{};
    float z = 0.;
    struct {
@@ -20,8 +24,7 @@ TTree* MakeTree() {
    Double32_t Double32 = 12.;
    Float16_t Float16 = -12.;
 
-
-   TTree* tree = new TTree("T", "test tree");
+   auto tree = std::make_unique<TTree>("T", "test tree");
    tree->Branch("one", &x, "x[3]/D");
    tree->Branch("two", &yData, "ny/i:y[ny]/I");
    tree->Branch("three", &z, "z");
@@ -53,9 +56,9 @@ TTree* MakeTree() {
 }
 
 TEST(TTreeReaderBasic, Interfaces) {
-   TTree* tree = MakeTree();
+   auto tree = MakeTree();
 
-   TTreeReader tr(tree);
+   TTreeReader tr(tree.get());
    TTreeReaderArray<double> x(tr, "one.x");
    TTreeReaderArray<int> y(tr, "two.y");
    TTreeReaderValue<unsigned int> ny(tr, "two.ny");
@@ -67,7 +70,7 @@ TEST(TTreeReaderBasic, Interfaces) {
    EXPECT_EQ(-1, tr.GetCurrentEntry());
    EXPECT_EQ(20, tr.GetEntries(false));
    EXPECT_EQ(TTreeReader::kEntryNotLoaded, tr.GetEntryStatus());
-   EXPECT_EQ(tree, tr.GetTree());
+   EXPECT_EQ(tree.get(), tr.GetTree());
    EXPECT_FALSE(tr.IsChain());
 
    EXPECT_EQ(nullptr, ny.GetAddress());
@@ -125,8 +128,8 @@ TEST(TTreeReaderBasic, ErrorProbing) {
 
 
 TEST(TTreeReaderBasic, Range) {
-   TTree* tree = MakeTree();
-   TTreeReader tr(tree);
+   auto tree = MakeTree();
+   TTreeReader tr(tree.get());
 
    EXPECT_EQ(TTreeReader::kEntryValid, tr.SetEntriesRange(5, 8));
 
@@ -173,10 +176,13 @@ TEST(TTreeReaderBasic, Range) {
 }
 
 TEST(TTreeReaderBasic, InvalidRange) {
-   TTree *tree = MakeTree();
-   TTreeReader tr(tree);
+   auto tree = MakeTree();
+   TTreeReader tr(tree.get());
 
-   EXPECT_EQ(TTreeReader::kEntryNotFound, tr.SetEntriesRange(tree->GetEntries(), 0));
+   {
+      RErrorIgnoreRAII errIgnRAAII;
+      EXPECT_EQ(TTreeReader::kEntryNotFound, tr.SetEntriesRange(tree->GetEntries(), 0));
+   }
 
    // Is SetEntriesRange() simply ignored as it should be?
    EXPECT_TRUE(tr.Next());
@@ -186,8 +192,8 @@ TEST(TTreeReaderBasic, InvalidRange) {
 
 
 TEST(TTreeReaderBasic, OneEntryRange) {
-   TTree* tree = MakeTree();
-   TTreeReader tr(tree);
+   auto tree = MakeTree();
+   TTreeReader tr(tree.get());
 
    EXPECT_EQ(TTreeReader::kEntryValid, tr.SetEntriesRange(1, 2));
 
@@ -206,8 +212,8 @@ TEST(TTreeReaderBasic, OneEntryRange) {
 
 
 TEST(TTreeReaderBasic, ZeroEntryRange) {
-   TTree* tree = MakeTree();
-   TTreeReader tr(tree);
+   auto tree = MakeTree();
+   TTreeReader tr(tree.get());
 
    // end is ignored:
    EXPECT_EQ(TTreeReader::kEntryValid, tr.SetEntriesRange(18, 18));
@@ -229,8 +235,8 @@ TEST(TTreeReaderBasic, ZeroEntryRange) {
 
 
 TEST(TTreeReaderBasic, InvertedEntryRange) {
-   TTree* tree = MakeTree();
-   TTreeReader tr(tree);
+   auto tree = MakeTree();
+   TTreeReader tr(tree.get());
 
    EXPECT_EQ(TTreeReader::kEntryValid, tr.SetEntriesRange(18, 3));
 
@@ -252,10 +258,10 @@ TEST(TTreeReaderBasic, InvertedEntryRange) {
 
 TEST(TTreeReaderBasic, EntryList) {
    // See https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=22850&p=100796
-   TTree* tree = MakeTree();
+   auto tree = MakeTree();
    EXPECT_EQ(9, tree->Draw(">>negZ","three.z<0", "entrylistarray"));
    TEntryListArray* selected = (TEntryListArray*)gDirectory->Get("negZ");
-   TTreeReader aReader(tree, selected);
+   TTreeReader aReader(tree.get(), selected);
 
    EXPECT_EQ(9, aReader.GetEntries(false));
 
@@ -280,12 +286,12 @@ TEST(TTreeReaderBasic, EntryList) {
 }
 
 TEST(TTreeReaderBasic, EntryListBeyondEnd) {
-   TTree* tree = MakeTree();
+   auto tree = MakeTree();
    TEntryList selected;
    // Add the last valid entry; a subsequent Next() must return false.
    selected.Enter(tree->GetEntries() - 1);
 
-   TTreeReader aReader(tree, &selected);
+   TTreeReader aReader(tree.get(), &selected);
 
    EXPECT_EQ(1, aReader.GetEntries(false));
 
@@ -300,8 +306,8 @@ TEST(TTreeReaderBasic, EntryListBeyondEnd) {
 
 
 TEST(TTreeReaderBasic, Values) {
-   TTree* tree = MakeTree();
-   TTreeReader tr(tree);
+   auto tree = MakeTree();
+   TTreeReader tr(tree.get());
    TTreeReaderArray<double> x(tr, "one.x");
    TTreeReaderArray<int> y(tr, "two.y");
    TTreeReaderValue<unsigned int> ny(tr, "two.ny");

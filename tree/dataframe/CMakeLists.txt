@@ -56,6 +56,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RRange.hxx
     ROOT/RDF/RSlotStack.hxx
     ROOT/RDF/Utils.hxx
+    ROOT/RDF/TTreeAsFlatMatrix.hxx
     ${RDATAFRAME_EXTRA_HEADERS}
   SOURCES
     src/RActionBase.cxx
