@@ -10,13 +10,30 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-</p>
-END_HTML
-*/
-//
+/** \class ParamHistFunc
+ * \ingroup HistFactory
+ *   A class which maps the current values of a RooRealVar
+ *  (or a set of RooRealVars) to one of a number of RooRealVars:
+
+ *  ParamHistFunc: {val1, val2, ...} -> {gamma (RooRealVar)}
+ *  
+ *  The intended interpretation is that each parameter in the
+ *  range represent the height of a bin over the domain
+ *  space.
+
+ *  The 'createParamSet' is an easy way to create these
+ *  parameters from a set of observables. They are
+ *  stored using the "TH1" ordering convention (as compared
+ *  to the RooDataHist convention, which is used internally
+ *  and one must map between the two).
+
+ *  All indices include '0'
+
+ *  gamma_i_j = paramSet[ size(i)*j + i ]
+
+ *  ie assuming the dimensions are 5*5:
+ *  gamma_2_1 = paramSet[ 5*1 + 2 ] = paramSet[7]
+ */
 
 
 #include <sstream>
@@ -57,33 +74,6 @@ END_HTML
 ClassImp(ParamHistFunc);
 
 
-/*
-  
-  A class which maps the current values of a RooRealVar
-  (or a set of RooRealVars) to one of a number of RooRealVars:
-
-  ParamHistFunc: {val1, val2, ...} -> {gamma (RooRealVar)}
-  
-  The intended interpretation is that each parameter in the
-  range represent the height of a bin over the domain
-  space.
-
-  The 'createParamSet' is an easy way to create these
-  parameters from a set of observables.  They are
-  stored using the "TH1" ordering convention (as compared
-  to the RooDataHist convention, which is used internally
-  and one must map between the two).
-
-  All indices include '0'
-
-  gamma_i_j = paramSet[ size(i)*j + i ]
-
-  ie assuming the dimensions are 5*5:
-  gamma_2_1 = paramSet[ 5*1 + 2 ] = paramSet[7]
-
- */
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 ParamHistFunc::ParamHistFunc() : _numBins(0)
@@ -93,7 +83,17 @@ ParamHistFunc::ParamHistFunc() : _numBins(0)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Create a function which returns binewise-values
+/// This class contains N RooRealVar's, one for each
+/// bin from the given RooRealVar.
+///
+/// The value of the function in the ith bin is 
+/// given by:
+///
+/// F(i) = gamma_i * nominal(i)
+///
+/// Where the nominal values are simply fixed
+/// numbers (default = 1.0 for all i)
 ParamHistFunc::ParamHistFunc(const char* name, const char* title, 
 			     const RooArgList& vars, const RooArgList& paramSet) :
   RooAbsReal(name, title),
@@ -102,17 +102,6 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _numBins(0),
   _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars)
 {
-  // Create a function which returns binewise-values
-  // This class contains N RooRealVar's, one for each
-  // bin from the given RooRealVar.
-  //
-  // The value of the function in the ith bin is 
-  // given by:
-  //
-  // F(i) = gamma_i * nominal(i)
-  //
-  // Where the nominal values are simply fixed
-  // numbers (default = 1.0 for all i)
 
   // Create the dataset that stores the binning info:
   
@@ -136,7 +125,17 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Create a function which returns binewise-values
+/// This class contains N RooRealVar's, one for each
+/// bin from the given RooRealVar.
+///
+/// The value of the function in the ith bin is 
+/// given by:
+///
+/// F(i) = gamma_i * nominal(i)
+///
+/// Where the nominal values are simply fixed
+/// numbers (default = 1.0 for all i)
 ParamHistFunc::ParamHistFunc(const char* name, const char* title, 
 			     const RooArgList& vars, const RooArgList& paramSet,
 			     const TH1* Hist ) :
@@ -149,18 +148,6 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
 {
 
   _dataSet.removeSelfFromDir(); // files must not delete _dataSet.
-
-  // Create a function which returns binewise-values
-  // This class contains N RooRealVar's, one for each
-  // bin from the given RooRealVar.
-  //
-  // The value of the function in the ith bin is 
-  // given by:
-  //
-  // F(i) = gamma_i * nominal(i)
-  //
-  // Where the nominal values are simply fixed
-  // numbers (default = 1.0 for all i)
 
   // Get the number of bins
   _numBins = GetNumBins( vars );
@@ -227,16 +214,14 @@ ParamHistFunc::~ParamHistFunc()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Get the index of the gamma parameter associated
+/// with the current bin
+/// This number is the "RooDataSet" style index
+/// and it must be because it uses the RooDataSet method directly
+/// This is intended to be fed into the getParameter(Int_t) method:
+///
+/// RooRealVar currentParam = getParameter( getCurrentBin() );
 Int_t ParamHistFunc::getCurrentBin() const {
-  // Get the index of the gamma parameter associated
-  // with the current bin
-  // This number is the "RooDataSet" style index
-  // and it must be because it uses the RooDataSet method directly
-  // This is intended to be fed into the getParameter(Int_t) method:
-  //
-  // RooRealVar currentParam = getParameter( getCurrentBin() );
-
   Int_t dataSetIndex = _dataSet.getIndex( _dataVars ); // calcTreeIndex();
   return dataSetIndex;
 
@@ -244,14 +229,12 @@ Int_t ParamHistFunc::getCurrentBin() const {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Get the parameter associate with the the
+/// input RooDataHist style index
+/// It uses the binMap to convert the RooDataSet style index
+/// into the TH1 style index (which is how they are stored
+/// internally in the '_paramSet' vector
 RooRealVar& ParamHistFunc::getParameter( Int_t index ) const {
-  // Get the parameter associate with the the
-  // input RooDataHist style index
-  // It uses the binMap to convert the RooDataSet style index
-  // into the TH1 style index (which is how they are stored
-  // internally in the '_paramSet' vector
-
   Int_t gammaIndex = -1;
   if( _binMap.find( index ) != _binMap.end() ) {
     gammaIndex = _binMap[ index ];
@@ -318,21 +301,21 @@ void ParamHistFunc::setShape( TH1* shape ) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create the list of RooRealVar
+/// parameters which represent the
+/// height of the histogram bins.
+/// The list 'vars' represents the 
+/// observables (corresponding to histogram bins)
+/// that these newly created parameters will 
+/// be mapped to. (ie, we create one parameter
+/// per observable in vars and per bin in each observable)
 
+/// Store them in a list using:
+/// _paramSet.add( createParamSet() );
+/// This list is stored in the "TH1" index order
 RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Prefix, 
 					 const RooArgList& vars) {
-  // Create the list of RooRealVar
-  // parameters which represent the
-  // height of the histogram bins.
-  // The list 'vars' represents the 
-  // observables (corresponding to histogram bins)
-  // that these newly created parameters will 
-  // be mapped to. (ie, we create one parameter
-  // per observable in vars and per bin in each observable)
 
-  // Store them in a list using:
-  // _paramSet.add( createParamSet() );
-  // This list is stored in the "TH1" index order
 
   // Get the number of bins
   // in the nominal histogram
@@ -454,22 +437,22 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create the list of RooRealVar
+/// parameters which represent the
+/// height of the histogram bins.
+/// The list 'vars' represents the 
+/// observables (corresponding to histogram bins)
+/// that these newly created parameters will 
+/// be mapped to. (ie, we create one parameter
+/// per observable in vars and per bin in each observable)
 
+/// Store them in a list using:
+/// _paramSet.add( createParamSet() );
+/// This list is stored in the "TH1" index order
 RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Prefix, 
 					 const RooArgList& vars, 
 					 Double_t gamma_min, Double_t gamma_max) {
-  // Create the list of RooRealVar
-  // parameters which represent the
-  // height of the histogram bins.
-  // The list 'vars' represents the 
-  // observables (corresponding to histogram bins)
-  // that these newly created parameters will 
-  // be mapped to. (ie, we create one parameter
-  // per observable in vars and per bin in each observable)
 
-  // Store them in a list using:
-  // _paramSet.add( createParamSet() );
-  // This list is stored in the "TH1" index order
 
   // Get the number of bins
   // in the nominal histogram
@@ -494,13 +477,13 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Create the list of RooRealVar
+/// parameters which represent the
+/// height of the histogram bins.
+/// Store them in a list
 RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBins, 
 					 Double_t gamma_min, Double_t gamma_max) {
-  // Create the list of RooRealVar
-  // parameters which represent the
-  // height of the histogram bins.
-  // Store them in a list
+
 
   // _paramSet.add( createParamSet() );
 
@@ -548,15 +531,14 @@ RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBin
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// return 0 for success
+/// return 1 for failure
+/// Check that the elements 
+/// are actually RooRealVar's
+/// If so, add them to the 
+/// list of vars
 Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
-  // return 0 for success
-  // return 1 for failure
-  
-  // Check that the elements 
-  // are actually RooRealVar's
-  // If so, add them to the 
-  // list of vars
+
 
   int numVars = 0;
 

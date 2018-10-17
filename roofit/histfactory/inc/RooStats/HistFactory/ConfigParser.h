@@ -33,17 +33,17 @@ namespace RooStats{
 
      public:
 
-       // The "main" method
+       /// The "main" method
        std::vector< RooStats::HistFactory::Measurement > GetMeasurementsFromXML(std::string input); 
        RooStats::HistFactory::Measurement CreateMeasurementFromDriverNode( TXMLNode* node );
        RooStats::HistFactory::Channel ParseChannelXMLFile( std::string filen );
 
-       // Helpers used to process a channel
+       /// Helpers used to process a channel
        HistFactory::Data CreateDataElement( TXMLNode* node );
        HistFactory::Sample CreateSampleElement( TXMLNode* node );
        HistFactory::StatErrorConfig CreateStatErrorConfigElement( TXMLNode* node );
 
-       // Helpers used when processing a Sample
+       /// Helpers used when processing a Sample
        HistFactory::NormFactor  MakeNormFactor( TXMLNode* node );
        HistFactory::HistoSys    MakeHistoSys( TXMLNode* node );
        HistFactory::HistoFactor MakeHistoFactor( TXMLNode* node );
@@ -58,9 +58,9 @@ namespace RooStats{
        bool CheckTrueFalse( std::string val, std::string Name );
        bool IsAcceptableNode( TXMLNode* functionNode );
 
-       // To facilitate writing xml, when not
-       // specified, files and paths default
-       // to these cached values
+       /// To facilitate writing xml, when not
+       /// specified, files and paths default
+       /// to these cached values
        std::string m_currentInputFile;
        std::string m_currentChannel;
        std::string m_currentHistoPath;

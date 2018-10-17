@@ -3,11 +3,9 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// PiecewiseInterpolation 
-// END_HTML
-//
+/** \class PiecewiseInterpolation
+ * \ingroup HistFactory
+ */
 
 #include "RooStats/HistFactory/PiecewiseInterpolation.h"
 

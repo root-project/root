@@ -1,5 +1,5 @@
-// @(#)root/roostats:$Id$
-// Author: George Lewis, Kyle Cranmer
+/// @(#)root/roostats:$Id$
+/// Author: George Lewis, Kyle Cranmer
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -33,41 +33,41 @@ public:
   Channel(const Channel& other);
   Channel(std::string Name, std::string InputFile="");
 
-  // set name of channel
+  //// set name of channel
   void SetName( const std::string& Name ) { fName = Name; }
-  // get name of channel
+  /// get name of channel
   std::string GetName() { return fName; }
-  // set name of input file containing histograms
+  /// set name of input file containing histograms
   void SetInputFile( const std::string& file ) { fInputFile = file; }
-  // get name of input file
+  /// get name of input file
   std::string GetInputFile() { return fInputFile; }
-  // set path for histograms in input file
+  /// set path for histograms in input file
   void SetHistoPath( const std::string& file ) { fHistoPath = file; }
-  // get path to histograms in input file
+  /// get path to histograms in input file
   std::string GetHistoPath() { return fHistoPath; }
 
-  // set data object
+  /// set data object
   void SetData( const RooStats::HistFactory::Data& data ) { fData = data; }
   void SetData( std::string HistoName, std::string InputFile, std::string HistoPath="" );
   void SetData( double Val );
   void SetData( TH1* hData );
-  // get data object
+  /// get data object
   RooStats::HistFactory::Data& GetData() { return fData; }
 
-  // add additional data object
+  /// add additional data object
   void AddAdditionalData( const RooStats::HistFactory::Data& data ) { fAdditionalData.push_back(data); }
-  // retrieve vector of additional data objects
+  /// retrieve vector of additional data objects
   std::vector<RooStats::HistFactory::Data>& GetAdditionalData() { return fAdditionalData; }
 
   void SetStatErrorConfig( double RelErrorThreshold, Constraint::Type ConstraintType );
   void SetStatErrorConfig( double RelErrorThreshold, std::string ConstraintType );
-  // define treatment of statistical uncertainties
+  /// define treatment of statistical uncertainties
   void SetStatErrorConfig( RooStats::HistFactory::StatErrorConfig Config ) { fStatErrorConfig = Config; }
-  // get information about threshold for statistical uncertainties and constraint term
+  /// get information about threshold for statistical uncertainties and constraint term
   HistFactory::StatErrorConfig& GetStatErrorConfig() { return fStatErrorConfig; }
 
   void AddSample( RooStats::HistFactory::Sample sample );
-  // get vector of samples for this channel
+  /// get vector of samples for this channel
   std::vector< RooStats::HistFactory::Sample >& GetSamples() { return fSamples; }
 
   void Print(std::ostream& = std::cout);  
@@ -84,15 +84,15 @@ protected:
 
   HistFactory::Data fData;
 
-  // One can add additional datasets
-  // These are simply added to the xml under a different name
+  /// One can add additional datasets
+  /// These are simply added to the xml under a different name
   std::vector<RooStats::HistFactory::Data> fAdditionalData;
 
   HistFactory::StatErrorConfig fStatErrorConfig;
 
   std::vector< RooStats::HistFactory::Sample > fSamples;
 
-  // Open a file and copy a histogram
+  /// Open a file and copy a histogram
   TH1* GetHistogram( std::string InputFile, std::string HistoPath, std::string HistoName );
 
 

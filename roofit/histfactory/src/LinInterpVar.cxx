@@ -10,13 +10,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-</p>
-END_HTML
-*/
-//
+/** \class RooStats::HistFactory::LinInterpVar
+ * \ingroup HistFactory
+ * RooAbsReal that does piecewise-linear interpolations.
+ */
 
 #include "RooFit.h"
 

@@ -9,14 +9,10 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/*
-BEGIN_HTML
-<p>
-</p>
-END_HTML
+/** \class RooStats::HistFactory::Data
+ *  \ingroup HistFactory 
+ * TODO Add documentation.
 */
-//
  
 
 #include "RooStats/HistFactory/Data.h"
