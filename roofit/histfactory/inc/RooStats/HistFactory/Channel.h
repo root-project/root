@@ -33,7 +33,7 @@ public:
   Channel(const Channel& other);
   Channel(std::string Name, std::string InputFile="");
 
-  //// set name of channel
+  /// set name of channel
   void SetName( const std::string& Name ) { fName = Name; }
   /// get name of channel
   std::string GetName() { return fName; }

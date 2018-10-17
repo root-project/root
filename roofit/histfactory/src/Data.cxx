@@ -11,7 +11,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /** \class RooStats::HistFactory::Data
  *  \ingroup HistFactory 
- * TODO Add documentation.
 */
  
 

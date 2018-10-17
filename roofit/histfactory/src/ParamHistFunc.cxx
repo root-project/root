@@ -14,25 +14,24 @@
  * \ingroup HistFactory
  *   A class which maps the current values of a RooRealVar
  *  (or a set of RooRealVars) to one of a number of RooRealVars:
-
- *  ParamHistFunc: {val1, val2, ...} -> {gamma (RooRealVar)}
+ *
+ *  `ParamHistFunc: {val1, val2, ...} -> {gamma (RooRealVar)}`
  *  
  *  The intended interpretation is that each parameter in the
  *  range represent the height of a bin over the domain
  *  space.
-
+ *
  *  The 'createParamSet' is an easy way to create these
  *  parameters from a set of observables. They are
  *  stored using the "TH1" ordering convention (as compared
  *  to the RooDataHist convention, which is used internally
  *  and one must map between the two).
-
- *  All indices include '0'
-
- *  gamma_i_j = paramSet[ size(i)*j + i ]
-
- *  ie assuming the dimensions are 5*5:
- *  gamma_2_1 = paramSet[ 5*1 + 2 ] = paramSet[7]
+ *
+ *  All indices include '0':<br>
+ *  \f$ \gamma_{i,j} \f$ = `paramSet[ size(i)*j + i ]`
+ * 
+ *  ie assuming the dimensions are 5*5:<br>
+ *  \f$ \gamma_{2,1} \f$ = `paramSet[ 5*1 + 2 ] = paramSet[7]`
  */
 
 
