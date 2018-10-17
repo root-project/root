@@ -1,3 +1,10 @@
+/// \file RWebDisplayHandle.cxx
+/// \ingroup WebGui ROOT7
+/// \author Sergey Linev <s.linev@gsi.de>
+/// \date 2018-10-17
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
+
 /*************************************************************************
  * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -6,14 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef __CINT__
+#include <ROOT/RWebDisplayHandle.hxx>
 
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
+#include <ROOT/RMakeUnique.hxx>
 
-#pragma link C++ class ROOT::Experimental::RWebDisplayHandle+;
-#pragma link C++ class ROOT::Experimental::RWebWindow+;
-#pragma link C++ class ROOT::Experimental::RWebWindowsManager+;
-
-#endif
