@@ -40,7 +40,7 @@ public:
    void AssignCallback(CefRefPtr<CefCallback> cb) { fCallBack = cb; }
 
    // this is callback from HTTP server
-   virtual void HttpReplied()
+   void HttpReplied() override
    {
       if (IsFile()) {
          // send file
@@ -186,8 +186,8 @@ protected:
 public:
    explicit ROOTSchemeHandlerFactory() : CefSchemeHandlerFactory() {}
 
-   virtual CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
-                                                const CefString &scheme_name, CefRefPtr<CefRequest> request)
+   CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+                                        const CefString &scheme_name, CefRefPtr<CefRequest> request) OVERRIDE
    {
       std::string addr = request->GetURL().ToString();
 
@@ -500,7 +500,7 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
    cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
 
    settings.no_sandbox = true;
-   if (gROOT->IsWebDisplayBatch()) settings.single_process = true;
+   // if (gROOT->IsWebDisplayBatch()) settings.single_process = true;
 
    //if (batch_mode)
    settings.windowless_rendering_enabled = true;
