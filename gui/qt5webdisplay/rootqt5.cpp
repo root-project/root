@@ -14,11 +14,11 @@
  *************************************************************************/
 
 #include <QApplication>
-// #include <QQmlApplicationEngine>
 #include <QWebEngineView>
 #include <qtwebengineglobal.h>
 #include <QThread>
 #include <QWebEngineSettings>
+#include <QWebEngineProfile>
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -26,8 +26,6 @@
 #include "TTimer.h"
 #include "TThread.h"
 #include "THttpServer.h"
-
-#include <stdio.h>
 
 #include "rootwebview.h"
 #include "rootwebpage.h"
@@ -37,7 +35,6 @@
 
 #include <ROOT/RWebDisplayHandle.hxx>
 #include <ROOT/RMakeUnique.hxx>
-
 
 class TQt5Timer : public TTimer {
 public:
@@ -70,6 +67,7 @@ namespace Experimental {
 class RQt5WebDisplayHandle : public RWebDisplayHandle {
 protected:
    class Qt5Creator : public Creator {
+      int fCounter{0}; ///< counter used to number handlers
    public:
 
       Qt5Creator() = default;
@@ -90,7 +88,11 @@ protected:
             timer->TurnOn();
          }
 
-         QString fullurl = UrlSchemeHandler::installHandler(QString(url.c_str()), serv);
+         auto handler = std::make_unique<RootUrlSchemeHandler>(serv, fCounter++);
+
+         QString fullurl = handler->MakeFullUrl(QString(url.c_str()));
+
+         auto handle = std::make_unique<RQt5WebDisplayHandle>(fullurl.toLatin1().constData(), handler);
 
          if (batch) {
             RootWebPage *page = new RootWebPage();
@@ -104,13 +106,20 @@ protected:
             view->show();
          }
 
-         return std::make_unique<RQt5WebDisplayHandle>(fullurl.toLatin1().constData());
+         return handle;
       }
       virtual ~Qt5Creator() = default;
    };
 
+   std::unique_ptr<RootUrlSchemeHandler> fHandler;
+
 public:
-   RQt5WebDisplayHandle(const std::string &url) : RWebDisplayHandle(url) {}
+   RQt5WebDisplayHandle(const std::string &url, std::unique_ptr<RootUrlSchemeHandler> &handler)
+      : RWebDisplayHandle(url)
+   {
+      std::swap(fHandler, handler);
+      QWebEngineProfile::defaultProfile()->installUrlSchemeHandler(QByteArray(fHandler->GetProtocol()), fHandler.get());
+   }
 
    static void AddCreator()
    {
@@ -119,6 +128,10 @@ public:
          GetMap().emplace("qt5", std::make_unique<Qt5Creator>());
    }
 
+   virtual ~RQt5WebDisplayHandle()
+   {
+      QWebEngineProfile::defaultProfile()->removeUrlSchemeHandler(fHandler.get());
+   }
 };
 
 struct RQt5CreatorReg {

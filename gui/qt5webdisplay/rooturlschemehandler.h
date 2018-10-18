@@ -39,26 +39,24 @@ public slots:
 // ===============================================================
 
 
-class UrlSchemeHandler : public QWebEngineUrlSchemeHandler {
+class RootUrlSchemeHandler : public QWebEngineUrlSchemeHandler {
    Q_OBJECT
 protected:
-   THttpServer *fServer; ///< server instance which should handle requests
 
-   static int  gNumHandler;  ///< number of created handlers
-   static THttpServer *gLastServer;  ///< keep pointer of last server
+   QString fProtocol;
+
+   THttpServer *fServer{nullptr}; ///< server instance which should handle requests
 
 public:
-   UrlSchemeHandler(QObject *p = Q_NULLPTR, THttpServer *server = Q_NULLPTR)
-      : QWebEngineUrlSchemeHandler(p), fServer(server)
-   {
-   }
+   RootUrlSchemeHandler(THttpServer *server = nullptr, int counter = 0);
 
-   virtual ~UrlSchemeHandler() {}
+   virtual ~RootUrlSchemeHandler() = default;
+
+   QByteArray GetProtocol() const { return QByteArray(fProtocol.toLatin1().constData(), fProtocol.length()); }
+
+   QString MakeFullUrl(const QString &url);
 
    virtual void requestStarted(QWebEngineUrlRequestJob *request);
-
-   static QString installHandler(const QString &url, THttpServer *server);
-
 };
 
 

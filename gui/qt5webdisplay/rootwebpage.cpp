@@ -15,13 +15,22 @@
 
 #include "rootwebpage.h"
 
-#include <stdio.h>
+#include <ROOT/TLogger.hxx>
+#include <TString.h>
 
-void RootWebPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel, const QString &message, int lineNumber,
-                                           const QString &sourceID)
+void RootWebPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel lvl, const QString &message, int lineNumber,
+                                           const QString &src)
 {
-   QByteArray ba = message.toLatin1();
-   QByteArray src = sourceID.toLatin1();
-
-   printf("CONSOLE %s:%d: %s\n", src.data(), lineNumber, ba.data());
+   switch (lvl) {
+   case InfoMessageLevel:
+      if (gDebug > 0)
+         R__DEBUG_HERE("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber, message.toLatin1().constData());
+      break;
+   case WarningMessageLevel:
+      R__WARNING_HERE("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber, message.toLatin1().constData());
+      break;
+   case ErrorMessageLevel:
+      R__ERROR_HERE("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber, message.toLatin1().constData());
+      break;
+   }
 }
