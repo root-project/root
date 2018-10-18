@@ -131,7 +131,9 @@ namespace RooFit {
 
   private:
     std::vector<double> vx_fVal_cache;
-
+#ifndef NDEBUG
+    std::size_t fVal_eval_counter = 0; //!
+#endif
   };
 
 } // namespace RooFit

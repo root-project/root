@@ -158,6 +158,8 @@ public:
 
   ROOT::Math::IMultiGradFunction *Clone() const override;
 
+  ~RooGradientFunction();
+
   Bool_t synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
                                         Bool_t optConst = kTRUE, Bool_t verbose = kFALSE);
   void synchronize_gradient_parameter_settings(std::vector<ROOT::Fit::ParameterSettings>& parameter_settings) const;
@@ -186,6 +188,12 @@ public:
   void set_grad_tolerance(double grad_tolerance) const;
   void set_ncycles(unsigned int ncycles) const;
   void set_error_level(double error_level) const;
+
+#ifndef NDEBUG
+private:
+  mutable Int_t _evalCounter_derivator = 0; //!
+  mutable std::size_t _derivatorCounter = 0; //!
+#endif  // not NDEBUG
 };
 
 #endif //ROO_GRADIENT_FUNCTION
