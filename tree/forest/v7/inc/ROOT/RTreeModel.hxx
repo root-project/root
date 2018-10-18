@@ -39,8 +39,10 @@ A model needs to be frozen before it can be used to create an RTree.
 */
 // clang-format on
 class RTreeModel {
-  RTreeFieldCollection fRootField;
-  RTreeEntry fDefaultEntry;
+   /// Hierarchy of fields consiting of simple types and collections (sub trees)
+   RTreeFieldCollection fRootField;
+   /// Contains tree values corresponding to the created fields
+   RTreeEntry fDefaultEntry;
 
 public:
    RTreeModel();
@@ -48,10 +50,10 @@ public:
    /// Creates a new brafieldnch and corresponding tree value.
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddField(std::string_view fieldName, ArgsT&&... args) {
-     RTreeField<T> *field = new RTreeField<T>(fieldName);
-     fRootField.Attach(field);
+      RTreeField<T> *field = new RTreeField<T>(fieldName);
+      fRootField.Attach(field);
 
-     return fDefaultEntry.AddField<T>(field, std::forward<ArgsT>(args)...);
+      return fDefaultEntry.AddField<T>(field, std::forward<ArgsT>(args)...);
    }
 
    /// Mounts an existing model as a sub tree, which allows for composing of tree models
