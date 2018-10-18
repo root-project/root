@@ -144,13 +144,14 @@ void ROOT::Experimental::RWebDisplayHandle::BrowserCreator::TestProg(const std::
 
    if (!gSystem->AccessPathName(nexttry.c_str(), kExecutePermission)) {
       fProg = nexttry;
-      #ifdef R__MACOSX
-         fProg.ReplaceAll("%20"," ");
-      #endif
+#ifdef R__MACOSX
+      fProg.ReplaceAll("%20", " ");
+#endif
       return;
    }
 
-   if (!check_std_paths) return;
+   if (!check_std_paths)
+      return;
 
 #ifdef _MSC_VER
    std::string ProgramFiles = gSystem->Getenv("ProgramFiles");
@@ -165,7 +166,6 @@ void ROOT::Experimental::RWebDisplayHandle::BrowserCreator::TestProg(const std::
       TestProg(ProgramFilesx86 + nexttry, false);
 #endif
 }
-
 
 std::unique_ptr<ROOT::Experimental::RWebDisplayHandle>
 ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Make(THttpServer *, const std::string &url, bool batch, int width, int height)
@@ -376,38 +376,15 @@ std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(T
 }
 
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// checks if provided executable exists
+/// Create web display
+/// \param where - defines kind of display
+/// \param func - creates local or remote URL
 
-void ROOT::Experimental::RWebDisplayHandle::TestProg(TString &prog, const std::string &nexttry)
+
+std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> ROOT::Experimental::RWebDisplayHandle::Display(const std::string &where, CreateUrlFunc_t func, THttpServer *serv, bool batch_mode, int width, int height)
 {
-   if ((prog.Length()==0) && !nexttry.empty())
-      if (!gSystem->AccessPathName(nexttry.c_str(), kExecutePermission))
-          prog = nexttry.c_str();
-}
-
-
-unsigned ROOT::Experimental::RWebDisplayHandle::DisplayWindow(RWebWindow &win, bool batch_mode, const std::string &where)
-{
-   std::string key;
-   std::string rmdir;
-   int ntry = 100000;
-
-   do {
-      key = std::to_string(gRandom->Integer(0x100000));
-   } while ((--ntry > 0) && win.HasKey(key));
-   if (ntry == 0) {
-      R__ERROR_HERE("WebDisplay") << "Fail to create unique key for the window";
-      return 0;
-   }
-
-   std::string addr = win.fMgr->GetUrl(win, batch_mode, false);
-   if (addr.find("?") != std::string::npos)
-      addr.append("&key=");
-   else
-      addr.append("?key=");
-   addr.append(key);
+   std::unique_ptr<RWebDisplayHandle> handle;
 
    enum { kCustom, kNative, kLocal, kChrome, kFirefox, kCEF, kQt5 } kind = kCustom;
 
@@ -427,65 +404,52 @@ unsigned ROOT::Experimental::RWebDisplayHandle::DisplayWindow(RWebWindow &win, b
       kind = kCustom; // all others kinds, normally name of alternative web browser
 
 
-   auto try_creator = [&win, addr, key, batch_mode](std::unique_ptr<Creator> &creator, bool remote) {
-      unsigned res = 0;
-      if (creator) {
-         std::string fullurl = addr;
-         if (remote) {
-            if (!win.fMgr->CreateServer(true)) {
-               R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server";
-               return res;
-            }
-            fullurl = win.fMgr->GetServerAddr() + addr;
-         }
-         auto handle = creator->Make(win.fMgr->GetServer(), fullurl, batch_mode, win.GetWidth(), win.GetHeight());
-         if (handle) {
-            res = win.AddDisplayHandle(batch_mode, key, handle);
-         } else {
-            R__ERROR_HERE("WebDisplay") << "Cannot create window";
-         }
-      }
-      return res;
+   auto try_creator = [&](std::unique_ptr<Creator> &creator, bool remote) {
+      if (!creator) return false;
+
+      std::string fullurl = func(remote);
+      if (fullurl.empty()) return false;
+
+      handle = creator->Make(serv, fullurl, batch_mode, width, height);
+      return handle ? true : false;
    };
 
-   unsigned res = 0;
-
    if ((kind == kLocal) || (kind == kCEF)) {
-      res = try_creator(FindCreator("cef", "libROOTCefDisplay"), false);
-      if (res) return res;
+      if (try_creator(FindCreator("cef", "libROOTCefDisplay"), false))
+         return handle;
    }
 
    if ((kind == kLocal) || (kind == kQt5)) {
-      res = try_creator(FindCreator("qt5", "libROOTQt5WebDisplay"), false);
-      if (res) return res;
+      if (try_creator(FindCreator("qt5", "libROOTQt5WebDisplay"), false))
+         return handle;
    }
 
    if ((kind == kLocal) || (kind == kQt5) || (kind == kCEF)) {
       R__ERROR_HERE("WebDisplay") << "Neither Qt5 nor CEF libraries were found to provide local display";
-      return res;
+      return handle;
    }
 
    if ((kind == kNative) || (kind == kChrome)) {
-      res = try_creator(FindCreator("chrome", "ChromeCreator"), true);
-      if (res) return res;
+      if (try_creator(FindCreator("chrome", "ChromeCreator"), true))
+         return handle;
    }
 
    if ((kind == kNative) || (kind == kFirefox)) {
-      res = try_creator(FindCreator("firefox", "FirefoxCreator"), true);
-      if (res) return res;
+      if (try_creator(FindCreator("firefox", "FirefoxCreator"), true))
+         return handle;
    }
 
    if ((kind == kChrome) || (kind == kFirefox)) {
       R__ERROR_HERE("WebDisplay") << "Neither Chrome nor Firefox browser cannot be started to provide display";
-      return res;
+      return handle;
    }
 
    if ((kind == kNative)) {
-      res = try_creator(FindCreator("browser", "BrowserCreator"), true);
+      try_creator(FindCreator("browser", "BrowserCreator"), true);
    } else {
       std::unique_ptr<Creator> creator = std::make_unique<BrowserCreator>(true, where);
-      res = try_creator(creator, true);
+      try_creator(creator, true);
    }
 
-   return res;
+   return handle;
 }

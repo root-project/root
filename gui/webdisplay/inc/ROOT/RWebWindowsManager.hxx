@@ -69,11 +69,14 @@ private:
    /// Start window batch job in specified location, see Show() method for more details
    unsigned ShowWindowBatch(RWebWindow &win, const std::string &where) { return Show(win, true, where); }
 
-   void TestProg(TString &prog, const std::string &nexttry);
-
    int WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool timed = false, double tm = -1);
 
    static bool IsMainThrd();
+
+   std::string GetUrl(const RWebWindow &win, bool batch_mode, bool remote = false);
+
+   bool CreateServer(bool with_http = false);
+
 
 public:
    RWebWindowsManager();
@@ -85,10 +88,6 @@ public:
 
    /// Returns http address of the server, empty string when not available
    std::string GetServerAddr() const { return fAddr; }
-
-   std::string GetUrl(const RWebWindow &win, bool batch_mode, bool remote = false);
-
-   bool CreateServer(bool with_http = false);
 
    static std::shared_ptr<RWebWindowsManager> &Instance();
 

@@ -324,16 +324,6 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// checks if provided executable exists
-
-void ROOT::Experimental::RWebWindowsManager::TestProg(TString &prog, const std::string &nexttry)
-{
-   if ((prog.Length()==0) && !nexttry.empty())
-      if (!gSystem->AccessPathName(nexttry.c_str(), kExecutePermission))
-          prog = nexttry.c_str();
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Show window in specified location
 /// Parameter "where" specifies that kind of window display should be used. Possible values:
 ///
@@ -369,7 +359,6 @@ void ROOT::Experimental::RWebWindowsManager::TestProg(TString &prog, const std::
 
 unsigned ROOT::Experimental::RWebWindowsManager::Show(ROOT::Experimental::RWebWindow &win, bool batch_mode, const std::string &_where)
 {
-
    // silently ignore regular Show() calls in batch mode
    if (!batch_mode && gROOT->IsWebDisplayBatch())
       return 0;
@@ -386,7 +375,37 @@ unsigned ROOT::Experimental::RWebWindowsManager::Show(ROOT::Experimental::RWebWi
    if (where.empty())
       where = gROOT->GetWebDisplay().Data();
 
-   return RWebDisplayHandle::DisplayWindow(win, batch_mode, where);
+   std::string key;
+   int ntry = 100000;
+
+   do {
+      key = std::to_string(gRandom->Integer(0x100000));
+   } while ((--ntry > 0) && win.HasKey(key));
+   if (ntry == 0) {
+      R__ERROR_HERE("WebDisplay") << "Fail to create unique key for the window";
+      return 0;
+   }
+
+   RWebDisplayHandle::CreateUrlFunc_t func = [&](bool remote) {
+      std::string addr = GetUrl(win, batch_mode, remote);
+      if (!addr.empty()) {
+         if (addr.find("?") != std::string::npos)
+            addr.append("&key=");
+         else
+            addr.append("?key=");
+         addr.append(key);
+      }
+      return addr;
+   };
+
+   auto handle = RWebDisplayHandle::Display(where, func, GetServer(), batch_mode, win.GetWidth(), win.GetHeight());
+
+   if (!handle) {
+      R__ERROR_HERE("WebDisplay") << "Cannot display window" << where;
+      return 0;
+   }
+
+   return win.AddDisplayHandle(batch_mode, key, handle);
 }
 
 //////////////////////////////////////////////////////////////////////////
