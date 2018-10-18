@@ -19,6 +19,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <functional>
 
 #include "TString.h"
 
@@ -27,11 +28,7 @@ class THttpServer;
 namespace ROOT {
 namespace Experimental {
 
-class RWebWindow;
-class RWebWindowsManager;
-
 class RWebDisplayHandle {
-   friend class RWebWindowsManager;
 
 protected:
    class Creator {
@@ -83,13 +80,16 @@ protected:
 
    static void TestProg(TString &prog, const std::string &nexttry);
 
-   static unsigned DisplayWindow(RWebWindow &win, bool batch_mode, const std::string &where);
-
 public:
+
+   /// Function should return URL for the widget dislpayed - local or http
+   using CreateUrlFunc_t = std::function<std::string(bool)>;
 
    RWebDisplayHandle(const std::string &url) : fUrl(url) {}
 
    std::string GetUrl() const { return fUrl; }
+
+   static std::unique_ptr<RWebDisplayHandle> Display(const std::string &where, CreateUrlFunc_t func, THttpServer *serv = nullptr, bool batch_mode = false, int width = 0, int height = 0);
 
    virtual ~RWebDisplayHandle() = default;
 };
