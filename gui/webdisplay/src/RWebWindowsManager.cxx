@@ -23,7 +23,6 @@
 
 #include "THttpServer.h"
 
-#include "RConfigure.h"
 #include "TSystem.h"
 #include "TRandom.h"
 #include "TString.h"
@@ -35,15 +34,6 @@
 
 #include <thread>
 #include <chrono>
-
-#if !defined(_MSC_VER)
-#include <unistd.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <spawn.h>
-#else
-#include <process.h>
-#endif
 
 
 /** \class ROOT::Experimental::RWebWindowsManager

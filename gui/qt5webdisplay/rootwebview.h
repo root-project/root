@@ -40,7 +40,7 @@ signals:
 
 public:
    RootWebView(QWidget *parent = 0, unsigned width = 0, unsigned height = 0);
-   virtual ~RootWebView();
+   virtual ~RootWebView() = default;
 
    virtual QSize  sizeHint() const;
 };

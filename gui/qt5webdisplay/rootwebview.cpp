@@ -25,6 +25,8 @@ RootWebView::RootWebView(QWidget *parent, unsigned width, unsigned height) :
    fWidth(width),
    fHeight(height)
 {
+   setObjectName("RootWebView");
+
    setPage(new RootWebPage());
 
    connect(page(), &QWebEnginePage::windowCloseRequested, this, &RootWebView::onWindowCloseRequested);
@@ -32,12 +34,6 @@ RootWebView::RootWebView(QWidget *parent, unsigned width, unsigned height) :
    connect(page(), &QWebEnginePage::loadFinished /*   loadStarted */, this, &RootWebView::onLoadStarted);
 
    setAcceptDrops(true);
-
-   setObjectName("RootWebView");
-}
-
-RootWebView::~RootWebView()
-{
 }
 
 QSize RootWebView::sizeHint() const
