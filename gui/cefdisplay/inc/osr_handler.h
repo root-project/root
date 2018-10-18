@@ -20,22 +20,13 @@
 
 /// Class used to handle off-screen application and should emulate some render requests
 
-class OsrHandler : public BaseHandler, public CefDisplayHandler, public CefRenderHandler {
+class OsrHandler : public BaseHandler, public CefRenderHandler {
 public:
    explicit OsrHandler(THttpServer *serv = 0);
    ~OsrHandler();
 
    // CefClient methods:
-   virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE { return this; }
    virtual CefRefPtr<CefRenderHandler> GetRenderHandler() OVERRIDE { return this; }
-
-   // CefDisplayHandler methods:
-   virtual void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title) OVERRIDE;
-
-   virtual bool OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                                 cef_log_severity_t level,
-                                 const CefString &message, const CefString &source,
-                                 int line) OVERRIDE;
 
    // CefRenderHandler methods.
    virtual bool GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect) OVERRIDE;

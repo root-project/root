@@ -18,20 +18,14 @@
 
 #include "base_handler.h"
 
-class GuiHandler : public BaseHandler, public CefDisplayHandler {
+class GuiHandler : public BaseHandler {
 public:
    explicit GuiHandler(THttpServer *serv = nullptr, bool use_views = false);
-
-   // CefClient methods:
-   virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE { return this; }
 
    // CefDisplayHandler methods:
    virtual void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title) OVERRIDE;
 
-   virtual bool OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                                 cef_log_severity_t level,
-                                 const CefString &message, const CefString &source,
-                                 int line) OVERRIDE;
+   virtual ~GuiHandler();
 
 private:
    // Platform-specific initialization
