@@ -128,6 +128,10 @@ namespace RooFit {
   public:
     bool always_exactly_mimic_minuit2() const;
     void set_always_exactly_mimic_minuit2(bool flag);
+
+  private:
+    std::vector<double> vx_fVal_cache;
+
   };
 
 } // namespace RooFit

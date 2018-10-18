@@ -71,7 +71,8 @@ namespace RooFit {
       dfmin(other.dfmin),
       vrysml(other.vrysml),
       precision(other.precision),
-      _always_exactly_mimic_minuit2(other._always_exactly_mimic_minuit2)
+      _always_exactly_mimic_minuit2(other._always_exactly_mimic_minuit2),
+      vx_fVal_cache(other.vx_fVal_cache)
   {}
 
   // Almost deep copy constructor, except for fFunction.
@@ -91,7 +92,8 @@ namespace RooFit {
       dfmin(other.dfmin),
       vrysml(other.vrysml),
       precision(other.precision),
-      _always_exactly_mimic_minuit2(other._always_exactly_mimic_minuit2)
+      _always_exactly_mimic_minuit2(other._always_exactly_mimic_minuit2),
+      vx_fVal_cache(other.vx_fVal_cache)
   {}
 
   // an operator= copy ctor doesn't make sense with const members...
@@ -141,6 +143,9 @@ namespace RooFit {
     if (vx_external.size() != fFunction->NDim()) {
       vx_external.resize(fFunction->NDim());
     }
+    if (vx_fVal_cache.size() != fFunction->NDim()) {
+      vx_fVal_cache.resize(fFunction->NDim());
+    }
 
     std::copy(cx, cx + fFunction->NDim(), vx.data());
 
@@ -149,7 +154,10 @@ namespace RooFit {
       vx_external[i] = Int2ext(parameters[i], vx[i]);
     }
 
-    fVal = (*fFunction)(vx_external.data());  // value of function at given points
+    if (vx != vx_fVal_cache) {
+      vx_fVal_cache = vx;
+      fVal = (*fFunction)(vx_external.data());  // value of function at given points
+    }
 
     dfmin = 8. * precision.Eps2() * (std::abs(fVal) + Up);
     vrysml = 8. * precision.Eps() * precision.Eps();
