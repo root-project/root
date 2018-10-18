@@ -60,6 +60,7 @@ ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -fno-strict-aliasing)
 ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -Wno-parentheses-equality)
 ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -Wno-cast-function-type)
 ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -Wno-deprecated-register)
+ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -Wno-register)
 
 separate_arguments(_PyROOT_FLAGS)
 
