@@ -28,9 +28,6 @@
 #include "THttpCallArg.h"
 #include "TBase64.h"
 
-int UrlSchemeHandler::gNumHandler = 0;
-THttpServer *UrlSchemeHandler::gLastServer = nullptr;
-
 
 /////////////////////////////////////////////////////////////////////////////////////
 /// Class UrlRequestJobHolder
@@ -130,9 +127,20 @@ public:
    }
 };
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void UrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
+RootUrlSchemeHandler::RootUrlSchemeHandler(THttpServer *server, int counter)
+   : QWebEngineUrlSchemeHandler(), fServer(server)
+{
+   fProtocol = Form("roothander%d", counter);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Start processing of emulated HTTP request in WebEngine scheme handler
+/// Either one reads file or redirect request to THttpServer
+
+void RootUrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
 {
    QUrl url = request->requestUrl();
 
@@ -150,9 +158,9 @@ void UrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
 
    TString fname;
 
+   // process file
    if (fServer->IsFileRequested(inp_path.toLatin1().data(), fname)) {
       arg->SendFile(fname.Data());
-      // process file
       return;
    }
 
@@ -175,28 +183,17 @@ void UrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
 }
 
 /////////////////////////////////////////////////////////////////
+/// Returns fully qualified URL, required to open in QWindow
 
-QString UrlSchemeHandler::installHandler(const QString &url_, THttpServer *server)
+QString RootUrlSchemeHandler::MakeFullUrl(const QString &url)
 {
-   TString protocol, fullurl, url(url_.toLatin1().data());
-   bool create_handler = false;
-
-   if (gLastServer != server) {
-      gLastServer = server;
-      create_handler = true;
-      gNumHandler++;
-   }
-
-   const char *suffix = url.Index("?") != kNPOS ? "&" : "?";
-
-   protocol.Form("roothandler%d", gNumHandler);
-   fullurl.Form("%s://rootserver.local%s%splatform=qt5&ws=rawlongpoll", protocol.Data(), url.Data(), suffix);
-
-   if (create_handler) {
-      const QByteArray protocol_name = QByteArray(protocol.Data());
-      UrlSchemeHandler *handler = new UrlSchemeHandler(Q_NULLPTR, server);
-      QWebEngineProfile::defaultProfile()->installUrlSchemeHandler(protocol_name, handler);
-   }
-
-   return QString(fullurl.Data());
+   QString res = fProtocol;
+   res.append(":");
+   res.append(url);
+   if (url.indexOf("?")<0)
+      res.append("?");
+   else
+      res.append("&");
+   res.append("platform=qt5&ws=rawlongpoll");
+   return res;
 }
