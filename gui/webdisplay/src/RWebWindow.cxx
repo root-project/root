@@ -480,11 +480,8 @@ void ROOT::Experimental::RWebWindow::CheckInactiveConnections()
       fConn.erase(std::remove_if(fConn.begin(), fConn.end(), pred), fConn.end());
    }
 
-   for (auto &&entry : clr) {
-      printf("Connection closing %d\n", entry->fConnId);
+   for (auto &&entry : clr)
       ProvideData(entry->fConnId, "CONN_CLOSED");
-      entry->fDisplayHandle.reset(); // No need - just to debug now
-   }
 
 }
 
@@ -552,8 +549,6 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
 
    const char *buf = (const char *)arg.GetPostData();
    char *str_end = nullptr;
-
-   // printf("Get portion of data %d %.30s\n", (int)arg.GetPostDataLength(), buf);
 
    unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
    if (!str_end || *str_end != ':') {

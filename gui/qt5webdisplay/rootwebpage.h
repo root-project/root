@@ -26,7 +26,7 @@ protected:
 
 public:
    RootWebPage(QObject *parent = 0) : QWebEnginePage(parent) {}
-   virtual ~RootWebPage() {}
+   virtual ~RootWebPage() = default;
 };
 
 #endif

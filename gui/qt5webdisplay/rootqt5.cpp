@@ -35,6 +35,7 @@
 
 #include <ROOT/RWebDisplayHandle.hxx>
 #include <ROOT/RMakeUnique.hxx>
+#include <ROOT/TLogger.hxx>
 
 #include <stdio.h>
 
@@ -75,7 +76,7 @@ protected:
          if (!qapp && !QApplication::instance()) {
 
             if (!gApplication) {
-               printf("NOT FOUND gApplication to create QApplication\n");
+               R__ERROR_HERE("Qt5") << "NOT FOUND gApplication to create QApplication";
                return nullptr;
             }
 
