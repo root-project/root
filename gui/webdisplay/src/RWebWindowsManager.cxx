@@ -389,43 +389,6 @@ unsigned ROOT::Experimental::RWebWindowsManager::Show(ROOT::Experimental::RWebWi
    return RWebDisplayHandle::DisplayWindow(win, batch_mode, where);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-/// When window connection is closed, correspondent browser application may need to be halted
-/// Process id produced by the Show() method
-
-void ROOT::Experimental::RWebWindowsManager::HaltClient(const std::string &procid)
-{
-   std::string arg = procid;
-   std::string tmpdir;
-
-   auto pos = arg.find("$rmdir$");
-   if (pos != std::string::npos) {
-      tmpdir = arg.substr(pos+7);
-      arg.resize(pos);
-   }
-
-   // kill program first
-   if (arg.find("pid:") == 0) {
-
-      int pid = std::stoi(arg.substr(4));
-
-#if !defined(_MSC_VER)
-      if (pid>0) kill(pid, SIGKILL);
-#else
-      if (pid > 0) gSystem->Exec(TString::Format("taskkill /F /PID %d", pid));
-#endif
-   }
-
-   // delete temporary directory at the end
-   if (!tmpdir.empty()) {
-#if !defined(_MSC_VER)
-      gSystem->Exec(TString::Format("rm -rf %s", tmpdir.c_str()));
-#else
-      gSystem->Exec(TString::Format("rmdir /S /Q %s", tmpdir.c_str()));
-#endif
-   }
-}
-
 //////////////////////////////////////////////////////////////////////////
 /// Waits until provided check function or lambdas returns non-zero value
 /// Regularly calls WebWindow::Sync() method to let run event loop

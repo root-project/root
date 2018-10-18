@@ -81,16 +81,16 @@ ROOT::Experimental::RWebWindow::~RWebWindow()
 
    if (fMgr) {
 
-      for (auto &&conn : GetConnections())
-         if (conn->fActive) {
-            conn->fActive = false;
-            fMgr->HaltClient(conn->fProcId);
-         }
+      // make copy of all connections
+      auto lst = GetConnections();
 
       {
          std::lock_guard<std::mutex> grd(fConnMutex);
-         fConn.clear(); // remove all connections
+         fConn.clear(); // remove all connections under mutex
       }
+
+      for (auto &&conn : lst)
+         conn->fActive = false;
 
       fMgr->Unregister(*this);
    }
@@ -377,17 +377,21 @@ void ROOT::Experimental::RWebWindow::InvokeCallbacks(bool force)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Add key - procid pair for started window
+/// Add display handle and associated key
 /// Key is random number generated when starting new window
-/// procid is special information about starting process which can be used later to halt it
+/// When client is connected, key should be supplied to correctly identify it
 
-unsigned ROOT::Experimental::RWebWindow::AddProcId(bool batch_mode, const std::string &key, const std::string &procid)
+unsigned ROOT::Experimental::RWebWindow::AddDisplayHandle(bool batch_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    ++fConnCnt;
 
-   fPendingConn.emplace_back(std::make_shared<WebConn>(fConnCnt, batch_mode, key, procid));
+   auto conn = std::make_shared<WebConn>(fConnCnt, batch_mode, key);
+
+   std::swap(conn->fDisplayHandle, handle);
+
+   fPendingConn.emplace_back(conn);
 
    return fConnCnt;
 }
@@ -416,7 +420,7 @@ bool ROOT::Experimental::RWebWindow::HasKey(const std::string &key)
 /// Check if started process(es) establish connection. After timeout such processed will be killed
 /// Method invoked from http server thread, therefore appropriate mutex must be used on all relevant data
 
-void ROOT::Experimental::RWebWindow::CheckWebKeys()
+void ROOT::Experimental::RWebWindow::CheckPendingConnections()
 {
    if (!fMgr) return;
 
@@ -424,7 +428,7 @@ void ROOT::Experimental::RWebWindow::CheckWebKeys()
 
    float tmout = fMgr->GetLaunchTmout();
 
-   std::vector<std::string> procs;
+   ConnectionsList selected;
 
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
@@ -433,8 +437,8 @@ void ROOT::Experimental::RWebWindow::CheckWebKeys()
          std::chrono::duration<double> diff = stamp - e->fSendStamp;
 
          if (diff.count() > tmout) {
-            R__DEBUG_HERE("webgui") << "Halt process " << e->fProcId << " after " << diff.count() << " sec";
-            procs.emplace_back(e->fProcId);
+            R__DEBUG_HERE("webgui") << "Halt process after " << diff.count() << " sec";
+            selected.emplace_back(e);
             return true;
          }
 
@@ -444,8 +448,6 @@ void ROOT::Experimental::RWebWindow::CheckWebKeys()
       fPendingConn.erase(std::remove_if(fPendingConn.begin(), fPendingConn.end(), pred), fPendingConn.end());
    }
 
-   for (auto &&entry : procs)
-      fMgr->HaltClient(entry);
 }
 
 
@@ -479,9 +481,9 @@ void ROOT::Experimental::RWebWindow::CheckInactiveConnections()
    }
 
    for (auto &&entry : clr) {
-      printf("Connection closing %d %s\n", entry->fConnId, entry->fProcId.c_str());
+      printf("Connection closing %d\n", entry->fConnId);
       ProvideData(entry->fConnId, "CONN_CLOSED");
-      fMgr->HaltClient(entry->fProcId);
+      entry->fDisplayHandle.reset(); // No need - just to debug now
    }
 
 }
@@ -520,15 +522,12 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
    }
 
    if (arg.IsMethod("WS_CLOSE")) {
-      // connection is closed, one can remove handle
+      // connection is closed, one can remove handle, associated window will be closed
 
       auto conn = RemoveConnection(arg.GetWSId());
 
-      if (conn) {
+      if (conn)
          ProvideData(conn->fConnId, "CONN_CLOSED");
-
-         fMgr->HaltClient(conn->fProcId);
-      }
 
       return true;
    }
@@ -780,7 +779,7 @@ void ROOT::Experimental::RWebWindow::Sync()
 
    CheckDataToSend();
 
-   CheckWebKeys();
+   CheckPendingConnections();
 
    CheckInactiveConnections();
 }
@@ -869,7 +868,7 @@ void ROOT::Experimental::RWebWindow::CloseConnection(unsigned connid)
 ///////////////////////////////////////////////////////////////////////////////////
 /// returns connection (or all active connections)
 
-std::vector<std::shared_ptr<ROOT::Experimental::RWebWindow::WebConn>> ROOT::Experimental::RWebWindow::GetConnections(unsigned connid)
+ROOT::Experimental::RWebWindow::ConnectionsList ROOT::Experimental::RWebWindow::GetConnections(unsigned connid)
 {
    std::vector<std::shared_ptr<WebConn>> arr;
 
