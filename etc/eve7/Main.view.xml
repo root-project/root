@@ -51,20 +51,29 @@
                     </MenuItem>
                   </items>
                 </Menu>
-               </menu>
+              </menu>
             </MenuButton>
             <MenuButton text="Tools" type="Transparent"  enabled="true">
-               <menu>
-                  <Menu itemSelected="onToolsMenuAction">
-                     <items>
+              <menu>
+                <Menu itemSelected="onToolsMenuAction">
+                  <items>
                     <MenuItem text="GED Editor" icon="{/GedIcon}" />
-                        <MenuItem text="Common Preferences" enabled="false" />
-                     </items>
-                  </Menu>
-               </menu>
+                    <MenuItem text="Common Preferences" enabled="false" />
+                  </items>
+                </Menu>
+              </menu>
             </MenuButton>
             <ToolbarSpacer />
-            <Button text="Help" type="Transparent" press="showHelp" ></Button>
+            <MenuButton text="Help" type="Solid"  enabled="true">
+              <menu>
+                <Menu >
+                  <items>
+                    <MenuItem text="User Guide" press="showUserURL" />
+                    <MenuItem text="Contact"  press="showHelp"  />
+                  </items>
+                </Menu>
+              </menu>
+            </MenuButton>
 
          </OverflowToolbar>
       </headerContent>
