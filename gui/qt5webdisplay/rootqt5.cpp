@@ -36,6 +36,8 @@
 #include <ROOT/RWebDisplayHandle.hxx>
 #include <ROOT/RMakeUnique.hxx>
 
+#include <stdio.h>
+
 class TQt5Timer : public TTimer {
 public:
    TQt5Timer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode) {}
@@ -43,7 +45,6 @@ public:
    {
       // timeout handler
       // used to process all qt5 events in main ROOT thread
-
       QApplication::sendPostedEvents();
       QApplication::processEvents();
    }
@@ -59,12 +60,14 @@ protected:
       QApplication *qapp{nullptr};  ///< created QApplication
       int qargc{1};                 ///< arg counter
       char *qargv[10];              ///< arg values
+      bool fInitEngine{false};      ///< does engine was initialized
+      TQt5Timer *fTimer{nullptr};   ///< timer to process ROOT events
    public:
 
       Qt5Creator() = default;
 
       std::unique_ptr<RWebDisplayHandle>
-      ShowURL(THttpServer *serv, const std::string &url, bool batch, int width, int height) override
+      ShowURL(const std::string &where, THttpServer *serv, const std::string &url, bool batch, int width, int height) override
       {
          if (batch)
             return nullptr;
@@ -79,11 +82,16 @@ protected:
             qargv[0] = gApplication->Argv(0);
             qargv[1] = nullptr;
             qapp = new QApplication(qargc, qargv);
+         }
 
+         if (!fInitEngine) {
             QtWebEngine::initialize();
+            fInitEngine = true;
+         }
 
-            TQt5Timer *timer = new TQt5Timer(10, kTRUE);
-            timer->TurnOn();
+         if (!fTimer) {
+            fTimer = new TQt5Timer(10, kTRUE);
+            fTimer->TurnOn();
          }
 
          std::unique_ptr<RootUrlSchemeHandler> handler;
@@ -95,6 +103,19 @@ protected:
             fullurl = handler->MakeFullUrl(fullurl);
          }
 
+         QWidget *qparent = nullptr;
+
+         auto pos = where.find("qprnt:");
+         if (pos != std::string::npos) {
+            long long unsigned value = 0;
+            sscanf(where.c_str() + pos + 6, "%llu", &value);
+            qparent = (QWidget *) value;
+         }
+
+         pos = where.find("url:");
+         if (pos != std::string::npos)
+            fullurl.append(QString(where.substr(pos+4).c_str()));
+
          auto handle = std::make_unique<RQt5WebDisplayHandle>(fullurl.toLatin1().constData(), handler);
 
          if (batch) {
@@ -104,14 +125,22 @@ protected:
             page->settings()->resetAttribute(QWebEngineSettings::PluginsEnabled);
             page->load(QUrl(fullurl));
          } else {
-            RootWebView *view = new RootWebView(0, width, height);
+            RootWebView *view = new RootWebView(qparent, width, height);
             view->load(QUrl(fullurl));
             view->show();
          }
 
          return handle;
       }
-      virtual ~Qt5Creator() = default;
+
+      virtual ~Qt5Creator()
+      {
+         if (fTimer) {
+            fTimer->TurnOff();
+            delete fTimer;
+         }
+
+      }
    };
 
    std::unique_ptr<RootUrlSchemeHandler> fHandler;
