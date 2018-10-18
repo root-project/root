@@ -168,7 +168,7 @@ void ROOT::Experimental::RWebDisplayHandle::BrowserCreator::TestProg(const std::
 }
 
 std::unique_ptr<ROOT::Experimental::RWebDisplayHandle>
-ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Make(THttpServer *, const std::string &url, bool batch, int width, int height)
+ROOT::Experimental::RWebDisplayHandle::BrowserCreator::ShowURL(THttpServer *, const std::string &url, bool batch, int width, int height)
 {
    TString exec = batch ? fBatchExec.c_str() : fExec.c_str();
 
@@ -410,7 +410,7 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> ROOT::Experimental::RWebD
       std::string fullurl = func(remote);
       if (fullurl.empty()) return false;
 
-      handle = creator->Make(serv, fullurl, batch_mode, width, height);
+      handle = creator->ShowURL(serv, fullurl, batch_mode, width, height);
       return handle ? true : false;
    };
 
