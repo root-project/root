@@ -440,7 +440,7 @@ unsigned ROOT::Experimental::RWebDisplayHandle::DisplayWindow(RWebWindow &win, b
          }
          auto handle = creator->Make(win.fMgr->GetServer(), fullurl, batch_mode, win.GetWidth(), win.GetHeight());
          if (handle) {
-            res = win.AddProcId(batch_mode, key, "any");
+            res = win.AddDisplayHandle(batch_mode, key, handle);
          } else {
             R__ERROR_HERE("WebDisplay") << "Cannot create window";
          }

@@ -69,8 +69,6 @@ private:
    /// Start window batch job in specified location, see Show() method for more details
    unsigned ShowWindowBatch(RWebWindow &win, const std::string &where) { return Show(win, true, where); }
 
-   void HaltClient(const std::string &procid);
-
    void TestProg(TString &prog, const std::string &nexttry);
 
    int WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool timed = false, double tm = -1);

@@ -16,6 +16,9 @@
 #ifndef ROOT7_RWebWindow
 #define ROOT7_RWebWindow
 
+
+#include <ROOT/RWebDisplayHandle.hxx>
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -45,7 +48,6 @@ using WebWindowWaitFunc_t = std::function<int(double)>;
 
 class RWebWindowsManager;
 class RWebWindowWSHandler;
-class RWebDisplayHandle;
 
 class RWebWindow {
 
@@ -67,7 +69,7 @@ private:
       unsigned fConnId{0};                 ///<! connection id (unique inside the window)
       bool fBatchMode{false};              ///<! indicate if connection represent batch job
       std::string fKey;                    ///<! key value supplied to the window (when exists)
-      std::string fProcId;                 ///<! client process identifier (when exists)
+      std::unique_ptr<RWebDisplayHandle> fDisplayHandle;  ///<! handle assigned with started web display (when exists)
       std::shared_ptr<THttpCallArg> fHold; ///<! request used to hold headless browser
       timestamp_t fSendStamp;              ///<! last server operation, always used from window thread
       bool fActive{false};                 ///<! flag indicates if connection is active
@@ -83,8 +85,8 @@ private:
       WebConn() = default;
       WebConn(unsigned connid) : fConnId(connid) {}
       WebConn(unsigned connid, unsigned wsid) : fConnId(connid), fActive(true), fWSId(wsid) {}
-      WebConn(unsigned connid, bool batch_mode, const std::string &key, const std::string &procid)
-         : fConnId(connid), fBatchMode(batch_mode), fKey(key), fProcId(procid)
+      WebConn(unsigned connid, bool batch_mode, const std::string &key)
+         : fConnId(connid), fBatchMode(batch_mode), fKey(key)
       {
          ResetStamps();
       }
@@ -100,6 +102,8 @@ private:
       DataEntry(unsigned connid, std::string &&data) : fConnId(connid), fData(data) {}
    };
 
+   typedef std::vector<std::shared_ptr<WebConn>> ConnectionsList;
+
    std::shared_ptr<RWebWindowsManager> fMgr;        ///<! display manager
    std::string fDefaultPage;                        ///<! HTML page (or file name) returned when window URL is opened
    std::string fPanelName;                          ///<! panel name which should be shown in the window
@@ -108,8 +112,8 @@ private:
    bool fSendMT{false};                             ///<! true is special threads should be used for sending data
    std::shared_ptr<RWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
    unsigned fConnCnt{0};                            ///<! counter of new connections to assign ids
-   std::vector<std::shared_ptr<WebConn>> fPendingConn; ///<! list of pending connection with pre-assigned keys
-   std::vector<std::shared_ptr<WebConn>> fConn;     ///<! list of all accepted connections
+   ConnectionsList fPendingConn;                    ///<! list of pending connection with pre-assigned keys
+   ConnectionsList fConn;                           ///<! list of all accepted connections
    std::mutex fConnMutex;                           ///<! mutex used to protect connection list
    unsigned fConnLimit{1};                          ///<! number of allowed active connections
    bool fNativeOnlyConn{false};                     ///<! only native connection are allowed, created by Show() method
@@ -128,7 +132,7 @@ private:
 
    void CompleteWSSend(unsigned wsid);
 
-   std::vector<std::shared_ptr<WebConn>> GetConnections(unsigned connid = 0);
+   ConnectionsList GetConnections(unsigned connid = 0);
 
    std::shared_ptr<WebConn> FindOrCreateConnection(unsigned wsid, bool make_new, const char *query);
 
@@ -150,11 +154,11 @@ private:
 
    bool HasKey(const std::string &key);
 
-   void CheckWebKeys();
+   void CheckPendingConnections();
 
    void CheckInactiveConnections();
 
-   unsigned AddProcId(bool batch_mode, const std::string &key, const std::string &procid);
+   unsigned AddDisplayHandle(bool batch_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle);
 
    bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg);
 
