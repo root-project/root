@@ -24,7 +24,7 @@ class THttpServer;
 
 /// Class used to handle off-screen application and should emulate some render requests
 
-class BaseHandler : public CefClient, public CefLifeSpanHandler, public CefLoadHandler {
+class BaseHandler : public CefClient, public CefLifeSpanHandler, public CefLoadHandler, public CefDisplayHandler {
 protected:
    THttpServer *fServer;
 
@@ -37,6 +37,7 @@ public:
    // CefClient methods:
    virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE { return this; }
    virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { return this; }
+   virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE { return this; }
 
    // CefLifeSpanHandler methods:
    virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
@@ -46,6 +47,14 @@ public:
    // CefLoadHandler methods:
    virtual void OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode,
                             const CefString &errorText, const CefString &failedUrl) OVERRIDE;
+
+   // CefDisplayHandler methods:
+   virtual void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title) OVERRIDE;
+
+   virtual bool OnConsoleMessage(CefRefPtr<CefBrowser> browser,
+                                 cef_log_severity_t level,
+                                 const CefString &message, const CefString &source,
+                                 int line) OVERRIDE;
 
    // Request that all existing browser windows close.
    void CloseAllBrowsers(bool force_close);

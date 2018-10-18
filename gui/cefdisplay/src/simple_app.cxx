@@ -30,6 +30,7 @@
 
 #include <ROOT/RWebDisplayHandle.hxx>
 #include <ROOT/RMakeUnique.hxx>
+#include <ROOT/TLogger.hxx>
 
 
 THttpServer *gHandlingServer = nullptr;
@@ -52,10 +53,6 @@ public:
          std::string file_content = THttpServer::ReadFileContent((const char *)GetContent());
          SetContent(std::move(file_content));
       }
-//      else {
-//         printf("CEF Request replied %s %s %s  len: %d %s\n", GetPathName(), GetFileName(), GetQuery(),
-//               GetContentLength(), (const char *) GetContent() );
-//      }
 
       fCallBack->Continue(); // we have result and can continue with processing
    }
@@ -196,7 +193,6 @@ public:
    {
       std::string addr = request->GetURL().ToString();
 
-      // printf("Request %s server %p\n", addr.c_str(), gHandlingServer);
 
       TUrl url(addr.c_str());
 
@@ -231,14 +227,12 @@ public:
       handler->fArg->SetPathAndFileName(inp_path);
       handler->fArg->SetTopName("webgui");
 
-      // printf("Method %s Request %s %s\n", inp_method.c_str(), inp_path, inp_query.Data());
-
       if (inp_method == "POST") {
 
          CefRefPtr< CefPostData > post_data = request->GetPostData();
 
          if (!post_data) {
-            printf("FATAL - NO POST DATA in CEF HANDLER!!!\n");
+            R__ERROR_HERE("CEF") << "FATAL - NO POST DATA in CEF HANDLER!!!";
             exit(1);
          } else {
             CefPostData::ElementVector elements;
@@ -253,7 +247,6 @@ public:
                sz = elements[n]->GetBytes(elements[n]->GetBytesCount(), (char *)data.data() + off);
                off += sz;
             }
-            // printf("Get post data %u  %u %s\n", (unsigned)off, (unsigned)data.length(), data.c_str());
             handler->fArg->SetPostData(std::move(data));
          }
       } else if (inp_query.Index("&post=") != kNPOS) {
@@ -274,11 +267,10 @@ public:
 
 } // namespace
 
-SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *serv, bool isbatch)
-   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUrl(url), fCefMain(cef_main),
-     fBatch(isbatch), fRect(), fOsrHandler(), fUseViewes(false), fGuiHandler()
+SimpleApp::SimpleApp(const std::string &cef_main, const std::string &url, bool isbatch, int width, int height)
+   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fCefMain(cef_main), fFirstUrl(url), fFirstBatch(isbatch)
 {
-   gHandlingServer = serv;
+   fFirstRect.Set(0, 0, width, height);
 }
 
 SimpleApp::~SimpleApp()
@@ -309,7 +301,7 @@ void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_lin
    command_line->SetProgram(newprog);
 
    // printf("OnBeforeChildProcessLaunch %s\n", command_line->GetProgram().ToString().c_str());
-   if (fBatch) {
+   if (fLastBatch) {
       command_line->AppendSwitch("disable-webgl");
       command_line->AppendSwitch("disable-gpu");
       command_line->AppendSwitch("disable-gpu-compositing");
@@ -317,44 +309,21 @@ void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_lin
    }
 }
 
-/*
-void SimpleApp::OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
-                                 CefRefPtr<CefV8Context> context)
-{
-   printf("$$$$$$$$$ SimpleApp::OnContextCreated\n");
-
-   if (!fBatch) return;
-
-   // Retrieve the context's window object.
-   CefRefPtr<CefV8Value> object = context->GetGlobal();
-
-   // Create a new V8 string value. See the "Basic JS Types" section below.
-   CefRefPtr<CefV8Value> str = CefV8Value::CreateString("My Value!");
-
-   // Add the string to the window object as "window.myval". See the "JS Objects" section below.
-   object->SetValue("ROOT_BATCH_FLAG", str, V8_PROPERTY_ATTRIBUTE_NONE);
-
-   printf("ADD BATCH FALG\n");
-}
-
-void SimpleApp::OnBrowserCreated(CefRefPtr<CefBrowser> browser)
-{
-   printf("$$$$$$$$$ SimpleApp::OnBrowserCreated\n");
-}
-*/
-
 void SimpleApp::OnContextInitialized()
 {
    CEF_REQUIRE_UI_THREAD();
 
    CefRegisterSchemeHandlerFactory("http", "rootserver.local", new ROOTSchemeHandlerFactory());
 
-   StartWindow(fUrl, fBatch, fRect);
+   if (!fFirstUrl.empty())
+      StartWindow(fFirstUrl, fFirstBatch, fFirstRect);
 }
 
 void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
+
+   fLastBatch = batch;
 
    std::string url = "http://rootserver.local";
    url.append(addr);
@@ -386,8 +355,6 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
       // CefRefPtr<OsrHandler> handler(new OsrHandler(gHandlingServer));
 
       window_info.SetAsWindowless(0);
-
-      printf("Create OSR browser %s\n", url.c_str());
 
       // Create the first browser window.
       CefBrowserHost::CreateBrowser(window_info, fOsrHandler, url, browser_settings, nullptr);
@@ -438,21 +405,13 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
 class TCefTimer : public TTimer {
 public:
-   TCefTimer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode)
-   {
-      // construtor
-   }
-   virtual ~TCefTimer()
-   {
-      // destructor
-   }
+   TCefTimer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode) {}
    virtual void Timeout()
    {
-      // just dummy workaround
+      // just let run loop
       CefDoMessageLoopWork();
    }
 };
-
 
 namespace ROOT {
 namespace Experimental {
@@ -470,14 +429,13 @@ protected:
       Make(THttpServer *serv, const std::string &url, bool batch, int width, int height)
       {
          if (fCefApp) {
-            // printf("Starting next CEF window\n");
-
             if (gHandlingServer != serv) {
-               printf("CEF plugin do not allow to use different THttpServer instance\n");
-            } else {
-               CefRect rect(0, 0, width, height);
-               fCefApp->StartWindow(url.c_str(), batch, rect);
+               R__ERROR_HERE("CEF") << "CEF do not allows to use different THttpServer instances";
+               return nullptr;
             }
+
+            CefRect rect(0, 0, width, height);
+            fCefApp->StartWindow(url, batch, rect);
             return std::make_unique<RCefWebDisplayHandle>(url);
          }
 
@@ -510,12 +468,12 @@ protected:
          const char *rootsys = gSystem->Getenv("ROOTSYS");
 
          if (!cef_path) {
-            printf("CEF_PATH not configured to use CEF\n");
+            R__ERROR_HERE("CEF") << "CEF_PATH not configured to use CEF";
             return nullptr;
          }
 
          if (!rootsys) {
-            printf("ROOTSYS not configured to use cef_main\n");
+            R__ERROR_HERE("CEF") << "ROOTSYS not configured to use CEF";
             return nullptr;
          }
 
@@ -544,11 +502,12 @@ protected:
          // settings.ignore_certificate_errors = true;
          // settings.remote_debugging_port = 7890;
 
+         gHandlingServer = serv;
+
          // SimpleApp implements application-level callbacks for the browser process.
          // It will create the first browser instance in OnContextInitialized() after
          // CEF has initialized.
-         fCefApp = new SimpleApp(url, cef_main.Data(), serv, batch);
-         fCefApp->SetRect(width, height);
+         fCefApp = new SimpleApp(cef_main.Data(), url, batch, width, height);
 
          // Initialize CEF for the browser process.
          CefInitialize(main_args, settings, fCefApp.get(), nullptr);

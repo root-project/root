@@ -15,20 +15,19 @@ class THttpServer;
 // Implement application-level callbacks for the browser process.
 class SimpleApp : public CefApp, public CefBrowserProcessHandler /*, public CefRenderProcessHandler */ {
 protected:
-   std::string fUrl;     ///<! first URL to open
-   std::string fCefMain; ///<! executable used for extra processed
-   bool fBatch{false};   ///<! indicate batch mode
-   CefRect fRect;        ///<! original width
+   std::string fCefMain;   ///<! extra executable used for additional processes
+   bool fLastBatch{false}; ///<! indicate if last started window was batch
+   std::string fFirstUrl;     ///<! first URL to open
+   bool fFirstBatch{false};   ///<! indicate batch mode
+   CefRect fFirstRect;        ///<! original width
 
    CefRefPtr<OsrHandler> fOsrHandler; ///<! batch-mode handler
    bool fUseViewes{false};            ///<! is views are used
    CefRefPtr<GuiHandler> fGuiHandler; ///<! normal handler
 
 public:
-   SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *server = nullptr, bool isbatch = false);
+   SimpleApp(const std::string &cef_main, const std::string &url = "", bool isbatch = false, int width = 0, int height = 0);
    virtual ~SimpleApp();
-
-   void SetRect(unsigned width, unsigned height) { fRect.Set(0, 0, width, height); }
 
    // CefApp methods:
    virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE { return this; }

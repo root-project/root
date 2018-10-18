@@ -28,20 +28,6 @@ OsrHandler::~OsrHandler()
 {
 }
 
-void OsrHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
-{
-   CEF_REQUIRE_UI_THREAD();
-}
-
-bool OsrHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                                  cef_log_severity_t level,
-                                  const CefString &message, const CefString &source,
-                                  int line)
-{
-   printf("CONSOLE: %s\n", message.ToString().c_str());
-   return true;
-}
-
 bool OsrHandler::GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
