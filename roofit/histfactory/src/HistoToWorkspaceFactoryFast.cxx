@@ -1243,7 +1243,7 @@ namespace HistFactory{
     // our main workspace that we are using to construct the model
     //
     RooWorkspace* proto = new RooWorkspace(channel_name.c_str(), (channel_name+" workspace").c_str());
-    ModelConfig * proto_config = new ModelConfig("ModelConfig", proto);
+    auto proto_config = make_unique<ModelConfig>("ModelConfig", proto);
     proto_config->SetWorkspace(*proto);
 
     // preprocess functions
@@ -1869,9 +1869,10 @@ namespace HistFactory{
     cout <<"-----------------------------------------"<<endl;
     cout <<"import model into workspace" << endl;
 
-    RooProdPdf* model = new RooProdPdf(("model_"+channel_name).c_str(),    // MB : have changed this into conditional pdf. Much faster for toys!
-               "product of Poissons accross bins for a single channel",
-	       constraintTerms, Conditional(likelihoodTerms,observables));  //likelihoodTerms);
+    auto model = make_unique<RooProdPdf>(
+      ("model_"+channel_name).c_str(),    // MB : have changed this into conditional pdf. Much faster for toys!
+      "product of Poissons accross bins for a single channel",
+      constraintTerms, Conditional(likelihoodTerms,observables));
     proto->import(*model,RecycleConflictNodes());
 
     proto_config->SetPdf(*model);
@@ -1907,8 +1908,8 @@ namespace HistFactory{
 
     // New Asimov Generation: Use the code in the Asymptotic calculator 
     // Need to get the ModelConfig...
-    RooDataSet* asimov_dataset = (RooDataSet*) AsymptoticCalculator::GenerateAsimovData(*model, observables);
-    proto->import(*asimov_dataset, Rename("asimovData"));
+    unique_ptr<RooAbsData> asimov_dataset(AsymptoticCalculator::GenerateAsimovData(*model, observables));
+    proto->import(dynamic_cast<RooDataSet&>(*asimov_dataset), Rename("asimovData"));
 
     // GHL: Determine to use data if the hist isn't 'NULL'
     if(channel.GetData().GetHisto() != NULL) { 
@@ -1922,10 +1923,10 @@ namespace HistFactory{
       }
 
       // THis works and is natural, but the memory size of the simultaneous dataset grows exponentially with channels
-      RooDataSet* obsDataUnbinned = new RooDataSet("obsData","",*proto->set("obsAndWeight"),weightName);
+      auto obsDataUnbinned = make_unique<RooDataSet>("obsData","",*proto->set("obsAndWeight"),weightName);
 
 
-      ConfigureHistFactoryDataset( obsDataUnbinned, mnominal, 
+      ConfigureHistFactoryDataset( obsDataUnbinned.get(), mnominal, 
 				   proto, fObsNameVec );
       
       /*
@@ -1962,7 +1963,6 @@ namespace HistFactory{
       */
 
       proto->import(*obsDataUnbinned);
-      delete obsDataUnbinned; 
     } // End: Has non-null 'data' entry
 
     
@@ -1978,10 +1978,10 @@ namespace HistFactory{
       }
 
       // THis works and is natural, but the memory size of the simultaneous dataset grows exponentially with channels
-      RooDataSet* obsDataUnbinned = new RooDataSet(dataName.c_str(), dataName.c_str(),
+      auto obsDataUnbinned = make_unique<RooDataSet>(dataName.c_str(), dataName.c_str(),
 						   *proto->set("obsAndWeight"), weightName);
       
-      ConfigureHistFactoryDataset( obsDataUnbinned, mnominal, 
+      ConfigureHistFactoryDataset( obsDataUnbinned.get(), mnominal, 
 				   proto, fObsNameVec );
       
       /*
@@ -2018,15 +2018,8 @@ namespace HistFactory{
       */
 
       proto->import(*obsDataUnbinned);
-
-      delete obsDataUnbinned;
       
     } // End: Has non-null 'data' entry
-
-    // clean up 
-    delete model;
-    delete proto_config;
-    delete asimov_dataset; 
     
     proto->Print();
     return proto;
