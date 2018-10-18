@@ -277,7 +277,7 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::ShowURL(const std::string
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// Constructor
 
 ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserCreator(false)
 {
@@ -304,9 +304,7 @@ ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserC
 #endif
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(false)
 {
