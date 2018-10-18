@@ -432,6 +432,16 @@ THttpServer *TWebCanvas::GetServer()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Show canvas in specified place.
+/// If parameter where not specified, default ROOT web display will be used
+
+void TWebCanvas::ShowWebWindow(const std::string &where)
+{
+   if (fWindow)
+      fWindow->Show(where);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Show canvas in browser window
 
 void TWebCanvas::Show()
@@ -440,7 +450,7 @@ void TWebCanvas::Show()
 
    fWaitNewConnection = kTRUE;
 
-   fWindow->Show();
+   ShowWebWindow();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
