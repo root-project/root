@@ -422,12 +422,16 @@ protected:
 
       CefRefPtr<SimpleApp> fCefApp;
    public:
-
       CefCreator() = default;
 
-      virtual std::unique_ptr<RWebDisplayHandle>
-      Make(THttpServer *serv, const std::string &url, bool batch, int width, int height)
+      std::unique_ptr<RWebDisplayHandle>
+      ShowURL(THttpServer *serv, const std::string &url, bool batch, int width, int height) override
       {
+         if (!serv) {
+            R__ERROR_HERE("CEF") << "CEF do not support loading of external HTTP pages";
+            return nullptr;
+         }
+
          if (fCefApp) {
             if (gHandlingServer != serv) {
                R__ERROR_HERE("CEF") << "CEF do not allows to use different THttpServer instances";
@@ -441,11 +445,11 @@ protected:
 
          TApplication *root_app = gROOT->GetApplication();
 
-      #if defined(OS_WIN)
+#if defined(OS_WIN)
          CefMainArgs main_args(GetModuleHandle(nullptr));
-      #else
+#else
          CefMainArgs main_args(root_app->Argc(), root_app->Argv());
-      #endif
+#endif
 
          // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
          // that share the same executable. This function checks the command-line and,
@@ -462,7 +466,6 @@ protected:
          // on non-fatal errors.
          //         XSetErrorHandler(XErrorHandlerImpl);
          //         XSetIOErrorHandler(XIOErrorHandlerImpl);
-
 
          const char *cef_path = gSystem->Getenv("CEF_PATH");
          const char *rootsys = gSystem->Getenv("ROOTSYS");
@@ -492,7 +495,7 @@ protected:
          settings.no_sandbox = true;
          // if (gROOT->IsWebDisplayBatch()) settings.single_process = true;
 
-         //if (batch_mode)
+         // if (batch_mode)
          settings.windowless_rendering_enabled = true;
 
          TString plog = "cef.log";

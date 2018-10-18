@@ -96,12 +96,12 @@ public:
       QWebEngineUrlRequestJob *req = fRequest.req();
 
       if (!req) {
-         R__ERROR_HERE("webgui") << "Qt5 request already processed path " << GetPathName() << " file " << GetFileName();
+         R__ERROR_HERE("Qt5") << "Qt5 request already processed path " << GetPathName() << " file " << GetFileName();
          return;
       }
 
       if (Is404()) {
-         R__ERROR_HERE("webgui") << "Qt5 request FAIL path " << GetPathName() << " file " << GetFileName();
+         R__ERROR_HERE("Qt5") << "Qt5 request FAIL path " << GetPathName() << " file " << GetFileName();
 
          req->fail(QWebEngineUrlRequestJob::UrlNotFound);
          // abort request
