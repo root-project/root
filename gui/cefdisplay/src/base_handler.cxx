@@ -12,10 +12,9 @@
 
 #include "TString.h"
 #include "TError.h"
-#include "THttpServer.h"
-#include "THttpCallArg.h"
 #include "TBase64.h"
-// #include "TRootSniffer.h"
+
+#include <ROOT/TLogger.hxx>
 
 #include <sstream>
 #include <string>
@@ -44,7 +43,7 @@ bool BaseHandler::DoClose(CefRefPtr<CefBrowser> browser)
    CEF_REQUIRE_UI_THREAD();
 
    // Closing the main window requires special handling. See the DoClose()
-   // documentation in the CEF header for a detailed destription of this
+   // documentation in the CEF header for a detailed description of this
    // process.
    if (browser_list_.size() == 1) {
       // Set a flag to indicate that the window close should be allowed.
@@ -110,3 +109,30 @@ void BaseHandler::CloseAllBrowsers(bool force_close)
    for (; it != browser_list_.end(); ++it)
       (*it)->GetHost()->CloseBrowser(force_close);
 }
+
+void BaseHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
+{
+   CEF_REQUIRE_UI_THREAD();
+}
+
+bool BaseHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
+                                  cef_log_severity_t level,
+                                  const CefString &message, const CefString &source,
+                                  int line)
+{
+   switch (level) {
+   case LOGSEVERITY_WARNING:
+      R__WARNING_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
+      break;
+   case LOGSEVERITY_ERROR:
+      R__ERROR_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
+      break;
+   default:
+      if (gDebug > 0)
+         R__DEBUG_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
+      break;
+   }
+
+   return true;
+}
+

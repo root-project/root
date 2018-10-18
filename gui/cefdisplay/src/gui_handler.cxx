@@ -33,6 +33,10 @@ GuiHandler::GuiHandler(THttpServer *serv, bool use_views) : BaseHandler(serv), u
    PlatformInit();
 }
 
+GuiHandler::~GuiHandler()
+{
+}
+
 void GuiHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
 {
    CEF_REQUIRE_UI_THREAD();
@@ -48,20 +52,4 @@ void GuiHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &t
       // Set the title of the window using platform APIs.
       PlatformTitleChange(browser, title);
    }
-}
-
-bool GuiHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                                  cef_log_severity_t level,
-                                  const CefString &message, const CefString &source,
-                                  int line)
-{
-
-   printf("CONSOLE: %s\n", message.ToString().c_str());
-
-   // CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("PING");
-   // Send the process message to the render process.
-   // Use PID_BROWSER instead when sending a message to the browser process.
-   // browser->SendProcessMessage(PID_RENDERER, msg);
-
-   return true;
 }
