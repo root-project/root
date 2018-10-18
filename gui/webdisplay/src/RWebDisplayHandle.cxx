@@ -168,7 +168,7 @@ void ROOT::Experimental::RWebDisplayHandle::BrowserCreator::TestProg(const std::
 }
 
 std::unique_ptr<ROOT::Experimental::RWebDisplayHandle>
-ROOT::Experimental::RWebDisplayHandle::BrowserCreator::ShowURL(THttpServer *, const std::string &url, bool batch, int width, int height)
+ROOT::Experimental::RWebDisplayHandle::BrowserCreator::ShowURL(const std::string &, THttpServer *, const std::string &url, bool batch, int width, int height)
 {
    TString exec = batch ? fBatchExec.c_str() : fExec.c_str();
 
@@ -396,9 +396,9 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> ROOT::Experimental::RWebD
       kind = kFirefox;
    else if ((where == "chrome") || (where == "chromium"))
       kind = kChrome;
-   else if (where == "cef")
+   else if ((where == "cef") || (where.compare(0, 3, "cef")==0))
       kind = kCEF;
-   else if (where == "qt5")
+   else if ((where == "qt5") || (where.compare(0, 3, "qt5")==0))
       kind = kQt5;
    else
       kind = kCustom; // all others kinds, normally name of alternative web browser
@@ -410,7 +410,7 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> ROOT::Experimental::RWebD
       std::string fullurl = func(remote);
       if (fullurl.empty()) return false;
 
-      handle = creator->ShowURL(serv, fullurl, batch_mode, width, height);
+      handle = creator->ShowURL(where, serv, fullurl, batch_mode, width, height);
       return handle ? true : false;
    };
 

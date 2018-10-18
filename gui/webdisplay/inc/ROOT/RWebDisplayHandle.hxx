@@ -34,7 +34,7 @@ protected:
    class Creator {
    public:
       virtual std::unique_ptr<RWebDisplayHandle>
-      ShowURL(THttpServer *serv, const std::string &url, bool batch, int width, int height) = 0;
+      ShowURL(const std::string &where, THttpServer *serv, const std::string &url, bool batch, int width, int height) = 0;
       virtual ~Creator() = default;
    };
 
@@ -53,7 +53,7 @@ protected:
       BrowserCreator(bool dflt = true, const std::string &where_arg = "");
 
       std::unique_ptr<RWebDisplayHandle>
-      ShowURL(THttpServer *serv, const std::string &url, bool batch, int width, int height) override;
+      ShowURL(const std::string &where, THttpServer *serv, const std::string &url, bool batch, int width, int height) override;
 
       virtual ~BrowserCreator() = default;
    };

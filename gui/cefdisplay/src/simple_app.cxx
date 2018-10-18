@@ -425,7 +425,7 @@ protected:
       CefCreator() = default;
 
       std::unique_ptr<RWebDisplayHandle>
-      ShowURL(THttpServer *serv, const std::string &url, bool batch, int width, int height) override
+      ShowURL(const std::string &, THttpServer *serv, const std::string &url, bool batch, int width, int height) override
       {
          if (!serv) {
             R__ERROR_HERE("CEF") << "CEF do not support loading of external HTTP pages";
