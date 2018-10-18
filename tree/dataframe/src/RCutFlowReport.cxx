@@ -26,7 +26,7 @@ void RCutFlowReport::Print()
       const auto all = ci.GetAll();
       const auto eff = ci.GetEff();
       const auto cumulativeEff = 100.f * float(pass) / float(allEntries);
-      Printf("%-10s: pass=%-10lld all=%-10lld -- eff=%8.3f %% cumulative eff=%8.3f %%", name.c_str(), pass, all, eff, cumulativeEff);
+      Printf("%-10s: pass=%-10lld all=%-10lld -- eff=%3.2f %% cumulative eff=%3.2f %%", name.c_str(), pass, all, eff, cumulativeEff);
    }
 }
 const TCutInfo &RCutFlowReport::operator[](std::string_view cutName)
