@@ -38,28 +38,16 @@
 
 class TQt5Timer : public TTimer {
 public:
-   TQt5Timer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode)
-   {
-      // construtor
-   }
-   virtual ~TQt5Timer()
-   {
-      // destructor
-   }
+   TQt5Timer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode) {}
    virtual void Timeout()
    {
       // timeout handler
-      // used to process http requests in main ROOT thread
+      // used to process all qt5 events in main ROOT thread
 
       QApplication::sendPostedEvents();
       QApplication::processEvents();
    }
 };
-
-QApplication *qapp = nullptr;
-int qargc = 1;
-char *qargv[10];
-
 
 namespace ROOT {
 namespace Experimental {
@@ -68,18 +56,28 @@ class RQt5WebDisplayHandle : public RWebDisplayHandle {
 protected:
    class Qt5Creator : public Creator {
       int fCounter{0}; ///< counter used to number handlers
+      QApplication *qapp{nullptr};  ///< created QApplication
+      int qargc{1};                 ///< arg counter
+      char *qargv[10];              ///< arg values
    public:
 
       Qt5Creator() = default;
 
-      virtual std::unique_ptr<RWebDisplayHandle>
-      Make(THttpServer *serv, const std::string &url, bool batch, int width, int height)
+      std::unique_ptr<RWebDisplayHandle>
+      ShowURL(THttpServer *serv, const std::string &url, bool batch, int width, int height) override
       {
          if (batch)
             return nullptr;
 
          if (!qapp && !QApplication::instance()) {
+
+            if (!gApplication) {
+               printf("NOT FOUND gApplication to create QApplication\n");
+               return nullptr;
+            }
+
             qargv[0] = gApplication->Argv(0);
+            qargv[1] = nullptr;
             qapp = new QApplication(qargc, qargv);
 
             QtWebEngine::initialize();
@@ -88,9 +86,14 @@ protected:
             timer->TurnOn();
          }
 
-         auto handler = std::make_unique<RootUrlSchemeHandler>(serv, fCounter++);
+         std::unique_ptr<RootUrlSchemeHandler> handler;
+         QString fullurl = QString(url.c_str());
 
-         QString fullurl = handler->MakeFullUrl(QString(url.c_str()));
+         // if no server provided - normal HTTP will be allowed to use
+         if (serv) {
+            handler = std::make_unique<RootUrlSchemeHandler>(serv, fCounter++);
+            fullurl = handler->MakeFullUrl(fullurl);
+         }
 
          auto handle = std::make_unique<RQt5WebDisplayHandle>(fullurl.toLatin1().constData(), handler);
 
@@ -118,7 +121,8 @@ public:
       : RWebDisplayHandle(url)
    {
       std::swap(fHandler, handler);
-      QWebEngineProfile::defaultProfile()->installUrlSchemeHandler(QByteArray(fHandler->GetProtocol()), fHandler.get());
+      if (fHandler)
+         QWebEngineProfile::defaultProfile()->installUrlSchemeHandler(QByteArray(fHandler->GetProtocol()), fHandler.get());
    }
 
    static void AddCreator()
@@ -130,7 +134,8 @@ public:
 
    virtual ~RQt5WebDisplayHandle()
    {
-      QWebEngineProfile::defaultProfile()->removeUrlSchemeHandler(fHandler.get());
+      if (fHandler)
+         QWebEngineProfile::defaultProfile()->removeUrlSchemeHandler(fHandler.get());
    }
 };
 
