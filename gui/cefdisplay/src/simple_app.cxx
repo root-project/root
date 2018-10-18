@@ -34,8 +34,6 @@
 
 THttpServer *gHandlingServer = nullptr;
 
-CefRefPtr<SimpleApp> *gCefApp = nullptr;
-
 class TCefHttpCallArg : public THttpCallArg {
 protected:
 
@@ -462,6 +460,8 @@ namespace Experimental {
 class RCefWebDisplayHandle : public RWebDisplayHandle {
 protected:
    class CefCreator : public Creator {
+
+      CefRefPtr<SimpleApp> fCefApp;
    public:
 
       CefCreator() = default;
@@ -469,14 +469,14 @@ protected:
       virtual std::unique_ptr<RWebDisplayHandle>
       Make(THttpServer *serv, const std::string &url, bool batch, int width, int height)
       {
-         if (gCefApp) {
+         if (fCefApp) {
             // printf("Starting next CEF window\n");
 
             if (gHandlingServer != serv) {
-               printf("CEF plugin do not allow to use other THttpServer instance\n");
+               printf("CEF plugin do not allow to use different THttpServer instance\n");
             } else {
                CefRect rect(0, 0, width, height);
-               gCefApp->get()->StartWindow(url.c_str(), batch, rect);
+               fCefApp->StartWindow(url.c_str(), batch, rect);
             }
             return std::make_unique<RCefWebDisplayHandle>(url);
          }
@@ -547,11 +547,11 @@ protected:
          // SimpleApp implements application-level callbacks for the browser process.
          // It will create the first browser instance in OnContextInitialized() after
          // CEF has initialized.
-         gCefApp = new CefRefPtr<SimpleApp>(new SimpleApp(url, cef_main.Data(), serv, batch));
-         gCefApp->get()->SetRect(width, height);
+         fCefApp = new SimpleApp(url, cef_main.Data(), serv, batch);
+         fCefApp->SetRect(width, height);
 
          // Initialize CEF for the browser process.
-         CefInitialize(main_args, settings, gCefApp->get(), nullptr);
+         CefInitialize(main_args, settings, fCefApp.get(), nullptr);
 
          // let run CEF message loop, should be improved later
          TCefTimer *timer = new TCefTimer(10, kTRUE);
