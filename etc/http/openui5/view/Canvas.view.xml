@@ -6,27 +6,30 @@
          <OverflowToolbar id="otb1">
             <Button icon="sap-icon://log" type="Transparent"
                tooltip="Quit ROOT session" press="onQuitRootPress" />
-            <Button icon="sap-icon://refresh" type="Transparent"
-               tooltip="Reload canvas from server" press="onReloadPress" />
-            <Button icon="sap-icon://user-edit" type="Transparent"
-               tooltip="Toggle GED editor" press="toggleGedEditor" />
+            <!--  Button icon="sap-icon://refresh" type="Transparent"
+               tooltip="Reload canvas from server" press="onReloadPress" /-->
+            <!-- Button icon="sap-icon://user-edit" type="Transparent"
+               tooltip="Toggle GED editor" press="toggleGedEditor" /-->
             <MenuButton text="File">
                <menu>
                   <Menu itemSelected="onFileMenuAction">
                      <items>
-                        <MenuItem text="Open" icon="sap-icon://open-folder" />
-                        <MenuItem text="Close canvas" icon="sap-icon://decline" />
+                        <MenuItem text="Open" icon="sap-icon://open-folder" enabled="false"/>
+                        <MenuItem text="Close canvas" icon="sap-icon://decline" tooltip="Close browser window"/>
                         <MenuItem text="Save" startsSection="true" icon="sap-icon://save">
                            <items>
-                              <MenuItem text="Canvas.png" />
-                              <MenuItem text="Canvas.svg" />
-                              <MenuItem text="Canvas.jpeg" />
-                              <MenuItem text="Canvas.pdf" />
+                              <MenuItem text="Canvas.png" tooltip="Creates PNG snapshot of browser window"/>
+                              <MenuItem text="Canvas.svg" tooltip="Creates SVG snapshot of browser window"/>
+                              <MenuItem text="Canvas.jpeg" tooltip="Creates JPEG snapshot of browser window"/>
+                              <MenuItem text="Canvas.root" startsSection="true" tooltip="Produces ROOT output on C++ side"/>
+                              <MenuItem text="Canvas.pdf" tooltip="Produces PDF output on C++ side"/>
+                              <MenuItem text="Canvas.ps" tooltip="Produces PS output on C++ side"/>
+                              <MenuItem text="Canvas.C" tooltip="Produces C output on server side"/>
                            </items>
                         </MenuItem>
-                        <MenuItem text="Save as ..." icon="sap-icon://save" />
-                        <MenuItem text="Interrupt" startsSection="true" icon="sap-icon://stop" />
-                        <MenuItem text="Quit ROOT" icon="sap-icon://log" />
+                        <MenuItem text="Save as ..." icon="sap-icon://save" enabled="false"/>
+                        <MenuItem text="Interrupt" startsSection="true" icon="sap-icon://stop" tooltip="Interrupts current event loop"/>
+                        <MenuItem text="Quit ROOT" icon="sap-icon://log" tooltip="Quit ROOT session"/>
 
                      </items>
                   </Menu>
@@ -37,13 +40,13 @@
                <menu>
                   <Menu itemSelected="onViewMenuAction">
                      <items>
-                        <MenuItem text="Editor" icon="{/GedIcon}" />
-                        <MenuItem text="Toolbar" icon="{/ToolbarIcon} "/>
+                        <MenuItem text="Editor" icon="{/GedIcon}" tooltip="Toggle graphics attribute editor"/>
+                        <MenuItem text="Toolbar" icon="{/ToolbarIcon}" tooltip="Toolbar with several shortcuts"/>
                         <MenuItem text="Event statusbar" icon="{/StatusIcon}" />
                         <MenuItem text="Tooltip info" icon="{/TooltipIcon}" />
-                        <MenuItem text="Colors" startsSection="true" />
-                        <MenuItem text="Fonts" />
-                        <MenuItem text="Markers" />
+                        <MenuItem text="Colors" startsSection="true" enabled="false"/>
+                        <MenuItem text="Fonts" enabled="false"/>
+                        <MenuItem text="Markers" enabled="false"/>
                      </items>
                   </Menu>
                </menu>
@@ -53,36 +56,33 @@
                <menu>
                   <Menu itemSelected="onToolsMenuAction">
                      <items>
-                        <MenuItem text="Fit panel" />
+                        <MenuItem text="Fit panel" enabled="false" />
                         <MenuItem text="Browser" enabled="false" />
                      </items>
                   </Menu>
                </menu>
             </MenuButton>
             <ToolbarSpacer />
-            <Button text="Help" type="Transparent"></Button>
+            <Button text="Help" type="Transparent"/>
          </OverflowToolbar>
       </headerContent>
       <subHeader>
          <OverflowToolbar>
-            <Button icon="sap-icon://open-folder" type="Transparent" />
+            <Button icon="sap-icon://user-edit" type="Transparent"
+               press="toggleGedEditor" tooltip="Toggle graphics attribute editor"/>
             <Button icon="sap-icon://decline" type="Transparent"
-               press="onCloseCanvasPress" />
+               press="onCloseCanvasPress"  tooltip="Close browser window"/>
             <Button icon="sap-icon://stop" type="Transparent"
-               press="onInterruptPress" />
+               press="onInterruptPress" tooltip="Interrupts current event loop"/>
             <Button icon="sap-icon://log" type="Transparent"
-               tooltip="Quit ROOT session" press="onQuitRootPress" />
+               press="onQuitRootPress" tooltip="Quit ROOT session"/>
          </OverflowToolbar>
       </subHeader>
       <content>
          <l:Splitter orientation="Horizontal" id="MainAreaSplitter">
-            <!-- <Button height="100%" width="100%" text="Content 1"> <layoutData><l:SplitterLayoutData
-               size="300px" /></layoutData> </Button> -->
             <mvc:XMLView id="MainPanel" width="100%"
                height="100%" viewName="sap.ui.jsroot.view.CanvasPanel">
             </mvc:XMLView>
-            <!-- <Button height="100%" width="100%" text="Content 2"> <layoutData><l:SplitterLayoutData
-               size="auto" /></layoutData> </Button> -->
          </l:Splitter>
       </content>
       <footer>

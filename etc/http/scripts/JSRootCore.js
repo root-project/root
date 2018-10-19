@@ -96,7 +96,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 15/10/2018";
+   JSROOT.version = "5.6.0 19/10/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -105,7 +105,7 @@
    JSROOT.nocache = false;
    JSROOT.sources = ['core']; // indicates which major sources were loaded
 
-   // JSROOT.openui5src = 'jsroot'; // use in ROOT distribution for local copy of OpenUI5
+   JSROOT.openui5src = 'jsroot'; // use in ROOT distribution for local copy of OpenUI5
 
    JSROOT.id_counter = 0;
    if (JSROOT.BatchMode === undefined)

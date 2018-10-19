@@ -1,20 +1,15 @@
 # JSROOT changelog
 
-## Changes in dev
-1. Fix drawing and update v7 histograms 
-2. Provide workaround for standard THREE.SVGRenderer. 
-   This will allows to use standard three.js version in the future 
-3. When producing graphical images, use normal three.js renderer for 3D.
-   Before SVGRenderer was used, which is not optimal for complex drawings.
-4. Let use WebGL renderer in Chrome headless mode for generation of images
-5. Fix - when drawing text, reserve extra y range to show it correctly
-6. Support text drawing with TH1 bar option
-7. Speed up (factor 10) drawing of canvas with many small sub-pads. 
-   Provide simple shortcut to enlarge such small sub-pads
-8. Let configure user click and double-click handlers, extend tooltip.htm example
-9. Fix - problem with interactive TAxis editing (#170)
-10. Fix - color palette axis attributes (#171)
-11. Provide possibility to create SVG files for canvas or frame (#172)
+## Changes in 5.6.0
+1. By drawing outline speed up (factor 10) canvas with many small sub-pads 
+2. Let configure user click and double-click handlers, extend tooltip.htm example
+3. Implement workaround for standard THREE.SVGRenderer - no need for patched version  
+4. When producing 3D graphical images in batch, use normal THREE.CanvasRenderer
+5. Use WebGL renderer in Chrome headless mode for 3D images generation
+6. Provide possibility to create SVG files for canvas or frame (#172)
+7. Support text drawing with TH1 bar option
+8. Fix - when drawing text, reserve extra y range to show it correctly
+9. Migrate to Node.js 8, do not support older versions 
 
 
 ## Changes in 5.5.0
