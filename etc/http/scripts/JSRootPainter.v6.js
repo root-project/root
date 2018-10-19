@@ -26,6 +26,9 @@
 
    JSROOT.sources.push("v6");
 
+   // identifier used in TWebCanvas painter
+   JSROOT.WebSnapIds = { kNone: 0,  kObject: 1, kSVG: 2, kSubPad: 3, kSpecial: 4 };
+
    // =======================================================================
 
 
@@ -3499,29 +3502,29 @@
 
          if (objpainter) {
 
-            if (snap.fKind === 1) { // object itself
+            if (snap.fKind === JSROOT.WebSnapIds.kObject) { // object itself
                if (objpainter.UpdateObject(snap.fSnapshot, snap.fOption)) objpainter.Redraw();
                continue; // call next
             }
 
-            if (snap.fKind === 2) { // update SVG
+            if (snap.fKind === JSROOT.WebSnapIds.kSVG) { // update SVG
                if (objpainter.UpdateObject(snap.fSnapshot)) objpainter.Redraw();
                continue; // call next
             }
 
-            if (snap.fKind === 3) { // subpad
+            if (snap.fKind === JSROOT.WebSnapIds.kSubPad) { // subpad
                return objpainter.RedrawPadSnap(snap, draw_callback);
             }
 
             continue; // call next
          }
 
-         if (snap.fKind === 4) { // specials like list of colors
+         if (snap.fKind === JSROOT.WebSnapIds.kSpecial) { // specials like list of colors
             this.CheckSpecial(snap.fSnapshot);
             continue;
          }
 
-         if (snap.fKind === 3) { // subpad
+         if (snap.fKind === JSROOT.WebSnapIds.kSubPad) { // subpad
 
             var subpad = snap.fSnapshot;
 
@@ -3554,10 +3557,10 @@
          var handle = { func: draw_callback };
 
          // here the case of normal drawing, can be improved
-         if (snap.fKind === 1)
+         if (snap.fKind === JSROOT.WebSnapIds.kObject)
             objpainter = JSROOT.draw(this.divid, snap.fSnapshot, snap.fOption, handle);
 
-         if (snap.fKind === 2)
+         if (snap.fKind === JSROOT.WebSnapIds.kSVG)
             objpainter = JSROOT.draw(this.divid, snap.fSnapshot, snap.fOption, handle);
 
          if (!handle.completed) return; // if callback will be invoked, break while loop
@@ -3623,12 +3626,17 @@
          // case of ROOT7 with always dummy TPad as first entry
          if (!first.fCw || !first.fCh) this._fixed_size = false;
 
-         if (JSROOT.BrowserLayout && (typeof this.divid == 'string') && !this.batch_mode) {
-            this.brlayout = new JSROOT.BrowserLayout(this.divid, null, this);
-            this.brlayout.Create(this.divid, true);
-            // this.brlayout.ToggleBrowserKind("float");
-            this.SetDivId(this.brlayout.drawing_divid(), -1);  // assign id for drawing
-            JSROOT.RegisterForResize(this.brlayout);
+         if (JSROOT.BrowserLayout && !this.batch_mode && !this.use_openui && !this.brlayout) {
+            var mainid = this.divid;
+            if (mainid && (typeof mainid == 'object'))
+               mainid = d3.select(mainid).attr("id");
+            if (mainid && (typeof mainid == "string")) {
+               this.brlayout = new JSROOT.BrowserLayout(mainid, null, this);
+               this.brlayout.Create(mainid, true);
+               // this.brlayout.ToggleBrowserKind("float");
+               this.SetDivId(this.brlayout.drawing_divid(), -1);  // assign id for drawing
+               JSROOT.RegisterForResize(this.brlayout);
+            }
          }
 
          this.CreateCanvasSvg(0);
@@ -3723,8 +3731,7 @@
                   gridx: this.pad.fGridx, gridy: this.pad.fGridy,
                   tickx: this.pad.fTickx, ticky: this.pad.fTicky,
                   mleft: this.pad.fLeftMargin, mright: this.pad.fRightMargin,
-                  mtop: this.pad.fTopMargin, mbottom: this.pad.fBottomMargin
-         };
+                  mtop: this.pad.fTopMargin, mbottom: this.pad.fBottomMargin };
 
          if (this.iscan) elem.bits = this.GetStatusBits();
 
@@ -4429,6 +4436,10 @@
       this.CreateImage(fname.substr(pnt+1), function(res) {
          pthis.SendWebsocket("SAVE:" + fname + ":" + res);
       })
+   }
+
+   TCanvasPainter.prototype.SendSaveCommand = function(fname) {
+      this.SendWebsocket("PRODUCE:" + fname);
    }
 
    TCanvasPainter.prototype.WindowBeforeUnloadHanlder = function() {
