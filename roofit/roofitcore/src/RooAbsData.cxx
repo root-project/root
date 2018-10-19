@@ -284,7 +284,7 @@ void RooAbsData::fill()
 
 Int_t RooAbsData::numEntries() const
 {
-  return _dstore->numEntries() ;
+  return nullptr != _dstore ? _dstore->numEntries() : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
