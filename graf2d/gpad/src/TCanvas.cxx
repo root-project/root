@@ -1475,11 +1475,8 @@ void TCanvas::MoveOpaque(Int_t set)
 
 void TCanvas::Paint(Option_t *option)
 {
-   if (IsWeb()) {
-      Update();
-   } else if (fCanvas) {
+   if (fCanvas)
       TPad::Paint(option);
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1615,7 +1612,7 @@ void TCanvas::Resize(Option_t *)
    TPad *padsav  = (TPad*)gPad;
    cd();
 
-   if (!IsBatch() && !IsWeb()) {
+   if (!IsBatch()) {
       gVirtualX->SelectWindow(fCanvasID);      //select current canvas
       gVirtualX->ResizeWindow(fCanvasID);      //resize canvas and off-screen buffer
 
