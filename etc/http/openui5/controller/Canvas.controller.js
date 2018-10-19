@@ -147,8 +147,13 @@ sap.ui.define([
             case "Canvas.png":
             case "Canvas.jpeg":
             case "Canvas.svg":
-            case "Canvas.pdf":
                p.SaveCanvasAsFile(name);
+               break;
+            case "Canvas.root":
+            case "Canvas.pdf":
+            case "Canvas.ps":
+            case "Canvas.C":
+               p.SendSaveCommand(name);
                break;
          }
 
@@ -184,6 +189,8 @@ sap.ui.define([
 
       showGeEditor : function(new_state) {
          this.showLeftArea(new_state ? "Ged" : "");
+         this.getView().getModel().setProperty("/GedIcon", new_state ? "sap-icon://accept" : "");
+
       },
 
       cleanupIfGed : function() {

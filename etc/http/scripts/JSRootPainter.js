@@ -3213,8 +3213,10 @@
     */
    TObjectPainter.prototype.SetDivId = function(divid, is_main, pad_name) {
 
-      if (divid !== undefined)
+      if (divid !== undefined) {
          this.divid = divid;
+         delete this._selected_main;
+      }
 
       if (!is_main) is_main = 0;
 
@@ -6201,25 +6203,11 @@
       } else if (JSROOT.nodejs_document) {
          build(JSROOT.nodejs_window.d3.select('body').append('div'));
       } else {
-
-         var jsdom;
-         try {
-           jsdom = require("jsdom/lib/old-api.js"); // jsdom >= 10.x
-         } catch (e) {
-           jsdom = require("jsdom"); // jsdom <= 9.x
-         }
-
-         jsdom.env({
-            html:'',
-            features:{ QuerySelector:true }, //you need query selector for D3 to work
-            done:function(errors, window) {
-
-               window.d3 = d3.select(window.document); //get d3 into the dom
-               JSROOT.nodejs_window = window;
-               JSROOT.nodejs_document = window.document; // used with three.js
-
-               build(window.d3.select('body').append('div'));
-            }});
+         // use eval while old minifier is not able to parse newest Node.js syntax
+         eval('const { JSDOM } = require("jsdom"); JSROOT.nodejs_window = (new JSDOM("<!DOCTYPE html>hello")).window;');
+         JSROOT.nodejs_document = JSROOT.nodejs_window.document; // used with three.js
+         JSROOT.nodejs_window.d3 = d3.select(JSROOT.nodejs_document); //get d3 into the dom
+         build(JSROOT.nodejs_window.d3.select('body').append('div'));
       }
    }
 

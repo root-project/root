@@ -4035,6 +4035,10 @@
       })
    }
 
+   TCanvasPainter.prototype.SendSaveCommand = function(fname) {
+      this.SendWebsocket("PRODUCE:" + fname);
+   }
+
    TCanvasPainter.prototype.SendWebsocket = function(msg, chid) {
       if (this._websocket)
          this._websocket.Send(msg, chid);
