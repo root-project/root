@@ -773,6 +773,12 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       }
       CheckDataToSend();
 
+   } else if (strncmp(cdata, "PRODUCE:", 8) == 0) {
+
+      Canvas()->Print(cdata+8);
+
+      CheckDataToSend();
+
    } else if (strncmp(cdata, "PADCLICKED:", 11) == 0) {
 
       TWebPadClick *click = nullptr;
