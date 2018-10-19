@@ -152,10 +152,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
       
-     
-
       showHelp : function(oEvent) {
          alert("User support: root-webgui@cern.ch");
+      },
+      showUserURL : function(oEvent) {
+         sap.m.URLHelper.redirect("https://github.com/alja/jsroot/blob/dev/eve7.md", true);
       }
    });
 });
