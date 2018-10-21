@@ -1291,16 +1291,15 @@ public:
    ///
    /// The user gives up ownership of the model object.
    /// The list of column names to be used for filling must always be specified.
+   /// If the type of the object to fill is not a TObject implementing the Merge method, an `Add(T *)` method must
+   /// be implemented.
    /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed.
    /// See RResultPtr documentation.
    template <typename FirstColumn, typename... OtherColumns, typename T> // need FirstColumn to disambiguate overloads
    RResultPtr<T> Fill(T &&model, const ColumnNames_t &columnList)
    {
-      auto h = std::make_shared<T>(std::forward<T>(model));
-      if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
-         throw std::runtime_error("The absence of axes limits is not supported yet.");
-      }
-      return CreateAction<RDFInternal::ActionTags::Fill, FirstColumn, OtherColumns...>(columnList, h);
+      auto object = std::make_shared<T>(std::forward<T>(model));
+      return CreateAction<RDFInternal::ActionTags::Fill, FirstColumn, OtherColumns...>(columnList, object);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1318,11 +1317,8 @@ public:
    template <typename T>
    RResultPtr<T> Fill(T &&model, const ColumnNames_t &bl)
    {
-      auto h = std::make_shared<T>(std::forward<T>(model));
-      if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
-         throw std::runtime_error("The absence of axes limits is not supported yet.");
-      }
-      return CreateAction<RDFInternal::ActionTags::Fill, RDFDetail::RInferredType>(bl, h, bl.size());
+      auto object = std::make_shared<T>(std::forward<T>(model));
+      return CreateAction<RDFInternal::ActionTags::Fill, RDFDetail::RInferredType>(bl, object, bl.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////

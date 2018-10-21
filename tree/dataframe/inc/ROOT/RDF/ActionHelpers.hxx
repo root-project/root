@@ -77,6 +77,41 @@ using namespace ROOT::Detail::RDF;
 
 using Hist_t = ::TH1D;
 
+/// Helper to detach histograms from the directory if needed
+template<typename T, bool isHisto = std::is_base_of<TH1, T>::value>
+class RDirectoryDetacher {
+public:
+   static void Detach(T &) {}
+};
+
+template<typename T>
+class RDirectoryDetacher<T, true> {
+public:
+   static void Detach(T &obj) {obj.SetDirectory(nullptr);}
+};
+
+// Helper to merge objects
+template<typename T, bool isHisto = std::is_base_of<TObject, T>::value>
+class RObjectsMerger {
+public:
+   static void Merge(const std::vector<T*> &objects)
+   {
+      auto resObj = objects[0];
+      std::for_each(objects.begin()+1, objects.end(), [&resObj](T *h){resObj->Add(h);});
+   }
+};
+
+template<typename T>
+class RObjectsMerger<T, true> {
+public:
+   static void Merge(const std::vector<T*> &objects) {
+      auto resObj = objects[0];
+      TList l;
+      std::for_each(objects.begin()+1, objects.end(), [&l](T *h){l.Add(h);});
+      resObj->Merge(&l);
+   }
+};
+
 /// The container type for each thread's partial result in an action helper
 // We have to avoid to instantiate std::vector<bool> as that makes it impossible to return a reference to one of
 // the thread-local results. In addition, a common definition for the type of the container makes it easy to swap
@@ -231,6 +266,8 @@ extern template void FillHelper::Exec(unsigned int, const std::vector<int> &, co
 extern template void
 FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
+
+
 template <typename HIST = Hist_t>
 class FillParHelper : public RActionImpl<FillParHelper<HIST>> {
    std::vector<HIST *> fObjects;
@@ -244,8 +281,9 @@ public:
       fObjects[0] = h.get();
       // Initialise all other slots
       for (unsigned int i = 1; i < nSlots; ++i) {
-         fObjects[i] = new HIST(*fObjects[0]);
-         fObjects[i]->SetDirectory(nullptr);
+         auto obj = new HIST(*fObjects[0]);
+         RDirectoryDetacher<HIST>::Detach(*obj);
+         fObjects[i] = obj;
       }
    }
 
@@ -337,15 +375,8 @@ public:
 
    void Finalize()
    {
-      auto resObj = fObjects[0];
-      const auto nSlots = fObjects.size();
-      TList l;
-      l.SetOwner(); // The list will free the memory associated to its elements upon destruction
-      for (unsigned int slot = 1; slot < nSlots; ++slot) {
-         l.Add(fObjects[slot]);
-      }
-
-      resObj->Merge(&l);
+      RObjectsMerger<HIST>::Merge(fObjects);
+      std::for_each(fObjects.begin()+1, fObjects.end(), [](HIST *h){delete h;});
    }
 
    HIST &PartialUpdate(unsigned int slot) { return *fObjects[slot]; }
