@@ -683,6 +683,29 @@ TEST_P(RDFSimpleTests, StandardDeviationPrecision)
    }
 }
 
+struct UserDefined
+{
+    UserDefined():hist({"h","h", 10, 0, 10}) {}
+    TH1F hist;
+    void Fill(const ULong64_t val)
+    {
+        hist.Fill(val);
+    }
+    void Add(const UserDefined *h)
+    {
+        hist.Add(&h->hist);
+    }
+};
+
+TEST_P(RDFSimpleTests, FillUserDefinedObject)
+{
+   auto res = ROOT::RDataFrame(8).Define("a", [&](ULong64_t e){return e;}, {"rdfentry_"})
+                                 .Fill(UserDefined(), {"a"});
+
+   EXPECT_DOUBLE_EQ(3.5, res->hist.GetMean());
+
+}
+
 TEST_P(RDFSimpleTests, StandardDeviationCollections)
 {
    RDataFrame tdf(3);
