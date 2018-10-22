@@ -12,6 +12,6 @@ ROOT::EnableImplicitMT(); // Tell ROOT you want to go parallel
 ROOT::RDataFrame d("myTree", "file_*.root"); // Interface to TTree and TChain
 auto myHisto = d.Histo1D("Branch_A"); // This happens in parallel!
 myHisto->Draw();
-~~~{.cpp}
+~~~
 
 Explore the examples below or go to [RDataFrame user guide](classROOT_1_1RDataFrame.html).
