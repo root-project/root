@@ -21,7 +21,8 @@
 class RooRealVar ;
 
 #include <map>
- 
+
+///PDF for the numerical (FFT) convolution of two PDFs.
 class RooFFTConvPdf : public RooAbsCachedPdf {
 public:
 
@@ -121,6 +122,8 @@ protected:
   RooSetProxy  _cacheObs ; // Non-convolution observables that are also cached
 
 private:
+
+  void prepareFFTBinning(RooRealVar& convVar) const;
 
   ClassDef(RooFFTConvPdf,1) // Convolution operator p.d.f based on numeric Fourier transforms
 };

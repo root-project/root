@@ -62,7 +62,7 @@ public:
     void setPayload(TObject* obj) { _payload = obj ; }
     const char* ownerName() const { return _ownerName.Data() ; }
 
-    void print() ;
+    void print() const;
 
   protected:
     
