@@ -2506,6 +2506,9 @@ void TTree::Browse(TBrowser* b)
 ///
 /// A TTreeIndex object pointed by fTreeIndex is created.
 /// This object will be automatically deleted by the TTree destructor.
+/// If an index is already existing, this is replaced by the new one without being
+/// deleted. This behaviour prevents the deletion of a previously external index
+/// assigned to the TTree via the TTree::SetTreeIndex() method.
 /// See also comments in TTree::SetTreeIndex().
 
 Int_t TTree::BuildIndex(const char* majorname, const char* minorname /* = "0" */)
