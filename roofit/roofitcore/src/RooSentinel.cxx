@@ -43,6 +43,7 @@ installs an atexit() function that takes care of this
 #include "RooRealConstant.h"
 #include "RooResolutionModel.h"
 #include "RooExpensiveObjectCache.h"
+#include "RooDataSet.h"
 
 Bool_t RooSentinel::_active = kFALSE ;
 
@@ -60,6 +61,7 @@ static void CleanUpRooFitAtExit()
   RooRealConstant::cleanup() ;
   RooResolutionModel::cleanup() ;
   RooExpensiveObjectCache::cleanup() ;
+  RooDataSet::cleanup();
 }
 
 
