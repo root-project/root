@@ -43,7 +43,7 @@ ClassImp(RooExpensiveObjectCache);
 ClassImp(RooExpensiveObjectCache::ExpensiveObject);
   ;
 
-RooExpensiveObjectCache* RooExpensiveObjectCache::_instance = 0 ;
+RooExpensiveObjectCache* RooExpensiveObjectCache::_instance = nullptr ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +75,7 @@ RooExpensiveObjectCache::~RooExpensiveObjectCache()
   }
 
   if (_instance == this) {
-    _instance = 0 ;
+    _instance = nullptr ;
   }
 }
 
@@ -343,17 +343,17 @@ void RooExpensiveObjectCache::print() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooExpensiveObjectCache::ExpensiveObject::print() 
+void RooExpensiveObjectCache::ExpensiveObject::print() const
 {
   cout << _payload->IsA()->GetName() << "::" << _payload->GetName() ;
   if (_realRefParams.size()>0 || _catRefParams.size()>0) {
     cout << " parameters=( " ;
-    map<TString,Double_t>::iterator iter = _realRefParams.begin() ;
+    auto iter = _realRefParams.begin() ;
     while(iter!=_realRefParams.end()) {
       cout << iter->first << "=" << iter->second << " " ;
       ++iter ;
     }  
-    map<TString,Int_t>::iterator iter2 = _catRefParams.begin() ;
+    auto iter2 = _catRefParams.begin() ;
     while(iter2!=_catRefParams.end()) {
       cout << iter2->first << "=" << iter2->second << " " ;
       ++iter2 ;
