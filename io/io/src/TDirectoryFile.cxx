@@ -1011,6 +1011,13 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const char* classn
 
 void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expectedClass)
 {
+
+   // If the name is invalid, issue an error message and return a nullptr
+   if (!namecycle || '\0' == namecycle[0]) {
+      Error("GetObjectChecked", "The provided key name is invalid.");
+      return nullptr;
+   }
+
    Short_t  cycle;
    char     name[kMaxLen];
 
