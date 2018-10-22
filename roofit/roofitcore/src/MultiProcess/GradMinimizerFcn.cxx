@@ -14,6 +14,8 @@
 #include <MultiProcess/messages.h>
 #include <stdexcept>
 
+#include <RooTimer.h>
+
 namespace RooFit {
   namespace MultiProcess {
     GradMinimizerFcn::GradMinimizerFcn(RooAbsReal *funct, RooMinimizerGenericPtr context, std::size_t _N_workers,
@@ -138,8 +140,12 @@ namespace RooFit {
         bool was_not_synced = sync_parameters(x);
         if (was_not_synced) {
           // update parameters and object states that changed since last calculation (or creation if first time)
+          RooWallTimer timer;
           update_state();
+          timer.stop();
+          auto time_update_state = timer.timing_s();
 
+          timer.start();
           // activate work mode
           get_manager()->set_work_mode(true);
 
@@ -155,6 +161,9 @@ namespace RooFit {
 
           // end work mode
           get_manager()->set_work_mode(false);
+          timer.stop();
+
+          std::cout << "update_state: " << time_update_state << "s, gradient work: " << timer.timing_s() << "s" << std::endl;
         }
       }
     }
