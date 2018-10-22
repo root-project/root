@@ -61,37 +61,28 @@ char* operator+( streampos&, char* );
 using namespace std;
 
 ClassImp(RooDataSet);
-;
 
+#ifndef USEMEMPOOLFORDATASET
+void RooDataSet::cleanup() {}
+#else
 
-char* RooDataSet::_poolBegin = 0 ;
-char* RooDataSet::_poolCur = 0 ;
-char* RooDataSet::_poolEnd = 0 ;
-#define POOLSIZE 1048576
+#include "MemPoolForRooSets.h"
 
-struct POOLDATA 
-{
-  void* _base ;
-} ;
-
-static std::list<POOLDATA> _memPoolList ;
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clear memoery pool on exit to avoid reported memory leaks
-
-void RooDataSet::cleanup()
-{
-  std::list<POOLDATA>::iterator iter = _memPoolList.begin() ;
-  while(iter!=_memPoolList.end()) {
-    free(iter->_base) ;
-    iter->_base=0 ;
-    ++iter ;
-  }
-  _memPoolList.clear() ;
+RooDataSet::MemPool* RooDataSet::memPool() {
+  RooSentinel::activate();
+  static auto * memPool = new RooDataSet::MemPool();
+  return memPool;
 }
 
+void RooDataSet::cleanup() {
+  auto pool = memPool();
+  pool->teardown();
 
-#ifdef USEMEMPOOL
+  //The pool will have to leak if it's not empty at this point.
+  if (pool->empty())
+    delete pool;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Overloaded new operator guarantees that all RooDataSets allocated with new
@@ -102,62 +93,10 @@ void RooDataSet::cleanup()
 
 void* RooDataSet::operator new (size_t bytes)
 {
-  // cout << " RooDataSet::operator new(" << bytes << ")" << endl ;
+  //This will fail if a derived class uses this operator
+  assert(sizeof(RooDataSet) == bytes);
 
-  if (!_poolBegin || _poolCur + (sizeof(RooDataSet)) >= _poolEnd) {
-
-     if (_poolBegin != 0) {
-        oocxcoutD((TObject *)0, Caching) << "RooDataSet::operator new(), starting new 1MB memory pool" << endl;
-     }
-
-     // Start pruning empty memory pools if number exceeds 3
-     if (_memPoolList.size() > 3) {
-
-        void *toFree(0);
-
-        for (std::list<POOLDATA>::iterator poolIter = _memPoolList.begin(); poolIter != _memPoolList.end();
-             ++poolIter) {
-
-           // If pool is empty, delete it and remove it from list
-           if ((*(Int_t *)(poolIter->_base)) == 0) {
-              oocxcoutD((TObject *)0, Caching)
-                 << "RooDataSet::operator new(), pruning empty memory pool " << (void *)(poolIter->_base) << endl;
-
-              toFree = poolIter->_base;
-              _memPoolList.erase(poolIter);
-              break;
-           }
-        }
-
-        free(toFree);
-     }
-
-     void *mem = malloc(POOLSIZE);
-     memset(mem, TStorage::kObjectAllocMemValue, POOLSIZE);
-
-     _poolBegin = (char *)mem;
-     // Reserve space for pool counter at head of pool
-     _poolCur = _poolBegin + sizeof(Int_t);
-     _poolEnd = _poolBegin + (POOLSIZE);
-
-     // Clear pool counter
-     *((Int_t *)_poolBegin) = 0;
-
-     POOLDATA p;
-     p._base = mem;
-     _memPoolList.push_back(p);
-
-     RooSentinel::activate();
-  }
-
-  char* ptr = _poolCur ;
-  _poolCur += bytes ;
-
-  // Increment use counter of pool
-  (*((Int_t*)_poolBegin))++ ;
-
-  return ptr ;
-
+  return memPool()->allocate(bytes);
 }
 
 
@@ -168,13 +107,13 @@ void* RooDataSet::operator new (size_t bytes)
 void RooDataSet::operator delete (void* ptr)
 {
   // Decrease use count in pool that ptr is on
-  for (std::list<POOLDATA>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
-    if ((char*)ptr > (char*)poolIter->_base && (char*)ptr < (char*)poolIter->_base + POOLSIZE) {
-      (*(Int_t*)(poolIter->_base))-- ;
-      break ;
-    }
-  }
-  
+  if (memPool()->deallocate(ptr))
+    return;
+
+  std::cerr << __func__ << " " << ptr << " is not in any of the pools." << std::endl;
+
+  // Not part of any pool; use global op delete:
+  ::operator delete(ptr);
 }
 
 #endif
