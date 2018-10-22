@@ -1685,13 +1685,13 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the events in the dataset
+   /// \brief Provides a representation of the columns in the dataset
    /// \tparam ColumnTypes variadic list of branch/column types.
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] rows Number of events for each column to be displayed.
    /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
    ///
-   /// This function returns a `RResultPtr<RDisplay>` containing all the events to be displayed, organized in tabular
+   /// This function returns a `RResultPtr<RDisplay>` containing all the entries to be displayed, organized in a tabular
    /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
    /// complete version through `AsString()`.
    template <typename... ColumnTypes>
@@ -1704,15 +1704,13 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the events in the dataset
+   /// \brief Provides a representation of the columns in the dataset
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] rows Number of events for each column to be displayed.
    /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
    ///
-   /// This function returns a `RResultPtr<RDisplay>` containing all the events to be displayed, organized in tabular
-   /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
-   /// complete version through `AsString()`.
    /// This overload automatically infers the column types.
+   /// See the previous overloads for further details.
    RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, const int &nRows = 5)
    {
       CheckIMTDisabled("Display");
@@ -1722,7 +1720,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the events in the dataset
+   /// \brief Provides a representation of the columns in the dataset
    /// \param[in] columnNameRegexp A regular expression to select the columns.
    /// \param[in] rows Number of events for each column to be displayed.
    /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
@@ -1737,15 +1735,12 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Provides a representation of the events in the dataset
+   /// \brief Provides a representation of the columns in the dataset
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
    /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
    ///
-   /// This function returns a `RResultPtr<RDisplay>` containing all the events to be displayed, organized in tabular
-   /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
-   /// complete version through `AsString()`.
-   /// This overload automatically infers the column types.
+   /// See the previous overloads for further details.
    RResultPtr<RDisplay> Display(std::initializer_list<std::string> columnList, const int &nRows = 5)
    {
       ColumnNames_t selectedColumns(columnList);
