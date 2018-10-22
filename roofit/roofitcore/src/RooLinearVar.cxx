@@ -15,27 +15,26 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-//
-// RooLinearVar is the most general form of a derived real-valued object that can
-// be used by RooRealIntegral to integrate over. The requirements for this are
-//
-//          - Can be modified directly (i.e. invertible formula)
-//          - Jacobian term in integral is constant (but not necessarily 1)
-//
-// This class implements the most general form that satisfy these requirement
-// 
-//    RLV = (slope)*x + (offset)
-//
-// X is required to be a RooRealVar to meet the invertibility criterium
-// (slope) and (offset) is are RooAbsReals, but may not overlap with x,
-// i.e. x may not be a server of (slope) and (offset)
-//
-// In the context of a dataset, (slope) may not contain any real-valued dependents
-// (satisfied constant Jacobian requirement). This check cannot be enforced at
-// construction time, but can be performed at run time through the isJacobianOK(depList)
-// member function.
-//
-//
+/// \class RooLinearVar
+/// RooLinearVar is the most general form of a derived real-valued object that can
+/// be used by RooRealIntegral to integrate over. The requirements for this are
+/// * Can be modified directly (i.e. invertible formula)
+/// * Jacobian term in integral is constant (but not necessarily 1)
+///
+/// This class implements the most general form that satisfy these requirement
+/// \f[
+///    RLV = \mathrm{slope} \cdot x + \mathrm{offset}
+/// \f]
+/// X is required to be a RooRealVar to meet the invertibility criterium
+/// `slope` and `offset` are RooAbsReals, but may not overlap with x,
+/// i.e. x may not be a server of `slope` and `offset`.
+///
+/// In the context of a dataset, `slope` may not contain any real-valued dependents
+/// (satisfied constant Jacobian requirement). This check cannot be enforced at
+/// construction time, but can be performed at run time through the isJacobianOK(depList)
+/// member function.
+///
+///
 
 #include "RooFit.h"
 #include "Riostream.h"
