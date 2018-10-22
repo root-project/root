@@ -23,13 +23,15 @@ class RooDataHist ;
 #include "RooAbsData.h"
 #include "RooDirItem.h"
 
-#define USEMEMPOOL
 
+#define USEMEMPOOLFORDATASET
+template <class RooSet_t, size_t>
+class MemPoolForRooSets;
 
 class RooDataSet : public RooAbsData, public RooDirItem {
 public:
 
-#ifdef USEMEMPOOL
+#ifdef USEMEMPOOLFORDATASET
   void* operator new (size_t bytes);
   void operator delete (void *ptr);
 #endif
@@ -129,6 +131,8 @@ public:
   void SetName(const char *name) ;
   void SetNameTitle(const char *name, const char* title) ;
 
+  static void cleanup();
+
 protected:
 
   virtual RooAbsData* cacheClone(const RooAbsArg* newCacheOwner, const RooArgSet* newCacheVars, const char* newName=0) ;
@@ -148,10 +152,11 @@ protected:
   RooArgSet _varsNoWgt ;   // Vars without weight variable 
   RooRealVar* _wgtVar ;    // Pointer to weight variable (if set) 
 
-  static void cleanup() ;
-  static char* _poolBegin ; //! Start of memory pool
-  static char* _poolCur ;   //! Next free slot in memory pool
-  static char* _poolEnd ;   //! End of memory pool  
+private:
+#ifdef USEMEMPOOLFORDATASET
+  typedef MemPoolForRooSets<RooDataSet, 5*150> MemPool; // 150 = about 100kb
+  static MemPool * memPool();
+#endif
 
   ClassDef(RooDataSet,2) // Unbinned data set
 };
