@@ -28,27 +28,29 @@ namespace RooFit {
 
     // static function
     TaskManager* TaskManager::instance(std::size_t N_workers) {
-      if (!_instance) {
+      if (!TaskManager::is_instantiated()) {
         assert(N_workers != 0);
         _instance = std::make_unique<TaskManager>(N_workers);
-      } else {
-        // some sanity checks
-        if(_instance->is_master() && N_workers != _instance->worker_pipes.size()) {
-          std::cerr << "On PID " << getpid() << ": N_workers != tmp->worker_pipes.size())! N_workers = " << N_workers << ", tmp->worker_pipes.size() = " << _instance->worker_pipes.size() << std::endl;
-          throw std::logic_error("");
-        } else if (_instance->is_worker()) {
-          if (_instance->get_worker_id() + 1 != _instance->worker_pipes.size()) {
-            std::cerr << "On PID " << getpid() << ": tmp->get_worker_id() + 1 != tmp->worker_pipes.size())! tmp->get_worker_id() = " << _instance->get_worker_id() << ", tmp->worker_pipes.size() = " << _instance->worker_pipes.size() << std::endl;
-            throw std::logic_error("");
-          }
-        }
       }
+      // these sanity checks no longer make sense with the worker_pipes only being maintained on the queue process
+//      } else {
+//        // some sanity checks
+//        if(_instance->is_master() && N_workers != _instance->worker_pipes.size()) {
+//          std::cerr << "On PID " << getpid() << ": N_workers != tmp->worker_pipes.size())! N_workers = " << N_workers << ", tmp->worker_pipes.size() = " << _instance->worker_pipes.size() << std::endl;
+//          throw std::logic_error("");
+//        } else if (_instance->is_worker()) {
+//          if (_instance->get_worker_id() + 1 != _instance->worker_pipes.size()) {
+//            std::cerr << "On PID " << getpid() << ": tmp->get_worker_id() + 1 != tmp->worker_pipes.size())! tmp->get_worker_id() = " << _instance->get_worker_id() << ", tmp->worker_pipes.size() = " << _instance->worker_pipes.size() << std::endl;
+//            throw std::logic_error("");
+//          }
+//        }
+//      }
       return _instance.get();
     }
 
     // static function
     TaskManager* TaskManager::instance() {
-      if (!_instance) {
+      if (!TaskManager::is_instantiated()) {
         throw std::runtime_error("in TaskManager::instance(): no instance was created yet! Call TaskManager::instance(std::size_t N_workers) first.");
       }
       return _instance.get();
