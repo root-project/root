@@ -2403,6 +2403,14 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
       } else {
          // We are not a top-level branch.
          TVirtualStreamerInfo* si = thiscast->GetInfoImp();
+         if (fCollProxy) {
+            // The GetInfo set fProxy for us, let's not
+            // redo it; the value of fCollProxy is possibly
+            // used/recorded is the actions sequences, so
+            // if we change it here, we would need to propagate
+            // the change.
+            return fCollProxy;
+         }
          TStreamerElement* se = si->GetElement(fID);
          cl = se->GetClassPointer();
       }
