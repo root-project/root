@@ -14,6 +14,7 @@
 
 #pragma link C++ class ROOT::Experimental::RWebDisplayHandle+;
 #pragma link C++ class ROOT::Experimental::RWebWindow+;
+#pragma link C++ class ROOT::Experimental::RWebWindow::WhereArg+;
 #pragma link C++ class ROOT::Experimental::RWebWindowsManager+;
 
 #endif
