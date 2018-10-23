@@ -33,14 +33,14 @@ friend class TWebCanvas;
 protected:
 
    std::unique_ptr<TWebPainterAttributes> fAttr; ///!< current attributes
-   bool fAttrChanged{false};              ///!< flag that attributes are changed after last paint operation
+   unsigned fAttrChanged{0};              ///!< mask identify which attributes were changed
    TWebPainting *fPainting{nullptr};      ///!< object to store all painting
    UInt_t fCw{0}, fCh{0};                 ///!< canvas dimensions, need for back pixel conversion
    Float_t fKx{1.}, fKy{1.};              ///!< coefficient to recalculate pixel coordinates
 
    enum { attrLine = 0x1, attrFill = 0x2, attrMarker = 0x4, attrText = 0x8, attrAll = 0xf };
 
-   TWebPainterAttributes *Attr();
+   TWebPainterAttributes *Attr(unsigned mask = attrAll);
 
    void StoreOperation(const char* opt, TObject* obj = nullptr, unsigned attrmask = attrAll);
 
@@ -62,18 +62,18 @@ public:
    Style_t  GetLineStyle() const { return fAttr ? fAttr->GetLineStyle() : 0; }
    Width_t  GetLineWidth() const { return fAttr ? fAttr->GetLineWidth() : 0; }
 
-   void     SetLineColor(Color_t lcolor) { if (GetLineColor()!=lcolor) Attr()->SetLineColor(lcolor); }
-   void     SetLineStyle(Style_t lstyle) { if (GetLineStyle()!=lstyle) Attr()->SetLineStyle(lstyle); }
-   void     SetLineWidth(Width_t lwidth) { if (GetLineWidth()!=lwidth) Attr()->SetLineWidth(lwidth); }
+   void     SetLineColor(Color_t lcolor) { if (GetLineColor()!=lcolor) Attr(attrLine)->SetLineColor(lcolor); }
+   void     SetLineStyle(Style_t lstyle) { if (GetLineStyle()!=lstyle) Attr(attrLine)->SetLineStyle(lstyle); }
+   void     SetLineWidth(Width_t lwidth) { if (GetLineWidth()!=lwidth) Attr(attrLine)->SetLineWidth(lwidth); }
 
    //Fill attributes.
    Color_t  GetFillColor() const { return fAttr ? fAttr->GetFillColor() : 0; }
    Style_t  GetFillStyle() const { return fAttr ? fAttr->GetFillStyle() : 0; }
    Bool_t   IsTransparent() const { return fAttr ? fAttr->IsTransparent() : kFALSE; }
 
-   void     SetFillColor(Color_t fcolor)  { if (GetFillColor()!=fcolor) Attr()->SetFillColor(fcolor); }
-   void     SetFillStyle(Style_t fstyle) { if (GetFillStyle()!=fstyle) Attr()->SetFillStyle(fstyle); }
-   void     SetOpacity(Int_t percent) { if (GetFillStyle()!=4000+percent) Attr()->SetFillStyle(4000 + percent); }
+   void     SetFillColor(Color_t fcolor)  { if (GetFillColor()!=fcolor) Attr(attrFill)->SetFillColor(fcolor); }
+   void     SetFillStyle(Style_t fstyle) { if (GetFillStyle()!=fstyle) Attr(attrFill)->SetFillStyle(fstyle); }
+   void     SetOpacity(Int_t percent) { if (GetFillStyle()!=4000+percent) Attr(attrFill)->SetFillStyle(4000 + percent); }
 
    //Text attributes.
    Short_t  GetTextAlign() const { return fAttr ? fAttr->GetTextAlign() : 0; }
@@ -83,12 +83,12 @@ public:
    Float_t  GetTextSize()  const { return fAttr ? fAttr->GetTextSize() : 0; }
    Float_t  GetTextMagnitude() const { return  0; }
 
-   void     SetTextAlign(Short_t align) { if (GetTextAlign()!=align) Attr()->SetTextAlign(align); }
-   void     SetTextAngle(Float_t tangle) { if (GetTextAngle()!=tangle) Attr()->SetTextAngle(tangle); }
-   void     SetTextColor(Color_t tcolor) { if (GetTextColor()!=tcolor) Attr()->SetTextColor(tcolor); }
-   void     SetTextFont(Font_t tfont) { if (GetTextFont()!=tfont) Attr()->SetTextFont(tfont); }
-   void     SetTextSize(Float_t tsize) { if (GetTextSize()!=tsize) Attr()->SetTextSize(tsize); }
-   void     SetTextSizePixels(Int_t npixels) { Attr()->SetTextSizePixels(npixels); }
+   void     SetTextAlign(Short_t align) { if (GetTextAlign()!=align) Attr(attrText)->SetTextAlign(align); }
+   void     SetTextAngle(Float_t tangle) { if (GetTextAngle()!=tangle) Attr(attrText)->SetTextAngle(tangle); }
+   void     SetTextColor(Color_t tcolor) { if (GetTextColor()!=tcolor) Attr(attrText)->SetTextColor(tcolor); }
+   void     SetTextFont(Font_t tfont) { if (GetTextFont()!=tfont) Attr(attrText)->SetTextFont(tfont); }
+   void     SetTextSize(Float_t tsize) { if (GetTextSize()!=tsize) Attr(attrText)->SetTextSize(tsize); }
+   void     SetTextSizePixels(Int_t npixels) { Attr(attrText)->SetTextSizePixels(npixels); }
 
    //MISSING in base class - Marker attributes
 
@@ -96,9 +96,9 @@ public:
    Size_t    GetMarkerSize() const { return fAttr ? fAttr->GetMarkerSize() : 0; }
    Style_t   GetMarkerStyle() const { return fAttr ? fAttr->GetMarkerStyle() : 0; }
 
-   void      SetMarkerColor(Color_t cindex) { if (GetMarkerColor()!=cindex) Attr()->SetMarkerColor(cindex); }
-   void      SetMarkerSize(Float_t markersize) { if (GetMarkerSize()!=markersize) Attr()->SetMarkerSize(markersize); }
-   void      SetMarkerStyle(Style_t markerstyle) { if (GetMarkerStyle()!=markerstyle) Attr()->SetMarkerStyle(markerstyle); }
+   void      SetMarkerColor(Color_t cindex) { if (GetMarkerColor()!=cindex) Attr(attrMarker)->SetMarkerColor(cindex); }
+   void      SetMarkerSize(Float_t markersize) { if (GetMarkerSize()!=markersize) Attr(attrMarker)->SetMarkerSize(markersize); }
+   void      SetMarkerStyle(Style_t markerstyle) { if (GetMarkerStyle()!=markerstyle) Attr(attrMarker)->SetMarkerStyle(markerstyle); }
 
    //2. "Off-screen management" part.
    Int_t    CreateDrawable(UInt_t w, UInt_t h);
