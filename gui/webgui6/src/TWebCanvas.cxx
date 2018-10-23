@@ -27,6 +27,8 @@
 #include "TBufferJSON.h"
 #include "Riostream.h"
 #include "TBase64.h"
+#include "TAtt3D.h"
+#include "TView.h"
 
 #include <ROOT/RWebWindowsManager.hxx>
 
@@ -165,7 +167,7 @@ TObject *TWebCanvas::FindPrimitive(const char *sid, TPad *pad, TObjLink **padlnk
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Creates representation of the object for painting in web browser
 
-TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TObject *obj, const char *opt)
+TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const char *opt)
 {
    TWebSnapshot *sub = new TWebSnapshot();
    sub->SetObjectIDAsPtr(obj);
@@ -180,10 +182,37 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TObject *obj, const char *opt)
          painter->ResetPainting();                                        // ensure painter is created
          painter->SetWebCanvasSize(Canvas()->GetWw(), Canvas()->GetWh()); // provide canvas dimension
 
+         TView *view = nullptr;
+
+         if (obj->InheritsFrom(TAtt3D::Class())) {
+            pad->cd();
+            pad->GetViewer3D("pad");
+            view = TView::CreateView(1,0,0); // Cartesian view by default
+            pad->SetView(view);
+            pad->GetCanvas()->SetBatch(kFALSE);
+
+            // Set view to perform first auto-range (scaling) pass
+            view->SetAutoRange(kTRUE);
+
+            printf("Detect 3D object %s %s view %p view3d %p\n", obj->GetName(), obj->ClassName(), pad->GetView(), pad->GetViewer3D());
+
+         }
+
          // calling Paint function for the object
          obj->Paint(opt);
 
+         if (view) {
+            view->SetAutoRange(kFALSE);
+            obj->Paint(opt);
+            pad->GetCanvas()->SetBatch(kTRUE);
+            pad->SetView(nullptr);
+         }
+
          p = painter->TakePainting();
+
+         if (view)
+            printf("After 3D object %s %s painting %p\n", obj->GetName(), obj->ClassName(), p);
+
          fHasSpecials = kTRUE;
       }
    }
@@ -280,7 +309,7 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
          TObject *fobj = nullptr;
          while ((fobj = fiter()) != nullptr)
             if (!fobj->InheritsFrom("TPaveStats") && !fobj->InheritsFrom("TPaletteAxis"))
-               curr->Add(CreateObjectSnapshot(fobj, fiter.GetOption()));
+               curr->Add(CreateObjectSnapshot(pad, fobj, fiter.GetOption()));
 
          primitives_lst->Add(hist->GetListOfFunctions());
       } else if (obj->InheritsFrom(TGraph::Class())) {
@@ -295,11 +324,11 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
          TObject *fobj = nullptr;
          while ((fobj = fiter()) != nullptr)
             if (!fobj->InheritsFrom("TPaveStats")) // stats should be created on the client side
-               curr->Add(CreateObjectSnapshot(fobj, fiter.GetOption()));
+               curr->Add(CreateObjectSnapshot(pad, fobj, fiter.GetOption()));
 
          primitives_lst->Add(gr->GetListOfFunctions());
       } else {
-         curr->Add(CreateObjectSnapshot(obj, iter.GetOption()));
+         curr->Add(CreateObjectSnapshot(pad, obj, iter.GetOption()));
       }
    }
 
@@ -324,8 +353,8 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
 
    // TODO: this is only for debugging, remove it later
-   // static int filecnt = 0;
-   // TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
+   static int filecnt = 0;
+   TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
 
    delete curr; // destroy created snapshot
 
