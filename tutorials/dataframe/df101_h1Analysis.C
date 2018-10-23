@@ -100,10 +100,10 @@ void FitAndPlotH2(TH2 &h2)
 void df101_h1Analysis()
 {
    TChain chain("h42");
-   chain.Add("http://root.cern.ch/files/h1/dstarmb.root");
-   chain.Add("http://root.cern.ch/files/h1/dstarp1a.root");
-   chain.Add("http://root.cern.ch/files/h1/dstarp1b.root");
-   chain.Add("http://root.cern.ch/files/h1/dstarp2.root");
+   chain.Add("root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root");
+   chain.Add("root://eospublic.cern.ch//eos/root-eos/h1/dstarp1a.root");
+   chain.Add("root://eospublic.cern.ch//eos/root-eos/h1/dstarp1b.root");
+   chain.Add("root://eospublic.cern.ch//eos/root-eos/h1/dstarp2.root");
 
    ROOT::EnableImplicitMT(4);
 
