@@ -19,70 +19,89 @@ class TWebPS : public TVirtualPS {
    TWebPadPainter &fPainter;
 public:
    TWebPS(TWebPadPainter &p) : fPainter(p) {}
+   virtual ~TWebPS() = default;
 
    //Redirect calls to WebPainter
    //Line attributes.
-   Color_t  GetLineColor() const { return fPainter.GetLineColor(); }
-   Style_t  GetLineStyle() const { return fPainter.GetLineStyle(); }
-   Width_t  GetLineWidth() const { return fPainter.GetLineWidth(); }
+   Color_t  GetLineColor() const override { return fPainter.GetLineColor(); }
+   Style_t  GetLineStyle() const override { return fPainter.GetLineStyle(); }
+   Width_t  GetLineWidth() const override { return fPainter.GetLineWidth(); }
 
-   void     SetLineColor(Color_t lcolor) { fPainter.SetLineColor(lcolor); }
-   void     SetLineStyle(Style_t lstyle) { fPainter.SetLineStyle(lstyle); }
-   void     SetLineWidth(Width_t lwidth) { fPainter.SetLineWidth(lwidth); }
+   void     SetLineColor(Color_t lcolor) override { fPainter.SetLineColor(lcolor); }
+   void     SetLineStyle(Style_t lstyle) override { fPainter.SetLineStyle(lstyle); }
+   void     SetLineWidth(Width_t lwidth) override { fPainter.SetLineWidth(lwidth); }
 
    //Fill attributes.
-   Color_t  GetFillColor() const { return fPainter.GetFillColor(); }
-   Style_t  GetFillStyle() const { return fPainter.GetFillStyle(); }
-   Bool_t   IsTransparent() const { return fPainter.IsTransparent(); }
+   Color_t  GetFillColor() const override { return fPainter.GetFillColor(); }
+   Style_t  GetFillStyle() const override { return fPainter.GetFillStyle(); }
+   Bool_t   IsTransparent() const override { return fPainter.IsTransparent(); }
 
-   void     SetFillColor(Color_t fcolor)  { fPainter.SetFillColor(fcolor); }
-   void     SetFillStyle(Style_t fstyle) { fPainter.SetFillStyle(fstyle); }
+   void     SetFillColor(Color_t fcolor)  override { fPainter.SetFillColor(fcolor); }
+   void     SetFillStyle(Style_t fstyle)  override { fPainter.SetFillStyle(fstyle); }
    void     SetOpacity(Int_t percent) { fPainter.SetOpacity(percent); }
 
    //Text attributes.
-   Short_t  GetTextAlign() const { return fPainter.GetTextAlign(); }
-   Float_t  GetTextAngle() const { return fPainter.GetTextAngle(); }
-   Color_t  GetTextColor() const { return fPainter.GetTextColor(); }
-   Font_t   GetTextFont()  const { return fPainter.GetTextFont(); }
-   Float_t  GetTextSize()  const { return fPainter.GetTextSize(); }
+   Short_t  GetTextAlign() const override { return fPainter.GetTextAlign(); }
+   Float_t  GetTextAngle() const override { return fPainter.GetTextAngle(); }
+   Color_t  GetTextColor() const override { return fPainter.GetTextColor(); }
+   Font_t   GetTextFont()  const override { return fPainter.GetTextFont(); }
+   Float_t  GetTextSize()  const override { return fPainter.GetTextSize(); }
    Float_t  GetTextMagnitude() const { return fPainter.GetTextMagnitude(); }
 
-   void     SetTextAlign(Short_t align) { fPainter.SetTextAlign(align); }
-   void     SetTextAngle(Float_t tangle) { fPainter.SetTextAngle(tangle); }
-   void     SetTextColor(Color_t tcolor) { fPainter.SetTextColor(tcolor); }
-   void     SetTextFont(Font_t tfont) { fPainter.SetTextFont(tfont); }
-   void     SetTextSize(Float_t tsize) { fPainter.SetTextSize(tsize); }
-   void     SetTextSizePixels(Int_t npixels) { fPainter.SetTextSizePixels(npixels); }
+   void     SetTextAlign(Short_t align) override { fPainter.SetTextAlign(align); }
+   void     SetTextAngle(Float_t tangle) override { fPainter.SetTextAngle(tangle); }
+   void     SetTextColor(Color_t tcolor) override { fPainter.SetTextColor(tcolor); }
+   void     SetTextFont(Font_t tfont) override { fPainter.SetTextFont(tfont); }
+   void     SetTextSize(Float_t tsize) override { fPainter.SetTextSize(tsize); }
+   void     SetTextSizePixels(Int_t npixels) override { fPainter.SetTextSizePixels(npixels); }
 
    //MISSING in base class - Marker attributes
 
-   Color_t   GetMarkerColor() const { return fPainter.GetMarkerColor(); }
-   Size_t    GetMarkerSize() const { return fPainter.GetMarkerSize(); }
-   Style_t   GetMarkerStyle() const { return fPainter.GetMarkerStyle(); }
+   Color_t   GetMarkerColor() const override  { return fPainter.GetMarkerColor(); }
+   Size_t    GetMarkerSize() const override  { return fPainter.GetMarkerSize(); }
+   Style_t   GetMarkerStyle() const override  { return fPainter.GetMarkerStyle(); }
 
-   void      SetMarkerColor(Color_t cindex) { fPainter.SetMarkerColor(cindex); }
-   void      SetMarkerSize(Float_t markersize) { fPainter.SetMarkerSize(markersize); }
-   void      SetMarkerStyle(Style_t markerstyle) { fPainter.SetMarkerStyle(markerstyle); }
+   void      SetMarkerColor(Color_t cindex) override  { fPainter.SetMarkerColor(cindex); }
+   void      SetMarkerSize(Float_t markersize) override  { fPainter.SetMarkerSize(markersize); }
+   void      SetMarkerStyle(Style_t markerstyle) override  { fPainter.SetMarkerStyle(markerstyle); }
+
+   void CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t, Double_t) override  {}
+   void CellArrayFill(Int_t, Int_t, Int_t)  override {}
+   void CellArrayEnd()  override  {}
+   void Close(Option_t * = "")  override  {}
+   void DrawBox(Double_t, Double_t, Double_t, Double_t) override   {}
+   void DrawFrame(Double_t, Double_t, Double_t, Double_t, Int_t, Int_t, Int_t, Int_t) override {}
 
 
-   virtual void CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) {}
-   virtual void CellArrayFill(Int_t r, Int_t g, Int_t b) {}
-   virtual void CellArrayEnd()  {}
-   virtual void Close(Option_t *opt = "")  {}
-   virtual void DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)  {}
-   virtual void
-   DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t yt, Int_t mode, Int_t border, Int_t dark, Int_t light)  {}
-   virtual void DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)  {}
-   virtual void DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)  {}
-   virtual void DrawPS(Int_t n, Float_t *xw, Float_t *yw)  {}
-   virtual void DrawPS(Int_t n, Double_t *xw, Double_t *yw)  {}
-   virtual void NewPage()  {}
-   virtual void Open(const char *filename, Int_t type = -111)  {}
-   virtual void Text(Double_t x, Double_t y, const char *string)  {}
-   virtual void Text(Double_t x, Double_t y, const wchar_t *string)  {}
-   virtual void SetColor(Float_t r, Float_t g, Float_t b)  {}
+   void DrawPolyMarker(Int_t n, Float_t *x, Float_t *y) override { fPainter.DrawPolyMarker(n, x, y); }
+   void DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) override { fPainter.DrawPolyMarker(n, x, y); }
+   void DrawPS(Int_t n, Float_t *xw, Float_t *yw) override
+   {
+      if (n == 2)
+         fPainter.DrawLine(xw[0], yw[0], xw[1], yw[1]);
+      else
+         fPainter.DrawPolyLine(n, xw, yw);
+   }
+   void DrawPS(Int_t n, Double_t *xw, Double_t *yw) override
+   {
+      if (n == 2)
+         fPainter.DrawLine(xw[0], yw[0], xw[1], yw[1]);
+      else
+         fPainter.DrawPolyLine(n, xw, yw);
+   }
+   void NewPage() override {}
+   void Open(const char *, Int_t = -111) override {}
+   void Text(Double_t x, Double_t y, const char *str) override
+   {
+      fPainter.DrawText(x, y, str, TVirtualPadPainter::kClear);
+   }
+   void Text(Double_t x, Double_t y, const wchar_t *str) override
+   {
+      fPainter.DrawText(x, y, str, TVirtualPadPainter::kClear);
+   }
+   void SetColor(Float_t, Float_t, Float_t) override {}
 
-   ClassDef(TWebPS, 0) // Redirection of VirtualPS to Web painter
+   ClassDefOverride(TWebPS, 0) // Redirection of VirtualPS to Web painter
 };
 
 #endif
