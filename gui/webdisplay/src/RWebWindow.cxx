@@ -21,6 +21,7 @@
 #include "RWebWindowWSHandler.hxx"
 #include "THttpCallArg.h"
 #include "TUrl.h"
+#include "TROOT.h"
 
 #include <cstring>
 #include <cstdlib>
@@ -41,6 +42,40 @@ ROOT::Experimental::RWebWindow::WebConn::~WebConn()
    }
 }
 
+
+/** \class ROOT::Experimental::RWebWindow::WhereArg
+ * \ingroup webdisplay
+ *
+ * Holds different arguments for RWebWindow::Show() method
+ */
+
+ROOT::Experimental::RWebWindow::WhereArg::WhereArg()
+{
+   SetBrowserKind(gROOT->GetWebDisplay().Data());
+}
+
+ROOT::Experimental::RWebWindow::WhereArg::WhereArg(const std::string &browser)
+{
+   SetBrowserKind(browser);
+}
+
+void ROOT::Experimental::RWebWindow::WhereArg::SetBrowserKind(const std::string &kind)
+{
+   if (kind == "local")
+      SetBrowserKind(kLocal);
+   else if (kind.empty() || (kind == "native"))
+      SetBrowserKind(kNative);
+   else if (kind == "firefox")
+      SetBrowserKind(kFirefox);
+   else if ((kind == "chrome") || (kind == "chromium"))
+      SetBrowserKind(kChrome);
+   else if (kind == "cef")
+      SetBrowserKind(kCEF);
+   else if (kind == "qt5")
+      SetBrowserKind(kQt5);
+   else
+      SetCustomExec(kind);
+}
 
 /** \class ROOT::Experimental::RWebWindow
 \ingroup webdisplay

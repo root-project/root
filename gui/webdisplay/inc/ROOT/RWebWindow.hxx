@@ -191,9 +191,23 @@ public:
 
       WhereArg(const std::string &browser);
 
+      void SetBrowserKind(const std::string &kind);
       void SetBrowserKind(BrowserKind kind) { fKind = kind; }
       BrowserKind GetBrowserKind() const { return fKind; }
 
+      void SetCustomExec(const std::string &exec)
+      {
+         SetBrowserKind(kCustom);
+         fExec = exec;
+      }
+
+      std::string GetCustomExec() const { return GetBrowserKind() == kCustom ? fExec : ""; }
+
+      void SetWidth(int w = 0) { fWidth = w; }
+      void SetHeight(int h = 0) { fHeight = h; }
+
+      int GetWidth() const { return fWidth; }
+      int GetHeight() const { return fHeight; }
    };
 
 
