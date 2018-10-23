@@ -57,12 +57,12 @@ void TWebPadPainter::ResetPainting()
 {
    if (fPainting) delete fPainting;
    fPainting = nullptr;
-   if (fAttr) fAttrChanged = kTRUE;
+   if (fAttr) fAttrChanged = attrAll;
 }
 
-TWebPainterAttributes *TWebPadPainter::Attr()
+TWebPainterAttributes *TWebPadPainter::Attr(unsigned mask)
 {
-   fAttrChanged = kTRUE;
+   fAttrChanged |= mask;
    if (!fAttr) fAttr = std::make_unique<TWebPainterAttributes>();
    return fAttr.get();
 }
@@ -80,9 +80,9 @@ void TWebPadPainter::StoreOperation(const char* opt, TObject* obj, unsigned attr
 {
    if (!fPainting) fPainting = new TWebPainting();
 
-   if (fAttrChanged) {
+   if (fAttrChanged & attrmask) {
       fPainting->Add(fAttr->Clone(), "attr");
-      fAttrChanged = kFALSE;
+      fAttrChanged = 0;
    }
    if (!obj) obj = new TObjString("any");
    fPainting->Add(obj, opt);
