@@ -42,6 +42,10 @@ namespace HistFactory {
   };
   */
 
+/** \class OverallSys
+ * \ingroup HistFactory
+ * Configuration for a constrained overall systematic to scale sample normalisations.
+ */
   class OverallSys {
 
   public:
@@ -66,7 +70,10 @@ namespace HistFactory {
 
   };
 
-
+/** \class NormFactor
+ * \ingroup HistFactory
+ * Configuration for an \a un- constrained overall systematic to scale sample normalisations.
+ */
   class NormFactor {
 
   public:
@@ -100,7 +107,10 @@ namespace HistFactory {
 
   };
 
-
+/** \class HistoSys
+ * \ingroup HistFactory
+ * Configuration for a constrained, coherent shape variation of affected samples.
+ */
   class HistoSys {
 
   public:
@@ -157,7 +167,10 @@ namespace HistFactory {
 
   };
 
-
+/** \class HistoFactor
+ * \ingroup HistFactory
+ * Configuration for an \a unconstrained, coherent shape variation of affected samples.
+ */
   class HistoFactor {
 
   public:
@@ -212,7 +225,10 @@ namespace HistFactory {
 
   };
 
-
+/** \class ShapeSys
+ * \ingroup HistFactory
+ * Constrained bin-by-bin variation of affected histogram.
+ */
   class ShapeSys {
 
   public:
@@ -254,7 +270,10 @@ namespace HistFactory {
 
   };
 
-
+/** \class ShapeFactor
+ * \ingroup HistFactory
+ * \a Unconstrained bin-by-bin variation of affected histogram.
+ */
   class ShapeFactor {
 
   public:
@@ -309,7 +328,10 @@ namespace HistFactory {
 
   };
 
-
+/** \class StatError
+ * \ingroup HistFactory
+ * Statistical error of Monte Carlo predictions.
+ */
   class StatError {
 
   public:
@@ -352,6 +374,11 @@ namespace HistFactory {
 
   };
 
+/** \class StatErrorConfig
+ * \ingroup HistFactory
+ * Configuration to automatically assign nuisance parameters for the statistical
+ * error of the Monte Carlo simulations.
+ */
   class StatErrorConfig {
 
   public:

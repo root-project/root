@@ -346,15 +346,16 @@ void RooAbsData::setDirtyProp(Bool_t flag)
 /// Create a reduced copy of this dataset. The caller takes ownership of the returned dataset
 ///
 /// The following optional named arguments are accepted
-///
-///  - `SelectVars(const RooArgSet& vars)` Only retain the listed observables in the output dataset
-///  - `Cut(const char* expression)` Only retain event surviving the given cut expression
-///  - `Cut(const RooFormulaVar& expr)` Only retain event surviving the given cut formula
-///  - `CutRange(const char* name)` Only retain events inside range with given name. Multiple CutRange
+/// <table>
+/// <tr><td> `SelectVars(const RooArgSet& vars)`   <td> Only retain the listed observables in the output dataset
+/// <tr><td> `Cut(const char* expression)`   <td> Only retain event surviving the given cut expression
+/// <tr><td> `Cut(const RooFormulaVar& expr)`   <td> Only retain event surviving the given cut formula
+/// <tr><td> `CutRange(const char* name)`   <td> Only retain events inside range with given name. Multiple CutRange
 ///     arguments may be given to select multiple ranges
-///  - `EventRange(int lo, int hi)` Only retain events with given sequential event numbers
-///  - `Name(const char* name)` Give specified name to output dataset
-///  - Title(const char* name)` Give specified title to output dataset
+/// <tr><td> `EventRange(int lo, int hi)`   <td> Only retain events with given sequential event numbers
+/// <tr><td> `Name(const char* name)`   <td> Give specified name to output dataset
+/// <tr><td> `Title(const char* name)`   <td> Give specified title to output dataset
+/// </table>
 
 RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,const RooCmdArg& arg4,
                 const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8)
@@ -526,44 +527,6 @@ void RooAbsData::weightError(Double_t& lo, Double_t& hi, ErrorType) const
   lo=0 ; hi=0 ;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Plot dataset on specified frame. By default an unbinned dataset will use the default binning of
-/// the target frame. A binned dataset will by default retain its intrinsic binning.
-///
-/// The following optional named arguments can be used to modify the default behavior
-///
-/// Data representation options
-/// ---------------------------
-///  - `Asymmetry(const RooCategory& c)` Show the asymmetry of the data in given two-state category [F(+)-F(-)] / [F(+)+F(-)].
-///     Category must have two states with indices -1 and +1 or three states with indices -1,0 and +1.
-///  - `DataError(RooAbsData::EType)` Select the type of error drawn: Poisson (default) draws asymmetric Poisson
-///     confidence intervals. SumW2 draws symmetric sum-of-weights error
-///  - `Binning(int nbins, double xlo, double xhi)` Use specified binning to draw dataset
-///  - `Binning(const RooAbsBinning&)` Use specified binning to draw dataset
-///  - `Binning(const char* name)` Use binning with specified name to draw dataset
-///  - `RefreshNorm(Bool_t flag)` Force refreshing for PDF normalization information in frame.
-///     If set, any subsequent PDF will normalize to this dataset, even if it is
-///     not the first one added to the frame. By default only the 1st dataset
-///     added to a frame will update the normalization information
-///  - `Rescale(Double_t factor)` Apply global rescaling factor to histogram
-///
-/// Histogram drawing options
-/// -------------------------
-///  - `DrawOption(const char* opt)` Select ROOT draw option for resulting TGraph object
-///  - `LineStyle(Int_t style)` Select line style by ROOT line style code, default is solid
-///  - `LineColor(Int_t color)` Select line color by ROOT color code, default is black
-///  - `LineWidth(Int_t width)` Select line with in pixels, default is 3
-///  - `MarkerStyle(Int_t style)` Select the ROOT marker style, default is 21
-///  - `MarkerColor(Int_t color)` Select the ROOT marker color, default is black
-///  - `MarkerSize(Double_t size)` Select the ROOT marker size
-///  - `XErrorSize(Double_t frac)` Select size of X error bar as fraction of the bin width, default is 1
-///
-///
-/// Misc. other options
-/// -------------------
-///  - `Name(const chat* name)` Give curve specified name in frame. Useful if curve is to be referenced later
-///  - `Invisible(Bool_t flag)` Add curve to frame, but do not display. Useful in combination AddTo()
-///  - `AddTo(const char* name,double_t wgtSelf, double_t wgtOther) Add constructed histogram to already existing histogram with given name and relative weight factors
 
 RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
              const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
@@ -646,28 +609,6 @@ TH1 *RooAbsData::createHistogram(const char* varNameList, Int_t xbins, Int_t ybi
   return result ;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Create and fill a ROOT histogram TH1,TH2 or TH3 with the values of this dataset.
-///
-/// This function accepts the following arguments
-///
-///  - nameName of the ROOT histogram
-///  - xvar -- Observable to be mapped on x axis of ROOT histogram
-///
-///  - `AutoBinning(Int_t nbins, Double_y margin)` Automatically calculate range with given added fractional margin, set binning to nbins
-///  - `AutoSymBinning(Int_t nbins, Double_y margin)` Automatically calculate range with given added fractional margin,
-///     with additional constraint that mean of data is in center of range, set binning to nbins
-///  - `Binning(const char* name)` Apply binning with given name to x axis of histogram
-///  - `Binning(RooAbsBinning& binning)` Apply specified binning to x axis of histogram
-///  - `Binning(int nbins, double lo, double hi)` Apply specified binning to x axis of histogram
-///
-///  - `YVar(const RooAbsRealLValue& var,...)` Observable to be mapped on y axis of ROOT histogram
-///  - `ZVar(const RooAbsRealLValue& var,...)` Observable to be mapped on z axis of ROOT histogram
-///
-/// The YVar() and ZVar() arguments can be supplied with optional Binning() Auto(Sym)Range() arguments to control the binning of the Y and Z axes, e.g.
-/// createHistogram("histo",x,Binning(-1,1,20), YVar(y,Binning(-1,1,30)), ZVar(z,Binning("zbinning")))
-///
-/// The caller takes ownership of the returned histogram
 
 TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
              const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
@@ -683,7 +624,31 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Internal method that implements histogram filling
+///
+/// This function accepts the following arguments
+///
+/// \param[in] name Name of the ROOT histogram
+/// \param[in] xvar Observable to be mapped on x axis of ROOT histogram
+/// \return Histogram now owned by user.
+///
+/// <table>
+/// <tr><td> `AutoBinning(Int_t nbins, Double_y margin)`   <td> Automatically calculate range with given added fractional margin, set binning to nbins
+/// <tr><td> `AutoSymBinning(Int_t nbins, Double_y margin)`   <td> Automatically calculate range with given added fractional margin,
+///     with additional constraint that mean of data is in center of range, set binning to nbins
+/// <tr><td> `Binning(const char* name)`   <td> Apply binning with given name to x axis of histogram
+/// <tr><td> `Binning(RooAbsBinning& binning)`   <td> Apply specified binning to x axis of histogram
+/// <tr><td> `Binning(int nbins, double lo, double hi)`   <td> Apply specified binning to x axis of histogram
+///
+/// <tr><td> `YVar(const RooAbsRealLValue& var,...)`   <td> Observable to be mapped on y axis of ROOT histogram
+/// <tr><td> `ZVar(const RooAbsRealLValue& var,...)`   <td> Observable to be mapped on z axis of ROOT histogram
+/// </table>
+///
+/// The YVar() and ZVar() arguments can be supplied with optional Binning() Auto(Sym)Range() arguments to control the binning of the Y and Z axes, e.g.
+/// ```
+/// createHistogram("histo",x,Binning(-1,1,20), YVar(y,Binning(-1,1,30)), ZVar(z,Binning("zbinning")))
+/// ```
+///
+/// The caller takes ownership of the returned histogram
 
 TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar, const RooLinkedList& argListIn) const
 {
@@ -832,11 +797,13 @@ Int_t RooAbsData::defaultPrintContents(Option_t* /*opt*/) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate standardized moment < (X - <X>)^n > / sigma^n,  where n = order.
+/// Calculate standardized moment.
 ///
-/// If cutSpec and/or cutRange are specified
-/// the moment is calculated on the subset of the data which pass the C++ cut specification expression 'cutSpec'
-/// and/or are inside the range named 'cutRange'
+/// \param[in] var Variable to be used for calculating the moment.
+/// \param[in] order Order of the moment.
+/// \param[in] cutSpec  If specified, the moment is calculated on the subset of the data which pass the C++ cut specification expression 'cutSpec'
+/// \param[in] cutRange If specified, calculate inside the range named 'cutRange' (also applies cut spec)
+/// \return \f$ \frac{\left< \left( X - \left< X \right> \right)^n \right>}{\sigma^n} \f$,  where n = order.
 
 Double_t RooAbsData::standMoment(RooRealVar &var, Double_t order, const char* cutSpec, const char* cutRange) const
 {
@@ -848,11 +815,14 @@ Double_t RooAbsData::standMoment(RooRealVar &var, Double_t order, const char* cu
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate moment < (X - <X>)^n > where n = order.
+/// Calculate moment of requested order.
 ///
-/// If cutSpec and/or cutRange are specified
-/// the moment is calculated on the subset of the data which pass the C++ cut specification expression 'cutSpec'
-/// and/or are inside the range named 'cutRange'
+/// \param[in] var Variable to be used for calculating the moment.
+/// \param[in] order Order of the moment.
+/// \param[in] cutSpec  If specified, the moment is calculated on the subset of the data which pass the C++ cut specification expression 'cutSpec'
+/// \param[in] cutRange If specified, calculate inside the range named 'cutRange' (also applies cut spec)
+/// \return \f$ \left< \left( X - \left< X \right> \right)^n \right> \f$ of order \f$n\f$.
+///
 
 Double_t RooAbsData::moment(RooRealVar &var, Double_t order, const char* cutSpec, const char* cutRange) const
 {
@@ -1150,24 +1120,30 @@ RooRealVar* RooAbsData::rmsVar(RooRealVar &var, const char* cutSpec, const char*
 /// event count, mean and rms of the plotted variable is added.
 ///
 /// The following optional named arguments are accepted
+/// <table>
+/// <tr><td> `What(const char* whatstr)`   <td> Controls what is printed: "N" = count, "M" is mean, "R" is RMS.
+/// <tr><td> `Format(const char* optStr)`   <td> \deprecated Classing parameter formatting options, provided for backward compatibility
 ///
-///  - `What(const char* whatstr)` Controls what is printed: "N" = count, "M" is mean, "R" is RMS.
-///  - `Format(const char* optStr)` Classing parameter formatting options, provided for backward compatibility
-///  - `Format(const char* what,...)` Parameter formatting options, details given below
-///  - `Label(const chat* label)` Add header label to parameter box
-///  - `Layout(Double_t xmin, Double_t xmax, Double_t ymax)` Specify relative position of left,right side of box and top of box. Position of
+/// <tr><td> `Format(const char* what,...)`   <td> Parameter formatting options.
+///   <table>
+///   <tr><td> const char* what <td> Controls what is shown:
+///     - "N" adds name
+///     - "E" adds error
+///     - "A" shows asymmetric error
+///     - "U" shows unit
+///     - "H" hides the value
+///   <tr><td> `FixedPrecision(int n)`   <td> Controls precision, set fixed number of digits
+///   <tr><td> `AutoPrecision(int n)`   <td> Controls precision. Number of shown digits is calculated from error + n specified additional digits (1 is sensible default)
+///   <tr><td> `VerbatimName(Bool_t flag)`   <td> Put variable name in a \\verb+   + clause.
+///   </table>
+/// <tr><td> `Label(const chat* label)`   <td> Add header label to parameter box
+/// <tr><td> `Layout(Double_t xmin, Double_t xmax, Double_t ymax)`   <td> Specify relative position of left,right side of box and top of box. Position of
 ///     bottom of box is calculated automatically from number lines in box
-///  - `Cut(const char* expression)` Apply given cut expression to data when calculating statistics
-///  - `CutRange(const char* rangeName)` Only consider events within given range when calculating statistics. Multiple
-///     CutRange() argument may be specified to combine ranges
+/// <tr><td> `Cut(const char* expression)`   <td> Apply given cut expression to data when calculating statistics
+/// <tr><td> `CutRange(const char* rangeName)`   <td> Only consider events within given range when calculating statistics. Multiple
+///     CutRange() argument may be specified to combine ranges.
 ///
-/// The `Format(const char* what,...)` has the following structure
-///
-///  - `const char* what` Controls what is shown. "N" adds name, "E" adds error,
-///    "A" shows asymmetric error, "U" shows unit, "H" hides the value
-///  - `FixedPrecision(int n)` Controls precision, set fixed number of digits
-///  - `AutoPrecision(int n)` Controls precision. Number of shown digits is calculated from error + n specified additional digits (1 is sensible default)
-///  - `VerbatimName(Bool_t flag)` Put variable name in a \\verb+   + clause.
+/// </table>
 
 RooPlot* RooAbsData::statOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
              const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
@@ -1577,44 +1553,43 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
 ///
 /// The following optional named arguments can be used to modify the default behavior
 ///
-/// Data representation options
-/// ---------------------------
-///  - `Asymmetry(const RooCategory& c)` Show the asymmetry of the data in given two-state category [F(+)-F(-)] / [F(+)+F(-)].
+/// <table>
+/// <tr><th> <th> Data representation options
+/// <tr><td> `Asymmetry(const RooCategory& c)`   <td> Show the asymmetry of the data in given two-state category [F(+)-F(-)] / [F(+)+F(-)].
 ///     Category must have two states with indices -1 and +1 or three states with indices -1,0 and +1.
-///  - `Efficiency(const RooCategory& c)` Show the efficiency F(acc)/[F(acc)+F(rej)]. Category must have two states with indices 0 and 1
-///  - `DataError(RooAbsData::EType)` Select the type of error drawn:
+/// <tr><td> `Efficiency(const RooCategory& c)`   <td> Show the efficiency F(acc)/[F(acc)+F(rej)]. Category must have two states with indices 0 and 1
+/// <tr><td> `DataError(RooAbsData::EType)`   <td> Select the type of error drawn:
 ///    - `Auto(default)` results in Poisson for unweighted data and SumW2 for weighted data
 ///    - `Poisson` draws asymmetric Poisson confidence intervals.
 ///    - `SumW2` draws symmetric sum-of-weights error ( sum(w)^2/sum(w^2) )
 ///    - `None` draws no error bars
-///  - `Binning(int nbins, double xlo, double xhi)` Use specified binning to draw dataset
-///  - `Binning(const RooAbsBinning&)`  Use specified binning to draw dataset
-///  - `Binning(const char* name)`  Use binning with specified name to draw dataset
-///  - `RefreshNorm(Bool_t flag)` Force refreshing for PDF normalization information in frame.
+/// <tr><td> `Binning(int nbins, double xlo, double xhi)`   <td> Use specified binning to draw dataset
+/// <tr><td> `Binning(const RooAbsBinning&)`   <td>  Use specified binning to draw dataset
+/// <tr><td> `Binning(const char* name)`   <td>  Use binning with specified name to draw dataset
+/// <tr><td> `RefreshNorm(Bool_t flag)`   <td> Force refreshing for PDF normalization information in frame.
 ///     If set, any subsequent PDF will normalize to this dataset, even if it is
 ///     not the first one added to the frame. By default only the 1st dataset
 ///     added to a frame will update the normalization information
-///  - `Rescale(Double_t f)` Rescale drawn histogram by given factor
+/// <tr><td> `Rescale(Double_t f)`   <td> Rescale drawn histogram by given factor
 ///
-/// Histogram drawing options
-/// -------------------------
-///  - `DrawOption(const char* opt)` Select ROOT draw option for resulting TGraph object
-///  - `LineStyle(Int_t style)` Select line style by ROOT line style code, default is solid
-///  - `LineColor(Int_t color)` Select line color by ROOT color code, default is black
-///  - `LineWidth(Int_t width)` Select line with in pixels, default is 3
-///  - `MarkerStyle(Int_t style)` Select the ROOT marker style, default is 21
-///  - `MarkerColor(Int_t color)` Select the ROOT marker color, default is black
-///  - `MarkerSize(Double_t size)` Select the ROOT marker size
-///  - `FillStyle(Int_t style)` Select fill style, default is filled.
-///  - `FillColor(Int_t color)` Select fill color by ROOT color code
-///  - `XErrorSize(Double_t frac)` Select size of X error bar as fraction of the bin width, default is 1
+/// <tr><th> <th> Histogram drawing options
+/// <tr><td> `DrawOption(const char* opt)`   <td> Select ROOT draw option for resulting TGraph object
+/// <tr><td> `LineStyle(Int_t style)`   <td> Select line style by ROOT line style code, default is solid
+/// <tr><td> `LineColor(Int_t color)`   <td> Select line color by ROOT color code, default is black
+/// <tr><td> `LineWidth(Int_t width)`   <td> Select line with in pixels, default is 3
+/// <tr><td> `MarkerStyle(Int_t style)`   <td> Select the ROOT marker style, default is 21
+/// <tr><td> `MarkerColor(Int_t color)`   <td> Select the ROOT marker color, default is black
+/// <tr><td> `MarkerSize(Double_t size)`   <td> Select the ROOT marker size
+/// <tr><td> `FillStyle(Int_t style)`   <td> Select fill style, default is filled.
+/// <tr><td> `FillColor(Int_t color)`   <td> Select fill color by ROOT color code
+/// <tr><td> `XErrorSize(Double_t frac)`   <td> Select size of X error bar as fraction of the bin width, default is 1
 ///
 ///
-/// Misc. other options
-/// -------------------
-///  - `Name(const chat* name)` Give curve specified name in frame. Useful if curve is to be referenced later
-///  - `Invisible()` Add curve to frame, but do not display. Useful in combination AddTo()
-///  - `AddTo(const char* name, double_t wgtSelf, double_t wgtOther)` Add constructed histogram to already existing histogram with given name and relative weight factors
+/// <tr><th> <th> Misc. other options
+/// <tr><td> `Name(const chat* name)`   <td> Give curve specified name in frame. Useful if curve is to be referenced later
+/// <tr><td> `Invisible()`   <td> Add curve to frame, but do not display. Useful in combination AddTo()
+/// <tr><td> `AddTo(const char* name, double_t wgtSelf, double_t wgtOther)`   <td> Add constructed histogram to already existing histogram with given name and relative weight factors
+/// </table>
 
 RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
 {
@@ -2347,7 +2322,8 @@ Bool_t RooAbsData::hasFilledCache() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to the TTree which stores the data. Returns a nullpointer
-/// if vector-based storage is used. The RooAbsData remains owner of the tree
+/// if vector-based storage is used. The RooAbsData remains owner of the tree.
+/// GetClonedTree() can be used to get a tree even if the internal storage does not use one.
 
 const TTree *RooAbsData::tree() const
 {
@@ -2355,7 +2331,7 @@ const TTree *RooAbsData::tree() const
       return _dstore->tree();
    } else {
       coutW(InputArguments) << "RooAbsData::tree(" << GetName() << ") WARNING: is not of StorageType::Tree. "
-                            << "Use export_tree() instead or convert to tree storage." << endl;
+                            << "Use GetClonedTree() instead or convert to tree storage." << endl;
       return (TTree *)nullptr;
    }
 }

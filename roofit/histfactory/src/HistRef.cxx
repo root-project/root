@@ -8,6 +8,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class RooStats::HistFactory::HistRef
+ * \ingroup HistFactory
+ * Internal class wrapping an histogram and managing its content. 
+ * convenient for dealing with histogram pointers in the 
+ * HistFactory class 
+ */
 
 #include "TH1.h"
 #include "RooStats/HistFactory/HistRef.h"

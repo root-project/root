@@ -8,19 +8,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-
-/*
-BEGIN_HTML
-<p>
+/** \class RooStats::HistFactory::Measurement
+ * \ingroup HistFactory
 The RooStats::HistFactory::Measurement class can be used to construct a model
 by combining multiple RooStats::HistFactory::Channel objects. It also allows
 to set some general properties like the integrated luminosity, its relative
 uncertainty or the functional form of constraints on nuisance parameters.
-</p>
-END_HTML
 */
-//
 
 
 #include <ctime>

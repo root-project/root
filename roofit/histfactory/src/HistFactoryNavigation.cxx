@@ -1,4 +1,8 @@
 
+/** \class RooStats::HistFactory::HistFactoryNavigation
+ *  \ingroup HistFactory 
+ */
+
 #include <iomanip>
 #include <sstream>
 

@@ -10,7 +10,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
+/**
+\ingroup HistFactory
+
 BEGIN_HTML
 <p>
 This is a package that creates a RooFit probability density function from ROOT histograms 

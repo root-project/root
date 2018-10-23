@@ -9,19 +9,14 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/*
-BEGIN_HTML
-<p>
-This class encapsulates all information for the statistical interpretation of one experiment.
-It can be combined with other channels (e.g. for the combination of multiple experiments, or
-to constrain nuisance parameters with information obtained in a control region).
-A channel contains one or more samples which describe the contribution from different processes
-to this measurement.
-</p>
-END_HTML
+/** \class RooStats::HistFactory::Channel
+ *  \ingroup HistFactory
+  This class encapsulates all information for the statistical interpretation of one experiment.
+  It can be combined with other channels (e.g. for the combination of multiple experiments, or
+  to constrain nuisance parameters with information obtained in a control region).
+  A channel contains one or more samples which describe the contribution from different processes
+  to this measurement.
 */
-//
 
 
 

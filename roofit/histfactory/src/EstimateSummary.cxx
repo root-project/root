@@ -10,13 +10,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-</p>
-END_HTML
-*/
-//
+/** \class RooStats::HistFactory::EstimateSummary
+ *  \ingroup HistFactory 
+ */
 
 #include <algorithm>
 #include "RooStats/HistFactory/EstimateSummary.h"

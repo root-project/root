@@ -492,11 +492,11 @@ RooAbsReal* RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
 /// it integrates and the range integrates over
 ///
 /// The following named arguments are accepted
-///
-/// NormSet(const RooArgSet&)            -- Specify normalization set, mostly useful when working with PDFS
-/// NumIntConfig(const RooNumIntConfig&) -- Use given configuration for any numeric integration, if necessary
-/// Range(const char* name)              -- Integrate only over given range. Multiple ranges may be specified
-///                                         by passing multiple Range() arguments
+/// |  | Effect on integral creation
+/// |--|-------------------------------
+/// | `NormSet(const RooArgSet&)`            | Specify normalization set, mostly useful when working with PDFS
+/// | `NumIntConfig(const RooNumIntConfig&)` | Use given configuration for any numeric integration, if necessary
+/// | `Range(const char* name)`              | Integrate only over given range. Multiple ranges may be specified by passing multiple Range() arguments
 
 RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
 				       const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
@@ -1291,28 +1291,31 @@ TH1* RooAbsReal::createHistogram(const char* varNameList, Int_t xbins, Int_t ybi
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create and fill a ROOT histogram TH1,TH2 or TH3 with the values of this function.
+/// Create and fill a ROOT histogram TH1, TH2 or TH3 with the values of this function.
 ///
-/// This function accepts the following arguments
+/// \param[in] name  Name of the ROOT histogram
+/// \param[in] xvar  Observable to be mapped on x axis of ROOT histogram
+/// \return TH1 *, one of TH{1,2,3}. The caller takes ownership.
 ///
-/// name -- Name of the ROOT histogram
-/// xvar -- Observable to be mapped on x axis of ROOT histogram
+/// <table>
+/// <tr><th><th> Effect on histogram creation
+/// <tr><td> `IntrinsicBinning()`                           <td> Apply binning defined by function or pdf (as advertised via binBoundaries() method)
+/// <tr><td> `Binning(const char* name)`                    <td> Apply binning with given name to x axis of histogram
+/// <tr><td> `Binning(RooAbsBinning& binning)`              <td> Apply specified binning to x axis of histogram
+/// <tr><td> `Binning(int nbins, [double lo, double hi])`   <td> Apply specified binning to x axis of histogram
+/// <tr><td> `ConditionalObservables(const RooArgSet& set)` <td> Do not normalized PDF over following observables when projecting PDF into histogram
+/// <tr><td> `Scaling(Bool_t)`                              <td> Apply density-correction scaling (multiply by bin volume), default is kTRUE
+/// <tr><td> `Extended(Bool_t)`                             <td> Plot event yield instead of probability density (for extended pdfs only)
 ///
-/// IntrinsicBinning()                           -- Apply binning defined by function or pdf (as advertised via binBoundaries() method)
-/// Binning(const char* name)                    -- Apply binning with given name to x axis of histogram
-/// Binning(RooAbsBinning& binning)              -- Apply specified binning to x axis of histogram
-/// Binning(int nbins, [double lo, double hi])   -- Apply specified binning to x axis of histogram
-/// ConditionalObservables(const RooArgSet& set) -- Do not normalized PDF over following observables when projecting PDF into histogram
-/// Scaling(Bool_t)                              -- Apply density-correction scaling (multiply by bin volume), default is kTRUE
-/// Extended(Bool_t)                             -- Plot event yield instead of probability density (for extended pdfs only)
-///
-/// YVar(const RooAbsRealLValue& var,...)    -- Observable to be mapped on y axis of ROOT histogram
-/// ZVar(const RooAbsRealLValue& var,...)    -- Observable to be mapped on z axis of ROOT histogram
+/// <tr><td> `YVar(const RooAbsRealLValue& var,...)`    <td> Observable to be mapped on y axis of ROOT histogram
+/// <tr><td> `ZVar(const RooAbsRealLValue& var,...)`    <td> Observable to be mapped on z axis of ROOT histogram
+/// </table>
 ///
 /// The YVar() and ZVar() arguments can be supplied with optional Binning() arguments to control the binning of the Y and Z axes, e.g.
+/// ```
 /// createHistogram("histo",x,Binning(-1,1,20), YVar(y,Binning(-1,1,30)), ZVar(z,Binning("zbinning")))
+/// ```
 ///
-/// The caller takes ownership of the returned histogram
 
 TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 				 const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
@@ -1571,112 +1574,89 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 /// will be printed for each projection step that is performed
 ///
 /// This function takes the following named arguments
-///
-/// Projection control
-/// ------------------
-/// Slice(const RooArgSet& set)     -- Override default projection behaviour by omittting observables listed
+/// <table>
+/// <tr><th><th> Projection control
+/// <tr><td> `Slice(const RooArgSet& set)`     <td> Override default projection behaviour by omittting observables listed
 ///                                    in set from the projection, resulting a 'slice' plot. Slicing is usually
 ///                                    only sensible in discrete observables. The slice is position at the 'current'
 ///                                    value of the observable objects
 ///
-/// Slice(RooCategory& cat,         -- Override default projection behaviour by omittting specified category
-///       const char* label)           observable from the projection, resulting in a 'slice' plot. The slice is positioned
+/// <tr><td> `Slice(RooCategory& cat, const char* label)`        <td> Override default projection behaviour by omittting specified category
+///                                    observable from the projection, resulting in a 'slice' plot. The slice is positioned
 ///                                    at the given label value. Multiple Slice() commands can be given to specify slices
 ///                                    in multiple observables
 ///
-/// Project(const RooArgSet& set)   -- Override default projection behaviour by projecting over observables
+/// <tr><td> `Project(const RooArgSet& set)`   <td> Override default projection behaviour by projecting over observables
 ///                                    given in set and complete ignoring the default projection behavior. Advanced use only.
 ///
-/// ProjWData(const RooAbsData& d)  -- Override default projection _technique_ (integration). For observables present in given dataset
+/// <tr><td> `ProjWData(const RooAbsData& d)`  <td> Override default projection _technique_ (integration). For observables present in given dataset
 ///                                    projection of PDF is achieved by constructing an average over all observable values in given set.
 ///                                    Consult RooFit plotting tutorial for further explanation of meaning & use of this technique
 ///
-/// ProjWData(const RooArgSet& s,   -- As above but only consider subset 's' of observables in dataset 'd' for projection through data averaging
-///           const RooAbsData& d)
+/// <tr><td> `ProjWData(const RooArgSet& s, const RooAbsData& d)`   <td> As above but only consider subset 's' of observables in dataset 'd' for projection through data averaging
 ///
-/// ProjectionRange(const char* rn) -- Override default range of projection integrals to a different range speficied by given range name.
+/// <tr><td> `ProjectionRange(const char* rn)` <td> Override default range of projection integrals to a different range speficied by given range name.
 ///                                    This technique allows you to project a finite width slice in a real-valued observable
 ///
-/// NumCPU(Int_t ncpu)              -- Number of CPUs to use simultaneously to calculate data-weighted projections (only in combination with ProjWData)
+/// <tr><td> `NumCPU(Int_t ncpu)`              <td> Number of CPUs to use simultaneously to calculate data-weighted projections (only in combination with ProjWData)
 ///
 ///
-/// Misc content control
-/// --------------------
-/// PrintEvalErrors(Int_t numErr)   -- Control number of p.d.f evaluation errors printed per curve. A negative
+/// <tr><th><th> Misc content control
+/// <tr><td> `PrintEvalErrors(Int_t numErr)`   <td> Control number of p.d.f evaluation errors printed per curve. A negative
 ///                                    value suppress output completely, a zero value will only print the error count per p.d.f component,
 ///                                    a positive value is will print details of each error up to numErr messages per p.d.f component.
 ///
-/// EvalErrorValue(Double_t value)  -- Set curve points at which (pdf) evaluation error occur to specified value. By default the
+/// <tr><td> `EvalErrorValue(Double_t value)`  <td> Set curve points at which (pdf) evaluation error occur to specified value. By default the
 ///                                    function value is plotted.
 ///
-/// Normalization(Double_t scale,   -- Adjust normalization by given scale factor. Interpretation of number depends on code: Relative:
-///                ScaleType code)     relative adjustment factor, NumEvent: scale to match given number of events.
+/// <tr><td> `Normalization(Double_t scale, ScaleType code)`   <td> Adjust normalization by given scale factor. Interpretation of number depends on code: Relative:
+///                     relative adjustment factor, NumEvent: scale to match given number of events.
 ///
-/// Name(const chat* name)          -- Give curve specified name in frame. Useful if curve is to be referenced later
+/// <tr><td> `Name(const chat* name)`          <td> Give curve specified name in frame. Useful if curve is to be referenced later
 ///
-/// Asymmetry(const RooCategory& c) -- Show the asymmetry of the PDF in given two-state category [F(+)-F(-)] / [F(+)+F(-)] rather than
+/// <tr><td> `Asymmetry(const RooCategory& c)` <td> Show the asymmetry of the PDF in given two-state category [F(+)-F(-)] / [F(+)+F(-)] rather than
 ///                                    the PDF projection. Category must have two states with indices -1 and +1 or three states with
 ///                                    indeces -1,0 and +1.
 ///
-/// ShiftToZero(Bool_t flag)        -- Shift entire curve such that lowest visible point is at exactly zero. Mostly useful when
-///                                    plotting -log(L) or chi^2 distributions
+/// <tr><td> `ShiftToZero(Bool_t flag)`        <td> Shift entire curve such that lowest visible point is at exactly zero. Mostly useful when plotting \f$ -\log(L) \f$ or \f$ \chi^2 \f$ distributions
 ///
-/// AddTo(const char* name,         -- Add constructed projection to already existing curve with given name and relative weight factors
-///                                    double_t wgtSelf, double_t wgtOther)
+/// <tr><td> `AddTo(const char* name, double_t wgtSelf, double_t wgtOther)`   <td> Add constructed projection to already existing curve with given name and relative weight factors
 ///
-/// Plotting control
-/// ----------------
-/// DrawOption(const char* opt)     -- Select ROOT draw option for resulting TGraph object
+/// <tr><th><th> Plotting control
+/// <tr><td> `DrawOption(const char* opt)`     <td> Select ROOT draw option for resulting TGraph object
 ///
-/// LineStyle(Int_t style)          -- Select line style by ROOT line style code, default is solid
+/// <tr><td> `LineStyle(Int_t style)`          <td> Select line style by ROOT line style code, default is solid
 ///
-/// LineColor(Int_t color)          -- Select line color by ROOT color code, default is blue
+/// <tr><td> `LineColor(Int_t color)`          <td> Select line color by ROOT color code, default is blue
 ///
-/// LineWidth(Int_t width)          -- Select line with in pixels, default is 3
+/// <tr><td> `LineWidth(Int_t width)`          <td> Select line with in pixels, default is 3
 ///
-/// FillStyle(Int_t style)          -- Select fill style, default is not filled. If a filled style is selected, also use VLines()
+/// <tr><td> `FillStyle(Int_t style)`          <td> Select fill style, default is not filled. If a filled style is selected, also use VLines()
 ///                                    to add vertical downward lines at end of curve to ensure proper closure
-/// FillColor(Int_t color)          -- Select fill color by ROOT color code
+/// <tr><td> `FillColor(Int_t color)`          <td> Select fill color by ROOT color code
 ///
-/// Range(const char* name)         -- Only draw curve in range defined by given name
+/// <tr><td> `Range(const char* name)`         <td> Only draw curve in range defined by given name
 ///
-/// Range(double lo, double hi)     -- Only draw curve in specified range
+/// <tr><td> `Range(double lo, double hi)`     <td> Only draw curve in specified range
 ///
-/// VLines()                        -- Add vertical lines to y=0 at end points of curve
+/// <tr><td> `VLines()`                        <td> Add vertical lines to y=0 at end points of curve
 ///
-/// Precision(Double_t eps)         -- Control precision of drawn curve w.r.t to scale of plot, default is 1e-3. Higher precision
+/// <tr><td> `Precision(Double_t eps)`         <td> Control precision of drawn curve w.r.t to scale of plot, default is 1e-3. Higher precision
 ///                                    will result in more and more densely spaced curve points
 ///
-/// Invisible(Bool_t flag)           -- Add curve to frame, but do not display. Useful in combination AddTo()
+/// <tr><td> `Invisible(Bool_t flag)`           <td> Add curve to frame, but do not display. Useful in combination AddTo()
 ///
-/// VisualizeError(const RooFitResult& fitres, Double_t Z=1, Bool_t linearMethod=kTRUE)
-///                                  -- Visualize the uncertainty on the parameters, as given in fitres, at 'Z' sigma'
+/// <tr><td> `VisualizeError(const RooFitResult& fitres, Double_t Z=1, Bool_t linearMethod=kTRUE)`
+///                                  <td> Visualize the uncertainty on the parameters, as given in fitres, at 'Z' sigma'
 ///
-/// VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z=1, Bool_t linearMethod=kTRUE) ;
-///                                  -- Visualize the uncertainty on the subset of parameters 'param', as given in fitres, at 'Z' sigma'
-///
+/// <tr><td> `VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z=1, Bool_t linearMethod=kTRUE)`
+///                                  <td> Visualize the uncertainty on the subset of parameters 'param', as given in fitres, at 'Z' sigma'
+/// </table>
 ///
 /// Details on error band visualization
 /// -----------------------------------
-///
-/// By default (linMethod=kTRUE) a linearized error is shown which is calculated as follows
-///                                    T
-/// error(x) = Z* F_a(x) * Corr(a,a') F_a'(x)
-///
-/// where     F_a(x) = [ f(x,a+da) - f(x,a-da) ] / 2, with f(x) the plotted curve and 'da' taken from the fit result
-///       Corr(a,a') = the correlation matrix from the fit result
-///                Z = requested significance 'Z sigma band'
-///
-/// The linear method is fast (required 2*N evaluations of the curve, where N is the number of parameters), but may
-/// not be accurate in the presence of strong correlations (~>0.9) and at Z>2 due to linear and Gaussian approximations made
-///
-/// Alternatively (linMethod=kFALSE), a more robust error is calculated using a sampling method. In this method a number of curves
-/// is calculated with variations of the parameter values, as drawn from a multi-variate Gaussian p.d.f. that is constructed
-/// from the fit results covariance matrix. The error(x) is determined by calculating a central interval that capture N% of the variations
-/// for each valye of x, where N% is controlled by Z (i.e. Z=1 gives N=68%). The number of sampling curves is chosen to be such
-/// that at least 30 curves are expected to be outside the N% interval, and is minimally 100 (e.g. Z=1->Ncurve=100, Z=2->Ncurve=659, Z=3->Ncurve=11111)
-/// Intervals from the sampling method can be asymmetric, and may perform better in the presence of strong correlations, but may take (much)
-/// longer to calculate
+/// *VisualizeError() uses plotOnWithErrorBand(). Documentation of the latter:*
+/// \copydetails plotOnWithErrorBand()
 
 RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
 			    const RooCmdArg& arg3, const RooCmdArg& arg4,
@@ -2311,7 +2291,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// OBSOLETE -- RETAINED FOR BACKWARD COMPATIBILITY. Use the plotOn(frame,Slice(...)) instead
+/// \deprecated OBSOLETE -- RETAINED FOR BACKWARD COMPATIBILITY. Use the plotOn(frame,Slice(...)) instead
 
 RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions,
 				 Double_t scaleFactor, ScaleType stype, const RooAbsData* projData) const
@@ -2730,17 +2710,26 @@ Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Plot function or p.d.f. on frame with support for visualization of the uncertainty encoded in the given fit result fr.
-/// If params is non-zero, only the subset of the parameters in fr that occur in params is considered for the error evaluation
-/// Argument argList can contain any RooCmdArg named argument that can be applied to a regular plotOn() operation
+/// Plot function or PDF on frame with support for visualization of the uncertainty encoded in the given fit result fr.
+/// \param[in] frame RooPlot to plot on 
+/// \param[in] fr The RooFitResult, where errors can be extracted
+/// \param[in] Z  The desired significance (width) of the error band
+/// \param[in] params If non-zero, consider only the subset of the parameters in fr for the error evaluation
+/// \param[in] argList Optional RooCmdArg that can be applied to a regular plotOn() operation
+/// \param[in] linMethod By default (linMethod=kTRUE) a linearized error is shown.
+/// \return The RooPlot the band was plotted on (for chaining)
 ///
-/// By default (linMethod=kTRUE) a linearized error is shown which is calculated as follows
-///                                    T
-/// error(x) = Z* F_a(x) * Corr(a,a') F_a'(x)
+/// The linearized error is calculated as follows:
+/// \f[
+///   \mathrm{error}(x) = Z * F_a(x) * \mathrm{Corr}(a,a') * {F_a^\mathrm{T}}'(x),
+/// \f]
 ///
-/// where     F_a(x) = [ f(x,a+da) - f(x,a-da) ] / 2, with f(x) the plotted curve and 'da' taken from the fit result
-///       Corr(a,a') = the correlation matrix from the fit result
-///                Z = requested signifance 'Z sigma band'
+/// where
+/// \f[
+///     F_a(x) = \frac{ f(x,a+\mathrm{d}a) - f(x,a-\mathrm{d}a) }{2},
+/// \f]
+/// with \f$ f(x) \f$ the plotted curve and \f$ \mathrm{d}a \f$ taken from the fit result, and
+/// \f$ \mathrm{Corr}(a,a') \f$ = the correlation matrix from the fit result, and \f$ Z \f$ = requested signifance (\f$ Z \sigma \f$ band)
 ///
 /// The linear method is fast (required 2*N evaluations of the curve, where N is the number of parameters), but may
 /// not be accurate in the presence of strong correlations (~>0.9) and at Z>2 due to linear and Gaussian approximations made
@@ -2750,7 +2739,8 @@ Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet 
 /// from the fit results covariance matrix. The error(x) is determined by calculating a central interval that capture N% of the variations
 /// for each valye of x, where N% is controlled by Z (i.e. Z=1 gives N=68%). The number of sampling curves is chosen to be such
 /// that at least 30 curves are expected to be outside the N% interval, and is minimally 100 (e.g. Z=1->Ncurve=100, Z=2->Ncurve=659, Z=3->Ncurve=11111)
-/// Intervals from the sampling method can be asymmetric, and may perform better in the presence of strong correlations
+/// Intervals from the sampling method can be asymmetric, and may perform better in the presence of strong correlations, but may take (much)
+/// longer to calculate.
 
 RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, Double_t Z,const RooArgSet* params, const RooLinkedList& argList, Bool_t linMethod) const
 {
@@ -3921,14 +3911,13 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooAr
 /// interpolation.
 ///
 /// The following named arguments are accepted
-///
-/// SupNormSet(const RooArgSet&)         -- Observables over which should be normalized _in_addition_ to the
-///                                         integration observables
-/// ScanParameters(Int_t nbins,          -- Parameters for scanning technique of making CDF: number
-///                Int_t intOrder)          of sampled bins and order of interpolation applied on numeric cdf
-/// ScanNum()                            -- Apply scanning technique if cdf integral involves numeric integration
-/// ScanAll()                            -- Always apply scanning technique
-/// ScanNone()                           -- Never apply scanning technique
+/// | | Effect on integral creation
+/// |-|-------------------------------
+/// | `SupNormSet(const RooArgSet&)`         | Observables over which should be normalized _in_addition_ to the integration observables
+/// | `ScanParameters(Int_t nbins, Int_t intOrder)`    | Parameters for scanning technique of making CDF: number of sampled bins and order of interpolation applied on numeric cdf
+/// | `ScanNum()`                            | Apply scanning technique if cdf integral involves numeric integration
+/// | `ScanAll()`                            | Always apply scanning technique
+/// | `ScanNone()`                           | Never apply scanning technique
 
 RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
 				 const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
@@ -4266,41 +4255,39 @@ RooMultiGenFunction* RooAbsReal::iGenFunction(const RooArgSet& observables, cons
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Perform a chi^2 fit to given histogram By default the fit is executed through the MINUIT
+/// Perform a \f$ \chi^2 \f$ fit to given histogram By default the fit is executed through the MINUIT
 /// commands MIGRAD, HESSE in succession
 ///
 /// The following named arguments are supported
 ///
-/// Options to control construction of -log(L)
-/// ------------------------------------------
-/// Range(const char* name)         -- Fit only data inside range with given name
-/// Range(Double_t lo, Double_t hi) -- Fit only data inside given range. A range named "fit" is created on the fly on all observables.
-///                                    Multiple comma separated range names can be specified.
-/// NumCPU(int num)                 -- Parallelize NLL calculation on num CPUs
-/// Optimize(Bool_t flag)           -- Activate constant term optimization (on by default)
+/// <table>
+/// <tr><th> <th> Options to control construction of -log(L)
+/// <tr><td> `Range(const char* name)`         <td> Fit only data inside range with given name
+/// <tr><td> `Range(Double_t lo, Double_t hi)` <td> Fit only data inside given range. A range named "fit" is created on the fly on all observables.
+///                                               Multiple comma separated range names can be specified.
+/// <tr><td> `NumCPU(int num)`                 <td> Parallelize NLL calculation on num CPUs
+/// <tr><td> `Optimize(Bool_t flag)`           <td> Activate constant term optimization (on by default)
 ///
-/// Options to control flow of fit procedure
-/// ----------------------------------------
-/// InitialHesse(Bool_t flag)      -- Flag controls if HESSE before MIGRAD as well, off by default
-/// Hesse(Bool_t flag)             -- Flag controls if HESSE is run after MIGRAD, on by default
-/// Minos(Bool_t flag)             -- Flag controls if MINOS is run after HESSE, on by default
-/// Minos(const RooArgSet& set)    -- Only run MINOS on given subset of arguments
-/// Save(Bool_t flag)              -- Flac controls if RooFitResult object is produced and returned, off by default
-/// Strategy(Int_t flag)           -- Set Minuit strategy (0 through 2, default is 1)
-/// FitOptions(const char* optStr) -- Steer fit with classic options string (for backward compatibility). Use of this option
-///                                   excludes use of any of the new style steering options.
+/// <tr><th> <th> Options to control flow of fit procedure
+/// <tr><td> `InitialHesse(Bool_t flag)`      <td> Flag controls if HESSE before MIGRAD as well, off by default
+/// <tr><td> `Hesse(Bool_t flag)`             <td> Flag controls if HESSE is run after MIGRAD, on by default
+/// <tr><td> `Minos(Bool_t flag)`             <td> Flag controls if MINOS is run after HESSE, on by default
+/// <tr><td> `Minos(const RooArgSet& set)`    <td> Only run MINOS on given subset of arguments
+/// <tr><td> `Save(Bool_t flag)`              <td> Flac controls if RooFitResult object is produced and returned, off by default
+/// <tr><td> `Strategy(Int_t flag)`           <td> Set Minuit strategy (0 through 2, default is 1)
+/// <tr><td> `FitOptions(const char* optStr)` <td> Steer fit with classic options string (for backward compatibility). Use of this option
+///                                              excludes use of any of the new style steering options.
 ///
-/// Options to control informational output
-/// ---------------------------------------
-/// Verbose(Bool_t flag)           -- Flag controls if verbose output is printed (NLL, parameter changes during fit
-/// Timer(Bool_t flag)             -- Time CPU and wall clock consumption of fit steps, off by default
-/// PrintLevel(Int_t level)        -- Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational
-///                                   messages are suppressed as well
-/// Warnings(Bool_t flag)          -- Enable or disable MINUIT warnings (enabled by default)
-/// PrintEvalErrors(Int_t numErr)  -- Control number of p.d.f evaluation errors printed per likelihood evaluation. A negative
-///                                   value suppress output completely, a zero value will only print the error count per p.d.f component,
-///                                   a positive value is will print details of each error up to numErr messages per p.d.f component.
-///
+/// <tr><th> <th> Options to control informational output
+/// <tr><td> `Verbose(Bool_t flag)`           <td> Flag controls if verbose output is printed (NLL, parameter changes during fit
+/// <tr><td> `Timer(Bool_t flag)`             <td> Time CPU and wall clock consumption of fit steps, off by default
+/// <tr><td> `PrintLevel(Int_t level)`        <td> Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational
+///                                              messages are suppressed as well
+/// <tr><td> `Warnings(Bool_t flag)`          <td> Enable or disable MINUIT warnings (enabled by default)
+/// <tr><td> `PrintEvalErrors(Int_t numErr)`  <td> Control number of p.d.f evaluation errors printed per likelihood evaluation. A negative
+///                                              value suppress output completely, a zero value will only print the error count per p.d.f component,
+///                                              a positive value is will print details of each error up to numErr messages per p.d.f component.
+/// </table>
 ///
 
 RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
@@ -4346,11 +4333,11 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdL
 ///
 /// The following named arguments are supported
 ///
-///  Options to control construction of the chi^2
-///  ------------------------------------------
-///  DataError(RooAbsData::ErrorType)  -- Choose between Poisson errors and Sum-of-weights errors
-///  NumCPU(Int_t)                     -- Activate parallel processing feature on N processes
-///  Range()                           -- Calculate Chi2 only in selected region
+///  | | Options to control construction of the \f$ \chi^2 \f$
+///  |-|-----------------------------------------
+///  | `DataError(RooAbsData::ErrorType)`  | Choose between Poisson errors and Sum-of-weights errors
+///  | `NumCPU(Int_t)`                     | Activate parallel processing feature on N processes
+///  | `Range()`                           | Calculate Chi2 only in selected region
 
 RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
 				   const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
@@ -4391,40 +4378,37 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdLi
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a chi-2 from a series of x and y value stored in a dataset.
+/// Create a 2-D \f$ \chi^2 \f$ from a series of x and y values stored in a dataset.
 /// The y values can either be the event weights, or can be another column designated
-/// by the YVar() argument. The y value must have errors defined for the chi-2 to
+/// by the YVar() argument. The y value must have errors defined for the \f$ \chi^2 \f$ to
 /// be well defined.
 ///
-/// The following named arguments are supported
-///
-/// Options to control construction of the chi^2
-/// ------------------------------------------
-/// YVar(RooRealVar& yvar)          -- Designate given column in dataset as Y value
-/// Integrate(Bool_t flag)          -- Integrate function over range specified by X errors
+/// <table>
+/// <tr><th><th> Options to control construction of the \f$ \chi^2 \f$
+/// <tr><td> `YVar(RooRealVar& yvar)`          <td>  Designate given column in dataset as Y value
+/// <tr><td> `Integrate(Bool_t flag)`          <td>  Integrate function over range specified by X errors
 ///                                    rather than take value at bin center.
 ///
-/// Options to control flow of fit procedure
-/// ----------------------------------------
-/// InitialHesse(Bool_t flag)      -- Flag controls if HESSE before MIGRAD as well, off by default
-/// Hesse(Bool_t flag)             -- Flag controls if HESSE is run after MIGRAD, on by default
-/// Minos(Bool_t flag)             -- Flag controls if MINOS is run after HESSE, on by default
-/// Minos(const RooArgSet& set)    -- Only run MINOS on given subset of arguments
-/// Save(Bool_t flag)              -- Flac controls if RooFitResult object is produced and returned, off by default
-/// Strategy(Int_t flag)           -- Set Minuit strategy (0 through 2, default is 1)
-/// FitOptions(const char* optStr) -- Steer fit with classic options string (for backward compatibility). Use of this option
+/// <tr><th><th> Options to control flow of fit procedure
+/// <tr><td> `InitialHesse(Bool_t flag)`      <td>  Flag controls if HESSE before MIGRAD as well, off by default
+/// <tr><td> `Hesse(Bool_t flag)`             <td>  Flag controls if HESSE is run after MIGRAD, on by default
+/// <tr><td> `Minos(Bool_t flag)`             <td>  Flag controls if MINOS is run after HESSE, on by default
+/// <tr><td> `Minos(const RooArgSet& set)`    <td>  Only run MINOS on given subset of arguments
+/// <tr><td> `Save(Bool_t flag)`              <td>  Flac controls if RooFitResult object is produced and returned, off by default
+/// <tr><td> `Strategy(Int_t flag)`           <td>  Set Minuit strategy (0 through 2, default is 1)
+/// <tr><td> `FitOptions(const char* optStr)` <td>  Steer fit with classic options string (for backward compatibility). Use of this option
 ///                                   excludes use of any of the new style steering options.
 ///
-/// Options to control informational output
-/// ---------------------------------------
-/// Verbose(Bool_t flag)           -- Flag controls if verbose output is printed (NLL, parameter changes during fit
-/// Timer(Bool_t flag)             -- Time CPU and wall clock consumption of fit steps, off by default
-/// PrintLevel(Int_t level)        -- Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational
+/// <tr><th><th> Options to control informational output
+/// <tr><td> `Verbose(Bool_t flag)`           <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit
+/// <tr><td> `Timer(Bool_t flag)`             <td>  Time CPU and wall clock consumption of fit steps, off by default
+/// <tr><td> `PrintLevel(Int_t level)`        <td>  Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational
 ///                                   messages are suppressed as well
-/// Warnings(Bool_t flag)          -- Enable or disable MINUIT warnings (enabled by default)
-/// PrintEvalErrors(Int_t numErr)  -- Control number of p.d.f evaluation errors printed per likelihood evaluation. A negative
+/// <tr><td> `Warnings(Bool_t flag)`          <td>  Enable or disable MINUIT warnings (enabled by default)
+/// <tr><td> `PrintEvalErrors(Int_t numErr)`  <td>  Control number of p.d.f evaluation errors printed per likelihood evaluation. A negative
 ///                                   value suppress output completely, a zero value will only print the error count per p.d.f component,
 ///                                   a positive value is will print details of each error up to numErr messages per p.d.f component.
+/// </table>
 
 RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  const RooCmdArg& arg2,
 				      const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
@@ -4465,18 +4449,17 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmd
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a chi-2 from a series of x and y value stored in a dataset.
+/// Create a \f$ \chi^2 \f$ from a series of x and y value stored in a dataset.
 /// The y values can either be the event weights (default), or can be another column designated
-/// by the YVar() argument. The y value must have errors defined for the chi-2 to
+/// by the YVar() argument. The y value must have errors defined for the \f$ \chi^2 \f$ to
 /// be well defined.
 ///
 /// The following named arguments are supported
 ///
-/// Options to control construction of the chi^2
-/// ------------------------------------------
-/// YVar(RooRealVar& yvar)          -- Designate given column in dataset as Y value
-/// Integrate(Bool_t flag)          -- Integrate function over range specified by X errors
-///                                    rather than take value at bin center.
+/// | | Options to control construction of the \f$ \chi^2 \f$
+/// |-|-----------------------------------------
+/// | `YVar(RooRealVar& yvar)`  | Designate given column in dataset as Y value
+/// | `Integrate(Bool_t flag)`  | Integrate function over range specified by X errors rather than take value at bin center.
 ///
 
 RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,

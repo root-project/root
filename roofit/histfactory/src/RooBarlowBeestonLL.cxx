@@ -9,16 +9,16 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
+/** \class RooStats::HistFactory::RooBarlowBeestonLL
+ * \ingroup HistFactory
 //
-// BEGIN_HTML
 // Class RooBarlowBeestonLL implements the profile likelihood estimator for
 // a given likelihood and set of parameters of interest. The value return by 
 // RooBarlowBeestonLL is the input likelihood nll minimized w.r.t all nuisance parameters
 // (which are all parameters except for those listed in the constructor) minus
 // the -log(L) of the best fit. Note that this function is slow to evaluate
 // as a MIGRAD minimization step is executed for each function evaluation
-// END_HTML
-//
+*/
 
 #include <stdexcept>
 #include <math.h>

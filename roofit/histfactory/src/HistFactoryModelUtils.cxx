@@ -1,3 +1,6 @@
+/**
+ *  \ingroup HistFactory 
+ */
 
 // A set of utils for navegating HistFactory models
 #include <stdexcept>    
