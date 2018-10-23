@@ -63,6 +63,28 @@
 #include "cpuid.h"
 #endif
 
+#if defined(_MSC_VER)
+     /* Microsoft C/C++-compatible compiler */
+     #include <intrin.h>
+#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+     /* GCC-compatible compiler, targeting x86/x86-64 */
+     #include <x86intrin.h>
+#elif defined(__GNUC__) && defined(__ARM_NEON__)
+     /* GCC-compatible compiler, targeting ARM with NEON */
+     #include <arm_neon.h>
+#elif defined(__GNUC__) && defined(__IWMMXT__)
+     /* GCC-compatible compiler, targeting ARM with WMMX */
+     #include <mmintrin.h>
+#elif (defined(__GNUC__) || defined(__xlC__)) && (defined(__VEC__) || defined(__ALTIVEC__))
+     /* XLC or GCC-compatible compiler, targeting PowerPC with VMX/VSX */
+     #include <altivec.h>
+#elif defined(__GNUC__) && defined(__SPE__)
+     /* GCC-compatible compiler, targeting PowerPC with SPE */
+     #include <spe.h>
+#elif defined(__clang__) && defined(__linux__)
+    #include <x86intrin.h>
+#endif
+
 const char deflate_copyright[] =
    " deflate 1.2.8 Copyright 1995-2013 Jean-loup Gailly and Mark Adler ";
 /*
@@ -155,7 +177,6 @@ static const config configuration_table[10] = {
 //
 
 #ifdef _MSC_VER
-#include <xmmintrin.h>
 #define PREFETCH(location) _mm_prefetch(location, _MM_HINT_T0)
 #else
 #ifdef __GNUC__
@@ -163,7 +184,7 @@ static const config configuration_table[10] = {
 #else
 #define PREFETCH(location);
 #endif
-#endif 
+#endif
 
 // zlib's CRC32 polynomial
 const uint32_t Polynomial = 0xEDB88320;
@@ -770,12 +791,12 @@ uint32_t crc32_bitwise(const void* data, size_t length, uint32_t previousCrc32 /
 {
 	uint32_t crc = ~previousCrc32; // same as previousCrc32 ^ 0xFFFFFFFF
 	const uint8_t* current = (const uint8_t*)data;
+   int j;
 
 	while(length-- != 0)
 	{
 		crc ^= *current++;
-
-		for(int j = 0; j < 8; j++)
+		for(j = 0; j < 8; j++)
 		{
 			// branch-free
 			crc = (crc >> 1) ^ (-(crc & 1) & Polynomial);
@@ -918,11 +939,11 @@ uint32_t crc32_4x8bytes(const void* data, size_t length, uint32_t previousCrc32 
 	// enabling optimization (at least -O2) automatically unrolls the inner for-loop
 	const size_t Unroll = 4;
 	const size_t BytesAtOnce = 8 * Unroll;
-
+   size_t unrolling;
 	// process 4x eight bytes at once (Slicing-by-8)
 	while(length >= BytesAtOnce)
 	{
-		for(size_t unrolling = 0; unrolling < Unroll; unrolling++)
+		for(unrolling = 0; unrolling < Unroll; unrolling++)
 		{
 #if __BYTE_ORDER == __BIG_ENDIAN
 			uint32_t one = *current++ ^ swap(crc);
@@ -971,10 +992,11 @@ uint32_t crc32_16bytes(const void* data, size_t length, uint32_t previousCrc32 /
 	// enabling optimization (at least -O2) automatically unrolls the inner for-loop
 	const size_t Unroll = 4;
 	const size_t BytesAtOnce = 16 * Unroll;
+   size_t unrolling;
 
 	while(length >= BytesAtOnce)
 	{
-		for(size_t unrolling = 0; unrolling < Unroll; unrolling++)
+		for(unrolling = 0; unrolling < Unroll; unrolling++)
 		{
 #if __BYTE_ORDER == __BIG_ENDIAN
 			uint32_t one = *current++ ^ swap(crc);
@@ -1045,12 +1067,13 @@ uint32_t crc32_16bytes_prefetch(const void* data, size_t length, uint32_t previo
 	// enabling optimization (at least -O2) automatically unrolls the for-loop
 	const size_t Unroll = 4;
 	const size_t BytesAtOnce = 16 * Unroll;
+   size_t unrolling;
 
 	while(length >= BytesAtOnce + prefetchAhead)
 	{
 		PREFETCH(((const char*)current) + prefetchAhead);
 
-		for(size_t unrolling = 0; unrolling < Unroll; unrolling++)
+		for(unrolling = 0; unrolling < Unroll; unrolling++)
 		{
 #if __BYTE_ORDER == __BIG_ENDIAN
 			uint32_t one = *current++ ^ swap(crc);
@@ -1112,7 +1135,6 @@ static uint32_t hash_func_default(deflate_state *s, uint32_t UNUSED(h), void* st
 	return crc32_8bytes(str, 32, 0) & s->hash_mask;
 }
 
-
 // CRC32 calculation from zlib 1.2.8 - Madler
 /*
 static uint32_t hash_func_default(deflate_state *s, uint32_t h, void* str) {
@@ -1120,10 +1142,7 @@ static uint32_t hash_func_default(deflate_state *s, uint32_t h, void* str) {
 }
 */
 
-#include <immintrin.h>
-
 #if defined (__aarch64__)
-#include <arm_neon.h>
 
 #pragma GCC push_options
 #if __ARM_ARCH >= 8
@@ -1144,9 +1163,7 @@ static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) {
 }
 
 #endif // ARMv8 without crc32 support
-#elif defined (__x86_64__) && defined (__linux__) // only for 64bit systems
-
-#include <immintrin.h>
+#elif defined (__x86_64__) && defined (__linux__) && ((__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9)) || (__clang__))
 
 static uint32_t hash_func_sse42(deflate_state *s, uint32_t UNUSED(h), void* str) __attribute__ ((__target__ ("sse4.2")));
 
@@ -2458,7 +2475,7 @@ static void fill_window_default(s)
            "not enough room for search");
 }
 
-#if defined (__x86_64__) && defined (__linux__)
+#if defined (__x86_64__) && defined (__linux__) && ((__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9)) || (__clang__))
 
 /* ===========================================================================
  * Fill the window when the lookahead becomes insufficient.
