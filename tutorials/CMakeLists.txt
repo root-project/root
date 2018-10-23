@@ -93,6 +93,11 @@ if(NOT ROOT_r_FOUND)
   set(r_veto  r/*.C)
 endif()
 
+# FIXME: Temporary workaround for runtime_cxxmodule
+if (FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
+  set(runtime_cxxmodules_veto r/Function.C)
+endif()
+
 if(WIN32)
   set(histfactory_veto histfactory/*.C
                        roostats/StandardFrequentistDiscovery.C) # histfactory doesn't work on Windows
@@ -243,6 +248,7 @@ set(all_veto hsimple.C
              ${opengl_veto}
              ${gviz_veto}
              ${r_veto}
+             ${runtime_cxxmodules_veto}
              ${histfactory_veto}
              ${tbb_veto}
              ${imt_veto}
