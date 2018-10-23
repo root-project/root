@@ -83,6 +83,10 @@ if(NOT ROOT_xml_FOUND)
                 unfold/*.C)        # unfold requires xml
 endif()
 
+if(NOT XROOTD_FOUND)
+  set(xrootd_veto dataframe/df102_NanoAODDimuonAnalysis.C)
+endif()
+
 # variables identifying the package must have the package name  in lower case (it corresponds to the CMake option name)
 if(NOT ROOT_r_FOUND)
   set(r_veto  r/*.C)
@@ -245,6 +249,7 @@ set(all_veto hsimple.C
              ${pythia_veto}
              ${root7_veto}
              ${bits32_veto}
+             ${xrootd_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
