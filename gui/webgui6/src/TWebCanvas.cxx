@@ -325,7 +325,7 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
 
    // TODO: this is only for debugging, remove it later
    // static int filecnt = 0;
-   // TBufferJSON::ExportToFile(Form("snapshot_%d.json", (filecnt++) % 10), curr);
+   // TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
 
    delete curr; // destroy created snapshot
 
