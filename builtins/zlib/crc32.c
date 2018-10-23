@@ -20,10 +20,11 @@
 
   DYNAMIC_CRC_TABLE and MAKECRCH can be #defined to write out crc32.h.
  */
-
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC push_options
 #if __ARM_ARCH >= 8
 #pragma GCC target ("arch=armv8-a+crc")
+#endif
 #endif
 
 #if defined (__ARM_FEATURE_CRC32)

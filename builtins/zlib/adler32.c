@@ -8,12 +8,39 @@
 
 #include "zutil.h"
 
-#if defined (__x86_64__) && defined (__linux__)
-#include <xmmintrin.h>
-#include <tmmintrin.h>
-#include <immintrin.h>
+#if defined(_MSC_VER)
+     /* Microsoft C/C++-compatible compiler */
+     #include <intrin.h>
+#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+     /* GCC-compatible compiler, targeting x86/x86-64 */
+     #include <x86intrin.h>
+#elif defined(__GNUC__) && defined(__ARM_NEON__)
+     /* GCC-compatible compiler, targeting ARM with NEON */
+     #include <arm_neon.h>
+#elif defined(__GNUC__) && defined(__IWMMXT__)
+     /* GCC-compatible compiler, targeting ARM with WMMX */
+     #include <mmintrin.h>
+#elif (defined(__GNUC__) || defined(__xlC__)) && (defined(__VEC__) || defined(__ALTIVEC__))
+     /* XLC or GCC-compatible compiler, targeting PowerPC with VMX/VSX */
+     #include <altivec.h>
+#elif defined(__GNUC__) && defined(__SPE__)
+     /* GCC-compatible compiler, targeting PowerPC with SPE */
+     #include <spe.h>
+#elif defined(__clang__) && defined(__linux__)
+    #include <x86intrin.h>
+#endif
 
+#if defined (__x86_64__) && defined (__linux__)
 #include "cpuid.h"
+#endif
+
+// from cpuid.h
+#ifndef bit_AVX2
+#define bit_AVX2 0x00000020
+#endif
+
+#ifndef bit_SSE4_2
+# define bit_SSE4_2 0x100000
 #endif
 
 static uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
@@ -22,7 +49,7 @@ static uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
 #define NMAX 5552
 /* NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1 */
 
-/* 
+/*
  * As we are using _signed_ integer arithmetic for the SSE/AVX2 implementations,
  * we consider the max as 2^31-1
  */
@@ -78,7 +105,7 @@ static uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
 
 /* ========================================================================= */
 uLong ZEXPORT adler32_default(uLong adler, const Bytef *buf, uInt len)
-{	
+{
     unsigned long sum2;
     unsigned n;
 
@@ -144,7 +171,7 @@ uLong ZEXPORT adler32_default(uLong adler, const Bytef *buf, uInt len)
     return adler | (sum2 << 16);
 }
 
-#if defined (__x86_64__) && defined (__linux__)
+#if defined (__x86_64__) && defined (__linux__) && ((__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9)) || (__clang__))
 
 #ifdef _MSC_VER
 
@@ -207,7 +234,7 @@ uLong ZEXPORT adler32_sse42(uLong adler, const Bytef *buf, uInt len)
     __m128i dot2v = _mm_load_si128((__m128i*)dot2);
     short __attribute__ ((aligned(16))) dot3[8] = {1, 1, 1, 1, 1, 1, 1, 1};
     __m128i dot3v = _mm_load_si128((__m128i*)dot3);
-    // We will need to multiply by 
+    // We will need to multiply by
     //char __attribute__ ((aligned(16))) shift[4] = {0, 0, 0, 4}; //{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4};
     char __attribute__ ((aligned(16))) shift[16] = {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     __m128i shiftv = _mm_load_si128((__m128i*)shift);
@@ -312,7 +339,7 @@ uLong ZEXPORT adler32_avx2(uLong adler, const Bytef *buf, uInt len)
     __m256i dot2v = _mm256_load_si256((__m256i*)dot2);
     short __attribute__ ((aligned(32))) dot3[16] = {1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1};
     __m256i dot3v = _mm256_load_si256((__m256i*)dot3);
-    // We will need to multiply by 
+    // We will need to multiply by
     char __attribute__ ((aligned(16))) shift[16] = {5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     __m128i shiftv = _mm_load_si128((__m128i*)shift);
     while (len >= 32) {
@@ -383,7 +410,7 @@ void *resolve_adler32(void)
   /* Pick AVX2 version only if as supports AVX2 (not the case of Haswell)*/
 #if !defined(ROOT_NO_AVX2)
 	signed char has_avx2 = 0;
-	has_avx2 = ((ebx & bit_AVX2) != 0);	 
+	has_avx2 = ((ebx & bit_AVX2) != 0);
 	if (has_avx2)
 	  return adler32_avx2;
 #endif
@@ -395,6 +422,7 @@ void *resolve_adler32(void)
 }
 
 uLong ZEXPORT adler32(uLong adler, const Bytef *buf, uInt len)  __attribute__ ((ifunc ("resolve_adler32")));
+
 #else // x86_64
 uLong ZEXPORT adler32(uLong adler, const Bytef *buf, uInt len){
   return adler32_default(adler, buf, len);
