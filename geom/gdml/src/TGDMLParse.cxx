@@ -170,6 +170,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* setustr = "setup";
    const char* consstr = "constant";
    const char* varistr = "variable";
+   const char* quanstr = "quantity";
    const char* rotastr = "rotation";
    const char* scalstr = "scale";
    const char* elemstr = "element";
@@ -217,6 +218,8 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
       node = ConProcess(gdml, node, attr);
    } else if ((strcmp(name, varistr)) == 0) {
       node = ConProcess(gdml, node, attr);
+   } else if ((strcmp(name, quanstr)) == 0) {
+      node = QuantityProcess(gdml, node, attr);
    }
    //*************eleprocess********************************
 
@@ -425,6 +428,39 @@ XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 
    return node;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// In the define section of the GDML file, quantities can be declared.
+/// These are treated the same as constants, but the unit has to be multiplied
+
+XMLNodePointer_t TGDMLParse::QuantityProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
+   TString name = "";
+   TString value = "";
+   TString unit = "1.0";
+   TString tempattr;
+
+   while (attr != 0) {
+      tempattr = gdml->GetAttrName(attr);
+      tempattr.ToLower();
+
+      if (tempattr == "name") {
+         name = gdml->GetAttrValue(attr);
+      }
+      if (tempattr == "value") {
+         value = gdml->GetAttrValue(attr);
+      }
+      if (tempattr == "unit") {
+         unit = gdml->GetAttrValue(attr);
+      }
+      attr = gdml->GetNextAttr(attr);
+   }
+
+   fconsts[name.Data()] = GetScaleVal(unit) * Value(value);
+
+   return node;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Throughout the GDML file, a unit can de specified.   Whether it be
 /// angular or linear, values can be used as well as abbreviations such as
@@ -596,7 +632,7 @@ Double_t TGDMLParse::Value(const char *svalue) const
 
 XMLNodePointer_t TGDMLParse::PosProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
+   TString lunit = fDefault_lunit.c_str();
    TString xpos = "0";
    TString ypos = "0";
    TString zpos = "0";
@@ -649,7 +685,7 @@ XMLNodePointer_t TGDMLParse::PosProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 
 XMLNodePointer_t TGDMLParse::RotProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString aunit = "rad";
+   TString aunit = fDefault_aunit.c_str();
    TString xpos = "0";
    TString ypos = "0";
    TString zpos = "0";
@@ -1535,7 +1571,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          TString number = "";
          TString width = "";
          TString offset = "";
-         TString lunit = "mm";
+         TString lunit = fDefault_lunit.c_str();
 
          attr = gdml->GetFirstAttr(child);
 
@@ -1618,8 +1654,8 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          TString number = "";
          TString width = "";
          TString offset = "";
-         TString wunit = "mm";
-         TString ounit = "mm";
+         TString wunit = fDefault_lunit.c_str();
+         TString ounit = fDefault_lunit.c_str();
          Double_t wvalue = 0;
          Double_t ovalue = 0;
 
@@ -2125,7 +2161,7 @@ XMLNodePointer_t TGDMLParse::TopProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
 XMLNodePointer_t TGDMLParse::Box(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
+   TString lunit = fDefault_lunit.c_str();
    TString xpos = "0";
    TString ypos = "0";
    TString zpos = "0";
@@ -2182,7 +2218,7 @@ XMLNodePointer_t TGDMLParse::Box(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
 
 XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
+   TString lunit = fDefault_lunit.c_str();
    TString ax = "0";
    TString by = "0";
    TString cz = "0";
@@ -2268,7 +2304,7 @@ XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, 
 
 XMLNodePointer_t TGDMLParse::ElCone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
+   TString lunit = fDefault_lunit.c_str();
    TString dx = "0";
    TString dy = "0";
    TString zmax = "0";
@@ -2345,7 +2381,7 @@ XMLNodePointer_t TGDMLParse::ElCone(TXMLEngine* gdml, XMLNodePointer_t node, XML
 
 XMLNodePointer_t TGDMLParse::Paraboloid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
+   TString lunit = fDefault_lunit.c_str();
    TString rlopos = "0";
    TString rhipos = "0";
    TString dzpos = "0";
@@ -2399,7 +2435,7 @@ XMLNodePointer_t TGDMLParse::Paraboloid(TXMLEngine* gdml, XMLNodePointer_t node,
 
 XMLNodePointer_t TGDMLParse::Arb8(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
+   TString lunit = fDefault_lunit.c_str();
    TString v1xpos = "0";
    TString v1ypos = "0";
    TString v2xpos = "0";
@@ -2519,8 +2555,8 @@ XMLNodePointer_t TGDMLParse::Arb8(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 
 XMLNodePointer_t TGDMLParse::Tube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
-   TString aunit = "rad";
+   TString lunit = fDefault_lunit.c_str();
+   TString aunit = fDefault_aunit.c_str();
    TString rmin = "0";
    TString rmax = "0";
    TString z = "0";
@@ -2595,8 +2631,8 @@ XMLNodePointer_t TGDMLParse::Tube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 
 XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
-   TString aunit = "rad";
+   TString lunit = fDefault_lunit.c_str();
+   TString aunit = fDefault_aunit.c_str();
    TString rmin = "0";
    TString rmax = "0";
    TString z = "0";
@@ -2697,8 +2733,8 @@ XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine* gdml, XMLNodePointer_t node, XM
 
 XMLNodePointer_t TGDMLParse::Cone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
-   TString aunit = "rad";
+   TString lunit = fDefault_lunit.c_str();
+   TString aunit = fDefault_aunit.c_str();
    TString rmin1 = "0";
    TString rmax1 = "0";
    TString rmin2 = "0";
@@ -2785,8 +2821,8 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 
 XMLNodePointer_t TGDMLParse::Trap(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
-   TString aunit = "rad";
+   TString lunit = fDefault_lunit.c_str();
+   TString aunit = fDefault_aunit.c_str();
    TString x1 = "0";
    TString x2 = "0";
    TString x3 = "0";
@@ -2885,7 +2921,7 @@ XMLNodePointer_t TGDMLParse::Trap(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 
 XMLNodePointer_t TGDMLParse::Trd(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
+   TString lunit = fDefault_lunit.c_str();
    TString x1 = "0";
    TString x2 = "0";
    TString y1 = "0";
@@ -2953,8 +2989,8 @@ XMLNodePointer_t TGDMLParse::Trd(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
 
 XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
-   TString aunit = "rad";
+   TString lunit = fDefault_lunit.c_str();
+   TString aunit = fDefault_aunit.c_str();
    TString rmin = "0";
    TString rmax = "0";
    TString z = "0";
@@ -3076,8 +3112,8 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
 
 XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
-   TString aunit = "rad";
+   TString lunit = fDefault_lunit.c_str();
+   TString aunit = fDefault_aunit.c_str();
    TString rmin = "0";
    TString rmax = "0";
    TString z = "0";
@@ -3205,8 +3241,8 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine* gdml, XMLNodePointer_t node, 
 
 XMLNodePointer_t TGDMLParse::Sphere(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
-   TString aunit = "rad";
+   TString lunit = fDefault_lunit.c_str();
+   TString aunit = fDefault_aunit.c_str();
    TString rmin = "0";
    TString rmax = "0";
    TString startphi = "0";
@@ -3280,8 +3316,8 @@ XMLNodePointer_t TGDMLParse::Sphere(TXMLEngine* gdml, XMLNodePointer_t node, XML
 
 XMLNodePointer_t TGDMLParse::Torus(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
-   TString aunit = "rad";
+   TString lunit = fDefault_lunit.c_str();
+   TString aunit = fDefault_aunit.c_str();
    TString rmin = "0";
    TString rmax = "0";
    TString rtor = "0";
@@ -3351,8 +3387,8 @@ XMLNodePointer_t TGDMLParse::Torus(TXMLEngine* gdml, XMLNodePointer_t node, XMLA
 
 XMLNodePointer_t TGDMLParse::Hype(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
-   TString aunit = "rad";
+   TString lunit = fDefault_lunit.c_str();
+   TString aunit = fDefault_aunit.c_str();
    TString rmin = "0";
    TString rmax = "0";
    TString z = "0";
@@ -3422,8 +3458,8 @@ XMLNodePointer_t TGDMLParse::Hype(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 
 XMLNodePointer_t TGDMLParse::Para(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
-   TString aunit = "rad";
+   TString lunit = fDefault_lunit.c_str();
+   TString aunit = fDefault_aunit.c_str();
    TString x = "0";
    TString y = "0";
    TString z = "0";
@@ -3499,8 +3535,8 @@ XMLNodePointer_t TGDMLParse::Para(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 
 XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
-   TString aunit = "rad";
+   TString lunit = fDefault_lunit.c_str();
+   TString aunit = fDefault_aunit.c_str();
    TString x1 = "0";
    TString x2 = "0";
    TString x3 = "0";
@@ -3607,7 +3643,7 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine* gdml, XMLNodePointer_t node, 
 
 XMLNodePointer_t TGDMLParse::ElTube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
+   TString lunit = fDefault_lunit.c_str();
    TString xpos = "0";
    TString ypos = "0";
    TString zpos = "0";
@@ -3662,7 +3698,7 @@ XMLNodePointer_t TGDMLParse::ElTube(TXMLEngine* gdml, XMLNodePointer_t node, XML
 
 XMLNodePointer_t TGDMLParse::Orb(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
+   TString lunit = fDefault_lunit.c_str();
    TString r = "0";
    TString name = "";
    TString tempattr;
@@ -3712,7 +3748,7 @@ XMLNodePointer_t TGDMLParse::Orb(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
 
 XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
-   TString lunit = "mm";
+   TString lunit = fDefault_lunit.c_str();
 //   TString aunit = "rad";
    TString x = "0";
    TString y = "0";

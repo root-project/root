@@ -103,6 +103,8 @@ public:
    TXMLEngine* fFileEngine[20]; //array of dom object pointers
    const char* fStartFile; //name of originating file
    const char* fCurrentFile; //current file name being parsed
+   std::string fDefault_lunit = "cm";
+   std::string fDefault_aunit = "deg";
 
    TGDMLParse() { //constructor
       fWorldName = "";
@@ -124,6 +126,8 @@ public:
    }
 
    TGeoVolume*       GDMLReadFile(const char* filename = "test.gdml");
+   void              SetDefaultROOTUnits() { fDefault_lunit = "cm"; fDefault_aunit = "deg"; }
+   void              SetDefaultG4Units() { fDefault_lunit = "mm"; fDefault_aunit = "rad"; }
 
 private:
 
@@ -137,6 +141,7 @@ private:
    //'define' section
    XMLNodePointer_t  ConProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  PosProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
+   XMLNodePointer_t  QuantityProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  RotProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  SclProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
 
@@ -212,7 +217,7 @@ private:
    ReflSolidMap freflsolidmap;    //!Map containing reflection names and the TGDMLRefl for it - containing refl matrix
    ReflVolMap freflvolmap;        //!Map containing reflected volume names and the solid ref for it
    FileMap ffilemap;              //!Map containing files parsed during entire parsing, with their world volume name
-   ConstMap fconsts;               //!Map containing values of constants declared in the file
+   ConstMap fconsts;              //!Map containing values of constants declared in the file
 
    ClassDef(TGDMLParse, 0)    //imports GDML using DOM and binds it to ROOT
 };
