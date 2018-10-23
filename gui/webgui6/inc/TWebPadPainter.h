@@ -42,8 +42,6 @@ protected:
 
    TWebPainterAttributes *Attr();
 
-   void AcquireXAttributes(unsigned attrmask = attrAll);
-
    void StoreOperation(const char* opt, TObject* obj = nullptr, unsigned attrmask = attrAll);
 
    Float_t *Reserve(Int_t sz);

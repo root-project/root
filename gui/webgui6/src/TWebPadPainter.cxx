@@ -74,42 +74,11 @@ Float_t *TWebPadPainter::Reserve(Int_t sz)
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Extract X11 attributes and store them
-/// With the mask one could specify which attributes are interested
-
-void TWebPadPainter::AcquireXAttributes(unsigned attrmask)
-{
-   if (gVirtualX) {
-      if (attrmask & attrLine) {
-         SetLineColor(gVirtualX->GetLineColor());
-         SetLineStyle(gVirtualX->GetLineStyle());
-         SetLineWidth(gVirtualX->GetLineWidth());
-      }
-      if (attrmask & attrFill) {
-         SetFillColor(gVirtualX->GetFillColor());
-         SetFillStyle(gVirtualX->GetFillStyle());
-      }
-      if (attrmask & attrMarker) {
-         SetMarkerColor(gVirtualX->GetMarkerColor());
-         SetMarkerSize(gVirtualX->GetMarkerSize());
-         SetMarkerStyle(gVirtualX->GetMarkerStyle());
-      }
-      if (attrmask & attrText) {
-         SetTextAlign(gVirtualX->GetTextAlign());
-         SetTextAngle(gVirtualX->GetTextAngle());
-         SetTextColor(gVirtualX->GetTextColor());
-         SetTextFont(gVirtualX->GetTextFont());
-         SetTextSize(gVirtualX->GetTextSize());
-      }
-   }
-}
-
+/// Store operation identifier with appropriate attributes
 
 void TWebPadPainter::StoreOperation(const char* opt, TObject* obj, unsigned attrmask)
 {
    if (!fPainting) fPainting = new TWebPainting();
-
-   AcquireXAttributes(attrmask);
 
    if (fAttrChanged) {
       fPainting->Add(fAttr->Clone(), "attr");
@@ -179,8 +148,6 @@ void TWebPadPainter::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*wi
 
 void TWebPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   AcquireXAttributes(attrLine);
-
    if (GetLineWidth()<=0) return;
 
    StoreOperation("line", nullptr, attrLine);
@@ -198,8 +165,6 @@ void TWebPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2
 
 void TWebPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
-   AcquireXAttributes(attrLine);
-
    if (GetLineWidth()<=0) return;
 
    StoreOperation("linendc", nullptr, attrLine);
@@ -217,10 +182,6 @@ void TWebPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t
 
 void TWebPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMode mode)
 {
-   // printf("PAINT BOX %4.2f %4.2f %4.2f %4.2f mode %d linecol %d\n", x1, y1, x2, y2, (int) mode, gVirtualX->GetLineColor());
-
-   // AcquireXAttributes(attrLine); // get only line attributes
-
    if (GetLineWidth()<=0 && mode == TVirtualPadPainter::kHollow) return;
 
    if (mode == TVirtualPadPainter::kHollow)
@@ -279,8 +240,6 @@ void TWebPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_
 
 void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Double_t *xs, const Double_t *ys)
 {
-   AcquireXAttributes(attrLine); // get only line attributes
-
    if (GetLineWidth()<=0) return;
 
    if (nPoints < 2) {
@@ -303,8 +262,6 @@ void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Double_t *xs, const Doubl
 
 void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Float_t *xs, const Float_t *ys)
 {
-   AcquireXAttributes(attrLine); // get only line attributes
-
    if (GetLineWidth()<=0) return;
 
    if (nPoints < 2) {
@@ -327,8 +284,6 @@ void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Float_t *xs, const Float_
 
 void TWebPadPainter::DrawPolyLineNDC(Int_t nPoints, const Double_t *u, const Double_t *v)
 {
-   AcquireXAttributes(attrLine); // get only line attributes
-
    if (GetLineWidth()<=0) return;
 
    if (nPoints < 2) {
