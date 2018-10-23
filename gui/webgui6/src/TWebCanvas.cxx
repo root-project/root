@@ -198,9 +198,6 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
             view->SetAutoRange(kTRUE);
 
             gVirtualPS = new TWebPS(*painter);
-
-            printf("Detect 3D object %s %s view %p view3d %p\n", obj->GetName(), obj->ClassName(), pad->GetView(), pad->GetViewer3D());
-
          }
 
          // calling Paint function for the object
@@ -359,8 +356,8 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
 
    // TODO: this is only for debugging, remove it later
-   static int filecnt = 0;
-   TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
+   // static int filecnt = 0;
+   // TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
 
    delete curr; // destroy created snapshot
 
