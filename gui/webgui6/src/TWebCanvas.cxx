@@ -13,6 +13,7 @@
 #include "TWebSnapshot.h"
 #include "TWebPadPainter.h"
 #include "TWebMenuItem.h"
+#include "TWebPS.h"
 
 #include "TSystem.h"
 #include "TCanvas.h"
@@ -179,20 +180,24 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
       if (!painter) {
          Error("CreateObjectSnapshot", "Not found WebPadPainter when paint class %s", obj->ClassName());
       } else {
+         TView *view = nullptr;
+         TVirtualPad *savepad = gPad;
+         TVirtualPS *saveps = gVirtualPS;
+
          painter->ResetPainting();                                        // ensure painter is created
          painter->SetWebCanvasSize(Canvas()->GetWw(), Canvas()->GetWh()); // provide canvas dimension
 
-         TView *view = nullptr;
+         pad->cd();
 
          if (obj->InheritsFrom(TAtt3D::Class())) {
-            pad->cd();
             pad->GetViewer3D("pad");
             view = TView::CreateView(1,0,0); // Cartesian view by default
             pad->SetView(view);
-            pad->GetCanvas()->SetBatch(kFALSE);
 
             // Set view to perform first auto-range (scaling) pass
             view->SetAutoRange(kTRUE);
+
+            gVirtualPS = new TWebPS(*painter);
 
             printf("Detect 3D object %s %s view %p view3d %p\n", obj->GetName(), obj->ClassName(), pad->GetView(), pad->GetViewer3D());
 
@@ -203,17 +208,18 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
 
          if (view) {
             view->SetAutoRange(kFALSE);
+            // call 3D paint once again to make real drawing
             obj->Paint(opt);
-            pad->GetCanvas()->SetBatch(kTRUE);
             pad->SetView(nullptr);
+            delete gVirtualPS;
+            gVirtualPS = saveps;
          }
 
          p = painter->TakePainting();
 
-         if (view)
-            printf("After 3D object %s %s painting %p\n", obj->GetName(), obj->ClassName(), p);
-
          fHasSpecials = kTRUE;
+
+         if (savepad) savepad->cd();
       }
    }
 
