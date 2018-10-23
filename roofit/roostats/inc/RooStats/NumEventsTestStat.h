@@ -35,7 +35,7 @@ namespace RooStats {
       NumEventsTestStat is a simple implementation of the TestStatistic interface used for simple number counting.
       It should probably support simple cuts as well.
       
-      \ingroup RooStats
+      \ingroup Roostats
    */
 
   class NumEventsTestStat : public TestStatistic{

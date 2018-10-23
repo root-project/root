@@ -11,13 +11,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-</p>
-END_HTML
-*/
-//
+/** \class RooStats::HistFactory::FlexibleInterpVar
+ *  \ingroup HistFactory 
+ */
 
 #include "RooFit.h"
 

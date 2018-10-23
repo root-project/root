@@ -49,9 +49,15 @@ public:
   virtual ~RooAbsPdf();
 
   // Toy MC generation
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// See RooAbsPdf::generate(const RooArgSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
+  /// \param[in] nEvents How many events to generate
   RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents, const RooCmdArg& arg1,
                        const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
-                       const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) ;
+                       const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) {
+    return generate(whatVars,RooFit::NumEvents(nEvents),arg1,arg2,arg3,arg4,arg5) ;
+  }
   RooDataSet *generate(const RooArgSet &whatVars,  
                        const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
                        const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
@@ -84,16 +90,23 @@ public:
     ClassDef(GenSpec,0) // Generation specification
   } ;
 
+  ///Prepare GenSpec configuration object for efficient generation of multiple datasets from identical specification.
   GenSpec* prepareMultiGen(const RooArgSet &whatVars,  
 			   const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
 			   const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
 			   const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+  ///Generate according to GenSpec obtained from prepareMultiGen().
   RooDataSet* generate(GenSpec&) const ;
   
 
+  ////////////////////////////////////////////////////////////////////////////////
+  /// As RooAbsPdf::generateBinned(const RooArgSet&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&)
+  /// \param[in] nEvents How many events to generate
   virtual RooDataHist *generateBinned(const RooArgSet &whatVars, Double_t nEvents, const RooCmdArg& arg1,
 			      const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
-			      const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) ;
+			      const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) {
+    return generateBinned(whatVars,RooFit::NumEvents(nEvents),arg1,arg2,arg3,arg4,arg5);
+  }
   virtual RooDataHist *generateBinned(const RooArgSet &whatVars,  
 			      const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
 			      const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
@@ -102,6 +115,7 @@ public:
 
   virtual RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) ;
 
+  ///Helper calling plotOn(RooPlot*, RooLinkedList&) const
   virtual RooPlot* plotOn(RooPlot* frame, 
 			  const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
 			  const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
@@ -113,7 +127,7 @@ public:
   }
   virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
-
+  /// Add a box with parameter values (and errors) to the specified frame
   virtual RooPlot* paramOn(RooPlot* frame, 
                            const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(), 
                            const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(), 

@@ -130,8 +130,10 @@ public:
 
   // data member get/set methods
   inline RooAbsRealLValue *getPlotVar() const { return _plotVarClone; }
+  ///Return the number of events in the fit range
   inline Double_t getFitRangeNEvt() const { return _normNumEvts; }
   Double_t getFitRangeNEvt(Double_t xlo, Double_t xhi) const ;
+  ///Return the bin width that is being used to normalise the PDF
   inline Double_t getFitRangeBinW() const { return _normBinWidth; }
   inline Double_t getPadFactor() const { return _padFactor; }
   inline void setPadFactor(Double_t factor) { if(factor >= 0) _padFactor= factor; }
@@ -163,10 +165,12 @@ public:
   virtual void SetMaximum(Double_t maximum = -1111) ;
   virtual void SetMinimum(Double_t minimum = -1111) ;
 
+  ///Shortcut for RooPlot::chiSquare(const char* pdfname, const char* histname, int nFitParam=0)
   Double_t chiSquare(int nFitParam=0) const { return chiSquare(0,0,nFitParam) ; } 
   Double_t chiSquare(const char* pdfname, const char* histname, int nFitParam=0) const ;
 
   RooHist* residHist(const char* histname=0, const char* pdfname=0,bool normalize=false, bool useAverage=kFALSE) const ;
+  ///Uses residHist() and sets normalize=true
   RooHist* pullHist(const char* histname=0, const char* pdfname=0, bool useAverage=false) const 
     { return residHist(histname,pdfname,true,useAverage); }
 

@@ -964,11 +964,17 @@ void RooPlot::SetMinimum(Double_t minimum)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return reduced chi-squared of curve with given name with respect
-/// to histogram with given name. If nFitParam is non-zero, it is used to reduce the
-/// number of degrees of freedom for a chi^2 for a curve that was fitted to the
-/// data with that number of floating parameters
+/// to histogram with given name.
+///
+/// \param[in] curvename  Name of the curve or nullptr for last curve
+/// \param[in] histname   Name of the histogram to compare to or nullptr for last added histogram
+/// \param[in] nFitParam  If non-zero, reduce the number of degrees of freedom by this
+/// number. This means that the curve was fitted to the data with nFitParam floating
+/// parameters, which needs to be reflected in the calculation of \f$\chi^2 / \mathrm{ndf}\f$.
+/// 
+/// \return \f$ \chi^2 / \mathrm{ndf} \f$
 
-Double_t RooPlot::chiSquare(const char* curvename, const char* histname, Int_t nFitParam) const
+Double_t RooPlot::chiSquare(const char* curvename, const char* histname, int nFitParam) const
 {
 
   // Find curve object

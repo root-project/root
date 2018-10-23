@@ -46,8 +46,8 @@ public:
   void SetValue( Double_t Val );
 
   // Some helper functions
-  /// Note that histogram name should not include the path of the histogram in the file.  
-  /// This has to be given separatly 
+  // Note that histogram name should not include the path of the histogram in the file.  
+  // This has to be given separatly 
 
   void ActivateStatError();
   void ActivateStatError( std::string HistoName, std::string InputFile, std::string HistoPath="" );
@@ -72,35 +72,35 @@ public:
   void AddShapeSys(    std::string Name, Constraint::Type ConstraintType, std::string HistoName, std::string HistoFile, std::string HistoPath="" );
   void AddShapeSys( const ShapeSys& Sys );
 
-  // defines whether the normalization scale with luminosity
+  /// defines whether the normalization scale with luminosity
   void SetNormalizeByTheory( bool norm ) { fNormalizeByTheory = norm; }
-  // does the normalization scale with luminosity
+  /// does the normalization scale with luminosity
   bool GetNormalizeByTheory() { return fNormalizeByTheory; }
 
 
-  // get name of sample
+  /// get name of sample
   std::string GetName() { return fName; }
-  // set name of sample
+  /// set name of sample
   void SetName(const std::string& Name) { fName = Name; }
 
-  // get input ROOT file
+  /// get input ROOT file
   std::string GetInputFile() { return fInputFile; }
-  // set input ROOT file
+  /// set input ROOT file
   void SetInputFile(const std::string& InputFile) { fInputFile = InputFile; }
 
-  // get histogram name
+  /// get histogram name
   std::string GetHistoName() { return fHistoName; }
-  // set histogram name
+  /// set histogram name
   void SetHistoName(const std::string& HistoName) { fHistoName = HistoName; }
 
-  // get histogram path
+  /// get histogram path
   std::string GetHistoPath() { return fHistoPath; }
-  // set histogram path
+  /// set histogram path
   void SetHistoPath(const std::string& HistoPath) { fHistoPath = HistoPath; }
 
-  // get name of associated channel
+  /// get name of associated channel
   std::string GetChannelName() { return fChannelName; }
-  // set name of associated channel
+  /// set name of associated channel
   void SetChannelName(const std::string& ChannelName) { fChannelName = ChannelName; }
 
 
@@ -125,7 +125,7 @@ protected:
   std::string fHistoName;
   std::string fHistoPath;
 
-  // The Name of the parent channel
+  /// The Name of the parent channel
   std::string fChannelName;
 
   //
@@ -142,14 +142,14 @@ protected:
   std::vector< RooStats::HistFactory::ShapeFactor > fShapeFactorList;
 
 
-  // Properties
+  /// Properties
   RooStats::HistFactory::StatError fStatError;
 
   bool fNormalizeByTheory;
   bool fStatErrorActivate;
 
 
-  // The Nominal Shape
+  /// The Nominal Shape
   HistRef fhNominal;
   TH1* fhCountingHist;
 

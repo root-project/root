@@ -26,7 +26,7 @@ class HistRef {
 public:
 
 
-   // constructor - use gives away ownerhip of the given pointer
+   /// constructor - use gives away ownerhip of the given pointer
    HistRef(TH1 * h = 0) : fHist(h) {}
 
    HistRef( const HistRef& other ) : 
@@ -38,7 +38,7 @@ public:
       DeleteObject(fHist); 
    }
  
-   // assignment operator (delete previous contained histogram)
+   /// assignment operator (delete previous contained histogram)
    HistRef & operator= (const HistRef & other) { 
       if (this == &other) return *this; 
       DeleteObject(fHist); 
@@ -48,13 +48,13 @@ public:
 
    TH1 * GetObject() const { return fHist; }
 
-   // set the object - user gives away the ownerhisp 
+   /// set the object - user gives away the ownerhisp 
    void SetObject(TH1 *h)  { 
       DeleteObject(fHist);
       fHist = h;
    }
 
-   // operator= passing an object pointer :  user gives away its ownerhisp 
+   /// operator= passing an object pointer :  user gives away its ownerhisp 
    void operator= (TH1 * h) { SetObject(h); } 
 
    static TH1 * CopyObject(TH1 * h); 

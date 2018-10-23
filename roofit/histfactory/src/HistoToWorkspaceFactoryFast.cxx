@@ -10,13 +10,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-</p>
-END_HTML
-*/
-//
+/** \class RooStats::HistFactory::HistoToWorkspaceFactoryFast
+ * \ingroup HistFactory 
+ */
 
 
 #ifndef __CINT__

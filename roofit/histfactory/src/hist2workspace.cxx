@@ -10,13 +10,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-</p>
-END_HTML
-*/
-//
+
 
 #include <string>
 #include <exception>
@@ -60,7 +54,10 @@ namespace RooStats {
   } // namespace RooStats
 } // namespace HistFactory
 
-
+/**
+ * \ingroup HistFactory
+ * hist2workspace executable main function to create RooFit models from an xml config and files with histograms.
+ */
 int main(int argc, char** argv) {
 
   if( !(argc > 1) ) {

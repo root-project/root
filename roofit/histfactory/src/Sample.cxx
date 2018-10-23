@@ -8,15 +8,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-
-/*
-BEGIN_HTML
-<p>
-</p>
-END_HTML
-*/
-//
+//////////////////////////////////////////////////////////////////////////////
+/** \class RooStats::HistFactory::Sample
+ * \ingroup HistFactory
+ */
 
 #include "TH1.h"
 #include "RooStats/HistFactory/Sample.h"
