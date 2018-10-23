@@ -33,6 +33,8 @@
 #include "TROOT.h"
 #include "TEnv.h"
 
+#include <regex>
+
 #if !defined(_MSC_VER)
 #include <unistd.h>
 #include <stdlib.h>
@@ -41,6 +43,7 @@
 #else
 #include <process.h>
 #endif
+
 
 std::map<std::string, std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator>> &ROOT::Experimental::RWebDisplayHandle::GetMap()
 {
@@ -143,9 +146,10 @@ void ROOT::Experimental::RWebDisplayHandle::BrowserCreator::TestProg(const std::
       return;
 
    if (!gSystem->AccessPathName(nexttry.c_str(), kExecutePermission)) {
-      fProg = nexttry;
 #ifdef R__MACOSX
-      fProg.ReplaceAll("%20", " ");
+      fProg = std::regex_replace(nexttry, std::regex("%20"), " ");
+#else
+      fProg = nexttry;
 #endif
       return;
    }
