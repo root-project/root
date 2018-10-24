@@ -23,23 +23,21 @@ class THttpServer;
 namespace ROOT {
 namespace Experimental {
 
-/// Argument used in RWebWindow::Show() method
 class RWebDisplayArgs {
 
 public:
    enum EBrowserKind {
-        kChrome,    // Google Chrome browser
-        kFirefox,   // Mozilla Firefox browser
-        kNative,    // either Chrome or Firefox - both support major functionality
-        kCEF,       // Chromium Embedded Framework - local display with CEF libs
-        kQt5,       // QWebEngine libraries - Chrome code packed in qt5
-        kLocal,     // either CEF or Qt5 - both runs on local display without real http server
-        kStandard,  // standard system web browser, not recognized by ROOT, without batch mode
-        kCustom     // custom web browser, execution string should be provided
-     };
+      kChrome,   ///< Google Chrome browser
+      kFirefox,  ///< Mozilla Firefox browser
+      kNative,   ///< either Chrome or Firefox - both support major functionality
+      kCEF,      ///< Chromium Embedded Framework - local display with CEF libs
+      kQt5,      ///< QWebEngine libraries - Chrome code packed in qt5
+      kLocal,    ///< either CEF or Qt5 - both runs on local display without real http server
+      kStandard, ///< standard system web browser, not recognized by ROOT, without batch mode
+      kCustom    ///< custom web browser, execution string should be provided
+   };
 
 protected:
-
    EBrowserKind fKind{kNative};   ///<! id of web browser used for display
    std::string fUrl;              ///<! URL to display
    bool fHeadless{false};         ///<! is browser runs in headless mode
@@ -51,7 +49,6 @@ protected:
    void *fDriverData{nullptr};    ///<! special data delivered to driver, can be used for QWebEngine
 
 public:
-
    RWebDisplayArgs();
 
    RWebDisplayArgs(const std::string &browser);
@@ -109,7 +106,5 @@ public:
 
 }
 }
-
-
 
 #endif
