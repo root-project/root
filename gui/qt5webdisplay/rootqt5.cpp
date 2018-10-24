@@ -67,7 +67,7 @@ protected:
 
       Qt5Creator() = default;
 
-      std::unique_ptr<RWebDisplayHandle> Display(const RWebBrowserArgs &args) override
+      std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override
       {
          if (args.IsHeadless())
             return nullptr;
@@ -99,7 +99,7 @@ protected:
 
          // if no server provided - normal HTTP will be allowed to use
          if (args.GetHttpServer()) {
-            handler = std::make_unique<RootUrlSchemeHandler>(serv, fCounter++);
+            handler = std::make_unique<RootUrlSchemeHandler>(args.GetHttpServer(), fCounter++);
             fullurl = handler->MakeFullUrl(fullurl);
          }
 

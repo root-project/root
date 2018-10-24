@@ -424,23 +424,22 @@ protected:
    public:
       CefCreator() = default;
 
-      std::unique_ptr<RWebDisplayHandle>
-      ShowURL(const std::string &, THttpServer *serv, const std::string &url, bool batch, int width, int height) override
+      std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override
       {
-         if (!serv) {
+         if (!args.GetHttpServer()) {
             R__ERROR_HERE("CEF") << "CEF do not support loading of external HTTP pages";
             return nullptr;
          }
 
          if (fCefApp) {
-            if (gHandlingServer != serv) {
+            if (gHandlingServer != args.GetHttpServer()) {
                R__ERROR_HERE("CEF") << "CEF do not allows to use different THttpServer instances";
                return nullptr;
             }
 
-            CefRect rect(0, 0, width, height);
-            fCefApp->StartWindow(url, batch, rect);
-            return std::make_unique<RCefWebDisplayHandle>(url);
+            CefRect rect(0, 0, args.GetWidth(), args.GetHeight());
+            fCefApp->StartWindow(args.GetFullUrl(), args.IsHeadless(), rect);
+            return std::make_unique<RCefWebDisplayHandle>(args.GetFullUrl());
          }
 
          TApplication *root_app = gROOT->GetApplication();
@@ -505,12 +504,12 @@ protected:
          // settings.ignore_certificate_errors = true;
          // settings.remote_debugging_port = 7890;
 
-         gHandlingServer = serv;
+         gHandlingServer = args.GetHttpServer();
 
          // SimpleApp implements application-level callbacks for the browser process.
          // It will create the first browser instance in OnContextInitialized() after
          // CEF has initialized.
-         fCefApp = new SimpleApp(cef_main.Data(), url, batch, width, height);
+         fCefApp = new SimpleApp(cef_main.Data(), args.GetFullUrl(), args.IsHeadless(), args.GetWidth(), args.GetHeight());
 
          // Initialize CEF for the browser process.
          CefInitialize(main_args, settings, fCefApp.get(), nullptr);
@@ -519,7 +518,7 @@ protected:
          TCefTimer *timer = new TCefTimer(10, kTRUE);
          timer->TurnOn();
 
-         return std::make_unique<RCefWebDisplayHandle>(url);
+         return std::make_unique<RCefWebDisplayHandle>(args.GetFullUrl());
       }
 
       virtual ~CefCreator() = default;
