@@ -1,5 +1,5 @@
 ############################################################################
-# CMakeLists.txt file for building ROOT gui/canvaspainter package
+# CMakeLists.txt file for building ROOT gui/webdisplay package
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTWebDisplay
