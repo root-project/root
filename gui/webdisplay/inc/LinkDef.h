@@ -13,7 +13,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class ROOT::Experimental::RWebDisplayHandle+;
-#pragma link C++ class ROOT::Experimental::RWebBrowserArgs+;
+#pragma link C++ class ROOT::Experimental::RWebDisplayArgs+;
 #pragma link C++ class ROOT::Experimental::RWebWindow+;
 #pragma link C++ class ROOT::Experimental::RWebWindowsManager+;
 

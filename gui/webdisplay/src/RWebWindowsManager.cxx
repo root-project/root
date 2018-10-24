@@ -16,7 +16,7 @@
 #include "ROOT/RWebWindowsManager.hxx"
 
 #include <ROOT/TLogger.hxx>
-#include <ROOT/RWebBrowserArgs.hxx>
+#include <ROOT/RWebDisplayArgs.hxx>
 #include <ROOT/RWebDisplayHandle.hxx>
 #include <ROOT/RWebWindowsManager.hxx>
 
@@ -377,7 +377,7 @@ unsigned ROOT::Experimental::RWebWindowsManager::Show(ROOT::Experimental::RWebWi
       return 0;
    }
 
-   RWebBrowserArgs args(where);
+   RWebDisplayArgs args(where);
 
    if (batch_mode && !args.IsSupportHeadless()) {
       R__ERROR_HERE("WebDisplay") << "Cannot use batch mode with " << where;
@@ -402,7 +402,7 @@ unsigned ROOT::Experimental::RWebWindowsManager::Show(ROOT::Experimental::RWebWi
 
    args.SetUrl(url);
 
-   url.SetHttpServer(GetServer());
+   args.SetHttpServer(GetServer());
 
    auto handle = RWebDisplayHandle::Display(args);
 

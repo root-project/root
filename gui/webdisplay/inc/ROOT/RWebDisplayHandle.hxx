@@ -21,7 +21,7 @@
 #include <memory>
 #include <functional>
 
-#include <ROOT/RWebBrowserArgs.hxx>
+#include <ROOT/RWebDisplayArgs.hxx>
 
 #include "TString.h"
 
@@ -35,7 +35,7 @@ class RWebDisplayHandle {
 protected:
    class Creator {
    public:
-      virtual std::unique_ptr<RWebDisplayHandle> Display(const RWebBrowserArgs &args) = 0;
+      virtual std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) = 0;
       virtual ~Creator() = default;
    };
 
@@ -53,7 +53,7 @@ protected:
 
       BrowserCreator(bool custom = true, const std::string &exec = "");
 
-      std::unique_ptr<RWebDisplayHandle> Display(const RWebBrowserArgs &args) override;
+      std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override;
 
       virtual ~BrowserCreator() = default;
    };
@@ -89,7 +89,7 @@ public:
 
    std::string GetUrl() const { return fUrl; }
 
-   static std::unique_ptr<RWebDisplayHandle> Display(const RWebBrowserArgs &args);
+   static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);
 
    virtual ~RWebDisplayHandle() = default;
 };
