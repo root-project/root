@@ -24,9 +24,6 @@
 #include <unistd.h> //pid_t
 
 class TMPWorker {
-   /// \cond
-   ClassDef(TMPWorker, 0);
-   /// \endcond
 public:
    TMPWorker() : fNWorkers(0), fMaxNEntries(0),
                  fProcessedEntries(0), fS(), fPid(0), fNWorker(0) { }
