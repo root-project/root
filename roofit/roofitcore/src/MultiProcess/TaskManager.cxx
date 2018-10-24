@@ -99,17 +99,54 @@ namespace RooFit {
     }
 
     void TaskManager::initialize_processes(bool cpu_pinning) {
-      // BidirMMapPipe parameters
-      bool useExceptions = true;
-      bool useSocketpair = false;
-      bool keepLocal_WORKER = true;
-      bool keepLocal_QUEUE = false;
+      // Initialize processes;
+      // ... first workers:
+      worker_pids.resize(N_workers);
+      pid_t child_pid;
+      for (std::size_t ix = 0; ix < N_workers; ++ix) {
+        child_pid = fork();
+        if (child_pid) {  // we're on the worker
+          worker_id = ix;
+          break;
+        } else {          // we're on master
+          worker_pids[ix] = child_pid;
+        }
+      }
 
-      // First initialize the workers.
-      // Which pointers we must retain depends on the process, so we first put
-      // them in a vector of raw pointers and transfer them to safe pointers
-      // in the proper cases. Raw pointers make sense here because BidirMMapPipe
-      // has some kind of built-in garbage collection.
+      // ... then queue:
+      if (!child_pid) {  // we're on master
+        child_pid = fork();
+        if (child_pid) { // we're now on queue
+          _is_queue = true;
+        } else {
+          _is_master = true;
+        }
+      }
+
+      // after all forks, create zmq context
+      zmq_context = std::make_unique<zmq::context_t>(1);
+
+      // then create connections
+      if (is_master()) {
+        zmq::socket_t mq_socket(zmq_context, zmq::socket_type::req);
+        mq_socket.bind("ipc://master_queue");
+      } else if (is_queue()) {
+        zmq::socket_t mq_socket(zmq_context, zmq::socket_type::rep);
+        mq_socket.connect("ipc::/master_queue");
+
+        for (std::size_t ix = 0; ix < N_workers; ++ix) {
+          qw_sockets[ix] = std::make_unique<zmq::socket_t>(zmq_context, zmq::socket_type::rep);
+          std::stringstream socket_name("ipc://queue_worker_");
+          socket_name << ix;
+          qw_sockets[ix]->bind(socket_name.str().c_str());
+        }
+
+      } else if (is_worker()) {
+
+      } else {
+        // should not get here
+        throw std::runtime_error("TaskManager::initialize_processes: I'm neither master, nor queue, nor a worker");
+      }
 
       std::vector<BidirMMapPipe*> worker_pipes_raw(N_workers);
       worker_pids.resize(N_workers);

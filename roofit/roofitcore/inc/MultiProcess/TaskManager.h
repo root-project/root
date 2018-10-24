@@ -18,6 +18,7 @@
 #include <map>
 #include <queue>
 #include <MultiProcess/BidirMMapPipe.h>
+#include <MultiProcess/zmq.hxx>
 // N.B.: cannot use forward declarations for BidirMMapPipe, because we need
 // the nested BidirMMapPipe::PollVector as well.
 
@@ -187,12 +188,12 @@ namespace RooFit {
       BidirMMapPipe::PollVector get_poll_vector();
 
       std::size_t N_workers;
-      std::vector<std::unique_ptr<BidirMMapPipe>> worker_pipes;
+      std::vector<std::unique_ptr<zmq::socket_t>> qw_sockets;
       std::vector<pid_t> worker_pids;  // master must wait for workers after completion, for which it needs their PIDs
       // for convenience on the worker processes, we use this_worker_pipe as an
       // alias for worker_pipes.back()
-      std::unique_ptr <BidirMMapPipe> this_worker_pipe;
-      std::unique_ptr <BidirMMapPipe> queue_pipe;
+      std::unique_ptr <BidirMMapPipe> this_qw_socket;
+      std::unique_ptr <zmq::socket_t> mq_socket;
       std::size_t worker_id;
       bool _is_master = false;
       bool _is_queue = false;
@@ -202,6 +203,7 @@ namespace RooFit {
       bool queue_activated = false;
       bool work_mode = false;
       bool processes_initialized = false;
+      std::unique_ptr<zmq::context_t> zmq_context;
 
       static std::map<std::size_t, Job *> job_objects;
       static std::size_t job_counter;

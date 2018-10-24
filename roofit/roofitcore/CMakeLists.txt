@@ -3,6 +3,12 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+find_package(ZeroMQ REQUIRED)
+if(NOT ZeroMQ_FOUND)
+    message(ERROR "Could not find ZeroMQ!")
+endif()
+
+
 if(UNIX AND NOT APPLE)
     # for Linux, BSD, Solaris, Minix: add rt library for timing in RooCPUTimer
     find_library(RT_LIBRARY rt)
@@ -247,6 +253,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         MultiProcess/TaskManager.h
         MultiProcess/Vector.h
         MultiProcess/messages.h
+        MultiProcess/zmq.hxx
   SOURCES
     src/Roo1DTable.cxx
     src/RooAbsAnaConvPdf.cxx
@@ -494,6 +501,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   LIBRARIES
     ${RT_LIBRARY}
 )
+
+target_include_directories(RooFitCore PRIVATE ${ZeroMQ_INCLUDE_DIR})
+target_link_libraries(RooFitCore PRIVATE ${ZeroMQ_LIBRARY})
 
 if(testing)
     ROOT_ADD_TEST_SUBDIRECTORY(test)
