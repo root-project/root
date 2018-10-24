@@ -28,7 +28,6 @@ class RWebDisplayArgs {
 
 public:
    enum EBrowserKind {
-        kDefault,   // default settings provided with --web argument when started ROOT
         kChrome,    // Google Chrome browser
         kFirefox,   // Mozilla Firefox browser
         kNative,    // either Chrome or Firefox - both support major functionality
@@ -41,7 +40,7 @@ public:
 
 protected:
 
-   EBrowserKind fKind{kDefault};  ///<! name of web browser used for display
+   EBrowserKind fKind{kNative};   ///<! id of web browser used for display
    std::string fUrl;              ///<! URL to display
    bool fHeadless{false};         ///<! is browser runs in headless mode
    THttpServer *fServer{nullptr}; ///<! http server which handle all requests
@@ -57,9 +56,12 @@ public:
 
    RWebDisplayArgs(const std::string &browser);
 
+   RWebDisplayArgs(const char *browser);
+
    void SetBrowserKind(const std::string &kind);
    void SetBrowserKind(EBrowserKind kind) { fKind = kind; }
    EBrowserKind GetBrowserKind() const { return fKind; }
+   std::string GetBrowserName() const;
 
    /// returns true if local display like CEF or Qt5 QWebEngine should be used
    bool IsLocalDisplay() const

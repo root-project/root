@@ -55,19 +55,8 @@ private:
 
    void Unregister(RWebWindow &win);
 
-   /// Returns window URL, running in batch mode
-   std::string GetBatchUrl(const RWebWindow &win, bool remote = false) { return GetUrl(win, true, remote); }
-
-   /// Returns window URL, running in normal mode
-   std::string GetWindowUrl(const RWebWindow &win, bool remote = false) { return GetUrl(win, false, remote); }
-
-   unsigned Show(RWebWindow &win, bool batch_mode, const std::string &where);
-
    /// Show window in specified location, see Show() method for more details
-   unsigned ShowWindow(RWebWindow &win, const std::string &where) { return Show(win, false, where); }
-
-   /// Start window batch job in specified location, see Show() method for more details
-   unsigned ShowWindowBatch(RWebWindow &win, const std::string &where) { return Show(win, true, where); }
+   unsigned ShowWindow(RWebWindow &win, bool batch_mode, const RWebDisplayArgs &args);
 
    int WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool timed = false, double tm = -1);
 
