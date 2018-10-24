@@ -51,70 +51,6 @@ namespace Math {
    }
 
 
-   double exponential_pdf(double x, double lambda, double x0) {
-
-      if ((x-x0) < 0) {
-         return 0.0;
-      } else {
-         return lambda * std::exp (-lambda * (x-x0));
-      }
-
-   }
-
-
-
-   double fdistribution_pdf(double x, double n, double m, double x0) {
-
-      // function is defined only for both n and m > 0
-      if (n < 0 || m < 0)
-         return std::numeric_limits<double>::quiet_NaN();
-      if ((x-x0) < 0)
-         return 0.0;
-
-      return std::exp((n/2) * std::log(n) + (m/2) * std::log(m) + ROOT::Math::lgamma((n+m)/2) - ROOT::Math::lgamma(n/2) - ROOT::Math::lgamma(m/2)
-                         + (n/2 -1) * std::log(x-x0) - ((n+m)/2) * std::log(m +  n*(x-x0)) );
-
-   }
-
-
-
-   double gamma_pdf(double x, double alpha, double theta, double x0) {
-
-      if ((x-x0) < 0) {
-         return 0.0;
-      } else if ((x-x0) == 0) {
-
-         if (alpha == 1) {
-            return 1.0/theta;
-         } else {
-            return 0.0;
-         }
-
-      } else if (alpha == 1) {
-         return std::exp(-(x-x0)/theta)/theta;
-      } else {
-         return std::exp((alpha - 1) * std::log((x-x0)/theta) - (x-x0)/theta - ROOT::Math::lgamma(alpha))/theta;
-      }
-
-   }
-
-
-
-   double gaussian_pdf(double x, double sigma, double x0) {
-
-      double tmp = (x-x0)/sigma;
-      return (1.0/(std::sqrt(2 * M_PI) * std::fabs(sigma))) * std::exp(-tmp*tmp/2);
-   }
-
-   double bigaussian_pdf(double x, double y, double sigmax , double sigmay , double rho , double x0 , double y0 ) {
-
-      double u = (x-x0)/sigmax;
-      double v = (y-y0)/sigmay;
-      double c = 1. - rho*rho;  
-      double z = u*u - 2.*rho*u*v + v*v;
-      return  1./(2 * M_PI * sigmax * sigmay * std::sqrt(c) ) * std::exp(- z / (2. * c) ); 
-   }
-
 
    double landau_pdf(double x, double xi, double x0) {
       // LANDAU pdf : algorithm from CERNLIB G110 denlan
@@ -179,68 +115,6 @@ namespace Math {
          denlan = u*u*(1+(a2[0]+a2[1]*u)*u);
       }
       return denlan/xi;
-
-   }
-
-
-
-
-
-   double lognormal_pdf(double x, double m, double s, double x0) {
-
-      if ((x-x0) <= 0) {
-         return 0.0;
-      } else {
-         double tmp = (std::log((x-x0)) - m)/s;
-         return 1.0 / ((x-x0) * std::fabs(s) * std::sqrt(2 * M_PI)) * std::exp(-(tmp * tmp) /2);
-      }
-
-   }
-
-
-
-   double normal_pdf(double x, double sigma, double x0) {
-
-      double tmp = (x-x0)/sigma;
-      return (1.0/(std::sqrt(2 * M_PI) * std::fabs(sigma))) * std::exp(-tmp*tmp/2);
-
-   }
-
-
-
-   double poisson_pdf(unsigned int n, double mu) {
-
-      if (n >  0)
-         return std::exp (n*std::log(mu) - ROOT::Math::lgamma(n+1) - mu);
-      else  {
-         //  when  n = 0 and mu = 0,  1 is returned
-         if (mu >= 0) return std::exp(-mu);
-         // return a nan for mu < 0 since it does not make sense
-         return std::log(mu);
-      }
-
-   }
-
-
-
-   double tdistribution_pdf(double x, double r, double x0) {
-
-      return (std::exp (ROOT::Math::lgamma((r + 1.0)/2.0) - ROOT::Math::lgamma(r/2.0)) / std::sqrt (M_PI * r))
-      * std::pow ((1.0 + (x-x0)*(x-x0)/r), -(r + 1.0)/2.0);
-
-   }
-
-
-
-   double uniform_pdf(double x, double a, double b, double x0) {
-
-      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! when a=b
-
-      if ((x-x0) < b && (x-x0) >= a) {
-         return 1.0/(b - a);
-      } else {
-         return 0.0;
-      }
 
    }
 
