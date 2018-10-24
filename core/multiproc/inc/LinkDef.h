@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class TMPClient+;
-#pragma link C++ class TMPWorker+;
-#pragma link C++ class ROOT::TProcessExecutor+;
+#pragma link C++ class TMPClient;
+#pragma link C++ class TMPWorker;
+#pragma link C++ class ROOT::TProcessExecutor;
 #pragma link C++ class TProcPool;  // Deprecated but still needed for backward compatibility
 
 #endif
