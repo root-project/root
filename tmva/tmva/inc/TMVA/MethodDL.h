@@ -151,6 +151,9 @@ private:
    template <typename Architecture_t>
    std::vector<Double_t> PredictDeepNet(Long64_t firstEvt, Long64_t lastEvt, size_t batchSize, Bool_t logProgress); 
 
+   /// parce the validation string and return the number of event data used for validation 
+   UInt_t GetNumValidationSamples();
+
    
    size_t fInputDepth;  ///< The depth of the input.
    size_t fInputHeight; ///< The height of the input.
@@ -173,6 +176,7 @@ private:
    TString fTrainingStrategyString;     ///< The string defining the training strategy
    TString fWeightInitializationString; ///< The string defining the weight initialization method
    TString fArchitectureString;         ///< The string defining the architecure: CPU or GPU
+   TString fNumValidationString;        ///< The string defining the number (or percentage) of training data used for validation
    bool fResume;
    bool fBuildNet;                     ///< Flag to control whether to build fNet, the stored network used for the evaluation
 
@@ -185,7 +189,7 @@ protected:
    // provide a help message
    void GetHelpMessage() const;
 
-   virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress); 
+   virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress);
 
 
 public:
