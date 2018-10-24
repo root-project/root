@@ -1,4 +1,4 @@
-/// \file RWebBrowserArgs.cxx
+/// \file RWebDisplayArgs.cxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <s.linev@gsi.de>
 /// \date 2018-10-24
@@ -13,22 +13,22 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RWebBrowserArgs.hxx>
+#include <ROOT/RWebDisplayArgs.hxx>
 
 #include "TROOT.h"
 
-/** \class ROOT::Experimental::RWebBrowserArgs
+/** \class ROOT::Experimental::RWebDisplayArgs
  * \ingroup webdisplay
  *
  * Holds different arguments for starting browser with RWebDisplayHandle::Display() method
  */
 
-ROOT::Experimental::RWebBrowserArgs::RWebBrowserArgs()
+ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs()
 {
    SetBrowserKind(gROOT->GetWebDisplay().Data());
 }
 
-ROOT::Experimental::RWebBrowserArgs::RWebBrowserArgs(const std::string &browser)
+ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(const std::string &browser)
 {
    SetBrowserKind(browser);
 }
@@ -36,7 +36,7 @@ ROOT::Experimental::RWebBrowserArgs::RWebBrowserArgs(const std::string &browser)
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Set browser kind using string argument
 
-void ROOT::Experimental::RWebBrowserArgs::SetBrowserKind(const std::string &kind)
+void ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &kind)
 {
    if (kind == "local")
       SetBrowserKind(kLocal);
@@ -57,7 +57,7 @@ void ROOT::Experimental::RWebBrowserArgs::SetBrowserKind(const std::string &kind
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Returns full url, which is combined from URL and extra URL options
 
-std::string ROOT::Experimental::RWebBrowserArgs::GetFullUrl() const
+std::string ROOT::Experimental::RWebDisplayArgs::GetFullUrl() const
 {
    std::string url = GetUrl(), urlopt = GetUrlOpt();
    if (url.empty() || urlopt.empty()) return url;
