@@ -53,11 +53,6 @@ private:
    TTreeFormulaManager(const TTreeFormulaManager&);
    TTreeFormulaManager& operator=(const TTreeFormulaManager&);
 
-#if !defined(_MSC_VER) || (_MSC_VER < 1300) || defined(__CINT__)
-   // Deletion is the sole responsability of the TTreeFormulas
-   ~TTreeFormulaManager();
-#endif
-
 protected:
 
    virtual void       AddVarDims(Int_t virt_dim);
@@ -67,10 +62,7 @@ protected:
 
 public:
    TTreeFormulaManager();
-#if _MSC_VER >= 1300
-   // cannot be private due to a bug in VC++7
    ~TTreeFormulaManager();
-#endif
 
    virtual void       Add(TTreeFormula*);
    virtual Int_t      GetMultiplicity() const {return fMultiplicity;}

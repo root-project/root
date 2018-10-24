@@ -331,9 +331,7 @@ public:
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)(Long_t)address,leaflist,bufsize);
    }
-#if !defined(__CINT__)
    virtual TBranch        *Branch(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 99);
-#endif
    template <class T> TBranch *Branch(const char* name, const char* classname, T* obj, Int_t bufsize = 32000, Int_t splitlevel = 99)
    {
       // See BranchImpRed for details. Here we __ignore
@@ -502,13 +500,7 @@ public:
    virtual void            Print(Option_t* option = "") const; // *MENU*
    virtual void            PrintCacheStats(Option_t* option = "") const;
    virtual Long64_t        Process(const char* filename, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
-#if defined(__CINT__)
-#if defined(R__MANUAL_DICT)
-   virtual Long64_t        Process(void* selector, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
-#endif
-#else
    virtual Long64_t        Process(TSelector* selector, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
-#endif
    virtual Long64_t        Project(const char* hname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual TSQLResult     *Query(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual Long64_t        ReadFile(const char* filename, const char* branchDescriptor = "", char delimiter = ' ');
@@ -525,9 +517,7 @@ public:
    virtual void            SetAutoSave(Long64_t autos = -300000000);
    virtual void            SetAutoFlush(Long64_t autof = -30000000);
    virtual void            SetBasketSize(const char* bname, Int_t buffsize = 16000);
-#if !defined(__CINT__)
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
-#endif
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
    template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {

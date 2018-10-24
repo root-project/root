@@ -74,9 +74,7 @@ public:
    virtual Int_t          Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99);
    virtual TBranch       *Bronch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
    virtual TBranch       *BranchOld(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
-#if !defined(__CINT__)
    virtual TBranch       *Branch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
-#endif
 
    virtual TBranch       *Branch(const char *name, void *address, const char *leaflist, Int_t bufsize);
 
