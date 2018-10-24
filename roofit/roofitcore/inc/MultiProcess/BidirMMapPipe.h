@@ -898,6 +898,8 @@ class BidirMMapPipe {
         /// for usage a la "pipe << purge;"
         static BidirMMapPipe& purge(BidirMMapPipe& pipe) { pipe.purge(); return pipe; }
 
+        static int wait_for_child(pid_t child_pid, bool may_throw);
+
     private:
         /// copy-construction forbidden
         BidirMMapPipe(const BidirMMapPipe&);
@@ -947,6 +949,8 @@ class BidirMMapPipe {
         int m_flags; ///< flags (e.g. end of file)
         pid_t m_childPid; ///< pid of the child (zero if we're child)
         pid_t m_parentPid; ///< pid of the parent
+        bool kept_local;
+
 
         /// cleanup routine - at exit, we want our children to get a SIGTERM...
         static void teardownall(void);

@@ -751,10 +751,15 @@ BidirMMapPipe::BidirMMapPipe(const BidirMMapPipe&) :
     }
 }
 
+
+// When creating with keepLocal, the master (which loses its bipe pointers to
+// the child) must manually wait for its children after they are closed!
+// Otherwise zombies are created. The static function wait_for_child can be
+// used for this by master.
 BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLocal) :
     m_pages(pagepool().pop()), m_busylist(0), m_freelist(0), m_dirtylist(0),
     m_inpipe(-1), m_outpipe(-1), m_flags(failbit), m_childPid(0),
-    m_parentPid(::getpid())
+    m_parentPid(::getpid()), kept_local(keepLocal)
 {
     ++s_pagepoolrefcnt;
     assert(0 < TotPages && 0 == (TotPages & 1) && TotPages <= 256);
@@ -941,6 +946,31 @@ int BidirMMapPipe::close()
     return doClose(false);
 }
 
+
+// static function
+int BidirMMapPipe::wait_for_child(pid_t child_pid, bool may_throw) {
+  int status = 0;
+  int tmp;
+  do {
+    tmp = waitpid(child_pid, &status, WNOHANG);
+  } while (-1 == tmp && EINTR == errno);
+  if (-1 == tmp && may_throw) throw Exception("waitpid", errno);
+
+  if (WIFEXITED(status)) {
+    printf("exited, status=%d\n", WEXITSTATUS(status));
+  } else if (WIFSIGNALED(status)) {
+    printf("killed by signal %d\n", WTERMSIG(status));
+  } else if (WIFSTOPPED(status)) {
+    printf("stopped by signal %d\n", WSTOPSIG(status));
+  } else if (WIFCONTINUED(status)) {
+    printf("continued\n");
+  }
+
+  return status;
+}
+
+
+
 int BidirMMapPipe::doClose(bool force, bool holdlock)
 {
     if (m_flags & failbit) return 0;
@@ -1002,16 +1032,15 @@ int BidirMMapPipe::doClose(bool force, bool holdlock)
     }
     m_busylist = m_freelist = m_dirtylist = 0;
     // wait for child process
-    int retVal = 0;
-    if (isParent() && ::getpid() == m_parentPid) { // double check whether actually parent
-        int tmp;
-        do {
-            tmp = waitpid(m_childPid, &retVal, WNOHANG);
-        } while (-1 == tmp && EINTR == errno);
-        if (-1 == tmp)
-            if (!force) throw Exception("waitpid", errno);
-        m_childPid = 0; // feeling that m_childPid can become zero when it should not be
+    int retval = 0;
+    if (!kept_local && isParent() && ::getpid() == m_parentPid) { // double check whether actually parent
+      retval = BidirMMapPipe::wait_for_child(m_childPid, !force);
+      m_childPid = 0; // feeling that m_childPid can become zero when it should not be
     }
+
+    // When created with keepLocal (so kept_local is true), the master (which
+    // lost its bipe pointers to the child) must manually wait for its children
+    // after they are closed! Otherwise zombies are created.
 
     // remove from list of open pipes
     if (!holdlock) pthread_mutex_lock(&s_openpipesmutex);
@@ -1021,7 +1050,7 @@ int BidirMMapPipe::doClose(bool force, bool holdlock)
     if (!holdlock) pthread_mutex_unlock(&s_openpipesmutex);
     m_flags |= failbit;
 
-    return retVal;
+    return retval;
 }
 
 BidirMMapPipe::~BidirMMapPipe()

@@ -166,8 +166,8 @@ namespace RooFit {
       if (!_manager) {
         _manager = TaskManager::instance(N_workers);
 
-        _manager->identify_processes();
-        sleep(10);
+//        _manager->identify_processes();
+//        sleep(10);
       }
 
       // N.B.: must check for activation here, otherwise get_manager is not callable

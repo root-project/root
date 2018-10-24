@@ -112,12 +112,8 @@ namespace RooFit {
       // has some kind of built-in garbage collection.
 
       std::vector<BidirMMapPipe*> worker_pipes_raw(N_workers);
+      worker_pids.resize(N_workers);
 
-//      // Reserve is necessary! BidirMMapPipe is not allowed to be copied,
-//      // but when capacity is not enough when using emplace_back, the
-//      // vector must be resized, which means existing elements must be
-//      // copied to the new memory locations.
-//      worker_pipes.reserve(N_workers);
       for (std::size_t ix = 0; ix < N_workers; ++ix) {
         // set worker_id before each fork so that fork will sync it to the worker
         worker_id = ix;
@@ -125,24 +121,27 @@ namespace RooFit {
         if(worker_pipes_raw[ix]->isChild()) {
           this_worker_pipe.reset(worker_pipes_raw[ix]);
           break;
+        } else {
+          worker_pids[ix] = worker_pipes_raw[ix]->pidOtherEnd();
         }
       }
 
       // then do the queue and master initialization, but each worker should
       // exit the constructor from here on
-      if (worker_pipes_raw[N_workers - 1]->isParent()) {
-        queue_pipe = std::make_unique<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_QUEUE);
+      if (worker_pipes_raw[N_workers - 1]->isParent()) {  // we're on master
+        queue_pipe = std::make_unique<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_QUEUE);  // fork off queue
+        // At this point, the pipes in worker_pipes_raw should all have been
+        // deleted by BidirMMapPipe's internal cleanup mechanism.
 
-        if (queue_pipe->isParent()) {
+        if (queue_pipe->isParent()) {       // we're on master
           _is_master = true;
-        } else if (queue_pipe->isChild()) {
+        } else if (queue_pipe->isChild()) { // we're on queue
           _is_queue = true;
           worker_pipes.resize(N_workers);
           for (std::size_t ix = 0; ix < N_workers; ++ix) {
             worker_pipes[ix].reset(worker_pipes_raw[ix]);
           }
-        } else {
-          // should never get here...
+        } else {                            // should never get here...
           throw std::runtime_error("Something went wrong while creating TaskManager!");
         }
       }
@@ -191,6 +190,10 @@ namespace RooFit {
         // delete queue_pipe (not worker_pipes, only on queue process!)
         // CAUTION: the following invalidates a possibly created PollVector
         queue_pipe.reset(); // sets to nullptr
+
+        for (auto it = worker_pids.begin(); it != worker_pids.end(); ++it) {
+          BidirMMapPipe::wait_for_child(*it, true);
+        }
       }
 
       processes_initialized = false;
@@ -262,12 +265,12 @@ namespace RooFit {
 
     // start message loops on child processes and quit processes afterwards
     void TaskManager::activate() {
-      std::cout << "activating" << std::endl;
+//      std::cout << "activating" << std::endl;
       // should be called soon after creation of this object, because everything in
       // between construction and activate gets executed both on the master process
       // and on the slaves
       if (!processes_initialized) {
-        std::cout << "intializing" << std::endl;
+//        std::cout << "intializing" << std::endl;
         initialize_processes();
       }
 

@@ -187,7 +187,8 @@ namespace RooFit {
       BidirMMapPipe::PollVector get_poll_vector();
 
       std::size_t N_workers;
-      std::vector <std::unique_ptr<BidirMMapPipe>> worker_pipes;
+      std::vector<std::unique_ptr<BidirMMapPipe>> worker_pipes;
+      std::vector<pid_t> worker_pids;  // master must wait for workers after completion, for which it needs their PIDs
       // for convenience on the worker processes, we use this_worker_pipe as an
       // alias for worker_pipes.back()
       std::unique_ptr <BidirMMapPipe> this_worker_pipe;
