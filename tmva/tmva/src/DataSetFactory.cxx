@@ -128,7 +128,7 @@ TMVA::DataSet* TMVA::DataSetFactory::CreateDataSet( TMVA::DataSetInfo& dsi,
    // build the first dataset from the data input
    DataSet * ds = BuildInitialDataSet( dsi, dataInput );
 
-   if (ds->GetNEvents() > 1 && dsi.GetNVariables() < 10) {
+   if (ds->GetNEvents() > 1 && fComputeCorrelations ) {
       CalcMinMax(ds,dsi);
 
       // from the the final dataset build the correlation matrix
@@ -657,7 +657,9 @@ TMVA::DataSetFactory::InitOptions( TMVA::DataSetInfo& dsi,
 
    fCorrelations = kTRUE;
    splitSpecs.DeclareOptionRef(fCorrelations, "Correlations", "Boolean to show correlation output (Default: true)");
-
+   fComputeCorrelations = kTRUE;
+   splitSpecs.DeclareOptionRef(fComputeCorrelations, "CalcCorrelations", "Compute correlations and also some variable statistics, e.g. min/max (Default: true )");
+   
    splitSpecs.ParseOptions();
    splitSpecs.CheckForUnusedOptions();
 
