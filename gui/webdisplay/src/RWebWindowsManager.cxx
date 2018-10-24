@@ -16,8 +16,9 @@
 #include "ROOT/RWebWindowsManager.hxx"
 
 #include <ROOT/TLogger.hxx>
-#include <ROOT/RWebWindowsManager.hxx>
+#include <ROOT/RWebBrowserArgs.hxx>
 #include <ROOT/RWebDisplayHandle.hxx>
+#include <ROOT/RWebWindowsManager.hxx>
 
 #include "RWebWindowWSHandler.hxx"
 
@@ -376,19 +377,34 @@ unsigned ROOT::Experimental::RWebWindowsManager::Show(ROOT::Experimental::RWebWi
       return 0;
    }
 
-   RWebDisplayHandle::CreateUrlFunc_t func = [&](bool remote) {
-      std::string addr = GetUrl(win, batch_mode, remote);
-      if (!addr.empty()) {
-         if (addr.find("?") != std::string::npos)
-            addr.append("&key=");
-         else
-            addr.append("?key=");
-         addr.append(key);
-      }
-      return addr;
-   };
+   RWebBrowserArgs args(where);
 
-   auto handle = RWebDisplayHandle::Display(where, func, GetServer(), batch_mode, win.GetWidth(), win.GetHeight());
+   if (batch_mode && !args.IsSupportHeadless()) {
+      R__ERROR_HERE("WebDisplay") << "Cannot use batch mode with " << where;
+      return 0;
+   }
+
+   args.SetHeadless(batch_mode);
+   args.SetWidth(win.GetWidth());
+   args.SetHeight(win.GetHeight());
+
+   std::string url = GetUrl(win, batch_mode, !args.IsLocalDisplay());
+   if (url.empty()) {
+      R__ERROR_HERE("WebDisplay") << "Cannot create URL for the window";
+      return 0;
+   }
+
+   if (url.find("?") != std::string::npos)
+         url.append("&key=");
+      else
+         url.append("?key=");
+   url.append(key);
+
+   args.SetUrl(url);
+
+   url.SetHttpServer(GetServer());
+
+   auto handle = RWebDisplayHandle::Display(args);
 
    if (!handle) {
       R__ERROR_HERE("WebDisplay") << "Cannot display window" << where;

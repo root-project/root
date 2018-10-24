@@ -33,6 +33,9 @@ ROOT::Experimental::RWebBrowserArgs::RWebBrowserArgs(const std::string &browser)
    SetBrowserKind(browser);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Set browser kind using string argument
+
 void ROOT::Experimental::RWebBrowserArgs::SetBrowserKind(const std::string &kind)
 {
    if (kind == "local")
@@ -49,4 +52,21 @@ void ROOT::Experimental::RWebBrowserArgs::SetBrowserKind(const std::string &kind
       SetBrowserKind(kQt5);
    else
       SetCustomExec(kind);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Returns full url, which is combined from URL and extra URL options
+
+std::string ROOT::Experimental::RWebBrowserArgs::GetFullUrl() const
+{
+   std::string url = GetUrl(), urlopt = GetUrlOpt();
+   if (url.empty() || urlopt.empty()) return url;
+
+   if (url.find("?") != std::string::npos)
+      url.append("&");
+   else
+      url.append("?");
+   url.append(urlopt);
+
+   return url;
 }
