@@ -4,6 +4,7 @@
 ## In this tutorial we learn how combinations of RVecs can be build.
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date August 2018
 ## \author Stefan Wunsch

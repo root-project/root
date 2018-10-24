@@ -12,6 +12,7 @@
 ///
 /// \macro_image
 /// \macro_code
+/// \macro_output
 ///
 /// \date August 2018
 /// \author Stefan Wunsch (KIT, CERN)

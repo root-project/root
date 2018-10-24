@@ -5,6 +5,7 @@
 /// express logical operations.
 ///
 /// \macro_code
+/// \macro_output
 ///
 /// \date May 2018
 /// \author Danilo Piparo
