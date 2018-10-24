@@ -164,53 +164,6 @@ private:
 
 public:
 
-   enum BrowserKind {
-      kDefault,   // default settings provided with --web argument when started ROOT
-      kChrome,    // Google Chrome browser
-      kFirefox,   // Mozilla Firefox browser
-      kNative,    // either Chrome or Firefox - both support major functionality
-      kCEF,       // Chromium Embedded Framework - local display with CEF libs
-      kQt5,       // QWebEngine libraries - again Chrome libs, but packed into qt5
-      kLocal,     // either CEF or Qt5 - both runs on local display without real http server
-      kStandard,  // standard system web browser, not recognized by ROOT, without batch mode
-      kCustom     // custom web browser, execution string should be provided
-   };
-
-
-
-   /// Argument used in RWebWindow::Show() method
-   class WhereArg {
-      BrowserKind fKind{kDefault};  ///<   name of web browser used for display
-      int fWidth{0};                ///<   custom window width, when not specified - used RWebWindow geometry
-      int fHeight{0};               ///<   custom window width, when not specified - used RWebWindow geometry
-      std::string fExtraUrlOpt;     ///<   extra options, which are append to window URL
-      void *fDriverData{nullptr};   ///<!  special data delivered to driver, can be used for QWebEngine
-      std::string fExec;            ///<   string to run browser, used with kCustom type
-
-      WhereArg();
-
-      WhereArg(const std::string &browser);
-
-      void SetBrowserKind(const std::string &kind);
-      void SetBrowserKind(BrowserKind kind) { fKind = kind; }
-      BrowserKind GetBrowserKind() const { return fKind; }
-
-      void SetCustomExec(const std::string &exec)
-      {
-         SetBrowserKind(kCustom);
-         fExec = exec;
-      }
-
-      std::string GetCustomExec() const { return GetBrowserKind() == kCustom ? fExec : ""; }
-
-      void SetWidth(int w = 0) { fWidth = w; }
-      void SetHeight(int h = 0) { fHeight = h; }
-
-      int GetWidth() const { return fWidth; }
-      int GetHeight() const { return fHeight; }
-   };
-
-
    RWebWindow();
 
    ~RWebWindow();
