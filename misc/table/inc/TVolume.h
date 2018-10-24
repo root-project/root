@@ -94,7 +94,6 @@ public:
    ClassDef(TVolume,1)  //Description of parameters to position a 3-D geometry object
 };
 
-inline void   TVolume::Add(TDataSet *dataset){ TDataSet::Add(dataset);}
 inline Bool_t TVolume::IsMarked() const { return TestBit(kMark); }
 
 #endif

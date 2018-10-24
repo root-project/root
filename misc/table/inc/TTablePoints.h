@@ -48,9 +48,6 @@ public:
 };
 
 //____________________________________________________________________________
-inline void TTablePoints::SetTablePointer(void *table){ fRows = table;}
-
-//____________________________________________________________________________
 // return the index of the origial row by its index from the sorted table
 inline Int_t TTablePoints::Indx(Int_t sortedIndx) const
 {return fTableSorter?fTableSorter->GetIndex(fFirstRow+sortedIndx):-1;}
