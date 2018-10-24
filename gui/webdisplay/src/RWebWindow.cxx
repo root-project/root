@@ -62,9 +62,6 @@ using RWebWindow::Send() method and call-back function assigned via RWebWindow::
 */
 
 
-
-
-
 //////////////////////////////////////////////////////////////////////////////////////////
 /// RWebWindow constructor
 /// Should be defined here because of std::unique_ptr<RWebWindowWSHandler>
@@ -138,7 +135,7 @@ ROOT::Experimental::RWebWindow::CreateWSHandler(std::shared_ptr<RWebWindowsManag
 
 std::string ROOT::Experimental::RWebWindow::GetUrl(bool remote)
 {
-   return fMgr->GetWindowUrl(*this, remote);
+   return fMgr->GetUrl(*this, false, remote);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -154,9 +151,9 @@ THttpServer *ROOT::Experimental::RWebWindow::GetServer()
 /// See ROOT::Experimental::RWebWindowsManager::Show() docu for more info
 /// returns (future) connection id (or 0 when fails)
 
-unsigned ROOT::Experimental::RWebWindow::Show(const std::string &where)
+unsigned ROOT::Experimental::RWebWindow::Show(const RWebDisplayArgs &args)
 {
-   return fMgr->ShowWindow(*this, where);
+   return fMgr->ShowWindow(*this, false, args);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -165,13 +162,13 @@ unsigned ROOT::Experimental::RWebWindow::Show(const std::string &where)
 /// See ROOT::Experimental::RWebWindowsManager::Show() docu for more info
 /// returns (future) connection id (or 0 when fails)
 
-unsigned ROOT::Experimental::RWebWindow::MakeBatch(bool create_new, const std::string &where)
+unsigned ROOT::Experimental::RWebWindow::MakeBatch(bool create_new, const RWebDisplayArgs &args)
 {
    unsigned connid = 0;
    if (!create_new)
       connid = FindBatch();
    if (!connid)
-      connid = fMgr->ShowWindowBatch(*this, where);
+      connid = fMgr->ShowWindow(*this, true, args);
    return connid;
 }
 

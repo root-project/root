@@ -23,10 +23,16 @@
  * Holds different arguments for starting browser with RWebDisplayHandle::Display() method
  */
 
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Default constructor - browser kind configured from gROOT->GetWebDisplay()
+
 ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs()
 {
-   SetBrowserKind(gROOT->GetWebDisplay().Data());
+   SetBrowserKind("");
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Constructor - browser kind specified as std::string
 
 ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(const std::string &browser)
 {
@@ -34,10 +40,22 @@ ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(const std::string &browser)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+/// Constructor - browser kind specified as const char *
+
+ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(const char *browser)
+{
+   SetBrowserKind(browser);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
 /// Set browser kind using string argument
 
-void ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &kind)
+void ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
 {
+   std::string kind = _kind;
+   if (kind.empty())
+      kind = gROOT->GetWebDisplay().Data();
+
    if (kind == "local")
       SetBrowserKind(kLocal);
    else if (kind.empty() || (kind == "native"))
@@ -52,6 +70,22 @@ void ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &kind
       SetBrowserKind(kQt5);
    else
       SetCustomExec(kind);
+}
+
+std::string ROOT::Experimental::RWebDisplayArgs::GetBrowserName() const
+{
+   switch (GetBrowserKind()) {
+      case kChrome: return "chrome";
+      case kFirefox: return "firefox";
+      case kNative: return "native";
+      case kCEF: return "cef";
+      case kQt5: return "qt5";
+      case kLocal: return "local";
+      case kStandard: return "default";
+      case kCustom: return "custom";
+   }
+
+   return "";
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
