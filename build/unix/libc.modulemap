@@ -1,62 +1,226 @@
-module "libc" [system] {
-  export *
-  module "assert.h" {
+module __usr_include [system] [extern_c] {
+  // Per <features.h>, these macros specify the desired environment.
+  // FIXME: We can't classify these as config_macros, because <features.h>
+  //        will sometimes define them itself.
+  /*
+  config_macros [exhaustive]
+    __STRICT_ANSI__,
+    _ATFILE_SOURCE,
+    _BSD_SOURCE,
+    _FILE_OFFSET_BITS,
+    _FORTIFY_SOURCE,
+    _GNU_SOURCE,
+    _ISOC99_SOURCE,
+    _ISOC9X_SOURCE,
+    _LARGEFILE_SOURCE,
+    _LARGEFILE64_SOURCE,
+    _POSIX_C_SOURCE,
+    _POSIX_SOURCE,
+    _REENTRANT,
+    _SVID_SOURCE,
+    _THREAD_SAFE,
+    _XOPEN_SOURCE,
+    _XOPEN_SOURCE_EXTENDED
+  */
+
+  // Ignore any attempt to define these macros. They control whether we are
+  // provided with definitions of the relevant entities, and we always want
+  // to get those, for visibility purposes.
+  /*
+  suppress_macros
+    __blkcnt_t_defined,
+    __blksize_t_defined,
+    __cloc_defined,
+    __clockid_t_defined,
+    __clock_t_defined,
+    __cpu_set_t_defined,
+    __daddr_t_defined,
+    __dev_t_defined,
+    __error_t_defined,
+    __error_t_defined,
+    ____FILE_defined,
+    __FILE_defined,
+    __fsblkcnt_t_defined,
+    __fsfilcnt_t_defined,
+    __gid_t_defined,
+    ____gwchar_t_defined,
+    __id_t_defined,
+    __ino64_t_defined,
+    __ino_t_defined,
+    __int8_t_defined,
+    __intptr_t_defined,
+    __iswxxx_defined,
+    __key_t_defined,
+    __ldiv_t_defined,
+    __lldiv_t_defined,
+    __malloc_and_calloc_defined,
+    __mbstate_t_defined,
+    __mode_t_defined,
+    __nlink_t_defined,
+    __off64_t_defined,
+    __off_t_defined,
+    __pid_t_defined,
+    __res_state_defined,
+    __sig_atomic_t_defined,
+    __sigset_t_defined,
+    __socklen_t_defined,
+    __ssize_t_defined,
+    __suseconds_t_defined,
+    __timer_t_defined,
+    __timespec_defined,
+    __time_t_defined,
+    __u_char_defined,
+    __uid_t_defined,
+    __uint32_t_defined,
+    __useconds_t_defined
+  */
+
+  // <assert.h> does not play well with others. Put its declarations in their
+  // own module, and exclude the main header so that multiple inclusions of it
+  // can do roughly the right thing.
+  exclude header "assert.h"
+  //explicit module assert { header "bits/assert.h" export * }
+
+  // Headers in /usr/include which are intended to be included directly.
+  // FIXME: Some are probably missing.
+  explicit module alloca { header "alloca.h" export * }
+  explicit module complex { header "complex.h" export * requires !cplusplus }
+  explicit module ctype { header "ctype.h" export * }
+  explicit module endian { header "endian.h" export * }
+  explicit module errno { header "errno.h" export * }
+  explicit module fcntl { header "fcntl.h" export * }
+  explicit module features { header "features.h" export * }
+  explicit module fenv { header "fenv.h" export * }
+  explicit module inttypes { header "inttypes.h" export * }
+  explicit module limits { header "limits.h" export * }
+  explicit module locale { header "locale.h" export * }
+  explicit module math { header "math.h" export * }
+  explicit module nl_types { header "nl_types.h" export * }
+  explicit module pthread { header "pthread.h" export * }
+  explicit module sched { header "sched.h" export * }
+  explicit module setjmp { header "setjmp.h" export * }
+  explicit module signal { header "signal.h" export * }
+  explicit module stdint {
+    header "stdint.h"
     export *
-    textual header "assert.h"
+    export __usr_include.sys.types // for int*_t
   }
-  module "string.h" {
-    export *
-    header "string.h"
+  explicit module stdio { header "stdio.h" export * }
+  explicit module stdlib { header "stdlib.h" export * }
+  explicit module string { header "string.h" export * }
+  explicit module tgmath { header "tgmath.h" export * requires !cplusplus }
+  explicit module time { header "time.h" export * }
+  explicit module wchar { header "wchar.h" export * }
+  explicit module wctype { header "wctype.h" export * }
+  explicit module xlocale { header "xlocale.h" export * }
+
+  explicit module sys {
+    explicit module resource { header "sys/resource.h" export * }
+    explicit module select { header "sys/select.h" export * }
+    explicit module stat { header "sys/stat.h" export * }
+    explicit module sysmacros { header "sys/sysmacros.h" export * }
+    explicit module types { header "sys/types.h" export * }
+    explicit module ucontext { header "sys/ucontext.h" export * }
+    explicit module uio { header "sys/uio.h" export * }
+    explicit module wait {
+      header "sys/wait.h"
+      export *
+      export __usr_include.signal // for siginfo
+      export __usr_include.stdlib // for waitflags and waitstatus
+    }
   }
-  module "ctype.h" {
-    export *
-    header "ctype.h"
+
+  // Headers in /usr/include/bits that are used by multiple headers.
+  explicit module bits {
+    explicit module mathdef { header "bits/mathdef.h" export * }
+    explicit module pthreadtypes { header "bits/pthreadtypes.h" export * }
+    explicit module setjmp { header "bits/setjmp.h" export * }
+    explicit module sigcontext { header "bits/sigcontext.h" export * }
+    explicit module sigset { header "bits/sigset.h" export * }
+    explicit module stat { header "bits/stat.h" export * }
+    explicit module time { header "bits/time.h" export * }
+    explicit module types { header "bits/types.h" export * }
+    explicit module uio { header "bits/uio.h" export * }
+    explicit module wchar { header "bits/wchar.h" export * }
+    explicit module wordsize { header "bits/wordsize.h" export * }
+
+    // FIXME: These only work if we include one of their friends first.
+    // They're included from multiple places, have no include guards,
+    // and are externally guarded.
+    // We work around this for now by making the second includer of these
+    // re-export the first.
+    /*
+    explicit module siginfo { header "bits/siginfo.h" export * }
+    explicit module waitflags { header "bits/waitflags.h" export * }
+    explicit module waitstatus { header "bits/waitstatus.h" export * }
+    */
   }
-  module "errno.h" {
-    export *
-    header "errno.h"
-  }
-  module "fenv.h" {
-    export *
-    header "fenv.h"
-  }
-  module "inttypes.h" {
-    export *
-    header "inttypes.h"
-  }
-  module "math.h" {
-    export *
-    header "math.h"
-  }
-  module "setjmp.h" {
-    export *
-    header "setjmp.h"
-  }
-  module "stdio.h" {
-    export *
-    header "stdio.h"
-  }
+
+  // FIXME: This is sometimes used by <stdio.h>.
+  //explicit module getopt { header "getopt.h" export * }
+
+  // Headers provided by the compiler that are logically part of this module.
+  explicit module float { header "float.h" export * }
+  explicit module iso646 { header "iso646.h" export * }
+  //explicit module limits { header "limits.h" export * }
+  explicit module stdalign { header "stdalign.h" export * }
+  explicit module stdarg { header "stdarg.h" export * }
+  explicit module stdbool { header "stdbool.h" export * }
+  explicit module stddef { header "stddef.h" export * }
+  //explicit module stdnoreturn { header "stdnoreturn.h" export * }
+  //explicit module tgmath { header "tgmath.h" export * }
+  //explicit module unwind { header "unwind.h" export * }
 }
 
-// glib specific header. In it's own module because it
-// doesn't exist on some systems with unpatched glib 2.26+
-module "xlocale.h" [system] {
-  export *
-  header "xlocale.h"
-}
+/*
 
-// System header that we have difficult with merging.
-module "sys_types.h" [system] {
-  export *
-  header "sys/types.h"
-}
+These headers are included by the above. We're not modularizing them because
+they are not intended to be included directly and are only included once.
 
-module "signal.h" [system] {
-  export *
-  header "signal.h"
-}
+#include <bits/byteswap.h>
+#include <bits/endian.h>
+#include <bits/errno.h>
+#include <bits/fcntl.h>
+#include <bits/fcntl2.h>
+#include <bits/fenv.h>
+#include <bits/fenvinline.h>
+#include <bits/huge_valf.h>
+#include <bits/huge_val.h>
+#include <bits/huge_vall.h>
+#include <bits/inf.h>
+#include <bits/locale.h>
+#include <bits/math-finite.h>
+#include <bits/mathinline.h>
+#include <bits/nan.h>
+#include <bits/posix1_lim.h>
+#include <bits/posix2_lim.h>
+#include <bits/resource.h>
+#include <bits/sched.h>
+#include <bits/select.h>
+#include <bits/select2.h>
+#include <bits/setjmp2.h>
+#include <bits/sigaction.h>
+#include <bits/signum.h>
+#include <bits/sigstack.h>
+#include <bits/sigthread.h>
+#include <bits/stdio2.h>
+#include <bits/stdio.h>
+#include <bits/stdio-ldbl.h>
+#include <bits/stdio_lim.h>
+#include <bits/stdlib.h>
+#include <bits/stdlib-ldbl.h>
+#include <bits/string2.h>
+#include <bits/string3.h>
+#include <bits/string.h>
+#include <bits/sys_errlist.h>
+#include <bits/timex.h>
+#include <bits/typesizes.h>
+#include <bits/wchar2.h>
+#include <bits/wchar-ldbl.h>
+#include <bits/xopen_lim.h>
 
-module "stdlib.h" [system] {
-  export *
-  header "stdlib.h"
-}
+These headers are conditionally directly included by the above, but are not yet
+modularized.
+
+#include <libio.h>
+*/
