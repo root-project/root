@@ -62,7 +62,7 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator> &ROOT::Experimen
       } else if (libname == "FirefoxCreator") {
          m.emplace(name, std::make_unique<FirefoxCreator>());
       } else if (libname == "BrowserCreator") {
-         m.emplace(name, std::make_unique<BrowserCreator>());
+         m.emplace(name, std::make_unique<BrowserCreator>(false));
       } else if (!libname.empty()) {
          gSystem->Load(libname.c_str());
       }
@@ -120,17 +120,12 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::RWebDisplayHandle::BrowserCreator::BrowserCreator(bool dflt, const std::string &where_arg)
+ROOT::Experimental::RWebDisplayHandle::BrowserCreator::BrowserCreator(bool custom, const std::string &exec)
 {
-   if (!dflt) return;
+   if (custom) return;
 
-   if (!where_arg.empty()) {
-      if (where_arg.find("$") != std::string::npos) {
-         fExec = where_arg;
-      } else {
-         fExec = "$prog $url &";
-         fProg = where_arg;
-      }
+   if (!exec.empty()) {
+      fExec = exec;
    } else if (gSystem->InheritsFrom("TMacOSXSystem")) {
       fExec = "open \'$url\'";
    } else if (gSystem->InheritsFrom("TWinNTSystem")) {
@@ -172,17 +167,20 @@ void ROOT::Experimental::RWebDisplayHandle::BrowserCreator::TestProg(const std::
 }
 
 std::unique_ptr<ROOT::Experimental::RWebDisplayHandle>
-ROOT::Experimental::RWebDisplayHandle::BrowserCreator::ShowURL(const std::string &, THttpServer *, const std::string &url, bool batch, int width, int height)
+ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebBrowserArgs &args)
 {
-   TString exec = batch ? fBatchExec.c_str() : fExec.c_str();
+   std::string url = args.GetFullUrl();
+   if (url.empty())
+      return nullptr;
 
+   TString exec = args.IsHeadless() ? fBatchExec.c_str() : fExec.c_str();
    if (exec.Length() == 0)
       return nullptr;
 
-   std::string swidth = std::to_string(width > 0 ? width : 800);
-   std::string sheight = std::to_string(height > 0 ? height : 600);
+   std::string swidth = std::to_string(args.GetWidth() > 0 ? args.GetWidth() : 800);
+   std::string sheight = std::to_string(args.GetHeight() > 0 ? args.GetHeight() : 600);
 
-   std::string rmdir = MakeProfile(exec, batch);
+   std::string rmdir = MakeProfile(exec, args.IsHeadless());
 
    exec.ReplaceAll("$url", url.c_str());
    exec.ReplaceAll("$width", swidth.c_str());
@@ -197,16 +195,16 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::ShowURL(const std::string
       exec.Remove(0, 5);
 #if !defined(_MSC_VER)
 
-      std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
-      if (!args || (args->GetLast()<=0)) {
+      std::unique_ptr<TObjArray> fargs(exec.Tokenize(" "));
+      if (!fargs || (fargs->GetLast()<=0)) {
          R__ERROR_HERE("WebDisplay") << "Fork instruction is empty";
          return nullptr;
       }
 
       std::vector<char *> argv;
       argv.push_back((char *) fProg.c_str());
-      for (Int_t n = 0; n <= args->GetLast(); ++n)
-         argv.push_back((char *)args->At(n)->GetName());
+      for (Int_t n = 0; n <= fargs->GetLast(); ++n)
+         argv.push_back((char *)fargs->At(n)->GetName());
       argv.push_back(nullptr);
 
       R__DEBUG_HERE("WebDisplay") << "Show web window in browser with posix_spawn:\n" << fProg << " " << exec;
@@ -253,14 +251,14 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::ShowURL(const std::string
 #endif
 
 #ifdef _MSC_VER
-   std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
+   std::unique_ptr<TObjArray> fargs(exec.Tokenize(" "));
    std::vector<char *> argv;
    if (prog.EndsWith("chrome.exe"))
       argv.push_back("chrome.exe");
    else if (prog.EndsWith("firefox.exe"))
       argv.push_back("firefox.exe");
-   for (Int_t n = 1; n <= args->GetLast(); ++n)
-      argv.push_back((char *)args->At(n)->GetName());
+   for (Int_t n = 1; n <= fargs->GetLast(); ++n)
+      argv.push_back((char *)fargs->At(n)->GetName());
    argv.push_back(nullptr);
 #endif
 
@@ -268,7 +266,7 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::ShowURL(const std::string
 
    // unsigned connid = win.AddProcId(batch_mode, key, where + rmdir); // for now just application name
 
-   R__DEBUG_HERE("WebDisplay") << "NEW Showing web window in browser with:\n" << exec;
+   R__DEBUG_HERE("WebDisplay") << "Showing web window in browser with:\n" << exec;
 
 #ifdef _MSC_VER
    _spawnv(_P_NOWAIT, prog.Data(), argv.data());
@@ -283,7 +281,7 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::ShowURL(const std::string
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserCreator(false)
+ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserCreator(true)
 {
    TestProg(gEnv->GetValue("WebGui.Chrome", ""));
 
@@ -310,7 +308,7 @@ ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserC
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(false)
+ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
 {
    TestProg(gEnv->GetValue("WebGui.Firefox", ""));
 
@@ -384,73 +382,52 @@ std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(T
 /// \param func - creates local or remote URL
 
 
-std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> ROOT::Experimental::RWebDisplayHandle::Display(const std::string &where, CreateUrlFunc_t func, THttpServer *serv, bool batch_mode, int width, int height)
+std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> ROOT::Experimental::RWebDisplayHandle::Display(const RWebBrowserArgs &args)
 {
    std::unique_ptr<RWebDisplayHandle> handle;
 
-   enum { kCustom, kNative, kLocal, kChrome, kFirefox, kCEF, kQt5 } kind = kCustom;
-
-   if (where == "local")
-      kind = kLocal;
-   else if (where.empty() || (where == "native"))
-      kind = kNative;
-   else if (where == "firefox")
-      kind = kFirefox;
-   else if ((where == "chrome") || (where == "chromium"))
-      kind = kChrome;
-   else if ((where == "cef") || (where.compare(0, 3, "cef")==0))
-      kind = kCEF;
-   else if ((where == "qt5") || (where.compare(0, 3, "qt5")==0))
-      kind = kQt5;
-   else
-      kind = kCustom; // all others kinds, normally name of alternative web browser
-
-
-   auto try_creator = [&](std::unique_ptr<Creator> &creator, bool remote) {
+   auto try_creator = [&args](std::unique_ptr<Creator> &creator) {
       if (!creator) return false;
 
-      std::string fullurl = func(remote);
-      if (fullurl.empty()) return false;
-
-      handle = creator->ShowURL(where, serv, fullurl, batch_mode, width, height);
+      handle = creator->Display(args);
       return handle ? true : false;
    };
 
-   if ((kind == kLocal) || (kind == kCEF)) {
-      if (try_creator(FindCreator("cef", "libROOTCefDisplay"), false))
+   if ((args.GetBrowserKind() == RWebBrowserArgs::kLocal) || (args.GetBrowserKind() == RWebBrowserArgs::kCEF)) {
+      if (try_creator(FindCreator("cef", "libROOTCefDisplay")))
          return handle;
    }
 
-   if ((kind == kLocal) || (kind == kQt5)) {
-      if (try_creator(FindCreator("qt5", "libROOTQt5WebDisplay"), false))
+   if ((args.GetBrowserKind() == RWebBrowserArgs::kLocal) || (args.GetBrowserKind() == RWebBrowserArgs::kQt5)) {
+      if (try_creator(FindCreator("qt5", "libROOTQt5WebDisplay")))
          return handle;
    }
 
-   if ((kind == kLocal) || (kind == kQt5) || (kind == kCEF)) {
+   if (args.IsLocalDisplay()) {
       R__ERROR_HERE("WebDisplay") << "Neither Qt5 nor CEF libraries were found to provide local display";
       return handle;
    }
 
-   if ((kind == kNative) || (kind == kChrome)) {
-      if (try_creator(FindCreator("chrome", "ChromeCreator"), true))
+   if ((args.GetBrowserKind() == RWebBrowserArgs::kNative) || (args.GetBrowserKind() == RWebBrowserArgs::kChrome)) {
+      if (try_creator(FindCreator("chrome", "ChromeCreator")))
          return handle;
    }
 
-   if ((kind == kNative) || (kind == kFirefox)) {
-      if (try_creator(FindCreator("firefox", "FirefoxCreator"), true))
+   if ((args.GetBrowserKind() == RWebBrowserArgs::kNative) || (args.GetBrowserKind() == RWebBrowserArgs::kFirefox)) {
+      if (try_creator(FindCreator("firefox", "FirefoxCreator")))
          return handle;
    }
 
-   if ((kind == kChrome) || (kind == kFirefox)) {
+   if ((args.GetBrowserKind() == RWebBrowserArgs::kChrome) || (args.GetBrowserKind() == RWebBrowserArgs::kFirefox)) {
       R__ERROR_HERE("WebDisplay") << "Neither Chrome nor Firefox browser cannot be started to provide display";
       return handle;
    }
 
-   if ((kind == kNative)) {
-      try_creator(FindCreator("browser", "BrowserCreator"), true);
-   } else {
-      std::unique_ptr<Creator> creator = std::make_unique<BrowserCreator>(true, where);
+   if ((args.GetBrowserKind() == RWebBrowserArgs::kCustom)) {
+      std::unique_ptr<Creator> creator = std::make_unique<BrowserCreator>(false, args.GetCustomExec());
       try_creator(creator, true);
+   } else {
+      try_creator(FindCreator("browser", "BrowserCreator"));
    }
 
    return handle;

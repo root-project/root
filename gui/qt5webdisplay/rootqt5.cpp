@@ -67,10 +67,9 @@ protected:
 
       Qt5Creator() = default;
 
-      std::unique_ptr<RWebDisplayHandle>
-      ShowURL(const std::string &where, THttpServer *serv, const std::string &url, bool batch, int width, int height) override
+      std::unique_ptr<RWebDisplayHandle> Display(const RWebBrowserArgs &args) override
       {
-         if (batch)
+         if (args.IsHeadless())
             return nullptr;
 
          if (!qapp && !QApplication::instance()) {
@@ -96,37 +95,31 @@ protected:
          }
 
          std::unique_ptr<RootUrlSchemeHandler> handler;
-         QString fullurl = QString(url.c_str());
+         QString fullurl = QString(args.GetUrl().c_str());
 
          // if no server provided - normal HTTP will be allowed to use
-         if (serv) {
+         if (args.GetHttpServer()) {
             handler = std::make_unique<RootUrlSchemeHandler>(serv, fCounter++);
             fullurl = handler->MakeFullUrl(fullurl);
          }
 
-         QWidget *qparent = nullptr;
+         QWidget *qparent = (QWidget *) args.GetDriverData();
 
-         auto pos = where.find("qprnt:");
-         if (pos != std::string::npos) {
-            long long unsigned value = 0;
-            sscanf(where.c_str() + pos + 6, "%llu", &value);
-            qparent = (QWidget *) value;
+         if (!args.GetUrlOpt().empty()) {
+            fullurl.append(QString("&"));
+            fullurl.append(QString(args.GetUrlOpt().c_str()));
          }
-
-         pos = where.find("url:");
-         if (pos != std::string::npos)
-            fullurl.append(QString(where.substr(pos+4).c_str()));
 
          auto handle = std::make_unique<RQt5WebDisplayHandle>(fullurl.toLatin1().constData(), handler);
 
-         if (batch) {
+         if (args.IsHeadless()) {
             RootWebPage *page = new RootWebPage();
             page->settings()->resetAttribute(QWebEngineSettings::WebGLEnabled);
             page->settings()->resetAttribute(QWebEngineSettings::Accelerated2dCanvasEnabled);
             page->settings()->resetAttribute(QWebEngineSettings::PluginsEnabled);
             page->load(QUrl(fullurl));
          } else {
-            RootWebView *view = new RootWebView(qparent, width, height);
+            RootWebView *view = new RootWebView(qparent, args.GetWidth(), args.GetHeight());
             view->load(QUrl(fullurl));
             view->show();
          }
