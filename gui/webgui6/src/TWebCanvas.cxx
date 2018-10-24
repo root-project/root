@@ -465,12 +465,12 @@ THttpServer *TWebCanvas::GetServer()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Show canvas in specified place.
-/// If parameter where not specified, default ROOT web display will be used
+/// If parameter args not specified, default ROOT web display will be used
 
-void TWebCanvas::ShowWebWindow(const std::string &where)
+void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
 {
    if (fWindow)
-      fWindow->Show(where);
+      fWindow->Show(args);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
