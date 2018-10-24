@@ -62,6 +62,8 @@ subtree, defined to be the subtree with the best quality index for the validatio
 
 using namespace TMVA;
 
+// Pin vtable
+TMVA::IPruneTool::~IPruneTool() {;}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// the constructor for the cost complexity pruning
