@@ -20,18 +20,18 @@
 
 The RooWorkspace is a persistable container for RooFit projects. A workspace
 can contain and own variables, p.d.f.s, functions and datasets. All objects
-that live in the workspace are owned by the workspace. The import() method
+that live in the workspace are owned by the workspace. The `import()` method
 enforces consistency of objects upon insertion into the workspace (e.g. no
 duplicate object with the same name are allowed) and makes sure all objects
 in the workspace are connected to each other. Easy accessor methods like
-pdf(), var() and data() allow to refer to the contents of the workspace by
+`pdf()`, `var()` and `data()` allow to refer to the contents of the workspace by
 object name. The entire RooWorkspace can be saved into a ROOT TFile and organises
 the consistent streaming of its contents without duplication.
 If a RooWorkspace contains custom classes, i.e. classes not in the 
 ROOT distribution, portability of workspaces can be enhanced by
 storing the source code of those classes in the workspace as well.
 This process is also organized by the workspace through the
-importClassCode() method.
+`importClassCode()` method.
 **/
 
 #include "RooFit.h"
@@ -238,7 +238,7 @@ RooWorkspace::~RooWorkspace()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Import a RooAbsArg or RooAbsData set from a workspace in a file. Filespec should be constructed as "filename:wspacename:objectname"
-/// The arguments will be passed on to the relevant RooAbsArg& or RooAbsData& import call
+/// The arguments will be passed to the relevant import() or import(RooAbsData&, ...) import calls
 
 Bool_t RooWorkspace::import(const char* fileSpec, 
 			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
@@ -321,17 +321,19 @@ Bool_t RooWorkspace::import(const RooArgSet& args,
 ///  to be imported already exists in the workspace an error message is printed and the import of the entire tree of objects is cancelled. 
 ///  Several optional arguments can be provided to modify the import procedure.
 ///
-///  Accepted arguments
-///  -------------------------------
-///  RenameConflictNodes(const char* suffix) -- Add suffix to branch node name if name conflicts with existing node in workspace
-///  RenameAllNodes(const char* suffix) -- Add suffix to all branch node names including top level node
-///  RenameAllVariables(const char* suffix) -- Add suffix to all variables names
-///  RenameAllVariablesExcept(const char* suffix, const char* exceptionList) -- Add suffix to all variables names, except ones listed
-///  RenameVariable(const char* inputName, const char* outputName) -- Rename variable as specified upon import.
-///  RecycleConflictNodes() -- If any of the function objects to be imported already exist in the name space, connect the
-///                            imported expression to the already existing nodes. WARNING: use with care! If function definitions
-///                            do not match, this alters the definition of your function upon import
-///  Silence() -- Do not issue any info message
+///  <table>
+///  <tr><th> Accepted arguments
+///  <tr><td> `RenameConflictNodes(const char* suffix)`   <td>  Add suffix to branch node name if name conflicts with existing node in workspace
+///  <tr><td> `RenameAllNodes(const char* suffix)`    <td>  Add suffix to all branch node names including top level node
+///  <tr><td> `RenameAllVariables(const char* suffix)`    <td>  Add suffix to all variables names
+///  <tr><td> `RenameAllVariablesExcept(const char* suffix, const char* exceptionList)`   <td>  Add suffix to all variables names, except ones listed
+///  <tr><td> `RenameVariable(const char* inputName, const char* outputName)` <td>  Rename variable as specified upon import.
+///  <tr><td> `RecycleConflictNodes()`    <td>  If any of the function objects to be imported already exist in the name space, connect the
+///                            imported expression to the already existing nodes.
+///                            \attention Use with care! If function definitions do not match, this alters the definition of your function upon import
+///
+///  <tr><td> `Silence()` <td>  Do not issue any info message
+///  </table>
 ///
 ///  The RenameConflictNodes, RenameNodes and RecycleConflictNodes arguments are mutually exclusive. The RenameVariable argument can be repeated
 ///  as often as necessary to rename multiple variables. Alternatively, a single RenameVariable argument can be given with
@@ -743,6 +745,13 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 
 
 ////////////////////////////////////////////////////////////////////////////////
+///  Import a dataset (RooDataSet or RooDataHist) into the work space. The workspace will contain a copy of the data.
+///  The dataset and its variables can be renamed upon insertion with the options below
+///
+///  <table>
+/// <tr><th> Accepted arguments
+/// <tr><td> `Rename(const char* suffix)` <td> Rename dataset upon insertion
+/// <tr><td> `RenameVariable(const char* inputName, const char* outputName)` <td> Change names of observables in dataset upon insertion
 
 Bool_t RooWorkspace::import(RooAbsData& inData, 
 			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
@@ -750,13 +759,6 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
 			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9) 
 
 {
-  //  Import a dataset (RooDataSet or RooDataHist) into the work space. The workspace will contain a copy of the data
-  //  The dataset and its variables can be renamed upon insertion with the options below
-  //
-  //  Accepted arguments
-  //  -------------------------------
-  //  Rename(const char* suffix) -- Rename dataset upon insertion
-  //  RenameVariable(const char* inputName, const char* outputName) -- Change names of observables in dataset upon insertion
 
   coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") importing dataset " << inData.GetName() << endl ;
 
