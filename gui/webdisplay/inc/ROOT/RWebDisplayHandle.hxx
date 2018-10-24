@@ -21,6 +21,8 @@
 #include <memory>
 #include <functional>
 
+#include <ROOT/RWebBrowserArgs.hxx>
+
 #include "TString.h"
 
 class THttpServer;
@@ -33,8 +35,7 @@ class RWebDisplayHandle {
 protected:
    class Creator {
    public:
-      virtual std::unique_ptr<RWebDisplayHandle>
-      ShowURL(const std::string &where, THttpServer *serv, const std::string &url, bool batch, int width, int height) = 0;
+      virtual std::unique_ptr<RWebDisplayHandle> Display(const RWebBrowserArgs &args) = 0;
       virtual ~Creator() = default;
    };
 
@@ -50,10 +51,9 @@ protected:
 
    public:
 
-      BrowserCreator(bool dflt = true, const std::string &where_arg = "");
+      BrowserCreator(bool custom = true, const std::string &exec = "");
 
-      std::unique_ptr<RWebDisplayHandle>
-      ShowURL(const std::string &where, THttpServer *serv, const std::string &url, bool batch, int width, int height) override;
+      std::unique_ptr<RWebDisplayHandle> Display(const RWebBrowserArgs &args) override;
 
       virtual ~BrowserCreator() = default;
    };
@@ -89,7 +89,7 @@ public:
 
    std::string GetUrl() const { return fUrl; }
 
-   static std::unique_ptr<RWebDisplayHandle> Display(const std::string &where, CreateUrlFunc_t func, THttpServer *serv = nullptr, bool batch_mode = false, int width = 0, int height = 0);
+   static std::unique_ptr<RWebDisplayHandle> Display(const RWebBrowserArgs &args);
 
    virtual ~RWebDisplayHandle() = default;
 };
