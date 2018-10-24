@@ -1483,6 +1483,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    Double_t* binWidth = new Double_t [cNvars];
    Double_t* invBinWidth = new Double_t [cNvars];
    Double_t** cutValues = new Double_t* [cNvars];
+   std::vector<UInt_t> ignored_integers;
 
    // #### set up the xmin and xmax arrays
    // #### each var has its own range
@@ -1496,6 +1497,10 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       if (ivar < fNvars) {
          if (fDataSetInfo->GetVariableInfo(ivar).GetVarType() == 'I') {
             nBins[ivar] = node->GetSampleMax(ivar) - node->GetSampleMin(ivar) + 1;
+            // do not apply integer binning if that would blow up the vectors by an order of magnitude
+            if (nBins[ivar] > 10 * fNCuts)
+               ignored_integers.push_back(ivar);
+               nBins[ivar] = fNCuts + 1;
          }
       }
      
@@ -1543,7 +1548,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    // #### if ncuts is on the order of the amount of training data/10 - ish then we get some gains from parallelizing this
    // fill the cut values for the scan:
    auto varSeeds = ROOT::TSeqU(cNvars);
-   auto fvarInitCuts = [this, &useVariable, &cutValues, &invBinWidth, &binWidth, &nBins, &xmin, &xmax](UInt_t ivar = 0){
+   auto fvarInitCuts = [this, &useVariable, &cutValues, &invBinWidth, &binWidth, &nBins, &xmin, &xmax, &ignored_integers](UInt_t ivar = 0){
 
       if ( useVariable[ivar] ) {
 
@@ -1561,7 +1566,12 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
          binWidth[ivar] = ( xmax[ivar] - xmin[ivar] ) / Double_t(nBins[ivar]);
          invBinWidth[ivar] = 1./binWidth[ivar];
          if (ivar < fNvars) {
-            if (fDataSetInfo->GetVariableInfo(ivar).GetVarType() == 'I') { invBinWidth[ivar] = 1; binWidth[ivar] = 1; }
+
+            if (fDataSetInfo->GetVariableInfo(ivar).GetVarType() == 'I' &&
+                std::find(ignored_integers.begin(), ignored_integers.end(), ivar) == ignored_integers.end()) {
+               invBinWidth[ivar] = 1;
+               binWidth[ivar] = 1;
+            }
          }
 
          // std::cout << "ivar="<<ivar
