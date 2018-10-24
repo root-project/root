@@ -148,7 +148,7 @@ public:
 
    TString CreateWebWindow(int limit = 0);
    THttpServer *GetServer();
-   void ShowWebWindow(const std::string &where = "");
+   void ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &user_args = "");
 
    virtual Int_t InitWindow();
    virtual void Close();
