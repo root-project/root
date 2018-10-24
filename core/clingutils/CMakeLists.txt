@@ -13,7 +13,6 @@
 
 set(ClingUtils_dict_headers
   root_std_complex.h
-  TClingRuntime.h
   PARENT_SCOPE
 )
 
