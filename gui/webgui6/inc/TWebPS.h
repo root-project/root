@@ -31,8 +31,13 @@ public:
    TWebPS();
    virtual ~TWebPS() = default;
 
+   Bool_t IsEmptyPainting() const { return fPainting ? fPainting->IsEmpty() : kTRUE; }
    TWebPainting *GetPainting() { return fPainting.get(); }
-   TWebPainting *TakePainting() { return fPainting.release(); }
+   TWebPainting *TakePainting()
+   {
+      fPainting->FixSize();
+      return fPainting.release();
+   }
 
    /// not yet implemented
 
