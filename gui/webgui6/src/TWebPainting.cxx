@@ -12,6 +12,9 @@
 
 Float_t *TWebPainting::Reserve(Int_t sz)
 {
+   if (sz <= 0)
+      return nullptr;
+
    if (fSize + sz > fBuf.GetSize()) {
       Int_t nextsz = fBuf.GetSize() + TMath::Max(1024, (sz/128 + 1) * 128);
       fBuf.Set(nextsz);
