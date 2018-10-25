@@ -2015,7 +2015,15 @@ static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoAct
             ids.back().fNestedIDs->fOwnOnfileObject = kTRUE;
          }
          ids.back().fNestedIDs->fOnfileObject = onfileObject;
-         GatherArtificialElements(branches, ids.back().fNestedIDs->fIDs, ename + ".", nextinfo, offset + nextel->GetOffset());
+         TString subprefix;
+         if (prefix.Length() && nextel->IsA() == TStreamerBase::Class()) {
+             // We skip the name of the base class if there is already a prefix.
+             // See TBranchElement::Unroll
+             subprefix = prefix;
+         } else {
+             subprefix = ename + ".";
+         }
+         GatherArtificialElements(branches, ids.back().fNestedIDs->fIDs, subprefix, nextinfo, offset + nextel->GetOffset());
          if (ids.back().fNestedIDs->fIDs.empty())
             ids.pop_back();
       }
