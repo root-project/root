@@ -1454,4 +1454,34 @@ function(find_python_module module)
    set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE)
 endfunction()
 
+#----------------------------------------------------------------------------
+# Generate headers files containing the command line options help
+# The first argument pythonInput is the path of the python argparse file for this command
+# The second argument output is the of path/name of the output file
+# The third argument is the name of the target that should be linked to the generated
+# library( the executable that includes it or the library that uses it)
+#----------------------------------------------------------------------------
+function(generateHeaders pythonInput output target)
+     add_custom_command(OUTPUT ${output}
+          DEPENDS ${pythonInput} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py 
+                                       ${pythonInput}
+                                       ${output}
+     )
+     target_sources(${target} PRIVATE ${output})
+endfunction()
 
+#----------------------------------------------------------------------------
+# Generate man page through argparse method
+# The first argument pythonInput is the path of the python argparse file for this command
+# The second argument output is the of path/name of the output file
+#----------------------------------------------------------------------------
+function(generateManual name pythonInput output)
+     add_custom_target(${name} ALL
+          DEPENDS ${pythonInput} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py 
+                                       ${pythonInput}
+                                       ${output}
+     )
+     install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR})
+endfunction()
