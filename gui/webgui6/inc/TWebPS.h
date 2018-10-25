@@ -38,6 +38,7 @@ public:
       fPainting->FixSize();
       return fPainting.release();
    }
+   void CreatePainting();
 
    /// not yet implemented
 
