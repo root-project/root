@@ -18,6 +18,9 @@
 #include "TAttMarker.h"
 #include "TArrayF.h"
 
+#include <vector>
+#include <string>
+
 /** Class to store actual drawing attributes */
 class TWebPainterAttributes : public TObject, public TAttFill, public TAttLine, public TAttMarker, public TAttText  {
    public:
@@ -30,16 +33,19 @@ class TWebPainterAttributes : public TObject, public TAttFill, public TAttLine, 
 class TWebPainting : public TObject {
 
    protected:
-      TList   fOper;                /// list of last draw operations
-      Int_t   fSize{0};             ///!< filled buffer size
-      TArrayF fBuf;                 /// array of points for all operations
+      std::vector<std::string> fOper; /// list of operations
+      Int_t fSize{0};                 ///<! filled buffer size
+      TArrayF fBuf;                   /// array of points for all operations
 
    public:
 
-      TWebPainting()  { fOper.SetOwner(kTRUE); }
-      virtual ~TWebPainting() { fOper.Delete(); }
+      TWebPainting()  {  }
+      virtual ~TWebPainting() {  }
 
-      void Add(TObject *obj, const char *opt) { fOper.Add(obj, opt); }
+      void Add(TObject *, const char *) { }
+
+      void AddOper(const std::string &oper) { fOper.emplace_back(oper); }
+
       Float_t *Reserve(Int_t sz);
 
       // Set actual filled size

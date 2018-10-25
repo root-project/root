@@ -198,7 +198,8 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
          }
 
          TVirtualPS *saveps = gVirtualPS;
-         gVirtualPS = new TWebPS(*painter);
+         TWebPS ps;
+         gVirtualPS = &ps;
 
          // calling Paint function for the object
          obj->Paint(opt);
@@ -210,10 +211,8 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
             pad->SetView(nullptr);
          }
 
-         delete gVirtualPS;
+         p = ps.TakePainting();
          gVirtualPS = saveps;
-
-         p = painter->TakePainting();
 
          fHasSpecials = kTRUE;
 
@@ -356,8 +355,8 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
 
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
 
-   // static int filecnt = 0;
-   // TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
+   static int filecnt = 0;
+   TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
 
    delete curr; // destroy created snapshot
 
