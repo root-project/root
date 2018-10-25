@@ -307,17 +307,34 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
 
    TIter iter(primitives);
    TObject *obj = nullptr;
+
+   auto flush_master = [&]() {
+      if (!usemaster || masterps.IsEmptyPainting()) return;
+
+      auto msub = new TWebSnapshot();
+      msub->SetObjectIDAsPtr(pad);
+      msub->SetSnapshot(TWebSnapshot::kSVG, masterps.TakePainting(), kTRUE);
+      curr->Add(msub);
+      masterps.CreatePainting(); // create for next operations
+   };
+
+   auto add_object = [&]() {
+      auto sub = new TWebSnapshot();
+      sub->SetObjectIDAsPtr(obj);
+      sub->SetOption(iter.GetOption());
+      sub->SetSnapshot(TWebSnapshot::kObject, obj);
+      curr->Add(sub);
+   };
+
    while ((obj = iter()) != nullptr) {
       if (obj->InheritsFrom(TPad::Class())) {
+         flush_master();
          CreateSnapshot((TPad *)obj, curr, primitives_lst);
       } else if (obj->InheritsFrom(TH1::Class())) {
-         TWebSnapshot *sub = new TWebSnapshot();
-         TH1 *hist = (TH1 *)obj;
-         sub->SetObjectIDAsPtr(hist);
-         sub->SetOption(iter.GetOption());
-         sub->SetSnapshot(TWebSnapshot::kObject, obj);
-         curr->Add(sub);
+         flush_master();
+         add_object();
 
+         TH1 *hist = (TH1 *)obj;
          TIter fiter(hist->GetListOfFunctions());
          TObject *fobj = nullptr;
          while ((fobj = fiter()) != nullptr)
@@ -326,12 +343,10 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
 
          primitives_lst->Add(hist->GetListOfFunctions());
       } else if (obj->InheritsFrom(TGraph::Class())) {
-         TWebSnapshot *sub = new TWebSnapshot();
+         flush_master();
+         add_object();
+
          TGraph *gr = (TGraph *)obj;
-         sub->SetObjectIDAsPtr(gr);
-         sub->SetOption(iter.GetOption());
-         sub->SetSnapshot(TWebSnapshot::kObject, obj);
-         curr->Add(sub);
 
          TIter fiter(gr->GetListOfFunctions());
          TObject *fobj = nullptr;
@@ -340,23 +355,16 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
                curr->Add(CreateObjectSnapshot(pad, fobj, fiter.GetOption()));
 
          primitives_lst->Add(gr->GetListOfFunctions());
+      } else if (IsJSSupportedClass(obj)) {
+         flush_master();
+         add_object();
       } else {
-
          auto res = CreateObjectSnapshot(pad, obj, iter.GetOption(), usemaster ? &masterps : nullptr);
-
          if (res) curr->Add(res);
       }
    }
 
-   if (usemaster && !masterps.IsEmptyPainting()) {
-      auto p = masterps.TakePainting();
-      p->FixSize();
-
-      auto sub = new TWebSnapshot();
-      sub->SetObjectIDAsPtr(pad);
-      sub->SetSnapshot(TWebSnapshot::kSVG, p, kTRUE);
-      curr->Add(sub);
-   }
+   flush_master();
 
    if (primitives_lst != &master_lst)
       return "";
@@ -378,8 +386,8 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
 
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
 
-   static int filecnt = 0;
-   TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
+   // static int filecnt = 0;
+   // TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
 
    delete curr; // destroy created snapshot
 
