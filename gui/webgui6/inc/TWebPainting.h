@@ -17,6 +17,7 @@
 #include "TAttText.h"
 #include "TAttMarker.h"
 #include "TArrayF.h"
+#include "TColor.h"
 
 #include <vector>
 #include <string>
@@ -44,6 +45,8 @@ class TWebPainting : public TObject {
       void AddMarkerAttr(const TAttMarker &attr);
 
       Float_t *Reserve(Int_t sz);
+
+      void AddColor(TColor *col, Bool_t onlyindx = kFALSE);
 
       // Set actual filled size
       void FixSize() { fBuf.Set(fSize); }
