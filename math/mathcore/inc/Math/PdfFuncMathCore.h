@@ -255,14 +255,12 @@ namespace Math {
      // double N = 1./(sigma*(C+D));
      if (z  > - abs_alpha)
         return std::exp(- 0.5 * z * z);
-     else {
-        //double A = std::pow(n/abs_alpha,n) * std::exp(-0.5*abs_alpha*abs_alpha);
-        double nDivAlpha = n/abs_alpha;
-        double AA =  std::exp(-0.5*abs_alpha*abs_alpha);
-        double B = nDivAlpha -abs_alpha;
-        double arg = nDivAlpha/(B-z);
-        return AA * std::pow(arg,n);
-     }
+     //double A = std::pow(n/abs_alpha,n) * std::exp(-0.5*abs_alpha*abs_alpha);
+     double nDivAlpha = n/abs_alpha;
+     double AA =  std::exp(-0.5*abs_alpha*abs_alpha);
+     double B = nDivAlpha -abs_alpha;
+     double arg = nDivAlpha/(B-z);
+     return AA * std::pow(arg,n);
    }
 
    /**
