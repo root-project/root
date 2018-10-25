@@ -2835,7 +2835,7 @@ Bool_t TCling::HasPCMForLibrary(const char *libname) const
 
    clang::ModuleMap &moduleMap = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo().getModuleMap();
    clang::Module *M = moduleMap.findModule(ModuleName);
-   return M && !M->IsMissingRequirement;
+   return M && !M->IsMissingRequirement && M->getASTFile();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

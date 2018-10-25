@@ -750,7 +750,10 @@ class ModuleFacade( types.ModuleType ):
 
     # manually load libMathCore, for example to obtain gRandom
     # This can be removed once autoloading on selected variables is available
-      _root.gSystem.Load( "libMathCore" )
+    # If we have a pcm for the library, we don't have to explicitly load this as
+    # modules have an autoloading support.
+      if not _root.gInterpreter.HasPCMForLibrary("libMathCore"):
+         _root.gSystem.Load( "libMathCore" )
 
 sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
 del ModuleFacade
