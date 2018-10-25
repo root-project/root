@@ -3388,7 +3388,7 @@ Int_t TGX11::WriteGIF(char *name)
 
    if (ncol > 256) {
       //GIFquantize(...);
-      Error("WriteGIF", "can not create GIF of image containing more than 256 colors");
+      Error("WriteGIF", "Cannot create GIF of image containing more than 256 colors. Try in batch mode.");
       delete [] red;
       delete [] green;
       delete [] blue;
