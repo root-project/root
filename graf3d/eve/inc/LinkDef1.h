@@ -118,7 +118,6 @@
 // TEveElement
 #pragma link C++ class TEveElement+;
 #pragma link C++ class TEveElement::TEveListTreeInfo+;
-#pragma link C++ class TEveElementObjectPtr+;
 #pragma link C++ class TEveElementList+;
 #pragma link C++ class TEveElementListProjected+;
 #pragma link C++ class TEveElementEditor+;
