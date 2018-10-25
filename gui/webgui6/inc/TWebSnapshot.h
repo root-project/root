@@ -32,7 +32,7 @@ protected:
    TString    fObjectID;            ///<   object identifier
    TString    fOption;              ///<   object draw option
    Int_t      fKind{0};             ///<   kind of snapshots
-   TObject*   fSnapshot{nullptr};   ///<   snapshot data
+   TObject   *fSnapshot{nullptr};   ///<   snapshot data
    Bool_t     fOwner{kFALSE};       ///<!  if objected owned
 
    void SetKind(Int_t kind) { fKind = kind; }
@@ -40,11 +40,12 @@ protected:
 public:
 
    enum {
-     kNone = 0,         // dummy
-     kObject = 1,       // object itself
-     kSVG = 2,          // list of SVG primitives
-     kSubPad = 3,       // subpad
-     kSpecial = 4       // special object like list of colors or palette
+     kNone = 0,        // dummy
+     kObject = 1,      // object itself
+     kSVG = 2,         // list of SVG primitives
+     kSubPad = 3,      // subpad
+     kColors = 4,      // list of ROOT colors
+     kPalette = 5      // current color palette
    };
 
    virtual ~TWebSnapshot();

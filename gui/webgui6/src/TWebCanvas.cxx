@@ -237,42 +237,40 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
 
 Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
 {
-   // if (!TColor::DefinedColors()) return 0;
+   if (!TColor::DefinedColors()) return kFALSE;
+
    TObjArray *colors = (TObjArray *)gROOT->GetListOfColors();
 
    if (!colors)
       return kFALSE;
-   Int_t cnt = 0;
+
+/*   Int_t cnt = 0;
    for (Int_t n = 0; n <= colors->GetLast(); ++n)
       if (colors->At(n) != nullptr)
          cnt++;
    if (cnt <= 598)
       return kFALSE; // normally there are 598 colors defined
+*/
 
    TWebSnapshot *sub = new TWebSnapshot();
    TWebPainting *listofcols = new TWebPainting;
    for (Int_t n = 0; n <= colors->GetLast(); ++n)
-      if (colors->At(n) != nullptr)
-         listofcols->AddColor((TColor *)colors->At(n));
+      if (colors->At(n))
+         listofcols->AddColor(n, (TColor *)colors->At(n));
    listofcols->FixSize();
 
-   sub->SetSnapshot(TWebSnapshot::kSpecial, listofcols, kTRUE);
+   sub->SetSnapshot(TWebSnapshot::kColors, listofcols, kTRUE);
    master->Add(sub);
-
-   if (gDebug > 1)
-      Info("AddCanvasSpecials", "ADD COLORS TABLES %d", cnt);
 
    // save the current palette
    TArrayI pal = TColor::GetPalette();
-   Int_t palsize = pal.GetSize();
-
    TWebPainting *palette = new TWebPainting;
-   for (Int_t i = 0; i < palsize; i++)
-      palette->AddColor(gROOT->GetColor(pal[i]), kTRUE);
+   for (Int_t i = 0; i < pal.GetSize(); i++)
+      palette->AddColor(-1, gROOT->GetColor(pal[i]));
    palette->FixSize();
 
    sub = new TWebSnapshot();
-   sub->SetSnapshot(TWebSnapshot::kSpecial, palette, kTRUE);
+   sub->SetSnapshot(TWebSnapshot::kPalette, palette, kTRUE);
    master->Add(sub);
 
    return kTRUE;
