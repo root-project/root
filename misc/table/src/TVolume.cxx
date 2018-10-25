@@ -45,6 +45,12 @@ TVolume *gNode;
 //R__EXTERN  Size3D gSize3D;
 static TRotMatrix *gIdentity = 0;
 
+// Pin vtable
+void TVolume::Add(TDataSet *dataset)
+{
+   TDataSet::Add(dataset);
+}
+
 ClassImp(TVolume);
 
 ////////////////////////////////////////////////////////////////////////////////
