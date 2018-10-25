@@ -46,7 +46,7 @@ class TWebPainting : public TObject {
 
       Float_t *Reserve(Int_t sz);
 
-      void AddColor(TColor *col, Bool_t onlyindx = kFALSE);
+      void AddColor(Int_t indx, TColor *col);
 
       // Set actual filled size
       void FixSize() { fBuf.Set(fSize); }

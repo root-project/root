@@ -59,24 +59,19 @@ void TWebPainting::AddMarkerAttr(const TAttMarker &attr)
            std::to_string((int) attr.GetMarkerSize()));
 }
 
-void TWebPainting::AddColor(TColor *col, Bool_t onlyindx)
+void TWebPainting::AddColor(Int_t indx, TColor *col)
 {
    if (!col) return;
-   if (onlyindx) {
-      AddOper("col:" + std::to_string(col->GetNumber()));
-   } else if (col->GetAlpha() == 1) {
-      AddOper("rgb:" + std::to_string(col->GetNumber()));
-      auto buf = Reserve(3);
-      buf[0] = (int) (255*col->GetRed());
-      buf[1] = (int) (255*col->GetGreen());
-      buf[2] = (int) (255*col->GetBlue());
-   } else {
-      AddOper("rga:" + std::to_string(col->GetNumber()));
-      auto buf = Reserve(4);
-      buf[0] = (int) (255*col->GetRed());
-      buf[1] = (int) (255*col->GetGreen());
-      buf[2] = (int) (255*col->GetBlue());
-      buf[3] = (int) (1000*col->GetAlpha());
-   }
+
+   TString code;
+
+   if (col->GetAlpha() == 1)
+      code.Form("rgb(%d,%d,%d)", (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()));
+   else
+      code.Form("rgba(%d,%d,%d,%5.3f)", (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()), col->GetAlpha());
+   if (indx>=0)
+      code.Prepend(TString::Format("%d:", indx));
+
+   AddOper(code.Data());
 }
 
