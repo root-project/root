@@ -13,17 +13,28 @@
 
 #include "TVirtualPS.h"
 
+#include "TWebPainting.h"
+
 #include "TWebPadPainter.h"
 
 class TWebPS : public TVirtualPS {
-   TWebPadPainter &fPainter;
+
+   TWebPainting *fPainting{nullptr};      ///!< object to store all painting
+
+   enum EAttrKinds { attrLine = 0x1, attrFill = 0x2, attrMarker = 0x4, attrText = 0x8 };
+
+   Float_t *StoreOperation(const std::string &oper, unsigned attrkind, int opersize = 0);
+
 public:
-   TWebPS(TWebPadPainter &p) : fPainter(p) {}
-   virtual ~TWebPS() = default;
+   TWebPS() {}
+   virtual ~TWebPS();
+
+   TWebPainting *TakePainting();
+   void ResetPainting();
 
    //Redirect calls to WebPainter
    //Line attributes.
-   Color_t  GetLineColor() const override { return fPainter.GetLineColor(); }
+/*   Color_t  GetLineColor() const override { return fPainter.GetLineColor(); }
    Style_t  GetLineStyle() const override { return fPainter.GetLineStyle(); }
    Width_t  GetLineWidth() const override { return fPainter.GetLineWidth(); }
 
@@ -65,43 +76,28 @@ public:
    void      SetMarkerSize(Float_t markersize) override  { fPainter.SetMarkerSize(markersize); }
    void      SetMarkerStyle(Style_t markerstyle) override  { fPainter.SetMarkerStyle(markerstyle); }
 
+*/
+
+   /// not yet implemented
+
    void CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t, Double_t) override  {}
    void CellArrayFill(Int_t, Int_t, Int_t)  override {}
    void CellArrayEnd()  override  {}
    void Close(Option_t * = "")  override  {}
    void DrawFrame(Double_t, Double_t, Double_t, Double_t, Int_t, Int_t, Int_t, Int_t) override {}
-
-   void DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2) override
-   {
-      fPainter.DrawBox(x1, y1, x2, y2, fPainter.GetFillStyle() ? TVirtualPadPainter::kFilled : TVirtualPadPainter::kHollow);
-   }
-   void DrawPolyMarker(Int_t n, Float_t *x, Float_t *y) override { fPainter.DrawPolyMarker(n, x, y); }
-   void DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) override { fPainter.DrawPolyMarker(n, x, y); }
-   void DrawPS(Int_t n, Float_t *xw, Float_t *yw) override
-   {
-      if (n == 2)
-         fPainter.DrawLine(xw[0], yw[0], xw[1], yw[1]);
-      else
-         fPainter.DrawPolyLine(n, xw, yw);
-   }
-   void DrawPS(Int_t n, Double_t *xw, Double_t *yw) override
-   {
-      if (n == 2)
-         fPainter.DrawLine(xw[0], yw[0], xw[1], yw[1]);
-      else
-         fPainter.DrawPolyLine(n, xw, yw);
-   }
    void NewPage() override {}
    void Open(const char *, Int_t = -111) override {}
-   void Text(Double_t x, Double_t y, const char *str) override
-   {
-      fPainter.DrawText(x, y, str, TVirtualPadPainter::kClear);
-   }
-   void Text(Double_t x, Double_t y, const wchar_t *str) override
-   {
-      fPainter.DrawText(x, y, str, TVirtualPadPainter::kClear);
-   }
    void SetColor(Float_t, Float_t, Float_t) override {}
+
+
+   // overwritten methods
+   void DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2) override;
+   void DrawPolyMarker(Int_t n, Float_t *x, Float_t *y) override;
+   void DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) override;
+   void DrawPS(Int_t n, Float_t *xw, Float_t *yw) override;
+   void DrawPS(Int_t n, Double_t *xw, Double_t *yw) override;
+   void Text(Double_t x, Double_t y, const char *str) override;
+   void Text(Double_t x, Double_t y, const wchar_t *str) override;
 
    ClassDefOverride(TWebPS, 0) // Redirection of VirtualPS to Web painter
 };
