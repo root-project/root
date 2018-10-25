@@ -1,8 +1,8 @@
-#include <zmq.hpp>
+#include <MultiProcess/zmq.hxx>
 
-#include <ZeroMQSvc.h>
+#include "ZeroMQSvc.h"
 
-#include <functions.h>
+#include "functions.h"
 
 namespace ZMQ {
    size_t stringLength(const char& cs) {

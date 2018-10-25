@@ -9,39 +9,15 @@
 #include <sstream>
 #include <ios>
 
-// boost
-#ifdef __CLING__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wexpansion-to-defined"
-#endif
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/unordered_map.hpp>
-#include <boost/serialization/unordered_set.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#ifdef __CLING__
-#pragma GCC diagnostic pop
-#endif
-#include <boost/iostreams/device/array.hpp>
-#include <boost/iostreams/device/back_inserter.hpp>
-#include <boost/iostreams/stream_buffer.hpp>
-#include <boost/numeric/conversion/cast.hpp>
-
 // ROOT
 #include <TH1.h>
 #include <TClass.h>
 #include <TBufferFile.h>
 
 // ZeroMQ
-#include <zmq.hpp>
+#include <MultiProcess/zmq.hxx>
 
 #include "Utility.h"
-#include "SerializeTuple.h"
-#include "CustomSink.h"
 #include "functions.h"
 
 namespace Detail {
@@ -119,24 +95,6 @@ public:
       T object;
       memcpy(&object, msg.data(), msg.size());
       return object;
-   }
-
-   // decode ZMQ message, general version using boost serialize
-   template <class T, typename std::enable_if<!(std::is_pointer<T>::value
-                                                || Detail::ROOTObject<T>::value
-                                                || Detail::is_trivial<T>::value
-                                                || std::is_same<T, std::string>::value), T>::type* = nullptr>
-   T decode(const zmq::message_t& msg) const {
-      using Device = boost::iostreams::basic_array_source<char>;
-      using Stream = boost::iostreams::stream_buffer<Device>;
-      Device device{static_cast<const char*>(msg.data()), msg.size()};
-      Stream stream{device};
-      if (encoding() == Text) {
-         std::istream istream{&stream};
-         return deserialize<boost::archive::text_iarchive, T>(istream);
-      } else {
-         return deserialize<boost::archive::binary_iarchive, T>(stream);
-      }
    }
 
    // decode ZMQ message, string version
@@ -225,26 +183,6 @@ public:
       return msg;
    }
 
-   // encode message to ZMQ after serialization with boost::serialize
-   template <class T, typename std::enable_if<!(std::is_pointer<T>::value
-                                                || Detail::ROOTObject<T>::value
-                                                || Detail::is_trivial<T>::value
-                                                || std::is_same<T, std::string>::value), T>::type* = nullptr>
-   zmq::message_t encode(const T& item) const {
-      using Device = CustomSink<char>;
-      using Stream = boost::iostreams::stream_buffer<Device>;
-      Stream stream{Device{}};
-      if (encoding() == Text) {
-         std::ostream ostream{&stream};
-         serialize<boost::archive::text_oarchive>(item, ostream);
-      } else {
-         serialize<boost::archive::binary_oarchive>(item, stream);
-      }
-      auto size = stream->size();
-      zmq::message_t msg{stream->release(), size, deleteBuffer<Device::byte>};
-      return msg;
-   }
-
    zmq::message_t encode(const char* item) const {
       std::function<size_t(const char& t)> fun = ZMQ::stringLength;
       return encode(*item, fun);
@@ -291,23 +229,6 @@ private:
 
    Encoding m_enc = Text;
    mutable zmq::context_t* m_context = nullptr;
-
-   template <class A, class S, class T>
-   void serialize(const T& t, S& stream) const {
-      A archive{stream};
-      archive << t;
-   }
-
-   template <class A, class T, class S>
-   T deserialize(S& stream) const {
-      T t;
-      try {
-         A archive{stream};
-         archive >> t;
-      } catch  (boost::archive::archive_exception) {
-      }
-      return t;
-   }
 
    // Receive ROOT serialized object of type T with ZMQ
    template<class T>

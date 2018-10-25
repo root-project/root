@@ -1,6 +1,7 @@
-#include <memory>
+//#include <memory>
+#include <ROOT/RMakeUnique.hxx>
 
-#include <ZeroMQSvc.h>
+#include "ZeroMQSvc.h"
 
 ZeroMQSvc& zmqSvc() {
    static std::unique_ptr<ZeroMQSvc> svc;

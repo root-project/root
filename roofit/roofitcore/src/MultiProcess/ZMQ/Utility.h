@@ -9,6 +9,8 @@
 #undef HAVE_TRIVIALLY_COPYABLE
 #endif
 
+#include <type_traits>
+
 namespace Detail {
 
 template<typename... Ts>
