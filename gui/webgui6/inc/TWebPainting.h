@@ -21,14 +21,6 @@
 #include <vector>
 #include <string>
 
-/** Class to store actual drawing attributes */
-class TWebPainterAttributes : public TObject, public TAttFill, public TAttLine, public TAttMarker, public TAttText  {
-   public:
-      virtual ~TWebPainterAttributes() = default;
-
-      ClassDef(TWebPainterAttributes,1) // different draw attributes used by the painter
-};
-
 /** Object used to store paint operations and deliver them to JSROOT */
 class TWebPainting : public TObject {
 
@@ -39,12 +31,17 @@ class TWebPainting : public TObject {
 
    public:
 
-      TWebPainting()  {  }
-      virtual ~TWebPainting() {  }
+      TWebPainting()  {}
+      virtual ~TWebPainting() {}
 
       void Add(TObject *, const char *) { }
 
       void AddOper(const std::string &oper) { fOper.emplace_back(oper); }
+
+      void AddLineAttr(const TAttLine &attr);
+      void AddFillAttr(const TAttFill &attr);
+      void AddTextAttr(const TAttText &attr);
+      void AddMarkerAttr(const TAttMarker &attr);
 
       Float_t *Reserve(Int_t sz);
 
