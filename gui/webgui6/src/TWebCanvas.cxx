@@ -183,9 +183,6 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
          TView *view = nullptr;
          TVirtualPad *savepad = gPad;
 
-         painter->ResetPainting();                                        // ensure painter is created
-         painter->SetWebCanvasSize(Canvas()->GetWw(), Canvas()->GetWh()); // provide canvas dimension
-
          pad->cd();
 
          if (obj->InheritsFrom(TAtt3D::Class())) {
@@ -200,6 +197,8 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
          TVirtualPS *saveps = gVirtualPS;
          TWebPS ps;
          gVirtualPS = &ps;
+         painter->SetPainting(ps.GetPainting());
+
 
          // calling Paint function for the object
          obj->Paint(opt);
@@ -211,6 +210,7 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
             pad->SetView(nullptr);
          }
 
+         painter->SetPainting(nullptr);
          p = ps.TakePainting();
          gVirtualPS = saveps;
 

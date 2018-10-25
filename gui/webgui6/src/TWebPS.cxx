@@ -10,53 +10,26 @@
 
 #include "TWebPS.h"
 
-TWebPS::~TWebPS()
-{
-   ResetPainting();
-}
+#include <ROOT/RMakeUnique.hxx>
 
-TWebPainting *TWebPS::TakePainting()
+TWebPS::TWebPS()
 {
-   TWebPainting *res = fPainting;
-   fPainting = nullptr;
-   return res;
+   fPainting = std::make_unique<TWebPainting>();
 }
-
-void TWebPS::ResetPainting()
-{
-   if (fPainting) delete fPainting;
-   fPainting = nullptr;
-}
-
 
 Float_t *TWebPS::StoreOperation(const std::string &oper, unsigned attrkind, int opersize)
 {
-   if (!fPainting) fPainting = new TWebPainting();
-
    if (attrkind & attrLine)
-      fPainting->AddOper(std::string("lattr:") +
-                         std::to_string((int)GetLineColor()) + ":" +
-                         std::to_string((int)GetLineStyle()) + ":" +
-                         std::to_string((int)GetLineWidth()));
+      fPainting->AddLineAttr(*this);
 
    if (attrkind & attrFill)
-      fPainting->AddOper(std::string("fattr:") +
-                         std::to_string((int)GetFillColor()) + ":" +
-                         std::to_string((int)GetFillStyle()));
+      fPainting->AddFillAttr(*this);
 
    if (attrkind & attrMarker)
-      fPainting->AddOper(std::string("mattr:") +
-                         std::to_string((int)GetMarkerColor()) + ":" +
-                         std::to_string((int)GetMarkerStyle()) + ":" +
-                         std::to_string((int)GetMarkerSize()));
+      fPainting->AddMarkerAttr(*this);
 
    if (attrkind & attrText)
-      fPainting->AddOper(std::string("tattr:") +
-                         std::to_string((int)GetTextColor()) + ":" +
-                         std::to_string((int)GetTextFont()) + ":" +
-                         std::to_string((int)(GetTextSize()>=1 ? GetTextSize() : -1000*GetTextSize())) + ":" +
-                         std::to_string((int)GetTextAlign()) + ":" +
-                         std::to_string((int)GetTextAngle()));
+      fPainting->AddTextAttr(*this);
 
    fPainting->AddOper(oper);
 
@@ -102,7 +75,7 @@ void TWebPS::DrawPS(Int_t nPoints, Float_t *xw, Float_t *yw)
    Float_t *buf = nullptr;
    if (nPoints < 0) {
       nPoints = -nPoints;
-      if ((GetFillStyle() <= 0) || (nPoints < 2))  return;
+      if ((GetFillStyle() <= 0) || (nPoints < 3))  return;
       buf = StoreOperation("pfill:" + std::to_string(nPoints), attrFill, nPoints*2);
    } else {
       if ((GetLineWidth() <= 0) || (nPoints < 2))  return;
@@ -119,7 +92,7 @@ void TWebPS::DrawPS(Int_t nPoints, Double_t *xw, Double_t *yw)
    Float_t *buf = nullptr;
    if (nPoints < 0) {
       nPoints = -nPoints;
-      if ((GetFillStyle() <= 0) || (nPoints < 2))  return;
+      if ((GetFillStyle() <= 0) || (nPoints < 3))  return;
       buf = StoreOperation("pfill:" + std::to_string(nPoints), attrFill, nPoints*2);
    } else {
       if ((GetLineWidth() <= 0) || (nPoints < 2))  return;
