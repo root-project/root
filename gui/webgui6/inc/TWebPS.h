@@ -73,7 +73,7 @@ public:
 
    void DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2) override
    {
-      fPainter.DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
+      fPainter.DrawBox(x1, y1, x2, y2, fPainter.GetFillStyle() ? TVirtualPadPainter::kFilled : TVirtualPadPainter::kHollow);
    }
    void DrawPolyMarker(Int_t n, Float_t *x, Float_t *y) override { fPainter.DrawPolyMarker(n, x, y); }
    void DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) override { fPainter.DrawPolyMarker(n, x, y); }

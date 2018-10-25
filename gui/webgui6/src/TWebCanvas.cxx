@@ -78,8 +78,8 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
                             {"TGaxis", false},
                             {"TPave", true},
                             {"TArrow", false},
-                            {"TBox", false},  // in principle, can be handled via TWebPainter
-                            {"TWbox", false}, // some extra calls which cannout be handled via TWebPainter
+//                            {"TBox", false},  // in principle, can be handled via TWebPainter
+                            {"TWbox", false}, // some extra calls which cannot be handled via TWebPainter
                             {"TLine", false}, // also can be handler via TWebPainter
                             {"TText", false},
                             {"TLatex", false},
@@ -87,15 +87,15 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
                             {"TMarker", false},
                             {"TPolyMarker3D", false},
                             {"TGraph2D", false},
-                            {0, false}};
+                            {nullptr, false}};
 
    // fast check of class name
-   for (int i = 0; supported_classes[i].name != 0; ++i)
+   for (int i = 0; supported_classes[i].name != nullptr; ++i)
       if (strcmp(supported_classes[i].name, obj->ClassName()) == 0)
          return kTRUE;
 
    // now check inheritance only for configured classes
-   for (int i = 0; supported_classes[i].name != 0; ++i)
+   for (int i = 0; supported_classes[i].name != nullptr; ++i)
       if (supported_classes[i].with_derived)
          if (obj->InheritsFrom(supported_classes[i].name))
             return kTRUE;
@@ -182,7 +182,6 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
       } else {
          TView *view = nullptr;
          TVirtualPad *savepad = gPad;
-         TVirtualPS *saveps = gVirtualPS;
 
          painter->ResetPainting();                                        // ensure painter is created
          painter->SetWebCanvasSize(Canvas()->GetWw(), Canvas()->GetWh()); // provide canvas dimension
@@ -196,9 +195,10 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
 
             // Set view to perform first auto-range (scaling) pass
             view->SetAutoRange(kTRUE);
-
-            gVirtualPS = new TWebPS(*painter);
          }
+
+         TVirtualPS *saveps = gVirtualPS;
+         gVirtualPS = new TWebPS(*painter);
 
          // calling Paint function for the object
          obj->Paint(opt);
@@ -208,9 +208,10 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
             // call 3D paint once again to make real drawing
             obj->Paint(opt);
             pad->SetView(nullptr);
-            delete gVirtualPS;
-            gVirtualPS = saveps;
          }
+
+         delete gVirtualPS;
+         gVirtualPS = saveps;
 
          p = painter->TakePainting();
 
@@ -355,7 +356,6 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
 
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
 
-   // TODO: this is only for debugging, remove it later
    // static int filecnt = 0;
    // TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
 
