@@ -132,15 +132,15 @@ module __usr_include [system] [extern_c] {
 
   // Headers in /usr/include/bits that are used by multiple headers.
   explicit module bits {
-    explicit module mathdef { header "bits/mathdef.h" export * }
+    //explicit module mathdef { header "bits/mathdef.h" export * }
     explicit module pthreadtypes { header "bits/pthreadtypes.h" export * }
-    explicit module setjmp { header "bits/setjmp.h" export * }
+    //explicit module setjmp { header "bits/setjmp.h" export * }
     explicit module sigcontext { header "bits/sigcontext.h" export * }
     explicit module sigset { header "bits/sigset.h" export * }
     explicit module stat { header "bits/stat.h" export * }
     explicit module time { header "bits/time.h" export * }
     explicit module types { header "bits/types.h" export * }
-    explicit module uio { header "bits/uio.h" export * }
+    //explicit module uio { header "bits/uio.h" export * }
     explicit module wchar { header "bits/wchar.h" export * }
     explicit module wordsize { header "bits/wordsize.h" export * }
 
