@@ -252,25 +252,21 @@ Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
       return kFALSE; // normally there are 598 colors defined
 */
 
+   TArrayI pal = TColor::GetPalette();
+
    TWebSnapshot *sub = new TWebSnapshot();
    TWebPainting *listofcols = new TWebPainting;
    for (Int_t n = 0; n <= colors->GetLast(); ++n)
       if (colors->At(n))
          listofcols->AddColor(n, (TColor *)colors->At(n));
+
+   // store palette in the buffer
+   Float_t *tgt = listofcols->Reserve(pal.GetSize());
+   for (Int_t i = 0; i < pal.GetSize(); i++)
+      tgt[i] = pal[i];
    listofcols->FixSize();
 
    sub->SetSnapshot(TWebSnapshot::kColors, listofcols, kTRUE);
-   master->Add(sub);
-
-   // save the current palette
-   TArrayI pal = TColor::GetPalette();
-   TWebPainting *palette = new TWebPainting;
-   for (Int_t i = 0; i < pal.GetSize(); i++)
-      palette->AddColor(-1, gROOT->GetColor(pal[i]));
-   palette->FixSize();
-
-   sub = new TWebSnapshot();
-   sub->SetSnapshot(TWebSnapshot::kPalette, palette, kTRUE);
    master->Add(sub);
 
    return kTRUE;
