@@ -30,8 +30,9 @@ if(MSVC)
   ROOT_LINKER_LIBRARY(Eve *.cxx G__Eve1.cxx G__Eve2.cxx LIBRARIES ${OPENGL_LIBRARIES} GLEW ${FTGL_LIBRARIES} GLEW ${FTGL_LIBRARIES} Core DEPENDENCIES Core Geom Ged RGL Physics EG)
   ROOT_INSTALL_HEADERS()
 else()
-  ROOT_STANDARD_LIBRARY_PACKAGE(Eve HEADERS ${headers1} ${headers2}
-                                LIBRARIES ${OPENGL_LIBRARIES} GLEW ${FTGL_LIBRARIES}
-                                DEPENDENCIES Core Geom Ged RGL Physics EG)
+  ROOT_STANDARD_LIBRARY_PACKAGE(Eve
+    HEADERS   ${headers1} ${headers2}
+    SOURCES   ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx
+    LIBRARIES ${OPENGL_LIBRARIES} GLEW ${FTGL_LIBRARIES}
+    DEPENDENCIES Core Geom Ged RGL Physics EG)
 endif()
-

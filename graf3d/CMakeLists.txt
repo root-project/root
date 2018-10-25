@@ -14,3 +14,6 @@ if (opengl)
   add_subdirectory(gviz3d) # special CMakeLists.txt
 endif()
 
+if(root7)
+  add_subdirectory(eve7) # special CMakeLists.txt
+endif()
