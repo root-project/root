@@ -36,7 +36,7 @@ class TObjLink;
 class TWebSnapshot;
 class TPadWebSnapshot;
 class THttpServer;
-class TWebCanvas;
+class TWebPS;
 
 /// Class used to transport drawing options from the client
 class TWebObjectOptions {
@@ -125,7 +125,7 @@ protected:
 
    Bool_t AddCanvasSpecials(TPadWebSnapshot *master);
    TString CreateSnapshot(TPad *pad, TPadWebSnapshot *master = nullptr, TList *tempbuf = nullptr);
-   TWebSnapshot *CreateObjectSnapshot(TPad *pad, TObject *obj, const char *opt);
+   TWebSnapshot *CreateObjectSnapshot(TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
 
    TObject *FindPrimitive(const char *id, TPad *pad = nullptr, TObjLink **padlnk = nullptr);
    Bool_t DecodeAllRanges(const char *arg);

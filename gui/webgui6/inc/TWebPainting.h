@@ -35,7 +35,7 @@ class TWebPainting : public TObject {
       TWebPainting()  {}
       virtual ~TWebPainting() {}
 
-      void Add(TObject *, const char *) { }
+      Bool_t IsEmpty() const { return (fOper.size() == 0) && (fBuf.GetSize() == 0); }
 
       void AddOper(const std::string &oper) { fOper.emplace_back(oper); }
 
