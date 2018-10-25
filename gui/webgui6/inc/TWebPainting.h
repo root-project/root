@@ -30,10 +30,14 @@ class TWebPainting : public TObject {
       Int_t fSize{0};                 ///<! filled buffer size
       TArrayF fBuf;                   /// array of points for all operations
 
+      TAttLine fLastLine;             ///<! last line attributes
+      TAttFill fLastFill;             ///<! last fill attributes
+      TAttMarker fLastMarker;         ///<! last marker attributes
+
    public:
 
-      TWebPainting()  {}
-      virtual ~TWebPainting() {}
+      TWebPainting();
+      virtual ~TWebPainting() = default;
 
       Bool_t IsEmpty() const { return (fOper.size() == 0) && (fBuf.GetSize() == 0); }
 
