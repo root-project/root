@@ -17,6 +17,12 @@ TWebPS::TWebPS()
    fPainting = std::make_unique<TWebPainting>();
 }
 
+void TWebPS::CreatePainting()
+{
+   fPainting = std::make_unique<TWebPainting>();
+}
+
+
 Float_t *TWebPS::StoreOperation(const std::string &oper, unsigned attrkind, int opersize)
 {
    if (attrkind & attrLine)
