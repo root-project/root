@@ -30,6 +30,7 @@ the trees in the chain.
 #include "TBrowser.h"
 #include "TChainElement.h"
 #include "TClass.h"
+#include "TColor.h"
 #include "TCut.h"
 #include "TError.h"
 #include "TMath.h"
@@ -2301,6 +2302,47 @@ void TChain::ResetAfterMerge(TFileMergeInfo *info)
    fTreeOffset[0]  = 0;
 
    TTree::ResetAfterMerge(info);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save TChain as a C++ statement(s) on output stream out
+
+void TChain::SavePrimitive(std::ostream &out, Option_t *option)
+{
+   TList chains;
+   chains.Add(this);
+
+   out << "   TChain *" << fName.Data() << " = new TChain(\"" << fName.Data() << "\");" << std::endl;
+
+   for (TObject *el : *fFriends) {
+      TChain *ch = (TChain *)((TFriendElement *)el)->GetTree();
+      chains.Add(ch);
+      out << "   TChain *" << ch->GetName() << " = new TChain(\"" << ch->GetName() << "\");" << std::endl;
+      out << "   " << fName.Data() << "->AddFriend(" << ch->GetName() << ");" << std::endl << std::endl;
+   }
+
+   for (TObject *_ch : chains) {
+      TChain *ch = (TChain *)_ch;
+      for (TObject *el : *ch->GetListOfFiles()) {
+         out << "   " << ch->GetName() << "->AddFile(\"" << ((TChainElement *)el)->GetTitle() << "\","
+             << ((TChainElement *)el)->GetEntries() << ");" << std::endl;
+      }
+      out << std::endl;
+   }
+
+   if (GetMarkerColor() != 1) {
+      if (GetMarkerColor() > 228) {
+         TColor::SaveColor(out, GetMarkerColor());
+         out << "   " << fName.Data() << "->SetMarkerColor(ci);" << std::endl;
+      } else
+         out << "   " << fName.Data() << "->SetMarkerColor(" << GetMarkerColor() << ");" << std::endl;
+   }
+   if (GetMarkerStyle() != 1) {
+      out << "   " << fName.Data() << "->SetMarkerStyle(" << GetMarkerStyle() << ");" << std::endl;
+   }
+   if (GetMarkerSize() != 1) {
+      out << "   " << fName.Data() << "->SetMarkerSize(" << GetMarkerSize() << ");" << std::endl;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

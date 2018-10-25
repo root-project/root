@@ -22,6 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TTree.h"
+#include <iosfwd>
 
 class TFile;
 class TBrowser;
@@ -135,6 +136,7 @@ public:
    virtual void      ResetAfterMerge(TFileMergeInfo *);
    virtual void      ResetBranchAddress(TBranch *);
    virtual void      ResetBranchAddresses();
+   virtual void      SavePrimitive (std::ostream &out, Option_t *option="");
    virtual Long64_t  Scan(const char *varexp="", const char *selection="", Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0); // *MENU*
    virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
    virtual Int_t     SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
