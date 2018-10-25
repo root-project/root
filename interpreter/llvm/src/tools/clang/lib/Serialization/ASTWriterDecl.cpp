@@ -2230,6 +2230,17 @@ static bool isRequiredDecl(const Decl *D, ASTContext &Context,
     return false;
   }
 
+  if (Context.getTargetInfo().getCXXABI().canKeyFunctionBeInline()) {
+    if (const CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(D)) {
+      const CXXRecordDecl *RD = MD->getParent();
+      if (MD->isOutOfLine() && RD->isDynamicClass()) {
+        const CXXMethodDecl *KeyFunc = Context.getCurrentKeyFunction(RD);
+        if (KeyFunc && KeyFunc->getCanonicalDecl() == MD->getCanonicalDecl())
+          return false;
+      }
+    }
+  }
+
   return Context.DeclMustBeEmitted(D);
 }
 
