@@ -10,6 +10,14 @@
 
 #include "TWebPainting.h"
 
+TWebPainting::TWebPainting()
+{
+   fLastFill.SetFillStyle(9999);
+   fLastLine.SetLineWidth(-123);
+   fLastMarker.SetMarkerStyle(9999);
+}
+
+
 Float_t *TWebPainting::Reserve(Int_t sz)
 {
    if (sz <= 0)
@@ -28,6 +36,12 @@ Float_t *TWebPainting::Reserve(Int_t sz)
 
 void TWebPainting::AddLineAttr(const TAttLine &attr)
 {
+   if ((attr.GetLineColor() == fLastLine.GetLineColor()) &&
+       (attr.GetLineStyle() == fLastLine.GetLineStyle()) &&
+       (attr.GetLineWidth() == fLastLine.GetLineWidth())) return;
+
+   fLastLine = attr;
+
    AddOper(std::string("lattr:") +
            std::to_string((int) attr.GetLineColor()) + ":" +
            std::to_string((int) attr.GetLineStyle()) + ":" +
@@ -36,6 +50,11 @@ void TWebPainting::AddLineAttr(const TAttLine &attr)
 
 void TWebPainting::AddFillAttr(const TAttFill &attr)
 {
+   if ((fLastFill.GetFillColor() == attr.GetFillColor()) &&
+       (fLastFill.GetFillStyle() == attr.GetFillStyle())) return;
+
+   fLastFill = attr;
+
    AddOper(std::string("fattr:") +
            std::to_string((int) attr.GetFillColor()) + ":" +
            std::to_string((int) attr.GetFillStyle()));
@@ -53,6 +72,12 @@ void TWebPainting::AddTextAttr(const TAttText &attr)
 
 void TWebPainting::AddMarkerAttr(const TAttMarker &attr)
 {
+   if ((attr.GetMarkerColor() == fLastMarker.GetMarkerColor()) &&
+       (attr.GetMarkerStyle() == fLastMarker.GetMarkerStyle()) &&
+       (attr.GetMarkerSize() == fLastMarker.GetMarkerSize())) return;
+
+   fLastMarker = attr;
+
    AddOper(std::string("mattr:") +
            std::to_string((int) attr.GetMarkerColor()) + ":" +
            std::to_string((int) attr.GetMarkerStyle()) + ":" +
