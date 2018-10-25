@@ -250,7 +250,13 @@ Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
       return kFALSE; // normally there are 598 colors defined
 
    TWebSnapshot *sub = new TWebSnapshot();
-   sub->SetSnapshot(TWebSnapshot::kSpecial, colors);
+   TWebPainting *listofcols = new TWebPainting;
+   for (Int_t n = 0; n <= colors->GetLast(); ++n)
+      if (colors->At(n) != nullptr)
+         listofcols->AddColor((TColor *)colors->At(n));
+   listofcols->FixSize();
+
+   sub->SetSnapshot(TWebSnapshot::kSpecial, listofcols, kTRUE);
    master->Add(sub);
 
    if (gDebug > 1)
@@ -259,13 +265,14 @@ Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
    // save the current palette
    TArrayI pal = TColor::GetPalette();
    Int_t palsize = pal.GetSize();
-   TObjArray *CurrentColorPalette = new TObjArray();
-   CurrentColorPalette->SetName("CurrentColorPalette");
+
+   TWebPainting *palette = new TWebPainting;
    for (Int_t i = 0; i < palsize; i++)
-      CurrentColorPalette->Add(gROOT->GetColor(pal[i]));
+      palette->AddColor(gROOT->GetColor(pal[i]), kTRUE);
+   palette->FixSize();
 
    sub = new TWebSnapshot();
-   sub->SetSnapshot(TWebSnapshot::kSpecial, CurrentColorPalette, kTRUE);
+   sub->SetSnapshot(TWebSnapshot::kSpecial, palette, kTRUE);
    master->Add(sub);
 
    return kTRUE;
@@ -355,8 +362,8 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
 
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
 
-   static int filecnt = 0;
-   TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
+   // static int filecnt = 0;
+   // TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
 
    delete curr; // destroy created snapshot
 
