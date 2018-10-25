@@ -42,7 +42,7 @@ public:
    TChair(TTable *table) : fTable(table),fLastIndx(0),fLastRow(0) { ; }
    TChair(const TChair &org) : TDataSet(org) {assert(0);}
 //   TChair     &operator=(const TChair &rhs){ assert(0); return rhs;}
-   virtual    ~TChair(){;}
+   virtual    ~TChair();
 
    virtual     void       Adopt(Int_t n, void *array){GetThisTable()->Adopt(n,array);}
    virtual     void       AddAt(TDataSet *dataset,Int_t idx);
