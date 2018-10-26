@@ -15,8 +15,6 @@
 
 #include "TWebPainting.h"
 
-#include "TWebPadPainter.h"
-
 #include <memory>
 
 class TWebPS : public TVirtualPS {

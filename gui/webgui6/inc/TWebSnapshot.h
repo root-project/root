@@ -21,19 +21,19 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObject.h"
-#include "TString.h"
 
 #include <vector>
+#include <memory>
+#include <string>
 
 class TWebSnapshot : public TObject {
 
 protected:
-
-   TString    fObjectID;            ///<   object identifier
-   TString    fOption;              ///<   object draw option
-   Int_t      fKind{0};             ///<   kind of snapshots
-   TObject   *fSnapshot{nullptr};   ///<   snapshot data
-   Bool_t     fOwner{kFALSE};       ///<!  if objected owned
+   std::string fObjectID;       ///<   object identifier
+   std::string fOption;         ///<   object draw option
+   Int_t fKind{0};              ///<   kind of snapshots
+   TObject *fSnapshot{nullptr}; ///<   snapshot data
+   Bool_t fOwner{kFALSE};       ///<!  if objected owned
 
    void SetKind(Int_t kind) { fKind = kind; }
 
@@ -49,15 +49,15 @@ public:
 
    virtual ~TWebSnapshot();
 
-   void SetObjectIDAsPtr(void* ptr);
-   void SetObjectID(const char* id) { fObjectID = id; }
-   const char* GetObjectID() const { return fObjectID.Data(); }
+   void SetObjectIDAsPtr(void *ptr);
+   void SetObjectID(const std::string &id) { fObjectID = id; }
+   const char* GetObjectID() const { return fObjectID.c_str(); }
 
-   void SetOption(const char* opt) { fOption = opt; }
+   void SetOption(const std::string &opt) { fOption = opt; }
 
-   void SetSnapshot(Int_t kind, TObject* shot, Bool_t owner = kFALSE);
+   void SetSnapshot(Int_t kind, TObject *snapshot, Bool_t owner = kFALSE);
    Int_t GetKind() const { return fKind; }
-   TObject* GetSnapshot() const { return fSnapshot; }
+   TObject *GetSnapshot() const { return fSnapshot; }
 
    ClassDef(TWebSnapshot,1)  // Object painting snapshot, used for JSROOT
 };
@@ -67,14 +67,14 @@ public:
 class TPadWebSnapshot : public TWebSnapshot {
 protected:
    bool fActive{false};                      ///< true when pad is active
-   std::vector<TWebSnapshot*> fPrimitives;   ///< list of all primitives, drawn in the pad
+   std::vector<std::unique_ptr<TWebSnapshot>> fPrimitives;   ///< list of all primitives, drawn in the pad
 public:
    TPadWebSnapshot() { SetKind(kSubPad); }
-   virtual ~TPadWebSnapshot();
 
    void SetActive(bool on = true) { fActive = on; }
-   void Add(TWebSnapshot *snap) { fPrimitives.push_back(snap); }
+   void Add(TWebSnapshot *snap) { fPrimitives.emplace_back(snap); }
 
    ClassDef(TPadWebSnapshot,1)  // Pad painting snapshot, used for JSROOT
 };
+
 #endif
