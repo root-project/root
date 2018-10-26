@@ -1475,12 +1475,6 @@ if(vdt OR builtin_vdt)
   endif()
 endif()
 
-if(VDT_FOUND AND NOT TARGET Vdt::Vdt)
-  add_library(Vdt::Vdt INTERFACE IMPORTED)
-  set_property(TARGET Vdt::Vdt PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${VDT_INCLUDE_DIRS}")
-  set_property(TARGET Vdt::Vdt PROPERTY INTERFACE_LINK_LIBRARIES "${VDT_LIBRARIES}")
-endif()
-
 #---Check for VecGeom--------------------------------------------------------------------
 if (vecgeom)
   message(STATUS "Looking for VecGeom")
