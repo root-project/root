@@ -231,6 +231,7 @@ set(extra_veto
   tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
   tree/h1chain.C
   http/*.C
+  eve7/*.C
   r/rootlogon.C)
 
 set(all_veto hsimple.C
