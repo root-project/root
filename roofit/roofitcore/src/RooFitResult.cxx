@@ -15,17 +15,17 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-//
-// RooFitResult is a container class to hold the input and output
-// of a PDF fit to a dataset. It contains:
-//
-//   - Values of all constant parameters
-//   - Initial and final values of floating parameters with error
-//   - Correlation matrix and global correlation coefficients
-//   - NLL and EDM at mininum
-//
-// No references to the fitted PDF and dataset are stored
-//
+/// \class RooFitResult
+/// RooFitResult is a container class to hold the input and output
+/// of a PDF fit to a dataset. It contains:
+///
+///   * Values of all constant parameters
+///   * Initial and final values of floating parameters with error
+///   * Correlation matrix and global correlation coefficients
+///   * NLL and EDM at mininum
+///
+/// No references to the fitted PDF and dataset are stored
+///
 
 #include "RooFit.h"
 #include "Riostream.h"
