@@ -562,7 +562,7 @@ void RSqliteDS::Initialise()
       throw std::runtime_error("SQlite error, reset");
 }
 
-std::string RSqliteDS::GetDataSourceType()
+std::string RSqliteDS::GetLabel()
 {
    return "RSqliteDS";
 }

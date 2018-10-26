@@ -155,7 +155,7 @@ void RRootDS::Initialise()
    fEntryRanges.back().second += reminder;
 }
 
-std::string RRootDS::GetDataSourceType()
+std::string RRootDS::GetLabel()
 {
    return "Root";
 }

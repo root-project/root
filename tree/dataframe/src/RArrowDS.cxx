@@ -479,7 +479,7 @@ void RArrowDS::Initialise()
 {
 }
 
-std::string RArrowDS::GetDataSourceType()
+std::string RArrowDS::GetLabel()
 {
    return "ArrowDS";
 }

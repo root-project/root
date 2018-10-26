@@ -78,7 +78,7 @@ public:
    bool HasColumn(std::string_view colName) const;
    bool SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
-   std::string GetDataSourceType();
+   std::string GetLabel();
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

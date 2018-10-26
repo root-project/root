@@ -41,7 +41,7 @@ public:
    };
    bool SetEntry(unsigned int, ULong64_t){ return true;};
    void SetNSlots(unsigned int){};
-   std::string GetDataSourceType(){
+   std::string GetLabel(){
       return "NonCopiableColumnDS";
    }
 };
