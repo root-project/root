@@ -1470,7 +1470,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Internal back-end function to steer \f$ \chi^2 \f$ fits
+/// Calls RooAbsPdf::createChi2(RooDataSet& data, const RooLinkedList& cmdList) and returns fit result.
 
 RooFitResult* RooAbsPdf::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) 
 {
@@ -1585,7 +1585,7 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  con
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Internal back-end function to create a \f$ \chi^2 \f$ from a p.d.f. and a dataset
+/// Argument-list version of RooAbsPdf::createChi2()
 
 RooAbsReal* RooAbsPdf::createChi2(RooDataSet& data, const RooLinkedList& cmdList) 
 {
