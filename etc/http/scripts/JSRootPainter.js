@@ -583,24 +583,40 @@
 
    /** Add new colors from object array. */
    Painter.extendRootColors = function(jsarr, objarr) {
-      if (!objarr || !objarr.arr) return;
-
-      for (var n = 0; n < objarr.arr.length; ++n) {
-         var col = objarr.arr[n];
-         if (!col || (col._typename != 'TColor')) continue;
-
-         var num = col.fNumber;
-         if ((num<0) || (num>10000)) continue;
-
-         var rgb = Painter.MakeColorRGB(col);
-         if (rgb && (jsarr[num] != rgb)) jsarr[num] = rgb;
+      if (!jsarr) {
+         jsarr = [];
+         for (var n=0;n<this.root_colors.length;++n)
+            jsarr[n] = this.root_colors[n];
       }
+
+      if (!objarr) return jsarr;
+
+      var rgb_array = objarr;
+      if (objarr._typename && objarr.arr) {
+         rgb_array = [];
+         for (var n = 0; n < objarr.arr.length; ++n) {
+            var col = objarr.arr[n];
+            if (!col || (col._typename != 'TColor')) continue;
+
+            if ((col.fNumber>=0) && (col.fNumber<=10000))
+               rgb_array[col.fNumber] = Painter.MakeColorRGB(col);
+         }
+      }
+
+
+      for (var n = 0; n < rgb_array.length; ++n)
+         if (rgb_array[n] && (jsarr[n] != rgb_array[n]))
+            jsarr[n] = rgb_array[n];
+
+      return jsarr;
    }
 
-   /** Use TObjArray of TColor instances, typically stored together with TCanvas primitives
+   /** Set global list of colors.
+    * Either TObjArray of TColor instances or just plain array with rgb() code.
+    * List of colors typically stored together with TCanvas primitives
     * @private */
    Painter.adoptRootColors = function(objarr) {
-      Painter.extendRootColors(Painter.root_colors, objarr);
+      this.extendRootColors(this.root_colors, objarr);
    }
 
    // =====================================================================
@@ -984,7 +1000,6 @@
     */
 
    function TAttFillHandler(args) {
-
       this.color = "none";
       this.colorindx = 0;
       this.pattern = 0;
@@ -1070,7 +1085,6 @@
     * @param {string} [color_as_svg = undefined] - color as HTML string index
     */
    TAttFillHandler.prototype.Change = function(color, pattern, svg, color_as_svg) {
-
       delete this.pattern_url;
       this.changed = true;
 
@@ -1104,7 +1118,7 @@
 
       if (color_as_svg) {
          this.color = color;
-         indx = 10000 + JSROOT.id_counter++; // use fictial unique index far away from existing color indexes
+         indx = 10000 + JSROOT.id_counter++; // use fictional unique index far away from existing color indexes
       } else {
          this.color = JSROOT.Painter.root_colors[indx];
       }
@@ -2273,6 +2287,20 @@
       return res;
    }
 
+   /** @summary Returns string with value of main element id attribute
+   *
+   * @desc if main element does not have id, it will be generated */
+   TBasePainter.prototype.get_main_id = function() {
+      var elem = this.select_main();
+      if (elem.empty()) return "";
+      var id = elem.attr("id");
+      if (!id) {
+         id = "jsroot_element_" + JSROOT.id_counter++;
+         elem.attr("id", id);
+      }
+      return id;
+   }
+
    /** @summary Returns layout kind
     * @private
     */
@@ -3301,7 +3329,7 @@
       var handler = args.std ? this.markeratt : null;
 
       if (!handler) handler = new TAttMarkerHandler(args);
-      else if (!handler.changed) handler.SetArgs(args);
+      else if (!handler.changed || args.force) handler.SetArgs(args);
 
       if (args.std) this.markeratt = handler;
 
@@ -3326,7 +3354,7 @@
       var handler = args.std ? this.lineatt : null;
 
       if (!handler) handler = new TAttLineHandler(args);
-      else if (!handler.changed) handler.SetArgs(args);
+      else if (!handler.changed || args.force) handler.SetArgs(args);
 
       if (args.std) this.lineatt = handler;
 
@@ -3361,7 +3389,7 @@
       if (!args.svg) args.svg = this.svg_canvas();
 
       if (!handler) handler = new TAttFillHandler(args);
-      else if (!handler.changed) handler.SetArgs(args);
+      else if (!handler.changed || args.force) handler.SetArgs(args);
 
       if (args.std) this.fillatt = handler;
 

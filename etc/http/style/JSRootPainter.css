@@ -426,16 +426,15 @@
 .jsroot .fast_command {
     width: 30px;
     height: 30px;
-    margin-left: 3px;
-    margin-top: 3px;
-    padding: 0px;
+    margin: 2px;
+    padding: 2px;
+    border-width: 2px;
 }
 
 .jsroot .fast_command img {
     max-width: 100%;
     max-height: 100%;
 }
-
 
 /*--------------------------------------------------
   Flexible MDI display

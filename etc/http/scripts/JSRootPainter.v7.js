@@ -3316,6 +3316,9 @@
       if (this.iscan && snap.fTitle && document)
          document.title = snap.fTitle;
 
+      if (this.iscan && snap.fTitle && document)
+         document.title = snap.fTitle;
+
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
 

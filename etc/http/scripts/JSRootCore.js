@@ -96,7 +96,7 @@
 
    "use strict";
 
-   JSROOT.version = "5.6.0 19/10/2018";
+   JSROOT.version = "dev 26/10/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -1857,6 +1857,7 @@
                  this._math = JSROOT.Math;
                  _func = _func.replace(/TMath::Prob\(/g, 'this._math.Prob(')
                               .replace(/TMath::Gaus\(/g, 'this._math.Gaus(')
+                              .replace(/TMath::BreitWigner\(/g, 'this._math.BreitWigner(')
                               .replace(/xygaus\(/g, 'this._math.gausxy(this, x, y, ')
                               .replace(/gaus\(/g, 'this._math.gaus(this, x, ')
                               .replace(/gausn\(/g, 'this._math.gausn(this, x, ')

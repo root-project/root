@@ -27,7 +27,7 @@
    JSROOT.sources.push("v6");
 
    // identifier used in TWebCanvas painter
-   JSROOT.WebSnapIds = { kNone: 0,  kObject: 1, kSVG: 2, kSubPad: 3, kSpecial: 4 };
+   JSROOT.WebSnapIds = { kNone: 0,  kObject: 1, kSVG: 2, kSubPad: 3, kColors: 4 };
 
    // =======================================================================
 
@@ -3085,7 +3085,7 @@
       return pad_visible;
    }
 
-   TPadPainter.prototype.CheckSpecial = function(obj) {
+   TPadPainter.prototype.CheckSpecial = function(obj, kind) {
 
       if (!obj || (obj._typename!=="TObjArray")) return false;
 
@@ -3104,13 +3104,9 @@
          if (!this.options || this.options.GlobalColors) // set global list of colors
             JSROOT.Painter.adoptRootColors(obj);
 
-         if (this.options && this.options.LocalColors) {
-            // copy existing colors and extend with new values
-            this.root_colors = [];
-            for (var n=0;n<JSROOT.Painter.root_colors.length;++n)
-               this.root_colors[n] = JSROOT.Painter.root_colors[n];
-            JSROOT.Painter.extendRootColors(this.root_colors, obj);
-         }
+         // copy existing colors and extend with new values
+         if (this.options && this.options.LocalColors)
+            this.root_colors = JSROOT.Painter.extendRootColors(null, obj);
          return true;
       }
 
@@ -3519,8 +3515,32 @@
             continue; // call next
          }
 
-         if (snap.fKind === JSROOT.WebSnapIds.kSpecial) { // specials like list of colors
-            this.CheckSpecial(snap.fSnapshot);
+         // list of colors
+         if (snap.fKind === JSROOT.WebSnapIds.kColors) {
+
+            var ListOfColors = [];
+            for (var n=0;n<snap.fSnapshot.fOper.length;++n) {
+               var name = snap.fSnapshot.fOper[n], p = name.indexOf(":");
+               ListOfColors[parseInt(name.substr(0,p))] = name.substr(p+1);
+            }
+
+            // set global list of colors
+            if (!this.options || this.options.GlobalColors)
+               JSROOT.Painter.adoptRootColors(ListOfColors);
+
+            // copy existing colors and extend with new values
+            if (this.options && this.options.LocalColors)
+               this.root_colors = JSROOT.Painter.extendRootColors(null, ListOfColors);
+
+            // set palette
+            if (snap.fSnapshot.fBuf && (!this.options || !this.options.IgnorePalette)) {
+               var palette = [];
+               for (var n=0;n<snap.fSnapshot.fBuf.length;++n)
+                  palette[n] = ListOfColors[Math.round(snap.fSnapshot.fBuf[n])];
+
+               this.CanvasPalette = new JSROOT.ColorPalette(palette);
+            }
+
             continue;
          }
 
