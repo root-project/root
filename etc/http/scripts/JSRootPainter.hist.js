@@ -6431,28 +6431,27 @@
    }
 
    THStackPainter.prototype.GetMinMax = function(iserr, pad) {
-      var res = { min : 0, max : 0 },
+      var res = { min: 0, max: 0 },
           stack = this.GetObject();
 
       if (this.nostack) {
          for (var i = 0; i < stack.fHists.arr.length; ++i) {
             var resh = this.GetHistMinMax(stack.fHists.arr[i], iserr);
-            if (i==0) res = resh; else {
-               if (resh.min < res.min) res.min = resh.min;
-               if (resh.max > res.max) res.max = resh.max;
+            if (i==0) {
+               res = resh;
+             } else {
+               res.min = Math.min(res.min, resh.min);
+               res.max = Math.max(res.max, resh.max);
             }
          }
-
-         if (stack.fMaximum != -1111)
-            res.max = stack.fMaximum;
-         else
-            res.max *= 1.05;
-
-         if (stack.fMinimum != -1111) res.min = stack.fMinimum;
       } else {
          res.min = this.GetHistMinMax(stack.fStack.arr[0], iserr).min;
-         res.max = this.GetHistMinMax(stack.fStack.arr[stack.fStack.arr.length-1], iserr).max * 1.05;
+         res.max = this.GetHistMinMax(stack.fStack.arr[stack.fStack.arr.length-1], iserr).max;
       }
+
+      if (stack.fMaximum != -1111) res.max = stack.fMaximum;
+      res.max *= 1.05;
+      if (stack.fMinimum != -1111) res.min = stack.fMinimum;
 
       if (pad) {
          if (pad.fLogy) {

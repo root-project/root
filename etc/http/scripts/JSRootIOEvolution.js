@@ -2712,6 +2712,30 @@
          }
       }
 
+      cs['TMaterial'] = function(buf,obj) {
+         var v = buf.last_read_version;
+         buf.ClassStreamer(obj, "TNamed");
+         obj.fNumber = buf.ntoi4();
+         obj.fA = buf.ntof();
+         obj.fZ = buf.ntof();
+         obj.fDensity = buf.ntof();
+         if (v>2) {
+            buf.ClassStreamer(obj, "TAttFill");
+            obj.fRadLength = buf.ntof();
+            obj.fInterLength = buf.ntof();
+         } else {
+            obj.fRadLength = obj.fInterLength = 0;
+         }
+      }
+
+      cs['TMixture'] = function(buf,obj) {
+         buf.ClassStreamer(obj, "TMaterial");
+         obj.fNmixt = buf.ntoi4();
+         obj.fAmixt = buf.ReadFastArray(buf.ntoi4(), JSROOT.IO.kFloat);
+         obj.fZmixt = buf.ReadFastArray(buf.ntoi4(), JSROOT.IO.kFloat);
+         obj.fWmixt = buf.ReadFastArray(buf.ntoi4(), JSROOT.IO.kFloat);
+      }
+
       // these are direct streamers - not follow version/checksum logic
 
       var ds = JSROOT.IO.DirectStreamers;
