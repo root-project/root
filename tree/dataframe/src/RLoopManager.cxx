@@ -408,7 +408,7 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetG
 {
    std::string name;
    if (fDataSource) {
-      name = fDataSource->GetDataSourceType();
+      name = fDataSource->GetLabel();
    } else if (fTree) {
       name = fTree->GetName();
    } else {

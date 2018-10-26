@@ -42,7 +42,7 @@ public:
    bool SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
    void Initialise();
-   std::string GetDataSourceType();
+   std::string GetLabel();
 };
 
 RInterface<RDFDetail::RLoopManager, RTrivialDS> MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries = false);
