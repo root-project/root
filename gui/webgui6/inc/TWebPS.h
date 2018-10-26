@@ -27,7 +27,6 @@ class TWebPS : public TVirtualPS {
 
 public:
    TWebPS();
-   virtual ~TWebPS() = default;
 
    Bool_t IsEmptyPainting() const { return fPainting ? fPainting->IsEmpty() : kTRUE; }
    TWebPainting *GetPainting() { return fPainting.get(); }
@@ -57,6 +56,13 @@ public:
    void DrawPS(Int_t n, Double_t *xw, Double_t *yw) override;
    void Text(Double_t x, Double_t y, const char *str) override;
    void Text(Double_t x, Double_t y, const wchar_t *str) override;
+
+private:
+   //Let's make this clear:
+   TWebPS(const TWebPS &rhs) = delete;
+   TWebPS(TWebPS && rhs) = delete;
+   TWebPS & operator = (const TWebPS &rhs) = delete;
+   TWebPS & operator = (TWebPS && rhs) = delete;
 
    ClassDefOverride(TWebPS, 0) // Redirection of VirtualPS to Web painter
 };
