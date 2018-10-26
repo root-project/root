@@ -638,6 +638,11 @@
    };
 
    /** @memberOf JSROOT.Math */
+   JSROOT.Math.BreitWigner = function(x, mean, gamma) {
+      return gamma/((x-mean)*(x-mean) + gamma*gamma/4) / 2 / Math.PI;
+   }
+
+   /** @memberOf JSROOT.Math */
    JSROOT.Math.gaus = function(f, x, i) {
       // function used when gaus(0) used in the TFormula
       return f.GetParValue(i+0) * Math.exp(-0.5 * Math.pow((x-f.GetParValue(i+1)) / f.GetParValue(i+2), 2));

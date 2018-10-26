@@ -3275,112 +3275,108 @@
          return true;
       }
 
+      painter.ReadAttr = function(str, names) {
+         var lastp = str.indexOf(":"), obj = { _typename: "any" };
+         for (var k=0;k<names.length;++k) {
+            var p = str.indexOf(":", lastp+1);
+            obj[names[k]] = parseInt(str.substr(lastp+1, (p>lastp) ? p-lastp-1 : undefined));
+            lastp = p;
+         }
+         return obj;
+      }
+
       painter.Redraw = function() {
-         var obj = this.GetObject(), attr = null, indx = 0,
-             lineatt = null, fillatt = null, markeratt = null;
+         var obj = this.GetObject(), indx = 0, isndc = false, attr = {}, lastpath = null, lastpathd = "";
          if (!obj || !obj.fOper) return;
 
          this.CreateG();
 
-         for (var k=0;k<obj.fOper.arr.length;++k) {
-            var oper = obj.fOper.opt[k];
-            switch (oper) {
-               case "attr":
-                  attr = obj.fOper.arr[k];
-                  lineatt = fillatt = markeratt = null;
+         for (var k=0;k<obj.fOper.length;++k) {
+            var oper = obj.fOper[k];
+            switch (oper.substr(0, 5)) {
+               case "lattr":
+                  this.createAttLine({ attr: this.ReadAttr(oper, ["fLineColor", "fLineStyle", "fLineWidth"]), force: true });
+                  if (lastpath) lastpath.attr("d", lastpathd);
+                  lastpath = null; lastpathd = "";
+                  continue;
+               case "fattr":
+                  this.createAttFill({ attr: this.ReadAttr(oper, ["fFillColor", "fFillStyle"]), force: true });
+                  if (lastpath) lastpath.attr("d", lastpathd);
+                  lastpath = null; lastpathd = "";
+                  continue;
+               case "mattr":
+                  this.createAttMarker({ attr: this.ReadAttr(oper, ["fMarkerColor", "fMarkerStyle", "fMarkerSize"]), force: true })
+                  if (lastpath) lastpath.attr("d", lastpathd);
+                  lastpath = null; lastpathd = "";
+                  continue;
+               case "tattr":
+                  attr = this.ReadAttr(oper, ["fTextColor", "fTextFont", "fTextSize", "fTextAlign", "fTextAngle" ]);
+                  if (attr.fTextSize < 0) attr.fTextSize *= -0.001;
+                  if (lastpath) lastpath.attr("d", lastpathd);
+                  lastpath = null; lastpathd = "";
                   continue;
                case "rect":
-               case "box": {
-                  var x1 = this.AxisToSvg("x", obj.fBuf[indx++]),
-                      y1 = this.AxisToSvg("y", obj.fBuf[indx++]),
-                      x2 = this.AxisToSvg("x", obj.fBuf[indx++]),
-                      y2 = this.AxisToSvg("y", obj.fBuf[indx++]);
-
-                  var rect = this.draw_g
-                     .append("svg:rect")
-                     .attr("x", Math.min(x1,x2))
-                     .attr("y", Math.min(y1,y2))
-                     .attr("width", Math.abs(x2-x1))
-                     .attr("height", Math.abs(y1-y2));
-
-                  if (oper === "box") {
-                     if (!fillatt) fillatt = this.createAttFill(attr);
-                     rect.call(fillatt.func).style('stroke','none');
-                  } else {
-                     if (!lineatt) lineatt = new JSROOT.TAttLineHandler(attr);
-                     rect.call(lineatt.func).style('fill','none');
-                  }
-
-                  continue;
-               }
-               case "line":
-               case "linendc": {
-
-                  var isndc = (oper==="linendc"),
-                      x1 = this.AxisToSvg("x", obj.fBuf[indx++], isndc),
+               case "bbox": {
+                  var x1 = this.AxisToSvg("x", obj.fBuf[indx++], isndc),
                       y1 = this.AxisToSvg("y", obj.fBuf[indx++], isndc),
                       x2 = this.AxisToSvg("x", obj.fBuf[indx++], isndc),
                       y2 = this.AxisToSvg("y", obj.fBuf[indx++], isndc);
 
-                  if (!lineatt) lineatt = new JSROOT.TAttLineHandler(attr);
+                  lastpathd += "M"+x1+","+y1+"h"+(x2-x1)+"v"+(y2-y1)+"h"+(x1-x2)+"z";
 
-                  this.draw_g
-                      .append("svg:line").attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2)
-                      .call(lineatt.func);
+                  if (lastpath) {
+                  } else if (oper == "bbox") {
+                     lastpath = this.draw_g.append("svg:path").call(this.fillatt.func).style('stroke','none');
+                  } else {
+                     lastpath = this.draw_g.append("svg:path").call(this.lineatt.func).style('fill','none');
+                  }
 
                   continue;
                }
-               case "polyline":
-               case "polylinendc":
-               case "fillarea":
-               case "fillareandc": {
-
-                  var npoints = parseInt(obj.fOper.arr[k].fString),
-                      cmd = "", isndc = (oper.indexOf("ndc") > 0);
+               case "pline":
+               case "pfill": {
+                  var npoints = parseInt(oper.substr(6)), cmd = "",
+                      dofill = (oper.substr(0, 5) == "pfill");
 
                   for (var n=0;n<npoints;++n)
                      cmd += ((n>0) ? "L" : "M") +
                             this.AxisToSvg("x", obj.fBuf[indx++], isndc) + "," +
                             this.AxisToSvg("y", obj.fBuf[indx++], isndc);
 
-                  if (oper.indexOf("fillarea") == 0) cmd+="Z";
+                  if (dofill) cmd+="Z";
+                  lastpathd += cmd;
 
-                  var path = this.draw_g.append("svg:path").attr("d", cmd);
-
-                  if (oper.indexOf("fillarea") == 0) {
-                     if (!fillatt) fillatt = this.createAttFill(attr);
-                     path.call(fillatt.func).attr('stroke','none');
+                  if (lastpath) {
+                  } else if (dofill) {
+                     lastpath = this.draw_g.append("svg:path").call(this.fillatt.func).attr('stroke','none');
                   } else {
-                     if (!lineatt) lineatt = new JSROOT.TAttLineHandler(attr);
-                     path.call(lineatt.func).attr('fill', 'none');
+                     lastpath = this.draw_g.append("svg:path").call(this.lineatt.func).attr('fill', 'none');
                   }
 
                   continue;
                }
 
-               case "polymarker": {
-                  var npoints = parseInt(obj.fOper.arr[k].fString), cmd = "";
+               case "pmark": {
+                  var npoints = parseInt(oper.substr(6)), cmd = "";
 
-                  if (!markeratt) markeratt = new JSROOT.TAttMarkerHandler(attr);
-
-                  markeratt.reset_pos();
+                  this.markeratt.reset_pos();
                   for (var n=0;n<npoints;++n)
-                     cmd += markeratt.create(this.AxisToSvg("x", obj.fBuf[indx++], false),
-                                             this.AxisToSvg("y", obj.fBuf[indx++], false));
+                     cmd += this.markeratt.create(this.AxisToSvg("x", obj.fBuf[indx++], false),
+                                                  this.AxisToSvg("y", obj.fBuf[indx++], false));
 
-                  if (cmd)
-                     this.draw_g.append("svg:path").attr("d", cmd).call(markeratt.func);
+                  lastpathd += cmd;
+
+                  if (!lastpath)
+                     lastpath = this.draw_g.append("svg:path").call(this.markeratt.func);
 
                   continue;
                }
 
-               case "text":
-               case "textndc": {
-                  var isndc = (oper==="textndc"),
-                      xx = this.AxisToSvg("x", obj.fBuf[indx++], isndc),
+               case "text": {
+                  var xx = this.AxisToSvg("x", obj.fBuf[indx++], isndc),
                       yy = this.AxisToSvg("y", obj.fBuf[indx++], isndc);
 
-                  if (attr) {
+                  if (attr.fTextSize) {
                      var height = (attr.fTextSize > 1) ? attr.fTextSize : this.pad_height() * attr.fTextSize;
 
                      var group = this.draw_g.append("svg:g");
@@ -3400,10 +3396,12 @@
                }
 
                default:
-                  console.log('unsupported operation', oper);
+                  console.log('unsupported operation ' + oper);
             }
-
          }
+
+         if (lastpath) lastpath.attr("d", lastpathd);
+
       }
 
       painter.SetDivId(divid);
