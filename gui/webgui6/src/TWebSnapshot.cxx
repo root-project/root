@@ -23,11 +23,11 @@ TWebSnapshot::~TWebSnapshot()
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// SetUse pointer to assign object id - TString::Hash
 
-void TWebSnapshot::SetSnapshot(Int_t kind, TObject *shot, Bool_t owner)
+void TWebSnapshot::SetSnapshot(Int_t kind, TObject *snapshot, Bool_t owner)
 {
    if (fSnapshot && fOwner) delete fSnapshot;
    fKind = kind;
-   fSnapshot = shot;
+   fSnapshot = snapshot;
    fOwner = owner;
 }
 
@@ -37,17 +37,5 @@ void TWebSnapshot::SetSnapshot(Int_t kind, TObject *shot, Bool_t owner)
 void TWebSnapshot::SetObjectIDAsPtr(void *ptr)
 {
    UInt_t hash = TString::Hash(&ptr, sizeof(ptr));
-   SetObjectID(TString::UItoa(hash,10));
+   SetObjectID(std::to_string(hash));
 }
-
-
-///////////////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
-TPadWebSnapshot::~TPadWebSnapshot()
-{
-   for (auto &&item: fPrimitives)
-      delete item;
-   fPrimitives.clear();
-}
-

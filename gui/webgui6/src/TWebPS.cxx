@@ -14,7 +14,7 @@
 
 TWebPS::TWebPS()
 {
-   fPainting = std::make_unique<TWebPainting>();
+   CreatePainting();
 }
 
 void TWebPS::CreatePainting()
