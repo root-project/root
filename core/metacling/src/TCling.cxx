@@ -1240,6 +1240,11 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       }
    }
 
+   // FIXME: This only will enable frontend timing reports.
+   EnvOpt = llvm::sys::Process::GetEnv("ROOT_CLING_TIMING");
+   if (EnvOpt.hasValue())
+     clingArgsStorage.push_back("-ftime-report");
+
    std::vector<const char*> interpArgs;
    for (std::vector<std::string>::const_iterator iArg = clingArgsStorage.begin(),
            eArg = clingArgsStorage.end(); iArg != eArg; ++iArg)

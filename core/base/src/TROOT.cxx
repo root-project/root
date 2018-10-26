@@ -1019,11 +1019,16 @@ TROOT::~TROOT()
       // TODO: Should we do more cleanup here than just call delete?
       // Segfaults rootcling in some cases, debug and uncomment
       // delete fInterpreter;
-#endif
-
-#ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fCleanups);
 #endif
+
+      // llvm::TimingGroup used for measuring the timing relies the destructors.
+      // In order to make use of this feature we have to call the destructor of
+      // TCling which will shut down clang, cling and llvm.
+      // gSystem->Getenv is not available anymore.
+      if (::getenv("ROOT_CLING_TIMING"))
+         delete fInterpreter;
+
 
       // Prints memory stats
       TStorage::PrintStatistics();
