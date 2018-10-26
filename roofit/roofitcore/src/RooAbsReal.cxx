@@ -4306,7 +4306,9 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  c
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Internal back-end function to steer chi2 fits
+/// Argument-list version of RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
+/// const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
+/// const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 
 RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList)
 {
@@ -4329,7 +4331,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdL
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a chi-2 from a histogram and this function.
+/// Create a \f$ \chi^2 \f$ variable from a histogram and this function.
 ///
 /// The following named arguments are supported
 ///
@@ -4337,7 +4339,10 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdL
 ///  |-|-----------------------------------------
 ///  | `DataError(RooAbsData::ErrorType)`  | Choose between Poisson errors and Sum-of-weights errors
 ///  | `NumCPU(Int_t)`                     | Activate parallel processing feature on N processes
-///  | `Range()`                           | Calculate Chi2 only in selected region
+///  | `Range()`                           | Calculate \f$ \chi^2 \f$ only in selected region
+///
+/// \param data Histogram with data
+/// \return \f$ \chi^2 \f$ variable
 
 RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
 				   const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
@@ -4352,7 +4357,10 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  co
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Internal back-end function to create a chi2
+/// \copydoc RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
+/// const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
+/// const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+/// \param cmdList List with RooCmdArg() from the table
 
 RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList)
 {
@@ -4378,7 +4386,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdLi
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a 2-D \f$ \chi^2 \f$ from a series of x and y values stored in a dataset.
+/// Perform a 2-D \f$ \chi^2 \f$ fit using a series of x and y values stored in the dataset `xydata`.
 /// The y values can either be the event weights, or can be another column designated
 /// by the YVar() argument. The y value must have errors defined for the \f$ \chi^2 \f$ to
 /// be well defined.
@@ -4426,7 +4434,9 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Internal back-end function to steer chi2 fits
+/// Argument-list version of RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  const RooCmdArg& arg2,
+/// const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
+/// const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 
 RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList)
 {
@@ -4449,7 +4459,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmd
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a \f$ \chi^2 \f$ from a series of x and y value stored in a dataset.
+/// Create a \f$ \chi^2 \f$ from a series of x and y values stored in a dataset.
 /// The y values can either be the event weights (default), or can be another column designated
 /// by the YVar() argument. The y value must have errors defined for the \f$ \chi^2 \f$ to
 /// be well defined.
@@ -4477,7 +4487,9 @@ RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  con
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Internal back-end function to create a chi^2 from a function and a dataset
+/// Argument-list version of RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
+/// const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
+/// const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 
 RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdList)
 {
