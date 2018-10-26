@@ -34,7 +34,7 @@ public:
    bool SetEntry(unsigned int, ULong64_t) final { return true; }
    void Initialise() final { fCounter = 0; }
 
-   std::string GetDataSourceType() final { return "Streaming"; }
+   std::string GetLabel() final { return "Streaming"; }
 
 protected:
    std::vector<void *> GetColumnReadersImpl(std::string_view name, const std::type_info &t) final

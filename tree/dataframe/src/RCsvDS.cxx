@@ -446,7 +446,7 @@ void RCsvDS::SetNSlots(unsigned int nSlots)
    fBoolEvtValues.resize(nColumns, std::deque<bool>(fNSlots));
 }
 
-std::string RCsvDS::GetDataSourceType()
+std::string RCsvDS::GetLabel()
 {
    return "RCsv";
 }

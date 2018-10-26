@@ -84,7 +84,7 @@ void RTrivialDS::Initialise()
    fEntryRanges.back().second += fSize % fNSlots;
 }
 
-std::string RTrivialDS::GetDataSourceType()
+std::string RTrivialDS::GetLabel()
 {
    return "TrivialDS";
 }
