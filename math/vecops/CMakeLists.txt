@@ -2,9 +2,9 @@
 # CMakeLists.txt file for building ROOT math/vecops package
 ############################################################################
 
-if(vdt)
-  # needed for rootcling, to be removed
-  include_directories(${VDT_INCLUDE_DIRS})
+if(builtin_vdt)
+  link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+  include_directories(${HEADER_OUTPUT_PATH})
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
@@ -16,12 +16,17 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
     src/RVec.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
+    -I${VDT_INCLUDE_DIR}
   LIBRARIES
     Core
 )
 
-if(vdt)
-  target_link_libraries(ROOTVecOps PUBLIC Vdt::Vdt)
+if(builtin_vdt)
+  target_link_libraries(ROOTVecOps PUBLIC $<INSTALL_INTERFACE:vdt>)
+  target_include_directories(ROOTVecOps PUBLIC $<INSTALL_INTERFACE:include>)
+elseif(vdt)
+  target_link_libraries(ROOTVecOps PUBLIC ${VDT_LIBRARIES})
+  target_include_directories(ROOTVecOps PUBLIC ${VDT_INCLUDE_DIRS})
 endif()
 
 target_compile_options(ROOTVecOps PRIVATE -O3 -ffast-math)
