@@ -204,7 +204,11 @@ public:
    // clang-format on
    virtual void Finalise() {}
 
-   virtual std::string GetDataSourceType() = 0;
+   /// \brief Return a string representation of the datasource type.
+   /// The returned string will be used by ROOT::RDF::SaveGraph() to represent
+   /// the datasource in the visualization of the computation graph.
+   /// Concrete datasources can override the default implementation.
+   virtual std::string GetDataSourceType() { return "custom datasource"; }
 
 protected:
    /// type-erased vector of pointers to pointers to column values - one per slot
