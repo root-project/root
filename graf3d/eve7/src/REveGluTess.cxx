@@ -55,10 +55,10 @@ TriangleCollector::TriangleCollector() :
    fTess = gluNewTess();
    if (!fTess) throw std::bad_alloc();
 
-   gluTessCallback(fTess, (GLenum)GLU_TESS_BEGIN_DATA,   (tessfuncptr_t) tess_begin);
-   gluTessCallback(fTess, (GLenum)GLU_TESS_VERTEX_DATA,  (tessfuncptr_t) tess_vertex);
-   gluTessCallback(fTess, (GLenum)GLU_TESS_COMBINE_DATA, (tessfuncptr_t) tess_combine);
-   gluTessCallback(fTess, (GLenum)GLU_TESS_END_DATA,     (tessfuncptr_t) tess_end);
+   gluTessCallback(fTess, (GLenum)GLU_TESS_BEGIN_DATA,   (_GLUfuncptr) tess_begin);
+   gluTessCallback(fTess, (GLenum)GLU_TESS_VERTEX_DATA,  (_GLUfuncptr) tess_vertex);
+   gluTessCallback(fTess, (GLenum)GLU_TESS_COMBINE_DATA, (_GLUfuncptr) tess_combine);
+   gluTessCallback(fTess, (GLenum)GLU_TESS_END_DATA,     (_GLUfuncptr) tess_end);
 }
 
 TriangleCollector::~TriangleCollector()
