@@ -8,9 +8,10 @@
 
 #include <string>
 
-#include <unistd.h>
+#ifndef WIN32
 #include <sys/types.h>
 #include <sys/mman.h>
+#endif
 
 #include "TFile.h"
 #include "TError.h"
