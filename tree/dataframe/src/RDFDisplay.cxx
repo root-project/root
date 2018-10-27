@@ -6,47 +6,76 @@
 namespace ROOT {
 namespace Internal {
 namespace RDF {
+
+
+/**
+ * \class ROOT::Internal::RDF::RDisplayElement
+ * \ingroup dataframe
+ * Helper class to let Display print compact tabular representations of the events
+ *
+ * This class is internal and not meant to be explicitly instantiated by the user.
+ * It is needed during printing to understand if a value can be
+ * skipped or must be printed. Each RDisplayElement represents a cell.
+ */
+
+////////////////////////////////////////////////////////////////////////////
+/// Constructor
+/// \param[in] representation The representation string
 RDisplayElement::RDisplayElement(const std::string &representation) : fRepresentation(representation)
 {
    SetPrint();
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Constructor assuming an empty representation to be printed
 RDisplayElement::RDisplayElement()
 {
    SetPrint();
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Flag this cell as to be printed
 void RDisplayElement::SetPrint()
 {
    fPrintingAction = PrintingAction::ToBePrinted;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Flag this cell as to be skipped
 void RDisplayElement::SetIgnore()
 {
    fPrintingAction = PrintingAction::ToBeIgnored;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Flag this cell to be replaced by "..."
 void RDisplayElement::SetDots()
 {
    fPrintingAction = PrintingAction::ToBeDotted;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Return if the cell has to be printed
 bool RDisplayElement::IsPrint() const
 {
    return fPrintingAction == PrintingAction::ToBePrinted;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Return if the cell has to be skipped
 bool RDisplayElement::IsIgnore() const
 {
    return fPrintingAction == PrintingAction::ToBeIgnored;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Return if the cell has to be replaced by "..."
 bool RDisplayElement::IsDot() const
 {
    return fPrintingAction == PrintingAction::ToBeDotted;
 }
 
-std::string RDisplayElement::GetRepresentation() const
+const std::string &RDisplayElement::GetRepresentation() const
 {
    return fRepresentation;
 }
@@ -137,7 +166,7 @@ void RDisplay::CallInterpreter(const std::string &code)
    }
 }
 
-RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, const int &entries)
+RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries)
    : fTypes(types), fWidths(columnNames.size(), 0), fRepresentations(columnNames.size()),
      fCollectionsRepresentations(columnNames.size()), fNColumns(columnNames.size()), fEntries(entries)
 {
