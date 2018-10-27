@@ -9,6 +9,11 @@
 #ifndef ROOT_TFileBufferRead
 #define ROOT_TFileBufferRead
 
+#include <string>
+#include <vector>
+
+#include "RtypesCore.h"
+
 /**
  * Add a buffering layer in front of a TFile.
  *
