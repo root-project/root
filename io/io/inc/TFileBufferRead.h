@@ -1,3 +1,11 @@
+/*************************************************************************
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TFileBufferRead
 #define ROOT_TFileBufferRead
 
@@ -21,47 +29,26 @@ class TFile;
 
 class TFileBufferRead {
 public:
-  TFileBufferRead(TFile *file);
-  ~TFileBufferRead();
+   TFileBufferRead(TFile *file);
+   ~TFileBufferRead();
 
-  /**
-   * Positional read of the file, using the underlying buffer file.
-   *
-   * If the buffer file is invalid, then this reads from the underlying file.
-   *
-   * On error, -1 is returned and errno is set appropriately.
-   */
-  ssize_t pread(char *into, size_t n, off_t pos);
+   Long_t Pread(char *into, UInt_t n, Long64_t pos);
 
-  /**
-   * Return the number of file chunks downloaded to the local buffer.
-   */
-  size_t GetCount() const {return fCount;}
+   ///
+   // Return the number of file chunks downloaded to the local buffer.
+   UInt_t GetCount() const {return fCount;}
 
 private:
-  /**
-   * Create a temporary file on disk and unlink it; use it as a buffer
-   * for the source TFile.
-   *
-   * - tmpdir: Directory where the temporary file should be created.
-   *
-   * Returns false on failure.
-   */
-  bool tmpfile(const std::string &tmpdir="");
-  /**
-   * Make sure the specified byte range is cached in the local buffer.
-   *
-   * Returns false on failure.
-   */
-  bool cache(off_t start, off_t end);
+   Bool_t TmpFile(const std::string &tmpdir="");
+   Bool_t Cache(Long64_t start, Long64_t end);
 
-  std::vector<char> fPresent;  // A mask of all the currently present file chunks in the buffer.
-  TFile  *fFile {nullptr};     // A copy of the TFile we are buffering.
-  ssize_t fSize = -1;          // Size of the source TFile.
-  size_t  fCount = 0;          // Number of file chunks we have buffered.
-  ssize_t fTotal = -1;         // Total number of chunks in source TFile.
-  int     fFd {-1};            // File descriptor pointing to the local file.
-  bool    fInvalid {true};     // Set to true if this buffer is in an invalid state
+   std::vector<char> fPresent;       // A mask of all the currently present file chunks in the buffer.
+   TFile            *fFile{nullptr}; // A copy of the TFile we are buffering.
+   Long64_t          fSize{-1};      // Size of the source TFile.
+   UInt_t            fCount{0};      // Number of file chunks we have buffered.
+   Int_t             fTotal{-1};     // Total number of chunks in source TFile.
+   Int_t             fFd{-1};        // File descriptor pointing to the local file.
+   Bool_t            fInvalid{true}; // Set to true if this buffer is in an invalid state
 };
 
 #endif  // ROOT_TFileBufferRead

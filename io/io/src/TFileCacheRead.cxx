@@ -1,8 +1,5 @@
-// @(#)root/io:$Id$
-// Author: Rene Brun   18/05/2006
-
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -38,7 +35,7 @@ ClassImp(TFileCacheRead);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor.
 
-TFileCacheRead::TFileCacheRead() : TObject()
+TFileCacheRead::TFileCacheRead() : TObject(), fEnableBuffering(false)
 {
    fBufferSizeMin = 0;
    fBufferSize  = 0;
@@ -345,7 +342,7 @@ void TFileCacheRead::Print(Option_t *option) const
      printf("Prefetching Wait Time..............: %f seconds\n", fPrefetch->GetWaitTime() / 1e+6);
    }
    if (fBufferFile) {
-     printf("Buffer file chunks ................: %lu blocks\n", fBufferFile->GetCount());
+     printf("Buffer file chunks ................: %u blocks\n", fBufferFile->GetCount());
    }
 
    if (!opt.Contains("a")) return;
@@ -392,7 +389,7 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
    if (fEnablePrefetching) {
       return ReadBufferExtPrefetch(buf, pos, len, loc);
    } else if (fBufferFile) {
-      ssize_t retval = fBufferFile->pread(buf, len, pos);
+      auto retval = fBufferFile->Pread(buf, len, pos);
       return (retval == -1) ? retval : (len == retval);
    } else {
       return ReadBufferExtNormal(buf, pos, len, loc);
@@ -788,7 +785,7 @@ void TFileCacheRead::SetEnableBufferRead(bool setBuffer) {
 ///
 /// If local disk buffering is disabled, this returns 0.
 ///
-ssize_t TFileCacheRead::GetBufferedBlocks() const {
+Long_t TFileCacheRead::GetBufferedBlocks() const {
    return fBufferFile ? fBufferFile->GetCount() : 0;
 }
 
