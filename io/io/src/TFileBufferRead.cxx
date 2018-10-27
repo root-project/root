@@ -14,6 +14,7 @@
 
 #include "TFile.h"
 #include "TError.h"
+#include "TSystem.h"
 
 #include "TFileBufferRead.h"
 
@@ -29,9 +30,12 @@ TFileBufferRead::TFileBufferRead (TFile *file) :
    fTotal = (fSize + CHUNK_SIZE - 1) / CHUNK_SIZE;
    fPresent.resize(fTotal, 0);
 
-   if (tmpfile()) {
+   if (TmpFile()) {
       fInvalid = false;
    }
+#ifdef WIN32
+   fInvalid = true;
+#endif
 }
 
 
@@ -48,32 +52,22 @@ TFileBufferRead::~TFileBufferRead() {
 // Returns false on failure.
 //
 Bool_t TFileBufferRead::TmpFile(const std::string &tmpdir) {
-   std::string pattern(tmpdir);
-   if (pattern.empty()) {
-      if (char *p = getenv("TMPDIR")) {
-         pattern = p;
-      }
-   }
-   if (pattern.empty()) {
-      pattern = "/tmp";
-   }
-   pattern += "/root-shadow-XXXXXX";
-
-   std::vector<char> temp(pattern.c_str(), pattern.c_str()+pattern.size()+1);
-   int fd = mkstemp(&temp[0]);
-   if (fd == -1) {
+   TString base = "root-shadow-";
+   FILE *fp = gSystem->TempFileName(base, tmpdir.empty() ? nullptr : tmpdir.c_str());
+   if (!fp) {
       Warning("TFileBufferRead", "Cannot create temporary file %s: %s (errno=%d)",
-                                 pattern.c_str(), strerror(errno), errno);
+                                 base.Data(), strerror(errno), errno);
       return false;
    }
-   if (-1 == unlink(&temp[0])) {
+   int fd = fileno(fp);
+   if (-1 == unlink(base.Data())) {
       Warning("TFileBufferRead", "Cannot unlink temporary file %s: %s (errno=%d)",
-                                 pattern.c_str(), strerror(errno), errno);
+                                 base.Data(), strerror(errno), errno);
       return false;
    }
    if (-1 == ftruncate(fd, fSize)) {
       Warning("TFileBufferRead", "Cannot resize temporary file %s: %s (errno=%d)",
-                                 pattern.c_str(), strerror(errno), errno);
+                                 base.Data(), strerror(errno), errno);
       // We ignore this error - it shouldn't be fatal.
    }
    fFd = fd;
@@ -121,6 +115,10 @@ Long_t TFileBufferRead::Pread(char *into, UInt_t n, Long64_t pos) {
 // Returns false on failure.
 //
 Bool_t TFileBufferRead::Cache(Long64_t start, Long64_t end) {
+#ifdef WIN32
+   return false;
+#else
+   if (fInvalid) return false;
    start = (start / CHUNK_SIZE) * CHUNK_SIZE;
    end = std::min(end, fSize);
 
@@ -144,13 +142,13 @@ Bool_t TFileBufferRead::Cache(Long64_t start, Long64_t end) {
          bool failed = fFile->ReadBuffer(static_cast<char *>(window), start, len);
          fFile->SetCacheRead(origCache, nullptr, TFile::kDoNotDisconnect);
 
+         munmap(window, len);
+
          if (failed) {
             Warning("TFileBufferRead", "Failed to read into the buffer file.");
             fInvalid = true;
             return false;
          }
-
-         munmap(window, len);
 
          fPresent[index] = 1;
          ++fCount;
@@ -162,4 +160,5 @@ Bool_t TFileBufferRead::Cache(Long64_t start, Long64_t end) {
       ++index;
    }
    return true;
+#endif
 }

@@ -88,7 +88,7 @@ TFileCacheRead::TFileCacheRead() : TObject(), fEnableBuffering(false)
 /// Creates a TFileCacheRead data structure.
 
 TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree)
-           : TObject()
+           : TObject(), fEnableBuffering(false)
 {
    if (buffersize <=10000) fBufferSize = 100000;
    else fBufferSize = buffersize;
