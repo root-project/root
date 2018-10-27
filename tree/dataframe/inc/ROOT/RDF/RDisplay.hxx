@@ -22,7 +22,10 @@
 namespace ROOT {
 namespace Internal {
 namespace RDF {
-std::string PrettyPrintAddr(const void *const addr); // Fw declaration
+
+template<typename T>
+class DisplayHelper;
+std::string PrettyPrintAddr(const void *const addr);
 
 class RDisplayElement {
 private:
@@ -58,6 +61,8 @@ namespace RDF {
  * In order to apply proper formatting the content is buffered in memory as strings.
  */
 class RDisplay {
+   template<typename T>
+   friend class ROOT::Internal::RDF::DisplayHelper;
 private:
    using VecStr_t = std::vector<std::string>;
    using DElement_t = ROOT::Internal::RDF::RDisplayElement;
@@ -152,14 +157,6 @@ private:
    /// Get the number of columns that do NOT fit in the characters limit
    size_t GetNColumnsToShorten() const;
 
-public:
-   ////////////////////////////////////////////////////////////////////////////
-   /// Creates an RDisplay to print the event values
-   /// \param[in] columnNames Columns to print
-   /// \param[in] types The type of each column
-   /// \param[in] entries How many events per column (row) must be processed.
-   RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries);
-
    ////////////////////////////////////////////////////////////////////////////
    /// Adds a row of events to the table
    template <typename... Columns>
@@ -188,6 +185,14 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// If the number of required rows has been parsed, returns false.
    bool HasNext() { return fEntries > 0; }
+
+public:
+   ////////////////////////////////////////////////////////////////////////////
+   /// Creates an RDisplay to print the event values
+   /// \param[in] columnNames Columns to print
+   /// \param[in] types The type of each column
+   /// \param[in] entries How many events per column (row) must be processed.
+   RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries);
 
    ////////////////////////////////////////////////////////////////////////////
    /// Prints the representation to the standard output
