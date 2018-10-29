@@ -35,6 +35,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
      inc/ROOT/REveVSD.hxx
      inc/ROOT/REveVSDStructs.hxx
   SOURCES
+     glu/memalloc.c
+     glu/dict.c
+     glu/geom.c
+     glu/mesh.c
+     glu/priorityq.c
+     glu/normal.c
+     glu/render.c
+     glu/sweep.c
+     glu/tess.c
+     glu/tessmono.c
      src/REveCompound.cxx
      src/REveCsgOps.cxx
      src/REveDataClasses.cxx

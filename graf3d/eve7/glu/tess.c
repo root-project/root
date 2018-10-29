@@ -54,6 +54,12 @@
 #define FALSE 0
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+/* A padding warning is just plain useless */
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+
 /*ARGSUSED*/ static void GLAPIENTRY noBegin( GLenum type ) {}
 /*ARGSUSED*/ static void GLAPIENTRY noEdgeFlag( GLboolean boundaryEdge ) {}
 /*ARGSUSED*/ static void GLAPIENTRY noVertex( void *data ) {}
@@ -78,6 +84,10 @@
 					       GLfloat weight[4],
 					       void **outData,
 					       void *polygonData ) {}
+
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 /* Half-edges are allocated in pairs (see mesh.c) */
 //typedef struct { GLUhalfEdge e, eSym; } EdgePair;
@@ -501,7 +511,7 @@ gluTessEndPolygon( GLUtesselator *tess )
 {
   GLUmesh *mesh;
 
-  if (setjmp(tess->env) != 0) { 
+  if (setjmp(tess->env) != 0) {
      /* come back here if out of memory */
      CALL_ERROR_OR_ERROR_DATA( GLU_OUT_OF_MEMORY );
      return;
@@ -617,10 +627,11 @@ gluBeginPolygon( GLUtesselator *tess )
 
 /*ARGSUSED*/
 void GLAPIENTRY
-gluNextContour( GLUtesselator *tess, GLenum type )
+gluNextContour( GLUtesselator *tess, GLenum type)
 {
   gluTessEndContour( tess );
   gluTessBeginContour( tess );
+  (void)type;
 }
 
 
