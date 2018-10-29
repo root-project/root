@@ -37,8 +37,12 @@ protected:
    const unsigned int fNSlots;      ///< number of thread slots used by this node, inherited from parent node.
    const bool fIsDataSourceColumn; ///< does the custom column refer to a data-source column? (or a user-define column?)
    std::vector<Long64_t> fLastCheckedEntry;
-
+   /// A unique ID that identifies this custom column.
+   /// Used e.g. to distinguish custom columns with the same name in different branches of the computation graph.
+   const unsigned int fID = GetNextID();
    RDFInternal::RBookedCustomColumns fCustomColumns;
+
+   static unsigned int GetNextID();
 
 public:
    RCustomColumnBase(RLoopManager *lm, std::string_view name, const unsigned int nSlots, const bool isDSColumn,
@@ -55,6 +59,8 @@ public:
    virtual void ClearValueReaders(unsigned int slot) = 0;
    bool IsDataSourceColumn() const { return fIsDataSourceColumn; }
    virtual void InitNode();
+   /// Return the unique identifier of this RCustomColumnBase.
+   unsigned int GetID() const { return fID; }
 };
 
 } // ns RDF
