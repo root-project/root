@@ -80,6 +80,8 @@ namespace Math {
   */
 
   inline double beta_pdf(double x, double a, double b) {
+    // Inlined to enable clad-auto-derivation for this function.
+
     if (x < 0 || x > 1.0) return 0;
     if (x == 0 ) {
       // need this work Windows
@@ -114,6 +116,7 @@ namespace Math {
   */
 
   inline double binomial_pdf(unsigned int k, double p, unsigned int n) {
+    // Inlined to enable clad-auto-derivation for this function.
     if (k > n)
       return 0.0;
 
@@ -141,7 +144,9 @@ namespace Math {
   */
 
   inline double negative_binomial_pdf(unsigned int k, double p, double n) {
-    // impelment in term of gamma function
+    // Inlined to enable clad-auto-derivation for this function.
+
+    // implement in term of gamma function
 
     if (n < 0)  return 0.0;
     if (p < 0 || p > 1.0) return 0.0;
@@ -168,6 +173,7 @@ namespace Math {
   */
 
   inline double breitwigner_pdf(double x, double gamma, double x0 = 0) {
+    // Inlined to enable clad-auto-derivation for this function.
     double gammahalf = gamma/2.0;
     return gammahalf/(M_PI * ((x-x0)*(x-x0) + gammahalf*gammahalf));
   }
@@ -217,6 +223,7 @@ namespace Math {
   */
 
   inline double chisquared_pdf(double x, double r, double x0 = 0) {
+    // Inlined to enable clad-auto-derivation for this function.
 
     if ((x-x0) <  0) {
       return 0.0;
@@ -245,6 +252,8 @@ namespace Math {
   */
 
   inline double crystalball_function(double x, double alpha, double n, double sigma, double mean = 0) {
+     // Inlined to enable clad-auto-derivation for this function.
+
      // evaluate the crystal ball function
      if (sigma < 0.)     return 0.;
      double z = (x - mean)/sigma;
@@ -267,14 +276,16 @@ namespace Math {
        pdf definition of the crystal_ball which is defined only for n > 1 otherwise integral is diverging
     */
   inline double crystalball_pdf(double x, double alpha, double n, double sigma, double mean = 0) {
-      // evaluation of the PDF ( is defined only for n >1)
-      if (sigma < 0.)     return 0.;
-      if ( n <= 1) return std::numeric_limits<double>::quiet_NaN();  // pdf is not normalized for n <=1
-      double abs_alpha = std::abs(alpha);
-      double C = n/abs_alpha * 1./(n-1.) * std::exp(-alpha*alpha/2.);
-      double D = std::sqrt(M_PI/2.)*(1.+ROOT::Math::erf(abs_alpha/std::sqrt(2.)));
-      double N = 1./(sigma*(C+D));
-      return N * crystalball_function(x,alpha,n,sigma,mean);
+    // Inlined to enable clad-auto-derivation for this function.
+
+    // evaluation of the PDF ( is defined only for n >1)
+    if (sigma < 0.)     return 0.;
+    if ( n <= 1) return std::numeric_limits<double>::quiet_NaN();  // pdf is not normalized for n <=1
+    double abs_alpha = std::abs(alpha);
+    double C = n/abs_alpha * 1./(n-1.) * std::exp(-alpha*alpha/2.);
+    double D = std::sqrt(M_PI/2.)*(1.+ROOT::Math::erf(abs_alpha/std::sqrt(2.)));
+    double N = 1./(sigma*(C+D));
+    return N * crystalball_function(x,alpha,n,sigma,mean);
    }
 
   /**
@@ -293,6 +304,8 @@ namespace Math {
   */
 
   inline double exponential_pdf(double x, double lambda, double x0 = 0) {
+    // Inlined to enable clad-auto-derivation for this function.
+
     if ((x-x0) < 0)
       return 0.0;
     return lambda * std::exp (-lambda * (x-x0));
@@ -317,6 +330,7 @@ namespace Math {
 
 
   inline double fdistribution_pdf(double x, double n, double m, double x0 = 0) {
+    // Inlined to enable clad-auto-derivation for this function.
 
     // function is defined only for both n and m > 0
     if (n < 0 || m < 0)
@@ -327,7 +341,7 @@ namespace Math {
     return std::exp((n/2) * std::log(n) + (m/2) * std::log(m) + ROOT::Math::lgamma((n+m)/2) - ROOT::Math::lgamma(n/2) - ROOT::Math::lgamma(m/2)
                     + (n/2 -1) * std::log(x-x0) - ((n+m)/2) * std::log(m +  n*(x-x0)) );
 
-   }
+  }
 
 
 
@@ -347,6 +361,7 @@ namespace Math {
   */
 
   inline double gamma_pdf(double x, double alpha, double theta, double x0 = 0) {
+    // Inlined to enable clad-auto-derivation for this function.
 
     if ((x-x0) < 0) {
       return 0.0;
@@ -458,6 +473,7 @@ namespace Math {
   */
 
   inline double lognormal_pdf(double x, double m, double s, double x0 = 0) {
+    // Inlined to enable clad-auto-derivation for this function.
     if ((x-x0) <= 0)
       return 0.0;
     double tmp = (std::log((x-x0)) - m)/s;
@@ -483,6 +499,7 @@ namespace Math {
   */
 
   inline double normal_pdf(double x, double sigma =1, double x0 = 0) {
+    // Inlined to enable clad-auto-derivation for this function.
 
     double tmp = (x-x0)/sigma;
     return (1.0/(std::sqrt(2 * M_PI) * std::fabs(sigma))) * std::exp(-tmp*tmp/2);
@@ -505,6 +522,7 @@ namespace Math {
   */
 
   inline double poisson_pdf(unsigned int n, double mu) {
+    // Inlined to enable clad-auto-derivation for this function.
 
     if (n > 0)
       return std::exp (n*std::log(mu) - ROOT::Math::lgamma(n+1) - mu);
@@ -535,11 +553,12 @@ namespace Math {
   */
 
   inline double tdistribution_pdf(double x, double r, double x0 = 0) {
+    // Inlined to enable clad-auto-derivation for this function.
 
     return (std::exp (ROOT::Math::lgamma((r + 1.0)/2.0) - ROOT::Math::lgamma(r/2.0)) / std::sqrt (M_PI * r))
     * std::pow ((1.0 + (x-x0)*(x-x0)/r), -(r + 1.0)/2.0);
 
-   }
+  }
 
 
 
@@ -559,6 +578,7 @@ namespace Math {
   */
 
   inline double uniform_pdf(double x, double a, double b, double x0 = 0) {
+    // Inlined to enable clad-auto-derivation for this function.
 
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! when a=b
 
