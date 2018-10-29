@@ -64,7 +64,7 @@ const std::type_info &TypeName2TypeID(const std::string &name);
 std::string TypeID2TypeName(const std::type_info &id);
 
 std::string ColumnName2ColumnTypeName(const std::string &colName, unsigned int namespaceID, TTree *, RDataSource *,
-                                      bool isCustomColumn, bool extraConversions = true);
+                                      bool isCustomColumn, bool extraConversions = true, unsigned int customColID = 0);
 
 char TypeName2ROOTTypeName(const std::string &b);
 
