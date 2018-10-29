@@ -551,6 +551,7 @@ D: XML interface package
 D: SQL interface extensions, ODBC driver
 D: THttpServer class
 D: JavaScript ROOT package (together with Bertrand Bellenot)
+D: RWebDisplay classes for web-based graphics and GUI
 
 N: Yan Liu
 E: liuyan@fnal.gov
@@ -671,7 +672,7 @@ D: many contributions to the Virtual Monte Carlo
 
 N: Alja Mrak-Tadel
 E: Alja.Mrak.Tadel@cern.ch
-D: Several contributions to GUI and GL
+D: Several contributions to GUI, GL and WebEVE
 
 N: Johannes Muelmenstaedt
 E: jmuelmen@socrates.Berkeley.EDU
@@ -909,7 +910,7 @@ D: development of class TGraphSmooth + many suggestions
 
 N: Matevz Tadel
 E: Matevz.Tadel@cern.ch
-D: Several contributions to the 3-d graphics and GL interface
+D: Several contributions to the 3-d graphics and GL interface, WebEVE
 
 N: Evgueni Tcherniaev
 E: Evgueni.Tcherniaev@cern.ch
