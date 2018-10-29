@@ -132,7 +132,7 @@ class RLoopManager : public RNodeBase {
    void CleanUpNodes();
    void CleanUpTask(unsigned int slot);
    void EvalChildrenCounts();
-   unsigned int GetNextID() const;
+   static unsigned int GetNextID();
 
 public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
