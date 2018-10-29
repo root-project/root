@@ -451,9 +451,9 @@ std::vector<std::string> ReplaceDots(const ColumnNames_t &colNames)
 
 // TODO comment well -- there is a lot going on in this function in terms of side-effects
 std::vector<std::string> ColumnTypesAsString(ColumnNames_t &colNames, ColumnNames_t &varNames,
-                                             const std::map<std::string, std::string> &aliasMap,
-                                             const ColumnNames_t &customColNames, TTree *tree, RDataSource *ds,
-                                             std::string &expr, unsigned int namespaceID)
+                                             const std::map<std::string, std::string> &aliasMap, TTree *tree,
+                                             RDataSource *ds, std::string &expr, unsigned int namespaceID,
+                                             const RDFInternal::RBookedCustomColumns &customCols)
 {
    std::vector<std::string> colTypes;
    colTypes.reserve(colNames.size());
@@ -494,9 +494,10 @@ std::vector<std::string> ColumnTypesAsString(ColumnNames_t &colNames, ColumnName
       const auto aliasMapIt = aliasMap.find(colName);
       const auto &realColName = aliasMapEnd == aliasMapIt ? colName : aliasMapIt->second;
       // The map is a const reference, so no operator[]
-      const auto isCustomCol =
-         std::find(customColNames.begin(), customColNames.end(), realColName) != customColNames.end();
-      const auto colTypeName = ColumnName2ColumnTypeName(realColName, namespaceID, tree, ds, isCustomCol);
+      const auto isCustomCol = customCols.HasName(realColName);
+      const auto customColID = isCustomCol ? customCols.GetColumns()[realColName]->GetID() : 0;
+      const auto colTypeName =
+         ColumnName2ColumnTypeName(realColName, namespaceID, tree, ds, isCustomCol, /*vector2rvec=*/true, customColID);
       colTypes.emplace_back(colTypeName);
       ++c, ++v;
    }
@@ -580,7 +581,7 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::strin
    auto varNames = ReplaceDots(usedBranches);
    auto dotlessExpr = std::string(expression);
    const auto usedColTypes =
-      ColumnTypesAsString(usedBranches, varNames, aliasMap, customCols.GetNames(), tree, ds, dotlessExpr, namespaceID);
+      ColumnTypesAsString(usedBranches, varNames, aliasMap, tree, ds, dotlessExpr, namespaceID, customCols);
 
    TRegexp re("[^a-zA-Z0-9_]return[^a-zA-Z0-9_]");
    Ssiz_t matchedLen;
@@ -634,7 +635,7 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    auto varNames = ReplaceDots(usedBranches);
    auto dotlessExpr = std::string(expression);
    const auto usedColTypes =
-      ColumnTypesAsString(usedBranches, varNames, aliasMap, customCols.GetNames(), tree, ds, dotlessExpr, namespaceID);
+      ColumnTypesAsString(usedBranches, varNames, aliasMap, tree, ds, dotlessExpr, namespaceID, customCols);
 
    TRegexp re("[^a-zA-Z0-9_]return[^a-zA-Z0-9_]");
    Ssiz_t matchedLen;
@@ -643,7 +644,8 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    TryToJitExpression(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
 
    const auto definelambda = BuildLambdaString(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
-   const auto lambdaName = "eval_" + std::string(name);
+   const auto customColID = std::to_string(jittedCustomColumn->GetID());
+   const auto lambdaName = "eval_" + std::string(name) + customColID;
    const auto ns = "__tdf" + std::to_string(namespaceID);
 
    auto customColumnsCopy = new RDFInternal::RBookedCustomColumns(customCols);
@@ -654,7 +656,7 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    // to let python users execute a Define cell multiple times
    const auto defineDeclaration =
       "namespace " + ns + " { auto " + lambdaName + " = " + definelambda + ";\n" + "using " + std::string(name) +
-      "_type = typename ROOT::TypeTraits::CallableTraits<decltype(" + lambdaName + " )>::ret_type;  }\n";
+      customColID + "_type = typename ROOT::TypeTraits::CallableTraits<decltype(" + lambdaName + " )>::ret_type;  }\n";
    gInterpreter->Declare(defineDeclaration.c_str());
 
    std::stringstream defineInvocation;
@@ -689,7 +691,9 @@ std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::t
    std::vector<std::string> columnTypeNames(nBranches);
    for (auto i = 0u; i < nBranches; ++i) {
       const auto isCustomCol = customCols.HasName(bl[i]);
-      const auto columnTypeName = ColumnName2ColumnTypeName(bl[i], namespaceID, tree, ds, isCustomCol);
+      const auto customColID = isCustomCol ? customCols.GetColumns()[bl[i]]->GetID() : 0;
+      const auto columnTypeName =
+         ColumnName2ColumnTypeName(bl[i], namespaceID, tree, ds, isCustomCol, /*vector2rvec=*/true, customColID);
       if (columnTypeName.empty()) {
          std::string exceptionText = "The type of column ";
          exceptionText += bl[i];

@@ -513,7 +513,9 @@ public:
 
       for (auto &c : validColumnNames) {
          const auto isCustom = std::find(customCols.begin(), customCols.end(), c) != customCols.end();
-         snapCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom, dontConvertVector)
+         const auto customColID = isCustom ? fCustomColumns.GetColumns()[c]->GetID() : 0;
+         snapCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom, dontConvertVector,
+                                                            customColID)
                   << ", ";
       };
       if (!columnList.empty())
@@ -628,7 +630,10 @@ public:
       const auto &customCols = fCustomColumns.GetNames();
       for (auto &c : columnList) {
          const auto isCustom = std::find(customCols.begin(), customCols.end(), c) != customCols.end();
-         cacheCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom) << ", ";
+         const auto customColID = isCustom ? fCustomColumns.GetColumns()[c]->GetID() : 0;
+         cacheCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom,
+                                                             /*vector2rvec=*/true, customColID)
+                   << ", ";
       };
       if (!columnList.empty())
          cacheCall.seekp(-2, cacheCall.cur);                         // remove the last ",
@@ -1517,8 +1522,9 @@ public:
                                                        convertVector2RVec);
       } else {
          // must convert the alias "__tdf::column_type" to a readable type
+         const auto colID = std::to_string(fCustomColumns.GetColumns()[std::string(column)]->GetID());
          const auto call = "ROOT::Internal::RDF::TypeID2TypeName(typeid(__tdf" + std::to_string(fLoopManager->GetID()) +
-                           "::" + std::string(column) + "_type))";
+                           "::" + std::string(column) + colID + "_type))";
          const auto callRes = gInterpreter->Calc(call.c_str());
          return *reinterpret_cast<std::string *>(callRes); // copy result to stack
       }
@@ -1767,7 +1773,7 @@ private:
 
       // Declare return type to the interpreter, for future use by jitted actions
       auto retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { using " + entryColName +
-                                "_type = ULong64_t; }";
+                                std::to_string(entryColumn->GetID()) + "_type = ULong64_t; }";
       gInterpreter->Declare(retTypeDeclaration.c_str());
 
       // Slot number column
@@ -1787,7 +1793,7 @@ private:
 
       // Declare return type to the interpreter, for future use by jitted actions
       retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { using " + slotColName +
-                           "_type = unsigned int; }";
+                           std::to_string(slotColumn->GetID()) + "_type = unsigned int; }";
       gInterpreter->Declare(retTypeDeclaration.c_str());
 
       fLoopManager->AddColumnAlias("tdfentry_", entryColName);
@@ -1945,6 +1951,9 @@ private:
       auto newColumns = CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<nColumns>(), ColTypes_t());
 
       using NewCol_t = RDFDetail::RCustomColumn<F, CustomColumnType>;
+      RDFInternal::RBookedCustomColumns newCols(newColumns);
+      auto newColumn = std::make_shared<NewCol_t>(fLoopManager, name, std::forward<F>(expression), validColumnNames,
+                                                  fLoopManager->GetNSlots(), newCols);
 
       // Declare return type to the interpreter, for future use by jitted actions
       auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
@@ -1962,16 +1971,11 @@ private:
             "class " + retTypeName + ";/* Did you forget to declare type " + retTypeName + " in the interpreter?*/";
       }
       const auto retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { " +
-                                      retTypeNameFwdDecl + " using " + std::string(name) + "_type = " + retTypeName +
-                                      "; }";
+                                      retTypeNameFwdDecl + " using " + std::string(name) +
+                                      std::to_string(newColumn->GetID()) + "_type = " + retTypeName + "; }";
       gInterpreter->Declare(retTypeDeclaration.c_str());
 
-      RDFInternal::RBookedCustomColumns newCols(newColumns);
-
-      auto newColumn = std::make_shared<NewCol_t>(fLoopManager, name, std::forward<F>(expression), validColumnNames,
-                                                  fLoopManager->GetNSlots(), newCols);
       fLoopManager->RegisterCustomColumn(newColumn.get());
-
       newCols.AddName(name);
       newCols.AddColumn(newColumn, name);
 
