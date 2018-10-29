@@ -256,23 +256,57 @@ extern "C" {
 #define GLU_TESS_WINDING_NEGATIVE          100133
 #define GLU_TESS_WINDING_ABS_GEQ_TWO       100134
 
+
+/* Boolean values */
+#define GL_FALSE                               0
+#define GL_TRUE                                1
+#define GL_NONE                                0
+
+/* Datatypes */
+typedef unsigned int    GLenum;
+typedef unsigned char   GLboolean;
+typedef unsigned int    GLbitfield;
+typedef void            GLvoid;
+typedef signed char     GLbyte;         /* 1-byte signed */
+typedef short           GLshort;        /* 2-byte signed */
+typedef int             GLint;          /* 4-byte signed */
+typedef unsigned char   GLubyte;        /* 1-byte unsigned */
+typedef unsigned short  GLushort;       /* 2-byte unsigned */
+typedef unsigned int    GLuint;         /* 4-byte unsigned */
+typedef int             GLsizei;        /* 4-byte signed */
+typedef float           GLfloat;        /* single precision float */
+typedef float           GLclampf;       /* single precision float in [0,1] */
+typedef double          GLdouble;       /* double precision float */
+typedef double          GLclampd;       /* double precision float in [0,1] */
+
+/* Primitives */
+#define GL_POINTS                              0x0000
+#define GL_LINES                               0x0001
+#define GL_LINE_LOOP                           0x0002
+#define GL_LINE_STRIP                          0x0003
+#define GL_TRIANGLES                           0x0004
+#define GL_TRIANGLE_STRIP                      0x0005
+#define GL_TRIANGLE_FAN                        0x0006
+#define GL_QUADS                               0x0007
+#define GL_QUAD_STRIP                          0x0008
+#define GL_POLYGON                             0x0009
+
 /*************************************************************/
 
-
 #ifdef __cplusplus
-class GLUnurbs;
-class GLUquadric;
-class GLUtesselator;
+// struct GLUnurbs;
+// struct GLUquadric;
+struct GLUtesselator;
 #else
-typedef struct GLUnurbs GLUnurbs;
-typedef struct GLUquadric GLUquadric;
+// typedef struct GLUnurbs GLUnurbs;
+// typedef struct GLUquadric GLUquadric;
 typedef struct GLUtesselator GLUtesselator;
 #endif
 
-typedef GLUnurbs GLUnurbsObj;
-typedef GLUquadric GLUquadricObj;
-typedef GLUtesselator GLUtesselatorObj;
-typedef GLUtesselator GLUtriangulatorObj;
+// typedef GLUnurbs GLUnurbsObj;
+// typedef GLUquadric GLUquadricObj;
+// typedef GLUtesselator GLUtesselatorObj;
+// typedef GLUtesselator GLUtriangulatorObj;
 
 #define GLU_TESS_MAX_COORD 1.0e150
 

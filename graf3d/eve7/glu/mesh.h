@@ -149,6 +149,11 @@ struct GLUhalfEdge {
                                    from the right face to the left face */
 };
 
+/* Allocate and free half-edges in pairs for efficiency.
+ * The *only* place that should use this fact is allocation/free.
+ */
+typedef struct { GLUhalfEdge e, eSym; } EdgePair;
+
 #define	Rface	Sym->Lface
 #define Dst	Sym->Org
 
