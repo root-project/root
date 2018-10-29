@@ -28,8 +28,8 @@
  * Silicon Graphics, Inc.
  */
 
-#ifndef __glu_h__
-#define __glu_h__
+#ifndef __GL_glu_h__
+#define __GL_glu_h__
 
 /*
 #if defined(USE_MGL_NAMESPACE)
@@ -51,17 +51,8 @@
 #define GLAPIENTRYP GLAPIENTRY *
 #endif
 
-#if (defined(_MSC_VER) || defined(__MINGW32__)) && defined(BUILD_GLU32)
-# undef GLAPI
-# define GLAPI __declspec(dllexport)
-#elif (defined(_MSC_VER) || defined(__MINGW32__)) && defined(_DLL)
-/* tag specifying we're building for DLL runtime support */
-# undef GLAPI
-# define GLAPI __declspec(dllimport)
-#elif !defined(GLAPI)
-/* for use with static link lib build of Win32 edition only */
-# define GLAPI extern
-#endif /* _STATIC_MESA support */
+// Sergey: we do not want export symbols, all functions for internal use
+#define GLAPI
 
 #ifdef __cplusplus
 extern "C" {
@@ -352,4 +343,4 @@ GLAPI void GLAPIENTRY gluTessVertex (GLUtesselator* tess, GLdouble *location, GL
 }
 #endif
 
-#endif /* __glu_h__ */
+#endif /* __GL_glu_h__ */
