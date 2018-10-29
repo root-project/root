@@ -18,12 +18,8 @@
 // - comment out clashing typedef EdgePair in tess.c;
 // - use -Wno-unused-parameter for this cxx file.
 
-// Sergey: first include gl code before any nomral ROOT includes,
+// Sergey: first include gl code before any normal ROOT includes,
 // try to avoid clash with other system includes through Rtypes.h
-
-//==============================================================================
-// Slurp-in of glu/libtess
-//==============================================================================
 
 #include "glu/GL_glu.h"
 
@@ -37,9 +33,9 @@ namespace ROOT {
 namespace Experimental {
 namespace EveGlu {
 
-
 //////////////////////////////////////////////////////////////////////////////////////
 /// TestTriangleHandler is just helper class to get access to protected members of TriangleCollector
+/// Hide static declarations, let use "native" GL types
 //////////////////////////////////////////////////////////////////////////////////////
 
 class TestTriangleHandler {
@@ -121,10 +117,10 @@ TriangleCollector::~TriangleCollector()
 
 void TriangleCollector::add_triangle(Int_t v0, Int_t v1, Int_t v2)
 {
-   fPolyDesc.push_back(3);
-   fPolyDesc.push_back(v0);
-   fPolyDesc.push_back(v1);
-   fPolyDesc.push_back(v2);
+   fPolyDesc.emplace_back(3);
+   fPolyDesc.emplace_back(v0);
+   fPolyDesc.emplace_back(v1);
+   fPolyDesc.emplace_back(v2);
    ++fNTriangles;
 }
 
