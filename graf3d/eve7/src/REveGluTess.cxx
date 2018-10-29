@@ -27,7 +27,7 @@ namespace EveGlu {
 // Slurp-in of glu/libtess
 //==============================================================================
 
-#include "glu/GL/glu.h"
+#include "glu/GL_glu.h"
 
 #include "glu/dict.c"
 #include "glu/geom.c"
