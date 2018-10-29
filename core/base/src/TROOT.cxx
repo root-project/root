@@ -1017,8 +1017,10 @@ TROOT::~TROOT()
       // checking the completeness of the termination deletion.
 
       // TODO: Should we do more cleanup here than just call delete?
-      // Segfaults rootcling in some cases, debug and uncomment
-      // delete fInterpreter;
+      // Segfaults rootcling in some cases, debug and uncomment:
+      //
+      //    delete fInterpreter;
+
       SafeDelete(fCleanups);
 #endif
 
