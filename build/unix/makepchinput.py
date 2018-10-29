@@ -143,7 +143,6 @@ def getSTLIncludes():
                      "ciso646",
                      "ccomplex",
                      "ctgmath",
-                     "cstdalign",
                      "regex",
                      "cstdbool")
 
