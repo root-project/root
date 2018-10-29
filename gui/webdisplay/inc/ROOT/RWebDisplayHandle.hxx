@@ -36,6 +36,7 @@ protected:
    class Creator {
    public:
       virtual std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) = 0;
+      virtual bool IsActive() const { return true; }
       virtual ~Creator() = default;
    };
 
@@ -62,13 +63,14 @@ protected:
    public:
       ChromeCreator();
       virtual ~ChromeCreator() = default;
+      bool IsActive() const override { return !fProg.empty(); }
    };
 
    class FirefoxCreator : public BrowserCreator {
    public:
       FirefoxCreator();
       virtual ~FirefoxCreator() = default;
-
+      bool IsActive() const override { return !fProg.empty(); }
       std::string MakeProfile(TString &exec, bool batch) override;
    };
 
