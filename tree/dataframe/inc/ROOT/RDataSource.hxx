@@ -208,7 +208,7 @@ public:
    /// The returned string will be used by ROOT::RDF::SaveGraph() to represent
    /// the datasource in the visualization of the computation graph.
    /// Concrete datasources can override the default implementation.
-   virtual std::string GetLabel() { return "custom datasource"; }
+   virtual std::string GetLabel() { return "Custom Datasource"; }
 
 protected:
    /// type-erased vector of pointers to pointers to column values - one per slot
