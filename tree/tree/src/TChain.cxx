@@ -2309,39 +2309,63 @@ void TChain::ResetAfterMerge(TFileMergeInfo *info)
 
 void TChain::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   TList chains;
-   chains.Add(this);
+   static Int_t chCounter = 0;
 
-   out << "   TChain *" << fName.Data() << " = new TChain(\"" << fName.Data() << "\");" << std::endl;
+   TString chName = gInterpreter->MapCppName(GetName());
+   if (chName.IsNull())
+      chName = "_chain";
+   chCounter++;
+   chName += chCounter;
 
-   for (TObject *el : *fFriends) {
-      TChain *ch = (TChain *)((TFriendElement *)el)->GetTree();
-      chains.Add(ch);
-      out << "   TChain *" << ch->GetName() << " = new TChain(\"" << ch->GetName() << "\");" << std::endl;
-      out << "   " << fName.Data() << "->AddFriend(" << ch->GetName() << ");" << std::endl << std::endl;
-   }
+   TString opt = option;
+   opt.ToLower();
 
-   for (TObject *_ch : chains) {
-      TChain *ch = (TChain *)_ch;
-      for (TObject *el : *ch->GetListOfFiles()) {
-         out << "   " << ch->GetName() << "->AddFile(\"" << ((TChainElement *)el)->GetTitle() << "\","
-             << ((TChainElement *)el)->GetEntries() << ");" << std::endl;
+   out << "   TChain *" << chName.Data() << " = new TChain(\"" << GetName() << "\");" << std::endl;
+
+   if (opt.Contains("friend")) {
+      opt.ReplaceAll("friend", "");
+      for (TObject *frel : *fFriends) {
+         TTree *frtree = ((TFriendElement *)frel)->GetTree();
+         if (dynamic_cast<TChain *>(frtree)) {
+            if (strcmp(frtree->GetName(), GetName()) != 0)
+               chCounter--; // make friends get the same chain counter
+            frtree->SavePrimitive(out, opt.Data());
+            out << "   " << chName.Data() << "->AddFriend(\"" << frtree->GetName() << "\");" << std::endl;
+         } else { // ordinary friend TTree
+            TDirectory *file = frtree->GetDirectory();
+            if (file && dynamic_cast<TFile *>(file))
+               out << "   " << chName.Data() << "->AddFriend(\"" << frtree->GetName() << "\", \"" << file->GetName()
+                   << "\");" << std::endl;
+         }
       }
-      out << std::endl;
    }
+   out << std::endl;
+
+   for (TObject *el : *fFiles) {
+      TChainElement *chel = (TChainElement *)el;
+      // Save tree file if it is really loaded to the chain
+      if (chel->GetLoadResult() == 0 && chel->GetEntries() != 0) {
+         if (chel->GetEntries() == TTree::kMaxEntries) // tree number of entries is not yet known
+            out << "   " << chName.Data() << "->AddFile(\"" << chel->GetTitle() << "\");" << std::endl;
+         else
+            out << "   " << chName.Data() << "->AddFile(\"" << chel->GetTitle() << "\"," << chel->GetEntries() << ");"
+                << std::endl;
+      }
+   }
+   out << std::endl;
 
    if (GetMarkerColor() != 1) {
       if (GetMarkerColor() > 228) {
          TColor::SaveColor(out, GetMarkerColor());
-         out << "   " << fName.Data() << "->SetMarkerColor(ci);" << std::endl;
+         out << "   " << chName.Data() << "->SetMarkerColor(ci);" << std::endl;
       } else
-         out << "   " << fName.Data() << "->SetMarkerColor(" << GetMarkerColor() << ");" << std::endl;
+         out << "   " << chName.Data() << "->SetMarkerColor(" << GetMarkerColor() << ");" << std::endl;
    }
    if (GetMarkerStyle() != 1) {
-      out << "   " << fName.Data() << "->SetMarkerStyle(" << GetMarkerStyle() << ");" << std::endl;
+      out << "   " << chName.Data() << "->SetMarkerStyle(" << GetMarkerStyle() << ");" << std::endl;
    }
    if (GetMarkerSize() != 1) {
-      out << "   " << fName.Data() << "->SetMarkerSize(" << GetMarkerSize() << ");" << std::endl;
+      out << "   " << chName.Data() << "->SetMarkerSize(" << GetMarkerSize() << ");" << std::endl;
    }
 }
 
