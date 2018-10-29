@@ -290,7 +290,7 @@ void RLoopManager::EvalChildrenCounts()
       namedFilterPtr->TriggerChildrenCount();
 }
 
-unsigned int RLoopManager::GetNextID() const
+unsigned int RLoopManager::GetNextID()
 {
    static unsigned int id = 0;
    ++id;
