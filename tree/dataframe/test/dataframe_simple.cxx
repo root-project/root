@@ -378,19 +378,22 @@ TEST_P(RDFSimpleTests, Define_Multiple)
    auto root = tdf.Define("root", "0");
    auto branch1 = root.Define("b", []() { return 1; });
    auto branch2 = root.Define("b", "2");
+   auto branch3 = root.Define("b", "4.2"); // check a second jitted branch (checks for ROOT-9754)
 
-   auto rootMean1 = branch1.Mean("root");
-   auto rootMean2 = branch2.Mean<int>("root");
-   auto branch1Mean = branch1.Mean("b");
-   auto branch2Mean = branch2.Mean<int>("b");
+   auto rootMax1 = branch1.Max("root");
+   auto rootMax2 = branch2.Max<int>("root");
+   auto branch1Max = branch1.Max("b");
+   auto branch2Max = branch2.Max<int>("b");
+   auto branch3Max = branch3.Max<double>("b");
 
    // Checking that both branches see the same root column
-   EXPECT_EQ(*rootMean1, *rootMean2);
-   EXPECT_EQ(*rootMean1, 0);
+   EXPECT_EQ(*rootMax1, *rootMax2);
+   EXPECT_EQ(*rootMax1, 0);
 
    // Name collision must not represent a problem
-   EXPECT_EQ(*branch1Mean, 1);
-   EXPECT_EQ(*branch2Mean, 2);
+   EXPECT_EQ(*branch1Max, 1);
+   EXPECT_EQ(*branch2Max, 2);
+   EXPECT_EQ(*branch3Max, 4.2);
 }
 
 TEST_P(RDFSimpleTests, Define_Multiple_Filter)
