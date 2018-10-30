@@ -102,7 +102,7 @@ int execTestMultiMerge()
    result += testSimpleFile("hsimple101.root",25000,101,412925 + lz4default*1667, kIs32bits ? 12 : (3 + fastMath*14));
    result += testSimpleFile("hsimple106.root",25000,106,429227 + lz4default*1931 + kIs32bits*12,3 + fastMath*20);
    result += testSimpleFile("hsimple109.root",25000,109,428937 + lz4default*1931 + kIs32bits*14,3 + fastMath*28);
-   result += testSimpleFile("hsimple9x2.root",2*25000,9,849733 + lz4default*169479 + kIs32bits*10,25 + fastMath*56);
+   result += testSimpleFile("hsimple9x2.root",2*25000,9,849733 + lz4default*169479 + kIs32bits*3,25 + fastMath*56);
    result += testSimpleFile("hsimple109x2.root",2*25000,109,848047 + lz4default*1931 + kIs32bits*15,9 + fastMath*52);
    result += testSimpleFile("hsimple209.root",25000,209,390662 + lz4default*1931,8 + fastMath*24);
    result += testSimpleFile("hsimple401.root",25000,401,416807 + lz4default*102982,8 + fastMath*31);
