@@ -66,28 +66,26 @@
           track_color = JSROOT.Painter.root_colors[track.fLineColor] || "rgb(255,0,255)";
       if (JSROOT.browser.isWin) track_width = 1;  // not supported on windows
 
-      var buf = new Float32Array(N*3*2), pos = 0;
+      var buf = new Float32Array((N-1)*6), pos = 0;
       for (var k=0;k<(N-1);++k) {
          buf[pos]   = rnrData.vtxBuff[k*3];
          buf[pos+1] = rnrData.vtxBuff[k*3+1];
          buf[pos+2] = rnrData.vtxBuff[k*3+2];
 
-         var breakTrack = 0;
-         if (rnrData.idxBuff) {
-            for (var b = 0; b < rnrData.idxBuff.length; b++)
-            {
-               if ( (k+1) == rnrData.idxBuff[b]) {
-                  breakTrack = 1;
+         var breakTrack = false;
+         if (rnrData.idxBuff)
+            for (var b = 0; b < rnrData.idxBuff.length; b++) {
+               if ( (k+1) == rnrData.idxBuff[b]) { 
+                  breakTrack = true;
+                  break;
                }
             }
-         }
 
          if (breakTrack) {
             buf[pos+3] = rnrData.vtxBuff[k*3];
             buf[pos+4] = rnrData.vtxBuff[k*3+1];
             buf[pos+5] = rnrData.vtxBuff[k*3+2];
-         }
-         else {
+         } else {
             buf[pos+3] = rnrData.vtxBuff[k*3+3];
             buf[pos+4] = rnrData.vtxBuff[k*3+4];
             buf[pos+5] = rnrData.vtxBuff[k*3+5];
@@ -100,9 +98,7 @@
       var lineMaterial;
       if (track.fLineStyle == 1) {
          lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width });
-      }
-      else
-      {
+      } else {
          //lineMaterial = new THREE.LineDashedMaterial({ color: track_color, linewidth: track_width, gapSize: parseInt(track.fLineStyle) });
          lineMaterial = new THREE.LineDashedMaterial({ color: track_color, linewidth: track_width, dashSize:3, gapSize: 1 });
       }
