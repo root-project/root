@@ -84,7 +84,7 @@ public:
       }
       return *m_context;
    }
-   virtual zmq::socket_t socket(int type) const {
+   zmq::socket_t socket(int type) const {
       return zmq::socket_t{context(), type};
    }
 
