@@ -390,8 +390,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
    TNamedBranchProxy* namedProxy = fTreeReader->FindProxy(fBranchName);
    if (namedProxy && namedProxy->GetDict() == fDict) {
       fProxy = namedProxy->GetProxy();
-      fSetupStatus = kSetupMatch;
-      return;
+      // But go on: we need to set fLeaf etc!
    }
 
    const std::string originalBranchName = fBranchName.Data();
@@ -474,31 +473,29 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       }
    }
 
-   // Update named proxy's dictionary
-   if (namedProxy && !namedProxy->GetDict()) {
-      namedProxy->SetDict(fDict);
-      fProxy = namedProxy->GetProxy();
-      if (fProxy)
-         fSetupStatus = kSetupMatch;
-      return;
-   }
+   if (!namedProxy) {
+      // Search for the branchname, determine what it contains, and wire the
+      // TBranchProxy representing it to us so we can access its data.
+      // A proxy for branch must not have been created before (i.e. check
+      // fProxies before calling this function!)
 
-   // Search for the branchname, determine what it contains, and wire the
-   // TBranchProxy representing it to us so we can access its data.
-   // A proxy for branch must not have been created before (i.e. check
-   // fProxies before calling this function!)
+      TString membername;
 
-   TString membername;
-
-   bool isTopLevel = branch->GetMother() == branch;
-   if (!isTopLevel) {
-      membername = strrchr(branch->GetName(), '.');
-      if (membername.IsNull()) {
-         membername = branch->GetName();
+      bool isTopLevel = branch->GetMother() == branch;
+      if (!isTopLevel) {
+         membername = strrchr(branch->GetName(), '.');
+         if (membername.IsNull()) {
+            membername = branch->GetName();
+         }
       }
+      namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, originalBranchName.c_str(), membername);
+      fTreeReader->AddProxy(namedProxy);
    }
-   namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, originalBranchName.c_str(), membername);
-   fTreeReader->AddProxy(namedProxy);
+
+   // Update named proxy's dictionary
+   if (!namedProxy->GetDict())
+      namedProxy->SetDict(fDict);
+
    fProxy = namedProxy->GetProxy();
    if (fProxy) {
       fSetupStatus = kSetupMatch;
