@@ -390,4 +390,8 @@ module "stl" [system] {
     export *
     header "bits/locale_facets.h"
   }
+  module "bits/allocator.h" {
+    export *
+    header "bits/allocator.h"
+  }
 }
