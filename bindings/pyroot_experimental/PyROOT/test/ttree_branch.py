@@ -105,7 +105,14 @@ class TTreeBranch(unittest.TestCase):
 
         ms = ROOT.MyStruct()
         ms.myint1, ms.myint2 = self.ival, 2*self.ival
-        t.Branch('structb', ms)
+
+        # Test overloads
+        t.Branch('structb0', ms)
+        t.Branch('structb1', ms, 32000)
+        t.Branch('structb2', ms, 32000, 99)
+        t.Branch('structb3', 'MyStruct', ms)
+        t.Branch('structb4', 'MyStruct', ms, 32000)
+        t.Branch('structb5', 'MyStruct', ms, 32000, 99)
 
         self.fill_and_close(f, t)
 
@@ -113,15 +120,22 @@ class TTreeBranch(unittest.TestCase):
         f,t = self.get_tree()
 
         for entry in t:
-            ms = entry.structb
-            self.assertEqual(ms.myint1, self.ival)
-            self.assertEqual(ms.myint2, 2*self.ival)
+            for ms in [ getattr(entry, 'structb' + str(i)) for i in range(6) ]:
+                self.assertEqual(ms.myint1, self.ival)
+                self.assertEqual(ms.myint2, 2*self.ival)
 
     def test09_write_vector_branch(self):
         f,t = self.create_file_and_tree()
 
         v = ROOT.std.vector('double')(self.arraysize*[ self.fval ])
-        t.Branch('vectorb', v)
+
+        # Test overloads
+        t.Branch('vectorb0', v)
+        t.Branch('vectorb1', v, 32000)
+        t.Branch('vectorb2', v, 32000, 99)
+        t.Branch('vectorb3', 'std::vector<double>', v)
+        t.Branch('vectorb4', 'std::vector<double>', v, 32000)
+        t.Branch('vectorb5', 'std::vector<double>', v, 32000, 99)
 
         self.fill_and_close(f, t)
 
@@ -129,8 +143,29 @@ class TTreeBranch(unittest.TestCase):
         f,t = self.get_tree()
 
         for entry in t:
-            for elem in entry.vectorb:
-                self.assertEqual(elem, self.fval)
+            for v in [ getattr(entry, 'vectorb' + str(i)) for i in range(6) ]:
+                for elem in v:
+                    self.assertEqual(elem, self.fval)
+
+    def test11_write_fallback_case(self):
+        f,t = self.create_file_and_tree()
+
+        # Test an overload that uses the original Branch proxy
+        l = ROOT.TList()
+        s = ROOT.TString('one:two')
+        a = s.Tokenize(ROOT.TString(':'))
+        a.SetName('myobjarray')
+        l.Add(a)
+        t.Branch(l)
+
+        self.fill_and_close(f, t)
+
+    def test12_read_fallback_case(self):
+        f,t = self.get_tree()
+
+        for entry in t:
+            self.assertEqual(entry.myobjarray_one.GetName(), 'one')
+            self.assertEqual(entry.myobjarray_two.GetName(), 'two')
 
 
 if __name__ == '__main__':
