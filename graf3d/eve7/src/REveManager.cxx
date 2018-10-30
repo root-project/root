@@ -163,6 +163,7 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->HttpServerCallback(connid, arg); });
    fWebWindow->SetGeometry(900, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(100); // maximal number of connections
+   fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -933,13 +934,13 @@ void REveManager::BroadcastElementsOf(REveElement::List_t& els)
 /// Show eve manager in specified browser
 /// If rootrc variable WebEve.DisableShow configured, just HTTP server will be started and URL printout
 
-void REveManager::Show(const std::string &where)
+void REveManager::Show(const RWebDisplayArgs &args)
 {
    if (gEnv->GetValue("WebEve.DisableShow", 0) != 0) {
       std::string url = fWebWindow->GetUrl(true);
       printf("EVE URL %s\n", url.c_str());
    } else {
-      fWebWindow->Show(where);
+      fWebWindow->Show(args);
    }
 }
 

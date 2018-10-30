@@ -14,6 +14,8 @@
 
 #include <ROOT/REveElement.hxx>
 
+#include <ROOT/RWebDisplayArgs.hxx>
+
 #include "TSysEvtHandler.h"
 #include "TTimer.h"
 
@@ -236,7 +238,7 @@ public:
 
    void BroadcastElementsOf(REveElement::List_t &els);
 
-   void Show(const std::string &where = "");
+   void Show(const RWebDisplayArgs &args = "");
 
    ClassDef(REveManager, 0); // Eve application manager.
 };
