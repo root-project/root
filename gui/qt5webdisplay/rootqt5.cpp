@@ -22,8 +22,8 @@
 
 #include "TROOT.h"
 #include "TApplication.h"
-#include "TRint.h"
 #include "TTimer.h"
+#include "TEnv.h"
 #include "TThread.h"
 #include "THttpServer.h"
 
@@ -36,8 +36,6 @@
 #include <ROOT/RWebDisplayHandle.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/TLogger.hxx>
-
-#include <stdio.h>
 
 class TQt5Timer : public TTimer {
 public:
@@ -90,8 +88,11 @@ protected:
          }
 
          if (!fTimer) {
-            fTimer = new TQt5Timer(10, kTRUE);
-            fTimer->TurnOn();
+            Int_t interval = gEnv->GetValue("WebGui.Qt5Timer", 1);
+            if (interval > 0) {
+               fTimer = new TQt5Timer(interval, kTRUE);
+               fTimer->TurnOn();
+            }
          }
 
          std::unique_ptr<RootUrlSchemeHandler> handler;
