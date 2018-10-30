@@ -133,7 +133,7 @@ public:
 RootUrlSchemeHandler::RootUrlSchemeHandler(THttpServer *server, int counter)
    : QWebEngineUrlSchemeHandler(), fServer(server)
 {
-   fProtocol = Form("roothander%d", counter);
+   fProtocol = Form("roothandler%d", counter);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
