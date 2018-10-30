@@ -333,10 +333,10 @@ void TRint::ExecLogon()
 ////////////////////////////////////////////////////////////////////////////////
 /// Main application eventloop. First process files given on the command
 /// line and then go into the main application event loop, unless the -q
-/// command line option was specfied in which case the program terminates.
-/// When retrun is true this method returns even when -q was specified.
+/// command line option was specified in which case the program terminates.
+/// When return is true this method returns even when -q was specified.
 ///
-/// When QuitOpt is true and retrn is false, terminate the application with
+/// When QuitOpt is true and return is false, terminate the application with
 /// an error code equal to either the ProcessLine error (if any) or the
 /// return value of the command casted to a long.
 
