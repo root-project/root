@@ -48,7 +48,7 @@ TGGC::TGGC(GCValues_t *values, Bool_t)
                               fValues.fDashLen);
       }
    } else {
-      memset(&fValues, 0, sizeof(GCValues_t));
+      fValues = {};
       fContext = 0;
    }
    SetRefCount(1);
@@ -62,7 +62,7 @@ TGGC::TGGC(GCValues_t *values)
    fContext = 0;
    // case of default ctor at program startup before gClient exists
    if (!values) {
-      memset(&fValues, 0, sizeof(GCValues_t));
+      fValues = {};
       fContext = 0;
       SetRefCount(1);
       return;
