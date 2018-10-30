@@ -130,36 +130,27 @@
 
       var geo_body = new THREE.BufferGeometry();
       geo_body.addAttribute('position', pos_ba);
-      {
-         var idcs = [];
-         idcs.push( 0 );  idcs.push( N - 1 );  idcs.push( 1 );
-         for (var i = 1; i < N - 1; ++i)
-         {
-            idcs.push( 0 );  idcs.push( i );  idcs.push( i + 1 );
-         }
-         geo_body.setIndex( idcs );
-         geo_body.computeVertexNormals();
-      }
+      var idcs = [];
+      idcs.push( 0, N-1, 1 );
+      for (var i = 1; i < N - 1; ++i)
+         idcs.push( 0, i, i + 1 );
+      geo_body.setIndex( idcs );
+      geo_body.computeVertexNormals();
+      
       var geo_rim = new THREE.BufferGeometry();
       geo_rim.addAttribute('position', pos_ba);
-      {
-         var idcs = [];
-         for (var i = 1; i < N; ++i)
-         {
-            idcs.push( i );
-         }
-         geo_rim.setIndex( idcs );
-      }
+      idcs = [];
+      for (var i = 1; i < N; ++i)
+         idcs.push( i );
+      geo_rim.setIndex( idcs );
+
       var geo_rays = new THREE.BufferGeometry();
       geo_rays.addAttribute('position', pos_ba);
-      {
-         var idcs = [];
-         for (var i = 1; i < N; i += 4)
-         {
-            idcs.push( 0 ); idcs.push( i );
-         }
-         geo_rays.setIndex( idcs );
-      }
+      idcs = [];
+      for (var i = 1; i < N; i += 4)
+         idcs.push( 0, i ); 
+      geo_rays.setIndex( idcs );
+      
       var mcol = JSROOT.Painter.root_colors[jet.fMainColor];
       var lcol = JSROOT.Painter.root_colors[jet.fLineColor];
       
@@ -195,30 +186,24 @@
 
       var geo_body = new THREE.BufferGeometry();
       geo_body.addAttribute('position', pos_ba);
-      {
-         var idcs = [];
-         idcs.push( 0 );  idcs.push( 2 );  idcs.push( 1 );
-         if (N > 3) {
-            idcs.push( 0 );  idcs.push( 3 );  idcs.push( 2 );
-         }
-         geo_body.setIndex( idcs );
-         geo_body.computeVertexNormals();
-      }
+      var idcs = [];
+      idcs.push( 0, 2, 1 );
+      if (N > 3) 
+         idcs.push( 0, 3, 2 );
+      geo_body.setIndex( idcs );
+      geo_body.computeVertexNormals();
+      
       var geo_rim = new THREE.BufferGeometry();
       geo_rim.addAttribute('position', pos_ba);
-      {
-         var idcs = [];
-         for (var i = 1; i < N; ++i) { idcs.push( i ); }
-         geo_rim.setIndex( idcs );
-      }
+      idcs = [];
+      for (var i = 1; i < N; ++i) idcs.push( i );
+      geo_rim.setIndex( idcs );
+      
       var geo_rays = new THREE.BufferGeometry();
       geo_rays.addAttribute('position', pos_ba);
-      {
-         var idcs = [];
-         idcs.push( 0 ); idcs.push( 1 );
-         idcs.push( 0 ); idcs.push( N - 1 );
-         geo_rays.setIndex( idcs );
-      }
+      idcs = [ 0, 1, 0, N-1 ];
+      geo_rays.setIndex( idcs );
+      
       var fcol = JSROOT.Painter.root_colors[jet.fFillColor];
       var lcol = JSROOT.Painter.root_colors[jet.fLineColor];
       // Process transparency !!!
@@ -255,7 +240,7 @@
 
       var ib_len = rnr_data.idxBuff.length;
 
-      console.log("ib_len", ib_len, rnr_data.idxBuff[0], rnr_data.idxBuff[1], 3 * rnr_data.idxBuff[1]);
+      // console.log("ib_len", ib_len, rnr_data.idxBuff[0], rnr_data.idxBuff[1], 3 * rnr_data.idxBuff[1]);
 
       if (rnr_data.idxBuff[0] != GL.TRIANGLES)   throw "Expect triangles first.";
       if (2 + 3 * rnr_data.idxBuff[1] != ib_len) throw "Expect single list of triangles in index buffer.";
@@ -277,10 +262,11 @@
 
       var fcol = JSROOT.Painter.root_colors[egs.fFillColor];
       // var lcol = JSROOT.Painter.root_colors[egs.fLineColor];
-      egs_ro.add( new THREE.Mesh(body, new THREE.MeshPhongMaterial({// side: THREE.DoubleSide,
-         depthWrite:  false,
-         color:fcol, transparent: true, opacity: 0.2
-      })) );
+      
+      var material = new THREE.MeshPhongMaterial({// side: THREE.DoubleSide,
+                             depthWrite:  false, color:fcol, transparent: true, opacity: 0.2 });
+      
+      egs_ro.add( new THREE.Mesh(body, material) );
 
       // egs_ro.add( new THREE.LineSegments(body, new THREE.LineBasicMaterial({color:lcol })) );
 
