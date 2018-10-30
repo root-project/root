@@ -20,6 +20,7 @@
 #include "THttpServer.h"
 #include "THttpCallArg.h"
 #include "TUrl.h"
+#include "TEnv.h"
 #include "TTimer.h"
 #include "TApplication.h"
 #include "TROOT.h"
@@ -514,8 +515,9 @@ protected:
          // Initialize CEF for the browser process.
          CefInitialize(main_args, settings, fCefApp.get(), nullptr);
 
+         Int_t interval = gEnv->GetValue("WebGui.CefTimer", 10);
          // let run CEF message loop, should be improved later
-         TCefTimer *timer = new TCefTimer(10, kTRUE);
+         TCefTimer *timer = new TCefTimer((interval > 0) ? interval : 10, kTRUE);
          timer->TurnOn();
 
          return std::make_unique<RCefWebDisplayHandle>(args.GetFullUrl());
