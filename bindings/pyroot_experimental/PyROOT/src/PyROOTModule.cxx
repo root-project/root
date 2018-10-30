@@ -31,6 +31,8 @@ static PyMethodDef gPyROOTMethods[] = {{(char *)"AddBranchAttrSyntax", (PyCFunct
                                         (char *)"Allow to access branches as tree attributes"},
                                        {(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
                                         (char *)"Pythonization for TTree::SetBranchAddress"},
+                                       {(char *)"BranchPyz", (PyCFunction)PyROOT::BranchPyz, METH_VARARGS,
+                                        (char *)"Pythonization for TTree::Branch"},
                                        {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
                                         (char *)"Add pretty printing pythonization"},
                                        {(char *)"GetEndianess", (PyCFunction)PyROOT::GetEndianess, METH_NOARGS,
