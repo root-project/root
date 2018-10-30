@@ -9,3 +9,5 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_iterable ttree_iterable.py
                     COPY_TO_BUILDDIR TreeHelper.h)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress ttree_setbranchaddress.py
                     COPY_TO_BUILDDIR TreeHelper.h)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py
+                    COPY_TO_BUILDDIR TreeHelper.h)
