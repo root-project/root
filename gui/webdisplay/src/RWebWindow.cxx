@@ -895,7 +895,7 @@ bool ROOT::Experimental::RWebWindow::CanSend(unsigned connid, bool direct)
       if (direct && (!conn->fQueue.empty() || (conn->fSendCredits == 0) || conn->fDoingSend))
          return false;
 
-      if (conn->fQueue.size() >= fMaxQueueLength)
+      if (conn->fQueue.size() >= GetMaxQueueLength())
          return false;
    }
 
@@ -939,7 +939,7 @@ void ROOT::Experimental::RWebWindow::SubmitData(unsigned connid, bool txt, std::
 
       std::lock_guard<std::mutex> grd(conn->fMutex);
 
-      if (conn->fQueue.size() < fMaxQueueLength) {
+      if (conn->fQueue.size() < GetMaxQueueLength()) {
          if (--cnt)
             conn->fQueue.emplace(chid, txt, std::string(data)); // make copy
          else

@@ -116,7 +116,7 @@ private:
    std::mutex fConnMutex;                           ///<! mutex used to protect connection list
    unsigned fConnLimit{1};                          ///<! number of allowed active connections
    bool fNativeOnlyConn{false};                     ///<! only native connection are allowed, created by Show() method
-   static const unsigned fMaxQueueLength{10};       ///<! maximal number of queue entries
+   unsigned fMaxQueueLength{10};                    ///<! maximal number of queue entries
    WebWindowDataCallback_t fDataCallback;           ///<! main callback when data over channel 1 is arrived
    std::thread::id fDataThrdId;                     ///<! thread id where data callback should be invoked
    std::queue<DataEntry> fDataQueue;                ///<! data queue for main callback
@@ -203,6 +203,14 @@ public:
    /////////////////////////////////////////////////////////////////////////
    /// returns configured connections limit (0 - default)
    unsigned GetConnLimit() const { return fConnLimit; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// configures maximal queue length of data which can be held by window
+   void SetMaxQueueLength(unsigned len = 10) { fMaxQueueLength = len; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// Return maximal queue length of data which can be held by window
+   unsigned GetMaxQueueLength() const { return fMaxQueueLength; }
 
    /////////////////////////////////////////////////////////////////////////
    /// configures that only native (own-created) connections are allowed
