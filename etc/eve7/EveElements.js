@@ -304,17 +304,24 @@
       {
          if (rnr_data.idxBuff[ib_pos] == GL.TRIANGLES)
          {
-            var body = new THREE.BufferGeometry();
-            body.addAttribute('position', pos_ba);
-            body.setIndex(idx_ba);
-            body.setDrawRange(ib_pos + 2, 3 * rnr_data.idxBuff[ib_pos + 1]);
-            body.computeVertexNormals();
+            // Sergey: make check, for now here many wrong values
+            var is_ok = true, maxindx = rnr_data.vtxBuff.length/3;
+            for (var k=0;is_ok && (k < 3*rnr_data.idxBuff[ib_pos + 1]); ++k) 
+               if (rnr_data.idxBuff[ib_pos+2+k] > maxindx) is_ok = false;
+            
+            if (is_ok) {
+               var body = new THREE.BufferGeometry();
+               body.addAttribute('position', pos_ba);
+               body.setIndex(idx_ba);
+               body.setDrawRange(ib_pos + 2, 3 * rnr_data.idxBuff[ib_pos + 1]);
+               body.computeVertexNormals();
+               var material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, depthWrite: false,
+                                               color:fcol, transparent: true, opacity: 0.4 });
 
-            psp_ro.add( new THREE.Mesh(body, new THREE.MeshBasicMaterial
-                                       ({ side: THREE.DoubleSide,
-                                          depthWrite: false,
-                                          color:fcol, transparent: true, opacity: 0.4
-                                        })) );
+               psp_ro.add( new THREE.Mesh(body, material) );
+            } else {
+               console.log('Error in makePolygonSetProjected - wrong GL.TRIANGLES indexes');
+            }
 
             ib_pos += 2 + 3 * rnr_data.idxBuff[ib_pos + 1];
          }
@@ -331,8 +338,10 @@
          }
          else
          {
-            throw "Unexpected primitive type", rnr_data.idxBuff[ib_pos]
+            console.error("Unexpected primitive type " + rnr_data.idxBuff[ib_pos]);
+            break;
          }
+         
       }
 
       return psp_ro;
