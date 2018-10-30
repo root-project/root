@@ -1160,7 +1160,8 @@ if(imt)
   endif()
 endif()  
 if(builtin_tbb)
-  set(tbb_version 2017_U5)
+  set(tbb_version 2019_U1)
+  set(tbb_sha256 d40aa6f62f2b2fb38c89b9f309859e3e6ff90487e8bc45abb0e096a6a165bec5)
   if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
     set(_tbb_compiler compiler=clang)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
@@ -1174,7 +1175,7 @@ if(builtin_tbb)
     ExternalProject_Add(
       TBB
       URL ${lcgpackages}/tbb${tbb_version}.tar.gz
-      URL_HASH SHA256=780baf0ad520f23b54dd20dc97bf5aae4bc562019e0a70f53bfc4c1afec6e545
+      URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
       BUILD_COMMAND devenv.exe /useenv /build "Release|Win32" build/${vsdir}/makefile.sln
@@ -1201,7 +1202,7 @@ if(builtin_tbb)
     ExternalProject_Add(
       TBB
       URL ${lcgpackages}/tbb${tbb_version}.tar.gz
-      URL_HASH SHA256=780baf0ad520f23b54dd20dc97bf5aae4bc562019e0a70f53bfc4c1afec6e545
+      URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ""
       BUILD_COMMAND make ${_tbb_compiler} CXXFLAGS=${_tbb_cxxflags} CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
