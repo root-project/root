@@ -145,6 +145,7 @@ private:
 
 class RooMinimizerGenericPtr {
   struct InnerBase {
+    virtual ~InnerBase() = default; // virtual dtor necessary for silencing warnings from -Wdelete-non-virtual-dtor; the destruction of val below (shared_ptr<InnerBase>) otherwise will not call the destructor of Inner, because it only knows about the non-virtual InnerBase dtor
     virtual ROOT::Fit::Fitter* fitter() const = 0;
     virtual TObject * get_ptr() const = 0;
   };
