@@ -1170,7 +1170,7 @@ if(builtin_tbb)
     set(_tbb_compiler compiler=gcc)
   endif()
   if(MSVC)
-    set(vsdir "vs2012")
+    set(vsdir "vs2013")
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb.lib)
     ExternalProject_Add(
       TBB
