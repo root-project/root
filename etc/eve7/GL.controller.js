@@ -123,7 +123,7 @@ sap.ui.define([
 
       drawGeometry: function() {
 
-         console.log("start geometry drawing", this.getView().getId());
+         // console.log("start geometry drawing", this.getView().getId());
 
  /*           var shape = {
       _typename: "TGeoBBox",
