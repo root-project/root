@@ -200,3 +200,26 @@ TEST(TTreeReaderLeafs, NamesWithDots)
    tr.Next();
    EXPECT_EQ(*rv, 64) << "The wrong leaf has been read!";
 }
+
+// This is ROOT-9743
+struct Event {
+   float bla = 3.14f;
+   int truth_type = 1;
+};
+
+TEST(TTreeReaderLeafs, MultipleReaders) {
+   TTree t("t","t");
+   Event event;
+   t.Branch ("event", &event, "bla/F:truth_type/I");
+   t.Fill();
+
+   TTreeReader r(&t);
+   TTreeReaderValue<int> v1(r, "event.truth_type");
+   TTreeReaderValue<int> v2(r, "event.truth_type");
+   TTreeReaderValue<int> v3(r, "event.truth_type");
+
+   r.Next();
+   EXPECT_EQ(*v1, 1) << "Wrong value read for rv1!";
+   EXPECT_EQ(*v2, 1) << "Wrong value read for rv2!";
+   EXPECT_EQ(*v3, 1) << "Wrong value read for rv3!";
+}
