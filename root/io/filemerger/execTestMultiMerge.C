@@ -107,7 +107,7 @@ int execTestMultiMerge()
    result += testSimpleFile("hsimple209.root",25000,209,392593 + lz4default*1931,8 + fastMath*24);
    result += testSimpleFile("hsimple401.root",25000,401,418775 + lz4default*102982,8 + fastMath*31);
    result += testSimpleFile("hsimple406.root",25000,406,516936 + lz4default*1931,8);
-   result += testSimpleFile("hsimple409.root",25000,409,516864 + lz4default*1931,8);
+   result += testSimpleFile("hsimple409.root",25000,409,516846 + lz4default*1931,8);
    result += testSimpleFile("hsimpleK.root",6*25000,209,2297480 + lz4default*1931,16 + fastMath*120);
    if (lzma_version_number() < 50020010) {
       // lzma v5.2.0 produced larger files ...
@@ -116,7 +116,7 @@ int execTestMultiMerge()
    } else {
       result += testSimpleFile("hsimpleK202.root",12*25000,202,4630084 + lz4default*1931,16 + fastMath*104);
    }
-   result += testSimpleFile("hsimpleK409.root",24*25000,409,12047076 + lz4default*1931,16);
+   result += testSimpleFile("hsimpleK409.root",24*25000,409,12046966 + lz4default*1931,16);
    result += testSimpleFile("hsimpleF.root",30*25000,9,12581306 + lz4default*2472134,hsimpleFTolerance + fastMath*1090);
    return result;
 }
