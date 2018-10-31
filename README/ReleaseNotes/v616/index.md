@@ -135,9 +135,8 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
 
 ## TTree Libraries
 ### RDataFrame
-  - Migrate name TIterationHelper to RIterationHelper which was left behind for 6.14 release
-  - Optimise the creation of the set of branches names of an input dataset,
-  doing the work once and caching it in the RInterface.
+  - Migrate name TIterationHelper to RIterationHelper which was left behind for 6.14 release.
+  - Optimise the creation of the set of branch names of an input dataset, doing the work once and caching it in the RInterface.
   - Add [StdDev](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a482c4e4f81fe1e421c016f89cd281572) action.
   - Add [Display](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#aee68f4411f16f00a1d46eccb6d296f01) action and [tutorial](https://github.com/root-project/root/blob/master/tutorials/dataframe/df024_Display.C).
   - Add [Graph](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a804b466ebdbddef5c7e3400cc6b89301) action and [tutorial](https://github.com/root-project/root/blob/master/tutorials/dataframe/df021_createTGraph.C).
@@ -148,11 +147,11 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
   - Fix ambiguous call on Cache() with one or two columns as parameters.
   - Add [GetFilterNames](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a25026681111897058299161a70ad9bb2).
   - Improve RDF node ownership model. The net effect is that users do not have to worry about keeping the first node of a computation graph in scope anymore.
-  - Make RResultPtr copy/move-assignable and copy/move-constructible
-  - Add [GetColumnType](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#ad3ccd813d9fed014ae6a080411c5b5a8a) utility method to query the type of a RDF column (returned as a string)
-  - Add [PassAsVec](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a1ecc8a41e8f12e65e1bf0d2e65aec36d) helper function
-  - Add [SaveGraph](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#adc17882b283c3d3ba85b1a236197c533) helper function to write out the RDF computation graph as a graphviz file
-  - Add a [tutorial for RDataFrame helper functions](https://root.cern/doc/master/df020__helpers_8C.html)
+  - Make RResultPtr copy/move-assignable and copy/move-constructible.
+  - Add [GetColumnType](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#ad3ccd813d9fed014ae6a080411c5b5a8a) utility method to query the type of a RDF column (returned as a string).
+  - Add [PassAsVec](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a1ecc8a41e8f12e65e1bf0d2e65aec36d) helper function.
+  - Add [SaveGraph](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#adc17882b283c3d3ba85b1a236197c533) helper function to write out the RDF computation graph as a graphviz file.
+  - Add a [tutorial for RDataFrame helper functions](https://root.cern/doc/master/df020__helpers_8C.html).
   - Throw if name of a custom column is not a valid C++ name.
   - Allow every RDataFrame variable be cast to a common type `ROOT::RDF::RNode`.
   - Speed up just-in-time compilation (and therefore runtime) of Snapshots with a large number of branches.
@@ -161,10 +160,12 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
   - Reading and writing of columns holding `vector<bool>` instances and `bool` C arrays.
   - Support `rdfentry_` and `rdfslot_` implicit columns.
   - Remove `RDataFrame` from the 32-bit builds.
+  - Speed up interpreted usage of RDataFrame (i.e. in macros or from ROOT prompt) by removing certain cling runtime safety checks.
 
 ### TTreeProcessorMT
   - Parallelise search of cluster boundaries for input datasets with no friends or TEntryLists. The net effect is a faster initialization time in this common case.
   - Handle gracefully the presence of chains the files associated to which are corrupted.
+  - Reduce number of expensive `TChain::LoadTree` calls by spawning nested TBB tasks to ensure clusters of a given file will be most likely processed by the same thread.
 
 ### TTree
   - TTrees can be forced to only create new baskets at event cluster boundaries.
