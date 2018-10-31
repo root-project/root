@@ -374,9 +374,9 @@ void plot(T sig, T bkg, T data, const std::string &x_label, const std::string &f
    h_data.SetLineColor(kBlack);
 
    // Draw histograms
-   h_cmb.Draw("HIST");
-   h_bkg.Draw("HIST SAME");
-   h_data.Draw("PE1 SAME");
+   h_cmb.DrawClone("HIST");
+   h_bkg.DrawClone("HIST SAME");
+   h_data.DrawClone("PE1 SAME");
 
    // Add legend
    TLegend legend(0.62, 0.70, 0.82, 0.88);
