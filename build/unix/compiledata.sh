@@ -118,7 +118,7 @@ echo "#define CXX \"$BXX\"" >> ${COMPILEDATA}.tmp
 echo "#define COMPILER \""`type -path $CXX`"\"" >> ${COMPILEDATA}.tmp
 echo "#define COMPILERVERS \"$COMPILERVERS\"" >> ${COMPILEDATA}.tmp
 if [ "$CUSTOMSHARED" = "" ]; then
-   echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $BXX -fPIC -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $BXX \$ObjectFiles $SOFLAGS $LDFLAGS $EXPLLINKLIBS -o \$SharedLib\"" >> ${COMPILEDATA}.tmp
+   echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $BXX -fPIC -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $BXX \$Opt \$ObjectFiles $SOFLAGS $LDFLAGS $EXPLLINKLIBS -o \$SharedLib\"" >> ${COMPILEDATA}.tmp
 else
    echo "#define MAKESHAREDLIB \"$CUSTOMSHARED\"" >> ${COMPILEDATA}.tmp
 fi
