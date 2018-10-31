@@ -1,7 +1,7 @@
 from libROOTPython import AddPrettyPrintingPyz
 from ROOT import pythonization
 
-@pythonization
+@pythonization()
 def pythonizegeneric(klass, name):
     # Parameters:
     # klass: class to be pythonized

@@ -2,21 +2,33 @@
 import cppyy
 import ROOT.pythonization as pyz
 
-import pkgutil
+import functools
 import importlib
+import pkgutil
 
-def pythonization(fn):
+def pythonization(lazy = True):
     """
-    Pythonizor decorator to be used in pythonization modules.
-
+    Pythonizor decorator to be used in pythonization modules for pythonizations.
+    These pythonizations functions are invoked upon usage of the class.
     Parameters
     ----------
-    fn : function
-        Function that implements some pythonization.
-        The function must accept two parameters: the class
-        to be pythonized and the name of that class.
+    lazy : boolean
+        If lazy is true, the class is pythonized upon first usage, otherwise
+        upon import of the ROOT module.
     """
-    cppyy.py.add_pythonization(fn)
+    def pythonization_impl(fn):
+        """
+        The real decorator. This structure is adopted to deal with parameters
+        fn : function
+            Function that implements some pythonization.
+            The function must accept two parameters: the class
+            to be pythonized and the name of that class.
+        """
+        if lazy:
+            cppyy.py.add_pythonization(fn)
+        else:
+            fn()
+    return pythonization_impl
 
 # Trigger the addition of the pythonizations
 for _, module_name, _ in  pkgutil.walk_packages(pyz.__path__):
