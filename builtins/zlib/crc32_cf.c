@@ -20,6 +20,41 @@
 
   DYNAMIC_CRC_TABLE and MAKECRCH can be #defined to write out crc32.h.
  */
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC push_options
+#if __ARM_ARCH >= 8
+#pragma GCC target ("arch=armv8-a+crc")
+#endif
+#endif
+
+#if defined (__ARM_FEATURE_CRC32)
+#include <arm_neon.h>
+#include <arm_acle.h>
+
+#include <stdint.h>
+#include <stddef.h>
+
+uint32_t crc32(uint32_t crc, uint8_t *buf, size_t len) {
+    crc = ~crc;
+
+    while (len > 8) {
+        crc = __crc32d(crc, *(uint64_t*)buf);
+        len -= 8;
+        buf += 8;
+    }
+
+    while (len) {
+        crc = __crc32b(crc, *buf);
+        len--;
+        buf++;
+    }
+
+    return ~crc;
+}
+
+#else
+
+#include <stdio.h>
 
 #ifdef MAKECRCH
 #  include <stdio.h>
@@ -29,6 +64,10 @@
 #endif /* MAKECRCH */
 
 #include "zutil.h"      /* for STDC and FAR definitions */
+
+#ifdef __x86_64__
+#include "cpuid.h"
+#endif
 
 #define local static
 
@@ -201,7 +240,7 @@ const z_crc_t FAR * ZEXPORT get_crc_table()
 #define DO8 DO1; DO1; DO1; DO1; DO1; DO1; DO1; DO1
 
 /* ========================================================================= */
-unsigned long ZEXPORT crc32(crc, buf, len)
+local unsigned long crc32_generic(crc, buf, len)
     unsigned long crc;
     const unsigned char FAR *buf;
     uInt len;
@@ -233,6 +272,14 @@ unsigned long ZEXPORT crc32(crc, buf, len)
         DO1;
     } while (--len);
     return crc ^ 0xffffffffUL;
+}
+
+uLong crc32(crc, buf, len)
+    uLong crc;
+    const Bytef *buf;
+    uInt len;
+{
+    return crc32_generic(crc, buf, len);
 }
 
 #ifdef BYFOUR
@@ -423,3 +470,5 @@ uLong ZEXPORT crc32_combine64(crc1, crc2, len2)
 {
     return crc32_combine_(crc1, crc2, len2);
 }
+
+#endif

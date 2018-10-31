@@ -19,6 +19,18 @@ set(ZLIB_PRIVATE_HEADERS
     zutil.h
 )
 
+set(ZLIBCF_PRIVATE_HEADERS
+    crc32.h
+    deflate_cf.h
+    gzguts.h
+    inffast.h
+    inffixed.h
+    inflate.h
+    inftrees.h
+    trees.h
+    zutil.h
+)
+
 set(ZLIB_SOURCES
     adler32.c
     compress.c
@@ -33,6 +45,24 @@ set(ZLIB_SOURCES
     inftrees.c
     inffast.c
     trees.c
+    uncompr.c
+    zutil.c
+)
+
+set(ZLIBCF_SOURCES
+    adler32_cf.c
+    compress.c
+    crc32_cf.c
+    deflate_cf.c
+    gzclose.c
+    gzlib.c
+    gzread.c
+    gzwrite.c
+    inflate.c
+    infback.c
+    inftrees.c
+    inffast.c
+    trees_cf.c
     uncompr.c
     zutil.c
 )
@@ -59,7 +89,12 @@ set(ZLIB_VERSION_STRING ${ZLIB_VERSION_STRING} CACHE INTERNAL "")
 set(ZLIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 set(ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
-add_library(ZLIB STATIC ${ZLIB_PUBLIC_HEADERS} ${ZLIB_PRIVATE_HEADERS} ${ZLIB_SOURCES} ${ZLIB_ASMS})
+if((CMAKE_SYSTEM_PROCESSOR MATCHES "amd64|x86_64|AMD64|X86_64|aarch64") AND (CMAKE_SYSTEM_NAME MATCHES "Linux"))
+   add_library(ZLIB STATIC ${ZLIB_PUBLIC_HEADERS} ${ZLIBCF_PRIVATE_HEADERS} ${ZLIBCF_SOURCES})
+else()
+   add_library(ZLIB STATIC ${ZLIB_PUBLIC_HEADERS} ${ZLIB_PRIVATE_HEADERS} ${ZLIB_SOURCES})
+endif()
+
 set_target_properties(ZLIB PROPERTIES C_VISIBILITY_PRESET hidden POSITION_INDEPENDENT_CODE ON)
 target_include_directories(ZLIB INTERFACE $<BUILD_INTERFACE:${ZLIB_INCLUDE_DIR}>)
 
