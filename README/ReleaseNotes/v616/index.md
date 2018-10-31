@@ -12,26 +12,34 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Kim Albertsson, CERN/ATLAS,\
+ Guilherme Amadio, CERN/SFT,\
  Bertrand Bellenot, CERN/SFT,\
- Brian Bockelman, University of Nebraska-Lincoln,\
+ Iliana Betsou, CERN/SFT,\
+ Brian Bockelman, UNL,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
+ Enrico Guiraud, CERN/SFT,\
+ Stephan Hageboeck, CERN/SFT,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
+ Alja Mrak Tadel, UCSD/CMS,\
  Axel Naumann, CERN/SFT,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
+ Oksana Shadura, UNL,\
  Matevz Tadel, UCSD/CMS,\
+ Yuka Takahashi, UCincinatti + CERN/SFT,\
+ Massimo Tumolo, Politecnico di Torino,\
+ Xavier Valls, CERN/SFT,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
- Jan Musinsky, SAS Kosice,\
- Enrico Guiraud, CERN,\
- Massimo Tumolo, Politecnico di Torino
+ Stefan Wunsch, CERN/SFT
 
 ## Deprecation and Removal
 
