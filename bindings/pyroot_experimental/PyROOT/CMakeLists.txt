@@ -1,3 +1,7 @@
+############################################################################
+# CMakeLists.txt file for building ROOT bindings/pyroot_experimental package
+############################################################################
+
 set(py_sources
   ROOT/__init__.py
   ROOT/pythonization/__init__.py
