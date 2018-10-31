@@ -134,7 +134,8 @@ if(cxxmodules)
   string(REPLACE "${ROOT_CXXMODULES_CFLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
   if(libcxx)
     # FIXME: We cannot build LLVM/clang with modules on with libstdc++, yet.
-    set (LLVM_ENABLE_MODULES ON CACHE BOOL "Override the default LLVM_ENABLE_MODULES option value." )
+    # FIXME: We cannot build LLVM/clang with modules on with libc++, too.
+    #set (LLVM_ENABLE_MODULES ON CACHE BOOL "Override the default LLVM_ENABLE_MODULES option value." )
   endif(libcxx)
 endif(cxxmodules)
 
