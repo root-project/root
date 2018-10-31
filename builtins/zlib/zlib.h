@@ -31,7 +31,11 @@
 #ifndef ZLIB_H
 #define ZLIB_H
 
+#ifdef R__HAS_CLOUDFLARE_ZLIB
+#include "zconf_cf.h"
+#else
 #include "zconf.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
