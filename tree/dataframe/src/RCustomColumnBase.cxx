@@ -22,7 +22,7 @@ namespace RDFInternal = ROOT::Internal::RDF;
 
 unsigned int RCustomColumnBase::GetNextID()
 {
-   static unsigned int id = 0;
+   static unsigned int id = 0U;
    ++id;
    return id;
 }
