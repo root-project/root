@@ -1198,7 +1198,9 @@ if(builtin_tbb)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*")
   else()
     ROOT_ADD_CXX_FLAG(_tbb_cxxflags -mno-rtm)
-    if(APPLE)
+    # Here we check that the CMAKE_OSX_SYSROOT variable is not empty otherwise
+    # it can happen that a "-isysroot" switch is added without an argument.
+    if(APPLE AND CMAKE_OSX_SYSROOT)
       set(_tbb_cxxflags "${_tbb_cxxflags} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
