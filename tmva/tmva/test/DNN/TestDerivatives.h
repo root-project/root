@@ -80,7 +80,7 @@ template<typename Architecture, typename F, typename dF>
  *  error. Prints the result for each function to the stdout. */
 //______________________________________________________________________________
 template<typename Architecture>
-auto testActivationFunctionDerivatives()
+auto testActivationFunctionDerivatives(bool useFastTanh = false)
     -> typename Architecture::Scalar_t
 {
    using Scalar_t   = typename Architecture::Scalar_t;
@@ -106,6 +106,9 @@ auto testActivationFunctionDerivatives()
       };
 
       auto h = std::sqrt(std::numeric_limits<Scalar_t>::epsilon());
+      // in case of tanh and using VDT h (derivative step size  must be much larger)
+      if (useFastTanh && af == EActivationFunction::kTanh ) h = 1.E-3; 
+
       error = testDerivatives<Architecture>(f, df, h);
 
       std::cout << "Testing " << static_cast<int>(af) << ": ";

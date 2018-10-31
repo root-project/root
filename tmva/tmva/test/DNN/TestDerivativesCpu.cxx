@@ -15,6 +15,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include "RConfigure.h"
 #include "TMVA/DNN/Architectures/Cpu.h"
 #include "TestDerivatives.h"
 
@@ -31,7 +32,12 @@ int main()
     //
 
     std::cout << "Activation Functions:" << std::endl;
-    error = testActivationFunctionDerivatives<TCpu<Scalar_t>>();
+#ifdef R__HAS_VDT
+    bool useFastTanh = true;
+#else
+    bool useFastTanh = false;
+#endif
+    error = testActivationFunctionDerivatives<TCpu<Scalar_t>>(useFastTanh);
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << error;
     std::cout << std::endl << std::endl;
