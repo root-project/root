@@ -133,6 +133,18 @@ class TTreeSetBranchAddress(unittest.TestCase):
             self.assertEqual(ms.myint1, self.more)
             self.assertEqual(ms.myint2, 0)
 
+    def test_fallback_case(self):
+        f,t,c = self.get_tree_and_chain()
+        
+        for ds in t,c:
+            n = array('f', [ 0. ])
+            b = ds.GetBranch('floatb')
+            # Test an overload that uses the original SetBranchAddress proxy
+            ds.SetBranchAddress('floatb', n, b)
+            ds.GetEntry(0)
+
+            self.assertEqual(n[0], self.more)
+
     def test_ntuples(self):
         f,nt,ntd = self.get_ntuples()
 
