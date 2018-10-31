@@ -24,7 +24,7 @@ def _SetBranchAddress(self, *args):
     if res is None:
         # Fall back to the original implementation for the rest of overloads
         res = self._OriginalSetBranchAddress(*args)
-    
+
     return res
 
 def _Branch(self, *args):
@@ -66,6 +66,7 @@ def pythonize_ttree(klass, name):
         AddBranchAttrSyntax(klass)
 
         # SetBranchAddress
+        klass._OriginalSetBranchAddress = klass.SetBranchAddress
         klass.SetBranchAddress = _SetBranchAddress
 
         # Branch
