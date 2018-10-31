@@ -4985,7 +4985,7 @@ const char* TCling::TypeName(const char* typeDesc)
 static bool requiresRootMap(const char* rootmapfile, cling::Interpreter* interp)
 {
    if (!rootmapfile || !*rootmapfile)
-      return true;
+      return false;
 
    llvm::StringRef moduleName = llvm::sys::path::filename(rootmapfile);
    moduleName.consume_front("lib");
@@ -5007,7 +5007,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
    // For "class ", "namespace ", "typedef ", "header ", "enum ", "var " respectively
    const std::map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7},{'e',5},{'v',4}};
 
-   if (rootmapfile && *rootmapfile) {
+   if (rootmapfile && *rootmapfile && requiresRootMap(rootmapfile, fInterpreter)) {
       std::string rootmapfileNoBackslash(rootmapfile);
 #ifdef _MSC_VER
       std::replace(rootmapfileNoBackslash.begin(), rootmapfileNoBackslash.end(), '\\', '/');
@@ -5031,7 +5031,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
          }
          newFormat=true;
 
-         if (line.compare(0, 9, "{ decls }") == 0 && requiresRootMap(rootmapfile, fInterpreter)) {
+         if (line.compare(0, 9, "{ decls }") == 0) {
             // forward declarations
 
             while (getline(file, line, '\n')) {
@@ -5120,6 +5120,9 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
 
 void TCling::InitRootmapFile(const char *name)
 {
+   if (!requiresRootMap(name, fInterpreter))
+      return;
+
    Bool_t ignore = fMapfile->IgnoreDuplicates(kFALSE);
 
    fMapfile->SetRcName(name);
@@ -5186,7 +5189,11 @@ namespace {
 
 Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 {
+   if (!requiresRootMap(rootmapfile, fInterpreter))
+      return 0;
+
    R__LOCKGUARD(gInterpreterMutex);
+
    // open the [system].rootmap files
    if (!fMapfile) {
       fMapfile = new TEnv();
@@ -5197,9 +5204,6 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
       fRootmapFiles->SetOwner();
       InitRootmapFile(".rootmap");
    }
-   bool needsRootMap = true;
-   if (rootmapfile && *rootmapfile)
-      needsRootMap = requiresRootMap(rootmapfile, fInterpreter);
 
    // Prepare a list of all forward declarations for cling
    // For some experiments it is easily as big as 500k characters. To be on the
@@ -5245,11 +5249,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
                            if (gDebug > 4) {
                               Info("LoadLibraryMap", "   rootmap file: %s", p.Data());
                            }
-                           Int_t ret;
-                           if (needsRootMap)
-                              ret = ReadRootmapFile(p,&uniqueString);
-                           else
-                              ret = ReadRootmapFile(p);
+                           Int_t ret = ReadRootmapFile(p,&uniqueString);
 
                            if (ret == 0)
                               fRootmapFiles->Add(new TNamed(gSystem->BaseName(f), p.Data()));
@@ -5284,11 +5284,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
       }
    }
    if (rootmapfile && *rootmapfile) {
-      Int_t res;
-      if (needsRootMap)
-         res = ReadRootmapFile(rootmapfile, &uniqueString);
-      else
-         res = ReadRootmapFile(rootmapfile);
+      Int_t res = ReadRootmapFile(rootmapfile, &uniqueString);
       if (res == 0) {
          //TString p = gSystem->ConcatFileName(gSystem->pwd(), rootmapfile);
          //fRootmapFiles->Add(new TNamed(gSystem->BaseName(rootmapfile), p.Data()));
@@ -5354,12 +5350,13 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 
    // Process the forward declarations collected
    cling::Transaction* T = nullptr;
+
    auto compRes= fInterpreter->declare(uniqueString.Data(), &T);
    assert(cling::Interpreter::kSuccess == compRes && "A declaration in a rootmap could not be compiled");
 
    if (compRes!=cling::Interpreter::kSuccess){
       Warning("LoadLibraryMap",
-               "Problems in %s declaring '%s' were encountered.", rootmapfile, uniqueString.Data()) ;
+            "Problems in %s declaring '%s' were encountered.", rootmapfile, uniqueString.Data()) ;
    }
 
    if (T){
