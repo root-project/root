@@ -84,8 +84,9 @@ if(NOT ROOT_xml_FOUND)
 endif()
 
 if(NOT XROOTD_FOUND)
-  set(xrootd_veto dataframe/df102_NanoAODDimuonAnalysis.C
-                  dataframe/df101_h1Analysis.C)
+  set(xrootd_veto dataframe/df101_h1Analysis.C
+                  dataframe/df102_NanoAODDimuonAnalysis.C
+                  dataframe/df103_NanoAODHiggsAnalysis.C)
 endif()
 
 # variables identifying the package must have the package name  in lower case (it corresponds to the CMake option name)
