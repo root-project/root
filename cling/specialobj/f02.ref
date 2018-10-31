@@ -10,4 +10,9 @@ input_line_FILTERED:2:3: error: use of undeclared identifier 'ThisReallyDoesNotE
   ^
 Error in <HandleInterpreterException>: Error evaluating expression (ThisReallyDoesNotExist[42]).
 Execution of your code was aborted.
+input_line_17:2:7: error: use of undeclared identifier 'WhyAmI'
+(1 ? WhyAmI : 0)
+^
+Error in <HandleInterpreterException>: Error evaluating expression (1 ? WhyAmI : 0).
+Execution of your code was aborted.
 (int) 0
