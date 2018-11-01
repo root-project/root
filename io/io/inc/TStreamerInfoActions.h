@@ -42,6 +42,7 @@ namespace TStreamerInfoActions {
       virtual ~TConfiguration() {};
 
       virtual void AddToOffset(Int_t delta);
+      virtual void SetMissing();
 
       virtual TConfiguration *Copy() { return new TConfiguration(*this); }
 
@@ -193,6 +194,7 @@ namespace TStreamerInfoActions {
       ActionContainer_t     fActions;
 
       void AddToOffset(Int_t delta);
+      void SetMissing();
 
       TActionSequence *CreateCopy();
       static TActionSequence *CreateReadMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy);
