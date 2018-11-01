@@ -37,8 +37,11 @@ PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
    PyObject *name = nullptr;
    PyObject *option = nullptr;
    Int_t bufsize = 0;
-   if (!PyArg_ParseTuple(args, const_cast<char *>("O!O!|O!i:TDirectory::WriteObject"), &CPPInstance_Type, &wrt,
-                         &CPyCppyy_PyUnicode_Type, &name, &CPyCppyy_PyUnicode_Type, &option, &bufsize))
+   if (!PyArg_ParseTuple(args, const_cast<char *>("O!O!|O!i:TDirectory::WriteObject"),
+                         &CPPInstance_Type, &wrt,
+                         &CPyCppyy_PyUnicode_Type, &name,
+                         &CPyCppyy_PyUnicode_Type, &option,
+                         &bufsize))
       return nullptr;
    auto dir = (TDirectory *)OP2TCLASS(self)->DynamicCast(TDirectory::Class(), self->GetObject());
    if (!dir) {
