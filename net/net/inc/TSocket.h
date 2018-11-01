@@ -24,6 +24,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Compression.h"
 #include "TNamed.h"
 #include "TBits.h"
 #include "TInetAddress.h"
@@ -99,7 +100,7 @@ protected:
 
    static Int_t  fgClientProtocol; // client "protocol" version
 
-   TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(0),
+   TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(ROOT::kUseGlobalCompressionAlgorithm),
                fLocalAddress(), fRemoteProtocol(), fSecContext(0), fService(),
                fServType(kSOCKD), fSocket(-1), fTcpWindowSize(0), fUrl(),
                fBitsInfo(), fUUIDs(0), fLastUsageMtx(0), fLastUsage() { }
@@ -163,9 +164,9 @@ public:
    virtual Int_t         SendObject(const TObject *obj, Int_t kind = kMESS_OBJECT);
    virtual Int_t         SendRaw(const void *buffer, Int_t length,
                                  ESendRecvOptions opt = kDefault);
-   void                  SetCompressionAlgorithm(Int_t algorithm=0);
-   void                  SetCompressionLevel(Int_t level=1);
-   void                  SetCompressionSettings(Int_t settings=1);
+   void                  SetCompressionAlgorithm(Int_t algorithm = ROOT::kUseGlobalCompressionAlgorithm);
+   void                  SetCompressionLevel(Int_t level = ROOT::kUseMinCompressionLevel);
+   void                  SetCompressionSettings(Int_t settings = ROOT::kUseGeneralPurposeCompressionSetting);
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
    void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }

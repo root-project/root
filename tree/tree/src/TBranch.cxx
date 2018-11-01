@@ -2347,7 +2347,7 @@ void TBranch::SetCompressionAlgorithm(Int_t algorithm)
 {
    if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
    if (fCompress < 0) {
-      fCompress = 100 * algorithm + 1;
+      fCompress = 100 * algorithm + ROOT::kUseMinCompressionLevel;
    } else {
       int level = fCompress % 100;
       fCompress = 100 * algorithm + level;

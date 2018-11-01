@@ -12,6 +12,7 @@
 #ifndef ROOT_TXMLFile
 #define ROOT_TXMLFile
 
+#include "Compression.h"
 #include "TXMLEngine.h"
 #include "TFile.h"
 #include "TXMLSetup.h"
@@ -49,7 +50,7 @@ private:
 
 public:
    TXMLFile();
-   TXMLFile(const char *filename, Option_t *option = "read", const char *title = "title", Int_t compression = 1);
+   TXMLFile(const char *filename, Option_t *option = "read", const char *title = "title", Int_t compression = ROOT::kUseGeneralPurposeCompressionSetting);
    virtual ~TXMLFile();
 
    virtual void Close(Option_t *option = ""); // *MENU*

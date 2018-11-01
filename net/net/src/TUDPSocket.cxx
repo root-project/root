@@ -53,7 +53,7 @@ ClassImp(TUDPSocket);
 /// closed on program termination.
 
 TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
-         : TNamed(addr.GetHostName(), service)
+         : TNamed(addr.GetHostName(), service), fCompress(ROOT::kUseGlobalCompressionAlgorithm)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -70,7 +70,6 @@ TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
    fAddress.fPort = gSystem->GetServiceByName(service);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress = 0;
    fUUIDs = 0;
    fLastUsageMtx = 0;
    ResetBit(TUDPSocket::kBrokenConn);
@@ -100,7 +99,7 @@ TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
 /// closed on program termination.
 
 TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
-         : TNamed(addr.GetHostName(), "")
+         : TNamed(addr.GetHostName(), ""), fCompress(ROOT::kUseGlobalCompressionAlgorithm)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -118,7 +117,6 @@ TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress = 0;
    fUUIDs = 0;
    fLastUsageMtx = 0;
    ResetBit(TUDPSocket::kBrokenConn);
@@ -144,7 +142,7 @@ TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
 /// closed on program termination.
 
 TUDPSocket::TUDPSocket(const char *host, const char *service)
-         : TNamed(host, service)
+         : TNamed(host, service), fCompress(ROOT::kUseGlobalCompressionAlgorithm)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -162,7 +160,6 @@ TUDPSocket::TUDPSocket(const char *host, const char *service)
    SetName(fAddress.GetHostName());
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress = 0;
    fUUIDs = 0;
    fLastUsageMtx = 0;
    ResetBit(TUDPSocket::kBrokenConn);
@@ -190,7 +187,7 @@ TUDPSocket::TUDPSocket(const char *host, const char *service)
 /// closed on program termination.
 
 TUDPSocket::TUDPSocket(const char *url, Int_t port)
-         : TNamed(TUrl(url).GetHost(), "")
+         : TNamed(TUrl(url).GetHost(), ""), fCompress(ROOT::kUseGlobalCompressionAlgorithm)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -212,7 +209,6 @@ TUDPSocket::TUDPSocket(const char *url, Int_t port)
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress = 0;
    fUUIDs = 0;
    fLastUsageMtx = 0;
    ResetBit(TUDPSocket::kBrokenConn);
@@ -233,7 +229,8 @@ TUDPSocket::TUDPSocket(const char *url, Int_t port)
 /// sockets list which will make sure that any open sockets are properly
 /// closed on program termination.
 
-TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, "")
+TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, ""),
+                                               fCompress(ROOT::kUseGlobalCompressionAlgorithm)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -249,7 +246,6 @@ TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, "")
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress  = 0;
    fUUIDs = 0;
    fLastUsageMtx  = 0;
    ResetBit(TUDPSocket::kBrokenConn);
@@ -265,7 +261,7 @@ TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, "")
 /// Create a socket. The socket will adopt previously opened TCP socket with
 /// descriptor desc.
 
-TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", "")
+TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", ""), fCompress(ROOT::kUseGlobalCompressionAlgorithm)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -276,7 +272,6 @@ TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", "")
    fServType       = kSOCKD;
    fBytesSent      = 0;
    fBytesRecv      = 0;
-   fCompress       = 0;
    fUUIDs          = 0;
    fLastUsageMtx   = 0;
    ResetBit(TUDPSocket::kBrokenConn);
@@ -295,7 +290,8 @@ TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", "")
 /// descriptor desc. The sockpath arg is for info purposes only. Use
 /// this method to adopt e.g. a socket created via socketpair().
 
-TUDPSocket::TUDPSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
+TUDPSocket::TUDPSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, ""),
+                                                           fCompress(ROOT::kUseGlobalCompressionAlgorithm)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -311,7 +307,6 @@ TUDPSocket::TUDPSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress  = 0;
    fUUIDs = 0;
    fLastUsageMtx  = 0;
    ResetBit(TUDPSocket::kBrokenConn);
@@ -1022,8 +1017,8 @@ void TUDPSocket::SetCompressionAlgorithm(Int_t algorithm)
 {
    if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
    if (fCompress < 0) {
-      // if the level is not defined yet use 1 as a default
-      fCompress = 100 * algorithm + 1;
+      // if the level is not defined yet use 4 as a default (with ZLIB was 1)
+      fCompress = 100 * algorithm + ROOT::kUseMinCompressionLevel;
    } else {
       int level = fCompress % 100;
       fCompress = 100 * algorithm + level;

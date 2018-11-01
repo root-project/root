@@ -12,6 +12,7 @@
 #ifndef ROOT_TRFIOFile
 #define ROOT_TRFIOFile
 
+#include "Compression.h"
 #include "TFile.h"
 #include "TSystem.h"
 
@@ -33,7 +34,7 @@ private:
 
 public:
    TRFIOFile(const char *url, Option_t *option="",
-             const char *ftitle="", Int_t compress=1);
+             const char *ftitle="", Int_t compress = ROOT::kUseGeneralPurposeCompressionSetting);
    ~TRFIOFile();
 
    Int_t   GetErrno() const;

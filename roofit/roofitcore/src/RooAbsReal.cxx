@@ -86,6 +86,7 @@
 
 #include "Riostream.h"
 
+#include "Compression.h"
 #include "Math/IFunction.h"
 #include "TMath.h"
 #include "TObjString.h"
@@ -2711,7 +2712,7 @@ Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Plot function or PDF on frame with support for visualization of the uncertainty encoded in the given fit result fr.
-/// \param[in] frame RooPlot to plot on 
+/// \param[in] frame RooPlot to plot on
 /// \param[in] fr The RooFitResult, where errors can be extracted
 /// \param[in] Z  The desired significance (width) of the error band
 /// \param[in] params If non-zero, consider only the subset of the parameters in fr for the error evaluation
@@ -3238,7 +3239,7 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 
     if (branch->GetCompressionLevel()<0) {
       // cout << "RooAbsReal::attachToTree(" << GetName() << ") Fixing compression level of branch " << cleanName << endl ;
-      branch->SetCompressionLevel(1) ;
+      branch->SetCompressionLevel(ROOT::kUseGlobalCompressionSetting % 100) ;
     }
 
 //      cout << "RooAbsReal::attachToTree(" << cleanName << "): branch already exists in tree " << (void*)&t << ", changing address" << endl ;
@@ -3248,7 +3249,7 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
     TString format(cleanName);
     format.Append("/D");
     branch = t.Branch(cleanName, &_value, (const Text_t*)format, bufSize);
-    branch->SetCompressionLevel(1) ;
+    branch->SetCompressionLevel(ROOT::kUseGlobalCompressionSetting % 100) ;
     //      cout << "RooAbsReal::attachToTree(" << cleanName << "): creating new branch in tree " << (void*)&t << endl ;
   }
 
@@ -4779,4 +4780,3 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
   }
   setStringAttribute("CACHEPARAMINT",plist.c_str()) ;
 }
-

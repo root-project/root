@@ -86,7 +86,7 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     return;
   }
 
-  if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kUseGlobalCompressionSetting) {
+  if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kUseGlobalCompressionAlgorithm) {
     compressionAlgorithm = R__ZipMode;
   }
 
@@ -97,7 +97,7 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   } else if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kLZ4) {
      R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
-  } else if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kOldCompressionAlgo || compressionAlgorithm == ROOT::ECompressionAlgorithm::kUseGlobalCompressionSetting) {
+  } else if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kOldCompressionAlgo || compressionAlgorithm == ROOT::ECompressionAlgorithm::kUseGlobalCompressionAlgorithm) {
      R__zipOld(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
   } else {
@@ -239,7 +239,7 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
 
 void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
    R__zipMultipleAlgorithm(cxlevel, srcsize, src, tgtsize, tgt, irep,
-                           ROOT::ECompressionAlgorithm::kUseGlobalCompressionSetting);
+                           ROOT::ECompressionAlgorithm::kUseGlobalCompressionAlgorithm);
 }
 
 /**

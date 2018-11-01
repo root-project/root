@@ -12,9 +12,7 @@
 #ifndef ROOT_Compression
 #define ROOT_Compression
 
-#if defined(__cplusplus)
 namespace ROOT {
-#endif
 
 /// The global settings depend on a global variable named R__ZipMode which can be
 /// modified by a global function named R__SetZipMode. Both are defined in Bits.h.
@@ -33,16 +31,19 @@ namespace ROOT {
 /// Level 0 means no compression.
 ///
 /// Recommendation for the compression algorithm's levels:
-///  - ZLIB is recommended to be used with compression level 1 [101] 
-///  - LZMA is recommended to be used with compression level 7-8 (higher is better, 
+///  - ZLIB is recommended to be used with compression level 1 [101]
+///  - LZMA is recommended to be used with compression level 7-8 (higher is better,
 ///   since in the case of LZMA we don't care about compression/decompression speed)
 ///   [207 - 208]
 ///  - LZ4 is recommended to be used with compression level 4 [404]
 
 
 enum ECompressionAlgorithm {
-   /// Use the global compression setting
-   kUseGlobalCompressionSetting,
+   /// Some objects use this value to denote that the compression algorithm
+   /// should be inherited from the parent object (e.g., TBranch should get the algorithm from the TTree)
+   kInheritCompressionAlgorithm = -1,
+   /// Use the global compression algorithm
+   kUseGlobalCompressionAlgorithm = 0,
    /// Use ZLIB compression
    kZLIB,
    /// Use LZMA compression
@@ -55,14 +56,37 @@ enum ECompressionAlgorithm {
    kUndefinedCompressionAlgorithm
 };
 
+enum ECompressionLevel {
+   /// Some objects use this value to denote that the compression algorithm
+   /// should be inherited from the parent object
+   kInheritCompressionLevel = -1,
+   // Compression level reserved for "uncompressed state"
+   kUncompressedLevel = 0,
+   // Compression level reserved when we are not sure what to use (1 is for the fastest compression)
+   kUseMinCompressionLevel = 1,
+   kDefaultZLIB = 1,
+   kDefaultLZ4 = 4,
+   kDefaultOld = 6,
+   kDefaultLZMA = 7
+};
+
+enum ECompressionSetting {
+   /// Use the global compression setting for this process; may be affected by rootrc.
+   kUseGlobalCompressionSetting = 0,
+   /// Use the compile-time default setting
+   kUseCompiledDefaultCompressionSetting = 404,
+   /// Use the default analysis setting; fast reading but poor compression ratio
+   kUseAnalysisCompressionSetting = 404,
+   /// Use the recommended general-purpose setting; moderate read / write speed and compression ratio
+   kUseGeneralPurposeCompressionSetting = 101,
+   /// Use the setting that results in the smallest files; very slow read and write
+   kUseSmallestCompressionSetting = 207
+};
+
 /// Deprecated name, do *not* use:
-static const enum ECompressionAlgorithm kUseGlobalSetting = kUseGlobalCompressionSetting;
+static constexpr ECompressionAlgorithm kUseGlobalSetting __attribute__ ((deprecated)) = kUseGlobalCompressionAlgorithm;
 
-#if defined(__cplusplus)
-
-   int CompressionSettings(ECompressionAlgorithm algorithm,
-                           int compressionLevel);
+int CompressionSettings(ECompressionAlgorithm algorithm, int compressionLevel);
 }
-#endif
 
 #endif
