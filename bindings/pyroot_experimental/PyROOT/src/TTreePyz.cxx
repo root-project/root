@@ -314,8 +314,9 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
                            &PyInt_Type, &bufsize,
                            &PyInt_Type, &splitlevel)) {
          bIsMatch = true;
-      } else
+      } else {
          PyErr_Clear();
+      }
    }
 
    if (bIsMatch) {
@@ -339,8 +340,9 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
             klName = GetClass((CPPInstance *)address)->GetName();
             argc += 1;
          }
-      } else
+      } else {
          Utility::GetBuffer(address, '*', 1, buf, false);
+      }
 
       if (buf && !klName.empty()) {
          TBranch *branch = 0;
