@@ -4163,7 +4163,7 @@ int RootClingMain(int argc,
    bool writeEmptyRootPCM = false;
    bool selSyntaxOnly = false;
    bool noIncludePaths = false;
-   bool cxxmodule = getenv("ROOT_MODULES") != nullptr;
+   bool cxxmodule = false;
 
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
