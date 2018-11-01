@@ -16,6 +16,7 @@ set(sources
   src/TTreePyz.cxx
   src/GenericPyz.cxx
   src/Helpers.cxx
+  src/PyzCppHelpers.cxx
 )
 
 file(COPY python/ROOT DESTINATION ${localruntimedir})
