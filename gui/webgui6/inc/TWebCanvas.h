@@ -22,6 +22,7 @@
 #include "TCanvasImp.h"
 
 #include "TString.h"
+#include "TList.h"
 
 #include <ROOT/RWebWindow.hxx>
 
@@ -31,7 +32,6 @@
 
 class TVirtualPad;
 class TPad;
-class TList;
 class TObjLink;
 class TWebSnapshot;
 class TPadWebSnapshot;
@@ -112,6 +112,7 @@ protected:
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
    bool fWaitNewConnection{false}; ///<! when true, Update() will wait for a new connection
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
+   TList fPrimitivesLists;         ///<! list of lists of primitives, temporary collected during painting
 
    UpdatedSignal_t fUpdatedSignal;          ///<! signal emitted when canvas updated or state is changed
    PadSignal_t fActivePadChangedSignal;     ///<!  signal emitted when active pad changed in the canvas
@@ -127,9 +128,9 @@ protected:
    virtual Bool_t PerformUpdate();
    virtual TVirtualPadPainter *CreatePadPainter();
 
-   Bool_t AddCanvasSpecials(std::unique_ptr<TPadWebSnapshot> &master);
-   void CreateObjectSnapshot(std::unique_ptr<TPadWebSnapshot> &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
-   bool CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t version = 0, TPadWebSnapshot *master = nullptr, TList *primitives_lst = nullptr);
+   void AddCanvasSpecials(TPadWebSnapshot &master);
+   void CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
+   void CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t version = 0, TPadWebSnapshot *master = nullptr);
 
    TObject *FindPrimitive(const char *id, TPad *pad = nullptr, TObjLink **padlnk = nullptr);
    Bool_t DecodeAllRanges(const char *arg);
