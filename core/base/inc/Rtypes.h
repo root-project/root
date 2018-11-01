@@ -31,8 +31,12 @@
 #include <string.h>
 #include <typeinfo>
 
+#ifndef __CLING__
+// __attribute__ is not supported on Windows, but it is internally needed by Cling
+// for autoloading and Clad rely on __attribute__((annotate("D")))
 #if defined(R__WIN32)
 #define __attribute__(unused)
+#endif
 #endif
 
 //---- forward declared class types --------------------------------------------
