@@ -5,6 +5,7 @@
 set(py_sources
   ROOT/__init__.py
   ROOT/pythonization/__init__.py
+  ROOT/pythonization/_tdirectory.py
   ROOT/pythonization/_ttree.py
   ROOT/pythonization/_generic.py
 )
@@ -13,6 +14,7 @@ set(sources
   src/PyROOTModule.cxx
   src/PyROOTStrings.cxx
   src/PyROOTWrapper.cxx
+  src/TDirectoryPyz.cxx
   src/TTreePyz.cxx
   src/GenericPyz.cxx
   src/Helpers.cxx
