@@ -272,23 +272,14 @@ void TWebCanvas::AddCanvasSpecials(TPadWebSnapshot &master)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create snapshot for pad and all primitives
 
-void TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t version, TPadWebSnapshot *master)
+void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t resfunc)
 {
-   std::unique_ptr<TPadWebSnapshot> canv_data;
-   TPadWebSnapshot *curr = nullptr;
-   if (master) {
-      curr = master->NewSubPad();
-   } else {
-      canv_data = std::make_unique<TPadWebSnapshot>();
-      curr = canv_data.get();
-   }
+   paddata.SetActive(pad == gPad);
+   paddata.SetObjectIDAsPtr(pad);
+   paddata.SetSnapshot(TWebSnapshot::kSubPad, pad);
 
-   curr->SetActive(pad == gPad);
-   curr->SetObjectIDAsPtr(pad);
-   curr->SetSnapshot(TWebSnapshot::kSubPad, pad);
-
-   if (!master && (version <= 0))
-      AddCanvasSpecials(*curr);
+   if (resfunc && (version <= 0))
+      AddCanvasSpecials(paddata);
 
    TList *primitives = pad->GetListOfPrimitives();
 
@@ -303,18 +294,18 @@ void TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t 
    auto flush_master = [&]() {
       if (!usemaster || masterps.IsEmptyPainting()) return;
 
-      curr->NewPrimitive(pad).SetSnapshot(TWebSnapshot::kSVG, masterps.TakePainting(), kTRUE);
+      paddata.NewPrimitive(pad).SetSnapshot(TWebSnapshot::kSVG, masterps.TakePainting(), kTRUE);
       masterps.CreatePainting(); // create for next operations
    };
 
    auto add_object = [&]() {
-      curr->NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+      paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
    };
 
    while ((obj = iter()) != nullptr) {
       if (obj->InheritsFrom(TPad::Class())) {
          flush_master();
-         CreatePadSnapshot((TPad *)obj, nullptr, version, curr);
+         CreatePadSnapshot(paddata.NewSubPad(), (TPad *)obj, version, nullptr);
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
          add_object();
@@ -324,7 +315,7 @@ void TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t 
          TObject *fobj = nullptr;
          while ((fobj = fiter()) != nullptr)
             if (!fobj->InheritsFrom("TPaveStats") && !fobj->InheritsFrom("TPaletteAxis"))
-               CreateObjectSnapshot(*curr, pad, fobj, fiter.GetOption());
+               CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
 
          fPrimitivesLists.Add(hist->GetListOfFunctions());
       } else if (obj->InheritsFrom(TGraph::Class())) {
@@ -337,20 +328,20 @@ void TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t 
          TObject *fobj = nullptr;
          while ((fobj = fiter()) != nullptr)
             if (!fobj->InheritsFrom("TPaveStats"))  // stats should be created on the client side
-               CreateObjectSnapshot(*curr, pad, fobj, fiter.GetOption());
+               CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
 
          fPrimitivesLists.Add(gr->GetListOfFunctions());
       } else if (IsJSSupportedClass(obj)) {
          flush_master();
          add_object();
       } else {
-         CreateObjectSnapshot(*curr, pad, obj, iter.GetOption(), usemaster ? &masterps : nullptr);
+         CreateObjectSnapshot(paddata, pad, obj, iter.GetOption(), usemaster ? &masterps : nullptr);
       }
    }
 
    flush_master();
 
-   if (master)
+   if (!resfunc)
       return;
 
    // now move all primitives and functions into separate list to perform I/O
@@ -362,13 +353,12 @@ void TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t 
       TIter fiter(dlst);
       while ((obj = fiter()) != nullptr)
          save_lst.Add(obj, fiter.GetOption());
-      save_lst.Add(dlst); // add list itslef to have marker
+      save_lst.Add(dlst); // add list itself to have marker
       dlst->Clear("nodelete");
    }
 
    // invoke callback for master painting
-   if (func)
-      func(curr);
+   resfunc(&paddata);
 
    // static int filecnt = 0;
    // TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
@@ -421,9 +411,10 @@ void TWebCanvas::CheckDataToSend()
          buf.append(":");
 
          TString res;
-         CreatePadSnapshot(Canvas(), [&res](TPadWebSnapshot *snap) {
+         TPadWebSnapshot holder;
+         CreatePadSnapshot(holder, Canvas(), conn.fDrawVersion, [&res](TPadWebSnapshot *snap) {
             res = TBufferJSON::ConvertToJSON(snap, 23);
-         }, conn.fDrawVersion);
+         });
          buf.append(res.Data());
 
       } else if (!conn.fSend.empty()) {
@@ -967,7 +958,8 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
 
    {
       auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
-      imp->CreatePadSnapshot(c, [&res, json_compression](TPadWebSnapshot *snap) {
+      TPadWebSnapshot holder;
+      imp->CreatePadSnapshot(holder, c, 0, [&res, json_compression](TPadWebSnapshot *snap) {
          res = TBufferJSON::ConvertToJSON(snap, json_compression);
       });
    }
@@ -993,7 +985,9 @@ Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *
    {
       auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
 
-      imp->CreatePadSnapshot(c, [&res, filename, option](TPadWebSnapshot *snap) {
+      TPadWebSnapshot holder;
+
+      imp->CreatePadSnapshot(holder, c, 0, [&res, filename, option](TPadWebSnapshot *snap) {
          res = TBufferJSON::ExportToFile(filename, snap, option);
       });
    }
