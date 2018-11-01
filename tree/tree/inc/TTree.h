@@ -26,6 +26,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Compression.h"
 #include "ROOT/TIOFeatures.hxx"
 #include "TArrayD.h"
 #include "TArrayI.h"

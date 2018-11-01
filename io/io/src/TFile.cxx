@@ -173,7 +173,7 @@ AddPseudoGlobals() {
 ////////////////////////////////////////////////////////////////////////////////
 /// File default Constructor.
 
-TFile::TFile() : TDirectoryFile(), fInfoCache(0)
+TFile::TFile() : TDirectoryFile(), fCompress(ROOT::kUseGlobalCompressionAlgorithm), fInfoCache(0)
 {
    fD               = -1;
    fFree            = 0;
@@ -181,7 +181,6 @@ TFile::TFile() : TDirectoryFile(), fInfoCache(0)
    fSumBuffer       = 0;
    fSum2Buffer      = 0;
    fClassIndex      = 0;
-   fCompress        = 0;
    fProcessIDs      = 0;
    fNProcessIDs     = 0;
    fOffset          = 0;
@@ -208,7 +207,6 @@ TFile::TFile() : TDirectoryFile(), fInfoCache(0)
    fBytesRead      = 0;
    fBytesReadExtra = 0;
    fBytesWrite     = 0;
-   fCompress       = 0;
    fNbytesFree     = 0;
    fNbytesInfo     = 0;
    fSeekFree       = 0;
@@ -323,7 +321,7 @@ TFile::TFile() : TDirectoryFile(), fInfoCache(0)
 ///
 
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
-           : TDirectoryFile(), fUrl(fname1,kTRUE), fInfoCache(0), fOpenPhases(0)
+           : TDirectoryFile(), fCompress(compress), fUrl(fname1,kTRUE), fInfoCache(0), fOpenPhases(0)
 {
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
@@ -368,7 +366,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fVersion      = gROOT->GetVersionInt();  //ROOT version in integer format
    fUnits        = 4;
    fOption       = option;
-   fCompress     = compress;
    fWritten      = 0;
    fSumBuffer    = 0;
    fSum2Buffer   = 0;
@@ -2205,8 +2202,7 @@ void TFile::SetCompressionAlgorithm(Int_t algorithm)
 {
    if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
    if (fCompress < 0) {
-      // if the level is not defined yet use 1 as a default
-      fCompress = 100 * algorithm + 1;
+      fCompress = 100 * algorithm + ROOT::kUseMinCompressionLevel;
    } else {
       int level = fCompress % 100;
       fCompress = 100 * algorithm + level;
