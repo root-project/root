@@ -967,3 +967,24 @@ Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
 
    return kFALSE;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Create JSON painting output for given canvas
+/// Produce JSON can be used for offline drawing with JSROOT
+
+TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
+{
+   if (!c) return TString();
+
+   Bool_t isbatch = c->IsBatch();
+   c->SetBatch(kTRUE);
+
+   TWebCanvas *imp = new TWebCanvas(c, c->GetName(), 0, 0, 1000, 500);
+   imp->SetJsonCompression(json_compression);
+
+   TString res = imp->CreateSnapshot(c);
+
+   c->SetBatch(isbatch);
+
+   return res;
+}
