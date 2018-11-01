@@ -138,11 +138,9 @@ void TWebPainting::AddColor(Int_t indx, TColor *col)
    TString code;
 
    if (col->GetAlpha() == 1)
-      code.Form("rgb(%d,%d,%d)", (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()));
+      code.Form("%d:%d,%d,%d", indx, (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()));
    else
-      code.Form("rgba(%d,%d,%d,%5.3f)", (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()), col->GetAlpha());
-   if (indx>=0)
-      code.Prepend(TString::Format("%d:", indx));
+      code.Form("%d=%d,%d,%d,%5.3f", indx, (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()), col->GetAlpha());
 
    AddOper(code.Data());
 }
