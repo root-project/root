@@ -134,6 +134,9 @@ foreach(var ${variables})
   endif()
 endforeach()
 
+#---Make sure the Jupyter ROOT C++ kernel runs with the same Python version as ROOT-----
+configure_file(${CMAKE_SOURCE_DIR}/etc/notebook/kernels/root/kernel.json.in ${CMAKE_BINARY_DIR}/etc/notebook/kernels/root/kernel.json)
+
 #---Move (copy) directories to binary tree------------------------------------------------------
 set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
 add_custom_command(OUTPUT ${stamp_file}
