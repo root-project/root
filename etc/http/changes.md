@@ -1,5 +1,10 @@
 # JSROOT changelog
 
+## Changes in dev
+1. Upgrade three.js 86 -> 97
+2. Upgrade d3.js 4.4.4 -> 5.7.0
+
+
 ## Changes in 5.6.0
 1. By drawing outline speed up (factor 10) canvas with many small sub-pads 
 2. Let configure user click and double-click handlers, extend tooltip.htm example

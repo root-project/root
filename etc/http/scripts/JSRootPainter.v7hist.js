@@ -622,13 +622,13 @@
 
    THistPainter.prototype.FillPaletteMenu = function(menu) {
 
-      var curr = this.options.Palette;
+      var curr = this.options.Palette, hpainter = this;
       if ((curr===null) || (curr===0)) curr = JSROOT.gStyle.Palette;
 
       function change(arg) {
-         this.options.Palette = parseInt(arg);
-         this.GetPalette(true);
-         this.Redraw(); // redraw histogram
+         hpainter.options.Palette = parseInt(arg);
+         hpainter.GetPalette(true);
+         hpainter.Redraw(); // redraw histogram
       };
 
       function add(id, name, more) {
