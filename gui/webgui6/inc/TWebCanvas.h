@@ -108,6 +108,7 @@ protected:
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
    bool fWaitNewConnection{false}; ///<! when true, Update() will wait for a new connection
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
+   Int_t fJsonCompression{23};     ///<! JSON compression value for data send to clients, see TBufferJSON
 
    UpdatedSignal_t fUpdatedSignal;          ///<! signal emitted when canvas updated or state is changed
    PadSignal_t fActivePadChangedSignal;     ///<!  signal emitted when active pad changed in the canvas
@@ -141,6 +142,8 @@ protected:
    void ShowCmd(const char *arg, Bool_t show);
 
    void AssignStatusBits(UInt_t bits);
+
+   void SetJsonCompression(Int_t lvl = 0) { fJsonCompression = lvl; }
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
@@ -196,6 +199,8 @@ public:
    virtual Bool_t HasStatusBar() const;
    virtual Bool_t HasToolBar() const { return kFALSE; }
    virtual Bool_t HasToolTips() const;
+
+   static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
 
    ClassDef(TWebCanvas, 0) // ABC describing main window protocol
 };
