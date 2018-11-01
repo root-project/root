@@ -127,8 +127,8 @@ protected:
    virtual Bool_t PerformUpdate();
    virtual TVirtualPadPainter *CreatePadPainter();
 
-   Bool_t AddCanvasSpecials(TPadWebSnapshot *master);
-   std::unique_ptr<TWebSnapshot> CreateObjectSnapshot(TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
+   Bool_t AddCanvasSpecials(std::unique_ptr<TPadWebSnapshot> &master);
+   void CreateObjectSnapshot(std::unique_ptr<TPadWebSnapshot> &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
    bool CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t version = 0, TPadWebSnapshot *master = nullptr, TList *primitives_lst = nullptr);
 
    TObject *FindPrimitive(const char *id, TPad *pad = nullptr, TObjLink **padlnk = nullptr);

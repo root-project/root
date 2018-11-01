@@ -70,10 +70,13 @@ protected:
    std::vector<std::unique_ptr<TWebSnapshot>> fPrimitives;   ///< list of all primitives, drawn in the pad
 public:
    TPadWebSnapshot() { SetKind(kSubPad); }
-   virtual ~TPadWebSnapshot() = default;
 
    void SetActive(bool on = true) { fActive = on; }
-   void Add(std::unique_ptr<TWebSnapshot> &snap) { fPrimitives.emplace_back(std::move(snap)); }
+
+   std::unique_ptr<TWebSnapshot> &NewPrimitive(TObject *obj = nullptr, const std::string &opt = "");
+
+   /// Add new snapshot directly, transfers with ownership
+   void Add(TWebSnapshot *snap) { fPrimitives.emplace_back(std::unique_ptr<TWebSnapshot>(snap)); }
 
    ClassDef(TPadWebSnapshot,1)  // Pad painting snapshot, used for JSROOT
 };
