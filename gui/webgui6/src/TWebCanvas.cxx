@@ -169,10 +169,10 @@ TObject *TWebCanvas::FindPrimitive(const char *sid, TPad *pad, TObjLink **padlnk
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Creates representation of the object for painting in web browser
 
-void TWebCanvas::CreateObjectSnapshot(std::unique_ptr<TPadWebSnapshot> &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps)
+void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps)
 {
    if (IsJSSupportedClass(obj)) {
-      master->NewPrimitive(obj, opt)->SetSnapshot(TWebSnapshot::kObject, obj);
+      master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kObject, obj);
       return;
    }
 
@@ -228,13 +228,13 @@ void TWebCanvas::CreateObjectSnapshot(std::unique_ptr<TPadWebSnapshot> &master, 
 
    // when paint method was used and produce output
 
-   master->NewPrimitive(obj, opt)->SetSnapshot(TWebSnapshot::kSVG, p, kTRUE);
+   master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kSVG, p, kTRUE);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Add special canvas objects like colors list at selected palette
 
-Bool_t TWebCanvas::AddCanvasSpecials(std::unique_ptr<TPadWebSnapshot> &master)
+void TWebCanvas::AddCanvasSpecials(TPadWebSnapshot &master)
 {
    // execute function to prevent storing of colors with custom TCanvas streamer
    // TODO: we need to change logic here
@@ -243,7 +243,7 @@ Bool_t TWebCanvas::AddCanvasSpecials(std::unique_ptr<TPadWebSnapshot> &master)
    TObjArray *colors = (TObjArray *)gROOT->GetListOfColors();
 
    if (!colors)
-      return kFALSE;
+      return;
 
    Int_t cnt = 0;
    for (Int_t n = 0; n <= colors->GetLast(); ++n)
@@ -251,7 +251,7 @@ Bool_t TWebCanvas::AddCanvasSpecials(std::unique_ptr<TPadWebSnapshot> &master)
          cnt++;
 
    if (cnt <= 598)
-      return kFALSE; // normally there are 598 colors defined
+      return; // normally there are 598 colors defined
 
    TArrayI pal = TColor::GetPalette();
 
@@ -266,31 +266,33 @@ Bool_t TWebCanvas::AddCanvasSpecials(std::unique_ptr<TPadWebSnapshot> &master)
       tgt[i] = pal[i];
    listofcols->FixSize();
 
-   master->NewPrimitive()->SetSnapshot(TWebSnapshot::kColors, listofcols, kTRUE);
-
-   return kTRUE;
+   master.NewPrimitive().SetSnapshot(TWebSnapshot::kColors, listofcols, kTRUE);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create snapshot for pad and all primitives
 
-bool TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t version, TPadWebSnapshot *master, TList *primitives_lst)
+void TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t version, TPadWebSnapshot *master)
 {
-   TList master_lst; // main list of TList object which are primitives or functions
-   if (!master && !primitives_lst)
-      primitives_lst = &master_lst;
+   std::unique_ptr<TPadWebSnapshot> canv_data;
+   TPadWebSnapshot *curr = nullptr;
+   if (master) {
+      curr = master->NewSubPad();
+   } else {
+      canv_data = std::make_unique<TPadWebSnapshot>();
+      curr = canv_data.get();
+   }
 
-   auto curr = std::make_unique<TPadWebSnapshot>();
    curr->SetActive(pad == gPad);
    curr->SetObjectIDAsPtr(pad);
    curr->SetSnapshot(TWebSnapshot::kSubPad, pad);
 
-   if ((primitives_lst == &master_lst) && (version <= 0))
-      AddCanvasSpecials(curr);
+   if (!master && (version <= 0))
+      AddCanvasSpecials(*curr);
 
    TList *primitives = pad->GetListOfPrimitives();
 
-   primitives_lst->Add(primitives); // add list of primitives
+   fPrimitivesLists.Add(primitives); // add list of primitives
 
    TWebPS masterps;
    bool usemaster = primitives->GetSize() > 100;
@@ -301,18 +303,18 @@ bool TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t 
    auto flush_master = [&]() {
       if (!usemaster || masterps.IsEmptyPainting()) return;
 
-      curr->NewPrimitive(pad)->SetSnapshot(TWebSnapshot::kSVG, masterps.TakePainting(), kTRUE);
+      curr->NewPrimitive(pad).SetSnapshot(TWebSnapshot::kSVG, masterps.TakePainting(), kTRUE);
       masterps.CreatePainting(); // create for next operations
    };
 
    auto add_object = [&]() {
-      curr->NewPrimitive(obj, iter.GetOption())->SetSnapshot(TWebSnapshot::kObject, obj);
+      curr->NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
    };
 
    while ((obj = iter()) != nullptr) {
       if (obj->InheritsFrom(TPad::Class())) {
          flush_master();
-         CreatePadSnapshot((TPad *)obj, nullptr, version, curr.get(), primitives_lst);
+         CreatePadSnapshot((TPad *)obj, nullptr, version, curr);
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
          add_object();
@@ -322,9 +324,9 @@ bool TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t 
          TObject *fobj = nullptr;
          while ((fobj = fiter()) != nullptr)
             if (!fobj->InheritsFrom("TPaveStats") && !fobj->InheritsFrom("TPaletteAxis"))
-               CreateObjectSnapshot(curr, pad, fobj, fiter.GetOption());
+               CreateObjectSnapshot(*curr, pad, fobj, fiter.GetOption());
 
-         primitives_lst->Add(hist->GetListOfFunctions());
+         fPrimitivesLists.Add(hist->GetListOfFunctions());
       } else if (obj->InheritsFrom(TGraph::Class())) {
          flush_master();
          add_object();
@@ -335,30 +337,26 @@ bool TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t 
          TObject *fobj = nullptr;
          while ((fobj = fiter()) != nullptr)
             if (!fobj->InheritsFrom("TPaveStats"))  // stats should be created on the client side
-               CreateObjectSnapshot(curr, pad, fobj, fiter.GetOption());
+               CreateObjectSnapshot(*curr, pad, fobj, fiter.GetOption());
 
-         primitives_lst->Add(gr->GetListOfFunctions());
+         fPrimitivesLists.Add(gr->GetListOfFunctions());
       } else if (IsJSSupportedClass(obj)) {
          flush_master();
          add_object();
       } else {
-         CreateObjectSnapshot(curr, pad, obj, iter.GetOption(), usemaster ? &masterps : nullptr);
+         CreateObjectSnapshot(*curr, pad, obj, iter.GetOption(), usemaster ? &masterps : nullptr);
       }
    }
 
    flush_master();
 
-   // transfer ownership
    if (master)
-      master->Add(curr.release());
-
-   if (primitives_lst != &master_lst)
-      return true;
+      return;
 
    // now move all primitives and functions into separate list to perform I/O
 
    TList save_lst;
-   TIter diter(&master_lst);
+   TIter diter(&fPrimitivesLists);
    TList *dlst = nullptr;
    while ((dlst = (TList *)diter()) != nullptr) {
       TIter fiter(dlst);
@@ -370,7 +368,7 @@ bool TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t 
 
    // invoke callback for master painting
    if (func)
-      func(curr.get());
+      func(curr);
 
    // static int filecnt = 0;
    // TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
@@ -387,9 +385,7 @@ bool TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t 
 
    save_lst.Clear("nodelete");
 
-   master_lst.Clear("nodelete");
-
-   return true;
+   fPrimitivesLists.Clear("nodelete");
 }
 
 void TWebCanvas::CheckDataToSend()

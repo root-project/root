@@ -73,7 +73,9 @@ public:
 
    void SetActive(bool on = true) { fActive = on; }
 
-   std::unique_ptr<TWebSnapshot> &NewPrimitive(TObject *obj = nullptr, const std::string &opt = "");
+   TWebSnapshot &NewPrimitive(TObject *obj = nullptr, const std::string &opt = "");
+
+   TPadWebSnapshot *NewSubPad();
 
    /// Add new snapshot directly, transfers with ownership
    void Add(TWebSnapshot *snap) { fPrimitives.emplace_back(std::unique_ptr<TWebSnapshot>(snap)); }

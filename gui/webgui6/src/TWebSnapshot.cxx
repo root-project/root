@@ -46,13 +46,24 @@ void TWebSnapshot::SetObjectIDAsPtr(void *ptr)
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Create new entry in list of primitives
 
-std::unique_ptr<TWebSnapshot> &TPadWebSnapshot::NewPrimitive(TObject *obj, const std::string &opt)
+TWebSnapshot &TPadWebSnapshot::NewPrimitive(TObject *obj, const std::string &opt)
 {
    fPrimitives.emplace_back(std::make_unique<TWebSnapshot>());
    if (obj) {
       fPrimitives.back()->SetObjectIDAsPtr(obj);
       fPrimitives.back()->SetOption(opt);
    }
-   return fPrimitives.back();
+   return *(fPrimitives.back());
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Create new entry for subpad
+
+TPadWebSnapshot *TPadWebSnapshot::NewSubPad()
+{
+   auto res = new TPadWebSnapshot();
+   fPrimitives.emplace_back(res);
+   return res;
+}
+
 
