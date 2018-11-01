@@ -27,7 +27,11 @@ PyObject *gRootModule = 0;
 }
 
 // Methods offered by the interface
-static PyMethodDef gPyROOTMethods[] = {{(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
+static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunction)PyROOT::AddDirectoryWritePyz, METH_VARARGS,
+                                        (char *)"Pythonization of TDirectory::WriteObject"},
+                                       {(char *)"AddDirectoryAttrSyntaxPyz", (PyCFunction)PyROOT::AddDirectoryAttrSyntaxPyz, METH_VARARGS,
+                                        (char *)"Attr syntax for TDirectory"},
+                                       {(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
                                         (char *)"Allow to access branches as tree attributes"},
                                        {(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
                                         (char *)"Fully enable the use of TTree::SetBranchAddress from Python"},

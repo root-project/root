@@ -7,6 +7,8 @@
 namespace PyROOT {
 
 PyObject *AddPrettyPrintingPyz(PyObject *self, PyObject *args);
+PyObject *AddDirectoryWritePyz(PyObject *self, PyObject *args);
+PyObject *AddDirectoryAttrSyntaxPyz(PyObject *self, PyObject *args);
 PyObject *AddBranchAttrSyntax(PyObject *self, PyObject *args);
 PyObject *SetBranchAddressPyz(PyObject *self, PyObject *args);
 PyObject *BranchPyz(PyObject *self, PyObject *args);
