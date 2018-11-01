@@ -59,11 +59,11 @@ TWebSnapshot &TPadWebSnapshot::NewPrimitive(TObject *obj, const std::string &opt
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Create new entry for subpad
 
-TPadWebSnapshot *TPadWebSnapshot::NewSubPad()
+TPadWebSnapshot &TPadWebSnapshot::NewSubPad()
 {
    auto res = new TPadWebSnapshot();
    fPrimitives.emplace_back(res);
-   return res;
+   return *res;
 }
 
 
