@@ -377,13 +377,13 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
 /// v = ROOT.std.vector('int')()
 /// t.Branch('my_vector_branch', v)
 /// ~~~
+///
+/// The following signatures are treated in this pythonization:
+/// - ( const char*, void*, const char*, Int_t = 32000 )
+/// - ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
+/// - ( const char*, T**, Int_t = 32000, Int_t = 99 )
 PyObject *PyROOT::BranchPyz(PyObject * /* self */, PyObject *args)
 {
-   // Acceptable signatures:
-   // ( const char*, void*, const char*, Int_t = 32000 )
-   // ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
-   // ( const char*, T**, Int_t = 32000, Int_t = 99 )
-
    int argc = PyTuple_GET_SIZE(args);
 
    if (argc >= 3) { // We count the TTree proxy object too
