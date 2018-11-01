@@ -64,7 +64,16 @@ namespace TStreamerInfoActions
       // Add the (potentially negative) delta to all the configuration's offset.  This is used by
       // TBranchElement in the case of split sub-object.
 
-      fOffset += delta;
+      if (fOffset != TVirtualStreamerInfo::kMissing)
+         fOffset += delta;
+   }
+
+  void TConfiguration::SetMissing()
+   {
+      // Add the (potentially negative) delta to all the configuration's offset.  This is used by
+      // TBranchElement in the case of split sub-object.
+
+      fOffset = TVirtualStreamerInfo::kMissing;
    }
 
    void TConfiguredAction::PrintDebug(TBuffer &buf, void *addr) const
@@ -154,7 +163,14 @@ namespace TStreamerInfoActions
          // Add the (potentially negative) delta to all the configuration's offset.  This is used by
          // TBranchElement in the case of split sub-object.
 
-         fOffset += delta;
+         if (fOffset != TVirtualStreamerInfo::kMissing)
+            fOffset += delta;
+         fObjectOffset = 0;
+      }
+
+      void SetMissing()
+      {
+         fOffset = TVirtualStreamerInfo::kMissing;
          fObjectOffset = 0;
       }
 
@@ -4137,6 +4153,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       }
       return sequence;
 }
+
 void TStreamerInfoActions::TActionSequence::AddToOffset(Int_t delta)
 {
    // Add the (potentially negative) delta to all the configuration's offset.  This is used by
@@ -4149,6 +4166,21 @@ void TStreamerInfoActions::TActionSequence::AddToOffset(Int_t delta)
    {
       if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
          iter->fConfiguration->AddToOffset(delta);
+   }
+}
+
+void TStreamerInfoActions::TActionSequence::SetMissing()
+{
+   // Add the (potentially negative) delta to all the configuration's offset.  This is used by
+   // TBranchElement in the case of split sub-object.
+
+   TStreamerInfoActions::ActionContainer_t::iterator end = fActions.end();
+   for(TStreamerInfoActions::ActionContainer_t::iterator iter = fActions.begin();
+       iter != end;
+       ++iter)
+   {
+      if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
+         iter->fConfiguration->SetMissing();
    }
 }
 

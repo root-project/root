@@ -228,6 +228,7 @@ public:
    virtual void             SetBranchFolder() { SetBit(kBranchFolder); }
    virtual void             SetClassName(const char* name) { fClassName = name; }
    virtual void             SetOffset(Int_t offset);
+   virtual void             SetMissing();
    inline  void             SetParentClass(TClass* clparent);
    virtual void             SetParentName(const char* name) { fParentName = name; }
    virtual void             SetTargetClass(const char *name);
