@@ -6,7 +6,7 @@ from libcppyy import SetOwnership
 
 class TDirectoryReadWrite(unittest.TestCase):
     """
-    Test for the attr syntax and Get method of TDirectory.
+    Test for the attr syntax of TDirectory.
     """
 
     nbins = 8

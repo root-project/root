@@ -79,11 +79,15 @@ PyObject *TDirectoryGet(CPPInstance *self, PyObject *pynamecycle)
    if (!namecycle)
       return nullptr; // TypeError already set
    auto key = dirf->GetKey(namecycle);
+   // We take this branch if the object is a TDirectoryFile (or daughters)
    if (key) {
       void *addr = dirf->GetObjectChecked(namecycle, key->GetClassName());
       return BindCppObjectNoCast(addr, (Cppyy::TCppType_t)Cppyy::GetScope(key->GetClassName()), kFALSE);
    }
-   // no key? for better or worse, call normal Get()
+   // This branch is taken if the object is a TDirectory. The objects within TDirectories can only be TObjects.
+   // Of course that statement is not their daughters which can contain anything - for example TFile is a daugher of TDirectory!
+   // BindCppObject internally is able to cast the TObject pointer to the right type after interrogating the
+   // type system of ROOT via TClass.
    void *addr = dirf->Get(namecycle);
    return BindCppObject(addr, (Cppyy::TCppType_t)Cppyy::GetScope("TObject"), kFALSE);
 }
