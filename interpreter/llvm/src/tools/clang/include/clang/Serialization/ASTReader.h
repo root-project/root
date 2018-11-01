@@ -446,7 +446,8 @@ private:
   ///
   /// When the pointer at index I is non-NULL, the type with
   /// ID = (I + 1) << FastQual::Width has already been loaded
-  std::vector<QualType> TypesLoaded;
+  llvm::DenseMap<unsigned, QualType> TypesLoaded;
+  unsigned NumTypesLoaded = 0;
 
   typedef ContinuousRangeMap<serialization::TypeID, ModuleFile *, 4>
     GlobalTypeMapType;
@@ -460,7 +461,8 @@ private:
   ///
   /// When the pointer at index I is non-NULL, the declaration with ID
   /// = I + 1 has already been loaded.
-  std::vector<Decl *> DeclsLoaded;
+  llvm::DenseMap<unsigned, Decl *> DeclsLoaded;
+  unsigned NumDeclsLoaded = 0;
 
   typedef ContinuousRangeMap<serialization::DeclID, ModuleFile *, 4>
     GlobalDeclMapType;
@@ -1673,12 +1675,12 @@ public:
 
   /// \brief Returns the number of types found in the chain.
   unsigned getTotalNumTypes() const {
-    return static_cast<unsigned>(TypesLoaded.size());
+    return NumTypesLoaded;
   }
 
   /// \brief Returns the number of declarations found in the chain.
   unsigned getTotalNumDecls() const {
-    return static_cast<unsigned>(DeclsLoaded.size());
+    return NumDeclsLoaded;
   }
 
   /// \brief Returns the number of submodules known.

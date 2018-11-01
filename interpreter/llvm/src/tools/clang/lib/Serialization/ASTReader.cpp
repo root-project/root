@@ -2769,7 +2769,7 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
           std::make_pair(LocalBaseTypeIndex,
                          F.BaseTypeIndex - LocalBaseTypeIndex));
 
-        TypesLoaded.resize(TypesLoaded.size() + F.LocalNumTypes);
+        NumTypesLoaded += F.LocalNumTypes;
       }
       break;
     }
@@ -2799,7 +2799,7 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
         // module.
         F.GlobalToLocalDeclIDs[&F] = LocalBaseDeclID;
 
-        DeclsLoaded.resize(DeclsLoaded.size() + F.LocalNumDecls);
+        NumDeclsLoaded += F.LocalNumDecls;
       }
       break;
     }
@@ -6766,19 +6766,19 @@ QualType ASTReader::GetType(TypeID ID) {
   }
 
   Index -= NUM_PREDEF_TYPE_IDS;
-  assert(Index < TypesLoaded.size() && "Type index out-of-range");
-  if (TypesLoaded[Index].isNull()) {
-    TypesLoaded[Index] = readTypeRecord(Index);
-    if (TypesLoaded[Index].isNull())
+  assert(Index < NumTypesLoaded && "Type index out-of-range");
+  if (TypesLoaded.find(Index) == TypesLoaded.end()) {
+    QualType Q = readTypeRecord(Index);
+    TypesLoaded.insert({Index, Q});
+    if (TypesLoaded.find(Index) == TypesLoaded.end())
       return QualType();
 
-    TypesLoaded[Index]->setFromAST();
+    Q->setFromAST();
     if (DeserializationListener)
-      DeserializationListener->TypeRead(TypeIdx::fromTypeID(ID),
-                                        TypesLoaded[Index]);
+      DeserializationListener->TypeRead(TypeIdx::fromTypeID(ID), Q);
   }
 
-  return TypesLoaded[Index].withFastQualifiers(FastQuals);
+  return TypesLoaded.find(Index)->second.withFastQualifiers(FastQuals);
 }
 
 QualType ASTReader::getLocalType(ModuleFile &F, unsigned LocalID) {
@@ -7016,13 +7016,14 @@ SourceLocation ASTReader::getSourceLocationForDeclID(GlobalDeclID ID) {
 
   unsigned Index = ID - NUM_PREDEF_DECL_IDS;
 
-  if (Index > DeclsLoaded.size()) {
+  if (Index > NumDeclsLoaded) {
     Error("declaration ID out-of-range for AST file");
     return SourceLocation();
   }
 
-  if (Decl *D = DeclsLoaded[Index])
-    return D->getLocation();
+  auto FindRes = DeclsLoaded.find(Index);
+  if (FindRes != DeclsLoaded.end())
+    return FindRes->second->getLocation();
 
   SourceLocation Loc;
   DeclCursorForID(ID, Loc);
@@ -7101,13 +7102,17 @@ Decl *ASTReader::GetExistingDecl(DeclID ID) {
 
   unsigned Index = ID - NUM_PREDEF_DECL_IDS;
 
-  if (Index >= DeclsLoaded.size()) {
+  if (Index >= NumDeclsLoaded) {
     assert(0 && "declaration ID out-of-range for AST file");
     Error("declaration ID out-of-range for AST file");
     return nullptr;
   }
 
-  return DeclsLoaded[Index];
+  auto FindRes = DeclsLoaded.find(Index);
+  if (FindRes == DeclsLoaded.end())
+    return nullptr;
+
+  return FindRes->second;
 }
 
 Decl *ASTReader::GetDecl(DeclID ID) {
@@ -7116,19 +7121,19 @@ Decl *ASTReader::GetDecl(DeclID ID) {
 
   unsigned Index = ID - NUM_PREDEF_DECL_IDS;
 
-  if (Index >= DeclsLoaded.size()) {
+  if (Index >= NumDeclsLoaded) {
     assert(0 && "declaration ID out-of-range for AST file");
     Error("declaration ID out-of-range for AST file");
     return nullptr;
   }
 
-  if (!DeclsLoaded[Index]) {
+  if (DeclsLoaded.find(Index) == DeclsLoaded.end()) {
     ReadDeclRecord(ID);
     if (DeserializationListener)
-      DeserializationListener->DeclRead(ID, DeclsLoaded[Index]);
+      DeserializationListener->DeclRead(ID, DeclsLoaded.find(Index)->second);
   }
 
-  return DeclsLoaded[Index];
+  return DeclsLoaded.find(Index)->second;
 }
 
 DeclID ASTReader::mapGlobalIDToModuleFileGlobalID(ModuleFile &M,
@@ -7386,12 +7391,10 @@ void ASTReader::StartTranslationUnit(ASTConsumer *Consumer) {
 void ASTReader::PrintStats() {
   std::fprintf(stderr, "*** AST File Statistics:\n");
 
-  unsigned NumTypesLoaded
-    = TypesLoaded.size() - std::count(TypesLoaded.begin(), TypesLoaded.end(),
-                                      QualType());
-  unsigned NumDeclsLoaded
-    = DeclsLoaded.size() - std::count(DeclsLoaded.begin(), DeclsLoaded.end(),
-                                      (Decl *)nullptr);
+  unsigned NumTypesLoaded = TypesLoaded.size();
+
+  unsigned NumDeclsLoaded = DeclsLoaded.size();
+
   unsigned NumIdentifiersLoaded
     = IdentifiersLoaded.size() - std::count(IdentifiersLoaded.begin(),
                                             IdentifiersLoaded.end(),
