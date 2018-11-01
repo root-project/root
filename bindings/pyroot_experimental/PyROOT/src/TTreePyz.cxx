@@ -237,7 +237,11 @@ PyObject *PyROOT::SetBranchAddressPyz(PyObject * /* self */, PyObject *args)
    Py_RETURN_NONE;
 }
 
-// Try ( const char*, void*, const char*, Int_t = 32000 )
+////////////////////////////////////////////////////////////////////////////
+/// Try to match the arguments of TTree::Branch to the following overload:
+/// - ( const char*, void*, const char*, Int_t = 32000 )
+/// If the match succeeds, invoke Branch on the C++ tree with the right
+/// arguments.
 PyObject *TryBranchLeafListOverload(int argc, PyObject *args)
 {
    PyObject *treeObj = nullptr;
@@ -280,8 +284,13 @@ PyObject *TryBranchLeafListOverload(int argc, PyObject *args)
    Py_RETURN_NONE;
 }
 
-// Try ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
-// or  ( const char*,              T**, Int_t = 32000, Int_t = 99 )
+////////////////////////////////////////////////////////////////////////////
+/// Try to match the arguments of TTree::Branch to one of the following
+/// overloads:
+/// - ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
+/// - ( const char*,              T**, Int_t = 32000, Int_t = 99 )
+/// If the match succeeds, invoke Branch on the C++ tree with the right
+/// arguments.
 PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
 {
    PyObject *treeObj = nullptr;
