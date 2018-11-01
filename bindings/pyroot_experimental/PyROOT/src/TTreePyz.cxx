@@ -255,7 +255,7 @@ PyObject *TryBranchLeafListOverload(int argc, PyObject *args)
                         &PyInt_Type, &bufsize)) {
 
       auto treeProxy = (CPPInstance *)treeObj;
-      TTree *tree = (TTree *)GetClass(treeProxy)->DynamicCast(TTree::Class(), treeProxy->GetObject());
+      auto tree = (TTree *)GetClass(treeProxy)->DynamicCast(TTree::Class(), treeProxy->GetObject());
       if (!tree) {
          PyErr_SetString(PyExc_TypeError, "TTree::Branch must be called with a TTree instance as first argument");
          return nullptr;
@@ -320,7 +320,7 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
 
    if (bIsMatch) {
       auto treeProxy = (CPPInstance *)treeObj;
-      TTree *tree = (TTree *)GetClass(treeProxy)->DynamicCast(TTree::Class(), treeProxy->GetObject());
+      auto tree = (TTree *)GetClass(treeProxy)->DynamicCast(TTree::Class(), treeProxy->GetObject());
       if (!tree) {
          PyErr_SetString(PyExc_TypeError, "TTree::Branch must be called with a TTree instance as first argument");
          return nullptr;
