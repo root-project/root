@@ -3537,7 +3537,7 @@ void TBranchElement::InitializeOffsets()
             //
             // Compensate for the i/o routines adding our local offset later.
             if (subBranch->fObject == 0 && localOffset == TStreamerInfo::kMissing) {
-               subBranch->SetOffset(TStreamerInfo::kMissing);
+               subBranch->SetMissing();
                // We stil need to set fBranchOffset in the case of a missing
                // element so that SetAddress is (as expected) not called
                // recursively in this case.
@@ -5414,6 +5414,11 @@ void TBranchElement::SetOffset(Int_t offset)
    // We need to make sure that the Read and Write action's configuration
    // properly reflect this value.
 
+   if (offset == TVirtualStreamerInfo::kMissing) {
+       SetMissing();
+       return;
+   }
+
    if (fReadActionSequence) {
       fReadActionSequence->AddToOffset(offset - fOffset);
    }
@@ -5421,6 +5426,24 @@ void TBranchElement::SetOffset(Int_t offset)
       fFillActionSequence->AddToOffset(offset - fOffset);
    }
    fOffset = offset;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set offset of the object (to which the data member represented by this
+/// branch belongs) inside its containing object (if any) to mark it as missing.
+
+void TBranchElement::SetMissing()
+{
+   // We need to make sure that the Read and Write action's configuration
+   // properly reflect this value.
+
+   if (fReadActionSequence) {
+      fReadActionSequence->SetMissing();
+   }
+   if (fFillActionSequence) {
+      fFillActionSequence->SetMissing();
+   }
+   fOffset = TVirtualStreamerInfo::kMissing;
 }
 
 
