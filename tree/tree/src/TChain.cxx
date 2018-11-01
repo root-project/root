@@ -2305,7 +2305,9 @@ void TChain::ResetAfterMerge(TFileMergeInfo *info)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save TChain as a C++ statement(s) on output stream out
+/// Save TChain as a C++ statements on output stream out.
+/// With the option "friend" save the description of all the 
+/// TChain's friend trees or chains as well.
 
 void TChain::SavePrimitive(std::ostream &out, Option_t *option)
 {
