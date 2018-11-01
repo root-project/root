@@ -129,7 +129,7 @@ protected:
 
    Bool_t AddCanvasSpecials(TPadWebSnapshot *master);
    TWebSnapshot *CreateObjectSnapshot(TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
-   bool CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, TPadWebSnapshot *master = nullptr, TList *primitives_lst = nullptr);
+   bool CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t version = 0, TPadWebSnapshot *master = nullptr, TList *primitives_lst = nullptr);
 
    TObject *FindPrimitive(const char *id, TPad *pad = nullptr, TObjLink **padlnk = nullptr);
    Bool_t DecodeAllRanges(const char *arg);
