@@ -12,7 +12,7 @@
          (targetfile is overwritten if it exists)
 
   When the -f option is specified, one can also specify the compression
-  level of the target file. By default the compression level is 1, but
+  level of the target file. By default the compression level is 1 (kDefaultZLIB), but
   if "-f0" is specified, the target file will not be compressed.
   if "-f6" is specified, the compression level 6 will be used.
 
@@ -69,7 +69,7 @@
             to support files with nested directories.
            Toby Burnett implemented the possibility to use indirect files.
  */
-
+#include "Compression.h"
 #include <ROOT/RConfig.h>
 #include "ROOT/TIOFeatures.hxx"
 #include <string>
@@ -124,7 +124,7 @@ int main( int argc, char **argv )
       std::cout << "If the option -experimental-io-features is used (and an argument provided), then\n"
                    "   the corresponding experimental feature will be enabled for output trees." << std::endl;
       std::cout << "When -the -f option is specified, one can also specify the compression level of\n"
-                   "   the target file.  By default the compression level is 4."
+                   "   the target file.  By default the compression level is kDefaultZLIB."
                 << std::endl;
       std::cout << "If \"-fk\" is specified, the target file contain the baskets with the same\n"
                    "   compression as in the input files unless -O is specified.  The meta data will\n"
@@ -421,9 +421,9 @@ int main( int argc, char **argv )
          if (firstInput && !firstInput->IsZombie())
             newcomp = firstInput->GetCompressionSettings();
          else
-            newcomp = 1;
+            newcomp = ROOT::kUseGeneralPurposeCompressionSetting % 100;
          delete firstInput;
-      } else newcomp = 1; // default compression level.
+      } else newcomp = ROOT::kUseGeneralPurposeCompressionSetting  % 100; // default compression level.
    }
    if (verbosity > 1) {
       if (keepCompressionAsIs && !reoptimize)
