@@ -240,24 +240,24 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-/// Add special canvas objects like palette
+/// Add special canvas objects like colors list at selected palette
 
 Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
 {
-   if (!TColor::DefinedColors()) return kFALSE;
+   // if (!TColor::DefinedColors()) return kFALSE;
 
    TObjArray *colors = (TObjArray *)gROOT->GetListOfColors();
 
    if (!colors)
       return kFALSE;
 
-/*   Int_t cnt = 0;
+   Int_t cnt = 0;
    for (Int_t n = 0; n <= colors->GetLast(); ++n)
-      if (colors->At(n) != nullptr)
+      if (colors->At(n))
          cnt++;
+
    if (cnt <= 598)
       return kFALSE; // normally there are 598 colors defined
-*/
 
    TArrayI pal = TColor::GetPalette();
 
@@ -282,7 +282,7 @@ Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create snapshot for pad and all primitives
 
-bool TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, TPadWebSnapshot *master, TList *primitives_lst)
+bool TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, Long64_t version, TPadWebSnapshot *master, TList *primitives_lst)
 {
    TList master_lst; // main list of TList object which are primitives or functions
    if (!master && !primitives_lst)
@@ -296,7 +296,7 @@ bool TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, TPadWebSn
    if (master)
       master->Add(curr);
 
-   if (primitives_lst == &master_lst)
+   if ((primitives_lst == &master_lst) && (version <= 0))
       AddCanvasSpecials(curr);
 
    TList *primitives = pad->GetListOfPrimitives();
@@ -330,7 +330,7 @@ bool TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, TPadWebSn
    while ((obj = iter()) != nullptr) {
       if (obj->InheritsFrom(TPad::Class())) {
          flush_master();
-         CreatePadSnapshot((TPad *)obj, nullptr, curr, primitives_lst);
+         CreatePadSnapshot((TPad *)obj, nullptr, version, curr, primitives_lst);
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
          add_object();
@@ -445,11 +445,9 @@ void TWebCanvas::CheckDataToSend()
          TString res;
          CreatePadSnapshot(Canvas(), [&res](TPadWebSnapshot *snap) {
             res = TBufferJSON::ConvertToJSON(snap, 23);
-         });
+         }, conn.fDrawVersion);
          buf.append(res.Data());
 
-         // printf("Snapshot created %d\n", buf.Length());
-         // if (buf.Length() < 10000) printf("Snapshot %s\n", buf.Data());
       } else if (!conn.fSend.empty()) {
          std::swap(buf, conn.fSend);
       }
