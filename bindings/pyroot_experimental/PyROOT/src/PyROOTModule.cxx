@@ -28,12 +28,13 @@ PyObject *gRootModule = 0;
 
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunction)PyROOT::AddDirectoryWritePyz, METH_VARARGS,
-                                        (char *)"Pythonization of TDirectory::WriteObject"},
+                                        (char *)"Allow to use seamlessly from Python the templated TDirectory::WriteObject method"},
                                        {(char *)"AddDirectoryAttrSyntaxPyz", (PyCFunction)PyROOT::AddDirectoryAttrSyntaxPyz, METH_VARARGS,
                                         (char *)"Attr syntax for TDirectory"},
                                        {(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
                                         (char *)"Allow to access branches as tree attributes"},
-                                       {(char *)"AddFileOpenPyz", (PyCFunction)PyROOT::AddFileOpenPyz, METH_VARARGS, (char *)"Pythonization of TFile::Open"},
+                                       {(char *)"AddFileOpenPyz", (PyCFunction)PyROOT::AddFileOpenPyz, METH_VARARGS,
+                                        (char *)"Make TFile::Open a constructor, adjusting for example the reference count"},
                                        {(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
                                         (char *)"Fully enable the use of TTree::SetBranchAddress from Python"},
                                        {(char *)"BranchPyz", (PyCFunction)PyROOT::BranchPyz, METH_VARARGS,
