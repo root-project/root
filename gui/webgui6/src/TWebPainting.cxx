@@ -10,6 +10,9 @@
 
 #include "TWebPainting.h"
 
+///////////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TWebPainting::TWebPainting()
 {
    fLastFill.SetFillStyle(9999);
@@ -17,6 +20,20 @@ TWebPainting::TWebPainting()
    fLastMarker.SetMarkerStyle(9999);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+/// Add next custom operator to painting
+/// Operations are separated by semicolons
+
+void TWebPainting::AddOper(const std::string &oper)
+{
+   if (!fOper.empty())
+      fOper.append(";");
+   fOper.append(oper);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+/// Reserve place in the float buffer
+/// Returns pointer on first element in reserved area
 
 Float_t *TWebPainting::Reserve(Int_t sz)
 {
@@ -33,6 +50,9 @@ Float_t *TWebPainting::Reserve(Int_t sz)
    return res; // return size where drawing can start
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+/// Store line attributes
+/// If attributes were not changed - ignore operation
 
 void TWebPainting::AddLineAttr(const TAttLine &attr)
 {
@@ -48,6 +68,10 @@ void TWebPainting::AddLineAttr(const TAttLine &attr)
            std::to_string((int) attr.GetLineWidth()));
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+/// Store fill attributes
+/// If attributes were not changed - ignore operation
+
 void TWebPainting::AddFillAttr(const TAttFill &attr)
 {
    if ((fLastFill.GetFillColor() == attr.GetFillColor()) &&
@@ -60,6 +84,10 @@ void TWebPainting::AddFillAttr(const TAttFill &attr)
            std::to_string((int) attr.GetFillStyle()));
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+/// Store text attributes
+/// If attributes were not changed - ignore operation
+
 void TWebPainting::AddTextAttr(const TAttText &attr)
 {
    AddOper(std::string("tattr:") +
@@ -69,6 +97,10 @@ void TWebPainting::AddTextAttr(const TAttText &attr)
            std::to_string((int) attr.GetTextAlign()) + ":" +
            std::to_string((int) attr.GetTextAngle()));
 }
+
+///////////////////////////////////////////////////////////////////////////////////////
+/// Store marker attributes
+/// If attributes were not changed - ignore operation
 
 void TWebPainting::AddMarkerAttr(const TAttMarker &attr)
 {
@@ -83,6 +115,9 @@ void TWebPainting::AddMarkerAttr(const TAttMarker &attr)
            std::to_string((int) attr.GetMarkerStyle()) + ":" +
            std::to_string((int) attr.GetMarkerSize()));
 }
+
+///////////////////////////////////////////////////////////////////////////////////////
+/// Add custom color to operations
 
 void TWebPainting::AddColor(Int_t indx, TColor *col)
 {
