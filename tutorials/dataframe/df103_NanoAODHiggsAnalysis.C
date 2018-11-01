@@ -43,6 +43,8 @@ using RNode = ROOT::RDF::RNode;
 using rvec_f = const RVec<float> &;
 using rvec_i = const RVec<int> &;
 
+const auto z_mass = 91.2;
+
 // Select interesting events with four muons
 RNode selection_4mu(RNode df)
 {
@@ -126,7 +128,6 @@ RVec<RVec<size_t>> reco_zz_to_4l(rvec_f pt, rvec_f eta, rvec_f phi, rvec_f mass,
    idx[0].reserve(2); idx[1].reserve(2);
 
    // Find first lepton pair with invariant mass closest to Z mass
-   const auto z_mass = 91.2;
    auto idx_cmb = Combinations(pt, 2);
    auto best_mass = -1;
    size_t best_i1 = 0; size_t best_i2 = 0;
@@ -170,7 +171,6 @@ RVec<float> compute_z_masses_4l(const RVec<RVec<size_t>> &idx, rvec_f pt, rvec_f
       p2.SetPtEtaPhiM(pt[i2], eta[i2], phi[i2], mass[i2]);
       z_masses[i] = (p1 + p2).M();
    }
-   const auto z_mass = 91.2;
    if (std::abs(z_masses[0] - z_mass) < std::abs(z_masses[1] - z_mass)) {
       return z_masses;
    } else {
@@ -288,7 +288,6 @@ RVec<float> compute_z_masses_2el2mu(rvec_f el_pt, rvec_f el_eta, rvec_f el_phi, 
    p4.SetPtEtaPhiM(el_pt[1], el_eta[1], el_phi[1], el_mass[1]);
    auto mu_z = (p1 + p2).M();
    auto el_z = (p3 + p4).M();
-   const auto z_mass = 91.2;
    RVec<float> z_masses(2);
    if (std::abs(mu_z - z_mass) < std::abs(el_z - z_mass)) {
       z_masses[0] = mu_z;
