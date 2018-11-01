@@ -8,13 +8,17 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from libROOTPython import AddDirectoryAttrSyntaxPyz, AddDirectoryWritePyz
 from ROOT import pythonization
-import cppyy
 
-@pythonization(lazy = False)
-def pythonize_tdirectory():
-    klass = cppyy.gbl.TDirectory
-    AddDirectoryAttrSyntaxPyz(klass)
-    AddDirectoryWritePyz(klass)
+# TDirectoryFile::Get method, based on the attr syntax
+def _TDirectoryFile_Get(self, objName):
+    return getattr(self, objName)
+
+# Pythonizor function
+@pythonization()
+def pythonize_tfile(klass, name):
+
+    if name == 'TDirectoryFile':
+       klass.Get = _TDirectoryFile_Get
+
     return True
