@@ -345,7 +345,7 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
       }
 
       if (buf && !klName.empty()) {
-         TBranch *branch = 0;
+         TBranch *branch = nullptr;
          if (argc == 4) {
             branch = tree->Branch(CPyCppyy_PyUnicode_AsString(name), klName.c_str(), buf);
          } else if (argc == 5) {
