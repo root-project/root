@@ -31,6 +31,8 @@
 #include "TTree.h"
 #include "TString.h"
 #include "TROOT.h"
+#include "TH1.h"
+#include "TCanvas.h"
 
 #include "TMVA/MethodDL.h"
 #include "TMVA/DataLoader.h"
@@ -82,20 +84,16 @@ int main()
 
    //input = TFile::Open("~/Documents/gsoc/root/tree.root", "CACHEREAD");
 
-   TString outfileName("TMVA_DNN_Regression.root");
+   TString outfileName("TMVA_DNN_MultiRegression.root");
    TFile *outputFile = TFile::Open(outfileName, "RECREATE");
 
-   TTree *dataTree = genTree(10000);
+   TTree *dataTree = genTree(50000);
 
    TMVA::DataLoader *dataloader = new TMVA::DataLoader("dataset");
 
    dataloader->AddVariable( "uniform1", "Variable 1", "units", 'F' );
    dataloader->AddVariable( "uniform2", "Variable 2", "units", 'F' );
-   dataloader->AddVariable( "uniform_add", "Variable 3", "units", 'F' );
-   dataloader->AddVariable( "uniform_sub", "Variable 4", "units", 'F' );
 
-   dataloader->AddTarget("uniform1");
-   dataloader->AddTarget("uniform2");
    dataloader->AddTarget("uniform_add");
    dataloader->AddTarget("uniform_sub");
 
@@ -105,35 +103,27 @@ int main()
 
    TCut mycut = "";
 
-   dataloader->PrepareTrainingAndTestTree( mycut,"nTrain_Regression=9000:nTest_Regression=1000:SplitMode=Random:NormMode=NumEvents:!V" );
+   dataloader->PrepareTrainingAndTestTree( mycut,"nTrain_Regression=40000:nTest_Regression=10000:SplitMode=Random:NormMode=NumEvents:!V" );
 
    // Input Layout
-   TString inputLayoutString("InputLayout=1|1|4");
+   TString inputLayoutString("InputLayout=1|1|2");
 
    // Batch Layout
-   TString batchLayoutString("BatchLayout=16|1|4");
+   TString batchLayoutString("BatchLayout=128|1|2");
 
    // General layout.
-   TString layoutString("Layout=RESHAPE|1|1|4|FLAT,DENSE|2|SIGMOID,DENSE|4|LINEAR");
+   TString layoutString("Layout=RESHAPE|1|1|2|FLAT,DENSE|2|SIGMOID,DENSE|2|LINEAR");
 
-   // Training strategies.
-   TString training0("LearningRate=1e-2,Momentum=0.0,Repetitions=1000,"
-                     "ConvergenceSteps=100,BatchSize=16,TestRepetitions=10,"
-                     "WeightDecay=0,Regularization=L2,"
-                     "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
-   TString training1("LearningRate=1e-2,Momentum=0.9,Repetitions=1,"
-                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
-                     "WeightDecay=1e-4,Regularization=L2,"
-                     "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
-   TString training2("LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
-                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
-                     "WeightDecay=1e-4,Regularization=L2,"
-                     "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
+   // Training strategy
+   TString training0("LearningRate=1e-3,Momentum=0.0,Repetitions=10,"
+                     "ConvergenceSteps=10,BatchSize=128,TestRepetitions=10,MaxEpochs=100"
+                     "WeightDecay=0,Regularization=None,Optimizer=ADAM,"
+                     "DropConfig=0.0+0.0+0.0+0.0");
    TString trainingStrategyString("TrainingStrategy=");
-   trainingStrategyString += training0 + "|" + training1 + "|" + training2;
+   trainingStrategyString += training0;
 
    // General Options.
-   TString dnnOptions("!H:V:ErrorStrategy=SUMOFSQUARES:""WeightInitialization=XAVIERUNIFORM");
+   TString dnnOptions("!H:V:ErrorStrategy=SUMOFSQUARES:WeightInitialization=XAVIERUNIFORM");
    
    // Concatenate all option strings
    dnnOptions.Append(":");
@@ -152,15 +142,25 @@ int main()
    dnnOptions.Append(architectureStr);
 
    // create factory
-   TMVA::Factory *factory = new TMVA::Factory( "TMVARegression", outputFile,"!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression" );
+   TMVA::Factory *factory = new TMVA::Factory( "TMVARegression", outputFile,"!V:!Silent:Color:!DrawProgressBar:AnalysisType=Regression" );
 
-   TString methodTitle = "DL_" + architectureStr;
+   TString methodTitle = "DL_MultiReg" + architectureStr;
    factory->BookMethod(dataloader, TMVA::Types::kDL, methodTitle, dnnOptions);
+
+   // // Boosted Decision Trees 
+   // factory->BookMethod(dataloader,TMVA::Types::kBDT, "BDTG_LS",
+   //                    TString("!H:!V:NTrees=64::BoostType=Grad:Shrinkage=0.3:nCuts=20:MaxDepth=4:")+
+   //                    TString("RegressionLossFunctionBDTG=LeastSquares"));
+   
 
    // Train MVAs using the set of training events
    factory->TrainAllMethods();
 
    factory->TestAllMethods();
+
+   // ebaluate all method to save result in outpt file
+   factory->EvaluateAllMethods();
+   
 
    // Save the output
    outputFile->Close();
@@ -170,6 +170,37 @@ int main()
 
    delete factory;
    delete dataloader;
+
+   // check the resulted target value   
+   auto resultsFile = TFile::Open(outfileName);
+   if (!resultsFile) {
+      std::cout << "ERROR in output file " << std::endl;
+      return -1; 
+   }
+   auto resultsTree = (TTree*) resultsFile->Get("dataset/TestTree"); 
+   if (!resultsTree) {
+      std::cout << "ERROR in reading output tree " << std::endl;
+      return -1; 
+   }
+   auto h1 = new TH1D("h1","Reg var1 - true target1",100,1,0);
+   auto h2 = new TH1D("h2","Reg var2 - true target2",100,1,0);
+   resultsTree->Draw("DL_MultiRegCPU.uniform_add-uniform_add >> h1"); 
+   resultsTree->Draw("DL_MultiRegCPU.uniform_sub-uniform_sub >> h2");
+   auto c1 = new TCanvas();
+   c1->Divide(1,2);
+   c1->cd(1);
+   h1->Draw();
+   c1->cd(2);
+   h2->Draw(); 
+   c1->SaveAs("DL_MultiRegCPU.pdf");
+
+   if (std::abs( h1->GetMean() / h1->GetMeanError() ) > 10. )  
+      std::cout << "ERROR in reconstructing target 1 " << std::endl;
+   if (std::abs( h2->GetMean() / h2->GetMeanError() ) > 10.  ) 
+      std::cout << "ERROR in reconstructing target 2 " << std::endl;
+
+   std::cout << "< Deviation target 1> = " << h1->GetMean()  << " +/- " << h1->GetMeanError() << std::endl;
+   std::cout << "< Deviation target 2> = " << h2->GetMean()  << " +/- " << h2->GetMeanError() << std::endl;
 }
 
 #endif
