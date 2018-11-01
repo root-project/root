@@ -352,7 +352,7 @@
             var geom = new THREE.BufferGeometry();
             geom.addAttribute( 'position', new THREE.BufferAttribute( pos, 3 ) );
             geom.addAttribute( 'normal', new THREE.BufferAttribute( norm, 3 ) );
-            var mater = new THREE.MeshBasicMaterial( { color: color, opacity: opacity, shading: THREE.SmoothShading  } );
+            var mater = new THREE.MeshBasicMaterial( { color: color, opacity: opacity, flatShading: true } );
             tooltip_mesh = new THREE.Mesh(geom, mater);
          } else {
             pos = tooltip_mesh.geometry.attributes.position.array;
@@ -680,7 +680,7 @@
             var v1 = raycaster.ray.origin.clone(),
                 v2 = v1.clone().addScaledVector(raycaster.ray.direction, 1e10);
 
-            var pnt = plane.intersectLine(new THREE.Line3(v1,v2));
+            var pnt = plane.intersectLine(new THREE.Line3(v1,v2), new THREE.Vector3());
 
             if (!pnt) return undefined;
 
@@ -1160,14 +1160,14 @@
 
          var positions = new Float32Array(numvertices*3),
              normals = new Float32Array(numvertices*3),
-             bins_index = use16indx ? new Uint16Array(numvertices) : new Uint32Array(numvertices),
-             pos2 = null, norm2 = null, indx2 = null,
+             face_to_bins_index = use16indx ? new Uint16Array(numvertices/3) : new Uint32Array(numvertices/3),
+             pos2 = null, norm2 = null, face_to_bins_indx2 = null,
              v = 0, v2 = 0, vert, bin, k, nn;
 
          if (num2vertices > 0) {
             pos2 = new Float32Array(num2vertices*3);
             norm2 = new Float32Array(num2vertices*3);
-            indx2 = use16indx ? new Uint16Array(num2vertices) : new Uint32Array(num2vertices);
+            face_to_bins_indx2 = use16indx ? new Uint16Array(num2vertices/3) : new Uint32Array(num2vertices/3);
          }
 
          for (i=i1;i<i2;++i) {
@@ -1211,8 +1211,7 @@
                      norm2[v2] = vnormals[nn];
                      norm2[v2+1] = vnormals[nn+1];
                      norm2[v2+2] = vnormals[nn+2];
-
-                     indx2[v2/3] = bin_index; // remember which bin corresponds to the vertex
+                     if (v2%9===0) face_to_bins_indx2[v2/9] = bin_index; // remember which bin corresponds to the face
                      v2+=3;
                   } else {
                      positions[v]   = x1 + vert.x * (x2 - x1);
@@ -1222,7 +1221,7 @@
                      normals[v] = vnormals[nn];
                      normals[v+1] = vnormals[nn+1];
                      normals[v+2] = vnormals[nn+2];
-                     bins_index[v/3] = bin_index; // remember which bin corresponds to the vertex
+                     if (v%9===0) face_to_bins_index[v/9] = bin_index; // remember which bin corresponds to the face
                      v+=3;
                   }
 
@@ -1256,11 +1255,11 @@
          }
 
          //var material = new THREE.MeshLambertMaterial( { color: fcolor } );
-         var material = new THREE.MeshBasicMaterial( { color: fcolor, shading: THREE.SmoothShading  } );
+         var material = new THREE.MeshBasicMaterial( { color: fcolor, flatShading: true } );
 
          var mesh = new THREE.Mesh(geometry, material);
 
-         mesh.bins_index = bins_index;
+         mesh.face_to_bins_index = face_to_bins_index;
          mesh.painter = this;
          mesh.zmin = axis_zmin;
          mesh.zmax = axis_zmax;
@@ -1269,12 +1268,18 @@
          mesh.handle = handle;
 
          mesh.tooltip = function(intersect) {
-            if ((intersect.index<0) || (intersect.index >= this.bins_index.length)) return null;
+            if (isNaN(intersect.faceIndex)) {
+               console.error('faceIndex not provided, check three.js version', THREE.REVISION, 'expected r97');
+               return null;
+            }
+
+            if ((intersect.faceIndex < 0) || (intersect.faceIndex >= this.face_to_bins_index.length)) return null;
+
             var p = this.painter,
                 handle = this.handle,
                 main = p.frame_painter(),
                 histo = p.GetHisto(),
-                tip = p.Get3DToolTip( this.bins_index[intersect.index] );
+                tip = p.Get3DToolTip( this.face_to_bins_index[intersect.faceIndex] );
 
             tip.x1 = Math.max(-main.size_xy3d,  handle.grx[tip.ix-1] + handle.xbar1*(handle.grx[tip.ix]-handle.grx[tip.ix-1]));
             tip.x2 = Math.min(main.size_xy3d, handle.grx[tip.ix-1] + handle.xbar2*(handle.grx[tip.ix]-handle.grx[tip.ix-1]));
@@ -1307,10 +1312,10 @@
             var color2 = (rootcolor<2) ? new THREE.Color(0xFF0000) :
                             new THREE.Color(d3.rgb(fcolor).darker(0.5).toString());
 
-            var material2 = new THREE.MeshBasicMaterial( { color: color2, shading: THREE.SmoothShading } );
+            var material2 = new THREE.MeshBasicMaterial( { color: color2, flatShading: true } );
 
             var mesh2 = new THREE.Mesh(geom2, material2);
-            mesh2.bins_index = indx2;
+            mesh2.face_to_bins_index = face_to_bins_indx2;
             mesh2.painter = this;
             mesh2.tooltip = mesh.tooltip;
             mesh2.zmin = mesh.zmin;
@@ -1980,7 +1985,7 @@
                 geometry.addAttribute( 'normal', new THREE.BufferAttribute( norm, 3 ) );
 
                 var fcolor = palette.getColor(colindx);
-                var material = new THREE.MeshBasicMaterial( { color: fcolor, shading: THREE.SmoothShading, side: THREE.DoubleSide, opacity: 0.5  } );
+                var material = new THREE.MeshBasicMaterial( { color: fcolor, flatShading: true, side: THREE.DoubleSide, opacity: 0.5  } );
                 var mesh = new THREE.Mesh(geometry, material);
                 mesh.painter = this;
                 main.toplevel.add(mesh);
@@ -2004,6 +2009,7 @@
           return !pthis._show_empty_bins;
        }
 
+       // loop over the points - first loop counts points, second fill arrays
        for (var loop=0;loop<2;++loop) {
 
           for (i=handle.i1;i<handle.i2;++i) {
@@ -2065,6 +2071,11 @@
        line.tip_color = (this.GetObject().fLineColor===3) ? 0xFF0000 : 0x00FF00;
 
        line.tooltip = function(intersect) {
+          if (isNaN(intersect.index)) {
+             console.error('segment index not provided, check three.js version', THREE.REVISION, 'expected r97');
+             return null;
+          }
+
           var pos = Math.floor(intersect.index / 6);
           if ((pos<0) || (pos >= this.intersect_index.length)) return null;
           var p = this.painter,
@@ -2246,7 +2257,7 @@
          geometry.computeVertexNormals();
 
          var fcolor = this.fPalette.getColor(colindx);
-         var material = new THREE.MeshBasicMaterial( { color: fcolor, shading: THREE.SmoothShading  } );
+         var material = new THREE.MeshBasicMaterial( { color: fcolor, flatShading: true } );
          var mesh = new THREE.Mesh(geometry, material);
 
          pmain.toplevel.add(mesh);
@@ -2545,6 +2556,11 @@
       mesh.tip_color = (histo.fMarkerColor===3) ? 0xFF0000 : 0x00FF00;
 
       mesh.tooltip = function(intersect) {
+         if (isNaN(intersect.index)) {
+            console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r97');
+            return null;
+         }
+
          var indx = Math.floor(intersect.index / this.nvertex);
          if ((indx<0) || (indx >= this.bins.length)) return null;
 
@@ -2826,7 +2842,7 @@
          var combined_bins = new THREE.Mesh(all_bins_buffgeom, material);
 
          combined_bins.bins = bin_tooltips[nseq];
-         combined_bins.bins_faces = buffer_size/3;
+         combined_bins.bins_faces = buffer_size/9;
          combined_bins.painter = this;
 
          combined_bins.scalex = tipscale*scalex;
@@ -2836,7 +2852,11 @@
          combined_bins.use_scale = use_scale;
 
          combined_bins.tooltip = function(intersect) {
-            var indx = Math.floor(intersect.index / this.bins_faces);
+            if (isNaN(intersect.faceIndex)) {
+               console.error('intersect.faceIndex not provided, check three.js version', THREE.REVISION, 'expected r97');
+               return null;
+            }
+            var indx = Math.floor(intersect.faceIndex / this.bins_faces);
             if ((indx<0) || (indx >= this.bins.length)) return null;
 
             var p = this.painter,
@@ -3101,6 +3121,11 @@
    }
 
    TGraph2DPainter.prototype.Graph2DTooltip = function(intersect) {
+      if (isNaN(intersect.index)) {
+         console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r97');
+         return null;
+      }
+
       var indx = Math.floor(intersect.index / this.nvertex);
       if ((indx<0) || (indx >= this.index.length)) return null;
 
@@ -3413,6 +3438,10 @@
          mesh.index = index;
 
          mesh.tooltip = function(intersect) {
+            if (isNaN(intersect.index)) {
+               console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r97');
+               return null;
+            }
             var indx = Math.floor(intersect.index / this.nvertex);
             if ((indx<0) || (indx >= this.index.length)) return null;
 

@@ -30,12 +30,16 @@
       JSROOT.loadScript('$$$style/JSRootPainter.css');
 
    if (!JSROOT._test_d3_) {
-      if ((typeof d3 == 'object') && d3.version && (d3.version[0]==="4"))  {
+      if ((typeof d3 == 'object') && d3.version && (d3.version[0]==="5"))  {
+         if (d3.version !== '5.7.0')
+            console.log('Reuse existing d3.js ' + d3.version + ", expected 5.7.0");
+         JSROOT._test_d3_ = 5;
+      } else if ((typeof d3 == 'object') && d3.version && (d3.version[0]==="4"))  {
          if (d3.version !== '4.4.4')
-            console.log('Reuse existing d3.js ' + d3.version + ", expected 4.4.4");
+            console.warn('Try to use older d3.js ' + d3.version + ", expected 5.7.0");
          JSROOT._test_d3_ = 4;
       } else if ((typeof d3 == 'object') && d3.version && (d3.version[0]==="3")) {
-         console.log("Older d3.js version " + d3.version + " found, try to adjust");
+         console.error("Very old d3.js " + d3.version + " found, please UPGRADE");
          d3.timeFormat = d3.time.format;
          d3.scaleTime = d3.time.scale;
          d3.scaleLog = d3.scale.log;
@@ -2886,13 +2890,13 @@
     *
     *  @param {string} axis - name like "x" or "y"
     *  @param {number} value - axis value to convert.
-    *  @param {boolean} kind - false or undefined is coordinate inside frame, true - when NDC pad coordinates are used, "pad" - when pad coordinates relative to pad ranges are specified
+    *  @param {boolean|string} kind - false or undefined is coordinate inside frame, true - when NDC pad coordinates are used, "pad" - when pad coordinates relative to pad ranges are specified
     *  @returns {number} rounded value of requested coordiantes
     *  @private
     */
    TObjectPainter.prototype.AxisToSvg = function(axis, value, kind) {
       var main = this.frame_painter();
-      if (main && !kind) {
+      if (main && !kind && main["gr"+axis]) {
          // this is frame coordinates
          value = (axis=="y") ? main.gry(value) + main.frame_y()
                              : main.grx(value) + main.frame_x();
@@ -2902,6 +2906,31 @@
       }
       return Math.round(value);
    }
+
+  /** @summary Return functor, which can convert x and y coordinates into pixels, used for drawing
+   *
+   * Produce functor can convert x and y value by calling func.x(x) and func.y(y)
+   *  @param {boolean|string} kind - false or undefined is coordinate inside frame, true - when NDC pad coordinates are used, "pad" - when pad coordinates relative to pad ranges are specified
+   *  @private
+   */
+  TObjectPainter.prototype.AxisToSvgFunc = function(kind) {
+     var func = { kind: kind }, main = this.frame_painter();
+     if (main && !kind && main.grx && main.gry) {
+        func.main = main;
+        func.offx = main.frame_x();
+        func.offy = main.frame_y();
+        func.x = function(x) { return Math.round(this.main.grx(x) + this.offx); }
+        func.y = function(y) { return Math.round(this.main.gry(y) + this.offy); }
+     } else {
+        if (kind !== true) func.p = this; // need for NDC conversion
+        func.padh = this.pad_height();
+        func.padw = this.pad_width();
+        func.x = function(x) { if (this.p) x = this.p.ConvertToNDC("x", x); return Math.round(x*this.padw); }
+        func.y = function(y) { if (this.p) y = this.p.ConvertToNDC("y", y); return Math.round((1-y)*this.padh); }
+     }
+     return func;
+  }
+
 
    /** @summary Returns svg element for the frame.
     *
@@ -5756,7 +5785,7 @@
    JSROOT.addDrawFunc({ name: "TStreamerInfoList", icon: 'img_question', prereq: "hierarchy",  func: "JSROOT.Painter.drawStreamerInfo" });
    JSROOT.addDrawFunc({ name: "TPaletteAxis", icon: "img_colz", prereq: "v6;hist", func: "JSROOT.Painter.drawPaletteAxis" });
    JSROOT.addDrawFunc({ name: "TWebPainting", icon: "img_graph", prereq: "more2d", func: "JSROOT.Painter.drawWebPainting" });
-   JSROOT.addDrawFunc({ name: "TPadWebSnapshot", icon: "img_canvas", func: JSROOT.Painter.drawPadSnapshot });
+   JSROOT.addDrawFunc({ name: "TPadWebSnapshot", icon: "img_canvas", prereq: "v6", func: "JSROOT.Painter.drawPadSnapshot" });
    JSROOT.addDrawFunc({ name: "kind:Text", icon: "img_text", func: JSROOT.Painter.drawRawText });
    JSROOT.addDrawFunc({ name: "TObjString", icon: "img_text", func: JSROOT.Painter.drawRawText });
    JSROOT.addDrawFunc({ name: "TF1", icon: "img_tf1", prereq: "math;more2d", func: "JSROOT.Painter.drawFunction" });
