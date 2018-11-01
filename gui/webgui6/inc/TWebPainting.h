@@ -55,6 +55,9 @@ class TWebPainting : public TObject {
       // Set actual filled size
       void FixSize() { fBuf.Set(fSize); }
 
+      static std::string MakeTextOper(const char *str);
+
+
    ClassDef(TWebPainting, 1) // store for all paint operation of TVirtualPadPainter
 };
 

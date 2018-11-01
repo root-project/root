@@ -44,7 +44,7 @@ Float_t *TWebPS::StoreOperation(const std::string &oper, unsigned attrkind, int 
 
 void TWebPS::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   Float_t *buf = (GetFillStyle() > 0) ? StoreOperation("bbox", attrFill, 4) : StoreOperation("rect", attrLine, 4);
+   Float_t *buf = (GetFillStyle() > 0) ? StoreOperation("b", attrFill, 4) : StoreOperation("r", attrLine, 4);
 
    buf[0] = x1;
    buf[1] = y1;
@@ -56,7 +56,7 @@ void TWebPS::DrawPolyMarker(Int_t nPoints, Float_t *x, Float_t *y)
 {
    if (nPoints < 1) return;
 
-   Float_t *buf = StoreOperation(std::string("pmark:") + std::to_string(nPoints), attrLine | attrMarker, nPoints*2);
+   Float_t *buf = StoreOperation(std::string("m") + std::to_string(nPoints), attrLine | attrMarker, nPoints*2);
 
    for (Int_t n=0;n<nPoints;++n) {
       buf[n*2] = x[n];
@@ -68,7 +68,7 @@ void TWebPS::DrawPolyMarker(Int_t nPoints, Double_t *x, Double_t *y)
 {
    if (nPoints < 1) return;
 
-   Float_t *buf = StoreOperation(std::string("pmark:") + std::to_string(nPoints), attrLine | attrMarker, nPoints*2);
+   Float_t *buf = StoreOperation(std::string("m") + std::to_string(nPoints), attrLine | attrMarker, nPoints*2);
 
    for (Int_t n=0;n<nPoints;++n) {
       buf[n*2] = x[n];
@@ -82,10 +82,10 @@ void TWebPS::DrawPS(Int_t nPoints, Float_t *xw, Float_t *yw)
    if (nPoints < 0) {
       nPoints = -nPoints;
       if ((GetFillStyle() <= 0) || (nPoints < 3))  return;
-      buf = StoreOperation("pfill:" + std::to_string(nPoints), attrFill, nPoints*2);
+      buf = StoreOperation(std::string("f") + std::to_string(nPoints), attrFill, nPoints*2);
    } else {
       if ((GetLineWidth() <= 0) || (nPoints < 2))  return;
-      buf = StoreOperation("pline:" + std::to_string(nPoints), attrLine, nPoints*2);
+      buf = StoreOperation(std::string("l") + std::to_string(nPoints), attrLine, nPoints*2);
    }
    for (Int_t n=0;n<nPoints;++n) {
       buf[n*2] = xw[n];
@@ -99,10 +99,10 @@ void TWebPS::DrawPS(Int_t nPoints, Double_t *xw, Double_t *yw)
    if (nPoints < 0) {
       nPoints = -nPoints;
       if ((GetFillStyle() <= 0) || (nPoints < 3))  return;
-      buf = StoreOperation("pfill:" + std::to_string(nPoints), attrFill, nPoints*2);
+      buf = StoreOperation(std::string("f") + std::to_string(nPoints), attrFill, nPoints*2);
    } else {
       if ((GetLineWidth() <= 0) || (nPoints < 2))  return;
-      buf = StoreOperation("pline:" + std::to_string(nPoints), attrLine, nPoints*2);
+      buf = StoreOperation(std::string("l") + std::to_string(nPoints), attrLine, nPoints*2);
    }
    for (Int_t n=0;n<nPoints;++n) {
       buf[n*2] = xw[n];
@@ -112,7 +112,7 @@ void TWebPS::DrawPS(Int_t nPoints, Double_t *xw, Double_t *yw)
 
 void TWebPS::Text(Double_t x, Double_t y, const char *str)
 {
-   Float_t *buf = StoreOperation(std::string("text:") + str, attrText, 2);
+   Float_t *buf = StoreOperation(TWebPainting::MakeTextOper(str), attrText, 2);
    buf[0] = x;
    buf[1] = y;
 }
@@ -120,7 +120,7 @@ void TWebPS::Text(Double_t x, Double_t y, const char *str)
 
 void TWebPS::Text(Double_t x, Double_t y, const wchar_t *)
 {
-   Float_t *buf = StoreOperation(std::string("text:") + "wchar_t", attrText, 2);
+   Float_t *buf = StoreOperation(TWebPainting::MakeTextOper("wchar_t"), attrText, 2);
    buf[0] = x;
    buf[1] = y;
 }

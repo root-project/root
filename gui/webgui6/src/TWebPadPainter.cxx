@@ -68,7 +68,7 @@ void TWebPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2
    if (GetLineWidth() <= 0)
       return;
 
-   auto buf = StoreOperation("pline:2", attrLine, 4);
+   auto buf = StoreOperation("l2", attrLine, 4);
    if (buf) {
       buf[0] = x1;
       buf[1] = y1;
@@ -87,7 +87,7 @@ void TWebPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t
 
    ::Error("DrawLineNDC", "Not supported correctly");
 
-   auto buf = StoreOperation("pline:2", attrLine, 4);
+   auto buf = StoreOperation("l2", attrLine, 4);
    if (buf) {
       buf[0] = u1;
       buf[1] = v1;
@@ -107,9 +107,9 @@ void TWebPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    Float_t *buf = nullptr;
 
    if (mode == TVirtualPadPainter::kHollow)
-      buf = StoreOperation("rect", attrLine, 4); // only border
+      buf = StoreOperation("r", attrLine, 4); // only border
    else
-      buf = StoreOperation("bbox", attrFill, 4); // only fill
+      buf = StoreOperation("b", attrFill, 4); // only fill
 
    if (buf) {
       buf[0] = x1;
@@ -127,7 +127,7 @@ void TWebPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Doubl
    if ((GetFillStyle() <= 0) || (nPoints < 3))
       return;
 
-   auto buf = StoreOperation("pfill:" + std::to_string(nPoints), attrFill, nPoints * 2);
+   auto buf = StoreOperation("f" + std::to_string(nPoints), attrFill, nPoints * 2);
    if (buf)
       for (Int_t n = 0; n < nPoints; ++n) {
          buf[n * 2] = xs[n];
@@ -143,7 +143,7 @@ void TWebPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_
    if ((GetFillStyle() <= 0) || (nPoints < 3))
       return;
 
-   auto buf = StoreOperation("pfill:" + std::to_string(nPoints), attrFill, nPoints * 2);
+   auto buf = StoreOperation("f" + std::to_string(nPoints), attrFill, nPoints * 2);
    if (buf)
       for (Int_t n = 0; n < nPoints; ++n) {
          buf[n * 2] = xs[n];
@@ -159,7 +159,7 @@ void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Double_t *xs, const Doubl
    if ((GetLineWidth() <= 0) || (nPoints < 2))
       return;
 
-   auto buf = StoreOperation("pline:" + std::to_string(nPoints), attrLine, nPoints * 2);
+   auto buf = StoreOperation("l" + std::to_string(nPoints), attrLine, nPoints * 2);
    if (buf)
       for (Int_t n = 0; n < nPoints; ++n) {
          buf[n * 2] = xs[n];
@@ -175,7 +175,7 @@ void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Float_t *xs, const Float_
    if ((GetLineWidth() <= 0) || (nPoints < 2))
       return;
 
-   auto buf = StoreOperation("pline:" + std::to_string(nPoints), attrLine, nPoints * 2);
+   auto buf = StoreOperation("l" + std::to_string(nPoints), attrLine, nPoints * 2);
    if (buf)
       for (Int_t n = 0; n < nPoints; ++n) {
          buf[n * 2] = xs[n];
@@ -193,7 +193,7 @@ void TWebPadPainter::DrawPolyLineNDC(Int_t nPoints, const Double_t *u, const Dou
 
    ::Error("DrawPolyLineNDC", "Not supported correctly");
 
-   auto buf = StoreOperation("pline:" + std::to_string(nPoints), attrLine, nPoints * 2);
+   auto buf = StoreOperation("l" + std::to_string(nPoints), attrLine, nPoints * 2);
    if (buf)
       for (Int_t n = 0; n < nPoints; ++n) {
          buf[n * 2] = u[n];
@@ -209,7 +209,7 @@ void TWebPadPainter::DrawPolyMarker(Int_t nPoints, const Double_t *x, const Doub
    if (nPoints < 1)
       return;
 
-   auto buf = StoreOperation(std::string("pmark:") + std::to_string(nPoints), attrLine | attrMarker, nPoints * 2);
+   auto buf = StoreOperation(std::string("m") + std::to_string(nPoints), attrLine | attrMarker, nPoints * 2);
 
    if (buf)
       for (Int_t n = 0; n < nPoints; ++n) {
@@ -226,7 +226,7 @@ void TWebPadPainter::DrawPolyMarker(Int_t nPoints, const Float_t *x, const Float
    if (nPoints < 1)
       return;
 
-   auto buf = StoreOperation(std::string("pmark:") + std::to_string(nPoints), attrLine | attrMarker, nPoints * 2);
+   auto buf = StoreOperation(std::string("m") + std::to_string(nPoints), attrLine | attrMarker, nPoints * 2);
 
    if (buf)
       for (Int_t n = 0; n < nPoints; ++n) {
@@ -240,7 +240,7 @@ void TWebPadPainter::DrawPolyMarker(Int_t nPoints, const Float_t *x, const Float
 
 void TWebPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode /*mode*/)
 {
-   auto buf = StoreOperation(std::string("text:") + text, attrText, 2);
+   auto buf = StoreOperation(TWebPainting::MakeTextOper(text), attrText, 2);
    if (buf) {
       buf[0] = x;
       buf[1] = y;
@@ -252,7 +252,7 @@ void TWebPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMod
 
 void TWebPadPainter::DrawText(Double_t x, Double_t y, const wchar_t * /*text*/, ETextMode /*mode*/)
 {
-   auto buf = StoreOperation(std::string("text:") + "wchar_t", attrText, 2);
+   auto buf = StoreOperation(TWebPainting::MakeTextOper("wchar_t"), attrText, 2);
    if (buf) {
       buf[0] = x;
       buf[1] = y;
@@ -266,7 +266,7 @@ void TWebPadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, EText
 {
    ::Error("DrawTextNDC", "Not supported correctly");
 
-   auto buf = StoreOperation(std::string("text:") + text, attrText, 2);
+   auto buf = StoreOperation(TWebPainting::MakeTextOper(text), attrText, 2);
 
    if (buf) {
       buf[0] = u;
@@ -281,7 +281,7 @@ void TWebPadPainter::DrawTextNDC(Double_t  u , Double_t v, const wchar_t * /*tex
 {
    ::Error("DrawTextNDC", "Not supported correctly");
 
-   auto buf = StoreOperation(std::string("text:") + "wchar_t", attrText, 2);
+   auto buf = StoreOperation(TWebPainting::MakeTextOper("wchar_t"), attrText, 2);
 
    if (buf) {
       buf[0] = u;

@@ -32,6 +32,18 @@ void TWebPainting::AddOper(const std::string &oper)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+/// Create text operation
+/// If text include special symbols - use TBase64 coding
+
+std::string TWebPainting::MakeTextOper(const char *str)
+{
+   std::string oper("t");
+   if (str) oper.append(str);
+   return oper;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////
 /// Reserve place in the float buffer
 /// Returns pointer on first element in reserved area
 
@@ -62,7 +74,7 @@ void TWebPainting::AddLineAttr(const TAttLine &attr)
 
    fLastLine = attr;
 
-   AddOper(std::string("lattr:") +
+   AddOper(std::string("z") +
            std::to_string((int) attr.GetLineColor()) + ":" +
            std::to_string((int) attr.GetLineStyle()) + ":" +
            std::to_string((int) attr.GetLineWidth()));
@@ -79,7 +91,7 @@ void TWebPainting::AddFillAttr(const TAttFill &attr)
 
    fLastFill = attr;
 
-   AddOper(std::string("fattr:") +
+   AddOper(std::string("y") +
            std::to_string((int) attr.GetFillColor()) + ":" +
            std::to_string((int) attr.GetFillStyle()));
 }
@@ -90,7 +102,7 @@ void TWebPainting::AddFillAttr(const TAttFill &attr)
 
 void TWebPainting::AddTextAttr(const TAttText &attr)
 {
-   AddOper(std::string("tattr:") +
+   AddOper(std::string("o") +
            std::to_string((int) attr.GetTextColor()) + ":" +
            std::to_string((int) attr.GetTextFont()) + ":" +
            std::to_string((int) (attr.GetTextSize()>=1 ? attr.GetTextSize() : -1000*attr.GetTextSize())) + ":" +
@@ -110,7 +122,7 @@ void TWebPainting::AddMarkerAttr(const TAttMarker &attr)
 
    fLastMarker = attr;
 
-   AddOper(std::string("mattr:") +
+   AddOper(std::string("x") +
            std::to_string((int) attr.GetMarkerColor()) + ":" +
            std::to_string((int) attr.GetMarkerStyle()) + ":" +
            std::to_string((int) attr.GetMarkerSize()));
