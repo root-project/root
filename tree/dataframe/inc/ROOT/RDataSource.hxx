@@ -73,20 +73,20 @@ for selected columns and to advance the readers to the desired data entry.
 
 The sequence of calls that RDataFrame (or any other client of a RDataSource) performs is the following:
 
-1) SetNSlots: inform RDataSource of the desired level of parallelism
-2) GetColumnReaders: retrieve from RDataSource per-thread readers for the desired columns
-3) Initialise: inform RDataSource that an event-loop is about to start
-4) GetEntryRanges: retrieve from RDataSource a set of ranges of entries that can be processed concurrently
-5) InitSlot: inform RDataSource that a certain thread is about to start working on a certain range of entries
-6) SetEntry: inform RDataSource that a certain thread is about to start working on a certain entry
-7) FinaliseSlot: inform RDataSource that a certain thread finished working on a certain range of entries
-8) Finalise: inform RDataSource that an event-loop finished
+ 1. SetNSlots: inform RDataSource of the desired level of parallelism
+ 2. GetColumnReaders: retrieve from RDataSource per-thread readers for the desired columns
+ 3. Initialise: inform RDataSource that an event-loop is about to start
+ 4. GetEntryRanges: retrieve from RDataSource a set of ranges of entries that can be processed concurrently
+ 5. InitSlot: inform RDataSource that a certain thread is about to start working on a certain range of entries
+ 6. SetEntry: inform RDataSource that a certain thread is about to start working on a certain entry
+ 7. FinaliseSlot: inform RDataSource that a certain thread finished working on a certain range of entries
+ 8. Finalise: inform RDataSource that an event-loop finished
 
 RDataSource implementations must support running multiple event-loops consecutively (although sequentially) on the same dataset.
-Method 1 is called once per RDataSource object, typically when it is associated to a RDataFrame.
-Method 2 can be called several times, potentially with the same arguments, also in-between event-loops, but not during an event-loop.
-Methods 3,8 are called once per event-loop, right before starting and right after finishing.
-Methods 5,6,7 can be called concurrently from multiple threads, multiple times per event-loop.
+ - Method 1 is called once per RDataSource object, typically when it is associated to a RDataFrame.
+ - Method 2 can be called several times, potentially with the same arguments, also in-between event-loops, but not during an event-loop.
+ - Methods 3,8 are called once per event-loop, right before starting and right after finishing.
+ - Methods 5,6,7 can be called concurrently from multiple threads, multiple times per event-loop.
 */
 class RDataSource {
    // clang-format on
