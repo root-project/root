@@ -26,22 +26,22 @@
 class TWebPainting : public TObject {
 
    protected:
-      std::vector<std::string> fOper; /// list of operations
-      Int_t fSize{0};                 ///<! filled buffer size
-      TArrayF fBuf;                   /// array of points for all operations
+      std::string fOper; /// list of operations, separated by semicolons
+      Int_t fSize{0};    ///<! filled buffer size
+      TArrayF fBuf;      /// array of points for all operations
 
-      TAttLine fLastLine;             ///<! last line attributes
-      TAttFill fLastFill;             ///<! last fill attributes
-      TAttMarker fLastMarker;         ///<! last marker attributes
+      TAttLine fLastLine;     ///<! last line attributes
+      TAttFill fLastFill;     ///<! last fill attributes
+      TAttMarker fLastMarker; ///<! last marker attributes
 
    public:
 
       TWebPainting();
       virtual ~TWebPainting() = default;
 
-      Bool_t IsEmpty() const { return (fOper.size() == 0) && (fBuf.GetSize() == 0); }
+      Bool_t IsEmpty() const { return fOper.empty() && (fBuf.GetSize() == 0); }
 
-      void AddOper(const std::string &oper) { fOper.emplace_back(oper); }
+      void AddOper(const std::string &oper);
 
       void AddLineAttr(const TAttLine &attr);
       void AddFillAttr(const TAttFill &attr);
@@ -55,7 +55,7 @@ class TWebPainting : public TObject {
       // Set actual filled size
       void FixSize() { fBuf.Set(fSize); }
 
-   ClassDef(TWebPainting, 1)// store for all paint operation of TVirtualPadPainter
+   ClassDef(TWebPainting, 1) // store for all paint operation of TVirtualPadPainter
 };
 
 #endif
