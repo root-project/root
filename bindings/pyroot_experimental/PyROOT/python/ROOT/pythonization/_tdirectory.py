@@ -12,6 +12,10 @@ from libROOTPython import AddDirectoryAttrSyntaxPyz, AddDirectoryWritePyz
 from ROOT import pythonization
 import cppyy
 
+# This pythonization must be set as not lazy, otherwise the mechanism cppyy uses
+# to pythonize classes will not be able to be triggered on this very core class.
+# The pythonization does not have arguments since it is not fired by cppyy but
+# manually upon import of the ROOT module.
 @pythonization(lazy = False)
 def pythonize_tdirectory():
     klass = cppyy.gbl.TDirectory
