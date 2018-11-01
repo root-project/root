@@ -92,6 +92,10 @@ public:
    using PadClickedSignal_t = std::function<void(TPad *, int, int)>;
 
 protected:
+
+   /// Function called when pad painting produced
+   using PadPaintingReady_t = std::function<void(TPadWebSnapshot *)>;
+
    struct WebConn {
       unsigned fConnId{0};       ///<! connection id
       std::string fGetMenu;      ///<! object id for menu request
@@ -108,7 +112,6 @@ protected:
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
    bool fWaitNewConnection{false}; ///<! when true, Update() will wait for a new connection
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
-   Int_t fJsonCompression{23};     ///<! JSON compression value for data send to clients, see TBufferJSON
 
    UpdatedSignal_t fUpdatedSignal;          ///<! signal emitted when canvas updated or state is changed
    PadSignal_t fActivePadChangedSignal;     ///<!  signal emitted when active pad changed in the canvas
@@ -125,8 +128,8 @@ protected:
    virtual TVirtualPadPainter *CreatePadPainter();
 
    Bool_t AddCanvasSpecials(TPadWebSnapshot *master);
-   TString CreateSnapshot(TPad *pad, TPadWebSnapshot *master = nullptr, TList *tempbuf = nullptr);
    TWebSnapshot *CreateObjectSnapshot(TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
+   bool CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, TPadWebSnapshot *master = nullptr, TList *primitives_lst = nullptr);
 
    TObject *FindPrimitive(const char *id, TPad *pad = nullptr, TObjLink **padlnk = nullptr);
    Bool_t DecodeAllRanges(const char *arg);
@@ -142,8 +145,6 @@ protected:
    void ShowCmd(const char *arg, Bool_t show);
 
    void AssignStatusBits(UInt_t bits);
-
-   void SetJsonCompression(Int_t lvl = 0) { fJsonCompression = lvl; }
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
@@ -201,6 +202,7 @@ public:
    virtual Bool_t HasToolTips() const;
 
    static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
+   static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");
 
    ClassDef(TWebCanvas, 0) // ABC describing main window protocol
 };
