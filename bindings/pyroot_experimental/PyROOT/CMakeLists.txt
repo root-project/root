@@ -6,6 +6,7 @@ set(py_sources
   ROOT/__init__.py
   ROOT/pythonization/__init__.py
   ROOT/pythonization/_tdirectory.py
+  ROOT/pythonization/_tdirectoryfile.py
   ROOT/pythonization/_tfile.py
   ROOT/pythonization/_ttree.py
   ROOT/pythonization/_generic.py
