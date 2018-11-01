@@ -3,6 +3,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py)
 
 # TFile, TDirectory, TDirectoryFile pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectoryfile_read_write tdirectoryfile_read_write.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tfile_open_read_write tfile_open_read_write.py)
 
 # TTree and subclasses pythonizations
