@@ -23,6 +23,20 @@ TWebPainting::TWebPainting()
 ///////////////////////////////////////////////////////////////////////////////////////
 /// Add next custom operator to painting
 /// Operations are separated by semicolons
+/// Following operations are supported:
+///   t - text
+///   h - text coded into simple hex
+///   r - rectangle
+///   b - rectangular fill region
+///   l - polyline
+///   f - poly fill region
+///   m - poly marker
+///   z - line attributes
+///   y - fill attributes
+///   x - marker attributes
+///   o - text attributes
+///  After operation code optional arguments can be append like length of operation or coded text
+///  Each operation may use data from binary float buffer
 
 void TWebPainting::AddOper(const std::string &oper)
 {
@@ -33,15 +47,33 @@ void TWebPainting::AddOper(const std::string &oper)
 
 ///////////////////////////////////////////////////////////////////////////////////////
 /// Create text operation
-/// If text include special symbols - use TBase64 coding
+/// If text include special symbols - use simple hex coding
 
 std::string TWebPainting::MakeTextOper(const char *str)
 {
-   std::string oper("t");
-   if (str) oper.append(str);
+   bool isany_special = false;
+   if (!str)
+      str = "";
+   for (auto p = str; *p; ++p) {
+      if ((*p < 32) || (*p > 126) || (*p == ';') || (*p == '\'') || (*p == '\"') || (*p == '\%')) {
+         isany_special = true;
+         break;
+      }
+   }
+
+   if (!isany_special)
+      return std::string("t") + str;
+
+   // use simple hex coding while special symbols are hard to handle
+   std::string oper("h");
+   static const char *digits = "0123456789abcdef";
+   for (auto p = str; *p; ++p) {
+      unsigned code = (unsigned)*p;
+      oper.append(1, digits[(code >> 4) & 0xF]);
+      oper.append(1, digits[code & 0xF]);
+   }
    return oper;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////
 /// Reserve place in the float buffer
