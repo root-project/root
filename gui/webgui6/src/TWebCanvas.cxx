@@ -32,6 +32,7 @@
 #include "TView.h"
 
 #include <ROOT/RWebWindowsManager.hxx>
+#include <ROOT/RMakeUnique.hxx>
 
 #include <stdio.h>
 #include <string.h>
@@ -980,22 +981,22 @@ Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
 
 TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
 {
-   if (!c) return TString();
+   TString res;
+
+   if (!c)
+      return res;
 
    Bool_t isbatch = c->IsBatch();
    c->SetBatch(kTRUE);
 
-   TWebCanvas *imp = new TWebCanvas(c, c->GetName(), 0, 0, 1000, 500);
-
-   TString res;
-   imp->CreatePadSnapshot(c, [&res,json_compression](TPadWebSnapshot *snap) {
-      res = TBufferJSON::ConvertToJSON(snap, json_compression);
-   });
-
-   delete imp;
+   {
+      auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
+      imp->CreatePadSnapshot(c, [&res, json_compression](TPadWebSnapshot *snap) {
+         res = TBufferJSON::ConvertToJSON(snap, json_compression);
+      });
+   }
 
    c->SetBatch(isbatch);
-
    return res;
 }
 
@@ -1005,23 +1006,22 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
 
 Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *option)
 {
-   if (!c) return 0;
+   Int_t res{0};
+
+   if (!c)
+      return res;
 
    Bool_t isbatch = c->IsBatch();
    c->SetBatch(kTRUE);
 
-   TWebCanvas *imp = new TWebCanvas(c, c->GetName(), 0, 0, 1000, 500);
+   {
+      auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
 
-   Int_t res = 0;
-
-   imp->CreatePadSnapshot(c, [&res,filename,option](TPadWebSnapshot *snap) {
-      res = TBufferJSON::ExportToFile(filename, snap, option);
-   });
-
-   delete imp;
+      imp->CreatePadSnapshot(c, [&res, filename, option](TPadWebSnapshot *snap) {
+         res = TBufferJSON::ExportToFile(filename, snap, option);
+      });
+   }
 
    c->SetBatch(isbatch);
-
    return res;
-
 }
