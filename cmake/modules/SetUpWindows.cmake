@@ -55,10 +55,10 @@ elseif(MSVC)
   math(EXPR VC_MINOR "${MSVC_VERSION} % 100")
 
   if(winrtdebug)
-    set(BLDCXXFLAGS "-MDd -GR")
+    set(BLDCXXFLAGS "-Zc:__cplusplus -MDd -GR")
     set(BLDCFLAGS   "-MDd")
   else()
-    set(BLDCXXFLAGS "-MD -GR")
+    set(BLDCXXFLAGS "-Zc:__cplusplus -MD -GR")
     set(BLDCFLAGS   "-MD")
   endif()
 
