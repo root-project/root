@@ -244,7 +244,9 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TPad *pad, TObject *obj, const ch
 
 Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
 {
-   // if (!TColor::DefinedColors()) return kFALSE;
+   // execute function to prevent storing of colors with custom TCanvas streamer
+   // TODO: we need to change logic here
+   TColor::DefinedColors();
 
    TObjArray *colors = (TObjArray *)gROOT->GetListOfColors();
 
