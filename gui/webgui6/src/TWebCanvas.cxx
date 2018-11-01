@@ -281,7 +281,7 @@ Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create snapshot for pad and all primitives
 
-TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *primitives_lst)
+bool TWebCanvas::CreatePadSnapshot(TPad *pad, PadPaintingReady_t func, TPadWebSnapshot *master, TList *primitives_lst)
 {
    TList master_lst; // main list of TList object which are primitives or functions
    if (!master && !primitives_lst)
@@ -329,7 +329,7 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
    while ((obj = iter()) != nullptr) {
       if (obj->InheritsFrom(TPad::Class())) {
          flush_master();
-         CreateSnapshot((TPad *)obj, curr, primitives_lst);
+         CreatePadSnapshot((TPad *)obj, nullptr, curr, primitives_lst);
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
          add_object();
@@ -367,7 +367,7 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
    flush_master();
 
    if (primitives_lst != &master_lst)
-      return "";
+      return true;
 
    // now move all primitives and functions into separate list to perform I/O
 
@@ -384,7 +384,8 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
       dlst->Clear("nodelete");
    }
 
-   TString res = TBufferJSON::ConvertToJSON(curr, 23);
+   if (func) func(curr);
+   // TString res = TBufferJSON::ConvertToJSON(curr, 23);
 
    // static int filecnt = 0;
    // TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
@@ -405,7 +406,7 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
 
    master_lst.Clear("nodelete");
 
-   return res;
+   return true;
 }
 
 void TWebCanvas::CheckDataToSend()
@@ -439,7 +440,12 @@ void TWebCanvas::CheckDataToSend()
          buf = "SNAP6:";
          buf.append(std::to_string(fCanvVersion));
          buf.append(":");
-         buf.append(CreateSnapshot(Canvas()).Data());
+
+         TString res;
+         CreatePadSnapshot(Canvas(), [&res](TPadWebSnapshot *snap) {
+            res = TBufferJSON::ConvertToJSON(snap, 23);
+         });
+         buf.append(res.Data());
 
          // printf("Snapshot created %d\n", buf.Length());
          // if (buf.Length() < 10000) printf("Snapshot %s\n", buf.Data());
@@ -980,11 +986,42 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
    c->SetBatch(kTRUE);
 
    TWebCanvas *imp = new TWebCanvas(c, c->GetName(), 0, 0, 1000, 500);
-   imp->SetJsonCompression(json_compression);
 
-   TString res = imp->CreateSnapshot(c);
+   TString res;
+   imp->CreatePadSnapshot(c, [&res,json_compression](TPadWebSnapshot *snap) {
+      res = TBufferJSON::ConvertToJSON(snap, json_compression);
+   });
+
+   delete imp;
 
    c->SetBatch(isbatch);
 
    return res;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Create JSON painting output for given canvas and store into the file
+/// See TBufferJSON::ExportToFile() method for more details
+
+Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *option)
+{
+   if (!c) return 0;
+
+   Bool_t isbatch = c->IsBatch();
+   c->SetBatch(kTRUE);
+
+   TWebCanvas *imp = new TWebCanvas(c, c->GetName(), 0, 0, 1000, 500);
+
+   Int_t res = 0;
+
+   imp->CreatePadSnapshot(c, [&res,filename,option](TPadWebSnapshot *snap) {
+      res = TBufferJSON::ExportToFile(filename, snap, option);
+   });
+
+   delete imp;
+
+   c->SetBatch(isbatch);
+
+   return res;
+
 }
