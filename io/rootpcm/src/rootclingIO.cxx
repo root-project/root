@@ -88,19 +88,17 @@ static bool IsUnsupportedUniquePointer(const char *normName, TDataMember *dm)
          return true;
       }
 
-      auto upDms = clm->GetListOfDataMembers();
+      clm->BuildRealData();
+      auto upDms = clm->GetListOfRealData();
       if (!upDms) {
          Error("CloseStreamerInfoROOTFile", "Cannot determine unique pointer %s data members.", dmTypeName);
          return true;
       }
 
-#ifndef _MSC_VER
-// TODO: Review if this is really a valid test on Windows
       if (0 == upDms->GetSize()) {
          Error("CloseStreamerInfoROOTFile", "Unique pointer %s has zero data members.", dmTypeName);
          return true;
       }
-#endif
 
       // We check if the unique_ptr has a default deleter
       std::vector<std::string> out;
