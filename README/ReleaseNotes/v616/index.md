@@ -53,6 +53,11 @@ Given that this effectively meant that Ruby was dysfunctional and given that nob
 The packages `afs`, `chirp`, `glite`, `sapdb`, `srp` and `ios` have been removed from ROOT.
 They were deprecated before, or never ported from configure, make to CMake.
 
+### Remove of unsused declarations from TVirtualX.h
+
+Remove GLUtesselator forward declarations, which is not used in TVirtualX classes.
+Use TGLUtil.h instead
+
 
 ## Core Libraries
 
