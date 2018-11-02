@@ -43,7 +43,7 @@ PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
                          &CPyCppyy_PyUnicode_Type, &option,
                          &bufsize))
       return nullptr;
-   auto dir = (TDirectory *)OP2TCLASS(self)->DynamicCast(TDirectory::Class(), self->GetObject());
+   auto dir = (TDirectory *)GetTClass(self)->DynamicCast(TDirectory::Class(), self->GetObject());
    if (!dir) {
       PyErr_SetString(PyExc_TypeError,
                       "TDirectory::WriteObject must be called with a TDirectory instance as first argument");
@@ -51,10 +51,10 @@ PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
    }
    Int_t result = 0;
    if (option != nullptr) {
-      result = dir->WriteObjectAny(wrt->GetObject(), OP2TCLASS(wrt), CPyCppyy_PyUnicode_AsString(name),
+      result = dir->WriteObjectAny(wrt->GetObject(), GetTClass(wrt), CPyCppyy_PyUnicode_AsString(name),
                                    CPyCppyy_PyUnicode_AsString(option), bufsize);
    } else {
-      result = dir->WriteObjectAny(wrt->GetObject(), OP2TCLASS(wrt), CPyCppyy_PyUnicode_AsString(name));
+      result = dir->WriteObjectAny(wrt->GetObject(), GetTClass(wrt), CPyCppyy_PyUnicode_AsString(name));
    }
    return PyInt_FromLong((Long_t)result);
 }
@@ -70,7 +70,7 @@ PyObject *TDirectoryGet(CPPInstance *self, PyObject *pynamecycle)
       PyErr_SetString(PyExc_TypeError, "TDirectory::Get must be called with a TDirectory instance as first argument");
       return nullptr;
    }
-   auto dirf = (TDirectory *)OP2TCLASS(self)->DynamicCast(TDirectory::Class(), self->GetObject());
+   auto dirf = (TDirectory *)GetTClass(self)->DynamicCast(TDirectory::Class(), self->GetObject());
    if (!dirf) {
       PyErr_SetString(PyExc_ReferenceError, "attempt to access a null-pointer");
       return nullptr;
