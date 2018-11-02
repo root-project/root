@@ -6768,14 +6768,14 @@ QualType ASTReader::GetType(TypeID ID) {
   Index -= NUM_PREDEF_TYPE_IDS;
   assert(Index < NumTypesLoaded && "Type index out-of-range");
   if (TypesLoaded.find(Index) == TypesLoaded.end()) {
-    QualType Q = readTypeRecord(Index);
-    TypesLoaded.insert({Index, Q});
+    QualType QualTy = readTypeRecord(Index);
+    TypesLoaded.insert({Index, QualTy});
     if (TypesLoaded.find(Index) == TypesLoaded.end())
       return QualType();
 
-    Q->setFromAST();
+    QualTy->setFromAST();
     if (DeserializationListener)
-      DeserializationListener->TypeRead(TypeIdx::fromTypeID(ID), Q);
+      DeserializationListener->TypeRead(TypeIdx::fromTypeID(ID), QualTy);
   }
 
   return TypesLoaded.find(Index)->second.withFastQualifiers(FastQuals);
