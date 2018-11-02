@@ -157,6 +157,12 @@ int TMVACrossValidation()
    // This sets up a CrossValidation class (which wraps a TMVA::Factory
    // internally) for 2-fold cross validation.
    //
+   // The split type can be "Random", "RandomStratified" or "Deterministic".
+   // For the last option, check the comment below. Random splitting randomises
+   // the order of events and distributes events as evenly as possible.
+   // RandomStratified applies the same logic but distributes events within a
+   // class as evenly as possible over the folds.
+   //
    UInt_t numFolds = 2;
    TString analysisType = "Classification";
    TString splitType = "Random";
