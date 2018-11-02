@@ -103,7 +103,7 @@ public:
    void Print() const;
 
    TCanvas *Draw(const TString name = "CrossValidation") const;
-   TCanvas *DrawAvgROCCurve(Bool_t drawFolds=kFALSE) const;
+   TCanvas *DrawAvgROCCurve(Bool_t drawFolds=kFALSE, TString title="") const;
 
    std::vector<Double_t> GetSigValues() const { return fSigs; }
    std::vector<Double_t> GetSepValues() const { return fSeps; }
