@@ -3333,7 +3333,7 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
           std::make_pair(LocalBaseMacroID,
                          F.BaseMacroID - LocalBaseMacroID));
 
-        MacrosLoaded.resize(MacrosLoaded.size() + F.LocalNumMacros);
+        NumMacrosLoaded += F.LocalNumMacros;
       }
       break;
     }
@@ -7400,9 +7400,7 @@ void ASTReader::PrintStats() {
                                             IdentifiersLoaded.end(),
                                             (IdentifierInfo *)nullptr);
   unsigned NumMacrosLoaded
-    = MacrosLoaded.size() - std::count(MacrosLoaded.begin(),
-                                       MacrosLoaded.end(),
-                                       (MacroInfo *)nullptr);
+    = MacrosLoaded.size();
   unsigned NumSelectorsLoaded
     = SelectorsLoaded.size() - std::count(SelectorsLoaded.begin(),
                                           SelectorsLoaded.end(),
@@ -8184,26 +8182,30 @@ MacroInfo *ASTReader::getMacro(MacroID ID) {
   if (ID == 0)
     return nullptr;
 
-  if (MacrosLoaded.empty()) {
+  if (!NumMacrosLoaded) {
     Error("no macro table in AST file");
     return nullptr;
   }
 
   ID -= NUM_PREDEF_MACRO_IDS;
-  if (!MacrosLoaded[ID]) {
+  auto FindRes = MacrosLoaded.find(ID);
+  if (FindRes == MacrosLoaded.end()) {
     GlobalMacroMapType::iterator I
       = GlobalMacroMap.find(ID + NUM_PREDEF_MACRO_IDS);
     assert(I != GlobalMacroMap.end() && "Corrupted global macro map");
     ModuleFile *M = I->second;
     unsigned Index = ID - M->BaseMacroID;
-    MacrosLoaded[ID] = ReadMacroRecord(*M, M->MacroOffsets[Index]);
+    MacroInfo *MI = ReadMacroRecord(*M, M->MacroOffsets[Index]);
+    MacrosLoaded.insert({ID, MI});
 
     if (DeserializationListener)
-      DeserializationListener->MacroRead(ID + NUM_PREDEF_MACRO_IDS,
-                                         MacrosLoaded[ID]);
+      DeserializationListener->MacroRead(ID + NUM_PREDEF_MACRO_IDS, MI);
   }
 
-  return MacrosLoaded[ID];
+  FindRes = MacrosLoaded.find(ID);
+  if (FindRes == MacrosLoaded.end())
+    return nullptr;
+  return FindRes->second;
 }
 
 MacroID ASTReader::getGlobalMacroID(ModuleFile &M, unsigned LocalID) {

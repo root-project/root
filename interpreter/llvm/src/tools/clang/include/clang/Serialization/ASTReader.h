@@ -604,7 +604,8 @@ private:
   /// If the pointer at index I is non-NULL, then it refers to the
   /// MacroInfo for the identifier with ID=I+1 that has already
   /// been loaded.
-  std::vector<MacroInfo *> MacrosLoaded;
+  llvm::DenseMap<unsigned, MacroInfo *> MacrosLoaded;
+  unsigned NumMacrosLoaded = 0;
 
   typedef std::pair<IdentifierInfo *, serialization::SubmoduleID>
       LoadedMacroInfo;
@@ -1670,7 +1671,7 @@ public:
 
   /// \brief Returns the number of macros found in the chain.
   unsigned getTotalNumMacros() const {
-    return static_cast<unsigned>(MacrosLoaded.size());
+    return NumMacrosLoaded;
   }
 
   /// \brief Returns the number of types found in the chain.
