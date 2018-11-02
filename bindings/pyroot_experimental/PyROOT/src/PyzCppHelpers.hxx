@@ -17,4 +17,4 @@ namespace CPyCppyy {
 }
 
 PyObject *CallPyObjMethod(PyObject *obj, const char *meth, PyObject *arg1);
-TClass *GetTClass(CPyCppyy::CPPInstance *pyobj);
+TClass *GetTClass(const CPyCppyy::CPPInstance *pyobj);

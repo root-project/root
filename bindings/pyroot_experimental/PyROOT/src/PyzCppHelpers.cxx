@@ -23,7 +23,7 @@ PyObject *CallPyObjMethod(PyObject *obj, const char *meth, PyObject *arg1)
    return result;
 }
 
-TClass *GetTClass(CPyCppyy::CPPInstance *pyobj)
+TClass *GetTClass(const CPyCppyy::CPPInstance *pyobj)
 {
    return TClass::GetClass(Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str());
 }

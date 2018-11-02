@@ -31,7 +31,7 @@ using namespace CPyCppyy;
 /// ~~~{.python}
 /// myDir.WriteObject(myObj, "myKeyName")
 /// ~~~
-PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
+PyObject *TDirectoryWriteObject(const CPPInstance *self, PyObject *args)
 {
    CPPInstance *wrt = nullptr;
    PyObject *name = nullptr;
@@ -63,7 +63,7 @@ PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
 /// \brief Implement the Get method for TDirectory
 /// This allows to seamlessly read from a TDirectory, and therefore a TDirectoryFile
 /// and file objects inputting their key name, being them TObjects or not.
-PyObject *TDirectoryGet(CPPInstance *self, PyObject *pynamecycle)
+PyObject *TDirectoryGet(const CPPInstance *self, PyObject *pynamecycle)
 {
    // Pythonization of TDirectory::Get that handles non-TObject deriveds
    if (!CPPInstance_Check(self)) {
