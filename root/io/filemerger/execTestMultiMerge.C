@@ -6,9 +6,9 @@ extern "C" uint32_t lzma_version_number(void);
 constexpr bool kIs32bits = sizeof(long) == 4;
 
 #ifdef R__HAS_DEFAULT_LZ4
-constexpr int expectedcomplevel = 4;
+constexpr int expectedcomplevel = 404;
 #else
-constexpr int expectedcomplevel = 1;
+constexpr int expectedcomplevel = 101;
 #endif
 
 int testMergedFile(const char *filename, Int_t compSetting, Long64_t fileSize, UInt_t tolerance = 0)
