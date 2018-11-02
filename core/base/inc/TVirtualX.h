@@ -49,11 +49,6 @@ enum ECursor { kBottomLeft, kBottomRight, kTopLeft, kTopRight,
 class TPoint;
 class TString;
 class TGWin32Command;
-#ifdef __cplusplus
-   class GLUtesselator;
-#else
-   extern "C" { struct GLUtesselator; }
-#endif
 
 class TVirtualX : public TNamed, public TAttLine, public TAttFill, public TAttText, public TAttMarker {
 
