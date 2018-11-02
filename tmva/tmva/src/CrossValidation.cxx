@@ -96,8 +96,9 @@ TMultiGraph *TMVA::CrossValidationResult::GetROCCurves(Bool_t /*fLegend*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Generates a multigraph that contains an average ROC Curve.
-/// \param numSamples[in] Number of Samples to use for generating the average
-///                       ROC Curve.
+/// \param numSamples[in] Number of samples used for generating the average ROC
+///                       Curve. Avg. curve will be evaluated only at these
+///                       points (using interpolation if necessary).
 /// \param drawFolds[in]  If true, the multigraph will also contain the individual
 ///                       ROC Curves of all the folds.
 ///
@@ -112,32 +113,28 @@ TMultiGraph *TMVA::CrossValidationResult::GetAvgROCCurve(UInt_t numSamples, Bool
       avgROCCurve = fROCCurves.get();
    }
 
-   Double_t interval = 1.0 / numSamples;
-   Double_t x[numSamples], y[numSamples];
-
-   Double_t xPoint = 0;
-   Double_t rocSum = 0;
+   Double_t increment = 1.0 / numSamples;
+   Double_t x[numSamples];
+   Double_t y[numSamples];
 
    TList *rocCurveList = fROCCurves.get()->GetListOfGraphs();
 
-   for(UInt_t i=0; i<numSamples; i++){
+   for(UInt_t iSample = 0; iSample < numSamples; iSample++) {
+      Double_t xPoint = iSample * increment;
+      Double_t rocSum = 0;
 
-      for(Int_t j=0; j<rocCurveList->GetSize(); j++){
-
-        TGraph *foldROC = static_cast<TGraph *>(rocCurveList->At(j));
+      for(Int_t iGraph = 0; iGraph < rocCurveList->GetSize(); iGraph++) {
+        TGraph *foldROC = static_cast<TGraph *>(rocCurveList->At(iGraph));
         foldROC->SetLineColor(1);
         foldROC->SetLineWidth(1);
-        rocSum += foldROC->Eval(xPoint,0,"");
+        rocSum += foldROC->Eval(xPoint);
       }
 
-      x[i] = xPoint;
-      y[i] = rocSum/rocCurveList->GetSize();
-
-      rocSum = 0;
-      xPoint += interval;
+      x[iSample] = xPoint;
+      y[iSample] = rocSum/rocCurveList->GetSize();
    }
 
-   TGraph *avgROCCurveGraph = new TGraph(numSamples,x,y);
+   TGraph *avgROCCurveGraph = new TGraph(numSamples, x, y);
    avgROCCurveGraph->SetTitle("Avg ROC Curve");
    avgROCCurveGraph->SetLineColor(2);
    avgROCCurveGraph->SetLineWidth(3);
