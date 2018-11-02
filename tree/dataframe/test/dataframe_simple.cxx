@@ -875,6 +875,23 @@ TEST(RDFSimpleTests, SumOfStrings)
    EXPECT_EQ(*df.Sum<std::string>("str"), "blabla");
 }
 
+TEST(RDFSimpleTests, AutomaticNamesOfHisto1DAndGraph)
+{
+   auto df = RDataFrame(1).Define("x", [](){return 1;})
+                          .Define("y", [](){return 1;});
+   auto hx = df.Histo1D("x");
+   auto hxy = df.Histo1D("x", "y");
+   auto gxy = df.Graph("x", "y");
+
+   EXPECT_STREQ(hx->GetName(), "x");
+   EXPECT_STREQ(hx->GetTitle(), "x");
+   EXPECT_STREQ(hxy->GetName(), "x_y");
+   EXPECT_STREQ(hxy->GetTitle(), "x_y");
+   EXPECT_STREQ(gxy->GetName(), "x_y");
+   EXPECT_STREQ(gxy->GetTitle(), "x_y");
+
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
