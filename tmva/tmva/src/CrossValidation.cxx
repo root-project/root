@@ -185,7 +185,7 @@ TCanvas* TMVA::CrossValidationResult::Draw(const TString name) const
 }
 
 //
-TCanvas* TMVA::CrossValidationResult::DrawAvgROCCurve(Bool_t drawFolds) const
+TCanvas* TMVA::CrossValidationResult::DrawAvgROCCurve(Bool_t drawFolds, TString title) const
 {
    TMultiGraph rocs{};
 
@@ -208,7 +208,12 @@ TCanvas* TMVA::CrossValidationResult::DrawAvgROCCurve(Bool_t drawFolds) const
 
    // Draw
    TCanvas *c = new TCanvas();
-   rocs.SetTitle("Cross Validation Average ROC Curve");
+
+   if (title != "") {
+      title = "Cross Validation Average ROC Curve";
+   }
+
+   rocs.SetTitle(title);
    rocs.GetXaxis()->SetTitle("Signal Efficiency");
    rocs.GetYaxis()->SetTitle("Background Rejection");
    rocs.DrawClone("AL");
