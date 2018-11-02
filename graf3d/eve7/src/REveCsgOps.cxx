@@ -2775,16 +2775,16 @@ class TCsgVV3D : public TVirtualViewer3D {
    typedef std::pair<UInt_t, TBaseMesh *> CSPart_t;
 
    std::vector<CSPart_t> fCSTokens;
-   Int_t fCSIndex;
-   mutable bool fCompositeOpen;
+   Int_t fCSIndex{0};
+   mutable bool fCompositeOpen{false};
 
    TBaseMesh *BuildComposite();
 
 public:
    std::unique_ptr<TBaseMesh> fResult;
 
-   TCsgVV3D();
-   virtual ~TCsgVV3D() {}
+   TCsgVV3D() = default;
+   virtual ~TCsgVV3D() = default;
 
    // virtual stuff that is used.
    Int_t AddObject(const TBuffer3D &buffer, Bool_t *addChildren = nullptr) override;
@@ -2808,12 +2808,6 @@ public:
    void EndScene() override {}
 };
 
-
-TCsgVV3D::TCsgVV3D() :
-   fCompositeOpen(kFALSE)
-{}
-
-
 Int_t TCsgVV3D::AddObject(const TBuffer3D& buffer, Bool_t* addChildren)
 {
    if (fCompositeOpen)
@@ -2822,7 +2816,7 @@ Int_t TCsgVV3D::AddObject(const TBuffer3D& buffer, Bool_t* addChildren)
       fCSTokens.push_back(std::make_pair(TBuffer3D::kCSNoOp, newMesh));
    }
 
-   if (addChildren)  *addChildren = kTRUE;
+   if (addChildren) *addChildren = kTRUE;
 
    return TBuffer3D::kNone;
 }
