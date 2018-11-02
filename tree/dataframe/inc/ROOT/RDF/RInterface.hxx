@@ -893,10 +893,21 @@ public:
       return CreateAction<RDFInternal::ActionTags::Histo1D, V>(userColumns, h);
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional histogram with the values of a column (*lazy action*)
+   /// \tparam V The type of the column used to fill the histogram.
+   /// \param[in] vName The name of the column that will fill the histogram.
+   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
+   ///
+   /// This overload uses a default model histogram TH1D(name, title, 128u, 0., 0.).
+   /// The "name" and "title" strings are built starting from the input column name.
+   /// See the description of the first Histo1D overload for more details.
    template <typename V = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(std::string_view vName)
    {
-      return Histo1D<V>({"", "", 128u, 0., 0.}, vName);
+      auto h_name_title = std::string(vName);
+      auto h_nt_cstr = h_name_title.c_str();
+      return Histo1D<V>({h_nt_cstr, h_nt_cstr, 128u, 0., 0.}, vName);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -932,12 +943,18 @@ public:
    /// \param[in] wName The name of the column that will provide the weights.
    /// \return the monodimensional histogram wrapped in a `RResultPtr`.
    ///
-   /// This overload uses a default model histogram TH1D("", "", 128u, 0., 0.).
+   /// This overload uses a default model histogram TH1D(name, title, 128u, 0., 0.).
+   /// The "name" and "title" strings are built starting from the input column names.
    /// See the description of the first Histo1D overload for more details.
    template <typename V = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(std::string_view vName, std::string_view wName)
    {
-      return Histo1D<V, W>({"", "", 128u, 0., 0.}, vName, wName);
+      // We build name and title based on the value and weight column names
+      auto h_name_title = std::string(vName);
+      h_name_title += "_";
+      h_name_title += wName;
+      auto h_nt_cstr = h_name_title.c_str();
+      return Histo1D<V, W>({h_nt_cstr, h_nt_cstr, 128u, 0., 0.}, vName, wName);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1115,8 +1132,10 @@ public:
    ///
    /// Columns can be of a container type (e.g. std::vector<double>), in which case the graph
    /// is filled with each one of the elements of the container.
-   /// If Multithreading is enabled, the order in which points are inserted can't be forseeen.
+   /// If Multithreading is enabled, the order in which points are inserted is undefined.
    /// If the Graph has to be drawn, it is suggested to the user to sort it on the x before printing.
+   /// A name and a title to the graph is given based on the input column names.
+   ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
@@ -1127,6 +1146,16 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
+
+      // We build a default name and title based on the input columns
+      if (!(userColumns[0].empty() && userColumns[1].empty())) {
+         auto g_name_title = std::string(v1Name);
+         g_name_title += "_";
+         g_name_title += v2Name;
+         auto g_name_title_char_ptr = g_name_title.c_str();
+         graph->SetNameTitle(g_name_title_char_ptr, g_name_title_char_ptr);
+      }
+
       return CreateAction<RDFInternal::ActionTags::Graph, V1, V2>(userColumns, graph);
    }
 
