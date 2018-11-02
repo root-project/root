@@ -96,24 +96,18 @@ TMultiGraph *TMVA::CrossValidationResult::GetROCCurves(Bool_t /*fLegend*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Generates a multigraph that contains an average ROC Curve.
+///
+/// \note You own the returned pointer.
+///
 /// \param numSamples[in] Number of samples used for generating the average ROC
 ///                       Curve. Avg. curve will be evaluated only at these
 ///                       points (using interpolation if necessary).
-/// \param drawFolds[in]  If true, the multigraph will also contain the individual
-///                       ROC Curves of all the folds.
 ///
 
-TMultiGraph *TMVA::CrossValidationResult::GetAvgROCCurve(UInt_t numSamples, Bool_t drawFolds)
+TGraph *TMVA::CrossValidationResult::GetAvgROCCurve(UInt_t numSamples) const
 {
-   TMultiGraph *avgROCCurve;
-
-   if (drawFolds == kFALSE) {
-      avgROCCurve = new TMultiGraph();
-   } else {
-      avgROCCurve = fROCCurves.get();
-   }
-
-   Double_t increment = 1.0 / numSamples;
+   // `numSamples * increment` should equal 1.0!
+   Double_t increment = 1.0 / (numSamples-1);
    Double_t x[numSamples];
    Double_t y[numSamples];
 
@@ -125,8 +119,6 @@ TMultiGraph *TMVA::CrossValidationResult::GetAvgROCCurve(UInt_t numSamples, Bool
 
       for(Int_t iGraph = 0; iGraph < rocCurveList->GetSize(); iGraph++) {
         TGraph *foldROC = static_cast<TGraph *>(rocCurveList->At(iGraph));
-        foldROC->SetLineColor(1);
-        foldROC->SetLineWidth(1);
         rocSum += foldROC->Eval(xPoint);
       }
 
@@ -134,13 +126,7 @@ TMultiGraph *TMVA::CrossValidationResult::GetAvgROCCurve(UInt_t numSamples, Bool
       y[iSample] = rocSum/rocCurveList->GetSize();
    }
 
-   TGraph *avgROCCurveGraph = new TGraph(numSamples, x, y);
-   avgROCCurveGraph->SetTitle("Avg ROC Curve");
-   avgROCCurveGraph->SetLineColor(2);
-   avgROCCurveGraph->SetLineWidth(3);
-   avgROCCurve->Add(avgROCCurveGraph);
-
-   return avgROCCurve;
+   return new TGraph(numSamples, x, y);
 }
 
 //_______________________________________________________________________
@@ -199,26 +185,51 @@ TCanvas* TMVA::CrossValidationResult::Draw(const TString name) const
 }
 
 //
-TCanvas* TMVA::CrossValidationResult::DrawAvgROCCurve(const TString name, Bool_t drawFolds)
+TCanvas* TMVA::CrossValidationResult::DrawAvgROCCurve(Bool_t drawFolds) const
 {
-   TMultiGraph *avgROCCurve = GetAvgROCCurve(100, drawFolds);
-   TCanvas *c = new TCanvas(name.Data());
-   avgROCCurve->Draw("AL");
-   avgROCCurve->GetXaxis()->SetTitle("Signal Efficiency");
-   avgROCCurve->GetYaxis()->SetTitle("Background Rejection");
+   TMultiGraph rocs{};
 
+   // Potentially add the folds
+   if (drawFolds) {
+      for (auto foldRocObj : *(*fROCCurves).GetListOfGraphs()) {
+         TGraph * foldRocGraph = dynamic_cast<TGraph *>(foldRocObj->Clone());
+         foldRocGraph->SetLineColor(1);
+         foldRocGraph->SetLineWidth(1);
+         rocs.Add(foldRocGraph);
+      }
+   }
+
+   // Add the average roc curve
+   TGraph *avgRocGraph = GetAvgROCCurve(100);
+   avgRocGraph->SetTitle("Avg ROC Curve");
+   avgRocGraph->SetLineColor(2);
+   avgRocGraph->SetLineWidth(3);
+   rocs.Add(avgRocGraph);
+
+   // Draw
+   TCanvas *c = new TCanvas();
+   rocs.SetTitle("Cross Validation Average ROC Curve");
+   rocs.GetXaxis()->SetTitle("Signal Efficiency");
+   rocs.GetYaxis()->SetTitle("Background Rejection");
+   rocs.DrawClone("AL");
+
+   // Build legend
    TLegend *leg = new TLegend();
-   TList *ROCCurveList = avgROCCurve->GetListOfGraphs();
+   TList *ROCCurveList = rocs.GetListOfGraphs();
 
-   if(drawFolds == kTRUE) {
-     leg->AddEntry(static_cast<TGraph *>(ROCCurveList->At(0)), "ROC Curves" ,"l");
-     leg->AddEntry(static_cast<TGraph *>(ROCCurveList->At(ROCCurveList->GetSize()-1)), "Avg ROC Curve" ,"l");
-     leg->Draw();
+   if (drawFolds) {
+      Int_t nCurves = ROCCurveList->GetSize();
+      leg->AddEntry(static_cast<TGraph *>(ROCCurveList->At(nCurves-1)),
+                    "Avg ROC Curve", "l");
+      leg->AddEntry(static_cast<TGraph *>(ROCCurveList->At(0)),
+                    "Fold ROC Curves", "l");
+      leg->Draw();
    } else {
       c->BuildLegend();
    }
 
-   c->SetTitle("Cross Validation Avergare ROC Curve");
+   // Draw Canvas
+   c->SetTitle("Cross Validation Average ROC Curve");
    c->Draw();
    return c;
 }

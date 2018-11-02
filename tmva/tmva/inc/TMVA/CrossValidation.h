@@ -99,11 +99,11 @@ public:
    Float_t GetROCAverage() const;
    Float_t GetROCStandardDeviation() const;
    TMultiGraph *GetROCCurves(Bool_t fLegend = kTRUE);
-   TMultiGraph *GetAvgROCCurve(UInt_t numSamples = 100, Bool_t drawFolds = kFALSE);
+   TGraph *GetAvgROCCurve(UInt_t numSamples = 100) const;
    void Print() const;
 
    TCanvas *Draw(const TString name = "CrossValidation") const;
-   TCanvas *DrawAvgROCCurve(const TString name = "CrossValidation Avg ROC Curve", Bool_t drawFolds = kFALSE);
+   TCanvas *DrawAvgROCCurve(Bool_t drawFolds=kFALSE) const;
 
    std::vector<Double_t> GetSigValues() const { return fSigs; }
    std::vector<Double_t> GetSepValues() const { return fSeps; }
