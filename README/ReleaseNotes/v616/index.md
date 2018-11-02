@@ -145,6 +145,7 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
   - Throw if name of a custom column is not a valid C++ name.
   - Allow every RDataFrame variable be cast to a common type `ROOT::RDF::RNode`.
   - Speed up just-in-time compilation (and therefore runtime) of Snapshots with a large number of branches.
+  - Create names for histograms and graphs based on the input columns if no model is provided.
 
 ### TTreeProcessorMT
   - Parallelise search of cluster boundaries for input datasets with no friends or TEntryLists. The net effect is a faster initialization time in this common case.
