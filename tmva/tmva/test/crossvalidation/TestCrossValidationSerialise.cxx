@@ -140,7 +140,7 @@ void TestContex::setUpCrossValidation(TString jobname, TMVA::Types::EMVA methodT
 
    fCrossEvaluate = new TMVA::CrossValidation(
       jobname, dataloader, &fOutputFile,
-      "!V:Silent:!ROC:!FoldFileOutput:AnalysisType=Classification:SplitExpr=int([EventNumber])%int([NumFolds])");
+      "!V:Silent:!ROC:!FoldFileOutput:AnalysisType=Classification:SplitType=Deterministic:SplitExpr=int([EventNumber])%int([NumFolds])");
 
    fCrossEvaluate->BookMethod(methodType, methodName, methodOptions);
    std::cout << "Done setting cross validation up" << std::endl;
