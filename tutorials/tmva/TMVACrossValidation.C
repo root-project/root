@@ -246,6 +246,11 @@ int TMVACrossValidation()
    // Launch the GUI for the root macros
    //
    if (!gROOT->IsBatch()) {
+      // Draw cv-specific graphs
+      cv.GetResults()[0].DrawAvgROCCurve(kTRUE, "Avg ROC for BDTG");
+      cv.GetResults()[0].DrawAvgROCCurve(kTRUE, "Avg ROC for Fisher");
+
+      // You can also use the classical gui
       TMVA::TMVAGui(outfileName);
    }
 
