@@ -88,7 +88,7 @@ int main()
    std::cout << "Testing TanH activation derivative:        ";
    std::cout << "maximum relative error = " << print_error(error) << std::endl;
 #ifdef R__HAS_VDT   // error is larger when using fast tanh from vdt
-    if (error > 1e-4) 
+    if (error > 1e-3) 
 #else
     if (error > 1e-10)
 #endif
