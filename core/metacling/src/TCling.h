@@ -205,6 +205,7 @@ public: // Public Interface
    void    InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient);
    Bool_t  IsLoaded(const char* filename) const;
    Bool_t  IsLibraryLoaded(const char* libname) const;
+   Bool_t  HasPCMForLibrary(const char *libname) const;
    Int_t   Load(const char* filenam, Bool_t system = kFALSE);
    void    LoadMacro(const char* filename, EErrorCode* error = 0);
    Int_t   LoadLibraryMap(const char* rootmapfile = 0);
