@@ -1,10 +1,10 @@
 
-Processing /home/oksana/CERN_sources/root-modules/roottest/root/io/treeForeign/Run.C...
+Processing Run.C...
 Warning in <TClass::Init>: no dictionary for class Wrapper is available
 Warning in <TClass::Init>: no dictionary for class MyClass is available
 ******************************************************************************
 *Tree    :T         : T                                                      *
-*Entries :        2 : Total =            4215 bytes  File  Size =       1509 *
+*Entries :        2 : Total =            4215 bytes  File  Size =       1510 *
 *        :          : Tree compression factor =   1.10                       *
 ******************************************************************************
 *Branch  :obj                                                                *
