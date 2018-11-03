@@ -12,6 +12,8 @@
 #ifndef ROOT_Compression
 #define ROOT_Compression
 
+#include "Rtypes.h"
+
 namespace ROOT {
 
 /// The global settings depend on a global variable named R__ZipMode which can be
@@ -84,7 +86,7 @@ enum ECompressionSetting {
 };
 
 /// Deprecated name, do *not* use:
-static constexpr ECompressionAlgorithm kUseGlobalSetting __attribute__ ((deprecated)) = kUseGlobalCompressionAlgorithm;
+ROOT_DEPRECATED static constexpr ECompressionAlgorithm kUseGlobalSetting = kUseGlobalCompressionAlgorithm;
 
 int CompressionSettings(ECompressionAlgorithm algorithm, int compressionLevel);
 }
