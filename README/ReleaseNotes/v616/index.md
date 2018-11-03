@@ -178,6 +178,25 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
 
 ## Math Libraries
 
+### VecOps
+  - Add `All` helper: return true if all of the elements equate to true, return false otherwise.
+  - Add `Any` helper: return true if any of the elements equates to true, return false otherwise.
+  - Add `ArgSort` helper: return an RVec of indices that sort the vector.
+  - Add `Combinations` helper which can:
+    - return the indices which represent all combinations of the elements of two vectors.
+    - return the indices which represent all unique n-tuple combinations of the elements of a given vector.
+  - Add `Intersect` helper: return the intersection of elements of two RVecs.
+  - Add `Nonzero` helper: return the indices of the elements which are not zero
+  - Add `Reverse` helepr: return copy of reversed RVec.
+  - Add `Sort` helper: return copy of vector with elements sorted in ascending order (also according to a user defined predicate)
+  - Add `Take` helper which can:
+    - return elements of a RVec at given indices.
+    - return first elements or last elements of an RVec.
+  - Add `Where` helper which can:
+    - return the elements of v1 if the condition c is true and v2 if the condition c is false.
+    - return the elements of v1 if the condition c is true and sets the value v2 if the condition c is false.
+    - return the elements of v2 if the condition c is false and sets the value v1 if the condition c is true.
+    - return a vector with the value v2 if the condition c is false and sets the value v1 if the condition c is true.
 
 ## RooFit Libraries
   - Add value printer for RooAbsArg and daughters.
