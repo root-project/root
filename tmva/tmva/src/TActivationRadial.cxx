@@ -35,7 +35,6 @@ Radial basis  activation function for ANN.
 
 #include <iostream>
 
-static const Int_t  UNINITIALIZED = -1;
 
 ClassImp(TMVA::TActivationRadial);
 
