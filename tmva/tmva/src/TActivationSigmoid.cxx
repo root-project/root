@@ -35,7 +35,6 @@ Sigmoid activation function for TNeuron.
 
 #include <iostream>
 
-static const Int_t  UNINITIALIZED = -1;
 
 ClassImp(TMVA::TActivationSigmoid);
 
