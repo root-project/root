@@ -3435,6 +3435,9 @@
       this.pad.fLineStyle = obj.fLineStyle;
       this.pad.fLineWidth = obj.fLineWidth;
 
+      this.pad.fPhi = obj.fPhi;
+      this.pad.fTheta = obj.fTheta;
+
       if (this.iscan) this.CheckSpecialsInPrimitives(obj);
 
       var fp = this.frame_painter();
