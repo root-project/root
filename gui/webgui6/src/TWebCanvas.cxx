@@ -176,11 +176,8 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
       return;
    }
 
-   TWebPadPainter *painter = dynamic_cast<TWebPadPainter *>(Canvas()->GetCanvasPainter());
-   if (!painter) {
-      Error("CreateObjectSnapshot", "Not found WebPadPainter when paint class %s", obj->ClassName());
-      return;
-   }
+   // painter is not necessary for batch canvas, keep it anyway for a while
+   auto *painter = dynamic_cast<TWebPadPainter *>(Canvas()->GetCanvasPainter());
 
    fHasSpecials = kTRUE;
 
@@ -202,7 +199,8 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
 
    TWebPS ps;
    gVirtualPS = masterps ? masterps : &ps;
-   painter->SetPainting(ps.GetPainting());
+   if (painter)
+      painter->SetPainting(ps.GetPainting());
 
    // calling Paint function for the object
    obj->Paint(opt);
@@ -214,7 +212,8 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
       pad->SetView(nullptr);
    }
 
-   painter->SetPainting(nullptr);
+   if (painter)
+      painter->SetPainting(nullptr);
 
    gVirtualPS = saveps;
    if (savepad)
