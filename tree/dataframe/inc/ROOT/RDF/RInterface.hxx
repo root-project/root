@@ -841,7 +841,17 @@ public:
    /// \param[in] column The name of the column to collect the values of.
    /// \return the content of the selected column wrapped in a `RResultPtr`.
    ///
-   /// The collection type to be specified for C-style array columns is `RVec<T>`.
+   /// The collection type to be specified for C-style array columns is `RVec<T>`:
+   /// in this case the returned collection is a `std::vector<RVec<T>>`.
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // In this case intCol is a std::vector<int>
+   /// auto intCol = rdf.Take<int>("integerColumn");
+   /// // Same content as above but in this case taken as a RVec<int>
+   /// auto intColAsRVec = rdf.Take<int, RVec<int>>("integerColumn");
+   /// // In this case intCol is a std::vector<RVec<int>>, a collection of collections
+   /// auto cArrayIntCol = rdf.Take<RVec<int>>("cArrayInt");
+   /// ~~~
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    template <typename T, typename COLL = std::vector<T>>
