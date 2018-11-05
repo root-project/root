@@ -1191,6 +1191,11 @@
          case 3024: w = h = 16; fills = "M0,8v8h2v-8zM8,0v8h2v-8M4,14v2h12v-2z"; fills2 = "M0,2h8v6h4v-6h4v12h-12v-6h-4z"; break;
          case 3025: w = h = 18; fills = "M5,13v-8h8ZM18,0v18h-18l5,-5h8v-8Z"; break;
          default:
+            if ((this.pattern>3025) && (this.pattern<3100)) {
+               // same as 3002, see TGX11.cxx, line 2234
+               w = 4; h = 2; fills = "M1,0h1v1h-1zM3,1h1v1h-1z"; break;
+            }
+
             var code = this.pattern % 1000,
                 k = code % 10, j = ((code - k) % 100) / 10, i = (code - j*10 - k)/100;
             if (!i) break;
@@ -2553,11 +2558,12 @@
     * @augments JSROOT.TBasePainter
     * @param {object} obj - object to draw
     */
-   function TObjectPainter(obj) {
+   function TObjectPainter(obj, opt) {
       TBasePainter.call(this);
       this.draw_g = null; // container for all drawn objects
       this.pad_name = ""; // name of pad where object is drawn
       this.main = null;  // main painter, received from pad
+      if (typeof opt == "string") this.options = { original: opt };
       this.AssignObject(obj);
    }
 
@@ -6074,10 +6080,9 @@
 
       function performDraw() {
          if (handle.direct) {
-            painter = new TObjectPainter(obj);
+            painter = new TObjectPainter(obj, opt);
             painter.SetDivId(divid, 2);
             painter.Redraw = handle.func;
-            painter.options = { original: opt || "" };
             painter.Redraw();
             painter.DrawingReady();
          } else {

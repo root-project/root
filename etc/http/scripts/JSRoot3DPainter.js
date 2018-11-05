@@ -428,6 +428,7 @@
 
       control.ChangeEvent = function() {
          this.mouse_ctxt.on = false; // disable context menu if any changes where done by orbit control
+         this.painter.zoom_changed_interactive = 1;
          this.painter.Render3D(0);
          this.control_changed = true;
       }

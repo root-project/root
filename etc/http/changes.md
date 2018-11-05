@@ -3,7 +3,9 @@
 ## Changes in dev
 1. Upgrade three.js 86 -> 97
 2. Upgrade d3.js 4.4.4 -> 5.7.0
-
+3. Many adjustment with new TWebCanvas
+4. Implement update of TF2 drawings, see tutorials/graphics/anim.C
+ 
 
 ## Changes in 5.6.0
 1. By drawing outline speed up (factor 10) canvas with many small sub-pads 

@@ -33,6 +33,31 @@
    if (typeof JSROOT.THistPainter === 'undefined')
       throw new Error('JSROOT.THistPainter is not defined', 'JSRootPainter.hist3d.js');
 
+   JSROOT.TFramePainter.prototype.SetCameraPosition = function(pad, first_time) {
+      var max3d = Math.max(0.75*this.size_xy3d, this.size_z3d);
+
+      if (first_time)
+         this.camera.position.set(-1.6*max3d, -3.5*max3d, 1.4*this.size_z3d);
+
+      if (pad && (first_time || !this.zoom_changed_interactive))
+         if (!isNaN(pad.fTheta) && !isNaN(pad.fPhi) && ((pad.fTheta !== this.camera_Theta) || (pad.fPhi !== this.camera_Phi))) {
+            max3d = 3*Math.max(this.size_xy3d, this.size_z3d);
+            var phi = (-pad.fPhi-90)/180*Math.PI, theta = pad.fTheta/180*Math.PI;
+
+            this.camera_Phi = pad.fPhi;
+            this.camera_Theta = pad.fTheta;
+
+            this.camera.position.set(max3d*Math.cos(phi)*Math.cos(theta),
+                                     max3d*Math.sin(phi)*Math.cos(theta),
+                                     this.size_z3d + max3d*Math.sin(theta));
+
+            first_time = true;
+         }
+
+      if (first_time)
+         this.camera.lookAt(this.lookat);
+   }
+
    JSROOT.TFramePainter.prototype.Create3DScene = function(arg) {
 
       if ((arg!==undefined) && (arg<0)) {
@@ -87,6 +112,8 @@
 
          this.Resize3D(); // set actual sizes
 
+         this.SetCameraPosition(this.root_pad(), false);
+
          return;
       }
 
@@ -109,28 +136,17 @@
 
       this.camera = new THREE.PerspectiveCamera(45, this.scene_width / this.scene_height, 1, 40*this.size_z3d);
 
-      var max3d = Math.max(0.75*this.size_xy3d, this.size_z3d);
-      this.camera.position.set(-1.6*max3d, -3.5*max3d, 1.4*this.size_z3d);
-
-      var pad = this.root_pad();
-      if (pad && (pad.fTheta!==undefined) && (pad.fPhi!==undefined) && (pad.fTheta !== 30) || (pad.fPhi !== 30)) {
-         max3d = 3*Math.max(this.size_xy3d, this.size_z3d);
-         var phi = (-pad.fPhi-90)/180*Math.PI, theta = pad.fTheta/180*Math.PI;
-
-         this.camera.position.set(max3d*Math.cos(phi)*Math.cos(theta),
-                                  max3d*Math.sin(phi)*Math.cos(theta),
-                                  this.size_z3d + max3d*Math.sin(theta));
-      }
+      this.camera_Phi = 30;
+      this.camera_Theta = 30;
 
       this.pointLight = new THREE.PointLight(0xffffff,1);
       this.camera.add(this.pointLight);
       this.pointLight.position.set(this.size_xy3d/2, this.size_xy3d/2, this.size_z3d/2);
-
-      var lookat = new THREE.Vector3(0,0,0.8*this.size_z3d);
-
+      this.lookat = new THREE.Vector3(0,0,0.8*this.size_z3d);
       this.camera.up = new THREE.Vector3(0,0,1);
-      this.camera.lookAt(lookat);
       this.scene.add( this.camera );
+
+      this.SetCameraPosition(this.root_pad(), true);
 
       var res = JSROOT.Painter.Create3DRenderer(this.scene_width, this.scene_height, this.usesvg, (sz.can3d == 4));
 
@@ -144,7 +160,7 @@
 
       if (JSROOT.BatchMode) return;
 
-      this.control = JSROOT.Painter.CreateOrbitControl(this, this.camera, this.scene, this.renderer, lookat);
+      this.control = JSROOT.Painter.CreateOrbitControl(this, this.camera, this.scene, this.renderer, this.lookat);
 
       var axis_painter = this, obj_painter = this.main_painter();
 

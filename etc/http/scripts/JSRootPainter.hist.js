@@ -6344,6 +6344,110 @@
       return painter;
    }
 
+   // =================================================================================
+
+
+   function createTF2Histogram(func, nosave, hist) {
+      var nsave = 0, npx = 0, npy = 0;
+      if (!nosave) {
+         nsave = func.fSave.length;
+         npx = Math.round(func.fSave[nsave-2]);
+         npy = Math.round(func.fSave[nsave-1]);
+         if (nsave !== (npx+1)*(npy+1) + 6) nsave = 0;
+      }
+
+      if (nsave > 6) {
+         var dx = (func.fSave[nsave-5] - func.fSave[nsave-6]) / npx / 2,
+             dy = (func.fSave[nsave-3] - func.fSave[nsave-4]) / npy / 2;
+
+         if (!hist) hist = JSROOT.CreateHistogram("TH2F", npx+1, npy+1);
+
+         hist.fXaxis.fXmin = func.fSave[nsave-6] - dx;
+         hist.fXaxis.fXmax = func.fSave[nsave-5] + dx;
+
+         hist.fYaxis.fXmin = func.fSave[nsave-4] - dy;
+         hist.fYaxis.fXmax = func.fSave[nsave-3] + dy;
+
+         for (var k=0,j=0;j<=npy;++j)
+            for (var i=0;i<=npx;++i)
+               hist.setBinContent(hist.getBin(i+1,j+1), func.fSave[k++]);
+
+      } else {
+         npx = Math.max(func.fNpx, 2);
+         npy = Math.max(func.fNpy, 2);
+
+         if (!hist) hist = JSROOT.CreateHistogram("TH2F", npx, npy);
+
+         hist.fXaxis.fXmin = func.fXmin;
+         hist.fXaxis.fXmax = func.fXmax;
+
+         hist.fYaxis.fXmin = func.fYmin;
+         hist.fYaxis.fXmax = func.fYmax;
+
+         for (var j=0;j<npy;++j)
+           for (var i=0;i<npx;++i) {
+               var x = func.fXmin + (i + 0.5) * (func.fXmax - func.fXmin) / npx,
+                   y = func.fYmin + (j + 0.5) * (func.fYmax - func.fYmin) / npy;
+
+               hist.setBinContent(hist.getBin(i+1,j+1), func.evalPar(x,y));
+            }
+      }
+
+      hist.fName = "Func";
+      hist.fTitle = func.fTitle;
+      hist.fMinimum = func.fMinimum;
+      hist.fMaximum = func.fMaximum;
+      //fHistogram->SetContour(fContour.fN, levels);
+      hist.fLineColor = func.fLineColor;
+      hist.fLineStyle = func.fLineStyle;
+      hist.fLineWidth = func.fLineWidth;
+      hist.fFillColor = func.fFillColor;
+      hist.fFillStyle = func.fFillStyle;
+      hist.fMarkerColor = func.fMarkerColor;
+      hist.fMarkerStyle = func.fMarkerStyle;
+      hist.fMarkerSize = func.fMarkerSize;
+
+      hist.fBits |= JSROOT.TH1StatusBits.kNoStats;
+
+      // only for testing - unfortunately, axis settings are not stored with TF2
+      // hist.fXaxis.fTitle = "axis X";
+      // hist.fXaxis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
+      // hist.fYaxis.fTitle = "axis Y";
+      // hist.fYaxis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
+      // hist.fZaxis.fTitle = "axis Z";
+      // hist.fZaxis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
+
+      return hist;
+   }
+
+   // TF2 always drawn via temporary TH2 object,
+   // therefore there is no special painter class
+
+   function drawTF2(divid, func, opt) {
+
+      var d = new JSROOT.DrawOptions(opt);
+
+      var hist = createTF2Histogram(func, d.check('NOSAVE'));
+
+      if (d.empty()) opt = "cont3"; else
+      if (d.opt === "SAME") opt = "cont2 same";
+      else opt = d.opt;
+
+      var hpainter = drawHistogram2D(divid, hist, opt);
+
+      hpainter.tf2_typename = func._typename;
+      hpainter.tf2_nosave = d.check('NOSAVE');
+
+      hpainter.UpdateObject = function(obj, opt) {
+         if (!obj || (this.tf2_typename != obj._typename)) return false;
+
+         createTF2Histogram(obj, this.tf2_nosave, this.GetHisto());
+
+         return true;
+      }
+
+      return hpainter;
+   }
 
    // ====================================================================
 
@@ -6657,94 +6761,7 @@
       return painter;
    }
 
-
    // =================================================================================
-
-   function drawTF2(divid, func, opt) {
-      // TF2 always drawn via temporary TH2 object,
-      // therefore there is no special painter class
-
-      var hist = null, npx = 0, npy = 0, nsave = 1,
-          d = new JSROOT.DrawOptions(opt);
-
-      if (d.check('NOSAVE')) nsave = 0;
-
-      if (!func.fSave || func.fSave.length<7 || !nsave) {
-         nsave = 0;
-      } else {
-          nsave = func.fSave.length;
-          npx = Math.round(func.fSave[nsave-2]);
-          npy = Math.round(func.fSave[nsave-1]);
-          if (nsave !== (npx+1)*(npy+1) + 6) nsave = 0;
-      }
-
-      if (nsave > 6) {
-         var dx = (func.fSave[nsave-5] - func.fSave[nsave-6]) / npx / 2,
-             dy = (func.fSave[nsave-3] - func.fSave[nsave-4]) / npy / 2;
-
-         hist = JSROOT.CreateHistogram("TH2F", npx+1, npy+1);
-
-         hist.fXaxis.fXmin = func.fSave[nsave-6] - dx;
-         hist.fXaxis.fXmax = func.fSave[nsave-5] + dx;
-
-         hist.fYaxis.fXmin = func.fSave[nsave-4] - dy;
-         hist.fYaxis.fXmax = func.fSave[nsave-3] + dy;
-
-         for (var k=0,j=0;j<=npy;++j)
-            for (var i=0;i<=npx;++i)
-               hist.setBinContent(hist.getBin(i+1,j+1), func.fSave[k++]);
-
-      } else {
-         npx = Math.max(func.fNpx, 2);
-         npy = Math.max(func.fNpy, 2);
-
-         hist = JSROOT.CreateHistogram("TH2F", npx, npy);
-
-         hist.fXaxis.fXmin = func.fXmin;
-         hist.fXaxis.fXmax = func.fXmax;
-
-         hist.fYaxis.fXmin = func.fYmin;
-         hist.fYaxis.fXmax = func.fYmax;
-
-         for (var j=0;j<npy;++j)
-           for (var i=0;i<npx;++i) {
-               var x = func.fXmin + (i + 0.5) * (func.fXmax - func.fXmin) / npx,
-                   y = func.fYmin + (j + 0.5) * (func.fYmax - func.fYmin) / npy;
-
-               hist.setBinContent(hist.getBin(i+1,j+1), func.evalPar(x,y));
-            }
-      }
-
-      hist.fName = "Func";
-      hist.fTitle = func.fTitle;
-      hist.fMinimum = func.fMinimum;
-      hist.fMaximum = func.fMaximum;
-      //fHistogram->SetContour(fContour.fN, levels);
-      hist.fLineColor = func.fLineColor;
-      hist.fLineStyle = func.fLineStyle;
-      hist.fLineWidth = func.fLineWidth;
-      hist.fFillColor = func.fFillColor;
-      hist.fFillStyle = func.fFillStyle;
-      hist.fMarkerColor = func.fMarkerColor;
-      hist.fMarkerStyle = func.fMarkerStyle;
-      hist.fMarkerSize = func.fMarkerSize;
-
-      hist.fBits |= JSROOT.TH1StatusBits.kNoStats;
-
-      // only for testing - unfortunately, axis settings are not stored with TF2
-      // hist.fXaxis.fTitle = "axis X";
-      // hist.fXaxis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
-      // hist.fYaxis.fTitle = "axis Y";
-      // hist.fYaxis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
-      // hist.fZaxis.fTitle = "axis Z";
-      // hist.fZaxis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
-
-      if (d.empty()) opt = "cont3"; else
-      if (d.opt === "SAME") opt = "cont2 same";
-      else opt = d.opt;
-
-      return drawHistogram2D(divid, hist, opt);
-   }
 
    // kept for backward compatibility, will be removed in future JSROOT versions
    JSROOT.Painter.drawLegend = drawPave;
@@ -6755,8 +6772,8 @@
    JSROOT.Painter.drawPaletteAxis = drawPaletteAxis;
    JSROOT.Painter.drawHistogram1D = drawHistogram1D;
    JSROOT.Painter.drawHistogram2D = drawHistogram2D;
-   JSROOT.Painter.drawHStack = drawHStack;
    JSROOT.Painter.drawTF2 = drawTF2;
+   JSROOT.Painter.drawHStack = drawHStack;
 
    JSROOT.TPavePainter = TPavePainter;
    JSROOT.THistPainter = THistPainter;
