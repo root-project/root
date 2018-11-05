@@ -402,12 +402,24 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
    TBranch *branch = nullptr;
    // If the branch name contains at least a dot, we analyse it in detail and
    // we give priority to the branch identified over the one which is found
-   // with the TTree::GetBranch method. This allow to correctly pick the desired
+   // with the TTree::GetBranch method. This allows to correctly pick the desired
    // branch in cases where a TTree has two branches, one called for example
    // "w.v.a" and another one called "v.a".
    // This behaviour is described in ROOT-9312.
    if (fBranchName.Contains(".")) {
       branch = SearchBranchWithCompositeName(myLeaf, branchActualType, errMsg);
+      // In rare cases where leaves contain the name of the branch as part of their
+      // name and a dot in the branch name (such as: branch "b." and leaf "b.a")
+      // the previous method may return the branch name ("b.") rather than the
+      // leaf name ("b.a") as we expect.
+      // For these cases, we do not have to give priority to the previously
+      // identified branch since we are in a different situation.
+      // This behaviour is described in ROOT-9757.
+      if (branch && branch->IsA() == TBranchElement::Class() && branchFromFullName){
+        branch = branchFromFullName;
+        fStaticClassOffsets = {};
+        fHaveStaticClassOffsets = 0;
+      }
    }
 
    if (!branch) {
@@ -625,4 +637,3 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
 
    return 0;
 }
-
