@@ -86,6 +86,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
                             {"TLatex", false},
                             {"TMathText", false},
                             {"TMarker", false},
+                            {"TPolyMarker", false},
                             {"TPolyMarker3D", false},
                             {"TGraph2D", false},
                             {nullptr, false}};
@@ -176,7 +177,7 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
       return;
    }
 
-   // painter is not necessary for batch canvas, keep it anyway for a while
+   // painter is not necessary for batch canvas, but keep configuring it for a while
    auto *painter = dynamic_cast<TWebPadPainter *>(Canvas()->GetCanvasPainter());
 
    fHasSpecials = kTRUE;
@@ -219,15 +220,9 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
    if (savepad)
       savepad->cd();
 
-   // if there are master PS, do not create single entries
-   if (masterps || ps.IsEmptyPainting())
-      return;
-
-   auto p = ps.TakePainting();
-
-   // when paint method was used and produce output
-
-   master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kSVG, p, kTRUE);
+   // if there are master PS, do not create separate entries
+   if (!masterps && !ps.IsEmptyPainting())
+      master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kSVG, ps.TakePainting(), kTRUE);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -254,7 +249,7 @@ void TWebCanvas::AddCanvasSpecials(TPadWebSnapshot &master)
 
    TArrayI pal = TColor::GetPalette();
 
-   TWebPainting *listofcols = new TWebPainting;
+   auto *listofcols = new TWebPainting;
    for (Int_t n = 0; n <= colors->GetLast(); ++n)
       if (colors->At(n))
          listofcols->AddColor(n, (TColor *)colors->At(n));
@@ -872,18 +867,20 @@ Bool_t TWebCanvas::IsAnyPadModified(TPad *pad)
    }
 
    TIter iter(pad->GetListOfPrimitives());
-   TObject *obj = 0;
-   while ((obj = iter()) != 0) {
-      if (obj->InheritsFrom(TPad::Class()) && IsAnyPadModified((TPad *)obj))
+   TObject *obj = nullptr;
+   while ((obj = iter()) != nullptr) {
+      if (obj->InheritsFrom(TPad::Class()) && IsAnyPadModified(static_cast<TPad *>(obj)))
          res = kTRUE;
    }
 
    return res;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns window geometry including borders and menus
+
 UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 {
-   // reset dimension in gVirtualX  - it will be requested immediately
    x = 0;
    y = 0;
    w = Canvas()->GetWw() + 4;
