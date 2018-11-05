@@ -77,6 +77,8 @@ public:
 
    TPadWebSnapshot &NewSubPad();
 
+   TWebSnapshot &NewSpecials();
+
    ClassDef(TPadWebSnapshot,1)  // Pad painting snapshot, used for JSROOT
 };
 
