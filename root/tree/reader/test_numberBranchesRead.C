@@ -1,0 +1,30 @@
+
+
+int test_numberBranchesRead(const char *fileName){
+  auto treeName = "TotemNtuple";
+
+  TFile *f = TFile::Open(fileName);
+
+  TTreeReader reader(treeName, f);
+  TTreeReaderValue<double> vd(reader, "track_rp_3.y");
+  while(reader.Next()){
+     *vd;
+  }
+
+  auto t = reader.GetTree();
+  auto nbytes = f->GetBytesRead();
+  auto fp = t->GetReadCache(f);
+  auto nbranches = fp->GetCachedBranches()->GetEntriesFast();
+  auto correctNumberBranches = nbranches == 1;
+  auto correctNumberBytes    = nbytes == 14204;
+  if (! correctNumberBytes){
+    cerr << "Wrong number of bytes" << endl;
+    return 1;
+  }
+  if (! correctNumberBranches){
+    cerr << "Wrong number of branches" << endl;
+    return 1;
+  }
+  return 0;
+
+}
