@@ -505,9 +505,9 @@ Released on August 23, 2018
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9630'>ROOT-9630</a>] -         Arrow RDS and lack of int32 support
 
 
-## HEAD of the v6-14-00-patches branch
+## Release 6.14/06
 
-These changes will be part of the future 6.14/06
+Released on November 5, 2018
 
 ### Platforms
 
@@ -517,11 +517,12 @@ MacOS 10.14 / Xcode 10 is supported.
 
 * To allow for increase run-time performance and increase thread scalability the override ability of `TFile::GetStreamerInfoList` is replaced by an override of `TFile::GetStreamerInfoListImp` with updated return type and arguments.   If a class override `TFile::GetStreamerInfoList` you will now see a compilation error like:
 
+
 ```
-/opt/build/root_builds/rootcling.cmake/include/TSQLFile.h:225:19: error: declaration of 'GetStreamerInfoList' overrides a 'final' function
+include/TSQLFile.h:225:19: error: declaration of 'GetStreamerInfoList' overrides a 'final' function
 virtual TList *GetStreamerInfoList();
 ^
-/opt/build/root_builds/rootcling.cmake/include/TFile.h:231:24: note: overridden virtual function is here
+include/TFile.h:231:24: note: overridden virtual function is here
 virtual TList      *GetStreamerInfoList() final; // Note: to override behavior, please override GetStreamerInfoListImpl
 ^
 ```
@@ -553,4 +554,38 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
 
 ### RDataFrame
 * throw if name of defined column is not a valid C++ name
+
+
+### Bugs and Issues fixed in this release
+
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9453'>ROOT-9453</a>] -         [VecOps] Cannot instantiate RVec&lt;bool&gt;
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-5236'>ROOT-5236</a>] -         Memory Leak in RooFit/HistFactory
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9209'>ROOT-9209</a>] -         Crash in cling::Value destruction
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9214'>ROOT-9214</a>] -         [Jenkins] TMVA_DNN_Arithmetic_Cpu fails sporadically
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9331'>ROOT-9331</a>] -         rootcint doesn&#39;t return with an error code when encountering a syntax error
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9467'>ROOT-9467</a>] -         TF1: Error when reading two functions with the same formula
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9473'>ROOT-9473</a>] -         FatalRootError after updating ROOT master in CMs IBs
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9475'>ROOT-9475</a>] -         ROOT / Windows startup warnings
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9506'>ROOT-9506</a>] -         [DF] RDataFrame filters cannot be cast to a common type, TDataFrame filters could
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9513'>ROOT-9513</a>] -         Data member not saved due to no streamer or dictionary 
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9542'>ROOT-9542</a>] -         RDataFrame Sum gets confused by std::string
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9563'>ROOT-9563</a>] -         [TreeProcMT] Trees in subdirectories are not supported (and their usage lead to a crash)
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9574'>ROOT-9574</a>] -         TTree::TClusterIterator::GetEstimatedClusterSize broken for ROOT File with clustering disabled.
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9624'>ROOT-9624</a>] -         TMySQLStatement.h incompatible with MySQL 8
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9632'>ROOT-9632</a>] -         ROOT::RDataFrame::Define struggles with user-defined return types when built stand-alone
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9640'>ROOT-9640</a>] -         Segmentation violation after starting TBrowser b
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9662'>ROOT-9662</a>] -         Thread problem in I/O for ROOT master
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9670'>ROOT-9670</a>] -         Cling problems with TFormula and std::math functions
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9681'>ROOT-9681</a>] -         Typedef clash in global namespace between ROOT and Geant4
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9684'>ROOT-9684</a>] -         Wrong cast of functions in TGlobalMappedFunction
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9694'>ROOT-9694</a>] -         Infinite recursion in GetStreamerInfoList when opening corrupt file.
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9701'>ROOT-9701</a>] -         IO read rules no longer executed
+
+
+
+
+## HEAD of the v6-14-00-patches branch
+
+These changes will be part of the future 6.14/08
+
 
