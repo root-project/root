@@ -23,17 +23,18 @@ RooMCStudy is a help class to facilitate Monte Carlo studies
 such as 'goodness-of-fit' studies, that involve fitting a PDF 
 to multiple toy Monte Carlo sets generated from the same PDF 
 or another PDF.
+
 Given a fit PDF and a generator PDF, RooMCStudy can produce
 large numbers of toyMC samples and/or fit these samples
-and acculumate the final parameters of each fit in a dataset.
+and accumulate the final parameters of each fit in a dataset.
 Additional plotting routines simplify the task of plotting
-the distribution of the minimized likelihood, each parameters fitted value, 
+the distribution of the minimized likelihood, the fitted parameter values,
 fitted error and pull distribution.
-Class RooMCStudy provides the option to insert add-in modules
+RooMCStudy provides the option to insert add-in modules
 that modify the generate and fit cycle and allow to perform
 extra steps in the cycle. Output of these modules can be stored
 alongside the fit results in the aggregate results dataset.
-These study modules should derive from classs RooAbsMCStudyModel
+These study modules should derive from class RooAbsMCStudyModel
 
 **/
 
@@ -69,44 +70,38 @@ ClassImp(RooMCStudy);
   ;
 
 
-////////////////////////////////////////////////////////////////////////////////
+/**
+Construct Monte Carlo Study Manager. This class automates generating data from a given PDF,
+fitting the PDF to that data and accumulating the fit statistics.
 
+\param[in] model The PDF to be studied
+\param[in] observables The variables of the PDF to be considered the observables
+\param[in] argX Arguments from the table below
+
+<table>
+<tr><th><th>
+<tr><td> Silence()                         <td> Suppress all RooFit messages during running below PROGRESS level
+<tr><td> FitModel(const RooAbsPdf&)        <td> The PDF for fitting, if it is different from the PDF for generating
+<tr><td> ConditionalObservables(const RooArgSet& set)  <td> The set of observables that the PDF should _not_ be normalized over
+<tr><td> Binned(Bool_t flag)               <td> Bin the dataset before fitting it. Speeds up fitting of large data samples
+<tr><td> FitOptions(const char*)           <td> Classic fit options, provided for backward compatibility
+<tr><td> FitOptions(....)                  <td> Options to be used for fitting. All named arguments inside FitOptions() are passed to RooAbsPdf::fitTo()
+<tr><td> Verbose(Bool_t flag)              <td> Activate informational messages in event generation phase
+<tr><td> Extended(Bool_t flag)             <td> Determine number of events for each sample anew from a Poisson distribution
+<tr><td> Constrain(const RooArgSet& pars)  <td> Apply internal constraints on given parameters in fit and sample constrained parameter values from constraint p.d.f for each toy.
+<tr><td> ExternalConstraints(const RooArgSet& ) <td> Apply internal constraints on given parameters in fit and sample constrained parameter values from constraint p.d.f for each toy.
+<tr><td> ProtoData(const RooDataSet&, Bool_t randOrder)
+         <td> Prototype data for the event generation. If the randOrder flag is set, the order of the dataset will be re-randomized for each generation
+              cycle to protect against systematic biases if the number of generated events does not exactly match the number of events in the prototype dataset
+              at the cost of reduced precision with mu equal to the specified number of events
+</table>
+*/
 RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
    		       const RooCmdArg& arg1, const RooCmdArg& arg2,
    		       const RooCmdArg& arg3,const RooCmdArg& arg4,const RooCmdArg& arg5,
    		       const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) : TNamed("mcstudy","mcstudy")
 
 {
-  // Construct Monte Carlo Study Manager. This class automates generating data from a given PDF,
-  // fitting the PDF to that data and accumulating the fit statistics.
-  //
-  // The constructor accepts the following arguments
-  //
-  // model       -- The PDF to be studied
-  // observables -- The variables of the PDF to be considered the observables
-  //
-  // Silence()                         -- Suppress all RooFit messages during running below PROGRESS level
-  // FitModel(const RooAbsPdf&)        -- The PDF for fitting, if it is different from the PDF for generating
-  // ConditionalObservables
-  //           (const RooArgSet& set)  -- The set of observables that the PDF should _not_ be normalized over
-  // Binned(Bool_t flag)               -- Bin the dataset before fitting it. Speeds up fitting of large data samples
-  // FitOptions(const char*)           -- Classic fit options, provided for backward compatibility
-  // FitOptions(....)                  -- Options to be used for fitting. All named arguments inside FitOptions()
-  //                                                   are passed to RooAbsPdf::fitTo();
-  // Verbose(Bool_t flag)              -- Activate informational messages in event generation phase
-  // Extended(Bool_t flag)             -- Determine number of events for each sample anew from a Poisson distribution
-  // Constrain(const RooArgSet& pars)  -- Apply internal constraints on given parameters in fit and sample constrained parameter
-  //                                      values from constraint p.d.f for each toy.
-  // ExternalConstraints(const RooArgSet& ) -- Apply internal constraints on given parameters in fit and sample constrained parameter
-  //                                      values from constraint p.d.f for each toy.
-  // ProtoData(const RooDataSet&, 
-  //                 Bool_t randOrder) -- Prototype data for the event generation. If the randOrder flag is
-  //                                      set, the order of the dataset will be re-randomized for each generation
-  //                                      cycle to protect against systematic biases if the number of generated
-  //                                      events does not exactly match the number of events in the prototype dataset
-  //                                      at the cost of reduced precision
-  //                                      with mu equal to the specified number of events
-
   // Stuff all arguments in a list
   RooLinkedList cmdList;
   cmdList.Add(const_cast<RooCmdArg*>(&arg1)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg2)) ;
@@ -303,8 +298,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// OBSOLETE, RETAINED FOR BACKWARD COMPATIBILY. PLEASE
-/// USE CONSTRUCTOR WITH NAMED ARGUMENTS
+/// \deprecated RETAINED FOR BACKWARD COMPATIBILY. PLEASE USE CONSTRUCTOR WITH NAMED ARGUMENTS
 ///
 /// Constructor with a generator and fit model. Both models may point
 /// to the same object. The 'dependents' set of variables is generated 
@@ -645,7 +639,7 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
 /// If keepGenData is set, all generated data sets will be kept in memory and can be accessed
 /// later via genData().
 ///
-/// Data sets will be written out is ascii form if the pattern string is supplied.
+/// Data sets will be written out in ascii form if the pattern string is supplied.
 /// The pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
 /// and should contain one integer field that encodes the sample serial number.
 ///
@@ -1054,12 +1048,13 @@ RooPlot* RooMCStudy::plotParamOn(RooPlot* frame, const RooCmdArg& arg1, const Ro
 ////////////////////////////////////////////////////////////////////////////////
 /// Plot the distribution of the fitted value of the given parameter on a newly created frame.
 ///
-/// This function accepts the following optional arguments
-/// FrameRange(double lo, double hi) -- Set range of frame to given specification
-/// FrameBins(int bins)              -- Set default number of bins of frame to given number
-/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-///                                     for list of allowed arguments
-///
+/// <table>
+/// <tr><th> Optional arguments <th>
+/// <tr><td> FrameRange(double lo, double hi) <td> Set range of frame to given specification
+/// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
+/// <tr><td> Frame(...)                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
+///     for list of allowed arguments
+/// </table>
 /// If no frame specifications are given, the AutoRange() feature will be used to set the range
 /// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
 
@@ -1082,15 +1077,8 @@ RooPlot* RooMCStudy::plotParam(const char* paramName, const RooCmdArg& arg1, con
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Plot the distribution of the fitted value of the given parameter on a newly created frame.
-///
-/// This function accepts the following optional arguments
-/// FrameRange(double lo, double hi) -- Set range of frame to given specification
-/// FrameBins(int bins)              -- Set default number of bins of frame to given number
-/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-///                                     for list of allowed arguments
-///
-/// If no frame specifications are given, the AutoRange() feature will be used to set the range
-/// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
+/// \copydetails RooMCStudy::plotParam(const char* paramName, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
+/// const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
 
 RooPlot* RooMCStudy::plotParam(const RooRealVar& param, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 
    			       const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) 
@@ -1115,13 +1103,15 @@ RooPlot* RooMCStudy::plotParam(const RooRealVar& param, const RooCmdArg& arg1, c
 ////////////////////////////////////////////////////////////////////////////////
 /// Plot the distribution of the -log(L) values on a newly created frame.
 ///
-/// This function accepts the following optional arguments
-/// FrameRange(double lo, double hi) -- Set range of frame to given specification
-/// FrameBins(int bins)              -- Set default number of bins of frame to given number
-/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-///                                     for list of allowed arguments
+/// <table>
+/// <tr><th> Optional arguments <th>
+/// <tr><td> FrameRange(double lo, double hi) <td> Set range of frame to given specification
+/// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
+/// <tr><td> Frame(...)                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
+///     for list of allowed arguments
+/// </table>
 ///
-/// If no frame specifications are given, the AutoRange() feature will be used to set the range
+/// If no frame specifications are given, the AutoRange() feature will be used to set the range.
 /// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
 
 RooPlot* RooMCStudy::plotNLL(const RooCmdArg& arg1, const RooCmdArg& arg2,
@@ -1137,11 +1127,13 @@ RooPlot* RooMCStudy::plotNLL(const RooCmdArg& arg1, const RooCmdArg& arg2,
 ////////////////////////////////////////////////////////////////////////////////
 /// Plot the distribution of the fit errors for the specified parameter on a newly created frame.
 ///
-/// This function accepts the following optional arguments
-/// FrameRange(double lo, double hi) -- Set range of frame to given specification
-/// FrameBins(int bins)              -- Set default number of bins of frame to given number
-/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-///                                     for list of allowed arguments
+/// <table>
+/// <tr><th> Optional arguments <th>
+/// <tr><td> FrameRange(double lo, double hi) <td> Set range of frame to given specification
+/// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
+/// <tr><td> Frame(...)                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
+///     for list of allowed arguments
+/// </table>
 ///
 /// If no frame specifications are given, the AutoRange() feature will be used to set the range
 /// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
@@ -1170,12 +1162,14 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, c
 /// Plot the distribution of pull values for the specified parameter on a newly created frame. If asymmetric
 /// errors are calculated in the fit (by MINOS) those will be used in the pull calculation
 ///
-/// This function accepts the following optional arguments
-/// FrameRange(double lo, double hi) -- Set range of frame to given specification
-/// FrameBins(int bins)              -- Set default number of bins of frame to given number
-/// Frame(...)                       -- Pass supplied named arguments to RooAbsRealLValue::frame() function. See frame() function
-///                                     for list of allowed arguments
-/// FitGauss(Bool_t flag)            -- Add a gaussian fit to the frame
+/// <table>
+/// <tr><th> Optional arguments <th>
+/// <tr><td> FrameRange(double lo, double hi) <td> Set range of frame to given specification
+/// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
+/// <tr><td> Frame(...)                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
+///     for list of allowed arguments
+/// <tr><td> FitGauss(Bool_t flag)            <td> Add a gaussian fit to the frame
+/// </table>
 ///
 /// If no frame specifications are given, the AutoSymRange() feature will be used to set the range
 /// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
