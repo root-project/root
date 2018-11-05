@@ -498,6 +498,7 @@ TVEC_LOGICAL_OPERATOR(||)
 ///@name RVec Standard Mathematical Functions
 ///@{
 
+/// \cond
 template <typename T> struct PromoteTypeImpl;
 
 template <> struct PromoteTypeImpl<float>       { using Type = float;       };
@@ -511,6 +512,8 @@ using PromoteType = typename PromoteTypeImpl<T>::Type;
 
 template <typename U, typename V>
 using PromoteTypes = decltype(PromoteType<U>() + PromoteType<V>());
+
+/// \endcond
 
 #define TVEC_UNARY_FUNCTION(NAME, FUNC)                                        \
    template <typename T>                                                       \
