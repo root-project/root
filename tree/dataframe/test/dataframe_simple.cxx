@@ -885,10 +885,14 @@ TEST(RDFSimpleTests, AutomaticNamesOfHisto1DAndGraph)
 
    EXPECT_STREQ(hx->GetName(), "x");
    EXPECT_STREQ(hx->GetTitle(), "x");
+   EXPECT_STREQ(hx->GetXaxis()->GetTitle(), "x");
    EXPECT_STREQ(hxy->GetName(), "x_y");
    EXPECT_STREQ(hxy->GetTitle(), "x_y");
+   EXPECT_STREQ(hxy->GetXaxis()->GetTitle(), "x");
    EXPECT_STREQ(gxy->GetName(), "x_y");
-   EXPECT_STREQ(gxy->GetTitle(), "x_y");
+   EXPECT_STREQ(gxy->GetTitle(), "x_y;x;y"); // current behaviour of TGraph
+   EXPECT_STREQ(gxy->GetXaxis()->GetTitle(), "x");
+   EXPECT_STREQ(gxy->GetYaxis()->GetTitle(), "y");
 
 }
 
