@@ -447,8 +447,6 @@ TString TWebCanvas::CreateWebWindow(int limit)
       fWindow->SetDefaultPage("file:$jsrootsys/files/canvas6.htm");
 
       fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
-
-      // fWindow->SetGeometry(500,300);
    }
 
    std::string url = fWindow->GetUrl(false);
@@ -473,8 +471,11 @@ THttpServer *TWebCanvas::GetServer()
 
 void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
 {
-   if (fWindow)
+   if (fWindow) {
+      if ((Canvas()->GetWw()>0) && (Canvas()->GetWw()<50000) && (Canvas()->GetWh()>0) && (Canvas()->GetWh()<30000))
+         fWindow->SetGeometry(Canvas()->GetWw()+6, Canvas()->GetWh()+22);
       fWindow->Show(args);
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
