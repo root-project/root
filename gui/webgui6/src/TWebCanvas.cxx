@@ -186,7 +186,7 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
 
    pad->cd();
 
-   if (obj->InheritsFrom(TAtt3D::Class())) {
+   if (obj->InheritsFrom(TAtt3D::Class()) && !pad->GetView()) {
       pad->GetViewer3D("pad");
       view = TView::CreateView(1, 0, 0); // Cartesian view by default
       pad->SetView(view);
@@ -587,9 +587,12 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
 
       pad->SetTicks(r.tickx, r.ticky);
       pad->SetGrid(r.gridx, r.gridy);
-      pad->SetLogx(r.logx);
-      pad->SetLogy(r.logy);
-      pad->SetLogz(r.logz);
+      if (r.logx != pad->GetLogx())
+         pad->SetLogx(r.logx);
+      if (r.logy != pad->GetLogy())
+         pad->SetLogy(r.logy);
+      if (r.logz != pad->GetLogz())
+         pad->SetLogz(r.logz);
 
       pad->SetLeftMargin(r.mleft);
       pad->SetRightMargin(r.mright);
