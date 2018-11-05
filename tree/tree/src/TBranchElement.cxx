@@ -3665,9 +3665,17 @@ static void PrintElements(const TStreamerInfo *info, const TStreamerInfoActions:
 {
    for(auto &cursor : ids) {
       auto id = cursor.fElemID;
-      if (id >= 0)
-         info->GetElement(id)->ls();
-      else if (cursor.fNestedIDs) {
+      if (id >= 0) {
+         auto el = info->GetElement(id);
+         if (el)
+            el->ls();
+         else {
+            Error("TBranchElement::Print", "Element for id #%d not found in StreamerInfo for %s",
+                  id, info->GetName());
+            info->ls();
+            TClass::GetClass("PFTauWith")->GetStreamerInfos()->ls();
+         }
+      } else if (cursor.fNestedIDs) {
          Printf("      Within subobject of type %s offset = %d", cursor.fNestedIDs->fInfo->GetName(), cursor.fNestedIDs->fOffset);
          PrintElements(cursor.fNestedIDs->fInfo, cursor.fNestedIDs->fIDs);
       }
@@ -3723,7 +3731,8 @@ void TBranchElement::Print(Option_t* option) const
       } else if (!fNewIDs.empty() && GetInfoImp()) {
          TStreamerInfo *localInfo = GetInfoImp();
          if (fType == 3 || fType == 4) {
-            localInfo = (TStreamerInfo *)fClonesClass->GetStreamerInfo();
+            // Search for the correct version.
+            localInfo = FindOnfileInfo(fClonesClass, fBranches);
          }
          PrintElements(localInfo, fNewIDs);
          Printf("   with read actions:");
