@@ -710,7 +710,7 @@ RVec<T> Filter(const RVec<T> &v, F &&f)
 template <typename T>
 auto Any(const RVec<T> &v) -> decltype(v[0] == true)
 {
-   for (auto &e : v)
+   for (auto &&e : v)
       if (e == true)
          return true;
    return false;
@@ -720,7 +720,7 @@ auto Any(const RVec<T> &v) -> decltype(v[0] == true)
 template <typename T>
 auto All(const RVec<T> &v) -> decltype(v[0] == false)
 {
-   for (auto &e : v)
+   for (auto &&e : v)
       if (e == false)
          return false;
    return true;
