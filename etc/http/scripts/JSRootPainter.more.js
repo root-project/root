@@ -515,6 +515,13 @@
       return this.GetObject().evalPar(x);
    }
 
+   //TF1Painter.prototype.UpdateObject = function(obj, opt) {
+   //   if (!this.MatchObjectType(obj)) return false;
+   //   var tf1 = this.GetObject();
+   //   tf1.fSave = obj.fSave;
+   //   return true;
+   //}
+
    TF1Painter.prototype.CreateBins = function(ignore_zoom) {
       var main = this.frame_painter(),
           gxmin = 0, gxmax = 0, tf1 = this.GetObject();
@@ -570,7 +577,7 @@
          var xx = xmin + n*dx;
          if (logx) xx = Math.exp(xx);
          var yy = this.Eval(xx);
-         if (!isNaN(yy)) res.push({ x : xx, y : yy });
+         if (!isNaN(yy)) res.push({ x: xx, y: yy });
       }
       return res;
    }
@@ -764,7 +771,7 @@
       return this.DrawingReady();
    }
 
-   JSROOT.Painter.drawFunction = function(divid, tf1, opt) {
+   function drawFunction(divid, tf1, opt) {
 
       var painter = new TF1Painter(tf1);
 
@@ -877,7 +884,7 @@
          // either graph drawn directly or
          // graph is first object in list of primitives
          var pad = this.root_pad();
-         if (!pad || !pad.fPrimitives || (pad.fPrimitives.arr[0] === graph)) res.Axis = "AXIS";
+         if (!pad || (pad.fPrimitives && (pad.fPrimitives.arr[0] === graph))) res.Axis = "AXIS";
       } else if (res.Axis.indexOf("A")<0) {
          res.Axis = "AXIS," + res.Axis;
       }
@@ -3263,7 +3270,7 @@
 
    function drawWebPainting(divid, obj, opt) {
 
-      var painter = new JSROOT.TObjectPainter(obj);
+      var painter = new JSROOT.TObjectPainter(obj, opt);
 
       painter.UpdateObject = function(obj) {
          if (!this.MatchObjectType(obj)) return false;
@@ -3387,7 +3394,7 @@
                      this.StartTextDrawing(attr.fTextFont, height, group);
 
                      var angle = attr.fTextAngle;
-                     angle -= Math.floor(angle/360) * 360;
+                     if (angle >= 360) angle -= Math.floor(angle/360) * 360;
 
                      var txt = arr[k].substr(1);
 
@@ -3402,7 +3409,7 @@
                      this.DrawText({ align: attr.fTextAlign,
                                      x: func.x(obj.fBuf[indx++]),
                                      y: func.y(obj.fBuf[indx++]),
-                                     rotate: angle,
+                                     rotate: -angle,
                                      text: txt,
                                      color: JSROOT.Painter.root_colors[attr.fTextColor], latex: 0, draw_g: group });
 
@@ -3420,8 +3427,6 @@
       }
 
       painter.SetDivId(divid);
-
-      painter.options = opt;
 
       painter.Redraw();
 
@@ -3682,6 +3687,7 @@
    JSROOT.Painter.drawWebPainting = drawWebPainting;
    JSROOT.Painter.drawRooPlot = drawRooPlot;
    JSROOT.Painter.drawGraph = drawGraph;
+   JSROOT.Painter.drawFunction = drawFunction;
 
    JSROOT.TF1Painter = TF1Painter;
    JSROOT.TGraphPainter = TGraphPainter;
