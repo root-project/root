@@ -260,12 +260,12 @@ void TWebCanvas::AddCanvasSpecials(TPadWebSnapshot &master)
          listofcols->AddColor(n, (TColor *)colors->At(n));
 
    // store palette in the buffer
-   Float_t *tgt = listofcols->Reserve(pal.GetSize());
+   auto *tgt = listofcols->Reserve(pal.GetSize());
    for (Int_t i = 0; i < pal.GetSize(); i++)
       tgt[i] = pal[i];
    listofcols->FixSize();
 
-   master.NewPrimitive().SetSnapshot(TWebSnapshot::kColors, listofcols, kTRUE);
+   master.NewSpecials().SetSnapshot(TWebSnapshot::kColors, listofcols, kTRUE);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -276,9 +276,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    paddata.SetActive(pad == gPad);
    paddata.SetObjectIDAsPtr(pad);
    paddata.SetSnapshot(TWebSnapshot::kSubPad, pad);
-
-   if (resfunc && (version <= 0))
-      AddCanvasSpecials(paddata);
 
    TList *primitives = pad->GetListOfPrimitives();
 
@@ -342,6 +339,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
    if (!resfunc)
       return;
+
+   // add specials after painting is performed - new colors may be generated only during painting
+   if (version <= 0)
+      AddCanvasSpecials(paddata);
 
    // now move all primitives and functions into separate list to perform I/O
 

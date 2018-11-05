@@ -66,4 +66,14 @@ TPadWebSnapshot &TPadWebSnapshot::NewSubPad()
    return *res;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Create new entry in list of primitives in the front
+
+TWebSnapshot &TPadWebSnapshot::NewSpecials()
+{
+   fPrimitives.emplace(fPrimitives.begin(), std::make_unique<TWebSnapshot>());
+   return *(fPrimitives.front());
+
+}
+
 
