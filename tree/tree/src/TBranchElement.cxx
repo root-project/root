@@ -5466,7 +5466,8 @@ void TBranchElement::SetActionSequence(TClass *originalClass, TStreamerInfo *loc
 
    if (!isSplitNode)
       fNewIDs.erase(fNewIDs.begin());
-   else if (fType != 3 && fType != 4) {
+
+   else if (fInitOffsets && fType != 3 && fType != 4) {
       // fObject has the address of the sub-object but the streamer action have
       // offset relative to the parent.
 
@@ -5474,13 +5475,12 @@ void TBranchElement::SetActionSequence(TClass *originalClass, TStreamerInfo *loc
       // sequence is about the content, we need to review what happens where an
       // action related to the collection itself will land.
       TBranchElement *parent = dynamic_cast<TBranchElement*>(GetMother()->GetSubBranch(this));
-      if (fInitOffsets) {
-         auto index = parent->fBranches.IndexOf(this);
-         if (index >= 0) {
-            actionSequence->AddToOffset( - parent->fBranchOffset[index] );
-         }
-      } // else it will be done by InitOffsets
-   }
+
+      auto index = parent->fBranches.IndexOf(this);
+      if (index >= 0) {
+         actionSequence->AddToOffset( - parent->fBranchOffset[index] );
+      }
+   } // else it will be done by InitOffsets
 }
 
 ////////////////////////////////////////////////////////////////////////////////
