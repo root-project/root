@@ -28,17 +28,17 @@ namespace TMath {
 ::ROOT::Double_v Gaus(::ROOT::Double_v &x, Double_t mean=0, Double_t sigma=1, Bool_t norm=kFALSE)
 {
    if (sigma == 0)
-      return ::ROOT::Double_v(1.e30f);
+      return ::ROOT::Double_v(1.e30);
 
-   ::ROOT::Double_v arg = (x-mean)/sigma;
+   ::ROOT::Double_v arg = (x - ::ROOT::Double_v(mean))/::ROOT::Double_v(sigma);
 
    // For those entries of |arg| > 39 result is zero in double precision
-   ::ROOT::Double_v out = vecCore::Blend<::ROOT::Double_v>(vecCore::math::Abs(arg) < 39.0f,
-                                                       vecCore::math::Exp(-0.5f * arg * arg),
-                                                       0.0f);
+   ::ROOT::Double_v out = vecCore::Blend<::ROOT::Double_v>(vecCore::math::Abs(arg) < ::ROOT::Double_v(39.0),
+                                                       vecCore::math::Exp(::ROOT::Double_v(-0.5) * arg * arg),
+                                                       ::ROOT::Double_v(0.0));
    if (!norm)
       return out;
-   return out/(2.50662827463100024f * sigma); //sqrt(2*Pi)=2.50662827463100024
+   return out/(::ROOT::Double_v(2.50662827463100024) * sigma); //sqrt(2*Pi)=2.50662827463100024
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,8 +50,9 @@ namespace TMath {
 /// the two-tailed exponential or the bilateral exponential distribution
 ::ROOT::Double_v LaplaceDist(::ROOT::Double_v &x, Double_t alpha=0, Double_t beta=1)
 {
-   ::ROOT::Double_v out = vecCore::math::Exp(-vecCore::math::Abs((x-alpha)/beta));
-   out /= (::ROOT::Double_v(2.0f)*beta);
+   ::ROOT::Double_v beta_v = ::ROOT::Double_v(beta);   
+   ::ROOT::Double_v out = vecCore::math::Exp(-vecCore::math::Abs((x-::ROOT::Double_v(alpha))/beta_v));
+   out /= (::ROOT::Double_v(2.0)*beta_v);
    return out;
 }
 
@@ -64,9 +65,11 @@ namespace TMath {
 /// the two-tailed exponential or the bilateral exponential distribution
 ::ROOT::Double_v LaplaceDistI(::ROOT::Double_v &x, Double_t alpha=0, Double_t beta=1)
 {
-   return vecCore::Blend<::ROOT::Double_v>(x <= alpha,
-                                         0.5 * vecCore::math::Exp(-vecCore::math::Abs((x-alpha)/beta)),
-                                         1 - 0.5 * vecCore::math::Exp(-vecCore::math::Abs((x-alpha)/beta)));
+   ::ROOT::Double_v alpha_v = ::ROOT::Double_v(alpha);
+   ::ROOT::Double_v beta_v = ::ROOT::Double_v(beta);
+   return vecCore::Blend<::ROOT::Double_v>(x <= alpha_v,
+                                         0.5 * vecCore::math::Exp(-vecCore::math::Abs((x-alpha_v)/beta_v)),
+                                         1 - 0.5 * vecCore::math::Exp(-vecCore::math::Abs((x-alpha_v)/beta_v)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -99,12 +102,12 @@ namespace TMath {
                   p33 =-2.78661308609647788e-1, q33 = 1.98733201817135256e+0,
                   p34 =-2.23192459734184686e-2, q34 = 1;
 
-   ::ROOT::Double_v v = vecCore::math::Abs(x)/::ROOT::Double_v(w2);
+   ::ROOT::Double_v v = vecCore::math::Abs(x)/w2;
 
    ::ROOT::Double_v ap, aq, h, hc, y, result;
 
-   vecCore::Mask<::ROOT::Double_v> mask1 = v < ::ROOT::Double_v(0.5f);
-   vecCore::Mask<::ROOT::Double_v> mask2 = !mask1 && v < ::ROOT::Double_v(4.0f);
+   vecCore::Mask<::ROOT::Double_v> mask1 = v < ::ROOT::Double_v(0.5);
+   vecCore::Mask<::ROOT::Double_v> mask2 = !mask1 && v < ::ROOT::Double_v(4.0);
    vecCore::Mask<::ROOT::Double_v> mask3 = !(mask1 || mask2);
 
    ::ROOT::Double_v v2 = v*v;
@@ -127,6 +130,16 @@ namespace TMath {
    return vecCore::Blend<::ROOT::Double_v>(x > 0,
                                          ::ROOT::Double_v(0.5) + ::ROOT::Double_v(0.5) * result,
                                          ::ROOT::Double_v(0.5)*(::ROOT::Double_v(1) - result));
+}
+
+inline ::ROOT::Double_v Exp(::ROOT::Double_v &x)
+{
+      return vecCore::math::Exp(x);
+}
+
+inline ::ROOT::Double_v Log(::ROOT::Double_v &x)
+{
+      return vecCore::math::Log(x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -158,44 +171,47 @@ namespace TMath {
 /// Theta function inversion formula is used for z <= 1
 ///
 /// This function was translated by Rene Brun from PROBKL in CERNLIB.
-::ROOT::Double_v KolmogorovProb_Split3_Less(::ROOT::Double_v &u)
+inline ::ROOT::Double_v KolmogorovProb_Split3_Less(::ROOT::Double_v &u)
 {
    ::ROOT::Double_v uu = u * u;
 
-   ::ROOT::Double_v maxj = vecCore::math::Max(::ROOT::Double_v(1.0), vecCore::math::Round(3./u));
-   ::ROOT::Double_v r0 = vecCore::math::Exp(-2. * uu);
+   ::ROOT::Double_v maxj = vecCore::math::Max(::ROOT::Double_v(1.0), vecCore::math::Round(::ROOT::Double_v(3.0)/u));
+   ::ROOT::Double_v r0 = vecCore::math::Exp(::ROOT::Double_v(-2.0) * uu);
    ::ROOT::Double_v r1, r2, r3, result;
 
-   vecCore::MaskedAssign<::ROOT::Double_v>(r1, maxj >= ::ROOT::Double_v(1), vecCore::math::Exp(-8. * uu));
-   vecCore::MaskedAssign<::ROOT::Double_v>(r2, maxj >= ::ROOT::Double_v(2), vecCore::math::Exp(-18. * uu));
-   vecCore::MaskedAssign<::ROOT::Double_v>(r3, maxj >= ::ROOT::Double_v(3), vecCore::math::Exp(-32. * uu));
+   vecCore::MaskedAssign<::ROOT::Double_v>(r1, maxj >= ::ROOT::Double_v(1), vecCore::math::Exp(::ROOT::Double_v(-8.0) * uu));
+   vecCore::MaskedAssign<::ROOT::Double_v>(r2, maxj >= ::ROOT::Double_v(2), vecCore::math::Exp(::ROOT::Double_v(-18.0) * uu));
+   vecCore::MaskedAssign<::ROOT::Double_v>(r3, maxj >= ::ROOT::Double_v(3), vecCore::math::Exp(::ROOT::Double_v(-32.0) * uu));
 
-   return 2.*(r0 - r1 + r2 - r3);
+   return ::ROOT::Double_v(2.0)*(r0 - r1 + r2 - r3);
 }
 
-::ROOT::Double_v KolmogorovProb_Split2_More(::ROOT::Double_v &u)
+inline ::ROOT::Double_v KolmogorovProb_Split2_Less(::ROOT::Double_v &u)
 {
-   return vecCore::Blend<::ROOT::Double_v>(u < 6.8116, KolmogorovProb_Split3_Less(u), 0);
-}
-
-::ROOT::Double_v KolmogorovProb_Split2_Less(::ROOT::Double_v &u)
-{
-   ::ROOT::Double_v u_inv = 1./u;
+   ::ROOT::Double_v u_inv = ::ROOT::Double_v(1.0)/u;
    ::ROOT::Double_v v = u_inv * u_inv;
-   return ::ROOT::Double_v(1.0) - 2.50662827*u_inv*(vecCore::math::Exp(-1.2337005501361697*v) +
-                  vecCore::math::Exp(-11.103304951225528*v) + vecCore::math::Exp(-30.842513753404244*v));
+   return ::ROOT::Double_v(1.0) - ::ROOT::Double_v(2.50662827)*u_inv*(vecCore::math::Exp(::ROOT::Double_v(-1.2337005501361697)*v)
+   + vecCore::math::Exp(::ROOT::Double_v(-11.103304951225528)*v) + vecCore::math::Exp(::ROOT::Double_v(-30.842513753404244)*v));
 }
 
-::ROOT::Double_v KolmogorovProb_Split1_More(::ROOT::Double_v &u)
+inline ::ROOT::Double_v KolmogorovProb_Split1_More(::ROOT::Double_v &u)
 {
-   return vecCore::Blend<::ROOT::Double_v>(u < 0.755,
-                        KolmogorovProb_Split2_Less(u), KolmogorovProb_Split2_More(u));
+   return vecCore::Blend<::ROOT::Double_v>(u < ::ROOT::Double_v(0.755),
+                        KolmogorovProb_Split2_Less(u), KolmogorovProb_Split3_Less(u));
 }
 
-::ROOT::Double_v KolmogorovProb(::ROOT::Double_v &z)
+inline ::ROOT::Double_v KolmogorovProb(::ROOT::Double_v &z)
 {
    ::ROOT::Double_v u = vecCore::math::Abs(z);
-   return vecCore::Blend<::ROOT::Double_v>(u < 0.2, 1, KolmogorovProb_Split1_More(u));
+   ::ROOT::Double_v result;
+   
+   vecCore::Mask<::ROOT::Double_v> mask_low = u < ::ROOT::Double_v(0.2);
+   vecCore::Mask<::ROOT::Double_v> mask_high = u >= ::ROOT::Double_v(6.8116);
+   
+   vecCore::MaskedAssign<::ROOT::Double_v>(result, mask_low, 1);
+   vecCore::MaskedAssign<::ROOT::Double_v>(result, mask_high, 0);
+   vecCore::MaskedAssign<::ROOT::Double_v>(result, !(mask_low && mask_high), KolmogorovProb_Split1_More(u));
+   return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,130 +219,178 @@ namespace TMath {
 inline ::ROOT::Double_v DiLog_Iterations(::ROOT::Double_v &y,
                                     ::ROOT::Double_v &s, ::ROOT::Double_v &a)
 {
-    Double_t c[20] = {0.42996693560813697, 0.40975987533077105,
-   -0.01858843665014592, 0.00145751084062268,-0.00014304184442340,
-   0.00001588415541880,-0.00000190784959387, 0.00000024195180854,
-   -0.00000003193341274, 0.00000000434545063,-0.00000000060578480,
-   0.00000000008612098,-0.00000000001244332, 0.00000000000182256,
-   -0.00000000000027007, 0.00000000000004042,-0.00000000000000610,
-   0.00000000000000093,-0.00000000000000014, 0.00000000000000002};
-   
    ::ROOT::Double_v h = y+y-1;
    ::ROOT::Double_v alfa = h+h;
-   ::ROOT::Double_v b0 = ::ROOT::Double_v(0);
-   ::ROOT::Double_v b1 = ::ROOT::Double_v(0);
-   ::ROOT::Double_v b2 = ::ROOT::Double_v(0);
-   for (Int_t i=19;i>=0;i--){
-      b0 = c[i] + alfa*b1-b2;
-      b2 = b1;
-      b1 = b0;
-   }
+
+   ::ROOT::Double_v b0 = ::ROOT::Double_v(0.00000000000000002);
+   ::ROOT::Double_v b1 = b0;
+   
+   b0 = ::ROOT::Double_v(-0.00000000000000014) + alfa * b1;
+   ::ROOT::Double_v b2 = b1;
+   b1 = b0;
+   
+   b0 = ::ROOT::Double_v(0.00000000000000093) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+   
+   b0 = ::ROOT::Double_v(-0.00000000000000610) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+   
+   b0 = ::ROOT::Double_v(0.00000000000004042) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+   
+   b0 = ::ROOT::Double_v(-0.00000000000027007) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(0.00000000000182256) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(-0.00000000001244332) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(0.00000000008612098) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(-0.00000000060578480) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(0.00000000434545063) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(-0.00000003193341274) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(0.00000024195180854) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(-0.00000190784959387) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(0.00001588415541880) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(-0.00014304184442340) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(0.00145751084062268) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(-0.01858843665014592) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(0.40975987533077105) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
+   b0 = ::ROOT::Double_v(0.42996693560813697) + alfa * b1 - b2;
+   b2 = b1;
+   b1 = b0;
+
    return -(s*(b0-h*b2)+a);
 }
 
-inline ::ROOT::Double_v DiLog_Split7_Less(::ROOT::Double_v &t)
+inline ::ROOT::Double_v DiLog_Split7_Less(::ROOT::Double_v &x, ::ROOT::Double_v &pi6)
+{
+   ::ROOT::Double_v y  = -1/x;
+   ::ROOT::Double_v b1 = vecCore::math::Log(-x);
+   ::ROOT::Double_v s  = pi6+0.5*b1*b1;
+   ::ROOT::Double_v temp = ::ROOT::Double_v(-1);
+   return DiLog_Iterations(y, temp, s);
+}
+
+inline ::ROOT::Double_v DiLog_Split6_Less(::ROOT::Double_v &x, ::ROOT::Double_v &pi6)
 {
    ::ROOT::Double_v ones = ::ROOT::Double_v(1);
    ::ROOT::Double_v zeros = ::ROOT::Double_v(0);
-   return DiLog_Iterations(t, ones, zeros);
+   ::ROOT::Double_v t = -x;
+   return vecCore::Blend<::ROOT::Double_v>(x >= -1, DiLog_Iterations(t, ones, zeros), DiLog_Split7_Less(x, pi6));
 }
 
-inline ::ROOT::Double_v DiLog_Split7_More(::ROOT::Double_v &t, ::ROOT::Double_v &pi6)
+inline ::ROOT::Double_v DiLog_Split6_More(::ROOT::Double_v &x)
 {
-   ::ROOT::Double_v y = 1/t;
-   ::ROOT::Double_v s = ::ROOT::Double_v(-1);
-   ::ROOT::Double_v b1= vecCore::math::Log(t);
-   ::ROOT::Double_v a = pi6+0.5f*b1*b1;
-
-   return DiLog_Iterations(y, s, a);
+   ::ROOT::Double_v temp = ::ROOT::Double_v(-1);
+   ::ROOT::Double_v y = x/(1-x);
+   ::ROOT::Double_v b1= vecCore::math::Log(1-x);
+   ::ROOT::Double_v k = 0.5*b1*b1;
+   return DiLog_Iterations(y, temp, k);
 }
 
-inline ::ROOT::Double_v DiLog_Split6_More(::ROOT::Double_v &t, ::ROOT::Double_v &pi6)
+inline ::ROOT::Double_v DiLog_Split5_Less(::ROOT::Double_v &x, ::ROOT::Double_v &pi6)
 {
-   return vecCore::Blend<::ROOT::Double_v>(t <= 1,
-                        DiLog_Split7_Less(t), DiLog_Split7_More(t, pi6));
+   return vecCore::Blend<::ROOT::Double_v>(x > 0, DiLog_Split6_More(x), DiLog_Split6_Less(x, pi6));
 }
 
-inline ::ROOT::Double_v DiLog_Split6_Less(::ROOT::Double_v &t)
+inline ::ROOT::Double_v DiLog_Split5_More(::ROOT::Double_v &x, ::ROOT::Double_v &pi6)
 {
-   ::ROOT::Double_v y = -t/(1+t);
-   ::ROOT::Double_v s = ::ROOT::Double_v(-1);
-   ::ROOT::Double_v b1= vecCore::math::Log(1+t);
-   ::ROOT::Double_v a = 0.5*b1*b1;
-
-   return DiLog_Iterations(y, s, a);
+   ::ROOT::Double_v ones = ::ROOT::Double_v(1);   
+   ::ROOT::Double_v y = 1/x - 1;
+   ::ROOT::Double_v a = vecCore::math::Log(x);
+   ::ROOT::Double_v k = -pi6+a*(-0.5*a+vecCore::math::Log(1-x));
+   return DiLog_Iterations(y, ones, k);
 }
 
-inline ::ROOT::Double_v DiLog_Split5_More(::ROOT::Double_v &t, ::ROOT::Double_v &pi6)
+inline ::ROOT::Double_v DiLog_Split4_Less(::ROOT::Double_v &x, ::ROOT::Double_v &pi6)
 {
-   return vecCore::Blend<::ROOT::Double_v>(t < 0,
-                        DiLog_Split6_Less(t), DiLog_Split6_More(t, pi6));
+   return vecCore::Blend<::ROOT::Double_v>(x >= 0.5, DiLog_Split5_More(x, pi6), DiLog_Split5_Less(x, pi6));
 }
 
-inline ::ROOT::Double_v DiLog_Split5_Less(::ROOT::Double_v &t, ::ROOT::Double_v &pi6)
+inline ::ROOT::Double_v DiLog_Split4_More(::ROOT::Double_v &x, ::ROOT::Double_v &pi6)
 {
-   ::ROOT::Double_v y = -(1+t)/t;
-   ::ROOT::Double_v s = ::ROOT::Double_v(1);
-   ::ROOT::Double_v a = vecCore::math::Log(-t);
-   a = -pi6+a*(-0.5f*a+vecCore::math::Log(1+t));
-
-   return DiLog_Iterations(y, s, a);
+   ::ROOT::Double_v temp = ::ROOT::Double_v(-1);
+   ::ROOT::Double_v y = x+temp;
+   ::ROOT::Double_v a = vecCore::math::Log(x);
+   ::ROOT::Double_v k = temp * pi6 + a*(a+vecCore::math::Log(1-1/x));
+   return DiLog_Iterations(y, temp, k);
 }
 
-inline ::ROOT::Double_v DiLog_Split4_More(::ROOT::Double_v &t, ::ROOT::Double_v &pi6)
+inline ::ROOT::Double_v DiLog_Split3_Less(::ROOT::Double_v &x, ::ROOT::Double_v &pi3)
 {
-   return vecCore::Blend<::ROOT::Double_v>(t <= -0.5,
-                        DiLog_Split5_Less(t, pi6), DiLog_Split5_More(t, pi6));
+   ::ROOT::Double_v pi6 = pi3/2;
+   return vecCore::Blend<::ROOT::Double_v>(x > 1, DiLog_Split4_More(x, pi6), DiLog_Split4_Less(x, pi6));
 }
 
-inline ::ROOT::Double_v DiLog_Split4_Less(::ROOT::Double_v &t, ::ROOT::Double_v &pi6)
+inline ::ROOT::Double_v DiLog_Split3_More(::ROOT::Double_v &x, ::ROOT::Double_v &pi3)
 {
-   ::ROOT::Double_v y = -t-1;
-   ::ROOT::Double_v s = ::ROOT::Double_v(-1);
-   ::ROOT::Double_v a = vecCore::math::Log(-t);
-   a = -pi6 + a*(a+vecCore::math::Log(1+1/t));
-
-   return DiLog_Iterations(y, s, a);
-}
-
-inline ::ROOT::Double_v DiLog_Split3_More(::ROOT::Double_v &t, ::ROOT::Double_v &pi3)
-{
-   ::ROOT::Double_v pi6 = ::ROOT::Double_v(pi3/2);
-   return vecCore::Blend<::ROOT::Double_v>(t < -1,
-                        DiLog_Split4_Less(t, pi6), DiLog_Split4_More(t, pi6));
-}
-
-inline ::ROOT::Double_v DiLog_Split3_Less(::ROOT::Double_v &t, ::ROOT::Double_v &pi3)
-{
-   ::ROOT::Double_v y = -1/(1 + t);
-   ::ROOT::Double_v s = ::ROOT::Double_v(1);
-   ::ROOT::Double_v b1 = vecCore::math::Log(-t);
-   ::ROOT::Double_v b2 = vecCore::math::Log(1+1/t);
-   ::ROOT::Double_v a = -pi3 + 0.5f*(b1*b1 - b2*b2);
-
-   return DiLog_Iterations(y, s, a);
+   ::ROOT::Double_v ones = ::ROOT::Double_v(1);
+   ::ROOT::Double_v y = -ones/(ones - x);
+   ::ROOT::Double_v b1 = vecCore::math::Log(x);
+   ::ROOT::Double_v b2 = vecCore::math::Log(ones-ones/x);
+   ::ROOT::Double_v k = -pi3 + ::ROOT::Double_v(0.5)*(b1*b1 - b2*b2);
+   return DiLog_Iterations(y, ones, k);
 }
 
 inline ::ROOT::Double_v DiLog_Split2(::ROOT::Double_v &x, ::ROOT::Double_v &pi2)
 {
-   ::ROOT::Double_v t = -x;
-   ::ROOT::Double_v pi3 = pi2/3;
-   return vecCore::Blend<::ROOT::Double_v>(t <= -2,
-                        DiLog_Split3_Less(t, pi3), DiLog_Split3_More(t, pi2));
+   ::ROOT::Double_v pi3 = ::ROOT::Double_v(3.2898681337);
+   return vecCore::Blend<::ROOT::Double_v>(x >= 2, DiLog_Split3_More(x, pi3), DiLog_Split3_Less(x, pi2));
 }
 
-inline ::ROOT::Double_v DiLog_Split1(::ROOT::Double_v &x, ::ROOT::Double_v &pi2)
+inline ::ROOT::Double_v DiLog_Split1(::ROOT::Double_v &x, ::ROOT::Double_v &pi12, ::ROOT::Double_v &pi2)
 {
-   ::ROOT::Double_v pi12 = ::ROOT::Double_v(pi2/12);
    return vecCore::Blend<::ROOT::Double_v>(x == -1, -pi12, DiLog_Split2(x, pi2));
 }
 
 inline ::ROOT::Double_v DiLog(::ROOT::Double_v &x)
 {
-    Double_t pi  = TMath::Pi();
-    ::ROOT::Double_v pi2 = ::ROOT::Double_v(pi*pi);
-
-   return vecCore::Blend<::ROOT::Double_v>(x == 1, pi2/6, DiLog_Split1(x, pi2));
+   ::ROOT::Double_v pi12 = ::ROOT::Double_v(0.82246703342);
+   ::ROOT::Double_v pi2 = ::ROOT::Double_v(9.86960440109);
+   return vecCore::Blend<::ROOT::Double_v>(x == 1,
+      ::ROOT::Double_v(1.64493406685), DiLog_Split1(x, pi12, pi2));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -345,9 +409,7 @@ inline ::ROOT::Double_v BesselI0_Split_Less(::ROOT::Double_v &x)
    ::ROOT::Double_v xx = x/3.75;
    ::ROOT::Double_v y = xx * xx;
 
-   return 1.0+y*(3.5156229+y*(3.0899424+
-      y*(1.2067492+y*(0.2659732+
-      y*(3.60768e-2+y*4.5813e-3)))));
+   return 1.0+y*(3.5156229+y*(3.0899424+y*(1.2067492+y*(0.2659732+y*(3.60768e-2+y*4.5813e-3)))));
 }
 
 inline ::ROOT::Double_v BesselI0(::ROOT::Double_v &x)
@@ -355,34 +417,6 @@ inline ::ROOT::Double_v BesselI0(::ROOT::Double_v &x)
    ::ROOT::Double_v ax = vecCore::math::Abs(x);
 
    return vecCore::Blend<::ROOT::Double_v>(ax <= 3.75, BesselI0_Split_Less(x), BesselI0_Split_More(ax));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///  Vectorized implementation of modified Bessel function K_0(x) for a vector x.
-inline ::ROOT::Double_v BesselK0_Split2_More(::ROOT::Double_v &x)
-{
-   ::ROOT::Double_v y = 2/x;
-   return (vecCore::math::Exp(-x)/vecCore::math::Sqrt(x))*
-            (1.25331414+y*(-7.832358e-2+y*(2.189568e-2+
-            y*(-1.062446e-2+y*(5.87872e-3+y*(-2.51540e-3+y*5.3208e-4))))));
-}
-
-inline ::ROOT::Double_v BesselK0_Split2_Less(::ROOT::Double_v &x)
-{
-   ::ROOT::Double_v y = x*x/4;
-   return (-vecCore::math::Log(x/2.)*BesselI0(x))+(-0.57721566+y*(0.42278420+
-                        y*(0.23069756+y*(3.488590e-2+
-                        y*(2.62698e-3+y*(1.0750e-4+y*7.4e-6))))));
-}
-
-inline ::ROOT::Double_v BesselK0_Split1_More(::ROOT::Double_v &x)
-{
-   return vecCore::Blend<::ROOT::Double_v>(x <= 2, BesselK0_Split2_Less(x), BesselK0_Split2_More(x));
-}
-
-inline ::ROOT::Double_v BesselK0(::ROOT::Double_v &x)
-{
-   return vecCore::Blend<::ROOT::Double_v>(x <= 0, ::ROOT::Double_v(0), BesselK0_Split1_More(x));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -412,6 +446,34 @@ inline ::ROOT::Double_v BesselI1(::ROOT::Double_v &x)
 
    return vecCore::Blend<::ROOT::Double_v>(ax <= 3.75,
             BesselI1_Split_Less(x), BesselI1_Split_More(ax, x));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///  Vectorized implementation of modified Bessel function K_0(x) for a vector x.
+inline ::ROOT::Double_v BesselK0_Split2_More(::ROOT::Double_v &x)
+{
+   ::ROOT::Double_v y = 2/x;
+   return (vecCore::math::Exp(-x)/vecCore::math::Sqrt(x))*
+            (1.25331414+y*(-7.832358e-2+y*(2.189568e-2
+            + y*(-1.062446e-2+y*(5.87872e-3+y*(-2.51540e-3+y*5.3208e-4))))));
+}
+
+inline ::ROOT::Double_v BesselK0_Split2_Less(::ROOT::Double_v &x)
+{
+   ::ROOT::Double_v y = x*x/4;
+   return (-vecCore::math::Log(x/2.)*BesselI0(x))+(-0.57721566+y*(0.42278420+
+                        y*(0.23069756+y*(3.488590e-2+
+                        y*(2.62698e-3+y*(1.0750e-4+y*7.4e-6))))));
+}
+
+inline ::ROOT::Double_v BesselK0_Split1_More(::ROOT::Double_v &x)
+{
+   return vecCore::Blend<::ROOT::Double_v>(x <= 2, BesselK0_Split2_Less(x), BesselK0_Split2_More(x));
+}
+
+inline ::ROOT::Double_v BesselK0(::ROOT::Double_v &x)
+{
+   return vecCore::Blend<::ROOT::Double_v>(x <= 0, 0, BesselK0_Split1_More(x));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -603,18 +665,17 @@ inline ::ROOT::Double_v BesselI_Split1_More(Int_t n, ::ROOT::Double_v &x)
 ::ROOT::Double_v BesselY0_Split1_Less(::ROOT::Double_v &x)
 {
    ::ROOT::Double_v y = x*x;
-   ::ROOT::Double_v result1 = -2957821389.0 + y*(7062834065.0 +
-                  y*(-512359803.6 + y*(10879881.29  + y*(-86327.92757  + y*228.4622733))));
-   ::ROOT::Double_v result2 = 40076544269.0 + y*(745249964.8 +
-                  y*(7189466.438 + y*(47447.26470 + y*(226.1030244 + y))));
+   ::ROOT::Double_v result1 = -2957821389.0 + y*(7062834065.0 + y*(-512359803.6
+            + y*(10879881.29 + y*(-86327.92757 + y*228.4622733))));
+   ::ROOT::Double_v result2 = 40076544269.0 + y*(745249964.8 + y*(7189466.438 + y*(47447.26470
+                  + y*(226.1030244 + y))));
    return (result1/result2) + 0.636619772*BesselJ0(x)*vecCore::math::Log(x);
 }
 
 ::ROOT::Double_v BesselY0(::ROOT::Double_v &x)
 {
    ::ROOT::Double_v ax = vecCore::math::Abs(x);
-   return vecCore::Blend<::ROOT::Double_v>(x < 8, BesselY0_Split1_Less(x),
-                  BesselY0_Split1_More(ax));
+   return vecCore::Blend<::ROOT::Double_v>(x < 8, BesselY0_Split1_Less(x), BesselY0_Split1_More(ax));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
