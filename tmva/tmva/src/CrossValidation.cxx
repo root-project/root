@@ -278,7 +278,7 @@ TMVA::CrossValidation::CrossValidation(TString jobName, TMVA::DataLoader *datalo
                                        TString options)
    : TMVA::Envelope(jobName, dataloader, nullptr, options),
      fAnalysisType(Types::kMaxAnalysisType),
-     fAnalysisTypeStr("auto"),
+     fAnalysisTypeStr("Auto"),
      fSplitTypeStr("Random"),
      fCorrelations(kFALSE),
      fCvFactoryOptions(""),
