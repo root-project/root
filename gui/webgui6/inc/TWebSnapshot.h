@@ -44,7 +44,8 @@ public:
      kObject = 1,      // object itself
      kSVG = 2,         // list of SVG primitives
      kSubPad = 3,      // subpad
-     kColors = 4       // list of ROOT colors + palette
+     kColors = 4,      // list of ROOT colors + palette
+     kStyle = 5        // gStyle object
    };
 
    virtual ~TWebSnapshot();

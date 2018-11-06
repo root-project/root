@@ -16,6 +16,7 @@
 #include "TWebPS.h"
 
 #include "TSystem.h"
+#include "TStyle.h"
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TClass.h"
@@ -24,6 +25,7 @@
 #include "TArrayI.h"
 #include "TList.h"
 #include "TH1.h"
+#include "TEnv.h"
 #include "TGraph.h"
 #include "TBufferJSON.h"
 #include "Riostream.h"
@@ -40,6 +42,8 @@
 TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
    : TCanvasImp(c, name, x, y, width, height)
 {
+   fStyleDelivery = gEnv->GetValue("WebGui.StyleDelivery", 0);
+   fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
 }
 
 Int_t TWebCanvas::InitWindow()
@@ -274,12 +278,15 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    paddata.SetObjectIDAsPtr(pad);
    paddata.SetSnapshot(TWebSnapshot::kSubPad, pad);
 
+   if (resfunc && (fStyleDelivery > (version > 0 ? 1 : 0)))
+      paddata.NewPrimitive().SetSnapshot(TWebSnapshot::kStyle, gStyle);
+
    TList *primitives = pad->GetListOfPrimitives();
 
    fPrimitivesLists.Add(primitives); // add list of primitives
 
    TWebPS masterps;
-   bool usemaster = primitives->GetSize() > 100;
+   bool usemaster = primitives->GetSize() > fPrimitivesMerge;
 
    TIter iter(primitives);
    TObject *obj = nullptr;
