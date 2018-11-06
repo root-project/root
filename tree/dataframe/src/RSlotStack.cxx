@@ -40,8 +40,9 @@ unsigned int &ROOT::Internal::RDF::RSlotStack::GetIndex()
 
    {
       ROOT::TRWSpinLockReadGuard rg(fRWLock);
-      if (fIndexMap.end() != fIndexMap.find(tid))
-         return fIndexMap[tid];
+      auto it = fIndexMap.find(tid);
+      if (fIndexMap.end() != it)
+         return it->second;
    }
 
    {
