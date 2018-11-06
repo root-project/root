@@ -204,6 +204,7 @@ RooAbsArg& RooAbsRealLValue::operator=(const RooAbsReal& arg)
 ///     inside the range and center of range coincides with mean of distribution in given dataset.
 /// <tr><td> Name(const char* name)               <td> Give specified name to RooPlot object
 /// <tr><td> Title(const char* title)             <td> Give specified title to RooPlot object
+/// </table>
 ///
 RooPlot* RooAbsRealLValue::frame(const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
 				 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const 

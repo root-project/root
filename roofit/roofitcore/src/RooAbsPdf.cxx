@@ -240,11 +240,11 @@ RooAbsPdf::~RooAbsPdf()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return current value, normalizated by integrating over
-/// the observables in 'nset'. If 'nset' is 0, the unnormalized value. 
+/// Return current value, normalized by integrating over
+/// the observables in 'nset'. If 'nset' is 0, the unnormalized value
 /// is returned. All elements of 'nset' must be lvalues
 ///
-/// Unnormalized values are not cached
+/// Unnormalized values are not cached.
 /// Doing so would be complicated as _norm->getVal() could
 /// spoil the cache and interfere with returning the cached
 /// return value. Since unnormalized calls are typically

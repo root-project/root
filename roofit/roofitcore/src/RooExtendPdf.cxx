@@ -104,10 +104,10 @@ RooExtendPdf::~RooExtendPdf()
   /// \f[
   ///     n \; / \; \frac{\int_{(x_C,y_F)} \mathrm{pdf}(x,y)}{\int_{(x_F,y_F)} \mathrm{pdf}(x,y) }
   /// \f]
-  /// Where x is the set of dependents with cuts defined
-  /// and y are the other dependents. \f$ x_C \f$ is the integration
-  /// of x over the cut range, \f$ x_F \f$ is the integration of
-  /// x over the full range.
+  /// Where \f$ x \f$ is the set of dependents with cuts defined
+  /// and \f$ y \f$ are the other dependents. \f$ x_C \f$ is the integration
+  /// of \f$ x \f$ over the cut range, \f$ x_F \f$ is the integration of
+  /// \f$ x \f$ over the full range.
 Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const 
 {
   RooAbsPdf& pdf = (RooAbsPdf&)_pdf.arg() ;
