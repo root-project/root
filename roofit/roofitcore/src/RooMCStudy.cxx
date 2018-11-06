@@ -79,7 +79,7 @@ fitting the PDF to that data and accumulating the fit statistics.
 \param[in] argX Arguments from the table below
 
 <table>
-<tr><th><th>
+<tr><th> Optional arguments <th>
 <tr><td> Silence()                         <td> Suppress all RooFit messages during running below PROGRESS level
 <tr><td> FitModel(const RooAbsPdf&)        <td> The PDF for fitting, if it is different from the PDF for generating
 <tr><td> ConditionalObservables(const RooArgSet& set)  <td> The set of observables that the PDF should _not_ be normalized over
@@ -298,7 +298,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \deprecated RETAINED FOR BACKWARD COMPATIBILY. PLEASE USE CONSTRUCTOR WITH NAMED ARGUMENTS
+/// \deprecated PLEASE USE CONSTRUCTOR WITH NAMED ARGUMENTS. RETAINED FOR BACKWARD COMPATIBILY.
 ///
 /// Constructor with a generator and fit model. Both models may point
 /// to the same object. The 'dependents' set of variables is generated 
@@ -404,7 +404,6 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor 
 
 RooMCStudy::~RooMCStudy() 
 {  
@@ -1052,7 +1051,7 @@ RooPlot* RooMCStudy::plotParamOn(RooPlot* frame, const RooCmdArg& arg1, const Ro
 /// <tr><th> Optional arguments <th>
 /// <tr><td> FrameRange(double lo, double hi) <td> Set range of frame to given specification
 /// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
-/// <tr><td> Frame(...)                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
+/// <tr><td> Frame()                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
 ///     for list of allowed arguments
 /// </table>
 /// If no frame specifications are given, the AutoRange() feature will be used to set the range
@@ -1107,7 +1106,7 @@ RooPlot* RooMCStudy::plotParam(const RooRealVar& param, const RooCmdArg& arg1, c
 /// <tr><th> Optional arguments <th>
 /// <tr><td> FrameRange(double lo, double hi) <td> Set range of frame to given specification
 /// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
-/// <tr><td> Frame(...)                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
+/// <tr><td> Frame()                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
 ///     for list of allowed arguments
 /// </table>
 ///
@@ -1131,7 +1130,7 @@ RooPlot* RooMCStudy::plotNLL(const RooCmdArg& arg1, const RooCmdArg& arg2,
 /// <tr><th> Optional arguments <th>
 /// <tr><td> FrameRange(double lo, double hi) <td> Set range of frame to given specification
 /// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
-/// <tr><td> Frame(...)                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
+/// <tr><td> Frame()                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
 ///     for list of allowed arguments
 /// </table>
 ///
@@ -1166,7 +1165,7 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, c
 /// <tr><th> Optional arguments <th>
 /// <tr><td> FrameRange(double lo, double hi) <td> Set range of frame to given specification
 /// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
-/// <tr><td> Frame(...)                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
+/// <tr><td> Frame()                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
 ///     for list of allowed arguments
 /// <tr><td> FitGauss(Bool_t flag)            <td> Add a gaussian fit to the frame
 /// </table>
