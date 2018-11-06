@@ -1080,10 +1080,12 @@ public:
 /// Helper object for a multi-thread Snapshot action
 template <typename... BranchTypes>
 class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
+   template <typename T>
+   using Stacks_t = std::vector<std::stack<T>>;
    const unsigned int fNSlots;
    std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
-   std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
-   std::vector<std::stack<std::unique_ptr<TTree>>> fOutputTrees;
+   Stacks_t<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
+   Stacks_t<std::unique_ptr<TTree>> fOutputTrees;
    std::vector<int> fIsFirstEvent;        // vector<bool> does not allow concurrent writing of different elements
    const std::string fFileName;           // name of the output file name
    const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
@@ -1109,21 +1111,40 @@ public:
 
    void InitTask(TTreeReader *r, unsigned int slot)
    {
+      // Useful shortcuts
+      auto &thisSlotTreeStack = fOutputTrees[slot];
+      auto &thisSlotFileStack = fOutputFiles[slot];
+
       ::TDirectory::TContext c; // do not let tasks change the thread-local gDirectory
-      if (!fOutputFiles[slot]) {
-         // first time this thread executes something, let's create a TBufferMerger output directory
-         fOutputFiles[slot] = fMerger->GetFile();
+      // We need a new file in two cases:
+      // 1. We never entered this slot, i.e. the output files stack for this slot is empty
+      // 2. We are entering this slot via work stealing, i.e. there is already at least a TTree being processed
+      if (thisSlotFileStack.empty() || !thisSlotTreeStack.empty()) {
+         thisSlotFileStack.emplace(fMerger->GetFile());
       }
-      TDirectory *treeDirectory = fOutputFiles[slot].get();
+
+      if (1 < thisSlotFileStack.size() && gDebug > 1) {
+         Info("SnapshotHelperMT::InitTask",
+              "The depth of the TBufferMergerFiles' stack is %lu\n", thisSlotFileStack.size());
+      }
+
+      // Another useful shortcut
+      auto &topFile = thisSlotFileStack.top();
+
+      TDirectory *treeDirectory = topFile.get();
       if (!fDirName.empty()) {
-         treeDirectory = fOutputFiles[slot]->mkdir(fDirName.c_str());
+         treeDirectory = topFile->mkdir(fDirName.c_str());
       }
       // re-create output tree as we need to create its branches again, with new input variables
       // TODO we could instead create the output tree and its branches, change addresses of input variables in each task
-      fOutputTrees[slot].emplace(
+      thisSlotTreeStack.emplace(
          std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory));
+
+      // Another useful shortcut
+      auto &topTree = thisSlotTreeStack.top();
+
       if (fOptions.fAutoFlush)
-         fOutputTrees[slot].top()->SetAutoFlush(fOptions.fAutoFlush);
+         topTree->SetAutoFlush(fOptions.fAutoFlush);
       if (r) {
          // not an empty-source RDF
          fInputTrees[slot] = r->GetTree();
@@ -1133,7 +1154,7 @@ public:
          // FIXME: AddClone might result in many many (safe) warnings printed by TTree::CopyAddresses, see ROOT-9487.
          const auto friendsListPtr = fInputTrees[slot]->GetListOfFriends();
          if (friendsListPtr && friendsListPtr->GetEntries() > 0)
-            fInputTrees[slot]->AddClone(fOutputTrees[slot].top().get());
+            fInputTrees[slot]->AddClone(topTree.get());
       }
       fIsFirstEvent[slot] = 1; // reset first event flag for this slot
    }
@@ -1141,9 +1162,19 @@ public:
    void FinalizeTask(unsigned int slot)
    {
       if (fOutputTrees[slot].top()->GetEntries() > 0)
-         fOutputFiles[slot]->Write();
-      // clear now to avoid concurrent destruction of output trees and input tree (which has them listed as fClones)
-      fOutputTrees[slot].pop();
+         fOutputFiles[slot].top()->Write();
+      // We clear now to avoid concurrent destruction of output trees and input tree (which has them listed as fClones)
+      // If we have only one tree in the stack, we pop it so to delete it. If not, we pop the file which
+      // deletes the associated tree too.
+      if (1 == fOutputTrees[slot].size()) {
+         fOutputTrees[slot].pop();
+      } else {
+         // We release here, otherwise upon popping the file, it will be destroyed and the TTree deleted again
+         // therewith causing a segfault.
+         fOutputTrees[slot].top().release();
+         fOutputTrees[slot].pop();
+         fOutputFiles[slot].pop();
+      }
    }
 
    void Exec(unsigned int slot, BranchTypes &... values)
@@ -1158,7 +1189,7 @@ public:
       auto entries = fOutputTrees[slot].top()->GetEntries();
       auto autoFlush = fOutputTrees[slot].top()->GetAutoFlush();
       if ((autoFlush > 0) && (entries % autoFlush == 0))
-         fOutputFiles[slot]->Write();
+         fOutputFiles[slot].top()->Write();
    }
 
    template <std::size_t... S>
@@ -1190,11 +1221,13 @@ public:
    void Finalize()
    {
       auto fileWritten = false;
-      for (auto &file : fOutputFiles) {
-         if (file) {
+      for (auto &fileStack : fOutputFiles) {
+         while(!fileStack.empty()) {
+            auto &file = fileStack.top();
             file->Write();
             file->Close();
             fileWritten = true;
+            fileStack.pop();
          }
       }
 
