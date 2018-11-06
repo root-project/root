@@ -2216,7 +2216,7 @@
          interactive.on("wheel", this.MouseWheel.bind(this));
    }
 
-   JSROOT.Painter.drawGraphPolargram = function(divid, polargram, opt) {
+   function drawGraphPolargram(divid, polargram, opt) {
 
       var painter = new TGraphPolargramPainter(polargram);
 
@@ -2440,7 +2440,7 @@
       this.DrawingReady();
    }
 
-   JSROOT.Painter.drawGraphPolar = function(divid, graph, opt) {
+   function drawGraphPolar(divid, graph, opt) {
 
       var painter = new TGraphPolarPainter(graph);
 
@@ -3688,6 +3688,8 @@
    JSROOT.Painter.drawRooPlot = drawRooPlot;
    JSROOT.Painter.drawGraph = drawGraph;
    JSROOT.Painter.drawFunction = drawFunction;
+   JSROOT.Painter.drawGraphPolar = drawGraphPolar;
+   JSROOT.Painter.drawGraphPolargram = drawGraphPolargram;
 
    JSROOT.TF1Painter = TF1Painter;
    JSROOT.TGraphPainter = TGraphPainter;
