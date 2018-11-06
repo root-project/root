@@ -1,4 +1,5 @@
 #include "ROOT/RDataFrame.hxx"
+#include "ROOT/TThreadExecutor.hxx"
 #include "ROOT/TSeq.hxx"
 #include "TFile.h"
 #include "TROOT.h"
@@ -7,6 +8,7 @@
 #include "gtest/gtest.h"
 #include <limits>
 #include <memory>
+#include <thread>
 using namespace ROOT;         // RDataFrame
 using namespace ROOT::RDF;    // RInterface
 using namespace ROOT::VecOps; // RVec
@@ -710,5 +712,27 @@ TEST(RDFSnapshotMore, EmptyBuffersMT)
    ROOT::DisableImplicitMT();
    gSystem->Unlink(fname);
 }
+
+// This is ROOT-9770
+TEST(RDFSnapshotMore, MissingEntriesMT)
+{
+   const auto fname = "MissingEntriesMT.root";
+   const auto treename = "t";
+   ROOT::EnableImplicitMT(4);
+   auto totEntries = 100000ULL;
+   ROOT::RDataFrame df(totEntries);
+   auto manysleeps = [&] {
+      ROOT::TThreadExecutor().Foreach(
+         [] { std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() / RAND_MAX * 200)); }, 8);
+      return true;
+   };
+   auto df2 = df.Filter(manysleeps).Snapshot<ULong64_t>(treename, fname, {"rdfentry_"});
+   auto c = *df2->Count();
+   EXPECT_EQ(totEntries, c) << "The parallel Snaphost seems to have lost some events along the way.";
+
+   ROOT::DisableImplicitMT();
+   gSystem->Unlink(fname);
+}
+
 
 #endif // R__USE_IMT
