@@ -5465,7 +5465,7 @@ void TBranchElement::SetActionSequence(TClass *originalClass, TStreamerInfo *loc
       if (fInitOffsets) {
          auto index = parent->fBranches.IndexOf(this);
          if (index >= 0) {
-            fReadActionSequence->AddToOffset( - parent->fBranchOffset[index] );
+            actionSequence->AddToOffset( - parent->fBranchOffset[index] );
          }
       } // else it will be done by InitOffsets
    }
