@@ -340,9 +340,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
    bool provide_colors = GetPaletteDelivery() > 0;
    if (GetPaletteDelivery() == 1)
-      provide_colors = !resfunc && (version<=0);
+      provide_colors = !!resfunc && (version<=0);
    else if (GetPaletteDelivery() == 2)
-      provide_colors = !resfunc;
+      provide_colors = !!resfunc;
 
    // add specials after painting is performed - new colors may be generated only during painting
    if (provide_colors)
