@@ -1116,7 +1116,9 @@ RVec<T> Intersect(const RVec<T>& v1, const RVec<T>& v2, bool v2_is_sorted = fals
 /// using namespace ROOT::VecOps;
 /// RVec<double> v1 {1., 2., 3.};
 /// RVec<double> v2 {-1., -2., -3.};
-/// RVec<int> c {0, 1, 1};
+/// auto c = v1 > 1;
+/// c
+/// // (ROOT::VecOps::RVec<int> &) { 0, 1, 1 }
 /// auto if_c_v1_else_v2 = Where(c, v1, v2);
 /// if_c_v1_else_v2
 /// // (ROOT::VecOps::RVec<double> &) { -1.0000000, 2.0000000, 3.0000000 }
@@ -1142,7 +1144,9 @@ RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, const RVec<T>& v2)
 /// using namespace ROOT::VecOps;
 /// RVec<double> v1 {1., 2., 3.};
 /// double v2 = 4.;
-/// RVec<int> c {0, 1, 1};
+/// auto c = v1 > 1;
+/// c
+/// // (ROOT::VecOps::RVec<int> &) { 0, 1, 1 }
 /// auto if_c_v1_else_v2 = Where(c, v1, v2);
 /// if_c_v1_else_v2
 /// // (ROOT::VecOps::RVec<double>) { 4.0000000, 2.0000000, 3.0000000 }
@@ -1168,7 +1172,9 @@ RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, T v2)
 /// using namespace ROOT::VecOps;
 /// double v1 = 4.;
 /// RVec<double> v2 {1., 2., 3.};
-/// RVec<int> c {0, 1, 1};
+/// auto c = v2 > 1;
+/// c
+/// // (ROOT::VecOps::RVec<int> &) { 0, 1, 1 }
 /// auto if_c_v1_else_v2 = Where(c, v1, v2);
 /// if_c_v1_else_v2
 /// // (ROOT::VecOps::RVec<double>) { 1.0000000, 4.0000000, 4.0000000 }
