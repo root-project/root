@@ -43,6 +43,7 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
    : TCanvasImp(c, name, x, y, width, height)
 {
    fStyleDelivery = gEnv->GetValue("WebGui.StyleDelivery", 0);
+   fPaletteDelivery = gEnv->GetValue("WebGui.PaletteDelivery", 1);
    fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
 }
 
@@ -234,12 +235,8 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Add special canvas objects like colors list at selected palette
 
-void TWebCanvas::AddCanvasSpecials(TPadWebSnapshot &master)
+void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
 {
-   // execute function to prevent storing of colors with custom TCanvas streamer
-   // TODO: we need to change logic here
-   TColor::DefinedColors();
-
    TObjArray *colors = (TObjArray *)gROOT->GetListOfColors();
 
    if (!colors)
@@ -276,9 +273,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 {
    paddata.SetActive(pad == gPad);
    paddata.SetObjectIDAsPtr(pad);
-   paddata.SetSnapshot(TWebSnapshot::kSubPad, pad);
+   paddata.SetSnapshot(TWebSnapshot::kSubPad, pad); // add ref to the pad
 
-   if (resfunc && (fStyleDelivery > (version > 0 ? 1 : 0)))
+   if (resfunc && (GetStyleDelivery() > (version > 0 ? 1 : 0)))
       paddata.NewPrimitive().SetSnapshot(TWebSnapshot::kStyle, gStyle);
 
    TList *primitives = pad->GetListOfPrimitives();
@@ -341,12 +338,18 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
    flush_master();
 
-   if (!resfunc)
-      return;
+   bool provide_colors = GetPaletteDelivery() > 0;
+   if (GetPaletteDelivery() == 1)
+      provide_colors = !resfunc && (version<=0);
+   else if (GetPaletteDelivery() == 2)
+      provide_colors = !resfunc;
 
    // add specials after painting is performed - new colors may be generated only during painting
-   if (version <= 0)
-      AddCanvasSpecials(paddata);
+   if (provide_colors)
+      AddColorsPalette(paddata);
+
+   if (!resfunc)
+      return;
 
    // now move all primitives and functions into separate list to perform I/O
 
@@ -360,6 +363,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       save_lst.Add(dlst); // add list itself to have marker
       dlst->Clear("nodelete");
    }
+
+   // execute function to prevent storing of colors with custom TCanvas streamer
+   // TODO: Olivier - we need to change logic here!
+   TColor::DefinedColors();
 
    // invoke callback for master painting
    resfunc(&paddata);
