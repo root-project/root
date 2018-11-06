@@ -16,7 +16,7 @@ class TTreeBranchAttr(unittest.TestCase):
     filename  = 'treebranchattr.root'
     treename  = 'mytree'
     tuplename = 'mytuple'
-    nentries  = 1
+    nentries  = 2
     arraysize = 10
     more      = 10
 
@@ -80,9 +80,19 @@ class TTreeBranchAttr(unittest.TestCase):
 
         for ds in t,c:
             a = ds.arrayb
-        
+
             for j in range(self.arraysize):
                 self.assertEqual(a[j], j)
+
+    def test_char_array_branch(self):
+        f,t,c = self.get_tree_and_chain()
+
+        for ds in t,c:
+            self.assertEqual(ds.chararrayb, 'one')
+
+            ds.GetEntry(1)
+
+            self.assertEqual(ds.chararrayb, 'onetwo')
 
     def test_vector_branch(self):
         f,t,c = self.get_tree_and_chain()

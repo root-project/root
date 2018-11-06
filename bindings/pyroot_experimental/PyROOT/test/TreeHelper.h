@@ -8,6 +8,7 @@ struct MyStruct {
 // Writes a `TTree` on a file. The `TTree` has the following branches:
 // - floatb: branch of basic type (`float`)
 // - arrayb: branch of type array of doubles, size `arraysize`
+// - chararrayb: branch of type array of characters, size 10
 // - vectorb: branch of type `std::vector<double>`, size `arraysize`
 // - structb: struct branch of type `MyStruct`
 // - structleafb: struct branch of type `MyStruct`, created as a leaf list
@@ -25,6 +26,10 @@ void CreateTTree(const char *filename, const char *treename, int nentries, int a
    auto a = new double[arraysize];
    t.Branch("arrayb", a, std::string("arrayb[") + arraysize + "]/D");
 
+   // Char array branch
+   char s[10] = "onetwo";
+   t.Branch("chararrayb", s, std::string("chararrayb[") + sizeof(s) + "]/C");
+
    // Vector branch
    std::vector<double> v(arraysize);
    t.Branch("vectorb", &v);
@@ -40,6 +45,11 @@ void CreateTTree(const char *filename, const char *treename, int nentries, int a
       for (int j = 0; j < arraysize; ++j) {
          a[j] = v[j] = i + j;
       }
+
+      if (i % 2 == 0)
+         s[3] = '\0';
+      else
+         s[3] = 't';
 
       mystruct.myint1 = i + more;
       mystruct.myint2 = i * more;
