@@ -557,8 +557,6 @@ struct Limits {
    Double_t Gamma(Double_t a,Double_t x);
    Double_t GammaDist(Double_t x, Double_t gamma, Double_t mu=0, Double_t beta=1);
    Double_t LnGamma(Double_t z);
-   Double_t GamCf(Double_t a, Double_t x);
-   Double_t GamSer(Double_t a, Double_t x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

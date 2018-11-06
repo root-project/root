@@ -37,6 +37,9 @@ NamespaceImp(TMath)
 #endif
 
 namespace TMath {
+
+   Double_t GamCf(Double_t a,Double_t x);
+   Double_t GamSer(Double_t a,Double_t x);
    Double_t VavilovDenEval(Double_t rlam, Double_t *AC, Double_t *HC, Int_t itype);
    void VavilovSet(Double_t rkappa, Double_t beta2, Bool_t mode, Double_t *WCM, Double_t *AC, Double_t *HC, Int_t &itype, Int_t &npt);
 
