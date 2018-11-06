@@ -1,5 +1,7 @@
 #include "ROOT/RDataFrame.hxx"
+#ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
+#endif
 #include "ROOT/TSeq.hxx"
 #include "TFile.h"
 #include "TROOT.h"
@@ -708,27 +710,6 @@ TEST(RDFSnapshotMore, EmptyBuffersMT)
    f.GetObject(treename, t);
    EXPECT_EQ(t->GetListOfBranches()->GetEntries(), 1);
    EXPECT_EQ(t->GetEntries(), Long64_t(passed));
-
-   ROOT::DisableImplicitMT();
-   gSystem->Unlink(fname);
-}
-
-// This is ROOT-9770
-TEST(RDFSnapshotMore, MissingEntriesMT)
-{
-   const auto fname = "MissingEntriesMT.root";
-   const auto treename = "t";
-   ROOT::EnableImplicitMT(4);
-   auto totEntries = 100000ULL;
-   ROOT::RDataFrame df(totEntries);
-   auto manysleeps = [&] {
-      ROOT::TThreadExecutor().Foreach(
-         [] { std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() / RAND_MAX * 200)); }, 8);
-      return true;
-   };
-   auto df2 = df.Filter(manysleeps).Snapshot<ULong64_t>(treename, fname, {"rdfentry_"});
-   auto c = *df2->Count();
-   EXPECT_EQ(totEntries, c) << "The parallel Snaphost seems to have lost some events along the way.";
 
    ROOT::DisableImplicitMT();
    gSystem->Unlink(fname);
