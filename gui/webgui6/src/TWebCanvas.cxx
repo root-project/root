@@ -90,6 +90,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
                             {"TPolyMarker3D", false},
                             {"TPolyLine3D", false},
                             {"TGraph2D", false},
+                            {"TGraph2DErrors", false},
                             {nullptr, false}};
 
    // fast check of class name
