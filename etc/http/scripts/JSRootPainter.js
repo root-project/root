@@ -2742,6 +2742,27 @@
       return jsarr.length-1;
    }
 
+   /** @summary returns custom palette for the object. If forced, will be created
+    * @private */
+   TObjectPainter.prototype.get_palette = function(force, palettedid) {
+      if (!palettedid) {
+         var pp = this.pad_painter();
+         if (!pp) return null;
+         if (pp.custom_palette) return pp.custom_palette;
+      }
+
+      var cp = this.canv_painter();
+      if (!cp) return null;
+      if (cp.custom_palette && !palettedid) return cp.custom_palette;
+
+      if (force && JSROOT.Painter.GetColorPalette)
+         cp.custom_palette = JSROOT.Painter.GetColorPalette(palettedid);
+
+      return cp.custom_palette;
+   }
+
+
+
    /** @summary Checks if draw elements were resized and drawing should be updated.
     *
     * @desc Redirects to {@link TPadPainter.CheckCanvasResize}
@@ -4339,12 +4360,16 @@
           svg_factor = 0,
           f = draw_g.property('text_factor'),
           font = draw_g.property('text_font'),
+          max_sz = draw_g.property('max_font_size'),
           font_size = font.size;
 
-      if ((f>0) && ((f<0.9) || (f>1.))) {
+      if ((f > 0) && ((f < 0.9) || (f > 1)))
          font.size = Math.floor(font.size/f);
-         if (draw_g.property('max_font_size') && (font.size > draw_g.property('max_font_size')))
-            font.size = draw_g.property('max_font_size');
+
+      if (max_sz && (font.size > max_sz))
+          font.size = max_sz;
+
+      if (font.size != font_size) {
          draw_g.call(font.func);
          font_size = font.size;
       }

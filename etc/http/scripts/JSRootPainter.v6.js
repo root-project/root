@@ -27,7 +27,7 @@
    JSROOT.sources.push("v6");
 
    // identifier used in TWebCanvas painter
-   JSROOT.WebSnapIds = { kNone: 0,  kObject: 1, kSVG: 2, kSubPad: 3, kColors: 4 };
+   JSROOT.WebSnapIds = { kNone: 0,  kObject: 1, kSVG: 2, kSubPad: 3, kColors: 4, kStyle: 5 };
 
    // =======================================================================
 
@@ -2742,6 +2742,7 @@
 
       delete this.frame_painter_ref;
       delete this.pads_cache;
+      delete this.custom_palette;
 
       this.painters = [];
       this.pad = null;
@@ -2767,8 +2768,25 @@
     * @private
     */
    TPadPainter.prototype.CreateAutoColor = function() {
+      var pp = this.canv_painter(),
+          pad = this.root_pad(),
+          numprimitives = pad && pad.fPrimitves ? pad.fPrimitves.arr.length : 5;
+
+      var pal = this.get_palette(true);
+
       var indx = this._auto_color || 0;
-      this._auto_color = (indx + 1) % 8;
+      this._auto_color = indx+1;
+
+      if (pal) {
+         if (numprimitives<2) numprimitives = 2;
+         if (indx >= numprimitives) indx = numprimitives - 1;
+         var palindx = Math.round(indx * (pal.getLength()-3) / (numprimitives-1));
+         var colvalue = pal.getColor(palindx);
+         var colindx = this.add_color(colvalue);
+         return colindx;
+      }
+
+      this._auto_color = this._auto_color % 8;
       return indx+2;
    }
 
@@ -3106,7 +3124,7 @@
                if (!col) { console.log('Fail to create color for palette'); arr = null; break; }
                arr.push(col);
             }
-            if (arr) this.CanvasPalette = new JSROOT.ColorPalette(arr);
+            if (arr) this.custom_palette = new JSROOT.ColorPalette(arr);
          }
 
          if (!this.options || this.options.GlobalColors) // set global list of colors
@@ -3128,7 +3146,8 @@
                console.log('Missing color with index ' + n); missing = true;
             }
          }
-         if (!this.options || (!missing && !this.options.IgnorePalette)) this.CanvasPalette = new JSROOT.ColorPalette(arr);
+         if (!this.options || (!missing && !this.options.IgnorePalette))
+            this.custom_palette = new JSROOT.ColorPalette(arr);
          return true;
       }
 
@@ -3526,6 +3545,12 @@
             continue; // call next
          }
 
+         // gStyle object
+         if (snap.fKind === JSROOT.WebSnapIds.kStyle) {
+            JSROOT.extend(JSROOT.gStyle, snap.fSnapshot);
+            continue;
+         }
+
          // list of colors
          if (snap.fKind === JSROOT.WebSnapIds.kColors) {
 
@@ -3554,7 +3579,7 @@
                for (var n=0;n<snap.fSnapshot.fBuf.length;++n)
                   palette[n] = ListOfColors[Math.round(snap.fSnapshot.fBuf[n])];
 
-               this.CanvasPalette = new JSROOT.ColorPalette(palette);
+               this.custom_palette = new JSROOT.ColorPalette(palette);
             }
 
             continue;
