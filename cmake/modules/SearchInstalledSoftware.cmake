@@ -438,6 +438,9 @@ if(mathmore OR builtin_gsl)
     foreach(l gsl gslcblas)
       list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
     endforeach()
+    if(CMAKE_OSX_SYSROOT)
+      set(_gsl_cppflags "-isysroot ${CMAKE_OSX_SYSROOT}")
+    endif()
     ExternalProject_Add(
       GSL
       # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
@@ -447,7 +450,9 @@ if(mathmore OR builtin_gsl)
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
                         --libdir=<INSTALL_DIR>/lib
                         --enable-shared=no --with-pic
-                        CC=${CMAKE_C_COMPILER} CFLAGS=${CMAKE_C_FLAGS}
+                        CC=${CMAKE_C_COMPILER}
+                        CFLAGS=${CMAKE_C_FLAGS}
+                        CPPFLAGS=${_gsl_cppflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${GSL_LIBRARIES}
     )
