@@ -930,7 +930,7 @@
 
       var painter = this;
 
-      this.tooltip_allowed = (JSROOT.gStyle.Tooltip > 0);
+      this.SetTooltipAllowed(JSROOT.gStyle.Tooltip > 0);
 
       this._controls = JSROOT.Painter.CreateOrbitControl(this, this._camera, this._scene, this._renderer, this._lookat);
 

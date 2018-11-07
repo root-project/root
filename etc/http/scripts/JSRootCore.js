@@ -96,7 +96,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 6/11/2018";
+   JSROOT.version = "dev 7/11/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -148,43 +148,43 @@
    // default draw styles, can be changed after loading of JSRootCore.js
    // this style also can be changed providing style=itemname in the URL
    JSROOT.gStyle = {
-         Tooltip : 1, // 0 - off, 1 - on
-         TooltipAnimation : 500, // time in msec for appearance of tooltips, 0 - no animation
-         ContextMenu : true,
-         Zooming : true,  // global zooming flag, enable/disable any kind of interactive zooming
-         ZoomMouse : true,  // Zooming with the mouse events
-         ZoomWheel : true,  // Zooming with mouse wheel
-         ZoomTouch : true,  // Zooming with the touch devices
-         MoveResize : true,   // enable move and resize of elements like statbox, title, pave, colz
-         DragAndDrop : true,  // enables drag and drop functionality
-         ToolBar : 'popup',  // show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button
-         ToolBarSide : 'left', // 'left' left-bottom corner on canvas, 'right' - right-bottom corner on canvas, opposite on sub-pads
-         ToolBarVert : false,  // display tool bar vertical (default false)
-         CanEnlarge : true,  // if drawing inside particular div can be enlarged on full window
-         CanAdjustFrame : false,  // if frame position can be adjusted to let show axis or colz labels
-         ApproxTextSize : false,  // calculation of text size consumes time and can be skipped to improve performance (but with side effects on text adjustments)
-         OptimizeDraw : 1, // drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always
-         AutoStat : true,
-         FrameNDC : { fX1NDC: 0.07, fY1NDC: 0.12, fX2NDC: 0.95, fY2NDC: 0.88 },
-         Palette : 57,
-         Latex : 2,    // 0 - never, 1 - only latex symbols, 2 - normal TLatex processing (default), 3 - use MathJax for complex case, 4 - use MathJax always
+         Tooltip: 1, // 0 - off, 1 - on
+         TooltipAnimation: 500, // time in msec for appearance of tooltips, 0 - no animation
+         ContextMenu: true,
+         Zooming: true,  // global zooming flag, enable/disable any kind of interactive zooming
+         ZoomMouse: true,  // Zooming with the mouse events
+         ZoomWheel: true,  // Zooming with mouse wheel
+         ZoomTouch: true,  // Zooming with the touch devices
+         MoveResize: true,   // enable move and resize of elements like statbox, title, pave, colz
+         DragAndDrop: true,  // enables drag and drop functionality
+         ToolBar: 'popup',  // show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button
+         ToolBarSide: 'left', // 'left' left-bottom corner on canvas, 'right' - right-bottom corner on canvas, opposite on sub-pads
+         ToolBarVert: false,  // display tool bar vertical (default false)
+         CanEnlarge: true,  // if drawing inside particular div can be enlarged on full window
+         CanAdjustFrame: false,  // if frame position can be adjusted to let show axis or colz labels
+         ApproxTextSize: false,  // calculation of text size consumes time and can be skipped to improve performance (but with side effects on text adjustments)
+         OptimizeDraw: 1, // drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always
+         AutoStat: true,
+         FrameNDC: { fX1NDC: 0.07, fY1NDC: 0.12, fX2NDC: 0.95, fY2NDC: 0.88 },
+         Palette: 57,
+         Latex: 2,    // 0 - never, 1 - only latex symbols, 2 - normal TLatex processing (default), 3 - use MathJax for complex case, 4 - use MathJax always
          // MathJax : 0,  // depricated, will be supported till JSROOT 6.0, use Latex variable  0 - never, 1 - only for complex cases, 2 - always
-         ProgressBox : true,  // show progress box
-         Embed3DinSVG : 2,  // 0 - no embed, only 3D plot, 1 - overlay over SVG (IE/WebKit), 2 - embed into SVG (only Firefox)
-         ImageSVG : !JSROOT.nodejs, // when producing SVG images, use <image> elements to insert 3D drawings from three.js,
-                                    // To enable on nodejs, one should call "npm install canvas"
-         NoWebGL : false, // if true, WebGL will be disabled
-         GeoGradPerSegm : 6, // amount of grads per segment in TGeo spherical shapes like tube
-         GeoCompressComp : true, // if one should compress faces after creation of composite shape,
-         IgnoreUrlOptions : false, // if true, ignore all kind of URL options in the browser URL
-         HierarchyLimit : 250,   // how many items shown on one level of hierarchy
-         SmallPad : { width : 150, height : 100 },   // size of pad, where many features will be deactivated like text draw or zooming
+         ProgressBox: true,  // show progress box
+         Embed3DinSVG: 2,  // 0 - no embed, only 3D plot, 1 - overlay over SVG (IE/WebKit), 2 - embed into SVG (only Firefox)
+         ImageSVG: !JSROOT.nodejs, // when producing SVG images, use <image> elements to insert 3D drawings from three.js,
+                                   // To enable on nodejs, one should call "npm install canvas"
+         NoWebGL: false, // if true, WebGL will be disabled
+         GeoGradPerSegm: 6, // amount of grads per segment in TGeo spherical shapes like tube
+         GeoCompressComp: true, // if one should compress faces after creation of composite shape,
+         IgnoreUrlOptions: false, // if true, ignore all kind of URL options in the browser URL
+         HierarchyLimit: 250,   // how many items shown on one level of hierarchy
+         SmallPad: { width: 150, height: 100 },   // size of pad, where many features will be deactivated like text draw or zooming
 
          // XValuesFormat : "6.4g",   // custom format for all X values
          // YValuesFormat : "6.4g",   // custom format for all Y values
          // ZValuesFormat : "6.4g",   // custom format for all Z values
 
-         // these are TStyle attributes, which can be changed via URL 'style' parameter
+         // these are TStyle attributes, which can be changed via URL 'style' parameter or delivered by TWebCanvas
 
          fOptLogx: 0,
          fOptLogy: 0,

@@ -1409,7 +1409,7 @@
 
       var hintsg = this.hints_layer().select(".objects_hints");
       // if tooltips were visible before, try to reconstruct them after short timeout
-      if (!hintsg.empty() && this.tooltip_allowed && (hintsg.property("hints_pad") == this.pad_name))
+      if (!hintsg.empty() && this.IsTooltipAllowed() && (hintsg.property("hints_pad") == this.pad_name))
          setTimeout(this.ProcessTooltipEvent.bind(this, hintsg.property('last_point')), 10);
    }
 
@@ -2083,9 +2083,9 @@
       //   menu.addchk(pad.fLogz, "SetLogz", this.ToggleLog.bind(main,"z"));
       menu.add("separator");
 
-      menu.addchk(this.tooltip_allowed, "Show tooltips", function() {
-         var fp = this.frame_painter();
-         if (fp) fp.tooltip_allowed = !fp.tooltip_allowed;
+
+      menu.addchk(this.IsTooltipAllowed(), "Show tooltips", function() {
+         this.SetTooltipAllowed("toggle");
       });
       this.FillAttContextMenu(menu,alone ? "" : "Frame ");
       menu.add("separator");
@@ -2623,20 +2623,6 @@
       return Math.round((!fact ? 1 : fact) * (this.iscan || !this.has_canvas ? 16 : 12));
    }
 
-   TPadPainter.prototype.IsTooltipAllowed = function() {
-      var res = undefined;
-      this.ForEachPainterInPad(function(fp) {
-         if ((res===undefined) && (fp.tooltip_allowed!==undefined)) res = fp.tooltip_allowed;
-      });
-      return res;
-   }
-
-   TPadPainter.prototype.SetTooltipAllowed = function(on) {
-      this.ForEachPainterInPad(function(fp) {
-         if (fp.tooltip_allowed!==undefined) fp.tooltip_allowed = on;
-      });
-   }
-
    TPadPainter.prototype.RegisterForPadEvents = function(receiver) {
       this.pad_events_receiver = receiver;
    }
@@ -3017,9 +3003,7 @@
       else
          menu.add("header: Canvas");
 
-      var tooltipon = this.IsTooltipAllowed();
-      if (tooltipon !== undefined)
-         menu.addchk(tooltipon, "Show tooltips", this.SetTooltipAllowed.bind(this, !tooltipon));
+      menu.addchk(this.IsTooltipAllowed(), "Show tooltips", this.SetTooltipAllowed.bind(this, "toggle"));
 
       if (!this._websocket) {
 
@@ -3910,6 +3894,7 @@
       // used for online canvas painter
       TPadPainter.call(this, canvas, true);
       this._websocket = null;
+      this.tooltip_allowed = (JSROOT.gStyle.Tooltip > 0);
    }
 
    TCanvasPainter.prototype = Object.create(TPadPainter.prototype);

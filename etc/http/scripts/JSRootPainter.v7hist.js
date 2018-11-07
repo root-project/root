@@ -523,8 +523,8 @@
              fp = this.frame_painter(),
              axis_painter = fp;
 
-         menu.addchk(main.tooltip_allowed, 'Show tooltips', function() {
-            main.tooltip_allowed = !main.tooltip_allowed;
+         menu.addchk(main.IsTooltipAllowed(), 'Show tooltips', function() {
+            main.SetTooltipAllowed("toggle");
          });
 
          menu.addchk(axis_painter.enable_highlight, 'Highlight bins', function() {

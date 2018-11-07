@@ -2742,6 +2742,20 @@
       return jsarr.length-1;
    }
 
+   /** @summary returns tooltip allowed flag. Check canvas painter
+    * @private */
+   TObjectPainter.prototype.IsTooltipAllowed = function() {
+      var src = this.canv_painter() || this;
+      return src.tooltip_allowed ? true : false;
+   }
+
+   /** @summary returns tooltip allowed flag
+    * @private */
+   TObjectPainter.prototype.SetTooltipAllowed = function(on) {
+      var src = this.canv_painter() || this;
+      src.tooltip_allowed = (on == "toggle") ? !src.tooltip_allowed : on;
+   }
+
    /** @summary returns custom palette for the object. If forced, will be created
     * @private */
    TObjectPainter.prototype.get_palette = function(force, palettedid) {
@@ -3867,19 +3881,20 @@
          return JSROOT.CallBack(call_back);
 
       function DoExecMenu(arg) {
-         var canvp = this.canv_painter(),
-             item = this.args_menu_items[parseInt(arg)];
+         var execp = this.exec_painter || this,
+             canvp = execp.canv_painter(),
+             item = execp.args_menu_items[parseInt(arg)];
 
          if (!item || !item.fName) return;
 
          if (canvp.MethodsDialog && (item.fArgs!==undefined))
-            return canvp.MethodsDialog(this, item, this.args_menu_id);
+            return canvp.MethodsDialog(execp, item, execp.args_menu_id);
 
-         if (this.ExecuteMenuCommand(item)) return;
+         if (execp.ExecuteMenuCommand(item)) return;
 
-         if (canvp._websocket && this.args_menu_id) {
-            console.log('execute method ' + item.fExec + ' for object ' + this.args_menu_id);
-            canvp.SendWebsocket('OBJEXEC:' + this.args_menu_id + ":" + item.fExec);
+         if (canvp._websocket && execp.args_menu_id) {
+            console.log('execute method ' + item.fExec + ' for object ' + execp.args_menu_id);
+            canvp.SendWebsocket('OBJEXEC:' + execp.args_menu_id + ":" + item.fExec);
          }
       }
 
@@ -3921,6 +3936,10 @@
 
       var reqid = this.snapid;
       if (kind) reqid += "#" + kind; // use # to separate object id from member specifier like 'x' or 'z'
+
+      // if menu painter differs from this, remember it for further usage
+      if (menu.painter)
+         menu.painter.exec_painter = (menu.painter !== this) ? this : undefined;
 
       canvp._getmenu_callback = DoFillMenu.bind(this, menu, reqid, call_back);
 
@@ -5340,7 +5359,6 @@
    function TooltipHandler(obj) {
       JSROOT.TObjectPainter.call(this, obj);
       this.tooltip_enabled = true;  // this is internally used flag to temporary disbale/enable tooltip
-      this.tooltip_allowed = (JSROOT.gStyle.Tooltip > 0); // this is interactively changed property
    }
 
    TooltipHandler.prototype = Object.create(TObjectPainter.prototype);
@@ -5355,7 +5373,7 @@
 
    TooltipHandler.prototype.IsTooltipShown = function() {
       // return true if tooltip is shown, use to prevent some other action
-      if (!this.tooltip_allowed || !this.tooltip_enabled) return false;
+      if (!this.tooltip_enabled || !this.IsTooltipAllowed()) return false;
       var hintsg = this.hints_layer().select(".objects_hints");
       return hintsg.empty() ? false : hintsg.property("hints_pad") == this.pad_name;
    }
@@ -5386,7 +5404,7 @@
           pp = this.pad_painter(),
           font = JSROOT.Painter.getFontDetails(160, textheight),
           status_func = this.GetShowStatusFunc(),
-          disable_tootlips = !this.tooltip_allowed || !this.tooltip_enabled;
+          disable_tootlips = !this.IsTooltipAllowed() || !this.tooltip_enabled;
 
       if ((pnt === undefined) || (disable_tootlips && !status_func)) pnt = null;
       if (pnt && disable_tootlips) pnt.disabled = true; // indicate that highlighting is not required
@@ -5791,6 +5809,7 @@
    JSROOT.addDrawFunc({ name: /^TH1/, icon: "img_histo1d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram1D", opt:";hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;B;B1;A;TEXT;LEGO;same", ctrl: "l" });
    JSROOT.addDrawFunc({ name: "TProfile", icon: "img_profile", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram1D", opt:";E0;E1;E2;p;AH;hist"});
    JSROOT.addDrawFunc({ name: "TH2Poly", icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;same", expand_item: "fBins", theonly: true });
+   JSROOT.addDrawFunc({ name: "TProfile2Poly", sameas: "TH2Poly" });
    JSROOT.addDrawFunc({ name: "TH2PolyBin", icon: "img_histo2d", draw_field: "fPoly" });
    JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;SCAT;TEXT;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same", ctrl: "colz" });
    JSROOT.addDrawFunc({ name: "TProfile2D", sameas: "TH2" });
