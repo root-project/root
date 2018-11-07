@@ -496,14 +496,17 @@ RDataFrame d("bTree", bFilePtr);
 d.Foreach([&sumSq, &n](double b) { ++n; sumSq += b*b; }, {"b"});
 std::cout << "rms of b: " << std::sqrt(sumSq / n) << std::endl;
 ~~~
-When executing on multiple threads, users are responsible for the thread-safety of the expression passed to `Foreach`.
+When executing on multiple threads, users are responsible for the thread-safety of the expression passed to `Foreach`:
+each thread will execute the expression multiple times (once per entry) in an unspecified order.
 The code above would need to employ some resource protection mechanism to ensure non-concurrent writing of `rms`; but
 this is probably too much head-scratch for such a simple operation.
 
 `ForeachSlot` can help in this situation. It is an alternative version of `Foreach` for which the function takes an
 additional parameter besides the columns it should be applied to: an `unsigned int slot` parameter, where `slot` is a
-number indicating which thread (0, 1, 2 , ..., poolSize - 1) the function is being run in. We can take advantage of
-`ForeachSlot` to evaluate a thread-safe root mean square of branch "b":
+number indicating which thread (0, 1, 2 , ..., poolSize - 1) the function is being run in. More specifically, RDataFrame
+guarantees that `ForeachSlot` will invoke the user expression with different `slot` parameters for different concurrent
+executions (there is no guarantee that a certain slot number will always correspond to a given thread id, though).
+We can take advantage of `ForeachSlot` to evaluate a thread-safe root mean square of branch "b":
 ~~~{.cpp}
 // Thread-safe evaluation of RMS of branch "b" using ForeachSlot
 ROOT::EnableImplicitMT();
@@ -706,16 +709,33 @@ are lazy, the others are instant.
 
 ##  <a name="parallel-execution"></a>Parallel execution
 As pointed out before in this document, `RDataFrame` can transparently perform multi-threaded event loops to speed up
-the execution of its actions. Users only have to call `ROOT::EnableImplicitMT()` *before* constructing the `RDataFrame`
+the execution of its actions. Users have to call `ROOT::EnableImplicitMT()` *before* constructing the `RDataFrame`
 object to indicate that it should take advantage of a pool of worker threads. **Each worker thread processes a distinct
 subset of entries**, and their partial results are merged before returning the final values to the user.
+More specifically, the dataset will be divided in batches of entries, and threads will divide among themselves the
+processing of these batches. There are no guarantees on the order the batches are processed, i.e. no guarantees in the
+order entries of the dataset are processed. Note that this in turn means that, for multi-thread event loops, there is no
+guarantee on the order in which `Snapshot` will _write_ entries: they could be scrambled with respect to the input dataset.
 
-### Thread safety
-`Filter` and `Define` transformations should be inherently thread-safe: they have no side-effects and are not
-dependent on global state.
-Most `Filter`/`Define` functions will in fact be pure in the functional programming sense.
-All actions are built to be thread-safe with the exception of `Foreach`, in which case users are responsible of
-thread-safety, see [here](#generic-actions).
+### Thread-safety of user-defined expressions
+RDataFrame operations such as `Histo1D` or `Snapshot` are guaranteed to work correctly in multi-thread event loops.
+User-defined expressions, such as strings or lambdas passed to `Filter`, `Define`, `Foreach`, `Reduce` or `Aggregate`
+will have to be thread-safe, i.e. it should be possible to call them concurrently from different threads.
+
+Note that simple `Filter` and `Define` transformations will inherently satisfy this requirement: `Filter`/`Define`
+expressions will often be *pure* in the functional programming sense (no side-effects, no dependency on external state),
+which eliminates all risks of race conditions.
+
+In order to facilitate writing of thread-safe operations, some RDataFrame features such as `Foreach`, `Define` or `OnPartialResult`
+offer thread-aware counterparts (`ForeachSlot`, `DefineSlot`, `OnPartialResultSlot`): their only difference is that they
+will pass an extra `slot` argument (an unsigned integer) to the user-defined expression. When calling user-defined code
+concurrently, `RDataFrame` guarantees that different threads will employ different values of the `slot` parameter,
+where `slot` will be a number between 0 and `ROOT::GetImplicitMTPoolSize() - 1`.
+In other words, within a slot, computation runs sequentially and events are processed sequentially.
+Note that the same slot might be associated to different threads over the course of a single event loop, but two threads
+will never receive the same slot at the same time.
+This extra parameter might facilitate writing safe parallel code by having each thread write/modify a different
+*processing slot*, e.g. a different element of a list. See [here](#generic-actions) for an example usage of `ForeachSlot`.
 
 <a name="reference"></a>
 */
