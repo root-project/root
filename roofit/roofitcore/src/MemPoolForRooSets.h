@@ -161,7 +161,10 @@ class MemPoolForRooSets {
   ~MemPoolForRooSets()
   {
     if (!empty()) {
-      std::cerr << __PRETTY_FUNCTION__ << " The mem pool being deleted is not empty. This will lead to crashes."
+#ifndef _MSC_VER
+      std::cerr << __PRETTY_FUNCTION__;
+#endif
+      std::cerr << " The mem pool being deleted is not empty. This will lead to crashes."
                 << std::endl;
       assert(false);
     }
