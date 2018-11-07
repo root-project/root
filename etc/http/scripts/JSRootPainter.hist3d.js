@@ -156,7 +156,6 @@
 
       this.first_render_tm = 0;
       this.enable_highlight = false;
-      this.tooltip_allowed = (JSROOT.gStyle.Tooltip > 0);
 
       if (JSROOT.BatchMode) return;
 
@@ -284,10 +283,9 @@
 
          if (this.first_render_tm === 0) {
             this.first_render_tm = tm2.getTime() - tm1.getTime();
-            this.enable_highlight = (this.first_render_tm < 1200) && this.tooltip_allowed;
+            this.enable_highlight = (this.first_render_tm < 1200) && this.IsTooltipAllowed();
             console.log('First render tm = ' + this.first_render_tm);
          }
-
 
          return;
       }

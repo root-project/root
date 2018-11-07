@@ -156,7 +156,7 @@
    JSROOT.R__unzip = function(arr, tgtsize, noalert, src_shift) {
       // Reads header envelope, determines zipped size and unzip content
 
-      var totallen = arr.byteLength, curr = src_shift || 0, fullres = 0, tgtbuf = null;
+      var totallen = arr.byteLength, curr = src_shift || 0, fullres = 0, tgtbuf = null, HDRSIZE = 9;
 
       function getChar(o) { return String.fromCharCode(arr.getUint8(o)); }
 
@@ -164,7 +164,7 @@
 
       while (fullres < tgtsize) {
 
-         var fmt = "unknown", off = 0, HDRSIZE = 9;
+         var fmt = "unknown", off = 0, CHKSUM = 0;
 
          if (curr + HDRSIZE >= totallen) {
             if (!noalert) JSROOT.alert("Error R__unzip: header size exceeds buffer size");
@@ -174,7 +174,7 @@
          if (getChar(curr) == 'Z' && getChar(curr+1) == 'L' && getCode(curr+2) == 8) { fmt = "new"; off = 2; } else
          if (getChar(curr) == 'C' && getChar(curr+1) == 'S' && getCode(curr+2) == 8) { fmt = "old"; off = 0; } else
          if (getChar(curr) == 'X' && getChar(curr+1) == 'Z') fmt = "LZMA"; else
-         if (getChar(curr) == 'L' && getChar(curr+1) == '4') { fmt = "LZ4"; off = 0; HDRSIZE = 17; }
+         if (getChar(curr) == 'L' && getChar(curr+1) == '4') { fmt = "LZ4"; off = 0; CHKSUM = 8; }
 
 /*
          if (fmt == "LZMA") {
@@ -214,7 +214,7 @@
 
          var srcsize = HDRSIZE + ((getCode(curr+3) & 0xff) | ((getCode(curr+4) & 0xff) << 8) | ((getCode(curr+5) & 0xff) << 16));
 
-         var uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off, arr.byteLength - curr - HDRSIZE - off);
+         var uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
 
          //  place for unpacking
          if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
