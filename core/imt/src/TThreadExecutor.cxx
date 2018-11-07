@@ -75,6 +75,22 @@
 ///
 //////////////////////////////////////////////////////////////////////////
 
+namespace ROOT {
+namespace Internal {
+
+/// A helper function to implement the TThreadExecutor::ParallelReduce methods
+template<typename T>
+static T ReduceHelper(const std::vector<T> &objs, const std::function<T(T a, T b)> &redfunc)
+{
+   using BRange_t = tbb::blocked_range<decltype(objs.begin())>;
+   return tbb::parallel_reduce(BRange_t(objs.begin(), objs.end()), T{},
+   [redfunc](BRange_t const & range, T init) {
+      return std::accumulate(range.begin(), range.end(), init, redfunc);
+   }, redfunc);
+}
+
+} // End NS Internal
+} // End NS ROOT
 
 namespace ROOT {
 
@@ -99,18 +115,12 @@ namespace ROOT {
 
    double TThreadExecutor::ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc)
    {
-      return tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), double{},
-      [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, double init) {
-         return std::accumulate(range.begin(), range.end(), init, redfunc);
-      }, redfunc);
+      return ROOT::Internal::ReduceHelper<double>(objs, redfunc);
    }
 
    float TThreadExecutor::ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc)
    {
-      return tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), float{},
-      [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, float init) {
-         return std::accumulate(range.begin(), range.end(), init, redfunc);
-      }, redfunc);
+      return ROOT::Internal::ReduceHelper<float>(objs, redfunc);
    }
 
    unsigned TThreadExecutor::GetPoolSize(){
