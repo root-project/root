@@ -96,8 +96,7 @@ class MemPoolForRooSets {
     bool inPool(void * ptr) const
     {
       auto       thePtr = static_cast<RooSet_t *>(ptr);
-      const bool inPool = memBegin <= thePtr && thePtr < memEnd;
-      return inPool;
+      return memBegin <= thePtr && thePtr < memEnd;
     }
 
     bool hasSpace() const { return ownedMemory && nextItem < memEnd; }
@@ -172,7 +171,8 @@ class MemPoolForRooSets {
   /// Allocate memory for the templated set type. Fails if bytes != sizeof(RooSet_t).
   void * allocate(std::size_t bytes)
   {
-    assert(bytes == sizeof(RooSet_t));
+    if (bytes != sizeof(RooSet_t))
+      throw std::bad_alloc();
 
     if (fArenas.empty() || !fArenas.back().hasSpace()) {
       newArena();
