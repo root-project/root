@@ -7,7 +7,7 @@
 ///
 /// \author Rene Brun
 
-{
+void demos() {
    gROOT->Reset();
 
    //Add the tutorials directory to the macro path
