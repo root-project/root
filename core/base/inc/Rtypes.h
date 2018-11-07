@@ -39,18 +39,6 @@
 #endif
 #endif
 
-#if defined(R__WIN32)
-// adding attribute "deprecated" used in Compression.h
-// Visual C++.
-#define ROOT_DEPRECATED __declspec(deprecated)
-// gcc.
-#elif defined __GNUC__
-#define ROOT_DEPRECATED __attribute__((deprecated))
-// Other compilers: ignore the qualifier.
-#else
-#define ROOT_DEPRECATED
-#endif
-
 //---- forward declared class types --------------------------------------------
 
 class TClass;
