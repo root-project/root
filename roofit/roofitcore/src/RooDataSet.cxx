@@ -67,8 +67,6 @@ void RooDataSet::cleanup() {}
 #else
 
 #include "MemPoolForRooSets.h"
-//typedef MemPoolForRooSets<RooDataSet, 10> RooDataSet::MemPool;
-
 
 RooDataSet::MemPool* RooDataSet::memPool() {
   RooSentinel::activate();

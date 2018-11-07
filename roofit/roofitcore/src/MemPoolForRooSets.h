@@ -16,6 +16,9 @@
  * both were using the same logic, the functionality has been put in this class.
  * This class solves RooFit's static destruction order problems by intentionally leaking
  * arenas of the mempool that still contain live objects at the end of the program.
+ *
+ * When the set types are compared based on a unique ID instead of their pointer,
+ * one can go back to normal memory management, and this class becomes obsolete.
  */
 
 #ifndef ROOFIT_ROOFITCORE_SRC_MEMPOOLFORROOSETS_H_
@@ -29,27 +32,34 @@ class MemPoolForRooSets {
 
   struct Arena {
     Arena()
-      : memBegin{static_cast<RooSet_t *>(::operator new(POOLSIZE * sizeof(RooSet_t)))}, nextItem{memBegin},
-        memEnd{memBegin + POOLSIZE}, refCount{0}, teardownMode{false}
+      : ownedMemory{static_cast<RooSet_t *>(::operator new(POOLSIZE * sizeof(RooSet_t)))},
+        memBegin{ownedMemory}, nextItem{ownedMemory},
+        memEnd{memBegin + POOLSIZE}, refCount{0}
     {
     }
 
+
+
     Arena(const Arena &) = delete;
     Arena(Arena && other)
-      : memBegin{other.memBegin}, nextItem{other.nextItem}, memEnd{other.memEnd}, refCount{other.refCount},
-	teardownMode{other.teardownMode}
+      : ownedMemory{other.ownedMemory},
+        memBegin{other.memBegin}, nextItem{other.nextItem}, memEnd{other.memEnd},
+        refCount{other.refCount}
 #ifndef NDEBUG
       , deletedElements { std::move(other.deletedElements) }
 #endif
     {
       // Needed for unique ownership
-      other.memBegin = nullptr;
+      other.ownedMemory = nullptr;
       other.refCount = 0;
     }
+
+
 
     Arena & operator=(const Arena &) = delete;
     Arena & operator=(Arena && other)
     {
+      ownedMemory = other.ownedMemory;
       memBegin = other.memBegin;
       nextItem = other.nextItem;
       memEnd   = other.memEnd;
@@ -57,43 +67,52 @@ class MemPoolForRooSets {
       deletedElements = std::move(other.deletedElements);
 #endif
       refCount     = other.refCount;
-      teardownMode = other.teardownMode;
 
-      other.memBegin = nullptr;
+      other.ownedMemory = nullptr;
       other.refCount = 0;
 
       return *this;
     }
 
+
+
     // If there is any user left, the arena shouldn't be deleted.
     // If this happens, nevertheless, one has an order of destruction problem.
     ~Arena()
     {
-      if (!memBegin) return;
+      if (!ownedMemory) return;
 
       if (refCount != 0) {
-        std::cerr << __FILE__ << ":" << __LINE__ << "Deleting arena " << memBegin << " with use count " << refCount
+        std::cerr << __FILE__ << ":" << __LINE__ << "Deleting arena " << ownedMemory << " with use count " << refCount
                   << std::endl;
         assert(false);
       }
 
-      ::operator delete(memBegin);
+      ::operator delete(ownedMemory);
     }
+
+
 
     bool inPool(void * ptr) const
     {
       auto       thePtr = static_cast<RooSet_t *>(ptr);
-      const bool inPool = memBegin <= thePtr && thePtr < memBegin + POOLSIZE;
+      const bool inPool = memBegin <= thePtr && thePtr < memEnd;
       return inPool;
     }
 
-    bool isFull() const { return nextItem >= memBegin + POOLSIZE; }
-
+    bool hasSpace() const { return ownedMemory && nextItem < memEnd; }
     bool empty() const { return refCount == 0; }
+
+    void tryFree(bool freeNonFull) {
+      if (ownedMemory && empty() && (!hasSpace() || freeNonFull) ) {
+        ::operator delete(ownedMemory);
+        ownedMemory = nullptr;
+      }
+    }
 
     void * tryAllocate()
     {
-      if (isFull()) return nullptr;
+      if (!hasSpace()) return nullptr;
 
       ++refCount;
       return nextItem++;
@@ -113,19 +132,21 @@ class MemPoolForRooSets {
         return false;
     }
 
-    RooSet_t * memBegin;
+    bool memoryOverlaps(const Arena& other) const {
+      return (memBegin >= other.memBegin && memBegin < other.memEnd)
+          || (memEnd >= other.memBegin && memEnd < other.memEnd);
+    }
+
+    RooSet_t * ownedMemory;
+    const RooSet_t * memBegin;
     RooSet_t * nextItem;
-    RooSet_t * memEnd;
+    const RooSet_t * memEnd;
     std::size_t refCount;
-    bool        teardownMode;
 #ifndef NDEBUG
     std::set<std::size_t> deletedElements;
 #endif
   };
 
-  private:
-  std::vector<Arena> fArenas;
-  bool               fTeardownMode{false};
 
   public:
   /// Create empty mem pool.
@@ -146,14 +167,16 @@ class MemPoolForRooSets {
     }
   }
 
+
+
   /// Allocate memory for the templated set type. Fails if bytes != sizeof(RooSet_t).
   void * allocate(std::size_t bytes)
   {
     assert(bytes == sizeof(RooSet_t));
 
-    if (fArenas.empty() || fArenas.back().isFull()) {
+    if (fArenas.empty() || !fArenas.back().hasSpace()) {
+      newArena();
       prune();
-      fArenas.emplace_back();
     }
 
     void * ptr = fArenas.back().tryAllocate();
@@ -162,8 +185,10 @@ class MemPoolForRooSets {
     return ptr;
   }
 
+
+
   /// Deallocate memory for the templated set type if in pool.
-  ///\return True if element was in pool.
+  /// \return True if element was in pool.
   bool deallocate(void * ptr)
   {
     bool deallocSuccess = false;
@@ -182,24 +207,26 @@ class MemPoolForRooSets {
     return deallocSuccess;
   }
 
+
+
   ////////////////////////////////////////////////////////////////////////////////
-  /// Delete arenas that don't have space and no users.
+  /// Free memory in arenas that don't have space and no users.
   /// In fTeardownMode, it will also delete the arena that still has space.
   ///
   void prune()
   {
-    bool doTeardown = fTeardownMode;
+    for (auto & arena : fArenas) {
+      arena.tryFree(fTeardownMode);
+    }
 
-    auto shouldFree = [doTeardown](Arena & arena) -> bool {
-      if (arena.refCount == 0 && (doTeardown || arena.isFull())) {
-        return true;
-      }
-
-      return false;
-    };
-
-    fArenas.erase(std::remove_if(fArenas.begin(), fArenas.end(), shouldFree), fArenas.end());
+    if (fTeardownMode) {
+      fArenas.erase(
+          std::remove_if(fArenas.begin(), fArenas.end(), [](Arena& ar){return ar.ownedMemory == nullptr;}),
+          fArenas.end());
+    }
   }
+
+
 
   /// Test if pool is empty.
   bool empty() const
@@ -207,18 +234,44 @@ class MemPoolForRooSets {
     return std::all_of(fArenas.begin(), fArenas.end(), [](const Arena & ar) { return ar.empty(); });
   }
 
+
+
   /// Set pool to teardown mode (at program end).
   /// Will prune all empty arenas. Non-empty arenas will survive until all contained elements
   /// are deleted. They may therefore leak if not all elements are destructed.
   void teardown()
   {
     fTeardownMode = true;
-    for (auto & arena : fArenas) {
-      arena.teardownMode = true;
-    }
 
     prune();
   }
+
+
+  private:
+
+  ////////////////////////////////////////////////////////////////////////////////////
+  /// RooFit relies on unique pointers for RooArgSets. Here, memory
+  /// has to be allocated until a completely new chunk of memory is encountered.
+  /// As soon as RooXXXSets can be identified with a unique ID, this becomes obsolete.
+  void newArena() {
+    std::vector<Arena> failedAllocs;
+    while (true) {
+      Arena ar;
+      if (std::none_of(fArenas.begin(), fArenas.end(),
+          [&ar](Arena& other){return ar.memoryOverlaps(other);})) {
+        fArenas.push_back(std::move(ar));
+        break;
+      }
+      else {
+        failedAllocs.push_back(std::move(ar));
+      }
+    }
+  }
+
+
+
+  std::vector<Arena> fArenas;
+  bool               fTeardownMode{false};
 };
 
 #endif /* ROOFIT_ROOFITCORE_SRC_MEMPOOLFORROOSETS_H_ */
