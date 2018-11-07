@@ -430,6 +430,7 @@ if(ROOT_python_FOUND)
                                 tutorial-pyroot-ntuple1-py)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom-py)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
+  set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
 
   foreach(t ${pytutorials})
     list(FIND returncode_1 ${t} index)
