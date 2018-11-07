@@ -77,10 +77,20 @@ template<typename T>
 static T ReduceHelper(const std::vector<T> &objs, const std::function<T(T a, T b)> &redfunc)
 {
    using BRange_t = tbb::blocked_range<decltype(objs.begin())>;
-   return tbb::parallel_reduce(BRange_t(objs.begin(), objs.end()), T{},
-   [redfunc](BRange_t const & range, T init) {
+
+   auto pred = [redfunc](BRange_t const & range, T init) {
       return std::accumulate(range.begin(), range.end(), init, redfunc);
-   }, redfunc);
+   };
+
+   T result;
+
+   BRange_t objRange(objs.begin(), objs.end());
+
+   tbb::this_task_arena::isolate([&]{
+      result = tbb::parallel_reduce(objRange, T{}, pred, redfunc);
+   });
+
+   return result;
 }
 
 } // End NS Internal
@@ -104,7 +114,9 @@ namespace ROOT {
 
    void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned step, const std::function<void(unsigned int i)> &f)
    {
-      tbb::parallel_for(start, end, step, f);
+      tbb::this_task_arena::isolate([&]{
+         tbb::parallel_for(start, end, step, f);
+      });
    }
 
    double TThreadExecutor::ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc)
