@@ -6,6 +6,7 @@
 3. Many adjustment with new TWebCanvas
 4. Implement update of TF2 drawings, see tutorials/graphics/anim.C
 5. Use gStyle attributes to draw histogram title 
+6. Add support of TProfile2Poly class
  
 
 ## Changes in 5.6.0
