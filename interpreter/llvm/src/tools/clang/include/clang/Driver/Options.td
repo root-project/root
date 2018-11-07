@@ -2464,6 +2464,8 @@ defm align_loops : BooleanFFlag<"align-loops">, Group<clang_ignored_gcc_optimiza
 def falign_loops_EQ : Joined<["-"], "falign-loops=">, Group<clang_ignored_gcc_optimization_f_Group>;
 defm align_jumps : BooleanFFlag<"align-jumps">, Group<clang_ignored_gcc_optimization_f_Group>;
 def falign_jumps_EQ : Joined<["-"], "falign-jumps=">, Group<clang_ignored_gcc_optimization_f_Group>;
+defm cf_protection : BooleanFFlag<"cf-protection">, Group<clang_ignored_f_Group>;
+def fcf_protection_EQ : Joined<["-"], "fcf-protection=">, Group<clang_ignored_f_Group>;
 
 // FIXME: This option should be supported and wired up to our diognostics, but
 // ignore it for now to avoid breaking builds that use it.
@@ -2524,6 +2526,7 @@ defm single_precision_constant : BooleanFFlag<"single-precision-constant">,
     Group<clang_ignored_gcc_optimization_f_Group>;
 defm spec_constr_count : BooleanFFlag<"spec-constr-count">, Group<clang_ignored_f_Group>;
 defm stack_check : BooleanFFlag<"stack-check">, Group<clang_ignored_f_Group>;
+defm stack_clash_protection : BooleanFFlag<"stack-clash-protection">, Group<clang_ignored_f_Group>;
 defm strength_reduce :
     BooleanFFlag<"strength-reduce">, Group<clang_ignored_gcc_optimization_f_Group>;
 defm tls_model : BooleanFFlag<"tls-model">, Group<clang_ignored_f_Group>;
