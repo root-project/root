@@ -55,7 +55,7 @@ std::string TWebPainting::MakeTextOper(const char *str)
    if (!str)
       str = "";
    for (auto p = str; *p; ++p) {
-      if ((*p < 32) || (*p > 126) || (*p == ';') || (*p == '\'') || (*p == '\"') || (*p == '\%')) {
+      if ((*p < 32) || (*p > 126) || (*p == ';') || (*p == '\'') || (*p == '\"') || (*p == '%')) {
          isany_special = true;
          break;
       }
