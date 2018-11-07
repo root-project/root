@@ -154,7 +154,7 @@ protected:
 
 private:
 #ifdef USEMEMPOOLFORDATASET
-  typedef MemPoolForRooSets<RooDataSet, 10> MemPool;
+  typedef MemPoolForRooSets<RooDataSet, 300> MemPool; // 150 = about 100kb
   static MemPool * memPool();
 #endif
 
