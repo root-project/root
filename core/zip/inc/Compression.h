@@ -86,7 +86,7 @@ enum ECompressionSetting {
 };
 
 /// Deprecated name, do *not* use:
-_R__DEPRECATED_LATER("kUseGlobalSetting is deprecated!") static constexpr ECompressionAlgorithm kUseGlobalSetting = kUseGlobalCompressionAlgorithm;
+static constexpr ECompressionAlgorithm kUseGlobalSetting = kUseGlobalCompressionAlgorithm;
 
 int CompressionSettings(ECompressionAlgorithm algorithm, int compressionLevel);
 }
