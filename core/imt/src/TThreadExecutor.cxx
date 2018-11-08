@@ -69,12 +69,36 @@
 ///
 //////////////////////////////////////////////////////////////////////////
 
+/*
+VERY IMPORTANT NOTE ABOUT WORK ISOLATION
+
+We enclose the parallel_for and parallel_reduce invocations in a
+task_arena::isolate because we want to prevent a thread to start executing an
+outer task when the task it's running spawned subtasks, e.g. with a parallel_for,
+and is waiting on inner tasks to be completed.
+
+While this change has a negligible performance impact, it has benefits for
+several applications, for example big parallelised HEP frameworks and
+RDataFrame analyses.
+- For HEP Frameworks, without work isolation, it can happen that a huge
+framework task is pulled by a yielding ROOT task.
+This causes to delay the processing of the event which is interrupted by the
+long task.
+For example, work isolation avoids that during the wait due to the parallel
+flushing of baskets, a very long simulation task is pulled in by the idle task.
+- For RDataFrame analyses we want to guarantee that each entry is processed from
+the beginning to the end without TBB interrupting it to pull in other work items.
+As a corollary, the usage of ROOT (or TBB in work isolation mode) in actions
+and transformations guarantee that each entry is processed from the beginning to
+the end without being interrupted by the processing of outer tasks.
+*/
+
 namespace ROOT {
 namespace Internal {
 
 /// A helper function to implement the TThreadExecutor::ParallelReduce methods
 template<typename T>
-static T ReduceHelper(const std::vector<T> &objs, const std::function<T(T a, T b)> &redfunc)
+static T ParallelReduceHelper(const std::vector<T> &objs, const std::function<T(T a, T b)> &redfunc)
 {
    using BRange_t = tbb::blocked_range<decltype(objs.begin())>;
 
@@ -82,15 +106,12 @@ static T ReduceHelper(const std::vector<T> &objs, const std::function<T(T a, T b
       return std::accumulate(range.begin(), range.end(), init, redfunc);
    };
 
-   T result;
-
    BRange_t objRange(objs.begin(), objs.end());
 
-   tbb::this_task_arena::isolate([&]{
-      result = tbb::parallel_reduce(objRange, T{}, pred, redfunc);
+   return tbb::this_task_arena::isolate([&]{
+      return tbb::parallel_reduce(objRange, T{}, pred, redfunc);
    });
 
-   return result;
 }
 
 } // End NS Internal
@@ -121,11 +142,11 @@ namespace ROOT {
 
    double TThreadExecutor::ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc)
    {
-      return ROOT::Internal::ReduceHelper<double>(objs, redfunc);
+      return ROOT::Internal::ParallelReduceHelper<double>(objs, redfunc);
    }
 
    float TThreadExecutor::ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc)
    {
-      return ROOT::Internal::ReduceHelper<float>(objs, redfunc);
+      return ROOT::Internal::ParallelReduceHelper<float>(objs, redfunc);
    }
 }
