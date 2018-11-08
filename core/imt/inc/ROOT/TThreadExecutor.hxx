@@ -307,7 +307,22 @@ namespace ROOT {
    auto TThreadExecutor::Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
       if (nChunks == 0)
       {
+#ifdef _MSC_VER
+         unsigned start = *args.begin();
+         unsigned end = *args.end();
+         unsigned seqStep = args.step();
+
+         using retType = decltype(func(start));
+         std::vector<retType> reslist(end - start);
+         auto lambda = [&](unsigned int i)
+         {
+            reslist[i] = func(i);
+         };
+         ParallelFor(start, end, seqStep, lambda);
+         return reslist;
+#else
          return Map(func, args);
+#endif
       }
 
       unsigned start = *args.begin();
