@@ -133,7 +133,7 @@ protected:
 
 #ifdef USEMEMPOOLFORARGSET
 private:
-  typedef MemPoolForRooSets<RooArgSet, 1200> MemPool; //600 = about 100 kb
+  typedef MemPoolForRooSets<RooArgSet, 10*600> MemPool; //600 = about 100 kb
   //Initialise a static mem pool. It has to happen inside a function to solve the
   //static initialisation order fiasco. At the end of the program, this might have
   //to leak depending if RooArgSets are still alive. This depends on the order of destructions.

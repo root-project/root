@@ -92,11 +92,13 @@ class MemPoolForRooSets {
     }
 
 
+    bool inPool(const RooSet_t * const ptr) const {
+      return memBegin <= ptr && ptr < memEnd;
+    }
 
-    bool inPool(void * ptr) const
+    bool inPool(const void * const ptr) const
     {
-      auto       thePtr = static_cast<RooSet_t *>(ptr);
-      return memBegin <= thePtr && thePtr < memEnd;
+      return inPool(static_cast<const RooSet_t * const>(ptr));
     }
 
     bool hasSpace() const { return ownedMemory && nextItem < memEnd; }
@@ -123,7 +125,11 @@ class MemPoolForRooSets {
         --refCount;
 #ifndef NDEBUG
         const std::size_t index = static_cast<RooSet_t *>(ptr) - memBegin;
-        assert(deletedElements.count(index) == 0);
+        if (deletedElements.count(index) != 0) {
+          std::cerr << "Double delete of " << ptr << " at index " << index << " in Arena with refCount " << refCount
+              << ".\n\tArena: |" << memBegin << "\t" << ptr << "\t" << memEnd << "|" << std::endl;
+          throw;
+        }
         deletedElements.insert(index);
 #endif
         return true;
@@ -132,8 +138,8 @@ class MemPoolForRooSets {
     }
 
     bool memoryOverlaps(const Arena& other) const {
-      return (memBegin >= other.memBegin && memBegin < other.memEnd)
-          || (memEnd >= other.memBegin && memEnd < other.memEnd);
+      //Need the reinterpret_cast to correctly check for non-overlap on the last byte of the last element
+      return inPool(other.memBegin) || inPool(reinterpret_cast<const char*>(other.memEnd)-1);
     }
 
     RooSet_t * ownedMemory;
@@ -195,11 +201,10 @@ class MemPoolForRooSets {
   bool deallocate(void * ptr)
   {
     bool deallocSuccess = false;
-    for (auto & arena : fArenas) {
-      if (arena.tryDeallocate(ptr)) {
+
+    if (std::any_of(fArenas.begin(), fArenas.end(),
+      [ptr](Arena& arena){return arena.tryDeallocate(ptr);})) {
         deallocSuccess = true;
-        break;
-      }
     }
 
     if (fTeardownMode) {
