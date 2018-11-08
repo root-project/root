@@ -37,12 +37,6 @@ void RJittedCustomColumn::Update(unsigned int slot, Long64_t entry)
    fConcreteCustomColumn->Update(slot, entry);
 }
 
-void RJittedCustomColumn::ClearValueReaders(unsigned int slot)
-{
-   R__ASSERT(fConcreteCustomColumn != nullptr);
-   fConcreteCustomColumn->ClearValueReaders(slot);
-}
-
 void RJittedCustomColumn::InitNode()
 {
    R__ASSERT(fConcreteCustomColumn != nullptr);
