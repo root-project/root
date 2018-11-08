@@ -1531,6 +1531,8 @@
       this.CleanupAxes();
       this.CleanXY();
 
+      this.ranges_set = false;
+
       this.xmin = this.xmax = 0;
       this.ymin = this.ymax = 0;
       this.zmin = this.zmax = 0;
@@ -3709,7 +3711,7 @@
          this.CreatePadSvg(true);
       }
 
-      var isanyfound = false;
+      var isanyfound = false, isanyremove = false;
 
       // find and remove painters which no longer exists in the list
       for (var k=0;k<this.painters.length;++k) {
@@ -3724,10 +3726,13 @@
             // remove painter which does not found in the list of snaps
             this.painters.splice(k--,1);
             sub.Cleanup(); // cleanup such painter
+            isanyremove = true;
          }
       }
 
-      // return JSROOT.CallBack(call_back, padpainter);
+      if (isanyremove) {
+         delete this.pads_cache;
+      }
 
       if (!isanyfound) {
          var svg_p = this.svg_pad(this.this_pad_name),
@@ -4500,9 +4505,12 @@
       this.CloseWebsocket(true);
    }
 
-   TCanvasPainter.prototype.SendWebsocket = function(msg, chid) {
-      if (this._websocket)
-         this._websocket.Send(msg, chid);
+   TCanvasPainter.prototype.SendWebsocket = function(msg) {
+      if (!this._websocket) return;
+      if (this._websocket.CanSend())
+         this._websocket.Send(msg);
+      else
+         console.warn("DROP SEND: " + msg);
    }
 
    TCanvasPainter.prototype.CloseWebsocket = function(force) {
@@ -4720,7 +4728,8 @@
    /// method informs that something was changed in the canvas
    /// used to update information on the server (when used with web6gui)
    TCanvasPainter.prototype.ProcessChanges = function(kind, source_pad) {
-      if (!this._websocket) return;
+      // check if we could send at least one message more - for some meaningful actions
+      if (!this._websocket || !this._websocket.CanSend(2)) return;
 
       var msg = (kind == "sbits") ? "STATUSBITS:" + this.GetStatusBits() : "RANGES6:" + this.GetAllRanges();
 
@@ -4754,8 +4763,8 @@
          if (click_pos.dbl) arg.dbl = true;
       }
 
-      if (this._websocket && arg && ischanged)
-         this._websocket.Send("PADCLICKED:" + JSROOT.toJSON(arg));
+      if (arg && ischanged)
+         this.SendWebsocket("PADCLICKED:" + JSROOT.toJSON(arg));
    }
 
    TCanvasPainter.prototype.GetStatusBits = function() {
