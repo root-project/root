@@ -308,6 +308,8 @@ namespace ROOT {
       if (nChunks == 0)
       {
 #ifdef _MSC_VER
+         // temporary work-around to silent the error C2668: 'ROOT::TThreadExecutor::Map':
+         // ambiguous call to overloaded function, due to a MS compiler bug
          unsigned start = *args.begin();
          unsigned end = *args.end();
          unsigned seqStep = args.step();
