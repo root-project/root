@@ -83,18 +83,6 @@ void RJittedFilter::ResetReportCount()
    fConcreteFilter->ResetReportCount();
 }
 
-void RJittedFilter::ClearValueReaders(unsigned int slot)
-{
-   R__ASSERT(fConcreteFilter != nullptr);
-   fConcreteFilter->ClearValueReaders(slot);
-}
-
-void RJittedFilter::ClearTask(unsigned int slot)
-{
-   R__ASSERT(fConcreteFilter != nullptr);
-   fConcreteFilter->ClearTask(slot);
-}
-
 void RJittedFilter::InitNode()
 {
    R__ASSERT(fConcreteFilter != nullptr);

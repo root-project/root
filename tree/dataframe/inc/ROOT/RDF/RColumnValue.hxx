@@ -26,7 +26,6 @@
 #include <initializer_list>
 #include <limits>
 #include <memory>
-#include <stack>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -84,13 +83,13 @@ class R__CLING_PTRCHECK(off) RColumnValue {
    // task execution i.e. when more than one task needs readers in this worker thread.
 
    /// Owning ptrs to a TTreeReaderValue or TTreeReaderArray. Only used for Tree columns.
-   std::stack<std::unique_ptr<TreeReader_t>> fTreeReaders;
+   std::unique_ptr<TreeReader_t> fTreeReader;
    /// Non-owning ptrs to the value of a custom column.
-   std::stack<T *> fCustomValuePtrs;
+   T *fCustomValuePtr;
    /// Non-owning ptrs to the value of a data-source column.
-   std::stack<T **> fDSValuePtrs;
+   T **fDSValuePtr;
    /// Non-owning ptrs to the node responsible for the custom column. Needed when querying custom values.
-   std::stack<RCustomColumnBase *> fCustomColumns;
+   RCustomColumnBase *fCustomColumn;
    /// Enumerator for the different properties of the branch storage in memory
    enum class EStorageType : char { kContiguous, kUnknown, kSparse };
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
@@ -105,7 +104,7 @@ public:
 
    void SetTmpColumn(unsigned int slot, RCustomColumnBase *customColumn)
    {
-      fCustomColumns.emplace(customColumn);
+      fCustomColumn = customColumn;
       // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
       // and a jitted one.
       if (0 != strcmp(customColumn->GetTypeId().name(), typeid(T).name()))
@@ -116,10 +115,10 @@ public:
 
       if (customColumn->IsDataSourceColumn()) {
          fColumnKind = EColumnKind::kDataSource;
-         fDSValuePtrs.emplace(static_cast<T **>(customColumn->GetValuePtr(slot)));
+         fDSValuePtr = static_cast<T **>(customColumn->GetValuePtr(slot));
       } else {
          fColumnKind = EColumnKind::kCustomColumn;
-         fCustomValuePtrs.emplace(static_cast<T *>(customColumn->GetValuePtr(slot)));
+         fCustomValuePtr = static_cast<T *>(customColumn->GetValuePtr(slot));
       }
       fSlot = slot;
    }
@@ -127,7 +126,7 @@ public:
    void MakeProxy(TTreeReader *r, const std::string &bn)
    {
       fColumnKind = EColumnKind::kTree;
-      fTreeReaders.emplace(std::make_unique<TreeReader_t>(*r, bn.c_str()));
+      fTreeReader = std::make_unique<TreeReader_t>(*r, bn.c_str());
    }
 
    /// This overload is used to return scalar quantities (i.e. types that are not read into a RVec)
@@ -138,10 +137,10 @@ public:
    T &Get(Long64_t entry)
    {
       if (fColumnKind == EColumnKind::kTree) {
-         return *(fTreeReaders.top()->Get());
+         return *(fTreeReader->Get());
       } else {
-         fCustomColumns.top()->Update(fSlot, entry);
-         return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.top() : **fDSValuePtrs.top();
+         fCustomColumn->Update(fSlot, entry);
+         return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtr : **fDSValuePtr;
       }
    }
 
@@ -154,7 +153,7 @@ public:
    T &Get(Long64_t entry)
    {
       if (fColumnKind == EColumnKind::kTree) {
-         auto &readerArray = *fTreeReaders.top();
+         auto &readerArray = *fTreeReader;
          // We only use TTreeReaderArrays to read columns that users flagged as type `RVec`, so we need to check
          // that the branch stores the array as contiguous memory that we can actually wrap in an `RVec`.
          // Currently we need the first entry to have been loaded to perform the check
@@ -205,8 +204,8 @@ public:
          return fRVec;
 
       } else {
-         fCustomColumns.top()->Update(fSlot, entry);
-         return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.top() : **fDSValuePtrs.top();
+         fCustomColumn->Update(fSlot, entry);
+         return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtr : **fDSValuePtr;
       }
    }
 
@@ -221,7 +220,7 @@ public:
    T &Get(Long64_t entry)
    {
       if (fColumnKind == EColumnKind::kTree) {
-         auto &readerArray = *fTreeReaders.top();
+         auto &readerArray = *fTreeReader;
          const auto readerArraySize = readerArray.GetSize();
          if (readerArraySize > 0) {
             // always perform a copy
@@ -234,24 +233,8 @@ public:
          return fRVec;
       } else {
          // business as usual
-         fCustomColumns.top()->Update(fSlot, entry);
-         return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.top() : **fDSValuePtrs.top();
-      }
-   }
-
-   void Reset()
-   {
-      switch (fColumnKind) {
-      case EColumnKind::kTree: fTreeReaders.pop(); break;
-      case EColumnKind::kCustomColumn:
-         fCustomColumns.pop();
-         fCustomValuePtrs.pop();
-         break;
-      case EColumnKind::kDataSource:
-         fCustomColumns.pop();
-         fDSValuePtrs.pop();
-         break;
-      case EColumnKind::kInvalid: throw std::runtime_error("ColumnKind not set for this RColumnValue");
+         fCustomColumn->Update(fSlot, entry);
+         return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtr : **fDSValuePtr;
       }
    }
 };
@@ -289,15 +272,6 @@ struct TRDFValueTuple<TypeList<BranchTypes...>> {
 
 template <typename BranchType>
 using RDFValueTuple_t = typename TRDFValueTuple<BranchType>::type;
-
-/// Clear the proxies of a tuple of RColumnValues
-template <typename ValueTuple, std::size_t... S>
-void ResetRDFValueTuple(ValueTuple &values, std::index_sequence<S...>)
-{
-   // hack to expand a parameter pack without c++17 fold expressions.
-   std::initializer_list<int> expander{(std::get<S>(values).Reset(), 0)...};
-   (void)expander; // avoid "unused variable" warnings
-}
 
 } // ns RDF
 } // ns Internal

@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
-#include <stack>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -1083,7 +1082,7 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
    const unsigned int fNSlots;
    std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
-   std::vector<std::stack<std::unique_ptr<TTree>>> fOutputTrees;
+   std::vector<std::unique_ptr<TTree>> fOutputTrees;
    std::vector<int> fIsFirstEvent;        // vector<bool> does not allow concurrent writing of different elements
    const std::string fFileName;           // name of the output file name
    const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
@@ -1120,10 +1119,10 @@ public:
       }
       // re-create output tree as we need to create its branches again, with new input variables
       // TODO we could instead create the output tree and its branches, change addresses of input variables in each task
-      fOutputTrees[slot].emplace(
-         std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory));
+      fOutputTrees[slot] =
+         std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory);
       if (fOptions.fAutoFlush)
-         fOutputTrees[slot].top()->SetAutoFlush(fOptions.fAutoFlush);
+         fOutputTrees[slot]->SetAutoFlush(fOptions.fAutoFlush);
       if (r) {
          // not an empty-source RDF
          fInputTrees[slot] = r->GetTree();
@@ -1133,17 +1132,17 @@ public:
          // FIXME: AddClone might result in many many (safe) warnings printed by TTree::CopyAddresses, see ROOT-9487.
          const auto friendsListPtr = fInputTrees[slot]->GetListOfFriends();
          if (friendsListPtr && friendsListPtr->GetEntries() > 0)
-            fInputTrees[slot]->AddClone(fOutputTrees[slot].top().get());
+            fInputTrees[slot]->AddClone(fOutputTrees[slot].get());
       }
       fIsFirstEvent[slot] = 1; // reset first event flag for this slot
    }
 
    void FinalizeTask(unsigned int slot)
    {
-      if (fOutputTrees[slot].top()->GetEntries() > 0)
+      if (fOutputTrees[slot]->GetEntries() > 0)
          fOutputFiles[slot]->Write();
       // clear now to avoid concurrent destruction of output trees and input tree (which has them listed as fClones)
-      fOutputTrees[slot].pop();
+      fOutputTrees[slot].reset(nullptr);
    }
 
    void Exec(unsigned int slot, BranchTypes &... values)
@@ -1154,9 +1153,9 @@ public:
          fIsFirstEvent[slot] = 0;
       }
       UpdateBoolArrays(slot, values..., ind_t{});
-      fOutputTrees[slot].top()->Fill();
-      auto entries = fOutputTrees[slot].top()->GetEntries();
-      auto autoFlush = fOutputTrees[slot].top()->GetAutoFlush();
+      fOutputTrees[slot]->Fill();
+      auto entries = fOutputTrees[slot]->GetEntries();
+      auto autoFlush = fOutputTrees[slot]->GetAutoFlush();
       if ((autoFlush > 0) && (entries % autoFlush == 0))
          fOutputFiles[slot]->Write();
    }
@@ -1165,7 +1164,7 @@ public:
    void SetBranches(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
-      int expander[] = {(SetBranchesHelper(fBoolArrays[slot], fInputTrees[slot], *fOutputTrees[slot].top(),
+      int expander[] = {(SetBranchesHelper(fBoolArrays[slot], fInputTrees[slot], *fOutputTrees[slot],
                                            fInputBranchNames[S], fOutputBranchNames[S], &values),
                          0)...,
                         0};
@@ -1177,7 +1176,7 @@ public:
    void UpdateBoolArrays(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       int expander[] = {
-         (UpdateBoolArray(fBoolArrays[slot], values, fOutputBranchNames[S], *fOutputTrees[slot].top()), 0)..., 0};
+         (UpdateBoolArray(fBoolArrays[slot], values, fOutputBranchNames[S], *fOutputTrees[slot]), 0)..., 0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
 
