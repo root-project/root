@@ -1799,7 +1799,7 @@
       this.msgqueue.push({ ready: true, msg: _msg, len: _len});
    }
 
-   /** Reserver entry in queue for data, which is not yet decoded.
+   /** Reserve entry in queue for data, which is not yet decoded.
     * @private */
    WebWindowHandle.prototype.ReserveQueueItem = function() {
       if (!this.msgqueue) this.msgqueue = [];
@@ -1839,6 +1839,11 @@
          this._websocket.close();
          delete this._websocket;
       }
+   }
+
+   /** Returns if one can send text message to server. Checks number of send credits */
+   WebWindowHandle.prototype.CanSend = function(numsend) {
+      return (this.cansend >= (numsend || 1));
    }
 
    /** Send text message via the connection. */
