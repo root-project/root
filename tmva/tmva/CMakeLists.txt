@@ -222,6 +222,11 @@ else()
 endif()
 endif()
 
+if (vdt AND NOT builtin_vdt)
+  include_directories(${VDT_INCLUDE_DIRS})
+endif()
+
+
 if(imt)
   set(TMVA_DEPENDENCIES Imt)
 endif()
