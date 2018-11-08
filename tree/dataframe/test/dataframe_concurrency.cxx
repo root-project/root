@@ -32,8 +32,8 @@ TEST(RDFConcurrency, NestedParallelismBetweenDefineCalls)
    auto checkAllNumbersAreThere = [](std::vector<int> &vec) {
       std::sort(vec.begin(), vec.end());
       const int s = vec.size();
-      for (auto i = 0; i < s; ++i)
-         EXPECT_EQ(vec[i], i);
+      for (auto j = 0; j < s; ++j)
+         EXPECT_EQ(vec[j], j);
    };
 
    checkAllNumbersAreThere(*res1);
