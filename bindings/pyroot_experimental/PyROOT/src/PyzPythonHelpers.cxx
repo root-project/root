@@ -9,6 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/**
+
+Set of helper functions that are invoked from the pythonizors, on the
+Python side. For that purpose, they are included in the interface of the
+PyROOT extension module.
+
+*/
+
 #include "CPyCppyy.h"
 #include "CPPInstance.h"
 #include "PyROOTPythonize.h"
