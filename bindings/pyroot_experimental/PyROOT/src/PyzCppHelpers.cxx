@@ -8,6 +8,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/**
+
+Set of helper functions that are invoked from the C++ implementation of
+pythonizations.
+
+*/
+
 #include "PyzCppHelpers.hxx"
 
 #include "CPyCppyy.h"
