@@ -646,9 +646,9 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
 
 
   // Remove command from required-args list (if it was there)
-  TObject* obj = _rList.FindObject(opc) ;
-  if (obj) {
-    _rList.Remove(obj) ;
+  TObject* obj;
+  while ( (obj = _rList.FindObject(opc)) ) {
+    _rList.Remove(obj);
   }
 
   // Add command the processed list
