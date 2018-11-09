@@ -914,7 +914,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       return 0;
    }
 
-   if (!strncmp(line, "?", 1) || !strncmp(line, ".help", 5)) {
+   if (!strncmp(line, ".?", 2) || !strncmp(line, ".help", 5)) {
       Help(line);
       return 1;
    }
