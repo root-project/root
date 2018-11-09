@@ -135,7 +135,6 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
 
 ## TTree Libraries
 ### RDataFrame
-  - Migrate name TIterationHelper to RIterationHelper which was left behind for 6.14 release.
   - Optimise the creation of the set of branch names of an input dataset, doing the work once and caching it in the RInterface.
   - Add [StdDev](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a482c4e4f81fe1e421c016f89cd281572) action.
   - Add [Display](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#aee68f4411f16f00a1d46eccb6d296f01) action and [tutorial](https://github.com/root-project/root/blob/master/tutorials/dataframe/df024_Display.C).
@@ -158,9 +157,12 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
   - Create names for histograms and graphs based on the input columns if no model is provided.
   - RCutFlowReport can print cumulative efficiency of cuts.
   - Reading and writing of columns holding `vector<bool>` instances and `bool` C arrays.
-  - Support `rdfentry_` and `rdfslot_` implicit columns.
+  - Support `rdfentry_` and `rdfslot_` implicit columns (`tdfentry_` and `tdfslot_` kept for backwards compatibility).
   - Remove `RDataFrame` from the 32-bit builds.
   - Speed up interpreted usage of RDataFrame (i.e. in macros or from ROOT prompt) by removing certain cling runtime safety checks.
+  - Streamline and better document usage of multi-thread RDataFrame: edge cases in which processing of an event could start
+    before processing of another event finished have been removed, making it easier for user to write safe parallel RDF operations. 
+    See the [relevant documentation](https://root.cern.ch/doc/master/classROOT_1_1RDataFrame.html#parallel-execution) for more information.
 
 ### TTreeProcessorMT
   - Parallelise search of cluster boundaries for input datasets with no friends or TEntryLists. The net effect is a faster initialization time in this common case.
