@@ -1155,12 +1155,13 @@ if(imt)
     message(STATUS "Looking for TBB")
     find_package(TBB)
     if(TBB_FOUND)
-      if(${TBB_VERSION} VERSION_LESS 4.3)
+      set(tbb_min_version 2018)
+      if(${TBB_VERSION} VERSION_LESS ${tbb_min_version})
         if(fail-on-missing)
-          message(FATAL_ERROR "TBB version < 4.3. You can enable the option 'builtin_tbb' to build the library internally")
+          message(FATAL_ERROR "TBB version < ${tbb_min_version}. You can enable the option 'builtin_tbb' to build the library internally")
         else()
-          message(STATUS "TBB version < 4.3. Switching on builtin_tbb option")
-          set(builtin_tbb ON CACHE BOOL "" FORCE)
+          message(STATUS "TBB version < ${tbb_min_version}. Switching on builtin_tbb option")
+          set(builtin_tbb ON CACHE BOOL "Enabled because imt requested and external TBB version < ${tbb_min_version} (${builtin_tbb})" FORCE)
         endif()
       endif()
     endif()  
@@ -1169,13 +1170,14 @@ if(imt)
         message(FATAL_ERROR "TBB not found. You can enable the option 'builtin_tbb' to build the library internally")
       else()
         message(STATUS "TBB not found. Switching on builtin_tbb option")
-        set(builtin_tbb ON CACHE BOOL "" FORCE)
+        set(builtin_tbb ON CACHE BOOL "Enabled because TBB not found and imt requested (${builtin_tbb_description})" FORCE)
       endif()
     endif()
   endif()
 endif()  
 if(builtin_tbb)
-  set(tbb_version 2017_U5)
+  set(tbb_builtin_version 2019_U1)
+  set(tbb_sha256 d40aa6f62f2b2fb38c89b9f309859e3e6ff90487e8bc45abb0e096a6a165bec5)
   if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
     set(_tbb_compiler compiler=clang)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
@@ -1184,12 +1186,12 @@ if(builtin_tbb)
     set(_tbb_compiler compiler=gcc)
   endif()
   if(MSVC)
-    set(vsdir "vs2012")
+    set(vsdir "vs2013")
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb.lib)
     ExternalProject_Add(
       TBB
-      URL ${lcgpackages}/tbb${tbb_version}.tar.gz
-      URL_HASH SHA256=780baf0ad520f23b54dd20dc97bf5aae4bc562019e0a70f53bfc4c1afec6e545
+      URL ${lcgpackages}/tbb${tbb_builtin_version}.tar.gz
+      URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
       BUILD_COMMAND devenv.exe /useenv /build "Release|Win32" build/${vsdir}/makefile.sln
@@ -1212,14 +1214,19 @@ if(builtin_tbb)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*")
   else()
     ROOT_ADD_CXX_FLAG(_tbb_cxxflags -mno-rtm)
+    # Here we check that the CMAKE_OSX_SYSROOT variable is not empty otherwise
+    # it can happen that a "-isysroot" switch is added without an argument.
+    if(APPLE AND CMAKE_OSX_SYSROOT)
+      set(_tbb_cxxflags "${_tbb_cxxflags} -isysroot ${CMAKE_OSX_SYSROOT}")
+    endif()
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       TBB
-      URL ${lcgpackages}/tbb${tbb_version}.tar.gz
-      URL_HASH SHA256=780baf0ad520f23b54dd20dc97bf5aae4bc562019e0a70f53bfc4c1afec6e545
+      URL ${lcgpackages}/tbb${tbb_builtin_version}.tar.gz
+      URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ""
-      BUILD_COMMAND make ${_tbb_compiler} CXXFLAGS=${_tbb_cxxflags} CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
+      BUILD_COMMAND make ${_tbb_compiler} "CXXFLAGS=${_tbb_cxxflags}" CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
       INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
       INSTALL_COMMAND ""
