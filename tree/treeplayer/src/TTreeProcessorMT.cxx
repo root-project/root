@@ -335,17 +335,11 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
          shouldUseGlobalEntries ? entries : std::vector<Long64_t>({theseClustersAndEntries.second[0]});
 
       auto processCluster = [&](const Internal::EntryCluster &c) {
-         // This task will operate with the tree that contains start
-         treeView->PushTaskFirstEntry(c.start);
-
          std::unique_ptr<TTreeReader> reader;
          std::unique_ptr<TEntryList> elist;
          std::tie(reader, elist) = treeView->GetTreeReader(c.start, c.end, fTreeName, theseFiles, fFriendInfo,
                                                            fEntryList, theseEntries, friendEntries);
          func(*reader);
-
-         // In case of task interleaving, we need to load here the tree of the parent task
-         treeView->PopTaskFirstEntry();
       };
 
       pool.Foreach(processCluster, thisFileClusters);
