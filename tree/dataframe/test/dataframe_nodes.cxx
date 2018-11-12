@@ -11,7 +11,7 @@ TEST(RDataFrameNodes, RSlotStackCheckSameThreadSameSlot)
 {
    unsigned int n(7);
    ROOT::Internal::RDF::RSlotStack s(n);
-   EXPECT_EQ(s.GetSlot(), s.GetSlot());
+   EXPECT_EQ(s.GetSlot()-1, s.GetSlot());
 }
 
 #ifndef NDEBUG
@@ -32,7 +32,7 @@ TEST(RDataFrameNodes, RSlotStackGetOneTooMuch)
          t.join();
    };
 
-   EXPECT_DEATH(theTest(), "RSlotStack assumes that a value can be always obtained.");
+   EXPECT_DEATH(theTest(), "Trying to pop a slot from an empty stack!");
 }
 
 TEST(RDataFrameNodes, RSlotStackPutBackTooMany)
@@ -42,7 +42,7 @@ TEST(RDataFrameNodes, RSlotStackPutBackTooMany)
       s.ReturnSlot(0);
    };
 
-   EXPECT_DEATH(theTest(), "RSlotStack has a reference count relative to an index which will become negative");
+   EXPECT_DEATH(theTest(), "Trying to put back a slot to a full stack!");
 }
 
 #endif
