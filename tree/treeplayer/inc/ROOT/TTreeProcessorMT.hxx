@@ -71,7 +71,6 @@ namespace ROOT {
          // NOTE: fFriends must come before fChain to be deleted after it, see ROOT-9281 for more details
          std::vector<std::unique_ptr<TChain>> fFriends; ///< Friends of the tree/chain
          std::unique_ptr<TChain> fChain;                ///< Chain on which to operate
-         std::vector<Long64_t> fLoadedEntries;          ///<! Per-task loaded entries (for task interleaving)
 
          ////////////////////////////////////////////////////////////////////////////////
          /// Construct fChain, also adding friends if needed and injecting knowledge of offsets if available.
@@ -160,20 +159,6 @@ namespace ROOT {
 
             // we need to return the entry list too, as it needs to be in scope as long as the reader is
             return std::make_pair(std::move(reader), std::move(localList));
-         }
-
-         //////////////////////////////////////////////////////////////////////////
-         /// Push a new loaded entry to the stack.
-         void PushTaskFirstEntry(Long64_t entry) { fLoadedEntries.push_back(entry); }
-
-         //////////////////////////////////////////////////////////////////////////
-         /// Restore the tree of the previous loaded entry, if any.
-         void PopTaskFirstEntry()
-         {
-            fLoadedEntries.pop_back();
-            if (fLoadedEntries.size() > 0) {
-               fChain->LoadTree(fLoadedEntries.back());
-            }
          }
       };
    } // End of namespace Internal
