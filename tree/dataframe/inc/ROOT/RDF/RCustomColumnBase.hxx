@@ -56,6 +56,7 @@ public:
    RLoopManager *GetLoopManagerUnchecked() const;
    std::string GetName() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
+   virtual void ClearValueReaders(unsigned int slot) = 0;
    bool IsDataSourceColumn() const { return fIsDataSourceColumn; }
    virtual void InitNode();
    /// Return the unique identifier of this RCustomColumnBase.

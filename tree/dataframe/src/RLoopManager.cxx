@@ -263,6 +263,8 @@ void RLoopManager::CleanUpTask(unsigned int slot)
 {
    for (auto &ptr : fBookedActions)
       ptr->FinalizeSlot(slot);
+   for (auto &ptr : fBookedFilters)
+      ptr->ClearTask(slot);
 }
 
 /// Jit all actions that required runtime column type inference, and clean the `fToJit` member variable.

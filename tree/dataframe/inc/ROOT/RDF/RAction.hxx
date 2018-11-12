@@ -84,6 +84,15 @@ void InitRDFValues(unsigned int slot, std::vector<RTypeErasedColumnValue> &value
                   0};
 }
 
+/// This overload is specialized to act on RTypeErasedColumnValues instead of RColumnValues.
+template <std::size_t... S, typename... ColTypes>
+void ResetRDFValueTuple(std::vector<RTypeErasedColumnValue> &values, std::index_sequence<S...>,
+                        ROOT::TypeTraits::TypeList<ColTypes...>)
+{
+   using expander = int[];
+   (void)expander{(values[S].Cast<ColTypes>()->Reset(), 0)...};
+}
+
 // fwd decl for RActionCRTP
 template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t>
 class RAction;
@@ -132,8 +141,14 @@ public:
 
    void FinalizeSlot(unsigned int slot) final
    {
+      ClearValueReaders(slot);
+      for (auto &column : GetCustomColumns().GetColumns()) {
+         column.second->ClearValueReaders(slot);
+      }
       fHelper.CallFinalizeTask(slot);
    }
+
+   void ClearValueReaders(unsigned int slot) { static_cast<Action_t *>(this)->ResetColumnValues(slot, TypeInd_t()); }
 
    void Finalize() final
    {
@@ -209,6 +224,12 @@ public:
       (void)entry; // avoid bogus 'unused parameter' warning in gcc4.9
       ActionCRTP_t::GetHelper().Exec(slot, std::get<S>(fValues[slot]).Get(entry)...);
    }
+
+   template <std::size_t... S>
+   void ResetColumnValues(unsigned int slot, std::index_sequence<S...> s)
+   {
+      ResetRDFValueTuple(fValues[slot], s);
+   }
 };
 
 // These specializations let RAction<SnapshotHelper[MT]> type-erase their column values, for (presumably) a small hit in
@@ -254,6 +275,12 @@ public:
       (void)entry; // avoid bogus 'unused parameter' warning in gcc4.9
       ActionCRTP_t::GetHelper().Exec(slot, fValues[slot][S].template Get<ColTypes>(entry)...);
    }
+
+   template <std::size_t... S>
+   void ResetColumnValues(unsigned int slot, std::index_sequence<S...> s)
+   {
+      ResetRDFValueTuple(fValues[slot], s, ColumnTypes_t{});
+   }
 };
 
 // Same exact code as above, but for SnapshotHelperMT. I don't know how to avoid repeating this code
@@ -287,6 +314,12 @@ public:
    {
       (void)entry; // avoid bogus 'unused parameter' warning in gcc4.9
       ActionCRTP_t::GetHelper().Exec(slot, fValues[slot][S].template Get<ColTypes>(entry)...);
+   }
+
+   template <std::size_t... S>
+   void ResetColumnValues(unsigned int slot, std::index_sequence<S...> s)
+   {
+      ResetRDFValueTuple(fValues[slot], s, ColumnTypes_t{});
    }
 };
 

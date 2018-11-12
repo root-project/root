@@ -125,6 +125,13 @@ public:
    {
       return fIsDataSourceColumn ? typeid(typename std::remove_pointer<ret_type>::type) : typeid(ret_type);
    }
+
+   void ClearValueReaders(unsigned int slot) final
+   {
+      // TODO: Each node calls this method for each column it uses. Multiple nodes may share the same columns, and this
+      // would lead to this method being called multiple times.
+      RDFInternal::ResetRDFValueTuple(fValues[slot], TypeInd_t());
+   }
 };
 
 } // ns RDF

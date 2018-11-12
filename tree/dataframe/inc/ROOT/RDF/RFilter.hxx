@@ -133,11 +133,25 @@ public:
       fPrevData.IncrChildrenCount();
    }
 
+   virtual void ClearValueReaders(unsigned int slot) final
+   {
+      RDFInternal::ResetRDFValueTuple(fValues[slot], TypeInd_t());
+   }
+
    void AddFilterName(std::vector<std::string> &filters)
    {
       fPrevData.AddFilterName(filters);
       auto name = (HasName() ? fName : "Unnamed Filter");
       filters.push_back(name);
+   }
+
+   virtual void ClearTask(unsigned int slot) final
+   {
+      for (auto &column : fCustomColumns.GetColumns()) {
+         column.second->ClearValueReaders(slot);
+      }
+
+      ClearValueReaders(slot);
    }
 
    std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph()
