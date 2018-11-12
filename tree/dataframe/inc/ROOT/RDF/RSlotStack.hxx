@@ -13,9 +13,7 @@
 
 #include "ROOT/TRWSpinLock.hxx"
 
-#include <map>
-#include <thread>
-#include <vector>
+#include <stack>
 
 namespace ROOT {
 namespace Internal {
@@ -27,10 +25,8 @@ namespace RDF {
 /// fixed at construction time and no blocking is foreseen.
 class RSlotStack {
 private:
-   unsigned int &GetCount();
-   unsigned int &GetIndex();
-   unsigned int fCursor;
-   std::vector<unsigned int> fBuf;
+   const unsigned int fSize;
+   std::stack<unsigned int> fStack;
    ROOT::TRWSpinLock fRWLock;
 
 public:
@@ -38,8 +34,6 @@ public:
    RSlotStack(unsigned int size);
    void ReturnSlot(unsigned int slotNumber);
    unsigned int GetSlot();
-   std::map<std::thread::id, unsigned int> fCountMap;
-   std::map<std::thread::id, unsigned int> fIndexMap;
 };
 } // ns RDF
 } // ns Internal
