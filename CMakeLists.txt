@@ -134,12 +134,6 @@ foreach(var ${variables})
   endif()
 endforeach()
 
-#---Make sure the Jupyter ROOT C++ kernel runs with the same Python version as ROOT-----
-set(root_kernel_dir  etc/notebook/kernels/root)
-set(root_kernel_file kernel.json)
-configure_file(${CMAKE_SOURCE_DIR}/${root_kernel_dir}/${root_kernel_file}.in ${CMAKE_BINARY_DIR}/${root_kernel_dir}/${root_kernel_file})
-install(FILES ${CMAKE_BINARY_DIR}/${root_kernel_dir}/${root_kernel_file} DESTINATION ${CMAKE_INSTALL_PREFIX}/${root_kernel_dir})
-
 #---Move (copy) directories to binary tree------------------------------------------------------
 set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
 add_custom_command(OUTPUT ${stamp_file}
@@ -436,6 +430,12 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(DIRECTORY cmake/modules DESTINATION ${CMAKE_INSTALL_CMAKEDIR} PATTERN "Find*.cmake" EXCLUDE)
   install(FILES build/misc/root.m4 DESTINATION ${CMAKE_INSTALL_ACLOCALDIR})
 endif()
+
+#---Make sure the Jupyter ROOT C++ kernel runs with the same Python version as ROOT-----
+set(root_kernel_dir  notebook/kernels/root)
+set(root_kernel_file kernel.json)
+configure_file(etc/${root_kernel_dir}/${root_kernel_file}.in etc/${root_kernel_dir}/${root_kernel_file})
+install(FILES ${CMAKE_BINARY_DIR}/etc/${root_kernel_dir}/${root_kernel_file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/${root_kernel_dir})
 
 #---Configure Testing using CTest----------------------------------------------------------------
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
