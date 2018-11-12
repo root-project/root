@@ -237,6 +237,21 @@ public:
          return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtr : **fDSValuePtr;
       }
    }
+
+   void Reset()
+   {
+      // This method should by all means not be removed, together with all
+      // of its callers, otherwise a race condition takes place in which a
+      // TTreeReader and its TTreeReader{Value,Array}s could be deleted
+      // concurrently:
+      // - Thread #1) a task ends and pushes back processing slot
+      // - Thread #2) a task starts and overwrites thread-local TTreeReaderValues
+      // - Thread #1) first task deletes TTreeReader
+      // See https://github.com/root-project/root/commit/26e8ace6e47de6794ac9ec770c3bbff9b7f2e945
+      if (EColumnKind::kTree == fColumnKind) {
+         fTreeReader.reset();
+      }
+   }
 };
 
 // Some extern instaniations to speed-up compilation/interpretation time
@@ -272,6 +287,16 @@ struct TRDFValueTuple<TypeList<BranchTypes...>> {
 
 template <typename BranchType>
 using RDFValueTuple_t = typename TRDFValueTuple<BranchType>::type;
+
+/// Clear the proxies of a tuple of RColumnValues
+template <typename ValueTuple, std::size_t... S>
+void ResetRDFValueTuple(ValueTuple &values, std::index_sequence<S...>)
+{
+   // hack to expand a parameter pack without c++17 fold expressions.
+   std::initializer_list<int> expander{(std::get<S>(values).Reset(), 0)...};
+   (void)expander; // avoid "unused variable" warnings
+}
+
 
 } // ns RDF
 } // ns Internal
