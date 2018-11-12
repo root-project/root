@@ -45,8 +45,6 @@ mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
 
 # The rootd executable
 install -s -m 755 %{_rootdir}/bin/rootd $RPM_BUILD_ROOT%{_prefix}/bin/rootd
-# Small application used internally for backward compatibility in SSH auth
-install -s -m 755 %{_rootdir}/bin/ssh2rpd $RPM_BUILD_ROOT%{_prefix}/bin/ssh2rpd
 # The rootd man page
 install -m 644 %{_rootdir}/man/man1/rootd.1 $RPM_BUILD_ROOT%{_prefix}/share/man/man1/rootd.1
 gzip $RPM_BUILD_ROOT%{_prefix}/share/man/man1/rootd.1
@@ -65,7 +63,6 @@ install -m 755 %{_rootdir}/etc/daemons/rootd.rc.d $RPM_BUILD_ROOT/etc/rc.d/init.
 # Files that go into this package 
 %files
 %attr(0755, root, root) %{_prefix}/bin/rootd 
-%attr(0755, root, root) %{_prefix}/bin/ssh2rpd
 %attr(0644, root, root) %{_prefix}/share/man/man1/rootd.1.gz 
 %attr(0644, root, root) %{_prefix}/share/man/man1/system.rootdaemonrc.1.gz 
 %attr(0644, root, root) %config(noreplace) %{_sysconfdir}/system.rootdaemonrc
