@@ -7,13 +7,6 @@
 
 #include "gtest/gtest.h"
 
-TEST(RDataFrameNodes, RSlotStackCheckSameThreadSameSlot)
-{
-   unsigned int n(7);
-   ROOT::Internal::RDF::RSlotStack s(n);
-   EXPECT_EQ(s.GetSlot()-1, s.GetSlot());
-}
-
 #ifndef NDEBUG
 
 TEST(RDataFrameNodes, RSlotStackGetOneTooMuch)
