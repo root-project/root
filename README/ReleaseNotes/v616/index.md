@@ -37,7 +37,7 @@ The following people have contributed to this new version:
  Ravi Kiran Selvam, GSOC, \
  Manos, Stergiadis, GSOC, \
  Matevz Tadel, UCSD/CMS,\
- Yuka Takahashi, UCincinatti + CERN/SFT,\
+ Yuka Takahashi, Princeton,\
  Massimo Tumolo, Politecnico di Torino,\
  Mohammad Uzair, CERN/SFT, \
  Xavier Valls, CERN/SFT,\
