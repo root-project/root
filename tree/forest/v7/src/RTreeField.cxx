@@ -14,12 +14,42 @@
  *************************************************************************/
 
 #include "ROOT/RTreeField.hxx"
+#include "ROOT/RTreeValue.hxx"
+
+#include "TError.h"
 
 ROOT::Experimental::Detail::RTreeFieldBase::RTreeFieldBase(std::string_view /*name*/)
 {
 }
 
 ROOT::Experimental::Detail::RTreeFieldBase::~RTreeFieldBase()
+{
+}
+
+void ROOT::Experimental::Detail::RTreeFieldBase::DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& /*value*/) {
+   R__ASSERT(false);
+}
+
+void ROOT::Experimental::Detail::RTreeFieldBase::DoRead(
+   ROOT::Experimental::TreeIndex_t /*index*/,
+   const RTreeValueBase& /*value*/)
+{
+   R__ASSERT(false);
+}
+
+void ROOT::Experimental::Detail::RTreeFieldBase::DoReadV(
+   ROOT::Experimental::TreeIndex_t /*index*/,
+   ROOT::Experimental::TreeIndex_t /*count*/,
+   void* /*dst*/)
+{
+   R__ASSERT(false);
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+void ROOT::Experimental::RTreeFieldCollection::Attach(ROOT::Experimental::Detail::RTreeFieldBase* child)
 {
 }
 
@@ -40,9 +70,9 @@ void ROOT::Experimental::RTreeFieldCollection::GenerateColumns(ROOT::Experimenta
 }
 
 
-std::unique_ptr<ROOT::Experimental::Detail::RTreeValueBase> ROOT::Experimental::RTreeFieldCollection::GenerateValue()
+ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RTreeFieldCollection::GenerateValue()
 {
-   return nullptr;
+   //return nullptr;
 }
 
 void ROOT::Experimental::RTreeFieldCollection::DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& /*value*/)
@@ -55,4 +85,17 @@ void ROOT::Experimental::RTreeFieldCollection::DoRead(TreeIndex_t /*index*/, con
 
 void ROOT::Experimental::RTreeFieldCollection::DoReadV(TreeIndex_t /*index*/, TreeIndex_t /*count*/, void* /*dst*/)
 {
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+void ROOT::Experimental::RTreeField<float>::GenerateColumns(ROOT::Experimental::Detail::RPageStorage& /*storage*/)
+{
+}
+
+ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RTreeField<float>::GenerateValue()
+{
+   return ROOT::Experimental::RTreeValue<float>();
 }
