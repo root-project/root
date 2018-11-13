@@ -38,6 +38,8 @@ or deserialized into by tree reading.
 // clang-format on
 class RTreeValueBase {
 public:
+   RTreeValueBase() : fPrincipalElement(nullptr) { }
+
    RColumnElementBase* fPrincipalElement;
 };
 

@@ -33,7 +33,7 @@ namespace Experimental {
 \brief The RTreeModel encapulates the schema of a tree.
 
 The tree model comprises a collection of hierarchically organized fields. From a frozen model, "entries"
-can be extracted. As a convenience, the model provides a default entry. Models have a unique model identifier
+can be extracted. For convenience, the model provides a default entry. Models have a unique model identifier
 that faciliates checking whether entries are compatible with it (i.e.: have been extracted from that model).
 A model needs to be frozen before it can be used to create an RTree.
 */
@@ -47,13 +47,13 @@ class RTreeModel {
 public:
    RTreeModel();
 
-   /// Creates a new brafieldnch and corresponding tree value.
+   /// Creates a new field and a corresponding tree value.
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddField(std::string_view fieldName, ArgsT&&... args) {
       RTreeField<T> *field = new RTreeField<T>(fieldName);
       fRootField.Attach(field);
 
-      return fDefaultEntry.AddField<T>(field, std::forward<ArgsT>(args)...);
+      return fDefaultEntry.AddValue<T>(field, std::forward<ArgsT>(args)...);
    }
 
    /// Mounts an existing model as a sub tree, which allows for composing of tree models
