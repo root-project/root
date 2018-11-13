@@ -317,7 +317,7 @@ Int_t TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
    // the expected TTree), then prefill the cache.  (We expect that in future
    // release the Prefill-ing will be the default so we test for that inside the
    // LearnPrefill call).
-   if (fNbranches == 0 && fEntryMin >= 0 && b->GetReadEntry() == fEntryMin) LearnPrefill();
+   if (!fLearnPrefilling && fNbranches == 0) LearnPrefill();
 
    //Is branch already in the cache?
    Bool_t isNew = kTRUE;
@@ -2175,6 +2175,14 @@ void TTreeCache::LearnPrefill()
    // extension to alternative Prefilling).
    if (fPrefillType == kNoPrefill) return;
 
+   Long64_t entry = fTree ? fTree->GetReadEntry() : 0;
+
+   // Return early if we are out of the requested range.
+   if (entry < fEntryMin || entry > fEntryMax) return;
+
+   fLearnPrefilling = kTRUE;
+
+
    // Force only the learn entries to be cached by temporarily setting min/max
    // to the learning phase entry range
    // But save all the old values, so we can restore everything to how it was
@@ -2187,6 +2195,17 @@ void TTreeCache::LearnPrefill()
 
    fEntryMin = std::max(fEntryMin, fEntryCurrent);
    fEntryMax = std::min(fEntryMax, fEntryNext);
+
+   // We check earlier that we are within the authorized range, but
+   // we might still be out of the (default) learning range and since
+   // this is called before any branch is added to the cache, this means
+   // that the user's first GetEntry is this one which is outside of the
+   // learning range ... so let's do something sensible-ish.
+   // Note: we probably should also fix the learning range but we may
+   // or may not have enough information to know if we can move it
+   // (for example fEntryMin (eminOld right now) might be the default or user provided)
+   if (entry < fEntryMin) fEntryMin = entry;
+   if (entry > fEntryMax) fEntryMax = entry;
 
    // Add all branches to be cached. This also sets fIsManual, stops learning,
    // and makes fEntryNext = -1 (which forces a cache fill, which is good)
@@ -2207,4 +2226,6 @@ void TTreeCache::LearnPrefill()
    fEntryNext = enextOld;
    fCurrentClusterStart = currentClusterStartOld;
    fNextClusterStart = nextClusterStartOld;
+
+   fLearnPrefilling = kFALSE;
 }
