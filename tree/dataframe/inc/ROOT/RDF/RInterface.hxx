@@ -1597,6 +1597,35 @@ public:
       return definedColumns;
    }
 
+   /// \brief Checks if a column is present in the dataset
+   /// \return true if the column is available, false otherwise
+   ///
+   /// This method checks if a column is part of the input ROOT dataset, has
+   /// been defined or can be provided by the data source.
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// ROOT::RDataFrame base(1);
+   /// auto rdf = base.Define("definedColumn", [](){return 0;});
+   /// rdf.HasColumn("definedColumn"); // true: we defined it
+   /// rdf.HasColumn("rdfentry_"); // true: it's always there
+   /// rdf.HasColumn("foo"); // false: it is not there
+   /// ~~~
+   bool HasColumn(std::string_view columnName)
+   {
+      if(fCustomColumns.HasName(columnName)) return true;
+
+      if (auto tree = fLoopManager->GetTree()) {
+         const auto branchNames = RDFInternal::GetBranchNames(*tree, /*allowDuplicates=*/true);
+         const auto branchNamesEnd = branchNames.end();
+         if (branchNamesEnd != std::find(branchNames.begin(), branchNamesEnd, columnName)) return true;
+      }
+
+      if (fDataSource && fDataSource->HasColumn(columnName)) return true;
+
+      return false;
+   }
+
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
