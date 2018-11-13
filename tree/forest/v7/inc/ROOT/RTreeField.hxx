@@ -36,11 +36,12 @@ class RPageStorage;
 /**
 \class ROOT::Experimental::RTreeFieldBase
 \ingroup Forest
-\brief An field translates read and write calls from/to underlying columns to/from tere values
+\brief An field translates read and write calls from/to underlying columns to/from tree values
 
-A field is a serializable C++ type. The RTreeFieldBase and its type-safe descendants provide the object
-to column mapper. They map C++ objects to primitive columns, where the mapping is trivial for simple types
-such as 'double'. The field knows based on its type and the field name the type(s) and name(s) of the columns.
+A field is a serializable C++ type or a container for a collection of sub fields. The RTreeFieldBase and its
+type-safe descendants provide the object to column mapper. They map C++ objects to primitive columns, where the
+mapping is trivial for simple types such as 'double'. The field knows based on its type and the field name the
+type(s) and name(s) of the columns.
 */
 // clang-format on
 class RTreeFieldBase {
@@ -55,9 +56,9 @@ private:
 protected:
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
-   virtual void DoAppend(const RTreeValueBase& value) = 0;
-   virtual void DoRead(TreeIndex_t index, const RTreeValueBase& value) = 0;
-   virtual void DoReadV(TreeIndex_t index, TreeIndex_t count, void* dst) = 0;
+   virtual void DoAppend(const RTreeValueBase& value);
+   virtual void DoRead(TreeIndex_t index, const RTreeValueBase& value);
+   virtual void DoReadV(TreeIndex_t index, TreeIndex_t count, void* dst);
 
 public:
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
@@ -68,7 +69,7 @@ public:
    virtual void GenerateColumns(Detail::RPageStorage &storage) = 0;
 
    /// Generates a tree value of the field type.
-   virtual std::unique_ptr<RTreeValueBase> GenerateValue() = 0;
+   virtual RTreeValueBase GenerateValue() = 0;
 
    /// Write the given value to a tree. The value object has to be of the same type as the field.
    void Append(const RTreeValueBase &value) {
@@ -134,8 +135,8 @@ public:
    ~RTreeFieldCollection();
 
    void GenerateColumns(Detail::RPageStorage &storage) final;
-   std::unique_ptr<Detail::RTreeValueBase> GenerateValue() final;
-   void Attach(RTreeFieldBase* child);
+   Detail::RTreeValueBase GenerateValue() final;
+   void Attach(Detail::RTreeFieldBase* child);
 };
 
 
@@ -144,9 +145,18 @@ template <typename T>
 class RTreeField : public Detail::RTreeFieldBase {
 };
 
-/// TODO(jblomer): template specializations for simple types and TClass
-
 } // namespace Experimental
 } // namespace ROOT
+
+
+template <>
+class ROOT::Experimental::RTreeField<float> : public ROOT::Experimental::Detail::RTreeFieldBase {
+public:
+   explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name) { }
+   ~RTreeField() = default;
+
+   void GenerateColumns(ROOT::Experimental::Detail::RPageStorage& storage) final;
+   ROOT::Experimental::Detail::RTreeValueBase GenerateValue() final;
+};
 
 #endif

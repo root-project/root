@@ -16,6 +16,7 @@
 #ifndef ROOT7_RTreeEntry
 #define ROOT7_RTreeEntry
 
+#include <ROOT/RTreeField.hxx>
 #include <ROOT/RTreeValue.hxx>
 
 #include <memory>
@@ -41,9 +42,9 @@ public:
 
    /// While building the entry, adds a new value to the list and return the value's shared pointer
    template <typename T, typename... ArgsT>
-   std::shared_ptr<T> AddField(ArgsT&&... args) {
-     auto value = std::make_shared<RTreeValue<T>>(std::forward<ArgsT>(args)...);
-     auto value_ptr = value->Get();
+   std::shared_ptr<T> AddValue(Detail::RTreeFieldBase* /*field*/, ArgsT&&... args) {
+     RTreeValue<T> value(std::forward<ArgsT>(args)...);
+     auto value_ptr = value.Get();
      fTreeValues.emplace_back(std::move(value));
      return value_ptr;
    }
