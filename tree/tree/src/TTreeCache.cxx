@@ -2185,8 +2185,8 @@ void TTreeCache::LearnPrefill()
    auto currentClusterStartOld = fCurrentClusterStart;
    auto nextClusterStartOld = fNextClusterStart;
 
-   fEntryMin = fEntryCurrent;
-   fEntryMax = fEntryNext;
+   fEntryMin = std::max(fEntryMin, fEntryCurrent);
+   fEntryMax = std::min(fEntryMax, fEntryNext);
 
    // Add all branches to be cached. This also sets fIsManual, stops learning,
    // and makes fEntryNext = -1 (which forces a cache fill, which is good)
