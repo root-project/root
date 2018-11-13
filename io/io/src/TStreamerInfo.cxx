@@ -1974,7 +1974,6 @@ void TStreamerInfo::BuildOld()
       std::string typeNameBuf;
       const char* dmType = nullptr;
       Bool_t dmIsPtr = false;
-      Bool_t isUniquePtr = false;
       TDataType* dt(nullptr);
       Int_t ndim = 0 ; //dm->GetArrayDim();
       std::array<Int_t, 5> maxIndices; // 5 is the maximum supported in TStreamerElement::SetMaxIndex
@@ -2010,7 +2009,7 @@ void TStreamerInfo::BuildOld()
             Bool_t nameChanged;
             typeNameBuf = TClassEdit::GetNameForIO(dmType, TClassEdit::EModType::kNone, &nameChanged);
             if (nameChanged) {
-               isUniquePtr = dmIsPtr = TClassEdit::IsUniquePtr(dmType);
+               dmIsPtr = TClassEdit::IsUniquePtr(dmType);
                dmType = typeNameBuf.c_str();
             }
             if ((isStdArray = TClassEdit::IsStdArray(dmType))){ // We tackle the std array case
@@ -2255,7 +2254,7 @@ void TStreamerInfo::BuildOld()
          if (element->GetNewType() != -2) {
             if (dm) {
                if (dmIsPtr) {
-                  if (isUniquePtr || strncmp(dm->GetTitle(),"->",2)==0) {
+                  if (strncmp(dm->GetTitle(),"->",2)==0) {
                      // We are fine, nothing to do.
                      if (newClass->IsTObject()) {
                         newType = kObjectp;
