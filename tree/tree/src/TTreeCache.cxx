@@ -1319,7 +1319,7 @@ Bool_t TTreeCache::FillBuffer()
          Bool_t filled = kFALSE;
          for (Int_t i = 0; i < fNbranches; ++i) {
             TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
-            if (b->GetDirectory()==0)
+            if (b->GetDirectory()==0 || b->TestBit(TBranch::kDoNotProcess))
                continue;
             if (b->GetDirectory()->GetFile() != fFile)
                continue;
