@@ -68,6 +68,8 @@ protected:
    static Int_t fgLearnEntries;       ///<  number of entries used for learning mode
    Bool_t       fAutoCreated{kFALSE}; ///<! true if cache was automatically created
 
+   Bool_t       fLearnPrefilling{kFALSE}; ///<! true if we are in the process of executing LearnPrefill
+
    // These members hold cached data for missed branches when miss optimization
    // is enabled.  Pointers are only initialized if the miss cache is enabled.
    Bool_t   fOptimizeMisses{kFALSE}; ///<! true if we should optimize cache misses.
