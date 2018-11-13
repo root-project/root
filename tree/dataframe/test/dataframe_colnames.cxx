@@ -2,6 +2,34 @@
 
 #include "gtest/gtest.h"
 
+
+TEST(ColNames, HasColumn)
+{
+   // From scratch
+   ROOT::RDataFrame fromScratch(1);
+
+   EXPECT_TRUE(fromScratch.HasColumn("rdfentry_"));
+   EXPECT_TRUE(fromScratch.HasColumn("rdfslot_"));
+
+   auto rdf = fromScratch.Define("def", [](){return 0;}).Alias("alias", "def");
+
+   EXPECT_TRUE(rdf.HasColumn("def"));
+   EXPECT_TRUE(rdf.HasColumn("alias"));
+
+   // From tree
+   TTree t("t","t");
+   int i;
+   t.Branch("branch", &i);
+
+   ROOT::RDataFrame fromTree(t);
+   EXPECT_TRUE(fromTree.HasColumn("branch"));
+
+   // From Source
+   auto fromSource = rdf.Cache<int>({"def"});
+   EXPECT_TRUE(fromSource.HasColumn("def"));
+
+}
+
 TEST(Aliases, DefineOnAlias)
 {
    ROOT::RDataFrame tdf(2);
