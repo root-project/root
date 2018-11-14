@@ -3567,8 +3567,8 @@ void TFormula::Print(Option_t *option) const
       }
       printf("Expression passed to Cling:\n");
       printf("\t%s\n",fClingInput.Data() );
-      printf("Generated Gradient:\n");
       if (fGradFuncPtr) {
+         printf("Generated Gradient:\n");
          printf("%s\n", fGradGenerationInput.c_str());
          printf("%s\n", GetGradientFormula().Data());
       }
