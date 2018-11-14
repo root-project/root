@@ -73,7 +73,7 @@ namespace TTraits = ROOT::TypeTraits;
 template <typename Proxied, typename DataSource>
 class RInterface;
 
-using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
+using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, RDataSource>;
 
 // clang-format off
 /**
@@ -87,9 +87,9 @@ using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
  * the majority of the template parameters are automatically deduced requiring no or very little effort by the user.
  */
 // clang-format on
-template <typename Proxied, typename DataSource = void>
+template <typename Proxied, typename DataSource = RDataSource>
 class RInterface {
-   using DS_t = DataSource;
+   using DS_t = DataSource;//typename std::conditional<std::is_same<void, DataSource>::value, RDataSource, DataSource>::type;
    using ColumnNames_t = RDFDetail::ColumnNames_t;
    using RFilterBase = RDFDetail::RFilterBase;
    using RRangeBase = RDFDetail::RRangeBase;
@@ -104,7 +104,7 @@ class RInterface {
    ///< The RLoopManager at the root of this computation graph. Never null.
    RLoopManager *fLoopManager;
    /// Non-owning pointer to a data-source object. Null if no data-source. RLoopManager has ownership of the object.
-   RDataSource *fDataSource = nullptr;
+   DS_t *fDataSource = nullptr;
    std::shared_ptr<const ColumnNames_t> fBranchNames; ///< Cache of the chain columns names
 
    /// Contains the custom columns defined up to this node.
@@ -127,7 +127,7 @@ public:
    /// \brief Only enabled when building a RInterface<RLoopManager>
    template <typename T = Proxied, typename std::enable_if<std::is_same<T, RLoopManager>::value, int>::type = 0>
    RInterface(const std::shared_ptr<Proxied> &proxied)
-      : fProxiedPtr(proxied), fLoopManager(proxied.get()), fDataSource(proxied->GetDataSource())
+      : fProxiedPtr(proxied), fLoopManager(proxied.get()), fDataSource(static_cast<DS_t*>(proxied->GetDataSource()))
    {
       AddDefaultColumns();
    }
@@ -695,7 +695,7 @@ public:
       using Range_t = RDFDetail::RRange<Proxied>;
       auto rangePtr = std::make_shared<Range_t>(begin, end, stride, fProxiedPtr);
       fLoopManager->Book(rangePtr.get());
-      RInterface<RDFDetail::RRange<Proxied>> tdf_r(std::move(rangePtr), *fLoopManager, fCustomColumns, fBranchNames,
+      RInterface<RDFDetail::RRange<Proxied>, DS_t> tdf_r(std::move(rangePtr), *fLoopManager, fCustomColumns, fBranchNames,
                                                    fDataSource);
       return tdf_r;
    }
@@ -2016,7 +2016,7 @@ private:
       newCols.AddName(name);
       newCols.AddColumn(newColumn, name);
 
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fBranchNames, fDataSource);
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fBranchNames, fDataSource);
 
       return newInterface;
    }
@@ -2123,7 +2123,9 @@ private:
       auto colHolders = std::make_tuple(Take<BranchTypes>(columnList[S])...);
       auto ds = std::make_unique<RLazyDS<BranchTypes...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
 
-      RInterface<RLoopManager> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnList));
+      // Here we leave the generic source as second template parameter until we identify the most performant
+      // way to get the type name for a RLazyDS
+      RInterface<RLoopManager, RDataSource> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnList));
 
       (void)s; // Prevents unused warning
 
@@ -2133,7 +2135,7 @@ private:
 protected:
    RInterface(const std::shared_ptr<Proxied> &proxied, RLoopManager &lm, RDFInternal::RBookedCustomColumns columns,
               const std::shared_ptr<const ColumnNames_t> &datasetColumns, RDataSource *ds)
-      : fProxiedPtr(proxied), fLoopManager(&lm), fDataSource(ds), fBranchNames(datasetColumns), fCustomColumns(columns)
+      : fProxiedPtr(proxied), fLoopManager(&lm), fDataSource(static_cast<DS_t*>(ds)), fBranchNames(datasetColumns), fCustomColumns(columns)
    {
    }
 

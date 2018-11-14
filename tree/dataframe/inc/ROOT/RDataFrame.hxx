@@ -48,6 +48,17 @@ public:
    RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
    RDataFrame(ULong64_t numEntries);
    RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource>, const ColumnNames_t &defaultBranches = {});
+   ///@cond
+   // This template version of the method above allows to de-virtualise calls to the data source.
+   // We leave in place the method exploiting overloading to workaround a PyROOT limitation which prevents
+   // the system to detect templated methods.
+   template<typename T>
+   RDataFrame(std::unique_ptr<T> ds, const ColumnNames_t &defaultBranches)
+   : RInterface<RDFDetail::RLoopManager, T>(std::make_shared<RDFDetail::RLoopManager>(std::move(ds), defaultBranches))
+   {
+   }
+   ///@endcond
+
 };
 
 } // ns ROOT
