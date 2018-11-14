@@ -1,9 +1,9 @@
 add_subdirectory(tmva)
 add_subdirectory(tmvagui)
-if(python AND NUMPY_FOUND)
+
+# Build pyMVA. Allows users to call python mva's from c++ ROOT/TMVA.
+if(python AND tmva-pymva AND NUMPY_FOUND)
    add_subdirectory(pymva)
-elseif(python AND NOT NUMPY_FOUND)
-   message(STATUS "TMVA: Deactivate PyMVA because numpy is not found")
 endif()
 if(r)
 add_subdirectory(rmva)
