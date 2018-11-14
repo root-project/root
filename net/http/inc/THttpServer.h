@@ -131,9 +131,6 @@ public:
    Bool_t ExecuteHttp(std::shared_ptr<THttpCallArg> arg);
 
    /** Submit HTTP request */
-   Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE) _R__DEPRECATED_618("Please use SubmitHttp(std::shared_ptr<THttpCallArg>,bool)");
-
-   /** Submit HTTP request */
    Bool_t SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run_immediately = kFALSE);
 
    /** Process submitted requests, must be called from appropriate thread */

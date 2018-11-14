@@ -614,44 +614,6 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \deprecated Signature with shared_ptr should be used
-/// Submit http request, specified in THttpCallArg structure
-/// Contrary to ExecuteHttp, it will not block calling thread.
-/// User should reimplement THttpCallArg::HttpReplied() method
-/// to react when HTTP request is executed.
-/// Method can be called from any thread
-/// Actual execution will be done in main ROOT thread, where analysis code is running.
-/// When called from main thread and can_run_immediately==kTRUE, will be
-/// executed immediately.
-/// If ownership==kTRUE, THttpCallArg object will be destroyed by the THttpServer
-/// Returns kTRUE when was executed.
-
-Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately, Bool_t ownership)
-{
-   if (fTerminated) {
-      if (ownership)
-         delete arg;
-      return kFALSE;
-   }
-
-   if (can_run_immediately && (fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
-      ProcessRequest(arg);
-      arg->NotifyCondition();
-      if (ownership)
-         delete arg;
-      return kTRUE;
-   }
-
-   // add call arg to the list
-   std::unique_lock<std::mutex> lk(fMutex);
-   if (ownership)
-      fArgs.push(std::shared_ptr<THttpCallArg>(arg));
-   else
-      fCallArgs.Add(arg);
-   return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Submit http request, specified in THttpCallArg structure
 /// Contrary to ExecuteHttp, it will not block calling thread.
 /// User should reimplement THttpCallArg::HttpReplied() method
