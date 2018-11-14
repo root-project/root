@@ -688,6 +688,8 @@
             var plane = new THREE.Plane(),
                 geom = this.geometry;
 
+            if (!geom || !geom.vertices) return undefined;
+
             plane.setFromCoplanarPoints(geom.vertices[0], geom.vertices[1], geom.vertices[2]);
             plane.applyMatrix4(this.matrixWorld);
 
@@ -710,7 +712,7 @@
          mesh.ShowSelection = function(pnt1,pnt2) {
             // used to show selection
 
-            var tgtmesh = this.children[0], gg, kind = this.zoom;
+            var tgtmesh = this.children ? this.children[0] : null, gg, kind = this.zoom;
             if (!pnt1 || !pnt2) {
                if (tgtmesh) {
                   this.remove(tgtmesh)
@@ -1331,6 +1333,7 @@
             var mesh2 = new THREE.Mesh(geom2, material2);
             mesh2.face_to_bins_index = face_to_bins_indx2;
             mesh2.painter = this;
+            mesh2.handle = mesh.handle;
             mesh2.tooltip = mesh.tooltip;
             mesh2.zmin = mesh.zmin;
             mesh2.zmax = mesh.zmax;

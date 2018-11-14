@@ -314,13 +314,15 @@
 
       if ((this.kind == "normal") && (handle.major.length > 0)) {
 
-         var maxorder = 0, minorder = 0;
+         var maxorder = 0, minorder = 0, exclorder3 = false;
 
          if (!optionNoexp) {
             var maxtick = Math.max(Math.abs(handle.major[0]),Math.abs(handle.major[handle.major.length-1])),
                 mintick = Math.min(Math.abs(handle.major[0]),Math.abs(handle.major[handle.major.length-1])),
                 ord1 = (maxtick > 0) ? Math.round(JSROOT.log10(maxtick)/3)*3 : 0,
                 ord2 = (mintick > 0) ? Math.round(JSROOT.log10(mintick)/3)*3 : 0;
+
+             exclorder3 = (maxtick < 2e4); // do not show 10^3 for values below 20000
 
              if (maxtick || mintick) {
                 maxorder = Math.max(ord1,ord2) + 3;
@@ -333,6 +335,7 @@
          var bestorder = 0, bestndig = this.ndig, bestlen = 1e10;
 
          for (var order = minorder; order <= maxorder; order+=3) {
+            if (exclorder3 && (order===3)) continue;
             this.order = order;
             this.ndig = 0;
             var lbls = [], indx = 0, totallen = 0;
@@ -1564,14 +1567,14 @@
 
       var last = this.zoom_changed_interactive;
 
-      if (dox || doy || dox) this.zoom_changed_interactive = 2;
+      if (dox || doy || doz) this.zoom_changed_interactive = 2;
 
       var changed = this.Zoom(dox ? 0 : undefined, dox ? 0 : undefined,
                               doy ? 0 : undefined, doy ? 0 : undefined,
                               doz ? 0 : undefined, doz ? 0 : undefined);
 
       // if unzooming has no effect, decrease counter
-      if ((dox || doy || dox) && !changed)
+      if ((dox || doy || doz) && !changed)
          this.zoom_changed_interactive = (!isNaN(last) && (last>0)) ? last - 1 : 0;
 
       return changed;
@@ -2592,16 +2595,18 @@
       JSROOT.TObjectPainter.prototype.Cleanup.call(this);
    }
 
+   /** @summary Cleanup primitives from pad - selector lets define which painters to remove
+    * @private
+    */
+
    TPadPainter.prototype.CleanPrimitives = function(selector) {
       if (!selector || (typeof selector !== 'function')) return;
 
-      for (var k=this.painters.length-1;k>=0;--k) {
-         var p = this.painters[k];
-         if (selector(p)) {
-            p.Cleanup();
-            this.painters.splice(k--, 1);
+      for (var k = this.painters.length-1; k >= 0; --k)
+         if (selector(this.painters[k])) {
+            this.painters[k].Cleanup();
+            this.painters.splice(k, 1);
          }
-      }
    }
 
    /// call function for each painter
