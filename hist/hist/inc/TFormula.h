@@ -100,10 +100,10 @@ private:
 
    using CallFuncSignature = TInterpreter::CallFuncIFacePtr_t::Generic_t;
    std::string       fGradGenerationInput; //! input query to clad to generate a gradient
-   CallFuncSignature fFuncPtr; //!  function pointer, owned by the JIT.
-   CallFuncSignature fGradFuncPtr; //!  function pointer, owned by the JIT.
+   CallFuncSignature fFuncPtr = nullptr; //!  function pointer, owned by the JIT.
+   CallFuncSignature fGradFuncPtr = nullptr; //!  function pointer, owned by the JIT.
+   void *   fLambdaPtr = nullptr;            //!  pointer to the lambda function
    static bool       fIsCladRuntimeIncluded;
-   void *   fLambdaPtr;                                    //!  pointer to the lambda function
 
    void     InputFormulaIntoCling();
    Bool_t   PrepareEvalMethod();

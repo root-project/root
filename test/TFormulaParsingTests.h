@@ -935,6 +935,28 @@ bool test48() {
    return ok;
 }
 
+bool test49() {
+   // test detailed printing of function
+   TFormula f1("f1","[A]*sin([B]*x)");
+   f1.Print("V");
+   bool ok = f1.IsValid(); 
+
+   TF2 f2("f2","[0]*x+[1]*y");
+   f2.Print("V");
+   ok |= f2.GetFormula()->IsValid();
+
+   // create using lambda expression, need to pass ndim and npar
+   TFormula f3("f3","[](double *x, double *p){ return p[0]*x[0] + p[1]; } ",1,2);
+   f3.Print("V");
+   ok |= f3.IsValid();
+
+   // create again using lambda from TF1, need to pass xmin(0.),xmax(1.), npar (1)
+   TF1 f4("f3","[](double *x, double *p){ return p[0]*x[0]; } ",0.,1.,1);  
+   f4.Print("V");
+   ok |= f3.IsValid();
+
+   return ok;
+}
 
 void PrintError(int itest)  {
    Error("TFormula test","test%d FAILED ",itest);
@@ -1001,6 +1023,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test46() ) { PrintError(itest); }
    IncrTest(itest); if (!test47() ) { PrintError(itest); }
    IncrTest(itest); if (!test48() ) { PrintError(itest); }
+   IncrTest(itest); if (!test49() ) { PrintError(itest); }
 
    std::cout << ".\n";
 
