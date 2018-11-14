@@ -85,6 +85,8 @@ TTree *genTree(Int_t nPoints, Double_t offset, Double_t scale, UInt_t seed = 100
    TTree *data = new TTree();
    data->Branch("x", &x, "x/F");
    data->Branch("y", &y, "y/F");
+
+   // EventID's can be large, set branch type to unsigned long
    data->Branch("eventID", &eventID, "eventID/I");
 
    for (Int_t n = 0; n < nPoints; ++n) {
@@ -134,6 +136,15 @@ int TMVACrossValidation()
 
    // Spectator used for split
    dataloader->AddSpectator("eventID", 'I');
+
+   // NOTE: Currently TMVA treats all input variables, spectators etc as
+   //       floats. Thus, if the absolute value of the input is too large
+   //       there can be precision loss. This can especially be a problem for
+   //       cross validation with large event numbers.
+   //       A workaround is to define your splitting variable as:
+   //           `dataloader->AddSpectator("eventID := eventID % 4096", 'I');`
+   //       where 4096 should be a number much larger than the number of folds
+   //       you intend to run with.
 
    // Attaches the trees so they can be read from
    dataloader->AddSignalTree(sigTree, 1.0);
