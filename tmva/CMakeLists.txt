@@ -5,6 +5,8 @@ add_subdirectory(tmvagui)
 if(python AND tmva-pymva AND NUMPY_FOUND)
    add_subdirectory(pymva)
 endif()
-if(r)
-add_subdirectory(rmva)
+
+# Build RMVA. Allows users to call R mva's from c++ ROOT/TMVA.
+if(r OR tmva-rmva)
+   add_subdirectory(rmva)
 endif()
