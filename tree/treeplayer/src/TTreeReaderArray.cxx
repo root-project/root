@@ -450,7 +450,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
             fSetupStatus = kSetupMismatch;
 
          // Update named proxy's dictionary
-         if (namedProxy && !namedProxy->GetContentDict()) {
+         if (!namedProxy->GetContentDict()) {
             namedProxy->SetContentDict(fDict);
          }
 
