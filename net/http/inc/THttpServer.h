@@ -52,7 +52,6 @@ protected:
    std::string fCors;            ///<! CORS: sets Access-Control-Allow-Origin header for ProcessRequest responses
 
    std::mutex fMutex;                                        ///<! mutex to protect list with arguments
-   TList fCallArgs;                                          ///<! submitted arguments (deprecated)
    std::queue<std::shared_ptr<THttpCallArg>> fArgs;          ///<! submitted arguments
 
    std::mutex fWSMutex;                                      ///<! mutex to protect WS handler lists

@@ -208,24 +208,6 @@ THttpServer::~THttpServer()
 {
    StopServerThread();
 
-   THttpCallArg *arg = nullptr;
-   Bool_t owner = kFALSE;
-   while (true) {
-      // delete outside the locked mutex area
-      if (owner && arg)
-         delete arg;
-
-      std::unique_lock<std::mutex> lk(fMutex);
-
-      if (fCallArgs.GetSize() == 0)
-         break;
-
-      arg = static_cast<THttpCallArg *>(fCallArgs.First());
-      const char *opt = fCallArgs.FirstLink()->GetAddOption();
-      owner = opt && !strcmp(opt, "owner");
-      fCallArgs.RemoveFirst();
-   }
-
    if (fTerminated) {
       TIter iter(&fEngines);
       THttpEngine *engine = nullptr;
@@ -658,33 +640,6 @@ Int_t THttpServer::ProcessRequests()
       }
 
       fSniffer->SetCurrentCallArg(arg.get());
-
-      try {
-         cnt++;
-         ProcessRequest(arg);
-         fSniffer->SetCurrentCallArg(nullptr);
-      } catch (...) {
-         fSniffer->SetCurrentCallArg(nullptr);
-      }
-
-      arg->NotifyCondition();
-   }
-
-   // then process old-style queue, will be removed later
-   while (true) {
-      THttpCallArg *arg = nullptr;
-
-      lk.lock();
-      if (fCallArgs.GetSize() > 0) {
-         arg = static_cast<THttpCallArg *>(fCallArgs.First());
-         fCallArgs.RemoveFirst();
-      }
-      lk.unlock();
-
-      if (!arg)
-         break;
-
-      fSniffer->SetCurrentCallArg(arg);
 
       try {
          cnt++;
