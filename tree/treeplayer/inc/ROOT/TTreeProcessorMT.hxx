@@ -142,7 +142,7 @@ namespace ROOT {
          /// Get a TTreeReader for the current tree of this view.
          TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::string &treeName,
                                                const std::vector<std::string> &fileNames, const FriendInfo &friendInfo,
-                                               TEntryList entryList, const std::vector<Long64_t> &nEntries,
+                                               TEntryList &entryList, const std::vector<Long64_t> &nEntries,
                                                const std::vector<std::vector<Long64_t>> &friendEntries)
          {
             const bool usingLocalEntries = friendInfo.fFriendNames.empty() && entryList.GetN() == 0;
@@ -168,7 +168,7 @@ namespace ROOT {
       const std::vector<std::string> fFileNames; ///< Names of the files
       const std::string fTreeName;               ///< Name of the tree
       /// User-defined selection of entry numbers to be processed, empty if none was provided
-      const TEntryList fEntryList;
+      TEntryList fEntryList;
       const Internal::FriendInfo fFriendInfo;
 
       ROOT::TThreadedObject<ROOT::Internal::TTreeView> treeView; ///<! Thread-local TreeViews
