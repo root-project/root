@@ -622,6 +622,40 @@ ROOT::RDF::SaveGraph(rd1, "./mydot.dot");
 ROOT::RDF::SaveGraph(rd1);
 ~~~
 
+### RDataFrame variables as function arguments and return values
+RDataFrame variables/nodes are relatively cheap to copy and it's possible to both pass them to (or move them into)
+functions and to return them from functions. However, in general each dataframe node will have a different C++ type,
+which includes all available compile-time information about what that node does. One way to cope with this complication
+is to use template functions and/or C++14 auto return types:
+~~~{.cpp}
+template <typename RDF>
+auto ApplySomeFilters(RDF df)
+{
+   return df.Filter("x > 0").Filter([](int y) { return y < 0; }, {"y"});
+}
+~~~
+
+A possibly simpler, C++11-compatible alternative is to take advantage of the fact that any dataframe node can be
+converted to the common type ROOT::RDF::RNode:
+~~~{.cpp}
+// a function that conditionally adds a Range to a RDataFrame node.
+RNode MaybeAddRange(RNode df, bool mustAddRange)
+{
+   return mustAddRange ? df.Range(1) : df;
+}
+// use as :
+ROOT::RDataFrame df(10);
+auto maybeRangedDF = MaybeAddRange(df, true);
+~~~
+
+The conversion to ROOT::RDF::RNode is cheap, but it will introduce an extra virtual call during the RDataFrame event 
+loop (in most cases, the resulting performance impact should be negligible).
+
+As a final note, remember that RDataFrame actions do not return another dataframe, but a RResultPtr<T>, where T is the
+type of the result of the action.
+
+Read more on this topic [here](https://root.cern.ch/doc/master/classROOT_1_1RDF_1_1RInterface.html#a6909f04c05723de79f97a14b092318b1).
+
 ##  <a name="transformations"></a>Transformations
 ### <a name="Filters"></a> Filters
 A filter is defined through a call to `Filter(f, columnList)`. `f` can be a function, a lambda expression, a functor
