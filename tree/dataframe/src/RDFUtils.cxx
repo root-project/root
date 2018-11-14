@@ -180,11 +180,11 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define. Throws if type name deduction fails.
 /// Note that for fixed- or variable-sized c-style arrays the returned type name will be RVec<T>.
-/// vector2tvec specifies whether typename 'std::vector<T>' should be converted to 'RVec<T>' or returned as is
+/// vector2rvec specifies whether typename 'std::vector<T>' should be converted to 'RVec<T>' or returned as is
 /// customColID is only used if isCustomColumn is true, and must correspond to the custom column's unique identifier
 /// returned by its `GetID()` method.
 std::string ColumnName2ColumnTypeName(const std::string &colName, unsigned int namespaceID, TTree *tree,
-                                      RDataSource *ds, bool isCustomColumn, bool vector2tvec, unsigned int customColID)
+                                      RDataSource *ds, bool isCustomColumn, bool vector2rvec, unsigned int customColID)
 {
    std::string colType;
 
@@ -193,7 +193,7 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, unsigned int n
 
    if (colType.empty() && tree) {
       colType = GetBranchOrLeafTypeName(*tree, colName);
-      if (vector2tvec && TClassEdit::IsSTLCont(colType) == ROOT::ESTLType::kSTLvector) {
+      if (vector2rvec && TClassEdit::IsSTLCont(colType) == ROOT::ESTLType::kSTLvector) {
          std::vector<std::string> split;
          int dummy;
          TClassEdit::GetSplit(colType.c_str(), split, dummy);
