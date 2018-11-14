@@ -33,7 +33,7 @@ The following people have contributed to this new version:
 
 ### THttpServer classes
 
-Following deprecated methods were removed:
+The following methods were deprecated and removed:
 
    * Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE);
    * Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
@@ -42,8 +42,7 @@ Following deprecated methods were removed:
    * void THttpCallArg::FillHttpHeader(TString &buf, const char *header = nullptr);
    * void THttpCallArg::SetBinData(void *data, Long_t length);
    
-   
-Methods should be replaced by equivalent methods with other signature:
+The methods could be replaced by equivalent methods with other signature:
 
    * Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run_immediately = kFALSE);
    * Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg);
