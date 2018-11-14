@@ -585,33 +585,6 @@ Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg)
    return kTRUE;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// \deprecated Signature with shared_ptr should be used
-/// Executes http request, specified in THttpCallArg structure
-/// Method can be called from any thread
-/// Actual execution will be done in main ROOT thread, where analysis code is running.
-
-Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
-{
-   if (fTerminated)
-      return kFALSE;
-
-   if ((fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
-      // should not happen, but one could process requests directly without any signaling
-
-      ProcessRequest(arg);
-
-      return kTRUE;
-   }
-
-   // add call arg to the list
-   std::unique_lock<std::mutex> lk(fMutex);
-   fCallArgs.Add(arg);
-   // and now wait until request is processed
-   arg->fCond.wait(lk);
-
-   return kTRUE;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Submit http request, specified in THttpCallArg structure

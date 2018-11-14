@@ -125,9 +125,6 @@ public:
    Bool_t IsFileRequested(const char *uri, TString &res) const;
 
    /** Execute HTTP request */
-   Bool_t ExecuteHttp(THttpCallArg *arg) _R__DEPRECATED_618("Please use ExecuteHttp(std::shared_ptr<THttpCallArg>)");
-
-   /** Execute HTTP request */
    Bool_t ExecuteHttp(std::shared_ptr<THttpCallArg> arg);
 
    /** Submit HTTP request */
