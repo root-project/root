@@ -137,10 +137,6 @@ public:
    /** return length of posted with request data */
    Long_t GetPostDataLength() const { return (Long_t) fPostData.length(); }
 
-   /** returns post data as TString */
-   TString GetPostDataAsString() const _R__DEPRECATED_618("Use other methods to access POST data")
-   { return TString(fPostData.c_str()); }
-
    /** returns path name from request URL */
    const char *GetPathName() const { return fPathName.Data(); }
 
@@ -210,7 +206,6 @@ public:
    /** add extra http header value to the reply */
    void SetExtraHeader(const char *name, const char *value) { AddHeader(name, value); }
 
-   void FillHttpHeader(TString &buf, const char *header = nullptr) _R__DEPRECATED_618("Use method returning std::string");
    std::string FillHttpHeader(const char *header = nullptr);
 
    // these methods used to return results of http request processing
@@ -225,8 +220,6 @@ public:
    Bool_t IsXml() const { return IsContentType("text/xml"); }
    Bool_t IsJson() const { return IsContentType("application/json"); }
    Bool_t IsBinary() const { return IsContentType("application/x-binary"); }
-
-   void SetBinData(void *data, Long_t length) _R__DEPRECATED_618("Use SetContent(std::string &&)");
 
    Long_t GetContentLength() const { return (Long_t) fContent.length(); }
    const void *GetContent() const { return fContent.data(); }
