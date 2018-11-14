@@ -239,8 +239,6 @@ public:
 
    virtual ULong_t GetItemHash(const char *itemname);
 
-   Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str) _R__DEPRECATED_618("Use signature with std::string");
-
    Bool_t Produce(const std::string &path, const std::string &file, const std::string &options, std::string &res);
 
    ClassDef(TRootSniffer, 0) // Sniffer of ROOT objects (basic version)
