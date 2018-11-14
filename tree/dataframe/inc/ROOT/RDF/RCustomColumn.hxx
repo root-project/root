@@ -64,6 +64,34 @@ class RCustomColumn final : public RCustomColumnBase {
 
    std::vector<RDFInternal::RDFValueTuple_t<ColumnTypes_t>> fValues;
 
+   template <std::size_t... S, typename... BranchTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, NoneTag)
+   {
+      fLastResults[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
+      // silence "unused parameter" warnings in gcc
+      (void)slot;
+      (void)entry;
+   }
+
+   template <std::size_t... S, typename... BranchTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotTag)
+   {
+      fLastResults[slot] = fExpression(slot, std::get<S>(fValues[slot]).Get(entry)...);
+      // silence "unused parameter" warnings in gcc
+      (void)slot;
+      (void)entry;
+   }
+
+   template <std::size_t... S, typename... BranchTypes>
+   void
+   UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotAndEntryTag)
+   {
+      fLastResults[slot] = fExpression(slot, entry, std::get<S>(fValues[slot]).Get(entry)...);
+      // silence "unused parameter" warnings in gcc
+      (void)slot;
+      (void)entry;
+   }
+
 public:
    RCustomColumn(RLoopManager *lm, std::string_view name, F &&expression, const ColumnNames_t &bl, unsigned int nSlots,
                  const RDFInternal::RBookedCustomColumns &customColumns, bool isDSColumn = false)
@@ -96,34 +124,6 @@ public:
    const std::type_info &GetTypeId() const
    {
       return fIsDataSourceColumn ? typeid(typename std::remove_pointer<ret_type>::type) : typeid(ret_type);
-   }
-
-   template <std::size_t... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, NoneTag)
-   {
-      fLastResults[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
-   }
-
-   template <std::size_t... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotTag)
-   {
-      fLastResults[slot] = fExpression(slot, std::get<S>(fValues[slot]).Get(entry)...);
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
-   }
-
-   template <std::size_t... S, typename... BranchTypes>
-   void
-   UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotAndEntryTag)
-   {
-      fLastResults[slot] = fExpression(slot, entry, std::get<S>(fValues[slot]).Get(entry)...);
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
    }
 };
 
