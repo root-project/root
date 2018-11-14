@@ -161,6 +161,7 @@ ROOT_BUILD_OPTION(tmva ON "Build TMVA multi variate analysis library")
 ROOT_BUILD_OPTION(tmva-cpu ON "Build TMVA with CPU support for deep learning. Requires BLAS")
 ROOT_BUILD_OPTION(tmva-gpu ON "Build TMVA with GPU support for deep learning. Requries CUDA")
 ROOT_BUILD_OPTION(tmva-pymva ON "Enable TMVA to call python mva's. Requires numpy")
+ROOT_BUILD_OPTION(tmva-rmva OFF "Alias for option r")
 ROOT_BUILD_OPTION(unuran OFF "UNURAN - package for generating non-uniform random numbers")
 ROOT_BUILD_OPTION(vc OFF "Vc adds a few new types for portable and intuitive SIMD programming")
 ROOT_BUILD_OPTION(vdt ON "VDT adds a set of fast and vectorisable mathematical functions")
@@ -185,6 +186,12 @@ option(clingtest "Include cling tests. NOTE that this makes llvm/clang symbols v
 if (runtime_cxxmodules)
   set(pch_defvalue OFF)
 endif(runtime_cxxmodules)
+
+# User can specify either old name or new name for enabling rmva
+if (r OR tmva-rmva)
+   set(r ON)
+   set(tmva-rmva ON)
+endif()
 
 #--- Compression algorithms in ROOT-------------------------------------------------------------
 if(NOT compression_default MATCHES "zlib|lz4|lzma")
