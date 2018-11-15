@@ -180,6 +180,8 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
 
 ## Math Libraries
 
+  - The built-in VDT library version has been changed from v0.4.1 to v0.4.2
+
 ### VecOps
   - Add `All` helper: return true if all of the elements equate to true, return false otherwise.
   - Add `Any` helper: return true if any of the elements equates to true, return false otherwise.
