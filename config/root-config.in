@@ -145,11 +145,8 @@ fi
 
 ### machine dependent settings ###
 
-case "$cxxversion" in
-  cxx17) cxxversionflag="-std=c++1z " ;;
-  cxx14) cxxversionflag="-std=c++1y " ;;
-  *)     cxxversionflag="-std=c++11 " ;;
-esac
+# Set the C++ standard version
+cxxversionflag="-std=${cxxversion} "
 
 case $arch in
 aix5)
