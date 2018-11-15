@@ -374,14 +374,6 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
   set( CLANG_BUILT_STANDALONE 1 )
   set(BACKEND_PACKAGE_STRING "LLVM ${LLVM_PACKAGE_VERSION}")
 
-
-if (builtin_clang)
-  add_subdirectory(llvm/src/tools/clang EXCLUDE_FROM_ALL)
-else()
-  add_subdirectory(cling)
-endif()
-endif(builtin_llvm)
-
 #---Export the include directories------------------------------------------------------------------
 if (builtin_clang)
   set(CLANG_INCLUDE_DIRS
@@ -389,6 +381,13 @@ if (builtin_clang)
     ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include
     CACHE STRING "Clang include directories.")
 endif()
+
+if (builtin_clang)
+  add_subdirectory(llvm/src/tools/clang EXCLUDE_FROM_ALL)
+else()
+  add_subdirectory(cling)
+endif()
+endif(builtin_llvm)
 
 if(builtin_llvm)
   set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/include
