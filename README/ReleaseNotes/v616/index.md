@@ -59,7 +59,7 @@ They were deprecated before, or never ported from configure, make to CMake.
 
 ### Remove GLUtesselator forward declaration from TVirtualX.h
 
-It was never used in TVirtualX interfaces. If GLUtesselator forward declaration is required, use TGLUtil.h include instead. 
+It was never used in TVirtualX interfaces. If GLUtesselator forward declaration is required, use TGLUtil.h include instead.
 
 ## C++ Modules Technology Preview
 
@@ -94,11 +94,11 @@ From heads/master@v6-13-04-1273-gea3f4333a2
 The previous setting called `ROOT.ZipMode` is now unused and ignored.
 Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm according to the values of [ECompression](https://root.cern/doc/master/Compression_8h.html#a0a7df9754a3b7be2b437f357254a771c):
 
-* 0: use the default value of `R__ZipMode` (currently selecting LZ4)
-* 1: use zlib (the default until 6.12)
-* 2: use lzma
+* 0: use the default value of `R__ZipMode` (currently selecting ZLIB)
+* 1: use ZLIB (the default until 6.12 and from 6.16)
+* 2: use LZMA
 * 3: legacy, please don't use
-* 4: LZ4 (the current default)
+* 4: LZ4
 
 ### TRef
 
@@ -148,6 +148,22 @@ return {infolist, 0, hash};
 
 See `TFile::GetStreamerInfoListImpl` implementation for an example on how to implement the caching.
 
+* ZLIB (with compression level 1) is now the default compression algorithm for new ROOT files (LZ4 was default compression algorithm in 6.14). Because of reported "corner cases" for LZ4, we are working on the fix to be landed in a next release and return back LZ4 as a default compression algorithm.
+
+* Introducing a possibility for ROOT to use generic compression algorithm/level/settings, by introducing new generic class RCompressionSetting together with new structs ELevel (compression level), EDefaults (default compression settings) and EAlgorithm (compression algorithm). These changes are the first step in generalization of setup of ROOT compression algorithm. It also provides correctness of resolution of compression level and compression algorithm from defined ROOT compression settings:
+
+```
+Attaching file hsimple.root as _file0...
+(TFile *) 0x55f79b0e6360
+root [1] _file0->GetCompressionAlgorithm()
+(int) 1
+root [2] _file0->GetCompressionLevel()
+(int) 1
+root [3] _file0->GetCompressionSettings()
+(int) 101
+root [4]
+```
+
 ## TTree Libraries
 ### RDataFrame
   - Optimise the creation of the set of branch names of an input dataset, doing the work once and caching it in the RInterface.
@@ -176,7 +192,7 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
   - Remove `RDataFrame` from the 32-bit builds.
   - Speed up interpreted usage of RDataFrame (i.e. in macros or from ROOT prompt) by removing certain cling runtime safety checks.
   - Streamline and better document usage of multi-thread RDataFrame: edge cases in which processing of an event could start
-    before processing of another event finished have been removed, making it easier for user to write safe parallel RDF operations. 
+    before processing of another event finished have been removed, making it easier for user to write safe parallel RDF operations.
     See the [relevant documentation](https://root.cern.ch/doc/master/classROOT_1_1RDataFrame.html#parallel-execution) for more information.
 
 ### TTreeProcessorMT
@@ -394,5 +410,3 @@ available in cvmfs.
 
 
 ## Build, Configuration and Testing Infrastructure
-
-
