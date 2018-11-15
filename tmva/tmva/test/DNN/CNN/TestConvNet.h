@@ -394,7 +394,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       if (gw.size() > 0) { 
          std::cout << "Weight gradient from back-propagation - vector size is " << gw.size()  << std::endl;
          if (gw[0].GetNElements() < 100 ) { 
-            PrintMatrix(gw[0],"WeightGrad");
+            TMVA_DNN_PrintTCpuMatrix(gw[0],"WeightGrad");
          }
          else
             std::cout << "BP Weight Gradient ( " << gw[0].GetNrows() << " x " << gw[0].GetNcols() << " ) , ...... skip printing (too many elements ) " << std::endl;  
@@ -407,7 +407,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
          std::cout << "Activation gradient from back-propagation  - vector size is " << actGrad.size() << std::endl;
          if (actGrad[0].GetNElements() < 100 ) { 
             for (size_t ii = 0; ii < actGrad.size(); ++ii) 
-               PrintMatrix(actGrad[ii],"ActivationGrad");
+               TMVA_DNN_PrintTCpuMatrix(actGrad[ii],"ActivationGrad");
          } else
             std::cout << "Activation Gradient ( " << actGrad[0].GetNrows() << " x " << actGrad[0].GetNcols() << " ) , ...... skip printing (too many elements ) " << std::endl;
       }
@@ -421,7 +421,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       std::cout << "layer output size " << outL.size() << std::endl;
       if (outL.size() > 0) {
          if (outL[0].GetNElements() < 100 ) { 
-            PrintMatrix(outL[0],"LayerOutput-Matrix0");
+            TMVA_DNN_PrintTCpuMatrix(outL[0],"LayerOutput-Matrix0");
          } else
             std::cout << "Layer Output ( " << outL[0].GetNrows() << " x " << outL[0].GetNcols() << " ) , ...... skip printing (too many elements ) " << std::endl;
       }
