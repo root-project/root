@@ -241,7 +241,7 @@ void TEveQuadSet::AddHexagon(Float_t a, Float_t b, Float_t c, Float_t r)
          break;
       }
       default:
-         throw(eH + "expect line quad-type.");
+         throw eH + "expects hexagon quad-type.";
    }
 }
 
