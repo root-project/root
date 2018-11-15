@@ -168,7 +168,8 @@ void TEveBoxSetGL::MakeDisplayList() const
    if (fM->fBoxType == TEveBoxSet::kBT_AABox         ||
        fM->fBoxType == TEveBoxSet::kBT_AABoxFixedDim ||
        fM->fBoxType == TEveBoxSet::kBT_Cone          ||
-       fM->fBoxType == TEveBoxSet::kBT_EllipticCone)
+       fM->fBoxType == TEveBoxSet::kBT_EllipticCone  ||
+       fM->fBoxType == TEveBoxSet::kBT_Hex)
    {
       if (fBoxDL == 0)
          fBoxDL = glGenLists(1);
@@ -186,7 +187,7 @@ void TEveBoxSetGL::MakeDisplayList() const
          RenderBoxStdNorm(p);
          glEnd();
       }
-      else
+      else if (fM->fBoxType < TEveBoxSet::kBT_Hex)
       {
          static TGLQuadric quad;
          Int_t nt = 15; // number of corners
@@ -200,8 +201,25 @@ void TEveBoxSetGL::MakeDisplayList() const
             glPopMatrix();
          }
       }
+      else // Hexagons
+      {
+         static TGLQuadric quad;
+         Int_t nt = 6; // number of corners
+         gluCylinder(quad.Get(), 1, 1, 1, nt, 1);
+
+         gluQuadricOrientation(quad.Get(), GLU_INSIDE);
+         gluDisk(quad.Get(), 0, 1, nt, 1);
+         gluQuadricOrientation(quad.Get(), GLU_OUTSIDE);
+
+         glPushMatrix();
+         glTranslatef(0, 0, 1);
+         gluDisk(quad.Get(), 0, 1, nt, 1);
+         glPopMatrix();
+      }
 
       glEndList();
+
+      TGLUtil::CheckError("TEveBoxSetGL::MakeDisplayList");
    }
 }
 
@@ -211,8 +229,6 @@ void TEveBoxSetGL::MakeDisplayList() const
 
 Bool_t TEveBoxSetGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
 {
-   MakeDisplayList();
-
    return TEveDigitSetGL::ShouldDLCache(rnrCtx);
 }
 
@@ -409,9 +425,34 @@ void TEveBoxSetGL::RenderBoxes(TGLRnrCtx& rnrCtx) const
          break;
       }
 
+      case TEveBoxSet::kBT_Hex:
+      {
+         using namespace TMath;
+
+         glEnable(GL_NORMALIZE);
+         while (bi.next())
+         {
+            TEveBoxSet::BHex_t& h = * (TEveBoxSet::BHex_t*) bi();
+            if (SetupColor(h))
+            {
+               if (rnrCtx.SecSelection()) glLoadName(bi.index());
+               glPushMatrix();
+               glTranslatef(h.fPos.fX, h.fPos.fY, h.fPos.fZ);
+               glRotatef(h.fAngle, 0, 0, 1);
+               glScalef (h.fR, h.fR, h.fDepth);
+               glCallList(fBoxDL);
+               if (fM->fAntiFlick)
+                  AntiFlick(0.0f, 0.0f, 0.5f);
+               glPopMatrix();
+            }
+            if (boxSkip) { Int_t s = boxSkip; while (s--) bi.next(); }
+         }
+         break;
+      }
+
       default:
       {
-         throw(eH + "unsupported box-type.");
+         throw eH + "unsupported box-type.";
       }
 
    } // end switch box-type
@@ -430,6 +471,8 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
    if (mB.fPlex.Size() > 0)
    {
+      MakeDisplayList();
+
       if (! mB.fSingleColor && ! mB.fValueIsColor && mB.fPalette == 0)
       {
          mB.AssertPalette();
@@ -467,8 +510,5 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
 void TEveBoxSetGL::Render(TGLRnrCtx& rnrCtx)
 {
-   MakeDisplayList();
    DirectDraw(rnrCtx);
-   glDeleteLists(fBoxDL, 1);
-   fBoxDL = 0;
 }

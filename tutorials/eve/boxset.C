@@ -155,3 +155,36 @@ TEveBoxSet* boxset_freebox(Int_t num=100, Bool_t registerSet=kTRUE)
 
    return q;
 }
+
+TEveBoxSet* boxset_hex(Float_t x=0, Float_t y=0, Float_t z=0,
+                       Int_t num=100, Bool_t registerSet=kTRUE)
+{
+   TEveManager::Create();
+
+   TRandom r(0);
+
+   auto q = new TEveBoxSet("BoxSet");
+   q->Reset(TEveBoxSet::kBT_Hex, kTRUE, 64);
+
+   for (Int_t i=0; i<num; ++i) {
+      q->AddHex(TEveVector(r.Uniform(-10, 10), r.Uniform(-10, 10), r.Uniform(-10, 10)),
+                r.Uniform(0.2, 1), r.Uniform(0, 60), r.Uniform(0.2, 5));
+      q->DigitColor(r.Uniform(20, 255), r.Uniform(20, 255),
+                    r.Uniform(20, 255), r.Uniform(20, 255));
+   }
+   q->RefitPlex();
+
+   q->SetPickable(true);
+   q->SetAlwaysSecSelect(true);
+
+   TEveTrans& t = q->RefMainTrans();
+   t.SetPos(x, y, z);
+
+   if (registerSet)
+   {
+      gEve->AddElement(q);
+      gEve->Redraw3D(kTRUE);
+   }
+
+   return q;
+}

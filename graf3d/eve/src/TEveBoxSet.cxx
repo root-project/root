@@ -75,6 +75,7 @@ Int_t TEveBoxSet::SizeofAtom(TEveBoxSet::EBoxType_e bt)
       case kBT_AABoxFixedDim:        return sizeof(BAABoxFixedDim_t);
       case kBT_Cone:                 return sizeof(BCone_t);
       case kBT_EllipticCone:         return sizeof(BEllipticCone_t);
+      case kBT_Hex:                  return sizeof(BHex_t);
       default:                       throw(eH + "unexpected atom type.");
    }
    return 0;
@@ -191,6 +192,25 @@ void TEveBoxSet::AddEllipticCone(const TEveVector& pos, const TEveVector& dir,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create a hexagonal prism with center of one hexagon at pos, radius of
+/// hexagon vertices r, rotation angle angle (in degrees), and length along z
+/// of depth. To be used for box-type kBT_Hex.
+
+void TEveBoxSet::AddHex(const TEveVector& pos, Float_t r, Float_t angle, Float_t depth)
+{
+   static const TEveException eH("TEveBoxSet::AddEllipticCone ");
+
+   if (fBoxType != kBT_Hex)
+      throw(eH + "expect hex box-type.");
+
+   BHex_t* hex = (BHex_t*) NewDigit();
+   hex->fPos   = pos;
+   hex->fR     = r;
+   hex->fAngle = angle;
+   hex->fDepth = depth;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Fill bounding-box information of the base-class TAttBBox (virtual method).
 /// If member 'TEveFrameBox* fFrame' is set, frame's corners are used as bbox.
 
@@ -249,6 +269,7 @@ void TEveBoxSet::ComputeBBox()
          }
          break;
       }
+
       case kBT_Cone:
       {
          Float_t mag2=0, mag2Max=0, rMax=0;
@@ -264,6 +285,7 @@ void TEveBoxSet::ComputeBBox()
          fBBox[1] += off;fBBox[3] += off;fBBox[5] += off;
          break;
       }
+
       case kBT_EllipticCone:
       {
          Float_t mag2=0, mag2Max=0, rMax=0;
@@ -280,6 +302,23 @@ void TEveBoxSet::ComputeBBox()
          fBBox[1] += off;fBBox[3] += off;fBBox[5] += off;
          break;
       }
+
+      case kBT_Hex:
+      {
+         while (bi.next()) {
+            BHex_t& h = * (BHex_t*) bi();
+            BBoxCheckPoint(h.fPos.fX - h.fR, h.fPos.fY - h.fR, h.fPos.fZ);
+            BBoxCheckPoint(h.fPos.fX + h.fR, h.fPos.fY - h.fR, h.fPos.fZ);
+            BBoxCheckPoint(h.fPos.fX + h.fR, h.fPos.fY + h.fR, h.fPos.fZ);
+            BBoxCheckPoint(h.fPos.fX - h.fR, h.fPos.fY + h.fR, h.fPos.fZ);
+            BBoxCheckPoint(h.fPos.fX - h.fR, h.fPos.fY - h.fR, h.fPos.fZ + h.fDepth);
+            BBoxCheckPoint(h.fPos.fX + h.fR, h.fPos.fY - h.fR, h.fPos.fZ + h.fDepth);
+            BBoxCheckPoint(h.fPos.fX + h.fR, h.fPos.fY + h.fR, h.fPos.fZ + h.fDepth);
+            BBoxCheckPoint(h.fPos.fX - h.fR, h.fPos.fY + h.fR, h.fPos.fZ + h.fDepth);
+         }
+         break;
+      }
+
       default:
       {
          throw(eH + "unsupported box-type.");
