@@ -4927,7 +4927,12 @@ Int_t TTree::FlushBasketsImpl() const
 #ifdef R__USE_IMT
    const auto useIMT = ROOT::IsImplicitMTEnabled() && fIMTEnabled;
    if (useIMT) {
-      if (fSortedBranches.empty()) { const_cast<TTree*>(this)->InitializeBranchLists(false); }
+      // ROOT-9668: here we need to check if the size of fSortedBranches is different from the
+      // size of the list of branches before triggering the initialisation of the fSortedBranches
+      // container to cover two cases:
+      // 1. This is the first time we flush. fSortedBranches is empty and we need to fill it.
+      // 2. We flushed at least once already but a branch has been be added to the tree since then
+      if (fSortedBranches.size() != unsigned(nb)) { const_cast<TTree*>(this)->InitializeBranchLists(false); }
 
       BoolRAIIToggle sentry(fIMTFlush);
       fIMTZipBytes.store(0);
@@ -5517,12 +5522,21 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 /// in parallel with the rest, there could be two threads invoking
 /// TBranch::GetEntry on one of them at the same time, since a branch that
 /// depends on a size (or count) branch will also invoke GetEntry on the latter.
+/// This method can be invoked several times during the event loop if the TTree
+/// is being written, for example when adding new branches. In these cases, the
+/// `checkLeafCount` parameter is false.
 /// \param[in] checkLeafCount True if we need to check whether some branches are
 ///                           count leaves.
 
 void TTree::InitializeBranchLists(bool checkLeafCount)
 {
    Int_t nbranches = fBranches.GetEntriesFast();
+
+   // The special branch fBranchRef needs to be processed sequentially:
+   // we add it once only.
+   if (fBranchRef && fBranchRef != fSeqBranches[0]) {
+      fSeqBranches.push_back(fBranchRef);
+   }
 
    // The branches to be processed sequentially are those that are the leaf count of another branch
    if (checkLeafCount) {
@@ -5538,12 +5552,11 @@ void TTree::InitializeBranchLists(bool checkLeafCount)
       }
    }
 
-   // The special branch fBranchRef also needs to be processed sequentially
-   if (fBranchRef) {
-      fSeqBranches.push_back(fBranchRef);
-   }
-
    // Any branch that is not a leaf count can be safely processed in parallel when reading
+   // We need to reset the vector to make sure we do not re-add several times the same branch.
+   if (!checkLeafCount) {
+      fSortedBranches.clear();
+   }
    for (Int_t i = 0; i < nbranches; i++)  {
       Long64_t bbytes = 0;
       TBranch* branch = (TBranch*)fBranches.UncheckedAt(i);
