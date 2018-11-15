@@ -864,6 +864,12 @@ N: Daniel Sigg
 E: sigg_d@ligo.caltech.edu
 D: TGNumberEntry GUI widget
 
+N: Oksana Shadura
+E: Oksana.Shadura@cern.ch
+D: rootbench co-author
+D: runtime c++ modules
+D: contributions to cmake
+
 N: Evgenia Smirnova
 E: Evgenia.Smirnova@gsi.de
 D: OpenLDAP interface
@@ -911,6 +917,11 @@ D: development of class TGraphSmooth + many suggestions
 N: Matevz Tadel
 E: Matevz.Tadel@cern.ch
 D: Several contributions to the 3-d graphics and GL interface, WebEVE
+
+N: Yuka Takahashi
+E: Yuka.Takahashi@cern.ch
+D: contributions to runtime c++ modules and their integration in the CMSSW
+D: contributions to rootcling, cling and cmake
 
 N: Evgueni Tcherniaev
 E: Evgueni.Tcherniaev@cern.ch
