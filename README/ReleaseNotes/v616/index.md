@@ -61,6 +61,17 @@ They were deprecated before, or never ported from configure, make to CMake.
 
 It was never used in TVirtualX interfaces. If GLUtesselator forward declaration is required, use TGLUtil.h include instead. 
 
+## C++ Modules Technology Preview
+
+ROOT has several features which interact with libraries and require implicit
+header inclusion. This can be triggered by reading or writing data on disk,
+or user actions at the prompt. Often, the headers are immutable and reparsing is
+redundant. C++ Modules are designed to minimize the reparsing of the same
+header content by providing an efficient on-disk representation of C++ Code.
+
+This is an experimental feature which can be enabled by compiling ROOT with
+`-Druntime_cxxmodules=On`. You can read more about the current state of the
+feature [here](../../README.CXXMODULES.md).
 
 ## Core Libraries
 
