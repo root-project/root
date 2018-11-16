@@ -13,7 +13,6 @@
 #define ROOSTATS_CONFIGPARSER_h
 
 
-#include <cstdlib>
 #include <string>
 #include <TXMLNode.h>
 
