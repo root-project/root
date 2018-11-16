@@ -818,19 +818,20 @@ def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent
         lastEvent = nbrEntries-1
     numberOfEntries = (lastEvent-firstEvent)+1
 
-    # "Skim" events based on branch values using selectionString
-    # as well as selecting a range of events by index
-    outputTree = bigTree.CopyTree(selectionString,"",numberOfEntries,firstEvent)
-
     # "Slim" tree by removing branches -
     # This is done after the skimming to allow for the user to skim on a
     # branch they no longer need to keep
+    outputTree = bigTree
     if branchexclude:
         _setBranchStatus(outputTree,branchexclude,0)
     if branchinclude:
         _setBranchStatus(outputTree,branchinclude,1)
     if branchexclude or branchinclude:
         outputTree = outputTree.CloneTree()
+
+    # "Skim" events based on branch values using selectionString
+    # as well as selecting a range of events by index
+    outputTree = outputTree.CopyTree(selectionString,"",numberOfEntries,firstEvent)
 
     outputTree.Write()
     return retcode
