@@ -12,6 +12,7 @@ set(CLADDIFFERENTIATOR_LIB
   ${_clad_byproduct_binary_dir}/lib/Differentiator/${CMAKE_STATIC_LIBRARY_PREFIX}cladDifferentiator${CMAKE_STATIC_LIBRARY_SUFFIX}
   ${_clad_byproduct_binary_dir}/tools/${CMAKE_STATIC_LIBRARY_PREFIX}cladPlugin${CMAKE_STATIC_LIBRARY_SUFFIX}
   )
+list(JOIN CLANG_INCLUDE_DIRS "|" _clad_clang_include_dirs)
 
 if(MSVC)
   if (winrtdebug)
@@ -27,7 +28,8 @@ if(MSVC)
     CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCLAD_BUILD_STATIC_ONLY=ON
                -DCMAKE_INSTALL_PREFIX=${CLING_PLUGIN_INSTALL_PREFIX}
                -DCLAD_PATH_TO_LLVM_BUILD=${LLVM_BINARY_DIR}
-               -DCLANG_INCLUDE_DIRS=${CLANG_INCLUDE_DIRS}
+               -DCLANG_INCLUDE_DIRS=${_clad_clang_include_dirs}
+    LIST_SEPARATOR |
     BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${_clad_build_type}
     # Wrap download, configure and build steps in a script to log output
     LOG_DOWNLOAD ON
@@ -60,9 +62,10 @@ else()
                -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                -DCMAKE_INSTALL_PREFIX=${CLING_PLUGIN_INSTALL_PREFIX}
                -DCLAD_PATH_TO_LLVM_BUILD=${LLVM_BINARY_DIR}
-               -DCLANG_INCLUDE_DIRS=${CLANG_INCLUDE_DIRS}
+               -DCLANG_INCLUDE_DIRS=${_clad_clang_include_dirs}
                -DCLAD_BUILD_STATIC_ONLY=ON
                ${_clad_extra_cmake_args}
+    LIST_SEPARATOR |
     BUILD_BYPRODUCTS ${CLADDIFFERENTIATOR_LIB}
     # Wrap download, configure and build steps in a script to log output
     LOG_DOWNLOAD ON
