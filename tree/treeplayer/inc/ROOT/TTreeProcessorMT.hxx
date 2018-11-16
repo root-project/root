@@ -87,6 +87,8 @@ namespace ROOT {
                fChain->Add(fileNames[i].c_str(), nEntries[i]);
             }
             fChain->ResetBit(TObject::kMustCleanup);
+            // Each task reads one cluster, so we don't need to pre-fetch anything else.
+            fChain->SetCacheSize(0);
 
             fFriends.clear();
             const auto nFriends = friendNames.size();
