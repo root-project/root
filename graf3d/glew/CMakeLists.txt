@@ -14,3 +14,4 @@ endif()
 
 ROOT_LINKER_LIBRARY(GLEW *.c LIBRARIES ${OPENGL_LIBRARIES})
 ROOT_INSTALL_HEADERS(${installoptions})
+target_include_directories(GLEW PRIVATE inc)
