@@ -19,7 +19,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(WebGui6
     src/TWebPainting.cxx
     src/TWebPS.cxx
     src/TWebSnapshot.cxx
-  LIBRARIES
+  DEPENDENCIES
     Core
     Gui 
     ROOTWebDisplay
