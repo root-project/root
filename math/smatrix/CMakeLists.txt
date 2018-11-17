@@ -38,7 +38,7 @@ ROOT_GENERATE_DICTIONARY(G__Smatrix32
 ROOT_LINKER_LIBRARY(Smatrix
     G__Smatrix.cxx
     G__Smatrix32.cxx
-  LIBRARIES
+  DEPENDENCIES
     Core
     MathCore
 )
