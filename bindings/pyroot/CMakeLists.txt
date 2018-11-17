@@ -48,9 +48,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
     src/Utility.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
-  LIBRARIES
-    Core
   DEPENDENCIES
+    Core
     MathCore
     ROOTVecOps
     Tree

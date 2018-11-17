@@ -209,7 +209,7 @@ if (tmva-cpu AND mathmore AND imt)
 #use GSL cblas installation
   message(STATUS "Using TMVA-DNN with gslcblas installation") 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNN_USE_CBLAS")
-  set(DNN_CPU_LIBRARIES MathCore Matrix ${TBB_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  set(DNN_CPU_LIBRARIES ${TBB_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
   include_directories(${TBB_INCLUDE_DIRS} ${GSL_INCLUDE_DIR} )
   if (CUDA_FOUND)
      include_directories(${TBB_INCLUDE_DIRS} ${GSL_INCLUDE_DIR} ${CUDA_INCLUDE_DIRS})
@@ -234,8 +234,8 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
                               HEADERS ${TMVA_HEADERS}
                               SOURCES *.cxx ${DNN_FILES} ${DNN_CPU_FILES} DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES Core MathCore Matrix ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
-                              DEPENDENCIES Core RIO Hist Tree TreePlayer MLP Minuit XMLIO ${TMVA_DEPENDENCIES}
+                              LIBRARIES  ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
+                              DEPENDENCIES Core MathCore Matrix RIO Hist Tree TreePlayer MLP Minuit XMLIO ${TMVA_DEPENDENCIES}
                               INSTALL_OPTIONS ${installoptions})
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

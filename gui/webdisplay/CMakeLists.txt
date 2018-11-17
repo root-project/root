@@ -13,7 +13,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTWebDisplay
        RWebDisplayHandle.cxx
        RWebWindow.cxx
        RWebWindowsManager.cxx
-    LIBRARIES 
+    DEPENDENCIES
        Core 
        RHTTP 
        MathCore

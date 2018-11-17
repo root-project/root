@@ -136,9 +136,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     "-writeEmptyRootPCM"
   LINKDEF
     LinkDef1.h
-  LIBRARIES
-    ${ROOT_MATHMORE_LIBRARY}
   DEPENDENCIES
+    ${ROOT_MATHMORE_LIBRARY}
     Core
     RooFitCore
     Tree

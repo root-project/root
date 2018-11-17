@@ -163,7 +163,7 @@ ROOT_LINKER_LIBRARY(GenVector
     src/Rotation3DxAxial.cxx
     src/RotationZYX.cxx
     src/VectorUtil.cxx
-  LIBRARIES
+  DEPENDENCIES
     Core
     MathCore
 )
