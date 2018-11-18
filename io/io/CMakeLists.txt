@@ -9,6 +9,7 @@
 ############################################################################
 
 ROOT_LINKER_LIBRARY(RIO
+  src/RRawFile.cxx
   src/TArchiveFile.cxx
   src/TBufferFile.cxx
   src/TBufferText.cxx
@@ -57,6 +58,7 @@ if(root7)
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__RIO
+  ROOT/RRawFile.hxx
   ROOT/TBufferMerger.hxx
   TArchiveFile.h
   TBufferFile.h
