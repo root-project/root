@@ -29,30 +29,56 @@ namespace Detail {
  */
 class RRawFile {
 public:
-   class ROptions {
+   static constexpr std::uint64_t kUnknownFileSize = std::uint64_t(-1);
+   struct ROptions {
+      ROptions()  { }
    };
+   enum class ELineBreaks { kSystem, kUnix, kWindows };
 
-   enum class ELineBreaks { kLbSystem, kLbUnix, kLbWindows };
+private:
+   static const char* kTransportSeparator;
 
 protected:
-   std::string fProtocol;
-   std::string fLocation;
+   std::string fUrl;
    ROptions fOptions;
    std::uint64_t fFilePos;
+   std::uint64_t fFileSize;
 
-   RRawFile(const std::string &fProtocol, const std::string &fLocation, ROptions options);
+   static std::string GetLocation(std::string_view url);
+   static std::string GetTransport(std::string_view url);
+
+   virtual size_t DoPread(void *buffer, size_t nbytes, std::uint64_t offset) = 0;
+   virtual std::uint64_t DoGetSize() = 0;
 
 public:
    // TODO: Move constructor, copy/assignment delete
+   RRawFile(const std::string &url, ROptions options);
    virtual ~RRawFile();
    static RRawFile* Create(std::string_view url, ROptions options = ROptions());
 
-   virtual ssize_t Pread(void *buffer, ssize_t nbytes, std::uint64_t offset) = 0;
-   virtual ssize_t Read(void *buffer, ssize_t nbytes) = 0;
-   virtual std::string Readln(ELineBreaks lineBreak = ELineBreaks::kLbSystem) = 0;
+   size_t Pread(void *buffer, size_t nbytes, std::uint64_t offset);
+   size_t Read(void *buffer, size_t nbytes);
+   void Seek(std::uint64_t offset);
+   std::uint64_t GetSize();
+
+   std::string Readln(ELineBreaks lineBreak = ELineBreaks::kSystem);
 };
 
 
+class RRawFilePosix : public RRawFile {
+private:
+   int filedes;
+
+   void EnsureOpen();
+
+protected:
+   size_t DoPread(void *buffer, size_t nbytes, std::uint64_t offset) final;
+   std::uint64_t DoGetSize() final;
+
+public:
+   RRawFilePosix(const std::string &url, RRawFile::ROptions options);
+   ~RRawFilePosix();
+};
 
 } // namespace Detail
 } // namespace ROOT
