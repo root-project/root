@@ -19,13 +19,13 @@
 \class RooRealIntegral
 \ingroup Roofitcore
 
-RooRealIntegral performs hybrid numerical/analytical integrals of RooAbsReal objects
+RooRealIntegral performs hybrid numerical/analytical integrals of RooAbsReal objects.
 The class performs none of the actual integration, but only manages the logic
 of what variables can be integrated analytically, accounts for eventual jacobian
 terms and defines what numerical integrations needs to be done to complement the
 analytical integral.
 The actual analytical integrations (if any) are done in the PDF themselves, the numerical
-integration is performed in the various implemenations of the RooAbsIntegrator base class.
+integration is performed in the various implementations of the RooAbsIntegrator base class.
 **/
 
 #include "RooFit.h"

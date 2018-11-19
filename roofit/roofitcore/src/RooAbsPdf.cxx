@@ -999,7 +999,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// commands MIGRAD, HESSE in succession.
 /// \param[in] data  Data to fit the PDF to
 /// \param[in] arg1  One or more arguments to control the behaviour of the fit
-/// \return RooFitResult * with the fit status.
+/// \return RooFitResult * with the fit status if option Save() is used, 0 otherwise.
 ///
 /// The following named arguments are supported
 ///
@@ -1062,7 +1062,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// <tr><td> `SumW2Error(Bool_t flag)`         <td>  Apply correction to errors and covariance matrix.
 ///                                               This uses sum-of-weights covariance matrix
 ///                                               to obtain correct error for weighted likelihood fits. If this option is activated the
-///                                               corrected covariance matrix is calculated as Vcorr = V C-1 V, where V is the original 
+///                                               corrected covariance matrix is calculated as \f$ V_\mathrm{corr} = V C^{-1} V \f$, where V is the original
 ///                                               covariance matrix and C is the inverse of the covariance matrix calculated using the
 ///                                               weights squared
 ///
@@ -1095,8 +1095,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooCmdArg& arg1, const Ro
 /// is binned, a binned maximum likelihood is performed. By default the fit is executed through the MINUIT
 /// commands MIGRAD, HESSE and MINOS in succession.
 ///
-/// See RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3, RooCmdArg arg4, 
-///                                         RooCmdArg arg5, RooCmdArg arg6, RooCmdArg arg7, RooCmdArg arg8) 
+/// See RooAbsPdf::fitTo(RooAbsData&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&)
 ///
 /// for documentation of options
 

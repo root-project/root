@@ -21,11 +21,11 @@ fractional term from a partial normalization of the PDF:
 \f[
       n_\mathrm{Expected} = N \quad \text{or} \quad n_\mathrm{Expected} = N / \mathrm{frac} 
 \f]
-where N is supplied as a RooAbsReal to RooExtendPdf.
+where \f$ N \f$ is supplied as a RooAbsReal to RooExtendPdf.
 The fractional term is defined as
 \f[
-    \mathrm{frac} = \frac{\int_\mathrm{cutRegion[x]} \mathrm{pdf}(x,y) \; dx dy}{
-      \int_\mathrm{normRegion[x]} \mathrm{pdf}(x,y) \; dx dy}
+    \mathrm{frac} = \frac{\int_\mathrm{cutRegion[x]} \mathrm{pdf}(x,y) \; \mathrm{d}x \mathrm{d}y}{
+      \int_\mathrm{normRegion[x]} \mathrm{pdf}(x,y) \; \mathrm{d}x \mathrm{d}y}
 \f]
 
 where x is the set of dependents involved in the selection region and y
@@ -59,9 +59,9 @@ RooExtendPdf::RooExtendPdf() : _rangeName(0)
   // Default constructor
 }
 
-/// Constructor. The ExtendedPdf behaves identical to the supplied input pdf,
+/// Constructor. The ExtendPdf behaves identical to the supplied input pdf,
 /// but adds an extended likelihood term. expectedEvents() will return 
-/// 'norm'.
+/// `norm` (or `norm` scaled to the full range of the variable if `rangeName` is used)
 /// \param[in] name   Name of the pdf
 /// \param[in] title  Title of the pdf (for plotting)
 /// \param[in] pdf    The pdf to be extended
@@ -102,12 +102,13 @@ RooExtendPdf::~RooExtendPdf()
 
   /// Return the number of expected events. That is
   /// \f[
-  ///     n \; / \; \frac{\int_{(x_C,y_F)} \mathrm{pdf}(x,y)}{\int_{(x_F,y_F)} \mathrm{pdf}(x,y) }
+  ///     N = \mathrm{norm} \; / \; \frac{\int_{(x_C,y_F)} \mathrm{pdf}(x,y)}{\int_{(x_F,y_F)} \mathrm{pdf}(x,y) }
   /// \f]
-  /// Where \f$ x \f$ is the set of dependents with cuts defined
+  /// Where \f$ x \f$ is the set of dependents with cuts defined (`rangeName` in the constructor)
   /// and \f$ y \f$ are the other dependents. \f$ x_C \f$ is the integration
   /// of \f$ x \f$ over the cut range, \f$ x_F \f$ is the integration of
-  /// \f$ x \f$ over the full range.
+  /// \f$ x \f$ over the full range, `norm` is the number of events from the constructor.
+  /// If the nested PDF can be extended, \f$ N \f$ is scaled by its expected number of events.
 Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const 
 {
   RooAbsPdf& pdf = (RooAbsPdf&)_pdf.arg() ;
