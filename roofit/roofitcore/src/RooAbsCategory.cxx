@@ -506,7 +506,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
 
     if (branch->GetCompressionLevel()<0) {
       cxcoutD(DataHandling) << "RooAbsCategory::attachToTree(" << GetName() << ") Fixing compression level of branch " << GetName() << endl ;
-      branch->SetCompressionLevel(ROOT::kUseGlobalCompressionSetting % 100) ;
+      branch->SetCompressionLevel(ROOT::RCompressionSetting::EDefaults::kUseGlobal % 100) ;
     }
   }
 
@@ -522,7 +522,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
     t.SetBranchAddress(idxName,&((Int_t&)_value._value)) ;
     if (branch->GetCompressionLevel()<0) {
       cxcoutD(Contents) << "RooAbsCategory::attachToTree(" << GetName() << ") Fixing compression level of branch " << idxName << endl ;
-      branch->SetCompressionLevel(ROOT::kUseGlobalCompressionSetting % 100) ;
+      branch->SetCompressionLevel(ROOT::RCompressionSetting::EDefaults::kUseGlobal % 100) ;
     }
 
   } else {
@@ -530,7 +530,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
     format.Append("/I");
     void* ptr = &(_value._value) ;
     branch = t.Branch(idxName, ptr, (const Text_t*)format, bufSize);
-    branch->SetCompressionLevel(ROOT::kUseGlobalCompressionSetting % 100) ;
+    branch->SetCompressionLevel(ROOT::RCompressionSetting::EDefaults::kUseGlobal % 100) ;
   }
 
   // First determine if branch is taken
@@ -539,7 +539,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
     t.SetBranchAddress(lblName,_value._label) ;
     if (branch->GetCompressionLevel()<0) {
       cxcoutD(DataHandling) << "RooAbsCategory::attachToTree(" << GetName() << ") Fixing compression level of branch " << lblName << endl ;
-      branch->SetCompressionLevel(ROOT::kUseGlobalCompressionSetting % 100) ;
+      branch->SetCompressionLevel(ROOT::RCompressionSetting::EDefaults::kUseGlobal % 100) ;
     }
 
   } else {
@@ -547,7 +547,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
     format.Append("/C");
     void* ptr = _value._label ;
     branch = t.Branch(lblName, ptr, (const Text_t*)format, bufSize);
-    branch->SetCompressionLevel(ROOT::kUseGlobalCompressionSetting % 100) ;
+    branch->SetCompressionLevel(ROOT::RCompressionSetting::EDefaults::kUseGlobal % 100) ;
   }
 
 }

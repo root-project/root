@@ -421,9 +421,9 @@ int main( int argc, char **argv )
          if (firstInput && !firstInput->IsZombie())
             newcomp = firstInput->GetCompressionSettings();
          else
-            newcomp = ROOT::kUseGeneralPurposeCompressionSetting % 100;
+            newcomp = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose % 100;
          delete firstInput;
-      } else newcomp = ROOT::kUseGeneralPurposeCompressionSetting  % 100; // default compression level.
+      } else newcomp = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose % 100; // default compression level.
    }
    if (verbosity > 1) {
       if (keepCompressionAsIs && !reoptimize)
