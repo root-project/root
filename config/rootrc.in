@@ -36,7 +36,7 @@ Unix.*.Root.UseThreads:     false
 
 # Select the compression algorithm: 0=default, 1=zlib, 2=lzma, 4=LZ4.
 # (3 is an old setting and shouldn't be used.)
-# See the documentation of ECompressionAlgorithm.
+# See the documentation of RCompressionSetting::EAlgorithm.
 # A simple "0" (the default value) uses the default compression algorithm as
 # specified by the initialization of R__ZipMode.
 Root.CompressionAlgorithm: 0

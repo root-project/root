@@ -258,13 +258,13 @@ void RooAbsString::attachToTree(TTree& t, Int_t bufSize)
     t.SetBranchAddress(GetName(),_value) ;
     if (branch->GetCompressionLevel()<0) {
       cxcoutD(DataHandling) << "RooAbsString::attachToTree(" << GetName() << ") Fixing compression level of branch " << GetName() << endl ;
-      branch->SetCompressionLevel(ROOT::kUseGlobalCompressionSetting % 100) ;
+      branch->SetCompressionLevel(ROOT::RCompressionSetting::EDefaults::kUseGlobal % 100) ;
     }
   } else {
     TString format(GetName());
     format.Append("/C");
     branch = t.Branch(GetName(), _value, (const Text_t*)format, bufSize);
-    branch->SetCompressionLevel(ROOT::kUseGlobalCompressionSetting % 100) ;
+    branch->SetCompressionLevel(ROOT::RCompressionSetting::EDefaults::kUseGlobal % 100) ;
   }
 }
 

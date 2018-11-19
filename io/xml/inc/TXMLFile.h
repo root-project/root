@@ -50,7 +50,7 @@ private:
 
 public:
    TXMLFile();
-   TXMLFile(const char *filename, Option_t *option = "read", const char *title = "title", Int_t compression = ROOT::kUseGeneralPurposeCompressionSetting);
+   TXMLFile(const char *filename, Option_t *option = "read", const char *title = "title", Int_t compression = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
    virtual ~TXMLFile();
 
    virtual void Close(Option_t *option = ""); // *MENU*
