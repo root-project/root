@@ -173,7 +173,7 @@ AddPseudoGlobals() {
 ////////////////////////////////////////////////////////////////////////////////
 /// File default Constructor.
 
-TFile::TFile() : TDirectoryFile(), fCompress(ROOT::kUseGlobalCompressionAlgorithm), fInfoCache(0)
+TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal), fInfoCache(0)
 {
    fD               = -1;
    fFree            = 0;
@@ -291,7 +291,7 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::kUseGlobalCompressionAlgorith
 /// 9   | maximal compression level but slower and might use more memory.
 /// (For the currently supported algorithms, the maximum level is 9)
 /// If compress is negative it indicates the compression level is not set yet.
-/// The enumeration ROOT::ECompressionAlgorithm associates each
+/// The enumeration ROOT::RCompressionSetting::EAlgorithm associates each
 /// algorithm with a number. There is a utility function to help
 /// to set the value of compress. For example,
 ///     ROOT::CompressionSettings(ROOT::kLZMA, 1)
@@ -2200,9 +2200,9 @@ void TFile::Seek(Long64_t offset, ERelativeTo pos)
 
 void TFile::SetCompressionAlgorithm(Int_t algorithm)
 {
-   if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+   if (algorithm < 0 || algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
    if (fCompress < 0) {
-      fCompress = 100 * algorithm + ROOT::kUseMinCompressionLevel;
+      fCompress = 100 * algorithm + ROOT::RCompressionSetting::ELevel::kUseMin;
    } else {
       int level = fCompress % 100;
       fCompress = 100 * algorithm + level;
@@ -2221,7 +2221,7 @@ void TFile::SetCompressionLevel(Int_t level)
       fCompress = level;
    } else {
       int algorithm = fCompress / 100;
-      if (algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+      if (algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
       fCompress = 100 * algorithm + level;
    }
 }

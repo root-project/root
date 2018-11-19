@@ -2385,7 +2385,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    }
 
    if (splitlevel < 0 || ((splitlevel == 0) && hasCustomStreamer && cl->IsTObject())) {
-      TBranchObject* branch = new TBranchObject(this, name, classname, addr, bufsize, 0, /*compress=*/ ROOT::kInheritCompressionAlgorithm, isptrptr);
+      TBranchObject* branch = new TBranchObject(this, name, classname, addr, bufsize, 0, /*compress=*/ ROOT::RCompressionSetting::EAlgorithm::kInherit, isptrptr);
       fBranches.Add(branch);
       return branch;
    }
@@ -6878,7 +6878,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          if (branch->GetZipBytes() > 0) comp = totBytes/Double_t(branch->GetZipBytes());
          if (comp > 1 && comp < minComp) {
             if (pDebug) Info("OptimizeBaskets", "Disabling compression for branch : %s\n",branch->GetName());
-            branch->SetCompressionSettings(ROOT::kUseGlobalCompressionAlgorithm);
+            branch->SetCompressionSettings(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
          }
       }
       // coverity[divide_by_zero] newMemsize can not be zero as there is at least one leaf
@@ -8517,7 +8517,7 @@ void TTree::SetCircular(Long64_t maxEntries)
       //a file, reset the compression level to the file compression level
       if (fDirectory) {
          TFile* bfile = fDirectory->GetFile();
-         Int_t compress = ROOT::kUseGeneralPurposeCompressionSetting;
+         Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose;
          if (bfile) {
             compress = bfile->GetCompressionSettings();
          }

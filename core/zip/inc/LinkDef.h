@@ -8,9 +8,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef __MAKECINT__
+#ifdef __CLING__
 
 #pragma link C++ namespace ROOT;
-#pragma link C++ enum ROOT::ECompressionAlgorithm;
+#pragma link C++ enum ROOT::RCompressionSetting::EAlgorithm;
+#pragma link C++ enum ROOT::RCompressionSetting::EDefaults;
+#pragma link C++ enum ROOT::RCompressionSetting::ELevel;
 
 #endif

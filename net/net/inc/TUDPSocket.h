@@ -131,9 +131,9 @@ public:
    virtual Int_t         SendObject(const TObject *obj, Int_t kind = kMESS_OBJECT);
    virtual Int_t         SendRaw(const void *buffer, Int_t length,
                                  ESendRecvOptions opt = kDefault);
-   void                  SetCompressionAlgorithm(Int_t algorithm = ROOT::kUseGlobalCompressionAlgorithm);
-   void                  SetCompressionLevel(Int_t level = ROOT::kUseMinCompressionLevel);
-   void                  SetCompressionSettings(Int_t settings = ROOT::kUseGeneralPurposeCompressionSetting);
+   void                  SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
+   void                  SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);
+   void                  SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
    void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }

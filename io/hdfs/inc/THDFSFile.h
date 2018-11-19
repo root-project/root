@@ -35,7 +35,7 @@ private:
 
 public:
    THDFSFile(const char *path, Option_t *option="",
-             const char *ftitle="", Int_t compress = ROOT::kUseGeneralPurposeCompressionSetting);
+             const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
    virtual ~THDFSFile();
 
    void ResetErrno() const;

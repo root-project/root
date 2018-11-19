@@ -99,7 +99,7 @@ public:
    virtual void        ls(Option_t *option="") const;
    virtual TDirectory *mkdir(const char *name, const char *title="");
    virtual TFile      *OpenFile(const char *name, Option_t *option= "",
-                            const char *ftitle = "", Int_t compress = ROOT::kUseGeneralPurposeCompressionSetting,
+                            const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose,
                             Int_t netopt = 0);
    virtual void        Purge(Short_t nkeep=1);
    virtual void        ReadAll(Option_t *option="");

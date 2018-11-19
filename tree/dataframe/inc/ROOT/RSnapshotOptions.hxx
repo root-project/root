@@ -20,7 +20,7 @@ namespace ROOT {
 namespace RDF {
 /// A collection of options to steer the creation of the dataset on file
 struct RSnapshotOptions {
-   using ECAlgo = ::ROOT::ECompressionAlgorithm;
+   using ECAlgo = ROOT::ECompressionAlgorithm;
    RSnapshotOptions() = default;
    RSnapshotOptions(const RSnapshotOptions &) = default;
    RSnapshotOptions(RSnapshotOptions &&) = default;
