@@ -39,56 +39,80 @@ namespace ROOT {
 ///   [207 - 208]
 ///  - LZ4 is recommended to be used with compression level 4 [404]
 
+struct RCompressionSetting {
+   struct EDefaults { /// Note: this is only temporarily a struct and will become a enum class hence the name convention
+                      /// used.
+      enum EValues {
+         /// Use the global compression setting for this process; may be affected by rootrc.
+         kUseGlobal = 0,
+         /// Use the compile-time default setting
+         kUseCompiledDefault = 404,
+         /// Use the default analysis setting; fast reading but poor compression ratio
+         kUseAnalysis = 404,
+         /// Use the recommended general-purpose setting; moderate read / write speed and compression ratio
+         kUseGeneralPurpose = 101,
+         /// Use the setting that results in the smallest files; very slow read and write
+         kUseSmallest = 207
+      };
+   };
+   struct ELevel { /// Note: this is only temporarily a struct and will become a enum class hence the name convention
+                   /// used.
+      enum EValues {
+         /// Some objects use this value to denote that the compression algorithm
+         /// should be inherited from the parent object
+         kInherit = -1,
+         // Compression level reserved for "uncompressed state"
+         kUncompressed = 0,
+         // Compression level reserved when we are not sure what to use (1 is for the fastest compression)
+         kUseMin = 1,
+         kDefaultZLIB = 1,
+         kDefaultLZ4 = 4,
+         kDefaultOld = 6,
+         kDefaultLZMA = 7
+      };
+   };
+   struct EAlgorithm { /// Note: this is only temporarily a struct and will become a enum class hence the name
+                        /// convention used.
+      enum EValues {
+         /// Some objects use this value to denote that the compression algorithm
+         /// should be inherited from the parent object (e.g., TBranch should get the algorithm from the TTree)
+         kInherit = -1,
+         /// Use the global compression algorithm
+         kUseGlobal = 0,
+         /// Use ZLIB compression
+         kZLIB,
+         /// Use LZMA compression
+         kLZMA,
+         /// Use the old compression algorithm
+         kOldCompressionAlgo,
+         /// Use LZ4 compression
+         kLZ4,
+         /// Undefined compression algorithm (must be kept the last of the list in case a new algorithm is added).
+         kUndefined
+      };
+   };
+};
 
 enum ECompressionAlgorithm {
-   /// Some objects use this value to denote that the compression algorithm
-   /// should be inherited from the parent object (e.g., TBranch should get the algorithm from the TTree)
-   kInheritCompressionAlgorithm = -1,
-   /// Use the global compression algorithm
-   kUseGlobalCompressionAlgorithm = 0,
-   /// Use ZLIB compression
-   kZLIB,
-   /// Use LZMA compression
-   kLZMA,
-   /// Use the old compression algorithm
-   kOldCompressionAlgo,
-   /// Use LZ4 compression
-   kLZ4,
-   /// Undefined compression algorithm (must be kept the last of the list in case a new algorithm is added).
-   kUndefinedCompressionAlgorithm
+   /// Deprecated name, do *not* use:
+   kUseGlobalCompressionSetting = RCompressionSetting::EAlgorithm::kUseGlobal,
+   /// Deprecated name, do *not* use:
+   kUseGlobalSetting = RCompressionSetting::EAlgorithm::kUseGlobal,
+   /// Deprecated name, do *not* use:
+   kZLIB = RCompressionSetting::EAlgorithm::kZLIB,
+   /// Deprecated name, do *not* use:
+   kLZMA = RCompressionSetting::EAlgorithm::kLZMA,
+   /// Deprecated name, do *not* use:
+   kOldCompressionAlgo = RCompressionSetting::EAlgorithm::kOldCompressionAlgo,
+   /// Deprecated name, do *not* use:
+   kLZ4 = RCompressionSetting::EAlgorithm::kLZ4,
+   /// Deprecated name, do *not* use:
+   kUndefinedCompressionAlgorithm = RCompressionSetting::EAlgorithm::kUndefined
 };
 
-enum ECompressionLevel {
-   /// Some objects use this value to denote that the compression algorithm
-   /// should be inherited from the parent object
-   kInheritCompressionLevel = -1,
-   // Compression level reserved for "uncompressed state"
-   kUncompressedLevel = 0,
-   // Compression level reserved when we are not sure what to use (1 is for the fastest compression)
-   kUseMinCompressionLevel = 1,
-   kDefaultZLIB = 1,
-   kDefaultLZ4 = 4,
-   kDefaultOld = 6,
-   kDefaultLZMA = 7
-};
-
-enum ECompressionSetting {
-   /// Use the global compression setting for this process; may be affected by rootrc.
-   kUseGlobalCompressionSetting = 0,
-   /// Use the compile-time default setting
-   kUseCompiledDefaultCompressionSetting = 404,
-   /// Use the default analysis setting; fast reading but poor compression ratio
-   kUseAnalysisCompressionSetting = 404,
-   /// Use the recommended general-purpose setting; moderate read / write speed and compression ratio
-   kUseGeneralPurposeCompressionSetting = 101,
-   /// Use the setting that results in the smallest files; very slow read and write
-   kUseSmallestCompressionSetting = 207
-};
-
+int CompressionSettings(RCompressionSetting::EAlgorithm algorithm, int compressionLevel);
 /// Deprecated name, do *not* use:
-static constexpr ECompressionAlgorithm kUseGlobalSetting = kUseGlobalCompressionAlgorithm;
-
-int CompressionSettings(ECompressionAlgorithm algorithm, int compressionLevel);
-}
+int CompressionSettings(ROOT::ECompressionAlgorithm algorithm, int compressionLevel);
+} // namespace ROOT
 
 #endif
