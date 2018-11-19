@@ -155,6 +155,7 @@ public:
    virtual Bool_t       IsLearning() const {return fIsLearning;}
 
    virtual Bool_t       FillBuffer();
+   virtual Int_t        LearnBranch(TBranch *b, Bool_t subgbranches = kFALSE);
    virtual void         LearnPrefill();
 
    virtual void         Print(Option_t *option="") const;
