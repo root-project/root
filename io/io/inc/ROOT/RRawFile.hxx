@@ -31,12 +31,9 @@ class RRawFile {
 public:
    static constexpr std::uint64_t kUnknownFileSize = std::uint64_t(-1);
    struct ROptions {
-      ROptions()  { }
+      ROptions() { }
    };
    enum class ELineBreaks { kSystem, kUnix, kWindows };
-
-private:
-   static const char* kTransportSeparator;
 
 protected:
    std::string fUrl;
@@ -51,9 +48,11 @@ protected:
    virtual std::uint64_t DoGetSize() = 0;
 
 public:
-   // TODO: Move constructor, copy/assignment delete
    RRawFile(const std::string &url, ROptions options);
-   virtual ~RRawFile();
+   RRawFile(const RRawFile&) = delete;
+   RRawFile& operator=(const RRawFile&) = delete;
+   virtual ~RRawFile() = default;
+
    static RRawFile* Create(std::string_view url, ROptions options = ROptions());
 
    size_t Pread(void *buffer, size_t nbytes, std::uint64_t offset);
@@ -61,7 +60,7 @@ public:
    void Seek(std::uint64_t offset);
    std::uint64_t GetSize();
 
-   std::string Readln(ELineBreaks lineBreak = ELineBreaks::kSystem);
+   bool Readln(std::string& line, ELineBreaks lineBreak = ELineBreaks::kSystem);
 };
 
 

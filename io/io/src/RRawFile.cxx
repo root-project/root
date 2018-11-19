@@ -24,7 +24,13 @@
 namespace ROOT {
 namespace Detail {
 
-const char* ROOT::Detail::RRawFile::kTransportSeparator = "://";
+namespace {
+const char* kTransportSeparator = "://";
+const char* kLineBreakTokens[] = {"\n", "\n", "\r\n"};
+constexpr unsigned kLineBreakTokenSizes[] = {1, 1, 2};
+constexpr unsigned kLineBuffer = 128;
+} // anonymous namespace
+
 
 ROOT::Detail::RRawFile::RRawFile(
    const std::string &url,
@@ -37,38 +43,52 @@ ROOT::Detail::RRawFile::RRawFile(
 }
 
 
-ROOT::Detail::RRawFile::~RRawFile()
+bool ROOT::Detail::RRawFile::Readln(std::string& line, ROOT::Detail::RRawFile::ELineBreaks lineBreak)
 {
+   line.clear();
+
+   char buffer[kLineBuffer];
+   size_t nbytes;
+   do {
+      nbytes = Read(buffer, sizeof(buffer));
+      std::string_view bufferView(buffer, nbytes);
+      auto idx = bufferView.find(kLineBreakTokens[static_cast<int>(lineBreak)]);
+      if (idx != std::string_view::npos) {
+         // Linebreak found, return the string and skip the linebreak itself
+         line.append(buffer, idx);
+         fFilePos += kLineBreakTokenSizes[static_cast<int>(lineBreak)];
+         break;
+      }
+      line.append(buffer, nbytes);
+   } while (nbytes > 0);
+
+   return nbytes > 0;
 }
 
-std::string ROOT::Detail::RRawFile::Readln(ROOT::Detail::RRawFile::ELineBreaks /*lineBreak*/)
-{
-   return "";
-}
 
 ROOT::Detail::RRawFile* ROOT::Detail::RRawFile::Create(std::string_view url, ROptions options)
 {
    std::string transport = GetTransport(url);
-	if (transport == "file") {
-		return new RRawFilePosix(std::string(url), options);
-	}
-	return nullptr;
+   if (transport == "file") {
+      return new RRawFilePosix(std::string(url), options);
+   }
+   throw std::runtime_error("Unsupported transport protocol: " + transport);
 }
 
 std::string ROOT::Detail::RRawFile::GetLocation(std::string_view url)
 {
-	auto idx = url.find(kTransportSeparator);
+   auto idx = url.find(kTransportSeparator);
    if (idx == std::string_view::npos)
-	  return std::string(url);
+      return std::string(url);
    return std::string(url.substr(idx + strlen(kTransportSeparator)));
 }
 
 std::string ROOT::Detail::RRawFile::GetTransport(std::string_view url)
 {
-	auto idx = url.find(kTransportSeparator);
-	if (idx == std::string_view::npos)
-	   return "file";
-	return std::string(url.substr(0, idx));
+   auto idx = url.find(kTransportSeparator);
+   if (idx == std::string_view::npos)
+      return "file";
+   return std::string(url.substr(0, idx));
 }
 
 
@@ -106,14 +126,14 @@ ROOT::Detail::RRawFilePosix::RRawFilePosix(const std::string &url, ROOT::Detail:
 ROOT::Detail::RRawFilePosix::~RRawFilePosix()
 {
    if (filedes >= 0)
-	   close(filedes);
+      close(filedes);
 }
 
 size_t ROOT::Detail::RRawFilePosix::DoPread(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    EnsureOpen();
 
-	size_t total_bytes = 0;
+   size_t total_bytes = 0;
    while (nbytes) {
       ssize_t res = pread(filedes, buffer, nbytes, offset);
       if (res < 0) {
@@ -127,7 +147,7 @@ size_t ROOT::Detail::RRawFilePosix::DoPread(void *buffer, size_t nbytes, std::ui
       buffer = reinterpret_cast<unsigned char *>(buffer) + res;
       nbytes -= res;
       total_bytes += res;
-		offset += res;
+      offset += res;
    }
    return total_bytes;
 }
@@ -135,12 +155,12 @@ size_t ROOT::Detail::RRawFilePosix::DoPread(void *buffer, size_t nbytes, std::ui
 
 std::uint64_t ROOT::Detail::RRawFilePosix::DoGetSize()
 {
-	EnsureOpen();
+   EnsureOpen();
    struct stat info;
-	int res = fstat(filedes, &info);
-	if (res == 0)
-	  return info.st_size;
-	throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
+   int res = fstat(filedes, &info);
+   if (res == 0)
+      return info.st_size;
+   throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
 }
 
 
