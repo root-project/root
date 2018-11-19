@@ -669,6 +669,8 @@ void TFormula::Copy(TObject &obj) const
    fnew.fClingInitialized = fClingInitialized;
    fnew.fAllParametersSetted = fAllParametersSetted;
    fnew.fClingName = fClingName;
+   fnew.fSavedInputFormula = fSavedInputFormula;
+   fnew.fLazyInitialization = fLazyInitialization;
 
    // case of function based on a C++  expression (lambda's) which is ready to be compiled
    if (fLambdaPtr && TestBit(TFormula::kLambda)) {
@@ -3421,8 +3423,8 @@ void TFormula::ReInitializeEvalMethod() {
       R__LOCKGUARD(gROOTMutex);
 
       // std::cout << "gClingFunctions list" << std::endl;
-      // for (auto thing : gClingFunctions)
-      //    std::cout << "gClingFunctions : " << thing.first << std::endl;
+      //  for (auto thing : gClingFunctions)
+      //     std::cout << "gClingFunctions : " << thing.first << std::endl;
 
       auto funcit = gClingFunctions.find(fSavedInputFormula);
 
