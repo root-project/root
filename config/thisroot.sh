@@ -91,10 +91,12 @@ fi
 
 if [ -z "${MANPATH}" ]; then
    # Grab the default man path before setting the path to avoid duplicates
-   if `which manpath > /dev/null 2>&1` ; then
+   if command -v manpath >/dev/null; then
       default_manpath=`manpath`
-   else
+   elif command -v man >/dev/null; then
       default_manpath=`man -w 2> /dev/null`
+   else
+      default_manpath=""
    fi
 fi
 
