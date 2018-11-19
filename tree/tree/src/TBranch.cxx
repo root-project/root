@@ -1210,7 +1210,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
       R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
       TFileCacheRead *pf = fTree->GetReadCache(file);
       if (pf){
-         if (pf->IsLearning()) pf->AddBranch(this);
+         if (pf->IsLearning()) pf->LearnBranch(this, kFALSE);
          if (fSkipZip) pf->SetSkipZip();
       }
    }
