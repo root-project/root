@@ -298,13 +298,14 @@ TTreeCache::~TTreeCache()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a branch to the list of branches to be stored in the cache
-/// this function is called by TBranch::GetBasket
+/// Add a branch discovered by actual usage to the list of branches to be stored
+/// in the cache this function is called by TBranch::GetBasket
+/// If we are not longer in the training phase this is an error.
 /// Returns:
 ///  - 0 branch added or already included
 ///  - -1 on error
 
-Int_t TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
+Int_t TTreeCache::LearnBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
 {
    if (!fIsLearning) {
       return -1;
@@ -318,6 +319,22 @@ Int_t TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
    // release the Prefill-ing will be the default so we test for that inside the
    // LearnPrefill call).
    if (!fLearnPrefilling && fNbranches == 0) LearnPrefill();
+
+   return AddBranch(b, subbranches);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a branch to the list of branches to be stored in the cache
+/// this function is called by the user via TTree::AddBranchToCache.
+/// The branch is added even if we are outside of the training phase.
+/// Returns:
+///  - 0 branch added or already included
+///  - -1 on error
+
+Int_t TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
+{
+   // Reject branch that are not from the cached tree.
+   if (!b || fTree->GetTree() != b->GetTree()) return -1;
 
    //Is branch already in the cache?
    Bool_t isNew = kTRUE;

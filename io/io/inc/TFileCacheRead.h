@@ -100,6 +100,7 @@ public:
    virtual void        SetEnablePrefetching(Bool_t setPrefetching = kFALSE);
    virtual Bool_t      IsEnablePrefetching() const { return fEnablePrefetching; };
    virtual Bool_t      IsLearning() const {return kFALSE;}
+   virtual Int_t       LearnBranch(TBranch * /*b*/, Bool_t /*subbranches*/ = kFALSE) { return 0; }
    virtual void        Prefetch(Long64_t pos, Int_t len);
    virtual void        Print(Option_t *option="") const;
    virtual Int_t       ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc);
