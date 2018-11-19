@@ -17,11 +17,11 @@ TEST(TTreeImplicitMT, flushBaskets)
    double b1 = 0.;
    double b2 = 0.;
    double b3 = 0.;
-   auto branch1 = t.Branch("branch1", &b1);
-   auto branch2 = t.Branch("branch2", &b2);
+   t.Branch("branch1", &b1);
+   t.Branch("branch2", &b2);
    t.Fill();
    t.Write(); // This invokes FlushBaskets!
-   auto branch3 = t.Branch("branch3", &b3);
+   t.Branch("branch3", &b3);
    t.Fill();
    t.Write(); // This invokes FlushBaskets!
    f.Close();
