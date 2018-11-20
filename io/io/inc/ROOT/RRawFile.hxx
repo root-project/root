@@ -31,11 +31,10 @@ namespace Detail {
 class RRawFile {
 public:
    static constexpr std::uint64_t kUnknownFileSize = std::uint64_t(-1);
-   // TODO(jblomer): add additional "auto" mode, which guesses the line breaks from the content
-   enum class ELineBreaks { kSystem, kUnix, kWindows };
+   enum class ELineBreaks { kAuto, kSystem, kUnix, kWindows };
    struct ROptions {
       ELineBreaks fLineBreak;
-      ROptions() : fLineBreak(ELineBreaks::kSystem) { }
+      ROptions() : fLineBreak(ELineBreaks::kAuto) { }
    };
 
 protected:
