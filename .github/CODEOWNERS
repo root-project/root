@@ -33,7 +33,7 @@
 /roofit/ @lmoneta
 /rootx/ @Axel-Naumann
 /sql/ @pcanal
-/tmva/ @lmoneta
+/tmva/ @lmoneta @ashlaban @stwunsch
 /tree/ @pcanal
 /tutorials/ @couet
 /tree/dataframe @dpiparo @bluehood
