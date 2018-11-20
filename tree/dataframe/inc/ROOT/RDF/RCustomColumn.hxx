@@ -124,6 +124,7 @@ public:
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
+   }
 
    void ClearValueReaders(unsigned int slot) final
    {
