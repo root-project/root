@@ -30,6 +30,7 @@ the trees in the chain.
 #include "TBrowser.h"
 #include "TChainElement.h"
 #include "TClass.h"
+#include "TColor.h"
 #include "TCut.h"
 #include "TError.h"
 #include "TMath.h"
@@ -2301,6 +2302,73 @@ void TChain::ResetAfterMerge(TFileMergeInfo *info)
    fTreeOffset[0]  = 0;
 
    TTree::ResetAfterMerge(info);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save TChain as a C++ statements on output stream out.
+/// With the option "friend" save the description of all the 
+/// TChain's friend trees or chains as well.
+
+void TChain::SavePrimitive(std::ostream &out, Option_t *option)
+{
+   static Int_t chCounter = 0;
+
+   TString chName = gInterpreter->MapCppName(GetName());
+   if (chName.IsNull())
+      chName = "_chain";
+   ++chCounter;
+   chName += chCounter;
+
+   TString opt = option;
+   opt.ToLower();
+
+   out << "   TChain *" << chName.Data() << " = new TChain(\"" << GetName() << "\");" << std::endl;
+
+   if (opt.Contains("friend")) {
+      opt.ReplaceAll("friend", "");
+      for (TObject *frel : *fFriends) {
+         TTree *frtree = ((TFriendElement *)frel)->GetTree();
+         if (dynamic_cast<TChain *>(frtree)) {
+            if (strcmp(frtree->GetName(), GetName()) != 0)
+               --chCounter; // make friends get the same chain counter
+            frtree->SavePrimitive(out, opt.Data());
+            out << "   " << chName.Data() << "->AddFriend(\"" << frtree->GetName() << "\");" << std::endl;
+         } else { // ordinary friend TTree
+            TDirectory *file = frtree->GetDirectory();
+            if (file && dynamic_cast<TFile *>(file))
+               out << "   " << chName.Data() << "->AddFriend(\"" << frtree->GetName() << "\", \"" << file->GetName()
+                   << "\");" << std::endl;
+         }
+      }
+   }
+   out << std::endl;
+
+   for (TObject *el : *fFiles) {
+      TChainElement *chel = (TChainElement *)el;
+      // Save tree file if it is really loaded to the chain
+      if (chel->GetLoadResult() == 0 && chel->GetEntries() != 0) {
+         if (chel->GetEntries() == TTree::kMaxEntries) // tree number of entries is not yet known
+            out << "   " << chName.Data() << "->AddFile(\"" << chel->GetTitle() << "\");" << std::endl;
+         else
+            out << "   " << chName.Data() << "->AddFile(\"" << chel->GetTitle() << "\"," << chel->GetEntries() << ");"
+                << std::endl;
+      }
+   }
+   out << std::endl;
+
+   if (GetMarkerColor() != 1) {
+      if (GetMarkerColor() > 228) {
+         TColor::SaveColor(out, GetMarkerColor());
+         out << "   " << chName.Data() << "->SetMarkerColor(ci);" << std::endl;
+      } else
+         out << "   " << chName.Data() << "->SetMarkerColor(" << GetMarkerColor() << ");" << std::endl;
+   }
+   if (GetMarkerStyle() != 1) {
+      out << "   " << chName.Data() << "->SetMarkerStyle(" << GetMarkerStyle() << ");" << std::endl;
+   }
+   if (GetMarkerSize() != 1) {
+      out << "   " << chName.Data() << "->SetMarkerSize(" << GetMarkerSize() << ");" << std::endl;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

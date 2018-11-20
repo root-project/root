@@ -116,6 +116,11 @@ void RLoopManager::RunTreeProcessorMT()
 /// Run event loop over one or multiple ROOT files, in sequence.
 void RLoopManager::RunTreeReader()
 {
+   if (fTree->IsA() == TClass::GetClass("TChain")) {
+      // in case this is not the first event loop, we bring the chain back to the first tree
+      // to avoid warnings from TTreeReader
+      fTree->LoadTree(0);
+   }
    TTreeReader r(fTree.get());
    if (0 == fTree->GetEntriesFast())
       return;
@@ -126,7 +131,6 @@ void RLoopManager::RunTreeReader()
    while (r.Next() && fNStopsReceived < fNChildren) {
       RunAndCheckFilters(0, r.GetCurrentEntry());
    }
-   fTree->GetEntry(0);
 }
 
 /// Run event loop over data accessed through a DataSource, in sequence.
@@ -259,6 +263,8 @@ void RLoopManager::CleanUpTask(unsigned int slot)
 {
    for (auto &ptr : fBookedActions)
       ptr->FinalizeSlot(slot);
+   for (auto &ptr : fBookedFilters)
+      ptr->ClearTask(slot);
 }
 
 /// Jit all actions that required runtime column type inference, and clean the `fToJit` member variable.

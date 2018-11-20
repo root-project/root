@@ -494,19 +494,26 @@ else()
   set(hasveccore undef)
 endif()
 if(cxx11)
-  set(cxxversion cxx11)
+  set(cxxversion c++11)
   set(usec++11 define)
 else()
   set(usec++11 undef)
 endif()
 if(cxx14)
-  set(cxxversion cxx14)
+  set(cxxversion c++14)
+  # If we are using gcc 4.X and we want c++14, we need to use the --std=c++1y flag
+  # else, we continue with c++14.
+  if(CMAKE_COMPILER_IS_GNUCXX AND NOT APPLE)
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0")
+      set(cxxversion c++1y)
+    endif()
+  endif()
   set(usec++14 define)
 else()
   set(usec++14 undef)
 endif()
 if(cxx17)
-  set(cxxversion cxx17)
+  set(cxxversion c++17)
   set(usec++17 define)
 else()
   set(usec++17 undef)
@@ -560,12 +567,12 @@ if (tmva-cpu)
   set(hastmvacpu define)
 else()
   set(hastmvacpu undef)
-endif()  
+endif()
 if (tmva-gpu)
   set(hastmvagpu define)
 else()
   set(hastmvagpu undef)
-endif()  
+endif()
 
 
 CHECK_CXX_SOURCE_COMPILES("#include <string_view>
@@ -815,7 +822,7 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
                           GROUP_READ
                           WORLD_READ
               DESTINATION ${CMAKE_INSTALL_BINDIR})
-              
+
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
               ${CMAKE_BINARY_DIR}/installtree/root-config
               ${CMAKE_SOURCE_DIR}/cmake/scripts/setenvwrap.csh
