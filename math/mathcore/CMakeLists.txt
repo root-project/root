@@ -112,11 +112,6 @@ if(imt)
   set(MATHCORE_DEPENDENCIES Imt)
 endif()
 
-if(veccore)
-  set(MATHCORE_BUILTINS VECCORE)
-  set(MATHCORE_LIBRARIES ${VecCore_LIBRARIES})
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
   HEADERS
     ${HEADERS}
@@ -187,7 +182,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     ${MATHCORE_BUILTINS}
 )
 
-target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
 target_link_libraries(MathCore PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+
+if (veccore)
+  target_link_libraries(MathCore PUBLIC VecCore::VecCore)
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
