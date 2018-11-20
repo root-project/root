@@ -26,8 +26,13 @@ namespace Detail {
 
 namespace {
 const char* kTransportSeparator = "://";
+#ifdef _WIN32
+const char* kLineBreakTokens[] = {"\r\n", "\n", "\r\n"};
+constexpr unsigned kLineBreakTokenSizes[] = {2, 1, 2};
+#else
 const char* kLineBreakTokens[] = {"\n", "\n", "\r\n"};
 constexpr unsigned kLineBreakTokenSizes[] = {1, 1, 2};
+#endif
 constexpr unsigned kLineBuffer = 128;
 } // anonymous namespace
 
@@ -43,7 +48,7 @@ ROOT::Detail::RRawFile::RRawFile(
 }
 
 
-bool ROOT::Detail::RRawFile::Readln(std::string& line, ROOT::Detail::RRawFile::ELineBreaks lineBreak)
+bool ROOT::Detail::RRawFile::Readln(std::string& line)
 {
    line.clear();
 
@@ -52,11 +57,11 @@ bool ROOT::Detail::RRawFile::Readln(std::string& line, ROOT::Detail::RRawFile::E
    do {
       nbytes = Read(buffer, sizeof(buffer));
       std::string_view bufferView(buffer, nbytes);
-      auto idx = bufferView.find(kLineBreakTokens[static_cast<int>(lineBreak)]);
+      auto idx = bufferView.find(kLineBreakTokens[static_cast<int>(fOptions.fLineBreak)]);
       if (idx != std::string_view::npos) {
          // Linebreak found, return the string and skip the linebreak itself
          line.append(buffer, idx);
-         fFilePos += kLineBreakTokenSizes[static_cast<int>(lineBreak)];
+         fFilePos += kLineBreakTokenSizes[static_cast<int>(fOptions.fLineBreak)];
          break;
       }
       line.append(buffer, nbytes);
@@ -157,11 +162,10 @@ std::uint64_t ROOT::Detail::RRawFilePosix::DoGetSize()
 {
    EnsureOpen();
    struct stat info;
-   info.st_size = 0;
    int res = fstat(filedes, &info);
-   if (res != 0)
-      throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
-   return info.st_size;
+   if (res == 0)
+     return info.st_size;
+   throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
 }
 
 
@@ -229,9 +233,8 @@ void ROOT::Detail::RRawFileCio::EnsureOpen()
       return;
 
    fileptr = fopen(GetLocation(fUrl).c_str(), "r");
-   if (fileptr == nullptr) {
+   if (fileptr == nullptr)
       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + std::string(strerror(errno)));
-   }
 }
 
 
