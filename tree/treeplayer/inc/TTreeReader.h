@@ -275,7 +275,8 @@ private:
    /// The end of the entry loop. When set (i.e. >= 0), it provides a way
    /// to stop looping over the TTree when we reach a certain entry: Next()
    /// returns kFALSE when GetCurrentEntry() reaches fEndEntry.
-   Long64_t fEndEntry = -1;
+   Long64_t fEndEntry = -1LL;
+   Long64_t fBeginEntry = 0LL; ///< This allows us to propagate the range to the TTreeCache
    Bool_t fProxiesSet = kFALSE; ///< True if the proxies have been set, false otherwise
 
    friend class ROOT::Internal::TTreeReaderValueBase;
