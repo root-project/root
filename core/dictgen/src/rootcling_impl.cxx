@@ -2841,8 +2841,8 @@ int CheckClassesForInterpreterOnlyDicts(cling::Interpreter &interp,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make up for skipping RegisterModule, now that dictionary parsing
 /// is done and these headers cannot be selected anymore.
-
-int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootPCM=false)
+///
+int EmitROOTPCM(cling::Interpreter &interp, bool writeEmptyRootPCM=false)
 {
    if (!gDriverConfig->fCloseStreamerInfoROOTFile)
       return 0;
@@ -2881,7 +2881,8 @@ int GenerateFullDict(std::ostream &dictStream,
                      const ROOT::TMetaUtils::RConstructorTypes &ctorTypes,
                      bool isSplit,
                      bool isGenreflex,
-                     bool writeEmptyRootPCM)
+                     bool writeEmptyRootPCM,
+                     bool hasCxxModule)
 {
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
 
@@ -2993,12 +2994,12 @@ int GenerateFullDict(std::ostream &dictStream,
    // coverity[fun_call_w_exception] - that's just fine.
    ROOT::Internal::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy, EmitStreamerInfo);
 
-   if (!gDriverConfig->fBuildingROOTStage1) {
+   if (!hasCxxModule && !gDriverConfig->fBuildingROOTStage1) {
       EmitTypedefs(scan.fSelectedTypedefs);
       EmitEnums(scan.fSelectedEnums);
       // Make up for skipping RegisterModule, now that dictionary parsing
       // is done and these headers cannot be selected anymore.
-      int finRetCode = FinalizeStreamerInfoWriting(interp, writeEmptyRootPCM);
+      int finRetCode = EmitROOTPCM(interp, writeEmptyRootPCM);
       if (finRetCode != 0) return finRetCode;
    }
 
@@ -4858,17 +4859,18 @@ int RootClingMain(int argc,
       rootclingRetCode += CheckClassesForInterpreterOnlyDicts(interp, scan);
       // generate an empty pcm nevertheless for consistency
       // Negate as true is 1 and true is returned in case of success.
-      if (!gDriverConfig->fBuildingROOTStage1) {
-         rootclingRetCode +=  FinalizeStreamerInfoWriting(interp);
+      if (!cxxmodule && !gDriverConfig->fBuildingROOTStage1) {
+         rootclingRetCode += EmitROOTPCM(interp);
       }
    } else {
       rootclingRetCode += GenerateFullDict(splitDictStream,
-                                 interp,
-                                 scan,
-                                 constructorTypes,
-                                 doSplit,
-                                 isGenreflex,
-                                 writeEmptyRootPCM);
+                                           interp,
+                                           scan,
+                                           constructorTypes,
+                                           doSplit,
+                                           isGenreflex,
+                                           writeEmptyRootPCM,
+                                           cxxmodule);
    }
 
    if (rootclingRetCode != 0) {

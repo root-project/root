@@ -1973,7 +1973,7 @@ void TCling::RegisterModule(const char* modulename,
 
    if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
       TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
-      if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
+      if (!hasCxxModule && !LoadPCM(pcmFileName, headers, triggerFunc)) {
          ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
                  ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
       }

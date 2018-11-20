@@ -371,6 +371,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   if(cpp_module_file)
     set(newargs -cxxmodule ${newargs})
+    set(pcm_name)
   endif()
 
   #---what rootcling command to use--------------------------
