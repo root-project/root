@@ -7,6 +7,8 @@
 #include "Math/ChebyshevPol.h"
 #include "TError.h"
 #include "TFile.h"
+#include "TMacro.h"
+#include "TSystem.h"
 
 #include <limits>
 #include <cstdlib>
@@ -933,6 +935,73 @@ bool test48() {
    return ok;
 }
 
+bool test49() {
+   // test copy consttructor in case of lazy initialization (i.e. when reading from a file)
+   TFile* f = TFile::Open("TFormulaTest49.root","RECREATE");   
+   if (!f) {
+      Error("test49","Error creating file for test49");
+      return false;
+   }
+   TF1 f1("f1","x*[0]");
+   f1.SetParameter(0,2); 
+   f1.Write();
+   f->Close();
+   // read the file 
+   f = TFile::Open("TFormulaTest49.root");   
+   if (!f) {
+      Error("test49","Error reading file for test49");
+      return false;
+   }
+   auto fr = (TF1*) f->Get("f1");
+   if (!fr) { 
+      Error("test49","Error reading function from file for test49");
+      return false;
+   }
+   // create a copy
+   TF1 fr2 = *fr;
+   bool ok = (fr->Eval(2.) == 4.);
+   ok |= ( fr2.Eval(2.) == fr->Eval(2.) ); 
+
+   // now read using an indpendent process (ROOT session)
+   // this should cause ROOT-9801
+
+   TMacro m;
+   m.AddLine("bool TFormulaTest49() { TFile * f = TFile::Open(\"TFormulaTest49.root\");"
+             "TF1 *f1 = (TF1*) f->Get(\"f1\"); TF1 f2 = *f1;"
+             "bool ok = (f1->Eval(2) == f2.Eval(2.)) && (f2.Eval(2.) == 4.);"
+             "if (!ok) Error(\"test49\",\"Error in test49 (lazy initialization)\");" 
+             "return ok; }");
+
+   m.SaveSource("TFormulaTest49.C");
+   int ret = gSystem->Exec("root -q -l -i TFormulaTest49.C");
+   ok |= (ret == 0);
+   return ok;
+}
+
+bool test50() {
+   // test detailed printing of function
+   TFormula f1("f1","[A]*sin([B]*x)");
+   f1.Print("V");
+   bool ok = f1.IsValid(); 
+
+   TF2 f2("f2","[0]*x+[1]*y");
+   f2.Print("V");
+   ok |= f2.GetFormula()->IsValid();
+
+   // create using lambda expression, need to pass ndim and npar
+   TFormula f3("f3","[](double *x, double *p){ return p[0]*x[0] + p[1]; } ",1,2);
+   f3.Print("V");
+   ok |= f3.IsValid();
+
+   // create again using lambda from TF1, need to pass xmin(0.),xmax(1.), npar (1)
+   TF1 f4("f3","[](double *x, double *p){ return p[0]*x[0]; } ",0.,1.,1);  
+   f4.Print("V");
+   ok |= f3.IsValid();
+
+   return ok;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
 
 void PrintError(int itest)  {
    Error("TFormula test","test%d FAILED ",itest);
@@ -999,6 +1068,8 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test46() ) { PrintError(itest); }
    IncrTest(itest); if (!test47() ) { PrintError(itest); }
    IncrTest(itest); if (!test48() ) { PrintError(itest); }
+   IncrTest(itest); if (!test49() ) { PrintError(itest); }
+   IncrTest(itest); if (!test50() ) { PrintError(itest); }
 
    std::cout << ".\n";
 
