@@ -12,7 +12,7 @@ set(CLADDIFFERENTIATOR_LIB
   ${_clad_byproduct_binary_dir}/lib/Differentiator/${CMAKE_STATIC_LIBRARY_PREFIX}cladDifferentiator${CMAKE_STATIC_LIBRARY_SUFFIX}
   ${_clad_byproduct_binary_dir}/tools/${CMAKE_STATIC_LIBRARY_PREFIX}cladPlugin${CMAKE_STATIC_LIBRARY_SUFFIX}
   )
-list(JOIN CLANG_INCLUDE_DIRS "|" _clad_clang_include_dirs)
+string(REPLACE ";" "|" _clad_clang_include_dirs "${CLANG_INCLUDE_DIRS}")
 
 if(MSVC)
   if (winrtdebug)
