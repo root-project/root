@@ -50,7 +50,6 @@ ROOT::Detail::RRawFile::RRawFile(
 
 bool ROOT::Detail::RRawFile::Readln(std::string& line)
 {
-   line.clear();
    if (fOptions.fLineBreak == ELineBreaks::kAuto) {
       fOptions.fLineBreak = ELineBreaks::kUnix;
       bool res = Readln(line);
@@ -61,6 +60,7 @@ bool ROOT::Detail::RRawFile::Readln(std::string& line)
       return res;
    }
 
+   line.clear();
    char buffer[kLineBuffer];
    size_t nbytes;
    do {
