@@ -27,11 +27,11 @@ namespace Detail {
 namespace {
 const char* kTransportSeparator = "://";
 #ifdef _WIN32
-const char* kLineBreakTokens[] = {"\r\n", "\n", "\r\n"};
-constexpr unsigned kLineBreakTokenSizes[] = {2, 1, 2};
+const char* kLineBreakTokens[] = {"", "\r\n", "\n", "\r\n"};
+constexpr unsigned kLineBreakTokenSizes[] = {0, 2, 1, 2};
 #else
-const char* kLineBreakTokens[] = {"\n", "\n", "\r\n"};
-constexpr unsigned kLineBreakTokenSizes[] = {1, 1, 2};
+const char* kLineBreakTokens[] = {"", "\n", "\n", "\r\n"};
+constexpr unsigned kLineBreakTokenSizes[] = {0, 1, 1, 2};
 #endif
 constexpr unsigned kLineBuffer = 128;
 } // anonymous namespace
@@ -51,6 +51,15 @@ ROOT::Detail::RRawFile::RRawFile(
 bool ROOT::Detail::RRawFile::Readln(std::string& line)
 {
    line.clear();
+   if (fOptions.fLineBreak == ELineBreaks::kAuto) {
+      fOptions.fLineBreak = ELineBreaks::kUnix;
+      bool res = Readln(line);
+      if ((line.length() > 0) && (*line.rbegin() == '\r')) {
+         fOptions.fLineBreak = ELineBreaks::kWindows;
+         line.resize(line.length() - 1);
+      }
+      return res;
+   }
 
    char buffer[kLineBuffer];
    size_t nbytes;
