@@ -683,8 +683,8 @@ extern "C" void TCling__SplitAclicMode(const char* fileName, string &mode,
 
 // Implemented in TClingCallbacks.
 extern "C" void TCling__FindLoadedLibraries(std::vector<std::pair<uint32_t, std::string>> &sLibraries,
-                                 std::vector<StringRef> &sPaths,
-                                 cling::Interpreter &interpreter);
+                                 std::vector<std::string> &sPaths,
+                                 cling::Interpreter &interpreter, bool searchSystem);
 
 //______________________________________________________________________________
 //
@@ -5973,12 +5973,17 @@ bool TCling::LibraryLoadingFailed(const std::string& errmessage, const std::stri
 {
    StringRef errMsg(errmessage);
    if (errMsg.contains("undefined symbol: ")) {
+   // This branch is taken when the callback was from DynamicLibraryManager::loadLibrary
       std::string mangled_name = std::string(errMsg.split("undefined symbol: ").second);
       void* res = ((TCling*)gCling)->LazyFunctionCreatorAutoload(mangled_name);
       cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
       if (res && DLM && (DLM->loadLibrary(libStem, permanent, resolved) == cling::DynamicLibraryManager::kLoadLibSuccess))
         // Return success when LazyFunctionCreatorAutoload could find mangled_name
         return true;
+   } else {
+   // The callback is from IncrementalExecutor::diagnoseUnresolvedSymbols
+      if ( ((TCling*)gCling)->LazyFunctionCreatorAutoload(errmessage))
+         return true;
    }
 
    return false;
@@ -6033,6 +6038,43 @@ static bool LookupBloomFilter(llvm::object::ObjectFile *soFile, uint32_t hash) {
    return  (bitmask & word) == bitmask;
 }
 
+// Lookup for normal symbols
+static bool LookupNormalSymbols(llvm::object::ObjectFile *RealSoFile, const std::string& mangled_name, const std::string& LibName)
+{
+   uint32_t hashedMangle = GNUHash(mangled_name);
+   // Check Bloom filter. If false, it means that this library doesn't contain mangled_name defenition
+   if (!LookupBloomFilter(RealSoFile, hashedMangle))
+      return false;
+
+   auto Symbols = RealSoFile->symbols();
+   for (auto S : Symbols) {
+      uint32_t Flags = S.getFlags();
+      // DO NOT insert to table if symbol was undefined
+      if (Flags & llvm::object::SymbolRef::SF_Undefined)
+         continue;
+
+      // Note, we are at last resort and loading library based on a weak
+      // symbol is allowed. Otherwise, the JIT will issue an unresolved
+      // symbol error.
+      //
+      // There are other weak symbol kinds (marked as 'V') to denote
+      // typeinfo and vtables. It is unclear whether we should load such
+      // libraries or from which library we should resolve the symbol.
+      // We seem to not have a way to differentiate it from the symbol API.
+
+      llvm::Expected<StringRef> SymNameErr = S.getName();
+      if (!SymNameErr) {
+         Warning("LazyFunctionCreatorAutoloadForModule", "Failed to read symbol");
+         continue;
+      }
+
+      if (SymNameErr.get() == mangled_name)
+         return true;
+   }
+
+   return false;
+}
+
 static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_name,
                                                   cling::Interpreter *fInterpreter) {
    using namespace llvm::object;
@@ -6042,67 +6084,96 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
    R__LOCKGUARD(gInterpreterMutex);
 
    static bool sFirstRun = true;
+   static bool sFirstSystemLibrary = true;
    // sLibraies contains pair of sPaths[i] (eg. /home/foo/module) and library name (eg. libTMVA.so). The
    // reason why we're separating sLibraries and sPaths is that we have a lot of
    // dupulication in path, for example we have "/home/foo/module-release/lib/libFoo.so", "/home/../libBar.so", "/home/../lib.."
    // and it's waste of memory to store the full path.
    static std::vector< std::pair<uint32_t, std::string> > sLibraries;
-   static std::vector<StringRef> sPaths;
+   static std::vector<std::string> sPaths;
+
+   // For system header autoloading
+   static std::vector< std::pair<uint32_t, std::string> > sSysLibraries;
+   static std::vector<std::string> sSysPaths;
 
    if (sFirstRun) {
-      TCling__FindLoadedLibraries(sLibraries, sPaths, *fInterpreter);
+      TCling__FindLoadedLibraries(sLibraries, sPaths, *fInterpreter, /* searchSystem */ false);
       sFirstRun = false;
    }
 
-   uint32_t hashedMangle = GNUHash(mangled_name);
    // Iterate over files under this path. We want to get each ".so" files
    for (std::pair<uint32_t, std::string> &P : sLibraries) {
       llvm::SmallString<400> Vec(sPaths[P.first]);
       llvm::sys::path::append(Vec, StringRef(P.second));
-      std::string LibName = Vec.str();
+      const std::string LibName = Vec.str();
+
       auto SoFile = ObjectFile::createObjectFile(LibName);
-      if (SoFile) {
-         auto RealSoFile = SoFile.get().getBinary();
+      if (!SoFile)
+         continue;
 
-         // Check Bloom filter. If false, it means that this library doesn't contain mangled_name defenition
-         if (!LookupBloomFilter(RealSoFile, hashedMangle))
-            continue;
+      if (LookupNormalSymbols(SoFile.get().getBinary(), mangled_name, LibName)) {
+         if (gSystem->Load(LibName.c_str(), "", false) < 0)
+            Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
 
-         auto Symbols = RealSoFile->symbols();
-         for (auto S : Symbols) {
-            uint32_t Flags = S.getFlags();
-            // DO NOT insert to table if symbol was undefined
-            if (Flags & SymbolRef::SF_Undefined)
-               continue;
+         // We want to delete a loaded library from sLibraries cache, because sLibraries is
+         // a vector of candidate libraries which might be loaded in the future.
+         sLibraries.erase(std::remove(sLibraries.begin(), sLibraries.end(), P), sLibraries.end());
+         void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
+         return addr;
+      }
+   }
 
-            // Note, we are at last resort and loading library based on a weak
-            // symbol is allowed. Otherwise, the JIT will issue an unresolved
-            // symbol error.
-            //
-            // There are other weak symbol kinds (marked as 'V') to denote
-            // typeinfo and vtables. It is unclear whether we should load such
-            // libraries or from which library we should resolve the symbol.
-            // We seem to not have a way to differentiate it from the symbol API.
+   // Normal lookup failed! Fall back to system library
+   if (sFirstSystemLibrary) {
+      TCling__FindLoadedLibraries(sSysLibraries, sSysPaths, *fInterpreter, /* searchSystem */ true);
+      sFirstSystemLibrary = false;
+   }
 
-            llvm::Expected<StringRef> SymNameErr = S.getName();
-            if (!SymNameErr) {
-               Warning("LazyFunctionCreatorAutoloadForModule", "Failed to read symbol");
-               continue;
-            }
+   for (std::pair<uint32_t, std::string> &P : sSysLibraries) {
+      llvm::SmallString<400> Vec(sSysPaths[P.first]);
+      llvm::sys::path::append(Vec, StringRef(P.second));
+      const std::string LibName = Vec.str();
 
-            if (SymNameErr.get() == mangled_name) {
+      auto SoFile = ObjectFile::createObjectFile(LibName);
+      if (!SoFile)
+         continue;
+
+      auto RealSoFile = SoFile.get().getBinary();
+
+      if (LookupNormalSymbols(RealSoFile, mangled_name, LibName)) {
+         if (gSystem->Load(LibName.c_str(), "", false) < 0)
+            Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
+
+         sSysLibraries.erase(std::remove(sSysLibraries.begin(), sSysLibraries.end(), P), sSysLibraries.end());
+         void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
+         return addr;
+      }
+
+      // Lookup for dynamic symbols
+      auto sections = RealSoFile->sections();
+      for (auto section : sections) {
+         llvm::StringRef sectionName;
+         section.getName(sectionName);
+
+         // .dynstr contains string of dynamic symbols
+         if (sectionName == ".dynstr") {
+            llvm::StringRef dContents;
+            section.getContents(dContents);
+            // If this library contains mangled name
+            if (dContents.contains(mangled_name)) {
                if (gSystem->Load(LibName.c_str(), "", false) < 0)
                   Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
 
-               // We want to delete a loaded library from sLibraries cache, because sLibraries is
-               // a vector of candidate libraries which might be loaded in the future.
-               sLibraries.erase(std::remove(sLibraries.begin(), sLibraries.end(), P), sLibraries.end());
+               // Delete a loaded library from sLibraries cache.
+               sSysLibraries.erase(std::remove(sSysLibraries.begin(), sSysLibraries.end(), P), sSysLibraries.end());
                void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
                return addr;
             }
          }
       }
    }
+
+   // Lookup failed!!!!
    return nullptr;
 }
 
