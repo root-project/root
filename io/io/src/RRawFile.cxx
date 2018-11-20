@@ -71,12 +71,12 @@ bool ROOT::Detail::RRawFile::Readln(std::string& line)
          // Linebreak found, return the string and skip the linebreak itself
          line.append(buffer, idx);
          fFilePos += kLineBreakTokenSizes[static_cast<int>(fOptions.fLineBreak)];
-         break;
+         return true;
       }
       line.append(buffer, nbytes);
    } while (nbytes > 0);
 
-   return nbytes > 0;
+   return false;
 }
 
 
