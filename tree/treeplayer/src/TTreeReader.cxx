@@ -14,6 +14,7 @@
 #include "TChain.h"
 #include "TDirectory.h"
 #include "TEntryList.h"
+#include "TTreeCache.h"
 #include "TTreeReaderValue.h"
 
 /** \class TTreeReader
@@ -270,6 +271,9 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long
          return es;
       }
    }
+
+   fBeginEntry = beginEntry;
+
    return kEntryValid;
 }
 
@@ -278,6 +282,12 @@ void TTreeReader::Restart() {
    fDirector->SetReadEntry(-1);
    fProxiesSet = false; // we might get more value readers, meaning new proxies.
    fEntry = -1;
+   if (const auto curFile = fTree->GetCurrentFile()) {
+      if (auto tc = fTree->GetReadCache(curFile, true)) {
+         tc->DropBranch("*", true);
+         tc->ResetCache();
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -411,14 +421,37 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       for (size_t i = 0; i < fValues.size(); ++i) {
          ROOT::Internal::TTreeReaderValueBase* reader = fValues[i];
          reader->CreateProxy();
-
          if (!reader->GetProxy()){
             fEntryStatus = kEntryDictionaryError;
             return fEntryStatus;
          }
+
       }
       // If at least one proxy was there and no error occurred, we assume the proxies to be set.
       fProxiesSet = !fValues.empty();
+
+      // Now we need to properly set the TTreeCache. We do this in steps:
+      // 1. We drop all branches and reset the cache, in case it's not the first time we
+      //    are here.
+      // 2. We set the entry range according to the entry range of the TTreeReader
+      // 3. We add to the cache the branches identifying them by the name the user provided
+      //    upon creation of the TTreeReader{Value, Array}s
+      // 4. We stop the learning phase.
+      // Operations 2, 3 and 4 need to happen in this order. See: https://sft.its.cern.ch/jira/browse/ROOT-9773?focusedCommentId=87837
+      if (fProxiesSet) {
+         if (const auto curFile = fTree->GetCurrentFile()) {
+            if (!(-1LL == fEndEntry && 0ULL == fBeginEntry)) {
+               // We need to avoid to pass -1 as end entry to the SetCacheEntryRange method
+               const auto lastEntry = (-1LL == fEndEntry) ? fTree->GetEntriesFast() : fEndEntry;
+               fTree->SetCacheEntryRange(fBeginEntry, lastEntry);
+            }
+            for (auto value: fValues) {
+               fTree->AddBranchToCache(value->GetProxy()->GetBranchName(), true);
+            }
+            fTree->StopCacheLearningPhase();
+         }
+      }
+
    }
 
    if (fEndEntry >= 0 && entry >= fEndEntry) {
