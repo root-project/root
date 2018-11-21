@@ -42,9 +42,6 @@ protected:
    std::uint64_t fFilePos;
    std::uint64_t fFileSize;
 
-   static std::string GetLocation(std::string_view url);
-   static std::string GetTransport(std::string_view url);
-
    virtual size_t DoPread(void *buffer, size_t nbytes, std::uint64_t offset) = 0;
    virtual std::uint64_t DoGetSize() = 0;
 
@@ -55,6 +52,8 @@ public:
    virtual ~RRawFile() = default;
 
    static RRawFile* Create(std::string_view url, ROptions options = ROptions());
+   static std::string GetLocation(std::string_view url);
+   static std::string GetTransport(std::string_view url);
 
    size_t Pread(void *buffer, size_t nbytes, std::uint64_t offset);
    size_t Read(void *buffer, size_t nbytes);
