@@ -88,7 +88,7 @@ ROOT_BUILD_OPTION(builtin_veccore OFF "Build VecCore internally (requires networ
 ROOT_BUILD_OPTION(builtin_xrootd OFF "Build XRootD internally (requires network)")
 ROOT_BUILD_OPTION(builtin_xxhash OFF "Build bundled copy of xxHash")
 ROOT_BUILD_OPTION(builtin_zlib OFF "Build bundled copy of zlib")
-ROOT_BUILD_OPTION(castor ON "Enable support for CASTOR (CERN Advanced STORage manager)")
+ROOT_BUILD_OPTION(castor OFF "Enable support for CASTOR (CERN Advanced STORage manager)")
 ROOT_BUILD_OPTION(ccache OFF "Enable ccache usage for speeding up builds")
 ROOT_BUILD_OPTION(cefweb OFF "Enable support for CEF (Chromium Embedded Framework) web-based display")
 ROOT_BUILD_OPTION(clad ON "Build clad, the cling automatic differentiation plugin")
