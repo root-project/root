@@ -54,7 +54,6 @@ function(ROOT_WRITE_OPTIONS file)
   endforeach()
 endfunction()
 
-
 #--------------------------------------------------------------------------------------------------
 #---Full list of options with their descriptions and default values
 #   The default value can be changed as many times as we wish before calling ROOT_APPLY_OPTIONS()
@@ -95,7 +94,6 @@ ROOT_BUILD_OPTION(cefweb OFF "Chromium Embedded Framework web-based display")
 ROOT_BUILD_OPTION(clad ON "Enable clad, the cling automatic differentiation plugin.")
 ROOT_BUILD_OPTION(cling ON "Enable new CLING C++ interpreter")
 ROOT_BUILD_OPTION(cocoa OFF "Use native Cocoa/Quartz graphics backend (MacOS X only)")
-set(compression_default "zlib" CACHE STRING "ROOT compression algorithm used as a default, default option is zlib. Can be lz4, zlib, or lzma")
 ROOT_BUILD_OPTION(cuda OFF "Use CUDA if it is found in the system")
 ROOT_BUILD_OPTION(cxx11 ON "Build using C++11 compatible mode, requires gcc > 4.7.x or clang")
 ROOT_BUILD_OPTION(cxx14 OFF "Build using C++14 compatible mode, requires gcc > 4.9.x or clang")
@@ -194,12 +192,13 @@ if (r OR tmva-rmva)
 endif()
 
 #--- Compression algorithms in ROOT-------------------------------------------------------------
-if(NOT compression_default MATCHES "zlib|lz4|lzma")
-  message(STATUS "Not supported compression algorithm, ROOT compression algorithms are zlib, lzma and lz4. 
-    ROOT will fall back to default algorithm: zlib")
-  set(compression_default "zlib" CACHE STRING "" FORCE)
+set(compression_default "zlib" CACHE STRING "Default compression algorithm (zlib (default), lz4, or lzma)")
+string(TOLOWER "${compression_default}" compression_default)
+if("${compression_default}" MATCHES "zlib|lz4|lzma")
+  message(STATUS "ROOT default compression algorithm: ${compression_default}")
 else()
-  message(STATUS "ROOT default compression algorithm is " ${compression_default})
+  message(FATAL_ERROR "Unsupported compression algorithm: ${compression_default}\n"
+    "Known values are zlib, lzma, lz4 (case-insensitive).")
 endif()
 
 #--- Minor chnages in defaults due to platform--------------------------------------------------
