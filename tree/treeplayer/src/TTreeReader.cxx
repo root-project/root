@@ -14,6 +14,8 @@
 #include "TChain.h"
 #include "TDirectory.h"
 #include "TEntryList.h"
+#include "TNtuple.h"
+#include "TNtupleD.h"
 #include "TTreeCache.h"
 #include "TTreeReaderValue.h"
 
@@ -431,15 +433,16 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       fProxiesSet = !fValues.empty();
 
       // Now we need to properly set the TTreeCache. We do this in steps:
-      // 1. We drop all branches and reset the cache, in case it's not the first time we
-      //    are here.
-      // 2. We set the entry range according to the entry range of the TTreeReader
-      // 3. We add to the cache the branches identifying them by the name the user provided
+      // 1. We set the entry range according to the entry range of the TTreeReader
+      // 2. We add to the cache the branches identifying them by the name the user provided
       //    upon creation of the TTreeReader{Value, Array}s
-      // 4. We stop the learning phase.
+      // 3. We stop the learning phase.
       // Operations 2, 3 and 4 need to happen in this order. See: https://sft.its.cern.ch/jira/browse/ROOT-9773?focusedCommentId=87837
       if (fProxiesSet) {
-         if (const auto curFile = fTree->GetCurrentFile()) {
+         // Check if we have a file and this is not a TNtuple
+         const auto treeCl = fTree->IsA();
+         const auto isTNtuple =  (treeCl == TNtuple::Class() ||  treeCl == TNtupleD::Class());
+         if (fTree->GetCurrentFile() && !isTNtuple) {
             if (!(-1LL == fEndEntry && 0ULL == fBeginEntry)) {
                // We need to avoid to pass -1 as end entry to the SetCacheEntryRange method
                const auto lastEntry = (-1LL == fEndEntry) ? fTree->GetEntriesFast() : fEndEntry;
