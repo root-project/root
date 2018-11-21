@@ -806,18 +806,39 @@ if(fitsio OR builtin_cfitsio)
     string(REPLACE "." "" cfitsio_version_no_dots ${cfitsio_version})
     message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}")
     set(CFITSIO_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
-    ExternalProject_Add(
-      CFITSIO
-      # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
-      URL ${lcgpackages}/cfitsio${cfitsio_version_no_dots}.tar.gz
-      URL_HASH SHA256=de8ce3f14c2f940fadf365fcc4a4f66553dd9045ee27da249f6e2c53e95362b3
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-      BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
-    )
-    set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+    if(WIN32)
+      if(winrtdebug)
+        set(cfitsiobuild "Debug")
+      else()
+        set(cfitsiobuild "Release")
+      endif()
+      ExternalProject_Add(
+        CFITSIO
+        # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
+        URL http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfit3450.zip
+        URL_HASH SHA256=1d13073967654a48d47535ff33392656f252511ddf29059d7c7dc3ce8f2a1041
+        INSTALL_DIR ${CMAKE_BINARY_DIR}
+        CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+        BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${cfitsiobuild}
+        INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${cfitsiobuild}/cfitsio.dll <INSTALL_DIR>/bin
+        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
+        BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
+      )
+      set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CFITSIO-prefix/src/CFITSIO)
+    else()
+      ExternalProject_Add(
+        CFITSIO
+        # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
+        URL ${lcgpackages}/cfitsio${cfitsio_version_no_dots}.tar.gz
+        URL_HASH SHA256=de8ce3f14c2f940fadf365fcc4a4f66553dd9045ee27da249f6e2c53e95362b3
+        INSTALL_DIR ${CMAKE_BINARY_DIR}
+        CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
+        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+        BUILD_IN_SOURCE 1
+        BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
+      )
+      set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+    endif()
     set(fitsio ON CACHE BOOL "Enabled because builtin_cfitsio requested (${fitsio_description})" FORCE)
     set(CFITSIO_TARGET CFITSIO)
   else()
