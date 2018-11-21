@@ -70,13 +70,14 @@ bool ROOT::Detail::RRawFile::Readln(std::string& line)
       if (idx != std::string_view::npos) {
          // Linebreak found, return the string and skip the linebreak itself
          line.append(buffer, idx);
+         fFilePos -= nbytes - idx;
          fFilePos += kLineBreakTokenSizes[static_cast<int>(fOptions.fLineBreak)];
          return true;
       }
       line.append(buffer, nbytes);
    } while (nbytes > 0);
 
-   return false;
+   return !line.empty();
 }
 
 
@@ -120,7 +121,9 @@ size_t ROOT::Detail::RRawFile::Pread(void *buffer, size_t nbytes, std::uint64_t 
 
 size_t ROOT::Detail::RRawFile::Read(void *buffer, size_t nbytes)
 {
-   return Pread(buffer, nbytes, fFilePos);
+   size_t res = Pread(buffer, nbytes, fFilePos);
+   fFilePos += res;
+   return res;
 }
 
 
