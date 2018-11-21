@@ -118,7 +118,6 @@ ROOT_BUILD_OPTION(explicitlink ON "Explicitly link with all dependent libraries"
 ROOT_BUILD_OPTION(fftw3 ON "Fast Fourier Transform support, requires libfftw3")
 ROOT_BUILD_OPTION(fitsio ON "Read images and data from FITS files, requires cfitsio")
 ROOT_BUILD_OPTION(fortran OFF "Enable the Fortran components of ROOT")
-set(gcctoolchain "" CACHE PATH "Path for the gcctoolchain in case not the system gcc is used to build clang/LLVM")
 ROOT_BUILD_OPTION(gdml ON "GDML writer and reader")
 ROOT_BUILD_OPTION(geocad OFF "ROOT-CAD Interface")
 ROOT_BUILD_OPTION(gfal ON "GFAL support, requires libgfal")
@@ -192,6 +191,8 @@ option(testing "Enable testing with CTest" OFF)
 option(roottest "Include roottest, if roottest exists in root or if it is a sibling directory." OFF)
 option(rootbench "Include rootbench, if rootbench exists in root or if it is a sibling directory." OFF)
 option(clingtest "Include cling tests. NOTE that this makes llvm/clang symbols visible in libCling." OFF)
+
+set(gcctoolchain "" CACHE PATH "Path for the gcctoolchain in case not the system gcc is used to build clang/LLVM")
 
 if (runtime_cxxmodules)
   set(pch_defvalue OFF)
