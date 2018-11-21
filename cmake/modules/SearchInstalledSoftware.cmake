@@ -1637,3 +1637,9 @@ foreach(opt afs glite sapdb srp chirp ios)
   endif()
 endforeach()
 
+#---Report deprecated options---------------------------------------------------
+foreach(opt afdsmgrd bonjour castor geocad globus gviz hdfs krb5 ldap memstat odbc qt qtgsi rfio table)
+  if(${opt})
+    message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in ROOT v6.18. Please inform rootdev@cern.ch should you still need it.")
+  endif()
+endforeach()
