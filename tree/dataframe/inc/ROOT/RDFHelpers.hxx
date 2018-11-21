@@ -104,27 +104,32 @@ auto PassAsVec(F &&f) -> RDFInternal::PassAsVecHelper<std::make_index_sequence<N
 template <typename Proxied, typename DataSource>
 class RInterface;
 
+
 // clang-format off
-/// Creates the dot representation of the graph.
-/// Won't work if the event loop has been executed
+/// Create a graphviz representation of the dataframe computation graph, return it as a string.
 /// \param[in] node any node of the graph. Called on the head (first) node, it prints the entire graph. Otherwise, only the branch the node belongs to.
-/// \param[in] filePath where to save the representation. If not specified, will be printed on standard output.
 // clang-format on
 template <typename NodeType>
-void SaveGraph(NodeType node, const std::string &dotFilePath = "")
+std::string SaveGraph(NodeType node)
+{
+   ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper helper;
+   return helper(node);
+}
+
+// clang-format off
+/// Create a graphviz representation of the dataframe computation graph, write it to the specified file.
+/// \param[in] node any node of the graph. Called on the head (first) node, it prints the entire graph. Otherwise, only the branch the node belongs to.
+/// \param[in] outputFile file where to save the representation.
+// clang-format on
+template <typename NodeType>
+void SaveGraph(NodeType node, const std::string &outputFile)
 {
    ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper helper;
    std::string dotGraph = helper(node);
 
-   if (dotFilePath == "") {
-      // No file specified, print on standard output
-      std::cout << dotGraph << std::endl;
-      return;
-   }
-
-   std::ofstream out(dotFilePath);
+   std::ofstream out(outputFile);
    if (!out.is_open()) {
-      throw std::runtime_error("File path not valid");
+      throw std::runtime_error("Could not open output file \"" + outputFile  + "\"for reading");
    }
 
    out << dotGraph;
