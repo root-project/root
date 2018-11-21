@@ -36,7 +36,7 @@
 #pragma link C++ class RooLinearVar+ ;
 #pragma link C++ class RooLinkedListElem+ ;
 #pragma link C++ class RooLinkedList- ;
-#pragma link C++ class RooLinkedListIter+ ;
+//#pragma link C++ class RooLinkedListIter+ ;
 #pragma link C++ class RooLinTransBinning+ ;
 #pragma link C++ class RooList+ ;
 #pragma link C++ class RooListProxy+ ;

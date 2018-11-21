@@ -22,6 +22,7 @@
 #include "RooLinkedList.h"
 #include "RooCmdArg.h"
 #include "RooLinkedListIter.h"
+#include <ROOT/RMakeUnique.hxx>
 #include <string>
 
 class RooAbsCollection : public TObject, public RooPrintable {
@@ -50,13 +51,14 @@ public:
   Bool_t snapshot(RooAbsCollection& output, Bool_t deepCopy=kTRUE) const ;
 
   // Hash table control
-  void setHashTableSize(Int_t i) { 
+  void setHashTableSize(Int_t) {
     // Set size of internal hash table to i (should be a prime number)
-    _list.setHashTableSize(i) ; 
+//    _list.setHashTableSize(i) ;
   }
   Int_t getHashTableSize() const { 
     // Return size of internal hash table
-    return _list.getHashTableSize() ; 
+//    return _list.getHashTableSize() ;
+    return 0;
   }
 
   // List content management
@@ -86,7 +88,7 @@ public:
   }
   Bool_t containsInstance(const RooAbsArg& var) const { 
     // Returns true if var is contained in this collection
-    return (0 == _list.FindObject(&var)) ? kFALSE:kTRUE; 
+    return std::find(_list.begin(), _list.end(), &var) != _list.end();
   }
   RooAbsCollection* selectByAttrib(const char* name, Bool_t value) const ;
   RooAbsCollection* selectCommon(const RooAbsCollection& refColl) const ;
@@ -94,22 +96,47 @@ public:
   Bool_t equals(const RooAbsCollection& otherColl) const ; 
   Bool_t overlaps(const RooAbsCollection& otherColl) const ;
 
-  // export subset of THashList interface
-  inline TIterator* createIterator(Bool_t dir = kIterForward) const { 
+  /// \deprecated TIterator-style iteration over contained elements. Use begin() and end() or
+  /// range-based for loop instead.
+  inline TIterator* createIterator(Bool_t dir = kIterForward) const
+      _R__DEPRECATED_LATER("RooAbsCollections and subclasses now support the more performant "
+      "begin(), end() and range-based for loops.") {
     // Create and return an iterator over the elements in this collection
-    return _list.MakeIterator(dir); 
+    return new TIteratorToSTLInterface<decltype(_list)>(_list);
   }
 
-  RooLinkedListIter iterator(Bool_t dir = kIterForward) const ;
-  RooFIter fwdIterator() const { return RooFIter(&_list); }
+  /// \deprecated TIterator-style iteration over contained elements. Use begin() and end() or
+  /// range-based for loop instead.
+  RooLinkedListIter iterator(Bool_t dir = kIterForward) const
+      _R__DEPRECATED_LATER("RooAbsCollections and subclasses now support the more performant "
+      "begin(), end() and range-based for loops.") {
+    auto iterImpl = std::make_unique<TIteratorToSTLInterface<decltype(_list)>>(_list);
+    return RooLinkedListIter(std::move(iterImpl));
+  }
+
+  /// \deprecated One-time forward iterator. Use begin() and end() or
+  /// range-based for loop instead.
+  RooFIter fwdIterator() const
+      _R__DEPRECATED_LATER("RooAbsCollections and subclasses now support the more performant "
+      "begin(), end() and range-based for loops."){
+    auto iterImpl = std::make_unique<RooFIterForStdVec>(_list);
+    return RooFIter(std::move(iterImpl));
+  }
+
+  std::vector<RooAbsArg*>::const_iterator begin() const {
+    return _list.begin();
+  }
+  std::vector<RooAbsArg*>::const_iterator end() const {
+    return _list.end();
+  }
 
   inline Int_t getSize() const { 
     // Return the number of elements in the collection
-    return _list.GetSize(); 
+    return _list.size();
   }
   inline RooAbsArg *first() const { 
     // Return the first element in this collection
-    return (RooAbsArg*)_list.First(); 
+    return _list.front();
   }
 
   inline virtual void Print(Option_t *options= 0) const {
@@ -155,7 +182,13 @@ public:
   void releaseOwnership() { _ownCont = kFALSE ; }
   void takeOwnership() { _ownCont = kTRUE ; }
 
-  void sort(Bool_t ascend=kTRUE) { _list.Sort(ascend) ; }
+  void sort(Bool_t ascend=kTRUE) {
+    if (ascend)
+      std::sort(_list.begin(), _list.end());
+    else {
+      std::sort(_list.begin(), _list.end(), std::greater<RooAbsArg*>());
+    }
+  }
 
   virtual void RecursiveRemove(TObject *obj);
 
@@ -163,7 +196,7 @@ protected:
 
   friend class RooMultiCatIter ;
 
-  RooLinkedList _list ; // Actual object store
+  std::vector<RooAbsArg*> _list; // Actual object storage
 
   Bool_t _ownCont;  // Flag to identify a list that owns its contents.
   TString _name;    // Our name.
@@ -177,8 +210,8 @@ protected:
   inline TNamed* structureTag() { if (_structureTag==0) makeStructureTag() ; return _structureTag ; }
   inline TNamed* typedStructureTag() { if (_typedStructureTag==0) makeTypedStructureTag() ; return _typedStructureTag ; }
 
-  mutable TNamed* _structureTag ; //! Structure tag
-  mutable TNamed* _typedStructureTag ; //! Typed structure tag
+  mutable TNamed* _structureTag{nullptr}; //! Structure tag
+  mutable TNamed* _typedStructureTag{nullptr}; //! Typed structure tag
   
   inline void clearStructureTags() { _structureTag=0 ; _typedStructureTag = 0 ; }
 
@@ -187,7 +220,7 @@ protected:
   
 private:
 
-  ClassDef(RooAbsCollection,2) // Collection of RooAbsArg objects
+  ClassDef(RooAbsCollection,3) // Collection of RooAbsArg objects
 };
 
 #endif

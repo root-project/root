@@ -973,7 +973,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
   }
 
   // Delete all previously registered servers
-  sIter = origServerList.fwdIterator() ;
+  sIter = origServerList.fwdIterator();
   Bool_t propValue, propShape ;
   while ((oldServer=sIter.next())) {
 

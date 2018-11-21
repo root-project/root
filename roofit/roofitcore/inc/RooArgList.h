@@ -71,19 +71,24 @@ public:
 
   inline void sort(Bool_t reverse=kFALSE) { 
     // Sort list in requested order
-    _list.Sort(!reverse) ; 
+    RooAbsCollection::sort(reverse);
   }
   inline Int_t index(const RooAbsArg* arg) const { 
     // Returns index of given arg, or -1 if arg is not in list
-    return _list.IndexOf(arg) ; 
+    auto item = std::find(_list.begin(), _list.end(), arg);
+    return item != _list.end() ? item - _list.begin() : -1;
   }
   inline Int_t index(const char* name) const { 
     // Returns index of given arg, or -1 if arg is not in list
-    return _list.IndexOf(name) ; 
+    const std::string theName(name);
+    auto item = std::find_if(_list.begin(), _list.end(), [&theName](const RooAbsArg * elm){
+      return elm->GetName() == theName;
+    });
+    return item != _list.end() ? item - _list.begin() : -1;
   }
   inline RooAbsArg* at(Int_t idx) const { 
     // Return object at given index, or 0 if index is out of range
-    return (RooAbsArg*) _list.At(idx) ; 
+    return _list[idx];
   }
 
   // I/O streaming interface (machine readable)
