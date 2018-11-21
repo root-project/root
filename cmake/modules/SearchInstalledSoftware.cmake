@@ -820,7 +820,8 @@ if(fitsio OR builtin_cfitsio)
         INSTALL_DIR ${CMAKE_BINARY_DIR}
         CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
         BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${cfitsiobuild}
-        INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${cfitsiobuild}/cfitsio.dll <INSTALL_DIR>/bin
+        INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${cfitsiobuild}/cfitsio.dll <INSTALL_DIR>/bin
+                COMMAND ${CMAKE_COMMAND} -E copy ${cfitsiobuild}/cfitsio.lib <INSTALL_DIR>/lib
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
         BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
       )
