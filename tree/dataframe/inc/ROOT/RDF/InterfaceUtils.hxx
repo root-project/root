@@ -244,7 +244,7 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::strin
 
 void BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds,
                    const std::shared_ptr<RJittedCustomColumn> &jittedCustomColumn,
-                   const RDFInternal::RBookedCustomColumns &customCols);
+                   const RDFInternal::RBookedCustomColumns &customCols, const ColumnNames_t &branches);
 
 std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::type_info &art, const std::type_info &at,
                            void *r, TTree *tree, const unsigned int nSlots,
@@ -270,8 +270,7 @@ bool AtLeastOneEmptyString(const std::vector<std::string_view> strings);
 std::shared_ptr<RNodeBase> UpcastNode(std::shared_ptr<RNodeBase> ptr);
 
 ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
-                                      const ColumnNames_t &datasetColumns, const ColumnNames_t &validCustomColumns,
-                                      RDataSource *ds);
+                                      const ColumnNames_t &validCustomColumns, RDataSource *ds);
 
 std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols);
 
@@ -438,8 +437,6 @@ template <>
 struct TNeedJitting<RInferredType> {
    static constexpr bool value = true;
 };
-
-ColumnNames_t GetBranchNames(TTree &t, bool allowDuplicates = true);
 
 ColumnNames_t GetTopLevelBranchNames(TTree &t);
 

@@ -7,6 +7,7 @@
 #include "ROOT/RDF/RSlotStack.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "RtypesCore.h" // Long64_t
+#include "TBranchElement.h"
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled
@@ -24,6 +25,152 @@
 
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::Internal::RDF;
+
+bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
+{
+   return (leaves.find(leaf) != leaves.end());
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// This overload does not perform any check on the duplicates.
+/// It is used for TBranch objects.
+void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::string &branchName,
+                std::string &friendName)
+{
+
+   if (!friendName.empty()) {
+      // In case of a friend tree, users might prepend its name/alias to the branch names
+      auto friendBName = friendName + "." + branchName;
+      if (bNamesReg.insert(friendBName).second)
+         bNames.push_back(friendBName);
+   }
+
+   if (bNamesReg.insert(branchName).second)
+      bNames.push_back(branchName);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// This overloads makes sure that the TLeaf has not been already inserted.
+void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::string &branchName,
+                std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
+{
+   const bool canAdd = allowDuplicates ? true : !ContainsLeaf(foundLeaves, leaf);
+   if (!canAdd) {
+      return;
+   }
+
+   UpdateList(bNamesReg, bNames, branchName, friendName);
+
+   foundLeaves.insert(leaf);
+}
+
+void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, TBranch *b, std::string prefix,
+                   std::string &friendName)
+{
+   for (auto sb : *b->GetListOfBranches()) {
+      TBranch *subBranch = static_cast<TBranch *>(sb);
+      auto subBranchName = std::string(subBranch->GetName());
+      auto fullName = prefix + subBranchName;
+
+      std::string newPrefix;
+      if (!prefix.empty())
+         newPrefix = fullName + ".";
+
+      ExploreBranch(t, bNamesReg, bNames, subBranch, newPrefix, friendName);
+
+      if (t.GetBranch(fullName.c_str())) {
+         UpdateList(bNamesReg, bNames, fullName, friendName);
+
+      } else if (t.GetBranch(subBranchName.c_str())) {
+         UpdateList(bNamesReg, bNames, subBranchName, friendName);
+      }
+   }
+}
+
+void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
+                        std::set<TTree *> &analysedTrees, std::string &friendName, bool allowDuplicates)
+{
+   std::set<TLeaf *> foundLeaves;
+   if (!analysedTrees.insert(&t).second) {
+      return;
+   }
+
+   const auto branches = t.GetListOfBranches();
+   if (branches) {
+      std::string prefix = "";
+      for (auto b : *branches) {
+         TBranch *branch = static_cast<TBranch *>(b);
+         auto branchName = std::string(branch->GetName());
+         if (branch->IsA() == TBranch::Class()) {
+            // Leaf list
+            auto listOfLeaves = branch->GetListOfLeaves();
+            if (listOfLeaves->GetEntries() == 1) {
+               auto leaf = static_cast<TLeaf *>(listOfLeaves->At(0));
+               auto leafName = std::string(leaf->GetName());
+               if (leafName == branchName) {
+                  UpdateList(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
+               }
+            }
+
+            for (auto leaf : *listOfLeaves) {
+               auto castLeaf = static_cast<TLeaf *>(leaf);
+               auto leafName = std::string(leaf->GetName());
+               auto fullName = branchName + "." + leafName;
+               UpdateList(bNamesReg, bNames, fullName, friendName, foundLeaves, castLeaf, allowDuplicates);
+            }
+         } else {
+            // TBranchElement
+            // Check if there is explicit or implicit dot in the name
+
+            bool dotIsImplied = false;
+            auto be = dynamic_cast<TBranchElement *>(b);
+            if (!be)
+               throw std::runtime_error("GetBranchNames: unsupported branch type");
+            // TClonesArray (3) and STL collection (4)
+            if (be->GetType() == 3 || be->GetType() == 4)
+               dotIsImplied = true;
+
+            if (dotIsImplied || branchName.back() == '.')
+               ExploreBranch(t, bNamesReg, bNames, branch, "", friendName);
+            else
+               ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName);
+
+            UpdateList(bNamesReg, bNames, branchName, friendName);
+         }
+      }
+   }
+
+   auto friendTrees = t.GetListOfFriends();
+
+   if (!friendTrees)
+      return;
+
+   for (auto friendTreeObj : *friendTrees) {
+      auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
+
+      std::string frName;
+      auto alias = t.GetFriendAlias(friendTree);
+      if (alias != nullptr)
+         frName = std::string(alias);
+      else
+         frName = std::string(friendTree->GetName());
+
+      GetBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees, frName, allowDuplicates);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Get all the branches names, including the ones of the friend trees
+ColumnNames_t ROOT::Internal::RDF::GetBranchNames(TTree &t, bool allowDuplicates)
+{
+   std::set<std::string> bNamesSet;
+   ColumnNames_t bNames;
+   std::set<TTree *> analysedTrees;
+   std::string emptyFrName = "";
+   GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees, emptyFrName, allowDuplicates);
+   return bNames;
+}
+
 
 RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
@@ -423,4 +570,15 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetG
    thisNode->SetRoot();
    thisNode->SetCounter(0);
    return thisNode;
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// Return all valid TTree::Branch names (caching results for subsequent calls).
+/// Never use fBranchNames directy, always request it through this method.
+const ColumnNames_t &RLoopManager::GetBranchNames()
+{
+   if (fValidBranchNames.empty() && fTree) {
+      fValidBranchNames = RDFInternal::GetBranchNames(*fTree, /*allowRepetitions=*/true);
+   }
+   return fValidBranchNames;
 }
