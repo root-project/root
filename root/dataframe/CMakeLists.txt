@@ -9,6 +9,11 @@ endif()
 
 set(DFLIBRARIES Core ROOTDataFrame Hist Tree RIO MathCore)
 
+# Linked to ROOT-9773: train cache with TTreeReader
+ROOTTEST_ADD_TEST(test_trainCache
+                  COPY_TO_BUILDDIR bigFile.root
+                  MACRO test_trainCache.C
+                  OUTREF test_trainCache.ref)
 # ROOT-9628
 ROOTTEST_ADD_TEST(test_chainZombieFile
                   COPY_TO_BUILDDIR input1.root input2.root
