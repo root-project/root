@@ -10,6 +10,9 @@
 
 ROOT_LINKER_LIBRARY(RIO
   src/RRawFile.cxx
+  src/RRawFileDavix.cxx
+  src/RRawFileUnix.cxx
+  src/RRawFileWin.cxx
   src/TArchiveFile.cxx
   src/TBufferFile.cxx
   src/TBufferText.cxx
@@ -59,6 +62,9 @@ endif()
 
 ROOT_GENERATE_DICTIONARY(G__RIO
   ROOT/RRawFile.hxx
+  ROOT/RRawFileDavix.hxx
+  ROOT/RRawFileUnix.hxx
+  ROOT/RRawFileWin.hxx
   ROOT/TBufferMerger.hxx
   TArchiveFile.h
   TBufferFile.h

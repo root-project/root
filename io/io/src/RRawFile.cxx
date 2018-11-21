@@ -10,19 +10,19 @@
  *************************************************************************/
 
 #include "ROOT/RRawFile.hxx"
-
-#include "TError.h"
+#include "ROOT/RRawFileDavix.hxx"
+#ifdef _WIN32
+#include "ROOT/RRawFileWin.hxx"
+#else
+#include "ROOT/RRawFileUnix.hxx"
+#endif
 
 #include <cerrno>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <stdexcept>
-
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-namespace ROOT {
-namespace Detail {
+#include <string>
 
 namespace {
 const char* kTransportSeparator = "://";
@@ -84,10 +84,15 @@ ROOT::Detail::RRawFile* ROOT::Detail::RRawFile::Create(std::string_view url, ROp
 {
    std::string transport = GetTransport(url);
    if (transport == "file") {
-      return new RRawFilePosix(std::string(url), options);
+#ifdef _WIN32
+      return new RRawFileWin(std::string(url), options);
+#else
+      return new RRawFileUnix(std::string(url), options);
+#endif
    }
    throw std::runtime_error("Unsupported transport protocol: " + transport);
 }
+
 
 std::string ROOT::Detail::RRawFile::GetLocation(std::string_view url)
 {
@@ -96,6 +101,7 @@ std::string ROOT::Detail::RRawFile::GetLocation(std::string_view url)
       return std::string(url);
    return std::string(url.substr(idx + strlen(kTransportSeparator)));
 }
+
 
 std::string ROOT::Detail::RRawFile::GetTransport(std::string_view url)
 {
@@ -111,15 +117,18 @@ size_t ROOT::Detail::RRawFile::Pread(void *buffer, size_t nbytes, std::uint64_t 
    return DoPread(buffer, nbytes, offset);
 }
 
+
 size_t ROOT::Detail::RRawFile::Read(void *buffer, size_t nbytes)
 {
    return Pread(buffer, nbytes, fFilePos);
 }
 
+
 void ROOT::Detail::RRawFile::Seek(std::uint64_t offset)
 {
   fFilePos = offset;
 }
+
 
 std::uint64_t ROOT::Detail::RRawFile::GetSize()
 {
@@ -127,125 +136,3 @@ std::uint64_t ROOT::Detail::RRawFile::GetSize()
       fFileSize = DoGetSize();
    return fFileSize;
 }
-
-
-/******************************************************************************/
-
-ROOT::Detail::RRawFilePosix::RRawFilePosix(const std::string &url, ROOT::Detail::RRawFile::ROptions options)
-  : ROOT::Detail::RRawFile(url, options)
-  , filedes(-1)
-{
-}
-
-ROOT::Detail::RRawFilePosix::~RRawFilePosix()
-{
-   if (filedes >= 0)
-      close(filedes);
-}
-
-size_t ROOT::Detail::RRawFilePosix::DoPread(void *buffer, size_t nbytes, std::uint64_t offset)
-{
-   EnsureOpen();
-
-   size_t total_bytes = 0;
-   while (nbytes) {
-      ssize_t res = pread(filedes, buffer, nbytes, offset);
-      if (res < 0) {
-         if (errno == EINTR)
-            continue;
-         throw std::runtime_error("Cannot read from '" + fUrl + "', error: " + std::string(strerror(errno)));
-      } else if (res == 0) {
-         return total_bytes;
-      }
-      R__ASSERT(static_cast<size_t>(res) <= nbytes);
-      buffer = reinterpret_cast<unsigned char *>(buffer) + res;
-      nbytes -= res;
-      total_bytes += res;
-      offset += res;
-   }
-   return total_bytes;
-}
-
-
-std::uint64_t ROOT::Detail::RRawFilePosix::DoGetSize()
-{
-   EnsureOpen();
-   struct stat info;
-   int res = fstat(filedes, &info);
-   if (res == 0)
-     return info.st_size;
-   throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
-}
-
-
-void ROOT::Detail::RRawFilePosix::EnsureOpen()
-{
-   if (filedes >= 0)
-      return;
-
-   filedes = open(GetLocation(fUrl).c_str(), O_RDONLY);
-   if (filedes < 0) {
-      throw std::runtime_error("Cannot open '" + fUrl + "', error: " + std::string(strerror(errno)));
-   }
-}
-
-/******************************************************************************/
-
-ROOT::Detail::RRawFileCio::RRawFileCio(const std::string &url, ROOT::Detail::RRawFile::ROptions options)
-  : ROOT::Detail::RRawFile(url, options)
-  , fileptr(nullptr)
-{
-}
-
-ROOT::Detail::RRawFileCio::~RRawFileCio()
-{
-   if (fileptr != nullptr)
-      fclose(fileptr);
-}
-
-void ROOT::Detail::RRawFileCio::Seek(long offset, int whence)
-{
-   int res = fseek(fileptr, offset, whence);
-   if (res != 0)
-      throw std::runtime_error("Cannot seek in '" + fUrl + "', error: " + std::string(strerror(errno)));
-}
-
-size_t ROOT::Detail::RRawFileCio::DoPread(void *buffer, size_t nbytes, std::uint64_t offset)
-{
-   EnsureOpen();
-   if (offset != fFilePos)
-      Seek(offset, SEEK_SET);
-   size_t res = fread(buffer, 1, nbytes, fileptr);
-   if ((res < nbytes) && (ferror(fileptr) != 0)) {
-      clearerr(fileptr);
-      throw std::runtime_error("Cannot read from '" + fUrl + "', error: " + std::string(strerror(errno)));
-   }
-   return res;
-}
-
-
-std::uint64_t ROOT::Detail::RRawFileCio::DoGetSize()
-{
-   EnsureOpen();
-   Seek(0L, SEEK_END);
-   long size = ftell(fileptr);
-   if (size < 0)
-     throw std::runtime_error("Cannot tell position counter in '" + fUrl + "', error: " + std::string(strerror(errno)));
-   Seek(fFilePos, SEEK_SET);
-   return size;
-}
-
-
-void ROOT::Detail::RRawFileCio::EnsureOpen()
-{
-   if (fileptr != nullptr)
-      return;
-
-   fileptr = fopen(GetLocation(fUrl).c_str(), "r");
-   if (fileptr == nullptr)
-      throw std::runtime_error("Cannot open '" + fUrl + "', error: " + std::string(strerror(errno)));
-}
-
-
-} // namespace Detail
-} // namespace ROOT

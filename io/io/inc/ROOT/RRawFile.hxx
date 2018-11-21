@@ -16,7 +16,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
 #include <string>
 
 namespace ROOT {
@@ -63,36 +62,6 @@ public:
    std::uint64_t GetSize();
 
    bool Readln(std::string& line);
-};
-
-
-class RRawFilePosix : public RRawFile {
-private:
-   int filedes;
-   void EnsureOpen();
-
-protected:
-   size_t DoPread(void *buffer, size_t nbytes, std::uint64_t offset) final;
-   std::uint64_t DoGetSize() final;
-
-public:
-   RRawFilePosix(const std::string &url, RRawFile::ROptions options);
-   ~RRawFilePosix();
-};
-
-class RRawFileCio : public RRawFile {
-private:
-   FILE *fileptr;
-   void EnsureOpen();
-   void Seek(long offset, int whence);
-
-protected:
-   size_t DoPread(void *buffer, size_t nbytes, std::uint64_t offset) final;
-   std::uint64_t DoGetSize() final;
-
-public:
-   RRawFileCio(const std::string &url, RRawFile::ROptions options);
-   ~RRawFileCio();
 };
 
 } // namespace Detail
