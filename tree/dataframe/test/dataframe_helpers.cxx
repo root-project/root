@@ -1,6 +1,7 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDFHelpers.hxx>
 #include <ROOT/RVec.hxx>
+#include <TSystem.h>
 
 #include <algorithm>
 #include <deque>
@@ -97,18 +98,7 @@ public:
 
    std::string GetRepresentationFromRoot()
    {
-      std::cout << std::flush;
-      // Redirect cout.
-      std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
-      std::ostringstream strCout;
-      std::cout.rdbuf(strCout.rdbuf());
-
-      SaveGraph(rd1);
-
-      // Restore old cout.
-      std::cout.rdbuf(oldCoutStreamBuf);
-
-      return strCout.str();
+      return SaveGraph(rd1);
    }
 
    std::string GetRealRepresentationFromRoot()
@@ -167,23 +157,12 @@ public:
              "\t16 -> 15;\n"
              "\t6 -> 16;\n"
              "\t16 -> 22;\n"
-             "}\n";
+             "}";
    }
 
    std::string GetRepresentationFromAction()
    {
-      std::cout << std::flush;
-      // Redirect cout.
-      std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
-      std::ostringstream strCout;
-      std::cout.rdbuf(strCout.rdbuf());
-
-      SaveGraph(branch1_1);
-
-      // Restore old cout.
-      std::cout.rdbuf(oldCoutStreamBuf);
-
-      return strCout.str();
+      return SaveGraph(branch1_1);
    }
 
    std::string GetRealRepresentationFromAction()
@@ -212,7 +191,7 @@ public:
              "\t2 -> 6;\n"
              "\t3 -> 2;\n"
              "\t0 -> 3;\n"
-             "}\n";
+             "}";
    }
 };
 
@@ -258,20 +237,41 @@ TEST(RDFHelpers, SaveGraphRootFromTree)
 
    static const std::string expectedGraph(
       "digraph {\n\t2 [label=\"Count\", style=\"filled\", fillcolor=\"#9cbbe5\", shape=\"box\"];\n\t0 [label=\"t\", "
-      "style=\"filled\", fillcolor=\"#e8f8fc\", shape=\"oval\"];\n\t0 -> 2;\n}\n");
+      "style=\"filled\", fillcolor=\"#e8f8fc\", shape=\"oval\"];\n\t0 -> 2;\n}");
 
    ROOT::RDataFrame df("t", "f.root");
    auto c = df.Count();
 
-   std::cout << std::flush;
-   // Redirect cout.
-   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
-   std::ostringstream strCout;
-   std::cout.rdbuf(strCout.rdbuf());
+   auto strOut = SaveGraph(c);
 
-   SaveGraph(c);
+   EXPECT_EQ(expectedGraph, strOut);
+}
 
-   // Restore old cout.
-   std::cout.rdbuf(oldCoutStreamBuf);
-   EXPECT_EQ(expectedGraph, strCout.str());
+TEST(RDFHelpers, SaveGraphToFile)
+{
+   TFile f("f.root", "recreate");
+   TTree t("t", "t");
+   int a;
+   t.Branch("a", &a);
+   a = 42; // The answer to life the universe and everything
+   t.Fill();
+   t.Write();
+   f.Close();
+
+   static const std::string expectedGraph(
+      "digraph {\n\t2 [label=\"Count\", style=\"filled\", fillcolor=\"#9cbbe5\", shape=\"box\"];\n\t0 [label=\"t\", "
+      "style=\"filled\", fillcolor=\"#e8f8fc\", shape=\"oval\"];\n\t0 -> 2;\n}");
+
+   ROOT::RDataFrame df("t", "f.root");
+   auto c = df.Count();
+
+   const auto outFileName = "savegraphout.root";
+   SaveGraph(c, outFileName);
+
+   std::ifstream outFile(outFileName);
+   std::stringstream outString;
+   outString << outFile.rdbuf();
+   EXPECT_EQ(expectedGraph, outString.str());
+
+   gSystem->Unlink(outFileName);
 }
