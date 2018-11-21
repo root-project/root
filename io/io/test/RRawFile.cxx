@@ -55,3 +55,30 @@ TEST(RRawFile, Basic)
    EXPECT_STREQ("bar", line.c_str());
    EXPECT_FALSE(f->Readln(line));
 }
+
+
+TEST(RRawFile, Readln)
+{
+   FileRaii empty("test_linebreak", "foo\r\none\nline\r\n\r\n");
+   std::unique_ptr<RRawFile> f(RRawFile::Create("test_linebreak"));
+   std::string line;
+   EXPECT_TRUE(f->Readln(line));
+   EXPECT_STREQ("foo", line.c_str());
+   EXPECT_TRUE(f->Readln(line));
+   EXPECT_STREQ("one\nline", line.c_str());
+   EXPECT_TRUE(f->Readln(line));
+   EXPECT_TRUE(line.empty());
+   EXPECT_FALSE(f->Readln(line));
+}
+
+
+TEST(RRawFile, SplitUrl)
+{
+   EXPECT_STREQ("C:\\Data\\events.root", RRawFile::GetLocation("C:\\Data\\events.root").c_str());
+   EXPECT_STREQ("///many/slashes", RRawFile::GetLocation("///many/slashes").c_str());
+   EXPECT_STREQ("/many/slashes", RRawFile::GetLocation(":///many/slashes").c_str());
+   EXPECT_STREQ("file", RRawFile::GetTransport("/foo").c_str());
+   EXPECT_STREQ("http", RRawFile::GetTransport("http://").c_str());
+   EXPECT_STREQ("", RRawFile::GetLocation("http://").c_str());
+   EXPECT_STREQ("http", RRawFile::GetTransport("http://file:///bar").c_str());
+}
