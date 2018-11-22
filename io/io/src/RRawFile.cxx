@@ -29,6 +29,7 @@
 
 namespace {
 const char* kTransportSeparator = "://";
+// Corresponds to ELineBreaks
 #ifdef _WIN32
 const char* kLineBreakTokens[] = {"", "\r\n", "\n", "\r\n"};
 constexpr unsigned kLineBreakTokenSizes[] = {0, 2, 1, 2};
@@ -36,8 +37,8 @@ constexpr unsigned kLineBreakTokenSizes[] = {0, 2, 1, 2};
 const char* kLineBreakTokens[] = {"", "\n", "\n", "\r\n"};
 constexpr unsigned kLineBreakTokenSizes[] = {0, 1, 1, 2};
 #endif
-constexpr unsigned kLineBuffer = 128;
-constexpr int kDefaultBlockSizeLocal = 4096;
+constexpr unsigned kLineBuffer = 128; // On Readln, look for line-breaks in chunks of 128 bytes
+constexpr int kDefaultBlockSizeLocal = 4096; // Local files are by default read in pages
 } // anonymous namespace
 
 
@@ -65,6 +66,7 @@ ROOT::Detail::RRawFile::~RRawFile() {
 bool ROOT::Detail::RRawFile::Readln(std::string& line)
 {
    if (fOptions.fLineBreak == ELineBreaks::kAuto) {
+      // Auto-detect line breaks according to the break discovered in the first line
       fOptions.fLineBreak = ELineBreaks::kUnix;
       bool res = Readln(line);
       if ((line.length() > 0) && (*line.rbegin() == '\r')) {
@@ -82,7 +84,7 @@ bool ROOT::Detail::RRawFile::Readln(std::string& line)
       std::string_view bufferView(buffer, nbytes);
       auto idx = bufferView.find(kLineBreakTokens[static_cast<int>(fOptions.fLineBreak)]);
       if (idx != std::string_view::npos) {
-         // Linebreak found, return the string and skip the linebreak itself
+         // Line break found, return the string and skip the linebreak itself
          line.append(buffer, idx);
          fFilePos -= nbytes - idx;
          fFilePos += kLineBreakTokenSizes[static_cast<int>(fOptions.fLineBreak)];
