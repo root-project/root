@@ -582,12 +582,28 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9701'>ROOT-9701</a>] -         IO read rules no longer executed
 
 
+## Release 6.14/08
 
-
-## HEAD of the v6-14-00-patches branch
-
-These changes will be part of the future 6.14/08
+Released on November 22, 2018
 
 ## Core Libraries
   - The minimal TBB library version required by ROOT is tbb2018. The built-in TBB version is tbb2019
   - Tasks spawned by TThreadedExecutor are now isolated exploiting the TBB work isolation feature. This avoids that tasks steal items of work spawned by their parents.
+
+
+### Bugs and Issues fixed in this release
+
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9504'>ROOT-9504</a>] -         RGL does not exist (official binary release for Fedora 28)
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9615'>ROOT-9615</a>] -         Unknown argument &#39;-fno-plt&#39;
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9635'>ROOT-9635</a>] -         Configuration and Build fails when CXXFLAGS has &#39;--save-temps&#39;
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9637'>ROOT-9637</a>] -         &quot;root-config --cflags&quot; echoes bad -std=c++1y
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9709'>ROOT-9709</a>] -         cling crash (null transaction) in gcc8 build.
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9762'>ROOT-9762</a>] -         Custom read rule fails to execute in certain situations
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9801'>ROOT-9801</a>] -         Copying a TFormula doesn&#39;t preserve fLazyInitialization
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9702'>ROOT-9702</a>] -         Cannot seamlessly evolve a datamember of type auto_ptr&lt;T&gt; into unique_ptr&lt;T&gt;
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9668'>ROOT-9668</a>] -         IMT code segfaults when branches are changed
+
+
+## HEAD of the v6-14-00-patches branch
+
+These changes will be part of the future 6.14/10.
