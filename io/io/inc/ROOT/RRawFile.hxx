@@ -28,6 +28,7 @@ class RRawFile;
  * \ingroup IO
  *
  * Read-only, usually remote file
+ * Features: lazy opening, control over buffer size, auto linebreak detection
  */
 class RRawFile {
 public:
