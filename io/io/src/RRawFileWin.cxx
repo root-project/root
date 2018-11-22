@@ -42,8 +42,7 @@ void ROOT::Detail::RRawFileWin::Seek(long offset, int whence)
 size_t ROOT::Detail::RRawFileWin::DoPread(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    EnsureOpen();
-   if (offset != fFilePos)
-      Seek(offset, SEEK_SET);
+   Seek(offset, SEEK_SET);
    size_t res = fread(buffer, 1, nbytes, fileptr);
    if ((res < nbytes) && (ferror(fileptr) != 0)) {
       clearerr(fileptr);
