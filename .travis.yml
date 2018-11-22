@@ -78,6 +78,8 @@ script:
   - cd "${TRAVIS_BUILD_DIR}/../root_build/roofit/roofitcore/test"
   - ./testRooGradMinimizer
   - ./testMultiProcess_Vector
+  - ./testVectorNLL
+  - ./testVectorGradMinimizer
 
 # Save the exact timestamps of the files so we can recreate them with touch in the next build.
 # N.B.: just tarring the build files doesn't work, since the git clone will still be newer.

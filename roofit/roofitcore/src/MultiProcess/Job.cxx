@@ -11,6 +11,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+#include <unistd.h> // getpid
+
 #include <MultiProcess/Job.h>
 #include <MultiProcess/TaskManager.h>
 #include <MultiProcess/messages.h>
@@ -44,7 +46,6 @@ namespace RooFit {
       Task task;
       std::size_t job_id;
       Q2W message_q2w;
-      JobTask job_task;
 
       // use a flag to not ask twice
       bool dequeue_acknowledged = true;
@@ -178,7 +179,8 @@ namespace RooFit {
 
       if (!worker_loop_running && _manager->is_worker()) {
         Job::worker_loop();
-        std::cout << "exiting worker process " << getpid() << std::endl;
+        _manager->close_worker_connections();
+//        std::cout << "exiting worker process " << getpid() << std::endl;
         std::_Exit(0);
       }
 

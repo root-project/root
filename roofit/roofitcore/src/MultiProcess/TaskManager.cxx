@@ -13,6 +13,7 @@
 
 #include <stdexcept>  // logic_error
 #include <sstream>
+#include <unistd.h> // getpid
 // for cpu affinity
 #if !defined(__APPLE__) && !defined(_WIN32)
 #include <sched.h>
@@ -22,9 +23,17 @@
 #include <MultiProcess/TaskManager.h>
 #include <MultiProcess/Job.h>
 #include <MultiProcess/messages.h>
+#include <MultiProcess/util.h>
+#include <RooFit_ZMQ/ZeroMQPoller.h>
+#include <algorithm>  // for_each
 
 namespace RooFit {
   namespace MultiProcess {
+
+    void set_socket_immediate(ZmqLingeringSocketPtr<> & socket) {
+      int optval = 1;
+      socket->setsockopt(ZMQ_IMMEDIATE, &optval, sizeof(optval));
+    }
 
     // static function
     TaskManager* TaskManager::instance(std::size_t N_workers) {
@@ -64,12 +73,12 @@ namespace RooFit {
 
     void TaskManager::identify_processes() {
       // identify yourselves (for debugging)
-      if (instance()->is_worker()) {
-        std::cout << "I'm a worker, PID " << getpid() << std::endl;
-      } else if (instance()->is_master()) {
-        std::cout << "I'm master, PID " << getpid() << std::endl;
-      } else if (instance()->is_queue()) {
-        std::cout << "I'm queue, PID " << getpid() << std::endl;
+      if (!(_is_master || _is_queue)) {
+        std::cout << "I'm a worker, PID " << getpid() << '\n';
+      } else if (_is_master) {
+        std::cout << "I'm master, PID " << getpid() << '\n';
+      } else if (_is_queue) {
+        std::cout << "I'm queue, PID " << getpid() << '\n';
       }
     }
 
@@ -102,10 +111,10 @@ namespace RooFit {
       // Initialize processes;
       // ... first workers:
       worker_pids.resize(N_workers);
-      pid_t child_pid;
+      pid_t child_pid {};
       for (std::size_t ix = 0; ix < N_workers; ++ix) {
         child_pid = fork();
-        if (child_pid) {  // we're on the worker
+        if (!child_pid) {  // we're on the worker
           worker_id = ix;
           break;
         } else {          // we're on master
@@ -114,89 +123,68 @@ namespace RooFit {
       }
 
       // ... then queue:
-      if (!child_pid) {  // we're on master
-        child_pid = fork();
-        if (child_pid) { // we're now on queue
+      if (child_pid) {  // we're on master
+        queue_pid = fork();
+        if (!queue_pid) { // we're now on queue
           _is_queue = true;
         } else {
           _is_master = true;
         }
       }
 
-      // after all forks, create zmq context
-      zmq_context = std::make_unique<zmq::context_t>(1);
-
-      // then create connections
-      if (is_master()) {
-        zmq::socket_t mq_socket(zmq_context, zmq::socket_type::req);
-        mq_socket.bind("ipc://master_queue");
-      } else if (is_queue()) {
-        zmq::socket_t mq_socket(zmq_context, zmq::socket_type::rep);
-        mq_socket.connect("ipc::/master_queue");
-
-        for (std::size_t ix = 0; ix < N_workers; ++ix) {
-          qw_sockets[ix] = std::make_unique<zmq::socket_t>(zmq_context, zmq::socket_type::rep);
-          std::stringstream socket_name("ipc://queue_worker_");
-          socket_name << ix;
-          qw_sockets[ix]->bind(socket_name.str().c_str());
-        }
-
-      } else if (is_worker()) {
-
-      } else {
-        // should not get here
-        throw std::runtime_error("TaskManager::initialize_processes: I'm neither master, nor queue, nor a worker");
-      }
-
-      std::vector<BidirMMapPipe*> worker_pipes_raw(N_workers);
-      worker_pids.resize(N_workers);
-
-      for (std::size_t ix = 0; ix < N_workers; ++ix) {
-        // set worker_id before each fork so that fork will sync it to the worker
-        worker_id = ix;
-        worker_pipes_raw[ix] = new BidirMMapPipe(useExceptions, useSocketpair, keepLocal_WORKER);
-        if(worker_pipes_raw[ix]->isChild()) {
-          this_worker_pipe.reset(worker_pipes_raw[ix]);
-          break;
-        } else {
-          worker_pids[ix] = worker_pipes_raw[ix]->pidOtherEnd();
-        }
-      }
-
-      // then do the queue and master initialization, but each worker should
-      // exit the constructor from here on
-      if (worker_pipes_raw[N_workers - 1]->isParent()) {  // we're on master
-        queue_pipe = std::make_unique<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_QUEUE);  // fork off queue
-        // At this point, the pipes in worker_pipes_raw should all have been
-        // deleted by BidirMMapPipe's internal cleanup mechanism.
-
-        if (queue_pipe->isParent()) {       // we're on master
-          _is_master = true;
-        } else if (queue_pipe->isChild()) { // we're on queue
-          _is_queue = true;
-          worker_pipes.resize(N_workers);
+      // after all forks, create zmq connections (zmq context is automatically created in the ZeroMQSvc class and maintained as singleton)
+      try {
+        if (is_master()) {
+          mq_socket.reset(zmqSvc().socket_ptr(zmq::PAIR)); //REQ));
+          set_socket_immediate(mq_socket);
+          mq_socket->bind("ipc:///tmp/roofitMP_master_queue");
+  //        mq_socket->bind("tcp://*:55555");
+        } else if (is_queue()) {
+          // first the queue-worker sockets
+          qw_sockets.resize(N_workers); // do resize instead of reserve so that the unique_ptrs are initialized (to nullptr) so that we can do reset below, alternatively you can do push/emplace_back with move or something
           for (std::size_t ix = 0; ix < N_workers; ++ix) {
-            worker_pipes[ix].reset(worker_pipes_raw[ix]);
+            qw_sockets[ix].reset(zmqSvc().socket_ptr(zmq::PAIR)); //REP));
+            set_socket_immediate(qw_sockets[ix]);
+            std::stringstream socket_name;
+            socket_name << "ipc:///tmp/roofitMP_queue_worker_" << ix;
+  //          socket_name << "tcp://*:" << 55556 + ix;
+            qw_sockets[ix]->bind(socket_name.str());
           }
-        } else {                            // should never get here...
-          throw std::runtime_error("Something went wrong while creating TaskManager!");
+          // then the master-queue socket
+          mq_socket.reset(zmqSvc().socket_ptr(zmq::PAIR)); //REP));
+          set_socket_immediate(mq_socket);
+          mq_socket->connect("ipc:///tmp/roofitMP_master_queue");
+  //        mq_socket->connect("tcp://127.0.0.1:55555");
+        } else if (is_worker()) {
+          this_worker_qw_socket.reset(zmqSvc().socket_ptr(zmq::PAIR)); //REQ));
+          set_socket_immediate(this_worker_qw_socket);
+          std::stringstream socket_name;
+          socket_name << "ipc:///tmp/roofitMP_queue_worker_" << worker_id;
+  //        socket_name << "tcp://127.0.0.1:" << 55556 + worker_id;
+          this_worker_qw_socket->connect(socket_name.str());
+        } else {
+          // should never get here
+          throw std::runtime_error("TaskManager::initialize_processes: I'm neither master, nor queue, nor a worker");
         }
-      }
+      } catch (zmq::error_t& e) {
+        std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
+        throw;
+      };
 
       if (cpu_pinning) {
         #if defined(__APPLE__)
-        std::cout << "WARNING: CPU affinity cannot be set on macOS, continuing..." << std::endl;
+        if (is_master()) std::cerr << "WARNING: CPU affinity cannot be set on macOS, continuing...\n";
         #elif defined(_WIN32)
-        std::cout << "WARNING: CPU affinity setting not implemented on Windows, continuing..." << std::endl;
+        if (is_master()) std::cerr << "WARNING: CPU affinity setting not implemented on Windows, continuing...\n";
         #else
         cpu_set_t mask;
         // zero all bits in mask
         CPU_ZERO(&mask);
         // set correct bit
         std::size_t set_cpu;
-        if (_is_master) {
+        if (is_master()) {
           set_cpu = N_workers + 1;
-        } else if (_is_queue) {
+        } else if (is_queue()) {
           set_cpu = N_workers;
         } else {
           set_cpu = worker_id;
@@ -205,43 +193,25 @@ namespace RooFit {
         /* sched_setaffinity returns 0 in success */
 
         if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
-          std::cout << "WARNING: Could not set CPU affinity, continuing..." << std::endl;
+          std::cerr << "WARNING: Could not set CPU affinity, continuing...\n";
         } else {
-          std::cout << "CPU affinity set to cpu " << set_cpu << " in process " << getpid() << std::endl;
+          std::cerr << "CPU affinity set to cpu " << set_cpu << " in process " << getpid() << '\n';
         }
         #endif
       }
+
+//      identify_processes();
 
       processes_initialized = true;
     }
 
 
-    void TaskManager::shutdown_processes() {
-      if (_is_master && queue_pipe->good()) {
-        *queue_pipe << M2Q::terminate << BidirMMapPipe::flush;
-        int retval = queue_pipe->close();
-        if (0 != retval) {
-          std::cerr << "error terminating queue_pipe" << "; child return value is " << retval << std::endl;
-        }
-
-        // delete queue_pipe (not worker_pipes, only on queue process!)
-        // CAUTION: the following invalidates a possibly created PollVector
-        queue_pipe.reset(); // sets to nullptr
-
-        for (auto it = worker_pids.begin(); it != worker_pids.end(); ++it) {
-          BidirMMapPipe::wait_for_child(*it, true);
-        }
-      }
-
-      processes_initialized = false;
-    }
-
-
     TaskManager::~TaskManager() {
+      std::cerr << "\ndestroying TaskManager on PID " << getpid() << (is_worker() ? " worker" : (is_queue()? " queue" : " master")) << '\n';
       // The TM instance gets created by some Job. Once all Jobs are gone, the
       // TM will get destroyed. In this case, the job_objects map should have
       // been emptied. This check makes sure:
-      assert(TaskManager::job_objects.size() == 0);
+      assert(TaskManager::job_objects.empty());
       terminate();
     }
 
@@ -269,7 +239,7 @@ namespace RooFit {
     // static function
     bool TaskManager::remove_job_object(std::size_t job_object_id) {
       bool removed_succesfully = job_objects.erase(job_object_id) == 1;
-      if (job_objects.size() == 0) {
+      if (job_objects.empty()) {
         _instance.reset(nullptr);
       }
       return removed_succesfully;
@@ -278,24 +248,76 @@ namespace RooFit {
 
     void TaskManager::terminate() noexcept {
       try {
-        shutdown_processes();
-        queue_activated = false;
-      } catch (const BidirMMapPipe::Exception& e) {
-        std::cerr << "WARNING: in TaskManager::terminate, something in BidirMMapPipe threw an exception! Message:\n\t" << e.what() << std::endl;
-      } catch (...) {
-        std::cerr << "WARNING: something unknown in TaskManager::terminate (probably something in BidirMMapPipe) threw an exception!" << std::endl;
+        if (is_master()) {
+          send_from_master_to_queue(M2Q::terminate);
+//          int period = 0;
+//          mq_socket->setsockopt(ZMQ_LINGER, &period, sizeof(period));
+          mq_socket.reset(nullptr);
+          zmqSvc().close_context();
+          queue_activated = false;
+          shutdown_processes();
+        }
+//      } catch (const BidirMMapPipe::Exception& e) {
+//        std::cerr << "WARNING: in TaskManager::terminate, something in BidirMMapPipe threw an exception! Message:\n\t" << e.what() << std::endl;
+      } catch (const std::exception& e) {
+        std::cerr << "WARNING: something in TaskManager::terminate threw an exception! Original exception message:\n" << e.what() << '\n';
+      }
+    }
+
+
+    void TaskManager::shutdown_processes() {
+      if (is_master()) {
+//        send_from_master_to_queue(M2Q::terminate);
+//        *queue_pipe << M2Q::terminate << BidirMMapPipe::flush;
+
+        // first wait for the workers that will be terminated by the queue
+        for (auto pid : worker_pids) {
+          wait_for_child(pid, true, 5);
+        }
+        // then wait for the queue
+        wait_for_child(queue_pid, true, 5);
+
+//        // delete queue_pipe (not worker_pipes, only on queue process!)
+//        // CAUTION: the following invalidates a possibly created PollVector
+//        queue_pipe.reset(); // sets to nullptr
+
+//        for (auto it = worker_pids.begin(); it != worker_pids.end(); ++it) {
+//          BidirMMapPipe::wait_for_child(*it, true);
+//        }
+      }
+
+      processes_initialized = false;
+      _is_master = false;
+    }
+
+    void TaskManager::close_worker_connections() {
+//      int period = 0;
+      if (is_worker()) {
+//        this_worker_qw_socket->setsockopt(ZMQ_LINGER, &period, sizeof(period));
+        this_worker_qw_socket.reset(nullptr);
+        zmqSvc().close_context();
+      } else if (is_queue()) {
+        for (std::size_t worker_ix = 0ul; worker_ix < N_workers; ++worker_ix) {
+//          qw_sockets[worker_ix]->setsockopt(ZMQ_LINGER, &period, sizeof(period));
+          qw_sockets[worker_ix].reset(nullptr);
+        }
       }
     }
 
     void TaskManager::terminate_workers() {
-      if (_is_queue) {
-        for (std::unique_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
-          *worker_pipe << Q2W::terminate << BidirMMapPipe::flush;
-          int retval = worker_pipe->close();
-          if (0 != retval) {
-            std::cerr << "error terminating worker_pipe for worker with PID " << worker_pipe->pidOtherEnd() << "; child return value is " << retval << std::endl;
-          }
+      if (is_queue()) {
+//        for (std::unique_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
+//          *worker_pipe << Q2W::terminate << BidirMMapPipe::flush;
+//        for(auto& worker_socket : qw_sockets) {
+//          zmqSvc().send(*worker_socket, Q2W::terminate);
+        for(std::size_t worker_ix = 0; worker_ix < N_workers; ++worker_ix) {
+          send_from_queue_to_worker(worker_ix, Q2W::terminate);
+//          int retval = worker_pipe->close();
+//          if (0 != retval) {
+//            std::cerr << "error terminating worker_pipe for worker with PID " << worker_pipe->pidOtherEnd() << "; child return value is " << retval << std::endl;
+//          }
         }
+        close_worker_connections();
       }
     }
 
@@ -313,9 +335,13 @@ namespace RooFit {
 
       queue_activated = true; // set on all processes, master, queue and slaves
 
-      if (_is_queue) {
+      if (is_queue()) {
         queue_loop();
         terminate_workers();
+//        int period = 0;
+//        mq_socket->setsockopt(ZMQ_LINGER, &period, sizeof(period));
+        mq_socket.reset(nullptr);   // delete/close master-queue socket from queue side
+        zmqSvc().close_context();
         std::_Exit(0);
       }
     }
@@ -329,15 +355,15 @@ namespace RooFit {
     // CAUTION:
     // this function returns a vector of pointers that may get invalidated by
     // the terminate function!
-    BidirMMapPipe::PollVector TaskManager::get_poll_vector() {
-      BidirMMapPipe::PollVector poll_vector;
-      poll_vector.reserve(1 + worker_pipes.size());
-      poll_vector.emplace_back(queue_pipe.get(), BidirMMapPipe::Readable);
-      for (std::unique_ptr<BidirMMapPipe>& pipe : worker_pipes) {
-        poll_vector.emplace_back(pipe.get(), BidirMMapPipe::Readable);
-      }
-      return poll_vector;
-    }
+//    BidirMMapPipe::PollVector TaskManager::get_poll_vector() {
+//      BidirMMapPipe::PollVector poll_vector;
+//      poll_vector.reserve(1 + worker_pipes.size());
+//      poll_vector.emplace_back(queue_pipe.get(), BidirMMapPipe::Readable);
+//      for (std::unique_ptr<BidirMMapPipe>& pipe : worker_pipes) {
+//        poll_vector.emplace_back(pipe.get(), BidirMMapPipe::Readable);
+//      }
+//      return poll_vector;
+//    }
 
 
     bool TaskManager::process_queue_pipe_message(M2Q message) {
@@ -351,9 +377,8 @@ namespace RooFit {
 
         case M2Q::enqueue: {
           // enqueue task
-          Task task;
-          std::size_t job_object_id;
-          *queue_pipe >> job_object_id >> task;
+          auto job_object_id = receive_from_master_on_queue<std::size_t>();
+          auto task = receive_from_master_on_queue<Task>();
           JobTask job_task(job_object_id, task);
           to_queue(job_task);
           N_tasks++;
@@ -364,49 +389,46 @@ namespace RooFit {
           // retrieve task results after queue is empty and all
           // tasks have been completed
           if (queue.empty() && N_tasks_completed == N_tasks) {
-            *queue_pipe << Q2M::retrieve_accepted;  // handshake message (master will now start reading from the pipe)
-            *queue_pipe << job_objects.size();
+            send_from_queue_to_master(Q2M::retrieve_accepted, job_objects.size());
             for (auto job_tuple : job_objects) {
-              *queue_pipe << job_tuple.first;  // job id
+              send_from_queue_to_master(job_tuple.first);  // job id
               job_tuple.second->send_back_results_from_queue_to_master();  // N_job_tasks, task_ids and results
               job_tuple.second->clear_results();
             }
             // reset number of received and completed tasks
             N_tasks = 0;
             N_tasks_completed = 0;
-            *queue_pipe << BidirMMapPipe::flush;
           } else {
-            *queue_pipe << Q2M::retrieve_rejected << BidirMMapPipe::flush;  // handshake message: tasks not done yet, try again
+            send_from_queue_to_master(Q2M::retrieve_rejected);  // handshake message: tasks not done yet, try again
           }
         }
           break;
 
         case M2Q::update_real: {
-          std::size_t job_id, ix;
-          double val;
-          bool is_constant;
-          *queue_pipe >> job_id >> ix >> val >> is_constant;
-          for (std::unique_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
-            *worker_pipe << Q2W::update_real << job_id << ix << val << is_constant << BidirMMapPipe::flush;
+          auto job_id = receive_from_master_on_queue<std::size_t>();
+          auto ix = receive_from_master_on_queue<std::size_t>();
+          auto val = receive_from_master_on_queue<double>();
+          auto is_constant = receive_from_master_on_queue<bool>();
+          for (std::size_t worker_ix = 0; worker_ix < N_workers; ++worker_ix) {
+            send_from_queue_to_worker(worker_ix, Q2W::update_real, job_id, ix, val, is_constant);
           }
         }
           break;
 
         case M2Q::switch_work_mode: {
-          for (std::unique_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
-            *worker_pipe << Q2W::switch_work_mode << BidirMMapPipe::flush;
+          for (std::size_t worker_ix = 0; worker_ix < N_workers; ++worker_ix) {
+            send_from_queue_to_worker(worker_ix, Q2W::switch_work_mode);
           }
         }
           break;
 
         case M2Q::call_double_const_method: {
-          std::size_t job_id, worker_id_call;
-          std::string key;
-          *queue_pipe >> job_id >> worker_id_call >> key;
-          *worker_pipes[worker_id_call] << Q2W::call_double_const_method << job_id << key << BidirMMapPipe::flush;
-          double result;
-          *worker_pipes[worker_id_call] >> result;
-          *queue_pipe << result << BidirMMapPipe::flush;
+          auto job_id = receive_from_master_on_queue<std::size_t>();
+          auto worker_id_call = receive_from_master_on_queue<std::size_t>();
+          auto key = receive_from_master_on_queue<std::string>();
+          send_from_queue_to_worker(worker_id_call, Q2W::call_double_const_method, job_id, key);
+          auto result = receive_from_worker_on_queue<double>(worker_id_call);
+          send_from_queue_to_master(result);
         }
           break;
       }
@@ -419,16 +441,13 @@ namespace RooFit {
       if (_is_master) {
         bool carry_on = true;
         while (carry_on) {
-          *queue_pipe << M2Q::retrieve << BidirMMapPipe::flush;
-          Q2M handshake;
-          *queue_pipe >> handshake;
+          send_from_master_to_queue(M2Q::retrieve);
+          auto handshake = receive_from_queue_on_master<Q2M>();
           if (handshake == Q2M::retrieve_accepted) {
             carry_on = false;
-            std::size_t N_jobs;
-            *queue_pipe >> N_jobs;
+            auto N_jobs = receive_from_queue_on_master<std::size_t>();
             for (std::size_t job_ix = 0; job_ix < N_jobs; ++job_ix) {
-              std::size_t job_object_id;
-              *queue_pipe >> job_object_id;
+              auto job_object_id = receive_from_queue_on_master<std::size_t>();
               TaskManager::get_job_object(job_object_id)->receive_results_on_master();
             }
           }
@@ -437,27 +456,26 @@ namespace RooFit {
     }
 
 
-    double TaskManager::call_double_const_method(std::string method_key, std::size_t job_id, std::size_t worker_id_call) {
-      *queue_pipe << M2Q::call_double_const_method << job_id << worker_id_call << method_key << BidirMMapPipe::flush;
-      double result;
-      *queue_pipe >> result;
+    double TaskManager::call_double_const_method(const std::string& method_key, std::size_t job_id, std::size_t worker_id_call) {
+      send_from_master_to_queue(M2Q::call_double_const_method, job_id, worker_id_call, method_key);
+      auto result = receive_from_queue_on_master<double>();
       return result;
     }
 
     // -- WORKER - QUEUE COMMUNICATION --
 
     void TaskManager::send_from_worker_to_queue() {
-      *this_worker_pipe << BidirMMapPipe::flush;
+//      *this_worker_pipe << BidirMMapPipe::flush;
     }
 
-    void TaskManager::send_from_queue_to_worker(std::size_t this_worker_id) {
-      *worker_pipes[this_worker_id] << BidirMMapPipe::flush;
+    void TaskManager::send_from_queue_to_worker(std::size_t /*this_worker_id*/) {
+//      *worker_pipes[this_worker_id] << BidirMMapPipe::flush;
     }
 
     // -- QUEUE - MASTER COMMUNICATION --
 
     void TaskManager::send_from_queue_to_master() {
-      *queue_pipe << BidirMMapPipe::flush;
+//      *queue_pipe << BidirMMapPipe::flush;
     }
 
     void TaskManager::send_from_master_to_queue() {
@@ -465,27 +483,25 @@ namespace RooFit {
     }
 
 
-    void TaskManager::process_worker_pipe_message(BidirMMapPipe &pipe, std::size_t this_worker_id, W2Q message) {
-      Task task;
-      std::size_t job_object_id;
+    void TaskManager::process_worker_pipe_message(std::size_t this_worker_id, W2Q message) {
       switch (message) {
         case W2Q::dequeue: {
           // dequeue task
           JobTask job_task;
           if (from_queue(job_task)) {
-            pipe << Q2W::dequeue_accepted << job_task.first << job_task.second;
+            send_from_queue_to_worker(this_worker_id, Q2W::dequeue_accepted, job_task.first, job_task.second);
           } else {
-            pipe << Q2W::dequeue_rejected;
+            send_from_queue_to_worker(this_worker_id, Q2W::dequeue_rejected);
           }
-          pipe << BidirMMapPipe::flush;
           break;
         }
 
         case W2Q::send_result: {
           // receive back task result
-          pipe >> job_object_id >> task;
+          auto job_object_id = receive_from_worker_on_queue<std::size_t>(this_worker_id);
+          auto task = receive_from_worker_on_queue<Task>(this_worker_id);
           TaskManager::get_job_object(job_object_id)->receive_task_result_on_queue(task, this_worker_id);
-          pipe << Q2W::result_received << BidirMMapPipe::flush;
+          send_from_queue_to_worker(this_worker_id, Q2W::result_received);
           N_tasks_completed++;
           break;
         }
@@ -496,41 +512,30 @@ namespace RooFit {
     void TaskManager::queue_loop() {
       if (_is_queue) {
         bool carry_on = true;
-        auto poll_vector = get_poll_vector();
+        ZeroMQPoller poller;
+        poller.register_socket(*mq_socket, zmq::POLLIN);
+        for(auto& s : qw_sockets) {
+          poller.register_socket(*s, zmq::POLLIN);
+        }
 
         while (carry_on) {
           // poll: wait until status change (-1: infinite timeout)
-          int n_changed_pipes = BidirMMapPipe::poll(poll_vector, -1);
-          // then process messages from changed pipes; loop while there are
-          // still messages remaining after processing one (so that all
-          // messages since changed pipe will get read).
-          // TODO: Should we do this outside of the for loop, to make sure that both the master and the worker pipes are read from successively, instead of possibly getting stuck on one pipe only?
-          // scan for pipes with changed status:
-          std::size_t pipe_ix = 0;
-          for (auto it = poll_vector.begin(); n_changed_pipes > 0 && poll_vector.end() != it; ++it, ++pipe_ix) {
-            if (!it->revents) {
-              // unchanged, next one
-              continue;
-            }
-//              --n_changed_pipes; // maybe we can stop early...
-            // read from pipes which are readable
-            if (it->revents & BidirMMapPipe::Readable) {
-              // message comes from the master/queue pipe (first element):
-              if (it == poll_vector.begin()) {
-                M2Q message;
-                *queue_pipe >> message;
-                carry_on = process_queue_pipe_message(message);
-                // on terminate, also stop for-loop, no need to check other
-                // pipes anymore:
-                if (!carry_on) {
-                  n_changed_pipes = 0;
-                }
-              } else { // from a worker pipe
-                W2Q message;
-                BidirMMapPipe &pipe = *(it->pipe);
-                pipe >> message;
-                process_worker_pipe_message(pipe, pipe_ix - 1, message);
+          auto poll_result = poller.poll(-1);
+          // then process incoming messages from sockets
+          for (auto readable_socket : poll_result) {
+            // message comes from the master/queue socket (first element):
+            if (readable_socket.first == 0) {
+              auto message = receive_from_master_on_queue<M2Q>();
+              carry_on = process_queue_pipe_message(message);
+              // on terminate, also stop for-loop, no need to check other
+              // sockets anymore:
+              if (!carry_on) {
+                break;
               }
+            } else { // from a worker socket
+              auto this_worker_id = readable_socket.first - 1;
+              auto message = receive_from_worker_on_queue<W2Q>(this_worker_id);
+              process_worker_pipe_message(this_worker_id, message);
             }
           }
         }
@@ -556,8 +561,7 @@ namespace RooFit {
         if (!queue_activated) {
           activate();
         }
-        *queue_pipe << M2Q::enqueue << job_task.first << job_task.second << BidirMMapPipe::flush;
-
+        send_from_master_to_queue(M2Q::enqueue, job_task.first, job_task.second);
       } else if (is_queue()) {
         queue.push(job_task);
       } else {
@@ -581,7 +585,7 @@ namespace RooFit {
     void TaskManager::set_work_mode(bool flag) {
       if (is_master() && flag != work_mode) {
         work_mode = flag;
-        *queue_pipe << M2Q::switch_work_mode << BidirMMapPipe::flush;
+        send_from_master_to_queue(M2Q::switch_work_mode);
       }
     }
 

@@ -148,9 +148,9 @@ ROOT::Math::IMultiGradFunction* RooGradientFunction::Clone() const {
 }
 
 RooGradientFunction::~RooGradientFunction() {
-#ifndef NDEBUG
-  std::cout << "RooGradientFunction " << this << " evaluations (in dtor): " << evalCounter() << "/" << _evalCounter_derivator << " (total/derivator)" << std::endl;
-#endif
+//#ifndef NDEBUG
+//  std::cout << "RooGradientFunction " << this << " evaluations (in dtor): " << evalCounter() << "/" << _evalCounter_derivator << " (total/derivator)" << std::endl;
+//#endif
 }
 
 
@@ -464,9 +464,9 @@ void RooGradientFunction::Function::updateFloatVec()
 
 double RooGradientFunction::DoEval(const double *x) const {
   double value = _function(x);
-#ifndef NDEBUG
-  std::cout << "RooGradientFunction " << this << " evaluations (in DoEval): " << evalCounter() << "/" << _evalCounter_derivator << " (total/derivator)" << std::endl;
-#endif
+//#ifndef NDEBUG
+//  std::cout << "RooGradientFunction " << this << " evaluations (in DoEval): " << evalCounter() << "/" << _evalCounter_derivator << " (total/derivator)" << std::endl;
+//#endif
   return value;
 }
 
@@ -535,9 +535,9 @@ double RooGradientFunction::Function::DoEval(const double *x) const
   }
 
   _evalCounter++;
-#ifndef NDEBUG
-  std::cout << "RooGradientFunction::Function " << this << " evaluations (in DoEval): " << _evalCounter << std::endl;
-#endif
+//#ifndef NDEBUG
+//  std::cout << "RooGradientFunction::Function " << this << " evaluations (in DoEval): " << _evalCounter << std::endl;
+//#endif
   return fvalue;
 }
 
@@ -607,9 +607,9 @@ bool RooGradientFunction::sync_parameters(const double *x) const {
 
 
 void RooGradientFunction::run_derivator(unsigned int i_component) const {
-#ifndef NDEBUG
-  Int_t evalCounter_now = evalCounter();
-#endif
+//#ifndef NDEBUG
+//  Int_t evalCounter_now = evalCounter();
+//#endif
   // check whether the derivative was already calculated for this set of parameters
   if (!has_been_calculated[i_component]) {
     // Calculate the derivative etc for these parameters
@@ -618,11 +618,11 @@ void RooGradientFunction::run_derivator(unsigned int i_component) const {
              mutable_gstep()(i_component)) = _gradf.partial_derivative(_grad_params.data(), parameter_settings(), i_component);
     has_been_calculated[i_component] = true;
   }
-#ifndef NDEBUG
-  _evalCounter_derivator += evalCounter() - evalCounter_now;
-  _derivatorCounter++;
-  std::cout << "RooGradientFunction " << this << " evaluations (in run_derivator): " << evalCounter() << "/" << _evalCounter_derivator << " (total/derivator), run_derivator calls: " << _derivatorCounter << std::endl;
-#endif
+//#ifndef NDEBUG
+//  _evalCounter_derivator += evalCounter() - evalCounter_now;
+//  _derivatorCounter++;
+//  std::cout << "RooGradientFunction " << this << " evaluations (in run_derivator): " << evalCounter() << "/" << _evalCounter_derivator << " (total/derivator), run_derivator calls: " << _derivatorCounter << std::endl;
+//#endif
 }
 
 

@@ -12,9 +12,7 @@
  *****************************************************************************/
 
 #include "gtest/gtest.h"
-#include "test_lib.h"
-
-
+#include "../test_lib.h"
 
 TEST(MPFEnll, getVal) {
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);

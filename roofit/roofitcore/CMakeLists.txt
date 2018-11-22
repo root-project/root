@@ -4,10 +4,13 @@
 ############################################################################
 
 find_package(ZeroMQ REQUIRED)
-if(NOT ZeroMQ_FOUND)
-    message(ERROR "Could not find ZeroMQ!")
-endif()
 
+# this should really be used as a dependency for the RooFitCore target, but since the ROOT macros do some custom variable mangling, instead of just using target_link_libraries, defining this library as INTERFACE gives an error like this: https://gitlab.kitware.com/cmake/cmake/issues/18194 when trying to call get_property(dep_include_dirs... in RootNewMacros.cmake.
+#add_library(ZeroMQ INTERFACE)
+#target_include_directories(ZeroMQ INTERFACE ${ZeroMQ_INCLUDE_DIR})
+#target_link_libraries(ZeroMQ INTERFACE ${ZeroMQ_LIBRARY})
+# so instead, we just use the old style include_directories which is also used inside ROOT_GENERATE_DICTIONARY
+#include_directories(${ZeroMQ_INCLUDE_DIR})
 
 if(UNIX AND NOT APPLE)
     # for Linux, BSD, Solaris, Minix: add rt library for timing in RooCPUTimer
@@ -253,7 +256,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         MultiProcess/TaskManager.h
         MultiProcess/Vector.h
         MultiProcess/messages.h
-        MultiProcess/zmq.hxx
+        MultiProcess/util.h
   SOURCES
     src/Roo1DTable.cxx
     src/RooAbsAnaConvPdf.cxx
@@ -485,8 +488,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         src/MultiProcess/NLLVar.cxx
         src/MultiProcess/TaskManager.cxx
         src/MultiProcess/messages.cxx
+        src/MultiProcess/util.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
+    -I${ZeroMQ_INCLUDE_DIR} # necessary because zmq.h is included in the RooFitCore dictionary as well via MultiProcess
   DEPENDENCIES
     Core
     Hist
@@ -498,12 +503,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RIO
     MathCore
     Foam
+        RooFitZMQ
+#        ZeroMQ # as noted above, this doesn't work here, so we instead list it as a library below
   LIBRARIES
-    ${RT_LIBRARY}
+        ${RT_LIBRARY}
+        ${ZeroMQ_LIBRARY}
 )
 
-target_include_directories(RooFitCore PRIVATE ${ZeroMQ_INCLUDE_DIR})
-target_link_libraries(RooFitCore PRIVATE ${ZeroMQ_LIBRARY})
+#target_include_directories(RooFitCore PRIVATE ${ZeroMQ_INCLUDE_DIR})
 
 if(testing)
     ROOT_ADD_TEST_SUBDIRECTORY(test)

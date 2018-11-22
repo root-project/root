@@ -62,18 +62,18 @@ namespace RooFit {
 
   } // namespace MultiProcess
 
-  // forward declaration:
-  class BidirMMapPipe;
-
-  // bipe stream operators for message enum classes
-  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::M2Q& sent);
-  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::M2Q& received);
-  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::Q2M& sent);
-  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::Q2M& received);
-  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::Q2W& sent);
-  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::Q2W& received);
-  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::W2Q& sent);
-  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::W2Q& received);
+//  // forward declaration:
+//  class BidirMMapPipe;
+//
+//  // bipe stream operators for message enum classes
+//  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::M2Q& sent);
+//  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::M2Q& received);
+//  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::Q2M& sent);
+//  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::Q2M& received);
+//  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::Q2W& sent);
+//  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::Q2W& received);
+//  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::W2Q& sent);
+//  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::W2Q& received);
 
 } // namespace RooFit
 

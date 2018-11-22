@@ -17,8 +17,9 @@
 #include <string>
 #include <map>
 #include <queue>
-#include <MultiProcess/BidirMMapPipe.h>
-#include <MultiProcess/zmq.hxx>
+//#include <MultiProcess/BidirMMapPipe.h>
+#include <iostream>
+#include <RooFit_ZMQ/ZeroMQSvc.h>
 // N.B.: cannot use forward declarations for BidirMMapPipe, because we need
 // the nested BidirMMapPipe::PollVector as well.
 
@@ -84,6 +85,8 @@ namespace RooFit {
 
       void terminate() noexcept;
 
+      void close_worker_connections();
+
       void terminate_workers();
 
       void activate();
@@ -94,7 +97,7 @@ namespace RooFit {
 
       void retrieve();
 
-      void process_worker_pipe_message(BidirMMapPipe &pipe, std::size_t this_worker_id, W2Q message);
+      void process_worker_pipe_message(std::size_t this_worker_id, W2Q message);
 
       void queue_loop();
 
@@ -113,7 +116,7 @@ namespace RooFit {
       std::size_t get_worker_id();
 
 //      std::map<JobTask, double>& get_results();
-      double call_double_const_method(std::string method_key, std::size_t job_id, std::size_t worker_id_call);
+      double call_double_const_method(const std::string& method_key, std::size_t job_id, std::size_t worker_id_call);
 
 
       // -- WORKER - QUEUE COMMUNICATION --
@@ -122,32 +125,54 @@ namespace RooFit {
 
       template<typename T, typename ... Ts>
       void send_from_worker_to_queue(T item, Ts ... items) {
-        *this_worker_pipe << item;
+        try {
+          zmqSvc().send(*this_worker_qw_socket, item);
+        } catch (zmq::error_t& e) {
+          std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
+          throw;
+        };
+//        *this_worker_pipe << item;
 //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
         send_from_worker_to_queue(items...);
       }
 
       template <typename value_t>
       value_t receive_from_worker_on_queue(std::size_t this_worker_id) {
-        value_t value;
-        *worker_pipes[this_worker_id] >> value;
-        return value;
+        try {
+          auto value = zmqSvc().receive<value_t>(*qw_sockets[this_worker_id]);
+          return value;
+        } catch (zmq::error_t& e) {
+          std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
+          throw;
+        };
+//        *worker_pipes[this_worker_id] >> value;
       }
 
       void send_from_queue_to_worker(std::size_t this_worker_id);
 
       template<typename T, typename ... Ts>
       void send_from_queue_to_worker(std::size_t this_worker_id, T item, Ts ... items) {
-        *worker_pipes[this_worker_id] << item;
+//        *worker_pipes[this_worker_id] << item;
+        try {
+          zmqSvc().send(*qw_sockets[this_worker_id], item);
+        } catch (zmq::error_t& e) {
+          std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
+          throw;
+        };
 //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
         send_from_queue_to_worker(this_worker_id, items...);
       }
 
       template <typename value_t>
       value_t receive_from_queue_on_worker() {
-        value_t value;
-        *this_worker_pipe >> value;
-        return value;
+        try {
+          auto value = zmqSvc().receive<value_t>(*this_worker_qw_socket);
+          return value;
+        } catch (zmq::error_t& e) {
+          std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
+          throw;
+        };
+//        *this_worker_pipe >> value;
       }
 
 
@@ -157,16 +182,27 @@ namespace RooFit {
 
       template<typename T, typename ... Ts>
       void send_from_queue_to_master(T item, Ts ... items) {
-        *queue_pipe << item;
+//        *queue_pipe << item;
+        try {
+          zmqSvc().send(*mq_socket, item);
+        } catch (zmq::error_t& e) {
+          std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
+          throw;
+        };
 //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
         send_from_queue_to_master(items...);
       }
 
       template <typename value_t>
       value_t receive_from_queue_on_master() {
-        value_t value;
-        *queue_pipe >> value;
-        return value;
+        try {
+          auto value = zmqSvc().receive<value_t>(*mq_socket);
+          return value;
+        } catch (zmq::error_t& e) {
+          std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
+          throw;
+        };
+//        *queue_pipe >> value;
       }
 
       void send_from_master_to_queue();
@@ -185,15 +221,16 @@ namespace RooFit {
     private:
       void initialize_processes(bool cpu_pinning = true);
       void shutdown_processes();
-      BidirMMapPipe::PollVector get_poll_vector();
+//      BidirMMapPipe::PollVector get_poll_vector();
 
       std::size_t N_workers;
-      std::vector<std::unique_ptr<zmq::socket_t>> qw_sockets;
+      std::vector<ZmqLingeringSocketPtr<> > qw_sockets;
       std::vector<pid_t> worker_pids;  // master must wait for workers after completion, for which it needs their PIDs
+      pid_t queue_pid;
       // for convenience on the worker processes, we use this_worker_pipe as an
       // alias for worker_pipes.back()
-      std::unique_ptr <BidirMMapPipe> this_qw_socket;
-      std::unique_ptr <zmq::socket_t> mq_socket;
+      ZmqLingeringSocketPtr<> this_worker_qw_socket;
+      ZmqLingeringSocketPtr<> mq_socket;
       std::size_t worker_id;
       bool _is_master = false;
       bool _is_queue = false;
@@ -203,7 +240,7 @@ namespace RooFit {
       bool queue_activated = false;
       bool work_mode = false;
       bool processes_initialized = false;
-      std::unique_ptr<zmq::context_t> zmq_context;
+//      std::unique_ptr<zmq::context_t> zmq_context;
 
       static std::map<std::size_t, Job *> job_objects;
       static std::size_t job_counter;

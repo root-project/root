@@ -155,14 +155,14 @@ namespace RooFit {
     }
 
     if (vx != vx_fVal_cache) {
-#ifndef NDEBUG
-      ++fVal_eval_counter;
-#endif
+//#ifndef NDEBUG
+//      ++fVal_eval_counter;
+//#endif
       vx_fVal_cache = vx;
       fVal = (*fFunction)(vx_external.data());  // value of function at given points
-#ifndef NDEBUG
-      std::cout << "NumericalDerivatorMinuit2::setup_differentiate, fVal evaluations: " << fVal_eval_counter << std::endl;
-#endif
+//#ifndef NDEBUG
+//      std::cout << "NumericalDerivatorMinuit2::setup_differentiate, fVal evaluations: " << fVal_eval_counter << std::endl;
+//#endif
     }
 
     dfmin = 8. * precision.Eps2() * (std::abs(fVal) + Up);
