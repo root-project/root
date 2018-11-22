@@ -3039,7 +3039,12 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "   virtual ~IClassifierReader() {}" << std::endl;
    fout << std::endl;
    fout << "   // return classifier response" << std::endl;
-   fout << "   virtual double GetMvaValue( const std::vector<double>& inputValues ) const = 0;" << std::endl;
+   if(GetAnalysisType() == Types::kMulticlass) {
+      fout << "   virtual std::vector<Float_t>& GetMulticlassValues( const std::vector<double>& inputValues ) const = 0;" << std::endl;
+   }
+   else {
+      fout << "   virtual double GetMvaValue( const std::vector<double>& inputValues ) const = 0;" << std::endl;
+   }
    fout << std::endl;
    fout << "   // returns classifier status" << std::endl;
    fout << "   bool IsStatusClean() const { return fStatusIsClean; }" << std::endl;
@@ -3118,7 +3123,12 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "   // the classifier response" << std::endl;
    fout << "   // \"inputValues\" is a vector of input values in the same order as the" << std::endl;
    fout << "   // variables given to the constructor" << std::endl;
-   fout << "   double GetMvaValue( const std::vector<double>& inputValues ) const override;" << std::endl;
+   if(GetAnalysisType() == Types::kMulticlass) {
+      fout << "   std::vector<Float_t>& GetMulticlassValues( const std::vector<double>& inputValues ) const override;" << std::endl;
+   }
+   else {
+      fout << "   double GetMvaValue( const std::vector<double>& inputValues ) const override;" << std::endl;
+   }
    fout << std::endl;
    fout << " private:" << std::endl;
    fout << std::endl;
@@ -3152,53 +3162,88 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << std::endl;
    fout << "   // initialize internal variables" << std::endl;
    fout << "   void Initialize();" << std::endl;
-   fout << "   double GetMvaValue__( const std::vector<double>& inputValues ) const;" << std::endl;
+   if(GetAnalysisType() == Types::kMulticlass) {
+      fout << "   std::vector<Float_t>& GetMulticlassValues__( const std::vector<double>& inputValues ) const;" << std::endl;
+   }
+   else {
+      fout << "   double GetMvaValue__( const std::vector<double>& inputValues ) const;" << std::endl;
+   }
    fout << "" << std::endl;
    fout << "   // private members (method specific)" << std::endl;
 
    // call the classifier specific output (the classifier must close the class !)
    MakeClassSpecific( fout, className );
 
-   fout << "   inline double " << className << "::GetMvaValue( const std::vector<double>& inputValues ) const" << std::endl;
-   fout << "   {" << std::endl;
-   fout << "      // classifier response value" << std::endl;
-   fout << "      double retval = 0;" << std::endl;
+   if(GetAnalysisType() == Types::kMulticlass) {
+      fout << "inline std::vector<Float_t>& " << className <<  "::GetMulticlassValues( const std::vector<double>& inputValues ) const" << std::endl;
+   }
+   else {
+      fout << "inline double " << className << "::GetMvaValue( const std::vector<double>& inputValues ) const" << std::endl;
+   }
+   fout << "{" << std::endl;
+   fout << "   // classifier response value" << std::endl;
+   if(GetAnalysisType() == Types::kMulticlass) {
+      fout << "   std::vector<Float_t> *retval = nullptr;" << std::endl;
+   }
+   else {
+      fout << "   double retval = 0;" << std::endl;
+   }
    fout << std::endl;
-   fout << "      // classifier response, sanity check first" << std::endl;
-   fout << "      if (!IsStatusClean()) {" << std::endl;
-   fout << "         std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": cannot return classifier response\"" << std::endl;
-   fout << "                   << \" because status is dirty\" << std::endl;" << std::endl;
-   fout << "         retval = 0;" << std::endl;
-   fout << "      }" << std::endl;
-   fout << "      else {" << std::endl;
+   fout << "   // classifier response, sanity check first" << std::endl;
+   fout << "   if (!IsStatusClean()) {" << std::endl;
+   fout << "      std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": cannot return classifier response\"" << std::endl;
+   fout << "                << \" because status is dirty\" << std::endl;" << std::endl;
+   fout << "   }" << std::endl;
+   fout << "   else {" << std::endl;
    if (IsNormalised()) {
-      fout << "            // normalise variables" << std::endl;
-      fout << "            std::vector<double> iV;" << std::endl;
-      fout << "            iV.reserve(inputValues.size());" << std::endl;
-      fout << "            int ivar = 0;" << std::endl;
-      fout << "            for (std::vector<double>::const_iterator varIt = inputValues.begin();" << std::endl;
-      fout << "                 varIt != inputValues.end(); varIt++, ivar++) {" << std::endl;
-      fout << "               iV.push_back(NormVariable( *varIt, fVmin[ivar], fVmax[ivar] ));" << std::endl;
-      fout << "            }" << std::endl;
+      fout << "         // normalise variables" << std::endl;
+      fout << "         std::vector<double> iV;" << std::endl;
+      fout << "         iV.reserve(inputValues.size());" << std::endl;
+      fout << "         int ivar = 0;" << std::endl;
+      fout << "         for (std::vector<double>::const_iterator varIt = inputValues.begin();" << std::endl;
+      fout << "              varIt != inputValues.end(); varIt++, ivar++) {" << std::endl;
+      fout << "            iV.push_back(NormVariable( *varIt, fVmin[ivar], fVmax[ivar] ));" << std::endl;
+      fout << "         }" << std::endl;
       if (GetTransformationHandler().GetTransformationList().GetSize() != 0 && GetMethodType() != Types::kLikelihood &&
           GetMethodType() != Types::kHMatrix) {
-         fout << "            Transform( iV, -1 );" << std::endl;
+         fout << "         Transform( iV, -1 );" << std::endl;
       }
-      fout << "            retval = GetMvaValue__( iV );" << std::endl;
+      
+      if(GetAnalysisType() == Types::kMulticlass) {
+         fout << "         retval = &GetMulticlassValues__( iV );" << std::endl;
+      }
+      else {
+         fout << "         retval = GetMvaValue__( iV );" << std::endl;
+      }
    } else {
       if (GetTransformationHandler().GetTransformationList().GetSize() != 0 && GetMethodType() != Types::kLikelihood &&
           GetMethodType() != Types::kHMatrix) {
-         fout << "            std::vector<double> iV(inputValues);" << std::endl;
-         fout << "            Transform( iV, -1 );" << std::endl;
-         fout << "            retval = GetMvaValue__( iV );" << std::endl;
+         fout << "         std::vector<double> iV(inputValues);" << std::endl;
+         fout << "         Transform( iV, -1 );" << std::endl;
+         if(GetAnalysisType() == Types::kMulticlass) {
+            fout << "         retval = &GetMulticlassValues__( iV );" << std::endl;
+         }
+         else {
+            fout << "         retval = GetMvaValue__( iV );" << std::endl;
+         }
       } else {
-         fout << "            retval = GetMvaValue__( inputValues );" << std::endl;
+         if(GetAnalysisType() == Types::kMulticlass) {
+            fout << "         retval = &GetMulticlassValues__( inputValues );" << std::endl;
+         }
+         else {
+            fout << "         retval = GetMvaValue__( inputValues );" << std::endl;
+         }
       }
    }
-   fout << "      }" << std::endl;
-   fout << std::endl;
-   fout << "      return retval;" << std::endl;
    fout << "   }" << std::endl;
+   fout << std::endl;
+   if(GetAnalysisType() == Types::kMulticlass) {
+      fout << "   return *retval;" << std::endl;
+   }
+   else {
+      fout << "   return retval;" << std::endl;
+   }
+   fout << "}" << std::endl;
 
    // create output for transformation - if any
    if (GetTransformationHandler().GetTransformationList().GetSize()!=0)
