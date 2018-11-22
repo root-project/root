@@ -142,8 +142,9 @@ size_t ROOT::Detail::RRawFile::Pread(void *buffer, size_t nbytes, std::uint64_t 
       size_t res = DoPread(fBuffer, fOptions.fBlockSize, offset);
       fBufferOffset = offset;
       fBufferSize = res;
-      memcpy(buffer, fBuffer, std::min(fBufferSize, nbytes));
-      return res;
+      size_t outputBytes = std::min(fBufferSize, nbytes);
+      memcpy(buffer, fBuffer, outputBytes);
+      return outputBytes;
    }
 
    // Request can be (partially) served from the cache
