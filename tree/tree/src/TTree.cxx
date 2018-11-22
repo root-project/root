@@ -5599,7 +5599,7 @@ void TTree::SortBranchesByTime()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the entry list, set to this tree
+///Returns the entry list assigned to this tree
 
 TEntryList* TTree::GetEntryList()
 {
