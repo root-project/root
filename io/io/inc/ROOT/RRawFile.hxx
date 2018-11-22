@@ -27,31 +27,52 @@ class RRawFile;
  * \class RRawFile RRawFile.hxx
  * \ingroup IO
  *
- * Read-only, usually remote file
- * Features: lazy opening, control over buffer size, auto linebreak detection
+ * The RRawFile provides read-only access to local and remote files. Data can be read either byte-wise or line-wise.
+ * The RRawFile base class provides line-wise access and buffering for byte-wise access. Derived classes provide the
+ * low-level read operations, e.g. from a local file system or from a web server. The RRawFile is used for non-root
+ * RDataSource implementations.
+ *
+ * Files are addressed by URL consisting of a transport protocol part and a location, like file:///path/to/data
+ * If the transport protocol part and the :// separator are missing, the default protocol is local file.
+ *
+ * RRawFiles are not copyable.
  */
 class RRawFile {
 public:
+   /// Derived classes do not necessarily need to provide file size information but they can return "not known" instead
    static constexpr std::uint64_t kUnknownFileSize = std::uint64_t(-1);
+   /// kAuto detects the line break from the first line, kSystem picks the system's default
    enum class ELineBreaks { kAuto, kSystem, kUnix, kWindows };
+   /// On construction, an ROptions parameter can customized the RRawFile behavior
    struct ROptions {
       ELineBreaks fLineBreak;
+      /**
+       * Read at least fBlockSize bytes at a time. A value of zero turns off I/O buffering. A negative value indicates
+       * that the protocol-dependent default block size should be used.
+       */
       int fBlockSize;
       ROptions() : fLineBreak(ELineBreaks::kAuto), fBlockSize(-1) { }
    };
 
 private:
+   /// Where in the open file does fBuffer start
    std::uint64_t fBufferOffset;
+   /// The number of currently buffered bytes in fBuffer
    size_t fBufferSize;
+   /// An I/O buffer with data from the file
    unsigned char *fBuffer;
 
 protected:
    std::string fUrl;
    ROptions fOptions;
+   /// The current position in the file, which can be changed by Seek, Read, and Readln
    std::uint64_t fFilePos;
+   /// The cached file size
    std::uint64_t fFileSize;
 
+   /// Derived classes should implement low-level reading without buffering
    virtual size_t DoPread(void *buffer, size_t nbytes, std::uint64_t offset) = 0;
+   /// Derived classes should return the file size or kUnknownFileSize
    virtual std::uint64_t DoGetSize() = 0;
 
 public:
@@ -60,15 +81,26 @@ public:
    RRawFile& operator=(const RRawFile&) = delete;
    virtual ~RRawFile();
 
+   /// Factory method that returns a suitable concrete implementation according to the transport in the url
    static RRawFile* Create(std::string_view url, ROptions options = ROptions());
+   /// Returns only the file location, e.g. "server/file" for http://server/file
    static std::string GetLocation(std::string_view url);
+   /// Returns only the transport protocol, e.g. "http" for http://server/file
    static std::string GetTransport(std::string_view url);
 
+   /**
+    * Buffered read from a random position. Returns the actual number of bytes read.
+    * Short reads indicate the end of the file
+    */
    size_t Pread(void *buffer, size_t nbytes, std::uint64_t offset);
+   /// Read from fFilePos offset. Returns the actual number of bytes read.
    size_t Read(void *buffer, size_t nbytes);
+   /// Change the cursor fFilePos
    void Seek(std::uint64_t offset);
+   /// Returns the size of the file
    std::uint64_t GetSize();
 
+   /// Read the next line starting from the current value of fFilePos. Returns false if the end of the file is reached.
    bool Readln(std::string& line);
 };
 
