@@ -23,7 +23,7 @@ Int_t mp001_fillHistos()
    auto workItem = [](UInt_t workerID) {
       // One generator, file and ntuple per worker
       TRandom3 workerRndm(workerID); // Change the seed
-      TFile f(Form("myFile_%u.root", workerID), "RECREATE");
+      TFile f(Form("myFile_mp001_%u.root", workerID), "RECREATE");
       TH1F h(Form("myHisto_%u", workerID), "The Histogram", 64, -4, 4);
       for (UInt_t i = 0; i < nNumbers; ++i) {
          h.Fill(workerRndm.Gaus());
