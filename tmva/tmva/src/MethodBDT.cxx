@@ -2767,11 +2767,12 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
    fout << "};" << std::endl << std::endl;
 
    if(GetAnalysisType() == Types::kMulticlass) {
-      fout << "std::vector<Float_t>& ReadBDTG::GetMulticlassValues__( const std::vector<double>& inputValues ) const" << std::endl;
+      fout << "std::vector<Float_t> ReadBDTG::GetMulticlassValues__( const std::vector<double>& inputValues ) const" << std::endl;
       fout << "{" << std::endl;
-      fout << "   std::vector<Float_t> *fMulticlassReturnVal = new std::vector<Float_t>();" << std::endl;
-      fout << std::endl;
       fout << "   UInt_t nClasses = " << DataInfo().GetNClasses() << ";" << std::endl;
+      fout << "   std::vector<Float_t> fMulticlassReturnVal;" << std::endl;
+      fout << "   fMulticlassReturnVal.reserve(nClasses);" << std::endl;
+      fout << std::endl;
       fout << "   std::vector<Double_t> temp(nClasses);" << std::endl;
       fout << "   auto forestSize = fForest.size();" << std::endl;
       fout << "   // trees 0, nClasses, 2*nClasses, ... belong to class 0" << std::endl;
@@ -2797,13 +2798,12 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
       fout << "         if(iClass!=j)" << std::endl;
       fout << "            norm += temp[j] / temp[iClass];" << std::endl;
       fout << "      }" << std::endl;
-      fout << "      (*fMulticlassReturnVal).push_back(1.0/(1.0+norm));" << std::endl;
+      fout << "      fMulticlassReturnVal.push_back(1.0/(1.0+norm));" << std::endl;
       fout << "   }" << std::endl;
       fout << std::endl;
-      fout << "   return *fMulticlassReturnVal;" << std::endl;
+      fout << "   return fMulticlassReturnVal;" << std::endl;
       fout << "}" << std::endl;
-   }
-   else {
+   } else {
       fout << "double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << std::endl;
       fout << "{" << std::endl;
       fout << "   double myMVA = 0;" << std::endl;
@@ -2862,7 +2862,7 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
    }
    fout << "   return;" << std::endl;
    fout << "};" << std::endl;
-   fout << " " << std::endl;
+   fout << std::endl;
    fout << "// Clean up" << std::endl;
    fout << "inline void " << className << "::Clear() " << std::endl;
    fout << "{" << std::endl;
@@ -2883,18 +2883,18 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    nodeName.Append("Node");
    fout << "#include <algorithm>" << std::endl;
    fout << "#include <limits>" << std::endl;
-   fout << "   " << std::endl;
+   fout << std::endl;
    //fout << "#ifndef NN" << std::endl; commented out on purpose see next line
    fout << "#define NN new "<<nodeName << std::endl; // NN definition depends on individual methods. Important to have NO #ifndef if several BDT methods compile together
    //fout << "#endif" << std::endl; commented out on purpose see previous line
-   fout << "   " << std::endl;
+   fout << std::endl;
    fout << "#ifndef "<<nodeName<<"__def" << std::endl;
    fout << "#define "<<nodeName<<"__def" << std::endl;
-   fout << "   " << std::endl;
+   fout << std::endl;
    fout << "class "<<nodeName<<" {" << std::endl;
-   fout << "   " << std::endl;
+   fout << std::endl;
    fout << "public:" << std::endl;
-   fout << "   " << std::endl;
+   fout << std::endl;
    fout << "   // constructor of an essentially \"empty\" node floating in space" << std::endl;
    fout << "   "<<nodeName<<" ( "<<nodeName<<"* left,"<<nodeName<<"* right," << std::endl;
    if (fUseFisherCuts){
@@ -2946,14 +2946,14 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    fout << "   double                  fPurity;   // Purity of node from training"<< std::endl;
    fout << "   double                  fResponse; // Regression response value of node" << std::endl;
    fout << "}; " << std::endl;
-   fout << "   " << std::endl;
+   fout << std::endl;
    fout << "//_______________________________________________________________________" << std::endl;
    fout << "   "<<nodeName<<"::~"<<nodeName<<"()" << std::endl;
    fout << "{" << std::endl;
    fout << "   if (fLeft  != NULL) delete fLeft;" << std::endl;
    fout << "   if (fRight != NULL) delete fRight;" << std::endl;
    fout << "}; " << std::endl;
-   fout << "   " << std::endl;
+   fout << std::endl;
    fout << "//_______________________________________________________________________" << std::endl;
    fout << "bool "<<nodeName<<"::GoesRight( const std::vector<double>& inputValues ) const" << std::endl;
    fout << "{" << std::endl;
@@ -2974,7 +2974,7 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    fout << "   if (fCutType == true) return result; //the cuts are selecting Signal ;" << std::endl;
    fout << "   else return !result;" << std::endl;
    fout << "}" << std::endl;
-   fout << "   " << std::endl;
+   fout << std::endl;
    fout << "//_______________________________________________________________________" << std::endl;
    fout << "bool "<<nodeName<<"::GoesLeft( const std::vector<double>& inputValues ) const" << std::endl;
    fout << "{" << std::endl;
@@ -2982,9 +2982,9 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    fout << "   if (!this->GoesRight(inputValues)) return true;" << std::endl;
    fout << "   else return false;" << std::endl;
    fout << "}" << std::endl;
-   fout << "   " << std::endl;
+   fout << std::endl;
    fout << "#endif" << std::endl;
-   fout << "   " << std::endl;
+   fout << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
