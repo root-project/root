@@ -2765,50 +2765,93 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
    fout << "   std::vector<"<<nodeName<<"*> fForest;       // i.e. root nodes of decision trees" << std::endl;
    fout << "   std::vector<double>                fBoostWeights; // the weights applied in the individual boosts" << std::endl;
    fout << "};" << std::endl << std::endl;
-   fout << "double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << std::endl;
-   fout << "{" << std::endl;
-   fout << "   double myMVA = 0;" << std::endl;
-   if (fDoPreselection){
-      for (UInt_t ivar = 0; ivar< fIsLowBkgCut.size(); ivar++){
-         if (fIsLowBkgCut[ivar]){
-            fout << "   if (inputValues["<<ivar<<"] < " << fLowBkgCut[ivar] << ") return -1;  // is background preselection cut" << std::endl;
-         }
-         if (fIsLowSigCut[ivar]){
-            fout << "   if (inputValues["<<ivar<<"] < "<< fLowSigCut[ivar] << ") return  1;  // is signal preselection cut" << std::endl;
-         }
-         if (fIsHighBkgCut[ivar]){
-            fout << "   if (inputValues["<<ivar<<"] > "<<fHighBkgCut[ivar] <<")  return -1;  // is background preselection cut" << std::endl;
-         }
-         if (fIsHighSigCut[ivar]){
-            fout << "   if (inputValues["<<ivar<<"] > "<<fHighSigCut[ivar]<<")  return  1;  // is signal preselection cut" << std::endl;
+
+   if(GetAnalysisType() == Types::kMulticlass) {
+      fout << "std::vector<Float_t>& ReadBDTG::GetMulticlassValues__( const std::vector<double>& inputValues ) const" << std::endl;
+      fout << "{" << std::endl;
+      fout << "   std::vector<Float_t> *fMulticlassReturnVal = new std::vector<Float_t>();" << std::endl;
+      fout << std::endl;
+      fout << "   UInt_t nClasses = " << DataInfo().GetNClasses() << ";" << std::endl;
+      fout << "   std::vector<Double_t> temp(nClasses);" << std::endl;
+      fout << "   auto forestSize = fForest.size();" << std::endl;
+      fout << "   // trees 0, nClasses, 2*nClasses, ... belong to class 0" << std::endl;
+      fout << "   // trees 1, nClasses+1, 2*nClasses+1, ... belong to class 1 and so forth" << std::endl;
+      fout << "   UInt_t classOfTree = 0;" << std::endl;
+      fout << "   for (UInt_t itree = 0; itree < forestSize; ++itree) {" << std::endl;
+      fout << "      BDTGNode *current = fForest[itree];" << std::endl;
+      fout << "      while (current->GetNodeType() == 0) { //intermediate node" << std::endl;
+      fout << "         if (current->GoesRight(inputValues)) current=(BDTGNode*)current->GetRight();" << std::endl;
+      fout << "         else current=(BDTGNode*)current->GetLeft();" << std::endl;
+      fout << "      }" << std::endl;
+      fout << "      temp[classOfTree] += current->GetResponse();" << std::endl;
+      fout << "      if (++classOfTree == nClasses) classOfTree = 0; // cheap modulo" << std::endl;
+      fout << "   }" << std::endl;
+      fout << std::endl;
+      fout << "   // we want to calculate sum of exp(temp[j] - temp[i]) for all i,j (i!=j)" << std::endl;
+      fout << "   // first calculate exp(), then replace minus with division." << std::endl;
+      fout << "   std::transform(temp.begin(), temp.end(), temp.begin(), [](Double_t d){return exp(d);});" << std::endl;
+      fout << std::endl;
+      fout << "   for(UInt_t iClass=0; iClass<nClasses; iClass++){" << std::endl;
+      fout << "      Double_t norm = 0.0;" << std::endl;
+      fout << "      for(UInt_t j=0;j<nClasses;j++){" << std::endl;
+      fout << "         if(iClass!=j)" << std::endl;
+      fout << "            norm += temp[j] / temp[iClass];" << std::endl;
+      fout << "      }" << std::endl;
+      fout << "      (*fMulticlassReturnVal).push_back(1.0/(1.0+norm));" << std::endl;
+      fout << "   }" << std::endl;
+      fout << std::endl;
+      fout << "   return *fMulticlassReturnVal;" << std::endl;
+      fout << "}" << std::endl;
+   }
+   else {
+      fout << "double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << std::endl;
+      fout << "{" << std::endl;
+      fout << "   double myMVA = 0;" << std::endl;
+      if (fDoPreselection){
+         for (UInt_t ivar = 0; ivar< fIsLowBkgCut.size(); ivar++){
+            if (fIsLowBkgCut[ivar]){
+               fout << "   if (inputValues["<<ivar<<"] < " << fLowBkgCut[ivar] << ") return -1;  // is background preselection cut" << std::endl;
+            }
+            if (fIsLowSigCut[ivar]){
+               fout << "   if (inputValues["<<ivar<<"] < "<< fLowSigCut[ivar] << ") return  1;  // is signal preselection cut" << std::endl;
+            }
+            if (fIsHighBkgCut[ivar]){
+               fout << "   if (inputValues["<<ivar<<"] > "<<fHighBkgCut[ivar] <<")  return -1;  // is background preselection cut" << std::endl;
+            }
+            if (fIsHighSigCut[ivar]){
+               fout << "   if (inputValues["<<ivar<<"] > "<<fHighSigCut[ivar]<<")  return  1;  // is signal preselection cut" << std::endl;
+            }
          }
       }
+
+      if (fBoostType!="Grad"){
+         fout << "   double norm  = 0;" << std::endl;
+      }
+      fout << "   for (unsigned int itree=0; itree<fForest.size(); itree++){" << std::endl;
+      fout << "      "<<nodeName<<" *current = fForest[itree];" << std::endl;
+      fout << "      while (current->GetNodeType() == 0) { //intermediate node" << std::endl;
+      fout << "         if (current->GoesRight(inputValues)) current=("<<nodeName<<"*)current->GetRight();" << std::endl;
+      fout << "         else current=("<<nodeName<<"*)current->GetLeft();" << std::endl;
+      fout << "      }" << std::endl;
+      if (fBoostType=="Grad"){
+         fout << "      myMVA += current->GetResponse();" << std::endl;
+      }else{
+         if (fUseYesNoLeaf) fout << "      myMVA += fBoostWeights[itree] *  current->GetNodeType();" << std::endl;
+         else               fout << "      myMVA += fBoostWeights[itree] *  current->GetPurity();" << std::endl;
+         fout << "      norm  += fBoostWeights[itree];" << std::endl;
+      }
+      fout << "   }" << std::endl;
+      if (fBoostType=="Grad"){
+         fout << "   return 2.0/(1.0+exp(-2.0*myMVA))-1.0;" << std::endl;
+      }
+      else fout << "   return myMVA /= norm;" << std::endl;
+      fout << "}" << std::endl << std::endl;
    }
 
-   if (fBoostType!="Grad"){
-      fout << "   double norm  = 0;" << std::endl;
-   }
-   fout << "   for (unsigned int itree=0; itree<fForest.size(); itree++){" << std::endl;
-   fout << "      "<<nodeName<<" *current = fForest[itree];" << std::endl;
-   fout << "      while (current->GetNodeType() == 0) { //intermediate node" << std::endl;
-   fout << "         if (current->GoesRight(inputValues)) current=("<<nodeName<<"*)current->GetRight();" << std::endl;
-   fout << "         else current=("<<nodeName<<"*)current->GetLeft();" << std::endl;
-   fout << "      }" << std::endl;
-   if (fBoostType=="Grad"){
-      fout << "      myMVA += current->GetResponse();" << std::endl;
-   }else{
-      if (fUseYesNoLeaf) fout << "      myMVA += fBoostWeights[itree] *  current->GetNodeType();" << std::endl;
-      else               fout << "      myMVA += fBoostWeights[itree] *  current->GetPurity();" << std::endl;
-      fout << "      norm  += fBoostWeights[itree];" << std::endl;
-   }
-   fout << "   }" << std::endl;
-   if (fBoostType=="Grad"){
-      fout << "   return 2.0/(1.0+exp(-2.0*myMVA))-1.0;" << std::endl;
-   }
-   else fout << "   return myMVA /= norm;" << std::endl;
-   fout << "};" << std::endl << std::endl;
    fout << "void " << className << "::Initialize()" << std::endl;
    fout << "{" << std::endl;
+   fout << "  double inf = std::numeric_limits<double>::infinity();" << std::endl;
+   fout << "  double nan = std::numeric_limits<double>::quiet_NaN();" << std::endl;
    //Now for each decision tree, write directly the constructors of the nodes in the tree structure
    for (UInt_t itree=0; itree<GetNTrees(); itree++) {
       fout << "  // itree = " << itree << std::endl;
@@ -2827,6 +2870,7 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
    fout << "      delete fForest[itree]; " << std::endl;
    fout << "   }" << std::endl;
    fout << "}" << std::endl;
+   fout << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2837,6 +2881,9 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    TString nodeName = className;
    nodeName.ReplaceAll("Read","");
    nodeName.Append("Node");
+   fout << "#include <algorithm>" << std::endl;
+   fout << "#include <limits>" << std::endl;
+   fout << "   " << std::endl;
    //fout << "#ifndef NN" << std::endl; commented out on purpose see next line
    fout << "#define NN new "<<nodeName << std::endl; // NN definition depends on individual methods. Important to have NO #ifndef if several BDT methods compile together
    //fout << "#endif" << std::endl; commented out on purpose see previous line
