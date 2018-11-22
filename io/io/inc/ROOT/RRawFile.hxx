@@ -21,6 +21,8 @@
 namespace ROOT {
 namespace Detail {
 
+class RRawFile;
+
 /**
  * \class RRawFile RRawFile.hxx
  * \ingroup IO
@@ -33,8 +35,14 @@ public:
    enum class ELineBreaks { kAuto, kSystem, kUnix, kWindows };
    struct ROptions {
       ELineBreaks fLineBreak;
-      ROptions() : fLineBreak(ELineBreaks::kAuto) { }
+      int fBlockSize;
+      ROptions() : fLineBreak(ELineBreaks::kAuto), fBlockSize(-1) { }
    };
+
+private:
+   std::uint64_t fBufferOffset;
+   size_t fBufferSize;
+   unsigned char *fBuffer;
 
 protected:
    std::string fUrl;
@@ -49,7 +57,7 @@ public:
    RRawFile(const std::string &url, ROptions options);
    RRawFile(const RRawFile&) = delete;
    RRawFile& operator=(const RRawFile&) = delete;
-   virtual ~RRawFile() = default;
+   virtual ~RRawFile();
 
    static RRawFile* Create(std::string_view url, ROptions options = ROptions());
    static std::string GetLocation(std::string_view url);

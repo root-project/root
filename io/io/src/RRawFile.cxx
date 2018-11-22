@@ -17,6 +17,9 @@
 #include "ROOT/RRawFileUnix.hxx"
 #endif
 
+#include "TError.h"
+
+#include <algorithm>
 #include <cerrno>
 #include <cstddef>
 #include <cstdint>
@@ -34,17 +37,28 @@ const char* kLineBreakTokens[] = {"", "\n", "\n", "\r\n"};
 constexpr unsigned kLineBreakTokenSizes[] = {0, 1, 1, 2};
 #endif
 constexpr unsigned kLineBuffer = 128;
+constexpr int kDefaultBlockSizeLocal = 4096;
 } // anonymous namespace
 
 
 ROOT::Detail::RRawFile::RRawFile(
    const std::string &url,
    ROOT::Detail::RRawFile::ROptions options)
-   : fUrl(url)
+   : fBufferOffset(0)
+   , fBufferSize(0)
+   , fBuffer(nullptr)
+   , fUrl(url)
    , fOptions(options)
    , fFilePos(0)
    , fFileSize(kUnknownFileSize)
 {
+   if (fOptions.fBlockSize > 0)
+      fBuffer = new unsigned char[fOptions.fBlockSize];
+}
+
+
+ROOT::Detail::RRawFile::~RRawFile() {
+   delete[] fBuffer;
 }
 
 
@@ -85,6 +99,8 @@ ROOT::Detail::RRawFile* ROOT::Detail::RRawFile::Create(std::string_view url, ROp
 {
    std::string transport = GetTransport(url);
    if (transport == "file") {
+      if (options.fBlockSize < 0)
+        options.fBlockSize = kDefaultBlockSizeLocal;
 #ifdef _WIN32
       return new RRawFileWin(std::string(url), options);
 #else
@@ -115,7 +131,43 @@ std::string ROOT::Detail::RRawFile::GetTransport(std::string_view url)
 
 size_t ROOT::Detail::RRawFile::Pread(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   return DoPread(buffer, nbytes, offset);
+   R__ASSERT(fOptions.fBlockSize >= 0);
+
+   // "Large" reads are served directly, bypassing the cache
+   if (nbytes > static_cast<unsigned>(fOptions.fBlockSize))
+      return DoPread(buffer, nbytes, offset);
+
+   // Jumped back
+   if (offset < fBufferOffset) {
+      size_t res = DoPread(fBuffer, fOptions.fBlockSize, offset);
+      fBufferOffset = offset;
+      fBufferSize = res;
+      memcpy(buffer, fBuffer, std::min(fBufferSize, nbytes));
+      return res;
+   }
+
+   // Request can be (partially) served from the cache
+   size_t totalBytes = 0;
+   std::uint64_t offsetInBuffer = offset - fBufferOffset;
+   if (offsetInBuffer < static_cast<std::uint64_t>(fBufferSize)) {
+      size_t bytesInBuffer = std::min(nbytes, fBufferSize - offsetInBuffer);
+      memcpy(buffer, fBuffer + offsetInBuffer, bytesInBuffer);
+      nbytes -= bytesInBuffer;
+      offset += bytesInBuffer;
+      buffer = reinterpret_cast<unsigned char *>(buffer) + bytesInBuffer;
+      totalBytes = bytesInBuffer;
+   }
+
+   // Read the rest as a new block
+   if (nbytes > 0) {
+      size_t res = DoPread(fBuffer, fOptions.fBlockSize, offset);
+      fBufferOffset = offset;
+      fBufferSize = res;
+      size_t remainingBytes = std::min(fBufferSize, nbytes);
+      memcpy(buffer, fBuffer, remainingBytes);
+      totalBytes += remainingBytes;
+   }
+   return totalBytes;
 }
 
 
