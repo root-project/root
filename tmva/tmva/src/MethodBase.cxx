@@ -3040,9 +3040,8 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << std::endl;
    fout << "   // return classifier response" << std::endl;
    if(GetAnalysisType() == Types::kMulticlass) {
-      fout << "   virtual std::vector<Float_t>& GetMulticlassValues( const std::vector<double>& inputValues ) const = 0;" << std::endl;
-   }
-   else {
+      fout << "   virtual std::vector<Float_t> GetMulticlassValues( const std::vector<double>& inputValues ) const = 0;" << std::endl;
+   } else {
       fout << "   virtual double GetMvaValue( const std::vector<double>& inputValues ) const = 0;" << std::endl;
    }
    fout << std::endl;
@@ -3124,9 +3123,8 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "   // \"inputValues\" is a vector of input values in the same order as the" << std::endl;
    fout << "   // variables given to the constructor" << std::endl;
    if(GetAnalysisType() == Types::kMulticlass) {
-      fout << "   std::vector<Float_t>& GetMulticlassValues( const std::vector<double>& inputValues ) const override;" << std::endl;
-   }
-   else {
+      fout << "   std::vector<Float_t> GetMulticlassValues( const std::vector<double>& inputValues ) const override;" << std::endl;
+   } else {
       fout << "   double GetMvaValue( const std::vector<double>& inputValues ) const override;" << std::endl;
    }
    fout << std::endl;
@@ -3163,9 +3161,8 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "   // initialize internal variables" << std::endl;
    fout << "   void Initialize();" << std::endl;
    if(GetAnalysisType() == Types::kMulticlass) {
-      fout << "   std::vector<Float_t>& GetMulticlassValues__( const std::vector<double>& inputValues ) const;" << std::endl;
-   }
-   else {
+      fout << "   std::vector<Float_t> GetMulticlassValues__( const std::vector<double>& inputValues ) const;" << std::endl;
+   } else {
       fout << "   double GetMvaValue__( const std::vector<double>& inputValues ) const;" << std::endl;
    }
    fout << "" << std::endl;
@@ -3175,17 +3172,15 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    MakeClassSpecific( fout, className );
 
    if(GetAnalysisType() == Types::kMulticlass) {
-      fout << "inline std::vector<Float_t>& " << className <<  "::GetMulticlassValues( const std::vector<double>& inputValues ) const" << std::endl;
-   }
-   else {
+      fout << "inline std::vector<Float_t> " << className <<  "::GetMulticlassValues( const std::vector<double>& inputValues ) const" << std::endl;
+   } else {
       fout << "inline double " << className << "::GetMvaValue( const std::vector<double>& inputValues ) const" << std::endl;
    }
    fout << "{" << std::endl;
    fout << "   // classifier response value" << std::endl;
    if(GetAnalysisType() == Types::kMulticlass) {
-      fout << "   std::vector<Float_t> *retval = nullptr;" << std::endl;
-   }
-   else {
+      fout << "   std::vector<Float_t> retval;" << std::endl;
+   } else {
       fout << "   double retval = 0;" << std::endl;
    }
    fout << std::endl;
@@ -3210,9 +3205,8 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
       }
       
       if(GetAnalysisType() == Types::kMulticlass) {
-         fout << "         retval = &GetMulticlassValues__( iV );" << std::endl;
-      }
-      else {
+         fout << "         retval = GetMulticlassValues__( iV );" << std::endl;
+      } else {
          fout << "         retval = GetMvaValue__( iV );" << std::endl;
       }
    } else {
@@ -3221,28 +3215,21 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
          fout << "         std::vector<double> iV(inputValues);" << std::endl;
          fout << "         Transform( iV, -1 );" << std::endl;
          if(GetAnalysisType() == Types::kMulticlass) {
-            fout << "         retval = &GetMulticlassValues__( iV );" << std::endl;
-         }
-         else {
+            fout << "         retval = GetMulticlassValues__( iV );" << std::endl;
+         } else {
             fout << "         retval = GetMvaValue__( iV );" << std::endl;
          }
       } else {
          if(GetAnalysisType() == Types::kMulticlass) {
-            fout << "         retval = &GetMulticlassValues__( inputValues );" << std::endl;
-         }
-         else {
+            fout << "         retval = GetMulticlassValues__( inputValues );" << std::endl;
+         } else {
             fout << "         retval = GetMvaValue__( inputValues );" << std::endl;
          }
       }
    }
    fout << "   }" << std::endl;
    fout << std::endl;
-   if(GetAnalysisType() == Types::kMulticlass) {
-      fout << "   return *retval;" << std::endl;
-   }
-   else {
-      fout << "   return retval;" << std::endl;
-   }
+   fout << "   return retval;" << std::endl;
    fout << "}" << std::endl;
 
    // create output for transformation - if any
