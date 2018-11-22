@@ -15,21 +15,24 @@
 #include <TBufferFile.h>
 
 // ZeroMQ
-#include <MultiProcess/zmq.hxx>
+#include "RooFit_ZMQ/zmq.hxx"
+#include "RooFit_ZMQ/Utility.h"
+#include "RooFit_ZMQ/functions.h"
 
-#include "Utility.h"
-#include "functions.h"
+namespace ZMQ {
+  namespace Detail {
 
-namespace Detail {
+    template<class T>
+    struct ROOTHisto {
+      constexpr static bool value = std::is_base_of<TH1, T>::value;
+    };
 
-template<class T> struct ROOTHisto {
-   constexpr static bool value = std::is_base_of<TH1, T>::value;
-};
+    template<class T>
+    struct ROOTObject {
+      constexpr static bool value = std::is_base_of<TObject, T>::value;
+    };
 
-template<class T> struct ROOTObject {
-   constexpr static bool value = std::is_base_of<TObject, T>::value;
-};
-
+  }
 }
 
 namespace ZMQ {
@@ -76,21 +79,16 @@ public:
       Binary
    };
 
-   Encoding encoding() const { return m_enc; };
-   void setEncoding(const Encoding& e) { m_enc = e; };
-   zmq::context_t& context() const {
-      if (!m_context) {
-         m_context = new zmq::context_t{1};
-      }
-      return *m_context;
-   }
-   zmq::socket_t socket(int type) const {
-      return zmq::socket_t{context(), type};
-   }
+   Encoding encoding() const;
+   void setEncoding(const Encoding& e);
+   zmq::context_t& context() const;
+   zmq::socket_t socket(int type) const;
+   zmq::socket_t* socket_ptr(int type) const;
+   void close_context() const;
 
-   // decode message with ZMQ, POD version
+  // decode message with ZMQ, POD version
    template <class T, typename std::enable_if<!std::is_pointer<T>::value
-                                              && Detail::is_trivial<T>::value, T>::type* = nullptr>
+                                              && ZMQ::Detail::is_trivial<T>::value, T>::type* = nullptr>
    T decode(const zmq::message_t& msg) const {
       T object;
       memcpy(&object, msg.data(), msg.size());
@@ -106,13 +104,13 @@ public:
    }
 
    // decode ZMQ message, ROOT version
-   template <class T, typename std::enable_if<Detail::ROOTObject<T>::value && !Detail::ROOTHisto<T>::value, T>::type* = nullptr>
+   template <class T, typename std::enable_if<ZMQ::Detail::ROOTObject<T>::value && !ZMQ::Detail::ROOTHisto<T>::value, T>::type* = nullptr>
    std::unique_ptr<T> decode(const zmq::message_t& msg) const {
       return decodeROOT<T>(msg);
    }
 
    // decode ZMQ message, ROOT histogram and profile version
-   template <class T, typename std::enable_if<Detail::ROOTHisto<T>::value, T>::type* = nullptr>
+   template <class T, typename std::enable_if<ZMQ::Detail::ROOTHisto<T>::value, T>::type* = nullptr>
    std::unique_ptr<T> decode(const zmq::message_t& msg) const {
       auto histo = decodeROOT<T>(msg);
       if (histo.get()) {
@@ -130,7 +128,7 @@ public:
 
    // receive message with ZMQ, general version
    // FIXME: what to do with flags=0.... more is a pointer, that might prevent conversion
-   template <class T, typename std::enable_if<!(Detail::ROOTObject<T>::value
+   template <class T, typename std::enable_if<!(ZMQ::Detail::ROOTObject<T>::value
                                                 || std::is_same<zmq::message_t, T>::value), T>::type* = nullptr>
    T receive(zmq::socket_t& socket, bool* more = nullptr) const {
       // receive message
@@ -159,7 +157,7 @@ public:
    }
 
    // receive message with ZMQ, ROOT version
-   template <class T, typename std::enable_if<Detail::ROOTObject<T>::value, T>::type* = nullptr>
+   template <class T, typename std::enable_if<ZMQ::Detail::ROOTObject<T>::value, T>::type* = nullptr>
    std::unique_ptr<T> receive(zmq::socket_t& socket, bool* more = nullptr) const {
       // receive message
       zmq::message_t msg;
@@ -175,7 +173,7 @@ public:
 
    // encode message to ZMQ
    template <class T, typename std::enable_if<!std::is_pointer<T>::value
-                                              && Detail::is_trivial<T>::value, T>::type* = nullptr>
+                                              && ZMQ::Detail::is_trivial<T>::value, T>::type* = nullptr>
    zmq::message_t encode(const T& item, std::function<size_t(const T& t)> sizeFun = ZMQ::defaultSizeOf<T>) const {
       size_t s = sizeFun(item);
       zmq::message_t msg{s};
@@ -183,29 +181,9 @@ public:
       return msg;
    }
 
-   zmq::message_t encode(const char* item) const {
-      std::function<size_t(const char& t)> fun = ZMQ::stringLength;
-      return encode(*item, fun);
-   }
-
-   zmq::message_t encode(const std::string& item) const {
-      return encode(item.c_str());
-   }
-
-   zmq::message_t encode(const TObject& item) const {
-      auto deleteBuffer = []( void* data, void* /* hint */ ) -> void {
-         delete [] (char*)data;
-      };
-
-      TBufferFile buffer(TBuffer::kWrite);
-      buffer.WriteObject(&item);
-
-      // Create message and detach buffer
-      zmq::message_t message(buffer.Buffer(), buffer.Length(), deleteBuffer);
-      buffer.DetachBuffer();
-
-      return message;
-   }
+   zmq::message_t encode(const char* item) const;
+   zmq::message_t encode(const std::string& item) const;
+   zmq::message_t encode(const TObject& item) const;
 
    // Send message with ZMQ
    template <class T, typename std::enable_if<!std::is_same<T, zmq::message_t>::value, T>::type* = nullptr>
@@ -213,17 +191,9 @@ public:
       return socket.send(encode(item), flags);
    }
 
-   bool send(zmq::socket_t& socket, const char* item, int flags = 0) const {
-      return socket.send(encode(item), flags);
-   }
-
-   bool send(zmq::socket_t& socket, zmq::message_t& msg, int flags = 0) const {
-      return socket.send(msg, flags);
-   }
-
-   bool send(zmq::socket_t& socket, zmq::message_t&& msg, int flags = 0) const {
-      return socket.send(std::move(msg), flags);
-   }
+   bool send(zmq::socket_t& socket, const char* item, int flags = 0) const;
+   bool send(zmq::socket_t& socket, zmq::message_t& msg, int flags = 0) const;
+   bool send(zmq::socket_t& socket, zmq::message_t&& msg, int flags = 0) const;
 
 private:
 

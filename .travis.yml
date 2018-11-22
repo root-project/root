@@ -73,6 +73,8 @@ script:
       cmake -G Ninja "${TRAVIS_BUILD_DIR}" -DCMAKE_C_COMPILER=gcc-7 -DCMAKE_CXX_COMPILER=g++-7 -Droofit=ON -Dtesting=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF
     fi
   - timeout 25m ninja -j4 # -d explain
+  - cd "${TRAVIS_BUILD_DIR}/../root_build/roofit/roofitZMQ/test"
+  - ./testRooFitZMQ
   - cd "${TRAVIS_BUILD_DIR}/../root_build/roofit/roofitcore/test"
   - ./testRooGradMinimizer
   - ./testMultiProcess_Vector

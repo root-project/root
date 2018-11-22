@@ -11,29 +11,33 @@
 
 #include <type_traits>
 
-namespace Detail {
+namespace ZMQ {
+  namespace Detail {
 
-template<typename... Ts>
-struct is_container_helper {};
+    template<typename... Ts>
+    struct is_container_helper {
+    };
 
 #if defined(HAVE_TRIVIALLY_COPYABLE)
-template<class T>
-using simple_object = std::is_trivially_copyable<T>;
+    template<class T>
+    using simple_object = std::is_trivially_copyable<T>;
 #else
-template<class T>
-using simple_object = std::is_pod<T>;
+    template<class T>
+    using simple_object = std::is_pod<T>;
 #endif
 
 // is trivial
-template <class T>
-struct is_trivial : std::conditional<
-   simple_object<
-      typename std::decay<T>::type
-      >::value,
-   std::true_type,
-   std::false_type
-   >::type {};
+    template<class T>
+    struct is_trivial : std::conditional<
+        simple_object<
+            typename std::decay<T>::type
+        >::value,
+        std::true_type,
+        std::false_type
+    >::type {
+    };
 
+  }
 }
 
 // is_pair
@@ -52,7 +56,7 @@ struct is_container<
    T,
    typename std::conditional<
       false,
-      Detail::is_container_helper<
+      ZMQ::Detail::is_container_helper<
          typename T::value_type,
          typename T::size_type,
          typename T::allocator_type,

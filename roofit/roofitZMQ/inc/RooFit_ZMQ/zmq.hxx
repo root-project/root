@@ -58,6 +58,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iostream> //debugging
 
 /*  Version macros for compile-time API version detection                     */
 #define CPPZMQ_VERSION_MAJOR 4
@@ -522,7 +523,11 @@ class context_t
         if (ptr == NULL)
             return;
 
-        int rc = zmq_ctx_destroy(ptr);
+        int rc;
+        do {
+            rc = zmq_ctx_destroy(ptr);
+        } while (rc == -1 && errno == EINTR);
+
         ZMQ_ASSERT(rc == 0);
         ptr = NULL;
     }

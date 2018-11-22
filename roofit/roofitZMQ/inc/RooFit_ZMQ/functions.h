@@ -1,7 +1,7 @@
 #ifndef ZEROMQ_FUNCTIONS_H
 #define ZEROMQ_FUNCTIONS_H 1
 
-#include <MultiProcess/zmq.hxx>
+#include "zmq.hxx"
 
 namespace zmq {
 
