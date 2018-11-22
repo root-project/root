@@ -435,7 +435,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       // 2. We add to the cache the branches identifying them by the name the user provided
       //    upon creation of the TTreeReader{Value, Array}s
       // 3. We stop the learning phase.
-      // Operations 2, 3 and 4 need to happen in this order. See: https://sft.its.cern.ch/jira/browse/ROOT-9773?focusedCommentId=87837
+      // Operations 1, 2 and 3 need to happen in this order. See: https://sft.its.cern.ch/jira/browse/ROOT-9773?focusedCommentId=87837
       if (fProxiesSet) {
          const auto curFile = fTree->GetCurrentFile();
          if (curFile && fTree->GetTree()->GetReadCache(curFile, true)) {
