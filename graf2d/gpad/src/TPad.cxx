@@ -5399,6 +5399,12 @@ void TPad::RedrawAxis(Option_t *option)
 
 void TPad::ResizePad(Option_t *option)
 {
+
+   if (!gPad) {
+      Error("ResizePad", "Cannot resize pad. No current pad available.");
+      return;
+   }
+
    // Recompute subpad positions in case pad has been moved/resized
    TPad *parent = fMother;
    if (this == gPad->GetCanvas()) {
