@@ -2,7 +2,7 @@
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,24 +12,70 @@
 /** \class TTreeCache
 \ingroup tree
 
-A specialized TFileCacheRead object for a TTree.
+# A cache to speed-up the reading of ROOT datasets
 
+## Table of Contents
+- [Motivation](motivation)
+- [General Description](#description)
+- [Changes in behaviour](#changesbehaviour)
+- [Self-optimization](#cachemisses)
+- [Examples of usage](#examples)
+- [Check performance and stats](#checkPerf)
+
+## <a name="motivation"></a>Motivation: why having a cache is needed?
+
+When writing a TTree, the branch buffers are kept in memory.
+A typical branch buffersize (before compression) is typically 32 KBytes.
+After compression, the zipped buffer may be just a few Kbytes.
+The branch buffers cannot be much larger in case of TTrees with several
+hundred or thousand branches.
+
+When writing, this does not generate a performance problem because branch
+buffers are always written sequentially and, thanks to OS optimisations,
+content is flushed to the output file when a few MBytes of data are available.
+On the other hand, when reading, one may hit performance problems because of
+latencies e.g imposed by network.
+For example in a WAN with 10ms latency, reading 1000 buffers of 10 KBytes each
+with no cache will imply 10s penalty where a local read of the 10 MBytes would
+take about 1 second.
+
+The TreeCache tries to prefetch all the buffers for the selected branches
+in order to transfer a few multi-Megabytes large buffers instead of many
+multi-kilobytes small buffers. In addition, TTreeCache can sort the blocks to
+be read in increasing order such that the file is read sequentially.
+
+Systems like xrootd, dCache or httpd take advantage of the TTreeCache in
+reading ahead as much data as they can and return to the application
+the maximum data specified in the cache and have the next chunk of data ready
+when the next request comes.
+
+### Are there cases for which the usage of TTreeCache is detrimental for performance?
+Yes, some corner cases. For example, when reading only a small fraction of all
+entries such that not all branch buffers are read.
+
+## <a name="description"></a>General Description
 This class acts as a file cache, registering automatically the baskets from
-the branches being processed (TTree::Draw or TTree::Process and TSelectors)
+the branches being processed via direct manipulation of TTrees or with tools
+such as TTree::Draw, TTree::Process, TSelector, TTreeReader and RDataFrame
 when in the learning phase. The learning phase is by default 100 entries.
 It can be changed via TTreeCache::SetLearnEntries.
 
-This cache speeds-up considerably the performance, in particular
-when the Tree is accessed remotely via a high latency network.
+The usage of a TTreeCache can considerably improve the runtime performance at
+the price of a modest investment in memory, in particular when the TTree is
+accessed remotely, e.g. via a high latency network.
 
-The default cache size (10 Mbytes) may be changed via the function
-TTree::SetCacheSize
-
-Only the baskets for the requested entry range are put in the cache
-
-For each Tree being processed a TTreeCache object is created.
+For each TTree being processed a TTreeCache object is created.
 This object is automatically deleted when the Tree is deleted or
 when the file is deleted.
+The user can change the size of the cache with the TTree::SetCacheSize method
+(by default the size is 30 Megabytes). This feature can be controlled with the
+environment variable `ROOT_TTREECACHE_SIZE` or the TTreeCache.Size option.
+The entry range for which the cache is active can also be set with the
+SetEntryRange method.
+
+## <a name="changesbehaviour"></a>Changes of behavior when using TChain and TEventList
+
+The usage of TChain or TEventList have influence on the behaviour of the cache:
 
 - Special case of a TChain
   Once the training is done on the first Tree, the list of branches
@@ -39,9 +85,8 @@ when the file is deleted.
   if the Tree or TChain has a TEventlist, only the buffers
   referenced by the list are put in the cache.
 
-The learning period is started or restarted when:
-   - TTree automatically creates a cache. This feature can be
-     controlled with an env. variable or the TTreeCache.Size option.
+The learning phase is started or restarted when:
+   - TTree automatically creates a cache.
    - TTree::SetCacheSize is called with a non-zero size and a cache
      did not previously exist
    - TTreeCache::StartLearningPhase is called.
@@ -50,197 +95,182 @@ The learning period is started or restarted when:
         * and has not been set to manual
         * and the new minimun entry is different.
 
-The learning period is stopped (and prefetching is actually started) when:
+The learning period is stopped (and prefetching is started) when:
    - TTreeCache::StopLearningPhase is called.
    - An entry outside the 'learning' range is requested
      The 'learning range is from fEntryMin (default to 0) to
-     fEntryMin + fgLearnEntries (default to 100).
+     fEntryMin + fgLearnEntries.
    - A 'cached' TChain switches over to a new file.
 
-Further, the TreeCache can optimize its behavior on a cache miss.  When
-miss optimization is enabled, it will track all branches utilized after
-the learning phase (those that cause a cache miss).  When one cache miss
-occurs, then all the utilized branches will be prefetched for that event.
-This optimization utilizes the observation that infrequently accessed
-branches are often accessed together.  For example, this will greatly speed
-up an analysis where the results of a trigger are read out for every branch,
-but the majority of event collections are read only when the trigger results
-pass a set of filters.  NOTE - when this mode is enabled, the memory dedicated
-to the cache will up to double in the case of cache miss.  Additionally, on
-the first miss of an event, we must iterate through all the "active branches"
-for the miss cache and find the correct basket.  This can be potentially a
-CPU-expensive operation compared to, e.g., the latency of a SSD.  This is why
-the miss cache is currently disabled by default.
 
-## WHY DO WE NEED the TreeCache when doing data analysis?
+## <a name="cachemisses"></a>Self-optimization in presence of cache misses
 
-When writing a TTree, the branch buffers are kept in memory.
-A typical branch buffersize (before compression) is typically 32 KBytes.
-After compression, the zipped buffer may be just a few Kbytes.
-The branch buffers cannot be much larger in case of Trees with several
-hundred or thousand branches.
+The TTreeCache can optimize its behavior on a cache miss. When
+miss optimization is enabled (see the SetOptimizeMisses method),
+it tracks all branches utilized after the learning phase which caused a cache
+miss.
+When one cache miss occurs, all the utilized branches are be prefetched
+for that event. This optimization utilizes the observation that infrequently
+accessed branches are often accessed together.
+An example scenario where such behavior is desirable, is an analysis where
+a set of collections are read only for a few events in which a certain
+condition is respected, e.g. a trigger fired.
 
-When writing, this does not generate a performance problem because branch
-buffers are always written sequentially and the OS is in general clever enough
-to flush the data to the output file when a few MBytes of data have to be written.
-When reading at the contrary, one may hit a performance problem when reading
-across a network (LAN or WAN) and the network latency is high.
-For example in a WAN with 10ms latency, reading 1000 buffers of 10 KBytes each
-with no cache will imply 10s penalty where a local read of the 10 MBytes would
-take about 1 second.
+### Additional memory and CPU usage when optimizing for cache misses
+When this mode is enabled, the memory dedicated to the cache can increase
+by at most a factor two in the case of cache miss.
+Additionally, on the first miss of an event, we must iterate through all the
+"active branches" for the miss cache and find the correct basket.
+This can be potentially a CPU-expensive operation compared to, e.g., the
+latency of a SSD.  This is why the miss cache is currently disabled by default.
 
-The TreeCache will try to prefetch all the buffers for the selected branches
-such that instead of transferring 1000 buffers of 10 Kbytes, it will be able
-to transfer one single large buffer of 10 Mbytes in one single transaction.
-Not only the TreeCache minimizes the number of transfers, but in addition
-it can sort the blocks to be read in increasing order such that the file
-is read sequentially.
+## <a name="examples"></a>Example usages of TTreeCache
 
-Systems like xrootd, dCache or httpd take advantage of the TreeCache in
-reading ahead as much data as they can and return to the application
-the maximum data specified in the cache and have the next chunk of data ready
-when the next request comes.
+A few use cases are discussed below. A cache may be created with automatic
+sizing when a TTree is used:
 
-## HOW TO USE the TreeCache
+In some applications, e.g. central processing workflows of experiments, the list
+of branches to read is known a priori. For these cases, the TTreeCache can be
+instructed about the branches which will be read via explicit calls to the TTree
+or TTreeCache interfaces.
+In less streamlined applications such as analysis, predicting the branches which
+will be read can be difficult. In such cases, ROOT I/O flags used branches
+automatically when a branch buffer is read during the learning phase.
 
-A few use cases are discussed below. A cache may be created with automatic sizing
-when a TTree is used:
+In the examples below, portions of analysis code are shown.
+The few statements involving the TreeCache are marked with `//<<<`
 
-Caches are created and automatically sized for TTrees when TTreeCache.Size or
-the environment variable ROOT_TTREECACHE_SIZE is set to a sizing factor.
+### ROOT::RDataFrame and TTreeReader Examples
 
-But there are many possible configurations where manual control may be wanted.
-In some applications you know a priori the list of branches to read. In other
-applications the analysis loop calls several layers of user functions where it
-is impossible to predict a priori which branches will be used. This
-is probably the most frequent case. In this case ROOT I/O will flag used
-branches automatically when a branch buffer is read during the learning phase.
-The TreeCache interface provides functions to instruct the cache about the used
-branches if they are known a priori. In the examples below, portions of analysis
-code are shown. The few statements involving the TreeCache are marked with `//<<<`
+If you use RDataFrame or TTreeReader, the system will automatically cache the
+best set of branches: no action is required by the user.
 
-### 1. with TTree::Draw
+### TTree::Draw Example
 
-the TreeCache is automatically used by TTree::Draw. The function knows
+The TreeCache is automatically used by TTree::Draw. The method knows
 which branches are used in the query and it puts automatically these branches
-in the cache. The entry range is also known automatically.
+in the cache. The entry range is also inferred automatically.
 
-### 2. with TTree::Process and TSelectors
+### TTree::Process and TSelectors
 
-You must enable the cache and tell the system which branches to cache
+The user must enable the cache and tell the system which branches to cache
 and also specify the entry range. It is important to specify the entry range
-in case you process only a subset of the events, otherwise you run the risk
-to store in the cache entries that you do not need.
+in case only a subset of the events is processed to avoid wasteful caching.
 
-#### example 2a
+#### Reading all branches
 ~~~ {.cpp}
-    TTree *T = (TTree*)f->Get("mytree");
-    Long64_t nentries = T->GetEntries();
-    Int_t cachesize = 10000000; //10 MBytes
+    TTree *T;
+    f->GetObject(T, "mytree");
+    auto nentries = T->GetEntries();
+    auto cachesize = 10000000U; // 10 MBytes
     T->SetCacheSize(cachesize); //<<<
-    T->AddBranchToCache("*",kTRUE);    //<<< add all branches to the cache
-    T->Process('myselector.C+");
-    //in the TSelector::Process function we read all branches
+    T->AddBranchToCache("*", true);    //<<< add all branches to the cache
+    T->Process("myselector.C+");
+    // In the TSelector::Process function we read all branches
     T->GetEntry(i);
-    ... here you process your entry
+    // ... Here the entry is processed
 ~~~
-#### example 2b
+#### Reading a subset of all branches
 
-in the Process function we read a subset of the branches.
+In the Process function we read a subset of the branches.
 Only the branches used in the first entry will be put in the cache
 ~~~ {.cpp}
-    TTree *T = (TTree*)f->Get("mytree");
-    //we want to process only the 200 first entries
-    Long64_t nentries=200;
-    int efirst= 0;
-    int elast = efirst+nentries;
-    Int_t cachesize = 10000000; //10 MBytes
+    TTree *T;
+    f->GetObject(T, "mytree");
+    // We want to process only the 200 first entries
+    auto nentries=200UL;
+    auto efirst = 0;
+    auto elast = efirst+nentries;
+    auto cachesize = 10000000U; // 10 MBytes
     TTreeCache::SetLearnEntries(1);  //<<< we can take the decision after 1 entry
     T->SetCacheSize(cachesize);      //<<<
     T->SetCacheEntryRange(efirst,elast); //<<<
-    T->Process('myselector.C+","",nentries,efirst);
-    // in the TSelector::Process we read only 2 branches
-    TBranch *b1 = T->GetBranch("branch1");
+    T->Process("myselector.C+","",nentries,efirst);
+    // In the TSelector::Process we read only 2 branches
+    auto b1 = T->GetBranch("branch1");
     b1->GetEntry(i);
     if (somecondition) return;
-    TBranch *b2 = T->GetBranch("branch2");
+    auto b2 = T->GetBranch("branch2");
     b2->GetEntry(i);
-    ... here you process your entry
+    ... Here the entry is processed
 ~~~
-### 3. with your own event loop
+### Custom event loop
 
-#### example 3a
+#### Always using the same two branches
 
-in your analysis loop, you always use 2 branches. You want to prefetch
-the branch buffers for these 2 branches only.
+In this example, exactly two branches are always used: those need to be
+prefetched.
 ~~~ {.cpp}
-    TTree *T = (TTree*)f->Get("mytree");
-    TBranch *b1 = T->GetBranch("branch1");
-    TBranch *b2 = T->GetBranch("branch2");
-    Long64_t nentries = T->GetEntries();
-    Int_t cachesize = 10000000; //10 MBytes
+    TTree *T;
+    f->GetObject(T, "mytree");
+    auto b1 = T->GetBranch("branch1");
+    auto b2 = T->GetBranch("branch2");
+    auto nentries = T->GetEntries();
+    auto cachesize = 10000000U; //10 MBytes
     T->SetCacheSize(cachesize);     //<<<
-    T->AddBranchToCache(b1,kTRUE);  //<<<add branch1 and branch2 to the cache
-    T->AddBranchToCache(b2,kTRUE);  //<<<
-    T->StopCacheLearningPhase();    //<<<
-    for (Long64_t i=0;i<nentries;i++) {
+    T->AddBranchToCache(b1, true);  //<<< add branch1 and branch2 to the cache
+    T->AddBranchToCache(b2, true);  //<<<
+    T->StopCacheLearningPhase();    //<<< we do not need the system to guess anything
+    for (auto i : TSeqL(nentries)) {
        T->LoadTree(i); //<<< important call when calling TBranch::GetEntry after
        b1->GetEntry(i);
        if (some condition not met) continue;
        b2->GetEntry(i);
        if (some condition not met) continue;
-       //here we read the full event only in some rare cases.
-       //there is no point in caching the other branches as it might be
-       //more economical to read only the branch buffers really used.
+       // Here we read the full event only in some rare cases.
+       // There is no point in caching the other branches as it might be
+       // more economical to read only the branch buffers really used.
        T->GetEntry(i);
-       .. process the rare but interesting cases.
-       ... here you process your entry
+       ... Here the entry is processed
     }
 ~~~
-#### example 3b
+#### Always using at least the same two branches
 
-in your analysis loop, you always use 2 branches in the main loop.
-you also call some analysis functions where a few more branches will be read.
-but you do not know a priori which ones. There is no point in prefetching
-branches that will be used very rarely.
+In this example, two branches are always used: in addition, some analysis
+functions are invoked and those may trigger the reading of other branches which
+are a priori not known.
+There is no point in prefetching branches that will be used very rarely: we can
+rely on the system to cache the right branches.
 ~~~ {.cpp}
-    TTree *T = (TTree*)f->Get("mytree");
-    Long64_t nentries = T->GetEntries();
-    Int_t cachesize = 10000000;   //10 MBytes
+    TTree *T;
+    f->GetObject(T, "mytree");
+    auto nentries = T->GetEntries();
+    auto cachesize = 10000000;   //10 MBytes
     T->SetCacheSize(cachesize);   //<<<
     T->SetCacheLearnEntries(5);   //<<< we can take the decision after 5 entries
-    TBranch *b1 = T->GetBranch("branch1");
-    TBranch *b2 = T->GetBranch("branch2");
-    for (Long64_t i=0;i<nentries;i++) {
+    auto b1 = T->GetBranch("branch1");
+    auto b2 = T->GetBranch("branch2");
+    for (auto i : TSeqL(nentries)) {
        T->LoadTree(i);
        b1->GetEntry(i);
        if (some condition not met) continue;
        b2->GetEntry(i);
-       //at this point we may call a user function where a few more branches
-       //will be read conditionally. These branches will be put in the cache
-       //if they have been used in the first 10 entries
+       // At this point we may call a user function where a few more branches
+       // will be read conditionally. These branches will be put in the cache
+       // if they have been used in the first 10 entries
        if (some condition not met) continue;
-       //here we read the full event only in some rare cases.
-       //there is no point in caching the other branches as it might be
-       //more economical to read only the branch buffers really used.
+       // Here we read the full event only in some rare cases.
+       // There is no point in caching the other branches as it might be
+       // more economical to read only the branch buffers really used.
        T->GetEntry(i);
        .. process the rare but interesting cases.
-       ... here you process your entry
+       ... Here the entry is processed
     }
 ~~~
-## SPECIAL CASES WHERE TreeCache should not be activated
 
-When reading only a small fraction of all entries such that not all branch
-buffers are read, it might be faster to run without a cache.
+##  <a name="checkPerf"></a>How can the usage and performance of TTreeCache be verified?
 
-## HOW TO VERIFY That the TreeCache has been used and check its performance
-
-Once your analysis loop has terminated, you can access/print the number
-of effective system reads for a given file with a code like
-(where TFile* f is a pointer to your file)
+Once the event loop terminated, the number of effective system reads for a
+given file can be checked with a code like the following:
 ~~~ {.cpp}
-    printf("Reading %lld bytes in %d transactions\n",f->GetBytesRead(),  f->GetReadCalls());
+    printf("Reading %lld bytes in %d transactions\n",myTFilePtr->GetBytesRead(),  f->GetReadCalls());
 ~~~
+
+Another handy command is:
+~~~ {.cpp}
+myTreeOrChain.GetTree()->PrintCacheStats();
+~~~
+
 */
 
 #include "TSystem.h"
