@@ -8772,7 +8772,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
 
       snprintf(t, 100," %7d|%7d|%7d\n", (Int_t)unov[0], (Int_t)unov[1], (Int_t)unov[2]);
       stats->AddText(t);
-      if (h2->GetEntries() < 1e7)
+      if (TMath::Abs(unov[4]) < 1.e7)
          snprintf(t, 100," %7d|%7d|%7d\n", (Int_t)unov[3], (Int_t)unov[4], (Int_t)unov[5]);
       else
          snprintf(t, 100," %7d|%14.7g|%7d\n", (Int_t)unov[3], (Float_t)unov[4], (Int_t)unov[5]);

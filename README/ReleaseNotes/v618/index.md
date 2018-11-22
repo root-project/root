@@ -41,12 +41,12 @@ The following methods were deprecated and removed:
    * TString THttpCallArg::GetPostDataAsString();
    * void THttpCallArg::FillHttpHeader(TString &buf, const char *header = nullptr);
    * void THttpCallArg::SetBinData(void *data, Long_t length);
-   
+
 The methods could be replaced by equivalent methods with other signature:
 
    * Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run_immediately = kFALSE);
    * Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg);
-   * Bool_t TRootSniffer::Produce(const std::string &path, const std::string &file, const std::string &options, std::string &res);   
+   * Bool_t TRootSniffer::Produce(const std::string &path, const std::string &file, const std::string &options, std::string &res);
    * const void *THttpCallArg::GetPostData() const;
    * Long_t THttpCallArg::GetPostDataLength() const;
    * std::string THttpCallArg::FillHttpHeader(const char *header = nullptr);
@@ -73,6 +73,9 @@ The methods could be replaced by equivalent methods with other signature:
 
 ## 2D Graphics Libraries
 
+  - In the statistics painting for 2D histograms, the  central cell of
+    the underflow/overflow grid was not properly rendered for very large contents.
+    This problem was reported [here](https://root-forum.cern.ch/t/stat-box-for-th2/).
 
 ## 3D Graphics Libraries
 
