@@ -153,7 +153,7 @@ size_t ROOT::Detail::RRawFile::Pread(void *buffer, size_t nbytes, std::uint64_t 
    size_t totalBytes = 0;
    std::uint64_t offsetInBuffer = offset - fBufferOffset;
    if (offsetInBuffer < static_cast<std::uint64_t>(fBufferSize)) {
-      size_t bytesInBuffer = std::min(nbytes, fBufferSize - offsetInBuffer);
+      size_t bytesInBuffer = std::min(nbytes, static_cast<size_t>(fBufferSize - offsetInBuffer));
       memcpy(buffer, fBuffer + offsetInBuffer, bytesInBuffer);
       nbytes -= bytesInBuffer;
       offset += bytesInBuffer;
