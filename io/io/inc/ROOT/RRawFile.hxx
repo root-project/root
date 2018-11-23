@@ -36,6 +36,8 @@ class RRawFile;
  * If the transport protocol part and the :// separator are missing, the default protocol is local file.
  *
  * RRawFiles are not copyable.
+ *
+ * TODO(jblomer): Implement derived class for Davix low-level I/O
  */
 class RRawFile {
 public:
@@ -59,7 +61,7 @@ private:
    std::uint64_t fBufferOffset;
    /// The number of currently buffered bytes in fBuffer
    size_t fBufferSize;
-   /// An I/O buffer with data from the file
+   /// An I/O buffer with data from the file. TODO(jblomer): Readln can lead to buffer thrashing.
    unsigned char *fBuffer;
 
 protected:

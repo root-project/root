@@ -12,6 +12,8 @@
 
 using namespace ROOT::Detail;
 
+// TODO(jblomer): Rigorous testing of buffered read with mock RRawFile
+
 namespace {
 
 class FileRaii {
