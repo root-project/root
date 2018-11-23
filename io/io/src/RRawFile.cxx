@@ -42,24 +42,42 @@ constexpr int kDefaultBlockSizeLocal = 4096; // Local files are by default read 
 } // anonymous namespace
 
 
+size_t ROOT::Detail::RRawFile::RBlockBuffer::Map(void *buffer, size_t nbytes, std::uint64_t offset)
+{
+   if (offset < fBufferOffset)
+      return 0;
+
+   size_t mappedBytes = 0;
+   std::uint64_t offsetInBuffer = offset - fBufferOffset;
+   if (offsetInBuffer < static_cast<std::uint64_t>(fBufferSize)) {
+      size_t bytesInBuffer = std::min(nbytes, static_cast<size_t>(fBufferSize - offsetInBuffer));
+      memcpy(buffer, fBuffer + offsetInBuffer, bytesInBuffer);
+      mappedBytes = bytesInBuffer;
+   }
+   return mappedBytes;
+}
+
+
 ROOT::Detail::RRawFile::RRawFile(
    const std::string &url,
    ROOT::Detail::RRawFile::ROptions options)
-   : fBufferOffset(0)
-   , fBufferSize(0)
-   , fBuffer(nullptr)
+   : fBlockBufferIdx(0)
+   , fBufferSpace(nullptr)
    , fFileSize(kUnknownFileSize)
    , fUrl(url)
    , fOptions(options)
    , fFilePos(0)
 {
-   if (fOptions.fBlockSize > 0)
-      fBuffer = new unsigned char[fOptions.fBlockSize];
+   if (fOptions.fBlockSize > 0) {
+      fBufferSpace = new unsigned char[kNumBlockBuffers * fOptions.fBlockSize];
+      for (unsigned i = 0; i < kNumBlockBuffers; ++i)
+         fBlockBuffers[i].fBuffer = fBufferSpace + i * fOptions.fBlockSize;
+   }
 }
 
 
 ROOT::Detail::RRawFile::~RRawFile() {
-   delete[] fBuffer;
+   delete[] fBufferSpace;
 }
 
 
@@ -139,37 +157,32 @@ size_t ROOT::Detail::RRawFile::Pread(void *buffer, size_t nbytes, std::uint64_t 
    if (nbytes > static_cast<unsigned>(fOptions.fBlockSize))
       return DoPread(buffer, nbytes, offset);
 
-   // Jumped back
-   if (offset < fBufferOffset) {
-      size_t res = DoPread(fBuffer, fOptions.fBlockSize, offset);
-      fBufferOffset = offset;
-      fBufferSize = res;
-      size_t outputBytes = std::min(fBufferSize, nbytes);
-      memcpy(buffer, fBuffer, outputBytes);
-      return outputBytes;
-   }
-
-   // Request can be (partially) served from the cache
    size_t totalBytes = 0;
-   std::uint64_t offsetInBuffer = offset - fBufferOffset;
-   if (offsetInBuffer < static_cast<std::uint64_t>(fBufferSize)) {
-      size_t bytesInBuffer = std::min(nbytes, static_cast<size_t>(fBufferSize - offsetInBuffer));
-      memcpy(buffer, fBuffer + offsetInBuffer, bytesInBuffer);
-      nbytes -= bytesInBuffer;
-      offset += bytesInBuffer;
-      buffer = reinterpret_cast<unsigned char *>(buffer) + bytesInBuffer;
-      totalBytes = bytesInBuffer;
+   size_t mappedBytes = 0;
+   /// Try to serve as many bytes as possible from the block buffers
+   for (unsigned idx = fBlockBufferIdx; idx < fBlockBufferIdx + kNumBlockBuffers; ++idx) {
+      mappedBytes = fBlockBuffers[idx % kNumBlockBuffers].Map(buffer, nbytes, offset);
+      buffer = reinterpret_cast<unsigned char *>(buffer) + mappedBytes;
+      nbytes -= mappedBytes;
+      offset += mappedBytes;
+      totalBytes += mappedBytes;
+      if (mappedBytes > 0)
+         fBlockBufferIdx = idx;
+      if (nbytes == 0)
+         return totalBytes;
    }
+   fBlockBufferIdx++;
 
-   // Read the rest as a new block
-   if (nbytes > 0) {
-      size_t res = DoPread(fBuffer, fOptions.fBlockSize, offset);
-      fBufferOffset = offset;
-      fBufferSize = res;
-      size_t remainingBytes = std::min(fBufferSize, nbytes);
-      memcpy(buffer, fBuffer, remainingBytes);
-      totalBytes += remainingBytes;
-   }
+   /// The request was not fully satisfied and fBlockBufferIdx now points to the previous shadow buffer
+
+   /// The remaining bytes populate the newly promoted main buffer
+   RBlockBuffer* thisBuffer = &fBlockBuffers[fBlockBufferIdx % kNumBlockBuffers];
+   size_t res = DoPread(thisBuffer->fBuffer, fOptions.fBlockSize, offset);
+   thisBuffer->fBufferOffset = offset;
+   thisBuffer->fBufferSize = res;
+   size_t remainingBytes = std::min(res, nbytes);
+   memcpy(buffer, thisBuffer->fBuffer, remainingBytes);
+   totalBytes += remainingBytes;
    return totalBytes;
 }
 
