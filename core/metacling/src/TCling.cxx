@@ -1782,25 +1782,37 @@ void TCling::RegisterModule(const char* modulename,
          // declaration exists yet.
          std::string fwdDeclsLine;
          std::istringstream fwdDeclsCodeStr(fwdDeclsCode);
-         std::vector<std::string> scope;
+         std::vector<std::string> scopes;
          while (std::getline(fwdDeclsCodeStr, fwdDeclsLine)) {
-            if (fwdDeclsLine.find("namespace ") == 0
-                || fwdDeclsLine.find("inline namespace ") == 0) {
-               // skip leading "namespace ", trailing " {"
-               scope.push_back(fwdDeclsLine.substr(10,
-                                                   fwdDeclsLine.length() - 10 - 2));
-            } else if (fwdDeclsLine == "}") {
-               scope.pop_back();
-            } else if (fwdDeclsLine.find("enum  __attribute__((annotate(\"") == 0) {
+            const auto enumPos = fwdDeclsLine.find("enum  __attribute__((annotate(\"");
+            // We check if the line contains a fwd declaration of an enum
+            if (enumPos != std::string::npos) {
+               // We clear the scopes which we may have carried from a previous iteration
+               scopes.clear();
+               // We check if the enum is not in a scope. If yes, save its name
+               // and the names of the enclosing scopes.
+               if (enumPos != 0) {
+                  // it's enclosed in namespaces. We need to understand what they are
+                  auto nsPos = fwdDeclsLine.find("namespace");
+                  R__ASSERT(nsPos < enumPos && "Inconsistent enum and enclosing scope parsing!");
+                  while (nsPos < enumPos && nsPos != std::string::npos) {
+                     // we have a namespace, let's put it in the collection of scopes
+                     const auto nsNameStart = nsPos + 10;
+                     const auto nsNameEnd = fwdDeclsLine.find('{', nsNameStart) - nsNameStart;
+                     const auto nsName = fwdDeclsLine.substr(nsNameStart, nsNameEnd);
+                     scopes.push_back(nsName);
+                     nsPos = fwdDeclsLine.find("namespace", nsNameEnd);
+                  }
+               }
                clang::DeclContext* DC = 0;
-               for (auto &&aScope: scope) {
+               for (auto &&aScope: scopes) {
                   DC = cling::utils::Lookup::Namespace(&fInterpreter->getSema(), aScope.c_str(), DC);
                   if (!DC) {
                      // No decl context means we have to fwd declare the enum.
                      break;
                   }
                }
-               if (scope.empty() || DC) {
+               if (scopes.empty() || DC) {
                   // We know the scope; let's look for the enum.
                   size_t posEnumName = fwdDeclsLine.find("\"))) ", 32);
                   R__ASSERT(posEnumName != std::string::npos && "Inconsistent enum fwd decl!");
@@ -1827,6 +1839,7 @@ void TCling::RegisterModule(const char* modulename,
                   }
                }
             }
+
             fwdDeclsCodeLessEnums += fwdDeclsLine + "\n";
          }
       }
