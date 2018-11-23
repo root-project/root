@@ -3511,7 +3511,7 @@ static ETupleOrdering IsTupleAscending()
    }
 }
 
-std::string AtlernateTuple(const char *classname)
+std::string AlternateTuple(const char *classname)
 {
    TClassEdit::TSplitType tupleContent(classname);
    std::string alternateName = "TEmulatedTuple";
@@ -3555,7 +3555,7 @@ std::string AtlernateTuple(const char *classname)
          break;
       }
       case ETupleOrdering::kUnexpected: {
-         Fatal("TCling::SetClassInfo::AtlernateTuple",
+         Fatal("TCling::SetClassInfo::AlternateTuple",
                "Layout of std::tuple on this platform is unexpected.");
          break;
       }
@@ -3597,7 +3597,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    // for the I/O to understand and handle.
    if (!(fCxxModulesEnabled && IsFromRootCling()) && strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
 
-      name = AtlernateTuple(cl->GetName());
+      name = AlternateTuple(cl->GetName());
 
    }
 
