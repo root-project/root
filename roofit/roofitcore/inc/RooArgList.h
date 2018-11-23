@@ -86,8 +86,13 @@ public:
     });
     return item != _list.end() ? item - _list.begin() : -1;
   }
+
+  /// Return object at given index, or nullptr if index is out of range
   inline RooAbsArg* at(Int_t idx) const { 
-    // Return object at given index, or 0 if index is out of range
+
+    if (idx >= static_cast<Int_t>(_list.size()))
+      return nullptr;
+
     return _list[idx];
   }
 

@@ -92,13 +92,17 @@ RooAbsCollection::RooAbsCollection(const char *name) :
 RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *name) :
   TObject(other),
   RooPrintable(other),
-  _list(other._list) ,
+  _list(),
   _ownCont(kFALSE),
   _name(name),
   _allRRV(other._allRRV)
 {
   RooTrace::create(this) ;
   if (!name) setName(other.GetName()) ;
+
+  for (auto item : other._list) {
+    add(*item);
+  }
 }
 
 
@@ -111,7 +115,6 @@ RooAbsCollection::~RooAbsCollection()
   // Delete all variables in our list if we own them
   if(_ownCont){
     safeDeleteList() ;
-    //_list.size().Delete();
   }
 }
 
@@ -136,13 +139,15 @@ void RooAbsCollection::safeDeleteList()
 
       // sort and uniquify, in case some elements occur more than once
       std::sort(tmp.begin(), tmp.end());
-      auto last = std::unique(tmp.begin(), tmp.end());
-      tmp.erase(last, tmp.end());
+
+      tmp.erase(std::unique(tmp.begin(), tmp.end()), tmp.end());
       // okay, can remove and delete what's in tmp
+      auto newEnd = _list.end();
       for (auto item : tmp) {
-        _list.erase(std::remove(_list.begin(), _list.end(), item), _list.end());
+        newEnd = std::remove(_list.begin(), newEnd, item);
         delete item;
       }
+      _list.erase(newEnd, _list.end());
     } while (!tmp.empty() && _list.size() > 1);
 
     // Check if there are any remaining elements
@@ -239,9 +244,24 @@ Bool_t RooAbsCollection::snapshot(RooAbsCollection& output, Bool_t deepCopy) con
     return kTRUE ;
   }
 
+//  for (std::size_t i = 0; i < _list.size(); ++i) {
+//    std::cout << "\n*** " << i << "\n\t" << _list[i] << "\t";
+//    _list[i]->Print();
+//    std::cout << "\n\t" << output._list[i] << "\t";
+//    output._list[i]->Print();
+//  }
+//  for (std::size_t i = _list.size(); i < output._list.size(); ++i) {
+//    std::cout << "\n*** " << i << "\n\t" << output._list[i] << "\t";
+//    output._list[i]->Print();
+//  }
+
    // Redirect all server connections to internal list members
   for (auto var : output) {
+//    std::cout << "BEFORE: Redirecting servers of " << var;
+//    var->Print("V");
     var->redirectServers(output,deepCopy) ;
+//    std::cout << "AFTER: Redirecting servers of " << var;
+//    var->Print("V");
   }
 
 
@@ -292,7 +312,7 @@ RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other)
     if(!theirs) continue;
     theirs->syncCache() ;
     elem->copyCache(theirs) ;
-   elem->setAttribute("Constant",theirs->isConstant()) ;
+    elem->setAttribute("Constant",theirs->isConstant()) ;
   }
   return *this;
 }
@@ -334,26 +354,23 @@ void RooAbsCollection::assignFast(const RooAbsCollection& other, Bool_t setValDi
   if (&other==this) return ;
   assert(_list.size() == other._list.size());
 
-  if (_allRRV) {
+  auto iter2 = other._list.begin();
+  for (auto iter1 = _list.begin();
+      iter1 != _list.end() && iter2 != other._list.end();
+      ++iter1, ++iter2) {
+    // Identical size of iterators is documented assumption of method
 
-    // All contents are know to be RooRealVars - fast version of assignment
-    auto iter2 = other._list.begin();
-    for (auto elem : _list) {
-      // Identical size of iterators is documented assumption of method
-      auto ours   = static_cast<RooRealVar*>(elem);
-      auto theirs = static_cast<RooRealVar*>(*iter2++);
+    if (_allRRV) {
+      // All contents are known to be RooRealVars - fast version of assignment
+      auto ours   = static_cast<RooRealVar*>(*iter1);
+      auto theirs = static_cast<RooRealVar*>(*iter2);
       ours->copyCacheFast(*theirs,setValDirty);
-    }
-
-  } else {
-    auto iter2 = other._list.begin();
-    for (auto elem : _list) {
-      // Identical size of iterators is documented assumption of method
-      auto theirs = (*iter2++);
-      theirs->syncCache() ;
-      elem->copyCache(theirs,kTRUE,setValDirty) ;
+    } else {
+      (*iter2)->syncCache() ;
+      (*iter1)->copyCache(*iter2,kTRUE,setValDirty) ;
     }
   }
+
 }
 
 
@@ -562,24 +579,32 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNam
 {
   // is var already in this list?
   const std::string name(var.GetName());
-  auto sizeBefore = _list.size();
+  const auto sizeBefore = _list.size();
 
   _list.erase(std::remove(_list.begin(), _list.end(), &var), _list.end());
-  std::set<const RooAbsArg*> tmp;
 
   if (matchByNameOnly) {
-    auto namesMatch = [this, &name, &tmp](const RooAbsArg* elm) {
-      bool found = elm->GetName() == name;
-      if (_ownCont && found) {
-        tmp.insert(elm);
-      }
-      return found;
+    auto nameMatch = [&name](const RooAbsArg* elm) {
+      return elm->GetName() == name;
     };
-    _list.erase(std::remove_if(_list.begin(), _list.end(), namesMatch), _list.end());
+    std::set<RooAbsArg*> toBeDeleted;
 
-    for (auto item : tmp) {
-      delete item;
+    if (_ownCont) {
+      std::for_each(_list.begin(), _list.end(), [&toBeDeleted, nameMatch](RooAbsArg* elm){
+        if (nameMatch(elm)) {
+          toBeDeleted.insert(elm);
+        }
+      });
     }
+
+    _list.erase(std::remove_if(_list.begin(), _list.end(), nameMatch), _list.end());
+
+    for (auto arg : toBeDeleted)
+      delete arg;
+  }
+
+  if (sizeBefore != _list.size()) {
+    invalidateActiveIterators();
   }
 
   return sizeBefore != _list.size();
@@ -761,6 +786,9 @@ Bool_t RooAbsCollection::overlaps(const RooAbsCollection& otherColl) const
 
 RooAbsArg * RooAbsCollection::find(const char *name) const
 {
+  if (!name)
+    return nullptr;
+
   const std::string theName(name);
   auto item = std::find_if(_list.begin(), _list.end(), [&theName](const RooAbsArg * elm){
     return elm->GetName() == theName;
@@ -776,7 +804,11 @@ RooAbsArg * RooAbsCollection::find(const char *name) const
 
 RooAbsArg * RooAbsCollection::find(const RooAbsArg& arg) const
 {
-  auto item = std::find(_list.begin(), _list.end(), &arg);
+  auto findByNamePtr = [& arg](const RooAbsArg * listItem) {
+    return arg.namePtr() == listItem->namePtr();
+  };
+
+  auto item = std::find_if(_list.begin(), _list.end(), findByNamePtr);
   return item != _list.end() ? *item : nullptr;
 }
 
@@ -1188,3 +1220,18 @@ void RooAbsCollection::RecursiveRemove(TObject *obj)
    if (obj && obj->InheritsFrom(RooAbsArg::Class())) remove(*(RooAbsArg*)obj,false,false);
 }
 
+
+void RooAbsCollection::invalidateActiveIterators() const {
+  //Prune inactive iterators
+  _activeIterators.erase(
+      std::remove_if(_activeIterators.begin(), _activeIterators.end(),
+          [](const weak_ptr<LegacyIterator_t> & wptr){return wptr.expired();}),
+          _activeIterators.end());
+
+  //Invalidate all others
+  for (const auto & wptr : _activeIterators) {
+    auto ptr = wptr.lock();
+    if (ptr)
+      ptr->invalidate();
+  }
+}

@@ -22,11 +22,27 @@
 RooLinkedListIter is the TIterator implementation for RooLinkedList
 **/
 
-#include "RooFit.h"
-
 #include "RooLinkedListIter.h"
 
-using namespace std;
+#include "RooAbsArg.h"
+#include <iostream>
+
+template<class STLContainer>
+RooAbsArg * TIteratorToSTLInterface<STLContainer>::nextChecked() {
+    assert(fSTLContainer->begin() <= fSTLIter && fSTLIter < fSTLContainer->end());
+
+    RooAbsArg * ret = *fSTLIter;
+//    std::cout << "It at " << fSTLIter - fSTLContainer->begin() << ": ";
+//    ret->Print();
+#ifndef NDEBUG
+    assert(ret == fCurrentElem);
+    fCurrentElem = ++fSTLIter != fSTLContainer->end() ? *fSTLIter : nullptr;
+#endif
+    return ret;
+}
+
+template class TIteratorToSTLInterface<std::vector<RooAbsArg*>>;
+
 
 //ClassImp(RooLinkedListIterImpl);
 

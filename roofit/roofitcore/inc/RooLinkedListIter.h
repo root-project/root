@@ -16,10 +16,11 @@
 #ifndef ROO_LINKED_LIST_ITER
 #define ROO_LINKED_LIST_ITER
 
-#include "Rtypes.h"
+//#include "Rtypes.h"
 #include "TIterator.h"
 #include "RooLinkedList.h"
 #include <memory>
+#include <assert.h>
 
 
 ///Interface for RooFIter-compatible iterators
@@ -34,7 +35,7 @@ class GenericRooFIter
 class RooFIter
 {
   public:
-  RooFIter(std::unique_ptr<GenericRooFIter> itImpl) : fIterImpl{std::move(itImpl)} {}
+  RooFIter(std::shared_ptr<GenericRooFIter> && itImpl) : fIterImpl{std::move(itImpl)} {}
   RooFIter(const RooFIter &) = delete;
   RooFIter(RooFIter &&) = default;
   RooFIter & operator=(const RooFIter &) = delete;
@@ -45,7 +46,7 @@ class RooFIter
   }
 
   private:
-  std::unique_ptr<GenericRooFIter> fIterImpl;
+  std::shared_ptr<GenericRooFIter> fIterImpl;
 };
 
 
@@ -67,37 +68,18 @@ class RooFIterForLinkedList final : public GenericRooFIter
     const RooLinkedListElem * fPtr{nullptr};  //! Next link element
 };
 
-template<class T>
-class RooFIterForSTL final : public GenericRooFIter
-{
-  public:
-  RooFIterForSTL(const T & vec) : fSTLContainer{&vec}, fSTLIter{vec.begin()} {}
-
-  /// Return next element in collection
-  RooAbsArg *next() override {
-    if (fSTLIter != fSTLContainer->end())
-      return *fSTLIter++;
-
-    return nullptr;
-  }
-
- private:
-    // If not constructed from a linked list
-    const std::vector<RooAbsArg*> * fSTLContainer{nullptr}; //!
-    typename std::vector<RooAbsArg*>::const_iterator fSTLIter{}; //!
-};
-using RooFIterForStdVec = RooFIterForSTL<std::vector<RooAbsArg*>>;
-
-
 
 
 template<class STLContainer>
-class TIteratorToSTLInterface final : public TIterator {
+class TIteratorToSTLInterface final : public TIterator , public GenericRooFIter {
   public:
 
   TIteratorToSTLInterface(const STLContainer & container) :
     fSTLContainer{&container},
     fSTLIter{fSTLContainer->begin()}
+#ifndef NDEBUG
+    ,fCurrentElem{fSTLContainer->empty() ? nullptr : *fSTLIter}
+#endif
   {
 
   }
@@ -110,16 +92,28 @@ class TIteratorToSTLInterface final : public TIterator {
     return nullptr;
   }
 
-  TObject * Next() override {
-    if (!fSTLContainer || fSTLIter == fSTLContainer->end())
+  RooAbsArg * next() override {
+    if (atEnd())
       return nullptr;
+
+#ifndef NDEBUG
+    return nextChecked();
+#endif
 
     return *fSTLIter++;
   }
 
+  TObject * Next() override {
+    return static_cast<TObject*>(next());
+  }
+
   void Reset() override {
-    if (fSTLContainer)
+    if (fSTLContainer) {
       fSTLIter = fSTLContainer->begin();
+#ifndef NDEBUG
+      fCurrentElem = fSTLContainer->empty() ? nullptr : *fSTLIter;
+#endif
+    }
   }
 
   Bool_t operator!=(const TIterator & other) const override {
@@ -133,21 +127,42 @@ class TIteratorToSTLInterface final : public TIterator {
   }
 
   TObject * operator*() const override {
-    if (!fSTLContainer || fSTLIter == fSTLContainer->end())
+    if (atEnd())
       return nullptr;
 
-    return *fSTLIter;
+#ifndef NDEBUG
+    assert(fCurrentElem == *fSTLIter);
+#endif
+
+    return static_cast<TObject*>(*fSTLIter);
+  }
+  
+  void invalidate() {
+    fIsValid = false;
   }
 
   private:
+  bool atEnd() const {
+    if (!fIsValid) {
+      throw std::logic_error("This iterator was invalidated by modifying the underlying collection.");
+    }
+    return !fSTLContainer
+        || fSTLContainer->empty()
+        || fSTLIter == fSTLContainer->end();
+  }
+
+  RooAbsArg * nextChecked();
+
   const STLContainer * fSTLContainer{nullptr}; //!
   typename STLContainer::const_iterator fSTLIter; //!
+  bool fIsValid{true}; //!
+#ifndef NDEBUG
+  const RooAbsArg * fCurrentElem; //!
+#endif
 };
 
 
-
-
-
+////////////////////////////////////////////////////////////////////////////////////////////
 /// A wrapper around TIterator derivatives.
 ///
 /// Its sole purpose is to act on the outside like the old RooLinkedListIter, even though
@@ -161,7 +176,7 @@ class TIteratorToSTLInterface final : public TIterator {
 class RooLinkedListIter final : public TIterator {
 
   public:
-  RooLinkedListIter(std::unique_ptr<TIterator> iterImpl) :
+  RooLinkedListIter(std::shared_ptr<TIterator> iterImpl) :
     fIterImpl{std::move(iterImpl)} {
 
   }
@@ -171,7 +186,7 @@ class RooLinkedListIter final : public TIterator {
   RooLinkedListIter & operator=(const RooLinkedListIter &) = delete;
   RooLinkedListIter & operator=(RooLinkedListIter &&) = default;
 
-  TIterator &operator=(const TIterator & other) override {return fIterImpl->operator=(other); }
+  TIterator &operator=(const TIterator & other) override {fIterImpl->operator=(other); return *this;}
   const TCollection *GetCollection() const override {return nullptr;}
 
   TObject * Next() override {return fIterImpl->Next();}
@@ -180,7 +195,7 @@ class RooLinkedListIter final : public TIterator {
   TObject * operator*() const override {return fIterImpl->operator*();}
 
   private:
-  std::unique_ptr<TIterator> fIterImpl; //!
+  std::shared_ptr<TIterator> fIterImpl; //!
 };
 
 

@@ -28,6 +28,9 @@
 class RooAbsCollection : public TObject, public RooPrintable {
 public:
 
+  using const_iterator = std::vector<RooAbsArg*>::const_iterator;
+//  using iterator = std::vector<RooAbsArg*>::iterator;
+
   // Constructors, assignment etc.
   RooAbsCollection();
   RooAbsCollection(const char *name);
@@ -74,6 +77,16 @@ public:
   virtual void   addClone(const RooAbsCollection& list, Bool_t silent=kFALSE);
   Bool_t replace(const RooAbsCollection &other);
   Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
+  template<class forwardIt>
+  void remove(forwardIt begin, forwardIt end, Bool_t silent = kFALSE, Bool_t matchByNameOnly = kFALSE) {
+      for (forwardIt it = begin; it != end; ++it) {
+        static_assert(std::is_same<
+            typename std::iterator_traits<forwardIt>::value_type,
+            RooAbsArg*>::value, "Can only remove lists of RooAbsArg*.");
+        auto castedElm = static_cast<RooAbsArg*>(*it);
+        remove(*castedElm, silent, matchByNameOnly);
+      }
+  }
 
   // Group operations on AbsArgs
   void setAttribAll(const Text_t* name, Bool_t value=kTRUE) ;
@@ -99,34 +112,29 @@ public:
   /// \deprecated TIterator-style iteration over contained elements. Use begin() and end() or
   /// range-based for loop instead.
   inline TIterator* createIterator(Bool_t dir = kIterForward) const
-      _R__DEPRECATED_LATER("RooAbsCollections and subclasses now support the more performant "
-      "begin(), end() and range-based for loops.") {
+  _R__SUGGEST_ALTERNATIVE("begin(), end() and range-based for loops.") {
     // Create and return an iterator over the elements in this collection
-    return new TIteratorToSTLInterface<decltype(_list)>(_list);
+    return new RooLinkedListIter(makeLegacyIterator(dir));
   }
 
   /// \deprecated TIterator-style iteration over contained elements. Use begin() and end() or
   /// range-based for loop instead.
   RooLinkedListIter iterator(Bool_t dir = kIterForward) const
-      _R__DEPRECATED_LATER("RooAbsCollections and subclasses now support the more performant "
-      "begin(), end() and range-based for loops.") {
-    auto iterImpl = std::make_unique<TIteratorToSTLInterface<decltype(_list)>>(_list);
-    return RooLinkedListIter(std::move(iterImpl));
+  _R__SUGGEST_ALTERNATIVE("begin(), end() and range-based for loops.") {
+    return RooLinkedListIter(makeLegacyIterator(dir));
   }
 
   /// \deprecated One-time forward iterator. Use begin() and end() or
   /// range-based for loop instead.
   RooFIter fwdIterator() const
-      _R__DEPRECATED_LATER("RooAbsCollections and subclasses now support the more performant "
-      "begin(), end() and range-based for loops."){
-    auto iterImpl = std::make_unique<RooFIterForStdVec>(_list);
-    return RooFIter(std::move(iterImpl));
+  _R__SUGGEST_ALTERNATIVE("begin(), end() and range-based for loops.") {
+    return RooFIter(makeLegacyIterator());
   }
 
-  std::vector<RooAbsArg*>::const_iterator begin() const {
+  const_iterator begin() const {
     return _list.begin();
   }
-  std::vector<RooAbsArg*>::const_iterator end() const {
+  const_iterator end() const {
     return _list.end();
   }
 
@@ -197,6 +205,10 @@ protected:
   friend class RooMultiCatIter ;
 
   std::vector<RooAbsArg*> _list; // Actual object storage
+  using LegacyIterator_t = TIteratorToSTLInterface<decltype(_list)>;
+  /// Active old-style iterators will not behave as expected when elements are deleted.
+  /// Need to notify them if that happens.
+  mutable std::vector<std::weak_ptr<LegacyIterator_t>> _activeIterators; //!
 
   Bool_t _ownCont;  // Flag to identify a list that owns its contents.
   TString _name;    // Our name.
@@ -219,7 +231,17 @@ protected:
   void makeTypedStructureTag() ;
   
 private:
+  std::shared_ptr<LegacyIterator_t> makeLegacyIterator (bool forward = true) const {
+    if (!forward)
+      throw std::logic_error("The legacy iterators are deprecated and only work in forward direction.");
+//    std::cout << "Making iterator for " << ClassName() << "\n";
+//    Print("V");
+    auto iterImpl = std::make_shared<LegacyIterator_t>(_list);
+    _activeIterators.emplace_back(iterImpl);
+    return iterImpl;
+  }
 
+  void invalidateActiveIterators() const;
   ClassDef(RooAbsCollection,3) // Collection of RooAbsArg objects
 };
 
