@@ -920,7 +920,7 @@ D: Several contributions to the 3-d graphics and GL interface, WebEVE
 
 N: Yuka Takahashi
 E: Yuka.Takahashi@cern.ch
-D: contributions to runtime c++ modules and their integration in the CMSSW
+D: contributions to runtime c++ modules and their integration into CMSSW
 D: contributions to rootcling, cling and cmake
 
 N: Evgueni Tcherniaev
