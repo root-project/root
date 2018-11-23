@@ -284,4 +284,6 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
 
 ## Build, Configuration and Testing Infrastructure
 
-
+  - The required version of CMake has been updated from 3.4.3 to 3.6. This is
+    necessary because both Vc and VecCore builtins require it, and ROOT uses
+    some features from newer CMake versions, namely `list(FILTER...)`.
