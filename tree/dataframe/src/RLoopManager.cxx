@@ -25,23 +25,25 @@
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::Internal::RDF;
 
-RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
+RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches, ULong64_t startEvt, ULong64_t endEvt)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
      fNSlots(RDFInternal::GetNSlots()),
-     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles)
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
+     fStartEvt(startEvt), fEndEvt(endEvt)
 {
 }
 
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
    : fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
-     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles)
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles),
+     fStartEvt(0ULL), fEndEvt(0ULL)
 {
 }
 
-RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
+RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches, ULong64_t startEvt, ULong64_t endEvt)
    : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
-     fDataSource(std::move(ds))
+     fDataSource(std::move(ds)), fStartEvt(startEvt), fEndEvt(endEvt)
 {
    fDataSource->SetNSlots(fNSlots);
 }
@@ -100,6 +102,11 @@ void RLoopManager::RunTreeProcessorMT()
    RSlotStack slotStack(fNSlots);
    auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree);
 
+   // TODO
+   // This feature is not implemented yet in TTreeProcessorMT
+   //if (0ULL != fStartEvt && 0ULL != fEndEvt)
+   //   tp.SetEntriesRange(fStartEvt, fEndEvt);
+
    tp->Process([this, &slotStack](TTreeReader &r) -> void {
       auto slot = slotStack.GetSlot();
       InitNodeSlots(&r, slot);
@@ -122,6 +129,8 @@ void RLoopManager::RunTreeReader()
       fTree->LoadTree(0);
    }
    TTreeReader r(fTree.get());
+   if (0ULL != fStartEvt && 0ULL != fEndEvt)
+      r.SetEntriesRange(fStartEvt, fEndEvt);
    if (0 == fTree->GetEntriesFast())
       return;
    InitNodeSlots(&r, 0);

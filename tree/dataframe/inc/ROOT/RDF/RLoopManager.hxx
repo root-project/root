@@ -116,6 +116,8 @@ class RLoopManager : public RNodeBase {
    /// A unique ID that identifies the computation graph that starts with this RLoopManager.
    /// Used, for example, to jit objects in a namespace reserved for this computation graph
    const unsigned int fID = GetNextID();
+   ULong64_t fStartEvt;
+   ULong64_t fEndEvt;
 
    std::vector<RCustomColumnBase *>
       fCustomColumns; ///< The loopmanager tracks all columns created, without owning them.
@@ -135,9 +137,9 @@ class RLoopManager : public RNodeBase {
    static unsigned int GetNextID();
 
 public:
-   RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
+   RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches, ULong64_t startEvt = 0ULL, ULong64_t endEvt = 0ULL);
    RLoopManager(ULong64_t nEmptyEntries);
-   RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches);
+   RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches, ULong64_t startEvt = 0ULL, ULong64_t endEvt = 0ULL);
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
 
