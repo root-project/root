@@ -48,10 +48,10 @@ ROOT::Detail::RRawFile::RRawFile(
    : fBufferOffset(0)
    , fBufferSize(0)
    , fBuffer(nullptr)
+   , fFileSize(kUnknownFileSize)
    , fUrl(url)
    , fOptions(options)
    , fFilePos(0)
-   , fFileSize(kUnknownFileSize)
 {
    if (fOptions.fBlockSize > 0)
       fBuffer = new unsigned char[fOptions.fBlockSize];

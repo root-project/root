@@ -63,14 +63,14 @@ private:
    size_t fBufferSize;
    /// An I/O buffer with data from the file. TODO(jblomer): Readln can lead to buffer thrashing.
    unsigned char *fBuffer;
+   /// The cached file size
+   std::uint64_t fFileSize;
 
 protected:
    std::string fUrl;
    ROptions fOptions;
    /// The current position in the file, which can be changed by Seek, Read, and Readln
    std::uint64_t fFilePos;
-   /// The cached file size
-   std::uint64_t fFileSize;
 
    /// Derived classes should implement low-level reading without buffering
    virtual size_t DoPread(void *buffer, size_t nbytes, std::uint64_t offset) = 0;
