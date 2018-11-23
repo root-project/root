@@ -15,7 +15,7 @@
 # A cache to speed-up the reading of ROOT datasets
 
 ## Table of Contents
-- [Motivation](motivation)
+- [Motivation](#motivation)
 - [General Description](#description)
 - [Changes in behaviour](#changesbehaviour)
 - [Self-optimization](#cachemisses)
@@ -151,13 +151,14 @@ The TreeCache is automatically used by TTree::Draw. The method knows
 which branches are used in the query and it puts automatically these branches
 in the cache. The entry range is also inferred automatically.
 
-### TTree::Process and TSelectors
+### TTree::Process and TSelectors Examples
 
 The user must enable the cache and tell the system which branches to cache
 and also specify the entry range. It is important to specify the entry range
 in case only a subset of the events is processed to avoid wasteful caching.
 
 #### Reading all branches
+
 ~~~ {.cpp}
     TTree *T;
     f->GetObject(T, "mytree");
@@ -170,6 +171,7 @@ in case only a subset of the events is processed to avoid wasteful caching.
     T->GetEntry(i);
     // ... Here the entry is processed
 ~~~
+
 #### Reading a subset of all branches
 
 In the Process function we read a subset of the branches.
