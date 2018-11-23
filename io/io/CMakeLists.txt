@@ -8,11 +8,18 @@
 # CMakeLists.txt file for building ROOT io/io package
 ############################################################################
 
+if (WIN32)
+  set(rawfile_local_headers ROOT/RRawFileWin.hxx)
+  set(rawfile_local_sources src/RRawFileWin.cxx)
+else ()
+  set(rawfile_local_headers ROOT/RRawFileUnix.hxx)
+  set(rawfile_local_sources src/RRawFileUnix.cxx)
+endif ()
+
 ROOT_LINKER_LIBRARY(RIO
   src/RRawFile.cxx
   src/RRawFileDavix.cxx
-  src/RRawFileUnix.cxx
-  src/RRawFileWin.cxx
+  ${rawfile_local_sources}
   src/TArchiveFile.cxx
   src/TBufferFile.cxx
   src/TBufferText.cxx
@@ -63,8 +70,7 @@ endif()
 ROOT_GENERATE_DICTIONARY(G__RIO
   ROOT/RRawFile.hxx
   ROOT/RRawFileDavix.hxx
-  ROOT/RRawFileUnix.hxx
-  ROOT/RRawFileWin.hxx
+  ${rawfile_local_headers}
   ROOT/TBufferMerger.hxx
   TArchiveFile.h
   TBufferFile.h
