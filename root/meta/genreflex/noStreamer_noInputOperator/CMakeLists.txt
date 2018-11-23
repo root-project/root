@@ -37,7 +37,7 @@ ROOTTEST_ADD_TEST(invalidNoInpuOperatorGenreflex
                   PASSRC 1)
 
 #   noInputOperator = true
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(noInputOperator_rflx foo_custom_input_operator.h SELECTION noInputOperator_selection.xml)
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(noInputOperator_rflx foo_custom_input_operator.h SELECTION noInputOperator_selection.xml NO_ROOTMAP)
 
 #   noInputOperator = false
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(noInputOperator_false_rflx foo_custom_input_operator.h SELECTION noInputOperator_false_selection.xml)
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(noInputOperator_false_rflx foo_custom_input_operator.h SELECTION noInputOperator_false_selection.xml NO_ROOTMAP)
