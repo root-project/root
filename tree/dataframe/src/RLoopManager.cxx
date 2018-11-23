@@ -263,11 +263,6 @@ void RLoopManager::RunTreeProcessorMT()
 /// Run event loop over one or multiple ROOT files, in sequence.
 void RLoopManager::RunTreeReader()
 {
-   if (fTree->IsA() == TClass::GetClass("TChain")) {
-      // in case this is not the first event loop, we bring the chain back to the first tree
-      // to avoid warnings from TTreeReader
-      fTree->LoadTree(0);
-   }
    TTreeReader r(fTree.get());
    if (0 == fTree->GetEntriesFast())
       return;
