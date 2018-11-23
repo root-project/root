@@ -127,7 +127,6 @@ namespace ROOT {
          std::unique_ptr<TTreeReader> MakeReader(Long64_t start, Long64_t end)
          {
             auto reader = std::make_unique<TTreeReader>(fChain.get());
-            fChain->LoadTree(start - 1);
             reader->SetEntriesRange(start, end);
             return reader;
          }
