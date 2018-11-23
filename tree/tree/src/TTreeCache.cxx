@@ -945,7 +945,7 @@ Bool_t TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len)
       return kFALSE;
    }
 
-   // OK, we updated the cache with as much information as possible.  Seach again for
+   // OK, we updated the cache with as much information as possible.  Search again for
    // the entry we want.
    iter = std::lower_bound(fMissCache->fEntries.begin(), fMissCache->fEntries.end(), mcentry);
 
@@ -1181,7 +1181,7 @@ Bool_t TTreeCache::FillBuffer()
    }
 
    // Set to true to enable all debug output without having to set gDebug
-   // Replace this once we have a per module and/or per class debuging level/setting.
+   // Replace this once we have a per module and/or per class debugging level/setting.
    static constexpr bool showMore = kFALSE;
 
    static const auto PrintAllCacheInfo = [](TObjArray *branches) {
@@ -1242,7 +1242,7 @@ Bool_t TTreeCache::FillBuffer()
    auto entryNext    = clusterIter.GetNextEntry();
 
    if (entryNext < fEntryMin || fEntryMax < entryCurrent) {
-      // There is no overlap betweent the cluster we found [entryCurrent, entryNext[
+      // There is no overlap between the cluster we found [entryCurrent, entryNext[
       // and the authorized range [fEntryMin, fEntryMax]
       // so we have nothing to do
       return kFALSE;
@@ -1452,7 +1452,7 @@ Bool_t TTreeCache::FillBuffer()
                   // If we are tight in memory, reading this basket may prevent reading the basket (for the other branches)
                   // that covers this gap, forcing those baskets to be read uncached (because the cache wont be reloaded
                   // until we use this basket).
-                  // eg. We could end up with the cache containg
+                  // eg. We could end up with the cache contain
                   //   b1: [428, 514[ // 'this' basket and we can assume [321 to 428[ is already in memory
                   //   b2: [400, 424[
                   // and when reading entry 425 we will read b2's basket uncached.
@@ -1491,7 +1491,7 @@ Bool_t TTreeCache::FillBuffer()
                   // let's not read it again. I.e. we bet that it will continue to not
                   // be used.  At worst it will be used and thus read by itself.
                   // Usually in this situation the basket is large so the penalty for
-                  // (re)reading it uselessly is high and the penatly to read it by
+                  // (re)reading it uselessly is high and the penalty to read it by
                   // itself is 'small' (i.e. size bigger than latency).
                   b->fCacheInfo.Veto(j);
                   if (showMore || gDebug > 7)
