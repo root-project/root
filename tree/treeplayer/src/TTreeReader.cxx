@@ -385,7 +385,8 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       return fEntryStatus;
    }
 
-   if (fMostRecentTreeNumber != treeNumberBeforeLoadTree) {
+   if (fMostRecentTreeNumber != -1 // We are not new-born
+       && fMostRecentTreeNumber != treeNumberBeforeLoadTree) {
       // This can happen if someone switched trees behind us.
       // Likely cause: a TChain::LoadTree() e.g. from TTree::Process().
       // This means that "local" should be set!
