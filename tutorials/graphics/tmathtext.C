@@ -29,5 +29,5 @@
    c1->Print("c1.ps");
    c1->Print("c1.eps");
 
-   return c1;
+   return 0; // success
 }
