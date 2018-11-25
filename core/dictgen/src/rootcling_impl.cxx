@@ -4148,12 +4148,6 @@ int RootClingMain(int argc,
    clingArgs.push_back(argv[0]);
    clingArgs.push_back("-iquote.");
 
-   // Is this needed at all or just historical?
-   if (! IsPointerTClassCopy<std::vector<int>::iterator>::kVal) {
-      // Tell cling (for parsing pragma) that std::vector's iterator is a class
-      clingArgs.push_back("-DG__VECTOR_HAS_CLASS_ITERATOR");
-   }
-
    if (ic < argc && !strcmp(argv[ic], "-c")) {
       // Simply ignore the -c options.
       ic++;
