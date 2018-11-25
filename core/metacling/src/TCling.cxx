@@ -833,21 +833,6 @@ int TCling_GenerateDictionary(const std::vector<std::string> &classes,
             // classes (now that we have a dictionary for them).
             fileContent +=    *it + "::*+;\n" ;
          }
-         std::string oprLink("#pragma link C++ operators ");
-         oprLink += *it;
-         // Don't! Requests e.g. op<(const vector<T>&, const vector<T>&):
-         // fileContent += oprLink + ";\n";
-         if (iSTLType != sSTLTypes.end()) {
-            if (n == "vector") {
-               fileContent += "#ifdef G__VECTOR_HAS_CLASS_ITERATOR\n";
-            }
-            fileContent += oprLink + "::iterator;\n";
-            fileContent += oprLink + "::const_iterator;\n";
-            fileContent += oprLink + "::reverse_iterator;\n";
-            if (n == "vector") {
-               fileContent += "#endif\n";
-            }
-         }
       }
       fileContent += "#endif\n";
       //end(1)
