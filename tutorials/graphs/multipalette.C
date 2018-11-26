@@ -7,7 +7,8 @@
 /// display plots using different palettes on the same pad.
 ///
 /// When a pad is painted, all its elements are painted in the sequence
-/// of Draw calls; for TExec it executes its command - which in the following
+/// of Draw calls (See the difference between Draw and Paint in the TPad documentation);
+/// for TExec it executes its command - which in the following
 /// example sets palette for painting all objects painted afterwards.
 /// If in the next pad another TExec changes the palette, it doesn’t affect the
 /// previous pad which was already painted, but it will affect the current and
