@@ -837,13 +837,18 @@ TopoDS_Shape TGeoToOCC::OCC_Arb8(Double_t, Double_t* , Double_t *points)
 }
 
 
-
-TopoDS_Shape TGeoToOCC::OCC_Box(Double_t dx, Double_t dy, Double_t dz, Double_t OX, Double_t OY, Double_t OZ )
+TopoDS_Shape TGeoToOCC::OCC_Box(Double_t dx, Double_t dy, Double_t dz,
+                                Double_t OX, Double_t OY, Double_t OZ)
 {
-   TopoDS_Solid box;
-   if (dz==0)dz=0.1;
-   if (dy==0)dy=0.1;if (dx==0)dx=0.1;
-   box = BRepPrimAPI_MakeBox( gp_Pnt(OX-dx, OY-dy, OZ-dz), dx*2, dy*2, dz*2);
+   if (dz == 0.0)
+      dz = 0.1;
+   if (dy == 0.0)
+      dy = 0.1;
+   if (dx == 0.0)
+      dx = 0.1;
+
+   TopoDS_Solid box = BRepPrimAPI_MakeBox(gp_Pnt(OX - dx, OY - dy, OZ - dz),
+                                          2.0 * dx, 2.0 * dy, 2.0 * dz);
    return Reverse(box);
 }
 
