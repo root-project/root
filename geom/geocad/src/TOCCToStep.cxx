@@ -75,7 +75,6 @@ TDF_Label TOCCToStep::OCCShapeCreation(TGeoManager *m)
    TGeoVolume * motherVol;
    TGeoVolume * Top;
    TString path;
-   Int_t num = 0;
    Int_t level = 0;
    TIter next(m->GetListOfVolumes());
    fLabel = XCAFDoc_DocumentTool::ShapeTool(fDoc->Main())->NewShape();
@@ -87,7 +86,6 @@ TDF_Label TOCCToStep::OCCShapeCreation(TGeoManager *m)
    fTree[Top] = fLabel;
    while ((currentVolume = (TGeoVolume *)next())) {
       if (GetLabelOfVolume(currentVolume).IsNull()) {
-         //num = currentVolume->GetNdaughters();
          if ((GetLabelOfVolume(currentVolume).IsNull())) {
             if (currentVolume->GetShape()->IsA()==TGeoCompositeShape::Class()) {
                fShape = fRootShape.OCC_CompositeShape((TGeoCompositeShape*)currentVolume->GetShape(), TGeoIdentity());
