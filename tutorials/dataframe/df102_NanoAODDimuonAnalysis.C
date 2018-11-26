@@ -3,12 +3,16 @@
 /// \notebook -draw
 /// This tutorial illustrates how NanoAOD files can be processed with ROOT
 /// dataframes. The NanoAOD-like input files are filled with 66 mio. events
-/// from CMS OpenData containing muon candidates from 2012 data
+/// from CMS OpenData containing muon candidates part of 2012 dataset
 /// ([DOI: 10.7483/OPENDATA.CMS.YLIC.86ZZ](http://opendata.cern.ch/record/6004)
 /// and [DOI: 10.7483/OPENDATA.CMS.M5AD.Y3V3](http://opendata.cern.ch/record/6030)).
-/// The script matches muon pairs and produces an histogram of the dimuon mass
+/// The macro matches muon pairs and produces an histogram of the dimuon mass
 /// spectrum showing resonances up to the Z mass.
 /// Note that the bump at 30 GeV is not a resonance but a trigger effect.
+///
+/// Some more details about the dataset:
+///   - It contains about 66 millions events (muon and electron collections, plus some other information, e.g. about primary vertices)
+///   - It spans two compressed ROOT files located on EOS for about a total size of 7.5 GB.
 ///
 /// \macro_image
 /// \macro_code
