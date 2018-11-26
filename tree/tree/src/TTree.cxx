@@ -5365,6 +5365,7 @@ Long64_t TTree::GetEntriesFriend() const
 /// and a new instance of Event is created and filled.
 ///
 /// ## OPTION 3
+///
 /// ~~~ {.cpp}
 /// Same as option 1, but you delete yourself the event.
 ///
