@@ -281,7 +281,7 @@ Later on to reuse the palette `MyPalette` it will be enough to do
 
 As only one palette is active, one need to use `TExec` to be able to
 display plots using different palettes on the same pad.
-The following macro illustrate this feature.
+The tutorial multipalette.C illustrates this feature.
 
 Begin_Macro(source)
 ../../../tutorials/graphs/multipalette.C
