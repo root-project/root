@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
 
-set(policy_new CMP0068)
+set(policy_new CMP0068 CMP0072)
 foreach(policy ${policy_new})
   if(POLICY ${policy})
     cmake_policy(SET ${policy} NEW)
