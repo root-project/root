@@ -10,9 +10,6 @@ Error in <TInterpreter::AutoParse>: Error parsing payload code for class AexprMs
 
 #line 1 "expressiveErrorMessages dictionary payload"
 
-#ifndef G__VECTOR_HAS_CLASS_ITERATOR
-  #define G__VECTOR_HAS_CLASS_ITERATOR 1
-#endif
 #ifndef ClingWorkAroundMissingDynamicScope
   #define ClingWorkAroundMissingDynamicScope 1
 #endif
