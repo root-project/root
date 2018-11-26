@@ -476,7 +476,7 @@ if(python)
     endif()
   endif()
 
-  if(NOT "${PYTHON_VERSION_STRING}" STREQUAL "${PYTHONLIBS_VERSION_STRING}")
+  if(NOT "${PYTHONLIBS_VERSION_STRING}" MATCHES "${PYTHON_VERSION_STRING}")
     message(FATAL_ERROR "Version mismatch between Python interpreter (${PYTHON_VERSION_STRING})"
     " and libraries (${PYTHONLIBS_VERSION_STRING}).\nROOT cannot work with this configuration. "
     "Please specify only PYTHON_EXECUTABLE to CMake with an absolute path to ensure matching versions are found.")
