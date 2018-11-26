@@ -1,5 +1,8 @@
 #include "ROOT/RDataFrame.hxx"
 #include "TROOT.h"
+#include "TSystem.h"
+
+#include <algorithm>
 
 #include "gtest/gtest.h"
 
@@ -84,4 +87,22 @@ TEST(TEST_CATEGORY, EmptyTree)
    EXPECT_EQ(*c, 0U);
    EXPECT_EQ(g->size(), 0U);
    EXPECT_EQ(fc.load(), 0);
+}
+
+// check that rdfentry_ contains all expected values,
+// also in multi-thread runs over multiple ROOT files
+TEST(TEST_CATEGORY, UniqueEntryNumbers)
+{
+   const auto treename = "t";
+   const auto fname = "df_uniqueentrynumbers.root";
+   ROOT::RDataFrame(10).Snapshot<unsigned int>(treename, fname, {"rdfslot_"}); // does not matter what column we write
+
+   ROOT::RDataFrame df(treename, {fname, fname});
+   auto entries = *df.Take<ULong64_t>("rdfentry_");
+   std::sort(entries.begin(), entries.end());
+   const auto nEntries = entries.size();
+   for (auto i = 0u; i < nEntries; ++i)
+      EXPECT_EQ(i, entries[i]);
+
+   gSystem->Unlink(fname);
 }
