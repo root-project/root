@@ -8,6 +8,8 @@
 # These files are linked into rootcling_stage1 and libCling. rootcling accesses
 # them through rootcling_impl.
 
+ROOT_ADD_COMPILE_OPTIONS(-Wno-class-memaccess)
+
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 
 ROOT_OBJECT_LIBRARY(Dictgen
