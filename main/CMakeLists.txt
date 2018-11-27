@@ -27,6 +27,9 @@ else()
 endif()
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
 
+#---CreateHaddCommandLineOptions------------------------------------------------------------------
+generateHeaders(${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py ${CMAKE_BINARY_DIR}/include/haddCommandLineOptionsHelp.h hadd)
+
 if(fortran AND CMAKE_Fortran_COMPILER)
   ROOT_EXECUTABLE(g2root g2root.f LIBRARIES minicern)
   set_target_properties(g2root PROPERTIES COMPILE_FLAGS "-w")

@@ -34,3 +34,6 @@ if(CXX_HAS_fno_rtti)
     set_source_files_properties(src/LinkdefReader.cxx    PROPERTIES COMPILE_FLAGS "-fno-rtti")
     set_source_files_properties(src/TModuleGenerator.cxx PROPERTIES COMPILE_FLAGS "-fno-rtti")
 endif()
+
+#---CreateRootClingCommandLineOptions------------------------------------------------------------------
+generateHeaders(${CMAKE_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py ${CMAKE_BINARY_DIR}/include/rootclingCommandLineOptionsHelp.h Dictgen)

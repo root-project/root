@@ -44,7 +44,7 @@ TApplication (see TRint).
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 
-#include "CommandLineOptionsHelp.h"
+#include "TApplicationCommandLineOptionsHelp.h"
 
 #include <stdlib.h>
 
@@ -382,7 +382,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    for (i = 1; i < *argc; i++) {
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
           !strncmp(argv[i], "--help", 6)) {
-         fprintf(stderr, kCommandLineOptionsHelp, argv[0]);
+         fprintf(stderr, kCommandLineOptionsHelp);
          Terminate(0);
       } else if (!strncmp(argv[i], "--version", 9)) {
          fprintf(stderr, "ROOT Version: %s\n", gROOT->GetVersion());
