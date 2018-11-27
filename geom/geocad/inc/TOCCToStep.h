@@ -23,6 +23,9 @@
 #include <TDF_Label.hxx>
 #include <TopoDS_Shape.hxx>
 
+#ifdef Handle
+# undef Handle
+#endif
 
 class TOCCToStep {
 

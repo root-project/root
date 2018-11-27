@@ -19,6 +19,9 @@
 #include <TopoDS_Shape.hxx>
 #include <TopoDS_Wire.hxx>
 #undef Printf
+#ifdef Handle
+# undef Handle
+#endif
 
 //Root
 #include "TGeoXtru.h"
