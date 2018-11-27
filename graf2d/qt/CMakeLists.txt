@@ -16,42 +16,10 @@ endif()
 
 include(${QT_USE_FILE})
 
-set(headers
-  inc/TGQt.h
-  inc/TQMimeTypes.h
-  inc/TQtApplication.h
-  inc/TQtBrush.h
-  inc/TQtClientFilter.h
-  inc/TQtClientWidget.h
-  inc/TQtMarker.h
-  inc/TQtPadFont.h
-  inc/TQtRootSlot.h
-  inc/TQtTimer.h
-  inc/TQtWidget.h
-  inc/TQtIncludes.h
-)
-
-set(sources
-  src/GQtGUI.cxx
-  src/TGQt.cxx
-  src/TGQtDummy.cxx
-  src/TQMimeTypes.cxx
-  src/TQtApplication.cxx
-  src/TQtBrush.cxx
-  src/TQtClientFilter.cxx
-  src/TQtClientGuard.cxx
-  src/TQtClientWidget.cxx
-  src/TQtEvent.cxx
-  src/TQtEventQueue.cxx
-  src/TQtMarker.cxx
-  src/TQtPadFont.cxx
-  src/TQtPen.cxx
-  src/TQtRootApplication.cxx
-  src/TQtRootSlot.cxx
-  src/TQtSymbolCodec.cxx
-  src/TQtTimer.cxx
-  src/TQtWidget.cxx
-)
+# Avoid warnings about deprecated register from Qt4
+ROOT_ADD_CXX_FLAG(_GQt_FLAGS -Wno-deprecated-register)
+ROOT_ADD_CXX_FLAG(_GQt_FLAGS -Wno-register)
+separate_arguments(_GQt_FLAGS)
 
 QT4_WRAP_CPP(moc_sources
   inc/TQtWidget.h
@@ -64,8 +32,50 @@ QT4_WRAP_CPP(moc_sources
 )
 
 ROOT_STANDARD_LIBRARY_PACKAGE(GQt
-                              HEADERS ${headers}
-                              SOURCES ${sources} ${moc_sources}
-                              DICTIONARY_OPTIONS -Wno-deprecated
-                              LIBRARIES Qt4::QtCore Qt4::QtGui
-                              DEPENDENCIES Gui Gpad Graf Rint)
+  HEADERS
+    TGQt.h
+    TQMimeTypes.h
+    TQtApplication.h
+    TQtBrush.h
+    TQtClientFilter.h
+    TQtClientWidget.h
+    TQtMarker.h
+    TQtPadFont.h
+    TQtRootSlot.h
+    TQtTimer.h
+    TQtWidget.h
+    TQtIncludes.h
+  SOURCES
+    src/GQtGUI.cxx
+    src/TGQt.cxx
+    src/TGQtDummy.cxx
+    src/TQMimeTypes.cxx
+    src/TQtApplication.cxx
+    src/TQtBrush.cxx
+    src/TQtClientFilter.cxx
+    src/TQtClientGuard.cxx
+    src/TQtClientWidget.cxx
+    src/TQtEvent.cxx
+    src/TQtEventQueue.cxx
+    src/TQtMarker.cxx
+    src/TQtPadFont.cxx
+    src/TQtPen.cxx
+    src/TQtRootApplication.cxx
+    src/TQtRootSlot.cxx
+    src/TQtSymbolCodec.cxx
+    src/TQtTimer.cxx
+    src/TQtWidget.cxx
+    ${moc_sources}
+  DICTIONARY_OPTIONS
+    ${_GQt_FLAGS}
+  LIBRARIES
+    Qt4::QtCore
+    Qt4::QtGui
+  DEPENDENCIES
+    Gui
+    Gpad
+    Graf
+    Rint
+)
+
+target_compile_options(GQt PRIVATE ${_GQt_FLAGS})
