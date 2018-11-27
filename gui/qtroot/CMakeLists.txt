@@ -18,3 +18,9 @@ endif()
 include(${QT_USE_FILE})
 
 ROOT_STANDARD_LIBRARY_PACKAGE(QtRoot DEPENDENCIES Core Gui GQt)
+
+# Avoid warnings about deprecated register from Qt4
+ROOT_ADD_CXX_FLAG(_QtRoot_FLAGS -Wno-deprecated-register)
+ROOT_ADD_CXX_FLAG(_QtRoot_FLAGS -Wno-register)
+separate_arguments(_QtRoot_FLAGS)
+target_compile_options(QtRoot PRIVATE ${_QtRoot_FLAGS})

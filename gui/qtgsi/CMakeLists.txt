@@ -50,3 +50,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(QtGSI
                               SOURCES ${sources} ${moc_sources}
                               LIBRARIES Qt4::QtCore Qt4::QtGui
                               DEPENDENCIES Gui Gpad)
+
+# Avoid warnings about deprecated register from Qt4
+ROOT_ADD_CXX_FLAG(_QtGSI_FLAGS -Wno-deprecated-register)
+ROOT_ADD_CXX_FLAG(_QtGSI_FLAGS -Wno-register)
+separate_arguments(_QtGSI_FLAGS)
+target_compile_options(QtGSI PRIVATE ${_QtGSI_FLAGS})
