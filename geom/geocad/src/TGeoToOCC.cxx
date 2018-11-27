@@ -45,7 +45,12 @@ A log file is created in `/tmp/TGeoCad.log`
 */
 
 #include "TGeoToOCC.h"
-
+// ROOT-9837: the macro `Handle` has been undefined
+// we need to redefine it as it is done in the oce
+// header Standard_Macro.hxx
+#ifndef Handle
+#define Handle(ClassName) Handle_##ClassName
+#endif
 
 //Cascade
 
