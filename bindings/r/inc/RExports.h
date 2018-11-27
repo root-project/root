@@ -132,6 +132,11 @@ namespace Rcpp {
 #undef HAVE_UINTPTR_T
 #include<RInside.h>
 
+#ifdef Free
+// see https://sft.its.cern.ch/jira/browse/ROOT-9258
+# undef Free
+#endif
+
 namespace ROOT {
    namespace R {
       //reference to internal ROOTR's Module that call ROOT's classes in R
