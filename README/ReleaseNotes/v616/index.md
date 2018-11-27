@@ -24,6 +24,7 @@ The following people have contributed to this new version:
  Andrei Gheata, CERN/SFT,\
  Enrico Guiraud, CERN/SFT,\
  Stephan Hageboeck, CERN/SFT,\
+ Siddhartha Rao Kamalakara, GSOC, \
  Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
@@ -33,9 +34,12 @@ The following people have contributed to this new version:
  Fons Rademakers, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Oksana Shadura, UNL,\
+ Ravi Kiran Selvam, GSOC, \
+ Manos, Stergiadis, GSOC, \
  Matevz Tadel, UCSD/CMS,\
  Yuka Takahashi, Princeton,\
  Massimo Tumolo, Politecnico di Torino,\
+ Mohammad Uzair, CERN/SFT, \
  Xavier Valls, CERN/SFT,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
@@ -226,6 +230,52 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
   - Add value printer for RooAbsArg and daughters.
   - Add a Python version for the majority of the Tutorials.
 
+## TMVA Library
+
+### Deep Learning
+
+This release contains several fixes and improvement for the `MethodDL`. The `MethodDL` is also now the recommended class to use for Deep Learning in TMVA and is replacing the previous existing
+`MethodDNN`, which is still available, but it has a limited functionality and it supports only dense layer.
+
+The new features of `MethodDL` are:
+
+ - Support training and evaluation of Convolutional layer on GPU
+ - Several ML optimizers are now included and they can be used in addition to SGD. These are ADAM (the new default), ADAGRAD,
+RMSPROP, ADADELTA. A new option, *Optimizer* has been added in the option string used to define the training strategy options.
+ - Add support for regression in MethodDL
+ - Use single precision (float) types as the fundamental type for the neural network architecture. Double precision could be enabled, but it will require recompiling TMVA. 
+ - Support inference (network evaluation) in batch mode in addition to single event. Batch mode evaluation is now the default when used within the `TMVA::Factory` class (i.e. when calling
+`Factory::TestAllMethod()` or `Factory::EvaluateAllMethods()`
+ - Support splitting the overall training data in Train and Validation data. The train data is used for finding the optimal network weight and the validation data is used to monitor the validation
+error. The weights which are giving a minimal validation error will be stored. For the splitting a new option, *ValidationSize* has been added to the global options for `MethodDL`.
+The same option is also available in the `PyKeras` method of `PyMVA`
+ - The fast tanh implementation from VDT is now used as activation function when training the network on CPU.
+ - Using `Cblas` from the GSL library is supported for CPU training when no other Blas libraries are found. However, it is strongly recommended, to use an optimized Blas implementation such as `libopenblas`, that is
+available in cvmfs.
+ - Add several performance optimizations for both CPU and GPU versions of `MethodDL`. 
+
+
+### Other New TMVA Features
+
+ - Add a new option to the `DataLoader` to switch off computation of correlation matrix. The new option is called *CalcCorrelations* and it should be used when a large number of input variables are
+  provided, otherwise TMVA will spend a long time in setting up the data set before training. 
+ 
+ - Build configuration:
+   - Add new cmake flags, `tmva-cpu` and `tmva-gpu`, which can be used to swicth on/off the CPU and GPU (based on CUDA) implementations of the TMVA Deep Learning module. `tmva-cpu` is enabled by
+   default if a Blas or CBlas library is found in the system. `tmva-gpu` is enabled when the cmake flag `cuda` is enabled and a compatible Cuda library is found. 
+   enabled if the corre
+   - Add possibility to independently configure building of optional pymva part of tmva with flag `-Dpymva=ON|OFF`.
+
+ - New Cross Validation features:
+   - Add stratified splitting for cross validation.
+   - New plotting option in cross validation, average ROC curve.
+
+ - Bugfixes:
+   - Fix bug in BDT training with imt=on
+   - Improved handling of large event numbers in cross validation using deterministic splitting
+
+ - Documentation:
+   - Update TMVA Users' guide
 
 ## 2D Graphics Libraries
 
