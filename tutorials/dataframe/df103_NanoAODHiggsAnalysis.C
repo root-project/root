@@ -15,7 +15,7 @@
 /// The following steps are performed for each sample with data and simulated events
 /// in order to reconstruct the Higgs boson from the selected muons and electrons:
 /// 1. Select interesting events with multiple cuts on event properties, e.g.,
-///    number of leptons, kinematics of the letpons and quality of the tracks.
+///    number of leptons, kinematics of the leptons and quality of the tracks.
 /// 2. Reconstruct two Z bosons of which only one on the mass shell from the selected events and apply additional cuts
 ///    on the reconstructed objects.
 /// 3. Reconstruct the Higgs boson from the remaining Z boson candidates and calculate
