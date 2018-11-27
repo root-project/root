@@ -114,7 +114,10 @@ namespace {
                         const size_t nmeth = Cppyy::GetNumMethods( scope );
                         for ( size_t imeth = 0; imeth < nmeth; ++imeth ) {
                            Cppyy::TCppMethod_t method = Cppyy::GetMethod( scope, imeth );
-                           if ( Cppyy::GetMethodName( method ) == name )
+                           auto currentName = Cppyy::GetMethodName(method);
+                           // We need to compare with the resolved name too, in case there are
+                           // typedefs to be resolved (e.g. Float_t -> float)
+                           if (currentName == name || currentName == Cppyy::ResolveName(name))
                               overloads.push_back( new TFunctionHolder( scope, method ) );
                         }
 
