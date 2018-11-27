@@ -1420,6 +1420,20 @@ function(ROOT_ADD_C_FLAG var flag)
 endfunction()
 
 #----------------------------------------------------------------------------
+# ROOT_ADD_COMPILE_OPTIONS(flags)
+#----------------------------------------------------------------------------
+macro(ROOT_ADD_COMPILE_OPTIONS flags)
+  foreach(__flag ${flags})
+    check_cxx_compiler_flag("-Werror ${__flag}" __result)
+    if(__result)
+      add_compile_options(${__flag})
+    endif()
+  endforeach()
+  unset(__flag)
+  unset(__result)
+endmacro()
+
+#----------------------------------------------------------------------------
 # find_python_module(module [REQUIRED] [QUIET])
 #----------------------------------------------------------------------------
 function(find_python_module module)
