@@ -15,7 +15,6 @@ endif()
 
 if(NOT WIN32 AND ssl)
   add_subdirectory(rpdutils)
-  add_subdirectory(rootd)
 endif()
 
 if(xrootd)
