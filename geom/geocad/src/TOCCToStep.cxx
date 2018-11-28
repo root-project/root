@@ -26,6 +26,10 @@ reproduce the ROOT tree that will be written to the STEP file using
 the OCCWriteStep(const char * fname ) method.
 
 */
+
+// Do not #undef Handle:
+#define R__Needs_Handle
+
 #include "TOCCToStep.h"
 #include "TGeoToOCC.h"
 
