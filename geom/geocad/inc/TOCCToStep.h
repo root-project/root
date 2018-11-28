@@ -16,14 +16,6 @@
 #include "TGeoMatrix.h"
 #include "TGeoToOCC.h"
 
-// ROOT-9837: manage the macro called Handle defined
-// in the Standard_Macro.hxx file. The name `Handle`
-// cannot leak out of these headers otherwise name
-// clashes will occour.
-#ifndef Handle
-#define Handle(ClassName) Handle_##ClassName
-#endif
-
 #include <TDF_Label.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 #include <TDocStd_Document.hxx>
@@ -68,7 +60,7 @@ public:
 };
 
 // ROOT-9837
-#ifdef Handle
+#if defined(Handle) && !defined(R__Needs_Handle)
 #undef Handle
 #endif
 
