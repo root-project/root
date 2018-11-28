@@ -360,6 +360,13 @@ available in cvmfs.
   - Added interoperability with NumPy arrays for STL vectors and `RVec`s (zero-copy wrapping of
   vectors and `RVec`s into NumPy arrays)
 
+### Jupyter Notebook Integration
+  - Make sure the ROOT C++ Jupyter kernel runs with the same Python version (major and minor) that ROOT
+  was built with.
+  - Make the Jupyter server started with `root --notebook` listen on all interfaces. This can be useful
+  if the user wants to connect to the server remotely. It also fixes an issue observed when starting
+  the Jupyter server inside a Docker container.
+
 ## JavaScript ROOT
 
 
