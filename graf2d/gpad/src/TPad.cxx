@@ -3035,6 +3035,20 @@ void TPad::FillCollideGrid(TObject *oi)
          if (o->InheritsFrom(TBox::Class()))   { FillCollideGridTBox(o);   continue;}
          if (o->InheritsFrom(TH1::Class()))    { FillCollideGridTH1(o);    continue;}
          if (o->InheritsFrom(TGraph::Class())) { FillCollideGridTGraph(o); continue;}
+         if (o->InheritsFrom(TMultiGraph::Class())) {
+            TList * grlist = ((TMultiGraph *)o)->GetListOfGraphs();
+            TIter nextgraph(grlist);
+            TObject * og;
+            while ((og = nextgraph())) FillCollideGridTGraph(og);
+         }
+         if (o->InheritsFrom(THStack::Class())) {
+            TList * hlist = ((THStack *)o)->GetHists();
+            TIter nexthist(hlist);
+            TObject * oh;
+            while ((oh = nexthist())) {
+               if (oh->InheritsFrom(TH1::Class())) FillCollideGridTH1(oh);
+            }
+         }
       }
    }
 }
