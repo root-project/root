@@ -16,6 +16,7 @@
 #include "ROOT/TThreadExecutor.hxx"
 #endif
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -100,12 +101,17 @@ void RLoopManager::RunTreeProcessorMT()
    RSlotStack slotStack(fNSlots);
    auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree);
 
-   tp->Process([this, &slotStack](TTreeReader &r) -> void {
+   std::atomic<ULong64_t> entryCount(0ull);
+
+   tp->Process([this, &slotStack, &entryCount](TTreeReader &r) -> void {
       auto slot = slotStack.GetSlot();
       InitNodeSlots(&r, slot);
+      const auto entryRange = r.GetEntriesRange(); // we trust TTreeProcessorMT to call SetEntriesRange
+      const auto nEntries = entryRange.second - entryRange.first;
+      auto count = entryCount.fetch_add(nEntries);
       // recursive call to check filters and conditionally execute actions
       while (r.Next()) {
-         RunAndCheckFilters(slot, r.GetCurrentEntry());
+         RunAndCheckFilters(slot, count++);
       }
       CleanUpTask(slot);
       slotStack.ReturnSlot(slot);
