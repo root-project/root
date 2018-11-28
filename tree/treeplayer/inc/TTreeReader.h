@@ -189,7 +189,7 @@ public:
    /// \return the `entry`'s read status, i.e. whether the entry is available.
    EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
 
-   ///  Sets the entry that `Next()` will stop iteration on.
+   ///  Set the begin and end entry numbers
    ///
    /// \param beginEntry The first entry that `Next()` will load.
    /// \param endEntry The entry that `Next()` will return `kFALSE` on (i.e. not
