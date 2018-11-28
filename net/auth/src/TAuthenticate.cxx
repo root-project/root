@@ -304,41 +304,6 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    // Check the list of auth info for already loaded info about this host
    fHostAuth = GetHostAuth(fqdnsrv, checkUser);
 
-   // If for whatever (and unlikely) reason nothing has been found
-   // we look for the old envs defaulting to method 0 (UsrPwd)
-   // if they are missing or meaningless
-   if (!fHostAuth) {
-
-      TString tmp;
-      if (fProtocol.Contains("proof")) {
-         tmp = TString(gEnv->GetValue("Proofd.Authentication", "0"));
-      } else if (fProtocol.Contains("root")) {
-         tmp = TString(gEnv->GetValue("Rootd.Authentication", "0"));
-      }
-      char am[kMAXSEC][10];
-      Int_t nw = sscanf(tmp.Data(), "%5s %5s %5s %5s %5s %5s",
-                        am[0], am[1], am[2], am[3], am[4], am[5]);
-
-      Int_t i = 0, nm = 0, me[kMAXSEC];
-      for( ; i < nw; i++) {
-         Int_t met = -1;
-         if (strlen(am[i]) > 1) {
-            met = GetAuthMethodIdx(am[i]);
-         } else {
-            met = atoi(am[i]);
-         }
-         if (met > -1 && met < kMAXSEC) {
-            me[nm++] = met;
-         }
-      }
-
-      // Create THostAuth
-      if (nm)
-         fHostAuth = new THostAuth(fRemote,fUser,nm,me,0);
-      else
-         fHostAuth = new THostAuth(fRemote,fUser,0,(const char *)0);
-   }
-
    //
    // If generic THostAuth (i.e. with wild card or user == any)
    // make a personalized memory copy of this THostAuth
