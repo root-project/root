@@ -331,9 +331,27 @@ available in cvmfs.
 
 ## Language Bindings
 
+### PyROOT
+  - Fixed support for templated functions when in need of:
+    - typedef resolution (`Foo<Float_t>` -> `Foo<float>`)
+    - namespace addition (`Foo<vector<float>>` -> `Foo<std::vector<float>>`)
+    - full name completion (`Foo<std::vector<float>>` -> `Foo<std::vector<float, std::allocator<float>>>`)
+
 ### Experimental PyROOT
-  - Pythonize TFile, TDirectory and TDirectoryFile. Most notably, implement attr syntax
-    for these classes.
+  - Added pythonisations for `TTree` and its subclasses (e.g. `TChain`, `TNtuple`)
+    - Pythonic iterator (`for event in tree:`)
+    - Access tree branches as attributes (`mytree.mybranch`)
+    - `TTree::Branch` pythonisation
+    - `TTree::SetBranchAddress` pythonisation
+  - Added pythonisations for `TDirectory` and its subclasses (e.g `TFile`, `TDirectoryFile`)
+    - Access directories/objects in `TDirectory`/`TDirectoryFile`/`TFile` as attributes
+    (`mydir1.mydir2.myhist`, `myfile.myhist`, `myfile.mydir.myhist`)
+    - `TDirectory::Get` pythonisation
+    - `TDirectory::WriteObject` pythonisation
+    - `TFile::Open` pythonisation
+  - Added pretty printing generic pythonisation for all classes
+  - Added interoperability with NumPy arrays for STL vectors and `RVec`s (zero-copy wrapping of
+  vectors and `RVec`s into NumPy arrays)
 
 ## JavaScript ROOT
   - Support of TWebCanvas functionality. Code for ROOT 6.16 will
