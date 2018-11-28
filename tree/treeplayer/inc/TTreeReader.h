@@ -196,6 +196,11 @@ public:
    ///   load anymore).
    EEntryStatus SetEntriesRange(Long64_t beginEntry, Long64_t endEntry);
 
+   ///  Get the begin and end entry numbers
+   ///
+   /// \return a pair contained the begin and end entry numbers.
+   std::pair<Long64_t, Long64_t> GetEntriesRange() const { return std::make_pair(fBeginEntry, fEndEntry); }
+
    /// Restart a Next() loop from entry 0 (of TEntryList index 0 of fEntryList is set).
    void Restart();
 
