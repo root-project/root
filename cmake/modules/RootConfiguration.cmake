@@ -668,11 +668,6 @@ configure_file(${CMAKE_SOURCE_DIR}/config/rootrc.in ${CMAKE_BINARY_DIR}/etc/syst
 configure_file(${CMAKE_SOURCE_DIR}/config/rootauthrc.in ${CMAKE_BINARY_DIR}/etc/system.rootauthrc @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/rootdaemonrc.in ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc @ONLY NEWLINE_STYLE UNIX)
 
-configure_file(${CMAKE_SOURCE_DIR}/config/rootd.in ${CMAKE_BINARY_DIR}/etc/daemons/rootd.rc.d @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/rootd.xinetd.in ${CMAKE_BINARY_DIR}/etc/daemons/rootd.xinetd @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/proofd.in ${CMAKE_BINARY_DIR}/etc/daemons/proofd.rc.d @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/proofd.xinetd.in ${CMAKE_BINARY_DIR}/etc/daemons/proofd.xinetd @ONLY NEWLINE_STYLE UNIX)
-
 configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in include/RConfigOptions.h NEWLINE_STYLE UNIX)
 
 if(ruby)
