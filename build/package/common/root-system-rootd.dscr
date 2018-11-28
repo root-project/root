@@ -1,6 +1,0 @@
-short: Remote file server for ROOT files
-long:
-This package installs the rootd daemon. This daemon allows
-access to ROOT files resident on remote hosts from any
-interactive ROOT session. The daemon also provides FTP-like
-and administrative (stat, opendir, ...) functionality.

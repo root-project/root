@@ -9,7 +9,7 @@ Standards-Version: 3.8.3
 Package: root-system
 Architecture: all
 Depends: root-system-bin, libroot-core-dev, ${misc:Depends}
-Recommends: libroot-graf3d-gl-dev (>= ${binary:Version}), libroot-io-xmlparser-dev (>= ${binary:Version}), libroot-math-mathmore-dev (>= ${binary:Version}), libroot-math-unuran-dev (>= ${binary:Version}), libroot-misc-table-dev (>= ${binary:Version}), libroot-net-ldap-dev (>= ${binary:Version}), libroot-net-bonjour-dev (>= ${binary:Version}), root-plugin-graf2d-asimage (>= ${binary:Version}), root-plugin-gui-qt (>= ${binary:Version}), root-plugin-graf2d-qt (>= ${binary:Version}), root-plugin-math-fftw3 (>= ${binary:Version}), root-plugin-math-minuit2 (>= ${binary:Version}), root-plugin-net-krb5 (>= ${binary:Version}), root-plugin-sql-odbc (>= ${binary:Version}), root-system-xrootd (>= ${binary:Version}), root-plugin-net-netx (>= ${binary:Version}), root-plugin-net-xrootd (>= ${binary:Version}), libroot-geom-dev (>= ${binary:Version}), libroot-graf2d-gpad-dev (>= ${binary:Version}), libroot-graf2d-graf-dev (>= ${binary:Version}), libroot-graf2d-postscript-dev (>= ${binary:Version}), libroot-graf3d-eve-dev (>= ${binary:Version}), libroot-graf3d-g3d-dev (>= ${binary:Version}), libroot-gui-dev (>= ${binary:Version}), libroot-gui-ged-dev (>= ${binary:Version}), libroot-hist-dev (>= ${binary:Version}), libroot-hist-spectrum-dev (>= ${binary:Version}), libroot-io-dev (>= ${binary:Version}), libroot-math-foam-dev (>= ${binary:Version}), libroot-math-genvector-dev (>= ${binary:Version}), libroot-math-mathcore-dev (>= ${binary:Version}), libroot-math-matrix-dev (>= ${binary:Version}), libroot-math-minuit-dev (>= ${binary:Version}), libroot-math-mlp-dev (>= ${binary:Version}), libroot-math-physics-dev (>= ${binary:Version}), libroot-math-quadp-dev (>= ${binary:Version}), libroot-math-smatrix-dev (>= ${binary:Version}), libroot-math-splot-dev (>= ${binary:Version}), libroot-misc-minicern-dev (>= ${binary:Version}), libroot-misc-memstat-dev (>= ${binary:Version}), libroot-montecarlo-eg-dev (>= ${binary:Version}), libroot-montecarlo-vmc-dev (>= ${binary:Version}), libroot-net-dev (>= ${binary:Version}), libroot-net-auth-dev (>= ${binary:Version}), libroot-proof-dev (>= ${binary:Version}), libroot-proof-proofplayer-dev (>= ${binary:Version}), libroot-tmva-dev (>= ${binary:Version}), libroot-tree-dev (>= ${binary:Version}), libroot-tree-treeplayer-dev (>= ${binary:Version}), root-plugin-geom-geombuilder (>= ${binary:Version}), root-plugin-geom-geompainter (>= ${binary:Version}), root-plugin-graf2d-x11 (>= ${binary:Version}), root-plugin-graf3d-x3d (>= ${binary:Version}), root-plugin-gui-fitpanel (>= ${binary:Version}), root-plugin-gui-guibuilder (>= ${binary:Version}), root-plugin-gui-sessionviewer (>= ${binary:Version}), root-plugin-hist-hbook (>= ${binary:Version}), root-plugin-hist-histpainter (>= ${binary:Version}), root-plugin-hist-spectrumpainter (>= ${binary:Version}), root-plugin-io-sql (>= ${binary:Version}), root-plugin-io-xml (>= ${binary:Version}), root-plugin-math-fumili (>= ${binary:Version}), root-plugin-proof-xproof (>= ${binary:Version}), root-plugin-tree-treeviewer (>= ${binary:Version}), root-system-proofd (>= ${binary:Version}), root-system-rootd (>= ${binary:Version}), root-system-doc  (>= ${binary:Version})
+Recommends: libroot-graf3d-gl-dev (>= ${binary:Version}), libroot-io-xmlparser-dev (>= ${binary:Version}), libroot-math-mathmore-dev (>= ${binary:Version}), libroot-math-unuran-dev (>= ${binary:Version}), libroot-misc-table-dev (>= ${binary:Version}), libroot-net-ldap-dev (>= ${binary:Version}), libroot-net-bonjour-dev (>= ${binary:Version}), root-plugin-graf2d-asimage (>= ${binary:Version}), root-plugin-gui-qt (>= ${binary:Version}), root-plugin-graf2d-qt (>= ${binary:Version}), root-plugin-math-fftw3 (>= ${binary:Version}), root-plugin-math-minuit2 (>= ${binary:Version}), root-plugin-net-krb5 (>= ${binary:Version}), root-plugin-sql-odbc (>= ${binary:Version}), root-system-xrootd (>= ${binary:Version}), root-plugin-net-netx (>= ${binary:Version}), root-plugin-net-xrootd (>= ${binary:Version}), libroot-geom-dev (>= ${binary:Version}), libroot-graf2d-gpad-dev (>= ${binary:Version}), libroot-graf2d-graf-dev (>= ${binary:Version}), libroot-graf2d-postscript-dev (>= ${binary:Version}), libroot-graf3d-eve-dev (>= ${binary:Version}), libroot-graf3d-g3d-dev (>= ${binary:Version}), libroot-gui-dev (>= ${binary:Version}), libroot-gui-ged-dev (>= ${binary:Version}), libroot-hist-dev (>= ${binary:Version}), libroot-hist-spectrum-dev (>= ${binary:Version}), libroot-io-dev (>= ${binary:Version}), libroot-math-foam-dev (>= ${binary:Version}), libroot-math-genvector-dev (>= ${binary:Version}), libroot-math-mathcore-dev (>= ${binary:Version}), libroot-math-matrix-dev (>= ${binary:Version}), libroot-math-minuit-dev (>= ${binary:Version}), libroot-math-mlp-dev (>= ${binary:Version}), libroot-math-physics-dev (>= ${binary:Version}), libroot-math-quadp-dev (>= ${binary:Version}), libroot-math-smatrix-dev (>= ${binary:Version}), libroot-math-splot-dev (>= ${binary:Version}), libroot-misc-minicern-dev (>= ${binary:Version}), libroot-misc-memstat-dev (>= ${binary:Version}), libroot-montecarlo-eg-dev (>= ${binary:Version}), libroot-montecarlo-vmc-dev (>= ${binary:Version}), libroot-net-dev (>= ${binary:Version}), libroot-net-auth-dev (>= ${binary:Version}), libroot-proof-dev (>= ${binary:Version}), libroot-proof-proofplayer-dev (>= ${binary:Version}), libroot-tmva-dev (>= ${binary:Version}), libroot-tree-dev (>= ${binary:Version}), libroot-tree-treeplayer-dev (>= ${binary:Version}), root-plugin-geom-geombuilder (>= ${binary:Version}), root-plugin-geom-geompainter (>= ${binary:Version}), root-plugin-graf2d-x11 (>= ${binary:Version}), root-plugin-graf3d-x3d (>= ${binary:Version}), root-plugin-gui-fitpanel (>= ${binary:Version}), root-plugin-gui-guibuilder (>= ${binary:Version}), root-plugin-gui-sessionviewer (>= ${binary:Version}), root-plugin-hist-hbook (>= ${binary:Version}), root-plugin-hist-histpainter (>= ${binary:Version}), root-plugin-hist-spectrumpainter (>= ${binary:Version}), root-plugin-io-sql (>= ${binary:Version}), root-plugin-io-xml (>= ${binary:Version}), root-plugin-math-fumili (>= ${binary:Version}), root-plugin-proof-xproof (>= ${binary:Version}), root-plugin-tree-treeviewer (>= ${binary:Version}), root-system-doc  (>= ${binary:Version})
 Suggests: libroot-bindings-python-dev (>= ${binary:Version}), libroot-bindings-ruby-dev (>= ${binary:Version}), libroot-proof-clarens-dev (>= ${binary:Version}), libroot-roofit-dev (>= ${binary:Version}), root-plugin-geom-gdml (>= ${binary:Version}), root-plugin-net-globus (>= ${binary:Version}), root-plugin-proof-peac (>= ${binary:Version}), root-plugin-sql-mysql (>= ${binary:Version}), root-plugin-sql-pgsql (>= ${binary:Version})
 Description: metapackage to install all ROOT packages
  The ROOT system provides a set of OO frameworks with all the
@@ -1741,39 +1741,6 @@ Description: GUI to browse an a ROOT tree
  .
  This package contains a plug-in for browsing a ROOT tree.
  in ROOT.
-
-Package: root-system-proofd
-Architecture: any
-Depends: root-system-common, lsb-base (>= 3.0-6), openbsd-inetd | inet-superserver, ${shlibs:Depends}, ${misc:Depends}
-Recommends: root-system-bin, libroot-dev, root-file-server | root-system-rootd
-Description: Parallel ROOt Facility - distributed, parallel computing
- The ROOT system provides a set of OO frameworks with all the
- functionality needed to handle and analyze large amounts of data
- efficiently. 
- .
- This package contains the PROOF server.  proofd is the core daemon of
- the PROOF (Parallel ROOt Facility) system for distributed parallel
- computing. Installing this package on a machine, makes it possible
- for the machine to participate in a parallel computing farm (cluster
- or via the Internet), either as a master or a slave, using a
- transparent interface.
-
-
-Package: root-system-rootd
-Architecture: any
-Depends: root-system-common, lsb-base (>= 3.0-6), adduser, openbsd-inetd | inet-superserver, ${shlibs:Depends}, ${misc:Depends}
-Recommends: root-system-bin, libroot-dev
-Provides: root-file-server
-Description: ROOT remote file server 
- The ROOT system provides a set of OO frameworks with all the
- functionality needed to handle and analyze large amounts of data
- efficiently. 
- .
- This package contains ROOT file server.  rootd is a server for ROOT
- files, serving files over the Internet. Using this daemon, you can
- access files on the machine from anywhere on the Internet, using a
- transparent interface.
-
 
 Package: root-system-doc
 Section: doc
