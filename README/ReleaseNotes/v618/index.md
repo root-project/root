@@ -76,6 +76,7 @@ The methods could be replaced by equivalent methods with other signature:
   - In the statistics painting for 2D histograms, the  central cell of
     the underflow/overflow grid was not properly rendered for very large contents.
     This problem was reported [here](https://root-forum.cern.ch/t/stat-box-for-th2/).
+  - The automatic placement of legend now "sees" TMultiGraph and THStack.
 
 ## 3D Graphics Libraries
 
