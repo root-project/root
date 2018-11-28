@@ -12,17 +12,12 @@
 #ifndef ROOT_TGeoToOCC
 #define ROOT_TGeoToOCC
 
-//Cascade
-#include <Standard_Version.hxx>
-
-#define Printf Printf_opencascade
-#include <TopoDS_Shape.hxx>
-#include <TopoDS_Wire.hxx>
-#undef Printf
-
-//Root
+// ROOT
 #include "TGeoXtru.h"
 #include "TGeoCompositeShape.h"
+
+// Cascade
+#include "TOCCExports.h"
 
 #include <fstream>
 
@@ -58,11 +53,6 @@ public:
    TopoDS_Shape Reverse(TopoDS_Shape Shape);
 
 };
-
-// ROOT-9837
-#if defined(Handle) && !defined(R__Needs_Handle)
-#undef Handle
-#endif
 
 #endif
 
