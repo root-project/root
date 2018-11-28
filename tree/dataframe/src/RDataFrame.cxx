@@ -453,6 +453,9 @@ or [Snapshot](classROOT_1_1RDF_1_1RInterface.html#a233b7723e498967f4340705d2c4db
 provides "its own" values for these columns which do not necessarily correspond to the ones of the mother data frame. This is
 most notably the case where filters are used before deriving a cached/persistified dataframe.
 
+Note that in multi-thread event loops the values of `rdfentry_` _do not_ correspond to what would be the entry numbers
+of a TChain constructed over the same set of ROOT files, as the entries are processed in an unspecified order.
+
 ### Branch type guessing and explicit declaration of branch types
 C++ is a statically typed language: all types must be known at compile-time. This includes the types of the `TTree`
 branches we want to work on. For filters, temporary columns and some of the actions, **branch types are deduced from the
