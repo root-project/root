@@ -124,7 +124,6 @@ public:
    int           SendDataN(XrdProofdProofServ *xps, XrdSrvBuffer **buf = 0, bool sb = 0);
    int           SendMsg();
    int           CtrlC();
-   int           StartRootd(XrdLink *lp, XrdOucString &emsg);
    void          TouchAdminPath();
    int           Urgent();
 

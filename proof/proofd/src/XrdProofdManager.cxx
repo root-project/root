@@ -250,28 +250,6 @@ XrdProofdManager::XrdProofdManager(char *parms, XrdProtocol_Config *pi, XrdSysEr
    fDataDirOpts = "";    // Default: no action
    fDataDirUrlOpts = ""; // Default: none
 
-   ////// This is deprecated: see fXrootd below
-   // Rootd file serving enabled by default in readonly mode 
-   fRootdExe = "";
-   // Add mandatory arguments
-   fRootdArgs.push_back(XrdOucString("-i"));
-   fRootdArgs.push_back(XrdOucString("-nologin"));
-   fRootdArgs.push_back(XrdOucString("-r"));            // Readonly
-   fRootdArgs.push_back(XrdOucString("-noauth"));       // No auth
-   // Build the argument list
-   fRootdArgsPtrs = new const char *[fRootdArgs.size() + 2];
-   fRootdArgsPtrs[0] = fRootdExe.c_str();
-   int i = 1;
-   std::list<XrdOucString>::iterator ia = fRootdArgs.begin();
-   while (ia != fRootdArgs.end()) {
-      fRootdArgsPtrs[i] = (*ia).c_str();
-      ++i; ++ia;
-   }
-   fRootdArgsPtrs[fRootdArgs.size() + 1] = 0;
-   // Started with 'system' (not 'fork')
-   fRootdFork = 0;
-   /////////////////////////////////////////////////////////////////
-
    // Tools to enable xrootd file serving
    fXrootdLibPath = "<>";
    fXrootdPlugin = 0;
@@ -330,7 +308,6 @@ XrdProofdManager::~XrdProofdManager()
    SafeDelete(fProofSched);
    SafeDelete(fROOTMgr);
    SafeDelete(fSessionMgr);
-   SafeDelArray(fRootdArgsPtrs);
    SafeDelete(fXrootdPlugin);
 }
 
@@ -1241,61 +1218,8 @@ int XrdProofdManager::Config(bool rcf)
    }
 
    // Xrootd protocol service
-   if ((fXrootd = LoadXrootd(fParms, fPi, fEDest))) {
-      // If enabled, Xrootd takes precedence
-      fRootdExe = "";
-   }
-
-   // File server
-   if (fRootdExe.length() > 0) {
-      // Absolute or relative?
-      if (!fRootdExe.beginswith("/")) {
-         if (fROOTMgr) {
-            XrdOucString rtag;
-            if (fRootdExe.beginswith("<") && fRootdExe.endswith(">")) {
-               if (fRootdExe.length() > 2) rtag.assign(fRootdExe, 1, fRootdExe.length() - 2);
-               fRootdExe = "rootd";
-               fRootdArgsPtrs[0] = fRootdExe.c_str();
-            }
-            XrdROOT *roo = 0;
-            if (rtag.length() <= 0 || !(roo = fROOTMgr->GetVersion(rtag.c_str())))
-               roo = fROOTMgr->DefaultVersion();
-            if (roo && strlen(roo->BinDir()) > 0) {
-               XrdOucString bindir(roo->BinDir());
-               if (!bindir.endswith("/")) bindir += "/";
-               fRootdExe.insert(bindir, 0);
-               fRootdArgsPtrs[0] = fRootdExe.c_str();
-            }
-         }
-      }
-      // Create unix socket where to accepts callbacks from rootd launchers
-      XrdOucString sockpath;
-      XPDFORM(sockpath, "%s/xpd.%d.%d.rootd", fSockPathDir.c_str(), fPort, getpid());
-      fRootdUnixSrv = new rpdunixsrv(sockpath.c_str());
-      if (!fRootdUnixSrv || (fRootdUnixSrv && !fRootdUnixSrv->isvalid(0))) {
-         XPDERR("could not start unix server connection on path "<<
-                sockpath<<" - errno: "<<(int)errno);
-         fRootdExe = "";
-         return -1;
-      }
-      TRACE(ALL, "unix socket path for rootd call backs: "<<sockpath);
-      // Check if access is controlled
-      if (fRootdAllow.size() > 0) {
-         XrdOucString hhs;
-         std::list<XrdOucString>::iterator ia = fRootdAllow.begin();
-         while (ia != fRootdAllow.end()) {
-            if (hhs.length() > 0) hhs += ",";
-            hhs += (*ia).c_str();
-            ++ia;
-         }
-         TRACE(ALL, "serving files with: '" << fRootdExe <<"' (protocol: 'rootd://') to ALLOWED hosts");
-         TRACE(ALL, "rootd-allowed hosts: "<< hhs);
-      } else {
-         TRACE(ALL, "serving files with: '" << fRootdExe <<"' (protocol: 'rootd://') to ALL hosts");
-      }
-
-   } else {
-      TRACE(ALL, "file serving (protocol: 'rootd://') explicitly disabled");
+   if (!(fXrootd = LoadXrootd(fParms, fPi, fEDest))) {
+      TRACE(ALL, "file serving (protocol: 'root://') not available");
    }
 
    if (!rcf) {
@@ -1425,8 +1349,6 @@ void XrdProofdManager::RegisterDirectives()
    Register("port", new XrdProofdDirective("port", this, &DoDirectiveClass));
    Register("datadir", new XrdProofdDirective("datadir", this, &DoDirectiveClass));
    Register("datasetsrc", new XrdProofdDirective("datasetsrc", this, &DoDirectiveClass));
-   Register("rootd", new XrdProofdDirective("rootd", this, &DoDirectiveClass));
-   Register("rootdallow", new XrdProofdDirective("rootdallow", this, &DoDirectiveClass));
    Register("xrd.protocol", new XrdProofdDirective("xrd.protocol", this, &DoDirectiveClass));
    Register("filterlibpaths", new XrdProofdDirective("filterlibpaths", this, &DoDirectiveClass));
    Register("xrootd", new XrdProofdDirective("xrootd", this, &DoDirectiveClass));
@@ -2015,68 +1937,11 @@ int XrdProofdManager::DoDirectiveXrootd(char *val, XrdOucStream *, bool)
 ///  xpd.rootd deny|allow [rootsys:<tag>] [path:abs-path/] [mode:ro|rw]
 ///            [auth:none|full] [other_rootd_args]
 
-int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
+int XrdProofdManager::DoDirectiveRootd(char *, XrdOucStream *, bool)
 {
    XPDLOC(ALL, "Manager::DoDirectiveRootd")
 
-   if (!val)
-      // undefined inputs
-      return -1;
-
-   // Rebuild arguments list
-   fRootdArgs.clear();
-   SafeDelArray(fRootdArgsPtrs);
-
-   TRACE(ALL, "val: "<< val);
-
-   // Parse directive
-   XrdOucString mode("ro"), auth("none"), fork("0");
-   bool denied = 1;
-   char *nxt = val;
-   do {
-      if (!strcmp(nxt, "deny") || !strcmp(nxt, "disable") || !strcmp(nxt, "off")) {
-         denied = 1;
-         fRootdExe = "";
-      } else if (!strcmp(nxt, "allow") || !strcmp(nxt, "enable") || !strcmp(nxt, "on")) {
-         denied = 0;
-         fRootdExe = "<>";
-         TRACE(ALL, "Use of this directive is deprecated: use xpd.xrootd instead");
-      } else if (!strncmp(nxt, "mode:", 5)) {
-         mode = nxt + 5;
-      } else if (!strncmp(nxt, "auth:", 5)) {
-         auth = nxt + 5;
-      } else if (!strncmp(nxt, "fork:", 5)) {
-         fork = nxt + 5;
-      } else {
-         // Assume rootd argument
-         fRootdArgs.push_back(XrdOucString(nxt));
-      }
-   } while ((nxt = cfg->GetWord()));
-
-   if (!denied) {
-      // If no exec given assume 'rootd' in the default path
-      if (fRootdExe.length() <= 0) fRootdExe = "<>";
-      // Add mandatory arguments
-      fRootdArgs.push_back(XrdOucString("-i"));
-      fRootdArgs.push_back(XrdOucString("-nologin"));
-      if (mode == "ro") fRootdArgs.push_back(XrdOucString("-r"));
-      if (auth == "none") fRootdArgs.push_back(XrdOucString("-noauth"));
-      fRootdFork = (fork == "1" || fork == "yes") ? 1 : 0;
-   } else {
-      // Nothing else to do, if denied
-      return 0;
-   }
-
-   // Build the argument list
-   fRootdArgsPtrs = new const char *[fRootdArgs.size() + 2];
-   fRootdArgsPtrs[0] = fRootdExe.c_str();
-   int i = 1;
-   std::list<XrdOucString>::iterator ia = fRootdArgs.begin();
-   while (ia != fRootdArgs.end()) {
-      fRootdArgsPtrs[i] = (*ia).c_str();
-      ++i; ++ia;
-   }
-   fRootdArgsPtrs[fRootdArgs.size() + 1] = 0;
+   TRACE(ALL, "unsupported!!! ");
 
    // Done
    return 0;
@@ -2087,28 +1952,11 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
 ///  xpd.rootdallow host1,host2 host3
 /// Host names may contain the wild card '*'
 
-int XrdProofdManager::DoDirectiveRootdAllow(char *val, XrdOucStream *cfg, bool)
+int XrdProofdManager::DoDirectiveRootdAllow(char *, XrdOucStream *, bool)
 {
    XPDLOC(ALL, "Manager::DoDirectiveRootdAllow")
 
-   if (!val)
-      // undefined inputs
-      return -1;
-
-   TRACE(ALL, "Use of this and 'xpd.rootd' directives is deprecated: use xpd.xrootd instead");
-
-   TRACE(ALL, "val: "<< val);
-
-   // Parse directive
-   XrdOucString hosts, h;
-   char *nxt = val;
-   do {
-      hosts = nxt;
-      int from = 0;
-      while ((from = hosts.tokenize(h, from, ',')) != -1) {
-         if (h.length() > 0) fRootdAllow.push_back(h);
-      }
-   } while ((nxt = cfg->GetWord()));
+   TRACE(ALL, "unsupported!!! ");
 
    // Done
    return 0;
@@ -2147,32 +1995,6 @@ int XrdProofdManager::DoDirectiveFilterLibPaths(char *val, XrdOucStream *cfg, bo
             TRACE(ALL, "Filtering out from "<<XPD_LIBPATH<<" lib path '"<<p<<"'");
          }
       }
-   }
-
-   // Done
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if 'host' is allowed to access files via rootd
-
-bool XrdProofdManager::IsRootdAllowed(const char *host)
-{
-   XPDLOC(ALL, "Manager::IsRootdAllowed")
-
-   // Check if access is controlled
-   if (fRootdAllow.size() <= 0) return 1;
-
-   // Need an host name
-   if (!host || strlen(host) <= 0) return 0;
-
-   TRACE(DBG, "checking host: "<< host);
-
-   XrdOucString h(host);
-   std::list<XrdOucString>::iterator ia = fRootdAllow.begin();
-   while (ia != fRootdAllow.end()) {
-      if (h.matches((*ia).c_str(), '*') > 0) return 1;
-      ++ia;
    }
 
    // Done
