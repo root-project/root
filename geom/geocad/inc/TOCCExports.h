@@ -15,13 +15,12 @@
 // Combine all OCE headers used by geocad.
 // After including them, #undef Handle.
 
+#define Printf Printf_opencascade
 #include <TDF_Label.hxx>
 #include <TDocStd_Document.hxx>
 #include <Standard_Version.hxx>
 #include <STEPCAFControl_Writer.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
-
-#define Printf Printf_opencascade
 #include <TopoDS_Shape.hxx>
 #include <TopoDS_Wire.hxx>
 #undef Printf
