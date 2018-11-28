@@ -108,16 +108,21 @@ namespace {
 
                // tickle lazy lookup of functions
                   if ( ! attr ) {
-                     if ( klass->GetListOfMethods()->FindObject( name.c_str() ) ) {
-                     // function exists, now collect overloads
+                     TObject *methObj = nullptr;
+                     if ( (methObj = klass->GetListOfMethods()->FindObject(name.c_str())) ) {
+                        // function exists, now collect overloads
+                        auto completeName = methObj->GetName();
                         std::vector< PyCallable* > overloads;
                         const size_t nmeth = Cppyy::GetNumMethods( scope );
                         for ( size_t imeth = 0; imeth < nmeth; ++imeth ) {
                            Cppyy::TCppMethod_t method = Cppyy::GetMethod( scope, imeth );
                            auto currentName = Cppyy::GetMethodName(method);
-                           // We need to compare with the resolved name too, in case there are
-                           // typedefs to be resolved (e.g. Float_t -> float)
-                           if (currentName == name || currentName == Cppyy::ResolveName(name))
+                           // We need to compare with a final complete name, where:
+                           // - Typedefs are resolved (e.g. Float_t -> float)
+                           // - Namespaces are added (e.g. vector<float> -> std::vector<float>
+                           // - All template types are included (e.g. std::vector<float> ->
+                           //   std::vector<float, std::allocator<float>>)
+                           if (currentName == completeName)
                               overloads.push_back( new TFunctionHolder( scope, method ) );
                         }
 
