@@ -1,5 +1,5 @@
 
-Using Globus certificates to authenticate to a remote rootd/proofd server
+Using Globus certificates to authenticate to a remote server
 =========================================================================
 
 To use Globus certificates for remote authentication, the Globus Tool Kit
@@ -134,12 +134,6 @@ cd ../..
         during a root session. Globus authentication can be requested by:
 
         1) Setting
-
-                Rootd.Authentication   3
-                Proofd.Authentication   3
-
-           in the $HOME/.rootrc file; other parameters can be changed at this
-           level:
 
           - the proxy duration, in hours
 

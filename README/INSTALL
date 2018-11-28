@@ -330,9 +330,9 @@ Venus libraries.  The sources can be downloaded from
 
     ftp://root.cern.ch/root/venus/
 
-7.10. Secure Remote Password (SRP) Authentication:
---------------------------------------------------
-To build the strong authentication module used by rootd and proofd,
+7.10. Secure Remote Password (SRP) Authentication (LEGACY):
+-----------------------------------------------------------
+To build the strong authentication module used by TServerSocket,
 you first have to install the SRP (Secure Remote Password)
 system. See:
 
@@ -343,9 +343,9 @@ is not enough to build the two utility program in the srputil
 directory of the ROOT source tree.
 
 
-7.11. AFS Authentication:
--------------------------
-To build rootd and proofd with support for AFS authentication, you
+7.11. AFS Authentication (LEGACY):
+----------------------------------
+To use AFS authentication in TServerSocket, you
 first have to install AFS client libraries system. There are a few AFS
 distributions available.
 
@@ -360,9 +360,9 @@ distributions available.
     http://www.transarc.ibm.com/Support/afs
 
 
-7.12. Kerberos Authentication:
-------------------------------
-To build the Kerberos authentication module used by rootd and proofd,
+7.12. Kerberos Authentication (LEGACY):
+---------------------------------------
+To build the Kerberos authentication module used by TServerSocket,
 you first have to install Kerberos V on your machine. See:
 
    http://web.mit.edu/kerberos/www/
@@ -375,9 +375,9 @@ the --with-krb5-incdir and --with-krb5-libdir can be specified
 individually.
 
 
-7.13. Globus Authentication:
-----------------------------
-To build the Globus authentication module used by rootd and proofd,
+7.13. Globus Authentication (LEGACY):
+-------------------------------------
+To build the Globus authentication module used by TServerSocket,
 you first have to make sure that the Globus Tool Kit is installed
 on the machine. See:
 
@@ -396,5 +396,5 @@ where <globus_src_dir> is the globus tool kit source,
 
 7.14. SSH Authentication:
 -------------------------
-There is no need to build special modules for SSH authentication.
+Not supported any longer
 
