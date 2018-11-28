@@ -51,8 +51,6 @@
 #           any of these is valid: '137.138.99', '137.138', '137`, '99.73'; 
 #           or with wild cards: '137.13*' or '*.99.73`; however, '138.99' 
 #           is invalid because ambigous.
-#         - host names can be followed by :rootd or :proofd to define directives
-#           applying only to the given service
 #
 #      <key> <info>:
 #         - valid keys are 'list' and 'method';
@@ -67,21 +65,14 @@
 #              SRP                            srp             1
 #              Kerberos                       krb5            2
 #              Globus                         globus          3
-#              SSH                            ssh             4
 #              UidGid                         uidgid          5   (insecure)
 #
 #           Example of a valid 'list' line:
 #
-#              default          list  4 
-#              lxplus*.cern.ch  list  ssh 3 krb5
+#              default          list  0 
+#              lxplus*.cern.ch  list  usrpwd 3 krb5
 #
-#           The first line defines as default method SSH, this is equivalent
-#           of setting:
-#
-#              Rootd.Authentication    4
-#              Proofd.Authentication   4
-#
-#           in the .rootc file.
+#           The first line defines as default method UsrPwd.
 #
 #           The second line adds Globus and Kerberos as available methods
 #           for authentication to the lxplus machines (in addition to SSH):
@@ -177,7 +168,7 @@
 #
 #           Example of valid 'method' lines:
 #
-#              default list 4 0 1
+#              default list 2 0 1
 #              default    method  ssh pt:yes us:qwerty
 #              default    method  3 pt:0 
 #              default user asdfgh  method  usrpwd pt:1 ru:no 
@@ -186,7 +177,7 @@
 #                                 cd:~/CA/HubCA/poiuyt ad:certificates
 #              include    local/pceple19.rootauthrc
 #              include $ROOTSYS/etc/system.rootauthrc
-#              localhost:proofd list  uidgid 
+#              localhost list  uidgid 
 #              pcepsft43.cern.ch  user asdfgh method 2 pt:no pp:asdkrb@LOC.KRB.REALM
 #            
 #           The first line states that, unless differently specified, 
@@ -236,4 +227,4 @@
 #      from the rest of the .rootauthrc file is sent to slaves via the master
 #            
 #
-default list usrpwd ssh @havesrp@ @havekrb5@ @haveglobus@ uidgid 
+default list usrpwd @havesrp@ @havekrb5@ @haveglobus@ uidgid 
