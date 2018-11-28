@@ -39,7 +39,7 @@ target_link_libraries(rpdutil INTERFACE ${CRYPTLIBS})
 set_property(TARGET rpdutil PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_dependencies(rpdutil move_headers)
 
-ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx ssh.cxx
+ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx
   LIBRARIES rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES}
   DEPENDENCIES Net
   BUILTINS OPENSSL)
