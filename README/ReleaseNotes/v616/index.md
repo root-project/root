@@ -373,6 +373,9 @@ available in cvmfs.
 ## Tutorials
   - Refurbish text in the `RDataFrame` tutorials category.
 
+## Command line tools
+  - Fixed `rooteventselector` when both applying a cut (based on branch values) and selecting only
+  a subset of the branches. Previously, the size of the output file was bigger than expected.
 
 ## Class Reference Guide
 
