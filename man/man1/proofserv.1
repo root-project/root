@@ -9,10 +9,9 @@ proofserv \- PROOF (The Parallel ROOT Facility)
 .SH "DESCRIPTION"
 Using \fBPROOF\fI (The \fIP\fRarallel \fIROO\fRT \fIF\fRacility) one
 can analyze trees in parallel on a cluster of computers. The
-\fBPROOF\fR system consists of the \fIproofd\fR(1) from-end program
-which is started via \fIinetd\fR(8).
+\fBPROOF\fR system consists also of the \fIxproofd\fR(1) daemon.
 .PP
-\fIproofd\fR takes care of user authentication and overlays itself
+\fIxproofd\fR takes care of user authentication and overlays itself
 then with the desired version of the \fIproofserv\fR(1)
 executable.
 .PP
@@ -30,11 +29,9 @@ Note, that if \fBproofserv\fR is passed any arguments, it will use the
 \fBlibProofx\fB interface, rather than the standard \fBlibProof\fR
 interface.
 .SH "SEE ALSO"
-.IR proofd (1)
+.IR xproofd (1)
 ,
 .IR root (1)
-,
-.IR rootd (1)
 .PP
 More information can be found at the \fBROOT\fR website:
 .UR http://root.cern.ch
