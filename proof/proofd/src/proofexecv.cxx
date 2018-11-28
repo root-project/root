@@ -62,7 +62,6 @@ int setproofservenv(const std::string &envfile,
 int redirectoutput(const std::string &logfile);
 
 void start_ps(int argc, char **argv);
-void start_rootd(int argc, char **argv);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write info message to syslog.
@@ -107,8 +106,8 @@ int main(int argc, char **argv)
       start_ps(argc, argv);
       exit(1);
    } else if (gType == 20) {
-      // Start a rootd to serve a file
-      start_rootd(argc, argv);
+      // rootd not supported anylonger
+      Info("ERROR: 'rootd' has been removed from ROOT");
       exit(1);
    } else {
       Info("ERROR: process type %d not yet implemented", gType);
@@ -117,71 +116,6 @@ int main(int argc, char **argv)
 
    // Done
    exit(0);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Process a request to start a rootd server
-
-void start_rootd(int argc, char **argv)
-{
-   if (argc < 6) {
-      Info("argc=%d: at least 5 additional arguments required - exit", argc);
-      return;
-   }
-
-   // Parse arguments:
-   //     1     process type (2=top-master, 1=sub-master 0=worker, 3=test, 10=admin, 20=rootd)
-   //     2     debug level
-   //     3     path to unix socket to the parent to receive the open descriptor
-   //     4     path to rootd executable
-   //   >=5     arguments to rootd
-
-   // Call back the parent, so that it can move to other processes
-   std::string sockpath = argv[3];
-   rpdunix *uconn = new rpdunix(sockpath.c_str());
-   if (!uconn || (uconn && !uconn->isvalid(0))) {
-      Info("ERROR: failure calling back parent on '%s'", sockpath.c_str());
-      return;
-   }
-
-   int rcc = 0;
-   // Receive the open descriptor to be used in rootd
-   int fd = -1;
-   if ((rcc = uconn->recvdesc(fd)) != 0) {
-      Info("ERROR: failure receiving open descriptor from parent (errno: %d)", -rcc);
-      delete uconn;
-      return;
-   }
-   // Close the connection to the parent
-   delete uconn;
-
-   // Force stdin/out to point to the socket FD (this will also bypass the
-   // close on exec setting for the socket)
-   if (dup2(fd, STDIN_FILENO) != 0)
-      Info("WARNING: failure duplicating STDIN (errno: %d)", errno);
-   if (dup2(fd, STDOUT_FILENO) != 0)
-      Info("WARNING: failure duplicating STDOUT (errno: %d)", errno);
-
-   // Prepare execv
-   int na = argc - 4;
-   char **argvv = new char *[na + 1];
-
-   // Fill arguments
-   argvv[0] = argv[4];
-   int ia = 5, ka = 1;
-   while (ia < argc) {
-      argvv[ka] = argv[ia];
-      ka++; ia++;
-   }
-   argvv[na] = 0;
-
-   // Run the program
-   execv(argv[4], argvv);
-
-   // We should not be here!!!
-   Info("ERROR: returned from execv: bad, bad sign !!!");
-   delete [] argvv;
-   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -195,7 +129,7 @@ void start_ps(int argc, char **argv)
    }
 
    // Parse arguments:
-   //     1     process type (2=top-master, 1=sub-master 0=worker, 3=test, 10=admin, 20=rootd)
+   //     1     process type (2=top-master, 1=sub-master 0=worker, 3=test, 10=admin)
    //     2     debug level
    //     3     user name
    //     4     root path for relevant directories and files (to be completed with PID)
