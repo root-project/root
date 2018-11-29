@@ -7,7 +7,7 @@
 ///
 /// \author Andrei Gheata
 
-void rootgeom()
+void rootgeom(bool vis = true)
 {
    // gStyle->SetCanvasPreferGL(true);
 
@@ -137,6 +137,6 @@ void rootgeom()
    //#Viewer3D.DefaultDrawOption:   ogl
 
    geom->SetVisLevel(4);
-   top->Draw("ogle");
+   if (vis) top->Draw("ogle");
 }
 
