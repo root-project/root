@@ -492,7 +492,7 @@ endif
 ifeq ($(ARCH),linuxicc)
 # Linux with Intel icc compiler in 32-bit mode
 CC ?= icc
-CXX?= icpc
+CXX ?= icpc
 LD ?= icpc
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS += -g -wd191 -fPIC
@@ -505,7 +505,7 @@ endif
 ifeq ($(ARCH),linuxx8664icc)
 # Linux with Intel icc compiler in 64-bit mode
 CC ?= icc
-CXX?= icpc
+CXX ?= icpc
 LD ?= icpc
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS += -g -wd191 -fPIC
