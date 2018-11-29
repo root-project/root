@@ -37,19 +37,13 @@ CreateGeometry method:
 ~~~
 
 The resulting STEP file will be saved in the current directory and called
-output_geometry.stp and will have converted all the nodes up to and
+output_geometry.stp and will have converted all the nodes up to and 
 including level 3.
 To compile the TGeoCad module on ROOT, OpenCascade must be installed!
 */
 
 #include "TGeoManager.h"
 #include "TOCCToStep.h"
-// ROOT-9837: the macro `Handle` has been undefined
-// we need to redefine it as it is done in the oce
-// header Standard_Macro.hxx
-#ifndef Handle
-#define Handle(ClassName) Handle_##ClassName
-#endif
 #include "TGeoToStep.h"
 #include "TString.h"
 #include "TClass.h"
