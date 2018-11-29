@@ -447,7 +447,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
             if (isClassDefMacro) {
                CXXRD.addAttr(new(C) AnnotateAttr(commentRange, C, comment.str(), 0));
             } else if (!isGenreflex) {
-               // Here we check if we are in presence of a selction file so that
+               // Here we check if we are in presence of a selection file so that
                // the comment does not ends up as a decoration in the AST,
                // Nevertheless, w/o PCMS this has no effect, since the headers
                // are parsed at runtime and the information in the AST dumped by
@@ -773,8 +773,8 @@ void LoadLibraryMap(const std::string &fileListName, map<string, string> &autolo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if the specificed operator (what) has been properly declared if the user has
-/// resquested a custom version.
+/// Check if the specified operator (what) has been properly declared if the user has
+/// requested a custom version.
 
 bool CheckInputOperator(const char *what,
                         const char *proto,
@@ -824,7 +824,7 @@ bool CheckInputOperator(const char *what,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if the operator>> has been properly declared if the user has
-/// resquested a custom version.
+/// requested a custom version.
 
 bool CheckInputOperator(const clang::RecordDecl *cl, cling::Interpreter &interp)
 {
@@ -1397,7 +1397,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// GrabIndex returns a static string (so use it or copy it immediatly, do not
+/// GrabIndex returns a static string (so use it or copy it immediately, do not
 /// call GrabIndex twice in the same expression) containing the size of the
 /// array data member.
 /// In case of error, or if the size is not specified, GrabIndex returns 0.
@@ -1747,7 +1747,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                   dictStream << "[R__i];" << std::endl;
                } else if (type.getTypePtr()->isPointerType()) {
                   // This is always good. However, in case of a pointer
-                  // to an object that is guarenteed to be there and not
+                  // to an object that is guaranteed to be there and not
                   // being referenced by other objects we could use
                   //     xx->Streamer(b);
                   // Optimize this with control statement in title.
@@ -2056,7 +2056,7 @@ static bool InjectModuleUtilHeader(const char *argv0,
 /// respecting the given isysroot.
 /// If module is not a null pointer, we only write the given module to the
 /// given file and not the whole AST.
-/// Returns true if the AST was succesfully written.
+/// Returns true if the AST was successfully written.
 static bool WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstance, StringRef iSysRoot,
                      clang::Module *module = nullptr)
 {
@@ -2091,7 +2091,7 @@ static bool WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstan
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generates a PCH from the given ModuleGenerator and CompilerInstance.
-/// Returns true iff the PCH was succesfully generated.
+/// Returns true iff the PCH was successfully generated.
 static bool GenerateAllDict(TModuleGenerator &modGen, clang::CompilerInstance *compilerInstance,
                             const std::string &currentDirectory)
 {
@@ -2126,7 +2126,7 @@ static bool IncludeHeaders(const std::vector<std::string> &headers, cling::Inter
 /// needed by the given ModuleGenerator.
 /// The names of all header files that are needed by the ModuleGenerator but are
 /// not in the given module will be inserted into the MissingHeader variable.
-/// Returns true iff the PCH was succesfully generated.
+/// Returns true iff the PCH was successfully generated.
 static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *module,
                                   std::vector<std::string> &missingHeaders)
 {
@@ -2924,7 +2924,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
       if (CRD) {
          ROOT::TMetaUtils::Info(0, "Generating code for class %s\n", selClass.GetNormalizedName());
-         if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str() /* unqualified name without template arguement */)) {
+         if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str() /* unqualified name without template argument */)) {
             // Register the collections
             // coverity[fun_call_w_exception] - that's just fine.
             Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
@@ -4093,7 +4093,7 @@ int RootClingMain(int argc,
          }
 
          if (strcmp("-excludePath", argv[ic]) == 0 && (ic + 1) < argc) {
-            // Path to be excluded from the ones rememberd by the dictionary
+            // Path to be excluded from the ones remembered by the dictionary
             excludePaths.push_back(argv[ic + 1]);
             ic += 2;
             continue;
@@ -4448,7 +4448,7 @@ int RootClingMain(int argc,
 
             interpPragmaSource += std::string("#include \"") + header + "\"\n";
             if (!isSelectionFile) {
-               // In order to not have to add the equivelent to -I${PWD} to the
+               // In order to not have to add the equivalent to -I${PWD} to the
                // command line, include the complete file name, even if it is a
                // full pathname, when we write it down in the dictionary.
                // Note: have -I${PWD} means in that (at least in the case of
@@ -4619,7 +4619,7 @@ int RootClingMain(int argc,
       }
    }
 
-   // Exclude string not to re-generatre the dictionary
+   // Exclude string not to re-generate the dictionary
    std::vector<std::pair<std::string, std::string>> namesForExclusion;
    if (!gBuildingROOT) {
       namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::name, "std::string"));
@@ -5081,10 +5081,10 @@ namespace genreflex {
 
    unsigned int extractArgs(int argc, char **argv, std::vector<std::string> &args)
    {
-      // loop on argv, spot strings which are not preceeded by something
+      // loop on argv, spot strings which are not preceded by something
       unsigned int argvCounter = 0;
       for (int i = 1; i < argc; ++i) {
-         if (!ROOT::TMetaUtils::BeginsWith(argv[i - 1], "-") && // so, if preceeding element starts with -, this is a value for an option
+         if (!ROOT::TMetaUtils::BeginsWith(argv[i - 1], "-") && // so, if preceding element starts with -, this is a value for an option
                !ROOT::TMetaUtils::BeginsWith(argv[i], "-")) { // and the element itself is not an option
             args.push_back(argv[i]);
             argvCounter++;
@@ -5449,7 +5449,7 @@ bool IsGoodLibraryName(const std::string &name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Translate the aruments of genreflex into rootcling ones and forward them
+/// Translate the arguments of genreflex into rootcling ones and forward them
 /// to the RootCling function.
 /// These are two typical genreflex and rootcling commandlines
 /// 1) genreflex header1.h [header2.h ...] [options] [preprocessor options]
@@ -5848,8 +5848,8 @@ int GenReflexMain(int argc, char **argv)
    ROOT::option::Stats  stats(genreflexUsageDescriptor,  argc, argv);
    std::vector<ROOT::option::Option> options(stats.options_max);// non POD var size arrays are not C++!
    std::vector<ROOT::option::Option> buffer(stats.buffer_max);
-   // The 4 is the minimum size of the abbreviation lenght.
-   // For example, --selction_file can be abbreviated with --sele at least.
+   // The 4 is the minimum size of the abbreviation length.
+   // For example, --selection_file can be abbreviated with --sele at least.
 
    ROOT::option::Parser parse(genreflexUsageDescriptor, argc, argv, &options[0], &buffer[0], 5);
 
