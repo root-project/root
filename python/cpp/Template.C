@@ -24,6 +24,11 @@ typedef MyTemplatedClass2< std::string > MyTemplateTypedef;
 template< class T >
 T MyTemplatedFunction( T t ) { return t; }
 
+namespace MyNamespace {
+   template <typename T>
+   T MyTemplatedFunctionNamespace(T t) { return t; }
+};
+
 #ifdef __CINT__
 #pragma link C++ class MyTemplatedClass< vector< float > >;
 #pragma link C++ function MyTemplatedFunction< int >( int );
