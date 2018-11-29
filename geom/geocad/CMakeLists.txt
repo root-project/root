@@ -5,9 +5,7 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(GeoCad
   HEADERS
-    TGeoToOCC.h
     TGeoToStep.h
-    TOCCToStep.h
   SOURCES
     TGeoToOCC.cxx
     TGeoToStep.cxx
