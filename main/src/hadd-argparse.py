@@ -10,7 +10,7 @@ Supply at least two source files for this to make sense... ;-)
 If Target and source files have different compression settings a slower method is used.
 For options that takes a size as argument, a decimal number of bytes is expected.
 If the number ends with a ``k'', ``m'', ``g'', etc., the number is multiplied by 1000 (1K), 1000000 (1MB), 1000000000 (1G), etc.
-If this prefix is followed by i, the number is multipled by the traditional 1024 (1KiB), 1048576 (1MiB), 1073741824 (1GiB), etc.
+If this prefix is followed by i, the number is multiplied by the traditional 1024 (1KiB), 1048576 (1MiB), 1073741824 (1GiB), etc.
 The prefix can be optionally followed by B whose casing is ignored, eg. 1k, 1K, 1Kb and 1KB are the same.
 """
 	parser = argparse.ArgumentParser(add_help=False, prog='hadd',
@@ -27,7 +27,7 @@ The prefix can be optionally followed by B whose casing is ignored, eg. 1k, 1K, 
 	parser.add_argument("-cachesize", help="Resize the prefetching cache use to speed up I/O operations(use 0 to disable)")
 	parser.add_argument("-experimental-io-features", help="Used with an argument provided, enables the corresponding experimental feature for output trees")
 	parser.add_argument("-f", help="Gives the ability to specify the compression level of the target file(by default 4) ")
-	parser.add_argument("-fk", help="""Sets the target file to contain the baskets with the same compression 
+	parser.add_argument("-fk", help="""Sets the target file to contain the baskets with the same compression
 as the input files (unless -O is specified). Compresses the meta data
 using the compression level specified in the first input or the
 compression setting after fk (for example 206 when using -fk206)""")
