@@ -54,7 +54,7 @@
   For options that takes a size as argument, a decimal number of bytes is expected.
   If the number ends with a ``k'', ``m'', ``g'', etc., the number is multiplied
   by 1000 (1K), 1000000 (1MB), 1000000000 (1G), etc.
-  If this prefix is followed by i, the number is multipled by the traditional
+  If this prefix is followed by i, the number is multiplied by the traditional
   1024 (1KiB), 1048576 (1MiB), 1073741824 (1GiB), etc.
   The prefix can be optionally followed by B whose casing is ignored,
   eg. 1k, 1K, 1Kb and 1KB are the same.
@@ -382,7 +382,7 @@ int main( int argc, char **argv )
       if (keepCompressionAsIs && !reoptimize)
          std::cout << "hadd compression setting for meta data: " << newcomp << '\n';
       else
-         std::cout << "hadd compression setting for all ouput: " << newcomp << '\n';
+         std::cout << "hadd compression setting for all output: " << newcomp << '\n';
    }
    if (append) {
       if (!fileMerger.OutputFile(targetname, "UPDATE", newcomp)) {
