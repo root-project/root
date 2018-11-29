@@ -16,14 +16,6 @@
 #include "TGeoMatrix.h"
 #include "TGeoToOCC.h"
 
-// ROOT-9837: manage the macro called Handle defined
-// in the Standard_Macro.hxx file. The name `Handle`
-// cannot leak out of these headers otherwise name
-// clashes will occour.
-#ifndef Handle
-#define Handle(ClassName) Handle_##ClassName
-#endif
-
 #include <TDF_Label.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 #include <TDocStd_Document.hxx>
@@ -40,7 +32,7 @@ private:
    STEPCAFControl_Writer    fWriter; //the step file pointer
    Handle(TDocStd_Document) fDoc;    //the step document element
 
-   // The following probably shouldn't be data members.
+   // The following probably shouldn't be data members. 
    LabelMap_t               fTree;   //tree of Label's volumes
    TDF_Label                fLabel;  //label of the OCC shape element
    TGeoToOCC                  fRootShape;
@@ -66,10 +58,5 @@ public:
 
    void      OCCWriteStep(const char *fname);
 };
-
-// ROOT-9837
-#ifdef Handle
-#undef Handle
-#endif
 
 #endif
