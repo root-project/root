@@ -16,12 +16,12 @@
 #include "TGeoMatrix.h"
 #include "TGeoToOCC.h"
 
-// We need Handle here; request it and possibly undef it at the end of file.
-#define R__Needs_Handle_Old R__Needs_Handle
-#define R__Needs_Handle 1
-// Cascade
-#include "TOCCExports.h"
-#define R__Needs_Handle R__Needs_Handle_Old
+#include <TDF_Label.hxx>
+#include <XCAFDoc_ShapeTool.hxx>
+#include <TDocStd_Document.hxx>
+#include <STEPCAFControl_Writer.hxx>
+#include <TDF_Label.hxx>
+#include <TopoDS_Shape.hxx>
 
 
 class TOCCToStep {
