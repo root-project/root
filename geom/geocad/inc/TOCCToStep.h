@@ -18,9 +18,7 @@
 
 // We need Handle here; request it and possibly undef it at the end of file.
 #define R__Needs_Handle_Old R__Needs_Handle
-#ifndef R__Needs_Handle
-# define R__Needs_Handle 1
-#endif
+#define R__Needs_Handle 1
 // Cascade
 #include "TOCCExports.h"
 #define R__Needs_Handle R__Needs_Handle_Old
