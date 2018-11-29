@@ -12,6 +12,14 @@
 #ifndef ROOT_TGeoToOCC
 #define ROOT_TGeoToOCC
 
+// ROOT-9837: manage the macro called Handle defined
+// in the Standard_Macro.hxx file. The name `Handle`
+// cannot leak out of these headers otherwise name
+// clashes will occour.
+#ifndef Handle
+#define Handle(ClassName) Handle_##ClassName
+#endif
+
 //Cascade
 #include <Standard_Version.hxx>
 
@@ -60,7 +68,7 @@ public:
 };
 
 // ROOT-9837
-#if defined(Handle) && !defined(R__Needs_Handle)
+#ifdef Handle
 #undef Handle
 #endif
 
