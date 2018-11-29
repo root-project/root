@@ -12,12 +12,25 @@
 #ifndef ROOT_TGeoToOCC
 #define ROOT_TGeoToOCC
 
-// ROOT
+// ROOT-9837: manage the macro called Handle defined
+// in the Standard_Macro.hxx file. The name `Handle`
+// cannot leak out of these headers otherwise name
+// clashes will occour.
+#ifndef Handle
+#define Handle(ClassName) Handle_##ClassName
+#endif
+
+//Cascade
+#include <Standard_Version.hxx>
+
+#define Printf Printf_opencascade
+#include <TopoDS_Shape.hxx>
+#include <TopoDS_Wire.hxx>
+#undef Printf
+
+//Root
 #include "TGeoXtru.h"
 #include "TGeoCompositeShape.h"
-
-// Cascade
-#include "TOCCExports.h"
 
 #include <fstream>
 
@@ -53,6 +66,11 @@ public:
    TopoDS_Shape Reverse(TopoDS_Shape Shape);
 
 };
+
+// ROOT-9837
+#ifdef Handle
+#undef Handle
+#endif
 
 #endif
 

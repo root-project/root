@@ -16,15 +16,20 @@
 #include "TGeoMatrix.h"
 #include "TGeoToOCC.h"
 
-// We need Handle here; request it and possibly undef it at the end of file.
-#define R__Needs_Handle_Old R__Needs_Handle
-#ifndef R__Needs_Handle
-# define R__Needs_Handle 1
+// ROOT-9837: manage the macro called Handle defined
+// in the Standard_Macro.hxx file. The name `Handle`
+// cannot leak out of these headers otherwise name
+// clashes will occour.
+#ifndef Handle
+#define Handle(ClassName) Handle_##ClassName
 #endif
-// Cascade
-#include "TOCCExports.h"
-#undef R__Needs_Handle
-#define R__Needs_Handle R__Needs_Handle_Old
+
+#include <TDF_Label.hxx>
+#include <XCAFDoc_ShapeTool.hxx>
+#include <TDocStd_Document.hxx>
+#include <STEPCAFControl_Writer.hxx>
+#include <TDF_Label.hxx>
+#include <TopoDS_Shape.hxx>
 
 
 class TOCCToStep {
@@ -63,7 +68,7 @@ public:
 };
 
 // ROOT-9837
-#if defined(Handle) && !defined(R__Needs_Handle)
+#ifdef Handle
 #undef Handle
 #endif
 

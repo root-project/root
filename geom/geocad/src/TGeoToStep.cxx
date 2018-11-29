@@ -42,12 +42,14 @@ including level 3.
 To compile the TGeoCad module on ROOT, OpenCascade must be installed!
 */
 
-// Do not #undef Handle:
-#define R__Needs_Handle
-
 #include "TGeoManager.h"
 #include "TOCCToStep.h"
-
+// ROOT-9837: the macro `Handle` has been undefined
+// we need to redefine it as it is done in the oce
+// header Standard_Macro.hxx
+#ifndef Handle
+#define Handle(ClassName) Handle_##ClassName
+#endif
 #include "TGeoToStep.h"
 #include "TString.h"
 #include "TClass.h"
