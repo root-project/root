@@ -295,6 +295,32 @@ class Cpp02TemplateLookup( MyTestCase ):
       obj = ROOT.MyTemplateTypedef()
       obj.set( 'hi' )   # used to fail with TypeError
 
+   def test9TemplatedFunctionNamespace(self):
+      """Test template function in a namespace, lookup and calls"""
+
+      f = ROOT.MyNamespace.MyTemplatedFunctionNamespace
+
+      val = 1.0
+      v = ROOT.std.vector("float")()
+      v.push_back(val)
+
+      # Test basic type
+      self.assertEqual(f("float")(val), val)
+      self.assertEqual(type(f("float")(val)), type(val))
+
+      # Test typedef resolution
+      self.assertEqual(f("Float_t")(val), val)
+      self.assertEqual(type(f("Float_t")(val)), type(val))
+
+      # Test no namespace specification
+      self.assertEqual(f("vector<float>")(v)[0], val)
+      self.assertEqual(type(f("vector<float>")(v)), type(v))
+
+      # Test incomplete type specification
+      # Complete type is std::vector<float, std::allocator<float>>
+      self.assertEqual(f("std::vector<float>")(v)[0], val)
+      self.assertEqual(type(f("std::vector<float>")(v)), type(v))
+
 
 ### C++ by-non-const-ref arguments tests =====================================
 class Cpp03PassByNonConstRef( MyTestCase ):
