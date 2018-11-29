@@ -23,7 +23,6 @@
 #endif
 // Cascade
 #include "TOCCExports.h"
-#undef R__Needs_Handle
 #define R__Needs_Handle R__Needs_Handle_Old
 
 
