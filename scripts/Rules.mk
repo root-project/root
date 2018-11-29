@@ -322,8 +322,9 @@ ifeq ($(ROOTBITS),)
    export ROOTBITS := $(shell root.exe -b -q -n $(ROOTTEST_HOME)/scripts/Bits.C | grep Bits_in_long | awk '{print $$2;}' )
 endif
 
-ifeq ($(CXXFLAGS),)
-   export CXXFLAGS := $(shell root-config --cflags)
+ifeq ($(ROOTTEST_CFLAGS_ADDED_TO_CXXFLAGS),)
+	export CXXFLAGS := $(CXXFLAGS) $(shell root-config --cflags)
+	ROOTTEST_CFLAGS_ADDED_TO_CXXFLAGS := 1
 endif
 ifeq ($(ROOTLIBS),)
    export ROOTLIBS     := $(shell root-config --nonew --libs)
