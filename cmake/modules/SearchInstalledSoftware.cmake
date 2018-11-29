@@ -914,6 +914,17 @@ if(builtin_xrootd)
   set(XROOTD_LIBRARIES ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
+
+  if(builtin_openssl)
+    set(XROOTD_OPENSSL_OPTS
+      -DOPENSSL_VERSION:STRING=${OPENSSL_VERSION}
+      -DOPENSSL_INCLUDE_DIR:PATH=${OPENSSL_INCLUDE_DIR}
+      -DOPENSSL_INCLUDE_DIRS:PATH=${OPENSSL_INCLUDE_DIR}
+      -DOPENSSL_LIBRARY:PATH=${OPENSSL_LIBRARY}
+      -DOPENSSL_LIBRARIES:PATH=${OPENSSL_LIBRARIES}
+    )
+  endif()
+
   ExternalProject_Add(
     XROOTD
     URL ${XROOTD_SRC_URI}
@@ -928,11 +939,17 @@ if(builtin_xrootd)
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
                -DENABLE_PYTHON=OFF
                -DENABLE_CEPH=OFF
+               ${XROOTD_OPENSSL_OPTS}
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
             COMMAND ${CMAKE_COMMAND} -E copy_directory <INSTALL_DIR>/include/xrootd <INSTALL_DIR>/include
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     BUILD_BYPRODUCTS ${XROOTD_LIBRARIES}
   )
+
+  if(builtin_openssl)
+    add_dependencies(XROOTD OPENSSL)
+  endif()
+
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
   set(XROOTD_INCLUDE_DIRS ${XROOTD_ROOTDIR}/include/xrootd ${XROOTD_ROOTDIR}/include/xrootd/private)
   set(XROOTD_NOMAIN TRUE)
