@@ -389,7 +389,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          fprintf(stderr, "Built for %s on %s\n",
                  gSystem->GetBuildArch(),
                  gROOT->GetGitDate());
-    
+
          fprintf(stderr, "From %s@%s\n",
                 gROOT->GetGitBranch(),
                 gROOT->GetGitCommit());
