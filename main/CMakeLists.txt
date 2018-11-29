@@ -48,11 +48,11 @@ if(python)
     configure_file(${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
 
     install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
-                                 DESTINATION ${CMAKE_INSTALL_BINDIR} 
+                                 DESTINATION ${CMAKE_INSTALL_BINDIR}
                                  RENAME ${utilName}
                                  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                                              GROUP_EXECUTE GROUP_READ
-                                             WORLD_EXECUTE WORLD_READ 
+                                             WORLD_EXECUTE WORLD_READ
                                  COMPONENT applications)
   endforeach()
 
