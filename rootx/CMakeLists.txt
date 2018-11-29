@@ -8,9 +8,9 @@ if(x11)
   # FIXME: Why are we adding the x11 independent rootx.cxx file?
   ROOT_EXECUTABLE(root *.cxx  ${CMAKE_SOURCE_DIR}/core/clib/src/strlcpy.c
                   LIBRARIES ${X11_LIBRARIES} ${X11_Xpm_LIB} ${X11_Xft_LIB} ${X11_Xext_LIB})
-                  
+
   #---CreateRootCommandLineOptions------------------------------------------------------------------
-  generateHeaders(${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py 
+  generateHeaders(${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py
                   ${CMAKE_BINARY_DIR}/include/rootCommandLineOptionsHelp.h root)
 elseif(cocoa)
 
@@ -32,7 +32,7 @@ elseif(cocoa)
   # language mode.
   ROOT_EXECUTABLE(root rootx.cxx rootxx-cocoa.mm LIBRARIES "-framework Cocoa")
   #---CreateRootCommandLineOptions------------------------------------------------------------------
-  generateHeaders(${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py 
+  generateHeaders(${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py
                   ${CMAKE_BINARY_DIR}/include/rootCommandLineOptionsHelp.h root)
 endif()
 
