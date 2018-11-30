@@ -13,14 +13,9 @@
 #define ROOT_TTreeReaderArray
 
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TTreeReaderArray                                                    //
-//                                                                        //
-// A simple interface for reading data from trees or chains.              //
-//                                                                        //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
+/** \class TTreeReaderArray
+A simple interface for reading data from trees or chains.
+*/
 
 #include "TTreeReaderValue.h"
 #include "TTreeReaderUtils.h"

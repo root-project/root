@@ -13,14 +13,9 @@
 #define ROOT_TTreeReaderValue
 
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TTreeReaderValue                                                    //
-//                                                                        //
-// A simple interface for reading data from trees or chains.              //
-//                                                                        //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
+/** \class TTreeReaderValue
+A simple interface for reading data from trees or chains.
+*/
 
 #include "TString.h"
 #include "TDictionary.h"
