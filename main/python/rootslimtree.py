@@ -33,16 +33,18 @@ EPILOG="""Examples:
 def get_argparse():
 	# Collect arguments with the module argparse
 	parser = cmdLineUtils.getParserSourceDest(COMMAND_HELP, EPILOG)
+	parser.prog = 'rootslimtree'
+
 	parser.add_argument("-c","--compress", type=int, help=cmdLineUtils.COMPRESS_HELP)
 	parser.add_argument("--recreate", help=cmdLineUtils.RECREATE_HELP, action="store_true")
 	parser.add_argument("-i","--branchinclude", default="")
 	parser.add_argument("-e","--branchexclude", default="")
-	
+
 	return parser
-	
+
 def execute():
 	parser = get_argparse()
-	
+
 	# Put arguments in shape
 	sourceList, destFileName, destPathSplit, optDict = cmdLineUtils.getSourceDestListOptDict(parser)
 
