@@ -13,6 +13,7 @@
 #define ROOT_RRawFileWin
 
 #include <ROOT/RRawFile.hxx>
+#include <ROOT/RStringView.hxx>
 
 #include <cstddef>
 #include <cstdint>
@@ -41,7 +42,7 @@ protected:
    std::uint64_t DoGetSize() final;
 
 public:
-   RRawFileWin(const std::string &url, RRawFile::ROptions options);
+   RRawFileWin(std::string_view url, RRawFile::ROptions options);
    ~RRawFileWin();
 };
 

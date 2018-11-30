@@ -96,7 +96,7 @@ protected:
    virtual std::uint64_t DoGetSize() = 0;
 
 public:
-   RRawFile(const std::string &url, ROptions options);
+   RRawFile(std::string_view url, ROptions options);
    RRawFile(const RRawFile&) = delete;
    RRawFile& operator=(const RRawFile&) = delete;
    virtual ~RRawFile();

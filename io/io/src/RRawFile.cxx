@@ -59,7 +59,7 @@ size_t ROOT::Detail::RRawFile::RBlockBuffer::Map(void *buffer, size_t nbytes, st
 
 
 ROOT::Detail::RRawFile::RRawFile(
-   const std::string &url,
+   std::string_view url,
    ROOT::Detail::RRawFile::ROptions options)
    : fBlockBufferIdx(0)
    , fBufferSpace(nullptr)
