@@ -1116,7 +1116,7 @@ def _rootLsPrintSimpleLs(keyList,indent,oneColumn):
 def _rootLsPrint(keyList, indent, oneColumn, \
                  longListing, treeListing):
     """Print informations given by keyList with a rootLs
-    style choosen with the options"""
+    style chosen with the options"""
     if longListing or treeListing: \
        _rootLsPrintLongLs(keyList, indent, treeListing)
     else:
