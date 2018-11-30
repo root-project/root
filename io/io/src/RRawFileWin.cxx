@@ -43,7 +43,8 @@ void ROOT::Detail::RRawFileWin::Seek(long offset, int whence)
 
 size_t ROOT::Detail::RRawFileWin::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   EnsureOpen();
+   if (!IsOpen()) Open();
+
    Seek(offset, SEEK_SET);
    size_t res = fread(buffer, 1, nbytes, fileptr);
    if ((res < nbytes) && (ferror(fileptr) != 0)) {
@@ -56,7 +57,8 @@ size_t ROOT::Detail::RRawFileWin::DoReadAt(void *buffer, size_t nbytes, std::uin
 
 std::uint64_t ROOT::Detail::RRawFileWin::DoGetSize()
 {
-   EnsureOpen();
+   if (!IsOpen()) Open();
+
    Seek(0L, SEEK_END);
    long size = ftell(fileptr);
    if (size < 0)
@@ -66,11 +68,8 @@ std::uint64_t ROOT::Detail::RRawFileWin::DoGetSize()
 }
 
 
-void ROOT::Detail::RRawFileWin::EnsureOpen()
+void ROOT::Detail::RRawFileWin::Open()
 {
-   if (fileptr != nullptr)
-      return;
-
    fileptr = fopen(GetLocation(fUrl).c_str(), "r");
    if (fileptr == nullptr)
       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + std::string(strerror(errno)));

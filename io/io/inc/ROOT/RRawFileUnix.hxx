@@ -24,7 +24,8 @@ namespace Detail {
 class RRawFileUnix : public RRawFile {
 private:
    int filedes;
-   void EnsureOpen();
+   void Open();
+   bool IsOpen() { return filedes >= 0; }
 
 protected:
    size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) final;

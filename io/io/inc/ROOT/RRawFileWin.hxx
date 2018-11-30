@@ -25,7 +25,8 @@ namespace Detail {
 class RRawFileWin : public RRawFile {
 private:
    FILE *fileptr;
-   void EnsureOpen();
+   void Open();
+   bool IsOpen() { return fileptr != nullptr; }
    void Seek(long offset, int whence);
 
 protected:
