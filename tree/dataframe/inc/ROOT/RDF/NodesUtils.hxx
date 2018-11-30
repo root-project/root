@@ -16,11 +16,13 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDF/Utils.hxx" // ColumnNames_t
 
+/// \cond
 template <typename T>
 class TTreeReaderValue;
 
 template <typename T>
 class TTreeReaderArray;
+/// \endcond
 
 namespace ROOT {
 namespace Internal {

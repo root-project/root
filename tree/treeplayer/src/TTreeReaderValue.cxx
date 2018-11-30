@@ -27,10 +27,6 @@
 #include "TNtuple.h"
 #include <vector>
 
-/** \class TTreeReaderValue
-
-Extracts data from a TTree.
-*/
 
 ClassImp(ROOT::Internal::TTreeReaderValueBase);
 
