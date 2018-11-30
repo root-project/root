@@ -16,6 +16,10 @@ using namespace ROOT::Detail;
 
 namespace {
 
+/**
+ * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object
+ * goes out of scope.
+ */
 class FileRaii {
 private:
    std::string fPath;
@@ -32,6 +36,11 @@ public:
    }
 };
 
+
+/**
+ * A minimal RRawFile implementation that serves data from a string. It keeps a counter of the number of read calls
+ * to help veryfing the buffer logic in the base class.
+ */
 class RRawFileMock : public RRawFile {
 public:
    std::string fContent;
