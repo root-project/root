@@ -13,6 +13,7 @@
 #define ROOT_RRawFileUnix
 
 #include <ROOT/RRawFile.hxx>
+#include <ROOT/RStringView.hxx>
 
 #include <cstddef>
 #include <cstdint>
@@ -39,7 +40,7 @@ protected:
    std::uint64_t DoGetSize() final;
 
 public:
-   RRawFileUnix(const std::string &url, RRawFile::ROptions options);
+   RRawFileUnix(std::string_view url, RRawFile::ROptions options);
    ~RRawFileUnix();
 };
 
