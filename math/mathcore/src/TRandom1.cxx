@@ -618,6 +618,6 @@ void TRandom1::SetSeed2(UInt_t seed, int lux)
 
 void TRandom1::SetSeed(ULong_t seed)
 {
-   // Set RanLux seed using default luxury level
-   SetSeed2(seed);
+   // Set RanLux seed using the luxury level provided in the constructor
+   SetSeed2(seed,fLuxury);
 }
