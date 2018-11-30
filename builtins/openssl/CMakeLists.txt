@@ -1,4 +1,5 @@
 include(ExternalProject)
+include(FindPackageHandleStandardArgs)
 
 # find_package(OpenSSL) may not have found it,
 # clear parent scope variables set to NOTFOUND
@@ -6,10 +7,9 @@ foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS CRYPTO_LIBRARY SSL_LIBRARY LIBRARY
   unset(OPENSSL_${suffix} PARENT_SCOPE)
 endforeach()
 
-set(OPENSSL_FOUND TRUE)
-set(OPENSSL_VERSION "1.0.2o")
+set(OPENSSL_VERSION "1.0.2q")
 set(OPENSSL_URL "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/openssl-${OPENSSL_VERSION}.tar.gz")
-set(OPENSSL_URLHASH "SHA256=ec3f5c9714ba0fd45cb4e087301eb1336c317e0d20b575a125050470e8089e4d")
+set(OPENSSL_URLHASH "SHA256=5744cfcbcec2b1b48629f7354203bc1e5e9b5466998bbccc5b5fcde3b18eb684")
 set(OPENSSL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/OPENSSL-prefix)
 
 foreach(lib ssl crypto)
@@ -36,7 +36,9 @@ ExternalProject_Add(OPENSSL
   LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
   BUILD_BYPRODUCTS ${OPENSSL_CRYPTO_LIBRARY} ${OPENSSL_SSL_LIBRARY})
 
+set(OPENSSL_FOUND TRUE CACHE BOOL "" FORCE)
 set(OPENSSL_VERSION ${OPENSSL_VERSION} CACHE INTERNAL "" FORCE)
+set(OPENSSL_VERSION_STRING "${OPENSSL_VERSION}" CACHE INTERNAL "" FORCE)
 set(OPENSSL_PREFIX ${OPENSSL_PREFIX} CACHE INTERNAL "" FORCE) # needed by Davix
 set(OPENSSL_INCLUDE_DIR ${OPENSSL_PREFIX}/include CACHE INTERNAL "" FORCE)
 set(OPENSSL_INCLUDE_DIRS ${OPENSSL_PREFIX}/include CACHE INTERNAL "" FORCE)
@@ -56,5 +58,17 @@ add_dependencies(builtin_ssl OPENSSL)
 
 add_library(OpenSSL::Crypto ALIAS builtin_crypto)
 add_library(OpenSSL::SSL ALIAS builtin_ssl)
+
+find_package_handle_standard_args(OpenSSL
+  FOUND_VAR
+    OPENSSL_FOUND
+  REQUIRED_VARS
+    OPENSSL_INCLUDE_DIR
+    OPENSSL_CRYPTO_LIBRARY
+    OPENSSL_SSL_LIBRARY
+    OPENSSL_LIBRARIES
+  VERSION_VAR
+    OPENSSL_VERSION_STRING
+)
 
 set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS OPENSSL)
