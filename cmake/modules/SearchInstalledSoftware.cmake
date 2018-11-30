@@ -926,6 +926,8 @@ if(builtin_xrootd)
                -DCMAKE_CXX_FLAGS=${__cxxflags}
                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+               -DOPENSSL_INCLUDE_DIR:STRING=${OPENSSL_INCLUDE_DIR}
+               -DOPENSSL_LIBRARIES:STRING=${OPENSSL_LIBRARIES}
                -DENABLE_PYTHON=OFF
                -DENABLE_CEPH=OFF
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
@@ -933,6 +935,11 @@ if(builtin_xrootd)
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     BUILD_BYPRODUCTS ${XROOTD_LIBRARIES}
   )
+
+  if(builtin_openssl)
+    add_dependencies(XROOTD OPENSSL)
+  endif()
+
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
   set(XROOTD_INCLUDE_DIRS ${XROOTD_ROOTDIR}/include/xrootd ${XROOTD_ROOTDIR}/include/xrootd/private)
   set(XROOTD_NOMAIN TRUE)
