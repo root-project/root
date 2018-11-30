@@ -22,6 +22,13 @@
 namespace ROOT {
 namespace Detail {
 
+/**
+ * \class RRawFileWin RRawFileWin.hxx
+ * \ingroup IO
+ *
+ * The RRawFileWin class uses portable C I/O calls to read from a drive. The standard C I/O buffering is turned off
+ * for the buffering of RRawFile base class.
+ */
 class RRawFileWin : public RRawFile {
 private:
    FILE *fFilePtr;

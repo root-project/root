@@ -21,6 +21,13 @@
 namespace ROOT {
 namespace Detail {
 
+/**
+ * \class RRawFileUnix RRawFileUnix.hxx
+ * \ingroup IO
+ *
+ * The RRawFileUnix class uses POSIX calls to read from a mounted file system. Thus the path name can, for instance,
+ * refer to a named pipe instead of a regular file.
+ */
 class RRawFileUnix : public RRawFile {
 private:
    int filedes;
