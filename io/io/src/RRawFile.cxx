@@ -32,12 +32,12 @@ const char* kTransportSeparator = "://";
 // Corresponds to ELineBreaks
 #ifdef _WIN32
 const char* kLineBreakTokens[] = {"", "\r\n", "\n", "\r\n"};
-constexpr unsigned kLineBreakTokenSizes[] = {0, 2, 1, 2};
+constexpr unsigned int kLineBreakTokenSizes[] = {0, 2, 1, 2};
 #else
 const char* kLineBreakTokens[] = {"", "\n", "\n", "\r\n"};
-constexpr unsigned kLineBreakTokenSizes[] = {0, 1, 1, 2};
+constexpr unsigned int kLineBreakTokenSizes[] = {0, 1, 1, 2};
 #endif
-constexpr unsigned kLineBuffer = 128; // On Readln, look for line-breaks in chunks of 128 bytes
+constexpr unsigned int kLineBuffer = 128; // On Readln, look for line-breaks in chunks of 128 bytes
 constexpr int kDefaultBlockSizeLocal = 4096; // Local files are by default read in pages
 } // anonymous namespace
 
@@ -70,7 +70,7 @@ ROOT::Detail::RRawFile::RRawFile(
 {
    if (fOptions.fBlockSize > 0) {
       fBufferSpace = new unsigned char[kNumBlockBuffers * fOptions.fBlockSize];
-      for (unsigned i = 0; i < kNumBlockBuffers; ++i)
+      for (unsigned int i = 0; i < kNumBlockBuffers; ++i)
          fBlockBuffers[i].fBuffer = fBufferSpace + i * fOptions.fBlockSize;
    }
 }
@@ -154,13 +154,13 @@ size_t ROOT::Detail::RRawFile::Pread(void *buffer, size_t nbytes, std::uint64_t 
    R__ASSERT(fOptions.fBlockSize >= 0);
 
    // "Large" reads are served directly, bypassing the cache
-   if (nbytes > static_cast<unsigned>(fOptions.fBlockSize))
+   if (nbytes > static_cast<unsigned int>(fOptions.fBlockSize))
       return DoPread(buffer, nbytes, offset);
 
    size_t totalBytes = 0;
    size_t mappedBytes = 0;
    /// Try to serve as many bytes as possible from the block buffers
-   for (unsigned idx = fBlockBufferIdx; idx < fBlockBufferIdx + kNumBlockBuffers; ++idx) {
+   for (unsigned int idx = fBlockBufferIdx; idx < fBlockBufferIdx + kNumBlockBuffers; ++idx) {
       mappedBytes = fBlockBuffers[idx % kNumBlockBuffers].Map(buffer, nbytes, offset);
       buffer = reinterpret_cast<unsigned char *>(buffer) + mappedBytes;
       nbytes -= mappedBytes;
