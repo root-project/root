@@ -1,4 +1,4 @@
-# Author: Stefan Wunsch CERN  06/2018
+# Author: Enric Tejedor CERN  11/2018
 
 ################################################################################
 # Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.                      #
@@ -8,23 +8,16 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from libROOTPython import AddPrettyPrintingPyz
 from ROOT import pythonization
 
-def add_len(klass, getter_name):
-	# Parameters:
-    # klass: class to be pythonized
-    # getter_name: name of the method to be associated with `len` in `klass`
-
-    klass.__len__ = getattr(klass, getter_name)
+from ._generic import add_len
 
 @pythonization()
-def pythonizegeneric(klass, name):
+def pythonize_tcollection(klass, name):
     # Parameters:
     # klass: class to be pythonized
     # name: string containing the name of the class
 
-    # Add pretty printing via setting the __str__ special function
-    AddPrettyPrintingPyz(klass)
-
-    return True
+    if name == 'TCollection':
+        # Support `len(c)` as `c.GetEntries()`
+        add_len(klass, 'GetEntries')
