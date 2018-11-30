@@ -60,7 +60,7 @@ def get_argparse():
 	parser.add_argument("-i","--branchinclude", default="")
 	parser.add_argument("-e","--branchexclude", default="")
 	return parser
-	
+
 def execute():
 	parser = get_argparse()
 	# Put arguments in shape

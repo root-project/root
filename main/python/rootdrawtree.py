@@ -31,7 +31,7 @@ user@users-desktop:~$ rootdrawtree --output output.root --input hsimple.root --t
 user@users-desktop:~$ rootdrawtree --output output.root --input hsimple.root hsimple2.root --histo 'hpx=px' 'hpxpy=px:py if px>2'
 
 		'''))
-	
+
 	parser.add_argument('configFile', nargs='?', default='', help = "Configuration file")
 	parser.add_argument('-o', '--output', default='', action='store', dest='output', help='Name of the output file in which will be stored the histograms')
 	parser.add_argument('-i', '--input', default=[], nargs='*', dest='inputFiles', help='.root input files')

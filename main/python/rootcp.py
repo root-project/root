@@ -43,8 +43,8 @@ def get_argparse():
 	parser.add_argument("-r","--recursive", help=cmdLineUtils.RECURSIVE_HELP, action="store_true")
 	parser.add_argument("--replace", help=cmdLineUtils.REPLACE_HELP, action="store_true")
 	return parser
-	
-	
+
+
 def execute():
 	parser = get_argparse()
 	 # Put arguments in shape
