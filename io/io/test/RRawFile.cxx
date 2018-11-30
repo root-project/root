@@ -35,13 +35,13 @@ public:
 class RRawFileMock : public RRawFile {
 public:
    std::string fContent;
-   unsigned fNumPread;
+   unsigned fNumReadAt;
    RRawFileMock(const std::string &content, RRawFile::ROptions options)
-     : RRawFile("", options), fContent(content), fNumPread(0) { }
+     : RRawFile("", options), fContent(content), fNumReadAt(0) { }
 
-   size_t DoPread(void *buffer, size_t nbytes, std::uint64_t offset) final
+   size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) final
    {
-      fNumPread++;
+      fNumReadAt++;
       if (offset > fContent.length())
          return 0;
 
@@ -62,7 +62,7 @@ TEST(RRawFile, Empty)
    std::unique_ptr<RRawFile> f(RRawFile::Create("testEmpty"));
    EXPECT_EQ(0u, f->GetSize());
    EXPECT_EQ(0u, f->Read(nullptr, 0));
-   EXPECT_EQ(0u, f->Pread(nullptr, 0, 1));
+   EXPECT_EQ(0u, f->ReadAt(nullptr, 0, 1));
    std::string line;
    EXPECT_FALSE(f->Readln(line));
 }
@@ -122,7 +122,7 @@ TEST(RRawFile, ReadDirect)
    EXPECT_EQ(0u, f->Read(&buffer, 0));
    EXPECT_EQ(1u, f->Read(&buffer, 1));
    EXPECT_EQ('a', buffer);
-   EXPECT_EQ(1u, f->Pread(&buffer, 1, 2));
+   EXPECT_EQ(1u, f->ReadAt(&buffer, 1, 2));
    EXPECT_EQ('c', buffer);
 
 }
@@ -136,35 +136,35 @@ TEST(RRawFile, ReadBufferd)
    std::unique_ptr<RRawFileMock> f(new RRawFileMock("abcdef", options));
 
    buffer[3] = '\0';
-   EXPECT_EQ(3u, f->Pread(buffer, 3, 1));
+   EXPECT_EQ(3u, f->ReadAt(buffer, 3, 1));
    EXPECT_STREQ("bcd", buffer);
-   EXPECT_EQ(1u, f->fNumPread); f->fNumPread = 0;
+   EXPECT_EQ(1u, f->fNumReadAt); f->fNumReadAt = 0;
 
    buffer[2] = '\0';
-   EXPECT_EQ(2u, f->Pread(buffer, 2, 2));
+   EXPECT_EQ(2u, f->ReadAt(buffer, 2, 2));
    EXPECT_STREQ("cd", buffer);
-   EXPECT_EQ(2u, f->Pread(buffer, 2, 0));
+   EXPECT_EQ(2u, f->ReadAt(buffer, 2, 0));
    EXPECT_STREQ("ab", buffer);
-   EXPECT_EQ(2u, f->Pread(buffer, 2, 2));
+   EXPECT_EQ(2u, f->ReadAt(buffer, 2, 2));
    EXPECT_STREQ("cd", buffer);
-   EXPECT_EQ(2u, f->Pread(buffer, 2, 1));
+   EXPECT_EQ(2u, f->ReadAt(buffer, 2, 1));
    EXPECT_STREQ("bc", buffer);
-   EXPECT_EQ(2u, f->fNumPread); f->fNumPread = 0;
+   EXPECT_EQ(2u, f->fNumReadAt); f->fNumReadAt = 0;
 
-   EXPECT_EQ(2u, f->Pread(buffer, 2, 0));
+   EXPECT_EQ(2u, f->ReadAt(buffer, 2, 0));
    EXPECT_STREQ("ab", buffer);
-   EXPECT_EQ(1u, f->Pread(buffer, 1, 1));
+   EXPECT_EQ(1u, f->ReadAt(buffer, 1, 1));
    EXPECT_STREQ("bb", buffer);
-   EXPECT_EQ(2u, f->Pread(buffer, 2, 1));
+   EXPECT_EQ(2u, f->ReadAt(buffer, 2, 1));
    EXPECT_STREQ("bc", buffer);
-   EXPECT_EQ(0u, f->fNumPread); f->fNumPread = 0;
-   EXPECT_EQ(2u, f->Pread(buffer, 2, 3));
+   EXPECT_EQ(0u, f->fNumReadAt); f->fNumReadAt = 0;
+   EXPECT_EQ(2u, f->ReadAt(buffer, 2, 3));
    EXPECT_STREQ("de", buffer);
-   EXPECT_EQ(1u, f->fNumPread); f->fNumPread = 0;
-   EXPECT_EQ(1u, f->Pread(buffer, 1, 2));
+   EXPECT_EQ(1u, f->fNumReadAt); f->fNumReadAt = 0;
+   EXPECT_EQ(1u, f->ReadAt(buffer, 1, 2));
    EXPECT_STREQ("ce", buffer);
-   EXPECT_EQ(0u, f->fNumPread); f->fNumPread = 0;
-   EXPECT_EQ(1u, f->Pread(buffer, 1, 1));
+   EXPECT_EQ(0u, f->fNumReadAt); f->fNumReadAt = 0;
+   EXPECT_EQ(1u, f->ReadAt(buffer, 1, 1));
    EXPECT_STREQ("be", buffer);
-   EXPECT_EQ(1u, f->fNumPread); f->fNumPread = 0;
+   EXPECT_EQ(1u, f->fNumReadAt); f->fNumReadAt = 0;
 }
