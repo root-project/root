@@ -12,8 +12,6 @@ from libROOTPython import AddBranchAttrSyntax, SetBranchAddressPyz, BranchPyz
 
 from ROOT import pythonization
 
-from cppyy.gbl import TClass
-
 # TTree iterator
 def _TTree__iter__(self):
     i = 0
