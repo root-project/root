@@ -22,7 +22,7 @@
 #include <unistd.h>
 
 
-ROOT::Detail::RRawFileUnix::RRawFileUnix(const std::string &url, ROOT::Detail::RRawFile::ROptions options)
+ROOT::Detail::RRawFileUnix::RRawFileUnix(std::string_view url, ROOT::Detail::RRawFile::ROptions options)
   : ROOT::Detail::RRawFile(url, options)
   , filedes(-1)
 {

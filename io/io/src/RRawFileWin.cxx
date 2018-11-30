@@ -22,7 +22,7 @@
 #include <string>
 
 
-ROOT::Detail::RRawFileWin::RRawFileWin(const std::string &url, ROOT::Detail::RRawFile::ROptions options)
+ROOT::Detail::RRawFileWin::RRawFileWin(std::string_view url, ROOT::Detail::RRawFile::ROptions options)
   : ROOT::Detail::RRawFile(url, options)
   , fFilePtr(nullptr)
 {
