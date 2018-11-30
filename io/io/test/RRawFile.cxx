@@ -128,7 +128,7 @@ TEST(RRawFile, ReadDirect)
 }
 
 
-TEST(RRawFile, ReadBufferd)
+TEST(RRawFile, ReadBuffered)
 {
    char buffer[8];
    RRawFile::ROptions options;
