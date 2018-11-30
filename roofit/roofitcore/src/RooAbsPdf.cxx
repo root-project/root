@@ -1069,7 +1069,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// <tr><th><th> Options to control informational output
 /// <tr><td> `Verbose(Bool_t flag)`            <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit
 /// <tr><td> `Timer(Bool_t flag)`              <td>  Time CPU and wall clock consumption of fit steps, off by default
-/// <tr><td> `PrintLevel(Int_t level)`         <td>  Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational messages are suppressed as well
+/// <tr><td> `PrintLevel(Int_t level)`         <td>  Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational messages are suppressed as well.
+///                                                  See RooMinimizer::PrintLevel for the meaning of the levels.
 /// <tr><td> `Warnings(Bool_t flag)`           <td>  Enable or disable MINUIT warnings (enabled by default)
 /// <tr><td> `PrintEvalErrors(Int_t numErr)`   <td>  Control number of p.d.f evaluation errors printed per likelihood evaluation.
 ///                                                A negative value suppresses output completely, a zero value will only print the error count per p.d.f component,
