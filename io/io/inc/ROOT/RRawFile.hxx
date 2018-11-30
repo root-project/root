@@ -58,7 +58,7 @@ public:
 
 private:
    /// Don't set to a different value without adapting Pread
-   static constexpr unsigned kNumBlockBuffers = 2;
+   static constexpr unsigned int kNumBlockBuffers = 2;
    struct RBlockBuffer {
       /// Where in the open file does fBuffer start
       std::uint64_t fBufferOffset;
@@ -76,7 +76,7 @@ private:
       size_t Map(void *buffer, size_t nbytes, std::uint64_t offset);
    };
    /// To be used modulo kNumBlockBuffers, points to the last used block buffer in fBlockBuffers
-   unsigned fBlockBufferIdx;
+   unsigned int fBlockBufferIdx;
    /// An active buffer and a shadow buffer, which supports "jumping back" to a previously used location in the file
    RBlockBuffer fBlockBuffers[kNumBlockBuffers];
    /// Memory block containing the block buffers consequtively
