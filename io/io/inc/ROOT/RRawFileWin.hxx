@@ -29,7 +29,7 @@ private:
    void Seek(long offset, int whence);
 
 protected:
-   size_t DoPread(void *buffer, size_t nbytes, std::uint64_t offset) final;
+   size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) final;
    std::uint64_t DoGetSize() final;
 
 public:

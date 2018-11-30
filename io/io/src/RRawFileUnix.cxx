@@ -36,7 +36,7 @@ ROOT::Detail::RRawFileUnix::~RRawFileUnix()
 }
 
 
-size_t ROOT::Detail::RRawFileUnix::DoPread(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Detail::RRawFileUnix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    EnsureOpen();
 

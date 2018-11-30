@@ -57,7 +57,7 @@ public:
    };
 
 private:
-   /// Don't set to a different value without adapting Pread
+   /// Don't set to a different value without adapting ReadAt()
    static constexpr unsigned int kNumBlockBuffers = 2;
    struct RBlockBuffer {
       /// Where in the open file does fBuffer start
@@ -91,7 +91,7 @@ protected:
    std::uint64_t fFilePos;
 
    /// Derived classes should implement low-level reading without buffering
-   virtual size_t DoPread(void *buffer, size_t nbytes, std::uint64_t offset) = 0;
+   virtual size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) = 0;
    /// Derived classes should return the file size or kUnknownFileSize
    virtual std::uint64_t DoGetSize() = 0;
 
@@ -112,7 +112,7 @@ public:
     * Buffered read from a random position. Returns the actual number of bytes read.
     * Short reads indicate the end of the file
     */
-   size_t Pread(void *buffer, size_t nbytes, std::uint64_t offset);
+   size_t ReadAt(void *buffer, size_t nbytes, std::uint64_t offset);
    /// Read from fFilePos offset. Returns the actual number of bytes read.
    size_t Read(void *buffer, size_t nbytes);
    /// Change the cursor fFilePos

@@ -149,13 +149,13 @@ std::string ROOT::Detail::RRawFile::GetTransport(std::string_view url)
 }
 
 
-size_t ROOT::Detail::RRawFile::Pread(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    R__ASSERT(fOptions.fBlockSize >= 0);
 
    // "Large" reads are served directly, bypassing the cache
    if (nbytes > static_cast<unsigned int>(fOptions.fBlockSize))
-      return DoPread(buffer, nbytes, offset);
+      return DoReadAt(buffer, nbytes, offset);
 
    size_t totalBytes = 0;
    size_t mappedBytes = 0;
@@ -177,7 +177,7 @@ size_t ROOT::Detail::RRawFile::Pread(void *buffer, size_t nbytes, std::uint64_t 
 
    /// The remaining bytes populate the newly promoted main buffer
    RBlockBuffer* thisBuffer = &fBlockBuffers[fBlockBufferIdx % kNumBlockBuffers];
-   size_t res = DoPread(thisBuffer->fBuffer, fOptions.fBlockSize, offset);
+   size_t res = DoReadAt(thisBuffer->fBuffer, fOptions.fBlockSize, offset);
    thisBuffer->fBufferOffset = offset;
    thisBuffer->fBufferSize = res;
    size_t remainingBytes = std::min(res, nbytes);
@@ -189,7 +189,7 @@ size_t ROOT::Detail::RRawFile::Pread(void *buffer, size_t nbytes, std::uint64_t 
 
 size_t ROOT::Detail::RRawFile::Read(void *buffer, size_t nbytes)
 {
-   size_t res = Pread(buffer, nbytes, fFilePos);
+   size_t res = ReadAt(buffer, nbytes, fFilePos);
    fFilePos += res;
    return res;
 }

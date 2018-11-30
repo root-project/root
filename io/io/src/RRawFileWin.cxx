@@ -41,7 +41,7 @@ void ROOT::Detail::RRawFileWin::Seek(long offset, int whence)
       throw std::runtime_error("Cannot seek in '" + fUrl + "', error: " + std::string(strerror(errno)));
 }
 
-size_t ROOT::Detail::RRawFileWin::DoPread(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Detail::RRawFileWin::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    EnsureOpen();
    Seek(offset, SEEK_SET);
