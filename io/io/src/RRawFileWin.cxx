@@ -11,6 +11,8 @@
 
 #include "ROOT/RRawFileWin.hxx"
 
+#include "TError.h"
+
 #include <cerrno>
 #include <cstddef>
 #include <cstdint>
@@ -72,4 +74,7 @@ void ROOT::Detail::RRawFileWin::EnsureOpen()
    fileptr = fopen(GetLocation(fUrl).c_str(), "r");
    if (fileptr == nullptr)
       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + std::string(strerror(errno)));
+   // Prevent double buffering
+   int res = setvbuf(fileptr, nullptr, _IONBF, 0);
+   R__ASSERT(res == 0);
 }
