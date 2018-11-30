@@ -22,7 +22,6 @@
 namespace ROOT {
 namespace Detail {
 
-// TODO(jblomer): use Win32 API instead of C I/O to avoid double buffering
 class RRawFileWin : public RRawFile {
 private:
    FILE *fileptr;
