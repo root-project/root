@@ -19,17 +19,22 @@
 #include "TString.h"
 #include "RooAbsArg.h"
 #include "RooPrintable.h"
-#include "RooLinkedList.h"
 #include "RooCmdArg.h"
 #include "RooLinkedListIter.h"
 #include <ROOT/RMakeUnique.hxx>
 #include <string>
 
+//#include <llvm/ADT/SmallVector.h>
+
+class RooCmdArg;
+
 class RooAbsCollection : public TObject, public RooPrintable {
 public:
+  using Storage_t = std::vector<RooAbsArg*>;
+//  using Storage_t = std::deque<RooAbsArg*>;
+//  using Storage_t = llvm::SmallVector<RooAbsArg*, 5>;
+  using const_iterator = Storage_t::const_iterator;
 
-  using const_iterator = std::vector<RooAbsArg*>::const_iterator;
-//  using iterator = std::vector<RooAbsArg*>::iterator;
 
   // Constructors, assignment etc.
   RooAbsCollection();
@@ -147,6 +152,10 @@ public:
     return _list.front();
   }
 
+  RooAbsArg * operator[](std::size_t i) const {
+    return _list[i];
+  }
+
   inline virtual void Print(Option_t *options= 0) const {
     // Printing interface (human readable)
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
@@ -190,13 +199,7 @@ public:
   void releaseOwnership() { _ownCont = kFALSE ; }
   void takeOwnership() { _ownCont = kTRUE ; }
 
-  void sort(Bool_t ascend=kTRUE) {
-    if (ascend)
-      std::sort(_list.begin(), _list.end());
-    else {
-      std::sort(_list.begin(), _list.end(), std::greater<RooAbsArg*>());
-    }
-  }
+  void sort(Bool_t reverse = false);
 
   virtual void RecursiveRemove(TObject *obj);
 
@@ -204,11 +207,8 @@ protected:
 
   friend class RooMultiCatIter ;
 
-  std::vector<RooAbsArg*> _list; // Actual object storage
-  using LegacyIterator_t = TIteratorToSTLInterface<decltype(_list)>;
-  /// Active old-style iterators will not behave as expected when elements are deleted.
-  /// Need to notify them if that happens.
-  mutable std::vector<std::weak_ptr<LegacyIterator_t>> _activeIterators; //!
+  Storage_t _list; // Actual object storage
+  using LegacyIterator_t = TIteratorToSTLInterface<Storage_t>;
 
   Bool_t _ownCont;  // Flag to identify a list that owns its contents.
   TString _name;    // Our name.
@@ -231,17 +231,8 @@ protected:
   void makeTypedStructureTag() ;
   
 private:
-  std::shared_ptr<LegacyIterator_t> makeLegacyIterator (bool forward = true) const {
-    if (!forward)
-      throw std::logic_error("The legacy iterators are deprecated and only work in forward direction.");
-//    std::cout << "Making iterator for " << ClassName() << "\n";
-//    Print("V");
-    auto iterImpl = std::make_shared<LegacyIterator_t>(_list);
-    _activeIterators.emplace_back(iterImpl);
-    return iterImpl;
-  }
+  std::unique_ptr<LegacyIterator_t> makeLegacyIterator (bool forward = true) const;
 
-  void invalidateActiveIterators() const;
   ClassDef(RooAbsCollection,3) // Collection of RooAbsArg objects
 };
 

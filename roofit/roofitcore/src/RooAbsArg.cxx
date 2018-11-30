@@ -921,11 +921,10 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
   if (!_serverList.First()) return kFALSE ;
   if (newSetOrig.getSize()==0) return kFALSE ;
 
-  // Strip any non-matchin removal nodes from newSetOrig
+  // Strip any non-matching removal nodes from newSetOrig
   RooAbsCollection* newSet ;
 
   if (nameChange) {
-
     newSet = new RooArgSet ;
     for (auto arg : newSetOrig) {
 
@@ -979,9 +978,9 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 
     if (!newServer) {
       if (mustReplaceAll) {
-	cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
+        coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
 			       << " (" << (void*)oldServer << ") not redirected" << (nameChange?"[nameChange]":"") << endl ;
-	ret = kTRUE ;
+        ret = kTRUE ;
       }
       continue ;
     }

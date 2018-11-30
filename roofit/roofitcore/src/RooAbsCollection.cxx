@@ -28,11 +28,12 @@ an optional hash-table lookup mechanism for fast indexing of large
 collections.
 **/
 
+#include "RooAbsCollection.h"
+
 #include "Riostream.h"
 #include "TClass.h"
 #include "TStopwatch.h"
 #include "TRegexp.h"
-#include "RooAbsCollection.h"
 #include "RooStreamParser.h"
 #include "RooFormula.h"
 #include "RooAbsRealLValue.h"
@@ -232,8 +233,10 @@ Bool_t RooAbsCollection::snapshot(RooAbsCollection& output, Bool_t deepCopy) con
   Bool_t error(kFALSE) ;
   if (deepCopy) {
     // Recursively add clones of all servers
-    for (auto var : output) {
-      error |= output.addServerClonesToList(*var) ;
+    // Can only do index access because collection might reallocate when growing
+    for (Storage_t::size_type i = 0; i < output._list.size(); ++i) {
+      const auto var = output._list[i];
+      error |= output.addServerClonesToList(*var);
     }
   }
 
@@ -244,24 +247,11 @@ Bool_t RooAbsCollection::snapshot(RooAbsCollection& output, Bool_t deepCopy) con
     return kTRUE ;
   }
 
-//  for (std::size_t i = 0; i < _list.size(); ++i) {
-//    std::cout << "\n*** " << i << "\n\t" << _list[i] << "\t";
-//    _list[i]->Print();
-//    std::cout << "\n\t" << output._list[i] << "\t";
-//    output._list[i]->Print();
-//  }
-//  for (std::size_t i = _list.size(); i < output._list.size(); ++i) {
-//    std::cout << "\n*** " << i << "\n\t" << output._list[i] << "\t";
-//    output._list[i]->Print();
-//  }
+
 
    // Redirect all server connections to internal list members
   for (auto var : output) {
-//    std::cout << "BEFORE: Redirecting servers of " << var;
-//    var->Print("V");
-    var->redirectServers(output,deepCopy) ;
-//    std::cout << "AFTER: Redirecting servers of " << var;
-//    var->Print("V");
+    var->redirectServers(output,deepCopy);
   }
 
 
@@ -273,7 +263,7 @@ Bool_t RooAbsCollection::snapshot(RooAbsCollection& output, Bool_t deepCopy) con
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add clones of servers of given argument to list
+/// Add clones of servers of given argument to end of list
 
 Bool_t RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
 {
@@ -283,17 +273,20 @@ Bool_t RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
   RooAbsArg* server ;
   while ((server=sIter.next())) {
     RooAbsArg* tmp = find(*server) ;
+
     if (!tmp) {
       RooAbsArg* serverClone = (RooAbsArg*)server->Clone() ;
       serverClone->setAttribute("SnapShot_ExtRefClone") ;
       _list.push_back(serverClone) ;
       if (_allRRV && dynamic_cast<RooRealVar*>(serverClone)==0) {
-	_allRRV=kFALSE ;
+        _allRRV=kFALSE ;
       }
       ret |= addServerClonesToList(*server) ;
     } else {
+
     }
   }
+
   return ret ;
 }
 
@@ -578,12 +571,12 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNameOnly)
 {
   // is var already in this list?
-  const std::string name(var.GetName());
   const auto sizeBefore = _list.size();
 
   _list.erase(std::remove(_list.begin(), _list.end(), &var), _list.end());
 
   if (matchByNameOnly) {
+    const std::string name(var.GetName());
     auto nameMatch = [&name](const RooAbsArg* elm) {
       return elm->GetName() == name;
     };
@@ -601,10 +594,6 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNam
 
     for (auto arg : toBeDeleted)
       delete arg;
-  }
-
-  if (sizeBefore != _list.size()) {
-    invalidateActiveIterators();
   }
 
   return sizeBefore != _list.size();
@@ -788,11 +777,27 @@ RooAbsArg * RooAbsCollection::find(const char *name) const
 {
   if (!name)
     return nullptr;
+  
+  decltype(_list)::const_iterator item;
 
-  const std::string theName(name);
-  auto item = std::find_if(_list.begin(), _list.end(), [&theName](const RooAbsArg * elm){
-    return elm->GetName() == theName;
-  });
+  if (_list.size() < 10) {
+    auto findByName = [name](const RooAbsArg * elm){
+      return strcmp(elm->GetName(), name) == 0;
+    };
+
+    item = std::find_if(_list.begin(), _list.end(), findByName);
+  }
+  else {
+    const TNamed* nptr= RooNameReg::known(name);
+    if (!nptr) return 0;
+
+    auto findByNamePtr = [nptr](const RooAbsArg* elm) {
+      return nptr == elm->namePtr();
+    };
+
+    item = std::find_if(_list.begin(), _list.end(), findByNamePtr);
+  }
+  
   return item != _list.end() ? *item : nullptr;
 }
 
@@ -804,11 +809,17 @@ RooAbsArg * RooAbsCollection::find(const char *name) const
 
 RooAbsArg * RooAbsCollection::find(const RooAbsArg& arg) const
 {
-  auto findByNamePtr = [& arg](const RooAbsArg * listItem) {
-    return arg.namePtr() == listItem->namePtr();
+  const auto nptr = arg.namePtr();
+  auto findByNamePtr = [nptr](const RooAbsArg * listItem) {
+    return nptr == listItem->namePtr();
   };
 
   auto item = std::find_if(_list.begin(), _list.end(), findByNamePtr);
+//  if (item == _list.end()) {
+//    std::cout << "Arg " << arg.GetName() << " with nptr " << nptr << " does not seem to be in list ";
+//    this->Print("V");
+//  }
+
   return item != _list.end() ? *item : nullptr;
 }
 
@@ -961,27 +972,33 @@ void RooAbsCollection::dump() const
 /// column contains the name of each variable, the right column the value.
 ///
 /// The following optional named arguments can be used to modify the default behavior
+/// <table>
+/// <tr><th> Argument <th> Effect
+/// <tr><td>   `Columns(Int_t ncol)`                    <td> Fold table into multiple columns, i.e. ncol=3 will result in 3 x 2 = 6 total columns
+/// <tr><td>   `Sibling(const RooAbsCollection& other)` <td> Define sibling list.
+///     The sibling list is assumed to have objects with the same
+///     name in the same order. If this is not the case warnings will be printed. If a single
+///     sibling list is specified, 3 columns will be output: the (common) name, the value of this
+///     list and the value in the sibling list. Multiple sibling lists can be specified by
+///     repeating the Sibling() command.
+/// <tr><td>   `Format(const char* str)`                <td> Classic format string, provided for backward compatibility
+/// <tr><td>   `Format()`                            <td> Formatting arguments.
+///   <table>
+///   <tr><td>   const char* what          <td> Controls what is shown. "N" adds name, "E" adds error,
+///                                  "A" shows asymmetric error, "U" shows unit, "H" hides the value
+///   <tr><td>   `FixedPrecision(int n)`     <td> Controls precision, set fixed number of digits
+///   <tr><td>   `AutoPrecision(int n)`      <td> Controls precision. Number of shown digits is calculated from error
+///                                               and n specified additional digits (1 is sensible default)
+///   <tr><td>   `VerbatimName(Bool_t flag)` <td> Put variable name in a \\verb+   + clause.
+///   </table>
+/// <tr><td>   `OutputFile(const char* fname)`          <td> Send output to file with given name rather than standard output
 ///
-///   Columns(Int_t ncol)                    -- Fold table into multiple columns, i.e. ncol=3 will result in 3 x 2 = 6 total columns
-///   Sibling(const RooAbsCollection& other) -- Define sibling list. The sibling list is assumed to have objects with the same
-///                                             name in the same order. If this is not the case warnings will be printed. If a single
-///                                             sibling list is specified, 3 columns will be output: the (common) name, the value of this
-///                                             list and the value in the sibling list. Multiple sibling lists can be specified by
-///                                             repeating the Sibling() command.
-///   Format(const char* str)                -- Classic format string, provided for backward compatibility
-///   Format(...)                            -- Formatting arguments, details are given below
-///   OutputFile(const char* fname)          -- Send output to file with given name rather than standard output
+/// </table>
 ///
-/// The Format(const char* what,...) has the following structure
-///
-///   const char* what          -- Controls what is shown. "N" adds name, "E" adds error,
-///                                "A" shows asymmetric error, "U" shows unit, "H" hides the value
-///   FixedPrecision(int n)     -- Controls precision, set fixed number of digits
-///   AutoPrecision(int n)      -- Controls precision. Number of shown digits is calculated from error
-///                                + n specified additional digits (1 is sensible default)
-///   VerbatimName(Bool_t flag) -- Put variable name in a \\verb+   + clause.
-///
-/// Example use: list.printLatex(Columns(2), Format("NEU",AutoPrecision(1),VerbatimName()) ) ;
+/// Example use:
+/// ```
+/// list.printLatex(Columns(2), Format("NEU",AutoPrecision(1),VerbatimName()) );
+/// ```
 
 void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
 				  const RooCmdArg& arg3, const RooCmdArg& arg4,
@@ -1220,18 +1237,28 @@ void RooAbsCollection::RecursiveRemove(TObject *obj)
    if (obj && obj->InheritsFrom(RooAbsArg::Class())) remove(*(RooAbsArg*)obj,false,false);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Sort collection using std::sort and name comparison
 
-void RooAbsCollection::invalidateActiveIterators() const {
-  //Prune inactive iterators
-  _activeIterators.erase(
-      std::remove_if(_activeIterators.begin(), _activeIterators.end(),
-          [](const weak_ptr<LegacyIterator_t> & wptr){return wptr.expired();}),
-          _activeIterators.end());
+void RooAbsCollection::sort(Bool_t reverse) {
+  const auto cmp = [](const RooAbsArg * l, const RooAbsArg * r) {
+    return strcmp(l->GetName(), r->GetName()) < 0;
+  };
 
-  //Invalidate all others
-  for (const auto & wptr : _activeIterators) {
-    auto ptr = wptr.lock();
-    if (ptr)
-      ptr->invalidate();
-  }
+  const auto cmpReverse = [](const RooAbsArg * l, const RooAbsArg * r) {
+    return strcmp(l->GetName(), r->GetName()) > 0;
+  };
+
+  std::sort(_list.begin(), _list.end(), reverse ? cmpReverse : cmp);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Factory for legacy iterators.
+
+std::unique_ptr<RooAbsCollection::LegacyIterator_t> RooAbsCollection::makeLegacyIterator (bool forward) const {
+  if (!forward)
+    ccoutE(DataHandling) << "The legacy RooFit collection iterators don't support reverse iterations, any more. "
+    << "Use begin() and end()" << endl;
+  return std::make_unique<LegacyIterator_t>(_list);
+}
+

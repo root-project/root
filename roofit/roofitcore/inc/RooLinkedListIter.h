@@ -16,14 +16,13 @@
 #ifndef ROO_LINKED_LIST_ITER
 #define ROO_LINKED_LIST_ITER
 
-//#include "Rtypes.h"
 #include "TIterator.h"
 #include "RooLinkedList.h"
+
 #include <memory>
 #include <assert.h>
 
-
-///Interface for RooFIter-compatible iterators
+/// Interface for RooFIter-compatible iterators
 class GenericRooFIter
 {
   public:
@@ -31,11 +30,14 @@ class GenericRooFIter
   virtual ~GenericRooFIter() {}
 };
 
-///A one-time forward iterator working on RooLinkedList or RooAbsCollection
-class RooFIter
+////////////////////////////////////////////////////////////////////////////////////////////
+/// A one-time forward iterator working on RooLinkedList or RooAbsCollection.
+/// This wrapper separates the interface visible to the outside from the actual
+/// implementation of the iterator.
+class RooFIter final
 {
   public:
-  RooFIter(std::shared_ptr<GenericRooFIter> && itImpl) : fIterImpl{std::move(itImpl)} {}
+  RooFIter(std::unique_ptr<GenericRooFIter> && itImpl) : fIterImpl{std::move(itImpl)} {}
   RooFIter(const RooFIter &) = delete;
   RooFIter(RooFIter &&) = default;
   RooFIter & operator=(const RooFIter &) = delete;
@@ -46,10 +48,11 @@ class RooFIter
   }
 
   private:
-  std::shared_ptr<GenericRooFIter> fIterImpl;
+  std::unique_ptr<GenericRooFIter> fIterImpl;
 };
 
-
+////////////////////////////////////////////////////////////////////////////////////////////
+/// Implementation of a GenericRooFIter for the RooLinkedList
 class RooFIterForLinkedList final : public GenericRooFIter
 {
   public:
@@ -70,15 +73,25 @@ class RooFIterForLinkedList final : public GenericRooFIter
 
 
 
+
+////////////////////////////////////////////////////////////////////////////////////////////
+/// TIterator and GenericRooFIter front end with STL back end.
+///
+/// By default, does index access to the underlying collection. Therefore, it can
+/// deal with reallocations while iterating. It will also check that the last element
+/// it was pointing to is the same element when it is invoked again. This ensures, that
+/// inserting or removing before this iterator does not happen, which was possible with
+/// the linked list iterators of RooFit.
+/// When NDEBUG is defined, these checks will disappear.
 template<class STLContainer>
 class TIteratorToSTLInterface final : public TIterator , public GenericRooFIter {
   public:
 
   TIteratorToSTLInterface(const STLContainer & container) :
-    fSTLContainer{&container},
-    fSTLIter{fSTLContainer->begin()}
+    fSTLContainer{container},
+    fIndex{0}
 #ifndef NDEBUG
-    ,fCurrentElem{fSTLContainer->empty() ? nullptr : *fSTLIter}
+    ,fCurrentElem{fSTLContainer.empty() ? nullptr : fSTLContainer.front()}
 #endif
   {
 
@@ -92,81 +105,67 @@ class TIteratorToSTLInterface final : public TIterator , public GenericRooFIter 
     return nullptr;
   }
 
+
+
+#ifndef NDEBUG
   RooAbsArg * next() override {
     if (atEnd())
       return nullptr;
-
-#ifndef NDEBUG
     return nextChecked();
+  }
+#else
+  RooAbsArg * next() override {
+    if (atEnd())
+      return nullptr;
+    return fSTLContainer[fIndex++];
+  }
 #endif
 
-    return *fSTLIter++;
-  }
 
-  TObject * Next() override {
-    return static_cast<TObject*>(next());
-  }
+  TObject * Next() override;
 
   void Reset() override {
-    if (fSTLContainer) {
-      fSTLIter = fSTLContainer->begin();
+    fIndex = 0;
 #ifndef NDEBUG
-      fCurrentElem = fSTLContainer->empty() ? nullptr : *fSTLIter;
+    fCurrentElem = fSTLContainer.empty() ? nullptr : fSTLContainer.front();
 #endif
-    }
+
   }
 
   Bool_t operator!=(const TIterator & other) const override {
-    if (!fSTLContainer)
-      return true;
-
     const auto * castedOther =
         dynamic_cast<const TIteratorToSTLInterface<STLContainer>*>(&other);
-    return !castedOther || fSTLContainer != castedOther->fSTLContainer
-        || fSTLIter != castedOther->fSTLIter;
+    return !castedOther || &fSTLContainer != &(castedOther->fSTLContainer)
+        || fIndex == castedOther->fIndex;
   }
 
-  TObject * operator*() const override {
-    if (atEnd())
-      return nullptr;
-
-#ifndef NDEBUG
-    assert(fCurrentElem == *fSTLIter);
-#endif
-
-    return static_cast<TObject*>(*fSTLIter);
-  }
-  
-  void invalidate() {
-    fIsValid = false;
-  }
+  TObject * operator*() const override;
 
   private:
   bool atEnd() const {
-    if (!fIsValid) {
-      throw std::logic_error("This iterator was invalidated by modifying the underlying collection.");
-    }
-    return !fSTLContainer
-        || fSTLContainer->empty()
-        || fSTLIter == fSTLContainer->end();
+    return fSTLContainer.empty()
+        || fIndex >= fSTLContainer.size();
   }
 
-  RooAbsArg * nextChecked();
-
-  const STLContainer * fSTLContainer{nullptr}; //!
-  typename STLContainer::const_iterator fSTLIter; //!
-  bool fIsValid{true}; //!
+  const STLContainer & fSTLContainer; //!
+  std::size_t fIndex; //!
 #ifndef NDEBUG
   const RooAbsArg * fCurrentElem; //!
+
+  RooAbsArg * nextChecked();
 #endif
 };
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 /// A wrapper around TIterator derivatives.
 ///
-/// Its sole purpose is to act on the outside like the old RooLinkedListIter, even though
-/// the underlying implementation may work an a totally different container, like e.g.
+/// It is called RooLinkedListIter because all classes assume that the RooAbsCollections use
+/// a RooLinkedList.
+/// The purpose of this wrapper is to act on the outside like a RooLinkedListIter, even though
+/// the underlying implementation may work an a different container, like e.g.
 /// an STL container. This is needed to not break user code that is using a RooLinkedList or
 /// a RooAbsCollection.
 ///
@@ -197,6 +196,7 @@ class RooLinkedListIter final : public TIterator {
   private:
   std::shared_ptr<TIterator> fIterImpl; //!
 };
+
 
 
 class RooLinkedListIterImpl final : public TIterator {

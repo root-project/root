@@ -25,25 +25,46 @@ RooLinkedListIter is the TIterator implementation for RooLinkedList
 #include "RooLinkedListIter.h"
 
 #include "RooAbsArg.h"
-#include <iostream>
 
-template<class STLContainer>
-RooAbsArg * TIteratorToSTLInterface<STLContainer>::nextChecked() {
-    assert(fSTLContainer->begin() <= fSTLIter && fSTLIter < fSTLContainer->end());
-
-    RooAbsArg * ret = *fSTLIter;
-//    std::cout << "It at " << fSTLIter - fSTLContainer->begin() << ": ";
-//    ret->Print();
-#ifndef NDEBUG
-    assert(ret == fCurrentElem);
-    fCurrentElem = ++fSTLIter != fSTLContainer->end() ? *fSTLIter : nullptr;
-#endif
-    return ret;
-}
+#include <vector>
+#include <deque>
 
 template class TIteratorToSTLInterface<std::vector<RooAbsArg*>>;
+template class TIteratorToSTLInterface<std::deque<RooAbsArg*>>;
+
+
+template<class STLContainer>
+TObject * TIteratorToSTLInterface<STLContainer>::Next() {
+  return static_cast<TObject*>(next());
+}
+
+
+template<class STLContainer>
+TObject * TIteratorToSTLInterface<STLContainer>::operator*() const {
+  if (atEnd())
+    return nullptr;
+
+#ifndef NDEBUG
+  assert(fCurrentElem == fSTLContainer[fIndex]);
+#endif
+
+  return static_cast<TObject*>(fSTLContainer[fIndex]);
+}
+
+
+#ifndef NDEBUG
+template<class STLContainer>
+RooAbsArg * TIteratorToSTLInterface<STLContainer>::nextChecked() {
+
+  RooAbsArg * ret = fSTLContainer.at(fIndex);
+  assert(fCurrentElem == nullptr || ret == fCurrentElem);
+  fCurrentElem = ++fIndex < fSTLContainer.size() ? fSTLContainer[fIndex] : nullptr;
+
+  return ret;
+}
+#endif
+
+
 
 
 //ClassImp(RooLinkedListIterImpl);
-
-;

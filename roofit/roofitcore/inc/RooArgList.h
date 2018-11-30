@@ -69,10 +69,6 @@ public:
   virtual TObject* create(const char* newname) const { return new RooArgList(newname); }
   RooArgList& operator=(const RooArgList& other) { RooAbsCollection::operator=(other) ; return *this ; }
 
-  inline void sort(Bool_t reverse=kFALSE) { 
-    // Sort list in requested order
-    RooAbsCollection::sort(reverse);
-  }
   inline Int_t index(const RooAbsArg* arg) const { 
     // Returns index of given arg, or -1 if arg is not in list
     auto item = std::find(_list.begin(), _list.end(), arg);
