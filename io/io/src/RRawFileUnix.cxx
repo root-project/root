@@ -38,7 +38,7 @@ ROOT::Detail::RRawFileUnix::~RRawFileUnix()
 
 size_t ROOT::Detail::RRawFileUnix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   EnsureOpen();
+   if (!IsOpen()) Open();
 
    size_t total_bytes = 0;
    while (nbytes) {
@@ -62,7 +62,7 @@ size_t ROOT::Detail::RRawFileUnix::DoReadAt(void *buffer, size_t nbytes, std::ui
 
 std::uint64_t ROOT::Detail::RRawFileUnix::DoGetSize()
 {
-   EnsureOpen();
+   if (!IsOpen()) Open();
    struct stat info;
    int res = fstat(filedes, &info);
    if (res != 0)
@@ -71,11 +71,8 @@ std::uint64_t ROOT::Detail::RRawFileUnix::DoGetSize()
 }
 
 
-void ROOT::Detail::RRawFileUnix::EnsureOpen()
+void ROOT::Detail::RRawFileUnix::Open()
 {
-   if (filedes >= 0)
-      return;
-
    filedes = open(GetLocation(fUrl).c_str(), O_RDONLY);
    if (filedes < 0) {
       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + std::string(strerror(errno)));
