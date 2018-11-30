@@ -38,7 +38,7 @@ def get_argparse():
 
 def execute():
 	parser = get_argparse()
-	
+
 	# Put arguments in shape
 	sourceList, destFileName, destPathSplit, optDict = cmdLineUtils.getSourceDestListOptDict(parser)
 
