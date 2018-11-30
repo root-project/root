@@ -167,6 +167,7 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
   - Streamline and better document usage of multi-thread RDataFrame: edge cases in which processing of an event could start
     before processing of another event finished have been removed, making it easier for user to write safe parallel RDF operations. 
     See the [relevant documentation](https://root.cern.ch/doc/master/classROOT_1_1RDataFrame.html#parallel-execution) for more information.
+  - In multi-thread runs, `rdfentry_` will not take values corresponding to the underlying TChain's global entries anymore.
 
 ### TTreeProcessorMT
   - Parallelise search of cluster boundaries for input datasets with no friends or TEntryLists. The net effect is a faster initialization time in this common case.
