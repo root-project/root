@@ -19,3 +19,6 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py
 
 # TCollection and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_len tcollection_len.py)
+
+# TArray and subclasses pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_len tarray_len.py)
