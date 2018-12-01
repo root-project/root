@@ -2,6 +2,7 @@
 #include "ROOT/TSeq.hxx"
 #include "TSystem.h"
 #include "TFile.h"
+#include "TChain.h"
 #include "TTree.h"
 #include "gtest/gtest.h"
 
