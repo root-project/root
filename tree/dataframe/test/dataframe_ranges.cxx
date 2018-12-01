@@ -1,4 +1,6 @@
 #include "ROOT/RDataFrame.hxx"
+#include <TROOT.h>
+
 #include "gtest/gtest.h"
 
 using namespace ROOT;

@@ -21,6 +21,7 @@
 #include <TInterpreter.h>
 #include <TObject.h>
 #include <TRegexp.h>
+#include <TROOT.h>
 #include <TString.h>
 #include <TTree.h>
 
@@ -53,6 +54,10 @@ namespace RDF {
 // the one in the vector
 class RActionBase;
 
+bool IsImplicitMTEnabled()
+{
+   return ROOT::IsImplicitMTEnabled();
+}
 
 HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
                             const std::string &fullTreeName,
