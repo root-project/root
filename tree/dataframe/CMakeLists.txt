@@ -15,6 +15,7 @@ endif()
 
 if(sqlite)
   list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RSqliteDS.hxx)
+  list(APPEND RDATAFRAME_EXTRA_INCLUDES -I${SQLITE_INCLUDE_DIR})
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
@@ -100,9 +101,10 @@ endif()
 
 if(sqlite)
   target_sources(ROOTDataFrame PRIVATE src/RSqliteDS.cxx)
-  target_link_libraries(ROOTDataFrame PRIVATE RSQLite)
+  target_include_directories(ROOTDataFrame PRIVATE ${SQLITE_INCLUDE_DIR})
+  target_link_libraries(ROOTDataFrame PRIVATE ${SQLITE_LIBRARIES})
   if (davix)
-    target_link_libraries(ROOTDataFrame PRIVATE RDAVIX)
+    target_link_libraries(ROOTDataFrame PRIVATE Davix::Davix)
   endif()
 endif()
 
