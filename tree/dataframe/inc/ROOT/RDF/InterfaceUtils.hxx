@@ -40,8 +40,15 @@
 class TObjArray;
 class TTree;
 namespace ROOT {
-
+namespace Detail {
 namespace RDF {
+class RNodeBase;
+}
+}
+namespace RDF {
+template<typename T, typename V>
+class RInterface;
+using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
 class RDataSource;
 } // namespace RDF
 
@@ -56,6 +63,10 @@ using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
 namespace TTraits = ROOT::TypeTraits;
 namespace RDFInternal = ROOT::Internal::RDF;
+
+ColumnNames_t ConvertRegexToColumns(const ::ROOT::RDF::RNode &node,
+                                    std::string_view columnNameRegexp,
+                                    std::string_view callerName);
 
 /// An helper object that sets and resets gErrorIgnoreLevel via RAII.
 class RIgnoreErrorLevelRAII {

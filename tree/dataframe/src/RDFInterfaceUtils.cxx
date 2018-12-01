@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include <ROOT/RDF/InterfaceUtils.hxx>
+#include <ROOT/RDF/RInterface.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/TSeq.hxx>
 #include <RtypesCore.h>
@@ -193,6 +194,65 @@ ColumnNames_t GetBranchNames(TTree &t, bool allowDuplicates)
    std::string emptyFrName = "";
    GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees, emptyFrName, allowDuplicates);
    return bNames;
+}
+
+ColumnNames_t ConvertRegexToColumns(const ROOT::RDF::RNode &node, std::string_view columnNameRegexp,
+                                    std::string_view callerName)
+{
+   const auto theRegexSize = columnNameRegexp.size();
+   std::string theRegex(columnNameRegexp);
+
+   const auto isEmptyRegex = 0 == theRegexSize;
+   // This is to avoid cases where branches called b1, b2, b3 are all matched by expression "b"
+   if (theRegexSize > 0 && theRegex[0] != '^')
+      theRegex = "^" + theRegex;
+   if (theRegexSize > 0 && theRegex[theRegexSize - 1] != '$')
+      theRegex = theRegex + "$";
+
+   ColumnNames_t selectedColumns;
+   selectedColumns.reserve(32);
+
+   // Since we support gcc48 and it does not provide in its stl std::regex,
+   // we need to use TRegexp
+   TRegexp regexp(theRegex);
+   int dummy;
+   for (auto &&branchName : node.fCustomColumns.GetNames()) {
+      if ((isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) &&
+            !RDFInternal::IsInternalColumn(branchName)) {
+         selectedColumns.emplace_back(branchName);
+      }
+   }
+
+   auto tree = node.fLoopManager->GetTree();
+   if (tree) {
+      auto branchNames = RDFInternal::GetTopLevelBranchNames(*tree);
+      for (auto &branchName : branchNames) {
+         if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
+            selectedColumns.emplace_back(branchName);
+         }
+      }
+   }
+
+   if (node.fDataSource) {
+      auto &dsColNames = node.fDataSource->GetColumnNames();
+      for (auto &dsColName : dsColNames) {
+         if ((isEmptyRegex || -1 != regexp.Index(dsColName.c_str(), &dummy)) &&
+               !RDFInternal::IsInternalColumn(dsColName)) {
+            selectedColumns.emplace_back(dsColName);
+         }
+      }
+   }
+
+   if (selectedColumns.empty()) {
+      std::string text(callerName);
+      if (columnNameRegexp.empty()) {
+         text = ": there is no column available to match.";
+      } else {
+         text = ": regex \"" + std::string(columnNameRegexp) + "\" did not match any column.";
+      }
+      throw std::runtime_error(text);
+   }
+   return selectedColumns;
 }
 
 void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,

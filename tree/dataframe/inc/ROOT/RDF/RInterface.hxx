@@ -34,7 +34,6 @@
 #include "TInterpreter.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
-#include "TRegexp.h"
 #include "TROOT.h" // IsImplicitMTEnabled
 
 #include <algorithm>
@@ -96,6 +95,9 @@ class RInterface {
    using RLoopManager = RDFDetail::RLoopManager;
    friend std::string cling::printValue(::ROOT::RDataFrame *tdf); // For a nice printing at the prompt
    friend class RDFInternal::GraphDrawing::GraphCreatorHelper;
+   friend ColumnNames_t RDFInternal::ConvertRegexToColumns(const RNode &node,
+                                                           std::string_view columnNameRegexp,
+                                                           std::string_view callerName);
 
    template <typename T, typename W>
    friend class RInterface;
@@ -551,7 +553,7 @@ public:
                                                  std::string_view columnNameRegexp = "",
                                                  const RSnapshotOptions &options = RSnapshotOptions())
    {
-      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp, "Snapshot");
+      auto selectedColumns = RDFInternal::ConvertRegexToColumns(*this, columnNameRegexp, "Snapshot");
       return Snapshot(treename, filename, selectedColumns, options);
    }
    // clang-format on
@@ -658,7 +660,7 @@ public:
    /// is empty, all columns are selected. See the previous overloads for more information.
    RInterface<RLoopManager> Cache(std::string_view columnNameRegexp = "")
    {
-      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp, "Cache");
+      auto selectedColumns = RDFInternal::ConvertRegexToColumns(*this, columnNameRegexp, "Cache");
       return Cache(selectedColumns);
    }
 
@@ -1773,7 +1775,7 @@ public:
    /// See the previous overloads for further details.
    RResultPtr<RDisplay> Display(std::string_view columnNameRegexp = "", const int &nRows = 5)
    {
-      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp, "Display");
+      auto selectedColumns = RDFInternal::ConvertRegexToColumns(*this, columnNameRegexp, "Display");
       return Display(selectedColumns, nRows);
    }
 
@@ -1837,64 +1839,6 @@ private:
       fCustomColumns.AddName("tdfentry_");
       fLoopManager->AddColumnAlias("tdfslot_", slotColName);
       fCustomColumns.AddName("tdfslot_");
-   }
-
-   ColumnNames_t ConvertRegexToColumns(std::string_view columnNameRegexp, std::string_view callerName)
-   {
-      const auto theRegexSize = columnNameRegexp.size();
-      std::string theRegex(columnNameRegexp);
-
-      const auto isEmptyRegex = 0 == theRegexSize;
-      // This is to avoid cases where branches called b1, b2, b3 are all matched by expression "b"
-      if (theRegexSize > 0 && theRegex[0] != '^')
-         theRegex = "^" + theRegex;
-      if (theRegexSize > 0 && theRegex[theRegexSize - 1] != '$')
-         theRegex = theRegex + "$";
-
-      ColumnNames_t selectedColumns;
-      selectedColumns.reserve(32);
-
-      // Since we support gcc48 and it does not provide in its stl std::regex,
-      // we need to use TRegexp
-      TRegexp regexp(theRegex);
-      int dummy;
-      for (auto &&branchName : fCustomColumns.GetNames()) {
-         if ((isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) &&
-             !RDFInternal::IsInternalColumn(branchName)) {
-            selectedColumns.emplace_back(branchName);
-         }
-      }
-
-      auto tree = fLoopManager->GetTree();
-      if (tree) {
-         auto branchNames = RDFInternal::GetTopLevelBranchNames(*tree);
-         for (auto &branchName : branchNames) {
-            if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
-               selectedColumns.emplace_back(branchName);
-            }
-         }
-      }
-
-      if (fDataSource) {
-         auto &dsColNames = fDataSource->GetColumnNames();
-         for (auto &dsColName : dsColNames) {
-            if ((isEmptyRegex || -1 != regexp.Index(dsColName.c_str(), &dummy)) &&
-                !RDFInternal::IsInternalColumn(dsColName)) {
-               selectedColumns.emplace_back(dsColName);
-            }
-         }
-      }
-
-      if (selectedColumns.empty()) {
-         std::string text(callerName);
-         if (columnNameRegexp.empty()) {
-            text = ": there is no column available to match.";
-         } else {
-            text = ": regex \"" + columnNameRegexp + "\" did not match any column.";
-         }
-         throw std::runtime_error(text);
-      }
-      return selectedColumns;
    }
 
    std::vector<std::string> GetColumnTypeNamesList(const ColumnNames_t &columnList)
