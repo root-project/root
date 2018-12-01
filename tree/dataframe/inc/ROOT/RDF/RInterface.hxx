@@ -25,9 +25,6 @@
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h" // for ULong64_t
-#include "TChain.h"
-#include "TClassEdit.h"
-#include "TDirectory.h"
 #include "TH1.h" // For Histo actions
 #include "TH2.h" // For Histo actions
 #include "TH3.h" // For Histo actions
@@ -98,6 +95,13 @@ class RInterface {
    friend ColumnNames_t RDFInternal::ConvertRegexToColumns(const RNode &node,
                                                            std::string_view columnNameRegexp,
                                                            std::string_view callerName);
+   using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;
+   friend HeadNode_t RDFInternal::CreateSnaphotRDF(const ColumnNames_t &validCols,
+                                                   const std::string &fullTreeName,
+                                                   const std::string &fileName,
+                                                   bool isLazy,
+                                                   RLoopManager &loopManager,
+                                                   std::unique_ptr<RDFInternal::RActionBase> actionPtr);
 
    template <typename T, typename W>
    friend class RInterface;
@@ -1946,8 +1950,7 @@ private:
          // and therefore an incomplete type, the interpreter will prompt an error and also display
          // the comment we nicely built which reminds the user about the absence of information about
          // this type in the interpreter.
-         int errCode(0);
-         retTypeName = TClassEdit::DemangleTypeIdName(typeid(RetType), errCode);
+         retTypeName = RDFInternal::DemangleTypeIdName(typeid(RetType));
          retTypeNameFwdDecl =
             "class " + retTypeName + ";/* Did you forget to declare type " + retTypeName + " in the interpreter?*/";
       }
@@ -2028,26 +2031,7 @@ private:
 
       fLoopManager->Book(actionPtr.get());
 
-      // create new RDF
-      ::TDirectory::TContext ctxt;
-      // Now we mimic a constructor for the RDataFrame. We cannot invoke it here
-      // since this would introduce a cyclic headers dependency.
-
-      // Keep these two statements separated to work-around an ABI incompatibility
-      // between clang (and thus cling) and gcc in the way std::forward is handled.
-      // See https://sft.its.cern.ch/jira/browse/ROOT-9236 for more detail.
-      auto rlm_ptr = std::make_shared<RLoopManager>(nullptr, validCols);
-      auto snapshotRDF = std::make_shared<RInterface<RLoopManager>>(rlm_ptr);
-      auto chain = std::make_shared<TChain>(fullTreename.c_str());
-      chain->Add(std::string(filename).c_str());
-      snapshotRDF->fProxiedPtr->SetTree(chain);
-      auto snapshotRDFResPtr = MakeResultPtr(snapshotRDF, *fLoopManager, std::move(actionPtr));
-
-      if (!options.fLazy) {
-         *snapshotRDFResPtr;
-      }
-
-      return snapshotRDFResPtr;
+      return RDFInternal::CreateSnaphotRDF(validCols, fullTreename, std::string(filename), options.fLazy, *fLoopManager, std::move(actionPtr));
    }
 
    ////////////////////////////////////////////////////////////////////////////

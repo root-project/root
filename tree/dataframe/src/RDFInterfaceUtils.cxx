@@ -13,7 +13,10 @@
 #include <ROOT/RStringView.hxx>
 #include <ROOT/TSeq.hxx>
 #include <RtypesCore.h>
+#include <TDirectory.h>
+#include <TChain.h>
 #include <TClass.h>
+#include <TClassEdit.h>
 #include <TFriendElement.h>
 #include <TInterpreter.h>
 #include <TObject.h>
@@ -194,6 +197,40 @@ ColumnNames_t GetBranchNames(TTree &t, bool allowDuplicates)
    std::string emptyFrName = "";
    GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees, emptyFrName, allowDuplicates);
    return bNames;
+}
+
+HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
+                            const std::string &fullTreeName,
+                            const std::string &fileName,
+                            bool isLazy,
+                            RLoopManager &loopManager,
+                            std::unique_ptr<RDFInternal::RActionBase> actionPtr)
+{
+   // create new RDF
+   ::TDirectory::TContext ctxt;
+   // Now we mimic a constructor for the RDataFrame. We cannot invoke it here
+   // since this would introduce a cyclic headers dependency.
+
+   // Keep these two statements separated to work-around an ABI incompatibility
+   // between clang (and thus cling) and gcc in the way std::forward is handled.
+   // See https://sft.its.cern.ch/jira/browse/ROOT-9236 for more detail.
+   auto rlm_ptr = std::make_shared<RLoopManager>(nullptr, validCols);
+   auto snapshotRDF = std::make_shared<RInterface<RLoopManager>>(rlm_ptr);
+   auto chain = std::make_shared<TChain>(fullTreeName.c_str());
+   chain->Add(std::string(fileName).c_str());
+   snapshotRDF->fProxiedPtr->SetTree(chain);
+   auto snapshotRDFResPtr = MakeResultPtr(snapshotRDF, loopManager, std::move(actionPtr));
+
+   if (!isLazy) {
+      *snapshotRDFResPtr;
+   }
+   return snapshotRDFResPtr;
+}
+
+std::string DemangleTypeIdName(const std::type_info &typeInfo)
+{
+   int dummy(0);
+   return TClassEdit::DemangleTypeIdName(typeInfo, dummy);
 }
 
 ColumnNames_t ConvertRegexToColumns(const ROOT::RDF::RNode &node, std::string_view columnNameRegexp,

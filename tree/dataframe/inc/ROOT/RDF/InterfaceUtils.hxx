@@ -46,6 +46,8 @@ class RNodeBase;
 }
 }
 namespace RDF {
+template <typename T>
+class RResultPtr;
 template<typename T, typename V>
 class RInterface;
 using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
@@ -63,6 +65,16 @@ using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
 namespace TTraits = ROOT::TypeTraits;
 namespace RDFInternal = ROOT::Internal::RDF;
+
+using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;
+HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
+                            const std::string &fullTreeName,
+                            const std::string &fileName,
+                            bool isLazy,
+                            RLoopManager &loopManager,
+                            std::unique_ptr<RDFInternal::RActionBase> actionPtr);
+
+std::string DemangleTypeIdName(const std::type_info &typeInfo);
 
 ColumnNames_t ConvertRegexToColumns(const ::ROOT::RDF::RNode &node,
                                     std::string_view columnNameRegexp,
