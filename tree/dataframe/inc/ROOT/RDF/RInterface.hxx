@@ -31,7 +31,6 @@
 #include "TInterpreter.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
-#include "TROOT.h" // IsImplicitMTEnabled
 
 #include <algorithm>
 #include <cstddef>
@@ -1881,7 +1880,7 @@ private:
 
    void CheckIMTDisabled(std::string_view callerName)
    {
-      if (ROOT::IsImplicitMTEnabled()) {
+      if (RDFInternal::IsImplicitMTEnabled()) {
          std::string error(callerName);
          error += " was called with ImplicitMT enabled, but multi-thread is not supported.";
          throw std::runtime_error(error);
@@ -2037,7 +2036,7 @@ private:
 
       // add action node to functional graph and run event loop
       std::unique_ptr<RDFInternal::RActionBase> actionPtr;
-      if (!ROOT::IsImplicitMTEnabled()) {
+      if (!RDFInternal::IsImplicitMTEnabled()) {
          // single-thread snapshot
          using Helper_t = RDFInternal::SnapshotHelper<ColumnTypes...>;
          using Action_t = RDFInternal::RAction<Helper_t, Proxied>;

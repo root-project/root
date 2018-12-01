@@ -2,6 +2,7 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/TSeq.hxx>
+#include <TROOT.h>
 #include <TSystem.h>
 
 #include "gtest/gtest.h"

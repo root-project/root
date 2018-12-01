@@ -1,6 +1,7 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RCsvDS.hxx>
 #include <ROOT/TSeq.hxx>
+#include <TROOT.h>
 
 #include <gtest/gtest.h>
 
