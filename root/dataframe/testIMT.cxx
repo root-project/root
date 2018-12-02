@@ -5,6 +5,7 @@
 #include "TMath.h"
 #include "TTree.h"
 #include "TRandom3.h"
+#include "TROOT.h"
 #include "TSystem.h"
 #include <cassert>
 #include <iostream>

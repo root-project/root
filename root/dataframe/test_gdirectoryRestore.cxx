@@ -1,5 +1,6 @@
 #include <ROOT/RDataFrame.hxx>
 #include <TFile.h>
+#include <TROOT.h>
 #include <TSystem.h>
 
 using namespace ROOT;
