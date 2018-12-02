@@ -1,6 +1,7 @@
 // Test that Snapshot yields correct results when each worker thread processes multiple tasks
 #include "ROOT/RDataFrame.hxx"
 #include "TFile.h"
+#include "TROOT.h"
 #include "TSystem.h"
 #include "TTree.h"
 
