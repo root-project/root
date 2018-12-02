@@ -3,6 +3,7 @@
 #include "ROOT/RDataFrame.hxx"
 #include "TFile.h"
 #include "TMath.h"
+#include "TROOT.h"
 #include "TTree.h"
 #include "TRandom3.h"
 #include <cassert>
