@@ -2,6 +2,7 @@
 #include "TError.h" // Info
 #include "TFile.h"
 #include "TTree.h"
+#include "TROOT.h"
 
 class NoDefCtor {
    int fInt;

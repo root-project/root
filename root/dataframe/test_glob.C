@@ -1,4 +1,5 @@
 #include "TFile.h"
+#include "TROOT.h"
 #include "TTree.h"
 
 #include "ROOT/RDataFrame.hxx"
