@@ -66,6 +66,17 @@ using namespace ROOT::RDF;
 namespace TTraits = ROOT::TypeTraits;
 namespace RDFInternal = ROOT::Internal::RDF;
 
+// Declare code in the interpreter via the TInterpreter::Declare method
+// and return the return code.
+bool InterpreterDeclare(const std::string &code);
+
+// Jit code in the interpreter with TInterpreter::Calc and return
+// a pair containing the return value of Calc and the error code.
+// The error code is:
+//   - 0 if Calc resulted in TInterpreter::kNoError
+//   - 1 otherwise
+std::pair<Long64_t, int> InterpreterCalc(const std::string &code);
+
 bool IsImplicitMTEnabled();
 
 using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;

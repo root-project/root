@@ -54,6 +54,19 @@ namespace RDF {
 // the one in the vector
 class RActionBase;
 
+bool InterpreterDeclare(const std::string &code)
+{
+   return gInterpreter->Declare(code.c_str());
+}
+
+std::pair<Long64_t, int> InterpreterCalc(const std::string &code)
+{
+   TInterpreter::EErrorCode errorCode;
+   auto res = gInterpreter->Calc(code.c_str(), &errorCode);
+   auto retCode = TInterpreter::kNoError == errorCode ? 0 : 1;
+   return std::make_pair(res, retCode);
+}
+
 bool IsImplicitMTEnabled()
 {
    return ROOT::IsImplicitMTEnabled();

@@ -28,7 +28,6 @@
 #include "TH1.h" // For Histo actions
 #include "TH2.h" // For Histo actions
 #include "TH3.h" // For Histo actions
-#include "TInterpreter.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
 
@@ -526,10 +525,9 @@ public:
                << RDFInternal::PrettyPrintAddr(&columnList) << "),"
                << "*reinterpret_cast<ROOT::RDF::RSnapshotOptions*>(" << RDFInternal::PrettyPrintAddr(&options) << "));";
       // jit snapCall, return result
-      TInterpreter::EErrorCode errorCode;
-      gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
-      if (TInterpreter::EErrorCode::kNoError != errorCode) {
-         std::string msg = "Cannot jit Snapshot call. Interpreter error code is " + std::to_string(errorCode) + ".";
+      auto calcRes = RDFInternal::InterpreterCalc(snapCall.str());
+      if (0 != calcRes.second) {
+         std::string msg = "Cannot jit Snapshot call. Interpreter error code is " + std::to_string(calcRes.second) + ".";
          throw std::runtime_error(msg);
       }
       return resPtr;
@@ -641,10 +639,9 @@ public:
       cacheCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
                 << RDFInternal::PrettyPrintAddr(&columnList) << "));";
       // jit cacheCall, return result
-      TInterpreter::EErrorCode errorCode;
-      gInterpreter->Calc(cacheCall.str().c_str(), &errorCode);
-      if (TInterpreter::EErrorCode::kNoError != errorCode) {
-         std::string msg = "Cannot jit Cache call. Interpreter error code is " + std::to_string(errorCode) + ".";
+      auto calcRes = RDFInternal::InterpreterCalc(cacheCall.str());
+      if (0 != calcRes.second) {
+         std::string msg = "Cannot jit Cache call. Interpreter error code is " + std::to_string(calcRes.second) + ".";
          throw std::runtime_error(msg);
       }
       return resRDF;
@@ -1562,8 +1559,8 @@ public:
          const auto colID = std::to_string(fCustomColumns.GetColumns()[std::string(column)]->GetID());
          const auto call = "ROOT::Internal::RDF::TypeID2TypeName(typeid(__tdf" + std::to_string(fLoopManager->GetID()) +
                            "::" + std::string(column) + colID + "_type))";
-         const auto callRes = gInterpreter->Calc(call.c_str());
-         return *reinterpret_cast<std::string *>(callRes); // copy result to stack
+         const auto calcRes = RDFInternal::InterpreterCalc(call.c_str());
+         return *reinterpret_cast<std::string *>(calcRes.first); // copy result to stack
       }
    }
 
@@ -1840,7 +1837,7 @@ private:
       // Declare return type to the interpreter, for future use by jitted actions
       auto retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { using " + entryColName +
                                 std::to_string(entryColumn->GetID()) + "_type = ULong64_t; }";
-      gInterpreter->Declare(retTypeDeclaration.c_str());
+      RDFInternal::InterpreterDeclare(retTypeDeclaration);
 
       // Slot number column
       const auto slotColName = "rdfslot_";
@@ -1860,7 +1857,7 @@ private:
       // Declare return type to the interpreter, for future use by jitted actions
       retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { using " + slotColName +
                            std::to_string(slotColumn->GetID()) + "_type = unsigned int; }";
-      gInterpreter->Declare(retTypeDeclaration.c_str());
+      RDFInternal::InterpreterDeclare(retTypeDeclaration);
 
       fLoopManager->AddColumnAlias("tdfentry_", entryColName);
       fCustomColumns.AddName("tdfentry_");
@@ -1979,7 +1976,7 @@ private:
       const auto retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { " +
                                       retTypeNameFwdDecl + " using " + std::string(name) +
                                       std::to_string(newColumn->GetID()) + "_type = " + retTypeName + "; }";
-      gInterpreter->Declare(retTypeDeclaration.c_str());
+      RDFInternal::InterpreterDeclare(retTypeDeclaration);
 
       fLoopManager->RegisterCustomColumn(newColumn.get());
       newCols.AddName(name);
