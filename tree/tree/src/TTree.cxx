@@ -2606,7 +2606,8 @@ TFile* TTree::ChangeFile(TFile* file)
    file->cd();
    Write();
    Reset();
-   char* fname = new char[2000];
+   constexpr auto kBufSize = 2000;
+   char* fname = new char[kBufSize];
    ++fFileNumber;
    char uscore[10];
    for (Int_t i = 0; i < 10; ++i) {
@@ -2617,30 +2618,30 @@ TFile* TTree::ChangeFile(TFile* file)
    while (nus < 10) {
       uscore[nus] = '_';
       fname[0] = 0;
-      strlcpy(fname, file->GetName(),2000);
+      strlcpy(fname, file->GetName(),kBufSize);
 
       if (fFileNumber > 1) {
          char* cunder = strrchr(fname, '_');
          if (cunder) {
-            snprintf(cunder,2000-Int_t(cunder-fname), "%s%d", uscore, fFileNumber);
+            snprintf(cunder,kBufSize-Int_t(cunder-fname), "%s%d", uscore, fFileNumber);
             const char* cdot = strrchr(file->GetName(), '.');
             if (cdot) {
-               strlcat(fname, cdot,2000);
+               strlcat(fname, cdot,kBufSize);
             }
          } else {
             char fcount[21];
             snprintf(fcount,21, "%s%d", uscore, fFileNumber);
-            strlcat(fname, fcount,2000);
+            strlcat(fname, fcount,kBufSize);
          }
       } else {
          char* cdot = strrchr(fname, '.');
          if (cdot) {
-            snprintf(cdot,2000-Int_t(fname-cdot), "%s%d", uscore, fFileNumber);
-            strlcat(fname, strrchr(file->GetName(), '.'),2000);
+            snprintf(cdot,kBufSize-Int_t(fname-cdot), "%s%d", uscore, fFileNumber);
+            strlcat(fname, strrchr(file->GetName(), '.'),kBufSize);
          } else {
             char fcount[21];
             snprintf(fcount,21, "%s%d", uscore, fFileNumber);
-            strlcat(fname, fcount,2000);
+            strlcat(fname, fcount,kBufSize);
          }
       }
       if (gSystem->AccessPathName(fname)) {
