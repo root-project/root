@@ -21,6 +21,7 @@
 #include <TInterpreter.h>
 #include <TObject.h>
 #include <TRegexp.h>
+#include <TPRegexp.h>
 #include <TROOT.h>
 #include <TString.h>
 #include <TTree.h>
@@ -124,10 +125,9 @@ ColumnNames_t ConvertRegexToColumns(const ROOT::RDF::RNode &node, std::string_vi
 
    // Since we support gcc48 and it does not provide in its stl std::regex,
    // we need to use TRegexp
-   TRegexp regexp(theRegex);
-   int dummy;
+   TPRegexp regexp(theRegex);
    for (auto &&branchName : node.fCustomColumns.GetNames()) {
-      if ((isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) &&
+      if ((isEmptyRegex || 0 != regexp.Match(branchName.c_str())) &&
             !RDFInternal::IsInternalColumn(branchName)) {
          selectedColumns.emplace_back(branchName);
       }
@@ -137,7 +137,7 @@ ColumnNames_t ConvertRegexToColumns(const ROOT::RDF::RNode &node, std::string_vi
    if (tree) {
       auto branchNames = RDFInternal::GetTopLevelBranchNames(*tree);
       for (auto &branchName : branchNames) {
-         if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
+         if (isEmptyRegex || 0 != regexp.Match(branchName.c_str())) {
             selectedColumns.emplace_back(branchName);
          }
       }
@@ -146,7 +146,7 @@ ColumnNames_t ConvertRegexToColumns(const ROOT::RDF::RNode &node, std::string_vi
    if (node.fDataSource) {
       auto &dsColNames = node.fDataSource->GetColumnNames();
       for (auto &dsColName : dsColNames) {
-         if ((isEmptyRegex || -1 != regexp.Index(dsColName.c_str(), &dummy)) &&
+         if ((isEmptyRegex || 0 != regexp.Match(dsColName.c_str())) &&
                !RDFInternal::IsInternalColumn(dsColName)) {
             selectedColumns.emplace_back(dsColName);
          }
