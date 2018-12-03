@@ -252,15 +252,15 @@ TEST(Cache, Regex)
    auto m = cached.Max<ULong64_t>("col0");
    EXPECT_EQ(3UL, *m);
 
-   // second part
+   // Now stress a bit more the regexps
    ROOT::RDataFrame df(1);
    ROOT::RDF::RNode n(df);
    std::string base("col_");
    std::vector<std::string> defColNames; defColNames.reserve(128);
-   auto addCol = [base, &defColNames](ROOT::RDF::RNode &n, int i) {
+   auto addCol = [base, &defColNames](ROOT::RDF::RNode &node, int i) {
       auto colName = base+std::to_string(i);
       defColNames.emplace_back(colName);
-      return ROOT::RDF::RNode(n.Define(colName, [](){return 0;}));
+      return ROOT::RDF::RNode(node.Define(colName, [](){return 0;}));
    };
    for (auto i : ROOT::TSeqI(128)) {
       n = addCol(n, i);
