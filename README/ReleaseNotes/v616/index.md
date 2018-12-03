@@ -298,6 +298,8 @@ available in cvmfs.
 
 ## 3D Graphics Libraries
 
+  - Prototype / demonstrator of EVE-7 (enabled with ROOT-7 build). See code in `graf3d/eve7/` and tutorials in `tutorials/eve7/`.
+
 
 ## Web Graphics Libraries
 
