@@ -89,7 +89,9 @@ HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
 
 std::string DemangleTypeIdName(const std::type_info &typeInfo);
 
-ColumnNames_t ConvertRegexToColumns(const ::ROOT::RDF::RNode &node,
+ColumnNames_t ConvertRegexToColumns(RDFInternal::RBookedCustomColumns & customColumns,
+                                    TTree *tree,
+                                    ROOT::RDF::RDataSource *dataSource,
                                     std::string_view columnNameRegexp,
                                     std::string_view callerName);
 
