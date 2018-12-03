@@ -23,6 +23,13 @@ if(ROOT_roofit_FOUND)
                    COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/stabilityTests_data_1.root)
   endif()
 
+  ROOT_ADD_GTEST(loadOldWorkspace loadOldWorkspace.cxx LIBRARIES RooFitCore RooFit
+                 COPY_TO_BUILDDIR
+                 ${CMAKE_CURRENT_SOURCE_DIR}/rf502_workspace_v5.34.root
+                 ${CMAKE_CURRENT_SOURCE_DIR}/rf502_workspace_v6.04.root
+                 ${CMAKE_CURRENT_SOURCE_DIR}/rf502_workspace_v6.14.root
+                 )
+
   if(NOT MSVC OR win_broken_tests)
     add_subdirectory(vectorisedPDFs)
   endif()
