@@ -2618,30 +2618,30 @@ TFile* TTree::ChangeFile(TFile* file)
    while (nus < 10) {
       uscore[nus] = '_';
       fname[0] = 0;
-      strlcpy(fname, file->GetName(),kBufSize);
+      strlcpy(fname, file->GetName(), kBufSize);
 
       if (fFileNumber > 1) {
          char* cunder = strrchr(fname, '_');
          if (cunder) {
-            snprintf(cunder,kBufSize-Int_t(cunder-fname), "%s%d", uscore, fFileNumber);
+            snprintf(cunder, kBufSize - Int_t(cunder - fname), "%s%d", uscore, fFileNumber);
             const char* cdot = strrchr(file->GetName(), '.');
             if (cdot) {
-               strlcat(fname, cdot,kBufSize);
+               strlcat(fname, cdot, kBufSize);
             }
          } else {
             char fcount[21];
             snprintf(fcount,21, "%s%d", uscore, fFileNumber);
-            strlcat(fname, fcount,kBufSize);
+            strlcat(fname, fcount, kBufSize);
          }
       } else {
          char* cdot = strrchr(fname, '.');
          if (cdot) {
-            snprintf(cdot,kBufSize-Int_t(fname-cdot), "%s%d", uscore, fFileNumber);
-            strlcat(fname, strrchr(file->GetName(), '.'),kBufSize);
+            snprintf(cdot, kBufSize - Int_t(fname-cdot), "%s%d", uscore, fFileNumber);
+            strlcat(fname, strrchr(file->GetName(), '.'), kBufSize);
          } else {
             char fcount[21];
             snprintf(fcount,21, "%s%d", uscore, fFileNumber);
-            strlcat(fname, fcount,kBufSize);
+            strlcat(fname, fcount, kBufSize);
          }
       }
       if (gSystem->AccessPathName(fname)) {
