@@ -538,7 +538,7 @@ public:
    /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
    /// \param[in] treename The name of the output TTree.
    /// \param[in] filename The name of the output TFile.
-   /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. See the documentation of TRegexp for more details. An empty string signals the selection of all columns.
+   /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. The dialect supported is PCRE via the TPRegexp class. An empty string signals the selection of all columns.
    /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree
    /// \return a `RDataFrame` that wraps the snapshotted dataset.
    ///
@@ -649,10 +649,10 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns in memory
-   /// \param[in] a regular expression to select the columns
+   /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. The dialect supported is PCRE via the TPRegexp class. An empty string signals the selection of all columns.
    /// \return a `RDataFrame` that wraps the cached dataset.
    ///
-   /// The existing columns are matched against the regeular expression. If the string provided
+   /// The existing columns are matched against the regular expression. If the string provided
    /// is empty, all columns are selected. See the previous overloads for more information.
    RInterface<RLoopManager> Cache(std::string_view columnNameRegexp = "")
    {
