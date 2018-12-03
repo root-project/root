@@ -371,7 +371,9 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// plot the test statistic distributions
+/// \param index Index of the result stored in HypoTestInverterResult
+/// \param type Type of the test (see below)
+/// \param nbins Number of bins
 ///  - type =0  null and alt
 ///  - type = 1 only null (S+B)
 ///  - type = 2 only alt  (B)

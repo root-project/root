@@ -49,7 +49,7 @@ ClassImp(RooAddition);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Empty constructor
 RooAddition::RooAddition()
   : _setIter( _set.createIterator() )
 {
@@ -58,9 +58,11 @@ RooAddition::RooAddition()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with a single set of RooAbsReals. The value of the function will be
-/// the sum of the values in sumSet. If takeOwnership is true the RooAddition object
-/// will take ownership of the arguments in sumSet
+/// Constructor with a single set consisting of RooAbsReal.
+/// \param[in] name Name of the PDF
+/// \param[in] title Title
+/// \param[in] sumSet The value of the function will be the sum of the values in this set
+/// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in `sumSet`
 
 RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet, Bool_t takeOwnership) 
   : RooAbsReal(name, title)
@@ -85,11 +87,20 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with two set of RooAbsReals. The value of the function will be
+/// Constructor with two sets of RooAbsReals.
 ///
-///  A = sum_i sumSet1(i)*sumSet2(i) 
+/// The sum of pair-wise products of elements in the sets will be computed:
+/// \f[
+///  A = \sum_i \mathrm{Set1}[i] * \mathrm{Set2}[i]
+/// \f]
 ///
-/// If takeOwnership is true the RooAddition object will take ownership of the arguments in sumSet
+/// \param[in] name Name of the PDF
+/// \param[in] title Title
+/// \param[in] sumSet1 Left-hand element of the pair-wise products
+/// \param[in] sumSet2 Right-hand element of the pair-wise products
+/// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in the `sumSets`
+///
+
 
 RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet1, const RooArgList& sumSet2, Bool_t takeOwnership) 
     : RooAbsReal(name, title)

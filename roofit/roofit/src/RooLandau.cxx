@@ -17,7 +17,8 @@
 /** \class RooLandau
     \ingroup Roofit
 
-Landau Distribution p.d.f
+Landau distribution p.d.f
+\image html RF_Landau.png "PDF of the Landau distribution."
 **/
 
 #include "TMath.h"

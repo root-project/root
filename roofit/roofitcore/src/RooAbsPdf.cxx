@@ -240,11 +240,11 @@ RooAbsPdf::~RooAbsPdf()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return current value, normalizated by integrating over
-/// the observables in 'nset'. If 'nset' is 0, the unnormalized value. 
+/// Return current value, normalized by integrating over
+/// the observables in 'nset'. If 'nset' is 0, the unnormalized value
 /// is returned. All elements of 'nset' must be lvalues
 ///
-/// Unnormalized values are not cached
+/// Unnormalized values are not cached.
 /// Doing so would be complicated as _norm->getVal() could
 /// spoil the cache and interfere with returning the cached
 /// return value. Since unnormalized calls are typically
@@ -999,7 +999,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// commands MIGRAD, HESSE in succession.
 /// \param[in] data  Data to fit the PDF to
 /// \param[in] arg1  One or more arguments to control the behaviour of the fit
-/// \return RooFitResult * with the fit status.
+/// \return RooFitResult * with the fit status if option Save() is used, 0 otherwise.
 ///
 /// The following named arguments are supported
 ///
@@ -1062,14 +1062,15 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// <tr><td> `SumW2Error(Bool_t flag)`         <td>  Apply correction to errors and covariance matrix.
 ///                                               This uses sum-of-weights covariance matrix
 ///                                               to obtain correct error for weighted likelihood fits. If this option is activated the
-///                                               corrected covariance matrix is calculated as Vcorr = V C-1 V, where V is the original 
+///                                               corrected covariance matrix is calculated as \f$ V_\mathrm{corr} = V C^{-1} V \f$, where V is the original
 ///                                               covariance matrix and C is the inverse of the covariance matrix calculated using the
 ///                                               weights squared
 ///
 /// <tr><th><th> Options to control informational output
 /// <tr><td> `Verbose(Bool_t flag)`            <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit
 /// <tr><td> `Timer(Bool_t flag)`              <td>  Time CPU and wall clock consumption of fit steps, off by default
-/// <tr><td> `PrintLevel(Int_t level)`         <td>  Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational messages are suppressed as well
+/// <tr><td> `PrintLevel(Int_t level)`         <td>  Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational messages are suppressed as well.
+///                                                  See RooMinimizer::PrintLevel for the meaning of the levels.
 /// <tr><td> `Warnings(Bool_t flag)`           <td>  Enable or disable MINUIT warnings (enabled by default)
 /// <tr><td> `PrintEvalErrors(Int_t numErr)`   <td>  Control number of p.d.f evaluation errors printed per likelihood evaluation.
 ///                                                A negative value suppresses output completely, a zero value will only print the error count per p.d.f component,
@@ -1095,8 +1096,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooCmdArg& arg1, const Ro
 /// is binned, a binned maximum likelihood is performed. By default the fit is executed through the MINUIT
 /// commands MIGRAD, HESSE and MINOS in succession.
 ///
-/// See RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3, RooCmdArg arg4, 
-///                                         RooCmdArg arg5, RooCmdArg arg6, RooCmdArg arg7, RooCmdArg arg8) 
+/// See RooAbsPdf::fitTo(RooAbsData&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&)
 ///
 /// for documentation of options
 

@@ -111,7 +111,7 @@ protected:
   RooAbsData*       _genSample ;       // Currently generated sample 
   RooAbsPdf*        _genModel ;        // Generator model 
   RooAbsGenContext* _genContext ;      // Generator context 
-  RooArgSet*        _genInitParams ;   // List of originalgenerator parameters
+  RooArgSet*        _genInitParams ;   // List of original generator parameters
   RooArgSet*        _genParams ;       // List of actual generator parameters
   const RooDataSet* _genProtoData ;    // Generator prototype data set
   RooArgSet         _projDeps ;        // List of projected dependents in fit

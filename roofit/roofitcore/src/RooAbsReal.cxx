@@ -817,6 +817,7 @@ TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* n
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function for plotOn() that creates a projection of a function or p.d.f
 /// to be plotted on a RooPlot.
+/// \ref createPlotProjAnchor "createPlotProjection()"
 
 const RooAbsReal* RooAbsReal::createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars,
                                                RooArgSet*& cloneSet) const
@@ -829,6 +830,7 @@ const RooAbsReal* RooAbsReal::createPlotProjection(const RooArgSet& depVars, con
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function for plotOn() that creates a projection of a function or p.d.f
 /// to be plotted on a RooPlot.
+/// \ref createPlotProjAnchor "createPlotProjection()"
 
 const RooAbsReal* RooAbsReal::createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars) const
 {
@@ -841,18 +843,25 @@ const RooAbsReal* RooAbsReal::createPlotProjection(const RooArgSet& depVars, con
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function for plotOn() that creates a projection of a function or p.d.f
 /// to be plotted on a RooPlot.
+/// \anchor createPlotProjAnchor
 ///
-/// Create a new object G that represents the normalized projection:
+/// Create a new object \f$ G \f$ that represents the normalized projection:
+/// \f[
+///  G[x,p] = \frac{\int F[x,y,p] \; \mathrm{d}\{y\}}
+///                {\int F[x,y,p] \; \mathrm{d}\{x\} \, \mathrm{d}\{y\}}
+/// \f]
+/// where \f$ F[x,y,p] \f$ is the function we represent, and
+/// \f$ \{ p \} \f$ are the remaining variables ("parameters").
 ///
-///             Integral [ F[x,y,p] , { y } ]
-///  G[x,p] = ---------------------------------
-///            Integral [ F[x,y,p] , { x,y } ]
-///
-/// where F[x,y,p] is the function we represent, "x" are the
-/// specified dependentVars, "y" are the specified projectedVars, and
-/// "p" are our remaining variables ("parameters"). Return a
-/// pointer to the newly created object, or else zero in case of an
-/// error.  The caller is responsible for deleting the contents of
+/// \param[in] dependentVars Dependent variables over which to normalise, \f$ \{x\} \f$
+/// \param[in] projectedVars Variables to project out, \f$ \{ y \} \f$
+/// \param[out] cloneSet Will be set to a RooArgSet*, which will contain a clone of *this plus its projection integral object.
+/// The latter will also be returned. The caller takes ownership of this set.
+/// \param[in] rangeName Optional range for projection integrals
+/// \param[in] condObs Conditional observables, which are not integrated for normalisation, even if they
+/// are in `dependentVars` or `projectedVars`
+/// \return A pointer to the newly created object, or else zero in case of an
+/// error. The caller is responsible for deleting the contents of
 /// cloneSet (which includes the returned projection object)
 
 const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
@@ -1232,11 +1241,16 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create and fill a ROOT histogram TH1,TH2 or TH3 with the values of this function for the variables with given names
-/// The number of bins can be controlled using the [xyz]bins parameters. For a greater degree of control
-/// use the createHistogram() method below with named arguments
+/// Create and fill a ROOT histogram TH1, TH2 or TH3 with the values of this function for the variables with given names.
+/// \param[in] varNameList List of variables to use for x, y, z axis, separated by ':'
+/// \param[in] xbins Number of bins for first variable
+/// \param[in] ybins Number of bins for second variable
+/// \param[in] zbins Number of bins for third variable
+/// \return TH1*, which is one of TH[1-3]. The histogram is owned by the caller.
 ///
-/// The caller takes ownership of the returned histogram
+/// For a greater degree of control use
+/// RooAbsReal::createHistogram(const char *, const RooAbsRealLValue&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&) const
+///
 
 TH1* RooAbsReal::createHistogram(const char* varNameList, Int_t xbins, Int_t ybins, Int_t zbins) const
 {
@@ -1296,6 +1310,7 @@ TH1* RooAbsReal::createHistogram(const char* varNameList, Int_t xbins, Int_t ybi
 ///
 /// \param[in] name  Name of the ROOT histogram
 /// \param[in] xvar  Observable to be mapped on x axis of ROOT histogram
+/// \param[in] arg[0-9]  Arguments according to list below
 /// \return TH1 *, one of TH{1,2,3}. The caller takes ownership.
 ///
 /// <table>
@@ -1308,14 +1323,14 @@ TH1* RooAbsReal::createHistogram(const char* varNameList, Int_t xbins, Int_t ybi
 /// <tr><td> `Scaling(Bool_t)`                              <td> Apply density-correction scaling (multiply by bin volume), default is kTRUE
 /// <tr><td> `Extended(Bool_t)`                             <td> Plot event yield instead of probability density (for extended pdfs only)
 ///
-/// <tr><td> `YVar(const RooAbsRealLValue& var,...)`    <td> Observable to be mapped on y axis of ROOT histogram
-/// <tr><td> `ZVar(const RooAbsRealLValue& var,...)`    <td> Observable to be mapped on z axis of ROOT histogram
-/// </table>
-///
+/// <tr><td> `YVar(const RooAbsRealLValue& var,...)`    <td> Observable to be mapped on y axis of ROOT histogram.
 /// The YVar() and ZVar() arguments can be supplied with optional Binning() arguments to control the binning of the Y and Z axes, e.g.
 /// ```
 /// createHistogram("histo",x,Binning(-1,1,20), YVar(y,Binning(-1,1,30)), ZVar(z,Binning("zbinning")))
 /// ```
+/// <tr><td> `ZVar(const RooAbsRealLValue& var,...)`    <td> Observable to be mapped on z axis of ROOT histogram
+/// </table>
+///
 ///
 
 TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
@@ -2292,7 +2307,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \deprecated OBSOLETE -- RETAINED FOR BACKWARD COMPATIBILITY. Use the plotOn(frame,Slice(...)) instead
+/// \deprecated OBSOLETE -- RETAINED FOR BACKWARD COMPATIBILITY. Use plotOn() with Slice() instead
 
 RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions,
 				 Double_t scaleFactor, ScaleType stype, const RooAbsData* projData) const
@@ -2611,11 +2626,12 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate error on self by propagated errors on parameters with correlations as given by fit result
 /// The linearly propagated error is calculated as follows
-///                                    T
-/// error(x) = F_a(x) * Corr(a,a') F_a'(x)
-///
-/// where     F_a(x) = [ f(x,a+da) - f(x,a-da) ] / 2, with f(x) this function and 'da' taken from the fit result
-///       Corr(a,a') = the correlation matrix from the fit result
+/// \f[
+///     \mathrm{error}(x) = F_a(x) * \mathrm{Corr}(a,a')  * F_{a'}^{\mathrm{T}}(x)
+/// \f]
+/// where \f$ F_a(x) = \frac{ f(x, a + \mathrm{d}a) - f(x, a - \mathrm{d}a) }{2} \f$,
+/// with \f$ f(x) \f$ this function and \f$ \mathrm{d}a \f$ taken from the fit result and
+/// \f$ \mathrm{Corr}(a,a') \f$ = the correlation matrix from the fit result
 ///
 
 Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset_in)
@@ -2722,7 +2738,7 @@ Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet 
 ///
 /// The linearized error is calculated as follows:
 /// \f[
-///   \mathrm{error}(x) = Z * F_a(x) * \mathrm{Corr}(a,a') * {F_a^\mathrm{T}}'(x),
+///   \mathrm{error}(x) = Z * F_a(x) * \mathrm{Corr}(a,a') * F_{a'}^\mathrm{T}(x),
 /// \f]
 ///
 /// where
@@ -3874,8 +3890,7 @@ void RooAbsReal::preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& o
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a running integral over this function, i.e. given a f(x), create an object
-/// representing 'int[x_lo,x] f(x_prime) dx_prime'
+/// Calls createRunningIntegral(const RooArgSet&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&)
 
 RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooArgSet& nset)
 {
@@ -3886,8 +3901,9 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooAr
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an object that represents the running integral of the function over one or more observables listed in iset, i.e.
-///
-///   int[x_lo,x] f(x_prime) dx_prime
+/// \f[
+///   \int_{x_\mathrm{lo}}^x f(x') \, \mathrm{d}x'
+/// \f]
 ///
 /// The actual integration calculation is only performed when the return object is evaluated. The name
 /// of the integral object is automatically constructed from the name of the input function, the variables
@@ -3914,7 +3930,7 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooAr
 /// The following named arguments are accepted
 /// | | Effect on integral creation
 /// |-|-------------------------------
-/// | `SupNormSet(const RooArgSet&)`         | Observables over which should be normalized _in_addition_ to the integration observables
+/// | `SupNormSet(const RooArgSet&)`         | Observables over which should be normalized _in addition_ to the integration observables
 /// | `ScanParameters(Int_t nbins, Int_t intOrder)`    | Parameters for scanning technique of making CDF: number of sampled bins and order of interpolation applied on numeric cdf
 /// | `ScanNum()`                            | Apply scanning technique if cdf integral involves numeric integration
 /// | `ScanAll()`                            | Always apply scanning technique
@@ -4191,8 +4207,11 @@ RooDerivative* RooAbsReal::derivative(RooRealVar& obs, const RooArgSet& normSet,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return function representing moment of function of given order. If central is
-/// true, the central moment is given <(x-<x>)^2>
+/// Return function representing moment of function of given order.
+/// \param[in] obs Observable to calculate the moments for
+/// \param[in] order Order of the moment
+/// \param[in] central If true, the central moment is given by \f$ \langle (x- \langle x \rangle )^2 \rangle \f$
+/// \param[in] takeRoot Calculate the square root
 
 RooAbsMoment* RooAbsReal::moment(RooRealVar& obs, Int_t order, Bool_t central, Bool_t takeRoot)
 {
@@ -4205,9 +4224,13 @@ RooAbsMoment* RooAbsReal::moment(RooRealVar& obs, Int_t order, Bool_t central, B
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return function representing moment of p.d.f (normalized w.r.t given observables) of given order. If central is
-/// true, the central moment is given <(x-<x>)^2>. If intNormObs is true, the moment of the function integrated over
-/// all normalization observables is returned.
+/// Return function representing moment of p.d.f (normalized w.r.t given observables) of given order.
+/// \param[in] obs Observable to calculate the moments for
+/// \param[in] normObs Normalise w.r.t. these observables
+/// \param[in] order Order of the moment
+/// \param[in] central If true, the central moment is given by \f$ \langle (x- \langle x \rangle )^2 \rangle \f$
+/// \param[in] takeRoot Calculate the square root
+/// \param[in] intNormOb If true, the moment of the function integrated over all normalization observables is returned.
 
 RooAbsMoment* RooAbsReal::moment(RooRealVar& obs, const RooArgSet& normObs, Int_t order, Bool_t central, Bool_t takeRoot, Bool_t intNormObs)
 {
@@ -4256,7 +4279,7 @@ RooMultiGenFunction* RooAbsReal::iGenFunction(const RooArgSet& observables, cons
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Perform a \f$ \chi^2 \f$ fit to given histogram By default the fit is executed through the MINUIT
+/// Perform a \f$ \chi^2 \f$ fit to given histogram. By default the fit is executed through the MINUIT
 /// commands MIGRAD, HESSE in succession
 ///
 /// The following named arguments are supported
@@ -4307,9 +4330,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  c
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Argument-list version of RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-/// const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-/// const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+/// \copydoc RooAbsReal::chi2FitTo(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
 
 RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList)
 {
@@ -4358,9 +4379,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  co
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \copydoc RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-/// const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-/// const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+/// \copydoc RooAbsReal::createChi2(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
 /// \param cmdList List with RooCmdArg() from the table
 
 RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList)
@@ -4435,9 +4454,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Argument-list version of RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-/// const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-/// const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+/// \copydoc RooAbsReal::chi2FitTo(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
 
 RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList)
 {
@@ -4488,9 +4505,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  con
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Argument-list version of RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-/// const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-/// const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+/// See RooAbsReal::createChi2(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
 
 RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdList)
 {

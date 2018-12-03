@@ -51,9 +51,6 @@ namespace RooStats {
       TMultiGraph* MakeExpectedPlot(double sig1=1, double sig2=2) ;
 
       /// Plot the test statistic distributions
-      /// type =0  null and alt
-      /// type = 1 only null (S+B)
-      /// type = 2 only alt  (B)
       SamplingDistPlot * MakeTestStatPlot(int index, int type=0, int nbins = 100);
 
 

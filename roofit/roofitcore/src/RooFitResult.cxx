@@ -65,7 +65,6 @@ ClassImp(RooFitResult);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with name and title
-/// coverity[UNINIT_CTOR]
 
 RooFitResult::RooFitResult(const char* name, const char* title) : 
   TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0), _randomPars(0), _Lt(0),
@@ -227,21 +226,21 @@ const char* RooFitResult::statusLabelHistory(UInt_t icycle) const
 /// are determined by the options string which should be a concatenation
 /// of the following (not case sensitive):
 ///
-///   M - a marker at the best fit result
-///   E - an error ellipse calculated at 1-sigma using the error matrix at the minimum
-///   1 - the 1-sigma error bar for parameter 1
-///   2 - the 1-sigma error bar for parameter 2
-///   B - the bounding box for the error ellipse
-///   H - a line and horizontal axis for reading off the correlation coefficient
-///   V - a line and vertical axis for reading off the correlation coefficient
-///   A - draw axes for reading off the correlation coefficients with the H or V options
+/// *  M - a marker at the best fit result
+/// *  E - an error ellipse calculated at 1-sigma using the error matrix at the minimum
+/// *  1 - the 1-sigma error bar for parameter 1
+/// *  2 - the 1-sigma error bar for parameter 2
+/// *  B - the bounding box for the error ellipse
+/// *  H - a line and horizontal axis for reading off the correlation coefficient
+/// *  V - a line and vertical axis for reading off the correlation coefficient
+/// *  A - draw axes for reading off the correlation coefficients with the H or V options
 ///
 /// You can change the attributes of objects in the returned RooPlot using the
-/// various RooPlot::getAttXxx(name) member functions, e.g.
-///
+/// various `RooPlot::getAttXxx(name)` member functions, e.g.
+/// ```
 ///   plot->getAttLine("contour")->SetLineStyle(kDashed);
-///
-/// Use plot->Print() for a list of all objects and their names (unfortunately most
+/// ```
+/// Use `plot->Print()` for a list of all objects and their names (unfortunately most
 /// of the ROOT builtin graphics objects like TLine are unnamed). Drag the left mouse
 /// button along the labels of either axis button to interactively zoom in a plot.
 
@@ -494,7 +493,7 @@ Double_t RooFitResult::covariance(Int_t row, Int_t col) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Print fit result to stream 'os'. In Verbose mode, the contant parameters and
+/// Print fit result to stream 'os'. In Verbose mode, the constant parameters and
 /// the initial and final values of the floating parameters are printed. 
 /// Standard mode only the final values of the floating parameters are printed
 
@@ -1138,14 +1137,14 @@ TMatrixDSym RooFitResult::reducedCovarianceMatrix(const RooArgList& params) cons
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a reduced covariance matrix, which is calculated as
-///        ___                   -1
-/// Vred = V22  = V11 - V12 * V22   * V21
+/// \f[
+///   V_\mathrm{red} = \bar{V_{22}} = V_{11} - V_{12} \cdot V_{22}^{-1} \cdot V_{21},
+/// \f]
+/// where \f$ V_{11},V_{12},V_{21},V_{22} \f$ represent a block decomposition of the covariance matrix into observables that
+/// are propagated (labeled by index '1') and that are not propagated (labeled by index '2'), and \f$ \bar{V_{22}} \f$
+/// is the Shur complement of \f$ V_{22} \f$, calculated as shown above.
 ///
-/// Where V11,V12,V21,V22 represent a block decomposition of the covariance matrix into observables that
-/// are propagated (labeled by index '1') and that are not propagated (labeled by index '2'), and V22bar
-/// is the Shur complement of V22, calculated as shown above  
-///
-/// (Note that Vred is _not_ a simple sub-matrix of V)
+/// (Note that \f$ V_\mathrm{red} \f$ is *not* a simple sub-matrix of \f$ V \f$)
 
 TMatrixDSym RooFitResult::conditionalCovarianceMatrix(const RooArgList& params) const 
 {
