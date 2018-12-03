@@ -324,7 +324,10 @@ available in cvmfs.
     for these classes.
 
 ## JavaScript ROOT
-
+  - Support of TWebCanvas functionality. Code for ROOT 6.16 will
+    be maintained in v6-16-00-patches branch of JSROOT repository. 
+  - Singificant speed up (factor 10) when drawing canvas with many subpads
+  - Many small improvements and bug fixes, see JSROOT release notes for v5.4.2 - v5.6.2 
 
 ## Tutorials
   - Refurbish text in the `RDataFrame` tutorials category.
