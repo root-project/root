@@ -318,6 +318,16 @@ available in cvmfs.
 ## 3D Graphics Libraries
 
 
+## Web Graphics Libraries
+
+  - Introduce web-based output for TCanvas. When ROOT compiled with cxx14 support `cmake -Dcxx14=ON ..` and
+    started with web option like `root --web hsimple.C`, TCanvas will be displayed in web browser.
+  - Most of histograms and graphs classes are supported. See 
+    [JavaScript ROOT website](https://root.cern/js/latest/examples.htm) for list of suported classes
+  - Also some classes with customize painters may be working - like TTree::Draw() into TParallelCoord object. These kind of
+    objects handled on server side, web browser used just for display of produced primitives like polylines or text          
+
+
 ## Geometry Libraries
 
 
