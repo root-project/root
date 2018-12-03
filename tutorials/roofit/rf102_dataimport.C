@@ -98,9 +98,38 @@ void rf102_dataimport()
    // and RRV y defines a range [-10,10] this means that the RooDataSet below will have less entries than the TTree 'tree'
 
    RooDataSet ds("ds","ds",RooArgSet(x,y),Import(*tree)) ;
+   
+   
+   
+   // U s e   a s c i i   i m p o r t / e x p o r t   f o r   d a t a s e t s
+   // ------------------------------------------------------------------------------------
+   {
+   	  // Write data to output stream
+	  std::ofstream outstream("/tmp/rf102_testData.txt");
+	  // Optionally, adjust the stream here (e.g. std::setprecision)
+      ds.write(outstream);
+      outstream.close();
+   }
+   
+     
+   //Read data from input stream. The variables of the dataset need to be supplied
+   //to the RooDataSet::read() function.
+   std::cout << "\n-----------------------\nReading data from ASCII\n";
+   RooDataSet * dataReadBack = RooDataSet::read("/tmp/rf102_testData.txt",
+   RooArgList(x, y), //variables to be read. If the file has more fields, these are ignored.
+	     "D"); //Prints if a RooFit message stream listens for debug messages. Use Q for quiet.
+   
+   dataReadBack->Print("V");
+   
+   std::cout << "\nOriginal data, line 20:\n";
+   ds.get(20)->Print("V");
+   
+   std::cout << "\nRead-back data, line 20:\n";
+   dataReadBack->get(20)->Print("V");
 
 
-   // P l o t   d a t a s e t   w i t h   m u l t i p l e   b i n n i n g   c h o i c e s
+
+   // P l o t   d a t a s e t s  w i t h   m u l t i p l e   b i n n i n g   c h o i c e s
    // ------------------------------------------------------------------------------------
 
    // Print number of events in dataset
@@ -114,13 +143,19 @@ void rf102_dataimport()
    RooPlot* frame4 = y.frame(Title("Unbinned data shown with custom binning")) ;
    ds.plotOn(frame4,Binning(20)) ;
 
+   RooPlot* frame5 = y.frame(Title("Unbinned data read back from ASCII file")) ;
+   ds.plotOn(frame5,Binning(20)) ;
+   dataReadBack->plotOn(frame5, Binning(20), MarkerColor(kRed), MarkerStyle(5));
+   
    // Draw all frames on a canvas
-   TCanvas* c = new TCanvas("rf102_dataimport","rf102_dataimport",800,800) ;
-   c->Divide(2,2) ;
+   TCanvas* c = new TCanvas("rf102_dataimport","rf102_dataimport",1000,800) ;
+   c->Divide(3,2) ;
    c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; frame->Draw() ;
    c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.4) ; frame2->Draw() ;
-   c->cd(3) ; gPad->SetLeftMargin(0.15) ; frame3->GetYaxis()->SetTitleOffset(1.4) ; frame3->Draw() ;
-   c->cd(4) ; gPad->SetLeftMargin(0.15) ; frame4->GetYaxis()->SetTitleOffset(1.4) ; frame4->Draw() ;
+   
+   c->cd(4) ; gPad->SetLeftMargin(0.15) ; frame3->GetYaxis()->SetTitleOffset(1.4) ; frame3->Draw() ;
+   c->cd(5) ; gPad->SetLeftMargin(0.15) ; frame4->GetYaxis()->SetTitleOffset(1.4) ; frame4->Draw() ;
+   c->cd(6) ; gPad->SetLeftMargin(0.15) ; frame4->GetYaxis()->SetTitleOffset(1.4) ; frame5->Draw() ;
 
 }
 
