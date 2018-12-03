@@ -75,6 +75,9 @@ class RResultPtr {
 
    // friend declarations
    template <typename T1>
+   friend class RResultPtr;
+
+   template <typename T1>
    friend RResultPtr<T1> RDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, ::ROOT::Detail::RDF::RLoopManager &,
                                                   std::shared_ptr<RDFInternal::RActionBase>);
    template <class T1, class T2>
@@ -145,6 +148,15 @@ public:
    RResultPtr &operator=(const RResultPtr &) = default;
    RResultPtr &operator=(RResultPtr &&) = default;
    explicit operator bool() const { return bool(fObjPtr); }
+   template<typename TO,  typename std::enable_if<std::is_convertible<T, TO>::value, int>::type = 0  >
+   operator RResultPtr<TO>() const
+   {
+      RResultPtr<TO> rp;
+      rp.fLoopManager = fLoopManager;
+      rp.fObjPtr = fObjPtr;
+      rp.fActionPtr = fActionPtr;
+      return rp;
+   }
 
    /// Get a const reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
