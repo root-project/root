@@ -90,9 +90,7 @@ class RInterface {
    using RLoopManager = RDFDetail::RLoopManager;
    friend std::string cling::printValue(::ROOT::RDataFrame *tdf); // For a nice printing at the prompt
    friend class RDFInternal::GraphDrawing::GraphCreatorHelper;
-   friend ColumnNames_t RDFInternal::ConvertRegexToColumns(const RNode &node,
-                                                           std::string_view columnNameRegexp,
-                                                           std::string_view callerName);
+
    using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;
    friend HeadNode_t RDFInternal::CreateSnaphotRDF(const ColumnNames_t &validCols,
                                                    const std::string &fullTreeName,
@@ -550,7 +548,11 @@ public:
                                                  std::string_view columnNameRegexp = "",
                                                  const RSnapshotOptions &options = RSnapshotOptions())
    {
-      auto selectedColumns = RDFInternal::ConvertRegexToColumns(*this, columnNameRegexp, "Snapshot");
+      auto selectedColumns = RDFInternal::ConvertRegexToColumns(fCustomColumns,
+                                                                fLoopManager->GetTree(),
+                                                                fDataSource,
+                                                                columnNameRegexp,
+                                                                "Snapshot");
       return Snapshot(treename, filename, selectedColumns, options);
    }
    // clang-format on
@@ -656,7 +658,12 @@ public:
    /// is empty, all columns are selected. See the previous overloads for more information.
    RInterface<RLoopManager> Cache(std::string_view columnNameRegexp = "")
    {
-      auto selectedColumns = RDFInternal::ConvertRegexToColumns(*this, columnNameRegexp, "Cache");
+
+      auto selectedColumns = RDFInternal::ConvertRegexToColumns(fCustomColumns,
+                                                                fLoopManager->GetTree(),
+                                                                fDataSource,
+                                                                columnNameRegexp,
+                                                                "Cache");
       return Cache(selectedColumns);
    }
 
@@ -1799,7 +1806,11 @@ public:
    /// See the previous overloads for further details.
    RResultPtr<RDisplay> Display(std::string_view columnNameRegexp = "", const int &nRows = 5)
    {
-      auto selectedColumns = RDFInternal::ConvertRegexToColumns(*this, columnNameRegexp, "Display");
+      auto selectedColumns = RDFInternal::ConvertRegexToColumns(fCustomColumns,
+                                                                fLoopManager->GetTree(),
+                                                                fDataSource,
+                                                                columnNameRegexp,
+                                                                "Display");
       return Display(selectedColumns, nRows);
    }
 
