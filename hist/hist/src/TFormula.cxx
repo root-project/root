@@ -807,8 +807,16 @@ void TFormula::InputFormulaIntoCling()
       // make sure the interpreter is initialized
       ROOT::GetROOT();
       R__ASSERT(gCling); 
+
+      // Trigger autoloading / autoparsing (ROOT-9840):
+      TString triggerAutoparsing = "namespace ROOT_TFormula_triggerAutoParse {\n"; triggerAutoparsing += fClingInput + "\n}";
+      gCling->ProcessLine(triggerAutoparsing);
+
       // add pragma for optimization of the formula
       fClingInput = TString("#pragma cling optimize(2)\n") + fClingInput;
+
+      // Now that all libraries and headers are loaded, Declare() a performant version
+      // of the same code:
       gCling->Declare(fClingInput);
       fClingInitialized = PrepareEvalMethod();
       if (!fClingInitialized) Error("InputFormulaIntoCling","Error compiling formula expression in Cling");
