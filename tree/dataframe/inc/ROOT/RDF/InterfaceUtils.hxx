@@ -81,8 +81,8 @@ bool IsImplicitMTEnabled();
 
 using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;
 HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
-                            const std::string &fullTreeName,
-                            const std::string &fileName,
+                            std::string_view treeName,
+                            std::string_view fileName,
                             bool isLazy,
                             RLoopManager &loopManager,
                             std::unique_ptr<RDFInternal::RActionBase> actionPtr);

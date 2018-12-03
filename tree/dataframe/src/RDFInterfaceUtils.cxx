@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include <ROOT/RDF/InterfaceUtils.hxx>
+#include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/RInterface.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/TSeq.hxx>
@@ -74,25 +75,15 @@ bool IsImplicitMTEnabled()
 }
 
 HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
-                            const std::string &fullTreeName,
-                            const std::string &fileName,
+                            std::string_view treeName,
+                            std::string_view fileName,
                             bool isLazy,
                             RLoopManager &loopManager,
                             std::unique_ptr<RDFInternal::RActionBase> actionPtr)
 {
    // create new RDF
    ::TDirectory::TContext ctxt;
-   // Now we mimic a constructor for the RDataFrame. We cannot invoke it here
-   // since this would introduce a cyclic headers dependency.
-
-   // Keep these two statements separated to work-around an ABI incompatibility
-   // between clang (and thus cling) and gcc in the way std::forward is handled.
-   // See https://sft.its.cern.ch/jira/browse/ROOT-9236 for more detail.
-   auto rlm_ptr = std::make_shared<RLoopManager>(nullptr, validCols);
-   auto snapshotRDF = std::make_shared<RInterface<RLoopManager>>(rlm_ptr);
-   auto chain = std::make_shared<TChain>(fullTreeName.c_str());
-   chain->Add(std::string(fileName).c_str());
-   snapshotRDF->fProxiedPtr->SetTree(chain);
+   auto snapshotRDF = std::make_shared<ROOT::RDataFrame>(treeName, fileName, validCols);
    auto snapshotRDFResPtr = MakeResultPtr(snapshotRDF, loopManager, std::move(actionPtr));
 
    if (!isLazy) {

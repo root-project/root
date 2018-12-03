@@ -91,14 +91,6 @@ class RInterface {
    friend std::string cling::printValue(::ROOT::RDataFrame *tdf); // For a nice printing at the prompt
    friend class RDFInternal::GraphDrawing::GraphCreatorHelper;
 
-   using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;
-   friend HeadNode_t RDFInternal::CreateSnaphotRDF(const ColumnNames_t &validCols,
-                                                   const std::string &fullTreeName,
-                                                   const std::string &fileName,
-                                                   bool isLazy,
-                                                   RLoopManager &loopManager,
-                                                   std::unique_ptr<RDFInternal::RActionBase> actionPtr);
-
    template <typename T, typename W>
    friend class RInterface;
 
@@ -2061,7 +2053,7 @@ private:
 
       fLoopManager->Book(actionPtr.get());
 
-      return RDFInternal::CreateSnaphotRDF(validCols, fullTreename, std::string(filename), options.fLazy, *fLoopManager, std::move(actionPtr));
+      return RDFInternal::CreateSnaphotRDF(validCols, fullTreename, filename, options.fLazy, *fLoopManager, std::move(actionPtr));
    }
 
    ////////////////////////////////////////////////////////////////////////////
