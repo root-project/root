@@ -60,7 +60,7 @@ public:
   RooAbsReal(const RooAbsReal& other, const char* name=0);
   virtual ~RooAbsReal();
 
-  // Return value and unit accessors
+  /// Evaluate object. Returns either cached value or triggers a recalculation.
   inline Double_t getVal(const RooArgSet* set=0) const { 
 /*     if (_fast && !_inhibitDirty && std::string("RooHistFunc")==IsA()->GetName()) std::cout << "RooAbsReal::getVal(" << GetName() << ") CLEAN value = " << _value << std::endl ;  */
 #ifndef _WIN32
@@ -69,6 +69,7 @@ public:
     return (_fast && !inhibitDirty()) ? _value : getValV(set) ;     
 #endif
   }
+  /// Evaluate object. Returns either cached value or triggers a recalculation.
   inline  Double_t getVal(const RooArgSet& set) const { return _fast ? _value : getValV(&set) ; }
 
   virtual Double_t getValV(const RooArgSet* set=0) const ;
@@ -370,6 +371,7 @@ protected:
     // Hook function to add functionality to evaluation tracing in derived classes
     return kFALSE ;
   }
+  /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
   virtual Double_t evaluate() const = 0 ;
 
   // Hooks for RooDataSet interface

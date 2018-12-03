@@ -27,12 +27,12 @@
 ///  - Objects can be retrieved by name only, and not by index.
 ///
 ///
-/// Ownership of contents.
-///
+/// Ownership of contents
+/// -------------------------
 /// Unowned objects are inserted with the add() method. Owned objects
 /// are added with addOwned() or addClone(). A RooArgSet either owns all
-/// of it contents, or none, which is determined by the first <add>
-/// call. Once an ownership status is selected, inappropriate <add> calls
+/// of it contents, or none, which is determined by the first `add`
+/// call. Once an ownership status is selected, inappropriate `add` calls
 /// will return error status. Clearing the list via removeAll() resets the
 /// ownership status. Arguments supplied in the constructor are always added
 /// as unowned elements.
