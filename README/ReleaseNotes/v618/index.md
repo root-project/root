@@ -61,6 +61,10 @@ The methods could be replaced by equivalent methods with other signature:
 
 ## TTree Libraries
 
+### RDataFrame
+  - Use TPRegexp instead of TRegexp to interpret the regex used to select columns
+  in the invocation of `Cache` and `Snapshot`.
+
 
 ## Histogram Libraries
 
