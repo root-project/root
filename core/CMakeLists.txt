@@ -71,21 +71,38 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
                    COMMENT ""
                    DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-if(WIN32)
-  add_custom_command(OUTPUT  ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-                     COMMAND ${CMAKE_SOURCE_DIR}/build/win/gitinfo.bat ${CMAKE_SOURCE_DIR}
-                     COMMAND ${CMAKE_SOURCE_DIR}/build/win/githeader.bat RGitCommit.h.tmp
-                     COMMENT "Recording the git revision now"
-                     DEPENDS ${dep_objects} move_artifacts
-                     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-else()
-  add_custom_command(OUTPUT  ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-                     COMMAND ${CMAKE_SOURCE_DIR}/build/unix/gitinfo.sh ${CMAKE_SOURCE_DIR}
-                     COMMAND ${CMAKE_SOURCE_DIR}/build/unix/githeader.sh RGitCommit.h.tmp
-                     COMMENT "Recording the git revision now"
-                     DEPENDS ${dep_objects} move_artifacts
-                     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --all
+                OUTPUT_VARIABLE GIT_DESCRIBE_ALL
+                RESULT_VARIABLE GIT_DESCRIBE_ERRCODE
+                ERROR_QUIET
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(NOT GIT_DESCRIBE_ERRCODE)
+  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --always
+                  OUTPUT_VARIABLE GIT_DESCRIBE_ALWAYS
+                  ERROR_QUIET
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  string(TIMESTAMP GIT_TIMESTAMP "%b %d %Y, %H:%M:%S" UTC)
 endif()
+
+message("Recording the git revision now")
+
+file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
+     "${GIT_DESCRIBE_ALL}
+${GIT_DESCRIBE_ALWAYS}
+${GIT_TIMESTAMP}
+"
+    )
+
+file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+     "#ifndef ROOT_RGITCOMMIT_H
+#define ROOT_RGITCOMMIT_H
+#define ROOT_GIT_BRANCH \"${GIT_DESCRIBE_ALL}\"
+#define ROOT_GIT_COMMIT \"${GIT_DESCRIBE_ALWAYS}\"
+#endif
+"
+    )
+
 add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp)
 set_source_files_properties(${CMAKE_BINARY_DIR}/RGitCommit.h.tmp PROPERTIES GENERATED TRUE)
 add_dependencies(gitcommit ${dep_targets})
