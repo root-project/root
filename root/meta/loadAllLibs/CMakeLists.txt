@@ -4,8 +4,5 @@ if(OPENGL_gl_LIBRARY AND ROOTTEST_OS_ID MATCHES Scientific|CentOS|Ubuntu|Fedora)
 endif()
 
 foreach( t LoadAllLibs LoadAllLibsAZ LoadAllLibsZA)
-  ROOTTEST_ADD_TEST(${t}
-                    MACRO assert${t}.C
-                    FAILREGEX "Error in|rc = -1"
-                    TIMEOUT 1200) # these tests need more time than the default 5 mins
+  ROOTTEST_ADD_TEST(${t} MACRO assert${t}.C FAILREGEX "Error in|rc = -1")
 endforeach()
