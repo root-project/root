@@ -18,7 +18,6 @@ endif ()
 
 ROOT_LINKER_LIBRARY(RIO
   src/RRawFile.cxx
-  src/RRawFileDavix.cxx
   ${rawfile_local_sources}
   src/TArchiveFile.cxx
   src/TBufferFile.cxx
@@ -69,7 +68,6 @@ endif()
 
 ROOT_GENERATE_DICTIONARY(G__RIO
   ROOT/RRawFile.hxx
-  ROOT/RRawFileDavix.hxx
   ${rawfile_local_headers}
   ROOT/TBufferMerger.hxx
   TArchiveFile.h
