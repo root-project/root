@@ -36,8 +36,6 @@ class RRawFile;
  * If the transport protocol part and the :// separator are missing, the default protocol is local file.
  *
  * RRawFiles are not copyable.
- *
- * TODO(jblomer): Implement derived class for Davix low-level I/O
  */
 class RRawFile {
 public:
