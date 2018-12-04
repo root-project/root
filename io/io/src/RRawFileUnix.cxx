@@ -16,6 +16,7 @@
 #include <cerrno>
 #include <cstring>
 #include <stdexcept>
+#include <string>
 
 #include <fcntl.h>
 #include <sys/stat.h>
