@@ -60,6 +60,9 @@ public:
    TNetXNGFile(const char *url, Option_t *mode = "", const char *title = "",
                Int_t compress = 1, Int_t netopt = 0, Bool_t parallelopen = kFALSE,
 	       const char *lurl = 0);
+   TNetXNGFile(const char *url, Option_t *mode = "", const char *title = "",
+               Int_t compress = 1, Int_t netopt = 0, Bool_t parallelopen = kFALSE
+	       );
    virtual ~TNetXNGFile();
 
    virtual void     Init(Bool_t create);
