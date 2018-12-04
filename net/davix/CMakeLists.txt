@@ -26,3 +26,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RDAVIX
 )
 
 target_compile_options(RDAVIX PRIVATE -Wno-deprecated-declarations)
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
