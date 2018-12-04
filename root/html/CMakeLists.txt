@@ -16,5 +16,4 @@ ROOTTEST_ADD_TEST(runMakeIndex
                   MACRO runMakeIndex.C
                   OUTCNV MakeIndex_convert.sh
                   OUTREF MakeIndex.oref
-                  ERRREF MakeIndex.eref
-                  TIMEOUT 1200) # more time is needed for this test wrt the default 5 minutes
+                  ERRREF MakeIndex.eref)
