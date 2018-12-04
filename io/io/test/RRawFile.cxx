@@ -99,6 +99,9 @@ TEST(RRawFile, Basic)
    std::unique_ptr<RRawFile> f3(RRawFile::Create("FiLE://testBasic"));
    EXPECT_EQ(7u, f3->GetSize());
 
+   std::unique_ptr<RRawFile> f4(RRawFile::Create("://testBasic"));
+   EXPECT_EQ(7u, f4->GetSize());
+
    EXPECT_THROW(RRawFile::Create("Communicator://Kirk"), std::runtime_error);
 }
 

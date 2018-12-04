@@ -78,41 +78,6 @@ ROOT::Detail::RRawFile::~RRawFile() {
 }
 
 
-bool ROOT::Detail::RRawFile::Readln(std::string& line)
-{
-   if (fOptions.fLineBreak == ELineBreaks::kAuto) {
-      // Auto-detect line breaks according to the break discovered in the first line
-      fOptions.fLineBreak = ELineBreaks::kUnix;
-      bool res = Readln(line);
-      if ((line.length() > 0) && (*line.rbegin() == '\r')) {
-         fOptions.fLineBreak = ELineBreaks::kWindows;
-         line.resize(line.length() - 1);
-      }
-      return res;
-   }
-
-   line.clear();
-   char buffer[kLineBuffer];
-   size_t nbytes;
-   do {
-      nbytes = Read(buffer, sizeof(buffer));
-      std::string_view bufferView(buffer, nbytes);
-      auto idx = bufferView.find(kLineBreakTokens[static_cast<int>(fOptions.fLineBreak)]);
-      if (idx != std::string_view::npos) {
-         // Line break found, return the string and skip the linebreak itself
-         line.append(buffer, idx);
-         fFilePos -= nbytes - idx;
-         fFilePos += kLineBreakTokenSizes[static_cast<int>(fOptions.fLineBreak)];
-         return true;
-      }
-      line.append(buffer, nbytes);
-   } while (nbytes > 0);
-
-   return !line.empty();
-}
-
-
-// TODO(jblomer): instantiate RRawFileDavix for http(s) URLs
 ROOT::Detail::RRawFile* ROOT::Detail::RRawFile::Create(std::string_view url, ROptions options)
 {
    std::string transport = GetTransport(url);
@@ -123,6 +88,7 @@ ROOT::Detail::RRawFile* ROOT::Detail::RRawFile::Create(std::string_view url, ROp
       return new RRawFileUnix(url, options);
 #endif
    }
+   // TODO(jblomer): instantiate RRawFileDavix for http(s) URLs
    throw std::runtime_error("Unsupported transport protocol: " + transport);
 }
 
@@ -136,6 +102,17 @@ std::string ROOT::Detail::RRawFile::GetLocation(std::string_view url)
 }
 
 
+std::uint64_t ROOT::Detail::RRawFile::GetSize()
+{
+   if (!fIsOpen) DoOpen();
+   fIsOpen = true;
+
+   if (fFileSize == kUnknownFileSize)
+      fFileSize = DoGetSize();
+   return fFileSize;
+}
+
+
 std::string ROOT::Detail::RRawFile::GetTransport(std::string_view url)
 {
    auto idx = url.find(kTransportSeparator);
@@ -144,6 +121,14 @@ std::string ROOT::Detail::RRawFile::GetTransport(std::string_view url)
    std::string transport(url.substr(0, idx));
    std::transform(transport.begin(), transport.end(), transport.begin(), ::tolower);
    return transport;
+}
+
+
+size_t ROOT::Detail::RRawFile::Read(void *buffer, size_t nbytes)
+{
+   size_t res = ReadAt(buffer, nbytes, fFilePos);
+   fFilePos += res;
+   return res;
 }
 
 
@@ -193,26 +178,42 @@ size_t ROOT::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t
 }
 
 
-size_t ROOT::Detail::RRawFile::Read(void *buffer, size_t nbytes)
+bool ROOT::Detail::RRawFile::Readln(std::string& line)
 {
-   size_t res = ReadAt(buffer, nbytes, fFilePos);
-   fFilePos += res;
-   return res;
+   if (fOptions.fLineBreak == ELineBreaks::kAuto) {
+      // Auto-detect line breaks according to the break discovered in the first line
+      fOptions.fLineBreak = ELineBreaks::kUnix;
+      bool res = Readln(line);
+      if ((line.length() > 0) && (*line.rbegin() == '\r')) {
+         fOptions.fLineBreak = ELineBreaks::kWindows;
+         line.resize(line.length() - 1);
+      }
+      return res;
+   }
+
+   line.clear();
+   char buffer[kLineBuffer];
+   size_t nbytes;
+   do {
+      nbytes = Read(buffer, sizeof(buffer));
+      std::string_view bufferView(buffer, nbytes);
+      auto idx = bufferView.find(kLineBreakTokens[static_cast<int>(fOptions.fLineBreak)]);
+      if (idx != std::string_view::npos) {
+         // Line break found, return the string and skip the linebreak itself
+         line.append(buffer, idx);
+         fFilePos -= nbytes - idx;
+         fFilePos += kLineBreakTokenSizes[static_cast<int>(fOptions.fLineBreak)];
+         return true;
+      }
+      line.append(buffer, nbytes);
+   } while (nbytes > 0);
+
+   return !line.empty();
 }
+
 
 
 void ROOT::Detail::RRawFile::Seek(std::uint64_t offset)
 {
   fFilePos = offset;
-}
-
-
-std::uint64_t ROOT::Detail::RRawFile::GetSize()
-{
-   if (!fIsOpen) DoOpen();
-   fIsOpen = true;
-
-   if (fFileSize == kUnknownFileSize)
-      fFileSize = DoGetSize();
-   return fFileSize;
 }

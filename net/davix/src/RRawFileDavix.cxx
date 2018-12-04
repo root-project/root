@@ -28,6 +28,7 @@ struct RDavixFileDes {
    RDavixFileDes() : fd(nullptr), pos(&ctx) { }
    RDavixFileDes(const RDavixFileDes&) = delete;
    RDavixFileDes& operator=(const RDavixFileDes&) = delete;
+   ~RDavixFileDes() = default;
 
    DAVIX_FD *fd;
    Davix::Context ctx;
@@ -39,15 +40,16 @@ struct RDavixFileDes {
 } // namespace ROOT
 
 
-
-size_t ROOT::Detail::RRawFileDavix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
+ROOT::Detail::RRawFileDavix::RRawFileDavix(std::string_view url, RRawFile::ROptions options)
+  : RRawFile(url, options), fFileDes(new Internal::RDavixFileDes())
 {
-   Davix::DavixError *err = nullptr;
-   auto retval = fFileDes->pos.pread(fFileDes->fd, buffer, nbytes, offset, &err);
-   if (retval < 0) {
-      throw std::runtime_error("Cannot read from '" + fUrl + "', error: " + err->getErrMsg());
-   }
-   return static_cast<size_t>(retval);
+}
+
+
+ROOT::Detail::RRawFileDavix::~RRawFileDavix()
+{
+   if (fFileDes->fd != nullptr)
+      fFileDes->pos.close(fFileDes->fd, nullptr);
 }
 
 
@@ -61,6 +63,7 @@ std::uint64_t ROOT::Detail::RRawFileDavix::DoGetSize()
    return buf.st_size;
 }
 
+
 void ROOT::Detail::RRawFileDavix::DoOpen()
 {
    Davix::DavixError *err = nullptr;
@@ -73,14 +76,12 @@ void ROOT::Detail::RRawFileDavix::DoOpen()
 }
 
 
-ROOT::Detail::RRawFileDavix::RRawFileDavix(std::string_view url, RRawFile::ROptions options)
-  : RRawFile(url, options), fFileDes(new Internal::RDavixFileDes())
+size_t ROOT::Detail::RRawFileDavix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-}
-
-
-ROOT::Detail::RRawFileDavix::~RRawFileDavix()
-{
-   if (fFileDes->fd != nullptr)
-      fFileDes->pos.close(fFileDes->fd, nullptr);
+   Davix::DavixError *err = nullptr;
+   auto retval = fFileDes->pos.pread(fFileDes->fd, buffer, nbytes, offset, &err);
+   if (retval < 0) {
+      throw std::runtime_error("Cannot read from '" + fUrl + "', error: " + err->getErrMsg());
+   }
+   return static_cast<size_t>(retval);
 }
