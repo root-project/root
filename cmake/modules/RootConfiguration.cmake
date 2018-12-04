@@ -847,13 +847,6 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
-install(FILES ${CMAKE_BINARY_DIR}/etc/daemons/rootd.rc.d
-              ${CMAKE_BINARY_DIR}/etc/daemons/proofd.rc.d
-              PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
-                          GROUP_EXECUTE GROUP_READ
-                          WORLD_EXECUTE WORLD_READ
-              DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/daemons)
-
 install(FILES ${CMAKE_BINARY_DIR}/etc/daemons/rootd.xinetd
               ${CMAKE_BINARY_DIR}/etc/daemons/proofd.xinetd
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/daemons)
