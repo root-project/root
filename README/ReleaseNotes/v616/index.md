@@ -43,7 +43,6 @@ The following people have contributed to this new version:
  Xavier Valls, CERN/SFT,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
- Stephan Hageboeck, CERN/SFT,\
  Stefan Wunsch, CERN/SFT
 
 ## Deprecation and Removal
