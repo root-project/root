@@ -101,7 +101,7 @@ endif()
 if(sqlite)
   target_sources(ROOTDataFrame PRIVATE src/RSqliteDS.cxx)
   target_include_directories(ROOTDataFrame PRIVATE ${SQLITE_INCLUDE_DIR})
-  target_link_libraries(ROOTDataFrame PRIVATE RSQLite)
+  target_link_libraries(ROOTDataFrame PRIVATE ${SQLITE_LIBRARIES})
   if (davix)
     # TODO(jblomer): Use Davix through an abstraction layer in RDAVIX to avoid linking issues
     if (builtin_davix)
