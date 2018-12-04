@@ -18,7 +18,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
-#include <string>
 
 namespace ROOT {
 namespace Detail {
