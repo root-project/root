@@ -178,7 +178,8 @@ endif()
 ROOTTEST_ADD_TEST(fork
                   EXEC ./fork
                   FAILREGEX "Error in" "cannot load any more object with static TLS"
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST} tsenums tclass_methods)
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST} tsenums tclass_methods
+                  TIMEOUT 1200) # this test needs more than the default 5 minutes
 
 if(ROOT_imt_FOUND)
    ROOTTEST_ADD_TEST(generate_imt_tree
