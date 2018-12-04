@@ -1,4 +1,4 @@
-#if __cplusplus < 201703L && !defined(_MSC_VER)
+#if __cplusplus < 201403L && !defined(_MSC_VER)
 
 #include "ROOT/RNotFn.hxx"
 
