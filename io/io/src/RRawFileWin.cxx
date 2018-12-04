@@ -32,28 +32,11 @@ ROOT::Detail::RRawFileWin::RRawFileWin(std::string_view url, ROOT::Detail::RRawF
 {
 }
 
+
 ROOT::Detail::RRawFileWin::~RRawFileWin()
 {
    if (fFilePtr != nullptr)
       fclose(fFilePtr);
-}
-
-void ROOT::Detail::RRawFileWin::Seek(long offset, int whence)
-{
-   int res = fseek(fFilePtr, offset, whence);
-   if (res != 0)
-      throw std::runtime_error("Cannot seek in '" + fUrl + "', error: " + std::string(strerror(errno)));
-}
-
-size_t ROOT::Detail::RRawFileWin::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
-{
-   Seek(offset, SEEK_SET);
-   size_t res = fread(buffer, 1, nbytes, fFilePtr);
-   if ((res < nbytes) && (ferror(fFilePtr) != 0)) {
-      clearerr(fFilePtr);
-      throw std::runtime_error("Cannot read from '" + fUrl + "', error: " + std::string(strerror(errno)));
-   }
-   return res;
 }
 
 
@@ -78,4 +61,24 @@ void ROOT::Detail::RRawFileWin::DoOpen()
    R__ASSERT(res == 0);
    if (fOptions.fBlockSize < 0)
       fOptions.fBlockSize = kDefaultBlockSize;
+}
+
+
+size_t ROOT::Detail::RRawFileWin::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
+{
+   Seek(offset, SEEK_SET);
+   size_t res = fread(buffer, 1, nbytes, fFilePtr);
+   if ((res < nbytes) && (ferror(fFilePtr) != 0)) {
+      clearerr(fFilePtr);
+      throw std::runtime_error("Cannot read from '" + fUrl + "', error: " + std::string(strerror(errno)));
+   }
+   return res;
+}
+
+
+void ROOT::Detail::RRawFileWin::Seek(long offset, int whence)
+{
+   int res = fseek(fFilePtr, offset, whence);
+   if (res != 0)
+      throw std::runtime_error("Cannot seek in '" + fUrl + "', error: " + std::string(strerror(errno)));
 }

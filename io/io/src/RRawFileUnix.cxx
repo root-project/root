@@ -41,28 +41,6 @@ ROOT::Detail::RRawFileUnix::~RRawFileUnix()
 }
 
 
-size_t ROOT::Detail::RRawFileUnix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
-{
-   size_t total_bytes = 0;
-   while (nbytes) {
-      ssize_t res = pread(fFileDes, buffer, nbytes, offset);
-      if (res < 0) {
-         if (errno == EINTR)
-            continue;
-         throw std::runtime_error("Cannot read from '" + fUrl + "', error: " + std::string(strerror(errno)));
-      } else if (res == 0) {
-         return total_bytes;
-      }
-      R__ASSERT(static_cast<size_t>(res) <= nbytes);
-      buffer = reinterpret_cast<unsigned char *>(buffer) + res;
-      nbytes -= res;
-      total_bytes += res;
-      offset += res;
-   }
-   return total_bytes;
-}
-
-
 std::uint64_t ROOT::Detail::RRawFileUnix::DoGetSize()
 {
    struct stat info;
@@ -93,4 +71,26 @@ void ROOT::Detail::RRawFileUnix::DoOpen()
    } else {
       fOptions.fBlockSize = kDefaultBlockSize;
    }
+}
+
+
+size_t ROOT::Detail::RRawFileUnix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
+{
+   size_t total_bytes = 0;
+   while (nbytes) {
+      ssize_t res = pread(fFileDes, buffer, nbytes, offset);
+      if (res < 0) {
+         if (errno == EINTR)
+            continue;
+         throw std::runtime_error("Cannot read from '" + fUrl + "', error: " + std::string(strerror(errno)));
+      } else if (res == 0) {
+         return total_bytes;
+      }
+      R__ASSERT(static_cast<size_t>(res) <= nbytes);
+      buffer = reinterpret_cast<unsigned char *>(buffer) + res;
+      nbytes -= res;
+      total_bytes += res;
+      offset += res;
+   }
+   return total_bytes;
 }
