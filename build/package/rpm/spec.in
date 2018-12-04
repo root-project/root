@@ -149,10 +149,6 @@ done
 
 # Prepare SYSV init scripts 
 mkdir -p ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d
-cp -a etc/daemons/rootd.rc.d \
-    ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d/rootd
-cp -a etc/daemons/proofd.rc.d \
-    ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d/proofd
 if test -f etc/daemons/xrootd.rc.d ; then 
     cp -a etc/daemons/xrootd.rc.d \
 	${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d/xrootd
@@ -166,10 +162,6 @@ fi
 mkdir -p rpm
 build/package/lib/makelists.sh rpm ${RPM_BUILD_ROOT} \
     %ver %_prefix %_sysconfdir %_defaultdocdir
-echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/rootd" \
-    >> rpm/root-system-rootd.install
-echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/proofd" \
-    >> rpm/root-system-proofd.install
 touch rpm/ttf-root-installer.install
 if test -f rpm/root-system-xrootd.install ; then 
     echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/xrootd" \
