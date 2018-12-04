@@ -126,6 +126,14 @@ TNetXNGFile::TNetXNGFile(const char *url,
                          Option_t   *mode,
                          const char *title,
                          Int_t       compress,
+                         Int_t       netopt,
+                         Bool_t      parallelopen) :
+	TNetXNGFile(url,mode,title,compress,netopt,parallelopen,0){}
+
+TNetXNGFile::TNetXNGFile(const char *url,
+                         Option_t   *mode,
+                         const char *title,
+                         Int_t       compress,
                          Int_t       /*netopt*/,
                          Bool_t      parallelopen,
 			 const char *lurl) :
