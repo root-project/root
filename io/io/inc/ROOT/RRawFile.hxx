@@ -29,13 +29,14 @@ class RRawFile;
  *
  * The RRawFile provides read-only access to local and remote files. Data can be read either byte-wise or line-wise.
  * The RRawFile base class provides line-wise access and buffering for byte-wise access. Derived classes provide the
- * low-level read operations, e.g. from a local file system or from a web server. The RRawFile is used for non-root
+ * low-level read operations, e.g. from a local file system or from a web server. The RRawFile is used for non-ROOT
  * RDataSource implementations.
  *
  * Files are addressed by URL consisting of a transport protocol part and a location, like file:///path/to/data
- * If the transport protocol part and the :// separator are missing, the default protocol is local file.
+ * If the transport protocol part and the :// separator are missing, the default protocol is local file. Files are
+ * opened when required (on reading, getting file size) and closed on object destruction.
  *
- * RRawFiles are not copyable.
+ * RRawFiles manage system respources and are therefore made non-copyable.
  */
 class RRawFile {
 public:
@@ -43,7 +44,7 @@ public:
    static constexpr std::uint64_t kUnknownFileSize = std::uint64_t(-1);
    /// kAuto detects the line break from the first line, kSystem picks the system's default
    enum class ELineBreaks { kAuto, kSystem, kUnix, kWindows };
-   /// On construction, an ROptions parameter can customized the RRawFile behavior
+   /// On construction, an ROptions parameter can customize the RRawFile behavior
    struct ROptions {
       ELineBreaks fLineBreak;
       /**
@@ -55,7 +56,7 @@ public:
    };
 
 private:
-   /// Don't set to a different value without adapting ReadAt()
+   /// Don't change without adapting ReadAt()
    static constexpr unsigned int kNumBlockBuffers = 2;
    struct RBlockBuffer {
       /// Where in the open file does fBuffer start
@@ -70,14 +71,14 @@ private:
       RBlockBuffer& operator=(const RBlockBuffer&) = delete;
       ~RBlockBuffer() = default;
 
-      /// Tries to copy up to nbytes starting at offset from fBuffer into buffer.
+      /// Tries to copy up to nbytes starting at offset from fBuffer into buffer.  Returns number of bytes copied.
       size_t Map(void *buffer, size_t nbytes, std::uint64_t offset);
    };
    /// To be used modulo kNumBlockBuffers, points to the last used block buffer in fBlockBuffers
    unsigned int fBlockBufferIdx;
    /// An active buffer and a shadow buffer, which supports "jumping back" to a previously used location in the file
    RBlockBuffer fBlockBuffers[kNumBlockBuffers];
-   /// Memory block containing the block buffers consequtively
+   /// Memory block containing the block buffers consecutively
    unsigned char *fBufferSpace;
    /// The cached file size
    std::uint64_t fFileSize;
@@ -91,12 +92,15 @@ protected:
    std::uint64_t fFilePos;
 
    /**
-    * This function is called at most once and before any call to either DoReadAt or DoGetSize. If fOptions.fBlocksize
+    * DoOpen() is called at most once and before any call to either DoReadAt or DoGetSize. If fOptions.fBlocksize
     * is negative, derived classes are responsible to set a sensible value. After a call to DoOpen(),
     * fOptions.fBlocksize must be larger or equal to zero.
     */
    virtual void DoOpen() = 0;
-   /// Derived classes should implement low-level reading without buffering
+   /**
+    * Derived classes should implement low-level reading without buffering. Short reads indicate the end of the file,
+    * therefore derived classes should return nbytes bytes if available.
+    */
    virtual size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) = 0;
    /// Derived classes should return the file size or kUnknownFileSize
    virtual std::uint64_t DoGetSize() = 0;
