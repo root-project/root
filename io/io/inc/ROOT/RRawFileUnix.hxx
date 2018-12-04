@@ -30,9 +30,9 @@ namespace Detail {
  */
 class RRawFileUnix : public RRawFile {
 private:
-   int filedes;
+   int fFileDes;
    void Open();
-   bool IsOpen() { return filedes >= 0; }
+   bool IsOpen() { return fFileDes >= 0; }
 
 protected:
    size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) final;
