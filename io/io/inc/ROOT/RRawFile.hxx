@@ -81,6 +81,8 @@ private:
    unsigned char *fBufferSpace;
    /// The cached file size
    std::uint64_t fFileSize;
+   /// Files are opened lazily and only when required; the open state is kept by this flag
+   bool fIsOpen;
 
 protected:
    std::string fUrl;
@@ -88,6 +90,12 @@ protected:
    /// The current position in the file, which can be changed by Seek, Read, and Readln
    std::uint64_t fFilePos;
 
+   /**
+    * This function is called at most once and before any call to either DoReadAt or DoGetSize. If fOptions.fBlocksize
+    * is negative, derived classes are responsible to set a sensible value. After a call to DoOpen(),
+    * fOptions.fBlocksize must be larger or equal to zero.
+    */
+   virtual void DoOpen() = 0;
    /// Derived classes should implement low-level reading without buffering
    virtual size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) = 0;
    /// Derived classes should return the file size or kUnknownFileSize
@@ -103,7 +111,7 @@ public:
    static RRawFile* Create(std::string_view url, ROptions options = ROptions());
    /// Returns only the file location, e.g. "server/file" for http://server/file
    static std::string GetLocation(std::string_view url);
-   /// Returns only the transport protocol, e.g. "http" for http://server/file
+   /// Returns only the transport protocol in lower case, e.g. "http" for HTTP://server/file
    static std::string GetTransport(std::string_view url);
 
    /**

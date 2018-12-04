@@ -16,6 +16,10 @@
 #include <davix.hpp>
 #include <sys/stat.h>
 
+namespace {
+constexpr int kDefaultBlockSize = 128 * 1024; // Read in relatively large 128k blocks for better network utilization
+} // anonymous namespace
+
 namespace ROOT {
 namespace Detail {
 namespace Internal {
@@ -38,8 +42,6 @@ struct RDavixFileDes {
 
 size_t ROOT::Detail::RRawFileDavix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   if (!IsOpen()) Open();
-
    Davix::DavixError *err = nullptr;
    auto retval = fFileDes->pos.pread(fFileDes->fd, buffer, nbytes, offset, &err);
    if (retval < 0) {
@@ -49,15 +51,8 @@ size_t ROOT::Detail::RRawFileDavix::DoReadAt(void *buffer, size_t nbytes, std::u
 }
 
 
-bool ROOT::Detail::RRawFileDavix::IsOpen() {
-   return fFileDes->fd != nullptr;
-}
-
-
 std::uint64_t ROOT::Detail::RRawFileDavix::DoGetSize()
 {
-   if (!IsOpen()) Open();
-
    struct stat buf;
    Davix::DavixError *err = nullptr;
    if (fFileDes->pos.stat(nullptr, fUrl, &buf, &err) == -1) {
@@ -66,13 +61,15 @@ std::uint64_t ROOT::Detail::RRawFileDavix::DoGetSize()
    return buf.st_size;
 }
 
-void ROOT::Detail::RRawFileDavix::Open()
+void ROOT::Detail::RRawFileDavix::DoOpen()
 {
    Davix::DavixError *err = nullptr;
    fFileDes->fd = fFileDes->pos.open(nullptr, fUrl, O_RDONLY, &err);
    if (fFileDes->fd == nullptr) {
       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + err->getErrMsg());
    }
+   if (fOptions.fBlockSize < 0)
+      fOptions.fBlockSize = kDefaultBlockSize;
 }
 
 
