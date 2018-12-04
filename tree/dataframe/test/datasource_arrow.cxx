@@ -1,6 +1,7 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RArrowDS.hxx>
 #include <ROOT/TSeq.hxx>
+#include <TROOT.h>
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
