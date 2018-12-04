@@ -48,6 +48,10 @@ public:
    RRawFileMock(const std::string &content, RRawFile::ROptions options)
      : RRawFile("", options), fContent(content), fNumReadAt(0) { }
 
+   void DoOpen() final
+   {
+   }
+
    size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) final
    {
       fNumReadAt++;
@@ -91,6 +95,11 @@ TEST(RRawFile, Basic)
 
    std::unique_ptr<RRawFile> f2(RRawFile::Create("NoSuchFile"));
    EXPECT_THROW(f2->Readln(line), std::runtime_error);
+
+   std::unique_ptr<RRawFile> f3(RRawFile::Create("FiLE://testBasic"));
+   EXPECT_EQ(7u, f3->GetSize());
+
+   EXPECT_THROW(RRawFile::Create("Communicator://Kirk"), std::runtime_error);
 }
 
 
