@@ -22,6 +22,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+namespace {
+constexpr int kDefaultBlockSize = 4096; // If fstat() does not provide a block size hint, use this value instead
+} // anonymous namespace
+
 
 ROOT::Detail::RRawFileUnix::RRawFileUnix(std::string_view url, ROOT::Detail::RRawFile::ROptions options)
   : ROOT::Detail::RRawFile(url, options)
@@ -39,8 +43,6 @@ ROOT::Detail::RRawFileUnix::~RRawFileUnix()
 
 size_t ROOT::Detail::RRawFileUnix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   if (!IsOpen()) Open();
-
    size_t total_bytes = 0;
    while (nbytes) {
       ssize_t res = pread(fFileDes, buffer, nbytes, offset);
@@ -63,7 +65,6 @@ size_t ROOT::Detail::RRawFileUnix::DoReadAt(void *buffer, size_t nbytes, std::ui
 
 std::uint64_t ROOT::Detail::RRawFileUnix::DoGetSize()
 {
-   if (!IsOpen()) Open();
    struct stat info;
    int res = fstat(fFileDes, &info);
    if (res != 0)
@@ -72,10 +73,24 @@ std::uint64_t ROOT::Detail::RRawFileUnix::DoGetSize()
 }
 
 
-void ROOT::Detail::RRawFileUnix::Open()
+void ROOT::Detail::RRawFileUnix::DoOpen()
 {
    fFileDes = open(GetLocation(fUrl).c_str(), O_RDONLY);
    if (fFileDes < 0) {
       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + std::string(strerror(errno)));
+   }
+
+   if (fOptions.fBlockSize >= 0)
+      return;
+
+   struct stat info;
+   int res = fstat(fFileDes, &info);
+   if (res != 0) {
+     throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
+   }
+   if (info.st_blksize > 0) {
+      fOptions.fBlockSize = info.st_blksize;
+   } else {
+      fOptions.fBlockSize = kDefaultBlockSize;
    }
 }

@@ -18,7 +18,6 @@ TEST(RRawFileDavix, Basics)
 {
    std::string line;
    RRawFile::ROptions options;
-   options.fBlockSize = 1;
    std::unique_ptr<RRawFileDavix> f(new RRawFileDavix("http://root.cern.ch/files/davix.test", options));
    f->Readln(line);
    EXPECT_STREQ("Hello, World", line.c_str());

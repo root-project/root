@@ -36,10 +36,9 @@ struct RDavixFileDes;
 class RRawFileDavix : public RRawFile {
 private:
    std::unique_ptr<Internal::RDavixFileDes> fFileDes;
-   void Open();
-   bool IsOpen();
 
 protected:
+   void DoOpen() final;
    size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) final;
    std::uint64_t DoGetSize() final;
 

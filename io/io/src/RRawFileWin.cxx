@@ -21,6 +21,10 @@
 #include <stdexcept>
 #include <string>
 
+namespace {
+constexpr int kDefaultBlockSize = 4096; // Read files in 4k pages unless told otherwise
+} // anonymous namespace
+
 
 ROOT::Detail::RRawFileWin::RRawFileWin(std::string_view url, ROOT::Detail::RRawFile::ROptions options)
   : ROOT::Detail::RRawFile(url, options)
@@ -43,8 +47,6 @@ void ROOT::Detail::RRawFileWin::Seek(long offset, int whence)
 
 size_t ROOT::Detail::RRawFileWin::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   if (!IsOpen()) Open();
-
    Seek(offset, SEEK_SET);
    size_t res = fread(buffer, 1, nbytes, fFilePtr);
    if ((res < nbytes) && (ferror(fFilePtr) != 0)) {
@@ -57,8 +59,6 @@ size_t ROOT::Detail::RRawFileWin::DoReadAt(void *buffer, size_t nbytes, std::uin
 
 std::uint64_t ROOT::Detail::RRawFileWin::DoGetSize()
 {
-   if (!IsOpen()) Open();
-
    Seek(0L, SEEK_END);
    long size = ftell(fFilePtr);
    if (size < 0)
@@ -68,7 +68,7 @@ std::uint64_t ROOT::Detail::RRawFileWin::DoGetSize()
 }
 
 
-void ROOT::Detail::RRawFileWin::Open()
+void ROOT::Detail::RRawFileWin::DoOpen()
 {
    fFilePtr = fopen(GetLocation(fUrl).c_str(), "r");
    if (fFilePtr == nullptr)
@@ -76,4 +76,6 @@ void ROOT::Detail::RRawFileWin::Open()
    // Prevent double buffering
    int res = setvbuf(fFilePtr, nullptr, _IONBF, 0);
    R__ASSERT(res == 0);
+   if (fOptions.fBlockSize < 0)
+      fOptions.fBlockSize = kDefaultBlockSize;
 }

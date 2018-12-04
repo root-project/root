@@ -9,17 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RRawFile.hxx"
-#include "ROOT/RRawFileDavix.hxx"
+#include <ROOT/RConfig.h>
+#include <ROOT/RRawFile.hxx>
+#include <ROOT/RRawFileDavix.hxx>
 #ifdef _WIN32
-#include "ROOT/RRawFileWin.hxx"
+#include <ROOT/RRawFileWin.hxx>
 #else
-#include "ROOT/RRawFileUnix.hxx"
+#include <ROOT/RRawFileUnix.hxx>
 #endif
 
 #include "TError.h"
 
 #include <algorithm>
+#include <cctype> // for towlower
 #include <cerrno>
 #include <cstddef>
 #include <cstdint>
@@ -38,7 +40,6 @@ const char* kLineBreakTokens[] = {"", "\n", "\n", "\r\n"};
 constexpr unsigned int kLineBreakTokenSizes[] = {0, 1, 1, 2};
 #endif
 constexpr unsigned int kLineBuffer = 128; // On Readln, look for line-breaks in chunks of 128 bytes
-constexpr int kDefaultBlockSizeLocal = 4096; // Local files are by default read in pages
 } // anonymous namespace
 
 
@@ -64,15 +65,11 @@ ROOT::Detail::RRawFile::RRawFile(
    : fBlockBufferIdx(0)
    , fBufferSpace(nullptr)
    , fFileSize(kUnknownFileSize)
+   , fIsOpen(false)
    , fUrl(url)
    , fOptions(options)
    , fFilePos(0)
 {
-   if (fOptions.fBlockSize > 0) {
-      fBufferSpace = new unsigned char[kNumBlockBuffers * fOptions.fBlockSize];
-      for (unsigned int i = 0; i < kNumBlockBuffers; ++i)
-         fBlockBuffers[i].fBuffer = fBufferSpace + i * fOptions.fBlockSize;
-   }
 }
 
 
@@ -115,16 +112,15 @@ bool ROOT::Detail::RRawFile::Readln(std::string& line)
 }
 
 
+// TODO(jblomer): instantiate RRawFileDavix for http(s) URLs
 ROOT::Detail::RRawFile* ROOT::Detail::RRawFile::Create(std::string_view url, ROptions options)
 {
    std::string transport = GetTransport(url);
    if (transport == "file") {
-      if (options.fBlockSize < 0)
-        options.fBlockSize = kDefaultBlockSizeLocal;
 #ifdef _WIN32
-      return new RRawFileWin(std::string(url), options);
+      return new RRawFileWin(url, options);
 #else
-      return new RRawFileUnix(std::string(url), options);
+      return new RRawFileUnix(url, options);
 #endif
    }
    throw std::runtime_error("Unsupported transport protocol: " + transport);
@@ -145,17 +141,27 @@ std::string ROOT::Detail::RRawFile::GetTransport(std::string_view url)
    auto idx = url.find(kTransportSeparator);
    if (idx == std::string_view::npos)
       return "file";
-   return std::string(url.substr(0, idx));
+   std::string transport(url.substr(0, idx));
+   std::transform(transport.begin(), transport.end(), transport.begin(), ::tolower);
+   return transport;
 }
 
 
 size_t ROOT::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
+   if (!fIsOpen) DoOpen();
    R__ASSERT(fOptions.fBlockSize >= 0);
+   fIsOpen = true;
 
    // "Large" reads are served directly, bypassing the cache
    if (nbytes > static_cast<unsigned int>(fOptions.fBlockSize))
       return DoReadAt(buffer, nbytes, offset);
+
+   if (fBufferSpace == nullptr) {
+      fBufferSpace = new unsigned char[kNumBlockBuffers * fOptions.fBlockSize];
+      for (unsigned int i = 0; i < kNumBlockBuffers; ++i)
+         fBlockBuffers[i].fBuffer = fBufferSpace + i * fOptions.fBlockSize;
+   }
 
    size_t totalBytes = 0;
    size_t mappedBytes = 0;
@@ -203,6 +209,9 @@ void ROOT::Detail::RRawFile::Seek(std::uint64_t offset)
 
 std::uint64_t ROOT::Detail::RRawFile::GetSize()
 {
+   if (!fIsOpen) DoOpen();
+   fIsOpen = true;
+
    if (fFileSize == kUnknownFileSize)
       fFileSize = DoGetSize();
    return fFileSize;
