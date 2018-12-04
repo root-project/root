@@ -104,9 +104,9 @@ void rf102_dataimport()
    // U s e   a s c i i   i m p o r t / e x p o r t   f o r   d a t a s e t s
    // ------------------------------------------------------------------------------------
    {
-   	  // Write data to output stream
-	  std::ofstream outstream("/tmp/rf102_testData.txt");
-	  // Optionally, adjust the stream here (e.g. std::setprecision)
+      // Write data to output stream
+      std::ofstream outstream("/tmp/rf102_testData.txt");
+      // Optionally, adjust the stream here (e.g. std::setprecision)
       ds.write(outstream);
       outstream.close();
    }
@@ -116,8 +116,8 @@ void rf102_dataimport()
    //to the RooDataSet::read() function.
    std::cout << "\n-----------------------\nReading data from ASCII\n";
    RooDataSet * dataReadBack = RooDataSet::read("/tmp/rf102_testData.txt",
-   RooArgList(x, y), //variables to be read. If the file has more fields, these are ignored.
-	     "D"); //Prints if a RooFit message stream listens for debug messages. Use Q for quiet.
+      RooArgList(x, y), //variables to be read. If the file has more fields, these are ignored.
+      "D"); //Prints if a RooFit message stream listens for debug messages. Use Q for quiet.
    
    dataReadBack->Print("V");
    
