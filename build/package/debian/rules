@@ -185,9 +185,7 @@ PLUGINS		:= libroot-geom				\
 		   root-plugin-proof-xproof		\
 		   root-plugin-sql-odbc			\
 		   root-plugin-tree-treeviewer		\
-		   root-system-proofd			\
 		   root-system-doc			\
-		   root-system-rootd			\
 		   root-system-xrootd		
 EXTRAS		:= libroot-proof-clarens		\
 		   libroot-bindings-python		\
@@ -396,10 +394,6 @@ clean:	$(TEMPLATES:%.in=%)
 	rm -f	macros/html.C 
 	rm -f  memstat.root
 	rm -f  *.Cexec
-	rm -f	etc/daemons/proofd.rc.d
-	rm -f	etc/daemons/proofd.xinetd
-	rm -f	etc/daemons/rootd.rc.d
-	rm -f	etc/daemons/rootd.xinetd
 	rm -f	etc/daemons/olbd.rc.d
 	rm -f	etc/daemons/xrootd.rc.d
 	rm -f	qtgsi/src/G__QtGSI.cxx qtgsi/src/G__QtGSI.h
@@ -606,8 +600,6 @@ install-arch:
 
 	# Remove Xinetd and Red Hat Init scripts from /etc 
 	rm -rf $(DTMP)$(SYSCONFDIR)/root/*.xinetd
-	rm -rf $(DTMP)$(SYSCONFDIR)/root/proofd
-	rm -rf $(DTMP)$(SYSCONFDIR)/root/rootd
 	rm -rf $(DTMP)$(SYSCONFDIR)/root/xrootd
 	rm -rf $(DTMP)$(SYSCONFDIR)/root/olbd 
 
