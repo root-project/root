@@ -241,10 +241,13 @@ void TGLFaceSet::EnforceTriangles()
       TriangleCollector(GLUtesselator* ts) :
          fNTriangles(0), fNVertices(0), fV0(-1), fV1(-1), fType(GL_NONE)
       {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
          gluTessCallback(ts, (GLenum)GLU_TESS_BEGIN_DATA,   (tessfuncptr_t) tess_begin);
          gluTessCallback(ts, (GLenum)GLU_TESS_VERTEX_DATA,  (tessfuncptr_t) tess_vertex);
          gluTessCallback(ts, (GLenum)GLU_TESS_COMBINE_DATA, (tessfuncptr_t) tess_combine);
          gluTessCallback(ts, (GLenum)GLU_TESS_END_DATA,     (tessfuncptr_t) tess_end);
+#pragma GCC diagnostic pop
       }
 
       Int_t               GetNTrianlges() { return fNTriangles; }
