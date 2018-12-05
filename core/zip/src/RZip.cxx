@@ -48,7 +48,7 @@ static void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigne
   speeds - sometimes by an order of magnitude.
 */
 #ifdef R__HAS_DEFAULT_LZ4
-ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm:::EValues::kLZ4;
+ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::EValues::kLZ4;
 #else
 ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::EValues::kZLIB;
 #endif
