@@ -521,6 +521,21 @@
 #define R__DEPRECATED(MAJOR, MINOR, REASON) \
   _R__JOIN3_(_R__DEPRECATED_,MAJOR,MINOR)("will be removed in ROOT v" #MAJOR "." #MINOR ": " REASON)
 
+/* Mechanism to advise users to avoid legacy functions that will not be removed */
+#ifdef R__SUGGEST_FASTER_FUNCTIONS
+  #define R__SUGGEST_FUNCTION(ALTERNATIVE) \
+      _R__DEPRECATED_LATER("This function has faster/more secure alternatives: " ALTERNATIVE)
+#else
+  #define R__SUGGEST_FUNCTION(ALTERNATIVE)
+#endif
+
+/* Mechanism to advise users to avoid legacy classes that will not be removed */
+#ifdef R__SUGGEST_FASTER_CLASSES
+  #define R__SUGGEST_CLASS(ALTERNATIVE) \
+      _R__DEPRECATED_LATER("This class has a faster/more secure alternative: " ALTERNATIVE)
+#else
+  #define R__SUGGEST_CLASS(ALTERNATIVE)
+#endif
 /*---- misc ------------------------------------------------------------------*/
 
 #ifdef R__GNU

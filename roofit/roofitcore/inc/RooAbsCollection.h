@@ -100,7 +100,9 @@ public:
     return _list.MakeIterator(dir); 
   }
 
-  RooLinkedListIter iterator(Bool_t dir = kIterForward) const ;
+  RooLinkedListIter
+  R__SUGGEST_FUNCTION("fwdIterator() is faster")
+  iterator(Bool_t dir = kIterForward) const ;
   RooFIter fwdIterator() const { return RooFIter(&_list); }
 
   inline Int_t getSize() const { 
