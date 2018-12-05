@@ -715,6 +715,7 @@ void THStack::Paint(Option_t *choptin)
       if (ws.IsWhitespace()) strncpy(option,"\0",1);
       TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
       TH1* hAti;
+      TH1* hsAti;
       Int_t nhists = fHists->GetSize();
       Int_t ic;
       gPad->IncrementPaletteColor(nhists, opt1);
@@ -724,6 +725,12 @@ void THStack::Paint(Option_t *choptin)
          if (l1) hAti->SetFillColor(ic);
          if (l2) hAti->SetLineColor(ic);
          if (l3) hAti->SetMarkerColor(ic);
+         if (fStack) {
+            hsAti = (TH1*)fStack->At(i);
+            if (l1) hsAti->SetFillColor(ic);
+            if (l2) hsAti->SetLineColor(ic);
+            if (l3) hsAti->SetMarkerColor(ic);
+         }
          lnk = (TObjOptLink*)lnk->Next();
       }
    }
