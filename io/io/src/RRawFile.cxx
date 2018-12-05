@@ -19,6 +19,8 @@
 #endif
 
 #include "TError.h"
+#include "TPluginManager.h"
+#include "TROOT.h"
 
 #include <algorithm>
 #include <cctype> // for towlower
@@ -88,7 +90,17 @@ ROOT::Detail::RRawFile* ROOT::Detail::RRawFile::Create(std::string_view url, ROp
       return new RRawFileUnix(url, options);
 #endif
    }
-   // TODO(jblomer): instantiate RRawFileDavix for http(s) URLs
+   if (transport == "http" || transport == "https") {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Detail::RRawFile"))) {
+         if (h->LoadPlugin() == 0) {
+            return reinterpret_cast<RRawFile*>(h->ExecPlugin(2, &url, &options));
+            //return reinterpret_cast<RRawFile*>(h->ExecPlugin(0));
+         }
+         throw std::runtime_error("Cannot load plugin handler for RRawFileDavix");
+      }
+      throw std::runtime_error("Cannot find plugin handler for RRawFileDavix");
+   }
    throw std::runtime_error("Unsupported transport protocol: " + transport);
 }
 
