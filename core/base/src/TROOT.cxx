@@ -1766,6 +1766,9 @@ TCollection *TROOT::GetListOfFunctionTemplates()
 /// a (tight) loop where no interpreter symbols will be created
 /// you can set load=kFALSE (default).
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+
 TCollection *TROOT::GetListOfGlobals(Bool_t load)
 {
    if (!fGlobals) {
@@ -1794,6 +1797,8 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
 
    return fGlobals;
 }
+
+#pragma GCC diagnostic pop
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return list containing the TFunctions currently defined.
