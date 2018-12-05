@@ -23,11 +23,6 @@ void FITS_tutorial5()
    printf("Row2: (99.0, 21.689, 20.206, 18.86, 18.32 , 18.128 )\n");
    printf("WARNING: when coding, row and column indices start from 0\n");
 
-   if (!gROOT->IsBatch()) {
-      //printf("Press ENTER to start..."); getchar();
-      //printf("\n");
-   }
-
    TString dir = gSystem->DirName(__FILE__);
 
    //Open the table
