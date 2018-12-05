@@ -519,15 +519,15 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
 
     return cache._rearrangedNum->getVal() / cache._rearrangedDen->getVal();
   } else {
-    RooAbsReal* partInt;
-    RooArgSet* normSet;
-    RooFIter plIter = cache._partList.fwdIterator();
+
     RooFIter nlIter = cache._normList.fwdIterator();
     Double_t value = 1.0;
-    for (partInt = (RooAbsReal*) plIter.next(),
-	normSet = (RooArgSet*) nlIter.next(); partInt && normSet;
-      partInt = (RooAbsReal*) plIter.next(),
-      normSet = (RooArgSet*) nlIter.next()) {
+    for (auto plItem : cache._partList) {
+      auto partInt = static_cast<const RooAbsReal*>(plItem);
+      //FIXME The CacheElem saves this as linked list of RooAbsArg*, which is NOT correct
+      auto normSet = reinterpret_cast<const RooArgSet*>(nlIter.next());
+      assert(normSet);
+
       const Double_t piVal = partInt->getVal(normSet->getSize() > 0 ? normSet : 0);
       value *= piVal ;
       if (value <= _cutOff) break;

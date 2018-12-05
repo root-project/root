@@ -452,6 +452,7 @@ Bool_t RooAbsCollection::add(const RooAbsArg& var, Bool_t silent)
 Bool_t RooAbsCollection::add(const RooAbsCollection& list, Bool_t silent)
 {
   Bool_t result(false) ;
+  _list.reserve(_list.size() + list._list.size());
 
   for (auto item : list._list) {
     result |= add(*item,silent);
@@ -469,6 +470,7 @@ Bool_t RooAbsCollection::add(const RooAbsCollection& list, Bool_t silent)
 Bool_t RooAbsCollection::addOwned(const RooAbsCollection& list, Bool_t silent)
 {
   Bool_t result(false) ;
+  _list.reserve(_list.size() + list._list.size());
 
   for (auto item : list._list) {
     result |= addOwned(*item, silent) ;
@@ -485,6 +487,8 @@ Bool_t RooAbsCollection::addOwned(const RooAbsCollection& list, Bool_t silent)
 
 void RooAbsCollection::addClone(const RooAbsCollection& list, Bool_t silent)
 {
+  _list.reserve(_list.size() + list._list.size());
+
   for (auto item : list._list) {
     addClone(*item, silent);
   }

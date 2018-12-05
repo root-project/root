@@ -244,28 +244,29 @@ Double_t RooRealSumPdf::evaluate() const
   Double_t value(0) ;
 
   // Do running sum of coef/func pairs, calculate lastCoef.
-  RooFIter funcIter = _funcList.fwdIterator() ;
-  RooFIter coefIter = _coefList.fwdIterator() ;
-  RooAbsReal* coef ;
-  RooAbsReal* func ;
       
   // N funcs, N-1 coefficients 
   Double_t lastCoef(1) ;
-  while((coef=(RooAbsReal*)coefIter.next())) {
-    func = (RooAbsReal*)funcIter.next() ;
+  auto funcIt = _funcList.begin();
+  for (const auto coefArg : _coefList) {
+    assert(funcIt != _funcList.end());
+    auto func = static_cast<const RooAbsReal*>(*funcIt++);
+    auto coef = static_cast<const RooAbsReal*>(coefArg);
+
     Double_t coefVal = coef->getVal() ;
     if (coefVal) {
       cxcoutD(Eval) << "RooRealSumPdf::eval(" << GetName() << ") coefVal = " << coefVal << " funcVal = " << func->IsA()->GetName() << "::" << func->GetName() << " = " << func->getVal() << endl ;
       if (func->isSelectedComp()) {
-	value += func->getVal()*coefVal ;
+        value += func->getVal()*coefVal ;
       }
       lastCoef -= coef->getVal() ;
     }
   }
   
   if (!_haveLastCoef) {
+    assert(funcIt != _funcList.end());
     // Add last func with correct coefficient
-    func = (RooAbsReal*) funcIter.next() ;
+    auto func = static_cast<const RooAbsReal*>(*funcIt);
     if (func->isSelectedComp()) {
       value += func->getVal()*lastCoef ;
     }
