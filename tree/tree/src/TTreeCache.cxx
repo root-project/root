@@ -283,6 +283,7 @@ myTreeOrChain.GetTree()->PrintCacheStats();
 #include "TBranch.h"
 #include "TBranchElement.h"
 #include "TEventList.h"
+#include "TObjArray.h"
 #include "TObjString.h"
 #include "TRegexp.h"
 #include "TLeaf.h"
