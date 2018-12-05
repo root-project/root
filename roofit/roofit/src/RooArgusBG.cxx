@@ -118,8 +118,8 @@ Double_t RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
     aLow  = -m0*m0/3.*f1*sqrt(f1);
     aHigh = -m0*m0/3.*f1*sqrt(f2);
   } else {
-    aLow  = 0.5*m0*m0*exp(c*f1)/(c*sqrt(c)) * (0.5*sqrt(pi)*((std::complex<double>)RooMath::faddeeva(sqrt(c*f1))).imag() - sqrt(c*f1));
-    aHigh = 0.5*m0*m0*exp(c*f2)/(c*sqrt(c)) * (0.5*sqrt(pi)*((std::complex<double>)RooMath::faddeeva(sqrt(c*f2))).imag() - sqrt(c*f2));
+    aLow  = 0.5*m0*m0*exp(c*f1)/(c*sqrt(c)) * (0.5*sqrt(pi)*(RooMath::faddeeva(sqrt(c*f1))).imag() - sqrt(c*f1));
+    aHigh = 0.5*m0*m0*exp(c*f2)/(c*sqrt(c)) * (0.5*sqrt(pi)*(RooMath::faddeeva(sqrt(c*f2))).imag() - sqrt(c*f2));
   }
   Double_t area = aHigh - aLow;
   //cout << "c = " << c << "aHigh = " << aHigh << " aLow = " << aLow << " area = " << area << endl ;
