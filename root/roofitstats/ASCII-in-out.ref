@@ -1,0 +1,150 @@
+
+Processing ASCII-in-out.C...
+
+                Copyright (C) 2000-2013 NIKHEF, University of California & Stanford University
+
+[#1] INFO:Eval -- RooTreeDataStore::loadValues(ds) Ignored 32 out of range events
+[#0] ERROR:DataHandling -- RooDataSet::read(static): read error at line 69
+[#1] INFO:DataHandling -- RooDataSet::read: read 68 events (ignored 0 out of range events)
+  Contains 68 entries
+  Observables: 
+    1)           x = 5.51161  L(-10 - 10)  "x"
+    2)           y = -8.2664  L(-10 - 10)  "y"
+    3)  blindState = Normal(idx = 0)
+  "Blinding State"
+Generated on the fly: -1.3312409 1.29242035 
+Read from reference : -1.3312409 1.29242035 0 
+Generated on the fly: -3.20382834 -5.36998371 
+Read from reference : -3.20382834 -5.36998371 0 
+Generated on the fly: 0.110356925 2.76339104 
+Read from reference : 0.110356925 2.76339104 0 
+Generated on the fly: 1.39688733 -5.776415 
+Read from reference : 1.39688733 -5.776415 0 
+Generated on the fly: 1.81421582 -3.41174776 
+Read from reference : 1.81421582 -3.41174776 0 
+Generated on the fly: 5.28687275 3.85503546 
+Read from reference : 5.28687275 3.85503546 0 
+Generated on the fly: -3.75034753 7.23466589 
+Read from reference : -3.75034753 7.23466589 0 
+Generated on the fly: 3.82411472 8.68675024 
+Read from reference : 3.82411472 8.68675024 0 
+Generated on the fly: 0.395080054 8.82355737 
+Read from reference : 0.395080054 8.82355737 0 
+Generated on the fly: -5.70314134 -4.16215283 
+Read from reference : -5.70314134 -4.16215283 0 
+Generated on the fly: -5.49662365 -3.56794019 
+Read from reference : -5.49662365 -3.56794019 0 
+Generated on the fly: -2.15444845 0.615008315 
+Read from reference : -2.15444845 0.615008315 0 
+Generated on the fly: 0.026563099 -3.90143702 
+Read from reference : 0.026563099 -3.90143702 0 
+Generated on the fly: -0.146181723 -6.35498558 
+Read from reference : -0.146181723 -6.35498558 0 
+Generated on the fly: 1.30853429 5.10656572 
+Read from reference : 1.30853429 5.10656572 0 
+Generated on the fly: -0.00211040815 -1.78494952 
+Read from reference : -0.00211040815 -1.78494952 0 
+Generated on the fly: -2.15487545 -2.60576111 
+Read from reference : -2.15487545 -2.60576111 0 
+Generated on the fly: 0.77056778 -9.02414302 
+Read from reference : 0.77056778 -9.02414302 0 
+Generated on the fly: 1.73109362 0.950981998 
+Read from reference : 1.73109362 0.950981998 0 
+Generated on the fly: 2.11237771 9.97112109 
+Read from reference : 2.11237771 9.97112109 0 
+Generated on the fly: -1.716927 -9.44247168 
+Read from reference : -1.716927 -9.44247168 0 
+Generated on the fly: 1.52462033 -2.23756016 
+Read from reference : 1.52462033 -2.23756016 0 
+Generated on the fly: 0.688701595 0.120211209 
+Read from reference : 0.688701595 0.120211209 0 
+Generated on the fly: -0.815480481 0.314128348 
+Read from reference : -0.815480481 0.314128348 0 
+Generated on the fly: 0.987653018 6.95070212 
+Read from reference : 0.987653018 6.95070212 0 
+Generated on the fly: -3.75980868 -2.52345668 
+Read from reference : -3.75980868 -2.52345668 0 
+Generated on the fly: 0.786418655 5.79658334 
+Read from reference : 0.786418655 5.79658334 0 
+Generated on the fly: -0.990932757 -3.92312821 
+Read from reference : -0.990932757 -3.92312821 0 
+Generated on the fly: 0.0236276 8.68008246 
+Read from reference : 0.0236276 8.68008246 0 
+Generated on the fly: 2.50842583 -4.50692354 
+Read from reference : 2.50842583 -4.50692354 0 
+Generated on the fly: -3.05837963 6.07571159 
+Read from reference : -3.05837963 6.07571159 0 
+Generated on the fly: -2.87563501 -0.263127694 
+Read from reference : -2.87563501 -0.263127694 0 
+Generated on the fly: -2.71624695 3.30712009 
+Read from reference : -2.71624695 3.30712009 0 
+Generated on the fly: 2.96763008 7.04922162 
+Read from reference : 2.96763008 7.04922162 0 
+Generated on the fly: -3.53427038 3.28578126 
+Read from reference : -3.53427038 3.28578126 0 
+Generated on the fly: 2.24349447 -6.69571491 
+Read from reference : 2.24349447 -6.69571491 0 
+Generated on the fly: 6.6653551 0.263143235 
+Read from reference : 6.6653551 0.263143235 0 
+Generated on the fly: -5.39452306 5.63631986 
+Read from reference : -5.39452306 5.63631986 0 
+Generated on the fly: -1.07401205 1.14987101 
+Read from reference : -1.07401205 1.14987101 0 
+Generated on the fly: 1.6003559 4.99393966 
+Read from reference : 1.6003559 4.99393966 0 
+Generated on the fly: 3.53326558 5.01986791 
+Read from reference : 3.53326558 5.01986791 0 
+Generated on the fly: 0.401381681 -5.26926298 
+Read from reference : 0.401381681 -5.26926298 0 
+Generated on the fly: 1.44701853 6.00895249 
+Read from reference : 1.44701853 6.00895249 0 
+Generated on the fly: 1.27697696 -7.03648979 
+Read from reference : 1.27697696 -7.03648979 0 
+Generated on the fly: 1.3413617 -0.9646208 
+Read from reference : 1.3413617 -0.9646208 0 
+Generated on the fly: 0.420251126 -0.506384738 
+Read from reference : 0.420251126 -0.506384738 0 
+Generated on the fly: 0.433859403 5.73480432 
+Read from reference : 0.433859403 5.73480432 0 
+Generated on the fly: 4.72267502 2.72400662 
+Read from reference : 4.72267502 2.72400662 0 
+Generated on the fly: 1.72605619 -0.587674468 
+Read from reference : 1.72605619 -0.587674468 0 
+Generated on the fly: -4.21833253 -0.974517027 
+Read from reference : -4.21833253 -0.974517027 0 
+Generated on the fly: 2.64693635 4.00645823 
+Read from reference : 2.64693635 4.00645823 0 
+Generated on the fly: 8.00830487 0.865117726 
+Read from reference : 8.00830487 0.865117726 0 
+Generated on the fly: -0.00840282835 0.138956392 
+Read from reference : -0.00840282835 0.138956392 0 
+Generated on the fly: -1.19251049 -2.10723801 
+Read from reference : -1.19251049 -2.10723801 0 
+Generated on the fly: -8.3954774 -8.41937307 
+Read from reference : -8.3954774 -8.41937307 0 
+Generated on the fly: -0.922130189 1.84191001 
+Read from reference : -0.922130189 1.84191001 0 
+Generated on the fly: -4.46142503 4.69416622 
+Read from reference : -4.46142503 4.69416622 0 
+Generated on the fly: 1.25764366 7.09325995 
+Read from reference : 1.25764366 7.09325995 0 
+Generated on the fly: 7.31285595 -3.29497471 
+Read from reference : 7.31285595 -3.29497471 0 
+Generated on the fly: -0.0953317118 5.96870367 
+Read from reference : -0.0953317118 5.96870367 0 
+Generated on the fly: -0.857883128 -8.35645988 
+Read from reference : -0.857883128 -8.35645988 0 
+Generated on the fly: -4.22608635 -3.30090453 
+Read from reference : -4.22608635 -3.30090453 0 
+Generated on the fly: -0.0635651741 -0.457234425 
+Read from reference : -0.0635651741 -0.457234425 0 
+Generated on the fly: -3.2894106 -4.8366792 
+Read from reference : -3.2894106 -4.8366792 0 
+Generated on the fly: -0.402478256 -0.81888011 
+Read from reference : -0.402478256 -0.81888011 0 
+Generated on the fly: -3.93132785 6.76953306 
+Read from reference : -3.93132785 6.76953306 0 
+Generated on the fly: -5.86528943 -7.85551544 
+Read from reference : -5.86528943 -7.85551544 0 
+Generated on the fly: 5.51160822 -8.26640299 
+Read from reference : 5.51160822 -8.26640299 0 
