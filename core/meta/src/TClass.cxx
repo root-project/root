@@ -681,10 +681,8 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
    // Encode data member title
    if (isdate == kFALSE && strcmp(memberFullTypeName, "char*") && strcmp(memberFullTypeName, "const char*")) {
       i = strlen(&line[0]); line[i] = ' ';
-      Int_t lentit = strlen(memberTitle);
-      if (lentit > 250-ktitle) lentit = 250-ktitle;
-      strncpy(&line[ktitle],memberTitle,lentit);
-      line[ktitle+lentit] = 0;
+      assert(250 > ktitle);
+      strlcpy(&line[ktitle],memberTitle,250-ktitle+1); // strlcpy copy 'size-1' characters.
    }
    Printf("%s", line);
 }
