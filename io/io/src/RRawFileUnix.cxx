@@ -26,13 +26,10 @@ namespace {
 constexpr int kDefaultBlockSize = 4096; // If fstat() does not provide a block size hint, use this value instead
 } // anonymous namespace
 
-
 ROOT::Detail::RRawFileUnix::RRawFileUnix(std::string_view url, ROOT::Detail::RRawFile::ROptions options)
-  : ROOT::Detail::RRawFile(url, options)
-  , fFileDes(-1)
+   : ROOT::Detail::RRawFile(url, options), fFileDes(-1)
 {
 }
-
 
 ROOT::Detail::RRawFileUnix::~RRawFileUnix()
 {
@@ -40,16 +37,14 @@ ROOT::Detail::RRawFileUnix::~RRawFileUnix()
       close(fFileDes);
 }
 
-
 std::uint64_t ROOT::Detail::RRawFileUnix::DoGetSize()
 {
    struct stat info;
    int res = fstat(fFileDes, &info);
    if (res != 0)
-     throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
+      throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
    return info.st_size;
 }
-
 
 void ROOT::Detail::RRawFileUnix::DoOpen()
 {
@@ -64,7 +59,7 @@ void ROOT::Detail::RRawFileUnix::DoOpen()
    struct stat info;
    int res = fstat(fFileDes, &info);
    if (res != 0) {
-     throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
+      throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
    }
    if (info.st_blksize > 0) {
       fOptions.fBlockSize = info.st_blksize;
@@ -72,7 +67,6 @@ void ROOT::Detail::RRawFileUnix::DoOpen()
       fOptions.fBlockSize = kDefaultBlockSize;
    }
 }
-
 
 size_t ROOT::Detail::RRawFileUnix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {

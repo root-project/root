@@ -25,9 +25,9 @@ namespace Detail {
 namespace Internal {
 
 struct RDavixFileDes {
-   RDavixFileDes() : fd(nullptr), pos(&ctx) { }
-   RDavixFileDes(const RDavixFileDes&) = delete;
-   RDavixFileDes& operator=(const RDavixFileDes&) = delete;
+   RDavixFileDes() : fd(nullptr), pos(&ctx) {}
+   RDavixFileDes(const RDavixFileDes &) = delete;
+   RDavixFileDes &operator=(const RDavixFileDes &) = delete;
    ~RDavixFileDes() = default;
 
    DAVIX_FD *fd;
@@ -39,19 +39,16 @@ struct RDavixFileDes {
 } // namespace Detail
 } // namespace ROOT
 
-
 ROOT::Detail::RRawFileDavix::RRawFileDavix(std::string_view url, RRawFile::ROptions options)
-  : RRawFile(url, options), fFileDes(new Internal::RDavixFileDes())
+   : RRawFile(url, options), fFileDes(new Internal::RDavixFileDes())
 {
 }
-
 
 ROOT::Detail::RRawFileDavix::~RRawFileDavix()
 {
    if (fFileDes->fd != nullptr)
       fFileDes->pos.close(fFileDes->fd, nullptr);
 }
-
 
 std::uint64_t ROOT::Detail::RRawFileDavix::DoGetSize()
 {
@@ -63,7 +60,6 @@ std::uint64_t ROOT::Detail::RRawFileDavix::DoGetSize()
    return buf.st_size;
 }
 
-
 void ROOT::Detail::RRawFileDavix::DoOpen()
 {
    Davix::DavixError *err = nullptr;
@@ -74,7 +70,6 @@ void ROOT::Detail::RRawFileDavix::DoOpen()
    if (fOptions.fBlockSize < 0)
       fOptions.fBlockSize = kDefaultBlockSize;
 }
-
 
 size_t ROOT::Detail::RRawFileDavix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
