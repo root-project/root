@@ -22,7 +22,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TFileCacheRead.h"
-#include "TObjArray.h"
 
 #include <cstdint>
 #include <memory>
@@ -31,6 +30,7 @@
 
 class TTree;
 class TBranch;
+class TObjArray;
 
 class TTreeCache : public TFileCacheRead {
 
