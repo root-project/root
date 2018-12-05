@@ -52,7 +52,7 @@ public:
        * that the protocol-dependent default block size should be used.
        */
       int fBlockSize;
-      ROptions() : fLineBreak(ELineBreaks::kAuto), fBlockSize(-1) { }
+      ROptions() : fLineBreak(ELineBreaks::kAuto), fBlockSize(-1) {}
    };
 
 private:
@@ -66,9 +66,9 @@ private:
       /// Points into the I/O buffer with data from the file, not owned.
       unsigned char *fBuffer;
 
-      RBlockBuffer() : fBufferOffset(0), fBufferSize(0), fBuffer(nullptr) { }
-      RBlockBuffer(const RBlockBuffer&) = delete;
-      RBlockBuffer& operator=(const RBlockBuffer&) = delete;
+      RBlockBuffer() : fBufferOffset(0), fBufferSize(0), fBuffer(nullptr) {}
+      RBlockBuffer(const RBlockBuffer &) = delete;
+      RBlockBuffer &operator=(const RBlockBuffer &) = delete;
       ~RBlockBuffer() = default;
 
       /// Tries to copy up to nbytes starting at offset from fBuffer into buffer.  Returns number of bytes copied.
@@ -107,12 +107,12 @@ protected:
 
 public:
    RRawFile(std::string_view url, ROptions options);
-   RRawFile(const RRawFile&) = delete;
-   RRawFile& operator=(const RRawFile&) = delete;
+   RRawFile(const RRawFile &) = delete;
+   RRawFile &operator=(const RRawFile &) = delete;
    virtual ~RRawFile();
 
    /// Factory method that returns a suitable concrete implementation according to the transport in the url
-   static RRawFile* Create(std::string_view url, ROptions options = ROptions());
+   static RRawFile *Create(std::string_view url, ROptions options = ROptions());
    /// Returns only the file location, e.g. "server/file" for http://server/file
    static std::string GetLocation(std::string_view url);
    /// Returns only the transport protocol in lower case, e.g. "http" for HTTP://server/file
@@ -131,7 +131,7 @@ public:
    std::uint64_t GetSize();
 
    /// Read the next line starting from the current value of fFilePos. Returns false if the end of the file is reached.
-   bool Readln(std::string& line);
+   bool Readln(std::string &line);
 };
 
 } // namespace Detail

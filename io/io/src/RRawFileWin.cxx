@@ -25,13 +25,10 @@ namespace {
 constexpr int kDefaultBlockSize = 4096; // Read files in 4k pages unless told otherwise
 } // anonymous namespace
 
-
 ROOT::Detail::RRawFileWin::RRawFileWin(std::string_view url, ROOT::Detail::RRawFile::ROptions options)
-  : ROOT::Detail::RRawFile(url, options)
-  , fFilePtr(nullptr)
+   : ROOT::Detail::RRawFile(url, options), fFilePtr(nullptr)
 {
 }
-
 
 ROOT::Detail::RRawFileWin::~RRawFileWin()
 {
@@ -39,17 +36,16 @@ ROOT::Detail::RRawFileWin::~RRawFileWin()
       fclose(fFilePtr);
 }
 
-
 std::uint64_t ROOT::Detail::RRawFileWin::DoGetSize()
 {
    Seek(0L, SEEK_END);
    long size = ftell(fFilePtr);
    if (size < 0)
-     throw std::runtime_error("Cannot tell position counter in '" + fUrl + "', error: " + std::string(strerror(errno)));
+      throw std::runtime_error("Cannot tell position counter in '" + fUrl +
+                               "', error: " + std::string(strerror(errno)));
    Seek(fFilePos, SEEK_SET);
    return size;
 }
-
 
 void ROOT::Detail::RRawFileWin::DoOpen()
 {
@@ -63,7 +59,6 @@ void ROOT::Detail::RRawFileWin::DoOpen()
       fOptions.fBlockSize = kDefaultBlockSize;
 }
 
-
 size_t ROOT::Detail::RRawFileWin::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    Seek(offset, SEEK_SET);
@@ -74,7 +69,6 @@ size_t ROOT::Detail::RRawFileWin::DoReadAt(void *buffer, size_t nbytes, std::uin
    }
    return res;
 }
-
 
 void ROOT::Detail::RRawFileWin::Seek(long offset, int whence)
 {
