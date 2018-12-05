@@ -99,10 +99,21 @@ TEST(RRawFile, Basic)
    std::unique_ptr<RRawFile> f3(RRawFile::Create("FiLE://testBasic"));
    EXPECT_EQ(7u, f3->GetSize());
 
-   std::unique_ptr<RRawFile> f4(RRawFile::Create("://testBasic"));
-   EXPECT_EQ(7u, f4->GetSize());
-
+   EXPECT_THROW(RRawFile::Create("://testBasic"), std::runtime_error);
    EXPECT_THROW(RRawFile::Create("Communicator://Kirk"), std::runtime_error);
+}
+
+
+TEST(RRawFile, Remote)
+{
+#ifdef R__HAS_DAVIX
+   std::unique_ptr<RRawFile> f(RRawFile::Create("http://root.cern.ch/files/davix.test"));
+   std::string line;
+   EXPECT_TRUE(f->Readln(line));
+   EXPECT_STREQ("Hello, World", line.c_str());
+#else
+   EXPECT_THROW(RRawFile::Create("http://root.cern.ch/files/davix.test"), std::runtime_error);
+#endif
 }
 
 
