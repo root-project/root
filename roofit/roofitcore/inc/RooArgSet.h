@@ -104,6 +104,8 @@ public:
 
   RooAbsArg& operator[](const char* name) const ;   
 
+  /// Shortcut for readFromStream(std::istream&, Bool_t, const char*, const char*, Bool_t), setting
+  /// `flagReadAtt` and `section` to 0.
   virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) {
     // I/O streaming interface (machine readable)
     return readFromStream(is, compact, 0, 0, verbose) ;

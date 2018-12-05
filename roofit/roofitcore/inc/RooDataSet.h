@@ -85,7 +85,8 @@ public:
   static RooDataSet *read(const char *filename, const RooArgList &variables,
 			  const char *opts= "", const char* commonPath="",
 			  const char *indexCatName=0) ;
-  Bool_t write(const char* filename) ;
+  Bool_t write(const char* filename) const;
+  Bool_t write(std::ostream & ofs) const;
 
 /*   void setWeightVar(const char* name=0) ; */
 /*   void setWeightVar(const RooAbsArg& arg) {  */

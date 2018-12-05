@@ -674,26 +674,34 @@ Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt, co
 /// Write the contents of the argset in ASCII form to given stream.
 /// 
 /// A line is written for each element contained in the form
-/// <argName> = <argValue>
+/// `<argName> = <argValue>`
 /// 
-/// The <argValue> part of each element is written by the arguments' 
+/// The `<argValue>` part of each element is written by the arguments'
 /// writeToStream() function.
+/// \param os The stream to write to
+/// \param compact Write only the bare values, separated by ' '. Doing this,
+/// the stream cannot be read back into a RooArgSet, but only into a RooArgList, because the
+/// key names are lost.
 
 void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* /*section*/) const
 {
-  if (compact) {
-    coutE(InputArguments) << "RooArgSet::writeToStream(" << GetName() << ") compact mode not supported" << endl ;
-    return ;
-  }
-
   TIterator *iterat= createIterator();
   RooAbsArg *next = 0;
-  while((0 != (next= (RooAbsArg*)iterat->Next()))) {
-    os << next->GetName() << " = " ;
-    next->writeToStream(os,kFALSE) ;
-    os << endl ;
+
+  if (compact) {
+    while((0 != (next= (RooAbsArg*)iterat->Next()))) {
+      next->writeToStream(os,true);
+      os << " ";
+    }
+    os << endl;
+  } else {
+    while((0 != (next= (RooAbsArg*)iterat->Next()))) {
+      os << next->GetName() << " = " ;
+      next->writeToStream(os,kFALSE) ;
+      os << endl ;
+    }
   }
-  delete iterat;  
+  delete iterat;
 }
 
 
@@ -704,36 +712,37 @@ void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* /*section
 /// 
 /// The stream is read to end-of-file and each line is assumed to be
 /// of the form
-///
-/// <argName> = <argValue>
-/// 
+/// \code
+///   <argName> = <argValue>
+/// \endcode
 /// Lines starting with argNames not matching any element in the list
 /// will be ignored with a warning message. In addition limited C++ style 
 /// preprocessing and flow control is provided. The following constructions 
 /// are recognized:
-///
-/// > #include "include.file"       
-/// 
+/// \code
+///   include "include.file"
+/// \endcode
 /// Include given file, recursive inclusion OK
-/// 
-/// > if (<boolean_expression>)
-/// >   <name> = <value>
-/// >   ....
-/// > else if (<boolean_expression>)
-///     ....
-/// > else
-///     ....
-/// > endif
+/// \code
+/// if (<boolean_expression>)
+///   <name> = <value>
+///   ....
+/// else if (<boolean_expression>)
+///   ....
+/// else
+///   ....
+/// endif
+/// \endcode
 ///
 /// All expressions are evaluated by RooFormula, and may involve any of
 /// the sets variables. 
-///
-/// > echo <Message>
-///
+/// \code
+///   echo <Message>
+/// \endcode
 /// Print console message while reading from stream
-///
-/// > abort
-///
+/// \code
+///   abort
+/// \endcode
 /// Force termination of read sequence with error status 
 ///
 /// The value of each argument is read by the arguments readFromStream
