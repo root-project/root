@@ -11,7 +11,6 @@
 
 #include <ROOT/RConfig.h>
 #include <ROOT/RRawFile.hxx>
-#include <ROOT/RRawFileDavix.hxx>
 #ifdef _WIN32
 #include <ROOT/RRawFileWin.hxx>
 #else
