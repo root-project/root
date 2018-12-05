@@ -21,7 +21,7 @@
 
 RooDataSet is a container class to hold unbinned data. Each data point
 in N-dimensional space is represented by a RooArgSet of RooRealVar, RooCategory 
-or RooStringVar objects 
+or RooStringVar objects.
 **/
 
 #include "RooFit.h"
@@ -1531,47 +1531,45 @@ RooPlot* RooDataSet::plotOnXY(RooPlot* frame, const RooCmdArg& arg1, const RooCm
 ////////////////////////////////////////////////////////////////////////////////
 /// Read given list of ascii files, and construct a data set, using the given
 /// ArgList as structure definition.
-///
-/// Multiple file names in fileList should be comma separated. Each
+/// \param fileList Multiple file names, comma separated. Each
 /// file is optionally prefixed with 'commonPath' if such a path is
 /// provided
-///
-/// The arglist specifies the dimensions of the dataset to be built
-/// and describes the order in which these dimensions appear in the
+/// \param varList Specify the dimensions of the dataset to be built.
+/// This list describes the order in which these dimensions appear in the
 /// ascii files to be read. 
-///
-/// Each line in the ascii file should contain N white space separated
-/// tokens, with N the number of args in 'variables'. Any text beyond
+/// Each line in the ascii file should contain N white-space separated
+/// tokens, with N the number of args in `varList`. Any text beyond
 /// N tokens will be ignored with a warning message.
-/// [ NB: This format is written by RooArgList::writeToStream() ]
+/// (NB: This is the default output of RooArgList::writeToStream())
+/// \param verbOpt `Q` be quiet, `D` debug mode (verbose)
+/// \param commonPath All filenames in `fileList` will be prefixed with this optional path.
+/// \param indexCatName Interpret the data as belonging to category `indexCatName`.
+/// When multiple files are read, a RooCategory arg in `varList` can
+/// optionally be designated to hold information about the source file
+/// of each data point. This feature is enabled by giving the name
+/// of the (already existing) category variable in `indexCatName`.
 /// 
-/// If the value of any of the variables on a given line exceeds the
+/// \attention If the value of any of the variables on a given line exceeds the
 /// fit range associated with that dimension, the entire line will be
 /// ignored. A warning message is printed in each case, unless the
-/// 'Q' verbose option is given. (Option 'D' will provide additional
-/// debugging information) The number of events read and skipped
+/// `Q` verbose option is given. The number of events read and skipped
 /// is always summarized at the end.
-///
-/// When multiple files are read, a RooCategory arg in 'variables' can 
-/// optionally be designated to hold information about the source file 
-/// of each data point. This feature is enabled by giving the name
-/// of the (already existing) category variable in 'indexCatName'
 ///
 /// If no further information is given a label name 'fileNNN' will
 /// be assigned to each event, where NNN is the sequential number of
-/// the source file in 'fileList'.
+/// the source file in `fileList`.
 /// 
-/// Alternatively it is possible to override the default label names
+/// Alternatively, it is possible to override the default label names
 /// of the index category by specifying them in the fileList string:
-/// When instead of "file1.txt,file2.txt" the string 
-/// "file1.txt:FOO,file2.txt:BAR" is specified, a state named "FOO"
+/// When instead of `file1.txt,file2.txt` the string
+/// `file1.txt:FOO,file2.txt:BAR` is specified, a state named "FOO"
 /// is assigned to the index category for each event originating from
 /// file1.txt. The labels FOO,BAR may be predefined in the index 
-/// category via defineType(), but don't have to be
+/// category via defineType(), but don't have to be.
 ///
 /// Finally, one can also assign the same label to multiple files,
-/// either by specifying "file1.txt:FOO,file2,txt:FOO,file3.txt:BAR"
-/// or "file1.txt,file2.txt:FOO,file3.txt:BAR"
+/// either by specifying `file1.txt:FOO,file2,txt:FOO,file3.txt:BAR`
+/// or `file1.txt,file2.txt:FOO,file3.txt:BAR`.
 ///
 
 RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
@@ -1763,15 +1761,13 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write the contents of this dataset to an ASCII file with the specified name
+/// Write the contents of this dataset to an ASCII file with the specified name.
 /// Each event will be written as a single line containing the written values
 /// of each observable in the order they were declared in the dataset and
 /// separated by whitespaces
 
-Bool_t RooDataSet::write(const char* filename)
+Bool_t RooDataSet::write(const char* filename) const
 {
-  checkInit() ;
-
   // Open file for writing 
   ofstream ofs(filename) ;
   if (ofs.fail()) {
@@ -1781,18 +1777,28 @@ Bool_t RooDataSet::write(const char* filename)
 
   // Write all lines as arglist in compact mode
   coutI(DataHandling) << "RooDataSet::write(" << GetName() << ") writing ASCII file " << filename << endl ;
-  Int_t i ;
-  for (i=0 ; i<numEntries() ; i++) {
-    RooArgList list(*get(i),"line") ;
-    list.writeToStream(ofs,kTRUE) ;
+  return write(ofs);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write the contents of this dataset to the stream.
+/// Each event will be written as a single line containing the written values
+/// of each observable in the order they were declared in the dataset and
+/// separated by whitespaces
+
+Bool_t RooDataSet::write(ostream & ofs) const {
+  checkInit();
+
+  for (Int_t i=0; i<numEntries(); ++i) {
+    get(i)->writeToStream(ofs,kTRUE);
   }
 
   if (ofs.fail()) {
     coutW(DataHandling) << "RooDataSet::write(" << GetName() << "): WARNING error(s) have occured in writing" << endl ;
   }
+
   return ofs.fail() ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
