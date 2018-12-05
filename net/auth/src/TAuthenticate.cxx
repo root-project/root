@@ -459,10 +459,10 @@ negotia:
            fSecurity, fDetails.Data());
 
    // Keep track of tried methods in a list
-   if (strlen(triedMeth) > 0)
-      snprintf(triedMeth, 80, "%s %s", triedMeth, fgAuthMeth[fSecurity].Data());
-   else
-      snprintf(triedMeth, 80, "%s", fgAuthMeth[fSecurity].Data());
+   if (triedMeth[0] != '\0')
+      (void) strlcat(triedMeth, " ", sizeof(triedMeth) - 1);
+
+   (void) strlcat(triedMeth, fgAuthMeth[fSecurity].Data(), sizeof(triedMeth) - 1);
 
    // Set environments
    SetEnvironment();
@@ -573,12 +573,8 @@ negotia:
          }
       } else {
          if (gDebug > 0)
-            Info("Authenticate",
-                 "remote daemon does not support Kerberos authentication");
-         if (strlen(noSupport) > 0)
-            snprintf(noSupport, 80, "%s/Krb5", noSupport);
-         else
-            snprintf(noSupport, 80, "Krb5");
+            Info("Authenticate", "remote daemon does not support Kerberos authentication");
+         (void) strlcat(noSupport, noSupport[0] == '\0' ? "Krb5" : "/Krb5", sizeof(noSupport) - 1);
       }
 
    } else if (fSecurity == kGlobus) {
@@ -601,12 +597,8 @@ negotia:
          }
       } else {
          if (gDebug > 0)
-            Info("Authenticate",
-                 "remote daemon does not support Globus authentication");
-         if (strlen(noSupport) > 0)
-            snprintf(noSupport, 80, "%s/Globus", noSupport);
-         else
-            snprintf(noSupport, 80, "Globus");
+            Info("Authenticate", "remote daemon does not support Globus authentication");
+         (void) strlcat(noSupport, noSupport[0] == '\0' ? "Globus" : "/Globus", sizeof(noSupport) - 1);
       }
 
 
@@ -619,12 +611,8 @@ negotia:
 
       } else {
          if (gDebug > 0)
-            Info("Authenticate",
-                 "remote daemon does not support SSH authentication");
-         if (strlen(noSupport) > 0)
-            snprintf(noSupport, 80, "%s/SSH", noSupport);
-         else
-            snprintf(noSupport, 80, "SSH");
+            Info("Authenticate", "remote daemon does not support SSH authentication");
+         (void) strlcat(noSupport, noSupport[0] == '\0' ? "SSH" : "/SSH", sizeof(noSupport) - 1);
       }
 
    } else if (fSecurity == kRfio) {
@@ -636,12 +624,8 @@ negotia:
 
       } else {
          if (gDebug > 0)
-            Info("Authenticate",
-                 "remote daemon does not support UidGid authentication");
-         if (strlen(noSupport) > 0)
-            snprintf(noSupport, 80, "%s/UidGid", noSupport);
-         else
-            snprintf(noSupport, 80, "UidGid");
+            Info("Authenticate", "remote daemon does not support UidGid authentication");
+         (void) strlcat(noSupport, noSupport[0] == '\0' ? "UidGid" : "/UidGid", sizeof(noSupport) - 1);
       }
    }
    //
@@ -745,7 +729,7 @@ negotia:
          }
          // Look if a non-tried method matches
          int i, j;
-         char locav[40] = { 0 };
+         std::string available{};
          Bool_t methfound = kFALSE;
          for (i = 0; i < remMeth; i++) {
             for (j = 0; j < nmet; j++) {
@@ -756,7 +740,7 @@ negotia:
                   break;
                }
                if (i == 0)
-                  snprintf(locav, 40, "%s %d", locav, fHostAuth->GetMethod(j));
+                  available += " " + std::to_string(fHostAuth->GetMethod(j));
             }
             if (methfound) break;
          }
@@ -764,8 +748,7 @@ negotia:
          //
          // No method left to be tried: notify and exit
          if (gDebug > 0)
-            Warning("Authenticate",
-                    "no match with those locally available: %s", locav);
+            Warning("Authenticate", "no match with those locally available: %s", available.c_str());
          action = 2;
          rc = kFALSE;
          break;
@@ -991,10 +974,12 @@ void TAuthenticate::SetEnvironment()
       // Build UserDefaults
       usdef[0] = '\0';
       if (fSecurity == kGlobus) {
-         if (strlen(cd) > 0) { snprintf(usdef,8192," %s",cd); }
-         if (strlen(cf) > 0) { snprintf(usdef,8192,"%s %s",usdef, cf); }
-         if (strlen(kf) > 0) { snprintf(usdef,8192,"%s %s",usdef, kf); }
-         if (strlen(ad) > 0) { snprintf(usdef,8192,"%s %s",usdef, ad); }
+         for (const char *str : { cd, cf, kf, ad }) {
+            if (*str != '\0') {
+               (void) strlcat(usdef, " ", sizeof(usdef) - 1);
+               (void) strlcat(usdef, str, sizeof(usdef) - 1);
+            }
+         }
       } else {
          if (fSecurity == kKrb5) {
             // Collect info about principal, if any
