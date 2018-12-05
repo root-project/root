@@ -32,18 +32,17 @@
 #include <string>
 
 namespace {
-const char* kTransportSeparator = "://";
+const char *kTransportSeparator = "://";
 // Corresponds to ELineBreaks
 #ifdef _WIN32
-const char* kLineBreakTokens[] = {"", "\r\n", "\n", "\r\n"};
+const char *kLineBreakTokens[] = {"", "\r\n", "\n", "\r\n"};
 constexpr unsigned int kLineBreakTokenSizes[] = {0, 2, 1, 2};
 #else
-const char* kLineBreakTokens[] = {"", "\n", "\n", "\r\n"};
+const char *kLineBreakTokens[] = {"", "\n", "\n", "\r\n"};
 constexpr unsigned int kLineBreakTokenSizes[] = {0, 1, 1, 2};
 #endif
 constexpr unsigned int kLineBuffer = 128; // On Readln, look for line-breaks in chunks of 128 bytes
 } // anonymous namespace
-
 
 size_t ROOT::Detail::RRawFile::RBlockBuffer::Map(void *buffer, size_t nbytes, std::uint64_t offset)
 {
@@ -60,27 +59,18 @@ size_t ROOT::Detail::RRawFile::RBlockBuffer::Map(void *buffer, size_t nbytes, st
    return mappedBytes;
 }
 
-
-ROOT::Detail::RRawFile::RRawFile(
-   std::string_view url,
-   ROOT::Detail::RRawFile::ROptions options)
-   : fBlockBufferIdx(0)
-   , fBufferSpace(nullptr)
-   , fFileSize(kUnknownFileSize)
-   , fIsOpen(false)
-   , fUrl(url)
-   , fOptions(options)
-   , fFilePos(0)
+ROOT::Detail::RRawFile::RRawFile(std::string_view url, ROOT::Detail::RRawFile::ROptions options)
+   : fBlockBufferIdx(0), fBufferSpace(nullptr), fFileSize(kUnknownFileSize), fIsOpen(false), fUrl(url),
+     fOptions(options), fFilePos(0)
 {
 }
 
-
-ROOT::Detail::RRawFile::~RRawFile() {
+ROOT::Detail::RRawFile::~RRawFile()
+{
    delete[] fBufferSpace;
 }
 
-
-ROOT::Detail::RRawFile* ROOT::Detail::RRawFile::Create(std::string_view url, ROptions options)
+ROOT::Detail::RRawFile *ROOT::Detail::RRawFile::Create(std::string_view url, ROptions options)
 {
    std::string transport = GetTransport(url);
    if (transport == "file") {
@@ -94,8 +84,7 @@ ROOT::Detail::RRawFile* ROOT::Detail::RRawFile::Create(std::string_view url, ROp
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Detail::RRawFile"))) {
          if (h->LoadPlugin() == 0) {
-            return reinterpret_cast<RRawFile*>(h->ExecPlugin(2, &url, &options));
-            //return reinterpret_cast<RRawFile*>(h->ExecPlugin(0));
+            return reinterpret_cast<RRawFile *>(h->ExecPlugin(2, &url, &options));
          }
          throw std::runtime_error("Cannot load plugin handler for RRawFileDavix");
       }
@@ -103,7 +92,6 @@ ROOT::Detail::RRawFile* ROOT::Detail::RRawFile::Create(std::string_view url, ROp
    }
    throw std::runtime_error("Unsupported transport protocol: " + transport);
 }
-
 
 std::string ROOT::Detail::RRawFile::GetLocation(std::string_view url)
 {
@@ -113,17 +101,16 @@ std::string ROOT::Detail::RRawFile::GetLocation(std::string_view url)
    return std::string(url.substr(idx + strlen(kTransportSeparator)));
 }
 
-
 std::uint64_t ROOT::Detail::RRawFile::GetSize()
 {
-   if (!fIsOpen) DoOpen();
+   if (!fIsOpen)
+      DoOpen();
    fIsOpen = true;
 
    if (fFileSize == kUnknownFileSize)
       fFileSize = DoGetSize();
    return fFileSize;
 }
-
 
 std::string ROOT::Detail::RRawFile::GetTransport(std::string_view url)
 {
@@ -135,7 +122,6 @@ std::string ROOT::Detail::RRawFile::GetTransport(std::string_view url)
    return transport;
 }
 
-
 size_t ROOT::Detail::RRawFile::Read(void *buffer, size_t nbytes)
 {
    size_t res = ReadAt(buffer, nbytes, fFilePos);
@@ -143,10 +129,10 @@ size_t ROOT::Detail::RRawFile::Read(void *buffer, size_t nbytes)
    return res;
 }
 
-
 size_t ROOT::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   if (!fIsOpen) DoOpen();
+   if (!fIsOpen)
+      DoOpen();
    R__ASSERT(fOptions.fBlockSize >= 0);
    fIsOpen = true;
 
@@ -179,7 +165,7 @@ size_t ROOT::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t
    /// The request was not fully satisfied and fBlockBufferIdx now points to the previous shadow buffer
 
    /// The remaining bytes populate the newly promoted main buffer
-   RBlockBuffer* thisBuffer = &fBlockBuffers[fBlockBufferIdx % kNumBlockBuffers];
+   RBlockBuffer *thisBuffer = &fBlockBuffers[fBlockBufferIdx % kNumBlockBuffers];
    size_t res = DoReadAt(thisBuffer->fBuffer, fOptions.fBlockSize, offset);
    thisBuffer->fBufferOffset = offset;
    thisBuffer->fBufferSize = res;
@@ -189,8 +175,7 @@ size_t ROOT::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t
    return totalBytes;
 }
 
-
-bool ROOT::Detail::RRawFile::Readln(std::string& line)
+bool ROOT::Detail::RRawFile::Readln(std::string &line)
 {
    if (fOptions.fLineBreak == ELineBreaks::kAuto) {
       // Auto-detect line breaks according to the break discovered in the first line
@@ -223,9 +208,7 @@ bool ROOT::Detail::RRawFile::Readln(std::string& line)
    return !line.empty();
 }
 
-
-
 void ROOT::Detail::RRawFile::Seek(std::uint64_t offset)
 {
-  fFilePos = offset;
+   fFilePos = offset;
 }
