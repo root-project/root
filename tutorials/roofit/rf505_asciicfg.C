@@ -52,11 +52,11 @@ void rf505_asciicfg()
    // Write parameters to file
    params->writeToFile("rf505_asciicfg_example.txt");
 
-   TString dir1 = gROOT->GetTutorialDir();
-   dir1.Append("/roofit/rf505_asciicfg.txt");
-   TString dir2 = gROOT->GetTutorialDir();
-   dir2.Append("/roofit/rf505_asciicfg_example.txt");
-   // R e a d    p a r a m e t e r s   f r o m    a s c i i   f i l e
+   TString dir1 = gROOT->GetTutorialDir() ;
+   dir1.Append("/roofit/rf505_asciicfg.txt") ;
+   TString dir2 = "rf505_asciicfg_example.txt";
+
+   // R e a d    p a r a m e t e r s   f r o m    a s c i i   f i l e 
    // ----------------------------------------------------------------
 
    // Read parameters from file
