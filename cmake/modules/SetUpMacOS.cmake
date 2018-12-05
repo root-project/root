@@ -139,7 +139,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   endif()
 
   #---Set Linker flags----------------------------------------------------------------------
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -mmacosx-version-min=${MACOSX_VERSION} -Wl,-rpath,@loader_path/../lib")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mmacosx-version-min=${MACOSX_VERSION}")
 
 
 else (CMAKE_SYSTEM_NAME MATCHES Darwin)
