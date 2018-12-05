@@ -4,11 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-if(davix)
-  list(APPEND RRAWFILE_EXTRA_DEPENDENCIES RDAVIX)
-endif()
-
-ROOT_ADD_GTEST(RRawFile RRawFile.cxx LIBRARIES RIO ${RRAWFILE_EXTRA_DEPENDENCIES})
+ROOT_ADD_GTEST(RRawFile RRawFile.cxx LIBRARIES RIO)
 ROOT_ADD_GTEST(TFile TFileTests.cxx LIBRARIES RIO)
 ROOT_ADD_GTEST(TBufferMerger TBufferMerger.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(TFileMerger TFileMergerTests.cxx LIBRARIES RIO Tree)
