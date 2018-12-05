@@ -12,6 +12,8 @@ set(CLADDIFFERENTIATOR_LIB
   ${_clad_byproduct_binary_dir}/lib/Differentiator/${CMAKE_STATIC_LIBRARY_PREFIX}cladDifferentiator${CMAKE_STATIC_LIBRARY_SUFFIX}
   ${_clad_byproduct_binary_dir}/tools/${CMAKE_STATIC_LIBRARY_PREFIX}cladPlugin${CMAKE_STATIC_LIBRARY_SUFFIX}
   )
+# Concatenate CLANG_INCLUDE_DIRS with a custom separator to avoid
+# ExternalProject_Add only keeping the first element
 string(REPLACE ";" "|" _clad_clang_include_dirs "${CLANG_INCLUDE_DIRS}")
 
 if(MSVC)
