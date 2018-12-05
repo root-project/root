@@ -244,7 +244,6 @@ static const int gAUTH_CLR_MSK = 0x1;     // Masks for authentication methods
 static const int gAUTH_SRP_MSK = 0x2;
 static const int gAUTH_KRB_MSK = 0x4;
 static const int gAUTH_GLB_MSK = 0x8;
-static const int gAUTH_SSH_MSK = 0x10;
 static const int gMAXTABSIZE = 50000000;
 
 static const std::string gAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5",
