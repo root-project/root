@@ -1145,8 +1145,9 @@ again:
       }
    } else if (c[0] == '~' && c[1] != '/') { // ~user case
       n = strcspn(c+1, "/ ");
-      buff[0] = 0;
-      strncat(buff, c+1, n);
+      assert((n+1) < kBufSize && "This should have been prevented by the truncation 'strlcat(inp, c, kBufSize)'");
+      // There is no overlap here as the buffer is segment in 4 strings of at most kBufSize
+      (void)strlcpy(buff, c+1, n+1); // strlcpy copy 'size-1' characters.
       std::string hd = GetHomeDirectory(buff);
       e = c+1+n;
       if (!hd.empty()) {                   // we have smth to copy
