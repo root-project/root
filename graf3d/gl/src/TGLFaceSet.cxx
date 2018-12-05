@@ -241,10 +241,10 @@ void TGLFaceSet::EnforceTriangles()
       TriangleCollector(GLUtesselator* ts) :
          fNTriangles(0), fNVertices(0), fV0(-1), fV1(-1), fType(GL_NONE)
       {
-         gluTessCallback(ts, (GLenum)GLU_TESS_BEGIN_DATA,   (tessfuncptr_t) tess_begin);
-         gluTessCallback(ts, (GLenum)GLU_TESS_VERTEX_DATA,  (tessfuncptr_t) tess_vertex);
-         gluTessCallback(ts, (GLenum)GLU_TESS_COMBINE_DATA, (tessfuncptr_t) tess_combine);
-         gluTessCallback(ts, (GLenum)GLU_TESS_END_DATA,     (tessfuncptr_t) tess_end);
+         gluTessCallback(ts, (GLenum)GLU_TESS_BEGIN_DATA,   (tessfuncptr_t)((void*)tess_begin));
+         gluTessCallback(ts, (GLenum)GLU_TESS_VERTEX_DATA,  (tessfuncptr_t)((void*)tess_vertex));
+         gluTessCallback(ts, (GLenum)GLU_TESS_COMBINE_DATA, (tessfuncptr_t)((void*)tess_combine));
+         gluTessCallback(ts, (GLenum)GLU_TESS_END_DATA,     (tessfuncptr_t)((void*)tess_end));
       }
 
       Int_t               GetNTrianlges() { return fNTriangles; }
