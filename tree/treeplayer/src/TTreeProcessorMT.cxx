@@ -284,7 +284,7 @@ TTreeProcessorMT::TTreeProcessorMT(TTree &tree) : TTreeProcessorMT(tree, TEntryL
 /// ~~~{.cpp}
 /// TTreeProcessorMT::Process([](TTreeReader& readerSubRange) {
 ///                            // Select branches to read
-///                            while (readerSubRange.next()) {
+///                            while (readerSubRange.Next()) {
 ///                                // Use content of current entry
 ///                            }
 ///                         });
