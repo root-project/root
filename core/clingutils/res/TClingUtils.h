@@ -22,7 +22,12 @@
 //#include <atomic>
 #include <stdlib.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+
 #include "clang/Basic/Module.h"
+
+#pragma GCC diagnostic pop
 
 namespace llvm {
    class StringRef;
