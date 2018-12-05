@@ -20,9 +20,6 @@ void FITS_tutorial4()
    printf("matching row)\n");
    printf("Data copyright: NASA\n\n");
 
-   if (!gROOT->IsBatch()) {
-      //printf("Press ENTER to start..."); getchar();
-   }
    TString dir = gSystem->DirName(__FILE__);
 
    //Open the table extension number 1)

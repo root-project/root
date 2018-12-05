@@ -20,9 +20,6 @@ void FITS_tutorial2()
    printf("the flux data, whereas the second row the wavelengths.\n");
    printf("Data copyright: NASA\n\n");
 
-   if (!gROOT->IsBatch()) {
-      //printf("Press ENTER to start..."); getchar();
-   }
    TString dir = gSystem->DirName(__FILE__);
 
    // Open primary HDU from file
