@@ -129,17 +129,17 @@ static std::string GetTreeFullPath(const TTree &tree)
       // we need to remove it, otherwise, if we open the same file in at least 2
       // threads we trigger ROOT-9857, ending up manipulating the same tree (same pointer)
       // concurrently.
-      const auto motherDirPath = motherDir->GetPath();
-      const char *fullPathCstr;
+      std::string_view motherDirPath(motherDir->GetPath());
+      std::string_view fullPathCstr;
       // Remove from the full path the name of the file if any
       if (auto currFile = tree.GetCurrentFile()) {
-         const auto currFileName = currFile->GetName();
-         const auto currFileNameLen = strlen(currFileName);
-         if (0 == strncmp(motherDirPath, currFileName, currFileNameLen)) {
-            fullPathCstr = motherDirPath + (currFileNameLen + 1); // +1 to skip the '/'
+         std::string_view currFileName(currFile->GetName());
+         const auto currFileNameLen = currFileName.size();
+         if (0 == motherDirPath.compare(0, currFileNameLen, currFileName)) {
+               fullPathCstr = motherDirPath.substr(currFileNameLen + 1); // +1 to skip the '/'
          }
       }
-      std::string fullPath(fullPathCstr);
+      auto fullPath = std::string(fullPathCstr);
       fullPath += "/";
       fullPath += tree.GetName();
       return fullPath;
