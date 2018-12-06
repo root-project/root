@@ -234,7 +234,7 @@ root [4]
     - return the indices which represent all unique n-tuple combinations of the elements of a given vector.
   - Add `Intersect` helper: return the intersection of elements of two RVecs.
   - Add `Nonzero` helper: return the indices of the elements which are not zero
-  - Add `Reverse` helepr: return copy of reversed RVec.
+  - Add `Reverse` helper: return copy of reversed RVec.
   - Add `Sort` helper: return copy of vector with elements sorted in ascending order (also according to a user defined predicate)
   - Add `Take` helper which can:
     - return elements of a RVec at given indices.
@@ -262,7 +262,7 @@ The new features of `MethodDL` are:
  - Several ML optimizers are now included and they can be used in addition to SGD. These are ADAM (the new default), ADAGRAD,
 RMSPROP, ADADELTA. A new option, *Optimizer* has been added in the option string used to define the training strategy options.
  - Add support for regression in MethodDL
- - Use single precision (float) types as the fundamental type for the neural network architecture. Double precision could be enabled, but it will require recompiling TMVA. 
+ - Use single precision (float) types as the fundamental type for the neural network architecture. Double precision could be enabled, but it will require recompiling TMVA.
  - Support inference (network evaluation) in batch mode in addition to single event. Batch mode evaluation is now the default when used within the `TMVA::Factory` class (i.e. when calling
 `Factory::TestAllMethod()` or `Factory::EvaluateAllMethods()`
  - Support splitting the overall training data in Train and Validation data. The train data is used for finding the optimal network weight and the validation data is used to monitor the validation
@@ -271,17 +271,17 @@ The same option is also available in the `PyKeras` method of `PyMVA`
  - The fast tanh implementation from VDT is now used as activation function when training the network on CPU.
  - Using `Cblas` from the GSL library is supported for CPU training when no other Blas libraries are found. However, it is strongly recommended, to use an optimized Blas implementation such as `libopenblas`, that is
 available in cvmfs.
- - Add several performance optimizations for both CPU and GPU versions of `MethodDL`. 
+ - Add several performance optimizations for both CPU and GPU versions of `MethodDL`.
 
 
 ### Other New TMVA Features
 
  - Add a new option to the `DataLoader` to switch off computation of correlation matrix. The new option is called *CalcCorrelations* and it should be used when a large number of input variables are
-  provided, otherwise TMVA will spend a long time in setting up the data set before training. 
- 
+  provided, otherwise TMVA will spend a long time in setting up the data set before training.
+
  - Build configuration:
-   - Add new cmake flags, `tmva-cpu` and `tmva-gpu`, which can be used to swicth on/off the CPU and GPU (based on CUDA) implementations of the TMVA Deep Learning module. `tmva-cpu` is enabled by
-   default if a Blas or CBlas library is found in the system. `tmva-gpu` is enabled when the cmake flag `cuda` is enabled and a compatible Cuda library is found. 
+   - Add new cmake flags, `tmva-cpu` and `tmva-gpu`, which can be used to switch on/off the CPU and GPU (based on CUDA) implementations of the TMVA Deep Learning module. `tmva-cpu` is enabled by
+   default if a Blas or CBlas library is found in the system. `tmva-gpu` is enabled when the cmake flag `cuda` is enabled and a compatible Cuda library is found.
    enabled if the corre
    - Add possibility to independently configure building of optional pymva part of tmva with flag `-Dpymva=ON|OFF`.
 
@@ -343,10 +343,10 @@ available in cvmfs.
 
   - Introduce web-based output for TCanvas. When ROOT compiled with cxx14 support `cmake -Dcxx14=ON ..` and
     started with web option like `root --web hsimple.C`, TCanvas will be displayed in web browser.
-  - Most of histograms and graphs classes are supported. See 
-    [JavaScript ROOT website](https://root.cern/js/latest/examples.htm) for list of suported classes
+  - Most of histograms and graphs classes are supported. See
+    [JavaScript ROOT website](https://root.cern/js/latest/examples.htm) for list of supported classes
   - Also some classes with customize painters may be working - like TTree::Draw() into TParallelCoord object. These kind of
-    objects handled on server side, web browser used just for display of produced primitives like polylines or text          
+    objects handled on server side, web browser used just for display of produced primitives like polylines or text
 
 
 ## Geometry Libraries
@@ -400,9 +400,9 @@ available in cvmfs.
 
 ## JavaScript ROOT
   - Support of TWebCanvas functionality. Code for ROOT 6.16 will
-    be maintained in v6-16-00-patches branch of JSROOT repository. 
-  - Singificant speed up (factor 10) when drawing canvas with many subpads
-  - Many small improvements and bug fixes, see JSROOT release notes for v5.4.2 - v5.6.2 
+    be maintained in v6-16-00-patches branch of JSROOT repository.
+  - Significant speed up (factor 10) when drawing canvas with many subpads
+  - Many small improvements and bug fixes, see JSROOT release notes for v5.4.2 - v5.6.2
 
 ## Tutorials
   - Refurbish text in the `RDataFrame` tutorials category.
