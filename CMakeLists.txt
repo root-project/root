@@ -37,13 +37,51 @@ set(ROOTSYS ${CMAKE_BINARY_DIR})
 set(HEADER_OUTPUT_PATH ${CMAKE_BINARY_DIR}/include)
 set(ROOT_INCLUDE_DIR ${HEADER_OUTPUT_PATH})
 
-#---Set the library version in the main CMakeLists.txt------------------------------------------
-file(READ ${CMAKE_SOURCE_DIR}/build/version_number versionstr)
-string(STRIP ${versionstr} versionstr)
-string(REGEX REPLACE "([0-9]+)[.][0-9]+[/][0-9]+" "\\1" ROOT_MAJOR_VERSION ${versionstr})
-string(REGEX REPLACE "[0-9]+[.]([0-9]+)[/][0-9]+" "\\1" ROOT_MINOR_VERSION ${versionstr})
-string(REGEX REPLACE "[0-9]+[.][0-9]+[/]([0-9]+)" "\\1" ROOT_PATCH_VERSION ${versionstr})
-set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
+#---Set the ROOT version--------------------------------------------------------------------
+execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --all
+                OUTPUT_VARIABLE GIT_DESCRIBE_ALL
+                RESULT_VARIABLE GIT_DESCRIBE_ERRCODE
+                ERROR_QUIET
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(GIT_DESCRIBE_ERRCODE)
+  file(READ ${CMAKE_SOURCE_DIR}/build/version_number versionstr)
+  string(STRIP ${versionstr} versionstr)
+  string(REGEX REPLACE "([0-9]+)[.][0-9]+[/][0-9]+" "\\1" ROOT_MAJOR_VERSION ${versionstr})
+  string(REGEX REPLACE "[0-9]+[.]([0-9]+)[/][0-9]+" "\\1" ROOT_MINOR_VERSION ${versionstr})
+  string(REGEX REPLACE "[0-9]+[.][0-9]+[/]([0-9]+)" "\\1" ROOT_PATCH_VERSION ${versionstr})
+  set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
+else()
+  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --always
+                  OUTPUT_VARIABLE GIT_DESCRIBE_ALWAYS
+                  ERROR_QUIET
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  string(TIMESTAMP GIT_TIMESTAMP "%b %d %Y, %H:%M:%S" UTC)
+
+  string(REGEX REPLACE "^v([0-9])-([0-9]+)-" "\\1.\\2." ROOT_VERSION "${GIT_DESCRIBE_ALWAYS}")
+  if("${GIT_DESCRIBE_ALL}" MATCHES "-patches")
+    # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1-47-g9ba56ef4a3
+    # GIT_DESCRIBE_ALL: heads/v6-16-00-patches
+    string(REGEX REPLACE "^.*/v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
+    string(REGEX REPLACE "^.*/v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
+    set(ROOT_PATCH_VERSION "99") # aka head of ...-patches
+  elseif("${GIT_DESCRIBE_ALL}" MATCHES "heads/master")
+    # GIT_DESCRIBE_ALWAYS: v6-13-04-2163-g7e8d27ea66
+    # GIT_DESCRIBE_ALL: heads/master
+    file(READ ${CMAKE_SOURCE_DIR}/build/version_number versionstr)
+    string(STRIP ${versionstr} versionstr)
+    string(REGEX REPLACE "([0-9]+)[.][0-9]+[/][0-9]+" "\\1" ROOT_MAJOR_VERSION ${versionstr})
+    string(REGEX REPLACE "[0-9]+[.]([0-9]+)[/][0-9]+" "\\1" ROOT_MINOR_VERSION ${versionstr})
+    string(REGEX REPLACE "[0-9]+[.][0-9]+[/]([0-9]+)" "\\1" ROOT_PATCH_VERSION ${versionstr})
+  else()
+    # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1
+    # GIT_DESCRIBE_ALL: tags/v6-16-00-rc1
+    # tag might end on "-rc1" or similar; parse version number in front.
+    string(REGEX REPLACE "v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
+    string(REGEX REPLACE "v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
+    string(REGEX REPLACE "v[0-9]+-[0-9]+-([0-9]+).*" "\\1" ROOT_PATCH_VERSION ${GIT_DESCRIBE_ALL})
+  endif()
+endif()
+
 
 #---Where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked-------------
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
