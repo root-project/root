@@ -72,19 +72,6 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
                    DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
-execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --all
-                OUTPUT_VARIABLE GIT_DESCRIBE_ALL
-                RESULT_VARIABLE GIT_DESCRIBE_ERRCODE
-                ERROR_QUIET
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-if(NOT GIT_DESCRIBE_ERRCODE)
-  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --always
-                  OUTPUT_VARIABLE GIT_DESCRIBE_ALWAYS
-                  ERROR_QUIET
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  string(TIMESTAMP GIT_TIMESTAMP "%b %d %Y, %H:%M:%S" UTC)
-endif()
-
 message("Recording the git revision now")
 
 file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
