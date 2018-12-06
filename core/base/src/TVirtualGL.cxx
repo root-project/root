@@ -27,11 +27,8 @@ static struct AddPseudoGlobals {
 AddPseudoGlobals() {
   // User "gCling" as synonym for "libCore static initialization has happened".
    // This code here must not trigger it.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
    TGlobalMappedFunction::Add(new TGlobalMappedFunction("gGLManager", "TVirtualGL*",
-                                 (TGlobalMappedFunction::GlobalFunc_t) &TGLManager::Instance));
-#pragma GCC diagnostic push
+            (TGlobalMappedFunction::GlobalFunc_t)((void*)&TGLManager::Instance)));
 }
 } gAddPseudoGlobals;
 }

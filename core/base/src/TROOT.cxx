@@ -1766,24 +1766,21 @@ TCollection *TROOT::GetListOfFunctionTemplates()
 /// a (tight) loop where no interpreter symbols will be created
 /// you can set load=kFALSE (default).
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-
 TCollection *TROOT::GetListOfGlobals(Bool_t load)
 {
    if (!fGlobals) {
       // We add to the list the "funcky-fake" globals.
       fGlobals = new TListOfDataMembers(0);
       fGlobals->Add(new TGlobalMappedFunction("gROOT", "TROOT*",
-                                              (TGlobalMappedFunction::GlobalFunc_t)&ROOT::GetROOT));
+               (TGlobalMappedFunction::GlobalFunc_t)((void*)&ROOT::GetROOT)));
       fGlobals->Add(new TGlobalMappedFunction("gPad", "TVirtualPad*",
-                                            (TGlobalMappedFunction::GlobalFunc_t)&TVirtualPad::Pad));
+               (TGlobalMappedFunction::GlobalFunc_t)((void*)&TVirtualPad::Pad)));
       fGlobals->Add(new TGlobalMappedFunction("gInterpreter", "TInterpreter*",
-                                            (TGlobalMappedFunction::GlobalFunc_t)&TInterpreter::Instance));
+               (TGlobalMappedFunction::GlobalFunc_t)((void*)&TInterpreter::Instance)));
       fGlobals->Add(new TGlobalMappedFunction("gVirtualX", "TVirtualX*",
-                                            (TGlobalMappedFunction::GlobalFunc_t)&TVirtualX::Instance));
+               (TGlobalMappedFunction::GlobalFunc_t)((void*)&TVirtualX::Instance)));
       fGlobals->Add(new TGlobalMappedFunction("gDirectory", "TDirectory*",
-                                            (TGlobalMappedFunction::GlobalFunc_t)&TDirectory::CurrentDirectory));
+               (TGlobalMappedFunction::GlobalFunc_t)((void*)&TDirectory::CurrentDirectory)));
       // Don't let TGlobalMappedFunction delete our globals, now that we take them.
       fGlobals->AddAll(&TGlobalMappedFunction::GetEarlyRegisteredGlobals());
       TGlobalMappedFunction::GetEarlyRegisteredGlobals().SetOwner(kFALSE);
@@ -1797,8 +1794,6 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
 
    return fGlobals;
 }
-
-#pragma GCC diagnostic pop
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return list containing the TFunctions currently defined.
