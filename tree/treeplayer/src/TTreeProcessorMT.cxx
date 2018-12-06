@@ -115,7 +115,7 @@ static std::string GetTreeFullPath(const TTree &tree)
 {
    // Case 1: this is a TChain: we get the name out of the first TChainElement
    if (0 == strcmp("TChain", tree.ClassName())) {
-      auto &chain = dynamic_cast<const TChain&>(tree);
+      auto &chain = dynamic_cast<const TChain &>(tree);
       auto files = chain.GetListOfFiles();
       if (files && 0 != files->GetEntries()) {
          return files->At(0)->GetName();
@@ -124,7 +124,22 @@ static std::string GetTreeFullPath(const TTree &tree)
 
    // Case 2: this is a TTree: we get the full path of it
    if (auto motherDir = tree.GetDirectory()) {
-      std::string fullPath(motherDir->GetPath());
+      // Workaround for ROOT-9857:
+      // In case the file name appears in the path of the mother directory
+      // we need to remove it, otherwise, if we open the same file in at least 2
+      // threads we trigger ROOT-9857, ending up manipulating the same tree (same pointer)
+      // concurrently.
+      const auto motherDirPath = motherDir->GetPath();
+      const char *fullPathCstr;
+      // Remove from the full path the name of the file if any
+      if (auto currFile = tree.GetCurrentFile()) {
+         const auto currFileName = currFile->GetName();
+         const auto currFileNameLen = strlen(currFileName);
+         if (0 == strncmp(motherDirPath, currFileName, currFileNameLen)) {
+            fullPathCstr = motherDirPath + (currFileNameLen + 1); // +1 to skip the '/'
+         }
+      }
+      std::string fullPath(fullPathCstr);
       fullPath += "/";
       fullPath += tree.GetName();
       return fullPath;
