@@ -491,6 +491,13 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
       *s = '\0';
       R__LOCKGUARD(gROOTMutex);
       TDirectory *f = (TDirectory *)gROOT->GetListOfFiles()->FindObject(path);
+      // Check if this is a duplicate (2nd opening) on this file and prefer
+      // this file.
+      if (GetFile()) {
+         auto url = GetFile()->GetEndpointUrl();
+         if (f && 0 == url->Compare(f->GetFile()->GetEndpointUrl()))
+            return GetDirectory(s+1,printError,funcname);
+      }
       if (!f && !strcmp(gROOT->GetName(), path)) f = gROOT;
       if (s) *s = ':';
       if (f) {
