@@ -896,6 +896,28 @@ TEST(RDFSimpleTests, AutomaticNamesOfHisto1DAndGraph)
 
 }
 
+TEST_P(RDFSimpleTests, DifferentTreesInDifferentThreads)
+{
+   const auto filename = "DifferentTreesInDifferentThreads.root";
+   const auto treename = "mytree";
+   {
+      auto df = RDataFrame(64)
+                   .Define("x", []() { return 1; })
+                   .Define("y", []() { return 1; })
+                   .Snapshot<int, int>(treename, filename, {"x", "y"}, {"RECREATE", ROOT::kZLIB, 4, 2, 99, false});
+   }
+
+   TFile f(filename);
+   TTree *t;
+   f.GetObject(treename, t);
+   RDataFrame df(*t);
+   *df.Define("xy", [](int x, int y) { return x * y; }, {"x", "y"})
+       .Filter([](int xy) { return xy > 0; }, {"xy"})
+       .Count();
+
+   gSystem->Unlink(filename);
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
