@@ -20,15 +20,12 @@ PyROOT::TMemoryRegulator::WeakRefMap_t* PyROOT::TMemoryRegulator::fgWeakRefTable
 namespace {
 
 // memory regulater callback for deletion of registered objects
-   PyMethodDef methoddef_ = {
+   PyMethodDef gObjectEraseMethodDef = {
       const_cast< char* >( "TMemoryRegulator_internal_ObjectEraseCallback" ),
       (PyCFunction) PyROOT::TMemoryRegulator::ObjectEraseCallback,
       METH_O,
       NULL
    };
-
-   PyObject* gObjectEraseCallback = PyCFunction_New( &methoddef_, NULL );
-
 
 // pseudo-None type for masking out objects on the python side
    PyTypeObject PyROOT_NoneType;
@@ -199,13 +196,15 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
 
 Bool_t PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* object )
 {
+   static PyObject* objectEraseCallback = PyCFunction_New(&gObjectEraseMethodDef, nullptr);
+
    if ( ! ( pyobj && object ) )
       return kFALSE;
 
    ObjectMap_t::iterator ppo = fgObjectTable->find( object );
    if ( ppo == fgObjectTable->end() ) {
       object->SetBit( TObject::kMustCleanup );
-      PyObject* pyref = PyWeakref_NewRef( (PyObject*)pyobj, gObjectEraseCallback );
+      PyObject* pyref = PyWeakref_NewRef( (PyObject*)pyobj, objectEraseCallback );
       ObjectMap_t::iterator newppo = fgObjectTable->insert( std::make_pair( object, pyref ) ).first;
       (*fgWeakRefTable)[ pyref ] = newppo;  // no Py_INCREF on pyref, as object table has one
       return kTRUE;
