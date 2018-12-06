@@ -30,7 +30,7 @@ project.xcworkspace
 .DS_Store
 
 # Visual Code
-.vscode/*
+.vscode
 .build
 
 # CLion
