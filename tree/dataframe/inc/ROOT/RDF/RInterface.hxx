@@ -434,6 +434,7 @@ public:
    /// written out and it appears before the array in the columnList.
    ///
    /// ### Example invocations:
+   ///
    /// ~~~{.cpp}
    /// // without specifying template parameters (column types automatically deduced)
    /// df.Snapshot("outputTree", "outputFile.root", {"x", "y"});
