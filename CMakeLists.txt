@@ -64,9 +64,9 @@ else()
     string(REGEX REPLACE "^.*/v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
     string(REGEX REPLACE "^.*/v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
     set(ROOT_PATCH_VERSION "99") # aka head of ...-patches
-  elseif("${GIT_DESCRIBE_ALL}" MATCHES "heads/master")
+  elseif("${GIT_DESCRIBE_ALL}" MATCHES "/master$")
     # GIT_DESCRIBE_ALWAYS: v6-13-04-2163-g7e8d27ea66
-    # GIT_DESCRIBE_ALL: heads/master
+    # GIT_DESCRIBE_ALL: heads/master or remotes/origin/master
     file(READ ${CMAKE_SOURCE_DIR}/build/version_number versionstr)
     string(STRIP ${versionstr} versionstr)
     string(REGEX REPLACE "([0-9]+)[.][0-9]+[/][0-9]+" "\\1" ROOT_MAJOR_VERSION ${versionstr})
