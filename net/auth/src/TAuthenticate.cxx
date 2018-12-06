@@ -877,9 +877,9 @@ void TAuthenticate::SetEnvironment()
       } else {
          if (!strncasecmp(gEnv->GetValue(usrPromptDef,""),"no",2) ||
              !strncmp(gEnv->GetValue(usrPromptDef,""),"0",1))
-            strncpy(pt,"0",1);
+            strncpy(pt,"0",2);
          else
-            strncpy(pt,"1",1);
+            strncpy(pt,"1",2);
       }
       TString usrReUseDef = TString(GetAuthMethod(fSecurity)) + ".ReUse";
       if ((ptr = strstr(fDetails, "ru:")) != 0) {
@@ -887,9 +887,9 @@ void TAuthenticate::SetEnvironment()
       } else {
          if (!strncasecmp(gEnv->GetValue(usrReUseDef,""),"no",2) ||
              !strncmp(gEnv->GetValue(usrReUseDef,""),"0",1))
-            strncpy(ru,"0",1);
+            strncpy(ru,"0",2);
          else
-            strncpy(ru,"1",1);
+            strncpy(ru,"1",2);
       }
       TString usrValidDef = TString(GetAuthMethod(fSecurity)) + ".Valid";
       TString hours(gEnv->GetValue(usrValidDef,"24:00"));
