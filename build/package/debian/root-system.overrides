@@ -1,3 +1,0 @@
-W: root-system source: debian-rules-ignores-make-clean-error line 388
-W: root-system source: configure-generated-file-in-source graf2d/asimage/src/libAfterImage/config.log
-W: root-system source: configure-generated-file-in-source graf2d/asimage/src/libAfterImage/config.status

@@ -1,1 +1,0 @@
-application/x-root; root %s; test=test "x$DISPLAY" != "x" ; description=ROOT Archive; nametemplate=%s.root; priority=7

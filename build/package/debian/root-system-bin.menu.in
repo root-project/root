@@ -1,6 +1,0 @@
-?package(root-system-bin):needs="text" \
-  section="Applications/Science/Data Analysis" \
-  title="ROOT" \
-  longtitle="ROOT's Object Oriented Technologies" \
-  command="@prefix@/bin/root" \
-  icon="@prefix@/share/pixmaps/root-system-bin.xpm"
