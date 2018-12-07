@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TTreeAsFlatMatrix
-#define ROOT_TTreeAsFlatMatrix
+#ifndef ROOT_PyROOTHelpers
+#define ROOT_PyROOTHelpers
 
 #include "ROOT/RDataFrame.hxx"
 
@@ -18,7 +18,7 @@
 #include <utility>
 
 namespace ROOT {
-namespace Detail {
+namespace Internal {
 namespace RDF {
 
 template <typename dtype>
@@ -61,7 +61,7 @@ void TTreeAsFlatMatrixHelper(TTree &tree, std::vector<BufType> &matrix, std::vec
 }
 
 } // namespace RDF
-} // namespace Detail
+} // namespace Internal
 } // namespace ROOT
 
 #endif
