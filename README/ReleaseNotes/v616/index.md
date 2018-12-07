@@ -333,6 +333,9 @@ available in cvmfs.
     particular case. This is now fixed. It was discussed
     [here](https://root-forum.cern.ch/t/horizontal-line-at-0-on-y-axis/30244/26)
   - Add `TGraph2D::GetPoint`, with similar interface and behaviour as `TGraph::GetPoint`
+  - In the statistics painting for 2D histograms, the central cell of
+    the underflow/overflow grid was not properly rendered for very large contents.
+    This problem was reported [here](https://root-forum.cern.ch/t/stat-box-for-th2/).
 
 ## 3D Graphics Libraries
 
