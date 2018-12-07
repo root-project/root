@@ -316,10 +316,6 @@ set(pythonlib ${PYTHON_LIBRARY})
 set(pythonincdir ${PYTHON_INCLUDE_DIR})
 set(pythonlibflags)
 
-if (ruby)
-  message(FATAL_ERROR "Ruby bindings are discontinued; please report to root-dev@cern.ch should you still need them!")
-endif()
-
 set(buildxml ${value${xml}})
 set(xmllibdir ${LIBXML2_LIBRARY_DIR})
 set(xmllib ${LIBXML2_LIBRARIES})
@@ -641,10 +637,6 @@ configure_file(${CMAKE_SOURCE_DIR}/config/rootauthrc.in ${CMAKE_BINARY_DIR}/etc/
 configure_file(${CMAKE_SOURCE_DIR}/config/rootdaemonrc.in ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc @ONLY NEWLINE_STYLE UNIX)
 
 configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in include/RConfigOptions.h NEWLINE_STYLE UNIX)
-
-if(ruby)
-  file(APPEND ${CMAKE_BINARY_DIR}/include/RConfigOptions.h "\#define R__RUBY_MAJOR ${RUBY_MAJOR_VERSION}\n\#define R__RUBY_MINOR ${RUBY_MINOR_VERSION}\n")
-endif()
 
 configure_file(${CMAKE_SOURCE_DIR}/config/Makefile-comp.in config/Makefile.comp NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/Makefile.in config/Makefile.config NEWLINE_STYLE UNIX)
