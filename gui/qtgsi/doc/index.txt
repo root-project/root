@@ -1,8 +1,0 @@
-This directory contains the GSI implementation of ROOT&Qt.
-BEGIN_HTML
- See:
-<ul>
-<li><a href="ftp://root.cern.ch/root/doc/26ROOTandQt.pdf">The Chapter about Qt BNL and Qt GSI in the Users Guide
-    </a></li>
-</ul>
-END_HTML

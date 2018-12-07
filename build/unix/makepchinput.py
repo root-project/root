@@ -247,8 +247,7 @@ def isDirForPCH(dirName):
                            "roofit/",
                            "tmva",
                            "main"]
-   PCHPatternsBlacklist = ["graf2d/qt",
-                           "gui/guihtml",
+   PCHPatternsBlacklist = ["gui/guihtml",
                            "gui/guibuilder",
                            "math/fftw",
                            "math/foam",

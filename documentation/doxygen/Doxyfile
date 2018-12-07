@@ -829,8 +829,6 @@ INPUT                  = . \
                          ../../gui/gui/ \
                          ../../gui/guibuilder/ \
                          ../../gui/guihtml/ \
-                         ../../gui/qtgsi/ \
-                         ../../gui/qtroot/ \
                          ../../gui/recorder/ \
                          ../../gui/sessionviewer/ \
                          ../../hist/ \
@@ -870,7 +868,6 @@ INPUT                  = . \
 #                         ../../core/lzma/
 #                         ../../core/newdelete/
 #                         ../../core/textinput/
-#                         ../../graf2d/qt/ \
 #                         ../../graf2d/mathtext/
 #                         ../../graf3d/ftgl/
 #                         ../../graf3d/glew/

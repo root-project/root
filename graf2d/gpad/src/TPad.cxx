@@ -4905,14 +4905,9 @@ void TPad::Print(const char *filenam, Option_t *option)
          gPad->GetCanvas()->SetHighLightColor(-1);
          gPad->Modified();
          gPad->Update();
-         if (TClass::GetClass("TGQt", kFALSE) && gVirtualX->InheritsFrom("TGQt")) {
-            wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
-            gVirtualX->WritePixmap(wid,UtoPixel(1.),VtoPixel(0.),(char *)psname.Data());
-         } else {
-            gVirtualX->Update(1);
-            gSystem->Sleep(30); // synchronize
-            GetPainter()->SaveImage(this, psname, gtype);
-         }
+         gVirtualX->Update(1);
+         gSystem->Sleep(30); // synchronize
+         GetPainter()->SaveImage(this, psname, gtype);
          if (!gSystem->AccessPathName(psname)) {
             Info("Print", "file %s has been created", psname.Data());
          }

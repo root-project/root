@@ -189,14 +189,6 @@ OCCLIBDIR      := @occlibdir@
 OCCLIB         := @occlib@
 OCCINCDIR      := $(filter-out /usr/include, @occincdir@)
 
-BUILDQT        := @buildqt@
-BUILDQTGSI     := @buildqtgsi@
-QTLIBDIR       := @qtlibdir@
-QTLIB          := @qtlib@
-QTINCDIR       := $(filter-out /usr/include, @qtincdir@)
-QTVERS	       := @qtvers@
-QTMOCEXE       := @qtmocexe@
-
 BUILDRFIO      := @buildrfio@
 SHIFTLIBDIR    := @shiftlibdir@
 SHIFTLIB       := @shiftlib@
