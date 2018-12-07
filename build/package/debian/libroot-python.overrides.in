@@ -1,3 +1,0 @@
-libroot-python@libvers@: postinst-has-useless-call-to-ldconfig
-libroot-python@libvers@: postrm-has-useless-call-to-ldconfig
-
