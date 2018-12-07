@@ -29,11 +29,13 @@ elseif(vdt)
   target_include_directories(ROOTVecOps PUBLIC ${VDT_INCLUDE_DIRS})
 endif()
 
-target_compile_options(ROOTVecOps PRIVATE -O3 -ffast-math)
+if(NOT MSVC)
+  target_compile_options(ROOTVecOps PRIVATE -O3 -ffast-math)
+endif()
 
 include(CheckCXXSymbolExists)
 check_symbol_exists(m __sqrt_finite HAVE_FINITE_MATH)
-if(NOT HAVE_FINITE_MATH)
+if(NOT HAVE_FINITE_MATH AND NOT MSVC)
   target_compile_options(ROOTVecOps PRIVATE -fno-finite-math-only)
 endif()
 
