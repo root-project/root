@@ -22,7 +22,7 @@
 //#include <atomic>
 #include <stdlib.h>
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
@@ -30,7 +30,7 @@
 
 #include "clang/Basic/Module.h"
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
 
