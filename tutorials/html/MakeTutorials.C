@@ -196,7 +196,6 @@ void writeTutorials(THtml& html) {
       {"quadp",    "Quadratic Programming package"}, 
       {"roofit",   "RooFit tutorials"}, 
       {"roostats", "Roostats tutorials"}, 
-      {"ruby",     "Ruby-ROOT"}, 
       {"spectrum", "Peak Finder, Deconvolutions"}, 
       {"splot",    "TSPlot example"}, 
       {"sql",      "SQL Data Bases interfaces"}, 
