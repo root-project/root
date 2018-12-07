@@ -183,9 +183,6 @@ tags
 # /graf2d/freetype/src/
 /graf2d/freetype/src/freetype-2.6.1
 
-# /graf2d/qt/src/
-/graf2d/qt/src/moc_*.cxx
-
 # /graf2d/win32gdk/gdk/src/gdk/
 /graf2d/win32gdk/gdk/src/gdk/gdk-1.3.exp
 /graf2d/win32gdk/gdk/src/gdk/gdk-1.3.lib
@@ -197,9 +194,6 @@ tags
 # /gui/fitpanel/test/
 /gui/fitpanel/test/outputUnitTesting.txt
 /gui/fitpanel/test/UnitTesting
-
-# /gui/qtgsi/src/
-/gui/qtgsi/src/moc_*
 
 # /interpreter/cling/lib/UserInterface/
 /interpreter/cling/lib/UserInterface/textinput

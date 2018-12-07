@@ -49,7 +49,6 @@
 /core/thread/ @pcanal
 /etc/http/ @linev
 /etc/eve7/ @linev
-/graf2d/qt/ @bellenot
 /graf2d/cocoa/ @TimurP
 /graf3d/eve/ @osschar
 /graf3d/eve7/ @osschar
