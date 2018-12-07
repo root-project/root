@@ -400,7 +400,6 @@ if(ROOT_python_FOUND)
              pyroot/na49geomfile.py # ????
              pyroot/na49visible.py  # ????
              pyroot/parse_CSV_file_with_TTree_ReadStream.py # not a tutorial
-             pyroot/qtexample.py    # requires GUI/Qt
              pyroot/numberEntry.py  # requires GUI
              histfactory/example.py # not a tutorial
              histfactory/makeQuickModel.py # not a tutorial

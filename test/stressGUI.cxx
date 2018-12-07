@@ -2293,9 +2293,6 @@ void testHtmlBrowser()
 // list of excluded macros
 const char *excluded[] = {
    "_playback",
-   "QtFileDialog",
-   "QtMultiFileDialog",
-   "QtPrintDialog",
    "calendar",
    "customContextMenu.C",
    "customTH1Fmenu",

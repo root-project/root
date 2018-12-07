@@ -431,9 +431,7 @@ Root.Html.Copyright:        * Copyright
 ### GUI Specific Settings
 
 
-Set the "`native`" ROOT GUI interface to be used in a ROOT session. If
-set to "`qt`", the "`native`" GUI interface is replaced with one based
-on Qt by the regular ROOT plug-in mechanism.
+Set the "`native`" ROOT GUI interface to be used in a ROOT session.
 
 ``` {.cpp}
 Gui.Backend:                native

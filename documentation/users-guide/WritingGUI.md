@@ -83,8 +83,6 @@ the implementation of **`TVirtualX`**.
 
 ![](pictures/02000201.jpg)
 
-The **`TGQt`** interface is currently still under development.
-
 ## A Simple Example
 
 

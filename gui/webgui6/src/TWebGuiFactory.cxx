@@ -31,8 +31,6 @@
 TWebGuiFactory::TWebGuiFactory() :
    TGuiFactory("WebRootProxy","web-based ROOT GUI Factory")
 {
-   //if (TGQt::GetVirtualX())  gVirtualX = TGQt::GetVirtualX();
-   // gSystem->Load("libGui");
    fGuiProxy = std::make_unique<TRootGuiFactory>();
 }
 
