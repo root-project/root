@@ -2646,15 +2646,23 @@ AMesh_t *build_difference(const AMesh_t &meshA, const AMesh_t &meshB, Bool_t pre
 
 /////////////////////////////////////////////////////////////////////////////
 
-TBaseMesh *ConvertToMesh(const TBuffer3D &buff)
+TBaseMesh *ConvertToMesh(const TBuffer3D &buff, TGeoMatrix *matr)
 {
    AMesh_t *newMesh = new AMesh_t;
    const Double_t *v = buff.fPnts;
 
    newMesh->Verts().resize(buff.NbPnts());
 
-   for (Int_t i = 0; i < (int) buff.NbPnts(); ++i)
-      newMesh->Verts()[i] = TVertexBase(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]);
+   Double_t dmaster[3];
+
+   for (Int_t i = 0; i < (int) buff.NbPnts(); ++i) {
+      if (matr) {
+         matr->LocalToMaster(&v[i*3], dmaster);
+         newMesh->Verts()[i] = TVertexBase(dmaster[0], dmaster[1], dmaster[2]);
+      } else {
+         newMesh->Verts()[i] = TVertexBase(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]);
+      }
+   }
 
    const Int_t *segs = buff.fSegs;
    const Int_t *pols = buff.fPols;
@@ -2892,7 +2900,7 @@ TBaseMesh *BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg)
    REvePadHolder gpad(kFALSE, &pad);
    pad.GetListOfPrimitives()->Add(cshape);
 
-   REveGeoManagerHolder gmgr(REveGeoShape::GetGeoMangeur(), n_seg);
+   REveGeoManagerHolder gmgr(REveGeoShape::GetGeoManager(), n_seg);
 
    //vv3d.BeginScene();
    {
@@ -2927,5 +2935,46 @@ TBaseMesh *BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg)
 
    return vv3d.fResult.release();
 }
+
+
+////////////////////////////////////////////////////////////////////////
+/// try to rewrite method without usage of gPad
+
+
+
+TBaseMesh *MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
+{
+
+
+   TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *> (shape);
+
+   if (!comp) {
+      std::unique_ptr<TBuffer3D> b3d(shape->MakeBuffer3D());
+      return EveCsg::ConvertToMesh(*b3d.get(), matr);
+   }
+
+   auto node = comp->GetBoolNode();
+
+   TGeoHMatrix mleft, mright;
+   if (matr) { mleft = *matr; mright = *matr; }
+
+   mleft.Multiply(node->GetLeftMatrix());
+   auto left = MakeMesh(&mleft, node->GetLeftShape());
+
+   mright.Multiply(node->GetRightMatrix());
+   auto right = MakeMesh(&mright, node->GetRightShape());
+
+   if (node->IsA() == TGeoUnion::Class()) return EveCsg::BuildUnion(left, right);
+   if (node->IsA() == TGeoIntersection::Class()) return EveCsg::BuildIntersection(left, right);
+   if (node->IsA() == TGeoSubtraction::Class()) return EveCsg::BuildDifference(left, right);
+
+   return nullptr;
+}
+
+TBaseMesh *BuildFromCompositeShapeNew(TGeoCompositeShape *cshape, Int_t n_seg)
+{
+   return MakeMesh(nullptr, cshape);
+}
+
 
 }}}

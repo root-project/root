@@ -53,7 +53,7 @@ namespace
       TGeoIdentity *old_id = gGeoIdentity;
       gGeoManager = 0;
       TGeoManager* mgr = new TGeoManager();
-      mgr->SetNameTitle("REveGeoShape::fgGeoMangeur",
+      mgr->SetNameTitle("REveGeoShape::fgGeoManager",
                         "Static geo manager used for wrapped TGeoShapes.");
       gGeoIdentity = new TGeoIdentity("Identity");
       gGeoManager  = old;
@@ -83,7 +83,7 @@ it gets forwarded to geo-manager and this tesselation detail is
 used when creating the buffer passed to GL.
 */
 
-TGeoManager* REX::REveGeoShape::fgGeoMangeur = init_geo_mangeur();
+TGeoManager* REX::REveGeoShape::fgGeoManager = init_geo_mangeur();
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return static geo-manager that is used internally to make shapes
@@ -91,9 +91,9 @@ TGeoManager* REX::REveGeoShape::fgGeoMangeur = init_geo_mangeur();
 /// Set gGeoManager to this object when creating TGeoShapes to be
 /// passed into EveGeoShapes.
 
-TGeoManager* REveGeoShape::GetGeoMangeur()
+TGeoManager* REveGeoShape::GetGeoManager()
 {
-   return fgGeoMangeur;
+   return fgGeoManager;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -163,7 +163,7 @@ void REveGeoShape::BuildRenderData()
 
    } else {
 
-      REveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
+      REveGeoManagerHolder gmgr(fgGeoManager, fNSegments);
 
       std::unique_ptr<TBuffer3D> b3d(fShape->MakeBuffer3D());
 
@@ -203,7 +203,7 @@ void REveGeoShape::SetNSegments(Int_t s)
 
 void REveGeoShape::SetShape(TGeoShape *s)
 {
-   REveGeoManagerHolder gmgr(fgGeoMangeur);
+   REveGeoManagerHolder gmgr(fgGeoManager);
 
    if (fCompositeShape) {
       delete fShape;
@@ -257,7 +257,7 @@ void REveGeoShape::Paint(Option_t* /*option*/)
    if (!fShape)
       return;
 
-   REveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
+   REveGeoManagerHolder gmgr(fgGeoManager, fNSegments);
 
    if (fCompositeShape)
    {
@@ -406,7 +406,7 @@ REveGeoShapeExtract* REveGeoShape::DumpShapeTree(REveGeoShape* gsre,
 REveGeoShape* REveGeoShape::ImportShapeExtract(REveGeoShapeExtract* gse,
                                                REveElement*         parent)
 {
-   REveGeoManagerHolder gmgr(fgGeoMangeur);
+   REveGeoManagerHolder gmgr(fgGeoManager);
    REveManager::RRedrawDisabler redrawOff(REX::gEve);
    REveGeoShape* gsre = SubImportShapeExtract(gse, parent);
    gsre->ElementChanged();
@@ -475,7 +475,7 @@ std::unique_ptr<TBuffer3D> REveGeoShape::MakeBuffer3D()
       return buff;
    }
 
-   REveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
+   REveGeoManagerHolder gmgr(fgGeoManager, fNSegments);
 
    buff.reset(fShape->MakeBuffer3D());
    REveTrans &mx    = RefMainTrans();
