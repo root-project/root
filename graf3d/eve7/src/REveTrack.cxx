@@ -199,7 +199,7 @@ REveTrack::REveTrack(REveRecTrack* t, REveTrackPropagator* prop) :
 /// If points of 't' are locked, they are cloned.
 
 REveTrack::REveTrack(const REveTrack& t) :
-   REveLine(),
+   REveLine(t),
    fV(t.fV),
    fP(t.fP),
    fPEnd(),
@@ -237,18 +237,18 @@ REveTrack::~REveTrack()
 
 void REveTrack::ComputeBBox()
 {
-   if (Size() > 0 || ! fPathMarks.empty())
+   if (fSize > 0 || ! fPathMarks.empty())
    {
       BBoxInit();
-      Int_t    n = Size();
-      Float_t* p = TPolyMarker3D::fP;
+      Int_t    n = fSize;
+      Float_t *p = & fPoints[0].fX;
       for (Int_t i = 0; i < n; ++i, p += 3)
       {
          BBoxCheckPoint(p);
       }
       for (vPathMark_ci i = fPathMarks.begin(); i != fPathMarks.end(); ++i)
       {
-         BBoxCheckPoint(i->fV.fX, i->fV.fY,i->fV.fZ);
+         BBoxCheckPoint(i->fV.fX, i->fV.fY, i->fV.fZ);
       }
    }
    else
@@ -300,7 +300,7 @@ void REveTrack::SetPathMarks(const REveTrack& t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set track's render style.
+/// Set track's propagator.
 /// Reference counts of old and new propagator are updated.
 
 void REveTrack::SetPropagator(REveTrackPropagator *prop)
@@ -523,7 +523,7 @@ void REveTrack::PrintPathMarks()
    static const REveException eh("REveTrack::PrintPathMarks ");
 
    printf("REveTrack '%s', number of path marks %d, label %d\n",
-          GetName(), (Int_t)fPathMarks.size(), fLabel);
+          GetCName(), (Int_t)fPathMarks.size(), fLabel);
 
    for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
    {
@@ -577,7 +577,7 @@ selection based on track parameters.
 /// one is created.
 
 REveTrackList::REveTrackList(REveTrackPropagator* prop) :
-   REveElementList(),
+   REveElement(),
    TAttMarker(1, 20, 1),
    TAttLine(1,1,1),
 
@@ -602,8 +602,8 @@ REveTrackList::REveTrackList(REveTrackPropagator* prop) :
 /// Constructor. If track-propagator argument is 0, a new default
 /// one is created.
 
-REveTrackList::REveTrackList(const char* name, REveTrackPropagator* prop) :
-   REveElementList(name),
+REveTrackList::REveTrackList(const std::string& name, REveTrackPropagator* prop) :
+   REveElement(name),
    TAttMarker(1, 20, 1),
    TAttLine(1,1,1),
 

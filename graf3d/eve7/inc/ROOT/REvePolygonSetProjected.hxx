@@ -23,7 +23,9 @@ class TBuffer3D;
 namespace ROOT {
 namespace Experimental {
 
-class REvePolygonSetProjected : public REveShape, public REveProjected {
+class REvePolygonSetProjected : public REveShape,
+                                public REveProjected
+{
 private:
    REvePolygonSetProjected(const REvePolygonSetProjected &);            // Not implemented
    REvePolygonSetProjected &operator=(const REvePolygonSetProjected &); // Not implemented

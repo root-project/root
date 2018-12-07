@@ -40,6 +40,13 @@ REveProjectable::REveProjectable()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor. Does shallow copy
+
+REveProjectable::REveProjectable(const REveProjectable &)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 /// Force projected replicas to unreference *this, then destroy them.
 

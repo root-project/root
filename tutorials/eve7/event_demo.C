@@ -50,7 +50,7 @@ REX::REvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
 {
    TRandom &r = *gRandom;
 
-   auto ps = new REX::REvePointSet("fu", npoints);
+   auto ps = new REX::REvePointSet("fu", "", npoints);
 
    for (Int_t i=0; i<npoints; ++i)
        ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
@@ -64,9 +64,11 @@ REX::REvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
 void addPoints()
 {
    REX::REveElement* event = eveMng->GetEventScene();
-   REX::REveElement* pntHolder = new REX::REveElementList("Hits");
+
+   auto pntHolder = new REX::REveElement("Hits");
+
    auto ps1 = getPointSet(20, 100);
-   ps1->SetElementName("Points_1");
+   ps1->SetName("Points_1");
    pntHolder->AddElement(ps1);
    /*
    auto ps2 = getPointSet(10, 200, 4);
@@ -86,7 +88,8 @@ void addTracks()
    prop->SetMaxR(300);
    prop->SetMaxZ(600);
    prop->SetMaxOrbs(6);
-   REX::REveElement* trackHolder = new REX::REveElementList("Tracks");
+
+   auto trackHolder = new REX::REveElement("Tracks");
 
    double v = 0.5;
    double m = 5;
@@ -103,7 +106,7 @@ void addTracks()
       auto track = new REX::REveTrack(p, 1, prop);
       track->MakeTrack();
       track->SetMainColor(kBlue);
-      track->SetElementName(Form("RandomTrack_%d",i ));
+      track->SetName(Form("RandomTrack_%d", i));
       trackHolder->AddElement(track);
    }
 
@@ -115,11 +118,11 @@ void addJets()
    TRandom &r = *gRandom;
 
    REX::REveElement* event = eveMng->GetEventScene();
-   auto jetHolder = new REX::REveElementList("Jets");
+   auto jetHolder = new REX::REveElement("Jets");
 
    for (int i = 0; i < N_Jets; i++)
    {
-      auto jet = new REX::REveJetCone(Form("Jet_%d",i ));
+      auto jet = new REX::REveJetCone(Form("Jet_%d", i));
       jet->SetCylinder(2*kR_max, 2*kZ_d);
       jet->AddEllipticCone(r.Uniform(-3.5, 3.5), r.Uniform(0, TMath::TwoPi()),
                            r.Uniform(0.02, 0.2), r.Uniform(0.02, 0.3));
@@ -207,7 +210,7 @@ void projectScenes(bool geomp, bool eventp)
 
 #pragma link C++ class EventManager+;
 
-class EventManager : public REX::REveElementList
+class EventManager : public REX::REveElement
 {
 public:
    EventManager() = default;
@@ -247,7 +250,7 @@ void event_demo()
    eveMng = REX::REveManager::Create();
 
    auto eventMng = new EventManager();
-   eventMng->SetElementName("EventManager");
+   eventMng->SetName("EventManager");
    eveMng->GetWorld()->AddElement(eventMng);
 
    eveMng->GetWorld()->AddCommand("NextEvent", "sap-icon://step", eventMng, "NextEvent()");

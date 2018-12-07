@@ -15,21 +15,22 @@
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveVector.hxx>
 
-#include "TAtt3D.h"
 #include "TAttBBox.h"
 #include "TColor.h"
 
 namespace ROOT {
 namespace Experimental {
 
-class REveShape : public REveElementList, public TAtt3D, public TAttBBox {
+class REveShape : public REveElement,
+                  public TAttBBox
+{
 private:
    REveShape(const REveShape &);            // Not implemented
    REveShape &operator=(const REveShape &); // Not implemented
 
 public:
    typedef std::vector<REveVector2> vVector2_t;
-   typedef std::vector<REveVector2>::iterator vVector2_i;
+   typedef vVector2_t::iterator     vVector2_i;
 
 protected:
    Color_t fFillColor; // fill color of polygons
@@ -41,7 +42,7 @@ protected:
    Bool_t fMiniFrame;      // draw minimal frame
 
 public:
-   REveShape(const char *n = "REveShape", const char *t = "");
+   REveShape(const std::string& n = "REveShape", const std::string& t = "");
    virtual ~REveShape();
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
@@ -72,9 +73,6 @@ public:
 
    // Abstract function from TAttBBox:
    // virtual void ComputeBBox();
-
-   // Abstract from REveProjectable, overriden in REveElementList:
-   // virtual TClass* ProjectedClass(const REveProjection* p) const;
 
    // ----------------------------------------------------------------
 

@@ -138,7 +138,10 @@ public:
 // REveTrackList
 /******************************************************************************/
 
-class REveTrackList : public REveElementList, public TAttMarker, public TAttLine
+class REveTrackList : public REveElement,
+                      public REveProjectable,
+                      public TAttMarker,
+                      public TAttLine
 {
 private:
    REveTrackList(const REveTrackList &);            // Not implemented
@@ -165,7 +168,7 @@ protected:
 
 public:
    REveTrackList(REveTrackPropagator *prop = nullptr);
-   REveTrackList(const char *name, REveTrackPropagator *prop = nullptr);
+   REveTrackList(const std::string& name, REveTrackPropagator *prop = nullptr);
    virtual ~REveTrackList();
 
    void MakeTracks(Bool_t recurse = kTRUE);

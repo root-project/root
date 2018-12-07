@@ -37,11 +37,7 @@ namespace REX = ROOT::Experimental;
 /// Constructor.
 
 REveProjectionManager::REveProjectionManager(REveProjection::EPType_e type):
-   REveElementList("REveProjectionManager",""),
-   TAttBBox(),
-   fProjection  (nullptr),
-   fCurrentDepth(0),
-   fImportEmpty (kFALSE)
+   REveElement("REveProjectionManager","")
 {
    for (Int_t i = 0; i < REveProjection::kPT_End; ++i)
       fProjections[i] = nullptr;
@@ -59,7 +55,7 @@ REveProjectionManager::~REveProjectionManager()
    for (Int_t i = 0; i < REveProjection::kPT_End; ++i) {
       delete fProjections[i];
    }
-   while (!fDependentEls.empty()) {
+   while ( ! fDependentEls.empty()) {
       fDependentEls.front()->Destroy();
    }
 }
@@ -166,7 +162,7 @@ Bool_t REveProjectionManager::ShouldImport(REveElement* el)
    if (fImportEmpty)
       return kTRUE;
 
-   if (el->IsA() != REveElementList::Class() && el->IsA()->InheritsFrom(REveProjectable::Class()))
+   if (el->IsA()->InheritsFrom(REveProjectable::Class()))
       return kTRUE;
    for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
       if (ShouldImport(*i))
@@ -188,7 +184,12 @@ void REveProjectionManager::UpdateDependentElsAndScenes(REveElement* root)
    }
 
    List_t scenes;
-   root->CollectSceneParentsFromChildren(scenes, 0);
+   root->CollectScenes(scenes);
+   if (root == this)
+   {
+      for (auto &n : fNieces) n->CollectScenes(scenes);
+   }
+
    REX::gEve->ScenesChanged(scenes);
 }
 
@@ -220,13 +221,14 @@ REveElement* REveProjectionManager::ImportElementsRecurse(REveElement* el,
       }
       else
       {
-         new_el = new REveElementList;
+         new_el = new REveElement;
       }
-      new_el->SetElementName (Form("%s [P]", el->GetElementName()));
-      new_el->SetElementTitle(Form("Projected replica.\n%s", el->GetElementTitle()));
+      new_el->SetName (Form("%s [P]", el->GetCName()));
+      new_el->SetTitle(Form("Projected replica.\n%s", el->GetCTitle()));
       new_el->SetRnrSelf     (el->GetRnrSelf());
       new_el->SetRnrChildren (el->GetRnrChildren());
       new_el->SetPickable    (el->IsPickable());
+
       parent->AddElement(new_el);
 
       REveCompound *cmpnd    = dynamic_cast<REveCompound*>(el);
@@ -268,7 +270,7 @@ REveElement* REveProjectionManager::ImportElements(REveElement* el,
       UpdateDependentElsAndScenes(new_el);
 
       if (ext_list)
-         AddElement(new_el);
+         AddNiece(new_el);
    }
    return new_el;
 }
@@ -361,8 +363,7 @@ void REveProjectionManager::ProjectChildrenRecurse(REveElement* el)
       el->ElementChanged(kFALSE);
    }
 
-   for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
-      ProjectChildrenRecurse(*i);
+   for (auto &c : el->RefChildren())  ProjectChildrenRecurse(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -372,8 +373,11 @@ void REveProjectionManager::ProjectChildrenRecurse(REveElement* el)
 void REveProjectionManager::ProjectChildren()
 {
    BBoxInit();
-   for (List_i i=BeginChildren(); i!=EndChildren(); ++i)
-      ProjectChildrenRecurse(*i);
+
+   for (auto &c : fChildren)  ProjectChildrenRecurse(c);
+
+   for (auto &n : fNieces)    ProjectChildrenRecurse(n);
+
    AssertBBoxExtents(0.1);
    StampTransBBox();
 
@@ -391,7 +395,8 @@ void REveProjectionManager::ComputeBBox()
 {
    static const REveException eH("REveProjectionManager::ComputeBBox ");
 
-   if (HasChildren() == kFALSE) {
+   if ( ! HasChildren() && ! HasNieces())
+   {
       BBoxZero();
       return;
    }

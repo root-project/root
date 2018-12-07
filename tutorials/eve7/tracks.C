@@ -39,7 +39,7 @@ void makeTracks(int N_Tracks, REX::REveElement* trackHolder)
       auto track = new REX::REveTrack(p, 1, prop);
       track->MakeTrack();
       track->SetMainColor(kBlue);
-      track->SetElementName(Form("RandomTrack_%d",i ));
+      track->SetName(Form("RandomTrack_%d",i ));
       trackHolder->AddElement(track);
    }
 }
@@ -48,7 +48,7 @@ void tracks()
 {
    auto eveMng = REX::REveManager::Create();
 
-   REX::REveElement* trackHolder = new REX::REveElementList("Tracks");
+   REX::REveElement* trackHolder = new REX::REveElement("Tracks");
    eveMng->GetEventScene()->AddElement(trackHolder);
    makeTracks(10, trackHolder);
 

@@ -59,9 +59,9 @@ REveJetCone::REveJetCone(const Text_t* n, const Text_t* t) :
    REveShape(n, t),
    fApex(),
    fLimits(), fThetaC(10),
-   fEta(0), fPhi(0), fDEta(0), fDPhi(0), fNDiv(72)
+   fEta(0), fPhi(0), fDEta(0), fDPhi(0), fNDiv(36)
 {
-   fColor = kGreen;
+   fFillColor = kGreen;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -243,7 +243,7 @@ Projection of REveJetCone.
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveJetConeProjected::REveJetConeProjected(const char* n, const char* t) :
+REveJetConeProjected::REveJetConeProjected(const std::string& n, const std::string& t) :
    REveShape(n, t)
 {
 }

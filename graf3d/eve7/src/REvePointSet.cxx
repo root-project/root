@@ -45,39 +45,16 @@ REveProjectionManager class.
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REvePointSet::REvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
-   REveElement(),
-   TPointSet3D(n_points),
-   REvePointSelectorConsumer(tv_type),
-   REveProjectable(),
-
-   fTitle          (),
-   fIntIds         (nullptr),
-   fIntIdsPerPoint (0)
+REvePointSet::REvePointSet(const std::string& name, const std::string& title, Int_t n_points) :
+   REveElement(name, title),
+   TAttMarker(),
+   TAttBBox()
 {
    fMarkerStyle = 20;
+
    SetMainColorPtr(&fMarkerColor);
 
-   // Override from REveElement.
-   fPickable = kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-REvePointSet::REvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_type) :
-   REveElement(),
-   TPointSet3D(n_points),
-   REvePointSelectorConsumer(tv_type),
-   REveProjectable(),
-
-   fTitle          (),
-   fIntIds         (nullptr),
-   fIntIdsPerPoint (0)
-{
-   fMarkerStyle = 20;
-   SetName(name);
-   SetMainColorPtr(&fMarkerColor);
+   Reset(n_points);
 
    // Override from REveElement.
    fPickable = kTRUE;
@@ -88,13 +65,9 @@ REvePointSet::REvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_t
 
 REvePointSet::REvePointSet(const REvePointSet& e) :
    REveElement(e),
-   TPointSet3D(e),
-   REvePointSelectorConsumer(e),
-   REveProjectable(),
-
-   fTitle          (e.fTitle),
-   fIntIds         (e.fIntIds ? new TArrayI(*e.fIntIds) : nullptr),
-   fIntIdsPerPoint (e.fIntIdsPerPoint)
+   REveProjectable(e),
+   TAttMarker(e),
+   TAttBBox(e)
 {
 }
 
@@ -103,7 +76,6 @@ REvePointSet::REvePointSet(const REvePointSet& e) :
 
 REvePointSet::~REvePointSet()
 {
-   delete fIntIds;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,46 +83,21 @@ REvePointSet::~REvePointSet()
 
 void REvePointSet::ClonePoints(const REvePointSet& e)
 {
-   // TPolyMarker3D
-   delete [] fP;
-   fN = e.fN;
-   if (fN > 0)
-   {
-      const Int_t nn = 3 * e.fN;
-      fP = new Float_t [nn];
-      for (Int_t i = 0; i < nn; i++) fP[i] = e.fP[i];
-   } else {
-      fP = 0;
-   }
-   fLastPoint = e.fLastPoint;
-
-   // TPointSet3D
-   CopyIds(e);
-
-   // REvePointSet
-   delete fIntIds;
-   fIntIds         = e.fIntIds ? new TArrayI(*e.fIntIds) : nullptr;
-   fIntIdsPerPoint = e.fIntIdsPerPoint;
+   fPoints   = e.fPoints;
+   fCapacity = e.fCapacity;
+   fSize     = e.fSize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Drop all data and set-up the data structures to recive new data.
-/// n_points   specifies the initial size of the arrays.
-/// n_int_ids  specifies the number of integer ids per point.
+/// n_points   specifies the initial size of the array.
 
-void REvePointSet::Reset(Int_t n_points, Int_t n_int_ids)
+void REvePointSet::Reset(Int_t n_points)
 {
-   delete [] fP; fP = nullptr;
-   fN = n_points;
-   if (fN) {
-      fP = new Float_t [3*fN];
-      memset(fP, 0, 3*fN*sizeof(Float_t));
-   }
-   fLastPoint = -1;
-   ClearIds();
-   delete fIntIds; fIntIds = nullptr;
-   fIntIdsPerPoint = n_int_ids;
-   if (fIntIdsPerPoint > 0) fIntIds = new TArrayI(fIntIdsPerPoint*fN);
+   fPoints.resize(n_points);
+   fCapacity = n_points;
+   fSize     = 0;
+
    ResetBBox();
 }
 
@@ -162,70 +109,35 @@ void REvePointSet::Reset(Int_t n_points, Int_t n_int_ids)
 
 Int_t REvePointSet::GrowFor(Int_t n_points)
 {
-   Int_t old_size = Size();
+   assert(n_points >= 0);
+
+   Int_t old_size = fCapacity;
    Int_t new_size = old_size + n_points;
-   SetPoint(new_size - 1, 0, 0, 0);
-   if (fIntIds)
-      fIntIds->Set(fIntIdsPerPoint * new_size);
+
+   fPoints.resize(new_size);
+   fCapacity = new_size;
+
    return old_size;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Assert that size of IntId array is compatible with the size of
-/// the point array.
-
-inline void REvePointSet::AssertIntIdsSize()
+int REvePointSet::SetNextPoint(float x, float y, float z)
 {
-   Int_t exp_size = GetN()*fIntIdsPerPoint;
-   if (fIntIds->GetSize() < exp_size)
-      fIntIds->Set(exp_size);
+   return SetPoint(fSize, x, y, z);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Return a pointer to integer ids of point with index p.
-/// Existence of integer id array is checked, 0 is returned if it
-/// does not exist.
-/// Validity of p is *not* checked.
-
-Int_t* REvePointSet::GetPointIntIds(Int_t p) const
+int REvePointSet::SetPoint(int n, float x, float y, float z)
 {
-   if (fIntIds)
-      return fIntIds->GetArray() + p*fIntIdsPerPoint;
-   return nullptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return i-th integer id of point with index p.
-/// Existence of integer id array is checked, kMinInt is returned if
-/// it does not exist.
-/// Validity of p and i is *not* checked.
-
-Int_t REvePointSet::GetPointIntId(Int_t p, Int_t i) const
-{
-   if (fIntIds)
-      return * (fIntIds->GetArray() + p*fIntIdsPerPoint + i);
-   return kMinInt;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set integer ids for the last point that was registered (most
-/// probably via TPolyMarker3D::SetNextPoint(x,y,z)).
-
-void REvePointSet::SetPointIntIds(Int_t* ids)
-{
-   SetPointIntIds(fLastPoint, ids);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set integer ids for point with index n.
-
-void REvePointSet::SetPointIntIds(Int_t n, Int_t* ids)
-{
-   if (!fIntIds) return;
-   AssertIntIdsSize();
-   Int_t* x = fIntIds->GetArray() + n*fIntIdsPerPoint;
-   for (Int_t i=0; i<fIntIdsPerPoint; ++i)
-      x[i] = ids[i];
+   if (n >= fCapacity)
+   {
+      fCapacity = std::max(n + 1, 2*fCapacity);
+      fPoints.resize(fCapacity);
+   }
+   fPoints[n].Set(x, y, z);
+   if (n >= fSize)
+   {
+      fSize = n + 1;
+   }
+   return fSize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -272,87 +184,6 @@ void REvePointSet::SetMarkerSize(Size_t msize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Initialize point-set for new filling.
-/// subIdNum gives the number of integer ids that can be assigned to
-/// each point.
-
-void REvePointSet::InitFill(Int_t subIdNum)
-{
-   if (subIdNum > 0) {
-      fIntIdsPerPoint = subIdNum;
-      if (!fIntIds)
-         fIntIds = new TArrayI(fIntIdsPerPoint*GetN());
-      else
-         fIntIds->Set(fIntIdsPerPoint*GetN());
-   } else {
-      delete fIntIds; fIntIds = nullptr;
-      fIntIdsPerPoint = 0;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Called from REvePointSelector when internal arrays of the tree-selector
-/// are filled up and need to be processed.
-/// Virtual from REvePointSelectorConsumer.
-
-void REvePointSet::TakeAction(REvePointSelector* sel)
-{
-   static const REveException eh("REvePointSet::TakeAction ");
-
-   if(sel == nullptr)
-      throw(eh + "selector is <null>.");
-
-   Int_t    n = sel->GetNfill();
-   Int_t  beg = GrowFor(n);
-
-   // printf("REvePointSet::TakeAction beg=%d n=%d size=%d nsubid=%d dim=%d\n",
-   //        beg, n, Size(), sel->GetSubIdNum(), sel->GetDimension());
-
-   Double_t *vx = sel->GetV1(), *vy = sel->GetV2(), *vz = sel->GetV3();
-   Float_t  *p  = fP + 3*beg;
-
-   switch(fSourceCS) {
-      case kTVT_XYZ:
-         while(n-- > 0) {
-            p[0] = *vx; p[1] = *vy; p[2] = *vz;
-            p += 3;
-            ++vx; ++vy; ++vz;
-         }
-         break;
-      case kTVT_RPhiZ:
-         while(n-- > 0) {
-            p[0] = *vx * TMath::Cos(*vy); p[1] = *vx * TMath::Sin(*vy); p[2] = *vz;
-            p += 3;
-            ++vx; ++vy; ++vz;
-         }
-         break;
-      default:
-         throw(eh + "unknown tree variable type.");
-   }
-
-   if (fIntIds) {
-      Double_t** subarr = new Double_t* [fIntIdsPerPoint];
-      for (Int_t i=0; i<fIntIdsPerPoint; ++i) {
-         subarr[i] = sel->GetVal(sel->GetDimension() - fIntIdsPerPoint + i);
-         if (subarr[i] == 0) {
-            delete[] subarr;
-            throw(eh + "sub-id array not available.");
-         }
-      }
-      Int_t* ids = fIntIds->GetArray() + fIntIdsPerPoint*beg;
-      n = sel->GetNfill();
-      while (n-- > 0) {
-         for (Int_t i=0; i<fIntIdsPerPoint; ++i) {
-            ids[i] = TMath::Nint(*subarr[i]);
-            ++subarr[i];
-         }
-         ids += fIntIdsPerPoint;
-      }
-      delete [] subarr;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Copy visualization parameters from element el.
 
 void REvePointSet::CopyVizParams(const REveElement* el)
@@ -361,7 +192,6 @@ void REvePointSet::CopyVizParams(const REveElement* el)
    if (m)
    {
       TAttMarker::operator=(*m);
-      fOption = m->fOption;
    }
 
    REveElement::CopyVizParams(el);
@@ -401,22 +231,43 @@ Int_t REvePointSet::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
 
 void REvePointSet::BuildRenderData()
 {
-   fRenderData = std::make_unique<REveRenderData>("makeHit", 3*fN);
+   if (fSize > 0)
+   {
+      fRenderData = std::make_unique<REveRenderData>("makeHit", 3*fSize);
+      fRenderData->PushV(&fPoints[0].fX, 3*fSize);
+   }
+}
 
-   fRenderData->PushV(fP, 3*fN);
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding box.
+
+void REvePointSet::ComputeBBox()
+{
+   if (fSize > 0) {
+      BBoxInit();
+      for (auto &p : fPoints)
+      {
+         BBoxCheckPoint(p.fX, p.fY, p.fZ);
+      }
+   } else {
+      BBoxZero();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual method of base class TPointSet3D. The function call is
 /// invoked with secondary selection in TPointSet3DGL.
 
-void REvePointSet::PointSelected(Int_t id)
+void REvePointSet::PointSelected(Int_t /* id */)
 {
    // Emit("PointSelected(Int_t)", id);
-   TPointSet3D::PointSelected(id);
 }
 
+
 //==============================================================================
+// REvePointSetArray
+//==============================================================================
+
 /** \class REvePointSetArray
 \ingroup REve
 An array of point-sets with each point-set playing a role of a bin
@@ -439,10 +290,9 @@ actually shown.
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REvePointSetArray::REvePointSetArray(const char* name,
-                                     const char* title) :
-   REveElement(),
-   TNamed(name, title),
+REvePointSetArray::REvePointSetArray(const std::string& name,
+                                     const std::string& title) :
+   REveElement(name, title),
 
    fBins(nullptr), fDefPointSetCapacity(128), fNBins(0), fLastBin(-1),
    fMin(0), fCurMin(0), fMax(0), fCurMax(0),
@@ -488,10 +338,9 @@ void REvePointSetArray::RemoveElementsLocal()
 
 void REvePointSetArray::SetMarkerColor(Color_t tcolor)
 {
-   static const REveException eh("REvePointSetArray::SetMarkerColor ");
-
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
-      TAttMarker* m = dynamic_cast<TAttMarker*>((*i)->GetObject(eh));
+   for (auto & el : fChildren)
+   {
+      TAttMarker* m = dynamic_cast<TAttMarker*>(el);
       if (m && m->GetMarkerColor() == fMarkerColor)
          m->SetMarkerColor(tcolor);
    }
@@ -503,10 +352,9 @@ void REvePointSetArray::SetMarkerColor(Color_t tcolor)
 
 void REvePointSetArray::SetMarkerStyle(Style_t mstyle)
 {
-   static const REveException eh("REvePointSetArray::SetMarkerStyle ");
-
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
-      TAttMarker* m = dynamic_cast<TAttMarker*>((*i)->GetObject(eh));
+   for (auto & el : fChildren)
+   {
+      TAttMarker* m = dynamic_cast<TAttMarker*>(el);
       if (m && m->GetMarkerStyle() == fMarkerStyle)
          m->SetMarkerStyle(mstyle);
    }
@@ -518,63 +366,13 @@ void REvePointSetArray::SetMarkerStyle(Style_t mstyle)
 
 void REvePointSetArray::SetMarkerSize(Size_t msize)
 {
-   static const REveException eh("REvePointSetArray::SetMarkerSize ");
-
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
-      TAttMarker* m = dynamic_cast<TAttMarker*>((*i)->GetObject(eh));
+   for (auto & el : fChildren)
+   {
+      TAttMarker* m = dynamic_cast<TAttMarker*>(el);
       if (m && m->GetMarkerSize() == fMarkerSize)
          m->SetMarkerSize(msize);
    }
    TAttMarker::SetMarkerSize(msize);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Called from REvePointSelector when internal arrays of the tree-selector
-/// are filled up and need to be processed.
-/// Virtual from REvePointSelectorConsumer.
-
-void REvePointSetArray::TakeAction(REvePointSelector* sel)
-{
-   static const REveException eh("REvePointSetArray::TakeAction ");
-
-   if (sel == nullptr)
-      throw eh + "selector is <null>.";
-
-   Int_t n = sel->GetNfill();
-
-   // printf("REvePointSetArray::TakeAction n=%d\n", n);
-
-   Double_t *vx = sel->GetV1(), *vy = sel->GetV2(), *vz = sel->GetV3();
-   Double_t *qq = sel->GetV4();
-
-   if (qq == nullptr)
-      throw eh + "requires 4-d varexp.";
-
-   switch (fSourceCS)
-   {
-      case kTVT_XYZ:
-      {
-         while (n-- > 0)
-         {
-            Fill(*vx, *vy, *vz, *qq);
-            ++vx; ++vy; ++vz; ++qq;
-         }
-         break;
-      }
-      case kTVT_RPhiZ:
-      {
-         while (n-- > 0)
-         {
-            Fill(*vx * TMath::Cos(*vy), *vx * TMath::Sin(*vy), *vz, *qq);
-            ++vx; ++vy; ++vz; ++qq;
-         }
-         break;
-      }
-      default:
-      {
-         throw eh + "unknown tree variable type.";
-      }
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -590,7 +388,7 @@ Int_t REvePointSetArray::Size(Bool_t under, Bool_t over) const
    for (Int_t i = min; i < max; ++i)
    {
       if (fBins[i])
-         size += fBins[i]->Size();
+         size += fBins[i]->GetSize();
    }
    return size;
 }
@@ -600,7 +398,7 @@ Int_t REvePointSetArray::Size(Bool_t under, Bool_t over) const
 /// The actual number of bins is nbins+2, bin 0 corresponding to
 /// underflow and bin nbin+1 to owerflow pointset.
 
-void REvePointSetArray::InitBins(const char* quant_name,
+void REvePointSetArray::InitBins(const std::string& quant_name,
                                  Int_t nbins, Double_t min, Double_t max)
 {
    static const REveException eh("REvePointSetArray::InitBins ");
@@ -623,6 +421,7 @@ void REvePointSetArray::InitBins(const char* quant_name,
    {
       fBins[i] = new REvePointSet
          (Form("Slice %d [%4.3lf, %4.3lf]", i, fMin + (i-1)*fBinWidth, fMin + i*fBinWidth),
+          "",
           fDefPointSetCapacity);
       fBins[i]->SetMarkerColor(fMarkerColor);
       fBins[i]->SetMarkerStyle(fMarkerStyle);
@@ -668,15 +467,6 @@ Bool_t REvePointSetArray::Fill(Double_t x, Double_t y, Double_t z, Double_t quan
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set external object id of the last added point.
-
-void REvePointSetArray::SetPointId(TObject* id)
-{
-   if (fLastBin >= 0)
-      fBins[fLastBin]->SetPointId(id);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Call this after all the points have been filled.
 /// At this point we can calculate bounding-boxes of individual
 /// point-sets.
@@ -687,23 +477,11 @@ void REvePointSetArray::CloseBins()
    {
       if (fBins[i])
       {
-         fBins[i]->SetTitle(Form("N=%d", fBins[i]->Size()));
+         fBins[i]->SetTitle(Form("N=%d", fBins[i]->GetSize()));
          fBins[i]->ComputeBBox();
       }
    }
    fLastBin = -1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Propagate id-object ownership to children.
-
-void REvePointSetArray::SetOwnIds(Bool_t o)
-{
-   for (Int_t i=0; i<fNBins; ++i)
-   {
-      if (fBins[i])
-         fBins[i]->SetOwnIds(o);
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -758,8 +536,10 @@ void REvePointSetProjected::SetDepthLocal(Float_t d)
 {
    SetDepthCommon(d, this, fBBox);
 
-   Int_t    n = Size();
-   Float_t *p = GetP() + 2;
+   // XXXX rewrite
+
+   Int_t    n = fSize;
+   Float_t *p = & fPoints[0].fZ;
    for (Int_t i = 0; i < n; ++i, p+=3)
       *p = fDepth;
 }
@@ -774,10 +554,13 @@ void REvePointSetProjected::UpdateProjection()
    REvePointSet   &ps   = * dynamic_cast<REvePointSet*>(fProjectable);
    REveTrans      *tr   =   ps.PtrMainTrans(kFALSE);
 
-   Int_t n = ps.Size();
+   // XXXX rewrite
+
+   Int_t n = ps.GetSize();
    Reset(n);
-   fLastPoint = n - 1;
-   Float_t *o = ps.GetP(), *p = GetP();
+   fSize = n;
+   const Float_t *o = & ps.RefPoint(0).fX;
+         Float_t *p = & fPoints[0].fX;
    for (Int_t i = 0; i < n; ++i, o+=3, p+=3)
    {
       proj.ProjectPointfv(tr, o, p, fDepth);

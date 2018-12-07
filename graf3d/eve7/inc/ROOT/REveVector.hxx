@@ -42,26 +42,26 @@ public:
    const TT *Arr() const
    {
       if (offsetof(REveVectorT, fZ) == offsetof(REveVectorT, fX) + 2 * sizeof(TT))
-         Error("REveVectorT", "Subsequent nembers cannot be accessed as array!");
+         Error("REveVectorT", "Subsequent members cannot be accessed as array!");
       return &fX;
    }
    TT *Arr()
    {
       if (offsetof(REveVectorT, fZ) == offsetof(REveVectorT, fX) + 2 * sizeof(TT))
-         Error("REveVectorT", "Subsequent nembers cannot be accessed as array!");
+         Error("REveVectorT", "Subsequent members cannot be accessed as array!");
       return &fX;
    }
 #else
    const TT *Arr() const
    {
       static_assert(offsetof(REveVectorT, fZ) == offsetof(REveVectorT, fX) + 2 * sizeof(TT),
-                    "Subsequent nembers cannot be accessed as array!");
+                    "Subsequent members cannot be accessed as array!");
       return &fX;
    }
    TT *Arr()
    {
       static_assert(offsetof(REveVectorT, fZ) == offsetof(REveVectorT, fX) + 2 * sizeof(TT),
-                    "Subsequent nembers cannot be accessed as array!");
+                    "Subsequent members cannot be accessed as array!");
       return &fX;
    }
 #endif
@@ -114,7 +114,7 @@ public:
 
    Bool_t       IsZero() const { return fX == 0 && fY == 0 && fZ == 0; }
 
-//   ClassDefNV(REveVectorT, 2); // A three-vector template without TObject inheritance and virtual functions.
+   //   ClassDefNV(REveVectorT, 2); // A three-vector template without TObject inheritance and virtual functions.
 };
 
 typedef REveVectorT<Float_t>  REveVector;

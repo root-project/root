@@ -33,8 +33,8 @@ It provides:
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveShape::REveShape(const char* n, const char* t) :
-   REveElementList(n, t),
+REveShape::REveShape(const std::string& n, const std::string& t) :
+   REveElement(n, t),
    fFillColor(5),
    fLineColor(5),
    fLineWidth(1),
@@ -59,7 +59,7 @@ REveShape::~REveShape()
 
 Int_t REveShape::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
 {
-   Int_t ret = REveElementList::WriteCoreJson(j, rnr_offset);
+   Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 
    j["fFillColor"] = fFillColor;
    j["fLineColor"] = fLineColor;
@@ -80,7 +80,7 @@ void REveShape::SetMainColor(Color_t color)
       fLineColor = color;
       StampObjProps();
    }
-   REveElementList::SetMainColor(color);
+   REveElement::SetMainColor(color);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -99,7 +99,7 @@ void REveShape::CopyVizParams(const REveElement* el)
       fMiniFrame      = m->fMiniFrame;
    }
 
-   REveElementList::CopyVizParams(el);
+   REveElement::CopyVizParams(el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +107,7 @@ void REveShape::CopyVizParams(const REveElement* el)
 
 void REveShape::WriteVizParams(std::ostream& out, const TString& var)
 {
-   REveElementList::WriteVizParams(out, var);
+   REveElement::WriteVizParams(out, var);
 
    TString t = "   " + var + "->";
    out << t << "SetFillColor(" << fFillColor << ");\n";
@@ -202,7 +202,7 @@ Int_t REveShape::FindConvexHull(const vVector2_t& pin, vVector2_t& pout, REveEle
    else
    {
       ::Warning("REveShape::FindConvexHull()", "Polygon reduced to %d points. for '%s'.",
-              N, caller ? caller->GetElementName() : "unknown");
+              N, caller ? caller->GetCName() : "unknown");
       hull.swap(idcs);
    }
 
