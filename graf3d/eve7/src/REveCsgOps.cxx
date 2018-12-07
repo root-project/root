@@ -2944,8 +2944,6 @@ TBaseMesh *BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg)
 
 TBaseMesh *MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
 {
-
-
    TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *> (shape);
 
    if (!comp) {
@@ -2964,11 +2962,16 @@ TBaseMesh *MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
    mright.Multiply(node->GetRightMatrix());
    auto right = MakeMesh(&mright, node->GetRightShape());
 
-   if (node->IsA() == TGeoUnion::Class()) return EveCsg::BuildUnion(left, right);
-   if (node->IsA() == TGeoIntersection::Class()) return EveCsg::BuildIntersection(left, right);
-   if (node->IsA() == TGeoSubtraction::Class()) return EveCsg::BuildDifference(left, right);
+   TBaseMesh *res = nullptr;
 
-   return nullptr;
+   if (node->IsA() == TGeoUnion::Class()) res = EveCsg::BuildUnion(left, right);
+   if (node->IsA() == TGeoIntersection::Class()) res = EveCsg::BuildIntersection(left, right);
+   if (node->IsA() == TGeoSubtraction::Class()) res = EveCsg::BuildDifference(left, right);
+
+   delete left;
+   delete right;
+
+   return res;
 }
 
 TBaseMesh *BuildFromCompositeShapeNew(TGeoCompositeShape *cshape, Int_t n_seg)
