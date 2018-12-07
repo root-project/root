@@ -438,7 +438,7 @@ public:
       for (unsigned int i = 1; i < nSlots; ++i)
          fColls.emplace_back(std::make_shared<COLL>());
    }
-   TakeHelper(TakeHelper &&) = default;
+   TakeHelper(TakeHelper &&);
    TakeHelper(const TakeHelper &) = delete;
 
    void InitTask(TTreeReader *, unsigned int) {}
@@ -480,7 +480,7 @@ public:
          fColls.emplace_back(v);
       }
    }
-   TakeHelper(TakeHelper &&) = default;
+   TakeHelper(TakeHelper &&);
    TakeHelper(const TakeHelper &) = delete;
 
    void InitTask(TTreeReader *, unsigned int) {}
@@ -522,7 +522,7 @@ public:
       for (unsigned int i = 1; i < nSlots; ++i)
          fColls.emplace_back(std::make_shared<COLL>());
    }
-   TakeHelper(TakeHelper &&) = default;
+   TakeHelper(TakeHelper &&);
    TakeHelper(const TakeHelper &) = delete;
 
    void InitTask(TTreeReader *, unsigned int) {}
@@ -564,7 +564,7 @@ public:
          fColls.emplace_back(v);
       }
    }
-   TakeHelper(TakeHelper &&) = default;
+   TakeHelper(TakeHelper &&);
    TakeHelper(const TakeHelper &) = delete;
 
    void InitTask(TTreeReader *, unsigned int) {}
@@ -589,6 +589,32 @@ public:
 
    std::string GetActionName() { return "Take"; }
 };
+
+// Extern templates for TakeHelper
+// NOTE: The move-constructor of specializations declared as extern templates
+// must be defined out of line, otherwise cling fails to find its symbol.
+template <typename RealT_t, typename T, typename COLL>
+TakeHelper<RealT_t, T, COLL>::TakeHelper(TakeHelper<RealT_t, T, COLL> &&) = default;
+template <typename RealT_t, typename T>
+TakeHelper<RealT_t, T, std::vector<T>>::TakeHelper(TakeHelper<RealT_t, T, std::vector<T>> &&) = default;
+template <typename RealT_t, typename COLL>
+TakeHelper<RealT_t, RVec<RealT_t>, COLL>::TakeHelper(TakeHelper<RealT_t, RVec<RealT_t>, COLL> &&) = default;
+template <typename RealT_t>
+TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>>::TakeHelper(TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>> &&) = default;
+
+// External templates are disabled for gcc5 since this version wrongly omits the C++11 ABI attribute
+#if __GNUC__ > 5
+extern template class TakeHelper<bool, bool, std::vector<bool>>;
+extern template class TakeHelper<unsigned int, unsigned int, std::vector<unsigned int>>;
+extern template class TakeHelper<unsigned long, unsigned long, std::vector<unsigned long>>;
+extern template class TakeHelper<unsigned long long, unsigned long long, std::vector<unsigned long long>>;
+extern template class TakeHelper<int, int, std::vector<int>>;
+extern template class TakeHelper<long, long, std::vector<long>>;
+extern template class TakeHelper<long long, long long, std::vector<long long>>;
+extern template class TakeHelper<float, float, std::vector<float>>;
+extern template class TakeHelper<double, double, std::vector<double>>;
+#endif
+
 
 template <typename ResultType>
 class MinHelper : public RActionImpl<MinHelper<ResultType>> {
