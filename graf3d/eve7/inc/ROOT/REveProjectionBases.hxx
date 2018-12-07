@@ -34,28 +34,30 @@ class REveProjectionManager;
 //                                                            //
 ////////////////////////////////////////////////////////////////
 
-class REveProjectable {
+class REveProjectable
+{
 private:
-   REveProjectable(const REveProjectable &);            // Not implemented
    REveProjectable &operator=(const REveProjectable &); // Not implemented
 
 public:
    typedef std::list<REveProjected *> ProjList_t;
-   typedef std::list<REveProjected *>::iterator ProjList_i;
+   typedef ProjList_t::iterator       ProjList_i;
 
 protected:
    ProjList_t fProjectedList; // references to projected instances.
 
 public:
    REveProjectable();
+   REveProjectable(const REveProjectable &);
    virtual ~REveProjectable();
 
    virtual TClass *ProjectedClass(const REveProjection *p) const = 0;
 
    virtual Bool_t HasProjecteds() const { return !fProjectedList.empty(); }
 
-   ProjList_i BeginProjecteds() { return fProjectedList.begin(); }
-   ProjList_i EndProjecteds() { return fProjectedList.end(); }
+   ProjList_t &RefProjecteds()   { return fProjectedList;         }
+   ProjList_i  BeginProjecteds() { return fProjectedList.begin(); }
+   ProjList_i  EndProjecteds()   { return fProjectedList.end();   }
 
    virtual void AddProjected(REveProjected *p) { fProjectedList.push_back(p); }
    virtual void RemoveProjected(REveProjected *p) { fProjectedList.remove(p); }
@@ -110,8 +112,7 @@ public:
 
    virtual void SetDepth(Float_t d);
 
-   ClassDef(REveProjected,
-            0); // Abstract base class for classes that hold results of a non-linear projection transformation.
+   ClassDef(REveProjected, 0); // Abstract base class for classes that hold results of a non-linear projection transformation.
 };
 
 } // namespace Experimental

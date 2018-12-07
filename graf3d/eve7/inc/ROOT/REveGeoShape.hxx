@@ -24,7 +24,9 @@ namespace Experimental {
 
 class REveGeoShapeExtract;
 
-class REveGeoShape : public REveShape {
+class REveGeoShape : public REveShape,
+                     public REveProjectable
+{
 private:
    REveGeoShape(const REveGeoShape &);            // Not implemented
    REveGeoShape &operator=(const REveGeoShape &); // Not implemented
@@ -42,17 +44,11 @@ protected:
    TGeoShape *MakePolyShape();
 
 public:
-   REveGeoShape(const char *name = "REveGeoShape", const char *title = nullptr);
+   REveGeoShape(const char *name = "REveGeoShape", const char *title = "");
    virtual ~REveGeoShape();
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
    void BuildRenderData();                                   // override;
-
-   virtual TObject *GetObject(const REveException &) const
-   {
-      const TObject *obj = this;
-      return const_cast<TObject *>(obj);
-   }
 
    Int_t GetNSegments() const { return fNSegments; }
    TGeoShape *GetShape() const { return fShape; }

@@ -22,7 +22,9 @@ namespace Experimental {
 // REveJetCone
 //------------------------------------------------------------------------------
 
-class REveJetCone : public REveShape {
+class REveJetCone : public REveShape,
+                    public REveProjectable
+{
    friend class REveJetConeProjected;
 
 private:
@@ -74,11 +76,14 @@ public:
    ClassDef(REveJetCone, 0); // Short description.
 };
 
+
 //------------------------------------------------------------------------------
 // REveJetConeProjected
 //------------------------------------------------------------------------------
 
-class REveJetConeProjected : public REveShape, public REveProjected {
+class REveJetConeProjected : public REveShape,
+                             public REveProjected
+{
 private:
    REveJetConeProjected(const REveJetConeProjected &);            // Not implemented
    REveJetConeProjected &operator=(const REveJetConeProjected &); // Not implemented
@@ -87,7 +92,7 @@ protected:
    virtual void SetDepthLocal(Float_t d);
 
 public:
-   REveJetConeProjected(const char *n = "REveJetConeProjected", const char *t = "");
+   REveJetConeProjected(const std::string& n = "REveJetConeProjected", const std::string& t = "");
    virtual ~REveJetConeProjected();
 
    void BuildRenderData(); // override;

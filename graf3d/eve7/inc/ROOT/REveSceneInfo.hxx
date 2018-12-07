@@ -20,7 +20,8 @@ namespace Experimental {
 class REveViewer;
 class REveScene;
 
-class REveSceneInfo : public REveElement, public TNamed {
+class REveSceneInfo : public REveElement
+{
 private:
    REveSceneInfo(const REveSceneInfo &);            // Not implemented
    REveSceneInfo &operator=(const REveSceneInfo &); // Not implemented

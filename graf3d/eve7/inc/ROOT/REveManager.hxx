@@ -51,7 +51,7 @@ public:
       RRedrawDisabler(const RRedrawDisabler &);            // Not implemented
       RRedrawDisabler &operator=(const RRedrawDisabler &); // Not implemented
 
-      REveManager *fMgr{nullptr};
+      REveManager *fMgr = nullptr;
 
    public:
       RRedrawDisabler(REveManager *m) : fMgr(m)
@@ -97,13 +97,13 @@ protected:
 
    TFolder                  *fMacroFolder;
 
-   REveScene                *fWorld;
+   REveScene                *fWorld   = nullptr;
 
-   REveViewerList           *fViewers;
-   REveSceneList            *fScenes;
+   REveViewerList           *fViewers = nullptr;
+   REveSceneList            *fScenes  = nullptr;
 
-   REveScene                *fGlobalScene;
-   REveScene                *fEventScene;
+   REveScene                *fGlobalScene = nullptr;
+   REveScene                *fEventScene  = nullptr;
 
    Int_t                     fRedrawDisabled;
    Bool_t                    fFullRedraw;
@@ -115,19 +115,14 @@ protected:
 
    // ElementId management
    std::unordered_map<ElementId_t, REveElement*> fElementIdMap;
-   ElementId_t                                   fLastElementId =  0;
-   ElementId_t                                   fNumElementIds =  0;
-   ElementId_t                                   fMaxElementIds = -1;
+   ElementId_t                                   fLastElementId = 0;
+   ElementId_t                                   fNumElementIds = 0;
+   ElementId_t                                   fMaxElementIds = std::numeric_limits<ElementId_t>::max();
 
-   // Fine grained scene updates.
-   TExMap                   *fStampedElements;
-
-   // Selection / hihglight elements
-   REveSelection            *fSelection;
-   REveSelection            *fHighlight;
-
-   REveElementList          *fOrphanage;
-   Bool_t                    fUseOrphanage;
+   // Selection / highlight elements
+   REveElement              *fSelectionList = nullptr;
+   REveSelection            *fSelection     = nullptr;
+   REveSelection            *fHighlight     = nullptr;
 
    std::shared_ptr<ROOT::Experimental::RWebWindow>  fWebWindow;
    std::vector<Conn>                                fConnList;
@@ -142,11 +137,6 @@ public:
 
    REveSelection*     GetSelection() const { return fSelection; }
    REveSelection*     GetHighlight() const { return fHighlight; }
-
-   REveElementList*   GetOrphanage()    const { return fOrphanage;    }
-   Bool_t             GetUseOrphanage() const { return fUseOrphanage; }
-   void               SetUseOrphanage(Bool_t o) { fUseOrphanage = o;  }
-   void               ClearOrphanage();
 
    REveSceneList*    GetScenes()   const { return fScenes;  }
    REveViewerList*   GetViewers()  const { return fViewers; }
@@ -182,9 +172,6 @@ public:
 
    void ElementChanged(REveElement* element, Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE);
    void ScenesChanged(REveElement::List_t& scenes);
-
-   // Fine grained updates via stamping.
-   void ElementStamped(REveElement* element);
 
    void AddElement(REveElement* element, REveElement* parent=0);
    void AddGlobalElement(REveElement* element, REveElement* parent=0);
@@ -228,9 +215,7 @@ public:
    // Access to internals, needed for low-level control in advanced
    // applications.
 
-   void    EnforceTimerActive (Bool_t ta) { fTimerActive = ta; }
-
-   TExMap* PtrToStampedElements() { return fStampedElements; }
+   void EnforceTimerActive (Bool_t ta) { fTimerActive = ta; }
 
    void HttpServerCallback(unsigned connid, const std::string &arg);
    // void Send(void* buff, unsigned connid);

@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #include <ROOT/REveTrans.hxx>
-#include <ROOT/REveUtil.hxx>
+#include <ROOT/REveTypes.hxx>
 
 #include "TBuffer.h"
 #include "TClass.h"

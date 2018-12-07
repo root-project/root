@@ -8,18 +8,24 @@
    xmlns:f="sap.ui.layout.form"
    height="100%">
 
-   <ObjectPageHeaderContent id="header">
+   <ObjectPageHeaderContent id="header" >
       <content>
-         <layout:VerticalLayout>
-           <m:ObjectStatus title="Table"
-                                                text="Tracks Collection"/>
-            <m:ObjectStatus title="Class" text="TParticle"/>
+        <layout:VerticalLayout>
+          <m:Label text="Choose Collection:" />
+	  <m:ComboBox id="ccombo" change="collectionChanged"
+                                enabled="false"
+				items="{
+				       path: 'collections>/itemx'
+				}">
+				<core:Item key="{collections>key}" text="{collections>text}" />
+			</m:ComboBox>
          </layout:VerticalLayout>
          <layout:VerticalLayout>
+           <m:Label text="Edit table:" />
             <m:Button icon="sap-icon://edit"
                                           press="toggleTableEdit"
                                           tooltip="toggle table edit"/>
-                                                
+
          </layout:VerticalLayout>
                         <!--
                         <layout:VerticalLayout id="tableEdit" width="97%">

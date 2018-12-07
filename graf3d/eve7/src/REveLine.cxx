@@ -30,30 +30,30 @@ An arbitrary polyline with fixed line and marker attributes.
 
 Bool_t REveLine::fgDefaultSmooth = kFALSE;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveLine::REveLine(Int_t n_points, ETreeVarType_e tv_type) :
-   REvePointSet("Line", n_points, tv_type),
+REveLine::REveLine(const char* name, const char *title, Int_t n_points) :
+   REvePointSet(name, title, n_points),
    fRnrLine   (kTRUE),
    fRnrPoints (kFALSE),
    fSmooth    (fgDefaultSmooth)
 {
    fMainColorPtr = &fLineColor;
-   fMarkerColor  =  kGreen;
+   fMarkerColor  = kGreen;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Copy constructor.
 
-REveLine::REveLine(const char* name, Int_t n_points, ETreeVarType_e tv_type) :
-   REvePointSet(name, n_points, tv_type),
-   fRnrLine   (kTRUE),
-   fRnrPoints (kFALSE),
-   fSmooth    (fgDefaultSmooth)
+REveLine::REveLine(const REveLine &l) :
+   REvePointSet(l),
+   TAttLine    (l),
+   fRnrLine    (l.fRnrLine),
+   fRnrPoints  (l.fRnrPoints),
+   fSmooth     (l.fSmooth)
 {
-   fMainColorPtr = &fLineColor;
-   fMarkerColor = kGreen;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,10 +179,12 @@ void REveLine::SetSmooth(Bool_t r)
 
 void REveLine::ReduceSegmentLengths(Float_t max)
 {
+   // XXXX rewrite
+
    const Float_t max2 = max*max;
 
-   Float_t    *p = GetP();
-   Int_t       s = Size();
+   Float_t    *p = & fPoints[0].fX;
+   Int_t       s = fSize;
    REveVector  a, b, d;
 
    std::vector<REveVector> q;
@@ -220,12 +222,11 @@ Float_t REveLine::CalculateLineLength() const
 {
    Float_t sum = 0;
 
-   Int_t    s = Size();
-   Float_t *p = GetP();
-   for (Int_t i = 1; i < s; ++i, p += 3)
+   for (Int_t i = 1; i < fSize; ++i)
    {
-      sum += TMath::Sqrt(sqr(p[3] - p[0]) + sqr(p[4] - p[1]) + sqr(p[5] - p[2]));
+      sum += fPoints[i - 1].Distance(fPoints[i]);
    }
+
    return sum;
 }
 
@@ -236,7 +237,7 @@ Float_t REveLine::CalculateLineLength() const
 REveVector REveLine::GetLineStart() const
 {
    REveVector v;
-   GetPoint(0, v.fX, v.fY, v.fZ);
+   if (fSize > 0) v = RefPoint(0);
    return v;
 }
 
@@ -247,7 +248,7 @@ REveVector REveLine::GetLineStart() const
 REveVector REveLine::GetLineEnd() const
 {
    REveVector v;
-   GetPoint(fLastPoint, v.fX, v.fY, v.fZ);
+   if (fSize > 0) v = RefPoint(fSize - 1);
    return v;
 }
 
@@ -294,7 +295,7 @@ TClass* REveLine::ProjectedClass(const REveProjection*) const
 
 Int_t REveLine::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-   Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
+   Int_t ret = REvePointSet::WriteCoreJson(j, rnr_offset);
 
    j["fLineWidth"] = GetLineWidth();
    j["fLineStyle"] = GetLineStyle();
@@ -308,13 +309,10 @@ Int_t REveLine::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
 void REveLine::BuildRenderData()
 {
-   fRenderData = std::make_unique<REveRenderData>("makeTrack", 3*fN);
-
-   // XXXX Do this for whole array at a time.
-   Float_t x, y, z;
-   for (int i = 0; i < fN; ++i) {
-      GetPoint(i, x, y,z);
-      fRenderData->PushV(x, y, z);
+   if (fSize > 0)
+   {
+      fRenderData = std::make_unique<REveRenderData>("makeTrack", 3*fSize);
+      fRenderData->PushV(&fPoints[0].fX, 3*fSize);
    }
 }
 
@@ -369,8 +367,8 @@ void REveLineProjected::SetDepthLocal(Float_t d)
 {
    SetDepthCommon(d, this, fBBox);
 
-   Int_t    n = Size();
-   Float_t *p = GetP() + 2;
+   Int_t    n = fSize;
+   Float_t *p = & fPoints[0].fZ;
    for (Int_t i = 0; i < n; ++i, p+=3)
       *p = fDepth;
 }
@@ -385,10 +383,11 @@ void REveLineProjected::UpdateProjection()
    REveLine      & als  = * dynamic_cast<REveLine*>(fProjectable);
    REveTrans      *tr   =   als.PtrMainTrans(kFALSE);
 
-   Int_t n = als.Size();
+   Int_t n = als.GetSize();
    Reset(n);
-   fLastPoint = n - 1;
-   Float_t *o = als.GetP(), *p = GetP();
+   fSize = n;
+   const Float_t *o = & als.RefPoint(0).fX;
+         Float_t *p = & fPoints[0].fX;
    for (Int_t i = 0; i < n; ++i, o+=3, p+=3)
    {
       proj.ProjectPointfv(tr, o, p, fDepth);

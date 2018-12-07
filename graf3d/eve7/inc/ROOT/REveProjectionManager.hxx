@@ -19,7 +19,10 @@
 namespace ROOT {
 namespace Experimental {
 
-class REveProjectionManager : public REveElementList, public TAttBBox {
+class REveProjectionManager : public REveElement,
+                              public REveAuntAsList,
+                              public TAttBBox
+{
 private:
    REveProjectionManager(const REveProjectionManager &);            // Not implemented
    REveProjectionManager &operator=(const REveProjectionManager &); // Not implemented
@@ -27,16 +30,16 @@ private:
 protected:
    REveProjection *fProjections[REveProjection::kPT_End];
 
-   REveProjection *fProjection{nullptr}; // current projection
-   REveVector fCenter;                   // center of distortion
-   Float_t fCurrentDepth{0};             // z depth of object being projected
+   REveProjection *fProjection = nullptr; // current projection
+   REveVector      fCenter;               // center of distortion
+   Float_t         fCurrentDepth = 0;     // z depth of object being projected
 
-   List_t fDependentEls; // elements that depend on manager and need to be destroyed with it
+   List_t fDependentEls;                  // elements that depend on manager and need to be destroyed with it
 
-   Bool_t fImportEmpty{kFALSE}; // import sub-trees with no projectable elements
+   Bool_t fImportEmpty = kFALSE;          // import sub-trees with no projectable elements
 
    virtual Bool_t ShouldImport(REveElement *el);
-   virtual void UpdateDependentElsAndScenes(REveElement *root);
+   virtual void   UpdateDependentElsAndScenes(REveElement *root);
 
 public:
    REveProjectionManager(REveProjection::EPType_e type = REveProjection::kPT_Unknown);

@@ -28,11 +28,10 @@ in viewer coordinate system.
 /// Constructor.
 
 REveSceneInfo::REveSceneInfo(REveViewer* viewer, REveScene* scene) :
-   REveElement (),
-   TNamed        (Form("SI - %s", scene->GetName()),
-                  Form("REveSceneInfo of scene '%s'", scene->GetName())),
-   fViewer       (viewer),
-   fScene        (scene)
+   REveElement (Form("SI - %s", scene->GetCName()),
+                Form("REveSceneInfo of scene '%s'", scene->GetCName())),
+   fViewer     (viewer),
+   fScene      (scene)
 {
 }
 

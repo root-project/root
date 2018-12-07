@@ -20,12 +20,13 @@
 namespace ROOT {
 namespace Experimental {
 
-class REveRenderData {
+class REveRenderData
+{
 private:
-   std::string fRnrFunc;
+   std::string        fRnrFunc;
    std::vector<float> fVertexBuffer;
    std::vector<float> fNormalBuffer;
-   std::vector<int> fIndexBuffer;
+   std::vector<int>   fIndexBuffer;
    std::vector<float> fMatrix;
 
 public:

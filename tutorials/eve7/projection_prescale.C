@@ -83,7 +83,7 @@ void projection_prescale(std::string type = "RhPhi")
    TFile::SetCacheFileDir(".");
    auto geoManager = REX::gEve->GetGeometry("http://root.cern.ch/files/cms.root");
    TGeoNode* top = geoManager->GetTopVolume()->FindNode("CMSE_1");
-   auto holder = new REX::REveElementList("MUON");
+   auto holder = new REX::REveElement("MUON");
    REX::gEve->GetGlobalScene()->AddElement(holder);
    auto n = getNodeFromPath(top, "MUON_1/MB_1");
    auto m = new REX::REveGeoShape("MB_1");
@@ -131,5 +131,7 @@ void projection_prescale(std::string type = "RhPhi")
       makeProjectedViewsAndScene(REX::REveProjection::kPT_RhoZ, true);
       makeProjectedViewsAndScene(REX::REveProjection::kPT_RhoZ, false);
    }
+
+   REX::gEve->Show();
 }
  

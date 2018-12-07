@@ -10,10 +10,13 @@
  *************************************************************************/
 
 #include <ROOT/REveDataClasses.hxx>
+#include <ROOT/REveUtil.hxx>
 
 #include "TROOT.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
+#include "TColor.h"
+
 
 #include "json.hpp"
 
@@ -22,20 +25,28 @@ using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
 
+Color_t  REveDataCollection::fgDefaultColor  = kBlue;
+
 //==============================================================================
 // REveDataCollection
 //==============================================================================
 
-REveDataCollection::REveDataCollection(const char* n, const char* t) :
-   REveElementList(n, t)
+REveDataCollection::REveDataCollection(const std::string& n, const std::string& t) :
+   REveElement(n, t)
 {
    fChildClass = REveDataItem::Class();
+
+   SetupDefaultColorAndTransparency(fgDefaultColor, true, true);
+   
+   _handler_func = 0;
+   _handler_func_ids = 0;
 }
 
-void REveDataCollection::AddItem(void *data_ptr, const char *n, const char *t)
+void REveDataCollection::AddItem(void *data_ptr, const std::string& n, const std::string& t)
 {
    auto el = new REveDataItem(n, t);
    AddElement(el);
+   el->SetMainColor(GetMainColor());
    fItems.emplace_back(data_ptr, el);
 }
 
@@ -57,15 +68,20 @@ void REveDataCollection::SetFilterExpr(const TString& filter)
    // printf("%s\n", s.Data());
    try {
       gROOT->ProcessLine(s.Data());
+      // AMT I don't know why ApplyFilter call is separated
+      ApplyFilter();
    }
    catch (const std::exception &exc)
    {
       std::cerr << "EveDataCollection::SetFilterExpr" << exc.what();
    }
+
 }
 
 void REveDataCollection::ApplyFilter()
 {
+   Ids_t ids;
+   int idx = 0;
    for (auto &ii : fItems)
    {
       bool res = fFilterFoo(ii.fDataPtr);
@@ -73,9 +89,16 @@ void REveDataCollection::ApplyFilter()
       // printf("Item:%s -- filter result = %d\n", ii.fItemPtr->GetElementName(), res);
 
       ii.fItemPtr->SetFiltered( ! res );
+
+      // AMT : not sure if ApplyFilter is the right place to set visibility
+      ii.fItemPtr->SetRnrSelf( res );
+      ids.push_back(idx++);
    }
+   StampObjProps();
+   if ( _handler_func_ids) _handler_func_ids( this , ids);
 }
 
+//______________________________________________________________________________
 
 Int_t REveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
@@ -96,13 +119,74 @@ Int_t REveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
    return ret;
 }
+
+//______________________________________________________________________________
+
+void REveDataCollection::SetCollectionColorRGB(UChar_t r, UChar_t g, UChar_t b)
+{
+   Color_t oldv = GetMainColor();
+   Color_t newv = TColor::GetColor(r, g, b);
+   int idx = 0;
+   Ids_t ids;
+   for (auto & chld : fChildren)
+   {
+      // if (chld->GetMainColor() == oldv) {
+         chld->SetMainColor(newv);
+         printf(" REveDataCollection::SetCollectionColorRGB going to change color for idx %d --------------------\n", idx);
+         ids.push_back(idx);
+         // }
+
+      idx++;
+   }
+
+   REveElement::SetMainColor(newv);
+   printf("REveDataCollection::SetCollectionColorRGB color ched to %d ->%d\n", oldv, GetMainColor());
+   _handler_func_ids( this , ids);
+}
+
+//______________________________________________________________________________
+
+void REveDataCollection::SetCollectionVisible(bool iRnrSelf)
+{
+   SetRnrSelf(iRnrSelf);
+
+   Ids_t ids;
+
+   for (int i = 0; i < GetNItems(); ++i ) {
+      ids.push_back(i);
+      GetDataItem(i)->SetRnrSelf(fRnrSelf);
+   }
+
+   _handler_func_ids( this , ids);
+}
+
+
+
+//______________________________________________________________________________
+
+void REveDataCollection::ItemChanged(REveDataItem* iItem)
+{
+   int idx = 0;
+   Ids_t ids;
+   for (auto & chld : fChildren)
+   {
+      if (chld == iItem) {
+         ids.push_back(idx);
+         _handler_func_ids( this , ids);
+         return;
+      }
+      idx++;
+   }
+}
+
 //==============================================================================
 // REveDataItem
 //==============================================================================
 
-REveDataItem::REveDataItem(const char* n, const char* t) :
-   REveElementList(n, t)
+REveDataItem::REveDataItem(const std::string& n, const std::string& t) :
+   REveElement(n, t)
 {
+   SetupDefaultColorAndTransparency(kMagenta, true, true);
 }
 
 Int_t REveDataItem::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
@@ -112,12 +196,36 @@ Int_t REveDataItem::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    return ret;
 }
 
+void REveDataItem::SetItemColorRGB(UChar_t r, UChar_t g, UChar_t b)
+{
+   Color_t color = TColor::GetColor(r, g, b);
+   REveElement::SetMainColor(color);
+   REveDataCollection* c = dynamic_cast<REveDataCollection*>(fMother);
+   c->ItemChanged(this);
+}
+
+void REveDataItem::SetItemRnrSelf(bool iRnrSelf)
+{
+   REveElement::SetRnrSelf(iRnrSelf);
+   REveDataCollection* c = dynamic_cast<REveDataCollection*>(fMother);
+   c->ItemChanged(this);
+}
+
+void REveDataItem::SetFiltered(bool f)
+{
+  if (f != fFiltered)
+  {
+     fFiltered = f;
+     StampObjProps();
+  }
+}
+
 //==============================================================================
 // REveDataTable
 //==============================================================================
 
-REveDataTable::REveDataTable(const char* n, const char* t) :
-   REveElementList(n, t)
+REveDataTable::REveDataTable(const std::string& n, const std::string& t) :
+   REveElement(n, t)
 {
    fChildClass = REveDataColumn::Class();
 }
@@ -131,7 +239,7 @@ void REveDataTable::PrintTable()
       void         *data = fCollection->GetDataPtr(i);
       REveDataItem *item = fCollection->GetDataItem(i);
 
-      printf("| %-20s |", item->GetElementName());
+      printf("| %-20s |", item->GetCName());
 
       for (auto & chld : fChildren)
       {
@@ -157,7 +265,7 @@ Int_t REveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
       for (auto & chld : fChildren)
       {
          auto clmn = dynamic_cast<REveDataColumn*>(chld);
-         row[chld->GetElementName()] = clmn->EvalExpr(data);
+         row[chld->GetCName()] = clmn->EvalExpr(data);
          // printf(" %10s |", clmn->EvalExpr(data).c_str());
 
       }
@@ -168,7 +276,7 @@ Int_t REveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    return ret;
 }
 
-void REveDataTable::AddNewColumn(const char* expr, const char* title, int prec)
+void REveDataTable::AddNewColumn(const std::string& expr, const std::string& title, int prec)
 {
    auto c = new REX::REveDataColumn(title);
    AddElement(c);
@@ -183,12 +291,12 @@ void REveDataTable::AddNewColumn(const char* expr, const char* title, int prec)
 // REveDataColumn
 //==============================================================================
 
-REveDataColumn::REveDataColumn(const char* n, const char* t) :
-   REveElementList(n, t)
+REveDataColumn::REveDataColumn(const std::string& n, const std::string& t) :
+   REveElement(n, t)
 {
 }
 
-void REveDataColumn::SetExpressionAndType(const TString& expr, FieldType_e type)
+void REveDataColumn::SetExpressionAndType(const std::string& expr, FieldType_e type)
 {
    auto table = dynamic_cast<REveDataTable*>(fMother);
    auto coll = table->GetCollection();
@@ -197,8 +305,8 @@ void REveDataColumn::SetExpressionAndType(const TString& expr, FieldType_e type)
    fExpression = expr;
    fType       = type;
 
-   const char *rtyp{nullptr};
-   const void *fooptr{nullptr};
+   const char *rtyp   = nullptr;
+   const void *fooptr = nullptr;
 
    switch (fType)
    {
@@ -246,5 +354,5 @@ std::string REveDataColumn::EvalExpr(void *iptr)
          return fStringFoo(iptr);
       }
    }
-   return "XYZZ";
+   return "XYZ";
 }

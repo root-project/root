@@ -11,6 +11,7 @@
 
 #include <ROOT/REveViewer.hxx>
 
+#include <ROOT/REveUtil.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveSceneInfo.hxx>
 #include <ROOT/REveManager.hxx>
@@ -32,8 +33,8 @@ Eve representation of a GL view. In a gist, it's a camera + a list of scenes.
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveViewer::REveViewer(const char* n, const char* t) :
-   REveElementList(n, t)
+REveViewer::REveViewer(const std::string& n, const std::string& t) :
+   REveElement(n, t)
 {
    // SetChildClass(REveSceneInfo::Class());
 }
@@ -98,19 +99,6 @@ void REveViewer::RemoveElementsLocal()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Object to be edited when this is selected, returns the TGLViewer.
-/// Virtual from REveElement.
-
-TObject* REveViewer::GetEditorObject(const REveException& /*eh*/) const
-{
-   // if (!fGLViewer)
-   //    throw(eh + "fGLViewer not set.");
-   // return fGLViewer;
-
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Receive a pasted object. REveViewer only accepts objects of
 /// class REveScene.
 /// Virtual from REveElement.
@@ -137,9 +125,9 @@ List of Viewers providing common operations on REveViewer collections.
 
 ////////////////////////////////////////////////////////////////////////////////
 
-REveViewerList::REveViewerList(const char* n, const char* t) :
-   REveElementList(n, t),
-   fShowTooltip   (kTRUE),
+REveViewerList::REveViewerList(const std::string& n, const std::string& t) :
+   REveElement  (n, t),
+   fShowTooltip (kTRUE),
 
    fBrightness(0),
    fUseLightColorSet(kFALSE)
@@ -165,8 +153,7 @@ REveViewerList::~REveViewerList()
 
 void REveViewerList::AddElement(REveElement* el)
 {
-   REveElementList::AddElement(el);
-   el->IncParentIgnoreCnt();
+   REveElement::AddElement(el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +164,7 @@ void REveViewerList::RemoveElementLocal(REveElement* el)
    // This was needed as viewer was in EveWindowManager hierarchy, too.
    // el->DecParentIgnoreCnt();
 
-   REveElementList::RemoveElementLocal(el);
+   REveElement::RemoveElementLocal(el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -192,7 +179,7 @@ void REveViewerList::RemoveElementsLocal()
    //    (*i)->DecParentIgnoreCnt();
    // }
 
-   REveElementList::RemoveElementsLocal();
+   REveElement::RemoveElementsLocal();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

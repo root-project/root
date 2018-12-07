@@ -38,8 +38,8 @@ calculated by multiplying the transformation matrices of all parents.
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveScene::REveScene(const char* n, const char* t) :
-   REveElementList(n, t)
+REveScene::REveScene(const std::string& n, const std::string& t) :
+   REveElement(n, t)
 {
    fScene = this;
 }
@@ -106,7 +106,7 @@ void REveScene::SceneElementAdded(REveElement* element)
 {
    assert(fAcceptingChanges);
    // printf("REveScene::SceneElementAdded(\n");
-   fAddedElements.insert(element);
+   fAddedElements.push_back(element);
 }
 
 
@@ -126,7 +126,11 @@ void REveScene::EndAcceptingChanges()
 
 void REveScene::ProcessChanges()
 {
-   // should return net message or talk to gEve about it
+   if (IsChanged())
+   {
+      StreamRepresentationChanges();
+      SendChangesToSubscribers();
+   }
 }
 
 void REveScene::StreamElements()
@@ -167,7 +171,8 @@ void REveScene::StreamElements()
    fOutputBinary.resize(fTotalBinarySize);
    Int_t off = 0;
 
-   for (auto &&e : fElsWithBinaryData) {
+   for (auto &&e : fElsWithBinaryData)
+   {
       auto rd_size = e->fRenderData->Write(&fOutputBinary[off], fOutputBinary.size() - off);
       off += rd_size;
    }
@@ -202,7 +207,23 @@ void REveScene::StreamJsonRecurse(REveElement *el, nlohmann::json &jarr)
 
    for (auto &&c : el->fChildren)
    {
-      StreamJsonRecurse(c, jarr);
+      // Stream only objects element el is a mother of.
+      //
+      // XXXX This is spooky side effect of multi-parenting.
+      //
+      // In particular screwed up for selection.
+      // Selection now streams element ids and implied selected ids
+      // and secondary-ids as part of core json.
+      //
+      // I wonder how this screws up REveProjectionManager (should
+      // we hold a map of already streamed ids?).
+      //
+      // Do uncles and aunts and figure out a clean way for backrefs.
+
+      if (c->GetMother() == el)
+      {
+         StreamJsonRecurse(c, jarr);
+      }
    }
 }
 
@@ -211,6 +232,7 @@ void REveScene::StreamJsonRecurse(REveElement *el, nlohmann::json &jarr)
 /// Prepare data for sending element changes
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 void REveScene::StreamRepresentationChanges()
 {
    fOutputJson.clear();
@@ -258,7 +280,7 @@ void REveScene::StreamRepresentationChanges()
 
       if (bits & kCBObjProps)
       {
-         printf("total element change %s \n", el->GetElementName());
+         printf("total element change %s \n", el->GetCName());
 
          Int_t rd_size = el->WriteCoreJson(jobj, fTotalBinarySize);
          if (rd_size) {
@@ -275,7 +297,7 @@ void REveScene::StreamRepresentationChanges()
 
    for (auto el : fAddedElements) {
       nlohmann::json jobj = {};
-      printf("scene representation change new element change %s \n", el->GetElementName());
+      printf("scene representation change new element change %s \n", el->GetCName());
       Int_t rd_size = el->WriteCoreJson(jobj, fTotalBinarySize);
       jarr.push_back(jobj);
       if (rd_size) {
@@ -305,11 +327,10 @@ void REveScene::StreamRepresentationChanges()
    nlohmann::json msg = { {"header", jhdr}, {"arr", jarr}};
    fOutputJson = msg.dump();
 
-   printf("[%s] Stream representation changes %s ...\n", GetElementName(), fOutputJson.substr(0,30).c_str() );
+   printf("[%s] Stream representation changes %s ...\n", GetCName(), fOutputJson.substr(0,30).c_str() );
 }
 
-void
-REveScene::SendChangesToSubscribers()
+void REveScene::SendChangesToSubscribers()
 {
    for (auto && client : fSubscribers) {
       printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
@@ -321,10 +342,11 @@ REveScene::SendChangesToSubscribers()
    }
 }
 
-Bool_t
-REveScene::IsChanged() const
+Bool_t REveScene::IsChanged() const
 {
-   printf("REveScene::IsChanged %s %d\n", GetElementName(), fAddedElements.empty());
+   printf("REveScene::IsChanged %s (changed=%d, added=%d, removed=%d)\n", GetCName(),
+          (int) fChangedElements.size(), (int) fAddedElements.size(), (int) fRemovedElements.size());
+
    return ! (fChangedElements.empty() && fAddedElements.empty() && fRemovedElements.empty());
 }
 
@@ -457,8 +479,8 @@ List of Scenes providing common operations on REveScene collections.
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveSceneList::REveSceneList(const char* n, const char* t) :
-   REveElementList(n, t)
+REveSceneList::REveSceneList(const std::string& n, const std::string& t) :
+   REveElement(n, t)
 {
    SetChildClass(REveScene::Class());
 }
@@ -543,14 +565,10 @@ void REveSceneList::DestroyElementRenderers(REveElement* element)
 
 void REveSceneList::ProcessSceneChanges()
 {
-   printf("ProcessSceneChanges\n");
+   printf("REveSceneList::ProcessSceneChanges\n");
 
-   for (List_i sIt=fChildren.begin(); sIt!=fChildren.end(); ++sIt)
+   for (auto &el : fChildren)
    {
-      REveScene* s = (REveScene*) *sIt;
-      if (s->IsChanged()) {
-         s->StreamRepresentationChanges();
-         s->SendChangesToSubscribers();
-      }
+      ((REveScene*) el)->ProcessChanges();
    }
 }
