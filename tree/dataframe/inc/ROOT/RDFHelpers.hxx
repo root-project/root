@@ -136,6 +136,16 @@ void SaveGraph(NodeType node, const std::string &outputFile)
    out.close();
 }
 
+// clang-format off
+/// Cast a RDataFrame node to the common type ROOT::RDF::RNode
+/// \param[in] Any node of a RDataFrame graph
+// clang-format on
+template <typename NodeType>
+RNode AsRNode(NodeType node)
+{
+   return node;
+}
+
 } // namespace RDF
 } // namespace ROOT
 #endif
