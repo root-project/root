@@ -23,14 +23,14 @@ class REveScene;
 // REveViewer
 /******************************************************************************/
 
-class REveViewer : public REveElementList
+class REveViewer : public REveElement
 {
 private:
    REveViewer(const REveViewer&);            // Not implemented
    REveViewer& operator=(const REveViewer&); // Not implemented
 
 public:
-   REveViewer(const char* n="REveViewer", const char* t="");
+   REveViewer(const std::string& n="REveViewer", const std::string& t="");
    virtual ~REveViewer();
 
    void Redraw(Bool_t resetCameras=kFALSE);
@@ -40,8 +40,6 @@ public:
 
    virtual void RemoveElementLocal(REveElement* el);
    virtual void RemoveElementsLocal();
-
-   virtual TObject* GetEditorObject(const REveException& eh="REveViewer::GetEditorObject ") const;
 
    virtual Bool_t HandleElementPaste(REveElement* el);
 
@@ -55,7 +53,7 @@ public:
 // REveViewerList
 /******************************************************************************/
 
-class REveViewerList : public REveElementList
+class REveViewerList : public REveElement
 {
 private:
    REveViewerList(const REveViewerList&);            // Not implemented
@@ -70,7 +68,7 @@ protected:
    void HandleTooltip();
 
 public:
-   REveViewerList(const char* n="REveViewerList", const char* t="");
+   REveViewerList(const std::string& n="REveViewerList", const std::string& t="");
    virtual ~REveViewerList();
 
    virtual void AddElement(REveElement* el);

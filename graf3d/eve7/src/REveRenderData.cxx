@@ -20,7 +20,8 @@ using namespace ROOT::Experimental;
 /////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-REveRenderData::REveRenderData(const std::string &func, int size_vert, int size_norm, int size_idx) : fRnrFunc(func)
+REveRenderData::REveRenderData(const std::string &func, int size_vert, int size_norm, int size_idx) :
+   fRnrFunc(func)
 {
    Reserve(size_vert, size_norm, size_idx);
 }

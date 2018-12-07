@@ -29,7 +29,7 @@ and clear corresponding selection-set from there.
 
 To support tooltips for sub-elements, implement:
 ~~~ {.cpp}
-    virtual TString REveElement::GetHighlightTooltip();
+    virtual std::string REveElement::GetHighlightTooltip() const;
 ~~~
 and return tooltip for the entry in the fHighlightedSet.
 There should always be a single entry there.

@@ -28,6 +28,9 @@
          loading scripts...
       </div>
 
+      <script src="jsrootsys/scripts/three.min.js"></script>
+      <script src="jsrootsys/scripts/three.extra.min.js"></script>
+
       <script type='text/javascript'>
 
         var evedir = JSROOT.source_dir.replace(/jsrootsys/g, "evedir");
@@ -59,7 +62,8 @@
         JSROOT.ConnectWebWindow({
            prereq: "openui5;user:" + evedir + "EveManager.js",
 //           openui5src: "jsroot",    // use JSROOT provided package, experimental
-//           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified", // customize openui5 libs
+           openui5src: "https://openui5.hana.ondemand.com/",
+           openui5libs: "sap.m, sap.ui.layout, sap.ui.table, sap.ui.commons", // customize openui5 libs
            prereq_logdiv: "EveDiv",
            callback: InitUI
         });

@@ -18,7 +18,8 @@
 namespace ROOT {
 namespace Experimental {
 
-class REveTrackProjected : public REveTrack, public REveProjected
+class REveTrackProjected : public REveTrack,
+                           public REveProjected
 {
 private:
    REveTrackProjected(const REveTrackProjected &);            // Not implemented

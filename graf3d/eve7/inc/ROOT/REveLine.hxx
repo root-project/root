@@ -24,10 +24,10 @@ namespace Experimental {
 // REveLine
 //------------------------------------------------------------------------------
 
-class REveLine : public REvePointSet, public TAttLine
+class REveLine : public REvePointSet,
+                 public TAttLine
 {
 private:
-   REveLine(const REveLine &);            // Not implemented
    REveLine &operator=(const REveLine &); // Not implemented
 
 protected:
@@ -38,8 +38,8 @@ protected:
    static Bool_t fgDefaultSmooth;
 
 public:
-   REveLine(Int_t n_points = 0, ETreeVarType_e tv_type = kTVT_XYZ);
-   REveLine(const char *name, Int_t n_points = 0, ETreeVarType_e tv_type = kTVT_XYZ);
+   REveLine(const char *name="", const char *title="", Int_t n_points = 0);
+   REveLine(const REveLine &l);
    virtual ~REveLine() {}
 
    virtual void SetMarkerColor(Color_t col);
@@ -51,11 +51,11 @@ public:
    Bool_t GetRnrLine() const { return fRnrLine; }
    Bool_t GetRnrPoints() const { return fRnrPoints; }
    Bool_t GetSmooth() const { return fSmooth; }
-   void SetRnrLine(Bool_t r);
-   void SetRnrPoints(Bool_t r);
-   void SetSmooth(Bool_t r);
+   void   SetRnrLine(Bool_t r);
+   void   SetRnrPoints(Bool_t r);
+   void   SetSmooth(Bool_t r);
 
-   void ReduceSegmentLengths(Float_t max);
+   void    ReduceSegmentLengths(Float_t max);
    Float_t CalculateLineLength() const;
 
    REveVector GetLineStart() const;

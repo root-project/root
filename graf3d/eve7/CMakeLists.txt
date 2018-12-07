@@ -1,8 +1,12 @@
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
   HEADERS
+    ROOT/REveChunkManager.hxx
     ROOT/REveClient.hxx
     ROOT/REveCompound.hxx
     ROOT/REveDataClasses.hxx
+    ROOT/REveDataProxyBuilderBase.hxx
+    ROOT/REveDataSimpleProxyBuilder.hxx
+    ROOT/REveDataSimpleProxyBuilderTemplate.hxx
     ROOT/REveElement.hxx
     ROOT/REveGeoPolyShape.hxx
     ROOT/REveGeoShapeExtract.hxx
@@ -20,19 +24,25 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOT/REveProjectionManager.hxx
     ROOT/REveProjections.hxx
     ROOT/REveRenderData.hxx
+    ROOT/REveScalableStraightLineSet.hxx
     ROOT/REveScene.hxx
     ROOT/REveSceneInfo.hxx
     ROOT/REveSecondarySelectable.hxx
     ROOT/REveSelection.hxx
     ROOT/REveShape.hxx
+    ROOT/REveStraightLineSet.hxx
+    ROOT/REveTableInfo.hxx
+    ROOT/REveTableProxyBuilder.hxx     
     ROOT/REveTrack.hxx
     ROOT/REveTrackProjected.hxx
     ROOT/REveTrackPropagator.hxx
     ROOT/REveTrans.hxx
     ROOT/REveTreeTools.hxx
+    ROOT/REveTypes.hxx
     ROOT/REveUtil.hxx
     ROOT/REveVector.hxx
     ROOT/REveViewer.hxx
+    ROOT/REveViewContext.hxx
     ROOT/REveVSD.hxx
     ROOT/REveVSDStructs.hxx
   SOURCES
@@ -46,8 +56,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     glu/sweep.c
     glu/tess.c
     glu/tessmono.c
+    src/REveChunkManager.cxx
     src/REveCompound.cxx
     src/REveDataClasses.cxx
+    src/REveDataProxyBuilderBase.cxx
+    src/REveDataSimpleProxyBuilder.cxx
     src/REveElement.cxx
     src/REveGeoPolyShape.cxx
     src/REveGeoShape.cxx
@@ -65,16 +78,21 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     src/REveProjectionManager.cxx
     src/REveProjections.cxx
     src/REveRenderData.cxx
+    src/REveScalableStraightLineSet.cxx
     src/REveScene.cxx
     src/REveSceneInfo.cxx
     src/REveSecondarySelectable.cxx
     src/REveSelection.cxx
     src/REveShape.cxx
+    src/REveStraightLineSet.cxx
+    src/REveTableInfo.cxx
+    src/REveTableProxyBuilder.cxx
     src/REveTrack.cxx
     src/REveTrackProjected.cxx
     src/REveTrackPropagator.cxx
     src/REveTrans.cxx
     src/REveTreeTools.cxx
+    src/REveTypes.cxx
     src/REveUtil.cxx
     src/REveVector.cxx
     src/REveViewer.cxx

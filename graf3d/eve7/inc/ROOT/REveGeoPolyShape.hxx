@@ -25,7 +25,8 @@ namespace Experimental {
 
 class REveRenderData;
 
-class REveGeoPolyShape : public TGeoBBox {
+class REveGeoPolyShape : public TGeoBBox
+{
 private:
    REveGeoPolyShape(const REveGeoPolyShape&);            // Not implemented
    REveGeoPolyShape& operator=(const REveGeoPolyShape&); // Not implemented

@@ -22,7 +22,8 @@ namespace Experimental {
 // REveSelectorToEventList
 /******************************************************************************/
 
-class REveSelectorToEventList : public TSelectorDraw {
+class REveSelectorToEventList : public TSelectorDraw
+{
    REveSelectorToEventList(const REveSelectorToEventList &);            // Not implemented
    REveSelectorToEventList &operator=(const REveSelectorToEventList &); // Not implemented
 
@@ -45,7 +46,8 @@ public:
 
 class REvePointSelector;
 
-class REvePointSelectorConsumer {
+class REvePointSelectorConsumer
+{
 public:
    enum ETreeVarType_e { kTVT_XYZ, kTVT_RPhiZ };
 
@@ -65,7 +67,8 @@ public:
    ClassDef(REvePointSelectorConsumer, 1); // Virtual base for classes that can be filled from TTree data via the REvePointSelector class.
 };
 
-class REvePointSelector : public TSelectorDraw {
+class REvePointSelector : public TSelectorDraw
+{
    REvePointSelector(const REvePointSelector &);            // Not implemented
    REvePointSelector &operator=(const REvePointSelector &); // Not implemented
 

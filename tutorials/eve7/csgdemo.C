@@ -89,7 +89,8 @@ void csgdemo ()
    bool poly_first = false;
    if (poly_first)
    {
-      eve_pshape = REX::REveGeoPolyShape::Construct(geo_cshape, 40);
+      eve_pshape = new REX::REveGeoPolyShape;
+      eve_pshape.BuildFromComposite(geo_cshape, 40);
 
       eve_shape = new REX::REveGeoShape("CSG_Result");
       eve_shape->SetShape(eve_pshape);

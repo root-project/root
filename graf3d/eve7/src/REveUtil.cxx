@@ -331,38 +331,6 @@ Float_t REveUtil::GetFraction(Float_t minM, Float_t maxM, Float_t minQ, Float_t 
 }
 
 
-/** \class REveException
-\ingroup REve
-Exception class thrown by Eve classes and macros.
-*/
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool REX::operator==(const TString& t, const std::string& s)
-{ return (s == t.Data()); }
-
-bool REX::operator==(const std::string&  s, const TString& t)
-{ return (s == t.Data()); }
-
-// Exc
-
-REveException::REveException(const std::string& s) : TString(s.c_str())
-{
-   // Constructor.
-}
-
-// Exc + ops
-
-REveException REX::operator+(const REveException &s1, const std::string &s2)
-{ REveException r(s1); r += s2; return r; }
-
-REveException REX::operator+(const REveException &s1, const TString &s2)
-{ REveException r(s1); r += s2; return r; }
-
-REveException REX::operator+(const REveException &s1,  const char *s2)
-{ REveException r(s1); r += s2; return r; }
-
-
 /** \class REveGeoManagerHolder
 \ingroup REve
 Exception safe wrapper for setting gGeoManager.
@@ -478,8 +446,8 @@ void REveRefBackPtr::DecRefCount(REveElement* re)
          fBackRefs.erase(i);
       REveRefCnt::DecRefCount();
    } else {
-      Warning(eh, "render element '%s' not found in back-refs.",
-                  re->GetObject(eh)->GetName());
+      Warning(eh, "element '%s' not found in back-refs.",
+                  re->GetCName());
    }
 }
 

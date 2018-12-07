@@ -29,8 +29,8 @@ class REveManager;
 // REveScene
 /******************************************************************************/
 
-class REveScene : public REveElementList {
-
+class REveScene : public REveElement
+{
    friend class REveManager;
 
 private:
@@ -38,14 +38,22 @@ private:
    REveScene &operator=(const REveScene &); // Not implemented
 
 protected:
-   struct SceneCommand {
+   struct SceneCommand
+   {
       std::string fName;
       std::string fIcon;
-      unsigned fElementId;
       std::string fElementClass;
       std::string fAction;
-      SceneCommand(const std::string &name, const std::string &icon, const REveElement *element, const std::string &action) :
-         fName(name), fIcon(icon), fElementId(element->GetElementId()), fElementClass(element->IsA()->GetName()), fAction(action) {}
+      ElementId_t fElementId;
+
+      SceneCommand(const std::string& name, const std::string& icon,
+                   const REveElement* element, const std::string& action) :
+         fName(name),
+         fIcon(icon),
+         fElementClass(element->IsA()->GetName()),
+         fAction(action),
+         fElementId(element->GetElementId())
+      {}
    };
 
    Bool_t fSmartRefresh{kTRUE};
@@ -53,12 +61,12 @@ protected:
 
    Bool_t fAcceptingChanges{kFALSE};
    Bool_t fChanged{kFALSE};
-   Set_t fChangedElements;
+   Set_t  fChangedElements;
    // For the following two have to rethink how the hierarchy will be handled.
    // If I remove a parent, i have to remove all the children.
    // So this has to be done right on both sides (on eve element and here).
    // I might need a set, so i can easily check if parent is in the removed / added list already.
-   Set_t fAddedElements;
+   List_t fAddedElements;
    std::vector<ElementId_t> fRemovedElements;
 
    std::vector<std::unique_ptr<REveClient>> fSubscribers;
@@ -73,17 +81,17 @@ protected:
    // void RetransHierarchicallyRecurse(REveElement* el, const REveTrans& tp);
 
 public:
-   REveScene(const char *n = "REveScene", const char *t = "");
+   REveScene(const std::string& n = "REveScene", const std::string& t = "");
    virtual ~REveScene();
 
-   virtual void CollectSceneParents(List_t &scenes);
+   void CollectSceneParents(List_t &scenes); // override;
 
    virtual Bool_t SingleRnrState() const { return kTRUE; }
 
-   void SetHierarchical(Bool_t h) { fHierarchical = h; }
+   void   SetHierarchical(Bool_t h) { fHierarchical = h; }
    Bool_t GetHierarchical() const { return fHierarchical; }
 
-   void Changed() { fChanged = kTRUE; } // AMT ??? depricated
+   void   Changed() { fChanged = kTRUE; } // AMT ??? depricated
    Bool_t IsChanged() const;
 
    Bool_t IsAcceptingChanges() const { return fAcceptingChanges; }
@@ -91,9 +99,8 @@ public:
    void SceneElementChanged(REveElement *element);
    void SceneElementAdded(REveElement *element);
    void SceneElementRemoved(ElementId_t id);
-
    void EndAcceptingChanges();
-   void ProcessChanges(); // should return net message or talk to gEve about it
+   void ProcessChanges();
 
    void StreamElements();
    void StreamJsonRecurse(REveElement *el, nlohmann::json &jobj);
@@ -122,14 +129,15 @@ public:
 // REveSceneList
 /******************************************************************************/
 
-class REveSceneList : public REveElementList {
+class REveSceneList : public REveElement
+{
 private:
    REveSceneList(const REveSceneList &);            // Not implemented
    REveSceneList &operator=(const REveSceneList &); // Not implemented
 
 protected:
 public:
-   REveSceneList(const char *n = "REveSceneList", const char *t = "");
+   REveSceneList(const std::string& n = "REveSceneList", const std::string& t = "");
    virtual ~REveSceneList() {}
 
    void DestroyScenes();

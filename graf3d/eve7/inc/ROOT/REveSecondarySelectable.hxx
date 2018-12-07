@@ -21,14 +21,15 @@
 namespace ROOT {
 namespace Experimental {
 
-class REveSecondarySelectable {
+class REveSecondarySelectable
+{
 private:
    REveSecondarySelectable(const REveSecondarySelectable &);            // Not implemented
    REveSecondarySelectable &operator=(const REveSecondarySelectable &); // Not implemented
 
 public:
-   typedef std::set<Int_t> SelectionSet_t;
-   typedef SelectionSet_t::iterator SelectionSet_i;
+   typedef std::set<Int_t>                SelectionSet_t;
+   typedef SelectionSet_t::iterator       SelectionSet_i;
    typedef SelectionSet_t::const_iterator SelectionSet_ci;
 
 protected:
@@ -44,10 +45,10 @@ public:
    REveSecondarySelectable();
    virtual ~REveSecondarySelectable() {}
 
-   Bool_t GetAlwaysSecSelect() const { return fAlwaysSecSelect; }
-   void SetAlwaysSecSelect(Bool_t f) { fAlwaysSecSelect = f; }
+   Bool_t GetAlwaysSecSelect()   const { return fAlwaysSecSelect; }
+   void   SetAlwaysSecSelect(Bool_t f) { fAlwaysSecSelect = f; }
 
-   const SelectionSet_t &RefSelectedSet() const { return fSelectedSet; }
+   const SelectionSet_t &RefSelectedSet()    const { return fSelectedSet; }
    const SelectionSet_t &RefHighlightedSet() const { return fHighlightedSet; }
 
    // XXXX

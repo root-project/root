@@ -2,11 +2,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/layout/Splitter',
                'sap/ui/layout/SplitterLayoutData'
 ],function(Controller, Splitter, SplitterLayoutData) {
+
    "use strict";
 
    return Controller.extend("eve.Main", {
       onInit: function () {
-         
+
          console.log('MAIN CONTROLLER INIT');
 
          this.mgr = new JSROOT.EVE.EveManager();
@@ -17,14 +18,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          var elem = this.byId("Summary");
          var ctrl = sap.ui.getCore().byId(elem.getId()).getController();
          ctrl.SetMgr(this.mgr);
-         
+
          this.mgr.RegisterUpdate(this, "onManagerUpdate");
       },
-      
+
       getHandle: function () {
          return this.handle;
       },
-      
+
       UpdateCommandsButtons: function(cmds) {
           if (!cmds || this.commands) return;
 
@@ -41,7 +42,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
              toolbar.insertContent(btn, 0);
           }
       },
-      
+
       updateViewers: function() {
          var viewers = this.mgr.FindViewers();
 
@@ -68,9 +69,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             // create missing view
             elem.$view_created = true;
             delete elem.$view_staged;
-            
+
             console.log("Creating view", viewid);
-            
+
             count++;
 
             var oLd = undefined;
@@ -100,13 +101,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             vv.addContentArea(view);
          }
       },
-      
+
       onManagerUpdate: function() {
          console.log("manager updated");
          this.UpdateCommandsButtons(this.mgr.commands);
          this.updateViewers();
       },
-      
+
       /*
        * processWaitingMsg: function() { for ( var i = 0; i <
        * msgToWait.length; ++i ) {
@@ -151,7 +152,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
           //  case "Tooltip info": this.toggleToolTip(); break;
          }
       },
-      
+
       showHelp : function(oEvent) {
          alert("User support: root-webgui@cern.ch");
       },

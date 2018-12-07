@@ -6,22 +6,27 @@ sap.ui.define([
 
    "use strict";
 
+   var direct_threejs = false;
+
    return Controller.extend("eve.GL", {
 
-      onInit : function() {
+      onInit : function()
+      {
          var id = this.getView().getId();
          console.log("eve.GL.onInit id = ", id);
 
          var data = this.getView().getViewData();
          // console.log("VIEW DATA", data);
 
-         if (data.standalone && data.conn_handle) {
+         if (data.standalone && data.conn_handle)
+         {
             this.mgr = new JSROOT.EVE.EveManager();
             this.mgr.UseConnection(data.conn_handle);
             this.standalone = data.standalone;
             this.mgr.RegisterUpdate(this, "onManagerUpdate");
-            
-         } else {
+         }
+         else
+         {
             this.mgr = data.mgr;
             this.elementid = data.elementid;
             this.kind = data.kind;
@@ -33,27 +38,148 @@ sap.ui.define([
          this._load_scripts = false;
          this._render_html = false;
          this.geo_painter = null;
-         this.painter_ready = false;
+         // this.painter_ready = false;
 
-         this.mgr.RegisterHighlight(this, "onElementHighlight");
+         JSROOT.AssertPrerequisites("geom;user:evedir/EveElements.js;evedir/EveScene.js", this.onLoadScripts.bind(this));
 
-         JSROOT.AssertPrerequisites("geom;user:evedir/EveElements.js", this.onLoadScripts.bind(this));
-
-         // this.checkScences();
       },
 
-      onLoadScripts: function() {
+      // MT-HAKA
+      createThreejsRenderer: function()
+      {
+         if (!direct_threejs || this.renderer) return;
+
+         this.scene      = new THREE.Scene();
+         this.camera     = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100000 );
+         this.rot_center = new THREE.Vector3(0,0,0);
+
+         // this.controls = new THREE.OrbitControls( this.camera );
+         //var controls = new THREE.FirstPersonControls( camera );
+
+         this.renderer = new THREE.WebGLRenderer();
+         this.renderer.setPixelRatio( window.devicePixelRatio );
+         this.renderer.setSize( window.innerWidth, window.innerHeight );
+
+         // this.scene.fog = new THREE.FogExp2( 0xaaaaaa, 0.05 );
+         this.renderer.setClearColor( 0xffffff, 1 );
+
+         this.dom_registered = false;
+         //document.body.appendChild( this.renderer.domElement );
+
+         //document.getElementById('EveViewer9').appendChild( this.renderer.domElement );
+
+         // this.getView().getDomRef().appendChild( this.renderer.domElement );
+
+         // -------
+
+         // var sphere = new THREE.SphereGeometry( 0.1, 8, 8 );
+         // var lamp = new THREE.DirectionalLight( 0xff5050, 0.5 );
+         var lampR = new THREE.PointLight( 0xff5050, 0.7 );
+         // lampR.add(new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: lampR.color } ) ));
+         lampR.position.set(2, 2, -2);
+         this.scene.add( lampR );
+
+         var lampG = new THREE.PointLight( 0x50ff50, 0.7 );
+         // lampG.add(new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: lampG.color } ) ));
+         lampG.position.set(-2, 2, 2);
+         this.scene.add( lampG );
+
+         var lampB = new THREE.PointLight( 0x5050ff, 0.7 );
+         // lampB.add(new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: lampB.color } ) ));
+         lampB.position.set(2, 2, 2);
+         this.scene.add( lampB );
+
+         //var plane = new THREE.GridHelper(20, 20, 0x80d080, 0x8080d0);
+         //this.scene.add(plane);
+      },
+
+      /** returns container for 3d objects */
+      getThreejsContainer: function(name)
+      {
+         var prnt = null;
+
+         if (!direct_threejs)
+            prnt = this.geo_painter.getExtrasContainer();
+         else
+            prnt = this.scene;
+
+         for (var k=0;k<prnt.children.length;++k)
+            if (prnt.children[k]._eve_name === name)
+               return prnt.children[k];
+
+         var obj3d = new THREE.Object3D();
+         obj3d._eve_name = name;
+         prnt.add(obj3d);
+         return obj3d;
+      },
+
+      // MT-HAKA
+      render: function()
+      {
+         if (!direct_threejs) {
+            if (this.geo_painter) {
+               if (!this.first_time_render) {
+                  this.first_time_render = true;
+                  this.geo_painter.adjustCameraPosition(true);
+               }
+               this.geo_painter.Render3D();
+            }
+            return;
+         }
+
+         if ( ! this.dom_registered)
+         {
+            this.getView().getDomRef().appendChild( this.renderer.domElement );
+
+            //this.controls = new THREE.OrbitControls( this.camera);
+            this.controls = new THREE.OrbitControls( this.camera, this.getView().getDomRef() );
+
+            this.controls.addEventListener( 'change', this.render.bind(this) );
+
+            this.dom_registered = true;
+
+            // Setup camera
+            var sbbox = new THREE.Box3();
+            sbbox.setFromObject( this.scene );
+
+            //var center = boundingBox.getCenter();
+            this.controls.target = this.rot_center;
+
+            var maxV = new THREE.Vector3; maxV.subVectors(sbbox.max, this.rot_center);
+            var minV = new THREE.Vector3; minV.subVectors(sbbox.min, this.rot_center);
+
+            var posV = new THREE.Vector3; posV = maxV.multiplyScalar(2);
+
+            this.camera.position.set( posV.x, posV.y, posV.z );
+            this.camera.lookAt(this.rot_center);
+
+            console.log("scene bbox ", sbbox, ", camera_pos ", posV, ", look_at ", this.rot_center);
+         }
+
+         // console.log(this.camera);
+
+         //console.log(this.controls);
+         //console.log(this.getView().getDomRef());
+         //console.log(this.renderer.domElement);
+
+         // requestAnimationFrame( this.render.bind(this) );
+
+         // this.controls.update( );
+
+         this.renderer.render( this.scene, this.camera );
+      },
+
+      onLoadScripts: function()
+      {
          this._load_scripts = true;
-         // only when scripts loaded, one could create objects
-         this.creator = new JSROOT.EVE.EveElements();
-         this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
-         this.checkScences();
+         this.checkViewReady();
       },
-      
-      onManagerUpdate: function() {
+
+      onManagerUpdate: function()
+      {
          // called when manager was updated, need only in standalone modes to detect own element id
          if (!this.standalone || this.elementid) return;
-         
+
          var viewers = this.mgr.FindViewers();
 
          // first check number of views to create
@@ -62,121 +188,94 @@ sap.ui.define([
             if (viewers[n].fName.indexOf(this.standalone) == 0) { found = viewers[n]; break; }
          }
          if (!found) return;
-         
+
          this.elementid = found.fElementId;
          this.kind = (found.fName == "Default Viewer") ? "3D" : "2D";
-         this.checkScences();
-         
+         this.checkViewReady();
+
       },
 
       // function called from GuiPanelController
-      onExit: function() {
+      onExit: function()
+      {
          if (this.mgr) this.mgr.Unregister(this);
       },
 
-      onElementChanged: function(id, element) {
-         // console.log("!!!GL DETECT CHANGED", id);
-
-         this.checkScences();
-      },
-
-      onAfterRendering: function() {
+      onAfterRendering: function()
+      {
 
          this._render_html = true;
 
          // TODO: should be specified somehow in XML file
          this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%").parent().css("overflow", "hidden");
 
-         this.checkScences();
+         this.checkViewReady();
       },
 
-      checkScences: function() {
-         
-         if (!this._load_scripts || !this._render_html || !this.elementid) return;
-         
-         if (!this.register_for_change) {
-            this.register_for_change = true;
-            
-            // only when rendering completed - register for modify events
-            var element = this.mgr.GetElement(this.elementid);
+      createScenes: function()
+      {
+         if (this.created_scenes !== undefined) return;
+         this.created_scenes = [];
 
-            // loop over scene and add dependency
-            for (var k=0;k<element.childs.length;++k) {
-               var scene = element.childs[k];
-               this.mgr.Register(scene.fSceneId, this, "onElementChanged");
-            }
-         }
-
-         // start drawing only when all scenes has childs
-         // this is configured view
-         var element = this.mgr.GetElement(this.elementid), allok = true, anyextras = false;
-
-         // loop over scene and add dependency
-         for (var k=0;k<element.childs.length;++k) {
-            var scene = element.childs[k];
-            if (!scene) { allok = false; break; }
-            var realscene = this.mgr.GetElement(scene.fSceneId);
-            if (this.hasExtras(realscene)) anyextras = true;
-         }
-
-         if (allok && anyextras) this.drawGeometry();
-      },
-
-      drawGeometry: function() {
-
-         // console.log("start geometry drawing", this.getView().getId());
-
- /*           var shape = {
-      _typename: "TGeoBBox",
-      fUniqueID: 0, fBits: 0x3000000, fName: "BOX", fTitle: "",
-      fShapeId: 256, fShapeBits: 1024, fDX: 200, fDY: 300, fDZ: 400, fOrigin: [0,0,0]
-      };
-
-      var geom_obj = JSROOT.extend(JSROOT.Create("TEveGeoShapeExtract"),
-                      { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 0.2], fElements: null, fRnrSelf: true });
- */
-         var options = "", geom_obj = null;
-         if (this.kind != "3D") options = "ortho_camera";
-
-         if (this.geo_painter) {
-
-            // when geo painter alreay exists - clear all our additional objects
-            this.geo_painter.clearExtras();
-
-            this.geo_painter.ResetReady();
-
-         } else {
-
-            // TODO: should be specified somehow in XML file
-            this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
-
-            this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), null, options);
-         }
-
-         this.painter_ready = false;
-         // assign callback function - when needed
-         this.geo_painter.WhenReady(this.onGeomertyDrawn.bind(this));
-
-         // now loop over all  scene and create three.js objects
-
-         // top scene element
+         // only when rendering completed - register for modify events
          var element = this.mgr.GetElement(this.elementid);
 
          // loop over scene and add dependency
-         for (var k=0;k<element.childs.length;++k) {
+         for (var k=0;k<element.childs.length;++k)
+         {
             var scene = element.childs[k];
-            if (!scene) continue;
-            var realscene = this.mgr.GetElement(scene.fSceneId);
 
-            if (realscene && realscene.childs)
-               this.createExtras(realscene.childs);
+            var handler = new JSROOT.EVE.EveScene(this.mgr, scene, this);
+
+            this.created_scenes.push(handler);
+            this.mgr.addSceneHandler(handler);
          }
 
-         // if geometry detected in the scenes, it will be used to display
+      },
 
-         this.geo_painter.AssignObject(geom_obj);
+      redrawScenes: function() {
+         for (var k=0;k<this.created_scenes.length;++k)
+            this.created_scenes[k].redrawScene();
+      },
 
-         this.geo_painter.prepareObjectDraw(geom_obj); // and now start everything
+
+      /** checks if all initialization is performed */
+      checkViewReady: function()
+      {
+         if (!this._load_scripts || !this._render_html || !this.elementid) return;
+
+         if (direct_threejs) {
+            this.createThreejsRenderer();
+            this.createScenes();
+            this.redrawScenes();
+            return;
+         }
+
+         if (this.geo_painter) {
+            this.redrawScenes();
+            return;
+         }
+
+
+         var options = "";
+         if (this.kind != "3D") options = "ortho_camera";
+
+
+         // TODO: should be specified somehow in XML file
+         this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
+
+         this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), null, options);
+
+         this.painter_ready = false;
+         // assign callback function - when needed
+         this.geo_painter.WhenReady(this.onGeoPainterReady.bind(this));
+
+         this.geo_painter.AssignObject(null);
+
+         this.geo_painter.prepareObjectDraw(null); // and now start everything
+      },
+
+      onGeoPainterReady: function(painter) {
 
          // AMT temporary here, should be set in camera instantiation time
          if (this.geo_painter._camera.type == "OrthographicCamera") {
@@ -185,83 +284,18 @@ sap.ui.define([
             this.geo_painter._camera.top = this.getView().$().height();
             this.geo_painter._camera.bottom = -this.getView().$().height();
             this.geo_painter._camera.updateProjectionMatrix();
-            this.geo_painter.Render3D();
          }
-         // JSROOT.draw(this.getView().getDomRef(), obj, "", this.onGeomertyDrawn.bind(this));
-      },
 
-      onGeomertyDrawn: function(painter) {
          this.painter_ready = true;
-         this.geo_painter._highlight_handlers = [ this ]; // register ourself for highlight handling
+         // this.geo_painter._highlight_handlers = [ this ]; // register ourself for highlight handling
          this.last_highlight = null;
+
+         // create only when geo painter is ready
+         this.createScenes();
+         this.redrawScenes();
       },
 
-      /// function called by GeoPainter, when mesh is highlighted
-      /// forward message to the EveManager to redistribute event to all other drawings
-      HighlightMesh: function(mesh, color, geo_object) {
-         if (this.last_highlight === geo_object) return;
-         this.last_highlight = geo_object;
-         this.mgr.ProcessHighlight(this, geo_object, geo_object ? 0 : 100);
-      },
-      
       /// invoked from the manager
-      
-      onElementHighlight: function(masterid) {
-         if (!this.painter_ready || !this.geo_painter) return;
-
-         // masterid used as identifier, no any recursions
-         this.geo_painter.HighlightMesh(null, null, masterid, null, true);
-      },
-      
-      makeGLRepresentation: function(elem) {
-         var fname = elem.render_data.rnr_func;
-         var obj3d = this.creator[fname](elem, elem.render_data);
-         if (obj3d) {
-            obj3d._typename = "THREE.Mesh";
-
-            // SL: this is just identifier for highlight, required to show items on other places, set in creator
-            // obj3d.geo_object = elem.fMasterId || elem.fElementId;
-            // obj3d.geo_name = elem.fName; // used for highlight
-
-            //AMT: reference needed in MIR callback
-            obj3d.eveId = elem.fElementId;
-
-            if (elem.render_data.matrix) {
-               obj3d.matrixAutoUpdate = false;
-               obj3d.matrix.fromArray( elem.render_data.matrix );
-               obj3d.updateMatrixWorld(true);
-            }
-            return obj3d;
-         }
-      },
-      
-      createExtras: function(arr, toplevel) {
-         if (!arr) return;
-         for (var k=0;k<arr.length;++k) {
-            var elem = arr[k];
-            if (elem.render_data) {
-               var fname = elem.render_data.rnr_func, obj3d = null;
-               if (!this.creator[fname]) {
-                  console.error("Function " +fname + " missing in creator");
-               } else {
-                  var obj3d =  this.makeGLRepresentation(elem);
-                  if (obj3d)
-                     this.geo_painter.addExtra(obj3d);
-               }
-            }
-            this.createExtras(elem.childs);
-         }
-      },
-      
-      hasExtras: function(elem) {
-         if (!elem) return false;
-         if (elem.render_data) return true;
-         if (elem.childs)
-            for (var k=0;k<elem.childs.length;++k) 
-               if (this.hasExtras(elem.childs[k])) return true;
-         return false;
-      },
-
       onResize: function(event) {
          // use timeout
          // console.log("resize painter")
@@ -276,74 +310,8 @@ sap.ui.define([
          this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
          if (this.geo_painter)
             this.geo_painter.CheckResize();
-      },
-
-      colorChanged: function(el) {
-         this.replaceElement(el);
-      },
-
-      replaceElement: function(el) {
-         if (!this.geo_painter) return;
-         
-         var mesh = this.getMesh(el.fElementId);
-         
-         var ex = this.geo_painter._extraObjects;
-         for (var i=0; i < ex.arr.length; ++i) {
-            if (ex.arr[i].geo_object == el.fElementId) {
-               ex.RemoveAt(i);
-            }
-         }
-         this.geo_painter.getExtrasContainer().remove(mesh);
-         var obj3d =  this.makeGLRepresentation(el);
-         if (obj3d) {
-            this.geo_painter.addExtra(obj3d);
-            this.geo_painter.getExtrasContainer().add(obj3d);
-         }
-         this.geo_painter.Render3D(-1);
-      },
-
-      getMesh : function(elementId) {
-         if (this.geo_painter && this.geo_painter._extraObjects ) {
-            var ex = this.geo_painter._extraObjects;
-            for (var i=0; i < ex.arr.length; ++i) {
-               if (ex.arr[i].eveId == elementId)
-                  return ex.arr[i];
-            }
-         }
-         return null;
-      },
-
-      visibilityChanged: function(el, msg) {
-         console.log("visibilit element changed ", this, msg);
-         var mesh = this.getMesh(el.fElementId);
-         console.log("MESH visibility change ", mesh , el.fRnrSelf);
-         mesh.visible = el.fRnrSelf;
-         this.geo_painter.Render3D(-1);
-      },
-
-      visibilityChildrenChanged: function(el, msg) {
-         console.log("visibilit children changed ", this.mgr, el);
-         el.fRnrChildren = msg.fRnrChildren;
-         if (el.childs) {
-            for ( var i = 0; i < el.childs.length; ++i)
-            {
-               // console.log("visChildren", el.fElementId, "loop child ", el.childs[i] )
-               var mesh = this.getMesh(el.childs[i].fElementId);
-               el.childs[i].fRnrSelf =  msg.fRnrChildren;;
-               mesh.visible = msg.fRnrChildren;
-               this.visibilityChildrenChanged(el.childs[i], msg);
-               this.geo_painter.Render3D(-1);
-            }
-         }
-      },
-      elementAdded: function(em) {
-      },
-      elementRemoved: function() {
-      },
-      beginChanges: function() {
-      },
-      endChanges: function() {
       }
+
    });
 
 });

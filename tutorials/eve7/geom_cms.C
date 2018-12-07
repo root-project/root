@@ -88,7 +88,7 @@ void geom_cms()
 
    // tracker
    {
-      auto holder = new REX::REveElementList("Tracker");
+      auto holder = new REX::REveElement("Tracker");
       eveMng->GetGlobalScene()->AddElement(holder);
       TGeoNode* n = getNodeFromPath(top, "TRAK_1/SVTX_1/TGBX_1/GAW1_1");
       REX::REveTrans trans;
@@ -98,7 +98,7 @@ void geom_cms()
 
    // muon
    {
-      auto holder = new REX::REveElementList("MUON");
+      auto holder = new REX::REveElement("MUON");
       eveMng->GetGlobalScene()->AddElement(holder);
 
       auto n = getNodeFromPath(top, "MUON_1/MB_1");
