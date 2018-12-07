@@ -4749,13 +4749,14 @@ int RpdUser(const char *sstr)
                   strncpy(salt, passw, lenS);
                   salt[lenS] = 0;
                }
+
                if (gDebug > 2)
                   ErrorInfo("RpdUser: salt: '%s' ",salt);
 
                // We add the random tag here
                if (gClientProtocol > 11) {
-                  strncpy(&salt[lenS],ctag,10);
-                  salt[lenS+10] = 0;
+                  strncat(salt, ctag, sizeof(salt) - sizeof(ctag) - 1);
+                  salt[sizeof(salt) - 1] = '\0';
                }
 
                // Send it over encrypted
@@ -5194,15 +5195,13 @@ int RpdSecureSend(char *str)
    char buftmp[kMAXSECBUF];
    char buflen[20];
 
-   int slen = strlen(str) + 1;
-
    int ttmp = 0;
    int nsen = -1;
 
    if (gRSAKey == 1) {
-      strncpy(buftmp, str, std::min( slen, kMAXSECBUF));
-      buftmp[slen] = 0;
-      ttmp = rsa_encode(buftmp, slen, gRSA_n, gRSA_d);
+      strncpy(buftmp, str, sizeof(buftmp) - 1);
+      buftmp[kMAXSECBUF - 1] = '\0';
+      ttmp = rsa_encode(buftmp, strlen(buftmp) + 1, gRSA_n, gRSA_d);
    } else if (gRSAKey == 2) {
 #ifdef R__SSL
       ttmp = strlen(str);
