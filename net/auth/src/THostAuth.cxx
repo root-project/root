@@ -196,9 +196,7 @@ THostAuth::THostAuth(const char *asstring) : TObject()
    fServer = -1;
 
    TString strtmp(asstring);
-   char *tmp = new char[strlen(asstring)+1];
-   strncpy(tmp,asstring,strlen(asstring));
-   tmp[strlen(asstring)] = 0;
+   char *tmp = strdup(asstring);
 
    fHost = TString((const char *)strtok(tmp," "));
    strtmp.ReplaceAll(fHost,"");
@@ -213,7 +211,7 @@ THostAuth::THostAuth(const char *asstring) : TObject()
    strtmp.ReplaceAll(fNmet,"");
    fNmet.Remove(0,fNmet.Index(":")+1);
 
-   delete[] tmp;
+   free(tmp);
 
    fNumMethods = atoi(fNmet.Data());
    Int_t i = 0;
