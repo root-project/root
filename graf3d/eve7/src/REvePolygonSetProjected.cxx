@@ -129,14 +129,14 @@ void REvePolygonSetProjected::BuildRenderData()
    Int_t n_idxbuff = 2 + 3 * n_trings + n_pols + n_poly_info;
    fRenderData->Reserve(0,0,n_idxbuff);
 
-   printf("REvePolygonSetProjected::BuildRenderData expect index buffer to be %d\n",  n_idxbuff);
+   assert(n_trings * 4 == (int)polys.size());
 
    // Export triangles.
    fRenderData->PushI(REveRenderData::GL_TRIANGLES);
    fRenderData->PushI(n_trings);
    for (int i = 0; i < n_trings; ++i)
    {
-      fRenderData->PushI(&polys[i*n_trings + 1], 3);
+      fRenderData->PushI(&polys[i*4 + 1], 3);
    }
 
    assert (fRenderData->SizeI() == 2 + 3 * n_trings);
