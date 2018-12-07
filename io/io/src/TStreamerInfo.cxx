@@ -1560,9 +1560,17 @@ namespace {
             std::string secondNewName;
             if (firstNewCl && !firstOldCl) {
                firstAltCl = FindAlternate(context, inside[1], firstNewName);
+            } else if (firstAltCl) {
+               firstNewName = firstAltCl->GetName();
+            } else {
+               firstNewName = inside[1];
             }
             if (secondNewCl && !secondOldCl) {
                secondAltCl = FindAlternate(context, inside[2], secondNewName);
+            } else if (secondAltCl) {
+               secondNewName = secondAltCl->GetName();
+            } else {
+               secondNewName  = inside[2];
             }
             if ((firstNewCl && firstAltCl != firstOldCl) ||
                 (secondNewCl && secondAltCl != secondOldCl) ) {
@@ -1570,9 +1578,9 @@ namespace {
                // Need to produce new name.
                std::string alternate = inside[0];
                alternate.append("<");
-               alternate.append(firstAltCl ? firstNewName : inside[1]);
+               alternate.append(firstNewName);
                alternate.append(",");
-               alternate.append(secondAltCl? secondNewName : inside[2]);
+               alternate.append(secondNewName);
                // We are intentionally dropping any further arguments,
                // they would be using the wrong typename and would also be
                // somewhat superflous since this is for the old layout.
