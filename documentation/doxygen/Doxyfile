@@ -865,7 +865,6 @@ INPUT                  = . \
                          ../../sql/ \
                          ../../tutorials/ \
                          ../../bindings/r/ \
-#                         ../../bindings/ruby/ \
 #                         ../../core/clib/
 #                         ../../core/lzma/
 #                         ../../core/newdelete/

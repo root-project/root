@@ -483,24 +483,6 @@ if(python)
   endif()
 endif()
 
-#---Check for Ruby installation-------------------------------------------------------
-if(ruby)
-  message(STATUS "Looking for Ruby")
-  find_package(Ruby)
-  if(NOT RUBY_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Ruby package not found and ruby component required")
-    else()
-      message(STATUS "Ruby not found. Switching off ruby option")
-      set(ruby OFF CACHE BOOL "Disabled because Ruby not found (${ruby_description})" FORCE)
-    endif()
-  else()
-    string(REGEX REPLACE "([0-9]+).*$" "\\1" RUBY_MAJOR_VERSION "${RUBY_VERSION}")
-    string(REGEX REPLACE "[0-9]+\\.([0-9]+).*$" "\\1" RUBY_MINOR_VERSION "${RUBY_VERSION}")
-    string(REGEX REPLACE "[0-9]+\\.[0-9]+\\.([0-9]+).*$" "\\1" RUBY_PATCH_VERSION "${RUBY_VERSION}")
-  endif()
-endif()
-
 #---Check for OpenGL installation-------------------------------------------------------
 if(opengl)
   message(STATUS "Looking for OpenGL")
@@ -1609,7 +1591,7 @@ ExternalProject_Add(
    SOURCE_DIR ${CMAKE_BINARY_DIR}/etc/http/openui5dist)
 
 #---Report removed options---------------------------------------------------
-foreach(opt afs glite sapdb srp chirp ios)
+foreach(opt afs chirp glite ios sapdb srp ruby)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' has been removed in ROOT v6.16.")
   endif()
