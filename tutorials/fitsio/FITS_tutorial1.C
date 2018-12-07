@@ -1,14 +1,14 @@
 /// \file
 /// \ingroup tutorial_FITS
 /// \notebook -draw
-
+///
 /// Open a FITS file and retrieve the first plane of the image array
 /// as a TImage object
 ///
 /// \macro_image
 /// \macro_code
 /// \macro_output
-
+///
 /// \author Claudi Martinez
 
 void FITS_tutorial1()
