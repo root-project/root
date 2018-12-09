@@ -986,7 +986,8 @@ EXCLUDE_PATTERNS       = */G__* \
                          converttonotebook.py \
                          makeimage.py \
                          parallelNotebooks.py \
-                         LinkDef.h
+                         LinkDef.h \
+                         */io/io/res/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
