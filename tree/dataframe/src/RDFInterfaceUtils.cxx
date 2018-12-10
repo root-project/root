@@ -23,7 +23,6 @@
 #include <TObject.h>
 #include <TRegexp.h>
 #include <TPRegexp.h>
-#include <TROOT.h>
 #include <TString.h>
 #include <TTree.h>
 
@@ -66,11 +65,6 @@ std::pair<Long64_t, int> InterpreterCalc(const std::string &code)
    TInterpreter::EErrorCode errorCode(TInterpreter::kNoError);
    auto res = gInterpreter->Calc(code.c_str(), &errorCode);
    return std::make_pair(res, errorCode);
-}
-
-bool IsImplicitMTEnabled()
-{
-   return ROOT::IsImplicitMTEnabled();
 }
 
 HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
