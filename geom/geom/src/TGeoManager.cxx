@@ -283,6 +283,8 @@ in order to enhance rays.
 #include "TEnv.h"
 #include "TGeoParallelWorld.h"
 #include "TGeoRegion.h"
+#include "TGDMLMatrix.h"
+#include "TGeoOpticalSurface.h"
 
 // statics and globals
 
@@ -341,7 +343,12 @@ TGeoManager::TGeoManager()
       fNtracks = 0;
       fNpdg = 0;
       fPdgNames = 0;
+      fGDMLMatrices = 0;
+      fOpticalSurfaces = 0;
+      fSkinSurfaces = 0;
+      fBorderSurfaces = 0;
       memset(fPdgId, 0, 1024*sizeof(Int_t));
+//   TObjArray            *fNavigators;       //! list of navigators
       fCurrentTrack = 0;
       fCurrentVolume = 0;
       fTopVolume = 0;
@@ -444,6 +451,10 @@ void TGeoManager::Init()
    fNtracks = 0;
    fNpdg = 0;
    fPdgNames = 0;
+   fGDMLMatrices = new TObjArray();
+   fOpticalSurfaces = new TObjArray();
+   fSkinSurfaces = new TObjArray();
+   fBorderSurfaces = new TObjArray();
    memset(fPdgId, 0, 1024*sizeof(Int_t));
    fCurrentTrack = 0;
    fCurrentVolume = 0;
@@ -523,6 +534,10 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fGVolumes(gm.fGVolumes),
   fTracks(gm.fTracks),
   fPdgNames(gm.fPdgNames),
+  fGDMLMatrices(gm.fGDMLMatrices),
+  fOpticalSurfaces(gm.fOpticalSurfaces),
+  fSkinSurfaces(gm.fSkinSurfaces),
+  fBorderSurfaces(gm.fBorderSurfaces),
   fMaterials(gm.fMaterials),
   fMedia(gm.fMedia),
   fNodes(gm.fNodes),
@@ -608,6 +623,10 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fGVolumes=gm.fGVolumes;
       fTracks=gm.fTracks;
       fPdgNames=gm.fPdgNames;
+      fGDMLMatrices=gm.fGDMLMatrices;
+      fOpticalSurfaces = gm.fOpticalSurfaces;
+      fSkinSurfaces = gm.fSkinSurfaces;
+      fBorderSurfaces = gm.fBorderSurfaces;
       fMaterials=gm.fMaterials;
       fMedia=gm.fMedia;
       fNodes=gm.fNodes;
@@ -684,6 +703,10 @@ TGeoManager::~TGeoManager()
    if (fTracks) {fTracks->Delete(); SafeDelete( fTracks );}
    SafeDelete( fUniqueVolumes );
    if (fPdgNames) {fPdgNames->Delete(); SafeDelete( fPdgNames );}
+   if (fGDMLMatrices) {fGDMLMatrices->Delete(); SafeDelete( fGDMLMatrices );}
+   if (fOpticalSurfaces) {fOpticalSurfaces->Delete(); SafeDelete( fOpticalSurfaces );}
+   if (fSkinSurfaces) {fSkinSurfaces->Delete(); SafeDelete( fSkinSurfaces );}
+   if (fBorderSurfaces) {fBorderSurfaces->Delete(); SafeDelete( fBorderSurfaces );}
    ClearNavigators();
    CleanGarbage();
    SafeDelete( fPainter );
@@ -1926,6 +1949,82 @@ void TGeoManager::SetPdgName(Int_t pdg, const char *name)
    fPdgId[fNpdg] = pdg;
    TNamed *pdgname = new TNamed(name, "");
    fPdgNames->AddAtAndExpand(pdgname, fNpdg++);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get GDML matrix with a given name;
+
+TGDMLMatrix *TGeoManager::GetGDMLMatrix(const char *name) const
+{
+   return (TGDMLMatrix*)fGDMLMatrices->FindObject(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add GDML matrix;
+void TGeoManager::AddGDMLMatrix(TGDMLMatrix *mat)
+{
+   if (GetGDMLMatrix(mat->GetName())) {
+      Error("AddGDMLMatrix", "Matrix %s already added to manager", mat->GetName());
+      return;
+   }
+   fGDMLMatrices->Add(mat);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get optical surface with a given name;
+
+TGeoOpticalSurface *TGeoManager::GetOpticalSurface(const char *name) const
+{
+   return (TGeoOpticalSurface*)fOpticalSurfaces->FindObject(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add optical surface;
+void TGeoManager::AddOpticalSurface(TGeoOpticalSurface *optsurf)
+{
+   if (GetOpticalSurface(optsurf->GetName())) {
+      Error("AddOpticalSurface", "Surface %s already added to manager", optsurf->GetName());
+      return;
+   }
+   fOpticalSurfaces->Add(optsurf);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get skin surface with a given name;
+
+TGeoSkinSurface *TGeoManager::GetSkinSurface(const char *name) const
+{
+   return (TGeoSkinSurface*)fSkinSurfaces->FindObject(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add skin surface;
+void TGeoManager::AddSkinSurface(TGeoSkinSurface *surf)
+{
+   if (GetSkinSurface(surf->GetName())) {
+      Error("AddSkinSurface", "Surface %s already added to manager", surf->GetName());
+      return;
+   }
+   fSkinSurfaces->Add(surf);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get border surface with a given name;
+
+TGeoBorderSurface *TGeoManager::GetBorderSurface(const char *name) const
+{
+   return (TGeoBorderSurface*)fBorderSurfaces->FindObject(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add border surface;
+void TGeoManager::AddBorderSurface(TGeoBorderSurface *surf)
+{
+   if (GetBorderSurface(surf->GetName())) {
+      Error("AddBorderSurface", "Surface %s already added to manager", surf->GetName());
+      return;
+   }
+   fBorderSurfaces->Add(surf);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

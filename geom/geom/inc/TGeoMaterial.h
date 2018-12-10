@@ -12,12 +12,11 @@
 #ifndef ROOT_TGeoMaterial
 #define ROOT_TGeoMaterial
 
-#include "TNamed.h"
-
-#include "TAttFill.h"
+#include <TNamed.h>
+#include <TAttFill.h>
+#include <TList.h>
 
 #include "TGeoElement.h"
-
 
 // forward declarations
 class TGeoExtension;
@@ -54,6 +53,7 @@ protected:
    TObject                 *fShader;     // shader with optical properties
    TObject                 *fCerenkov;   // pointer to class with Cerenkov properties
    TGeoElement             *fElement;    // pointer to element composing the material
+   TList                    fProperties; // user-defined properties
    TGeoExtension           *fUserExtension;  //! Transient user-defined extension to materials
    TGeoExtension           *fFWExtension;    //! Transient framework-defined extension to materials
 
@@ -80,6 +80,9 @@ public:
    virtual TGeoMaterial    *DecayMaterial(Double_t time, Double_t precision=0.001);
    virtual void             FillMaterialEvolution(TObjArray *population, Double_t precision=0.001);
    // getters & setters
+   bool                     AddProperty(const char *property, const char *ref);
+   const char              *GetPropertyRef(const char *property);
+   TList const             &GetProperties() const { return fProperties; }
    virtual Int_t            GetByteCount() const {return sizeof(*this);}
    virtual Double_t         GetA() const       {return fA;}
    virtual Double_t         GetZ()  const      {return fZ;}
@@ -125,7 +128,7 @@ public:
 
 
 
-   ClassDef(TGeoMaterial, 5)              // base material class
+   ClassDef(TGeoMaterial, 6)              // base material class
 
 //***** Need to add classes and globals to LinkDef.h *****
 };
