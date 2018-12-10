@@ -18,48 +18,6 @@ The user name and password can be specified in the URL like this:
 </li>
 </ul>
 
-<h3>Bonjour Support</h3>
-New Zero-Configuration networking classes using Bonjour:
-<ul>
-<li>TBonjourRecord</li>
-<li>TBonjourRegistrar</li>
-<li>TBonjourBrowser</li>
-<li>TBonjourResolver</li>
-</ul>
-<p>
-Zeroconf is meant to solve the problem of finding services and connecting
-to them. Instead of having to know a machine's IP address and port number
-for the service, a machine offering a service simply announces that it
-offers the service. Clients who want to use a service ask for all the
-machines that are offering it and then the user decides which one to
-connect to.
-</p><p>
-Traditionally, you would have to make sure that each machine is configured
-correctly and on the network. Zeroconf takes care of all of this for you
-for a local area network. Lots of new hardware, such as printers with
-networking support or wireless routers, come with their own Zeroconf server
-to allow easy network configuration. On Mac OS X, many applications take
-advantage of Bonjour to advertise services, such as the ssh server,
-iTunes shares, or iChat availability. Zeroconf is a powerful way of
-simplifying your applications, and there are implementations available
-for most operating systems.
-</p><p>
-If you have Mac OS X, you already have Bonjour installed; otherwise, you
-can download the source code from the Apple website
-(http://developer.apple.com/Bonjour) and build and install Bonjour in
-relatively short order. Most modern Linux distributions come with Avahi,
-an LGPL implementation of Zeroconf with a compatibibility API for Bonjour.
-The ROOT Bonjour classes were tested to work with both Apple's Bonjour
-implementation and Avahi's Bonjour compatibility layer.
-</p><p>
-Service discovery consists of three steps: registering a service, browsing
-for available services, and resolving the service to an actual address.
-A server will register its services with the Bonjour daemon. Clients will
-browse for services to get a list to provide to the user. Finally, when it
-is time to connect to a service, the client will resolve the selected
-service to an actual IP address and port and then connect to the service
-provide using TCP/IP.
-
 </p><h3>XROOTD</h3><ul><li>New version 20090610-0430</li></ul><ul><ul><li>Improvements</li><ul><li>Add the possibility of using the xrd command line from
 batch scripts</li><li>Add support for&nbsp;Adler32 checksum calculation of
 a local unix file (including stdin) and file on a remote xrootd data

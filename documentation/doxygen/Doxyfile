@@ -846,7 +846,6 @@ INPUT                  = . \
                          ../../montecarlo/ \
                          ../../net/alien/ \
                          ../../net/auth/ \
-                         ../../net/bonjour/ \
                          ../../net/davix/ \
                          ../../net/http/ \
                          ../../net/krb5auth/ \

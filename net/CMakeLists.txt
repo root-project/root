@@ -1,10 +1,6 @@
 add_subdirectory(net)
 add_subdirectory(auth)
 
-if(bonjour)
-  add_subdirectory(bonjour)
-endif()
-
 if(krb5)
   add_subdirectory(krb5auth)
 endif()
