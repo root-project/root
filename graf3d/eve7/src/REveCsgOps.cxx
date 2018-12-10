@@ -1674,21 +1674,18 @@ private:
    PLIST fPolys;
 
 public:
-   VLIST       &Verts(){return fVerts;}
-   const VLIST &Verts()const{return fVerts;}
-   PLIST       &Polys(){return fPolys;}
-   const PLIST &Polys()const{return fPolys;}
+   VLIST &Verts() { return fVerts; }
+   const VLIST &Verts() const { return fVerts; }
+   PLIST &Polys() { return fPolys; }
+   const PLIST &Polys() const { return fPolys; }
 
-   //TBaseMesh's final-overriders
-   Int_t          NumberOfPolys()const{return fPolys.size();}
-   Int_t          NumberOfVertices()const{return fVerts.size();}
-   Int_t          SizeOfPoly(Int_t polyIndex)const{return fPolys[polyIndex].Size();}
-   const Double_t *GetVertex(Int_t vertexNum)const{return fVerts[vertexNum].GetValue();}
+   // TBaseMesh's final-overriders
+   Int_t NumberOfPolys() const override { return fPolys.size(); }
+   Int_t NumberOfVertices() const override { return fVerts.size(); }
+   Int_t SizeOfPoly(Int_t polyIndex) const override { return fPolys[polyIndex].Size(); }
+   const Double_t *GetVertex(Int_t vertexNum) const override { return fVerts[vertexNum].GetValue(); }
 
-   Int_t GetVertexIndex(Int_t polyNum, Int_t vertexNum)const
-   {
-      return fPolys[polyNum][vertexNum];
-   }
+   Int_t GetVertexIndex(Int_t polyNum, Int_t vertexNum) const override { return fPolys[polyNum][vertexNum]; }
 };
 
 const Int_t cofacTable[3][2] = {{1,2}, {0,2}, {0,1}};
