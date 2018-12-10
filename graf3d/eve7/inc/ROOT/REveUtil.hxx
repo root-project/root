@@ -23,7 +23,6 @@
 #include <set>
 #include <exception>
 
-class TVirtualPad;
 class TGeoManager;
 
 namespace ROOT {
@@ -110,34 +109,14 @@ REveException operator+(const REveException &s1, const char *s2);
 // Exception-safe global variable holders
 /******************************************************************************/
 
-class REvePadHolder {
-private:
-   TVirtualPad *fOldPad;
-   Bool_t fModifyUpdateP;
-
-   REvePadHolder(const REvePadHolder &);            // Not implemented
-   REvePadHolder &operator=(const REvePadHolder &); // Not implemented
-
-public:
-   REvePadHolder(Bool_t modify_update_p, TVirtualPad *new_pad = 0, Int_t subpad = 0);
-   virtual ~REvePadHolder();
-
-   ClassDef(REvePadHolder, 0); // Exception-safe wrapper for temporary setting of gPad variable.
-};
-
 class REveGeoManagerHolder {
 private:
-   TGeoManager *fManager;
-   Int_t fNSegments;
-
-   REveGeoManagerHolder(const REveGeoManagerHolder &);            // Not implemented
-   REveGeoManagerHolder &operator=(const REveGeoManagerHolder &); // Not implemented
+   TGeoManager *fManager{nullptr};  ///<!  hold manager
+   Int_t fNSegments{0};             ///<!  previous settings for num segments
 
 public:
-   REveGeoManagerHolder(TGeoManager *new_gmgr = 0, Int_t n_seg = 0);
-   virtual ~REveGeoManagerHolder();
-
-   ClassDef(REveGeoManagerHolder, 0); // Exception-safe wrapper for temporary setting of gGeoManager variable.
+   REveGeoManagerHolder(TGeoManager *new_gmgr = nullptr, Int_t n_seg = 0);
+   ~REveGeoManagerHolder();
 };
 
 /******************************************************************************/

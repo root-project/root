@@ -2892,6 +2892,52 @@ TBaseMesh* TCsgVV3D::BuildComposite()
 
 //------------------------------------------------------------------------------
 
+/** \class REvePadHolder
+\ingroup REve
+Exception safe wrapper for setting gPad.
+Optionally calls gPad->Modified()/Update() in destructor.
+*/
+
+
+class REvePadHolder {
+private:
+   TVirtualPad *fOldPad{nullptr}; ///<!
+   Bool_t fModifyUpdateP{kFALSE}; ///<!
+
+public:
+   REvePadHolder(Bool_t modify_update_p, TVirtualPad *new_pad = 0, Int_t subpad = 0);
+   ~REvePadHolder();
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
+REvePadHolder::REvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad, Int_t subpad) :
+   fOldPad        (gPad),
+   fModifyUpdateP (modify_update_p)
+{
+   if (new_pad != 0)
+      new_pad->cd(subpad);
+   else
+      gPad = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
+REvePadHolder::~REvePadHolder()
+{
+   if (fModifyUpdateP && gPad != 0) {
+      gPad->Modified();
+      gPad->Update();
+   }
+   gPad = fOldPad;
+}
+
+
+
+
+
 TBaseMesh *BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg)
 {
    TCsgVV3D      vv3d;
@@ -2970,8 +3016,10 @@ std::unique_ptr<TBaseMesh> MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
    return res;
 }
 
-std::unique_ptr<TBaseMesh> BuildFromCompositeShapeNew(TGeoCompositeShape *cshape, Int_t)
+std::unique_ptr<TBaseMesh> BuildFromCompositeShapeNew(TGeoCompositeShape *cshape, Int_t n_seg)
 {
+   REveGeoManagerHolder gmgr(REveGeoShape::GetGeoManager(), n_seg);
+
    return MakeMesh(nullptr, cshape);
 }
 
