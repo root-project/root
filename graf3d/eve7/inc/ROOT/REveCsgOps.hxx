@@ -6,10 +6,7 @@
 
 #include "Rtypes.h"
 
-#include <memory>
-
 class TBuffer3D;
-class TGeoCompositeShape;
 class TGeoMatrix;
 
 namespace ROOT {
@@ -26,7 +23,11 @@ public:
    virtual Int_t GetVertexIndex(Int_t polyNum, Int_t vertNum) const = 0;
 };
 
-std::unique_ptr<TBaseMesh> BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg);
+
+TBaseMesh *ConvertToMesh(const TBuffer3D &buff, TGeoMatrix *matr = nullptr);
+TBaseMesh *BuildUnion(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
+TBaseMesh *BuildIntersection(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
+TBaseMesh *BuildDifference(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
 
 
 } // namespace EveCsg

@@ -68,17 +68,14 @@
 #include <vector>
 #include <cassert>
 
-
 #include "TBuffer3D.h"
 #include "Rtypes.h"
 #include "TMath.h"
 
-#include <ROOT/REveGeoShape.hxx>
-#include <ROOT/REveUtil.hxx>
+// #include <ROOT/REveGeoShape.hxx>
+// #include <ROOT/REveUtil.hxx>
 
-#include "TBuffer3DTypes.h"
-#include "TGeoBoolNode.h"
-#include "TGeoCompositeShape.h"
+// #include "TBuffer3DTypes.h"
 #include "TGeoMatrix.h"
 
 
@@ -2736,49 +2733,5 @@ TBaseMesh *BuildDifference(const TBaseMesh *l, const TBaseMesh *r)
    return build_difference(*static_cast<const AMesh_t *>(l), *static_cast<const AMesh_t *>(r), kFALSE);
 }
 
-
-//------------------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-/// Function produces mesh for provided shape, applying matrix to the result
-
-std::unique_ptr<TBaseMesh> MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
-{
-   TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *> (shape);
-
-   std::unique_ptr<TBaseMesh> res;
-
-   if (!comp) {
-      std::unique_ptr<TBuffer3D> b3d(shape->MakeBuffer3D());
-      res.reset(EveCsg::ConvertToMesh(*b3d.get(), matr));
-   } else {
-      auto node = comp->GetBoolNode();
-
-      TGeoHMatrix mleft, mright;
-      if (matr) { mleft = *matr; mright = *matr; }
-
-      mleft.Multiply(node->GetLeftMatrix());
-      auto left = MakeMesh(&mleft, node->GetLeftShape());
-
-      mright.Multiply(node->GetRightMatrix());
-      auto right = MakeMesh(&mright, node->GetRightShape());
-
-      if (node->IsA() == TGeoUnion::Class()) res.reset(EveCsg::BuildUnion(left.get(), right.get()));
-      if (node->IsA() == TGeoIntersection::Class()) res.reset(EveCsg::BuildIntersection(left.get(), right.get()));
-      if (node->IsA() == TGeoSubtraction::Class()) res.reset(EveCsg::BuildDifference(left.get(), right.get()));
-   }
-
-   return res;
-}
-
-////////////////////////////////////////////////////////////////////////
-/// Function produces mesh for composite shape
-
-std::unique_ptr<TBaseMesh> BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg)
-{
-   REveGeoManagerHolder gmgr(REveGeoShape::GetGeoManager(), n_seg);
-
-   return MakeMesh(nullptr, cshape);
-}
 
 }}}
