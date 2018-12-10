@@ -163,16 +163,16 @@ void REveGeoPolyShape::SetFromBuff3D(const TBuffer3D& buffer)
       segmentInd--;
       Int_t segEnds[] = {segs[s1 * 3 + 1], segs[s1 * 3 + 2],
                          segs[s2 * 3 + 1], segs[s2 * 3 + 2]};
-      Int_t numPnts[3] = {0};
+      Int_t numPnts[3];
 
       if (segEnds[0] == segEnds[2]) {
-         numPnts[0] = segEnds[1], numPnts[1] = segEnds[0], numPnts[2] = segEnds[3];
+         numPnts[0] = segEnds[1]; numPnts[1] = segEnds[0]; numPnts[2] = segEnds[3];
       } else if (segEnds[0] == segEnds[3]) {
-         numPnts[0] = segEnds[1], numPnts[1] = segEnds[0], numPnts[2] = segEnds[2];
+         numPnts[0] = segEnds[1]; numPnts[1] = segEnds[0]; numPnts[2] = segEnds[2];
       } else if (segEnds[1] == segEnds[2]) {
-         numPnts[0] = segEnds[0], numPnts[1] = segEnds[1], numPnts[2] = segEnds[3];
+         numPnts[0] = segEnds[0]; numPnts[1] = segEnds[1]; numPnts[2] = segEnds[3];
       } else {
-         numPnts[0] = segEnds[0], numPnts[1] = segEnds[1], numPnts[2] = segEnds[2];
+         numPnts[0] = segEnds[0]; numPnts[1] = segEnds[1]; numPnts[2] = segEnds[2];
       }
 
       fPolyDesc[currInd] = 3;
@@ -319,7 +319,7 @@ void REveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) con
       b.SetSectionsValid(TBuffer3D::kCore);
    }
 
-   if (reqSections & TBuffer3D::kRawSizes || reqSections & TBuffer3D::kRaw)
+   if ((reqSections & TBuffer3D::kRawSizes) || (reqSections & TBuffer3D::kRaw))
    {
       Int_t nvrt = fVertices.size() / 3;
       Int_t nseg = 0;
