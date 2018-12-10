@@ -15,8 +15,6 @@
 
 #include "TMath.h"
 
-#include <cassert>
-
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 

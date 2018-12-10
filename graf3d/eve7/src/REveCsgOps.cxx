@@ -66,6 +66,8 @@
 
 #include <algorithm>
 #include <vector>
+#include <cassert>
+
 
 #include "TBuffer3D.h"
 #include "Rtypes.h"
@@ -2968,10 +2970,9 @@ std::unique_ptr<TBaseMesh> MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
    return res;
 }
 
-std::unique_ptr<TBaseMesh> BuildFromCompositeShapeNew(TGeoCompositeShape *cshape, Int_t n_seg)
+std::unique_ptr<TBaseMesh> BuildFromCompositeShapeNew(TGeoCompositeShape *cshape, Int_t)
 {
    return MakeMesh(nullptr, cshape);
 }
-
 
 }}}

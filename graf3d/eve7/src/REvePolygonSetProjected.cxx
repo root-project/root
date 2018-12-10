@@ -21,6 +21,7 @@
 #include "TVirtualViewer3D.h"
 
 #include "json.hpp"
+#include <cassert>
 
 
 using namespace ROOT::Experimental;
