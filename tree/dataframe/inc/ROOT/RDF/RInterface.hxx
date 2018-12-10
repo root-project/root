@@ -1884,7 +1884,7 @@ private:
 
    void CheckIMTDisabled(std::string_view callerName)
    {
-      if (RDFInternal::IsImplicitMTEnabled()) {
+      if (ROOT::IsImplicitMTEnabled()) {
          std::string error(callerName);
          error += " was called with ImplicitMT enabled, but multi-thread is not supported.";
          throw std::runtime_error(error);
@@ -2040,7 +2040,7 @@ private:
 
       // add action node to functional graph and run event loop
       std::unique_ptr<RDFInternal::RActionBase> actionPtr;
-      if (!RDFInternal::IsImplicitMTEnabled()) {
+      if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
          using Helper_t = RDFInternal::SnapshotHelper<ColumnTypes...>;
          using Action_t = RDFInternal::RAction<Helper_t, Proxied>;

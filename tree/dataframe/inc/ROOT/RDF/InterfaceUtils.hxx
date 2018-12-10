@@ -77,8 +77,6 @@ bool InterpreterDeclare(const std::string &code);
 //   - 1 otherwise
 std::pair<Long64_t, int> InterpreterCalc(const std::string &code);
 
-bool IsImplicitMTEnabled();
-
 using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;
 HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
                             std::string_view treeName,
