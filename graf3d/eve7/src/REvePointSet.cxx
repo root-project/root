@@ -16,10 +16,6 @@
 #include <ROOT/REveTrans.hxx>
 #include <ROOT/REveRenderData.hxx>
 
-#include "TTree.h"
-#include "TTreePlayer.h"
-#include "TF3.h"
-
 #include "TColor.h"
 
 #include "json.hpp"

@@ -27,7 +27,7 @@ class REveSelectorToEventList : public TSelectorDraw {
    REveSelectorToEventList &operator=(const REveSelectorToEventList &); // Not implemented
 
 protected:
-   TEventList *fEvList;
+   TEventList *fEvList{nullptr};
    TList fInput;
 
 public:
@@ -36,8 +36,7 @@ public:
    virtual Int_t Version() const { return 1; }
    virtual Bool_t Process(Long64_t entry);
 
-   ClassDef(REveSelectorToEventList,
-            1); // TSelector that stores entry numbers of matching TTree entries into an event-list.
+   ClassDef(REveSelectorToEventList, 1); // TSelector that stores entry numbers of matching TTree entries into an event-list.
 };
 
 /******************************************************************************/
@@ -63,8 +62,7 @@ public:
    ETreeVarType_e GetSourceCS() const { return fSourceCS; }
    void SetSourceCS(ETreeVarType_e cs) { fSourceCS = cs; }
 
-   ClassDef(REvePointSelectorConsumer,
-            1); // Virtual base for classes that can be filled from TTree data via the REvePointSelector class.
+   ClassDef(REvePointSelectorConsumer, 1); // Virtual base for classes that can be filled from TTree data via the REvePointSelector class.
 };
 
 class REvePointSelector : public TSelectorDraw {
@@ -72,8 +70,8 @@ class REvePointSelector : public TSelectorDraw {
    REvePointSelector &operator=(const REvePointSelector &); // Not implemented
 
 protected:
-   TTree *fTree;
-   REvePointSelectorConsumer *fConsumer;
+   TTree *fTree{nullptr};
+   REvePointSelectorConsumer *fConsumer{nullptr};
 
    TString fVarexp;
    TString fSelection;
@@ -84,11 +82,11 @@ protected:
    TList fInput;
 
 public:
-   REvePointSelector(TTree *t = 0, REvePointSelectorConsumer *c = 0, const char *vexp = "", const char *sel = "");
+   REvePointSelector(TTree *t = nullptr, REvePointSelectorConsumer *c = nullptr, const char *vexp = "", const char *sel = "");
    virtual ~REvePointSelector() {}
 
-   virtual Long64_t Select(const char *selection = 0);
-   virtual Long64_t Select(TTree *t, const char *selection = 0);
+   virtual Long64_t Select(const char *selection = nullptr);
+   virtual Long64_t Select(TTree *t, const char *selection = nullptr);
    virtual void TakeAction();
 
    TTree *GetTree() const { return fTree; }
