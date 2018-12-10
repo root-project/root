@@ -26,9 +26,7 @@ public:
    virtual Int_t GetVertexIndex(Int_t polyNum, Int_t vertNum) const = 0;
 };
 
-// TBaseMesh *BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg);
-
-std::unique_ptr<TBaseMesh> BuildFromCompositeShapeNew(TGeoCompositeShape *cshape, Int_t n_seg);
+std::unique_ptr<TBaseMesh> BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg);
 
 
 } // namespace EveCsg
