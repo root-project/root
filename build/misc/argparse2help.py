@@ -73,5 +73,3 @@ if __name__ == "__main__":
 		write_header(parser, sys.argv[2])
 	elif (ext == ".1"):
 		write_man(parser, sys.argv[2])
-	pycfile = sys.argv[1]+"c"
-	os.remove(pycfile)

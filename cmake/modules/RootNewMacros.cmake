@@ -1478,9 +1478,9 @@ endfunction()
 function(generateHeaders pythonInput output target)
      add_custom_command(OUTPUT ${output}
           DEPENDS ${pythonInput} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
-          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
-                                       ${pythonInput}
-                                       ${output}
+          COMMAND ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+                                          ${pythonInput}
+                                          ${output}
      )
      target_sources(${target} PRIVATE ${output})
 endfunction()
@@ -1493,9 +1493,9 @@ endfunction()
 function(generateManual name pythonInput output)
      add_custom_target(${name} ALL
           DEPENDS ${pythonInput} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
-          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
-                                       ${pythonInput}
-                                       ${output}
+          COMMAND ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+                                          ${pythonInput}
+                                          ${output}
      )
      install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR})
 endfunction()
