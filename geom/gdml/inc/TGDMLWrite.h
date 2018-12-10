@@ -34,6 +34,7 @@
 #include "TGeoCompositeShape.h"
 #include "TGeoScaledShape.h"
 #include "TGeoManager.h"
+#include "TGDMLMatrix.h"
 
 #include <map>
 #include <vector>
@@ -46,6 +47,10 @@
 //    see http://gdml.web.cern.ch.                                        //
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
+
+class TGeoOpticalSurface;
+class TGeoSkinSurface;
+class TGeoBorderSurface;
 
 class TGDMLWrite : public TObject {
 public:
@@ -134,6 +139,10 @@ private:
    XMLNodePointer_t ExtractMaterials(TList* materialsLst); //result <materials>...
    TString          ExtractSolid(TGeoShape* volShape);     //adds <shape> to <solids>
    void             ExtractVolumes(TGeoVolume* volume);    //result <volume> node...  + corresp. shape
+   void             ExtractMatrices(TObjArray *matrices);  //adds <matrix> to <define>
+   void             ExtractOpticalSurfaces(TObjArray *surfaces); //adds <opticalsurface> to <solids>
+   void             ExtractSkinSurfaces(TObjArray *surfaces);    //adds <skinsurface> to <structure>
+   void             ExtractBorderSurfaces(TObjArray *surfaces);  //adds <bordersurface> to <structure>
 
    // Combined implementation to extract GDML information from the geometry tree
    void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, TList* materialsLst, const char* filename, TString option);
@@ -142,6 +151,7 @@ private:
    XMLNodePointer_t CreateAtomN(Double_t atom, const char * unit = "g/mole");
    XMLNodePointer_t CreateDN(Double_t density, const char * unit = "g/cm3");
    XMLNodePointer_t CreateFractionN(Double_t percentage, const char * refName);
+   XMLNodePointer_t CreatePropertyN(TNamed const &property);
 
    XMLNodePointer_t CreateIsotopN(TGeoIsotope * isotope, const char * name);
    XMLNodePointer_t CreateElementN(TGeoElement * element, XMLNodePointer_t materials, const char * name);
@@ -175,6 +185,9 @@ private:
    XMLNodePointer_t CreateXtrusionN(TGeoXtru * geoShape);
    XMLNodePointer_t CreateEllipsoidN(TGeoCompositeShape * geoShape, TString elName);
    XMLNodePointer_t CreateElConeN(TGeoScaledShape * geoShape);
+   XMLNodePointer_t CreateOpticalSurfaceN(TGeoOpticalSurface * geoSurf);
+   XMLNodePointer_t CreateSkinSurfaceN(TGeoSkinSurface * geoSurf);
+   XMLNodePointer_t CreateBorderSurfaceN(TGeoBorderSurface * geoSurf);
 
    XMLNodePointer_t CreateCommonBoolN(TGeoCompositeShape *geoShape);
 
@@ -192,6 +205,7 @@ private:
    //nodes to create position, rotation and similar types first-position/rotation...
    XMLNodePointer_t CreatePositionN(const char * name, Xyz position, const char * type = "position", const char * unit = "cm");
    XMLNodePointer_t CreateRotationN(const char * name, Xyz rotation, const char * type = "rotation", const char * unit = "deg");
+   XMLNodePointer_t CreateMatrixN(TGDMLMatrix const *matrix);
    TGeoCompositeShape* CreateFakeCtub(TGeoCtub * geoShape);  //create fake cut tube as intersection
 
    //check name (2nd parameter) whether it is in the list (1st parameter)
