@@ -2226,16 +2226,17 @@ Bool_t RooAbsData::allClientsCached(RooAbsArg* var, const RooArgSet& cacheList)
 {
   Bool_t ret(kTRUE), anyClient(kFALSE) ;
 
-  TIterator* cIter = var->valueClientIterator() ;
-  RooAbsArg* client ;
-  while ((client=(RooAbsArg*) cIter->Next())) {
+//  TIterator* cIter = var->valueClientIterator() ;
+//  RooAbsArg* client ;
+  for (auto it = var->valueClientIteratorBegin(); it != var->valueClientIteratorEnd(); ++it) {
     anyClient = kTRUE ;
+    const auto client = *it;
     if (!cacheList.find(client->GetName())) {
       // If client is not cached recurse
       ret &= allClientsCached(client,cacheList) ;
     }
   }
-  delete cIter ;
+//  delete cIter ;
 
   return anyClient?ret:kFALSE ;
 }

@@ -2646,7 +2646,7 @@ void RooWorkspace::Streamer(TBuffer &R__b)
 
      // Make lists of external clients of WS objects, and remove those links temporarily
 
-     map<RooAbsArg*,list<RooAbsArg*> > extClients, extValueClients, extShapeClients ;
+     map<RooAbsArg*,vector<RooAbsArg *> > extClients, extValueClients, extShapeClients ;
 
      TIterator* iter = _allOwnedNodes.createIterator() ;
      RooAbsArg* tmparg ;
@@ -2666,19 +2666,19 @@ void RooWorkspace::Streamer(TBuffer &R__b)
        delete clientIter ;
 
        // Loop over value client list of this arg
-       TIterator* vclientIter = tmparg->_clientListValue.MakeIterator() ;
-       RooAbsArg* vclient ;
-       while((vclient=(RooAbsArg*)vclientIter->Next())) {
-	 if (!_allOwnedNodes.containsInstance(*vclient)) {
-	   cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName() 
-				   << " has external value client link to " << vclient << " (" << vclient->GetName() << ") with ref count " << tmparg->_clientListValue.refCount(vclient) << endl ;
-	   while(tmparg->_clientListValue.refCount(vclient)>0) {
-	     tmparg->_clientListValue.Remove(vclient) ;
-	     extValueClients[tmparg].push_back(vclient) ;
-	   }
-	 }
+       std::vector<RooAbsArg *> valueClientsTmp{tmparg->_clientListValue.begin(), tmparg->_clientListValue.end()};
+       for (auto vclient : valueClientsTmp) {
+         if (!_allOwnedNodes.containsInstance(*vclient)) {
+           cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
+				       << " has external value client link to " << vclient << " (" << vclient->GetName() << ") with ref count " << tmparg->_clientListValue.refCount(vclient) << endl ;
+
+           const std::size_t refCount = tmparg->_clientListValue.refCount(vclient);
+           auto& extValTmpArgVec = extValueClients[tmparg];
+
+           extValTmpArgVec.insert(extValTmpArgVec.end(), refCount, vclient);
+           tmparg->_clientListValue.Remove(vclient, true);
+         }
        }
-       delete vclientIter ;
 
        // Loop over shape client list of this arg
        TIterator* sclientIter = tmparg->_clientListShape.MakeIterator() ;
@@ -2703,21 +2703,21 @@ void RooWorkspace::Streamer(TBuffer &R__b)
      // Reinstate clients here
 
      
-     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iterx = extClients.begin() ; iterx!=extClients.end() ; ++iterx) {
-       for (list<RooAbsArg*>::iterator citer = iterx->second.begin() ; citer!=iterx->second.end() ; ++citer) {
-	 iterx->first->_clientList.Add(*citer) ;
+     for (auto iterx = extClients.begin() ; iterx!=extClients.end() ; ++iterx) {
+       for (auto client : iterx->second) {
+         iterx->first->_clientList.Add(client);
        }
      }
 
-     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iterx = extValueClients.begin() ; iterx!=extValueClients.end() ; ++iterx) {
-       for (list<RooAbsArg*>::iterator citer = iterx->second.begin() ; citer!=iterx->second.end() ; ++citer) {
-	 iterx->first->_clientListValue.Add(*citer) ;
+     for (auto iterx = extValueClients.begin() ; iterx!=extValueClients.end() ; ++iterx) {
+       for (auto client : iterx->second) {
+         iterx->first->_clientListValue.Add(client);
        }
      }
 
-     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iterx = extShapeClients.begin() ; iterx!=extShapeClients.end() ; ++iterx) {
-       for (list<RooAbsArg*>::iterator citer = iterx->second.begin() ; citer!=iterx->second.end() ; ++citer) {
-	 iterx->first->_clientListShape.Add(*citer) ;
+     for (auto iterx = extShapeClients.begin() ; iterx!=extShapeClients.end() ; ++iterx) {
+       for (auto client : iterx->second) {
+         iterx->first->_clientListShape.Add(client);
        }
      }
 

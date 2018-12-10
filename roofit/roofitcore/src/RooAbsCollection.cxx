@@ -749,7 +749,7 @@ RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, Bool_t ve
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if this and other collection have identically named contents
+/// Check if this and other collection have identically-named contents
 
 Bool_t RooAbsCollection::equals(const RooAbsCollection& otherColl) const
 {
@@ -757,7 +757,13 @@ Bool_t RooAbsCollection::equals(const RooAbsCollection& otherColl) const
   if (getSize() != otherColl.getSize()) return kFALSE ;
 
   // Then check that each element of our list also occurs in the other list
-  return std::is_permutation(_list.begin(), _list.end(), otherColl._list.begin());
+  auto compareByNamePtr = [](const RooAbsArg * left, const RooAbsArg * right) {
+    return left->namePtr() == right->namePtr();
+  };
+
+  return std::is_permutation(_list.begin(), _list.end(),
+      otherColl._list.begin(),
+      compareByNamePtr);
 }
 
 

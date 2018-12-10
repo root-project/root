@@ -649,9 +649,11 @@ Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSe
 
    // Loop over all clients
    Int_t numLVServ(0) ;
-   RooAbsArg* client ;
-   TIterator* cIter = server->valueClientIterator() ;
-   while((client=(RooAbsArg*)cIter->Next())) {
+//   RooAbsArg* client ;
+//   TIterator* cIter = server->valueClientIterator() ;
+//   while((client=(RooAbsArg*)cIter->Next())) {
+   for (auto it = server->valueClientIteratorBegin(); it != server->valueClientIteratorEnd(); ++it) {
+     const auto client = *it;
 //      cout << "now checking value client " << client->GetName() << " of server " << server->GetName() << endl ;
      // If client is not an LValue, recurse
      if (!(exclLVBranches.find(client->GetName())==client)) {
@@ -660,7 +662,7 @@ Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSe
 // 	 cout << " ... recursing call" << endl ;
 	 if (!servesExclusively(client,exclLVBranches,allBranches)) {
 	 // Client is a non-LValue that doesn't have an exclusive LValue server
-	 delete cIter ;
+//	 delete cIter ;
 // 	 cout << "client " << client->GetName() << " is a non-lvalue that doesn't have an exclusive lvalue server" << endl ;
 	 return kFALSE ;	 
 	 }
@@ -672,7 +674,7 @@ Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSe
      }
    }
 
-   delete cIter ;
+//   delete cIter ;
 //    cout << "numLVserv = " << numLVServ << endl ;
    return (numLVServ==1) ;
 }

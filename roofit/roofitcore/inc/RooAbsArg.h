@@ -61,6 +61,101 @@ class RooRefArray : public TObjArray {
   ClassDef(RooRefArray,1) // Helper class for proxy lists
 } ;
 
+template <class T>
+class RefCountListNew {
+  public:
+    using Container_t =  std::vector<T *>;
+
+    RefCountListNew() {}
+    RefCountListNew(const RefCountListNew&) = default;
+    RefCountListNew& operator=(const RefCountListNew&) = default;
+
+    virtual ~RefCountListNew() {}
+
+    void Add(RooAbsArg* obj, std::size_t refCount = 1) {
+      auto foundItem = findByPointer(obj);
+
+      if (foundItem != _storage.end()) {
+        ++_refCount[foundItem - _storage.begin()];
+      }
+      else {
+        _storage.emplace_back(obj);
+        _refCount.emplace_back(refCount);
+      }
+    }
+
+    RefCountListNew<T>& operator=(const RooRefCountList & other);
+
+    std::size_t refCount(typename Container_t::const_iterator item) const {
+      assert(_storage.size() == _refCount.size());
+
+      return item != _storage.end() ? _refCount[item - _storage.begin()] : 0;
+    }
+
+    std::size_t refCount(const T * obj) const {
+      return refCount(findByPointer(obj));
+    }
+
+    typename Container_t::const_iterator begin() const {
+      return _storage.begin();
+    }
+
+    typename Container_t::const_iterator end() const {
+      return _storage.end();
+    }
+
+    std::size_t size() const {
+      assert(_storage.size() == _refCount.size());
+
+      return _storage.size();
+    }
+
+    typename Container_t::iterator findByPointer(const T * item) {
+      auto byArgPointer = [item](const T * listItem) {
+        return listItem == item;
+      };
+
+      return std::find_if(_storage.begin(), _storage.end(), byArgPointer);
+    }
+
+    typename Container_t::const_iterator findByPointer(const TObject * item) const {
+      auto byPointer = [item](const T * listItem) {
+        return listItem == item;
+      };
+
+      return std::find_if(_storage.begin(), _storage.end(), byPointer);
+    }
+
+    typename Container_t::const_iterator findByName(const char * name) const;
+
+    typename Container_t::const_iterator findByNamePointer(const T * item) const;
+
+    bool contains(const TObject * obj) const {
+      return findByPointer(obj) != _storage.end();
+    }
+
+    bool containsByNamePtr(const T * obj) const {
+      return findByNamePointer(obj) != _storage.end();
+    }
+
+    bool containsSameName(const char * name) const {
+      return findByName(name) != _storage.end();
+    }
+
+    void Remove(const T * obj, bool force = false);
+
+    void RemoveAll(const T * obj) {
+      Remove(obj, true);
+    }
+
+
+  private:
+    Container_t _storage;
+    std::vector<std::size_t> _refCount; //!
+
+    ClassDef(RefCountListNew<T>,0);
+};
+
 
 class RooAbsArg : public TNamed, public RooPrintable {
 public:
@@ -100,10 +195,17 @@ public:
     // Return iterator over all client RooAbsArgs
     return _clientList.MakeIterator() ;
   }
-  inline TIterator* valueClientIterator() const {
-    // Return iterator over all value client RooAbsArgs
-    return _clientListValue.MakeIterator() ;
+//  inline TIterator* valueClientIterator() const {
+//    // Return iterator over all value client RooAbsArgs
+//    return _clientListValue.MakeIterator() ;
+//  }
+  RefCountListNew<RooAbsArg>::Container_t::const_iterator valueClientIteratorBegin() const {
+    return _clientListValue.begin();
   }
+  RefCountListNew<RooAbsArg>::Container_t::const_iterator valueClientIteratorEnd() const {
+    return _clientListValue.end();
+  }
+
   inline TIterator* shapeClientIterator() const {
     // Return iterator over all shape client RooAbsArgs
     return _clientListShape.MakeIterator() ;
@@ -113,7 +215,7 @@ public:
     return _serverList.MakeIterator() ;
   }
 
-  inline RooFIter valueClientMIterator() const { return _clientListValue.fwdIterator() ; }
+//  inline RooFIter valueClientMIterator() const { return _clientListValue.fwdIterator() ; }
   inline RooFIter shapeClientMIterator() const { return _clientListShape.fwdIterator() ; }
   inline RooFIter serverMIterator() const { return _serverList.fwdIterator() ; }
 
@@ -132,11 +234,11 @@ public:
   }
   inline Bool_t isValueServer(const RooAbsArg& arg) const {
     // If true, arg is a value server of self
-    return _clientListValue.findArg(&arg)?kTRUE:kFALSE ;
+    return _clientListValue.containsByNamePtr(&arg);
   }
   inline Bool_t isValueServer(const char* name) const {
     // If true, we have a server with given name
-    return _clientListValue.FindObject(name)?kTRUE:kFALSE ;
+    return _clientListValue.containsSameName(name);
   }
   inline Bool_t isShapeServer(const RooAbsArg& arg) const {
     // If true arg is a shape server of self
@@ -472,11 +574,13 @@ public:
   RooRefCountList _serverList       ; // list of server objects
   RooRefCountList _clientList       ; // list of client objects
   RooRefCountList _clientListShape  ; // subset of clients that requested shape dirty flag propagation
-  RooRefCountList _clientListValue  ; // subset of clients that requested value dirty flag propagation
+//  RooRefCountList _clientListValue  ; // subset of clients that requested value dirty flag propagation
+  RefCountListNew<RooAbsArg> _clientListValue;
+
   RooRefArray _proxyList        ; // list of proxies
   std::deque<RooAbsCache*> _cacheList ; // list of caches
-  TIterator* _clientShapeIter ; //! Iterator over _clientListShape
-  TIterator* _clientValueIter ; //! Iterator over _clientListValue
+//  TIterator* _clientShapeIter ; //! Iterator over _clientListShape
+//  TIterator* _clientValueIter ; //! Iterator over _clientListValue
 
   // Server redirection interface
  public:
@@ -595,7 +699,7 @@ public:
   static std::map<RooAbsArg*,TRefArray*> _ioEvoList ; // temporary holding list for proxies needed in schema evolution
   static std::stack<RooAbsArg*> _ioReadStack ; // reading stack
 
-  ClassDef(RooAbsArg,6) // Abstract variable
+  ClassDef(RooAbsArg,7) // Abstract variable
 };
 
 std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);
