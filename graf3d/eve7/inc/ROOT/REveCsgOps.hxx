@@ -6,6 +6,8 @@
 
 #include "Rtypes.h"
 
+#include <memory>
+
 class TBuffer3D;
 class TGeoCompositeShape;
 class TGeoMatrix;

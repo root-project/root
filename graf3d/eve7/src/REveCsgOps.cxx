@@ -2682,13 +2682,13 @@ TBaseMesh *ConvertToMesh(const TBuffer3D &buff, TGeoMatrix *matr)
       Int_t numPnts[3] = {0};
 
       if (segEnds[0] == segEnds[2]) {
-         numPnts[0] = segEnds[1], numPnts[1] = segEnds[0], numPnts[2] = segEnds[3];
+         numPnts[0] = segEnds[1]; numPnts[1] = segEnds[0]; numPnts[2] = segEnds[3];
       } else if (segEnds[0] == segEnds[3]) {
-         numPnts[0] = segEnds[1], numPnts[1] = segEnds[0], numPnts[2] = segEnds[2];
+         numPnts[0] = segEnds[1]; numPnts[1] = segEnds[0]; numPnts[2] = segEnds[2];
       } else if (segEnds[1] == segEnds[2]) {
-         numPnts[0] = segEnds[0], numPnts[1] = segEnds[1], numPnts[2] = segEnds[3];
+         numPnts[0] = segEnds[0]; numPnts[1] = segEnds[1]; numPnts[2] = segEnds[3];
       } else {
-         numPnts[0] = segEnds[0], numPnts[1] = segEnds[1], numPnts[2] = segEnds[2];
+         numPnts[0] = segEnds[0]; numPnts[1] = segEnds[1]; numPnts[2] = segEnds[2];
       }
 
       currPoly.AddProp(TBlenderVProp(numPnts[0]));
@@ -2820,7 +2820,7 @@ Int_t TCsgVV3D::AddObject(const TBuffer3D& buffer, Bool_t* addChildren)
 {
    if (fCompositeOpen)
    {
-      TBaseMesh *newMesh = ConvertToMesh(buffer);
+      auto newMesh = ConvertToMesh(buffer);
       fCSTokens.push_back(std::make_pair(TBuffer3D::kCSNoOp, newMesh));
    }
 
@@ -2942,41 +2942,39 @@ TBaseMesh *BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg)
 
 
 
-TBaseMesh *MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
+std::unique_ptr<TBaseMesh> MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
 {
    TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *> (shape);
 
+   std::unique_ptr<TBaseMesh> res;
+
    if (!comp) {
       std::unique_ptr<TBuffer3D> b3d(shape->MakeBuffer3D());
-      return EveCsg::ConvertToMesh(*b3d.get(), matr);
+      res.reset(EveCsg::ConvertToMesh(*b3d.get(), matr));
+   } else {
+      auto node = comp->GetBoolNode();
+
+      TGeoHMatrix mleft, mright;
+      if (matr) { mleft = *matr; mright = *matr; }
+
+      mleft.Multiply(node->GetLeftMatrix());
+      auto left = MakeMesh(&mleft, node->GetLeftShape());
+
+      mright.Multiply(node->GetRightMatrix());
+      auto right = MakeMesh(&mright, node->GetRightShape());
+
+      if (node->IsA() == TGeoUnion::Class()) res.reset(EveCsg::BuildUnion(left.get(), right.get()));
+      if (node->IsA() == TGeoIntersection::Class()) res.reset(EveCsg::BuildIntersection(left.get(), right.get()));
+      if (node->IsA() == TGeoSubtraction::Class()) res.reset(EveCsg::BuildDifference(left.get(), right.get()));
    }
-
-   auto node = comp->GetBoolNode();
-
-   TGeoHMatrix mleft, mright;
-   if (matr) { mleft = *matr; mright = *matr; }
-
-   mleft.Multiply(node->GetLeftMatrix());
-   auto left = MakeMesh(&mleft, node->GetLeftShape());
-
-   mright.Multiply(node->GetRightMatrix());
-   auto right = MakeMesh(&mright, node->GetRightShape());
-
-   TBaseMesh *res = nullptr;
-
-   if (node->IsA() == TGeoUnion::Class()) res = EveCsg::BuildUnion(left, right);
-   if (node->IsA() == TGeoIntersection::Class()) res = EveCsg::BuildIntersection(left, right);
-   if (node->IsA() == TGeoSubtraction::Class()) res = EveCsg::BuildDifference(left, right);
-
-   delete left;
-   delete right;
 
    return res;
 }
 
 TBaseMesh *BuildFromCompositeShapeNew(TGeoCompositeShape *cshape, Int_t n_seg)
 {
-   return MakeMesh(nullptr, cshape);
+   auto res = MakeMesh(nullptr, cshape);
+   return res.release();
 }
 
 
