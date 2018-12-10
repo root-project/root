@@ -486,6 +486,17 @@ public:
 // 3. The column is an RVec, the collection is not a vector
 // 4. The column is an RVec, the collection is a vector
 
+template <typename T, typename COLL>
+void FillColl(const T& v, COLL& c) {
+   c.emplace_back(v);
+}
+
+// Use push_back for std::vector<bool> since some compilers do not support emplace_back.
+template <typename COLL>
+void FillColl(const bool v, COLL& c) {
+   c.push_back(v);
+}
+
 // Case 1.: The column is not an RVec, the collection is not a vector
 // No optimisations, no transformations: just copies.
 template <typename RealT_t, typename T, typename COLL>
@@ -505,7 +516,7 @@ public:
 
    void InitTask(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, T &v) { fColls[slot]->emplace_back(v); }
+   void Exec(unsigned int slot, T &v) { FillColl(v, *fColls[slot]); }
 
    void Initialize() { /* noop */}
 
@@ -514,8 +525,8 @@ public:
       auto rColl = fColls[0];
       for (unsigned int i = 1; i < fColls.size(); ++i) {
          auto &coll = fColls[i];
-         for (T &v : *coll) {
-            rColl->emplace_back(v);
+         for (const T &v : *coll) {
+            FillColl(v, *rColl);
          }
       }
    }
@@ -547,7 +558,7 @@ public:
 
    void InitTask(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, T &v) { fColls[slot]->emplace_back(v); }
+   void Exec(unsigned int slot, T &v) { FillColl(v, *fColls[slot]); }
 
    void Initialize() { /* noop */}
 
