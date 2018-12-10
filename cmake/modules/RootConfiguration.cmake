@@ -240,11 +240,6 @@ set(gfalincdir ${GFAL_INCLUDE_DIR})
 
 set(buildmemstat ${value${memstat}})
 
-set(buildbonjour ${value${bonjour}})
-set(dnssdlibdir ${BONJOUR_LIBRARY_DIR})
-set(dnssdlib ${BONJOUR_LIBRARY})
-set(dnsdincdir ${BONJOUR_INCLUDE_DIR})
-
 set(buildhdfs ${value${hdfs}})
 set(hdfslibdir ${HDFS_LIBRARY_DIR})
 set(hdfslib ${HDFS_LIBRARY})

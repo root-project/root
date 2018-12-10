@@ -518,21 +518,6 @@ if(gviz)
   endif()
 endif()
 
-#---Check for Bonjour installation-------------------------------------------------------
-if(bonjour)
-  message(STATUS "Looking for Bonjour")
-  find_package(Bonjour)
-  if(NOT BONJOUR_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Bonjour/Avahi libraries not found and Bonjour component required")
-    else()
-      message(STATUS "Bonjour not found. Switching off bonjour option")
-      set(bonjour OFF CACHE BOOL "Disabled because Bonjour not found (${bonjour_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-
 #---Check for krb5 Support-----------------------------------------------------------
 if(krb5)
   message(STATUS "Looking for Kerberos 5")

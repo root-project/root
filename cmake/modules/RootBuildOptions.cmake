@@ -76,7 +76,6 @@ ROOT_BUILD_OPTION(alien OFF "Enable support for AliEn (requires libgapiUI from A
 ROOT_BUILD_OPTION(arrow OFF "Enable support for Apache Arrow")
 ROOT_BUILD_OPTION(asimage ON "Enable support for image processing via libAfterImage")
 ROOT_BUILD_OPTION(astiff ON "Enable support for TIFF images via libAfterImage")
-ROOT_BUILD_OPTION(bonjour OFF "Enable support for Avahi/Bonjour (requires libdns_sd and/or avahi)")
 ROOT_BUILD_OPTION(builtin_afterimage ON "Build bundled copy of libAfterImage")
 ROOT_BUILD_OPTION(builtin_cfitsio OFF "Build CFITSIO internally (requires network)")
 ROOT_BUILD_OPTION(builtin_clang ON "Build bundled copy of Clang")
@@ -237,7 +236,6 @@ endif()
 #--- The 'all' option swithes ON major options---------------------------------------------------
 if(all)
  set(arrow_defvalue ON)
- set(bonjour_defvalue ON)
  set(dcache_defvalue ON)
  set(fitsio_defvalue ON)
  set(fortran_defvalue ON)
@@ -326,14 +324,14 @@ endif()
 ROOT_APPLY_OPTIONS()
 
 #---Removed options------------------------------------------------------------
-foreach(opt afs chirp glite ios qt qtgsi ruby sapdb srp table)
+foreach(opt afs bonjour chirp glite ios qt qtgsi ruby sapdb srp table)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' has been removed in ROOT v6.16.")
   endif()
 endforeach()
 
 #---Deprecated options---------------------------------------------------------
-foreach(opt afdsmgrd bonjour castor geocad globus gviz hdfs krb5 ldap memstat odbc rfio)
+foreach(opt afdsmgrd castor geocad globus gviz hdfs krb5 ldap memstat odbc rfio)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in ROOT v6.18. Please inform rootdev@cern.ch should you still need it.")
   endif()

@@ -236,11 +236,6 @@ GLIB2INCDIR    := $(filter-out /usr/include, @glib2incdir@)
 
 BUILDMEMSTAT   := @buildmemstat@
 
-BUILDBONJOUR   := @buildbonjour@
-DNSSDLIBDIR    := @dnssdlibdir@
-DNSSDLIB       := @dnssdlib@
-DNSSDINCDIR    := $(filter-out /usr/include, @dnssdincdir@)
-
 BUILDHDFS      := @buildhdfs@
 HDFSLIBDIR     := @hdfslibdir@
 HDFSCLILIB     := @hdfslib@
