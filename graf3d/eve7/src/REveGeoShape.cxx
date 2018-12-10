@@ -132,7 +132,7 @@ REveGeoShape::~REveGeoShape()
 
 TGeoShape* REveGeoShape::MakePolyShape()
 {
-   return REveGeoPolyShape::Construct(fCompositeShape, fNSegments);
+   return new REveGeoPolyShape(fCompositeShape, fNSegments);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -25,11 +25,6 @@ namespace Experimental {
 
 class REveRenderData;
 
-namespace EveCsg
-{
-class TBaseMesh;
-}
-
 class REveGeoPolyShape : public TGeoBBox
 {
 private:
@@ -69,13 +64,12 @@ protected:
 
 public:
    REveGeoPolyShape();
-   virtual ~REveGeoPolyShape() {}
+   REveGeoPolyShape(TGeoCompositeShape *cshp, Int_t n_seg);
 
-   static REveGeoPolyShape* Construct(TGeoCompositeShape *cshp, Int_t n_seg);
+   virtual ~REveGeoPolyShape() {}
 
    void FillRenderData(REveRenderData &rd);
 
-   void SetFromMesh(EveCsg::TBaseMesh* mesh);
    void SetFromBuff3D(const TBuffer3D& buffer);
 
    void EnforceTriangles();
