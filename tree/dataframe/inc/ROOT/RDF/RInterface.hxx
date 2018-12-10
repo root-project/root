@@ -47,6 +47,9 @@ class TGraph;
 
 // Windows requires a forward decl of printValue to accept it as a valid friend function in RInterface
 namespace ROOT {
+void 	DisableImplicitMT ();
+bool 	IsImplicitMTEnabled ();
+void 	EnableImplicitMT (UInt_t numthreads);
 class RDataFrame;
 namespace Internal {
 namespace RDF {
