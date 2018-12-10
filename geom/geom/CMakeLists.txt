@@ -3,7 +3,7 @@
 ############################################################################
 
 set(headers1 TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h
-             TGeoMedium.h TGeoMaterial.h
+             TGeoMedium.h TGeoMaterial.h TGeoOpticalSurface.h
              TGeoMatrix.h TGeoVolume.h TGeoNode.h
              TGeoVoxelFinder.h TGeoShape.h TGeoBBox.h
              TGeoPara.h TGeoTube.h TGeoTorus.h TGeoSphere.h
@@ -14,7 +14,7 @@ set(headers1 TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h
              TVirtualGeoConverter.h TGeoPolygon.h TGeoXtru.h TGeoPhysicalNode.h
              TGeoHelix.h TGeoParaboloid.h TGeoElement.h TGeoHalfSpace.h
              TGeoBuilder.h TGeoNavigator.h TGeoRegion.h
-             TGeoPhysicalConstants.h TGeoSystemOfUnits.h)
+             TGeoPhysicalConstants.h TGeoSystemOfUnits.h TGDMLMatrix.h)
 set(headers2 TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h
              TGeoUniformMagField.h TGeoGlobalMagField.h TGeoBranchArray.h
              TGeoExtension.h TGeoParallelWorld.h)

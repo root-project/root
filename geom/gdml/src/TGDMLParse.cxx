@@ -77,6 +77,9 @@ When most solids or volumes are added to the geometry they
 
 */
 
+#include "TGDMLParse.h"
+#include "TGDMLMatrix.h"
+
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 #include "TXMLEngine.h"
@@ -109,9 +112,12 @@ When most solids or volumes are added to the geometry they
 #include "TGeoShape.h"
 #include "TGeoCompositeShape.h"
 #include "TGeoRegion.h"
-#include "TGDMLParse.h"
+#include "TGeoOpticalSurface.h"
+#include "TGeoSystemOfUnits.h"
+
 #include <stdlib.h>
 #include <string>
+#include <sstream>
 #include <locale>
 
 ClassImp(TGDMLParse);
@@ -160,6 +166,7 @@ TGeoVolume* TGDMLParse::GDMLReadFile(const char* filename)
 
 const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
 {
+   DefineConstants();
    XMLAttrPointer_t attr = gdml->GetFirstAttr(node);
    const char* name = gdml->GetNodeName(node);
    XMLNodePointer_t parentn = gdml->GetParent(node);
@@ -171,6 +178,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* consstr = "constant";
    const char* varistr = "variable";
    const char* quanstr = "quantity";
+   const char* matrstr = "matrix";
    const char* rotastr = "rotation";
    const char* scalstr = "scale";
    const char* elemstr = "element";
@@ -178,7 +186,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* matestr = "material";
    const char* volustr = "volume";
    const char* assestr = "assembly";
-   const char* twtrstr = "twistedtrap"; //name changed according to schema
+   const char* twtrstr = "twistedtrap";
    const char* cutTstr = "cutTube";
    const char* bboxstr = "box";
    const char* xtrustr = "xtru";
@@ -202,6 +210,9 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* reflstr = "reflectedSolid";
    const char* ellistr = "ellipsoid";
    const char* elcnstr = "elcone";
+   const char* optsstr = "opticalsurface";
+   const char* skinstr = "skinsurface";
+   const char* bordstr = "bordersurface";
    const char* usrstr  = "userinfo";
    Bool_t hasIsotopes;
    Bool_t hasIsotopesExtended;
@@ -220,6 +231,14 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
       node = ConProcess(gdml, node, attr);
    } else if ((strcmp(name, quanstr)) == 0) {
       node = QuantityProcess(gdml, node, attr);
+   } else if ((strcmp(name, matrstr)) == 0) {
+      node = MatrixProcess(gdml, node, attr);
+   } else if ((strcmp(name, optsstr)) == 0) {
+      node = OpticalSurfaceProcess(gdml, node, attr);
+   } else if ((strcmp(name, skinstr)) == 0) {
+      node = SkinSurfaceProcess(gdml, node, attr);
+   } else if ((strcmp(name, bordstr)) == 0) {
+      node = BorderSurfaceProcess(gdml, node, attr);
    }
    //*************eleprocess********************************
 
@@ -429,6 +448,44 @@ XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    return node;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Define constant expressions used.
+void TGDMLParse::DefineConstants()
+{
+   // Units used in TGeo. Note that they are based on cm/degree/GeV and they are different from Geant4
+   fconsts["mm"] = TGeoUnit::mm;
+   fconsts["millimeter"] = TGeoUnit::mm;
+   fconsts["cm"] = TGeoUnit::cm;
+   fconsts["centimeter"] = TGeoUnit::cm;
+   fconsts["m"] = TGeoUnit::m;
+   fconsts["meter"] = TGeoUnit::m;
+   fconsts["km"] = TGeoUnit::km;
+   fconsts["kilometer"] = TGeoUnit::km;
+   fconsts["rad"] = TGeoUnit::rad;
+   fconsts["radian"] = TGeoUnit::rad;
+   fconsts["deg"] = TGeoUnit::deg;
+   fconsts["degree"] = TGeoUnit::deg;
+   fconsts["pi"] = TGeoUnit::pi;
+   fconsts["twopi"] = TGeoUnit::twopi;
+   fconsts["avogadro"] = TMath::Na();
+   fconsts["gev"] = TGeoUnit::GeV;
+   fconsts["GeV"] = TGeoUnit::GeV;
+   fconsts["mev"] = TGeoUnit::MeV;
+   fconsts["MeV"] = TGeoUnit::MeV;
+   fconsts["kev"] = TGeoUnit::keV;
+   fconsts["keV"] = TGeoUnit::keV;
+   fconsts["ev"] = TGeoUnit::eV;
+   fconsts["eV"] = TGeoUnit::eV;
+   fconsts["s"] = TGeoUnit::s;
+   fconsts["ms"] = TGeoUnit::ms;
+   fconsts["ns"] = TGeoUnit::ns;
+   fconsts["us"] = TGeoUnit::us;
+   fconsts["kg"] = TGeoUnit::kg;
+   fconsts["g"] = TGeoUnit::g;
+   fconsts["mg"] = TGeoUnit::mg;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// In the define section of the GDML file, quantities can be declared.
 /// These are treated the same as constants, but the unit has to be multiplied
@@ -459,6 +516,115 @@ XMLNodePointer_t TGDMLParse::QuantityProcess(TXMLEngine* gdml, XMLNodePointer_t 
    fconsts[name.Data()] = GetScaleVal(unit) * Value(value);
 
    return node;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// In the define section of the GDML file, matrices
+/// These are referenced by other GDML tags, such as optical surfaces
+XMLNodePointer_t TGDMLParse::MatrixProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
+   TString name = "";
+   Int_t coldim  = 0;
+   std::string values;
+   TString tempattr;
+
+   while (attr != 0) {
+      tempattr = gdml->GetAttrName(attr);
+      tempattr.ToLower();
+
+      if (tempattr == "name") {
+         name = gdml->GetAttrValue(attr);
+      }
+      if (tempattr == "coldim") {
+         coldim = (Int_t)Value(gdml->GetAttrValue(attr));
+      }
+      if (tempattr == "values") {
+         values = gdml->GetAttrValue(attr);
+      }
+      attr = gdml->GetNextAttr(attr);
+   }
+
+   // Parse the values and create the matrix
+   std::stringstream valueStream(values);
+   std::vector<Double_t> valueList;
+   while (!valueStream.eof())
+   {
+      std::string matrixValue;
+      valueStream >> matrixValue;
+
+      valueList.push_back(Value(matrixValue.c_str()));
+   }
+
+   TGDMLMatrix *matrix = new TGDMLMatrix(name, valueList.size()/coldim, coldim);
+   matrix->SetMatrixAsString(values.c_str());
+   for (size_t i=0; i<valueList.size(); ++i)
+      matrix->Set(i/coldim, i%coldim, valueList[i]);
+
+   gGeoManager->AddGDMLMatrix(matrix);
+   fmatrices[name.Data()] = matrix;
+
+   return node;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// In the solids section of the GDML file, optical surfaces can be defined
+///
+XMLNodePointer_t TGDMLParse::OpticalSurfaceProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
+   TString name, propname, ref;
+   TGeoOpticalSurface::ESurfaceModel model = TGeoOpticalSurface::kMglisur;
+   TGeoOpticalSurface::ESurfaceFinish finish = TGeoOpticalSurface::kFpolished;
+   TGeoOpticalSurface::ESurfaceType type = TGeoOpticalSurface::kTdielectric_metal;
+   Double_t value = 0;
+   TString tempattr;
+
+   while (attr != 0) {
+      tempattr = gdml->GetAttrName(attr);
+      tempattr.ToLower();
+
+      if (tempattr == "name") {
+         name = gdml->GetAttrValue(attr);
+      }
+      if (tempattr == "model") {
+         model = TGeoOpticalSurface::StringToModel(gdml->GetAttrValue(attr));
+      }
+      if (tempattr == "finish") {
+         finish = TGeoOpticalSurface::StringToFinish(gdml->GetAttrValue(attr));
+      }
+      if (tempattr == "type") {
+         type = TGeoOpticalSurface::StringToType(gdml->GetAttrValue(attr));
+      }
+      if (tempattr == "value") {
+         value = Value(gdml->GetAttrValue(attr));
+      }
+      attr = gdml->GetNextAttr(attr);
+   }
+
+   TGeoOpticalSurface *surf = new TGeoOpticalSurface(name, model, finish, type, value);
+
+   XMLNodePointer_t child = gdml->GetChild(node);
+   while (child != 0) {
+      attr = gdml->GetFirstAttr(child);
+      if ((strcmp(gdml->GetNodeName(child), "property")) == 0) {
+         while (attr != 0) {
+            tempattr = gdml->GetAttrName(attr);
+            tempattr.ToLower();
+            if (tempattr == "name") {
+               propname = gdml->GetAttrValue(attr);
+            } else if (tempattr == "ref") {
+               ref = gdml->GetAttrValue(attr);
+               TGDMLMatrix *matrix = fmatrices[ref.Data()];
+               if (!matrix)
+                  Error("OpticalSurfaceProcess", "Reference matrix %s for optical surface %s not found", ref.Data(), name.Data());
+               surf->AddProperty(propname, ref);
+            }
+            attr = gdml->GetNextAttr(attr);
+         }
+      } // loop on child attributes
+      child = gdml->GetNext(child);
+   } // loop on children
+   gGeoManager->AddOpticalSurface(surf);
+   return child;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1074,235 +1240,274 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 
 XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,   XMLAttrPointer_t attr,  int z)
 {
-  //!Map to hold fractions while being processed
-  typedef FracMap::iterator fractions;
+   //!Map to hold fractions while being processed
+   typedef FracMap::iterator fractions;
 //  typedef FracMap::iterator i;
-  FracMap fracmap;
+   FracMap fracmap;
 
-  TGeoManager* mgr = gGeoManager;
-  TGeoElementTable* tab_ele = mgr->GetElementTable();
-  // We have to assume the media are monotonic increasing starting with 1
-  static int medid = mgr->GetListOfMedia()->GetSize()+1;
-  XMLNodePointer_t child = gdml->GetChild(node);
-  TString tempattr = "";
-  Int_t ncompo = 0, mixflag = 2;
-  Double_t density = 0;
-  TString name = "";
-  TGeoMixture* mix = 0;
-  TGeoMaterial* mat = 0;
-  TString tempconst = "";
-  TString matname;
-  Bool_t composite = kFALSE;
+   TGeoManager* mgr = gGeoManager;
+   TGeoElementTable* tab_ele = mgr->GetElementTable();
+   TList properties;
+   properties.SetOwner();
+   // We have to assume the media are monotonic increasing starting with 1
+   static int medid = mgr->GetListOfMedia()->GetSize()+1;
+   XMLNodePointer_t child = gdml->GetChild(node);
+   TString tempattr = "";
+   Int_t ncompo = 0, mixflag = 2;
+   Double_t density = 0;
+   TString name = "";
+   TGeoMixture* mix = 0;
+   TGeoMaterial* mat = 0;
+   TString tempconst = "";
+   TString matname;
+   Bool_t composite = kFALSE;
 
-  if (z == 1) {
-    Double_t a = 0;
-    Double_t d = 0;
+   if (z == 1) {
+      Double_t a = 0;
+      Double_t d = 0;
 
-    while (child != 0) {
-      attr = gdml->GetFirstAttr(child);
-
-      if ((strcmp(gdml->GetNodeName(child), "atom")) == 0) {
-        while (attr != 0) {
-          tempattr = gdml->GetAttrName(attr);
-          tempattr.ToLower();
-
-          if (tempattr == "value") {
-            a = Value(gdml->GetAttrValue(attr));
-          }
-          attr = gdml->GetNextAttr(attr);
-        }
+      name = gdml->GetAttr(node, "name");
+      if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+         name = TString::Format("%s_%s", name.Data(), fCurrentFile);
       }
 
-      if ((strcmp(gdml->GetNodeName(child), "D")) == 0) {
-        while (attr != 0) {
-          tempattr = gdml->GetAttrName(attr);
-          tempattr.ToLower();
+      while (child != 0) {
+         attr = gdml->GetFirstAttr(child);
 
-          if (tempattr == "value") {
-            d = Value(gdml->GetAttrValue(attr));
-          }
-          attr = gdml->GetNextAttr(attr);
-        }
+         if ((strcmp(gdml->GetNodeName(child), "property")) == 0) {
+            TNamed *property = new TNamed();
+            while (attr != 0) {
+               tempattr = gdml->GetAttrName(attr);
+               tempattr.ToLower();
+
+               if (tempattr == "name") {
+                  property->SetName(gdml->GetAttrValue(attr));
+               }
+               else if(tempattr == "ref") {
+                  property->SetTitle(gdml->GetAttrValue(attr));
+                  TGDMLMatrix *matrix = fmatrices[property->GetTitle()];
+                  if (!matrix)
+                     Error("MatProcess", "Reference matrix %s for material %s not found", property->GetTitle(), name.Data());
+                  properties.Add(property);
+               }
+               attr = gdml->GetNextAttr(attr);
+            }
+         }
+
+         if ((strcmp(gdml->GetNodeName(child), "atom")) == 0) {
+            while (attr != 0) {
+               tempattr = gdml->GetAttrName(attr);
+               tempattr.ToLower();
+
+               if (tempattr == "value") {
+                  a = Value(gdml->GetAttrValue(attr));
+               }
+               attr = gdml->GetNextAttr(attr);
+            }
+         }
+
+         if ((strcmp(gdml->GetNodeName(child), "D")) == 0) {
+            while (attr != 0) {
+               tempattr = gdml->GetAttrName(attr);
+               tempattr.ToLower();
+
+               if (tempattr == "value") {
+                  d = Value(gdml->GetAttrValue(attr));
+               }
+               attr = gdml->GetNextAttr(attr);
+            }
+         }
+         child = gdml->GetNext(child);
       }
-      child = gdml->GetNext(child);
-    }
-    //still in the is Z else...but not in the while..
+      //still in the is Z else...but not in the while..
+      //CHECK FOR CONSTANTS
+      tempconst = gdml->GetAttr(node, "Z");
 
-    name = gdml->GetAttr(node, "name");
+      Double_t valZ = Value(tempconst);
 
-    if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-      name = TString::Format("%s_%s", name.Data(), fCurrentFile);
-    }
+      TString tmpname = name;
+      //deal with special case - Z of vacuum is always 0
+      tmpname.ToLower();
+      if (tmpname == "vacuum") {
+         valZ = 0;
+      }
+      TString mat_name = NameShort(name);
+      mat = mgr->GetMaterial(mat_name);
+      if ( !mat )  {
+         mat = new TGeoMaterial(mat_name, a, valZ, d);
+      }
+      else  {
+         Info("TGDMLParse","Re-use existing material: %s",mat->GetName());
+      }
+      if (properties.GetSize()) {
+         TNamed *property;
+         TIter next(&properties);
+         while ((property = (TNamed*)next()))
+            mat->AddProperty(property->GetName(), property->GetTitle());
+      }
+      mixflag = 0;
+      //Note: Object(name, title) corresponds to Element(formula, name)
+      TGeoElement* mat_ele = tab_ele->FindElement(mat_name);
+      // We cannot use elements with Z = 0, so we expect a user definition
+      if (mat_ele && mat_ele->Z() == 0)
+         mat_ele = nullptr;
 
-    //CHECK FOR CONSTANTS
-    tempconst = gdml->GetAttr(node, "Z");
+      if ( !mat_ele )  {
+         mat_ele = new TGeoElement(mat_name, mat_name, atoi(tempconst), a);
+      }
+      else if ( gDebug >= 2 )  {
+         Info("TGDMLParse","Re-use existing material-element: %s",mat_ele->GetName());
+      }
+      felemap[name.Data()] = mat_ele;
+   }
 
-    Double_t valZ = Value(tempconst);
+   else if (z == 0) {
+      while (child != 0) {
+         attr = gdml->GetFirstAttr(child);
 
-    TString tmpname = name;
-    //deal with special case - Z of vacuum is always 0
-    tmpname.ToLower();
-    if (tmpname == "vacuum") {
-      valZ = 0;
-    }
-    TString mat_name = NameShort(name);
-    mat = mgr->GetMaterial(mat_name);
-    if ( !mat )  {
-      mat = new TGeoMaterial(mat_name, a, valZ, d);
-    }
-    else  {
-      Info("TGDMLParse","Re-use existing material: %s",mat->GetName());
-    }
-    mixflag = 0;
-    //Note: Object(name, title) corresponds to Element(formula, name)
-    TGeoElement* mat_ele = tab_ele->FindElement(mat_name);
-    // We cannot use elements with Z = 0, so we expect a user definition
-    if (mat_ele && mat_ele->Z() == 0)
-       mat_ele = nullptr;
+         if ((strcmp(gdml->GetNodeName(child), "property")) == 0) {
+            TNamed *property = new TNamed();
+            while (attr != 0) {
+               tempattr = gdml->GetAttrName(attr);
+               tempattr.ToLower();
 
-    if ( !mat_ele )  {
-      mat_ele = new TGeoElement(mat_name, mat_name, atoi(tempconst), a);
-    }
-    else if ( gDebug >= 2 )  {
-       Info("TGDMLParse","Re-use existing material-element: %s",mat_ele->GetName());
-    }
-    felemap[name.Data()] = mat_ele;
-  }
+               if (tempattr == "name") {
+                  property->SetName(gdml->GetAttrValue(attr));
+               }
+               else if(tempattr == "ref") {
+                  property->SetTitle(gdml->GetAttrValue(attr));
+                  TGDMLMatrix *matrix = fmatrices[property->GetTitle()];
+                  if (!matrix)
+                     Error("MatProcess", "Reference matrix %s for material %s not found", property->GetTitle(), name.Data());
+                  properties.Add(property);
+               }
+               attr = gdml->GetNextAttr(attr);
+            }
+         }
+         if ((strcmp(gdml->GetNodeName(child), "fraction")) == 0) {
+            Double_t n = 0;
+            TString ref = "";
+            ncompo = ncompo + 1;
 
-  else if (z == 0) {
-     while (child != 0) {
-        attr = gdml->GetFirstAttr(child);
+            while (attr != 0) {
+               tempattr = gdml->GetAttrName(attr);
+               tempattr.ToLower();
 
-        if ((strcmp(gdml->GetNodeName(child), "fraction")) == 0) {
-           Double_t n = 0;
-           TString ref = "";
-           ncompo = ncompo + 1;
+               if (tempattr == "n") {
+                  n = Value(gdml->GetAttrValue(attr));
+               } else if (tempattr == "ref") {
+                  ref = gdml->GetAttrValue(attr);
+                  if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+                     ref = TString::Format("%s_%s", ref.Data(), fCurrentFile);
+                  }
+               }
+               attr = gdml->GetNextAttr(attr);
+            }
+            fracmap[ref.Data()] = n;
+         }
 
-           while (attr != 0) {
-              tempattr = gdml->GetAttrName(attr);
-              tempattr.ToLower();
+         else if ((strcmp(gdml->GetNodeName(child), "composite")) == 0) {
+            composite = kTRUE;
+            Double_t n = 0;
+            TString ref = "";
+            ncompo = ncompo + 1;
 
-              if (tempattr == "n") {
-                 n = Value(gdml->GetAttrValue(attr));
-              } else if (tempattr == "ref") {
-                 ref = gdml->GetAttrValue(attr);
-                 if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-                    ref = TString::Format("%s_%s", ref.Data(), fCurrentFile);
-                 }
+            while (attr != 0) {
+               tempattr = gdml->GetAttrName(attr);
+               tempattr.ToLower();
+               if (tempattr == "n") {
+                  n = Value(gdml->GetAttrValue(attr));
+               } else if (tempattr == "ref") {
+                  ref = gdml->GetAttrValue(attr);
+                  if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+                     ref = TString::Format("%s_%s", ref.Data(), fCurrentFile);
+                  }
+               }
+               attr = gdml->GetNextAttr(attr);
+            }
+            fracmap[ref.Data()] = n;
+         }
+         else if ((strcmp(gdml->GetNodeName(child), "D")) == 0) {
+            while (attr != 0) {
+               tempattr = gdml->GetAttrName(attr);
+               tempattr.ToLower();
 
-              }
+               if (tempattr == "value") {
+                  density = Value(gdml->GetAttrValue(attr));
+               }
+               attr = gdml->GetNextAttr(attr);
+            }
+         }
+         child = gdml->GetNext(child);
+      }
+      //still in the not Z else...but not in the while..
 
-              attr = gdml->GetNextAttr(attr);
-           }
-           fracmap[ref.Data()] = n;
+      name = gdml->GetAttr(node, "name");
+      if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+         name = TString::Format("%s_%s", name.Data(), fCurrentFile);
+      }
+      //mix = new TGeoMixture(NameShort(name), 0 /*ncompo*/, density);
+      mixflag = 1;
+      TString mat_name = NameShort(name);
+      mat = mgr->GetMaterial(mat_name);
+      if ( !mat )  {
+         mix = new TGeoMixture(mat_name, ncompo, density);
+      }
+      else if ( mat->IsMixture() ) {
+         mix = (TGeoMixture*)mat;
+         if ( gDebug >= 2 )
+            Info("TGDMLParse","Re-use existing material-mixture: %s",mix->GetName());
+      }
+      else  {
+         Error("TGDMLParse","WARNING! Inconsistent material definitions between GDML and TGeoManager");
+      }
+      if (properties.GetSize()) {
+         TNamed *property;
+         TIter next(&properties);
+         while ((property = (TNamed*)next()))
+            mix->AddProperty(property->GetName(), property->GetTitle());
+      }
+      Int_t natoms;
+      Double_t weight;
 
-        }
+      for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
+         matname = f->first;
+         matname = NameShort(matname);
 
-        else if ((strcmp(gdml->GetNodeName(child), "composite")) == 0) {
-           composite = kTRUE;
-           Double_t n = 0;
-           TString ref = "";
-           ncompo = ncompo + 1;
+         TGeoMaterial *mattmp = (TGeoMaterial*)gGeoManager->GetListOfMaterials()->FindObject(matname);
 
-           while (attr != 0) {
-              tempattr = gdml->GetAttrName(attr);
-              tempattr.ToLower();
+         if (mattmp || (felemap.find(f->first) != felemap.end())) {
+            if (composite) {
+               natoms = (Int_t)f->second;
 
-              if (tempattr == "n") {
-                 n = Value(gdml->GetAttrValue(attr));
-              } else if (tempattr == "ref") {
-                 ref = gdml->GetAttrValue(attr);
-                 if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-                    ref = TString::Format("%s_%s", ref.Data(), fCurrentFile);
-                 }
-              }
+               mix->AddElement(felemap[f->first], natoms);
 
-              attr = gdml->GetNextAttr(attr);
-           }
+            }
 
-           fracmap[ref.Data()] = n;
-
-        }
-        else if ((strcmp(gdml->GetNodeName(child), "D")) == 0) {
-           while (attr != 0) {
-              tempattr = gdml->GetAttrName(attr);
-              tempattr.ToLower();
-
-              if (tempattr == "value") {
-                 density = Value(gdml->GetAttrValue(attr));
-              }
-
-              attr = gdml->GetNextAttr(attr);
-           }
-        }
-
-        child = gdml->GetNext(child);
-     }
-     //still in the not Z else...but not in the while..
-
-     name = gdml->GetAttr(node, "name");
-     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-        name = TString::Format("%s_%s", name.Data(), fCurrentFile);
-     }
-     //mix = new TGeoMixture(NameShort(name), 0 /*ncompo*/, density);
-     mixflag = 1;
-     TString mat_name = NameShort(name);
-     mat = mgr->GetMaterial(mat_name);
-     if ( !mat )  {
-       mix = new TGeoMixture(mat_name, ncompo, density);
-     }
-     else if ( mat->IsMixture() ) {
-       mix = (TGeoMixture*)mat;
-       if ( gDebug >= 2 )
-          Info("TGDMLParse","Re-use existing material-mixture: %s",mix->GetName());
-     }
-     else  {
-       Error("TGDMLParse","WARNING! Inconsistent material definitions between GDML and TGeoManager");
-     }
-     Int_t natoms;
-     Double_t weight;
-
-     for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
-        matname = f->first;
-        matname = NameShort(matname);
-
-        TGeoMaterial *mattmp = (TGeoMaterial*)gGeoManager->GetListOfMaterials()->FindObject(matname);
-
-        if (mattmp || (felemap.find(f->first) != felemap.end())) {
-           if (composite) {
-              natoms = (Int_t)f->second;
-
-              mix->AddElement(felemap[f->first], natoms);
-
-           }
-
-           else {
-              weight = f->second;
-              if (mattmp){
-
-                 mix->AddElement(mattmp, weight);
-              }
-              else {
-
-                 mix->AddElement(felemap[f->first], weight);
-              }
-           }
-        }
-     }
-
-  }//end of not Z else
+            else {
+               weight = f->second;
+               if (mattmp){
+                  mix->AddElement(mattmp, weight);
+               }
+               else {
+                  mix->AddElement(felemap[f->first], weight);
+               }
+            }
+         }
+      }
+   }//end of not Z else
 
    medid = medid + 1;
 
    TGeoMedium* med = mgr->GetMedium(NameShort(name));
    if ( !med )   {
-     if (mixflag == 1) {
-       fmixmap[name.Data()] = mix;
-       med = new TGeoMedium(NameShort(name), medid, mix);
-     } else if (mixflag == 0) {
-       fmatmap[name.Data()] = mat;
-       med = new TGeoMedium(NameShort(name), medid, mat);
-     }
+      if (mixflag == 1) {
+         fmixmap[name.Data()] = mix;
+         med = new TGeoMedium(NameShort(name), medid, mix);
+      } else if (mixflag == 0) {
+         fmatmap[name.Data()] = mat;
+         med = new TGeoMedium(NameShort(name), medid, mat);
+      }
    }
    else if ( gDebug >= 2 ) {
       Info("TGDMLParse","Re-use existing medium: %s",med->GetName());
@@ -1310,7 +1515,106 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    fmedmap[name.Data()] = med;
 
    return child;
+}
 
+////////////////////////////////////////////////////////////////////////////////
+/// In the structure section of the GDML file, skin surfaces can be declared.
+
+XMLNodePointer_t TGDMLParse::SkinSurfaceProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
+   TString name, surfname, volname;
+   TString tempattr;
+
+   while (attr != 0) {
+      tempattr = gdml->GetAttrName(attr);
+      tempattr.ToLower();
+
+      if (tempattr == "name") {
+         name = gdml->GetAttrValue(attr);
+      }
+      if (tempattr == "surfaceproperty") {
+         surfname = gdml->GetAttrValue(attr);
+      }
+      attr = gdml->GetNextAttr(attr);
+   }
+
+   XMLNodePointer_t child = gdml->GetChild(node);
+   while (child != 0) {
+      attr = gdml->GetFirstAttr(child);
+      if ((strcmp(gdml->GetNodeName(child), "volumeref")) == 0) {
+         while (attr != 0) {
+            tempattr = gdml->GetAttrName(attr);
+            tempattr.ToLower();
+            if (tempattr == "ref") {
+               volname = gdml->GetAttrValue(attr);
+            }
+            attr = gdml->GetNextAttr(attr);
+         }
+      } // loop on child attributes
+      child = gdml->GetNext(child);
+   } // loop on children
+   TGeoOpticalSurface *surf = gGeoManager->GetOpticalSurface(surfname);
+   if (!surf) 
+      Fatal("SkinSurfaceProcess", "Skin surface %s: referenced optical surface %s not defined",
+            name.Data(), surfname.Data());
+   TGeoVolume *vol = fvolmap[volname.Data()];
+   TGeoSkinSurface *skin = new TGeoSkinSurface(name, surfname, surf, vol);
+   gGeoManager->AddSkinSurface(skin);
+   return child;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// In the structure section of the GDML file, border surfaces can be declared.
+
+XMLNodePointer_t TGDMLParse::BorderSurfaceProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
+   TString name, surfname, nodename[2];
+   TString tempattr;
+
+   while (attr != 0) {
+      tempattr = gdml->GetAttrName(attr);
+      tempattr.ToLower();
+
+      if (tempattr == "name") {
+         name = gdml->GetAttrValue(attr);
+      }
+      if (tempattr == "surfaceproperty") {
+         surfname = gdml->GetAttrValue(attr);
+      }
+      attr = gdml->GetNextAttr(attr);
+   }
+
+   XMLNodePointer_t child = gdml->GetChild(node);
+   Int_t inode = 0;
+   while (child != 0) {
+      attr = gdml->GetFirstAttr(child);
+      if ((strcmp(gdml->GetNodeName(child), "physvolref")) == 0) {
+         while (attr != 0) {
+            tempattr = gdml->GetAttrName(attr);
+            tempattr.ToLower();
+            if (tempattr == "ref") {
+               nodename[inode++] = gdml->GetAttrValue(attr);
+            }
+            attr = gdml->GetNextAttr(attr);
+         }
+      } // loop on child attributes
+      child = gdml->GetNext(child);
+   } // loop on children
+   if (inode != 2)
+      Fatal("BorderSurfaceProcess", "Border surface %s not referencing two nodes", name.Data());
+   TGeoOpticalSurface *surf = gGeoManager->GetOpticalSurface(surfname);
+   if (!surf)
+      Fatal("BorderSurfaceProcess", "Border surface %s: referenced optical surface %s not defined",
+            name.Data(), surfname.Data());
+   TGeoNode *node1 = fpvolmap[nodename[0].Data()];
+   TGeoNode *node2 = fpvolmap[nodename[1].Data()];
+   if (!node1 || !node2)
+      Fatal("BorderSurfaceProcess", "Border surface %s: not found nodes %s or %s",
+            name.Data(), nodename[0].Data(), nodename[1].Data());
+
+   TGeoBorderSurface *border = new TGeoBorderSurface(name, surfname, surf, node1, node2);
+   gGeoManager->AddBorderSurface(border);
+   return child;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1562,8 +1866,10 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 // END: reflectedSolid
 
          vol->AddNode(lv, copynum, transform);
+         TGeoNode *lastnode = (TGeoNode*)vol->GetNodes()->Last();
          if (!pnodename.IsNull())
-            ((TNamed*)vol->GetNodes()->Last())->SetName(pnodename);
+            lastnode->SetName(pnodename);
+         fpvolmap[lastnode->GetName()] = lastnode;
       } else if ((strcmp(gdml->GetNodeName(child), "divisionvol")) == 0) {
 
          TString divVolref = "";
@@ -2108,9 +2414,10 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          fVolID = fVolID + 1;
          matr = new TGeoCombiTrans(*pos, *rot);
          assem->AddNode(lv, copynum, matr);
+         TGeoNode *lastnode = (TGeoNode*)assem->GetNodes()->Last();
          if (!pnodename.IsNull())
-            ((TNamed*)assem->GetNodes()->Last())->SetName(pnodename);
-
+            lastnode->SetName(pnodename);
+         fpvolmap[lastnode->GetName()] = lastnode;
       }
       child = gdml->GetNext(child);
    }
