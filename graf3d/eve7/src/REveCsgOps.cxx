@@ -2820,7 +2820,7 @@ Int_t TCsgVV3D::AddObject(const TBuffer3D& buffer, Bool_t* addChildren)
 {
    if (fCompositeOpen)
    {
-      auto newMesh = ConvertToMesh(buffer);
+      auto newMesh = ConvertToMesh(buffer, nullptr);
       fCSTokens.push_back(std::make_pair(TBuffer3D::kCSNoOp, newMesh));
    }
 
@@ -2971,10 +2971,9 @@ std::unique_ptr<TBaseMesh> MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
    return res;
 }
 
-TBaseMesh *BuildFromCompositeShapeNew(TGeoCompositeShape *cshape, Int_t n_seg)
+std::unique_ptr<TBaseMesh> BuildFromCompositeShapeNew(TGeoCompositeShape *cshape, Int_t n_seg)
 {
-   auto res = MakeMesh(nullptr, cshape);
-   return res.release();
+   return MakeMesh(nullptr, cshape);
 }
 
 
