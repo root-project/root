@@ -62,12 +62,9 @@ private:
 
    int                LocateLocalFile(XrdOucString &file);
 
-   int                DoDirectiveBonjour(char *val, XrdOucStream *cfg, bool);
    int                DoDirectiveAdminReqTO(char *, XrdOucStream *, bool);
    int                DoDirectiveResource(char *, XrdOucStream *, bool);
    int                DoDirectiveWorker(char *, XrdOucStream *, bool);
-
-   bool               fBonjourEnabled;
 
 public:
    XrdProofdNetMgr(XrdProofdManager *mgr, XrdProtocol_Config *pi, XrdSysError *e);
