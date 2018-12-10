@@ -72,13 +72,6 @@
 #include "Rtypes.h"
 #include "TMath.h"
 
-// #include <ROOT/REveGeoShape.hxx>
-// #include <ROOT/REveUtil.hxx>
-
-// #include "TBuffer3DTypes.h"
-#include "TGeoMatrix.h"
-
-
 namespace ROOT {
 namespace Experimental {
 namespace EveCsg {
@@ -2639,22 +2632,15 @@ AMesh_t *build_difference(const AMesh_t &meshA, const AMesh_t &meshB, Bool_t pre
 
 /////////////////////////////////////////////////////////////////////////////
 
-TBaseMesh *ConvertToMesh(const TBuffer3D &buff, TGeoMatrix *matr)
+TBaseMesh *ConvertToMesh(const TBuffer3D &buff)
 {
    AMesh_t *newMesh = new AMesh_t;
    const Double_t *v = buff.fPnts;
 
    newMesh->Verts().resize(buff.NbPnts());
 
-   Double_t dmaster[3];
-
    for (Int_t i = 0; i < (int) buff.NbPnts(); ++i) {
-      if (matr) {
-         matr->LocalToMaster(&v[i*3], dmaster);
-         newMesh->Verts()[i] = TVertexBase(dmaster[0], dmaster[1], dmaster[2]);
-      } else {
-         newMesh->Verts()[i] = TVertexBase(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]);
-      }
+      newMesh->Verts()[i] = TVertexBase(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]);
    }
 
    const Int_t *segs = buff.fSegs;

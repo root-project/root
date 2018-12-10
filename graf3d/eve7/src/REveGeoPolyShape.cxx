@@ -48,7 +48,7 @@ Bool_t REveGeoPolyShape::GetAutoCalculateNormals()         { return fgAutoCalcul
 ////////////////////////////////////////////////////////////////////////
 /// Function produces mesh for provided shape, applying matrix to the result
 
-std::unique_ptr<EveCsg::TBaseMesh> MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
+std::unique_ptr<EveCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *shape)
 {
    TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *> (shape);
 
@@ -56,7 +56,19 @@ std::unique_ptr<EveCsg::TBaseMesh> MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
 
    if (!comp) {
       std::unique_ptr<TBuffer3D> b3d(shape->MakeBuffer3D());
-      res.reset(EveCsg::ConvertToMesh(*b3d.get(), matr));
+
+      if (matr) {
+         Double_t *v = b3d->fPnts;
+         Double_t buf[3];
+         for (UInt_t i = 0; i < b3d->NbPnts(); ++i) {
+            buf[0] = v[i*3];
+            buf[1] = v[i*3+1];
+            buf[2] = v[i*3+2];
+            matr->LocalToMaster(buf, &v[i*3]);
+         }
+      }
+
+      res.reset(EveCsg::ConvertToMesh(*b3d.get()));
    } else {
       auto node = comp->GetBoolNode();
 
@@ -64,10 +76,10 @@ std::unique_ptr<EveCsg::TBaseMesh> MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
       if (matr) { mleft = *matr; mright = *matr; }
 
       mleft.Multiply(node->GetLeftMatrix());
-      auto left = MakeMesh(&mleft, node->GetLeftShape());
+      auto left = MakeGeoMesh(&mleft, node->GetLeftShape());
 
       mright.Multiply(node->GetRightMatrix());
-      auto right = MakeMesh(&mright, node->GetRightShape());
+      auto right = MakeGeoMesh(&mright, node->GetRightShape());
 
       if (node->IsA() == TGeoUnion::Class()) res.reset(EveCsg::BuildUnion(left.get(), right.get()));
       if (node->IsA() == TGeoIntersection::Class()) res.reset(EveCsg::BuildIntersection(left.get(), right.get()));
@@ -103,7 +115,7 @@ REveGeoPolyShape::REveGeoPolyShape(TGeoCompositeShape *cshape, Int_t n_seg) :
 
    REveGeoManagerHolder gmgr(REveGeoShape::GetGeoManager(), n_seg);
 
-   auto mesh = MakeMesh(nullptr, cshape);
+   auto mesh = MakeGeoMesh(nullptr, cshape);
 
    Int_t nv = mesh->NumberOfVertices();
    fVertices.reserve(3 * nv);
