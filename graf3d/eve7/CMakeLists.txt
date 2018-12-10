@@ -84,7 +84,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     Physics 
     EG 
     TreePlayer 
-    RHTTP 
     ROOTWebDisplay
 )
 
