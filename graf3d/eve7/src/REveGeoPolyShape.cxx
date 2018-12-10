@@ -66,7 +66,7 @@ REveGeoPolyShape* REveGeoPolyShape::Construct(TGeoCompositeShape *cshape, Int_t 
    egps->fDY = cshape->GetDY();
    egps->fDZ = cshape->GetDZ();
 
-   auto mesh = EveCsg::BuildFromCompositeShapeNew(cshape, n_seg);
+   auto mesh = EveCsg::BuildFromCompositeShape(cshape, n_seg);
    egps->SetFromMesh(mesh.get());
 
    return egps;
