@@ -76,13 +76,10 @@
 #include <ROOT/REveGeoShape.hxx>
 #include <ROOT/REveUtil.hxx>
 
-// Includes for BuildFromCompositeShape - this could go somewhere else.
 #include "TBuffer3DTypes.h"
 #include "TGeoBoolNode.h"
 #include "TGeoCompositeShape.h"
 #include "TGeoMatrix.h"
-#include "TPad.h"
-#include "TVirtualViewer3D.h"
 
 
 namespace ROOT {
@@ -2740,252 +2737,10 @@ TBaseMesh *BuildDifference(const TBaseMesh *l, const TBaseMesh *r)
 }
 
 
-//==============================================================================
-// TCsgPad
-//==============================================================================
-
-// Internal pad class overriding handling of updates and 3D-viewers.
-
-class TCsgPad : public TPad {
-   TVirtualViewer3D *fViewer3D{nullptr};
-
-public:
-   TCsgPad(TVirtualViewer3D *vv3d)
-   {
-      fViewer3D = vv3d;
-      fPrimitives = new TList;
-   }
-   virtual ~TCsgPad() {}
-
-   // XXXX cling checks on the following if override is specified.
-   // Also, it can not see fViewer3D from TPad.
-   // As if TPad.h would not be read / parsed correctly.
-
-   Bool_t IsBatch() const { return kTRUE; }
-
-   void Update() {}
-
-   TVirtualViewer3D *GetViewer3D(Option_t * /*type*/ = "") { return fViewer3D; }
-};
-
-
-//==============================================================================
-// TCsgVV3D
-//==============================================================================
-
-
-// Internal VV3D for extracting composite shapes.
-
-class TCsgVV3D : public TVirtualViewer3D {
-
-   // Composite shape specific
-   typedef std::pair<UInt_t, TBaseMesh *> CSPart_t;
-
-   std::vector<CSPart_t> fCSTokens;
-   Int_t fCSIndex{0};
-   mutable bool fCompositeOpen{false};
-
-   TBaseMesh *BuildComposite();
-
-public:
-   std::unique_ptr<TBaseMesh> fResult;
-
-   TCsgVV3D() = default;
-   virtual ~TCsgVV3D() = default;
-
-   // virtual stuff that is used.
-   Int_t AddObject(const TBuffer3D &buffer, Bool_t *addChildren = nullptr) override;
-   Bool_t OpenComposite(const TBuffer3D &buffer, Bool_t *addChildren = nullptr) override;
-   void CloseComposite() override;
-   void AddCompositeOp(UInt_t operation) override;
-
-   // virtual crap that needs to be defined but is not used/needed.
-   Int_t AddObject(UInt_t, const TBuffer3D &, Bool_t * = 0) override { return -1; }
-   Bool_t CanLoopOnPrimitives() const override { return kTRUE; }
-   void PadPaint(TVirtualPad *) override {}
-   void ObjectPaint(TObject *, Option_t * = "") override {}
-
-   Int_t DistancetoPrimitive(Int_t, Int_t) override { return 9999; }
-   void ExecuteEvent(Int_t, Int_t, Int_t) override {}
-
-   Bool_t PreferLocalFrame() const override { return kTRUE; }
-
-   void BeginScene() override {}
-   Bool_t BuildingScene() const override { return kTRUE; }
-   void EndScene() override {}
-};
-
-Int_t TCsgVV3D::AddObject(const TBuffer3D& buffer, Bool_t* addChildren)
-{
-   if (fCompositeOpen)
-   {
-      auto newMesh = ConvertToMesh(buffer, nullptr);
-      fCSTokens.push_back(std::make_pair(TBuffer3D::kCSNoOp, newMesh));
-   }
-
-   if (addChildren) *addChildren = kTRUE;
-
-   return TBuffer3D::kNone;
-}
-
-Bool_t TCsgVV3D::OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren)
-{
-   if (fCompositeOpen) {
-      Error("TCsgVV3D::OpenComposite", "composite already open");
-      return kFALSE;
-   }
-
-   AddObject(buffer, addChildren);
-   fCompositeOpen = kTRUE;
-
-   return kTRUE;
-}
-
-void TCsgVV3D::CloseComposite()
-{
-   if ( ! fCompositeOpen) {
-      Error("TCsgVV3D::CloseComposite", "composite not open");
-      return;
-   }
-
-   fCSIndex = 0;
-   fResult = std::unique_ptr<TBaseMesh>( BuildComposite() );
-
-   for (Int_t i = 0; i < (int) fCSTokens.size(); ++i) delete fCSTokens[i].second;
-   fCSTokens.clear();
-   fCompositeOpen = kFALSE;
-}
-
-void TCsgVV3D::AddCompositeOp(UInt_t operation)
-{
-   fCSTokens.push_back(std::make_pair(operation, (EveCsg::TBaseMesh *)0));
-}
-
 //------------------------------------------------------------------------------
-
-TBaseMesh* TCsgVV3D::BuildComposite()
-{
-   const CSPart_t &currToken = fCSTokens[fCSIndex];
-   Int_t opCode = currToken.first;
-
-   if (opCode != TBuffer3D::kCSNoOp)
-   {
-      ++fCSIndex;
-      TBaseMesh *left  = BuildComposite();
-      TBaseMesh *right = BuildComposite();
-
-      switch (opCode)
-      {
-      case TBuffer3D::kCSUnion:        return EveCsg::BuildUnion(left, right);
-      case TBuffer3D::kCSIntersection: return EveCsg::BuildIntersection(left, right);
-      case TBuffer3D::kCSDifference:   return EveCsg::BuildDifference(left, right);
-      default:
-         Error("BuildComposite", "Wrong operation code %d\n", opCode);
-         return 0;
-      }
-   }
-   else
-   {
-      return fCSTokens[fCSIndex++].second;
-   }
-}
-
-//------------------------------------------------------------------------------
-
-/** \class REvePadHolder
-\ingroup REve
-Exception safe wrapper for setting gPad.
-Optionally calls gPad->Modified()/Update() in destructor.
-*/
-
-
-class REvePadHolder {
-private:
-   TVirtualPad *fOldPad{nullptr}; ///<!
-   Bool_t fModifyUpdateP{kFALSE}; ///<!
-
-public:
-   REvePadHolder(Bool_t modify_update_p, TVirtualPad *new_pad = 0, Int_t subpad = 0);
-   ~REvePadHolder();
-};
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-REvePadHolder::REvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad, Int_t subpad) :
-   fOldPad        (gPad),
-   fModifyUpdateP (modify_update_p)
-{
-   if (new_pad != 0)
-      new_pad->cd(subpad);
-   else
-      gPad = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-REvePadHolder::~REvePadHolder()
-{
-   if (fModifyUpdateP && gPad != 0) {
-      gPad->Modified();
-      gPad->Update();
-   }
-   gPad = fOldPad;
-}
-
-
-
-
-
-TBaseMesh *BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg)
-{
-   TCsgVV3D      vv3d;
-   TCsgPad       pad(&vv3d);
-   REvePadHolder gpad(kFALSE, &pad);
-   pad.GetListOfPrimitives()->Add(cshape);
-
-   REveGeoManagerHolder gmgr(REveGeoShape::GetGeoManager(), n_seg);
-
-   //vv3d.BeginScene();
-   {
-      Double_t halfLengths[3] = { cshape->GetDX(), cshape->GetDY(), cshape->GetDZ() };
-
-      TBuffer3D buff(TBuffer3DTypes::kComposite);
-      buff.fID           = cshape;
-      buff.fLocalFrame   = kTRUE;
-      buff.SetLocalMasterIdentity();
-      buff.SetAABoundingBox(cshape->GetOrigin(), halfLengths);
-      buff.SetSectionsValid(TBuffer3D::kCore|TBuffer3D::kBoundingBox);
-
-      Bool_t paintComponents = kTRUE;
-
-      // Start a composite shape, identified by this buffer
-      if (TBuffer3D::GetCSLevel() == 0)
-         paintComponents = gPad->GetViewer3D()->OpenComposite(buff);
-
-      TBuffer3D::IncCSLevel();
-
-      // Paint the boolean node - will add more buffers to viewer
-      TGeoMatrix *gst = TGeoShape::GetTransform();
-      TGeoShape::SetTransform(REveGeoShape::GetGeoHMatrixIdentity());
-      if (paintComponents) cshape->GetBoolNode()->Paint("");
-      TGeoShape::SetTransform(gst);
-
-      assert (TBuffer3D::DecCSLevel() == 0);
-      gPad->GetViewer3D()->CloseComposite();
-   }
-   //vv3d.EndScene();
-   pad.SetViewer3D(0);
-
-   return vv3d.fResult.release();
-}
-
 
 ////////////////////////////////////////////////////////////////////////
-/// try to rewrite method without usage of gPad
-
-
+/// Function produces mesh for provided shape, applying matrix to the result
 
 std::unique_ptr<TBaseMesh> MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
 {
@@ -3016,7 +2771,10 @@ std::unique_ptr<TBaseMesh> MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
    return res;
 }
 
-std::unique_ptr<TBaseMesh> BuildFromCompositeShapeNew(TGeoCompositeShape *cshape, Int_t n_seg)
+////////////////////////////////////////////////////////////////////////
+/// Function produces mesh for composite shape
+
+std::unique_ptr<TBaseMesh> BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg)
 {
    REveGeoManagerHolder gmgr(REveGeoShape::GetGeoManager(), n_seg);
 
