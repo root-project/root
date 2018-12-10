@@ -18,6 +18,7 @@
 #include <ROOT/RWebWindow.hxx>
 
 #include "json.hpp"
+#include <cassert>
 
 
 using namespace ROOT::Experimental;

@@ -27,6 +27,8 @@
 #include "TColor.h"
 
 #include "json.hpp"
+#include <cassert>
+
 
 #include <algorithm>
 
