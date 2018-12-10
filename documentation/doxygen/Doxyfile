@@ -843,7 +843,6 @@ INPUT                  = . \
                          ../../io/xmlparser/ \
                          ../../math/ \
                          ../../misc/memstat/ \
-                         ../../misc/table/ \
                          ../../montecarlo/ \
                          ../../net/alien/ \
                          ../../net/auth/ \
