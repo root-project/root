@@ -44,6 +44,40 @@ void   REveGeoPolyShape::SetAutoCalculateNormals(Bool_t f) { fgAutoCalculateNorm
 Bool_t REveGeoPolyShape::GetAutoCalculateNormals()         { return fgAutoCalculateNormals; }
 
 
+
+////////////////////////////////////////////////////////////////////////
+/// Function produces mesh for provided shape, applying matrix to the result
+
+std::unique_ptr<EveCsg::TBaseMesh> MakeMesh(TGeoMatrix *matr, TGeoShape *shape)
+{
+   TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *> (shape);
+
+   std::unique_ptr<EveCsg::TBaseMesh> res;
+
+   if (!comp) {
+      std::unique_ptr<TBuffer3D> b3d(shape->MakeBuffer3D());
+      res.reset(EveCsg::ConvertToMesh(*b3d.get(), matr));
+   } else {
+      auto node = comp->GetBoolNode();
+
+      TGeoHMatrix mleft, mright;
+      if (matr) { mleft = *matr; mright = *matr; }
+
+      mleft.Multiply(node->GetLeftMatrix());
+      auto left = MakeMesh(&mleft, node->GetLeftShape());
+
+      mright.Multiply(node->GetRightMatrix());
+      auto right = MakeMesh(&mright, node->GetRightShape());
+
+      if (node->IsA() == TGeoUnion::Class()) res.reset(EveCsg::BuildUnion(left.get(), right.get()));
+      if (node->IsA() == TGeoIntersection::Class()) res.reset(EveCsg::BuildIntersection(left.get(), right.get()));
+      if (node->IsA() == TGeoSubtraction::Class()) res.reset(EveCsg::BuildDifference(left.get(), right.get()));
+   }
+
+   return res;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
@@ -56,51 +90,20 @@ REveGeoPolyShape::REveGeoPolyShape() :
 ////////////////////////////////////////////////////////////////////////////////
 /// Static constructor from a composite shape.
 
-REveGeoPolyShape* REveGeoPolyShape::Construct(TGeoCompositeShape *cshape, Int_t n_seg)
+REveGeoPolyShape::REveGeoPolyShape(TGeoCompositeShape *cshape, Int_t n_seg) :
+   TGeoBBox(),
+   fNbPols(0)
 {
-   REveGeoPolyShape *egps = new REveGeoPolyShape;
-   egps->fOrigin[0] = cshape->GetOrigin()[0];
-   egps->fOrigin[1] = cshape->GetOrigin()[1];
-   egps->fOrigin[2] = cshape->GetOrigin()[2];
-   egps->fDX = cshape->GetDX();
-   egps->fDY = cshape->GetDY();
-   egps->fDZ = cshape->GetDZ();
+   fOrigin[0] = cshape->GetOrigin()[0];
+   fOrigin[1] = cshape->GetOrigin()[1];
+   fOrigin[2] = cshape->GetOrigin()[2];
+   fDX = cshape->GetDX();
+   fDY = cshape->GetDY();
+   fDZ = cshape->GetDZ();
 
-   auto mesh = EveCsg::BuildFromCompositeShape(cshape, n_seg);
-   egps->SetFromMesh(mesh.get());
+   REveGeoManagerHolder gmgr(REveGeoShape::GetGeoManager(), n_seg);
 
-   return egps;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void REveGeoPolyShape::FillRenderData(REveRenderData &rd)
-{
-   // We know all elements are triangles. Or at least they should be.
-
-   rd.Reserve(fVertices.size(), 0, 2 + fNbPols * 3);
-
-   for (Int_t i = 0; i < (Int_t) fVertices.size(); ++i) rd.PushV(fVertices[i]);
-
-   rd.PushI(REveRenderData::GL_TRIANGLES);
-   rd.PushI(fNbPols);
-
-   // count number of index entries etc
-   for (Int_t i = 0, j = 0; i < fNbPols; ++i)
-   {
-      assert (fPolyDesc[j] == 3);
-
-      rd.PushI(fPolyDesc[j+1], fPolyDesc[j+2], fPolyDesc[j+3]);
-      j += 1 + fPolyDesc[j];
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set data-members from a Csg mesh.
-
-void REveGeoPolyShape::SetFromMesh(EveCsg::TBaseMesh* mesh)
-{
-   assert(fNbPols == 0);
+   auto mesh = MakeMesh(nullptr, cshape);
 
    Int_t nv = mesh->NumberOfVertices();
    fVertices.reserve(3 * nv);
@@ -132,6 +135,33 @@ void REveGeoPolyShape::SetFromMesh(EveCsg::TBaseMesh* mesh)
    if (fgAutoEnforceTriangles) EnforceTriangles();
    if (fgAutoCalculateNormals) CalculateNormals();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void REveGeoPolyShape::FillRenderData(REveRenderData &rd)
+{
+   // We know all elements are triangles. Or at least they should be.
+
+   rd.Reserve(fVertices.size(), 0, 2 + fNbPols * 3);
+
+   for (Int_t i = 0; i < (Int_t) fVertices.size(); ++i) rd.PushV(fVertices[i]);
+
+   rd.PushI(REveRenderData::GL_TRIANGLES);
+   rd.PushI(fNbPols);
+
+   // count number of index entries etc
+   for (Int_t i = 0, j = 0; i < fNbPols; ++i)
+   {
+      assert (fPolyDesc[j] == 3);
+
+      rd.PushI(fPolyDesc[j+1], fPolyDesc[j+2], fPolyDesc[j+3]);
+      j += 1 + fPolyDesc[j];
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set data-members from a Csg mesh.
+
 
 void REveGeoPolyShape::SetFromBuff3D(const TBuffer3D& buffer)
 {
