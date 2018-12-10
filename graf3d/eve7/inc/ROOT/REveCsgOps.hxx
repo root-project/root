@@ -7,7 +7,6 @@
 #include "Rtypes.h"
 
 class TBuffer3D;
-class TGeoMatrix;
 
 namespace ROOT {
 namespace Experimental {
@@ -24,7 +23,7 @@ public:
 };
 
 
-TBaseMesh *ConvertToMesh(const TBuffer3D &buff, TGeoMatrix *matr = nullptr);
+TBaseMesh *ConvertToMesh(const TBuffer3D &buff);
 TBaseMesh *BuildUnion(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
 TBaseMesh *BuildIntersection(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
 TBaseMesh *BuildDifference(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
