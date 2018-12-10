@@ -10,6 +10,8 @@
  *************************************************************************/
 
 #include "Rtypes.h"
+#include <cassert>
+
 
 #include <ROOT/REveGeoPolyShape.hxx>
 #include <ROOT/REveGeoShape.hxx>
@@ -21,7 +23,6 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 
-#include "TList.h"
 #include "TGeoBoolNode.h"
 #include "TGeoCompositeShape.h"
 #include "TGeoMatrix.h"
