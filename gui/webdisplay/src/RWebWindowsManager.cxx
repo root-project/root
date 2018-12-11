@@ -356,6 +356,7 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 ///   WebGui.FirefoxRandomProfile: usage of random Firefox profile -1 never, 0 - only for batch mode (dflt), 1 - always
 ///   WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
 ///   WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
+///   WebGui.RecordData: if specified enables data recording for each web window 0 - off, 1 - on
 ///
 ///   Http-server related parameters documented in RWebWindowsManager::CreateServer() method
 
