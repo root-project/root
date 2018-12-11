@@ -826,11 +826,12 @@ int ROOT::Experimental::RWebWindow::NumConnections()
 /// If empty file name is provided, data recording will be disabled
 /// Recorded data can be used in JSROOT directly to test client code without running C++ server
 
-void ROOT::Experimental::RWebWindow::RecordData(const std::string &fname)
+void ROOT::Experimental::RWebWindow::RecordData(const std::string &fname, const std::string &fprefix)
 {
    fProtocolFileName = fname;
    fProtocolCnt = fProtocolFileName.empty() ? -1 : 0;
    fProtocolConnId = fProtocolFileName.empty() ? 0 : GetConnectionId(0);
+   fProtocolPrefix = fprefix;
    fProtocol = "[]"; // empty array
 }
 
@@ -968,7 +969,8 @@ void ROOT::Experimental::RWebWindow::SubmitData(unsigned connid, bool txt, std::
       if (fProtocolCnt>=0)
          if (!fProtocolConnId || (conn->fConnId == fProtocolConnId)) {
             fProtocolConnId = conn->fConnId; // remember connection
-            std::string fname("msg");
+            std::string fname = fProtocolPrefix;
+            fname.append("msg");
             fname.append(std::to_string(fProtocolCnt++));
             fname.append(txt ? ".txt" : ".bin");
 
