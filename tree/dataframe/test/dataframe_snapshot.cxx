@@ -441,6 +441,98 @@ TEST(RDFSnapshotMore, ReadWriteStdVec)
    gSystem->Unlink(outfname3);
 }
 
+void ReadWriteCarray(const char *outFileNameBase)
+{
+   // write a TFile containing a arrays
+   std::string outFileNameBaseStr = outFileNameBase;
+   const auto fname = outFileNameBaseStr + ".root";
+   const auto treename = "t";
+   TFile f(fname.c_str(), "RECREATE");
+   TTree t(treename, treename);
+   const auto maxArraySize = 100000U;
+   auto size = 0;
+   int v[maxArraySize];
+   bool vb[maxArraySize];
+   t.Branch("size", &size, "size/I");
+   t.Branch("v", v, "v[size]/I");
+   t.Branch("vb", vb, "vb[size]/O");
+   
+   // Size 1
+   t.Fill();
+
+   // Size 100k: this reallocates!
+   size = maxArraySize;
+   for (auto i : ROOT::TSeqU(size)) {
+      v[i] = 84;
+      vb[i] = true;
+   }
+   t.Fill();
+
+   // Size 3
+   size = 3U;
+   v[0] = 42;
+   v[1] = 43;
+   v[2] = 44;
+   vb[0] = true;
+   vb[1] = false;
+   vb[2] = true;
+   t.Fill();
+
+   t.Write();
+   f.Close();
+
+   auto outputChecker = [&treename](const char *filename) {
+      // check snapshot output
+      TFile f2(filename);
+      TTreeReader r(treename, &f2);
+      TTreeReaderArray<int> rv(r, "v");
+      TTreeReaderArray<bool> rvb(r, "vb");
+
+      // Size 0
+      r.Next();
+      EXPECT_EQ(rv.GetSize(), 0u);
+      EXPECT_EQ(rvb.GetSize(), 0u);
+
+      // Size 100k
+      r.Next();
+      EXPECT_EQ(rv.GetSize(), 100000u);
+      EXPECT_EQ(rvb.GetSize(), 100000u);
+      for (auto e : rv)
+         EXPECT_EQ(e, 84);
+      for (auto e : rvb)
+         EXPECT_TRUE(e);
+
+      // Size 3
+      r.Next();
+      EXPECT_EQ(rv.GetSize(), 3u);
+      EXPECT_EQ(rv[0], 42);
+      EXPECT_EQ(rv[1], 43);
+      EXPECT_EQ(rv[2], 44);
+      EXPECT_EQ(rvb.GetSize(), 3u);
+      EXPECT_TRUE(rvb[0]);
+      EXPECT_FALSE(rvb[1]);
+      EXPECT_TRUE(rvb[2]);
+   };
+
+   // read and write using RDataFrame
+   const auto outfname1 = outFileNameBaseStr + "_out1.root";
+   RDataFrame(treename, fname).Snapshot(treename, outfname1);
+   outputChecker(outfname1.c_str());
+
+   const auto outfname2 = outFileNameBaseStr + "_out2.root";
+   RDataFrame(treename, fname).Snapshot<int, RVec<int>, RVec<bool>>(treename, outfname2, {"size", "v", "vb"});
+   outputChecker(outfname2.c_str());
+
+   gSystem->Unlink(fname.c_str());
+   gSystem->Unlink(outfname1.c_str());
+   gSystem->Unlink(outfname2.c_str());
+}
+
+TEST(RDFSnapshotMore, ReadWriteCarray)
+{
+   ReadWriteCarray("ReadWriteCarray");
+}
+
 struct TwoInts {
    int a, b;
 };
@@ -711,4 +803,12 @@ TEST(RDFSnapshotMore, EmptyBuffersMT)
    gSystem->Unlink(fname);
 }
 
+TEST(RDFSnapshotMore, ReadWriteCarrayMT)
+{
+   ROOT::EnableImplicitMT(4);
+   ReadWriteCarray("ReadWriteCarrayMT");
+   ROOT::DisableImplicitMT();
+}
+
 #endif // R__USE_IMT
+
