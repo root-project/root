@@ -914,12 +914,33 @@ T *UpdateBoolArrayIfBool(BoolArrayMap &, RVec<T> &v, const std::string &)
    return v.data();
 }
 
-/// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
+// Helper which gets the return value of the data() method if the type is an
+// RVec (of anything but a bool), nullptr otherwise.
+inline void *GetData(ROOT::VecOps::RVec<bool> & /*v*/)
+{
+   return nullptr;
+}
+
+template <typename T>
+void *GetData(ROOT::VecOps::RVec<T> &v)
+{
+   return v.data();
+}
+
+template <typename T>
+void *GetData(T & /*v*/)
+{
+   return nullptr;
+}
+
+
 template <typename T>
 void SetBranchesHelper(BoolArrayMap &, TTree * /*inputTree*/, TTree &outputTree, const std::string & /*validName*/,
-                       const std::string &name, T *address)
+                       const std::string &name, TBranch *& branch, void *& branchAddress, T *address)
 {
    outputTree.Branch(name.c_str(), address);
+   branch = nullptr;
+   branchAddress = nullptr;
 }
 
 /// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
@@ -927,9 +948,11 @@ void SetBranchesHelper(BoolArrayMap &, TTree * /*inputTree*/, TTree &outputTree,
 /// 1. c-style arrays in ROOT files, so we are sure that there are input trees to which we can ask the correct branch title
 /// 2. RVecs coming from a custom column or a source
 /// 3. vectors coming from ROOT files
+/// In case of 1., we save the pointer to the branch and the pointer to the input value. In case of 2. and 3. we save
+/// nullptrs.
 template <typename T>
 void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &outputTree, const std::string &inName,
-                       const std::string &outName, RVec<T> *ab)
+                       const std::string &outName, TBranch *&branch, void *&branchAddress, RVec<T> *ab)
 {
    auto *const inputBranch = inputTree ? inputTree->GetBranch(inName.c_str()) : nullptr;
    const auto mustWriteStdVec =
@@ -958,6 +981,12 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
 
    auto *const outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str());
    outputBranch->SetTitle(inputBranch->GetTitle());
+
+   // Record the branch ptr and the address associated to it if this is not a bool array
+   if (!std::is_same<bool, T>::value) {
+      branch = outputBranch;
+      branchAddress = GetData(*ab);
+   }
 }
 
 // generic version, no-op
@@ -990,13 +1019,16 @@ class SnapshotHelper : public RActionImpl<SnapshotHelper<BranchTypes...>> {
    const ColumnNames_t fOutputBranchNames;
    TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
    BoolArrayMap fBoolArrays; // Storage for C arrays of bools to be written out
+   std::vector<TBranch *> fBranches;     // Addresses of branches in output, non-null only for the ones holding C arrays
+   std::vector<void *> fBranchAddresses; // Addresses associated to output branches, non-null only for the ones holding C arrays
 
 public:
    using ColumnTypes_t = TypeList<BranchTypes...>;
    SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
                   const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const RSnapshotOptions &options)
       : fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
-        fOutputBranchNames(ReplaceDotWithUnderscore(bnames))
+        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fBranches(vbnames.size(), nullptr),
+        fBranchAddresses(vbnames.size(), nullptr)
    {
    }
 
@@ -1016,7 +1048,9 @@ public:
    void Exec(unsigned int /* slot */, BranchTypes &... values)
    {
       using ind_t = std::index_sequence_for<BranchTypes...>;
-      if (fIsFirstEvent) {
+      if (! fIsFirstEvent) {
+         UpdateCArraysPtrs(values..., ind_t{});
+      } else {
          SetBranches(values..., ind_t{});
          fIsFirstEvent = false;
       }
@@ -1025,11 +1059,26 @@ public:
    }
 
    template <std::size_t... S>
+   void UpdateCArraysPtrs(BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
+   {
+      // This code deals with branches which hold C arrays of variable size. It can happen that the buffers
+      // associated to those is re-allocated. As a result the value of the pointer can change therewith
+      // leaving associated to the branch of the output tree an invalid pointer.
+      // With this code, we set the value of the pointer in the output branch anew when needed.
+      // Nota bene: the extra ",0" after the invocation of SetAddress, is because that method returns void and 
+      // we need an int for the expander list.
+      int expander[] = {
+         (fBranches[S] && fBranchAddresses[S] != GetData(values) ? fBranches[S]->SetAddress(GetData(values)),0 : 0, 0)...,
+         0};
+      (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+   }
+
+   template <std::size_t... S>
    void SetBranches(BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       // create branches in output tree (and fill fBoolArrays for RVec<bool> columns)
       int expander[] = {(SetBranchesHelper(fBoolArrays, fInputTree, *fOutputTree, fInputBranchNames[S],
-                                           fOutputBranchNames[S], &values),
+                                           fOutputBranchNames[S], fBranches[S], fBranchAddresses[S], &values),
                          0)...,
                         0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
@@ -1092,6 +1141,10 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
    const ColumnNames_t fOutputBranchNames;
    std::vector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitTask`)
    std::vector<BoolArrayMap> fBoolArrays; // Per-thread storage for C arrays of bools to be written out
+   // Addresses of branches in output per slot, non-null only for the ones holding C arrays
+   std::vector<std::vector<TBranch *>> fBranches;
+   // Addresses associated to output branches per slot, non-null only for the ones holding C arrays
+   std::vector<std::vector<void *>> fBranchAddresses; 
 
 public:
    using ColumnTypes_t = TypeList<BranchTypes...>;
@@ -1100,7 +1153,9 @@ public:
                     const RSnapshotOptions &options)
       : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots), fIsFirstEvent(fNSlots, 1), fFileName(filename),
         fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
-        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots), fBoolArrays(fNSlots)
+        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots), fBoolArrays(fNSlots),
+        fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)), 
+        fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr))
    {
    }
    SnapshotHelperMT(const SnapshotHelperMT &) = delete;
@@ -1148,7 +1203,9 @@ public:
    void Exec(unsigned int slot, BranchTypes &... values)
    {
       using ind_t = std::index_sequence_for<BranchTypes...>;
-      if (fIsFirstEvent[slot]) {
+      if (!fIsFirstEvent[slot]) {
+         UpdateCArraysPtrs(slot, values..., ind_t{});
+      } else {
          SetBranches(slot, values..., ind_t{});
          fIsFirstEvent[slot] = 0;
       }
@@ -1161,13 +1218,31 @@ public:
    }
 
    template <std::size_t... S>
-   void SetBranches(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
+   void UpdateCArraysPtrs(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
-      // hack to call TTree::Branch on all variadic template arguments
-      int expander[] = {(SetBranchesHelper(fBoolArrays[slot], fInputTrees[slot], *fOutputTrees[slot],
-                                           fInputBranchNames[S], fOutputBranchNames[S], &values),
+      // This code deals with branches which hold C arrays of variable size. It can happen that the buffers
+      // associated to those is re-allocated. As a result the value of the pointer can change therewith
+      // leaving associated to the branch of the output tree an invalid pointer.
+      // With this code, we set the value of the pointer in the output branch anew when needed.
+      // Nota bene: the extra ",0" after the invocation of SetAddress, is because that method returns void and
+      // we need an int for the expander list.
+      int expander[] = {(fBranches[slot][S] && fBranchAddresses[slot][S] != GetData(values)
+                            ? fBranches[slot][S]->SetAddress(GetData(values)),0
+                            : 0,
                          0)...,
                         0};
+      (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+   }
+
+   template <std::size_t... S>
+   void SetBranches(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
+   {
+         // hack to call TTree::Branch on all variadic template arguments
+         int expander[] = {
+            (SetBranchesHelper(fBoolArrays[slot], fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S],
+                               fOutputBranchNames[S], fBranches[slot][S], fBranchAddresses[slot][S], &values),
+             0)...,
+            0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
       (void)slot;     // avoid unused variable warnings in gcc6.2
    }
