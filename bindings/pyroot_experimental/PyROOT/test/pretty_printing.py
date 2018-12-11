@@ -45,7 +45,11 @@ class PrettyPrinting(unittest.TestCase):
         ROOT.gInterpreter.Declare('class MyClass {};')
         x = ROOT.MyClass()
         self._print(x)
-        self.assertIn("MyClass object at", x.__str__())
+        s = x.__str__()
+        r = x.__repr__()
+        self.assertIn("MyClass object at", s)
+        self.assertEqual(s, r)
+
 
     # TNamed and TObject are not pythonized because these object are touched
     # by PyROOT before any pythonizations are added. Following, the classes
