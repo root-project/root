@@ -19,6 +19,7 @@
 #include <string>
 
 namespace ROOT {
+namespace Experimental {
 namespace Detail {
 
 class RRawFile;
@@ -135,6 +136,7 @@ public:
 };
 
 } // namespace Detail
+} // namespace Experimental
 } // namespace ROOT
 
 #endif
