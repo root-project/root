@@ -114,7 +114,7 @@ Long64_t REvePointSelector::Select(const char* selection)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process tree 't', select points matching 'selection'.
 
-Long64_t REvePointSelector::Select(TTree* t, const char* selection)
+Long64_t REvePointSelector::Select(TTree *t, const char *selection)
 {
    fTree = t;
    return Select(selection);

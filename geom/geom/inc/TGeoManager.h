@@ -34,6 +34,10 @@ class TVirtualGeoPainter;
 class THashList;
 class TGeoParallelWorld;
 class TGeoRegion;
+class TGDMLMatrix;
+class TGeoOpticalSurface;
+class TGeoSkinSurface;
+class TGeoBorderSurface;
 
 class TGeoManager : public TNamed
 {
@@ -89,7 +93,10 @@ private :
    TObjArray            *fGVolumes;         //! list of runtime volumes
    TObjArray            *fTracks;           //-> list of tracks attached to geometry
    TObjArray            *fPdgNames;         //-> list of pdg names for tracks
-//   TObjArray            *fNavigators;       //! list of navigators
+   TObjArray            *fGDMLMatrices;     //-> list of matrices read from GDML
+   TObjArray            *fOpticalSurfaces;  //-> list of optical surfaces read from GDML
+   TObjArray            *fSkinSurfaces;     //-> list of skin surfaces read from GDML
+   TObjArray            *fBorderSurfaces;   //-> list of border surfaces read from GDML
    TList                *fMaterials;        //-> list of materials
    TList                *fMedia;            //-> list of tracking media
    TObjArray            *fNodes;            //-> current branch of nodes
@@ -471,6 +478,10 @@ public:
    TObjArray             *GetListOfGShapes() const      {return fGShapes;}
    TObjArray             *GetListOfUVolumes() const     {return fUniqueVolumes;}
    TObjArray             *GetListOfTracks() const       {return fTracks;}
+   TObjArray             *GetListOfGDMLMatrices() const {return fGDMLMatrices;}
+   TObjArray             *GetListOfOpticalSurfaces() const {return fOpticalSurfaces;}
+   TObjArray             *GetListOfSkinSurfaces() const    {return fSkinSurfaces;}
+   TObjArray             *GetListOfBorderSurfaces() const  {return fBorderSurfaces;}
    TObjArray             *GetListOfRegions() const      {return fRegions;}
    TGeoNavigatorArray    *GetListOfNavigators() const;
    TGeoElementTable      *GetElementTable();
@@ -528,6 +539,17 @@ public:
    TGeoMedium            *GetMedium(const char *medium) const;
    TGeoMedium            *GetMedium(Int_t numed) const;
    Int_t                  GetMaterialIndex(const char *matname) const;
+
+   //--- GDML object accessors
+   TGDMLMatrix           *GetGDMLMatrix(const char *name) const;
+   void                   AddGDMLMatrix(TGDMLMatrix *mat);
+   TGeoOpticalSurface    *GetOpticalSurface(const char *name) const;
+   void                   AddOpticalSurface(TGeoOpticalSurface *optsurf);
+   TGeoSkinSurface       *GetSkinSurface(const char *name) const;
+   void                   AddSkinSurface(TGeoSkinSurface *surf);
+   TGeoBorderSurface     *GetBorderSurface(const char *name) const;
+   void                   AddBorderSurface(TGeoBorderSurface *surf);
+
 //   TGeoShape             *GetShape(const char *name) const;
    TGeoVolume            *GetVolume(const char*name) const;
    TGeoVolume            *GetVolume(Int_t uid) const {return (TGeoVolume*)fUniqueVolumes->At(uid);}
@@ -556,7 +578,7 @@ public:
    void                  SetUseParallelWorldNav(Bool_t flag);
    Bool_t                IsParallelWorldNav() const {return fUsePWNav;}
 
-   ClassDef(TGeoManager, 15)          // geometry manager
+   ClassDef(TGeoManager, 16)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;

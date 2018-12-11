@@ -126,6 +126,8 @@ See that function for details.
 
 */
 
+#include "TGDMLWrite.h"
+
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
 #include "TGeoMatrix.h"
@@ -155,7 +157,7 @@ See that function for details.
 #include "TGeoElement.h"
 #include "TGeoShape.h"
 #include "TGeoCompositeShape.h"
-#include "TGDMLWrite.h"
+#include "TGeoOpticalSurface.h"
 #include <stdlib.h>
 #include <string>
 #include <map>
@@ -351,6 +353,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
    //calling main extraction functions (with measuring time)
    time_t startT, endT;
    startT = time(NULL);
+   ExtractMatrices(geomanager->GetListOfGDMLMatrices());
    fMaterialsNode = ExtractMaterials(materialsLst);
 
    Info("WriteGDMLfile", "Extracting volumes");
@@ -358,6 +361,9 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
    Info("WriteGDMLfile", "%i solids added", fSolCnt);
    Info("WriteGDMLfile", "%i volumes added", fVolCnt);
    Info("WriteGDMLfile", "%i physvolumes added", fPhysVolCnt);
+   ExtractOpticalSurfaces(geomanager->GetListOfOpticalSurfaces());
+   ExtractSkinSurfaces(geomanager->GetListOfSkinSurfaces());
+   ExtractBorderSurfaces(geomanager->GetListOfBorderSurfaces());
    endT = time(NULL);
    //<gdml>
    fGdmlE->AddChild(rootNode, fDefineNode);                 //  <define>...</define>
@@ -381,6 +387,65 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
    delete fGdmlE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Method exporting GDML matrices
+
+void TGDMLWrite::ExtractMatrices(TObjArray* matrixList)
+{
+   if (!matrixList->GetEntriesFast()) return;
+   XMLNodePointer_t matrixN;
+   TIter next(matrixList);
+   TGDMLMatrix *matrix;
+   while ((matrix = (TGDMLMatrix*)next())) {
+      matrixN = CreateMatrixN(matrix);
+      fGdmlE->AddChild(fDefineNode, matrixN);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Method exporting optical surfaces
+
+void TGDMLWrite::ExtractOpticalSurfaces(TObjArray *surfaces)
+{
+   if (!surfaces->GetEntriesFast()) return;
+   XMLNodePointer_t surfaceN;
+   TIter next(surfaces);
+   TGeoOpticalSurface *surf;
+   while ((surf = (TGeoOpticalSurface*)next())) {
+      surfaceN = CreateOpticalSurfaceN(surf);
+      fGdmlE->AddChild(fSolidsNode, surfaceN);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Method exporting skin surfaces
+
+void TGDMLWrite::ExtractSkinSurfaces(TObjArray *surfaces)
+{
+   if (!surfaces->GetEntriesFast()) return;
+   XMLNodePointer_t surfaceN;
+   TIter next(surfaces);
+   TGeoSkinSurface *surf;
+   while ((surf = (TGeoSkinSurface*)next())) {
+      surfaceN = CreateSkinSurfaceN(surf);
+      fGdmlE->AddChild(fStructureNode, surfaceN);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Method exporting border surfaces
+
+void TGDMLWrite::ExtractBorderSurfaces(TObjArray *surfaces)
+{
+   if (!surfaces->GetEntriesFast()) return;
+   XMLNodePointer_t surfaceN;
+   TIter next(surfaces);
+   TGeoBorderSurface *surf;
+   while ((surf = (TGeoBorderSurface*)next())) {
+      surfaceN = CreateBorderSurfaceN(surf);
+      fGdmlE->AddChild(fStructureNode, surfaceN);
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Method exporting materials
@@ -630,6 +695,17 @@ XMLNodePointer_t TGDMLWrite::CreateFractionN(Double_t percentage, const char * r
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Creates "property" node for GDML
+
+XMLNodePointer_t TGDMLWrite::CreatePropertyN(TNamed const &property)
+{
+  XMLNodePointer_t propertyN = fGdmlE->NewChild(0, 0, "property", 0);
+  fGdmlE->NewAttr(propertyN, 0, "name", property.GetName());
+  fGdmlE->NewAttr(propertyN, 0, "ref", property.GetTitle());
+  return propertyN;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Creates "isotope" node for GDML
 
 XMLNodePointer_t TGDMLWrite::CreateIsotopN(TGeoIsotope * isotope, const char * name)
@@ -756,6 +832,15 @@ XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointe
       fGdmlE->AddChild(mainN, CreateFractionN(wPercentage[itr->first], itr->first.Data()));
    }
 
+   // Write properties
+   TList const &properties = mixture->GetProperties();
+   if (properties.GetSize()) {
+      TIter next(&properties);
+      TNamed *property;
+      while ((property = (TNamed*)next()))
+        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+   }
+
    return mainN;
 }
 
@@ -787,6 +872,14 @@ XMLNodePointer_t TGDMLWrite::CreateMaterialN(TGeoMaterial * material, TString mn
    fGdmlE->NewAttr(mainN, 0, "Z", TString::Format(fltPrecision.Data(), valZ)); //material->GetZ()));
    fGdmlE->AddChild(mainN, CreateDN(material->GetDensity()));
    fGdmlE->AddChild(mainN, CreateAtomN(material->GetA()));
+   // Create properties if any
+   TList const &properties = material->GetProperties();
+   if (properties.GetSize()) {
+      TIter next(&properties);
+      TNamed *property;
+      while ((property = (TNamed*)next()))
+        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+   }
    return mainN;
 }
 
@@ -1613,6 +1706,61 @@ XMLNodePointer_t TGDMLWrite::CreateCommonBoolN(TGeoCompositeShape *geoShape)
    return mainN;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "opticalsurface" node for GDML
+
+XMLNodePointer_t TGDMLWrite::CreateOpticalSurfaceN(TGeoOpticalSurface * geoSurf)
+{
+   XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "opticalsurface", 0);
+   const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
+   fGdmlE->NewAttr(mainN, 0, "name", geoSurf->GetName());
+   fGdmlE->NewAttr(mainN, 0, "model", TGeoOpticalSurface::ModelToString(geoSurf->GetModel()));
+   fGdmlE->NewAttr(mainN, 0, "finish", TGeoOpticalSurface::FinishToString(geoSurf->GetFinish()));
+   fGdmlE->NewAttr(mainN, 0, "type", TGeoOpticalSurface::TypeToString(geoSurf->GetType()));
+   fGdmlE->NewAttr(mainN, 0, "value", TString::Format(fltPrecision.Data(), geoSurf->GetValue()));
+
+   // Write properties
+   TList const &properties = geoSurf->GetProperties();
+   if (properties.GetSize()) {
+      TIter next(&properties);
+      TNamed *property;
+      while ((property = (TNamed*)next()))
+        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+   }
+
+   return mainN;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "skinsurface" node for GDML
+
+XMLNodePointer_t TGDMLWrite::CreateSkinSurfaceN(TGeoSkinSurface * geoSurf)
+{
+   XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "skinsurface", 0);
+   fGdmlE->NewAttr(mainN, 0, "name", geoSurf->GetName());
+   fGdmlE->NewAttr(mainN, 0, "surfaceproperty", geoSurf->GetTitle());
+   // Cretate the logical volume reference node
+   auto childN = fGdmlE->NewChild(0, 0, "volumeref", 0);
+   fGdmlE->NewAttr(childN, 0, "ref", geoSurf->GetVolume()->GetName());
+   fGdmlE->AddChild(mainN, childN);
+   return mainN;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "bordersurface" node for GDML
+
+XMLNodePointer_t TGDMLWrite::CreateBorderSurfaceN(TGeoBorderSurface * geoSurf)
+{
+   XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "bordersurface", 0);
+   fGdmlE->NewAttr(mainN, 0, "name", geoSurf->GetName());
+   fGdmlE->NewAttr(mainN, 0, "surfaceproperty", geoSurf->GetTitle());
+   // Cretate the logical volume reference node
+   auto childN = fGdmlE->NewChild(0, 0, "physvolref", 0);
+   fGdmlE->NewAttr(childN, 0, "ref", geoSurf->GetNode1()->GetName());
+   fGdmlE->NewAttr(childN, 0, "ref", geoSurf->GetNode2()->GetName());
+   fGdmlE->AddChild(mainN, childN);
+   return mainN;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates "position" kind of node for GDML
@@ -1641,6 +1789,18 @@ XMLNodePointer_t TGDMLWrite::CreateRotationN(const char * name, Xyz rotation, co
    fGdmlE->NewAttr(mainN, 0, "y", TString::Format(fltPrecision.Data(), rotation.y));
    fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fltPrecision.Data(), rotation.z));
    fGdmlE->NewAttr(mainN, 0, "unit", unit);
+   return mainN;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "matrix" kind of node for GDML
+
+XMLNodePointer_t TGDMLWrite::CreateMatrixN(TGDMLMatrix const *matrix)
+{
+   XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "matrix", 0);
+   fGdmlE->NewAttr(mainN, 0, "name", matrix->GetName());
+   fGdmlE->NewAttr(mainN, 0, "coldim", TString::Format("%ld", matrix->GetCols()));
+   fGdmlE->NewAttr(mainN, 0, "values", matrix->GetMatrixAsString());
    return mainN;
 }
 

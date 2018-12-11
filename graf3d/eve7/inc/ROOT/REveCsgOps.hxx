@@ -7,7 +7,6 @@
 #include "Rtypes.h"
 
 class TBuffer3D;
-class TGeoCompositeShape;
 
 namespace ROOT {
 namespace Experimental {
@@ -23,11 +22,11 @@ public:
    virtual Int_t GetVertexIndex(Int_t polyNum, Int_t vertNum) const = 0;
 };
 
+
 TBaseMesh *ConvertToMesh(const TBuffer3D &buff);
 TBaseMesh *BuildUnion(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
 TBaseMesh *BuildIntersection(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
 TBaseMesh *BuildDifference(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
-TBaseMesh *BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg);
 
 
 } // namespace EveCsg
