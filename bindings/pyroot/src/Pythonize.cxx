@@ -2681,6 +2681,11 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    }
 
+   else if ( name.find("ROOT::RDataFrame") == 0 || name.find("ROOT::RDF::RInterface<") == 0 ) {
+      PyObject_SetAttrString(pyclass, "AsNumpy",
+                             PyObject_GetAttrString( gRootModule, "_RDataFrameAsNumpy" ));
+   }
+
    else if ( name == "TStyle" ) {
       MethodProxy* ctor = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gInit );
       ctor->fMethodInfo->fFlags &= ~TCallContext::kIsCreator;
