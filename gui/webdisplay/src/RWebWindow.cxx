@@ -586,17 +586,20 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
       conn->fRecvStamp = stamp;
    }
 
-   if (fProtocolCnt>=0)
+   if (fProtocolCnt >= 0)
       if (!fProtocolConnId || (conn->fConnId == fProtocolConnId)) {
          fProtocolConnId = conn->fConnId; // remember connection
 
-         if (fProtocol.length()>2)
-            fProtocol.insert(fProtocol.length()-1,",");
-         fProtocol.insert(fProtocol.length()-1, "\"send\"");
+         // record send event only for normal channel or very first message via ch0
+         if ((nchannel != 0) || (cdata.find("READY=") == 0)) {
+            if (fProtocol.length() > 2)
+               fProtocol.insert(fProtocol.length() - 1, ",");
+            fProtocol.insert(fProtocol.length() - 1, "\"send\"");
 
-         std::ofstream pfs(fProtocolFileName);
-         pfs.write(fProtocol.c_str(), fProtocol.length());
-         pfs.close();
+            std::ofstream pfs(fProtocolFileName);
+            pfs.write(fProtocol.c_str(), fProtocol.length());
+            pfs.close();
+         }
       }
 
    if (nchannel == 0) {
@@ -966,7 +969,7 @@ void ROOT::Experimental::RWebWindow::SubmitData(unsigned connid, bool txt, std::
 
    for (auto &&conn : arr) {
 
-      if (fProtocolCnt>=0)
+      if (fProtocolCnt >= 0)
          if (!fProtocolConnId || (conn->fConnId == fProtocolConnId)) {
             fProtocolConnId = conn->fConnId; // remember connection
             std::string fname = fProtocolPrefix;
@@ -978,9 +981,9 @@ void ROOT::Experimental::RWebWindow::SubmitData(unsigned connid, bool txt, std::
             ofs.write(data.c_str(), data.length());
             ofs.close();
 
-            if (fProtocol.length()>2)
-               fProtocol.insert(fProtocol.length()-1,",");
-            fProtocol.insert(fProtocol.length()-1, std::string("\"") + fname + std::string("\""));
+            if (fProtocol.length() > 2)
+               fProtocol.insert(fProtocol.length() - 1, ",");
+            fProtocol.insert(fProtocol.length() - 1, std::string("\"") + fname + std::string("\""));
 
             std::ofstream pfs(fProtocolFileName);
             pfs.write(fProtocol.c_str(), fProtocol.length());
