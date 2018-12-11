@@ -50,6 +50,13 @@ class PrettyPrinting(unittest.TestCase):
         self._print(x)
         self.assertEqual("Name: name Title: title NbinsX: 10", x.__str__())
 
+    def test_user_class(self):
+        # Test fall-back to __repr__
+        ROOT.gInterpreter.Declare('class MyClass {};')
+        x = ROOT.MyClass()
+        self._print(x)
+        self.assertIn("MyClass object at", x.__str__())
+
 
 if __name__ == '__main__':
     unittest.main()
