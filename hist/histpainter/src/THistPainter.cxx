@@ -4010,12 +4010,14 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (nch == 5) Hoption.Hist = 1;
       Hoption.Same = 2;
       memcpy(l,"     ",5);
+      if (l[5] == '0') { Hoption.Same += 10; l[5] = ' '; }
    }
    l = strstr(chopt,"SAME");
    if (l) {
       if (nch == 4) Hoption.Hist = 1;
       Hoption.Same = 1;
       memcpy(l,"    ",4);
+      if (l[4] == '0') { Hoption.Same += 10; l[4] = ' '; }
    }
 
    l = strstr(chopt,"PIE");
@@ -4459,7 +4461,7 @@ void THistPainter::Paint(Option_t *option)
          if (gridx) gPad->SetGridx(1);
          if (gridy) gPad->SetGridy(1);
       }
-      if (Hoption.Same ==1) Hoption.Same = 2;
+      if ((Hoption.Same%10) ==1) Hoption.Same += 1;
       goto paintstat;
    }
    if (gridx || gridy) PaintAxis(kTRUE); //    Draw the grid only
@@ -4502,7 +4504,7 @@ void THistPainter::Paint(Option_t *option)
 
    // Draw box with histogram statistics and/or fit parameters
 paintstat:
-   if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
+   if ((Hoption.Same%10) != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
       TObject *obj = 0;
       while ((obj = next())) {
@@ -4992,7 +4994,7 @@ void THistPainter::PaintBarH(Option_t *)
    PaintTitle();
 
    //    Draw box with histogram statistics and/or fit parameters
-   if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
+   if ((Hoption.Same%10) != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
       TObject *obj = 0;
       while ((obj = next())) {
@@ -5034,7 +5036,7 @@ void THistPainter::PaintBoxes(Option_t *)
 
    // In case of option SAME, zmin and zmax values are taken from the
    // first plotted 2D histogram.
-   if (Hoption.Same) {
+   if (Hoption.Same > 0 && Hoption.Same < 10) {
       TH2 *h2;
       TIter next(gPad->GetListOfPrimitives());
       while ((h2 = (TH2 *)next())) {
@@ -5613,13 +5615,15 @@ void THistPainter::PaintColorLevels(Option_t*)
 
    // In case of option SAME, zmin and zmax values are taken from the
    // first plotted 2D histogram.
-   if (Hoption.Same) {
+   if (Hoption.Same > 0 && Hoption.Same < 10) {
       TH2 *h2;
       TIter next(gPad->GetListOfPrimitives());
       while ((h2 = (TH2 *)next())) {
          if (!h2->InheritsFrom(TH2::Class())) continue;
          zmin = h2->GetMinimum();
          zmax = h2->GetMaximum();
+         fH->SetMinimum(zmin);
+         fH->SetMaximum(zmax);
          if (Hoption.Logz) {
             if (zmin <= 0) {
                zmin = TMath::Log10(zmax*0.001);
@@ -6875,7 +6879,7 @@ void THistPainter::PaintH3(Option_t *option)
          break;
       }
    }
-   if (Hoption.Same != 1) {
+   if ((Hoption.Same%10) != 1) {
       if (!fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
          PaintStat3(gStyle->GetOptStat(),fit);
       }
@@ -9465,7 +9469,7 @@ void THistPainter::PaintTable(Option_t *option)
          break;
       }
    }
-   if (Hoption.Same != 1) {
+   if ((Hoption.Same%10) != 1) {
       if (!fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
          if (!gPad->PadInSelectionMode() && !gPad->PadInHighlightMode()) {
             //ALWAYS executed on non-iOS platform.
