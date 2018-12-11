@@ -20,6 +20,7 @@
 #include <memory>
 
 namespace ROOT {
+namespace Experimental {
 namespace Detail {
 
 namespace Internal {
@@ -48,6 +49,7 @@ public:
 };
 
 } // namespace Detail
+} // namespace Experimental
 } // namespace ROOT
 
 #endif

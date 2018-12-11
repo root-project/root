@@ -43,7 +43,7 @@ constexpr unsigned int kLineBreakTokenSizes[] = {0, 1, 1, 2};
 constexpr unsigned int kLineBuffer = 128; // On Readln, look for line-breaks in chunks of 128 bytes
 } // anonymous namespace
 
-size_t ROOT::Detail::RRawFile::RBlockBuffer::Map(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Experimental::Detail::RRawFile::RBlockBuffer::Map(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    if (offset < fBufferOffset)
       return 0;
@@ -58,18 +58,19 @@ size_t ROOT::Detail::RRawFile::RBlockBuffer::Map(void *buffer, size_t nbytes, st
    return mappedBytes;
 }
 
-ROOT::Detail::RRawFile::RRawFile(std::string_view url, ROOT::Detail::RRawFile::ROptions options)
+ROOT::Experimental::Detail::RRawFile::RRawFile(std::string_view url, ROptions options)
    : fBlockBufferIdx(0), fBufferSpace(nullptr), fFileSize(kUnknownFileSize), fIsOpen(false), fUrl(url),
      fOptions(options), fFilePos(0)
 {
 }
 
-ROOT::Detail::RRawFile::~RRawFile()
+ROOT::Experimental::Detail::RRawFile::~RRawFile()
 {
    delete[] fBufferSpace;
 }
 
-ROOT::Detail::RRawFile *ROOT::Detail::RRawFile::Create(std::string_view url, ROptions options)
+ROOT::Experimental::Detail::RRawFile *
+ROOT::Experimental::Detail::RRawFile::Create(std::string_view url, ROptions options)
 {
    std::string transport = GetTransport(url);
    if (transport == "file") {
@@ -81,7 +82,7 @@ ROOT::Detail::RRawFile *ROOT::Detail::RRawFile::Create(std::string_view url, ROp
    }
    if (transport == "http" || transport == "https") {
       TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Detail::RRawFile"))) {
+      if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Experimental::Detail::RRawFile"))) {
          if (h->LoadPlugin() == 0) {
             return reinterpret_cast<RRawFile *>(h->ExecPlugin(2, &url, &options));
          }
@@ -92,7 +93,7 @@ ROOT::Detail::RRawFile *ROOT::Detail::RRawFile::Create(std::string_view url, ROp
    throw std::runtime_error("Unsupported transport protocol: " + transport);
 }
 
-std::string ROOT::Detail::RRawFile::GetLocation(std::string_view url)
+std::string ROOT::Experimental::Detail::RRawFile::GetLocation(std::string_view url)
 {
    auto idx = url.find(kTransportSeparator);
    if (idx == std::string_view::npos)
@@ -100,7 +101,7 @@ std::string ROOT::Detail::RRawFile::GetLocation(std::string_view url)
    return std::string(url.substr(idx + strlen(kTransportSeparator)));
 }
 
-std::uint64_t ROOT::Detail::RRawFile::GetSize()
+std::uint64_t ROOT::Experimental::Detail::RRawFile::GetSize()
 {
    if (!fIsOpen)
       DoOpen();
@@ -111,7 +112,7 @@ std::uint64_t ROOT::Detail::RRawFile::GetSize()
    return fFileSize;
 }
 
-std::string ROOT::Detail::RRawFile::GetTransport(std::string_view url)
+std::string ROOT::Experimental::Detail::RRawFile::GetTransport(std::string_view url)
 {
    auto idx = url.find(kTransportSeparator);
    if (idx == std::string_view::npos)
@@ -121,14 +122,14 @@ std::string ROOT::Detail::RRawFile::GetTransport(std::string_view url)
    return transport;
 }
 
-size_t ROOT::Detail::RRawFile::Read(void *buffer, size_t nbytes)
+size_t ROOT::Experimental::Detail::RRawFile::Read(void *buffer, size_t nbytes)
 {
    size_t res = ReadAt(buffer, nbytes, fFilePos);
    fFilePos += res;
    return res;
 }
 
-size_t ROOT::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Experimental::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    if (!fIsOpen)
       DoOpen();
@@ -174,7 +175,7 @@ size_t ROOT::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t
    return totalBytes;
 }
 
-bool ROOT::Detail::RRawFile::Readln(std::string &line)
+bool ROOT::Experimental::Detail::RRawFile::Readln(std::string &line)
 {
    if (fOptions.fLineBreak == ELineBreaks::kAuto) {
       // Auto-detect line breaks according to the break discovered in the first line
@@ -207,7 +208,7 @@ bool ROOT::Detail::RRawFile::Readln(std::string &line)
    return !line.empty();
 }
 
-void ROOT::Detail::RRawFile::Seek(std::uint64_t offset)
+void ROOT::Experimental::Detail::RRawFile::Seek(std::uint64_t offset)
 {
    fFilePos = offset;
 }

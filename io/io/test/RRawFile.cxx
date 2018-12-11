@@ -12,7 +12,7 @@
 
 #include "gtest/gtest.h"
 
-using namespace ROOT::Detail;
+using namespace ROOT::Experimental::Detail;
 
 namespace {
 
