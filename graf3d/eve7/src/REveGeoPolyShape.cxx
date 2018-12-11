@@ -16,12 +16,12 @@
 #include <ROOT/REveGeoPolyShape.hxx>
 #include <ROOT/REveGeoShape.hxx>
 #include <ROOT/REveUtil.hxx>
-#include <ROOT/REveCsgOps.hxx>
 #include <ROOT/REveGluTess.hxx>
 #include <ROOT/REveRenderData.hxx>
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "CsgOps.h"
 
 #include "TGeoBoolNode.h"
 #include "TGeoCompositeShape.h"
@@ -48,11 +48,11 @@ Bool_t REveGeoPolyShape::GetAutoCalculateNormals()         { return fgAutoCalcul
 ////////////////////////////////////////////////////////////////////////
 /// Function produces mesh for provided shape, applying matrix to the result
 
-std::unique_ptr<EveCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *shape)
+std::unique_ptr<RootCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *shape)
 {
    TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *> (shape);
 
-   std::unique_ptr<EveCsg::TBaseMesh> res;
+   std::unique_ptr<RootCsg::TBaseMesh> res;
 
    if (!comp) {
       std::unique_ptr<TBuffer3D> b3d(shape->MakeBuffer3D());
@@ -68,7 +68,7 @@ std::unique_ptr<EveCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *shap
          }
       }
 
-      res.reset(EveCsg::ConvertToMesh(*b3d.get()));
+      res.reset(RootCsg::ConvertToMesh(*b3d.get()));
    } else {
       auto node = comp->GetBoolNode();
 
@@ -81,9 +81,9 @@ std::unique_ptr<EveCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *shap
       mright.Multiply(node->GetRightMatrix());
       auto right = MakeGeoMesh(&mright, node->GetRightShape());
 
-      if (node->IsA() == TGeoUnion::Class()) res.reset(EveCsg::BuildUnion(left.get(), right.get()));
-      if (node->IsA() == TGeoIntersection::Class()) res.reset(EveCsg::BuildIntersection(left.get(), right.get()));
-      if (node->IsA() == TGeoSubtraction::Class()) res.reset(EveCsg::BuildDifference(left.get(), right.get()));
+      if (node->IsA() == TGeoUnion::Class()) res.reset(RootCsg::BuildUnion(left.get(), right.get()));
+      if (node->IsA() == TGeoIntersection::Class()) res.reset(RootCsg::BuildIntersection(left.get(), right.get()));
+      if (node->IsA() == TGeoSubtraction::Class()) res.reset(RootCsg::BuildDifference(left.get(), right.get()));
    }
 
    return res;
