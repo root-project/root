@@ -25,18 +25,18 @@ namespace {
 constexpr int kDefaultBlockSize = 4096; // Read files in 4k pages unless told otherwise
 } // anonymous namespace
 
-ROOT::Detail::RRawFileWin::RRawFileWin(std::string_view url, ROOT::Detail::RRawFile::ROptions options)
-   : ROOT::Detail::RRawFile(url, options), fFilePtr(nullptr)
+ROOT::Experimental::Detail::RRawFileWin::RRawFileWin(std::string_view url, ROptions options)
+   : ROOT::Experimental::Detail::RRawFile(url, options), fFilePtr(nullptr)
 {
 }
 
-ROOT::Detail::RRawFileWin::~RRawFileWin()
+ROOT::Experimental::Detail::RRawFileWin::~RRawFileWin()
 {
    if (fFilePtr != nullptr)
       fclose(fFilePtr);
 }
 
-std::uint64_t ROOT::Detail::RRawFileWin::DoGetSize()
+std::uint64_t ROOT::Experimental::Detail::RRawFileWin::DoGetSize()
 {
    Seek(0L, SEEK_END);
    long size = ftell(fFilePtr);
@@ -47,7 +47,7 @@ std::uint64_t ROOT::Detail::RRawFileWin::DoGetSize()
    return size;
 }
 
-void ROOT::Detail::RRawFileWin::DoOpen()
+void ROOT::Experimental::Detail::RRawFileWin::DoOpen()
 {
    fFilePtr = fopen(GetLocation(fUrl).c_str(), "r");
    if (fFilePtr == nullptr)
@@ -59,7 +59,7 @@ void ROOT::Detail::RRawFileWin::DoOpen()
       fOptions.fBlockSize = kDefaultBlockSize;
 }
 
-size_t ROOT::Detail::RRawFileWin::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Experimental::Detail::RRawFileWin::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    Seek(offset, SEEK_SET);
    size_t res = fread(buffer, 1, nbytes, fFilePtr);
@@ -70,7 +70,7 @@ size_t ROOT::Detail::RRawFileWin::DoReadAt(void *buffer, size_t nbytes, std::uin
    return res;
 }
 
-void ROOT::Detail::RRawFileWin::Seek(long offset, int whence)
+void ROOT::Experimental::Detail::RRawFileWin::Seek(long offset, int whence)
 {
    int res = fseek(fFilePtr, offset, whence);
    if (res != 0)

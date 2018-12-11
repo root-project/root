@@ -26,18 +26,18 @@ namespace {
 constexpr int kDefaultBlockSize = 4096; // If fstat() does not provide a block size hint, use this value instead
 } // anonymous namespace
 
-ROOT::Detail::RRawFileUnix::RRawFileUnix(std::string_view url, ROOT::Detail::RRawFile::ROptions options)
-   : ROOT::Detail::RRawFile(url, options), fFileDes(-1)
+ROOT::Experimental::Detail::RRawFileUnix::RRawFileUnix(std::string_view url, ROptions options)
+   : ROOT::Experimental::Detail::RRawFile(url, options), fFileDes(-1)
 {
 }
 
-ROOT::Detail::RRawFileUnix::~RRawFileUnix()
+ROOT::Experimental::Detail::RRawFileUnix::~RRawFileUnix()
 {
    if (fFileDes >= 0)
       close(fFileDes);
 }
 
-std::uint64_t ROOT::Detail::RRawFileUnix::DoGetSize()
+std::uint64_t ROOT::Experimental::Detail::RRawFileUnix::DoGetSize()
 {
    struct stat info;
    int res = fstat(fFileDes, &info);
@@ -46,7 +46,7 @@ std::uint64_t ROOT::Detail::RRawFileUnix::DoGetSize()
    return info.st_size;
 }
 
-void ROOT::Detail::RRawFileUnix::DoOpen()
+void ROOT::Experimental::Detail::RRawFileUnix::DoOpen()
 {
    fFileDes = open(GetLocation(fUrl).c_str(), O_RDONLY);
    if (fFileDes < 0) {
@@ -68,7 +68,7 @@ void ROOT::Detail::RRawFileUnix::DoOpen()
    }
 }
 
-size_t ROOT::Detail::RRawFileUnix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Experimental::Detail::RRawFileUnix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    size_t total_bytes = 0;
    while (nbytes) {
