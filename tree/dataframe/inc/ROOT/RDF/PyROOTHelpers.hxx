@@ -60,6 +60,15 @@ void TTreeAsFlatMatrixHelper(TTree &tree, std::vector<BufType> &matrix, std::vec
    TTreeAsFlatMatrix<BufType, ColTypes...>(std::index_sequence_for<ColTypes...>(), tree, matrix, columns);
 }
 
+// RDataFrame.AsNumpy helpers
+
+// NOTE: This is a workaround for the missing Take action in the PyROOT interface
+template <typename T>
+ROOT::RDF::RResultPtr<std::vector<T>> RDataFrameTake(ROOT::RDF::RNode df, std::string_view column)
+{
+   return df.Take<T>(column);
+}
+
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT
