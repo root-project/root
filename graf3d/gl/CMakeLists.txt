@@ -42,5 +42,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
                               SOURCES ${sources}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES ${gllibs} ${GL2PS_LIBRARIES} GLEW ${FTGL_LIBRARIES}
-                              DEPENDENCIES Hist Gui Ged
+                              DEPENDENCIES Hist Gui Ged RCsg
                               INSTALL_OPTIONS ${installoptions})
