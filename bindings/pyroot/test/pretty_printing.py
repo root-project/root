@@ -55,7 +55,10 @@ class PrettyPrinting(unittest.TestCase):
         ROOT.gInterpreter.Declare('class MyClass {};')
         x = ROOT.MyClass()
         self._print(x)
-        self.assertIn("MyClass object at", x.__str__())
+        s = x.__str__()
+        r = x.__repr__()
+        self.assertIn("MyClass object at", s)
+        self.assertEqual(s, r)
 
 
 if __name__ == '__main__':
