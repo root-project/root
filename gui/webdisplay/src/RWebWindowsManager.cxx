@@ -268,6 +268,17 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RWebWindowsM
 
    auto wshandler = win->CreateWSHandler(Instance(), ++fIdCnt, dflt_tmout);
 
+   if (gEnv->GetValue("WebGui.RecordData", 0) > 0) {
+      std::string fname, prefix;
+      if (fIdCnt > 1) {
+         prefix = std::string("f") + std::to_string(fIdCnt) + "_";
+         fname = std::string("protcol") + std::to_string(fIdCnt) + ".json";
+      } else {
+         fname = "protocol.json";
+      }
+      win->RecordData(fname, prefix);
+   }
+
    fServer->RegisterWS(wshandler);
 
    return win;
