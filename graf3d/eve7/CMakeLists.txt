@@ -2,7 +2,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
   HEADERS
      inc/ROOT/REveClient.hxx
      inc/ROOT/REveCompound.hxx
-     inc/ROOT/REveCsgOps.hxx
      inc/ROOT/REveDataClasses.hxx
      inc/ROOT/REveElement.hxx
      inc/ROOT/REveGeoPolyShape.hxx
@@ -46,7 +45,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
      glu/tess.c
      glu/tessmono.c
      src/REveCompound.cxx
-     src/REveCsgOps.cxx
      src/REveDataClasses.cxx
      src/REveElement.cxx
      src/REveGeoPolyShape.cxx
@@ -83,7 +81,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     Geom 
     Physics 
     EG 
-    TreePlayer 
+    TreePlayer
+    RCsg 
     ROOTWebDisplay
 )
 
