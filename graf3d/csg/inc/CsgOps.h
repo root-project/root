@@ -15,13 +15,15 @@ namespace RootCsg {
 
 class TBaseMesh {
 public:
+   TBaseMesh() = default;
+   virtual ~TBaseMesh() = default;
 
-   virtual ~TBaseMesh(){}
    virtual UInt_t NumberOfPolys()const = 0;
    virtual UInt_t NumberOfVertices()const = 0;
    virtual UInt_t SizeOfPoly(UInt_t polyIndex)const = 0;
    virtual const Double_t *GetVertex(UInt_t vertNum)const = 0;
-   virtual Int_t GetVertexIndex(UInt_t polyNum, UInt_t vertNum)const = 0; };
+   virtual Int_t GetVertexIndex(UInt_t polyNum, UInt_t vertNum)const = 0;
+};
 
    TBaseMesh *ConvertToMesh(const TBuffer3D &buff);
    TBaseMesh *BuildUnion(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
