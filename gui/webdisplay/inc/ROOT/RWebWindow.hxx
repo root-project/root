@@ -127,6 +127,7 @@ private:
    std::string fProtocolFileName;                   ///<! local file where communication protocol will be written
    int fProtocolCnt{-1};                            ///<! counter for protocol recording
    unsigned fProtocolConnId{0};                     ///<! connection id, which is used for writing protocol
+   std::string fProtocolPrefix;                     ///<! prefix for created files names
    std::string fProtocol;                           ///<! protocol
 
    std::shared_ptr<RWebWindowWSHandler> CreateWSHandler(std::shared_ptr<RWebWindowsManager> mgr, unsigned id, double tmout);
@@ -269,7 +270,7 @@ public:
 
    void SendBinary(unsigned connid, std::string &&data);
 
-   void RecordData(const std::string &fname = "protocol.json");
+   void RecordData(const std::string &fname = "protocol.json", const std::string &fprefix = "");
 
    std::string RelativeAddr(std::shared_ptr<RWebWindow> &win);
 
