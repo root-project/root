@@ -2272,7 +2272,13 @@ namespace {
       Py_XDECREF(cppname);
 
       std::string printResult = gInterpreter->ToString(className.c_str(), self->GetObject());
-      return PyROOT_PyUnicode_FromString(printResult.c_str());
+      if (printResult.find("@0x") == 0) {
+         // Fall back to __repr__ if we just get an address from cling
+         auto method = PyObject_GetAttrString((PyObject*)self, "__repr__");
+         return PyObject_CallObject(method, nullptr);
+      } else {
+         return PyROOT_PyUnicode_FromString(printResult.c_str());
+      }
    }
 
    //- Adding array interface to classes ---------------
