@@ -251,11 +251,6 @@ set(gfallibdir ${GFAL_LIBRARY_DIR})
 set(gfallib ${GFAL_LIBRARY})
 set(gfalincdir ${GFAL_INCLUDE_DIR})
 
-set(buildglite ${value${glite}})
-set(glitelibdir ${GLITE_LIBRARY_DIR})
-set(glitelib ${GLITE_LIBRARY})
-set(gaw_cppflags)
-
 set(buildmemstat ${value${memstat}})
 
 set(buildbonjour ${value${bonjour}})
