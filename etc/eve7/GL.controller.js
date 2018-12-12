@@ -108,17 +108,17 @@ sap.ui.define([
 
          // start drawing only when all scenes has childs
          // this is configured view
-         var element = this.mgr.GetElement(this.elementid), allok = true;
+         var element = this.mgr.GetElement(this.elementid), allok = true, anychilds = false;
 
          // loop over scene and add dependency
          for (var k=0;k<element.childs.length;++k) {
             var scene = element.childs[k];
             if (!scene) { allok = false; break; }
             var realscene = this.mgr.GetElement(scene.fSceneId);
-            if (!realscene || !realscene.childs) { allok = false; break; }
+            if (realscene && realscene.childs) anychilds = true;
          }
 
-         if (allok) this.drawGeometry();
+         if (allok && anychilds) this.drawGeometry();
       },
 
       drawGeometry: function() {
