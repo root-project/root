@@ -81,9 +81,6 @@
 /// Creating proxy ............................ Done
 /// Your proxy is valid until: Fri Oct 31 09:33:04 2003
 /// +                                                                          +
-/// +   Testing SSH ...                                                        +
-/// ganis@localhost's password:
-/// +                                                                          +
 /// +   Testing UidGid ...                                                     +
 /// +                                                                          +
 /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -95,7 +92,6 @@
 /// +   Method: 0 (UsrPwd): successful! (reuse: successful!)                   +
 /// +   Method: 2   (Krb5): successful! (reuse: successful!)                   +
 /// +   Method: 3 (Globus): successful! (reuse: successful!)                   +
-/// +   Method: 4    (SSH): successful! (reuse: successful!)                   +
 /// +   Method: 5 (UidGid): successful!                                        +
 /// +                                                                          +
 /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -246,11 +242,6 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
       GlobusDetails = TString("pt:0 ru:1 ") + TString(globus);
    }
    delete[] p;
-
-// Check if SSH available
-   if (gSystem->Which(gSystem->Getenv("PATH"), "ssh", kExecutePermission)) {
-      HaveMeth[4] = 1;
-   }
 
 // Test parameter Printout
    printf("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
@@ -441,46 +432,6 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
       // remove method from available list
       ha->RemoveMethod(3);
    }
-
-// SSH method
-
-   if ( HaveMeth[4] ) {
-      printf("+                                                                             +\n");
-      printf("+   Testing SSH ...                                                           +\n");
-
-     // Add relevant info to HostAuth
-      ha->AddFirst(4,Details.Data());
-      if (lDebug > 0)
-         ha->Print();
-
-     // Authentication attempt
-      t1 = new TFTP(TFTPPath.Data(),2);
-      if (t1->IsOpen()) {
-         TestMeth[4] = 1;
-      } else {
-         printf(" >>>>>>>>>>>>>>>> Test of SSH authentication failed \n");
-      }
-
-      // Try ReUse
-      if (TestMeth[4] == 1) {
-         TIter next(ha->Established());
-         TSecContext *ai;
-         while ((ai = (TSecContext *) next())) {
-            if (ai->GetMethod() == 4) {
-               Int_t OffSet = ai->GetOffSet();
-               TestReUse[4] = 0;
-               if (OffSet > -1) {
-                  TestReUse[4] = 1;
-               }
-            }
-         }
-      }
-      // Delete t1
-      if (t1) delete t1;
-      // remove method from available list
-      ha->RemoveMethod(4);
-   }
-
 
 // Rfio method
    printf("+                                                                             +\n");
