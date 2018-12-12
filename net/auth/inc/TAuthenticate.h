@@ -57,7 +57,7 @@ friend class TRootSecContext;
 friend class TSocket;
 
 public:
-   enum ESecurity { kClear, kSRP, kKrb5, kGlobus, kSSH, kRfio }; // type of authentication
+   enum ESecurity { kClear, kUnsupported, kKrb5, kGlobus, kSSH, kRfio }; // type of authentication
 
 private:
    TString      fDetails;     // logon details (method dependent ...)
@@ -70,7 +70,6 @@ private:
    TRootSecContext *fSecContext;  // pointer to relevant sec context
    ESecurity    fSecurity;    // actual logon security level
    TSocket     *fSocket;      // connection to remote daemon
-   Bool_t       fSRPPwd;      // kTRUE if fPasswd is a SRP passwd
    Int_t        fVersion;     // 0,1,2, ... accordingly to remote daemon version
    TString      fUser;        // user to be authenticated
    Int_t        fTimeOut;     // timeout flag
@@ -79,7 +78,7 @@ private:
    Bool_t       GetPwHash() const { return fPwHash; }
    Int_t        GetRSAKey() const { return fRSAKey; }
    ESecurity    GetSecurity() const { return fSecurity; }
-   Bool_t       GetSRPPwd() const { return fSRPPwd; }
+   Bool_t       GetSRPPwd() const { return false; }
    const char  *GetSshUser(TString user) const;
    Int_t        GetVersion() const { return fVersion; }
    Int_t        ClearAuth(TString &user, TString &passwd, Bool_t &pwhash);
@@ -114,7 +113,6 @@ private:
    static R__rsa_KEY         fgRSAPubKey;
    static R__rsa_KEY_export* fgRSAPubExport; // array of size [2]
    static SecureAuth_t    fgSecAuthHook;
-   static Bool_t          fgSRPPwd;         // kTRUE if fgPasswd is a SRP passwd
    static TString         fgUser;
    static Bool_t          fgUsrPwdCrypt;    // kTRUE if encryption for UsrPwd is required
    static Int_t           fgLastError;      // Last error code processed by AuthError()

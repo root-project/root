@@ -327,17 +327,10 @@ Venus libraries.  The sources can be downloaded from
 
     ftp://root.cern.ch/root/venus/
 
-7.10. Secure Remote Password (SRP) Authentication (LEGACY):
------------------------------------------------------------
-To build the strong authentication module used by TServerSocket,
-you first have to install the SRP (Secure Remote Password)
-system. See:
 
-   http://srp.stanford.edu/
-
-Please note, that the library "libsrp-dev" as distributed by Standford
-is not enough to build the two utility program in the srputil
-directory of the ROOT source tree.
+7.10. Secure Remote Password (SRP) Authentication:
+--------------------------------------------------
+Not supported any longer
 
 
 7.11. AFS Authentication:

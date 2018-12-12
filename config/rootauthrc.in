@@ -62,7 +62,6 @@
 #              Method                        short name      code
 #
 #              UsrPwd                         usrpwd          0
-#              SRP                            srp             1
 #              Kerberos                       krb5            2
 #              Globus                         globus          3
 #              UidGid                         uidgid          5   (insecure)
@@ -103,8 +102,7 @@
 #           to access the same host with same method during the same
 #           session: this allows to speed up operation in case of multiple
 #           access). Default is 'yes' for methods 0 (UsrPwd), 3 (Globus)
-#           and 4 (SSH), superseeded by the related entries in '.rootrc';
-#           feature not yet implemented for methods 1 (SRP) and 2 (Kerberos). 
+#           and 4 (SSH), superseeded by the related entries in '.rootrc'.
 #           No additional info is needed by method 5 (UidGid): this method
 #           sends to the remote host the (uid,gid) of the current process;
 #           'reuse' will be af no advantage and 'prompt' is not allowed for
@@ -114,7 +112,6 @@
 #              Method                       Format info
 #
 #              UsrPwd                       us:<username> cp:<crypt_option>
-#              SRP                          us:<username> 
 #              Kerberos                     pp:<principal> us:<username>(<principal>) 
 #              Globus                       cd:<user_certkey_dir> 
 #                                           cf:<usercert_file>
@@ -182,7 +179,7 @@
 #            
 #           The first line states that, unless differently specified, 
 #           the first method to be tried for autentication is SSH,
-#           followed in case of failure by UsrPwd and SRP. 
+#           followed in case of failure by UsrPwd.
 #           The second line specifies that when a SSH authentication is
 #           attempted, the user will be prompted for the remote username,
 #           with 'qwerty' as default. The third line states that for 

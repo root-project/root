@@ -128,7 +128,7 @@ public:
 //
 // TPwdCtx
 //
-// To store associated passwd for UsrPwd and SRP methods
+// To store associated passwd for UsrPwd method
 //
 class TPwdCtx {
 
