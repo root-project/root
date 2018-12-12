@@ -68,9 +68,9 @@ For the default plugins see $ROOTSYS/etc/system.rootrc.
 
 Plugin handlers can also be registered at run time, e.g.:
 ~~~ {.cpp}
-  gPluginMgr->AddHandler("TSQLServer", "^sapdb:",
-                         "TSapDBServer", "SapDB",
-            "TSapDBServer(const char*,const char*, const char*)");
+  gPluginMgr->AddHandler("TSQLServer", "^sqlite:",
+                         "TSQLiteServer", "RSQLite",
+            "TSQLiteServer(const char*,const char*,const char*)");
 ~~~
 A list of currently defined handlers can be printed using:
 ~~~ {.cpp}
