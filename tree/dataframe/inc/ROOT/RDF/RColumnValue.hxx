@@ -59,7 +59,9 @@ RDataFrame nodes can store tuples of RColumnValues and retrieve an updated
 value for the column via the `Get` method.
 **/
 template <typename T>
-class R__CLING_PTRCHECK(off) RColumnValue {
+class
+R__CLING_PTRCHECK(off)
+RColumnValue {
 // R__CLING_PTRCHECK is disabled because all pointers are hand-crafted by RDF.
 
    using MustUseRVec_t = IsRVec_t<T>;
@@ -170,7 +172,7 @@ public:
          if (EStorageType::kContiguous == fStorageType ||
              (EStorageType::kUnknown == fStorageType && readerArray.GetSize() < 2)) {
             if (readerArraySize > 0) {
-               // trigger loading of the contens of the TTreeReaderArray
+               // trigger loading of the contents of the TTreeReaderArray
                // the address of the first element in the reader array is not necessarily equal to
                // the address returned by the GetAddress method
                auto readerArrayAddr = &readerArray.At(0);
@@ -254,7 +256,7 @@ public:
    }
 };
 
-// Some extern instaniations to speed-up compilation/interpretation time
+// Some extern instantiations to speed-up compilation/interpretation time
 // These are not active if c++17 is enabled because of a bug in our clang
 // See ROOT-9499.
 #if __cplusplus < 201703L
