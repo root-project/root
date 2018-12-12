@@ -18,6 +18,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
+#include "TError.h"
 #include <ROOT/RConfig.h>
 
 #include <ctype.h>
@@ -140,13 +141,6 @@ static std::string gRndmSalt = std::string("ABCDEFGH");
 #include <shadow.h>
 #endif
 
-#ifdef R__SRP
-extern "C" {
-   #include <t_pwd.h>
-   #include <t_server.h>
-}
-#endif
-
 #ifdef R__KRB5
 #include "Krb5Auth.h"
 #include <string>
@@ -237,17 +231,15 @@ std::string gServName[3] = { "sockd", "rootd", "proofd" };
 //
 // Local global consts
 static const int gAUTH_CLR_MSK = 0x1;     // Masks for authentication methods
-static const int gAUTH_SRP_MSK = 0x2;
 static const int gAUTH_KRB_MSK = 0x4;
 static const int gAUTH_GLB_MSK = 0x8;
 static const int gMAXTABSIZE = 50000000;
 
-static const std::string gAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5",
+static const std::string gAuthMeth[kMAXSEC] = { "UsrPwd", "Unsupported", "Krb5",
                                                 "Globus", "SSH", "UidGid" };
 static const std::string gAuthTab    = "/rpdauthtab";   // auth table
 static const std::string gDaemonRc   = ".rootdaemonrc"; // daemon access rules
 static const std::string gRootdPass  = ".rootdpass";    // special rootd passwd
-static const std::string gSRootdPass = "/.srootdpass";  // SRP passwd
 static const std::string gKeyRoot    = "/rpk.";         // Root for key files
 
 //
@@ -264,7 +256,6 @@ static int gClientProtocol = -1;
 static int gCryptRequired = -1;
 static std::string gCryptToken;
 static int gAllowMeth[kMAXSEC];
-static std::string gAltSRPPass;
 static int gAnon = 0;
 static int gExistingAuth = 0;
 static int gAuthListSent = 0;
@@ -612,8 +603,6 @@ int RpdGetAuthMethod(int kind)
 
    if (kind == kROOTD_USER)
       method = 0;
-   if (kind == kROOTD_SRPUSER)
-      method = 1;
    if (kind == kROOTD_KRB5)
       method = 2;
    if (kind == kROOTD_GLOBUS)
@@ -1619,7 +1608,7 @@ bool RpdCheckToken(char *token, char *tknref)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check the requiring subject has already authenticated during this session
 /// and its 'ticket' is still valid.
-/// Not implemented for SRP and Krb5 (yet).
+/// Not implemented for Krb5 (yet).
 
 int RpdReUseAuth(const char *sstr, int kind)
 {
@@ -1639,27 +1628,6 @@ int RpdReUseAuth(const char *sstr, int kind)
          return 0;              // re-authentication required by administrator
       }
       gSec = 0;
-      // Decode subject string
-      sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenU, user);
-      user[lenU] = '\0';
-      if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
-         gOffSet = offset;
-         if (gRemPid > 0 && gOffSet > -1) {
-            auth =
-                RpdCheckAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
-         }
-         if ((auth == 1) && (offset != gOffSet))
-            auth = 2;
-         // Fill gUser and free allocated memory
-         strlcpy(gUser, user, sizeof(gUser));
-      }
-   }
-   // kSRP
-   if (kind == kROOTD_SRPUSER) {
-      if (!(gReUseAllow & gAUTH_SRP_MSK)) {
-         return 0;              // re-authentication required by administrator
-      }
-      gSec = 1;
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenU, user);
       user[lenU] = '\0';
@@ -2639,252 +2607,12 @@ int RpdKrb5Auth(const char *sstr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Use Secure Remote Password protocol.
-/// Check user id in $HOME/.srootdpass file.
+/// Secure Remote Password protocol (no longer supported)
 
-int RpdSRPUser(const char *sstr)
+int RpdSRPUser(const char *)
 {
-   int auth = 0;
-
-   if (!*sstr) {
-      NetSend(kErrBadUser, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: bad user name");
-      return auth;
-   }
-
-#ifdef R__SRP
-
-   // Decode subject string
-   char user[kMAXUSERLEN] = { 0 };
-   if (gClientProtocol > 8) {
-      int lenU, ofs, opt;
-      char dumm[20];
-      sscanf(sstr, "%d %d %d %d %127s %19s", &gRemPid, &ofs, &opt, &lenU, user, dumm);
-      lenU = (lenU > kMAXUSERLEN-1) ? kMAXUSERLEN-1 : lenU;
-      user[lenU] = '\0';
-      gReUseRequired = (opt & kAUTH_REUSE_MSK);
-#ifdef R__SSL
-      if (gRSASSLKey) {
-         // Determine type of RSA key required
-         gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
-      } else
-         gRSAKey = 1;
-#else
-      gRSAKey = 1;
-#endif
-   } else {
-      SPrintf(user,kMAXUSERLEN,"%s",sstr);
-   }
-
-   struct passwd *pw = getpwnam(user);
-   if (!pw) {
-      NetSend(kErrNoUser, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: user %s unknown", user);
-      return auth;
-   }
-   // Method cannot be attempted for anonymous users ... (ie data servers )...
-   if (!strcmp(pw->pw_shell, "/bin/false")) {
-      NetSend(kErrNotAllowed, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: no SRP for anonymous user '%s' ", user);
-      return auth;
-   }
-   // If server is not started as root and user is not same as the
-   // one who started rootd then authetication is not ok.
-   uid_t uid = getuid();
-   if (uid && uid != pw->pw_uid) {
-      NetSend(kErrBadUser, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: user not same as effective user of rootd");
-      return auth;
-   }
-
-   NetSend(auth, kROOTD_AUTH);
-
-   strlcpy(gUser, user, sizeof(gUser));
-
-   std::string srootdpass, srootdconf;
-   if (gAltSRPPass.length()) {
-      srootdpass = gAltSRPPass;
-   } else {
-      srootdpass = std::string(pw->pw_dir).append(gSRootdPass);
-   }
-   srootdconf = srootdpass + std::string(".conf");
-
-   FILE *fp1 = fopen(srootdpass.c_str(), "r");
-   if (!fp1) {
-      NetSend(kErrFileOpen, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: error opening %s", srootdpass.c_str());
-      return auth;
-   }
-   FILE *fp2 = fopen(srootdconf.c_str(), "r");
-   if (!fp2) {
-      NetSend(kErrFileOpen, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: error opening %s", srootdconf.c_str());
-      if (fp1)
-         fclose(fp1);
-      return auth;
-   }
-
-   struct t_pw *tpw = t_openpw(fp1);
-   if (!tpw) {
-      NetSend(kErrFileOpen, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: unable to open password file %s",
-                srootdpass.c_str());
-      fclose(fp1);
-      fclose(fp2);
-      return auth;
-   }
-
-   struct t_conf *tcnf = t_openconf(fp2);
-   if (!tcnf) {
-      NetSend(kErrFileOpen, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: unable to open configuration file %s",
-                srootdconf.c_str());
-      t_closepw(tpw);
-      fclose(fp1);
-      fclose(fp2);
-      return auth;
-   }
-#if R__SRP_1_1
-   struct t_server *ts = t_serveropen(gUser, tpw, tcnf);
-#else
-   struct t_server *ts = t_serveropenfromfiles(gUser, tpw, tcnf);
-#endif
-
-   if (tcnf)
-      t_closeconf(tcnf);
-   if (tpw)
-      t_closepw(tpw);
-   if (fp2)
-      fclose(fp2);
-   if (fp1)
-      fclose(fp1);
-
-   if (!ts) {
-      NetSend(kErrNoUser, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: user %s not found SRP password file", gUser);
-      return auth;
-   }
-
-   char hexbuf[MAXHEXPARAMLEN];
-
-   // send n to client
-   NetSend(t_tob64(hexbuf, (char *) ts->n.data, ts->n.len), kROOTD_SRPN);
-   // send g to client
-   NetSend(t_tob64(hexbuf, (char *) ts->g.data, ts->g.len), kROOTD_SRPG);
-   // send salt to client
-   NetSend(t_tob64(hexbuf, (char *) ts->s.data, ts->s.len),
-           kROOTD_SRPSALT);
-
-   struct t_num *B = t_servergenexp(ts);
-
-   // receive A from client
-   EMessageTypes kind;
-   if (NetRecv(hexbuf, MAXHEXPARAMLEN, kind) < 0) {
-      NetSend(kErrFatal, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: error receiving A from client");
-      return auth;
-   }
-   if (kind != kROOTD_SRPA) {
-      NetSend(kErrFatal, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: expected kROOTD_SRPA message");
-      return auth;
-   }
-
-   unsigned char buf[MAXPARAMLEN];
-   struct t_num A;
-   A.data = buf;
-   A.len = t_fromb64((char *) A.data, hexbuf);
-
-   // send B to client
-   NetSend(t_tob64(hexbuf, (char *) B->data, B->len), kROOTD_SRPB);
-
-   t_servergetkey(ts, &A);
-
-   // receive response from client
-   if (NetRecv(hexbuf, MAXHEXPARAMLEN, kind) < 0) {
-      NetSend(kErrFatal, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: error receiving response from client");
-      return auth;
-   }
-   if (kind != kROOTD_SRPRESPONSE) {
-      NetSend(kErrFatal, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: expected kROOTD_SRPRESPONSE message");
-      return auth;
-   }
-
-   unsigned char cbuf[20];
-   t_fromhex((char *) cbuf, hexbuf);
-
-   if (!t_serververify(ts, cbuf)) {
-
-      // authentication successful
-      if (gDebug > 0)
-         ErrorInfo("RpdSRPUser: user %s authenticated", gUser);
-      auth = 1;
-      gSec = 1;
-
-      if (gClientProtocol > 8) {
-
-         char line[kMAXPATHLEN];
-         if ((gReUseAllow & gAUTH_SRP_MSK) && gReUseRequired) {
-
-            // Ask for the RSA key
-            NetSend(gRSAKey, kROOTD_RSAKEY);
-
-            // Receive the key securely
-            if (RpdRecvClientRSAKey()) {
-               ErrorInfo
-                   ("RpdSRPAuth: could not import a valid key"
-                    " - switch off reuse for this session");
-               gReUseRequired = 0;
-            }
-
-            // Set an entry in the auth tab file for later (re)use, if required ...
-            int offset = -1;
-            char *token = 0;
-            if (gReUseRequired) {
-               SPrintf(line, kMAXPATHLEN, "1 1 %d %d %s %s",
-                       gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
-               offset = RpdUpdateAuthTab(1, line, &token);
-            }
-            // Comunicate login user name to client
-            SPrintf(line, kMAXPATHLEN, "%s %d", gUser, offset);
-            NetSend(strlen(line), kROOTD_SRPUSER);   // Send message length first
-            NetSend(line, kMESS_STRING);
-
-            if (gReUseRequired && offset > -1) {
-               // Send Token
-               if (RpdSecureSend(token) == -1) {
-                  ErrorInfo("RpdSRPUser: problems secure-sending token"
-                            " - may result in corrupted token");
-               }
-               if (token) delete[] token;
-            }
-            gOffSet = offset;
-
-         } else {
-            // Comunicate login user name to client
-            SPrintf(line, kMAXPATHLEN, "%s -1", gUser);
-            NetSend(strlen(line), kROOTD_SRPUSER);   // Send message length first
-            NetSend(line, kMESS_STRING);
-         }
-
-      }
-
-   } else {
-      if (gClientProtocol > 8) {
-         NetSend(kErrBadPasswd, kROOTD_ERR);
-         ErrorInfo("RpdSRPUser: authentication failed for user %s", gUser);
-         return auth;
-      }
-   }
-
-   t_serverclose(ts);
-
-#else
-   NetSend(0, kROOTD_SRPUSER);
-#endif
-   return auth;
+   ::Error("RpdSRPUser", "SRP no longer supported by ROOT");
+   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3750,15 +3478,8 @@ void RpdDefaultAuthAllow()
    gNumAllow++;
    gNumLeft++;
 
-   // SRP
-#ifdef R__SRP
-   gAllowMeth[gNumAllow] = 1;
-   gNumAllow++;
-   gNumLeft++;
-#else
-   // Don't have this method
+   // Don't have SRP method
    gHaveMeth[1] = 0;
-#endif
 
    // Kerberos
 #ifdef R__KRB5
@@ -4001,7 +3722,6 @@ int RpdUser(const char *sstr)
                  user);
             return auth;
          }
-#endif
       }
    }
    // Ok: Save username and go to next steps
@@ -4206,13 +3926,6 @@ int RpdGuessClientProt(const char *buf, EMessageTypes kind)
 
    // Clear authentication
    if (kind == kROOTD_USER) {
-      char usr[64], rest[256];
-      int ns = sscanf(buf, "%63s %255s", usr, rest);
-      if (ns == 1)
-         proto = 8;
-   }
-   // SRP authentication
-   if (kind == kROOTD_SRPUSER) {
       char usr[64], rest[256];
       int ns = sscanf(buf, "%63s %255s", usr, rest);
       if (ns == 1)
@@ -5081,9 +4794,6 @@ int RpdAuthenticate()
          case kROOTD_USER:
             auth = RpdUser(buf);
             break;
-         case kROOTD_SRPUSER:
-            auth = RpdSRPUser(buf);
-            break;
          case kROOTD_PASS:
             auth = RpdPass(buf);
             break;
@@ -5725,7 +5435,7 @@ int RpdSetUid(int uid)
 /// Change defaults job control options.
 
 void RpdInit(EService serv, int pid, int sproto, unsigned int options,
-             int rumsk, int, const char *tmpd, const char *asrpp, int login)
+             int rumsk, int, const char *tmpd, const char * /* asrpp */, int login)
 {
    gService        = serv;
    gParentId       = pid;
@@ -5749,9 +5459,6 @@ void RpdInit(EService serv, int pid, int sproto, unsigned int options,
    gRpdKeyRoot.append(ItoA(getuid()));
    gRpdKeyRoot.append("_");
 
-   if (asrpp && strlen(asrpp))
-      gAltSRPPass  = asrpp;
-
 #ifdef R__GLBS
    // Init globus
    if (RpdGlobusInit() != 0)
@@ -5769,8 +5476,6 @@ void RpdInit(EService serv, int pid, int sproto, unsigned int options,
       ErrorInfo("RpdInit: gDoLogin= %d", gDoLogin);
       if (tmpd)
          ErrorInfo("RpdInit: gTmpDir= %s", gTmpDir.c_str());
-      if (asrpp)
-         ErrorInfo("RpdInit: gAltSRPPass= %s", gAltSRPPass.c_str());
 #ifdef R__GLBS
       ErrorInfo("RpdInit: gHaveGlobus: %d", (int) gHaveGlobus);
 #endif
