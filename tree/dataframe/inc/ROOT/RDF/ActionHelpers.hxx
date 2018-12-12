@@ -1067,9 +1067,10 @@ public:
       // With this code, we set the value of the pointer in the output branch anew when needed.
       // Nota bene: the extra ",0" after the invocation of SetAddress, is because that method returns void and 
       // we need an int for the expander list.
-      int expander[] = {
-         (fBranches[S] && fBranchAddresses[S] != GetData(values) ? fBranches[S]->SetAddress(GetData(values)),0 : 0, 0)...,
-         0};
+      int expander[] = {(fBranches[S] && fBranchAddresses[S] != GetData(values)
+                         ? fBranches[S]->SetAddress(GetData(values)),
+                         fBranchAddresses[S] = GetData(values), 0 : 0, 0)...,
+                        0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
 
@@ -1227,9 +1228,8 @@ public:
       // Nota bene: the extra ",0" after the invocation of SetAddress, is because that method returns void and
       // we need an int for the expander list.
       int expander[] = {(fBranches[slot][S] && fBranchAddresses[slot][S] != GetData(values)
-                            ? fBranches[slot][S]->SetAddress(GetData(values)),0
-                            : 0,
-                         0)...,
+                         ? fBranches[slot][S]->SetAddress(GetData(values)),
+                         fBranchAddresses[slot][S] = GetData(values), 0 : 0, 0)...,
                         0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
