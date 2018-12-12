@@ -31,6 +31,10 @@ class TTreeReader;
 namespace ROOT {
 namespace Internal {
 
+/** \class TTreeReaderValueBase
+Base class of TTreeReaderValue.
+*/
+
    class TTreeReaderValueBase {
    public:
 
@@ -120,7 +124,9 @@ namespace Internal {
 
 
 template <typename T>
-class R__CLING_PTRCHECK(off) TTreeReaderValue final: public ROOT::Internal::TTreeReaderValueBase {
+class
+R__CLING_PTRCHECK(off)
+TTreeReaderValue final: public ROOT::Internal::TTreeReaderValueBase {
 // R__CLING_PTRCHECK is disabled because pointer / types are checked by CreateProxy().
 
 public:

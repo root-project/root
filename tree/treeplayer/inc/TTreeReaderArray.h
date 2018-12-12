@@ -24,6 +24,10 @@ A simple interface for reading data from trees or chains.
 namespace ROOT {
 namespace Internal {
 
+/** \class TTreeReaderArrayBase
+Base class of TTreeReaderArray.
+*/
+
    class TTreeReaderArrayBase: public TTreeReaderValueBase {
    public:
       TTreeReaderArrayBase(TTreeReader* reader, const char* branchname,
@@ -55,7 +59,9 @@ namespace Internal {
 } // namespace ROOT
 
 template <typename T>
-class R__CLING_PTRCHECK(off) TTreeReaderArray final : public ROOT::Internal::TTreeReaderArrayBase {
+class
+R__CLING_PTRCHECK(off)
+TTreeReaderArray final : public ROOT::Internal::TTreeReaderArrayBase {
 // R__CLING_PTRCHECK is disabled because pointer / types are checked by CreateProxy().
 
 public:
