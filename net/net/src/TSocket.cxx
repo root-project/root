@@ -1256,8 +1256,8 @@ Bool_t TSocket::Authenticate(const char *user)
 ///                any remote server session using TServerSocket)
 ///          [p] = for parallel sockets (forced internally for
 ///                rootd; ignored for proofd)
-///       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd,
-///                SRP, Krb5, Globus, SSH or UidGid authentication
+///       [auth] = "up", "k", "g", "h", "ug" to force UsrPwd,
+///                Krb5, Globus, SSH or UidGid authentication
 ///       [port] = is the remote port number
 ///    [service] = service name used to determine the port
 ///                (for backward compatibility, specification of
@@ -1273,15 +1273,6 @@ Bool_t TSocket::Authenticate(const char *user)
 /// code (see NetErrors.h).
 ///
 /// Example:
-///
-///   TSocket::CreateAuthSocket("rootds://qwerty@machine.fq.dn:5051")
-///
-///   creates an authenticated socket to a rootd server running
-///   on remote machine machine.fq.dn on port 5051; "parallel" sockets
-///   are forced internally because rootd expects
-///   parallel sockets; however a simple socket will be created
-///   in this case because the size is 0 (the default);
-///   authentication will attempt protocol SRP first.
 ///
 ///   TSocket::CreateAuthSocket("pk://qwerty@machine.fq.dn:5052",3)
 ///
@@ -1413,8 +1404,8 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
 ///                any remote server session using TServerSocket)
 ///          [p] = for parallel sockets (forced internally for
 ///                rootd)
-///       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd,
-///                SRP, Krb5, Globus, SSH or UidGid authentication
+///       [auth] = "up", "k", "g", "h", "ug" to force UsrPwd,
+///                Krb5, Globus, SSH or UidGid authentication
 ///    [options] = "m" or "s", when proto=proofd indicates whether
 ///                we are master or slave (used internally by TSlave)
 ///
@@ -1425,15 +1416,6 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
 /// code (see NetErrors.h).
 ///
 /// Example:
-///
-///   TSocket::CreateAuthSocket("qwerty","rootdps://machine.fq.dn",5051)
-///
-///   creates an authenticated socket to a rootd server running
-///   on remote machine machine.fq.dn on port 5051; "parallel"
-///   sockets are forced internally because rootd expects
-///   parallel sockets; however a simple socket will be created
-///   in this case because the size is 0 (the default);
-///   authentication will attempt protocol SRP first.
 ///
 ///   TSocket::CreateAuthSocket("qwerty","pk://machine.fq.dn:5052",3)
 ///

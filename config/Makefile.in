@@ -75,7 +75,7 @@ CTORSINITARRAY := @ctorsinitarray@
 CXXMKDEPFLAGS  := @cxxmkdepflags@
 
 GLBPATCHFLAGS  := @glbpatchcflags@
-EXTRA_AUTHFLAGS:= @srpextracflags@ @krb5extracflags@ @glbextracflags@ @sslextracflags@
+EXTRA_AUTHFLAGS:= @krb5extracflags@ @glbextracflags@ @sslextracflags@
 
 BINDIR         := @bindir@
 LIBDIR         := @libdir@
@@ -323,15 +323,6 @@ XRDINCPRIVATE  := @xrdincprivate@
 BUILDNETXNG    := @buildnetxng@
 BUILDXPROOFD   := @buildxproofd@
 BUILDXRDCLT    := @buildxrdclt@
-
-SRPLIBDIR      := @srplibdir@
-SRPLIB         := @srplib@
-SRPINCDIR      := $(filter-out /usr/include, @srpincdir@)
-
-BUILDSRPUTIL   := @buildsrputil@
-SRPUTILLIBDIR  := @srputillibdir@
-SRPUTILLIB     := @srputillib@
-SRPUTILINCDIR  := $(filter-out /usr/include, @srputilincdir@)
 
 ALLOCLIB       := @alloclib@
 ALLOCLIBDIR    := @alloclibdir@
