@@ -1177,7 +1177,8 @@ TGeoNode *TGeoNavigator::FindNextDaughterBoundary(Double_t *point, Double_t *dir
          current->cd();
          current->MasterToLocal(point, lpoint);
          current->MasterToLocalVect(dir, ldir);
-         if (current->IsOverlapping() && current->GetVolume()->Contains(lpoint)) continue;
+         if (current->IsOverlapping() && current->GetVolume()->Contains(lpoint) &&
+             current->GetVolume()->GetShape()->Safety(lpoint, kTRUE) > gTolerance) continue;
          snext = current->GetVolume()->GetShape()->DistFromOutside(lpoint, ldir, 3, fStep);
          sumchecked++;
 //         printf("checked %d from %d : snext=%g\n", sumchecked, nd, snext);
