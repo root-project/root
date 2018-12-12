@@ -179,11 +179,6 @@ SQLITELIBDIR    := @sqlitelibdir@
 SQLITECLILIB    := @sqlitelib@
 SQLITEINCDIR    := $(filter-out /usr/include, @sqliteincdir@)
 
-BUILDSAPDB     := @buildsapdb@
-SAPDBLIBDIR    := @sapdblibdir@
-SAPDBCLILIB    := @sapdblib@
-SAPDBINCDIR    := $(filter-out /usr/include, @sapdbincdir@)
-
 BUILDODBC      := @buildodbc@
 ODBCLIBDIR     := @odbclibdir@
 ODBCCLILIB     := @odbclib@
