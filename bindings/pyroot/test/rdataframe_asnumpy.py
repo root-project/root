@@ -144,8 +144,8 @@ class RDataFrameAsNumpy(unittest.TestCase):
         npy = df.AsNumpy(columns=["x", "y"])
         ref = {"x": np.array([1] * 4), "y": np.array([2] * 4)}
         self.assertTrue(sorted(["x", "y"]) == sorted(npy.keys()))
-        self.assertTrue(any(ref["x"] == npy["x"]))
-        self.assertTrue(any(ref["y"] == npy["y"]))
+        self.assertTrue(all(ref["x"] == npy["x"]))
+        self.assertTrue(all(ref["y"] == npy["y"]))
 
     def test_exclude_columns(self):
         df = ROOT.RDataFrame(4).Define("x", "1").Define("y", "2").Define(
@@ -153,15 +153,15 @@ class RDataFrameAsNumpy(unittest.TestCase):
         npy = df.AsNumpy(exclude=["z"])
         ref = {"x": np.array([1] * 4), "y": np.array([2] * 4)}
         self.assertTrue(sorted(["x", "y"]) == sorted(npy.keys()))
-        self.assertTrue(any(ref["x"] == npy["x"]))
-        self.assertTrue(any(ref["y"] == npy["y"]))
+        self.assertTrue(all(ref["x"] == npy["x"]))
+        self.assertTrue(all(ref["y"] == npy["y"]))
 
         df2 = ROOT.RDataFrame(4).Define("x", "1").Define("y", "2").Define(
             "z", "3")
         npy = df.AsNumpy(columns=["x", "y"], exclude=["y"])
         ref = {"x": np.array([1] * 4)}
-        self.assertTrue(["x"] == npy.keys())
-        self.assertTrue(any(ref["x"] == npy["x"]))
+        self.assertTrue(["x"] == list(npy.keys()))
+        self.assertTrue(all(ref["x"] == npy["x"]))
 
     def test_numpy_result_ptr(self):
         df = ROOT.RDataFrame(4).Define("x", "(double)rdfentry_")
