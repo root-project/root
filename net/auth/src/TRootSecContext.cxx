@@ -84,9 +84,8 @@ void TRootSecContext::DeActivate(Option_t *Opt)
    if (clean && fOffSet > -1)
       CleanupSecContext(kFALSE);
 
-   // Cleanup TPwdCtx object fro UsrPwd and SRP
-   if (fMethod == TAuthenticate::kClear ||
-       fMethod == TAuthenticate::kSRP)
+   // Cleanup TPwdCtx object fro UsrPwd
+   if (fMethod == TAuthenticate::kClear)
       if (fContext) {
          delete (TPwdCtx *)fContext;
          fContext = 0;

@@ -323,15 +323,6 @@ set(xrdaddopts)
 set(extraxrdflags)
 set(xrdversion)
 
-set(srplibdir)
-set(srplib)
-set(srpincdir)
-
-set(buildsrputil)
-set(srputillibdir)
-set(srputillib)
-set(srputilincdir)
-
 set(alloclib)
 set(alloclibdir)
 

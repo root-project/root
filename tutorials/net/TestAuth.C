@@ -70,9 +70,6 @@
 /// +   Testing UsrPwd ...                                                     +
 /// ganis@localhost password:
 /// +                                                                          +
-/// +   Testing SRP ...                                                        +
-/// ganis@localhost SRP password:
-/// +                                                                          +
 /// +   Testing Krb5 ...                                                       +
 /// Password for ganis@PCEPSFT43.CERN.CH:
 /// +                                                                          +
@@ -96,7 +93,6 @@
 /// +   Result of the tests:                                                   +
 /// +                                                                          +
 /// +   Method: 0 (UsrPwd): successful! (reuse: successful!)                   +
-/// +   Method: 1    (SRP): successful! (reuse: successful!)                   +
 /// +   Method: 2   (Krb5): successful! (reuse: successful!)                   +
 /// +   Method: 3 (Globus): successful! (reuse: successful!)                   +
 /// +   Method: 4    (SSH): successful! (reuse: successful!)                   +
@@ -193,12 +189,6 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
 
 // Testing availabilities
    char *p;
-
-//   TString HaveSRP = "@srpdir@";
-   if ((p = gSystem->DynamicPathName("libSRPAuth", kTRUE))) {
-      HaveMeth[1] = 1;
-   }
-   delete[] p;
 
 // Check if Kerberos is available
    TString Krb5Details;
@@ -337,45 +327,6 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
    if (t1) delete t1;
    // remove method from available list
    ha->RemoveMethod(0);
-
-// SRP method
-   if ( HaveMeth[1] ) {
-      printf("+                                                                             +\n");
-      printf("+   Testing SRP ...                                                           +\n");
-
-     // Add relevant info to HostAuth
-      ha->AddFirst(1,Details.Data());
-      if (lDebug > 0)
-         ha->Print();
-
-     // Authentication attempt
-      t1 = new TFTP(TFTPPath.Data(),2);
-      if (t1->IsOpen()) {
-         TestMeth[1] = 1;
-      } else {
-         printf(" >>>>>>>>>>>>>>>> Test of SRP authentication failed \n");
-      }
-
-      // Try ReUse
-      if (TestMeth[1] == 1) {
-         TIter next(ha->Established());
-         TSecContext *ai;
-         while ((ai = (TSecContext *) next())) {
-            if (ai->GetMethod() == 1) {
-               Int_t OffSet = ai->GetOffSet();
-               TestReUse[1] = 0;
-               if (OffSet > -1) {
-                  TestReUse[1] = 1;
-               }
-            }
-         }
-      }
-      // Delete t1
-      if (t1) delete t1;
-      // remove method from available list
-      ha->RemoveMethod(1);
-
-   }
 
 // Kerberos method
    THostAuth *hak = 0;

@@ -93,7 +93,7 @@ struct R__rsa_NUMBER: rsa_NUMBER {};
 
 // Statics initialization
 TList          *TAuthenticate::fgAuthInfo = 0;
-TString         TAuthenticate::fgAuthMeth[] = { "UsrPwd", "SRP", "Krb5",
+TString         TAuthenticate::fgAuthMeth[] = { "UsrPwd", "Unsupported", "Krb5",
                                                 "Globus", "SSH", "UidGid" };
 Bool_t          TAuthenticate::fgAuthReUse;
 TString         TAuthenticate::fgDefaultUser;
@@ -116,7 +116,6 @@ R__rsa_KEY_export R__fgRSAPubExport[2] = {{}, {}};
 R__rsa_KEY_export* TAuthenticate::fgRSAPubExport = R__fgRSAPubExport;
 R__rsa_KEY         TAuthenticate::fgRSAPubKey;
 SecureAuth_t    TAuthenticate::fgSecAuthHook;
-Bool_t          TAuthenticate::fgSRPPwd;
 TString         TAuthenticate::fgUser;
 Bool_t          TAuthenticate::fgUsrPwdCrypt;
 Int_t           TAuthenticate::fgLastError = -1;
@@ -259,7 +258,6 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    }
    fPasswd = "";
    fPwHash = kFALSE;
-   fSRPPwd = kFALSE;
 
    // Type of RSA key
    if (fgRSAKey < 0) {
@@ -468,52 +466,6 @@ negotia:
       } else {
          Error("Authenticate",
                "unable to get user name for UsrPwd authentication");
-      }
-
-   } else if (fSecurity == kSRP) {
-
-      rc = kFALSE;
-
-      // SRP Authentication
-      user = fgDefaultUser;
-      if (user != "")
-         CheckNetrc(user, passwd, pwhash, kTRUE);
-      if (passwd == "") {
-         if (fgPromptUser) {
-            char *p = PromptUser(fRemote);
-            user = p;
-            delete [] p;
-         }
-         rc = GetUserPasswd(user, passwd, pwhash, kTRUE);
-      }
-      fUser = user;
-      fPasswd = passwd;
-
-      if (!fgSecAuthHook) {
-
-         char *p;
-         TString lib = "libSRPAuth";
-         if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
-            delete [] p;
-            gSystem->Load(lib);
-         }
-      }
-      if (!rc && fgSecAuthHook) {
-
-         st = (*fgSecAuthHook) (this, user, passwd, fRemote, fDetails,
-                                fVersion);
-      } else {
-         if (!fgSecAuthHook)
-            Error("Authenticate",
-                  "no support for SRP authentication available");
-         if (rc)
-            Error("Authenticate",
-                  "unable to get user name for SRP authentication");
-      }
-      // Fill present user info ...
-      if (st == 1) {
-         fPwHash = kFALSE;
-         fSRPPwd = kTRUE;
       }
 
    } else if (fSecurity == kKrb5) {
@@ -999,26 +951,26 @@ void TAuthenticate::SetEnvironment()
 Bool_t TAuthenticate::GetUserPasswd(TString &user, TString &passwd,
                                     Bool_t &pwhash, Bool_t srppwd)
 {
+   if (srppwd) {
+      Error("GetUserPasswd", "SRP no longer supported by ROOT");
+      return 1;
+   }
+
    if (gDebug > 3)
       Info("GetUserPasswd", "Enter: User: '%s' Hash:%d SRP:%d",
-           user.Data(),(Int_t)pwhash,(Int_t)srppwd);
+           user.Data(),(Int_t)pwhash,(Int_t)false);
 
    // Get user and passwd set via static functions SetUser and SetPasswd.
-   if (user == "") {
-      if (fgUser != "")
-         user = fgUser;
-      if (passwd == "" && fgPasswd != "" && srppwd == fgSRPPwd) {
+   if (user == "" && fgUser != "")
+      user = fgUser;
+
+   if (fgUser != "" && user == fgUser) {
+      if (passwd == "" && fgPasswd != "") {
          passwd = fgPasswd;
          pwhash = fgPwHash;
       }
-   } else {
-      if (fgUser != "" && user == fgUser) {
-         if (passwd == "" && fgPasswd != "" && srppwd == fgSRPPwd) {
-            passwd = fgPasswd;
-            pwhash = fgPwHash;
-         }
-      }
    }
+
    if (gDebug > 3)
       Info("GetUserPasswd", "In memory: User: '%s' Hash:%d",
            user.Data(),(Int_t)pwhash);
@@ -1039,7 +991,7 @@ Bool_t TAuthenticate::GetUserPasswd(TString &user, TString &passwd,
    if (user == "" || passwd == "") {
       if (gDebug > 3)
          Info("GetUserPasswd", "Checking .netrc family ...");
-      CheckNetrc(user, passwd, pwhash, srppwd);
+      CheckNetrc(user, passwd, pwhash, /* srppwd */ false);
    }
    if (gDebug > 3)
       Info("GetUserPasswd", "From .netrc family: User: '%s' Hash:%d",
@@ -1066,12 +1018,8 @@ Bool_t TAuthenticate::GetUserPasswd(TString &user, TString &passwd,
 
 Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd)
 {
-   Bool_t hash, srppwd;
-
-   // Set srppwd flag
-   srppwd = (fSecurity == kSRP) ? kTRUE : kFALSE;
-
-   return CheckNetrc(user, passwd, hash, srppwd);
+   Bool_t hash = false;
+   return CheckNetrc(user, passwd, hash, /* srppwd */ false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1080,8 +1028,6 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd)
 /// These files will only be used when their access masks are 0600.
 /// Returns kTRUE if user and passwd were found for the machine
 /// specified in the URL. If kFALSE, user and passwd are "".
-/// If srppwd == kTRUE then a SRP ('secure') pwd is searched for in
-/// the files.
 /// The boolean pwhash is set to kTRUE if the returned passwd is to
 /// be understood as password hash, i.e. if the 'password-hash' keyword
 /// is found in the 'machine' lines; not implemented for 'secure'
@@ -1103,6 +1049,11 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd)
 Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd,
                                  Bool_t &pwhash, Bool_t srppwd)
 {
+   if (srppwd) {
+      Error("CheckNetrc", "SRP no longer supported by ROOT");
+      return 1;
+   }
+
    Bool_t result = kFALSE;
    Bool_t first = kTRUE;
    TString remote = fRemote;
@@ -1124,11 +1075,11 @@ again:
    if (gSystem->GetPathInfo(net, buf) == 0) {
 #ifdef WIN32
       // Since Win32 does not have proper protections use file always
-      if (R_ISREG(buf.fMode) && !R_ISDIR(buf.fMode)) {
+      bool mode0600 = true;
 #else
-         if (R_ISREG(buf.fMode) && !R_ISDIR(buf.fMode) &&
-             (buf.fMode & 0777) == (kS_IRUSR | kS_IWUSR)) {
+      bool mode0600 = (buf.fMode & 0777) == (kS_IRUSR | kS_IWUSR);
 #endif
+      if (R_ISREG(buf.fMode) && !R_ISDIR(buf.fMode) && mode0600) {
             FILE *fd = fopen(net, "r");
             char line[256];
             while (fgets(line, sizeof(line), fd) != 0) {
@@ -1139,16 +1090,11 @@ again:
                                         word[0], word[1], word[2], word[3], word[4], word[5]);
                if (nword != 6)
                   continue;
-               if (srppwd && strcmp(word[0], "secure"))
-                  continue;
-               if (!srppwd && strcmp(word[0], "machine"))
+               if (strcmp(word[0], "machine"))
                   continue;
                if (strcmp(word[2], "login"))
                   continue;
-               if (srppwd && strcmp(word[4], "password"))
-                  continue;
-               if (!srppwd &&
-                   strcmp(word[4], "password") && strcmp(word[4], "password-hash"))
+               if (strcmp(word[4], "password") && strcmp(word[4], "password-hash"))
                   continue;
 
                // Treat the host name found in file as a regular expression
@@ -1182,7 +1128,7 @@ again:
       }
       delete [] net;
 
-      if (first && !srppwd && !result) {
+      if (first && !result) {
          net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".netrc");
          first = kFALSE;
          goto again;
@@ -1212,7 +1158,7 @@ Bool_t TAuthenticate::GetGlobalPwHash()
 
 Bool_t TAuthenticate::GetGlobalSRPPwd()
 {
-   return fgSRPPwd;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1522,9 +1468,9 @@ void TAuthenticate::SetGlobalPwHash(Bool_t pwhash)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set global SRP passwd flag to be used for authentication to rootd or proofd.
 
-void TAuthenticate::SetGlobalSRPPwd(Bool_t srppwd)
+void TAuthenticate::SetGlobalSRPPwd(Bool_t)
 {
-   fgSRPPwd = srppwd;
+   ::Error("SetGlobalSRPPwd", "SRP no longer supported by ROOT");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1582,8 +1528,7 @@ void TAuthenticate::SetPromptUser(Bool_t promptuser)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set secure authorization function. Automatically called when libSRPAuth
-/// is loaded.
+/// Set secure authorization function.
 
 void TAuthenticate::SetSecureAuthHook(SecureAuth_t func)
 {
@@ -2539,8 +2484,6 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
       fPwHash = kFALSE;
       fgPasswd = passwd;
       fPasswd = passwd;
-      fSRPPwd = kFALSE;
-      fgSRPPwd = kFALSE;
 
       // Send it to server
       if (anon == 0 && cryptopt == 1) {
@@ -2998,14 +2941,6 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
                gEnv->GetValue("UsrPwd.LoginPrompt", copt[opt]),
                gEnv->GetValue("UsrPwd.ReUse", "1"),
                gEnv->GetValue("UsrPwd.Crypt", "1"), usr);
-
-      // SRP
-   } else if (sec == TAuthenticate::kSRP) {
-      if (!usr[0] || !strncmp(usr,"*",1))
-         usr = gEnv->GetValue("SRP.Login", "");
-      snprintf(temp, kMAXPATHLEN, "pt:%s ru:%s us:%s",
-               gEnv->GetValue("SRP.LoginPrompt", copt[opt]),
-               gEnv->GetValue("SRP.ReUse", "0"), usr);
 
       // Kerberos
    } else if (sec == TAuthenticate::kKrb5) {
@@ -4410,14 +4345,6 @@ Bool_t TAuthenticate::CheckProofAuth(Int_t cSec, TString &out)
          out.Form("pt:0 ru:1 us:%s",user.Data());
    }
 
-   // SRP
-   if (cSec == (Int_t) TAuthenticate::kSRP) {
-#ifdef R__SRP
-      out.Form("pt:0 ru:1 us:%s",user.Data());
-      rc = kTRUE;
-#endif
-   }
-
    // Kerberos
    if (cSec == (Int_t) TAuthenticate::kKrb5) {
 #ifdef R__KRB5
@@ -4640,7 +4567,6 @@ Int_t TAuthenticate::ProofAuthSetup()
    TAuthenticate::SetGlobalUser(user);
    TAuthenticate::SetGlobalPasswd(passwd);
    TAuthenticate::SetGlobalPwHash(pwhash);
-   TAuthenticate::SetGlobalSRPPwd(srppwd);
    TAuthenticate::SetDefaultRSAKeyType(rsakey);
    const char *h = gSystem->Getenv("ROOTHOMEAUTHRC");
    if (h) {
@@ -4729,7 +4655,7 @@ Int_t TAuthenticate::ProofAuthSetup()
 /// successful authentication.
 /// Return 0 on success, -1 on failure.
 
-Int_t TAuthenticate::ProofAuthSetup(TSocket *sock, Bool_t client)
+Int_t TAuthenticate::ProofAuthSetup(TSocket *sock, Bool_t /* client */)
 {
    // Fill some useful info
    TSecContext *sc    = sock->GetSecContext();
@@ -4737,35 +4663,21 @@ Int_t TAuthenticate::ProofAuthSetup(TSocket *sock, Bool_t client)
    Int_t remoteOffSet = sc->GetOffSet();
 
    // send user name to remote host
-   // for UsrPwd and SRP methods send also passwd, rsa encoded
+   // for UsrPwd method send also passwd, rsa encoded
    TMessage pubkey;
    TString passwd = "";
    Bool_t  pwhash = kFALSE;
    Bool_t  srppwd = kFALSE;
-   Bool_t  sndsrp = kFALSE;
 
    Bool_t upwd = sc->IsA("UsrPwd");
-   Bool_t srp = sc->IsA("SRP");
 
    TPwdCtx *pwdctx = 0;
-   if (remoteOffSet > -1 && (upwd || srp))
+   if (remoteOffSet > -1 && upwd)
       pwdctx = (TPwdCtx *)(sc->GetContext());
 
-   if (client) {
-      if ((gEnv->GetValue("Proofd.SendSRPPwd",0)) && (remoteOffSet > -1))
-         sndsrp = kTRUE;
-   } else {
-      if (srp && pwdctx) {
-         if (strcmp(pwdctx->GetPasswd(), "") && remoteOffSet > -1)
-            sndsrp = kTRUE;
-      }
-   }
-
-   if ((upwd && pwdctx) || (srp  && sndsrp)) {
-      if (pwdctx) {
-         passwd = pwdctx->GetPasswd();
-         pwhash = pwdctx->IsPwHash();
-      }
+   if (upwd && pwdctx) {
+      passwd = pwdctx->GetPasswd();
+      pwhash = pwdctx->IsPwHash();
    }
 
    Int_t keytyp = ((TRootSecContext *)sc)->GetRSAKey();
@@ -4981,7 +4893,7 @@ extern "C" {
 /// Return 0 on success, -1 on failure.
 
 Int_t OldSlaveAuthSetup(TSocket *sock,
-                        Bool_t master, TString ord, TString conf)
+                        Bool_t /* master */, TString ord, TString conf)
 {
 
    // Fill some useful info
@@ -4991,31 +4903,19 @@ Int_t OldSlaveAuthSetup(TSocket *sock,
    Int_t remoteOffSet = sc->GetOffSet();
 
    // send user name to remote host
-   // for UsrPwd and SRP methods send also passwd, rsa encoded
+   // for UsrPwd method send also passwd, rsa encoded
    TMessage pubkey;
    TString passwd = "";
    Bool_t  pwhash = kFALSE;
    Bool_t  srppwd = kFALSE;
-   Bool_t  sndsrp = kFALSE;
 
    Bool_t upwd = sc->IsA("UsrPwd");
-   Bool_t srp = sc->IsA("SRP");
 
    TPwdCtx *pwdctx = 0;
-   if (remoteOffSet > -1 && (upwd || srp))
+   if (remoteOffSet > -1 && upwd)
       pwdctx = (TPwdCtx *)(sc->GetContext());
 
-   if (!master) {
-      if ((gEnv->GetValue("Proofd.SendSRPPwd",0)) && (remoteOffSet > -1))
-         sndsrp = kTRUE;
-   } else {
-      if (srp && pwdctx) {
-         if (strcmp(pwdctx->GetPasswd(), "") && remoteOffSet > -1)
-            sndsrp = kTRUE;
-      }
-   }
-
-   if ((upwd && pwdctx) || (srp  && sndsrp)) {
+   if (upwd && pwdctx) {
 
       // Send offset to identify remotely the public part of RSA key
       if (sock->Send(remoteOffSet, kROOTD_RSAKEY) != 2*sizeof(Int_t)) {
@@ -5190,7 +5090,6 @@ Int_t OldProofServAuthSetup(TSocket *sock, Bool_t master, Int_t protocol,
    TAuthenticate::SetGlobalUser(user);
    TAuthenticate::SetGlobalPasswd(passwd);
    TAuthenticate::SetGlobalPwHash(pwhash);
-   TAuthenticate::SetGlobalSRPPwd(srppwd);
    TAuthenticate::SetDefaultRSAKeyType(rsakey);
    const char *h = gSystem->Getenv("ROOTHOMEAUTHRC");
    if (h) {

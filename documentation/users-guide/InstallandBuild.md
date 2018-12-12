@@ -650,12 +650,6 @@ Check of host equivalence via `/etc/hosts`.`equiv` or `$HOME/.rhosts`.
 SrvAuth.CheckHostsEquivalence: 1
 ```
 
-SRP: pass file (default `$HOME/.srootdpass`).
-
-``` {.cpp}
-SrvAuth.SRPpassfile:     $HOME/.srootdpass
-```
-
 Globus/GSI: `hostcert` configuration file.
 
 ``` {.cpp}

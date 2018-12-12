@@ -55,7 +55,6 @@ the information following the name or IP address indicates, in order of preferen
    Method                           nickname    code
 
    UsrPwd                            usrpwd       0
-   SRP                               srp          1
    Kerberos                          krb5         2
    Globus                            globus       3
    UidGid                            uidgid       5   (insecure)
@@ -92,7 +91,7 @@ All mechanisms are accepted for requests coming from host pceple19.cern.ch .
 
 .TP
 .B lxplus*.cern.ch      1 globus 0:qwerty:uytre
-Requests from the lxplus cluster can authenticate using 'ssh', 'srp' and 'globus'; users 'qwerty' and 'uytre' can also use 'usrpwd' .
+Requests from the lxplus cluster can authenticate using 'ssh' and 'globus'; users 'qwerty' and 'uytre' can also use 'usrpwd' .
 
 .TP
 .B pcep*.cern.ch        0:-qwerty

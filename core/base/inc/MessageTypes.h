@@ -112,13 +112,6 @@ enum EMessageTypes {
    kROOTD_ACK            = 2010,         //acknowledgement (all OK)
    kROOTD_ERR            = 2011,         //error code and message follow
    kROOTD_PROTOCOL       = 2012,         //returns rootd protocol
-   kROOTD_SRPUSER        = 2013,         //user id for SRP authentication follows
-   kROOTD_SRPN           = 2014,         //SRP n follows
-   kROOTD_SRPG           = 2015,         //SRP g follows
-   kROOTD_SRPSALT        = 2016,         //SRP salt follows
-   kROOTD_SRPA           = 2017,         //SRP a follows
-   kROOTD_SRPB           = 2018,         //SRP b follows
-   kROOTD_SRPRESPONSE    = 2019,         //SRP final response
    kROOTD_PUTFILE        = 2020,         //store file
    kROOTD_GETFILE        = 2021,         //retrieve file
    kROOTD_CHDIR          = 2022,         //change directory

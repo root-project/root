@@ -40,7 +40,6 @@ castor:///castor?path=/castor/cern.ch/user/r/rdm/bla.root&svcClass=MYSVCLASS&cas
 
 will try first the globus/GSI protocol; available protocols are
   -# passwd
-  -# srp
   -# krb5
   -# globus
   -# ssh

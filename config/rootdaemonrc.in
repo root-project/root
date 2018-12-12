@@ -44,7 +44,6 @@
 #        Method                           short name   code
 #
 #        UsrPwd                            usrpwd       0
-#        SRP                               srp          1
 #        Kerberos                          krb5         2
 #        Globus                            globus       3
 #        UidGid                            uidgid       5   (insecure)
@@ -72,7 +71,7 @@
 #
 # Example of allowing machines in the cern.ch domain to authenticate
 # using UsrPwd (as preferred method) followed by the Globus method;
-# in this case, attempts to use SRP, Kerberos or UidGid methods will be
+# in this case, attempts to use Kerberos or UidGid methods will be
 # rejected; however, the accepted methods will be communicated to the client
 # and an automatic retry is attempted if the client can use any of them
 # (negotiation).
@@ -90,4 +89,4 @@
 127.0.0.1            0 3 1 2 5
 #
 # secure methods allowed by default
-default usrpwd @havesrp@ @havekrb5@ @haveglobus@ 
+default usrpwd @havekrb5@ @haveglobus@
