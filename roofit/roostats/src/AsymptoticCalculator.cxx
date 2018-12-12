@@ -917,29 +917,31 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
 bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs)
 {
     RooLinkedListIter  iter(prod.pdfList().iterator());
-    bool ret = false;
+    bool ret = true;
     for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
         if (!a->dependsOn(obs)) continue;
         RooPoisson *pois = 0;
         RooGaussian * gaus = 0;
         if ((pois = dynamic_cast<RooPoisson *>(a)) != 0) {
-            SetObsToExpected(*pois, obs);
+            ret &= SetObsToExpected(*pois, obs);
             pois->setNoRounding(true);  //needed since expected value is not an integer
         } else if ((gaus = dynamic_cast<RooGaussian *>(a)) != 0) {
-            SetObsToExpected(*gaus, obs);
+            ret &= SetObsToExpected(*gaus, obs);
         } else {
            // should try to add also lognormal case ?
             RooProdPdf *subprod = dynamic_cast<RooProdPdf *>(a);
             if (subprod)
-               return SetObsToExpected(*subprod, obs);
+               ret &= SetObsToExpected(*subprod, obs);
             else {
-               oocoutE((TObject*)0,InputArguments) << "Illegal term in counting model: depends on observables, but not Poisson or Gaussian or Product"
-                                                   << endl;
+               oocoutE((TObject*)0,InputArguments) << "Illegal term in counting model: "
+                   << "the PDF " << a->GetName()
+                   << " depends on the observables, but is not a Poisson, Gaussian or Product"
+                   << endl;
                return false;
             }
         }
-        ret = (pois != 0 || gaus != 0 );
     }
+
     return ret;
 }
 
