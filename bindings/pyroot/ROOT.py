@@ -241,23 +241,10 @@ def _TTree__iter__( self ):
 _root.CreateScopeProxy( "TTree" ).__iter__    = _TTree__iter__
 
 # Array interface
-def _proxy__array_interface__(self):
-    getter_array_interface = "_get__array_interface__"
-    if hasattr(self, getter_array_interface):
-        return self._get__array_interface__()
-    else:
-        raise Exception("Class {} does not have method {}.".format(
-            type(self), getter_array_interface))
+def _add__array_interface__(self):
+    self.__array_interface__ = property(self._get__array_interface__)
 
-for pyclass in [
-        "std::vector<{dtype}>",
-        "ROOT::VecOps::RVec<{dtype}>"
-        ]:
-    dtypes = ["float", "double", "int", "unsigned int", "long", "unsigned long"]
-    for dtype in dtypes:
-        class_scope = _root.CreateScopeProxy(pyclass.format(dtype=dtype))
-        class_scope._proxy__array_interface__ = _proxy__array_interface__
-        class_scope.__array_interface__ = property(class_scope._proxy__array_interface__)
+_root._add__array_interface__ = _add__array_interface__
 
 # TTree.AsMatrix functionality
 def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labels=False):
