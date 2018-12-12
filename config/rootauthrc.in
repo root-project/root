@@ -69,13 +69,12 @@
 #           Example of a valid 'list' line:
 #
 #              default          list  0 
-#              lxplus*.cern.ch  list  usrpwd 3 krb5
+#              lxplus*.cern.ch  list  usrpwd krb5
 #
 #           The first line defines as default method UsrPwd.
 #
 #           The second line adds Globus and Kerberos as available methods
-#           for authentication to the lxplus machines (in addition to SSH):
-#           SSH the preferred first, Kerberos the last option. 
+#           for authentication to the lxplus machines.
 #
 #           Having a line 'list' for a host is non mandatory: methods can
 #           also be defined directly via 'method' lines (see below); in
@@ -101,8 +100,8 @@
 #           be later re-used without prompting (e.g. when the user tries
 #           to access the same host with same method during the same
 #           session: this allows to speed up operation in case of multiple
-#           access). Default is 'yes' for methods 0 (UsrPwd), 3 (Globus)
-#           and 4 (SSH), superseeded by the related entries in '.rootrc'.
+#           access). Default is 'yes' for methods 0 (UsrPwd), and 3 (Globus)
+#           superseeded by the related entries in '.rootrc'.
 #           No additional info is needed by method 5 (UidGid): this method
 #           sends to the remote host the (uid,gid) of the current process;
 #           'reuse' will be af no advantage and 'prompt' is not allowed for
@@ -117,7 +116,6 @@
 #                                           cf:<usercert_file>
 #                                           kf:<userkey_file>
 #                                           ad:<authorities_dir>
-#              SSH                          us:<username>
 #              UidGid
 #
 #
@@ -165,9 +163,7 @@
 #
 #           Example of valid 'method' lines:
 #
-#              default list 2 0 1
-#              default    method  ssh pt:yes us:qwerty
-#              default    method  3 pt:0 
+#              default list 0
 #              default user asdfgh  method  usrpwd pt:1 ru:no 
 #              lxplus*.cern.ch  method  3 pt:no  ad:certificates
 #              pcepsft43.cern.ch  user poiuyt method globus pt:no \
@@ -178,33 +174,27 @@
 #              pcepsft43.cern.ch  user asdfgh method 2 pt:no pp:asdkrb@LOC.KRB.REALM
 #            
 #           The first line states that, unless differently specified, 
-#           the first method to be tried for autentication is SSH,
-#           followed in case of failure by UsrPwd.
-#           The second line specifies that when a SSH authentication is
-#           attempted, the user will be prompted for the remote username,
-#           with 'qwerty' as default. The third line states that for 
-#           Globus the user will not be prompted and the credentials
-#           and related files will be looked for in the default places.
-#           The fourth line specifies that, for UsrPwd authentication, user
+#           the first method to be tried for autentication is UsrPwd.
+#           The second line specifies that, for UsrPwd authentication, user
 #           'asdfgh' will get a prompt with default username 'asdfgh' and
 #           that a successful authentication will not be reused
-#           The fifth line tells that for Globus to lxplus, the user 
+#           The third line tells that for Globus to lxplus, the user 
 #           will still not be prompted, but the credentials for the 
 #           CA signing the remote certificate will be looked
 #           for in ~/.globus/certificates.
-#           The sixth line tells that for Globus authentication on 
+#           The fourth line tells that for Globus authentication on 
 #           pcepsft43 of user poiuyt, the usercert.pem and userkey.pem
 #           files are looked for in directory ~/CA/HubCA/poiuyt, 
 #           and the credentials for the CA signing the remote certificate
 #           in ~/.globus/certificates.
-#           The seventh directive includes the content of the file 
+#           The fifth directive includes the content of the file 
 #           pceple19.rootauthrc located in the subdirectory local of the
 #           directory where the intercative root session was started. 
-#           The eight directive includes the content of the system 
+#           The sixth directive includes the content of the system 
 #           defaults.
-#           The ninth line states that when accessing slaves on the local
+#           The seventh line states that when accessing slaves on the local
 #           host, the uidgid method should be used.
-#           The tenth line states that the krb5 method should be used for
+#           The eighth line states that the krb5 method should be used for
 #           accessing account 'asdfgh' at pcepsft43.cern.ch, with kerberos
 #           credentials for principal adskrb@LOC.KRB.REALM .
 #

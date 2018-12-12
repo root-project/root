@@ -127,7 +127,6 @@ enum EMessageTypes {
    kROOTD_BYE            = 2032,         //terminate rootd
    kROOTD_GLOBUS         = 2033,         //Globus authetication follows
    kROOTD_CLEANUP        = 2034,         //cleanup things
-   kROOTD_SSH            = 2035,         //SSH-like authentication follows
    kROOTD_RFIO           = 2036,         //RFIO-like authentication follows
    kROOTD_NEGOTIA        = 2037,         //negotiation follows
    kROOTD_RSAKEY         = 2038,         //RSA public key exchange
