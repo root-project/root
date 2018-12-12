@@ -458,6 +458,13 @@ void ReadWriteCarray(const char *outFileNameBase)
    t.Branch("vb", vb, "vb[size]/O");
    
    // Size 1
+   size = 1;
+   v[0] = 12;
+   vb[0] = true;
+   t.Fill();
+
+   // Size 0 (see ROOT-9860)
+   size = 0;
    t.Fill();
 
    // Size 100k: this reallocates!
@@ -469,7 +476,7 @@ void ReadWriteCarray(const char *outFileNameBase)
    t.Fill();
 
    // Size 3
-   size = 3U;
+   size = 3;
    v[0] = 42;
    v[1] = 43;
    v[2] = 44;
@@ -487,6 +494,13 @@ void ReadWriteCarray(const char *outFileNameBase)
       TTreeReader r(treename, &f2);
       TTreeReaderArray<int> rv(r, "v");
       TTreeReaderArray<bool> rvb(r, "vb");
+
+      // Size 1
+      r.Next();
+      EXPECT_EQ(rv.GetSize(), 1u);
+      EXPECT_EQ(rv[0], 12);
+      EXPECT_EQ(rvb.GetSize(), 1u);
+      EXPECT_TRUE(rvb[0]);
 
       // Size 0
       r.Next();
