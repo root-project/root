@@ -348,12 +348,6 @@ set(srputillibdir)
 set(srputillib)
 set(srputilincdir)
 
-set(afslib ${AFS_LIBRARY})
-set(afslibdir ${AFS_LIBRARY_DIR})
-set(afsincdir ${AFS_INCLUDE_DIR})
-set(afsextracflags)
-set(afsshared)
-
 set(alloclib)
 set(alloclibdir)
 
