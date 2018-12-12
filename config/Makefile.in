@@ -348,12 +348,6 @@ SRPUTILLIBDIR  := @srputillibdir@
 SRPUTILLIB     := @srputillib@
 SRPUTILINCDIR  := $(filter-out /usr/include, @srputilincdir@)
 
-AFSLIB         := @afslib@
-AFSLIBDIR      := @afslibdir@
-AFSINCDIR      := @afsincdir@
-AFSEXTRACFLAGS := @afsextracflags@
-AFSSHARED      := @afsshared@
-
 ALLOCLIB       := @alloclib@
 ALLOCLIBDIR    := @alloclibdir@
 
