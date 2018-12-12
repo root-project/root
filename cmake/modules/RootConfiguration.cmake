@@ -183,11 +183,6 @@ set(sqlitelibdir ${SQLITE_LIBRARY_DIR})
 set(sqlitelib ${SQLITE_LIBRARY})
 set(sqliteincdir ${SQLITE_INCLUDE_DIR})
 
-set(buildsapdb ${value${sapdb}})
-set(sapdblibdir ${SAPDB_LIBRARY_DIR})
-set(sapdblib ${SAPDB_LIBRARY})
-set(sapdbincdir ${SAPDB_INCLUDE_DIR})
-
 set(buildodbc ${value${odbc}})
 set(odbclibdir ${OCDB_LIBRARY_DIR})
 set(odbclib ${OCDB_LIBRARY})
