@@ -505,19 +505,6 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 #ifdef ROOTPREFIX
    if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
 #endif
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-   // first loaded is the app so set ROOTSYS to app bundle
-   if (i == 1) {
-      char respath[kMAXPATHLEN];
-      if (!realpath(lib, respath)) {
-         if (!gSystem->Getenv("ROOTSYS"))
-            ::SysError("TUnixSystem::DylibAdded", "error getting realpath of %s", gSystem->BaseName(lib));
-      } else {
-         TString rs = gSystem->DirName(respath);
-         gSystem->Setenv("ROOTSYS", rs);
-      }
-   }
-#else
    if (lib.EndsWith("libCore.dylib") || lib.EndsWith("libCore.so") ||
        lib.Index(sovers) != kNPOS    || lib.Index(dyvers) != kNPOS) {
       char respath[kMAXPATHLEN];
@@ -529,7 +516,6 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
          gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
       }
    }
-#endif
 #ifdef ROOTPREFIX
    }
 #endif
