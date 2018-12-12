@@ -435,37 +435,26 @@ ACLiC.Linkdef:          _linkdef
 #
 #  Auth.UsePasswdDialogBox: 0
 
-# Set this to 1 to use SSH authentication in PROOF servers
-# (Master-to-Slave or Slaves-to-DataServers). This is switched
-# off by default because credentials forwarding for SSH is not
-# controlled by the system; however the user may have other
-# ways to guarantee it, so it may want to switch it on.
-ProofServ.UseSSH:       0
-
 # Default login name (if not defined is taken from $(HOME)).
 #UsrPwd.Login:           qwerty
 #Krb5.Login:             qwerty@LOCAL.DOM.AIN
 #Globus.Login:           cd:~/.globus cf:usercert.pem  kf:userkey.pem  ad:/etc/grid-security/certificates
-#SSH.Login:              qwerty
 #UidGid.Login:           qwerty
 
 # To be prompted for login information.
 #UsrPwd.LoginPrompt:     yes
 #Krb5.LoginPrompt:       yes
 #Globus.LoginPrompt:     yes
-#SSH.LoginPrompt:        yes
 #UidGid.LoginPrompt:     yes
 
 # To reuse established security context.
 UsrPwd.ReUse:         yes
 Krb5.ReUse:           no
 Globus.ReUse:         yes
-SSH.ReUse:            yes
 
 # Duration validity of the security context.
 # Format:  <hours>:<minutes>  (default 24:00)
 #UsrPwd.Valid:     24:00
-#SSH.Valid:        24:00
 
 # To control password encryption for UsrPwd authentication.
 UsrPwd.Crypt:         yes
@@ -477,22 +466,6 @@ Globus.ProxyDuration:    default
 #Globus.ProxyDuration:    14
 # Number of bits for the initial key.
 Globus.ProxyKeyBits:     1024
-
-# Path to alternative 'ssh' (to override $PATH if ever needed).
-#SSH.ExecDir:      /usr/bin
-
-# In case of error, SSH returns 1 (or 256 = 0x100).
-# To trap those errors for which one should retry, error printouts
-# must be parsed; any substring found under the Env SSH.ErrorRetry
-# triggers a retry condition; strings can be added here
-# in the form (including double quotes):
-#              +SSH.ErrorRetry:     "<error_string>"
-# This is what one usually gets if the server has reached the maximum
-# number of sshd daemons (defined by MaxStartups in sshd_config);
-# this is a typical case in which one should retry.
-SSH.ErrorRetry:   "Connection closed by remote host"
-# Max number of retries for SSH in case of retry error (see above).
-SSH.MaxRetry:     100
 
 # Type of key to be used for RSA encryption:
 # 0 = local; 1 = SSL (default if openssl available).
@@ -515,9 +488,6 @@ RSA.KeyType:  1
 #SrvAuth.HostCert:  /etc/root/hostcert.conf
 # Globus/GSI: gridmap file.
 #SrvAuth.GridMap:  /etc/grid-security/grid-mapfile
-#
-# SSH: port for the sshd daemon.
-#SrvAuth.SshdPort:  22
 
 # Force file opening via TNetFile (TXNetFile) if a hostname is specified
 # in the Url.
