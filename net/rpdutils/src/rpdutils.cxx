@@ -140,10 +140,6 @@ static std::string gRndmSalt = std::string("ABCDEFGH");
 #include <shadow.h>
 #endif
 
-#ifdef R__AFS
-#include "AFSAuth.h"
-#endif
-
 #ifdef R__SRP
 extern "C" {
    #include <t_pwd.h>
@@ -3121,9 +3117,6 @@ int RpdPass(const char *pass, int errheq)
    struct spwd *spw;
 #endif
    int afs_auth = 0;
-#ifdef R__AFS
-   char *reason;
-#endif
 
    if (gDebug > 2)
       ErrorInfo("RpdPass: Enter (pass length: %d)", (int)strlen(pass));
@@ -3187,18 +3180,6 @@ int RpdPass(const char *pass, int errheq)
       return auth;
    }
 
-#ifdef R__AFS
-   void *tok = GetAFSToken(gUser, passwd, 0, -1, &reason);
-   afs_auth = (tok) ? 1 : 0;
-   // We do not need the token anymore
-   DeleteAFSToken(tok);
-   if (!afs_auth) {
-      if (gDebug > 0)
-         ErrorInfo("RpdPass: AFS login failed for user %s: %s",
-                    gUser, reason);
-      // try conventional login...
-#endif
-
 #ifdef R__SHADOWPW
       // System V Rel 4 style shadow passwords
       if ((spw = getspnam(gUser)) == 0) {
@@ -3242,11 +3223,6 @@ int RpdPass(const char *pass, int errheq)
       }
       if (gDebug > 2)
          ErrorInfo("RpdPass: valid password for user %s", gUser);
-#ifdef R__AFS
-   } else                            // afs_auth
-      if (gDebug > 2)
-         ErrorInfo("RpdPass: AFS login successful for user %s", gUser);
-#endif
 
    authok:
    auth = afs_auth ? 5 : 1;
@@ -3999,9 +3975,6 @@ int RpdUser(const char *sstr)
          errrdp = (rcsp == -2) ? 3 : 0;
 
       if (!passw[0] || !strcmp(passw, "x")) {
-#ifdef R__AFS
-         gSaltRequired = 0;
-#else
 
 #ifdef R__SHADOWPW
          struct spwd *spw = 0;

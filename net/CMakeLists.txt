@@ -1,10 +1,6 @@
 add_subdirectory(net)
 add_subdirectory(auth)
 
-if(afs)
-  add_subdirectory(afs)
-endif()
-
 if(bonjour)
   add_subdirectory(bonjour)
 endif()

@@ -565,7 +565,7 @@ if(krb5)
   endif()
 endif()
 
-if(krb5 OR afs)
+if(krb5)
   find_library(COMERR_LIBRARY com_err)
   if(COMERR_LIBRARY)
     set(COMERR_LIBRARIES ${COMERR_LIBRARY})

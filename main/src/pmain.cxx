@@ -32,9 +32,6 @@
 
 #include <ROOT/RConfig.h>
 #include "RConfigure.h"
-#ifdef R__AFS
-#include "TAFS.h"
-#endif
 #include "TApplication.h"
 #include "TInterpreter.h"
 #include "TROOT.h"
@@ -46,14 +43,6 @@ static Int_t gLogLevel = 0;
 // Special type for the hook to the TXProofServ constructor, needed to avoid
 // using the plugin manager
 typedef TApplication *(*TProofServ_t)(Int_t *argc, char **argv, FILE *flog);
-
-#ifdef R__AFS
-// Special type for the hook to the TAFS constructor, needed to avoid
-// using the plugin manager
-typedef TAFS *(*TAFS_t)(const char *, const char *, Int_t);
-// Instance of the AFS token class
-static TAFS *gAFS = 0;
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read envs from file 'envfile' and add them to the env space
@@ -178,48 +167,6 @@ static void SetMaxMemLimits(const char *prog)
 #endif
 }
 
-#ifdef R__AFS
-////////////////////////////////////////////////////////////////////////////////
-/// Init AFS token using credentials at fileafs
-
-static Int_t InitAFS(const char *fileafs, const char *loc)
-{
-   TString getter("GetTAFS");
-   char *p = 0;
-   TString afslib = "libAFSAuth";
-   if ((p = gSystem->DynamicPathName(afslib, kTRUE))) {
-      delete[] p;
-      if (gSystem->Load(afslib) == -1) {
-         if (loc)
-            fprintf(stderr,"%s: can't load %s\n", loc, afslib.Data());
-         return -1;
-      }
-   } else {
-      if (loc)
-         fprintf(stderr,"%s: can't locate %s\n", loc, afslib.Data());
-      return -1;
-   }
-
-   // Locate constructor
-   Func_t f = gSystem->DynFindSymbol(afslib, getter);
-   if (f) {
-      gAFS = (*((TAFS_t)f))(fileafs, 0, -1);
-      if (!gAFS) {
-         if (loc)
-            fprintf(stderr,"%s: could not initialize a valid TAFS\n", loc);
-         return -1;
-      }
-   } else {
-      if (loc)
-         fprintf(stderr,"%s: can't find %s\n", loc, getter.Data());
-      return -1;
-   }
-
-   // Done
-   return 0;
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 /// PROOF server main program.
 
@@ -266,18 +213,6 @@ int main(int argc, char **argv)
 
    SetMaxMemLimits(argv[1]);
 
-#ifdef R__AFS
-   // Init AFS, if required
-   if (gSystem->Getenv("ROOTPROOFAFSCREDS")) {
-      if (InitAFS(gSystem->Getenv("ROOTPROOFAFSCREDS"), loc) != 0) {
-          fprintf(stderr,"%s: unable to initialize the AFS token\n", argv[1]);
-      } else {
-         if (gLogLevel > 0)
-            fprintf(stderr,"%s: AFS token initialized\n", argv[1]);
-      }
-   }
-#endif
-
    gROOT->SetBatch();
    TApplication *theApp = 0;
 
@@ -323,12 +258,6 @@ int main(int argc, char **argv)
       fprintf(stderr,"%s: running the TProofServ application\n", argv[1]);
 
    theApp->Run();
-
-#ifdef R__AFS
-   // Cleanup
-   if (gAFS)
-      delete gAFS;
-#endif
 
    // We can exit now
    gSystem->Exit(0);
