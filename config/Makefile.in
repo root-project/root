@@ -259,11 +259,6 @@ DNSSDLIBDIR    := @dnssdlibdir@
 DNSSDLIB       := @dnssdlib@
 DNSSDINCDIR    := $(filter-out /usr/include, @dnssdincdir@)
 
-BUILDCHIRP     := @buildchirp@
-CHIRPLIBDIR    := @chirplibdir@
-CHIRPCLILIB    := @chirplib@
-CHIRPINCDIR    := $(filter-out /usr/include, @chirpincdir@)
-
 BUILDHDFS      := @buildhdfs@
 HDFSLIBDIR     := @hdfslibdir@
 HDFSCLILIB     := @hdfslib@
