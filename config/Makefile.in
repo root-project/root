@@ -247,11 +247,6 @@ GFALINCDIR     := $(filter-out /usr/include, @gfalincdir@)
 SRMIFCEINCDIR  := $(filter-out /usr/include, @srmifceincdir@)
 GLIB2INCDIR    := $(filter-out /usr/include, @glib2incdir@)
 
-BUILDGLITE     := @buildglite@
-GLITELIBDIR    := @glitelibdir@
-GAWLIB         := @glitelib@
-GAW_CPPFLAGS   := $(filter-out /usr/include, @gaw_cppflags@)
-
 BUILDMEMSTAT   := @buildmemstat@
 
 BUILDBONJOUR   := @buildbonjour@

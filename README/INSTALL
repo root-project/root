@@ -343,21 +343,9 @@ is not enough to build the two utility program in the srputil
 directory of the ROOT source tree.
 
 
-7.11. AFS Authentication (LEGACY):
-----------------------------------
-To use AFS authentication in TServerSocket, you
-first have to install AFS client libraries system. There are a few AFS
-distributions available.
-
-* OpenAFS
-  IBMs OpenSource AFS distribution - see
-
-    http://www.openafs.org
-
-* Transarc AFS
-  IBMs commercial AFS ditribution - see
-
-    http://www.transarc.ibm.com/Support/afs
+7.11. AFS Authentication:
+-------------------------
+Not supported any longer
 
 
 7.12. Kerberos Authentication (LEGACY):
