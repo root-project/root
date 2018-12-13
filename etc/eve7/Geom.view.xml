@@ -1,6 +1,8 @@
-<mvc:View height="100%" class="sapUiSizeCompact" controllerName="eve.Geom"
+<mvc:View height="100%" width="100%" class="sapUiSizeCompact" controllerName="eve.Geom"
           xmlns="sap.m"
           xmlns:mvc="sap.ui.core.mvc"
+          xmlns:m="sap.m"
+          xmlns:t="sap.ui.table"
           xmlns:l="sap.ui.layout"
           xmlns:commons="sap.ui.commons">
    <Page title="" showNavButton="false" showFooter="false" showSubHeader="false">
@@ -33,7 +35,7 @@
               </menu>
             </MenuButton>
             <ToolbarSpacer />
-            <MenuButton text="Help" type="Solid"  enabled="true">
+            <MenuButton text="Help" enabled="true">
               <menu>
                 <Menu >
                   <items>
@@ -58,12 +60,31 @@
          </OverflowToolbar>
       </subHeader>
       <content>
-        <l:Splitter orientation="Horizontal" id="MainAreaSplitter">
-          <l:contentAreas>
-             <mvc:XMLView id="Summary" viewName="eve.Summary" height="100%">
-                <mvc:layoutData><l:SplitterLayoutData size="25%"/></mvc:layoutData>
-             </mvc:XMLView>
-          </l:contentAreas>
+        <l:Splitter id="mainSplitter">
+        <t:TreeTable
+           id="treeTable"
+           selectionMode="Single"
+           enableColumnReordering="false"
+           expandFirstLevel="false"
+           visibleRowCountMode="Auto"
+           rows="{ path:'/Nodes',  parameters : { arrayNames: ['childs']}}" >
+           
+           <t:layoutData><l:SplitterLayoutData size="300px" /></t:layoutData>
+
+           <t:columns>
+               <t:Column label="Description">
+                   <t:template>
+                       <m:Text text="{title}" wrapping="false" />
+                   </t:template>
+               </t:Column>
+           </t:columns>
+
+       </t:TreeTable>
+        
+        
+            <Button text="Content 2">
+                <layoutData><l:SplitterLayoutData size="auto" /></layoutData>
+            </Button>
         </l:Splitter>
       </content>
       <footer>
