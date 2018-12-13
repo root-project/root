@@ -27,6 +27,21 @@
 #include "TNtuple.h"
 #include <vector>
 
+// clang-format off
+/**
+ * \class TTreeReaderValue
+ * \ingroup treeplayer
+ * \brief An interface for reading values stored in ROOT columnar datasets
+ *
+ * The TTreeReaderValue is a type-safe tool to be used in association with a TTreeReader
+ * to access the values stored in TTree, TNtuple and TChain datasets.
+ * TTreeReaderValue can be also used to access collections such as `std::vector`s or TClonesArray
+ * stored in columnar datasets but it is recommended to use TTreeReaderArray instead as it offers
+ * several advantages.
+ *
+ * See the documentation of TTreeReader for more details and examples.
+*/
+// clang-format on
 
 ClassImp(ROOT::Internal::TTreeReaderValueBase);
 
