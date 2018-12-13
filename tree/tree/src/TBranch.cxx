@@ -384,7 +384,8 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
          if (leaf->IsZombie()) {
             delete leaf;
             leaf = 0;
-            Error("TBranch", "Illegal leaf: %s/%s", name, leaflist);
+            auto msg = "Illegal leaf: %s/%s. If this is a variable size C array it's possible that the branch holding the size is not available.";
+            Error("TBranch", msg, name, leaflist);
             delete [] leafname;
             delete[] leaftype;
             MakeZombie();
