@@ -32,10 +32,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          
          var model = new JSONModel(data);
          this.getView().setModel(model);
-
          
+         var view = new JSROOT.sap.ui.xmlview({
+            id: "GeomDrawId",
+            viewName: "eve.GeomDraw",
+            viewData: { main: this },
+            layoutData: new SplitterLayoutData({ resizable: true, size: "100%" })
+         });
+         
+         this.getView().byId("mainSplitter").addContentArea(view);
       },
-      
 
       onAfterRendering: function(){
       },
