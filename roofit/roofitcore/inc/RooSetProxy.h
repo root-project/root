@@ -21,7 +21,7 @@
 #include "RooAbsArg.h"
 #include "RooArgSet.h"
 
-class RooSetProxy : public RooArgSet, public RooAbsProxy  {
+class RooSetProxy final : public RooArgSet, public RooAbsProxy  {
 public:
 
 #ifdef USEMEMPOOL

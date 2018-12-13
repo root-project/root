@@ -10,7 +10,7 @@
     code="{ TIterator* iter = onfile._proxyList.MakeIterator() ; TObject* tmpObj ; while ((tmpObj = iter->Next())) { _proxyList.Add(tmpObj) ; } delete iter ; }" 
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[5]" source="TRefArray _proxyList" target="_proxyList" \
   code="{ _proxyList.GetSize() ; if (onfile._proxyList.GetSize()>0) { RooAbsArg::_ioEvoList[newObj] = new TRefArray(onfile._proxyList) ; } }" 
-#pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[6]"\
+#pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
   source="RooRefCountList _clientListValue" target="_clientListValue" \
   code="{ _clientListValue = onfile._clientListValue; }"
 #pragma link C++ class RooAbsBinning- ;

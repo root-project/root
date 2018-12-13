@@ -187,6 +187,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooRealVarSharedProperties.h
     RooRecursiveFraction.h
     RooRefCountList.h
+    RooSTLRefCountList.h
     RooResolutionModel.h
     RooScaledFunc.h
     RooSecondMoment.h
@@ -405,6 +406,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooRealVarSharedProperties.cxx
     src/RooRecursiveFraction.cxx
     src/RooRefCountList.cxx
+    src/RooSTLRefCountList.cxx
     src/RooResolutionModel.cxx
     src/RooScaledFunc.cxx
     src/RooSecondMoment.cxx
@@ -455,3 +457,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
+
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${ROOFIT_CXX_FLAGS}")
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${ROOFIT_CXX_FLAGS}")
+SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ROOFIT_SHARED_LINKER_FLAGS}")
+
+message(STATUS "************** The RooFit CXX_FLAGS are: ${CMAKE_CXX_FLAGS} ${CMAKE_BUILD_TYPE} Release:${CMAKE_CXX_FLAGS_RELEASE} RelWithDeb:${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")

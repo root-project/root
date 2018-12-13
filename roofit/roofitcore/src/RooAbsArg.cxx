@@ -85,74 +85,6 @@ Bool_t RooAbsArg::inhibitDirty() const { return _inhibitDirty && !_localNoInhibi
 std::map<RooAbsArg*,TRefArray*> RooAbsArg::_ioEvoList ;
 std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
 
-/**
- * \class RefCountListNew
- * The RefCountListNew is a simple collection of pointers and ref counters.
- * The pointers are not owned, hence not deleted when removed from the collection.
- * Object can be searched for either by pointer or by name (confusion possible when
- * objects with same name are present). This replicates the behaviour of the RooRefCountList.
- */
-
-
-template<class T>
-RefCountListNew<T>& RefCountListNew<T>::operator=(const RooRefCountList & other) {
-  _storage.clear();
-  _refCount.clear();
-
-  _storage.reserve(other.GetSize());
-  _refCount.reserve(other.GetSize());
-
-  auto it = other.fwdIterator();
-  for (RooAbsArg * elm = it.next(); elm != nullptr; elm = it.next()) {
-    _storage.push_back(elm);
-    _refCount.push_back(static_cast<typename decltype(_refCount)::value_type>(
-        other.refCount(elm)));
-  }
-
-  return *this;
-}
-
-template<class T>
-typename RefCountListNew<T>::Container_t::const_iterator
-RefCountListNew<T>::findByName(const char * name) const {
-  //If this turns out to be a bottleneck,
-  //one could use the RooNameReg to obtain the pointer to the arg's and compare these
-  const std::string theName(name);
-  auto byName = [&theName](const T * element) {
-    return element->GetName() == theName;
-  };
-
-  return std::find_if(_storage.begin(), _storage.end(), byName);
-}
-
-template<class T>
-typename RefCountListNew<T>::Container_t::const_iterator
-RefCountListNew<T>::findByNamePointer(const T * obj) const {
-  auto nptr = obj->namePtr();
-  auto byNamePointer = [nptr](const T * element) {
-    return element->namePtr() == nptr;
-  };
-
-  return std::find_if(_storage.begin(), _storage.end(), byNamePointer);
-}
-
-
-template<class T>
-void RefCountListNew<T>::Remove(const T * obj, bool force) {
-  auto item = findByPointer(obj);
-
-  if (item != _storage.end()) {
-    const std::size_t pos = item - _storage.begin();
-
-    if (force || --_refCount[pos] == 0) {
-      _storage.erase(item);
-      _refCount.erase(_refCount.begin() + pos);
-    }
-  }
-}
-
-ClassImp(RefCountListNew<RooAbsArg>);
-template class RefCountListNew<RooAbsArg>;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -162,9 +94,6 @@ RooAbsArg::RooAbsArg()
      _prohibitServerRedirect(kFALSE), _eocache(0), _namePtr(0), _isConstant(kFALSE), _localNoInhibitDirty(kFALSE),
      _myws(0)
 {
-//  _clientShapeIter = _clientListShape.MakeIterator() ;
-//  _clientValueIter = _clientListValue.MakeIterator() ;
-
   _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
 
 }
@@ -180,10 +109,6 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
      _localNoInhibitDirty(kFALSE), _myws(0)
 {
   _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
-
-//  _clientShapeIter = _clientListShape.MakeIterator() ;
-//  _clientValueIter = _clientListValue.MakeIterator() ;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -215,9 +140,6 @@ RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
     shapeProp = server->_clientListShape.findArg(&other)?kTRUE:kFALSE ;
     addServer(*server,valueProp,shapeProp) ;
   }
-
-//  _clientShapeIter = _clientListShape.MakeIterator() ;
-//  _clientValueIter = _clientListValue.MakeIterator() ;
 
   setValueDirty() ;
   setShapeDirty() ;
@@ -262,9 +184,6 @@ RooAbsArg::~RooAbsArg()
 		       << client->GetName() << "\" should have been deleted first" << endl ;
     }
   }
-
-//  delete _clientShapeIter ;
-//  delete _clientValueIter ;
 
   if (_ownedComponents) {
     delete _ownedComponents ;
@@ -924,8 +843,6 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
   _valueDirty = kTRUE ;
 
 
-//  RooFIter clientValueIter = _clientListValue.fwdIterator() ;
-//  RooAbsArg* client ;
   for (auto client : _clientListValue) {
     client->setValueDirty(source) ;
   }
@@ -1821,8 +1738,6 @@ void RooAbsArg::setOperMode(OperMode mode, Bool_t recurseADirty)
 
   // Propagate to all clients
   if (mode==ADirty && recurseADirty) {
-//    RooFIter iter = valueClientMIterator() ;
-//    RooAbsArg* client ;
     for (auto clientV : _clientListValue) {
       clientV->setOperMode(mode) ;
     }
