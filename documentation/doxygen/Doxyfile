@@ -2203,6 +2203,7 @@ PREDEFINED             = ClassDef(x,y)=// \
                          ClassImpQ(x)=// \
                          templateClassImp(x)=// \
                          NamespaceImp(x)=// \
+                         R__CLING_PTRCHECK \
                          R__USE_IMT
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
