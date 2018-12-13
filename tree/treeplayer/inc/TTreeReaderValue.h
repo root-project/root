@@ -12,12 +12,6 @@
 #ifndef ROOT_TTreeReaderValue
 #define ROOT_TTreeReaderValue
 
-
-/** \class TTreeReaderValue
-A simple interface for reading data from trees or chains.
-See the TTreeReader class documentation on how to use it.
-*/
-
 #include "TString.h"
 #include "TDictionary.h"
 #include "TBranchProxy.h"
