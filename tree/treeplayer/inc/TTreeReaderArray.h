@@ -72,9 +72,7 @@ Base class of TTreeReaderArray.
 // clang-format on
 
 template <typename T>
-class
-R__CLING_PTRCHECK(off)
-TTreeReaderArray final : public ROOT::Internal::TTreeReaderArrayBase {
+class R__CLING_PTRCHECK(off) TTreeReaderArray final : public ROOT::Internal::TTreeReaderArrayBase {
 // R__CLING_PTRCHECK is disabled because pointer / types are checked by CreateProxy().
 
 public:
