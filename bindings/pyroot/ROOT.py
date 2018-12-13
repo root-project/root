@@ -242,7 +242,10 @@ _root.CreateScopeProxy( "TTree" ).__iter__    = _TTree__iter__
 
 # Array interface
 def _add__array_interface__(self):
-    self.__array_interface__ = property(self._get__array_interface__)
+    # This proxy fixes attaching the property in Python 3.
+    def _proxy__array_interface__(x):
+        return x._get__array_interface__()
+    self.__array_interface__ = property(_proxy__array_interface__)
 
 _root._add__array_interface__ = _add__array_interface__
 
