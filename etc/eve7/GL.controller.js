@@ -90,7 +90,7 @@ sap.ui.define([
       },
 
       checkScences: function() {
-
+         
          if (!this._load_scripts || !this._render_html || !this.elementid) return;
          
          if (!this.register_for_change) {
@@ -108,17 +108,17 @@ sap.ui.define([
 
          // start drawing only when all scenes has childs
          // this is configured view
-         var element = this.mgr.GetElement(this.elementid), allok = true;
+         var element = this.mgr.GetElement(this.elementid), allok = true, anyextras = false;
 
          // loop over scene and add dependency
          for (var k=0;k<element.childs.length;++k) {
             var scene = element.childs[k];
             if (!scene) { allok = false; break; }
             var realscene = this.mgr.GetElement(scene.fSceneId);
-            if (!realscene || !realscene.childs) { continue; }
+            if (this.hasExtras(realscene)) anyextras = true;
          }
 
-         if (allok) this.drawGeometry();
+         if (allok && anyextras) this.drawGeometry();
       },
 
       drawGeometry: function() {
@@ -233,6 +233,7 @@ sap.ui.define([
             return obj3d;
          }
       },
+      
       createExtras: function(arr, toplevel) {
          if (!arr) return;
          for (var k=0;k<arr.length;++k) {
@@ -249,6 +250,15 @@ sap.ui.define([
             }
             this.createExtras(elem.childs);
          }
+      },
+      
+      hasExtras: function(elem) {
+         if (!elem) return false;
+         if (elem.render_data) return true;
+         if (elem.childs)
+            for (var k=0;k<elem.childs.length;++k) 
+               if (this.hasExtras(elem.childs[k])) return true;
+         return false;
       },
 
       onResize: function(event) {
