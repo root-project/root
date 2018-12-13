@@ -15,6 +15,7 @@
 #include <ROOT/REveViewer.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveClient.hxx>
+#include <ROOT/REveGeomViewer.hxx>
 #include <ROOT/RWebWindowsManager.hxx>
 
 #include "TGeoManager.h"
@@ -944,3 +945,19 @@ void REveManager::Show(const RWebDisplayArgs &args)
    }
 }
 
+//////////////////////////////////////////////////////////////////
+/// Show current geometry in web browser
+
+std::shared_ptr<REveGeomViewer> REveManager::ShowGeometry(const RWebDisplayArgs &args)
+{
+   if (!gGeoManager) {
+      Error("ShowGeometry", "No geometry is loaded");
+      return nullptr;
+   }
+
+   auto viewer = std::make_shared<REveGeomViewer>(gGeoManager);
+
+   viewer->Show(args);
+
+   return viewer;
+}
