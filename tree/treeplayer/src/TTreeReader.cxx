@@ -17,15 +17,19 @@
 #include "TTreeCache.h"
 #include "TTreeReaderValue.h"
 
-/** \class TTreeReader
- TTreeReader is a simple, robust and fast interface to read values from a TTree,
- TChain or TNtuple.
+// clang-format off
+/**
+ \class TTreeReader
+ \ingroup treeplayer
+ \brief A simple, robust and fast interface to read values from ROOT colmnar datasets such as TTree, TChain or TNtuple
 
- It uses `TTreeReaderValue<T>` and `TTreeReaderArray<T>` to access the data.
+ TTreeReader is associated to TTreeReaderValue and TTreeReaderArray which are handles to concretely
+ access the information in the dataset.
 
  Example code can be found in
- tutorials/tree/hsimpleReader.C and tutorials/trees/h1analysisTreeReader.h and
- tutorials/trees/h1analysisTreeReader.C for a TSelector.
+  - tutorials/tree/hsimpleReader.C
+  - tutorials/trees/h1analysisTreeReader.C
+  - <a href="http://root.cern.ch/gitweb?p=roottest.git;a=tree;f=root/tree/reader;hb=HEAD">This example</a>
 
  You can generate a skeleton of `TTreeReaderValue<T>` and `TTreeReaderArray<T>` declarations
  for all of a tree's branches using `TTree::MakeSelector()`.
@@ -34,8 +38,7 @@
  <a href="http://root.cern.ch/gitweb?p=roottest.git;a=tree;f=root/tree/reader;hb=HEAD">example</a>
  showing the full power.
 
-A simpler analysis example - the one from the tutorials - can be found below:
-it histograms a function of the px and py branches.
+A simpler analysis example can be found below: it histograms a function of the px and py branches.
 
 ~~~{.cpp}
 // A simple TTreeReader use: read data from hsimple.root (written by hsimple.C)
@@ -162,6 +165,7 @@ bool analyze(TFile* file) {
 }
 ~~~
 */
+// clang-format on
 
 ClassImp(TTreeReader);
 
