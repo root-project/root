@@ -1,5 +1,0 @@
-<mvc:View
-   controllerName="eve.GeomDraw"
-   xmlns:mvc="sap.ui.core.mvc"
-   xmlns="sap.m">
-</mvc:View>
