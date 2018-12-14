@@ -206,3 +206,6 @@
 // REveJetCone
 #pragma link C++ class ROOT::Experimental::REveJetCone+;
 #pragma link C++ class ROOT::Experimental::REveJetConeProjected+;
+
+#pragma link C++ class ROOT::Experimental::REveGeomNode+;
+#pragma link C++ class ROOT::Experimental::REveGeomDescription+;

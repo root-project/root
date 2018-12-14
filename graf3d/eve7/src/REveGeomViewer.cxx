@@ -16,10 +16,12 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "THttpServer.h"
-
+#include "TBufferJSON.h"
 
 ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr) : fGeoManager(mgr)
 {
+
+   fDesc.Build(fGeoManager);
 
    TString evedir = TString::Format("%s/eve7", TROOT::GetEtcDir().Data());
 
@@ -47,11 +49,19 @@ ROOT::Experimental::REveGeomViewer::~REveGeomViewer()
 
 void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 {
+   printf("Get ARG %s\n", arg.c_str());
 
+   if (arg=="CONN_READY") {
+      TString buf = TBufferJSON::ToJSON(&fDesc);
+      std::string sbuf = buf.Data();
+      printf("Send data %d\n", buf.Length());
+      fWebWindow->Send(connid, sbuf);
+   }
 }
 
 void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args)
 {
    fWebWindow->Show(args);
+
 }
 
