@@ -21,7 +21,7 @@
 /**
  \class TTreeReader
  \ingroup treeplayer
- \brief A simple, robust and fast interface to read values from ROOT colmnar datasets such as TTree, TChain or TNtuple
+ \brief A simple, robust and fast interface to read values from ROOT columnar datasets such as TTree, TChain or TNtuple
 
  TTreeReader is associated to TTreeReaderValue and TTreeReaderArray which are handles to concretely
  access the information in the dataset.
