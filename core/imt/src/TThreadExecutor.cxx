@@ -15,7 +15,7 @@
 /// multiple times in parallel, possibly with different arguments every
 /// time. This mimics the behaviour of python's pool.Map method.
 ///
-/// ###ROOT::TThreadExecutor::Map
+/// ### ROOT::TThreadExecutor::Map
 /// This class inherits its interfaces from ROOT::TExecutor\n.
 /// The two possible usages of the Map method are:\n
 /// * Map(F func, unsigned nTimes): func is executed nTimes with no arguments
@@ -55,7 +55,7 @@
 /// root[] ROOT::TThreadExecutor pool(2); auto squares = pool.Map([](int a) { return a*a; }, {1,2,3});
 /// ~~~
 ///
-/// ###ROOT::TThreadExecutor::MapReduce
+/// ### ROOT::TThreadExecutor::MapReduce
 /// This set of methods behaves exactly like Map, but takes an additional
 /// function as a third argument. This function is applied to the set of
 /// objects returned by the corresponding Map execution to "squash" them
@@ -67,7 +67,7 @@
 /// An integer can be passed as the fourth argument indicating the number of chunks we want to divide our work in.
 /// This may be useful to avoid the overhead introduced when running really short tasks.
 ///
-/// ####Examples:
+/// #### Examples:
 /// ~~~{.cpp}
 /// root[] ROOT::TThreadExecutor pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](std::vector<int> v) { return std::accumulate(v.begin(), v.end(), 0); })
 /// root[] ROOT::TThreadExecutor pool; auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
