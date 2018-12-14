@@ -28,7 +28,7 @@
 
  Example code can be found in
   - tutorials/tree/hsimpleReader.C
-  - tutorials/trees/h1analysisTreeReader.C
+  - tutorials/tree/h1analysisTreeReader.C
   - <a href="http://root.cern.ch/gitweb?p=roottest.git;a=tree;f=root/tree/reader;hb=HEAD">This example</a>
 
  You can generate a skeleton of `TTreeReaderValue<T>` and `TTreeReaderArray<T>` declarations
