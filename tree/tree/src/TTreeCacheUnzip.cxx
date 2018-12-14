@@ -1,44 +1,21 @@
-// @(#)root/tree:$Id$
-// Author: Leandro Franco   10/04/2008
+// Authors: Rene Brun   04/06/2006
+//          Leandro Franco   10/04/2008
+//          Fabrizio Furano (CERN) Aug 2009
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TTreeCacheUnzip
+/** 
+\class TTreeCacheUnzip
 \ingroup tree
 
-Specialization of TTreeCache for parallel Unzipping.
+A TTreeCache which exploits parallelized decompression of its own content.
 
-Fabrizio Furano (CERN) Aug 2009
-Core TTree-related code borrowed from the previous version
- by Leandro Franco and Rene Brun
-
-## Parallel Unzipping
-
-TTreeCache has been specialised in order to let additional threads
-free to unzip in advance its content. In this implementation we
-support up to 10 threads, but right now it makes more sense to
-limit their number to 1-2
-
-The application reading data is carefully synchronized, in order to:
- - if the block it wants is not unzipped, it self-unzips it without
-   waiting
- - if the block is being unzipped in parallel, it waits only
-   for that unzip to finish
- - if the block has already been unzipped, it takes it
-
-This is supposed to cancel a part of the unzipping latency, at the
-expenses of cpu time.
-
-The default parameters are the same of the prev version, i.e. 20%
-of the TTreeCache cache size. To change it use
-TTreeCache::SetUnzipBufferSize(Long64_t bufferSize)
-where bufferSize must be passed in bytes.
 */
 
 #include "TTreeCacheUnzip.h"
@@ -49,11 +26,11 @@ where bufferSize must be passed in bytes.
 #include "TFile.h"
 #include "TMath.h"
 #include "TMutex.h"
-#include "TROOT.h"
-#include "TVirtualMutex.h"
+#include "ROOT/RMakeUnique.hxx"
 
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
+#include "ROOT/TTaskGroup.hxx"
 #endif
 
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
@@ -219,7 +196,7 @@ void TTreeCacheUnzip::Init()
 #ifdef R__USE_IMT
    fUnzipTaskGroup.reset();
 #endif
-   fIOMutex = new TMutex(kTRUE);
+   fIOMutex = std::make_unique<TMutex>(kTRUE);
 
    fCompBuffer = new char[16384];
    fCompBufferSize = 16384;
@@ -256,7 +233,6 @@ void TTreeCacheUnzip::Init()
 TTreeCacheUnzip::~TTreeCacheUnzip()
 {
    ResetCache();
-   delete fIOMutex;
    fUnzipState.Clear(fNseekMax);
 }
 
@@ -819,7 +795,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 #endif
       {
          // Fill new baskets into cache.
-         R__LOCKGUARD(fIOMutex);
+         R__LOCKGUARD(fIOMutex.get());
 	 fFile->Seek(pos);
 	 res = fFile->ReadBuffer(fCompBuffer, len);
       } // end of lock scope
@@ -977,6 +953,6 @@ void  TTreeCacheUnzip::Print(Option_t* option) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t TTreeCacheUnzip::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc) {
-   R__LOCKGUARD(fIOMutex);
+   R__LOCKGUARD(fIOMutex.get());
    return TTreeCache::ReadBufferExt(buf, pos, len, loc);
 }

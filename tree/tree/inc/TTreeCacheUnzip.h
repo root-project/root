@@ -1,5 +1,6 @@
-// @(#)root/tree:$Id$
-// Author: Rene Brun   04/06/2006
+// Authors: Rene Brun   04/06/2006
+//          Leandro Franco   10/04/2008
+//          Fabrizio Furano (CERN) Aug 2009
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -12,24 +13,9 @@
 #ifndef ROOT_TTreeCacheUnzip
 #define ROOT_TTreeCacheUnzip
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTreeCacheUnzip                                                      //
-//                                                                      //
-// Specialization of TTreeCache for parallel Unzipping                  //
-//                                                                      //
-// Fabrizio Furano (CERN) Aug 2009                                      //
-// Core TTree-related code borrowed from the previous version           //
-//  by Leandro Franco and Rene Brun                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "Bytes.h"
 #include "TTreeCache.h"
-#include "ROOT/TTaskGroup.hxx"
 #include <atomic>
-#include <queue>
 #include <memory>
 #include <vector>
 
@@ -37,6 +23,14 @@ class TBasket;
 class TBranch;
 class TMutex;
 class TTree;
+
+#ifdef R__USE_IMT
+namespace ROOT {
+namespace Experimental {
+class TTaskGroup;
+}
+}
+#endif
 
 class TTreeCacheUnzip : public TTreeCache {
 
@@ -89,7 +83,7 @@ protected:
    Int_t       fCycle;
    Bool_t      fParallel; ///< Indicate if we want to activate the parallelism (for this instance)
 
-   TMutex     *fIOMutex;
+   std::unique_ptr<TMutex> fIOMutex;
 
    static TTreeCacheUnzip::EParUnzipMode fgParallel;  ///< Indicate if we want to activate the parallelism
 
