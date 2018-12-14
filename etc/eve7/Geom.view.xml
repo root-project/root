@@ -68,7 +68,7 @@
            enableColumnReordering="false"
            expandFirstLevel="false"
            visibleRowCountMode="Auto"
-           rows="{ path:'/Nodes',  parameters : { arrayNames: ['childs']}}" >
+           rows="{ path:'/Nodes',  parameters : { arrayNames: ['chlds']}}" >
            
            <t:layoutData><l:SplitterLayoutData size="300px" /></t:layoutData>
 
