@@ -41,7 +41,7 @@ class REveGeomDescription {
    std::vector<TGeoNode *> fNodes;   ///<! flat list of all nodes
    std::vector<REveGeomNode> fDesc;  ///< converted description, send to client
 
-   void ScanNode(TGeoNode *node);
+   void ScanNode(TGeoNode *node, std::vector<int> &numbers, int offset);
 
 public:
    REveGeomDescription() = default;
