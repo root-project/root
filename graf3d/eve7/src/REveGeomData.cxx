@@ -22,20 +22,23 @@
 /////////////////////////////////////////////////////////////////////
 /// Add node and all its childs to the flat list, exclude duplication
 
-void ROOT::Experimental::REveGeomDescription::ScanNode(TGeoNode *node)
+void ROOT::Experimental::REveGeomDescription::ScanNode(TGeoNode *node, std::vector<int> &numbers, int offset)
 {
    if (!node)
       return;
 
-   if (std::find(fNodes.begin(), fNodes.end(), node) != fNodes.end())
-      return;
+   // artificial offset, used as identifier
+   if (node->GetNumber() >= offset) return;
 
-   fNodes.push_back(node);
+   numbers.emplace_back(node->GetNumber());
+
+   node->SetNumber(offset + fNodes.size()); // use id with shift 1e9
+   fNodes.emplace_back(node);
 
    auto chlds = node->GetNodes();
    if (chlds) {
       for (int n = 0; n <= chlds->GetLast(); ++n)
-         ScanNode(dynamic_cast<TGeoNode *>(chlds->At(n)));
+         ScanNode(dynamic_cast<TGeoNode *>(chlds->At(n)), numbers, offset);
    }
 }
 
@@ -47,26 +50,21 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
 {
    fNodes.clear();
 
-   ScanNode(mgr->GetTopNode());
+   // vector to remember numbers
+   std::vector<int> numbers;
+   int offset = 1000000000;
 
-   // vector to remember number
-   std::vector<Int_t> numbers;
+   ScanNode(mgr->GetTopNode(), numbers, offset);
 
    fDesc.clear();
    fDesc.reserve(fNodes.size());
    numbers.reserve(fNodes.size());
 
-   // first create nodes vector and assign id as node number
+   // create vector of desc and childs
    int cnt = 0;
    for (auto &&node: fNodes) {
-      numbers.emplace_back(node->GetNumber());
-      node->SetNumber(cnt++);
-      fDesc.emplace_back(node->GetNumber());
-   }
 
-   // now create list of childs as just vector with ids
-   cnt = 0;
-   for (auto &&node: fNodes) {
+      fDesc.emplace_back(node->GetNumber()-offset);
       auto &desc = fDesc[cnt++];
 
       desc.name = node->GetName();
@@ -79,7 +77,7 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
       if (chlds)
          for (int n = 0; n <= chlds->GetLast(); ++n) {
             auto chld = dynamic_cast<TGeoNode *> (chlds->At(n));
-            desc.chlds.emplace_back(chld->GetNumber());
+            desc.chlds.emplace_back(chld->GetNumber()-offset);
          }
    }
 
@@ -88,5 +86,5 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
    for (auto &&node: fNodes)
       node->SetNumber(numbers[cnt++]);
 
-   printf("Build description size %u\n", fDesc.size());
+   printf("Build description size %d\n", (int) fDesc.size());
 }
