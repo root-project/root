@@ -21,15 +21,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                Nodes: [
                 {
                   title: "1",
-                  childs: [ { title: "1.1" } , { title: "1.2" },  { title: "1.3" } ]
+                  chlds: [ { title: "1.1" } , { title: "1.2" },  { title: "1.3" } ]
                 },
                 {
                    title: "2",
-                   childs: [ { title: "2.1" } , { title: "2.2" },  { title: "2.3" } ]
+                   chlds: [ { title: "2.1" } , { title: "2.2" },  { title: "2.3" } ]
                  },
                  {
                     title: "3",
-                    childs: [ { title: "3.1" } , { title: "3.2" },  { title: "3.3" } ]
+                    chlds: [ { title: "3.1" } , { title: "3.2" },  { title: "3.3" } ]
                  }
               ]
          };
@@ -72,13 +72,20 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
       
-      buildNode: function(indx) {
-         var node = this.tree_nodes[indx];
-         if (node) return node;
+      buildTreeNode: function(indx) {
+         var tnode = this.tree_nodes[indx];
+         if (tnode) return tnode;
+         var node = this.clones.nodes[indx];
          
-         node = { title: "any" };
-         this.tree_nodes[indx] = node;
-         return node;
+         this.tree_nodes[indx] = tnode = { title: node.name };
+         
+         if (node.chlds) {
+            tnode.chlds = [];
+            for (var k=0;k<node.chlds.length;++k)
+               tnode.chlds.push(this.buildTreeNode(node.chlds[k]));
+         }
+         
+         return tnode;
       },
       
       buildTree: function() {
@@ -88,7 +95,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
         
          this.tree_nodes = [];
          
-         this.data.Nodes = [ this.buildNode(0) ];
+         this.data.Nodes = [ this.buildTreeNode(0) ];
          
          console.log('data', this.data.Nodes);
          
