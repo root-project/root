@@ -9,15 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #include <ROOT/REveGeomData.hxx>
+
+#include <ROOT/REveGeoPolyShape.hxx>
+#include <ROOT/REveUtil.hxx>
 
 #include "TGeoNode.h"
 #include "TGeoVolume.h"
 #include "TGeoBBox.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
+#include "TGeoCompositeShape.h"
 #include "TObjArray.h"
+#include "TBuffer3D.h"
+
+#include <algorithm>
 
 /////////////////////////////////////////////////////////////////////
 /// Add node and all its childs to the flat list, exclude duplication
@@ -54,11 +60,18 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
    std::vector<int> numbers;
    int offset = 1000000000;
 
+   // build flat list of all nodes
    ScanNode(mgr->GetTopNode(), numbers, offset);
 
    fDesc.clear();
+   fSortMap.clear();
    fDesc.reserve(fNodes.size());
    numbers.reserve(fNodes.size());
+   fSortMap.reserve(fNodes.size());
+
+   // array for sorting
+   std::vector<REveGeomNode *> sortarr;
+   sortarr.reserve(fNodes.size());
 
    // create vector of desc and childs
    int cnt = 0;
@@ -66,6 +79,8 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
 
       fDesc.emplace_back(node->GetNumber()-offset);
       auto &desc = fDesc[cnt++];
+
+      sortarr.emplace_back(&desc);
 
       desc.name = node->GetName();
 
@@ -88,6 +103,12 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
    cnt = 0;
    for (auto &node: fNodes)
       node->SetNumber(numbers[cnt++]);
+
+   // sort in volume descent order
+   std::sort(sortarr.begin(), sortarr.end(), [](REveGeomNode *a, REveGeomNode * b) { return a->vol > b->vol; });
+
+   for (auto &elem: sortarr)
+      fSortMap.emplace_back(elem->id);
 
    printf("Build description size %d\n", (int) fDesc.size());
 
@@ -174,5 +195,68 @@ void ROOT::Experimental::REveGeomDescription::ScanVisible(REveGeomScanFunc_t fun
    };
 
    scan_func(0, 999999);
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Find description object for requested shape
+/// If not exists - will be created
+
+ROOT::Experimental::REveGeomDescription::ShapeDescr &ROOT::Experimental::REveGeomDescription::FindShapeDescr(TGeoShape *s)
+{
+   for (auto &descr: fShapes)
+      if (descr.fShape == s) return descr;
+
+   fShapes.emplace_back(s);
+
+   auto &elem = fShapes.back();
+   elem.id = fShapes.size() - 1;
+   return elem;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Collect all information required to draw geometry on the client
+/// This includes list of each visible nodes, meshes and matrixes
+
+void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces)
+{
+   std::vector<int> viscnt(fDesc.size(), 0);
+
+   // first count how many times each individual node appears
+   ScanVisible([&viscnt](REveGeomNode& node, std::vector<int>&) {
+      viscnt[node.id]++;
+      return true;
+   });
+
+   // now one can start build all shapes in volume decreasing order
+   for (auto &sid: fSortMap) {
+      auto &desc = fDesc[sid];
+      if ((viscnt[sid] <= 0) && (desc.vol <= 0)) continue;
+
+      auto shape = fNodes[sid]->GetVolume()->GetShape();
+      if (!shape) continue;
+
+      // now we need to create TEveGeoPolyShape, which can provide all rendering data
+
+      auto &shape_descr = FindShapeDescr(shape);
+
+      if (!shape_descr.fRenderData) {
+         TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *>(shape);
+
+         std::unique_ptr<REveGeoPolyShape> poly;
+
+         if (comp) {
+            poly = std::make_unique<REveGeoPolyShape>(comp, 20);
+         } else {
+            poly = std::make_unique<REveGeoPolyShape>();
+            REveGeoManagerHolder gmgr(gGeoManager, 20);
+            std::unique_ptr<TBuffer3D> b3d(shape->MakeBuffer3D());
+            poly->SetFromBuff3D(*b3d.get());
+         }
+
+         shape_descr.fRenderData = std::make_unique<REveRenderData>();
+
+         poly->FillRenderData(*shape_descr.fRenderData);
+      }
+   }
 }
 
