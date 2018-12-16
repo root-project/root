@@ -12,19 +12,23 @@
 #ifndef ROOT7_REveGeomData
 #define ROOT7_REveGeomData
 
-#include "Rtypes.h"
+#include <ROOT/REveRenderData.hxx>
 
 #include <vector>
 #include <string>
 #include <functional>
+#include <memory>
 
 class TGeoNode;
 class TGeoManager;
+class TGeoShape;
 
 // do not use namespace to avoid too long JSON
 
 namespace ROOT {
 namespace Experimental {
+
+class REveRenderData;
 
 class REveGeomNode {
 public:
@@ -46,14 +50,29 @@ using REveGeomScanFunc_t = std::function<bool(REveGeomNode&, std::vector<int>&)>
 
 class REveGeomDescription {
 
+   class ShapeDescr {
+   public:
+      int id{0};
+      TGeoShape *fShape{nullptr};
+      std::unique_ptr<REveRenderData> fRenderData;
+      ShapeDescr(TGeoShape *s) : fShape(s) {}
+   };
+
+
    std::vector<TGeoNode *> fNodes;   ///<! flat list of all nodes
    std::vector<REveGeomNode> fDesc;  ///< converted description, send to client
+   std::vector<int> fSortMap;        ///<! nodes in order large -> smaller volume
+   std::vector<ShapeDescr> fShapes;  ///<! shapes with created descriptions
 
    void ScanNode(TGeoNode *node, std::vector<int> &numbers, int offset);
 
    int MarkVisible(bool on_screen = false);
 
    void ScanVisible(REveGeomScanFunc_t func);
+
+   void CollectVisibles(int maxnumfaces);
+
+   ShapeDescr &FindShapeDescr(TGeoShape *s);
 
 public:
    REveGeomDescription() = default;
