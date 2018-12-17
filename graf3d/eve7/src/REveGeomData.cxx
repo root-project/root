@@ -109,10 +109,10 @@ void ROOT::Experimental::REveGeomDescription::PackMatrix(std::vector<float> &vec
    }
 
    vect.resize(16);
-   vect[0] = rotate[0]; vect[1] = rotate[1]; vect[2]  = rotate[2]; vect[3] = trans[0];
-   vect[4] = rotate[3]; vect[5] = rotate[4]; vect[6]  = rotate[5]; vect[7] = trans[1];
-   vect[8] = rotate[6]; vect[9] = rotate[7]; vect[10] = rotate[8]; vect[11] = trans[2];
-   vect[12] = 0;        vect[13] = 0;        vect[14] = 0;         vect[15] = 1;
+   vect[0] = rotate[0]; vect[4] = rotate[1]; vect[8]  = rotate[2]; vect[12] = trans[0];
+   vect[1] = rotate[3]; vect[5] = rotate[4]; vect[9]  = rotate[5]; vect[13] = trans[1];
+   vect[2] = rotate[6]; vect[6] = rotate[7]; vect[10] = rotate[8]; vect[14] = trans[2];
+   vect[3] = 0;         vect[7] = 0;         vect[11] = 0;         vect[15] = 1;
 }
 
 
@@ -150,6 +150,10 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
    // vector to remember numbers
    std::vector<int> numbers;
    int offset = 1000000000;
+
+   // by top node visibility always enabled and harm logic
+   // later visibility can be controlled by other means
+   mgr->GetTopNode()->GetVolume()->SetVisibility(kFALSE);
 
    // build flat list of all nodes
    ScanNode(mgr->GetTopNode(), numbers, offset);
@@ -318,7 +322,7 @@ void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces, s
    std::vector<int> viscnt(fDesc.size(), 0);
 
    // first count how many times each individual node appears
-   ScanVisible([&viscnt](REveGeomNode& node, std::vector<int>&) {
+   ScanVisible([&viscnt](REveGeomNode &node, std::vector<int> &) {
       viscnt[node.id]++;
       return true;
    });
