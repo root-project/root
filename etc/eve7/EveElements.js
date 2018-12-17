@@ -229,12 +229,11 @@
 
       return jet_ro;
    }
-
-   EveElements.prototype.makeEveGeoShape = function(egs, rnr_data)
+   
+   EveElements.prototype.makeEveGeoMesh = function(egs, rnr_data)
    {
       // console.log("makeEveGeoShape ", egs);
 
-      var egs_ro = new THREE.Object3D();
       var pos_ba = new THREE.BufferAttribute( rnr_data.vtxBuff, 3 );
       var idx_ba = new THREE.BufferAttribute( rnr_data.idxBuff, 1 );
 
@@ -258,17 +257,21 @@
       // XXXX triangles is trivial, we could do it before invoking the big guns (if they are even needed).
       // XXXX Oh, and once triangulated, we really don't need to store 3 as number of verts in a poly each time.
       // XXXX Or do we? We might need it for projection stuff.
-      body.computeVertexNormals();
+      body.computeVertexNormals(); 
 
       var fcol = JSROOT.Painter.root_colors[egs.fFillColor];
-      // var lcol = JSROOT.Painter.root_colors[egs.fLineColor];
       
       var material = new THREE.MeshPhongMaterial({// side: THREE.DoubleSide,
                              depthWrite:  false, color:fcol, transparent: true, opacity: 0.2 });
       
-      egs_ro.add( new THREE.Mesh(body, material) );
+      return new THREE.Mesh(body, material);
+   }
 
-      // egs_ro.add( new THREE.LineSegments(body, new THREE.LineBasicMaterial({color:lcol })) );
+   EveElements.prototype.makeEveGeoShape = function(egs, rnr_data)
+   {
+      var egs_ro = new THREE.Object3D();
+      
+      egs_ro.add( this.makeEveGeoMesh(egs, rnr_data) );
 
       return egs_ro;
    }
