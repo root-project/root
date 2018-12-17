@@ -217,22 +217,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                } else {
                   var nm = elem.matrix = new Array(16);
                   for (var k=0;k<16;++k) nm[k] = 0;
+                  nm[0] = nm[5] = nm[10] = nm[15] = 1;
                
                   if (m.length == 3) {
                      // translation martix
-                     nm[0] = nm[5] = nm[10] = nm[15] = 1;
-                     nm[3] = m[0];
-                     nm[7] = m[1];
-                     nm[11] = m[2];
+                     nm[12] = m[0]; nm[13] = m[1]; nm[14] = m[2];
                   } else if (m.length == 4) {
                      // scale matrix
                      nm[0] = m[0]; nm[5] = m[1]; nm[10] = m[2]; nm[15] = m[3];
                   } else if (m.length == 9) {
                      // rotation matrix
-                     nm[0] = m[0]; nm[1] = m[1]; nm[2]  = m[2]; 
-                     nm[4] = m[3]; nm[5] = m[4]; nm[6]  = m[5]; 
-                     nm[8] = m[6]; nm[9] = m[7]; nm[10] = m[8]; 
-                     nm[15] = 1;
+                     nm[0] = m[0]; nm[4] = m[1]; nm[8]  = m[2]; 
+                     nm[1] = m[3]; nm[5] = m[4]; nm[9]  = m[5]; 
+                     nm[2] = m[6]; nm[6] = m[7]; nm[10] = m[8]; 
                   } else {
                      console.error('wrong number of elements in the matrix ' + m.length);
                   }
