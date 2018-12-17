@@ -54,8 +54,18 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
    if (arg=="CONN_READY") {
       TString buf = TBufferJSON::ToJSON(&fDesc,3);
       std::string sbuf = buf.Data();
-      printf("Send data %d\n", buf.Length());
+      printf("Send description %d\n", buf.Length());
       fWebWindow->Send(connid, sbuf);
+
+      std::string json;
+      std::vector<char> binary;
+      fDesc.CollectVisibles(100000, json, binary);
+
+      printf("Produce JSON %d binary %d\n", (int) json.length(), (int) binary.size());
+
+      fWebWindow->Send(connid, json);
+
+      fWebWindow->SendBinary(connid, &binary[0], binary.size());
    }
 }
 
