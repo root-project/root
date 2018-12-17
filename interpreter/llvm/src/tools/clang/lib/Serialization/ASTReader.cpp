@@ -3887,7 +3887,8 @@ ASTReader::ReadModuleMapFileBlock(RecordData &Record, ModuleFile &F,
 
     // Check the primary module map file.
     const FileEntry *StoredModMap = FileMgr.getFile(F.ModuleMapPath);
-    if (StoredModMap == nullptr || StoredModMap != ModMap) {
+    if (!PP.getPreprocessorOpts().DisablePCHValidation &&
+          (StoredModMap == nullptr || StoredModMap != ModMap)) {
       assert(ModMap && "found module is missing module map file");
       assert(ImportedBy && "top-level import should be verified");
       if ((ClientLoadCapabilities & ARR_OutOfDate) == 0)
