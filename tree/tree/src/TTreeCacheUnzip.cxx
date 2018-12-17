@@ -788,7 +788,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
    if (!ReadBufferExt(fCompBuffer, pos, len, loc)) {
       // Cache is invalidated and we need to wait for all unzipping tasks to befinished before fill new baskets in cache.
 #ifdef R__USE_IMT
-      if(fUnzipTaskGroup) {
+      if(ROOT::IsImplicitMTEnabled() && fUnzipTaskGroup) {
          fUnzipTaskGroup->Cancel();
          fUnzipTaskGroup.reset();
       }
@@ -796,11 +796,13 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
       {
          // Fill new baskets into cache.
          R__LOCKGUARD(fIOMutex.get());
-	 fFile->Seek(pos);
-	 res = fFile->ReadBuffer(fCompBuffer, len);
+	      fFile->Seek(pos);
+	      res = fFile->ReadBuffer(fCompBuffer, len);
       } // end of lock scope
 #ifdef R__USE_IMT
-      CreateTasks();
+      if(ROOT::IsImplicitMTEnabled()) {
+         CreateTasks();
+      }
 #endif
    }
 
