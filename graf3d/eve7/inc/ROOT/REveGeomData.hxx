@@ -37,7 +37,7 @@ public:
    int sortid{0};           ///< place in sorted array, to check cuts
    std::vector<int> chlds;  ///< list of childs id
    std::string name;        ///< node name
-   std::vector<float> matr; ///< matrix for the node
+   std::vector<float> matr; ///< matrix for the node, can have reduced number of elements
    double vol{0};           ///<! volume estimation
    int nfaces{0};           ///<! number of shape faces
    bool vis{false};         ///<! visibility flags used in selection
@@ -55,7 +55,8 @@ public:
 
 class REveGeomVisisble {
 public:
-   std::vector<int> stack;  ///< path to the node
+   int nodeid{0};           ///< selected node id,
+   std::vector<int> stack;  ///< path to the node, index in list of childs
 
    // render data, equivalent of REveElement::WriteCoreJson
    int rnr_offset{0};     ///< rnr_offset;
@@ -66,7 +67,7 @@ public:
    int trans_size{0};     ///< fRenderData->SizeT();
 
    REveGeomVisisble() = default;
-   REveGeomVisisble(const std::vector<int> &_stack) : stack(_stack) {}
+   REveGeomVisisble(int id, const std::vector<int> &_stack) : nodeid(id), stack(_stack) {}
 };
 
 using REveGeomScanFunc_t = std::function<bool(REveGeomNode&, std::vector<int>&)>;
