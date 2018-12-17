@@ -15,32 +15,15 @@
 
 /**
  * \class RooSTLRefCountList
- * The RooSTLRefCountList is a simple collection of pointers and ref counters.
- * The pointers are not owned, hence not deleted when removed from the collection.
+ * The RooSTLRefCountList is a simple collection of **pointers** to the template objects and
+ * corresponding ref counters.
+ * The pointees are not owned, hence not deleted when removed from the collection.
  * Objects can be searched for either by pointer or by name (confusion possible when
  * objects with same name are present). This replicates the behaviour of the RooRefCountList.
  */
 
 ClassImp(RooSTLRefCountList<RooAbsArg>);
 
-
-template<class T>
-RooSTLRefCountList<T>& RooSTLRefCountList<T>::operator=(const RooRefCountList & other) {
-  _storage.clear();
-  _refCount.clear();
-
-  _storage.reserve(other.GetSize());
-  _refCount.reserve(other.GetSize());
-
-  auto it = other.fwdIterator();
-  for (RooAbsArg * elm = it.next(); elm != nullptr; elm = it.next()) {
-    _storage.push_back(elm);
-    _refCount.push_back(static_cast<typename decltype(_refCount)::value_type>(
-        other.refCount(elm)));
-  }
-
-  return *this;
-}
 
 template<class T>
 typename RooSTLRefCountList<T>::Container_t::const_iterator
@@ -55,6 +38,7 @@ RooSTLRefCountList<T>::findByName(const char * name) const {
   return std::find_if(_storage.begin(), _storage.end(), byName);
 }
 
+
 template<class T>
 typename RooSTLRefCountList<T>::Container_t::const_iterator
 RooSTLRefCountList<T>::findByNamePointer(const T * obj) const {
@@ -66,5 +50,7 @@ RooSTLRefCountList<T>::findByNamePointer(const T * obj) const {
   return std::find_if(_storage.begin(), _storage.end(), byNamePointer);
 }
 
-
+// An explicit instantiation is needed because the two functions above
+// cannot be in the header. They have a circular dependency with RooAbsArg,
+// which contains a RooSTLRefCountList<RooAbsArg>.
 template class RooSTLRefCountList<RooAbsArg>;
