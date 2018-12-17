@@ -270,7 +270,7 @@ void ROOT::Experimental::REveGeomDescription::ScanVisible(REveGeomScanFunc_t fun
          int numvischld = 0, previd = seqid;
          stack.push_back(0);
          for (unsigned k=0; k<desc.chlds.size(); ++k) {
-            stack[pos] = k;
+            stack[pos] = k; // stack provides index in list of chdils
             numvischld += scan_func(desc.chlds[k], lvl-1);
          }
          stack.pop_back();
@@ -378,9 +378,9 @@ void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces, s
    std::vector<REveRenderData*> render_data; // data which should be send as binary
    int render_offset{0}; /// current offset
 
-   ScanVisible([&, this](REveGeomNode& node, std::vector<int>& stack) {
+   ScanVisible([&, this](REveGeomNode &node, std::vector<int> &stack) {
       if (node.sortid < sortidcut) {
-         visibles.emplace_back(stack);
+         visibles.emplace_back(node.id, stack);
 
          auto &item = visibles.back();
 

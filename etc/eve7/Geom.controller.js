@@ -48,7 +48,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.geo_painter.assignClones(clones);
          
          if (this.geo_visisble) {
-            this.geo_painter.startDrawVisible(this.geo_visisble);
+            this.geo_painter.prepareObjectDraw(this.geo_visisble,"__geom_viewer_selection__");
             delete this.geo_visisble;
          }
       },
@@ -62,7 +62,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       
       startDrawing: function(visible) {
          if (this.geo_painter)
-            this.geo_painter.startDrawVisible(visible);
+            this.geo_painter.prepareObjectDraw(visible,"__geom_viewer_selection__");
          else
             this.geo_visisble = visible;
       },
@@ -149,11 +149,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                for (var cnt=0;cnt<this.draw_msg.length;++cnt) {
                   var rd = this.draw_msg[cnt];
                   
-                  if (rd.rnr_offset<0) continue;
+                  if (rd.rnr_offset<0) {
+                     console.log('No binary data for elemet', cnt, rd);
+                     continue;
+                  }
                   
                   var cache = rnr_cache[rd.rnr_offset];
                   if (cache) {
-                     rd.mesh = cache.mesh;
+                     rd.server_shape = cache.server_shape;
                      continue;
                   }
 
@@ -165,24 +168,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                   if (rd.vert_size) {
                      render_data.vtxBuff = new Float32Array(msg, off, rd.vert_size);
                      off += rd.vert_size*4;
-                   }
+                  }
 
-                   if (rd.norm_size) {
-                      render_data.nrmBuff = new Float32Array(msg, off, rd.norm_size);
+                  if (rd.norm_size) {
+                     render_data.nrmBuff = new Float32Array(msg, off, rd.norm_size);
                      off += rd.norm_size*4;
-                   }
+                  }
 
-                   if (rd.index_size) {
-                      render_data.idxBuff = new Uint32Array(msg, off, rd.index_size);
-                      off += rd.index_size*4;
-                   }
+                  if (rd.index_size) {
+                     render_data.idxBuff = new Uint32Array(msg, off, rd.index_size);
+                     off += rd.index_size*4;
+                  }
                    
-                   rd.fFillColor = 3;
-                   rd.mesh = this.creator.makeEveGeoMesh(rd,render_data);
+                  // shape handle is similar to created in JSROOT.GeoPainter
+                  rd.server_shape = { geom: this.creator.makeEveGeometry(render_data), nfaces: (rd.index_size-2) / 3, ready: true };
                    
-                   rnr_cache[rd.rnr_offset] = rd;
+                  rnr_cache[rd.rnr_offset] = rd;
                }
-               
+
                this.geomControl.startDrawing(this.draw_msg);
                
                delete this.draw_msg;
@@ -198,6 +201,46 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // this if first message
          if (!this.descr) {
             this.descr = JSROOT.parse(msg);
+            
+            // we need to calculate matrixes here
+            var nodes = this.descr.fDesc;
+            
+            for (var cnt = 0; cnt < nodes.length; ++cnt) {
+               var elem = nodes[cnt];
+               elem.kind = 2; // special element
+               var m = elem.matr;
+               delete elem.matr;
+               if (!m || !m.length) continue;
+               
+               if (m.length == 16) {
+                  elem.matrix = m;
+               } else {
+                  var nm = elem.matrix = new Array(16);
+                  for (var k=0;k<16;++k) nm[k] = 0;
+               
+                  if (m.length == 3) {
+                     // translation martix
+                     nm[0] = nm[5] = nm[10] = nm[15] = 1;
+                     nm[3] = m[0];
+                     nm[7] = m[1];
+                     nm[11] = m[2];
+                  } else if (m.length == 4) {
+                     // scale matrix
+                     nm[0] = m[0]; nm[5] = m[1]; nm[10] = m[2]; nm[15] = m[3];
+                  } else if (m.length == 9) {
+                     // rotation matrix
+                     nm[0] = m[0]; nm[1] = m[1]; nm[2]  = m[2]; 
+                     nm[4] = m[3]; nm[5] = m[4]; nm[6]  = m[5]; 
+                     nm[8] = m[6]; nm[9] = m[7]; nm[10] = m[8]; 
+                     nm[15] = 1;
+                  } else {
+                     console.error('wrong number of elements in the matrix ' + m.length);
+                  }
+               }
+            }
+            
+            this.clones = new JSROOT.GEO.ClonedNodes(null, nodes);
+            
             this.buildTree();
          } else if (msg.indexOf("DRAW:") == 0) {
             this.draw_msg = JSROOT.parse(msg.substr(5));
@@ -223,13 +266,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       buildTree: function() {
          if (!this.descr || !this.descr.fDesc) return;
          
-         this.clones = new JSROOT.GEO.ClonedNodes(null, this.descr.fDesc);
-        
          this.tree_nodes = [];
          
          this.data.Nodes = [ this.buildTreeNode(0) ];
-         
-         console.log('data', this.data.Nodes);
          
          this.model.refresh();
          

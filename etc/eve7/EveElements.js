@@ -230,7 +230,7 @@
       return jet_ro;
    }
    
-   EveElements.prototype.makeEveGeoMesh = function(egs, rnr_data)
+   EveElements.prototype.makeEveGeometry = function(rnr_data)
    {
       // console.log("makeEveGeoShape ", egs);
 
@@ -259,19 +259,23 @@
       // XXXX Or do we? We might need it for projection stuff.
       body.computeVertexNormals(); 
 
-      var fcol = JSROOT.Painter.root_colors[egs.fFillColor];
-      
-      var material = new THREE.MeshPhongMaterial({// side: THREE.DoubleSide,
-                             depthWrite:  false, color:fcol, transparent: true, opacity: 0.2 });
-      
-      return new THREE.Mesh(body, material);
+      return body;
    }
 
    EveElements.prototype.makeEveGeoShape = function(egs, rnr_data)
    {
       var egs_ro = new THREE.Object3D();
       
-      egs_ro.add( this.makeEveGeoMesh(egs, rnr_data) );
+      var geom = this.makeEveGeometry(rnr_data)
+
+      var fcol = JSROOT.Painter.root_colors[egs.fFillColor];
+
+      var material = new THREE.MeshPhongMaterial({// side: THREE.DoubleSide,
+         depthWrite: false, color:fcol, transparent: true, opacity: 0.2 });
+
+      var mesh = new THREE.Mesh(body, material);
+      
+      egs_ro.add(mesh);
 
       return egs_ro;
    }
