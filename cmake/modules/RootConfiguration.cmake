@@ -575,20 +575,21 @@ else()
 endif()
 
 
+set(hasstdexpstringview undef)
 CHECK_CXX_SOURCE_COMPILES("#include <string_view>
   int main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}" found_stdstringview)
 if(found_stdstringview)
   set(hasstdstringview define)
 else()
   set(hasstdstringview undef)
-endif()
 
-CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
+  CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
    int main() { char arr[3] = {'B', 'a', 'r'}; std::experimental::string_view strv(arr, sizeof(arr)); return 0;}" found_stdexpstringview)
-if(found_stdexpstringview)
-  set(hasstdexpstringview define)
-else()
-  set(hasstdexpstringview undef)
+  if(found_stdexpstringview)
+    set(hasstdexpstringview define)
+  else()
+    set(hasstdexpstringview undef)
+  endif()
 endif()
 
 if(found_stdstringview)
