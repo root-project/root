@@ -14,6 +14,7 @@
 #include <ROOT/REveGeoPolyShape.hxx>
 #include <ROOT/REveUtil.hxx>
 
+#include "TMath.h"
 #include "TGeoNode.h"
 #include "TGeoVolume.h"
 #include "TGeoBBox.h"
@@ -24,6 +25,95 @@
 #include "TBuffer3D.h"
 
 #include <algorithm>
+
+static int dummy_cnt = 0, rotation_cnt = 0, scale_cnt = 0, trans_cnt = 0;
+
+/////////////////////////////////////////////////////////////////////
+/// Pack matrix into vector, which can be send to client
+/// Following sizes can be used for vector:
+///   0 - Identity matrix
+///   3 - Translation
+///   4 - Scale (last element always 1)
+///   9 - Rotation
+///  16 - Full size
+
+void ROOT::Experimental::REveGeomDescription::PackMatrix(std::vector<float> &vect, TGeoMatrix *matr)
+{
+   vect.clear();
+
+   if (!matr || matr->IsIdentity()) {
+      dummy_cnt++;
+      return;
+   }
+
+   auto trans = matr->GetTranslation();
+   auto scale = matr->GetScale();
+   auto rotate = matr->GetRotationMatrix();
+
+   bool is_translate = matr->IsA() == TGeoTranslation::Class(),
+        is_scale = matr->IsA() == TGeoScale::Class(),
+        is_rotate = matr->IsA() == TGeoRotation::Class();
+
+   if (!is_translate && !is_scale && !is_rotate) {
+      // check if trivial matrix
+
+      auto test = [](double val, double chk) { return (val==chk) || (TMath::Abs(val-chk) < 1e-20); };
+
+      bool no_scale = test(scale[0],1) && test(scale[1],1) && test(scale[2],1);
+      bool no_trans = test(trans[0],0) && test(trans[1],0) && test(trans[2],0);
+      bool no_rotate = test(rotate[0],1) && test(rotate[1],0) && test(rotate[2],0) &&
+                       test(rotate[3],0) && test(rotate[4],1) && test(rotate[5],0) &&
+                       test(rotate[6],0) && test(rotate[7],0) && test(rotate[8],1);
+
+      if (no_scale && no_trans && no_rotate) {
+         printf("Detect extra dummy\n");
+         dummy_cnt++;
+         return;
+      }
+
+      if (no_scale && no_trans && !no_rotate) {
+         is_rotate = true;
+      } else if (no_scale && !no_trans && no_rotate) {
+         is_translate = true;
+      } else if (!no_scale && no_trans && no_rotate) {
+         is_scale = true;
+      }
+   }
+
+   if (is_translate) {
+      vect.resize(3);
+      vect[0] = trans[0];
+      vect[1] = trans[1];
+      vect[2] = trans[2];
+      trans_cnt++;
+      return;
+   }
+
+   if (is_scale) {
+      vect.resize(4);
+      vect[0] = scale[0];
+      vect[1] = scale[1];
+      vect[2] = scale[2];
+      vect[3] = 1;
+      scale_cnt++;
+      return;
+   }
+
+   if (is_rotate) {
+      vect.resize(9);
+      for (int n=0;n<9;++n)
+         vect[n] = rotate[n];
+      rotation_cnt++;
+      return;
+   }
+
+   vect.resize(16);
+   vect[0] = rotate[0]; vect[1] = rotate[1]; vect[2]  = rotate[2]; vect[3] = trans[0];
+   vect[4] = rotate[3]; vect[5] = rotate[4]; vect[6]  = rotate[5]; vect[7] = trans[1];
+   vect[8] = rotate[6]; vect[9] = rotate[7]; vect[10] = rotate[8]; vect[11] = trans[2];
+   vect[12] = 0;        vect[13] = 0;        vect[14] = 0;         vect[15] = 1;
+}
+
 
 /////////////////////////////////////////////////////////////////////
 /// Add node and all its childs to the flat list, exclude duplication
@@ -92,6 +182,8 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
 
       auto chlds = node->GetNodes();
 
+      PackMatrix(desc.matr, node->GetMatrix());
+
       if (chlds)
          for (int n = 0; n <= chlds->GetLast(); ++n) {
             auto chld = dynamic_cast<TGeoNode *> (chlds->At(n));
@@ -107,10 +199,13 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
    // sort in volume descent order
    std::sort(sortarr.begin(), sortarr.end(), [](REveGeomNode *a, REveGeomNode * b) { return a->vol > b->vol; });
 
-   for (auto &elem: sortarr)
+   cnt = 0;
+   for (auto &elem: sortarr) {
       fSortMap.emplace_back(elem->id);
+      elem->sortid = cnt++; // keep place in sorted array to correctly apply cut
+   }
 
-   printf("Build description size %d\n", (int) fDesc.size());
+   printf("Build description size %d dummymatrix %d rotation %d scale %d translation %d\n", (int) fDesc.size(), dummy_cnt, rotation_cnt, scale_cnt, trans_cnt);
 
    MarkVisible(); // set visibility flags
 }
@@ -227,8 +322,11 @@ void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces)
       return true;
    });
 
-   // now one can start build all shapes in volume decreasing order
+   int sortidcut{0}, totalnumfaces{0}, totalnumnodes{0};
+
+   // build all shapes in volume decreasing order
    for (auto &sid: fSortMap) {
+      sortidcut++; //
       auto &desc = fDesc[sid];
       if ((viscnt[sid] <= 0) && (desc.vol <= 0)) continue;
 
@@ -256,7 +354,65 @@ void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces)
          shape_descr.fRenderData = std::make_unique<REveRenderData>();
 
          poly->FillRenderData(*shape_descr.fRenderData);
+
+         shape_descr.nfaces = poly->GetNumFaces();
       }
+
+      // check how many faces are created
+      totalnumfaces += shape_descr.nfaces * viscnt[sid];
+      if (totalnumfaces > maxnumfaces) break;
+
+      // also avoid too many nodes
+      totalnumnodes += viscnt[sid];
+      if (totalnumnodes > maxnumfaces/12) break;
    }
+
+   // finally we should create data for streaming to the client
+   // it includes list of visible nodes and rawdata
+
+   for (auto &s: fShapes)
+      s.render_offest = -1;
+
+   std::vector<REveGeomVisisble> visibles;
+   std::vector<REveRenderData*> render_data; // data which should be send as binary
+   int render_offset{0}; /// current offset
+
+   ScanVisible([&, this](REveGeomNode& node, std::vector<int>& stack) {
+      if (node.sortid < sortidcut) {
+         visibles.emplace_back(stack);
+
+         auto &item = visibles.back();
+
+         auto &sd = FindShapeDescr(fNodes[node.id]->GetVolume()->GetShape());
+         auto *rd = sd.fRenderData.get();
+
+         if (sd.render_offest < 0) {
+            sd.render_offest = render_offset;
+            render_offset += rd->GetBinarySize();
+            render_data.emplace_back(rd);
+         }
+
+         item.rnr_offset = sd.render_offest;
+
+         item.rnr_func = rd->GetRnrFunc();
+         item.vert_size = rd->SizeV();
+         item.norm_size = rd->SizeN();
+         item.index_size = rd->SizeI();
+         item.trans_size = rd->SizeT();
+      }
+      return true;
+   });
+
+   // finally, create binary data with all produced shapes
+
+   std::vector<char> binary;
+   binary.resize(render_offset);
+   int off{0};
+
+   for (auto rd : render_data) {
+      auto size = rd->Write( & binary[ off ] );
+      off += size;
+   }
+   assert(render_offset == off);
 }
 

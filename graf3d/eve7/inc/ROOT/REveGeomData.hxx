@@ -22,6 +22,7 @@
 class TGeoNode;
 class TGeoManager;
 class TGeoShape;
+class TGeoMatrix;
 
 // do not use namespace to avoid too long JSON
 
@@ -33,8 +34,10 @@ class REveRenderData;
 class REveGeomNode {
 public:
    int id{0};               ///< node id, index in array
+   int sortid{0};           ///< place in sorted array, to check cuts
    std::vector<int> chlds;  ///< list of childs id
    std::string name;        ///< node name
+   std::vector<float> matr; ///< matrix for the node
    double vol{0};           ///<! volume estimation
    int nfaces{0};           ///<! number of shape faces
    bool vis{false};         ///<! visibility flags used in selection
@@ -46,23 +49,46 @@ public:
    REveGeomNode(int _id) : id(_id) {}
 };
 
+/** REveGeomVisisble contains description of visible node
+ * It is path to the node plus reference to shape rendering data
+ */
+
+class REveGeomVisisble {
+public:
+   std::vector<int> stack;  ///< path to the node
+
+   // render data, equivalent of REveElement::WriteCoreJson
+   int rnr_offset{0};     ///< rnr_offset;
+   std::string rnr_func;  ///< fRenderData->GetRnrFunc();
+   int vert_size{0};      ///< fRenderData->SizeV();
+   int norm_size{0};      ///< fRenderData->SizeN();
+   int index_size{0};     ///< fRenderData->SizeI();
+   int trans_size{0};     ///< fRenderData->SizeT();
+
+   REveGeomVisisble() = default;
+   REveGeomVisisble(const std::vector<int> &_stack) : stack(_stack) {}
+};
+
 using REveGeomScanFunc_t = std::function<bool(REveGeomNode&, std::vector<int>&)>;
 
 class REveGeomDescription {
 
    class ShapeDescr {
    public:
-      int id{0};
-      TGeoShape *fShape{nullptr};
-      std::unique_ptr<REveRenderData> fRenderData;
+      int id{0};                    ///<! sequential id
+      TGeoShape *fShape{nullptr};   ///<! original shape
+      int nfaces{0};                ///<! number of faces in render data
+      std::unique_ptr<REveRenderData> fRenderData;  ///<! binary render data
+      int render_offest{-1};        ///<! offset in current binary array, transient
       ShapeDescr(TGeoShape *s) : fShape(s) {}
    };
-
 
    std::vector<TGeoNode *> fNodes;   ///<! flat list of all nodes
    std::vector<REveGeomNode> fDesc;  ///< converted description, send to client
    std::vector<int> fSortMap;        ///<! nodes in order large -> smaller volume
    std::vector<ShapeDescr> fShapes;  ///<! shapes with created descriptions
+
+   void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 
    void ScanNode(TGeoNode *node, std::vector<int> &numbers, int offset);
 
