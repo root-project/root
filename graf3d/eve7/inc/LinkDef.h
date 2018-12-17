@@ -207,5 +207,7 @@
 #pragma link C++ class ROOT::Experimental::REveJetCone+;
 #pragma link C++ class ROOT::Experimental::REveJetConeProjected+;
 
+// Geometry viewer
 #pragma link C++ class ROOT::Experimental::REveGeomNode+;
+#pragma link C++ class ROOT::Experimental::REveGeomVisisble+;
 #pragma link C++ class ROOT::Experimental::REveGeomDescription+;
