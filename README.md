@@ -31,7 +31,7 @@ acquisition, simulation and data analysis systems.
 
 ## Build Status
 | Branch | Nightly build status |
-|--------|------------|---------|
+|--------|------------|
 | master | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master/) |
 | v6-16-00-patches | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-16-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-16-00-patches/) |
 | v6-14-00-patches | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-14-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-14-00-patches/) |
