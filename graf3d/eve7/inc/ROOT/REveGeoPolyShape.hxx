@@ -66,7 +66,9 @@ public:
    REveGeoPolyShape();
    REveGeoPolyShape(TGeoCompositeShape *cshp, Int_t n_seg);
 
-   virtual ~REveGeoPolyShape() {}
+   virtual ~REveGeoPolyShape() = default;
+
+   Int_t GetNumFaces() const { return fNbPols; }
 
    void FillRenderData(REveRenderData &rd);
 
@@ -77,6 +79,8 @@ public:
 
    virtual const TBuffer3D& GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual TBuffer3D *MakeBuffer3D() const;
+
+
 
    static void   SetAutoEnforceTriangles(Bool_t f);
    static Bool_t GetAutoEnforceTriangles();
