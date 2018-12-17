@@ -97,43 +97,42 @@ endif()
 include(CheckCXXCompilerFlag)
 include(CheckCCompilerFlag)
 
-#---Check for cxx11 option------------------------------------------------------------
-if(cxx11 AND cxx14)
-  message(STATUS "c++11 mode requested but superseded by request for c++14 mode")
-  set(cxx11 OFF CACHE BOOL "" FORCE)
-endif()
-if((cxx11 OR cxx14) AND cxx17)
-  message(STATUS "c++11 or c++14 mode requested but superseded by request for c++17 mode")
-  set(cxx11 OFF CACHE BOOL "" FORCE)
-  set(cxx14 OFF CACHE BOOL "" FORCE)
-endif()
-if(cxx11)
-  CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CXX11)
-  if(NOT HAS_CXX11)
-    message(STATUS "Current compiler does not suppport -std=c++11 option. Switching OFF cxx11 option")
-    set(cxx11 OFF CACHE BOOL "" FORCE)
+#---C++ standard----------------------------------------------------------------------
+
+set(CMAKE_CXX_STANDARD 11 CACHE STRING "")
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+set(CMAKE_CXX_EXTENSIONS FALSE CACHE BOOL "")
+
+if(cxx11 OR cxx14 OR cxx17)
+  message(DEPRECATION "Options cxx11/14/17 are deprecated. Please use CMAKE_CXX_STANDARD instead.")
+
+  # for backward compatibility
+  if(cxx17)
+    set(CMAKE_CXX_STANDARD 17)
+  elseif(cxx14)
+    set(CMAKE_CXX_STANDARD 14)
+  elseif(cxx11)
+    set(CMAKE_CXX_STANDARD 11)
   endif()
+
+  unset(cxx17 CACHE)
+  unset(cxx14 CACHE)
+  unset(cxx11 CACHE)
 endif()
-if(cxx14)
-  CHECK_CXX_COMPILER_FLAG("-std=c++14" HAS_CXX14)
-  if(NOT HAS_CXX14)
-    message(STATUS "Current compiler does not suppport -std=c++14 option. Switching OFF cxx14 option")
-    set(cxx14 OFF CACHE BOOL "" FORCE)
-  endif()
+
+if(NOT CMAKE_CXX_STANDARD MATCHES "11|14|17")
+  message(FATAL_ERROR "Unsupported C++ standard: ${CMAKE_CXX_STANDARD}")
 endif()
-if(cxx17)
-  CHECK_CXX_COMPILER_FLAG("-std=c++17" HAS_CXX17)
-  if(NOT HAS_CXX17)
-    message(STATUS "Current compiler does not suppport -std=c++17 option. Switching OFF cxx17 option")
-    set(cxx17 OFF CACHE BOOL "" FORCE)
-  endif()
-endif()
+
+# needed by roottest, to be removed once roottest is fixed
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${CMAKE_CXX_STANDARD}")
+
 if(root7)
-  if(cxx11)
-    message(STATUS "ROOT7 interfaces require >= cxx14 which is disabled. Switching OFF root7 option")
-    set(root7 OFF CACHE BOOL "" FORCE)
+  if(CMAKE_CXX_STANDARD EQUAL 11)
+    message(FATAL_ERROR "ROOT 7 requires C++14 or higher")
+  elseif(NOT http)
+    set(http ON CACHE BOOL "(Enabled since it's needed by ROOT 7)" FORCE)
   endif()
-    set(http ON CACHE BOOL "" FORCE)
 endif()
 
 #---Check for libcxx option------------------------------------------------------------
@@ -177,18 +176,6 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_THREAD_FLAG}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_THREAD_FLAG}")
-
-if(cxx11)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-endif()
-
-if(cxx14)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-endif()
-
-if(cxx17)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-endif()
 
 if(libcxx)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
