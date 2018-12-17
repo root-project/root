@@ -276,9 +276,11 @@ if (NOT WIN32 AND NOT libcxx)
   if (__libcpp_full_paths_list)
     list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
 
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in.build ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap-installed.overlay.yaml.in ${CMAKE_BINARY_DIR}/build/modulemap.overlay.yaml @ONLY)
-    install(FILES "${CMAKE_BINARY_DIR}/build/modulemap.overlay.yaml" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in.install ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml.install @ONLY)
+    install(FILES "${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml.install" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers RENAME "modulemap.overlay.yaml")
 
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.modulemap ${CMAKE_BINARY_DIR}/include/stl.modulemap)
     install(FILES "${CMAKE_BINARY_DIR}/include/stl.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
