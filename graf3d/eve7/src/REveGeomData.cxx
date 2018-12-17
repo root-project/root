@@ -23,6 +23,7 @@
 #include "TGeoCompositeShape.h"
 #include "TObjArray.h"
 #include "TBuffer3D.h"
+#include "TBufferJSON.h"
 
 #include <algorithm>
 
@@ -312,7 +313,7 @@ ROOT::Experimental::REveGeomDescription::ShapeDescr &ROOT::Experimental::REveGeo
 /// Collect all information required to draw geometry on the client
 /// This includes list of each visible nodes, meshes and matrixes
 
-void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces)
+void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces, std::string &json, std::vector<char> &binary)
 {
    std::vector<int> viscnt(fDesc.size(), 0);
 
@@ -405,7 +406,10 @@ void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces)
 
    // finally, create binary data with all produced shapes
 
-   std::vector<char> binary;
+   auto res = TBufferJSON::ToJSON(&visibles, 3);
+   json = "DRAW:";
+   json.append(res.Data());
+
    binary.resize(render_offset);
    int off{0};
 

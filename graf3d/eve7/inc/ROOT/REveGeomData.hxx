@@ -96,14 +96,14 @@ class REveGeomDescription {
 
    void ScanVisible(REveGeomScanFunc_t func);
 
-   void CollectVisibles(int maxnumfaces);
-
    ShapeDescr &FindShapeDescr(TGeoShape *s);
 
 public:
    REveGeomDescription() = default;
 
    void Build(TGeoManager *mgr);
+
+   void CollectVisibles(int maxnumfaces, std::string &json, std::vector<char> &binary);
 };
 
 
