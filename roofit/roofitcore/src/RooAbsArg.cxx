@@ -493,6 +493,7 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
 //     if (list->getHashTableSize()==0) {
 //       list->setHashTableSize(1000) ;
 //     }
+    list->reserve(10);
     arg=this ;
   }
 
@@ -953,6 +954,10 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 
   //Copy original server list to not confuse the iterator while deleting
   std::vector<RooAbsArg*> origServerList, origServerValue, origServerShape;
+  std::size_t origSize = _serverList.GetSize();
+  origServerList.reserve(origSize);
+  origServerValue.reserve(origSize);
+
   RooFIter sIter = _serverList.fwdIterator() ;
   for (RooAbsArg * oldServer = sIter.next(); oldServer; oldServer=sIter.next()) {
     origServerList.push_back(oldServer) ;

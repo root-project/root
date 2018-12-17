@@ -129,6 +129,14 @@ public:
 
   Bool_t isInRange(const char* rangeSpec) ;
 
+  RooArgSet * snapshot(bool deepCopy = true) const {
+    return static_cast<RooArgSet*>(RooAbsCollection::snapshot(deepCopy));
+  }
+
+  Bool_t snapshot(RooAbsCollection& output, Bool_t deepCopy=kTRUE) const {
+    return RooAbsCollection::snapshot(output, deepCopy);
+  }
+
 protected:
 
   Bool_t checkForDup(const RooAbsArg& arg, Bool_t silent) const ;

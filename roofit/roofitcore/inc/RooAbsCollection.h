@@ -21,7 +21,6 @@
 #include "RooPrintable.h"
 #include "RooCmdArg.h"
 #include "RooLinkedListIter.h"
-#include <ROOT/RMakeUnique.hxx>
 #include <string>
 
 //#include <llvm/ADT/SmallVector.h>
@@ -141,6 +140,14 @@ public:
   }
   const_iterator end() const {
     return _list.end();
+  }
+
+  std::size_t size() const {
+    return _list.size();
+  }
+
+  void reserve(std::size_t count) {
+    _list.reserve(count);
   }
 
   inline Int_t getSize() const { 

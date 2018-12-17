@@ -22,10 +22,8 @@
 RooAbsCollection is an abstract container object that can hold
 multiple RooAbsArg objects.  Collections are ordered and can
 contain multiple objects of the same name, (but a derived
-implementation can enforce unique names). The storage of objects in
-implement through class RooLinkedList, a doubly linked list with an
-an optional hash-table lookup mechanism for fast indexing of large
-collections.
+implementation can enforce unique names). The storage of objects is
+implemented using the container denoted by RooAbsCollection::Storage_t.
 **/
 
 #include "RooAbsCollection.h"
@@ -46,6 +44,7 @@ collections.
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
+#include <ROOT/RMakeUnique.hxx>
 
 #include <algorithm>
 #include <iomanip>
@@ -63,11 +62,12 @@ ClassImp(RooAbsCollection);
 /// Default constructor
 
 RooAbsCollection::RooAbsCollection() :
-  _list(0),
+  _list(),
   _ownCont(kFALSE),
   _name(),
   _allRRV(kTRUE)
 {
+  _list.reserve(8);
 }
 
 
@@ -76,11 +76,12 @@ RooAbsCollection::RooAbsCollection() :
 /// Empty collection constructor
 
 RooAbsCollection::RooAbsCollection(const char *name) :
-  _list(0),
+  _list(),
   _ownCont(kFALSE),
   _name(name),
   _allRRV(kTRUE)
 {
+  _list.reserve(8);
 }
 
 
@@ -100,6 +101,8 @@ RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *na
 {
   RooTrace::create(this) ;
   if (!name) setName(other.GetName()) ;
+
+  _list.reserve(other._list.size());
 
   for (auto item : other._list) {
     add(*item);
@@ -192,15 +195,13 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
     snapName.Append(GetName()) ;
   }
   RooAbsCollection* output = (RooAbsCollection*) create(snapName.Data()) ;
-  if (deepCopy || getSize()>1000) {
-    output->setHashTableSize(1000) ;
-  }
+
   Bool_t error = snapshot(*output,deepCopy) ;
   if (error) {
     delete output ;
     return 0 ;
   }
-  output->setHashTableSize(0) ;
+
   return output ;
 }
 
@@ -224,6 +225,7 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
 Bool_t RooAbsCollection::snapshot(RooAbsCollection& output, Bool_t deepCopy) const
 {
   // Copy contents
+  output.reserve(_list.size());
   for (auto orig : _list) {
     RooAbsArg *copy= (RooAbsArg*)orig->Clone();
     output.add(*copy);
