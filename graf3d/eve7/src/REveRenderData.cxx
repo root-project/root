@@ -59,7 +59,7 @@ int REveRenderData::Write(char *msg)
       off += binsize;
    }
    if (!fIndexBuffer.empty()) {
-      int binsize = fIndexBuffer.size() * sizeof(float);
+      int binsize = fIndexBuffer.size() * sizeof(int);
       memcpy(msg + off, &fIndexBuffer[0], binsize);
       off += binsize;
    }
