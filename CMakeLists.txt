@@ -38,11 +38,16 @@ set(HEADER_OUTPUT_PATH ${CMAKE_BINARY_DIR}/include)
 set(ROOT_INCLUDE_DIR ${HEADER_OUTPUT_PATH})
 
 #---Set the ROOT version--------------------------------------------------------------------
-execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --all
-                OUTPUT_VARIABLE GIT_DESCRIBE_ALL
-                RESULT_VARIABLE GIT_DESCRIBE_ERRCODE
-                ERROR_QUIET
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
+find_package(Git)
+if(Git_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/.git)
+  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --all
+                  OUTPUT_VARIABLE GIT_DESCRIBE_ALL
+                  RESULT_VARIABLE GIT_DESCRIBE_ERRCODE
+                  ERROR_QUIET
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+else()
+  set(GIT_DESCRIBE_ERRCODE "NoGit")
+endif()
 if(GIT_DESCRIBE_ERRCODE)
   file(READ ${CMAKE_SOURCE_DIR}/build/version_number versionstr)
   string(STRIP ${versionstr} versionstr)
