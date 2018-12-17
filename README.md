@@ -33,9 +33,8 @@ acquisition, simulation and data analysis systems.
 | Branch | Nightly build status |
 |--------|------------|---------|
 | master | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master/) |
-| master-noimt | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master-noimt)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master-noimt/) |
+| v6-16-00-patches | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-16-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-16-00-patches/) |
 | v6-14-00-patches | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-14-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-14-00-patches/) |
-| v6-12-00-patches | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-12-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-12-00-patches/) |
 
 ## Cite
 We are [![DOI](https://zenodo.org/badge/10994345.svg)](https://zenodo.org/badge/latestdoi/10994345)
