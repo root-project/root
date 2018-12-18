@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 set(policy_new CMP0068 CMP0072 CMP0077)
 foreach(policy ${policy_new})
