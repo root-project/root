@@ -16,9 +16,11 @@
 
 #include <mutex> // std::lock_guard
 
-ROOT::Internal::RDF::RSlotStack::RSlotStack(unsigned int size) : fSize(size), fMutexPtr(std::make_unique<ROOT::TSpinMutex>())
+ROOT::Internal::RDF::RSlotStack::RSlotStack(unsigned int size)
+   : fSize(size), fMutexPtr(std::make_unique<ROOT::TSpinMutex>())
 {
-   for (auto i : ROOT::TSeqU(size)) fStack.push(i);
+   for (auto i : ROOT::TSeqU(size))
+      fStack.push(i);
 }
 
 void ROOT::Internal::RDF::RSlotStack::ReturnSlot(unsigned int slot)

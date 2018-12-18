@@ -35,8 +35,8 @@ public:
    void ReturnSlot(unsigned int slotNumber);
    unsigned int GetSlot();
 };
-} // ns RDF
-} // ns Internal
-} // ns ROOT
+} // namespace RDF
+} // namespace Internal
+} // namespace ROOT
 
 #endif
