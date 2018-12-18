@@ -15,92 +15,94 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-// 
-// RooCustomizer is a factory class to produce clones
-// of a prototype composite PDF object with the same structure but
-// different leaf servers (parameters or dependents)
-//
-// RooCustomizer supports two kinds of modifications:
-// 
-// -> replace(leaf_arg,repl_arg) 
-// replaces each occurence of leaf_arg with repl_arg in the composite pdf.
-//
-// -> split(split_arg)
-// is used when building multiple clones of the same prototype. Each
-// occurrence of split_arg is replaceed with a clone of split_arg
-// named split_arg_[MCstate], where [MCstate] is the name of the
-// 'master category state' that indexes the clones to be built.
-//
-//
-// [Example]
-//
-// Splitting is particularly useful when building simultaneous fits to
-// subsets of the data sample with different background properties.
-// In such a case, the user builds a single prototype PDF representing
-// the structure of the signal and background and splits the dataset
-// into categories with different background properties. Using
-// RooCustomizer a PDF for each subfit can be constructed from the
-// prototype that has same structure and signal parameters, but
-// different instances of the background parameters: e.g.
-//
-//     ...
-//     RooExponential bg("bg","background",x,alpha) ;
-//     RooGaussian sig("sig","signal",x,mean,sigma) ;
-//     RooAddPdf pdf("pdf","pdf",sig,bg,sigfrac) ;
-//
-//     RooDataSet data("data","dataset",RooArgSet(x,runblock),...)
-//
-//     RooCategory runblock("runblock","run block") ;
-//     runblock.defineType("run1") ;
-//     runblock.defineType("run2") ;
-//
-//     RooArgSet splitLeafs
-//     RooCustomizer cust(pdf,runblock,splitLeafs)
-//     cust.split(alpha,runblock)
-//
-//     RooAbsPdf* pdf_run1 = cust.build("run1") ;
-//     RooAbsPdf* pdf_run2 = cust.build("run2") ;
-//
-//     RooSimultaneous simpdf("simpdf","simpdf",RooArgSet(*pdf_run1,*pdf_run2)) 
-//
-// If the master category state is a super category, leafs may be split
-// by any subset of that master category. E.g. if the master category
-// is 'A x B', leafs may be split by A, B or AxB.
-//
-// In addition to replacing leaf nodes, RooCustomizer clones all branch
-// nodes that depend directly or indirectly on modified leaf nodes, so
-// that the input pdf is untouched by each build operation.
-//
-// The customizer owns all the branch nodes including the returned top
-// level node, so the customizer should live as longs as the cloned
-// composites are needed.
-//
-// Any leaf nodes that are created by the customizer will be put into
-// the leaf list that is passed into the customizers constructor (splitLeafs in
-// the above example. The list owner is responsible for deleting these leaf
-// nodes after the customizer is deleted.
-//
-//
-// [Advanced techniques]
-//
-// By default the customizer clones the prototype leaf node when splitting a leaf,
-// but the user can feed pre-defined split leafs in leaf list. These leafs
-// must have the name <split_leaf>_<splitcat_label> to be picked up. The list
-// of pre-supplied leafs may be partial, any missing split leafs will be auto
-// generated.
-//
-// Another common construction is to have two prototype PDFs, each to be customized
-// by a separate customizer instance, that share parameters. To ensure that
-// the customized clones also share their respective split leafs, i.e.
-//
-//   PDF1(x,y;A) and PDF2(z,A)   ---> PDF1_run1(x,y,A_run1) and PDF2_run1(x,y,A_run1)
-//                                    PDF1_run2(x,y,A_run2) and PDF2_run2(x,y,A_run2)
-//
-// feed the same split leaf list into both customizers. In that case the second customizer
-// will pick up the split leafs instantiated by the first customizer and the link between
-// the two PDFs is retained
-//
-//
+/// \class RooCustomizer
+///
+/// RooCustomizer is a factory class to produce clones
+/// of a prototype composite PDF object with the same structure but
+/// different leaf servers (parameters or dependents)
+///
+/// RooCustomizer supports two kinds of modifications:
+///
+/// - replace(leaf_arg,repl_arg)
+/// replaces each occurence of leaf_arg with repl_arg in the composite pdf.
+///
+/// - split(split_arg)
+/// is used when building multiple clones of the same prototype. Each
+/// occurrence of split_arg is replaceed with a clone of split_arg
+/// named split_arg_[MCstate], where [MCstate] is the name of the
+/// 'master category state' that indexes the clones to be built.
+///
+///
+/// Example
+/// ------------------------------
+/// Splitting is particularly useful when building simultaneous fits to
+/// subsets of the data sample with different background properties.
+/// In such a case, the user builds a single prototype PDF representing
+/// the structure of the signal and background and splits the dataset
+/// into categories with different background properties. Using
+/// RooCustomizer a PDF for each subfit can be constructed from the
+/// prototype that has same structure and signal parameters, but
+/// different instances of the background parameters: e.g.
+/// ```
+///     ...
+///     RooExponential bg("bg","background",x,alpha) ;
+///     RooGaussian sig("sig","signal",x,mean,sigma) ;
+///     RooAddPdf pdf("pdf","pdf",sig,bg,sigfrac) ;
+///
+///     RooDataSet data("data","dataset",RooArgSet(x,runblock),...)
+///
+///     RooCategory runblock("runblock","run block") ;
+///     runblock.defineType("run1") ;
+///     runblock.defineType("run2") ;
+///
+///     RooArgSet splitLeafs;
+///     RooCustomizer cust(pdf,runblock,splitLeafs);
+///     cust.split(alpha,runblock);
+///
+///     RooAbsPdf* pdf_run1 = cust.build("run1") ;
+///     RooAbsPdf* pdf_run2 = cust.build("run2") ;
+///
+///     RooSimultaneous simpdf("simpdf","simpdf",RooArgSet(*pdf_run1,*pdf_run2))
+/// ```
+/// If the master category state is a super category, leafs may be split
+/// by any subset of that master category. E.g. if the master category
+/// is 'A x B', leafs may be split by A, B or AxB.
+///
+/// In addition to replacing leaf nodes, RooCustomizer clones all branch
+/// nodes that depend directly or indirectly on modified leaf nodes, so
+/// that the input pdf is untouched by each build operation.
+///
+/// The customizer owns all the branch nodes including the returned top
+/// level node, so the customizer should live as longs as the cloned
+/// composites are needed.
+///
+/// Any leaf nodes that are created by the customizer will be put into
+/// the leaf list that is passed into the customizers constructor (splitLeafs in
+/// the above example. The list owner is responsible for deleting these leaf
+/// nodes after the customizer is deleted.
+///
+///
+/// Advanced techniques
+/// -------------------------------------
+///
+/// By default the customizer clones the prototype leaf node when splitting a leaf,
+/// but the user can feed pre-defined split leafs in leaf list. These leafs
+/// must have the name <split_leaf>_<splitcat_label> to be picked up. The list
+/// of pre-supplied leafs may be partial, any missing split leafs will be auto
+/// generated.
+///
+/// Another common construction is to have two prototype PDFs, each to be customized
+/// by a separate customizer instance, that share parameters. To ensure that
+/// the customized clones also share their respective split leafs, i.e.
+/// ```
+///   PDF1(x,y;A) and PDF2(z,A)   ---> PDF1_run1(x,y,A_run1) and PDF2_run1(x,y,A_run1)
+///                                    PDF1_run2(x,y,A_run2) and PDF2_run2(x,y,A_run2)
+/// ```
+/// feed the same split leaf list into both customizers. In that case the second customizer
+/// will pick up the split leafs instantiated by the first customizer and the link between
+/// the two PDFs is retained
+///
+///
 
 
 #include "RooFit.h"
