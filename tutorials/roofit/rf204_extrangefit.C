@@ -1,8 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-/// Addition and convolution: extended maximum likelihood fit with alternate range definition for observed number of
-/// events.
+///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #204
+///
+///  Extended maximum likelihood fit with alternate range definition
+///  for observed number of events.
+///  If multiple ranges are used, or only a part of the data is fitted,
+///  it is advisable to use a RooAddPdf to extend the model. See tutorial
+///  204a.
 ///
 /// \macro_output
 /// \macro_code
@@ -46,6 +51,8 @@ void rf204_extrangefit()
    RooRealVar sig1frac("sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.);
    RooAddPdf sig("sig", "Signal", RooArgList(sig1, sig2), sig1frac);
 
+   // C o n s t r u c t   e x t e n d e d   c o m p s   wi t h   r a n g e   s p e c
+   // ------------------------------------------------------------------------------
 
    // Define signal range in which events counts are to be defined
    x.setRange("signalRange", 4, 6);
@@ -81,54 +88,5 @@ void rf204_extrangefit()
    // Perform unbinned ML fit to data, full range
    RooFitResult* r = model.fitTo(*data,Save()) ;
    r->Print() ;
-   
-   RooPlot * frame = x.frame(Title("Full range fitted"));
-   data->plotOn(frame);
-   model.plotOn(frame, VisualizeError(*r));
-   model.plotOn(frame);
-   model.paramOn(frame);
-   frame->Draw();
-   
-   
-   // Fit in two regions
-   // -------------------------------------------
-   
-   canv->cd(2);
-   x.setRange("left",  0., 4.);
-   x.setRange("right", 6., 10.);
-   
-   RooFitResult* r2 = model2.fitTo(*data,
-      Range("left,right"),
-      Save()) ;
-   r2->Print();
-   
-   
-   RooPlot * frame2 = x.frame(Title("Fit in left/right sideband"));
-   data->plotOn(frame2);
-   model2.plotOn(frame2, VisualizeError(*r2));
-   model2.plotOn(frame2);
-   model2.paramOn(frame2);
-   frame2->Draw();
-   
-   
-   // Fit in one region
-   // -------------------------------------------
-   
-   canv->cd(3);
-   x.setRange("leftToMiddle",  0., 5.);
-   
-   RooFitResult* r3 = model3.fitTo(*data,
-      Range("leftToMiddle"),
-      Save()) ;
-   r3->Print();
-   
-   
-   RooPlot * frame3 = x.frame(Title("Fit from left to middle"));
-   data->plotOn(frame3);
-   model3.plotOn(frame3, VisualizeError(*r3));
-   model3.plotOn(frame3);
-   model3.paramOn(frame3);
-   frame3->Draw();
-   
-   canv->Draw();
+
 }
