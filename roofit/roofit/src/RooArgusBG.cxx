@@ -18,6 +18,11 @@
     \ingroup Roofit
 
 RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
+\f[
+  \mathrm{Argus}(m, m_0, c, p) = \mathcal{N} \cdot m \cdot \left[ 1 - \left( \frac{m}{m_0} \right)^2 \right]^p
+  \cdot \exp\left[ c \cdot \left(1 - \left(\frac{m}{m_0}\right)^2 \right) \right]
+\f]
+\image html RooArgusBG.png
 */
 
 #include "RooFit.h"

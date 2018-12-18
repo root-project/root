@@ -15,28 +15,28 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-// 
-// RooArgList is a container object that can hold multiple RooAbsArg objects.
-// The container has list semantics which means that:
-//
-//  - Contained objects are ordered, The iterator 
-//    follows the object insertion order.
-//
-//  - Objects can be retrieved by name and index
-//
-//  - Multiple objects with the same name are allowed
-//
-// Ownership of contents. 
-//
-// Unowned objects are inserted with the add() method. Owned objects
-// are added with addOwned() or addClone(). A RooArgSet either owns all 
-// of it contents, or none, which is determined by the first <add>
-// call. Once an ownership status is selected, inappropriate <add> calls
-// will return error status. Clearing the list via removeAll() resets the 
-// ownership status. Arguments supplied in the constructor are always added 
-// as unowned elements.
-//
-//
+/// \class RooArgList
+/// RooArgList is a container object that can hold multiple RooAbsArg objects.
+/// The container has list semantics which means that:
+///
+///  - Contained objects are ordered, The iterator
+///    follows the object insertion order.
+///
+///  - Objects can be retrieved by name and index
+///
+///  - Multiple objects with the same name are allowed
+///
+/// Ownership of contents.
+///
+/// Unowned objects are inserted with the add() method. Owned objects
+/// are added with addOwned() or addClone(). A RooArgSet either owns all
+/// of it contents, or none, which is determined by the first <add>
+/// call. Once an ownership status is selected, inappropriate <add> calls
+/// will return error status. Clearing the list via removeAll() resets the
+/// ownership status. Arguments supplied in the constructor are always added
+/// as unowned elements.
+///
+///
 
 #include "Riostream.h"
 #include <iomanip>

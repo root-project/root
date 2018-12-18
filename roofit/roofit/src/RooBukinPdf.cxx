@@ -16,24 +16,14 @@
 /** \class RooBukinPdf
     \ingroup Roofit
 
-RooBukinPdf implements the NovosibirskA function
+RooBukinPdf implements the NovosibirskA function. For the parameters, see
+RooBukinPdf().
 
-#### Original Fortran Header below
-~~~
- * Fitting function for asymmetric peaks with 6 free parameters:
- *     Ap   - peak value
- *     Xp   - peak position
- *     sigp - FWHM divided by 2*sqrt(2*log(2))=2.35
- *     xi   - peak asymmetry parameter
- *     rho1 - parameter of the "left tail"
- *     rho2 - parameter of the "right tail"
- *   ---------------------------------------------
- *       May 26, 2003
- *       A.Bukin, Budker INP, Novosibirsk
- *       Documentation:
- *       http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003/Tues3a/bukin.ps
- *   -------------------------------------------
-~~~
+Credits:
+May 26, 2003.
+A.Bukin, Budker INP, Novosibirsk
+
+http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003/Tues3a/bukin.ps
 **/
 
 #include "RooFit.h"
@@ -50,7 +40,15 @@ using namespace std;
 ClassImp(RooBukinPdf);
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Construct a Bukin PDF.
+/// \param name  The name of the PDF for RooFit's bookeeping.
+/// \param title The title for e.g. plotting it.
+/// \param _x    The variable.
+/// \param _Xp   The peak position.
+/// \param _sigp The peak width as FWHM divided by 2*sqrt(2*log(2))=2.35
+/// \param _xi   Peak asymmetry. Use values around 0.
+/// \param _rho1 Left tail. Use slightly negative starting values.
+/// \param _rho2 Right tail. Use slightly positive starting values.
 RooBukinPdf::RooBukinPdf(const char *name, const char *title,
           RooAbsReal& _x,    RooAbsReal& _Xp,
           RooAbsReal& _sigp, RooAbsReal& _xi,
@@ -70,7 +68,7 @@ RooBukinPdf::RooBukinPdf(const char *name, const char *title,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Copy a Bukin PDF.
 RooBukinPdf::RooBukinPdf(const RooBukinPdf& other, const char *name):
   RooAbsPdf(other,name),
   x("x",this,other.x),

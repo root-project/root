@@ -135,44 +135,37 @@ RooDataSet::RooDataSet() : _wgtVar(0)
 /// Construct an unbinned dataset from a RooArgSet defining the dimensions of the data space. Optionally, data
 /// can be imported at the time of construction.
 ///
-/// This constructor takes the following optional arguments
-///
-/// Import(TTree*)              -- Import contents of given TTree. Only braches of the TTree that have names
+/// <table>
+/// <tr><th> %RooCmdArg <th> Effect
+/// <tr><td> Import(TTree*)              <td> Import contents of given TTree. Only braches of the TTree that have names
 ///                                corresponding to those of the RooAbsArgs that define the RooDataSet are
 ///                                imported. 
-/// ImportFromFile(const char* fileName, const char* treeName) -- Import tree with given name from file with given name.
-///
-/// Import(RooDataSet&)         -- Import contents of given RooDataSet. Only observables that are common with
-///                                the definition of this dataset will be imported
-///
-/// Index(RooCategory&)         -- Prepare import of datasets into a N+1 dimensional RooDataSet
+/// <tr><td> ImportFromFile(const char* fileName, const char* treeName) <td> Import tree with given name from file with given name.
+/// <tr><td> Import(RooDataSet&)
+///     <td> Import contents of given RooDataSet. Only observables that are common with the definition of this dataset will be imported
+/// <tr><td> Index(RooCategory&)         <td> Prepare import of datasets into a N+1 dimensional RooDataSet
 ///                                where the extra discrete dimension labels the source of the imported histogram.
-///                              
-/// Import(const char*,         -- Import a dataset to be associated with the given state name of the index category
-///              RooDataSet&)      specified in Index(). If the given state name is not yet defined in the index
-///                               category it will be added on the fly. The import command can be specified
-///                                multiple times. 
-///
-/// Link(const char*, RooDataSet&) -- Link contents of supplied RooDataSet to this dataset for given index category state name.
+/// <tr><td> Import(const char*, RooDataSet&)
+///     <td> Import a dataset to be associated with the given state name of the index category
+///                    specified in Index(). If the given state name is not yet defined in the index
+///                    category it will be added on the fly. The import command can be specified multiple times.
+/// <tr><td> Link(const char*, RooDataSet&) <td> Link contents of supplied RooDataSet to this dataset for given index category state name.
 ///                                   In this mode, no data is copied and the linked dataset must be remain live for the duration
 ///                                   of this dataset. Note that link is active for both reading and writing, so modifications
 ///                                   to the aggregate dataset will also modify its components. Link() and Import() are mutually exclusive.
-/// OwnLinked()                    -- Take ownership of all linked datasets
-///
-/// Import(map<string,RooDataSet*>&) -- As above, but allows specification of many imports in a single operation
-/// Link(map<string,RooDataSet*>&)   -- As above, but allows specification of many links in a single operation
-///
-///                              
-/// Cut(const char*)            -- Apply the given cut specification when importing data
-/// Cut(RooFormulaVar&)         
-///
-/// CutRange(const char*)       -- Only accept events in the observable range with the given name
-///
-/// WeightVar(const char*)      -- Interpret the given variable as event weight rather than as observable
-/// WeightVar(const RooAbsArg&) 
-///
-/// StoreError(const RooArgSet&)     -- Store symmetric error along with value for given subset of observables
-/// StoreAsymError(const RooArgSet&) -- Store asymmetric error along with value for given subset of observables
+/// <tr><td> OwnLinked()                    <td> Take ownership of all linked datasets
+/// <tr><td> Import(map<string,RooDataSet*>&) <td> As above, but allows specification of many imports in a single operation
+/// <tr><td> Link(map<string,RooDataSet*>&)   <td> As above, but allows specification of many links in a single operation
+/// <tr><td> Cut(const char*) <br>
+///     Cut(RooFormulaVar&)
+///     <td> Apply the given cut specification when importing data
+/// <tr><td> CutRange(const char*)       <td> Only accept events in the observable range with the given name
+/// <tr><td> WeightVar(const char*) <br>
+///     WeightVar(const RooAbsArg&)
+///     <td> Interpret the given variable as event weight rather than as observable
+/// <tr><td> StoreError(const RooArgSet&)     <td> Store symmetric error along with value for given subset of observables
+/// <tr><td> StoreAsymError(const RooArgSet&) <td> Store asymmetric error along with value for given subset of observables
+/// </table>
 ///
 
 RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
@@ -1389,30 +1382,25 @@ TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsReal
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Special plot method for 'X-Y' datasets used in Chi^2 fitting. These datasets 
+/// Special plot method for 'X-Y' datasets used in \f$ \chi^2 \f$ fitting. These datasets
 /// have one observable (X) and have weights (Y) and associated errors.
-///
-/// Contents options
-/// ---------------------
-/// YVar(RooRealVar& var)           -- Designate specified observable as 'y' variable
+/// <table>
+/// <tr><th> Contents options       <th> Effect
+/// <tr><td> YVar(RooRealVar& var)  <td> Designate specified observable as 'y' variable
 ///                                    If not specified, the event weight will be the y variable
-/// Histogram drawing options
-/// -------------------------
-/// DrawOption(const char* opt)     -- Select ROOT draw option for resulting TGraph object
-/// LineStyle(Int_t style)          -- Select line style by ROOT line style code, default is solid
-/// LineColor(Int_t color)          -- Select line color by ROOT color code, default is black
-/// LineWidth(Int_t width)          -- Select line with in pixels, default is 3
-/// MarkerStyle(Int_t style)        -- Select the ROOT marker style, default is 21
-/// MarkerColor(Int_t color)        -- Select the ROOT marker color, default is black
-/// MarkerSize(Double_t size)       -- Select the ROOT marker size
-/// Rescale(Double_t factor)        -- Apply global rescaling factor to histogram
-///
-///
-/// Misc. other options
-/// -------------------
-/// Name(const chat* name)          -- Give curve specified name in frame. Useful if curve is to be referenced later
-/// Invisible(Bool_t flag)          -- Add curve to frame, but do not display. Useful in combination AddTo()
-/// 
+/// <tr><th> Histogram drawing options <th> Effect
+/// <tr><td> DrawOption(const char* opt)     <td> Select ROOT draw option for resulting TGraph object
+/// <tr><td> LineStyle(Int_t style)          <td> Select line style by ROOT line style code, default is solid
+/// <tr><td> LineColor(Int_t color)          <td> Select line color by ROOT color code, default is black
+/// <tr><td> LineWidth(Int_t width)          <td> Select line with in pixels, default is 3
+/// <tr><td> MarkerStyle(Int_t style)        <td> Select the ROOT marker style, default is 21
+/// <tr><td> MarkerColor(Int_t color)        <td> Select the ROOT marker color, default is black
+/// <tr><td> MarkerSize(Double_t size)       <td> Select the ROOT marker size
+/// <tr><td> Rescale(Double_t factor)        <td> Apply global rescaling factor to histogram
+/// <tr><th> Misc. other options <th> Effect
+/// <tr><td> Name(const chat* name)          <td> Give curve specified name in frame. Useful if curve is to be referenced later
+/// <tr><td> Invisible(Bool_t flag)          <td> Add curve to frame, but do not display. Useful in combination AddTo()
+/// </table>
 
 RooPlot* RooDataSet::plotOnXY(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
 			      const RooCmdArg& arg3, const RooCmdArg& arg4,
@@ -1534,6 +1522,7 @@ RooPlot* RooDataSet::plotOnXY(RooPlot* frame, const RooCmdArg& arg1, const RooCm
 /// \param fileList Multiple file names, comma separated. Each
 /// file is optionally prefixed with 'commonPath' if such a path is
 /// provided
+///
 /// \param varList Specify the dimensions of the dataset to be built.
 /// This list describes the order in which these dimensions appear in the
 /// ascii files to be read. 
@@ -1541,8 +1530,11 @@ RooPlot* RooDataSet::plotOnXY(RooPlot* frame, const RooCmdArg& arg1, const RooCm
 /// tokens, with N the number of args in `varList`. Any text beyond
 /// N tokens will be ignored with a warning message.
 /// (NB: This is the default output of RooArgList::writeToStream())
+///
 /// \param verbOpt `Q` be quiet, `D` debug mode (verbose)
+///
 /// \param commonPath All filenames in `fileList` will be prefixed with this optional path.
+///
 /// \param indexCatName Interpret the data as belonging to category `indexCatName`.
 /// When multiple files are read, a RooCategory arg in `varList` can
 /// optionally be designated to hold information about the source file

@@ -5,3 +5,4 @@
 RooStats is a package containing statistical tools built on top of RooFit.
 See the RooStats [Twiki Page](https://twiki.cern.ch/twiki/bin/view/RooStats/WebHome) for more information.
 
+For tutorials see \ref tutorial_roostats. 

@@ -12,11 +12,23 @@
 
 Bernstein basis polynomials are positive-definite in the range [0,1].
 In this implementation, we extend [0,1] to be the range of the parameter.
-There are n+1 Bernstein basis polynomials of degree n.
-Thus, by providing N coefficients that are positive-definite, there
-is a natural way to have well behaved polynomial PDFs.
-For any n, the n+1 basis polynomials 'form a partition of unity', eg.
- they sum to one for all values of x. See
+There are n+1 Bernstein basis polynomials of degree n:
+\f[
+ B_{i,n}(x) = \begin{pmatrix}n \\\ i \end{pmatrix} x^i \cdot (1-x)^{n-i}
+\f]
+Thus, by providing n coefficients that are positive-definite, there
+is a natural way to have well-behaved polynomial PDFs. For any n, the n+1 polynomials
+'form a partition of unity', i.e., they sum to one for all values of x.
+They can be used as a basis to span the space of polynomials with degree n or less:
+\f[
+ PDF(x, c_0, ..., c_n) = \mathcal{N} \cdot \sum_{i=0}^{n} c_i \cdot B_{i,n}(x).
+\f]
+By giving n+1 coefficients in the constructor, this class constructs the n+1
+polynomials of degree n, and sums them to form an element of the space of polynomials
+of degree n. \f$ \mathcal{N} \f$ is a normalisation constant that takes care of the
+cases where the \f$ c_i \f$ are not all equal to one.
+
+See also
 http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 **/
 
