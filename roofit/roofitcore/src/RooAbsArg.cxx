@@ -132,12 +132,10 @@ RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
   }
 
   // Copy server list by hand
-  RooFIter sIter = other._serverList.fwdIterator() ;
-  RooAbsArg* server ;
   Bool_t valueProp, shapeProp ;
-  while ((server = sIter.next())) {
+  for (const auto server : other._serverList) {
     valueProp = server->_clientListValue.containsByNamePtr(&other);
-    shapeProp = server->_clientListShape.findArg(&other)?kTRUE:kFALSE ;
+    shapeProp = server->_clientListShape.containsByNamePtr(&other);
     addServer(*server,valueProp,shapeProp) ;
   }
 
@@ -156,16 +154,14 @@ RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
 RooAbsArg::~RooAbsArg()
 {
   // Notify all servers that they no longer need to serve us
-  while (_serverList.GetSize() > 0) {
-    removeServer(*static_cast<RooAbsArg*>(_serverList.First()), kTRUE) ;
+  while (!_serverList.empty()) {
+    removeServer(*_serverList.containedObjects().back(), kTRUE);
   }
 
-  // Notify all client that they are in limbo
-  RooRefCountList tmpclientList(_clientList); // have to copy, as we invalidate iterators
-  RooFIter clientIter = tmpclientList.fwdIterator() ;
-  RooAbsArg* client = 0;
+  // Notify all clients that they are in limbo
+  std::vector<RooAbsArg*> clientListTmp(_clientList.begin(), _clientList.end()); // have to copy, as we invalidate iterators
   Bool_t first(kTRUE) ;
-  while ((client=clientIter.next())) {
+  for (auto client : clientListTmp) {
     client->setAttribute("ServerDied") ;
     TString attr("ServerDied:");
     attr.Append(GetName());
@@ -336,8 +332,8 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
 
 
   // LM: use hash tables for larger lists
-  if (_serverList.GetSize() > 999 && _serverList.getHashTableSize() == 0) _serverList.setHashTableSize(1000);
-  if (server._clientList.GetSize() > 999 && server._clientList.getHashTableSize() == 0) server._clientList.setHashTableSize(1000);
+//  if (_serverList.GetSize() > 999 && _serverList.getHashTableSize() == 0) _serverList.setHashTableSize(1000);
+//  if (server._clientList.GetSize() > 999 && server._clientList.getHashTableSize() == 0) server._clientList.setHashTableSize(1000);
 //  if (server._clientListValue.GetSize() >  999 && server._clientListValue.getHashTableSize() == 0) server._clientListValue.setHashTableSize(1000);
 
   // Add server link to given server
@@ -383,19 +379,11 @@ void RooAbsArg::removeServer(RooAbsArg& server, Bool_t force)
   }
 
   // Remove server link to given server
-  if (!force) {
-    _serverList.Remove(&server) ;
+  _serverList.Remove(&server, force) ;
 
-    server._clientList.Remove(this) ;
-    server._clientListValue.Remove(this) ;
-    server._clientListShape.Remove(this) ;
-  } else {
-    _serverList.RemoveAll(&server) ;
-
-    server._clientList.RemoveAll(this) ;
-    server._clientListValue.RemoveAll(this) ;
-    server._clientListShape.RemoveAll(this) ;
-  }
+  server._clientList.Remove(this, force) ;
+  server._clientListValue.Remove(this, force) ;
+  server._clientListShape.Remove(this, force) ;
 }
 
 
@@ -417,14 +405,14 @@ void RooAbsArg::replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, Bool_t
 
 void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
 {
-  if (!_serverList.findArg(&server)) {
+  if (!_serverList.containsByNamePtr(&server)) {
     coutE(LinkStateMgmt) << "RooAbsArg::changeServer(" << GetName() << "): Server "
 	 << server.GetName() << " not registered" << endl ;
     return ;
   }
 
   // This condition should not happen, but check anyway
-  if (!server._clientList.findArg(this)) {
+  if (!server._clientList.containsByNamePtr(this)) {
     coutE(LinkStateMgmt) << "RooAbsArg::changeServer(" << GetName() << "): Server "
 			 << server.GetName() << " doesn't have us registered as client" << endl ;
     return ;
@@ -862,7 +850,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source) const
 			   << "): dirty flag " << (_shapeDirty?"already ":"") << "raised" << endl ;
   }
 
-  if (_clientListShape.GetSize()==0) {
+  if (_clientListShape.empty()) {
     _shapeDirty = kTRUE ;
     return ;
   }
@@ -880,9 +868,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source) const
   // Propagate dirty flag to all clients if this is a down->up transition
   _shapeDirty=kTRUE ;
 
-  RooFIter clientShapeIter = _clientListShape.fwdIterator() ;
-  RooAbsArg* client ;
-  while ((client=clientShapeIter.next())) {
+  for (auto client : _clientListShape) {
     client->setShapeDirty(source) ;
     client->setValueDirty(source) ;
   }
@@ -901,7 +887,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source) const
 Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursionStep)
 {
   // Trivial case, no servers
-  if (!_serverList.First()) return kFALSE ;
+  if (_serverList.empty()) return kFALSE ;
   if (newSetOrig.getSize()==0) return kFALSE ;
 
   // Strip any non-matching removal nodes from newSetOrig
@@ -936,19 +922,18 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 
   //Copy original server list to not confuse the iterator while deleting
   std::vector<RooAbsArg*> origServerList, origServerValue, origServerShape;
-  std::size_t origSize = _serverList.GetSize();
+  std::size_t origSize = _serverList.size();
   origServerList.reserve(origSize);
   origServerValue.reserve(origSize);
 
-  RooFIter sIter = _serverList.fwdIterator() ;
-  for (RooAbsArg * oldServer = sIter.next(); oldServer; oldServer=sIter.next()) {
+  for (const auto oldServer : _serverList) {
     origServerList.push_back(oldServer) ;
 
     // Retrieve server side link state information
     if (oldServer->_clientListValue.containsByNamePtr(this)) {
       origServerValue.push_back(oldServer) ;
     }
-    if (oldServer->_clientListShape.findArg(this)) {
+    if (oldServer->_clientListShape.containsByNamePtr(this)) {
       origServerShape.push_back(oldServer) ;
     }
   }
@@ -1375,24 +1360,20 @@ void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose
   os << indent << "  Address: " << (void*)this << endl;
   // client list
   os << indent << "  Clients: " << endl;
-  RooFIter clientIter= _clientList.fwdIterator();
-  RooAbsArg* client ;
-  while ((client=clientIter.next())) {
+  for (const auto client : _clientList) {
     os << indent << "    (" << (void*)client  << ","
        << (_clientListValue.containsByNamePtr(client)?"V":"-")
-       << (_clientListShape.findArg(client)?"S":"-")
+       << (_clientListShape.containsByNamePtr(client)?"S":"-")
        << ") " ;
     client->printStream(os,kClassName|kTitle|kName,kSingleLine);
   }
 
   // server list
   os << indent << "  Servers: " << endl;
-  RooFIter serverIter= _serverList.fwdIterator();
-  RooAbsArg* server ;
-  while ((server=serverIter.next())) {
+  for (const auto server : _serverList) {
     os << indent << "    (" << (void*)server << ","
        << (server->_clientListValue.containsByNamePtr(this)?"V":"-")
-       << (server->_clientListShape.findArg(this)?"S":"-")
+       << (server->_clientListShape.containsByNamePtr(this)?"S":"-")
        << ") " ;
     server->printStream(os,kClassName|kName|kTitle,kSingleLine);
   }
@@ -1782,7 +1763,7 @@ void RooAbsArg::printCompactTree(ostream& os, const char* indent, const char* na
     os << IsA()->GetName() << "::" << GetName() <<  " = " ;
     printValue(os) ;
 
-    if (_serverList.GetSize()>0) {
+    if (!_serverList.empty()) {
       switch(operMode()) {
       case Auto:   os << " [Auto," << (isValueDirty()?"Dirty":"Clean") << "] "  ; break ;
       case AClean: os << " [ACLEAN] " ; break ;
@@ -2404,6 +2385,10 @@ void RooAbsArg::ioStreamerPass2Finalize()
 
 }
 
+RooAbsArg::RefCountListLegacyIterator_t *
+RooAbsArg::makeLegacyIterator(const RooAbsArg::RefCountList_t& list) const {
+  return new RefCountListLegacyIterator_t(list.containedObjects());
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class RooRefArray.

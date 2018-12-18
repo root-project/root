@@ -2653,47 +2653,47 @@ void RooWorkspace::Streamer(TBuffer &R__b)
      while((tmparg=(RooAbsArg*)iter->Next())) {
 
        // Loop over client list of this arg
-       TIterator* clientIter = tmparg->_clientList.MakeIterator() ;
-       RooAbsArg* client ;
-       while((client=(RooAbsArg*)clientIter->Next())) {
-	 if (!_allOwnedNodes.containsInstance(*client)) {
-	   while(tmparg->_clientList.refCount(client)>0) {
-	     tmparg->_clientList.Remove(client) ;
-	     extClients[tmparg].push_back(client) ;
-	   }
-	 }
+       std::vector<RooAbsArg *> clientsTmp{tmparg->_clientList.begin(), tmparg->_clientList.end()};
+       for (auto client : clientsTmp) {
+         if (!_allOwnedNodes.containsInstance(*client)) {
+
+           const std::size_t refCount = tmparg->_clientList.refCount(client);
+           auto& bufferVec = extClients[tmparg];
+
+           bufferVec.insert(bufferVec.end(), refCount, client);
+           tmparg->_clientList.Remove(client, true);
+         }
        }
-       delete clientIter ;
 
        // Loop over value client list of this arg
-       std::vector<RooAbsArg *> valueClientsTmp{tmparg->_clientListValue.begin(), tmparg->_clientListValue.end()};
-       for (auto vclient : valueClientsTmp) {
+       clientsTmp.assign(tmparg->_clientListValue.begin(), tmparg->_clientListValue.end());
+       for (auto vclient : clientsTmp) {
          if (!_allOwnedNodes.containsInstance(*vclient)) {
            cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
 				       << " has external value client link to " << vclient << " (" << vclient->GetName() << ") with ref count " << tmparg->_clientListValue.refCount(vclient) << endl ;
 
            const std::size_t refCount = tmparg->_clientListValue.refCount(vclient);
-           auto& extValTmpArgVec = extValueClients[tmparg];
+           auto& bufferVec = extValueClients[tmparg];
 
-           extValTmpArgVec.insert(extValTmpArgVec.end(), refCount, vclient);
+           bufferVec.insert(bufferVec.end(), refCount, vclient);
            tmparg->_clientListValue.Remove(vclient, true);
          }
        }
 
        // Loop over shape client list of this arg
-       TIterator* sclientIter = tmparg->_clientListShape.MakeIterator() ;
-       RooAbsArg* sclient ;
-       while((sclient=(RooAbsArg*)sclientIter->Next())) {
-	 if (!_allOwnedNodes.containsInstance(*sclient)) {
-	   cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName() 
-				 << " has external shape client link to " << sclient << " (" << sclient->GetName() << ") with ref count " << tmparg->_clientListShape.refCount(sclient) << endl ;
-	   while(tmparg->_clientListShape.refCount(sclient)>0) {
-	     tmparg->_clientListShape.Remove(sclient) ;
-	     extShapeClients[tmparg].push_back(sclient) ;
-	   }
-	 }
+       clientsTmp.assign(tmparg->_clientListShape.begin(), tmparg->_clientListShape.end());
+       for (auto sclient : clientsTmp) {
+         if (!_allOwnedNodes.containsInstance(*sclient)) {
+           cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
+				         << " has external shape client link to " << sclient << " (" << sclient->GetName() << ") with ref count " << tmparg->_clientListShape.refCount(sclient) << endl ;
+
+           const std::size_t refCount = tmparg->_clientListShape.refCount(sclient);
+           auto& bufferVec = extShapeClients[tmparg];
+
+           bufferVec.insert(bufferVec.end(), refCount, sclient);
+           tmparg->_clientListShape.Remove(sclient, true);
+         }
        }
-       delete sclientIter ;
 
      }
      delete iter ;

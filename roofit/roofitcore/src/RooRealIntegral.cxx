@@ -638,7 +638,7 @@ Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSe
   if (exclLVBranches.getSize()==0) return kFALSE ;
 
   // If server has no clients and is not an LValue itself, return false
-   if (server->_clientList.GetSize()==0 && exclLVBranches.find(server->GetName())) {
+   if (server->_clientList.empty() && exclLVBranches.find(server->GetName())) {
      return kFALSE ;
    }
 
@@ -652,8 +652,7 @@ Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSe
 //   RooAbsArg* client ;
 //   TIterator* cIter = server->valueClientIterator() ;
 //   while((client=(RooAbsArg*)cIter->Next())) {
-   for (auto it = server->valueClientIteratorBegin(); it != server->valueClientIteratorEnd(); ++it) {
-     const auto client = *it;
+   for (const auto client : server->valueClients()) {
 //      cout << "now checking value client " << client->GetName() << " of server " << server->GetName() << endl ;
      // If client is not an LValue, recurse
      if (!(exclLVBranches.find(client->GetName())==client)) {

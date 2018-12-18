@@ -11,13 +11,17 @@
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[5]" source="TRefArray _proxyList" target="_proxyList" \
   code="{ _proxyList.GetSize() ; if (onfile._proxyList.GetSize()>0) { RooAbsArg::_ioEvoList[newObj] = new TRefArray(onfile._proxyList) ; } }" 
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
+  source="RooRefCountList _serverList" target="_serverList" \
+  code="{ _serverList = STLRefCountListHelpers::convert(onfile._serverList); }"
+#pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
+  source="RooRefCountList _clientList" target="_clientList" \
+  code="{ _clientList = STLRefCountListHelpers::convert(onfile._clientList); }"
+#pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
   source="RooRefCountList _clientListValue" target="_clientListValue" \
-  code="{ RooSTLRefCountList<RooAbsArg> newList; \
-          auto it = onfile._clientListValue.fwdIterator(); \
-          for (RooAbsArg * elm = it.next(); elm != nullptr; elm = it.next()) { \
-            newList.Add(elm, onfile._clientListValue.refCount(elm)); \
-          } \
-         _clientListValue = newList; }"
+  code="{ _clientListValue = STLRefCountListHelpers::convert(onfile._clientListValue); }"
+#pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
+  source="RooRefCountList _clientListShape" target="_clientListShape" \
+  code="{ _clientListShape = STLRefCountListHelpers::convert(onfile._clientListShape); }"
 #pragma link C++ class RooAbsBinning- ;
 #pragma link C++ class RooAbsCategory+ ;
 #pragma link C++ class RooAbsCategoryLValue+ ;

@@ -21,7 +21,6 @@
 #include "THashList.h"
 #include "TRefArray.h"
 #include "RooPrintable.h"
-#include "RooRefCountList.h"
 #include "RooSTLRefCountList.h"
 #include "RooAbsCache.h"
 #include "RooLinkedListIter.h"
@@ -68,6 +67,8 @@ class RooRefArray : public TObjArray {
 
 class RooAbsArg : public TNamed, public RooPrintable {
 public:
+  using RefCountList_t = RooSTLRefCountList<RooAbsArg>;
+  using RefCountListLegacyIterator_t = TIteratorToSTLInterface<RefCountList_t::Container_t>;
 
   // Constructors, cloning and assignment
   RooAbsArg() ;
@@ -99,47 +100,77 @@ public:
   Bool_t dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0, Bool_t valueOnly=kFALSE) const ;
   Bool_t dependsOn(const RooAbsArg& server, const RooAbsArg* ignoreArg=0, Bool_t valueOnly=kFALSE) const ;
   Bool_t overlaps(const RooAbsArg& testArg, Bool_t valueOnly=kFALSE) const ;
-  Bool_t hasClients() const { return _clientList.GetSize()>0 ? kTRUE : kFALSE ; }
-  inline TIterator* clientIterator() const {
+  Bool_t hasClients() const { return !_clientList.empty(); }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Legacy iterators
+  inline TIterator* clientIterator() const
+  R_SUGGEST_FUNCTION_ALTERNATIVE("Use clients() and begin(), end() or range-based loops.") {
     // Return iterator over all client RooAbsArgs
-    return _clientList.MakeIterator() ;
+    return makeLegacyIterator(_clientList);
   }
-//  inline TIterator* valueClientIterator() const {
-//    // Return iterator over all value client RooAbsArgs
-//    return _clientListValue.MakeIterator() ;
-//  }
-  RooSTLRefCountList<RooAbsArg>::Container_t::const_iterator valueClientIteratorBegin() const {
-    return _clientListValue.begin();
-  }
-  RooSTLRefCountList<RooAbsArg>::Container_t::const_iterator valueClientIteratorEnd() const {
-    return _clientListValue.end();
-  }
-
-  inline TIterator* shapeClientIterator() const {
+  inline TIterator* valueClientIterator() const
+  R_SUGGEST_FUNCTION_ALTERNATIVE("Use valueClients() and begin(), end() or range-based loops.") {
     // Return iterator over all shape client RooAbsArgs
-    return _clientListShape.MakeIterator() ;
+    return makeLegacyIterator(_clientListValue);
   }
-  inline TIterator* serverIterator() const {
+  inline TIterator* shapeClientIterator() const
+  R_SUGGEST_FUNCTION_ALTERNATIVE("Use shapeClients() and begin(), end() or range-based loops.") {
+    // Return iterator over all shape client RooAbsArgs
+    return makeLegacyIterator(_clientListShape);
+  }
+  inline TIterator* serverIterator() const
+  R_SUGGEST_FUNCTION_ALTERNATIVE("Use servers() and begin(), end() or range-based loops.") {
     // Return iterator over all server RooAbsArgs
-    return _serverList.MakeIterator() ;
+    return makeLegacyIterator(_serverList);
   }
 
-//  inline RooFIter valueClientMIterator() const { return _clientListValue.fwdIterator() ; }
-  inline RooFIter shapeClientMIterator() const { return _clientListShape.fwdIterator() ; }
-  inline RooFIter serverMIterator() const { return _serverList.fwdIterator() ; }
+  inline RooFIter valueClientMIterator() const
+  R_SUGGEST_FUNCTION_ALTERNATIVE("Use valueClients() and begin(), end() or range-based loops.") {
+    return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_clientListValue)));
+  }
+  inline RooFIter shapeClientMIterator() const
+  R_SUGGEST_FUNCTION_ALTERNATIVE("Use shapeClients() and begin(), end() or range-based loops.") {
+    return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_clientListShape)));
+  }
+  inline RooFIter serverMIterator() const
+  R_SUGGEST_FUNCTION_ALTERNATIVE("Use shapeClients() and begin(), end() or range-based loops.") {
+    return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_serverList)));
+  }
 
+  ////////////////////////////////////////////////////////////////////////////
+
+  /// List of all clients of this object.
+  const RefCountList_t& clients() const {
+    return _clientList;
+  }
+  /// List of all value clients of this object. Value clients receive value updates.
+  const RefCountList_t& valueClients() const {
+    return _clientListValue;
+  }
+  /// List of all shape clients of this object. Shape clients receive property information such as
+  /// changes of a value range.
+  const RefCountList_t& shapeClients() const {
+    return _clientListShape;
+  }
+
+  const RefCountList_t& servers() const {
+    return _serverList;
+  }
 
   inline RooAbsArg* findServer(const char *name) const {
     // Return server of this arg with given name. Returns null if not found
-    return (RooAbsArg*)_serverList.FindObject(name);
+    const auto serverIt = _serverList.findByName(name);
+    return serverIt != _serverList.end() ? *serverIt : nullptr;
   }
   inline RooAbsArg* findServer(const RooAbsArg& arg) const {
     // Return server of this arg with name of given input arg. Returns null if not found
-    return (RooAbsArg*)_serverList.findArg(&arg);
+    const auto serverIt = _serverList.findByNamePointer(&arg);
+    return serverIt != _serverList.end() ? *serverIt : nullptr;
   }
   inline RooAbsArg* findServer(Int_t index) const {
     // Return i-th server from server list
-    return (RooAbsArg*)_serverList.At(index);
+    return _serverList.containedObjects()[index];
   }
   inline Bool_t isValueServer(const RooAbsArg& arg) const {
     // If true, arg is a value server of self
@@ -151,11 +182,11 @@ public:
   }
   inline Bool_t isShapeServer(const RooAbsArg& arg) const {
     // If true arg is a shape server of self
-    return _clientListShape.findArg(&arg)?kTRUE:kFALSE ;
+    return _clientListShape.containsByNamePtr(&arg);
   }
   inline Bool_t isShapeServer(const char* name) const {
     // If true, we have a shape server with given name
-    return _clientListShape.FindObject(name)?kTRUE:kFALSE ;
+    return _clientListShape.containsSameName(name);
   }
   void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, Bool_t recurseNonDerived=kFALSE) const ;
   void branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, Bool_t recurseNonDerived=kFALSE) const ;
@@ -480,11 +511,14 @@ public:
   friend class RooAbsCollection ;
   friend class RooCustomizer ;
   friend class RooWorkspace ;
-  RooRefCountList _serverList       ; // list of server objects
-  RooRefCountList _clientList       ; // list of client objects
-  RooRefCountList _clientListShape  ; // subset of clients that requested shape dirty flag propagation
+//  RooRefCountList _serverList       ; // list of server objects
+//  RooRefCountList _clientList       ; // list of client objects
+//  RooRefCountList _clientListShape  ; // subset of clients that requested shape dirty flag propagation
 //  RooRefCountList _clientListValue  ; // subset of clients that requested value dirty flag propagation
-  RooSTLRefCountList<RooAbsArg> _clientListValue;
+  RefCountList_t _serverList       ; // list of server objects
+  RefCountList_t _clientList; // list of client objects
+  RefCountList_t _clientListShape; // subset of clients that requested shape dirty flag propagation
+  RefCountList_t _clientListValue; // subset of clients that requested value dirty flag propagation
 
   RooRefArray _proxyList        ; // list of proxies
   std::deque<RooAbsCache*> _cacheList ; // list of caches
@@ -607,6 +641,9 @@ public:
   static void ioStreamerPass2Finalize() ;
   static std::map<RooAbsArg*,TRefArray*> _ioEvoList ; // temporary holding list for proxies needed in schema evolution
   static std::stack<RooAbsArg*> _ioReadStack ; // reading stack
+
+  private:
+  RefCountListLegacyIterator_t * makeLegacyIterator(const RefCountList_t& list) const;
 
   ClassDef(RooAbsArg,7) // Abstract variable
 };

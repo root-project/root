@@ -14,6 +14,15 @@
 #include <assert.h>
 
 
+/**
+ * \class RooSTLRefCountList
+ * The RooSTLRefCountList is a simple collection of **pointers** to the template objects with
+ * reference counters.
+ * The pointees are not owned, hence not deleted when removed from the collection.
+ * Objects can be searched for either by pointer or by name (confusion possible when
+ * objects with same name are present). This replicates the behaviour of the RooRefCountList.
+ */
+
 template <class T>
 class RooSTLRefCountList {
   public:
@@ -67,11 +76,22 @@ class RooSTLRefCountList {
     }
 
 
+    ///Direct reference to container of objects held by this list.
+    const Container_t& containedObjects() const {
+      return _storage;
+    }
+
+
     ///Number of contained objects (neglecting the ref count).
     std::size_t size() const {
       assert(_storage.size() == _refCount.size());
 
       return _storage.size();
+    }
+
+    void reserve(std::size_t size) {
+      _storage.reserve(size);
+      _refCount.reserve(size);
     }
 
 
@@ -81,7 +101,7 @@ class RooSTLRefCountList {
     }
 
 
-    ///Find an item by comparing adresses.
+    ///Find an item by comparing its adress.
     template<typename Obj_t>
     typename Container_t::const_iterator findByPointer(const Obj_t * item) const {
       auto byPointer = [item](const T * listItem) {
@@ -92,12 +112,28 @@ class RooSTLRefCountList {
     }
 
 
-    ///Find an item by comparing strings using RooAbsArg::GetName()
-    typename Container_t::const_iterator findByName(const char * name) const;
+    ///Find an item by comparing strings returned by RooAbsArg::GetName()
+    typename Container_t::const_iterator findByName(const char * name) const {
+      //If this turns out to be a bottleneck,
+      //one could use the RooNameReg to obtain the pointer to the arg's name and compare these
+      const std::string theName(name);
+      auto byName = [&theName](const T * element) {
+        return element->GetName() == theName;
+      };
+
+      return std::find_if(_storage.begin(), _storage.end(), byName);
+    }
 
 
     ///Find an item by comparing RooAbsArg::namePtr() adresses.
-    typename Container_t::const_iterator findByNamePointer(const T * item) const;
+    typename Container_t::const_iterator findByNamePointer(const T * item) const {
+      auto nptr = item->namePtr();
+      auto byNamePointer = [nptr](const T * element) {
+        return element->namePtr() == nptr;
+      };
+
+      return std::find_if(_storage.begin(), _storage.end(), byNamePointer);
+    }
 
 
     ///Check if list contains an item using findByPointer().
@@ -120,6 +156,8 @@ class RooSTLRefCountList {
 
 
     ///Decrease ref count of given object. Shrink list if ref count reaches 0.
+    ///\param obj Decrease ref count of given object. Compare by pointer.
+    ///\param force If true, remove irrespective of ref count.
     void Remove(const T * obj, bool force = false) {
       auto item = findByPointer(obj);
 
@@ -146,5 +184,15 @@ class RooSTLRefCountList {
 
     ClassDef(RooSTLRefCountList<T>,1);
 };
+
+
+
+class RooAbsArg;
+class RooRefCountList;
+
+namespace STLRefCountListHelpers {
+  /// Converter from the old RooRefCountList to RooSTLRefCountList.
+  RooSTLRefCountList<RooAbsArg> convert(const RooRefCountList& old);
+}
 
 #endif /* ROOFIT_ROOFITCORE_INC_ROOSTLREFCOUNTLIST_H_ */
