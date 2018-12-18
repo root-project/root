@@ -63,13 +63,20 @@ else()
   string(TIMESTAMP GIT_TIMESTAMP "%b %d %Y, %H:%M:%S" UTC)
 
   string(REGEX REPLACE "^v([0-9])-([0-9]+)-" "\\1.\\2." ROOT_VERSION "${GIT_DESCRIBE_ALWAYS}")
-  if("${GIT_DESCRIBE_ALL}" MATCHES "-patches")
+  if("${GIT_DESCRIBE_ALL}" MATCHES "^tags/")
+    # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1
+    # GIT_DESCRIBE_ALL: tags/v6-16-00-rc1
+    # tag might end on "-rc1" or similar; parse version number in front.
+    string(REGEX REPLACE "v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALWAYS})
+    string(REGEX REPLACE "v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALWAYS})
+    string(REGEX REPLACE "v[0-9]+-[0-9]+-([0-9]+).*" "\\1" ROOT_PATCH_VERSION ${GIT_DESCRIBE_ALWAYS})
+  elseif("${GIT_DESCRIBE_ALL}" MATCHES "-patches$")
     # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1-47-g9ba56ef4a3
     # GIT_DESCRIBE_ALL: heads/v6-16-00-patches
     string(REGEX REPLACE "^.*/v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
     string(REGEX REPLACE "^.*/v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
     set(ROOT_PATCH_VERSION "99") # aka head of ...-patches
-  elseif("${GIT_DESCRIBE_ALL}" MATCHES "/master$")
+  else()
     # GIT_DESCRIBE_ALWAYS: v6-13-04-2163-g7e8d27ea66
     # GIT_DESCRIBE_ALL: heads/master or remotes/origin/master
     file(READ ${CMAKE_SOURCE_DIR}/build/version_number versionstr)
@@ -78,12 +85,6 @@ else()
     string(REGEX REPLACE "[0-9]+[.]([0-9]+)[/][0-9]+" "\\1" ROOT_MINOR_VERSION ${versionstr})
     string(REGEX REPLACE "[0-9]+[.][0-9]+[/]([0-9]+)" "\\1" ROOT_PATCH_VERSION ${versionstr})
   else()
-    # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1
-    # GIT_DESCRIBE_ALL: tags/v6-16-00-rc1
-    # tag might end on "-rc1" or similar; parse version number in front.
-    string(REGEX REPLACE "v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
-    string(REGEX REPLACE "v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
-    string(REGEX REPLACE "v[0-9]+-[0-9]+-([0-9]+).*" "\\1" ROOT_PATCH_VERSION ${GIT_DESCRIBE_ALL})
   endif()
 endif()
 
