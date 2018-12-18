@@ -1887,8 +1887,8 @@ void TCling::RegisterModule(const char* modulename,
                   while (nsPos < enumPos && nsPos != std::string::npos) {
                      // we have a namespace, let's put it in the collection of scopes
                      const auto nsNameStart = nsPos + 10;
-                     const auto nsNameEnd = fwdDeclsLine.find('{', nsNameStart) - nsNameStart;
-                     const auto nsName = fwdDeclsLine.substr(nsNameStart, nsNameEnd);
+                     const auto nsNameEnd = fwdDeclsLine.find('{', nsNameStart);
+                     const auto nsName = fwdDeclsLine.substr(nsNameStart, nsNameEnd - nsNameStart);
                      scopes.push_back(nsName);
                      nsPos = fwdDeclsLine.find("namespace", nsNameEnd);
                   }
