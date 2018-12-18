@@ -13,7 +13,9 @@
 #include <csignal> // kill, SIGKILL
 #include <iostream> // cerr, and indirectly WNOHANG, EINTR, W* macros
 #include <stdexcept> // runtime_error
+#include <sys/wait.h>  // waitpid
 #include <string>
+
 #include <MultiProcess/util.h>
 
 namespace RooFit {
