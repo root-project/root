@@ -21,7 +21,7 @@
 
 Class RooPolyVar is a RooAbsReal implementing a polynomial in terms
 of a list of RooAbsReal coefficients
-\f[f(x) = \sum_{i} a_{i}x \f]
+\f[f(x) = \sum_{i} a_{i} \cdot x^i \f]
 Class RooPolyvar implements analytical integrals of all polynomials
 it can define.
 **/

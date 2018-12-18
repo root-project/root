@@ -1007,9 +1007,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// <tr><th> Type of CmdArg                  <th> Options to control construction of -log(L)
 /// <tr><td> `ConditionalObservables(const RooArgSet& set)`  <td>  Do not normalize PDF over listed observables
 /// <tr><td> `Extended(Bool_t flag)`           <td>  Add extended likelihood term, off by default
-/// <tr><td> `Range(const char* name)`         <td>  Fit only data inside range with given name
+/// <tr><td> `Range(const char* name)`         <td>  Fit only data inside range with given name. Multiple comma-separated range names can be specified.
 /// <tr><td> `Range(Double_t lo, Double_t hi)` <td>  Fit only data inside given range. A range named "fit" is created on the fly on all observables.
-///                                                Multiple comma separated range names can be specified.
 /// <tr><td> `SumCoefRange(const char* name)`  <td>  Set the range in which to interpret the coefficients of RooAddPdf components 
 /// <tr><td> `NumCPU(int num, int strat)`      <td> Parallelize NLL calculation on num CPUs
 ///   <table>
@@ -2372,6 +2371,11 @@ RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvent
 ///                                                 adaptive point spacing and restrict sampling to the grid point of points defined by the binning
 ///                                                 of the plotted observabled (recommended for expensive functions such as profile likelihoods)
 /// <tr><td> `Invisible(Bool_t flag)`           <td>  Add curve to frame, but do not display. Useful in combination AddTo()
+/// <tr><td> `VisualizeError(const RooFitResult& fitres, Double_t Z=1, Bool_t linearMethod=kTRUE)`
+///                                  <td> Visualize the uncertainty on the parameters, as given in fitres, at 'Z' sigma'
+///
+/// <tr><td> `VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z=1, Bool_t linearMethod=kTRUE)`
+///                                  <td> Visualize the uncertainty on the subset of parameters 'param', as given in fitres, at 'Z' sigma'
 /// </table>
 
 RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
