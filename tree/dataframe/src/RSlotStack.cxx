@@ -8,25 +8,27 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RMakeUnique.hxx>
+#include <ROOT/TSpinMutex.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RDF/RSlotStack.hxx>
 #include <TError.h> // R__ASSERT
 
-ROOT::Internal::RDF::RSlotStack::RSlotStack(unsigned int size) : fSize(size)
+ROOT::Internal::RDF::RSlotStack::RSlotStack(unsigned int size) : fSize(size), fMutexPtr(std::make_unique<ROOT::TSpinMutex>())
 {
    for (auto i : ROOT::TSeqU(size)) fStack.push(i);
 }
 
 void ROOT::Internal::RDF::RSlotStack::ReturnSlot(unsigned int slot)
 {
-   ROOT::TRWSpinLockWriteGuard guard(fRWLock);
+   std::lock_guard<ROOT::TSpinMutex> guard(*fMutexPtr);
    R__ASSERT(fStack.size() < fSize && "Trying to put back a slot to a full stack!");
    fStack.push(slot);
 }
 
 unsigned int ROOT::Internal::RDF::RSlotStack::GetSlot()
 {
-   ROOT::TRWSpinLockWriteGuard guard(fRWLock);
+   std::lock_guard<ROOT::TSpinMutex> guard(*fMutexPtr);
    R__ASSERT(!fStack.empty() && "Trying to pop a slot from an empty stack!");
    const auto slot = fStack.top();
    fStack.pop();
