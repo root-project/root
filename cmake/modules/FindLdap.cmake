@@ -8,7 +8,7 @@
 #  LDAP_LIBRARIES - libldap + liblber (if found) library
 
 
-find_path(LDAP_INCLUDE_DIR NAMES ldap.h HINTS ${LDAP_DIR}/include $ENV{LDAP_DIR}/include)
+find_path(LDAP_INCLUDE_DIR NAMES ldap.h HINTS ${LDAP_DIR}/include $ENV{LDAP_DIR}/include NO_CMAKE_ENVIRONMENT_PATH)
 find_library(LDAP_LIBRARY NAMES ldap HINTS ${LDAP_DIR}/lib $ENV{LDAP_DIR}/lib)
 find_library(LBER_LIBRARY NAMES lber HINTS ${LDAP_DIR}/lib $ENV{LDAP_DIR}/lib)
 
