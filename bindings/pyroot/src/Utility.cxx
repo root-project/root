@@ -710,6 +710,7 @@ const std::string PyROOT::Utility::ClassName( PyObject* pyobj )
          clname = PyROOT_PyUnicode_AsString( pyname );
          Py_DECREF( pyname );
       } else {
+         PyErr_Clear();
          pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
          if ( pyname != 0 ) {
             clname = PyROOT_PyUnicode_AsString( pyname );
