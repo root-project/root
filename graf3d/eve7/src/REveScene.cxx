@@ -165,13 +165,13 @@ void REveScene::StreamElements()
    // }
 
    fOutputBinary.resize(fTotalBinarySize);
-   Int_t actual_binary_size = 0;
+   Int_t off = 0;
 
    for (auto &&e : fElsWithBinaryData) {
-      Int_t rd_size = e->fRenderData->Write( & fOutputBinary[ actual_binary_size ] );
-      actual_binary_size += rd_size;
+      auto rd_size = e->fRenderData->Write(&fOutputBinary[off], fOutputBinary.size() - off);
+      off += rd_size;
    }
-   assert(actual_binary_size == fTotalBinarySize);
+   assert(off == fTotalBinarySize);
 
    jarr.front()["fTotalBinarySize"] = fTotalBinarySize;
 
@@ -289,18 +289,16 @@ void REveScene::StreamRepresentationChanges()
    fAddedElements.clear();
    fRemovedElements.clear();
 
-
    // render data for total change
    fOutputBinary.resize(fTotalBinarySize);
-   Int_t actual_binary_size = 0;
+   Int_t off = 0;
 
-   for (auto &e : fElsWithBinaryData)
-   {
-      Int_t rd_size = e->fRenderData->Write( & fOutputBinary[ actual_binary_size ] );
+   for (auto &e : fElsWithBinaryData) {
+      auto rd_size = e->fRenderData->Write(&fOutputBinary[off], fOutputBinary.size() - off);
 
-      actual_binary_size += rd_size;
+      off += rd_size;
    }
-   assert(actual_binary_size == fTotalBinarySize);
+   assert(off == fTotalBinarySize);
 
    jhdr["fTotalBinarySize"] = fTotalBinarySize;
 
