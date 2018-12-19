@@ -11,11 +11,11 @@
 #ifndef ROOT_RSLOTSTACK
 #define ROOT_RSLOTSTACK
 
-#include <memory>
+#include <ROOT/TSpinMutex.hxx>
+
 #include <stack>
 
 namespace ROOT {
-class TSpinMutex;
 namespace Internal {
 namespace RDF {
 
@@ -27,7 +27,7 @@ class RSlotStack {
 private:
    const unsigned int fSize;
    std::stack<unsigned int> fStack;
-   std::unique_ptr<ROOT::TSpinMutex> fMutexPtr;
+   ROOT::TSpinMutex fMutex;
 
 public:
    RSlotStack() = delete;
