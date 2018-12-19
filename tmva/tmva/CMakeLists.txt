@@ -166,6 +166,7 @@ set(TMVA_HEADERS
   TMVA/VarTransformHandler.h
   TMVA/Version.h
   TMVA/Volume.h
+  TMVA/RTensor.hxx
 )
 
 #---Assign source files to the implementations -----------------
