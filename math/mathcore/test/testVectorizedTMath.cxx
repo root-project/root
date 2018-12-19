@@ -1,6 +1,6 @@
 #include <cmath>
 #include <random>
-#include "VectorizedTMath.hxx"
+#include "../src/VectorizedTMath.cxx"
 #include <gtest/gtest.h>
 
 #if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
