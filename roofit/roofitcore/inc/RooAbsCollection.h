@@ -116,7 +116,7 @@ public:
   /// \deprecated TIterator-style iteration over contained elements. Use begin() and end() or
   /// range-based for loop instead.
   inline TIterator* createIterator(Bool_t dir = kIterForward) const
-  R_SUGGEST_FUNCTION_ALTERNATIVE("begin(), end() and range-based for loops.") {
+  R__SUGGEST_FUNCTION("begin(), end() and range-based for loops.") {
     // Create and return an iterator over the elements in this collection
     return new RooLinkedListIter(makeLegacyIterator(dir));
   }
@@ -124,14 +124,14 @@ public:
   /// \deprecated TIterator-style iteration over contained elements. Use begin() and end() or
   /// range-based for loop instead.
   RooLinkedListIter iterator(Bool_t dir = kIterForward) const
-  R_SUGGEST_FUNCTION_ALTERNATIVE("begin(), end() and range-based for loops.") {
+  R__SUGGEST_FUNCTION("begin(), end() and range-based for loops.") {
     return RooLinkedListIter(makeLegacyIterator(dir));
   }
 
   /// \deprecated One-time forward iterator. Use begin() and end() or
   /// range-based for loop instead.
   RooFIter fwdIterator() const
-  R_SUGGEST_FUNCTION_ALTERNATIVE("begin(), end() and range-based for loops.") {
+  R__SUGGEST_FUNCTION("begin(), end() and range-based for loops.") {
     return RooFIter(makeLegacyIterator());
   }
 
