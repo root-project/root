@@ -380,17 +380,13 @@ REveGeoManagerHolder::REveGeoManagerHolder(TGeoManager* new_gmgr, Int_t n_seg) :
    fNSegments (0)
 {
    gGeoManager = new_gmgr;
-   if (gGeoManager)
-   {
-      gGeoIdentity = (TGeoIdentity*) gGeoManager->GetListOfMatrices()->At(0);
-      if (n_seg > 2)
-      {
+   if (gGeoManager) {
+      gGeoIdentity = (TGeoIdentity *)gGeoManager->GetListOfMatrices()->At(0);
+      if (n_seg > 2) {
          fNSegments = gGeoManager->GetNsegments();
          gGeoManager->SetNsegments(n_seg);
       }
-   }
-   else
-   {
+   } else {
       gGeoIdentity = nullptr;
    }
 }
@@ -400,17 +396,13 @@ REveGeoManagerHolder::REveGeoManagerHolder(TGeoManager* new_gmgr, Int_t n_seg) :
 
 REveGeoManagerHolder::~REveGeoManagerHolder()
 {
-   if (gGeoManager && fNSegments > 2)
-   {
+   if (gGeoManager && fNSegments > 2) {
       gGeoManager->SetNsegments(fNSegments);
    }
    gGeoManager = fManager;
-   if (gGeoManager)
-   {
-      gGeoIdentity = (TGeoIdentity*) gGeoManager->GetListOfMatrices()->At(0);
-   }
-   else
-   {
+   if (gGeoManager) {
+      gGeoIdentity = (TGeoIdentity *)gGeoManager->GetListOfMatrices()->At(0);
+   } else {
       gGeoIdentity = nullptr;
    }
 }

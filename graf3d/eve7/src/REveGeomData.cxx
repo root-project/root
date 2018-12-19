@@ -389,9 +389,9 @@ void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces, s
          auto poly = std::make_unique<REveGeoPolyShape>();
 
          if (comp) {
-            poly->BuildFromComposite(comp, 20);
+            poly->BuildFromComposite(comp, GetNSegments());
          } else {
-            poly->BuildFromShape(shape, 20);
+            poly->BuildFromShape(shape, GetNSegments());
          }
 
          shape_descr.fRenderData = std::make_unique<REveRenderData>();

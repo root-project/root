@@ -92,6 +92,7 @@ class REveGeomDescription {
    std::vector<REveGeomNode> fDesc; ///< converted description, send to client
    int fTopDrawNode{0};             ///<! selected top node
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
+   int fNSegments{0};               ///<! number of segments for cylindrical shapes
    std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
 
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
@@ -114,6 +115,9 @@ public:
    void SelectVolume(TGeoVolume *);
 
    void SelectNode(TGeoNode *);
+
+   void SetNSegments(int n = 0) { fNSegments = n; }
+   int GetNSegments() const { return fNSegments; }
 
    void SetDrawOptions(const std::string &opt = "") { fDrawOptions = opt; }
 
