@@ -153,7 +153,7 @@ ROOT_BUILD_OPTION(qt5web OFF "Enable support for Qt5 web-based display (requires
 ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RInside)")
 ROOT_BUILD_OPTION(rfio OFF "Enable support for RFIO (Remote File IO) for CASTOR")
 ROOT_BUILD_OPTION(roofit ON "Build RooFit advanced fitting package")
-ROOT_BUILD_OPTION(root7 OFF "Build ROOT 7 components of ROOT (requires C++14 standard or higher)")
+ROOT_BUILD_OPTION(root7 ON "Build ROOT 7 components of ROOT (requires C++14 standard or higher)")
 ROOT_BUILD_OPTION(rpath OFF "Link libraries with built-in RPATH (run-time search path)")
 ROOT_BUILD_OPTION(runtime_cxxmodules OFF "Enable runtime support for C++ modules")
 ROOT_BUILD_OPTION(shadowpw OFF "Enable support for shadow passwords")
@@ -216,7 +216,6 @@ if(WIN32)
   set(x11_defvalue OFF)
   set(memstat_defvalue OFF)
   set(davix_defvalue OFF)
-  set(root7_defvalue OFF)
   set(imt_defvalue OFF)
   set(builtin_tbb_defvalue OFF)
   set(tmva_defvalue OFF)
@@ -309,9 +308,9 @@ foreach(opt ${root_build_options})
   endif()
 endforeach()
 
-#---Apply root7 versus language------------------------------------------------------------------
-if(CMAKE_CXX_STANDARD GREATER 11)
-  set(root7_defvalue ON)
+#---ROOT 7 requires C++14 standard or higher---------------------------------------------------
+if(NOT CMAKE_CXX_STANDARD GREATER 11)
+  set(root7_defvalue OFF)
 endif()
 
 #---roottest option implies testing
