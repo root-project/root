@@ -89,22 +89,10 @@ std::unique_ptr<RootCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *sha
    return res;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Produce all polygons from composite shape
 
-REveGeoPolyShape::REveGeoPolyShape() :
-   TGeoBBox(),
-   fNbPols(0)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Static constructor from a composite shape.
-
-REveGeoPolyShape::REveGeoPolyShape(TGeoCompositeShape *cshape, Int_t n_seg) :
-   TGeoBBox(),
-   fNbPols(0)
+void REveGeoPolyShape::BuildFromComposite(TGeoCompositeShape *cshape, Int_t n_seg)
 {
    fOrigin[0] = cshape->GetOrigin()[0];
    fOrigin[1] = cshape->GetOrigin()[1];
@@ -119,11 +107,9 @@ REveGeoPolyShape::REveGeoPolyShape(TGeoCompositeShape *cshape, Int_t n_seg) :
 
    Int_t nv = mesh->NumberOfVertices();
    fVertices.reserve(3 * nv);
-   Int_t i;
 
-   for (i = 0; i < nv; ++i)
-   {
-      const Double_t *v = mesh->GetVertex(i);
+   for (Int_t i = 0; i < nv; ++i) {
+      auto v = mesh->GetVertex(i);
       fVertices.insert(fVertices.end(), v, v + 3);
    }
 
@@ -131,21 +117,44 @@ REveGeoPolyShape::REveGeoPolyShape(TGeoCompositeShape *cshape, Int_t n_seg) :
 
    Int_t descSize = 0;
 
-   for (i = 0; i < fNbPols; ++i) descSize += mesh->SizeOfPoly(i) + 1;
+   for (Int_t i = 0; i < fNbPols; ++i) descSize += mesh->SizeOfPoly(i) + 1;
 
    fPolyDesc.reserve(descSize);
 
-   for (Int_t polyIndex = 0; polyIndex < fNbPols; ++polyIndex)
-   {
+   for (Int_t polyIndex = 0; polyIndex < fNbPols; ++polyIndex) {
       Int_t polySize = mesh->SizeOfPoly(polyIndex);
 
       fPolyDesc.push_back(polySize);
 
-      for (i = 0; i < polySize; ++i) fPolyDesc.push_back(mesh->GetVertexIndex(polyIndex, i));
+      for (Int_t i = 0; i < polySize; ++i)
+         fPolyDesc.push_back(mesh->GetVertexIndex(polyIndex, i));
    }
 
    if (fgAutoEnforceTriangles) EnforceTriangles();
    if (fgAutoCalculateNormals) CalculateNormals();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Produce all polygons from normal shape
+
+void REveGeoPolyShape::BuildFromShape(TGeoShape *shape, Int_t n_seg)
+{
+   TGeoBBox *box = dynamic_cast<TGeoBBox *> (shape);
+
+   if (box) {
+      fOrigin[0] = box->GetOrigin()[0];
+      fOrigin[1] = box->GetOrigin()[1];
+      fOrigin[2] = box->GetOrigin()[2];
+      fDX = box->GetDX();
+      fDY = box->GetDY();
+      fDZ = box->GetDZ();
+   }
+
+   REveGeoManagerHolder gmgr(REveGeoShape::GetGeoManager(), n_seg);
+
+   std::unique_ptr<TBuffer3D> b3d(shape->MakeBuffer3D());
+
+   SetFromBuff3D(*b3d.get());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
