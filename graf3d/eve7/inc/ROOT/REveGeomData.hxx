@@ -58,6 +58,8 @@ class REveGeomVisisble {
 public:
    int nodeid{0};           ///< selected node id,
    std::vector<int> stack;  ///< path to the node, index in list of childs
+   std::string color;       ///< color in rgb format
+   double opacity{1};       ///< opacity
 
    // render data, equivalent of REveElement::WriteCoreJson
    int rnr_offset{0};     ///< rnr_offset;
@@ -65,7 +67,7 @@ public:
    int vert_size{0};      ///< fRenderData->SizeV();
    int norm_size{0};      ///< fRenderData->SizeN();
    int index_size{0};     ///< fRenderData->SizeI();
-   int trans_size{0};     ///< fRenderData->SizeT();
+   // int trans_size{0};     ///< fRenderData->SizeT(); not used in GeomViewer
 
    REveGeomVisisble() = default;
    REveGeomVisisble(int id, const std::vector<int> &_stack) : nodeid(id), stack(_stack) {}
