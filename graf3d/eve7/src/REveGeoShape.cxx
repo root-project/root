@@ -132,7 +132,9 @@ REveGeoShape::~REveGeoShape()
 
 TGeoShape* REveGeoShape::MakePolyShape()
 {
-   return new REveGeoPolyShape(fCompositeShape, fNSegments);
+   auto poly = new REveGeoPolyShape();
+   poly->BuildFromComposite(fCompositeShape, fNSegments);
+   return poly;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -163,12 +165,10 @@ void REveGeoShape::BuildRenderData()
 
    } else {
 
-      REveGeoManagerHolder gmgr(fgGeoManager, fNSegments);
-
-      std::unique_ptr<TBuffer3D> b3d(fShape->MakeBuffer3D());
-
       tmp_egps = std::make_unique<REveGeoPolyShape>();
-      tmp_egps->SetFromBuff3D(*b3d.get());
+
+      tmp_egps->BuildFromShape(fShape, fNSegments);
+
       egps = tmp_egps.get();
    }
 
