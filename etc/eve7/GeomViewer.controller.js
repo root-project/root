@@ -7,7 +7,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 ],function(Controller, CoreControl, JSONModel, Splitter, SplitterLayoutData, ResizeHandler) {
    "use strict";
    
-   var GeomDraw = CoreControl.extend("eve.GeomDraw", { 
+   CoreControl.extend("eve.GeomDraw", { 
 
       // the control API:
       metadata : {
@@ -36,8 +36,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
       
       onInit: function() {
-         console.log('CALLED ONINIT');
-         this.draw_options = ""; 
       },
 
       onAfterRendering: function() {
@@ -57,12 +55,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
       
       assignClones: function(clones, drawopt) {
-         this.draw_options = drawopt;
          if (this.geo_painter) {
-            this.geo_painter.options = this.geo_painter.decodeOptions(drawopt || "");
+            this.geo_painter.options = this.geo_painter.decodeOptions(drawopt);
             this.geo_painter.assignClones(clones);
          } else {
             this.geo_clones = clones;
+            this.draw_options = drawopt;
          }
       },
       
@@ -90,10 +88,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       }
    });
 
-   return Controller.extend("eve.Geom", {
+   return Controller.extend("eve.GeomViewer", {
       onInit: function () {
-         
-         console.log('GEOM CONTROLLER INIT');
          
          this.websocket = this.getView().getViewData().conn_handle;
          
@@ -109,7 +105,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          
          // PART 2: instantiate Control and place it onto the page
 
-         this.geomControl = new GeomDraw({color:"#f00"});
+         this.geomControl = new eve.GeomDraw({color:"#f00"});
          
          this.creator = new JSROOT.EVE.EveElements();
          
@@ -129,9 +125,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             if (this.draw_msg) {
                // here we should decode render data
                
-               console.log('DO DRAWING cnt:', this.draw_msg.length);
-               
-               console.log('BINARY data', msg.byteLength, offset, msg);
+               console.log('DRAWING cnt:', this.draw_msg.length, "BYNARY", msg.byteLength, offset);
                
                var rnr_cache = {};
                
