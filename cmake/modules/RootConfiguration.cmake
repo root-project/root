@@ -550,6 +550,14 @@ else()
   set(hastmvagpu undef)
 endif()
 
+# clear cache to allow reconfiguring
+# with a different CMAKE_CXX_STANDARD
+unset(found_stdapply CACHE)
+unset(found_stdindexsequence CACHE)
+unset(found_stdinvoke CACHE)
+unset(found_stdstringview CACHE)
+unset(found_stdexpstringview CACHE)
+unset(found_stod_stringview CACHE)
 
 set(hasstdexpstringview undef)
 CHECK_CXX_SOURCE_COMPILES("#include <string_view>
