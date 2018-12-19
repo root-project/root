@@ -35,14 +35,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onclick : function(evt) {   // is called when the Control's area is clicked - no further event registration required
       },
       
+      onInit: function() {
+         console.log('CALLED ONINIT');
+         this.draw_options = ""; 
+      },
+
       onAfterRendering: function() {
          ResizeHandler.register(this, this.onResize.bind(this));
          this.did_rendering = true;
          this.geom_painter = null;
          
-         var options = "";
-         
-         this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getDomRef(), null, options);
+         this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getDomRef(), null, this.draw_options);
          
          if (this.geo_clones) 
             this.geo_painter.assignClones(clones);
@@ -53,11 +56,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
       
-      assignClones: function(clones) {
-         if (this.geo_painter) 
+      assignClones: function(clones, drawopt) {
+         this.draw_options = drawopt;
+         if (this.geo_painter) {
+            this.geo_painter.options = this.geo_painter.decodeOptions(drawopt || "");
             this.geo_painter.assignClones(clones);
-         else
+         } else {
             this.geo_clones = clones;
+         }
       },
       
       startDrawing: function(visible) {
@@ -74,14 +80,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       
       onResizeTimeout: function() {
          delete this.resize_tmout;
-         console.log('Resize GEOM drawing'); 
+         if (this.geo_painter)
+            this.geo_painter.CheckResize();
       },
 
       handleChange: function (oEvent) {
-         var newColor = oEvent.getParameter("colorString");
-         this.setColor(newColor);
-         // TODO: fire a "change" event, in case the application needs to react explicitly when the color has changed
-         // but when the color is bound via data binding, it will be updated also without this event
+         // var newColor = oEvent.getParameter("colorString");
+         // this.setColor(newColor);
       }
    });
 
@@ -95,25 +100,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.websocket.SetReceiver(this);
          this.websocket.Connect();
          
-         this.data = {
-               Nodes: [
-                {
-                  title: "1",
-                  chlds: [ { title: "1.1" } , { title: "1.2" },  { title: "1.3" } ]
-                },
-                {
-                   title: "2",
-                   chlds: [ { title: "2.1" } , { title: "2.2" },  { title: "2.3" } ]
-                 },
-                 {
-                    title: "3",
-                    chlds: [ { title: "3.1" } , { title: "3.2" },  { title: "3.3" } ]
-                 }
-              ]
-         };
+         this.data = { Nodes: null };
          
-         this.descr = null; // description object from 
-         
+         this.descr = null; // description object from server 
          
          this.model = new JSONModel(this.data);
          this.getView().setModel(this.model);
@@ -239,6 +228,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.clones = new JSROOT.GEO.ClonedNodes(null, nodes);
             
             this.buildTree();
+            
+            this.geomControl.assignClones(this.clones, this.descr.fDrawOptions);
+            
          } else if (msg.indexOf("DRAW:") == 0) {
             this.draw_msg = JSROOT.parse(msg.substr(5));
          }
@@ -268,8 +260,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.data.Nodes = [ this.buildTreeNode(0) ];
          
          this.model.refresh();
-         
-         this.geomControl.assignClones(this.clones);
       },
 
       OnWebsocketClosed: function() {
