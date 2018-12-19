@@ -2356,10 +2356,18 @@ void TTreePlayer::RecursiveRemove(TObject *obj)
 /// if maxrows is set to 0 all rows of the Tree are shown.
 ///
 /// This option is interesting when dumping the contents of a Tree to
-/// an ascii file, eg from the command line
+/// an ascii file, eg from the command line.
+/// ### with ROOT 5
 /// ~~~{.cpp}
-///   tree->SetScanField(0);
-///   tree->Scan("*"); >tree.log
+///   root [0] tree->SetScanField(0);
+///   root [1] tree->Scan("*"); >tree.log
+/// ~~~
+/// ### with ROOT 6
+/// ~~~{.cpp}
+///   root [0] tree->SetScanField(0);
+///   root [1] .> tree.log
+///   tree->Scan("*");
+///   .>
 /// ~~~
 ///  will create a file tree.log
 ///
