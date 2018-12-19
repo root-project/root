@@ -89,7 +89,7 @@ ROOT_LINKER_LIBRARY(Aclock Aclock.cxx G__Aclock.cxx LIBRARIES Graf Gpad)
 ROOT_GENERATE_DICTIONARY(G__TBench ${CMAKE_CURRENT_SOURCE_DIR}/TBench.h MODULE TBench LINKDEF benchLinkDef.h DEPENDENCIES MathCore Tree)
 ROOT_LINKER_LIBRARY(TBench TBench.cxx G__TBench.cxx LIBRARIES Core MathCore RIO Tree)
 ROOT_EXECUTABLE(bench bench.cxx LIBRARIES Core TBench)
-ROOT_ADD_TEST(test-bench COMMAND bench LABELS longtest)
+ROOT_ADD_TEST(test-bench COMMAND bench -s LABELS longtest)
 
 #--stress------------------------------------------------------------------------------------
   ROOT_EXECUTABLE(stress stress.cxx LIBRARIES Event Core Hist RIO Tree Gpad Postscript)
