@@ -22,7 +22,7 @@ protected:
       features.Set(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap);
       tree->SetIOFeatures(features);
       tree->SetBit(TTree::kOnlyFlushAtCluster);
-      tree->SetAutoSave(10);
+      tree->SetAutoFlush(10);
       Int_t sample[10];
       Int_t elem = 1;
       tree->Branch("elem", &elem, "elem/I");
@@ -39,7 +39,7 @@ protected:
       file = new TFile("TOffsetGeneration2.root", "RECREATE");
       tree = new TTree("tree", "A test tree");
       tree->SetBit(TTree::kOnlyFlushAtCluster);
-      tree->SetAutoSave(10);
+      tree->SetAutoFlush(10);
       tree->Branch("elem", &elem, "elem/I");
       tree->Branch("sample", &sample, "sample[elem]/I");
 
@@ -52,7 +52,7 @@ protected:
       file = new TFile("TOffsetGeneration3.root", "RECREATE");
       tree = new TTree("tree", "A test tree");
       tree->SetBit(TTree::kOnlyFlushAtCluster);
-      tree->SetAutoSave(5000);
+      tree->SetAutoFlush(5000);
       ElementStruct sample2;
       sample2.i = 1;
       double d[10];
@@ -72,7 +72,7 @@ protected:
       features.Set(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap);
       tree2->SetIOFeatures(features);
       tree2->SetBit(TTree::kOnlyFlushAtCluster);
-      tree2->SetAutoSave(5000);
+      tree2->SetAutoFlush(5000);
       sample2.i = 1;
       sample2.d = d;
       tree2->Branch("sample", &sample2, 32*1024, 99);
@@ -93,8 +93,8 @@ protected:
       tree->SetIOFeatures(features);
       tree->SetBit(TTree::kOnlyFlushAtCluster);
       tree2->SetBit(TTree::kOnlyFlushAtCluster);
-      tree->SetAutoSave(5000);
-      tree2->SetAutoSave(5000);
+      tree->SetAutoFlush(5000);
+      tree2->SetAutoFlush(5000);
       sample2.i = 1;
       sample2.d = d;
       auto br = tree->Branch("sample", &sample2, 32*1024, 99);
