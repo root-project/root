@@ -45,6 +45,8 @@ public:
 
    void SelectVolume(const std::string &volname);
 
+   void SetDrawOptions(const std::string &opt) { fDesc.SetDrawOptions(opt); }
+
    void Show(const RWebDisplayArgs &args = "");
 
 };

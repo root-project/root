@@ -88,6 +88,7 @@ class REveGeomDescription {
    };
 
    std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
+   std::string fDrawOptions;        ///< default draw options for client
    std::vector<REveGeomNode> fDesc; ///< converted description, send to client
    int fTopDrawNode{0};             ///<! selected top node
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
@@ -113,6 +114,8 @@ public:
    void SelectVolume(TGeoVolume *);
 
    void SelectNode(TGeoNode *);
+
+   void SetDrawOptions(const std::string &opt = "") { fDrawOptions = opt; }
 
 };
 
