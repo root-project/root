@@ -17,6 +17,7 @@
 #include "TROOT.h"
 #include "THttpServer.h"
 #include "TBufferJSON.h"
+#include "TGeoManager.h"
 
 ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr) : fGeoManager(mgr)
 {
@@ -69,9 +70,23 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
    }
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Select visible top volume, all other volumes will be disabled
+
+void ROOT::Experimental::REveGeomViewer::SelectVolume(const std::string &volname)
+{
+   if (!fGeoManager || volname.empty()) {
+      fDesc.SelectVolume(nullptr);
+   } else {
+      fDesc.SelectVolume(fGeoManager->GetVolume(volname.c_str()));
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Show geometry in web browser
+
 void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args)
 {
    fWebWindow->Show(args);
-
 }
 
