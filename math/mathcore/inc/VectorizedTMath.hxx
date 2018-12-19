@@ -254,4 +254,4 @@ inline ::ROOT::Double_v BesselI1(::ROOT::Double_v &x)
 } // namespace TMath
 #endif // VECCORE and VC exist check
 
-#endif // file defined check
+#endif

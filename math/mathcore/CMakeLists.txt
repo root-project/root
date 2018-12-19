@@ -92,7 +92,6 @@ set(HEADERS
   TRandom3.h
   TRandomGen.h
   TStatistic.h
-  VectorizedTMath.h
 )
 
 if(runtime_cxxmodules)
@@ -177,6 +176,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     src/TStatistic.cxx
     src/UnBinData.cxx
     src/triangle.c
+    inc/VectorizedTMath.hxx
   LIBRARIES
     ${MATHCORE_LIBRARIES}
   DICTIONARY_OPTIONS
