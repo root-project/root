@@ -23,6 +23,7 @@ class TGeoNode;
 class TGeoManager;
 class TGeoShape;
 class TGeoMatrix;
+class TGeoVolume;
 
 // do not use namespace to avoid too long JSON
 
@@ -84,10 +85,11 @@ class REveGeomDescription {
       ShapeDescr(TGeoShape *s) : fShape(s) {}
    };
 
-   std::vector<TGeoNode *> fNodes;   ///<! flat list of all nodes
-   std::vector<REveGeomNode> fDesc;  ///< converted description, send to client
-   std::vector<int> fSortMap;        ///<! nodes in order large -> smaller volume
-   std::vector<ShapeDescr> fShapes;  ///<! shapes with created descriptions
+   std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
+   std::vector<REveGeomNode> fDesc; ///< converted description, send to client
+   int fTopDrawNode{0};             ///<! selected top node
+   std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
+   std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
 
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 
@@ -105,6 +107,11 @@ public:
    void Build(TGeoManager *mgr);
 
    void CollectVisibles(int maxnumfaces, std::string &json, std::vector<char> &binary);
+
+   void SelectVolume(TGeoVolume *);
+
+   void SelectNode(TGeoNode *);
+
 };
 
 
