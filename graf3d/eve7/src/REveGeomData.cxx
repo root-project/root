@@ -15,11 +15,15 @@
 #include <ROOT/REveUtil.hxx>
 
 #include "TMath.h"
+#include "TColor.h"
+#include "TROOT.h"
 #include "TGeoNode.h"
 #include "TGeoVolume.h"
 #include "TGeoBBox.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
+#include "TGeoMedium.h"
+#include "TGeoMaterial.h"
 #include "TGeoCompositeShape.h"
 #include "TObjArray.h"
 #include "TBuffer3D.h"
@@ -425,7 +429,35 @@ void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces, s
 
          auto &item = visibles.back();
 
-         auto &sd = FindShapeDescr(fNodes[node.id]->GetVolume()->GetShape());
+         auto volume = fNodes[node.id]->GetVolume();
+
+         TColor *col{nullptr};
+
+         if ((volume->GetFillColor() > 1) && (volume->GetLineColor() == 1))
+            col = gROOT->GetColor(volume->GetFillColor());
+         else if (volume->GetLineColor() >= 0)
+            col = gROOT->GetColor(volume->GetLineColor());
+
+
+         if (volume->GetMedium() && (volume->GetMedium() != TGeoVolume::DummyMedium()) && volume->GetMedium()->GetMaterial()) {
+            auto material = volume->GetMedium()->GetMaterial();
+
+            auto fillstyle = material->GetFillStyle();
+            if ((fillstyle>=3000) && (fillstyle<=3100)) item.opacity = (3100 - fillstyle) / 100.;
+            if (!col) col = gROOT->GetColor(material->GetFillColor());
+         }
+
+         if (col) {
+            item.color = std::to_string((int)(col->GetRed()*255)) + "," +
+                         std::to_string((int)(col->GetGreen()*255)) + "," +
+                         std::to_string((int)(col->GetBlue()*255));
+            if (item.opacity == 1.)
+              item.opacity = col->GetAlpha();
+         } else {
+            item.color = "200,200,200";
+         }
+
+         auto &sd = FindShapeDescr(volume->GetShape());
          auto *rd = sd.fRenderData.get();
 
          if (sd.render_offest < 0) {
@@ -440,7 +472,7 @@ void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces, s
          item.vert_size = rd->SizeV();
          item.norm_size = rd->SizeN();
          item.index_size = rd->SizeI();
-         item.trans_size = rd->SizeT();
+         // item.trans_size = rd->SizeT();
       }
       return true;
    });
