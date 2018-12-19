@@ -524,7 +524,10 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
    std::string scName = "";
    if ( parent ) {
       PyObject* pyparent = PyObject_GetAttr( parent, PyStrings::gCppName );
-      if ( ! pyparent ) pyparent = PyObject_GetAttr( parent, PyStrings::gName );
+      if ( ! pyparent ) {
+         PyErr_Clear();
+         pyparent = PyObject_GetAttr( parent, PyStrings::gName );
+      }
       if ( ! pyparent ) {
          PyErr_Format( PyExc_SystemError, "given scope has no name for %s", name.c_str() );
          return 0;
