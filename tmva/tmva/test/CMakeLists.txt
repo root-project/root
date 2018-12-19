@@ -10,6 +10,7 @@ include_directories(${ROOT_INCLUDE_DIRS})
 ROOT_ADD_GTEST(TestRandomGenerator
                TestRandomGenerator.cxx
                LIBRARIES ${Libraries})
+ROOT_ADD_GTEST(rtensor rtensor.cxx LIBRARIES ROOTVecOps TMVA)
 
 project(tmva-tests)
 find_package(ROOT REQUIRED)

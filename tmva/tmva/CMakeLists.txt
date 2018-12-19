@@ -178,6 +178,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     TMVA/VarTransformHandler.h
     TMVA/Version.h
     TMVA/Volume.h
+    TMVA/RTensor.hxx
   SOURCES
     src/BDTEventWrapper.cxx
     src/BinarySearchTree.cxx
@@ -355,6 +356,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
   DEPENDENCIES
     TreePlayer
     Tree
+    ROOTDataFrame
+    ROOTVecOps
     Hist
     Matrix
     Minuit
