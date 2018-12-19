@@ -691,6 +691,9 @@
          m.M = function() { return this.fCoordinates.M(); }
          m.R = m.P = function() { return this.fCoordinates.R(); }
          m.P2 = function() { return this.P() * this.P(); }
+         m.Pt = m.pt = function() { return Math.sqrt(this.P2()); }
+         m.Phi = m.phi = function() { return Math.atan2(this.fCoordinates.Py(), this.fCoordinates.Px()); }
+         m.Eta = m.eta = function() { return Math.atanh(this.Pz()/this.P()); }
       }
 
       if (typename.indexOf("ROOT::Math::PxPyPzE4D")===0) {
@@ -707,6 +710,9 @@
             return -Math.sqrt(-mm);
          }
          m.Perp2 = m.Pt2 = function() { return this.fX*this.fX + this.fY*this.fY;}
+         m.Pt = m.pt = function() { return Math.sqrt(this.P2()); }
+         m.Phi = m.phi = function() { return Math.atan2(this.fY, this.fX); }
+         m.Eta = m.eta = function() { return Math.atanh(this.Pz/this.P()); }
       }
    }
 

@@ -1752,6 +1752,51 @@
 
    // ========================================================================================
 
+   function FileDumpSocket(receiver) {
+      this.receiver = receiver;
+      this.protocol = [];
+      this.cnt = 0;
+      JSROOT.NewHttpRequest("protocol.json", "text", this.get_protocol.bind(this)).send();
+   }
+
+   FileDumpSocket.prototype.get_protocol = function(res) {
+      if (!res) return;
+      this.protocol = JSON.parse(res);
+      if (typeof this.onopen == 'function') this.onopen();
+      this.next_operation();
+   }
+
+   FileDumpSocket.prototype.send = function(str) {
+      if (this.protocol[this.cnt] == "send") {
+         this.cnt++;
+         // use timeout to let process other callbacks before next portion will be produced
+         setTimeout(this.next_operation.bind(this), 10);
+      }
+   }
+
+   FileDumpSocket.prototype.close = function() {
+   }
+
+   FileDumpSocket.prototype.next_operation = function() {
+      var fname = this.protocol[this.cnt];
+      if (!fname) return;
+      if (fname == "send") return; // waiting for send
+      // console.log("getting file", fname);
+      JSROOT.NewHttpRequest(fname, (fname.indexOf(".bin") > 0 ? "buf" : "text"), this.get_file.bind(this)).send();
+      this.cnt++;
+   }
+
+   FileDumpSocket.prototype.get_file = function(res) {
+      // console.log('got file', typeof res, !!res, res);
+      if (!res) return;
+      if (this.receiver.ProvideData)
+         this.receiver.ProvideData(res, 0);
+      // use timeout to let process other callbacks before next portion will be produced
+      setTimeout(this.next_operation.bind(this), 10);
+   }
+
+   // ========================================================================================
+
 
    /** Client communication handle for TWebWindow.
     *
@@ -1897,7 +1942,7 @@
 
          if (pthis.state != 0) return;
 
-         // if (!first_time) console.log("try connect window again" + (new Date()).getTime());
+         if (!first_time) console.log("try connect window again" + (new Date()).getTime());
 
          if (pthis._websocket) pthis._websocket.close();
          delete pthis._websocket;
@@ -1916,7 +1961,11 @@
 
          var path = href;
 
-         if ((pthis.kind === 'websocket') && first_time) {
+         if (pthis.kind == "file") {
+            path += "root.filedump";
+            conn = new FileDumpSocket(pthis);
+            console.log('configure protocol log ' + path);
+         } else if ((pthis.kind === 'websocket') && first_time) {
             path = path.replace("http://", "ws://").replace("https://", "wss://") + "root.websocket";
             if (args) path += "?" + args;
             console.log('configure websocket ' + path);
@@ -2086,7 +2135,6 @@
       if (arg.first_recv) {
          arg.receiver = {
             OnWebsocketOpened: function(handle) {
-               console.log('Connected');
             },
 
             OnWebsocketMsg: function(handle, msg) {
@@ -2122,7 +2170,6 @@
       } else if (!arg.first_recv) {
          JSROOT.CallBack(arg.callback, handle, arg);
       }
-
    }
 
    // ========================================================================================

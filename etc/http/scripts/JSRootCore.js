@@ -96,7 +96,7 @@
 
    "use strict";
 
-   JSROOT.version = "ROOT 6.16.00";
+   JSROOT.version = "dev 19/12/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -818,8 +818,8 @@
     * @desc One should call req.send() to submit request
     * kind of the request can be:
     *
-    *    - "bin" - abstract binary data, result as string (default)
-    *    - "buf" - abstract binary data, result as BufferArray
+    *    - "bin" - abstract binary data, result as string
+    *    - "buf" - abstract binary data, result as ArrayBuffer (default)
     *    - "text" - returns req.responseText
     *    - "object" - returns JSROOT.parse(req.responseText)
     *    - "multi" - returns correctly parsed multi.json request
@@ -882,12 +882,13 @@
          if (xhr.readyState != 4) return;
 
          if ((xhr.status != 200) && (xhr.status != 206) && !JSROOT.browser.qt5 &&
-               ((xhr.status !== 0) || (url.indexOf("file://")!==0))) {
+             // in these special cases browsers not always set status
+             !((xhr.status == 0) && ((url.indexOf("file://")==0) || (url.indexOf("blob:")==0)))) {
             return callback(null);
          }
 
          if (JSROOT.nodejs && (method == "GET") && (kind === "object") &&
-             (xhr.responseType = 'arraybuffer') && (xhr.getResponseHeader("content-encoding")=="gzip")) {
+             (xhr.responseType == "arraybuffer") && (xhr.getResponseHeader("content-encoding") == "gzip")) {
             // special handling of gzipped JSON objects in Node.js
             var zlib = require('zlib'),
                 str = zlib.unzipSync(Buffer.from(xhr.response));
