@@ -730,21 +730,20 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg
 
 
   // Next test direct dependence
-  RooAbsArg* server = findServer(testArg) ;
-  if (server!=0) {
+  RooAbsArg* foundServer = findServer(testArg) ;
+  if (foundServer!=0) {
 
     // Return true if valueOnly is FALSE or if server is value server, otherwise keep looking
-    if ( !valueOnly || server->isValueServer(*this)) {
+    if ( !valueOnly || foundServer->isValueServer(*this)) {
       return kTRUE ;
     }
   }
 
   // If not, recurse
   for (const auto server : _serverList) {
-
     if ( !valueOnly || server->isValueServer(*this)) {
       if (server->dependsOn(testArg,ignoreArg,valueOnly)) {
-	return kTRUE ;
+        return kTRUE ;
       }
     }
   }
