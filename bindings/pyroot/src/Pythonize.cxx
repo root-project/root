@@ -2290,10 +2290,12 @@ namespace {
       Utility::AddToClass(pyclass, "_get__array_interface__", func, METH_NOARGS);
       // Add the dictionary as property to the class so that it updates automatically if accessed.
       // Since we are not able to add a property easily from C++, we do this in Python.
+
+      // We return early if the module does not have the function to add the property, which
+      // is the case if cppyy is invoked directly and not through PyROOT.
+      if (!PyObject_HasAttrString(gRootModule, "_add__array_interface__")) return;
+
       auto f = PyObject_GetAttrString(gRootModule, "_add__array_interface__");
-      // In case cppyy is not invoked through PyROOT and the above callable is not found,
-      // we return early and don't add the property.
-      if (!f) return;
       auto r = PyObject_CallFunction(f, (char*)"O", pyclass);
       Py_DECREF(f);
       Py_DECREF(r);
