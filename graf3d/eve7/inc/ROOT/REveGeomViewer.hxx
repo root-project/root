@@ -43,6 +43,8 @@ public:
    REveGeomViewer(TGeoManager *mgr);
    virtual ~REveGeomViewer();
 
+   void SelectVolume(const std::string &volname);
+
    void Show(const RWebDisplayArgs &args = "");
 
 };

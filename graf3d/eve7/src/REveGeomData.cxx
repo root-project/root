@@ -216,6 +216,36 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
 }
 
 /////////////////////////////////////////////////////////////////////
+/// Select top visible volume, other volumes will not be shown
+
+void ROOT::Experimental::REveGeomDescription::SelectVolume(TGeoVolume *vol)
+{
+   fTopDrawNode = 0;
+   if (!vol) return;
+
+   for (auto &desc: fDesc)
+      if (fNodes[desc.id]->GetVolume() == vol) {
+         fTopDrawNode = desc.id;
+         break;
+      }
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Select top visible node, other nodes will not be shown
+
+void ROOT::Experimental::REveGeomDescription::SelectNode(TGeoNode *node)
+{
+   fTopDrawNode = 0;
+   if (!node) return;
+
+   for (auto &desc: fDesc)
+      if (fNodes[desc.id] == node) {
+         fTopDrawNode = desc.id;
+         break;
+      }
+}
+
+/////////////////////////////////////////////////////////////////////
 /// Set visibility flag for each nodes
 
 int ROOT::Experimental::REveGeomDescription::MarkVisible(bool on_screen)
@@ -254,28 +284,33 @@ void ROOT::Experimental::REveGeomDescription::ScanVisible(REveGeomScanFunc_t fun
 {
    std::vector<int> stack;
    stack.reserve(200);
-   int seqid{0};
+   int seqid{0}, inside_visisble_branch{0};
 
    using ScanFunc_t = std::function<int(int, int)>;
 
    ScanFunc_t scan_func = [&, this](int nodeid, int lvl) {
+      if (nodeid == fTopDrawNode)
+         inside_visisble_branch++;
+
       auto &desc = fDesc[nodeid];
       int res = 0;
-      if (desc.vis && (lvl>=0))
-        if (func(desc, stack)) res++;
+      if (desc.vis && (lvl >= 0) && (inside_visisble_branch > 0))
+         if (func(desc, stack))
+            res++;
 
-      seqid++; // count sequence id of current position in scan
+      seqid++; // count sequence id of current position in scan, will be used later for merging drawing lists
 
       // limit depth to which it scans
-      if (lvl > desc.visdepth) lvl = desc.visdepth;
+      if (lvl > desc.visdepth)
+         lvl = desc.visdepth;
 
-      if ((desc.chlds.size() > 0) && (desc.numvischld>0)) {
+      if ((desc.chlds.size() > 0) && (desc.numvischld > 0)) {
          auto pos = stack.size();
          int numvischld = 0, previd = seqid;
          stack.push_back(0);
-         for (unsigned k=0; k<desc.chlds.size(); ++k) {
+         for (unsigned k = 0; k < desc.chlds.size(); ++k) {
             stack[pos] = k; // stack provides index in list of chdils
-            numvischld += scan_func(desc.chlds[k], lvl-1);
+            numvischld += scan_func(desc.chlds[k], lvl - 1);
          }
          stack.pop_back();
 
@@ -290,8 +325,10 @@ void ROOT::Experimental::REveGeomDescription::ScanVisible(REveGeomScanFunc_t fun
          seqid += desc.idshift;
       }
 
-      return res;
+      if (nodeid == fTopDrawNode)
+         inside_visisble_branch--;
 
+      return res;
    };
 
    scan_func(0, 999999);
