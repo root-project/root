@@ -38,15 +38,15 @@ class RooSTLRefCountList {
 
     ///Add an object or increase refCount if it is already present. Only compares
     ///pointers to check for existing objects
-    void Add(T * obj, std::size_t initialRefCount = 1) {
+    void Add(T * obj, std::size_t initialCount = 1) {
       auto foundItem = findByPointer(obj);
 
       if (foundItem != _storage.end()) {
-        ++_refCount[foundItem - _storage.begin()];
+        _refCount[foundItem - _storage.begin()] += initialCount;
       }
       else {
         _storage.emplace_back(obj);
-        _refCount.emplace_back(initialRefCount);
+        _refCount.emplace_back(initialCount);
       }
     }
 

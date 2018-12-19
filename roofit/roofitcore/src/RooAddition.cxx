@@ -177,10 +177,9 @@ Double_t RooAddition::evaluate() const
 
 //   cout << "RooAddition::eval sum = " ;
 
-  RooFIter setIter = _set.fwdIterator() ;
-  RooAbsReal* comp ;
-  while((comp=(RooAbsReal*)setIter.next())) {
-    Double_t tmp = comp->getVal(nset) ;
+  for (const auto arg : _set) {
+    const auto comp = static_cast<RooAbsReal*>(arg);
+    const Double_t tmp = comp->getVal(nset);
 //     cout << tmp << " " ;
     sum += tmp ;
   }

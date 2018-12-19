@@ -311,10 +311,13 @@ Bool_t RooAbsArg::getTransientAttribute(const Text_t* name) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register another RooAbsArg as a server to us, ie, declare that
-/// we depend on it. In addition to the basic client-server relationship,
-/// we can declare dependence on the server's value and/or shape.
+/// we depend on it.
+/// \param server The server to be registered.
+/// \param valueProp In addition to the basic client-server relationship, declare dependence on the server's value.
+/// \param valueProp In addition to the basic client-server relationship, declare dependence on the server's shape.
+/// \param refCount Optionally add with higher reference count (if multiple components depend on it)
 
-void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
+void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp, std::size_t refCount)
 {
   if (_prohibitServerRedirect) {
     cxcoutF(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName()
@@ -337,24 +340,24 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
 //  if (server._clientListValue.GetSize() >  999 && server._clientListValue.getHashTableSize() == 0) server._clientListValue.setHashTableSize(1000);
 
   // Add server link to given server
-  _serverList.Add(&server) ;
+  _serverList.Add(&server, refCount) ;
 
-  server._clientList.Add(this) ;
-  if (valueProp) server._clientListValue.Add(this) ;
-  if (shapeProp) server._clientListShape.Add(this) ;
+  server._clientList.Add(this, refCount);
+  if (valueProp) server._clientListValue.Add(this, refCount);
+  if (shapeProp) server._clientListShape.Add(this, refCount);
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Register a list of RooAbsArg as servers to us by calls
+/// Register a list of RooAbsArg as servers to us by calling
 /// addServer() for each arg in the list
 
 void RooAbsArg::addServerList(RooAbsCollection& serverList, Bool_t valueProp, Bool_t shapeProp)
 {
-  RooAbsArg* arg ;
-  RooFIter iter = serverList.fwdIterator() ;
-  while ((arg=iter.next())) {
+  _serverList.reserve(_serverList.size() + serverList.size());
+
+  for (const auto arg : serverList) {
     addServer(*arg,valueProp,shapeProp) ;
   }
 }
@@ -394,9 +397,7 @@ void RooAbsArg::replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, Bool_t
 {
   Int_t count = _serverList.refCount(&oldServer);
   removeServer(oldServer, kTRUE);
-  while (count--) {
-    addServer(newServer, propValue, propShape);
-  }
+  addServer(newServer, propValue, propShape, count);
 }
 
 
@@ -480,9 +481,7 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
 
   // Recurse if current node is derived
   if (arg->isDerived() && (!arg->isFundamental() || recurseFundamental)) {
-    RooAbsArg* server ;
-    RooFIter sIter = arg->serverMIterator() ;
-    while ((server=sIter.next())) {
+    for (const auto server : arg->_serverList) {
 
       // Skip non-value server nodes if requested
       Bool_t isValueSrv = server->_clientListValue.containsByNamePtr(arg);
@@ -514,12 +513,10 @@ RooArgSet* RooAbsArg::getParameters(const RooAbsData* set, Bool_t stripDisconnec
 void RooAbsArg::addParameters(RooArgSet& params, const RooArgSet* nset,Bool_t stripDisconnected) const
 {
   // INTERNAL helper function for getParameters()
-  RooFIter siter = serverMIterator() ;
-  RooAbsArg* server ;
 
   RooArgSet nodeParamServers ;
   RooArgSet nodeBranchServers ;
-  while((server=siter.next())) {
+  for (const auto server : _serverList) {
     if (server->isValueServer(*this)) {
       if (server->isFundamental()) {
 	if (!nset || !server->dependsOn(*nset)) {
@@ -538,8 +535,7 @@ void RooAbsArg::addParameters(RooArgSet& params, const RooArgSet* nset,Bool_t st
   params.add(nodeParamServers,kTRUE) ;
 
   // Now recurse into branch servers
-  RooFIter biter = nodeBranchServers.fwdIterator() ;
-  while((server=biter.next())) {
+  for (const auto server : nodeBranchServers) {
     server->addParameters(params,nset) ;
   }
 }
@@ -744,8 +740,7 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg
   }
 
   // If not, recurse
-  RooFIter sIter = serverMIterator() ;
-  while ((server=sIter.next())) {
+  for (const auto server : _serverList) {
 
     if ( !valueOnly || server->isValueServer(*this)) {
       if (server->dependsOn(testArg,ignoreArg,valueOnly)) {
@@ -1081,9 +1076,7 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_
   ret |= redirectServers(newSet,mustReplaceAll,nameChange,kTRUE) ;
 
   // Do redirect on servers
-  RooFIter sIter = serverMIterator() ;
-  RooAbsArg* server ;
-  while((server=sIter.next())) {
+  for (const auto server : _serverList){
     ret |= server->recursiveRedirectServers(newSet,mustReplaceAll,nameChange,recurseInNewSet) ;
   }
 
@@ -1583,9 +1576,7 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optim
   }
 
   // Forward calls to all servers
-  RooFIter sIter = serverMIterator() ;
-  RooAbsArg* server ;
-  while((server=sIter.next())) {
+  for (const auto server : _serverList) {
     server->optimizeCacheMode(observables,optimizedNodes,processedNodes) ;
   }
 
@@ -1665,11 +1656,9 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
   if (!canOpt) {
 
     // If not, see if next level down can be cached
-    RooFIter sIter = serverMIterator() ;
-    RooAbsArg* server ;
-    while((server=sIter.next())) {
+    for (const auto server : _serverList) {
       if (server->isDerived()) {
-	server->findConstantNodes(observables,cacheList,processedNodes) ;
+        server->findConstantNodes(observables,cacheList,processedNodes) ;
       }
     }
   }
@@ -1692,9 +1681,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
 
 void RooAbsArg::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt)
 {
-  RooFIter sIter = serverMIterator() ;
-  RooAbsArg* server ;
-  while((server=sIter.next())) {
+  for (const auto server : _serverList) {
     server->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt) ;
   }
 }
@@ -1780,9 +1767,7 @@ void RooAbsArg::printCompactTree(ostream& os, const char* indent, const char* na
 
   TString indent2(indent) ;
   indent2 += "  " ;
-  RooFIter iter = serverMIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
+  for (const auto arg : _serverList) {
     arg->printCompactTree(os,indent2,namePat,this) ;
   }
 }
@@ -1809,9 +1794,7 @@ void RooAbsArg::printComponentTree(const char* indent, const char* namePat, Int_
 
   TString indent2(indent) ;
   indent2 += "  " ;
-  RooFIter iter = serverMIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
+  for (const auto arg : _serverList) {
     arg->printComponentTree(indent2.Data(),namePat,nLevel-1) ;
   }
 }
@@ -2141,9 +2124,7 @@ void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, 
 
 void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSet)
 {
-  RooFIter sIter = serverMIterator() ;
-  RooAbsArg* server ;
-  while((server=sIter.next())) {
+  for (const auto server : _serverList) {
     linkSet.insert(make_pair(this,server)) ;
     server->graphVizAddConnections(linkSet) ;
   }

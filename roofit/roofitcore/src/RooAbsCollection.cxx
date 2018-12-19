@@ -275,9 +275,7 @@ Bool_t RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
 {
   Bool_t ret(kFALSE) ;
 
-  RooFIter sIter = var.serverMIterator() ;
-  RooAbsArg* server ;
-  while ((server=sIter.next())) {
+  for (const auto server : var.servers()) {
     RooAbsArg* tmp = find(*server) ;
 
     if (!tmp) {
