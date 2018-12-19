@@ -48,13 +48,21 @@ if(Git_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/.git)
 else()
   set(GIT_DESCRIBE_ERRCODE "NoGit")
 endif()
-if(GIT_DESCRIBE_ERRCODE)
+
+function(SET_VERSION_FROM_FILE)
   file(READ ${CMAKE_SOURCE_DIR}/build/version_number versionstr)
   string(STRIP ${versionstr} versionstr)
   string(REGEX REPLACE "([0-9]+)[.][0-9]+[/][0-9]+" "\\1" ROOT_MAJOR_VERSION ${versionstr})
   string(REGEX REPLACE "[0-9]+[.]([0-9]+)[/][0-9]+" "\\1" ROOT_MINOR_VERSION ${versionstr})
   string(REGEX REPLACE "[0-9]+[.][0-9]+[/]([0-9]+)" "\\1" ROOT_PATCH_VERSION ${versionstr})
-  set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
+  set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}" PARENT_SCOPE)
+  set(ROOT_MAJOR_VERSION "${ROOT_MAJOR_VERSION}" PARENT_SCOPE)
+  set(ROOT_MINOR_VERSION "${ROOT_MINOR_VERSION}" PARENT_SCOPE)
+  set(ROOT_PATCH_VERSION "${ROOT_PATCH_VERSION}" PARENT_SCOPE)
+endfunction()
+
+if(GIT_DESCRIBE_ERRCODE)
+  SET_VERSION_FROM_FILE()
 else()
   execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --always
                   OUTPUT_VARIABLE GIT_DESCRIBE_ALWAYS
@@ -79,11 +87,7 @@ else()
   else()
     # GIT_DESCRIBE_ALWAYS: v6-13-04-2163-g7e8d27ea66
     # GIT_DESCRIBE_ALL: heads/master or remotes/origin/master
-    file(READ ${CMAKE_SOURCE_DIR}/build/version_number versionstr)
-    string(STRIP ${versionstr} versionstr)
-    string(REGEX REPLACE "([0-9]+)[.][0-9]+[/][0-9]+" "\\1" ROOT_MAJOR_VERSION ${versionstr})
-    string(REGEX REPLACE "[0-9]+[.]([0-9]+)[/][0-9]+" "\\1" ROOT_MINOR_VERSION ${versionstr})
-    string(REGEX REPLACE "[0-9]+[.][0-9]+[/]([0-9]+)" "\\1" ROOT_PATCH_VERSION ${versionstr})
+    SET_VERSION_FROM_FILE()
   endif()
 endif()
 
