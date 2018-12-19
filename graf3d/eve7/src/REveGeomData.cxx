@@ -484,8 +484,8 @@ void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces, s
    int off{0};
 
    for (auto rd : render_data) {
-      auto size = rd->Write( & binary[ off ] );
-      off += size;
+      auto sz = rd->Write( &binary[off], binary.size() - off );
+      off += sz;
    }
    assert(render_offset == off);
 }
