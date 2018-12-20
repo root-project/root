@@ -941,57 +941,57 @@ Begin_Macro(source)
 }
 End_Macro
 
-Sometimes the change of the range of the Z axis is unwanted, in which case, one can use
-`SAME0` (or `SAMES0`) option to opt out of this change.
+\since **ROOT version 6.17/01:**
+
+Sometimes the change of the range of the Z axis is unwanted, in which case, one
+can use `SAME0` (or `SAMES0`) option to opt out of this change.
 
 Begin_Macro(source)
 {
-  TH2F* h2 = new TH2F("h2","h2",10,0,10,10,20,30);
-  TH2F* hf = (TH2F*)h2->Clone("hf");
+   auto *h2 = new TH2F("h2"," ",10,0,10,10,20,30);
+   auto *hf = (TH2F*)h2->Clone("hf");
+   h2->SetBit(TH1::kNoStats);
+   hf->SetBit(TH1::kNoStats);
 
-  h2->Fill(5,22);
-  h2->Fill(5,23);
-  h2->Fill(6,22);
-  h2->Fill(6,23);
+   h2->Fill(5,22);
+   h2->Fill(5,23);
+   h2->Fill(6,22);
+   h2->Fill(6,23);
 
+   hf->Fill(6,23);
+   hf->Fill(6,23);
+   hf->Fill(6,23);
+   hf->Fill(6,23);
+   hf->Fill(5,23);
 
-  hf->Fill(6,23);
-  hf->Fill(6,23);
-  hf->Fill(6,23);
-  hf->Fill(6,23);
-  hf->Fill(5,23);
+   auto hf_copy1 = hf->Clone("hf_copy1");
+   auto hf_copy2 = hf->Clone("hf_copy2");
+   auto hf_copy3 = hf->Clone("hf_copy3");
 
-  hf_copy1 = hf->Clone("hf_copy1");
-  hf_copy2 = hf->Clone("hf_copy2");
-  hf_copy3 = hf->Clone("hf_copy3");
+   auto* lt = new TLatex();
+   auto* cx = new TCanvas(); cx->Divide(2,2);
 
-  auto* lt = new TLatex();
-  auto* cx = new TCanvas();
-  cx->Divide(2,2);
+   cx->cd(1);
+   h2->Draw("box");
+   hf->Draw("text colz same");
+   lt->DrawLatexNDC(0.3,0.5,"SAME");
 
-  cx->cd(1);
-  h2->Draw("box");
-  hf->Draw("text colz same");
-  lt->DrawLatexNDC(0.3,0.5,"SAME");
+   cx->cd(2);
+   h2->Draw("box");
+   hf_copy1->Draw("text colz same0");
+   lt->DrawLatexNDC(0.3,0.5,"SAME0");
 
-  cx->cd(2);
-  h2->Draw("box");
-  hf_copy1->Draw("text colz same0");
-  lt->DrawLatexNDC(0.3,0.5,"SAME0");
+   cx->cd(3);
+   h2->Draw("box");
+   hf_copy2->Draw("text colz sameS");
+   lt->DrawLatexNDC(0.3,0.5,"SAMES");
 
-  cx->cd(3);
-  h2->Draw("box");
-  hf_copy2->Draw("text colz sameS");
-  lt->DrawLatexNDC(0.3,0.5,"SAMES");
-
-  cx->cd(4);
-  h2->Draw("box");
-  hf_copy3->Draw("text colz sameS0");
-  lt->DrawLatexNDC(0.3,0.5,"SAMES0");
-
+   cx->cd(4);
+   h2->Draw("box");
+   hf_copy3->Draw("text colz sameS0");
+   lt->DrawLatexNDC(0.3,0.5,"SAMES0");
 }
 End_Macro
-
 
 
 ### <a name="HP14"></a> The COLor option
