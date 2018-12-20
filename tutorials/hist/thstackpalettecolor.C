@@ -18,20 +18,20 @@
 
 void thstackpalettecolor()
 {
-   THStack *hs = new THStack("hs","Stacked 1D histograms colored using kOcean palette");
+   auto hs = new THStack("hs","Stacked 1D histograms colored using kOcean palette");
 
    gStyle->SetPalette(kOcean);
 
    // Create three 1-d histograms  and add them in the stack
-   TH1F *h1st = new TH1F("h1st","test hstack",100,-4,4);
+   auto h1st = new TH1F("h1st","test hstack",100,-4,4);
    h1st->FillRandom("gaus",20000);
    hs->Add(h1st);
 
-   TH1F *h2st = new TH1F("h2st","test hstack",100,-4,4);
+   auto h2st = new TH1F("h2st","test hstack",100,-4,4);
    h2st->FillRandom("gaus",15000);
    hs->Add(h2st);
 
-   TH1F *h3st = new TH1F("h3st","test hstack",100,-4,4);
+   auto h3st = new TH1F("h3st","test hstack",100,-4,4);
    h3st->FillRandom("gaus",10000);
    hs->Add(h3st);
 
