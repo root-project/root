@@ -2,15 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'DATA AND CATEGORIES' RooFit tutorial macro #405
-##
-## Demonstration of real-.discrete mapping functions
+## Data and categories: demonstration of real-discrete mapping functions
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 
 import ROOT

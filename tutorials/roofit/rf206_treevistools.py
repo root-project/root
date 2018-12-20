@@ -1,14 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
-## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #206
-## Tools for visualization of ROOT.RooAbsArg expression trees
+## Addition and convolution: tools for visualization of ROOT.RooAbsArg expression trees
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 import ROOT
 

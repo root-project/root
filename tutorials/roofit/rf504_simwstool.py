@@ -2,16 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #504
-##
-## Using RooSimWSTool to construct a simultaneous p.d.f that is built
-## of variations of an input p.d.f
+## Organization and simultaneous fits: using RooSimWSTool to construct a simultaneous p.d.f that is built of variations of an input p.d.f
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 import ROOT
 

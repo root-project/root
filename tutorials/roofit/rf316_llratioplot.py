@@ -2,16 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #316
-##
-## Using the likelihood ratio techique to construct a signal enhanced
-## one-dimensional projection of a multi-dimensional p.d.f.
+## Multidimensional models: using the likelihood ratio techique to construct a signal enhanced one-dimensional projection of a multi-dimensional p.d.f.
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 
 import ROOT

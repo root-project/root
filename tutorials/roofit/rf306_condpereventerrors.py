@@ -1,14 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #306
-## Complete example with use of conditional p.d.f. with per-event errors
+## Multidimensional models: complete example with use of conditional p.d.f. with per-event errors
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 import ROOT
 

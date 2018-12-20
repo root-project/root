@@ -2,15 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## 'DATA AND CATEGORIES' RooFit tutorial macro #407
-##
-## Latex printing of lists and sets of RooArgSets
+## Data and categories: latex printing of lists and sets of RooArgSets
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 
 import ROOT

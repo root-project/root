@@ -1,16 +1,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #903
-##
-## Caching of slow numeric integrals and parameterizations of slow
-## numeric integrals
+## Numeric algorithm tuning: caching of slow numeric integrals and parameterizations of slow numeric integrals
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-
+## \author Wouter Verkerke (C++ version)
 
 import sys
 import ROOT

@@ -1,16 +1,14 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## 'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #901
-##
-## Configuration and customization of how MC sampling algorithms
+## Numeric algorithm tuning: configuration and customization of how MC sampling algorithms
 ## on specific p.d.f.s are executed
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-
+## \author Wouter Verkerke (C++ version)
 
 import ROOT
 

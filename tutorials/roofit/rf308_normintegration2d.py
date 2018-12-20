@@ -2,18 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #308
-##
-## Examples on normalization of p.d.f.s,
-## integration of p.d.fs, construction
-## of cumulative distribution functions from p.d.f.s
-## in two dimensions
+## Multidimensional models: normalization and  integration of p.d.fs, construction of cumulative distribution functions from p.d.f.s in two dimensions
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 from __future__ import print_function
 import ROOT

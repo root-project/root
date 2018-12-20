@@ -2,15 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #312
-##
-## Performing fits in multiple (disjoint) ranges in one or more dimensions
+## Multidimensional models: performing fits in multiple (disjoint) ranges in one or more dimensions
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 import ROOT
 

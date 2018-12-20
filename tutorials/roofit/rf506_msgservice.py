@@ -2,15 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #506
-##
-## Tuning and customizing the ROOT.RooFit message logging facility
+## Organization and simultaneous fits: tuning and customizing the ROOT.RooFit message logging facility
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 
 import ROOT
