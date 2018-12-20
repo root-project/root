@@ -860,6 +860,25 @@ Begin_Macro(source)
 }
 End_Macro
 
+\since **ROOT version 6.17/01**
+
+The option `ARR` can be combined with the option `COL` or `COLZ`.
+
+Begin_Macro(source)
+{
+   auto *c1   = new TCanvas("c1","c1",600,400);
+   auto *harr = new TH2F("harr","Option ARR + COLZ example",20,-4,4,20,-20,20);
+   harr->SetStats(0);
+   Float_t px, py;
+   for (Int_t i = 0; i < 25000; i++) {
+      gRandom->Rannor(px,py);
+      harr->Fill(px,5*py);
+      harr->Fill(3+0.5*px,2*py-10.,0.1);
+   }
+   harr->Draw("ARR COLZ");
+}
+End_Macro
+
 
 ### <a name="HP13"></a> The BOX option
 
@@ -4180,6 +4199,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (hdim>1) {
          Hoption.Arrow  = 1;
          Hoption.Scat = 0;
+         l = strstr(chopt,"COL"); if (l) { Hoption.Arrow  = 2;  memcpy(l,"   ",3); }
+         l = strstr(chopt,"Z");   if (l) { Hoption.Zscale = 1;  memcpy(l," ",1); }
       } else {
          Hoption.Hist = 1;
       }
@@ -4603,6 +4624,22 @@ void THistPainter::PaintArrows(Option_t *)
    arrow->SetFillStyle(1001);
    arrow->SetFillColor(fH->GetLineColor());
    arrow->SetLineColor(fH->GetLineColor());
+   arrow->SetLineWidth(fH->GetLineWidth());
+
+   // Initialize the levels on the Z axis
+   Int_t ncolors=0, ndivz=0;
+   Double_t scale=0.;
+   if (Hoption.Arrow>1) {
+      ncolors = gStyle->GetNumberOfColors();
+      Int_t ndiv    = fH->GetContour();
+      if (ndiv == 0 ) {
+         ndiv = gStyle->GetNumberContours();
+         fH->SetContour(ndiv);
+      }
+      ndivz  = TMath::Abs(ndiv);
+      if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
+      scale = ndivz/(fH->GetMaximum()-fH->GetMinimum());
+   }
 
    for (Int_t id=1;id<=2;id++) {
       for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
@@ -4638,6 +4675,13 @@ void THistPainter::PaintArrows(Option_t *)
                dyn = cy*dy/dn;
                y1  = yc - dyn;
                y2  = yc + dyn;
+               if (Hoption.Arrow>1) {
+                  int color = Int_t(0.01+(fH->GetBinContent(i, j)-fH->GetMinimum())*scale);
+                  Int_t theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
+                  if (theColor > ncolors-1) theColor = ncolors-1;
+                  arrow->SetFillColor(gStyle->GetColorPalette(theColor));
+                  arrow->SetLineColor(gStyle->GetColorPalette(theColor));
+               }
                if (TMath::Abs(x2-x1) > 0. || TMath::Abs(y2-y1) > 0.) {
                   arrow->PaintArrow(x1, y1, x2, y2, 0.015, "|>");
                } else {
