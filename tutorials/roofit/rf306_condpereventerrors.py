@@ -29,7 +29,7 @@ gm = ROOT.RooGaussModel(
 # Construct decay(dt) (x) gauss1(dt|dterr)
 tau = ROOT.RooRealVar("tau", "tau", 1.548)
 decay_gm = ROOT.RooDecay("decay_gm", "decay", dt,
-                            tau, gm, ROOT.RooDecay.DoubleSided)
+                         tau, gm, ROOT.RooDecay.DoubleSided)
 
 # Construct fake 'external' data with per-event error
 # ------------------------------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ decay_gm.plotOn(frame2, ROOT.RooFit.ProjWData(expDataDterr, ROOT.kTRUE))
 
 # Draw all frames on canvas
 c = ROOT.TCanvas("rf306_condpereventerrors",
-                    "rf306_condperventerrors", 1200, 400)
+                 "rf306_condperventerrors", 1200, 400)
 c.Divide(3)
 c.cd(1)
 ROOT.gPad.SetLeftMargin(0.20)

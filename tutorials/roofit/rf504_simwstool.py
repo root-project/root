@@ -65,7 +65,7 @@ sct = ROOT.RooSimWSTool(w)
 #
 # Returned p.d.f is owned by the workspace
 model_sim = sct.build("model_sim", "model",
-                        ROOT.RooFit.SplitParam("m", "c"))
+                      ROOT.RooFit.SplitParam("m", "c"))
 
 # Print tree structure of model
 model_sim.Print("t")
@@ -82,7 +82,7 @@ w.Print("v")
 
 # Build another simultaneous p.d.f using a composite split in states c X d
 model_sim2 = sct.build("model_sim2", "model",
-                        ROOT.RooFit.SplitParam("p0", "c,d"))
+                       ROOT.RooFit.SplitParam("p0", "c,d"))
 
 # Print tree structure of self model
 model_sim2.Print("t")

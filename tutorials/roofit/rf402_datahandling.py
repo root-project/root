@@ -146,7 +146,7 @@ dh2.Print("v")
 
 # Add dh2 to yframe and redraw
 dh2.plotOn(yframe, ROOT.RooFit.LineColor(ROOT.kRed),
-            ROOT.RooFit.MarkerColor(ROOT.kRed))
+           ROOT.RooFit.MarkerColor(ROOT.kRed))
 
 # Saving and loading from file
 # -------------------------------------------------------

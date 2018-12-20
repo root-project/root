@@ -67,12 +67,16 @@ data3 = model3.generate(ROOT.RooArgSet(x, y, z), 10000)
 
 # Create and fill ROOT 2D histogram (8x8x8 bins) with contents of dataset
 # hh_data3 = data3.createHistogram("hh_data3", x, ROOT.RooFit.Binning(8), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(8)), ROOT.RooFit.ZVar(z, ROOT.RooFit.Binning(8)))
-hh_data3 = ROOT.RooAbsData.createHistogram(data3, "hh_data3", x, ROOT.RooFit.Binning(
-    8), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(8)), ROOT.RooFit.ZVar(z, ROOT.RooFit.Binning(8)))
+hh_data3 = ROOT.RooAbsData.createHistogram(
+    data3, "hh_data3", x, ROOT.RooFit.Binning(8), ROOT.RooFit.YVar(
+        y, ROOT.RooFit.Binning(8)), ROOT.RooFit.ZVar(
+            z, ROOT.RooFit.Binning(8)))
 
 # Create and fill ROOT 2D histogram (20x20x20 bins) with sampling of pdf
-hh_pdf3 = model3.createHistogram("hh_model3", x, ROOT.RooFit.Binning(
-    20), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(20)), ROOT.RooFit.ZVar(z, ROOT.RooFit.Binning(20)))
+hh_pdf3 = model3.createHistogram(
+    "hh_model3", x, ROOT.RooFit.Binning(20), ROOT.RooFit.YVar(
+        y, ROOT.RooFit.Binning(20)), ROOT.RooFit.ZVar(
+            z, ROOT.RooFit.Binning(20)))
 hh_pdf3.SetFillColor(ROOT.kBlue)
 
 c1 = ROOT.TCanvas("rf309_2dimplot", "rf309_2dimplot", 800, 800)
