@@ -121,8 +121,6 @@ else()
   set(aclocaldir ${prefix}/${CMAKE_INSTALL_ACLOCALDIR})
 endif()
 
-set(LibSuffix ${SOEXT})
-
 set(buildx11 ${value${x11}})
 set(x11libdir -L${X11_LIBRARY_DIR})
 set(xpmlibdir -L${X11_LIBRARY_DIR})
@@ -752,14 +750,14 @@ endif()
 
 
 #---compiledata.h--------------------------------------------------------------------------------------------
+
 if(WIN32)
   # We cannot use the compiledata.sh script for windows
   configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in ${CMAKE_BINARY_DIR}/include/compiledata.h NEWLINE_STYLE UNIX)
 else()
   execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh ${CMAKE_BINARY_DIR}/include/compiledata.h "${CXX}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_FLAGS}"
-        "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}"
-        "${LibSuffix}" "${SYSLIBS}"
+        "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "so" "${SYSLIBS}"
         "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "" "${explicitlink}" )
 endif()
 
