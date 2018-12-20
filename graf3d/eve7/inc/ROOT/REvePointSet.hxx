@@ -16,8 +16,9 @@
 #include <ROOT/REveProjectionBases.hxx>
 #include <ROOT/REveTreeTools.hxx>
 
-#include "TArrayI.h"
 #include "TPointSet3D.h"
+
+class TArrayI;
 
 namespace ROOT {
 namespace Experimental {
@@ -33,9 +34,9 @@ private:
    REvePointSet &operator=(const REvePointSet &); // Not implemented
 
 protected:
-   TString fTitle;        // Title/tooltip of the REvePointSet.
-   TArrayI *fIntIds;      // Optional array of integer ideices.
-   Int_t fIntIdsPerPoint; // Number of integer indices assigned to each point.
+   TString fTitle;            // Title/tooltip of the REvePointSet.
+   TArrayI *fIntIds{nullptr}; // Optional array of integer ideices.
+   Int_t fIntIdsPerPoint;     // Number of integer indices assigned to each point.
 
    void AssertIntIdsSize();
 
@@ -120,14 +121,14 @@ class REvePointSetArray : public REveElement, public TNamed, public TAttMarker, 
    REvePointSetArray &operator=(const REvePointSetArray &); // Not implemented
 
 protected:
-   REvePointSet **fBins;       //  Pointers to subjugated REvePointSet's.
-   Int_t fDefPointSetCapacity; //  Default capacity of subjugated REvePointSet's.
-   Int_t fNBins;               //  Number of subjugated REvePointSet's.
-   Int_t fLastBin;             //! Index of the last filled REvePointSet.
-   Double_t fMin, fCurMin;     //  Overall and current minimum value of the separating quantity.
-   Double_t fMax, fCurMax;     //  Overall and current maximum value of the separating quantity.
-   Double_t fBinWidth;         //  Separating quantity bin-width.
-   TString fQuantName;         //  Name of the separating quantity.
+   REvePointSet **fBins{nullptr}; //  Pointers to subjugated REvePointSet's.
+   Int_t fDefPointSetCapacity;    //  Default capacity of subjugated REvePointSet's.
+   Int_t fNBins;                  //  Number of subjugated REvePointSet's.
+   Int_t fLastBin;                //! Index of the last filled REvePointSet.
+   Double_t fMin, fCurMin;        //  Overall and current minimum value of the separating quantity.
+   Double_t fMax, fCurMax;        //  Overall and current maximum value of the separating quantity.
+   Double_t fBinWidth;            //  Separating quantity bin-width.
+   TString fQuantName;            //  Name of the separating quantity.
 
 public:
    REvePointSetArray(const char *name = "REvePointSetArray", const char *title = "");
