@@ -82,6 +82,7 @@ The methods could be replaced by equivalent methods with other signature:
     This problem was reported [here](https://root-forum.cern.ch/t/stat-box-for-th2/).
   - The automatic placement of legend now "sees" TMultiGraph and THStack.
   - Improve and simplify the drawing the 2D histogram's option "ARR".
+  - The option ARR can be combined with the option COL or COLZ.
 
 ## 3D Graphics Libraries
 
