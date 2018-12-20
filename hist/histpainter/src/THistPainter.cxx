@@ -59,6 +59,7 @@
 #include "TPluginManager.h"
 #include "TPaletteAxis.h"
 #include "TCrown.h"
+#include "TArrow.h"
 #include "TVirtualPadEditor.h"
 #include "TEnv.h"
 #include "TPoint.h"
@@ -846,8 +847,9 @@ The orientation of the arrow follows the cell gradient.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *harr = new TH2F("harr","Option ARRow example",20,-4,4,20,-20,20);
+   auto *c1   = new TCanvas("c1","c1",600,400);
+   auto *harr = new TH2F("harr","Option ARRow example",20,-4,4,20,-20,20);
+   harr->SetLineColor(kRed);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -855,7 +857,6 @@ Begin_Macro(source)
       harr->Fill(3+0.5*px,2*py-10.,0.1);
    }
    harr->Draw("ARR");
-   return c1;
 }
 End_Macro
 
@@ -4585,10 +4586,8 @@ paintstat:
 
 void THistPainter::PaintArrows(Option_t *)
 {
-   fH->TAttLine::Modify();
-
    Double_t xk, xstep, yk, ystep;
-   Double_t dx, dy, si, co, anr, x1, x2, y1, y2, xc, yc, dxn, dyn;
+   Double_t dx, dy, x1, x2, y1, y2, xc, yc, dxn, dyn;
    Int_t   ncx  = Hparam.xlast - Hparam.xfirst + 1;
    Int_t   ncy  = Hparam.ylast - Hparam.yfirst + 1;
    Double_t xrg = gPad->GetUxmin();
@@ -4598,6 +4597,12 @@ void THistPainter::PaintArrows(Option_t *)
    Double_t cx  = (xln/Double_t(ncx) -0.03)/2;
    Double_t cy  = (yln/Double_t(ncy) -0.03)/2;
    Double_t dn  = 1.E-30;
+
+   auto arrow = new TArrow();
+   arrow->SetAngle(30);
+   arrow->SetFillStyle(1001);
+   arrow->SetFillColor(fH->GetLineColor());
+   arrow->SetLineColor(fH->GetLineColor());
 
    for (Int_t id=1;id<=2;id++) {
       for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
@@ -4633,25 +4638,10 @@ void THistPainter::PaintArrows(Option_t *)
                dyn = cy*dy/dn;
                y1  = yc - dyn;
                y2  = yc + dyn;
-               fXbuf[0] = x1;
-               fXbuf[1] = x2;
-               fYbuf[0] = y1;
-               fYbuf[1] = y2;
-               if (TMath::Abs(x2-x1) > 0.01 || TMath::Abs(y2-y1) > 0.01) {
-                  anr = 0.005*.5*TMath::Sqrt(2/(dxn*dxn + dyn*dyn));
-                  si  = anr*(dxn + dyn);
-                  co  = anr*(dxn - dyn);
-                  fXbuf[2] = x2 - si;
-                  fYbuf[2] = y2 + co;
-                  gPad->PaintPolyLine(3, fXbuf, fYbuf);
-                  fXbuf[0] = x2;
-                  fXbuf[1] = x2 - co;
-                  fYbuf[0] = y2;
-                  fYbuf[1] = y2 - si;
-                  gPad->PaintPolyLine(2, fXbuf, fYbuf);
-               }
-               else {
-                  gPad->PaintPolyLine(2, fXbuf, fYbuf);
+               if (TMath::Abs(x2-x1) > 0. || TMath::Abs(y2-y1) > 0.) {
+                  arrow->PaintArrow(x1, y1, x2, y2, 0.015, "|>");
+               } else {
+                  arrow->PaintArrow(x1, y1, x2, y2, 0.005, "|>");
                }
             }
          }
