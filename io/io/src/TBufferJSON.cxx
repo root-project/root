@@ -49,6 +49,9 @@ persistent storage for object data - only for live applications.
 #include <string.h>
 #include <locale.h>
 #include <cmath>
+#include <memory>
+
+#include <ROOT/RMakeUnique.hxx>
 
 #include "Compression.h"
 
@@ -263,7 +266,7 @@ public:
    TObjArray fValues;                   //! raw values
    Int_t fMemeberCnt{1};                //! count members values of current object, _typename is counted as first
    Int_t fLevel{0};                     //! indent level
-   TArrayIndexProducer *fIndx{nullptr}; //! producer of ndim indexes
+   std::unique_ptr<TArrayIndexProducer> fIndx; //! producer of ndim indexes
    nlohmann::json *fNode{nullptr};      //! JSON node, used for reading
    Int_t fStlIndx{-1};                  //! index of object in STL container
    Int_t fStlMap{-1};                   //! special iterator over STL map::key members
@@ -275,8 +278,6 @@ public:
    {
       if (fIsElemOwner)
          delete fElem;
-      if (fIndx)
-         delete fIndx;
    }
 
    Bool_t IsStreamerInfo() const { return fIsStreamerInfo; }
@@ -320,18 +321,17 @@ public:
       return res;
    }
 
-   TArrayIndexProducer *MakeReadIndexes()
+   std::unique_ptr<TArrayIndexProducer> MakeReadIndexes()
    {
       if (!fElem || (fElem->GetType() <= TStreamerInfo::kOffsetL) ||
           (fElem->GetType() >= TStreamerInfo::kOffsetL + 20) || (fElem->GetArrayDim() < 2))
          return nullptr;
 
-      TArrayIndexProducer *indx = new TArrayIndexProducer(fElem, -1, "");
+      auto indx = std::make_unique<TArrayIndexProducer>(fElem, -1, "");
 
-      if (!indx->IsArray() || (indx->NumDimensions() < 2)) {
-         delete indx; // no need for single dimension - it can be handled directly
+      // no need for single dimension - it can be handled directly
+      if (!indx->IsArray() || (indx->NumDimensions() < 2))
          return nullptr;
-      }
 
       return indx;
    }
@@ -1910,7 +1910,7 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
 
    if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) && (elem->GetArrayDim() > 0)) {
       // array of array, start handling here
-      stack->fIndx = new TArrayIndexProducer(elem, -1, fArraySepar.Data());
+      stack->fIndx = std::make_unique<TArrayIndexProducer>(elem, -1, fArraySepar.Data());
       if (IsWriting())
          AppendOutput(stack->fIndx->GetBegin());
    }
@@ -2506,7 +2506,7 @@ R__ALWAYS_INLINE void TBufferJSON::JsonReadFastArray(T *arr, Int_t arrsize, bool
    nlohmann::json *json = Stack()->fNode;
    if (gDebug > 2)
       Info("ReadFastArray", "Reading array sz %d from JSON %s", arrsize, json->dump().substr(0, 30).c_str());
-   TArrayIndexProducer *indexes = Stack()->MakeReadIndexes();
+   auto indexes = Stack()->MakeReadIndexes();
    if (indexes) { /* at least two dims */
       TArrayI &indx = indexes->GetIndices();
       Int_t lastdim = indx.GetSize() - 1;
@@ -2519,7 +2519,6 @@ R__ALWAYS_INLINE void TBufferJSON::JsonReadFastArray(T *arr, Int_t arrsize, bool
          arr[cnt] = asstring ? elem->get<std::string>()[indx[lastdim]] : (*elem)[indx[lastdim]].get<T>();
          indexes->NextSeparator();
       }
-      delete indexes;
    } else if (asstring) {
       std::string str = json->get<std::string>();
       for (int cnt = 0; cnt < arrsize; ++cnt)
