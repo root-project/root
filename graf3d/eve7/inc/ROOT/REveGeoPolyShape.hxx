@@ -12,7 +12,6 @@
 #ifndef ROOT7_REveGeoPolyShape
 #define ROOT7_REveGeoPolyShape
 
-#include "Rtypes.h"
 #include "TGeoBBox.h"
 
 #include <vector>
@@ -37,9 +36,9 @@ protected:
    std::vector<Int_t>    fPolyDesc;
    Int_t                 fNbPols{0};
 
-   virtual void FillBuffer3D(TBuffer3D& buffer, Int_t reqSections, Bool_t localFrame) const;
+   virtual void FillBuffer3D(TBuffer3D &buffer, Int_t reqSections, Bool_t localFrame) const;
 
-   void SetFromBuff3D(const TBuffer3D& buffer);
+   void SetFromBuff3D(const TBuffer3D &buffer);
 
    Int_t CheckPoints(const Int_t *source, Int_t *dest) const;
 
@@ -81,8 +80,6 @@ public:
 
    virtual const TBuffer3D& GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual TBuffer3D *MakeBuffer3D() const;
-
-
 
    static void   SetAutoEnforceTriangles(Bool_t f);
    static Bool_t GetAutoEnforceTriangles();

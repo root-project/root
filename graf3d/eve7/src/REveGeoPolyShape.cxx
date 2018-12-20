@@ -43,8 +43,6 @@ Bool_t REveGeoPolyShape::GetAutoEnforceTriangles()         { return fgAutoEnforc
 void   REveGeoPolyShape::SetAutoCalculateNormals(Bool_t f) { fgAutoCalculateNormals = f; }
 Bool_t REveGeoPolyShape::GetAutoCalculateNormals()         { return fgAutoCalculateNormals; }
 
-
-
 ////////////////////////////////////////////////////////////////////////
 /// Function produces mesh for provided shape, applying matrix to the result
 
@@ -165,17 +163,17 @@ void REveGeoPolyShape::FillRenderData(REveRenderData &rd)
 
    rd.Reserve(fVertices.size(), 0, 2 + fNbPols * 3);
 
-   for (Int_t i = 0; i < (Int_t) fVertices.size(); ++i) rd.PushV(fVertices[i]);
+   for (Int_t i = 0; i < (Int_t)fVertices.size(); ++i)
+      rd.PushV(fVertices[i]);
 
    rd.PushI(REveRenderData::GL_TRIANGLES);
    rd.PushI(fNbPols);
 
    // count number of index entries etc
-   for (Int_t i = 0, j = 0; i < fNbPols; ++i)
-   {
-      assert (fPolyDesc[j] == 3);
+   for (Int_t i = 0, j = 0; i < fNbPols; ++i) {
+      assert(fPolyDesc[j] == 3);
 
-      rd.PushI(fPolyDesc[j+1], fPolyDesc[j+2], fPolyDesc[j+3]);
+      rd.PushI(fPolyDesc[j + 1], fPolyDesc[j + 2], fPolyDesc[j + 3]);
       j += 1 + fPolyDesc[j];
    }
 }
@@ -349,7 +347,7 @@ Bool_t REveGeoPolyShape::Eq(const Double_t *p1, const Double_t *p2)
    Double_t dx = TMath::Abs(p1[0] - p2[0]);
    Double_t dy = TMath::Abs(p1[1] - p2[1]);
    Double_t dz = TMath::Abs(p1[2] - p2[2]);
-   return dx < 1e-10 && dy < 1e-10 && dz < 1e-10;
+   return (dx < 1e-10) && (dy < 1e-10) && (dz < 1e-10);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -379,14 +377,12 @@ void REveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) con
       std::map<Edge_t, Int_t> edges;
 
       const Int_t *pd = &fPolyDesc[0];
-      for (Int_t i = 0; i < fNbPols; ++i)
-      {
-         Int_t nv = pd[0]; ++pd;
-         for (Int_t j = 0; j < nv; ++j)
-         {
-            Edge_t e(pd[j], (j != nv - 1) ? pd[j+1] : pd[0]);
-            if (edges.find(e) == edges.end())
-            {
+      for (Int_t i = 0; i < fNbPols; ++i) {
+         Int_t nv = pd[0];
+         ++pd;
+         for (Int_t j = 0; j < nv; ++j) {
+            Edge_t e(pd[j], (j != nv - 1) ? pd[j + 1] : pd[0]);
+            if (edges.find(e) == edges.end()) {
                edges.insert(std::make_pair(e, 0));
                ++nseg;
             }
@@ -399,24 +395,22 @@ void REveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) con
       memcpy(b.fPnts, &fVertices[0], sizeof(Double_t)*fVertices.size());
 
       Int_t si = 0, scnt = 0;
-      for (std::map<Edge_t, Int_t>::iterator i = edges.begin(); i != edges.end(); ++i)
-      {
+      for (auto &edge : edges) {
          b.fSegs[si++] = 0;
-         b.fSegs[si++] = i->first.fI;
-         b.fSegs[si++] = i->first.fJ;
-         i->second = scnt++;
+         b.fSegs[si++] = edge.first.fI;
+         b.fSegs[si++] = edge.first.fJ;
+         edge.second = scnt++;
       }
 
       Int_t pi = 0;
       pd = &fPolyDesc[0];
-      for (Int_t i = 0; i < fNbPols; ++i)
-      {
-         Int_t nv = pd[0]; ++pd;
+      for (Int_t i = 0; i < fNbPols; ++i) {
+         Int_t nv = pd[0];
+         ++pd;
          b.fPols[pi++] = 0;
          b.fPols[pi++] = nv;
-         for (Int_t j = 0; j < nv; ++j)
-         {
-            b.fPols[pi++] = edges[Edge_t(pd[j], (j != nv - 1) ? pd[j+1] : pd[0])];
+         for (Int_t j = 0; j < nv; ++j) {
+            b.fPols[pi++] = edges[Edge_t(pd[j], (j != nv - 1) ? pd[j + 1] : pd[0])];
          }
          pd += nv;
       }
