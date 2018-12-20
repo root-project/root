@@ -31,10 +31,10 @@ public:
    virtual ~TBufferJSON();
 
    void SetCompact(int level);
-
    void SetTypenameTag(const char *tag = "_typename");
-
    void SetTypeversionTag(const char *tag = nullptr);
+   void SetSkipClassInfo(const TClass *cl);
+   Bool_t IsSkipClassInfo(const TClass *cl) const;
 
    static TString ConvertToJSON(const TObject *obj, Int_t compact = 0, const char *member_name = nullptr);
    static TString
@@ -293,6 +293,7 @@ protected:
    TString fNumericLocale; ///<!  stored value of setlocale(LC_NUMERIC), which should be recovered at the end
    TString fTypeNameTag;   ///<! JSON member used for storing class name, when empty - no class name will be stored
    TString fTypeVersionTag;  ///<! JSON member used to store class version, default empty
+   TExMap *fSkipClasses{nullptr}; ///<! list of classes, which class info is not stored
 
    ClassDef(TBufferJSON, 1) // a specialized TBuffer to only write objects into JSON format
 };
