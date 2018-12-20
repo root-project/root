@@ -55,6 +55,7 @@ persistent storage for object data - only for live applications.
 #include "TArrayI.h"
 #include "TObjArray.h"
 #include "TError.h"
+#include "TExMap.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassTable.h"
@@ -263,15 +264,12 @@ public:
    Int_t fMemeberCnt{1};                //! count members values of current object, _typename is counted as first
    Int_t fLevel{0};                     //! indent level
    TArrayIndexProducer *fIndx{nullptr}; //! producer of ndim indexes
-   nlohmann::json *fNode{nullptr}; //! JSON node, used for reading
-   Int_t fStlIndx{-1};             //! index of object in STL container
-   Int_t fStlMap{-1};              //! special iterator over STL map::key members
-   Version_t fClVersion{0};        //! keep actual class version, workaround for ReadVersion in custom streamer
+   nlohmann::json *fNode{nullptr};      //! JSON node, used for reading
+   Int_t fStlIndx{-1};                  //! index of object in STL container
+   Int_t fStlMap{-1};                   //! special iterator over STL map::key members
+   Version_t fClVersion{0};             //! keep actual class version, workaround for ReadVersion in custom streamer
 
-   TJSONStackObj()
-   {
-      fValues.SetOwner(kTRUE);
-   }
+   TJSONStackObj() { fValues.SetOwner(kTRUE); }
 
    virtual ~TJSONStackObj()
    {
@@ -361,8 +359,8 @@ public:
 /// Creates buffer object to serialize data into json.
 
 TBufferJSON::TBufferJSON(TBuffer::EMode mode)
-   : TBufferText(mode), fOutBuffer(), fOutput(nullptr), fValue(), fStack(),
-     fSemicolon(" : "), fArraySepar(", "), fNumericLocale(), fTypeNameTag("_typename")
+   : TBufferText(mode), fOutBuffer(), fOutput(nullptr), fValue(), fStack(), fSemicolon(" : "), fArraySepar(", "),
+     fNumericLocale(), fTypeNameTag("_typename")
 {
    fOutBuffer.Capacity(10000);
    fValue.Capacity(1000);
@@ -388,6 +386,9 @@ TBufferJSON::~TBufferJSON()
 
    if (fNumericLocale.Length() > 0)
       setlocale(LC_NUMERIC, fNumericLocale.Data());
+
+   if (fSkipClasses)
+      delete fSkipClasses;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -439,7 +440,8 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
 
 void TBufferJSON::SetCompact(int level)
 {
-   if (level < 0) level = 0;
+   if (level < 0)
+      level = 0;
    fCompact = level % 10;
    fSemicolon = (fCompact > 2) ? ":" : " : ";
    fArraySepar = (fCompact > 2) ? "," : ", ";
@@ -476,6 +478,31 @@ void TBufferJSON::SetTypeversionTag(const char *tag)
       fTypeVersionTag.Clear();
    else
       fTypeVersionTag = tag;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Specify class which type information (name and version) will not be stored in JSON
+/// One can configure several such classes
+/// Allows to excluded type information for only these classes
+
+void TBufferJSON::SetSkipClassInfo(const TClass *cl)
+{
+   if (!cl)
+      return;
+   if (!fSkipClasses)
+      fSkipClasses = new TExMap();
+
+   fSkipClasses->Add(Void_Hash(cl), 777);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if class info will be skipped from JSON
+
+Bool_t TBufferJSON::IsSkipClassInfo(const TClass *cl) const
+{
+   if (!cl || !fSkipClasses) return kFALSE;
+
+   return fSkipClasses->GetValue(Void_Hash(cl)) == 777;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1157,7 +1184,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
       fJsonrCnt++; // object counts is important in dereferencing part
 
       stack = PushStack(2);
-      if (fTypeNameTag.Length() > 0) {
+      if ((fTypeNameTag.Length() > 0) && !IsSkipClassInfo(cl)) {
          AppendOutput("{", Form("\"%s\"", fTypeNameTag.Data()));
          AppendOutput(fSemicolon.Data());
          AppendOutput("\"");
@@ -1166,7 +1193,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          if (fTypeVersionTag.Length() > 0) {
             AppendOutput(",", Form("\"%s\"", fTypeVersionTag.Data()));
             AppendOutput(fSemicolon.Data());
-            AppendOutput(Form("%d", (int) cl->GetClassVersion()));
+            AppendOutput(Form("%d", (int)cl->GetClassVersion()));
          }
       } else {
          stack->fMemeberCnt = 0; // exclude typename
@@ -1439,7 +1466,8 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
                if (fTypeNameTag.Length() > 0) {
                   clones->SetClass(subelem->at(fTypeNameTag.Data()).get<std::string>().c_str(), size);
                } else {
-                  Error("JsonReadCollection", "Cannot detect class name for TClonesArray - typename tag not configured");
+                  Error("JsonReadCollection",
+                        "Cannot detect class name for TClonesArray - typename tag not configured");
                   return;
                }
             } else if (size > clones->GetSize()) {
@@ -1742,7 +1770,7 @@ void TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
       fJsonrCnt++; // count object, but do not keep reference
 
       stack = PushStack(2);
-      if (fTypeNameTag.Length() > 0) {
+      if ((fTypeNameTag.Length() > 0) && !IsSkipClassInfo(cl)) {
          AppendOutput("{", Form("\"%s\"", fTypeNameTag.Data()));
          AppendOutput(fSemicolon.Data());
          AppendOutput("\"");
@@ -1751,7 +1779,7 @@ void TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
          if (fTypeVersionTag.Length() > 0) {
             AppendOutput(",", Form("\"%s\"", fTypeVersionTag.Data()));
             AppendOutput(fSemicolon.Data());
-            AppendOutput(Form("%d", sinfo ? sinfo->GetClassVersion() : (int) cl->GetClassVersion()));
+            AppendOutput(Form("%d", sinfo ? sinfo->GetClassVersion() : (int)cl->GetClassVersion()));
          }
       } else {
          stack->fMemeberCnt = 0; // exclude typename
@@ -2180,9 +2208,7 @@ TClass *TBufferJSON::ReadClass(const TClass *, UInt_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// suppressed function of TBuffer
 
-void TBufferJSON::WriteClass(const TClass *)
-{
-}
+void TBufferJSON::WriteClass(const TClass *) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// read version value from buffer
@@ -2229,9 +2255,7 @@ void *TBufferJSON::ReadObjectAny(const TClass *expectedClass)
 ////////////////////////////////////////////////////////////////////////////////
 /// Skip any kind of object from buffer
 
-void TBufferJSON::SkipObjectAny()
-{
-}
+void TBufferJSON::SkipObjectAny() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object to buffer. Only used from TBuffer
