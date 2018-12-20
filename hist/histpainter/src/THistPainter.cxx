@@ -100,6 +100,7 @@
 - [The TEXT and TEXTnn Option](#HP15)
 - [The CONTour options](#HP16)
    - [The LIST option](#HP16a)
+   - [The AITOFF, MERCATOR, SINUSOIDAL and PARABOLIC options](#HP16b)
 - [The LEGO options](#HP17)
 - [The "SURFace" options](#HP18)
 - [Cylindrical, Polar, Spherical and PseudoRapidity/Phi options](#HP19)
@@ -1851,6 +1852,8 @@ The following example (ContourList.C) shows how to use this functionality.
 Begin_Macro(source)
 ../../../tutorials/hist/ContourList.C
 End_Macro
+
+#### <a name="HP16b"></a> The AITOFF, MERCATOR, SINUSOIDAL and PARABOLIC options
 
 The following options select the `CONT4` option and are useful for
 sky maps or exposure maps (earth.C).
