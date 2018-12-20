@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Validation and MC studies: a simple Toy Monte Carlo study
+/// Validation and MC studies: toy Monte Carlo study that perform cycles of event generation and fitting
 ///
 /// \macro_image
 /// \macro_output
