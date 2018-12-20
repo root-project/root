@@ -295,6 +295,8 @@ using `TH1::GetOption`:
 | "LIST"    | Generate a list of TGraph objects for each contour.|
 | "CYL"     | Use Cylindrical coordinates. The X coordinate is mapped on the angle and the Y coordinate on the cylinder length.|
 | "POL"     | Use Polar coordinates. The X coordinate is mapped on the angle and the Y coordinate on the radius.|
+| "SAME0"   | Same as "SAME" but do not use the z-axis range of the first plot. |
+| "SAMES0"  | Same as "SAME" but do not use the z-axis range of the first plot. |
 | "SPH"     | Use Spherical coordinates. The X coordinate is mapped on the latitude and the Y coordinate on the longitude.|
 | "PSR"     | Use PseudoRapidity/Phi coordinates. The X coordinate is mapped on Phi.|
 | "SURF"    | Draw a surface plot with hidden line removal.|
@@ -939,6 +941,58 @@ Begin_Macro(source)
 }
 End_Macro
 
+Sometimes the change of the range of the Z axis is unwanted, in which case, one can use
+`SAME0` (or `SAMES0`) option to opt out of this change.
+
+Begin_Macro(source)
+{
+  TH2F* h2 = new TH2F("h2","h2",10,0,10,10,20,30);
+  TH2F* hf = (TH2F*)h2->Clone("hf");
+
+  h2->Fill(5,22);
+  h2->Fill(5,23);
+  h2->Fill(6,22);
+  h2->Fill(6,23);
+
+
+  hf->Fill(6,23);
+  hf->Fill(6,23);
+  hf->Fill(6,23);
+  hf->Fill(6,23);
+  hf->Fill(5,23);
+
+  hf_copy1 = hf->Clone("hf_copy1");
+  hf_copy2 = hf->Clone("hf_copy2");
+  hf_copy3 = hf->Clone("hf_copy3");
+
+  auto* lt = new TLatex();
+  auto* cx = new TCanvas();
+  cx->Divide(2,2);
+
+  cx->cd(1);
+  h2->Draw("box");
+  hf->Draw("text colz same");
+  lt->DrawLatexNDC(0.3,0.5,"SAME");
+
+  cx->cd(2);
+  h2->Draw("box");
+  hf_copy1->Draw("text colz same0");
+  lt->DrawLatexNDC(0.3,0.5,"SAME0");
+
+  cx->cd(3);
+  h2->Draw("box");
+  hf_copy2->Draw("text colz sameS");
+  lt->DrawLatexNDC(0.3,0.5,"SAMES");
+
+  cx->cd(4);
+  h2->Draw("box");
+  hf_copy3->Draw("text colz sameS0");
+  lt->DrawLatexNDC(0.3,0.5,"SAMES0");
+
+}
+End_Macro
+
+
 
 ### <a name="HP14"></a> The COLor option
 
@@ -1051,7 +1105,8 @@ End_Macro
 When the option SAME (or "SAMES") is used with the option COL, the boxes' color
 are computing taking the previous plots into account. The range along the Z axis
 is imposed by the first plot (the one without option SAME); therefore the order
-in which the plots are done is relevant.
+in which the plots are done is relevant. Same as [in the `BOX` option](#HP13), one can use
+`SAME0` (or `SAMES0`) to opt out of this imposition.
 
 Begin_Macro(source)
 {
@@ -4010,12 +4065,14 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (nch == 5) Hoption.Hist = 1;
       Hoption.Same = 2;
       memcpy(l,"     ",5);
+      if (l[5] == '0') { Hoption.Same += 10; l[5] = ' '; }
    }
    l = strstr(chopt,"SAME");
    if (l) {
       if (nch == 4) Hoption.Hist = 1;
       Hoption.Same = 1;
       memcpy(l,"    ",4);
+      if (l[4] == '0') { Hoption.Same += 10; l[4] = ' '; }
    }
 
    l = strstr(chopt,"PIE");
@@ -4459,7 +4516,7 @@ void THistPainter::Paint(Option_t *option)
          if (gridx) gPad->SetGridx(1);
          if (gridy) gPad->SetGridy(1);
       }
-      if (Hoption.Same ==1) Hoption.Same = 2;
+      if ((Hoption.Same%10) ==1) Hoption.Same += 1;
       goto paintstat;
    }
    if (gridx || gridy) PaintAxis(kTRUE); //    Draw the grid only
@@ -4502,7 +4559,7 @@ void THistPainter::Paint(Option_t *option)
 
    // Draw box with histogram statistics and/or fit parameters
 paintstat:
-   if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
+   if ((Hoption.Same%10) != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
       TObject *obj = 0;
       while ((obj = next())) {
@@ -4992,7 +5049,7 @@ void THistPainter::PaintBarH(Option_t *)
    PaintTitle();
 
    //    Draw box with histogram statistics and/or fit parameters
-   if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
+   if ((Hoption.Same%10) != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
       TObject *obj = 0;
       while ((obj = next())) {
@@ -5034,7 +5091,7 @@ void THistPainter::PaintBoxes(Option_t *)
 
    // In case of option SAME, zmin and zmax values are taken from the
    // first plotted 2D histogram.
-   if (Hoption.Same) {
+   if (Hoption.Same > 0 && Hoption.Same < 10) {
       TH2 *h2;
       TIter next(gPad->GetListOfPrimitives());
       while ((h2 = (TH2 *)next())) {
@@ -5613,13 +5670,15 @@ void THistPainter::PaintColorLevels(Option_t*)
 
    // In case of option SAME, zmin and zmax values are taken from the
    // first plotted 2D histogram.
-   if (Hoption.Same) {
+   if (Hoption.Same > 0 && Hoption.Same < 10) {
       TH2 *h2;
       TIter next(gPad->GetListOfPrimitives());
       while ((h2 = (TH2 *)next())) {
          if (!h2->InheritsFrom(TH2::Class())) continue;
          zmin = h2->GetMinimum();
          zmax = h2->GetMaximum();
+         fH->SetMinimum(zmin);
+         fH->SetMaximum(zmax);
          if (Hoption.Logz) {
             if (zmin <= 0) {
                zmin = TMath::Log10(zmax*0.001);
@@ -6875,7 +6934,7 @@ void THistPainter::PaintH3(Option_t *option)
          break;
       }
    }
-   if (Hoption.Same != 1) {
+   if ((Hoption.Same%10) != 1) {
       if (!fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
          PaintStat3(gStyle->GetOptStat(),fit);
       }
@@ -9465,7 +9524,7 @@ void THistPainter::PaintTable(Option_t *option)
          break;
       }
    }
-   if (Hoption.Same != 1) {
+   if ((Hoption.Same%10) != 1) {
       if (!fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
          if (!gPad->PadInSelectionMode() && !gPad->PadInHighlightMode()) {
             //ALWAYS executed on non-iOS platform.
