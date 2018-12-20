@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// 'Hypothesis Test Inversion' RooStats tutorial macro #801
-///
-/// This tutorial shows an example of using the HypoTestInverterOriginal class
+/// An example of using the HypoTestInverterOriginal class
 ///
 /// \macro_image
 /// \macro_output

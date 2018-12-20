@@ -1,10 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// 'High Level Factory Example' RooStats tutorial macro #601
-///
-/// This tutorial shows an example of creating a simple
-/// model using the High Level model Factory.
+/// High Level Factory: creation of a simple model
 ///
 /// \macro_image
 /// \macro_output

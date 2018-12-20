@@ -1,9 +1,8 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// 'Bernstein Correction' RooStats tutorial macro
+/// Example of the BernsteinCorrection utility in RooStats.
 ///
-/// This tutorial shows usage of a the BernsteinCorrection utility in RooStats.
 /// The idea is that one has a distribution coming either from data or Monte Carlo
 /// (called "reality" in the macro) and a nominal model that is not sufficiently
 /// flexible to take into account the real distribution.  One wants to take into

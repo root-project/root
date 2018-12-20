@@ -1,10 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// 'High Level Factory Example' RooStats tutorial macro #602
-///
-/// This tutorial shows an example of creating a combined
-/// model using the High Level model Factory.
+/// High Level Factory: creation of a combined model
 ///
 /// \macro_image
 /// \macro_output
