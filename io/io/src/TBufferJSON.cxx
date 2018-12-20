@@ -260,6 +260,7 @@ public:
    Bool_t fIsObjStarted{kFALSE};        //! indicate that object writing started, should be closed in postprocess
    Bool_t fAccObjects{kFALSE};          //! if true, accumulate whole objects in values
    TObjArray fValues;                   //! raw values
+   Int_t fMemeberCnt{1};                //! count members values of current object, _typename is counted as first
    Int_t fLevel{0};                     //! indent level
    TArrayIndexProducer *fIndx{nullptr}; //! producer of ndim indexes
    nlohmann::json *fNode{nullptr}; //! JSON node, used for reading
@@ -399,8 +400,8 @@ TBufferJSON::~TBufferJSON()
 ///
 /// Second digit of compact parameter defines algorithm for arrays compression
 ///  - 0 - no compression, standard JSON array
-///  - 1 - exclude leading, trailing zeros, required JSROOT v5
-///  - 2 - check values repetition and empty gaps, required JSROOT v5
+///  - 1 - exclude leading and trailing zeros
+///  - 2 - check values repetition and empty gaps
 ///
 /// Maximal compression achieved when compact parameter equal to 23
 /// When member_name specified, converts only this data member
@@ -436,7 +437,6 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
 ///
 /// If third digit of compact parameter is 1, "_typename" will be skipped
 
-
 void TBufferJSON::SetCompact(int level)
 {
    if (level < 0) level = 0;
@@ -446,8 +446,22 @@ void TBufferJSON::SetCompact(int level)
    fArrayCompact = (level / 10) % 10;
    if (((level / 100) % 10) == 1)
       fTypeNameTag.Clear();
-   else
+   else if (fTypeNameTag.Length() == 0)
       fTypeNameTag = "_typename";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Let configure typename tag in JSON.
+/// By default "_typename" field in JSON structures used to store class information
+/// One can specify alternative tag like "$typename" or "xy", but such JSON can not be correctly used in JSROOT
+/// If empty string is provided, class information will not be stored
+
+void TBufferJSON::SetTypenameTag(const char *tag)
+{
+   if (!tag)
+      fTypeNameTag.Clear();
+   else
+      fTypeNameTag = tag;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -968,7 +982,7 @@ void TBufferJSON::AppendOutput(const char *line0, const char *line1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Start new class member in JSON structures
 
-void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *base_class)
+void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *base_class, Bool_t first_element)
 {
    const char *elem_name = nullptr;
    Int_t special_kind = JsonSpecialClass(base_class);
@@ -1017,7 +1031,10 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
       }
 
    } else {
-      AppendOutput(",", "\"");
+      if (first_element)
+         AppendOutput("\"");
+      else
+         AppendOutput(",", "\"");
       AppendOutput(elem_name);
       AppendOutput("\"");
       AppendOutput(fSemicolon.Data());
@@ -1126,11 +1143,16 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
       fJsonrCnt++; // object counts is important in dereferencing part
 
       stack = PushStack(2);
-      AppendOutput("{", "\"_typename\"");
-      AppendOutput(fSemicolon.Data());
-      AppendOutput("\"");
-      AppendOutput(cl->GetName());
-      AppendOutput("\"");
+      if (fTypeNameTag.Length() > 0) {
+         AppendOutput("{", Form("\"%s\"", fTypeNameTag.Data()));
+         AppendOutput(fSemicolon.Data());
+         AppendOutput("\"");
+         AppendOutput(cl->GetName());
+         AppendOutput("\"");
+      } else {
+         stack->fMemeberCnt = 0; // exclude typename
+         AppendOutput("{");
+      }
    } else {
       // for array, string and STL collections different handling -
       // they not recognized at the end as objects in JSON
@@ -1395,9 +1417,14 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
       if (clones) {
          if (n == 0) {
             if (!clones->GetClass() || (clones->GetSize() == 0)) {
-               clones->SetClass(subelem->at("_typename").get<std::string>().c_str(), size);
+               if (fTypeNameTag.Length() > 0) {
+                  clones->SetClass(subelem->at(fTypeNameTag.Data()).get<std::string>().c_str(), size);
+               } else {
+                  Error("JsonReadCollection", "Cannot detect class name for TClonesArray - typename tag not configured");
+                  return;
+               }
             } else if (size > clones->GetSize()) {
-               Error("JsonReadCollection", "TClonesArray size %d smaller than required %d\n", clones->GetSize(), size);
+               Error("JsonReadCollection", "TClonesArray size %d smaller than required %d", clones->GetSize(), size);
                return;
             }
          }
@@ -1549,7 +1576,10 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
          Info("JsonReadObject", "Reading baseclass %s ptr %p", objClass->GetName(), obj);
    } else {
 
-      std::string clname = json->at("_typename").get<std::string>();
+      std::string clname;
+
+      if (fTypeNameTag.Length() > 0)
+         clname = json->at(fTypeNameTag.Data()).get<std::string>();
 
       jsonClass = clname.empty() ? nullptr : TClass::GetClass(clname.c_str());
 
@@ -1689,11 +1719,16 @@ void TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
       fJsonrCnt++; // count object, but do not keep reference
 
       stack = PushStack(2);
-      AppendOutput("{", "\"_typename\"");
-      AppendOutput(fSemicolon.Data());
-      AppendOutput("\"");
-      AppendOutput(cl->GetName());
-      AppendOutput("\"");
+      if (fTypeNameTag.Length() > 0) {
+         AppendOutput("{", Form("\"%s\"", fTypeNameTag.Data()));
+         AppendOutput(fSemicolon.Data());
+         AppendOutput("\"");
+         AppendOutput(cl->GetName());
+         AppendOutput("\"");
+      } else {
+         stack->fMemeberCnt = 0; // exclude typename
+         AppendOutput("{");
+      }
    } else {
       stack = PushStack(0);
    }
@@ -1806,11 +1841,13 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
 
    TClass *base_class = elem->IsBase() ? elem->GetClassPointer() : nullptr;
 
+   Bool_t first_element = (stack->fMemeberCnt++ == 0);
+
    stack = PushStack(0, stack->fNode);
    stack->fElem = (TStreamerElement *)elem;
    stack->fIsElemOwner = (number < 0);
 
-   JsonStartElement(elem, base_class);
+   JsonStartElement(elem, base_class, first_element);
 
    if (base_class && IsReading())
       stack->fClVersion = base_class->GetClassVersion();

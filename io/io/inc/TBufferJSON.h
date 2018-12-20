@@ -32,6 +32,8 @@ public:
 
    void SetCompact(int level);
 
+   void SetTypenameTag(const char *tag = "_typename");
+
    static TString ConvertToJSON(const TObject *obj, Int_t compact = 0, const char *member_name = nullptr);
    static TString
    ConvertToJSON(const void *obj, const TClass *cl, Int_t compact = 0, const char *member_name = nullptr);
@@ -227,7 +229,7 @@ protected:
    void JsonDisablePostprocessing();
    Int_t JsonSpecialClass(const TClass *cl) const;
 
-   void JsonStartElement(const TStreamerElement *elem, const TClass *base_class = nullptr);
+   void JsonStartElement(const TStreamerElement *elem, const TClass *base_class = nullptr, Bool_t first_element = kFALSE);
 
    void PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_cl = nullptr);
 
