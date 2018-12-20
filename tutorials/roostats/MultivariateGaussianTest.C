@@ -53,28 +53,27 @@ using namespace std;
 using namespace RooFit;
 using namespace RooStats;
 
-
 void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
 {
-  // let's time this challenging example
-  TStopwatch t;
-  t.Start();
+   // let's time this challenging example
+   TStopwatch t;
+   t.Start();
 
    RooArgList xVec;
    RooArgList muVec;
    RooArgSet poi;
 
    // make the observable and means
-   Int_t i,j;
-   RooRealVar* x;
-   RooRealVar* mu_x;
+   Int_t i, j;
+   RooRealVar *x;
+   RooRealVar *mu_x;
    for (i = 0; i < dim; i++) {
-      char* name = Form("x%d", i);
-      x = new RooRealVar(name, name, 0, -3,3);
+      char *name = Form("x%d", i);
+      x = new RooRealVar(name, name, 0, -3, 3);
       xVec.add(*x);
 
-      char* mu_name = Form("mu_x%d",i);
-      mu_x = new RooRealVar(mu_name, mu_name, 0, -2,2);
+      char *mu_name = Form("mu_x%d", i);
+      mu_x = new RooRealVar(mu_name, mu_name, 0, -2, 2);
       muVec.add(*mu_x);
    }
 
@@ -87,8 +86,10 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
    TMatrixDSym cov(dim);
    for (i = 0; i < dim; i++) {
       for (j = 0; j < dim; j++) {
-         if (i == j) cov(i,j) = 3.;
-         else        cov(i,j) = 1.0;
+         if (i == j)
+            cov(i, j) = 3.;
+         else
+            cov(i, j) = 1.0;
       }
    }
 
@@ -97,10 +98,10 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
 
    // --------------------
    // make a toy dataset
-   RooDataSet* data = mvg.generate(xVec, 100);
+   RooDataSet *data = mvg.generate(xVec, 100);
 
    // now create the model config for this problem
-   RooWorkspace* w = new RooWorkspace("MVG");
+   RooWorkspace *w = new RooWorkspace("MVG");
    ModelConfig modelConfig(w);
    modelConfig.SetPdf(mvg);
    modelConfig.SetParametersOfInterest(poi);
@@ -111,13 +112,13 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
    // MCMC
    // we want to setup an efficient proposal function
    // using the covariance matrix from a fit to the data
-   RooFitResult* fit = mvg.fitTo(*data, Save(true));
+   RooFitResult *fit = mvg.fitTo(*data, Save(true));
    ProposalHelper ph;
-   ph.SetVariables((RooArgSet&)fit->floatParsFinal());
+   ph.SetVariables((RooArgSet &)fit->floatParsFinal());
    ph.SetCovMatrix(fit->covarianceMatrix());
    ph.SetUpdateProposalParameters(true);
    ph.SetCacheSize(100);
-   ProposalFunction* pdfProp = ph.GetProposalFunction();
+   ProposalFunction *pdfProp = ph.GetProposalFunction();
 
    // now create the calculator
    MCMCCalculator mc(*data, modelConfig);
@@ -127,19 +128,18 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
    mc.SetNumBins(50);
    mc.SetProposalFunction(*pdfProp);
 
-   MCMCInterval* mcInt = mc.GetInterval();
-   RooArgList* poiList = mcInt->GetAxes();
+   MCMCInterval *mcInt = mc.GetInterval();
+   RooArgList *poiList = mcInt->GetAxes();
 
    // now setup the profile likelihood calculator
    ProfileLikelihoodCalculator plc(*data, modelConfig);
    plc.SetConfidenceLevel(0.95);
-   LikelihoodInterval* plInt = (LikelihoodInterval*)plc.GetInterval();
-
+   LikelihoodInterval *plInt = (LikelihoodInterval *)plc.GetInterval();
 
    // make some plots
    MCMCIntervalPlot mcPlot(*mcInt);
 
-   TCanvas* c1 = new TCanvas();
+   TCanvas *c1 = new TCanvas();
    mcPlot.SetLineColor(kGreen);
    mcPlot.SetLineWidth(2);
    mcPlot.Draw();
@@ -148,16 +148,16 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
    plPlot.Draw("same");
 
    if (poiList->getSize() == 1) {
-      RooRealVar* p = (RooRealVar*)poiList->at(0);
+      RooRealVar *p = (RooRealVar *)poiList->at(0);
       Double_t ll = mcInt->LowerLimit(*p);
       Double_t ul = mcInt->UpperLimit(*p);
       cout << "MCMC interval: [" << ll << ", " << ul << "]" << endl;
    }
 
    if (poiList->getSize() == 2) {
-      RooRealVar* p0 = (RooRealVar*)poiList->at(0);
-      RooRealVar* p1 = (RooRealVar*)poiList->at(1);
-      TCanvas* scatter = new TCanvas();
+      RooRealVar *p0 = (RooRealVar *)poiList->at(0);
+      RooRealVar *p1 = (RooRealVar *)poiList->at(1);
+      TCanvas *scatter = new TCanvas();
       Double_t ll = mcInt->LowerLimit(*p0);
       Double_t ul = mcInt->UpperLimit(*p0);
       cout << "MCMC interval on p0: [" << ll << ", " << ul << "]" << endl;
@@ -165,14 +165,12 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
       ul = mcInt->UpperLimit(*p0);
       cout << "MCMC interval on p1: [" << ll << ", " << ul << "]" << endl;
 
-      //MCMC interval on p0: [-0.2, 0.6]
-      //MCMC interval on p1: [-0.2, 0.6]
+      // MCMC interval on p0: [-0.2, 0.6]
+      // MCMC interval on p1: [-0.2, 0.6]
 
       mcPlot.DrawChainScatter(*p0, *p1);
       scatter->Update();
    }
 
-  t.Print();
-
+   t.Print();
 }
-

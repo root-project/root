@@ -20,28 +20,26 @@
 #include "RooPlot.h"
 #include "RooStats/HLFactory.h"
 
-
 // use this order for safety on library loading
 using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
-void rs601_HLFactoryexample() {
+void rs601_HLFactoryexample()
+{
 
    // --- Build the datacard and dump to file---
 
    TString card_name("HLFavtoryexample.rs");
    ofstream ofile(card_name);
    ofile << "// The simplest card\n\n"
-      << "gauss = Gaussian(mes[5.20,5.30],mean[5.28,5.2,5.3],width[0.0027,0.001,1]);\n"
-      << "argus = ArgusBG(mes,5.291,argpar[-20,-100,-1]);\n"
-      << "sum = SUM(nsig[200,0,10000]*gauss,nbkg[800,0,10000]*argus);\n\n";
+         << "gauss = Gaussian(mes[5.20,5.30],mean[5.28,5.2,5.3],width[0.0027,0.001,1]);\n"
+         << "argus = ArgusBG(mes,5.291,argpar[-20,-100,-1]);\n"
+         << "sum = SUM(nsig[200,0,10000]*gauss,nbkg[800,0,10000]*argus);\n\n";
 
    ofile.close();
 
-   HLFactory hlf("HLFavtoryexample",
-                  card_name,
-                  false);
+   HLFactory hlf("HLFavtoryexample", card_name, false);
 
    // --- Take elements out of the internal workspace ---
 
@@ -55,14 +53,14 @@ void rs601_HLFactoryexample() {
    auto data = sum->generate(*mes, 2000);
 
    // --- Perform extended ML fit of composite PDF to toy data ---
-   sum->fitTo(*data) ;
+   sum->fitTo(*data);
 
    // --- Plot toy data and composite PDF overlaid ---
    auto mesframe = mes->frame();
-   data->plotOn(mesframe) ;
-   sum->plotOn(mesframe) ;
-   sum->plotOn(mesframe,Components(*argus),LineStyle(kDashed)) ;
+   data->plotOn(mesframe);
+   sum->plotOn(mesframe);
+   sum->plotOn(mesframe, Components(*argus), LineStyle(kDashed));
 
    gROOT->SetStyle("Plain");
-   mesframe->Draw()  ;
+   mesframe->Draw();
 }

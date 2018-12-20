@@ -27,7 +27,6 @@
 ///
 /// \author Kyle Cranmer
 
-
 #include "RooStats/ProfileLikelihoodCalculator.h"
 #include "RooStats/NumberCountingPdfFactory.h"
 #include "RooStats/ConfInterval.h"
@@ -41,7 +40,6 @@
 using namespace RooFit;
 using namespace RooStats;
 
-
 // declare three variations on the same tutorial
 void rs_numberCountingCombination_expected();
 void rs_numberCountingCombination_observed();
@@ -49,13 +47,13 @@ void rs_numberCountingCombination_observedWithTau();
 
 // -------------------------------
 // main driver to choose one
-void rs_numberCountingCombination(int flag=1)
+void rs_numberCountingCombination(int flag = 1)
 {
-   if(flag==1)
+   if (flag == 1)
       rs_numberCountingCombination_expected();
-   if(flag==2)
+   if (flag == 2)
       rs_numberCountingCombination_observed();
-   if(flag==3)
+   if (flag == 3)
       rs_numberCountingCombination_observedWithTau();
 }
 
@@ -68,16 +66,14 @@ void rs_numberCountingCombination_expected()
    // We consider both hypothesis testing and the equivalent confidence interval.
    /////////////////////////////////////////
 
-
    /////////////////////////////////////////
    // The Model building stage
    /////////////////////////////////////////
 
    // Step 1, define arrays with signal & bkg expectations and background uncertainties
-   Double_t s[2] = {20.,10.};           // expected signal
-   Double_t b[2] = {100.,100.};         // expected background
-   Double_t db[2] = {.0100,.0100};      // fractional background uncertainty
-
+   Double_t s[2] = {20., 10.};      // expected signal
+   Double_t b[2] = {100., 100.};    // expected background
+   Double_t db[2] = {.0100, .0100}; // fractional background uncertainty
 
    // Step 2, use a RooStats factory to build a PDF for a
    // number counting combination and add it to the workspace.
@@ -86,8 +82,8 @@ void rs_numberCountingCombination_expected()
    // The model neglects correlations in background uncertainty,
    // but they could be added without much change to the example.
    NumberCountingPdfFactory f;
-   RooWorkspace* wspace = new RooWorkspace();
-   f.AddModel(s,2,wspace,"TopLevelPdf", "masterSignal");
+   RooWorkspace *wspace = new RooWorkspace();
+   f.AddModel(s, 2, wspace, "TopLevelPdf", "masterSignal");
 
    // Step 3, use a RooStats factory to add datasets to the workspace.
    // Step 3a.
@@ -102,21 +98,20 @@ void rs_numberCountingCombination_expected()
    /////////////////////////////////////////
    // Step 4, Define the null hypothesis for the calculator
    // Here you need to know the name of the variables corresponding to hypothesis.
-   RooRealVar* mu = wspace->var("masterSignal");
-   RooArgSet* poi = new RooArgSet(*mu);
-   RooArgSet* nullParams = new RooArgSet("nullParams");
+   RooRealVar *mu = wspace->var("masterSignal");
+   RooArgSet *poi = new RooArgSet(*mu);
+   RooArgSet *nullParams = new RooArgSet("nullParams");
    nullParams->addClone(*mu);
    // here we explicitly set the value of the parameters for the null
-   nullParams->setRealValue("masterSignal",0);
+   nullParams->setRealValue("masterSignal", 0);
 
    // Step 5, Create a calculator for doing the hypothesis test.
    // because this is a
-   ProfileLikelihoodCalculator plc( *wspace->data("ExpectedNumberCountingData"),
-                                    *wspace->pdf("TopLevelPdf"), *poi, 0.05, nullParams);
-
+   ProfileLikelihoodCalculator plc(*wspace->data("ExpectedNumberCountingData"), *wspace->pdf("TopLevelPdf"), *poi, 0.05,
+                                   nullParams);
 
    // Step 6, Use the Calculator to get a HypoTestResult
-   HypoTestResult* htr = plc.GetHypoTest();
+   HypoTestResult *htr = plc.GetHypoTest();
    assert(htr != 0);
    cout << "-------------------------------------------------" << endl;
    cout << "The p-value for the null is " << htr->NullPValue() << endl;
@@ -135,13 +130,13 @@ void rs_numberCountingCombination_expected()
 
    // Step 8, Here we re-use the ProfileLikelihoodCalculator to return a confidence interval.
    // We need to specify what are our parameters of interest
-   RooArgSet* paramsOfInterest = nullParams; // they are the same as before in this case
+   RooArgSet *paramsOfInterest = nullParams; // they are the same as before in this case
    plc.SetParameters(*paramsOfInterest);
-   LikelihoodInterval* lrint = (LikelihoodInterval*) plc.GetInterval();  // that was easy.
+   LikelihoodInterval *lrint = (LikelihoodInterval *)plc.GetInterval(); // that was easy.
    lrint->SetConfidenceLevel(0.95);
 
    // Step 9, make a plot of the likelihood ratio and the interval obtained
-   //paramsOfInterest->setRealValue("masterSignal",1.);
+   // paramsOfInterest->setRealValue("masterSignal",1.);
    // find limits
    double lower = lrint->LowerLimit(*mu);
    double upper = lrint->UpperLimit(*mu);
@@ -151,44 +146,40 @@ void rs_numberCountingCombination_expected()
    lrPlot.Draw();
 
    // Step 10a. Get upper and lower limits
-   cout << "lower limit on master signal = " <<  lower << endl;
-   cout << "upper limit on master signal = " <<  upper << endl;
-
+   cout << "lower limit on master signal = " << lower << endl;
+   cout << "upper limit on master signal = " << upper << endl;
 
    // Step 10b, Ask if masterSignal=0 is in the interval.
    // Note, this is equivalent to the question of a 2-sigma hypothesis test:
    // "is the parameter point masterSignal=0 inside the 95% confidence interval?"
    // Since the significance of the Hypothesis test was > 2-sigma it should not be:
    // eg. we exclude masterSignal=0 at 95% confidence.
-   paramsOfInterest->setRealValue("masterSignal",0.);
+   paramsOfInterest->setRealValue("masterSignal", 0.);
    cout << "-------------------------------------------------" << endl;
    std::cout << "Consider this parameter point:" << std::endl;
    paramsOfInterest->first()->Print();
-   if( lrint->IsInInterval(*paramsOfInterest) )
-      std::cout << "It IS in the interval."  << std::endl;
+   if (lrint->IsInInterval(*paramsOfInterest))
+      std::cout << "It IS in the interval." << std::endl;
    else
-      std::cout << "It is NOT in the interval."  << std::endl;
+      std::cout << "It is NOT in the interval." << std::endl;
    cout << "-------------------------------------------------\n\n" << endl;
 
    // Step 10c, We also ask about the parameter point masterSignal=2, which is inside the interval.
-   paramsOfInterest->setRealValue("masterSignal",2.);
+   paramsOfInterest->setRealValue("masterSignal", 2.);
    cout << "-------------------------------------------------" << endl;
    std::cout << "Consider this parameter point:" << std::endl;
    paramsOfInterest->first()->Print();
-   if( lrint->IsInInterval(*paramsOfInterest) )
-      std::cout << "It IS in the interval."  << std::endl;
+   if (lrint->IsInInterval(*paramsOfInterest))
+      std::cout << "It IS in the interval." << std::endl;
    else
-      std::cout << "It is NOT in the interval."  << std::endl;
+      std::cout << "It is NOT in the interval." << std::endl;
    cout << "-------------------------------------------------\n\n" << endl;
-
 
    delete lrint;
    delete htr;
    delete wspace;
    delete poi;
    delete nullParams;
-
-
 
    /*
    // Here's an example of what is in the workspace
@@ -223,10 +214,7 @@ void rs_numberCountingCombination_expected()
    embedded pre-calculated expensive components
    -------------------------------------------
    */
-
 }
-
-
 
 void rs_numberCountingCombination_observed()
 {
@@ -243,8 +231,7 @@ void rs_numberCountingCombination_observed()
 
    // Step 1, define arrays with signal & bkg expectations and background uncertainties
    // We still need the expectation to relate signal in different channels with the master signal
-   Double_t s[2] = {20.,10.};           // expected signal
-
+   Double_t s[2] = {20., 10.}; // expected signal
 
    // Step 2, use a RooStats factory to build a PDF for a
    // number counting combination and add it to the workspace.
@@ -253,15 +240,15 @@ void rs_numberCountingCombination_observed()
    // The model neglects correlations in background uncertainty,
    // but they could be added without much change to the example.
    NumberCountingPdfFactory f;
-   RooWorkspace* wspace = new RooWorkspace();
-   f.AddModel(s,2,wspace,"TopLevelPdf", "masterSignal");
+   RooWorkspace *wspace = new RooWorkspace();
+   f.AddModel(s, 2, wspace, "TopLevelPdf", "masterSignal");
 
    // Step 3, use a RooStats factory to add datasets to the workspace.
    // Add the observed data to the workspace
-   Double_t mainMeas[2] = {123.,117.};      // observed main measurement
-   Double_t bkgMeas[2] = {111.23,98.76};    // observed background
-   Double_t dbMeas[2] = {.011,.0095};       // observed fractional background uncertainty
-   f.AddData(mainMeas, bkgMeas, dbMeas, 2, wspace,"ObservedNumberCountingData");
+   Double_t mainMeas[2] = {123., 117.};   // observed main measurement
+   Double_t bkgMeas[2] = {111.23, 98.76}; // observed background
+   Double_t dbMeas[2] = {.011, .0095};    // observed fractional background uncertainty
+   f.AddData(mainMeas, bkgMeas, dbMeas, 2, wspace, "ObservedNumberCountingData");
 
    // see below for a printout of the workspace
    //  wspace->Print();  //uncomment to see structure of workspace
@@ -271,23 +258,23 @@ void rs_numberCountingCombination_observed()
    /////////////////////////////////////////
    // Step 4, Define the null hypothesis for the calculator
    // Here you need to know the name of the variables corresponding to hypothesis.
-   RooRealVar* mu = wspace->var("masterSignal");
-   RooArgSet* poi = new RooArgSet(*mu);
-   RooArgSet* nullParams = new RooArgSet("nullParams");
+   RooRealVar *mu = wspace->var("masterSignal");
+   RooArgSet *poi = new RooArgSet(*mu);
+   RooArgSet *nullParams = new RooArgSet("nullParams");
    nullParams->addClone(*mu);
    // here we explicitly set the value of the parameters for the null
-   nullParams->setRealValue("masterSignal",0);
+   nullParams->setRealValue("masterSignal", 0);
 
    // Step 5, Create a calculator for doing the hypothesis test.
    // because this is a
-   ProfileLikelihoodCalculator plc( *wspace->data("ObservedNumberCountingData"),
-                                    *wspace->pdf("TopLevelPdf"), *poi, 0.05, nullParams);
+   ProfileLikelihoodCalculator plc(*wspace->data("ObservedNumberCountingData"), *wspace->pdf("TopLevelPdf"), *poi, 0.05,
+                                   nullParams);
 
    wspace->var("tau_0")->Print();
    wspace->var("tau_1")->Print();
 
    // Step 7, Use the Calculator to get a HypoTestResult
-   HypoTestResult* htr = plc.GetHypoTest();
+   HypoTestResult *htr = plc.GetHypoTest();
    cout << "-------------------------------------------------" << endl;
    cout << "The p-value for the null is " << htr->NullPValue() << endl;
    cout << "Corresponding to a significance of " << htr->Significance() << endl;
@@ -300,30 +287,26 @@ void rs_numberCountingCombination_observed()
       -------------------------------------------------
    */
 
-
    //////////////////////////////////////////
    // Confidence Interval Stage
 
    // Step 8, Here we re-use the ProfileLikelihoodCalculator to return a confidence interval.
    // We need to specify what are our parameters of interest
-   RooArgSet* paramsOfInterest = nullParams; // they are the same as before in this case
+   RooArgSet *paramsOfInterest = nullParams; // they are the same as before in this case
    plc.SetParameters(*paramsOfInterest);
-   LikelihoodInterval* lrint = (LikelihoodInterval*) plc.GetInterval();  // that was easy.
+   LikelihoodInterval *lrint = (LikelihoodInterval *)plc.GetInterval(); // that was easy.
    lrint->SetConfidenceLevel(0.95);
 
    // Step 9c. Get upper and lower limits
-   cout << "lower limit on master signal = " <<   lrint->LowerLimit(*mu ) << endl;
-   cout << "upper limit on master signal = " <<   lrint->UpperLimit(*mu ) << endl;
+   cout << "lower limit on master signal = " << lrint->LowerLimit(*mu) << endl;
+   cout << "upper limit on master signal = " << lrint->UpperLimit(*mu) << endl;
 
    delete lrint;
    delete htr;
    delete wspace;
    delete nullParams;
    delete poi;
-
-
 }
-
 
 void rs_numberCountingCombination_observedWithTau()
 {
@@ -340,7 +323,7 @@ void rs_numberCountingCombination_observedWithTau()
 
    // Step 1, define arrays with signal & bkg expectations and background uncertainties
    // We still need the expectation to relate signal in different channels with the master signal
-   Double_t s[2] = {20.,10.};           // expected signal
+   Double_t s[2] = {20., 10.}; // expected signal
 
    // Step 2, use a RooStats factory to build a PDF for a
    // number counting combination and add it to the workspace.
@@ -349,15 +332,15 @@ void rs_numberCountingCombination_observedWithTau()
    // The model neglects correlations in background uncertainty,
    // but they could be added without much change to the example.
    NumberCountingPdfFactory f;
-   RooWorkspace* wspace = new RooWorkspace();
-   f.AddModel(s,2,wspace,"TopLevelPdf", "masterSignal");
+   RooWorkspace *wspace = new RooWorkspace();
+   f.AddModel(s, 2, wspace, "TopLevelPdf", "masterSignal");
 
    // Step 3, use a RooStats factory to add datasets to the workspace.
    // Add the observed data to the workspace in the on-off problem.
-   Double_t mainMeas[2] = {123.,117.};      // observed main measurement
-   Double_t sideband[2] = {11123.,9876.};    // observed sideband
-   Double_t tau[2] = {100.,100.}; // ratio of bkg in sideband to bkg in main measurement, from experimental design.
-   f.AddDataWithSideband(mainMeas, sideband, tau, 2, wspace,"ObservedNumberCountingDataWithSideband");
+   Double_t mainMeas[2] = {123., 117.};    // observed main measurement
+   Double_t sideband[2] = {11123., 9876.}; // observed sideband
+   Double_t tau[2] = {100., 100.}; // ratio of bkg in sideband to bkg in main measurement, from experimental design.
+   f.AddDataWithSideband(mainMeas, sideband, tau, 2, wspace, "ObservedNumberCountingDataWithSideband");
 
    // see below for a printout of the workspace
    //  wspace->Print();  //uncomment to see structure of workspace
@@ -367,21 +350,20 @@ void rs_numberCountingCombination_observedWithTau()
    /////////////////////////////////////////
    // Step 4, Define the null hypothesis for the calculator
    // Here you need to know the name of the variables corresponding to hypothesis.
-   RooRealVar* mu = wspace->var("masterSignal");
-   RooArgSet* poi = new RooArgSet(*mu);
-   RooArgSet* nullParams = new RooArgSet("nullParams");
+   RooRealVar *mu = wspace->var("masterSignal");
+   RooArgSet *poi = new RooArgSet(*mu);
+   RooArgSet *nullParams = new RooArgSet("nullParams");
    nullParams->addClone(*mu);
    // here we explicitly set the value of the parameters for the null
-   nullParams->setRealValue("masterSignal",0);
+   nullParams->setRealValue("masterSignal", 0);
 
    // Step 5, Create a calculator for doing the hypothesis test.
    // because this is a
-   ProfileLikelihoodCalculator plc( *wspace->data("ObservedNumberCountingDataWithSideband"),
-                                    *wspace->pdf("TopLevelPdf"), *poi, 0.05, nullParams);
-
+   ProfileLikelihoodCalculator plc(*wspace->data("ObservedNumberCountingDataWithSideband"), *wspace->pdf("TopLevelPdf"),
+                                   *poi, 0.05, nullParams);
 
    // Step 7, Use the Calculator to get a HypoTestResult
-   HypoTestResult* htr = plc.GetHypoTest();
+   HypoTestResult *htr = plc.GetHypoTest();
    cout << "-------------------------------------------------" << endl;
    cout << "The p-value for the null is " << htr->NullPValue() << endl;
    cout << "Corresponding to a significance of " << htr->Significance() << endl;
@@ -394,28 +376,23 @@ void rs_numberCountingCombination_observedWithTau()
       -------------------------------------------------
    */
 
-
    //////////////////////////////////////////
    // Confidence Interval Stage
 
    // Step 8, Here we re-use the ProfileLikelihoodCalculator to return a confidence interval.
    // We need to specify what are our parameters of interest
-   RooArgSet* paramsOfInterest = nullParams; // they are the same as before in this case
+   RooArgSet *paramsOfInterest = nullParams; // they are the same as before in this case
    plc.SetParameters(*paramsOfInterest);
-   LikelihoodInterval* lrint = (LikelihoodInterval*) plc.GetInterval();  // that was easy.
+   LikelihoodInterval *lrint = (LikelihoodInterval *)plc.GetInterval(); // that was easy.
    lrint->SetConfidenceLevel(0.95);
 
-
-
    // Step 9c. Get upper and lower limits
-   cout << "lower limit on master signal = " <<   lrint->LowerLimit(*mu ) << endl;
-   cout << "upper limit on master signal = " <<   lrint->UpperLimit(*mu ) << endl;
+   cout << "lower limit on master signal = " << lrint->LowerLimit(*mu) << endl;
+   cout << "upper limit on master signal = " << lrint->UpperLimit(*mu) << endl;
 
    delete lrint;
    delete htr;
    delete wspace;
    delete nullParams;
    delete poi;
-
-
 }

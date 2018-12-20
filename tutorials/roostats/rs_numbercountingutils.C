@@ -36,13 +36,12 @@
 ///
 /// \author Kyle Cranmer
 
-
 #include "RooStats/RooStatsUtils.h"
 #include <iostream>
 
 using namespace RooFit;
 using namespace RooStats; // the utilities are in the RooStats namespace
-using namespace std ;
+using namespace std;
 
 void rs_numbercountingutils()
 {
@@ -62,8 +61,8 @@ void rs_numbercountingutils()
 
    // For each of the utilities you can inspect the arguments by tab completion
    // ~~~{.bash}
-   //root [1] NumberCountingUtils::BinomialExpZ( <tab>
-   //Double_t BinomialExpZ(Double_t sExp, Double_t bExp, Double_t fractionalBUncertainty)
+   // root [1] NumberCountingUtils::BinomialExpZ( <tab>
+   // Double_t BinomialExpZ(Double_t sExp, Double_t bExp, Double_t fractionalBUncertainty)
    // ~~~
 
    // -------------------------------------------------
@@ -80,15 +79,14 @@ void rs_numbercountingutils()
 
    double pExp = NumberCountingUtils::BinomialExpP(sExpected, bExpected, relativeBkgUncert);
    double zExp = NumberCountingUtils::BinomialExpZ(sExpected, bExpected, relativeBkgUncert);
-   cout << "expected p-value ="<< pExp << "  Z value (Gaussian sigma) = "<< zExp << endl;
+   cout << "expected p-value =" << pExp << "  Z value (Gaussian sigma) = " << zExp << endl;
 
    // -------------------------------------------------
    // Expected p-values and significance with background uncertainty
    double observed = 150;
    double pObs = NumberCountingUtils::BinomialObsP(observed, bExpected, relativeBkgUncert);
    double zObs = NumberCountingUtils::BinomialObsZ(observed, bExpected, relativeBkgUncert);
-   cout << "observed p-value ="<< pObs << "  Z value (Gaussian sigma) = "<< zObs << endl;
-
+   cout << "observed p-value =" << pObs << "  Z value (Gaussian sigma) = " << zObs << endl;
 
    // ---------------------------------------------------------
    // Here we see usages where the experimenter has knowledge
@@ -110,12 +108,11 @@ void rs_numbercountingutils()
 
    double pExpWithTau = NumberCountingUtils::BinomialWithTauExpP(sExpected, bExpected, tau);
    double zExpWithTau = NumberCountingUtils::BinomialWithTauExpZ(sExpected, bExpected, tau);
-   cout << "expected p-value ="<< pExpWithTau << "  Z value (Gaussian sigma) = "<< zExpWithTau << endl;
+   cout << "expected p-value =" << pExpWithTau << "  Z value (Gaussian sigma) = " << zExpWithTau << endl;
 
    // ---------------------------------------------------------------
    // Expected p-values and significance with background uncertainty
    double pObsWithTau = NumberCountingUtils::BinomialWithTauObsP(observed, bExpected, tau);
    double zObsWithTau = NumberCountingUtils::BinomialWithTauObsZ(observed, bExpected, tau);
-   cout << "observed p-value ="<< pObsWithTau << "  Z value (Gaussian sigma) = "<< zObsWithTau << endl;
-
+   cout << "observed p-value =" << pObsWithTau << "  Z value (Gaussian sigma) = " << zObsWithTau << endl;
 }

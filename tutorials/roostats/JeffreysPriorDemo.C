@@ -47,15 +47,16 @@
 
 using namespace RooFit;
 
-void JeffreysPriorDemo(){
+void JeffreysPriorDemo()
+{
    RooWorkspace w("w");
    w.factory("Uniform::u(x[0,1])");
    w.factory("mu[100,1,200]");
    w.factory("ExtendPdf::p(u,mu)");
 
-   RooDataHist* asimov = w.pdf("p")->generateBinned(*w.var("x"),ExpectedData());
+   RooDataHist *asimov = w.pdf("p")->generateBinned(*w.var("x"), ExpectedData());
 
-   RooFitResult* res = w.pdf("p")->fitTo(*asimov,Save(),SumW2Error(kTRUE));
+   RooFitResult *res = w.pdf("p")->fitTo(*asimov, Save(), SumW2Error(kTRUE));
 
    asimov->Print();
    res->Print();
@@ -65,23 +66,23 @@ void JeffreysPriorDemo(){
    cov.Invert();
    cout << "jeffreys = " << sqrt(cov.Determinant()) << endl;
 
-   w.defineSet("poi","mu");
-   w.defineSet("obs","x");
+   w.defineSet("poi", "mu");
+   w.defineSet("obs", "x");
 
-   RooJeffreysPrior pi("jeffreys","jeffreys",*w.pdf("p"),*w.set("poi"),*w.set("obs"));
+   RooJeffreysPrior pi("jeffreys", "jeffreys", *w.pdf("p"), *w.set("poi"), *w.set("obs"));
 
-   RooGenericPdf* test = new RooGenericPdf("test","test","1./sqrt(mu)",*w.set("poi"));
+   RooGenericPdf *test = new RooGenericPdf("test", "test", "1./sqrt(mu)", *w.set("poi"));
 
-   TCanvas* c1 = new TCanvas;
-   RooPlot* plot = w.var("mu")->frame();
+   TCanvas *c1 = new TCanvas;
+   RooPlot *plot = w.var("mu")->frame();
    pi.plotOn(plot);
-   test->plotOn(plot,LineColor(kRed));
+   test->plotOn(plot, LineColor(kRed));
    plot->Draw();
-
 }
 
 //_________________________________________________
-void TestJeffreysGaussMean(){
+void TestJeffreysGaussMean()
+{
    RooWorkspace w("w");
    w.factory("Gaussian::g(x[0,-20,20],mu[0,-5,5],sigma[1,0,10])");
    w.factory("n[10,.1,200]");
@@ -89,9 +90,9 @@ void TestJeffreysGaussMean(){
    w.var("sigma")->setConstant();
    w.var("n")->setConstant();
 
-   RooDataHist* asimov = w.pdf("p")->generateBinned(*w.var("x"),ExpectedData());
+   RooDataHist *asimov = w.pdf("p")->generateBinned(*w.var("x"), ExpectedData());
 
-   RooFitResult* res = w.pdf("p")->fitTo(*asimov,Save(),SumW2Error(kTRUE));
+   RooFitResult *res = w.pdf("p")->fitTo(*asimov, Save(), SumW2Error(kTRUE));
 
    asimov->Print();
    res->Print();
@@ -101,26 +102,27 @@ void TestJeffreysGaussMean(){
    cov.Invert();
    cout << "jeffreys = " << sqrt(cov.Determinant()) << endl;
 
-   w.defineSet("poi","mu");
-   w.defineSet("obs","x");
+   w.defineSet("poi", "mu");
+   w.defineSet("obs", "x");
 
-   RooJeffreysPrior pi("jeffreys","jeffreys",*w.pdf("p"),*w.set("poi"),*w.set("obs"));
+   RooJeffreysPrior pi("jeffreys", "jeffreys", *w.pdf("p"), *w.set("poi"), *w.set("obs"));
 
-   const RooArgSet* temp = w.set("poi");
+   const RooArgSet *temp = w.set("poi");
    pi.getParameters(*temp)->Print();
 
    //  return;
-   RooGenericPdf* test = new RooGenericPdf("test","test","1",*w.set("poi"));
+   RooGenericPdf *test = new RooGenericPdf("test", "test", "1", *w.set("poi"));
 
-   TCanvas* c1 = new TCanvas;
-   RooPlot* plot = w.var("mu")->frame();
+   TCanvas *c1 = new TCanvas;
+   RooPlot *plot = w.var("mu")->frame();
    pi.plotOn(plot);
-   test->plotOn(plot,LineColor(kRed),LineStyle(kDotted));
+   test->plotOn(plot, LineColor(kRed), LineStyle(kDotted));
    plot->Draw();
 }
 
 //_________________________________________________
-void TestJeffreysGaussSigma(){
+void TestJeffreysGaussSigma()
+{
    // this one is VERY sensitive
    // if the Gaussian is narrow ~ range(x)/nbins(x) then the peak isn't resolved
    //   and you get really bizarre shapes
@@ -135,9 +137,9 @@ void TestJeffreysGaussSigma(){
    w.var("n")->setConstant();
    w.var("x")->setBins(301);
 
-   RooDataHist* asimov = w.pdf("p")->generateBinned(*w.var("x"),ExpectedData());
+   RooDataHist *asimov = w.pdf("p")->generateBinned(*w.var("x"), ExpectedData());
 
-   RooFitResult* res = w.pdf("p")->fitTo(*asimov,Save(),SumW2Error(kTRUE));
+   RooFitResult *res = w.pdf("p")->fitTo(*asimov, Save(), SumW2Error(kTRUE));
 
    asimov->Print();
    res->Print();
@@ -147,28 +149,27 @@ void TestJeffreysGaussSigma(){
    cov.Invert();
    cout << "jeffreys = " << sqrt(cov.Determinant()) << endl;
 
-   w.defineSet("poi","sigma");
-   w.defineSet("obs","x");
+   w.defineSet("poi", "sigma");
+   w.defineSet("obs", "x");
 
-   RooJeffreysPrior pi("jeffreys","jeffreys",*w.pdf("p"),*w.set("poi"),*w.set("obs"));
-   pi.specialIntegratorConfig(kTRUE)->getConfigSection("RooIntegrator1D").setRealValue("maxSteps",3);
+   RooJeffreysPrior pi("jeffreys", "jeffreys", *w.pdf("p"), *w.set("poi"), *w.set("obs"));
+   pi.specialIntegratorConfig(kTRUE)->getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 3);
 
-   const RooArgSet* temp = w.set("poi");
+   const RooArgSet *temp = w.set("poi");
    pi.getParameters(*temp)->Print();
 
-   RooGenericPdf* test = new RooGenericPdf("test","test","sqrt(2.)/sigma",*w.set("poi"));
+   RooGenericPdf *test = new RooGenericPdf("test", "test", "sqrt(2.)/sigma", *w.set("poi"));
 
-   TCanvas* c1 = new TCanvas;
-   RooPlot* plot = w.var("sigma")->frame();
+   TCanvas *c1 = new TCanvas;
+   RooPlot *plot = w.var("sigma")->frame();
    pi.plotOn(plot);
-   test->plotOn(plot,LineColor(kRed),LineStyle(kDotted));
+   test->plotOn(plot, LineColor(kRed), LineStyle(kDotted));
    plot->Draw();
-
-
 }
 
 //_________________________________________________
-void TestJeffreysGaussMeanAndSigma(){
+void TestJeffreysGaussMeanAndSigma()
+{
    // this one is VERY sensitive
    // if the Gaussian is narrow ~ range(x)/nbins(x) then the peak isn't resolved
    //   and you get really bizarre shapes
@@ -182,9 +183,9 @@ void TestJeffreysGaussMeanAndSigma(){
    w.var("n")->setConstant();
    w.var("x")->setBins(301);
 
-   RooDataHist* asimov = w.pdf("p")->generateBinned(*w.var("x"),ExpectedData());
+   RooDataHist *asimov = w.pdf("p")->generateBinned(*w.var("x"), ExpectedData());
 
-   RooFitResult* res = w.pdf("p")->fitTo(*asimov,Save(),SumW2Error(kTRUE));
+   RooFitResult *res = w.pdf("p")->fitTo(*asimov, Save(), SumW2Error(kTRUE));
 
    asimov->Print();
    res->Print();
@@ -194,17 +195,17 @@ void TestJeffreysGaussMeanAndSigma(){
    cov.Invert();
    cout << "jeffreys = " << sqrt(cov.Determinant()) << endl;
 
-   w.defineSet("poi","mu,sigma");
-   w.defineSet("obs","x");
+   w.defineSet("poi", "mu,sigma");
+   w.defineSet("obs", "x");
 
-   RooJeffreysPrior pi("jeffreys","jeffreys",*w.pdf("p"),*w.set("poi"),*w.set("obs"));
-   pi.specialIntegratorConfig(kTRUE)->getConfigSection("RooIntegrator1D").setRealValue("maxSteps",3);
+   RooJeffreysPrior pi("jeffreys", "jeffreys", *w.pdf("p"), *w.set("poi"), *w.set("obs"));
+   pi.specialIntegratorConfig(kTRUE)->getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 3);
 
-   const RooArgSet* temp = w.set("poi");
+   const RooArgSet *temp = w.set("poi");
    pi.getParameters(*temp)->Print();
    //  return;
 
-   TCanvas* c1 = new TCanvas;
-   TH1* Jeff2d = pi.createHistogram("2dJeffreys",*w.var("mu"),Binning(10),YVar(*w.var("sigma"),Binning(10)));
+   TCanvas *c1 = new TCanvas;
+   TH1 *Jeff2d = pi.createHistogram("2dJeffreys", *w.var("mu"), Binning(10), YVar(*w.var("sigma"), Binning(10)));
    Jeff2d->Draw("surf");
 }

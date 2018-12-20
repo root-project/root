@@ -43,20 +43,18 @@
 #include "RooStats/PointSetInterval.h"
 #include "RooStats/ConfidenceBelt.h"
 
-
 using namespace RooFit;
 using namespace RooStats;
 
-void StandardFeldmanCousinsDemo(const char* infile = "",
-                                const char* workspaceName = "combined",
-                                const char* modelConfigName = "ModelConfig",
-                                const char* dataName = "obsData"){
+void StandardFeldmanCousinsDemo(const char *infile = "", const char *workspaceName = "combined",
+                                const char *modelConfigName = "ModelConfig", const char *dataName = "obsData")
+{
 
    // -------------------------------------------------------
    // First part is just to access a user-defined file
    // or create the standard example file if it doesn't exist
-   const char* filename = "";
-   if (!strcmp(infile,"")) {
+   const char *filename = "";
+   if (!strcmp(infile, "")) {
       filename = "results/example_combined_GaussExample_model.root";
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
@@ -66,49 +64,47 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
          return;
 #endif
          // Normally this would be run on the command line
-         cout <<"will run standard hist2workspace example"<<endl;
+         cout << "will run standard hist2workspace example" << endl;
          gROOT->ProcessLine(".! prepareHistFactory .");
          gROOT->ProcessLine(".! hist2workspace config/example.xml");
-         cout <<"\n\n---------------------"<<endl;
-         cout <<"Done creating example input"<<endl;
-         cout <<"---------------------\n\n"<<endl;
+         cout << "\n\n---------------------" << endl;
+         cout << "Done creating example input" << endl;
+         cout << "---------------------\n\n" << endl;
       }
 
-   }
-   else
+   } else
       filename = infile;
 
    // Try to open the file
    TFile *file = TFile::Open(filename);
 
    // if input file was specified byt not found, quit
-   if(!file ){
-      cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
+   if (!file) {
+      cout << "StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
    }
-
 
    // -------------------------------------------------------
    // Tutorial starts here
    // -------------------------------------------------------
 
    // get the workspace out of the file
-   RooWorkspace* w = (RooWorkspace*) file->Get(workspaceName);
-   if(!w){
-      cout <<"workspace not found" << endl;
+   RooWorkspace *w = (RooWorkspace *)file->Get(workspaceName);
+   if (!w) {
+      cout << "workspace not found" << endl;
       return;
    }
 
    // get the modelConfig out of the file
-   ModelConfig* mc = (ModelConfig*) w->obj(modelConfigName);
+   ModelConfig *mc = (ModelConfig *)w->obj(modelConfigName);
 
    // get the modelConfig out of the file
-   RooAbsData* data = w->data(dataName);
+   RooAbsData *data = w->data(dataName);
 
    // make sure ingredients are found
-   if(!data || !mc){
+   if (!data || !mc) {
       w->Print();
-      cout << "data or ModelConfig was not found" <<endl;
+      cout << "data or ModelConfig was not found" << endl;
       return;
    }
 
@@ -117,12 +113,12 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
    // to find and plot the 95% confidence interval
    // on the parameter of interest as specified
    // in the model config
-   FeldmanCousins fc(*data,*mc);
+   FeldmanCousins fc(*data, *mc);
    fc.SetConfidenceLevel(0.95); // 95% interval
-   //fc.AdditionalNToysFactor(0.1); // to speed up the result
+   // fc.AdditionalNToysFactor(0.1); // to speed up the result
    fc.UseAdaptiveSampling(true); // speed it up a bit
-   fc.SetNBins(10); // set how many points per parameter of interest to scan
-   fc.CreateConfBelt(true); // save the information in the belt for plotting
+   fc.SetNBins(10);              // set how many points per parameter of interest to scan
+   fc.CreateConfBelt(true);      // save the information in the belt for plotting
 
    // Since this tool needs to throw toy MC the PDF needs to be
    // extended or the tool needs to know how many entries in a dataset
@@ -131,11 +127,11 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
    // are counts, and not values of discriminating variables, the
    // datasets typically only have one entry and the PDF is not
    // extended.
-   if(!mc->GetPdf()->canBeExtended()){
-      if(data->numEntries()==1)
+   if (!mc->GetPdf()->canBeExtended()) {
+      if (data->numEntries() == 1)
          fc.FluctuateNumDataEntries(false);
       else
-         cout <<"Not sure what to do about this model" <<endl;
+         cout << "Not sure what to do about this model" << endl;
    }
 
    // We can use PROOF to speed things along in parallel
@@ -143,41 +139,36 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
    //  ToyMCSampler*  toymcsampler = (ToyMCSampler*) fc.GetTestStatSampler();
    //  toymcsampler->SetProofConfig(&pc); // enable proof
 
-
    // Now get the interval
-   PointSetInterval* interval = fc.GetInterval();
-   ConfidenceBelt* belt = fc.GetConfidenceBelt();
+   PointSetInterval *interval = fc.GetInterval();
+   ConfidenceBelt *belt = fc.GetConfidenceBelt();
 
    // print out the interval on the first Parameter of Interest
-   RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
-   cout << "\n95% interval on " <<firstPOI->GetName()<<" is : ["<<
-      interval->LowerLimit(*firstPOI) << ", "<<
-      interval->UpperLimit(*firstPOI) <<"] "<<endl;
+   RooRealVar *firstPOI = (RooRealVar *)mc->GetParametersOfInterest()->first();
+   cout << "\n95% interval on " << firstPOI->GetName() << " is : [" << interval->LowerLimit(*firstPOI) << ", "
+        << interval->UpperLimit(*firstPOI) << "] " << endl;
 
    // ---------------------------------------------
    // No nice plots yet, so plot the belt by hand
 
    // Ask the calculator which points were scanned
-   RooDataSet* parameterScan = (RooDataSet*) fc.GetPointsToScan();
-   RooArgSet* tmpPoint;
+   RooDataSet *parameterScan = (RooDataSet *)fc.GetPointsToScan();
+   RooArgSet *tmpPoint;
 
    // make a histogram of parameter vs. threshold
-   TH1F* histOfThresholds = new TH1F("histOfThresholds","",
-                                       parameterScan->numEntries(),
-                                       firstPOI->getMin(),
-                                       firstPOI->getMax());
+   TH1F *histOfThresholds =
+      new TH1F("histOfThresholds", "", parameterScan->numEntries(), firstPOI->getMin(), firstPOI->getMax());
 
    // loop through the points that were tested and ask confidence belt
    // what the upper/lower thresholds were.
    // For FeldmanCousins, the lower cut off is always 0
-   for(Int_t i=0; i<parameterScan->numEntries(); ++i){
-      tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
+   for (Int_t i = 0; i < parameterScan->numEntries(); ++i) {
+      tmpPoint = (RooArgSet *)parameterScan->get(i)->clone("temp");
       double arMax = belt->GetAcceptanceRegionMax(*tmpPoint);
       double arMin = belt->GetAcceptanceRegionMax(*tmpPoint);
-      double poiVal = tmpPoint->getRealValue(firstPOI->GetName()) ;
-      histOfThresholds->Fill(poiVal,arMax);
+      double poiVal = tmpPoint->getRealValue(firstPOI->GetName());
+      histOfThresholds->Fill(poiVal, arMax);
    }
    histOfThresholds->SetMinimum(0);
    histOfThresholds->Draw();
-
 }
