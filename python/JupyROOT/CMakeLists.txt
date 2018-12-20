@@ -1,6 +1,6 @@
 if (ROOT_python_FOUND AND NOT ROOT_CLASSIC_BUILD) # Do not run with classic build
 
-set(MODULES_LOCATION ${ROOTSYS}/lib/JupyROOT/)
+set(MODULES_LOCATION ${ROOTSYS}/lib/JupyROOT/helpers)
 set(NBDIFFUTIL ${CMAKE_CURRENT_SOURCE_DIR}/nbdiff.py )
 
 # List of notebook files
