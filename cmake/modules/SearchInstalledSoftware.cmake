@@ -122,58 +122,20 @@ endif()
 #---Check for PCRE-------------------------------------------------------------------
 if(NOT builtin_pcre)
   message(STATUS "Looking for PCRE")
+  # Clear cache variables, or LLVM may use old values for PCRE
+  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE)
+    unset(PCRE_${suffix} CACHE)
+  endforeach()
   find_package(PCRE)
   if(NOT PCRE_FOUND)
     message(STATUS "PCRE not found. Switching on builtin_pcre option")
     set(builtin_pcre ON CACHE BOOL "Enabled because PCRE not found (${builtin_pcre_description})" FORCE)
   endif()
 endif()
+
 if(builtin_pcre)
-  set(pcre_version 8.37)
-  message(STATUS "Building pcre version ${pcre_version} included in ROOT itself")
-  set(PCRE_LIBRARY ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pcre${CMAKE_STATIC_LIBRARY_SUFFIX})
-  if(WIN32)
-    if (winrtdebug)
-      set(pcre_lib pcred.lib)
-      set(pcre_build_type Debug)
-    else()
-      set(pcre_lib pcre.lib)
-      set(pcre_build_type Release)
-    endif()
-    ExternalProject_Add(
-      PCRE
-      URL ${CMAKE_SOURCE_DIR}/core/pcre/src/pcre-${pcre_version}.tar.gz
-      URL_HASH SHA256=19d490a714274a8c4c9d131f651489b8647cdb40a159e9fb7ce17ba99ef992ab
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-#      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${pcre_build_type}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${pcre_build_type}/${pcre_lib} ${PCRE_LIBRARY}
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre.h  <INSTALL_DIR>/include
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre_scanner.h  <INSTALL_DIR>/include
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre_stringpiece.h  <INSTALL_DIR>/include
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcrecpp.h  <INSTALL_DIR>/include
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcrecpparg.h  <INSTALL_DIR>/include
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcreposix.h  <INSTALL_DIR>/include              
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${PCRE_LIBRARY})
-  else()
-    set(_pcre_cflags -O)
-    if(CMAKE_OSX_SYSROOT)
-      set(_pcre_cflags "${_pcre_cflags} -isysroot ${CMAKE_OSX_SYSROOT}")
-    endif()
-    ExternalProject_Add(
-      PCRE
-      URL ${CMAKE_SOURCE_DIR}/core/pcre/src/pcre-${pcre_version}.tar.gz
-      URL_HASH SHA256=19d490a714274a8c4c9d131f651489b8647cdb40a159e9fb7ce17ba99ef992ab
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic --disable-shared
-                        CC=${CMAKE_C_COMPILER} CFLAGS=${_pcre_cflags}
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${PCRE_LIBRARY})
-  endif()
-  set(PCRE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-  set(PCRE_LIBRARIES ${PCRE_LIBRARY})
-  set(PCRE_TARGET PCRE)
+  list(APPEND ROOT_BUILTINS PCRE)
+  add_subdirectory(builtins/pcre)
 endif()
 
 #---Check for LZMA-------------------------------------------------------------------
