@@ -1,16 +1,14 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #304
-///
-///  Simple uncorrelated multi-dimensional p.d.f.s
+/// Multidimensional models: simple uncorrelated multi-dimensional p.d.f.s
 ///
 ///  pdf = gauss(x,mx,sx) * gauss(y,my,sy)
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

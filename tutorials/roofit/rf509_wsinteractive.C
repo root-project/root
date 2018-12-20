@@ -1,35 +1,14 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #509
-///
-///   Easy CINT interactive access to workspace contents through a
-///   'C++' namespace in CINT that maps the workspace contents in a typesafe way
-///
-///   *********************************************************************************
-///   *** NB: This macro exploits a feature native to CINT and _cannot_ be compiled ***
-///   *********************************************************************************
+/// Organization and simultaneous fits: easy interactive access to workspace contents - CINT to CLING code nmigration
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 /// \author 04/2009 - Wouter Verkerke
 
-
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooGaussian.h"
-#include "RooConstVar.h"
-#include "RooChebychev.h"
-#include "RooAddPdf.h"
-#include "RooWorkspace.h"
-#include "RooPlot.h"
-#include "TCanvas.h"
-#include "TAxis.h"
-#include "TFile.h"
-#include "TH1.h"
 using namespace RooFit ;
-
 
 void fillWorkspace(RooWorkspace& w) ;
 

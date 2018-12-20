@@ -1,13 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'DATA AND CATEGORIES' RooFit tutorial macro #407
-///
-///  Latex printing of lists and sets of RooArgSets
+/// Data and categories: latex printing of lists and sets of RooArgSets
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

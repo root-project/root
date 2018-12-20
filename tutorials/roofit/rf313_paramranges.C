@@ -1,16 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #313
-///
-///  Working with parametrized ranges to define non-rectangular regions
-///  for fitting and integration
+/// Multidimensional models: working with parametrized ranges to define non-rectangular regions for fitting and integration
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 /// \author 07/2008 - Wouter Verkerke
-
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

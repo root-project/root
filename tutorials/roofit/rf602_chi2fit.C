@@ -1,14 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #602
-///
-///  Setting up a chi^2 fit to a binned dataset
+/// Likelihood and minimization: setting up a chi^2 fit to a binned dataset
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

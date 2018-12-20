@@ -1,17 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'BASIC FUNCTIONALITY' RooFit tutorial macro #110
-///
-///  Examples on normalization of p.d.f.s,
-///  integration of p.d.fs, construction
-///  of cumulative distribution functions from p.d.f.s
-///  in one dimension
+/// Basic functionality: normalization and integration of p.d.fs, construction of cumulative distribution monodimensional functions 
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooGaussian.h"

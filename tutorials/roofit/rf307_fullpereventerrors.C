@@ -1,15 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #307
-///
-///  Complete example with use of full p.d.f. with per-event errors
+/// Multidimensional models: full p.d.f. with per-event errors
 ///
 ///
 ///
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

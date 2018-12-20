@@ -1,15 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'DATA AND CATEGORIES' RooFit tutorial macro #405
-///
-///  Demonstration of real-->discrete mapping functions
+/// Data and categories: demonstration of real-->discrete mapping functions
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

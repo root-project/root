@@ -1,10 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #501
-///
-///  Using simultaneous p.d.f.s to describe simultaneous fits to multiple
-///  datasets
+/// Organisation and simultaneous fits: using simultaneous p.d.f.s to describe simultaneous fits to multiple datasets
 ///
 /// \macro_image
 /// \macro_output

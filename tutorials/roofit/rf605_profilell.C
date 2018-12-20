@@ -1,15 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #605
-///
-///  Working with the profile likelihood estimator
+/// Likelihood and minimization: working with the profile likelihood estimator
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
