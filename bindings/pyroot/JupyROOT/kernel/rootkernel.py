@@ -23,9 +23,9 @@ except ImportError:
 
 import ROOT
 
-from JupyROOT.utils import setStyle, invokeAclic, GetDrawers
-from JupyROOT.handlers import RunAsyncAndPrint
-from JupyROOT.cppcompleter import CppCompleter
+from JupyROOT.helpers.utils import setStyle, invokeAclic, GetDrawers
+from JupyROOT.helpers.handlers import RunAsyncAndPrint
+from JupyROOT.helpers.cppcompleter import CppCompleter
 from JupyROOT.kernel.utils import GetIOHandler, GetExecutor, GetDeclarer, MagicLoader
 
 import IPython
