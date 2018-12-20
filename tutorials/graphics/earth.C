@@ -13,18 +13,18 @@
 ///
 /// \author Olivier Couet (from an original macro sent by Ernst-Jan Buis)
 
-TCanvas *earth(){
+void earth(){
 
    gStyle->SetOptTitle(1);
    gStyle->SetOptStat(0);
 
-   TCanvas *c1 = new TCanvas("c1","earth_projections",700,700);
+   auto c1 = new TCanvas("c1","earth_projections",700,700);
    c1->Divide(2,2);
 
-   TH2F *ha = new TH2F("ha","Aitoff",    180, -180, 180, 179, -89.5, 89.5);
-   TH2F *hm = new TH2F("hm","Mercator",  180, -180, 180, 161, -80.5, 80.5);
-   TH2F *hs = new TH2F("hs","Sinusoidal",180, -180, 180, 181, -90.5, 90.5);
-   TH2F *hp = new TH2F("hp","Parabolic", 180, -180, 180, 181, -90.5, 90.5);
+   auto ha = new TH2F("ha","Aitoff",    180, -180, 180, 179, -89.5, 89.5);
+   auto hm = new TH2F("hm","Mercator",  180, -180, 180, 161, -80.5, 80.5);
+   auto hs = new TH2F("hs","Sinusoidal",180, -180, 180, 181, -90.5, 90.5);
+   auto hp = new TH2F("hp","Parabolic", 180, -180, 180, 181, -90.5, 90.5);
 
    TString dat = gROOT->GetTutorialDir();
    dat.Append("/graphics/earth.dat");
@@ -47,6 +47,4 @@ TCanvas *earth(){
    c1->cd(2); hm->Draw("mercator");
    c1->cd(3); hs->Draw("sinusoidal");
    c1->cd(4); hp->Draw("parabolic");
-
-   return c1;
 }
