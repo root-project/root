@@ -455,17 +455,17 @@ of this example.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
+   auto c1 = new TCanvas("c1","c1",600,400);
    // create/fill draw h1
    gStyle->SetOptStat(kFALSE);
-   TH1F *h1 = new TH1F("h1","Superimposing two histograms with different scales",100,-3,3);
+   auto h1 = new TH1F("h1","Superimposing two histograms with different scales",100,-3,3);
    Int_t i;
    for (i=0;i<10000;i++) h1->Fill(gRandom->Gaus(0,1));
    h1->Draw();
    c1->Update();
 
    // create hint1 filled with the bins integral of h1
-   TH1F *hint1 = new TH1F("hint1","h1 bins integral",100,-3,3);
+   auto hint1 = new TH1F("hint1","h1 bins integral",100,-3,3);
    Float_t sum = 0;
    for (i=1;i<=100;i++) {
       sum += h1->GetBinContent(i);
@@ -480,12 +480,11 @@ Begin_Macro(source)
    hint1->Draw("same");
 
    // draw an axis on the right side
-   TGaxis *axis = new TGaxis(gPad->GetUxmax(),gPad->GetUymin(),
+   auto axis = new TGaxis(gPad->GetUxmax(),gPad->GetUymin(),
    gPad->GetUxmax(), gPad->GetUymax(),0,rightmax,510,"+L");
    axis->SetLineColor(kRed);
    axis->SetTextColor(kRed);
    axis->Draw();
-   return c1;
 }
 End_Macro
 
@@ -671,15 +670,13 @@ to `gStyle->SetOptFit(111)`
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH1F *he = new TH1F("he","Distribution drawn with error bars (option E1)  ",100,-3,3);
-   Int_t i;
-   for (i=0;i<10000;i++) he->Fill(gRandom->Gaus(0,1));
+   auto c1 = new TCanvas("c1","c1",600,400);
+   auto he = new TH1F("he","Distribution drawn with error bars (option E1)  ",100,-3,3);
+   for (int i=0; i<10000; i++) he->Fill(gRandom->Gaus(0,1));
    gStyle->SetEndErrorSize(3);
    gStyle->SetErrorX(1.);
    he->SetMarkerStyle(20);
    he->Draw("E1");
-   return c1;
 }
 End_Macro
 
@@ -691,9 +688,9 @@ of "E4".
 
 Begin_Macro(source)
 {
-   TCanvas *ce4 = new TCanvas("ce4","ce4",600,400);
+   auto ce4 = new TCanvas("ce4","ce4",600,400);
    ce4->Divide(2,1);
-   TH1F *he4 = new TH1F("he4","Distribution drawn with option E4",100,-3,3);
+   auto he4 = new TH1F("he4","Distribution drawn with option E4",100,-3,3);
    Int_t i;
    for (i=0;i<10000;i++) he4->Fill(gRandom->Gaus(0,1));
    he4->SetFillColor(kRed);
@@ -701,9 +698,8 @@ Begin_Macro(source)
    ce4->cd(1);
    he4->Draw("E4");
    ce4->cd(2);
-   TH1F *he3 = (TH1F*)he4->DrawClone("E3");
+   auto he3 = (TH1F*)he4->DrawClone("E3");
    he3->SetTitle("Distribution drawn option E3");
-   return ce4;
 }
 End_Macro
 
@@ -711,15 +707,14 @@ End_Macro
 
 Begin_Macro(source)
 {
-   TCanvas *c2e = new TCanvas("c2e","c2e",600,400);
-   TH2F *h2e = new TH2F("h2e","TH2 drawn with option E",40,-4,4,40,-20,20);
+   auto c2e = new TCanvas("c2e","c2e",600,400);
+   auto h2e = new TH2F("h2e","TH2 drawn with option E",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       h2e->Fill(px,5*py);
    }
    h2e->Draw("E");
-   return c2e;
 }
 End_Macro
 
@@ -741,12 +736,12 @@ Begin_Macro(source)
    float d_35_0[nx] = {0.75, -3.30, -0.92, 0.10, 0.08, -1.69, -1.29, -2.37};
    float d_35_1[nx] = {1.01, -3.02, -0.65, 0.37, 0.34, -1.42, -1.02, -2.10};
 
-   TCanvas *cb = new TCanvas("cb","cb",600,400);
+   auto *cb = new TCanvas("cb","cb",600,400);
    cb->SetGrid();
 
    gStyle->SetHistMinimumZero();
 
-   TH1F *h1b = new TH1F("h1b","Option B example",nx,0,nx);
+   auto h1b = new TH1F("h1b","Option B example",nx,0,nx);
    h1b->SetFillColor(4);
    h1b->SetBarWidth(0.4);
    h1b->SetBarOffset(0.1);
@@ -761,7 +756,7 @@ Begin_Macro(source)
 
    h1b->Draw("b");
 
-   TH1F *h2b = new TH1F("h2b","h2b",nx,0,nx);
+   auto h2b = new TH1F("h2b","h2b",nx,0,nx);
    h2b->SetFillColor(38);
    h2b->SetBarWidth(0.4);
    h2b->SetBarOffset(0.5);
@@ -769,8 +764,6 @@ Begin_Macro(source)
    for (i=1;i<=nx;i++) h2b->SetBinContent(i, d_35_1[i-1]);
 
    h2b->Draw("b same");
-
-   return cb;
 }
 End_Macro
 
@@ -825,8 +818,8 @@ type should be used. For instance a circle (marker style 20).
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *hscat = new TH2F("hscat","Option SCATter example (default for 2D histograms)  ",40,-4,4,40,-20,20);
+   auto c1 = new TCanvas("c1","c1",600,400);
+   auto hscat = new TH2F("hscat","Option SCATter example (default for 2D histograms)  ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -834,7 +827,6 @@ Begin_Macro(source)
       hscat->Fill(3+0.5*px,2*py-10.);
    }
    hscat->Draw("scat=0.5");
-   return c1;
 }
 End_Macro
 
@@ -847,8 +839,8 @@ The orientation of the arrow follows the cell gradient.
 
 Begin_Macro(source)
 {
-   auto *c1   = new TCanvas("c1","c1",600,400);
-   auto *harr = new TH2F("harr","Option ARRow example",20,-4,4,20,-20,20);
+   auto c1   = new TCanvas("c1","c1",600,400);
+   auto harr = new TH2F("harr","Option ARRow example",20,-4,4,20,-20,20);
    harr->SetLineColor(kRed);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -866,8 +858,8 @@ The option `ARR` can be combined with the option `COL` or `COLZ`.
 
 Begin_Macro(source)
 {
-   auto *c1   = new TCanvas("c1","c1",600,400);
-   auto *harr = new TH2F("harr","Option ARR + COLZ example",20,-4,4,20,-20,20);
+   auto c1   = new TCanvas("c1","c1",600,400);
+   auto harr = new TH2F("harr","Option ARR + COLZ example",20,-4,4,20,-20,20);
    harr->SetStats(0);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -889,8 +881,8 @@ The cells with a negative content are drawn with a `X` on top of the box.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   hbox  = new TH2F("hbox","Option BOX example",3,0,3,3,0,3);
+   auto c1   = new TCanvas("c1","c1",600,400);
+   auto hbox = new TH2F("hbox","Option BOX example",3,0,3,3,0,3);
    hbox->SetFillColor(42);
    hbox->Fill(0.5, 0.5,  1.);
    hbox->Fill(0.5, 1.5,  4.);
@@ -902,7 +894,6 @@ Begin_Macro(source)
    hbox->Fill(2.5, 1.5,  6.);
    hbox->Fill(2.5, 2.5,  0.5);
    hbox->Draw("BOX");
-   return c1;
 }
 End_Macro
 
@@ -912,8 +903,8 @@ negative values a raised one for positive.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   hbox1  = new TH2F("hbox1","Option BOX1 example",3,0,3,3,0,3);
+   auto c1    = new TCanvas("c1","c1",600,400);
+   auto hbox1 = new TH2F("hbox1","Option BOX1 example",3,0,3,3,0,3);
    hbox1->SetFillColor(42);
    hbox1->Fill(0.5, 0.5,  1.);
    hbox1->Fill(0.5, 1.5,  4.);
@@ -925,7 +916,6 @@ Begin_Macro(source)
    hbox1->Fill(2.5, 1.5,  6.);
    hbox1->Fill(2.5, 2.5,  0.5);
    hbox1->Draw("BOX1");
-   return c1;
 }
 End_Macro
 
@@ -936,11 +926,11 @@ along the Z axis is imposed by the first plot (the one without option
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *hb1 = new TH2F("hb1","Example of BOX plots with option SAME ",40,-3,3,40,-3,3);
-   TH2F *hb2 = new TH2F("hb2","hb2",40,-3,3,40,-3,3);
-   TH2F *hb3 = new TH2F("hb3","hb3",40,-3,3,40,-3,3);
-   TH2F *hb4 = new TH2F("hb4","hb4",40,-3,3,40,-3,3);
+   auto c1  = new TCanvas("c1","c1",600,400);
+   auto hb1 = new TH2F("hb1","Example of BOX plots with option SAME ",40,-3,3,40,-3,3);
+   auto hb2 = new TH2F("hb2","hb2",40,-3,3,40,-3,3);
+   auto hb3 = new TH2F("hb3","hb3",40,-3,3,40,-3,3);
+   auto hb4 = new TH2F("hb4","hb4",40,-3,3,40,-3,3);
    for (Int_t i=0;i<1000;i++) {
       double x,y;
       gRandom->Rannor(x,y);
@@ -957,7 +947,6 @@ Begin_Macro(source)
    hb2->Draw("box same");
    hb3->Draw("box same");
    hb4->Draw("box same");
-   return c1;
 }
 End_Macro
 
@@ -968,8 +957,8 @@ can use `SAME0` (or `SAMES0`) option to opt out of this change.
 
 Begin_Macro(source)
 {
-   auto *h2 = new TH2F("h2"," ",10,0,10,10,20,30);
-   auto *hf = (TH2F*)h2->Clone("hf");
+   auto h2 = new TH2F("h2"," ",10,0,10,10,20,30);
+   auto hf = (TH2F*)h2->Clone("hf");
    h2->SetBit(TH1::kNoStats);
    hf->SetBit(TH1::kNoStats);
 
@@ -1051,15 +1040,14 @@ bins (containing 0) are not drawn.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *hcol1 = new TH2F("hcol1","Option COLor example ",40,-4,4,40,-20,20);
+   auto c1    = new TCanvas("c1","c1",600,400);
+   auto hcol1 = new TH2F("hcol1","Option COLor example ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hcol1->Fill(px,5*py);
    }
    hcol1->Draw("COLZ");
-   return c1;
 }
 End_Macro
 
@@ -1070,10 +1058,10 @@ empty bins (containing 0) of histograms having a negative minimum. The option
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,600);
+   auto c1 = new TCanvas("c1","c1",600,600);
    c1->Divide(1,2);
-   TH2F *hcol23 = new TH2F("hcol2","Option COLZ example ",40,-4,4,40,-20,20);
-   TH2F *hcol24 = new TH2F("hcol2","Option COLZ1 example ",40,-4,4,40,-20,20);
+   auto hcol23 = new TH2F("hcol2","Option COLZ example ",40,-4,4,40,-20,20);
+   auto hcol24 = new TH2F("hcol2","Option COLZ1 example ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -1084,7 +1072,6 @@ Begin_Macro(source)
    hcol24->Fill(0.,0.,-200.);
    c1->cd(1); hcol23->Draw("COLZ");
    c1->cd(2); hcol24->Draw("COLZ1");
-   return c1;
 }
 End_Macro
 
@@ -1100,10 +1087,10 @@ The following example illustrates the option `0` combined with the option `COL`.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,600);
+   auto c1 = new TCanvas("c1","c1",600,600);
    c1->Divide(1,2);
-   TH2F *hcol21 = new TH2F("hcol21","Option COLZ",40,-4,4,40,-20,20);
-   TH2F *hcol22 = new TH2F("hcol22","Option COLZ0",40,-4,4,40,-20,20);
+   auto hcol21 = new TH2F("hcol21","Option COLZ",40,-4,4,40,-20,20);
+   auto hcol22 = new TH2F("hcol22","Option COLZ0",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -1116,7 +1103,6 @@ Begin_Macro(source)
    c1->cd(2); hcol22->Draw("COLZ0");
    hcol22->SetMaximum(100);
    hcol22->SetMinimum(40);
-   return c1;
 }
 End_Macro
 
@@ -1130,11 +1116,11 @@ in which the plots are done is relevant. Same as [in the `BOX` option](#HP13), o
 
 Begin_Macro(source)
 {
-   c = new TCanvas("c","Example of col plots with option SAME",200,10,700,500);
-   TH2F *h1 = new TH2F("h1","h1",40,-3,3,40,-3,3);
-   TH2F *h2 = new TH2F("h2","h2",40,-3,3,40,-3,3);
-   TH2F *h3 = new TH2F("h3","h3",40,-3,3,40,-3,3);
-   TH2F *h4 = new TH2F("h4","h4",40,-3,3,40,-3,3);
+   auto c = new TCanvas("c","Example of col plots with option SAME",200,10,700,500);
+   auto h1 = new TH2F("h1","h1",40,-3,3,40,-3,3);
+   auto h2 = new TH2F("h2","h2",40,-3,3,40,-3,3);
+   auto h3 = new TH2F("h3","h3",40,-3,3,40,-3,3);
+   auto h4 = new TH2F("h4","h4",40,-3,3,40,-3,3);
    h1->SetBit(TH1::kNoStats);
    for (Int_t i=0;i<5000;i++) {
       double x,y;
@@ -1155,15 +1141,14 @@ The option `COL` can be combined with the option `POL`:
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *hcol1 = new TH2F("hcol1","Option COLor combined with POL",40,-4,4,40,-4,4);
+   auto c1 = new TCanvas("c1","c1",600,400);
+   auto hcol1 = new TH2F("hcol1","Option COLor combined with POL",40,-4,4,40,-4,4);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
       hcol1->Fill(px,py);
    }
    hcol1->Draw("COLZPOL");
-   return c1;
 }
 End_Macro
 
@@ -1471,11 +1456,11 @@ The following picture shows how the six predefined representations look.
 
 Begin_Macro
 {
-   TCanvas *c1 = new TCanvas("c1","c1",700,800);
+   auto c1 = new TCanvas("c1","c1",700,800);
    c1->Divide(2,3);
    gStyle->SetOptStat(kFALSE);
 
-   TH2F *hcandle = new TH2F("hcandle"," ",10,-4,4,40,-20,20);
+   auto hcandle = new TH2F("hcandle"," ",10,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 15000; i++) {
       gRandom->Rannor(px,py);
@@ -1491,7 +1476,6 @@ Begin_Macro
    }
 }
 End_Macro
-
 
 
 #### Example 1
@@ -1582,10 +1566,10 @@ hashed style).
 
 Begin_Macro(source)
 {
-    TCanvas *c1 = new TCanvas("c1","c1",600,400);
+    auto c1 = new TCanvas("c1","c1",600,400);
     Int_t nx(6), ny(40);
     Double_t xmin(0.0), xmax(+6.0), ymin(0.0), ymax(+4.0);
-    TH2F* hviolin = new TH2F("hviolin", "Option VIOLIN example", nx, xmin, xmax, ny, ymin, ymax);
+    auto hviolin = new TH2F("hviolin", "Option VIOLIN example", nx, xmin, xmax, ny, ymin, ymax);
     TF1 f1("f1", "gaus", +0,0 +4.0);
     Double_t x,y;
     for (Int_t iBin=1; iBin<hviolin->GetNbinsX(); ++iBin) {
@@ -1602,7 +1586,6 @@ Begin_Macro(source)
     hviolin->SetMarkerSize(0.5);
     hviolin->Draw("VIOLIN");
     c1->Update();
-    return c1;
 }
 End_Macro
 
@@ -1639,10 +1622,10 @@ text ("TEXTE"), the error for each bin is also printed.
 
 Begin_Macro(source)
 {
-   TCanvas *c01 = new TCanvas("c01","c01",700,400);
+   auto c01 = new TCanvas("c01","c01",700,400);
    c01->Divide(2,1);
-   TH1F *htext1 = new TH1F("htext1","Option TEXT on 1D histograms ",10,-4,4);
-   TH2F *htext2 = new TH2F("htext2","Option TEXT on 2D histograms ",10,-4,4,10,-20,20);
+   auto htext1 = new TH1F("htext1","Option TEXT on 1D histograms ",10,-4,4);
+   auto htext2 = new TH2F("htext2","Option TEXT on 2D histograms ",10,-4,4,10,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -1656,7 +1639,6 @@ Begin_Macro(source)
    c01->cd(2);
    htext1->Draw();
    htext1->Draw("HIST TEXT0 SAME");
-   return c01;
 }
 End_Macro
 
@@ -1668,11 +1650,11 @@ text position in each cell, in percentage of the bin width.
 
 Begin_Macro(source)
 {
-   TCanvas *c03 = new TCanvas("c03","c03",700,400);
+   auto c03 = new TCanvas("c03","c03",700,400);
    gStyle->SetOptStat(0);
-   TH2F *htext3 = new TH2F("htext3","Several 2D histograms drawn with option TEXT",10,-4,4,10,-20,20);
-   TH2F *htext4 = new TH2F("htext4","htext4",10,-4,4,10,-20,20);
-   TH2F *htext5 = new TH2F("htext5","htext5",10,-4,4,10,-20,20);
+   auto htext3 = new TH2F("htext3","Several 2D histograms drawn with option TEXT",10,-4,4,10,-20,20);
+   auto htext4 = new TH2F("htext4","htext4",10,-4,4,10,-20,20);
+   auto htext5 = new TH2F("htext5","htext5",10,-4,4,10,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -1680,7 +1662,6 @@ Begin_Macro(source)
       htext4->Fill(4*px,20*py,0.5);
       htext5->Fill(4*px,20*py,1.0);
    }
-   //gStyle->SetPaintTextFormat("4.1f m");
    htext4->SetMarkerSize(1.8);
    htext5->SetMarkerSize(1.8);
    htext5->SetMarkerColor(kRed);
@@ -1689,7 +1670,6 @@ Begin_Macro(source)
    htext4->Draw("TEXT SAME");
    htext5->SetBarOffset(-0.2);
    htext5->Draw("TEXT SAME");
-   return c03;
 }
 End_Macro
 
@@ -1699,11 +1679,11 @@ option "E" (for entries) with the option "TEXT".
 
 Begin_Macro(source)
 {
-   TCanvas *c02 = new TCanvas("c02","c02",700,400);
+   auto c02 = new TCanvas("c02","c02",700,400);
    c02->Divide(2,1);
    gStyle->SetPaintTextFormat("g");
 
-   TProfile *profile = new TProfile("profile","profile",10,0,10);
+   auto profile = new TProfile("profile","profile",10,0,10);
    profile->SetMarkerSize(2.2);
    profile->Fill(0.5,1);
    profile->Fill(1.5,2);
@@ -1717,8 +1697,6 @@ Begin_Macro(source)
    profile->Fill(9.5,1);
    c02->cd(1); profile->Draw("HIST TEXT0");
    c02->cd(2); profile->Draw("HIST TEXT0E");
-
-   return c02;
 }
 End_Macro
 
@@ -1747,8 +1725,8 @@ defined by `gStyle->SetPalette()`.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *hcontz = new TH2F("hcontz","Option CONTZ example ",40,-4,4,40,-20,20);
+   auto c1 = new TCanvas("c1","c1",600,400);
+   auto hcontz = new TH2F("hcontz","Option CONTZ example ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -1756,7 +1734,6 @@ Begin_Macro(source)
       hcontz->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hcontz->Draw("CONTZ");
-   return c1;
 }
 End_Macro
 
@@ -1768,8 +1745,8 @@ the option `Z` allows to display the color palette defined by
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *hcont1 = new TH2F("hcont1","Option CONT1Z example ",40,-4,4,40,-20,20);
+   auto c1 = new TCanvas("c1","c1",600,400);
+   auto hcont1 = new TH2F("hcont1","Option CONT1Z example ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -1777,7 +1754,6 @@ Begin_Macro(source)
       hcont1->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hcont1->Draw("CONT1Z");
-   return c1;
 }
 End_Macro
 
@@ -1787,8 +1763,8 @@ line styles to distinguish contours.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *hcont2 = new TH2F("hcont2","Option CONT2 example ",40,-4,4,40,-20,20);
+   auto c1 = new TCanvas("c1","c1",600,400);
+   auto hcont2 = new TH2F("hcont2","Option CONT2 example ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -1796,7 +1772,6 @@ Begin_Macro(source)
       hcont2->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hcont2->Draw("CONT2");
-   return c1;
 }
 End_Macro
 
@@ -1806,8 +1781,8 @@ all contours.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *hcont3 = new TH2F("hcont3","Option CONT3 example ",40,-4,4,40,-20,20);
+   auto c1 = new TCanvas("c1","c1",600,400);
+   auto hcont3 = new TH2F("hcont3","Option CONT3 example ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -1815,7 +1790,6 @@ Begin_Macro(source)
       hcont3->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hcont3->Draw("CONT3");
-   return c1;
 }
 End_Macro
 
@@ -1827,8 +1801,8 @@ allows to display the color palette defined by `gStyle->SetPalette()`.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *hcont4 = new TH2F("hcont4","Option CONT4Z example ",40,-4,4,40,-20,20);
+   auto c1 = new TCanvas("c1","c1",600,400);
+   auto hcont4 = new TH2F("hcont4","Option CONT4Z example ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -1836,7 +1810,6 @@ Begin_Macro(source)
       hcont4->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hcont4->Draw("CONT4Z");
-   return c1;
 }
 End_Macro
 
@@ -1921,8 +1894,8 @@ lines removal technique.
 
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   TH2F *hlego = new TH2F("hlego","Option LEGO example ",40,-4,4,40,-20,20);
+   auto c2 = new TCanvas("c2","c2",600,400);
+   auto hlego = new TH2F("hlego","Option LEGO example ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -1930,7 +1903,6 @@ Begin_Macro(source)
       hlego->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hlego->Draw("LEGO");
-   return c2;
 }
 End_Macro
 
@@ -1941,8 +1913,8 @@ option `0` allows to not drawn the empty bins.
 
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   TH2F *hlego1 = new TH2F("hlego1","Option LEGO1 example (with option 0)  ",40,-4,4,40,-20,20);
+   auto c2 = new TCanvas("c2","c2",600,400);
+   auto hlego1 = new TH2F("hlego1","Option LEGO1 example (with option 0)  ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -1951,7 +1923,6 @@ Begin_Macro(source)
    }
    hlego1->SetFillColor(kYellow);
    hlego1->Draw("LEGO1 0");
-   return c2;
 }
 End_Macro
 
@@ -1964,8 +1935,8 @@ image because of the border lines. This option also works with stacked legos.
 
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   TH2F *hlego3 = new TH2F("hlego3","Option LEGO3 example",40,-4,4,40,-20,20);
+   auto c2 = new TCanvas("c2","c2",600,400);
+   auto hlego3 = new TH2F("hlego3","Option LEGO3 example",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -1974,7 +1945,6 @@ Begin_Macro(source)
    }
    hlego3->SetFillColor(kRed);
    hlego3->Draw("LEGO3");
-   return c2;
 }
 End_Macro
 
@@ -1986,8 +1956,8 @@ show the cell contents.  Combined with the option `LEGO2`, the option
 
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   TH2F *hlego2 = new TH2F("hlego2","Option LEGO2Z example ",40,-4,4,40,-20,20);
+   auto c2 = new TCanvas("c2","c2",600,400);
+   auto hlego2 = new TH2F("hlego2","Option LEGO2Z example ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -1995,7 +1965,6 @@ Begin_Macro(source)
       hlego2->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hlego2->Draw("LEGO2Z");
-   return c2;
 }
 End_Macro
 
@@ -2028,8 +1997,8 @@ lines removal technique.
 
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   TH2F *hsurf = new TH2F("hsurf","Option SURF example ",30,-4,4,30,-20,20);
+   auto c2 = new TCanvas("c2","c2",600,400);
+   auto hsurf = new TH2F("hsurf","Option SURF example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -2037,7 +2006,6 @@ Begin_Macro(source)
       hsurf->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hsurf->Draw("SURF");
-   return c2;
 }
 End_Macro
 
@@ -2049,8 +2017,8 @@ the option `Z` allows to display the color palette defined by
 
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   TH2F *hsurf1 = new TH2F("hsurf1","Option SURF1 example ",30,-4,4,30,-20,20);
+   auto c2 = new TCanvas("c2","c2",600,400);
+   auto hsurf1 = new TH2F("hsurf1","Option SURF1 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -2058,7 +2026,6 @@ Begin_Macro(source)
       hsurf1->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hsurf1->Draw("SURF1");
-   return c2;
 }
 End_Macro
 
@@ -2070,8 +2037,8 @@ to show the cell contents. Combined with the option `SURF2`, the option
 
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   TH2F *hsurf2 = new TH2F("hsurf2","Option SURF2 example ",30,-4,4,30,-20,20);
+   auto c2 = new TCanvas("c2","c2",600,400);
+   auto hsurf2 = new TH2F("hsurf2","Option SURF2 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -2079,7 +2046,6 @@ Begin_Macro(source)
       hsurf2->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hsurf2->Draw("SURF2");
-   return c2;
 }
 End_Macro
 
@@ -2091,8 +2057,8 @@ to display the color palette defined by `gStyle->SetPalette()`.
 
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   TH2F *hsurf3 = new TH2F("hsurf3","Option SURF3 example ",30,-4,4,30,-20,20);
+   auto c2 = new TCanvas("c2","c2",600,400);
+   auto hsurf3 = new TH2F("hsurf3","Option SURF3 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -2100,7 +2066,6 @@ Begin_Macro(source)
       hsurf3->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hsurf3->Draw("SURF3");
-   return c2;
 }
 End_Macro
 
@@ -2110,8 +2075,8 @@ shading technique.
 
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   TH2F *hsurf4 = new TH2F("hsurf4","Option SURF4 example ",30,-4,4,30,-20,20);
+   auto c2 = new TCanvas("c2","c2",600,400);
+   auto hsurf4 = new TH2F("hsurf4","Option SURF4 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -2120,7 +2085,6 @@ Begin_Macro(source)
    }
    hsurf4->SetFillColor(kOrange);
    hsurf4->Draw("SURF4");
-   return c2;
 }
 End_Macro
 
@@ -2130,8 +2094,8 @@ The following example shows a 2D histogram plotted with the option
 
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   TH2F *hsurf5 = new TH2F("hsurf4","Option SURF5 example ",30,-4,4,30,-20,20);
+   auto c2 = new TCanvas("c2","c2",600,400);
+   auto hsurf5 = new TH2F("hsurf4","Option SURF5 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -2139,7 +2103,6 @@ Begin_Macro(source)
       hsurf5->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hsurf5->Draw("SURF5 CYL");
-   return c2;
 }
 End_Macro
 
@@ -2151,8 +2114,8 @@ to display the color palette defined by `gStyle->SetPalette()`.
 
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   TH2F *hsurf7 = new TH2F("hsurf3","Option SURF7 example ",30,-4,4,30,-20,20);
+   auto c2 = new TCanvas("c2","c2",600,400);
+   auto hsurf7 = new TH2F("hsurf3","Option SURF7 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -2160,7 +2123,6 @@ Begin_Macro(source)
       hsurf7->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hsurf7->Draw("SURF7");
-   return c2;
 }
 End_Macro
 
@@ -2170,10 +2132,10 @@ surface.
 
 Begin_Macro(source)
 {
-   TCanvas *c20=new TCanvas("c20","c20",600,400);
+   auto c20=new TCanvas("c20","c20",600,400);
    int NBins = 50;
    double d = 2;
-   TH2F* hsc = new TH2F("hsc", "Surface and contour with option SAME ", NBins, -d, d, NBins, -d, d);
+   auto hsc = new TH2F("hsc", "Surface and contour with option SAME ", NBins, -d, d, NBins, -d, d);
    for (int bx = 1;  bx <= NBins; ++bx) {
       for (int by = 1;  by <= NBins; ++by) {
          double x = hsc->GetXaxis()->GetBinCenter(bx);
@@ -2183,7 +2145,6 @@ Begin_Macro(source)
    }
    hsc->Draw("surf2");
    hsc->Draw("CONT1 SAME");
-   return c20;
 }
 End_Macro
 
@@ -2211,9 +2172,9 @@ different coordinates systems.
 
 Begin_Macro(source)
 {
-   TCanvas *c3 = new TCanvas("c3","c3",600,400);
+   auto c3 = new TCanvas("c3","c3",600,400);
    c3->Divide(2,2);
-   TH2F *hlcc = new TH2F("hlcc","Cylindrical coordinates",20,-4,4,20,-20,20);
+   auto hlcc = new TH2F("hlcc","Cylindrical coordinates",20,-4,4,20,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -2228,7 +2189,6 @@ Begin_Macro(source)
    hlsc->SetTitle("Spherical coordinates");
    c3->cd(4); TH2F *hlprpc = (TH2F*) hlcc->DrawClone("LEGO1 PSR");
    hlprpc->SetTitle("PseudoRapidity/Phi coordinates");
-   return c3;
 }
 End_Macro
 
@@ -2236,9 +2196,9 @@ The following example shows the same histogram as a surface plot is the four dif
 
 Begin_Macro(source)
 {
-   TCanvas *c4 = new TCanvas("c4","c4",600,400);
+   auto c4 = new TCanvas("c4","c4",600,400);
    c4->Divide(2,2);
-   TH2F *hscc = new TH2F("hscc","Cylindrical coordinates",20,-4,4,20,-20,20);
+   auto hscc = new TH2F("hscc","Cylindrical coordinates",20,-4,4,20,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -2252,7 +2212,6 @@ Begin_Macro(source)
    hssc->SetTitle("Spherical coordinates");
    c4->cd(4); TH2F *hsprpc = (TH2F*) hscc->DrawClone("SURF1 PSR");
    hsprpc->SetTitle("PseudoRapidity/Phi coordinates");
-   return c4;
 }
 End_Macro
 
@@ -2268,11 +2227,11 @@ command:
 
 Begin_Macro(source)
 {
-   TCanvas *c5 = new TCanvas("c5","c5",700,400);
+   auto c5 = new TCanvas("c5","c5",700,400);
    c5->Divide(2,1);
    gStyle->SetHistMinimumZero(1);
-   TH1F *hz1 = new TH1F("hz1","Bar-chart drawn from 0",20,-3,3);
-   TH2F *hz2 = new TH2F("hz2","Lego plot drawn from 0",20,-3,3,20,-3,3);
+   auto hz1 = new TH1F("hz1","Bar-chart drawn from 0",20,-3,3);
+   auto hz2 = new TH2F("hz2","Lego plot drawn from 0",20,-3,3,20,-3,3);
    Int_t i;
    Double_t x,y;
    hz1->SetFillColor(kBlue);
@@ -2290,7 +2249,6 @@ Begin_Macro(source)
    }
    c5->cd(1); hz1->Draw("bar2");
    c5->cd(2); hz2->Draw("lego1");
-   return c5;
 }
 End_Macro
 
@@ -2305,12 +2263,12 @@ Begin_Macro(source)
    float d_35_0[nx] = {0.75, -3.30, -0.92, 0.10, 0.08, -1.69, -1.29, -2.37};
    float d_35_1[nx] = {1.01, -3.02, -0.65, 0.37, 0.34, -1.42, -1.02, -2.10};
 
-   TCanvas *cbh = new TCanvas("cbh","cbh",400,600);
+   auto cbh = new TCanvas("cbh","cbh",400,600);
    cbh->SetGrid();
 
    gStyle->SetHistMinimumZero();
 
-   TH1F *h1bh = new TH1F("h1bh","Option HBAR centered on 0",nx,0,nx);
+   auto h1bh = new TH1F("h1bh","Option HBAR centered on 0",nx,0,nx);
    h1bh->SetFillColor(4);
    h1bh->SetBarWidth(0.4);
    h1bh->SetBarOffset(0.1);
@@ -2325,7 +2283,7 @@ Begin_Macro(source)
 
    h1bh->Draw("hbar");
 
-   TH1F *h2bh = new TH1F("h2bh","h2bh",nx,0,nx);
+   auto h2bh = new TH1F("h2bh","h2bh",nx,0,nx);
    h2bh->SetFillColor(38);
    h2bh->SetBarWidth(0.4);
    h2bh->SetBarOffset(0.5);
@@ -2333,8 +2291,6 @@ Begin_Macro(source)
    for (i=1;i<=nx;i++) h2bh->Fill(os_X[i-1].c_str(), d_35_1[i-1]);
 
    h2bh->Draw("hbar same");
-
-   return cbh;
 }
 End_Macro
 
@@ -2365,8 +2321,8 @@ example showing how to book a TH2Poly and draw it.
 
 Begin_Macro(source)
 {
-   TCanvas *ch2p1 = new TCanvas("ch2p1","ch2p1",600,400);
-   TH2Poly *h2p = new TH2Poly();
+   auto ch2p1 = new TCanvas("ch2p1","ch2p1",600,400);
+   auto h2p = new TH2Poly();
    h2p->SetName("h2poly_name");
    h2p->SetTitle("h2poly_title");
    Double_t px1[] = {0, 5, 6};
@@ -2404,7 +2360,7 @@ shows a such case:
 
 Begin_Macro(source)
 {
-   TCanvas *ch2p2 = new TCanvas("ch2p2","ch2p2",600,400);
+   auto ch2p2 = new TCanvas("ch2p2","ch2p2",600,400);
 
    Int_t i, bin;
    const Int_t nx = 48;
@@ -2435,7 +2391,7 @@ Begin_Macro(source)
    Double_t lon2 = -65;
    Double_t lat1 = 24;
    Double_t lat2 = 50;
-   TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
+   auto p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
 
    TFile::SetCacheFileDir(".");
    TFile *f = TFile::Open("http://root.cern.ch/files/usa.root", "CACHEREAD");
@@ -2468,9 +2424,9 @@ combined with the option "COL" et COLZ allows to do that.
 
 Begin_Macro(source)
 {
-   TCanvas *chc = new TCanvas("chc","chc",600,400);
+   auto chc = new TCanvas("chc","chc",600,400);
 
-   TH2Poly *hc = new TH2Poly();
+   auto hc = new TH2Poly();
    hc->Honeycomb(0,0,.1,25,25);
    hc->SetName("hc");
    hc->SetTitle("Option COLZ 0");
@@ -2747,7 +2703,7 @@ other as bar charts:
 
 Begin_Macro(source)
 {
-   TCanvas *cst0 = new TCanvas("cst0","cst0",600,400);
+   auto cst0 = new TCanvas("cst0","cst0",600,400);
    THStack *hs = new THStack("hs","Stacked 1D histograms: option #font[82]{\"nostackb\"}");
 
    TH1F *h1 = new TH1F("h1","h1",10,-4,4);
@@ -2755,12 +2711,12 @@ Begin_Macro(source)
    h1->SetFillColor(kRed);
    hs->Add(h1);
 
-   TH1F *h2 = new TH1F("h2","h2",10,-4,4);
+   auto h2 = new TH1F("h2","h2",10,-4,4);
    h2->FillRandom("gaus",15000);
    h2->SetFillColor(kBlue);
    hs->Add(h2);
 
-   TH1F *h3 = new TH1F("h3","h3",10,-4,4);
+   auto h3 = new TH1F("h3","h3",10,-4,4);
    h3->FillRandom("gaus",10000);
    h3->SetFillColor(kGreen);
    hs->Add(h3);
@@ -2768,7 +2724,6 @@ Begin_Macro(source)
    hs->Draw("nostackb");
    hs->GetXaxis()->SetNdivisions(-10);
    cst0->SetGridx();
-   return cst0;
 }
 End_Macro
 
@@ -2778,16 +2733,16 @@ option `HIST` should be used.
 
 Begin_Macro(source)
 {
-   TCanvas *cst1 = new TCanvas("cst1","cst1",700,400);
+   auto cst1 = new TCanvas("cst1","cst1",700,400);
    cst1->Divide(2,1);
 
-   TH1F * hst11 = new TH1F("hst11", "", 20, -10, 10);
+   auto hst11 = new TH1F("hst11", "", 20, -10, 10);
    hst11->Sumw2();
    hst11->FillRandom("gaus", 1000);
    hst11->SetFillColor(kViolet);
    hst11->SetLineColor(kViolet);
 
-   TH1F * hst12 = new TH1F("hst12", "", 20, -10, 10);
+   auto hst12 = new TH1F("hst12", "", 20, -10, 10);
    hst12->FillRandom("gaus", 500);
    hst12->SetFillColor(kBlue);
    hst12->SetLineColor(kBlue);
@@ -2798,8 +2753,6 @@ Begin_Macro(source)
 
    cst1->cd(1); st1.Draw();
    cst1->cd(2); st1.Draw("hist");
-
-   return cst1;
 }
 End_Macro
 
@@ -2813,13 +2766,12 @@ In the following example the options "FB" and "BB" suppress the
 
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   TF3 *f3 = new TF3("f3","sin(x*x+y*y+z*z-36)",-2,2,-2,2,-2,2);
+   auto c2 = new TCanvas("c2","c2",600,400);
+   auto f3 = new TF3("f3","sin(x*x+y*y+z*z-36)",-2,2,-2,2,-2,2);
    f3->SetClippingBoxOn(0,0,0);
    f3->SetFillColor(30);
    f3->SetLineColor(15);
    f3->Draw("FBBB");
-   return c2;
 }
 End_Macro
 
