@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Organization and simultaneous fits: easy interactive access to workspace contents - CINT to CLING code nmigration
+/// Organization and simultaneous fits: easy interactive access to workspace contents - CINT to CLING code migration
 ///
 /// \macro_image
 /// \macro_output
