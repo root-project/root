@@ -6,7 +6,6 @@ execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSCTL_OUTPUT)
 if(${SYSCTL_OUTPUT} MATCHES x86_64)
   message(STATUS "Found a 64bit system")
   set(BIT_ENVIRONMENT "-m64")
-  set(SPECIAL_CINT_FLAGS "-DG__64BIT")
   if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "Found GNU compiler collection")
     set(ROOT_ARCHITECTURE linuxx8664gcc)
@@ -20,7 +19,6 @@ if(${SYSCTL_OUTPUT} MATCHES x86_64)
   endif()
 elseif(${SYSCTL_OUTPUT} MATCHES aarch64)
   message(STATUS "Found a 64bit ARM system")
-  set(SPECIAL_CINT_FLAGS "-DG__64BIT")
   if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "Found GNU compiler collection")
     set(ROOT_ARCHITECTURE linuxarm64)
@@ -32,7 +30,6 @@ elseif(${SYSCTL_OUTPUT} MATCHES aarch64)
   endif()
 elseif(${SYSCTL_OUTPUT} MATCHES ppc64)
   message(STATUS "Found a 64bit PPC system (ppc64/ppc64le)")
-  set(SPECIAL_CINT_FLAGS "-DG__64BIT")
   if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "Found GNU compiler collection")
     set(ROOT_ARCHITECTURE linuxppc64gcc)
@@ -44,7 +41,6 @@ elseif(${SYSCTL_OUTPUT} MATCHES ppc64)
   endif()
 elseif(${SYSCTL_OUTPUT} MATCHES arm)
   message(STATUS "Found a 32bit ARM system")
-  set(SPECIAL_CINT_FLAGS "")
   if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "Found GNU compiler collection")
     set(ROOT_ARCHITECTURE linuxarm)
@@ -57,7 +53,6 @@ elseif(${SYSCTL_OUTPUT} MATCHES arm)
 elseif(${SYSCTL_OUTPUT} MATCHES s390x)
   message(STATUS "Found a 64bit system")
   set(BIT_ENVIRONMENT "-m64")
-  set(SPECIAL_CINT_FLAGS "-DG__64BIT")
   if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "Found GNU compiler collection")
     set(ROOT_ARCHITECTURE linuxs390xgcc)
@@ -70,7 +65,6 @@ elseif(${SYSCTL_OUTPUT} MATCHES s390x)
 elseif(${SYSCTL_OUTPUT} MATCHES s390)
   message(STATUS "Found a 31bit system")
   set(BIT_ENVIRONMENT "-m31")
-  set(SPECIAL_CINT_FLAGS "")
   if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "Found GNU compiler collection")
     set(ROOT_ARCHITECTURE linuxs390gcc)
@@ -84,7 +78,6 @@ else()
   message(STATUS "Found a 32bit system")
   set(BIT_ENVIRONMENT "-m32")
   set(FP_MATH_FLAGS "-msse -mfpmath=sse")
-  set(SPECIAL_CINT_FLAGS "")
   if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "Found GNU compiler collection")
     set(ROOT_ARCHITECTURE linux)
@@ -107,18 +100,12 @@ set(CMAKE_M_LIBS -lm)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} ${FP_MATH_FLAGS} -Wshadow -Wall -W -Woverloaded-virtual -fsigned-char")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W")
-
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${BIT_ENVIRONMENT} -std=legacy")
-
-  set(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
-  set(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
 
   set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS}")
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}")
-
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined -Wl,--hash-style=\"both\"")
 
   # Select flags.
@@ -134,32 +121,17 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_C_FLAGS_DEBUG            "-g")
   set(CMAKE_C_FLAGS_DEBUGFULL        "-g3 -fno-inline")
   set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
-
-  #Settings for cint
-  set(CPPPREP "${CXX} -E -C")
-  set(CXXOUT "-o ")
-  set(EXPLICITLINK "no") #TODO
-
-  set(EXEEXT "")
-  set(SOEXT "so")
-
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} ${FP_MATH_FLAGS} -Wall -W -Woverloaded-virtual -fsigned-char")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${BIT_ENVIRONMENT} -std=legacy")
 
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wshadow")
   endif()
 
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${BIT_ENVIRONMENT} -std=legacy")
-
-  set(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
-  set(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
-
   set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS}")
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}")
-
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
   # Select flags.
@@ -175,25 +147,10 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
   set(CMAKE_C_FLAGS_DEBUG            "-g")
   set(CMAKE_C_FLAGS_DEBUGFULL        "-g3")
   set(CMAKE_C_FLAGS_PROFILE          "-g3 -ftest-coverage -fprofile-arcs")
-
-  #Settings for cint
-  set(CPPPREP "${CXX} -E -C")
-  set(CXXOUT "-o ")
-  set(EXPLICITLINK "no") #TODO
-
-  set(EXEEXT "")
-  set(SOEXT "so")
-
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
-
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd1476")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -restrict")
-
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}")
-
-  set(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
-  set(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
-
 
   # Check icc compiler version and set compile flags according to the
   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -v
@@ -238,14 +195,4 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
   set(CMAKE_C_FLAGS_RELEASE          "-O2 -fp-model precise -DNDEBUG")
   set(CMAKE_C_FLAGS_OPTIMIZED        "-O3 -DNDEBUG")
   set(CMAKE_C_FLAGS_DEBUG            "-O0 -g")
-
-  #Settings for cint
-  set(CPPPREP "${CXX} -E -C")
-  set(CXXOUT "-o ")
-  set(EXPLICITLINK "no") #TODO
-
-  set(EXEEXT "")
-  set(SOEXT "so")
-
 endif()
-
