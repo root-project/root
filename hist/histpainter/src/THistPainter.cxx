@@ -1060,8 +1060,8 @@ Begin_Macro(source)
 {
    auto c1 = new TCanvas("c1","c1",600,600);
    c1->Divide(1,2);
-   auto hcol23 = new TH2F("hcol2","Option COLZ example ",40,-4,4,40,-20,20);
-   auto hcol24 = new TH2F("hcol2","Option COLZ1 example ",40,-4,4,40,-20,20);
+   auto hcol23 = new TH2F("hcol23","Option COLZ example ",40,-4,4,40,-20,20);
+   auto hcol24 = new TH2F("hcol24","Option COLZ1 example ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
