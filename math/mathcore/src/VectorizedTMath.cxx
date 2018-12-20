@@ -4,14 +4,14 @@
 
 namespace TMath {
 ////////////////////////////////////////////////////////////////////////////////
-inline ::ROOT::Double_v Log2(::ROOT::Double_v &x)
+::ROOT::Double_v Log2(::ROOT::Double_v &x)
 {
    return vecCore::math::Log2(x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate a Breit Wigner function with mean and gamma.
-inline ::ROOT::Double_v BreitWigner(::ROOT::Double_v &x, Double_t mean, Double_t gamma)
+::ROOT::Double_v BreitWigner(::ROOT::Double_v &x, Double_t mean, Double_t gamma)
 {
    return 0.5 * M_1_PI * (gamma / (0.25 * gamma * gamma + (x - mean) * (x - mean)));
 }
@@ -20,7 +20,7 @@ inline ::ROOT::Double_v BreitWigner(::ROOT::Double_v &x, Double_t mean, Double_t
 /// Calculate a gaussian function with mean and sigma.
 /// If norm=kTRUE (default is kFALSE) the result is divided
 /// by sqrt(2*Pi)*sigma.
-inline ::ROOT::Double_v Gaus(::ROOT::Double_v &x, Double_t mean, Double_t sigma, Bool_t norm)
+::ROOT::Double_v Gaus(::ROOT::Double_v &x, Double_t mean, Double_t sigma, Bool_t norm)
 {
    if (sigma == 0)
       return ::ROOT::Double_v(1.e30);
@@ -43,7 +43,7 @@ inline ::ROOT::Double_v Gaus(::ROOT::Double_v &x, Double_t mean, Double_t sigma,
 /// This distribution is known under different names, most common is
 /// double exponential distribution, but it also appears as
 /// the two-tailed exponential or the bilateral exponential distribution
-inline ::ROOT::Double_v LaplaceDist(::ROOT::Double_v &x, Double_t alpha, Double_t beta)
+::ROOT::Double_v LaplaceDist(::ROOT::Double_v &x, Double_t alpha, Double_t beta)
 {
    ::ROOT::Double_v beta_v = ::ROOT::Double_v(beta);
    ::ROOT::Double_v out = vecCore::math::Exp(-vecCore::math::Abs((x - ::ROOT::Double_v(alpha)) / beta_v));
@@ -58,7 +58,7 @@ inline ::ROOT::Double_v LaplaceDist(::ROOT::Double_v &x, Double_t alpha, Double_
 /// This distribution is known under different names, most common is
 /// double exponential distribution, but it also appears as
 /// the two-tailed exponential or the bilateral exponential distribution
-inline ::ROOT::Double_v LaplaceDistI(::ROOT::Double_v &x, Double_t alpha, Double_t beta)
+::ROOT::Double_v LaplaceDistI(::ROOT::Double_v &x, Double_t alpha, Double_t beta)
 {
    ::ROOT::Double_v alpha_v = ::ROOT::Double_v(alpha);
    ::ROOT::Double_v beta_v = ::ROOT::Double_v(beta);
@@ -72,7 +72,7 @@ inline ::ROOT::Double_v LaplaceDistI(::ROOT::Double_v &x, Double_t alpha, Double
 /// Freq(x) = (1/sqrt(2pi)) Integral(exp(-t^2/2))dt between -infinity and x.
 ///
 /// Translated from CERNLIB C300 by Rene Brun.
-inline ::ROOT::Double_v Freq(::ROOT::Double_v &x)
+::ROOT::Double_v Freq(::ROOT::Double_v &x)
 {
    Double_t c1 = 0.56418958354775629;
    Double_t w2 = 1.41421356237309505;
@@ -126,7 +126,7 @@ inline ::ROOT::Double_v Freq(::ROOT::Double_v &x)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Vectorized implementation of Bessel function I_0(x) for a vector x.
-inline ::ROOT::Double_v BesselI0_Split_More(::ROOT::Double_v &ax)
+::ROOT::Double_v BesselI0_Split_More(::ROOT::Double_v &ax)
 {
    ::ROOT::Double_v y = 3.75 / ax;
    return (vecCore::math::Exp(ax) / vecCore::math::Sqrt(ax)) *
@@ -138,7 +138,7 @@ inline ::ROOT::Double_v BesselI0_Split_More(::ROOT::Double_v &ax)
                                y * (-2.057706e-2 + y * (2.635537e-2 + y * (-1.647633e-2 + y * 3.92377e-3))))))));
 }
 
-inline ::ROOT::Double_v BesselI0_Split_Less(::ROOT::Double_v &x)
+::ROOT::Double_v BesselI0_Split_Less(::ROOT::Double_v &x)
 {
    ::ROOT::Double_v xx = x / 3.75;
    ::ROOT::Double_v y = xx * xx;
@@ -147,7 +147,7 @@ inline ::ROOT::Double_v BesselI0_Split_Less(::ROOT::Double_v &x)
           y * (3.5156229 + y * (3.0899424 + y * (1.2067492 + y * (0.2659732 + y * (3.60768e-2 + y * 4.5813e-3)))));
 }
 
-inline ::ROOT::Double_v BesselI0(::ROOT::Double_v &x)
+::ROOT::Double_v BesselI0(::ROOT::Double_v &x)
 {
    ::ROOT::Double_v ax = vecCore::math::Abs(x);
 
@@ -156,7 +156,7 @@ inline ::ROOT::Double_v BesselI0(::ROOT::Double_v &x)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Vectorized implementation of modified Bessel function I_1(x) for a vector x.
-inline ::ROOT::Double_v BesselI1_Split_More(::ROOT::Double_v &ax, ::ROOT::Double_v &x)
+::ROOT::Double_v BesselI1_Split_More(::ROOT::Double_v &ax, ::ROOT::Double_v &x)
 {
    ::ROOT::Double_v y = 3.75 / ax;
    ::ROOT::Double_v result =
@@ -169,7 +169,7 @@ inline ::ROOT::Double_v BesselI1_Split_More(::ROOT::Double_v &ax, ::ROOT::Double
    return vecCore::Blend<::ROOT::Double_v>(x < 0, -result, result);
 }
 
-inline ::ROOT::Double_v BesselI1_Split_Less(::ROOT::Double_v &x)
+::ROOT::Double_v BesselI1_Split_Less(::ROOT::Double_v &x)
 {
    ::ROOT::Double_v xx = x / 3.75;
    ::ROOT::Double_v y = xx * xx;
@@ -178,7 +178,7 @@ inline ::ROOT::Double_v BesselI1_Split_Less(::ROOT::Double_v &x)
                           y * (0.51498869 + y * (0.15084934 + y * (2.658733e-2 + y * (3.01532e-3 + y * 3.2411e-4))))));
 }
 
-inline ::ROOT::Double_v BesselI1(::ROOT::Double_v &x)
+::ROOT::Double_v BesselI1(::ROOT::Double_v &x)
 {
    ::ROOT::Double_v ax = vecCore::math::Abs(x);
 
