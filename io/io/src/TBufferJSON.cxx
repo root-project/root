@@ -451,7 +451,7 @@ void TBufferJSON::SetCompact(int level)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Let configure typename tag in JSON.
+/// Configures _typename tag in JSON structures
 /// By default "_typename" field in JSON structures used to store class information
 /// One can specify alternative tag like "$typename" or "xy", but such JSON can not be correctly used in JSROOT
 /// If empty string is provided, class information will not be stored
@@ -462,6 +462,20 @@ void TBufferJSON::SetTypenameTag(const char *tag)
       fTypeNameTag.Clear();
    else
       fTypeNameTag = tag;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Configures _typeversion tag in JSON
+/// One can specify name of the JSON tag like "_typeversion" ot "$tv" which will be used to store class version
+/// Such tag can be used to correctly recover objects from JSON
+/// If empty string is provided (default), class version will not be stored
+
+void TBufferJSON::SetTypeversionTag(const char *tag)
+{
+   if (!tag)
+      fTypeVersionTag.Clear();
+   else
+      fTypeVersionTag = tag;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1149,6 +1163,11 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          AppendOutput("\"");
          AppendOutput(cl->GetName());
          AppendOutput("\"");
+         if (fTypeVersionTag.Length() > 0) {
+            AppendOutput(",", Form("\"%s\"", fTypeVersionTag.Data()));
+            AppendOutput(fSemicolon.Data());
+            AppendOutput(Form("%d", (int) cl->GetClassVersion()));
+         }
       } else {
          stack->fMemeberCnt = 0; // exclude typename
          AppendOutput("{");
@@ -1549,6 +1568,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       stack = PushStack(0, json);
 
    TClass *jsonClass = nullptr;
+   Int_t jsonClassVersion = 0;
 
    if ((special_kind == json_TArray) || ((special_kind > 0) && (special_kind < ROOT::kSTLend))) {
 
@@ -1589,6 +1609,9 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
             PopStack();
          return obj;
       }
+
+      if (fTypeVersionTag.Length() > 0)
+         jsonClassVersion = json->at(fTypeVersionTag.Data()).get<int>();
 
       if (objClass && (jsonClass != objClass)) {
          Error("JsonReadObject", "Class mismatch between provided %s and in JSON %s", objClass->GetName(),
@@ -1631,8 +1654,8 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
             stack->fStlMap = 0;
       }
 
-      // workaround for missing version in JSON structures
-      stack->fClVersion = jsonClass->GetClassVersion();
+      // if provided - use class version from JSON
+      stack->fClVersion = jsonClassVersion ? jsonClassVersion : jsonClass->GetClassVersion();
 
       if (gDebug > 3)
          Info("JsonReadObject", "Calling streamer of class %s", jsonClass->GetName());
@@ -1725,6 +1748,11 @@ void TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
          AppendOutput("\"");
          AppendOutput(cl->GetName());
          AppendOutput("\"");
+         if (fTypeVersionTag.Length() > 0) {
+            AppendOutput(",", Form("\"%s\"", fTypeVersionTag.Data()));
+            AppendOutput(fSemicolon.Data());
+            AppendOutput(Form("%d", sinfo ? sinfo->GetClassVersion() : (int) cl->GetClassVersion()));
+         }
       } else {
          stack->fMemeberCnt = 0; // exclude typename
          AppendOutput("{");
