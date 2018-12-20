@@ -1,11 +1,9 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// 'Limit Example' RooStats tutorial macro #101
-/// This tutorial shows an example of creating a simple
-/// model for a number counting experiment with uncertainty
-/// on both the background rate and signal efficiency. We then
-/// use a Confidence Interval Calculator to set a limit on the signal.
+/// Limits: number counting experiment with uncertainty on both the background rate and signal efficiency. 
+///
+/// The usage of a Confidence Interval Calculator to set a limit on the signal is illustrated
 ///
 /// \macro_image
 /// \macro_output

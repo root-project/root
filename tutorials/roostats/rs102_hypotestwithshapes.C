@@ -1,10 +1,8 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// rs102_hypotestwithshapes for RooStats project
+/// A typical search for a new particle by studying an invariant mass distribution
 ///
-/// This tutorial macro shows a typical search for a new particle
-/// by studying an invariant mass distribution.
 /// The macro creates a simple signal model and two background models,
 /// which are added to a RooWorkspace.
 /// The macro creates a toy dataset, and then uses a RooStats
