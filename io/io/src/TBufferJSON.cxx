@@ -360,8 +360,8 @@ public:
 /// Creates buffer object to serialize data into json.
 
 TBufferJSON::TBufferJSON(TBuffer::EMode mode)
-   : TBufferText(mode), fOutBuffer(), fOutput(nullptr), fValue(), fJsonrCnt(0), fStack(), fCompact(0),
-     fSemicolon(" : "), fArraySepar(", "), fNumericLocale()
+   : TBufferText(mode), fOutBuffer(), fOutput(nullptr), fValue(), fStack(),
+     fSemicolon(" : "), fArraySepar(", "), fNumericLocale(), fTypeNameTag("_typename")
 {
    fOutBuffer.Capacity(10000);
    fValue.Capacity(1000);
@@ -422,28 +422,7 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Set level of space/newline/array compression
-// Lower digit of compact parameter define formatting rules
-//  - 0 - no any compression, human-readable form
-//  - 1 - exclude spaces in the begin
-//  - 2 - remove newlines
-//  - 3 - exclude spaces as much as possible
-//
-// Second digit of compact parameter defines algorithm for arrays compression
-//  - 0 - no compression, standard JSON array
-//  - 1 - exclude leading and trailing zeros
-//  - 2 - check values repetition and empty gaps
-
-void TBufferJSON::SetCompact(int level)
-{
-   fCompact = level;
-   fSemicolon = (fCompact % 10 > 2) ? ":" : " : ";
-   fArraySepar = (fCompact % 10 > 2) ? "," : ", ";
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Converts any type of object to JSON string
-/// One should provide pointer on object and its class name
+/// Set level of space/newline/array compression
 /// Lower digit of compact parameter define formatting rules
 ///  - 0 - no any compression, human-readable form
 ///  - 1 - exclude spaces in the begin
@@ -455,6 +434,35 @@ void TBufferJSON::SetCompact(int level)
 ///  - 1 - exclude leading and trailing zeros
 ///  - 2 - check values repetition and empty gaps
 ///
+/// If third digit of compact parameter is 1, "_typename" will be skipped
+
+
+void TBufferJSON::SetCompact(int level)
+{
+   if (level < 0) level = 0;
+   fCompact = level % 10;
+   fSemicolon = (fCompact > 2) ? ":" : " : ";
+   fArraySepar = (fCompact > 2) ? "," : ", ";
+   fArrayCompact = (level / 10) % 10;
+   if (((level / 100) % 10) == 1)
+      fTypeNameTag.Clear();
+   else
+      fTypeNameTag = "_typename";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Converts any type of object to JSON string
+/// One should provide pointer on object and its class name
+/// Lower digit of compact parameter define formatting rules
+///  - 0 - no any compression, human-readable form
+///  - 1 - exclude spaces in the begin
+///  - 2 - remove newlines
+///  - 3 - exclude spaces as much as possible
+/// Second digit of compact parameter defines algorithm for arrays compression
+///  - 0 - no compression, standard JSON array
+///  - 1 - exclude leading and trailing zeros
+///  - 2 - check values repetition and empty gaps
+/// If third digit of compact parameter is 1, "_typename" will be skipped
 /// Maximal compression achieved when compact parameter equal to 23
 /// When member_name specified, converts only this data member
 
@@ -944,11 +952,11 @@ void TBufferJSON::AppendOutput(const char *line0, const char *line1)
       fOutput->Append(line0);
 
    if (line1) {
-      if (fCompact % 10 < 2)
+      if (fCompact < 2)
          fOutput->Append("\n");
 
       if (strlen(line1) > 0) {
-         if (fCompact % 10 < 1) {
+         if (fCompact < 1) {
             if (Stack()->fLevel > 0)
                fOutput->Append(' ', Stack()->fLevel);
          }
@@ -2667,7 +2675,7 @@ void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
 template <typename T>
 R__ALWAYS_INLINE void TBufferJSON::JsonWriteArrayCompress(const T *vname, Int_t arrsize, const char *typname)
 {
-   if ((fCompact < 10) || (arrsize < 6)) {
+   if ((fArrayCompact == 0) || (arrsize < 6)) {
       fValue.Append("[");
       for (Int_t indx = 0; indx < arrsize; indx++) {
          if (indx > 0)
@@ -2692,7 +2700,7 @@ R__ALWAYS_INLINE void TBufferJSON::JsonWriteArrayCompress(const T *vname, Int_t 
                continue;
             }
             Int_t p0(p++), pp(0), nsame(1);
-            if (fCompact < 20) {
+            if (fArrayCompact < 2) {
                pp = bindx;
                p = bindx + 1;
                nsame = 0;
