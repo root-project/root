@@ -278,11 +278,11 @@ protected:
                                             void (TBufferJSON::*method)(const T *, Int_t, const char *));
 
    TString fOutBuffer;                 ///<!  main output buffer for json code
-   TString *fOutput;                   ///<!  current output buffer for json code
+   TString *fOutput{nullptr};          ///<!  current output buffer for json code
    TString fValue;                     ///<!  buffer for current value
-   unsigned fJsonrCnt;                 ///<!  counter for all objects, used for referencing
+   unsigned fJsonrCnt{0};              ///<!  counter for all objects, used for referencing
    std::deque<TJSONStackObj *> fStack; ///<!  hierarchy of currently streamed element
-   Int_t fCompact;     ///<!  0 - no any compression, 1 - no spaces in the begin, 2 - no new lines, 3 - no spaces at all
+   Int_t fCompact{0};  ///<!  0 - no any compression, 1 - no spaces in the begin, 2 - no new lines, 3 - no spaces at all
    TString fSemicolon; ///<!  depending from compression level, " : " or ":"
    TString fArraySepar;    ///<!  depending from compression level, ", " or ","
    TString fNumericLocale; ///<!  stored value of setlocale(LC_NUMERIC), which should be recovered at the end
