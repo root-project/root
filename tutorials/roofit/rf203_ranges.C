@@ -1,15 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #203
-///
-///  Fitting and plotting in sub ranges
+/// Addition and convolution: fitting and plotting in sub ranges
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

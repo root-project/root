@@ -1,14 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #309
-///
-///  Projecting p.d.f and data slices in discrete observables
+/// Multidimensional models: projecting p.d.f and data slices in discrete observables
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

@@ -1,15 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'BASIC FUNCTIONALITY' RooFit tutorial macro #102
-///
-///  Importing data from ROOT TTrees and THx histograms
+/// Basic functionality: importing data from ROOT TTrees and THx histograms
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

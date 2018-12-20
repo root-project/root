@@ -1,15 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'BASIC FUNCTIONALITY' RooFit tutorial macro #105
+/// Basic functionality: binding ROOT math functions as RooFit functions and pdfs
 ///
-///   Demonstration of binding ROOT Math functions as RooFit functions
-///   and pdfs
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

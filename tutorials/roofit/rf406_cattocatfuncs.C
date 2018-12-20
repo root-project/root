@@ -1,14 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'DATA AND CATEGORIES' RooFit tutorial macro #406
-///
-///  Demonstration of discrete-->discrete (invertable) functions
+/// Data and categories: demonstration of discrete-->discrete (invertable) functions
 ///
 /// \macro_output
 /// \macro_code
 /// \author 07/2008 - Wouter Verkerke
-
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

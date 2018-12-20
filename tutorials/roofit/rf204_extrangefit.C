@@ -1,15 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #204
-///
-///  Extended maximum likelihood fit with alternate range definition
-///  for observed number of events.
+/// Addition and convolution: extended maximum likelihood fit with alternate range definition for observed number of events.
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

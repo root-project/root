@@ -1,15 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'VALIDATION AND MC STUDIES' RooFit tutorial macro #803
-///
-///  RooMCStudy: Using the randomizer and profile likelihood add-on models
+/// Validation and MC studies: RooMCStudy - Using the randomizer and profile likelihood add-on models
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

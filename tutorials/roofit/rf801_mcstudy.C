@@ -1,15 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'VALIDATION AND MC STUDIES' RooFit tutorial macro #801
-///
-///  A Toy Monte Carlo study that perform cycles of
+/// Validation and MC studies: a simple Toy Monte Carlo study
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 /// \author
-
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

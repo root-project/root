@@ -1,18 +1,14 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #211
+/// Addition and convolution: working with a p.d.f. with a convolution operator in terms of a parameter
 ///
-///  Working a with a p.d.f. with a convolution operator in terms
-///  of a parameter
-///
-///  (require ROOT to be compiled with --enable-fftw3)
+/// This tutorial requires FFT3 to be enabled.
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 04/2009 - Wouter Verkerke 
-
+/// \author 04/2009 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataHist.h"

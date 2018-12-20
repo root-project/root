@@ -1,14 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #604
-///
-///  Fitting with constraints
+/// Likelihood and minimization: fitting with constraints
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

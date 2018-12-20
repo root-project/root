@@ -1,15 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'BASIC FUNCTIONALITY' RooFit tutorial macro #108
+/// Basic functionality: plotting unbinned data with alternate and variable binnings
 ///
-///  Plotting unbinned data with alternate and variable binnings
 /// \macro_image
 /// \macro_output
 /// \macro_code
 ///
 /// \author 07/2008 - Wouter Verkerke
-
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

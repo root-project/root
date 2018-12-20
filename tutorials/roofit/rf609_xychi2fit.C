@@ -1,16 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #609
-///
-///  Setting up a chi^2 fit to an unbinned dataset with X,Y,err(Y)
-///  values (and optionally err(X) values)
+/// Likelihood and minimization: setting up a chi^2 fit to an unbinned dataset with X,Y,err(Y) values (and optionally err(X) values)
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

@@ -1,15 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #513
-///
-///   Illustration use of RooCustomizer and RooSimWSTool interface
-///   in factory workspace tool in a complex standalone B physics example
+/// Organization and simultaneous fits: RooCustomizer and RooSimWSTool interface in factory workspace tool in a complex standalone B physics example
 ///
 /// \macro_output
 /// \macro_code
-/// \author 04/2009 - Wouter Verkerke 
-
+/// \author 04/2009 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

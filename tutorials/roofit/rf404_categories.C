@@ -1,14 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'DATA AND CATEGORIES' RooFit tutorial macro #404
-///
-///  Working with RooCategory objects to describe discrete variables
+/// Data and categories: working with RooCategory objects to describe discrete variables
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

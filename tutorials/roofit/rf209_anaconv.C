@@ -1,12 +1,9 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #209
+/// Addition and convolution: decay function p.d.fs with optional B physics effects (mixing and CP violation) 
 ///
-///  Decay function p.d.fs with optional B physics
-///  effects (mixing and CP violation) that can be
-///  analytically convolved with e.g. Gaussian resolution
-///  functions
+/// that can be analytically convolved with e.g. Gaussian resolution functions
 ///
 ///  pdf1 = decay(t,tau) (x) delta(t)
 ///  pdf2 = decay(t,tau) (x) gauss(t,m,s)

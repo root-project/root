@@ -1,18 +1,16 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #208
+/// Addition and convolution: one-dimensional numeric convolution
 ///
-///  One-dimensional numeric convolution
-///  (require ROOT to be compiled with --enable-fftw3)
+/// pdf = landau(t) (x) gauss(t)
 ///
-///  pdf = landau(t) (x) gauss(t)
+/// This tutorial requires FFT3 to be enabled.
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

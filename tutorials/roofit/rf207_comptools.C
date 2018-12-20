@@ -1,14 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #207
-///
-///  Tools and utilities for manipulation of composite objects
+/// Addition and convolution: tools and utilities for manipulation of composite objects
 ///
 /// \macro_output
 /// \macro_code
 /// \author 07/2008 - Wouter Verkerke
-
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

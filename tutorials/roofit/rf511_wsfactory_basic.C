@@ -1,16 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #511
-///
-///   Basic use of the 'object factory' associated with a workspace
-///   to rapidly build p.d.f.s functions and their parameter components
+/// Organization and simultaneous fits: basic use of the 'object factory' associated with a workspace to rapidly build p.d.f.s functions and their parameter components
 ///
 /// \macro_output
 /// \macro_code
 /// \author 04/2009 - Wouter Verkerke
-
-
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

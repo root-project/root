@@ -1,10 +1,8 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #301
-///
-///  Multi-dimensional p.d.f.s through composition, e.g. substituting a
-///  p.d.f parameter with a function that depends on other observables
+/// Multidimensional models: multi-dimensional p.d.f.s through composition
+///  e.g. substituting a p.d.f parameter with a function that depends on other observables
 ///
 ///  pdf = gauss(x,f(y),s) with f(y) = a0 + a1*y
 ///

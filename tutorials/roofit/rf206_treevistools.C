@@ -1,14 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #206
-///
-///  Tools for visualization of RooAbsArg expression trees
+/// Addition and convolution: tools for visualization of RooAbsArg expression trees
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

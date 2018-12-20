@@ -1,10 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #901
-///
-///  Configuration and customization of how numeric (partial) integrals
-///  are executed
+/// Numeric algorithm tuning: configuration and customization of how numeric (partial) integrals are executed
 ///
 /// \macro_output
 /// \macro_code

@@ -1,20 +1,18 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #314
+/// Multidimensional models: working with parametrized ranges in a fit. 
 ///
-///  Working with parametrized ranges in a fit. This an example of a
-///  fit with an acceptance that changes per-event
+/// This an example of a fit with an acceptance that changes per-event
 ///
 ///   pdf = exp(-t/tau) with t[tmin,5]
 ///
-///   where t and tmin are both observables in the dataset
+/// where t and tmin are both observables in the dataset
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 /// \author 07/2008 - Wouter Verkerke
-
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

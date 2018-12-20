@@ -1,17 +1,14 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #305
-///
-///  Multi-dimensional p.d.f.s with conditional p.d.fs in product
+/// Multidimensional models: multi-dimensional p.d.f.s with conditional p.d.fs in product
 ///
 ///  pdf = gauss(x,f(y),sx | y ) * gauss(y,ms,sx)    with f(y) = a0 + a1*y
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

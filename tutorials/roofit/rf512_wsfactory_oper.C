@@ -1,15 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #512
-///
-///   Illustration of operator expressions and expression-based
-///   basic p.d.f.s in the workspace factory syntax
+/// Organization and simultaneous fits: operator expressions and expression-based basic p.d.f.s in the workspace factory syntax
 ///
 /// \macro_output
 /// \macro_code
-/// \author 04/2009 - Wouter Verkerke 
-
+/// \author 04/2009 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

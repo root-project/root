@@ -1,15 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'VALIDATION AND MC STUDIES' RooFit tutorial macro #804
-///
-///  Using RooMCStudy on models with constrains
+/// Validation and MC studies: using RooMCStudy on models with constrains
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
