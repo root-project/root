@@ -21,7 +21,18 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT CMAKE_CROSSCOMPILING AND NOT EXISTS
   endif()
 endif()
 
-#---Check for Cocoa/Quartz graphics backend (MacOS X only)
+#---If -Dshared=Off, prefer static libraries-----------------------------------------
+if(NOT shared)
+  if(WINDOWS)
+    message(FATAL "Option \"shared=Off\" not supported on Windows!")
+  else()
+    message("Prefering static libraries.")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;${CMAKE_FIND_LIBRARY_SUFFIXES}")
+  endif()
+endif()
+
+
+#---Check for Cocoa/Quartz graphics backend (MacOS X only)---------------------------
 if(cocoa)
   if(APPLE)
     set(x11 OFF CACHE BOOL "Disabled because cocoa requested (${x11_description})" FORCE)
