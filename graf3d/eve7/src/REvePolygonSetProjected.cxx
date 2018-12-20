@@ -17,12 +17,9 @@
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
-#include "TVirtualPad.h"
-#include "TVirtualViewer3D.h"
 
 #include "json.hpp"
 #include <cassert>
-
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
