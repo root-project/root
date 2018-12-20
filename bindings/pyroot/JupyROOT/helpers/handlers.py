@@ -13,7 +13,7 @@ from time import sleep as timeSleep
 from sys import platform
 from os import path
 
-_lib = CDLL(path.join(path.dirname(path.dirname(__file__)), 'libJupyROOT.so'))
+_lib = CDLL(path.join(path.dirname(path.dirname(path.dirname(__file__))), 'libJupyROOT.so'))
 
 class IOHandler(object):
     r'''Class used to capture output from C/C++ libraries.

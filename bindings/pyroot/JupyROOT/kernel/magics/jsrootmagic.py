@@ -4,7 +4,7 @@
 #  Authors: Danilo Piparo <Danilo.Piparo@cern.ch> CERN
 #-----------------------------------------------------------------------------
 
-from JupyROOT.utils import enableJSVis, disableJSVis, enableJSVisDebug, TBufferJSONErrorMessage, TBufferJSONAvailable
+from JupyROOT.helpers.utils import enableJSVis, disableJSVis, enableJSVisDebug, TBufferJSONErrorMessage, TBufferJSONAvailable
 
 from metakernel import Magic, option
 

@@ -23,7 +23,7 @@ from IPython.display import HTML
 from IPython.core.extensions import ExtensionManager
 import IPython.display
 import ROOT
-from JupyROOT import handlers
+from JupyROOT.helpers import handlers
 
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
