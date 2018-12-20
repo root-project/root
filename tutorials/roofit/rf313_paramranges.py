@@ -2,16 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #313
-##
-## Working with parameterized ranges to define non-rectangular regions
-## for fitting and integration
+## Multidimensional models: working with parameterized ranges to define non-rectangular regions for fitting and integration
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 
 import ROOT

@@ -1,15 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' RooFit tutorial macro #107
-## Demonstration of various plotting styles of data, functions
-## in a RooPlot
+## Basic functionality: demonstration of various plotting styles of data, functions in a RooPlot
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 import ROOT
 

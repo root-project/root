@@ -2,18 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #509
-##
-## Easy CINT interactive access to workspace contents through a
-## 'C++' namespace in CINT that maps the workspace contents in a typesafe way
-##
-## NB: ROOT.This macro exploits a feature native to CINT and _cannot_ be compiled
+## Organization and simultaneous fits: easy interactive access to workspace contents - CINT to CLING code migration
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 
 import ROOT

@@ -2,15 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #603
-##
-## Setting up a multi-core parallelized unbinned maximum likelihood fit
+## Likelihood and minimization: setting up a multi-core parallelized unbinned maximum likelihood fit
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 
 import ROOT
