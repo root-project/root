@@ -24,7 +24,8 @@ npoints = 10000000
 tdf = ROOT.ROOT.RDataFrame(npoints)
 
 ## Define what data we want inside the dataframe. We do not need to define p
-## as an array, but we do it here to demonstrate how to use jitting with RDataFrame
+# as an array, but we do it here to demonstrate how to use jitting with
+# RDataFrame
 
 pidf = tdf.Define("x", "gRandom->Uniform(-1.0, 1.0)") \
           .Define("y", "gRandom->Uniform(-1.0, 1.0)") \

@@ -12,7 +12,8 @@
 
 import ROOT
 
-# A simple helper function to fill a test tree: this makes the example stand-alone.
+# A simple helper function to fill a test tree: this makes the example
+# stand-alone.
 fill_tree_code = '''
 using FourVector = ROOT::Math::XYZTVector;
 using FourVectorVec = std::vector<FourVector>;
@@ -64,16 +65,16 @@ d = RDF(treeName, fileName)
 # Here we deal with the simplest of the cuts: we decide to accept the event
 # only if the number of tracks is greater than 5.
 n_cut = 'tracks.size() > 8'
-nentries = d.Filter(n_cut).Count();
+nentries = d.Filter(n_cut).Count()
 
-print("%s passed all filters" %nentries.GetValue())
+print("%s passed all filters" % nentries.GetValue())
 
 # Another possibility consists in creating a new column containing the
 # quantity we are interested in.
 # In this example, we will cut on the number of tracks and plot their
 # transverse momentum.
 
-getPt_code ='''
+getPt_code = '''
 using namespace ROOT::VecOps;
 RVec<double> getPt(const RVec<FourVector> &tracks)
 {
@@ -83,7 +84,7 @@ RVec<double> getPt(const RVec<FourVector> &tracks)
 '''
 ROOT.gInterpreter.Declare(getPt_code)
 
-getPtWeights_code ='''
+getPtWeights_code = '''
 using namespace ROOT::VecOps;
 RVec<double> getPtWeights(const RVec<FourVector> &tracks)
 {
@@ -96,7 +97,7 @@ ROOT.gInterpreter.Declare(getPtWeights_code)
 augmented_d = d.Define('tracks_n', '(int)tracks.size()') \
                .Filter('tracks_n > 2') \
                .Define('tracks_pts', 'getPt( tracks )') \
-               .Define("tracks_pts_weights", 'getPtWeights( tracks )' )
+               .Define("tracks_pts_weights", 'getPtWeights( tracks )')
 
 # The histogram is initialised with a tuple containing the parameters of the
 # histogram

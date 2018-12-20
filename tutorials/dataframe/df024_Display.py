@@ -32,10 +32,14 @@ ROOT.gInterpreter.ProcessLine('''
 
 d = ROOT.d
 
-# Preparing the RResultPtr<RDisplay> object with all columns and default number of entries
+# Preparing the RResultPtr<RDisplay> object with all columns and default
+# number of entries
 d1 = d.Display("")
-# Preparing the RResultPtr<RDisplay> object with two columns and default number of entries
-cols = ROOT.vector('string')(); cols.push_back("x"); cols.push_back("y");
+# Preparing the RResultPtr<RDisplay> object with two columns and default
+# number of entries
+cols = ROOT.vector('string')()
+cols.push_back("x")
+cols.push_back("y")
 d2 = d.Display(cols)
 
 # Printing the short representations, the event loop will run

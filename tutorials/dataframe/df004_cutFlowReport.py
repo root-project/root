@@ -12,10 +12,12 @@
 
 import ROOT
 
+
 def fill_tree(treeName, fileName):
     tdf = ROOT.ROOT.RDataFrame(50)
     tdf.Define("b1", "(double) tdfentry_")\
        .Define("b2", "(int) tdfentry_ * tdfentry_").Snapshot(treeName, fileName)
+
 
 # We prepare an input tree to run on
 fileName = 'df004_cutFlowReport_py.root'
@@ -29,12 +31,13 @@ d = RDF(treeName, fileName)
 
 # ## Define cuts and create the report
 # An optional string parameter name can be passed to the Filter method to create a named filter.
-# Named filters work as usual, but also keep track of how many entries they accept and reject.
+# Named filters work as usual, but also keep track of how many entries
+# they accept and reject.
 filtered1 = d.Filter('b1 > 25', 'Cut1')
 filtered2 = d.Filter('0 == b2 % 2', 'Cut2')
 
 augmented1 = filtered2.Define('b3', 'b1 / b2')
-filtered3 = augmented1.Filter('b3 < .5','Cut3')
+filtered3 = augmented1.Filter('b3 < .5', 'Cut3')
 
 # Statistics are retrieved through a call to the Report method:
 # when Report is called on the main RDataFrame object, it retrieves stats for

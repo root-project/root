@@ -21,12 +21,13 @@
 ## \date June 2018
 ## \author Danilo Piparo
 
+import os
 import ROOT
 RDataFrame = ROOT.ROOT.RDataFrame
-import os
 
 # We create a data frame on top of the hsimple example
-hsimplePath = os.path.join(str(ROOT.gROOT.GetTutorialDir().Data()), "hsimple.root")
+hsimplePath = os.path.join(
+    str(ROOT.gROOT.GetTutorialDir().Data()), "hsimple.root")
 df = RDataFrame("ntuple", hsimplePath)
 
 #We apply a simple cut and define a new column

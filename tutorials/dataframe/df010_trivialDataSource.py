@@ -22,9 +22,9 @@ d_s = MakeTrivialDataFrame(nEvents)
 
 # Now we have a regular RDataFrame: the ingestion of data is delegated to
 # the RDataSource. At this point everything works as before.
-h_s = d_s.Define("x", "1./(1. + col0)").Histo1D(("h_s", "h_s", 128, 0, .6), "x")
+h_s = d_s.Define(
+    "x", "1./(1. + col0)").Histo1D(("h_s", "h_s", 128, 0, .6), "x")
 
 c = ROOT.TCanvas()
 c.SetLogy()
 h_s.Draw()
-

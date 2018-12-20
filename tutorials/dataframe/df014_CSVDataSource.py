@@ -33,7 +33,13 @@ filteredEvents = tdf.Filter("Q1 * Q2 == -1") \
                     .Define("m", "sqrt(pow(E1 + E2, 2) - (pow(px1 + px2, 2) + pow(py1 + py2, 2) + pow(pz1 + pz2, 2)))")
 
 # Next we create a histogram to hold the invariant mass values and we draw it.
-invMass = filteredEvents.Histo1D(("invMass", "CMS Opendata: #mu#mu mass;#mu#mu mass [GeV];Events", 512, 2, 110), "m")
+invMass = filteredEvents.Histo1D(
+    ("invMass",
+     "CMS Opendata: #mu#mu mass;#mu#mu mass [GeV];Events",
+     512,
+     2,
+     110),
+    "m")
 
 c = ROOT.TCanvas()
 c.SetLogx()
@@ -44,7 +50,13 @@ invMass.Draw()
 # on the same canvas the full spectrum and the zoom in the J/psi particle.
 # First we will create the full spectrum histogram from the invariant mass
 # column, using a different histogram model than before.
-fullSpectrum = filteredEvents.Histo1D(("Spectrum", "Subset of CMS Run 2010B;#mu#mu mass [GeV];Events", 1024, 2, 110), "m")
+fullSpectrum = filteredEvents.Histo1D(
+    ("Spectrum",
+     "Subset of CMS Run 2010B;#mu#mu mass [GeV];Events",
+     1024,
+     2,
+     110),
+    "m")
 
 # Next we will create the histogram for the J/psi particle, applying first
 # the corresponding cut.

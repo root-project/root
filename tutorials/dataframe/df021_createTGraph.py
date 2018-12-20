@@ -19,7 +19,8 @@ dd = d.Alias("x", "rdfentry_").Define("y", "x*x")
 
 graph = dd.Graph("x", "y")
 
-# This tutorial is ran with multithreading enabled. The order in which points are inserted is not known, so to have a meaningful representation points are sorted.
+# This tutorial is ran with multithreading enabled. The order in which
+# points are inserted is not known, so to have a meaningful representation
+# points are sorted.
 graph.Sort()
 graph.Draw("APL")
-

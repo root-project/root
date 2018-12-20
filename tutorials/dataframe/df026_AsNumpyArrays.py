@@ -62,7 +62,7 @@ print("Access to all methods and data members of the C++ object:\nObject: {}\nAc
 # including any complex C++ object that may be read-out.
 try:
     import pandas
-except:
+except BaseException:
     print("Failed to import pandas.")
     exit()
 

@@ -11,6 +11,7 @@
 
 import ROOT
 
+
 def fill_tree(treeName, fileName):
     tdf = ROOT.ROOT.RDataFrame(100)
     tdf.Define("b1", "(int) tdfentry_")\
@@ -44,7 +45,8 @@ d_15_end_3 = d.Range(15, 0, 3)
 c_15_end_3 = d_15_end_3.Count()
 
 # The Range is a 1st class citizen in the RDataFrame graph:
-# not only actions (like Count) but also filters and new columns can be added to it.
+# not only actions (like Count) but also filters and new columns can be
+# added to it.
 d_0_50 = d.Range(0, 50)
 c_0_50_odd_b1 = d_0_50.Filter("1 == b1 % 2").Count()
 
@@ -60,4 +62,5 @@ print(" - Entries from 0 to 30:", c_0_30.GetValue())
 print(" - Entries from 15 onwards:", c_15_end.GetValue())
 print(" - Entries from 15 onwards in steps of 3:", c_15_end_3.GetValue())
 print(" - Entries from 0 to 50, odd only:", c_0_50_odd_b1.GetValue())
-print(" - First three entries of all even entries:", c_0_3_after_even_b1.GetValue())
+print(" - First three entries of all even entries:",
+      c_0_3_after_even_b1.GetValue())

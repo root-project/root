@@ -9,11 +9,15 @@
 
 import ROOT
 
-# A simple helper function to fill a test tree: this makes the example stand-alone.
+# A simple helper function to fill a test tree: this makes the example
+# stand-alone.
+
+
 def fill_tree(treeName, fileName):
     tdf = ROOT.ROOT.RDataFrame(10000)
     tdf.Define("b1", "(int) tdfentry_")\
        .Define("b2", "(float) tdfentry_ * tdfentry_").Snapshot(treeName, fileName)
+
 
 # We prepare an input tree to run on
 fileName = "df007_snapshot_py.root"
@@ -32,7 +36,7 @@ d_cut = d.Filter("b1 % 2 == 0")
 # ## Enrich the dataset
 # Build some temporary columns: we'll write them out
 
-getVector_code ='''
+getVector_code = '''
 std::vector<float> getVector (float b2)
 {
    std::vector<float> v;
@@ -61,7 +65,7 @@ f1 = ROOT.TFile(outFileName)
 t = f1.myTree
 print("These are the columns b1, b1_square and b2_vector:")
 for branch in t.GetListOfBranches():
-    print("Branch: %s" %branch.GetName())
+    print("Branch: %s" % branch.GetName())
 
 f1.Close()
 
@@ -75,7 +79,7 @@ f2 = ROOT.TFile(outFileNameAllColumns)
 t = f2.myTree
 print("These are all the columns available to this tdf:")
 for branch in t.GetListOfBranches():
-    print("Branch: %s" %branch.GetName())
+    print("Branch: %s" % branch.GetName())
 
 f2.Close()
 
@@ -84,8 +88,7 @@ f2.Close()
 
 branchList.clear()
 branchList.push_back("b1_square")
-snapshot_tdf = d2.Snapshot(treeName, outFileName, branchList);
+snapshot_tdf = d2.Snapshot(treeName, outFileName, branchList)
 h = snapshot_tdf.Histo1D("b1_square")
 c = ROOT.TCanvas()
 h.Draw()
-
