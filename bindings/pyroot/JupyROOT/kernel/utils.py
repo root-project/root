@@ -14,7 +14,7 @@ from glob import glob
 
 import importlib
 
-from JupyROOT.handlers import IOHandler, JupyROOTDeclarer, JupyROOTExecutor
+from JupyROOT.helpers.handlers import IOHandler, JupyROOTDeclarer, JupyROOTExecutor
 
 import ROOT
 
