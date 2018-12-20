@@ -76,6 +76,15 @@ public:
 };
 bool TLeakChecker::fgDestroyed = false;
 
+// This test is here to check that emplace_back works
+// also for T==bool. Indeed, on some platform, vector<bool>
+// has no emplace_back. Notable examples are osx 10.14 and gcc 4.8
+TEST(VecOps, EmplaceBack)
+{
+   ROOT::RVec<bool> vb; vb.emplace_back(true);
+   ROOT::RVec<int> vi; vi.emplace_back(1);
+}
+
 TEST(VecOps, CopyCtorCheckNoLeak)
 {
    ROOT::VecOps::RVec<TLeakChecker> ref;
