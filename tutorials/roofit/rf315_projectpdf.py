@@ -38,11 +38,20 @@ gaussx = ROOT.RooGaussian(
 
 # Create gaussy(y,0,2)
 gaussy = ROOT.RooGaussian(
-    "gaussy", "Gaussian in y", y, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(2))
+    "gaussy",
+    "Gaussian in y",
+    y,
+    ROOT.RooFit.RooConst(0),
+    ROOT.RooFit.RooConst(2))
 
 # Create gaussx(x,sx|y) * gaussy(y)
-model = ROOT.RooProdPdf("model", "gaussx(x|y)*gaussy(y)", ROOT.RooArgSet(
-    gaussy), ROOT.RooFit.Conditional(ROOT.RooArgSet(gaussx), ROOT.RooArgSet(x)))
+model = ROOT.RooProdPdf(
+    "model",
+    "gaussx(x|y)*gaussy(y)",
+    ROOT.RooArgSet(gaussy),
+    ROOT.RooFit.Conditional(
+        ROOT.RooArgSet(gaussx),
+        ROOT.RooArgSet(x)))
 
 # Marginalize m(x,y) to m(x)
 # ----------------------------------------------------

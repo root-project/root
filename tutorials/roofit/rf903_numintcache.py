@@ -56,7 +56,7 @@ def getWorkspace(mode):
     return w
 
 
-mode=0
+mode = 0
 # Mode = 0 : Run plain fit (slow)
 # Mode = 1 : Generate workspace with precalculated integral and store it on file (prepare for accelerated running)
 # Mode = 2 : Run fit from previously stored workspace including cached
@@ -78,7 +78,7 @@ if mode == 1:
         hhcache.createHistogram("a").Draw()
     else:
         ROOT.RooFit.Error("rf903_numintcache",
-                            "Cached histogram is not existing in workspace")
+                          "Cached histogram is not existing in workspace")
         sys.exit()
 
 # Use pdf from workspace for generation and fitting
@@ -86,10 +86,18 @@ if mode == 1:
 
 # ROOT.This is always slow (need to find maximum function value
 # empirically in 3D space)
-d = w.pdf("model").generate(ROOT.RooArgSet(w.var("x"), w.var("y"), w.var("z")), 1000)
+d = w.pdf("model").generate(
+    ROOT.RooArgSet(
+        w.var("x"),
+        w.var("y"),
+        w.var("z")),
+    1000)
 
 # ROOT.This is slow in mode 0, fast in mode 1
-w.pdf("model").fitTo(d, ROOT.RooFit.Verbose(ROOT.kTRUE), ROOT.RooFit.Timer(ROOT.kTRUE))
+w.pdf("model").fitTo(
+    d, ROOT.RooFit.Verbose(
+        ROOT.kTRUE), ROOT.RooFit.Timer(
+            ROOT.kTRUE))
 
 # Projection on x (always slow as 2D integral over Y, at fitted value of a
 # is not cached)

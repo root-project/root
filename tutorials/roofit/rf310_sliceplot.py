@@ -42,8 +42,18 @@ sigma1 = ROOT.RooRealVar("sigma1", "sigma1", 0.01)
 gm1 = ROOT.RooGaussModel("gm1", "gauss model 1", dt, bias1, sigma1)
 
 # Construct a decay pdf, with single gaussian resolution model
-bmix_gm1 = ROOT.RooBMixDecay("bmix", "decay", dt, mixState,
-                                tagFlav, tau, dm, w, dw, gm1, ROOT.RooBMixDecay.DoubleSided)
+bmix_gm1 = ROOT.RooBMixDecay(
+    "bmix",
+    "decay",
+    dt,
+    mixState,
+    tagFlav,
+    tau,
+    dm,
+    w,
+    dw,
+    gm1,
+    ROOT.RooBMixDecay.DoubleSided)
 
 # Generate BMixing data with above set of event errors
 data = bmix_gm1.generate(ROOT.RooArgSet(dt, tagFlav, mixState), 20000)

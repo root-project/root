@@ -14,7 +14,7 @@
 import ROOT
 
 
-compact=ROOT.kFALSE
+compact = ROOT.kFALSE
 w = ROOT.RooWorkspace("w")
 
 # Creating and adding basic pdfs
@@ -41,8 +41,9 @@ else:
     #  - Contracted to a single line recursive expression,
     #  - Omitting explicit names for components that are not referred to explicitly later
 
-    w.factory("SUM::model(bkgfrac[0.5,0.,1.]*Chebychev::bkg(x[-10,10],{a0[0.5,0.,1],a1[-0.2,0.,1.]}), "
-                "SUM(sig1frac[0.8,0.,1.]*Gaussian(x,mean[5,0,10],0.5), Gaussian(x,mean,1)))")
+    w.factory(
+        "SUM::model(bkgfrac[0.5,0.,1.]*Chebychev::bkg(x[-10,10],{a0[0.5,0.,1],a1[-0.2,0.,1.]}), "
+        "SUM(sig1frac[0.8,0.,1.]*Gaussian(x,mean[5,0,10],0.5), Gaussian(x,mean,1)))")
 
 # Advanced pdf constructor arguments
 # ----------------------------------------------------------------

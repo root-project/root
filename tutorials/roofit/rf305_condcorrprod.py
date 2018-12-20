@@ -35,14 +35,23 @@ gaussx = ROOT.RooGaussian(
 
 # Create gaussy(y,0,5)
 gaussy = ROOT.RooGaussian(
-    "gaussy", "Gaussian in y", y, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(3))
+    "gaussy",
+    "Gaussian in y",
+    y,
+    ROOT.RooFit.RooConst(0),
+    ROOT.RooFit.RooConst(3))
 
 # Create product gx(x|y)*gy(y)
 # -------------------------------------------------------
 
 # Create gaussx(x,sx|y) * gaussy(y)
 model = ROOT.RooProdPdf(
-    "model", "gaussx(x|y)*gaussy(y)", ROOT.RooArgSet(gaussy), ROOT.RooFit.Conditional(ROOT.RooArgSet(gaussx), ROOT.RooArgSet(x)))
+    "model",
+    "gaussx(x|y)*gaussy(y)",
+    ROOT.RooArgSet(gaussy),
+    ROOT.RooFit.Conditional(
+        ROOT.RooArgSet(gaussx),
+        ROOT.RooArgSet(x)))
 
 # Sample, fit and plot product pdf
 # ---------------------------------------------------------------

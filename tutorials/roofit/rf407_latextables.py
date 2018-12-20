@@ -38,7 +38,7 @@ sig = ROOT.RooAddPdf(
 a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0., 1.)
 a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0., 1.)
 bkg1 = ROOT.RooChebychev("bkg1", "Background 1",
-                            x, ROOT.RooArgList(a0, a1))
+                         x, ROOT.RooArgList(a0, a1))
 
 # Build expontential pdf
 alpha = ROOT.RooRealVar("alpha", "alpha", -1)
@@ -87,4 +87,4 @@ params.printLatex(ROOT.RooFit.Sibling(initParams), ROOT.RooFit.Columns(2))
 
 # Write LaTex table to file
 params.printLatex(ROOT.RooFit.Sibling(initParams),
-                    ROOT.RooFit.OutputFile("rf407_latextables.tex"))
+                  ROOT.RooFit.OutputFile("rf407_latextables.tex"))

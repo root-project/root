@@ -41,7 +41,9 @@ bkg = ROOT.RooProdPdf("bkg", "bkg", ROOT.RooArgList(px, py, pz))
 
 # Create composite pdf sig+bkg
 fsig = ROOT.RooRealVar("fsig", "signal fraction", 0.1, 0., 1.)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(sig, bkg), ROOT.RooArgList(fsig))
+model = ROOT.RooAddPdf(
+    "model", "model", ROOT.RooArgList(
+        sig, bkg), ROOT.RooArgList(fsig))
 
 data = model.generate(ROOT.RooArgSet(x, y, z), 20000)
 

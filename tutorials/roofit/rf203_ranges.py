@@ -55,8 +55,10 @@ r_sig = model.fitTo(modelData, ROOT.RooFit.Save(
 # Make plot frame in x and add data and fitted model
 frame = x.frame(ROOT.RooFit.Title("Fitting a sub range"))
 modelData.plotOn(frame)
-model.plotOn(frame, ROOT.RooFit.Range("Full"), ROOT.RooFit.LineStyle(
-    ROOT.kDashed), ROOT.RooFit.LineColor(ROOT.kRed))  # Add shape in full ranged dashed
+model.plotOn(
+    frame, ROOT.RooFit.Range("Full"), ROOT.RooFit.LineStyle(
+        ROOT.kDashed), ROOT.RooFit.LineColor(
+            ROOT.kRed)) # Add shape in full ranged dashed
 model.plotOn(frame)  # By default only fitted range is shown
 
 # Print fit results

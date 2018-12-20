@@ -36,7 +36,9 @@ bkg = ROOT.RooProdPdf("bkg", "bkg", px, py)
 
 # Construct the composite model sig+bkg
 f = ROOT.RooRealVar("f", "f", 0., 1.)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(sig, bkg), ROOT.RooArgList(f))
+model = ROOT.RooAddPdf(
+    "model", "model", ROOT.RooArgList(
+        sig, bkg), ROOT.RooArgList(f))
 
 # Sample 10000 events in (x,y) from the model
 modelData = model.generate(ROOT.RooArgSet(x, y), 10000)

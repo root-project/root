@@ -25,7 +25,12 @@ x = ROOT.RooRealVar("x", "x", -20, 20)
 #
 alpha = ROOT.RooRealVar("alpha", "alpha", 5, 0.1, 10)
 genpdf = ROOT.RooGenericPdf(
-    "genpdf", "genpdf", "(1+0.1*abs(x)+sin(sqrt(abs(x*alpha+0.1))))", ROOT.RooArgList(x, alpha))
+    "genpdf",
+    "genpdf",
+    "(1+0.1*abs(x)+sin(sqrt(abs(x*alpha+0.1))))",
+    ROOT.RooArgList(
+        x,
+        alpha))
 
 # Sample, fit and plot generic pdf
 # ---------------------------------------------------------------
