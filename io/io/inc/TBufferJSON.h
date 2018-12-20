@@ -34,6 +34,8 @@ public:
 
    void SetTypenameTag(const char *tag = "_typename");
 
+   void SetTypeversionTag(const char *tag = nullptr);
+
    static TString ConvertToJSON(const TObject *obj, Int_t compact = 0, const char *member_name = nullptr);
    static TString
    ConvertToJSON(const void *obj, const TClass *cl, Int_t compact = 0, const char *member_name = nullptr);
@@ -290,6 +292,7 @@ protected:
    TString fArraySepar;    ///<!  depending from compression level, ", " or ","
    TString fNumericLocale; ///<!  stored value of setlocale(LC_NUMERIC), which should be recovered at the end
    TString fTypeNameTag;   ///<! JSON member used for storing class name, when empty - no class name will be stored
+   TString fTypeVersionTag;  ///<! JSON member used to store class version, default empty
 
    ClassDef(TBufferJSON, 1) // a specialized TBuffer to only write objects into JSON format
 };
