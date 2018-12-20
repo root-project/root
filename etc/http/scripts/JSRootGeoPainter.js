@@ -103,12 +103,14 @@
 
 
    Toolbar.prototype.createIcon = function(button, thisIcon) {
-      var size = thisIcon.size || 512,
+      var dimensions = thisIcon.size ? thisIcon.size.split(' ') : [512, 512],
+          width = dimensions[0],
+          height = dimensions[1] || dimensions[0],
           scale = thisIcon.scale || 1,
           svg = button.append("svg:svg")
                       .attr('height', '1em')
                       .attr('width', '1em')
-                      .attr('viewBox', [0, 0, size, size].join(' '));
+                      .attr('viewBox', [0, 0, width, height].join(' '));
 
       if ('recs' in thisIcon) {
           var rec = {};
@@ -190,6 +192,17 @@
          click: function() { painter.ToggleEnlarge(); }
       });
 
+      // Only show VR icon if WebVR API available.
+      if (navigator.getVRDisplays) {
+         buttonList.push({
+            name: 'entervr',
+            title: 'Enter VR (It requires a VR Headset connected)',
+            icon: JSROOT.ToolbarIcons.vrgoggles,
+            click: function() { painter.ToggleVRMode(); }
+         });
+         this.InitVRMode();
+      }
+
       if (JSROOT.gStyle.ContextMenu)
       buttonList.push({
          name: 'menu',
@@ -213,6 +226,50 @@
       var bkgr = new THREE.Color(this.options.background);
 
       this._toolbar = new Toolbar( this.select_main(), [buttonList], (bkgr.r + bkgr.g + bkgr.b) < 1);
+   }
+
+   TGeoPainter.prototype.InitVRMode = function() {
+      var pthis = this;
+      navigator.getVRDisplays().then(function (displays) {
+         var vrDisplay = displays[0];
+         if (!vrDisplay) return;
+         pthis._renderer.vr.setDevice(vrDisplay);
+         pthis._vrDisplay = vrDisplay;
+      });
+   }
+
+   TGeoPainter.prototype.ToggleVRMode = function() {
+      var pthis = this;
+      if (!this._vrDisplay) return;
+      // Toggle VR mode off
+      if (this._vrDisplay.isPresenting) {
+         this.ExitVRMode();
+         return;
+      }
+      this._previousCameraPosition = this._camera.position.clone();
+      this._previousCameraRotation = this._camera.rotation.clone();
+      this._vrDisplay.requestPresent([{ source: this._renderer.domElement }]).then(function() {
+         pthis._renderer.vr.enabled = true;
+         pthis._renderer.setAnimationLoop(function () { pthis.Render3D(0); });
+      });
+      this._renderer.vr.enabled = true;
+
+      window.addEventListener( 'keydown', function ( event ) {
+         // Esc Key turns VR mode off
+         if (event.keyCode === 27) pthis.ExitVRMode();
+      });
+   }
+
+   TGeoPainter.prototype.ExitVRMode = function() {
+      var pthis = this;
+      if (!this._vrDisplay.isPresenting) return;
+      this._renderer.vr.enabled = false;
+      // Restore Camera pose
+      this._camera.position.copy(this._previousCameraPosition);
+      this._previousCameraPosition = undefined;
+      this._camera.rotation.copy(this._previousCameraRotation);
+      this._previousCameraRotation = undefined;
+      this._vrDisplay.exitPresent();
    }
 
    TGeoPainter.prototype.GetGeometry = function() {
