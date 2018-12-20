@@ -7,6 +7,8 @@
 4. Implement update of TF2 drawings, see tutorials/graphics/anim.C
 5. Use gStyle attributes to draw histogram title 
 6. Add support of TProfile2Poly class
+7. Support eve7 geometry viewer - render data generated in ROOT itself
+8. Provide initial WebVR support (#176), thanks to Diego Marcos (@dmarcos)    
 
  
 ## Changes in 5.6.2

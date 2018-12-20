@@ -2412,11 +2412,11 @@
       }
 
       if (!this.origin) {
-         console.error('origin not there - kind', clone.kind, nodeid, clone);
+         console.error('origin not there - kind', clone.kind, entry.nodeid, clone);
          return null;
       }
 
-      var node = this.origin[nodeid];
+      var node = this.origin[entry.nodeid];
 
       if (clone.kind === 1) {
          // special handling for EVE nodes
