@@ -1,15 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'BASIC FUNCTIONALITY' RooFit tutorial macro #103
-///
-///  Interpreted functions and p.d.f.s
+/// Basic functionality: interpreted functions and p.d.f.s
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 /// \author 07/2008 - Wouter Verkerke
-
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

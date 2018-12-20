@@ -1,10 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #316
-///
-///  Using the likelihood ratio technique to construct a signal enhanced
-///  one-dimensional projection of a multi-dimensional p.d.f.
+/// Multidimensional models: using the likelihood ratio technique to construct a signal enhanced one-dimensional projection of a multi-dimensional p.d.f.
 ///
 /// \macro_image
 /// \macro_output

@@ -1,15 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #606
-///
-///  Understanding and customizing error handling in likelihood evaluations
+/// Likelihood and minimization: understanding and customizing error handling in likelihood evaluations
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 /// \author 07/2008 - Wouter Verkerke
-
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

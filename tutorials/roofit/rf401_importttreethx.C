@@ -1,10 +1,9 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'DATA AND CATEGORIES' RooFit tutorial macro #401
-///
-///  Overview of advanced option for importing data from ROOT TTree and THx histograms
-///  Basic import options are demonstrated in rf102_dataimport.C
+/// Data and categories: advanced options for importing data from ROOT TTree and THx histograms
+/// 
+/// Basic import options are demonstrated in rf102_dataimport.C
 ///
 /// \macro_output
 /// \macro_code

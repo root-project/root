@@ -1,15 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #205
-///
-///  Options for plotting components of composite p.d.f.s.
+/// Addition and convolution: options for plotting components of composite p.d.f.s.
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 /// \author 07/2008 - Wouter Verkerke
-
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

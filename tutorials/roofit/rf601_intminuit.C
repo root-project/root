@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #601
-///
-///  Interactive minimization with MINUIT
+/// Likelihood and minimization: interactive minimization with MINUIT
 ///
 /// \macro_image
 /// \macro_output

@@ -1,15 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #902
-///
-///  Configuration and customization of how MC sampling algorithms
-///  on specific p.d.f.s are executed
+/// Numeric algorithm tuning: configuration and customization of how MC sampling algorithms on specific p.d.f.s are executed
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

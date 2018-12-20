@@ -1,14 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #312
-///
-///  Performing fits in multiple (disjoint) ranges in one or more dimensions
+/// Multidimensional models: performing fits in multiple (disjoint) ranges in one or more dimensions
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

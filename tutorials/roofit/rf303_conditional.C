@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #303
-///
-///  Use of tailored p.d.f as conditional p.d.fs.s
+/// Multidimensional models: use of tailored p.d.f as conditional p.d.fs.s
 ///
 ///  pdf = gauss(x,f(y),sx | y ) with f(y) = a0 + a1*y
 ///
@@ -11,7 +9,6 @@
 /// \macro_output
 /// \macro_code
 /// \author 07/2008 - Wouter Verkerke
-
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

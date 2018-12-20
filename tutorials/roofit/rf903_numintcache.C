@@ -1,10 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #903
-///
-///   Caching of slow numeric integrals and parameterization of slow
-///   numeric integrals
+/// Numeric algorithm tuning: caching of slow numeric integrals and parameterization of slow numeric integrals
 ///
 /// \macro_image
 /// \macro_output

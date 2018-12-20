@@ -1,16 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #510
-///
-///   Working with named parameter sets and parameter snapshots in
-///   workspaces
+/// Organization and simultaneous fits: working with named parameter sets and parameter snapshots in workspaces
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 /// \author  04/2009 - Wouter Verkerke
-
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

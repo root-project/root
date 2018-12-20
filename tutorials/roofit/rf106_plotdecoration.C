@@ -1,16 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'BASIC FUNCTIONALITY' RooFit tutorial macro #106
+/// Basic functionality: adding boxes with parameters, statistics to RooPlots, decorating with arrows, text etc...
 ///
-///   Adding boxes with parameters, statistics to RooPlots.
-///   Decorating RooPlots with arrows, text etc...
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

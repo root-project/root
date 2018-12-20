@@ -1,15 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #607
-///
-///  Demonstration of options of the RooFitResult class
+/// Likelihood and minimization: demonstration of options of the RooFitResult class
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke 
-
+/// \author 07/2008 - Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

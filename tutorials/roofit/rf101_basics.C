@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///  'BASIC FUNCTIONALITY' RooFit tutorial macro #101
-///
-///  Fitting, plotting, toy data generation on one-dimensional p.d.f
+/// Basic functionality: fitting, plotting, toy data generation on one-dimensional p.d.f
 ///
 ///  pdf = gauss(x,m,s)
 ///
