@@ -24,8 +24,12 @@ z = ROOT.RooRealVar("z", "z", 0, 10)
 
 # Define 3 dimensional pdf
 z0 = ROOT.RooRealVar("z0", "z0", -0.1, 1)
-px = ROOT.RooPolynomial("px", "px", x, ROOT.RooArgList(ROOT.RooFit.RooConst(0)))
-py = ROOT.RooPolynomial("py", "py", y, ROOT.RooArgList(ROOT.RooFit.RooConst(0)))
+px = ROOT.RooPolynomial(
+    "px", "px", x, ROOT.RooArgList(
+        ROOT.RooFit.RooConst(0)))
+py = ROOT.RooPolynomial(
+    "py", "py", y, ROOT.RooArgList(
+        ROOT.RooFit.RooConst(0)))
 pz = ROOT.RooPolynomial("pz", "pz", z, ROOT.RooArgList(z0))
 pxyz = ROOT.RooProdPdf("pxyz", "pxyz", ROOT.RooArgList(px, py, pz))
 

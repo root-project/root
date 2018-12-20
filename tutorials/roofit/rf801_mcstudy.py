@@ -65,8 +65,17 @@ model = ROOT.RooAddPdf(
 # A Binned() option is added in self example to bin the data between generation and fitting
 # to speed up the study at the expemse of some precision
 
-mcstudy = ROOT.RooMCStudy(model, ROOT.RooArgSet(x), ROOT.RooFit.Binned(ROOT.kTRUE), ROOT.RooFit.Silence(), ROOT.RooFit.Extended(),
-                            ROOT.RooFit.FitOptions(ROOT.RooFit.Save(ROOT.kTRUE), ROOT.RooFit.PrintEvalErrors(0)))
+mcstudy = ROOT.RooMCStudy(
+    model,
+    ROOT.RooArgSet(x),
+    ROOT.RooFit.Binned(
+        ROOT.kTRUE),
+    ROOT.RooFit.Silence(),
+    ROOT.RooFit.Extended(),
+    ROOT.RooFit.FitOptions(
+        ROOT.RooFit.Save(
+            ROOT.kTRUE),
+        ROOT.RooFit.PrintEvalErrors(0)))
 
 # Generate and fit events
 # ---------------------------------------------
@@ -88,10 +97,10 @@ frame3 = mcstudy.plotPull(mean, ROOT.RooFit.Bins(
 frame4 = mcstudy.plotNLL(ROOT.RooFit.Bins(40))
 
 # Make some histograms from the parameter dataset
-hh_cor_a0_s1f = ROOT.RooAbsData.createHistogram(mcstudy.fitParDataSet(),
-    "hh", a1, ROOT.RooFit.YVar(sig1frac))
+hh_cor_a0_s1f = ROOT.RooAbsData.createHistogram(
+    mcstudy.fitParDataSet(), "hh", a1, ROOT.RooFit.YVar(sig1frac))
 hh_cor_a0_a1 = ROOT.RooAbsData.createHistogram(mcstudy.fitParDataSet(),
-    "hh", a0, ROOT.RooFit.YVar(a1))
+                                               "hh", a0, ROOT.RooFit.YVar(a1))
 
 # Access some of the saved fit results from individual toys
 corrHist000 = mcstudy.fitResult(0).correlationHist("c000")

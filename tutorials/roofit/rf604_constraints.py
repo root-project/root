@@ -29,7 +29,13 @@ poly = ROOT.RooPolynomial("poly", "poly(x)", x)
 
 # model = f*gauss + (1-f)*poly
 f = ROOT.RooRealVar("f", "f", 0.5, 0., 1.)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(gauss, poly), ROOT.RooArgList(f))
+model = ROOT.RooAddPdf(
+    "model",
+    "model",
+    ROOT.RooArgList(
+        gauss,
+        poly),
+    ROOT.RooArgList(f))
 
 # Generate small dataset for use in fitting below
 d = model.generate(ROOT.RooArgSet(x), 50)
@@ -40,7 +46,11 @@ d = model.generate(ROOT.RooArgSet(x), 50)
 # Construct Gaussian constraint p.d.f on parameter f at 0.8 with
 # resolution of 0.1
 fconstraint = ROOT.RooGaussian(
-    "fconstraint", "fconstraint", f, ROOT.RooFit.RooConst(0.8), ROOT.RooFit.RooConst(0.1))
+    "fconstraint",
+    "fconstraint",
+    f,
+    ROOT.RooFit.RooConst(0.8),
+    ROOT.RooFit.RooConst(0.1))
 
 # Method 1 - add internal constraint to model
 # -------------------------------------------------------------------------------------
@@ -57,7 +67,11 @@ modelc = ROOT.RooProdPdf(
 r1 = model.fitTo(d, ROOT.RooFit.Save())
 
 # Fit modelc with constraint term on parameter f
-r2 = modelc.fitTo(d, ROOT.RooFit.Constrain(ROOT.RooArgSet(f)), ROOT.RooFit.Save())
+r2 = modelc.fitTo(
+    d,
+    ROOT.RooFit.Constrain(
+        ROOT.RooArgSet(f)),
+    ROOT.RooFit.Save())
 
 # Method 2 - specify external constraint when fitting
 # ------------------------------------------------------------------------------------------

@@ -63,7 +63,8 @@ params.Print("v")
 params.readFromFile("rf505_asciicfg.txt", "READ", "Section3")
 
 # Print the list of parameters that were not read from Section3
-print("The following parameters of the were _not_ read from Section3: ", params.selectByAttrib("READ", ROOT.kFALSE))
+print("The following parameters of the were _not_ read from Section3: ",
+      params.selectByAttrib("READ", ROOT.kFALSE))
 
 # Read parameters from section 'Section4' of file, contains
 # 'include file' statement of rf505_asciicfg_example.txt

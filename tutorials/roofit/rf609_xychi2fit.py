@@ -47,7 +47,9 @@ for i in range(10):
 # Make fit function
 a = ROOT.RooRealVar("a", "a", 0.0, -10, 10)
 b = ROOT.RooRealVar("b", "b", 0.0, -100, 100)
-f = ROOT.RooPolyVar("f", "f", x, ROOT.RooArgList(b, a, ROOT.RooFit.RooConst(1)))
+f = ROOT.RooPolyVar(
+    "f", "f", x, ROOT.RooArgList(
+        b, a, ROOT.RooFit.RooConst(1)))
 
 # Plot dataset in X-Y interpretation
 frame = x.frame(ROOT.RooFit.Title(
@@ -66,7 +68,7 @@ f.chi2FitTo(dxy, ROOT.RooFit.YVar(y), ROOT.RooFit.Integrate(ROOT.kTRUE))
 
 # Overlay alternate fit result
 f.plotOn(frame, ROOT.RooFit.LineStyle(ROOT.kDashed),
-            ROOT.RooFit.LineColor(ROOT.kRed))
+         ROOT.RooFit.LineColor(ROOT.kRed))
 
 # Draw the plot on a canvas
 c = ROOT.TCanvas("rf609_xychi2fit", "rf609_xychi2fit", 600, 600)

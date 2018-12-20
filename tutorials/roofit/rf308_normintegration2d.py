@@ -83,7 +83,7 @@ hh_cdf = gxy_cdf.createHistogram("hh_cdf", x, ROOT.RooFit.Binning(
 hh_cdf.SetLineColor(ROOT.kBlue)
 
 c = ROOT.TCanvas("rf308_normintegration2d",
-                    "rf308_normintegration2d", 600, 600)
+                 "rf308_normintegration2d", 600, 600)
 ROOT.gPad.SetLeftMargin(0.15)
 hh_cdf.GetZaxis().SetTitleOffset(1.8)
 hh_cdf.Draw("surf")

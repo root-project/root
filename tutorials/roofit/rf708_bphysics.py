@@ -41,8 +41,18 @@ tagFlav.defineType("B0bar", -1)
 tm = ROOT.RooTruthModel("tm", "truth model", dt)
 
 # Construct Bdecay with mixing
-bmix = ROOT.RooBMixDecay("bmix", "decay", dt, mixState,
-                            tagFlav, tau, dm, w, dw, tm, ROOT.RooBMixDecay.DoubleSided)
+bmix = ROOT.RooBMixDecay(
+    "bmix",
+    "decay",
+    dt,
+    mixState,
+    tagFlav,
+    tau,
+    dm,
+    w,
+    dw,
+    tm,
+    ROOT.RooBMixDecay.DoubleSided)
 
 # Plot pdf in various slices
 # ---------------------------------------------------
@@ -73,8 +83,11 @@ data.plotOn(frame2, ROOT.RooFit.Cut(
 bmix.plotOn(frame2, ROOT.RooFit.Slice(tagFlav, "B0"),
             ROOT.RooFit.Slice(mixState, "mixed"))
 
-data.plotOn(frame2, ROOT.RooFit.Cut(
-    "mixState==mixState::mixed&&tagFlav==tagFlav::B0bar"), ROOT.RooFit.MarkerColor(ROOT.kCyan))
+data.plotOn(
+    frame2,
+    ROOT.RooFit.Cut("mixState==mixState::mixed&&tagFlav==tagFlav::B0bar"),
+    ROOT.RooFit.MarkerColor(
+        ROOT.kCyan))
 bmix.plotOn(frame2, ROOT.RooFit.Slice(tagFlav, "B0bar"), ROOT.RooFit.Slice(
     mixState, "mixed"), ROOT.RooFit.LineColor(ROOT.kCyan))
 
@@ -87,8 +100,11 @@ data.plotOn(frame3, ROOT.RooFit.Cut(
 bmix.plotOn(frame3, ROOT.RooFit.Slice(tagFlav, "B0"),
             ROOT.RooFit.Slice(mixState, "unmixed"))
 
-data.plotOn(frame3, ROOT.RooFit.Cut(
-    "mixState==mixState::unmixed&&tagFlav==tagFlav::B0bar"), ROOT.RooFit.MarkerColor(ROOT.kCyan))
+data.plotOn(
+    frame3,
+    ROOT.RooFit.Cut("mixState==mixState::unmixed&&tagFlav==tagFlav::B0bar"),
+    ROOT.RooFit.MarkerColor(
+        ROOT.kCyan))
 bmix.plotOn(frame3, ROOT.RooFit.Slice(tagFlav, "B0bar"), ROOT.RooFit.Slice(
     mixState, "unmixed"), ROOT.RooFit.LineColor(ROOT.kCyan))
 
@@ -105,8 +121,21 @@ argLambda = ROOT.RooRealVar("absLambda", "|lambda|", 0.7, -1, 1)
 effR = ROOT.RooRealVar("effR", "B0/B0bar reco efficiency ratio", 1)
 
 # Construct Bdecay with CP violation
-bcp = ROOT.RooBCPEffDecay("bcp", "bcp", dt, tagFlav, tau, dm, w, CPeigen,
-                            absLambda, argLambda, effR, dw, tm, ROOT.RooBCPEffDecay.DoubleSided)
+bcp = ROOT.RooBCPEffDecay(
+    "bcp",
+    "bcp",
+    dt,
+    tagFlav,
+    tau,
+    dm,
+    w,
+    CPeigen,
+    absLambda,
+    argLambda,
+    effR,
+    dw,
+    tm,
+    ROOT.RooBCPEffDecay.DoubleSided)
 
 # Plot scenario 1 - sin(2b)=0.7, |l|=1
 # ---------------------------------------------------------------------------
@@ -122,9 +151,9 @@ data2.plotOn(frame4, ROOT.RooFit.Cut("tagFlav==tagFlav::B0"))
 bcp.plotOn(frame4, ROOT.RooFit.Slice(tagFlav, "B0"))
 
 data2.plotOn(frame4, ROOT.RooFit.Cut("tagFlav==tagFlav::B0bar"),
-                ROOT.RooFit.MarkerColor(ROOT.kCyan))
+             ROOT.RooFit.MarkerColor(ROOT.kCyan))
 bcp.plotOn(frame4, ROOT.RooFit.Slice(tagFlav, "B0bar"),
-            ROOT.RooFit.LineColor(ROOT.kCyan))
+           ROOT.RooFit.LineColor(ROOT.kCyan))
 
 # # Plot scenario 2 - sin(2b)=0.7, |l|=0.7
 # -------------------------------------------------------------------------------
@@ -143,9 +172,9 @@ data3.plotOn(frame5, ROOT.RooFit.Cut("tagFlav==tagFlav::B0"))
 bcp.plotOn(frame5, ROOT.RooFit.Slice(tagFlav, "B0"))
 
 data3.plotOn(frame5, ROOT.RooFit.Cut("tagFlav==tagFlav::B0bar"),
-                ROOT.RooFit.MarkerColor(ROOT.kCyan))
+             ROOT.RooFit.MarkerColor(ROOT.kCyan))
 bcp.plotOn(frame5, ROOT.RooFit.Slice(tagFlav, "B0bar"),
-            ROOT.RooFit.LineColor(ROOT.kCyan))
+           ROOT.RooFit.LineColor(ROOT.kCyan))
 
 
 # Generic B-decay with user coefficients
@@ -190,7 +219,7 @@ data4.plotOn(frame6, ROOT.RooFit.Cut("tagFlav==tagFlav::B0"))
 bcpg.plotOn(frame6, ROOT.RooFit.Slice(tagFlav, "B0"))
 
 data4.plotOn(frame6, ROOT.RooFit.Cut("tagFlav==tagFlav::B0bar"),
-                ROOT.RooFit.MarkerColor(ROOT.kCyan))
+             ROOT.RooFit.MarkerColor(ROOT.kCyan))
 bcpg.plotOn(frame6, ROOT.RooFit.Slice(tagFlav, "B0bar"),
             ROOT.RooFit.LineColor(ROOT.kCyan))
 

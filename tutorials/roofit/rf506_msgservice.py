@@ -63,7 +63,10 @@ ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.Integration)
 
 # Show DEBUG level message on function tracing, ROOT.RooGaussian only
 ROOT.RooMsgService.instance().addStream(
-    ROOT.RooFit.DEBUG, ROOT.RooFit.Topic(ROOT.RooFit.Tracing), ROOT.RooFit.ClassName("RooGaussian"))
+    ROOT.RooFit.DEBUG,
+    ROOT.RooFit.Topic(
+        ROOT.RooFit.Tracing),
+    ROOT.RooFit.ClassName("RooGaussian"))
 
 # Perform a fit to generate some tracing messages
 model.fitTo(data, ROOT.RooFit.Verbose(ROOT.kTRUE))
@@ -74,7 +77,10 @@ ROOT.RooMsgService.instance().reset()
 # Show DEBUG level message on function tracing on all objects, output to
 # file
 ROOT.RooMsgService.instance().addStream(
-    ROOT.RooFit.DEBUG, ROOT.RooFit.Topic(ROOT.RooFit.Tracing), ROOT.RooFit.OutputFile("rf506_debug.log"))
+    ROOT.RooFit.DEBUG,
+    ROOT.RooFit.Topic(
+        ROOT.RooFit.Tracing),
+    ROOT.RooFit.OutputFile("rf506_debug.log"))
 
 # Perform a fit to generate some tracing messages
 model.fitTo(data, ROOT.RooFit.Verbose(ROOT.kTRUE))
