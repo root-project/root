@@ -2,17 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #608
-##
-## Representing the parabolic approximation of the fit as
-# a multi-variate Gaussian on the parameters of the fitted p.d.f.
-#
+## Likelihood and minimization: representing the parabolic approximation of the fit as a multi-variate Gaussian on the parameters of the fitted p.d.f.
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 
 import ROOT

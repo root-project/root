@@ -2,16 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #501
-##
-## Using simultaneous p.d.f.s to describe simultaneous fits to multiple
-## datasets
+## Organization and simultaneous fits: using simultaneous p.d.f.s to describe simultaneous fits to multiple datasets
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 
 import ROOT

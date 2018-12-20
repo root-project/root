@@ -2,15 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'SPECIAL PDFS' RooFit tutorial macro #708
-##
-## Special decay pdf for B physics with mixing and/or CP violation
+## Special p.d.f.'s: special decay pdf for B physics with mixing and/or CP violation
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-
+## \author Wouter Verkerke (C++ version)
 
 import ROOT
 

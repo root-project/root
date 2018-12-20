@@ -1,14 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' RooFit tutorial macro #108
-## Plotting unbinned data with alternate and variable binnings
+## Basic functionality: plotting unbinned data with alternate and variable binnings
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 import ROOT
 

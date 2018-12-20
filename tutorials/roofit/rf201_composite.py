@@ -1,15 +1,15 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #201
-## Composite p.d.f with signal and background component
+## Addition and convolution: composite p.d.f with signal and background component
+##
 ## pdf = f_bkg * bkg(x,a0,a1) + (1-fbkg) * (f_sig1 * sig1(x,m,s1 + (1-f_sig1) * sig2(x,m,s2)))
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Wouter Verkerke (C++ version)
 
 import ROOT
 
