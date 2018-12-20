@@ -88,17 +88,16 @@ enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stds
 
 class TArrayIndexProducer {
 protected:
-   Int_t fTotalLen;
-   Int_t fCnt;
-   const char *fSepar;
+   Int_t fTotalLen{0};
+   Int_t fCnt{-1};
+   const char *fSepar{nullptr};
    TArrayI fIndicies;
    TArrayI fMaxIndex;
    TString fRes;
-   Bool_t fIsArray;
+   Bool_t fIsArray{kFALSE};
 
 public:
-   TArrayIndexProducer(TStreamerElement *elem, Int_t arraylen, const char *separ)
-      : fTotalLen(0), fCnt(-1), fSepar(separ), fIndicies(), fMaxIndex(), fRes(), fIsArray(kFALSE)
+   TArrayIndexProducer(TStreamerElement *elem, Int_t arraylen, const char *separ) : fSepar(separ)
    {
       Bool_t usearrayindx = elem && (elem->GetArrayDim() > 0);
       Bool_t isloop = elem && ((elem->GetType() == TStreamerInfo::kStreamLoop) ||
@@ -134,8 +133,7 @@ public:
       }
    }
 
-   TArrayIndexProducer(TDataMember *member, Int_t extradim, const char *separ)
-      : fTotalLen(0), fCnt(-1), fSepar(separ), fIndicies(), fMaxIndex(), fRes(), fIsArray(kFALSE)
+   TArrayIndexProducer(TDataMember *member, Int_t extradim, const char *separ) : fSepar(separ)
    {
       Int_t ndim = member->GetArrayDim();
       if (extradim > 0)
@@ -254,26 +252,22 @@ public:
 
 class TJSONStackObj : public TObject {
 public:
-   TStreamerInfo *fInfo;       //!
-   TStreamerElement *fElem;    //! element in streamer info
-   Bool_t fIsStreamerInfo;     //!
-   Bool_t fIsElemOwner;        //!
-   Bool_t fIsPostProcessed;    //! indicate that value is written
-   Bool_t fIsObjStarted;       //! indicate that object writing started, should be closed in postprocess
-   Bool_t fAccObjects;         //! if true, accumulate whole objects in values
-   TObjArray fValues;          //! raw values
-   Int_t fLevel;               //! indent level
-   TArrayIndexProducer *fIndx; //! producer of ndim indexes
-
-   nlohmann::json *fNode; //! JSON node, used for reading
-   Int_t fStlIndx;        //! index of object in STL container
-   Int_t fStlMap;         //! special iterator over STL map::key members
-   Version_t fClVersion;  //! keep actual class version, workaround for ReadVersion in custom streamer
+   TStreamerInfo *fInfo{nullptr};       //!
+   TStreamerElement *fElem{nullptr};    //! element in streamer info
+   Bool_t fIsStreamerInfo{kFALSE};      //!
+   Bool_t fIsElemOwner{kFALSE};         //!
+   Bool_t fIsPostProcessed{kFALSE};     //! indicate that value is written
+   Bool_t fIsObjStarted{kFALSE};        //! indicate that object writing started, should be closed in postprocess
+   Bool_t fAccObjects{kFALSE};          //! if true, accumulate whole objects in values
+   TObjArray fValues;                   //! raw values
+   Int_t fLevel{0};                     //! indent level
+   TArrayIndexProducer *fIndx{nullptr}; //! producer of ndim indexes
+   nlohmann::json *fNode{nullptr}; //! JSON node, used for reading
+   Int_t fStlIndx{-1};             //! index of object in STL container
+   Int_t fStlMap{-1};              //! special iterator over STL map::key members
+   Version_t fClVersion{0};        //! keep actual class version, workaround for ReadVersion in custom streamer
 
    TJSONStackObj()
-      : TObject(), fInfo(nullptr), fElem(nullptr), fIsStreamerInfo(kFALSE), fIsElemOwner(kFALSE),
-        fIsPostProcessed(kFALSE), fIsObjStarted(kFALSE), fAccObjects(kFALSE), fValues(), fLevel(0), fIndx(nullptr),
-        fNode(nullptr), fStlIndx(-1), fStlMap(-1), fClVersion(0)
    {
       fValues.SetOwner(kTRUE);
    }
@@ -437,8 +431,8 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
 //
 // Second digit of compact parameter defines algorithm for arrays compression
 //  - 0 - no compression, standard JSON array
-//  - 1 - exclude leading, trailing zeros, required JSROOT v5
-//  - 2 - check values repetition and empty gaps, required JSROOT v5
+//  - 1 - exclude leading and trailing zeros
+//  - 2 - check values repetition and empty gaps
 
 void TBufferJSON::SetCompact(int level)
 {
@@ -458,8 +452,8 @@ void TBufferJSON::SetCompact(int level)
 ///
 /// Second digit of compact parameter defines algorithm for arrays compression
 ///  - 0 - no compression, standard JSON array
-///  - 1 - exclude leading, trailing zeros, required JSROOT v5
-///  - 2 - check values repetition and empty gaps, required JSROOT v5
+///  - 1 - exclude leading and trailing zeros
+///  - 2 - check values repetition and empty gaps
 ///
 /// Maximal compression achieved when compact parameter equal to 23
 /// When member_name specified, converts only this data member
