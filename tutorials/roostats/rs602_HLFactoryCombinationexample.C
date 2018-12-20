@@ -50,17 +50,17 @@ void rs602_HLFactoryCombinationexample() {
 
    hlf.AddChannel("model1","sb_model1","flat1");
    hlf.AddChannel("model2","sb_model2","flat2");
-   RooAbsPdf* pdf=hlf.GetTotSigBkgPdf();
-   RooCategory* thecat = hlf.GetTotCategory();
-   RooRealVar* x= static_cast<RooRealVar*>(hlf.GetWs()->arg("x"));
+   auto pdf = hlf.GetTotSigBkgPdf();
+   auto thecat = hlf.GetTotCategory();
+   auto x = static_cast<RooRealVar *>(hlf.GetWs()->arg("x"));
 
-   RooDataSet* data = pdf->generate(RooArgSet(*x,*thecat),Extended());
+   auto data = pdf->generate(RooArgSet(*x, *thecat), Extended());
 
    // --- Perform extended ML fit of composite PDF to toy data ---
    pdf->fitTo(*data) ;
 
    // --- Plot toy data and composite PDF overlaid ---
-   RooPlot* xframe = x->frame() ;
+   auto xframe = x->frame();
 
    data->plotOn(xframe);
    thecat->setIndex(0);

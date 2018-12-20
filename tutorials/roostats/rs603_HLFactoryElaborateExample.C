@@ -76,17 +76,17 @@ void rs603_HLFactoryElaborateExample() {
                "rs603_card_WsMaker.rs",
                false);
 
-   RooRealVar* x = static_cast<RooRealVar*>(hlf.GetWs()->arg("x"));
-   RooAbsPdf* pdf1 = hlf.GetWs()->pdf("sb_model1");
-   RooAbsPdf* pdf2 = hlf.GetWs()->pdf("sb_model2");
+   auto x = static_cast<RooRealVar *>(hlf.GetWs()->arg("x"));
+   auto pdf1 = hlf.GetWs()->pdf("sb_model1");
+   auto pdf2 = hlf.GetWs()->pdf("sb_model2");
 
    RooWorkspace w("rs603_ws");
 
-   RooDataSet* data1 = pdf1->generate(RooArgSet(*x),Extended());
+   auto data1 = pdf1->generate(RooArgSet(*x), Extended());
    data1->SetName("data1");
    w.import(*data1);
 
-   RooDataSet* data2 = pdf2->generate(RooArgSet(*x),Extended());
+   auto data2 = pdf2->generate(RooArgSet(*x), Extended());
    data2->SetName("data2");
    w.import(*data2);
 
@@ -112,15 +112,15 @@ void rs603_HLFactoryElaborateExample() {
    hlf_2.AddChannel("model1","sb_model1","flat1","data1");
    hlf_2.AddChannel("model2","sb_model2","flat2","data2");
 
-   RooDataSet* data = hlf_2.GetTotDataSet();
-   RooAbsPdf* pdf = hlf_2.GetTotSigBkgPdf();
-   RooCategory* thecat = hlf_2.GetTotCategory();
+   auto data = hlf_2.GetTotDataSet();
+   auto pdf = hlf_2.GetTotSigBkgPdf();
+   auto thecat = hlf_2.GetTotCategory();
 
    // --- Perform extended ML fit of composite PDF to toy data ---
    pdf->fitTo(*data) ;
 
    // --- Plot toy data and composite PDF overlaid ---
-   RooPlot* xframe = x->frame() ;
+   auto xframe = x->frame();
 
    data->plotOn(xframe);
    thecat->setIndex(0);

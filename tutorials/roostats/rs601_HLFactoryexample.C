@@ -45,22 +45,20 @@ void rs601_HLFactoryexample() {
 
    // --- Take elements out of the internal workspace ---
 
-   RooWorkspace* w = hlf.GetWs();
+   auto w = hlf.GetWs();
 
-   RooRealVar* mes = dynamic_cast<RooRealVar*>(w->arg("mes"));
-   RooAbsPdf* sum = dynamic_cast<RooAbsPdf*>(w->pdf("sum"));
-   RooAbsPdf* argus = dynamic_cast<RooAbsPdf*>(w->pdf("argus"));
-//   RooRealVar* mean = dynamic_cast<RooRealVar*>(w->arg("mean"));
-//   RooRealVar* argpar = dynamic_cast<RooRealVar*>(w->arg("argpar"));
+   auto mes = dynamic_cast<RooRealVar *>(w->arg("mes"));
+   auto sum = dynamic_cast<RooAbsPdf *>(w->pdf("sum"));
+   auto argus = dynamic_cast<RooAbsPdf *>(w->pdf("argus"));
 
    // --- Generate a toyMC sample from composite PDF ---
-   RooDataSet *data = sum->generate(*mes,2000) ;
+   auto data = sum->generate(*mes, 2000);
 
    // --- Perform extended ML fit of composite PDF to toy data ---
    sum->fitTo(*data) ;
 
    // --- Plot toy data and composite PDF overlaid ---
-   RooPlot* mesframe = mes->frame() ;
+   auto mesframe = mes->frame();
    data->plotOn(mesframe) ;
    sum->plotOn(mesframe) ;
    sum->plotOn(mesframe,Components(*argus),LineStyle(kDashed)) ;
