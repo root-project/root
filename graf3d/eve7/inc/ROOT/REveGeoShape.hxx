@@ -60,12 +60,11 @@ public:
    void SetShape(TGeoShape *s);
 
    virtual void ComputeBBox();
-   virtual void Paint(Option_t *option = "");
 
    void SaveExtract(const char *file, const char *name);
    void WriteExtract(const char *name);
 
-   static REveGeoShape *ImportShapeExtract(REveGeoShapeExtract *gse, REveElement *parent = 0);
+   static REveGeoShape *ImportShapeExtract(REveGeoShapeExtract *gse, REveElement *parent = nullptr);
 
    // GeoProjectable
    virtual std::unique_ptr<TBuffer3D> MakeBuffer3D();
