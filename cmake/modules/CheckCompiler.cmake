@@ -31,15 +31,6 @@ else()
   set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
 endif()
 
-#----Get the compiler file name (to ensure re-location)---------------------------------------------
-get_filename_component(_compiler_name ${CMAKE_CXX_COMPILER} NAME)
-get_filename_component(_compiler_path ${CMAKE_CXX_COMPILER} PATH)
-if("$ENV{PATH}" MATCHES ${_compiler_path})
-  set(CXX ${_compiler_name})
-else()
-  set(CXX ${CMAKE_CXX_COMPILER})
-endif()
-
 #----Test if clang setup works----------------------------------------------------------------------
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   exec_program(${CMAKE_CXX_COMPILER} ARGS "--version 2>&1 | grep version" OUTPUT_VARIABLE _clang_version_info)
