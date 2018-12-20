@@ -479,18 +479,18 @@ void TBufferJSON::SetTypeversionTag(const char *tag)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Specify class which type information (name and version) will not be stored in JSON
-/// One can configure several such classes
-/// Allows to excluded type information for only these classes
+/// Specify class which typename will not be stored in JSON
+/// Several classes can be configured
+/// To exclude typeinfo for all classes, call TBufferJSON::SetTypenameTag("")
 
 void TBufferJSON::SetSkipClassInfo(const TClass *cl)
 {
    if (!cl)
       return;
    if (!fSkipClasses)
-      fSkipClasses = new TExMap();
+      fSkipClasses = new TObjArray();
 
-   fSkipClasses->Add(Void_Hash(cl), 777);
+   fSkipClasses->Add(const_cast<TClass *>(cl));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -500,7 +500,7 @@ Bool_t TBufferJSON::IsSkipClassInfo(const TClass *cl) const
 {
    if (!cl || !fSkipClasses) return kFALSE;
 
-   return fSkipClasses->GetValue(Void_Hash(cl)) == 777;
+   return fSkipClasses->FindObject(cl) != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
