@@ -23,6 +23,8 @@
 
 #include "TDictionary.h"
 
+#include <functional>
+
 
 class TGlobal : public TDictionary {
 
@@ -52,8 +54,14 @@ public:
    class TGlobalMappedFunction: public TGlobal {
    public:
       typedef void* (*GlobalFunc_t)();
+      typedef std::function<void*()> GlobalFunctor_t;
       TGlobalMappedFunction(const char* name, const char* type,
                             GlobalFunc_t funcPtr):fFuncPtr(funcPtr)
+      {
+         SetNameTitle(name, type);
+      }
+      TGlobalMappedFunction(const char* name, const char* type,
+                            void *dummyPtr, GlobalFunctor_t functor): fFuncPtr((GlobalFunc_t)dummyPtr), fFunctor(functor)
       {
          SetNameTitle(name, type);
       }
@@ -61,7 +69,7 @@ public:
       Int_t          GetArrayDim() const { return 0;}
       DeclId_t       GetDeclId() const { return (DeclId_t)(fFuncPtr); } // Used as DeclId because of uniqueness
       Int_t          GetMaxIndex(Int_t /*dim*/) const { return -1; }
-      void          *GetAddress() const { return (*fFuncPtr)(); }
+      void          *GetAddress() const { return !fFunctor ? (*fFuncPtr)() : fFunctor(); }
       const char    *GetTypeName() const { return fTitle; }
       const char    *GetFullTypeName() const { return fTitle; }
       Long_t         Property() const { return 0; }
@@ -71,6 +79,8 @@ public:
    private:
 
       GlobalFunc_t fFuncPtr; // Function to call to get the address
+
+      GlobalFunctor_t fFunctor; // functor which correctly returns pointer
 
       TGlobalMappedFunction &operator=(const TGlobal &); // not implemented.
       // Some of the special ones are created before the list is create e.g gFile
