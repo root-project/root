@@ -72,7 +72,7 @@ public:
    static TGlobalMappedFunction *MakeFunctor(const char *name, const char *type, GlobFunc &func, bool add_globals = true)
    {
       auto glob = new TGlobalMappedFunction(name, type, (GlobalFunc_t) ((void*) &func));
-      glob->fFunctor = [&func] { return (void*) func(); };
+      glob->fFunctor = [&func] { auto &res = func(); return (void *) (&res); };
       if (add_globals)
          Add(glob);
       return glob;
