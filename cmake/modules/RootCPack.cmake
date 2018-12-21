@@ -67,16 +67,9 @@ else()
 endif()
 
 #---Processor architecture---------------------------------------------------------------------------
-if(APPLE)
-  execute_process(COMMAND uname -m OUTPUT_VARIABLE arch OUTPUT_STRIP_TRAILING_WHITESPACE)
-elseif(UNIX)
-  execute_process(COMMAND uname -p OUTPUT_VARIABLE arch OUTPUT_STRIP_TRAILING_WHITESPACE)
-elseif(DEFINED ENV{Platform})
-  set(arch $ENV{Platform})
-  string(TOLOWER ${arch} arch)
-else()
-  set(arch $ENV{PROCESSOR_ARCHITECTURE})
-endif()
+
+set(arch ${CMAKE_SYSTEM_PROCESSOR})
+
 #---OS and version-----------------------------------------------------------------------------------
 if(APPLE)
   execute_process(COMMAND sw_vers "-productVersion"
