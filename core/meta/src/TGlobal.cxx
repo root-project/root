@@ -38,7 +38,7 @@ TGlobal::TGlobal(DataMemberInfo_t *info) : TDictionary(), fInfo(info)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-TGlobal::TGlobal(const TGlobal &rhs) : TDictionary( ), fInfo(0)
+TGlobal::TGlobal(const TGlobal &rhs) : TDictionary( ), fInfo(nullptr)
 {
    if (rhs.fInfo) {
       fInfo = gCling->DataMemberInfo_FactoryCopy(rhs.fInfo);
@@ -110,7 +110,7 @@ Int_t TGlobal::GetMaxIndex(Int_t dim) const
 
 const char *TGlobal::GetTypeName() const
 {
-   if (!fInfo) return 0;
+   if (!fInfo) return nullptr;
    return gCling->TypeName(gCling->DataMemberInfo_TypeName(fInfo));
 }
 
@@ -119,7 +119,7 @@ const char *TGlobal::GetTypeName() const
 
 const char *TGlobal::GetFullTypeName() const
 {
-   if (!fInfo) return 0;
+   if (!fInfo) return nullptr;
    return gCling->DataMemberInfo_TypeName(fInfo);
 }
 
