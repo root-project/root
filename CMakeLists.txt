@@ -18,7 +18,7 @@ project(ROOT)
 # output to use the default C locale which is more or less identical on all systems.
 set(ENV{LANG} C)
 
-#---Set pathes where to put the libraries, executables and headers------------------------------
+#---Set paths where to put the libraries, executables and headers------------------------------
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -26,10 +26,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # Before setting ROOTSYS, make sure that the environment isn't polluted by a different
 # ROOT build. This is significant e,g. for roottest, which will otherwise have libraries
 # of a different ROOT build available / visible / reachable.
-if($ENV{ROOTSYS})
-  string(REPLACE "$ENV{ROOTSYS}/bin" "" ENV{PATH}, $ENV{PATH})
-  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV{LD_LIBRARY_PATH} $ENV{LD_LIBRARY_PATH})
-  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV{PYTHONPATH} $ENV{PYTHONPATH})
+if(NOT $ENV{ROOTSYS} STREQUAL "")
+  string(REPLACE "$ENV{ROOTSYS}/bin" "" ENV_PATH "$ENV{PATH}")
+  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV_LD_LIBRARY_PATH "$ENV{LD_LIBRARY_PATH}")
+  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV_PYTHONPATH $ENV{PYTHONPATH})
+  string(REPLACE "$ENV{ROOTSYS}" "" ENV_CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
+  set(ENV{PATH} "${ENV_PATH}")
+  set(ENV{LD_LIBRARY_PATH} "${ENV_LD_LIBRARY_PATH}")
+  set(ENV{PYTHONPATH} "${ENV_PYTHONPATH}")
+  set(ENV{CMAKE_PREFIX_PATH} "${ENV_CMAKE_PREFIX_PATH}")
   set(ENV{"ROOTSYS"} ${CMAKE_BINARY_DIR})
 endif()
 
