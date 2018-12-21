@@ -57,7 +57,7 @@ static struct AddPseudoGlobals {
 AddPseudoGlobals() {
    // User "gCling" as synonym for "libCore static initialization has happened".
    // This code here must not trigger it.
-   TGlobalMappedFunction::AddFunctor("gClient", "TGClient*", TGClient::Instance);
+   TGlobalMappedFunction::MakeFunctor("gClient", "TGClient*", TGClient::Instance);
 }
 } gAddPseudoGlobals;
 }

@@ -1763,14 +1763,14 @@ TCollection *TROOT::GetListOfFunctionTemplates()
 TCollection *TROOT::GetListOfGlobals(Bool_t load)
 {
    if (!fGlobals) {
-      // We add to the list the "funcky-fake" globals.
-      TGlobalMappedFunction::AddFunctor("gROOT", "TROOT*", ROOT::GetROOT);
-      TGlobalMappedFunction::AddFunctor("gPad", "TVirtualPad*", TVirtualPad::Pad);
-      TGlobalMappedFunction::AddFunctor("gInterpreter", "TInterpreter*", TInterpreter::Instance);
-      TGlobalMappedFunction::AddFunctor("gVirtualX", "TVirtualX*", TVirtualX::Instance);
-      TGlobalMappedFunction::AddFunctor("gDirectory", "TDirectory*", TDirectory::CurrentDirectory);
-      // Don't let TGlobalMappedFunction delete our globals, now that we take them.
       fGlobals = new TListOfDataMembers(0);
+      // We add to the list the "funcky-fake" globals.
+      fGlobals->Add(TGlobalMappedFunction::MakeFunctor("gROOT", "TROOT*", ROOT::GetROOT, false));
+      fGlobals->Add(TGlobalMappedFunction::MakeFunctor("gPad", "TVirtualPad*", TVirtualPad::Pad, false));
+      fGlobals->Add(TGlobalMappedFunction::MakeFunctor("gInterpreter", "TInterpreter*", TInterpreter::Instance, false));
+      fGlobals->Add(TGlobalMappedFunction::MakeFunctor("gVirtualX", "TVirtualX*", TVirtualX::Instance, false));
+      fGlobals->Add(TGlobalMappedFunction::MakeFunctor("gDirectory", "TDirectory*", TDirectory::CurrentDirectory, false));
+      // Don't let TGlobalMappedFunction delete our globals, now that we take them.
       fGlobals->AddAll(&TGlobalMappedFunction::GetEarlyRegisteredGlobals());
       TGlobalMappedFunction::GetEarlyRegisteredGlobals().SetOwner(kFALSE);
       TGlobalMappedFunction::GetEarlyRegisteredGlobals().Clear();
