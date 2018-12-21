@@ -20,7 +20,7 @@ use the classes using OpenGL.
 
 ClassImp(TGLManager);
 
-TGLManager * (*gPtr2GLManager)() = 0;
+TGLManager * (*gPtr2GLManager)() = nullptr;
 
 namespace {
 static struct AddPseudoGlobals {
@@ -44,7 +44,7 @@ TGLManager::TGLManager() : TNamed("gGLManager", "")
 
 TGLManager *&TGLManager::Instance()
 {
-   static TGLManager *instance = 0;
+   static TGLManager *instance = nullptr;
 
    if(gPtr2GLManager) {
       instance = gPtr2GLManager();
