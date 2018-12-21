@@ -24,7 +24,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
                               HEADERS ${headers1} ${headers2}
                               DEPENDENCIES Thread RIO MathCore)
 
-# GCC 4.x has bugs with -O3 or -Ofast that break Geom
-if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
-  target_compile_options(Geom PRIVATE -O2)
+# GCC has bugs with -O3 or -Ofast that break Geom
+if(CMAKE_COMPILER_IS_GNUCXX)
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5 OR CMAKE_SIZEOF_VOID_P LESS 8)
+    target_compile_options(Geom PRIVATE -O2)
+  endif()
 endif()
