@@ -58,7 +58,7 @@ AddPseudoGlobals() {
    // User "gCling" as synonym for "libCore static initialization has happened".
    // This code here must not trigger it.
    TGlobalMappedFunction::Add(new TGlobalMappedFunction("gClient", "TGClient*",
-                                 (TGlobalMappedFunction::GlobalFunc_t)&TGClient::Instance));
+         (void*)&TGClient::Instance, [] { return (void *)TGClient::Instance(); }));
 }
 } gAddPseudoGlobals;
 }
