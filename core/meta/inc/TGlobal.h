@@ -75,6 +75,12 @@ public:
    virtual bool Update(DataMemberInfo_t * /*info*/) { return false; }
    static void Add(TGlobalMappedFunction *gmf);
 
+   template<typename GlobFunc>
+   static void AddFunctor(const char *name, const char *type, GlobFunc &func)
+   {
+      Add(new TGlobalMappedFunction(name, type, (void*) &func, [func]{ return (void*) func(); }));
+   }
+
 private:
    GlobalFunc_t fFuncPtr; // Function to call to get the address
 
