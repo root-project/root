@@ -875,6 +875,15 @@ TEST(RDFSimpleTests, SumOfStrings)
    EXPECT_EQ(*df.Sum<std::string>("str"), "blabla");
 }
 
+
+TEST(RDFSimpleTests, GenVector)
+{
+   ROOT::RDataFrame t(1);
+   auto aa = t.Define("hh", "ROOT::Math::PtEtaPhiMVector(1,1,1,1)").Define("h", "hh.Rapidity()");
+   auto m = aa.Mean("h");
+   EXPECT_TRUE(0 != *m);
+}
+
 TEST(RDFSimpleTests, AutomaticNamesOfHisto1DAndGraph)
 {
    auto df = RDataFrame(1).Define("x", [](){return 1;})
