@@ -155,7 +155,6 @@ ROOT_LINKER_LIBRARY(GenVector
     src/BoostY.cxx
     src/BoostZ.cxx
     src/EulerAngles.cxx
-    src/GenVector_exception.cxx
     src/LorentzRotation.cxx
     src/Quaternion.cxx
     src/QuaternionXaxial.cxx
