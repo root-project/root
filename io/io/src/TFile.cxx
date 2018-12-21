@@ -165,7 +165,7 @@ static struct AddPseudoGlobals {
 AddPseudoGlobals() {
    // User "gCling" as synonym for "libCore static initialization has happened".
    // This code here must not trigger it.
-   TGlobalMappedFunction::AddFunctor("gFile", "TFile*", TFile::CurrentFile);
+   TGlobalMappedFunction::MakeFunctor("gFile", "TFile*", TFile::CurrentFile);
 }
 } gAddPseudoGlobals;
 }
