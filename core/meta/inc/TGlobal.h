@@ -22,9 +22,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TDictionary.h"
+#include "TList.h"
 
 #include <functional>
-
 
 class TGlobal : public TDictionary {
 
@@ -54,13 +54,7 @@ public:
 class TGlobalMappedFunction : public TGlobal {
 public:
    typedef void *(*GlobalFunc_t)();
-   typedef std::function<void *()> GlobalFunctor_t;
    TGlobalMappedFunction(const char *name, const char *type, GlobalFunc_t funcPtr) : fFuncPtr(funcPtr)
-   {
-      SetNameTitle(name, type);
-   }
-   TGlobalMappedFunction(const char *name, const char *type, void *dummyPtr, GlobalFunctor_t functor)
-      : fFuncPtr((GlobalFunc_t)dummyPtr), fFunctor(functor)
    {
       SetNameTitle(name, type);
    }
@@ -76,15 +70,19 @@ public:
    static void Add(TGlobalMappedFunction *gmf);
 
    template<typename GlobFunc>
-   static void AddFunctor(const char *name, const char *type, GlobFunc &func)
+   static TGlobalMappedFunction *MakeFunctor(const char *name, const char *type, GlobFunc &func, bool add_globals = true)
    {
-      Add(new TGlobalMappedFunction(name, type, (void*) &func, [func]{ return (void*) func(); }));
+      auto glob = new TGlobalMappedFunction(name, type, (GlobalFunc_t) ((void*) &func));
+      glob->fFunctor = [&func] { return (void*) func(); };
+      if (add_globals)
+         Add(glob);
+      return glob;
    }
 
 private:
-   GlobalFunc_t fFuncPtr; // Function to call to get the address
+   GlobalFunc_t fFuncPtr{nullptr}; // Function to call to get the address
 
-   GlobalFunctor_t fFunctor; // functor which correctly returns pointer
+   std::function<void *()> fFunctor; // functor which correctly returns pointer
 
    TGlobalMappedFunction &operator=(const TGlobal &); // not implemented.
    // Some of the special ones are created before the list is create e.g gFile
