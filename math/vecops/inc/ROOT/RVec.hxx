@@ -1457,12 +1457,6 @@ TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
 // Allow to use RVec as ROOT::RVec
 using ROOT::VecOps::RVec;
 
-namespace Internal {
-namespace VecOps {
-
-} // End of VecOps NS
-} // End of Internal NS
-
 } // End of ROOT NS
 
 #endif
