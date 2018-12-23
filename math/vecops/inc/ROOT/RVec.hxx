@@ -48,23 +48,17 @@ namespace VecOps {
 // We use this helper to workaround a limitation of compilers such as
 // gcc 4.8 amd clang on osx 10.14 for which std::vector<bool>::emplace_back
 // is not defined.
-// We have the template for all types and a partial specialisation 
-// for T == bool, which uses push_back.
-template<typename T, typename... Args>
-struct REmplaceBackHelper{
-static void EmplaceBack(T &v, Args &&... args)
+template <typename T, typename... Args>
+void EmplaceBack(T &v, Args &&... args)
 {
-   v.emplace_back(std::forward<Args>(args)...); 
+   v.emplace_back(std::forward<Args>(args)...);
 }
-};
 
-template<typename... Args>
-struct REmplaceBackHelper<std::vector<bool>, Args...>{
-static void EmplaceBack(std::vector<bool> &v, Args &&... args)
+template <typename... Args>
+void EmplaceBack(std::vector<bool> &v, Args &&... args)
 {
-   v.push_back(std::forward<Args>(args)...); 
+   v.push_back(std::forward<Args>(args)...);
 }
-};
 
 } // End of VecOps NS
 } // End of Internal NS
@@ -354,8 +348,7 @@ public:
    template <class... Args>
    reference emplace_back(Args &&... args)
    {
-      using EBHelper_t = ROOT::Internal::VecOps::REmplaceBackHelper<Impl_t, Args...>;
-      EBHelper_t::EmplaceBack(fData, std::forward<Args>(args)...);
+      ROOT::Internal::VecOps::EmplaceBack(fData, std::forward<Args>(args)...);
       return fData.back();
    }
    /// This method is intended only for arithmetic types unlike the std::vector
