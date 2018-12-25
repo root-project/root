@@ -179,6 +179,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     TMVA/Version.h
     TMVA/Volume.h
     TMVA/RTensor.hxx
+    TMVA/RTensorUtils.hxx
   SOURCES
     src/BDTEventWrapper.cxx
     src/BinarySearchTree.cxx
