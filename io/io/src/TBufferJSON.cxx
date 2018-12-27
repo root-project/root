@@ -1780,7 +1780,9 @@ void TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
          AppendOutput("{");
       }
    } else {
+      auto mcnt = stack ? stack->fMemberCnt : 1;
       stack = PushStack(0);
+      stack->fMemberCnt = mcnt;
    }
 
    stack->fInfo = sinfo;
