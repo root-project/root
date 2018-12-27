@@ -983,16 +983,15 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member, TClas
 
 TJSONStackObj *TBufferJSON::PushStack(Int_t inclevel, void *readnode)
 {
-   TJSONStackObj *next = new TJSONStackObj();
+   auto next = new TJSONStackObj();
    next->fLevel = inclevel;
-   TJSONStackObj *prev = (fStack.size() > 0) ? Stack() : nullptr;
    if (IsReading()) {
       next->fNode = (nlohmann::json *)readnode;
-   } else if (prev) {
+   } else if (fStack.size() > 0) {
+      auto prev = Stack();
       next->fLevel += prev->fLevel;
-      next->fMemberPtr = (inclevel > 0) ? &next->fMemberCnt : prev->fMemberPtr;
+      next->fMemberPtr = prev->fMemberPtr;
    }
-
    fStack.push_back(next);
    return next;
 }
@@ -1030,6 +1029,40 @@ void TBufferJSON::AppendOutput(const char *line0, const char *line1)
          fOutput->Append(line1);
       }
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Start object element with typeinfo
+
+TJSONStackObj *TBufferJSON::JsonStartObjectWrite(const TClass *obj_class, TStreamerInfo *info)
+{
+   auto stack = PushStack(2);
+
+   // new object started - assign own member counter
+   stack->fMemberPtr = &stack->fMemberCnt;
+
+   if ((fTypeNameTag.Length() > 0) && !IsSkipClassInfo(obj_class)) {
+      // stack->fMemberCnt = 1; // default value, comment out here
+      AppendOutput("{", "\"");
+      AppendOutput(fTypeNameTag.Data());
+      AppendOutput("\"");
+      AppendOutput(fSemicolon.Data());
+      AppendOutput("\"");
+      AppendOutput(obj_class->GetName());
+      AppendOutput("\"");
+      if (fTypeVersionTag.Length() > 0) {
+         AppendOutput(stack->NextMemberSeparator(), "\"");
+         AppendOutput(fTypeVersionTag.Data());
+         AppendOutput("\"");
+         AppendOutput(fSemicolon.Data());
+         AppendOutput(Form("%d", (int)(info ? info->GetClassVersion() : obj_class->GetClassVersion())));
+      }
+   } else {
+      stack->fMemberCnt = 0; // exclude typename
+      AppendOutput("{");
+   }
+
+   return stack;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1188,26 +1221,10 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          MapObject(obj, cl, fJsonrCnt + 1); // +1 used
       }
 
-      fJsonrCnt++; // object counts is important in dereferencing part
+      fJsonrCnt++; // object counts required in dereferencing part
 
-      stack = PushStack(2);
-      if ((fTypeNameTag.Length() > 0) && !IsSkipClassInfo(cl)) {
-         AppendOutput("{", "\"");
-         AppendOutput(fTypeNameTag.Data());
-         AppendOutput("\"");
-         AppendOutput(fSemicolon.Data());
-         AppendOutput("\"");
-         AppendOutput(cl->GetName());
-         AppendOutput("\"");
-         if (fTypeVersionTag.Length() > 0) {
-            AppendOutput(",", Form("\"%s\"", fTypeVersionTag.Data()));
-            AppendOutput(fSemicolon.Data());
-            AppendOutput(Form("%d", (int)cl->GetClassVersion()));
-         }
-      } else {
-         stack->fMemberCnt = 0; // exclude typename
-         AppendOutput("{");
-      }
+      stack = JsonStartObjectWrite(cl);
+
    } else {
       // for array, string and STL collections different handling -
       // they not recognized at the end as objects in JSON
@@ -1776,24 +1793,7 @@ void TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
 
       fJsonrCnt++; // count object, but do not keep reference
 
-      stack = PushStack(2);
-      if ((fTypeNameTag.Length() > 0) && !IsSkipClassInfo(cl)) {
-         AppendOutput("{", "\"");
-         AppendOutput(fTypeNameTag.Data());
-         AppendOutput("\"");
-         AppendOutput(fSemicolon.Data());
-         AppendOutput("\"");
-         AppendOutput(cl->GetName());
-         AppendOutput("\"");
-         if (fTypeVersionTag.Length() > 0) {
-            AppendOutput(",", Form("\"%s\"", fTypeVersionTag.Data()));
-            AppendOutput(fSemicolon.Data());
-            AppendOutput(Form("%d", sinfo ? sinfo->GetClassVersion() : (int)cl->GetClassVersion()));
-         }
-      } else {
-         stack->fMemberCnt = 0; // exclude typename
-         AppendOutput("{");
-      }
+      stack = JsonStartObjectWrite(cl, sinfo);
    } else {
       stack = PushStack(0);
    }
