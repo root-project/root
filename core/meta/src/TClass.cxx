@@ -123,6 +123,9 @@ using namespace std;
 TVirtualMutex* gInterpreterMutex = 0;
 
 namespace {
+
+   static constexpr const char kUndeterminedClassInfoName[] = "<NOT YET DETERMINED FROM fClassInfo>";
+
    class TMmallocDescTemp {
    private:
       void *fSave;
@@ -1525,7 +1528,7 @@ void TClass::Init(const char *name, Version_t cversion,
    if (fClassInfo) {
       SetTitle(gCling->ClassInfo_Title(fClassInfo));
       if ( fDeclFileName == 0 || fDeclFileName[0] == '\0' ) {
-         fDeclFileName = gInterpreter->ClassInfo_FileName( fClassInfo );
+	fDeclFileName = kUndeterminedClassInfoName;
          // Missing interface:
          // fDeclFileLine = gInterpreter->ClassInfo_FileLine( fClassInfo );
 
@@ -3294,6 +3297,16 @@ TDataMember *TClass::GetDataMember(const char *datamember) const
    } else {
       return (TDataMember *)((TClass*)this)->GetListOfDataMembers(kFALSE)->FindObject(start_name);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return name of the file containing the declaration of this class.
+
+const char *TClass::GetDeclFileName() const
+{
+   if (fDeclFileName == kUndeterminedClassInfoName)
+      return gInterpreter->ClassInfo_FileName( fClassInfo );
+   return fDeclFileName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

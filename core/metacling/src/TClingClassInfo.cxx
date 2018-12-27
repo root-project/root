@@ -827,6 +827,8 @@ int TClingClassInfo::InternalNext()
 {
    R__LOCKGUARD(gInterpreterMutex);
 
+   fDeclFileName.clear(); // invalidate decl file name.
+
    cling::Interpreter::PushTransactionRAII RAII(fInterp);
    if (fFirstTime) {
       // fDecl must be a DeclContext in order to iterate.
@@ -1231,7 +1233,8 @@ const char *TClingClassInfo::FileName()
    if (!IsValid()) {
       return 0;
    }
-   fDeclFileName = ROOT::TMetaUtils::GetFileName(*GetDecl(), *fInterp);
+   if (fDeclFileName.empty())
+     fDeclFileName = ROOT::TMetaUtils::GetFileName(*GetDecl(), *fInterp);
    return fDeclFileName.c_str();
 }
 
