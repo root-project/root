@@ -1071,7 +1071,7 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
 
    } else {
       if (first_element)
-         AppendOutput("\"");
+         AppendOutput(nullptr, "\"");
       else
          AppendOutput(",", "\"");
       AppendOutput(elem_name);
@@ -1328,9 +1328,8 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
 
    PopStack();
 
-   if (special_kind <= 0) {
-      AppendOutput(0, "}");
-   }
+   if (special_kind <= 0)
+      AppendOutput(nullptr, "}");
 
 post_process:
 
