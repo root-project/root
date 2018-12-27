@@ -264,7 +264,8 @@ public:
    Bool_t fIsObjStarted{kFALSE};        //! indicate that object writing started, should be closed in postprocess
    Bool_t fAccObjects{kFALSE};          //! if true, accumulate whole objects in values
    std::vector<std::string> fValues;    //! raw values
-   Int_t fMemberCnt{1};                 //! count number of object members, normally _typename is first member
+   int fMemberCnt{1};                   //! count number of object members, normally _typename is first member
+   int *fMemberPtr{nullptr};            //! pointer on members counter, can be inherit from parent stack objects
    Int_t fLevel{0};                     //! indent level
    std::unique_ptr<TArrayIndexProducer> fIndx; //! producer of ndim indexes
    nlohmann::json *fNode{nullptr};      //! JSON node, used for reading
@@ -292,10 +293,18 @@ public:
 
    void PushIntValue(Int_t v) { fValues.emplace_back(std::to_string(v)); }
 
+   ////////////////////////////////////////////////////////////////////////
+   /// returns separator for data members
+   const char *NextMemberSeparator()
+   {
+      return (!fMemberPtr || ((*fMemberPtr)++ > 0)) ? ","  : "";
+   }
+
    Bool_t IsJsonString() { return fNode && fNode->is_string(); }
 
-   // checks if specified JSON node is array (compressed or not compressed)
-   // returns length of array (or -1 if failure)
+   ////////////////////////////////////////////////////////////////////////
+   /// checks if specified JSON node is array (compressed or not compressed)
+   /// returns length of array (or -1 if failure)
    Int_t IsJsonArray(nlohmann::json *json = nullptr)
    {
       if (!json)
@@ -976,9 +985,14 @@ TJSONStackObj *TBufferJSON::PushStack(Int_t inclevel, void *readnode)
 {
    TJSONStackObj *next = new TJSONStackObj();
    next->fLevel = inclevel;
-   if (fStack.size() > 0)
-      next->fLevel += Stack()->fLevel;
-   next->fNode = (nlohmann::json *)readnode;
+   TJSONStackObj *prev = (fStack.size() > 0) ? Stack() : nullptr;
+   if (IsReading()) {
+      next->fNode = (nlohmann::json *)readnode;
+   } else if (prev) {
+      next->fLevel += prev->fLevel;
+      next->fMemberPtr = (inclevel > 0) ? &next->fMemberCnt : prev->fMemberPtr;
+   }
+
    fStack.push_back(next);
    return next;
 }
@@ -1021,7 +1035,7 @@ void TBufferJSON::AppendOutput(const char *line0, const char *line1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Start new class member in JSON structures
 
-void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *base_class, Bool_t first_element)
+void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *base_class)
 {
    const char *elem_name = nullptr;
    Int_t special_kind = JsonSpecialClass(base_class);
@@ -1070,10 +1084,7 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
       }
 
    } else {
-      if (first_element)
-         AppendOutput(nullptr, "\"");
-      else
-         AppendOutput(",", "\"");
+      AppendOutput(Stack()->NextMemberSeparator(), "\"");
       AppendOutput(elem_name);
       AppendOutput("\"");
       AppendOutput(fSemicolon.Data());
@@ -1181,7 +1192,9 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
 
       stack = PushStack(2);
       if ((fTypeNameTag.Length() > 0) && !IsSkipClassInfo(cl)) {
-         AppendOutput("{", Form("\"%s\"", fTypeNameTag.Data()));
+         AppendOutput("{", "\"");
+         AppendOutput(fTypeNameTag.Data());
+         AppendOutput("\"");
          AppendOutput(fSemicolon.Data());
          AppendOutput("\"");
          AppendOutput(cl->GetName());
@@ -1348,11 +1361,12 @@ post_process:
 
 void TBufferJSON::JsonWriteCollection(TCollection *col, const TClass *)
 {
-   AppendOutput(",", "\"name\"");
+   AppendOutput(Stack()->NextMemberSeparator(), "\"name\"");
    AppendOutput(fSemicolon.Data());
    AppendOutput("\"");
    AppendOutput(col->GetName());
-   AppendOutput("\",", "\"arr\"");
+   AppendOutput("\"");
+   AppendOutput(Stack()->NextMemberSeparator(), "\"arr\"");
    AppendOutput(fSemicolon.Data());
 
    // collection treated as JS Array
@@ -1409,7 +1423,7 @@ void TBufferJSON::JsonWriteCollection(TCollection *col, const TClass *)
 
    if (islist) {
       sopt.Append("]");
-      AppendOutput(",", "\"opt\"");
+      AppendOutput(Stack()->NextMemberSeparator(), "\"opt\"");
       AppendOutput(fSemicolon.Data());
       AppendOutput(sopt.Data());
    }
@@ -1764,7 +1778,9 @@ void TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
 
       stack = PushStack(2);
       if ((fTypeNameTag.Length() > 0) && !IsSkipClassInfo(cl)) {
-         AppendOutput("{", Form("\"%s\"", fTypeNameTag.Data()));
+         AppendOutput("{", "\"");
+         AppendOutput(fTypeNameTag.Data());
+         AppendOutput("\"");
          AppendOutput(fSemicolon.Data());
          AppendOutput("\"");
          AppendOutput(cl->GetName());
@@ -1779,9 +1795,7 @@ void TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
          AppendOutput("{");
       }
    } else {
-      auto mcnt = stack ? stack->fMemberCnt : 1;
       stack = PushStack(0);
-      stack->fMemberCnt = mcnt;
    }
 
    stack->fInfo = sinfo;
@@ -1892,13 +1906,11 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
 
    TClass *base_class = elem->IsBase() ? elem->GetClassPointer() : nullptr;
 
-   Bool_t first_element = (stack->fMemberCnt++ == 0);
-
    stack = PushStack(0, stack->fNode);
    stack->fElem = (TStreamerElement *)elem;
    stack->fIsElemOwner = (number < 0);
 
-   JsonStartElement(elem, base_class, first_element);
+   JsonStartElement(elem, base_class);
 
    if (base_class && IsReading())
       stack->fClVersion = base_class->GetClassVersion();
@@ -2142,17 +2154,17 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_
       if (cnt < 2 || cnt > 3) {
          if (gDebug > 0)
             Error("PerformPostProcessing", "When storing TObject/TRef, strange number of items %d", cnt);
-         AppendOutput(",", "\"dummy\"");
+         AppendOutput(stack->NextMemberSeparator(), "\"dummy\"");
          AppendOutput(fSemicolon.Data());
       } else {
-         AppendOutput(",", "\"fUniqueID\"");
+         AppendOutput(stack->NextMemberSeparator(), "\"fUniqueID\"");
          AppendOutput(fSemicolon.Data());
          AppendOutput(stack->fValues[0].c_str());
-         AppendOutput(",", "\"fBits\"");
+         AppendOutput(stack->NextMemberSeparator(), "\"fBits\"");
          AppendOutput(fSemicolon.Data());
          AppendOutput((stack->fValues.size() > 1) ? stack->fValues[1].c_str() : fValue.Data());
          if (cnt == 3) {
-            AppendOutput(",", "\"fPID\"");
+            AppendOutput(stack->NextMemberSeparator(), "\"fPID\"");
             AppendOutput(fSemicolon.Data());
             AppendOutput((stack->fValues.size() > 2) ? stack->fValues[2].c_str() : fValue.Data());
          }
