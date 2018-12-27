@@ -264,7 +264,7 @@ public:
    Bool_t fIsObjStarted{kFALSE};        //! indicate that object writing started, should be closed in postprocess
    Bool_t fAccObjects{kFALSE};          //! if true, accumulate whole objects in values
    std::vector<std::string> fValues;    //! raw values
-   Int_t fMemeberCnt{1};                //! count members values of current object, _typename is counted as first
+   Int_t fMemberCnt{1};                 //! count number of object members, normally _typename is first member
    Int_t fLevel{0};                     //! indent level
    std::unique_ptr<TArrayIndexProducer> fIndx; //! producer of ndim indexes
    nlohmann::json *fNode{nullptr};      //! JSON node, used for reading
@@ -1192,7 +1192,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
             AppendOutput(Form("%d", (int)cl->GetClassVersion()));
          }
       } else {
-         stack->fMemeberCnt = 0; // exclude typename
+         stack->fMemberCnt = 0; // exclude typename
          AppendOutput("{");
       }
    } else {
@@ -1776,7 +1776,7 @@ void TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
             AppendOutput(Form("%d", sinfo ? sinfo->GetClassVersion() : (int)cl->GetClassVersion()));
          }
       } else {
-         stack->fMemeberCnt = 0; // exclude typename
+         stack->fMemberCnt = 0; // exclude typename
          AppendOutput("{");
       }
    } else {
@@ -1891,7 +1891,7 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
 
    TClass *base_class = elem->IsBase() ? elem->GetClassPointer() : nullptr;
 
-   Bool_t first_element = (stack->fMemeberCnt++ == 0);
+   Bool_t first_element = (stack->fMemberCnt++ == 0);
 
    stack = PushStack(0, stack->fNode);
    stack->fElem = (TStreamerElement *)elem;
