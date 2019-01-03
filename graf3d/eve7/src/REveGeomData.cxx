@@ -476,7 +476,7 @@ void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces, s
 
    // finally, create binary data with all produced shapes
 
-   auto res = TBufferJSON::ToJSON(&visibles, 3);
+   auto res = TBufferJSON::ToJSON(&visibles, 103);
    json = "DRAW:";
    json.append(res.Data());
 

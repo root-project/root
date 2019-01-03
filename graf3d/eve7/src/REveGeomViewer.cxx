@@ -53,7 +53,7 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
    printf("Get ARG %s\n", arg.c_str());
 
    if (arg=="CONN_READY") {
-      TString buf = TBufferJSON::ToJSON(&fDesc,3);
+      TString buf = TBufferJSON::ToJSON(&fDesc,103);
       std::string sbuf = buf.Data();
       printf("Send description %d\n", buf.Length());
       fWebWindow->Send(connid, sbuf);
