@@ -107,7 +107,11 @@ class REveGeomDescription {
 
    void ScanVisible(REveGeomScanFunc_t func);
 
-   ShapeDescr &FindShapeDescr(TGeoShape *s);
+   ShapeDescr &FindShapeDescr(TGeoShape *shape);
+
+   ShapeDescr &MakeShapeDescr(TGeoShape *shape);
+
+   void CopyMaterialProperties(TGeoVolume *col, REveGeomVisisble &item);
 
 public:
    REveGeomDescription() = default;
@@ -119,6 +123,8 @@ public:
    bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawBinary.size() > 0) && (fDrawIdCut > 0); }
    const std::string &GetDrawJson() const { return fDrawJson; }
    const std::vector<char> &GetDrawBinary() const { return fDrawBinary; }
+
+   int SearchVisibles(const std::string &find, std::string &json, std::vector<char> &binary);
 
    void SelectVolume(TGeoVolume *);
 

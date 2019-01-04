@@ -342,17 +342,75 @@ void ROOT::Experimental::REveGeomDescription::ScanVisible(REveGeomScanFunc_t fun
 /// Find description object for requested shape
 /// If not exists - will be created
 
-ROOT::Experimental::REveGeomDescription::ShapeDescr &ROOT::Experimental::REveGeomDescription::FindShapeDescr(TGeoShape *s)
+ROOT::Experimental::REveGeomDescription::ShapeDescr &ROOT::Experimental::REveGeomDescription::FindShapeDescr(TGeoShape *shape)
 {
-   for (auto &descr: fShapes)
-      if (descr.fShape == s) return descr;
+   for (auto &&descr: fShapes)
+      if (descr.fShape == shape)
+         return descr;
 
-   fShapes.emplace_back(s);
-
+   fShapes.emplace_back(shape);
    auto &elem = fShapes.back();
    elem.id = fShapes.size() - 1;
    return elem;
 }
+
+
+/////////////////////////////////////////////////////////////////////
+/// Find description object and create render information
+
+ROOT::Experimental::REveGeomDescription::ShapeDescr &ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape)
+{
+   auto &elem = FindShapeDescr(shape);
+
+   if (!elem.fRenderData) {
+      TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *>(shape);
+
+      auto poly = std::make_unique<REveGeoPolyShape>();
+
+      if (comp) {
+         poly->BuildFromComposite(comp, GetNSegments());
+      } else {
+         poly->BuildFromShape(shape, GetNSegments());
+      }
+
+      elem.fRenderData = std::make_unique<REveRenderData>();
+
+      poly->FillRenderData(*elem.fRenderData);
+
+      elem.nfaces = poly->GetNumFaces();
+   }
+
+   return elem;
+}
+
+void ROOT::Experimental::REveGeomDescription::CopyMaterialProperties(TGeoVolume *volume, REveGeomVisisble &item)
+{
+   TColor *col{nullptr};
+
+   if ((volume->GetFillColor() > 1) && (volume->GetLineColor() == 1))
+      col = gROOT->GetColor(volume->GetFillColor());
+   else if (volume->GetLineColor() >= 0)
+      col = gROOT->GetColor(volume->GetLineColor());
+
+   if (volume->GetMedium() && (volume->GetMedium() != TGeoVolume::DummyMedium()) && volume->GetMedium()->GetMaterial()) {
+      auto material = volume->GetMedium()->GetMaterial();
+
+      auto fillstyle = material->GetFillStyle();
+      if ((fillstyle>=3000) && (fillstyle<=3100)) item.opacity = (3100 - fillstyle) / 100.;
+      if (!col) col = gROOT->GetColor(material->GetFillColor());
+   }
+
+   if (col) {
+      item.color = std::to_string((int)(col->GetRed()*255)) + "," +
+                   std::to_string((int)(col->GetGreen()*255)) + "," +
+                   std::to_string((int)(col->GetBlue()*255));
+      if (item.opacity == 1.)
+        item.opacity = col->GetAlpha();
+   } else {
+      item.color = "200,200,200";
+   }
+}
+
 
 /////////////////////////////////////////////////////////////////////
 /// Collect all information required to draw geometry on the client
@@ -383,25 +441,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces)
 
       // now we need to create TEveGeoPolyShape, which can provide all rendering data
 
-      auto &shape_descr = FindShapeDescr(shape);
-
-      if (!shape_descr.fRenderData) {
-         TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *>(shape);
-
-         auto poly = std::make_unique<REveGeoPolyShape>();
-
-         if (comp) {
-            poly->BuildFromComposite(comp, GetNSegments());
-         } else {
-            poly->BuildFromShape(shape, GetNSegments());
-         }
-
-         shape_descr.fRenderData = std::make_unique<REveRenderData>();
-
-         poly->FillRenderData(*shape_descr.fRenderData);
-
-         shape_descr.nfaces = poly->GetNumFaces();
-      }
+      auto &shape_descr = MakeShapeDescr(shape);
 
       // check how many faces are created
       totalnumfaces += shape_descr.nfaces * viscnt[sid];
@@ -427,42 +467,16 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces)
          visibles.emplace_back(node.id, stack);
 
          auto &item = visibles.back();
-
          auto volume = fNodes[node.id]->GetVolume();
+         CopyMaterialProperties(volume, item);
 
-         TColor *col{nullptr};
-
-         if ((volume->GetFillColor() > 1) && (volume->GetLineColor() == 1))
-            col = gROOT->GetColor(volume->GetFillColor());
-         else if (volume->GetLineColor() >= 0)
-            col = gROOT->GetColor(volume->GetLineColor());
-
-
-         if (volume->GetMedium() && (volume->GetMedium() != TGeoVolume::DummyMedium()) && volume->GetMedium()->GetMaterial()) {
-            auto material = volume->GetMedium()->GetMaterial();
-
-            auto fillstyle = material->GetFillStyle();
-            if ((fillstyle>=3000) && (fillstyle<=3100)) item.opacity = (3100 - fillstyle) / 100.;
-            if (!col) col = gROOT->GetColor(material->GetFillColor());
-         }
-
-         if (col) {
-            item.color = std::to_string((int)(col->GetRed()*255)) + "," +
-                         std::to_string((int)(col->GetGreen()*255)) + "," +
-                         std::to_string((int)(col->GetBlue()*255));
-            if (item.opacity == 1.)
-              item.opacity = col->GetAlpha();
-         } else {
-            item.color = "200,200,200";
-         }
-
-         auto &sd = FindShapeDescr(volume->GetShape());
-         auto *rd = sd.fRenderData.get();
+         auto &sd = MakeShapeDescr(volume->GetShape());
+         auto &rd = sd.fRenderData;
 
          if (sd.render_offest < 0) {
             sd.render_offest = render_offset;
             render_offset += rd->GetBinarySize();
-            render_data.emplace_back(rd);
+            render_data.emplace_back(rd.get());
          }
 
          item.rnr_offset = sd.render_offest;
@@ -494,3 +508,84 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces)
    return true;
 }
 
+/////////////////////////////////////////////////////////////////////
+/// Search visible nodes for provided name
+/// If number of found elements less than 100, create description and shapes for them
+/// Returns number of match elements
+
+int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &find, std::string &json, std::vector<char> &binary)
+{
+   std::vector<int> viscnt(fDesc.size(), 0);
+
+   int nmatches = 0;
+
+   // first count how many times each individual node appears
+   ScanVisible([&viscnt,&find,&nmatches](REveGeomNode &node, std::vector<int> &) {
+      if (node.name.compare(0, find.length(), find)==0) {
+         nmatches++;
+         viscnt[node.id]++;
+      };
+      return true;
+   });
+
+   json.clear();
+   binary.clear();
+
+   // do not send too much data, limit could be made configurable later
+   if ((nmatches >= 100) || (nmatches==0)) return nmatches;
+
+   // finally we should create data for streaming to the client
+   // it includes list of visible nodes and rawdata
+
+   for (auto &s: fShapes)
+      s.render_offest = -1;
+   std::vector<REveGeomVisisble> visibles;
+   std::vector<REveRenderData*> render_data; // data which should be send as binary
+   int render_offset{0}; /// current offset
+
+   ScanVisible([&, this](REveGeomNode &node, std::vector<int> &stack) {
+      // select only nodes which should match
+      if (node.name.compare(0, find.length(), find) != 0)
+         return true;
+
+      visibles.emplace_back(node.id, stack);
+      auto &item = visibles.back();
+      auto volume = fNodes[node.id]->GetVolume();
+
+      CopyMaterialProperties(volume, item);
+
+      auto &sd = MakeShapeDescr(volume->GetShape());
+
+      auto &rd = sd.fRenderData;
+
+      if (sd.render_offest < 0) {
+         sd.render_offest = render_offset;
+         render_offset += rd->GetBinarySize();
+         render_data.emplace_back(rd.get());
+      }
+
+      item.rnr_offset = sd.render_offest;
+
+      item.rnr_func = rd->GetRnrFunc();
+      item.vert_size = rd->SizeV();
+      item.norm_size = rd->SizeN();
+      item.index_size = rd->SizeI();
+      // item.trans_size = rd->SizeT();
+      return true;
+   });
+
+   auto res = TBufferJSON::ToJSON(&visibles, 103);
+   json = "EXTRA:";
+   json.append(res.Data());
+
+   binary.resize(render_offset);
+   int off{0};
+
+   for (auto rd : render_data) {
+      auto sz = rd->Write( &binary[off], binary.size() - off );
+      off += sz;
+   }
+   assert(render_offset == off);
+
+   return nmatches;
+}
