@@ -25,6 +25,7 @@
 #include "THashTable.h"
 #include "TTree.h"
 #include "TTreeReaderUtils.h"
+#include "TNotifyLink.h"
 
 #include <deque>
 #include <iterator>
@@ -133,6 +134,12 @@ public:
       kEntryUnknownError ///< LoadTree return less than -4, likely a 'newer' error code.
    };
 
+   enum ELoadTreeStatus {
+      kLoadTreeNone = 0, ///< default state, Notify has not been called yet.
+      kInternalLoadTree, ///< Notify/LoadTree was last called from SetEntryBase
+      kExternalLoadTree  ///< User code called LoadTree directly.
+   };
+
    static constexpr const char * const fgEntryStatusText[kEntryBeyondEnd + 1] = {
       "valid entry",
       "the tree does not exist",
@@ -220,6 +227,8 @@ public:
    /// through `reader.GetEntryList()->GetEntry(reader.GetCurrentEntry())`.
    Long64_t GetCurrentEntry() const { return fEntry; }
 
+   Bool_t Notify();
+
    /// Return an iterator to the 0th TTree entry.
    Iterator_t begin() {
       return Iterator_t(*this, 0);
@@ -265,13 +274,15 @@ private:
 
    enum EStatusBits {
       kBitIsChain = BIT(14), ///< our tree is a chain
-      kBitHaveWarnedAboutEntryListAttachedToTTree = BIT(15) ///< the tree had a TEntryList and we have warned about that
+      kBitHaveWarnedAboutEntryListAttachedToTTree = BIT(15), ///< the tree had a TEntryList and we have warned about that
+      kBitSetEntryBaseCallingLoadTree = BIT(16) ///< SetEntryBase is in the process of calling TChain/TTree::LoadTree.
    };
 
    TTree* fTree = nullptr; ///< tree that's read
    TEntryList* fEntryList = nullptr; ///< entry list to be used
    EEntryStatus fEntryStatus = kEntryNotLoaded; ///< status of most recent read request
-   Int_t fMostRecentTreeNumber = -1; ///< TTree::GetTreeNumber() of the most recent tree
+   ELoadTreeStatus fLoadTreeStatus = kLoadTreeNone; ///< Indicator on how LoadTree was called 'last' time.
+   std::unique_ptr<TNotifyLink<TTreeReader>> fNotify; // Callback object used by the TChain to update this proxy
    ROOT::Internal::TBranchProxyDirector* fDirector = nullptr; ///< proxying director, owned
    std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director
    NamedProxies_t fProxies; ///< attached ROOT::TNamedBranchProxies; owned
