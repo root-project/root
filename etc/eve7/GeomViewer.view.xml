@@ -9,6 +9,7 @@
    <Page title="" showNavButton="false" showFooter="false" showSubHeader="false">
       <headerContent>
          <OverflowToolbar id="otb1">
+            <SearchField liveChange="onSearch" width="50%"/>
             <MenuButton text="View" type="Transparent"  enabled="true">
               <menu>
                 <Menu itemSelected="onViewMenuAction">
@@ -66,7 +67,7 @@
            id="treeTable"
            selectionMode="Single"
            enableColumnReordering="false"
-           expandFirstLevel="false"
+           expandFirstLevel="true"
            visibleRowCountMode="Auto"
            rows="{ path:'/Nodes',  parameters : { arrayNames: ['chlds']}}" >
            
