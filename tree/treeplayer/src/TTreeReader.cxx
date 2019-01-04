@@ -359,23 +359,45 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
    TTree* treeToCallLoadOn = local ? fTree->GetTree() : fTree;
    Long64_t loadResult = treeToCallLoadOn->LoadTree(entryAfterList);
 
-   // ROOT-9628 We cover here the case when:
-   // - We deal with a TChain
-   // - The last file is opened
-   // - The TTree is not correctly loaded
-   // The system is robust against issues with TTrees associated to the chain
-   // when they are not at the end of it.
-   if (loadResult == -3 && TestBit(kBitIsChain) && !fTree->GetTree()) {
-      Warning("SetEntryBase()",
-              "There was an issue opening the last file associated to the TChain "
-              "being processed.");
-      fEntryStatus = kEntryChainFileError;
-      return fEntryStatus;
-   }
+   if (loadResult < 0) {
+      // ROOT-9628 We cover here the case when:
+      // - We deal with a TChain
+      // - The last file is opened
+      // - The TTree is not correctly loaded
+      // The system is robust against issues with TTrees associated to the chain
+      // when they are not at the end of it.
+      if (loadResult == -3 && TestBit(kBitIsChain) && !fTree->GetTree()) {
+         Warning("SetEntryBase()",
+               "There was an issue opening the last file associated to the TChain "
+               "being processed.");
+         fEntryStatus = kEntryChainFileError;
+         return fEntryStatus;
+      }
 
-   if (loadResult == -2) {
-      fDirector->SetTree(nullptr);
-      fEntryStatus = kEntryNotFound;
+      if (loadResult == -2) {
+         fDirector->SetTree(nullptr);
+         fEntryStatus = kEntryNotFound;
+         return fEntryStatus;
+      }
+
+      if (loadResult == -1) {
+         // The chain is empty
+         fEntryStatus = kEntryNotFound;
+         return fEntryStatus;
+      }
+
+      if (loadResult == -4) {
+         // The TChainElement corresponding to the entry is missing or
+         // the TTree is missing from the file.
+         fEntryStatus = kEntryNotFound;
+         return fEntryStatus;
+      }
+
+      Warning("SetEntryBase()",
+              "Unexpected error '%lld' in %::LoadTree", loadResult,
+              treeToCallLoadOn->IsA()->GetName());
+
+      fEntryStatus = kEntryUnknownError;
       return fEntryStatus;
    }
 
