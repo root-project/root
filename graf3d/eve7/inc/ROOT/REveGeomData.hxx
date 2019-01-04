@@ -95,6 +95,10 @@ class REveGeomDescription {
    int fNSegments{0};               ///<! number of segments for cylindrical shapes
    std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
 
+   std::string fDrawJson;           ///<! JSON with main nodes drawn by client
+   std::vector<char> fDrawBinary;   ///<! binary data for main draw nodes
+   int fDrawIdCut{0};               ///<! sortid used for selection of most-significant nodes
+
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 
    void ScanNode(TGeoNode *node, std::vector<int> &numbers, int offset);
@@ -110,7 +114,11 @@ public:
 
    void Build(TGeoManager *mgr);
 
-   void CollectVisibles(int maxnumfaces, std::string &json, std::vector<char> &binary);
+   bool CollectVisibles(int maxnumfaces);
+
+   bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawBinary.size() > 0) && (fDrawIdCut > 0); }
+   const std::string &GetDrawJson() const { return fDrawJson; }
+   const std::vector<char> &GetDrawBinary() const { return fDrawBinary; }
 
    void SelectVolume(TGeoVolume *);
 
