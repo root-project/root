@@ -358,7 +358,7 @@ ROOT::Experimental::REveGeomDescription::ShapeDescr &ROOT::Experimental::REveGeo
 /// Collect all information required to draw geometry on the client
 /// This includes list of each visible nodes, meshes and matrixes
 
-void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces, std::string &json, std::vector<char> &binary)
+bool ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces)
 {
    std::vector<int> viscnt(fDesc.size(), 0);
 
@@ -368,11 +368,13 @@ void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces, s
       return true;
    });
 
-   int sortidcut{0}, totalnumfaces{0}, totalnumnodes{0};
+   int totalnumfaces{0}, totalnumnodes{0};
+
+   fDrawIdCut = 0;
 
    // build all shapes in volume decreasing order
    for (auto &sid: fSortMap) {
-      sortidcut++; //
+      fDrawIdCut++; //
       auto &desc = fDesc[sid];
       if ((viscnt[sid] <= 0) && (desc.vol <= 0)) continue;
 
@@ -421,7 +423,7 @@ void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces, s
    int render_offset{0}; /// current offset
 
    ScanVisible([&, this](REveGeomNode &node, std::vector<int> &stack) {
-      if (node.sortid < sortidcut) {
+      if (node.sortid < fDrawIdCut) {
          visibles.emplace_back(node.id, stack);
 
          auto &item = visibles.back();
@@ -477,16 +479,18 @@ void ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces, s
    // finally, create binary data with all produced shapes
 
    auto res = TBufferJSON::ToJSON(&visibles, 103);
-   json = "DRAW:";
-   json.append(res.Data());
+   fDrawJson = "DRAW:";
+   fDrawJson.append(res.Data());
 
-   binary.resize(render_offset);
+   fDrawBinary.resize(render_offset);
    int off{0};
 
    for (auto rd : render_data) {
-      auto sz = rd->Write( &binary[off], binary.size() - off );
+      auto sz = rd->Write( &fDrawBinary[off], fDrawBinary.size() - off );
       off += sz;
    }
    assert(render_offset == off);
+
+   return true;
 }
 

@@ -58,9 +58,11 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       printf("Send description %d\n", buf.Length());
       fWebWindow->Send(connid, sbuf);
 
-      std::string json;
-      std::vector<char> binary;
-      fDesc.CollectVisibles(100000, json, binary);
+      if (!fDesc.HasDrawData())
+         fDesc.CollectVisibles(100000);
+
+      auto &json = fDesc.GetDrawJson();
+      auto &binary = fDesc.GetDrawBinary();
 
       printf("Produce JSON %d binary %d\n", (int) json.length(), (int) binary.size());
 
