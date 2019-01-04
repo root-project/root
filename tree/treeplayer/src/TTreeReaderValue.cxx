@@ -158,8 +158,12 @@ std::string ROOT::Internal::TTreeReaderValueBase::GetElementTypeName(const std::
 /// The TTreeReader has switched to a new TTree. Update the leaf.
 
 void ROOT::Internal::TTreeReaderValueBase::NotifyNewTree(TTree* newTree) {
-   if (!fHaveLeaf)
+   fProxyReadFunc = &TTreeReaderValueBase::ProxyReadDefaultImpl;
+
+   if (!fHaveLeaf || !newTree) {
+      fLeaf = nullptr;
       return;
+   }
 
    TBranch *myBranch = newTree->GetBranch(fBranchName);
 
