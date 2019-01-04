@@ -354,16 +354,6 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       }
    }
 
-   if (fProxiesSet && fDirector && fDirector->GetReadEntry() == -1
-       && fMostRecentTreeNumber != -1) {
-      // Passed the end of the chain, Restart() was not called:
-      // don't try to load entries anymore. Can happen in these cases:
-      // while (tr.Next()) {something()};
-      // while (tr.Next()) {somethingelse()}; // should not be calling somethingelse().
-      fEntryStatus = kEntryNotFound;
-      return fEntryStatus;
-   }
-
    Int_t treeNumberBeforeLoadTree = fTree->GetTreeNumber();
 
    TTree* treeToCallLoadOn = local ? fTree->GetTree() : fTree;
