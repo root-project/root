@@ -38,7 +38,7 @@ namespace Internal {
    void Reset(Detail::TBranchProxy *x) { x->Reset(); }
 
    // Helper function to call SetReadEntry on all TFriendProxy
-   void ResetReadEntry(TFriendProxy *x) { x->ResetReadEntry(); }
+   void ResetReadEntry(TFriendProxy *fp) { fp->ResetReadEntry(); }
 
    // Helper class to call Update on all TFriendProxy
    struct Update {
@@ -126,15 +126,6 @@ namespace Internal {
 
       if (opt.Length() && opt.Contains("e")) hist->Sumw2();
       return hist;
-   }
-
-   void TBranchProxyDirector::SetReadEntry(Long64_t entry) {
-
-      // move to a new entry to read
-      fEntry = entry;
-      if (!fFriends.empty()) {
-         for_each(fFriends.begin(),fFriends.end(),ResetReadEntry);
-      }
    }
 
    TTree* TBranchProxyDirector::SetTree(TTree *newtree) {

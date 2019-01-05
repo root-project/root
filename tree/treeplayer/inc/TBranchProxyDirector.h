@@ -13,9 +13,10 @@
 #define ROOT_TBranchProxyDirector
 
 #include "Rtypes.h"
-
 #include <list>
 #include <vector>
+#include <algorithm>
+
 
 #ifdef R__OLDHPACC
 namespace std {
@@ -29,10 +30,14 @@ class TTree;
 namespace ROOT {
 namespace Detail {
    class TBranchProxy;
+   class TFriendProxy;
 }
 
 namespace Internal{
    class TFriendProxy;
+
+   // Helper function to call SetReadEntry on all TFriendProxy
+   void ResetReadEntry(TFriendProxy *fp);
 
    class TBranchProxyDirector {
 
@@ -57,7 +62,13 @@ namespace Internal{
       Long64_t GetReadEntry() const { return fEntry; }
       TTree*   GetTree() const { return fTree; };
       // void   Print();
-      void     SetReadEntry(Long64_t entry);
+      void     SetReadEntry(Long64_t entry) {
+         // move to a new entry to read
+         fEntry = entry;
+         if (!fFriends.empty()) {
+            std::for_each(fFriends.begin(), fFriends.end(), ResetReadEntry);
+         }
+      }
       TTree*   SetTree(TTree *newtree);
 
    };
