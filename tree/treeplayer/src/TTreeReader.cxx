@@ -252,7 +252,7 @@ void TTreeReader::Initialize()
 Bool_t TTreeReader::Notify()
 {
 
-   if (TestBit(kBitSetEntryBaseCallingLoadTree)) {
+   if (fSetEntryBaseCallingLoadTree) {
       if (fLoadTreeStatus == kExternalLoadTree) {
          // This can happen if someone switched trees behind us.
          // Likely cause: a TChain::LoadTree() e.g. from TTree::Process().
@@ -267,6 +267,13 @@ Bool_t TTreeReader::Notify()
       fLoadTreeStatus = kInternalLoadTree;
    } else {
       fLoadTreeStatus = kExternalLoadTree;
+   }
+
+   if (!fEntryList && fTree->GetEntryList() && !TestBit(kBitHaveWarnedAboutEntryListAttachedToTTree)) {
+      Warning("SetEntryBase()",
+              "The TTree / TChain has an associated TEntryList. "
+              "TTreeReader ignores TEntryLists unless you construct the TTreeReader passing a TEntryList.");
+      SetBit(kBitHaveWarnedAboutEntryListAttachedToTTree);
    }
 
    fDirector->SetTree(fTree->GetTree());
@@ -411,13 +418,6 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       return fEntryStatus;
    }
 
-   if (!fEntryList && fTree->GetEntryList() && !TestBit(kBitHaveWarnedAboutEntryListAttachedToTTree)) {
-      Warning("SetEntryBase()",
-              "The TTree / TChain has an associated TEntryList. "
-              "TTreeReader ignores TEntryLists unless you construct the TTreeReader passing a TEntryList.");
-      SetBit(kBitHaveWarnedAboutEntryListAttachedToTTree);
-   }
-
    fEntry = entry;
 
    Long64_t entryAfterList = entry;
@@ -439,9 +439,9 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
 
    TTree* treeToCallLoadOn = local ? fTree->GetTree() : fTree;
 
-   SetBit(kBitSetEntryBaseCallingLoadTree);
-   Long64_t loadResult = treeToCallLoadOn->LoadTree(entryAfterList);
-   ResetBit(kBitSetEntryBaseCallingLoadTree);
+   fSetEntryBaseCallingLoadTree = kTRUE;
+   const Long64_t loadResult = treeToCallLoadOn->LoadTree(entryAfterList);
+   fSetEntryBaseCallingLoadTree = kFALSE;
 
    if (loadResult < 0) {
       // ROOT-9628 We cover here the case when:
