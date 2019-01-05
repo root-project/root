@@ -88,7 +88,8 @@ static bool IsUnsupportedUniquePointer(const char *normName, TDataMember *dm)
          return true;
       }
 
-      auto upDms = clm->GetListOfDataMembers();
+      clm->BuildRealData();
+      auto upDms = clm->GetListOfRealData();
       if (!upDms) {
          Error("CloseStreamerInfoROOTFile", "Cannot determine unique pointer %s data members.", dmTypeName);
          return true;

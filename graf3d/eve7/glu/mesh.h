@@ -35,9 +35,9 @@
 #ifndef __mesh_h_
 #define __mesh_h_
 
-#include "GL/glu.h"
+#include "GL_glu.h"
 
-typedef struct GLUmesh GLUmesh; 
+typedef struct GLUmesh GLUmesh;
 
 typedef struct GLUvertex GLUvertex;
 typedef struct GLUface GLUface;
@@ -148,6 +148,11 @@ struct GLUhalfEdge {
   int		winding;	/* change in winding number when crossing
                                    from the right face to the left face */
 };
+
+/* Allocate and free half-edges in pairs for efficiency.
+ * The *only* place that should use this fact is allocation/free.
+ */
+typedef struct { GLUhalfEdge e, eSym; } EdgePair;
 
 #define	Rface	Sym->Lface
 #define Dst	Sym->Org

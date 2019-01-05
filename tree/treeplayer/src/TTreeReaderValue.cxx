@@ -27,10 +27,21 @@
 #include "TNtuple.h"
 #include <vector>
 
-/** \class TTreeReaderValue
-
-Extracts data from a TTree.
+// clang-format off
+/**
+ * \class TTreeReaderValue
+ * \ingroup treeplayer
+ * \brief An interface for reading values stored in ROOT columnar datasets
+ *
+ * The TTreeReaderValue is a type-safe tool to be used in association with a TTreeReader
+ * to access the values stored in TTree, TNtuple and TChain datasets.
+ * TTreeReaderValue can be also used to access collections such as `std::vector`s or TClonesArray
+ * stored in columnar datasets but it is recommended to use TTreeReaderArray instead as it offers
+ * several advantages.
+ *
+ * See the documentation of TTreeReader for more details and examples.
 */
+// clang-format on
 
 ClassImp(ROOT::Internal::TTreeReaderValueBase);
 
@@ -390,8 +401,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
    TNamedBranchProxy* namedProxy = fTreeReader->FindProxy(fBranchName);
    if (namedProxy && namedProxy->GetDict() == fDict) {
       fProxy = namedProxy->GetProxy();
-      fSetupStatus = kSetupMatch;
-      return;
+      // But go on: we need to set fLeaf etc!
    }
 
    const std::string originalBranchName = fBranchName.Data();
@@ -403,12 +413,24 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
    TBranch *branch = nullptr;
    // If the branch name contains at least a dot, we analyse it in detail and
    // we give priority to the branch identified over the one which is found
-   // with the TTree::GetBranch method. This allow to correctly pick the desired
+   // with the TTree::GetBranch method. This allows to correctly pick the desired
    // branch in cases where a TTree has two branches, one called for example
    // "w.v.a" and another one called "v.a".
    // This behaviour is described in ROOT-9312.
    if (fBranchName.Contains(".")) {
       branch = SearchBranchWithCompositeName(myLeaf, branchActualType, errMsg);
+      // In rare cases where leaves contain the name of the branch as part of their
+      // name and a dot in the branch name (such as: branch "b." and leaf "b.a")
+      // the previous method may return the branch name ("b.") rather than the
+      // leaf name ("b.a") as we expect.
+      // For these cases, we do not have to give priority to the previously
+      // identified branch since we are in a different situation.
+      // This behaviour is described in ROOT-9757.
+      if (branch && branch->IsA() == TBranchElement::Class() && branchFromFullName){
+        branch = branchFromFullName;
+        fStaticClassOffsets = {};
+        fHaveStaticClassOffsets = 0;
+      }
    }
 
    if (!branch) {
@@ -474,31 +496,29 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       }
    }
 
-   // Update named proxy's dictionary
-   if (namedProxy && !namedProxy->GetDict()) {
-      namedProxy->SetDict(fDict);
-      fProxy = namedProxy->GetProxy();
-      if (fProxy)
-         fSetupStatus = kSetupMatch;
-      return;
-   }
+   if (!namedProxy) {
+      // Search for the branchname, determine what it contains, and wire the
+      // TBranchProxy representing it to us so we can access its data.
+      // A proxy for branch must not have been created before (i.e. check
+      // fProxies before calling this function!)
 
-   // Search for the branchname, determine what it contains, and wire the
-   // TBranchProxy representing it to us so we can access its data.
-   // A proxy for branch must not have been created before (i.e. check
-   // fProxies before calling this function!)
+      TString membername;
 
-   TString membername;
-
-   bool isTopLevel = branch->GetMother() == branch;
-   if (!isTopLevel) {
-      membername = strrchr(branch->GetName(), '.');
-      if (membername.IsNull()) {
-         membername = branch->GetName();
+      bool isTopLevel = branch->GetMother() == branch;
+      if (!isTopLevel) {
+         membername = strrchr(branch->GetName(), '.');
+         if (membername.IsNull()) {
+            membername = branch->GetName();
+         }
       }
+      namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, originalBranchName.c_str(), membername);
+      fTreeReader->AddProxy(namedProxy);
    }
-   namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, originalBranchName.c_str(), membername);
-   fTreeReader->AddProxy(namedProxy);
+
+   // Update named proxy's dictionary
+   if (!namedProxy->GetDict())
+      namedProxy->SetDict(fDict);
+
    fProxy = namedProxy->GetProxy();
    if (fProxy) {
       fSetupStatus = kSetupMatch;
@@ -628,4 +648,3 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
 
    return 0;
 }
-

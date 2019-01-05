@@ -40,8 +40,17 @@
 class TObjArray;
 class TTree;
 namespace ROOT {
-
+namespace Detail {
 namespace RDF {
+class RNodeBase;
+}
+}
+namespace RDF {
+template <typename T>
+class RResultPtr;
+template<typename T, typename V>
+class RInterface;
+using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
 class RDataSource;
 } // namespace RDF
 
@@ -56,6 +65,33 @@ using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
 namespace TTraits = ROOT::TypeTraits;
 namespace RDFInternal = ROOT::Internal::RDF;
+
+// Declare code in the interpreter via the TInterpreter::Declare method
+// and return the return code.
+bool InterpreterDeclare(const std::string &code);
+
+// Jit code in the interpreter with TInterpreter::Calc and return
+// a pair containing the return value of Calc and the error code.
+// The error code is:
+//   - 0 if Calc resulted in TInterpreter::kNoError
+//   - 1 otherwise
+std::pair<Long64_t, int> InterpreterCalc(const std::string &code);
+
+using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;
+HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
+                            std::string_view treeName,
+                            std::string_view fileName,
+                            bool isLazy,
+                            RLoopManager &loopManager,
+                            std::unique_ptr<RDFInternal::RActionBase> actionPtr);
+
+std::string DemangleTypeIdName(const std::type_info &typeInfo);
+
+ColumnNames_t ConvertRegexToColumns(RDFInternal::RBookedCustomColumns & customColumns,
+                                    TTree *tree,
+                                    ROOT::RDF::RDataSource *dataSource,
+                                    std::string_view columnNameRegexp,
+                                    std::string_view callerName);
 
 /// An helper object that sets and resets gErrorIgnoreLevel via RAII.
 class RIgnoreErrorLevelRAII {
@@ -244,7 +280,7 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::strin
 
 void BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds,
                    const std::shared_ptr<RJittedCustomColumn> &jittedCustomColumn,
-                   const RDFInternal::RBookedCustomColumns &customCols);
+                   const RDFInternal::RBookedCustomColumns &customCols, const ColumnNames_t &branches);
 
 std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::type_info &art, const std::type_info &at,
                            void *r, TTree *tree, const unsigned int nSlots,
@@ -270,8 +306,7 @@ bool AtLeastOneEmptyString(const std::vector<std::string_view> strings);
 std::shared_ptr<RNodeBase> UpcastNode(std::shared_ptr<RNodeBase> ptr);
 
 ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
-                                      const ColumnNames_t &datasetColumns, const ColumnNames_t &validCustomColumns,
-                                      RDataSource *ds);
+                                      const ColumnNames_t &validCustomColumns, RDataSource *ds);
 
 std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols);
 
@@ -438,8 +473,6 @@ template <>
 struct TNeedJitting<RInferredType> {
    static constexpr bool value = true;
 };
-
-ColumnNames_t GetBranchNames(TTree &t, bool allowDuplicates = true);
 
 ColumnNames_t GetTopLevelBranchNames(TTree &t);
 

@@ -10,19 +10,23 @@
  *************************************************************************/
 
 #include <ROOT/REveRenderData.hxx>
+#include <ROOT/REveUtil.hxx>
 
 #include <cstdio>
 #include <cstring>
 
 using namespace ROOT::Experimental;
 
+/////////////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 REveRenderData::REveRenderData(const std::string &func, int size_vert, int size_norm, int size_idx) : fRnrFunc(func)
 {
    Reserve(size_vert, size_norm, size_idx);
 }
 
-REveRenderData::~REveRenderData() {}
-
+/////////////////////////////////////////////////////////////////////////////////////////
+/// Reserve place for render data
 
 void REveRenderData::Reserve(int size_vert, int size_norm, int size_idx)
 {
@@ -34,52 +38,44 @@ void REveRenderData::Reserve(int size_vert, int size_norm, int size_idx)
       fIndexBuffer.reserve(size_idx);
 }
 
-int REveRenderData::Write(char *msg)
+/////////////////////////////////////////////////////////////////////////////////////////
+/// Write render data to binary buffer
+
+int REveRenderData::Write(char *msg, int maxlen)
 {
-   // XXXX Where do we make sure the buffer is large enough?
-   //std::string fh = fHeader.dump();
-   //memcpy(msg, fh.c_str(), fh.size());
-   //int off = int(ceil(fh.size()/4.0))*4;
+   static const REveException eh("REveRenderData::Write ");
 
-   int off = 0;
+   int off{0};
 
-   if (!fMatrix.empty()) {
-      int binsize = fMatrix.size() * sizeof(float);
-      memcpy(msg + off, &fMatrix[0], binsize);
-      off += binsize;
-   }
-   if (!fVertexBuffer.empty()) {
-      int binsize = fVertexBuffer.size() * sizeof(float);
-      memcpy(msg + off, &fVertexBuffer[0], binsize);
-      off += binsize;
-   }
-   if (!fNormalBuffer.empty()) {
-      int binsize = fNormalBuffer.size() * sizeof(float);
-      memcpy(msg + off, &fNormalBuffer[0], binsize);
-      off += binsize;
-   }
-   if (!fIndexBuffer.empty()) {
-      int binsize = fIndexBuffer.size() * sizeof(float);
-      memcpy(msg + off, &fIndexBuffer[0], binsize);
-      off += binsize;
-   }
+   auto append = [&, this](void *buf, int len) {
+      if (off + len > maxlen)
+         throw eh + "output buffer does not have enough memory";
+      memcpy(msg + off, buf, len);
+      off += len;
+   };
+
+   if (!fMatrix.empty())
+      append(&fMatrix[0], fMatrix.size() * sizeof(float));
+
+   if (!fVertexBuffer.empty())
+      append(&fVertexBuffer[0], fVertexBuffer.size() * sizeof(float));
+
+   if (!fNormalBuffer.empty())
+      append(&fNormalBuffer[0], fNormalBuffer.size() * sizeof(float));
+
+   if (!fIndexBuffer.empty())
+      append(&fIndexBuffer[0], fIndexBuffer.size() * sizeof(int));
+
    return off;
 }
 
-void REveRenderData::SetMatrix(const double* arr)
-{
-      fMatrix.reserve(16);
-      for (int i = 0; i < 16; ++i) {
-         fMatrix.push_back(arr[i]);
-      }
-}
+/////////////////////////////////////////////////////////////////////////////////////////
+/// Set transformation matrix
 
-void REveRenderData::Dump()
+void REveRenderData::SetMatrix(const double *arr)
 {
-   printf("RederData dump %d\n", (int)fVertexBuffer.size());
-   int cnt = 0;
-   for (auto it = fVertexBuffer.begin(); it !=fVertexBuffer.end(); ++it )
-   {
-      printf("%d %f", cnt++, *it);
+   fMatrix.reserve(16);
+   for (int i = 0; i < 16; ++i) {
+      fMatrix.push_back(arr[i]);
    }
 }

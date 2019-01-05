@@ -22,11 +22,11 @@ namespace Experimental {
 
 class REveRenderData {
 private:
-   std::string         fRnrFunc;
-   std::vector<float>  fVertexBuffer;
-   std::vector<float>  fNormalBuffer;
-   std::vector<int>    fIndexBuffer;
-   std::vector<float>  fMatrix;
+   std::string fRnrFunc;
+   std::vector<float> fVertexBuffer;
+   std::vector<float> fNormalBuffer;
+   std::vector<int> fIndexBuffer;
+   std::vector<float> fMatrix;
 
 public:
    // If Primitive_e is changed, change also definition in EveElements.js.
@@ -35,7 +35,6 @@ public:
 
    REveRenderData() = default;
    REveRenderData(const std::string &func, int size_vert = 0, int size_norm = 0, int size_idx = 0);
-   virtual ~REveRenderData();
 
    void Reserve(int size_vert = 0, int size_norm = 0, int size_idx = 0);
 
@@ -55,10 +54,7 @@ public:
       PushV(v.fZ);
    }
 
-   void PushV(float *v, int len)
-   {
-      fVertexBuffer.insert(fVertexBuffer.end(), v, v + len);
-   }
+   void PushV(float *v, int len) { fVertexBuffer.insert(fVertexBuffer.end(), v, v + len); }
 
    void PushN(float x) { fNormalBuffer.emplace_back(x); }
 
@@ -85,17 +81,11 @@ public:
       PushI(k);
    }
 
-   void PushI(int *v, int len)
-   {
-      fIndexBuffer.insert(fIndexBuffer.end(), v, v + len);
-   }
+   void PushI(int *v, int len) { fIndexBuffer.insert(fIndexBuffer.end(), v, v + len); }
 
-   void PushI(std::vector<int> &v)
-   {
-      fIndexBuffer.insert(fIndexBuffer.end(), v.begin(), v.end());
-   }
+   void PushI(std::vector<int> &v) { fIndexBuffer.insert(fIndexBuffer.end(), v.begin(), v.end()); }
 
-   void SetMatrix(const double* arr);
+   void SetMatrix(const double *arr);
 
    const std::string GetRnrFunc() const { return fRnrFunc; }
 
@@ -104,15 +94,12 @@ public:
    int SizeI() const { return fIndexBuffer.size(); }
    int SizeT() const { return fMatrix.size(); }
 
-   int GetBinarySize() { return  (SizeV() + SizeN() + SizeT()) * sizeof(float) + SizeI() * sizeof(int); }
+   int GetBinarySize() { return (SizeV() + SizeN() + SizeT()) * sizeof(float) + SizeI() * sizeof(int); }
 
-   int Write(char *msg);
-
-   void Dump();
+   int Write(char *msg, int maxlen);
 };
 
-} // namespace
-} // namespace
-
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

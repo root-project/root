@@ -12,159 +12,10 @@ const char *shortHelp =
    "Usage: rootcling [-v][-v0-4] [-f] [out.cxx] [opts] "
    "file1.h[+][-][!] file2.h[+][-][!] ...[LinkDef.h]\n";
 
-// Write the help as a big string to have only one version of the documentation
-const char *rootClingHelp =
-   "This program generates the dictionaries needed for performing I/O of        \n"
-   "classes. Rootcling can be used with an invocation like this one:            \n"
-   "                                                                            \n"
-   " rootcling [-v][-v0-4] [-f] [out.cxx] [opts] "
-   "file1.h[+][-][!] file2.h[+][-][!] ...[LinkDef.h]\n"
-   "                                                                            \n"
-   "IMPORTANT:                                                                  \n"
-   "1) LinkDef.h must be the last argument on the rootcling command line.       \n"
-   "2) Note that the LinkDef file name must contain the string:                 \n"
-   "   LinkDef.h, Linkdef.h or linkdef.h, i.e. NA49_LinkDef.h.                  \n"
-   "                                                                            \n"
-   "Before specifying the first header file one can also add include            \n"
-   "file directories to be searched and preprocessor defines, like:             \n"
-   "  -I$MYPROJECT/include -DDebug=1                                            \n"
-   "                                                                            \n"
-   "NOTA BENE: the dictionaries that will be used within the same project must  \n"
-   "have unique names.                                                          \n"
-   "                                                                            \n"
-   "Options:                                                                    \n"
-   "                                                                            \n"
-   " -f\tOverwrite an existing output file.                                     \n"
-   "  The output file must have the .cxx, .C, .cpp, .cc or .cp extension.       \n"
-   "                                                                            \n"
-   " -v\tThe verbose flags have the following meaning:                          \n"
-   "  -v   Display all messages                                                 \n"
-   "  -v0  Display no messages at all.                                          \n"
-   "  -v1  Display only error messages.                                         \n"
-   "  -v2  Display error and warning messages (default).                        \n"
-   "  -v3  Display error, warning and note messages.                            \n"
-   "  -v4  Display all messages                                                 \n"
-   "                                                                            \n"
-   " -m\tSpecify absolute or relative path Clang pcm file to be loaded.         \n"
-   "  The pcm file (module) produced by this invocation of rootcling will       \n"
-   "  not include any of the declarations already included in the pcm           \n"
-   "  files loaded via -m.  There can be more than one -m.                      \n"
-   "                                                                            \n"
-   " -rmf\tRootmap file name.                                                   \n"
-   "  Name of the rootmap file. In order to be picked up by ROOT it must have   \n"
-   "  .rootmap extension.                                                       \n"
-   "                                                                            \n"
-   " -rml\tRootmap library name.                                                \n"
-   "  Specify the name of the library which contains the autoload keys. This    \n"
-   "  switch can be specified multiple times to autoload several libraries in   \n"
-   "  presence of a particular key.                                             \n"
-   "                                                                            \n"
-   " -split\tSplit the dictionary.                                              \n"
-   "  Split the dictionary in two, putting the ClassDef functions in a separate \n"
-   "  file.                                                                     \n"
-   "                                                                            \n"
-   " -s\tTarget library name.                                                   \n"
-   "  The flag -s must be followed by the name of the library that will         \n"
-   "  contain the object file corresponding to the dictionary produced by       \n"
-   "  this invocation of rootcling.                                             \n"
-   "  The name takes priority over the one specified for the rootmapfile.       \n"
-   "  The name influences the name of the created pcm:                          \n"
-   "   1) If it is not specified, the pcm is called libINPUTHEADER_rdict.pcm    \n"
-   "   2) If it is specified, the pcm is called libTARGETLIBRARY_rdict.pcm      \n"
-   "      Any \"liblib\" occurence is transformed in the expected \"lib\".      \n"
-   "   3) If this is specified in conjunction with --multiDict, the output is   \n"
-   "      libTARGETLIBRARY_DICTIONARY_rdict.pcm                                 \n"
-   "                                                                            \n"
-   " -multiDict\tEnable support for multiple pcms in one library.               \n"
-   "  Needs the -s flag. See its documentation.                                 \n"
-   "                                                                            \n"
-   " -inlineInputHeader\tAdd the argument header to the code of the dictionary. \n"
-   "  This allows the header to be inlined within the dictionary.               \n"
-   "                                                                            \n"
-   " -interpreteronly\tNo IO information in the dictionary.                     \n"
-   "                                                                            \n"
-   " -noIncludePaths\tDo not store the headers' directories in the dictionary.  \n"
-   "  Instead, rely on the environment variable $ROOT_INCLUDE_PATH at runtime.  \n"
-   "                                                                            \n"
-   " -excludePath\tSpecify a path to be excluded from the include paths         \n"
-   "  specified for building this dictionary.                                   \n"
-   "                                                                            \n"
-   " --lib-list-prefix\t Specify libraries needed by the header files parsed.   \n"
-   "  This feature is used by ACliC (the automatic library generator).          \n"
-   "  Rootcling will read the content of xxx.in for a list of rootmap files (see\n"
-   "  rlibmap). Rootcling will read these files and use them to deduce a list of\n"
-   "  libraries that are needed to properly link and load this dictionary. This \n"
-   "  list of libraries is saved in the first line of the file xxx.out; the     \n"
-   "  remaining lines contains the list of classes for which this run of        \n"
-   "  rootcling produced a dictionary.                                          \n"
-   "                                                                            \n"
-   "The options -p, -c, -l, -cint, -reflex and -gccxml are deprecated and       \n"
-   "currently ignored.                                                          \n"
-   "                                                                            \n"
-   "The (optional) file LinkDef.h looks like:                                   \n"
-   "                                                                            \n"
-   "#ifdef __CLING__                                                            \n"
-   "                                                                            \n"
-   "#pragma link off all globals;                                               \n"
-   "#pragma link off all classes;                                               \n"
-   "#pragma link off all functions;                                             \n"
-   "                                                                            \n"
-   "#pragma link C++ class TAxis;                                               \n"
-   "#pragma link C++ class TAttAxis-;                                           \n"
-   "#pragma link C++ class TArrayC-!;                                           \n"
-   "#pragma link C++ class AliEvent+;                                           \n"
-   "                                                                            \n"
-   "#pragma link C++ function StrDup;                                           \n"
-   "#pragma link C++ function operator+(const TString&,const TString&);         \n"
-   "                                                                            \n"
-   "#pragma link C++ global gROOT;                                              \n"
-   "#pragma link C++ global gEnv;                                               \n"
-   "                                                                            \n"
-   "#pragma link C++ enum EMessageTypes;                                        \n"
-   "                                                                            \n"
-   "#endif                                                                      \n"
-   "                                                                            \n"
-   "This file tells rootcling which classes will be persisted on disk and what  \n"
-   "entities will trigger automatic load of the shared library which contains   \n"
-   "it. A trailing - in the class name tells rootcling to not generate the      \n"
-   "Streamer() method. This is necessary for those classes that need a          \n"
-   "customized Streamer() method. A trailing ! in the class name tells rootcling\n"
-   "to not generate the operator>>(TBuffer &b, MyClass *&obj) function. This is \n"
-   "necessary to be able to write pointers to objects of classes not inheriting \n"
-   "from TObject. See for an example the source of the TArrayF class.           \n"
-   "If the class contains a ClassDef macro, a trailing + in the class           \n"
-   "name tells rootcling to generate an automatic Streamer(), i.e. a            \n"
-   "streamer that let ROOT do automatic schema evolution. Otherwise, a          \n"
-   "trailing + in the class name tells rootcling to generate a ShowMember       \n"
-   "function and a Shadow Class. The + option is mutually exclusive with        \n"
-   "the - option. For legacy reasons it is not yet the default.                 \n"
-   "When the linkdef file is not specified a default version exporting          \n"
-   "the classes with the names equal to the include files minus the .h          \n"
-   "is generated.                                                               \n"
-   "                                                                            \n"
-   "The default constructor used by the ROOT I/O can be customized by           \n"
-   "using the rootcling pragma:                                                 \n"
-   "   #pragma link C++ ioctortype UserClass;                                   \n"
-   "For example, with this pragma and a class named MyClass,                    \n"
-   "this method will called the first of the following 3                        \n"
-   "constructors which exists and is public:                                    \n"
-   "   MyClass(UserClass*);                                                     \n"
-   "   MyClass(TRootIOCtor*);                                                   \n"
-   "   MyClass(); // Or a constructor with all its arguments defaulted.         \n"
-   "                                                                            \n"
-   "When more than one pragma ioctortype is used, the first seen has            \n"
-   "priority.  For example with:                                                \n"
-   "   #pragma link C++ ioctortype UserClass1;                                  \n"
-   "   #pragma link C++ ioctortype UserClass2;                                  \n"
-   "                                                                            \n"
-   "ROOT considers the constructors in this order:                              \n"
-   "   MyClass(UserClass1*);                                                    \n"
-   "   MyClass(UserClass2*);                                                    \n"
-   "   MyClass(TRootIOCtor*);                                                   \n"
-   "   MyClass(); // Or a constructor with all its arguments defaulted.         \n";
 
 
 #include "rootcling_impl.h"
+#include "rootclingCommandLineOptionsHelp.h"
 
 #include "RConfigure.h"
 #include <ROOT/RConfig.h>
@@ -596,7 +447,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
             if (isClassDefMacro) {
                CXXRD.addAttr(new(C) AnnotateAttr(commentRange, C, comment.str(), 0));
             } else if (!isGenreflex) {
-               // Here we check if we are in presence of a selction file so that
+               // Here we check if we are in presence of a selection file so that
                // the comment does not ends up as a decoration in the AST,
                // Nevertheless, w/o PCMS this has no effect, since the headers
                // are parsed at runtime and the information in the AST dumped by
@@ -772,9 +623,19 @@ string gLibsNeeded;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RecordDeclCallback(const char *c)
+void RecordDeclCallback(const clang::RecordDecl* recordDecl)
 {
-   string need(gAutoloads[c]);
+   std::string need;
+   if (recordDecl->hasOwningModule()) {
+      clang::Module *M = recordDecl->getOwningModule()->getTopLevelModule();
+      need = "lib" + M->Name + gLibraryExtension;
+   } else {
+      std::string qual_name;
+      RScanner::GetDeclQualName(recordDecl, qual_name);
+
+      need = gAutoloads[qual_name];
+   }
+
    if (need.length() && gLibsNeeded.find(need) == string::npos) {
       gLibsNeeded += " " + need;
    }
@@ -912,8 +773,8 @@ void LoadLibraryMap(const std::string &fileListName, map<string, string> &autolo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if the specificed operator (what) has been properly declared if the user has
-/// resquested a custom version.
+/// Check if the specified operator (what) has been properly declared if the user has
+/// requested a custom version.
 
 bool CheckInputOperator(const char *what,
                         const char *proto,
@@ -963,7 +824,7 @@ bool CheckInputOperator(const char *what,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if the operator>> has been properly declared if the user has
-/// resquested a custom version.
+/// requested a custom version.
 
 bool CheckInputOperator(const clang::RecordDecl *cl, cling::Interpreter &interp)
 {
@@ -1536,7 +1397,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// GrabIndex returns a static string (so use it or copy it immediatly, do not
+/// GrabIndex returns a static string (so use it or copy it immediately, do not
 /// call GrabIndex twice in the same expression) containing the size of the
 /// array data member.
 /// In case of error, or if the size is not specified, GrabIndex returns 0.
@@ -1886,7 +1747,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                   dictStream << "[R__i];" << std::endl;
                } else if (type.getTypePtr()->isPointerType()) {
                   // This is always good. However, in case of a pointer
-                  // to an object that is guarenteed to be there and not
+                  // to an object that is guaranteed to be there and not
                   // being referenced by other objects we could use
                   //     xx->Streamer(b);
                   // Optimize this with control statement in title.
@@ -2195,7 +2056,7 @@ static bool InjectModuleUtilHeader(const char *argv0,
 /// respecting the given isysroot.
 /// If module is not a null pointer, we only write the given module to the
 /// given file and not the whole AST.
-/// Returns true if the AST was succesfully written.
+/// Returns true if the AST was successfully written.
 static bool WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstance, StringRef iSysRoot,
                      clang::Module *module = nullptr)
 {
@@ -2230,7 +2091,7 @@ static bool WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstan
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generates a PCH from the given ModuleGenerator and CompilerInstance.
-/// Returns true iff the PCH was succesfully generated.
+/// Returns true iff the PCH was successfully generated.
 static bool GenerateAllDict(TModuleGenerator &modGen, clang::CompilerInstance *compilerInstance,
                             const std::string &currentDirectory)
 {
@@ -2265,7 +2126,7 @@ static bool IncludeHeaders(const std::vector<std::string> &headers, cling::Inter
 /// needed by the given ModuleGenerator.
 /// The names of all header files that are needed by the ModuleGenerator but are
 /// not in the given module will be inserted into the MissingHeader variable.
-/// Returns true iff the PCH was succesfully generated.
+/// Returns true iff the PCH was successfully generated.
 static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *module,
                                   std::vector<std::string> &missingHeaders)
 {
@@ -3063,7 +2924,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
       if (CRD) {
          ROOT::TMetaUtils::Info(0, "Generating code for class %s\n", selClass.GetNormalizedName());
-         if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str() /* unqualified name without template arguement */)) {
+         if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str() /* unqualified name without template argument */)) {
             // Register the collections
             // coverity[fun_call_w_exception] - that's just fine.
             Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
@@ -4062,7 +3923,7 @@ int RootClingMain(int argc,
       ignoreExistingDict = true;
       ic++;
    } else if (argc > 1 && (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h"))) {
-      fprintf(stderr, "%s\n", rootClingHelp);
+      fprintf(stderr, kCommandLineOptionsHelp);
       return 1;
    } else if (ic < argc && !strncmp(argv[ic], "-", 1)) {
       fprintf(stderr, shortHelp,
@@ -4121,7 +3982,7 @@ int RootClingMain(int argc,
       ic++;
 
    } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
-      fprintf(stderr, "%s\n", rootClingHelp);
+      fprintf(stderr, kCommandLineOptionsHelp);
       return 1;
    } else {
       ic = 1;
@@ -4137,12 +3998,6 @@ int RootClingMain(int argc,
    std::vector<std::string> clingArgs;
    clingArgs.push_back(argv[0]);
    clingArgs.push_back("-iquote.");
-
-   // Is this needed at all or just historical?
-   if (! IsPointerTClassCopy<std::vector<int>::iterator>::kVal) {
-      // Tell cling (for parsing pragma) that std::vector's iterator is a class
-      clingArgs.push_back("-DG__VECTOR_HAS_CLASS_ITERATOR");
-   }
 
    if (ic < argc && !strcmp(argv[ic], "-c")) {
       // Simply ignore the -c options.
@@ -4163,7 +4018,8 @@ int RootClingMain(int argc,
    bool writeEmptyRootPCM = false;
    bool selSyntaxOnly = false;
    bool noIncludePaths = false;
-   bool cxxmodule = getenv("ROOT_MODULES") != nullptr;
+   bool cxxmodule = false;
+   bool isAclic = false;
 
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
@@ -4237,7 +4093,7 @@ int RootClingMain(int argc,
          }
 
          if (strcmp("-excludePath", argv[ic]) == 0 && (ic + 1) < argc) {
-            // Path to be excluded from the ones rememberd by the dictionary
+            // Path to be excluded from the ones remembered by the dictionary
             excludePaths.push_back(argv[ic + 1]);
             ic += 2;
             continue;
@@ -4309,6 +4165,8 @@ int RootClingMain(int argc,
       }
       ic++;
    }
+   if (liblistPrefix.length())
+      isAclic = true;
 
    // Check if we have a multi dict request but no target library
    if (multiDict && sharedLibraryPathName.empty()) {
@@ -4590,7 +4448,7 @@ int RootClingMain(int argc,
 
             interpPragmaSource += std::string("#include \"") + header + "\"\n";
             if (!isSelectionFile) {
-               // In order to not have to add the equivelent to -I${PWD} to the
+               // In order to not have to add the equivalent to -I${PWD} to the
                // command line, include the complete file name, even if it is a
                // full pathname, when we write it down in the dictionary.
                // Note: have -I${PWD} means in that (at least in the case of
@@ -4761,7 +4619,7 @@ int RootClingMain(int argc,
       }
    }
 
-   // Exclude string not to re-generatre the dictionary
+   // Exclude string not to re-generate the dictionary
    std::vector<std::pair<std::string, std::string>> namesForExclusion;
    if (!gBuildingROOT) {
       namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::name, "std::string"));
@@ -5067,7 +4925,7 @@ int RootClingMain(int argc,
          // Write the module/PCH depending on what mode we are on
          if (modGen.IsPCH()) {
             if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
-         } else if (cxxmodule) {
+         } else if (cxxmodule && !isAclic) {
             if (!CheckModuleValid(modGen, resourceDir, interp, linkdefFilename, moduleName.str()))
                return 1;
          }
@@ -5182,6 +5040,7 @@ int RootClingMain(int argc,
    // Manually call end of translation unit because we never call the
    // appropriate deconstructors in the interpreter. This writes out the C++
    // module file that we currently generate.
+   if (!isAclic)
    {
       cling::Interpreter::PushTransactionRAII RAII(&interp);
       CI->getSema().getASTConsumer().HandleTranslationUnit(CI->getSema().getASTContext());
@@ -5222,10 +5081,10 @@ namespace genreflex {
 
    unsigned int extractArgs(int argc, char **argv, std::vector<std::string> &args)
    {
-      // loop on argv, spot strings which are not preceeded by something
+      // loop on argv, spot strings which are not preceded by something
       unsigned int argvCounter = 0;
       for (int i = 1; i < argc; ++i) {
-         if (!ROOT::TMetaUtils::BeginsWith(argv[i - 1], "-") && // so, if preceeding element starts with -, this is a value for an option
+         if (!ROOT::TMetaUtils::BeginsWith(argv[i - 1], "-") && // so, if preceding element starts with -, this is a value for an option
                !ROOT::TMetaUtils::BeginsWith(argv[i], "-")) { // and the element itself is not an option
             args.push_back(argv[i]);
             argvCounter++;
@@ -5590,7 +5449,7 @@ bool IsGoodLibraryName(const std::string &name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Translate the aruments of genreflex into rootcling ones and forward them
+/// Translate the arguments of genreflex into rootcling ones and forward them
 /// to the RootCling function.
 /// These are two typical genreflex and rootcling commandlines
 /// 1) genreflex header1.h [header2.h ...] [options] [preprocessor options]
@@ -5989,8 +5848,8 @@ int GenReflexMain(int argc, char **argv)
    ROOT::option::Stats  stats(genreflexUsageDescriptor,  argc, argv);
    std::vector<ROOT::option::Option> options(stats.options_max);// non POD var size arrays are not C++!
    std::vector<ROOT::option::Option> buffer(stats.buffer_max);
-   // The 4 is the minimum size of the abbreviation lenght.
-   // For example, --selction_file can be abbreviated with --sele at least.
+   // The 4 is the minimum size of the abbreviation length.
+   // For example, --selection_file can be abbreviated with --sele at least.
 
    ROOT::option::Parser parse(genreflexUsageDescriptor, argc, argv, &options[0], &buffer[0], 5);
 

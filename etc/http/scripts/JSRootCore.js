@@ -96,7 +96,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 26/10/2018";
+   JSROOT.version = "dev 20/12/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -105,11 +105,11 @@
    JSROOT.nocache = false;
    JSROOT.sources = ['core']; // indicates which major sources were loaded
 
-   JSROOT.openui5src = 'jsroot'; // use in ROOT distribution for local copy of OpenUI5
-
    JSROOT.id_counter = 0;
    if (JSROOT.BatchMode === undefined)
       JSROOT.BatchMode = false; // when true, disables all kind of interactive features
+
+   //openuicfg // DO NOT DELETE, used to configure openui5 usage like JSROOT.openui5src = "nojsroot";
 
    // JSROOT.use_full_libs = true;
 
@@ -148,96 +148,96 @@
    // default draw styles, can be changed after loading of JSRootCore.js
    // this style also can be changed providing style=itemname in the URL
    JSROOT.gStyle = {
-         Tooltip : 1, // 0 - off, 1 - on
-         TooltipAnimation : 500, // time in msec for appearance of tooltips, 0 - no animation
-         ContextMenu : true,
-         Zooming : true,  // global zooming flag, enable/disable any kind of interactive zooming
-         ZoomMouse : true,  // Zooming with the mouse events
-         ZoomWheel : true,  // Zooming with mouse wheel
-         ZoomTouch : true,  // Zooming with the touch devices
-         MoveResize : true,   // enable move and resize of elements like statbox, title, pave, colz
-         DragAndDrop : true,  // enables drag and drop functionality
-         ToolBar : 'popup',  // show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button
-         ToolBarSide : 'left', // 'left' left-bottom corner on canvas, 'right' - right-bottom corner on canvas, opposite on sub-pads
-         ToolBarVert : false,  // display tool bar vertical (default false)
-         CanEnlarge : true,  // if drawing inside particular div can be enlarged on full window
-         CanAdjustFrame : false,  // if frame position can be adjusted to let show axis or colz labels
-         ApproxTextSize : false,  // calculation of text size consumes time and can be skipped to improve performance (but with side effects on text adjustments)
-         OptimizeDraw : 1, // drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always
-         AutoStat : true,
-         FrameNDC : { fX1NDC: 0.07, fY1NDC: 0.12, fX2NDC: 0.95, fY2NDC: 0.88 },
-         Palette : 57,
-         Latex : 2,    // 0 - never, 1 - only latex symbols, 2 - normal TLatex processing (default), 3 - use MathJax for complex case, 4 - use MathJax always
+         Tooltip: 1, // 0 - off, 1 - on
+         TooltipAnimation: 500, // time in msec for appearance of tooltips, 0 - no animation
+         ContextMenu: true,
+         Zooming: true,  // global zooming flag, enable/disable any kind of interactive zooming
+         ZoomMouse: true,  // Zooming with the mouse events
+         ZoomWheel: true,  // Zooming with mouse wheel
+         ZoomTouch: true,  // Zooming with the touch devices
+         MoveResize: true,   // enable move and resize of elements like statbox, title, pave, colz
+         DragAndDrop: true,  // enables drag and drop functionality
+         ToolBar: 'popup',  // show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button
+         ToolBarSide: 'left', // 'left' left-bottom corner on canvas, 'right' - right-bottom corner on canvas, opposite on sub-pads
+         ToolBarVert: false,  // display tool bar vertical (default false)
+         CanEnlarge: true,  // if drawing inside particular div can be enlarged on full window
+         CanAdjustFrame: false,  // if frame position can be adjusted to let show axis or colz labels
+         ApproxTextSize: false,  // calculation of text size consumes time and can be skipped to improve performance (but with side effects on text adjustments)
+         OptimizeDraw: 1, // drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always
+         AutoStat: true,
+         FrameNDC: { fX1NDC: 0.07, fY1NDC: 0.12, fX2NDC: 0.95, fY2NDC: 0.88 },
+         Palette: 57,
+         Latex: 2,    // 0 - never, 1 - only latex symbols, 2 - normal TLatex processing (default), 3 - use MathJax for complex case, 4 - use MathJax always
          // MathJax : 0,  // depricated, will be supported till JSROOT 6.0, use Latex variable  0 - never, 1 - only for complex cases, 2 - always
-         ProgressBox : true,  // show progress box
-         Embed3DinSVG : 2,  // 0 - no embed, only 3D plot, 1 - overlay over SVG (IE/WebKit), 2 - embed into SVG (only Firefox)
-         ImageSVG : !JSROOT.nodejs, // when producing SVG images, use <image> elements to insert 3D drawings from three.js,
-                                    // To enable on nodejs, one should call "npm install canvas"
-         NoWebGL : false, // if true, WebGL will be disabled
-         GeoGradPerSegm : 6, // amount of grads per segment in TGeo spherical shapes like tube
-         GeoCompressComp : true, // if one should compress faces after creation of composite shape,
-         IgnoreUrlOptions : false, // if true, ignore all kind of URL options in the browser URL
-         HierarchyLimit : 250,   // how many items shown on one level of hierarchy
-         SmallPad : { width : 150, height : 100 },   // size of pad, where many features will be deactivated like text draw or zooming
+         ProgressBox: true,  // show progress box
+         Embed3DinSVG: 2,  // 0 - no embed, only 3D plot, 1 - overlay over SVG (IE/WebKit), 2 - embed into SVG (only Firefox)
+         ImageSVG: !JSROOT.nodejs, // when producing SVG images, use <image> elements to insert 3D drawings from three.js,
+                                   // To enable on nodejs, one should call "npm install canvas"
+         NoWebGL: false, // if true, WebGL will be disabled
+         GeoGradPerSegm: 6, // amount of grads per segment in TGeo spherical shapes like tube
+         GeoCompressComp: true, // if one should compress faces after creation of composite shape,
+         IgnoreUrlOptions: false, // if true, ignore all kind of URL options in the browser URL
+         HierarchyLimit: 250,   // how many items shown on one level of hierarchy
+         SmallPad: { width: 150, height: 100 },   // size of pad, where many features will be deactivated like text draw or zooming
 
          // XValuesFormat : "6.4g",   // custom format for all X values
          // YValuesFormat : "6.4g",   // custom format for all Y values
          // ZValuesFormat : "6.4g",   // custom format for all Z values
 
-         // these are TStyle attributes, which can be changed via URL 'style' parameter
+         // these are TStyle attributes, which can be changed via URL 'style' parameter or delivered by TWebCanvas
 
-         fOptLogx : 0,
-         fOptLogy : 0,
-         fOptLogz : 0,
-         fOptDate : 0,
-         fOptFile : 0,
-         fOptTitle : 1,
-         fPadBottomMargin : 0.1,
-         fPadTopMargin : 0.1,
-         fPadLeftMargin : 0.1,
-         fPadRightMargin : 0.1,
-         fPadGridX : false,
-         fPadGridY : false,
-         fPadTickX : 0,
-         fPadTickY : 0,
-         fStatColor : 0,
-         fStatTextColor : 1,
-         fStatBorderSize : 1,
-         fStatFont : 42,
-         fStatFontSize : 0,
-         fStatStyle : 1001,
-         fStatFormat : "6.4g",
-         fStatX : 0.98,
-         fStatY : 0.935,
-         fStatW : 0.2,
-         fStatH : 0.16,
-         fTitleAlign : 23,
-         fTitleColor : 0,
-         fTitleTextColor : 1,
-         fTitleBorderSize : 0,
-         fTitleFont : 42,
-         fTitleFontSize : 0.05,
-         fTitleStyle : 0,
-         fTitleX : 0.5,
-         fTitleY : 0.995,
-         fTitleW : 0,
-         fTitleH : 0,
-         fFitFormat : "5.4g",
-         fOptStat : 1111,
-         fOptFit : 0,
-         fNumberContours : 20,
-         fGridColor : 0,
-         fGridStyle : 3,
-         fGridWidth : 1,
-         fFrameFillColor : 0,
-         fFrameFillStyle : 1001,
-         fFrameLineColor : 1,
-         fFrameLineWidth : 1,
-         fFrameLineStyle : 1,
-         fFrameBorderSize : 1,
-         fFrameBorderMode : 0,
-         fEndErrorSize : 2,   // size in pixels of end error for E1 draw options
-         fErrorX : 0.5,   // X size of the error marks for the histogram drawings
+         fOptLogx: 0,
+         fOptLogy: 0,
+         fOptLogz: 0,
+         fOptDate: 0,
+         fOptFile: 0,
+         fOptTitle: 1,
+         fPadBottomMargin: 0.1,
+         fPadTopMargin: 0.1,
+         fPadLeftMargin: 0.1,
+         fPadRightMargin: 0.1,
+         fPadGridX: false,
+         fPadGridY: false,
+         fPadTickX: 0,
+         fPadTickY: 0,
+         fStatColor: 0,
+         fStatTextColor: 1,
+         fStatBorderSize: 1,
+         fStatFont: 42,
+         fStatFontSize: 0,
+         fStatStyle: 1001,
+         fStatFormat: "6.4g",
+         fStatX: 0.98,
+         fStatY: 0.935,
+         fStatW: 0.2,
+         fStatH: 0.16,
+         fTitleAlign: 23,
+         fTitleColor: 0,
+         fTitleTextColor: 1,
+         fTitleBorderSize: 0,
+         fTitleFont: 42,
+         fTitleFontSize: 0.05,
+         fTitleStyle: 0,
+         fTitleX: 0.5,
+         fTitleY: 0.995,
+         fTitleW: 0,
+         fTitleH: 0,
+         fFitFormat: "5.4g",
+         fOptStat: 1111,
+         fOptFit: 0,
+         fNumberContours: 20,
+         fGridColor: 0,
+         fGridStyle: 3,
+         fGridWidth: 1,
+         fFrameFillColor: 0,
+         fFrameFillStyle: 1001,
+         fFrameLineColor: 1,
+         fFrameLineWidth: 1,
+         fFrameLineStyle: 1,
+         fFrameBorderSize: 1,
+         fFrameBorderMode: 0,
+         fEndErrorSize: 2,   // size in pixels of end error for E1 draw options
+         fErrorX: 0.5,   // X size of the error marks for the histogram drawings
          fHistMinimumZero: false,   // when true, BAR and LEGO drawing using base = 0
          fPaintTextFormat : "g",
          fTimeOffset : 788918400 // UTC time at 01/01/95
@@ -818,8 +818,8 @@
     * @desc One should call req.send() to submit request
     * kind of the request can be:
     *
-    *    - "bin" - abstract binary data, result as string (default)
-    *    - "buf" - abstract binary data, result as BufferArray
+    *    - "bin" - abstract binary data, result as string
+    *    - "buf" - abstract binary data, result as ArrayBuffer (default)
     *    - "text" - returns req.responseText
     *    - "object" - returns JSROOT.parse(req.responseText)
     *    - "multi" - returns correctly parsed multi.json request
@@ -882,12 +882,13 @@
          if (xhr.readyState != 4) return;
 
          if ((xhr.status != 200) && (xhr.status != 206) && !JSROOT.browser.qt5 &&
-               ((xhr.status !== 0) || (url.indexOf("file://")!==0))) {
+             // in these special cases browsers not always set status
+             !((xhr.status == 0) && ((url.indexOf("file://")==0) || (url.indexOf("blob:")==0)))) {
             return callback(null);
          }
 
          if (JSROOT.nodejs && (method == "GET") && (kind === "object") &&
-             (xhr.responseType = 'arraybuffer') && (xhr.getResponseHeader("content-encoding")=="gzip")) {
+             (xhr.responseType == "arraybuffer") && (xhr.getResponseHeader("content-encoding") == "gzip")) {
             // special handling of gzipped JSON objects in Node.js
             var zlib = require('zlib'),
                 str = zlib.unzipSync(Buffer.from(xhr.response));
@@ -1672,10 +1673,22 @@
       return obj;
    }
 
-   // obsolete functions, can be removed by next JSROOT release
+   /** @summary Create TList
+    * @desc obsolete, use JSROOT.Create("TList") instead
+    * @deprecated */
    JSROOT.CreateTList = function() { return JSROOT.Create("TList"); }
+
+   /** @summary Create TAxis
+    * @desc obsolete, use JSROOT.Create("TAxis") instead
+    * @deprecated */
    JSROOT.CreateTAxis = function() { return JSROOT.Create("TAxis"); }
 
+   /** @summary Create histogram object
+    * @param {string} typename - histogram typename like TH1I or TH2F
+    * @param {number} nbinsx - number of bins on X-axis
+    * @param {number} [nbinsy] - number of bins on Y-axis (for 2D/3D histograms)
+    * @param {number} [nbinsz] - number of bins on Z-axis (for 3D histograms)
+    */
    JSROOT.CreateHistogram = function(typename, nbinsx, nbinsy, nbinsz) {
       // create histogram object of specified type
       // if bins numbers are specified, appropriate typed array will be created
@@ -1705,18 +1718,30 @@
       return histo;
    }
 
+   /** @summary Create 1-d histogram
+    * @desc obsolete, use JSROOT.CreateHistogram() instead
+    * @deprecated */
    JSROOT.CreateTH1 = function(nbinsx) {
       return JSROOT.CreateHistogram("TH1I", nbinsx);
    }
 
+   /** @summary Create 2-d histogram
+    * @desc obsolete, use JSROOT.CreateHistogram() instead
+    * @deprecated */
    JSROOT.CreateTH2 = function(nbinsx, nbinsy) {
       return JSROOT.CreateHistogram("TH2I", nbinsx, nbinsy);
    }
 
+   /** @summary Create 3-d histogram
+    * @desc obsolete, use JSROOT.CreateHistogram() instead
+    * @deprecated */
    JSROOT.CreateTH3 = function(nbinsx, nbinsy, nbinsz) {
       return JSROOT.CreateHistogram("TH3I", nbinsx, nbinsy, nbinsz);
    }
 
+   /** @summary Creates TPolyLine object
+    * @param {number} npoints - number of points
+    * @param {boolean} [use_int32] - use Int32Array type for points, default is Float32Array */
    JSROOT.CreateTPolyLine = function(npoints, use_int32) {
       var poly = JSROOT.Create("TPolyLine");
       if (npoints) {
@@ -1733,6 +1758,10 @@
       return poly;
    }
 
+   /** @summary Creates TGraph object
+    * @param {number} npoints - number of points in TGraph
+    * @param {array} [xpts] - array with X coordinates
+    * @param {array} [ypts] - array with Y coordinates */
    JSROOT.CreateTGraph = function(npoints, xpts, ypts) {
       var graph = JSROOT.extend(JSROOT.Create("TGraph"), { fBits: 0x3000408, fName: "graph", fTitle: "title" });
 
@@ -1751,6 +1780,16 @@
       return graph;
    }
 
+   /** @summary Creates THStack object
+    * @desc
+    * As arguments one could specify any number of histograms objects
+    * @example
+    * var nbinsx = 20;
+    * var h1 = JSROOT.CreateHistogram("TH1F", nbinsx);
+    * var h2 = JSROOT.CreateHistogram("TH1F", nbinsx);
+    * var h3 = JSROOT.CreateHistogram("TH1F", nbinsx);
+    * var stack = JSROOT.CreateTHStack(h1, h2, h3);
+    * */
    JSROOT.CreateTHStack = function() {
       var stack = JSROOT.Create("THStack");
       for(var i=0; i<arguments.length; ++i)
@@ -1758,6 +1797,9 @@
       return stack;
    }
 
+   /** @summary Creates TMultiGraph object
+    * @desc
+    * As arguments one could specify any number of TGraph objects */
    JSROOT.CreateTMultiGraph = function() {
       var mgraph = JSROOT.Create("TMultiGraph");
       for(var i=0; i<arguments.length; ++i)
@@ -1840,8 +1882,9 @@
                  }
                  if (this.fFormula.fClingParameters && this.fFormula.fParams) {
                     for (var i=0;i<this.fFormula.fParams.length;++i) {
-                       var regex = new RegExp('(\\[' + this.fFormula.fParams[i].first + '\\])', 'g');
-                       _func = _func.replace(regex, this.fFormula.fClingParameters[this.fFormula.fParams[i].second]);
+                       var regex = new RegExp('(\\[' + this.fFormula.fParams[i].first + '\\])', 'g'),
+                           parvalue = this.fFormula.fClingParameters[this.fFormula.fParams[i].second];
+                       _func = _func.replace(regex, (parvalue < 0) ? "(" + parvalue + ")" : parvalue);
                     }
                  }
               }

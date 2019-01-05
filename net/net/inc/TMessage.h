@@ -22,6 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Compression.h"
 #include "TBufferFile.h"
 #include "MessageTypes.h"
 #include "TBits.h"
@@ -80,9 +81,9 @@ public:
    Int_t    GetCompressionAlgorithm() const;
    Int_t    GetCompressionLevel() const;
    Int_t    GetCompressionSettings() const;
-   void     SetCompressionAlgorithm(Int_t algorithm=0);
-   void     SetCompressionLevel(Int_t level=4);
-   void     SetCompressionSettings(Int_t settings=4);
+   void     SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
+   void     SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);
+   void     SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
    Int_t    Compress();
    Int_t    Uncompress();
    char    *CompBuffer() const { return fBufComp; }

@@ -20,6 +20,12 @@
 #pragma link C++ class TGeoIntersection+;
 #pragma link C++ class TGeoSubtraction+;
 #pragma link C++ class TGeoMedium+;
+#pragma link C++ class TGeoOpticalSurface+;
+#pragma link C++ enum  TGeoOpticalSurface::ESurfaceType;
+#pragma link C++ enum  TGeoOpticalSurface::ESurfaceModel;
+#pragma link C++ enum  TGeoOpticalSurface::ESurfaceFinish;
+#pragma link C++ class TGeoSkinSurface+;
+#pragma link C++ class TGeoBorderSurface+;
 #pragma link C++ class TGeoElement+;
 #pragma read sourceClass="TGeoElement" targetClass="TGeoElement" version="[1-2]" source="" target="" \
     code="{ newObj->ComputeDerivedQuantities() ; }" 
@@ -90,6 +96,7 @@
 #pragma link C++ class TGeoBuilder;
 #pragma link C++ class TGeoNavigator+;
 #pragma link C++ class TGeoNavigatorArray;
+#pragma link C++ class TGDMLMatrix+;
 #pragma link C++ struct std::map<std::thread::id, TGeoNavigatorArray *>;
 #pragma link C++ struct std::pair<std::thread::id, TGeoNavigatorArray *>;
 #pragma link C++ struct std::map<std::thread::id, Int_t>;

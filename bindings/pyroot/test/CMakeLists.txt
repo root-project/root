@@ -6,6 +6,7 @@ if(NUMPY_FOUND)
   ROOT_ADD_PYUNITTEST(pyroot_array_interface array_interface.py)
   # this excludes RDF for 32 bits builds because of clang/gcc abi issues
   if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+    ROOT_ADD_PYUNITTEST(pyroot_rdataframe_asnumpy rdataframe_asnumpy.py)
     ROOT_ADD_PYUNITTEST(pyroot_ttree_asmatrix ttree_asmatrix.py)
   endif()
 endif()

@@ -2769,7 +2769,7 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
           std::make_pair(LocalBaseTypeIndex,
                          F.BaseTypeIndex - LocalBaseTypeIndex));
 
-        TypesLoaded.resize(TypesLoaded.size() + F.LocalNumTypes);
+        NumTypesLoaded += F.LocalNumTypes;
       }
       break;
     }
@@ -2799,7 +2799,7 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
         // module.
         F.GlobalToLocalDeclIDs[&F] = LocalBaseDeclID;
 
-        DeclsLoaded.resize(DeclsLoaded.size() + F.LocalNumDecls);
+        NumDeclsLoaded += F.LocalNumDecls;
       }
       break;
     }
@@ -3333,7 +3333,7 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
           std::make_pair(LocalBaseMacroID,
                          F.BaseMacroID - LocalBaseMacroID));
 
-        MacrosLoaded.resize(MacrosLoaded.size() + F.LocalNumMacros);
+        NumMacrosLoaded += F.LocalNumMacros;
       }
       break;
     }
@@ -3528,7 +3528,8 @@ ASTReader::ReadModuleMapFileBlock(RecordData &Record, ModuleFile &F,
 
     // Check the primary module map file.
     const FileEntry *StoredModMap = FileMgr.getFile(F.ModuleMapPath);
-    if (StoredModMap == nullptr || StoredModMap != ModMap) {
+    if (!PP.getPreprocessorOpts().DisablePCHValidation &&
+          (StoredModMap == nullptr || StoredModMap != ModMap)) {
       assert(ModMap && "found module is missing module map file");
       assert(ImportedBy && "top-level import should be verified");
       if ((ClientLoadCapabilities & ARR_OutOfDate) == 0)
@@ -6766,19 +6767,19 @@ QualType ASTReader::GetType(TypeID ID) {
   }
 
   Index -= NUM_PREDEF_TYPE_IDS;
-  assert(Index < TypesLoaded.size() && "Type index out-of-range");
-  if (TypesLoaded[Index].isNull()) {
-    TypesLoaded[Index] = readTypeRecord(Index);
-    if (TypesLoaded[Index].isNull())
+  assert(Index < NumTypesLoaded && "Type index out-of-range");
+  if (TypesLoaded.find(Index) == TypesLoaded.end()) {
+    QualType QualTy = readTypeRecord(Index);
+    TypesLoaded.insert({Index, QualTy});
+    if (TypesLoaded.find(Index) == TypesLoaded.end())
       return QualType();
 
-    TypesLoaded[Index]->setFromAST();
+    QualTy->setFromAST();
     if (DeserializationListener)
-      DeserializationListener->TypeRead(TypeIdx::fromTypeID(ID),
-                                        TypesLoaded[Index]);
+      DeserializationListener->TypeRead(TypeIdx::fromTypeID(ID), QualTy);
   }
 
-  return TypesLoaded[Index].withFastQualifiers(FastQuals);
+  return TypesLoaded.find(Index)->second.withFastQualifiers(FastQuals);
 }
 
 QualType ASTReader::getLocalType(ModuleFile &F, unsigned LocalID) {
@@ -7016,13 +7017,14 @@ SourceLocation ASTReader::getSourceLocationForDeclID(GlobalDeclID ID) {
 
   unsigned Index = ID - NUM_PREDEF_DECL_IDS;
 
-  if (Index > DeclsLoaded.size()) {
+  if (Index > NumDeclsLoaded) {
     Error("declaration ID out-of-range for AST file");
     return SourceLocation();
   }
 
-  if (Decl *D = DeclsLoaded[Index])
-    return D->getLocation();
+  auto FindRes = DeclsLoaded.find(Index);
+  if (FindRes != DeclsLoaded.end())
+    return FindRes->second->getLocation();
 
   SourceLocation Loc;
   DeclCursorForID(ID, Loc);
@@ -7101,13 +7103,17 @@ Decl *ASTReader::GetExistingDecl(DeclID ID) {
 
   unsigned Index = ID - NUM_PREDEF_DECL_IDS;
 
-  if (Index >= DeclsLoaded.size()) {
+  if (Index >= NumDeclsLoaded) {
     assert(0 && "declaration ID out-of-range for AST file");
     Error("declaration ID out-of-range for AST file");
     return nullptr;
   }
 
-  return DeclsLoaded[Index];
+  auto FindRes = DeclsLoaded.find(Index);
+  if (FindRes == DeclsLoaded.end())
+    return nullptr;
+
+  return FindRes->second;
 }
 
 Decl *ASTReader::GetDecl(DeclID ID) {
@@ -7116,19 +7122,19 @@ Decl *ASTReader::GetDecl(DeclID ID) {
 
   unsigned Index = ID - NUM_PREDEF_DECL_IDS;
 
-  if (Index >= DeclsLoaded.size()) {
+  if (Index >= NumDeclsLoaded) {
     assert(0 && "declaration ID out-of-range for AST file");
     Error("declaration ID out-of-range for AST file");
     return nullptr;
   }
 
-  if (!DeclsLoaded[Index]) {
+  if (DeclsLoaded.find(Index) == DeclsLoaded.end()) {
     ReadDeclRecord(ID);
     if (DeserializationListener)
-      DeserializationListener->DeclRead(ID, DeclsLoaded[Index]);
+      DeserializationListener->DeclRead(ID, DeclsLoaded.find(Index)->second);
   }
 
-  return DeclsLoaded[Index];
+  return DeclsLoaded.find(Index)->second;
 }
 
 DeclID ASTReader::mapGlobalIDToModuleFileGlobalID(ModuleFile &M,
@@ -7386,20 +7392,16 @@ void ASTReader::StartTranslationUnit(ASTConsumer *Consumer) {
 void ASTReader::PrintStats() {
   std::fprintf(stderr, "*** AST File Statistics:\n");
 
-  unsigned NumTypesLoaded
-    = TypesLoaded.size() - std::count(TypesLoaded.begin(), TypesLoaded.end(),
-                                      QualType());
-  unsigned NumDeclsLoaded
-    = DeclsLoaded.size() - std::count(DeclsLoaded.begin(), DeclsLoaded.end(),
-                                      (Decl *)nullptr);
+  unsigned NumTypesLoaded = TypesLoaded.size();
+
+  unsigned NumDeclsLoaded = DeclsLoaded.size();
+
   unsigned NumIdentifiersLoaded
     = IdentifiersLoaded.size() - std::count(IdentifiersLoaded.begin(),
                                             IdentifiersLoaded.end(),
                                             (IdentifierInfo *)nullptr);
   unsigned NumMacrosLoaded
-    = MacrosLoaded.size() - std::count(MacrosLoaded.begin(),
-                                       MacrosLoaded.end(),
-                                       (MacroInfo *)nullptr);
+    = MacrosLoaded.size();
   unsigned NumSelectorsLoaded
     = SelectorsLoaded.size() - std::count(SelectorsLoaded.begin(),
                                           SelectorsLoaded.end(),
@@ -8181,26 +8183,30 @@ MacroInfo *ASTReader::getMacro(MacroID ID) {
   if (ID == 0)
     return nullptr;
 
-  if (MacrosLoaded.empty()) {
+  if (!NumMacrosLoaded) {
     Error("no macro table in AST file");
     return nullptr;
   }
 
   ID -= NUM_PREDEF_MACRO_IDS;
-  if (!MacrosLoaded[ID]) {
+  auto FindRes = MacrosLoaded.find(ID);
+  if (FindRes == MacrosLoaded.end()) {
     GlobalMacroMapType::iterator I
       = GlobalMacroMap.find(ID + NUM_PREDEF_MACRO_IDS);
     assert(I != GlobalMacroMap.end() && "Corrupted global macro map");
     ModuleFile *M = I->second;
     unsigned Index = ID - M->BaseMacroID;
-    MacrosLoaded[ID] = ReadMacroRecord(*M, M->MacroOffsets[Index]);
+    MacroInfo *MI = ReadMacroRecord(*M, M->MacroOffsets[Index]);
+    MacrosLoaded.insert({ID, MI});
 
     if (DeserializationListener)
-      DeserializationListener->MacroRead(ID + NUM_PREDEF_MACRO_IDS,
-                                         MacrosLoaded[ID]);
+      DeserializationListener->MacroRead(ID + NUM_PREDEF_MACRO_IDS, MI);
   }
 
-  return MacrosLoaded[ID];
+  FindRes = MacrosLoaded.find(ID);
+  if (FindRes == MacrosLoaded.end())
+    return nullptr;
+  return FindRes->second;
 }
 
 MacroID ASTReader::getGlobalMacroID(ModuleFile &M, unsigned LocalID) {

@@ -121,8 +121,6 @@ else()
   set(aclocaldir ${prefix}/${CMAKE_INSTALL_ACLOCALDIR})
 endif()
 
-set(LibSuffix ${SOEXT})
-
 set(buildx11 ${value${x11}})
 set(x11libdir -L${X11_LIBRARY_DIR})
 set(xpmlibdir -L${X11_LIBRARY_DIR})
@@ -493,24 +491,7 @@ if(veccore)
 else()
   set(hasveccore undef)
 endif()
-if(cxx11)
-  set(cxxversion cxx11)
-  set(usec++11 define)
-else()
-  set(usec++11 undef)
-endif()
-if(cxx14)
-  set(cxxversion cxx14)
-  set(usec++14 define)
-else()
-  set(usec++14 undef)
-endif()
-if(cxx17)
-  set(cxxversion cxx17)
-  set(usec++17 define)
-else()
-  set(usec++17 undef)
-endif()
+
 if(compression_default STREQUAL "lz4")
   set(uselz4 define)
   set(usezlib undef)
@@ -560,28 +541,37 @@ if (tmva-cpu)
   set(hastmvacpu define)
 else()
   set(hastmvacpu undef)
-endif()  
+endif()
 if (tmva-gpu)
   set(hastmvagpu define)
 else()
   set(hastmvagpu undef)
-endif()  
+endif()
 
+# clear cache to allow reconfiguring
+# with a different CMAKE_CXX_STANDARD
+unset(found_stdapply CACHE)
+unset(found_stdindexsequence CACHE)
+unset(found_stdinvoke CACHE)
+unset(found_stdstringview CACHE)
+unset(found_stdexpstringview CACHE)
+unset(found_stod_stringview CACHE)
 
+set(hasstdexpstringview undef)
 CHECK_CXX_SOURCE_COMPILES("#include <string_view>
   int main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}" found_stdstringview)
 if(found_stdstringview)
   set(hasstdstringview define)
 else()
   set(hasstdstringview undef)
-endif()
 
-CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
+  CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
    int main() { char arr[3] = {'B', 'a', 'r'}; std::experimental::string_view strv(arr, sizeof(arr)); return 0;}" found_stdexpstringview)
-if(found_stdexpstringview)
-  set(hasstdexpstringview define)
-else()
-  set(hasstdexpstringview undef)
+  if(found_stdexpstringview)
+    set(hasstdexpstringview define)
+  else()
+    set(hasstdexpstringview undef)
+  endif()
 endif()
 
 if(found_stdstringview)
@@ -638,7 +628,7 @@ else()
 endif()
 
 #---root-config----------------------------------------------------------------------------------------------
-ROOT_SHOW_OPTIONS(features)
+ROOT_GET_OPTIONS(features ENABLED)
 string(REPLACE "c++11" "cxx11" features ${features}) # change the name of the c++11 feature needed for root-config.in
 set(configfeatures ${features})
 set(configargs ${ROOT_CONFIGARGS})
@@ -661,11 +651,6 @@ configure_file(${CMAKE_SOURCE_DIR}/config/rootrc.in ${CMAKE_BINARY_DIR}/etc/syst
 configure_file(${CMAKE_SOURCE_DIR}/config/rootauthrc.in ${CMAKE_BINARY_DIR}/etc/system.rootauthrc @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/rootdaemonrc.in ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc @ONLY NEWLINE_STYLE UNIX)
 
-configure_file(${CMAKE_SOURCE_DIR}/config/rootd.in ${CMAKE_BINARY_DIR}/etc/daemons/rootd.rc.d @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/rootd.xinetd.in ${CMAKE_BINARY_DIR}/etc/daemons/rootd.xinetd @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/proofd.in ${CMAKE_BINARY_DIR}/etc/daemons/proofd.rc.d @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/proofd.xinetd.in ${CMAKE_BINARY_DIR}/etc/daemons/proofd.xinetd @ONLY NEWLINE_STYLE UNIX)
-
 configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in include/RConfigOptions.h NEWLINE_STYLE UNIX)
 
 if(ruby)
@@ -677,7 +662,8 @@ configure_file(${CMAKE_SOURCE_DIR}/config/Makefile.in config/Makefile.config NEW
 configure_file(${CMAKE_SOURCE_DIR}/config/mimes.unix.in ${CMAKE_BINARY_DIR}/etc/root.mimes NEWLINE_STYLE UNIX)
 
 #---Generate the ROOTConfig files to be used by CMake projects-----------------------------------------------
-ROOT_SHOW_OPTIONS(ROOT_ENABLED_OPTIONS)
+ROOT_GET_OPTIONS(ROOT_ALL_OPTIONS)
+ROOT_GET_OPTIONS(ROOT_ENABLED_OPTIONS ENABLED)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in
                ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake @ONLY NEWLINE_STYLE UNIX)
 
@@ -764,14 +750,15 @@ endif()
 
 
 #---compiledata.h--------------------------------------------------------------------------------------------
+
 if(WIN32)
   # We cannot use the compiledata.sh script for windows
   configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in ${CMAKE_BINARY_DIR}/include/compiledata.h NEWLINE_STYLE UNIX)
 else()
-  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh ${CMAKE_BINARY_DIR}/include/compiledata.h "${CXX}"
+  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh
+    ${CMAKE_BINARY_DIR}/include/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_FLAGS}"
-        "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}"
-        "${LibSuffix}" "${SYSLIBS}"
+        "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "so" "${SYSLIBS}"
         "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "" "${explicitlink}" )
 endif()
 
@@ -815,7 +802,7 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
                           GROUP_READ
                           WORLD_READ
               DESTINATION ${CMAKE_INSTALL_BINDIR})
-              
+
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
               ${CMAKE_BINARY_DIR}/installtree/root-config
               ${CMAKE_SOURCE_DIR}/cmake/scripts/setenvwrap.csh
@@ -843,17 +830,6 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootauthrc
               ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-
-install(FILES ${CMAKE_BINARY_DIR}/etc/daemons/rootd.rc.d
-              ${CMAKE_BINARY_DIR}/etc/daemons/proofd.rc.d
-              PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
-                          GROUP_EXECUTE GROUP_READ
-                          WORLD_EXECUTE WORLD_READ
-              DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/daemons)
-
-install(FILES ${CMAKE_BINARY_DIR}/etc/daemons/rootd.xinetd
-              ${CMAKE_BINARY_DIR}/etc/daemons/proofd.xinetd
-              DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/daemons)
 
 install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
 

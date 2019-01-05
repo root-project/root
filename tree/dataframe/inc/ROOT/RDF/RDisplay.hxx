@@ -22,16 +22,11 @@
 namespace ROOT {
 namespace Internal {
 namespace RDF {
-std::string PrettyPrintAddr(const void *const addr); // Fw declaration
 
-/**
- * \class ROOT::Internal::RDF::RDisplayElement
- * \ingroup dataframe
- * \brief Utility class to let Display print compact tabular representations of the events
- *
- * This class is never explicitly visible to the user. It is needed during printing to understand if a value can be
- * jumped over or must be printed. Each RDisplayElement represents a cell.
- */
+template<typename T>
+class DisplayHelper;
+std::string PrettyPrintAddr(const void *const addr);
+
 class RDisplayElement {
 private:
    enum class PrintingAction { ToBePrinted, ToBeIgnored, ToBeDotted };
@@ -39,40 +34,15 @@ private:
    PrintingAction fPrintingAction;
 
 public:
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief C-tor, it takes the event string representation sets it to be printed
    RDisplayElement(const std::string &representation);
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief C-tor, empty representation to be printed
    RDisplayElement();
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief This cell must not be jumped over
    void SetPrint();
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief This cell must can be jumped over
    void SetIgnore();
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief This cell can be replaced by "..."
    void SetDots();
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Getter, returns if the cell has to be printed
    bool IsPrint() const;
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Getter, returns if the cell has to be ignored
    bool IsIgnore() const;
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Getter, returns if the cell has to be replaced by "..."
    bool IsDot() const;
-
-   std::string GetRepresentation() const;
-
+   const std::string &GetRepresentation() const;
    bool IsEmpty() const;
 };
 } // namespace RDF
@@ -83,14 +53,16 @@ namespace RDF {
 /**
  * \class ROOT::RDF::RDisplay
  * \ingroup dataframe
- * \brief Returned to the user to allows printing the desired dataset.
+ * This class is the textual representation of the content of a columnar dataset.
  *
- * This class is provided to the user, and it can be used to print on Standard output the events required through
- * Display in a shortened representation or to return the full representation of the events as a string. This object
- * stores the whole set of events in memory as data members, because it needs to know all the events to be printed in
- * order to apply proper formatting.
+ * This class is provided to the user, and it can be used to print on screen
+ * the entries of the dataset requested through the Display action in a compact
+ * representation or to return the full representation of the events as a string.
+ * In order to apply proper formatting the content is buffered in memory as strings.
  */
 class RDisplay {
+   template<typename T>
+   friend class ROOT::Internal::RDF::DisplayHelper;
 private:
    using VecStr_t = std::vector<std::string>;
    using DElement_t = ROOT::Internal::RDF::RDisplayElement;
@@ -117,7 +89,7 @@ private:
    size_t fEntries; ///< Number of events to process for each column (i.e. number of rows).
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Appends a cling::printValue call to the stringstream.
+   /// Appends a cling::printValue call to the stringstream.
    /// \tparam T the type of the event to convert
    /// \param[in] stream Where the conversion function call will be chained.
    /// \param[in] element The event to convert to its string representation
@@ -132,7 +104,7 @@ private:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Appends collection.size() cling::printValue call to the stringstream.
+   /// Appends collection.size() cling::printValue call to the stringstream.
    /// \tparam T the type of the event to convert
    /// \param[in] stream Where the conversion function call will be chained.
    /// \param[in] element The event to convert to its string representation
@@ -161,38 +133,32 @@ private:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Adds a single element to the next slot in the table
+   /// Adds a single element to the next slot in the table
    void AddToRow(const std::string &stringEle);
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Adds a collection to the table
+   /// Adds a collection to the table
+   ///
    /// Starting from the slot, the elements are added one under the other, each
    /// one using a single cell of an entire row
    void AddCollectionToRow(const VecStr_t &collection);
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Moves to the next cell
+   /// Moves to the next cell
+   ///
    /// Moves to the next cell, and if the row is full moves to the next row.
    void MovePosition();
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Feed a piece of code to cling and handle errors
+   /// Feed a piece of code to cling and handle errors
    void CallInterpreter(const std::string &code);
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the number of columns that do NOT fit in the characters limit
+   /// Get the number of columns that do NOT fit in the characters limit
    size_t GetNColumnsToShorten() const;
 
-public:
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates an RDisplay to print the event values
-   /// \param[in] columnNames Columns to print
-   /// \param[in] types The type of each column
-   /// \param[in] entries How many events per column (row) must be processed.
-   RDisplay(const VecStr_t &columnNames, const VecStr_t &types, const int &entries);
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Adds a row of events to the table
+   /// Adds a row of events to the table
    template <typename... Columns>
    void AddRow(Columns... columns)
    {
@@ -217,17 +183,26 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief If the number of required rows has been parsed, returns false.
+   /// If the number of required rows has been parsed, returns false.
    bool HasNext() { return fEntries > 0; }
 
+public:
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Prints the representation to the standard output
+   /// Creates an RDisplay to print the event values
+   /// \param[in] columnNames Columns to print
+   /// \param[in] types The type of each column
+   /// \param[in] entries How many events per column (row) must be processed.
+   RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries);
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// Prints the representation to the standard output
+   ///
    /// Collections are shortened to the first and last element. The overall width
    /// is shortened to a fixed size of TODO
    void Print() const;
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns the representation as a string
+   /// Returns the representation as a string
    std::string AsString() const;
 };
 

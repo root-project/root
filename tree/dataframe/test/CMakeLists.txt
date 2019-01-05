@@ -1,7 +1,8 @@
 # @author Danilo Piparo CERN, Enrico Guiraud CERN
 
+#### C++ TESTS ####
 ROOT_ADD_GTEST(dataframe_friends dataframe_friends.cxx LIBRARIES ROOTDataFrame)
-ROOT_ADD_GTEST(dataframe_alias dataframe_aliases.cxx LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(dataframe_colnames dataframe_colnames.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_cache dataframe_cache.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_callbacks dataframe_callbacks.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_histomodels dataframe_histomodels.cxx LIBRARIES ROOTDataFrame)
@@ -17,8 +18,14 @@ ROOT_ADD_GTEST(dataframe_ranges dataframe_ranges.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_leaves dataframe_leaves.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_vecops dataframe_vecops.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_resptr dataframe_resptr.cxx LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(dataframe_take dataframe_take.cxx LIBRARIES ROOTDataFrame)
+
+if (imt)
+   ROOT_ADD_GTEST(dataframe_concurrency dataframe_concurrency.cxx LIBRARIES ROOTDataFrame)
+endif()
 
 ROOT_ADD_GTEST(datasource_more datasource_more.cxx LIBRARIES ROOTDataFrame)
+# deactivate until sporadic crashes are understood, see ROOT-9174
 #ROOT_ADD_GTEST(datasource_root datasource_root.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(datasource_trivial datasource_trivial.cxx LIBRARIES ROOTDataFrame)
 configure_file(RCsvDS_test_headers.csv . COPYONLY)
@@ -35,6 +42,8 @@ endif()
 ROOT_ADD_GTEST(datasource_csv datasource_csv.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(datasource_lazy datasource_lazy.cxx LIBRARIES ROOTDataFrame)
 
+#### PYTHON TESTS ####
 ROOT_ADD_PYUNITTEST(dataframe_misc dataframe_misc.py)
 ROOT_ADD_PYUNITTEST(dataframe_histograms dataframe_histograms.py)
+# deactivate until Cache will be available through PyROOT
 #ROOT_ADD_PYUNITTEST(dataframe_cache dataframe_cache.py)

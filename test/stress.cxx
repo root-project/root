@@ -361,7 +361,7 @@ void stress2()
       if (last < lastgood - 200 || last > lastgood + 200 || comp < 1.5 || comp > 2.1)
          OK = kFALSE;
 #else
-      Long64_t lastgood = 10032;  // changes in TFormula (v12)
+      Long64_t lastgood = 10034;  // changes in TFormula (v12)
       if (last < lastgood - 200 || last > lastgood + 200 || comp < 2.0 || comp > 2.4)
          OK = kFALSE;
 #endif

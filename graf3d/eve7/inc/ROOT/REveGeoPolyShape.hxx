@@ -1,8 +1,8 @@
 // @(#)root/eve:$Id$
-// Author: Matevz Tadel 2007
+// Author: Matevz Tadel 2007, 2018
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,26 +12,20 @@
 #ifndef ROOT7_REveGeoPolyShape
 #define ROOT7_REveGeoPolyShape
 
-#include "Rtypes.h"
 #include "TGeoBBox.h"
 
 #include <vector>
 
 class TBuffer3D;
 class TGeoCompositeShape;
+class TGeoShape;
 
 namespace ROOT {
 namespace Experimental {
 
 class REveRenderData;
 
-namespace EveCsg
-{
-class TBaseMesh;
-}
-
-class REveGeoPolyShape : public TGeoBBox
-{
+class REveGeoPolyShape : public TGeoBBox {
 private:
    REveGeoPolyShape(const REveGeoPolyShape&);            // Not implemented
    REveGeoPolyShape& operator=(const REveGeoPolyShape&); // Not implemented
@@ -40,9 +34,11 @@ protected:
    std::vector<Double_t> fVertices;
    std::vector<Double_t> fNormals;
    std::vector<Int_t>    fPolyDesc;
-   Int_t                 fNbPols;
+   Int_t                 fNbPols{0};
 
-   virtual void FillBuffer3D(TBuffer3D& buffer, Int_t reqSections, Bool_t localFrame) const;
+   virtual void FillBuffer3D(TBuffer3D &buffer, Int_t reqSections, Bool_t localFrame) const;
+
+   void SetFromBuff3D(const TBuffer3D &buffer);
 
    Int_t CheckPoints(const Int_t *source, Int_t *dest) const;
 
@@ -68,15 +64,16 @@ protected:
    static Bool_t         fgAutoCalculateNormals;
 
 public:
-   REveGeoPolyShape();
-   virtual ~REveGeoPolyShape() {}
+   REveGeoPolyShape() = default;
 
-   static REveGeoPolyShape* Construct(TGeoCompositeShape *cshp, Int_t n_seg);
+   virtual ~REveGeoPolyShape() = default;
+
+   Int_t GetNumFaces() const { return fNbPols; }
 
    void FillRenderData(REveRenderData &rd);
 
-   void SetFromMesh(EveCsg::TBaseMesh* mesh);
-   void SetFromBuff3D(const TBuffer3D& buffer);
+   void BuildFromComposite(TGeoCompositeShape *cshp, Int_t n_seg = 60);
+   void BuildFromShape(TGeoShape *shape, Int_t n_seg = 60);
 
    void EnforceTriangles();
    void CalculateNormals();

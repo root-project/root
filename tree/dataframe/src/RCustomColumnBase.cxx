@@ -20,6 +20,13 @@ using ROOT::Detail::RDF::RCustomColumnBase;
 using ROOT::Detail::RDF::RLoopManager;
 namespace RDFInternal = ROOT::Internal::RDF;
 
+unsigned int RCustomColumnBase::GetNextID()
+{
+   static unsigned int id = 0U;
+   ++id;
+   return id;
+}
+
 RCustomColumnBase::RCustomColumnBase(RLoopManager *lm, std::string_view name, const unsigned int nSlots,
                                      const bool isDSColumn, const RDFInternal::RBookedCustomColumns &customColumns)
    : fLoopManager(lm), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn), fCustomColumns(customColumns)

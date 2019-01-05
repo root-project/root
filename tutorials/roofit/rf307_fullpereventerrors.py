@@ -1,14 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #307
-## Complete example with use of full p.d.f. with per-event errors
+## Multidimensional models: usage of full p.d.f. with per-event errors
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -30,7 +28,7 @@ gm = ROOT.RooGaussModel(
 # Construct decay(dt) (x) gauss1(dt|dterr)
 tau = ROOT.RooRealVar("tau", "tau", 1.548)
 decay_gm = ROOT.RooDecay("decay_gm", "decay", dt,
-                            tau, gm, ROOT.RooDecay.DoubleSided)
+                         tau, gm, ROOT.RooDecay.DoubleSided)
 
 # Construct empirical pdf for per-event error
 # -----------------------------------------------------------------
@@ -50,8 +48,13 @@ pdfErr = ROOT.RooHistPdf(
 
 # Construct production of conditional decay_dm(dt|dterr) with empirical
 # pdfErr(dterr)
-model = ROOT.RooProdPdf("model", "model", ROOT.RooArgSet(
-    pdfErr), ROOT.RooFit.Conditional(ROOT.RooArgSet(decay_gm), ROOT.RooArgSet(dt)))
+model = ROOT.RooProdPdf(
+    "model",
+    "model",
+    ROOT.RooArgSet(pdfErr),
+    ROOT.RooFit.Conditional(
+        ROOT.RooArgSet(decay_gm),
+        ROOT.RooArgSet(dt)))
 
 # (Alternatively you could also use the landau shape pdfDtErr)
 # ROOT.RooProdPdf model("model", "model",pdfDtErr,
@@ -85,7 +88,7 @@ model.plotOn(frame)
 
 # Draw all frames on canvas
 c = ROOT.TCanvas("rf307_fullpereventerrors",
-                    "rf307_fullpereventerrors", 800, 400)
+                 "rf307_fullpereventerrors", 800, 400)
 c.Divide(2)
 c.cd(1)
 ROOT.gPad.SetLeftMargin(0.20)

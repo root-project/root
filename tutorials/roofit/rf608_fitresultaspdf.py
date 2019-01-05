@@ -2,18 +2,12 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #608
-##
-## Representing the parabolic approximation of the fit as
-# a multi-variate Gaussian on the parameters of the fitted p.d.f.
-#
+## Likelihood and minimization: representing the parabolic approximation of the fit as a multi-variate Gaussian on the parameters of the fitted p.d.f.
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
-
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -33,7 +27,9 @@ sigma_g2 = ROOT.RooRealVar("sigma_g2", "width of g2", 4, 3.0, 5.0)
 g2 = ROOT.RooGaussian("g2", "g2", x, mean, sigma_g2)
 
 frac = ROOT.RooRealVar("frac", "frac", 0.5, 0.0, 1.0)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(g1, g2), ROOT.RooArgList(frac))
+model = ROOT.RooAddPdf(
+    "model", "model", ROOT.RooArgList(
+        g1, g2), ROOT.RooArgList(frac))
 
 # Generate 1000 events
 data = model.generate(ROOT.RooArgSet(x), 1000)
@@ -84,7 +80,7 @@ c1.SaveAs("rf608_fitresultaspdf_1.png")
 
 # Draw the 2D projections of the 3D p.d.f.
 c2 = ROOT.TCanvas("rf608_fitresultaspdf_2",
-                    "rf608_fitresultaspdf_2", 900, 600)
+                  "rf608_fitresultaspdf_2", 900, 600)
 c2.Divide(3, 2)
 c2.cd(1)
 ROOT.gPad.SetLeftMargin(0.15)

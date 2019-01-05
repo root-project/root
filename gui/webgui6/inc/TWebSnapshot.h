@@ -44,7 +44,8 @@ public:
      kObject = 1,      // object itself
      kSVG = 2,         // list of SVG primitives
      kSubPad = 3,      // subpad
-     kColors = 4       // list of ROOT colors + palette
+     kColors = 4,      // list of ROOT colors + palette
+     kStyle = 5        // gStyle object
    };
 
    virtual ~TWebSnapshot();
@@ -66,13 +67,18 @@ public:
 
 class TPadWebSnapshot : public TWebSnapshot {
 protected:
-   bool fActive{false};                      ///< true when pad is active
-   std::vector<std::unique_ptr<TWebSnapshot>> fPrimitives;   ///< list of all primitives, drawn in the pad
+   bool fActive{false};                                    ///< true when pad is active
+   std::vector<std::unique_ptr<TWebSnapshot>> fPrimitives; ///< list of all primitives, drawn in the pad
 public:
    TPadWebSnapshot() { SetKind(kSubPad); }
 
    void SetActive(bool on = true) { fActive = on; }
-   void Add(TWebSnapshot *snap) { fPrimitives.emplace_back(snap); }
+
+   TWebSnapshot &NewPrimitive(TObject *obj = nullptr, const std::string &opt = "");
+
+   TPadWebSnapshot &NewSubPad();
+
+   TWebSnapshot &NewSpecials();
 
    ClassDef(TPadWebSnapshot,1)  // Pad painting snapshot, used for JSROOT
 };

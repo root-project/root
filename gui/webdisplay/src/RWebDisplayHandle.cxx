@@ -387,8 +387,8 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> ROOT::Experimental::RWebD
    std::unique_ptr<RWebDisplayHandle> handle;
 
    auto try_creator = [&](std::unique_ptr<Creator> &creator) {
-      if (!creator) return false;
-
+      if (!creator || !creator->IsActive())
+         return false;
       handle = creator->Display(args);
       return handle ? true : false;
    };

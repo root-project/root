@@ -329,7 +329,7 @@
 #   endif
 #endif
 
-#ifdef R__USE_CXX14
+#if __cplusplus >= 201402L
 #   if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_12)
       // At least on 10.11, the compiler defines but the c++ library does not provide the size operator delete.
       // See for example https://llvm.org/bugs/show_bug.cgi?id=22951 or
@@ -468,8 +468,8 @@
 # else
 #   define _R__DEPRECATED_LATER(REASON) __attribute__((deprecated(REASON)))
 # endif
-// #elif defined(_MSC_VER)
-// #   define _R__DEPRECATED_LATER(REASON) __declspec(deprecated(REASON))
+#elif defined(_MSC_VER)
+#   define _R__DEPRECATED_LATER(REASON) __pragma(deprecated(REASON))
 #else
 /* Deprecation not supported for this compiler. */
 #   define _R__DEPRECATED_LATER(REASON)

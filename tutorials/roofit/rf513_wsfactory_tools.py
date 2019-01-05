@@ -2,17 +2,12 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #513
-##
-## Illustration use of ROOT.RooCustomizer and ROOT.RooSimWSTool interface
-## in factory workspace tool in a complex standalone B physics example
+## Organization and simultaneous fits: illustration use of ROOT.RooCustomizer and ROOT.RooSimWSTool interface in factory workspace tool in a complex standalone B physics example
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
-
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -24,18 +19,19 @@ w = ROOT.RooWorkspace("w")
 
 # Make signal model for CPV: A bmixing decay function in t (convoluted with a triple Gaussian resolution model)
 # times a Gaussian function the reconstructed mass
-w.factory("PROD::sig(  BMixDecay::sig_t( dt[-20,20], mixState[mixed=1,unmix=-1], tagFlav[B0=1,B0bar=-1], "
-            "tau[1.54], dm[0.472], w[0.05], dw[0], "
-            "AddModel::gm({GaussModel(dt,biasC[-10,10],sigmaC[0.1,3],dterr[0.01,0.2]), "
-            "GaussModel(dt,0,sigmaT[3,10]), "
-            "GaussModel(dt,0,20)},{fracC[0,1],fracT[0,1]}), "
-            "DoubleSided ), "
-            "Gaussian::sig_m( mes[5.20,5.30], mB0[5.20,5.30], sigmB0[0.01,0.05] ))")
+w.factory(
+    "PROD::sig(  BMixDecay::sig_t( dt[-20,20], mixState[mixed=1,unmix=-1], tagFlav[B0=1,B0bar=-1], "
+    "tau[1.54], dm[0.472], w[0.05], dw[0], "
+    "AddModel::gm({GaussModel(dt,biasC[-10,10],sigmaC[0.1,3],dterr[0.01,0.2]), "
+    "GaussModel(dt,0,sigmaT[3,10]), "
+    "GaussModel(dt,0,20)},{fracC[0,1],fracT[0,1]}), "
+    "DoubleSided ), "
+    "Gaussian::sig_m( mes[5.20,5.30], mB0[5.20,5.30], sigmB0[0.01,0.05] ))")
 
 # Make background component: A plain decay function in t times an Argus
 # function in the reconstructed mass
 w.factory("PROD::bkg(  Decay::bkg_t( dt, tau, gm, DoubleSided), "
-            "ArgusBG::bkg_m( mes, 5.291, k[-100,-10]))")
+          "ArgusBG::bkg_m( mes, 5.291, k[-100,-10]))")
 
 # Make composite model from the signal and background component
 w.factory("SUM::model( Nsig[5000,0,10000]*sig, NBkg[500,0,10000]*bkg )")

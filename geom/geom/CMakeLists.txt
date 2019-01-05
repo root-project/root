@@ -3,7 +3,7 @@
 ############################################################################
 
 set(headers1 TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h
-             TGeoMedium.h TGeoMaterial.h
+             TGeoMedium.h TGeoMaterial.h TGeoOpticalSurface.h
              TGeoMatrix.h TGeoVolume.h TGeoNode.h
              TGeoVoxelFinder.h TGeoShape.h TGeoBBox.h
              TGeoPara.h TGeoTube.h TGeoTorus.h TGeoSphere.h
@@ -14,7 +14,7 @@ set(headers1 TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h
              TVirtualGeoConverter.h TGeoPolygon.h TGeoXtru.h TGeoPhysicalNode.h
              TGeoHelix.h TGeoParaboloid.h TGeoElement.h TGeoHalfSpace.h
              TGeoBuilder.h TGeoNavigator.h TGeoRegion.h
-             TGeoPhysicalConstants.h TGeoSystemOfUnits.h)
+             TGeoPhysicalConstants.h TGeoSystemOfUnits.h TGDMLMatrix.h)
 set(headers2 TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h
              TGeoUniformMagField.h TGeoGlobalMagField.h TGeoBranchArray.h
              TGeoExtension.h TGeoParallelWorld.h)
@@ -24,7 +24,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
                               HEADERS ${headers1} ${headers2}
                               DEPENDENCIES Thread RIO MathCore)
 
-# GCC 4.x has bugs with -O3 or -Ofast that break Geom
-if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
-  target_compile_options(Geom PRIVATE -O2)
+# GCC has bugs with -O3 or -Ofast that break Geom
+if(CMAKE_COMPILER_IS_GNUCXX)
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5 OR CMAKE_SIZEOF_VOID_P LESS 8)
+    target_compile_options(Geom PRIVATE -O2)
+  endif()
 endif()

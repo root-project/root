@@ -1,10 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// 'High Level Factory Example' RooStats tutorial macro #602
-///
-/// This tutorial shows an example of creating a combined
-/// model using the High Level model Factory.
+/// High Level Factory: creating a complex combined model.
 ///
 /// \macro_image
 /// \macro_output
@@ -24,13 +21,13 @@
 #include "RooPlot.h"
 #include "RooStats/HLFactory.h"
 
-
 // use this order for safety on library loading
 using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
-void rs603_HLFactoryElaborateExample() {
+void rs603_HLFactoryElaborateExample()
+{
 
    // --- Prepare the 2 needed datacards for this example ---
 
@@ -75,65 +72,59 @@ void rs603_HLFactoryElaborateExample() {
 
    // --- Produce the two separate datasets into a WorkSpace ---
 
-   HLFactory hlf("HLFactoryComplexExample",
-               "rs603_card_WsMaker.rs",
-               false);
+   HLFactory hlf("HLFactoryComplexExample", "rs603_card_WsMaker.rs", false);
 
-   RooRealVar* x = static_cast<RooRealVar*>(hlf.GetWs()->arg("x"));
-   RooAbsPdf* pdf1 = hlf.GetWs()->pdf("sb_model1");
-   RooAbsPdf* pdf2 = hlf.GetWs()->pdf("sb_model2");
+   auto x = static_cast<RooRealVar *>(hlf.GetWs()->arg("x"));
+   auto pdf1 = hlf.GetWs()->pdf("sb_model1");
+   auto pdf2 = hlf.GetWs()->pdf("sb_model2");
 
    RooWorkspace w("rs603_ws");
 
-   RooDataSet* data1 = pdf1->generate(RooArgSet(*x),Extended());
+   auto data1 = pdf1->generate(RooArgSet(*x), Extended());
    data1->SetName("data1");
    w.import(*data1);
 
-   RooDataSet* data2 = pdf2->generate(RooArgSet(*x),Extended());
+   auto data2 = pdf2->generate(RooArgSet(*x), Extended());
    data2->SetName("data2");
    w.import(*data2);
 
    // --- Write the WorkSpace into a rootfile ---
 
-   TFile outfile("rs603_infile.root","RECREATE");
+   TFile outfile("rs603_infile.root", "RECREATE");
    w.Write();
    outfile.Close();
 
    cout << "-------------------------------------------------------------------\n"
-      << " Rootfile and Workspace prepared \n"
-      << "-------------------------------------------------------------------\n";
+        << " Rootfile and Workspace prepared \n"
+        << "-------------------------------------------------------------------\n";
 
-
-   HLFactory hlf_2("HLFactoryElaborateExample",
-                  "rs603_card.rs",
-                  false);
+   HLFactory hlf_2("HLFactoryElaborateExample", "rs603_card.rs", false);
 
    x = hlf_2.GetWs()->var("x");
    pdf1 = hlf_2.GetWs()->pdf("sb_model1");
    pdf2 = hlf_2.GetWs()->pdf("sb_model2");
 
-   hlf_2.AddChannel("model1","sb_model1","flat1","data1");
-   hlf_2.AddChannel("model2","sb_model2","flat2","data2");
+   hlf_2.AddChannel("model1", "sb_model1", "flat1", "data1");
+   hlf_2.AddChannel("model2", "sb_model2", "flat2", "data2");
 
-   RooDataSet* data = hlf_2.GetTotDataSet();
-   RooAbsPdf* pdf = hlf_2.GetTotSigBkgPdf();
-   RooCategory* thecat = hlf_2.GetTotCategory();
+   auto data = hlf_2.GetTotDataSet();
+   auto pdf = hlf_2.GetTotSigBkgPdf();
+   auto thecat = hlf_2.GetTotCategory();
 
    // --- Perform extended ML fit of composite PDF to toy data ---
-   pdf->fitTo(*data) ;
+   pdf->fitTo(*data);
 
    // --- Plot toy data and composite PDF overlaid ---
-   RooPlot* xframe = x->frame() ;
+   auto xframe = x->frame();
 
    data->plotOn(xframe);
    thecat->setIndex(0);
-   pdf->plotOn(xframe,Slice(*thecat),ProjWData(*thecat,*data)) ;
+   pdf->plotOn(xframe, Slice(*thecat), ProjWData(*thecat, *data));
 
    thecat->setIndex(1);
-   pdf->plotOn(xframe,Slice(*thecat),ProjWData(*thecat,*data)) ;
+   pdf->plotOn(xframe, Slice(*thecat), ProjWData(*thecat, *data));
 
    gROOT->SetStyle("Plain");
 
    xframe->Draw();
-
 }

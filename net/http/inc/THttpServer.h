@@ -52,7 +52,6 @@ protected:
    std::string fCors;            ///<! CORS: sets Access-Control-Allow-Origin header for ProcessRequest responses
 
    std::mutex fMutex;                                        ///<! mutex to protect list with arguments
-   TList fCallArgs;                                          ///<! submitted arguments (deprecated)
    std::queue<std::shared_ptr<THttpCallArg>> fArgs;          ///<! submitted arguments
 
    std::mutex fWSMutex;                                      ///<! mutex to protect WS handler lists
@@ -125,13 +124,7 @@ public:
    Bool_t IsFileRequested(const char *uri, TString &res) const;
 
    /** Execute HTTP request */
-   Bool_t ExecuteHttp(THttpCallArg *arg) _R__DEPRECATED_618("Please use ExecuteHttp(std::shared_ptr<THttpCallArg>)");
-
-   /** Execute HTTP request */
    Bool_t ExecuteHttp(std::shared_ptr<THttpCallArg> arg);
-
-   /** Submit HTTP request */
-   Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE) _R__DEPRECATED_618("Please use SubmitHttp(std::shared_ptr<THttpCallArg>,bool)");
 
    /** Submit HTTP request */
    Bool_t SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run_immediately = kFALSE);

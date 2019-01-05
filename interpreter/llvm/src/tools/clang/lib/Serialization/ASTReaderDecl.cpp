@@ -2560,8 +2560,9 @@ void ASTReader::ReadAttributes(ASTRecordReader &Record, AttrVec &Attrs) {
 /// so that future GetDecl calls will return this declaration rather
 /// than trying to load a new declaration.
 inline void ASTReader::LoadedDecl(unsigned Index, Decl *D) {
-  assert(!DeclsLoaded[Index] && "Decl loaded twice?");
-  DeclsLoaded[Index] = D;
+  assert((DeclsLoaded.find(Index) == DeclsLoaded.end()) &&
+         "Decl loaded twice?");
+  DeclsLoaded.insert({Index, D});
 }
 
 

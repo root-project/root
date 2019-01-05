@@ -16,8 +16,6 @@
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
-#include "TVirtualPad.h"
-#include "TVirtualViewer3D.h"
 
 #include "TClass.h"
 
@@ -41,12 +39,12 @@ namespace REX = ROOT::Experimental;
 REveProjectionManager::REveProjectionManager(REveProjection::EPType_e type):
    REveElementList("REveProjectionManager",""),
    TAttBBox(),
-   fProjection  (0),
+   fProjection  (nullptr),
    fCurrentDepth(0),
    fImportEmpty (kFALSE)
 {
    for (Int_t i = 0; i < REveProjection::kPT_End; ++i)
-      fProjections[i] = 0;
+      fProjections[i] = nullptr;
 
    if (type != REveProjection::kPT_Unknown)
       SetProjection(type);
@@ -58,12 +56,10 @@ REveProjectionManager::REveProjectionManager(REveProjection::EPType_e type):
 
 REveProjectionManager::~REveProjectionManager()
 {
-   for (Int_t i = 0; i < REveProjection::kPT_End; ++i)
-   {
+   for (Int_t i = 0; i < REveProjection::kPT_End; ++i) {
       delete fProjections[i];
    }
-   while ( ! fDependentEls.empty())
-   {
+   while (!fDependentEls.empty()) {
       fDependentEls.front()->Destroy();
    }
 }
@@ -71,7 +67,7 @@ REveProjectionManager::~REveProjectionManager()
 ////////////////////////////////////////////////////////////////////////////////
 /// Add el as dependent element.
 
-void REveProjectionManager::AddDependent(REveElement* el)
+void REveProjectionManager::AddDependent(REveElement *el)
 {
    fDependentEls.push_back(el);
 }
@@ -79,7 +75,7 @@ void REveProjectionManager::AddDependent(REveElement* el)
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove el as dependent element.
 
-void REveProjectionManager::RemoveDependent(REveElement* el)
+void REveProjectionManager::RemoveDependent(REveElement *el)
 {
    fDependentEls.remove(el);
 }
@@ -209,11 +205,11 @@ REveElement* REveProjectionManager::ImportElementsRecurse(REveElement* el,
 {
    static const REveException eh("REveProjectionManager::ImportElementsRecurse ");
 
-   REveElement *new_el = 0;
+   REveElement *new_el = nullptr;
 
    if (ShouldImport(el))
    {
-      REveProjected   *new_pr = 0;
+      REveProjected   *new_pr = nullptr;
       REveProjectable *pble   = dynamic_cast<REveProjectable*>(el);
       if (pble)
       {

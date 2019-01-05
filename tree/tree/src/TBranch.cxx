@@ -384,7 +384,8 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
          if (leaf->IsZombie()) {
             delete leaf;
             leaf = 0;
-            Error("TBranch", "Illegal leaf: %s/%s", name, leaflist);
+            auto msg = "Illegal leaf: %s/%s. If this is a variable size C array it's possible that the branch holding the size is not available.";
+            Error("TBranch", msg, name, leaflist);
             delete [] leafname;
             delete[] leaftype;
             MakeZombie();
@@ -1217,7 +1218,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
       R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
       TFileCacheRead *pf = fTree->GetReadCache(file);
       if (pf){
-         if (pf->IsLearning()) pf->AddBranch(this);
+         if (pf->IsLearning()) pf->LearnBranch(this, kFALSE);
          if (fSkipZip) pf->SetSkipZip();
       }
    }
@@ -2345,9 +2346,9 @@ void TBranch::SetBufferAddress(TBuffer* buf)
 
 void TBranch::SetCompressionAlgorithm(Int_t algorithm)
 {
-   if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+   if (algorithm < 0 || algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
    if (fCompress < 0) {
-      fCompress = 100 * algorithm + 4;
+      fCompress = 100 * algorithm + ROOT::RCompressionSetting::ELevel::kUseMin;
    } else {
       int level = fCompress % 100;
       fCompress = 100 * algorithm + level;
@@ -2371,7 +2372,7 @@ void TBranch::SetCompressionLevel(Int_t level)
       fCompress = level;
    } else {
       int algorithm = fCompress / 100;
-      if (algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+      if (algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
       fCompress = 100 * algorithm + level;
    }
 

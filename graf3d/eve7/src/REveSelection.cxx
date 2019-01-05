@@ -287,8 +287,8 @@ void REveSelection::DeactivateSelection()
 
 REveElement* REveSelection::MapPickedToSelected(REveElement* el)
 {
-   if (el == 0)
-      return 0;
+   if (el == nullptr)
+      return nullptr;
 
    if (el->ForwardSelection())
    {
@@ -299,7 +299,7 @@ REveElement* REveSelection::MapPickedToSelected(REveElement* el)
    {
       case kPS_Ignore:
       {
-         return 0;
+         return nullptr;
       }
       case kPS_Element:
       {

@@ -2272,13 +2272,33 @@ namespace {
       Py_XDECREF(cppname);
 
       std::string printResult = gInterpreter->ToString(className.c_str(), self->GetObject());
-      return PyROOT_PyUnicode_FromString(printResult.c_str());
+      if (printResult.find("@0x") == 0) {
+         // Fall back to __repr__ if we just get an address from cling
+         auto method = PyObject_GetAttrString((PyObject*)self, "__repr__");
+         auto res = PyObject_CallObject(method, nullptr);
+         Py_DECREF(method);
+         return res;
+      } else {
+         return PyROOT_PyUnicode_FromString(printResult.c_str());
+      }
    }
 
    //- Adding array interface to classes ---------------
    void AddArrayInterface(PyObject *pyclass, PyCFunction func)
    {
+      // Add a getter for the array interface dict to the class.
       Utility::AddToClass(pyclass, "_get__array_interface__", func, METH_NOARGS);
+      // Add the dictionary as property to the class so that it updates automatically if accessed.
+      // Since we are not able to add a property easily from C++, we do this in Python.
+
+      // We return early if the module does not have the function to add the property, which
+      // is the case if cppyy is invoked directly and not through PyROOT.
+      if (!PyObject_HasAttrString(gRootModule, "_add__array_interface__")) return;
+
+      auto f = PyObject_GetAttrString(gRootModule, "_add__array_interface__");
+      auto r = PyObject_CallFunction(f, (char*)"O", pyclass);
+      Py_DECREF(f);
+      Py_DECREF(r);
    }
 
    template <typename dtype>
@@ -2679,6 +2699,11 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
       Py_DECREF( method ); method = 0;
 
+   }
+
+   else if ( name.find("ROOT::RDataFrame") == 0 || name.find("ROOT::RDF::RInterface<") == 0 ) {
+      PyObject_SetAttrString(pyclass, "AsNumpy",
+                             PyObject_GetAttrString( gRootModule, "_RDataFrameAsNumpy" ));
    }
 
    else if ( name == "TStyle" ) {

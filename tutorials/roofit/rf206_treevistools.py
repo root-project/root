@@ -1,14 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
-## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #206
-## Tools for visualization of ROOT.RooAbsArg expression trees
+## Addition and convolution: tools for visualization of ROOT.RooAbsArg expression trees
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -36,7 +34,7 @@ sig = ROOT.RooAddPdf(
 a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0., 1.)
 a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0., 1.)
 bkg1 = ROOT.RooChebychev("bkg1", "Background 1",
-                            x, ROOT.RooArgList(a0, a1))
+                         x, ROOT.RooArgList(a0, a1))
 
 # Build expontential pdf
 alpha = ROOT.RooRealVar("alpha", "alpha", -1)

@@ -25,10 +25,11 @@ string value
 Implementation of RooAbsString may be derived, there no interface
 is provided to modify the contents
 **/
-// 
+//
 
 #include "RooFit.h"
 
+#include "Compression.h"
 #include "Riostream.h"
 #include "Riostream.h"
 #include "TObjString.h"
@@ -42,7 +43,7 @@ is provided to modify the contents
 
 using namespace std;
 
-ClassImp(RooAbsString); 
+ClassImp(RooAbsString);
 ;
 
 
@@ -57,8 +58,8 @@ RooAbsString::RooAbsString() : RooAbsArg(), _len(128) , _value(new char[128])
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsString::RooAbsString(const char *name, const char *title, Int_t bufLen) : 
-  RooAbsArg(name,title), _len(bufLen), _value(new char[bufLen]) 
+RooAbsString::RooAbsString(const char *name, const char *title, Int_t bufLen) :
+  RooAbsArg(name,title), _len(bufLen), _value(new char[bufLen])
 {
   setValueDirty() ;
   setShapeDirty() ;
@@ -69,7 +70,7 @@ RooAbsString::RooAbsString(const char *name, const char *title, Int_t bufLen) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAbsString::RooAbsString(const RooAbsString& other, const char* name) : 
+RooAbsString::RooAbsString(const RooAbsString& other, const char* name) :
   RooAbsArg(other, name), _len(other._len), _value(new char[other._len])
 {
   strlcpy(_value,other._value,_len) ;
@@ -95,8 +96,8 @@ const char* RooAbsString::getVal() const
   if (isValueDirty()) {
     clearValueDirty() ;
     strlcpy(_value,traceEval(),_len) ;
-  } 
-  
+  }
+
   return _value ;
 }
 
@@ -113,7 +114,7 @@ Bool_t RooAbsString::operator==(const char* value) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooAbsString::isIdentical(const RooAbsArg& other, Bool_t assumeSameType)  
+Bool_t RooAbsString::isIdentical(const RooAbsArg& other, Bool_t assumeSameType)
 {
   if (!assumeSameType) {
     const RooAbsString* otherString = dynamic_cast<const RooAbsString*>(&other) ;
@@ -128,7 +129,7 @@ Bool_t RooAbsString::isIdentical(const RooAbsArg& other, Bool_t assumeSameType)
 ////////////////////////////////////////////////////////////////////////////////
 /// Equality operator comparing to another RooAbsArg
 
-Bool_t RooAbsString::operator==(const RooAbsArg& other) 
+Bool_t RooAbsString::operator==(const RooAbsArg& other)
 {
   const RooAbsString* otherString = dynamic_cast<const RooAbsString*>(&other) ;
   return otherString ? operator==(otherString->getVal()) : kFALSE ;
@@ -139,10 +140,10 @@ Bool_t RooAbsString::operator==(const RooAbsArg& other)
 ////////////////////////////////////////////////////////////////////////////////
 ///Read object contents from stream (dummy for now)
 
-Bool_t RooAbsString::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/) 
+Bool_t RooAbsString::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/)
 {
   return kFALSE ;
-} 
+}
 
 
 
@@ -168,7 +169,7 @@ void RooAbsString::printValue(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if current value is valid
 
-Bool_t RooAbsString::isValid() const 
+Bool_t RooAbsString::isValid() const
 {
   return isValidString(getVal()) ;
 }
@@ -178,7 +179,7 @@ Bool_t RooAbsString::isValid() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if given string value is valid
 
-Bool_t RooAbsString::isValidString(const char* value, Bool_t /*printError*/) const 
+Bool_t RooAbsString::isValidString(const char* value, Bool_t /*printError*/) const
 {
   // Protect against string overflows
   if (TString(value).Length()>_len) return kFALSE ;
@@ -190,9 +191,9 @@ Bool_t RooAbsString::isValidString(const char* value, Bool_t /*printError*/) con
 ////////////////////////////////////////////////////////////////////////////////
 /// Hook function for trace evaluation
 
-Bool_t RooAbsString::traceEvalHook(const char* /*value*/) const 
-{ 
-  return kFALSE ; 
+Bool_t RooAbsString::traceEvalHook(const char* /*value*/) const
+{
+  return kFALSE ;
 }
 
 
@@ -203,7 +204,7 @@ Bool_t RooAbsString::traceEvalHook(const char* /*value*/) const
 TString RooAbsString::traceEval() const
 {
   TString value = evaluate() ;
-  
+
   //Standard tracing code goes here
   if (!isValidString(value)) {
     cxcoutD(Tracing) << "RooAbsString::traceEval(" << GetName() << "): new output too long (>" << _len << " chars): " << value << endl ;
@@ -220,9 +221,9 @@ TString RooAbsString::traceEval() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Forcibly bring internal cache up-to-date
 
-void RooAbsString::syncCache(const RooArgSet*) 
-{ 
-  getVal() ; 
+void RooAbsString::syncCache(const RooArgSet*)
+{
+  getVal() ;
 }
 
 
@@ -233,7 +234,7 @@ void RooAbsString::syncCache(const RooArgSet*)
 /// Warning: This function copies the cached values of source,
 ///          it is the callers responsibility to make sure the cache is clean
 
-void RooAbsString::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t setValDirty) 
+void RooAbsString::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t setValDirty)
 {
   RooAbsString* other = dynamic_cast<RooAbsString*>(const_cast<RooAbsArg*>(source)) ;
   assert(other!=0) ;
@@ -257,30 +258,30 @@ void RooAbsString::attachToTree(TTree& t, Int_t bufSize)
     t.SetBranchAddress(GetName(),_value) ;
     if (branch->GetCompressionLevel()<0) {
       cxcoutD(DataHandling) << "RooAbsString::attachToTree(" << GetName() << ") Fixing compression level of branch " << GetName() << endl ;
-      branch->SetCompressionLevel(4) ;
+      branch->SetCompressionLevel(ROOT::RCompressionSetting::EDefaults::kUseGlobal % 100) ;
     }
   } else {
     TString format(GetName());
     format.Append("/C");
     branch = t.Branch(GetName(), _value, (const Text_t*)format, bufSize);
-    branch->SetCompressionLevel(4) ;
+    branch->SetCompressionLevel(ROOT::RCompressionSetting::EDefaults::kUseGlobal % 100) ;
   }
 }
- 
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill tree branch associated with this object
 
-void RooAbsString::fillTreeBranch(TTree& t) 
+void RooAbsString::fillTreeBranch(TTree& t)
 {
   // First determine if branch is taken
   TBranch* branch = t.GetBranch(GetName()) ;
-  if (!branch) { 
+  if (!branch) {
     coutE(DataHandling) << "RooAbsString::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << endl ;
     assert(0) ;
   }
-  branch->Fill() ;  
+  branch->Fill() ;
 }
 
 
@@ -288,10 +289,10 @@ void RooAbsString::fillTreeBranch(TTree& t)
 ////////////////////////////////////////////////////////////////////////////////
 /// (De)Activate associated tree branch
 
-void RooAbsString::setTreeBranchStatus(TTree& t, Bool_t active) 
+void RooAbsString::setTreeBranchStatus(TTree& t, Bool_t active)
 {
   TBranch* branch = t.GetBranch(GetName()) ;
-  if (branch) { 
+  if (branch) {
     t.SetBranchStatus(GetName(),active?1:0) ;
   }
 }
@@ -301,8 +302,8 @@ void RooAbsString::setTreeBranchStatus(TTree& t, Bool_t active)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RooStringVar fundamental object with our properties.
 
-RooAbsArg *RooAbsString::createFundamental(const char* newname) const 
+RooAbsArg *RooAbsString::createFundamental(const char* newname) const
 {
-  RooStringVar *fund= new RooStringVar(newname?newname:GetName(),GetTitle(),"") ; 
+  RooStringVar *fund= new RooStringVar(newname?newname:GetName(),GetTitle(),"") ;
   return fund;
 }

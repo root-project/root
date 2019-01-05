@@ -12,7 +12,7 @@
          (targetfile is overwritten if it exists)
 
   When the -f option is specified, one can also specify the compression
-  level of the target file. By default the compression level is 4, but
+  level of the target file. By default the compression level is 1 (kDefaultZLIB), but
   if "-f0" is specified, the target file will not be compressed.
   if "-f6" is specified, the compression level 6 will be used.
 
@@ -54,7 +54,7 @@
   For options that takes a size as argument, a decimal number of bytes is expected.
   If the number ends with a ``k'', ``m'', ``g'', etc., the number is multiplied
   by 1000 (1K), 1000000 (1MB), 1000000000 (1G), etc.
-  If this prefix is followed by i, the number is multipled by the traditional
+  If this prefix is followed by i, the number is multiplied by the traditional
   1024 (1KiB), 1048576 (1MiB), 1073741824 (1GiB), etc.
   The prefix can be optionally followed by B whose casing is ignored,
   eg. 1k, 1K, 1Kb and 1KB are the same.
@@ -69,7 +69,7 @@
             to support files with nested directories.
            Toby Burnett implemented the possibility to use indirect files.
  */
-
+#include "Compression.h"
 #include <ROOT/RConfig.h>
 #include "ROOT/TIOFeatures.hxx"
 #include <string>
@@ -85,6 +85,7 @@
 #include <stdlib.h>
 #include <climits>
 #include <sstream>
+#include "haddCommandLineOptionsHelp.h"
 
 #include "TFileMerger.h"
 #ifndef R__WIN32
@@ -96,56 +97,8 @@
 int main( int argc, char **argv )
 {
    if ( argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1]) ) {
-      std::cout << "Usage: " << argv[0] << " [-f[fk][0-9]] [-k] [-T] [-O] [-a] \n"
-      "            [-n maxopenedfiles] [-cachesize size] [-j ncpus] [-v [verbosity]] \n"
-      "            targetfile source1 [source2 source3 ...]\n" << std::endl;
-      std::cout << "This program will add histograms from a list of root files and write them" << std::endl;
-      std::cout << "   to a target root file. The target file is newly created and must not" << std::endl;
-      std::cout << "   exist, or if -f (\"force\") is given, must not be one of the source files." << std::endl;
-      std::cout << "   Supply at least two source files for this to make sense... ;-)" << std::endl;
-      std::cout << "If the option -a is used, hadd will append to the output." << std::endl;
-      std::cout << "If the option -k is used, hadd will not exit on corrupt or non-existant input\n"
-                   "   files but skip the offending files instead." << std::endl;
-      std::cout << "If the option -T is used, Trees are not merged" <<std::endl;
-      std::cout << "If the option -O is used, when merging TTree, the basket size is re-optimized" <<std::endl;
-      std::cout << "If the option -v is used, explicitly set the verbosity level;\n"\
-                   "   0 request no output, 99 is the default" <<std::endl;
-      std::cout << "If the option -j is used, the execution will be parallelized in multiple processes\n" << std::endl;
-      std::cout << "If the option -dbg is used, the execution will be parallelized in multiple processes in debug mode."
-                   " This will not delete the partial files stored in the working directory\n"
-                << std::endl;
-      std::cout << "If the option -d is used, the partial multiprocess execution will be carried out in the specified "
-                   "directory\n"
-                << std::endl;
-      std::cout << "If the option -n is used, hadd will open at most 'maxopenedfiles' at once, use 0\n"
-                   "   to request to use the system maximum." << std::endl;
-      std::cout << "If the option -cachesize is used, hadd will resize (or disable if 0) the\n"
-                   "   prefetching cache use to speed up I/O operations." << std::endl;
-      std::cout << "If the option -experimental-io-features is used (and an argument provided), then\n"
-                   "   the corresponding experimental feature will be enabled for output trees." << std::endl;
-      std::cout << "When -the -f option is specified, one can also specify the compression level of\n"
-                   "   the target file.  By default the compression level is 4."
-                << std::endl;
-      std::cout << "If \"-fk\" is specified, the target file contain the baskets with the same\n"
-                   "   compression as in the input files unless -O is specified.  The meta data will\n"
-                   "   be compressed using the compression level specified in the first input or the\n"
-                   "   compression setting specified follow fk (206 when using -fk206 for example)" <<std::endl;
-      std::cout << "If \"-ff\" is specified, the compression level use is the one specified in the\n"
-                   "   first input." <<std::endl;
-      std::cout << "If \"-f0\" is specified, the target file will not be compressed." <<std::endl;
-      std::cout << "If \"-f6\" is specified, the compression level 6 will be used.  \n"
-                   "   See TFile::SetCompressionSettings for the support range of value." <<std::endl;
-      std::cout << "If Target and source files have different compression settings a slower method\n"
-                   "   is used.\n"<<std::endl;
-      std::cout << "For options that takes a size as argument, a decimal number of bytes is expected.\n"
-                   "If the number ends with a ``k'', ``m'', ``g'', etc., the number is multiplied\n"
-                   "   by 1000 (1K), 1000000 (1MB), 1000000000 (1G), etc. \n"
-                   "If this prefix is followed by i, the number is multipled by the traditional\n"
-                   "   1024 (1KiB), 1048576 (1MiB), 1073741824 (1GiB), etc. \n"
-                   "The prefix can be optionally followed by B whose casing is ignored,\n"
-                   "   eg. 1k, 1K, 1Kb and 1KB are the same."<<std::endl;
-
-      return 1;
+         fprintf(stderr, kCommandLineOptionsHelp);
+         return 1;
    }
 
    ROOT::TIOFeatures features;
@@ -421,15 +374,15 @@ int main( int argc, char **argv )
          if (firstInput && !firstInput->IsZombie())
             newcomp = firstInput->GetCompressionSettings();
          else
-            newcomp = 4;
+            newcomp = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose % 100;
          delete firstInput;
-      } else newcomp = 4; // default compression level.
+      } else newcomp = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose % 100; // default compression level.
    }
    if (verbosity > 1) {
       if (keepCompressionAsIs && !reoptimize)
          std::cout << "hadd compression setting for meta data: " << newcomp << '\n';
       else
-         std::cout << "hadd compression setting for all ouput: " << newcomp << '\n';
+         std::cout << "hadd compression setting for all output: " << newcomp << '\n';
    }
    if (append) {
       if (!fileMerger.OutputFile(targetname, "UPDATE", newcomp)) {

@@ -2,16 +2,12 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #315
-##
-## Marginizalization of multi-dimensional p.d.f.s through integration
+## Multidimensional models: marginizalization of multi-dimensional p.d.f.s through integration
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
-
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -40,11 +36,20 @@ gaussx = ROOT.RooGaussian(
 
 # Create gaussy(y,0,2)
 gaussy = ROOT.RooGaussian(
-    "gaussy", "Gaussian in y", y, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(2))
+    "gaussy",
+    "Gaussian in y",
+    y,
+    ROOT.RooFit.RooConst(0),
+    ROOT.RooFit.RooConst(2))
 
 # Create gaussx(x,sx|y) * gaussy(y)
-model = ROOT.RooProdPdf("model", "gaussx(x|y)*gaussy(y)", ROOT.RooArgSet(
-    gaussy), ROOT.RooFit.Conditional(ROOT.RooArgSet(gaussx), ROOT.RooArgSet(x)))
+model = ROOT.RooProdPdf(
+    "model",
+    "gaussx(x|y)*gaussy(y)",
+    ROOT.RooArgSet(gaussy),
+    ROOT.RooFit.Conditional(
+        ROOT.RooArgSet(gaussx),
+        ROOT.RooArgSet(x)))
 
 # Marginalize m(x,y) to m(x)
 # ----------------------------------------------------

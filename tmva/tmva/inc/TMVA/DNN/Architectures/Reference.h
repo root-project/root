@@ -498,6 +498,15 @@ public:
     */
    static void SqrtElementWise(TMatrixT<AReal> &A);
 
+   // optimizer update functions
+
+   /// Update functions for ADAM optimizer
+   static void AdamUpdate(TMatrixT<AReal> & A, const TMatrixT<AReal> & M, const TMatrixT<AReal> & V, AReal alpha, AReal eps);
+   static void AdamUpdateFirstMom(TMatrixT<AReal> & A, const TMatrixT<AReal> & B, AReal beta);
+   static void AdamUpdateSecondMom(TMatrixT<AReal> & A, const TMatrixT<AReal> & B, AReal beta);
+
+
+
    //____________________________________________________________________________
    //
    // AutoEncoder Propagation

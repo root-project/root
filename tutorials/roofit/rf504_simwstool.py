@@ -2,16 +2,12 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #504
-##
-## Using RooSimWSTool to construct a simultaneous p.d.f that is built
-## of variations of an input p.d.f
+## Organization and simultaneous fits: using RooSimWSTool to construct a simultaneous p.d.f that is built of variations of an input p.d.f
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -68,7 +64,7 @@ sct = ROOT.RooSimWSTool(w)
 #
 # Returned p.d.f is owned by the workspace
 model_sim = sct.build("model_sim", "model",
-                        ROOT.RooFit.SplitParam("m", "c"))
+                      ROOT.RooFit.SplitParam("m", "c"))
 
 # Print tree structure of model
 model_sim.Print("t")
@@ -85,7 +81,7 @@ w.Print("v")
 
 # Build another simultaneous p.d.f using a composite split in states c X d
 model_sim2 = sct.build("model_sim2", "model",
-                        ROOT.RooFit.SplitParam("p0", "c,d"))
+                       ROOT.RooFit.SplitParam("p0", "c,d"))
 
 # Print tree structure of self model
 model_sim2.Print("t")

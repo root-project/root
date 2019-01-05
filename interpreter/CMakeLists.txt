@@ -52,9 +52,10 @@ set(LLVM_EXTERNAL_PROJECTS "cling" CACHE STRING "")
 # to serialize access to llvm.  We can later review how to make this finer grained by using llvm's own locking
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF CACHE BOOL "")
-if(cxx17)
+
+if(CMAKE_CXX_STANDARD EQUAL 17)
   set(LLVM_ENABLE_CXX1Z ON CACHE BOOL "" FORCE)
-elseif(cxx14)
+elseif(CMAKE_CXX_STANDARD EQUAL 14)
   set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "" FORCE)
 endif()
 
@@ -134,7 +135,8 @@ if(cxxmodules)
   string(REPLACE "${ROOT_CXXMODULES_CFLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
   if(libcxx)
     # FIXME: We cannot build LLVM/clang with modules on with libstdc++, yet.
-    set (LLVM_ENABLE_MODULES ON CACHE BOOL "Override the default LLVM_ENABLE_MODULES option value." )
+    # FIXME: We cannot build LLVM/clang with modules on with libc++, too.
+    #set (LLVM_ENABLE_MODULES ON CACHE BOOL "Override the default LLVM_ENABLE_MODULES option value." )
   endif(libcxx)
 endif(cxxmodules)
 

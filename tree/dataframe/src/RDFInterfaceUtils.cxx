@@ -9,17 +9,22 @@
  *************************************************************************/
 
 #include <ROOT/RDF/InterfaceUtils.hxx>
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RDF/RInterface.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/TSeq.hxx>
 #include <RtypesCore.h>
+#include <TDirectory.h>
+#include <TChain.h>
 #include <TClass.h>
+#include <TClassEdit.h>
 #include <TFriendElement.h>
 #include <TInterpreter.h>
 #include <TObject.h>
 #include <TRegexp.h>
+#include <TPRegexp.h>
 #include <TString.h>
 #include <TTree.h>
-#include <TBranchElement.h>
 
 #include <iosfwd>
 #include <stdexcept>
@@ -50,149 +55,100 @@ namespace RDF {
 // the one in the vector
 class RActionBase;
 
-bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
+bool InterpreterDeclare(const std::string &code)
 {
-   return (leaves.find(leaf) != leaves.end());
+   return gInterpreter->Declare(code.c_str());
 }
 
-///////////////////////////////////////////////////////////////////////////////
-/// This overload does not perform any check on the duplicates.
-/// It is used for TBranch objects.
-void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::string &branchName,
-                std::string &friendName)
+std::pair<Long64_t, int> InterpreterCalc(const std::string &code)
 {
+   TInterpreter::EErrorCode errorCode(TInterpreter::kNoError);
+   auto res = gInterpreter->Calc(code.c_str(), &errorCode);
+   return std::make_pair(res, errorCode);
+}
 
-   if (!friendName.empty()) {
-      // In case of a friend tree, users might prepend its name/alias to the branch names
-      auto friendBName = friendName + "." + branchName;
-      if (bNamesReg.insert(friendBName).second)
-         bNames.push_back(friendBName);
+HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
+                            std::string_view treeName,
+                            std::string_view fileName,
+                            bool isLazy,
+                            RLoopManager &loopManager,
+                            std::unique_ptr<RDFInternal::RActionBase> actionPtr)
+{
+   // create new RDF
+   ::TDirectory::TContext ctxt;
+   auto snapshotRDF = std::make_shared<ROOT::RDataFrame>(treeName, fileName, validCols);
+   auto snapshotRDFResPtr = MakeResultPtr(snapshotRDF, loopManager, std::move(actionPtr));
+
+   if (!isLazy) {
+      *snapshotRDFResPtr;
    }
-
-   if (bNamesReg.insert(branchName).second)
-      bNames.push_back(branchName);
+   return snapshotRDFResPtr;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-/// This overloads makes sure that the TLeaf has not been already inserted.
-void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::string &branchName,
-                std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
+std::string DemangleTypeIdName(const std::type_info &typeInfo)
 {
-   const bool canAdd = allowDuplicates ? true : !ContainsLeaf(foundLeaves, leaf);
-   if (!canAdd) {
-      return;
-   }
-
-   UpdateList(bNamesReg, bNames, branchName, friendName);
-
-   foundLeaves.insert(leaf);
+   int dummy(0);
+   return TClassEdit::DemangleTypeIdName(typeInfo, dummy);
 }
 
-void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, TBranch *b, std::string prefix,
-                   std::string &friendName)
+ColumnNames_t ConvertRegexToColumns(RDFInternal::RBookedCustomColumns & customColumns,
+                                    TTree *tree,
+                                    ROOT::RDF::RDataSource *dataSource,
+                                    std::string_view columnNameRegexp,
+                                    std::string_view callerName)
 {
-   for (auto sb : *b->GetListOfBranches()) {
-      TBranch *subBranch = static_cast<TBranch *>(sb);
-      auto subBranchName = std::string(subBranch->GetName());
-      auto fullName = prefix + subBranchName;
+   const auto theRegexSize = columnNameRegexp.size();
+   std::string theRegex(columnNameRegexp);
 
-      std::string newPrefix;
-      if (!prefix.empty())
-         newPrefix = fullName + ".";
+   const auto isEmptyRegex = 0 == theRegexSize;
+   // This is to avoid cases where branches called b1, b2, b3 are all matched by expression "b"
+   if (theRegexSize > 0 && theRegex[0] != '^')
+      theRegex = "^" + theRegex;
+   if (theRegexSize > 0 && theRegex[theRegexSize - 1] != '$')
+      theRegex = theRegex + "$";
 
-      ExploreBranch(t, bNamesReg, bNames, subBranch, newPrefix, friendName);
+   ColumnNames_t selectedColumns;
+   selectedColumns.reserve(32);
 
-      if (t.GetBranch(fullName.c_str())) {
-         UpdateList(bNamesReg, bNames, fullName, friendName);
-
-      } else if (t.GetBranch(subBranchName.c_str())) {
-         UpdateList(bNamesReg, bNames, subBranchName, friendName);
+   // Since we support gcc48 and it does not provide in its stl std::regex,
+   // we need to use TRegexp
+   TPRegexp regexp(theRegex);
+   for (auto &&branchName : customColumns.GetNames()) {
+      if ((isEmptyRegex || 0 != regexp.Match(branchName.c_str())) &&
+            !RDFInternal::IsInternalColumn(branchName)) {
+         selectedColumns.emplace_back(branchName);
       }
    }
-}
 
-void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
-                        std::set<TTree *> &analysedTrees, std::string &friendName, bool allowDuplicates)
-{
-   std::set<TLeaf *> foundLeaves;
-   if (!analysedTrees.insert(&t).second) {
-      return;
-   }
-
-   const auto branches = t.GetListOfBranches();
-   if (branches) {
-      std::string prefix = "";
-      for (auto b : *branches) {
-         TBranch *branch = static_cast<TBranch *>(b);
-         auto branchName = std::string(branch->GetName());
-         if (branch->IsA() == TBranch::Class()) {
-            // Leaf list
-            auto listOfLeaves = branch->GetListOfLeaves();
-            if (listOfLeaves->GetEntries() == 1) {
-               auto leaf = static_cast<TLeaf *>(listOfLeaves->At(0));
-               auto leafName = std::string(leaf->GetName());
-               if (leafName == branchName) {
-                  UpdateList(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
-               }
-            }
-
-            for (auto leaf : *listOfLeaves) {
-               auto castLeaf = static_cast<TLeaf *>(leaf);
-               auto leafName = std::string(leaf->GetName());
-               auto fullName = branchName + "." + leafName;
-               UpdateList(bNamesReg, bNames, fullName, friendName, foundLeaves, castLeaf, allowDuplicates);
-            }
-         } else {
-            // TBranchElement
-            // Check if there is explicit or implicit dot in the name
-
-            bool dotIsImplied = false;
-            auto be = dynamic_cast<TBranchElement *>(b);
-            if (!be)
-               throw std::runtime_error("GetBranchNames: unsupported branch type");
-            // TClonesArray (3) and STL collection (4)
-            if (be->GetType() == 3 || be->GetType() == 4)
-               dotIsImplied = true;
-
-            if (dotIsImplied || branchName.back() == '.')
-               ExploreBranch(t, bNamesReg, bNames, branch, "", friendName);
-            else
-               ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName);
-
-            UpdateList(bNamesReg, bNames, branchName, friendName);
+   if (tree) {
+      auto branchNames = RDFInternal::GetTopLevelBranchNames(*tree);
+      for (auto &branchName : branchNames) {
+         if (isEmptyRegex || 0 != regexp.Match(branchName.c_str())) {
+            selectedColumns.emplace_back(branchName);
          }
       }
    }
 
-   auto friendTrees = t.GetListOfFriends();
-
-   if (!friendTrees)
-      return;
-
-   for (auto friendTreeObj : *friendTrees) {
-      auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
-
-      std::string frName;
-      auto alias = t.GetFriendAlias(friendTree);
-      if (alias != nullptr)
-         frName = std::string(alias);
-      else
-         frName = std::string(friendTree->GetName());
-
-      GetBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees, frName, allowDuplicates);
+   if (dataSource) {
+      auto &dsColNames = dataSource->GetColumnNames();
+      for (auto &dsColName : dsColNames) {
+         if ((isEmptyRegex || 0 != regexp.Match(dsColName.c_str())) &&
+               !RDFInternal::IsInternalColumn(dsColName)) {
+            selectedColumns.emplace_back(dsColName);
+         }
+      }
    }
-}
 
-///////////////////////////////////////////////////////////////////////////////
-/// Get all the branches names, including the ones of the friend trees
-ColumnNames_t GetBranchNames(TTree &t, bool allowDuplicates)
-{
-   std::set<std::string> bNamesSet;
-   ColumnNames_t bNames;
-   std::set<TTree *> analysedTrees;
-   std::string emptyFrName = "";
-   GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees, emptyFrName, allowDuplicates);
-   return bNames;
+   if (selectedColumns.empty()) {
+      std::string text(callerName);
+      if (columnNameRegexp.empty()) {
+         text = ": there is no column available to match.";
+      } else {
+         text = ": regex \"" + std::string(columnNameRegexp) + "\" did not match any column.";
+      }
+      throw std::runtime_error(text);
+   }
+   return selectedColumns;
 }
 
 void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
@@ -451,9 +407,9 @@ std::vector<std::string> ReplaceDots(const ColumnNames_t &colNames)
 
 // TODO comment well -- there is a lot going on in this function in terms of side-effects
 std::vector<std::string> ColumnTypesAsString(ColumnNames_t &colNames, ColumnNames_t &varNames,
-                                             const std::map<std::string, std::string> &aliasMap,
-                                             const ColumnNames_t &customColNames, TTree *tree, RDataSource *ds,
-                                             std::string &expr, unsigned int namespaceID)
+                                             const std::map<std::string, std::string> &aliasMap, TTree *tree,
+                                             RDataSource *ds, std::string &expr, unsigned int namespaceID,
+                                             const RDFInternal::RBookedCustomColumns &customCols)
 {
    std::vector<std::string> colTypes;
    colTypes.reserve(colNames.size());
@@ -494,9 +450,10 @@ std::vector<std::string> ColumnTypesAsString(ColumnNames_t &colNames, ColumnName
       const auto aliasMapIt = aliasMap.find(colName);
       const auto &realColName = aliasMapEnd == aliasMapIt ? colName : aliasMapIt->second;
       // The map is a const reference, so no operator[]
-      const auto isCustomCol =
-         std::find(customColNames.begin(), customColNames.end(), realColName) != customColNames.end();
-      const auto colTypeName = ColumnName2ColumnTypeName(realColName, namespaceID, tree, ds, isCustomCol);
+      const auto isCustomCol = customCols.HasName(realColName);
+      const auto customColID = isCustomCol ? customCols.GetColumns()[realColName]->GetID() : 0;
+      const auto colTypeName =
+         ColumnName2ColumnTypeName(realColName, namespaceID, tree, ds, isCustomCol, /*vector2rvec=*/true, customColID);
       colTypes.emplace_back(colTypeName);
       ++c, ++v;
    }
@@ -580,7 +537,7 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::strin
    auto varNames = ReplaceDots(usedBranches);
    auto dotlessExpr = std::string(expression);
    const auto usedColTypes =
-      ColumnTypesAsString(usedBranches, varNames, aliasMap, customCols.GetNames(), tree, ds, dotlessExpr, namespaceID);
+      ColumnTypesAsString(usedBranches, varNames, aliasMap, tree, ds, dotlessExpr, namespaceID, customCols);
 
    TRegexp re("[^a-zA-Z0-9_]return[^a-zA-Z0-9_]");
    Ssiz_t matchedLen;
@@ -621,11 +578,10 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::strin
 // Jit a Define call
 void BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds,
                    const std::shared_ptr<RJittedCustomColumn> &jittedCustomColumn,
-                   const RDFInternal::RBookedCustomColumns &customCols)
+                   const RDFInternal::RBookedCustomColumns &customCols, const ColumnNames_t &branches)
 {
    const auto &aliasMap = lm.GetAliasMap();
    auto *const tree = lm.GetTree();
-   const auto branches = tree ? RDFInternal::GetBranchNames(*tree) : ColumnNames_t();
    const auto namespaceID = lm.GetID();
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
@@ -634,7 +590,7 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    auto varNames = ReplaceDots(usedBranches);
    auto dotlessExpr = std::string(expression);
    const auto usedColTypes =
-      ColumnTypesAsString(usedBranches, varNames, aliasMap, customCols.GetNames(), tree, ds, dotlessExpr, namespaceID);
+      ColumnTypesAsString(usedBranches, varNames, aliasMap, tree, ds, dotlessExpr, namespaceID, customCols);
 
    TRegexp re("[^a-zA-Z0-9_]return[^a-zA-Z0-9_]");
    Ssiz_t matchedLen;
@@ -643,7 +599,8 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    TryToJitExpression(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
 
    const auto definelambda = BuildLambdaString(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
-   const auto lambdaName = "eval_" + std::string(name);
+   const auto customColID = std::to_string(jittedCustomColumn->GetID());
+   const auto lambdaName = "eval_" + std::string(name) + customColID;
    const auto ns = "__tdf" + std::to_string(namespaceID);
 
    auto customColumnsCopy = new RDFInternal::RBookedCustomColumns(customCols);
@@ -654,7 +611,7 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    // to let python users execute a Define cell multiple times
    const auto defineDeclaration =
       "namespace " + ns + " { auto " + lambdaName + " = " + definelambda + ";\n" + "using " + std::string(name) +
-      "_type = typename ROOT::TypeTraits::CallableTraits<decltype(" + lambdaName + " )>::ret_type;  }\n";
+      customColID + "_type = typename ROOT::TypeTraits::CallableTraits<decltype(" + lambdaName + " )>::ret_type;  }\n";
    gInterpreter->Declare(defineDeclaration.c_str());
 
    std::stringstream defineInvocation;
@@ -689,7 +646,9 @@ std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::t
    std::vector<std::string> columnTypeNames(nBranches);
    for (auto i = 0u; i < nBranches; ++i) {
       const auto isCustomCol = customCols.HasName(bl[i]);
-      const auto columnTypeName = ColumnName2ColumnTypeName(bl[i], namespaceID, tree, ds, isCustomCol);
+      const auto customColID = isCustomCol ? customCols.GetColumns()[bl[i]]->GetID() : 0;
+      const auto columnTypeName =
+         ColumnName2ColumnTypeName(bl[i], namespaceID, tree, ds, isCustomCol, /*vector2rvec=*/true, customColID);
       if (columnTypeName.empty()) {
          std::string exceptionText = "The type of column ";
          exceptionText += bl[i];
@@ -762,12 +721,12 @@ std::shared_ptr<RNodeBase> UpcastNode(std::shared_ptr<RNodeBase> ptr)
 /// * check that selected column names refer to valid branches, custom columns or datasource columns (throw if not)
 /// Return the list of selected column names.
 ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
-                                      const ColumnNames_t &datasetColumns, const ColumnNames_t &validCustomColumns,
-                                      RDataSource *ds)
+                                      const ColumnNames_t &validCustomColumns, RDataSource *ds)
 {
    const auto &defaultColumns = lm.GetDefaultColumnNames();
    auto selectedColumns = SelectColumns(nColumns, columns, defaultColumns);
-   const auto unknownColumns = FindUnknownColumns(selectedColumns, datasetColumns, validCustomColumns,
+   const auto &validBranchNames = lm.GetBranchNames();
+   const auto unknownColumns = FindUnknownColumns(selectedColumns, validBranchNames, validCustomColumns,
                                                   ds ? ds->GetColumnNames() : ColumnNames_t{});
 
    if (!unknownColumns.empty()) {

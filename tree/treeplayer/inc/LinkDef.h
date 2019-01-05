@@ -28,7 +28,9 @@
 #pragma link C++ class TTreeTableInterface;
 #pragma link C++ class TSimpleAnalysis+;
 #pragma link C++ class TMPWorkerTree+;
+#ifdef R__USE_IMT
 #pragma link C++ class ROOT::TTreeProcessorMT-;
+#endif
 
 #pragma link C++ class ROOT::Internal::TBranchProxyDirector+;
 #pragma link C++ class ROOT::Detail::TBranchProxy+;

@@ -34,7 +34,7 @@ protected:
    TGeoShape *fShape{nullptr};
    TGeoCompositeShape *fCompositeShape{nullptr}; //! Temporary holder (if passed shape is composite shape).
 
-   static TGeoManager *fgGeoMangeur;
+   static TGeoManager *fgGeoManager;
 
    static REveGeoShape *SubImportShapeExtract(REveGeoShapeExtract *gse, REveElement *parent);
    REveGeoShapeExtract *DumpShapeTree(REveGeoShape *geon, REveGeoShapeExtract *parent = nullptr);
@@ -60,18 +60,17 @@ public:
    void SetShape(TGeoShape *s);
 
    virtual void ComputeBBox();
-   virtual void Paint(Option_t *option = "");
 
    void SaveExtract(const char *file, const char *name);
    void WriteExtract(const char *name);
 
-   static REveGeoShape *ImportShapeExtract(REveGeoShapeExtract *gse, REveElement *parent = 0);
+   static REveGeoShape *ImportShapeExtract(REveGeoShapeExtract *gse, REveElement *parent = nullptr);
 
    // GeoProjectable
    virtual std::unique_ptr<TBuffer3D> MakeBuffer3D();
    virtual TClass *ProjectedClass(const REveProjection *p) const;
 
-   static TGeoManager *GetGeoMangeur();
+   static TGeoManager *GetGeoManager();
    static TGeoHMatrix *GetGeoHMatrixIdentity();
 
    ClassDef(REveGeoShape, 0); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted

@@ -22,6 +22,7 @@
 #include <TBenchmark.h>
 #include "TError.h"
 #include "TInterpreter.h"
+#include "TInterpreterValue.h"
 #include "TFormula.h"
 #include "TRegexp.h"
 #include <array>
@@ -468,10 +469,11 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
    fReadyToExecute = false;
    fClingInitialized = false;
    fNpar = 0;
-   fMethod = 0;
+   fMethod = nullptr;
    fNumber = 0;
    fLambdaPtr = nullptr;
    fFuncPtr = nullptr;
+   fGradFuncPtr = nullptr;
 
 
    fNdim = ndim;
@@ -667,6 +669,8 @@ void TFormula::Copy(TObject &obj) const
    fnew.fClingInitialized = fClingInitialized;
    fnew.fAllParametersSetted = fAllParametersSetted;
    fnew.fClingName = fClingName;
+   fnew.fSavedInputFormula = fSavedInputFormula;
+   fnew.fLazyInitialization = fLazyInitialization;
 
    // case of function based on a C++  expression (lambda's) which is ready to be compiled
    if (fLambdaPtr && TestBit(TFormula::kLambda)) {
@@ -688,7 +692,15 @@ void TFormula::Copy(TObject &obj) const
       fnew.fMethod  = m;
    }
 
+   if (fGradMethod) {
+      // use copy-constructor of TMethodCall
+      TMethodCall *m = new TMethodCall(*fGradMethod);
+      fnew.fGradMethod.reset(m);
+   }
+
    fnew.fFuncPtr = fFuncPtr;
+   fnew.fGradGenerationInput = fGradGenerationInput;
+   fnew.fGradFuncPtr = fGradFuncPtr;
 
 }
 
@@ -728,69 +740,77 @@ void TFormula::Clear(Option_t * )
 
 }
 
+// Returns nullptr on failure.
+static std::unique_ptr<TMethodCall>
+prepareMethod(bool HasParameters, bool HasVariables, const char* FuncName,
+              bool IsVectorized, bool IsGradient = false) {
+   std::unique_ptr<TMethodCall> Method = std::unique_ptr<TMethodCall>(new TMethodCall());
+
+   TString prototypeArguments = "";
+   if (HasVariables || HasParameters) {
+      if (IsVectorized)
+         prototypeArguments.Append("ROOT::Double_v*");
+      else
+         prototypeArguments.Append("Double_t*");
+   }
+   auto AddDoublePtrParam = [&prototypeArguments] () {
+      prototypeArguments.Append(",");
+      prototypeArguments.Append("Double_t*");
+   };
+   if (HasParameters)
+      AddDoublePtrParam();
+
+   // We need an extra Double_t* for the gradient return result.
+   if (IsGradient)
+      AddDoublePtrParam();
+
+   // Initialize the method call using real function name (cling name) defined
+   // by ProcessFormula
+   Method->InitWithPrototype(FuncName, prototypeArguments);
+   if (!Method->IsValid()) {
+      Error("prepareMethod",
+            "Can't compile function %s prototype with arguments %s", FuncName,
+            prototypeArguments.Data());
+      return nullptr;
+   }
+
+   return Method;
+}
+
+static TInterpreter::CallFuncIFacePtr_t::Generic_t
+prepareFuncPtr(TMethodCall *Method) {
+   CallFunc_t *callfunc = Method->GetCallFunc();
+
+   if (!gCling->CallFunc_IsValid(callfunc)) {
+      Error("prepareFuncPtr", "Callfunc retuned from Cling is not valid");
+      return nullptr;
+   }
+
+   TInterpreter::CallFuncIFacePtr_t::Generic_t Result
+      = gCling->CallFunc_IFacePtr(callfunc).fGeneric;
+   if (!Result) {
+      Error("prepareFuncPtr", "Compiled function pointer is null");
+      return nullptr;
+   }
+   return Result;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets TMethodCall to function inside Cling environment.
 /// TFormula uses it to execute function.
 /// After call, TFormula should be ready to evaluate formula.
+/// Returns false on failure.
 
 bool TFormula::PrepareEvalMethod()
 {
    if (!fMethod) {
-      fMethod = new TMethodCall();
-
       Bool_t hasParameters = (fNpar > 0);
       Bool_t hasVariables = (fNdim > 0);
-      TString prototypeArguments = "";
-      if (hasVariables || hasParameters) {
-         if (fVectorized)
-            prototypeArguments.Append("ROOT::Double_v*");
-         else
-            prototypeArguments.Append("Double_t*");
-      }
-      if (hasParameters) {
-         prototypeArguments.Append(",");
-//      }
-//      if (hasParameters) {
-         prototypeArguments.Append("Double_t*");
-      }
-      // init method call using real function name (cling name) which is defined in ProcessFormula
-      fMethod->InitWithPrototype(fClingName, prototypeArguments);
-      if (!fMethod->IsValid()) {
-         Error("PrepareEvalMethod", "Can't compile function %s prototype with arguments %s", fClingName.Data(),
-               prototypeArguments.Data());
-         return false;
-      }
-
-      // not needed anymore since we use the function pointer
-      // if(hasParameters)
-      // {
-      //    Long_t args[2];
-      //    args[0] = (Long_t)fClingVariables.data();
-      //    args[1] = (Long_t)fClingParameters.data();
-      //    fMethod->SetParamPtrs(args,2);
-      // }
-      // else
-      // {
-      //    Long_t args[1];
-      //    args[0] = (Long_t)fClingVariables.data();
-      //    fMethod->SetParamPtrs(args,1);
-      // }
-
-      CallFunc_t *callfunc = fMethod->GetCallFunc();
-
-      bool isvalid = gCling->CallFunc_IsValid(callfunc);
-      if (! isvalid ) {
-         Error("PrepareEvalMethod","Callfunc retuned from Cling is not valid");
-         return false;
-      }
-      TInterpreter::CallFuncIFacePtr_t faceptr = gCling->CallFunc_IFacePtr(callfunc);
-      fFuncPtr = faceptr.fGeneric;
-      if (fFuncPtr == 0) {
-         Error("PrepareEvalMethod","Compiled function pointer is null");
-         return false;
-      }
+      fMethod = prepareMethod(hasParameters, hasVariables, fClingName,
+                              fVectorized).release();
+      fFuncPtr = prepareFuncPtr(fMethod);
    }
-   return true;
+   return fFuncPtr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -803,8 +823,16 @@ void TFormula::InputFormulaIntoCling()
       // make sure the interpreter is initialized
       ROOT::GetROOT();
       R__ASSERT(gCling); 
+
+      // Trigger autoloading / autoparsing (ROOT-9840):
+      TString triggerAutoparsing = "namespace ROOT_TFormula_triggerAutoParse {\n"; triggerAutoparsing += fClingInput + "\n}";
+      gCling->ProcessLine(triggerAutoparsing);
+
       // add pragma for optimization of the formula
       fClingInput = TString("#pragma cling optimize(2)\n") + fClingInput;
+
+      // Now that all libraries and headers are loaded, Declare() a performant version
+      // of the same code:
       gCling->Declare(fClingInput);
       fClingInitialized = PrepareEvalMethod();
       if (!fClingInitialized) Error("InputFormulaIntoCling","Error compiling formula expression in Cling");
@@ -2253,7 +2281,7 @@ void TFormula::ProcessFormula(TString &formula)
          auto funcit = gClingFunctions.find(inputFormulaVecFlag);
 
          if (funcit != gClingFunctions.end()) {
-            fFuncPtr = (TInterpreter::CallFuncIFacePtr_t::Generic_t)funcit->second;
+            fFuncPtr = (TFormula::CallFuncSignature)funcit->second;
             fClingInitialized = true;
             inputIntoCling = false;
          }
@@ -3099,6 +3127,113 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
 #endif
 }
 
+bool TFormula::fIsCladRuntimeIncluded = false;
+
+static bool functionExists(const string &Name) {
+   return gInterpreter->GetFunction(/*cl*/0, Name.c_str());
+}
+
+/// returns true on success.
+bool TFormula::GenerateGradientPar()
+{
+   // We already have generated the gradient.
+   if (fGradMethod)
+      return true;
+
+   if (!HasGradientGenerationFailed()) {
+      // FIXME: Move this elsewhere
+      if (!TFormula::fIsCladRuntimeIncluded) {
+         TFormula::fIsCladRuntimeIncluded = true;
+         gInterpreter->Declare("#include <Math/CladDerivator.h>\n#pragma clad OFF");
+      }
+
+      // Check if the gradient request was made as part of another TFormula.
+      // This can happen when we create multiple TFormula objects with the same
+      // formula. In that case, the hasher will give identical id and we can
+      // reuse the already generated gradient function.
+      if (!functionExists(GetGradientFuncName())) {
+         std::string GradReqFuncName = GetGradientFuncName() + "_req";
+         // We want to call clad::differentiate(TFormula_id);
+         fGradGenerationInput = std::string("#pragma cling optimize(2)\n") +
+            "#pragma clad ON\n" +
+            "void " + GradReqFuncName + "() {\n" +
+            "clad::gradient(" + std::string(fClingName) + ");\n }\n" +
+            "#pragma clad OFF";
+
+         if (!gInterpreter->Declare(fGradGenerationInput.c_str()))
+            return false;
+      }
+
+      Bool_t hasParameters = (fNpar > 0);
+      Bool_t hasVariables = (fNdim > 0);
+      std::string GradFuncName = GetGradientFuncName();
+      fGradMethod = prepareMethod(hasParameters, hasVariables,
+                                  GradFuncName.c_str(),
+                                  fVectorized, /*IsGradient*/ true);
+      fGradFuncPtr = prepareFuncPtr(fGradMethod.get());
+      return true;
+   }
+   return false;
+}
+
+void TFormula::GradientPar(const Double_t *x, TFormula::GradientStorage& result)
+{
+   if (DoEval(x) == TMath::QuietNaN())
+      return;
+
+   if (!fClingInitialized) {
+      Error("GradientPar", "Could not initialize the formula!");
+      return;
+   }
+
+   if (!GenerateGradientPar()) {
+      Error("GradientPar", "Could not generate a gradient for the formula %s!",
+            fClingName.Data());
+      return;
+   }
+
+   if ((int)result.size() < fNpar) {
+      Warning("GradientPar",
+              "The size of gradient result is %zu but %d is required. Resizing.",
+              result.size(), fNpar);
+      result.resize(fNpar);
+   }
+   GradientPar(x, result.data());
+}
+
+void TFormula::GradientPar(const Double_t *x, Double_t *result)
+{
+   void* args[3];
+   const double * vars = (x) ? x : fClingVariables.data();
+   args[0] = &vars;
+   if (fNpar <= 0) {
+      // __attribute__((used)) extern "C" void __cf_0(void* obj, int nargs, void** args, void* ret)
+      // {
+      //    if (ret) {
+      //       new (ret) (double) (((double (&)(double*))TFormula____id)(*(double**)args[0]));
+      //       return;
+      //    } else {
+      //       ((double (&)(double*))TFormula____id)(*(double**)args[0]);
+      //       return;
+      //    }
+      // }
+      args[1] = &result;
+      (*fGradFuncPtr)(0, 2, args, /*ret*/nullptr); // We do not use ret in a return-void func.
+   } else {
+      // __attribute__((used)) extern "C" void __cf_0(void* obj, int nargs, void** args, void* ret)
+      // {
+      //    ((void (&)(double*, double*,
+      //               double*))TFormula____id_grad)(*(double**)args[0], *(double**)args[1],
+      //                                                                 *(double**)args[2]);
+      //    return;
+      // }
+      const double *pars = fClingParameters.data();
+      args[1] = &pars;
+      args[2] = &result;
+      (*fGradFuncPtr)(0, 3, args, /*ret*/nullptr); // We do not use ret in a return-void func.
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef R__HAS_VECCORE
 // ROOT::Double_v TFormula::Eval(ROOT::Double_v x, ROOT::Double_v y, ROOT::Double_v z, ROOT::Double_v t) const
@@ -3296,13 +3431,13 @@ void TFormula::ReInitializeEvalMethod() {
       R__LOCKGUARD(gROOTMutex);
 
       // std::cout << "gClingFunctions list" << std::endl;
-      // for (auto thing : gClingFunctions)
-      //    std::cout << "gClingFunctions : " << thing.first << std::endl;
+      //  for (auto thing : gClingFunctions)
+      //     std::cout << "gClingFunctions : " << thing.first << std::endl;
 
       auto funcit = gClingFunctions.find(fSavedInputFormula);
 
       if (funcit != gClingFunctions.end()) {
-         fFuncPtr = (TInterpreter::CallFuncIFacePtr_t::Generic_t)funcit->second;
+         fFuncPtr = (TFormula::CallFuncSignature)funcit->second;
          fClingInitialized = true;
          fLazyInitialization = false;
          return; 
@@ -3403,6 +3538,12 @@ TString TFormula::GetExpFormula(Option_t *option) const
    return fFormula;
 }
 
+TString TFormula::GetGradientFormula() const {
+   std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
+   gInterpreter->Evaluate(GetGradientFuncName().c_str(), *v);
+   return v->ToString();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the formula and its attributes.
 
@@ -3436,6 +3577,11 @@ void TFormula::Print(Option_t *option) const
       }
       printf("Expression passed to Cling:\n");
       printf("\t%s\n",fClingInput.Data() );
+      if (fGradFuncPtr) {
+         printf("Generated Gradient:\n");
+         printf("%s\n", fGradGenerationInput.c_str());
+         printf("%s\n", GetGradientFormula().Data());
+      }
    }
    if(!fReadyToExecute)
       {

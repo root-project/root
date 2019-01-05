@@ -8,6 +8,8 @@
 # These files are linked into rootcling_stage1 and libCling. rootcling accesses
 # them through rootcling_impl.
 
+ROOT_ADD_COMPILE_OPTIONS(-Wno-class-memaccess)
+
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 
 ROOT_OBJECT_LIBRARY(Dictgen
@@ -34,3 +36,6 @@ if(CXX_HAS_fno_rtti)
     set_source_files_properties(src/LinkdefReader.cxx    PROPERTIES COMPILE_FLAGS "-fno-rtti")
     set_source_files_properties(src/TModuleGenerator.cxx PROPERTIES COMPILE_FLAGS "-fno-rtti")
 endif()
+
+#---CreateRootClingCommandLineOptions------------------------------------------------------------------
+generateHeaders(${CMAKE_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py ${CMAKE_BINARY_DIR}/include/rootclingCommandLineOptionsHelp.h Dictgen)

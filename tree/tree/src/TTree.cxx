@@ -2385,7 +2385,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    }
 
    if (splitlevel < 0 || ((splitlevel == 0) && hasCustomStreamer && cl->IsTObject())) {
-      TBranchObject* branch = new TBranchObject(this, name, classname, addr, bufsize, 0, /*compress=*/ -1, isptrptr);
+      TBranchObject* branch = new TBranchObject(this, name, classname, addr, bufsize, 0, /*compress=*/ ROOT::RCompressionSetting::EAlgorithm::kInherit, isptrptr);
       fBranches.Add(branch);
       return branch;
    }
@@ -2606,7 +2606,8 @@ TFile* TTree::ChangeFile(TFile* file)
    file->cd();
    Write();
    Reset();
-   char* fname = new char[2000];
+   constexpr auto kBufSize = 2000;
+   char* fname = new char[kBufSize];
    ++fFileNumber;
    char uscore[10];
    for (Int_t i = 0; i < 10; ++i) {
@@ -2617,30 +2618,30 @@ TFile* TTree::ChangeFile(TFile* file)
    while (nus < 10) {
       uscore[nus] = '_';
       fname[0] = 0;
-      strlcpy(fname, file->GetName(),2000);
+      strlcpy(fname, file->GetName(), kBufSize);
 
       if (fFileNumber > 1) {
          char* cunder = strrchr(fname, '_');
          if (cunder) {
-            snprintf(cunder,2000-Int_t(cunder-fname), "%s%d", uscore, fFileNumber);
+            snprintf(cunder, kBufSize - Int_t(cunder - fname), "%s%d", uscore, fFileNumber);
             const char* cdot = strrchr(file->GetName(), '.');
             if (cdot) {
-               strlcat(fname, cdot,2000);
+               strlcat(fname, cdot, kBufSize);
             }
          } else {
-            char fcount[10];
-            snprintf(fcount,10, "%s%d", uscore, fFileNumber);
-            strlcat(fname, fcount,2000);
+            char fcount[21];
+            snprintf(fcount,21, "%s%d", uscore, fFileNumber);
+            strlcat(fname, fcount, kBufSize);
          }
       } else {
          char* cdot = strrchr(fname, '.');
          if (cdot) {
-            snprintf(cdot,2000-Int_t(fname-cdot), "%s%d", uscore, fFileNumber);
-            strlcat(fname, strrchr(file->GetName(), '.'),2000);
+            snprintf(cdot, kBufSize - Int_t(fname-cdot), "%s%d", uscore, fFileNumber);
+            strlcat(fname, strrchr(file->GetName(), '.'), kBufSize);
          } else {
-            char fcount[10];
-            snprintf(fcount,10, "%s%d", uscore, fFileNumber);
-            strlcat(fname, fcount,2000);
+            char fcount[21];
+            snprintf(fcount,21, "%s%d", uscore, fFileNumber);
+            strlcat(fname, fcount, kBufSize);
          }
       }
       if (gSystem->AccessPathName(fname)) {
@@ -4927,7 +4928,12 @@ Int_t TTree::FlushBasketsImpl() const
 #ifdef R__USE_IMT
    const auto useIMT = ROOT::IsImplicitMTEnabled() && fIMTEnabled;
    if (useIMT) {
-      if (fSortedBranches.empty()) { const_cast<TTree*>(this)->InitializeBranchLists(false); }
+      // ROOT-9668: here we need to check if the size of fSortedBranches is different from the
+      // size of the list of branches before triggering the initialisation of the fSortedBranches
+      // container to cover two cases:
+      // 1. This is the first time we flush. fSortedBranches is empty and we need to fill it.
+      // 2. We flushed at least once already but a branch has been be added to the tree since then
+      if (fSortedBranches.size() != unsigned(nb)) { const_cast<TTree*>(this)->InitializeBranchLists(false); }
 
       BoolRAIIToggle sentry(fIMTFlush);
       fIMTZipBytes.store(0);
@@ -5360,6 +5366,7 @@ Long64_t TTree::GetEntriesFriend() const
 /// and a new instance of Event is created and filled.
 ///
 /// ## OPTION 3
+///
 /// ~~~ {.cpp}
 /// Same as option 1, but you delete yourself the event.
 ///
@@ -5517,12 +5524,21 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 /// in parallel with the rest, there could be two threads invoking
 /// TBranch::GetEntry on one of them at the same time, since a branch that
 /// depends on a size (or count) branch will also invoke GetEntry on the latter.
+/// This method can be invoked several times during the event loop if the TTree
+/// is being written, for example when adding new branches. In these cases, the
+/// `checkLeafCount` parameter is false.
 /// \param[in] checkLeafCount True if we need to check whether some branches are
 ///                           count leaves.
 
 void TTree::InitializeBranchLists(bool checkLeafCount)
 {
    Int_t nbranches = fBranches.GetEntriesFast();
+
+   // The special branch fBranchRef needs to be processed sequentially:
+   // we add it once only.
+   if (fBranchRef && fBranchRef != fSeqBranches[0]) {
+      fSeqBranches.push_back(fBranchRef);
+   }
 
    // The branches to be processed sequentially are those that are the leaf count of another branch
    if (checkLeafCount) {
@@ -5538,12 +5554,11 @@ void TTree::InitializeBranchLists(bool checkLeafCount)
       }
    }
 
-   // The special branch fBranchRef also needs to be processed sequentially
-   if (fBranchRef) {
-      fSeqBranches.push_back(fBranchRef);
-   }
-
    // Any branch that is not a leaf count can be safely processed in parallel when reading
+   // We need to reset the vector to make sure we do not re-add several times the same branch.
+   if (!checkLeafCount) {
+      fSortedBranches.clear();
+   }
    for (Int_t i = 0; i < nbranches; i++)  {
       Long64_t bbytes = 0;
       TBranch* branch = (TBranch*)fBranches.UncheckedAt(i);
@@ -5586,7 +5601,7 @@ void TTree::SortBranchesByTime()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the entry list, set to this tree
+///Returns the entry list assigned to this tree
 
 TEntryList* TTree::GetEntryList()
 {
@@ -6864,7 +6879,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          if (branch->GetZipBytes() > 0) comp = totBytes/Double_t(branch->GetZipBytes());
          if (comp > 1 && comp < minComp) {
             if (pDebug) Info("OptimizeBaskets", "Disabling compression for branch : %s\n",branch->GetName());
-            branch->SetCompressionSettings(0);
+            branch->SetCompressionSettings(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
          }
       }
       // coverity[divide_by_zero] newMemsize can not be zero as there is at least one leaf
@@ -7107,7 +7122,8 @@ void TTree::PrintCacheStats(Option_t* option) const
 /// in the same script. If this is required, proceed as indicated in NOTE1,
 /// by getting a pointer to the corresponding TSelector,eg
 ///
-/// ### workaround 1
+/// ### Workaround 1
+///
 /// ~~~ {.cpp}
 ///     void stubs1() {
 ///        TSelector *selector = TSelector::GetSelector("h1test.C");
@@ -7121,7 +7137,8 @@ void TTree::PrintCacheStats(Option_t* option) const
 /// ~~~
 /// or use ACLIC to compile the selector
 ///
-/// ### workaround 2
+/// ### Workaround 2
+///
 /// ~~~ {.cpp}
 ///     void stubs2() {
 ///        TFile *f1 = new TFile("stubs_nood_le1.root");
@@ -8501,7 +8518,7 @@ void TTree::SetCircular(Long64_t maxEntries)
       //a file, reset the compression level to the file compression level
       if (fDirectory) {
          TFile* bfile = fDirectory->GetFile();
-         Int_t compress = 1;
+         Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose;
          if (bfile) {
             compress = bfile->GetCompressionSettings();
          }

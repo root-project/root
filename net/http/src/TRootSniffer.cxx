@@ -1464,43 +1464,6 @@ Bool_t TRootSniffer::ProduceImage(Int_t /*kind*/, const std::string & /*path*/, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \deprecated Use signature with std::string
-/// Method produce different kind of data out of object
-/// Parameter 'path' specifies object or object member
-/// Supported 'file' (case sensitive):
-///   "root.bin"  - binary data
-///   "root.png"  - png image
-///   "root.jpeg" - jpeg image
-///   "root.gif"  - gif image
-///   "root.xml"  - xml representation
-///   "root.json" - json representation
-///   "exe.json"  - method execution with json reply
-///   "exe.bin"   - method execution with binary reply
-///   "exe.txt"   - method execution with debug output
-///   "cmd.json"  - execution of registered commands
-/// Result returned either as string or binary buffer,
-/// which should be released with free() call
-
-Bool_t TRootSniffer::Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length,
-                                 TString &str)
-{
-   std::string data;
-   if (!Produce(path, file, options, data))
-      return kFALSE;
-   if (strstr(file, ".json") || strstr(file, ".xml") || strstr(file, ".txt")) {
-      str = data.c_str();
-      ptr = 0;
-      length = 0;
-   } else {
-      str.Clear();
-      length = data.length();
-      ptr = malloc(length + 1);
-      memcpy(ptr, data.data(), length + 1); // copy including zero at the end
-   }
-   return kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Method produce different kind of data out of object
 /// Parameter 'path' specifies object or object member
 /// Supported 'file' (case sensitive):

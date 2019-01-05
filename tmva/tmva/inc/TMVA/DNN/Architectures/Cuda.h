@@ -525,6 +525,12 @@ public:
     * \p A
     */
    static void SqrtElementWise(TCudaMatrix<AFloat> &A);
+
+  // optimizer functions
+   static void AdamUpdate(TCudaMatrix<AFloat> & A, const TCudaMatrix<AFloat> & M, const TCudaMatrix<AFloat> & V, AFloat alpha, AFloat eps);
+   static void AdamUpdateFirstMom(TCudaMatrix<AFloat> & A, const TCudaMatrix<AFloat> & B, AFloat beta);
+   static void AdamUpdateSecondMom(TCudaMatrix<AFloat> & A, const TCudaMatrix<AFloat> & B, AFloat beta);
+
 };
 
 //____________________________________________________________________________

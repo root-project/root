@@ -14,6 +14,8 @@
 
 #include <ROOT/REveElement.hxx>
 
+#include <ROOT/RWebDisplayArgs.hxx>
+
 #include "TSysEvtHandler.h"
 #include "TTimer.h"
 
@@ -36,6 +38,7 @@ class REveScene;
 class REveSceneList;
 
 class RWebWindow;
+class REveGeomViewer;
 
 class REveManager
 {
@@ -128,6 +131,8 @@ protected:
 
    std::shared_ptr<ROOT::Experimental::RWebWindow>  fWebWindow;
    std::vector<Conn>                                fConnList;
+
+   void GeomWindowCallback(unsigned connid, const std::string &arg);
 
 public:
    REveManager(); // (Bool_t map_window=kTRUE, Option_t* opt="FI");
@@ -236,7 +241,9 @@ public:
 
    void BroadcastElementsOf(REveElement::List_t &els);
 
-   void Show(const std::string &where = "");
+   void Show(const RWebDisplayArgs &args = "");
+
+   std::shared_ptr<REveGeomViewer> ShowGeometry(const RWebDisplayArgs &args = "");
 
    ClassDef(REveManager, 0); // Eve application manager.
 };

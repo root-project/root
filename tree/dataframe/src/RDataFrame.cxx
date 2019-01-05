@@ -111,12 +111,14 @@ produce several different results in one event loop. Instant actions trigger the
 
 | **Operation** | **Description** |
 |---------------------|-----------------|
-| [Alias](classROOT_1_1RDF_1_1RInterface.html#a31ca327e4a192dcc05a4aac240e1a725) | Introduce an alias for a particular column name |
-| [GetColumnNames](classROOT_1_1RDF_1_1RInterface.html#a951fe60b74d3a9fda37df59fd1dac186) | Get all the available columns of the dataset |
-| [GetColumnType](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#ad3ccd813d9fed014ae6a080411c5b5a8) | Return the type of a given column as a string. |
+| [Alias](classROOT_1_1RDF_1_1RInterface.html#a31ca327e4a192dcc05a4aac240e1a725) | Introduce an alias for a particular column name. |
+| [GetColumnNames](classROOT_1_1RDF_1_1RInterface.html#a951fe60b74d3a9fda37df59fd1dac186) | Get the names of all the available columns of the dataset. |
+| [GetDefinedColumnNames](classROOT_1_1RDF_1_1RInterface.html#ad5c3fab8155aae8f614735df68430c58) | Get the names of all the defined columns |
+| [GetColumnType](classROOT_1_1RDF_1_1RInterface.html#ad3ccd813d9fed014ae6a080411c5b5a8) | Return the type of a given column as a string. |
+| [GetColumnTypeNamesList](classROOT_1_1RDF_1_1RInterface.html#a951fe60b74d3a9fda37df59fd1dac186) | Return the list of type names of columns in the dataset. |
 | [GetFilterNames](classROOT_1_1RDF_1_1RInterface.html#a25026681111897058299161a70ad9bb2) | Get all the filters defined. If called on a root node, all filters will be returned. For any other node, only the filters upstream of that node. |
 | [Display](classROOT_1_1RDF_1_1RInterface.html#a652f9ab3e8d2da9335b347b540a9a941) | Provides an ASCII representation of the columns types and contents of the dataset printable by the user. |
-| [SaveGraph](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#adc17882b283c3d3ba85b1a236197c533) | Store the computation graph of an RDataFrame in graphviz format for easy inspection. |
+| [SaveGraph](namespaceROOT_1_1RDF.html#adc17882b283c3d3ba85b1a236197c533) | Store the computation graph of an RDataFrame in graphviz format for easy inspection. |
 
 
 ## <a name="introduction"></a>Introduction
@@ -453,6 +455,9 @@ or [Snapshot](classROOT_1_1RDF_1_1RInterface.html#a233b7723e498967f4340705d2c4db
 provides "its own" values for these columns which do not necessarily correspond to the ones of the mother data frame. This is
 most notably the case where filters are used before deriving a cached/persistified dataframe.
 
+Note that in multi-thread event loops the values of `rdfentry_` _do not_ correspond to what would be the entry numbers
+of a TChain constructed over the same set of ROOT files, as the entries are processed in an unspecified order.
+
 ### Branch type guessing and explicit declaration of branch types
 C++ is a statically typed language: all types must be known at compile-time. This includes the types of the `TTree`
 branches we want to work on. For filters, temporary columns and some of the actions, **branch types are deduced from the
@@ -496,14 +501,17 @@ RDataFrame d("bTree", bFilePtr);
 d.Foreach([&sumSq, &n](double b) { ++n; sumSq += b*b; }, {"b"});
 std::cout << "rms of b: " << std::sqrt(sumSq / n) << std::endl;
 ~~~
-When executing on multiple threads, users are responsible for the thread-safety of the expression passed to `Foreach`.
+When executing on multiple threads, users are responsible for the thread-safety of the expression passed to `Foreach`:
+each thread will execute the expression multiple times (once per entry) in an unspecified order.
 The code above would need to employ some resource protection mechanism to ensure non-concurrent writing of `rms`; but
 this is probably too much head-scratch for such a simple operation.
 
 `ForeachSlot` can help in this situation. It is an alternative version of `Foreach` for which the function takes an
 additional parameter besides the columns it should be applied to: an `unsigned int slot` parameter, where `slot` is a
-number indicating which thread (0, 1, 2 , ..., poolSize - 1) the function is being run in. We can take advantage of
-`ForeachSlot` to evaluate a thread-safe root mean square of branch "b":
+number indicating which thread (0, 1, 2 , ..., poolSize - 1) the function is being run in. More specifically, RDataFrame
+guarantees that `ForeachSlot` will invoke the user expression with different `slot` parameters for different concurrent
+executions (there is no guarantee that a certain slot number will always correspond to a given thread id, though).
+We can take advantage of `ForeachSlot` to evaluate a thread-safe root mean square of branch "b":
 ~~~{.cpp}
 // Thread-safe evaluation of RMS of branch "b" using ForeachSlot
 ROOT::EnableImplicitMT();
@@ -616,6 +624,40 @@ ROOT::RDF::SaveGraph(rd1, "./mydot.dot");
 ROOT::RDF::SaveGraph(rd1);
 ~~~
 
+### RDataFrame variables as function arguments and return values
+RDataFrame variables/nodes are relatively cheap to copy and it's possible to both pass them to (or move them into)
+functions and to return them from functions. However, in general each dataframe node will have a different C++ type,
+which includes all available compile-time information about what that node does. One way to cope with this complication
+is to use template functions and/or C++14 auto return types:
+~~~{.cpp}
+template <typename RDF>
+auto ApplySomeFilters(RDF df)
+{
+   return df.Filter("x > 0").Filter([](int y) { return y < 0; }, {"y"});
+}
+~~~
+
+A possibly simpler, C++11-compatible alternative is to take advantage of the fact that any dataframe node can be
+converted to the common type ROOT::RDF::RNode:
+~~~{.cpp}
+// a function that conditionally adds a Range to a RDataFrame node.
+RNode MaybeAddRange(RNode df, bool mustAddRange)
+{
+   return mustAddRange ? df.Range(1) : df;
+}
+// use as :
+ROOT::RDataFrame df(10);
+auto maybeRangedDF = MaybeAddRange(df, true);
+~~~
+
+The conversion to ROOT::RDF::RNode is cheap, but it will introduce an extra virtual call during the RDataFrame event 
+loop (in most cases, the resulting performance impact should be negligible).
+
+As a final note, remember that RDataFrame actions do not return another dataframe, but a RResultPtr<T>, where T is the
+type of the result of the action.
+
+Read more on this topic [here](https://root.cern.ch/doc/master/classROOT_1_1RDF_1_1RInterface.html#a6909f04c05723de79f97a14b092318b1).
+
 ##  <a name="transformations"></a>Transformations
 ### <a name="Filters"></a> Filters
 A filter is defined through a call to `Filter(f, columnList)`. `f` can be a function, a lambda expression, a functor
@@ -706,16 +748,33 @@ are lazy, the others are instant.
 
 ##  <a name="parallel-execution"></a>Parallel execution
 As pointed out before in this document, `RDataFrame` can transparently perform multi-threaded event loops to speed up
-the execution of its actions. Users only have to call `ROOT::EnableImplicitMT()` *before* constructing the `RDataFrame`
+the execution of its actions. Users have to call `ROOT::EnableImplicitMT()` *before* constructing the `RDataFrame`
 object to indicate that it should take advantage of a pool of worker threads. **Each worker thread processes a distinct
 subset of entries**, and their partial results are merged before returning the final values to the user.
+More specifically, the dataset will be divided in batches of entries, and threads will divide among themselves the
+processing of these batches. There are no guarantees on the order the batches are processed, i.e. no guarantees in the
+order entries of the dataset are processed. Note that this in turn means that, for multi-thread event loops, there is no
+guarantee on the order in which `Snapshot` will _write_ entries: they could be scrambled with respect to the input dataset.
 
-### Thread safety
-`Filter` and `Define` transformations should be inherently thread-safe: they have no side-effects and are not
-dependent on global state.
-Most `Filter`/`Define` functions will in fact be pure in the functional programming sense.
-All actions are built to be thread-safe with the exception of `Foreach`, in which case users are responsible of
-thread-safety, see [here](#generic-actions).
+### Thread-safety of user-defined expressions
+RDataFrame operations such as `Histo1D` or `Snapshot` are guaranteed to work correctly in multi-thread event loops.
+User-defined expressions, such as strings or lambdas passed to `Filter`, `Define`, `Foreach`, `Reduce` or `Aggregate`
+will have to be thread-safe, i.e. it should be possible to call them concurrently from different threads.
+
+Note that simple `Filter` and `Define` transformations will inherently satisfy this requirement: `Filter`/`Define`
+expressions will often be *pure* in the functional programming sense (no side-effects, no dependency on external state),
+which eliminates all risks of race conditions.
+
+In order to facilitate writing of thread-safe operations, some RDataFrame features such as `Foreach`, `Define` or `OnPartialResult`
+offer thread-aware counterparts (`ForeachSlot`, `DefineSlot`, `OnPartialResultSlot`): their only difference is that they
+will pass an extra `slot` argument (an unsigned integer) to the user-defined expression. When calling user-defined code
+concurrently, `RDataFrame` guarantees that different threads will employ different values of the `slot` parameter,
+where `slot` will be a number between 0 and `ROOT::GetImplicitMTPoolSize() - 1`.
+In other words, within a slot, computation runs sequentially and events are processed sequentially.
+Note that the same slot might be associated to different threads over the course of a single event loop, but two threads
+will never receive the same slot at the same time.
+This extra parameter might facilitate writing safe parallel code by having each thread write/modify a different
+*processing slot*, e.g. a different element of a list. See [here](#generic-actions) for an example usage of `ForeachSlot`.
 
 <a name="reference"></a>
 */
@@ -743,7 +802,7 @@ namespace RDFInternal = ROOT::Internal::RDF;
 /// booking of actions or transformations.
 /// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const ColumnNames_t &defaultBranches)
-   : RInterface<RDFDetail::RLoopManager>(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
 {
    if (!dirPtr) {
       auto msg = "Invalid TDirectory!";
@@ -769,7 +828,7 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 /// booking of actions or transformations.
 /// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches)
-   : RInterface<RDFDetail::RLoopManager>(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
 {
    const std::string treeNameInt(treeName);
    const std::string filenameglobInt(filenameglob);
@@ -789,7 +848,7 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob,
 /// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string> &fileglobs,
                        const ColumnNames_t &defaultBranches)
-   : RInterface<RDFDetail::RLoopManager>(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
 {
    std::string treeNameInt(treeName);
    auto chain = std::make_shared<TChain>(treeNameInt.c_str());
@@ -807,7 +866,7 @@ RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string>
 /// booking of actions or transformations.
 /// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
-   : RInterface<RDFDetail::RLoopManager>(std::make_shared<RDFDetail::RLoopManager>(&tree, defaultBranches))
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(&tree, defaultBranches))
 {
 }
 
@@ -820,7 +879,7 @@ RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
 /// and it will do so for all the previously-defined temporary branches.
 /// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(ULong64_t numEntries)
-   : RInterface<RDFDetail::RLoopManager>(std::make_shared<RDFDetail::RLoopManager>(numEntries))
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(numEntries))
 
 {
 }
@@ -833,7 +892,7 @@ RDataFrame::RDataFrame(ULong64_t numEntries)
 /// A dataframe associated to a datasource will query it to access column values.
 /// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnNames_t &defaultBranches)
-   : RInterface<RDFDetail::RLoopManager>(std::make_shared<RDFDetail::RLoopManager>(std::move(ds), defaultBranches))
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(std::move(ds), defaultBranches))
 {
 }
 

@@ -911,21 +911,28 @@
       } else {
 
          // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
-         var stepy = height / nlines, has_head = false, margin_x = pt.fMargin * width;
+         var stepy = height / nlines, has_head = false, margin_x = pt.fMargin * width, max_font_size = 0;
 
-         this.StartTextDrawing(pt.fTextFont, height/(nlines * 1.2), text_g);
+         // for single line (typically title) limit font size
+         if ((nlines == 1) && (pt.fTextSize > 0)) {
+            max_font_size = Math.round(pt.fTextSize*can_height);
+            if (max_font_size < 3) max_font_size = 3;
+         }
+
+         this.StartTextDrawing(pt.fTextFont, height/(nlines * 1.2), text_g, max_font_size);
 
          for (var j = 0; j < nlines; ++j) {
             var arg = null, lj = lines[j];
 
             if (nlines == 1) {
-               arg = { align: pt.fTextAlign, x:0, y:0, width: width, height: height };
+               arg = { x:0, y:0, width: width, height: height };
             } else {
-               arg = { align: pt.fTextAlign, x: margin_x, y: j*stepy, width: width-2*margin_x, height: stepy };
+               arg = { x: margin_x, y: j*stepy, width: width-2*margin_x, height: stepy };
                if (lj.fTextColor) arg.color = this.get_color(lj.fTextColor);
                if (lj.fTextSize) arg.font_size = Math.round(lj.fTextSize*can_height);
             }
 
+            arg.align = pt.fTextAlign;
             arg.draw_g = text_g;
             arg.latex = (lj._typename == "TText" ? 0 : 1);
             arg.text = lj.fTitle;
@@ -1325,8 +1332,19 @@
             pave.fOptFit = obj.fOptFit;
             return true;
          case 'TLegend':
+            var oldprim = pave.fPrimitives;
             pave.fPrimitives = obj.fPrimitives;
             pave.fNColumns = obj.fNColumns;
+            if (oldprim && oldprim.arr && pave.fPrimitives && pave.fPrimitives.arr && (oldprim.arr.length == pave.fPrimitives.arr.length)) {
+               // try to sync object reference, new object does not displayed automatically
+               // in ideal case one should use snapids in the entries
+               for (var k=0;k<oldprim.arr.length;++k) {
+                  var oldobj = oldprim.arr[k].fObject, newobj = pave.fPrimitives.arr[k].fObject;
+
+                  if (oldobj && newobj && oldobj._typename == newobj._typename && oldobj.fName == newobj.fName)
+                     pave.fPrimitives.arr[k].fObject = oldobj;
+               }
+            }
             return true;
       }
 
@@ -1416,7 +1434,7 @@
          if (nbr1<=0) nbr1 = 8;
          axis.fTickSize = 0.6 * s_width / width; // adjust axis ticks size
 
-         if (contour) {
+         if (contour && framep) {
             zmin = Math.min(contour[0], framep.zmin);
             zmax = Math.max(contour[contour.length-1], framep.zmax);
          } else
@@ -1465,7 +1483,7 @@
                           .property("fill0", col)
                           .property("fill1", d3.rgb(col).darker(0.5).toString())
 
-               if (framep && framep.tooltip_allowed)
+               if (this.IsTooltipAllowed())
                   r.on('mouseover', function() {
                      d3.select(this).transition().duration(100).style("fill", d3.select(this).property('fill1'));
                   }).on('mouseout', function() {
@@ -1649,7 +1667,7 @@
               minimum: -1111, maximum: -1111 });
    }
 
-   THistDrawOptions.prototype.Decode = function(opt, hdim, histo, pad, fp) {
+   THistDrawOptions.prototype.Decode = function(opt, hdim, histo, pad, painter) {
       this.orginal = opt;
 
       var d = new JSROOT.DrawOptions(opt), check3dbox = "";
@@ -1676,8 +1694,8 @@
       if (d.check('NOSTAT')) this.NoStat = true;
       if (d.check('STAT')) this.ForceStat = true;
 
-      if (d.check('NOTOOLTIP') && fp) fp.tooltip_allowed = false;
-      if (d.check('TOOLTIP') && fp) fp.tooltip_allowed = true;
+      if (d.check('NOTOOLTIP') && painter) painter.SetTooltipAllowed(false);
+      if (d.check('TOOLTIP') && painter) painter.SetTooltipAllowed(true);
 
       if (d.check('LOGX') && pad) { pad.fLogx = 1; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
       if (d.check('LOGY') && pad) { pad.fLogy = 1; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
@@ -1975,7 +1993,7 @@
    }
 
    THistPainter.prototype.IsTH2Poly = function() {
-      return this.MatchObjectType(/^TH2Poly/);
+      return this.MatchObjectType(/^TH2Poly/) || this.MatchObjectType(/^TProfile2Poly/);
    }
 
    THistPainter.prototype.Clear3DScene = function() {
@@ -2012,15 +2030,14 @@
       /* decode string 'opt' and fill the option structure */
       var histo = this.GetHisto(),
           hdim = this.Dimension(),
-          pad = this.root_pad(),
-          fp = this.frame_painter();
+          pad = this.root_pad();
 
       if (!this.options)
          this.options = new THistDrawOptions;
       else
          this.options.Reset();
 
-      this.options.Decode(opt || histo.fOption, hdim, histo, pad, fp);
+      this.options.Decode(opt || histo.fOption, hdim, histo, pad, this);
 
       this.OptionsStore(opt); // opt will be return as default draw option, used in webcanvas
    }
@@ -2149,6 +2166,20 @@
             tgt.fLabels = src.fLabels;
             tgt.fXmin = src.fXmin;
             tgt.fXmax = src.fXmax;
+            tgt.fTimeDisplay = src.fTimeDisplay;
+            tgt.fTimeFormat = src.fTimeFormat;
+            // copy attributes
+            tgt.fAxisColor = src.fAxisColor;
+            tgt.fLabelColor = src.fLabelColor;
+            tgt.fLabelFont = src.fLabelFont;
+            tgt.fLabelOffset = src.fLabelOffset;
+            tgt.fLabelSize = src.fLabelSize;
+            tgt.fNdivisions = src.fNdivisions;
+            tgt.fTickLength = src.fTickLength;
+            tgt.fTitleColor = src.fTitleColor;
+            tgt.fTitleFont = src.fTitleFont;
+            tgt.fTitleOffset = src.fTitleOffset;
+            tgt.fTitleSize = src.fTitleSize;
          }
          CopyAxis(histo.fXaxis, obj.fXaxis);
          CopyAxis(histo.fYaxis, obj.fYaxis);
@@ -2270,6 +2301,8 @@
       fp.CreateXY({ ndim: this.Dimension(),
                     check_pad_range: this.check_pad_range,
                     create_canvas: this.create_canvas,
+                    zoom_ymin: this.zoom_ymin,
+                    zoom_ymax: this.zoom_ymax,
                     ymin_nz: this.ymin_nz,
                     swap_xy: (this.options.BarStyle >= 20),
                     reverse_x: this.options.RevX,
@@ -2323,25 +2356,42 @@
       // case when histogram drawn over other histogram (same option)
       if (!this.is_main_painter() || this.options.Same) return;
 
-      var histo = this.GetHisto(),
+      var histo = this.GetHisto(), st = JSROOT.gStyle,
           tpainter = this.FindPainterFor(null, "title"),
-          pavetext = tpainter ? tpainter.GetObject() : null;
+          pt = tpainter ? tpainter.GetObject() : null;
 
-      if (!pavetext) pavetext = this.FindInPrimitives("title");
-      if (pavetext && (pavetext._typename !== "TPaveText")) pavetext = null;
+      if (!pt) pt = this.FindInPrimitives("title");
+      if (pt && (pt._typename !== "TPaveText")) pt = null;
 
-      var draw_title = !histo.TestBit(JSROOT.TH1StatusBits.kNoTitle) && (JSROOT.gStyle.fOptTitle > 0);
+      var draw_title = !histo.TestBit(JSROOT.TH1StatusBits.kNoTitle) && (st.fOptTitle > 0);
 
-      if (pavetext) {
-         pavetext.Clear();
-         if (draw_title) pavetext.AddText(histo.fTitle);
+      if (pt) {
+         pt.Clear();
+         if (draw_title) pt.AddText(histo.fTitle);
          if (tpainter) tpainter.Redraw();
-      } else
-      if (draw_title && !tpainter && histo.fTitle) {
-         pavetext = JSROOT.Create("TPaveText");
-         JSROOT.extend(pavetext, { fName: "title", fX1NDC: 0.28, fY1NDC: 0.94, fX2NDC: 0.72, fY2NDC: 0.99 } );
-         pavetext.AddText(histo.fTitle);
-         tpainter = JSROOT.Painter.drawPave(this.divid, pavetext);
+      } else if (draw_title && !tpainter && histo.fTitle) {
+         pt = JSROOT.Create("TPaveText");
+
+         var fp = this.frame_painter(), midx = st.fTitleX, y2 = st.fTitleY, w = st.fTitleW, h = st.fTitleH;
+         if (!h && fp) h = (y2-fp.fY2NDC)*0.7;
+         if (!w && fp) w = fp.fX2NDC - fp.fX1NDC;
+         if (!h || isNaN(h) || (h<0)) h = 0.06;
+         if (!w || isNaN(w) || (w<0)) w = 0.44;
+         pt.fName = "title";
+         pt.fX1NDC = midx - w/2;
+         pt.fY1NDC = y2 - h;
+         pt.fX2NDC = midx + w/2;
+         pt.fY2NDC = y2;
+         pt.fTextFont = st.fTitleFont;
+         pt.fTextSize = st.fTitleFontSize;
+         pt.fTextColor = st.fTitleTextColor;
+         pt.fTextAlign = st.fTitleAlign;
+         pt.fFillColor = st.fTitleColor;
+         pt.fFillStyle = st.fTitleStyle;
+         pt.fBorderSize = st.fTitleBorderSize;
+
+         pt.AddText(histo.fTitle);
+         tpainter = JSROOT.Painter.drawPave(this.divid, pt);
          if (tpainter) tpainter.$secondary = true;
       }
    }
@@ -2356,9 +2406,9 @@
       if (arg==="check")
          return (!this.is_main_painter() || this.options.Same) ? null : histo;
 
-      var pavetext = tpainter.GetObject();
-      pavetext.Clear();
-      pavetext.AddText(histo.fTitle);
+      var pt = tpainter.GetObject();
+      pt.Clear();
+      pt.AddText(histo.fTitle);
 
       tpainter.Redraw();
    }
@@ -2476,8 +2526,6 @@
          if (!this.draw_content || !this.is_main_painter()) return null;
       }
 
-      this.create_stats = true;
-
       var stats = this.FindStat(), st = JSROOT.gStyle,
           optstat = this.options.optstat, optfit = this.options.optfit;
 
@@ -2495,13 +2543,17 @@
          optfit = st.fOptFit;
       }
 
+      if (!stats && !optstat && !optfit) return null;
+
+      this.create_stats = true;
+
       if (stats) return stats;
 
       stats = JSROOT.Create('TPaveStats');
-      JSROOT.extend(stats, { fName : 'stats',
+      JSROOT.extend(stats, { fName: 'stats',
                              fOptStat: optstat,
                              fOptFit: optfit,
-                             fBorderSize : 1} );
+                             fBorderSize: 1 });
 
       stats.fX1NDC = st.fStatX - st.fStatW;
       stats.fY1NDC = st.fStatY - st.fStatH;
@@ -2713,7 +2765,7 @@
             menu.painter.FillObjectExecMenu(menu, kind, function() {
                 // suppress any running zooming
                 menu.painter.SwitchTooltip(false);
-                menu.show(menu.painter.ctx_menu_evnt, menu.painter.SwitchTooltip.bind(menu.painter, true) );
+                menu.show(menu.painter.ctx_menu_evnt, menu.painter.SwitchTooltip.bind(menu.painter, true));
             });
 
       });  // end menu creation
@@ -2776,8 +2828,8 @@
 
          var main = this.main_painter() || this;
 
-         menu.addchk(fp.tooltip_allowed, 'Show tooltips', function() {
-            fp.tooltip_allowed = !fp.tooltip_allowed;
+         menu.addchk(main.IsTooltipAllowed(), 'Show tooltips', function() {
+            main.SetTooltipAllowed("toggle");
          });
 
          menu.addchk(fp.enable_highlight, 'Highlight bins', function() {
@@ -3023,22 +3075,20 @@
    }
 
    THistPainter.prototype.GetPalette = function(force) {
-      if (!this.fPalette || force) {
-         var pp = this.options.Palette ? null : this.canv_painter();
-         this.fPalette = (pp && pp.CanvasPalette) ? pp.CanvasPalette : JSROOT.Painter.GetColorPalette(this.options.Palette);
-      }
+      if (!this.fPalette || force)
+         this.fPalette = this.get_palette(true, this.options.Palette);
       return this.fPalette;
    }
 
    THistPainter.prototype.FillPaletteMenu = function(menu) {
 
-      var curr = this.options.Palette;
+      var curr = this.options.Palette, hpainter = this;
       if ((curr===null) || (curr===0)) curr = JSROOT.gStyle.Palette;
 
       function change(arg) {
-         this.options.Palette = parseInt(arg);
-         this.GetPalette(true);
-         this.Redraw(); // redraw histogram
+         hpainter.options.Palette = parseInt(arg);
+         hpainter.GetPalette(true);
+         hpainter.Redraw(); // redraw histogram
       };
 
       function add(id, name, more) {
@@ -3347,10 +3397,16 @@
       histo.fReady = true;
    }
 
+   /** Scan content of 1-D histogram
+    *
+    * Detect min/max values for x and y axis
+    * @param when_axis_changed - true when only zooming was changed, some checks may be skipped
+    */
+
    TH1Painter.prototype.ScanContent = function(when_axis_changed) {
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
 
-      if (!this.nbinsx && when_axis_changed) when_axis_changed = false;
+      if (when_axis_changed && !this.nbinsx) when_axis_changed = false;
 
       if (this.IsTH1K()) this.ConvertTH1K();
 
@@ -3367,10 +3423,8 @@
          if ((left === this.scan_xleft) && (right === this.scan_xright)) return;
       }
 
-      this.draw_content = true; // draw by default
-
       // Paint histogram axis only
-      if (this.options.Axis > 0) this.draw_content = false;
+      this.draw_content = !(this.options.Axis > 0);
 
       this.scan_xleft = left;
       this.scan_xright = right;
@@ -3432,13 +3486,16 @@
 
       hmin = this.options.minimum;
       hmax = this.options.maximum;
-      var set_zoom = false;
 
       if ((hmin === hmax) && (hmin !== -1111)) {
-         hmin = hmin < 0 ? 2*hmin : 0;
-         hmax = hmax < 0 ? 0 : 2*hmax;
+         if (hmin < 0) {
+            hmin *= 2; hmax = 0;
+         } else {
+            hmin = 0; hmax*=2; if (!hmax) hmax = 1;
+         }
       }
 
+      var set_zoom = false;
       if ((hmin != -1111) && (hmax != -1111) && !this.draw_content) {
          this.ymin = hmin;
          this.ymax = hmax;
@@ -3451,9 +3508,14 @@
          }
       }
 
-      if (set_zoom && this.draw_content) {
-         this.zoom_ymin = (hmin == -1111) ? this.ymin : hmin;
-         this.zoom_ymax = (hmax == -1111) ? this.ymax : hmax;
+      if (!when_axis_changed) {
+         if (set_zoom && this.draw_content) {
+            this.zoom_ymin = (hmin == -1111) ? this.ymin : hmin;
+            this.zoom_ymax = (hmax == -1111) ? this.ymax : hmax;
+         } else {
+            delete this.zoom_ymin;
+            delete this.zoom_ymax;
+         }
       }
 
       // used in AllowDefaultYZooming
@@ -6328,13 +6390,116 @@
       return painter;
    }
 
+   // =================================================================================
+
+
+   function createTF2Histogram(func, nosave, hist) {
+      var nsave = 0, npx = 0, npy = 0;
+      if (!nosave) {
+         nsave = func.fSave.length;
+         npx = Math.round(func.fSave[nsave-2]);
+         npy = Math.round(func.fSave[nsave-1]);
+         if (nsave !== (npx+1)*(npy+1) + 6) nsave = 0;
+      }
+
+      if (nsave > 6) {
+         var dx = (func.fSave[nsave-5] - func.fSave[nsave-6]) / npx / 2,
+             dy = (func.fSave[nsave-3] - func.fSave[nsave-4]) / npy / 2;
+
+         if (!hist) hist = JSROOT.CreateHistogram("TH2F", npx+1, npy+1);
+
+         hist.fXaxis.fXmin = func.fSave[nsave-6] - dx;
+         hist.fXaxis.fXmax = func.fSave[nsave-5] + dx;
+
+         hist.fYaxis.fXmin = func.fSave[nsave-4] - dy;
+         hist.fYaxis.fXmax = func.fSave[nsave-3] + dy;
+
+         for (var k=0,j=0;j<=npy;++j)
+            for (var i=0;i<=npx;++i)
+               hist.setBinContent(hist.getBin(i+1,j+1), func.fSave[k++]);
+
+      } else {
+         npx = Math.max(func.fNpx, 2);
+         npy = Math.max(func.fNpy, 2);
+
+         if (!hist) hist = JSROOT.CreateHistogram("TH2F", npx, npy);
+
+         hist.fXaxis.fXmin = func.fXmin;
+         hist.fXaxis.fXmax = func.fXmax;
+
+         hist.fYaxis.fXmin = func.fYmin;
+         hist.fYaxis.fXmax = func.fYmax;
+
+         for (var j=0;j<npy;++j)
+           for (var i=0;i<npx;++i) {
+               var x = func.fXmin + (i + 0.5) * (func.fXmax - func.fXmin) / npx,
+                   y = func.fYmin + (j + 0.5) * (func.fYmax - func.fYmin) / npy;
+
+               hist.setBinContent(hist.getBin(i+1,j+1), func.evalPar(x,y));
+            }
+      }
+
+      hist.fName = "Func";
+      hist.fTitle = func.fTitle;
+      hist.fMinimum = func.fMinimum;
+      hist.fMaximum = func.fMaximum;
+      //fHistogram->SetContour(fContour.fN, levels);
+      hist.fLineColor = func.fLineColor;
+      hist.fLineStyle = func.fLineStyle;
+      hist.fLineWidth = func.fLineWidth;
+      hist.fFillColor = func.fFillColor;
+      hist.fFillStyle = func.fFillStyle;
+      hist.fMarkerColor = func.fMarkerColor;
+      hist.fMarkerStyle = func.fMarkerStyle;
+      hist.fMarkerSize = func.fMarkerSize;
+
+      hist.fBits |= JSROOT.TH1StatusBits.kNoStats;
+
+      // only for testing - unfortunately, axis settings are not stored with TF2
+      // hist.fXaxis.fTitle = "axis X";
+      // hist.fXaxis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
+      // hist.fYaxis.fTitle = "axis Y";
+      // hist.fYaxis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
+      // hist.fZaxis.fTitle = "axis Z";
+      // hist.fZaxis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
+
+      return hist;
+   }
+
+   // TF2 always drawn via temporary TH2 object,
+   // therefore there is no special painter class
+
+   function drawTF2(divid, func, opt) {
+
+      var d = new JSROOT.DrawOptions(opt);
+
+      var hist = createTF2Histogram(func, d.check('NOSAVE'));
+
+      if (d.empty()) opt = "cont3"; else
+      if (d.opt === "SAME") opt = "cont2 same";
+      else opt = d.opt;
+
+      var hpainter = drawHistogram2D(divid, hist, opt);
+
+      hpainter.tf2_typename = func._typename;
+      hpainter.tf2_nosave = d.check('NOSAVE');
+
+      hpainter.UpdateObject = function(obj, opt) {
+         if (!obj || (this.tf2_typename != obj._typename)) return false;
+
+         createTF2Histogram(obj, this.tf2_nosave, this.GetHisto());
+
+         return true;
+      }
+
+      return hpainter;
+   }
 
    // ====================================================================
 
-   function THStackPainter(stack) {
-      JSROOT.TObjectPainter.call(this, stack);
+   function THStackPainter(stack, opt) {
+      JSROOT.TObjectPainter.call(this, stack, opt);
 
-      this.nostack = false;
       this.firstpainter = null;
       this.painters = []; // keep painters to be able update objects
    }
@@ -6342,6 +6507,8 @@
    THStackPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
 
    THStackPainter.prototype.Cleanup = function() {
+      var pp = this.pad_painter();
+      if (pp) pp.CleanPrimitives(this.Selector.bind(this, true));
       delete this.firstpainter;
       delete this.painters;
       JSROOT.TObjectPainter.prototype.Cleanup.call(this);
@@ -6354,17 +6521,15 @@
       return false;
    }
 
-   THStackPainter.prototype.BuildStack = function() {
+   THStackPainter.prototype.BuildStack = function(stack) {
       //  build sum of all histograms
       //  Build a separate list fStack containing the running sum of all histograms
 
-      var stack = this.GetObject();
       if (!stack.fHists) return false;
       var nhists = stack.fHists.arr.length;
       if (nhists <= 0) return false;
       var lst = JSROOT.Create("TList");
       lst.Add(JSROOT.clone(stack.fHists.arr[0]), stack.fHists.opt[0]);
-      this.haserrors = this.HasErrors(stack.fHists.arr[0]);
       for (var i=1;i<nhists;++i) {
          var hnext = JSROOT.clone(stack.fHists.arr[i]),
              hnextopt = stack.fHists.opt[i],
@@ -6377,8 +6542,6 @@
             lst.Clear();
             return false;
          }
-
-         this.haserrors = this.haserrors || this.HasErrors(stack.fHists.arr[i]);
 
          // trivial sum of histograms
          for (var n = 0; n < hnext.fArray.length; ++n)
@@ -6434,7 +6597,7 @@
       var res = { min: 0, max: 0 },
           stack = this.GetObject();
 
-      if (this.nostack) {
+      if (this.options.nostack) {
          for (var i = 0; i < stack.fHists.arr.length; ++i) {
             var resh = this.GetHistMinMax(stack.fHists.arr[i], iserr);
             if (i==0) {
@@ -6453,18 +6616,21 @@
       res.max *= 1.05;
       if (stack.fMinimum != -1111) res.min = stack.fMinimum;
 
-      if (pad) {
-         if (pad.fLogy) {
-            if (res.min<0) res.min = res.max * 1e-4;
-         } else {
-            if ((res.min>0) && (res.min < 0.05*res.max)) res.min = 0;
-         }
+      if (pad && (this.options.ndim == 1 ? pad.fLogy : pad.fLogz)) {
+         if (res.max<=0) res.max = 1;
+         if (res.min<=0) res.min = 1e-4*res.max;
+         var kmin = 1/(1 + 0.5*JSROOT.log10(res.max / res.min)),
+             kmax = 1 + 0.2*JSROOT.log10(res.max / res.min);
+         res.min *= kmin;
+         res.max *= kmax;
+      } else {
+         if ((res.min>0) && (res.min < 0.05*res.max)) res.min = 0;
       }
 
       return res;
    }
 
-   THStackPainter.prototype.DrawNextHisto = function(indx, opt, mm, subp, reenter) {
+   THStackPainter.prototype.DrawNextHisto = function(indx, mm, subp, reenter) {
       if (mm === "callback") {
          mm = null; // just misuse min/max argument to indicate callback
          if (indx<0) this.firstpainter = subp;
@@ -6474,152 +6640,202 @@
 
       var stack = this.GetObject(),
           hist = stack.fHistogram, hopt = "",
-          hlst = this.nostack ? stack.fHists : stack.fStack,
+          hlst = this.options.nostack ? stack.fHists : stack.fStack,
           nhists = (hlst && hlst.arr) ? hlst.arr.length : 0, rindx = 0;
 
-      if (indx>=nhists) {
-         this._pfc = this._plc = this._pmc = false; // disable auto coloring at the end
-         return this.DrawingReady();
-      }
+      if (indx>=nhists) return this.DrawingReady();
 
       if ((indx % 500 === 499) && !reenter)
-         return setTimeout(this.DrawNextHisto.bind(this, indx, opt, mm, subp, true), 0);
+         return setTimeout(this.DrawNextHisto.bind(this, indx, mm, subp, true), 0);
 
       if (indx>=0) {
-         rindx = this.horder ? indx : nhists-indx-1;
+         rindx = this.options.horder ? indx : nhists-indx-1;
          hist = hlst.arr[rindx];
-         hopt = hlst.opt[rindx] || hist.fOption || opt;
-         if (hopt.toUpperCase().indexOf(opt)<0) hopt += opt;
-         if (this.draw_errors && !hopt) hopt = "E";
+         hopt = hlst.opt[rindx] || hist.fOption || this.options.hopt;
+         if (hopt.toUpperCase().indexOf(this.options.hopt)<0) hopt += this.options.hopt;
+         if (this.options.draw_errors && !hopt) hopt = "E";
          hopt += " same nostat";
 
          // if there is auto colors assignment, try to provide it
-         if (this._pfc || this._plc || this._pmc) {
+         if (this.options._pfc || this.options._plc || this.options._pmc) {
             if (!this.pallette && JSROOT.Painter.GetColorPalette)
                this.palette = JSROOT.Painter.GetColorPalette();
             if (this.palette) {
                var color = this.palette.calcColor(rindx, nhists+1);
                var icolor = this.add_color(color);
 
-               if (this._pfc) hist.fFillColor = icolor;
-               if (this._plc) hist.fLineColor = icolor;
-               if (this._pmc) hist.fMarkerColor = icolor;
+               if (this.options._pfc) hist.fFillColor = icolor;
+               if (this.options._plc) hist.fLineColor = icolor;
+               if (this.options._pmc) hist.fMarkerColor = icolor;
             }
          }
 
       } else {
-         hopt = (opt || "") + " axis";
-         // if (mm && (!this.nostack || (hist.fMinimum==-1111 && hist.fMaximum==-1111))) hopt += ";minimum:" + mm.min + ";maximum:" + mm.max;
+         hopt = this.options.hopt + " axis";
+         // if (mm && (!this.options.nostack || (hist.fMinimum==-1111 && hist.fMaximum==-1111))) hopt += ";minimum:" + mm.min + ";maximum:" + mm.max;
          if (mm) hopt += ";minimum:" + mm.min + ";maximum:" + mm.max;
       }
 
       // special handling of stacked histograms - set $baseh object for correct drawing
       // also used to provide tooltips
-      if ((rindx > 0) && !this.nostack) hist.$baseh = hlst.arr[rindx - 1];
+      if ((rindx > 0) && !this.options.nostack) hist.$baseh = hlst.arr[rindx - 1];
 
-      JSROOT.draw(this.divid, hist, hopt, this.DrawNextHisto.bind(this, indx, opt, "callback"));
+      JSROOT.draw(this.divid, hist, hopt, this.DrawNextHisto.bind(this, indx, "callback"));
    }
 
-   THStackPainter.prototype.drawStack = function(opt) {
+   THStackPainter.prototype.DecodeOptions = function(opt) {
+      if (!this.options) this.options = {};
+      JSROOT.extend(this.options, { ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: "" });
 
-      var pad = this.root_pad(),
-          stack = this.GetObject(),
-          histos = stack.fHists,
-          nhists = histos.arr.length,
-          ndim = 1;
+      var stack = this.GetObject(),
+          hist = stack.fHistogram || (stack.fHists ? stack.fHists.arr[0] : null) || (stack.fStack ? stack.fStack.arr[0] : null);
 
-      if ((nhists>0) && (histos.arr[0]._typename.indexOf("TH2")==0)) ndim = 2;
-      if ((ndim==2) && !opt) opt = "lego1";
+      if (hist && (hist._typename.indexOf("TH2")==0)) this.options.ndim = 2;
 
-      var d = new JSROOT.DrawOptions(opt),
-          lsame = d.check("SAME");
+      if ((this.options.ndim==2) && !opt) opt = "lego1";
 
-      this.nostack = d.check("NOSTACK");
-      if (d.check("STACK")) this.nostack = false;
+      if (stack.fHists && !this.options.nostack) {
+         for (var k=0;k<stack.fHists.arr.length;++k)
+            this.options.has_errors = this.options.has_errors || this.HasErrors(stack.fHists.arr[k]);
+      }
 
-      this._pfc = d.check("PFC");
-      this._plc = d.check("PLC");
-      this._pmc = d.check("PMC");
+      var d = new JSROOT.DrawOptions(opt);
 
-      opt = d.remain(); // use remaining draw options for histogram draw
+      this.options.nostack = d.check("NOSTACK");
+      if (d.check("STACK")) this.options.nostack = false;
+      this.options.same = d.check("SAME");
 
-      // when building stack, one could fail to sum up histograms
-      if (!this.nostack)
-         this.nostack = ! this.BuildStack();
+      this.options._pfc = d.check("PFC");
+      this.options._plc = d.check("PLC");
+      this.options._pmc = d.check("PMC");
 
-      this.dolego = d.check("LEGO");
+      this.options.hopt = d.remain(); // use remaining draw options for histogram draw
+
+      var dolego = d.check("LEGO");
+
+      this.options.errors = d.check("E");
 
       // if any histogram appears with pre-calculated errors, use E for all histograms
-      if (!this.nostack && this.haserrors && !this.dolego && !d.check("HIST") && (opt.indexOf("E")<0)) this.draw_errors = true;
+      if (!this.options.nostack && this.options.has_errors && !dolego && !d.check("HIST") && (this.options.hopt.indexOf("E")<0)) this.options.draw_errors = true;
 
-      // order used to display histograms in stack direct - true, reverse - false
-      this.horder = this.nostack || this.dolego;
+      this.options.horder = this.options.nostack || dolego;
+   }
 
-      var mm = this.GetMinMax(d.check("E"), pad);
+   THStackPainter.prototype.CreateHistogram = function(stack) {
+      var histos = stack.fHists,
+          numhistos = histos ? histos.arr.length : 0;
 
-      var histo = stack.fHistogram;
+      if (!numhistos) {
+         var histo = JSROOT.CreateHistogram("TH1I", 100);
+         histo.fTitle = stack.fTitle;
+         return histo;
+      }
 
-      if (!histo) {
+      var h0 = histos.arr[0];
+      var histo = JSROOT.CreateHistogram((this.options.ndim==1) ? "TH1I" : "TH2I", h0.fXaxis.fNbins, h0.fYaxis.fNbins);
+      histo.fName = "axis_hist";
+      JSROOT.extend(histo.fXaxis, h0.fXaxis);
+      if (this.options.ndim==2)
+         JSROOT.extend(histo.fYaxis, h0.fYaxis);
 
-         // compute the min/max of each axis
-         var xmin = 0, xmax = 0, ymin = 0, ymax = 0;
-         for (var i = 0; i < nhists; ++i) {
-            var h = histos.arr[i];
-            if (i == 0 || h.fXaxis.fXmin < xmin)
-               xmin = h.fXaxis.fXmin;
-            if (i == 0 || h.fXaxis.fXmax > xmax)
-               xmax = h.fXaxis.fXmax;
-            if (i == 0 || h.fYaxis.fXmin < ymin)
-               ymin = h.fYaxis.fXmin;
-            if (i == 0 || h.fYaxis.fXmax > ymax)
-               ymax = h.fYaxis.fXmax;
+      // this code is not exists in ROOT painter, can be skipped?
+      for (var n=1;n<numhistos;++n) {
+         var h = histos.arr[n];
+
+         if (!histo.fXaxis.fLabels) {
+            histo.fXaxis.fXmin = Math.min(histo.fXaxis.fXmin, h.fXaxis.fXmin);
+            histo.fXaxis.fXmax = Math.max(histo.fXaxis.fXmax, h.fXaxis.fXmax);
          }
 
-         var h = stack.fHists.arr[0];
-
-         histo = JSROOT.CreateHistogram((ndim==1) ? "TH1I" : "TH2I", h.fXaxis.fNbins, h.fYaxis.fNbins);
-         histo.fName = "axis_hist";
-         histo.fXaxis = JSROOT.clone(h.fXaxis);
-         histo.fYaxis = JSROOT.clone(h.fYaxis);
-         histo.fXaxis.fXmin = xmin;
-         histo.fXaxis.fXmax = xmax;
-         histo.fYaxis.fXmin = ymin;
-         histo.fYaxis.fXmax = ymax;
-
-         stack.fHistogram = histo;
+         if ((this.options.ndim==2) && !histo.fYaxis.fLabels) {
+            histo.fYaxis.fXmin = Math.min(histo.fYaxis.fXmin, h.fYaxis.fXmin);
+            histo.fYaxis.fXmax = Math.max(histo.fYaxis.fXmax, h.fYaxis.fXmax);
+         }
       }
+
       histo.fTitle = stack.fTitle;
 
-      if (pad && pad.fLogy) {
-         if (mm.max<=0) mm.max = 1;
-         if (mm.min<=0) mm.min = 1e-4*mm.max;
-         var kmin = 1/(1 + 0.5*JSROOT.log10(mm.max / mm.min)),
-             kmax = 1 + 0.2*JSROOT.log10(mm.max / mm.min);
-         mm.min*=kmin;
-         mm.max*=kmax;
-      }
+      return histo;
+   }
 
-      this.DrawNextHisto(!lsame ? -1 : 0, opt, mm);
+   THStackPainter.prototype.drawStack = function() {
+
+      var stack = this.GetObject();
+
+      // when building stack, one could fail to sum up histograms
+      if (!this.options.nostack)
+         this.options.nostack = ! this.BuildStack(stack);
+
+      if (!stack.fHistogram && !this.options.same)
+         stack.fHistogram = this.CreateHistogram(stack);
+
+      var mm = this.GetMinMax(this.options.errors || this.options.draw_errors, this.root_pad());
+
+      this.DrawNextHisto(this.options.same ? 0 : -1, mm);
       return this;
    }
 
    THStackPainter.prototype.UpdateObject = function(obj) {
       if (!this.MatchObjectType(obj)) return false;
 
-      var lst = this.nostack ? obj.fHists : obj.fStack;
-      if (!lst) return false;
+      var stack = this.GetObject();
 
-      var isany = false;
-      if (this.firstpainter)
-         if (this.firstpainter.UpdateObject(obj.fHistogram)) isany = true;
+      stack.fHists = obj.fHists;
+      stack.fStack = obj.fStack;
 
-      var nhists = Math.min(lst.arr.length, this.painters.length);
-      for (var i = 0; i < nhists; ++i) {
-         var hist = lst.arr[this.horder ? i : nhists - i - 1];
-         if (this.painters[i].UpdateObject(hist)) isany = true;
+      if (!this.options.nostack) {
+         this.options.nostack = !this.BuildStack(stack);
       }
 
+      var isany = false;
+      if (this.firstpainter) {
+         var src = obj.fHistogram;
+         if (!src)
+            src = stack.fHistogram = this.CreateHistogram(stack);
+
+         this.firstpainter.UpdateObject(src);
+
+         var mm = this.GetMinMax(this.options.errors || this.options.draw_errors, this.root_pad());
+
+         this.firstpainter.options.minimum = mm.min;
+         this.firstpainter.options.maximum = mm.max;
+
+         if (this.options.ndim == 1) {
+            this.firstpainter.ymin = mm.min;
+            this.firstpainter.ymax = mm.max;
+         }
+
+         isany = true;
+      }
+
+      // try fully remove old histogram painters
+      var pp = this.pad_painter();
+      if (pp) pp.CleanPrimitives(this.Selector.bind(this, false));
+      this.painters = [];
+
+      this.did_update = isany;
+
       return isany;
+   }
+
+   /** @summary Returns true if painter belongs to stack, used in cleanup */
+   THStackPainter.prototype.Selector = function(fullclear, painter) {
+      if (fullclear && (painter===this.firstpainter)) return true;
+      return this.painters.indexOf(painter) >= 0;
+   }
+
+   /** @summary Redraw THStack, changes output only if Update was performed before */
+   THStackPainter.prototype.Redraw = function() {
+      // do nothing in case of simple redraw
+      if (!this.did_update) return;
+
+      // remove flag set in update
+      delete this.did_update;
+
+      if (this.firstpainter)
+         this.firstpainter.Redraw();
+
+      this.DrawNextHisto(0, null);
    }
 
    function drawHStack(divid, stack, opt) {
@@ -6628,107 +6844,20 @@
       // - the first histogram is paint
       // - then the sum of the first and second, etc
 
-      var painter = new THStackPainter(stack);
-
+      var painter = new THStackPainter(stack, opt);
       painter.SetDivId(divid, -1); // it maybe no element to set divid
+      painter.DecodeOptions(opt);
 
       if (!stack.fHists || (stack.fHists.arr.length == 0)) return painter.DrawingReady();
 
-      painter.drawStack(opt);
+      painter.drawStack();
 
       painter.SetDivId(divid); // only when first histogram drawn, we could assign divid
 
       return painter;
    }
 
-
    // =================================================================================
-
-   function drawTF2(divid, func, opt) {
-      // TF2 always drawn via temporary TH2 object,
-      // therefore there is no special painter class
-
-      var hist = null, npx = 0, npy = 0, nsave = 1,
-          d = new JSROOT.DrawOptions(opt);
-
-      if (d.check('NOSAVE')) nsave = 0;
-
-      if (!func.fSave || func.fSave.length<7 || !nsave) {
-         nsave = 0;
-      } else {
-          nsave = func.fSave.length;
-          npx = Math.round(func.fSave[nsave-2]);
-          npy = Math.round(func.fSave[nsave-1]);
-          if (nsave !== (npx+1)*(npy+1) + 6) nsave = 0;
-      }
-
-      if (nsave > 6) {
-         var dx = (func.fSave[nsave-5] - func.fSave[nsave-6]) / npx / 2,
-             dy = (func.fSave[nsave-3] - func.fSave[nsave-4]) / npy / 2;
-
-         hist = JSROOT.CreateHistogram("TH2F", npx+1, npy+1);
-
-         hist.fXaxis.fXmin = func.fSave[nsave-6] - dx;
-         hist.fXaxis.fXmax = func.fSave[nsave-5] + dx;
-
-         hist.fYaxis.fXmin = func.fSave[nsave-4] - dy;
-         hist.fYaxis.fXmax = func.fSave[nsave-3] + dy;
-
-         for (var k=0,j=0;j<=npy;++j)
-            for (var i=0;i<=npx;++i)
-               hist.setBinContent(hist.getBin(i+1,j+1), func.fSave[k++]);
-
-      } else {
-         npx = Math.max(func.fNpx, 2);
-         npy = Math.max(func.fNpy, 2);
-
-         hist = JSROOT.CreateHistogram("TH2F", npx, npy);
-
-         hist.fXaxis.fXmin = func.fXmin;
-         hist.fXaxis.fXmax = func.fXmax;
-
-         hist.fYaxis.fXmin = func.fYmin;
-         hist.fYaxis.fXmax = func.fYmax;
-
-         for (var j=0;j<npy;++j)
-           for (var i=0;i<npx;++i) {
-               var x = func.fXmin + (i + 0.5) * (func.fXmax - func.fXmin) / npx,
-                   y = func.fYmin + (j + 0.5) * (func.fYmax - func.fYmin) / npy;
-
-               hist.setBinContent(hist.getBin(i+1,j+1), func.evalPar(x,y));
-            }
-      }
-
-      hist.fName = "Func";
-      hist.fTitle = func.fTitle;
-      hist.fMinimum = func.fMinimum;
-      hist.fMaximum = func.fMaximum;
-      //fHistogram->SetContour(fContour.fN, levels);
-      hist.fLineColor = func.fLineColor;
-      hist.fLineStyle = func.fLineStyle;
-      hist.fLineWidth = func.fLineWidth;
-      hist.fFillColor = func.fFillColor;
-      hist.fFillStyle = func.fFillStyle;
-      hist.fMarkerColor = func.fMarkerColor;
-      hist.fMarkerStyle = func.fMarkerStyle;
-      hist.fMarkerSize = func.fMarkerSize;
-
-      hist.fBits |= JSROOT.TH1StatusBits.kNoStats;
-
-      // only for testing - unfortunately, axis settings are not stored with TF2
-      // hist.fXaxis.fTitle = "axis X";
-      // hist.fXaxis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
-      // hist.fYaxis.fTitle = "axis Y";
-      // hist.fYaxis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
-      // hist.fZaxis.fTitle = "axis Z";
-      // hist.fZaxis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
-
-      if (d.empty()) opt = "cont3"; else
-      if (d.opt === "SAME") opt = "cont2 same";
-      else opt = d.opt;
-
-      return drawHistogram2D(divid, hist, opt);
-   }
 
    // kept for backward compatibility, will be removed in future JSROOT versions
    JSROOT.Painter.drawLegend = drawPave;
@@ -6739,8 +6868,8 @@
    JSROOT.Painter.drawPaletteAxis = drawPaletteAxis;
    JSROOT.Painter.drawHistogram1D = drawHistogram1D;
    JSROOT.Painter.drawHistogram2D = drawHistogram2D;
-   JSROOT.Painter.drawHStack = drawHStack;
    JSROOT.Painter.drawTF2 = drawTF2;
+   JSROOT.Painter.drawHStack = drawHStack;
 
    JSROOT.TPavePainter = TPavePainter;
    JSROOT.THistPainter = THistPainter;

@@ -15,7 +15,6 @@ endif()
 
 if(sqlite)
   list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RSqliteDS.hxx)
-  list(APPEND RDATAFRAME_EXTRA_INCLUDES -I${SQLITE_INCLUDE_DIR})
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
@@ -56,7 +55,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RRange.hxx
     ROOT/RDF/RSlotStack.hxx
     ROOT/RDF/Utils.hxx
-    ROOT/RDF/TTreeAsFlatMatrix.hxx
+    ROOT/RDF/PyROOTHelpers.hxx
     ${RDATAFRAME_EXTRA_HEADERS}
   SOURCES
     src/RActionBase.cxx
@@ -104,7 +103,16 @@ if(sqlite)
   target_include_directories(ROOTDataFrame PRIVATE ${SQLITE_INCLUDE_DIR})
   target_link_libraries(ROOTDataFrame PRIVATE ${SQLITE_LIBRARIES})
   if (davix)
-    target_link_libraries(ROOTDataFrame PRIVATE Davix::Davix)
+    # TODO(jblomer): Use Davix through an abstraction layer in RDAVIX to avoid linking issues
+    if (builtin_davix)
+      # The builtin version is statically linked, thus we link against RDAVIX to avoid a symbol conflict
+      # if libROOTDataFrame and libRDAVIX are used together.
+      target_include_directories(ROOTDataFrame PRIVATE ${DAVIX_INCLUDE_DIRS})
+      target_link_libraries(ROOTDataFrame PRIVATE RDAVIX)
+    else()
+      # If the system libDavix is used, RDAVIX does not contain the Davix symbols itself
+      target_link_libraries(ROOTDataFrame PRIVATE Davix::Davix)
+    endif()
   endif()
 endif()
 

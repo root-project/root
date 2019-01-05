@@ -12,16 +12,6 @@
 #ifndef ROOT_TTreeReaderValue
 #define ROOT_TTreeReaderValue
 
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TTreeReaderValue                                                    //
-//                                                                        //
-// A simple interface for reading data from trees or chains.              //
-//                                                                        //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-
 #include "TString.h"
 #include "TDictionary.h"
 #include "TBranchProxy.h"
@@ -35,6 +25,10 @@ class TTreeReader;
 
 namespace ROOT {
 namespace Internal {
+
+/** \class TTreeReaderValueBase
+Base class of TTreeReaderValue.
+*/
 
    class TTreeReaderValueBase {
    public:
@@ -125,7 +119,9 @@ namespace Internal {
 
 
 template <typename T>
-class TTreeReaderValue final: public ROOT::Internal::TTreeReaderValueBase {
+class R__CLING_PTRCHECK(off) TTreeReaderValue final: public ROOT::Internal::TTreeReaderValueBase {
+// R__CLING_PTRCHECK is disabled because pointer / types are checked by CreateProxy().
+
 public:
    using NonConstT_t = typename std::remove_const<T>::type;
    TTreeReaderValue() = delete;

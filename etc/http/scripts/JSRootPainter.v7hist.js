@@ -523,8 +523,8 @@
              fp = this.frame_painter(),
              axis_painter = fp;
 
-         menu.addchk(main.tooltip_allowed, 'Show tooltips', function() {
-            main.tooltip_allowed = !main.tooltip_allowed;
+         menu.addchk(main.IsTooltipAllowed(), 'Show tooltips', function() {
+            main.SetTooltipAllowed("toggle");
          });
 
          menu.addchk(axis_painter.enable_highlight, 'Highlight bins', function() {
@@ -613,22 +613,20 @@
    }
 
    THistPainter.prototype.GetPalette = function(force) {
-      if (!this.fPalette || force) {
-         var pp = this.options.Palette ? null : this.canv_painter();
-         this.fPalette = (pp && pp.CanvasPalette) ? pp.CanvasPalette : JSROOT.Painter.GetColorPalette(this.options.Palette);
-      }
+      if (!this.fPalette || force)
+         this.fPalette = this.get_palette(true, this.options.Palette);
       return this.fPalette;
    }
 
    THistPainter.prototype.FillPaletteMenu = function(menu) {
 
-      var curr = this.options.Palette;
+      var curr = this.options.Palette, hpainter = this;
       if ((curr===null) || (curr===0)) curr = JSROOT.gStyle.Palette;
 
       function change(arg) {
-         this.options.Palette = parseInt(arg);
-         this.GetPalette(true);
-         this.Redraw(); // redraw histogram
+         hpainter.options.Palette = parseInt(arg);
+         hpainter.GetPalette(true);
+         hpainter.Redraw(); // redraw histogram
       };
 
       function add(id, name, more) {

@@ -3,10 +3,27 @@
 ############################################################################
 
 ROOT_GENERATE_DICTIONARY(G__Smatrix
-    Math/SMatrix.h
+    Math/BinaryOperators.h
+    Math/BinaryOpPolicy.h
+    Math/CholeskyDecomp.h
+    Math/Dfact.h
+    Math/Dfactir.h
+    Math/Dfinv.h
+    Math/Dinv.h
+    Math/Dsfact.h
+    Math/Dsinv.h
+    Math/Expression.h
+    Math/Functions.h
+    Math/HelperOps.h
+    Math/MatrixFunctions.h
+    Math/MatrixRepresentationsStatic.h
+    Math/MConfig.h
     Math/SMatrixDfwd.h
     Math/SMatrixFfwd.h
+    Math/SMatrix.h
+    Math/StaticCheck.h
     Math/SVector.h
+    Math/UnaryOperators.h
   MODULE
     Smatrix
   LINKDEF
@@ -38,7 +55,7 @@ ROOT_GENERATE_DICTIONARY(G__Smatrix32
 ROOT_LINKER_LIBRARY(Smatrix
     G__Smatrix.cxx
     G__Smatrix32.cxx
-  LIBRARIES
+  DEPENDENCIES
     Core
     MathCore
 )

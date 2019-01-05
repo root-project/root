@@ -2,15 +2,12 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #607
-##
-## Demonstration of options of the RooFitResult class
+## Likelihood and minimization: demonstration of options of the RooFitResult class
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 from __future__ import print_function
 import ROOT

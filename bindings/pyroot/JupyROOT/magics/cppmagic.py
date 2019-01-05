@@ -1,7 +1,7 @@
 
 from IPython.core.magic import (Magics, magics_class, cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
-from JupyROOT import utils
+from JupyROOT.helpers import utils
 
 
 @magics_class

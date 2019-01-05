@@ -44,7 +44,7 @@ TApplication (see TRint).
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 
-#include "CommandLineOptionsHelp.h"
+#include "TApplicationCommandLineOptionsHelp.h"
 
 #include <stdlib.h>
 
@@ -382,14 +382,14 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    for (i = 1; i < *argc; i++) {
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
           !strncmp(argv[i], "--help", 6)) {
-         fprintf(stderr, kCommandLineOptionsHelp, argv[0]);
+         fprintf(stderr, kCommandLineOptionsHelp);
          Terminate(0);
       } else if (!strncmp(argv[i], "--version", 9)) {
          fprintf(stderr, "ROOT Version: %s\n", gROOT->GetVersion());
          fprintf(stderr, "Built for %s on %s\n",
                  gSystem->GetBuildArch(),
                  gROOT->GetGitDate());
-    
+
          fprintf(stderr, "From %s@%s\n",
                 gROOT->GetGitBranch(),
                 gROOT->GetGitCommit());
@@ -914,7 +914,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       return 0;
    }
 
-   if (!strncmp(line, "?", 1) || !strncmp(line, ".help", 5)) {
+   if (!strncmp(line, ".?", 2) || !strncmp(line, ".help", 5)) {
       Help(line);
       return 1;
    }

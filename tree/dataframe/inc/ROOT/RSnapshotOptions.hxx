@@ -20,7 +20,7 @@ namespace ROOT {
 namespace RDF {
 /// A collection of options to steer the creation of the dataset on file
 struct RSnapshotOptions {
-   using ECAlgo = ::ROOT::ECompressionAlgorithm;
+   using ECAlgo = ROOT::ECompressionAlgorithm;
    RSnapshotOptions() = default;
    RSnapshotOptions(const RSnapshotOptions &) = default;
    RSnapshotOptions(RSnapshotOptions &&) = default;
@@ -31,7 +31,7 @@ struct RSnapshotOptions {
    }
    std::string fMode = "RECREATE";             ///< Mode of creation of output file
    ECAlgo fCompressionAlgorithm = ROOT::kZLIB; ///< Compression algorithm of output file
-   int fCompressionLevel = 4;                  ///< Compression level of output file
+   int fCompressionLevel = 1;                  ///< Compression level of output file
    int fAutoFlush = 0;                         ///< AutoFlush value for output tree
    int fSplitLevel = 99;                       ///< Split level of output tree
    bool fLazy = false;                         ///< Delay the snapshot of the dataset

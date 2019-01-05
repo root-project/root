@@ -1,3 +1,13 @@
+// Author: Enric Tejedor CERN  06/2018
+// Original PyROOT code by Wim Lavrijsen, LBL
+
+/*************************************************************************
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 // Bindings
 #include "PyROOTPythonize.h"
@@ -27,10 +37,18 @@ PyObject *gRootModule = 0;
 }
 
 // Methods offered by the interface
-static PyMethodDef gPyROOTMethods[] = {{(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
+static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunction)PyROOT::AddDirectoryWritePyz, METH_VARARGS,
+                                        (char *)"Allow to use seamlessly from Python the templated TDirectory::WriteObject method"},
+                                       {(char *)"AddDirectoryAttrSyntaxPyz", (PyCFunction)PyROOT::AddDirectoryAttrSyntaxPyz, METH_VARARGS,
+                                        (char *)"Attr syntax for TDirectory"},
+                                       {(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
                                         (char *)"Allow to access branches as tree attributes"},
+                                       {(char *)"AddFileOpenPyz", (PyCFunction)PyROOT::AddFileOpenPyz, METH_VARARGS,
+                                        (char *)"Make TFile::Open a constructor, adjusting for example the reference count"},
                                        {(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
-                                        (char *)"Pythonization for TTree::SetBranchAddress"},
+                                        (char *)"Fully enable the use of TTree::SetBranchAddress from Python"},
+                                       {(char *)"BranchPyz", (PyCFunction)PyROOT::BranchPyz, METH_VARARGS,
+                                        (char *)"Fully enable the use of TTree::Branch from Python"},
                                        {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
                                         (char *)"Add pretty printing pythonization"},
                                        {(char *)"GetEndianess", (PyCFunction)PyROOT::GetEndianess, METH_NOARGS,

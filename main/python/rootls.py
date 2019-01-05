@@ -44,9 +44,9 @@ EPILOG = """Examples:
 """
 
 def get_argparse():
-	parser = cmdLineUtils.getParserFile(description, EPILOG) 
+	parser = cmdLineUtils.getParserFile(description, EPILOG)
 	parser.prog = 'rootls'
-	
+
 	parser.add_argument("-1", "--oneColumn", help=ONE_HELP, action= "store_true")
 	parser.add_argument("-l", "--longListing", help=LONG_PRINT_HELP, action= "store_true")
 	parser.add_argument("-t", "--treeListing", help=TREE_PRINT_HELP, action= "store_true")

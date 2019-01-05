@@ -1,14 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' RooFit tutorial macro #108
-## Plotting unbinned data with alternate and variable binnings
+## Basic functionality: plotting unbinned data with alternate and variable binnings
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -37,7 +35,7 @@ gm1 = ROOT.RooGaussModel("gm1", "gauss model 1", dt, bias1, sigma1)
 
 # Construct Bdecay (x) gauss
 bmix = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav,
-                            tau, dm, w, dw, gm1, ROOT.RooBMixDecay.DoubleSided)
+                         tau, dm, w, dw, gm1, ROOT.RooBMixDecay.DoubleSided)
 
 # Sample data from model
 # --------------------------------------------
@@ -62,7 +60,7 @@ tbins.addUniform(15, 0, 15)
 
 # Make plot with specified binning
 dtframe = dt.frame(ROOT.RooFit.Range(-15, 15),
-                    ROOT.RooFit.Title("dt distribution with custom binning"))
+                   ROOT.RooFit.Title("dt distribution with custom binning"))
 data.plotOn(dtframe, ROOT.RooFit.Binning(tbins))
 bmix.plotOn(dtframe)
 

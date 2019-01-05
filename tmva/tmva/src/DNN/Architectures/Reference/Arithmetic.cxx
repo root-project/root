@@ -97,6 +97,45 @@ void TReference<AReal>::SqrtElementWise(TMatrixT<AReal> &A)
       }
    }
 }
+/// Adam updates 
+//____________________________________________________________________________
+template<typename AReal>
+void TReference<AReal>::AdamUpdate(TMatrixT<AReal> &A, const TMatrixT<AReal> & M, const TMatrixT<AReal> & V, AReal alpha, AReal eps)
+{
+   // ADAM update the weights.
+   // Weight = Weight - alpha * M / (sqrt(V) + epsilon)
+   AReal * a = A.GetMatrixArray();
+   const AReal * m = M.GetMatrixArray();
+   const AReal * v = V.GetMatrixArray();
+   for (int index = 0; index < A.GetNoElements() ; ++index) {
+      a[index] = a[index] - alpha * m[index]/( sqrt(v[index]) + eps);
+   }
+}
 
+//____________________________________________________________________________
+template<typename AReal>
+void TReference<AReal>::AdamUpdateFirstMom(TMatrixT<AReal> &A, const TMatrixT<AReal> & B, AReal beta)
+{
+   // First momentum weight gradient update for ADAM 
+   // Mt = beta1 * Mt-1 + (1-beta1) * WeightGradients
+   AReal * a = A.GetMatrixArray();
+   const AReal * b = B.GetMatrixArray();
+   for (int index = 0; index < A.GetNoElements() ; ++index) {
+      a[index] = beta * a[index] + (1.-beta) * b[index];
+   }
+}   
+//____________________________________________________________________________
+template<typename AReal>
+void TReference<AReal>::AdamUpdateSecondMom(TMatrixT<AReal> &A, const TMatrixT<AReal> & B, AReal beta)
+{
+   // Second  momentum weight gradient update for ADAM 
+   // Vt = beta2 * Vt-1 + (1-beta2) * WeightGradients^2
+   AReal * a = A.GetMatrixArray();
+   const AReal * b = B.GetMatrixArray();
+   for (int index = 0; index < A.GetNoElements() ; ++index) {
+      a[index] = beta * a[index] + (1.-beta) * b[index] * b[index];
+   }
+}
+   
 } // namespace DNN
 } // namespace TMVA

@@ -225,6 +225,10 @@ TGeoMaterial::TGeoMaterial(const TGeoMaterial& gm) :
 
 {
    //copy constructor
+   fProperties.SetOwner();
+   TIter next(&fProperties);
+   TNamed *property;
+   while ((property = (TNamed*)next())) fProperties.Add(new TNamed(*property));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -249,6 +253,10 @@ TGeoMaterial& TGeoMaterial::operator=(const TGeoMaterial& gm)
       fElement=gm.fElement;
       fUserExtension = gm.fUserExtension->Grab();
       fFWExtension = gm.fFWExtension->Grab();
+      fProperties.SetOwner();
+      TIter next(&fProperties);
+      TNamed *property;
+      while ((property = (TNamed*)next())) fProperties.Add(new TNamed(*property));
    }
    return *this;
 }
@@ -275,6 +283,27 @@ void TGeoMaterial::SetUserExtension(TGeoExtension *ext)
    if (fUserExtension) fUserExtension->Release();
    fUserExtension = 0;
    if (ext) fUserExtension = ext->Grab();
+}
+
+//_____________________________________________________________________________
+const char *TGeoMaterial::GetPropertyRef(const char *property)
+{
+   // Find reference for a given property
+   TNamed *prop = (TNamed*)fProperties.FindObject(property);
+   return (prop) ? prop->GetTitle() : nullptr;
+}
+
+//_____________________________________________________________________________
+bool TGeoMaterial::AddProperty(const char *property, const char *ref)
+{
+   fProperties.SetOwner();
+   if (GetPropertyRef(property)) {
+      Error("AddProperty", "Property %s already added to material %s",
+         property, GetName());
+      return false;
+   }
+   fProperties.Add(new TNamed(property, ref));
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

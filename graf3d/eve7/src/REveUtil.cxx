@@ -24,7 +24,6 @@
 
 #include "TROOT.h"
 #include "TInterpreter.h"
-#include "TVirtualPad.h"
 #include "TSystem.h"
 
 #include "TGClient.h"
@@ -364,37 +363,6 @@ REveException REX::operator+(const REveException &s1,  const char *s2)
 { REveException r(s1); r += s2; return r; }
 
 
-/** \class REvePadHolder
-\ingroup REve
-Exception safe wrapper for setting gPad.
-Optionally calls gPad->Modified()/Update() in destructor.
-*/
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-REvePadHolder::REvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad, Int_t subpad) :
-   fOldPad        (gPad),
-   fModifyUpdateP (modify_update_p)
-{
-   if (new_pad != 0)
-      new_pad->cd(subpad);
-   else
-      gPad = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-REvePadHolder::~REvePadHolder()
-{
-   if (fModifyUpdateP && gPad != 0) {
-      gPad->Modified();
-      gPad->Update();
-   }
-   gPad = fOldPad;
-}
-
 /** \class REveGeoManagerHolder
 \ingroup REve
 Exception safe wrapper for setting gGeoManager.
@@ -412,18 +380,14 @@ REveGeoManagerHolder::REveGeoManagerHolder(TGeoManager* new_gmgr, Int_t n_seg) :
    fNSegments (0)
 {
    gGeoManager = new_gmgr;
-   if (gGeoManager)
-   {
-      gGeoIdentity = (TGeoIdentity*) gGeoManager->GetListOfMatrices()->At(0);
-      if (n_seg > 2)
-      {
+   if (gGeoManager) {
+      gGeoIdentity = (TGeoIdentity *)gGeoManager->GetListOfMatrices()->At(0);
+      if (n_seg > 2) {
          fNSegments = gGeoManager->GetNsegments();
          gGeoManager->SetNsegments(n_seg);
       }
-   }
-   else
-   {
-      gGeoIdentity = 0;
+   } else {
+      gGeoIdentity = nullptr;
    }
 }
 
@@ -432,18 +396,14 @@ REveGeoManagerHolder::REveGeoManagerHolder(TGeoManager* new_gmgr, Int_t n_seg) :
 
 REveGeoManagerHolder::~REveGeoManagerHolder()
 {
-   if (gGeoManager && fNSegments > 2)
-   {
+   if (gGeoManager && fNSegments > 2) {
       gGeoManager->SetNsegments(fNSegments);
    }
    gGeoManager = fManager;
-   if (gGeoManager)
-   {
-      gGeoIdentity = (TGeoIdentity*) gGeoManager->GetListOfMatrices()->At(0);
-   }
-   else
-   {
-      gGeoIdentity = 0;
+   if (gGeoManager) {
+      gGeoIdentity = (TGeoIdentity *)gGeoManager->GetListOfMatrices()->At(0);
+   } else {
+      gGeoIdentity = nullptr;
    }
 }
 

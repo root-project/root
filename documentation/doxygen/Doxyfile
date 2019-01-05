@@ -986,7 +986,8 @@ EXCLUDE_PATTERNS       = */G__* \
                          converttonotebook.py \
                          makeimage.py \
                          parallelNotebooks.py \
-                         LinkDef.h
+                         LinkDef.h \
+                         */io/io/res/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -2202,6 +2203,7 @@ PREDEFINED             = ClassDef(x,y)=// \
                          ClassImpQ(x)=// \
                          templateClassImp(x)=// \
                          NamespaceImp(x)=// \
+                         R__CLING_PTRCHECK \
                          R__USE_IMT
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this

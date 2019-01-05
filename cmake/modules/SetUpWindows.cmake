@@ -15,10 +15,6 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -Wall -W")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy")
 
-  set(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
-  set(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
-
-
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
   # Select flags.
@@ -35,30 +31,20 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_C_FLAGS_DEBUGFULL        "-g3 -fno-inline")
   set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
 
-
   #---Set Linker flags----------------------------------------------------------------------
   set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS}")
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}")
-
-  # Settings for cint
-  set(CPPPREP "${CMAKE_CXX_COMPILER} -E -C")
-  set(CXXOUT "-o ")
-
-  set(EXEEXT "")
-  set(SOEXT "so")
-
 elseif(MSVC)
-
   set(ROOT_ARCHITECTURE win32)
 
   math(EXPR VC_MAJOR "${MSVC_VERSION} / 100")
   math(EXPR VC_MINOR "${MSVC_VERSION} % 100")
 
   if(winrtdebug)
-    set(BLDCXXFLAGS "-MDd -GR")
+    set(BLDCXXFLAGS "-Zc:__cplusplus -MDd -GR")
     set(BLDCFLAGS   "-MDd")
   else()
-    set(BLDCXXFLAGS "-MD -GR")
+    set(BLDCXXFLAGS "-Zc:__cplusplus -MD -GR")
     set(BLDCFLAGS   "-MD")
   endif()
 
@@ -86,16 +72,12 @@ elseif(MSVC)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ignore:4049,4206,4217,4221 -incremental:no")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -ignore:4049,4206,4217,4221 -incremental:no")
 
-  set(SOEXT dll)
-  set(EXEEXT exe)
-
   foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
     string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
     set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} )
     set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} )
     set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} )
   endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
-
 else()
   message(FATAL_ERROR "There is no setup for compiler '${CMAKE_CXX_COMPILER}' on this Windows system up to now. Stop cmake at this point.")
 endif()

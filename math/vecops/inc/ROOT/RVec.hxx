@@ -38,6 +38,30 @@
 #endif
 
 namespace ROOT {
+namespace VecOps {
+template<typename T>
+class RVec;
+}
+namespace Internal {
+namespace VecOps {
+
+// We use this helper to workaround a limitation of compilers such as
+// gcc 4.8 amd clang on osx 10.14 for which std::vector<bool>::emplace_back
+// is not defined.
+template <typename T, typename... Args>
+void EmplaceBack(T &v, Args &&... args)
+{
+   v.emplace_back(std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void EmplaceBack(std::vector<bool> &v, Args &&... args)
+{
+   v.push_back(std::forward<Args>(args)...);
+}
+
+} // End of VecOps NS
+} // End of Internal NS
 
 namespace VecOps {
 // clang-format off
@@ -324,7 +348,7 @@ public:
    template <class... Args>
    reference emplace_back(Args &&... args)
    {
-      fData.emplace_back(std::forward<Args>(args)...);
+      ROOT::Internal::VecOps::EmplaceBack(fData, std::forward<Args>(args)...);
       return fData.back();
    }
    /// This method is intended only for arithmetic types unlike the std::vector
@@ -498,6 +522,7 @@ TVEC_LOGICAL_OPERATOR(||)
 ///@name RVec Standard Mathematical Functions
 ///@{
 
+/// \cond
 template <typename T> struct PromoteTypeImpl;
 
 template <> struct PromoteTypeImpl<float>       { using Type = float;       };
@@ -511,6 +536,8 @@ using PromoteType = typename PromoteTypeImpl<T>::Type;
 
 template <typename U, typename V>
 using PromoteTypes = decltype(PromoteType<U>() + PromoteType<V>());
+
+/// \endcond
 
 #define TVEC_UNARY_FUNCTION(NAME, FUNC)                                        \
    template <typename T>                                                       \
@@ -636,6 +663,16 @@ TVEC_VDT_UNARY_FUNCTION(fast_atan)
 ///@}
 
 /// Inner product
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<float> v1 {1., 2., 3.};
+/// RVec<float> v2 {4., 5., 6.};
+/// auto v1_dot_v2 = Dot(v1, v2);
+/// v1_dot_v2
+/// // (float) 32.f
+/// ~~~
 template <typename T, typename V>
 auto Dot(const RVec<T> &v0, const RVec<V> &v1) -> decltype(v0[0] * v1[0])
 {
@@ -644,14 +681,33 @@ auto Dot(const RVec<T> &v0, const RVec<V> &v1) -> decltype(v0[0] * v1[0])
    return std::inner_product(v0.begin(), v0.end(), v1.begin(), decltype(v0[0] * v1[0])(0));
 }
 
-/// Sum elements
+/// Sum elements of an RVec
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<float> v {1.f, 2.f, 3.f};
+/// auto v_sum = Sum(v);
+/// v_sum
+/// // (float) 6.f
+/// ~~~
 template <typename T>
 T Sum(const RVec<T> &v)
 {
    return std::accumulate(v.begin(), v.end(), T(0));
 }
 
-/// Get Mean
+/// Get the mean of the elements of an RVec
+///
+/// The return type is a double precision floating point number.
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<float> v {1.f, 2.f, 4.f};
+/// auto v_mean = Mean(v);
+/// v_mean
+/// // (double) 2.3333333
+/// ~~~
 template <typename T>
 double Mean(const RVec<T> &v)
 {
@@ -659,7 +715,17 @@ double Mean(const RVec<T> &v)
    return double(Sum(v)) / v.size();
 }
 
-/// Get variance
+/// Get the variance of the elements of an RVec
+///
+/// The return type is a double precision floating point number.
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<float> v {1.f, 2.f, 4.f};
+/// auto v_var = Var(v);
+/// v_var
+/// // (double) 2.3333333
+/// ~~~
 template <typename T>
 double Var(const RVec<T> &v)
 {
@@ -673,7 +739,17 @@ double Var(const RVec<T> &v)
    return 1. / (dsize - 1.) * (sum_squares - squared_sum / dsize );
 }
 
-/// Get standard deviation
+/// Get the standard deviation of the elements of an RVec
+///
+/// The return type is a double precision floating point number.
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<float> v {1.f, 2.f, 4.f};
+/// auto v_sd = StdDev(v);
+/// v_sd
+/// // (double) 1.5275252
+/// ~~~
 template <typename T>
 double StdDev(const RVec<T> &v)
 {
@@ -681,6 +757,15 @@ double StdDev(const RVec<T> &v)
 }
 
 /// Create new collection applying a callable to the elements of the input collection
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<float> v {1.f, 2.f, 4.f};
+/// auto v_square = Map(v, [](float f){return f* 2.f;});
+/// v_square
+/// // (ROOT::VecOps::RVec<float> &) { 2.00000f, 4.00000f, 8.00000f }
+/// ~~~
 template <typename T, typename F>
 auto Map(const RVec<T> &v, F &&f) -> RVec<decltype(f(v[0]))>
 {
@@ -690,6 +775,15 @@ auto Map(const RVec<T> &v, F &&f) -> RVec<decltype(f(v[0]))>
 }
 
 /// Create a new collection with the elements passing the filter expressed by the predicate
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<int> v {1, 2, 4};
+/// auto v_even = Filter(v, [](int i){return 0 == i%2;});
+/// v_even
+/// // (ROOT::VecOps::RVec<int> &) { 2, 4 }
+/// ~~~
 template <typename T, typename F>
 RVec<T> Filter(const RVec<T> &v, F &&f)
 {
@@ -704,20 +798,38 @@ RVec<T> Filter(const RVec<T> &v, F &&f)
 }
 
 /// Return true if any of the elements equates to true, return false otherwise.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<int> v {0, 1, 0};
+/// auto anyTrue = Any(v);
+/// anyTrue
+/// // (bool) true
+/// ~~~
 template <typename T>
 auto Any(const RVec<T> &v) -> decltype(v[0] == true)
 {
-   for (auto &e : v)
+   for (auto &&e : v)
       if (e == true)
          return true;
    return false;
 }
 
 /// Return true if all of the elements equate to true, return false otherwise.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<int> v {0, 1, 0};
+/// auto allTrue = All(v);
+/// allTrue
+/// // (bool) false
+/// ~~~
 template <typename T>
 auto All(const RVec<T> &v) -> decltype(v[0] == false)
 {
-   for (auto &e : v)
+   for (auto &&e : v)
       if (e == false)
          return false;
    return true;
@@ -729,7 +841,16 @@ void swap(RVec<T> &lhs, RVec<T> &rhs)
    lhs.swap(rhs);
 }
 
-/// Return indices that sort the vector
+/// Return an RVec of indices that sort the input RVec
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v {2., 3., 1.};
+/// auto sortIndices = Argsort(v);
+/// sortIndices
+/// // (ROOT::VecOps::RVec<unsigned long> &) { 2, 0, 1 }
+/// ~~~
 template <typename T>
 RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
 {
@@ -741,6 +862,15 @@ RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
 }
 
 /// Return elements of a vector at given indices
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v {2., 3., 1.};
+/// auto vTaken = Take(v, {0,2});
+/// vTaken
+/// // (ROOT::VecOps::RVec<double>) { 2.0000000, 1.0000000 }
+/// ~~~
 template <typename T>
 RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i)
 {
@@ -752,7 +882,21 @@ RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i)
    return r;
 }
 
-/// Return first elements of a vector if n>0 and last elements if n<0
+/// Return first or last `n` elements of an RVec
+///
+/// if `n > 0` and last elements if `n < 0`.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v {2., 3., 1.};
+/// auto firstTwo = Take(v, 2);
+/// firstTwo
+/// // (ROOT::VecOps::RVec<double>) { 2.0000000, 3.0000000 }
+/// auto lastOne = Take(v, -1);
+/// lastOne
+/// // (ROOT::VecOps::RVec<double>) { 1.0000000 }
+/// ~~~
 template <typename T>
 RVec<T> Take(const RVec<T> &v, const int n)
 {
@@ -776,6 +920,15 @@ RVec<T> Take(const RVec<T> &v, const int n)
 }
 
 /// Return copy of reversed vector
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v {2., 3., 1.};
+/// auto v_reverse = Reverse(v);
+/// v_reverse
+/// // (ROOT::VecOps::RVec<double>) { 1.0000000, 3.0000000, 2.0000000 }
+/// ~~~
 template <typename T>
 RVec<T> Reverse(const RVec<T> &v)
 {
@@ -784,7 +937,19 @@ RVec<T> Reverse(const RVec<T> &v)
    return r;
 }
 
-/// Return copy of vector with elements sorted in ascending order
+/// Return copy of RVec with elements sorted in ascending order
+///
+/// This helper is different from ArgSort since it does not return an RVec of indices,
+/// but an RVec of values.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v {2., 3., 1.};
+/// auto v_sorted = Sort(v);
+/// v_sorted
+/// // (ROOT::VecOps::RVec<double>) { 1.0000000, 2.0000000, 3.0000000 }
+/// ~~~
 template <typename T>
 RVec<T> Sort(const RVec<T> &v)
 {
@@ -793,9 +958,23 @@ RVec<T> Sort(const RVec<T> &v)
    return r;
 }
 
-/// Return copy of vector with elements sorted based on comparison operator.
-/// The comparison operator has to fullfill the same requirements than the
-/// operator taken by std::sort.
+/// Return copy of RVec with elements sorted based on a comparison operator
+///
+/// The comparison operator has to fullfill the same requirements of the
+/// predicate of by std::sort.
+///
+///
+/// This helper is different from ArgSort since it does not return an RVec of indices,
+/// but an RVec of values.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v {2., 3., 1.};
+/// auto v_sorted = Sort(v, [](double x, double y) {return 1/x < 1/y;});
+/// v_sorted
+/// // (ROOT::VecOps::RVec<double>) { 3.0000000, 2.0000000, 1.0000000 }
+/// ~~~
 template <typename T, typename Compare>
 RVec<T> Sort(const RVec<T> &v, Compare &&c)
 {
@@ -804,8 +983,20 @@ RVec<T> Sort(const RVec<T> &v, Compare &&c)
    return r;
 }
 
-/// Return the indices, which represent all combinations of the elements of two
-/// vectors.
+/// Return the indices that represent all combinations of the elements of two
+/// RVecs.
+///
+/// The type of the return value is an RVec of two RVecs containing indices.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v1 {1., 2., 3.};
+/// RVec<double> v2 {-4., -5.};
+/// auto comb_idx = Combinations(v1, v2);
+/// comb_idx
+/// // (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 1, 1, 2, 2 }, { 0, 1, 0, 1, 0, 1 } }
+/// ~~~
 template <typename T1, typename T2>
 RVec<RVec<typename RVec<T1>::size_type>> Combinations(const RVec<T1> &v1, const RVec<T2> &v2)
 {
@@ -826,8 +1017,25 @@ RVec<RVec<typename RVec<T1>::size_type>> Combinations(const RVec<T1> &v1, const 
    return r;
 }
 
-/// Return the indices, which represent all unique n-tuple combinations of the
-/// elements of a given vector.
+/// Return the indices that represent all unique combinations of the
+/// elements of a given RVec.
+///
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v {1., 2., 3., 4.};
+/// auto v_1 = Combinations(v, 1);
+/// v_1
+/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 1, 2, 3 } }
+/// auto v_2 = Combinations(v, 2);
+/// auto v_2
+/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 0, 1, 1, 2 }, { 1, 2, 3, 2, 3, 3 } }
+/// auto v_3 = Combinations(v, 3);
+/// v_3
+/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 0, 1 }, { 1, 1, 2, 2 }, { 2, 3, 3, 3 } }
+/// auto v_4 = Combinations(v, 4);
+/// v_4
+/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0 }, { 1 }, { 2 }, { 3 } }
+/// ~~~
 template <typename T>
 RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T>& v, const typename RVec<T>::size_type n)
 {
@@ -865,6 +1073,15 @@ RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T>& v, const typ
 }
 
 /// Return the indices of the elements which are not zero
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v {2., 0., 3., 0., 1.};
+/// auto nonzero_idx = Nonzero(v);
+/// nonzero_idx
+/// // (ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type>) { 0, 2, 4 }
+/// ~~~
 template <typename T>
 RVec<typename RVec<T>::size_type> Nonzero(const RVec<T> &v)
 {
@@ -881,10 +1098,21 @@ RVec<typename RVec<T>::size_type> Nonzero(const RVec<T> &v)
 }
 
 /// Return the intersection of elements of two RVecs.
+///
 /// Each element of v1 is looked up in v2 and added to the returned vector if
 /// found. Following, the order of v1 is preserved. If v2 is already sorted, the
 /// optional argument v2_is_sorted can be used to toggle of the internal sorting
 /// step, therewith optimising runtime.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v1 {1., 2., 3.};
+/// RVec<double> v2 {-4., -5., 2., 1.};
+/// auto v1_intersect_v2 = Intersect(v1, v2);
+/// v1_intersect_v2
+/// // (ROOT::VecOps::RVec<double>) { 1.0000000, 2.0000000 }
+/// ~~~
 template <typename T>
 RVec<T> Intersect(const RVec<T>& v1, const RVec<T>& v2, bool v2_is_sorted = false)
 {
@@ -906,6 +1134,19 @@ RVec<T> Intersect(const RVec<T>& v1, const RVec<T>& v2, bool v2_is_sorted = fals
 
 /// Return the elements of v1 if the condition c is true and v2 if the
 /// condition c is false.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v1 {1., 2., 3.};
+/// RVec<double> v2 {-1., -2., -3.};
+/// auto c = v1 > 1;
+/// c
+/// // (ROOT::VecOps::RVec<int> &) { 0, 1, 1 }
+/// auto if_c_v1_else_v2 = Where(c, v1, v2);
+/// if_c_v1_else_v2
+/// // (ROOT::VecOps::RVec<double> &) { -1.0000000, 2.0000000, 3.0000000 }
+/// ~~~
 template <typename T>
 RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, const RVec<T>& v2)
 {
@@ -921,6 +1162,19 @@ RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, const RVec<T>& v2)
 
 /// Return the elements of v1 if the condition c is true and sets the value v2
 /// if the condition c is false.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<double> v1 {1., 2., 3.};
+/// double v2 = 4.;
+/// auto c = v1 > 1;
+/// c
+/// // (ROOT::VecOps::RVec<int> &) { 0, 1, 1 }
+/// auto if_c_v1_else_v2 = Where(c, v1, v2);
+/// if_c_v1_else_v2
+/// // (ROOT::VecOps::RVec<double>) { 4.0000000, 2.0000000, 3.0000000 }
+/// ~~~
 template <typename T>
 RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, T v2)
 {
@@ -936,6 +1190,19 @@ RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, T v2)
 
 /// Return the elements of v2 if the condition c is false and sets the value v1
 /// if the condition c is true.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// double v1 = 4.;
+/// RVec<double> v2 {1., 2., 3.};
+/// auto c = v2 > 1;
+/// c
+/// // (ROOT::VecOps::RVec<int> &) { 0, 1, 1 }
+/// auto if_c_v1_else_v2 = Where(c, v1, v2);
+/// if_c_v1_else_v2
+/// // (ROOT::VecOps::RVec<double>) { 1.0000000, 4.0000000, 4.0000000 }
+/// ~~~
 template <typename T>
 RVec<T> Where(const RVec<int>& c, T v1, const RVec<T>& v2)
 {
@@ -951,6 +1218,17 @@ RVec<T> Where(const RVec<int>& c, T v1, const RVec<T>& v2)
 
 /// Return a vector with the value v2 if the condition c is false and sets the
 /// value v1 if the condition c is true.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// double v1 = 4.;
+/// double v2 = 2.;
+/// RVec<int> c {0, 1, 1};
+/// auto if_c_v1_else_v2 = Where(c, v1, v2);
+/// if_c_v1_else_v2
+/// // (ROOT::VecOps::RVec<double>) { 2.0000000, 4.0000000, 4.0000000 }
+/// ~~~
 template <typename T>
 RVec<T> Where(const RVec<int>& c, T v1, T v2)
 {
@@ -1168,6 +1446,9 @@ TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
 #endif // _VECOPS_USE_EXTERN_TEMPLATES
 
 } // End of VecOps NS
+
+// Allow to use RVec as ROOT::RVec
+using ROOT::VecOps::RVec;
 
 } // End of ROOT NS
 

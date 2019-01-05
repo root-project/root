@@ -40,6 +40,17 @@ class PrettyPrinting(unittest.TestCase):
         self._print(x)
         self.assertEqual("Name: name Title: title NbinsX: 10", x.__str__())
 
+    def test_user_class(self):
+        # Test fall-back to __repr__
+        ROOT.gInterpreter.Declare('class MyClass {};')
+        x = ROOT.MyClass()
+        self._print(x)
+        s = x.__str__()
+        r = x.__repr__()
+        self.assertIn("MyClass object at", s)
+        self.assertEqual(s, r)
+
+
     # TNamed and TObject are not pythonized because these object are touched
     # by PyROOT before any pythonizations are added. Following, the classes
     # are not piped through the pythonizor functions again.

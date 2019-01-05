@@ -400,10 +400,55 @@ __global__ void SqrtElementWise(AFloat * A,
    }
 }
 
+
+/// optimizer kernel functions
+
+//____________________________________________________________________________
+template<typename AFloat>
+__global__ void AdamUpdate(AFloat * A, const AFloat * M, const AFloat * V,
+                           int m, int n, AFloat alpha, AFloat eps)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+   int index = j * m + i;
+
+   if ((i < m) && (j < n)) {
+      A[index] = A[index] - alpha * M[index]/( sqrt(V[index]) + eps);
+   }
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+__global__ void AdamUpdateFirstMom(AFloat * A, const AFloat * B,
+                           int m, int n, AFloat beta)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+   int index = j * m + i;
+
+   if ((i < m) && (j < n)) {
+      A[index] = beta * A[index] + (1.-beta) * B[index];
+   }
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+__global__ void AdamUpdateSecondMom(AFloat * A, const AFloat * B,
+                           int m, int n, AFloat beta)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+   int index = j * m + i;
+
+   if ((i < m) && (j < n)) {
+      A[index] = beta * A[index] + (1.-beta) * B[index] * B[index];
+   }
+}
+
 //____________________________________________________________________________
 template<typename AFloat>
 __global__ void IdentityDerivative(AFloat * A,
-                                   int m, int n)
+                                   int m, int n)   
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;

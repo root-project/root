@@ -518,6 +518,12 @@ public:
     * \p A
     */
    static void SqrtElementWise(TCpuMatrix<Scalar_t> &A);
+
+     // optimizer functions
+   static void AdamUpdate(TCpuMatrix<Scalar_t> & A, const TCpuMatrix<Scalar_t> & M, const TCpuMatrix<Scalar_t> & V, Scalar_t alpha, Scalar_t eps);
+   static void AdamUpdateFirstMom(TCpuMatrix<Scalar_t> & A, const TCpuMatrix<Scalar_t> & B, Scalar_t beta);
+   static void AdamUpdateSecondMom(TCpuMatrix<Scalar_t> & A, const TCpuMatrix<Scalar_t> & B, Scalar_t beta);
+
 };
 
 //____________________________________________________________________________

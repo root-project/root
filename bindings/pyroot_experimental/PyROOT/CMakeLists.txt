@@ -1,6 +1,13 @@
+############################################################################
+# CMakeLists.txt file for building ROOT bindings/pyroot_experimental package
+############################################################################
+
 set(py_sources
   ROOT/__init__.py
   ROOT/pythonization/__init__.py
+  ROOT/pythonization/_tdirectory.py
+  ROOT/pythonization/_tdirectoryfile.py
+  ROOT/pythonization/_tfile.py
   ROOT/pythonization/_ttree.py
   ROOT/pythonization/_generic.py
 )
@@ -9,9 +16,12 @@ set(sources
   src/PyROOTModule.cxx
   src/PyROOTStrings.cxx
   src/PyROOTWrapper.cxx
+  src/TDirectoryPyz.cxx
+  src/TFilePyz.cxx
   src/TTreePyz.cxx
   src/GenericPyz.cxx
-  src/Helpers.cxx
+  src/PyzPythonHelpers.cxx
+  src/PyzCppHelpers.cxx
 )
 
 file(COPY python/ROOT DESTINATION ${localruntimedir})

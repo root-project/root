@@ -1,3 +1,3 @@
 \defgroup tutorial_roofit RooFit Tutorials
 \ingroup Tutorials
-\brief These tutorials illustrate the main features of RooFit. Their names are related to the aspect which is treated in the code.
+\brief These tutorials illustrate the main features of RooFit: the name of the examples and their short description help in figuring out their objective.

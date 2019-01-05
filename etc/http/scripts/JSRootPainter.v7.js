@@ -314,13 +314,15 @@
 
       if ((this.kind == "normal") && (handle.major.length > 0)) {
 
-         var maxorder = 0, minorder = 0;
+         var maxorder = 0, minorder = 0, exclorder3 = false;
 
          if (!optionNoexp) {
             var maxtick = Math.max(Math.abs(handle.major[0]),Math.abs(handle.major[handle.major.length-1])),
                 mintick = Math.min(Math.abs(handle.major[0]),Math.abs(handle.major[handle.major.length-1])),
                 ord1 = (maxtick > 0) ? Math.round(JSROOT.log10(maxtick)/3)*3 : 0,
                 ord2 = (mintick > 0) ? Math.round(JSROOT.log10(mintick)/3)*3 : 0;
+
+             exclorder3 = (maxtick < 2e4); // do not show 10^3 for values below 20000
 
              if (maxtick || mintick) {
                 maxorder = Math.max(ord1,ord2) + 3;
@@ -333,6 +335,7 @@
          var bestorder = 0, bestndig = this.ndig, bestlen = 1e10;
 
          for (var order = minorder; order <= maxorder; order+=3) {
+            if (exclorder3 && (order===3)) continue;
             this.order = order;
             this.ndig = 0;
             var lbls = [], indx = 0, totallen = 0;
@@ -1409,7 +1412,7 @@
 
       var hintsg = this.hints_layer().select(".objects_hints");
       // if tooltips were visible before, try to reconstruct them after short timeout
-      if (!hintsg.empty() && this.tooltip_allowed && (hintsg.property("hints_pad") == this.pad_name))
+      if (!hintsg.empty() && this.IsTooltipAllowed() && (hintsg.property("hints_pad") == this.pad_name))
          setTimeout(this.ProcessTooltipEvent.bind(this, hintsg.property('last_point')), 10);
    }
 
@@ -1564,14 +1567,14 @@
 
       var last = this.zoom_changed_interactive;
 
-      if (dox || doy || dox) this.zoom_changed_interactive = 2;
+      if (dox || doy || doz) this.zoom_changed_interactive = 2;
 
       var changed = this.Zoom(dox ? 0 : undefined, dox ? 0 : undefined,
                               doy ? 0 : undefined, doy ? 0 : undefined,
                               doz ? 0 : undefined, doz ? 0 : undefined);
 
       // if unzooming has no effect, decrease counter
-      if ((dox || doy || dox) && !changed)
+      if ((dox || doy || doz) && !changed)
          this.zoom_changed_interactive = (!isNaN(last) && (last>0)) ? last - 1 : 0;
 
       return changed;
@@ -2083,9 +2086,9 @@
       //   menu.addchk(pad.fLogz, "SetLogz", this.ToggleLog.bind(main,"z"));
       menu.add("separator");
 
-      menu.addchk(this.tooltip_allowed, "Show tooltips", function() {
-         var fp = this.frame_painter();
-         if (fp) fp.tooltip_allowed = !fp.tooltip_allowed;
+
+      menu.addchk(this.IsTooltipAllowed(), "Show tooltips", function() {
+         this.SetTooltipAllowed("toggle");
       });
       this.FillAttContextMenu(menu,alone ? "" : "Frame ");
       menu.add("separator");
@@ -2592,16 +2595,18 @@
       JSROOT.TObjectPainter.prototype.Cleanup.call(this);
    }
 
+   /** @summary Cleanup primitives from pad - selector lets define which painters to remove
+    * @private
+    */
+
    TPadPainter.prototype.CleanPrimitives = function(selector) {
       if (!selector || (typeof selector !== 'function')) return;
 
-      for (var k=this.painters.length-1;k>=0;--k) {
-         var p = this.painters[k];
-         if (selector(p)) {
-            p.Cleanup();
-            this.painters.splice(k--, 1);
+      for (var k = this.painters.length-1; k >= 0; --k)
+         if (selector(this.painters[k])) {
+            this.painters[k].Cleanup();
+            this.painters.splice(k, 1);
          }
-      }
    }
 
    /// call function for each painter
@@ -2621,20 +2626,6 @@
 
    TPadPainter.prototype.ButtonSize = function(fact) {
       return Math.round((!fact ? 1 : fact) * (this.iscan || !this.has_canvas ? 16 : 12));
-   }
-
-   TPadPainter.prototype.IsTooltipAllowed = function() {
-      var res = undefined;
-      this.ForEachPainterInPad(function(fp) {
-         if ((res===undefined) && (fp.tooltip_allowed!==undefined)) res = fp.tooltip_allowed;
-      });
-      return res;
-   }
-
-   TPadPainter.prototype.SetTooltipAllowed = function(on) {
-      this.ForEachPainterInPad(function(fp) {
-         if (fp.tooltip_allowed!==undefined) fp.tooltip_allowed = on;
-      });
    }
 
    TPadPainter.prototype.RegisterForPadEvents = function(receiver) {
@@ -3017,9 +3008,7 @@
       else
          menu.add("header: Canvas");
 
-      var tooltipon = this.IsTooltipAllowed();
-      if (tooltipon !== undefined)
-         menu.addchk(tooltipon, "Show tooltips", this.SetTooltipAllowed.bind(this, !tooltipon));
+      menu.addchk(this.IsTooltipAllowed(), "Show tooltips", this.SetTooltipAllowed.bind(this, "toggle"));
 
       if (!this._websocket) {
 
@@ -3350,7 +3339,7 @@
          this.CreatePadSvg(true);
       }
 
-      var isanyfound = false;
+      var isanyfound = false, isanyremove = false;
 
       // find and remove painters which no longer exists in the list
       for (var k=0;k<this.painters.length;++k) {
@@ -3364,7 +3353,12 @@
             // remove painter which does not found in the list of snaps
             this.painters.splice(k--,1);
             sub.Cleanup(); // cleanup such painter
+            isanyremove = true;
          }
+      }
+
+      if (isanyremove) {
+         delete this.pads_cache;
       }
 
       if (!isanyfound) {
@@ -3910,6 +3904,7 @@
       // used for online canvas painter
       TPadPainter.call(this, canvas, true);
       this._websocket = null;
+      this.tooltip_allowed = (JSROOT.gStyle.Tooltip > 0);
    }
 
    TCanvasPainter.prototype = Object.create(TPadPainter.prototype);

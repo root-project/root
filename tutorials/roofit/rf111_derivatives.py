@@ -1,15 +1,14 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' RooFit tutorial macro #111
-## Numerical 1st, and 3rd order derivatives w.r.t. observables and parameters
+## Basic functionality: numerical 1st, and 3rd order derivatives w.r.t. observables and parameters
+##
 ## pdf = gauss(x,m,s)
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

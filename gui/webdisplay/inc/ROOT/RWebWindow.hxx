@@ -116,7 +116,7 @@ private:
    std::mutex fConnMutex;                           ///<! mutex used to protect connection list
    unsigned fConnLimit{1};                          ///<! number of allowed active connections
    bool fNativeOnlyConn{false};                     ///<! only native connection are allowed, created by Show() method
-   static const unsigned fMaxQueueLength{10};       ///<! maximal number of queue entries
+   unsigned fMaxQueueLength{10};                    ///<! maximal number of queue entries
    WebWindowDataCallback_t fDataCallback;           ///<! main callback when data over channel 1 is arrived
    std::thread::id fDataThrdId;                     ///<! thread id where data callback should be invoked
    std::queue<DataEntry> fDataQueue;                ///<! data queue for main callback
@@ -124,6 +124,11 @@ private:
    unsigned fWidth{0};                              ///<! initial window width when displayed
    unsigned fHeight{0};                             ///<! initial window height when displayed
    float fOperationTmout{50.};                      ///<! timeout in seconds to perform synchronous operation, default 50s
+   std::string fProtocolFileName;                   ///<! local file where communication protocol will be written
+   int fProtocolCnt{-1};                            ///<! counter for protocol recording
+   unsigned fProtocolConnId{0};                     ///<! connection id, which is used for writing protocol
+   std::string fProtocolPrefix;                     ///<! prefix for created files names
+   std::string fProtocol;                           ///<! protocol
 
    std::shared_ptr<RWebWindowWSHandler> CreateWSHandler(std::shared_ptr<RWebWindowsManager> mgr, unsigned id, double tmout);
 
@@ -205,6 +210,14 @@ public:
    unsigned GetConnLimit() const { return fConnLimit; }
 
    /////////////////////////////////////////////////////////////////////////
+   /// configures maximal queue length of data which can be held by window
+   void SetMaxQueueLength(unsigned len = 10) { fMaxQueueLength = len; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// Return maximal queue length of data which can be held by window
+   unsigned GetMaxQueueLength() const { return fMaxQueueLength; }
+
+   /////////////////////////////////////////////////////////////////////////
    /// configures that only native (own-created) connections are allowed
    void SetNativeOnlyConn(bool on = true) { fNativeOnlyConn = on; }
 
@@ -212,7 +225,6 @@ public:
    /// returns true if only native (own-created) connections are allowed
    bool IsNativeOnlyConn() const { return fNativeOnlyConn; }
 
-   /// Returns current number of active clients connections
    int NumConnections();
 
    unsigned GetConnectionId(int num = 0);
@@ -257,6 +269,8 @@ public:
    void SendBinary(unsigned connid, const void *data, std::size_t len);
 
    void SendBinary(unsigned connid, std::string &&data);
+
+   void RecordData(const std::string &fname = "protocol.json", const std::string &fprefix = "");
 
    std::string RelativeAddr(std::shared_ptr<RWebWindow> &win);
 

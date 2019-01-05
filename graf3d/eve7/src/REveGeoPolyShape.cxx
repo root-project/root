@@ -10,18 +10,19 @@
  *************************************************************************/
 
 #include "Rtypes.h"
+#include <cassert>
+
 
 #include <ROOT/REveGeoPolyShape.hxx>
 #include <ROOT/REveGeoShape.hxx>
 #include <ROOT/REveUtil.hxx>
-#include <ROOT/REveCsgOps.hxx>
 #include <ROOT/REveGluTess.hxx>
 #include <ROOT/REveRenderData.hxx>
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "CsgOps.h"
 
-#include "TList.h"
 #include "TGeoBoolNode.h"
 #include "TGeoCompositeShape.h"
 #include "TGeoMatrix.h"
@@ -42,34 +43,116 @@ Bool_t REveGeoPolyShape::GetAutoEnforceTriangles()         { return fgAutoEnforc
 void   REveGeoPolyShape::SetAutoCalculateNormals(Bool_t f) { fgAutoCalculateNormals = f; }
 Bool_t REveGeoPolyShape::GetAutoCalculateNormals()         { return fgAutoCalculateNormals; }
 
+////////////////////////////////////////////////////////////////////////
+/// Function produces mesh for provided shape, applying matrix to the result
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-REveGeoPolyShape::REveGeoPolyShape() :
-   TGeoBBox(),
-   fNbPols(0)
+std::unique_ptr<RootCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *shape)
 {
+   TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *> (shape);
+
+   std::unique_ptr<RootCsg::TBaseMesh> res;
+
+   if (!comp) {
+      std::unique_ptr<TBuffer3D> b3d(shape->MakeBuffer3D());
+
+      if (matr) {
+         Double_t *v = b3d->fPnts;
+         Double_t buf[3];
+         for (UInt_t i = 0; i < b3d->NbPnts(); ++i) {
+            buf[0] = v[i*3];
+            buf[1] = v[i*3+1];
+            buf[2] = v[i*3+2];
+            matr->LocalToMaster(buf, &v[i*3]);
+         }
+      }
+
+      res.reset(RootCsg::ConvertToMesh(*b3d.get()));
+   } else {
+      auto node = comp->GetBoolNode();
+
+      TGeoHMatrix mleft, mright;
+      if (matr) { mleft = *matr; mright = *matr; }
+
+      mleft.Multiply(node->GetLeftMatrix());
+      auto left = MakeGeoMesh(&mleft, node->GetLeftShape());
+
+      mright.Multiply(node->GetRightMatrix());
+      auto right = MakeGeoMesh(&mright, node->GetRightShape());
+
+      if (node->IsA() == TGeoUnion::Class()) res.reset(RootCsg::BuildUnion(left.get(), right.get()));
+      if (node->IsA() == TGeoIntersection::Class()) res.reset(RootCsg::BuildIntersection(left.get(), right.get()));
+      if (node->IsA() == TGeoSubtraction::Class()) res.reset(RootCsg::BuildDifference(left.get(), right.get()));
+   }
+
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static constructor from a composite shape.
+/// Produce all polygons from composite shape
 
-REveGeoPolyShape* REveGeoPolyShape::Construct(TGeoCompositeShape *cshape, Int_t n_seg)
+void REveGeoPolyShape::BuildFromComposite(TGeoCompositeShape *cshape, Int_t n_seg)
 {
-   REveGeoPolyShape *egps = new REveGeoPolyShape;
-   egps->fOrigin[0] = cshape->GetOrigin()[0];
-   egps->fOrigin[1] = cshape->GetOrigin()[1];
-   egps->fOrigin[2] = cshape->GetOrigin()[2];
-   egps->fDX = cshape->GetDX();
-   egps->fDY = cshape->GetDY();
-   egps->fDZ = cshape->GetDZ();
+   fOrigin[0] = cshape->GetOrigin()[0];
+   fOrigin[1] = cshape->GetOrigin()[1];
+   fOrigin[2] = cshape->GetOrigin()[2];
+   fDX = cshape->GetDX();
+   fDY = cshape->GetDY();
+   fDZ = cshape->GetDZ();
 
-   EveCsg::TBaseMesh *mesh = EveCsg::BuildFromCompositeShape(cshape, n_seg);
-   egps->SetFromMesh(mesh);
-   delete mesh;
+   REveGeoManagerHolder gmgr(REveGeoShape::GetGeoManager(), n_seg);
 
-   return egps;
+   auto mesh = MakeGeoMesh(nullptr, cshape);
+
+   Int_t nv = mesh->NumberOfVertices();
+   fVertices.reserve(3 * nv);
+
+   for (Int_t i = 0; i < nv; ++i) {
+      auto v = mesh->GetVertex(i);
+      fVertices.insert(fVertices.end(), v, v + 3);
+   }
+
+   fNbPols = mesh->NumberOfPolys();
+
+   Int_t descSize = 0;
+
+   for (Int_t i = 0; i < fNbPols; ++i) descSize += mesh->SizeOfPoly(i) + 1;
+
+   fPolyDesc.reserve(descSize);
+
+   for (Int_t polyIndex = 0; polyIndex < fNbPols; ++polyIndex) {
+      Int_t polySize = mesh->SizeOfPoly(polyIndex);
+
+      fPolyDesc.push_back(polySize);
+
+      for (Int_t i = 0; i < polySize; ++i)
+         fPolyDesc.push_back(mesh->GetVertexIndex(polyIndex, i));
+   }
+
+   if (fgAutoEnforceTriangles) EnforceTriangles();
+   if (fgAutoCalculateNormals) CalculateNormals();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Produce all polygons from normal shape
+
+void REveGeoPolyShape::BuildFromShape(TGeoShape *shape, Int_t n_seg)
+{
+   TGeoBBox *box = dynamic_cast<TGeoBBox *> (shape);
+
+   if (box) {
+      fOrigin[0] = box->GetOrigin()[0];
+      fOrigin[1] = box->GetOrigin()[1];
+      fOrigin[2] = box->GetOrigin()[2];
+      fDX = box->GetDX();
+      fDY = box->GetDY();
+      fDZ = box->GetDZ();
+   }
+
+   REveGeoManagerHolder gmgr(REveGeoShape::GetGeoManager(), n_seg);
+
+   std::unique_ptr<TBuffer3D> b3d(shape->MakeBuffer3D());
+
+   SetFromBuff3D(*b3d.get());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,17 +163,17 @@ void REveGeoPolyShape::FillRenderData(REveRenderData &rd)
 
    rd.Reserve(fVertices.size(), 0, 2 + fNbPols * 3);
 
-   for (Int_t i = 0; i < (Int_t) fVertices.size(); ++i) rd.PushV(fVertices[i]);
+   for (Int_t i = 0; i < (Int_t)fVertices.size(); ++i)
+      rd.PushV(fVertices[i]);
 
    rd.PushI(REveRenderData::GL_TRIANGLES);
    rd.PushI(fNbPols);
 
    // count number of index entries etc
-   for (Int_t i = 0, j = 0; i < fNbPols; ++i)
-   {
-      assert (fPolyDesc[j] == 3);
+   for (Int_t i = 0, j = 0; i < fNbPols; ++i) {
+      assert(fPolyDesc[j] == 3);
 
-      rd.PushI(fPolyDesc[j+1], fPolyDesc[j+2], fPolyDesc[j+3]);
+      rd.PushI(fPolyDesc[j + 1], fPolyDesc[j + 2], fPolyDesc[j + 3]);
       j += 1 + fPolyDesc[j];
    }
 }
@@ -98,40 +181,6 @@ void REveGeoPolyShape::FillRenderData(REveRenderData &rd)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set data-members from a Csg mesh.
 
-void REveGeoPolyShape::SetFromMesh(EveCsg::TBaseMesh* mesh)
-{
-   assert(fNbPols == 0);
-
-   Int_t nv = mesh->NumberOfVertices();
-   fVertices.reserve(3 * nv);
-   Int_t i;
-
-   for (i = 0; i < nv; ++i)
-   {
-      const Double_t *v = mesh->GetVertex(i);
-      fVertices.insert(fVertices.end(), v, v + 3);
-   }
-
-   fNbPols = mesh->NumberOfPolys();
-
-   Int_t descSize = 0;
-
-   for (i = 0; i < fNbPols; ++i) descSize += mesh->SizeOfPoly(i) + 1;
-
-   fPolyDesc.reserve(descSize);
-
-   for (Int_t polyIndex = 0; polyIndex < fNbPols; ++polyIndex)
-   {
-      Int_t polySize = mesh->SizeOfPoly(polyIndex);
-
-      fPolyDesc.push_back(polySize);
-
-      for (i = 0; i < polySize; ++i) fPolyDesc.push_back(mesh->GetVertexIndex(polyIndex, i));
-   }
-
-   if (fgAutoEnforceTriangles) EnforceTriangles();
-   if (fgAutoCalculateNormals) CalculateNormals();
-}
 
 void REveGeoPolyShape::SetFromBuff3D(const TBuffer3D& buffer)
 {
@@ -164,16 +213,16 @@ void REveGeoPolyShape::SetFromBuff3D(const TBuffer3D& buffer)
       segmentInd--;
       Int_t segEnds[] = {segs[s1 * 3 + 1], segs[s1 * 3 + 2],
                          segs[s2 * 3 + 1], segs[s2 * 3 + 2]};
-      Int_t numPnts[3] = {0};
+      Int_t numPnts[3];
 
       if (segEnds[0] == segEnds[2]) {
-         numPnts[0] = segEnds[1], numPnts[1] = segEnds[0], numPnts[2] = segEnds[3];
+         numPnts[0] = segEnds[1]; numPnts[1] = segEnds[0]; numPnts[2] = segEnds[3];
       } else if (segEnds[0] == segEnds[3]) {
-         numPnts[0] = segEnds[1], numPnts[1] = segEnds[0], numPnts[2] = segEnds[2];
+         numPnts[0] = segEnds[1]; numPnts[1] = segEnds[0]; numPnts[2] = segEnds[2];
       } else if (segEnds[1] == segEnds[2]) {
-         numPnts[0] = segEnds[0], numPnts[1] = segEnds[1], numPnts[2] = segEnds[3];
+         numPnts[0] = segEnds[0]; numPnts[1] = segEnds[1]; numPnts[2] = segEnds[3];
       } else {
-         numPnts[0] = segEnds[0], numPnts[1] = segEnds[1], numPnts[2] = segEnds[2];
+         numPnts[0] = segEnds[0]; numPnts[1] = segEnds[1]; numPnts[2] = segEnds[2];
       }
 
       fPolyDesc[currInd] = 3;
@@ -298,7 +347,7 @@ Bool_t REveGeoPolyShape::Eq(const Double_t *p1, const Double_t *p2)
    Double_t dx = TMath::Abs(p1[0] - p2[0]);
    Double_t dy = TMath::Abs(p1[1] - p2[1]);
    Double_t dz = TMath::Abs(p1[2] - p2[2]);
-   return dx < 1e-10 && dy < 1e-10 && dz < 1e-10;
+   return (dx < 1e-10) && (dy < 1e-10) && (dz < 1e-10);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -320,7 +369,7 @@ void REveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) con
       b.SetSectionsValid(TBuffer3D::kCore);
    }
 
-   if (reqSections & TBuffer3D::kRawSizes || reqSections & TBuffer3D::kRaw)
+   if ((reqSections & TBuffer3D::kRawSizes) || (reqSections & TBuffer3D::kRaw))
    {
       Int_t nvrt = fVertices.size() / 3;
       Int_t nseg = 0;
@@ -328,14 +377,12 @@ void REveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) con
       std::map<Edge_t, Int_t> edges;
 
       const Int_t *pd = &fPolyDesc[0];
-      for (Int_t i = 0; i < fNbPols; ++i)
-      {
-         Int_t nv = pd[0]; ++pd;
-         for (Int_t j = 0; j < nv; ++j)
-         {
-            Edge_t e(pd[j], (j != nv - 1) ? pd[j+1] : pd[0]);
-            if (edges.find(e) == edges.end())
-            {
+      for (Int_t i = 0; i < fNbPols; ++i) {
+         Int_t nv = pd[0];
+         ++pd;
+         for (Int_t j = 0; j < nv; ++j) {
+            Edge_t e(pd[j], (j != nv - 1) ? pd[j + 1] : pd[0]);
+            if (edges.find(e) == edges.end()) {
                edges.insert(std::make_pair(e, 0));
                ++nseg;
             }
@@ -348,24 +395,22 @@ void REveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) con
       memcpy(b.fPnts, &fVertices[0], sizeof(Double_t)*fVertices.size());
 
       Int_t si = 0, scnt = 0;
-      for (std::map<Edge_t, Int_t>::iterator i = edges.begin(); i != edges.end(); ++i)
-      {
+      for (auto &edge : edges) {
          b.fSegs[si++] = 0;
-         b.fSegs[si++] = i->first.fI;
-         b.fSegs[si++] = i->first.fJ;
-         i->second = scnt++;
+         b.fSegs[si++] = edge.first.fI;
+         b.fSegs[si++] = edge.first.fJ;
+         edge.second = scnt++;
       }
 
       Int_t pi = 0;
       pd = &fPolyDesc[0];
-      for (Int_t i = 0; i < fNbPols; ++i)
-      {
-         Int_t nv = pd[0]; ++pd;
+      for (Int_t i = 0; i < fNbPols; ++i) {
+         Int_t nv = pd[0];
+         ++pd;
          b.fPols[pi++] = 0;
          b.fPols[pi++] = nv;
-         for (Int_t j = 0; j < nv; ++j)
-         {
-            b.fPols[pi++] = edges[Edge_t(pd[j], (j != nv - 1) ? pd[j+1] : pd[0])];
+         for (Int_t j = 0; j < nv; ++j) {
+            b.fPols[pi++] = edges[Edge_t(pd[j], (j != nv - 1) ? pd[j + 1] : pd[0])];
          }
          pd += nv;
       }

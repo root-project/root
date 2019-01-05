@@ -48,15 +48,15 @@ static void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigne
   speeds - sometimes by an order of magnitude.
 */
 #ifdef R__HAS_DEFAULT_LZ4
-enum ROOT::ECompressionAlgorithm R__ZipMode = ROOT::ECompressionAlgorithm::kLZ4;
+ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::EValues::kLZ4;
 #else
-enum ROOT::ECompressionAlgorithm R__ZipMode = ROOT::ECompressionAlgorithm::kZLIB;
+ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::EValues::kZLIB;
 #endif
 
 /* ===========================================================================
    Function to set the ZipMode
  */
-extern "C" void R__SetZipMode(enum ROOT::ECompressionAlgorithm mode)
+extern "C" void R__SetZipMode(ROOT::RCompressionSetting::EAlgorithm::EValues mode)
 {
    R__ZipMode = mode;
 }
@@ -72,7 +72,7 @@ unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int
 /*                      1 = zlib */
 /*                      2 = lzma */
 /*                      3 = old */
-void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::ECompressionAlgorithm compressionAlgorithm)
+void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::RCompressionSetting::EAlgorithm::EValues compressionAlgorithm)
      /* int cxlevel;                      compression level */
 {
 
@@ -86,28 +86,25 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     return;
   }
 
-  if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kUseGlobalCompressionSetting) {
+  if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kUseGlobal) {
     compressionAlgorithm = R__ZipMode;
   }
 
   // The LZMA compression algorithm from the XZ package
-  if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kLZMA) {
+  if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kLZMA) {
      R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
-  } else if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kLZ4) {
+  } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kLZ4) {
      R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
-  } else if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kOldCompressionAlgo || compressionAlgorithm == ROOT::ECompressionAlgorithm::kUseGlobalCompressionSetting) {
+  } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kOldCompressionAlgo || compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kUseGlobal) {
      R__zipOld(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
-  } else if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kZLIB) {
-     R__zipZLIB(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
   } else {
-     // 4 is for LZ4 (which is the default), LZ4 is also used for any illegal
+     // 1 is for ZLIB (which is the default), ZLIB is also used for any illegal
      // algorithm setting.  This was a poor historic choice, as poor code may result in
      // a surprising change in algorithm in a future version of ROOT.
-     R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
+     R__zipZLIB(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
   }
 }
@@ -242,7 +239,7 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
 
 void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
    R__zipMultipleAlgorithm(cxlevel, srcsize, src, tgtsize, tgt, irep,
-                           ROOT::ECompressionAlgorithm::kUseGlobalCompressionSetting);
+                           ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
 }
 
 /**

@@ -267,27 +267,6 @@ void THttpCallArg::ReplaceAllinContent(const std::string &from, const std::strin
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \deprecated use SetContent(std::string &&arg) signature instead
-/// set binary data, which will be returned as reply body
-/// Memory should be allocated with std::malloc().
-/// THttpCallArg take over ownership over specified memory.
-/// Memory will be released by calling std::free() function.
-
-void THttpCallArg::SetBinData(void *data, Long_t length)
-{
-   // string content must be cleared in any case
-   if (length <= 0) {
-      fContent.clear();
-   } else {
-      fContent.resize(length);
-      if (data) {
-         std::copy((const char *)data, (const char *)data + length, fContent.begin());
-         free(data);
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// set complete path of requested http element
 /// For instance, it could be "/folder/subfolder/get.bin"
 /// Here "/folder/subfolder/" is element path and "get.bin" requested file.
@@ -375,16 +354,6 @@ std::string THttpCallArg::FillHttpHeader(const char *name)
                       GetContentType(), GetContentLength(), fHeader.Data()));
 
    return hdr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \depricated use FillHttpHeader with other signature
-/// Fills HTTP header, which can be send at the beggining of reply on the http request
-/// \param name is HTTP protocol name (default "HTTP/1.1")
-
-void THttpCallArg::FillHttpHeader(TString &hdr, const char *name)
-{
-    hdr = FillHttpHeader(name).c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

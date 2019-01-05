@@ -184,7 +184,7 @@ if(CUDA_FOUND)
   message(STATUS "Using TMVA-DNN with CUDA installation") 
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --compiler-options -fPIC")
   CUDA_INCLUDE_DIRECTORIES("${CMAKE_BINARY_DIR}/include")	
-  CUDA_ADD_LIBRARY(dnn_cuda ${DNN_CUDA_FILES})
+  CUDA_ADD_LIBRARY(dnn_cuda STATIC ${DNN_CUDA_FILES})
   set_property(TARGET dnn_cuda PROPERTY POSITION_INDEPENDENT_CODE ON)	
   set(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNNCUDA")
@@ -209,7 +209,7 @@ if (tmva-cpu AND mathmore AND imt)
 #use GSL cblas installation
   message(STATUS "Using TMVA-DNN with gslcblas installation") 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNN_USE_CBLAS")
-  set(DNN_CPU_LIBRARIES MathCore Matrix ${TBB_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  set(DNN_CPU_LIBRARIES ${TBB_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
   include_directories(${TBB_INCLUDE_DIRS} ${GSL_INCLUDE_DIR} )
   if (CUDA_FOUND)
      include_directories(${TBB_INCLUDE_DIRS} ${GSL_INCLUDE_DIR} ${CUDA_INCLUDE_DIRS})
@@ -222,6 +222,11 @@ else()
 endif()
 endif()
 
+if (vdt AND NOT builtin_vdt)
+  include_directories(${VDT_INCLUDE_DIRS})
+endif()
+
+
 if(imt)
   set(TMVA_DEPENDENCIES Imt)
 endif()
@@ -229,8 +234,8 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
                               HEADERS ${TMVA_HEADERS}
                               SOURCES *.cxx ${DNN_FILES} ${DNN_CPU_FILES} DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES Core MathCore Matrix ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
-                              DEPENDENCIES Core RIO Hist Tree TreePlayer MLP Minuit XMLIO ${TMVA_DEPENDENCIES}
+                              LIBRARIES  ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
+                              DEPENDENCIES Core MathCore Matrix RIO Hist Tree TreePlayer MLP Minuit XMLIO ${TMVA_DEPENDENCIES}
                               INSTALL_OPTIONS ${installoptions})
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

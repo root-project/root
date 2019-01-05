@@ -13,14 +13,7 @@
 #define ROOT_TTreeReaderArray
 
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TTreeReaderArray                                                    //
-//                                                                        //
-// A simple interface for reading data from trees or chains.              //
-//                                                                        //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
+
 
 #include "TTreeReaderValue.h"
 #include "TTreeReaderUtils.h"
@@ -28,6 +21,10 @@
 
 namespace ROOT {
 namespace Internal {
+
+/** \class TTreeReaderArrayBase
+Base class of TTreeReaderArray.
+*/
 
    class TTreeReaderArrayBase: public TTreeReaderValueBase {
    public:
@@ -59,8 +56,25 @@ namespace Internal {
 } // namespace Internal
 } // namespace ROOT
 
+// clang-format off
+/**
+ * \class TTreeReaderArray
+ * \ingroup treeplayer
+ * \brief An interface for reading collections stored in ROOT columnar datasets
+ *
+ * The TTreeReaderArray is a type-safe tool to be used in association with a TTreeReader
+ * to access the collections stored in TTree, TNtuple and TChain datasets.
+ * In order to access values which are not collections, the TTreeReaderValue class can
+ * be used.
+ *
+ * See the documentation of TTreeReader for more details and examples.
+*/
+// clang-format on
+
 template <typename T>
-class TTreeReaderArray final: public ROOT::Internal::TTreeReaderArrayBase {
+class R__CLING_PTRCHECK(off) TTreeReaderArray final : public ROOT::Internal::TTreeReaderArrayBase {
+// R__CLING_PTRCHECK is disabled because pointer / types are checked by CreateProxy().
+
 public:
    /// Random access iterator to the elements of a TTreeReaderArray.
    // The template parameter is there to allow distinguishing between the `const` and `non-const` cases.

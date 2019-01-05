@@ -30,12 +30,11 @@ acquisition, simulation and data analysis systems.
 [![License: LGPL v2.1+](https://img.shields.io/badge/License-LGPL%20v2.1+-blue.svg)](https://www.gnu.org/licenses/lgpl.html) [![Test coverage](https://root.cern/files/img/coverage-badge.svg)](https://epsft-jenkins.cern.ch/job/root-nightly-master-coverage/cobertura)
 
 ## Build Status
-| Branch | Continuous | Nightly |
-|--------|------------|---------|
-| master | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-master)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-master/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master/) |
-| master-noimt | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-master-noimt)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-master-noimt/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master-noimt)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master-noimt/) |
-| v6-14-00-patches |  [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-v6-14-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-v6-14-00-patches/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-14-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-14-00-patches/) |
-| v6-12-00-patches |  [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-v6-12-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-v6-12-00-patches/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-12-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-12-00-patches/) |
+| Branch | Nightly build status |
+|--------|------------|
+| master | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master/) |
+| v6-16-00-patches | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-16-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-16-00-patches/) |
+| v6-14-00-patches | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-14-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-14-00-patches/) |
 
 ## Cite
 We are [![DOI](https://zenodo.org/badge/10994345.svg)](https://zenodo.org/badge/latestdoi/10994345)

@@ -22,7 +22,17 @@
 //#include <atomic>
 #include <stdlib.h>
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
+
 #include "clang/Basic/Module.h"
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 namespace llvm {
    class StringRef;

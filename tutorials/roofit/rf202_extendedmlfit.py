@@ -1,14 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #202
-## Setting up an extended maximum likelihood fit
+## Addition and convolution: setting up an extended maximum likelihood fit
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -47,7 +45,14 @@ nsig = ROOT.RooRealVar("nsig", "number of signal events", 500, 0., 10000)
 nbkg = ROOT.RooRealVar(
     "nbkg", "number of background events", 500, 0, 10000)
 model = ROOT.RooAddPdf(
-    "model", "(g1+g2)+a", ROOT.RooArgList(bkg, sig), ROOT.RooArgList(nbkg, nsig))
+    "model",
+    "(g1+g2)+a",
+    ROOT.RooArgList(
+        bkg,
+        sig),
+    ROOT.RooArgList(
+        nbkg,
+        nsig))
 
 # Sample, fit and plot extended model
 # ---------------------------------------------------------------------
@@ -68,13 +73,17 @@ model.plotOn(xframe, ROOT.RooFit.Normalization(
 
 # Overlay the background component of model with a dashed line
 ras_bkg = ROOT.RooArgSet(bkg)
-model.plotOn(xframe, ROOT.RooFit.Components(ras_bkg), ROOT.RooFit.LineStyle(ROOT.kDashed),
-                ROOT.RooFit.Normalization(1.0, ROOT.RooAbsReal.RelativeExpected))
+model.plotOn(
+    xframe, ROOT.RooFit.Components(ras_bkg), ROOT.RooFit.LineStyle(
+        ROOT.kDashed), ROOT.RooFit.Normalization(
+            1.0, ROOT.RooAbsReal.RelativeExpected))
 
 # Overlay the background+sig2 components of model with a dotted line
 ras_bkg_sig2 = ROOT.RooArgSet(bkg, sig2)
-model.plotOn(xframe, ROOT.RooFit.Components(ras_bkg_sig2), ROOT.RooFit.LineStyle(
-    ROOT.kDotted), ROOT.RooFit.Normalization(1.0, ROOT.RooAbsReal.RelativeExpected))
+model.plotOn(
+    xframe, ROOT.RooFit.Components(ras_bkg_sig2), ROOT.RooFit.LineStyle(
+        ROOT.kDotted), ROOT.RooFit.Normalization(
+            1.0, ROOT.RooAbsReal.RelativeExpected))
 
 # Print structure of composite p.d.f.
 model.Print("t")

@@ -12,6 +12,7 @@
 #ifndef ROOSTATS_SamplingDistPlot
 #define ROOSTATS_SamplingDistPlot
 
+#include "Compression.h"
 #include "RooList.h"
 #include "RooPrintable.h"
 #include "TNamed.h"
@@ -96,7 +97,7 @@ namespace RooStats {
     void SetYRange( double mi, double ma ) { fYMin = mi; fYMax = ma; }
 
     /// write to Root file
-    void DumpToFile(const char* RootFileName, Option_t *option="", const char *ftitle="", Int_t compress=4);
+    void DumpToFile(const char* RootFileName, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
 
   private:
     std::vector<Double_t> fSamplingDistr;

@@ -80,6 +80,7 @@ namespace TMVA {
       Int_t fTriesEarlyStopping; // Stop training if validation loss is not decreasing for several epochs
       TString fLearningRateSchedule; // Set new learning rate at specific epochs
       TString fTensorBoard;          // Store log files during training
+      TString fNumValidationString;  // option string defining the number of validation events
 
       bool fModelIsSetup = false; // flag whether model is loaded, neede for getMvaValue during evaluation
       float* fVals = nullptr; // variables array used for GetMvaValue
@@ -89,6 +90,7 @@ namespace TMVA {
       TString fFilenameTrainedModel; // output filename for trained model
 
       void SetupKerasModel(Bool_t loadTrainedModel); // setups the needed variables loads the model
+      UInt_t  GetNumValidationSamples();  // get numer of validation events according to given option
 
       ClassDef(MethodPyKeras, 0);
    };

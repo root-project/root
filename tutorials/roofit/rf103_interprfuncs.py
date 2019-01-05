@@ -1,14 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' RooFit tutorial macro #103
-## Interpreted functions and p.d.f.s
+## Basic functionality: interpreted functions and p.d.f.s
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -26,7 +24,12 @@ x = ROOT.RooRealVar("x", "x", -20, 20)
 #
 alpha = ROOT.RooRealVar("alpha", "alpha", 5, 0.1, 10)
 genpdf = ROOT.RooGenericPdf(
-    "genpdf", "genpdf", "(1+0.1*abs(x)+sin(sqrt(abs(x*alpha+0.1))))", ROOT.RooArgList(x, alpha))
+    "genpdf",
+    "genpdf",
+    "(1+0.1*abs(x)+sin(sqrt(abs(x*alpha+0.1))))",
+    ROOT.RooArgList(
+        x,
+        alpha))
 
 # Sample, fit and plot generic pdf
 # ---------------------------------------------------------------

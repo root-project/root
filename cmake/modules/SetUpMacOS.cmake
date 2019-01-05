@@ -66,8 +66,6 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wshadow -Wall -Woverloaded-virtual -fsigned-char -fno-common")
      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common")
      SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy")
-     SET(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL -DG__STD_EXCEPTION")
-     SET(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL -DG__STD_EXCEPTION")
 
      SET(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS} -single_module -Wl,-dead_strip_dylibs")
      SET(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -single_module -Wl,-dead_strip_dylibs")
@@ -88,22 +86,16 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      set(CMAKE_C_FLAGS_DEBUG            "-g")
      set(CMAKE_C_FLAGS_DEBUGFULL        "-g3")
      set(CMAKE_C_FLAGS_PROFILE          "-g3 -ftest-coverage -fprofile-arcs")
-
-     #settings for cint
-     set(CPPPREP "${CXX} -E -C")
-     set(CXXOUT "-o ")
-     set(EXEEXT "")
-     set(SOEXT "so")
-
   elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-
      message(STATUS "Found LLVM compiler collection")
 
-     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wshadow -Wall -Woverloaded-virtual -fsigned-char -fno-common -Qunused-arguments")
+     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fno-common -Qunused-arguments")
      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common -Qunused-arguments")
+     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8)
+       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wshadow")
+     endif()
+
      SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy")
-     SET(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL -DG__STD_EXCEPTION")
-     SET(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL -DG__STD_EXCEPTION")
 
      SET(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS} -single_module -Wl,-dead_strip_dylibs")
      SET(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -single_module -Wl,-dead_strip_dylibs")
@@ -124,20 +116,12 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      set(CMAKE_C_FLAGS_DEBUG            "-g")
      set(CMAKE_C_FLAGS_DEBUGFULL        "-g3")
      set(CMAKE_C_FLAGS_PROFILE          "-g3 -ftest-coverage -fprofile-arcs")
-
-     #settings for cint
-     set(CPPPREP "${CXX} -E -C")
-     set(CXXOUT "-o ")
-     set(EXEEXT "")
-     set(SOEXT "so")
   else()
     MESSAGE(FATAL_ERROR "There is no setup for this compiler with ID=${CMAKE_CXX_COMPILER_ID} up to now. Don't know what to do. Stop cmake at this point.")
   endif()
 
   #---Set Linker flags----------------------------------------------------------------------
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -mmacosx-version-min=${MACOSX_VERSION} -Wl,-rpath,@loader_path/../lib")
-
-
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mmacosx-version-min=${MACOSX_VERSION}")
 else (CMAKE_SYSTEM_NAME MATCHES Darwin)
   MESSAGE(FATAL_ERROR "There is no setup for this this Apple system up to now. Don't know waht to do. Stop cmake at this point.")
 endif (CMAKE_SYSTEM_NAME MATCHES Darwin)
@@ -151,5 +135,3 @@ if(CMAKE_GENERATOR MATCHES Xcode)
     set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${_conf} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} )
   endforeach()
 endif()
-
-

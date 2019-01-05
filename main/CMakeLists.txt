@@ -9,7 +9,6 @@ if(NOT WIN32)
     SET_TARGET_PROPERTIES(rootn.exe PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
   endif()
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore)
-  ROOT_EXECUTABLE(ssh2rpd ssh2rpd.cxx ${CMAKE_SOURCE_DIR}/core/clib/src/strlcpy.c )
   ROOT_EXECUTABLE(xpdtest xpdtest.cxx LIBRARIES Proof Tree Hist RIO Net Thread Matrix MathCore)
 endif()
 ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
@@ -26,6 +25,9 @@ else()
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore MultiProc)
 endif()
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
+
+#---CreateHaddCommandLineOptions------------------------------------------------------------------
+generateHeaders(${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py ${CMAKE_BINARY_DIR}/include/haddCommandLineOptionsHelp.h hadd)
 
 if(fortran AND CMAKE_Fortran_COMPILER)
   ROOT_EXECUTABLE(g2root g2root.f LIBRARIES minicern)
@@ -45,11 +47,11 @@ if(python)
     configure_file(${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
 
     install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
-                                 DESTINATION ${CMAKE_INSTALL_BINDIR} 
+                                 DESTINATION ${CMAKE_INSTALL_BINDIR}
                                  RENAME ${utilName}
                                  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                                              GROUP_EXECUTE GROUP_READ
-                                             WORLD_EXECUTE WORLD_READ 
+                                             WORLD_EXECUTE WORLD_READ
                                  COMPONENT applications)
   endforeach()
 

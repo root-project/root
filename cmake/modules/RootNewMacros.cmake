@@ -374,7 +374,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   if(CMAKE_ROOTTEST_NOROOTMAP)
-    set(rootmapname )
+    set(rootmap_name )
     set(rootmapargs )
   else()
     set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
@@ -654,10 +654,10 @@ function(ROOT_LINKER_LIBRARY library)
     if(ARG_TYPE STREQUAL SHARED)
       set_target_properties(${library} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
     endif()
-    if(explicitlink OR ROOT_explicitlink_FOUND)
-      target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
-    else()
+    if(CMAKE_PROJECT_NAME STREQUAL ROOT AND NOT explicitlink)
       target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES})
+    else()
+      target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
     endif()
   endif()
   if(TARGET G__${library})
@@ -1420,6 +1420,20 @@ function(ROOT_ADD_C_FLAG var flag)
 endfunction()
 
 #----------------------------------------------------------------------------
+# ROOT_ADD_COMPILE_OPTIONS(flags)
+#----------------------------------------------------------------------------
+macro(ROOT_ADD_COMPILE_OPTIONS flags)
+  foreach(__flag ${flags})
+    check_cxx_compiler_flag("-Werror ${__flag}" __result)
+    if(__result)
+      add_compile_options(${__flag})
+    endif()
+  endforeach()
+  unset(__flag)
+  unset(__result)
+endmacro()
+
+#----------------------------------------------------------------------------
 # find_python_module(module [REQUIRED] [QUIET])
 #----------------------------------------------------------------------------
 function(find_python_module module)
@@ -1454,4 +1468,34 @@ function(find_python_module module)
    set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE)
 endfunction()
 
+#----------------------------------------------------------------------------
+# Generate headers files containing the command line options help
+# The first argument pythonInput is the path of the python argparse file for this command
+# The second argument output is the of path/name of the output file
+# The third argument is the name of the target that should be linked to the generated
+# library( the executable that includes it or the library that uses it)
+#----------------------------------------------------------------------------
+function(generateHeaders pythonInput output target)
+     add_custom_command(OUTPUT ${output}
+          DEPENDS ${pythonInput} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+          COMMAND ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+                                          ${pythonInput}
+                                          ${output}
+     )
+     target_sources(${target} PRIVATE ${output})
+endfunction()
 
+#----------------------------------------------------------------------------
+# Generate man page through argparse method
+# The first argument pythonInput is the path of the python argparse file for this command
+# The second argument output is the of path/name of the output file
+#----------------------------------------------------------------------------
+function(generateManual name pythonInput output)
+     add_custom_target(${name} ALL
+          DEPENDS ${pythonInput} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+          COMMAND ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+                                          ${pythonInput}
+                                          ${output}
+     )
+     install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR})
+endfunction()

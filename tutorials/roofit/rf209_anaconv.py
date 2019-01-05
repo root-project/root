@@ -1,11 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #209
-## Decay function p.d.fs with optional B physics
-## effects (mixing and CP violation) that can be
-## analytically convolved with e.g. Gaussian resolution
-## functions
+## Addition and convolution: decay function p.d.fs with optional B physics effects (mixing and CP violation) that can be analytically convolved with e.g. Gaussian resolution functions
 ##
 ## pdf1 = decay(t,tau) (x) delta(t)
 ## pdf2 = decay(t,tau) (x) gauss(t,m,s)
@@ -14,8 +10,7 @@
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -31,7 +26,7 @@ tm = ROOT.RooTruthModel("tm", "truth model", dt)
 
 # Construct decay(t) (x) delta(t)
 decay_tm = ROOT.RooDecay("decay_tm", "decay", dt,
-                            tau, tm, ROOT.RooDecay.DoubleSided)
+                         tau, tm, ROOT.RooDecay.DoubleSided)
 
 # Plot p.d.f. (dashed)
 frame = dt.frame(ROOT.RooFit.Title("Bdecay (x) resolution"))
@@ -47,7 +42,7 @@ gm1 = ROOT.RooGaussModel("gm1", "gauss model 1", dt, bias1, sigma1)
 
 # Construct decay(t) (x) gauss1(t)
 decay_gm1 = ROOT.RooDecay("decay_gm1", "decay",
-                            dt, tau, gm1, ROOT.RooDecay.DoubleSided)
+                          dt, tau, gm1, ROOT.RooDecay.DoubleSided)
 
 # Plot p.d.f.
 decay_gm1.plotOn(frame)
@@ -63,7 +58,12 @@ gm2 = ROOT.RooGaussModel("gm2", "gauss model 2", dt, bias2, sigma2)
 # Build a composite resolution model f*gm1+(1-f)*gm2
 gm1frac = ROOT.RooRealVar("gm1frac", "fraction of gm1", 0.5)
 gmsum = ROOT.RooAddModel(
-    "gmsum", "sum of gm1 and gm2", ROOT.RooArgList(gm1, gm2), ROOT.RooArgList(gm1frac))
+    "gmsum",
+    "sum of gm1 and gm2",
+    ROOT.RooArgList(
+        gm1,
+        gm2),
+    ROOT.RooArgList(gm1frac))
 
 # Construct decay(t) (x) (f*gm1 + (1-f)*gm2)
 decay_gmsum = ROOT.RooDecay(

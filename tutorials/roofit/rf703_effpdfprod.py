@@ -2,16 +2,12 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'SPECIAL PDFS' RooFit tutorial macro #703
-##
-## Using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
+## Special p.d.f.'s: using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
-
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -30,7 +26,10 @@ model = ROOT.RooExponential("model", "model", t, tau)
 # ---------------------------------------------------
 
 # Use error function to simulate turn-on slope
-eff = ROOT.RooFormulaVar("eff", "0.5*(TMath::Erf((t-1)/0.5)+1)", ROOT.RooArgList(t))
+eff = ROOT.RooFormulaVar(
+    "eff",
+    "0.5*(TMath::Erf((t-1)/0.5)+1)",
+    ROOT.RooArgList(t))
 
 # Define decay pdf with efficiency
 # ---------------------------------------------------------------

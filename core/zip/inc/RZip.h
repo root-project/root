@@ -21,7 +21,7 @@ extern "C" unsigned long R__crc32(unsigned long crc, const unsigned char* buf, u
 
 extern "C" unsigned long R__memcompress(char *tgt, unsigned long tgtsize, char *src, unsigned long srcsize);
 
-extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::ECompressionAlgorithm);
+extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::RCompressionSetting::EAlgorithm::EValues);
 
 /**
  * This is a historical definition, prior to ROOT supporting multiple algorithms in a single file.  Use

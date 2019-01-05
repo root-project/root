@@ -103,12 +103,14 @@
 
 
    Toolbar.prototype.createIcon = function(button, thisIcon) {
-      var size = thisIcon.size || 512,
+      var dimensions = thisIcon.size ? thisIcon.size.split(' ') : [512, 512],
+          width = dimensions[0],
+          height = dimensions[1] || dimensions[0],
           scale = thisIcon.scale || 1,
           svg = button.append("svg:svg")
                       .attr('height', '1em')
                       .attr('width', '1em')
-                      .attr('viewBox', [0, 0, size, size].join(' '));
+                      .attr('viewBox', [0, 0, width, height].join(' '));
 
       if ('recs' in thisIcon) {
           var rec = {};
@@ -147,6 +149,7 @@
 
       this.no_default_title = true; // do not set title to main DIV
       this.mode3d = true; // indication of 3D mode
+      this.drawing_stage = 0; //
 
       this.Cleanup(true);
    }
@@ -189,6 +192,17 @@
          click: function() { painter.ToggleEnlarge(); }
       });
 
+      // Only show VR icon if WebVR API available.
+      if (navigator.getVRDisplays) {
+         buttonList.push({
+            name: 'entervr',
+            title: 'Enter VR (It requires a VR Headset connected)',
+            icon: JSROOT.ToolbarIcons.vrgoggles,
+            click: function() { painter.ToggleVRMode(); }
+         });
+         this.InitVRMode();
+      }
+
       if (JSROOT.gStyle.ContextMenu)
       buttonList.push({
          name: 'menu',
@@ -212,6 +226,50 @@
       var bkgr = new THREE.Color(this.options.background);
 
       this._toolbar = new Toolbar( this.select_main(), [buttonList], (bkgr.r + bkgr.g + bkgr.b) < 1);
+   }
+
+   TGeoPainter.prototype.InitVRMode = function() {
+      var pthis = this;
+      navigator.getVRDisplays().then(function (displays) {
+         var vrDisplay = displays[0];
+         if (!vrDisplay) return;
+         pthis._renderer.vr.setDevice(vrDisplay);
+         pthis._vrDisplay = vrDisplay;
+      });
+   }
+
+   TGeoPainter.prototype.ToggleVRMode = function() {
+      var pthis = this;
+      if (!this._vrDisplay) return;
+      // Toggle VR mode off
+      if (this._vrDisplay.isPresenting) {
+         this.ExitVRMode();
+         return;
+      }
+      this._previousCameraPosition = this._camera.position.clone();
+      this._previousCameraRotation = this._camera.rotation.clone();
+      this._vrDisplay.requestPresent([{ source: this._renderer.domElement }]).then(function() {
+         pthis._renderer.vr.enabled = true;
+         pthis._renderer.setAnimationLoop(function () { pthis.Render3D(0); });
+      });
+      this._renderer.vr.enabled = true;
+
+      window.addEventListener( 'keydown', function ( event ) {
+         // Esc Key turns VR mode off
+         if (event.keyCode === 27) pthis.ExitVRMode();
+      });
+   }
+
+   TGeoPainter.prototype.ExitVRMode = function() {
+      var pthis = this;
+      if (!this._vrDisplay.isPresenting) return;
+      this._renderer.vr.enabled = false;
+      // Restore Camera pose
+      this._camera.position.copy(this._previousCameraPosition);
+      this._previousCameraPosition = undefined;
+      this._camera.rotation.copy(this._previousCameraRotation);
+      this._previousCameraRotation = undefined;
+      this._vrDisplay.exitPresent();
    }
 
    TGeoPainter.prototype.GetGeometry = function() {
@@ -242,6 +300,8 @@
    }
 
    TGeoPainter.prototype.decodeOptions = function(opt) {
+      if (typeof opt != "string") opt = "";
+
       var res = { _grid: false, _bound: false, _debug: false,
                   _full: false, _axis: false, _axis_center: false,
                   _count: false, wireframe: false,
@@ -366,6 +426,10 @@
       if (d.check("F")) res._full = true;
       if (d.check("Y")) res._yup = true;
       if (d.check("Z")) res._yup = false;
+
+      // when drawing geometry without TCanvas, yup = true by default
+      if (res._yup === undefined)
+         res._yup = this.svg_canvas().empty();
 
       return res;
    }
@@ -930,7 +994,7 @@
 
       var painter = this;
 
-      this.tooltip_allowed = (JSROOT.gStyle.Tooltip > 0);
+      this.SetTooltipAllowed(JSROOT.gStyle.Tooltip > 0);
 
       this._controls = JSROOT.Painter.CreateOrbitControl(this, this._camera, this._scene, this._renderer, this._lookat);
 
@@ -1059,6 +1123,15 @@
       if (!this._clones || (this.drawing_stage == 0)) return false;
 
       if (this.drawing_stage == 1) {
+
+         // when draw nodes already provided - just immdidately use it
+         if (this._provided_draw_nodes) {
+            this._new_draw_nodes = this._provided_draw_nodes;
+            delete this._provided_draw_nodes;
+            this._draw_all_nodes = false;
+            this.drawing_stage = 3;
+            return true;
+         }
 
          // wait until worker is really started
          if (this.options.use_worker>0) {
@@ -1231,11 +1304,12 @@
          var tm0 = new Date().getTime(), ready = true,
              toplevel = this.options.project ? this._full_geom : this._toplevel;
 
-         for (var n=0; n<this._draw_nodes.length;++n) {
+         for (var n = 0; n < this._draw_nodes.length; ++n) {
             var entry = this._draw_nodes[n];
             if (entry.done) continue;
 
-            var shape = this._build_shapes[entry.shapeid];
+            /// shape can be provided with entry itself
+            var shape = entry.server_shape || this._build_shapes[entry.shapeid];
             if (!shape.ready) {
                if (this.drawing_stage === 8) console.warn('shape marked as not ready when should');
                ready = false;
@@ -1251,9 +1325,7 @@
                continue;
             }
 
-            var nodeobj = this._clones.origin[entry.nodeid];
-            var clone = this._clones.nodes[entry.nodeid];
-            var prop = JSROOT.GEO.getNodeProperties(clone.kind, nodeobj, true);
+            var prop = this._clones.getDrawEntryProperties(entry);
 
             this._num_meshes++;
             this._num_faces += shape.nfaces;
@@ -1287,7 +1359,7 @@
 
             if (this.options._debug || this.options._full) {
                var wfg = new THREE.WireframeGeometry( mesh.geometry ),
-                   wfm = new THREE.LineBasicMaterial( { color: prop.fillcolor, linewidth: (nodeobj && nodeobj.fVolume) ? nodeobj.fVolume.fLineWidth : 1  } ),
+                   wfm = new THREE.LineBasicMaterial( { color: prop.fillcolor, linewidth: prop.linewidth || 1 } ),
                    helper = new THREE.LineSegments(wfg, wfm);
                obj3d.add(helper);
             }
@@ -1926,7 +1998,7 @@
             var boxHelper = new THREE.BoxHelper(this._toplevel);
             this._scene.add( boxHelper );
          }
-         this._scene.add( new THREE.AxisHelper( 2 * this._overall_size ) );
+         this._scene.add( new THREE.AxesHelper( 2 * this._overall_size ) );
          this._scene.add( new THREE.GridHelper( Math.ceil( this._overall_size), Math.ceil( this._overall_size ) / 50 ) );
          this.helpText("<font face='verdana' size='1' color='red'><center>Transform Controls<br>" +
                "'T' translate | 'R' rotate | 'S' scale<br>" +
@@ -2473,12 +2545,22 @@
       }).send();
    }
 
+   /** Assign clones, created outside.
+    * Used by geometry painter, where clones are handled by the server */
+   TGeoPainter.prototype.assignClones = function(clones) {
+      this._clones_owner = true;
+      this._clones = clones;
+   }
+
    TGeoPainter.prototype.prepareObjectDraw = function(draw_obj, name_prefix) {
 
-      // first delete clones (if any)
-      delete this._clones;
+      if ((name_prefix == "__geom_viewer_selection__") && this._clones) {
+         // case of display visible
+         this._provided_draw_nodes = draw_obj;
 
-      if (this._main_painter) {
+         this.options.use_worker = 0;
+
+      } else if (this._main_painter) {
 
          this._clones_owner = false;
 
@@ -3128,37 +3210,36 @@
       JSROOT.progress(msg);
    }
 
-   TGeoPainter.prototype.CheckResize = function(size) {
+   TGeoPainter.prototype.CheckResize = function(arg) {
       var pad_painter = this.canv_painter();
-
 
       // firefox is the only browser which correctly supports resize of embedded canvas,
       // for others we should force canvas redrawing at every step
       if (pad_painter)
-         if (!pad_painter.CheckCanvasResize(size)) return false;
+         if (!pad_painter.CheckCanvasResize(arg)) return false;
 
       var sz = this.size_for_3d();
 
       if ((this._scene_width === sz.width) && (this._scene_height === sz.height)) return false;
-      if ((sz.width<10) || (sz.height<10)) return;
+      if ((sz.width<10) || (sz.height<10)) return false;
 
       this._scene_width = sz.width;
       this._scene_height = sz.height;
 
-      if ( this._camera.type == "OrthographicCamera")
-      {
-         this._camera.left = -sz.width;
-         this._camera.right = sz.width;
-         this._camera.top = -sz.height;
-         this._camera.bottom = sz.height;
-      }
-      else {
-         this._camera.aspect = this._scene_width / this._scene_height;
-      }
-      this._camera.updateProjectionMatrix();
-      this._renderer.setSize( this._scene_width, this._scene_height, !this._fit_main_area );
+      if (this._camera && this._renderer) {
+         if (this._camera.type == "OrthographicCamera") {
+            this._camera.left = -sz.width;
+            this._camera.right = sz.width;
+            this._camera.top = -sz.height;
+            this._camera.bottom = sz.height;
+         } else {
+            this._camera.aspect = this._scene_width / this._scene_height;
+         }
+         this._camera.updateProjectionMatrix();
+         this._renderer.setSize( this._scene_width, this._scene_height, !this._fit_main_area );
 
-      this.Render3D();
+         if (!this.drawing_stage) this.Render3D();
+      }
 
       return true;
    }
@@ -3212,6 +3293,10 @@
 
       var painter = new TGeoPainter(obj);
 
+      // one could use TGeoManager setting, but for some example JSROOT does not build composites
+      // if (obj && obj._typename=='TGeoManager' && (obj.fNsegments > 3))
+      //   JSROOT.GEO.GradPerSegm = 360/obj.fNsegments;
+
       painter.SetDivId(divid, 5);
 
       painter._usesvg = JSROOT.Painter.UseSVGFor3D();
@@ -3220,10 +3305,7 @@
 
       painter._webgl = !painter._usesvg && JSROOT.Painter.TestWebGL();
 
-      painter.options = painter.decodeOptions(opt || "");
-
-      if (painter.options._yup === undefined)
-         painter.options._yup = painter.svg_canvas().empty();
+      painter.options = painter.decodeOptions(opt);
 
       return painter;
    }

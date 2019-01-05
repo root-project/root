@@ -917,29 +917,31 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
 bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs)
 {
     RooLinkedListIter  iter(prod.pdfList().iterator());
-    bool ret = false;
+    bool ret = true;
     for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
         if (!a->dependsOn(obs)) continue;
         RooPoisson *pois = 0;
         RooGaussian * gaus = 0;
         if ((pois = dynamic_cast<RooPoisson *>(a)) != 0) {
-            SetObsToExpected(*pois, obs);
+            ret &= SetObsToExpected(*pois, obs);
             pois->setNoRounding(true);  //needed since expected value is not an integer
         } else if ((gaus = dynamic_cast<RooGaussian *>(a)) != 0) {
-            SetObsToExpected(*gaus, obs);
+            ret &= SetObsToExpected(*gaus, obs);
         } else {
            // should try to add also lognormal case ?
             RooProdPdf *subprod = dynamic_cast<RooProdPdf *>(a);
             if (subprod)
-               return SetObsToExpected(*subprod, obs);
+               ret &= SetObsToExpected(*subprod, obs);
             else {
-               oocoutE((TObject*)0,InputArguments) << "Illegal term in counting model: depends on observables, but not Poisson or Gaussian or Product"
-                                                   << endl;
+               oocoutE((TObject*)0,InputArguments) << "Illegal term in counting model: "
+                   << "the PDF " << a->GetName()
+                   << " depends on the observables, but is not a Poisson, Gaussian or Product"
+                   << endl;
                return false;
             }
         }
-        ret = (pois != 0 || gaus != 0 );
     }
+
     return ret;
 }
 
@@ -1186,9 +1188,15 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// static function to the an Asimov data set
-/// given an observed dat set, a model and a snapshot of poi.
-/// Return the asimov data set + global observables set to values satisfying the constraints
+/// Make the Asimov data from the ModelConfig and list of poi
+/// \param realData Real data
+/// \param model Model config defining the pdf and the parameters
+/// \param paramValues The snapshot of POI and parameters used for finding the best nuisance parameter values (conditioned at these values)
+/// \param[out] asimovGlobObs Global observables set to values satisfying the constraints
+/// \param genPoiValues Optional. A different set of POI values used for generating. By default the same POI are used for generating and for finding the nuisance parameters
+/// given an observed data set, a model and a snapshot of the poi.
+/// \return The asimov data set. The user takes ownership.
+///
 
 RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const ModelConfig & model, const  RooArgSet & paramValues, RooArgSet & asimovGlobObs, const RooArgSet * genPoiValues )  {
 
@@ -1292,9 +1300,13 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// static function to the an Asimov data set
-/// given the model and the values of all parameters including the nuisance
-/// Return the asimov data set + global observables set to values satisfying the constraints
+/// \param model ModelConfig that contains the model pdf and the model parameters
+/// \param allParamValues The parameters fo the model will be set to the values given in this set
+/// \param[out] asimovGlobObs Global observables set to values satisfying the constraints
+/// \return Asimov data set. The user takes ownership.
+///
+/// The parameter values (including the nuisance parameter) can result from a fit to data or be at the nominal values.
+///
 
 RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, const  RooArgSet & allParamValues, RooArgSet & asimovGlobObs)  {
 

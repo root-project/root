@@ -16,11 +16,8 @@
 #include <ROOT/REveTrans.hxx>
 #include <ROOT/REveRenderData.hxx>
 
-#include "TTree.h"
-#include "TTreePlayer.h"
-#include "TF3.h"
-
 #include "TColor.h"
+#include "TArrayI.h"
 
 #include "json.hpp"
 
@@ -55,7 +52,7 @@ REvePointSet::REvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
    REveProjectable(),
 
    fTitle          (),
-   fIntIds         (0),
+   fIntIds         (nullptr),
    fIntIdsPerPoint (0)
 {
    fMarkerStyle = 20;
@@ -75,7 +72,7 @@ REvePointSet::REvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_t
    REveProjectable(),
 
    fTitle          (),
-   fIntIds         (0),
+   fIntIds         (nullptr),
    fIntIdsPerPoint (0)
 {
    fMarkerStyle = 20;
@@ -96,7 +93,7 @@ REvePointSet::REvePointSet(const REvePointSet& e) :
    REveProjectable(),
 
    fTitle          (e.fTitle),
-   fIntIds         (e.fIntIds ? new TArrayI(*e.fIntIds) : 0),
+   fIntIds         (e.fIntIds ? new TArrayI(*e.fIntIds) : nullptr),
    fIntIdsPerPoint (e.fIntIdsPerPoint)
 {
 }
@@ -151,7 +148,7 @@ void REvePointSet::Reset(Int_t n_points, Int_t n_int_ids)
    }
    fLastPoint = -1;
    ClearIds();
-   delete fIntIds; fIntIds = 0;
+   delete fIntIds; fIntIds = nullptr;
    fIntIdsPerPoint = n_int_ids;
    if (fIntIdsPerPoint > 0) fIntIds = new TArrayI(fIntIdsPerPoint*fN);
    ResetBBox();
@@ -288,7 +285,7 @@ void REvePointSet::InitFill(Int_t subIdNum)
       else
          fIntIds->Set(fIntIdsPerPoint*GetN());
    } else {
-      delete fIntIds; fIntIds = 0;
+      delete fIntIds; fIntIds = nullptr;
       fIntIdsPerPoint = 0;
    }
 }
@@ -302,7 +299,7 @@ void REvePointSet::TakeAction(REvePointSelector* sel)
 {
    static const REveException eh("REvePointSet::TakeAction ");
 
-   if(sel == 0)
+   if(sel == nullptr)
       throw(eh + "selector is <null>.");
 
    Int_t    n = sel->GetNfill();
@@ -452,7 +449,6 @@ REvePointSetArray::REvePointSetArray(const char* name,
    fBinWidth(0),
    fQuantName()
 {
-
    SetMainColorPtr(&fMarkerColor);
 }
 
@@ -689,7 +685,7 @@ void REvePointSetArray::CloseBins()
 {
    for (Int_t i=0; i<fNBins; ++i)
    {
-      if (fBins[i] != 0)
+      if (fBins[i])
       {
          fBins[i]->SetTitle(Form("N=%d", fBins[i]->Size()));
          fBins[i]->ComputeBBox();
@@ -705,7 +701,7 @@ void REvePointSetArray::SetOwnIds(Bool_t o)
 {
    for (Int_t i=0; i<fNBins; ++i)
    {
-      if (fBins[i] != 0)
+      if (fBins[i])
          fBins[i]->SetOwnIds(o);
    }
 }
@@ -725,7 +721,7 @@ void REvePointSetArray::SetRange(Double_t min, Double_t max)
 
    for (Int_t i = 1; i < fNBins - 1; ++i)
    {
-      if (fBins[i] != 0)
+      if (fBins[i])
          fBins[i]->SetRnrSelf(i>=low_b && i<=high_b);
    }
 }

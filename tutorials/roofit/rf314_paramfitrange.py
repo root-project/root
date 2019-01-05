@@ -2,10 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #314
-##
-## Working with parameterized ranges in a fit. ROOT.This an example of a
-## fit with an acceptance that changes per-event
+## Multidimensional models: working with parameterized ranges in a fit. ROOT.This an example of a fit with an acceptance that changes per-event
 ##
 ## pdf = exp(-t/tau) with t[tmin,5]
 ##
@@ -14,9 +11,7 @@
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
-
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

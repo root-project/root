@@ -94,6 +94,41 @@ TMultiGraph *TMVA::CrossValidationResult::GetROCCurves(Bool_t /*fLegend*/)
    return fROCCurves.get();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Generates a multigraph that contains an average ROC Curve.
+///
+/// \note You own the returned pointer.
+///
+/// \param numSamples[in] Number of samples used for generating the average ROC
+///                       Curve. Avg. curve will be evaluated only at these
+///                       points (using interpolation if necessary).
+///
+
+TGraph *TMVA::CrossValidationResult::GetAvgROCCurve(UInt_t numSamples) const
+{
+   // `numSamples * increment` should equal 1.0!
+   Double_t increment = 1.0 / (numSamples-1);
+   Double_t x[numSamples];
+   Double_t y[numSamples];
+
+   TList *rocCurveList = fROCCurves.get()->GetListOfGraphs();
+
+   for(UInt_t iSample = 0; iSample < numSamples; iSample++) {
+      Double_t xPoint = iSample * increment;
+      Double_t rocSum = 0;
+
+      for(Int_t iGraph = 0; iGraph < rocCurveList->GetSize(); iGraph++) {
+        TGraph *foldROC = static_cast<TGraph *>(rocCurveList->At(iGraph));
+        rocSum += foldROC->Eval(xPoint);
+      }
+
+      x[iSample] = xPoint;
+      y[iSample] = rocSum/rocCurveList->GetSize();
+   }
+
+   return new TGraph(numSamples, x, y);
+}
+
 //_______________________________________________________________________
 Float_t TMVA::CrossValidationResult::GetROCAverage() const
 {
@@ -149,6 +184,61 @@ TCanvas* TMVA::CrossValidationResult::Draw(const TString name) const
    return c;
 }
 
+//
+TCanvas* TMVA::CrossValidationResult::DrawAvgROCCurve(Bool_t drawFolds, TString title) const
+{
+   TMultiGraph rocs{};
+
+   // Potentially add the folds
+   if (drawFolds) {
+      for (auto foldRocObj : *(*fROCCurves).GetListOfGraphs()) {
+         TGraph * foldRocGraph = dynamic_cast<TGraph *>(foldRocObj->Clone());
+         foldRocGraph->SetLineColor(1);
+         foldRocGraph->SetLineWidth(1);
+         rocs.Add(foldRocGraph);
+      }
+   }
+
+   // Add the average roc curve
+   TGraph *avgRocGraph = GetAvgROCCurve(100);
+   avgRocGraph->SetTitle("Avg ROC Curve");
+   avgRocGraph->SetLineColor(2);
+   avgRocGraph->SetLineWidth(3);
+   rocs.Add(avgRocGraph);
+
+   // Draw
+   TCanvas *c = new TCanvas();
+
+   if (title != "") {
+      title = "Cross Validation Average ROC Curve";
+   }
+
+   rocs.SetTitle(title);
+   rocs.GetXaxis()->SetTitle("Signal Efficiency");
+   rocs.GetYaxis()->SetTitle("Background Rejection");
+   rocs.DrawClone("AL");
+
+   // Build legend
+   TLegend *leg = new TLegend();
+   TList *ROCCurveList = rocs.GetListOfGraphs();
+
+   if (drawFolds) {
+      Int_t nCurves = ROCCurveList->GetSize();
+      leg->AddEntry(static_cast<TGraph *>(ROCCurveList->At(nCurves-1)),
+                    "Avg ROC Curve", "l");
+      leg->AddEntry(static_cast<TGraph *>(ROCCurveList->At(0)),
+                    "Fold ROC Curves", "l");
+      leg->Draw();
+   } else {
+      c->BuildLegend();
+   }
+
+   // Draw Canvas
+   c->SetTitle("Cross Validation Average ROC Curve");
+   c->Draw();
+   return c;
+}
+
 /**
 * \class TMVA::CrossValidation
 * \ingroup TMVA
@@ -188,7 +278,8 @@ TMVA::CrossValidation::CrossValidation(TString jobName, TMVA::DataLoader *datalo
                                        TString options)
    : TMVA::Envelope(jobName, dataloader, nullptr, options),
      fAnalysisType(Types::kMaxAnalysisType),
-     fAnalysisTypeStr("auto"),
+     fAnalysisTypeStr("Auto"),
+     fSplitTypeStr("Random"),
      fCorrelations(kFALSE),
      fCvFactoryOptions(""),
      fDrawProgressBar(kFALSE),
@@ -257,6 +348,12 @@ void TMVA::CrossValidation::InitOptions()
    AddPreDefVal(TString("Auto"));
 
    // Options specific to CE
+   DeclareOptionRef(fSplitTypeStr, "SplitType",
+                    "Set the split type (Deterministic, Random, RandomStratified) (default: Random)");
+   AddPreDefVal(TString("Deterministic"));
+   AddPreDefVal(TString("Random"));
+   AddPreDefVal(TString("RandomStratified"));
+
    DeclareOptionRef(fSplitExprString, "SplitExpr", "The expression used to assign events to folds");
    DeclareOptionRef(fNumFolds, "NumFolds", "Number of folds to generate");
    DeclareOptionRef(fNumWorkerProcs, "NumWorkerProcs",
@@ -281,6 +378,10 @@ void TMVA::CrossValidation::InitOptions()
 void TMVA::CrossValidation::ParseOptions()
 {
    this->Envelope::ParseOptions();
+
+   if (fSplitTypeStr != "Deterministic" and fSplitExprString != "") {
+      Log() << kFATAL << "SplitExpr can only be used with Deterministic Splitting" << Endl;
+   }
 
    // Factory options
    fAnalysisTypeStr.ToLower();
@@ -358,7 +459,14 @@ void TMVA::CrossValidation::ParseOptions()
       fFactory = std::make_unique<TMVA::Factory>(fJobName, fOutputFile, fOutputFactoryOptions);
    }
 
-   fSplit = std::make_unique<CvSplitKFolds>(fNumFolds, fSplitExprString);
+   if(fSplitTypeStr == "Random"){
+      fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString, kFALSE));
+   } else if(fSplitTypeStr == "RandomStratified"){
+      fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString, kTRUE));
+   } else {
+      fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString));
+   }
+
 }
 
 //_______________________________________________________________________

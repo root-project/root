@@ -2,15 +2,12 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #505
-##
-## Reading and writing ASCII configuration files
+## Organization and simultaneous fits: reading and writing ASCII configuration files
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 from __future__ import print_function
 import ROOT
@@ -65,7 +62,8 @@ params.Print("v")
 params.readFromFile("rf505_asciicfg.txt", "READ", "Section3")
 
 # Print the list of parameters that were not read from Section3
-print("The following parameters of the were _not_ read from Section3: ", params.selectByAttrib("READ", ROOT.kFALSE))
+print("The following parameters of the were _not_ read from Section3: ",
+      params.selectByAttrib("READ", ROOT.kFALSE))
 
 # Read parameters from section 'Section4' of file, contains
 # 'include file' statement of rf505_asciicfg_example.txt

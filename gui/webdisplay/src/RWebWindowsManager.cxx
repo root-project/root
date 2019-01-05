@@ -268,6 +268,17 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RWebWindowsM
 
    auto wshandler = win->CreateWSHandler(Instance(), ++fIdCnt, dflt_tmout);
 
+   if (gEnv->GetValue("WebGui.RecordData", 0) > 0) {
+      std::string fname, prefix;
+      if (fIdCnt > 1) {
+         prefix = std::string("f") + std::to_string(fIdCnt) + "_";
+         fname = std::string("protcol") + std::to_string(fIdCnt) + ".json";
+      } else {
+         fname = "protocol.json";
+      }
+      win->RecordData(fname, prefix);
+   }
+
    fServer->RegisterWS(wshandler);
 
    return win;
@@ -345,6 +356,7 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 ///   WebGui.FirefoxRandomProfile: usage of random Firefox profile -1 never, 0 - only for batch mode (dflt), 1 - always
 ///   WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
 ///   WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
+///   WebGui.RecordData: if specified enables data recording for each web window 0 - off, 1 - on
 ///
 ///   Http-server related parameters documented in RWebWindowsManager::CreateServer() method
 

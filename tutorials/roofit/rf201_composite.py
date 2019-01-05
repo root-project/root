@@ -1,15 +1,14 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #201
-## Composite p.d.f with signal and background component
+## Addition and convolution: composite p.d.f with signal and background component
+##
 ## pdf = f_bkg * bkg(x,a0,a1) + (1-fbkg) * (f_sig1 * sig1(x,m,s1 + (1-f_sig1) * sig2(x,m,s2)))
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -70,12 +69,12 @@ model.plotOn(xframe)
 # Overlay the background component of model with a dashed line
 ras_bkg = ROOT.RooArgSet(bkg)
 model.plotOn(xframe, ROOT.RooFit.Components(ras_bkg),
-                ROOT.RooFit.LineStyle(ROOT.kDashed))
+             ROOT.RooFit.LineStyle(ROOT.kDashed))
 
 # Overlay the background+sig2 components of model with a dotted line
 ras_bkg_sig2 = ROOT.RooArgSet(bkg, sig2)
 model.plotOn(xframe, ROOT.RooFit.Components(ras_bkg_sig2),
-                ROOT.RooFit.LineStyle(ROOT.kDotted))
+             ROOT.RooFit.LineStyle(ROOT.kDotted))
 
 # Print structure of composite p.d.f.
 model.Print("t")
@@ -87,8 +86,17 @@ model.Print("t")
 #
 #   model2 = bkg + (sig1 + sig2)
 #
-model2 = ROOT.RooAddPdf("model", "g1+g2+a", ROOT.RooArgList(bkg,
-                                                            sig1, sig2), ROOT.RooArgList(bkgfrac, sig1frac), ROOT.kTRUE)
+model2 = ROOT.RooAddPdf(
+    "model",
+    "g1+g2+a",
+    ROOT.RooArgList(
+        bkg,
+        sig1,
+        sig2),
+    ROOT.RooArgList(
+        bkgfrac,
+        sig1frac),
+    ROOT.kTRUE)
 
 # NB: Each coefficient is interpreted as the fraction of the
 # left-hand component of the i-th recursive sum, i.e.
@@ -100,9 +108,14 @@ model2 = ROOT.RooAddPdf("model", "g1+g2+a", ROOT.RooArgList(bkg,
 # Plot recursive addition model
 # ---------------------------------------------------------
 model2.plotOn(xframe, ROOT.RooFit.LineColor(ROOT.kRed),
-                ROOT.RooFit.LineStyle(ROOT.kDashed))
-model2.plotOn(xframe, ROOT.RooFit.Components(ras_bkg_sig2),
-                ROOT.RooFit.LineColor(ROOT.kRed), ROOT.RooFit.LineStyle(ROOT.kDashed))
+              ROOT.RooFit.LineStyle(ROOT.kDashed))
+model2.plotOn(
+    xframe,
+    ROOT.RooFit.Components(ras_bkg_sig2),
+    ROOT.RooFit.LineColor(
+        ROOT.kRed),
+    ROOT.RooFit.LineStyle(
+        ROOT.kDashed))
 model2.Print("t")
 
 # Draw the frame on the canvas

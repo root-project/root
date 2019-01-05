@@ -2,16 +2,12 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## 'DATA AND CATEGORIES' RooFit tutorial macro #406
-##
-## Demonstration of discrete-.discrete (invertable) functions
+## Data and categories: demonstration of discrete-discrete (invertable) functions
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
-
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

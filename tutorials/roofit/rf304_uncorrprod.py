@@ -1,16 +1,14 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #304
-## Simple uncorrelated multi-dimensional p.d.f.s
+## Multidimensional models: simple uncorrelated multi-dimensional p.d.f.s
 ##
 ## pdf = gauss(x,mx,sx) * gauss(y,my,sy)
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

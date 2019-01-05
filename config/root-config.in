@@ -43,7 +43,6 @@ ROOTSYS=`dirname $fullpath1`
 
 arch=@architecture@
 platform=@platform@
-cxxversion=@cxxversion@
 bindir=@bindir@
 libdir=@libdir@
 incdir=@incdir@
@@ -145,11 +144,8 @@ fi
 
 ### machine dependent settings ###
 
-case "$cxxversion" in
-  cxx17) cxxversionflag="-std=c++1z " ;;
-  cxx14) cxxversionflag="-std=c++1y " ;;
-  *)     cxxversionflag="-std=c++11 " ;;
-esac
+# Set the C++ standard version
+cxxversionflag="-std=c++@CMAKE_CXX_STANDARD@ "
 
 case $arch in
 aix5)

@@ -1,5 +1,28 @@
 # JSROOT changelog
 
+## Changes in dev
+1. Upgrade three.js 86 -> 97
+2. Upgrade d3.js 4.4.4 -> 5.7.0
+3. Many adjustment with new TWebCanvas
+4. Implement update of TF2 drawings, see tutorials/graphics/anim.C
+5. Use gStyle attributes to draw histogram title 
+6. Add support of TProfile2Poly class
+7. Support eve7 geometry viewer - render data generated in ROOT itself
+8. Provide initial WebVR support (#176), thanks to Diego Marcos (@dmarcos)    
+
+ 
+## Changes in 5.6.2
+1. Fix - correctly handle negative parameter values in TF1/TF2
+
+
+## Changes in 5.6.1
+1. Add TMath.BreitWigner function
+2. Support custom streamers for TMaterial and TMixture (very old examples)
+3. Fix Y-scale drawing of THStack (https://root-forum.cern.ch/t/31266)
+4. Fix - select palette from colz element
+5. Fix - LZ4 uncompression of large buffers
+
+
 ## Changes in 5.6.0
 1. By drawing outline speed up (factor 10) canvas with many small sub-pads 
 2. Let configure user click and double-click handlers, extend tooltip.htm example

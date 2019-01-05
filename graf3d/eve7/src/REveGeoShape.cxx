@@ -23,8 +23,6 @@
 #include "TROOT.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
-#include "TVirtualViewer3D.h"
-#include "TVirtualPad.h"
 #include "TColor.h"
 #include "TFile.h"
 
@@ -51,9 +49,9 @@ namespace
 
       TGeoManager  *old    = gGeoManager;
       TGeoIdentity *old_id = gGeoIdentity;
-      gGeoManager = 0;
+      gGeoManager = nullptr;
       TGeoManager* mgr = new TGeoManager();
-      mgr->SetNameTitle("REveGeoShape::fgGeoMangeur",
+      mgr->SetNameTitle("REveGeoShape::fgGeoManager",
                         "Static geo manager used for wrapped TGeoShapes.");
       gGeoIdentity = new TGeoIdentity("Identity");
       gGeoManager  = old;
@@ -83,7 +81,7 @@ it gets forwarded to geo-manager and this tesselation detail is
 used when creating the buffer passed to GL.
 */
 
-TGeoManager* REX::REveGeoShape::fgGeoMangeur = init_geo_mangeur();
+TGeoManager *REX::REveGeoShape::fgGeoManager = init_geo_mangeur();
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return static geo-manager that is used internally to make shapes
@@ -91,9 +89,9 @@ TGeoManager* REX::REveGeoShape::fgGeoMangeur = init_geo_mangeur();
 /// Set gGeoManager to this object when creating TGeoShapes to be
 /// passed into EveGeoShapes.
 
-TGeoManager* REveGeoShape::GetGeoMangeur()
+TGeoManager *REveGeoShape::GetGeoManager()
 {
-   return fgGeoMangeur;
+   return fgGeoManager;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +100,7 @@ TGeoManager* REveGeoShape::GetGeoMangeur()
 /// assumes TGeoShape::fgTransform is a TGeoHMatrix and we need to pass in
 /// an identity matrix when painting a composite shape.
 
-TGeoHMatrix* REveGeoShape::GetGeoHMatrixIdentity()
+TGeoHMatrix *REveGeoShape::GetGeoHMatrixIdentity()
 {
    return &localGeoHMatrixIdentity;
 }
@@ -110,11 +108,8 @@ TGeoHMatrix* REveGeoShape::GetGeoHMatrixIdentity()
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveGeoShape::REveGeoShape(const char* name, const char* title) :
-   REveShape       (name, title),
-   fNSegments      (0),
-   fShape          (nullptr),
-   fCompositeShape (nullptr)
+REveGeoShape::REveGeoShape(const char *name, const char *title)
+   : REveShape(name, title), fNSegments(0), fShape(nullptr), fCompositeShape(nullptr)
 {
    InitMainTrans();
 }
@@ -132,7 +127,9 @@ REveGeoShape::~REveGeoShape()
 
 TGeoShape* REveGeoShape::MakePolyShape()
 {
-   return REveGeoPolyShape::Construct(fCompositeShape, fNSegments);
+   auto poly = new REveGeoPolyShape();
+   poly->BuildFromComposite(fCompositeShape, fNSegments);
+   return poly;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -163,12 +160,10 @@ void REveGeoShape::BuildRenderData()
 
    } else {
 
-      REveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
-
-      std::unique_ptr<TBuffer3D> b3d(fShape->MakeBuffer3D());
-
       tmp_egps = std::make_unique<REveGeoPolyShape>();
-      tmp_egps->SetFromBuff3D(*b3d.get());
+
+      tmp_egps->BuildFromShape(fShape, fNSegments);
+
       egps = tmp_egps.get();
    }
 
@@ -183,8 +178,7 @@ void REveGeoShape::BuildRenderData()
 
 void REveGeoShape::SetNSegments(Int_t s)
 {
-   if (s != fNSegments && fCompositeShape != 0)
-   {
+   if (s != fNSegments && fCompositeShape != nullptr) {
       delete fShape;
       fShape = MakePolyShape();
    }
@@ -203,7 +197,7 @@ void REveGeoShape::SetNSegments(Int_t s)
 
 void REveGeoShape::SetShape(TGeoShape *s)
 {
-   REveGeoManagerHolder gmgr(fgGeoMangeur);
+   REveGeoManagerHolder gmgr(fgGeoManager);
 
    if (fCompositeShape) {
       delete fShape;
@@ -233,90 +227,14 @@ void REveGeoShape::SetShape(TGeoShape *s)
 
 void REveGeoShape::ComputeBBox()
 {
-   TGeoBBox *bb = dynamic_cast<TGeoBBox*>(fShape);
-   if (bb)
-   {
+   TGeoBBox *bb = dynamic_cast<TGeoBBox *>(fShape);
+   if (bb) {
       BBoxInit();
       const Double_t *o = bb->GetOrigin();
       BBoxCheckPoint(o[0] - bb->GetDX(), o[0] - bb->GetDY(), o[0] - bb->GetDZ());
       BBoxCheckPoint(o[0] + bb->GetDX(), o[0] + bb->GetDY(), o[0] + bb->GetDZ());
-   }
-   else
-   {
+   } else {
       BBoxZero();
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Paint object.
-
-void REveGeoShape::Paint(Option_t* /*option*/)
-{
-   static const REveException eh("REveGeoShape::Paint ");
-
-   if (!fShape)
-      return;
-
-   REveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
-
-   if (fCompositeShape)
-   {
-      Double_t halfLengths[3] = { fCompositeShape->GetDX(), fCompositeShape->GetDY(), fCompositeShape->GetDZ() };
-
-      TBuffer3D buff(TBuffer3DTypes::kComposite);
-      buff.fID           = this;
-      buff.fColor        = GetMainColor();
-      buff.fTransparency = GetMainTransparency();
-      RefMainTrans().SetBuffer3D(buff);
-      buff.fLocalFrame   = kTRUE; // Always enforce local frame (no geo manager).
-      buff.SetAABoundingBox(fCompositeShape->GetOrigin(), halfLengths);
-      buff.SetSectionsValid(TBuffer3D::kCore|TBuffer3D::kBoundingBox);
-
-      Bool_t paintComponents = kTRUE;
-
-      // Start a composite shape, identified by this buffer
-      if (TBuffer3D::GetCSLevel() == 0)
-         paintComponents = gPad->GetViewer3D()->OpenComposite(buff);
-
-      TBuffer3D::IncCSLevel();
-
-      // Paint the boolean node - will add more buffers to viewer
-      TGeoMatrix *gst = TGeoShape::GetTransform();
-      TGeoShape::SetTransform(REveGeoShape::GetGeoHMatrixIdentity());
-      if (paintComponents) fCompositeShape->GetBoolNode()->Paint("");
-      TGeoShape::SetTransform(gst);
-      // Close the composite shape
-      if (TBuffer3D::DecCSLevel() == 0)
-         gPad->GetViewer3D()->CloseComposite();
-   }
-   else
-   {
-      TBuffer3D& buff = (TBuffer3D&) fShape->GetBuffer3D
-         (TBuffer3D::kCore, kFALSE);
-
-      buff.fID           = this;
-      buff.fColor        = GetMainColor();
-      buff.fTransparency = GetMainTransparency();
-      RefMainTrans().SetBuffer3D(buff);
-      buff.fLocalFrame   = kTRUE; // Always enforce local frame (no geo manager).
-
-      Int_t sections = TBuffer3D::kBoundingBox | TBuffer3D::kShapeSpecific;
-      if (fNSegments > 2)
-         sections |= TBuffer3D::kRawSizes | TBuffer3D::kRaw;
-      fShape->GetBuffer3D(sections, kTRUE);
-
-      Int_t reqSec = gPad->GetViewer3D()->AddObject(buff);
-
-      if (reqSec != TBuffer3D::kNone) {
-         // This shouldn't happen, but I suspect it does sometimes.
-         if (reqSec & TBuffer3D::kCore)
-            Warning(eh, "Core section required again for shape='%s'. This shouldn't happen.", GetName());
-         fShape->GetBuffer3D(reqSec, kTRUE);
-         reqSec = gPad->GetViewer3D()->AddObject(buff);
-      }
-
-      if (reqSec != TBuffer3D::kNone)
-         Warning(eh, "Extra section required: reqSec=%d, shape=%s.", reqSec, GetName());
    }
 }
 
@@ -336,7 +254,7 @@ void REveGeoShape::SaveExtract(const char* file, const char* name)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the shape tree as REveGeoShapeExtract to current directory.
-/// FIXME: SL: no any write into gFirectory
+/// FIXME: SL: no any write into gDirectory
 
 void REveGeoShape::WriteExtract(const char* name)
 {
@@ -348,7 +266,7 @@ void REveGeoShape::WriteExtract(const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Export this shape and its descendants into a geoshape-extract.
 
-REveGeoShapeExtract* REveGeoShape::DumpShapeTree(REveGeoShape* gsre,
+REveGeoShapeExtract *REveGeoShape::DumpShapeTree(REveGeoShape* gsre,
                                                  REveGeoShapeExtract* parent)
 {
    REveGeoShapeExtract* she = new REveGeoShapeExtract(gsre->GetName(), gsre->GetTitle());
@@ -403,10 +321,10 @@ REveGeoShapeExtract* REveGeoShape::DumpShapeTree(REveGeoShape* gsre,
 ////////////////////////////////////////////////////////////////////////////////
 /// Import a shape extract 'gse' under element 'parent'.
 
-REveGeoShape* REveGeoShape::ImportShapeExtract(REveGeoShapeExtract* gse,
+REveGeoShape *REveGeoShape::ImportShapeExtract(REveGeoShapeExtract* gse,
                                                REveElement*         parent)
 {
-   REveGeoManagerHolder gmgr(fgGeoMangeur);
+   REveGeoManagerHolder gmgr(fgGeoManager);
    REveManager::RRedrawDisabler redrawOff(REX::gEve);
    REveGeoShape* gsre = SubImportShapeExtract(gse, parent);
    gsre->ElementChanged();
@@ -416,7 +334,7 @@ REveGeoShape* REveGeoShape::ImportShapeExtract(REveGeoShapeExtract* gse,
 ////////////////////////////////////////////////////////////////////////////////
 /// Recursive version for importing a shape extract tree.
 
-REveGeoShape* REveGeoShape::SubImportShapeExtract(REveGeoShapeExtract* gse,
+REveGeoShape *REveGeoShape::SubImportShapeExtract(REveGeoShapeExtract* gse,
                                                   REveElement*         parent)
 {
    REveGeoShape* gsre = new REveGeoShape(gse->GetName(), gse->GetTitle());
@@ -452,7 +370,7 @@ REveGeoShape* REveGeoShape::SubImportShapeExtract(REveGeoShapeExtract* gse,
 ///  - 3D projections: REveGeoShapeProjected.
 /// Virtual from REveProjectable.
 
-TClass* REveGeoShape::ProjectedClass(const REveProjection* p) const
+TClass *REveGeoShape::ProjectedClass(const REveProjection* p) const
 {
    if (p->Is2D())
       return REvePolygonSetProjected::Class();
@@ -475,7 +393,7 @@ std::unique_ptr<TBuffer3D> REveGeoShape::MakeBuffer3D()
       return buff;
    }
 
-   REveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
+   REveGeoManagerHolder gmgr(fgGeoManager, fNSegments);
 
    buff.reset(fShape->MakeBuffer3D());
    REveTrans &mx    = RefMainTrans();

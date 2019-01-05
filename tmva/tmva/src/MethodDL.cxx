@@ -178,6 +178,9 @@ void MethodDL::DeclareOptions()
 
    DeclareOptionRef(fRandomSeed = 0, "RandomSeed", "Random seed used for weight initialization and batch shuffling");
 
+   DeclareOptionRef(fNumValidationString = "20%", "ValidationSize", "Part of the training data to use for validation. "
+                    "Specify as 0.2 or 20% to use a fifth of the data set as validation set. "
+                    "Specify as 100 to use exactly 100 events. (Default: 20%)");
 
    DeclareOptionRef(fArchitectureString = "CPU", "Architecture", "Which architecture to perform the training on.");
    AddPreDefVal(TString("STANDARD"));
@@ -988,6 +991,65 @@ Bool_t MethodDL::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses
    return kFALSE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Validation of the ValidationSize option. Allowed formats are 20%, 0.2 and
+/// 100 etc.
+///    - 20% and 0.2 selects 20% of the training set as validation data.
+///    - 100 selects 100 events as the validation data.
+///
+/// @return number of samples in validation set
+///
+UInt_t TMVA::MethodDL::GetNumValidationSamples()
+{
+   Int_t nValidationSamples = 0;
+   UInt_t trainingSetSize = GetEventCollection(Types::kTraining).size();
+
+   // Parsing + Validation
+   // --------------------
+   if (fNumValidationString.EndsWith("%")) {
+      // Relative spec. format 20%
+      TString intValStr = TString(fNumValidationString.Strip(TString::kTrailing, '%'));
+
+      if (intValStr.IsFloat()) {
+         Double_t valSizeAsDouble = fNumValidationString.Atof() / 100.0;
+         nValidationSamples = GetEventCollection(Types::kTraining).size() * valSizeAsDouble;
+      } else {
+         Log() << kFATAL << "Cannot parse number \"" << fNumValidationString
+               << "\". Expected string like \"20%\" or \"20.0%\"." << Endl;
+      }
+   } else if (fNumValidationString.IsFloat()) {
+      Double_t valSizeAsDouble = fNumValidationString.Atof();
+
+      if (valSizeAsDouble < 1.0) {
+         // Relative spec. format 0.2
+         nValidationSamples = GetEventCollection(Types::kTraining).size() * valSizeAsDouble;
+      } else {
+         // Absolute spec format 100 or 100.0
+         nValidationSamples = valSizeAsDouble;
+      }
+   } else {
+      Log() << kFATAL << "Cannot parse number \"" << fNumValidationString << "\". Expected string like \"0.2\" or \"100\"."
+            << Endl;
+   }
+
+   // Value validation
+   // ----------------
+   if (nValidationSamples < 0) {
+      Log() << kFATAL << "Validation size \"" << fNumValidationString << "\" is negative." << Endl;
+   }
+
+   if (nValidationSamples == 0) {
+      Log() << kFATAL << "Validation size \"" << fNumValidationString << "\" is zero." << Endl;
+   }
+
+   if (nValidationSamples >= (Int_t)trainingSetSize) {
+      Log() << kFATAL << "Validation size \"" << fNumValidationString
+            << "\" is larger than or equal in size to training set (size=\"" << trainingSetSize << "\")." << Endl;
+   }
+
+   return nValidationSamples;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Implementation of architecture specific train method
@@ -1004,9 +1066,6 @@ void MethodDL::TrainDeepNet()
 
    bool debug = Log().GetMinType() == kDEBUG;
 
-   // Determine the number of training and testing examples
-   size_t nTrainingSamples = GetEventCollection(Types::kTraining).size();
-   size_t nTestSamples = GetEventCollection(Types::kTesting).size();
 
    // Determine the number of outputs
    // //    size_t outputSize = 1;
@@ -1017,10 +1076,20 @@ void MethodDL::TrainDeepNet()
    // //    }
 
    // set the random seed for weight initialization
-   Architecture_t::SetRandomSeed(fRandomSeed); 
+   Architecture_t::SetRandomSeed(fRandomSeed);
+
+   ///split training data in training and validation data
+   // and determine the number of training and testing examples
+
+   size_t nValidationSamples = GetNumValidationSamples();
+   size_t nTrainingSamples = GetEventCollection(Types::kTraining).size() - nValidationSamples;
+
+   const std::vector<TMVA::Event *> &allData = GetEventCollection(Types::kTraining);
+   const std::vector<TMVA::Event *> eventCollectionTraining{allData.begin(), allData.begin() + nTrainingSamples};
+   const std::vector<TMVA::Event *> eventCollectionValidation{allData.begin() + nTrainingSamples, allData.end()};
 
    size_t trainingPhase = 1;
-      
+
    for (TTrainingSettings &settings : this->GetTrainingSettings()) {
 
       size_t nThreads = 1;       // FIXME threads are hard coded to 1, no use of slave threads or multi-threading
@@ -1069,6 +1138,16 @@ void MethodDL::TrainDeepNet()
          Error("Train","Given input layout %zu x %zu x %zu is not compatible with  batch layout %zu x %zu x  %zu ",
                inputDepth,inputHeight,inputWidth,batchDepth,batchHeight,batchWidth);
          return;
+      }
+
+      // check batch size is compatible with number of events
+      if (nTrainingSamples < settings.batchSize || nValidationSamples < settings.batchSize) {
+         Log() << kFATAL << "Number of samples in the datasets are train: ("
+               << nTrainingSamples << ") test: (" << nValidationSamples
+               << "). One of these is smaller than the batch size of "
+               << settings.batchSize << ". Please increase the batch"
+               << " size to be at least the same size as the smallest"
+               << " of them." << Endl;
       }
 
 
@@ -1123,15 +1202,16 @@ void MethodDL::TrainDeepNet()
          if (Log().GetMinType() <= kINFO)
             deepNet.Print();
       }
+      Log() << "Using " << nTrainingSamples << " events for training and " <<  nValidationSamples << " for testing" << Endl; 
 
-      // Loading the training and testing datasets
-      TMVAInput_t trainingTuple = std::tie(GetEventCollection(Types::kTraining), DataInfo());
+      // Loading the training and validation datasets
+      TMVAInput_t trainingTuple = std::tie(eventCollectionTraining, DataInfo());
       TensorDataLoader_t trainingData(trainingTuple, nTrainingSamples, deepNet.GetBatchSize(),
                                       deepNet.GetBatchDepth(), deepNet.GetBatchHeight(), deepNet.GetBatchWidth(),
                                       deepNet.GetOutputWidth(), nThreads);
 
-      TMVAInput_t testTuple = std::tie(GetEventCollection(Types::kTesting), DataInfo());
-      TensorDataLoader_t testingData(testTuple, nTestSamples, deepNet.GetBatchSize(),
+      TMVAInput_t validationTuple = std::tie(eventCollectionValidation, DataInfo());
+      TensorDataLoader_t validationData(validationTuple, nValidationSamples, deepNet.GetBatchSize(),
                                      deepNet.GetBatchDepth(), deepNet.GetBatchHeight(), deepNet.GetBatchWidth(),
                                      deepNet.GetOutputWidth(), nThreads);
 
@@ -1141,18 +1221,18 @@ void MethodDL::TrainDeepNet()
 
       Bool_t includeRegularization = (R != DNN::ERegularization::kNone); 
 
-      Double_t minTestError = 0.0;
-      for (auto batch : testingData) {
+      Double_t minValError = 0.0;
+      for (auto batch : validationData) {
          auto inputTensor = batch.GetInput();
          auto outputMatrix = batch.GetOutput();
          auto weights = batch.GetWeights();
          // should we apply droput to the loss ??
-         minTestError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
+         minValError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
       }
       // add Regularization term
       Double_t regzTerm = (includeRegularization) ? deepNet.RegularizationTerm() : 0.0; 
-      minTestError /= (Double_t)(nTestSamples / settings.batchSize);
-      minTestError += regzTerm;
+      minValError /= (Double_t)(nValidationSamples / settings.batchSize);
+      minValError += regzTerm;
 
 
       // create a pointer to base class VOptimizer
@@ -1202,13 +1282,13 @@ void MethodDL::TrainDeepNet()
       Log() << "Training phase " << trainingPhase << " of " << this->GetTrainingSettings().size() << ":    "
             << "Learning rate = " << settings.learningRate 
             << " regularization " << (char) settings.regularization 
-            << " minimum error = " << minTestError
+            << " minimum error = " << minValError
             << Endl;
       if (!fInteractive) {
          std::string separator(62, '-');
          Log() << separator << Endl;
          Log() << std::setw(10) << "Epoch"
-               << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Test Err." 
+               << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Val. Err." 
                << std::setw(12) << "t(s)/epoch" << std::setw(12)  << "t(s)/Loss"
                << std::setw(12) << "nEvents/s"
                << std::setw(12) << "Conv. Steps" << Endl;
@@ -1263,31 +1343,31 @@ void MethodDL::TrainDeepNet()
 
             t1 = std::chrono::system_clock::now();
 
-            // Compute test error.
-            Double_t testError = 0.0;
-            for (auto batch : testingData) {
+            // Compute validation error.
+            Double_t valError = 0.0;
+            for (auto batch : validationData) {
                auto inputTensor = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
                auto weights = batch.GetWeights();
                // should we apply droput to the loss ??
-               testError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
+               valError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
             }
             // normalize loss to number of batches and add regularization term 
             Double_t regTerm = (includeRegularization) ? deepNet.RegularizationTerm() : 0.0; 
-            testError /= (Double_t)(nTestSamples / settings.batchSize);
-            testError += regTerm; 
+            valError /= (Double_t)(nValidationSamples / settings.batchSize);
+            valError += regTerm; 
             
             t2 = std::chrono::system_clock::now();
 
             // checking for convergence
-            if (testError < minTestError) {
+            if (valError < minValError) {
                convergenceCount = 0;
             } else {
                convergenceCount += settings.testInterval;
             }
 
             // copy configuration when reached a minimum error
-            if (testError < minTestError ) {
+            if (valError < minValError ) {
                // Copy weights from deepNet to fNet
                Log() << std::setw(10) << optimizer->GetGlobalStep()
                      << " Minimum Test error found - save the configuration " << Endl;
@@ -1300,10 +1380,10 @@ void MethodDL::TrainDeepNet()
                   // for (size_t k = 0; k < dlayer->GetWeights().size(); ++k) 
                   //    dLayer->GetWeightsAt(k).Print(); 
                }
-               minTestError = testError;
+               minValError = valError;
             }
-            else if ( minTestError <= 0. )
-               minTestError = testError; 
+            else if ( minValError <= 0. )
+               minValError = valError; 
 
 
             Double_t trainingError = 0.0;
@@ -1339,7 +1419,7 @@ void MethodDL::TrainDeepNet()
 
             Log() << std::setw(10) << optimizer->GetGlobalStep()  << " | "
                   << std::setw(12) << trainingError
-                  << std::setw(12) << testError
+                  << std::setw(12) << valError
                   << std::setw(12) << seconds / settings.testInterval
                   << std::setw(12)  << elapsed_testing.count()
                   << std::setw(12) << 1. / eventTime
@@ -1376,21 +1456,6 @@ void MethodDL::Train()
       Log() << kFATAL << "Not implemented yet" << Endl;
       return;
    }
-
-   for (TTrainingSettings & settings : fTrainingSettings) {
-      size_t nTrainingSamples = GetEventCollection(Types::kTraining).size();
-      size_t nTestSamples = GetEventCollection(Types::kTesting).size();
-
-      if (nTrainingSamples < settings.batchSize or
-          nTestSamples < settings.batchSize) {
-         Log() << kFATAL << "Number of samples in the datasets are train: ("
-                         << nTrainingSamples << ") test: (" << nTestSamples
-                         << "). One of these is smaller than the batch size of "
-                         << settings.batchSize << ". Please increase the batch"
-                         << " size to be at least the same size as the smallest"
-                         << " of them." << Endl;
-      }
-  }
 
    // using for training same scalar type defined for the prediction
    if (this->GetArchitectureString() == "GPU") {
@@ -1661,6 +1726,66 @@ std::vector<Double_t> MethodDL::PredictDeepNet(Long64_t firstEvt, Long64_t lastE
 
    return mvaValues;
 }
+
+const std::vector<Float_t> & TMVA::MethodDL::GetRegressionValues()
+{
+   size_t nVariables = GetEvent()->GetNVariables();
+   MatrixImpl_t X(1, nVariables);
+   std::vector<MatrixImpl_t> X_vec;
+   const Event *ev = GetEvent();
+   const std::vector<Float_t>& inputValues = ev->GetValues();
+   for (size_t i = 0; i < nVariables; i++) {
+       X(0,i) = inputValues[i];
+   }
+   X_vec.emplace_back(X);
+   size_t nTargets = std::max(1u, ev->GetNTargets());
+   MatrixImpl_t YHat(1, nTargets);
+   std::vector<Float_t> output(nTargets);
+   fNet->Prediction(YHat, X_vec, fOutputFunction);
+
+   for (size_t i = 0; i < nTargets; i++)
+       output[i] = YHat(0, i);
+
+   if (fRegressionReturnVal == NULL) {
+       fRegressionReturnVal = new std::vector<Float_t>();
+   }
+   fRegressionReturnVal->clear();
+
+   Event * evT = new Event(*ev);
+   for (size_t i = 0; i < nTargets; ++i) {
+      evT->SetTarget(i, output[i]);
+   }
+
+   const Event* evT2 = GetTransformationHandler().InverseTransform(evT);
+   for (size_t i = 0; i < nTargets; ++i) {
+      fRegressionReturnVal->push_back(evT2->GetTarget(i));
+   }
+   delete evT;
+   return *fRegressionReturnVal;
+}
+
+const std::vector<Float_t> & TMVA::MethodDL::GetMulticlassValues()
+{
+   size_t nVariables = GetEvent()->GetNVariables();
+   MatrixImpl_t X(1, nVariables);
+   std::vector<MatrixImpl_t> X_vec;
+   MatrixImpl_t YHat(1, DataInfo().GetNClasses());
+   if (fMulticlassReturnVal == NULL) {
+      fMulticlassReturnVal = new std::vector<Float_t>(DataInfo().GetNClasses());
+   }
+
+   const std::vector<Float_t>& inputValues = GetEvent()->GetValues();
+   for (size_t i = 0; i < nVariables; i++) {
+      X(0,i) = inputValues[i];
+   }
+   X_vec.emplace_back(X);
+   fNet->Prediction(YHat, X_vec, fOutputFunction);
+   for (size_t i = 0; i < (size_t) YHat.GetNcols(); i++) {
+      (*fMulticlassReturnVal)[i] = YHat(0, i);
+   }
+   return *fMulticlassReturnVal;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate the DeepNet on a vector of input values stored in the TMVA Event class

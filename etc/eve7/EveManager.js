@@ -403,7 +403,7 @@
       var arr = this.last_json;
       this.last_json = null;
 
-      var lastoff = 0;
+      var lastoff = offset;
 
       for (var n=1; n<arr.length;++n) {
          var elem = arr[n];
@@ -415,7 +415,7 @@
              obj = this.GetElement(elem.fElementId);
 
          if (off !== lastoff)
-            console.error('Element', elem.fName, 'offset mismatch', off, lastoff);
+            console.error('Element ' + elem.fName + ' offset mismatch ' + off + ' != ' + lastoff);
 
          if (rd.trans_size) {
             rd.matrix = new Float32Array(rawdata, off, rd.trans_size);

@@ -1,10 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// 'High Level Factory Example' RooStats tutorial macro #602
-///
-/// This tutorial shows an example of creating a combined
-/// model using the High Level model Factory.
+/// High Level Factory: creation of a combined model
 ///
 /// \macro_image
 /// \macro_output
@@ -23,13 +20,13 @@
 #include "RooPlot.h"
 #include "RooStats/HLFactory.h"
 
-
 // use this order for safety on library loading
 using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
-void rs602_HLFactoryCombinationexample() {
+void rs602_HLFactoryCombinationexample()
+{
 
    using namespace RooStats;
    using namespace RooFit;
@@ -47,30 +44,28 @@ void rs602_HLFactoryCombinationexample() {
 
    ofile.close();
 
-   HLFactory hlf("HLFavtoryCombinationexample",
-               card_name,
-               false);
+   HLFactory hlf("HLFavtoryCombinationexample", card_name, false);
 
-   hlf.AddChannel("model1","sb_model1","flat1");
-   hlf.AddChannel("model2","sb_model2","flat2");
-   RooAbsPdf* pdf=hlf.GetTotSigBkgPdf();
-   RooCategory* thecat = hlf.GetTotCategory();
-   RooRealVar* x= static_cast<RooRealVar*>(hlf.GetWs()->arg("x"));
+   hlf.AddChannel("model1", "sb_model1", "flat1");
+   hlf.AddChannel("model2", "sb_model2", "flat2");
+   auto pdf = hlf.GetTotSigBkgPdf();
+   auto thecat = hlf.GetTotCategory();
+   auto x = static_cast<RooRealVar *>(hlf.GetWs()->arg("x"));
 
-   RooDataSet* data = pdf->generate(RooArgSet(*x,*thecat),Extended());
+   auto data = pdf->generate(RooArgSet(*x, *thecat), Extended());
 
    // --- Perform extended ML fit of composite PDF to toy data ---
-   pdf->fitTo(*data) ;
+   pdf->fitTo(*data);
 
    // --- Plot toy data and composite PDF overlaid ---
-   RooPlot* xframe = x->frame() ;
+   auto xframe = x->frame();
 
    data->plotOn(xframe);
    thecat->setIndex(0);
-   pdf->plotOn(xframe,Slice(*thecat),ProjWData(*thecat,*data)) ;
+   pdf->plotOn(xframe, Slice(*thecat), ProjWData(*thecat, *data));
 
    thecat->setIndex(1);
-   pdf->plotOn(xframe,Slice(*thecat),ProjWData(*thecat,*data)) ;
+   pdf->plotOn(xframe, Slice(*thecat), ProjWData(*thecat, *data));
 
    gROOT->SetStyle("Plain");
    xframe->Draw();

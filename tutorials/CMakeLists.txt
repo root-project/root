@@ -84,8 +84,13 @@ if(NOT ROOT_xml_FOUND)
 endif()
 
 if(NOT XROOTD_FOUND)
-  set(xrootd_veto dataframe/df102_NanoAODDimuonAnalysis.C
-                  dataframe/df101_h1Analysis.C)
+  set(xrootd_veto dataframe/df101_h1Analysis.C
+                  dataframe/df102_NanoAODDimuonAnalysis.C
+                  dataframe/df103_NanoAODHiggsAnalysis.C)
+endif()
+
+if(NOT ROOT_geocad_FOUND)
+  set(geocad_veto geom/geo2stp.C)
 endif()
 
 # variables identifying the package must have the package name  in lower case (it corresponds to the CMake option name)
@@ -242,6 +247,7 @@ set(all_veto hsimple.C
              ${roofit_veto}
              ${unuran_veto}
              ${xml_veto}
+             ${geocad_veto}
              ${fitsio_veto}
              ${tmva_veto}
              ${mathmore_veto}
@@ -284,7 +290,6 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphs/timeonaxis2.C
                  graphs/timeonaxis3.C
                  graphs/exclusiongraph.C
-                 graphs/multipalette.C
                  graphs/graphstruct.C
                  hist/ContourList.C
                  hist/hstack.C
@@ -429,6 +434,7 @@ if(ROOT_python_FOUND)
                                 tutorial-pyroot-ntuple1-py)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom-py)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
+  set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
 
   foreach(t ${pytutorials})
     list(FIND returncode_1 ${t} index)

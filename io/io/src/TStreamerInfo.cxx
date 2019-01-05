@@ -305,74 +305,79 @@ void TStreamerInfo::Build()
    // Iterate over base classes.
    //
 
-   bool isCollection = fClass->GetCollectionProxy();
-   bool isString = !strcmp(fClass->GetName(), "string");
-
-   TBaseClass* base = 0;
-   TIter nextb(fClass->GetListOfBases());
-   while ((base = (TBaseClass*)nextb())) {
-      TStreamerElement* element = 0;
-      Int_t offset = base->GetDelta();
-      if (offset == kMissing) {
-         continue;
-      }
-      if (offset == kNeedObjectForVirtualBaseClass) {
-         Error("Build()", "Cannot stream virtual base %s of class %s",
-               base->GetName(), fClass->GetName());
-         continue;
-      }
-      const char* bname  = base->GetName();
-      const char* btitle = base->GetTitle();
-      // this case appears with STL collections as base class.
-      if (!strcmp(bname, "string")) {
-         element = new TStreamerSTLstring(bname, btitle, offset, bname, kFALSE);
-      } else if (base->IsSTLContainer()) {
-         TVirtualCollectionProxy *proxy = base->GetClassPointer()->GetCollectionProxy();
-         if (proxy) element = new TStreamerSTL(bname, btitle, offset, bname, *proxy, kFALSE);
-         else       element = new TStreamerSTL(bname, btitle, offset, bname, 0, kFALSE);
-         if (fClass->IsLoaded() && ((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector) {
-            if (!element->GetClassPointer()->IsLoaded()) {
-               Error("Build","The class \"%s\" is compiled and its base class \"%s\" is a collection and we do not have a dictionary for it, we will not be able to read or write this base class.",GetName(),bname);
-               delete element;
-               continue;
-            }
+   // ROOT-9808: Here we skip the investigations of the base classes in case
+   // this is a pair, otherwise, on some STL implementations, it can happen that
+   // pair has mother classes which are an internal implementation detail and
+   // would result in bogus messages printed on screen.
+   if (strncmp(fClass->GetName(), "pair<", 5)) {
+      const bool isCollection = fClass->GetCollectionProxy();
+      const bool isString = !strcmp(fClass->GetName(), "string");
+      TBaseClass* base = 0;
+      TIter nextb(fClass->GetListOfBases());
+      while ((base = (TBaseClass*)nextb())) {
+         TStreamerElement* element = 0;
+         Int_t offset = base->GetDelta();
+         if (offset == kMissing) {
+            continue;
          }
-      } else {
-         element = new TStreamerBase(bname, btitle, offset);
-         TClass* clm = element->GetClassPointer();
-         if (!clm) {
-            // We have no information about the class yet, except that since it
-            // is a base class, we know it is a class.  So let's create it (in v5
-            // it would have been created as a side effect of the dictionary of
-            // for the derived class having a forward declaration of the base class).
-            clm = new TClass(bname,1,TClass::kForwardDeclared, true /*silent*/);
-            Warning("Build", "%s: base class %s has no streamer or dictionary it will not be saved", GetName(), clm->GetName());
-            element->Init(0);
+         if (offset == kNeedObjectForVirtualBaseClass) {
+            Error("Build()", "Cannot stream virtual base %s of class %s",
+                  base->GetName(), fClass->GetName());
+            continue;
+         }
+         const char* bname  = base->GetName();
+         const char* btitle = base->GetTitle();
+         // this case appears with STL collections as base class.
+         if (!strcmp(bname, "string")) {
+            element = new TStreamerSTLstring(bname, btitle, offset, bname, kFALSE);
+         } else if (base->IsSTLContainer()) {
+            TVirtualCollectionProxy *proxy = base->GetClassPointer()->GetCollectionProxy();
+            if (proxy) element = new TStreamerSTL(bname, btitle, offset, bname, *proxy, kFALSE);
+            else       element = new TStreamerSTL(bname, btitle, offset, bname, 0, kFALSE);
+            if (fClass->IsLoaded() && ((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector) {
+               if (!element->GetClassPointer()->IsLoaded()) {
+                  Error("Build","The class \"%s\" is compiled and its base class \"%s\" is a collection and we do not have a dictionary for it, we will not be able to read or write this base class.",GetName(),bname);
+                  delete element;
+                  continue;
+               }
+            }
          } else {
-            // Now part of the TStreamerBase constructor.
-            // clm->GetStreamerInfo();
-            if ((clm == TObject::Class()) && fClass->CanIgnoreTObjectStreamer()) {
-               // -- An ignored TObject base class.
-               // Note: The TClass kIgnoreTObjectStreamer == BIT(15), but
-               // the TStreamerInfo kIgnoreTobjectStreamer == BIT(13) which
-               // is confusing.
-               SetBit(kIgnoreTObjectStreamer);
-               // Flag the element to be ignored by setting its type to -1.
-               // This flag will be used later by Compile() to prevent this
-               // element from being inserted into the compiled info.
-               element->SetType(-1);
-            }
-            if (!clm->IsLoaded() && !(isCollection || isString)) {
-               // Don't complain about the base classes of collections nor of
-               // std::string.
+            element = new TStreamerBase(bname, btitle, offset);
+            TClass* clm = element->GetClassPointer();
+            if (!clm) {
+               // We have no information about the class yet, except that since it
+               // is a base class, we know it is a class.  So let's create it (in v5
+               // it would have been created as a side effect of the dictionary of
+               // for the derived class having a forward declaration of the base class).
+               clm = new TClass(bname,1,TClass::kForwardDeclared, true /*silent*/);
                Warning("Build", "%s: base class %s has no streamer or dictionary it will not be saved", GetName(), clm->GetName());
+               element->Init(0);
+            } else {
+               // Now part of the TStreamerBase constructor.
+               // clm->GetStreamerInfo();
+               if ((clm == TObject::Class()) && fClass->CanIgnoreTObjectStreamer()) {
+                  // -- An ignored TObject base class.
+                  // Note: The TClass kIgnoreTObjectStreamer == BIT(15), but
+                  // the TStreamerInfo kIgnoreTobjectStreamer == BIT(13) which
+                  // is confusing.
+                  SetBit(kIgnoreTObjectStreamer);
+                  // Flag the element to be ignored by setting its type to -1.
+                  // This flag will be used later by Compile() to prevent this
+                  // element from being inserted into the compiled info.
+                  element->SetType(-1);
+               }
+               if (!clm->IsLoaded() && !(isCollection || isString)) {
+                  // Don't complain about the base classes of collections nor of
+                  // std::string.
+                  Warning("Build", "%s: base class %s has no streamer or dictionary it will not be saved", GetName(), clm->GetName());
+               }
             }
          }
-      }
-      if (element) {
-         fElements->Add(element);
-      }
-   } // end of base class loop
+         if (element) {
+            fElements->Add(element);
+         }
+      } // end of base class loop
+   }
 
    //
    // Iterate over data members.
@@ -1555,9 +1560,17 @@ namespace {
             std::string secondNewName;
             if (firstNewCl && !firstOldCl) {
                firstAltCl = FindAlternate(context, inside[1], firstNewName);
+            } else if (firstAltCl) {
+               firstNewName = firstAltCl->GetName();
+            } else {
+               firstNewName = inside[1];
             }
             if (secondNewCl && !secondOldCl) {
                secondAltCl = FindAlternate(context, inside[2], secondNewName);
+            } else if (secondAltCl) {
+               secondNewName = secondAltCl->GetName();
+            } else {
+               secondNewName  = inside[2];
             }
             if ((firstNewCl && firstAltCl != firstOldCl) ||
                 (secondNewCl && secondAltCl != secondOldCl) ) {
@@ -1565,9 +1578,9 @@ namespace {
                // Need to produce new name.
                std::string alternate = inside[0];
                alternate.append("<");
-               alternate.append(firstAltCl ? firstNewName : inside[1]);
+               alternate.append(firstNewName);
                alternate.append(",");
-               alternate.append(secondAltCl? secondNewName : inside[2]);
+               alternate.append(secondNewName);
                // We are intentionally dropping any further arguments,
                // they would be using the wrong typename and would also be
                // somewhat superflous since this is for the old layout.
@@ -1974,7 +1987,6 @@ void TStreamerInfo::BuildOld()
       std::string typeNameBuf;
       const char* dmType = nullptr;
       Bool_t dmIsPtr = false;
-      Bool_t isUniquePtr = false;
       TDataType* dt(nullptr);
       Int_t ndim = 0 ; //dm->GetArrayDim();
       std::array<Int_t, 5> maxIndices; // 5 is the maximum supported in TStreamerElement::SetMaxIndex
@@ -2010,7 +2022,7 @@ void TStreamerInfo::BuildOld()
             Bool_t nameChanged;
             typeNameBuf = TClassEdit::GetNameForIO(dmType, TClassEdit::EModType::kNone, &nameChanged);
             if (nameChanged) {
-               isUniquePtr = dmIsPtr = TClassEdit::IsUniquePtr(dmType);
+               dmIsPtr = TClassEdit::IsUniquePtr(dmType);
                dmType = typeNameBuf.c_str();
             }
             if ((isStdArray = TClassEdit::IsStdArray(dmType))){ // We tackle the std array case
@@ -2255,7 +2267,7 @@ void TStreamerInfo::BuildOld()
          if (element->GetNewType() != -2) {
             if (dm) {
                if (dmIsPtr) {
-                  if (isUniquePtr || strncmp(dm->GetTitle(),"->",2)==0) {
+                  if (strncmp(dm->GetTitle(),"->",2)==0) {
                      // We are fine, nothing to do.
                      if (newClass->IsTObject()) {
                         newType = kObjectp;

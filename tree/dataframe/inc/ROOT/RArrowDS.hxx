@@ -41,7 +41,7 @@ public:
    void InitSlot(unsigned int slot, ULong64_t firstEntry) override;
    void SetNSlots(unsigned int nSlots) override;
    void Initialise() override;
-   std::string GetDataSourceType() override;
+   std::string GetLabel() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

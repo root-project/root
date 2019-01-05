@@ -99,9 +99,11 @@ public:
    Float_t GetROCAverage() const;
    Float_t GetROCStandardDeviation() const;
    TMultiGraph *GetROCCurves(Bool_t fLegend = kTRUE);
+   TGraph *GetAvgROCCurve(UInt_t numSamples = 100) const;
    void Print() const;
 
    TCanvas *Draw(const TString name = "CrossValidation") const;
+   TCanvas *DrawAvgROCCurve(Bool_t drawFolds=kFALSE, TString title="") const;
 
    std::vector<Double_t> GetSigValues() const { return fSigs; }
    std::vector<Double_t> GetSepValues() const { return fSeps; }
@@ -144,6 +146,7 @@ private:
 
    Types::EAnalysisType fAnalysisType;
    TString fAnalysisTypeStr;
+   TString fSplitTypeStr;
    Bool_t fCorrelations;
    TString fCvFactoryOptions;
    Bool_t fDrawProgressBar;

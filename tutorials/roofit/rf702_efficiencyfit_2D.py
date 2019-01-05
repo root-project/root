@@ -2,23 +2,18 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'SPECIAL PDFS' RooFit tutorial macro #702
-##
-## Unbinned maximum likelihood fit of an efficiency eff(x) function to
-## a dataset D(x,cut), cut is a category encoding a selection whose
-## efficiency as function of x should be described by eff(x)
+## Special p.d.f.'s: unbinned maximum likelihood fit of an efficiency eff(x) function
+## to a dataset D(x,cut), cut is a category encoding a selection whose efficiency as function of x should be described by eff(x)
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
-
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
 
-flat=ROOT.kFALSE
+flat = ROOT.kFALSE
 # Construct efficiency function e(x,y)
 # -----------------------------------------------------------------------
 
@@ -36,7 +31,18 @@ ay = ROOT.RooRealVar("ay", "ay", 0.2, 0, 1)
 by = ROOT.RooRealVar("by", "by", 5)
 cy = ROOT.RooRealVar("cy", "cy", -1, -10, 10)
 
-effFunc = ROOT.RooFormulaVar("effFunc", "((1-ax)+ax*cos((x-cx)/bx))*((1-ay)+ay*cos((y-cy)/by))", ROOT.RooArgList(ax, bx, cx, x, ay, by, cy, y))
+effFunc = ROOT.RooFormulaVar(
+    "effFunc",
+    "((1-ax)+ax*cos((x-cx)/bx))*((1-ay)+ay*cos((y-cy)/by))",
+    ROOT.RooArgList(
+        ax,
+        bx,
+        cx,
+        x,
+        ay,
+        by,
+        cy,
+        y))
 
 # Acceptance state cut (1 or 0)
 cut = ROOT.RooCategory("cut", "cutr")
@@ -54,10 +60,27 @@ effPdf = ROOT.RooEfficiency("effPdf", "effPdf", effFunc, cut, "accept")
 
 # Construct global shape p.d.f shape(x) and product model(x,cut) = eff(cut|x)*shape(x)
 # (These are _only_ needed to generate some toy MC here to be used later)
-shapePdfX = ROOT.RooPolynomial("shapePdfX", "shapePdfX", x, ROOT.RooArgList(ROOT.RooFit.RooConst(0 if flat else -0.095)))
-shapePdfY = ROOT.RooPolynomial("shapePdfY", "shapePdfY", y, ROOT.RooArgList(ROOT.RooFit.RooConst(0 if flat else +0.095)))
-shapePdf = ROOT.RooProdPdf("shapePdf", "shapePdf", ROOT.RooArgList(shapePdfX, shapePdfY))
-model = ROOT.RooProdPdf("model", "model", ROOT.RooArgSet(shapePdf), ROOT.RooFit.Conditional(ROOT.RooArgSet(effPdf), ROOT.RooArgSet(cut)))
+shapePdfX = ROOT.RooPolynomial(
+    "shapePdfX", "shapePdfX", x, ROOT.RooArgList(
+        ROOT.RooFit.RooConst(
+            0 if flat else -0.095)))
+shapePdfY = ROOT.RooPolynomial(
+    "shapePdfY", "shapePdfY", y, ROOT.RooArgList(
+        ROOT.RooFit.RooConst(
+            0 if flat else +0.095)))
+shapePdf = ROOT.RooProdPdf(
+    "shapePdf",
+    "shapePdf",
+    ROOT.RooArgList(
+        shapePdfX,
+        shapePdfY))
+model = ROOT.RooProdPdf(
+    "model",
+    "model",
+    ROOT.RooArgSet(shapePdf),
+    ROOT.RooFit.Conditional(
+        ROOT.RooArgSet(effPdf),
+        ROOT.RooArgSet(cut)))
 
 # Generate some toy data from model
 data = model.generate(ROOT.RooArgSet(x, y, cut), 10000)
@@ -72,13 +95,15 @@ effPdf.fitTo(data, ROOT.RooFit.ConditionalObservables(ROOT.RooArgSet(x, y)))
 # --------------------------------------------------------
 
 # Make 2D histograms of all data, data and efficiency function
-hh_data_all = ROOT.RooAbsData.createHistogram(data, "hh_data_all", x, ROOT.RooFit.Binning(
-    8), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(8)))
-hh_data_sel = ROOT.RooAbsData.createHistogram(data, "hh_data_sel", x, ROOT.RooFit.Binning(
-    8), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(8)), ROOT.RooFit.Cut("cut==cut::accept"))
+hh_data_all = ROOT.RooAbsData.createHistogram(
+    data, "hh_data_all", x, ROOT.RooFit.Binning(8), ROOT.RooFit.YVar(
+        y, ROOT.RooFit.Binning(8)))
+hh_data_sel = ROOT.RooAbsData.createHistogram(
+    data, "hh_data_sel", x, ROOT.RooFit.Binning(8), ROOT.RooFit.YVar(
+        y, ROOT.RooFit.Binning(8)), ROOT.RooFit.Cut("cut==cut::accept"))
 hh_eff = effFunc.createHistogram(
-"hh_eff", x, ROOT.RooFit.Binning(
-    50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50)))
+    "hh_eff", x, ROOT.RooFit.Binning(
+        50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50)))
 
 # Some adjustsment for good visualization
 hh_data_all.SetMinimum(0)

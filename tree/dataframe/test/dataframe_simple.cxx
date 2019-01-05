@@ -378,19 +378,22 @@ TEST_P(RDFSimpleTests, Define_Multiple)
    auto root = tdf.Define("root", "0");
    auto branch1 = root.Define("b", []() { return 1; });
    auto branch2 = root.Define("b", "2");
+   auto branch3 = root.Define("b", "4.2"); // check a second jitted branch (checks for ROOT-9754)
 
-   auto rootMean1 = branch1.Mean("root");
-   auto rootMean2 = branch2.Mean<int>("root");
-   auto branch1Mean = branch1.Mean("b");
-   auto branch2Mean = branch2.Mean<int>("b");
+   auto rootMax1 = branch1.Max("root");
+   auto rootMax2 = branch2.Max<int>("root");
+   auto branch1Max = branch1.Max("b");
+   auto branch2Max = branch2.Max<int>("b");
+   auto branch3Max = branch3.Max<double>("b");
 
    // Checking that both branches see the same root column
-   EXPECT_EQ(*rootMean1, *rootMean2);
-   EXPECT_EQ(*rootMean1, 0);
+   EXPECT_EQ(*rootMax1, *rootMax2);
+   EXPECT_EQ(*rootMax1, 0);
 
    // Name collision must not represent a problem
-   EXPECT_EQ(*branch1Mean, 1);
-   EXPECT_EQ(*branch2Mean, 2);
+   EXPECT_EQ(*branch1Max, 1);
+   EXPECT_EQ(*branch2Max, 2);
+   EXPECT_EQ(*branch3Max, 4.2);
 }
 
 TEST_P(RDFSimpleTests, Define_Multiple_Filter)
@@ -870,6 +873,58 @@ TEST(RDFSimpleTests, SumOfStrings)
 {
    auto df = RDataFrame(2).Define("str", []() -> std::string { return "bla"; });
    EXPECT_EQ(*df.Sum<std::string>("str"), "blabla");
+}
+
+
+TEST(RDFSimpleTests, GenVector)
+{
+   ROOT::RDataFrame t(1);
+   auto aa = t.Define("hh", "ROOT::Math::PtEtaPhiMVector(1,1,1,1)").Define("h", "hh.Rapidity()");
+   auto m = aa.Mean("h");
+   EXPECT_TRUE(0 != *m);
+}
+
+TEST(RDFSimpleTests, AutomaticNamesOfHisto1DAndGraph)
+{
+   auto df = RDataFrame(1).Define("x", [](){return 1;})
+                          .Define("y", [](){return 1;});
+   auto hx = df.Histo1D("x");
+   auto hxy = df.Histo1D("x", "y");
+   auto gxy = df.Graph("x", "y");
+
+   EXPECT_STREQ(hx->GetName(), "x");
+   EXPECT_STREQ(hx->GetTitle(), "x");
+   EXPECT_STREQ(hx->GetXaxis()->GetTitle(), "x");
+   EXPECT_STREQ(hxy->GetName(), "x*y");
+   EXPECT_STREQ(hxy->GetTitle(), "x*y");
+   EXPECT_STREQ(hxy->GetXaxis()->GetTitle(), "x*y");
+   EXPECT_STREQ(gxy->GetName(), "x*y");
+   EXPECT_STREQ(gxy->GetTitle(), "x*y"); // current behaviour of TGraph
+   EXPECT_STREQ(gxy->GetXaxis()->GetTitle(), "x*y");
+   EXPECT_STREQ(gxy->GetYaxis()->GetTitle(), "y");
+
+}
+
+TEST_P(RDFSimpleTests, DifferentTreesInDifferentThreads)
+{
+   const auto filename = "DifferentTreesInDifferentThreads.root";
+   const auto treename = "mytree";
+   {
+      auto df = RDataFrame(64)
+                   .Define("x", []() { return 1; })
+                   .Define("y", []() { return 1; })
+                   .Snapshot<int, int>(treename, filename, {"x", "y"}, {"RECREATE", ROOT::kZLIB, 4, 2, 99, false});
+   }
+
+   TFile f(filename);
+   TTree *t;
+   f.GetObject(treename, t);
+   RDataFrame df(*t);
+   *df.Define("xy", [](int x, int y) { return x * y; }, {"x", "y"})
+       .Filter([](int xy) { return xy > 0; }, {"xy"})
+       .Count();
+
+   gSystem->Unlink(filename);
 }
 
 // run single-thread tests

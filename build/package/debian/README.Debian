@@ -30,10 +30,8 @@ The core packages are:
 * root-system-bin       The interactive interface and utilities
 * root-system-doc       Examples and tutorials
 
-A few `server' packages are available 
+A `server' package is available 
 
-* root-system-rootd     Remote fileserver 
-* root-system-proofd    PROOF environment
 * root-system-xrootd	Extendend ROOT Remote File server
 
 A few `extension' packages 
@@ -348,7 +346,7 @@ the license given by the upstream author Klaus Werner:
 
 Secure Remote Password (SRP) Authentication:
 --------------------------------------------
-To build the strong authentication module used by rootd and proofd,
+To build the strong authentication module used by TSocketServer,
 you first have to install the SRP (Secure Remote Password)
 system. See:
 
@@ -360,7 +358,7 @@ sub-directory.   There are no known packages of this code.
 
 Globus Authentication:
 ----------------------
-To build the Globus authentication module used by rootd and proofd,
+To build the Globus authentication module used by TSocketServer,
 you first have to make sure that the Globus Tool Kit is installed
 on the machine. See:
 

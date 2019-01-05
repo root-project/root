@@ -304,41 +304,6 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    // Check the list of auth info for already loaded info about this host
    fHostAuth = GetHostAuth(fqdnsrv, checkUser);
 
-   // If for whatever (and unlikely) reason nothing has been found
-   // we look for the old envs defaulting to method 0 (UsrPwd)
-   // if they are missing or meaningless
-   if (!fHostAuth) {
-
-      TString tmp;
-      if (fProtocol.Contains("proof")) {
-         tmp = TString(gEnv->GetValue("Proofd.Authentication", "0"));
-      } else if (fProtocol.Contains("root")) {
-         tmp = TString(gEnv->GetValue("Rootd.Authentication", "0"));
-      }
-      char am[kMAXSEC][10];
-      Int_t nw = sscanf(tmp.Data(), "%5s %5s %5s %5s %5s %5s",
-                        am[0], am[1], am[2], am[3], am[4], am[5]);
-
-      Int_t i = 0, nm = 0, me[kMAXSEC];
-      for( ; i < nw; i++) {
-         Int_t met = -1;
-         if (strlen(am[i]) > 1) {
-            met = GetAuthMethodIdx(am[i]);
-         } else {
-            met = atoi(am[i]);
-         }
-         if (met > -1 && met < kMAXSEC) {
-            me[nm++] = met;
-         }
-      }
-
-      // Create THostAuth
-      if (nm)
-         fHostAuth = new THostAuth(fRemote,fUser,nm,me,0);
-      else
-         fHostAuth = new THostAuth(fRemote,fUser,0,(const char *)0);
-   }
-
    //
    // If generic THostAuth (i.e. with wild card or user == any)
    // make a personalized memory copy of this THostAuth
@@ -459,10 +424,10 @@ negotia:
            fSecurity, fDetails.Data());
 
    // Keep track of tried methods in a list
-   if (strlen(triedMeth) > 0)
-      snprintf(triedMeth, 80, "%s %s", triedMeth, fgAuthMeth[fSecurity].Data());
-   else
-      snprintf(triedMeth, 80, "%s", fgAuthMeth[fSecurity].Data());
+   if (triedMeth[0] != '\0')
+      (void) strlcat(triedMeth, " ", sizeof(triedMeth) - 1);
+
+   (void) strlcat(triedMeth, fgAuthMeth[fSecurity].Data(), sizeof(triedMeth) - 1);
 
    // Set environments
    SetEnvironment();
@@ -573,12 +538,8 @@ negotia:
          }
       } else {
          if (gDebug > 0)
-            Info("Authenticate",
-                 "remote daemon does not support Kerberos authentication");
-         if (strlen(noSupport) > 0)
-            snprintf(noSupport, 80, "%s/Krb5", noSupport);
-         else
-            snprintf(noSupport, 80, "Krb5");
+            Info("Authenticate", "remote daemon does not support Kerberos authentication");
+         (void) strlcat(noSupport, noSupport[0] == '\0' ? "Krb5" : "/Krb5", sizeof(noSupport) - 1);
       }
 
    } else if (fSecurity == kGlobus) {
@@ -601,12 +562,8 @@ negotia:
          }
       } else {
          if (gDebug > 0)
-            Info("Authenticate",
-                 "remote daemon does not support Globus authentication");
-         if (strlen(noSupport) > 0)
-            snprintf(noSupport, 80, "%s/Globus", noSupport);
-         else
-            snprintf(noSupport, 80, "Globus");
+            Info("Authenticate", "remote daemon does not support Globus authentication");
+         (void) strlcat(noSupport, noSupport[0] == '\0' ? "Globus" : "/Globus", sizeof(noSupport) - 1);
       }
 
 
@@ -619,12 +576,8 @@ negotia:
 
       } else {
          if (gDebug > 0)
-            Info("Authenticate",
-                 "remote daemon does not support SSH authentication");
-         if (strlen(noSupport) > 0)
-            snprintf(noSupport, 80, "%s/SSH", noSupport);
-         else
-            snprintf(noSupport, 80, "SSH");
+            Info("Authenticate", "remote daemon does not support SSH authentication");
+         (void) strlcat(noSupport, noSupport[0] == '\0' ? "SSH" : "/SSH", sizeof(noSupport) - 1);
       }
 
    } else if (fSecurity == kRfio) {
@@ -636,12 +589,8 @@ negotia:
 
       } else {
          if (gDebug > 0)
-            Info("Authenticate",
-                 "remote daemon does not support UidGid authentication");
-         if (strlen(noSupport) > 0)
-            snprintf(noSupport, 80, "%s/UidGid", noSupport);
-         else
-            snprintf(noSupport, 80, "UidGid");
+            Info("Authenticate", "remote daemon does not support UidGid authentication");
+         (void) strlcat(noSupport, noSupport[0] == '\0' ? "UidGid" : "/UidGid", sizeof(noSupport) - 1);
       }
    }
    //
@@ -745,7 +694,7 @@ negotia:
          }
          // Look if a non-tried method matches
          int i, j;
-         char locav[40] = { 0 };
+         std::string available{};
          Bool_t methfound = kFALSE;
          for (i = 0; i < remMeth; i++) {
             for (j = 0; j < nmet; j++) {
@@ -756,7 +705,7 @@ negotia:
                   break;
                }
                if (i == 0)
-                  snprintf(locav, 40, "%s %d", locav, fHostAuth->GetMethod(j));
+                  available += " " + std::to_string(fHostAuth->GetMethod(j));
             }
             if (methfound) break;
          }
@@ -764,8 +713,7 @@ negotia:
          //
          // No method left to be tried: notify and exit
          if (gDebug > 0)
-            Warning("Authenticate",
-                    "no match with those locally available: %s", locav);
+            Warning("Authenticate", "no match with those locally available: %s", available.c_str());
          action = 2;
          rc = kFALSE;
          break;
@@ -894,9 +842,9 @@ void TAuthenticate::SetEnvironment()
       } else {
          if (!strncasecmp(gEnv->GetValue(usrPromptDef,""),"no",2) ||
              !strncmp(gEnv->GetValue(usrPromptDef,""),"0",1))
-            strncpy(pt,"0",1);
+            strncpy(pt,"0",2);
          else
-            strncpy(pt,"1",1);
+            strncpy(pt,"1",2);
       }
       TString usrReUseDef = TString(GetAuthMethod(fSecurity)) + ".ReUse";
       if ((ptr = strstr(fDetails, "ru:")) != 0) {
@@ -904,9 +852,9 @@ void TAuthenticate::SetEnvironment()
       } else {
          if (!strncasecmp(gEnv->GetValue(usrReUseDef,""),"no",2) ||
              !strncmp(gEnv->GetValue(usrReUseDef,""),"0",1))
-            strncpy(ru,"0",1);
+            strncpy(ru,"0",2);
          else
-            strncpy(ru,"1",1);
+            strncpy(ru,"1",2);
       }
       TString usrValidDef = TString(GetAuthMethod(fSecurity)) + ".Valid";
       TString hours(gEnv->GetValue(usrValidDef,"24:00"));
@@ -991,10 +939,12 @@ void TAuthenticate::SetEnvironment()
       // Build UserDefaults
       usdef[0] = '\0';
       if (fSecurity == kGlobus) {
-         if (strlen(cd) > 0) { snprintf(usdef,8192," %s",cd); }
-         if (strlen(cf) > 0) { snprintf(usdef,8192,"%s %s",usdef, cf); }
-         if (strlen(kf) > 0) { snprintf(usdef,8192,"%s %s",usdef, kf); }
-         if (strlen(ad) > 0) { snprintf(usdef,8192,"%s %s",usdef, ad); }
+         for (const char *str : { cd, cf, kf, ad }) {
+            if (*str != '\0') {
+               (void) strlcat(usdef, " ", sizeof(usdef) - 1);
+               (void) strlcat(usdef, str, sizeof(usdef) - 1);
+            }
+         }
       } else {
          if (fSecurity == kKrb5) {
             // Collect info about principal, if any

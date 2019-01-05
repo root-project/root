@@ -16,11 +16,13 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDF/Utils.hxx" // ColumnNames_t
 
+/// \cond
 template <typename T>
 class TTreeReaderValue;
 
 template <typename T>
 class TTreeReaderArray;
+/// \endcond
 
 namespace ROOT {
 namespace Internal {
@@ -58,15 +60,15 @@ void InitRDFValues(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader *r,
    // TODO: evaluate this once, pass it down
    std::array<bool, sizeof...(S)> isTmpColumn;
    for (auto i = 0u; i < isTmpColumn.size(); ++i)
-      isTmpColumn[i] = customCols.HasName(bn.at(i));
+      isTmpColumn[i] = customCols.HasName(bn[i]);
 
    // hack to expand a parameter pack without c++17 fold expressions.
    // The statement defines a variable with type std::initializer_list<int>, containing all zeroes, and SetTmpColumn or
    // SetProxy are conditionally executed as the braced init list is expanded. The final ... expands S.
    //- TODO
    int expander[] = {(isTmpColumn[S]
-                         ? std::get<S>(valueTuple).SetTmpColumn(slot, customCols.GetColumns().at(bn.at(S)).get())
-                         : std::get<S>(valueTuple).MakeProxy(r, bn.at(S)),
+                         ? std::get<S>(valueTuple).SetTmpColumn(slot, customCols.GetColumns().at(bn[S]).get())
+                         : std::get<S>(valueTuple).MakeProxy(r, bn[S]),
                       0)...,
                      0};
    (void)expander; // avoid "unused variable" warnings for expander on gcc4.9

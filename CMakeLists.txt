@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
-set(policy_new CMP0068)
+set(policy_new CMP0072 CMP0077)
 foreach(policy ${policy_new})
   if(POLICY ${policy})
     cmake_policy(SET ${policy} NEW)
@@ -18,7 +18,7 @@ project(ROOT)
 # output to use the default C locale which is more or less identical on all systems.
 set(ENV{LANG} C)
 
-#---Set pathes where to put the libraries, executables and headers------------------------------
+#---Set paths where to put the libraries, executables and headers------------------------------
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -26,10 +26,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # Before setting ROOTSYS, make sure that the environment isn't polluted by a different
 # ROOT build. This is significant e,g. for roottest, which will otherwise have libraries
 # of a different ROOT build available / visible / reachable.
-if($ENV{ROOTSYS})
-  string(REPLACE "$ENV{ROOTSYS}/bin" "" ENV{PATH}, $ENV{PATH})
-  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV{LD_LIBRARY_PATH} $ENV{LD_LIBRARY_PATH})
-  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV{PYTHONPATH} $ENV{PYTHONPATH})
+if(NOT $ENV{ROOTSYS} STREQUAL "")
+  string(REPLACE "$ENV{ROOTSYS}/bin" "" ENV_PATH "$ENV{PATH}")
+  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV_LD_LIBRARY_PATH "$ENV{LD_LIBRARY_PATH}")
+  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV_PYTHONPATH $ENV{PYTHONPATH})
+  string(REPLACE "$ENV{ROOTSYS}" "" ENV_CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
+  set(ENV{PATH} "${ENV_PATH}")
+  set(ENV{LD_LIBRARY_PATH} "${ENV_LD_LIBRARY_PATH}")
+  set(ENV{PYTHONPATH} "${ENV_PYTHONPATH}")
+  set(ENV{CMAKE_PREFIX_PATH} "${ENV_CMAKE_PREFIX_PATH}")
   set(ENV{"ROOTSYS"} ${CMAKE_BINARY_DIR})
 endif()
 
@@ -37,13 +42,60 @@ set(ROOTSYS ${CMAKE_BINARY_DIR})
 set(HEADER_OUTPUT_PATH ${CMAKE_BINARY_DIR}/include)
 set(ROOT_INCLUDE_DIR ${HEADER_OUTPUT_PATH})
 
-#---Set the library version in the main CMakeLists.txt------------------------------------------
-file(READ ${CMAKE_SOURCE_DIR}/build/version_number versionstr)
-string(STRIP ${versionstr} versionstr)
-string(REGEX REPLACE "([0-9]+)[.][0-9]+[/][0-9]+" "\\1" ROOT_MAJOR_VERSION ${versionstr})
-string(REGEX REPLACE "[0-9]+[.]([0-9]+)[/][0-9]+" "\\1" ROOT_MINOR_VERSION ${versionstr})
-string(REGEX REPLACE "[0-9]+[.][0-9]+[/]([0-9]+)" "\\1" ROOT_PATCH_VERSION ${versionstr})
-set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
+#---Set the ROOT version--------------------------------------------------------------------
+find_package(Git)
+if(Git_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/.git)
+  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --all
+                  OUTPUT_VARIABLE GIT_DESCRIBE_ALL
+                  RESULT_VARIABLE GIT_DESCRIBE_ERRCODE
+                  ERROR_QUIET
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+else()
+  set(GIT_DESCRIBE_ERRCODE "NoGit")
+endif()
+
+function(SET_VERSION_FROM_FILE)
+  file(READ ${CMAKE_SOURCE_DIR}/build/version_number versionstr)
+  string(STRIP ${versionstr} versionstr)
+  string(REGEX REPLACE "([0-9]+)[.][0-9]+[/][0-9]+" "\\1" ROOT_MAJOR_VERSION ${versionstr})
+  string(REGEX REPLACE "[0-9]+[.]([0-9]+)[/][0-9]+" "\\1" ROOT_MINOR_VERSION ${versionstr})
+  string(REGEX REPLACE "[0-9]+[.][0-9]+[/]([0-9]+)" "\\1" ROOT_PATCH_VERSION ${versionstr})
+  set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}" PARENT_SCOPE)
+  set(ROOT_MAJOR_VERSION "${ROOT_MAJOR_VERSION}" PARENT_SCOPE)
+  set(ROOT_MINOR_VERSION "${ROOT_MINOR_VERSION}" PARENT_SCOPE)
+  set(ROOT_PATCH_VERSION "${ROOT_PATCH_VERSION}" PARENT_SCOPE)
+endfunction()
+
+if(GIT_DESCRIBE_ERRCODE)
+  SET_VERSION_FROM_FILE()
+else()
+  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --always
+                  OUTPUT_VARIABLE GIT_DESCRIBE_ALWAYS
+                  ERROR_QUIET
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  string(TIMESTAMP GIT_TIMESTAMP "%b %d %Y, %H:%M:%S" UTC)
+
+  string(REGEX REPLACE "^v([0-9])-([0-9]+)-" "\\1.\\2." ROOT_VERSION "${GIT_DESCRIBE_ALWAYS}")
+  if("${GIT_DESCRIBE_ALL}" MATCHES "^tags/v[0-9]+-[0-9]+-[0-9]+.*")
+    # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1
+    # GIT_DESCRIBE_ALL: tags/v6-16-00-rc1
+    # tag might end on "-rc1" or similar; parse version number in front.
+    string(REGEX REPLACE "v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALWAYS})
+    string(REGEX REPLACE "v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALWAYS})
+    string(REGEX REPLACE "v[0-9]+-[0-9]+-([0-9]+).*" "\\1" ROOT_PATCH_VERSION ${GIT_DESCRIBE_ALWAYS})
+  elseif("${GIT_DESCRIBE_ALL}" MATCHES "/v[0-9]+-[0-9]+.*-patches$")
+    # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1-47-g9ba56ef4a3
+    # GIT_DESCRIBE_ALL: heads/v6-16-00-patches
+    string(REGEX REPLACE "^.*/v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
+    string(REGEX REPLACE "^.*/v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
+    set(ROOT_PATCH_VERSION "99") # aka head of ...-patches
+  else()
+    # GIT_DESCRIBE_ALWAYS: v6-13-04-2163-g7e8d27ea66
+    # GIT_DESCRIBE_ALL: heads/master or remotes/origin/master
+    SET_VERSION_FROM_FILE()
+  endif()
+endif()
+
 
 #---Where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked-------------
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
@@ -101,7 +153,7 @@ ROOT_CHECK_OUT_OF_SOURCE_BUILD()
 
 #---Here we look for installed software and switch on and of the different build options--------
 include(SearchInstalledSoftware)
-ROOT_SHOW_OPTIONS()
+ROOT_SHOW_ENABLED_OPTIONS()
 
 #---Here we add tcmalloc to the linker flags if needed------------------------------------------
 if (TCMALLOC_FOUND)
@@ -180,7 +232,7 @@ if(cxxmodules)
     message(FATAL_ERROR "cxxmodules is not supported by this compiler")
   endif()
 
-  set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -Xclang -fno-validate-pch -fno-autolink -fdiagnostics-show-note-include-stack -Wno-module-import-in-extern-c")
+  set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -Xclang -fno-validate-pch -fno-autolink -fdiagnostics-show-note-include-stack")
 
   # FIXME: We should remove this once libc++ supports -fmodules-local-submodule-visibility.
   if (APPLE)
@@ -233,9 +285,11 @@ if (NOT WIN32 AND NOT libcxx)
   if (__libcpp_full_paths_list)
     list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
 
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in.build ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap-installed.overlay.yaml.in ${CMAKE_BINARY_DIR}/build/modulemap.overlay.yaml @ONLY)
-    install(FILES "${CMAKE_BINARY_DIR}/build/modulemap.overlay.yaml" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in.install ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml.install @ONLY)
+    install(FILES "${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml.install" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers RENAME "modulemap.overlay.yaml")
 
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.modulemap ${CMAKE_BINARY_DIR}/include/stl.modulemap)
     install(FILES "${CMAKE_BINARY_DIR}/include/stl.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
@@ -249,14 +303,8 @@ endif()
 
 if (cxxmodules)
   # These vars are useful when we want to compile things without cxxmodules.
-  set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules" CACHE STRING "Useful to filter out the modules-related cxxflags.")
+  set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules -Xclang -fmodules-local-submodule-visibility -Wno-module-import-in-extern-c" CACHE STRING "Useful to filter out the modules-related cxxflags.")
   set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")
-  if (NOT APPLE)
-    set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -Xclang -fmodules-local-submodule-visibility" CACHE STRING "Useful to filter out the modules-related cxxflags." FORCE)
-    set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -Xclang -fmodules-local-submodule-visibility" CACHE STRING "Useful to filter out the modules-related cflags." FORCE)
-
-  endif()
-
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_CFLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_CXXFLAGS}")
 endif(cxxmodules)
@@ -324,6 +372,7 @@ if(cxxmodules)
 endif(cxxmodules)
 string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE} ${CORE_OS_DICT_CXX_FLAGS}")
 if(MSVC)
+  string(REPLACE "-Zc:__cplusplus" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-nologo" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-EHsc-" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-GR" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
@@ -373,6 +422,13 @@ else()
   install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 endif()
 
+# FIXME: Add a post-build script where you compare the lib/*.pcm list to the reference, so as not to install random pcms.
+install(
+   DIRECTORY ${CMAKE_BINARY_DIR}/lib/
+   DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   FILES_MATCHING PATTERN "*.pcm"
+)
+
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
@@ -401,8 +457,7 @@ add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh 
 endif()
 
 #---distribution commands------------------------------------------------------------------------
-add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh ${CMAKE_SOURCE_DIR}
-                  DEPENDS ${CMAKE_BINARY_DIR}/include/RGitCommit.h)
+add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh "${ROOT_VERSION}" "${GIT_DESCRIBE_ALWAYS}" "${CMAKE_SOURCE_DIR}")
 add_custom_target(dist COMMAND cpack --config CPackConfig.cmake)
 
 #---Configure and install various files neded later and for clients -----------------------------
@@ -425,7 +480,8 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
                          PATTERN "rootd.xinetd" EXCLUDE
                          PATTERN "proofd.xinetd" EXCLUDE
                          PATTERN "root.mimes" EXCLUDE
-                         PATTERN "cmake" EXCLUDE )
+                         PATTERN "cmake" EXCLUDE
+                         PATTERN "*.in" EXCLUDE)
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})
@@ -435,6 +491,12 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(DIRECTORY cmake/modules DESTINATION ${CMAKE_INSTALL_CMAKEDIR} PATTERN "Find*.cmake" EXCLUDE)
   install(FILES build/misc/root.m4 DESTINATION ${CMAKE_INSTALL_ACLOCALDIR})
 endif()
+
+#---Make sure the Jupyter ROOT C++ kernel runs with the same Python version as ROOT-----
+set(root_kernel_dir  notebook/kernels/root)
+set(root_kernel_file kernel.json)
+configure_file(etc/${root_kernel_dir}/${root_kernel_file}.in etc/${root_kernel_dir}/${root_kernel_file})
+install(FILES ${CMAKE_BINARY_DIR}/etc/${root_kernel_dir}/${root_kernel_file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/${root_kernel_dir})
 
 #---Configure Testing using CTest----------------------------------------------------------------
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)

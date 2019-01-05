@@ -12,6 +12,8 @@
 
 #include "TString.h"
 
+#include <ROOT/RMakeUnique.hxx>
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
@@ -39,3 +41,39 @@ void TWebSnapshot::SetObjectIDAsPtr(void *ptr)
    UInt_t hash = TString::Hash(&ptr, sizeof(ptr));
    SetObjectID(std::to_string(hash));
 }
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Create new entry in list of primitives
+
+TWebSnapshot &TPadWebSnapshot::NewPrimitive(TObject *obj, const std::string &opt)
+{
+   fPrimitives.emplace_back(std::make_unique<TWebSnapshot>());
+   if (obj) {
+      fPrimitives.back()->SetObjectIDAsPtr(obj);
+      fPrimitives.back()->SetOption(opt);
+   }
+   return *(fPrimitives.back());
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Create new entry for subpad
+
+TPadWebSnapshot &TPadWebSnapshot::NewSubPad()
+{
+   auto res = new TPadWebSnapshot();
+   fPrimitives.emplace_back(res);
+   return *res;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Create new entry in list of primitives in the front
+
+TWebSnapshot &TPadWebSnapshot::NewSpecials()
+{
+   fPrimitives.emplace(fPrimitives.begin(), std::make_unique<TWebSnapshot>());
+   return *(fPrimitives.front());
+
+}
+
+

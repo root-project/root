@@ -21,12 +21,14 @@
 class RooArgList ;
 
 
-#define USEMEMPOOL
+#define USEMEMPOOLFORARGSET
+template <class RooSet_t, size_t>
+class MemPoolForRooSets;
 
 class RooArgSet : public RooAbsCollection {
 public:
   
-#ifdef USEMEMPOOL
+#ifdef USEMEMPOOLFORARGSET
   void* operator new (size_t bytes);
   void* operator new (size_t bytes, void* ptr) noexcept;
   void operator delete (void *ptr);
@@ -102,6 +104,8 @@ public:
 
   RooAbsArg& operator[](const char* name) const ;   
 
+  /// Shortcut for readFromStream(std::istream&, Bool_t, const char*, const char*, Bool_t), setting
+  /// `flagReadAtt` and `section` to 0.
   virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) {
     // I/O streaming interface (machine readable)
     return readFromStream(is, compact, 0, 0, verbose) ;
@@ -129,9 +133,14 @@ protected:
 
   Bool_t checkForDup(const RooAbsArg& arg, Bool_t silent) const ;
 
-  static char* _poolBegin ; //! Start of memory pool
-  static char* _poolCur ;   //! Next free slot in memory pool
-  static char* _poolEnd ;   //! End of memory pool  
+#ifdef USEMEMPOOLFORARGSET
+private:
+  typedef MemPoolForRooSets<RooArgSet, 10*600> MemPool; //600 = about 100 kb
+  //Initialise a static mem pool. It has to happen inside a function to solve the
+  //static initialisation order fiasco. At the end of the program, this might have
+  //to leak depending if RooArgSets are still alive. This depends on the order of destructions.
+  static MemPool* memPool();
+#endif
   
   ClassDef(RooArgSet,1) // Set of RooAbsArg objects
 };

@@ -21,7 +21,18 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT CMAKE_CROSSCOMPILING AND NOT EXISTS
   endif()
 endif()
 
-#---Check for Cocoa/Quartz graphics backend (MacOS X only)
+#---If -Dshared=Off, prefer static libraries-----------------------------------------
+if(NOT shared)
+  if(WINDOWS)
+    message(FATAL_ERROR "Option \"shared=Off\" not supported on Windows!")
+  else()
+    message("Preferring static libraries.")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;${CMAKE_FIND_LIBRARY_SUFFIXES}")
+  endif()
+endif()
+
+
+#---Check for Cocoa/Quartz graphics backend (MacOS X only)---------------------------
 if(cocoa)
   if(APPLE)
     set(x11 OFF CACHE BOOL "Disabled because cocoa requested (${x11_description})" FORCE)
@@ -122,58 +133,20 @@ endif()
 #---Check for PCRE-------------------------------------------------------------------
 if(NOT builtin_pcre)
   message(STATUS "Looking for PCRE")
+  # Clear cache variables, or LLVM may use old values for PCRE
+  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE)
+    unset(PCRE_${suffix} CACHE)
+  endforeach()
   find_package(PCRE)
   if(NOT PCRE_FOUND)
     message(STATUS "PCRE not found. Switching on builtin_pcre option")
     set(builtin_pcre ON CACHE BOOL "Enabled because PCRE not found (${builtin_pcre_description})" FORCE)
   endif()
 endif()
+
 if(builtin_pcre)
-  set(pcre_version 8.37)
-  message(STATUS "Building pcre version ${pcre_version} included in ROOT itself")
-  set(PCRE_LIBRARY ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pcre${CMAKE_STATIC_LIBRARY_SUFFIX})
-  if(WIN32)
-    if (winrtdebug)
-      set(pcre_lib pcred.lib)
-      set(pcre_build_type Debug)
-    else()
-      set(pcre_lib pcre.lib)
-      set(pcre_build_type Release)
-    endif()
-    ExternalProject_Add(
-      PCRE
-      URL ${CMAKE_SOURCE_DIR}/core/pcre/src/pcre-${pcre_version}.tar.gz
-      URL_HASH SHA256=19d490a714274a8c4c9d131f651489b8647cdb40a159e9fb7ce17ba99ef992ab
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-#      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${pcre_build_type}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${pcre_build_type}/${pcre_lib} ${PCRE_LIBRARY}
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre.h  <INSTALL_DIR>/include
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre_scanner.h  <INSTALL_DIR>/include
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre_stringpiece.h  <INSTALL_DIR>/include
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcrecpp.h  <INSTALL_DIR>/include
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcrecpparg.h  <INSTALL_DIR>/include
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different pcreposix.h  <INSTALL_DIR>/include              
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${PCRE_LIBRARY})
-  else()
-    set(_pcre_cflags -O)
-    if(CMAKE_OSX_SYSROOT)
-      set(_pcre_cflags "${_pcre_cflags} -isysroot ${CMAKE_OSX_SYSROOT}")
-    endif()
-    ExternalProject_Add(
-      PCRE
-      URL ${CMAKE_SOURCE_DIR}/core/pcre/src/pcre-${pcre_version}.tar.gz
-      URL_HASH SHA256=19d490a714274a8c4c9d131f651489b8647cdb40a159e9fb7ce17ba99ef992ab
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic --disable-shared
-                        CC=${CMAKE_C_COMPILER} CFLAGS=${_pcre_cflags}
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${PCRE_LIBRARY})
-  endif()
-  set(PCRE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-  set(PCRE_LIBRARIES ${PCRE_LIBRARY})
-  set(PCRE_TARGET PCRE)
+  list(APPEND ROOT_BUILTINS PCRE)
+  add_subdirectory(builtins/pcre)
 endif()
 
 #---Check for LZMA-------------------------------------------------------------------
@@ -437,6 +410,9 @@ if(mathmore OR builtin_gsl)
     foreach(l gsl gslcblas)
       list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
     endforeach()
+    if(CMAKE_OSX_SYSROOT)
+      set(_gsl_cppflags "-isysroot ${CMAKE_OSX_SYSROOT}")
+    endif()
     ExternalProject_Add(
       GSL
       # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
@@ -446,7 +422,9 @@ if(mathmore OR builtin_gsl)
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
                         --libdir=<INSTALL_DIR>/lib
                         --enable-shared=no --with-pic
-                        CC=${CMAKE_C_COMPILER} CFLAGS=${CMAKE_C_FLAGS}
+                        CC=${CMAKE_C_COMPILER}
+                        CFLAGS=${CMAKE_C_FLAGS}
+                        CPPFLAGS=${_gsl_cppflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${GSL_LIBRARIES}
     )
@@ -457,14 +435,24 @@ endif()
 
 #---Check for Python installation-------------------------------------------------------
 if(python)
+  message(STATUS "Looking for python")
   find_package(PythonInterp ${python_version} REQUIRED)
   find_package(PythonLibs ${python_version} REQUIRED)
-  if (tmva)
-    if(fail-on-missing)
-      find_package(NumPy REQUIRED)
-    else()
-      find_package(NumPy)
+  if (tmva AND tmva-pymva)
+    message(STATUS "Looking for numpy (python package)")
+    find_package(NumPy)
+    if(fail-on-missing AND NOT NUMPY_FOUND)
+      message(FATAL_ERROR "TMVA: numpy python package not found and tmva-pymva component required (python executable: ${PYTHON_EXECUTABLE})")
+    elseif(NOT NUMPY_FOUND)
+      message(STATUS "TMVA: numpy not found for python ${PYTHON_EXECUTABLE}. Switching off tmva-pymva option")
+      set(tmva-pymva OFF CACHE BOOL "Disabled because numpy not found (${tmva-pymva_description})" FORCE)
     endif()
+  endif()
+
+  if(NOT "${PYTHONLIBS_VERSION_STRING}" MATCHES "${PYTHON_VERSION_STRING}")
+    message(FATAL_ERROR "Version mismatch between Python interpreter (${PYTHON_VERSION_STRING})"
+    " and libraries (${PYTHONLIBS_VERSION_STRING}).\nROOT cannot work with this configuration. "
+    "Please specify only PYTHON_EXECUTABLE to CMake with an absolute path to ensure matching versions are found.")
   endif()
 endif()
 
@@ -797,18 +785,40 @@ if(fitsio OR builtin_cfitsio)
     string(REPLACE "." "" cfitsio_version_no_dots ${cfitsio_version})
     message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}")
     set(CFITSIO_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
-    ExternalProject_Add(
-      CFITSIO
-      # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
-      URL ${lcgpackages}/cfitsio${cfitsio_version_no_dots}.tar.gz
-      URL_HASH SHA256=de8ce3f14c2f940fadf365fcc4a4f66553dd9045ee27da249f6e2c53e95362b3
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-      BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
-    )
-    set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+    if(WIN32)
+      if(winrtdebug)
+        set(cfitsiobuild "Debug")
+      else()
+        set(cfitsiobuild "Release")
+      endif()
+      ExternalProject_Add(
+        CFITSIO
+        # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
+        URL http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfit3450.zip
+        URL_HASH SHA256=1d13073967654a48d47535ff33392656f252511ddf29059d7c7dc3ce8f2a1041
+        INSTALL_DIR ${CMAKE_BINARY_DIR}
+        CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+        BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${cfitsiobuild}
+        INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${cfitsiobuild}/cfitsio.dll <INSTALL_DIR>/bin
+                COMMAND ${CMAKE_COMMAND} -E copy ${cfitsiobuild}/cfitsio.lib <INSTALL_DIR>/lib
+        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
+        BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
+      )
+      set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CFITSIO-prefix/src/CFITSIO)
+    else()
+      ExternalProject_Add(
+        CFITSIO
+        # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
+        URL ${lcgpackages}/cfitsio${cfitsio_version_no_dots}.tar.gz
+        URL_HASH SHA256=de8ce3f14c2f940fadf365fcc4a4f66553dd9045ee27da249f6e2c53e95362b3
+        INSTALL_DIR ${CMAKE_BINARY_DIR}
+        CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
+        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+        BUILD_IN_SOURCE 1
+        BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
+      )
+      set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+    endif()
     set(fitsio ON CACHE BOOL "Enabled because builtin_cfitsio requested (${fitsio_description})" FORCE)
     set(CFITSIO_TARGET CFITSIO)
   else()
@@ -864,9 +874,9 @@ if(xrootd)
   endif()
 endif()
 if(builtin_xrootd)
-  set(XROOTD_VERSION 4.8.2)
+  set(XROOTD_VERSION 4.8.5)
   set(XROOTD_VERSIONNUM 400060001)
-  set(XROOTD_SRC_URI http://xrootd.org/download/v${XROOTD_VERSION}/xrootd-${XROOTD_VERSION}.tar.gz)
+  set(XROOTD_SRC_URI ${lcgpackages}/xrootd-${XROOTD_VERSION}.tar.gz)
   set(XROOTD_DESTDIR ${CMAKE_BINARY_DIR})
   set(XROOTD_ROOTDIR ${XROOTD_DESTDIR})
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
@@ -880,7 +890,7 @@ if(builtin_xrootd)
   ExternalProject_Add(
     XROOTD
     URL ${XROOTD_SRC_URI}
-    URL_HASH SHA256=8f28ec53e799d4aa55bd0cc4ab278d9762e0e57ac40a4b02af7fc53dcd1bef39
+    URL_HASH SHA256=42e4d2cc6f8b442135f09bcc12c7be38b1a0c623a005cb5e69ff3d27997bdf73
     INSTALL_DIR ${XROOTD_ROOTDIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -1140,12 +1150,13 @@ if(imt)
     message(STATUS "Looking for TBB")
     find_package(TBB)
     if(TBB_FOUND)
-      if(${TBB_VERSION} VERSION_LESS 4.3)
+      set(tbb_min_version 2018)
+      if(${TBB_VERSION} VERSION_LESS ${tbb_min_version})
         if(fail-on-missing)
-          message(FATAL_ERROR "TBB version < 4.3. You can enable the option 'builtin_tbb' to build the library internally")
+          message(FATAL_ERROR "TBB version < ${tbb_min_version}. You can enable the option 'builtin_tbb' to build the library internally")
         else()
-          message(STATUS "TBB version < 4.3. Switching on builtin_tbb option")
-          set(builtin_tbb ON CACHE BOOL "Enabled because imt requested and external TBB version < 4.3 (${builtin_tbb})" FORCE)
+          message(STATUS "TBB version < ${tbb_min_version}. Switching on builtin_tbb option")
+          set(builtin_tbb ON CACHE BOOL "Enabled because imt requested and external TBB version < ${tbb_min_version} (${builtin_tbb})" FORCE)
         endif()
       endif()
     endif()  
@@ -1160,7 +1171,8 @@ if(imt)
   endif()
 endif()  
 if(builtin_tbb)
-  set(tbb_version 2017_U5)
+  set(tbb_builtin_version 2019_U1)
+  set(tbb_sha256 d40aa6f62f2b2fb38c89b9f309859e3e6ff90487e8bc45abb0e096a6a165bec5)
   if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
     set(_tbb_compiler compiler=clang)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
@@ -1169,12 +1181,12 @@ if(builtin_tbb)
     set(_tbb_compiler compiler=gcc)
   endif()
   if(MSVC)
-    set(vsdir "vs2012")
+    set(vsdir "vs2013")
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb.lib)
     ExternalProject_Add(
       TBB
-      URL ${lcgpackages}/tbb${tbb_version}.tar.gz
-      URL_HASH SHA256=780baf0ad520f23b54dd20dc97bf5aae4bc562019e0a70f53bfc4c1afec6e545
+      URL ${lcgpackages}/tbb${tbb_builtin_version}.tar.gz
+      URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
       BUILD_COMMAND devenv.exe /useenv /build "Release|Win32" build/${vsdir}/makefile.sln
@@ -1197,14 +1209,19 @@ if(builtin_tbb)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*")
   else()
     ROOT_ADD_CXX_FLAG(_tbb_cxxflags -mno-rtm)
+    # Here we check that the CMAKE_OSX_SYSROOT variable is not empty otherwise
+    # it can happen that a "-isysroot" switch is added without an argument.
+    if(APPLE AND CMAKE_OSX_SYSROOT)
+      set(_tbb_cxxflags "${_tbb_cxxflags} -isysroot ${CMAKE_OSX_SYSROOT}")
+    endif()
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       TBB
-      URL ${lcgpackages}/tbb${tbb_version}.tar.gz
-      URL_HASH SHA256=780baf0ad520f23b54dd20dc97bf5aae4bc562019e0a70f53bfc4c1afec6e545
+      URL ${lcgpackages}/tbb${tbb_builtin_version}.tar.gz
+      URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ""
-      BUILD_COMMAND make ${_tbb_compiler} CXXFLAGS=${_tbb_cxxflags} CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
+      BUILD_COMMAND make ${_tbb_compiler} "CXXFLAGS=${_tbb_cxxflags}" CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
       INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
       INSTALL_COMMAND ""
@@ -1233,38 +1250,6 @@ if(geocad)
   endif()
 endif()
 
-#---Check for Vc compatibility-----------------------------------------------------------
-if(vc OR builtin_vc)
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.3.0)
-      message(STATUS "Vc requires GCC version >= 5.3.0; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "Disabled because Vc requires GCC version >= 5.3.0 (${vc_description})" FORCE)
-      set(builtin_vc OFF CACHE BOOL "Disabled because Vc requires GCC version >= 5.3.0 (${builtin_vc_description})" FORCE)
-    endif()
-    if(cxx17 OR CMAKE_CXX_STANDARD EQUAL 17)
-      message(STATUS "Vc uses std::for_each_n(), which is not available in GCC; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "Disabled because std::for_each_n() is not available in GCC (${vc_description})" FORCE)
-      set(builtin_vc OFF CACHE BOOL "Disabled because std::for_each_n() is not available in GCC (${builtin_vc_description})" FORCE)
-    endif()
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    if ( APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
-      message(STATUS "Vc requires Apple Clang version >= 5.0; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "Disabled because Apple Clang version >= 5.0 required (${vc_description})" FORCE)
-      set(builtin_vc OFF CACHE BOOL "Disabled because Apple Clang version >= 5.0 required (${builtin_vc_description})" FORCE)
-    elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.1)
-      message(STATUS "Vc requires Clang version >= 3.1; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "Disabled because Clang version >= 3.1 required (${vc_description})" FORCE)
-      set(builtin_vc OFF CACHE BOOL "Disabled because Clang version >= 3.1 required (${builtin_vc_description})" FORCE)
-    endif()
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0)  # equivalent to MSVC 2010
-      message(STATUS "Vc requires MSVC version >= 2011; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "Disabled because MSVC version >= 2011 required (${vc_description})" FORCE)
-      set(builtin_vc OFF CACHE BOOL "Disabled because MSVC version >= 2011 required (${builtin_vc_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for Vc---------------------------------------------------------------------
 if(builtin_vc)
   unset(Vc_FOUND)
@@ -1287,7 +1272,7 @@ elseif(vc)
 endif()
 
 if(vc AND NOT Vc_FOUND)
-  set(Vc_VERSION "1.3.3")
+  set(Vc_VERSION "1.4.1")
   set(Vc_PROJECT "Vc-${Vc_VERSION}")
   set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
   set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals")
@@ -1297,7 +1282,7 @@ if(vc AND NOT Vc_FOUND)
 
   ExternalProject_Add(VC
     URL     ${Vc_SRC_URI}
-    URL_HASH SHA256=08c629d2e14bfb8e4f1a10f09535e4a3c755292503c971ab46637d2986bdb4fe
+    URL_HASH SHA256=68e609a735326dc3625e98bd85258e1329fb2a26ce17f32c432723b750a4119f
     BUILD_IN_SOURCE 0
     BUILD_BYPRODUCTS ${Vc_LIBRARY}
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -1368,7 +1353,7 @@ elseif(veccore)
 endif()
 
 if(veccore AND NOT VecCore_FOUND)
-  set(VecCore_VERSION "0.5.1")
+  set(VecCore_VERSION "0.5.2")
   set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
   set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
   set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/externals")
@@ -1376,7 +1361,7 @@ if(veccore AND NOT VecCore_FOUND)
 
   ExternalProject_Add(VECCORE
     URL     ${VecCore_SRC_URI}
-    URL_HASH SHA256=20f4ab8f599b9d12becc3e27e8dbb0f4ec0aa2de958053eb550020a9c95a6d62
+    URL_HASH SHA256=6c8740342bfa1d9c6ef55a19f57b95674a94e5f9ea156e9b329635718b0b4049
     BUILD_IN_SOURCE 0
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
@@ -1446,13 +1431,13 @@ if(vdt OR builtin_vdt)
     endif()
   endif()
   if(builtin_vdt)
-    set(vdt_version 0.4.1)
+    set(vdt_version 0.4.2)
     set(VDT_FOUND True)
     set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       VDT
       URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
-      URL_HASH SHA256=020ae76518d67476c3cb9a3fdf0683ee982d6b1a5898739000072ce34063072c
+      URL_HASH SHA256=643136a38d6890c1cf18074bd494f99a4f269429ac552c57907e28c0091df8e6
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS
         -DSSE=OFF # breaks on ARM without this
@@ -1495,13 +1480,13 @@ endif()
 if(tmva AND cuda AND tmva-gpu)
   message(STATUS "Looking for CUDA for optional parts of TMVA")
 
-  if(cxx11)
+  if(CMAKE_CXX_STANDARD EQUAL 11)
     find_package(CUDA 7.5)
-  elseif(cxx14)
+  elseif(CMAKE_CXX_STANDARD EQUAL 14)
     message(STATUS "Detected request for c++14, requiring minimum version CUDA 9.0 (default 7.5)")
     find_package(CUDA 9.0)
-  elseif(cxx17)
-    message(FATAL_ERROR "Using CUDA with c++17 currently not supported")
+  else()
+    message(FATAL_ERROR "CUDA not supported with C++${CMAKE_CXX_STANDARD}")
   endif()
 
   if(NOT CUDA_FOUND)
@@ -1575,6 +1560,7 @@ if (testing)
                   -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                   -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+                  -DCMAKE_AR=${CMAKE_AR}
                   -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
                   ${EXTRA_GTEST_OPTS}
     # Disable install step
@@ -1624,3 +1610,9 @@ foreach(opt afs glite sapdb srp chirp ios)
   endif()
 endforeach()
 
+#---Report deprecated options---------------------------------------------------
+foreach(opt afdsmgrd bonjour castor geocad globus gviz hdfs krb5 ldap memstat odbc qt qtgsi rfio table)
+  if(${opt})
+    message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in ROOT v6.18. Please inform rootdev@cern.ch should you still need it.")
+  endif()
+endforeach()

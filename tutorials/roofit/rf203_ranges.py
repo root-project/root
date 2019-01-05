@@ -1,14 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #203
-## Fitting and plotting in sub ranges
+## Addition and convolution: fitting and plotting in sub ranges
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 from __future__ import print_function
 import ROOT
@@ -56,8 +54,10 @@ r_sig = model.fitTo(modelData, ROOT.RooFit.Save(
 # Make plot frame in x and add data and fitted model
 frame = x.frame(ROOT.RooFit.Title("Fitting a sub range"))
 modelData.plotOn(frame)
-model.plotOn(frame, ROOT.RooFit.Range("Full"), ROOT.RooFit.LineStyle(
-    ROOT.kDashed), ROOT.RooFit.LineColor(ROOT.kRed))  # Add shape in full ranged dashed
+model.plotOn(
+    frame, ROOT.RooFit.Range("Full"), ROOT.RooFit.LineStyle(
+        ROOT.kDashed), ROOT.RooFit.LineColor(
+            ROOT.kRed)) # Add shape in full ranged dashed
 model.plotOn(frame)  # By default only fitted range is shown
 
 # Print fit results

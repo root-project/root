@@ -401,6 +401,57 @@ void TCuda<AFloat>::SqrtElementWise(TCudaMatrix<AFloat> &A)
        (int) A.GetNcols());
 }
 
+/// Adam updates 
+//____________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::AdamUpdate(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> & M, const TCudaMatrix<AFloat> & V, AFloat alpha, AFloat eps)
+{
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
+   cudaStream_t s = A.GetComputeStream();
+   ::TMVA::DNN::Cuda::AdamUpdate<<<gridDims, blockDims, 0, s>>>(
+       A.GetDataPointer(),
+       M.GetDataPointer(),
+       V.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols(),
+       alpha, eps);
+}
 
+//____________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::AdamUpdateFirstMom(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> & B, AFloat beta)
+{
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
+   cudaStream_t s = A.GetComputeStream();
+   ::TMVA::DNN::Cuda::AdamUpdateFirstMom<<<gridDims, blockDims, 0, s>>>(
+       A.GetDataPointer(),
+       B.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols(), beta);
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::AdamUpdateSecondMom(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> & B, AFloat beta)
+{
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
+   cudaStream_t s = A.GetComputeStream();
+   ::TMVA::DNN::Cuda::AdamUpdateSecondMom<<<gridDims, blockDims, 0, s>>>(
+       A.GetDataPointer(),
+       B.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols(), beta);
+}
+
+
+
+
+
+
+
+   
 } // DNN
 } // TMVA

@@ -25,6 +25,8 @@
 
 #include <memory>
 
+#include "Compression.h"
+
 #include "TNamed.h"
 
 #include "TObjArray.h"
@@ -148,8 +150,8 @@ private:
 
 public:
    TBranch();
-   TBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
-   TBranch(TBranch *parent, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
+   TBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   TBranch(TBranch *parent, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
    virtual ~TBranch();
 
    virtual void      AddBasket(TBasket &b, Bool_t ondisk, Long64_t startEntry);
@@ -227,9 +229,9 @@ public:
    virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
    virtual void      SetBasketSize(Int_t buffsize);
    virtual void      SetBufferAddress(TBuffer *entryBuffer);
-   void              SetCompressionAlgorithm(Int_t algorithm=0);
-   void              SetCompressionLevel(Int_t level=4);
-   void              SetCompressionSettings(Int_t settings=4);
+   void              SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
+   void              SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);
+   void              SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
    virtual void      SetEntries(Long64_t entries);
    virtual void      SetEntryOffsetLen(Int_t len, Bool_t updateSubBranches = kFALSE);
    virtual void      SetFirstEntry( Long64_t entry );

@@ -1,0 +1,99 @@
+<mvc:View height="100%" width="100%" class="sapUiSizeCompact" controllerName="eve.GeomViewer"
+          xmlns="sap.m"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns:m="sap.m"
+          xmlns:t="sap.ui.table"
+          xmlns:l="sap.ui.layout"
+          xmlns:core="sap.ui.core"
+          xmlns:commons="sap.ui.commons">
+   <Page title="" showNavButton="false" showFooter="false" showSubHeader="false">
+      <headerContent>
+         <OverflowToolbar id="otb1">
+            <MenuButton text="View" type="Transparent"  enabled="true">
+              <menu>
+                <Menu itemSelected="onViewMenuAction">
+                  <items>
+                    <MenuItem text="New Viewer" >
+                      <items>
+                        <MenuItem text="3D"  enabled="false"/>
+                        <MenuItem text="RhoZ" enabled="false" />
+                        <MenuItem text="RhoPhi"  enabled="false"/>
+                        <MenuItem text="Table"  startsSection="true"  enabled="false"/>
+                      </items>
+                    </MenuItem>
+                  </items>
+                </Menu>
+              </menu>
+            </MenuButton>
+            <MenuButton text="Tools" type="Transparent"  enabled="true">
+              <menu>
+                <Menu itemSelected="onToolsMenuAction">
+                  <items>
+                    <MenuItem text="GED Editor" icon="{/GedIcon}" />
+                    <MenuItem text="Common Preferences" enabled="false" />
+                  </items>
+                </Menu>
+              </menu>
+            </MenuButton>
+            <ToolbarSpacer />
+            <MenuButton text="Help" enabled="true">
+              <menu>
+                <Menu >
+                  <items>
+                    <MenuItem text="User Guide" press="showUserURL" />
+                    <MenuItem text="Contact"  press="showHelp"  />
+                  </items>
+                </Menu>
+              </menu>
+            </MenuButton>
+
+         </OverflowToolbar>
+      </headerContent>
+      <subHeader>
+         <OverflowToolbar>
+            <Button icon="sap-icon://open-folder" type="Transparent" />
+            <Button icon="sap-icon://decline" type="Transparent"
+               press="onCloseCanvasPress" />
+            <Button icon="sap-icon://stop" type="Transparent"
+               press="onInterruptPress" />
+            <Button icon="sap-icon://system-exit" type="Transparent"
+               tooltip="Quit ROOT session" press="onQuitRootPress" />
+         </OverflowToolbar>
+      </subHeader>
+      <content>
+        <l:Splitter id="mainSplitter">
+        <t:TreeTable
+           id="treeTable"
+           selectionMode="Single"
+           enableColumnReordering="false"
+           expandFirstLevel="false"
+           visibleRowCountMode="Auto"
+           rows="{ path:'/Nodes',  parameters : { arrayNames: ['chlds']}}" >
+           
+           <t:layoutData><l:SplitterLayoutData size="300px" /></t:layoutData>
+
+           <t:columns>
+               <t:Column label="Description">
+                   <t:template>
+                       <m:Text text="{title}" wrapping="false" />
+                   </t:template>
+               </t:Column>
+           </t:columns>
+
+          </t:TreeTable>
+          
+         <!--  <mvc:View id="GeomDraw" height="100%" width="100%" viewName="eve.GeomDraw" controllerName="eve.GeomDraw">
+            </mvc:View> -->        
+        </l:Splitter>
+      </content>
+      <footer>
+        <OverflowToolbar>
+          <Label text="{/StatusLbl1}" id="FooterLbl1" />
+          <Label text="{/StatusLbl2}" id="FooterLbl2" />
+          <Label text="{/StatusLbl3}" id="FooterLbl3" />
+          <Label text="{/StatusLbl4}" id="FooterLbl4" />
+        </OverflowToolbar>
+      </footer>
+    </Page>
+</mvc:View>
+

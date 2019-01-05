@@ -1,15 +1,14 @@
-#include <ROOT/REveGluTess.hxx>
+// @(#)root/eve:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
 
-#include <math.h>
-#include <stdlib.h>
+/*************************************************************************
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
-#include <stdexcept>
-
-#if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic push
-/* A padding warning is just plain useless */
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#endif
 
 // This is a minimal-change import of GLU libtess from:
 //   git://anongit.freedesktop.org/git/mesa/glu
@@ -19,91 +18,116 @@
 // - comment out clashing typedef EdgePair in tess.c;
 // - use -Wno-unused-parameter for this cxx file.
 
+// Sergey: first include gl code before any normal ROOT includes,
+// try to avoid clash with other system includes through Rtypes.h
+
+#include "glu/GL_glu.h"
+
+#include <ROOT/REveGluTess.hxx>
+
+#include <math.h>
+#include <stdlib.h>
+#include <stdexcept>
+
 namespace ROOT {
 namespace Experimental {
 namespace EveGlu {
 
-//==============================================================================
-// Slurp-in of glu/libtess
-//==============================================================================
+//////////////////////////////////////////////////////////////////////////////////////
+/// TestTriangleHandler is just helper class to get access to protected members of TriangleCollector
+/// Hide static declarations, let use "native" GL types
+//////////////////////////////////////////////////////////////////////////////////////
 
-#include "glu/GL/glu.h"
-
-#include "glu/dict.c"
-#include "glu/geom.c"
-#undef Swap
-#include "glu/memalloc.c"
-#include "glu/mesh.c"
-// #include "glu/priorityq-heap.c" - included in priorityq.c
-#include "glu/priorityq.c"
-#include "glu/normal.c" // has to be after priorityq.c (don't ask, may defines be with you)
-#include "glu/render.c"
-#include "glu/sweep.c"
-#include "glu/tess.c"
-#include "glu/tessmono.c"
+class TestTriangleHandler {
+public:
+   static void tess_begin(GLenum type, TriangleCollector *tc);
+   static void tess_vertex(Int_t *vi, TriangleCollector *tc);
+   static void
+   tess_combine(GLdouble coords[3], void *vertex_data[4], GLfloat weight[4], void **outData, TriangleCollector *tc);
+   static void tess_end(TriangleCollector *tc);
+};
 
 
-//==============================================================================
-// TriangleCollector
-//==============================================================================
+//////////////////////////////////////////////////////////////////////////////////////
+/// tess_begin
 
-typedef void (*tessfuncptr_t)();
-
-TriangleCollector::TriangleCollector() :
-   fNTriangles(0), fNVertices(0), fV0(-1), fV1(-1), fType(GL_NONE)
-{
-   fTess = gluNewTess();
-   if (!fTess) throw std::bad_alloc();
-
-   gluTessCallback(fTess, (GLenum)GLU_TESS_BEGIN_DATA,   (tessfuncptr_t) tess_begin);
-   gluTessCallback(fTess, (GLenum)GLU_TESS_VERTEX_DATA,  (tessfuncptr_t) tess_vertex);
-   gluTessCallback(fTess, (GLenum)GLU_TESS_COMBINE_DATA, (tessfuncptr_t) tess_combine);
-   gluTessCallback(fTess, (GLenum)GLU_TESS_END_DATA,     (tessfuncptr_t) tess_end);
-}
-
-TriangleCollector::~TriangleCollector()
-{
-   gluDeleteTess(fTess);
-}
-
-//------------------------------------------------------------------------------
-
-void TriangleCollector::tess_begin(GLenum type, TriangleCollector* tc)
+void TestTriangleHandler::tess_begin(GLenum type, TriangleCollector *tc)
 {
    tc->fNVertices = 0;
    tc->fV0 = tc->fV1 = -1;
    tc->fType = type;
 }
 
-void TriangleCollector::tess_vertex(Int_t* vi, TriangleCollector* tc)
+//////////////////////////////////////////////////////////////////////////////////////
+/// tess_vertex
+
+void TestTriangleHandler::tess_vertex(Int_t *vi, TriangleCollector *tc)
 {
    tc->process_vertex(*vi);
 }
 
-void TriangleCollector::tess_combine(GLdouble /*coords*/[3], void* /*vertex_data*/[4],
+//////////////////////////////////////////////////////////////////////////////////////
+/// tess_combine
+
+void TestTriangleHandler::tess_combine(GLdouble /*coords*/[3], void* /*vertex_data*/[4],
                                      GLfloat  /*weight*/[4], void** /*outData*/,
-                                     TriangleCollector* /*tc*/)
+                                     TriangleCollector */*tc*/)
 {
    throw std::runtime_error("GLU::TriangleCollector tesselator requested vertex combining -- not supported yet.");
 }
 
-void TriangleCollector::tess_end(TriangleCollector* tc)
+//////////////////////////////////////////////////////////////////////////////////////
+/// tess_end
+
+void TestTriangleHandler::tess_end(TriangleCollector *tc)
 {
    tc->fType = GL_NONE;
 }
 
-//------------------------------------------------------------------------------
+
+//==============================================================================
+// TriangleCollector
+//==============================================================================
+
+//////////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
+TriangleCollector::TriangleCollector()
+{
+   fType = GL_NONE;
+   fTess = gluNewTess();
+   if (!fTess) throw std::bad_alloc();
+
+   gluTessCallback(fTess, (GLenum)GLU_TESS_BEGIN_DATA,   (_GLUfuncptr) TestTriangleHandler::tess_begin);
+   gluTessCallback(fTess, (GLenum)GLU_TESS_VERTEX_DATA,  (_GLUfuncptr) TestTriangleHandler::tess_vertex);
+   gluTessCallback(fTess, (GLenum)GLU_TESS_COMBINE_DATA, (_GLUfuncptr) TestTriangleHandler::tess_combine);
+   gluTessCallback(fTess, (GLenum)GLU_TESS_END_DATA,     (_GLUfuncptr) TestTriangleHandler::tess_end);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
+TriangleCollector::~TriangleCollector()
+{
+   gluDeleteTess(fTess);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+/// add triangle
 
 void TriangleCollector::add_triangle(Int_t v0, Int_t v1, Int_t v2)
 {
-   fPolyDesc.push_back(3);
-   fPolyDesc.push_back(v0);
-   fPolyDesc.push_back(v1);
-   fPolyDesc.push_back(v2);
+   fPolyDesc.emplace_back(3);
+   fPolyDesc.emplace_back(v0);
+   fPolyDesc.emplace_back(v1);
+   fPolyDesc.emplace_back(v2);
    ++fNTriangles;
 }
 
-void TriangleCollector::process_vertex(Int_t vi)
+//////////////////////////////////////////////////////////////////////////////////////
+/// process_vertex
+
+void ROOT::Experimental::EveGlu::TriangleCollector::process_vertex(Int_t vi)
 {
    ++fNVertices;
 
@@ -147,7 +171,10 @@ void TriangleCollector::process_vertex(Int_t vi)
    }
 }
 
-void TriangleCollector::ProcessData(const std::vector<Double_t>& verts,
+//////////////////////////////////////////////////////////////////////////////////////
+/// ProcessData
+
+void ROOT::Experimental::EveGlu::TriangleCollector::ProcessData(const std::vector<Double_t>& verts,
                                     const std::vector<Int_t>   & polys,
                                     const Int_t                  n_polys)
 {
@@ -174,8 +201,3 @@ void TriangleCollector::ProcessData(const std::vector<Double_t>& verts,
 } // namespace EveGlu
 } // namespace Experimental
 } // namespace ROOT
-
-
-#if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic pop
-#endif

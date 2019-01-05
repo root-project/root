@@ -2,16 +2,12 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #610
-##
-## Visualization of errors from a covariance matrix
+## Likelihood and minimization: visualization of errors from a covariance matrix
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
-
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -79,21 +75,42 @@ model.plotOn(frame, ROOT.RooFit.VisualizeError(
 # 100 (e.g. Z=1.Ncurve=356, Z=2.Ncurve=2156)) Intervals from the sampling method can be asymmetric,
 # and may perform better in the presence of strong correlations, may take
 # (much) longer to calculate
-model.plotOn(frame, ROOT.RooFit.VisualizeError(r, 1, ROOT.kFALSE), ROOT.RooFit.DrawOption(
-    "L"), ROOT.RooFit.LineWidth(2), ROOT.RooFit.LineColor(ROOT.kRed))
+model.plotOn(
+    frame,
+    ROOT.RooFit.VisualizeError(
+        r,
+        1,
+        ROOT.kFALSE),
+    ROOT.RooFit.DrawOption("L"),
+    ROOT.RooFit.LineWidth(2),
+    ROOT.RooFit.LineColor(
+        ROOT.kRed))
 
 # Perform the same type of error visualization on the background component only.
 # The VisualizeError() option can generally applied to _any_ kind of
 # plot (components, asymmetries, etc..)
-model.plotOn(frame, ROOT.RooFit.VisualizeError(r, 1),
-                ROOT.RooFit.FillColor(ROOT.kOrange), ROOT.RooFit.Components("bkg"))
-model.plotOn(frame, ROOT.RooFit.VisualizeError(r, 1, ROOT.kFALSE), ROOT.RooFit.DrawOption("L"), ROOT.RooFit.LineWidth(
-    2), ROOT.RooFit.LineColor(ROOT.kRed), ROOT.RooFit.Components("bkg"), ROOT.RooFit.LineStyle(ROOT.kDashed))
+model.plotOn(
+    frame, ROOT.RooFit.VisualizeError(
+        r, 1), ROOT.RooFit.FillColor(
+            ROOT.kOrange), ROOT.RooFit.Components("bkg"))
+model.plotOn(
+    frame,
+    ROOT.RooFit.VisualizeError(
+        r,
+        1,
+        ROOT.kFALSE),
+    ROOT.RooFit.DrawOption("L"),
+    ROOT.RooFit.LineWidth(2),
+    ROOT.RooFit.LineColor(
+        ROOT.kRed),
+    ROOT.RooFit.Components("bkg"),
+    ROOT.RooFit.LineStyle(
+        ROOT.kDashed))
 
 # Overlay central value
 model.plotOn(frame)
 model.plotOn(frame, ROOT.RooFit.Components("bkg"),
-                ROOT.RooFit.LineStyle(ROOT.kDashed))
+             ROOT.RooFit.LineStyle(ROOT.kDashed))
 d.plotOn(frame)
 frame.SetMinimum(0)
 
@@ -123,7 +140,7 @@ model.plotOn(frame2, ROOT.RooFit.Components("bkg"), ROOT.RooFit.VisualizeError(
 
 model.plotOn(frame2)
 model.plotOn(frame2, ROOT.RooFit.Components("bkg"),
-                ROOT.RooFit.LineStyle(ROOT.kDashed))
+             ROOT.RooFit.LineStyle(ROOT.kDashed))
 frame2.SetMinimum(0)
 
 # Make plot frame
@@ -139,7 +156,7 @@ model.plotOn(frame3, ROOT.RooFit.Components("bkg"), ROOT.RooFit.VisualizeError(
 
 model.plotOn(frame3)
 model.plotOn(frame3, ROOT.RooFit.Components("bkg"),
-                ROOT.RooFit.LineStyle(ROOT.kDashed))
+             ROOT.RooFit.LineStyle(ROOT.kDashed))
 frame3.SetMinimum(0)
 
 # Make plot frame
@@ -155,7 +172,7 @@ model.plotOn(frame4, ROOT.RooFit.Components("bkg"), ROOT.RooFit.VisualizeError(
 
 model.plotOn(frame4)
 model.plotOn(frame4, ROOT.RooFit.Components("bkg"),
-                ROOT.RooFit.LineStyle(ROOT.kDashed))
+             ROOT.RooFit.LineStyle(ROOT.kDashed))
 frame4.SetMinimum(0)
 
 c = ROOT.TCanvas("rf610_visualerror", "rf610_visualerror", 800, 800)

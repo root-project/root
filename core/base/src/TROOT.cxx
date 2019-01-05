@@ -1017,8 +1017,10 @@ TROOT::~TROOT()
       // checking the completeness of the termination deletion.
 
       // TODO: Should we do more cleanup here than just call delete?
-      // Segfaults rootcling in some cases, debug and uncomment
-      // delete fInterpreter;
+      // Segfaults rootcling in some cases, debug and uncomment:
+      //
+      //    delete fInterpreter;
+
       SafeDelete(fCleanups);
 #endif
 
@@ -1770,15 +1772,15 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
       // We add to the list the "funcky-fake" globals.
       fGlobals = new TListOfDataMembers(0);
       fGlobals->Add(new TGlobalMappedFunction("gROOT", "TROOT*",
-                                              (TGlobalMappedFunction::GlobalFunc_t)&ROOT::GetROOT));
+               (TGlobalMappedFunction::GlobalFunc_t)((void*)&ROOT::GetROOT)));
       fGlobals->Add(new TGlobalMappedFunction("gPad", "TVirtualPad*",
-                                            (TGlobalMappedFunction::GlobalFunc_t)&TVirtualPad::Pad));
+               (TGlobalMappedFunction::GlobalFunc_t)((void*)&TVirtualPad::Pad)));
       fGlobals->Add(new TGlobalMappedFunction("gInterpreter", "TInterpreter*",
-                                            (TGlobalMappedFunction::GlobalFunc_t)&TInterpreter::Instance));
+               (TGlobalMappedFunction::GlobalFunc_t)((void*)&TInterpreter::Instance)));
       fGlobals->Add(new TGlobalMappedFunction("gVirtualX", "TVirtualX*",
-                                            (TGlobalMappedFunction::GlobalFunc_t)&TVirtualX::Instance));
+               (TGlobalMappedFunction::GlobalFunc_t)((void*)&TVirtualX::Instance)));
       fGlobals->Add(new TGlobalMappedFunction("gDirectory", "TDirectory*",
-                                            (TGlobalMappedFunction::GlobalFunc_t)&TDirectory::CurrentDirectory));
+               (TGlobalMappedFunction::GlobalFunc_t)((void*)&TDirectory::CurrentDirectory)));
       // Don't let TGlobalMappedFunction delete our globals, now that we take them.
       fGlobals->AddAll(&TGlobalMappedFunction::GetEarlyRegisteredGlobals());
       TGlobalMappedFunction::GetEarlyRegisteredGlobals().SetOwner(kFALSE);

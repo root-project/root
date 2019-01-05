@@ -23,53 +23,27 @@
 
 /*! \class TMVA::TActivationSigmoid
 \ingroup TMVA
-Sigmoid activation function for TNeuron. This really simple implementation
-uses TFormula and should probably be replaced with something more
-efficient later.
+Sigmoid activation function for TNeuron.
 */
 
 #include "TMVA/TActivationSigmoid.h"
 
 #include "TMVA/TActivation.h"
 
-#include "TFormula.h"
 #include "TMath.h"
 #include "TString.h"
 
 #include <iostream>
 
-static const Int_t  UNINITIALIZED = -1;
 
 ClassImp(TMVA::TActivationSigmoid);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor for sigmoid normalized in [0,1]
-
-TMVA::TActivationSigmoid::TActivationSigmoid()
-{
-   fEqn = new TFormula("sigmoid", "1.0/(1.0+TMath::Exp(-x))");
-   fEqnDerivative =
-      new TFormula("derivative", "TMath::Exp(-x)/(1.0+TMath::Exp(-x))^2");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
-TMVA::TActivationSigmoid::~TActivationSigmoid()
-{
-   if (fEqn != NULL) delete fEqn;
-   if (fEqnDerivative != NULL) delete fEqnDerivative;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluate the sigmoid
 
 Double_t TMVA::TActivationSigmoid::Eval(Double_t arg)
 {
-   if (fEqn == NULL) return UNINITIALIZED;
-   return fEqn->Eval(arg);
-
-   //return EvalFast(arg);
+   return 1.0 / (1.0 + TMath::Exp(-arg));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,10 +51,8 @@ Double_t TMVA::TActivationSigmoid::Eval(Double_t arg)
 
 Double_t TMVA::TActivationSigmoid::EvalDerivative(Double_t arg)
 {
-   if (fEqnDerivative == NULL) return UNINITIALIZED;
-   return fEqnDerivative->Eval(arg);
-
-   //return EvalDerivativeFast(arg);
+   Double_t tmp = (1.0 + TMath::Exp(-arg));
+   return TMath::Exp(-arg) / (tmp * tmp);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,16 +60,7 @@ Double_t TMVA::TActivationSigmoid::EvalDerivative(Double_t arg)
 
 TString TMVA::TActivationSigmoid::GetExpression()
 {
-   TString expr = "";
-
-   if (fEqn == NULL) expr += "<null>";
-   else              expr += fEqn->GetExpFormula();
-
-   expr += "\t\t";
-
-   if (fEqnDerivative == NULL) expr += "<null>";
-   else                        expr += fEqnDerivative->GetExpFormula();
-
+   TString expr = "1.0/(1.0+TMath::Exp(-x))\t\tTMath::Exp(-x)/(1.0+TMath::Exp(-x))^2";
    return expr;
 }
 

@@ -13,7 +13,6 @@
 #define ROOT_THDFSFile
 
 #include "TFile.h"
-
 #include "TSystem.h"
 
 class THDFSFile : public TFile {
@@ -36,7 +35,7 @@ private:
 
 public:
    THDFSFile(const char *path, Option_t *option="",
-             const char *ftitle="", Int_t compress=1);
+             const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
    virtual ~THDFSFile();
 
    void ResetErrno() const;

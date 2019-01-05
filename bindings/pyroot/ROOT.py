@@ -241,23 +241,13 @@ def _TTree__iter__( self ):
 _root.CreateScopeProxy( "TTree" ).__iter__    = _TTree__iter__
 
 # Array interface
-def _proxy__array_interface__(self):
-    getter_array_interface = "_get__array_interface__"
-    if hasattr(self, getter_array_interface):
-        return self._get__array_interface__()
-    else:
-        raise Exception("Class {} does not have method {}.".format(
-            type(self), getter_array_interface))
+def _add__array_interface__(self):
+    # This proxy fixes attaching the property in Python 3.
+    def _proxy__array_interface__(x):
+        return x._get__array_interface__()
+    self.__array_interface__ = property(_proxy__array_interface__)
 
-for pyclass in [
-        "std::vector<{dtype}>",
-        "ROOT::VecOps::RVec<{dtype}>"
-        ]:
-    dtypes = ["float", "double", "int", "unsigned int", "long", "unsigned long"]
-    for dtype in dtypes:
-        class_scope = _root.CreateScopeProxy(pyclass.format(dtype=dtype))
-        class_scope._proxy__array_interface__ = _proxy__array_interface__
-        class_scope.__array_interface__ = property(class_scope._proxy__array_interface__)
+_root._add__array_interface__ = _add__array_interface__
 
 # TTree.AsMatrix functionality
 def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labels=False):
@@ -357,10 +347,10 @@ def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labe
     flat_matrix = _root.std.vector(dtype)(self.GetEntries()*len(columns))
 
     # Read the tree as flat std.vector(dtype)
-    tree_ptr = _root.ROOT.Detail.RDF.GetAddress(self)
-    columns_vector_ptr = _root.ROOT.Detail.RDF.GetAddress(columns_vector)
-    flat_matrix_ptr = _root.ROOT.Detail.RDF.GetVectorAddress(dtype)(flat_matrix)
-    jit_code = "ROOT::Detail::RDF::TTreeAsFlatMatrixHelper<{dtype}, {col_dtypes}>(*reinterpret_cast<TTree*>({tree_ptr}), *reinterpret_cast<std::vector<{dtype}>* >({flat_matrix_ptr}), *reinterpret_cast<std::vector<string>* >({columns_vector_ptr}));".format(
+    tree_ptr = _root.ROOT.Internal.RDF.GetAddress(self)
+    columns_vector_ptr = _root.ROOT.Internal.RDF.GetAddress(columns_vector)
+    flat_matrix_ptr = _root.ROOT.Internal.RDF.GetVectorAddress(dtype)(flat_matrix)
+    jit_code = "ROOT::Internal::RDF::TTreeAsFlatMatrixHelper<{dtype}, {col_dtypes}>(*reinterpret_cast<TTree*>({tree_ptr}), *reinterpret_cast<std::vector<{dtype}>* >({flat_matrix_ptr}), *reinterpret_cast<std::vector<string>* >({columns_vector_ptr}));".format(
             col_dtypes = ", ".join(col_dtypes),
             dtype = dtype,
             tree_ptr = tree_ptr,
@@ -378,6 +368,86 @@ def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labe
         return (reshaped_matrix_np, columns)
     else:
         return reshaped_matrix_np
+
+# RDataFrame.AsNumpy feature
+def _RDataFrameAsNumpy(df, columns=None, exclude=None):
+    """Read-out the RDataFrame as a collection of numpy arrays.
+
+    The values of the dataframe are read out as numpy array of the respective type
+    if the type is a fundamental type such as float or int. If the type of the column
+    is a complex type, such as your custom class or a std::array, the returned numpy
+    array contains Python objects of this type interpreted via PyROOT.
+
+    Be aware that reading out custom types is much less performant than reading out
+    fundamental types, such as int or float, which are supported directly by numpy.
+
+    The reading is performed in multiple threads if the implicit multi-threading of
+    ROOT is enabled.
+
+    Note that this is an instant action of the RDataFrame graph and will trigger the
+    event-loop.
+
+    Parameters:
+        columns: If None return all branches as columns, otherwise specify names in iterable.
+        exclude: Exclude branches from selection.
+
+    Returns:
+        dict: Dict with column names as keys and 1D numpy arrays with content as values
+    """
+    # Import numpy lazily
+    try:
+        import numpy
+    except:
+        raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
+
+    # Find all column names in the dataframe if no column are specified
+    if not columns:
+        columns = [c for c in df.GetColumnNames()]
+
+    # Exclude the specified columns
+    if exclude == None:
+        exclude = []
+    columns = [col for col in columns if not col in exclude]
+
+    # Cast input node to base RNode type
+    df_rnode = _root.ROOT.RDF.AsRNode(df)
+
+    # Register Take action for each column
+    result_ptrs = {}
+    for column in columns:
+        column_type = df_rnode.GetColumnType(column)
+        result_ptrs[column] = _root.ROOT.Internal.RDF.RDataFrameTake(column_type)(df_rnode, column)
+
+    # This wrapper class inherits from numpy.ndarray and enables us to attach
+    # the result pointer of the Take action to the object.
+    class ndarray(numpy.ndarray):
+        def __new__(cls, numpy_array, result_ptr):
+            obj = numpy.asarray(numpy_array).view(cls)
+            obj.result_ptr = result_ptr
+            obj.__class__.__name__ = "numpy.array"
+            return obj
+
+        def __array_finalize__(self, obj):
+            if obj is None: return
+            self.result_ptr = getattr(obj, "result_ptr", None)
+
+    # Convert the C++ vectors to numpy arrays
+    py_arrays = {}
+    for column in columns:
+        cpp_reference = result_ptrs[column].GetValue()
+        if hasattr(cpp_reference, "__array_interface__"):
+            tmp = numpy.array(cpp_reference) # This adopts the memory of the C++ object.
+            py_arrays[column] = ndarray(tmp, result_ptrs[column])
+        else:
+            tmp = numpy.empty(len(cpp_reference), dtype=numpy.object)
+            for i, x in enumerate(cpp_reference):
+                tmp[i] = x # This creates only the wrapping of the objects and does not copy.
+            py_arrays[column] = ndarray(tmp, result_ptrs[column])
+
+    return py_arrays
+
+# This function is injected as method to the respective classes in Pythonize.cxx.
+_root._RDataFrameAsNumpy = _RDataFrameAsNumpy
 
 # This Pythonisation is there only for 64 bits builds
 if (sys.maxsize > 2**32): # https://docs.python.org/3/library/platform.html#cross-platform
@@ -750,7 +820,10 @@ class ModuleFacade( types.ModuleType ):
 
     # manually load libMathCore, for example to obtain gRandom
     # This can be removed once autoloading on selected variables is available
-      _root.gSystem.Load( "libMathCore" )
+    # If we have a pcm for the library, we don't have to explicitly load this as
+    # modules have an autoloading support.
+      if not _root.gInterpreter.HasPCMForLibrary("libMathCore"):
+         _root.gSystem.Load( "libMathCore" )
 
 sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
 del ModuleFacade

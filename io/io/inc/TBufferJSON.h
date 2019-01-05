@@ -31,6 +31,10 @@ public:
    virtual ~TBufferJSON();
 
    void SetCompact(int level);
+   void SetTypenameTag(const char *tag = "_typename");
+   void SetTypeversionTag(const char *tag = nullptr);
+   void SetSkipClassInfo(const TClass *cl);
+   Bool_t IsSkipClassInfo(const TClass *cl) const;
 
    static TString ConvertToJSON(const TObject *obj, Int_t compact = 0, const char *member_name = nullptr);
    static TString
@@ -227,7 +231,9 @@ protected:
    void JsonDisablePostprocessing();
    Int_t JsonSpecialClass(const TClass *cl) const;
 
-   void JsonStartElement(const TStreamerElement *elem, const TClass *base_class = nullptr);
+   TJSONStackObj *JsonStartObjectWrite(const TClass *obj_class, TStreamerInfo *info = nullptr);
+
+   void JsonStartElement(const TStreamerElement *elem, const TClass *base_class);
 
    void PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_cl = nullptr);
 
@@ -278,14 +284,18 @@ protected:
                                             void (TBufferJSON::*method)(const T *, Int_t, const char *));
 
    TString fOutBuffer;                 ///<!  main output buffer for json code
-   TString *fOutput;                   ///<!  current output buffer for json code
+   TString *fOutput{nullptr};          ///<!  current output buffer for json code
    TString fValue;                     ///<!  buffer for current value
-   unsigned fJsonrCnt;                 ///<!  counter for all objects, used for referencing
+   unsigned fJsonrCnt{0};              ///<!  counter for all objects, used for referencing
    std::deque<TJSONStackObj *> fStack; ///<!  hierarchy of currently streamed element
-   Int_t fCompact;     ///<!  0 - no any compression, 1 - no spaces in the begin, 2 - no new lines, 3 - no spaces at all
+   Int_t fCompact{0};  ///<!  0 - no any compression, 1 - no spaces in the begin, 2 - no new lines, 3 - no spaces at all
    TString fSemicolon; ///<!  depending from compression level, " : " or ":"
+   Int_t fArrayCompact{0}; ///<!  0 - no array compression, 1 - exclude leading/trailing zeros, 2 - check value repetition
    TString fArraySepar;    ///<!  depending from compression level, ", " or ","
    TString fNumericLocale; ///<!  stored value of setlocale(LC_NUMERIC), which should be recovered at the end
+   TString fTypeNameTag;   ///<! JSON member used for storing class name, when empty - no class name will be stored
+   TString fTypeVersionTag;  ///<! JSON member used to store class version, default empty
+   TObjArray *fSkipClasses{nullptr}; ///<! list of classes, which class info is not stored
 
    ClassDef(TBufferJSON, 1) // a specialized TBuffer to only write objects into JSON format
 };

@@ -27,13 +27,13 @@ private:
 protected:
    REveProjection *fProjections[REveProjection::kPT_End];
 
-   REveProjection *fProjection; // current projection
-   REveVector fCenter;          // center of distortion
-   Float_t fCurrentDepth;       // z depth of object being projected
+   REveProjection *fProjection{nullptr}; // current projection
+   REveVector fCenter;                   // center of distortion
+   Float_t fCurrentDepth{0};             // z depth of object being projected
 
    List_t fDependentEls; // elements that depend on manager and need to be destroyed with it
 
-   Bool_t fImportEmpty; // import sub-trees with no projectable elements
+   Bool_t fImportEmpty{kFALSE}; // import sub-trees with no projectable elements
 
    virtual Bool_t ShouldImport(REveElement *el);
    virtual void UpdateDependentElsAndScenes(REveElement *root);

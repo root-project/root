@@ -2,15 +2,12 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #502
-##
-## Creating and writing a workspace
+## Organization and simultaneous fits: creating and writing a workspace
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \author Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

@@ -22,6 +22,7 @@
 #include "TCanvasImp.h"
 
 #include "TString.h"
+#include "TList.h"
 
 #include <ROOT/RWebWindow.hxx>
 
@@ -31,7 +32,6 @@
 
 class TVirtualPad;
 class TPad;
-class TList;
 class TObjLink;
 class TWebSnapshot;
 class TPadWebSnapshot;
@@ -92,6 +92,10 @@ public:
    using PadClickedSignal_t = std::function<void(TPad *, int, int)>;
 
 protected:
+
+   /// Function called when pad painting produced
+   using PadPaintingReady_t = std::function<void(TPadWebSnapshot *)>;
+
    struct WebConn {
       unsigned fConnId{0};       ///<! connection id
       std::string fGetMenu;      ///<! object id for menu request
@@ -108,6 +112,10 @@ protected:
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
    bool fWaitNewConnection{false}; ///<! when true, Update() will wait for a new connection
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
+   TList fPrimitivesLists;         ///<! list of lists of primitives, temporary collected during painting
+   Int_t fStyleDelivery{0};        ///<! gStyle delivery to clients: 0:never, 1:once, 2:always
+   Int_t fPaletteDelivery{1};      ///<! colors palette delivery 0:never, 1:once, 2:always, 3:per subpad
+   Int_t fPrimitivesMerge{100};    ///<! number of PS primitives, which will be merged together
 
    UpdatedSignal_t fUpdatedSignal;          ///<! signal emitted when canvas updated or state is changed
    PadSignal_t fActivePadChangedSignal;     ///<!  signal emitted when active pad changed in the canvas
@@ -123,9 +131,9 @@ protected:
    virtual Bool_t PerformUpdate();
    virtual TVirtualPadPainter *CreatePadPainter();
 
-   Bool_t AddCanvasSpecials(TPadWebSnapshot *master);
-   TString CreateSnapshot(TPad *pad, TPadWebSnapshot *master = nullptr, TList *tempbuf = nullptr);
-   TWebSnapshot *CreateObjectSnapshot(TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
+   void AddColorsPalette(TPadWebSnapshot &master);
+   void CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
+   void CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t func);
 
    TObject *FindPrimitive(const char *id, TPad *pad = nullptr, TObjLink **padlnk = nullptr);
    Bool_t DecodeAllRanges(const char *arg);
@@ -196,6 +204,18 @@ public:
    virtual Bool_t HasStatusBar() const;
    virtual Bool_t HasToolBar() const { return kFALSE; }
    virtual Bool_t HasToolTips() const;
+
+   void SetStyleDelivery(Int_t val) { fStyleDelivery = val; }
+   Int_t GetStyleDelivery() const { return fStyleDelivery; }
+
+   void SetPaletteDelivery(Int_t val) { fPaletteDelivery = val; }
+   Int_t GetPaletteDelivery() const { return fPaletteDelivery; }
+
+   void SetPrimitivesMerge(Int_t cnt) { fPrimitivesMerge = cnt; }
+   Int_t GetPrimitivesMerge() const { return fPrimitivesMerge; }
+
+   static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
+   static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");
 
    ClassDef(TWebCanvas, 0) // ABC describing main window protocol
 };

@@ -66,28 +66,26 @@
           track_color = JSROOT.Painter.root_colors[track.fLineColor] || "rgb(255,0,255)";
       if (JSROOT.browser.isWin) track_width = 1;  // not supported on windows
 
-      var buf = new Float32Array(N*3*2), pos = 0;
+      var buf = new Float32Array((N-1)*6), pos = 0;
       for (var k=0;k<(N-1);++k) {
          buf[pos]   = rnrData.vtxBuff[k*3];
          buf[pos+1] = rnrData.vtxBuff[k*3+1];
          buf[pos+2] = rnrData.vtxBuff[k*3+2];
 
-         var breakTrack = 0;
-         if (rnrData.idxBuff) {
-            for (var b = 0; b < rnrData.idxBuff.length; b++)
-            {
-               if ( (k+1) == rnrData.idxBuff[b]) {
-                  breakTrack = 1;
+         var breakTrack = false;
+         if (rnrData.idxBuff)
+            for (var b = 0; b < rnrData.idxBuff.length; b++) {
+               if ( (k+1) == rnrData.idxBuff[b]) { 
+                  breakTrack = true;
+                  break;
                }
             }
-         }
 
          if (breakTrack) {
             buf[pos+3] = rnrData.vtxBuff[k*3];
             buf[pos+4] = rnrData.vtxBuff[k*3+1];
             buf[pos+5] = rnrData.vtxBuff[k*3+2];
-         }
-         else {
+         } else {
             buf[pos+3] = rnrData.vtxBuff[k*3+3];
             buf[pos+4] = rnrData.vtxBuff[k*3+4];
             buf[pos+5] = rnrData.vtxBuff[k*3+5];
@@ -100,9 +98,7 @@
       var lineMaterial;
       if (track.fLineStyle == 1) {
          lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width });
-      }
-      else
-      {
+      } else {
          //lineMaterial = new THREE.LineDashedMaterial({ color: track_color, linewidth: track_width, gapSize: parseInt(track.fLineStyle) });
          lineMaterial = new THREE.LineDashedMaterial({ color: track_color, linewidth: track_width, dashSize:3, gapSize: 1 });
       }
@@ -134,36 +130,27 @@
 
       var geo_body = new THREE.BufferGeometry();
       geo_body.addAttribute('position', pos_ba);
-      {
-         var idcs = [];
-         idcs.push( 0 );  idcs.push( N - 1 );  idcs.push( 1 );
-         for (var i = 1; i < N - 1; ++i)
-         {
-            idcs.push( 0 );  idcs.push( i );  idcs.push( i + 1 );
-         }
-         geo_body.setIndex( idcs );
-         geo_body.computeVertexNormals();
-      }
+      var idcs = [];
+      idcs.push( 0, N-1, 1 );
+      for (var i = 1; i < N - 1; ++i)
+         idcs.push( 0, i, i + 1 );
+      geo_body.setIndex( idcs );
+      geo_body.computeVertexNormals();
+      
       var geo_rim = new THREE.BufferGeometry();
       geo_rim.addAttribute('position', pos_ba);
-      {
-         var idcs = [];
-         for (var i = 1; i < N; ++i)
-         {
-            idcs.push( i );
-         }
-         geo_rim.setIndex( idcs );
-      }
+      idcs = [];
+      for (var i = 1; i < N; ++i)
+         idcs.push( i );
+      geo_rim.setIndex( idcs );
+
       var geo_rays = new THREE.BufferGeometry();
       geo_rays.addAttribute('position', pos_ba);
-      {
-         var idcs = [];
-         for (var i = 1; i < N; i += 4)
-         {
-            idcs.push( 0 ); idcs.push( i );
-         }
-         geo_rays.setIndex( idcs );
-      }
+      idcs = [];
+      for (var i = 1; i < N; i += 4)
+         idcs.push( 0, i ); 
+      geo_rays.setIndex( idcs );
+      
       var mcol = JSROOT.Painter.root_colors[jet.fMainColor];
       var lcol = JSROOT.Painter.root_colors[jet.fLineColor];
       
@@ -199,30 +186,24 @@
 
       var geo_body = new THREE.BufferGeometry();
       geo_body.addAttribute('position', pos_ba);
-      {
-         var idcs = [];
-         idcs.push( 0 );  idcs.push( 2 );  idcs.push( 1 );
-         if (N > 3) {
-            idcs.push( 0 );  idcs.push( 3 );  idcs.push( 2 );
-         }
-         geo_body.setIndex( idcs );
-         geo_body.computeVertexNormals();
-      }
+      var idcs = [];
+      idcs.push( 0, 2, 1 );
+      if (N > 3) 
+         idcs.push( 0, 3, 2 );
+      geo_body.setIndex( idcs );
+      geo_body.computeVertexNormals();
+      
       var geo_rim = new THREE.BufferGeometry();
       geo_rim.addAttribute('position', pos_ba);
-      {
-         var idcs = [];
-         for (var i = 1; i < N; ++i) { idcs.push( i ); }
-         geo_rim.setIndex( idcs );
-      }
+      idcs = [];
+      for (var i = 1; i < N; ++i) idcs.push( i );
+      geo_rim.setIndex( idcs );
+      
       var geo_rays = new THREE.BufferGeometry();
       geo_rays.addAttribute('position', pos_ba);
-      {
-         var idcs = [];
-         idcs.push( 0 ); idcs.push( 1 );
-         idcs.push( 0 ); idcs.push( N - 1 );
-         geo_rays.setIndex( idcs );
-      }
+      idcs = [ 0, 1, 0, N-1 ];
+      geo_rays.setIndex( idcs );
+      
       var fcol = JSROOT.Painter.root_colors[jet.fFillColor];
       var lcol = JSROOT.Painter.root_colors[jet.fLineColor];
       // Process transparency !!!
@@ -248,18 +229,17 @@
 
       return jet_ro;
    }
-
-   EveElements.prototype.makeEveGeoShape = function(egs, rnr_data)
+   
+   EveElements.prototype.makeEveGeometry = function(rnr_data)
    {
       // console.log("makeEveGeoShape ", egs);
 
-      var egs_ro = new THREE.Object3D();
       var pos_ba = new THREE.BufferAttribute( rnr_data.vtxBuff, 3 );
       var idx_ba = new THREE.BufferAttribute( rnr_data.idxBuff, 1 );
 
       var ib_len = rnr_data.idxBuff.length;
 
-      console.log("ib_len", ib_len, rnr_data.idxBuff[0], rnr_data.idxBuff[1], 3 * rnr_data.idxBuff[1]);
+      // console.log("ib_len", ib_len, rnr_data.idxBuff[0], rnr_data.idxBuff[1], 3 * rnr_data.idxBuff[1]);
 
       if (rnr_data.idxBuff[0] != GL.TRIANGLES)   throw "Expect triangles first.";
       if (2 + 3 * rnr_data.idxBuff[1] != ib_len) throw "Expect single list of triangles in index buffer.";
@@ -277,16 +257,25 @@
       // XXXX triangles is trivial, we could do it before invoking the big guns (if they are even needed).
       // XXXX Oh, and once triangulated, we really don't need to store 3 as number of verts in a poly each time.
       // XXXX Or do we? We might need it for projection stuff.
-      body.computeVertexNormals();
+      body.computeVertexNormals(); 
+
+      return body;
+   }
+
+   EveElements.prototype.makeEveGeoShape = function(egs, rnr_data)
+   {
+      var egs_ro = new THREE.Object3D();
+      
+      var geom = this.makeEveGeometry(rnr_data);
 
       var fcol = JSROOT.Painter.root_colors[egs.fFillColor];
-      // var lcol = JSROOT.Painter.root_colors[egs.fLineColor];
-      egs_ro.add( new THREE.Mesh(body, new THREE.MeshPhongMaterial({// side: THREE.DoubleSide,
-         depthWrite:  false,
-         color:fcol, transparent: true, opacity: 0.2
-      })) );
 
-      // egs_ro.add( new THREE.LineSegments(body, new THREE.LineBasicMaterial({color:lcol })) );
+      var material = new THREE.MeshPhongMaterial({// side: THREE.DoubleSide,
+                          depthWrite: false, color:fcol, transparent: true, opacity: 0.2 });
+
+      var mesh = new THREE.Mesh(geom, material);
+      
+      egs_ro.add(mesh);
 
       return egs_ro;
    }
@@ -308,17 +297,24 @@
       {
          if (rnr_data.idxBuff[ib_pos] == GL.TRIANGLES)
          {
-            var body = new THREE.BufferGeometry();
-            body.addAttribute('position', pos_ba);
-            body.setIndex(idx_ba);
-            body.setDrawRange(ib_pos + 2, 3 * rnr_data.idxBuff[ib_pos + 1]);
-            body.computeVertexNormals();
+            // Sergey: make check, for now here many wrong values
+            var is_ok = true, maxindx = rnr_data.vtxBuff.length/3;
+            for (var k=0;is_ok && (k < 3*rnr_data.idxBuff[ib_pos + 1]); ++k) 
+               if (rnr_data.idxBuff[ib_pos+2+k] > maxindx) is_ok = false;
+            
+            if (is_ok) {
+               var body = new THREE.BufferGeometry();
+               body.addAttribute('position', pos_ba);
+               body.setIndex(idx_ba);
+               body.setDrawRange(ib_pos + 2, 3 * rnr_data.idxBuff[ib_pos + 1]);
+               body.computeVertexNormals();
+               var material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, depthWrite: false,
+                                               color:fcol, transparent: true, opacity: 0.4 });
 
-            psp_ro.add( new THREE.Mesh(body, new THREE.MeshBasicMaterial
-                                       ({ side: THREE.DoubleSide,
-                                          depthWrite: false,
-                                          color:fcol, transparent: true, opacity: 0.4
-                                        })) );
+               psp_ro.add( new THREE.Mesh(body, material) );
+            } else {
+               console.log('Error in makePolygonSetProjected - wrong GL.TRIANGLES indexes');
+            }
 
             ib_pos += 2 + 3 * rnr_data.idxBuff[ib_pos + 1];
          }
@@ -335,8 +331,10 @@
          }
          else
          {
-            throw "Unexpected primitive type", rnr_data.idxBuff[ib_pos]
+            console.error("Unexpected primitive type " + rnr_data.idxBuff[ib_pos]);
+            break;
          }
+         
       }
 
       return psp_ro;

@@ -28,6 +28,7 @@
 #include <utility>
 #include <assert.h>
 #include <algorithm>
+#include <fstream>
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Destructor for WebConn
@@ -483,7 +484,6 @@ void ROOT::Experimental::RWebWindow::CheckInactiveConnections()
 
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Processing of websockets call-backs, invoked from RWebWindowWSHandler
 /// Method invoked from http server thread, therefore appropriate mutex must be used on all relevant data
@@ -585,6 +585,22 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
       conn->fClientCredits = (int)can_send;
       conn->fRecvStamp = stamp;
    }
+
+   if (fProtocolCnt >= 0)
+      if (!fProtocolConnId || (conn->fConnId == fProtocolConnId)) {
+         fProtocolConnId = conn->fConnId; // remember connection
+
+         // record send event only for normal channel or very first message via ch0
+         if ((nchannel != 0) || (cdata.find("READY=") == 0)) {
+            if (fProtocol.length() > 2)
+               fProtocol.insert(fProtocol.length() - 1, ",");
+            fProtocol.insert(fProtocol.length() - 1, "\"send\"");
+
+            std::ofstream pfs(fProtocolFileName);
+            pfs.write(fProtocol.c_str(), fProtocol.length());
+            pfs.close();
+         }
+      }
 
    if (nchannel == 0) {
       // special system channel
@@ -777,7 +793,6 @@ void ROOT::Experimental::RWebWindow::Sync()
    CheckInactiveConnections();
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////
 /// Returns relative URL address for the specified window
 /// Address can be required if one needs to access data from one window into another window
@@ -796,11 +811,31 @@ std::string ROOT::Experimental::RWebWindow::RelativeAddr(std::shared_ptr<RWebWin
    return res;
 }
 
+///////////////////////////////////////////////////////////////////////////////////
 /// Returns current number of active clients connections
+
 int ROOT::Experimental::RWebWindow::NumConnections()
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
    return fConn.size();
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////
+/// Configures recording of communication data in protocol file
+/// Provided filename will be used to store JSON array with names of written files - text or binary
+/// If data was send from client, "send" entry will be placed. JSON file will look like:
+///    ["send","msg0.txt","send","msg1.txt","msg2.txt"]
+/// If empty file name is provided, data recording will be disabled
+/// Recorded data can be used in JSROOT directly to test client code without running C++ server
+
+void ROOT::Experimental::RWebWindow::RecordData(const std::string &fname, const std::string &fprefix)
+{
+   fProtocolFileName = fname;
+   fProtocolCnt = fProtocolFileName.empty() ? -1 : 0;
+   fProtocolConnId = fProtocolFileName.empty() ? 0 : GetConnectionId(0);
+   fProtocolPrefix = fprefix;
+   fProtocol = "[]"; // empty array
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -813,7 +848,6 @@ unsigned ROOT::Experimental::RWebWindow::GetConnectionId(int num)
    if (num>=(int)fConn.size() || !fConn[num]->fActive) return 0;
    return fConn[num]->fConnId;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// returns true if specified connection id exists
@@ -836,7 +870,6 @@ bool ROOT::Experimental::RWebWindow::HasConnection(unsigned connid, bool only_ac
 
    return false;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// Closes all connection to clients
@@ -895,7 +928,7 @@ bool ROOT::Experimental::RWebWindow::CanSend(unsigned connid, bool direct)
       if (direct && (!conn->fQueue.empty() || (conn->fSendCredits == 0) || conn->fDoingSend))
          return false;
 
-      if (conn->fQueue.size() >= fMaxQueueLength)
+      if (conn->fQueue.size() >= GetMaxQueueLength())
          return false;
    }
 
@@ -935,11 +968,33 @@ void ROOT::Experimental::RWebWindow::SubmitData(unsigned connid, bool txt, std::
    timestamp_t stamp = std::chrono::system_clock::now();
 
    for (auto &&conn : arr) {
+
+      if (fProtocolCnt >= 0)
+         if (!fProtocolConnId || (conn->fConnId == fProtocolConnId)) {
+            fProtocolConnId = conn->fConnId; // remember connection
+            std::string fname = fProtocolPrefix;
+            fname.append("msg");
+            fname.append(std::to_string(fProtocolCnt++));
+            fname.append(txt ? ".txt" : ".bin");
+
+            std::ofstream ofs(fname);
+            ofs.write(data.c_str(), data.length());
+            ofs.close();
+
+            if (fProtocol.length() > 2)
+               fProtocol.insert(fProtocol.length() - 1, ",");
+            fProtocol.insert(fProtocol.length() - 1, std::string("\"") + fname + std::string("\""));
+
+            std::ofstream pfs(fProtocolFileName);
+            pfs.write(fProtocol.c_str(), fProtocol.length());
+            pfs.close();
+         }
+
       conn->fSendStamp = stamp;
 
       std::lock_guard<std::mutex> grd(conn->fMutex);
 
-      if (conn->fQueue.size() < fMaxQueueLength) {
+      if (conn->fQueue.size() < GetMaxQueueLength()) {
          if (--cnt)
             conn->fQueue.emplace(chid, txt, std::string(data)); // make copy
          else

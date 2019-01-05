@@ -33,7 +33,7 @@ private:
 
 public:
    TCastorFile(const char *url, Option_t *option = "", const char *ftitle = "",
-               Int_t compress = 1, Int_t netopt = 0);
+               Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose, Int_t netopt = 0);
    TCastorFile() : TNetFile() { fIsCastor = fWrittenTo = kFALSE; }
    virtual ~TCastorFile() { }
 

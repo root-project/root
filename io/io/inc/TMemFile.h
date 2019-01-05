@@ -77,8 +77,8 @@ private:
    TMemFile &operator=(const TMemFile&); // Not implemented.
 
 public:
-   TMemFile(const char *name, Option_t *option="", const char *ftitle="", Int_t compress=4);
-   TMemFile(const char *name, char *buffer, Long64_t size, Option_t *option="", const char *ftitle="", Int_t compress=4);
+   TMemFile(const char *name, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
+   TMemFile(const char *name, char *buffer, Long64_t size, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
    TMemFile(const char *name, ExternalDataPtr_t data);
    TMemFile(const TMemFile &orig);
    virtual ~TMemFile();

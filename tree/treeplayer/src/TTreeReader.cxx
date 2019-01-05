@@ -14,17 +14,22 @@
 #include "TChain.h"
 #include "TDirectory.h"
 #include "TEntryList.h"
+#include "TTreeCache.h"
 #include "TTreeReaderValue.h"
 
-/** \class TTreeReader
- TTreeReader is a simple, robust and fast interface to read values from a TTree,
- TChain or TNtuple.
+// clang-format off
+/**
+ \class TTreeReader
+ \ingroup treeplayer
+ \brief A simple, robust and fast interface to read values from ROOT columnar datasets such as TTree, TChain or TNtuple
 
- It uses `TTreeReaderValue<T>` and `TTreeReaderArray<T>` to access the data.
+ TTreeReader is associated to TTreeReaderValue and TTreeReaderArray which are handles to concretely
+ access the information in the dataset.
 
  Example code can be found in
- tutorials/tree/hsimpleReader.C and tutorials/trees/h1analysisTreeReader.h and
- tutorials/trees/h1analysisTreeReader.C for a TSelector.
+  - tutorials/tree/hsimpleReader.C
+  - tutorials/tree/h1analysisTreeReader.C
+  - <a href="http://root.cern.ch/gitweb?p=roottest.git;a=tree;f=root/tree/reader;hb=HEAD">This example</a>
 
  You can generate a skeleton of `TTreeReaderValue<T>` and `TTreeReaderArray<T>` declarations
  for all of a tree's branches using `TTree::MakeSelector()`.
@@ -33,8 +38,7 @@
  <a href="http://root.cern.ch/gitweb?p=roottest.git;a=tree;f=root/tree/reader;hb=HEAD">example</a>
  showing the full power.
 
-A simpler analysis example - the one from the tutorials - can be found below:
-it histograms a function of the px and py branches.
+A simpler analysis example can be found below: it histograms a function of the px and py branches.
 
 ~~~{.cpp}
 // A simple TTreeReader use: read data from hsimple.root (written by hsimple.C)
@@ -161,6 +165,7 @@ bool analyze(TFile* file) {
 }
 ~~~
 */
+// clang-format on
 
 ClassImp(TTreeReader);
 
@@ -270,6 +275,9 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long
          return es;
       }
    }
+
+   fBeginEntry = beginEntry;
+
    return kEntryValid;
 }
 
@@ -278,6 +286,12 @@ void TTreeReader::Restart() {
    fDirector->SetReadEntry(-1);
    fProxiesSet = false; // we might get more value readers, meaning new proxies.
    fEntry = -1;
+   if (const auto curFile = fTree->GetCurrentFile()) {
+      if (auto tc = fTree->GetTree()->GetReadCache(curFile, true)) {
+         tc->DropBranch("*", true);
+         tc->ResetCache();
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -375,7 +389,8 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       return fEntryStatus;
    }
 
-   if (fMostRecentTreeNumber != treeNumberBeforeLoadTree) {
+   if (fMostRecentTreeNumber != -1 // We are not new-born
+       && fMostRecentTreeNumber != treeNumberBeforeLoadTree) {
       // This can happen if someone switched trees behind us.
       // Likely cause: a TChain::LoadTree() e.g. from TTree::Process().
       // This means that "local" should be set!
@@ -411,14 +426,36 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       for (size_t i = 0; i < fValues.size(); ++i) {
          ROOT::Internal::TTreeReaderValueBase* reader = fValues[i];
          reader->CreateProxy();
-
          if (!reader->GetProxy()){
             fEntryStatus = kEntryDictionaryError;
             return fEntryStatus;
          }
+
       }
       // If at least one proxy was there and no error occurred, we assume the proxies to be set.
       fProxiesSet = !fValues.empty();
+
+      // Now we need to properly set the TTreeCache. We do this in steps:
+      // 1. We set the entry range according to the entry range of the TTreeReader
+      // 2. We add to the cache the branches identifying them by the name the user provided
+      //    upon creation of the TTreeReader{Value, Array}s
+      // 3. We stop the learning phase.
+      // Operations 1, 2 and 3 need to happen in this order. See: https://sft.its.cern.ch/jira/browse/ROOT-9773?focusedCommentId=87837
+      if (fProxiesSet) {
+         const auto curFile = fTree->GetCurrentFile();
+         if (curFile && fTree->GetTree()->GetReadCache(curFile, true)) {
+            if (!(-1LL == fEndEntry && 0ULL == fBeginEntry)) {
+               // We need to avoid to pass -1 as end entry to the SetCacheEntryRange method
+               const auto lastEntry = (-1LL == fEndEntry) ? fTree->GetEntriesFast() : fEndEntry;
+               fTree->SetCacheEntryRange(fBeginEntry, lastEntry);
+            }
+            for (auto value: fValues) {
+               fTree->AddBranchToCache(value->GetProxy()->GetBranchName(), true);
+            }
+            fTree->StopCacheLearningPhase();
+         }
+      }
+
    }
 
    if (fEndEntry >= 0 && entry >= fEndEntry) {

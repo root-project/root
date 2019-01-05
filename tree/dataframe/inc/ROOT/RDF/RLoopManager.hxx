@@ -31,6 +31,8 @@ class RDataSource;
 
 namespace Internal {
 namespace RDF {
+ColumnNames_t GetBranchNames(TTree &t, bool allowDuplicates = true);
+
 class RActionBase;
 class GraphNode;
 
@@ -117,8 +119,9 @@ class RLoopManager : public RNodeBase {
    /// Used, for example, to jit objects in a namespace reserved for this computation graph
    const unsigned int fID = GetNextID();
 
-   std::vector<RCustomColumnBase *>
-      fCustomColumns; ///< The loopmanager tracks all columns created, without owning them.
+   std::vector<RCustomColumnBase *> fCustomColumns; ///< Non-owning container of all custom columns created so far.
+   /// Cache of the tree/chain branch names. Never access directy, always use GetBranchNames().
+   ColumnNames_t fValidBranchNames;
 
    void RunEmptySourceMT();
    void RunEmptySource();
@@ -132,7 +135,7 @@ class RLoopManager : public RNodeBase {
    void CleanUpNodes();
    void CleanUpTask(unsigned int slot);
    void EvalChildrenCounts();
-   unsigned int GetNextID() const;
+   static unsigned int GetNextID();
 
 public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
@@ -187,6 +190,8 @@ public:
 
    std::vector<RDFInternal::RActionBase *> GetBookedActions() { return fBookedActions; }
    std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph();
+
+   const ColumnNames_t &GetBranchNames();
 };
 
 } // ns RDF

@@ -30,10 +30,10 @@
 /montecarlo/ @Axel-Naumann
 /net/ @gganis
 /proof/ @gganis
-/roofit/ @lmoneta
+/roofit/ @lmoneta @hageboeck
 /rootx/ @Axel-Naumann
 /sql/ @pcanal
-/tmva/ @lmoneta
+/tmva/ @lmoneta @ashlaban @stwunsch
 /tree/ @pcanal
 /tutorials/ @couet
 /tree/dataframe @dpiparo @bluehood
@@ -48,9 +48,12 @@
 /core/multiproc/ @gganis
 /core/thread/ @pcanal
 /etc/http/ @linev
+/etc/eve7/ @linev
 /graf2d/qt/ @bellenot
 /graf2d/cocoa/ @TimurP
 /graf3d/eve/ @osschar
+/graf3d/eve7/ @osschar
+/gui/fitpanelv7/ @linev
 /gui/cefdisplay/ @linev
 /gui/qt5webdisplay/ @linev
 /gui/webdisplay/ @linev

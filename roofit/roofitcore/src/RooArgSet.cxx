@@ -14,36 +14,36 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-// 
-// RooArgSet is a container object that can hold multiple RooAbsArg objects.
-// The container has set semantics which means that:
-//
-//  - Every object it contains must have a unique name returned by GetName().
-//
-//  - Contained objects are not ordered, although the set can be traversed
-//    using an iterator returned by createIterator(). The iterator does not
-//    necessarily follow the object insertion order.
-//
-//  - Objects can be retrieved by name only, and not by index.
-//
-//
-// Ownership of contents. 
-//
-// Unowned objects are inserted with the add() method. Owned objects
-// are added with addOwned() or addClone(). A RooArgSet either owns all 
-// of it contents, or none, which is determined by the first <add>
-// call. Once an ownership status is selected, inappropriate <add> calls
-// will return error status. Clearing the list via removeAll() resets the 
-// ownership status. Arguments supplied in the constructor are always added 
-// as unowned elements.
-//
-//
+/// \class RooArgSet
+/// RooArgSet is a container object that can hold multiple RooAbsArg objects.
+/// The container has set semantics which means that:
+///
+///  - Every object it contains must have a unique name returned by GetName().
+///
+///  - Contained objects are not ordered, although the set can be traversed
+///    using an iterator returned by createIterator(). The iterator does not
+///    necessarily follow the object insertion order.
+///
+///  - Objects can be retrieved by name only, and not by index.
+///
+///
+/// Ownership of contents
+/// -------------------------
+/// Unowned objects are inserted with the add() method. Owned objects
+/// are added with addOwned() or addClone(). A RooArgSet either owns all
+/// of it contents, or none, which is determined by the first `add`
+/// call. Once an ownership status is selected, inappropriate `add` calls
+/// will return error status. Clearing the list via removeAll() resets the
+/// ownership status. Arguments supplied in the constructor are always added
+/// as unowned elements.
+///
+///
+
+#include "RooArgSet.h"
 
 #include "Riostream.h"
-#include <iomanip>
 #include "TClass.h"
 #include "RooErrorHandler.h"
-#include "RooArgSet.h"
 #include "RooStreamParser.h"
 #include "RooFormula.h"
 #include "RooAbsRealLValue.h"
@@ -53,6 +53,9 @@
 #include "RooArgList.h"
 #include "RooSentinel.h"
 #include "RooMsgService.h"
+#include "ROOT/RMakeUnique.hxx"
+
+#include <iomanip>
 
 using namespace std ;
 
@@ -61,36 +64,34 @@ char* operator+( streampos&, char* );
 #endif
 
 ClassImp(RooArgSet);
-  ;
 
-char* RooArgSet::_poolBegin = 0 ;
-char* RooArgSet::_poolCur = 0 ;
-char* RooArgSet::_poolEnd = 0 ;
-#define POOLSIZE 1048576
 
-struct POOLDATA 
-{
-  void* _base ;
-} ;
 
-static std::list<POOLDATA> _memPoolList ;
+#ifndef USEMEMPOOLFORARGSET
+void RooArgSet::cleanup() { }
+#else
+
+#include "MemPoolForRooSets.h"
+
+RooArgSet::MemPool* RooArgSet::memPool() {
+  RooSentinel::activate();
+  static auto * memPool = new RooArgSet::MemPool();
+  return memPool;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clear memoery pool on exit to avoid reported memory leaks
+/// Clear memory pool on exit to avoid reported memory leaks
 
 void RooArgSet::cleanup()
 {
-  std::list<POOLDATA>::iterator iter = _memPoolList.begin() ;
-  while(iter!=_memPoolList.end()) {
-    free(iter->_base) ;
-    iter->_base=0 ;
-    ++iter ;
-  }
-  _memPoolList.clear() ;
+  auto pool = memPool();
+  memPool()->teardown();
+
+  //Here, the pool might have to leak if RooArgSets are still alive.
+  if (pool->empty())
+    delete pool;
 }
 
-
-#ifdef USEMEMPOOL
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Overloaded new operator guarantees that all RooArgSets allocated with new
@@ -101,64 +102,10 @@ void RooArgSet::cleanup()
 
 void* RooArgSet::operator new (size_t bytes)
 {
-  //cout << " RooArgSet::operator new(" << bytes << ")" << endl ;
+  //This will fail if a derived class uses this operator
+  assert(sizeof(RooArgSet) == bytes);
 
-  if (!_poolBegin || _poolCur+(sizeof(RooArgSet)) >= _poolEnd) {
-
-    if (_poolBegin!=0) {
-      oocxcoutD((TObject*)0,Caching) << "RooArgSet::operator new(), starting new 1MB memory pool" << endl ;
-    }
-
-    RooTrace::createSpecial("RooArgSet_pool",POOLSIZE) ;
-
-    // Start pruning empty memory pools if number exceeds 3
-    if (_memPoolList.size()>3) {
-      
-      void* toFree(0) ;
-
-      for (std::list<POOLDATA>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
-
-	// If pool is empty, delete it and remove it from list
-	if ((*(Int_t*)(poolIter->_base))==0) {
-	  oocxcoutD((TObject*)0,Caching) << "RooArgSet::operator new(), pruning empty memory pool " << (void*)(poolIter->_base) << endl ;
-
-	  toFree = poolIter->_base ;
-	  _memPoolList.erase(poolIter) ;
-	  RooTrace::destroySpecial("RooArgSet_pool") ;
-	  
-	  break ;
-	}
-      }      
-
-      free(toFree) ;      
-    }
-    
-    void* mem = malloc(POOLSIZE) ;
-    memset(mem, TStorage::kObjectAllocMemValue, POOLSIZE);
-
-    _poolBegin = (char*)mem ;
-    // Reserve space for pool counter at head of pool
-    _poolCur = _poolBegin+sizeof(Int_t) ;
-    _poolEnd = _poolBegin+(POOLSIZE) ;
-
-    // Clear pool counter
-    *((Int_t*)_poolBegin)=0 ;
-    
-    POOLDATA p ;
-    p._base=mem ;
-    _memPoolList.push_back(p) ;
-
-    RooSentinel::activate() ;
-  }
-
-  char* ptr = _poolCur ;
-  _poolCur += bytes ;
-
-  // Increment use counter of pool
-  (*((Int_t*)_poolBegin))++ ;
-
-  return ptr ;
-
+  return memPool()->allocate(bytes);
 }
 
 
@@ -179,12 +126,11 @@ void* RooArgSet::operator new (size_t bytes, void* ptr) noexcept
 void RooArgSet::operator delete (void* ptr)
 {
   // Decrease use count in pool that ptr is on
-  for (std::list<POOLDATA>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
-    if ((char*)ptr > (char*)poolIter->_base && (char*)ptr < (char*)poolIter->_base + POOLSIZE) {
-      (*(Int_t*)(poolIter->_base))-- ;
-      return ;
-    }
-  }
+  if (memPool()->deallocate(ptr))
+    return;
+
+  std::cerr << __func__ << " " << ptr << " is not in any of the pools." << std::endl;
+
   // Not part of any pool; use global op delete:
   ::operator delete(ptr);
 }
@@ -728,26 +674,34 @@ Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt, co
 /// Write the contents of the argset in ASCII form to given stream.
 /// 
 /// A line is written for each element contained in the form
-/// <argName> = <argValue>
+/// `<argName> = <argValue>`
 /// 
-/// The <argValue> part of each element is written by the arguments' 
+/// The `<argValue>` part of each element is written by the arguments'
 /// writeToStream() function.
+/// \param os The stream to write to
+/// \param compact Write only the bare values, separated by ' '. Doing this,
+/// the stream cannot be read back into a RooArgSet, but only into a RooArgList, because the
+/// key names are lost.
 
 void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* /*section*/) const
 {
-  if (compact) {
-    coutE(InputArguments) << "RooArgSet::writeToStream(" << GetName() << ") compact mode not supported" << endl ;
-    return ;
-  }
-
   TIterator *iterat= createIterator();
   RooAbsArg *next = 0;
-  while((0 != (next= (RooAbsArg*)iterat->Next()))) {
-    os << next->GetName() << " = " ;
-    next->writeToStream(os,kFALSE) ;
-    os << endl ;
+
+  if (compact) {
+    while((0 != (next= (RooAbsArg*)iterat->Next()))) {
+      next->writeToStream(os,true);
+      os << " ";
+    }
+    os << endl;
+  } else {
+    while((0 != (next= (RooAbsArg*)iterat->Next()))) {
+      os << next->GetName() << " = " ;
+      next->writeToStream(os,kFALSE) ;
+      os << endl ;
+    }
   }
-  delete iterat;  
+  delete iterat;
 }
 
 
@@ -758,36 +712,37 @@ void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* /*section
 /// 
 /// The stream is read to end-of-file and each line is assumed to be
 /// of the form
-///
-/// <argName> = <argValue>
-/// 
+/// \code
+///   <argName> = <argValue>
+/// \endcode
 /// Lines starting with argNames not matching any element in the list
 /// will be ignored with a warning message. In addition limited C++ style 
 /// preprocessing and flow control is provided. The following constructions 
 /// are recognized:
-///
-/// > #include "include.file"       
-/// 
+/// \code
+///   include "include.file"
+/// \endcode
 /// Include given file, recursive inclusion OK
-/// 
-/// > if (<boolean_expression>)
-/// >   <name> = <value>
-/// >   ....
-/// > else if (<boolean_expression>)
-///     ....
-/// > else
-///     ....
-/// > endif
+/// \code
+/// if (<boolean_expression>)
+///   <name> = <value>
+///   ....
+/// else if (<boolean_expression>)
+///   ....
+/// else
+///   ....
+/// endif
+/// \endcode
 ///
 /// All expressions are evaluated by RooFormula, and may involve any of
 /// the sets variables. 
-///
-/// > echo <Message>
-///
+/// \code
+///   echo <Message>
+/// \endcode
 /// Print console message while reading from stream
-///
-/// > abort
-///
+/// \code
+///   abort
+/// \endcode
 /// Force termination of read sequence with error status 
 ///
 /// The value of each argument is read by the arguments readFromStream
@@ -826,7 +781,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
       break ;
     }
     
-    // Read next token until end of file
+    // Read next token until memEnd of file
     if (!reprocessToken) {
       token = parser.readToken() ;
     }

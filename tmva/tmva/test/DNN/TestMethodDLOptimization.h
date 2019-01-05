@@ -60,7 +60,7 @@ void testMethodDL_DNN(TString architectureStr, TString optimizerStr)
    TTree *signalTree = (TTree *)input->Get("TreeS");
    TTree *background = (TTree *)input->Get("TreeB");
 
-   TString outfileName("TMVA_DNN.root");
+   TString outfileName = TString::Format("TMVA_DNN_%s_%s.root",optimizerStr.Data(),architectureStr.Data());
    TFile *outputFile = TFile::Open(outfileName, "RECREATE");
 
    TMVA::DataLoader *dataloader = new TMVA::DataLoader("dataset");
@@ -142,7 +142,7 @@ void testMethodDL_DNN(TString architectureStr, TString optimizerStr)
       new TMVA::Factory("TMVAClassification", outputFile,
                         "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
 
-   TString methodTitle = "DL_" + architectureStr;
+   TString methodTitle = TString::Format("DL_%s_%s",optimizerStr.Data(),architectureStr.Data());
    factory->BookMethod(dataloader, TMVA::Types::kDL, methodTitle, dnnOptions);
 
    // Train MVAs using the set of training events
