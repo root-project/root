@@ -295,6 +295,7 @@ private:
    Long64_t fEndEntry = -1LL;
    Long64_t fBeginEntry = 0LL; ///< This allows us to propagate the range to the TTreeCache
    Bool_t fProxiesSet = kFALSE; ///< True if the proxies have been set, false otherwise
+   Bool_t fSetEntryBaseCallingLoadTree = kFALSE; ///< True if during the LoadTree execution triggered by SetEntryBase.
 
    friend class ROOT::Internal::TTreeReaderValueBase;
    friend class ROOT::Internal::TTreeReaderArrayBase;
