@@ -15,6 +15,7 @@
 #include "Rtypes.h"
 
 #include <list>
+#include <vector>
 
 #ifdef R__OLDHPACC
 namespace std {
@@ -40,7 +41,7 @@ namespace Internal{
       Long64_t fEntry; // Entry currently being read.
 
       std::list<Detail::TBranchProxy*> fDirected;
-      std::list<TFriendProxy*> fFriends;
+      std::vector<TFriendProxy*> fFriends;
 
       TBranchProxyDirector(const TBranchProxyDirector &) : fTree(0), fEntry(-1) {;}
       TBranchProxyDirector& operator=(const TBranchProxyDirector&) {return *this;}
