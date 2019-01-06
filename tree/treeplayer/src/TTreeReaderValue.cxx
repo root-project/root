@@ -133,9 +133,67 @@ void ROOT::Internal::TTreeReaderValueBase::RegisterWithTreeReader() {
 /// Try to read the value from the TBranchProxy, returns
 /// the status of the read.
 
+
+
+template <ROOT::Internal::TTreeReaderValueBase::BranchProxyRead_t Func>
+ROOT::Internal::TTreeReaderValueBase::EReadStatus ROOT::Internal::TTreeReaderValueBase::ProxyReadTemplate()
+{
+   if ((fProxy->*Func)()) {
+      fReadStatus = kReadSuccess;
+   } else {
+      fReadStatus = kReadError;
+   }
+   return fReadStatus;
+}
+
 ROOT::Internal::TTreeReaderValueBase::EReadStatus
-ROOT::Internal::TTreeReaderValueBase::ProxyRead() {
+ROOT::Internal::TTreeReaderValueBase::ProxyReadDefaultImpl() {
    if (!fProxy) return kReadNothingYet;
+   if (fProxy->IsInitialized() || fProxy->Setup()) {
+
+      using EReadType = ROOT::Detail::TBranchProxy::EReadType;
+      using TBranchPoxy = ROOT::Detail::TBranchProxy;
+
+      EReadType readtype = EReadType::kNoDirector;
+      if (fProxy) readtype = fProxy->GetReadType();
+
+      switch (readtype) {
+         case EReadType::kNoDirector:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoDirector>;
+            break;
+         case EReadType::kReadParentNoCollection:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadParentNoCollection>;
+            break;
+         case EReadType::kReadParentCollectionNoPointer:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadParentCollectionNoPointer>;
+            break;
+         case EReadType::kReadParentCollectionPointer:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadParentCollectionPointer>;
+            break;
+         case EReadType::kReadNoParentNoBranchCountCollectionPointer:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoParentNoBranchCountCollectionPointer>;
+            break;
+         case EReadType::kReadNoParentNoBranchCountCollectionNoPointer:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoParentNoBranchCountCollectionNoPointer>;
+            break;
+         case EReadType::kReadNoParentNoBranchCountNoCollection:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoParentNoBranchCountNoCollection>;
+            break;
+         case EReadType::kReadNoParentBranchCountCollectionPointer:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoParentBranchCountCollectionPointer>;
+            break;
+         case EReadType::kReadNoParentBranchCountCollectionNoPointer:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoParentBranchCountCollectionNoPointer>;
+            break;
+         case EReadType::kReadNoParentBranchCountNoCollection:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoParentBranchCountNoCollection>;
+            break;
+         case EReadType::kDefault:
+            // intentional fall through.
+         default: fProxyReadFunc = &TTreeReaderValueBase::ProxyReadDefaultImpl;
+      }
+      return (this->*fProxyReadFunc)();
+   }
    if (fProxy->Read()) {
       fReadStatus = kReadSuccess;
    } else {

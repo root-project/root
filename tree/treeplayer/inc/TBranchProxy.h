@@ -60,6 +60,8 @@ namespace Internal {
       }
       operator const char*() { return fName.Data(); };
    };
+
+   class TTreeReaderValueBase;
 } // namespace Internal
 
 
@@ -168,6 +170,181 @@ namespace Detail {
             return IsInitialized();
          }
       }
+
+private:
+      friend class ROOT::Internal::TTreeReaderValueBase;
+
+      enum class EReadType {
+         kDefault,
+         kNoDirector,
+         kReadParentNoCollection,
+         kReadParentCollectionNoPointer,
+         kReadParentCollectionPointer,
+         kReadNoParentNoBranchCountCollectionPointer,
+         kReadNoParentNoBranchCountCollectionNoPointer,
+         kReadNoParentNoBranchCountNoCollection,
+         kReadNoParentBranchCountCollectionPointer,
+         kReadNoParentBranchCountCollectionNoPointer,
+         kReadNoParentBranchCountNoCollection
+      };
+
+      EReadType GetReadType() {
+         if (fParent) {
+            if (!fCollection) {
+               return EReadType::kReadParentNoCollection;
+            } else {
+               if (IsaPointer()) {
+                  return EReadType::kReadParentCollectionPointer;
+               } else {
+                  return EReadType::kReadParentCollectionNoPointer;
+               }
+            }
+         } else {
+            if (fBranchCount) {
+               if (fCollection) {
+                  if (IsaPointer()) {
+                     return EReadType::kReadNoParentBranchCountCollectionPointer;
+                  } else {
+                     return EReadType::kReadNoParentBranchCountCollectionNoPointer;
+                  }
+               } else {
+                  return EReadType::kReadNoParentBranchCountNoCollection;
+               }
+
+            } else {
+               if (fCollection) {
+                  if (IsaPointer()) {
+                     return EReadType::kReadNoParentNoBranchCountCollectionPointer;
+                  } else {
+                     return EReadType::kReadNoParentNoBranchCountCollectionNoPointer;
+                  }
+               } else {
+                  return EReadType::kReadNoParentNoBranchCountNoCollection;
+               }
+            }
+         }
+         return EReadType::kDefault;
+      }
+
+      Bool_t ReadNoDirector() {
+         return false;
+      }
+
+      Bool_t ReadParentNoCollection() {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
+            const Bool_t result = fParent->Read();
+            fRead = treeEntry;
+            return result;
+         } else {
+            return IsInitialized();
+         }
+      }
+
+      Bool_t ReadParentCollectionNoPointer() {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
+            const Bool_t result = fParent->Read();
+            fRead = treeEntry;
+            fCollection->PopProxy(); // works even if no proxy env object was set.
+            fCollection->PushProxy( fWhere );
+            return result;
+         } else {
+            return IsInitialized();
+         }
+      }
+
+      Bool_t ReadParentCollectionPointer() {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
+            const Bool_t result = fParent->Read();
+            fRead = treeEntry;
+            fCollection->PopProxy(); // works even if no proxy env object was set.
+            fCollection->PushProxy( *(void**)fWhere );
+            return result;
+         } else {
+            return IsInitialized();
+         }
+      }
+
+      Bool_t ReadNoParentNoBranchCountCollectionPointer() {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
+            Bool_t result = (-1 != fBranch->GetEntry(treeEntry));
+            fRead = treeEntry;
+            fCollection->PopProxy(); // works even if no proxy env object was set.
+            fCollection->PushProxy( *(void**)fWhere );
+            return result;
+         } else {
+            return IsInitialized();
+         }
+      }
+
+      Bool_t ReadNoParentNoBranchCountCollectionNoPointer() {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
+            Bool_t result = (-1 != fBranch->GetEntry(treeEntry));
+            fRead = treeEntry;
+            fCollection->PopProxy(); // works even if no proxy env object was set.
+            fCollection->PushProxy( fWhere );
+            return result;
+         } else {
+            return IsInitialized();
+         }
+      }
+
+      Bool_t ReadNoParentNoBranchCountNoCollection() {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
+            Bool_t result = (-1 != fBranch->GetEntry(treeEntry));
+            fRead = treeEntry;
+            return result;
+         } else {
+            return IsInitialized();
+         }
+      }
+
+      Bool_t ReadNoParentBranchCountCollectionPointer() {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
+            Bool_t result = (-1 != fBranchCount->GetEntry(treeEntry));
+            result &= (-1 != fBranch->GetEntry(treeEntry));
+            fRead = treeEntry;
+            fCollection->PopProxy(); // works even if no proxy env object was set.
+            fCollection->PushProxy( *(void**)fWhere );
+            return result;
+         } else {
+            return IsInitialized();
+         }
+      }
+
+      Bool_t ReadNoParentBranchCountCollectionNoPointer() {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
+            Bool_t result = (-1 != fBranchCount->GetEntry(treeEntry));
+            result &= (-1 != fBranch->GetEntry(treeEntry));
+            fRead = treeEntry;
+            fCollection->PopProxy(); // works even if no proxy env object was set.
+            fCollection->PushProxy( fWhere );
+            return result;
+         } else {
+            return IsInitialized();
+         }
+      }
+
+      Bool_t ReadNoParentBranchCountNoCollection() {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
+            Bool_t result = (-1 != fBranchCount->GetEntry(treeEntry));
+            result &= (-1 != fBranch->GetEntry(treeEntry));
+            fRead = treeEntry;
+            return result;
+         } else {
+            return IsInitialized();
+         }
+      }
+
+public:
 
       Bool_t ReadEntries() {
          if (R__unlikely(fDirector==0)) return false;

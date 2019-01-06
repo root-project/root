@@ -59,7 +59,13 @@ Base class of TTreeReaderValue.
          kReadError // problem reading data
       };
 
-      EReadStatus ProxyRead();
+      EReadStatus ProxyRead() { return (this->*fProxyReadFunc)(); }
+
+      EReadStatus ProxyReadDefaultImpl();
+
+      typedef Bool_t (ROOT::Detail::TBranchProxy::*BranchProxyRead_t)();
+      template <BranchProxyRead_t Func>
+      ROOT::Internal::TTreeReaderValueBase::EReadStatus ProxyReadTemplate();
 
       Bool_t IsValid() const { return fProxy && 0 == (int)fSetupStatus && 0 == (int)fReadStatus; }
       ESetupStatus GetSetupStatus() const { return fSetupStatus; }
@@ -107,6 +113,8 @@ Base class of TTreeReaderValue.
       Detail::TBranchProxy* fProxy = nullptr; // proxy for this branch, owned by TTreeReader
       TLeaf*       fLeaf = nullptr;
       std::vector<Long64_t> fStaticClassOffsets;
+      typedef EReadStatus (TTreeReaderValueBase::*Read_t)();
+      Read_t fProxyReadFunc = &TTreeReaderValueBase::ProxyReadDefaultImpl;      ///<! Pointer to the Read implementation to use.
 
       // FIXME: re-introduce once we have ClassDefInline!
       //ClassDef(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
