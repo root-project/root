@@ -50,24 +50,28 @@ public:
    REveGeomNode(int _id) : id(_id) {}
 };
 
+class REveShapeRenderInfo {
+public:
+   // render data, equivalent of REveElement::WriteCoreJson
+   int rnr_offset{-1};     ///< rnr_offset;
+   std::string rnr_func;  ///< fRenderData->GetRnrFunc();
+   int vert_size{0};      ///< fRenderData->SizeV();
+   int norm_size{0};      ///< fRenderData->SizeN();
+   int index_size{0};     ///< fRenderData->SizeI();
+   // int trans_size{0};     ///< fRenderData->SizeT(); not used in GeomViewer
+};
+
 /** REveGeomVisisble contains description of visible node
  * It is path to the node plus reference to shape rendering data
  */
 
 class REveGeomVisisble {
 public:
-   int nodeid{0};           ///< selected node id,
-   std::vector<int> stack;  ///< path to the node, index in list of childs
-   std::string color;       ///< color in rgb format
-   double opacity{1};       ///< opacity
-
-   // render data, equivalent of REveElement::WriteCoreJson
-   int rnr_offset{0};     ///< rnr_offset;
-   std::string rnr_func;  ///< fRenderData->GetRnrFunc();
-   int vert_size{0};      ///< fRenderData->SizeV();
-   int norm_size{0};      ///< fRenderData->SizeN();
-   int index_size{0};     ///< fRenderData->SizeI();
-   // int trans_size{0};     ///< fRenderData->SizeT(); not used in GeomViewer
+   int nodeid{0};                    ///< selected node id,
+   std::vector<int> stack;           ///< path to the node, index in list of childs
+   std::string color;                ///< color in rgb format
+   double opacity{1};                ///< opacity
+   REveShapeRenderInfo *ri{nullptr}; ///< render information for the shape, can be same for different nodes
 
    REveGeomVisisble() = default;
    REveGeomVisisble(int id, const std::vector<int> &_stack) : nodeid(id), stack(_stack) {}
@@ -79,11 +83,11 @@ class REveGeomDescription {
 
    class ShapeDescr {
    public:
-      int id{0};                    ///<! sequential id
-      TGeoShape *fShape{nullptr};   ///<! original shape
-      int nfaces{0};                ///<! number of faces in render data
-      std::unique_ptr<REveRenderData> fRenderData;  ///<! binary render data
-      int render_offest{-1};        ///<! offset in current binary array, transient
+      int id{0};                                   ///<! sequential id
+      TGeoShape *fShape{nullptr};                  ///<! original shape
+      int nfaces{0};                               ///<! number of faces in render data
+      std::unique_ptr<REveRenderData> fRenderData; ///<! binary render data
+      REveShapeRenderInfo fRenderInfo;             ///<! render information for client
       ShapeDescr(TGeoShape *s) : fShape(s) {}
    };
 

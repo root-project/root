@@ -456,7 +456,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces)
    // it includes list of visible nodes and rawdata
 
    for (auto &s: fShapes)
-      s.render_offest = -1;
+      s.fRenderInfo.rnr_offset = -1;
 
    std::vector<REveGeomVisisble> visibles;
    std::vector<REveRenderData*> render_data; // data which should be send as binary
@@ -472,19 +472,20 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces)
 
          auto &sd = MakeShapeDescr(volume->GetShape());
          auto &rd = sd.fRenderData;
+         auto &ri = sd.fRenderInfo;
 
-         if (sd.render_offest < 0) {
-            sd.render_offest = render_offset;
+         if (ri.rnr_offset < 0) {
+            ri.rnr_offset = render_offset;
             render_offset += rd->GetBinarySize();
             render_data.emplace_back(rd.get());
+
+            ri.rnr_func = rd->GetRnrFunc();
+            ri.vert_size = rd->SizeV();
+            ri.norm_size = rd->SizeN();
+            ri.index_size = rd->SizeI();
          }
 
-         item.rnr_offset = sd.render_offest;
-
-         item.rnr_func = rd->GetRnrFunc();
-         item.vert_size = rd->SizeV();
-         item.norm_size = rd->SizeN();
-         item.index_size = rd->SizeI();
+         item.ri = &ri;
          // item.trans_size = rd->SizeT();
       }
       return true;
@@ -523,14 +524,11 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       return (node.vol > 0) && (node.name.compare(0, find.length(), find) == 0);
    };
 
-   int cnt = 0;
-
    // first count how many times each individual node appears
-   ScanVisible([&viscnt,&match_func,&nmatches, &cnt](REveGeomNode &node, std::vector<int> &) {
+   ScanVisible([&viscnt,&match_func,&nmatches](REveGeomNode &node, std::vector<int> &) {
       if (match_func(node)) {
          nmatches++;
          viscnt[node.id]++;
-         if (cnt++ < 1000) printf("NODE NAME %s\n", node.name.c_str());
       };
       return true;
    });
@@ -553,7 +551,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    // it includes list of visible nodes and rawdata
 
    for (auto &s: fShapes)
-      s.render_offest = -1;
+      s.fRenderInfo.rnr_offset = -1;
    std::vector<REveGeomVisisble> visibles;
    std::vector<REveRenderData*> render_data; // data which should be send as binary
    int render_offset{0}; /// current offset
@@ -565,15 +563,14 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 
       visibles.emplace_back(node.id, stack);
 
-      auto &item = visibles.back();
-
       // no need to transfer shape if it provided with main drawing list
       // also no binary will be transported when too many matches are there
       if ((node.sortid < fDrawIdCut) || (nmatches >= 100)) {
-         item.rnr_offset = -1; // indicate that raw data is not send
+         // do not include render data
          return true;
       }
 
+      auto &item = visibles.back();
       auto volume = fNodes[node.id]->GetVolume();
 
       CopyMaterialProperties(volume, item);
@@ -581,20 +578,20 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       auto &sd = MakeShapeDescr(volume->GetShape());
 
       auto &rd = sd.fRenderData;
+      auto &ri = sd.fRenderInfo;
 
-      if (sd.render_offest < 0) {
-         sd.render_offest = render_offset;
+      if (ri.rnr_offset < 0) {
+         ri.rnr_offset = render_offset;
          render_offset += rd->GetBinarySize();
          render_data.emplace_back(rd.get());
+
+         ri.rnr_func = rd->GetRnrFunc();
+         ri.vert_size = rd->SizeV();
+         ri.norm_size = rd->SizeN();
+         ri.index_size = rd->SizeI();
       }
 
-      item.rnr_offset = sd.render_offest;
-
-      item.rnr_func = rd->GetRnrFunc();
-      item.vert_size = rd->SizeV();
-      item.norm_size = rd->SizeN();
-      item.index_size = rd->SizeI();
-      // item.trans_size = rd->SizeT();
+      item.ri = &ri;
       return true;
    });
 

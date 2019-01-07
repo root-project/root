@@ -172,44 +172,38 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** Extract shapes from binary data using appropriate draw message 
        * Draw message is vector of REveGeomVisisble objects, including info where shape is in raw data */
       extractRawShapes: function(draw_msg, msg, offset) {
-         var rnr_cache = {};
          
          for (var cnt=0;cnt < draw_msg.length;++cnt) {
-            var rd = draw_msg[cnt];
+            var item = draw_msg[cnt], rd = item.ri;
 
             // entry may be provided without shape - it is ok
-            if (rd.rnr_offset < 0) continue;
+            if (!rd) continue;
             
-            var cache = rnr_cache[rd.rnr_offset];
-            if (cache) {
-               rd.server_shape = cache.server_shape;
+            if (rd.server_shape) {
+               item.server_shape = rd.server_shape;
                continue;
             }
 
             // reconstruct render data
             var off = offset + rd.rnr_offset;
             
-            var render_data = {}; // put render data in temporary object, only need to create mesh
-               
             if (rd.vert_size) {
-               render_data.vtxBuff = new Float32Array(msg, off, rd.vert_size);
+               rd.vtxBuff = new Float32Array(msg, off, rd.vert_size);
                off += rd.vert_size*4;
             }
 
             if (rd.norm_size) {
-               render_data.nrmBuff = new Float32Array(msg, off, rd.norm_size);
+               rd.nrmBuff = new Float32Array(msg, off, rd.norm_size);
                off += rd.norm_size*4;
             }
 
             if (rd.index_size) {
-               render_data.idxBuff = new Uint32Array(msg, off, rd.index_size);
+               rd.idxBuff = new Uint32Array(msg, off, rd.index_size);
                off += rd.index_size*4;
             }
              
             // shape handle is similar to created in JSROOT.GeoPainter
-            rd.server_shape = { geom: this.creator.makeEveGeometry(render_data), nfaces: (rd.index_size-2) / 3, ready: true };
-             
-            rnr_cache[rd.rnr_offset] = rd;
+            item.server_shape = rd.server_shape = { geom: this.creator.makeEveGeometry(rd), nfaces: (rd.index_size-2)/3, ready: true };
          }
       },
       
@@ -464,11 +458,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (msg == "BIN") { lst = this.found_msg; delete this.found_msg; } else 
          if (msg == "NO") { lst = "Not found"; } else
          if (msg.substr(0,7) == "TOOMANY") { lst = "Too many " + msg.substr(8); } else {
-            lst = JSON.parse(msg);
+            lst = JSROOT.parse(msg);
             for (var k=0;k<lst.length;++k)
-               if (lst[k].rnr_offset >= 0) {
+               if (lst[k].ri) { // wait for binary render data
                   this.found_msg = lst;
-                  return; // wait for the binary message
+                  return;
                }
          }  
          
