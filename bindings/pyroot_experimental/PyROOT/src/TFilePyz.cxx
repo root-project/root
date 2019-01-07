@@ -30,7 +30,7 @@ PyObject *PyROOT::AddFileOpenPyz(PyObject * /* self */, PyObject *args)
    PyObject *pyclass = PyTuple_GetItem(args, 0);
    // TFile::Open really is a constructor
    PyObject *attr = PyObject_GetAttrString(pyclass, (char *)"Open");
-   if (TPython::CPPOverload_Check(attr)) {
+   if (CPPOverload_Check(attr)) {
       ((CPPOverload *)attr)->fMethodInfo->fFlags |= CallContext::kIsCreator;
    }
    Py_XDECREF(attr);
