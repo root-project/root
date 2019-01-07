@@ -212,4 +212,18 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 #pragma unused(dirtyRect)
 }
 
+//______________________________________________________________________________
+
+- (BOOL) wantsLayer
+{
+    return NO;
+}
+
+//______________________________________________________________________________
+
+- (void) setLayer:(CALayer *) layer
+{
+#pragma unused(layer)
+}
+
 @end
