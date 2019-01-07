@@ -102,6 +102,8 @@ class REveGeomDescription {
    std::string fDrawJson;           ///<! JSON with main nodes drawn by client
    std::vector<char> fDrawBinary;   ///<! binary data for main draw nodes
    int fDrawIdCut{0};               ///<! sortid used for selection of most-significant nodes
+   int fFacesLimit{0};              ///<! maximal number of faces to be selected for drawing
+   int fNodesLimit{0};              ///<! maximial number of nodes to be selected for drawing
 
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 
@@ -110,6 +112,8 @@ class REveGeomDescription {
    int MarkVisible(bool on_screen = false);
 
    void ScanVisible(REveGeomScanFunc_t func);
+
+   int FindNodeId(const std::vector<int> &stack);
 
    ShapeDescr &FindShapeDescr(TGeoShape *shape);
 
@@ -122,13 +126,27 @@ public:
 
    void Build(TGeoManager *mgr);
 
-   bool CollectVisibles(int maxnumfaces);
+   /** Set maximal number of nodes which should be selected for drawing */
+   void SetMaxVisNodes(int cnt) { fNodesLimit = cnt; }
+
+   /** Returns maximal visible number of nodes, ignored when non-positive */
+   int GetMaxVisNodes() const { return fNodesLimit; }
+
+   /** Set maximal number of faces which should be selected for drawing */
+   void SetMaxVisFaces(int cnt) { fFacesLimit = cnt; }
+
+   /** Returns maximal visible number of faces, ignored when non-positive */
+   int GetMaxVisFaces() const { return fFacesLimit; }
+
+   bool CollectVisibles();
 
    bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawBinary.size() > 0) && (fDrawIdCut > 0); }
    const std::string &GetDrawJson() const { return fDrawJson; }
    const std::vector<char> &GetDrawBinary() const { return fDrawBinary; }
 
    int SearchVisibles(const std::string &find, std::string &json, std::vector<char> &binary);
+
+   bool ProduceShapeFor(const std::vector<int> &stack, std::string &json, std::vector<char> &binary);
 
    void SelectVolume(TGeoVolume *);
 

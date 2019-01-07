@@ -124,11 +124,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
       
+      /** function called then mouse-hover event over the row is invoked
+       * Used to highlight correspondent volume on geometry drawing 
+       */
       onRowHover: function(row, is_enter) {
          // create stack and try highlight it if exists
-         var stack = is_enter ? this.getRowStack(row) : null;
+         var stack = is_enter ? this.getRowStack(row) : null,
+             ctxt = row.getBindingContext(),  
+             prop = ctxt.getProperty(ctxt.getPath()),
+             found_mesh = false;
          
-         this.geomControl.geo_painter.HighlightMesh(null, 0x00ff00, null, stack, true);
+         if (!this.geomControl || !this.geomControl.geo_painter) return;
+         
+         this._hover_stack = stack; // remember current element with hover stack
+            
+         found_mesh = this.geomControl.geo_painter.HighlightMesh(null, 0x00ff00, null, stack, true);
+         
+         if (stack && !found_mesh) {
+            if (prop && prop.search_select && !prop.has_drawing) {
+               console.log('Request stack', stack);
+               this.submitSearchQuery(stack, true);
+            }
+         }
       },
       
       /** try to produce stack out of row path */
@@ -144,7 +161,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             var ttt = ctxt.getProperty(path.substr(0,lastpos));
             
             if (!ttt || (ttt.id===undefined)) {
-               console.error('Fail to extract node id for path ', path.substr(0,lastpos));
+               // it is not an error - sometime TableTree does not have displayed items
+               // console.error('Fail to extract node id for path ' + path.substr(0,lastpos) + ' full path ' + ctxt.getPath());
                return null;
             }
             
@@ -284,8 +302,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          } else if (msg.substr(0,5) == "DRAW:") {
             this.last_draw_msg = this.draw_msg = JSROOT.parse(msg.substr(5));
          } else if (msg.substr(0,6) == "FOUND:") {
-            this.processSearchReply(msg); 
-         } 
+            this.processSearchReply(msg, false); 
+         } else if (msg.substr(0,6) == "SHAPE:") {
+            this.processSearchReply(msg, true);
+         }
       },
       
       buildTreeNode: function(indx) {
@@ -307,15 +327,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       
       // here try to append only given stack to the tree
       // used to build partial tree with visible objects
-      appendStackToTree: function(stack) {
+      appendStackToTree: function(tnodes, stack, has_drawing) {
          var prnt = null, node = null;
          for (var i=-1;i<stack.length;++i) {
             var indx = (i<0) ? 0 : node.chlds[stack[i]];
             node = this.clones.nodes[indx];
-            var tnode = this.tree_nodes[indx];
-            if (!tnode) {
-               this.tree_nodes[indx] = tnode = { title: node.name, id: indx };
-            }
+            var tnode = tnodes[indx];
+            if (!tnode)
+               tnodes[indx] = tnode = { title: node.name, id: indx };
             
             if (prnt) {
                if (!prnt.chlds) prnt.chlds = [];
@@ -325,7 +344,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             prnt = tnode;
          }
          
-         prnt.has_drawing = true;
+         prnt.search_select = true;
+         prnt.has_drawing = has_drawing;
       },
       
       buildTree: function() {
@@ -356,15 +376,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
       
       /** try to show selected nodes. With server may be provided shapes */ 
-      showFoundNodes: function(matches, with_shapes) {
+      showFoundNodes: function(matches, append_more, with_binaries) {
+         
+         var gpainter = this.geomControl ? this.geomControl.geo_painter : null;
          
          if (typeof matches == "string") {
             this.byId("treeTable").collapseAll();
             this.data.Nodes = [ { title: matches } ];
             this.model.refresh();
-            if (this.geomControl && this.geomControl.geo_painter) {
-               if (with_shapes) this.geomControl.geo_painter.appendMoreNodes(null);
-               this.geomControl.geo_painter.changeGlobalTransparency();
+            if (gpainter) {
+               if (append_more) gpainter.appendMoreNodes(null);
+               gpainter.changeGlobalTransparency();
             }
             return;
          }
@@ -376,9 +398,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.model.refresh();
             this.byId("treeTable").expandToLevel(1);
             
-            if (this.geomControl && this.geomControl.geo_painter) {
-               if (with_shapes) this.geomControl.geo_painter.appendMoreNodes(matches);
-               this.geomControl.geo_painter.changeGlobalTransparency();
+            if (gpainter) {
+               if (append_more) gpainter.appendMoreNodes(matches);
+               gpainter.changeGlobalTransparency();
             }
             return;
          }
@@ -387,24 +409,21 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.data.Nodes = null;
             this.model.refresh();
          } else {
-            this.tree_nodes = [];
+            var nodes = [];
             for (var k=0;k<matches.length;++k) 
-               this.appendStackToTree(matches[k].stack);
-            this.data.Nodes = [ this.tree_nodes[0] ];
+               this.appendStackToTree(nodes, matches[k].stack, !!matches[k].ri);
+            this.data.Nodes = [ nodes[0] ];
             this.model.refresh();
             if (matches.length < 100)
                this.byId("treeTable").expandToLevel(99);
          }
          
-         if (this.geomControl && this.geomControl.geo_painter) {
-            var p = this.geomControl.geo_painter; 
-            
-            if (with_shapes)
-               p.appendMoreNodes(matches);
+         if (gpainter) {
+            if (append_more && with_binaries) gpainter.appendMoreNodes(matches);
             
             if ((matches.length>0) && (matches.length<100)) { 
-               var dflt = Math.max(p.options.transparency, 0.98);
-               p.changeGlobalTransparency(function(node) {
+               var dflt = Math.max(gpainter.options.transparency, 0.98);
+               gpainter.changeGlobalTransparency(function(node) {
                   if (node.stack) 
                      for (var n=0;n<matches.length;++n)
                         if (JSROOT.GEO.IsSameStack(node.stack, matches[n].stack))
@@ -412,7 +431,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                   return dflt;
                });
             } else {
-               p.changeGlobalTransparency();
+               gpainter.changeGlobalTransparency();
             }
          }
       },
@@ -447,29 +466,41 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          sap.m.URLHelper.redirect("https://github.com/alja/jsroot/blob/dev/eve7.md", true);
       },
       
-      processSearchReply: function(msg) {
+      processSearchReply: function(msg, is_shape) {
          // not waiting search - ignore any replies
          if (!this.waiting_search) return;
          
          msg = msg.substr(6);
          
-         var lst = [];
+         var lst = [], has_binaries = false;
          
-         if (msg == "BIN") { lst = this.found_msg; delete this.found_msg; } else 
-         if (msg == "NO") { lst = "Not found"; } else
-         if (msg.substr(0,7) == "TOOMANY") { lst = "Too many " + msg.substr(8); } else {
+         if (msg == "BIN") { 
+            has_binaries = true; 
+            lst = this.found_msg; is_shape = this.found_shape; 
+            delete this.found_msg; 
+            delete this.found_shape;
+         } else if (msg == "NO") { 
+            lst = "Not found"; 
+         } else if (msg.substr(0,7) == "TOOMANY") { 
+            lst = "Too many " + msg.substr(8); 
+         } else {
             lst = JSROOT.parse(msg);
             for (var k=0;k<lst.length;++k)
                if (lst[k].ri) { // wait for binary render data
                   this.found_msg = lst;
+                  this.found_shape = is_shape;
                   return;
                }
-         }  
+         }
          
-         this.showFoundNodes(lst, true);
+         if (is_shape) {
+            console.log('Process explicit shape for ', lst[0], has_binaries);  
+         } else {
+            this.showFoundNodes(lst, true, has_binaries);
+         }
          
          if (this.next_search) {
-            this.websocket.Send("SEARCH:" + this.next_search);
+            this.websocket.Send(this.next_search);
             delete this.next_search;
          } else { 
             this.waiting_search = false;
@@ -478,6 +509,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       
       /** Submit node search query to server */ 
       submitSearchQuery: function(query, from_handler) {
+         
+         // ignore query in file description mode 
+         if (this.websocket.kind == "file") return;
          
          if (!from_handler) {
             // do not submit immediately, but after very short timeout
@@ -497,13 +531,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             return;
          }
          
+         if (typeof query == "string")
+            query = "SEARCH:" + query;
+         else
+            query = "GETSHAPE:" + JSON.stringify(query);
+         
          if (this.waiting_search) {
             // do not submit next search query when prvious not yet proceed
             this.next_search = query;
             return;
          }
          
-         this.websocket.Send("SEARCH:" + query);
+         this.websocket.Send(query);
          this.waiting_search = true;
       },
       

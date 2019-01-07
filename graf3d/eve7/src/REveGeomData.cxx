@@ -217,6 +217,16 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
    printf("Build description size %d dummymatrix %d rotation %d scale %d translation %d\n", (int) fDesc.size(), dummy_cnt, rotation_cnt, scale_cnt, trans_cnt);
 
    MarkVisible(); // set visibility flags
+
+   auto maxnodes = mgr->GetMaxVisNodes();
+   if (maxnodes > 5000)
+      maxnodes = 5000;
+   else if (maxnodes < 1000)
+      maxnodes = 1000;
+
+   // take maximal setting
+   SetMaxVisNodes(maxnodes);
+   SetMaxVisFaces(maxnodes * 100);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -416,7 +426,7 @@ void ROOT::Experimental::REveGeomDescription::CopyMaterialProperties(TGeoVolume 
 /// Collect all information required to draw geometry on the client
 /// This includes list of each visible nodes, meshes and matrixes
 
-bool ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces)
+bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
 {
    std::vector<int> viscnt(fDesc.size(), 0);
 
@@ -445,11 +455,11 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles(int maxnumfaces)
 
       // check how many faces are created
       totalnumfaces += shape_descr.nfaces * viscnt[sid];
-      if (totalnumfaces > maxnumfaces) break;
+      if ((GetMaxVisFaces() > 0) && (totalnumfaces > GetMaxVisFaces())) break;
 
       // also avoid too many nodes
       totalnumnodes += viscnt[sid];
-      if (totalnumnodes > maxnumfaces/12) break;
+      if ((GetMaxVisNodes() > 0) && (totalnumnodes > GetMaxVisNodes())) break;
    }
 
    // finally we should create data for streaming to the client
@@ -524,14 +534,17 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       return (node.vol > 0) && (node.name.compare(0, find.length(), find) == 0);
    };
 
+   int cnt = 0;
    // first count how many times each individual node appears
-   ScanVisible([&viscnt,&match_func,&nmatches](REveGeomNode &node, std::vector<int> &) {
+   ScanVisible([&viscnt,&match_func,&nmatches,&cnt](REveGeomNode &node, std::vector<int> &) {
       if (match_func(node)) {
+         if (cnt++<100) printf("Node %s\n", node.name.c_str());
          nmatches++;
          viscnt[node.id]++;
       };
       return true;
    });
+
 
    json.clear();
    binary.clear();
@@ -542,13 +555,42 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       return nmatches;
    }
 
-   if (nmatches > 1000) {
+   if (nmatches > 10 * GetMaxVisNodes()) {
       json = "FOUND:TOOMANY:" + std::to_string(nmatches);
       return nmatches;
    }
 
+   // now build all necessary shapes and check number of faces - not too many
+
+   int totalnumfaces{0}, totalnumnodes{0}, scnt{0};
+   bool send_rawdata{true};
+
+   // build all shapes in volume decreasing order
+   for (auto &sid: fSortMap) {
+      if (scnt++ < fDrawIdCut) continue; // no need to most significant shapes
+
+      auto &desc = fDesc[sid];
+      if ((viscnt[sid] <= 0) && (desc.vol <= 0)) continue;
+
+      auto shape = fNodes[sid]->GetVolume()->GetShape();
+      if (!shape) continue;
+
+      // create shape raw data
+      auto &shape_descr = MakeShapeDescr(shape);
+
+      // check how many faces are created
+      totalnumfaces += shape_descr.nfaces * viscnt[sid];
+      if ((GetMaxVisFaces() > 0) && (totalnumfaces > GetMaxVisFaces())) { send_rawdata = false; break; }
+
+      // also avoid too many nodes
+      totalnumnodes += viscnt[sid];
+      if ((GetMaxVisNodes() > 0) && (totalnumnodes > GetMaxVisNodes()))  { send_rawdata = false; break; }
+   }
+
+   send_rawdata = false;
+
    // finally we should create data for streaming to the client
-   // it includes list of visible nodes and rawdata
+   // it includes list of visible nodes and rawdata (if there is enough space)
 
    for (auto &s: fShapes)
       s.fRenderInfo.rnr_offset = -1;
@@ -565,7 +607,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 
       // no need to transfer shape if it provided with main drawing list
       // also no binary will be transported when too many matches are there
-      if ((node.sortid < fDrawIdCut) || (nmatches >= 100)) {
+      if (!send_rawdata || (node.sortid < fDrawIdCut)) {
          // do not include render data
          return true;
       }
@@ -609,4 +651,64 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    assert(render_offset == off);
 
    return nmatches;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Returns nodeid for given stack array, returns -1 in case of failure
+
+int ROOT::Experimental::REveGeomDescription::FindNodeId(const std::vector<int> &stack)
+{
+   int nodeid{0};
+
+   for (auto &chindx: stack) {
+      auto &node = fDesc[nodeid];
+      if (chindx >= (int) node.chlds.size()) return -1;
+      nodeid = node.chlds[chindx];
+   }
+
+   return nodeid;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Produce shape rendering data for given stack
+
+bool ROOT::Experimental::REveGeomDescription::ProduceShapeFor(const std::vector<int> &stack, std::string &json, std::vector<char> &binary)
+{
+   json.clear();
+   binary.clear();
+
+   auto nodeid = FindNodeId(stack);
+   if (nodeid < 0) {
+      json = "SHAPE:NO";
+      return true;
+   }
+
+   std::vector<REveGeomVisisble> visibles;
+   visibles.emplace_back(nodeid, stack);
+
+   auto &item = visibles.back();
+   auto volume = fNodes[nodeid]->GetVolume();
+
+   CopyMaterialProperties(volume, item);
+
+   auto &sd = MakeShapeDescr(volume->GetShape());
+
+   auto &rd = sd.fRenderData;
+   auto &ri = sd.fRenderInfo;
+
+   ri.rnr_offset = 0;
+   ri.rnr_func = rd->GetRnrFunc();
+   ri.vert_size = rd->SizeV();
+   ri.norm_size = rd->SizeN();
+   ri.index_size = rd->SizeI();
+   item.ri = &ri;
+
+   auto res = TBufferJSON::ToJSON(&visibles, 103);
+   json = "SHAPE:";
+   json.append(res.Data());
+
+   binary.resize(rd->GetBinarySize());
+   rd->Write( &binary[0], binary.size());
+
+   return true;
 }
