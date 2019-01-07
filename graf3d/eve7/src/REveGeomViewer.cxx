@@ -23,6 +23,8 @@ ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr) : fGeoManag
 {
 
    fDesc.Build(fGeoManager);
+   fDesc.SetMaxVisNodes(10000);
+   fDesc.SetMaxVisFaces(100000);
 
    TString evedir = TString::Format("%s/eve7", TROOT::GetEtcDir().Data());
 
@@ -58,8 +60,9 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       printf("Send description %d\n", buf.Length());
       fWebWindow->Send(connid, sbuf);
 
-      if (!fDesc.HasDrawData())
-         fDesc.CollectVisibles(100000);
+      if (!fDesc.HasDrawData()) {
+         fDesc.CollectVisibles();
+      }
 
       auto &json = fDesc.GetDrawJson();
       auto &binary = fDesc.GetDrawBinary();
@@ -84,6 +87,33 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 
       if (binary.size() > 0)
          fWebWindow->SendBinary(connid, &binary[0], binary.size());
+   } else if (arg.compare(0,9,"GETSHAPE:") == 0) {
+      // provide exact shape
+      std::string sstack = arg.substr(9);
+
+      std::vector<int> *stack = nullptr;
+
+      if (TBufferJSON::FromJSON(stack,sstack.c_str())) {
+         printf("GET STACK len %d\n", (int) stack->size());
+         for (auto &d: *stack)
+            printf(" elem %d\n", d);
+
+         std::string json;
+         std::vector<char> binary;
+
+         fDesc.ProduceShapeFor(*stack, json, binary);
+
+         printf("Produce shape for stack json %d binary %d\n", (int) json.length(), (int) binary.size());
+
+         fWebWindow->Send(connid, json);
+
+         if (binary.size() > 0)
+            fWebWindow->SendBinary(connid, &binary[0], binary.size());
+
+         delete stack;
+      } else {
+         printf("FAIL to convert vector!!!!\n");
+      }
    }
 }
 
