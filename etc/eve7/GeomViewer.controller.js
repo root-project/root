@@ -21,11 +21,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          oRm.write("<div"); 
          oRm.writeControlData(oControl);  // writes the Control ID and enables event handling - important!
          // oRm.addStyle("background-color", oControl.getColor());  // write the color property; UI5 has validated it to be a valid CSS color
-         oRm.addStyle("width", "100%");  // write the color property; UI5 has validated it to be a valid CSS color
-         oRm.addStyle("height", "100%");  // write the color property; UI5 has validated it to be a valid CSS color
-         oRm.addStyle("overflow", "hidden");  // write the color property; UI5 has validated it to be a valid CSS color
+         oRm.addStyle("width", "100%");  
+         oRm.addStyle("height", "100%");  
+         oRm.addStyle("overflow", "hidden");  
          oRm.writeStyles();
-         oRm.addClass("myColorBox");      // add a CSS class for styles common to all control instances
+         //oRm.addClass("myColorBox");      // add a CSS class for styles common to all control instances
          oRm.writeClasses();              // this call writes the above class plus enables support for Square.addStyleClass(...)
          oRm.write(">"); 
          oRm.write("</div>"); // no text content to render; close the tag
@@ -169,6 +169,50 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
       
+      /** Extract shapes from binary data using appropriate draw message 
+       * Draw message is vector of REveGeomVisisble objects, including info where shape is in raw data */
+      extractRawShapes: function(draw_msg, msg, offset) {
+         var rnr_cache = {};
+         
+         for (var cnt=0;cnt < draw_msg.length;++cnt) {
+            var rd = draw_msg[cnt];
+
+            // entry may be provided without shape - it is ok
+            if (rd.rnr_offset < 0) continue;
+            
+            var cache = rnr_cache[rd.rnr_offset];
+            if (cache) {
+               rd.server_shape = cache.server_shape;
+               continue;
+            }
+
+            // reconstruct render data
+            var off = offset + rd.rnr_offset;
+            
+            var render_data = {}; // put render data in temporary object, only need to create mesh
+               
+            if (rd.vert_size) {
+               render_data.vtxBuff = new Float32Array(msg, off, rd.vert_size);
+               off += rd.vert_size*4;
+            }
+
+            if (rd.norm_size) {
+               render_data.nrmBuff = new Float32Array(msg, off, rd.norm_size);
+               off += rd.norm_size*4;
+            }
+
+            if (rd.index_size) {
+               render_data.idxBuff = new Uint32Array(msg, off, rd.index_size);
+               off += rd.index_size*4;
+            }
+             
+            // shape handle is similar to created in JSROOT.GeoPainter
+            rd.server_shape = { geom: this.creator.makeEveGeometry(render_data), nfaces: (rd.index_size-2) / 3, ready: true };
+             
+            rnr_cache[rd.rnr_offset] = rd;
+         }
+      },
+      
       /** Called when data comes via the websocket */
       OnWebsocketMsg: function(handle, msg, offset) {
 
@@ -177,53 +221,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             if (this.draw_msg) {
                // here we should decode render data
                
-               console.log('DRAWING cnt:', this.draw_msg.length, "BINARY", msg.byteLength, offset);
-               
-               var rnr_cache = {};
-               
-               for (var cnt=0;cnt<this.draw_msg.length;++cnt) {
-                  var rd = this.draw_msg[cnt];
-                  
-                  if (rd.rnr_offset<0) {
-                     console.log('No binary data for elemet', cnt, rd);
-                     continue;
-                  }
-                  
-                  var cache = rnr_cache[rd.rnr_offset];
-                  if (cache) {
-                     rd.server_shape = cache.server_shape;
-                     continue;
-                  }
+               this.extractRawShapes(this.draw_msg, msg, offset);
 
-                  // reconstruct render data
-                  var off = offset + rd.rnr_offset;
-                  
-                  var render_data = {}; // put render data in temporary object, only need to create mesh
-                     
-                  if (rd.vert_size) {
-                     render_data.vtxBuff = new Float32Array(msg, off, rd.vert_size);
-                     off += rd.vert_size*4;
-                  }
-
-                  if (rd.norm_size) {
-                     render_data.nrmBuff = new Float32Array(msg, off, rd.norm_size);
-                     off += rd.norm_size*4;
-                  }
-
-                  if (rd.index_size) {
-                     render_data.idxBuff = new Uint32Array(msg, off, rd.index_size);
-                     off += rd.index_size*4;
-                  }
-                   
-                  // shape handle is similar to created in JSROOT.GeoPainter
-                  rd.server_shape = { geom: this.creator.makeEveGeometry(render_data), nfaces: (rd.index_size-2) / 3, ready: true };
-                   
-                  rnr_cache[rd.rnr_offset] = rd;
-               }
-
+               // this is just start drawing, main work will be done asynchronous
                this.geomControl.startDrawing(this.draw_msg);
                
                delete this.draw_msg;
+            } else if (this.found_msg) {
+               
+               this.extractRawShapes(this.found_msg, msg, offset);
+              
+               this.processSearchReply("FOUND:BIN");
+               
+               delete this.found_msg;
             }
             
             // console.log('ArrayBuffer size ',
@@ -277,9 +287,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             
             this.geomControl.assignClones(this.clones, this.descr.fDrawOptions);
             
-         } else if (msg.indexOf("DRAW:") == 0) {
+         } else if (msg.substr(0,5) == "DRAW:") {
             this.last_draw_msg = this.draw_msg = JSROOT.parse(msg.substr(5));
-         }
+         } else if (msg.substr(0,6) == "FOUND:") {
+            this.processSearchReply(msg); 
+         } 
       },
       
       buildTreeNode: function(indx) {
@@ -334,47 +346,74 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.model.refresh();
       },
       
-      /// try to select only from visisble nodes - no need for server 
-      selectDrawn: function(func) {
-         if (!this.originalNodes || !this.last_draw_msg) return;
-
-         this.tree_nodes = [];
+      /** search main drawn nodes for matches */ 
+      findMatchesFromDraw: function(func) {
+         var matches = [];
          
-         var nmatch = 0, matches = [];
-         
-         for (var k=0;k<this.last_draw_msg.length;++k) {
-            var item = this.last_draw_msg[k];
-            
-            var res = this.clones.ResolveStack(item.stack);
-            
-            if (func(res.node)) {
-               nmatch++;
-               matches.push(item.stack);
-               this.appendStackToTree(item.stack); 
+         if (this.last_draw_msg) 
+            for (var k=0;k<this.last_draw_msg.length;++k) {
+               var item = this.last_draw_msg[k];
+               var res = this.clones.ResolveStack(item.stack);
+               if (func(res.node)) 
+                  matches.push({ stack: item.stack });
             }
+         
+         return matches;
+      },
+      
+      /** try to show selected nodes. With server may be provided shapes */ 
+      showFoundNodes: function(matches, with_shapes) {
+         
+         if (typeof matches == "string") {
+            this.byId("treeTable").collapseAll();
+            this.data.Nodes = [ { title: matches } ];
+            this.model.refresh();
+            if (this.geomControl && this.geomControl.geo_painter) {
+               if (with_shapes) this.geomControl.geo_painter.appendMoreNodes(null);
+               this.geomControl.geo_painter.changeGlobalTransparency();
+            }
+            return;
          }
          
-         if (nmatch == 0) {
+         // fully reset search selection
+         if ((matches === null) || (matches === undefined)) {
+            this.byId("treeTable").collapseAll();
+            this.data.Nodes = this.originalNodes || null;
+            this.model.refresh();
+            this.byId("treeTable").expandToLevel(1);
+            
+            if (this.geomControl && this.geomControl.geo_painter) {
+               if (with_shapes) this.geomControl.geo_painter.appendMoreNodes(matches);
+               this.geomControl.geo_painter.changeGlobalTransparency();
+            }
+            return;
+         }
+         
+         if (!matches || (matches.length == 0)) {
             this.data.Nodes = null;
             this.model.refresh();
          } else {
-         
+            this.tree_nodes = [];
+            for (var k=0;k<matches.length;++k) 
+               this.appendStackToTree(matches[k].stack);
             this.data.Nodes = [ this.tree_nodes[0] ];
-
             this.model.refresh();
-         
-            if (nmatch < 100)
+            if (matches.length < 100)
                this.byId("treeTable").expandToLevel(99);
          }
          
          if (this.geomControl && this.geomControl.geo_painter) {
             var p = this.geomControl.geo_painter; 
-            if ((nmatch>0) && (nmatch<100)) { 
+            
+            if (with_shapes)
+               p.appendMoreNodes(matches);
+            
+            if ((matches.length>0) && (matches.length<100)) { 
                var dflt = Math.max(p.options.transparency, 0.98);
                p.changeGlobalTransparency(function(node) {
                   if (node.stack) 
                      for (var n=0;n<matches.length;++n)
-                        if (JSROOT.GEO.IsSameStack(node.stack, matches[n]))
+                        if (JSROOT.GEO.IsSameStack(node.stack, matches[n].stack))
                            return 0;
                   return dflt;
                });
@@ -382,7 +421,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                p.changeGlobalTransparency();
             }
          }
-         
       },
 
       OnWebsocketClosed: function() {
@@ -415,20 +453,78 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          sap.m.URLHelper.redirect("https://github.com/alja/jsroot/blob/dev/eve7.md", true);
       },
       
+      processSearchReply: function(msg) {
+         // not waiting search - ignore any replies
+         if (!this.waiting_search) return;
+         
+         msg = msg.substr(6);
+         
+         var lst = [];
+         
+         if (msg == "BIN") { lst = this.found_msg; delete this.found_msg; } else 
+         if (msg == "NO") { lst = "Not found"; } else
+         if (msg.substr(0,7) == "TOOMANY") { lst = "Too many " + msg.substr(8); } else {
+            lst = JSON.parse(msg);
+            for (var k=0;k<lst.length;++k)
+               if (lst[k].rnr_offset >= 0) {
+                  this.found_msg = lst;
+                  return; // wait for the binary message
+               }
+         }  
+         
+         this.showFoundNodes(lst, true);
+         
+         if (this.next_search) {
+            this.websocket.Send("SEARCH:" + this.next_search);
+            delete this.next_search;
+         } else { 
+            this.waiting_search = false;
+         }
+      },
+      
+      /** Submit node search query to server */ 
+      submitSearchQuery: function(query, from_handler) {
+         
+         if (!from_handler) {
+            // do not submit immediately, but after very short timeout
+            // if user types very fast - only last selection will be shown
+            if (this.search_handler) clearTimeout(this.search_handler);
+            this.search_handler = setTimeout(this.submitSearchQuery.bind(this, query, true), 1000);
+            return;
+         }
+         
+         delete this.search_handler;
+         
+         if (!query) {
+            // if empty query specified - restore geometry drawing and ignore any possible reply from server
+            this.waiting_search = false;
+            delete this.next_search;
+            this.showFoundNodes(null);
+            return;
+         }
+         
+         if (this.waiting_search) {
+            // do not submit next search query when prvious not yet proceed
+            this.next_search = query;
+            return;
+         }
+         
+         this.websocket.Send("SEARCH:" + query);
+         this.waiting_search = true;
+      },
+      
       onSearch : function(oEvt) {
-         var query = oEvt.getSource().getValue(), func = null;
-         if (query) {
-            this.selectDrawn(function(node) {
-               return node.name.indexOf(query)==0;
-            });
+         var query = oEvt.getSource().getValue();
+         if (this.websocket.kind != "file") {
+            this.submitSearchQuery(query);
+         } else if (query) {
+            this.showFoundNodes(
+               this.findMatchesFromDraw(function(node) {
+                  return node.name.indexOf(query)==0;
+               })
+            );
          } else {
-            this.byId("treeTable").collapseAll();
-            this.data.Nodes = this.originalNodes || null;
-            this.model.refresh();
-            this.byId("treeTable").expandToLevel(1);
-            
-            if (this.geomControl && this.geomControl.geo_painter)
-               this.geomControl.geo_painter.changeGlobalTransparency();
+            this.showFoundNodes(null);
          }
       }
    });
