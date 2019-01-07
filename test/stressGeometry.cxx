@@ -92,7 +92,7 @@ typedef struct {
 } p_t;
 p_t p;
 
-const Int_t NG = 34;
+const Int_t NG = 33;
 const char *exps[NG] = {"aleph",
                         "barres",
                         "felix",
@@ -257,7 +257,6 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE, Bool_t vecg
       if (opt.Contains(exps[i])) iexp[i] = 1;
       else                       iexp[i] = 0;
    }
-   iexp[NG-1]=0;
    TFile::SetCacheFileDir(".");
    TString fname;
    for (i=0; i<NG; i++) {
