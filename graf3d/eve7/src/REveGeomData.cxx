@@ -519,11 +519,18 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 
    int nmatches = 0;
 
+   auto match_func = [&find](REveGeomNode &node) {
+      return (node.vol > 0) && (node.name.compare(0, find.length(), find) == 0);
+   };
+
+   int cnt = 0;
+
    // first count how many times each individual node appears
-   ScanVisible([&viscnt,&find,&nmatches](REveGeomNode &node, std::vector<int> &) {
-      if (node.name.compare(0, find.length(), find)==0) {
+   ScanVisible([&viscnt,&match_func,&nmatches, &cnt](REveGeomNode &node, std::vector<int> &) {
+      if (match_func(node)) {
          nmatches++;
          viscnt[node.id]++;
+         if (cnt++ < 1000) printf("NODE NAME %s\n", node.name.c_str());
       };
       return true;
    });
@@ -532,7 +539,15 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    binary.clear();
 
    // do not send too much data, limit could be made configurable later
-   if ((nmatches >= 100) || (nmatches==0)) return nmatches;
+   if (nmatches==0) {
+      json = "FOUND:NO";
+      return nmatches;
+   }
+
+   if (nmatches > 1000) {
+      json = "FOUND:TOOMANY:" + std::to_string(nmatches);
+      return nmatches;
+   }
 
    // finally we should create data for streaming to the client
    // it includes list of visible nodes and rawdata
@@ -545,11 +560,20 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 
    ScanVisible([&, this](REveGeomNode &node, std::vector<int> &stack) {
       // select only nodes which should match
-      if (node.name.compare(0, find.length(), find) != 0)
+      if (!match_func(node))
          return true;
 
       visibles.emplace_back(node.id, stack);
+
       auto &item = visibles.back();
+
+      // no need to transfer shape if it provided with main drawing list
+      // also no binary will be transported when too many matches are there
+      if ((node.sortid < fDrawIdCut) || (nmatches >= 100)) {
+         item.rnr_offset = -1; // indicate that raw data is not send
+         return true;
+      }
+
       auto volume = fNodes[node.id]->GetVolume();
 
       CopyMaterialProperties(volume, item);
@@ -575,13 +599,13 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    });
 
    auto res = TBufferJSON::ToJSON(&visibles, 103);
-   json = "EXTRA:";
+   json = "FOUND:";
    json.append(res.Data());
 
    binary.resize(render_offset);
    int off{0};
 
-   for (auto rd : render_data) {
+   for (auto &rd: render_data) {
       auto sz = rd->Write( &binary[off], binary.size() - off );
       off += sz;
    }
