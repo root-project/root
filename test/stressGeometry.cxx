@@ -257,6 +257,14 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE, Bool_t vecg
       if (opt.Contains(exps[i])) iexp[i] = 1;
       else                       iexp[i] = 0;
    }
+#if defined(linux) && !defined(__x86_64__)
+   // 32bit linux: we have an error with ATLAS, see https://sft.its.cern.ch/jira/browse/ROOT-9893
+   // Disable unless explicitly enabled.
+   if (all) {
+      printf("DISABLED ATLAS TEST due to known failure on Linux 32 bit!\n");
+      iexp[32] = 0;
+   }
+#endif
    TFile::SetCacheFileDir(".");
    TString fname;
    for (i=0; i<NG; i++) {
