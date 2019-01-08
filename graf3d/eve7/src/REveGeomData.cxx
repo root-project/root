@@ -589,7 +589,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       if ((GetMaxVisNodes() > 0) && (totalnumnodes > GetMaxVisNodes()))  { send_rawdata = false; break; }
    }
 
-   // TODO: only for debug purposes - remove later
+   // only for debug purposes - remove later
    // send_rawdata = false;
 
    // finally we should create data for streaming to the client
@@ -674,28 +674,45 @@ int ROOT::Experimental::REveGeomDescription::FindNodeId(const std::vector<int> &
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Produce shape rendering data for given stack
+/// All nodes, which are referencing same shape will be transferred
 
-bool ROOT::Experimental::REveGeomDescription::ProduceShapeFor(const std::vector<int> &stack, std::string &json, std::vector<char> &binary)
+bool ROOT::Experimental::REveGeomDescription::ProduceShapeFor(const std::vector<int> &sstack, std::string &json, std::vector<char> &binary)
 {
    json.clear();
    binary.clear();
 
-   auto nodeid = FindNodeId(stack);
-   if (nodeid < 0) {
+   auto nodeid = FindNodeId(sstack);
+
+   // only this shape is interesting
+   TGeoShape *shape = nodeid < 0 ? nullptr : fNodes[nodeid]->GetVolume()->GetShape();
+
+   if (!shape) {
       json = "SHAPE:NO";
       return true;
    }
 
    std::vector<REveGeomVisisble> visibles;
-   visibles.emplace_back(nodeid, stack);
 
-   auto &item = visibles.back();
-   auto volume = fNodes[nodeid]->GetVolume();
+   ScanVisible([&, this](REveGeomNode &node, std::vector<int> &stack) {
+      // select only nodes which reference same shape
+      auto volume = fNodes[node.id]->GetVolume();
+      if (volume->GetShape() != shape) return true;
 
-   CopyMaterialProperties(volume, item);
+      visibles.emplace_back(node.id, stack);
 
-   auto &sd = MakeShapeDescr(volume->GetShape());
+      auto &item = visibles.back();
 
+      CopyMaterialProperties(volume, item);
+      return true;
+   });
+
+   // no any visible nodes were done
+   if (visibles.size()==0) {
+      json = "SHAPE:NO";
+      return true;
+   }
+
+   auto &sd = MakeShapeDescr(shape);
    auto &rd = sd.fRenderData;
    auto &ri = sd.fRenderInfo;
 
@@ -704,7 +721,10 @@ bool ROOT::Experimental::REveGeomDescription::ProduceShapeFor(const std::vector<
    ri.vert_size = rd->SizeV();
    ri.norm_size = rd->SizeN();
    ri.index_size = rd->SizeI();
-   item.ri = &ri;
+
+   // assign shape data
+   for (auto &item : visibles)
+      item.ri = &ri;
 
    auto res = TBufferJSON::ToJSON(&visibles, 103);
    json = "SHAPE:";

@@ -87,9 +87,9 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 
       if (binary.size() > 0)
          fWebWindow->SendBinary(connid, &binary[0], binary.size());
-   } else if (arg.compare(0,9,"GETSHAPE:") == 0) {
+   } else if (arg.compare(0,4,"GET:") == 0) {
       // provide exact shape
-      std::string sstack = arg.substr(9);
+      std::string sstack = arg.substr(4);
 
       std::vector<int> *stack{nullptr};
 
