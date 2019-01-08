@@ -86,6 +86,8 @@ The methods could be replaced by equivalent methods with other signature:
 
 ## 3D Graphics Libraries
 
+  - Make sure a TF3 is painted the same way in GL and non-GL mode.
+    The mismatch was reported in [this post](https://root-forum.cern.ch/t/how-to-specify-the-level-value-in-isosurface-drawing-with-tf3-and-gl/32179)
 
 ## Geometry Libraries
 
