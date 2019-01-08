@@ -83,6 +83,7 @@ The methods could be replaced by equivalent methods with other signature:
   - The automatic placement of legend now "sees" TMultiGraph and THStack.
   - Improve and simplify the drawing the 2D histogram's option "ARR".
   - The option ARR can be combined with the option COL or COLZ.
+  - `TBox::DistancetoPrimitive` and `TBox::ExecuteEvent` now work in log scales (by Jérémie Dudouet).
 
 ## 3D Graphics Libraries
 
