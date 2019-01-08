@@ -134,18 +134,33 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
              prop = ctxt.getProperty(ctxt.getPath()),
              found_mesh = false;
          
-         if (!this.geomControl || !this.geomControl.geo_painter) return;
+         var gpainter = this.geomControl ? this.geomControl.geo_painter : null;
+         if (!gpainter) return;
          
          this._hover_stack = stack; // remember current element with hover stack
+         
+         // if there are already exists special entry for hover highlight - check it 
+         if (this._hover_highlight && this._hover_highlight.is_highlighted) {
+            if (is_enter && JSROOT.GEO.IsSameStack(this._hover_highlight.stack, stack)) return;
+
+            gpainter.explicitHighlight(this._hover_highlight, false);
+
+            this._hover_highlight.is_highlighted = false;
             
-         found_mesh = this.geomControl.geo_painter.HighlightMesh(null, 0x00ff00, null, stack, true);
+            if (!is_enter) return;
+         }
+            
+         found_mesh = gpainter.HighlightMesh(null, 0x00ff00, null, stack, true);
          
          if (stack && !found_mesh) {
-            if (prop && prop.search_select && !prop.has_drawing) {
-               console.log('Request stack', stack);
+            if (this._hover_highlight && JSROOT.GEO.IsSameStack(this._hover_highlight.stack, stack)) {
+               // reuse highlight entry again
+               gpainter.explicitHighlight(this._hover_highlight, true);
+               this._hover_highlight.is_highlighted = true;
+            } else if (prop && prop.search_select && !prop.has_drawing) {
                this.submitSearchQuery(stack, true);
             }
-         }
+         } 
       },
       
       /** try to produce stack out of row path */
@@ -435,6 +450,21 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }
          }
       },
+      
+      showHighlightedNode: function(matches) {
+         var gpainter = this.geomControl ? this.geomControl.geo_painter : null;
+         if (!gpainter) return;
+         
+         if (!matches || (matches.length!=1)) return;
+         
+         // check if same element is still highlighted
+         if (this._hover_stack && JSROOT.GEO.IsSameStack(this._hover_stack, matches[0].stack)) {
+            this._hover_highlight = matches[0];
+            gpainter.explicitHighlight(this._hover_highlight, true);
+            this._hover_highlight.is_highlighted = true;
+            console.log("GOT HIGHLIGHTED STACK");
+         }
+      },
 
       OnWebsocketClosed: function() {
          // when connection closed, close panel as well
@@ -447,7 +477,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (this.geomControl && this.geomControl.geo_painter)
             this.geomControl.geo_painter.AddHighlightHandler(this);
       },
-      
 
       onToolsMenuAction : function (oEvent) {
 
@@ -494,7 +523,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
          
          if (is_shape) {
-            console.log('Process explicit shape for ', lst[0], has_binaries);  
+            console.log('Process explicit shape for ', lst.length, lst[0], has_binaries); 
+            this.showHighlightedNode(lst);
          } else {
             this.showFoundNodes(lst, true, has_binaries);
          }

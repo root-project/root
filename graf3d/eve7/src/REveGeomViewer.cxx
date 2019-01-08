@@ -91,12 +91,9 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       // provide exact shape
       std::string sstack = arg.substr(9);
 
-      std::vector<int> *stack = nullptr;
+      std::vector<int> *stack{nullptr};
 
-      if (TBufferJSON::FromJSON(stack,sstack.c_str())) {
-         printf("GET STACK len %d\n", (int) stack->size());
-         for (auto &d: *stack)
-            printf(" elem %d\n", d);
+      if (TBufferJSON::FromJSON(stack, sstack.c_str())) {
 
          std::string json;
          std::vector<char> binary;
@@ -112,7 +109,7 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 
          delete stack;
       } else {
-         printf("FAIL to convert vector!!!!\n");
+         printf("FAIL to convert vector from %s!!!!\n", sstack.c_str());
       }
    }
 }
