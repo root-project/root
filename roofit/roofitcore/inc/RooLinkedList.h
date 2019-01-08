@@ -18,6 +18,7 @@
 
 #include <map>
 #include <list>
+#include <vector>
 
 #include "TNamed.h"
 #include "RooLinkedListElem.h"
@@ -126,6 +127,8 @@ private:
   typedef RooLinkedListImplDetails::Pool Pool;
   /// shared memory pool for allocation of RooLinkedListElems
   static Pool* _pool; //!
+
+  std::vector<RooLinkedListElem *> _at; //! index list for quick index through ::At
 
   ClassDef(RooLinkedList,3) // Doubly linked list for storage of RooAbsArg objects
 };
