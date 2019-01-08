@@ -20,6 +20,8 @@
 /// The handle hides this dependency.
 class RooWorkspaceHandle {
 public:
+   virtual ~RooWorkspaceHandle() {}
+
    ///Set the workspace. If it exists, it is up to the implementing class to decide how to proceed.
    virtual void SetWS(RooWorkspace &ws) = 0;
 
@@ -28,6 +30,8 @@ public:
 
    ///Retrieve the workspace.
    virtual RooWorkspace *GetWS() const = 0;
+
+   ClassDef(RooWorkspaceHandle, 0)
 };
 
 #endif /* ROOFIT_ROOFITCORE_INC_ROOWORKSPACEHANDLE_H_ */
