@@ -8,6 +8,7 @@
 #include "RooStats/ModelConfig.h"
 
 #include "TFile.h"
+#include "TSystem.h"
 
 #include "gtest/gtest.h"
 
@@ -18,6 +19,8 @@ using namespace RooStats;
 ///
 TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
 {
+   const char* filename = "ROOT-9777.root";
+
    RooRealVar x("x", "x", 1, 0, 10);
    RooRealVar mu("mu", "mu", 1, 0, 10);
    RooRealVar sigma("sigma", "sigma", 1, 0, 10);
@@ -25,7 +28,7 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
    RooGaussian pdf("Gauss", "Gauss", x, mu, sigma);
 
    {
-      TFile outfile("/tmp/ROOT-9777", "RECREATE");
+      TFile outfile(filename, "RECREATE");
       
       // now create the model config for this problem
       RooWorkspace* w = new RooWorkspace("ws");
@@ -41,7 +44,7 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
    
    RooWorkspace *w2;
    {
-      TFile infile("/tmp/ROOT-9777", "READ");
+      TFile infile(filename, "READ");
       RooWorkspace *w;
       infile.GetObject("ws", w);
       ASSERT_TRUE(w) << "Workspace not read from file.";
@@ -61,5 +64,7 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
 
    ASSERT_TRUE(mc->GetParametersOfInterest()) << "ParametersOfInterest in mc broken.";
    mc->GetParametersOfInterest()->Print();
+
+   gSystem->Unlink(filename);
 }
 
