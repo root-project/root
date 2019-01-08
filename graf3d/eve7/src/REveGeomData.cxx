@@ -567,7 +567,9 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 
    // build all shapes in volume decreasing order
    for (auto &sid: fSortMap) {
-      if (scnt++ < fDrawIdCut) continue; // no need to most significant shapes
+      if (scnt++ < fDrawIdCut) continue; // no need to send most significant shapes
+
+      if (viscnt[sid] == 0) continue; // this node is not used at all
 
       auto &desc = fDesc[sid];
       if ((viscnt[sid] <= 0) && (desc.vol <= 0)) continue;
@@ -587,7 +589,8 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       if ((GetMaxVisNodes() > 0) && (totalnumnodes > GetMaxVisNodes()))  { send_rawdata = false; break; }
    }
 
-   send_rawdata = false;
+   // TODO: only for debug purposes - remove later
+   // send_rawdata = false;
 
    // finally we should create data for streaming to the client
    // it includes list of visible nodes and rawdata (if there is enough space)
