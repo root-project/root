@@ -78,7 +78,7 @@ Bool_t TGLTF3Painter::InitGeometry()
                                          fCoord->GetYScale(), fCoord->GetZScale(),
                                          Rgl::Mc::TGridGeometry<Double_t>::kBinEdge);
 
-   builder.BuildMesh(fF3, geom, &fMesh, 0.2);
+   builder.BuildMesh(fF3, geom, &fMesh, 0.);
 
    if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
