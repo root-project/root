@@ -198,9 +198,9 @@ Begin_Macro(source)
    A2->Draw();
 
    TF1 *f3=new TF1("f3","log10(x)",1,1000);
-   TGaxis *A3 = new TGaxis(2,-2,2,0,"f3",505,"G");
+   TGaxis *A3 = new TGaxis(2,-2,2,0,"f3",505,"");
    A3->SetTitle("logarithmic axis");
-   A3->SetLabelSize(0.03);
+   A3->SetLabelSize(0.02);
    A3->SetTitleSize(0.03);
    A3->SetTitleOffset(0.); // Axis title automatically placed
    A3->Draw();
