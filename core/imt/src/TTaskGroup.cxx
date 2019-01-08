@@ -16,6 +16,7 @@
 #ifdef R__USE_IMT
 #include "TROOT.h"
 #include "tbb/task_group.h"
+#include "tbb/task_arena.h"
 #endif
 
 #include <type_traits>
@@ -44,6 +45,7 @@ TTaskGroup::TTaskGroup()
       throw std::runtime_error("Implicit parallelism not enabled. Cannot instantiate a TTaskGroup.");
    }
    fTaskContainer = ((TaskContainerPtr_t *)new tbb::task_group());
+   fTaskArena = ((TaskArenaPtr_t *)new tbb::task_arena());
 #endif
 }
 
@@ -56,6 +58,8 @@ TTaskGroup &TTaskGroup::operator=(TTaskGroup &&other)
 {
    fTaskContainer = other.fTaskContainer;
    other.fTaskContainer = nullptr;
+   fTaskArena = other.fTaskArena;
+   fTaskArena = nullptr;
    fCanRun.store(other.fCanRun);
    return *this;
 }
@@ -67,6 +71,19 @@ TTaskGroup::~TTaskGroup()
       return;
    Wait();
    delete ((tbb::task_group *)fTaskContainer);
+   delete ((tbb::task_arena *)fTaskArena);
+#endif
+}
+
+/////////////////////////////////////////////////////////////////////////////
+/// Run operation in the internal task arena to implement work isolation, i.e.
+/// prevent stealing of work items spawned by ancestors.
+void TTaskGroup::ExecuteInIsolation(const std::function<void(void)> &operation)
+{
+#ifdef R__USE_IMT
+   ((tbb::task_arena *)fTaskArena)->execute([&] { operation(); });
+#else
+   operation();
 #endif
 }
 
@@ -76,7 +93,7 @@ void TTaskGroup::Cancel()
 {
 #ifdef R__USE_IMT
    fCanRun = false;
-   ((tbb::task_group *)fTaskContainer)->cancel();
+   ExecuteInIsolation([&] { ((tbb::task_group *)fTaskContainer)->cancel(); });
    fCanRun = true;
 #endif
 }
@@ -95,7 +112,7 @@ void TTaskGroup::Run(const std::function<void(void)> &closure)
    while (!fCanRun)
       /* empty */;
 
-   ((tbb::task_group *)fTaskContainer)->run(closure);
+   ExecuteInIsolation([&] { ((tbb::task_group *)fTaskContainer)->run(closure); });
 #else
    closure();
 #endif
@@ -108,9 +125,9 @@ void TTaskGroup::Wait()
 {
 #ifdef R__USE_IMT
    fCanRun = false;
-   ((tbb::task_group *)fTaskContainer)->wait();
+   ExecuteInIsolation([&] { ((tbb::task_group *)fTaskContainer)->wait(); });
    fCanRun = true;
 #endif
 }
-}
-}
+} // namespace Experimental
+} // namespace ROOT

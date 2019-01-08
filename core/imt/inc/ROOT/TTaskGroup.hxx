@@ -29,8 +29,11 @@ class TTaskGroup {
    */
 private:
    using TaskContainerPtr_t = void *; /// Shield completely from implementation
+   using TaskArenaPtr_t = void *;     /// Shield completely from implementation
    TaskContainerPtr_t fTaskContainer{nullptr};
+   TaskArenaPtr_t fTaskArena{nullptr};
    std::atomic<bool> fCanRun{true};
+   void ExecuteInIsolation(const std::function<void(void)> &operation);
 
 public:
    TTaskGroup();
@@ -43,7 +46,7 @@ public:
    void Run(const std::function<void(void)> &closure);
    void Wait();
 };
-}
-}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif
