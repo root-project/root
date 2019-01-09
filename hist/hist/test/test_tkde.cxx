@@ -136,26 +136,36 @@ struct  TestKDE  {
    
 };
 
+/// Hstogram comparison tests
+/// In this test we compare the TKDE with an histogram
+/// filled with th same type of data. A GoF test (chi2 and KS) is applied to
+/// check for compatibility
 TEST(TKDE, tkde_hist)
-{
-   
+{   
    TestKDE t;
    t.CompareWithHist(); 
    EXPECT_PRED1(TestKDE::IsPValid, t.pval);
-
+}
+TEST(TKDE, tkde_hist_adaptive)
+{   
+   TestKDE t;
    t.adaptive = true; 
    t.CompareWithHist("tkde_adaptive"); 
    EXPECT_PRED1(TestKDE::IsPValid, t.pval);
-
+}
+TEST(TKDE, tkde_hist_binned)
+{  
+   TestKDE t;
+   t.adaptive = true; 
    t.binned = true; 
    t.CompareWithHist("tkde_binned"); 
    EXPECT_PRED1(TestKDE::IsPValid, t.pval);
-
 }
 
+/// IO tests
+/// In this test we compare the value before writing and after reading of the TKDE
 TEST(TKDE, tkde_io)
 {
-
    TestKDE t;
    t.Write();
    t.Read();
@@ -171,7 +181,6 @@ TEST(TKDE, tkde_io)
 
 TEST(TKDE, tkde_io_adaptive)
 {
-
    TString name = "tkde_adaptive";
    TestKDE t;
    t.adaptive = true;
@@ -186,7 +195,6 @@ TEST(TKDE, tkde_io_adaptive)
 
 TEST(TKDE, tkde_io_binned)
 {
-
    TestKDE t;
    t.adaptive = true; 
    t.binned = true;
