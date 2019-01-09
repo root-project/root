@@ -45,7 +45,7 @@ TTaskGroup::TTaskGroup()
       throw std::runtime_error("Implicit parallelism not enabled. Cannot instantiate a TTaskGroup.");
    }
    fTaskContainer = ((TaskContainerPtr_t *)new tbb::task_group());
-   fTaskArena = ((TaskArenaPtr_t *)new tbb::task_arena());
+   fTaskArena = ((TaskArenaPtr_t *)new tbb::task_arena(ROOT::GetImplicitMTPoolSize()));
 #endif
 }
 
