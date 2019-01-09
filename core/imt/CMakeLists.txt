@@ -39,6 +39,8 @@ if(imt)
     src/TThreadExecutor.cxx
   )
 
+  add_dependencies(Imt G__Imt)
+
   ROOT_ADD_TEST_SUBDIRECTORY(test)
 endif()
 
