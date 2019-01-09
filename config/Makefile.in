@@ -384,9 +384,6 @@ BUILDTABLE     := @buildtable@
 
 BUILDTMVA      := @buildtmva@
 
-BUILDAFDSMGRD  := @buildafdsmgrd@
-AFDSMGRDAPMON  := @afdsmgrdapmon@
-
 BUILDHTTP      := @buildhttp@
 USEFASCGI      := @usefastcgi@
 FASTCGIINCDIR  := @fastcgiincdir@
