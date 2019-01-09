@@ -830,7 +830,6 @@ INPUT                  = . \
                          ../../gui/sessionviewer/ \
                          ../../hist/ \
                          ../../html/ \
-                         ../../io/castor/ \
                          ../../io/dcache/ \
                          ../../io/gfal/ \
                          ../../io/hdfs/ \
