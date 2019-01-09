@@ -5,7 +5,57 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/layout/SplitterLayoutData',
                "sap/ui/core/ResizeHandler"
 ],function(Controller, CoreControl, JSONModel, Splitter, SplitterLayoutData, ResizeHandler) {
+
    "use strict";
+   
+   CoreControl.extend("eve.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
+
+      // the control API:
+      metadata : {
+         properties : {           // setter and getter are created behind the scenes, incl. data binding and type validation
+            "color" : {type: "sap.ui.core.CSSColor", defaultValue: "#fff"} // you can give a default value and more
+         }
+      },
+
+      // the part creating the HTML:
+      renderer : function(oRm, oControl) { // static function, so use the given "oControl" instance instead of "this" in the renderer function
+         if (oControl.getColor() == "white") return;
+         
+         oRm.write("<div"); 
+         oRm.writeControlData(oControl);  // writes the Control ID and enables event handling - important!
+         oRm.addStyle("background-color", oControl.getColor());  // write the color property; UI5 has validated it to be a valid CSS color
+         oRm.writeStyles();
+         oRm.addClass("eveColorBox");      // add a CSS class for styles common to all control instances
+         oRm.writeClasses();              // this call writes the above class plus enables support for Square.addStyleClass(...)
+         oRm.write(">"); 
+         oRm.write("</div>"); // no text content to render; close the tag
+      }
+
+/*      
+      // an event handler:
+      onclick : function(evt) {   // is called when the Control's area is clicked - no further event registration required
+         sap.ui.require([
+            'sap/ui/unified/ColorPickerPopover'
+         ], function (ColorPickerPopover) {
+            if (!this.oColorPickerPopover) {
+               this.oColorPickerPopover = new ColorPickerPopover({
+                  change: this.handleChange.bind(this)
+               });
+            }
+            this.oColorPickerPopover.setColorString(this.getColor());
+            this.oColorPickerPopover.openBy(this);
+         }.bind(this));
+      },
+
+      handleChange: function (oEvent) {
+         var newColor = oEvent.getParameter("colorString");
+         this.setColor(newColor);
+         // TODO: fire a "change" event, in case the application needs to react explicitly when the color has changed
+         // but when the color is bound via data binding, it will be updated also without this event
+      }
+*/      
+      
+   });
    
    CoreControl.extend("eve.GeomDraw", { 
 
@@ -49,7 +99,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.geo_painter.assignClones(this.geo_clones);
          
          if (this.geo_visisble) {
-            this.geo_painter.prepareObjectDraw(this.geo_visisble,"__geom_viewer_selection__");
+            this.geo_painter.prepareObjectDraw(this.geo_visisble, "__geom_viewer_selection__");
             delete this.geo_visisble;
          }
       },
@@ -66,7 +116,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       
       startDrawing: function(visible) {
          if (this.geo_painter)
-            this.geo_painter.prepareObjectDraw(visible,"__geom_viewer_selection__");
+            this.geo_painter.prepareObjectDraw(visible, "__geom_viewer_selection__");
          else
             this.geo_visisble = visible;
       },
@@ -103,9 +153,21 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.geomControl = new eve.GeomDraw({color:"#f00"});
          
          this.creator = new JSROOT.EVE.EveElements();
-
+         
+         var t = this.getView().byId("treeTable");
+         
+         t.addColumn(new sap.ui.table.Column({
+            label: "Description",
+            template: new sap.ui.layout.HorizontalLayout({
+               content: [
+                  new eve.ColorBox({color:"{color}" }),
+                  new sap.m.Text({text:"{title}", wrapping: false })
+               ]
+            })
+          }));
+         
          // catch re-rendering of the table to assign handlers 
-         this.getView().byId("treeTable").addEventDelegate({
+         t.addEventDelegate({
             onAfterRendering: function() { this.assignRowHandlers(); }
          }, this);
          
@@ -130,7 +192,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onRowHover: function(row, is_enter) {
          // property of current entry, not used now
          var ctxt = row.getBindingContext(),  
-             prop = ctxt.getProperty(ctxt.getPath()); 
+             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null; 
 
          // remember current element with hover stack
          this._hover_stack = (is_enter && prop && prop.end_node) ? this.getRowStack(row) : null; 
@@ -170,10 +232,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
       
       HighlightMesh: function(active_mesh, color, geo_object, geo_stack) {
-         if (this.last_geo_stack === geo_stack) return;
-         
-         this.last_geo_stack = geo_stack;
-         
          var rows = this.getView().byId("treeTable").getRows();
          
          for (var i=0;i<rows.length;++i) {
@@ -291,6 +349,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }
             
             this.clones = new JSROOT.GEO.ClonedNodes(null, nodes);
+            this.clones.name_prefix = this.clones.GetNodeName(0); 
             
             this.buildTree();
             
@@ -298,6 +357,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             
          } else if (msg.substr(0,5) == "DRAW:") {
             this.last_draw_msg = this.draw_msg = JSROOT.parse(msg.substr(5));
+            this.setNodesDrawProperties(this.draw_msg);
          } else if (msg.substr(0,6) == "FOUND:") {
             this.processSearchReply(msg, false); 
          } else if (msg.substr(0,6) == "SHAPE:") {
@@ -305,18 +365,20 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
       
-      buildTreeNode: function(indx) {
-         var tnode = this.tree_nodes[indx];
+      buildTreeNode: function(cache, indx) {
+         var tnode = cache[indx];
          if (tnode) return tnode;
 
          var node = this.clones.nodes[indx];
          
-         this.tree_nodes[indx] = tnode = { title: node.name, id: indx };
+         cache[indx] = tnode = { title: node.name, id: indx, color: "white" };
          
-         if (node.chlds) {
+         if (node.chlds && (node.chlds.length>0)) {
             tnode.chlds = [];
             for (var k=0;k<node.chlds.length;++k) 
-               tnode.chlds.push(this.buildTreeNode(node.chlds[k]));
+               tnode.chlds.push(this.buildTreeNode(cache, node.chlds[k]));
+         } else {
+            tnode.end_node = true;
          }
          
          return tnode;
@@ -324,14 +386,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       
       // here try to append only given stack to the tree
       // used to build partial tree with visible objects
-      appendStackToTree: function(tnodes, stack) {
+      appendStackToTree: function(tnodes, stack, color) {
          var prnt = null, node = null;
          for (var i=-1;i<stack.length;++i) {
             var indx = (i<0) ? 0 : node.chlds[stack[i]];
             node = this.clones.nodes[indx];
             var tnode = tnodes[indx];
             if (!tnode)
-               tnodes[indx] = tnode = { title: node.name, id: indx };
+               tnodes[indx] = tnode = { title: node.name, id: indx, color: "white" };
             
             if (prnt) {
                if (!prnt.chlds) prnt.chlds = [];
@@ -342,18 +404,32 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
          
          prnt.end_node = true;
+         prnt.color = "rgb(" + color + ")";
       },
       
+      /** Build complete tree of all existing nodes. 
+       * Produced structure can be very large, therefore later one should move this functionality to the server */
       buildTree: function() {
          if (!this.descr || !this.descr.fDesc) return;
          
-         this.tree_nodes = [];
-         
-         this.data.Nodes = [ this.buildTreeNode(0) ];
+         this.data.Nodes = [ this.buildTreeNode([], 0) ];
          
          this.originalNodes = this.data.Nodes; 
          
          this.model.refresh();
+      },
+      
+      /** Set draw properties of nodes which are displayed, currently only draw colors */
+      setNodesDrawProperties: function(draw_msg) {
+         if (!this.data.Nodes) return;
+         for (var k=0;k<draw_msg.length;++k) {
+            var item = draw_msg[k];
+            var dnode = this.data.Nodes[0];
+            for (var n=0;n<item.stack.length;++n)
+               dnode = dnode.chlds[item.stack[n]];
+            dnode.color = "rgb(" + item.color + ")";
+         }
+         this.model.refresh(); // refresh browser
       },
       
       /** search main drawn nodes for matches */ 
@@ -365,7 +441,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                var item = this.last_draw_msg[k];
                var res = this.clones.ResolveStack(item.stack);
                if (func(res.node)) 
-                  matches.push({ stack: item.stack });
+                  matches.push({ stack: item.stack, color: item.color });
             }
          
          return matches;
@@ -407,7 +483,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          } else {
             var nodes = [];
             for (var k=0;k<matches.length;++k) 
-               this.appendStackToTree(nodes, matches[k].stack);
+               this.appendStackToTree(nodes, matches[k].stack, matches[k].color);
             this.data.Nodes = [ nodes[0] ];
             this.model.refresh();
             if (matches.length < 100)
@@ -450,8 +526,65 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
       
       onAfterRendering: function() {
-         if (this.geomControl && this.geomControl.geo_painter)
+         if (this.geomControl && this.geomControl.geo_painter) {
             this.geomControl.geo_painter.AddHighlightHandler(this);
+            this.geomControl.geo_painter.ActivateInBrowser = this.activateInTreeTable.bind(this);            
+         }
+      },
+      
+      /** method called from geom painter when specific node need to be activated in the browser 
+       * Due to complex indexing in TreeTable it is not trivial to select special node */
+      activateInTreeTable: function(itemnames, force) {
+         if (!force || !itemnames) return; 
+            
+         var stack = this.clones.FindStackByName(itemnames[0]);
+         if (!stack) return;
+         
+         function test_match(st) {
+            if (!st || (st.length > stack.length)) return -1;
+            for (var k=0;k<stack.length;++k) {
+               if (k>=st.length) return k;
+               if (stack[k] !== st[k]) return -1; // either stack matches completely or not at all
+            }
+            return stack.length; 
+         }
+         
+         // now start searching items
+         
+         var tt = this.getView().byId("treeTable"),
+             rows = tt.getRows(), best_match = -1, best_row = 0;
+         
+         for (var i=0;i<rows.length;++i) {
+            
+            var rstack = this.getRowStack(rows[i]);
+            var match = test_match(rstack);
+            
+            if (match > best_match) {
+               best_match = match;
+               best_row = rows[i].getIndex();
+            }
+         }
+
+         // start from very beginning
+         if (best_match < 0) {
+            tt.collapseAll();
+            best_match = 0; 
+            best_row = 0;
+         }
+         
+         if (best_match < stack.length) {
+            var ii = best_row;
+            // item should remain as is, but all childs can be below limit
+            tt.expand(ii);
+            
+            while (best_match < stack.length) {
+               ii += stack[best_match++] + 1; // stack is index in child array, can use it here
+               if (ii > tt.getFirstVisibleRow() + tt.getVisibleRowCount()) {
+                  tt.setFirstVisibleRow(Math.max(0, ii - Math.round(tt.getVisibleRowCount()/2)));
+               }
+               tt.expand(ii);
+            }
+         }
       },
 
       onToolsMenuAction : function (oEvent) {
@@ -471,6 +604,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          sap.m.URLHelper.redirect("https://github.com/alja/jsroot/blob/dev/eve7.md", true);
       },
       
+      /** called when new portion of data received from server */
       processSearchReply: function(msg, is_shape) {
          // not waiting search - ignore any replies
          if (!this.waiting_search) return;
@@ -512,7 +646,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
       
-      /** Submit node search query to server */ 
+      /** Submit node search query to server, ignore in offline case */ 
       submitSearchQuery: function(query, from_handler) {
          
          // ignore query in file description mode 
@@ -551,6 +685,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.waiting_search = true;
       },
       
+      /** when new query entered in the seach field */
       onSearch : function(oEvt) {
          var query = oEvt.getSource().getValue();
          if (this.websocket.kind != "file") {
@@ -566,4 +701,5 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       }
    });
+   
 });
