@@ -39,15 +39,19 @@ public:
    std::vector<int> chlds;  ///< list of childs id
    std::string name;        ///< node name
    std::vector<float> matr; ///< matrix for the node, can have reduced number of elements
+   int vis{0};              ///< visibility flag, also delivered to client, use int for shorter JSON
    double vol{0};           ///<! volume estimation
    int nfaces{0};           ///<! number of shape faces
-   bool vis{false};         ///<! visibility flags used in selection
    int visdepth{0};         ///<! how far to check daughters visibility
    int numvischld{0};       ///<! number of visible childs, if all can be jump over
    int idshift{0};          ///<! used to jump over then scan all geom hierarchy
 
    REveGeomNode() = default;
    REveGeomNode(int _id) : id(_id) {}
+
+   /** True when there is shape and it can be displayed */
+   bool CanDisplay() const { return (vol > 0.) && (nfaces > 0); }
+
 };
 
 class REveShapeRenderInfo {
@@ -103,7 +107,7 @@ class REveGeomDescription {
    std::vector<char> fDrawBinary;   ///<! binary data for main draw nodes
    int fDrawIdCut{0};               ///<! sortid used for selection of most-significant nodes
    int fFacesLimit{0};              ///<! maximal number of faces to be selected for drawing
-   int fNodesLimit{0};              ///<! maximial number of nodes to be selected for drawing
+   int fNodesLimit{0};              ///<! maximal number of nodes to be selected for drawing
 
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 
