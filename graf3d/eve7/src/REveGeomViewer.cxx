@@ -50,20 +50,40 @@ ROOT::Experimental::REveGeomViewer::~REveGeomViewer()
 
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// convert JSON into stack array
+
+std::vector<int> ROOT::Experimental::REveGeomViewer::GetStackFromJson(const std::string &json)
+{
+   std::vector<int> *stack{nullptr}, res;
+
+   if (TBufferJSON::FromJSON(stack, json.c_str())) {
+      res = *stack;
+      delete stack;
+   } else {
+      printf("Fail convert json %s into vector<int>\n", json.c_str());
+   }
+
+   return res;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// receive data from client
+
 void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 {
    printf("Get ARG %s\n", arg.c_str());
 
    if (arg=="CONN_READY") {
       auto buf = TBufferJSON::ToJSON(&fDesc,103);
-      std::string sbuf = "DESC:";
+      std::string sbuf = "DESCR:";
       sbuf.append(buf.Data());
       printf("Send description %d\n", (int) sbuf.length());
       fWebWindow->Send(connid, sbuf);
 
-      if (!fDesc.HasDrawData()) {
+      if (!fDesc.HasDrawData())
          fDesc.CollectVisibles();
-      }
 
       auto &json = fDesc.GetDrawJson();
       auto &binary = fDesc.GetDrawBinary();
@@ -90,27 +110,56 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
          fWebWindow->SendBinary(connid, &binary[0], binary.size());
    } else if (arg.compare(0,4,"GET:") == 0) {
       // provide exact shape
-      std::string sstack = arg.substr(4);
 
-      std::vector<int> *stack{nullptr};
+      auto stack = GetStackFromJson(arg.substr(4));
 
-      if (TBufferJSON::FromJSON(stack, sstack.c_str())) {
+      auto nodeid = fDesc.FindNodeId(stack);
 
-         std::string json;
-         std::vector<char> binary;
+      std::string json{"SHAPE:"};
+      std::vector<char> binary;
 
-         fDesc.ProduceShapeFor(*stack, json, binary);
+      fDesc.ProduceDrawingFor(nodeid, json, binary);
 
-         printf("Produce shape for stack json %d binary %d\n", (int) json.length(), (int) binary.size());
+      printf("Produce shape for stack json %d binary %d\n", (int) json.length(), (int) binary.size());
 
-         fWebWindow->Send(connid, json);
+      fWebWindow->Send(connid, json);
 
-         if (binary.size() > 0)
-            fWebWindow->SendBinary(connid, &binary[0], binary.size());
+      if (binary.size() > 0)
+         fWebWindow->SendBinary(connid, &binary[0], binary.size());
 
-         delete stack;
-      } else {
-         printf("FAIL to convert vector from %s!!!!\n", sstack.c_str());
+   } else if ((arg.compare(0,7,"SETVI0:") == 0) || (arg.compare(0,7,"SETVI1:") == 0)) {
+      // change visibility for specified nodeid
+
+      auto nodeid = std::stoi(arg.substr(7));
+
+      bool selected = (arg[5] == '1');
+
+      printf("Change %d = vis %d\n", nodeid, selected);
+
+      if (fDesc.ChangeNodeVisibility(nodeid, selected)) {
+
+         // send modified entry only for specified node, when disabled client will automatically remove node from drawing
+         std::string json0 = "MODIF:";
+         json0.append(TBufferJSON::ToJSON(&fDesc.GetGeomNode(nodeid),103).Data());
+         fWebWindow->Send(connid, json0);
+
+         printf("Send %s\n", json0.c_str());
+
+         if (selected && fDesc.IsPrincipalNode(nodeid)) {
+            // we need to send changes in drawing nodes
+
+            std::string json{"APPND:"};
+            std::vector<char> binary;
+
+            fDesc.ProduceDrawingFor(nodeid, json, binary);
+
+            printf("Send changes JSON %d binary %d\n", (int) json.length(), (int) binary.size());
+
+            if (binary.size() > 0) {
+               fWebWindow->Send(connid, json);
+               fWebWindow->SendBinary(connid, &binary[0], binary.size());
+            }
+         }
       }
    }
 }

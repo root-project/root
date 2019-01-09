@@ -117,8 +117,6 @@ class REveGeomDescription {
 
    void ScanVisible(REveGeomScanFunc_t func);
 
-   int FindNodeId(const std::vector<int> &stack);
-
    ShapeDescr &FindShapeDescr(TGeoShape *shape);
 
    ShapeDescr &MakeShapeDescr(TGeoShape *shape);
@@ -129,6 +127,12 @@ public:
    REveGeomDescription() = default;
 
    void Build(TGeoManager *mgr);
+
+   /** Number of unique nodes in the geometry */
+   int GetNumNodes() const { return fDesc.size(); }
+
+   /** Return summary object for specified nodeid */
+   REveGeomNode &GetGeomNode(int nodeid) { return fDesc[nodeid]; }
 
    /** Set maximal number of nodes which should be selected for drawing */
    void SetMaxVisNodes(int cnt) { fNodesLimit = cnt; }
@@ -144,13 +148,19 @@ public:
 
    bool CollectVisibles();
 
+   bool IsPrincipalNode(int nodeid);
+
    bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawBinary.size() > 0) && (fDrawIdCut > 0); }
    const std::string &GetDrawJson() const { return fDrawJson; }
    const std::vector<char> &GetDrawBinary() const { return fDrawBinary; }
 
    int SearchVisibles(const std::string &find, std::string &json, std::vector<char> &binary);
 
-   bool ProduceShapeFor(const std::vector<int> &stack, std::string &json, std::vector<char> &binary);
+   int FindNodeId(const std::vector<int> &stack);
+
+   bool ProduceDrawingFor(int nodeid, std::string &json, std::vector<char> &binary);
+
+   bool ChangeNodeVisibility(int nodeid, bool selected);
 
    void SelectVolume(TGeoVolume *);
 

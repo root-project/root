@@ -38,6 +38,8 @@ protected:
 
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
+   std::vector<int> GetStackFromJson(const std::string &json);
+
 public:
 
    REveGeomViewer(TGeoManager *mgr);
