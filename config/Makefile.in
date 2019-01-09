@@ -219,11 +219,6 @@ GLIB2INCDIR    := $(filter-out /usr/include, @glib2incdir@)
 
 BUILDMEMSTAT   := @buildmemstat@
 
-BUILDHDFS      := @buildhdfs@
-HDFSLIBDIR     := @hdfslibdir@
-HDFSCLILIB     := @hdfslib@
-HDFSINCDIR     := $(filter-out /usr/include, @hdfsincdir@)
-
 BUILDALIEN     := @buildalien@
 ALIENLIBDIR    := @alienlibdir@
 ALIENCLILIB    := @alienlib@

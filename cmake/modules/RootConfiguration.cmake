@@ -227,11 +227,6 @@ set(gfalincdir ${GFAL_INCLUDE_DIR})
 
 set(buildmemstat ${value${memstat}})
 
-set(buildhdfs ${value${hdfs}})
-set(hdfslibdir ${HDFS_LIBRARY_DIR})
-set(hdfslib ${HDFS_LIBRARY})
-set(hdfsincdir ${HDFS_INCLUDE_DIR})
-
 set(buildalien ${value${alien}})
 set(alienlibdir ${ALIEN_LIBRARY_DIR})
 set(alienlib ${ALIEN_LIBRARY})
