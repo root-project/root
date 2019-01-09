@@ -314,22 +314,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             
             if (this.draw_msg) {
                // here we should decode render data
-               
                this.extractRawShapes(this.draw_msg, msg, offset);
-               
-               console.log('Start drawing again', this.draw_msg.length);
-
                // this is just start drawing, main work will be done asynchronous
                this.geomControl.startDrawing(this.draw_msg);
-               
                delete this.draw_msg;
             } else if (this.found_msg) {
-               
                this.extractRawShapes(this.found_msg, msg, offset);
-              
                this.processSearchReply("BIN");
-               
                delete this.found_msg;
+            } else if (this.append_msg) {
+               this.extractRawShapes(this.append_msg, msg, offset);
+               this.appendNodes(this.append_msg);
+               delete this.append_msg;
             } else {
                console.error('not process binary data', msg ? msg.byteLength : 0)
             }
@@ -344,13 +340,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          } else if (msg.substr(0,6) == "MODIF:") {
             this.modifyDescription(msg.substr(6));
          } else if (msg.substr(0,6) == "GDRAW:") {
-            this.last_draw_msg = this.draw_msg = JSROOT.parse(msg.substr(6));
+            this.last_draw_msg = this.draw_msg = JSROOT.parse(msg.substr(6)); // use JSROOT.parse while refs are used
             this.setNodesDrawProperties(this.draw_msg);
+         } else if (msg.substr(0,6) == "APPND:") {
+            this.append_msg = JSROOT.parse(msg.substr(6)); // use JSROOT.parse while refs are used
+            this.setNodesDrawProperties(this.append_msg);
          } else if (msg.substr(0,6) == "FOUND:") {
             this.processSearchReply(msg.substr(6), false); 
          } else if (msg.substr(0,6) == "SHAPE:") {
             this.processSearchReply(msg.substr(6), true);
-         }
+         } 
       },
       
       /** Format REveGeomNode data to be able use it in list of clones */
@@ -415,7 +414,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          item.vis = newitem.vis;
          item.matrix = newitem.matrix;
 
-         console.log('Modify item', item.id, newitem.id);
+         // console.log('Modify item', item.id, newitem.id);
          
          this.buildTree();
          
@@ -566,6 +565,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                gpainter.changeGlobalTransparency();
             }
          }
+      },
+      
+      appendNodes: function(nodes) {
+         var gpainter = this.geomControl ? this.geomControl.geo_painter : null;
+         if (gpainter) gpainter.prepareObjectDraw(nodes, "__geom_viewer_append__");
       },
       
       showMoreNodes: function(matches) {
