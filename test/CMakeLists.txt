@@ -120,7 +120,12 @@ ROOT_EXECUTABLE(stressGraphics stressGraphics.cxx LIBRARIES Graf Gpad Postscript
 if(MSVC)
   set_property(TARGET stressGraphics APPEND_STRING PROPERTY LINK_FLAGS "/STACK:4000000")
 endif()
-configure_file(stressGraphics.ref stressGraphics.ref COPYONLY)
+# with ZLIB-CF(builtin_zlib) we have better compression ratio.
+if(ZLIB_CF)
+  configure_file(stressGraphics_builtinzlib.ref stressGraphics_builtinzlib.ref COPYONLY)
+else()
+  configure_file(stressGraphics.ref stressGraphics.ref COPYONLY)
+endif()  
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat COPYONLY)
 ROOT_ADD_TEST(test-stressgraphics ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH} COMMAND stressGraphics -b -k FAILREGEX "FAILED|Error in" LABELS longtest)
 ROOT_ADD_TEST(test-stressgraphics-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGraphics.cxx

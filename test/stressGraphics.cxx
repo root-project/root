@@ -280,9 +280,13 @@ void stressGraphics(Int_t verbose = 0)
    gErrorIgnoreLevel = 0;
 
    // Read the reference file "stressGraphics.ref"
+#ifdef R__HAS_CLOUDFLARE_ZLIB
+   FILE *sg = fopen("stressGraphics_builtinzlib.ref","r");
+#else
    FILE *sg = fopen("stressGraphics.ref","r");
+#endif
    if (!sg) {
-      printf("Could not open stressGraphics.ref\n");
+      printf("Could not open stressGraphics.ref/stressGraphics_builtinzlib.ref\n");
       return;
    }
    char line[160];
