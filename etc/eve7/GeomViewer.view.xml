@@ -73,13 +73,13 @@
            
            <t:layoutData><l:SplitterLayoutData size="300px" /></t:layoutData>
 
-           <t:columns>
+           <!-- t:columns>
                <t:Column label="Description">
                    <t:template>
-                       <m:Text text="{title}" wrapping="false" />
+                       <m:Text text="{title}" wrapping="false"/>
                    </t:template>
                </t:Column>
-           </t:columns>
+           </t:columns -->
 
           </t:TreeTable>
           
