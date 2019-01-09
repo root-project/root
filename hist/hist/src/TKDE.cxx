@@ -83,7 +83,6 @@ TKDE::TKDE() :
    fMean(0.),fSigma(0.), fSigmaRob(0.), fXMin(0.), fXMax(0.),
    fRho(0.), fAdaptiveBandwidthFactor(0.), fWeightSize(0)
 {
-   std::cout << "Created TKDE class " <<  fData.size() << "   " << fEvents.size() << std::endl;
 }
 
 TKDE::~TKDE() {
@@ -481,7 +480,12 @@ void TKDE::ReInit() {
    // recreate kernel function pointer
 
    if (fKernelFunction) Error("ReInit","Kernel function pointer should be a nullptr when re-initializing after reading from a file");
-   
+
+   if (fEvents.size() == 0) {
+      Error("ReInit","TKDE does not contain any data !");
+      return;
+   }
+       
    SetKernelFunction(0);
 
    SetKernel();
@@ -687,7 +691,11 @@ Double_t TKDE::operator()(const Double_t* x, const Double_t*) const {
 
 Double_t TKDE::operator()(Double_t x) const {
    // The class's unary function: returns the kernel density estimate
-   if (!fKernel) (const_cast<TKDE*>(this))->ReInit();
+   if (!fKernel) {
+      (const_cast<TKDE*>(this))->ReInit();
+      // in case of failed re-initialization
+      if (!fKernel) return TMath::QuietNaN();
+   }
    return (*fKernel)(x);
 }
 
