@@ -1011,21 +1011,6 @@ if(r)
   endif()
 endif()
 
-
-#---Check for hdfs--------------------------------------------------------------------
-if(hdfs)
-  find_package(hdfs)
-  if(NOT HDFS_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "hdfs library not found and is required (hdfs option enabled)")
-    else()
-      message(STATUS "hdfs library not found. Set variable HDFS_DIR to point to your hdfs installation")
-      message(STATUS "For the time being switching OFF 'hdfs' option")
-      set(hdfs OFF CACHE BOOL "Disabled because hdfs not found (${hdfs_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for Davix library-----------------------------------------------------------
 
 foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)

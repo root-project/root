@@ -643,7 +643,7 @@ Int_t TMemFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Perform a stat on the HDFS file; see TFile::SysStat().
+/// Perform a stat on the file; see TFile::SysStat().
 
 Int_t TMemFile::SysStat(Int_t, Long_t* /* id */, Long64_t* /* size */, Long_t* /* flags */, Long_t* /* modtime */)
 {
