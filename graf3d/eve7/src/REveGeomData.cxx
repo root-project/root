@@ -268,24 +268,24 @@ int ROOT::Experimental::REveGeomDescription::MarkVisible(bool on_screen)
    for (auto &node: fNodes) {
       auto &desc = fDesc[cnt++];
 
-      desc.vis = false;
+      desc.vis = 0;
       desc.visdepth = 9999999;
       desc.numvischld = 1;
       desc.idshift = 0;
 
       if (on_screen) {
-         desc.vis = node->IsOnScreen();
+         if (node->IsOnScreen()) desc.vis = 1;
       } else {
          auto vol = node->GetVolume();
 
-         desc.vis = vol->IsVisible() && !vol->TestAttBit(TGeoAtt::kVisNone);
+         if (vol->IsVisible() && !vol->TestAttBit(TGeoAtt::kVisNone)) desc.vis = 1;
          if (!vol->IsVisDaughters())
             desc.visdepth = vol->TestAttBit(TGeoAtt::kVisOneLevel) ? 1 : 0;
       }
 
-      if ((desc.vol <= 0) || (desc.nfaces <= 0)) desc.vis = false;
+      if ((desc.vol <= 0) || (desc.nfaces <= 0)) desc.vis = 0;
 
-      if (desc.vis) res++;
+      if (desc.vis && desc.CanDisplay()) res++;
    }
 
    return res;
@@ -308,7 +308,7 @@ void ROOT::Experimental::REveGeomDescription::ScanVisible(REveGeomScanFunc_t fun
 
       auto &desc = fDesc[nodeid];
       int res = 0;
-      if (desc.vis && (lvl >= 0) && (inside_visisble_branch > 0))
+      if (desc.vis && desc.CanDisplay() && (lvl >= 0) && (inside_visisble_branch > 0))
          if (func(desc, stack))
             res++;
 
