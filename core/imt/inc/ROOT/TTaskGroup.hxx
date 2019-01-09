@@ -28,10 +28,8 @@ class TTaskGroup {
    is executing.
    */
 private:
-   using TaskContainerPtr_t = void *; /// Shield completely from implementation
-   using TaskArenaPtr_t = void *;     /// Shield completely from implementation
-   TaskContainerPtr_t fTaskContainer{nullptr};
-   TaskArenaPtr_t fTaskArena{nullptr};
+   void *fTaskContainer{nullptr};
+   void *fTaskArena{nullptr};
    std::atomic<bool> fCanRun{true};
    void ExecuteInIsolation(const std::function<void(void)> &operation);
 
