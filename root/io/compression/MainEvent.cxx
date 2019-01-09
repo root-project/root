@@ -312,7 +312,11 @@ int main(int argc, char **argv)
       }
       int expectedSize = -1;
       if (comp == 0) expectedSize = 5538619;
-      else if (comp == 101) expectedSize = 1254957;
+#ifdef R__HAS_CLOUDFLARE_ZLIB
+      else if (comp == 101) expectedSize = 1239527;
+#else
+      else if (comp == 101) expectedSize = 1254957; 
+#endif
       else if (comp == 208) expectedSize = 1088187;
       else if (comp == 301) expectedSize = 1265145;
       else if (comp == 404) expectedSize = 1289623;
