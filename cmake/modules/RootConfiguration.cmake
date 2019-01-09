@@ -186,13 +186,6 @@ set(odbclibdir ${OCDB_LIBRARY_DIR})
 set(odbclib ${OCDB_LIBRARY})
 set(odbcincdir ${OCDB_INCLUDE_DIR})
 
-set(buildcastor ${value${castor}})
-set(castorlibdir ${CASTOR_LIBRARY_DIR})
-set(castorlib ${CASTOR_LIBRARY})
-set(castorincdir ${CASTOR_INCLUDE_DIR})
-set(castorcflags)
-
-
 set(builddavix ${value${davix}})
 set(davixlibdir ${DAVIX_LIBRARY_DIR})
 set(davixlib ${DAVIX_LIBRARY})

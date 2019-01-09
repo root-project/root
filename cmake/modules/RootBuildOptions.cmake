@@ -98,7 +98,6 @@ ROOT_BUILD_OPTION(builtin_veccore OFF "Build VecCore internally (requires networ
 ROOT_BUILD_OPTION(builtin_xrootd OFF "Build XRootD internally (requires network)")
 ROOT_BUILD_OPTION(builtin_xxhash OFF "Build bundled copy of xxHash")
 ROOT_BUILD_OPTION(builtin_zlib OFF "Build bundled copy of zlib")
-ROOT_BUILD_OPTION(castor OFF "Enable support for CASTOR (CERN Advanced STORage manager)")
 ROOT_BUILD_OPTION(ccache OFF "Enable ccache usage for speeding up builds")
 ROOT_BUILD_OPTION(cefweb OFF "Enable support for CEF (Chromium Embedded Framework) web-based display")
 ROOT_BUILD_OPTION(clad ON "Build clad, the cling automatic differentiation plugin")
@@ -318,14 +317,14 @@ endif()
 ROOT_APPLY_OPTIONS()
 
 #---Removed options------------------------------------------------------------
-foreach(opt afdsmgrd afs bonjour chirp geocad glite gviz ios qt qtgsi rfio ruby sapdb srp table)
+foreach(opt afdsmgrd afs bonjour castor chirp geocad glite gviz ios qt qtgsi rfio ruby sapdb srp table)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' has been removed in ROOT v6.16.")
   endif()
 endforeach()
 
 #---Deprecated options---------------------------------------------------------
-foreach(opt castor globus hdfs krb5 ldap memstat odbc)
+foreach(opt globus hdfs krb5 ldap memstat odbc)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in ROOT v6.18. Please inform rootdev@cern.ch should you still need it.")
   endif()

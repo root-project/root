@@ -581,20 +581,6 @@ if(builtin_openssl)
   add_subdirectory(builtins/openssl)
 endif()
 
-#---Check for Castor-------------------------------------------------------------------
-if(castor)
-  message(STATUS "Looking for Castor")
-  find_package(Castor)
-  if(NOT CASTOR_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Castor libraries not found and they are required (castor option enabled)")
-    else()
-      message(STATUS "Castor not found. Switching off castor option")
-      set(castor OFF CACHE BOOL "Disabled because Castor not found (${castor_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for MySQL-------------------------------------------------------------------
 if(mysql)
   message(STATUS "Looking for MySQL")

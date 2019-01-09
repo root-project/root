@@ -184,12 +184,6 @@ ODBCLIBDIR     := @odbclibdir@
 ODBCCLILIB     := @odbclib@
 ODBCINCDIR     := $(filter-out /usr/include, @odbcincdir@)
 
-BUILDCASTOR    := @buildcastor@
-CASTORLIBDIR   := @castorlibdir@
-CASTORCLILIB   := @castorlib@
-CASTORINCDIR   := $(filter-out /usr/include, @castorincdir@)
-CASTORCFLAGS   := @castorcflags@
-
 BUILDDAVIX      := @builddavix@
 DAVIXLIBDIR     := @davixlibdir@
 DAVIXCLILIB     := @davixlib@
