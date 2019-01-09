@@ -504,7 +504,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
    // finally, create binary data with all produced shapes
 
    auto res = TBufferJSON::ToJSON(&visibles, 103);
-   fDrawJson = "DRAW:";
+   fDrawJson = "GDRAW:";
    fDrawJson.append(res.Data());
 
    fDrawBinary.resize(render_offset);
@@ -517,6 +517,18 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
    assert(render_offset == off);
 
    return true;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// return true when node used in main geometry drawing
+
+bool ROOT::Experimental::REveGeomDescription::IsPrincipalNode(int nodeid)
+{
+   if ((nodeid<0) || (nodeid >= (int) fDesc.size())) return false;
+
+   auto &desc = fDesc[nodeid];
+
+   return desc.sortid < fDrawIdCut;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -676,18 +688,13 @@ int ROOT::Experimental::REveGeomDescription::FindNodeId(const std::vector<int> &
 /// Produce shape rendering data for given stack
 /// All nodes, which are referencing same shape will be transferred
 
-bool ROOT::Experimental::REveGeomDescription::ProduceShapeFor(const std::vector<int> &sstack, std::string &json, std::vector<char> &binary)
+bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, std::vector<char> &binary)
 {
-   json.clear();
-   binary.clear();
-
-   auto nodeid = FindNodeId(sstack);
-
    // only this shape is interesting
-   TGeoShape *shape = nodeid < 0 ? nullptr : fNodes[nodeid]->GetVolume()->GetShape();
+   TGeoShape *shape = (nodeid < 0) ? nullptr : fNodes[nodeid]->GetVolume()->GetShape();
 
    if (!shape) {
-      json = "SHAPE:NO";
+      json.append("NO");
       return true;
    }
 
@@ -695,20 +702,17 @@ bool ROOT::Experimental::REveGeomDescription::ProduceShapeFor(const std::vector<
 
    ScanVisible([&, this](REveGeomNode &node, std::vector<int> &stack) {
       // select only nodes which reference same shape
-      auto volume = fNodes[node.id]->GetVolume();
-      if (volume->GetShape() != shape) return true;
+      if (node.id != nodeid) return true;
 
       visibles.emplace_back(node.id, stack);
-
       auto &item = visibles.back();
-
-      CopyMaterialProperties(volume, item);
+      CopyMaterialProperties(fNodes[nodeid]->GetVolume(), item);
       return true;
    });
 
    // no any visible nodes were done
    if (visibles.size()==0) {
-      json = "SHAPE:NO";
+      json.append("NO");
       return true;
    }
 
@@ -727,11 +731,28 @@ bool ROOT::Experimental::REveGeomDescription::ProduceShapeFor(const std::vector<
       item.ri = &ri;
 
    auto res = TBufferJSON::ToJSON(&visibles, 103);
-   json = "SHAPE:";
    json.append(res.Data());
 
    binary.resize(rd->GetBinarySize());
    rd->Write( &binary[0], binary.size());
+
+   return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Change visibility for specified element
+/// Returns node id when changes were performed or -1 if no changes were done
+
+bool ROOT::Experimental::REveGeomDescription::ChangeNodeVisibility(int nodeid, bool selected)
+{
+   int iselected = (selected ? 1 : 0);
+
+   // nothing changed
+   if (fDesc[nodeid].vis == iselected)
+      return false;
+
+   fNodes[nodeid]->GetVolume()->SetVisibility(selected);
+   fDesc[nodeid].vis = iselected;
 
    return true;
 }

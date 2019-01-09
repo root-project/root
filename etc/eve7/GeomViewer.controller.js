@@ -158,11 +158,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          
          var t = this.getView().byId("treeTable");
          
+         var vis_selected_handler = this.visibilitySelected.bind(this);
+         
          t.addColumn(new sap.ui.table.Column({
             label: "Description",
             template: new sap.ui.layout.HorizontalLayout({
                content: [
-                  new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}" }),
+                  new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}", select: vis_selected_handler }), 
                   new eve.ColorBox({color:"{color}", visible: "{color_visible}" }),
                   new mText({text:"{title}", wrapping: false })
                ]
@@ -180,6 +182,20 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          //new my.ColorBox({color:"green"}).placeAt("content");
          
          this.getView().byId("mainSplitter").addContentArea(this.geomControl);
+      },
+      
+      /** invoked when visibility checkbox clicked */
+      visibilitySelected: function(oEvent) {
+         var nodeid = this.getRowNodeId(oEvent.getSource());
+         if (nodeid<0) {
+            console.error('Fail to identify nodeid');
+            return;
+         }
+
+         var msg = "SETVI" + (oEvent.getParameter("selected") ? 1 : 0) + ":" + JSON.stringify(nodeid);
+         
+         // send info message to client to change visibility  
+         this.websocket.Send(msg);
       },
       
       assignRowHandlers: function() {
@@ -210,6 +226,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.submitSearchQuery(this._hover_stack, true);
       },
       
+      /** Return nodeid for the row */
+      getRowNodeId: function(row) {
+         var ctxt = row.getBindingContext();
+         var ttt = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
+         return ttt && (ttt.id!==undefined) ? ttt.id : -1;
+      },
+      
       /** try to produce stack out of row path */
       getRowStack: function(row) {
          var ctxt = row.getBindingContext();
@@ -234,6 +257,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return this.geomControl.geo_clones.MakeStackByIds(ids);
       },
       
+      /** Callback from geo painter when mesh object is highlighted. Use for update of TreeTable */
       HighlightMesh: function(active_mesh, color, geo_object, geo_stack) {
          var rows = this.getView().byId("treeTable").getRows();
          
@@ -292,6 +316,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                // here we should decode render data
                
                this.extractRawShapes(this.draw_msg, msg, offset);
+               
+               console.log('Start drawing again', this.draw_msg.length);
 
                // this is just start drawing, main work will be done asynchronous
                this.geomControl.startDrawing(this.draw_msg);
@@ -301,7 +327,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                
                this.extractRawShapes(this.found_msg, msg, offset);
               
-               this.processSearchReply("FOUND:BIN");
+               this.processSearchReply("BIN");
                
                delete this.found_msg;
             } else {
@@ -313,55 +339,60 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          console.log("msg len=", msg.length, " txt:", msg.substr(0,70), "...");
 
-         if (msg.substr(0,5) == "DESC:") {
-            this.parseDescription(msg.substr(5));
-         } else if (msg.substr(0,5) == "DRAW:") {
-            this.last_draw_msg = this.draw_msg = JSROOT.parse(msg.substr(5));
+         if (msg.substr(0,6) == "DESCR:") {
+            this.parseDescription(msg.substr(6));
+         } else if (msg.substr(0,6) == "MODIF:") {
+            this.modifyDescription(msg.substr(6));
+         } else if (msg.substr(0,6) == "GDRAW:") {
+            this.last_draw_msg = this.draw_msg = JSROOT.parse(msg.substr(6));
             this.setNodesDrawProperties(this.draw_msg);
          } else if (msg.substr(0,6) == "FOUND:") {
-            this.processSearchReply(msg, false); 
+            this.processSearchReply(msg.substr(6), false); 
          } else if (msg.substr(0,6) == "SHAPE:") {
-            this.processSearchReply(msg, true);
+            this.processSearchReply(msg.substr(6), true);
+         }
+      },
+      
+      /** Format REveGeomNode data to be able use it in list of clones */
+      formatNodeElement: function(elem) {
+         elem.kind = 2; // special element for geom viewer, used in TGeoPainter
+         var m = elem.matr;
+         delete elem.matr;
+         if (!m || !m.length) return;
+         
+         if (m.length == 16) {
+            elem.matrix = m;
+         } else {
+            var nm = elem.matrix = new Array(16);
+            for (var k=0;k<16;++k) nm[k] = 0;
+            nm[0] = nm[5] = nm[10] = nm[15] = 1;
+         
+            if (m.length == 3) {
+               // translation martix
+               nm[12] = m[0]; nm[13] = m[1]; nm[14] = m[2];
+            } else if (m.length == 4) {
+               // scale matrix
+               nm[0] = m[0]; nm[5] = m[1]; nm[10] = m[2]; nm[15] = m[3];
+            } else if (m.length == 9) {
+               // rotation matrix
+               nm[0] = m[0]; nm[4] = m[1]; nm[8]  = m[2]; 
+               nm[1] = m[3]; nm[5] = m[4]; nm[9]  = m[5]; 
+               nm[2] = m[6]; nm[6] = m[7]; nm[10] = m[8]; 
+            } else {
+               console.error('wrong number of elements in the matrix ' + m.length);
+            }
          }
       },
       
       /** Parse and format base geometry description, initialize hierarchy browser */
       parseDescription: function(msg) {
-         this.descr = JSROOT.parse(msg);
+         this.descr = JSON.parse(msg);
          
          var nodes = this.descr.fDesc;
 
          // we need to calculate matrixes here
-         for (var cnt = 0; cnt < nodes.length; ++cnt) {
-            var elem = nodes[cnt];
-            elem.kind = 2; // special element for geom viewer, used in TGeoPainter
-            var m = elem.matr;
-            delete elem.matr;
-            if (!m || !m.length) continue;
-            
-            if (m.length == 16) {
-               elem.matrix = m;
-            } else {
-               var nm = elem.matrix = new Array(16);
-               for (var k=0;k<16;++k) nm[k] = 0;
-               nm[0] = nm[5] = nm[10] = nm[15] = 1;
-            
-               if (m.length == 3) {
-                  // translation martix
-                  nm[12] = m[0]; nm[13] = m[1]; nm[14] = m[2];
-               } else if (m.length == 4) {
-                  // scale matrix
-                  nm[0] = m[0]; nm[5] = m[1]; nm[10] = m[2]; nm[15] = m[3];
-               } else if (m.length == 9) {
-                  // rotation matrix
-                  nm[0] = m[0]; nm[4] = m[1]; nm[8]  = m[2]; 
-                  nm[1] = m[3]; nm[5] = m[4]; nm[9]  = m[5]; 
-                  nm[2] = m[6]; nm[6] = m[7]; nm[10] = m[8]; 
-               } else {
-                  console.error('wrong number of elements in the matrix ' + m.length);
-               }
-            }
-         }
+         for (var cnt = 0; cnt < nodes.length; ++cnt) 
+            this.formatNodeElement(nodes[cnt]);
          
          this.clones = new JSROOT.GEO.ClonedNodes(null, nodes);
          this.clones.name_prefix = this.clones.GetNodeName(0); 
@@ -369,6 +400,27 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.buildTree();
          
          this.geomControl.assignClones(this.clones, this.descr.fDrawOptions);
+      },
+      
+      /** When single node element is modified from server side */ 
+      modifyDescription: function(msg) {
+         var newitem = JSON.parse(msg);
+         
+         if (!newitem || !this.descr.fDesc) return;
+         
+         this.formatNodeElement(newitem);
+         
+         var item = this.descr.fDesc[newitem.id];
+         
+         item.vis = newitem.vis;
+         item.matrix = newitem.matrix;
+
+         console.log('Modify item', item.id, newitem.id);
+         
+         this.buildTree();
+         
+         if (!item.vis && this.geomControl && this.geomControl.geo_painter) 
+            this.geomControl.geo_painter.RemoveDrawnNode(item.id);
       },
       
       buildTreeNode: function(cache, indx) {
@@ -616,8 +668,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       processSearchReply: function(msg, is_shape) {
          // not waiting search - ignore any replies
          if (!this.waiting_search) return;
-         
-         msg = msg.substr(6);
          
          var lst = [], has_binaries = false;
          
