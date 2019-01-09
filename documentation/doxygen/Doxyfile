@@ -832,7 +832,6 @@ INPUT                  = . \
                          ../../html/ \
                          ../../io/dcache/ \
                          ../../io/gfal/ \
-                         ../../io/hdfs/ \
                          ../../io/io/ \
                          ../../io/sql/ \
                          ../../io/xml/ \
