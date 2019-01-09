@@ -186,12 +186,6 @@ set(odbclibdir ${OCDB_LIBRARY_DIR})
 set(odbclib ${OCDB_LIBRARY})
 set(odbcincdir ${OCDB_INCLUDE_DIR})
 
-set(buildrfio ${value${rfio}})
-set(shiftlibdir ${RFIO_LIBRARY_DIR})
-set(shiftlib ${RFIO_LIBRARY})
-set(shiftincdir ${RFIO_INCLUDE_DIR})
-set(shiftcflags)
-
 set(buildcastor ${value${castor}})
 set(castorlibdir ${CASTOR_LIBRARY_DIR})
 set(castorlib ${CASTOR_LIBRARY})

@@ -519,12 +519,11 @@ TFile.CrossProtocolRedirects:  yes
 TS3WebFile.Root.MultiRangeServer:  Huawei OBS
 
 # Special cases for the TUrl parser, where the special cases are parsed
-# in a protocol + file part, like rfio:host:/path/file.root,
-# castor:/path/file.root or /alien/path/file.root.
+# in a protocol + file part, like castor:/path/file.root or /alien/path/file.root.
 # In case the file namespace descriptor ends with - the namespace
 # is not a part of the filename.
 # Extend in private .rootrc with a +Url.Special line.
-Url.Special:         file: rfio: hpss: castor: gfal: dcache:
+Url.Special:         file: hpss: castor: gfal: dcache:
 +Url.Special:        /alien/- /castor/
 
 # PROOF XRD client variables

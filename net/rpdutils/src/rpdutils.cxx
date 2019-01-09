@@ -607,8 +607,6 @@ int RpdGetAuthMethod(int kind)
       method = 2;
    if (kind == kROOTD_GLOBUS)
       method = 3;
-   if (kind == kROOTD_RFIO)
-      method = 5;
 
    return method;
 }
@@ -3331,73 +3329,12 @@ int RpdGlobusAuth(const char *sstr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if user and group id specified in the request exist in the
-/// passwd file. If they do then grant access. Very insecure: to be used
-/// with care.
+/// RFIO protocol (no longer supported by ROOT)
 
 int RpdRfioAuth(const char *sstr)
 {
-   int auth = 0;
-
-   if (gDebug > 2)
-      ErrorInfo("RpdRfioAuth: analyzing ... %s", sstr);
-
-   if (!*sstr) {
-      NetSend(kErrBadUser, kROOTD_ERR);
-      ErrorInfo("RpdRfioAuth: subject string is empty");
-      return auth;
-   }
-   // Decode subject string
-   unsigned int uid, gid;
-   sscanf(sstr, "%u %u", &uid, &gid);
-
-   // Now inquire passwd ...
-   struct passwd *pw;
-   if ((pw = getpwuid((uid_t) uid)) == 0) {
-      NetSend(kErrBadUser, kROOTD_ERR);
-      ErrorInfo("RpdRfioAuth: uid %u not found", uid);
-      return auth;
-   }
-   // Check if authorized
-   char cuid[20];
-   SPrintf(cuid, 20, "%u", uid);
-   if (gUserIgnLen[5] > 0 && strstr(gUserIgnore[5], cuid) != 0) {
-      NetSend(kErrNotAllowed, kROOTD_ERR);
-      ErrorInfo
-          ("RpdRfioAuth: user (%u,%s) not authorized to use (uid:gid) method",
-           uid, pw->pw_name);
-      return auth;
-   }
-   if (gUserAlwLen[5] > 0 && strstr(gUserAllow[5], cuid) == 0) {
-      NetSend(kErrNotAllowed, kROOTD_ERR);
-      ErrorInfo
-          ("RpdRfioAuth: user (%u,%s) not authorized to use (uid:gid) method",
-           uid, pw->pw_name);
-      return auth;
-   }
-
-   // Now check group id ...
-   if (gid != (unsigned int) pw->pw_gid) {
-      NetSend(kErrBadUser, kROOTD_ERR);
-      ErrorInfo
-          ("RpdRfioAuth: group id does not match (remote:%u,local:%u)",
-           gid, (unsigned int) pw->pw_gid);
-      return auth;
-   }
-   // Set username ....
-   strlcpy(gUser, pw->pw_name, sizeof(gUser));
-
-
-   // Notify, if required ...
-   if (gDebug > 0)
-      ErrorInfo("RpdRfioAuth: user %s authenticated (uid:%u, gid:%u)",
-                gUser, uid, gid);
-
-   // Set Auth flag
-   auth = 1;
-   gSec = 5;
-
-   return auth;
+   ::Error("RpdRfioAuth", "RfioAuth no longer supported by ROOT");
+   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4780,8 +4717,7 @@ int RpdAuthenticate()
          }
 
          // Then check if a previous authentication exists and is valid
-         // ReUse does not apply for RFIO
-         if (kind != kROOTD_RFIO && (auth = RpdReUseAuth(buf, kind)))
+         if (auth = RpdReUseAuth(buf, kind))
             goto next;
       }
 
@@ -4800,9 +4736,6 @@ int RpdAuthenticate()
             break;
          case kROOTD_GLOBUS:
             auth = RpdGlobusAuth(buf);
-            break;
-         case kROOTD_RFIO:
-            auth = RpdRfioAuth(buf);
             break;
          case kROOTD_CLEANUP:
             RpdAuthCleanup(buf,1);

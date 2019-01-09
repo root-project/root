@@ -1191,7 +1191,7 @@ Float_t TFile::GetCompressionFactor()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Method returning errno. Is overriden in TRFIOFile.
+/// Method returning errno.
 
 Int_t TFile::GetErrno() const
 {
@@ -1199,7 +1199,7 @@ Int_t TFile::GetErrno() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Method resetting the errno. Is overridden in TRFIOFile.
+/// Method resetting the errno.
 
 void TFile::ResetErrno() const
 {

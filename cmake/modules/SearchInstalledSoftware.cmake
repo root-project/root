@@ -595,21 +595,6 @@ if(castor)
   endif()
 endif()
 
-#---Check for RFIO-------------------------------------------------------------------
-if(rfio)
-  message(STATUS "Looking for RFIO")
-  find_package(Castor)
-  find_package(DPM)
-  if(NOT CASTOR_FOUND AND NOT DPM_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Castor or DPM libraries not found and one of them is required (rfio option enabled)")
-    else()
-      message(STATUS "Castor or DPM not found. Switching off rfio option")
-      set(rfio OFF CACHE BOOL "Disabled because Castor or DPM not found (${rfio_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for MySQL-------------------------------------------------------------------
 if(mysql)
   message(STATUS "Looking for MySQL")

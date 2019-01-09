@@ -983,8 +983,8 @@ Int_t TNetSystem::MakeDirectory(const char *dir)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Open a directory via rfiod. Returns an opaque pointer to a dir
-/// structure. Returns 0 in case of error.
+/// Open a directory and return an opaque pointer to a dir structure.
+/// Returns nullptr in case of error.
 
 void *TNetSystem::OpenDirectory(const char *dir)
 {
@@ -997,7 +997,7 @@ void *TNetSystem::OpenDirectory(const char *dir)
    }
 
    if (!fFTP || !fFTP->IsOpen())
-      return (void *)0;
+      return nullptr;
 
    if (fDir) {
       if (gDebug > 0)
@@ -1014,7 +1014,7 @@ void *TNetSystem::OpenDirectory(const char *dir)
       fDirp = (void *)&fDir;
       return fDirp;
    } else
-      return (void *)0;
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
