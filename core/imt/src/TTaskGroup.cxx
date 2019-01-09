@@ -32,8 +32,10 @@ Nesting TTaskGroup instances may result in a runtime overhead.
 */
 
 namespace ROOT {
+
 namespace Internal {
 
+#ifdef R__USE_IMT
 tbb::task_group *CastToTG(void* p) {
    return (tbb::task_group *) p;
 }
@@ -42,6 +44,8 @@ tbb::task_arena *CastToTA(void *p)
 {
    return (tbb::task_arena *)p;
 }
+
+#endif
 
 } // namespace Internal
 
