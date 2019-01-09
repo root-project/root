@@ -239,11 +239,20 @@ void TTreeReader::Initialize()
    if (fTree->InheritsFrom(TChain::Class())) {
       SetBit(kBitIsChain);
    }
+
+   fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
+
    if (!fNotify) {
       fNotify = std::make_unique<TNotifyLink<TTreeReader>>(this);
       fNotify->PrependLink(*fTree);
+
+      if (fTree->GetTree()) {
+         // The current TTree is already available.
+         fSetEntryBaseCallingLoadTree = kTRUE;
+         Notify();
+         fSetEntryBaseCallingLoadTree = kFALSE;
+      }
    }
-   fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,40 +293,48 @@ Bool_t TTreeReader::Notify()
    }
 
    if (!fProxiesSet) {
-      // Tell readers we now have a tree.
-      // fValues gets insertions during this loop (when parameterized arrays are read),
-      // invalidating iterators. Use old-school counting instead.
-      for (size_t i = 0; i < fValues.size(); ++i) {
-         ROOT::Internal::TTreeReaderValueBase* reader = fValues[i];
-         reader->CreateProxy();
-         if (!reader->GetProxy()){
-            fEntryStatus = kEntryDictionaryError;
-            return fEntryStatus;
-         }
+      return SetProxies();
+   }
 
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Tell readers we now have a tree.
+/// fValues gets insertions during this loop (when parameterized arrays are read),
+/// invalidating iterators. Use old-school counting instead.
+
+Bool_t TTreeReader::SetProxies() {
+
+   for (size_t i = 0; i < fValues.size(); ++i) {
+      ROOT::Internal::TTreeReaderValueBase* reader = fValues[i];
+      reader->CreateProxy();
+      if (!reader->GetProxy()){
+         return kFALSE;
       }
-      // If at least one proxy was there and no error occurred, we assume the proxies to be set.
-      fProxiesSet = !fValues.empty();
 
-      // Now we need to properly set the TTreeCache. We do this in steps:
-      // 1. We set the entry range according to the entry range of the TTreeReader
-      // 2. We add to the cache the branches identifying them by the name the user provided
-      //    upon creation of the TTreeReader{Value, Array}s
-      // 3. We stop the learning phase.
-      // Operations 1, 2 and 3 need to happen in this order. See: https://sft.its.cern.ch/jira/browse/ROOT-9773?focusedCommentId=87837
-      if (fProxiesSet) {
-         const auto curFile = fTree->GetCurrentFile();
-         if (curFile && fTree->GetTree()->GetReadCache(curFile, true)) {
-            if (!(-1LL == fEndEntry && 0ULL == fBeginEntry)) {
-               // We need to avoid to pass -1 as end entry to the SetCacheEntryRange method
-               const auto lastEntry = (-1LL == fEndEntry) ? fTree->GetEntriesFast() : fEndEntry;
-               fTree->SetCacheEntryRange(fBeginEntry, lastEntry);
-            }
-            for (auto value: fValues) {
-               fTree->AddBranchToCache(value->GetProxy()->GetBranchName(), true);
-            }
-            fTree->StopCacheLearningPhase();
+   }
+   // If at least one proxy was there and no error occurred, we assume the proxies to be set.
+   fProxiesSet = !fValues.empty();
+
+   // Now we need to properly set the TTreeCache. We do this in steps:
+   // 1. We set the entry range according to the entry range of the TTreeReader
+   // 2. We add to the cache the branches identifying them by the name the user provided
+   //    upon creation of the TTreeReader{Value, Array}s
+   // 3. We stop the learning phase.
+   // Operations 1, 2 and 3 need to happen in this order. See: https://sft.its.cern.ch/jira/browse/ROOT-9773?focusedCommentId=87837
+   if (fProxiesSet) {
+      const auto curFile = fTree->GetCurrentFile();
+      if (curFile && fTree->GetTree()->GetReadCache(curFile, true)) {
+         if (!(-1LL == fEndEntry && 0ULL == fBeginEntry)) {
+            // We need to avoid to pass -1 as end entry to the SetCacheEntryRange method
+            const auto lastEntry = (-1LL == fEndEntry) ? fTree->GetEntriesFast() : fEndEntry;
+            fTree->SetCacheEntryRange(fBeginEntry, lastEntry);
          }
+         for (auto value: fValues) {
+            fTree->AddBranchToCache(value->GetProxy()->GetBranchName(), true);
+         }
+         fTree->StopCacheLearningPhase();
       }
    }
 
@@ -500,6 +517,13 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
 
       fEntryStatus = kEntryUnknownError;
       return fEntryStatus;
+   }
+
+   if (!fProxiesSet) {
+      if (!SetProxies()) {
+         fEntryStatus = kEntryDictionaryError;
+         return fEntryStatus;
+      }
    }
 
    if (fEndEntry >= 0 && entry >= fEndEntry) {

@@ -263,6 +263,8 @@ protected:
 
    EEntryStatus SetEntryBase(Long64_t entry, Bool_t local);
 
+   Bool_t SetProxies();
+
 private:
 
    std::string GetProxyKey(const char *branchname)
