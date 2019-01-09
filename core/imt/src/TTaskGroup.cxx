@@ -31,8 +31,22 @@ executing.
 */
 
 namespace ROOT {
+namespace Internal {
+
+tbb::task_group *CastToTG(void* p) {
+   return (tbb::task_group *) p;
+}
+
+tbb::task_arena *CastToTA(void *p)
+{
+   return (tbb::task_arena *)p;
+}
+
+} // namespace Internal
 
 namespace Experimental {
+
+using namespace ROOT::Internal;
 
 // in the constructor and destructor the casts are present in order to be able
 // to be independent from the runtime used.
@@ -44,8 +58,8 @@ TTaskGroup::TTaskGroup()
    if (!ROOT::IsImplicitMTEnabled()) {
       throw std::runtime_error("Implicit parallelism not enabled. Cannot instantiate a TTaskGroup.");
    }
-   fTaskContainer = ((TaskContainerPtr_t *)new tbb::task_group());
-   fTaskArena = ((TaskArenaPtr_t *)new tbb::task_arena(ROOT::GetImplicitMTPoolSize()));
+   fTaskContainer = ((void *)new tbb::task_group());
+   fTaskArena = ((void *)new tbb::task_arena(ROOT::GetImplicitMTPoolSize()));
 #endif
 }
 
@@ -70,8 +84,8 @@ TTaskGroup::~TTaskGroup()
    if (!fTaskContainer)
       return;
    Wait();
-   delete ((tbb::task_group *)fTaskContainer);
-   delete ((tbb::task_arena *)fTaskArena);
+   delete CastToTG(fTaskContainer);
+   delete CastToTA(fTaskArena);
 #endif
 }
 
@@ -81,7 +95,7 @@ TTaskGroup::~TTaskGroup()
 void TTaskGroup::ExecuteInIsolation(const std::function<void(void)> &operation)
 {
 #ifdef R__USE_IMT
-   ((tbb::task_arena *)fTaskArena)->execute([&] { operation(); });
+   CastToTA(fTaskArena)->execute([&] { operation(); });
 #else
    operation();
 #endif
@@ -93,7 +107,7 @@ void TTaskGroup::Cancel()
 {
 #ifdef R__USE_IMT
    fCanRun = false;
-   ExecuteInIsolation([&] { ((tbb::task_group *)fTaskContainer)->cancel(); });
+   ExecuteInIsolation([&] { CastToTG(fTaskContainer)->cancel(); });
    fCanRun = true;
 #endif
 }
@@ -112,7 +126,7 @@ void TTaskGroup::Run(const std::function<void(void)> &closure)
    while (!fCanRun)
       /* empty */;
 
-   ExecuteInIsolation([&] { ((tbb::task_group *)fTaskContainer)->run(closure); });
+   ExecuteInIsolation([&] { CastToTG(fTaskContainer)->run(closure); });
 #else
    closure();
 #endif
@@ -125,7 +139,7 @@ void TTaskGroup::Wait()
 {
 #ifdef R__USE_IMT
    fCanRun = false;
-   ExecuteInIsolation([&] { ((tbb::task_group *)fTaskContainer)->wait(); });
+   ExecuteInIsolation([&] { CastToTG(fTaskContainer)->wait(); });
    fCanRun = true;
 #endif
 }
