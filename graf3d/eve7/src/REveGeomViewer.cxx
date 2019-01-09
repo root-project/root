@@ -134,16 +134,12 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 
       bool selected = (arg[5] == '1');
 
-      printf("Change %d = vis %d\n", nodeid, selected);
-
       if (fDesc.ChangeNodeVisibility(nodeid, selected)) {
 
          // send modified entry only for specified node, when disabled client will automatically remove node from drawing
          std::string json0 = "MODIF:";
          json0.append(TBufferJSON::ToJSON(&fDesc.GetGeomNode(nodeid),103).Data());
          fWebWindow->Send(connid, json0);
-
-         printf("Send %s\n", json0.c_str());
 
          if (selected && fDesc.IsPrincipalNode(nodeid)) {
             // we need to send changes in drawing nodes
@@ -153,9 +149,9 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 
             fDesc.ProduceDrawingFor(nodeid, json, binary);
 
-            printf("Send changes JSON %d binary %d\n", (int) json.length(), (int) binary.size());
-
             if (binary.size() > 0) {
+               printf("Send appending JSON %d binary %d\n", (int) json.length(), (int) binary.size());
+
                fWebWindow->Send(connid, json);
                fWebWindow->SendBinary(connid, &binary[0], binary.size());
             }
