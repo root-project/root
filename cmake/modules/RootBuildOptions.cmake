@@ -330,6 +330,20 @@ endif()
 #---Define at moment the options with the selected default values-----------------------------
 ROOT_APPLY_OPTIONS()
 
+#---Removed options------------------------------------------------------------
+foreach(opt afs chirp glite ios sapdb srp ruby)
+  if(${opt})
+    message(FATAL_ERROR ">>> Option '${opt}' has been removed in ROOT v6.16.")
+  endif()
+endforeach()
+
+#---Deprecated options---------------------------------------------------------
+foreach(opt afdsmgrd bonjour castor geocad globus gviz hdfs krb5 ldap memstat odbc qt qtgsi rfio table)
+  if(${opt})
+    message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in ROOT v6.18. Please inform rootdev@cern.ch should you still need it.")
+  endif()
+endforeach()
+
 #---Avoid creating dependencies to 'non-standard' header files -------------------------------
 include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
 
