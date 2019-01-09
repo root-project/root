@@ -50,6 +50,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
     -writeEmptyRootPCM
   DEPENDENCIES
     Core
+    MathCore
+    ROOTVecOps
     Tree
 )
 
