@@ -962,20 +962,6 @@ if(ldap)
   endif()
 endif()
 
-#---Check for globus--------------------------------------------------------------------
-if(globus)
-  find_package(Globus)
-  if(NOT GLOBUS_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "globus libraries not found and is required ('globus' option enabled)")
-    else()
-      message(STATUS "globus libraries not found. Set environment var GLOBUS_LOCATION or varibale GLOBUS_DIR to point to your globus installation")
-      message(STATUS "For the time being switching OFF 'globus' option")
-      set(globus OFF CACHE BOOL "Disabled because globus not found (${globus_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for ftgl if needed----------------------------------------------------------
 if(opengl AND NOT builtin_ftgl)
   find_package(FTGL)

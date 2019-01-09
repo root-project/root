@@ -10,16 +10,6 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/res
   ${CMAKE_CURRENT_SOURCE_DIR}/../auth/res)
 
-if(globus)
-  add_definitions(-DR__GLBS)
-  include_directories(${GLOBUS_INCLUDE_DIRS})
-  if(GLOBUS_gsi_credential_FOUND)
-    add_definitions(-DR__GLBS22)
-  endif()
-else()
-  list(REMOVE_ITEM rpdutilsrcs src/globus.cxx)
-endif()
-
 if(MACOSX_SSL_DEPRECATED)
   set_source_files_properties(src/rpdutils.cxx COMPILE_FLAGS "-Wno-deprecated-declarations" )
 endif()
@@ -40,6 +30,6 @@ set_property(TARGET rpdutil PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_dependencies(rpdutil move_headers)
 
 ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx
-  LIBRARIES rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES}
+  LIBRARIES rpdutil rsa ${OPENSSL_LIBRARIES}
   DEPENDENCIES Net
   BUILTINS OPENSSL)
