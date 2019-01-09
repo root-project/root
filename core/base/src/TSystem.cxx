@@ -748,7 +748,7 @@ void TSystem::StackTrace()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create helper TSystem to handle file and directory operations that
-/// might be special for remote file access, like via rfiod or rootd.
+/// might be special for remote file access.
 
 TSystem *TSystem::FindHelper(const char *path, void *dirptr)
 {

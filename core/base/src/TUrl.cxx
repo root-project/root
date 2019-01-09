@@ -140,7 +140,7 @@ void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
 tryfile:
    u = u0;
 
-   // Handle special protocol cases: "file:", "rfio:", etc.
+   // Handle special protocol cases: "file:", etc.
    for (int i = 0; i < GetSpecialProtocols()->GetEntriesFast(); i++) {
       TObjString *os = (TObjString*) GetSpecialProtocols()->UncheckedAt(i);
       TString s1 = os->GetString();
@@ -160,7 +160,7 @@ tryfile:
             else
                l = 0;  // leave namespace prefix as part of file name
          } else {
-            // case with protocol, like: rfio:machine:/data/file.root
+            // case with protocol, like: file:/data/file.root
             fProtocol = s1(0, l-1);
          }
          if (!strncmp(u+l, "//", 2))
@@ -392,7 +392,7 @@ const char *TUrl::GetUrl(Bool_t withDeflt) const
       fUrl = "";
 
    if (IsValid() && fUrl == "") {
-      // Handle special protocol cases: file:, rfio:, etc.
+      // Handle special protocol cases: file:, etc.
       for (int i = 0; i < GetSpecialProtocols()->GetEntriesFast(); i++) {
          TObjString *os = (TObjString*) GetSpecialProtocols()->UncheckedAt(i);
          TString &s = os->String();
@@ -566,7 +566,7 @@ void TUrl::Print(Option_t *) const
 /// Read the list of special protocols from the rootrc files.
 /// These protocols will be parsed in a protocol and a file part,
 /// no host or other info will be determined. This is typically
-/// used for legacy file descriptions like: rfio:host:/path/file.root.
+/// used for legacy file descriptions like: file:/path/file.root.
 
 TObjArray *TUrl::GetSpecialProtocols()
 {
@@ -591,7 +591,7 @@ TObjArray *TUrl::GetSpecialProtocols()
    if (!fgSpecialProtocols)
       fgSpecialProtocols = new TObjArray;
 
-   const char *protos = gEnv->GetValue("Url.Special", "file: rfio: hpss: castor: dcache: dcap:");
+   const char *protos = gEnv->GetValue("Url.Special", "file: hpss: castor: dcache: dcap:");
    usedEnv = kTRUE;
 
    if (protos) {

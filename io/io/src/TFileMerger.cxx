@@ -17,8 +17,7 @@ This class provides file copy and merging services.
 
 It can be used to copy files (not only ROOT files), using TFile or
 any of its remote file access plugins. It is therefore useful in
-a Grid environment where the files might be accessible via Castor,
-rfio, dcap, etc.
+a Grid environment where the files might be accessible only remotely.
 The merging interface allows files containing histograms and trees
 to be merged, like the standalone hadd program.
 */

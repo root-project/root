@@ -380,16 +380,13 @@ def patternToFileNameAndPathSplitList(pattern,wildcards = True):
     s3RootObjPattern = s3RootFilePattern+":*"
     gsRootFilePattern = "gs://*.root"
     gsRootObjPattern = gsRootFilePattern+":*"
-    rfioRootFilePattern = "rfio://*.root"
-    rfioRootObjPattern = rfioRootFilePattern+":*"
     pcmFilePattern = "*.pcm"
     pcmObjPattern = pcmFilePattern+":*"
 
     if fnmatch.fnmatch(pattern,httpRootObjPattern) or \
        fnmatch.fnmatch(pattern,xrootdRootObjPattern) or \
        fnmatch.fnmatch(pattern,s3RootObjPattern) or \
-       fnmatch.fnmatch(pattern,gsRootObjPattern) or \
-       fnmatch.fnmatch(pattern,rfioRootObjPattern):
+       fnmatch.fnmatch(pattern,gsRootObjPattern):
         patternSplit = pattern.rsplit(":", 1)
         fileName = patternSplit[0]
         objPattern = patternSplit[1]
@@ -399,8 +396,7 @@ def patternToFileNameAndPathSplitList(pattern,wildcards = True):
     if fnmatch.fnmatch(pattern,httpRootFilePattern) or \
        fnmatch.fnmatch(pattern,xrootdRootFilePattern) or \
        fnmatch.fnmatch(pattern,s3RootFilePattern) or \
-       fnmatch.fnmatch(pattern,gsRootFilePattern) or \
-       fnmatch.fnmatch(pattern,rfioRootFilePattern):
+       fnmatch.fnmatch(pattern,gsRootFilePattern):
         fileName = pattern
         pathSplitList = [[]]
         return [(fileName,pathSplitList)]

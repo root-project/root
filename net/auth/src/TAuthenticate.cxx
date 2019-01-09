@@ -519,20 +519,8 @@ negotia:
       }
 
 
-   } else if (fSecurity == kRfio) {
-
-      if (fVersion > 1) {
-
-         // UidGid Authentication
-         st = RfioAuth(fUser);
-
-      } else {
-         if (gDebug > 0)
-            Info("Authenticate", "remote daemon does not support UidGid authentication");
-         (void) strlcat(noSupport, noSupport[0] == '\0' ? "UidGid" : "/UidGid", sizeof(noSupport) - 1);
-      }
    }
-   //
+   
    // Stop timer
    if (alarm) alarm->Stop();
 
@@ -1620,96 +1608,11 @@ Bool_t TAuthenticate::CheckHost(const char *host, const char *href)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// UidGid client authentication code.
-/// Returns 0 in case authentication failed
-///         1 in case of success
-///        <0 in case of system error
+/// RFIO authentication (no longer supported)
 
 Int_t TAuthenticate::RfioAuth(TString &username)
 {
-   if (gDebug > 2)
-      Info("RfioAuth", "enter ... username %s", username.Data());
-
-   // Get user info ... ...
-   UserGroup_t *pw = gSystem->GetUserInfo(gSystem->GetEffectiveUid());
-   if (pw) {
-
-      // These are the details to be saved in case of success ...
-      username = pw->fUser;
-      fDetails = TString("pt:0 ru:0 us:") + username;
-
-      // Check that we are not root and that the requested user is ourselves
-      if (pw->fUid != 0) {
-
-         UserGroup_t *grp = gSystem->GetGroupInfo(gSystem->GetEffectiveGid());
-
-         // Get effective user & group ID associated with the current process...
-         Int_t uid = pw->fUid;
-         Int_t gid = grp ? grp->fGid : pw->fGid;
-
-         delete grp;
-
-         // Send request ....
-         TString sstr = TString::Format("%d %d", uid, gid);
-         if (gDebug > 3)
-            Info("RfioAuth", "sending ... %s", sstr.Data());
-         Int_t ns = 0;
-         if ((ns = fSocket->Send(sstr.Data(), kROOTD_RFIO)) < 0)
-            return 0;
-         if (gDebug > 3)
-            Info("RfioAuth", "sent ... %d bytes (expected > %d)", ns,
-                 sstr.Length());
-
-         // Get answer
-         Int_t stat, kind;
-         if (fSocket->Recv(stat, kind) < 0)
-            return 0;
-         if (gDebug > 3)
-            Info("RfioAuth", "after kROOTD_RFIO: kind= %d, stat= %d", kind,
-                 stat);
-
-         // Query result ...
-         if (kind == kROOTD_AUTH && stat >= 1) {
-            // Create inactive SecContext object for use in TSocket
-            fSecContext =
-               fHostAuth->CreateSecContext((const char *)pw->fUser,
-                                           fRemote, kRfio, -stat, fDetails, 0);
-            delete pw;
-            return 1;
-         } else {
-            TString server = "sockd";
-            if (fProtocol.Contains("root"))
-               server = "rootd";
-            if (fProtocol.Contains("proof"))
-               server = "proofd";
-
-            // Authentication failed
-            if (stat == kErrConnectionRefused) {
-               if (gDebug > 0)
-                  Error("RfioAuth",
-                        "%s@%s does not accept connections from %s%s",
-                        server.Data(),fRemote.Data(),
-                        fUser.Data(),gSystem->HostName());
-               delete pw;
-               return -2;
-            } else if (stat == kErrNotAllowed) {
-               if (gDebug > 0)
-                  Error("RfioAuth",
-                        "%s@%s does not accept %s authentication from %s@%s",
-                        server.Data(),fRemote.Data(),
-                        TAuthenticate::fgAuthMeth[5].Data(),
-                        fUser.Data(),gSystem->HostName());
-            } else {
-               AuthError("RfioAuth", stat);
-            }
-            delete pw;
-            return 0;
-         }
-      } else {
-         Warning("RfioAuth", "UidGid login as \"root\" not allowed");
-         return -1;
-      }
-   }
+   ::Error("RfioAuth", "RfioAuth is no longer supported by ROOT");
    return -1;
 }
 
@@ -2416,14 +2319,8 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
                gEnv->GetValue("Globus.LoginPrompt", copt[opt]),
                gEnv->GetValue("Globus.ReUse", "1"),
                gEnv->GetValue("Globus.Login", ""));
-
-      // Uid/Gid
-   } else if (sec == TAuthenticate::kRfio) {
-      if (!usr[0] || !strncmp(usr,"*",1))
-         usr = gEnv->GetValue("UidGid.Login", "");
-      snprintf(temp, kMAXPATHLEN, "pt:%s us:%s",
-               gEnv->GetValue("UidGid.LoginPrompt", copt[opt]), usr);
    }
+
    if (gDebug > 2)
       ::Info("TAuthenticate::GetDefaultDetails", "returning ... %s", temp);
 
@@ -3837,12 +3734,6 @@ Bool_t TAuthenticate::CheckProofAuth(Int_t cSec, TString &out)
          }
       }
 #endif
-   }
-
-   // Rfio
-   if (cSec == (Int_t) TAuthenticate::kRfio) {
-      out.Form("pt:0 ru:0 us:%s",user.Data());
-      rc = kTRUE;
    }
 
    if (gDebug > 3) {
