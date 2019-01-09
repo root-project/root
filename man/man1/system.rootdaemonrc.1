@@ -56,7 +56,6 @@ the information following the name or IP address indicates, in order of preferen
 
    UsrPwd                            usrpwd       0
    Kerberos                          krb5         2
-   Globus                            globus       3
    UidGid                            uidgid       5   (insecure)
 
 (The insecure method is intended to speed up access within a cluster protected by other means from outside attacks; should not be used for inter-cluster or inter-domain authentication). Methods non specified explicitly are not accepted. For the insecure method it is possible to give access only to a specific list of users by specifying the usernames after the method separated by colons (:) example:
@@ -90,8 +89,8 @@ Authentication mechanisms allowed from host in the domain 137.138. (cern.ch) are
 All mechanisms are accepted for requests coming from host pceple19.cern.ch .
 
 .TP
-.B lxplus*.cern.ch      globus 0:qwerty:uytre
-Requests from the lxplus cluster can authenticate using 'globus'; users 'qwerty' and 'uytre' can also use 'usrpwd' .
+.B lxplus*.cern.ch      0:qwerty:uytre
+Requests from the lxplus cluster from users 'qwerty' and 'uytre' can authenticate using 'usrpwd'.
 
 .TP
 .B pcep*.cern.ch        0:-qwerty

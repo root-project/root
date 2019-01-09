@@ -7,7 +7,7 @@
 ///   Syntax:
 ///
 /// ~~~ {.cpp}
-///  .x TestAuth.C(<port>,"<user>","<krb5_princ>","<globus_det>")
+///  .x TestAuth.C(<port>,"<user>","<krb5_princ>")
 ///
 ///     <port>          = rootd port (default 1094)
 ///     <user>          = login user name for the test
@@ -17,9 +17,6 @@
 ///                       ( default: <running_user@Default_Realm with
 ///                                  Default_realm taken from /etc/krb5.conf
 ///                                  or the $KRB5_CONFIG file )
-///     <globus_det>    = details for the globus authentication
-///                       ( default: ad:certificates cd:$HOME/.globus
-///                                  cf:usercert.pem kf:userkey.pem )
 /// ~~~
 ///
 ///  MAKE SURE that rootd is running
@@ -35,7 +32,7 @@
 /// +                                                                          +
 /// +   Syntax:                                                                +
 /// +                                                                          +
-/// + .x TestAuth.C(<port>,"<user>","<krb5_princ>","<globus_det>")             +
+/// + .x TestAuth.C(<port>,"<user>","<krb5_princ>")                            +
 /// +                                                                          +
 /// +     <port>          = rootd port (default 1094)                          +
 /// +     <user>          = login user name for the test                       +
@@ -45,9 +42,6 @@
 /// +                      ( default: <running_user@Default_Realm with         +
 /// +                                 Default_realm taken from /etc/krb5.conf  +
 /// +                                 or the $KRB5_CONFIG file )               +
-/// +     <globus_det>    = details for the globus authentication              +
-/// +                      ( default ad:certificates cd:$HOME/.globus          +
-/// +                                cf:usercert.pem kf:userkey.pem )          +
 /// +                                                                          +
 /// +                 >>> MAKE SURE that rootd is running <<<                  +
 /// +                                                                          +
@@ -73,14 +67,6 @@
 /// +   Testing Krb5 ...                                                       +
 /// Password for ganis@PCEPSFT43.CERN.CH:
 /// +                                                                          +
-/// +   Testing Globus ...                                                     +
-/// Local Globus Certificates (    )
-/// Enter <key>:<new value> to change:
-/// Your identity: /O=Grid/OU=GlobusTest/OU=simpleCA-arthux.cern.ch/OU=cern.ch/CN=ganis
-/// Enter GRID pass phrase for this identity:
-/// Creating proxy ............................ Done
-/// Your proxy is valid until: Fri Oct 31 09:33:04 2003
-/// +                                                                          +
 /// +   Testing UidGid ...                                                     +
 /// +                                                                          +
 /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -91,7 +77,6 @@
 /// +                                                                          +
 /// +   Method: 0 (UsrPwd): successful! (reuse: successful!)                   +
 /// +   Method: 2   (Krb5): successful! (reuse: successful!)                   +
-/// +   Method: 3 (Globus): successful! (reuse: successful!)                   +
 /// +   Method: 5 (UidGid): successful!                                        +
 /// +                                                                          +
 /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -101,7 +86,7 @@
 ///
 /// \author
 
-int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  = "")
+int TestAuth(int port = 1094, char *user = "", char *krb5  = "")
 {
    //
    // This macro tests the authentication methods
@@ -126,7 +111,7 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
    printf("+                                                                             +\n");
    printf("+   Syntax:                                                                   +\n");
    printf("+                                                                             +\n");
-   printf("+ .x TestAuth.C(<port>,\"<user>\",\"<krb5_princ>\",\"<globus_det>\")                +\n");
+   printf("+ .x TestAuth.C(<port>,\"<user>\",\"<krb5_princ>\")                               +\n");
    printf("+                                                                             +\n");
    printf("+     <port>          = rootd port (default 1094)                             +\n");
    printf("+     <user>          = login user name for the test                          +\n");
@@ -136,9 +121,6 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
    printf("+                      ( default: <running_user@Default_Realm with            +\n");
    printf("+                                 Default_realm taken from /etc/krb5.conf     +\n");
    printf("+                                 or the $KRB5_CONFIG file )                  +\n");
-   printf("+     <globus_det>    = details for the globus authentication                 +\n");
-   printf("+                      ( default ad:certificates cd:$HOME/.globus             +\n");
-   printf("+                                cf:usercert.pem kf:userkey.pem )             +\n");
    printf("+                                                                             +\n");
    printf("+                     >>> MAKE SURE that rootd is running <<<                 +\n");
    printf("+                                                                             +\n");
@@ -231,15 +213,6 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
             }
          }
       }
-   }
-   delete[] p;
-
-// Check if Globus is available
-   TString GlobusDetails;
-   if ((p = gSystem->DynamicPathName("libGlobusAuth", kTRUE))) {
-      HaveMeth[3] = 1;
-      // Special details string for Globus
-      GlobusDetails = TString("pt:0 ru:1 ") + TString(globus);
    }
    delete[] p;
 
@@ -378,59 +351,6 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
       if (t1) delete t1;
       // remove method from available list
       hak->RemoveMethod(2);
-   }
-
-// Globus method
-   if ( HaveMeth[3] ) {
-      printf("+                                                                             +\n");
-      printf("+   Testing Globus ...                                                        +\n");
-
-     // Add relevant info to HostAuth
-      ha->AddFirst(3,GlobusDetails.Data());
-      if (lDebug > 0)
-         ha->Print();
-
-     // Authentication attempt
-      t1 = new TFTP(TFTPPath.Data(),2);
-      if (t1->IsOpen()) {
-         TestMeth[3] = 1;
-      } else {
-         printf(" >>>>>>>>>>>>>>>> Test of Globus authentication failed \n");
-         if (strlen(globus) > 0) {
-            printf(" >>>>>>>>>>>>>>>> details used: '%s' \n",globus);
-         } else {
-            printf(" >>>>>>>>>>>>>>>> using default details: \n");
-            printf(" >>>>>>>>>>>>>>>>   ad:/etc/grid-security/certificates");
-            printf(" cd:$HOME/.globus cf:usercert.pem kf:userkey.pem\n");
-         }
-         UserGroup_t *u = gSystem->GetUserInfo();
-         if (u) {
-            if (u->fUid > 0) {
-               printf(" >>>>>>>>>>>>>>>> You are not root,");
-               printf(" you may not have the right privileges\n");
-               printf(" >>>>>>>>>>>>>>>> Make sure that the used details are correct! \n");
-            }
-         }
-      }
-
-      // Try ReUse
-      if (TestMeth[3] == 1) {
-         TIter next(ha->Established());
-         TSecContext *ai;
-         while ((ai = (TSecContext *) next())) {
-            if (ai->GetMethod() == 3) {
-               Int_t OffSet = ai->GetOffSet();
-               TestReUse[3] = 0;
-               if (OffSet > -1) {
-                  TestReUse[3] = 1;
-               }
-            }
-         }
-      }
-      // Delete t1
-      if (t1) delete t1;
-      // remove method from available list
-      ha->RemoveMethod(3);
    }
 
    printf("+                                                                             +\n");

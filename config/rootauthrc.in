@@ -63,7 +63,6 @@
 #
 #              UsrPwd                         usrpwd          0
 #              Kerberos                       krb5            2
-#              Globus                         globus          3
 #              UidGid                         uidgid          5   (insecure)
 #
 #           Example of a valid 'list' line:
@@ -73,8 +72,8 @@
 #
 #           The first line defines as default method UsrPwd.
 #
-#           The second line adds Globus and Kerberos as available methods
-#           for authentication to the lxplus machines.
+#           The second line adds Kerberos as available methods for
+#           authentication to the lxplus machines.
 #
 #           Having a line 'list' for a host is non mandatory: methods can
 #           also be defined directly via 'method' lines (see below); in
@@ -100,8 +99,8 @@
 #           be later re-used without prompting (e.g. when the user tries
 #           to access the same host with same method during the same
 #           session: this allows to speed up operation in case of multiple
-#           access). Default is 'yes' for methods 0 (UsrPwd), and 3 (Globus)
-#           superseeded by the related entries in '.rootrc'.
+#           access). Default is 'yes' for methods 0 (UsrPwd), superseeded
+#           by the related entries in '.rootrc'.
 #           No additional info is needed by method 5 (UidGid): this method
 #           sends to the remote host the (uid,gid) of the current process;
 #           'reuse' will be af no advantage and 'prompt' is not allowed for
@@ -112,12 +111,7 @@
 #
 #              UsrPwd                       us:<username> cp:<crypt_option>
 #              Kerberos                     pp:<principal> us:<username>(<principal>) 
-#              Globus                       cd:<user_certkey_dir> 
-#                                           cf:<usercert_file>
-#                                           kf:<userkey_file>
-#                                           ad:<authorities_dir>
 #              UidGid
-#
 #
 #           The key 'us' allows to specify a target username different from
 #           the local username (which is the default target username); the 
@@ -138,37 +132,11 @@
 #           form <username>@<KERBEROS.REALM>, otherwise the string pointed by
 #           'us' is interpreted as target username).
 #
-#           The keys for Globus allow to specify only partial changes of 
-#           the defaults:
-#              'cd' defines the directory containing the user certificate
-#                   and private key files;
-#              'cf' defines the user certificate file
-#              'kf' defines the user private key file
-#              'ad' defines the directory containing credentials for
-#                   recognized Certificate Authorities
-#                   (the CA signing the remote host certificate must have
-#                   an entry here)
-#           All these files and directories can be specified as absolute
-#           paths (starting with '/') or as relative to the getenv("HOME")
-#           directory (starting with '~/') or relative to the local '.globus'
-#           directory. Defaults are:
-#              cd:~/.globus
-#              cf:usercert.pem
-#              kf:userkey.pem
-#              ad:/etc/grid-security/certificates
-#
-#           NB: for all the mentioned keys, there should be NO space between
-#           the key and the value, e.g. 'us: qwerty' will result in 
-#           <username>=""
-#
 #           Example of valid 'method' lines:
 #
 #              default list 0
 #              default user asdfgh  method  usrpwd pt:1 ru:no 
-#              lxplus*.cern.ch  method  3 pt:no  ad:certificates
-#              pcepsft43.cern.ch  user poiuyt method globus pt:no \
-#                                 cd:~/CA/HubCA/poiuyt ad:certificates
-#              include    local/pceple19.rootauthrc
+#              include local/myrootauthrc
 #              include $ROOTSYS/etc/system.rootauthrc
 #              localhost list  uidgid 
 #              pcepsft43.cern.ch  user asdfgh method 2 pt:no pp:asdkrb@LOC.KRB.REALM
@@ -178,23 +146,14 @@
 #           The second line specifies that, for UsrPwd authentication, user
 #           'asdfgh' will get a prompt with default username 'asdfgh' and
 #           that a successful authentication will not be reused
-#           The third line tells that for Globus to lxplus, the user 
-#           will still not be prompted, but the credentials for the 
-#           CA signing the remote certificate will be looked
-#           for in ~/.globus/certificates.
-#           The fourth line tells that for Globus authentication on 
-#           pcepsft43 of user poiuyt, the usercert.pem and userkey.pem
-#           files are looked for in directory ~/CA/HubCA/poiuyt, 
-#           and the credentials for the CA signing the remote certificate
-#           in ~/.globus/certificates.
-#           The fifth directive includes the content of the file 
-#           pceple19.rootauthrc located in the subdirectory local of the
+#           The third directive includes the content of the file 
+#           myrootauthrc located in the subdirectory local of the
 #           directory where the intercative root session was started. 
-#           The sixth directive includes the content of the system 
+#           The fourth directive includes the content of the system 
 #           defaults.
-#           The seventh line states that when accessing slaves on the local
+#           The fifth line states that when accessing slaves on the local
 #           host, the uidgid method should be used.
-#           The eighth line states that the krb5 method should be used for
+#           The sixth line states that the krb5 method should be used for
 #           accessing account 'asdfgh' at pcepsft43.cern.ch, with kerberos
 #           credentials for principal adskrb@LOC.KRB.REALM .
 #
@@ -214,4 +173,4 @@
 #      from the rest of the .rootauthrc file is sent to slaves via the master
 #            
 #
-default list usrpwd @havesrp@ @havekrb5@ @haveglobus@ uidgid 
+default list usrpwd @havesrp@ @havekrb5@ uidgid 

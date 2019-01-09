@@ -20,8 +20,7 @@
 //                                                                      //
 // To open a connection to a GRID use the static method Connect().      //
 // The argument of Connect() is of the form:                            //
-//    <grid>://<host>[:<port>], e.g.                                    //
-// alien://alice.cern.ch, globus://glsvr1.cern.ch, ...                  //
+//    <grid>://<host>[:<port>], e.g. alien://alice.cern.ch              //
 // Depending on the <grid> specified an appropriate plugin library      //
 // will be loaded which will provide the real interface.                //
 //                                                                      //
@@ -46,7 +45,7 @@ class TGrid : public TObject {
 
 protected:
    TString        fGridUrl; // the GRID url used to create the grid connection
-   TString        fGrid;    // type of GRID (AliEn, Globus, ...)
+   TString        fGrid;    // type of GRID (AliEn, ...)
    TString        fHost;    // GRID portal to which we are connected
    TString        fUser;    // user name
    TString        fPw;      // user passwd
