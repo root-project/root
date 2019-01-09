@@ -835,7 +835,6 @@ INPUT                  = . \
                          ../../io/gfal/ \
                          ../../io/hdfs/ \
                          ../../io/io/ \
-                         ../../io/rfio/ \
                          ../../io/sql/ \
                          ../../io/xml/ \
                          ../../io/xmlparser/ \

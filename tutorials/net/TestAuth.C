@@ -433,30 +433,6 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
       ha->RemoveMethod(3);
    }
 
-// Rfio method
-   printf("+                                                                             +\n");
-   printf("+   Testing UidGid ...                                                        +\n");
-
-   // Add relevant info to HostAuth
-   ha->AddFirst(5,Details.Data());
-   if (lDebug > 0)
-      ha->Print();
-
-   // Authentication attempt
-   {
-   t1 = new TFTP(TFTPPath.Data(),2);
-   if (t1->IsOpen()) {
-      TestMeth[5] = 1;
-   } else {
-      printf(" >>>>>>>>>>>>>>>> Test of UidGid authentication failed \n");
-   }}
-
-   // Delete t1
-   if (t1) delete t1;
-
-   // remove method from available list
-   ha->RemoveMethod(5);
-
    printf("+                                                                             +\n");
    printf("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 

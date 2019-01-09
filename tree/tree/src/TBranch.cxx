@@ -1670,8 +1670,7 @@ TString TBranch::GetRealFileName() const
    }
    TString bFileName = fFileName;
 
-   // check if branch file name is absolute or a URL (e.g. /castor/...,
-   // root://host/..., rfio:/path/...)
+   // check if branch file name is absolute or a URL (e.g. /castor/..., root://host/...)
    char *bname = gSystem->ExpandPathName(fFileName.Data());
    if (!gSystem->IsAbsoluteFileName(bname) && !strstr(bname, ":/") && fTree && fTree->GetCurrentFile()) {
 
