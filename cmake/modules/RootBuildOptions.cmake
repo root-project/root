@@ -71,7 +71,6 @@ endfunction()
 #   The default value can be changed as many times as we wish before calling ROOT_APPLY_OPTIONS()
 #--------------------------------------------------------------------------------------------------
 
-ROOT_BUILD_OPTION(afdsmgrd OFF "Enable support for Dataset manager for PROOF-based analysis facilities")
 ROOT_BUILD_OPTION(alien OFF "Enable support for AliEn (requires libgapiUI from ALICE)")
 ROOT_BUILD_OPTION(arrow OFF "Enable support for Apache Arrow")
 ROOT_BUILD_OPTION(asimage ON "Enable support for image processing via libAfterImage")
@@ -324,14 +323,14 @@ endif()
 ROOT_APPLY_OPTIONS()
 
 #---Removed options------------------------------------------------------------
-foreach(opt afs bonjour chirp glite ios qt qtgsi ruby sapdb srp table)
+foreach(opt afdsmgrd afs bonjour chirp glite ios qt qtgsi ruby sapdb srp table)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' has been removed in ROOT v6.16.")
   endif()
 endforeach()
 
 #---Deprecated options---------------------------------------------------------
-foreach(opt afdsmgrd castor geocad globus gviz hdfs krb5 ldap memstat odbc rfio)
+foreach(opt castor geocad globus gviz hdfs krb5 ldap memstat odbc rfio)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in ROOT v6.18. Please inform rootdev@cern.ch should you still need it.")
   endif()
