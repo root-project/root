@@ -1202,21 +1202,6 @@ if(builtin_tbb)
   set(TBB_TARGET TBB)
 endif()
 
-#---Check for OCC--------------------------------------------------------------------
-if(geocad)
-  find_package(OCC COMPONENTS TKPrim TKBRep TKOffset TKGeomBase TKShHealing TKTopAlgo
-                              TKSTEP TKG2d TKBool TKBO TKXCAF TKXDESTEP TKLCAF TKernel TKXSBase TKG3d TKMath)
-  if(NOT OCC_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "OpenCascade libraries not found and is required (geocad option enabled)")
-    else()
-      message(STATUS "OpenCascade libraries not found. Set variable CASROOT to point to your OpenCascade installation")
-      message(STATUS "For the time being switching OFF 'geocad' option")
-      set(geocad OFF CACHE BOOL "Disabled because OpenCascade not found (${geocad_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for Vc---------------------------------------------------------------------
 if(builtin_vc)
   unset(Vc_FOUND)

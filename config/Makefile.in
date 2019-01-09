@@ -184,11 +184,6 @@ ODBCLIBDIR     := @odbclibdir@
 ODBCCLILIB     := @odbclib@
 ODBCINCDIR     := $(filter-out /usr/include, @odbcincdir@)
 
-BUILDGEOCAD    := @buildgeocad@
-OCCLIBDIR      := @occlibdir@
-OCCLIB         := @occlib@
-OCCINCDIR      := $(filter-out /usr/include, @occincdir@)
-
 BUILDRFIO      := @buildrfio@
 SHIFTLIBDIR    := @shiftlibdir@
 SHIFTLIB       := @shiftlib@
