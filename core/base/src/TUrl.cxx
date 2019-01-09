@@ -591,7 +591,7 @@ TObjArray *TUrl::GetSpecialProtocols()
    if (!fgSpecialProtocols)
       fgSpecialProtocols = new TObjArray;
 
-   const char *protos = gEnv->GetValue("Url.Special", "file: hpss: castor: dcache: dcap:");
+   const char *protos = gEnv->GetValue("Url.Special", "file: hpss: dcache: dcap:");
    usedEnv = kTRUE;
 
    if (protos) {

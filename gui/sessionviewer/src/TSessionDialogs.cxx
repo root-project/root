@@ -872,7 +872,7 @@ TUploadDataSetDlg::TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h) :
                      new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
                      10, 10, 5, 5));
    fLocationURL = new TGTextEntry(hFrame11, new TGTextBuffer(150));
-   fLocationURL->SetToolTipText("Enter location URL ( i.e \" root://lxplus//castor/cern.ch/user/n/name/*.root \" )");
+   fLocationURL->SetToolTipText("Enter location URL (i.e \"root://host//path/to/file.root\")");
    fLocationURL->Resize(210, fLocationURL->GetDefaultHeight());
    hFrame11->AddFrame(fLocationURL, new TGLayoutHints(kLHintsLeft |
                       kLHintsCenterY, 10, 10, 5, 5));

@@ -4068,8 +4068,8 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 
       IncrementFileCounter();
 
-      // change names from e.g. /castor/cern.ch/alice/file.root to
-      // castor:/castor/cern.ch/alice/file.root as recognized by the plugin manager
+      // change names to be recognized by the plugin manager
+      // e.g. /protocol/path/to/file.root -> protocol:/path/to/file.root
       TUrl urlname(n, kTRUE);
       name = urlname.GetUrl();
       // Check first if a pending async open request matches this one
@@ -4145,8 +4145,6 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
             } else {
                // Just try to open it locally but via TFile::Open, so that we pick-up the correct
                // plug-in in the case file name contains information about a special backend (e.g.
-               // "srm://srm.cern.ch//castor/cern.ch/grid/..." should be considered a castor file
-               // /castor/cern.ch/grid/...").
                f = TFile::Open(urlname.GetFileAndOptions(), option, ftitle, compress);
             }
          }
@@ -4245,8 +4243,8 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
    Ssiz_t from = 0;
    while (namelist.Tokenize(n, from, "|") && !f) {
 
-      // change names from e.g. /castor/cern.ch/alice/file.root to
-      // castor:/castor/cern.ch/alice/file.root as recognized by the plugin manager
+      // change names to be recognized by the plugin manager
+      // e.g. /protocol/path/to/file.root -> protocol:/path/to/file.root
       TUrl urlname(n, kTRUE);
       name = urlname.GetUrl();
 

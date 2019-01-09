@@ -1670,7 +1670,7 @@ TString TBranch::GetRealFileName() const
    }
    TString bFileName = fFileName;
 
-   // check if branch file name is absolute or a URL (e.g. /castor/..., root://host/...)
+   // check if branch file name is absolute or a URL (e.g. root://host/...)
    char *bname = gSystem->ExpandPathName(fFileName.Data());
    if (!gSystem->IsAbsoluteFileName(bname) && !strstr(bname, ":/") && fTree && fTree->GetCurrentFile()) {
 
@@ -2429,7 +2429,7 @@ void TBranch::SetEntries(Long64_t entries)
 /// By default the branch buffers reside in the file where the
 /// Tree was created.
 /// If the file name where the tree was created is an absolute
-/// path name or an URL (e.g. /castor/... or root://host/...)
+/// path name or an URL (e.g. or root://host/...)
 /// and if the fname is not an absolute path name or an URL then
 /// the path of the tree file is prepended to fname to make the
 /// branch file relative to the tree file. In this case one can
@@ -2474,7 +2474,7 @@ void TBranch::SetFile(TFile* file)
 /// By default the branch buffers reside in the file where the
 /// Tree was created.
 /// If the file name where the tree was created is an absolute
-/// path name or an URL (e.g. /castor/... or root://host/...)
+/// path name or an URL (e.g. root://host/...)
 /// and if the fname is not an absolute path name or an URL then
 /// the path of the tree file is prepended to fname to make the
 /// branch file relative to the tree file. In this case one can
