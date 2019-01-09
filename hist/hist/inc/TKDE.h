@@ -64,7 +64,7 @@ public:
    };
 
    
-   TKDE(); 
+   TKDE();                    // defaul constructor used only by I/O 
 
    TKDE(UInt_t events, const Double_t* data, Double_t xMin = 0.0, Double_t xMax = 0.0, const Option_t* option =
                  "KernelType:Gaussian;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0) {
