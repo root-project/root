@@ -301,12 +301,6 @@ set(resolvlib)
 set(cryptolib ${CRYPTLIBS})
 set(cryptolibdir)
 
-set(buildglobus ${value${globus}})
-set(globuslibdir ${GLOBUS_LIBRARY_DIR})
-set(globuslib ${GLOBUS_LIBRARY})
-set(globusincdir ${GLOBUS_INCLUDE_DIR})
-set(buildxrdgsi)
-
 set(buildmonalisa ${value${monalisa}})
 set(monalisalibdir ${MONALISA_LIBRARY_DIR})
 set(monalisalib ${MONALISA_LIBRARY})

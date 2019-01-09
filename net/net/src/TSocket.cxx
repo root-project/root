@@ -56,7 +56,6 @@ ULong64_t TSocket::fgBytesRecv = 0;
 // 14: support for SSH authentication via SSH tunnel
 // 15: cope with fixes in TUrl::GetFile
 // 16: add env setup message exchange
-// 17: optmized Globus/GSI protocol exchange
 //
 Int_t TSocket::fgClientProtocol = 17;  // increase when client protocol changes
 
@@ -1256,8 +1255,8 @@ Bool_t TSocket::Authenticate(const char *user)
 ///                any remote server session using TServerSocket)
 ///          [p] = for parallel sockets (forced internally for
 ///                rootd; ignored for proofd)
-///       [auth] = "up", "k", "g", "ug" to force UsrPwd,
-///                Krb5, Globus or UidGid authentication
+///       [auth] = "up", "k", "ug" to force UsrPwd,
+///                Krb5, or UidGid authentication
 ///       [port] = is the remote port number
 ///    [service] = service name used to determine the port
 ///                (for backward compatibility, specification of
@@ -1404,8 +1403,8 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
 ///                any remote server session using TServerSocket)
 ///          [p] = for parallel sockets (forced internally for
 ///                rootd)
-///       [auth] = "up", "k", "g", "ug" to force UsrPwd,
-///                Krb5, Globus or UidGid authentication
+///       [auth] = "up", "k", "ug" to force UsrPwd,
+///                Krb5, or UidGid authentication
 ///    [options] = "m" or "s", when proto=proofd indicates whether
 ///                we are master or slave (used internally by TSlave)
 ///

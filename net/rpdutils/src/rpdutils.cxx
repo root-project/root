@@ -236,7 +236,7 @@ static const int gAUTH_GLB_MSK = 0x8;
 static const int gMAXTABSIZE = 50000000;
 
 static const std::string gAuthMeth[kMAXSEC] = { "UsrPwd", "Unsupported", "Krb5",
-                                                "Globus", "Unsupported", "UidGid" };
+                                                "Unsupported", "Unsupported", "UidGid" };
 static const std::string gAuthTab    = "/rpdauthtab";   // auth table
 static const std::string gDaemonRc   = ".rootdaemonrc"; // daemon access rules
 static const std::string gRootdPass  = ".rootdpass";    // special rootd passwd
@@ -306,15 +306,6 @@ static char *gUserIgnore[kMAXSEC] = { 0 };
 static krb5_context gKcontext;
 static krb5_keytab gKeytab = 0;        // default Keytab file can be changed
 static std::string gKeytabFile = "";   // via RpdSetKeytabFile
-#endif
-
-//
-// Globus stuff
-#ifdef R__GLBS
-static int gShmIdCred = -1;
-static gss_cred_id_t gGlbCredHandle = GSS_C_NO_CREDENTIAL;
-static bool gHaveGlobus = 1;
-static std::string gGlobusSubjName;
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -605,8 +596,6 @@ int RpdGetAuthMethod(int kind)
       method = 0;
    if (kind == kROOTD_KRB5)
       method = 2;
-   if (kind == kROOTD_GLOBUS)
-      method = 3;
 
    return method;
 }
@@ -1317,28 +1306,9 @@ int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
 
    // Now check Token validity
    if (goodOfs && token && RpdCheckToken(token, tkn)) {
-
-      if (Sec == 3) {
-#ifdef R__GLBS
-         // kGlobus:
-         if (GlbsToolCheckContext(shmid)) {
-            retval = 1;
-            strlcpy(gUser, user, sizeof(gUser));
-         } else {
-            // set entry inactive
-            RpdCleanupAuthTab(Host,RemId,*OffSet);
-         }
-#else
-         ErrorInfo
-                ("RpdCheckAuthTab: compiled without Globus support:%s",
-                 " you shouldn't have got here!");
-#endif
-      } else {
-            retval = 1;
-      }
-
+      retval = 1;
       // Comunicate new offset to remote client
-      if (retval) *OffSet = ofs;
+      *OffSet = ofs;
    }
 
    if (tkn) delete[] tkn;
@@ -1660,26 +1630,6 @@ int RpdReUseAuth(const char *sstr, int kind)
          strlcpy(gUser, user, sizeof(gUser));
       }
    }
-   // kGlobus
-   if (kind == kROOTD_GLOBUS) {
-      if (!(gReUseAllow & gAUTH_GLB_MSK)) {
-         return 0;              //  re-authentication required by administrator
-      }
-      gSec = 3;
-      // Decode subject string
-      int lenS;
-      sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenS, user);
-      user[lenS] = '\0';
-      if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
-         gOffSet = offset;
-         if (gRemPid > 0 && gOffSet > -1) {
-            auth =
-                RpdCheckAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
-         }
-         if ((auth == 1) && (offset != gOffSet))
-            auth = 2;
-      }
-   }
 
    // Flag if existing token has been re-used
    if (auth > 0)
@@ -1701,14 +1651,6 @@ int RpdReUseAuth(const char *sstr, int kind)
 int RpdCheckAuthAllow(int Sec, const char *Host)
 {
    int retval = 1, found = 0;
-
-#ifdef R__GBLS
-   if (Sec == 3 && !gHaveGlobus) {
-      ErrorInfo("RpdCheckAuthAllow: meth: 3:"
-                " server does not have globus/GSI credentials");
-      return 1;
-   }
-#endif
 
    std::string theDaemonRc;
 
@@ -3014,332 +2956,30 @@ int RpdPass(const char *pass, int errheq)
 
 int RpdGlobusInit()
 {
-#ifdef R__GLBS
-   // Now we open the certificates and we check if we are able to
-   // autheticate the client. In the affirmative case we initialize
-   // our credentials and we send our subject name to the client ...
-   // NB: we look first for a specific certificate for ROOT (default
-   // location under /etc/grid-security/root); if this is does not
-   // work we try to open the host certificate, which however may
-   // require super-user privileges; finally we check if valid proxies
-   // (for the user who started the server) are available.
-   char *subject_name = 0;
-   int certRc = GlbsToolCheckCert(&subject_name);
-   if (certRc)
-      certRc = GlbsToolCheckProxy(&subject_name);
-   if (certRc) {
-      ErrorInfo("RpdGlobusInit: no valid server credentials found: globus disabled");
-      gHaveGlobus = 0;
-      return 1;
-   } else {
-
-      // Save the subject name
-      gGlobusSubjName = subject_name;
-      delete [] subject_name;
-
-      // Inquire Globus credentials:
-      // This is looking to file X509_USER_CERT for valid a X509 cert (default
-      // /etc/grid-security/hostcert.pem) and to dir X509_CERT_DIR for trusted CAs
-      // (default /etc/grid-security/certificates).
-      OM_uint32 majStat = 0;
-      OM_uint32 minStat = 0;
-      if ((majStat =
-           globus_gss_assist_acquire_cred(&minStat, GSS_C_ACCEPT,
-                                          &gGlbCredHandle)) !=
-          GSS_S_COMPLETE) {
-         GlbsToolError("RpdGlobusInit: gss_assist_acquire_cred", majStat,
-                       minStat, 0);
-         if (getuid() > 0)
-            ErrorInfo("RpdGlobusInit: non-root: make sure you have"
-                      " initialized (manually) your proxies");
-         return 1;
-      }
-   }
-#endif
-   // Done
-   return 0;
+   ::Error("RpdGlobusInit", "Globus is no longer supported by ROOT");
+   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Authenticate via Globus.
 
-int RpdGlobusAuth(const char *sstr)
+int RpdGlobusAuth(const char *)
 {
-   int auth = 0;
-
-#ifndef R__GLBS
-
-   if (sstr) { }  // use sstr
-   NetSend(0, kROOTD_GLOBUS);
-   return auth;
-
-#else
-
-   if (!gHaveGlobus) {
-      // No valid credentials
-      if (sstr) { }  // use sstr
-      return auth;
-   }
-
-   OM_uint32 MajStat = 0;
-   OM_uint32 MinStat = 0;
-   OM_uint32 GssRetFlags = 0;
-   gss_ctx_id_t GlbContextHandle = GSS_C_NO_CONTEXT;
-   gss_cred_id_t GlbDelCredHandle = GSS_C_NO_CREDENTIAL;
-   int GlbTokenStatus = 0;
-   char *GlbClientName;
-   FILE *FILE_SockFd;
-   const char *gridmap_default = "/etc/grid-security/grid-mapfile";
-   EMessageTypes kind;
-   int lSubj, offset = -1;
-   char *user = 0;
-   int ulen = 0;
-
-   if (gDebug > 2)
-      ErrorInfo("RpdGlobusAuth: contacted by host: %s", gOpenHost.c_str());
-
-   // Tell the remote client that we may accept Globus credentials ...
-   NetSend(1, kROOTD_GLOBUS);
-
-   // Decode subject string
-   char Subj[kMAXPATHLEN];
-   int opt;
-   char dumm[20];
-   sscanf(sstr, "%d %d %d %d %4095s %19s", &gRemPid, &offset, &opt, &lSubj, Subj, dumm);
-
-   Subj[lSubj] = '\0';
-   gReUseRequired = (opt & kAUTH_REUSE_MSK);
-#ifdef R__SSL
-   if (gRSASSLKey) {
-      // Determine type of RSA key required
-      gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
-   } else
-      gRSAKey = 1;
-#else
-   gRSAKey = 1;
-#endif
-   if (gDebug > 2)
-      ErrorInfo("RpdGlobusAuth: gRemPid: %d, Subj: %s (%d %d)", gRemPid,
-                Subj, lSubj, strlen(Subj));
-
-   if (gClientProtocol < 17) {
-      // GlbClientName will be determined from the security context ...
-      // Now wait for client to communicate the issuer name of the certificate ...
-      char *answer = new char[20];
-      NetRecv(answer, (int) sizeof(answer), kind);
-      if (kind != kMESS_STRING) {
-         Error(gErr, kErrAuthNotOK,
-                "RpdGlobusAuth: client_issuer_name:received unexpected"
-                " type of message (%d)",kind);
-         if (answer) delete[] answer;
-         return auth;
-      }
-      int client_issuer_name_len = atoi(answer);
-      if (answer) delete[] answer;
-      char *client_issuer_name = new char[client_issuer_name_len + 1];
-      NetRecv(client_issuer_name, client_issuer_name_len, kind);
-      if (kind != kMESS_STRING) {
-         Error(gErr, kErrAuthNotOK,
-               "RpdGlobusAuth: client_issuer_name:received unexpected"
-               " type of message (%d)",kind);
-         if (client_issuer_name) delete[] client_issuer_name;
-         return auth;
-      }
-      if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: client issuer name is: %s",
-                   client_issuer_name);
-   }
-
-   // Send our subject to the clients: it is needed to start
-   // the handshake
-   int sjlen = gGlobusSubjName.length() + 1;
-   int bsnd = NetSend(sjlen, kROOTD_GLOBUS);
-   if (gDebug > 2)
-      ErrorInfo("RpdGlobusAuth: sent: %d (due >=%d))", bsnd, 2 * sizeof(sjlen));
-   bsnd = NetSend(gGlobusSubjName.c_str(), sjlen, kMESS_STRING);
-   if (gDebug > 2)
-      ErrorInfo("RpdGlobusAuth: sent: %d (due >=%d))", bsnd, sjlen);
-
-   // We need to associate a FILE* stream with the socket
-   // It will automatically closed when the socket will be closed ...
-   FILE_SockFd = fdopen(NetGetSockFd(), "w+");
-
-   // Now we are ready to start negotiating with the Client
-   if ((MajStat =
-        globus_gss_assist_accept_sec_context(&MinStat, &GlbContextHandle,
-                                             gGlbCredHandle, &GlbClientName,
-                                             &GssRetFlags, 0,
-                                             &GlbTokenStatus,
-                                             &GlbDelCredHandle,
-                                             globus_gss_assist_token_get_fd,
-                                             (void *) FILE_SockFd,
-                                             globus_gss_assist_token_send_fd,
-                                             (void *) FILE_SockFd)) !=
-       GSS_S_COMPLETE) {
-      GlbsToolError("RpdGlobusAuth: gss_assist_accept_sec_context",
-                    MajStat, MinStat, GlbTokenStatus);
-      return auth;
-   } else {
-      auth = 1;
-      gSec = 3;
-      if (gDebug > 0)
-         ErrorInfo("RpdGlobusAuth: user: %s \n authenticated",
-                   GlbClientName);
-   }
-
-   // Check if there might be the need of credentials ...
-   if (gService == kPROOFD) {
-      // Check that we got delegation to autheticate the slaves
-      if (GssRetFlags | GSS_C_DELEG_FLAG) {
-         if (gDebug > 2)
-            ErrorInfo("RpdGlobusAuth: Pointer to del cred is %p", GlbDelCredHandle);
-      } else {
-         Error(gErr, kErrAuthNotOK,
-               "RpdGlobusAuth: did not get delegated credentials (RetFlags: 0x%x)",
-               GssRetFlags);
-         return auth;
-      }
-      // Now we have to export these delegated credentials to a shared memory segment
-      // for later use in 'proofserv' ...
-      //   credential= (gss_buffer_t)malloc(sizeof(gss_buffer_desc));
-      gss_buffer_t credential = new gss_buffer_desc;
-      if ((MajStat =
-           gss_export_cred(&MinStat, GlbDelCredHandle, 0, 0,
-                           credential)) != GSS_S_COMPLETE) {
-         GlbsToolError("RpdGlobusAuth: gss_export_cred", MajStat, MinStat,
-                       0);
-         return auth;
-      } else if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: credentials prepared for export");
-
-      // Now store it in shm for later use in proofserv ...
-      int rc;
-      if ((rc = GlbsToolStoreToShm(credential, &gShmIdCred))) {
-         ErrorInfo
-             ("RpdGlobusAuth: credentials not correctly stored in shm (rc: %d)",
-              rc);
-      }
-      if (gDebug > 2)
-         ErrorInfo
-             ("RpdGlobusAuth: credentials stored in shared memory segment %d",
-              gShmIdCred);
-
-      delete credential;
-   } else {
-      if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: no need for delegated credentials (%s)",
-                   gServName[gService].c_str());
-   }
-
-   // For Now we set the gUser to the certificate owner using the gridmap file ...
-   // Should be understood if this is really necessary ...
-   if (getenv("GRIDMAP") == 0) {
-      // The installation did not specify a special location for the gridmap file
-      // We assume the usual default ...
-      setenv("GRIDMAP", gridmap_default, 1);
-      if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: gridmap: using default file (%s)",
-                   gridmap_default);
-   } else if (gDebug > 2)
-      ErrorInfo("RpdGlobusAuth: gridmap: using file %s",
-                getenv("GRIDMAP"));
-
-   // Get local login name for the subject ...
-   char AnonUser[10] = "rootd";
-   if (globus_gss_assist_gridmap(GlbClientName, &user)) {
-      if (gDebug > 2)
-         ErrorInfo
-             ("RpdGlobusAuth: unable to get local username from gridmap: using: %s",
-              AnonUser);
-      user = strdup(AnonUser);
-      if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: user: %s", user);
-   }
-   if (!strcmp(user, "anonymous"))
-      user = strdup(AnonUser);
-   if (!strcmp(user, AnonUser))
-      gAnon = 1;
-
-   // No reuse for anonymous users
-   gReUseRequired = (gAnon == 1) ? 0 : gReUseRequired;
-
-   // Fill gUser and free allocated memory
-   ulen = strlen(user);
-   strncpy(gUser, user, ulen + 1);
-
-   char line[kMAXPATHLEN];
-   if ((gReUseAllow & gAUTH_GLB_MSK) && gReUseRequired) {
-
-      // Ask for the RSA key
-      NetSend(gRSAKey, kROOTD_RSAKEY);
-
-      // Receive the key securely
-      if (RpdRecvClientRSAKey()) {
-         ErrorInfo
-             ("RpdGlobusAuth: could not import a valid key"
-              " - switch off reuse for this session");
-         gReUseRequired = 0;
-      }
-
-      // Store security context and related info for later use ...
-      offset = -1;
-      char *token = 0;
-      if (gReUseRequired) {
-         int ShmId = GlbsToolStoreContext(GlbContextHandle, user);
-         if (ShmId > 0) {
-            SPrintf(line, kMAXPATHLEN, "3 1 %d %d %s %s %d %s",
-                    gRSAKey, gRemPid, gOpenHost.c_str(),
-                    user, ShmId, GlbClientName);
-            offset = RpdUpdateAuthTab(1, line, &token);
-         } else if (gDebug > 0)
-            ErrorInfo
-                ("RpdGlobusAuth: unable to export context to shm for later use");
-      }
-      // Comunicate login user name to client (and token)
-      SPrintf(line, kMAXPATHLEN, "%s %d", gUser, offset);
-      NetSend(strlen(line), kROOTD_GLOBUS);   // Send message length first
-      NetSend(line, kMESS_STRING);
-
-      if (gReUseRequired && offset > -1) {
-         // Send Token
-         if (RpdSecureSend(token) == -1) {
-            ErrorInfo("RpdGlobusAuth: problems secure-sending token"
-                      " - may result in corrupted token");
-         }
-         if (token) delete[] token;
-      }
-      gOffSet = offset;
-   } else {
-      // Comunicate login user name to client (and token)
-      SPrintf(line, kMAXPATHLEN, "%s %d", gUser, offset);
-      NetSend(strlen(line), kROOTD_GLOBUS);   // Send message length first
-      NetSend(line, kMESS_STRING);
-   }
-
-   // and free allocated memory
-   free(user);
-   free(GlbClientName);
-
-   if (gDebug > 0)
-      ErrorInfo("RpdGlobusAuth: client mapped to local user %s ", gUser);
-
-   return auth;
-
-#endif
+   ::Error("RpdGlobusInit", "Globus is no longer supported by ROOT");
+   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// RFIO protocol (no longer supported by ROOT)
 
-int RpdRfioAuth(const char *sstr)
+int RpdRfioAuth(const char *)
 {
    ::Error("RpdRfioAuth", "RfioAuth no longer supported by ROOT");
    return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Terminate correctly by cleaning up the auth table (and shared
-/// memories in case of Globus) and closing the file.
+/// Terminate correctly by cleaning up the auth table and closing the file.
 /// Called upon receipt of a kROOTD_CLEANUP and on SIGPIPE.
 
 void RpdAuthCleanup(const char *sstr, int opt)
@@ -3413,7 +3053,7 @@ void RpdDefaultAuthAllow()
    gNumAllow++;
    gNumLeft++;
 
-   // Don't have SRP method
+   // No SRP method
    gHaveMeth[1] = 0;
 
    // Kerberos
@@ -3422,19 +3062,12 @@ void RpdDefaultAuthAllow()
    gNumAllow++;
    gNumLeft++;
 #else
-   // Don't have this method
+   // No Kerberos method
    gHaveMeth[2] = 0;
 #endif
 
-   // Globus
-#ifdef R__GLBS
-   gAllowMeth[gNumAllow] = 3;
-   gNumAllow++;
-   gNumLeft++;
-#else
-   // Don't have this method
+   // No Globus method
    gHaveMeth[3] = 0;
-#endif
 
    if (gDebug > 2) {
       int i;
@@ -4717,7 +4350,7 @@ int RpdAuthenticate()
          }
 
          // Then check if a previous authentication exists and is valid
-         if (auth = RpdReUseAuth(buf, kind))
+         if ((auth = RpdReUseAuth(buf, kind)))
             goto next;
       }
 
@@ -4733,9 +4366,6 @@ int RpdAuthenticate()
             break;
          case kROOTD_KRB5:
             auth = RpdKrb5Auth(buf);
-            break;
-         case kROOTD_GLOBUS:
-            auth = RpdGlobusAuth(buf);
             break;
          case kROOTD_CLEANUP:
             RpdAuthCleanup(buf,1);
@@ -5390,12 +5020,6 @@ void RpdInit(EService serv, int pid, int sproto, unsigned int options,
    gRpdKeyRoot.append(ItoA(getuid()));
    gRpdKeyRoot.append("_");
 
-#ifdef R__GLBS
-   // Init globus
-   if (RpdGlobusInit() != 0)
-      ErrorInfo("RpdInit: failure initializing globus authentication");
-#endif
-
    if (gDebug > 0) {
       ErrorInfo("RpdInit: gService= %s, gSysLog= %d",
                  gServName[gService].c_str(), gSysLog);
@@ -5407,9 +5031,6 @@ void RpdInit(EService serv, int pid, int sproto, unsigned int options,
       ErrorInfo("RpdInit: gDoLogin= %d", gDoLogin);
       if (tmpd)
          ErrorInfo("RpdInit: gTmpDir= %s", gTmpDir.c_str());
-#ifdef R__GLBS
-      ErrorInfo("RpdInit: gHaveGlobus: %d", (int) gHaveGlobus);
-#endif
    }
 }
 
