@@ -23,8 +23,16 @@
 ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr) : fGeoManager(mgr)
 {
    fDesc.Build(fGeoManager);
-   fDesc.SetMaxVisNodes(10000);
-   fDesc.SetMaxVisFaces(100000);
+
+   // take maximal setting
+   auto maxnodes = fGeoManager->GetMaxVisNodes();
+   if (maxnodes > 5000)
+      maxnodes = 5000;
+   else if (maxnodes < 1000)
+      maxnodes = 1000;
+
+   fDesc.SetMaxVisNodes(maxnodes);
+   fDesc.SetMaxVisFaces(maxnodes * 100);
 
    TString evedir = TString::Format("%s/eve7", TROOT::GetEtcDir().Data());
 
@@ -76,6 +84,10 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
    printf("Recv %s\n", arg.c_str());
 
    if ((arg == "CONN_READY") || (arg == "RELOAD")) {
+
+      if (arg == "RELOAD")
+         fDesc.Build(fGeoManager);
+
       std::string sbuf = "DESCR:";
       sbuf.append(TBufferJSON::ToJSON(&fDesc,103).Data());
       printf("Send description %d\n", (int) sbuf.length());
