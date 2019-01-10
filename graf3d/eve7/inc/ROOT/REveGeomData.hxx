@@ -93,6 +93,9 @@ class REveGeomDescription {
       std::unique_ptr<REveRenderData> fRenderData; ///<! binary render data
       REveShapeRenderInfo fRenderInfo;             ///<! render information for client
       ShapeDescr(TGeoShape *s) : fShape(s) {}
+
+      /// Provide render info for visible item
+      REveShapeRenderInfo *rndr_info() { return (nfaces>0) && (fRenderInfo.rnr_offset>=0) ? &fRenderInfo : nullptr; }
    };
 
    std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
@@ -159,6 +162,7 @@ public:
    bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawBinary.size() > 0) && (fDrawIdCut > 0); }
    const std::string &GetDrawJson() const { return fDrawJson; }
    const std::vector<char> &GetDrawBinary() const { return fDrawBinary; }
+   void ClearRawData();
 
    int SearchVisibles(const std::string &find, std::string &json, std::vector<char> &binary);
 

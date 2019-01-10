@@ -273,8 +273,6 @@ int ROOT::Experimental::REveGeomDescription::MarkVisible(bool on_screen)
             desc.visdepth = vol->TestAttBit(TGeoAtt::kVisOneLevel) ? 1 : 0;
       }
 
-      if ((desc.vol <= 0) || (desc.nfaces <= 0)) desc.vis = 0;
-
       if (desc.vis && desc.CanDisplay()) res++;
    }
 
@@ -381,7 +379,7 @@ ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape, bool a
       elem.nfaces = poly->GetNumFaces();
    }
 
-   if (acc_rndr) {
+   if (acc_rndr && (elem.nfaces > 0)) {
       auto &rd = elem.fRenderData;
       auto &ri = elem.fRenderInfo;
 
@@ -522,7 +520,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
 
          auto &sd = MakeShapeDescr(volume->GetShape(), true);
 
-         item.ri = &sd.fRenderInfo;
+         item.ri = sd.rndr_info();
       }
       return true;
    });
@@ -535,6 +533,15 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
    BuildRndrBinary(fDrawBinary);
 
    return true;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Clear raw data. Will be rebuild when next connection will be established
+
+void ROOT::Experimental::REveGeomDescription::ClearRawData()
+{
+   fDrawJson.clear();
+   fDrawBinary.clear();
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -653,7 +660,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 
       auto &sd = MakeShapeDescr(volume->GetShape(), true);
 
-      item.ri = &sd.fRenderInfo;
+      item.ri = sd.rndr_info();
       return true;
    });
 
@@ -719,7 +726,7 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
 
    // assign shape data
    for (auto &item : visibles)
-      item.ri = &sd.fRenderInfo;
+      item.ri = sd.rndr_info();
 
    json.append(TBufferJSON::ToJSON(&visibles, 103).Data());
 
@@ -742,6 +749,8 @@ bool ROOT::Experimental::REveGeomDescription::ChangeNodeVisibility(int nodeid, b
 
    fNodes[nodeid]->GetVolume()->SetVisibility(selected);
    fDesc[nodeid].vis = iselected;
+
+   ClearRawData(); // after change raw data is no longer valid
 
    return true;
 }
