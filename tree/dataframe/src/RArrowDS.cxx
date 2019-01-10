@@ -411,47 +411,40 @@ void RArrowDS::InitSlot(unsigned int slot, ULong64_t entry)
    }
 }
 
+void splitInEqualRanges(std::vector<std::pair<ULong64_t, ULong64_t>> &ranges, int nRecords, unsigned int nSlots)
+{
+   ranges.clear();
+   const auto chunkSize = nRecords / nSlots;
+   const auto remainder = 1U == nSlots ? 0 : nRecords % nSlots;
+   auto start = 0UL;
+   auto end = 0UL;
+   for (auto i : ROOT::TSeqU(nSlots)) {
+      start = end;
+      end += chunkSize;
+      ranges.emplace_back(start, end);
+      (void)i;
+   }
+   ranges.back().second += remainder;
+}
+
+int getNRecords(std::shared_ptr<arrow::Table> &table, std::vector<std::string> &columnNames)
+{
+   auto index = table->schema()->GetFieldIndex(columnNames.front());
+   return table->column(index)->length();
+};
+
 void RArrowDS::SetNSlots(unsigned int nSlots)
 {
    assert(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
-
+   fNSlots = nSlots;
    // We dump all the previous getters structures and we rebuild it.
    auto nColumns = fGetterIndex.size();
-   auto &outNSlots = fNSlots;
-   auto &ranges = fEntryRanges;
-   auto &table = fTable;
-   auto &columnNames = fColumnNames;
 
    fValueGetters.clear();
    for (size_t ci = 0; ci != nColumns; ++ci) {
       auto chunkedArray = fTable->column(fGetterIndex[ci].first)->data();
       fValueGetters.emplace_back(std::make_unique<ROOT::Internal::RDF::TValueGetter>(nSlots, chunkedArray->chunks()));
    }
-
-   // We use the same logic as the ROOTDS.
-   auto splitInEqualRanges = [&outNSlots, &ranges](int nRecords, unsigned int newNSlots) {
-      ranges.clear();
-      outNSlots = newNSlots;
-      const auto chunkSize = nRecords / outNSlots;
-      const auto remainder = 1U == outNSlots ? 0 : nRecords % outNSlots;
-      auto start = 0UL;
-      auto end = 0UL;
-      for (auto i : ROOT::TSeqU(outNSlots)) {
-         start = end;
-         end += chunkSize;
-         ranges.emplace_back(start, end);
-         (void)i;
-      }
-      ranges.back().second += remainder;
-   };
-
-   auto getNRecords = [&table, &columnNames]() -> int {
-      auto index = table->schema()->GetFieldIndex(columnNames.front());
-      return table->column(index)->length();
-   };
-
-   auto nRecords = getNRecords();
-   splitInEqualRanges(nRecords, nSlots);
 }
 
 /// This needs to return a pointer to the pointer each value getter
@@ -477,6 +470,8 @@ std::vector<void *> RArrowDS::GetColumnReadersImpl(std::string_view colName, con
 
 void RArrowDS::Initialise()
 {
+   auto nRecords = getNRecords(fTable, fColumnNames);
+   splitInEqualRanges(fEntryRanges, nRecords, fNSlots);
 }
 
 std::string RArrowDS::GetLabel()
