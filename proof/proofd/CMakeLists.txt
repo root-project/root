@@ -3,6 +3,31 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set(PROOFD_SOURCES
+  src/XpdObject.cxx
+  src/XProofProtUtils.cxx
+  src/XrdProofConn.cxx
+  src/XrdProofdAdmin.cxx
+  src/XrdProofdAux.cxx
+  src/XrdProofdClient.cxx
+  src/XrdProofdClientMgr.cxx
+  src/XrdProofdConfig.cxx
+  src/XrdProofdManager.cxx
+  src/XrdProofdNetMgr.cxx
+  src/XrdProofdPriorityMgr.cxx
+  src/XrdProofdProofServ.cxx
+  src/XrdProofdProofServMgr.cxx
+  src/XrdProofdProtocol.cxx
+  src/XrdProofdResponse.cxx
+  src/XrdProofdSandbox.cxx
+  src/XrdProofGroup.cxx
+  src/XrdProofPhyConn.cxx
+  src/XrdProofSched.cxx
+  src/XrdProofWorker.cxx
+  src/XrdROOT.cxx
+  ../../net/rpdutils/src/rpdconn.cxx
+)
+
 include_directories(${XROOTD_INCLUDE_DIRS})
 include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../net/rpdutils/res)
@@ -15,15 +40,40 @@ add_definitions(${XROOTD_CFLAGS})
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-nonnull-compare)
 
 if(WIN32)
-  ROOT_LINKER_LIBRARY(XrdProofd XProofProtUtils.cxx LIBRARIES ${XROOTD_LIBRARIES})
+  ROOT_LINKER_LIBRARY(XrdProofd
+    XProofProtUtils.cxx
+    LIBRARIES
+      ${XROOTD_LIBRARIES}
+  )
 else()
   if (NOT XROOTD_NOMAIN)
-     ROOT_EXECUTABLE(xproofd X*.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
-                         LIBRARIES ${XROOTD_LIBRARIES} ${SYSLIBS} BUILTINS XROOTD)
-  endif ()
-  ROOT_LINKER_LIBRARY(XrdProofd X*.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
-                         LIBRARIES ${XROOTD_LIBRARIES} rpdutil ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS} BUILTINS XROOTD)
+    ROOT_EXECUTABLE(xproofd
+      ${PROOFD_SOURCES}
+      LIBRARIES
+        ${XROOTD_LIBRARIES}
+        ${SYSLIBS}
+      BUILTINS
+        XROOTD
+    )
+  endif()
+
+  ROOT_LINKER_LIBRARY(XrdProofd
+    ${PROOFD_SOURCES}
+    LIBRARIES
+      ${XROOTD_LIBRARIES}
+      rpdutil
+      ${CMAKE_THREAD_LIBS_INIT}
+      ${CMAKE_DL_LIBS}
+    BUILTINS
+      XROOTD
+  )
   set_target_properties(XrdProofd PROPERTIES INTERFACE_LINK_LIBRARIES "")
-  ROOT_EXECUTABLE(proofexecv proofexecv.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdpriv.cxx
-                         LIBRARIES ${SYSLIBS})
+
+  ROOT_EXECUTABLE(proofexecv
+    proofexecv.cxx
+    ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
+    ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdpriv.cxx
+    LIBRARIES
+      ${SYSLIBS}
+  )
 endif()
