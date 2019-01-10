@@ -462,9 +462,12 @@ public:
    {
       auto rColl = fColls[0];
       for (unsigned int i = 1; i < fColls.size(); ++i) {
-         auto &coll = fColls[i];
-         for (auto &&v : *coll) {
-            FillColl(v, *rColl);
+         const auto &coll = fColls[i];
+         const auto end = coll->end();
+         // Use an explicit loop here to prevent compiler warnings introduced by
+         // clang's range-based loop analysis and vector<bool> references.
+         for (auto j = coll->begin(); j != end; j++) {
+            FillColl(*j, *rColl);
          }
       }
    }
