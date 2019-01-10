@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 
 # Previous step is to do something like
 # root -l -q 'MakeRef.C("Event.old.split.root");'
@@ -12,7 +12,7 @@ subdir=$1
 
 # launch replace
 launch () {
-  ($CALLROOTEXE -l -b -q 'dt_wrap.C("'$subdir$1'",'$2')' 2>&1; return $?;) | \
+  (root.exe -l -b -q 'dt_wrap.C("'$subdir$1'",'$2')' 2>&1; return $?;) | \
      (eval grep -v $3 ) | \
      (if test ! "x$4" = x ; then eval grep -v $4; else cat; fi;)  | \
      (if test ! "x$5" = x ; then eval grep -v $5; else cat; fi;)  | \

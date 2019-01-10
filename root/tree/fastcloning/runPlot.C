@@ -1,5 +1,5 @@
 void Plot(const char*filename) {
-   
+
    TFile *f1 = new TFile(filename);
    TTree *t1; f1->GetObject("CalTuple",t1);
    if (t1==0) {
@@ -27,7 +27,3 @@ void runPlot(int what=(4|8)) {
       Plot("cal.root");
    }
 }
-
-
-
-
