@@ -1225,6 +1225,10 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       }
    }
 
+   if (fCxxModulesEnabled) {
+      clingArgsStorage.push_back("-modulemap_overlay=" + std::string(TROOT::GetIncludeDir().Data()));
+   }
+
    // FIXME: This only will enable frontend timing reports.
    EnvOpt = llvm::sys::Process::GetEnv("ROOT_CLING_TIMING");
    if (EnvOpt.hasValue())
@@ -1246,14 +1250,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // module build remarks from clang to make it easier to spot when we do
       // this by accident.
       interpArgs.push_back("-Rmodule-build");
-
-      TString vfsPath = TROOT::GetIncludeDir() + "/modulemap.overlay.yaml";
-      // On modules aware build systems (such as OSX) we do not need an overlay file and thus the build system does not
-      // generate it.
-      if (FileExists(vfsPath.Data())) {
-         vfsArg = "-ivfsoverlay" + vfsPath;
-         interpArgs.push_back(vfsArg.Data());
-      }
    }
 
 #ifdef R__FAST_MATH

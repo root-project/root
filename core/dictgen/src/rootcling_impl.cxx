@@ -4175,7 +4175,8 @@ int RootClingMain(int argc,
    }
 
    ic = nextStart;
-   clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(gDriverConfig->fTROOT__GetIncludeDir()));
+   std::string includeDir = llvm::sys::path::convert_to_slash(gDriverConfig->fTROOT__GetIncludeDir());
+   clingArgs.push_back(std::string("-I") + includeDir);
 
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
@@ -4235,6 +4236,9 @@ int RootClingMain(int argc,
    }
 
    if (!isPCH && cxxmodule) {
+      // includeDir is where modulemaps exist.
+      clingArgsInterpreter.push_back("-modulemap_overlay=" + includeDir);
+
       // We just pass -fmodules, the CIFactory will do the rest and configure
       // clang correctly once it sees this flag.
       clingArgsInterpreter.push_back("-fmodules");
@@ -4248,14 +4252,6 @@ int RootClingMain(int argc,
 
       clingArgsInterpreter.push_back("-fmodule-name");
       clingArgsInterpreter.push_back(moduleName.str());
-
-      std::string vfsPath = std::string(gDriverConfig->fTROOT__GetIncludeDir()) + "/modulemap.overlay.yaml";
-      // On modules aware build systems (such as OSX) we do not need an overlay file and thus the build system does not
-      // generate it.
-      if (FileExists(vfsPath.c_str())) {
-         vfsArg = "-ivfsoverlay" + vfsPath;
-         clingArgsInterpreter.push_back(vfsArg.c_str());
-      }
 
       // Set the C++ modules output directory to the directory where we generate
       // the shared library.
