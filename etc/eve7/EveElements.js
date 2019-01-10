@@ -47,8 +47,7 @@
       }
       var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[hit.fMarkerColor]);
 
-      mesh.highlightMarkerSize = hit_size*3;
-      mesh.normalMarkerSize = hit_size;
+      mesh.highlightScale = 2;
       
       mesh.object = hit;
       mesh.geo_name = hit.fName;
@@ -111,10 +110,7 @@
       line.geo_name = track.fName;
       line.geo_object = track.fMasterId || track.fElementId;
       line.visible = track.fRnrSelf;
-      if (!JSROOT.browser.isWin) {
-         line.hightlightLineWidth = track_width*3;
-         line.normalLineWidth = track_width;
-      }
+      line.hightlightWidthScale = 2;
 
       // console.log("make track ", track, line.visible);
       return line;
