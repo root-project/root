@@ -73,12 +73,11 @@ std::vector<int> ROOT::Experimental::REveGeomViewer::GetStackFromJson(const std:
 
 void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 {
-   printf("Get ARG %s\n", arg.c_str());
+   printf("Recv %s\n", arg.c_str());
 
-   if (arg=="CONN_READY") {
-      auto buf = TBufferJSON::ToJSON(&fDesc,103);
+   if ((arg == "CONN_READY") || (arg == "RELOAD")) {
       std::string sbuf = "DESCR:";
-      sbuf.append(buf.Data());
+      sbuf.append(TBufferJSON::ToJSON(&fDesc,103).Data());
       printf("Send description %d\n", (int) sbuf.length());
       fWebWindow->Send(connid, sbuf);
 
@@ -93,6 +92,10 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       fWebWindow->Send(connid, json);
 
       fWebWindow->SendBinary(connid, &binary[0], binary.size());
+   } else if (arg == "QUIT_ROOT") {
+
+      RWebWindowsManager::Instance()->Terminate();
+
    } else if (arg.compare(0, 7, "SEARCH:") == 0) {
       std::string query = arg.substr(7);
 

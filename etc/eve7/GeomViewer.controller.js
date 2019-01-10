@@ -108,8 +108,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          
          this.data = { Nodes: null };
          
-         this.descr = null; // description object from server 
-         
          this.model = new JSONModel(this.data);
          this.getView().setModel(this.model);
          
@@ -284,28 +282,40 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                this.appendNodes(this.append_msg);
                delete this.append_msg;
             } else {
-               console.error('not process binary data', msg ? msg.byteLength : 0)
+               console.error('not process binary data len=' + (msg ? msg.byteLength : 0))
             }
             
             return;
          }
+         
+         var mhdr = msg.substr(0,6);
+         msg = msg.substr(6);
 
-         console.log("msg len=", msg.length, " txt:", msg.substr(0,70), "...");
+         // console.log(mhdr, msg.length, msg.substr(0,70), "...");
 
-         if (msg.substr(0,6) == "DESCR:") {
-            this.parseDescription(msg.substr(6));
-         } else if (msg.substr(0,6) == "MODIF:") {
-            this.modifyDescription(msg.substr(6));
-         } else if (msg.substr(0,6) == "GDRAW:") {
-            this.last_draw_msg = this.draw_msg = JSROOT.parse(msg.substr(6)); // use JSROOT.parse while refs are used
+         switch (mhdr) {
+         case "DESCR:": 
+            this.parseDescription(msg); 
+            break;
+         case "MODIF:": 
+            this.modifyDescription(msg); 
+            break;
+         case "GDRAW:":
+            this.last_draw_msg = this.draw_msg = JSROOT.parse(msg); // use JSROOT.parse while refs are used
             this.setNodesDrawProperties(this.draw_msg);
-         } else if (msg.substr(0,6) == "APPND:") {
-            this.append_msg = JSROOT.parse(msg.substr(6)); // use JSROOT.parse while refs are used
+            break;
+         case "APPND:":
+            this.append_msg = JSROOT.parse(msg); // use JSROOT.parse while refs are used
             this.setNodesDrawProperties(this.append_msg);
-         } else if (msg.substr(0,6) == "FOUND:") {
-            this.processSearchReply(msg.substr(6), false); 
-         } else if (msg.substr(0,6) == "SHAPE:") {
-            this.processSearchReply(msg.substr(6), true);
+            break;
+         case "FOUND:": 
+            this.processSearchReply(msg, false);
+            break;
+         case "SHAPE:":
+            this.processSearchReply(msg, true);
+            break
+         default:
+            console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
          } 
       },
       
@@ -342,9 +352,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       
       /** Parse and format base geometry description, initialize hierarchy browser */
       parseDescription: function(msg) {
-         this.descr = JSON.parse(msg);
+         var descr = JSON.parse(msg);
          
-         var nodes = this.descr.fDesc;
+         var nodes = descr.fDesc;
 
          // we need to calculate matrixes here
          for (var cnt = 0; cnt < nodes.length; ++cnt) 
@@ -353,7 +363,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          var clones = new JSROOT.GEO.ClonedNodes(null, nodes);
          clones.name_prefix = clones.GetNodeName(0); 
 
-         this.assignClones(clones, this.descr.fDrawOptions);
+         this.assignClones(clones, descr.fDrawOptions);
 
          this.buildTree();
       },
@@ -362,11 +372,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       modifyDescription: function(msg) {
          var newitem = JSON.parse(msg);
          
-         if (!newitem || !this.descr.fDesc) return;
+         if (!newitem || !this.geo_clones) return;
          
          this.formatNodeElement(newitem);
          
-         var item = this.descr.fDesc[newitem.id];
+         var item = this.geo_clones.nodes[newitem.id];
          
          item.vis = newitem.vis;
          item.matrix = newitem.matrix;
@@ -425,7 +435,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** Build complete tree of all existing nodes. 
        * Produced structure can be very large, therefore later one should move this functionality to the server */
       buildTree: function() {
-         if (!this.descr || !this.descr.fDesc) return;
+         if (!this.geo_clones) return;
          
          this.data.Nodes = [ this.buildTreeNode([], 0) ];
          
@@ -541,10 +551,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
       
       onAfterRendering: function() {
-
+         if (this.geo_clones) this.createGeoPainter();
+      },
+      
+      createGeoPainter: function() {
          this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.geomControl.getDomRef(), null, this.draw_options);
          this.geomControl.geo_painter = this.geo_painter; 
-         
+
+         this.geo_painter.AddHighlightHandler(this);
+         this.geo_painter.ActivateInBrowser = this.activateInTreeTable.bind(this);            
+
          if (this.geo_clones) 
             this.geo_painter.assignClones(this.geo_clones);
          
@@ -552,9 +568,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.geo_painter.prepareObjectDraw(this.geo_visisble, "__geom_viewer_selection__");
             delete this.geo_visisble;
          }
-    
-         this.geo_painter.AddHighlightHandler(this);
-         this.geo_painter.ActivateInBrowser = this.activateInTreeTable.bind(this);            
       },
       
       assignClones: function(clones, drawopt) {
@@ -562,8 +575,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.draw_options = drawopt;
 
          if (this.geo_painter) {
-            this.geo_painter.options = this.geo_painter.decodeOptions(drawopt);
+            // this.geo_painter.options = this.geo_painter.decodeOptions(drawopt);
             this.geo_painter.assignClones(this.geo_clones);
+         } else {
+            this.createGeoPainter();
          } 
       },
       
@@ -629,23 +644,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      onToolsMenuAction : function (oEvent) {
-
-         var item = oEvent.getParameter("item");
-
-         switch (item.getText()) {
-            case "GED Editor": this.getView().byId("Summary").getController().toggleEditor(); break;
-         }
-      },
-      
-      showHelp : function(oEvent) {
-         alert("User support: root-webgui@cern.ch");
-      },
-      
-      showUserURL : function(oEvent) {
-         sap.m.URLHelper.redirect("https://github.com/alja/jsroot/blob/dev/eve7.md", true);
-      },
-      
       /** called when new portion of data received from server */
       processSearchReply: function(msg, is_shape) {
          // not waiting search - ignore any replies
@@ -739,7 +737,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          } else {
             this.showFoundNodes(null);
          }
+      },
+
+      /** Reload geometry description and base drawing, normally not required */
+      onRealoadPress: function (oEvent) {
+         this.websocket.Send("RELOAD");
+      },
+      
+      /** Quit ROOT session */
+      onQuitRootPress: function(oEvent) {
+         this.websocket.Send("QUIT_ROOT");
       }
+
    });
    
 });
