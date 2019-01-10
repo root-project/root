@@ -76,6 +76,16 @@ set(sourcesv7 v7/src/TFile.cxx)
 
 include_directories(${CMAKE_SOURCE_DIR}/core/clib/res ${CMAKE_SOURCE_DIR}/io/io/res)
 
+# TStreamerInfoReadBuffer in O0 needs 6k on the stack. It is called
+# recursively, quickly exhausting the stack. Prevent that by forcing
+# the many scope-local vars to share their stack space / become
+# registers, thanks to the optimizer.
+if(WINDOWS)
+  set_source_files_properties(src/TStreamerInfoReadBuffer.cxx COMPILE_FLAGS "/O2")
+else()
+  set_source_files_properties(src/TStreamerInfoReadBuffer.cxx COMPILE_FLAGS "-O3")
+endif()
+
 ROOT_GENERATE_DICTIONARY(G__RIO ${headers} STAGE1 MODULE RIO LINKDEF LinkDef.h DEPENDENCIES Core Thread)
 
 if(root7)
