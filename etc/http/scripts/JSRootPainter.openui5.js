@@ -357,7 +357,7 @@
    // ===================================================================================================
 
    JSROOT.TCanvasPainter.prototype.ShowGed = function(objpainter) {
-      // function used to actiavte GED
+      // function used to activate GED
 
       d3.select("#ged_placeholder").text("");
 
@@ -401,7 +401,7 @@
    }
 
    JSROOT.TCanvasPainter.prototype.openuiActivateGed = function(painter, kind, mode) {
-      // function used to actiavte GED in full canvas
+      // function used to activate GED in full canvas
 
       var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
       if (main) main.getController().showGeEditor(true);
@@ -413,7 +413,7 @@
    }
 
    JSROOT.TCanvasPainter.prototype.ActivateFitPanel = function(painter) {
-      // function used to actiavte FitPanel
+      // function used to activate FitPanel
 
       if (!this.use_openui) return; // not supported in reduced mode
       var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
@@ -511,9 +511,8 @@
    // ====================================================================================
 
    if (JSROOT.v7 && JSROOT.v7.TCanvasPainter)
-
    JSROOT.v7.TCanvasPainter.prototype.ActivatePanel = function(name, handle, callback) {
-      // function used to actiavte FitPanel
+      // function used to activate FitPanel
 
       var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
       if (!main) return JSROOT.CallBack(callback, false);
