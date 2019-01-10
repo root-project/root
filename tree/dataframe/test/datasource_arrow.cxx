@@ -77,7 +77,7 @@ TEST(RArrowDS, ColTypeNames)
    EXPECT_STREQ("Long64_t", tds.GetTypeName("Age").c_str());
    EXPECT_STREQ("double", tds.GetTypeName("Height").c_str());
    EXPECT_STREQ("bool", tds.GetTypeName("Married").c_str());
-   EXPECT_STREQ("ULong_t", tds.GetTypeName("Babies").c_str());
+   EXPECT_STREQ("UInt_t", tds.GetTypeName("Babies").c_str());
 }
 
 TEST(RArrowDS, EntryRanges)
