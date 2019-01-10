@@ -142,6 +142,9 @@ void ROOT::Experimental::REveGeomDescription::ScanNode(TGeoNode *node, std::vect
 void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
 {
    fNodes.clear();
+   fSortMap.clear();
+   ClearRawData();
+   fDrawIdCut = 0;
 
    // vector to remember numbers
    std::vector<int> numbers;
@@ -207,16 +210,6 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
    }
 
    MarkVisible(); // set visibility flags
-
-   auto maxnodes = mgr->GetMaxVisNodes();
-   if (maxnodes > 5000)
-      maxnodes = 5000;
-   else if (maxnodes < 1000)
-      maxnodes = 1000;
-
-   // take maximal setting
-   SetMaxVisNodes(maxnodes);
-   SetMaxVisFaces(maxnodes * 100);
 }
 
 /////////////////////////////////////////////////////////////////////
