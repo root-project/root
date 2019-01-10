@@ -2660,6 +2660,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    // add safety for non-TObject derived Get() results
       Utility::AddToClass( pyclass, "Get", (PyCFunction) TDirectoryFileGet,     METH_O );
 
+      // Re-inject here too, since TDirectoryFile redefines GetObject
+      Utility::AddToClass(pyclass, "GetObject", (PyCFunction)TDirectoryGetObject);
+
       return kTRUE;
    }
 
@@ -2745,7 +2748,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    // allow member-style access to entries in file
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) TFileGetAttr, METH_O );
-
    }
 
    else if ( name.substr(0,8) == "TVector3" ) {
