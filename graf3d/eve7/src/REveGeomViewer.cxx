@@ -20,19 +20,8 @@
 #include "TBufferJSON.h"
 #include "TGeoManager.h"
 
-ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr) : fGeoManager(mgr)
+ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr)
 {
-   fDesc.Build(fGeoManager);
-
-   // take maximal setting
-   auto maxnodes = fGeoManager->GetMaxVisNodes();
-   if (maxnodes > 5000)
-      maxnodes = 5000;
-   else if (maxnodes < 1000)
-      maxnodes = 1000;
-
-   fDesc.SetMaxVisNodes(maxnodes);
-   fDesc.SetMaxVisFaces(maxnodes * 100);
 
    TString evedir = TString::Format("%s/eve7", TROOT::GetEtcDir().Data());
 
@@ -51,11 +40,77 @@ ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr) : fGeoManag
    fWebWindow->SetGeometry(900, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
+
+   if (mgr) SetGeometry(mgr);
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// destructor
 
 ROOT::Experimental::REveGeomViewer::~REveGeomViewer()
 {
 
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// assign new geometry to the viewer
+
+void ROOT::Experimental::REveGeomViewer::SetGeometry(TGeoManager *mgr)
+{
+   fGeoManager = mgr;
+
+   fDesc.Build(fGeoManager);
+
+   if (!fGeoManager) return;
+
+   // take maximal setting
+   auto maxnodes = fGeoManager->GetMaxVisNodes();
+   if (maxnodes > 5000)
+      maxnodes = 5000;
+   else if (maxnodes < 1000)
+      maxnodes = 1000;
+
+   fDesc.SetMaxVisNodes(maxnodes);
+   fDesc.SetMaxVisFaces(maxnodes * 100);
+   fDesc.SetNSegments(fGeoManager->GetNsegments());
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Select visible top volume, all other volumes will be disabled
+
+void ROOT::Experimental::REveGeomViewer::SelectVolume(const std::string &volname)
+{
+   if (!fGeoManager || volname.empty()) {
+      fDesc.SelectVolume(nullptr);
+   } else {
+      fDesc.SelectVolume(fGeoManager->GetVolume(volname.c_str()));
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Show geometry in new web window
+
+void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args)
+{
+   fWebWindow->Show(args);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Refresh geometry drawing on all connected clients
+/// Just emulates press of "reload" button on client side
+/// If none of clients exists - start
+
+void ROOT::Experimental::REveGeomViewer::Refresh()
+{
+   auto number = fWebWindow->NumConnections();
+
+   if (number == 0) {
+      Show();
+   } else {
+      for (int n=0;n<number;++n)
+         WebWindowCallback(fWebWindow->GetConnectionId(n),"RELOAD");
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -174,24 +229,3 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       }
    }
 }
-
-/////////////////////////////////////////////////////////////////////////////////
-/// Select visible top volume, all other volumes will be disabled
-
-void ROOT::Experimental::REveGeomViewer::SelectVolume(const std::string &volname)
-{
-   if (!fGeoManager || volname.empty()) {
-      fDesc.SelectVolume(nullptr);
-   } else {
-      fDesc.SelectVolume(fGeoManager->GetVolume(volname.c_str()));
-   }
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-/// Show geometry in web browser
-
-void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args)
-{
-   fWebWindow->Show(args);
-}
-
