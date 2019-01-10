@@ -80,7 +80,7 @@ include_directories(${CMAKE_SOURCE_DIR}/core/clib/res ${CMAKE_SOURCE_DIR}/io/io/
 # recursively, quickly exhausting the stack. Prevent that by forcing
 # the many scope-local vars to share their stack space / become
 # registers, thanks to the optimizer.
-if(WINDOWS)
+if(MSVC)
   set_source_files_properties(src/TStreamerInfoReadBuffer.cxx COMPILE_FLAGS "/O2")
 else()
   set_source_files_properties(src/TStreamerInfoReadBuffer.cxx COMPILE_FLAGS "-O3")
