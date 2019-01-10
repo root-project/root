@@ -387,7 +387,16 @@
          return mouse;
       }
 
-      control.GetIntersects = function(mouse) {
+      control.GetOriginDirectionIntersects = function(origin, direction) {
+         this.raycaster.set(origin, direction);
+         var intersects = this.raycaster.intersectObjects(this.scene.children, true);
+         // painter may want to filter intersects
+         if (typeof this.painter.FilterIntersects == 'function')
+            intersects = this.painter.FilterIntersects(intersects);
+         return intersects;
+      }
+
+      control.GetMouseIntersects = function(mouse) {
          // domElement gives correct coordinate with canvas render, but isn't always right for webgl renderer
          var sz = (this.renderer instanceof THREE.WebGLRenderer) ? this.renderer.getSize() : this.renderer.domElement;
          var pnt = { x: mouse.x / sz.width * 2 - 1, y: -mouse.y / sz.height * 2 + 1 };
@@ -406,7 +415,7 @@
 
       control.DetectZoomMesh = function(evnt) {
          var mouse = this.GetMousePos(evnt, {});
-         var intersects = this.GetIntersects(mouse);
+         var intersects = this.GetMouseIntersects(mouse);
          if (intersects)
             for (var n=0;n<intersects.length;++n)
                if (intersects[n].object.zoom)
@@ -449,7 +458,7 @@
          this.control_active = false;
          if (this.mouse_ctxt.on) {
             this.mouse_ctxt.on = false;
-            this.ContextMenu(this.mouse_ctxt, this.GetIntersects(this.mouse_ctxt));
+            this.ContextMenu(this.mouse_ctxt, this.GetMouseIntersects(this.mouse_ctxt));
          } else
          if (this.control_changed) {
             // react on camera change when required
@@ -466,7 +475,7 @@
          if (this.block_ctxt)
             this.block_ctxt = false;
          else
-            this.ContextMenu(this.mouse_ctxt, this.GetIntersects(this.mouse_ctxt));
+            this.ContextMenu(this.mouse_ctxt, this.GetMouseIntersects(this.mouse_ctxt));
       }
 
       control.ContextMenu = function(pos, intersects) {
@@ -517,7 +526,7 @@
          evnt.preventDefault();
 
          var mouse = this.GetMousePos(evnt, {}),
-             intersects = this.GetIntersects(mouse),
+             intersects = this.GetMouseIntersects(mouse),
              tip = this.ProcessMouseMove(intersects),
              status_func = this.painter.GetShowStatusFunc();
 

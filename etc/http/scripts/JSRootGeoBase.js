@@ -2021,6 +2021,18 @@
       return geom.vertices.length;
    }
 
+   /** Checks if two stack arrays are identical
+    * @memberOf JSROOT.GEO */
+   JSROOT.GEO.IsSameStack = function(stack1, stack2) {
+      if (!stack1 || !stack2) return false;
+      if (stack1 === stack2) return true;
+      if (stack1.length !== stack2.length) return false;
+      for (var k=0;k<stack1.length;++k)
+         if (stack1[k] !== stack2[k]) return false;
+      return true;
+   }
+
+
    // ====================================================================
 
    // class for working with cloned nodes
@@ -2330,6 +2342,18 @@
       return res;
    }
 
+   /** Return node name with given id.
+    * Either original object or description is used
+    * @private */
+   JSROOT.GEO.ClonedNodes.prototype.GetNodeName = function(nodeid) {
+      if (this.origin) {
+         var obj = this.origin[nodeid];
+         return obj ? JSROOT.GEO.ObjectName(obj) : "";
+      }
+      var node = this.nodes[nodeid];
+      return node ? node.name : "";
+   }
+
    JSROOT.GEO.ClonedNodes.prototype.ResolveStack = function(stack, withmatrix) {
 
       var res = { id: 0, obj: null, node: this.nodes[0], name: this.name_prefix };
@@ -2341,19 +2365,24 @@
          if (res.node.matrix) res.matrix.fromArray(res.node.matrix);
       }
 
-      if (this.origin) res.obj = this.origin[0];
+      if (this.origin)
+         res.obj = this.origin[0];
+
+      //if (!res.name)
+      //   res.name = this.GetNodeName(0);
 
       if (stack)
          for(var lvl=0;lvl<stack.length;++lvl) {
             res.id = res.node.chlds[stack[lvl]];
             res.node = this.nodes[res.id];
-            if (this.origin) {
+
+            if (this.origin)
                res.obj = this.origin[res.id];
 
-               if (res.obj.fName) {
-                  if (res.name.length>0) res.name += "/";
-                  res.name += JSROOT.GEO.ObjectName(res.obj);
-               }
+            var subname = this.GetNodeName(res.id);
+            if (subname) {
+               if (res.name) res.name+="/";
+               res.name += subname;
             }
 
             if (withmatrix && res.node.matrix)
@@ -2363,23 +2392,47 @@
       return res;
    }
 
+   /** Create stack array based on nodes ids array.
+    * Ids list should correspond to existing nodes hierarchy */
+   JSROOT.GEO.ClonedNodes.prototype.MakeStackByIds = function(ids) {
+      var stack = [];
+
+      if (ids[0] !== 0) {
+         console.error('wrong ids - first should be 0');
+         return null;
+      }
+
+      var node = this.nodes[0];
+
+      for (var k=1;k<ids.length;++k) {
+         var nodeid = ids[k];
+         var chindx = node.chlds.indexOf(nodeid);
+         if (chindx < 0) {
+            console.error('wrong nodes ids ' + ids[k] + ' is not child of ' + ids[k-1]);
+            return null;
+         }
+
+         stack.push(chindx);
+         node = this.nodes[nodeid];
+      }
+
+      return stack;
+   }
+
+   /** find stack by name which include names of all parents */
    JSROOT.GEO.ClonedNodes.prototype.FindStackByName = function(fullname) {
-      if (!this.origin) return null;
 
-      var names = fullname.split('/'),
-          currid = 0, stack = [],
-          top = this.origin[0];
+      var names = fullname.split('/'), currid = 0, stack = [];
 
-      if (!top || (JSROOT.GEO.ObjectName(top)!==names[0])) return null;
+      if (this.GetNodeName(currid) !== names[0]) return null;
 
       for (var n=1;n<names.length;++n) {
          var node = this.nodes[currid];
          if (!node.chlds) return null;
 
          for (var k=0;k<node.chlds.length;++k) {
-            var chldid = node.chlds[k],
-                obj = this.origin[chldid];
-            if (obj && (JSROOT.GEO.ObjectName(obj) === names[n])) { stack.push(k); currid = chldid; break; }
+            var chldid = node.chlds[k];
+            if (this.GetNodeName(chldid) === names[n]) { stack.push(k); currid = chldid; break; }
          }
 
          // no new entry - not found stack
@@ -2399,13 +2452,12 @@
 
       if (clone.kind === 2) {
          var prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null };
-         var _transparent = (entry.opacity < 1), _opacity = entry.opacity;
+         var _opacity = entry.opacity;
          prop.fillcolor = new THREE.Color( entry.color ? "rgb(" + entry.color + ")" : "blue" );
-         prop.material = new THREE.MeshLambertMaterial( { transparent: _transparent,
+         prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
                           opacity: _opacity, wireframe: false, color: prop.fillcolor,
                           side: THREE.FrontSide /* THREE.DoubleSide*/, vertexColors: THREE.NoColors /*THREE.VertexColors */,
-                          overdraw: 0., depthWrite: !_transparent } );
-         prop.material.alwaysTransparent = _transparent;
+                          overdraw: 0., depthWrite: _opacity == 1 } );
          prop.material.inherentOpacity = _opacity;
 
          return prop;
@@ -2426,17 +2478,12 @@
          if (node.fElements !== null) prop.chlds = node.fElements.arr;
 
          if (visible) {
-            var _transparent = false, _opacity = 1.0;
-            if ( node.fRGBA[3] < 1.0) {
-               _transparent = true;
-               _opacity = node.fRGBA[3];
-            }
+            var _opacity = Math.min(1, node.fRGBA[3]);
             prop.fillcolor = new THREE.Color( node.fRGBA[0], node.fRGBA[1], node.fRGBA[2] );
-            prop.material = new THREE.MeshLambertMaterial( { transparent: _transparent,
+            prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
                              opacity: _opacity, wireframe: false, color: prop.fillcolor,
                              side: THREE.FrontSide /* THREE.DoubleSide*/, vertexColors: THREE.NoColors /*THREE.VertexColors */,
-                             overdraw: 0., depthWrite: !_transparent } );
-            prop.material.alwaysTransparent = _transparent;
+                             overdraw: 0., depthWrite: _opacity == 1 } );
             prop.material.inherentOpacity = _opacity;
          }
 
@@ -2452,7 +2499,7 @@
       if (volume) prop.linewidth = volume.fLineWidth;
 
       if (visible) {
-         var _transparent = false, _opacity = 1.0;
+         var _opacity = 1.0;
          if ((volume.fFillColor > 1) && (volume.fLineColor == 1))
             prop.fillcolor = JSROOT.Painter.root_colors[volume.fFillColor];
          else
@@ -2462,25 +2509,19 @@
          if (volume.fMedium && volume.fMedium.fMaterial) {
             var fillstyle = volume.fMedium.fMaterial.fFillStyle;
             var transparency = (fillstyle < 3000 || fillstyle > 3100) ? 0 : fillstyle - 3000;
-            if (transparency > 0) {
-               _transparent = true;
+            if (transparency > 0)
                _opacity = (100.0 - transparency) / 100.0;
-            }
             if (prop.fillcolor === undefined)
                prop.fillcolor = JSROOT.Painter.root_colors[volume.fMedium.fMaterial.fFillColor];
          }
          if (prop.fillcolor === undefined)
             prop.fillcolor = "lightgrey";
 
-         prop.material = new THREE.MeshLambertMaterial( { transparent: _transparent,
+         prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
                               opacity: _opacity, wireframe: false, color: prop.fillcolor,
                               side: THREE.FrontSide /* THREE.DoubleSide */, vertexColors: THREE.NoColors /*THREE.VertexColors*/,
-                              overdraw: 0., depthWrite: !_transparent } );
-         prop.material.alwaysTransparent = _transparent;
+                              overdraw: 0., depthWrite: _opacity == 1 } );
          prop.material.inherentOpacity = _opacity;
-
-         //console.log('opacity', _opacity, 'transp', _transparent);
-         //console.log('material', prop.material);
 
       }
 
@@ -2555,13 +2596,14 @@
 
          if ((options === 'mesh') || !mesh) return mesh;
 
+         var res = three_prnt;
          while (mesh && (mesh !== toplevel)) {
             three_prnt = mesh.parent;
             three_prnt.remove(mesh);
             mesh = (three_prnt.children.length == 0) ? three_prnt : null;
          }
 
-         return null;
+         return res;
       }
 
       if (three_prnt) {
@@ -2710,7 +2752,6 @@
 
       return del; //
    }
-
 
    JSROOT.GEO.ClonedNodes.prototype.CollectShapes = function(lst) {
       // based on list of visible nodes, collect all uniques shapes which should be build
@@ -2937,9 +2978,9 @@
 
             shape.geomZ.scale(flip.x, flip.y, flip.z);
 
-            var face, d;
-            for (var n=0;n<shape.geomZ.faces.length;++n) {
-               face = geom.faces[n];
+            var face, d, n = 0;
+            while(n < shape.geomZ.faces.length) {
+               face = geom.faces[n++];
                d = face.b; face.b = face.c; face.c = d;
             }
 
@@ -2957,6 +2998,20 @@
       return mesh;
    }
 
+   /** Cleanup shape entity
+    * @private */
+   JSROOT.GEO.cleanupShape = function(shape) {
+      if (!shape) return;
+
+      if (shape.geom && (typeof shape.geom.dispose == 'funciton'))
+         shape.geom.dispose();
+
+      if (shape.geomZ && (typeof shape.geomZ.dispose == 'funciton'))
+         shape.geomZ.dispose();
+
+      delete shape.geom;
+      delete shape.geomZ;
+   }
 
    JSROOT.GEO.produceRenderOrder = function(toplevel, origin, method, clones) {
       // function scans throug hierarchy of objects and try to set renderOrder
@@ -3015,7 +3070,7 @@
                mesh.$jsroot_box3 = box3 = JSROOT.GEO.getBoundingBox(mesh);
 
             if (method === 'size') {
-               mesh.$jsroot_distance = box3.getSize();
+               mesh.$jsroot_distance = box3.getSize(new THREE.Vector3());
                continue;
             }
 

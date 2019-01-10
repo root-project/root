@@ -4662,7 +4662,7 @@
 
 
    TCanvasPainter.prototype.ActivateGed = function(objpainter, kind, mode) {
-      // function used to actiavte GED
+      // function used to activate GED
 
       if (this.use_openui)
          return this.openuiActivateGed(objpainter, kind, mode);
