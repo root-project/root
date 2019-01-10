@@ -12,6 +12,7 @@
 #include <ROOT/REveGeomViewer.hxx>
 
 #include <ROOT/RWebWindowsManager.hxx>
+#include <ROOT/TLogger.hxx>
 
 #include "TSystem.h"
 #include "TROOT.h"
@@ -21,7 +22,6 @@
 
 ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr) : fGeoManager(mgr)
 {
-
    fDesc.Build(fGeoManager);
    fDesc.SetMaxVisNodes(10000);
    fDesc.SetMaxVisFaces(100000);
@@ -29,7 +29,7 @@ ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr) : fGeoManag
    TString evedir = TString::Format("%s/eve7", TROOT::GetEtcDir().Data());
 
    if (gSystem->ExpandPathName(evedir)) {
-      Warning("REveGeomViewer", "problems resolving %s for HTML sources", evedir.Data());
+      R__WARNING_HERE("webeve") << "Problems resolve path " << evedir << " for HTML sources";
       evedir = ".";
    }
 
@@ -61,7 +61,7 @@ std::vector<int> ROOT::Experimental::REveGeomViewer::GetStackFromJson(const std:
       res = *stack;
       delete stack;
    } else {
-      printf("Fail convert json %s into vector<int>\n", json.c_str());
+      R__ERROR_HERE("webeve") << "Fail convert " << json << " into vector<int>";
    }
 
    return res;
