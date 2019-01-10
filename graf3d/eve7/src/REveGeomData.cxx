@@ -141,10 +141,13 @@ void ROOT::Experimental::REveGeomDescription::ScanNode(TGeoNode *node, std::vect
 
 void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
 {
+   fDesc.clear();
    fNodes.clear();
    fSortMap.clear();
    ClearRawData();
    fDrawIdCut = 0;
+
+   if (!mgr) return;
 
    // vector to remember numbers
    std::vector<int> numbers;
@@ -157,8 +160,6 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
    // build flat list of all nodes
    ScanNode(mgr->GetTopNode(), numbers, offset);
 
-   fDesc.clear();
-   fSortMap.clear();
    fDesc.reserve(fNodes.size());
    numbers.reserve(fNodes.size());
    fSortMap.reserve(fNodes.size());

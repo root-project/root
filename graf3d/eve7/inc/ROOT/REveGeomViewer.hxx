@@ -42,8 +42,10 @@ protected:
 
 public:
 
-   REveGeomViewer(TGeoManager *mgr);
+   REveGeomViewer(TGeoManager *mgr = nullptr);
    virtual ~REveGeomViewer();
+
+   void SetGeometry(TGeoManager *mgr);
 
    void SelectVolume(const std::string &volname);
 
@@ -58,6 +60,8 @@ public:
    void SetDrawOptions(const std::string &opt) { fDesc.SetDrawOptions(opt); }
 
    void Show(const RWebDisplayArgs &args = "");
+
+   void Refresh();
 
 };
 
