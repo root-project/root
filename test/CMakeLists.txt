@@ -212,7 +212,7 @@ endif()
 
 #--stressHistFactory--------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND)
-if(ROOT_xml_FOUND)
+if((xml OR ROOT_xml_FOUND) AND GSL_FOUND) # must use same check as in roofit/CMakeLists.txt
   ROOT_EXECUTABLE(stressHistFactory stressHistFactory.cxx LIBRARIES RooStats HistFactory XMLParser)
   configure_file(HistFactoryTest.tar HistFactoryTest.tar COPYONLY)
   configure_file(stressHistFactory_ref.root stressHistFactory_ref.root COPYONLY)
