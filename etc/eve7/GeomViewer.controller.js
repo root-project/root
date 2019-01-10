@@ -21,7 +21,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       // the part creating the HTML:
       renderer : function(oRm, oControl) { // static function, so use the given "oControl" instance instead of "this" in the renderer function
-         if (!oControl.getVisible()) return;
+         // if (!oControl.getVisible()) return;
          
          oRm.write("<div"); 
          oRm.writeControlData(oControl);  // writes the Control ID and enables event handling - important!
@@ -61,10 +61,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
    
    CoreControl.extend("eve.GeomDraw", { 
 
-      // the control API:
       metadata : {
-         properties : { // setter and getter are created behind the scenes, incl. data binding and type validation
-            "color" : { type: "sap.ui.core.CSSColor", defaultValue: "#fff" } // you can give a default value and more
+         properties : {           // setter and getter are created behind the scenes, incl. data binding and type validation
+            "color" : {type: "sap.ui.core.CSSColor", defaultValue: "#fff"} // you can give a default value and more
          }
       },
 
@@ -77,50 +76,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          oRm.addStyle("height", "100%");  
          oRm.addStyle("overflow", "hidden");  
          oRm.writeStyles();
-         //oRm.addClass("myColorBox");      // add a CSS class for styles common to all control instances
          oRm.writeClasses();              // this call writes the above class plus enables support for Square.addStyleClass(...)
          oRm.write(">"); 
          oRm.write("</div>"); // no text content to render; close the tag
       },
 
-      // an event handler:
-      onclick : function(evt) {   // is called when the Control's area is clicked - no further event registration required
-      },
-      
-      onInit: function() {
-      },
-
       onAfterRendering: function() {
          ResizeHandler.register(this, this.onResize.bind(this));
-         this.did_rendering = true;
          this.geom_painter = null;
-         
-         this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getDomRef(), null, this.draw_options);
-         
-         if (this.geo_clones) 
-            this.geo_painter.assignClones(this.geo_clones);
-         
-         if (this.geo_visisble) {
-            this.geo_painter.prepareObjectDraw(this.geo_visisble, "__geom_viewer_selection__");
-            delete this.geo_visisble;
-         }
-      },
-      
-      assignClones: function(clones, drawopt) {
-         this.geo_clones = clones;
-         this.draw_options = drawopt;
-
-         if (this.geo_painter) {
-            this.geo_painter.options = this.geo_painter.decodeOptions(drawopt);
-            this.geo_painter.assignClones(clones);
-         } 
-      },
-      
-      startDrawing: function(visible) {
-         if (this.geo_painter)
-            this.geo_painter.prepareObjectDraw(visible, "__geom_viewer_selection__");
-         else
-            this.geo_visisble = visible;
       },
       
       onResize: function() {
@@ -152,8 +115,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          
          // PART 2: instantiate Control and place it onto the page
 
-         this.geomControl = new eve.GeomDraw({color:"#f00"});
-         
          this.creator = new JSROOT.EVE.EveElements();
          
          var t = this.getView().byId("treeTable");
@@ -176,11 +137,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             onAfterRendering: function() { this.assignRowHandlers(); }
          }, this);
          
-         //myControl.placeAt("content");
-
-         // ok, add another instance...:
-         //new my.ColorBox({color:"green"}).placeAt("content");
-         
+         // geometry painter 
+         this.geomControl = new eve.GeomDraw({color:"#f00"});
          this.getView().byId("mainSplitter").addContentArea(this.geomControl);
       },
       
@@ -216,10 +174,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // remember current element with hover stack
          this._hover_stack = (is_enter && prop && prop.end_node) ? this.getRowStack(row) : null; 
          
-         var gpainter = this.geomControl ? this.geomControl.geo_painter : null;
-         if (!gpainter) return;
+         if (!this.geo_painter) return;
          
-         var found_mesh = gpainter.HighlightMesh(null, 0x00ff00, null, this._hover_stack, true);
+         var found_mesh = this.geo_painter.HighlightMesh(null, 0x00ff00, null, this._hover_stack, true);
 
          // request given stack
          if (this._hover_stack && !found_mesh) 
@@ -254,7 +211,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             ids.push(ttt.id);
          }
          
-         return this.geomControl.geo_clones.MakeStackByIds(ids);
+         return this.geo_clones.MakeStackByIds(ids);
       },
       
       /** Callback from geo painter when mesh object is highlighted. Use for update of TreeTable */
@@ -316,7 +273,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                // here we should decode render data
                this.extractRawShapes(this.draw_msg, msg, offset);
                // this is just start drawing, main work will be done asynchronous
-               this.geomControl.startDrawing(this.draw_msg);
+               this.startDrawing(this.draw_msg);
                delete this.draw_msg;
             } else if (this.found_msg) {
                this.extractRawShapes(this.found_msg, msg, offset);
@@ -393,12 +350,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          for (var cnt = 0; cnt < nodes.length; ++cnt) 
             this.formatNodeElement(nodes[cnt]);
          
-         this.clones = new JSROOT.GEO.ClonedNodes(null, nodes);
-         this.clones.name_prefix = this.clones.GetNodeName(0); 
-         
+         var clones = new JSROOT.GEO.ClonedNodes(null, nodes);
+         clones.name_prefix = clones.GetNodeName(0); 
+
+         this.assignClones(clones, this.descr.fDrawOptions);
+
          this.buildTree();
-         
-         this.geomControl.assignClones(this.clones, this.descr.fDrawOptions);
       },
       
       /** When single node element is modified from server side */ 
@@ -418,15 +375,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          
          this.buildTree();
          
-         if (!item.vis && this.geomControl && this.geomControl.geo_painter) 
-            this.geomControl.geo_painter.RemoveDrawnNode(item.id);
+         if (!item.vis && this.geo_painter) 
+            this.geo_painter.RemoveDrawnNode(item.id);
       },
       
       buildTreeNode: function(cache, indx) {
          var tnode = cache[indx];
          if (tnode) return tnode;
 
-         var node = this.clones.nodes[indx];
+         var node = this.geo_clones.nodes[indx];
          
          cache[indx] = tnode = { title: node.name, id: indx, color_visible: false, node_visible: node.vis != 0 };
          
@@ -447,7 +404,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          var prnt = null, node = null;
          for (var i=-1;i<stack.length;++i) {
             var indx = (i<0) ? 0 : node.chlds[stack[i]];
-            node = this.clones.nodes[indx];
+            node = this.geo_clones.nodes[indx];
             var tnode = tnodes[indx];
             if (!tnode)
                tnodes[indx] = tnode = { title: node.name, id: indx, color_visible: false, node_visible: true };
@@ -498,7 +455,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (this.last_draw_msg) 
             for (var k=0;k<this.last_draw_msg.length;++k) {
                var item = this.last_draw_msg[k];
-               var res = this.clones.ResolveStack(item.stack);
+               var res = this.geo_clones.ResolveStack(item.stack);
                if (func(res.node)) 
                   matches.push({ stack: item.stack, color: item.color });
             }
@@ -509,15 +466,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** try to show selected nodes. With server may be provided shapes */ 
       showFoundNodes: function(matches, append_more, with_binaries) {
          
-         var gpainter = this.geomControl ? this.geomControl.geo_painter : null;
-         
          if (typeof matches == "string") {
             this.byId("treeTable").collapseAll();
             this.data.Nodes = [ { title: matches } ];
             this.model.refresh();
-            if (gpainter) {
-               if (append_more) gpainter.appendMoreNodes(null);
-               gpainter.changeGlobalTransparency();
+            if (this.geo_painter) {
+               if (append_more) this.geo_painter.appendMoreNodes(null);
+               this.geo_painter.changeGlobalTransparency();
             }
             return;
          }
@@ -528,10 +483,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.data.Nodes = this.originalNodes || null;
             this.model.refresh();
             this.byId("treeTable").expandToLevel(1);
-            
-            if (gpainter) {
-               if (append_more) gpainter.appendMoreNodes(matches);
-               gpainter.changeGlobalTransparency();
+          
+            if (this.geo_painter) {
+               if (append_more) this.geo_painter.appendMoreNodes(matches);
+               this.geo_painter.changeGlobalTransparency();
             }
             return;
          }
@@ -549,12 +504,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                this.byId("treeTable").expandToLevel(99);
          }
          
-         if (gpainter) {
-            if (append_more && with_binaries) gpainter.appendMoreNodes(matches);
+         if (this.geo_painter) {
+            if (append_more && with_binaries) this.geo_painter.appendMoreNodes(matches);
             
             if ((matches.length>0) && (matches.length<100)) { 
-               var dflt = Math.max(gpainter.options.transparency, 0.98);
-               gpainter.changeGlobalTransparency(function(node) {
+               var dflt = Math.max(this.geo_painter.options.transparency, 0.98);
+               this.geo_painter.changeGlobalTransparency(function(node) {
                   if (node.stack) 
                      for (var n=0;n<matches.length;++n)
                         if (JSROOT.GEO.IsSameStack(node.stack, matches[n].stack))
@@ -562,24 +517,20 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                   return dflt;
                });
             } else {
-               gpainter.changeGlobalTransparency();
+               this.geo_painter.changeGlobalTransparency();
             }
          }
       },
       
       appendNodes: function(nodes) {
-         var gpainter = this.geomControl ? this.geomControl.geo_painter : null;
-         if (gpainter) gpainter.prepareObjectDraw(nodes, "__geom_viewer_append__");
+         if (this.geo_painter) this.geo_painter.prepareObjectDraw(nodes, "__geom_viewer_append__");
       },
       
       showMoreNodes: function(matches) {
-         var gpainter = this.geomControl ? this.geomControl.geo_painter : null;
-         
-         if (!gpainter) return; 
-            
-         gpainter.appendMoreNodes(matches);
+         if (!this.geo_painter) return; 
+         this.geo_painter.appendMoreNodes(matches);
          if (this._hover_stack)
-            gpainter.HighlightMesh(null, 0x00ff00, null, this._hover_stack, true);
+            this.geo_painter.HighlightMesh(null, 0x00ff00, null, this._hover_stack, true);
       },
 
       OnWebsocketClosed: function() {
@@ -590,10 +541,37 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
       
       onAfterRendering: function() {
-         if (this.geomControl && this.geomControl.geo_painter) {
-            this.geomControl.geo_painter.AddHighlightHandler(this);
-            this.geomControl.geo_painter.ActivateInBrowser = this.activateInTreeTable.bind(this);            
+
+         this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.geomControl.getDomRef(), null, this.draw_options);
+         this.geomControl.geo_painter = this.geo_painter; 
+         
+         if (this.geo_clones) 
+            this.geo_painter.assignClones(this.geo_clones);
+         
+         if (this.geo_visisble) {
+            this.geo_painter.prepareObjectDraw(this.geo_visisble, "__geom_viewer_selection__");
+            delete this.geo_visisble;
          }
+    
+         this.geo_painter.AddHighlightHandler(this);
+         this.geo_painter.ActivateInBrowser = this.activateInTreeTable.bind(this);            
+      },
+      
+      assignClones: function(clones, drawopt) {
+         this.geo_clones = clones;
+         this.draw_options = drawopt;
+
+         if (this.geo_painter) {
+            this.geo_painter.options = this.geo_painter.decodeOptions(drawopt);
+            this.geo_painter.assignClones(this.geo_clones);
+         } 
+      },
+      
+      startDrawing: function(visible) {
+         if (this.geo_painter)
+            this.geo_painter.prepareObjectDraw(visible, "__geom_viewer_selection__");
+         else
+            this.geo_visisble = visible;
       },
       
       /** method called from geom painter when specific node need to be activated in the browser 
@@ -601,7 +579,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       activateInTreeTable: function(itemnames, force) {
          if (!force || !itemnames) return; 
             
-         var stack = this.clones.FindStackByName(itemnames[0]);
+         var stack = this.geo_clones.FindStackByName(itemnames[0]);
          if (!stack) return;
          
          function test_match(st) {

@@ -102,6 +102,8 @@ class REveGeomDescription {
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
    int fNSegments{0};               ///<! number of segments for cylindrical shapes
    std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
+   std::vector<REveRenderData*> fRndrShapes; ///<! list of shapes which should be packet into binary
+   int fRndrOffest{0};              ///<! current render offset
 
    std::string fDrawJson;           ///<! JSON with main nodes drawn by client
    std::vector<char> fDrawBinary;   ///<! binary data for main draw nodes
@@ -117,9 +119,13 @@ class REveGeomDescription {
 
    void ScanVisible(REveGeomScanFunc_t func);
 
+   void ResetRndrInfos();
+
    ShapeDescr &FindShapeDescr(TGeoShape *shape);
 
-   ShapeDescr &MakeShapeDescr(TGeoShape *shape);
+   ShapeDescr &MakeShapeDescr(TGeoShape *shape, bool acc_rndr = false);
+
+   void BuildRndrBinary(std::vector<char> &buf);
 
    void CopyMaterialProperties(TGeoVolume *col, REveGeomVisisble &item);
 
