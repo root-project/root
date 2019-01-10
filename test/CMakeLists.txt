@@ -211,7 +211,7 @@ if(ROOT_roofit_FOUND)
 endif()
 
 #--stressHistFactory--------------------------------------------------------------------------------
-if(ROOT_roofit_FOUND AND ROOT_xml_FOUND)
+if(ROOT_roofit_FOUND AND GSL_FOUND AND ROOT_xml_FOUND)
   ROOT_EXECUTABLE(stressHistFactory stressHistFactory.cxx LIBRARIES RooStats HistFactory XMLParser)
   configure_file(HistFactoryTest.tar HistFactoryTest.tar COPYONLY)
   configure_file(stressHistFactory_ref.root stressHistFactory_ref.root COPYONLY)
