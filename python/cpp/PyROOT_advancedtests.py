@@ -153,7 +153,7 @@ class Cpp01Inheritence( MyTestCase ):
 
 ### C++ template tests =======================================================
 class Cpp02TemplateLookup( MyTestCase ):
-   def test1SingleInstantiatedTemplate( self ):
+   def test01SingleInstantiatedTemplate( self ):
       """Test data member access for a templated class"""
 
       t1 = T1( int )( 32 )
@@ -164,7 +164,7 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertEqual( t1.value(), 41 )
       self.assertEqual( t1.m_t1, 41 )
 
-   def test2TemplateInstantiatedTemplate( self ):
+   def test02TemplateInstantiatedTemplate( self ):
       """Test data member access for a templated class instantiated with a template"""
 
       t2 = T2( T1( int ) )()
@@ -172,7 +172,7 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertEqual( t2.m_t2.value(), 32 )
       self.assertEqual( t2.m_t2.m_t1, 32 )
 
-   def test3TemplateInstantiationWithVectorOfFloat( self ):
+   def test03TemplateInstantiationWithVectorOfFloat( self ):
       """Test template instantiation with a std::vector< float >"""
 
       gROOT.LoadMacro( "Template.C+" )
@@ -187,7 +187,7 @@ class Cpp02TemplateLookup( MyTestCase ):
          b.m_b.push_back( i )
          self.assertEqual( round( b.m_b[i], 5 ), float(i) )
 
-   def test4TemplateMemberFunctions( self ):
+   def test04TemplateMemberFunctions( self ):
       """Test template member functions lookup and calls"""
 
     # gROOT.LoadMacro( "Template.C+" )  # already loaded ...
@@ -212,7 +212,7 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertEqual( m.GetSize( 'MyDoubleVector_t' )(), m.GetVectorOfDoubleSize() )
       self.assertEqual( m.GetSize( 'vector<double>' )(), m.GetVectorOfDoubleSize() )
 
-   def test5TemplateMemberFunctions( self ):
+   def test05TemplateMemberFunctions( self ):
       """Test template member functions lookup and calls (set 2)"""
 
     # gROOT.LoadMacro( "Template.C+" )  # already loaded ...
@@ -225,7 +225,7 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertEqual( m.GetSize2( 'char', 'long' )( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
       self.assertEqual( m.GetSize2(ROOT.Long(256), 1.), m.GetFloatSize() - m.GetLongSize() )
 
-   def test6OverloadedTemplateMemberFunctions( self ):
+   def test06OverloadedTemplateMemberFunctions( self ):
       """Test overloaded template member functions lookup and calls"""
 
     # gROOT.LoadMacro( "Template.C+" )  # already loaded ...
@@ -276,7 +276,23 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 2 )
       self.assertEqual( gzoi_id, id( MyTemplatedMethodClass.__dict__[ mname ] ) )
 
-   def test7TemplateGlobalFunctions( self ):
+   def test07TemplateMemberFunctionsNotInstantiated(self):
+      """
+      Test lookup and calls for template member functions that have not been
+      explicitly instantiated
+      """
+      MyTemplatedMethodClass = ROOT.MyTemplatedMethodClass
+      m = MyTemplatedMethodClass()
+
+      # Test the templated overload
+      self.assertEqual(m.GetSizeNEI('char')('c'), m.GetCharSize())
+      self.assertEqual(m.GetSizeNEI(int)(1), m.GetIntSize())
+
+      # Test the non-templated overload (must have been added to
+      # the template proxy too)
+      self.assertEqual(m.GetSizeNEI(), 1) 
+
+   def test08TemplateGlobalFunctions( self ):
       """Test template global function lookup and calls"""
 
     # gROOT.LoadMacro( "Template.C+" )  # already loaded ...
@@ -289,13 +305,13 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertEqual( f( 3. ), 3. )
       self.assertEqual( type( f( 4. ) ), type( 4. ) )
 
-   def test8TemplatedArgument( self ):
+   def test09TemplatedArgument( self ):
       """Use of template argument"""
 
       obj = ROOT.MyTemplateTypedef()
       obj.set( 'hi' )   # used to fail with TypeError
 
-   def test9TemplatedFunctionNamespace(self):
+   def test10TemplatedFunctionNamespace(self):
       """Test template function in a namespace, lookup and calls"""
 
       f = ROOT.MyNamespace.MyTemplatedFunctionNamespace

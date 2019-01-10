@@ -62,6 +62,11 @@ public:
 // the following actually means that it is not possible to specify template
 // arguments in python with a string, as it will match this overload ...
    long GetSizeOL( const std::string& s ) { return -s.size(); }
+
+   // Not explicitly instantiated below
+   template<class A> long GetSizeNEI(const A&);
+   // Non-templated overload
+   long GetSizeNEI() { return 1L; }
 };
 
 template< class B >
@@ -77,6 +82,12 @@ long MyTemplatedMethodClass::GetSize2( const B&, const A& ) {
 template< class B >
 long MyTemplatedMethodClass::GetSizeOL( const B& ) {
    return sizeof(B);
+}
+
+template<class A>
+long MyTemplatedMethodClass::GetSizeNEI(const A&)
+{
+   return sizeof(A);
 }
 
 template long MyTemplatedMethodClass::GetSize< char >();
