@@ -6,7 +6,7 @@ if (1) {
   TFile CloneFile("CloneTree.root");
 
   TTree* OriginalTree = (TTree*) OriginalFile.Get("NtpSt");
-  TTree* CloneTree     = (TTree*) CloneFile.Get("NtpSt"); 
+  TTree* CloneTree     = (TTree*) CloneFile.Get("NtpSt");
 
   cout << "Number of entries in original " << OriginalTree->GetEntries() << endl;
   cout << "Number of entries in double copy " << CloneTree->GetEntries() << endl;
@@ -29,4 +29,3 @@ if (1) {
 }
 #endif
 }
-

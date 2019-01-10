@@ -1,0 +1,6 @@
+
+Processing runabstract.C...
+Warning in <TClass::Init>: no dictionary for class Holder is available
+Warning in <TClass::Init>: no dictionary for class Top is available
+Warning in <TClass::Init>: no dictionary for class Bottom is available
+Warning in <TClass::Init>: no dictionary for class AbstractMiddle is available

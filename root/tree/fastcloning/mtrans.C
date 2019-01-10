@@ -1,4 +1,4 @@
-void mtrans(char *filename) 
+void mtrans(const char *filename) 
 {
    TChain *c = new TChain("T");
    c->AddFile(Form("one/%s",filename));

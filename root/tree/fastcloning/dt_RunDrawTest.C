@@ -58,7 +58,7 @@ Int_t HistCompare(TH1 *ref, TH1 *comp)
 
 Int_t Compare(TDirectory* from) {
    TFile * reffile = new TFile(Form("%s/dt_reference.root",gPath.Data()));
-   
+
    TIter next(reffile->GetListOfKeys());
    TH1 *ref, *draw;
    const char* name;
@@ -68,7 +68,7 @@ Int_t Compare(TDirectory* from) {
 
    while ((key=(TKey*)next())) {
       if (strcmp(key->GetClassName(),"TH1F")
-          && strcmp(key->GetClassName(),"TH2F") ) 
+          && strcmp(key->GetClassName(),"TH2F") )
         continue; //may be a TList of TStreamerInfo
       ref = (TH1*)reffile->Get(key->GetName());
       name = ref->GetName();
@@ -89,7 +89,7 @@ Int_t Compare(TDirectory* from) {
          if (gInteractiveTest) {
             TCanvas * canv = new TCanvas();
             canv->Divide(2,1);
-            canv->cd(1); 
+            canv->cd(1);
             TString reftitle = "Ref: ";
             reftitle.Append(ref->GetTitle());
             ref->SetTitle(reftitle);
@@ -142,7 +142,7 @@ bool dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
    if (mode == 1) {
       if (!TClassTable::GetDict("Event")) {
          gSystem->Load("libEvent");
-     }     
+     }
       gHasLibrary = kTRUE;
    }
 
@@ -186,7 +186,7 @@ bool dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
 
    if (gQuietLevel<2) cout << "Generating histograms from TTree::Draw" << endl;
    TDirectory* where = GenerateDrawHist(tree,gQuietLevel);
- 
+
    if (gQuietLevel<2) cout << "Comparing histograms" << endl;
    if (Compare(where)>0) {
      cout << "DrawTest: Comparison failed" << endl;
@@ -200,4 +200,4 @@ bool dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
    gROOT->GetList()->Delete();
 
    return true;
-}   
+}
