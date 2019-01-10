@@ -30,6 +30,7 @@
 #include "TInterpreter.h"
 #include "TGlobal.h"
 #include "DllImport.h"
+#include "TFunctionTemplate.h"
 
 // Standard
 #include <map>
@@ -315,6 +316,18 @@ static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
 // add a pseudo-default ctor, if none defined
    if ( ! isNamespace && ! hasConstructor )
       cache[ "__init__" ].push_back( new TConstructorHolder( scope, (Cppyy::TCppMethod_t)0 ) );
+
+   // Add function templates that have not been instantiated to the class dictionary
+   auto cppClass = TClass::GetClass(Cppyy::GetFinalName(scope).c_str());
+   TIter next(cppClass->GetListOfFunctionTemplates());
+   TFunctionTemplate *templ = nullptr;
+   while ((templ = (TFunctionTemplate*)next())) {
+      if (templ->Property() & kIsPublic) { // Discard private templates
+         auto templProxy = TemplateProxy_New(templ->GetName(), pyclass);
+         PyObject_SetAttrString(pyclass, templ->GetName(), (PyObject*)templProxy);
+         Py_DECREF(templProxy);
+      }
+   }
 
 // add the methods to the class dictionary
    for ( CallableCache_t::iterator imd = cache.begin(); imd != cache.end(); ++imd ) {
