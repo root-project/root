@@ -38,8 +38,10 @@ arrow::Schema.
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 #include <arrow/table.h>
+#include <arrow/stl.h>
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
@@ -54,9 +56,28 @@ private:
    /// The pointer to update.
    void **fResult;
    bool fCachedBool{false};   // Booleans need to be unpacked, so we use a cached entry.
+   // FIXME: I should really use a variant here
+   RVec<float> fCachedRVecFloat;
+   RVec<double> fCachedRVecDouble;
+   RVec<ULong64_t> fCachedRVecULong64;
+   RVec<UInt_t> fCachedRVecUInt;
+   RVec<Long64_t> fCachedRVecLong64;
+   RVec<Int_t> fCachedRVecInt;
    std::string fCachedString;
    /// The entry in the array which should be looked up.
    ULong64_t fCurrentEntry;
+
+   template <typename T>
+   void *getTypeErasedPtrFrom(arrow::ListArray const &array, int32_t entry, RVec<T> &cache)
+   {
+      using ArrowType = typename arrow::stl::ConversionTraits<T>::ArrowType;
+      using ArrayType = typename arrow::TypeTraits<ArrowType>::ArrayType;
+      auto values = reinterpret_cast<ArrayType *>(array.values().get());
+      auto offset = array.value_offset(entry);
+      RVec<T> tmp(const_cast<T *>(values->raw_values()) + offset, array.value_length(entry));
+      cache.swap(tmp);
+      return (void *)(&cache);
+   }
 
 public:
    ArrayPtrVisitor(void **result) : fResult{result}, fCurrentEntry{0} {}
@@ -113,6 +134,37 @@ public:
       fCachedString = array.GetString(fCurrentEntry);
       *fResult = reinterpret_cast<void *>(&fCachedString);
       return arrow::Status::OK();
+   }
+
+   virtual arrow::Status Visit(arrow::ListArray const &array) final
+   {
+      switch (array.value_type()->id()) {
+      case arrow::Type::FLOAT: {
+         *fResult = getTypeErasedPtrFrom(array, fCurrentEntry, fCachedRVecFloat);
+         return arrow::Status::OK();
+      }
+      case arrow::Type::DOUBLE: {
+         *fResult = getTypeErasedPtrFrom(array, fCurrentEntry, fCachedRVecDouble);
+         return arrow::Status::OK();
+      }
+      case arrow::Type::UINT32: {
+         *fResult = getTypeErasedPtrFrom(array, fCurrentEntry, fCachedRVecUInt);
+         return arrow::Status::OK();
+      }
+      case arrow::Type::UINT64: {
+         *fResult = getTypeErasedPtrFrom(array, fCurrentEntry, fCachedRVecULong64);
+         return arrow::Status::OK();
+      }
+      case arrow::Type::INT32: {
+         *fResult = getTypeErasedPtrFrom(array, fCurrentEntry, fCachedRVecInt);
+         return arrow::Status::OK();
+      }
+      case arrow::Type::INT64: {
+         *fResult = getTypeErasedPtrFrom(array, fCurrentEntry, fCachedRVecLong64);
+         return arrow::Status::OK();
+      }
+      default: return arrow::Status::TypeError("Type not supported");
+      }
    }
 
    using ::arrow::ArrayVisitor::Visit;
@@ -214,50 +266,69 @@ namespace RDF {
 /// Helper to get the human readable name of type
 class RDFTypeNameGetter : public ::arrow::TypeVisitor {
 private:
-   std::string fTypeName;
+   std::vector<std::string> fTypeName;
 
 public:
    arrow::Status Visit(const arrow::Int64Type &) override
    {
-      fTypeName = "Long64_t";
+      fTypeName.push_back("Long64_t");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::Int32Type &) override
    {
-      fTypeName = "Long_t";
+      fTypeName.push_back("Long_t");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::UInt64Type &) override
    {
-      fTypeName = "ULong64_t";
+      fTypeName.push_back("ULong64_t");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::UInt32Type &) override
    {
-      fTypeName = "ULong_t";
+      fTypeName.push_back("ULong_t");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::FloatType &) override
    {
-      fTypeName = "float";
+      fTypeName.push_back("float");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::DoubleType &) override
    {
-      fTypeName = "double";
+      fTypeName.push_back("double");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::StringType &) override
    {
-      fTypeName = "string";
+      fTypeName.push_back("string");
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::BooleanType &) override
    {
-      fTypeName = "bool";
+      fTypeName.push_back("bool");
       return arrow::Status::OK();
    }
-   std::string result() { return fTypeName; }
+   arrow::Status Visit(const arrow::ListType &l) override
+   {
+      /// Recursively visit List types and map them to
+      /// an RVec. We accumulate the result of the recursion on
+      /// fTypeName so that we can create the actual type
+      /// when the recursion is done.
+      fTypeName.push_back("ROOT::VecOps::RVec<%s>");
+      return l.value_type()->Accept(this);
+   }
+   std::string result()
+   {
+      // This recursively builds a nested type.
+      std::string result = "%s";
+      char buffer[8192];
+      for (size_t i = 0; i < fTypeName.size(); ++i) {
+         snprintf(buffer, 8192, result.c_str(), fTypeName[i].c_str());
+         result = buffer;
+      }
+      return result;
+   }
 
    using ::arrow::TypeVisitor::Visit;
 };
@@ -274,6 +345,7 @@ public:
    virtual arrow::Status Visit(const arrow::DoubleType &) override { return arrow::Status::OK(); }
    virtual arrow::Status Visit(const arrow::StringType &) override { return arrow::Status::OK(); }
    virtual arrow::Status Visit(const arrow::BooleanType &) override { return arrow::Status::OK(); }
+   virtual arrow::Status Visit(const arrow::ListType &) override { return arrow::Status::OK(); }
 
    using ::arrow::TypeVisitor::Visit;
 };
