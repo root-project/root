@@ -1799,7 +1799,7 @@ XMLNodePointer_t TGDMLWrite::CreateMatrixN(TGDMLMatrix const *matrix)
 {
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "matrix", 0);
    fGdmlE->NewAttr(mainN, 0, "name", matrix->GetName());
-   fGdmlE->NewAttr(mainN, 0, "coldim", TString::Format("%ld", matrix->GetCols()));
+   fGdmlE->NewAttr(mainN, 0, "coldim", TString::Format("%zu", matrix->GetCols()));
    fGdmlE->NewAttr(mainN, 0, "values", matrix->GetMatrixAsString());
    return mainN;
 }
