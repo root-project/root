@@ -10,11 +10,19 @@
 
 ROOT_ADD_COMPILE_OPTIONS(-Wno-class-memaccess)
 
-ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
-
 ROOT_OBJECT_LIBRARY(Dictgen
-  ${sources}
+  BaseSelectionRule.cxx
+  ClassSelectionRule.cxx
+  DictSelectionReader.cxx
+  LinkdefReader.cxx
+  rootcling_impl.cxx
+  Scanner.cxx
+  SelectionRules.cxx
+  TModuleGenerator.cxx
+  VariableSelectionRule.cxx
+  XMLReader.cxx
 )
+
 add_dependencies(Dictgen CLING)
 
 target_include_directories(Dictgen PRIVATE
@@ -22,8 +30,9 @@ target_include_directories(Dictgen PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/res
   ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res
   ${CMAKE_CURRENT_SOURCE_DIR}/../clingutils/res
+  ${CLING_INCLUDE_DIRS}
 )
-target_include_directories(Dictgen PRIVATE ${CLING_INCLUDE_DIRS})
+
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
