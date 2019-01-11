@@ -194,7 +194,14 @@ void ROOT::Experimental::EveGlu::TriangleCollector::ProcessData(const std::vecto
       }
 
       gluTessEndContour(fTess);
-      gluTessEndPolygon(fTess);
+
+      static int except_cnt = 0;
+
+      try {
+         gluTessEndPolygon(fTess);
+      } catch(...) {
+         if (except_cnt++ < 100) printf("Catch exception gluTessEndPolygon!\n");
+      }
    }
 }
 
