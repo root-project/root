@@ -1590,7 +1590,7 @@
 
               matrix = new THREE.Matrix4();
 
-              switch (node.fFinder._typename.charAt[node.fFinder._typename.length-1]) {
+              switch (node.fFinder._typename[node.fFinder._typename.length-1]) {
                  case 'X': matrix.setPosition(new THREE.Vector3(_shift, 0, 0)); break;
                  case 'Y': matrix.setPosition(new THREE.Vector3(0, _shift, 0)); break;
                  case 'Z': matrix.setPosition(new THREE.Vector3(0, 0, _shift)); break;
@@ -2226,7 +2226,7 @@
                   }
                } else {
                   clone.vis = !JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisNone) &&
-                               JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisThis);
+                               JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisThis) && !obj.fFinder;
                   if (!JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisDaughters))
                      clone.depth = JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisOneLevel) ? 1 : 0;
                }

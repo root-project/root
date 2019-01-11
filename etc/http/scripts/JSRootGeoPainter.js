@@ -251,7 +251,7 @@
    }
 
    TGeoPainter.prototype.InitVRControllersGeometry = function() {
-      /// comment
+
       let geometry = new THREE.SphereGeometry(0.025, 18, 36);
       let material = new THREE.MeshBasicMaterial({color: 'grey'});
       let rayMaterial = new THREE.MeshBasicMaterial({color: 'fuchsia'});
@@ -923,6 +923,8 @@
 
    TGeoPainter.prototype.FilterIntersects = function(intersects) {
 
+      if (!intersects.length) return intersects;
+
       // check redirections
       for (var n=0;n<intersects.length;++n)
          if (intersects[n].object.geo_highlight)
@@ -945,25 +947,19 @@
          if (!unique) intersects.splice(n,1);
       }
 
-      if (this.enableX || this.enableY || this.enableZ ) {
+      if (this.enableX || this.enableY || this.enableZ) {
          var clippedIntersects = [];
 
+         function myXor(a,b) { return ( a && !b ) || (!a && b); }
+
          for (var i = 0; i < intersects.length; ++i) {
-            var clipped = false;
-            var point = intersects[i].point;
+            var point = intersects[i].point, special = (intersects[i].object.type == "Points"), clipped = true;
 
-            if (this.enableX && this._clipPlanes[0].normal.dot(point) > this._clipPlanes[0].constant ) {
-               clipped = true;
-            }
-            if (this.enableY && this._clipPlanes[1].normal.dot(point) > this._clipPlanes[1].constant ) {
-               clipped = true;
-            }
-            if (this.enableZ && this._clipPlanes[2].normal.dot(point) > this._clipPlanes[2].constant ) {
-               clipped = true;
-            }
+            if (this.enableX && myXor(this._clipPlanes[0].normal.dot(point) > this._clipPlanes[0].constant, special)) clipped = false;
+            if (this.enableY && myXor(this._clipPlanes[1].normal.dot(point) > this._clipPlanes[1].constant, special)) clipped = false;
+            if (this.enableZ && (this._clipPlanes[2].normal.dot(point) > this._clipPlanes[2].constant)) clipped = false;
 
-            if (clipped)
-               clippedIntersects.push(intersects[i]);
+            if (!clipped) clippedIntersects.push(intersects[i]);
          }
 
          intersects = clippedIntersects;
@@ -1076,10 +1072,14 @@
             c.material.opacity = c.originalOpacity;
             delete c.originalColor;
             delete c.originalOpacity;
-            if (c.normalLineWidth)
-               c.material.linewidth = c.normalLineWidth;
-            if (c.normalMarkerSize)
-               c.material.size = c.normalMarkerSize;
+            if (c.originalWidth) {
+               c.material.linewidth = c.originalWidth;
+               delete c.originalWidth;
+            }
+            if (c.originalSize) {
+               c.material.size = c.originalSize;
+               delete c.originalSize;
+            }
          }
 
       this._selected_mesh = active_mesh;
@@ -1094,10 +1094,14 @@
             a.material.color = new THREE.Color( color || 0xffaa33 );
             a.material.opacity = 1.;
 
-            if (a.hightlightLineWidth)
-               a.material.linewidth = a.hightlightLineWidth;
-            if (a.highlightMarkerSize)
-               a.material.size = a.highlightMarkerSize;
+            if (a.hightlightWidthScale && !JSROOT.browser.isWin) {
+               a.originalWidth = a.material.linewidth;
+               a.material.linewidth *= a.hightlightWidthScale;
+            }
+            if (a.highlightScale) {
+               a.originalSize = a.material.size;
+               a.material.size *= a.highlightScale;
+            }
          }
 
       this.Render3D(0);
@@ -1913,9 +1917,11 @@
       this.Render3D(0);
    }
 
-   /** Assign clipping attributes to the meshes
+   /** Assign clipping attributes to the meshes - supported only for webgl
     * @private */
    TGeoPainter.prototype.updateClipping = function(without_render) {
+      if (!this._webgl) return;
+
       this._clipPlanes[0].constant = this.clipX;
       this._clipPlanes[1].constant = -this.clipY;
       this._clipPlanes[2].constant = this.options._yup ? -this.clipZ : this.clipZ;
@@ -2260,8 +2266,6 @@
 
    TGeoPainter.prototype.PerformDrop = function(obj, itemname, hitem, opt, call_back) {
 
-      console.log('Calling perform drop');
-
       if (obj && (obj.$kind==='TTree')) {
          // drop tree means function call which must extract tracks from provided tree
 
@@ -2281,6 +2285,7 @@
          return func(obj, opt, function(tracks) {
             if (tracks) {
                geo_painter.drawExtras(tracks, "", false); // FIXME: probably tracks should be remembered??
+               this.updateClipping(true);
                geo_painter.Render3D(100);
             }
             JSROOT.CallBack(call_back); // finally callback
@@ -2357,14 +2362,16 @@
          this._toplevel.traverse(function(node) { if (node.geo_object === obj) mesh = node; });
 
          if (mesh) mesh.visible = res; else
-         if (res) this.drawExtras(obj, "", false);
+         if (res) {
+            this.drawExtras(obj, "", false);
+            this.updateClipping(true);
+         }
 
          if (mesh || res) this.Render3D();
       }
 
       return res;
    }
-
 
    TGeoPainter.prototype.drawExtras = function(obj, itemname, add_objects) {
       if (!obj || obj._typename===undefined) return false;
@@ -2403,8 +2410,10 @@
          isany = this.drawExtraShape(obj, itemname);
       }
 
-      if (isany && do_render)
+      if (isany && do_render) {
+         this.updateClipping(true);
          this.Render3D(100);
+      }
 
       return isany;
    }
@@ -2472,10 +2481,7 @@
 
       line.geo_name = itemname;
       line.geo_object = track;
-      if (!JSROOT.browser.isWin) {
-         line.hightlightLineWidth = track_width*3;
-         line.normalLineWidth = track_width;
-      }
+      line.hightlightWidthScale = 2;
 
       this.getExtrasContainer().add(line);
 
@@ -2511,10 +2517,7 @@
 
       line.geo_name = itemname;
       line.geo_object = track;
-      if (!JSROOT.browser.isWin) {
-         line.hightlightLineWidth = track_width*3;
-         line.normalLineWidth = track_width;
-      }
+      line.hightlightWidthScale = 2;
 
       this.getExtrasContainer().add(line);
 
@@ -2539,8 +2542,7 @@
 
       var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[hit.fMarkerColor] || "rgb(0,0,255)");
 
-      mesh.highlightMarkerSize = hit_size*3;
-      mesh.normalMarkerSize = hit_size;
+      mesh.highlightScale = 2;
 
       mesh.geo_name = itemname;
       mesh.geo_object = hit;
@@ -3258,9 +3260,6 @@
             this.addExtra(this.geo_manager.fTracks, "<prnt>/Tracks");
       }
 
-      if (this._webgl)
-         this.updateClipping(true); // do not render
-
       if (this.options.transparency!==0)
          this.changeGlobalTransparency(this.options.transparency, true);
 
@@ -3282,6 +3281,8 @@
          var extras = (this._main_painter ? this._main_painter._extraObjects : null) || this._extraObjects;
          this.drawExtras(extras, "", false);
       }
+
+      this.updateClipping(true); // do not render
 
       this.Render3D(0, true);
 
