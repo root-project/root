@@ -1679,7 +1679,7 @@
 
       var painter = this;
       this._scene.traverse( function (node) {
-         if (node instanceof THREE.Mesh) {
+         if (node.material && (node.material.clippingPlanes!==undefined)) {
             node.material.clipIntersection = painter.clipIntersection;
             node.material.clippingPlanes = [];
             if (painter.enableX) node.material.clippingPlanes.push(painter._clipPlanes[0]);
