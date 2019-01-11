@@ -59,9 +59,7 @@ public:
    /** Configures default draw option for geometry */
    void SetDrawOptions(const std::string &opt) { fDesc.SetDrawOptions(opt); }
 
-   void Show(const RWebDisplayArgs &args = "");
-
-   void Refresh();
+   void Show(const RWebDisplayArgs &args = "", bool always_start_new_browser = false);
 
 };
 
