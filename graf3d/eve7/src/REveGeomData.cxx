@@ -262,7 +262,7 @@ int ROOT::Experimental::REveGeomDescription::MarkVisible(bool on_screen)
       } else {
          auto vol = node->GetVolume();
 
-         if (vol->IsVisible() && !vol->TestAttBit(TGeoAtt::kVisNone)) desc.vis = 1;
+         if (vol->IsVisible() && !vol->TestAttBit(TGeoAtt::kVisNone) && !node->GetFinder()) desc.vis = 1;
          if (!vol->IsVisDaughters())
             desc.visdepth = vol->TestAttBit(TGeoAtt::kVisOneLevel) ? 1 : 0;
       }
@@ -476,13 +476,15 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
    for (auto &sid: fSortMap) {
       fDrawIdCut++; //
       auto &desc = fDesc[sid];
-      if ((viscnt[sid] <= 0) && (desc.vol <= 0)) continue;
+
+      if ((viscnt[sid] <= 0) || (desc.vol <= 0)) continue;
 
       auto shape = fNodes[sid]->GetVolume()->GetShape();
       if (!shape) continue;
 
       // now we need to create TEveGeoPolyShape, which can provide all rendering data
       auto &shape_descr = MakeShapeDescr(shape);
+
       // should not happen, but just in case
       if (shape_descr.nfaces <= 0) {
          R__ERROR_HERE("webeve") << "No faces for the shape " << shape->GetName() << " class " << shape->ClassName();
