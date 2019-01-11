@@ -226,25 +226,86 @@
       return jet_ro;
    }
    
-   EveElements.prototype.makeEveGeometry = function(rnr_data)
+   EveElements.prototype.makeEveGeometryN = function(rnr_data) 
    {
-      // console.log("makeEveGeoShape ", egs);
+      var nVert = rnr_data.idxBuff[1]*3;
+      
+      var vBuf = new Float32Array(nVert*3),
+          nBuf = new Float32Array(nVert*3);
+      
+      for (var i=0;i<nVert;++i) {
+         var pos = rnr_data.idxBuff[i+2];
+         vBuf[i*3] = rnr_data.vtxBuff[pos*3];
+         vBuf[i*3+1] = rnr_data.vtxBuff[pos*3+1];
+         vBuf[i*3+2] = rnr_data.vtxBuff[pos*3+2];
+         
+         var k = i - (i%3);
+         nBuf[i*3] = rnr_data.nrmBuff[k];
+         nBuf[i*3+1] = rnr_data.nrmBuff[k+1];
+         nBuf[i*3+2] = rnr_data.nrmBuff[k+2];
+      }
 
-      var pos_ba = new THREE.BufferAttribute( rnr_data.vtxBuff, 3 );
-      var idx_ba = new THREE.BufferAttribute( rnr_data.idxBuff, 1 );
-
-      var ib_len = rnr_data.idxBuff.length;
-
-      // console.log("ib_len", ib_len, rnr_data.idxBuff[0], rnr_data.idxBuff[1], 3 * rnr_data.idxBuff[1]);
-
-      if (rnr_data.idxBuff[0] != GL.TRIANGLES)   throw "Expect triangles first.";
-      if (2 + 3 * rnr_data.idxBuff[1] != ib_len) throw "Expect single list of triangles in index buffer.";
+      var pos_ba = new THREE.BufferAttribute( vBuf, 3 );
+      var norm_ba = new THREE.BufferAttribute( nBuf, 3 );
 
       var body =  new THREE.BufferGeometry();
       body.addAttribute('position', pos_ba);
-      body.setIndex(idx_ba);
-      body.setDrawRange(2, 3 * rnr_data.idxBuff[1]);
+      // body.addAttribute('normal', norm_ba);
+      
+      body.computeVertexNormals();
 
+      return body;
+   }
+   
+   EveElements.prototype.makeEveGeometry = function(rnr_data, force)
+   {
+      var nVert = rnr_data.idxBuff[1]*3;
+      
+      if (rnr_data.idxBuff[0] != GL.TRIANGLES)  throw "Expect triangles first.";
+      if (2 + nVert != rnr_data.idxBuff.length) throw "Expect single list of triangles in index buffer.";
+
+      if (false) {
+         var body = new THREE.BufferGeometry();
+         body.addAttribute('position', new THREE.BufferAttribute( rnr_data.vtxBuff, 3 ));
+         body.setIndex(new THREE.BufferAttribute( rnr_data.idxBuff, 1 ));
+         body.setDrawRange(2, nVert);
+         // this does not work correctly - draw range ignored when calculating normals   
+         // even worse - shift 2 makes complete logic wrong while wrong triangle are extracted
+         // Let see if it will be fixed https://github.com/mrdoob/three.js/issues/15560
+         body.computeVertexNormals();
+         return body;
+      }
+      
+      var vBuf = new Float32Array(nVert*3); // plain buffer with all vertices
+      var nBuf = null;                      // plaint buffer with normals per vertex
+      
+      if (rnr_data.nrmBuff) {
+         if (rnr_data.nrmBuff.length !== nVert) throw "Expect normals per face";
+         nBuf = new Float32Array(nVert*3);
+      }
+      
+      for (var i=0;i<nVert;++i) {
+         var pos = rnr_data.idxBuff[i+2];
+         vBuf[i*3] = rnr_data.vtxBuff[pos*3];
+         vBuf[i*3+1] = rnr_data.vtxBuff[pos*3+1];
+         vBuf[i*3+2] = rnr_data.vtxBuff[pos*3+2];
+         if (nBuf) {
+            pos = i - i%3;
+            nBuf[i*3] = rnr_data.nrmBuff[pos];
+            nBuf[i*3+1] = rnr_data.nrmBuff[pos+1];
+            nBuf[i*3+2] = rnr_data.nrmBuff[pos+2];
+         }
+      }
+
+      var body = new THREE.BufferGeometry();
+
+      body.addAttribute('position', new THREE.BufferAttribute( vBuf, 3 ));
+      
+      if (nBuf)
+         body.addAttribute('normal', new THREE.BufferAttribute( nBuf, 3 ));
+      else
+         body.computeVertexNormals();   
+      
       // XXXX Fix this. It seems we could have flat shading with usage of simple shaders.
       // XXXX Also, we could do edge detect on the server for outlines.
       // XXXX a) 3d objects - angle between triangles >= 85 degrees (or something);
@@ -253,7 +314,6 @@
       // XXXX triangles is trivial, we could do it before invoking the big guns (if they are even needed).
       // XXXX Oh, and once triangulated, we really don't need to store 3 as number of verts in a poly each time.
       // XXXX Or do we? We might need it for projection stuff.
-      body.computeVertexNormals(); 
 
       return body;
    }
