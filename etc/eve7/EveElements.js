@@ -226,37 +226,6 @@
       return jet_ro;
    }
    
-   EveElements.prototype.makeEveGeometryN = function(rnr_data) 
-   {
-      var nVert = rnr_data.idxBuff[1]*3;
-      
-      var vBuf = new Float32Array(nVert*3),
-          nBuf = new Float32Array(nVert*3);
-      
-      for (var i=0;i<nVert;++i) {
-         var pos = rnr_data.idxBuff[i+2];
-         vBuf[i*3] = rnr_data.vtxBuff[pos*3];
-         vBuf[i*3+1] = rnr_data.vtxBuff[pos*3+1];
-         vBuf[i*3+2] = rnr_data.vtxBuff[pos*3+2];
-         
-         var k = i - (i%3);
-         nBuf[i*3] = rnr_data.nrmBuff[k];
-         nBuf[i*3+1] = rnr_data.nrmBuff[k+1];
-         nBuf[i*3+2] = rnr_data.nrmBuff[k+2];
-      }
-
-      var pos_ba = new THREE.BufferAttribute( vBuf, 3 );
-      var norm_ba = new THREE.BufferAttribute( nBuf, 3 );
-
-      var body =  new THREE.BufferGeometry();
-      body.addAttribute('position', pos_ba);
-      // body.addAttribute('normal', norm_ba);
-      
-      body.computeVertexNormals();
-
-      return body;
-   }
-   
    EveElements.prototype.makeEveGeometry = function(rnr_data, force)
    {
       var nVert = rnr_data.idxBuff[1]*3;
@@ -264,7 +233,7 @@
       if (rnr_data.idxBuff[0] != GL.TRIANGLES)  throw "Expect triangles first.";
       if (2 + nVert != rnr_data.idxBuff.length) throw "Expect single list of triangles in index buffer.";
 
-      if (false) {
+      if (this.useIndexAsIs) {
          var body = new THREE.BufferGeometry();
          body.addAttribute('position', new THREE.BufferAttribute( rnr_data.vtxBuff, 3 ));
          body.setIndex(new THREE.BufferAttribute( rnr_data.idxBuff, 1 ));

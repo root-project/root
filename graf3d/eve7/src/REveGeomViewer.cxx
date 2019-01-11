@@ -89,24 +89,16 @@ void ROOT::Experimental::REveGeomViewer::SelectVolume(const std::string &volname
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-/// Show geometry in new web window
+/// Show or update geometry in web window
+/// If web browser already started - just refresh drawing like "reload" button does
+/// If no web window exists or \param always_start_new_browser configured, starts new window
 
-void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args)
-{
-   fWebWindow->Show(args);
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-/// Refresh geometry drawing on all connected clients
-/// Just emulates press of "reload" button on client side
-/// If none of clients exists - start
-
-void ROOT::Experimental::REveGeomViewer::Refresh()
+void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
 {
    auto number = fWebWindow->NumConnections();
 
-   if (number == 0) {
-      Show();
+   if ((number == 0) || always_start_new_browser) {
+      fWebWindow->Show(args);
    } else {
       for (int n=0;n<number;++n)
          WebWindowCallback(fWebWindow->GetConnectionId(n),"RELOAD");
