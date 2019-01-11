@@ -208,6 +208,18 @@ static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
    getattrofunc oldgetattro = Py_TYPE(pyclass)->tp_getattro;
    Py_TYPE(pyclass)->tp_getattro = PyType_Type.tp_getattro;
 
+   // Add function templates that have not been instantiated to the class dictionary
+   auto cppClass = TClass::GetClass(Cppyy::GetFinalName(scope).c_str());
+   TIter next(cppClass->GetListOfFunctionTemplates());
+   TFunctionTemplate *templ = nullptr;
+   while ((templ = (TFunctionTemplate*)next())) {
+      if (templ->Property() & kIsPublic) { // Discard private templates
+         auto templProxy = TemplateProxy_New(templ->GetName(), pyclass);
+         PyObject_SetAttrString(pyclass, templ->GetName(), (PyObject*)templProxy);
+         Py_DECREF(templProxy);
+      }
+   }
+
 // functions in namespaces are properly found through lazy lookup, so do not
 // create them until needed (the same is not true for data members)
    const Cppyy::TCppIndex_t nMethods =
@@ -316,18 +328,6 @@ static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
 // add a pseudo-default ctor, if none defined
    if ( ! isNamespace && ! hasConstructor )
       cache[ "__init__" ].push_back( new TConstructorHolder( scope, (Cppyy::TCppMethod_t)0 ) );
-
-   // Add function templates that have not been instantiated to the class dictionary
-   auto cppClass = TClass::GetClass(Cppyy::GetFinalName(scope).c_str());
-   TIter next(cppClass->GetListOfFunctionTemplates());
-   TFunctionTemplate *templ = nullptr;
-   while ((templ = (TFunctionTemplate*)next())) {
-      if (templ->Property() & kIsPublic) { // Discard private templates
-         auto templProxy = TemplateProxy_New(templ->GetName(), pyclass);
-         PyObject_SetAttrString(pyclass, templ->GetName(), (PyObject*)templProxy);
-         Py_DECREF(templProxy);
-      }
-   }
 
 // add the methods to the class dictionary
    for ( CallableCache_t::iterator imd = cache.begin(); imd != cache.end(); ++imd ) {
