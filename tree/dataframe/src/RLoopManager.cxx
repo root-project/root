@@ -8,6 +8,7 @@
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TBranchElement.h"
+#include "TEntryList.h"
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled
@@ -246,7 +247,8 @@ void RLoopManager::RunTreeProcessorMT()
 {
 #ifdef R__USE_IMT
    RSlotStack slotStack(fNSlots);
-   auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree);
+   const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
+   auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList);
 
    std::atomic<ULong64_t> entryCount(0ull);
 
@@ -269,7 +271,7 @@ void RLoopManager::RunTreeProcessorMT()
 /// Run event loop over one or multiple ROOT files, in sequence.
 void RLoopManager::RunTreeReader()
 {
-   TTreeReader r(fTree.get());
+   TTreeReader r(fTree.get(), fTree->GetEntryList());
    if (0 == fTree->GetEntriesFast())
       return;
    InitNodeSlots(&r, 0);
