@@ -3,11 +3,22 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-include_directories(${CFITSIO_INCLUDE_DIR})
-
 ROOT_STANDARD_LIBRARY_PACKAGE(FITSIO
-                              HEADERS *.h
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES ${CFITSIO_LIBRARIES}
-                              DEPENDENCIES Hist Gpad Graf Matrix BUILTINS CFITSIO)
+  HEADERS
+    TFITS.h
+  SOURCES
+    TFITS.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  LIBRARIES
+    ${CFITSIO_LIBRARIES}
+  DEPENDENCIES
+    Gpad
+    Graf
+    Hist
+    Matrix
+  BUILTINS
+    CFITSIO
+)
 
+target_include_directories(FITSIO PRIVATE ${CFITSIO_INCLUDE_DIR})
