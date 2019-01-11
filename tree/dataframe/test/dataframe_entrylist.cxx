@@ -85,14 +85,14 @@ TEST(RDFEntryList, Tree)
 }
 
 #ifdef R__USE_IMT
-TEST(RDFEntryList, ChainMT)
+TEST(RDFEntryList, DISABLED_ChainMT)
 {
    ROOT::EnableImplicitMT();
    TestChainWithEntryList();
    ROOT::DisableImplicitMT();
 }
 
-TEST(RDFEntryList, TreeMT)
+TEST(RDFEntryList, DISABLED_TreeMT)
 {
    ROOT::EnableImplicitMT();
    TestTreeWithEntryList();
