@@ -168,6 +168,7 @@ set(TMVA_HEADERS
   TMVA/Volume.h
   TMVA/RTensor.hxx
   TMVA/RTensorUtils.hxx
+  TMVA/RLegacyReader.hxx
 )
 
 #---Assign source files to the implementations -----------------
@@ -237,7 +238,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
                               HEADERS ${TMVA_HEADERS}
                               SOURCES *.cxx ${DNN_FILES} ${DNN_CPU_FILES} DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES  ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
-                              DEPENDENCIES Core MathCore Matrix RIO Hist Tree TreePlayer MLP Minuit XMLIO ${TMVA_DEPENDENCIES}
+                              DEPENDENCIES Core MathCore Matrix RIO Hist Tree TreePlayer MLP Minuit XMLIO ROOTVecOps ROOTDataFrame ${TMVA_DEPENDENCIES}
                               INSTALL_OPTIONS ${installoptions})
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
