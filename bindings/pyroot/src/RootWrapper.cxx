@@ -214,9 +214,14 @@ static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
    TFunctionTemplate *templ = nullptr;
    while ((templ = (TFunctionTemplate*)next())) {
       if (templ->Property() & kIsPublic) { // Discard private templates
-         auto templProxy = TemplateProxy_New(templ->GetName(), pyclass);
-         PyObject_SetAttrString(pyclass, templ->GetName(), (PyObject*)templProxy);
-         Py_DECREF(templProxy);
+         auto templName = templ->GetName();
+         auto attr = PyObject_GetAttrString(pyclass, templName);
+         if (!TemplateProxy_Check(attr)) {
+            auto templProxy = TemplateProxy_New(templName, pyclass);
+            PyObject_SetAttrString(pyclass, templName, (PyObject*)templProxy);
+            Py_DECREF(templProxy);
+         }
+         Py_XDECREF(attr);
       }
    }
 
