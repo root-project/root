@@ -24,27 +24,18 @@
 
    var GL = { POINTS: 0, LINES: 1, LINE_LOOP: 2, LINE_STRIP: 3, TRIANGLES: 4 };
 
-   // var flat_material = new THREE.ShaderMaterial( {
-   //     uniforms: { time: { value: 1.0 }, resolution: { value: new THREE.Vector2() } },
-   //     vertexShader: document.getElementById( 'vertexShader' ).textContent,
-   //     fragmentShader: document.getElementById( 'fragmentShader' ).textContent
-   // } );
-
    function EveElements()
    {
    }
 
    EveElements.prototype.makeHit = function(hit, rnrData) {
-      // console.log("drawiHt ", hit, "this type ", this.viewType);
-      // console.log("marker size ", hit.fMarkerSize)
       var hit_size = 8*rnrData.fMarkerSize,
           size = rnrData.vtxBuff.length/3,
           pnts = new JSROOT.Painter.PointsCreator(size, true, hit_size);
 
-      for (var i=0;i<size;i++) {
+      for (var i=0;i<size;i++)
          pnts.AddPoint(rnrData.vtxBuff[i*3],rnrData.vtxBuff[i*3+1],rnrData.vtxBuff[i*3+2]);
-         // console.log("add vertex ", rnrData.vtxBuff[i*3],rnrData.vtxBuff[i*3+1],rnrData.vtxBuff[i*3+2]);
-      }
+      
       var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[hit.fMarkerColor]);
 
       mesh.highlightScale = 2;
@@ -112,7 +103,6 @@
       line.visible = track.fRnrSelf;
       line.hightlightWidthScale = 2;
 
-      // console.log("make track ", track, line.visible);
       return line;
    }
 
@@ -120,14 +110,12 @@
    {
       // console.log("make jet ", jet);
       var jet_ro = new THREE.Object3D();
-      //var geo = new EveJetConeGeometry(jet.geoBuff);
       var pos_ba = new THREE.BufferAttribute( rnrData.vtxBuff, 3 );
       var N      = rnrData.vtxBuff.length / 3;
-
+      
       var geo_body = new THREE.BufferGeometry();
       geo_body.addAttribute('position', pos_ba);
-      var idcs = [];
-      idcs.push( 0, N-1, 1 );
+      var idcs = [0, N-1, 1];
       for (var i = 1; i < N - 1; ++i)
          idcs.push( 0, i, i + 1 );
       geo_body.setIndex( idcs );
@@ -135,10 +123,9 @@
       
       var geo_rim = new THREE.BufferGeometry();
       geo_rim.addAttribute('position', pos_ba);
-      idcs = [];
-      for (var i = 1; i < N; ++i)
-         idcs.push( i );
-      geo_rim.setIndex( idcs );
+      idcs = new Uint16Array(N-1);
+      for (var i = 1; i < N; ++i) idcs[i-1] = i;
+      geo_rim.setIndex(new THREE.BufferAttribute( idcs, 1 ));
 
       var geo_rays = new THREE.BufferGeometry();
       geo_rays.addAttribute('position', pos_ba);
@@ -182,8 +169,7 @@
 
       var geo_body = new THREE.BufferGeometry();
       geo_body.addAttribute('position', pos_ba);
-      var idcs = [];
-      idcs.push( 0, 2, 1 );
+      var idcs = [0, 2, 1];
       if (N > 3) 
          idcs.push( 0, 3, 2 );
       geo_body.setIndex( idcs );
@@ -191,9 +177,9 @@
       
       var geo_rim = new THREE.BufferGeometry();
       geo_rim.addAttribute('position', pos_ba);
-      idcs = [];
-      for (var i = 1; i < N; ++i) idcs.push( i );
-      geo_rim.setIndex( idcs );
+      idcs = new Uint16Array(N-1);
+      for (var i = 1; i < N; ++i) idcs[i-1] = i;
+      geo_rim.setIndex(new THREE.BufferAttribute( idcs, 1 ));
       
       var geo_rays = new THREE.BufferGeometry();
       geo_rays.addAttribute('position', pos_ba);
@@ -305,10 +291,9 @@
       return egs_ro;
    }
 
-   EveElements.prototype.makePolygonSetProjected = function(psp, rnr_data)
+   /** Keep this old code for reference, arbitrary referencing via index does not work */
+   EveElements.prototype.makePolygonSetProjectedOld = function(psp, rnr_data)
    {
-      // console.log("makePolygonSetProjected ", psp);
-
       var psp_ro = new THREE.Object3D();
       var pos_ba = new THREE.BufferAttribute( rnr_data.vtxBuff, 3 );
       var idx_ba = new THREE.BufferAttribute( rnr_data.idxBuff, 1 );
@@ -364,6 +349,79 @@
 
       return psp_ro;
    }
+   
+   EveElements.prototype.makePolygonSetProjected = function(psp, rnr_data)
+   {
+      if (this.useIndexAsIs)
+         return this.makePolygonSetProjectedOld(psp, rnr_data);
+      
+      var psp_ro = new THREE.Object3D(),
+          ib_len = rnr_data.idxBuff.length,
+          fcol = JSROOT.Painter.root_colors[psp.fMainColor];
+
+      for (var ib_pos = 0; ib_pos < ib_len; )
+      {
+         if (rnr_data.idxBuff[ib_pos] == GL.TRIANGLES) {
+            
+            var nVert = rnr_data.idxBuff[ib_pos + 1] * 3, 
+                vBuf = new Float32Array(nVert*3); // plain buffer with all vertices
+            
+            for (var k=0;k<nVert;++k) {
+               var pos = rnr_data.idxBuff[ib_pos+2+k];
+               if (pos*3 > rnr_data.vtxBuff.length) { vBuf = null; break; }
+               vBuf[k*3] = rnr_data.vtxBuff[pos*3]; 
+               vBuf[k*3+1] = rnr_data.vtxBuff[pos*3+1]; 
+               vBuf[k*3+2] = rnr_data.vtxBuff[pos*3+2]; 
+            }
+            
+            if (vBuf) {
+               var body = new THREE.BufferGeometry();
+               body.addAttribute('position', new THREE.BufferAttribute( vBuf, 3 ));
+               body.computeVertexNormals();
+               var material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, depthWrite: false,
+                                  color:fcol, transparent: true, opacity: 0.4 });
+               psp_ro.add( new THREE.Mesh(body, material) );
+            } else {
+               console.log('Error in makePolygonSetProjected - wrong GL.TRIANGLES indexes');
+            }
+
+            ib_pos += 2 + nVert;
+         }
+         else if (rnr_data.idxBuff[ib_pos] == GL.LINE_LOOP)
+         {
+            var nVert = rnr_data.idxBuff[ib_pos + 1],
+                vBuf = new Float32Array(nVert*3); // plain buffer with all vertices
+            
+            for (var k=0;k<nVert;++k) {
+               var pos = rnr_data.idxBuff[ib_pos+2+k];
+               if (pos*3 > rnr_data.vtxBuff.length) { vBuf = null; break; }
+               vBuf[k*3] = rnr_data.vtxBuff[pos*3]; 
+               vBuf[k*3+1] = rnr_data.vtxBuff[pos*3+1]; 
+               vBuf[k*3+2] = rnr_data.vtxBuff[pos*3+2]; 
+            }
+            
+            if (vBuf) {
+               var body = new THREE.BufferGeometry();
+               body.addAttribute('position', new THREE.BufferAttribute( vBuf, 3 ));
+               var line_mat = new THREE.LineBasicMaterial({color:fcol });
+               psp_ro.add( new THREE.LineLoop(body, line_mat) );
+            } else {
+               console.log('Error in makePolygonSetProjected - wrong GL.LINE_LOOP indexes');
+            }
+
+            ib_pos += 2 + nVert;
+         }
+         else
+         {
+            console.error("Unexpected primitive type " + rnr_data.idxBuff[ib_pos]);
+            break;
+         }
+         
+      }
+
+      return psp_ro;
+   }
+   
 
    JSROOT.EVE.EveElements = EveElements;
 

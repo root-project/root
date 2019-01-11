@@ -46,6 +46,7 @@ sap.ui.define([
          this._load_scripts = true;
          // only when scripts loaded, one could create objects
          this.creator = new JSROOT.EVE.EveElements();
+         this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
          this.checkScences();
       },
       
