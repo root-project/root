@@ -43,7 +43,7 @@ protected:
    bool fHeadless{false};         ///<! is browser runs in headless mode
    THttpServer *fServer{nullptr}; ///<! http server which handle all requests
    int fWidth{0};                 ///<! custom window width, when not specified - used RWebWindow geometry
-   int fHeight{0};                ///<! custom window width, when not specified - used RWebWindow geometry
+   int fHeight{0};                ///<! custom window height, when not specified - used RWebWindow geometry
    std::string fUrlOpt;           ///<! extra URL options, which are append to window URL
    std::string fExec;             ///<! string to run browser, used with kCustom type
    void *fDriverData{nullptr};    ///<! special data delivered to driver, can be used for QWebEngine
@@ -56,7 +56,9 @@ public:
    RWebDisplayArgs(const char *browser);
 
    void SetBrowserKind(const std::string &kind);
+   /// set browser kind, see EBrowserKind for allowed values
    void SetBrowserKind(EBrowserKind kind) { fKind = kind; }
+   /// returns configured browser kind, see EBrowserKind for supported values
    EBrowserKind GetBrowserKind() const { return fKind; }
    std::string GetBrowserName() const;
 
@@ -72,35 +74,52 @@ public:
       return (GetBrowserKind() == kNative) || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kChrome);
    }
 
+   /// set window url
    void SetUrl(const std::string &url) { fUrl = url; }
+   /// returns window url
    std::string GetUrl() const { return fUrl; }
 
+   /// set window url options
    void SetUrlOpt(const std::string &opt) { fUrlOpt = opt; }
+   /// returns window url options
    std::string GetUrlOpt() const { return fUrlOpt; }
 
+   /// returns window url with append options
    std::string GetFullUrl() const;
 
+   /// set headless mode
    void SetHeadless(bool on = true) { fHeadless = on; }
+   /// returns headless mode
    bool IsHeadless() const { return fHeadless; }
 
-   void SetHttpServer(THttpServer *serv) { fServer = serv; }
-   THttpServer *GetHttpServer() const { return fServer; }
-
+   /// set preferable web window width
    void SetWidth(int w = 0) { fWidth = w; }
+   /// set preferable web window height
    void SetHeight(int h = 0) { fHeight = h; }
 
+   /// returns preferable web window width
    int GetWidth() const { return fWidth; }
+   /// returns preferable web window height
    int GetHeight() const { return fHeight; }
 
+   /// set custom executable to start web browser
    void SetCustomExec(const std::string &exec)
    {
       SetBrowserKind(kCustom);
       fExec = exec;
    }
 
+   /// returns custom executable to start web browser
    std::string GetCustomExec() const { return GetBrowserKind() == kCustom ? fExec : ""; }
 
+   /// set http server instance, used for window display
+   void SetHttpServer(THttpServer *serv) { fServer = serv; }
+   /// returns http server instance, used for window display
+   THttpServer *GetHttpServer() const { return fServer; }
+
+   /// [internal] set web-driver data, used to start window
    void SetDriverData(void *data) { fDriverData = data; }
+   /// [internal] returns web-driver data, used to start window
    void *GetDriverData() const { return fDriverData; }
 };
 
