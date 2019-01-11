@@ -31,6 +31,7 @@
 #include "TGlobal.h"
 #include "DllImport.h"
 #include "TFunctionTemplate.h"
+#include "TCollection.h"
 
 // Standard
 #include <map>
@@ -210,9 +211,7 @@ static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
 
    // Add function templates that have not been instantiated to the class dictionary
    auto cppClass = TClass::GetClass(Cppyy::GetFinalName(scope).c_str());
-   TIter next(cppClass->GetListOfFunctionTemplates());
-   TFunctionTemplate *templ = nullptr;
-   while ((templ = (TFunctionTemplate*)next())) {
+   for (auto templ : ROOT::Detail::TRangeStaticCast<TFunctionTemplate>(cppClass->GetListOfFunctionTemplates())) {
       if (templ->Property() & kIsPublic) { // Discard private templates
          auto templName = templ->GetName();
          auto attr = PyObject_GetAttrString(pyclass, templName);
