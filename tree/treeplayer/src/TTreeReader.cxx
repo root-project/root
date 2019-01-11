@@ -328,7 +328,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       return fEntryStatus;
    }
 
-   if (fTree->GetEntryList() && !TestBit(kBitHaveWarnedAboutEntryListAttachedToTTree)) {
+   if (!fEntryList && fTree->GetEntryList() && !TestBit(kBitHaveWarnedAboutEntryListAttachedToTTree)) {
       Warning("SetEntryBase()",
               "The TTree / TChain has an associated TEntryList. "
               "TTreeReader ignores TEntryLists unless you construct the TTreeReader passing a TEntryList.");
