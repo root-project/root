@@ -3,16 +3,31 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-include_directories(${X11_INCLUDE_DIR})
-
 ROOT_STANDARD_LIBRARY_PACKAGE(GX11
-                              HEADERS T*.h
-                              SOURCES *.cxx  *.c
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Core
-                              LIBRARIES Core ${X11_LIBRARIES} ${X11_Xpm_LIB} ${CMAKE_THREAD_LIBS_INIT}
-                              INSTALL_OPTIONS FILTER "inc/X11/" FILTER "X11$")
+  HEADERS
+    TGX11.h
+  SOURCES
+    src/gifdecode.c
+    src/gifencode.c
+    src/gifquantize.c
+    src/GX11Gui.cxx
+    src/Rotated.cxx
+    src/TGX11.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  LIBRARIES
+    ${X11_LIBRARIES}
+    ${X11_Xpm_LIB}
+    ${CMAKE_THREAD_LIBS_INIT}
+  DEPENDENCIES
+    Core
+  INSTALL_OPTIONS
+    FILTER "inc/X11/"
+    FILTER "X11$"
+)
+
+target_include_directories(GX11 PRIVATE ${X11_INCLUDE_DIR})
 
 if(AIX)
-  include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+  target_include_directories(GX11 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 endif()

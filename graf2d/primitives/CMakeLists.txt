@@ -3,13 +3,37 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-
-ROOT_GLOB_HEADERS(GPrim_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/R*.hxx)
-ROOT_GLOB_SOURCES(src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/src/*.cxx)
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGraphicsPrimitives
-                              HEADERS ${GPrim_v7_dict_headers}
-                              SOURCES ${src}
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES RIO Core)
+  HEADERS
+    ROOT/RBox.hxx
+    ROOT/RColor.hxx
+    ROOT/RDisplayItem.hxx
+    ROOT/RDrawingAttr.hxx
+    ROOT/RDrawingOptsBase.hxx
+    ROOT/RLine.hxx
+    ROOT/RMarker.hxx
+    ROOT/RPalette.hxx
+    ROOT/RStringEnumAttr.hxx
+    ROOT/RStyle.hxx
+    ROOT/RText.hxx
+  SOURCES
+    v7/src/RBox.cxx
+    v7/src/RColor.cxx
+    v7/src/RDisplayItem.cxx
+    v7/src/RDrawingAttr.cxx
+    v7/src/RDrawingOptsBase.cxx
+    v7/src/RLine.cxx
+    v7/src/RMarker.cxx
+    v7/src/RPalette.cxx
+    v7/src/RStringEnumAttr.cxx
+    v7/src/RStyle.cxx
+    v7/src/RStyleReader.cxx
+    v7/src/RText.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  DEPENDENCIES
+    Core
+    RIO
+)
 
 ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
