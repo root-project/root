@@ -8,7 +8,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
 
 using ROOT::Detail::RDF::RRangeBase;
@@ -25,7 +24,5 @@ void RRangeBase::ResetCounters()
    fHasStopped = false;
 }
 
-RRangeBase::~RRangeBase()
-{
-   fLoopManager->Deregister(this);
-}
+// outlined to pin virtual table
+RRangeBase::~RRangeBase() { }

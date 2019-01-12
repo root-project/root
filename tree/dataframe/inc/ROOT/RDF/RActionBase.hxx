@@ -42,11 +42,12 @@ bool CheckIfDefaultOrDSColumn(const std::string &name,
 } // namespace GraphDrawing
 
 class RActionBase {
-private:
+protected:
    /// A raw pointer to the RLoopManager at the root of this functional graph.
    /// Never null: children nodes have shared ownership of parent nodes in the graph.
    RLoopManager *fLoopManager;
 
+private:
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
    bool fHasRun = false;
    const ColumnNames_t fColumnNames;
