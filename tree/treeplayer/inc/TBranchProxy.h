@@ -97,13 +97,10 @@ namespace Detail {
 
       TNotifyLink<TBranchProxy> fNotify; // Callback object used by the TChain to update this proxy
 
-      TTree   *fLastTree; // TTree containing the last entry read
       Long64_t fRead;     // Last entry read
 
       void    *fWhere;    // memory location of the data
       TVirtualCollectionProxy *fCollection; // Handle to the collection containing the data chunk.
-
-      Int_t    fCurrentTreeNumber;
 
    public:
       virtual void Print();
