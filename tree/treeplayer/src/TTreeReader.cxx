@@ -16,7 +16,6 @@
 #include "TEntryList.h"
 #include "TTreeCache.h"
 #include "TTreeReaderValue.h"
-#include "ROOT/RMakeUnique.hxx"
 
 
 // clang-format off
@@ -177,11 +176,17 @@ using namespace ROOT::Internal;
 constexpr const char * const TTreeReader::fgEntryStatusText[TTreeReader::kEntryBeyondEnd + 1];
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.  Call SetTree to connect to a TTree.
+
+TTreeReader::TTreeReader() : fNotify(this) {}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Access data from tree.
 
 TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
    fTree(tree),
-   fEntryList(entryList)
+   fEntryList(entryList),
+   fNotify(this)
 {
    if (!fTree) {
       Error("TTreeReader", "TTree is NULL!");
@@ -196,7 +201,8 @@ TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
 /// found, or if it is not a TTree, IsZombie() will return true.
 
 TTreeReader::TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList /*= nullptr*/):
-   fEntryList(entryList)
+   fEntryList(entryList),
+   fNotify(this)
 {
    if (!dir) dir = gDirectory;
    dir->GetObject(keyname, fTree);
@@ -212,8 +218,8 @@ TTreeReader::~TTreeReader()
            i = fValues.begin(), e = fValues.end(); i != e; ++i) {
       (*i)->MarkTreeReaderUnavailable();
    }
-   if (fTree && fNotify)
-      fNotify->RemoveLink(*fTree);
+   if (fTree && fNotify.IsLinked())
+      fNotify.RemoveLink(*fTree);
 
    // Need to clear the map of proxies before deleting the director otherwise
    // they will have a dangling pointer.
@@ -242,9 +248,8 @@ void TTreeReader::Initialize()
 
    fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
 
-   if (!fNotify) {
-      fNotify = std::make_unique<TNotifyLink<TTreeReader>>(this);
-      fNotify->PrependLink(*fTree);
+   if (!fNotify.IsLinked()) {
+      fNotify.PrependLink(*fTree);
 
       if (fTree->GetTree()) {
          // The current TTree is already available.
