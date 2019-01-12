@@ -16,6 +16,7 @@
 #include "ROOT/RDF/NodesUtils.hxx" // InitRDFValues
 #include "ROOT/RDF/Utils.hxx"      // ColumnNames_t
 #include "ROOT/RDF/RColumnValue.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 
 #include <cstddef> // std::size_t
 #include <memory>
@@ -117,6 +118,9 @@ public:
 
    RActionCRTP(const RActionCRTP &) = delete;
    RActionCRTP &operator=(const RActionCRTP &) = delete;
+   // must call Deregister here, before fPrevDataFrame is destroyed,
+   // otherwise if fPrevDataFrame is fLoopManager we get a use after delete
+   ~RActionCRTP() { fLoopManager->Deregister(this); }
 
    Helper &GetHelper() { return fHelper; }
 
