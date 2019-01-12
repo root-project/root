@@ -5199,6 +5199,7 @@ namespace genreflex {
                        bool interpreteronly,
                        bool doSplit,
                        bool isDeep,
+                       bool isCxxmodule,
                        bool writeEmptyRootPCM,
                        bool selSyntaxOnly,
                        bool noIncludePaths,
@@ -5214,6 +5215,9 @@ namespace genreflex {
       argvVector.push_back(string2charptr(verbosity));
       argvVector.push_back(string2charptr("-f"));
       argvVector.push_back(string2charptr(ofilename));
+
+      if (isCxxmodule)
+         argvVector.push_back(string2charptr("-cxxmodule"));
 
       // Extract the path to the dictionary
       std::string dictLocation;
@@ -5346,6 +5350,7 @@ namespace genreflex {
                            bool interpreteronly,
                            bool doSplit,
                            bool isDeep,
+                           bool isCxxmodule,
                            bool writeEmptyRootPCM,
                            bool selSyntaxOnly,
                            bool noIncludePaths,
@@ -5382,6 +5387,7 @@ namespace genreflex {
                                           interpreteronly,
                                           doSplit,
                                           isDeep,
+                                          isCxxmodule,
                                           writeEmptyRootPCM,
                                           selSyntaxOnly,
                                           noIncludePaths,
@@ -5501,6 +5507,7 @@ int GenReflexMain(int argc, char **argv)
                        VERBOSE,
                        QUIET,
                        SILENT,
+                       CXXMODULE,
                        WRITEEMPTYROOTPCM,
                        HELP,
                        FAILONWARNINGS,
@@ -5752,6 +5759,15 @@ int GenReflexMain(int argc, char **argv)
       },
 
       {
+         CXXMODULE,
+         NOTYPE ,
+         "" , "cxxmodule",
+         ROOT::option::Arg::None,
+         "--cxxmodule\tGenerates a PCM for C++ Modules.\n"
+      },
+
+
+      {
          HELP,
          NOTYPE,
          "h" , "help",
@@ -5922,6 +5938,8 @@ int GenReflexMain(int argc, char **argv)
       }
    }
 
+   bool isCxxmodule = options[CXXMODULE];
+
    bool multidict = false;
    if (options[MULTIDICT]) multidict = true;
 
@@ -6014,6 +6032,7 @@ int GenReflexMain(int argc, char **argv)
                                     interpreteronly,
                                     doSplit,
                                     isDeep,
+                                    isCxxmodule,
                                     writeEmptyRootPCM,
                                     selSyntaxOnly,
                                     noIncludePaths,
@@ -6036,6 +6055,7 @@ int GenReflexMain(int argc, char **argv)
                                         interpreteronly,
                                         doSplit,
                                         isDeep,
+                                        isCxxmodule,
                                         writeEmptyRootPCM,
                                         selSyntaxOnly,
                                         noIncludePaths,
