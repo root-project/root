@@ -16,6 +16,7 @@
 #include "ROOT/RDF/NodesUtils.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h"
@@ -69,6 +70,9 @@ public:
 
    RFilter(const RFilter &) = delete;
    RFilter &operator=(const RFilter &) = delete;
+   // must call Deregister here, before fPrevDataFrame is destroyed,
+   // otherwise if fPrevDataFrame is fLoopManager we get a use after delete
+   ~RFilter() { fLoopManager->Deregister(this); }
 
    bool CheckFilters(unsigned int slot, Long64_t entry) final
    {

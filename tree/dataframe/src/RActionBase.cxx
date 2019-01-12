@@ -16,7 +16,5 @@ using namespace ROOT::Internal::RDF;
 RActionBase::RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RBookedCustomColumns &customColumns)
    : fLoopManager(lm), fNSlots(lm->GetNSlots()), fColumnNames(colNames), fCustomColumns(customColumns) { }
 
-RActionBase::~RActionBase()
-{
-   fLoopManager->Deregister(this);
-}
+// outlined to pin virtual table
+RActionBase::~RActionBase() {}
