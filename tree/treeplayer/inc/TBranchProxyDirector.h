@@ -13,16 +13,9 @@
 #define ROOT_TBranchProxyDirector
 
 #include "Rtypes.h"
-#include <list>
 #include <vector>
+#include <list>
 #include <algorithm>
-
-
-#ifdef R__OLDHPACC
-namespace std {
-   using ::list;
-}
-#endif
 
 class TH1F;
 class TTree;
