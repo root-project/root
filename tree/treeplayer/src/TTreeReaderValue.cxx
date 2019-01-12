@@ -194,6 +194,10 @@ ROOT::Internal::TTreeReaderValueBase::ProxyReadDefaultImpl() {
       }
       return (this->*fProxyReadFunc)();
    }
+
+   // If somehow the Setup fails call the original Read to
+   // have the proper error handling (message only if the Setup fails
+   // and the current proxy entry is different than the TTree's current entry)
    if (fProxy->Read()) {
       fReadStatus = kReadSuccess;
    } else {
@@ -216,6 +220,8 @@ std::string ROOT::Internal::TTreeReaderValueBase::GetElementTypeName(const std::
 /// The TTreeReader has switched to a new TTree. Update the leaf.
 
 void ROOT::Internal::TTreeReaderValueBase::NotifyNewTree(TTree* newTree) {
+   // Since the TTree structure might have change, let's make sure we
+   // use the right reading function.
    fProxyReadFunc = &TTreeReaderValueBase::ProxyReadDefaultImpl;
 
    if (!fHaveLeaf || !newTree) {
