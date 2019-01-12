@@ -150,7 +150,7 @@ public:
       "last entry loop has reached its end"
    };
 
-   TTreeReader() = default;
+   TTreeReader();
 
    TTreeReader(TTree* tree, TEntryList* entryList = nullptr);
    TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
@@ -284,7 +284,7 @@ private:
    TEntryList* fEntryList = nullptr; ///< entry list to be used
    EEntryStatus fEntryStatus = kEntryNotLoaded; ///< status of most recent read request
    ELoadTreeStatus fLoadTreeStatus = kLoadTreeNone; ///< Indicator on how LoadTree was called 'last' time.
-   std::unique_ptr<TNotifyLink<TTreeReader>> fNotify; // Callback object used by the TChain to update this proxy
+   TNotifyLink<TTreeReader> fNotify; // Callback object used by the TChain to update this proxy
    ROOT::Internal::TBranchProxyDirector* fDirector = nullptr; ///< proxying director, owned
    std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director
    NamedProxies_t fProxies; ///< attached ROOT::TNamedBranchProxies; owned
