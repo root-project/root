@@ -30,7 +30,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy() :
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
    fNotify(this),
-   fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
+   fRead(-1), fWhere(0),fCollection(0)
 {
    // Constructor.
 };
@@ -42,7 +42,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char*
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
    fNotify(this),
-   fLastTree(0), fRead(-1),  fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
+   fRead(-1),  fWhere(0),fCollection(0)
 {
    // Constructor.
 
@@ -59,7 +59,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char 
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
    fNotify(this),
-   fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
+   fRead(-1), fWhere(0),fCollection(0)
 {
    // Constructor.
 
@@ -79,7 +79,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBr
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
    fNotify(this),
-   fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
+   fRead(-1), fWhere(0),fCollection(0)
 {
    // Constructor.
 
@@ -98,7 +98,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* br
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
    fNotify(this),
-   fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
+   fRead(-1), fWhere(0),fCollection(0)
 {
    // Constructor.
 
@@ -131,7 +131,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char*
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
    fNotify(this),
-   fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
+   fRead(-1), fWhere(0),fCollection(0)
 {
    // Constructor.
 
@@ -161,10 +161,8 @@ void ROOT::Detail::TBranchProxy::Reset()
    fIsClone = false;
    fInitialized = false;
    fHasLeafCount = false;
-   fLastTree = 0;
    delete fCollection;
    fCollection = 0;
-   fCurrentTreeNumber = -1;
 }
 
 void ROOT::Detail::TBranchProxy::Print()
@@ -252,7 +250,7 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
 
       // This is not sufficient for following pointers
 
-   } else if (!fBranch || fCurrentTreeNumber != fDirector->GetTree()->GetTreeNumber() || fLastTree != fDirector->GetTree()) {
+   } else if (!fBranch) {
 
       // This does not allow (yet) to precede the branch name with
       // its mother's name
@@ -481,8 +479,6 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
    }
    if (fClass==TClonesArray::Class()) fIsClone = true;
    if (fWhere!=0) {
-      fLastTree = fDirector->GetTree();
-      fCurrentTreeNumber = fLastTree->GetTreeNumber();
       fInitialized = true;
       return true;
    } else {
