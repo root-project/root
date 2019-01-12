@@ -95,7 +95,7 @@ namespace Detail {
          TLeaf   *fLeafCount;    // eventual auxiliary leaf (for example holding the size)
       };
 
-      std::unique_ptr<TNotifyLink<TBranchProxy>> fNotify; // Callback object used by the TChain to update this proxy
+      TNotifyLink<TBranchProxy> fNotify; // Callback object used by the TChain to update this proxy
 
       TTree   *fLastTree; // TTree containing the last entry read
       Long64_t fRead;     // Last entry read

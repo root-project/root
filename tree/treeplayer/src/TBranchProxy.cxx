@@ -19,7 +19,6 @@ of the autoloading of branches as well as all the generic setup routine.
 #include "TBranchElement.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
-#include <ROOT/RMakeUnique.hxx>
 
 ClassImp(ROOT::Detail::TBranchProxy);
 
@@ -30,6 +29,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy() :
    fHasLeafCount(false), fBranchName(""), fParent(0), fDataMember(""),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
+   fNotify(this),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
 {
    // Constructor.
@@ -41,6 +41,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char*
    fHasLeafCount(false), fBranchName(top), fParent(0), fDataMember(""),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
+   fNotify(this),
    fLastTree(0), fRead(-1),  fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
 {
    // Constructor.
@@ -57,6 +58,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char 
    fHasLeafCount(false), fBranchName(top), fParent(0), fDataMember(membername),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
+   fNotify(this),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
 {
    // Constructor.
@@ -76,6 +78,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBr
    fHasLeafCount(false), fBranchName(top), fParent(parent), fDataMember(membername),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
+   fNotify(this),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
 {
    // Constructor.
@@ -94,6 +97,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* br
    fHasLeafCount(false), fBranchName(branch->GetName()), fParent(0), fDataMember(membername),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
+   fNotify(this),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
 {
    // Constructor.
@@ -126,6 +130,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char*
    fHasLeafCount(false), fBranchName(GetFriendBranchName(boss->GetTree(), branch, branchname)), fParent(0), fDataMember(membername),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
+   fNotify(this),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
 {
    // Constructor.
@@ -136,8 +141,8 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char*
 ROOT::Detail::TBranchProxy::~TBranchProxy()
 {
    // Typical Destructor
-   if (fNotify && fDirector && fDirector->GetTree())
-      fNotify->RemoveLink(*(fDirector->GetTree()));
+   if (fNotify.IsLinked() && fDirector && fDirector->GetTree())
+      fNotify.RemoveLink(*(fDirector->GetTree()));
 }
 
 void ROOT::Detail::TBranchProxy::Reset()
@@ -181,9 +186,8 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
    if (!fDirector->GetTree()) {
       return false;
    }
-   if (!fNotify) {
-      fNotify = std::make_unique<TNotifyLink<TBranchProxy>>(this);
-      fNotify->PrependLink(*fDirector->GetTree());
+   if (!fNotify.IsLinked()) {
+      fNotify.PrependLink(*fDirector->GetTree());
    }
    if (fParent) {
 

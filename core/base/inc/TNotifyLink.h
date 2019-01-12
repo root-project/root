@@ -35,11 +35,16 @@ protected:
    TObject         *fNext = nullptr;
 
 public:
+   // TTree status bits
+   enum EStatusBits {
+      kLinked = BIT(11) // Used when the TNotifyLink is connected to a TTree.
+   };
 
    void Clear(Option_t * /*option*/ ="") {
       auto current = this;
       do {
          auto next = dynamic_cast<TNotifyLinkBase*>(fNext);
+         current->ResetBit(kLinked);
          current->fPrevious = nullptr;
          current->fNext = nullptr;
          current = next;
@@ -48,6 +53,8 @@ public:
 
    template <class Notifier>
    void PrependLink(Notifier &notifier) {
+      SetBit(kLinked);
+
       fNext = notifier.GetNotify();
       if (auto link = dynamic_cast<TNotifyLinkBase*>(fNext)) {
          link->fPrevious = this;
@@ -57,6 +64,8 @@ public:
 
    template <class Notifier>
    void RemoveLink(Notifier &notifier) {
+      ResetBit(kLinked);
+
       if (notifier.GetNotify() == this) {
          R__ASSERT(fPrevious == nullptr && "The TNotifyLink head node should not have a previous element.");
          notifier.SetNotify(fNext);
@@ -68,6 +77,10 @@ public:
       }
       fPrevious = nullptr;
       fNext = nullptr;
+   }
+
+   Bool_t IsLinked() {
+      return TestBit(kLinked);
    }
 
    ClassDef(TNotifyLinkBase, 0);
