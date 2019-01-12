@@ -6,6 +6,6 @@
 #pragma link C++ nestedclasses;
 #pragma link C++ nestedtypedef;
 
-#pragma link C++ class ROOT::Math::IpoptMinimizer;
+#pragma link C++ class ROOT::Math::Experimental::IpoptMinimizer;
 
 #endif //__CINT__

@@ -35,6 +35,8 @@
 namespace ROOT {
 
 namespace Math {
+
+namespace Experimental {
 /**
    enumeration specifying the types of Ipopt solvers
    @ingroup MultiMin
@@ -437,6 +439,8 @@ protected:
    Ipopt::SmartPtr<InternalTNLP> fInternalTNLP;
    ClassDef(IpoptMinimizer, 0) //
 };
+
+} // end namespace Experimental
 
 } // end namespace Math
 

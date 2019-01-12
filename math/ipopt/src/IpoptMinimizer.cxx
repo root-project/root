@@ -7,6 +7,7 @@
 
 using namespace ROOT;
 using namespace ROOT::Math;
+using namespace ROOT::Math::Experimental;
 using namespace Ipopt;
 using namespace ROOT::Fit;
 //_______________________________________________________________________
@@ -20,6 +21,8 @@ IpoptMinimizer::IpoptMinimizer() : BasicMinimizer()
 //_______________________________________________________________________
 IpoptMinimizer::IpoptMinimizer(const char *type)
 {
+   fIpotApp = IpoptApplicationFactory();
+   fInternalTNLP = new InternalTNLP(this);
    fIpotApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
    fIpotApp->Options()->SetStringValue("linear_solver", type);
 }
