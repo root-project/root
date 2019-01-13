@@ -250,7 +250,7 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
 
       // This is not sufficient for following pointers
 
-   } else if (!fBranch) {
+   } else {
 
       // This does not allow (yet) to precede the branch name with
       // its mother's name

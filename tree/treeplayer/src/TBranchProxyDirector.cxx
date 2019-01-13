@@ -35,7 +35,7 @@ namespace ROOT {
 namespace Internal {
 
    // Helper function to call Reset on each TBranchProxy
-   void Reset(Detail::TBranchProxy *x) { x->Reset(); }
+   void NotifyDirected(Detail::TBranchProxy *x) { x->Notify(); }
 
    // Helper function to call SetReadEntry on all TFriendProxy
    void ResetReadEntry(TFriendProxy *fp) { fp->ResetReadEntry(); }
@@ -136,13 +136,17 @@ namespace Internal {
 
       TTree* oldtree = fTree;
       fTree = newtree;
+      Notify();
+      return oldtree;
+   }
+
+   Bool_t TBranchProxyDirector::Notify() {
       fEntry = -1;
-      //if (fInitialized) fInitialized = setup();
-      //fprintf(stderr,"calling SetTree for %p\n",this);
-      for_each(fDirected.begin(),fDirected.end(),Reset);
+
+      for_each(fDirected.begin(),fDirected.end(),NotifyDirected);
       Update update(fTree);
       for_each(fFriends.begin(),fFriends.end(),update);
-      return oldtree;
+      return kTRUE;
    }
 
 } // namespace Internal
