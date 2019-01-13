@@ -290,7 +290,7 @@ Bool_t TTreeReader::Notify()
       SetBit(kBitHaveWarnedAboutEntryListAttachedToTTree);
    }
 
-   fDirector->SetTree(fTree->GetTree());
+   fDirector->Notify();
    if (fProxiesSet) {
       for (auto value: fValues) {
          value->NotifyNewTree(fTree->GetTree());
@@ -473,7 +473,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       // The system is robust against issues with TTrees associated to the chain
       // when they are not at the end of it.
       if (loadResult == -3 && TestBit(kBitIsChain) && !fTree->GetTree()) {
-         fDirector->SetTree(fTree->GetTree());
+         fDirector->Notify();
          if (fProxiesSet) {
             for (auto value: fValues) {
                value->NotifyNewTree(fTree->GetTree());
@@ -487,7 +487,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       }
 
       if (loadResult == -2) {
-         fDirector->SetTree(fTree->GetTree());
+         fDirector->Notify();
          if (fProxiesSet) {
             for (auto value: fValues) {
                value->NotifyNewTree(fTree->GetTree());
@@ -506,7 +506,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       if (loadResult == -4) {
          // The TChainElement corresponding to the entry is missing or
          // the TTree is missing from the file.
-         fDirector->SetTree(fTree->GetTree());
+         fDirector->Notify();
          if (fProxiesSet) {
             for (auto value: fValues) {
                value->NotifyNewTree(fTree->GetTree());
