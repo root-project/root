@@ -36,7 +36,7 @@ namespace Internal{
 
       //This class could actually be the selector itself.
       TTree   *fTree;  // TTree we are currently looking at.
-      Long64_t fEntry; // Entry currently being read.
+      Long64_t fEntry; // Entry currently being read (in the local TTree rather than the TChain)
 
       std::list<Detail::TBranchProxy*> fDirected;
       std::vector<TFriendProxy*> fFriends;
@@ -52,11 +52,18 @@ namespace Internal{
       void     Attach(Detail::TBranchProxy* p);
       void     Attach(TFriendProxy* f);
       TH1F*    CreateHistogram(const char *options);
+
+      /// Return the current 'local' entry number; i.e. in the 'local' TTree rather than the TChain.
+      /// This value will be passed directly to TBranch::GetEntry.
       Long64_t GetReadEntry() const { return fEntry; }
+
       TTree*   GetTree() const { return fTree; };
       // void   Print();
+
+      /// Move to a new entry to read
+      /// entry is the 'local' entry number; i.e. in the 'local' TTree rather than the TChain.
+      /// This value will be passed directly to TBranch::GetEntry.
       void     SetReadEntry(Long64_t entry) {
-         // move to a new entry to read
          fEntry = entry;
          if (!fFriends.empty()) {
             std::for_each(fFriends.begin(), fFriends.end(), ResetReadEntry);
