@@ -15,7 +15,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Ipopt
                               LIBRARIES ${IPOPT_LIBRARIES}
                               DEPENDENCIES MathCore MathMore)
 
-#ROOT_ADD_TEST_SUBDIRECTORY(test)
+ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 
 

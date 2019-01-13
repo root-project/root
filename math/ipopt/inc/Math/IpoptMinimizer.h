@@ -41,6 +41,7 @@ namespace Experimental {
    enumeration specifying the types of Ipopt solvers
    @ingroup MultiMin
 */
+// Only supported MUMPS (MUltifrontal Massively Parallel Sparse direct Solver)
 enum EIpoptMinimizerSolver { kMa27, kMa57, kMa77, kMa86, kMa97, kPardiso, kWsmp, kMumps };
 
 //_____________________________________________________________________________________
