@@ -27,6 +27,8 @@ in this Software without prior written authorization from the X Consortium.
 
 */
 
+#define USE_CHMOD
+
 #if !defined(USGISH) || !defined(_SEQUENT_) || !defined(USE_CHMOD)
 #define _DEFAULT_SOURCE /* def.h includes sys/stat and we need _BSD_SOURCE for fchmod see man fchmod */
 #endif
@@ -99,7 +101,7 @@ char *targetlist[ MAXFILES ];
 char *includedirs[ MAXDIRS + 1 ];
 char *notdotdot[ MAXDIRS ];
 char *objprefix = "";
-char *objsuffix = OBJSUFFIX;
+char *objsuffix = ".o";
 char *startat = "# DO NOT DELETE";
 char  *isysroot = "";
 int width = 78;
@@ -397,10 +399,10 @@ char **argv;
             }
          }
       }
-#else /* !__EMX__, does not use INCLUDEDIR at all */
+#else /* !__EMX__ */
       if (incp >= includedirs + MAXDIRS)
          fatalerr("Too many -I flags.\n");
-      *incp++ = INCLUDEDIR;
+      *incp++ = "/usr/include";
 #endif
 
 #ifdef POSTINCDIR
