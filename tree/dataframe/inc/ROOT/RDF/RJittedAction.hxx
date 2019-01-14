@@ -12,6 +12,7 @@
 #define ROOT_RJITTEDACTION
 
 #include "ROOT/RDF/RActionBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "RtypesCore.h"
 
 #include <memory>
@@ -19,14 +20,6 @@
 class TTreeReader;
 
 namespace ROOT {
-
-// fwd decl
-namespace Detail {
-namespace RDF {
-class RLoopManager;
-} // ns RDF
-} // ns Detail
-
 namespace Internal {
 namespace RDF {
 
@@ -41,6 +34,7 @@ private:
 
 public:
    RJittedAction(RLoopManager &lm);
+   ~RJittedAction() { fLoopManager->Deregister(this); }
 
    void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
 
