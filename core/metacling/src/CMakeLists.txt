@@ -1,18 +1,21 @@
 # TInterpreter implementation for cling. Only in libCling; needs to resolve
 # symbols from libCore.
 
-ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/*.cxx)
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../res
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../clingutils/res
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../foundation/res)
-include_directories(${CLING_INCLUDE_DIRS})
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
-include_directories(SYSTEM ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
+include_directories(SYSTEM
+  ${CLANG_INCLUDE_DIRS}
+  ${LLVM_INCLUDE_DIRS}
+  ${CLAD_INCLUDE_DIRS}
+)
 
-include_directories(SYSTEM ${CLAD_INCLUDE_DIRS})
+include_directories(
+  ../res
+  ../../clingutils/res
+  ../../foundation/res
+  ${CLING_INCLUDE_DIRS}
+)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
@@ -33,9 +36,22 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-maybe-uninitialized)
 endif()
 
-ROOT_OBJECT_LIBRARY(MetaCling ${sources})
-add_dependencies(MetaCling CLING)
+ROOT_OBJECT_LIBRARY(MetaCling
+  rootclingTCling.cxx
+  TClingBaseClassInfo.cxx
+  TClingCallbacks.cxx
+  TClingCallFunc.cxx
+  TClingClassInfo.cxx
+  TCling.cxx
+  TClingDataMemberInfo.cxx
+  TClingMethodArgInfo.cxx
+  TClingMethodInfo.cxx
+  TClingTypedefInfo.cxx
+  TClingTypeInfo.cxx
+  TClingValue.cxx
+)
 
+add_dependencies(MetaCling CLING)
 
 ##### libCling #############################################################
 
