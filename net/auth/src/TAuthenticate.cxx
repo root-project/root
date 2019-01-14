@@ -94,7 +94,7 @@ struct R__rsa_NUMBER: rsa_NUMBER {};
 // Statics initialization
 TList          *TAuthenticate::fgAuthInfo = 0;
 TString         TAuthenticate::fgAuthMeth[] = { "UsrPwd", "Unsupported", "Krb5",
-                                                "Unsupported", "Unsupported", "UidGid" };
+                                                "Unsupported", "Unsupported", "Unsupported" };
 Bool_t          TAuthenticate::fgAuthReUse;
 TString         TAuthenticate::fgDefaultUser;
 TDatime         TAuthenticate::fgExpDate;

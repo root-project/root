@@ -438,12 +438,10 @@ ACLiC.Linkdef:          _linkdef
 # Default login name (if not defined is taken from $(HOME)).
 #UsrPwd.Login:           qwerty
 #Krb5.Login:             qwerty@LOCAL.DOM.AIN
-#UidGid.Login:           qwerty
 
 # To be prompted for login information.
 #UsrPwd.LoginPrompt:     yes
 #Krb5.LoginPrompt:       yes
-#UidGid.LoginPrompt:     yes
 
 # To reuse established security context.
 UsrPwd.ReUse:         yes

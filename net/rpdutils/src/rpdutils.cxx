@@ -236,7 +236,7 @@ static const int gAUTH_GLB_MSK = 0x8;
 static const int gMAXTABSIZE = 50000000;
 
 static const std::string gAuthMeth[kMAXSEC] = { "UsrPwd", "Unsupported", "Krb5",
-                                                "Unsupported", "Unsupported", "UidGid" };
+                                                "Unsupported", "Unsupported", "Unsupported" };
 static const std::string gAuthTab    = "/rpdauthtab";   // auth table
 static const std::string gDaemonRc   = ".rootdaemonrc"; // daemon access rules
 static const std::string gRootdPass  = ".rootdpass";    // special rootd passwd

@@ -63,7 +63,6 @@
 #
 #              UsrPwd                         usrpwd          0
 #              Kerberos                       krb5            2
-#              UidGid                         uidgid          5   (insecure)
 #
 #           Example of a valid 'list' line:
 #
@@ -101,8 +100,6 @@
 #           session: this allows to speed up operation in case of multiple
 #           access). Default is 'yes' for methods 0 (UsrPwd), superseeded
 #           by the related entries in '.rootrc'.
-#           No additional info is needed by method 5 (UidGid): this method
-#           sends to the remote host the (uid,gid) of the current process;
 #           'reuse' will be af no advantage and 'prompt' is not allowed for
 #           security reasons. The format for the default info depends on
 #           the method:
@@ -111,7 +108,6 @@
 #
 #              UsrPwd                       us:<username> cp:<crypt_option>
 #              Kerberos                     pp:<principal> us:<username>(<principal>) 
-#              UidGid
 #
 #           The key 'us' allows to specify a target username different from
 #           the local username (which is the default target username); the 
@@ -122,7 +118,6 @@
 #              'cp' whether to encrypt the password with a public key (default)
 #                   or not (slighty faster), values are 'yes' or '1' for YES,
 #                   'no' or '0' for NO (case sensitive);
-#
 #
 #           For Kerberos, the default principal is the one associated to
 #           the local user in the Kerberos realm. A different principal
@@ -138,7 +133,6 @@
 #              default user asdfgh  method  usrpwd pt:1 ru:no 
 #              include local/myrootauthrc
 #              include $ROOTSYS/etc/system.rootauthrc
-#              localhost list  uidgid 
 #              pcepsft43.cern.ch  user asdfgh method 2 pt:no pp:asdkrb@LOC.KRB.REALM
 #            
 #           The first line states that, unless differently specified, 
@@ -151,9 +145,7 @@
 #           directory where the intercative root session was started. 
 #           The fourth directive includes the content of the system 
 #           defaults.
-#           The fifth line states that when accessing slaves on the local
-#           host, the uidgid method should be used.
-#           The sixth line states that the krb5 method should be used for
+#           The fifth line states that the krb5 method should be used for
 #           accessing account 'asdfgh' at pcepsft43.cern.ch, with kerberos
 #           credentials for principal adskrb@LOC.KRB.REALM .
 #
@@ -173,4 +165,4 @@
 #      from the rest of the .rootauthrc file is sent to slaves via the master
 #            
 #
-default list usrpwd @havesrp@ @havekrb5@ uidgid 
+default list usrpwd @havekrb5@
