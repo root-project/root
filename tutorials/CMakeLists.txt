@@ -389,7 +389,7 @@ endforeach()
 
 
 #---Python tutorials-----------------------------------------------------
-if(ROOT_python_FOUND)
+if(ROOT_python_FOUND AND NOT pyroot_experimental)
   find_package(PythonInterp REQUIRED)
 
   file(GLOB pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} */*.py)
