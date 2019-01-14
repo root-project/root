@@ -229,7 +229,7 @@ TEST_F(ClassifierTest2, TestsOverOutput)
    auto ds = (TDirectoryFile *)outfile->Get("dataset"); // get dataset dir
    ASSERT_NE(ds, nullptr);
 
-   auto Method_BDTB = (TDirectoryFile *)ds->Get("Method_BDTB"); // get method 1 training output dir
+   auto Method_BDTB = (TDirectoryFile *)ds->Get("Method_BDT"); // get method 1 training output dir
    ASSERT_NE(Method_BDTB, nullptr);
 
    auto BDTB = (TDirectoryFile *)Method_BDTB->Get("BDTB");
