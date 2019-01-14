@@ -2018,17 +2018,14 @@ TDirectory *TMVA::MethodBase::MethodBaseDir() const
 
    const TString datasetName = DataInfo().GetName();
 
-   Log() << kDEBUG << Form("Dataset[%s] : ", datasetName)
-         << " Base Directory for " << GetMethodTypeName()
+   Log() << kDEBUG << Form("Dataset[%s] : ", datasetName) << " Base Directory for " << GetMethodTypeName()
          << " not set yet --> check if already there.." << Endl;
-
 
    TDirectory *fFactoryBaseDir = GetFile();
 
    fMethodBaseDir = fFactoryBaseDir->GetDirectory(datasetName);
    if (!fMethodBaseDir) {
-      fMethodBaseDir = fFactoryBaseDir->mkdir(datasetName,
-         Form("Base directory for dataset %s",datasetName));
+      fMethodBaseDir = fFactoryBaseDir->mkdir(datasetName, Form("Base directory for dataset %s", datasetName));
       if (!fMethodBaseDir) {
          Log() << kFATAL << "Can not create dir " << datasetName;
       }
@@ -2038,18 +2035,14 @@ TDirectory *TMVA::MethodBase::MethodBaseDir() const
 
    if (!fMethodBaseDir) {
       TDirectory *datasetDir = fFactoryBaseDir->GetDirectory(datasetName);
-      TString methodTypeDirHelpStr = Form("Directory for all %s methods",
-                                          GetMethodTypeName().Data());
-      fMethodBaseDir = datasetDir->mkdir(methodTypeDir.Data(),
-                                         methodTypeDirHelpStr);
-      Log() << kDEBUG << Form("Dataset[%s] : ",datasetName)
-            << " Base Directory for " << GetMethodName()
+      TString methodTypeDirHelpStr = Form("Directory for all %s methods", GetMethodTypeName().Data());
+      fMethodBaseDir = datasetDir->mkdir(methodTypeDir.Data(), methodTypeDirHelpStr);
+      Log() << kDEBUG << Form("Dataset[%s] : ", datasetName) << " Base Directory for " << GetMethodName()
             << " does not exist yet--> created it" << Endl;
    }
 
-   Log() << kDEBUG << Form("Dataset[%s] : ",datasetName)
-         << "Return from MethodBaseDir() after creating base directory "
-         << Endl;
+   Log() << kDEBUG << Form("Dataset[%s] : ", datasetName)
+         << "Return from MethodBaseDir() after creating base directory " << Endl;
    return fMethodBaseDir;
 }
 
