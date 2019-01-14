@@ -2,14 +2,92 @@
 # CMakeLists.txt file for building ROOT core/meta package
 ############################################################################
 
-ROOT_GLOB_FILES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
-ROOT_GLOB_FILES(headers FILTER "(LinkDef|RootMetaSelection.h)" ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
+set(Meta_dict_headers
+  TBaseClass.h
+  TClassGenerator.h
+  TClass.h
+  TClassMenuItem.h
+  TClassRef.h
+  TClassStreamer.h
+  TDataMember.h
+  TDataType.h
+  TDictAttributeMap.h
+  TDictionary.h
+  TEnumConstant.h
+  TEnum.h
+  TFileMergeInfo.h
+  TFunction.h
+  TFunctionTemplate.h
+  TGenericClassInfo.h
+  TGlobal.h
+  TInterpreter.h
+  TInterpreterValue.h
+  TIsAProxy.h
+  TListOfDataMembers.h
+  TListOfEnums.h
+  TListOfEnumsWithLock.h
+  TListOfFunctions.h
+  TListOfFunctionTemplates.h
+  TMemberStreamer.h
+  TMethodArg.h
+  TMethodCall.h
+  TMethod.h
+  TProtoClass.h
+  TRealData.h
+  TSchemaHelper.h
+  TSchemaRule.h
+  TSchemaRuleSet.h
+  TStatusBitsChecker.h
+  TStreamerElement.h
+  TStreamer.h
+  TToggleGroup.h
+  TToggle.h
+  TVirtualIsAProxy.h
+  TVirtualRefProxy.h
+  TVirtualStreamerInfo.h
+  PARENT_SCOPE
+)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
+ROOT_OBJECT_LIBRARY(Meta
+  src/TBaseClass.cxx
+  src/TClass.cxx
+  src/TClassGenerator.cxx
+  src/TClassMenuItem.cxx
+  src/TClassRef.cxx
+  src/TDataMember.cxx
+  src/TDataType.cxx
+  src/TDictAttributeMap.cxx
+  src/TDictionary.cxx
+  src/TEnum.cxx
+  src/TEnumConstant.cxx
+  src/TFunction.cxx
+  src/TFunctionTemplate.cxx
+  src/TGenericClassInfo.cxx
+  src/TGlobal.cxx
+  src/TInterpreter.cxx
+  src/TIsAProxy.cxx
+  src/TListOfDataMembers.cxx
+  src/TListOfEnums.cxx
+  src/TListOfEnumsWithLock.cxx
+  src/TListOfFunctions.cxx
+  src/TListOfFunctionTemplates.cxx
+  src/TMethod.cxx
+  src/TMethodArg.cxx
+  src/TMethodCall.cxx
+  src/TProtoClass.cxx
+  src/TRealData.cxx
+  src/TSchemaRule.cxx
+  src/TSchemaRuleSet.cxx
+  src/TStatusBitsChecker.cxx
+  src/TStreamerElement.cxx
+  src/TToggle.cxx
+  src/TToggleGroup.cxx
+  src/TViewPubDataMembers.cxx
+  src/TViewPubFunctions.cxx
+  src/TVirtualStreamerInfo.cxx
+)
 
-set(Meta_dict_headers ${headers} PARENT_SCOPE)
-ROOT_OBJECT_LIBRARY(Meta ${sources})
+target_include_directories(Meta PRIVATE res ../foundation/res)
 
 ROOT_INSTALL_HEADERS()
-
 ROOT_ADD_TEST_SUBDIRECTORY(test)
