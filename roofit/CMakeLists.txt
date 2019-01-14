@@ -1,7 +1,6 @@
 add_subdirectory(roofitcore)
 add_subdirectory(roofit)
 add_subdirectory(roostats)
-find_package(GSL)
-if((xml OR ROOT_xml_FOUND) AND GSL_FOUND)
+if(xml)
   add_subdirectory(histfactory)
 endif()
