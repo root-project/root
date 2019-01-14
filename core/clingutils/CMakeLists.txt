@@ -5,12 +5,17 @@
 # These files depend on cling/clang/llvm; they need to be linked into libCling.
 # They are used by rootcling_stage1, rootcling and libCling.
 
-ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
-ROOT_GLOB_HEADERS(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
+set(ClingUtils_dict_headers
+  root_std_complex.h
+  TClingRuntime.h
+  PARENT_SCOPE
+)
 
-set(ClingUtils_dict_headers ${headers} PARENT_SCOPE)
+ROOT_OBJECT_LIBRARY(ClingUtils
+  src/RStl.cxx
+  src/TClingUtils.cxx
+)
 
-ROOT_OBJECT_LIBRARY(ClingUtils ${sources})
 add_dependencies(ClingUtils CLING)
 
 target_include_directories(ClingUtils PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
