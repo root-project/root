@@ -2025,7 +2025,7 @@ TDirectory* TMVA::MethodBase::BaseDir() const
          fMethodBaseDir = fFactoryBaseDir->mkdir(DataInfo().GetName(),Form("Base directory for dataset %s",DataInfo().GetName()));
          if(!fMethodBaseDir)Log()<<kFATAL<<"Can not create dir "<<DataInfo().GetName();
       }
-   TString _methodDir = Form("Method_%s",GetMethodName().Data());
+   TString _methodDir = Form("Method_%s", GetMethodTypeName().Data());
    fMethodBaseDir = fMethodBaseDir->GetDirectory(_methodDir.Data());
 
    if(!fMethodBaseDir){
