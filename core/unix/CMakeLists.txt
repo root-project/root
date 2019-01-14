@@ -2,11 +2,15 @@
 # CMakeLists.txt file for building ROOT core/unix package
 ############################################################################
 
-ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+set(Unix_dict_headers
+  TUnixSystem.h
+  PARENT_SCOPE
+)
 
-set(Unix_dict_headers  ${CMAKE_CURRENT_SOURCE_DIR}/inc/TUnixSystem.h PARENT_SCOPE)
+ROOT_OBJECT_LIBRARY(Unix
+  src/TUnixSystem.cxx
+)
 
-include_directories(${CMAKE_SOURCE_DIR}/core/clib/res)
-ROOT_OBJECT_LIBRARY(Unix ${sources})
+target_include_directories(Unix PRIVATE ../clib/res)
 
 ROOT_INSTALL_HEADERS()
