@@ -2,8 +2,13 @@
 # CMakeLists.txt file for building ROOT core/newdelete package
 ############################################################################
 
-include_directories(${CMAKE_SOURCE_DIR}/core/clib/res)
+ROOT_LINKER_LIBRARY(New
+  src/MemCheck.cxx
+  src/NewDelete.cxx
+  DEPENDENCIES
+    Core
+)
 
-ROOT_LINKER_LIBRARY(New *.cxx DEPENDENCIES Core)
+target_include_directories(New PRIVATE ../clib/res)
+
 ROOT_INSTALL_HEADERS()
-
