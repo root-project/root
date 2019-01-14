@@ -57,7 +57,7 @@ bool IpoptMinimizer::IpoptMinimizer::InternalTNLP::get_nlp_info(Index &n, Index 
                                                                 IndexStyleEnum &index_style)
 {
    n = fMinimizer->NDim();
-   m = 0; // n - fMinimizer->NFree();//total variables with constraints
+   m = 0;
    nnz_jac_g = fNNZerosJacobian;
    nnz_h_lag = fNNZerosHessian;
    // use the C style indexing (0-based)
@@ -74,7 +74,6 @@ bool IpoptMinimizer::IpoptMinimizer::InternalTNLP::get_bounds_info(Index n, Numb
    // If desired, we could assert to make sure they are what we think they are.
    // TODO: print a meesage telling that information is not good whit the variables and constraints
    R__ASSERT(n == (Index)fMinimizer->NDim());
-   //   R__ASSERT(m == fMinimizer->NDim() - fMinimizer->NFree());
    for (Index i = 0; i < n; i++) {
       ParameterSettings varsettings;
       if (fMinimizer->GetVariableSettings(i, varsettings)) {
@@ -198,16 +197,8 @@ void IpoptMinimizer::IpoptMinimizer::InternalTNLP::finalize_solution(SolverRetur
 
 void IpoptMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction &func)
 {
-   // set the function to minimizer
-   // need to calculate numerically the derivatives: do via class MultiNumGradFunction
-   // no need to clone the passed function
    ROOT::Math::MultiNumGradFunction gradFunc(func);
-   //     IGradientFunctionMultiDim gradFunc(func);
-   // function is cloned inside so can be delete afterwards
-   // called base class method setfunction
-   // (note: write explicitly otherwise it will call back itself)
    BasicMinimizer::SetFunction(gradFunc);
-   //    BasicMinimizer::SetFunction(func);
 }
 
 //_______________________________________________________________________

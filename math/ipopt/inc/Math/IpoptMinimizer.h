@@ -1,8 +1,8 @@
 // @(#)root/ipopt:$Id$
-// Author: Omar.Zapata@cern.ch Thu Dec 28 2:15:00 2017
+// Author: Omar.Zapata@cern.ch
 
 /*************************************************************************
- * Copyright (C) 2017-2018, Omar Zapata                                  *
+ * Copyright (C) 2017-2019, Omar Zapata                                  *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -418,12 +418,6 @@ public:
 
    /// return expected distance reached from the minimum
    virtual double Edm() const { return 0; } // not impl. }
-
-   /// return pointer to gradient values at the minimum
-   //     virtual const double *MinGradient() const;
-
-   /// number of function calls to reach the minimum
-   //     virtual unsigned int NCalls() const;
 
    /// minimizer provides error and error matrix
    virtual bool ProvidesError() const { return false; }

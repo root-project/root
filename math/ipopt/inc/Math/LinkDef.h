@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Id$
+// @(#)root/math/ipopt:$Id$
 // Authors: Omar.Zapata@cern.ch  12/2017
 
 #ifdef __CINT__

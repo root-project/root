@@ -194,7 +194,7 @@ else()
     execute_process(COMMAND ${LIB_EXECUTABLE} /list "${_IPOPT_LIB}"
                     OUTPUT_VARIABLE _lib_output)
 
-    set(ENV{PATH} "${_path}")
+    #set(ENV{PATH} "${_path}")
     unset(_path)
 
     if(NOT "${_lib_output}" MATCHES "libifcoremd.dll")
