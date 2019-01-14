@@ -822,10 +822,7 @@ void TMVA::VariableTransformBase::MakeFunction( std::ostream& fout, const TStrin
    if( part == 0 ){ // definitions
       fout << std::endl;
       fout << "   // define the indices of the variables which are transformed by this transformation" << std::endl;
-      fout << "   static std::vector<int> indicesGet;" << std::endl;
-      fout << "   static std::vector<int> indicesPut;" << std::endl << std::endl;
-      fout << "   if ( indicesGet.empty() ) {" << std::endl;
-      fout << "      indicesGet.reserve(fNvars);" << std::endl;
+      fout << "   std::array<int, fNvars> indicesGet{" << std::endl;
 
       for( ItVarTypeIdxConst itEntry = fGet.begin(), itEntryEnd = fGet.end(); itEntry != itEntryEnd; ++itEntry ) {
          Char_t type = (*itEntry).first;
@@ -833,7 +830,7 @@ void TMVA::VariableTransformBase::MakeFunction( std::ostream& fout, const TStrin
 
          switch( type ) {
          case 'v':
-            fout << "      indicesGet.push_back( " << idx << ");" << std::endl;
+            fout << "      " << idx << ", " << std::endl;
             break;
          case 't':
             Log() << kWARNING << "MakeClass doesn't work with transformation of targets. The results will be wrong!" << Endl;
@@ -845,17 +842,16 @@ void TMVA::VariableTransformBase::MakeFunction( std::ostream& fout, const TStrin
             Log() << kFATAL << "VariableTransformBase/GetInput : unknown type '" << type << "'." << Endl;
          }
       }
-      fout << "   }" <<  std::endl;
-      fout << "   if ( indicesPut.empty() ) {" << std::endl;
-      fout << "      indicesPut.reserve(fNvars);" << std::endl;
+      fout << "};" << std::endl << std::endl;
 
+      fout << "   std::array<int, fNvars> indicesPut{" << std::endl;
       for( ItVarTypeIdxConst itEntry = fPut.begin(), itEntryEnd = fPut.end(); itEntry != itEntryEnd; ++itEntry ) {
          Char_t type = (*itEntry).first;
          Int_t  idx  = (*itEntry).second;
 
          switch( type ) {
          case 'v':
-            fout << "      indicesPut.push_back( " << idx << ");" << std::endl;
+            fout << "      " << idx << "," << std::endl;
             break;
          case 't':
             Log() << kWARNING << "MakeClass doesn't work with transformation of targets. The results will be wrong!" << Endl;
@@ -867,9 +863,7 @@ void TMVA::VariableTransformBase::MakeFunction( std::ostream& fout, const TStrin
             Log() << kFATAL << "VariableTransformBase/PutInput : unknown type '" << type << "'." << Endl;
          }
       }
-
-      fout << "   }" <<  std::endl;
-      fout << std::endl;
+      fout << "};" << std::endl << std::endl;
 
    }else if( part == 1){
    }

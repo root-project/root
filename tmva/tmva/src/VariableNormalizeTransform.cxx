@@ -606,9 +606,8 @@ void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const T
       fout << "   const int nVar = " << nVar << ";" << std::endl << std::endl;
       fout << "   // get indices of used variables" << std::endl;
       VariableTransformBase::MakeFunction(fout, fcncName, 0, trCounter, 0);
-      fout << "   static std::vector<double> dv;"
-           << std::endl; // simply made it static so it doesn't need to be re-booked every time
-      fout << "   dv.resize(nVar);" << std::endl;
+      fout << "   std::array<double, nVar> dv;"
+           << std::endl; // simply made it an array so it is on the stack
       fout << "   for (int ivar=0; ivar<nVar; ivar++) dv[ivar] = iv[indicesGet.at(ivar)];" << std::endl;
 
       fout << "   for (int ivar=0;ivar<" << nVar << ";ivar++) {" << std::endl;
