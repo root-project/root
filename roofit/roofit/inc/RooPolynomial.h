@@ -48,6 +48,7 @@ protected:
 
   mutable std::vector<Double_t> _wksp; //! do not persist
 
+  /// Evaluation
   Double_t evaluate() const;
 
   ClassDef(RooPolynomial,1) // Polynomial PDF
