@@ -139,13 +139,13 @@ large file.
 | 34 `->` 37        | `fCompress`      | Zip compression level                 |
 | [42-\>45]         |                  |                                       |
 +-------------------+------------------+---------------------------------------+
-| 34 `->` 37        | `fSeekInfo`      | Pointer to **`TStreamerInfo`** record |
+| 38 `->` 41        | `fSeekInfo`      | Pointer to **`TStreamerInfo`** record |
 | [46-\>53]         |                  |                                       |
 +-------------------+------------------+---------------------------------------+
-| 34 `->` 37        | `fNBytesInfo`    | Number of bytes in                    |
+| 42 `->` 45        | `fNBytesInfo`    | Number of bytes in                    |
 | [54-\>57]         |                  | **`TStreamerInfo`** record            |
 +-------------------+------------------+---------------------------------------+
-| 34 `->` 37        | `fCompress`      | Universal Unique ID                   |
+| 46 `->` 63        | `fCompress`      | Universal Unique ID                   |
 | [58-\>75]         |                  |                                       |
 +-------------------+------------------+---------------------------------------+
 
