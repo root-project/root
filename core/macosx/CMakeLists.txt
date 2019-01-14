@@ -2,12 +2,16 @@
 # CMakeLists.txt file for building ROOT core/macosx package
 ############################################################################
 
-ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm)
-ROOT_GLOB_SOURCES(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h)
+set(Macosx_dict_headers
+  TMacOSXSystem.h
+  PARENT_SCOPE
+)
 
-set(Macosx_dict_headers ${headers} PARENT_SCOPE)
+ROOT_OBJECT_LIBRARY(Macosx
+  src/CocoaUtils.mm
+  src/TMacOSXSystem.mm
+)
 
-ROOT_OBJECT_LIBRARY(Macosx ${sources})
-set_source_files_properties(${sources} COMPILE_FLAGS "-ObjC++ -std=c++11")
+target_compile_options(Macosx PRIVATE -ObjC++)
 
 ROOT_INSTALL_HEADERS()
