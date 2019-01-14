@@ -2021,11 +2021,10 @@ TDirectory *TMVA::MethodBase::MethodBaseDir() const
    Log() << kDEBUG << Form("Dataset[%s] : ", datasetName) << " Base Directory for " << GetMethodTypeName()
          << " not set yet --> check if already there.." << Endl;
 
-   TDirectory *fFactoryBaseDir = GetFile();
-
-   fMethodBaseDir = fFactoryBaseDir->GetDirectory(datasetName);
+   TDirectory *factoryBaseDir = GetFile();
+   fMethodBaseDir = factoryBaseDir->GetDirectory(datasetName);
    if (!fMethodBaseDir) {
-      fMethodBaseDir = fFactoryBaseDir->mkdir(datasetName, Form("Base directory for dataset %s", datasetName));
+      fMethodBaseDir = factoryBaseDir->mkdir(datasetName, Form("Base directory for dataset %s", datasetName));
       if (!fMethodBaseDir) {
          Log() << kFATAL << "Can not create dir " << datasetName;
       }
@@ -2034,7 +2033,7 @@ TDirectory *TMVA::MethodBase::MethodBaseDir() const
    fMethodBaseDir = fMethodBaseDir->GetDirectory(methodTypeDir.Data());
 
    if (!fMethodBaseDir) {
-      TDirectory *datasetDir = fFactoryBaseDir->GetDirectory(datasetName);
+      TDirectory *datasetDir = factoryBaseDir->GetDirectory(datasetName);
       TString methodTypeDirHelpStr = Form("Directory for all %s methods", GetMethodTypeName().Data());
       fMethodBaseDir = datasetDir->mkdir(methodTypeDir.Data(), methodTypeDirHelpStr);
       Log() << kDEBUG << Form("Dataset[%s] : ", datasetName) << " Base Directory for " << GetMethodName()
