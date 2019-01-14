@@ -5,6 +5,8 @@
 
 #if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
 
+#define N 16384
+
 Double_t uniform_random(Double_t a, Double_t b)
 {
    return a + (b - a) * drand48();
@@ -15,16 +17,16 @@ protected:
    VectorizedTMathTest() {}
 
    size_t kVS = vecCore::VectorSize<ROOT::Double_v>();
-   Double_t input_array1[16384] __attribute__((aligned(VECCORE_SIMD_ALIGN)));
-   Double_t input_array2[16384] __attribute__((aligned(VECCORE_SIMD_ALIGN)));
+   Double_t input_array1[N] __attribute__((aligned(VECCORE_SIMD_ALIGN)));
+   Double_t input_array2[N] __attribute__((aligned(VECCORE_SIMD_ALIGN)));
 
-   Double_t output_array[16384] __attribute__((aligned(VECCORE_SIMD_ALIGN)));
+   Double_t output_array[N] __attribute__((aligned(VECCORE_SIMD_ALIGN)));
 };
 
 #define TEST_VECTORIZED_TMATH_FUNCTION(tmathfunc, a, b)                                                             \
    TEST_F(VectorizedTMathTest, tmathfunc)                                                                           \
    {                                                                                                                \
-      int trials = 16384;                                                                                           \
+      int trials = N;                                                                                           \
       for (int i = 0; i < trials; i++)                                                                              \
          input_array1[i] = uniform_random(a, b);                                                                    \
                                                                                                                     \
@@ -39,14 +41,14 @@ protected:
          Double_t vec_output = output_array[j];                                                                     \
          Double_t re =                                                                                              \
             (scalar_output == vec_output && scalar_output == 0) ? 0 : (vec_output - scalar_output) / scalar_output; \
-         EXPECT_NEAR(0, re, std::pow(10, 9) * std::numeric_limits<double>::epsilon());                              \
+         EXPECT_NEAR(0, re, 1e9 * std::numeric_limits<double>::epsilon());                              \
       }                                                                                                             \
    }
 
 #define TEST_VECTORIZED_TMATH_FUNCTION2(tmathfunc, a, b, c, d)                                                      \
    TEST_F(VectorizedTMathTest, tmathfunc)                                                                           \
    {                                                                                                                \
-      int trials = 16384;                                                                                           \
+      int trials = N;                                                                                           \
       for (int i = 0; i < trials; i++) {                                                                            \
          input_array1[i] = uniform_random(a, b);                                                                    \
          input_array2[i] = uniform_random(c, d);                                                                    \
@@ -63,7 +65,7 @@ protected:
          Double_t vec_output = output_array[j];                                                                     \
          Double_t re =                                                                                              \
             (scalar_output == vec_output && scalar_output == 0) ? 0 : (vec_output - scalar_output) / scalar_output; \
-         EXPECT_NEAR(0, re, std::pow(10, 10) * std::numeric_limits<double>::epsilon());                             \
+         EXPECT_NEAR(0, re, 1e10 * std::numeric_limits<double>::epsilon());                             \
       }                                                                                                             \
    }
 

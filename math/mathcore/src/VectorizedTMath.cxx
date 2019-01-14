@@ -25,15 +25,16 @@ namespace TMath {
    if (sigma == 0)
       return ::ROOT::Double_v(1.e30);
 
-   ::ROOT::Double_v arg = (x - ::ROOT::Double_v(mean)) / ::ROOT::Double_v(sigma);
+   ::ROOT::Double_v inv_sigma = 1.0 / ::ROOT::Double_v(sigma);
+   ::ROOT::Double_v arg = (x - ::ROOT::Double_v(mean)) * inv_sigma;
 
    // For those entries of |arg| > 39 result is zero in double precision
    ::ROOT::Double_v out =
       vecCore::Blend<::ROOT::Double_v>(vecCore::math::Abs(arg) < ::ROOT::Double_v(39.0),
                                        vecCore::math::Exp(::ROOT::Double_v(-0.5) * arg * arg), ::ROOT::Double_v(0.0));
-   if (!norm)
-      return out;
-   return out / (::ROOT::Double_v(2.50662827463100024) * sigma); // sqrt(2*Pi)=2.50662827463100024
+   if (norm)
+      out *= 0.3989422804014327 * inv_sigma; // 1/sqrt(2*Pi)=0.3989422804014327
+   return out;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,9 +46,9 @@ namespace TMath {
 /// the two-tailed exponential or the bilateral exponential distribution
 ::ROOT::Double_v LaplaceDist(::ROOT::Double_v &x, Double_t alpha, Double_t beta)
 {
-   ::ROOT::Double_v beta_v = ::ROOT::Double_v(beta);
-   ::ROOT::Double_v out = vecCore::math::Exp(-vecCore::math::Abs((x - ::ROOT::Double_v(alpha)) / beta_v));
-   out /= (::ROOT::Double_v(2.0) * beta_v);
+   ::ROOT::Double_v beta_v_inv = ::ROOT::Double_v(1.0) / ::ROOT::Double_v(beta);
+   ::ROOT::Double_v out = vecCore::math::Exp(-vecCore::math::Abs((x - ::ROOT::Double_v(alpha)) * beta_v_inv));
+   out *= ::ROOT::Double_v(0.5) * beta_v_inv;
    return out;
 }
 
@@ -61,10 +62,10 @@ namespace TMath {
 ::ROOT::Double_v LaplaceDistI(::ROOT::Double_v &x, Double_t alpha, Double_t beta)
 {
    ::ROOT::Double_v alpha_v = ::ROOT::Double_v(alpha);
-   ::ROOT::Double_v beta_v = ::ROOT::Double_v(beta);
-   return vecCore::Blend<::ROOT::Double_v>(x <= alpha_v,
-                                           0.5 * vecCore::math::Exp(-vecCore::math::Abs((x - alpha_v) / beta_v)),
-                                           1 - 0.5 * vecCore::math::Exp(-vecCore::math::Abs((x - alpha_v) / beta_v)));
+   ::ROOT::Double_v beta_v_inv = ::ROOT::Double_v(1.0) / ::ROOT::Double_v(beta);
+   return vecCore::Blend<::ROOT::Double_v>(
+      x <= alpha_v, 0.5 * vecCore::math::Exp(-vecCore::math::Abs((x - alpha_v) * beta_v_inv)),
+      1 - 0.5 * vecCore::math::Exp(-vecCore::math::Abs((x - alpha_v) * beta_v_inv)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -140,8 +141,7 @@ namespace TMath {
 
 ::ROOT::Double_v BesselI0_Split_Less(::ROOT::Double_v &x)
 {
-   ::ROOT::Double_v xx = x / 3.75;
-   ::ROOT::Double_v y = xx * xx;
+   ::ROOT::Double_v y = x * x * 0.071111111;
 
    return 1.0 +
           y * (3.5156229 + y * (3.0899424 + y * (1.2067492 + y * (0.2659732 + y * (3.60768e-2 + y * 4.5813e-3)))));
@@ -166,13 +166,12 @@ namespace TMath {
                               y * (1.63801e-3 + y * (-1.031555e-2 +
                                                      y * (2.282967e-2 + y * (-2.895312e-2 +
                                                                              y * (1.787654e-2 + y * -4.20059e-3))))))));
-   return vecCore::Blend<::ROOT::Double_v>(x < 0, -result, result);
+   return vecCore::Blend<::ROOT::Double_v>(x < 0, ::ROOT::Double_v(-1.0) * result, result);
 }
 
 ::ROOT::Double_v BesselI1_Split_Less(::ROOT::Double_v &x)
 {
-   ::ROOT::Double_v xx = x / 3.75;
-   ::ROOT::Double_v y = xx * xx;
+   ::ROOT::Double_v y = x * x * 0.071111111;
 
    return x * (0.5 + y * (0.87890594 +
                           y * (0.51498869 + y * (0.15084934 + y * (2.658733e-2 + y * (3.01532e-3 + y * 3.2411e-4))))));
