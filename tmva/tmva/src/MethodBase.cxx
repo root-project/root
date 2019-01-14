@@ -2018,27 +2018,36 @@ TDirectory* TMVA::MethodBase::MethodBaseDir() const
 
    const TString datasetName = DataInfo().GetName();
 
-   Log()<<kDEBUG<<Form("Dataset[%s] : ",datasetName)<<" Base Directory for " << GetMethodTypeName() << " not set yet --> check if already there.." <<Endl;
+   Log() << kDEBUG << Form("Dataset[%s] : ", datasetName)
+         << " Base Directory for " << GetMethodTypeName()
+         << " not set yet --> check if already there.." << Endl;
 
 
-   TDirectory *fFactoryBaseDir=GetFile();
+   TDirectory *fFactoryBaseDir = GetFile();
 
    fMethodBaseDir = fFactoryBaseDir->GetDirectory(datasetName);
    if(!fMethodBaseDir) {
-      fMethodBaseDir = fFactoryBaseDir->mkdir(datasetName,Form("Base directory for dataset %s",datasetName));
+      fMethodBaseDir = fFactoryBaseDir->mkdir(datasetName,
+         Form("Base directory for dataset %s",datasetName));
       if(!fMethodBaseDir) {
-         Log()<<kFATAL<<"Can not create dir "<<datasetName;
+         Log() << kFATAL << "Can not create dir " << datasetName;
       }
    }
    TString _methodDir = Form("Method_%s", GetMethodTypeName().Data());
    fMethodBaseDir = fMethodBaseDir->GetDirectory(_methodDir.Data());
 
    if(!fMethodBaseDir) {
-      fMethodBaseDir = fFactoryBaseDir->GetDirectory(datasetName)->mkdir(_methodDir.Data(),Form("Directory for all %s methods", GetMethodTypeName().Data()));
-      Log()<<kDEBUG<<Form("Dataset[%s] : ",datasetName)<<" Base Directory for " << GetMethodName() << " does not exist yet--> created it" <<Endl;
+      fMethodBaseDir = fFactoryBaseDir->GetDirectory(datasetName)->mkdir(
+         _methodDir.Data(), Form("Directory for all %s methods",
+                                 GetMethodTypeName().Data()));
+      Log() << kDEBUG << Form("Dataset[%s] : ",datasetName)
+            << " Base Directory for " << GetMethodName()
+            << " does not exist yet--> created it" << Endl;
    }
 
-   Log()<<kDEBUG<<Form("Dataset[%s] : ",datasetName)<<"Return from MethodBaseDir() after creating base directory "<<Endl;
+   Log() << kDEBUG << Form("Dataset[%s] : ",datasetName)
+         << "Return from MethodBaseDir() after creating base directory "
+         << Endl;
    return fMethodBaseDir;
 }
 
