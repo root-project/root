@@ -2016,7 +2016,7 @@ TDirectory *TMVA::MethodBase::MethodBaseDir() const
       return fMethodBaseDir;
    }
 
-   const TString datasetName = DataInfo().GetName();
+   const char *datasetName = DataInfo().GetName();
 
    Log() << kDEBUG << Form("Dataset[%s] : ", datasetName) << " Base Directory for " << GetMethodTypeName()
          << " not set yet --> check if already there.." << Endl;
