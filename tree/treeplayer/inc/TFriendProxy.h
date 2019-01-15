@@ -28,6 +28,8 @@ namespace Internal {
       TFriendProxy();
       TFriendProxy(TBranchProxyDirector *director, TTree *main, Int_t index);
 
+      TBranchProxyDirector *GetDirector() { return &fDirector; }
+
       Long64_t GetReadEntry() const;
       void     ResetReadEntry();
       void     Update(TTree *newmain);
