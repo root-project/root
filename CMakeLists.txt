@@ -497,6 +497,11 @@ set(root_kernel_file kernel.json)
 configure_file(etc/${root_kernel_dir}/${root_kernel_file}.in etc/${root_kernel_dir}/${root_kernel_file})
 install(FILES ${CMAKE_BINARY_DIR}/etc/${root_kernel_dir}/${root_kernel_file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/${root_kernel_dir})
 
+#---Set flag for PyROOT tests that are expected to fail in experimental
+if(pyroot_experimental)
+  set(PYTESTS_WILLFAIL WILLFAIL)
+endif()
+
 #---Configure Testing using CTest----------------------------------------------------------------
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
 if(testing)
