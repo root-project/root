@@ -425,6 +425,57 @@ if(ROOT_python_FOUND)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
 
+  #---Tutorials expected to fail in PyROOT experimental
+  set(pyexp_fail tutorial-dataframe-df001-introduction-py
+                 tutorial-dataframe-df002-dataModel-py
+                 tutorial-dataframe-df003-profiles-py
+                 tutorial-dataframe-df004-cutFlowReport-py
+                 tutorial-dataframe-df006-ranges-py
+                 tutorial-dataframe-df007-snapshot-py
+                 tutorial-dataframe-df008-createDataSetFromScratch-py
+                 tutorial-dataframe-df010-trivialDataSource-py
+                 tutorial-dataframe-df011-ROOTDataSource-py
+                 tutorial-dataframe-df012-DefinesAndFiltersAsStrings-py
+                 tutorial-dataframe-df014-CSVDataSource-py
+                 tutorial-dataframe-df016-vecOps-py
+                 tutorial-dataframe-df017-vecOpsHEP-py
+                 tutorial-dataframe-df019-Cache-py
+                 tutorial-dataframe-df021-createTGraph-py
+                 tutorial-dataframe-df024-Display-py
+                 tutorial-dataframe-df026-AsNumpyArrays-py
+                 tutorial-graphs-timeSeriesFromCSV-py
+                 tutorial-hist-fillrandom-py
+                 tutorial-math-Legendre-py
+                 tutorial-math-tStudent-py
+                 tutorial-pyroot-DynamicSlice-py
+                 tutorial-pyroot-benchmarks-py
+                 tutorial-pyroot-fillrandom-py
+                 tutorial-pyroot-fit1-py
+                 tutorial-pyroot-geometry-py
+                 tutorial-pyroot-h1draw-py
+                 tutorial-pyroot-hsimple-py
+                 tutorial-pyroot-hsum-py
+                 tutorial-pyroot-na49view-py
+                 tutorial-pyroot-ntuple1-py
+                 tutorial-pyroot-pyroot002_TTreeAsMatrix-py
+                 tutorial-pyroot-ratioplot-py
+                 tutorial-pyroot-rootmarks-py
+                 tutorial-pyroot-shapes-py
+                 tutorial-pyroot-staff-py
+                 tutorial-pyroot-tornado-py
+                 tutorial-pyroot-tree-py
+                 tutorial-roofit-rf104-classfactory-py
+                 tutorial-roofit-rf106-plotdecoration-py
+                 tutorial-roofit-rf315-projectpdf-py
+                 tutorial-roofit-rf402-datahandling-py
+                 tutorial-roofit-rf504-simwstool-py
+                 tutorial-roofit-rf509-wsinteractive-py
+                 tutorial-roofit-rf511-wsfactory-basic-py
+                 tutorial-roofit-rf610-visualerror-py
+                 tutorial-roofit-rf707-kernelestimation-py
+                 tutorial-vecops-vo004-SortAndSelect-py
+                 tutorial-vecops-vo005-Combinations-py)
+
   foreach(t ${pytutorials})
     list(FIND returncode_1 ${t} index)
     if(index EQUAL -1)
@@ -436,12 +487,22 @@ if(ROOT_python_FOUND)
     string(REPLACE ".py" "" tname ${t})
     string(REPLACE "/" "-" tname ${tname})
 
-    ROOT_ADD_TEST(tutorial-${tname}-py
+    set(tutorial_name tutorial-${tname}-py)
+
+    list(FIND pyexp_fail ${tutorial_name} index)
+    if(index EQUAL -1)
+      set(py_will_fail "")
+    else()
+      set(py_will_fail ${PYTESTS_WILLFAIL})
+    endif()
+
+    ROOT_ADD_TEST(${tutorial_name}
                 COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t} -b
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS tutorial
                 DEPENDS ${${tname}-depends}
-                ENVIRONMENT ${ROOT_environ})
+                ENVIRONMENT ${ROOT_environ}
+                ${py_will_fail})
   endforeach()
 endif()
 
