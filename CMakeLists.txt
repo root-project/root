@@ -422,11 +422,11 @@ else()
   install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 endif()
 
-# FIXME: Add a post-build script where you compare the lib/*.pcm list to the reference, so as not to install random pcms.
 install(
    DIRECTORY ${CMAKE_BINARY_DIR}/lib/
    DESTINATION ${CMAKE_INSTALL_LIBDIR}
    FILES_MATCHING PATTERN "*.pcm"
+   PATTERN ".*rdict.*" EXCLUDE
 )
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
