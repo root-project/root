@@ -1,15 +1,29 @@
 import difflib
-import subprocess
-import shutil
+import json
 import os
-
+import shutil
+import subprocess
 import sys
-if sys.version_info >= (3, 0):
-    kernelName = 'python3'
-else:
-    kernelName = 'python2'
+import tempfile
+
 nbExtension=".ipynb"
 convCmdTmpl = "%s nbconvert  --to notebook --ExecutePreprocessor.kernel_name=%s --ExecutePreprocessor.enabled=True --ExecutePreprocessor.timeout=3600 %s --output %s"
+pythonInterpName = 'python3' if sys.version_info >= (3, 0) else 'python2'
+
+rootKernelFileContent = '''{
+ "language": "c++",
+ "display_name": "ROOT C++",
+ "argv": [
+  "%s",
+  "-m",
+  "JupyROOT.kernel.rootkernel",
+  "-f",
+  "{connection_file}"
+ ]
+}
+''' %pythonInterpName
+
+
 
 # Replace the criterion according to which a line shall be skipped
 def customLineJunkFilter(line):
@@ -40,12 +54,28 @@ def compareNotebooks(inNBName,outNBName):
     if areDifferent: print("\n")
     return areDifferent
 
+def createKernelSpec():
+    """Create a root kernel spec with the right python interpreter name
+    and puts it in a tmp directory. Return the name of such directory."""
+    tmpd = tempfile.mkdtemp(suffix="_nbdiff_ipythondir")
+    kernelsPath = os.path.join(tmpd, "kernels")
+    os.mkdir(kernelsPath)
+    rootKernelPath = os.path.join(kernelsPath, "root")
+    os.mkdir(rootKernelPath)
+    kernel_file = open(os.path.join(rootKernelPath, "kernel.json"), "w")
+    kernel_file.write(rootKernelFileContent)
+    kernel_file.close()
+
+    return tmpd
+
 def addEtcToEnvironment(inNBDirName):
     """Add the etc directory of root to the environment under the name of
     JUPYTER_PATH in order to pick up the kernel specs.
     """
-    os.environ["JUPYTER_PATH"] =  os.path.join(inNBDirName, "ipythondir/kernels")
-    os.environ["IPYTHONDIR"] = os.path.join(inNBDirName, "ipythondir")
+    ipythondir = createKernelSpec()
+    os.environ["JUPYTER_PATH"] = ipythondir
+    os.environ["IPYTHONDIR"] = ipythondir
+    return ipythondir
 
 def getInterpreterName():
     """Find if the 'jupyter' executable is available on the platform. If
@@ -54,14 +84,24 @@ def getInterpreterName():
     ret = subprocess.call("type jupyter",
                           shell=True,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return "jupyter" if ret == 0 else "ipython"
+    return "jupyter" if ret == 0 else "i%s" %pythonInterpName
+
+def getKernelName(inNBName):
+    nbj = json.load(open(inNBName))
+    if nbj["metadata"]["kernelspec"]["language"] == "python":
+        return pythonInterpName
+    else: # we support only Python and C++
+        return 'root'
+
 
 def canReproduceNotebook(inNBName):
-    addEtcToEnvironment(os.path.dirname(inNBName))
+    kernelName = getKernelName(inNBName)
+    tmpDir = addEtcToEnvironment(os.path.dirname(inNBName))
     outNBName = inNBName.replace(nbExtension,"_out"+nbExtension)
     interpName = getInterpreterName()
     convCmd = convCmdTmpl %(interpName, kernelName, inNBName, outNBName)
-    subprocess.check_output(convCmd.split(), env = os.environ)
+    os.system(convCmd) # we use system to inherit the environment in os.environ
+    shutil.rmtree(tmpDir)
     return compareNotebooks(inNBName,outNBName)
 
 def isInputNotebookFileName(filename):
