@@ -13,13 +13,13 @@ if(TARGET onepcm)
 endif()
 
 if(NOT TARGET eventexe)
-      ROOT_GENERATE_DICTIONARY(EventDict ${ROOT_EVENT_DIR}/Event.h 
+      ROOT_GENERATE_DICTIONARY(EventDict ${ROOT_EVENT_DIR}/Event.h
                   LINKDEF ${ROOT_EVENT_DIR}/EventLinkDef.h)
 
       ROOT_LINKER_LIBRARY(EventTreeFormula TEST ${ROOT_EVENT_DIR}/Event.cxx EventDict.cxx
                   LIBRARIES Core Tree Hist MathCore)
 
-      ROOTTEST_GENERATE_EXECUTABLE(EventGenerate ${ROOT_EVENT_DIR}/MainEvent.cxx 
+      ROOTTEST_GENERATE_EXECUTABLE(EventGenerate ${ROOT_EVENT_DIR}/MainEvent.cxx
                   LIBRARIES Core RIO Net Tree Hist MathCore EventTreeFormula)
 
       add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Event.root
@@ -138,6 +138,4 @@ ROOTTEST_ADD_TEST(index
 
 ROOTTEST_ADD_TEST(assertBranchCount
                   MACRO assertBranchCount.C
-                  OUTREF assertBranchCount.ref)
-
-
+                  OUTREF references/assertBranchCount.ref)
