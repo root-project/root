@@ -3,12 +3,34 @@
 ############################################################################
 
 if(root7)
-    set(root7src v7/src/RHistPainter.cxx)
-    set(HISTDRAWLIB ROOTHistDraw)
+    set(HISTPAINTER_V7_SOURCES v7/src/RHistPainter.cxx)
+    set(HISTPAINTER_V7_LIBRARIES ROOTHistDraw)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(HistPainter
-                              SOURCES *.cxx ${root7src}
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES  Graf Hist Matrix MathCore ${HISTDRAWLIB} Gpad)
-
+  HEADERS
+    Hoption.h
+    Hparam.h
+    TGraph2DPainter.h
+    TGraphPainter.h
+    THistPainter.h
+    TLego.h
+    TPainter3dAlgorithms.h
+    TPaletteAxis.h
+  SOURCES
+    src/TGraph2DPainter.cxx
+    src/TGraphPainter.cxx
+    src/THistPainter.cxx
+    src/TPainter3dAlgorithms.cxx
+    src/TPaletteAxis.cxx
+    ${HISTPAINTER_V7_SOURCES}
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  DEPENDENCIES
+    Gpad
+    Graf
+    Hist
+    MathCore
+    Matrix
+    ${HISTPAINTER_V7_LIBRARIES}
+)
