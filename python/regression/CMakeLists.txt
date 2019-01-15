@@ -13,12 +13,13 @@ if(ROOT_python_FOUND)
                                          -e .L\ ULongLong.C+
                                          -e .L\ Till.C+
                                          -e .L\ CoralAttributeList.C+
-                    )
+                    ${PYTESTS_WILLFAIL})
+
   ROOTTEST_ADD_TEST(root_6023
                     MACRO exec_root_6023.py OPTS -b
                     COPY_TO_BUILDDIR root_6023.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARY}\"\)
                                                      -e .L\ root_6023.h+
-                    )
+                    ${PYTESTS_WILLFAIL})
 
 endif()

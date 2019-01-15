@@ -16,7 +16,8 @@ ROOTTEST_ADD_TEST(testcint
                   OUTREF pythoncintrun.ref
                   OUTCNVCMD grep -v "just a comment"
                   WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                  LABELS roottest regression cling)
+                  LABELS roottest regression cling
+                  ${PYTESTS_WILLFAIL})
 
 if(ROOT_cintex_FOUND)
   ROOTTEST_ADD_TEST(testreflex
