@@ -17,6 +17,8 @@
 #include "TBranchSTL.h"
 #include "TBranchProxyDirector.h"
 #include "TClassEdit.h"
+#include "TFriendElement.h"
+#include "TFriendProxy.h"
 #include "TLeaf.h"
 #include "TROOT.h"
 #include "TStreamerInfo.h"
@@ -409,7 +411,36 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
             membername = branch->GetName();
          }
       }
-      namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, fBranchName, membername);
+      auto director = fTreeReader->fDirector;
+      // Determine if the branch is actually in a Friend TTree and if so which.
+      if (branch->GetTree() != fTreeReader->GetTree()->GetTree()) {
+         // It is in a friend, let's find the 'index' in the list of friend ...
+         int index = -1;
+         int current = 0;
+         for(auto fe : TRangeDynCast<TFriendElement>( fTreeReader->GetTree()->GetTree()->GetListOfFriends())) {
+            if (branch->GetTree() == fe->GetTree()) {
+               index = current;
+            }
+            ++current;
+         }
+         if (index == -1) {
+            Error("TTreeReaderArrayBase::CreateProxy()", "The branch %s is contained in a Friend TTree that is not directly attached to the main.\n"
+                  "This is not yet supported by TTreeReader.",
+                  fBranchName.Data());
+            return;
+         }
+         TFriendProxy *feproxy = nullptr;
+         if ((size_t)index < fTreeReader->fFriendProxies.size()) {
+            feproxy = fTreeReader->fFriendProxies.at(index);
+         }
+         if (!feproxy) {
+            feproxy = new ROOT::Internal::TFriendProxy(director, fTreeReader->GetTree(), index);
+            fTreeReader->fFriendProxies.resize(index+1);
+            fTreeReader->fFriendProxies.at(index) = feproxy;
+         }
+         director = feproxy->GetDirector();
+      }
+      namedProxy = new TNamedBranchProxy(director, branch, fBranchName, membername);
       fTreeReader->AddProxy(namedProxy);
       fProxy = namedProxy->GetProxy();
       if (fProxy)
