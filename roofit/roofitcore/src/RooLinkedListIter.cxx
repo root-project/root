@@ -67,4 +67,3 @@ RooAbsArg * TIteratorToSTLInterface<STLContainer>::nextChecked() {
 
 
 
-//ClassImp(RooLinkedListIterImpl);

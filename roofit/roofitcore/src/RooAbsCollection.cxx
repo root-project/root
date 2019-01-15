@@ -821,10 +821,6 @@ RooAbsArg * RooAbsCollection::find(const RooAbsArg& arg) const
   };
 
   auto item = std::find_if(_list.begin(), _list.end(), findByNamePtr);
-//  if (item == _list.end()) {
-//    std::cout << "Arg " << arg.GetName() << " with nptr " << nptr << " does not seem to be in list ";
-//    this->Print("V");
-//  }
 
   return item != _list.end() ? *item : nullptr;
 }

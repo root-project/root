@@ -23,15 +23,11 @@
 #include "RooLinkedListIter.h"
 #include <string>
 
-//#include <llvm/ADT/SmallVector.h>
-
 class RooCmdArg;
 
 class RooAbsCollection : public TObject, public RooPrintable {
 public:
   using Storage_t = std::vector<RooAbsArg*>;
-//  using Storage_t = std::deque<RooAbsArg*>;
-//  using Storage_t = llvm::SmallVector<RooAbsArg*, 5>;
   using const_iterator = Storage_t::const_iterator;
 
 
@@ -57,14 +53,12 @@ public:
   RooAbsCollection *snapshot(Bool_t deepCopy=kTRUE) const ;
   Bool_t snapshot(RooAbsCollection& output, Bool_t deepCopy=kTRUE) const ;
 
-  // Hash table control
+  /// \deprecated Without effect.
   void setHashTableSize(Int_t) {
     // Set size of internal hash table to i (should be a prime number)
-//    _list.setHashTableSize(i) ;
   }
+  /// \deprecated Without effect.
   Int_t getHashTableSize() const { 
-    // Return size of internal hash table
-//    return _list.getHashTableSize() ;
     return 0;
   }
 

@@ -129,6 +129,7 @@ public:
 
   Bool_t isInRange(const char* rangeSpec) ;
 
+  /// Use RooAbsCollection::snapshot(), but return as RooArgSet.
   RooArgSet * snapshot(bool deepCopy = true) const {
     return static_cast<RooArgSet*>(RooAbsCollection::snapshot(deepCopy));
   }

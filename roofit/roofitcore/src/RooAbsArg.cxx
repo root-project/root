@@ -490,9 +490,6 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
 //   }
 
   if (!arg) {
-//     if (list->getHashTableSize()==0) {
-//       list->setHashTableSize(1000) ;
-//     }
     list->reserve(10);
     arg=this ;
   }

@@ -1122,10 +1122,8 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
   RooFIter iterp = cache._partList.fwdIterator() ;
   RooFIter iter1 = cache._numList.fwdIterator() ;
   RooFIter iter2 = cache._denList.fwdIterator() ;
-//  RooFIter itern = cache._normList.fwdIterator() ;
   while((part=(RooAbsReal*)iterp.next())) {
 
-//    itern.next() ;
     num = (RooAbsReal*) iter1.next() ;
     den = (RooAbsReal*) iter2.next() ;
 
@@ -1943,10 +1941,8 @@ void RooProdPdf::generateEvent(Int_t code)
 
 RooProdPdf::CacheElem::~CacheElem()
 {
-//  _normList.Delete() ; //WVE THIS IS AN INTENTIAL LEAK -- MUST FIX LATER
   if (_rearrangedNum) delete _rearrangedNum ;
   if (_rearrangedDen) delete _rearrangedDen ;
-//   cout << "RooProdPdf::CacheElem dtor, this = " << this << endl ;
 }
 
 

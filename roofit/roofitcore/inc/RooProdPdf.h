@@ -135,7 +135,6 @@ protected:
     RooArgList _numList ;
     RooArgList _denList ;
     RooArgList _ownedList ;
-//    RooLinkedList _normList ;
     std::vector<RooArgSet*> _normList;
     Bool_t _isRearranged ;
     RooAbsReal* _rearrangedNum ;

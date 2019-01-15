@@ -68,14 +68,15 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooArgList(*this,newname); }
   virtual TObject* create(const char* newname) const { return new RooArgList(newname); }
   RooArgList& operator=(const RooArgList& other) { RooAbsCollection::operator=(other) ; return *this ; }
-
+    
+  /// Returns index of given arg, or -1 if arg is not in list.
   inline Int_t index(const RooAbsArg* arg) const { 
-    // Returns index of given arg, or -1 if arg is not in list
     auto item = std::find(_list.begin(), _list.end(), arg);
     return item != _list.end() ? item - _list.begin() : -1;
   }
+
+  /// Returns index of arg with given name, or -1 if arg is not in list.
   inline Int_t index(const char* name) const { 
-    // Returns index of given arg, or -1 if arg is not in list
     const std::string theName(name);
     auto item = std::find_if(_list.begin(), _list.end(), [&theName](const RooAbsArg * elm){
       return elm->GetName() == theName;
