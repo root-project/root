@@ -1373,7 +1373,7 @@ endfunction()
 # ROOT_ADD_PYUNITTEST( <name> <file>)
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTEST name file)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "COPY_TO_BUILDDIR" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR" ${ARGN})
 
   set(ROOT_ENV ROOTSYS=${ROOTSYS}
       PATH=${ROOTSYS}/bin:$ENV{PATH}
@@ -1391,10 +1391,15 @@ function(ROOT_ADD_PYUNITTEST name file)
     set(copy_to_builddir COPY_TO_BUILDDIR ${copy_files})
   endif()
 
+  if(ARG_WILLFAIL)
+    set(will_fail WILLFAIL)
+  endif()
+
   ROOT_ADD_TEST(pyunittests-${good_name}
                 COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
                 ENVIRONMENT ${ROOT_ENV}
-                ${copy_to_builddir})
+                ${copy_to_builddir}
+                ${will_fail})
 endfunction()
 
 #----------------------------------------------------------------------------
