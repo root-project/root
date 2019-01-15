@@ -297,14 +297,11 @@ Bool_t TTreeReader::Notify()
    }
 
    fDirector->Notify();
+
    if (fProxiesSet) {
       for (auto value: fValues) {
          value->NotifyNewTree(fTree->GetTree());
       }
-   }
-
-   if (!fProxiesSet) {
-      return SetProxies();
    }
 
    return kTRUE;
