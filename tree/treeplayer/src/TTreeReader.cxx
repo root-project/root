@@ -16,6 +16,7 @@
 #include "TEntryList.h"
 #include "TTreeCache.h"
 #include "TTreeReaderValue.h"
+#include "TFriendProxy.h"
 
 
 // clang-format off
@@ -224,6 +225,11 @@ TTreeReader::~TTreeReader()
    // Need to clear the map of proxies before deleting the director otherwise
    // they will have a dangling pointer.
    fProxies.clear();
+
+   for (auto feproxy: fFriendProxies) {
+      delete feproxy;
+   }
+   fFriendProxies.clear();
 
    delete fDirector;
 }

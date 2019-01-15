@@ -18,6 +18,8 @@
 #include "TBranchSTL.h"
 #include "TBranchProxyDirector.h"
 #include "TClassEdit.h"
+#include "TFriendElement.h"
+#include "TFriendProxy.h"
 #include "TLeaf.h"
 #include "TTreeProxyGenerator.h"
 #include "TTreeReaderValue.h"
@@ -579,7 +581,57 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
             membername = branch->GetName();
          }
       }
-      namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, originalBranchName.c_str(), membername);
+      auto director = fTreeReader->fDirector;
+      // Determine if the branch is actually in a Friend TTree and if so which.
+      if (branch->GetTree() != fTreeReader->GetTree()->GetTree()) {
+         // It is in a friend, let's find the 'index' in the list of friend ...
+         int index = -1;
+         int current = 0;
+         TFriendElement *fe_found = nullptr;
+         for(auto fe : TRangeDynCast<TFriendElement>( fTreeReader->GetTree()->GetTree()->GetListOfFriends())) {
+            if (branch->GetTree() == fe->GetTree()) {
+               index = current;
+               fe_found = fe;
+               break;
+            }
+            ++current;
+         }
+         if (index == -1) {
+            Error(errPrefix, "The branch %s is contained in a Friend TTree that is not directly attached to the main.\n"
+                  "This is not yet supported by TTreeReader.",
+                  fBranchName.Data());
+            return;
+         }
+         const char *localBranchName =  originalBranchName.c_str();
+         if (branch != branch->GetTree()->GetBranch(localBranchName)) {
+            // Try removing the name of the TTree.
+            auto len = strlen( branch->GetTree()->GetName());
+            if (strncmp(localBranchName, branch->GetTree()->GetName(), len) == 0
+                && localBranchName[len] == '.'
+                && branch != branch->GetTree()->GetBranch(localBranchName+len+1)) {
+               localBranchName = localBranchName + len + 1;
+            } else {
+               len = strlen(fe_found->GetName());
+               if (strncmp(localBranchName, fe_found->GetName(), len) == 0
+                  && localBranchName[len] == '.'
+                  && branch != branch->GetTree()->GetBranch(localBranchName+len+1)) {
+                  localBranchName = localBranchName + len + 1;
+               }
+            }
+         }
+         TFriendProxy *feproxy = nullptr;
+         if ((size_t)index < fTreeReader->fFriendProxies.size()) {
+            feproxy = fTreeReader->fFriendProxies.at(index);
+         }
+         if (!feproxy) {
+            feproxy = new ROOT::Internal::TFriendProxy(director, fTreeReader->GetTree(), index);
+            fTreeReader->fFriendProxies.resize(index+1);
+            fTreeReader->fFriendProxies.at(index) = feproxy;
+         }
+         namedProxy = new TNamedBranchProxy(feproxy->GetDirector(), branch, originalBranchName.c_str(), branch->GetName(), membername);
+      } else {
+         namedProxy = new TNamedBranchProxy(director, branch, originalBranchName.c_str(), membername);
+      }
       fTreeReader->AddProxy(namedProxy);
    }
 
