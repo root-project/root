@@ -34,9 +34,8 @@ This process is also organized by the workspace through the
 `importClassCode()` method.
 **/
 
-#include "RooWorkspace.h"
-#include "RooWorkspaceHandle.h"
 #include "RooFit.h"
+#include "RooWorkspace.h"
 #include "RooAbsPdf.h"
 #include "RooRealVar.h"
 #include "RooCategory.h"
@@ -74,14 +73,17 @@ using namespace std ;
 #include <string.h>
 
 ClassImp(RooWorkspace);
+;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 ClassImp(RooWorkspace::CodeRepo);
+;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 ClassImp(RooWorkspace::WSDir);
+;
 
 list<string> RooWorkspace::_classDeclDirList ;
 list<string> RooWorkspace::_classImplDirList ;
@@ -203,14 +205,7 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
   TIterator* iter4 = other._genObjects.MakeIterator() ;
   TObject* gobj ;
   while((gobj=iter4->Next())) {
-    TObject *theClone = gobj->Clone();
-
-    auto handle = dynamic_cast<RooWorkspaceHandle*>(theClone);
-    if (handle) {
-      handle->ReplaceWS(this);
-    }
-
-    _genObjects.Add(theClone);
+    _genObjects.Add(gobj->Clone()) ;
   }
   delete iter4 ;
   

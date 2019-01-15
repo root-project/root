@@ -18,7 +18,7 @@
 
 #include "RooArgSet.h"
 
-#include "RooWorkspaceHandle.h"
+#include "RooWorkspace.h"
 
 #include "TRef.h"
 
@@ -27,7 +27,7 @@
 
 namespace RooStats {
 
-class ModelConfig final : public TNamed, public RooWorkspaceHandle {
+class ModelConfig : public TNamed {
 
 public:
 
@@ -51,7 +51,7 @@ public:
 
 
    /// clone
-   virtual ModelConfig * Clone(const char * name = "") const override {
+   virtual ModelConfig * Clone(const char * name = "") const {
       ModelConfig * mc =  new ModelConfig(*this);
       if(strcmp(name,"")==0)
    mc->SetName(this->GetName());
@@ -60,16 +60,10 @@ public:
       return mc;
    }
 
-   /// Set a workspace that owns all the necessary components for the analysis.
-   virtual void SetWS(RooWorkspace & ws) override;
+   /// set a workspace that owns all the necessary components for the analysis
+   virtual void SetWS(RooWorkspace & ws);
    //// alias for SetWS(...)
    virtual void SetWorkspace(RooWorkspace & ws) { SetWS(ws); }
-
-   /// Remove the existing reference to a workspace and replace it with this new one.
-   virtual void ReplaceWS(RooWorkspace *ws) override {
-     fRefWS = nullptr;
-     SetWS(*ws);
-   }
 
    /// Set the proto DataSet, add to the the workspace if not already there
    virtual void SetProtoData(RooAbsData & data) {
@@ -256,7 +250,7 @@ public:
 
    void LoadSnapshot() const;
 
-   RooWorkspace * GetWS() const override;
+   RooWorkspace * GetWS() const;
    /// alias for GetWS()
    RooWorkspace * GetWorkspace() const { return GetWS(); }
 
@@ -264,7 +258,7 @@ public:
    void GuessObsAndNuisance(const RooAbsData& data);
 
    /// overload the print method
-   virtual void Print(Option_t* option = "") const override;
+   virtual void Print(Option_t* option = "") const;
 
 protected:
 
@@ -300,7 +294,7 @@ protected:
 
    std::string fObservablesName; /// name for RooArgSet specifying observable parameters.
 
-   ClassDefOverride(ModelConfig,4) /// A class that holds configuration information for a model using a workspace as a store
+   ClassDef(ModelConfig,4) /// A class that holds configuration information for a model using a workspace as a store
 
 };
 
