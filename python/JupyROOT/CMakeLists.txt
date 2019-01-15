@@ -8,8 +8,9 @@ set(NBDIFFUTIL ${CMAKE_CURRENT_SOURCE_DIR}/nbdiff.py )
 # documentation and as tutorials. In order to spot problems with downloads
 # one should not use GLOB but rather list explicitely all the files
 set(NOTEBOOKS ${CMAKE_CURRENT_SOURCE_DIR}/importROOT.ipynb
-              ${CMAKE_CURRENT_SOURCE_DIR}/simpleCppMagic.ipynb)
-#             ${CMAKE_CURRENT_SOURCE_DIR}/ROOT_kernel.ipynb)
+              ${CMAKE_CURRENT_SOURCE_DIR}/simpleCppMagic.ipynb
+              ${CMAKE_CURRENT_SOURCE_DIR}/thread_local.ipynb
+              ${CMAKE_CURRENT_SOURCE_DIR}/ROOT_kernel.ipynb)
 
 find_python_module(IPython QUIET)
 
@@ -20,17 +21,15 @@ if(PY_IPYTHON_FOUND)
     get_filename_component(SHORTPYFILE ${pyfile} NAME_WE)
     if (NOT ${SHORTPYFILE} STREQUAL "__init__")
       ROOTTEST_ADD_TEST(${SHORTPYFILE}_doctest
-                        COMMAND ${PYTHON_EXECUTABLE} -m doctest ${pyfile}
-                        RUN_SERIAL)
+                        COMMAND ${PYTHON_EXECUTABLE} -m doctest ${pyfile})
     endif()
   endforeach()
 
 # Test all notebooks available
   foreach(NOTEBOOK ${NOTEBOOKS})
     get_filename_component(NOTEBOOKBASE ${NOTEBOOK} NAME_WE)
-    ROOTTEST_ADD_TEST(${NOTEBOOKBASE}
-                      COMMAND ${PYTHON_EXECUTABLE} ${NBDIFFUTIL} ${NOTEBOOK}
-                      RUN_SERIAL)
+    ROOTTEST_ADD_TEST(${NOTEBOOKBASE}_notebook
+                      COMMAND ${PYTHON_EXECUTABLE} ${NBDIFFUTIL} ${NOTEBOOK})
   endforeach()
 endif()
 
