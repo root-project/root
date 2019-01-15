@@ -50,6 +50,34 @@ arrow::Schema.
 namespace ROOT {
 namespace Internal {
 namespace RDF {
+
+// This is needed by Arrow 0.12.0 which dropped 
+//
+//      using ArrowType = ArrowType_;
+//
+// from ARROW_STL_CONVERSION
+template <typename T>
+struct RootConversionTraits {};
+
+#define ROOT_ARROW_STL_CONVERSION(c_type, ArrowType_)  \
+   template <>                                         \
+   struct RootConversionTraits<c_type> {               \
+   using ArrowType = ::arrow::ArrowType_;              \
+   };
+
+ROOT_ARROW_STL_CONVERSION(bool, BooleanType)
+ROOT_ARROW_STL_CONVERSION(int8_t, Int8Type)
+ROOT_ARROW_STL_CONVERSION(int16_t, Int16Type)
+ROOT_ARROW_STL_CONVERSION(int32_t, Int32Type)
+ROOT_ARROW_STL_CONVERSION(int64_t, Int64Type)
+ROOT_ARROW_STL_CONVERSION(uint8_t, UInt8Type)
+ROOT_ARROW_STL_CONVERSION(uint16_t, UInt16Type)
+ROOT_ARROW_STL_CONVERSION(uint32_t, UInt32Type)
+ROOT_ARROW_STL_CONVERSION(uint64_t, UInt64Type)
+ROOT_ARROW_STL_CONVERSION(float, FloatType)
+ROOT_ARROW_STL_CONVERSION(double, DoubleType)
+ROOT_ARROW_STL_CONVERSION(std::string, StringType)
+
 // Per slot visitor of an Array.
 class ArrayPtrVisitor : public ::arrow::ArrayVisitor {
 private:
@@ -70,7 +98,7 @@ private:
    template <typename T>
    void *getTypeErasedPtrFrom(arrow::ListArray const &array, int32_t entry, RVec<T> &cache)
    {
-      using ArrowType = typename arrow::stl::ConversionTraits<T>::ArrowType;
+      using ArrowType = typename RootConversionTraits<T>::ArrowType;
       using ArrayType = typename arrow::TypeTraits<ArrowType>::ArrayType;
       auto values = reinterpret_cast<ArrayType *>(array.values().get());
       auto offset = array.value_offset(entry);
