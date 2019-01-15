@@ -110,6 +110,10 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
    //CRD->isDerivedFrom(BaseCRD, Paths);
    // Check that base derives from derived.
    clang::CXXBasePaths Paths;
+
+   // CXXRecordDecl::isDerivedFrom can trigger deserialization.
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+
    if (!CRD->isDerivedFrom(BaseCRD, Paths)) {
       //Not valid fBaseInfo = 0.
       return;
