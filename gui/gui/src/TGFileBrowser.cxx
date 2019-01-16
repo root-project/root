@@ -1672,6 +1672,12 @@ void TGFileBrowser::GotoDir(const char *path)
    // always prevent expanding the parent directory tree on afs
    if (first == "afs")
       expand = kFALSE;
+   // check also AFS_SUPER_MAGIC, NFS_SUPER_MAGIC, FUSE_SUPER_MAGIC,
+   // CIFS_MAGIC_NUMBER and SMB_SUPER_MAGIC
+   if (!gSystem->GetFsInfo(path, &id, &bsize, &blocks, &bfree))
+      if (id == 0x5346414f || id == 0x6969 || id == 0x65735546 ||
+          id == 0xff534d42 || id == 0x517b)
+         expand = kFALSE;
    if (first.Length() == 2 && first.EndsWith(":")) {
       TList *curvol  = gSystem->GetVolumes("cur");
       if (curvol) {
