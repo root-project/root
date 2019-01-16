@@ -103,6 +103,7 @@
 #pragma link C++ class ROOT::Internal::TTreeReaderValueBase+;
 #pragma link C++ class ROOT::Internal::TTreeReaderArrayBase+;
 #pragma link C++ class ROOT::Internal::TNamedBranchProxy+;
+#pragma link C++ class TNotifyLink<ROOT::Detail::TBranchProxy>;
 
 #endif
 

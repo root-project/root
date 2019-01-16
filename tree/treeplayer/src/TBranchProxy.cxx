@@ -19,6 +19,7 @@ of the autoloading of branches as well as all the generic setup routine.
 #include "TBranchElement.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
+#include <ROOT/RMakeUnique.hxx>
 
 ClassImp(ROOT::Detail::TBranchProxy);
 
@@ -135,6 +136,8 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char*
 ROOT::Detail::TBranchProxy::~TBranchProxy()
 {
    // Typical Destructor
+   if (fNotify && fDirector && fDirector->GetTree())
+      fNotify->RemoveLink(*(fDirector->GetTree()));
 }
 
 void ROOT::Detail::TBranchProxy::Reset()
@@ -177,6 +180,10 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
 
    if (!fDirector->GetTree()) {
       return false;
+   }
+   if (!fNotify) {
+      fNotify = std::make_unique<TNotifyLink<TBranchProxy>>(this);
+      fNotify->PrependLink(*fDirector->GetTree());
    }
    if (fParent) {
 
