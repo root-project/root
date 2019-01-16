@@ -504,20 +504,6 @@ if(opengl AND NOT builtin_gl2ps)
   endif()
 endif()
 
-#---Check for Graphviz installation-------------------------------------------------------
-if(gviz)
-  message(STATUS "Looking for Graphviz")
-  find_package(Graphviz)
-  if(NOT GRAPHVIZ_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Graphviz package not found and gviz option required")
-    else()
-      message(STATUS "Graphviz not found. Switching off gviz option")
-      set(gviz OFF CACHE BOOL "Disabled because Graphviz not found (${gviz_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for krb5 Support-----------------------------------------------------------
 if(krb5)
   message(STATUS "Looking for Kerberos 5")
