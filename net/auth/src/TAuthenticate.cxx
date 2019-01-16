@@ -67,11 +67,6 @@
 extern "C" char *crypt(const char *, const char *);
 #endif
 
-#ifdef R__GLBS
-#   include <sys/ipc.h>
-#   include <sys/shm.h>
-#endif
-
 #ifdef R__SSL
 // SSL specific headers
 #   include <openssl/bio.h>

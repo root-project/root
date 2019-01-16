@@ -232,7 +232,6 @@ std::string gServName[3] = { "sockd", "rootd", "proofd" };
 // Local global consts
 static const int gAUTH_CLR_MSK = 0x1;     // Masks for authentication methods
 static const int gAUTH_KRB_MSK = 0x4;
-static const int gAUTH_GLB_MSK = 0x8;
 static const int gMAXTABSIZE = 50000000;
 
 static const std::string gAuthMeth[kMAXSEC] = { "UsrPwd", "Unsupported", "Krb5",
@@ -1009,21 +1008,6 @@ int RpdCleanupAuthTab(const char *crypttoken)
             // Delete Public Key file
             RpdDeleteKeyFile(pw);
 
-#ifdef R__GLBS
-            if (lsec == 3) {
-               int shmid = atoi(ctkn);
-               struct shmid_ds shm_ds;
-               if (shmctl(shmid, IPC_RMID, &shm_ds) == -1) {
-                  if (GetErrno() != EIDRM) {
-                     ErrorInfo("RpdCleanupAuthTab: unable to mark shared"
-                               " memory segment %d (buf:%s)", shmid, ctkn);
-                     ErrorInfo("RpdCleanupAuthTab: for destruction"
-                               " (errno: %d)", GetErrno());
-                     retval++;
-                  }
-               }
-            }
-#endif
             // Locate 'act' ... skeep initial spaces, if any
             int slen = (int)strlen(line);
             int ka = 0;
@@ -1151,21 +1135,6 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
             // Delete Public Key file
             RpdDeleteKeyFile(pw);
 
-#ifdef R__GLBS
-            if (lsec == 3 && act > 0) {
-               int shmid = atoi(shmbuf);
-               struct shmid_ds shm_ds;
-               if (shmctl(shmid, IPC_RMID, &shm_ds) == -1) {
-                  if (GetErrno() != EIDRM) {
-                     ErrorInfo("RpdCleanupAuthTab: unable to mark shared"
-                               " memory segment %d (buf:%s)", shmid, shmbuf);
-                     ErrorInfo("RpdCleanupAuthTab: for destruction"
-                               " (errno: %d)", GetErrno());
-                     retval++;
-                  }
-               }
-            }
-#endif
             // Deactivate active entries: remote client has gone ...
             if (act > 0) {
 
@@ -4640,30 +4609,6 @@ int RpdLogin(int ServType, int auth)
    }
 
    if (getuid() == 0) {
-
-#ifdef R__GLBS
-      if (ServType == 2) {
-         // We need to change the ownership of the shared memory segments used
-         // for credential export to allow proofserv to destroy them
-         struct shmid_ds shm_ds;
-         if (gShmIdCred > 0) {
-            if (shmctl(gShmIdCred, IPC_STAT, &shm_ds) == -1) {
-               ErrorInfo("RpdLogin: can't get info about shared memory"
-                         " segment %d (errno: %d)",gShmIdCred,GetErrno());
-               return -1;
-            }
-            shm_ds.shm_perm.uid = pw->pw_uid;
-            shm_ds.shm_perm.gid = pw->pw_gid;
-            if (shmctl(gShmIdCred, IPC_SET, &shm_ds) == -1) {
-               ErrorInfo("RpdLogin: can't change ownership of shared"
-                         " memory segment %d (errno: %d)",
-                         gShmIdCred,GetErrno());
-               return -1;
-            }
-         }
-      }
-#endif
-      //
       // Anonymous users are confined to their corner
       if (gAnon) {
          // We need to do it before chroot, otherwise it does not work
@@ -5099,17 +5044,6 @@ void RpdSetErrorHandler(ErrorHandler_t err, ErrorHandler_t sys, ErrorHandler_t f
    gErrSys   = sys;
    gErrFatal = fatal;
 }
-
-#ifdef R__GLBS
-////////////////////////////////////////////////////////////////////////////////
-/// Returns shared memory id
-
-int RpdGetShmIdCred()
-{
-   return gShmIdCred;
-}
-#endif
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve specific ROOT password from $HOME/fpw, if any.
