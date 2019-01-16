@@ -37,11 +37,11 @@ class Cache(unittest.TestCase):
         # commented out until we do not understand iteration
         #l = rdf.Take(ColType_t+", std::list("+ColType_t+")")("arr")
 
-        for i in xrange(4):
+        for i in range(4):
             vv = v[i]
             dv = d[i]
-            for j in xrange(4):
-                ref = float(i + j);
+            for j in range(4):
+                ref = float(i + j)
                 self.assertEqual(ref, vv[j])
                 self.assertEqual(ref, dv[j])
 
@@ -50,7 +50,7 @@ class Cache(unittest.TestCase):
        cache = rdf.Cache("arr")
        arr = cache.Take('ROOT::RVec<float>')("arr")
        for ievt, e in enumerate(arr):
-           for i in xrange(4):
+           for i in range(4):
                self.assertEqual(float(i + ievt), e[i])
 
     def test_EntryAndSlotColumns(self):
