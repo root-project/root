@@ -117,6 +117,11 @@ if(ROOT_python_FOUND)
   find_package(PythonLibs)
 endif()
 
+#---Set flag for PyROOT tests that are expected to fail in experimental
+if(ROOT_pyroot_experimental_FOUND)
+  set(PYTESTS_WILLFAIL WILLFAIL)
+endif()
+
 # Find OpenGL 
 find_library(OPENGL_gl_LIBRARY NAMES GL)
 
