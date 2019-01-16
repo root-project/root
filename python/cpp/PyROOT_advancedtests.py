@@ -277,10 +277,8 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertEqual( gzoi_id, id( MyTemplatedMethodClass.__dict__[ mname ] ) )
 
    def test07TemplateMemberFunctionsNotInstantiated(self):
-      """
-      Test lookup and calls for template member functions that have not been
-      explicitly instantiated
-      """
+      """Test lookup and calls for template member functions
+      that have not been explicitly instantiated"""
       MyTemplatedMethodClass = ROOT.MyTemplatedMethodClass
       m = MyTemplatedMethodClass()
 
