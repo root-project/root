@@ -1649,6 +1649,7 @@ void TGFileBrowser::GetObjPicture(const TGPicture **pic, TObject *obj)
 void TGFileBrowser::GotoDir(const char *path)
 {
    TGListTreeItem *item, *itm;
+   Long_t id, bsize, blocks, bfree;
    Bool_t expand = kTRUE;
    TString sPath(gSystem->UnixPathName(path));
    item = fRootDir;
