@@ -140,16 +140,16 @@ namespace RooFit {
         bool was_not_synced = sync_parameters(x);
         if (was_not_synced) {
           // update parameters and object states that changed since last calculation (or creation if first time)
-          #ifdef NDEBUG
+//          #ifdef NDEBUG
           RooWallTimer timer;
-          #endif // NDEBUG
+//          #endif // NDEBUG
           update_state();
-          #ifdef NDEBUG
+//          #ifdef NDEBUG
           timer.stop();
           auto time_update_state = timer.timing_s();
 
           timer.start();
-          #endif // NDEBUG
+//          #endif // NDEBUG
           // activate work mode
           get_manager()->set_work_mode(true);
 
@@ -165,11 +165,11 @@ namespace RooFit {
 
           // end work mode
           get_manager()->set_work_mode(false);
-          #ifdef NDEBUG
+//          #ifdef NDEBUG
           timer.stop();
 
           std::cout << "update_state: " << time_update_state << "s, gradient work: " << timer.timing_s() << "s" << std::endl;
-          #endif // NDEBUG
+//          #endif // NDEBUG
         }
       }
     }
