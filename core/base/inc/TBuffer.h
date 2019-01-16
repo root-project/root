@@ -22,12 +22,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObject.h"
+#include "TClass.h"
 
 #include <vector>
 
 class TVirtualStreamerInfo;
 class TStreamerElement;
-class TClass;
 class TString;
 class TProcessID;
 class TClonesArray;
@@ -386,14 +386,14 @@ template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
    // would not be sufficient to pass the information 'which class do we want'
    // since the pointer could be zero (so typeid(*obj) is not usable).
 
-   TClass *cl = TBuffer::GetClass(typeid(Tmpl));
+   auto cl = TClass::GetClass<Tmpl>();
    obj = (Tmpl *) ( (void*) buf.ReadObjectAny(cl) );
    return buf;
 }
 
 template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj)
 {
-   TClass *cl = (obj) ? TBuffer::GetClass(typeid(*obj)) : 0;
+   auto cl = (obj) ? TClass::GetClass<Tmpl>() : nullptr;
    buf.WriteObjectAny(obj, cl);
    return buf;
 }
@@ -402,16 +402,10 @@ template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj);
 template <class Tmpl> TBuffer &operator<<(TBuffer &buf, Tmpl *&obj);
 #endif
 
-#if defined(R__TEMPLATE_OVERLOAD_BUG)
-template <>
-#endif
-inline TBuffer &operator<<(TBuffer &buf, const TObject *obj)
-   { buf.WriteObjectAny(obj, TObject::Class()); return buf; }
-
 template <class T>
 inline Int_t TBuffer::WriteObject(const T *objptr, Bool_t cacheReuse)
 {
-   TClass *cl = (objptr) ? TBuffer::GetClass(typeid(T)) : 0;
+   auto cl = (objptr) ? TClass::GetClass<T>() : nullptr;
    return WriteObjectAny(objptr, cl, cacheReuse);
 }
 

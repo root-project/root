@@ -539,6 +539,8 @@ public:
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(const std::type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(ClassInfo_t *info, Bool_t load = kTRUE, Bool_t silent = kFALSE);
+   template<typename T>
+   static TClass        *GetClass(Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static Bool_t         GetClass(DeclId_t id, std::vector<TClass*> &classes);
    static DictFuncPtr_t  GetDict (const char *cname);
    static DictFuncPtr_t  GetDict (const std::type_info &info);
@@ -571,6 +573,30 @@ public:
 
    ClassDef(TClass,0)  //Dictionary containing class information
 };
+
+namespace ROOT {
+namespace Internal {
+template <typename T>
+TClass *GetClassHelper(Bool_t, Bool_t, std::true_type)
+{
+   return T::Class();
+}
+
+template <typename T>
+TClass *GetClassHelper(Bool_t load, Bool_t silent, std::false_type)
+{
+   return TClass::GetClass(typeid(T), load, silent);
+}
+
+} // namespace Internal
+} // namespace ROOT
+
+template <typename T>
+TClass *TClass::GetClass(Bool_t load, Bool_t silent)
+{
+   typename std::is_base_of<TObject, T>::type tag;
+   return ROOT::Internal::GetClassHelper<T>(load, silent, tag);
+}
 
 namespace ROOT {
 
