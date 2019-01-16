@@ -78,7 +78,7 @@ public:
    virtual TDirectory *GetDirectory(const char *apath, Bool_t printError = false, const char *funcname = "GetDirectory");
    template <class T> inline void GetObject(const char* namecycle, T*& ptr) // See TDirectory::Get for information
       {
-         ptr = (T*)GetObjectChecked(namecycle,TBuffer::GetClass(typeid(T)));
+         ptr = (T*)GetObjectChecked(namecycle,TClass::GetClass<T>());
       }
    virtual void       *GetObjectChecked(const char *namecycle, const char* classname);
    virtual void       *GetObjectChecked(const char *namecycle, const TClass* cl);
