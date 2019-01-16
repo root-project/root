@@ -201,7 +201,7 @@ def _invokeAclicMac(fileName):
 def _codeToFilename(code):
     '''Convert code to a unique file name
 
-    >>> _codeToFilename("int f(i){return i*i;}")
+    >>> _codeToFilename("int f(i){return i*i;}".encode('utf-8'))
     'dbf7e731.C'
     '''
     fileNameBase = sha1(code).hexdigest()[0:8]
@@ -210,7 +210,7 @@ def _codeToFilename(code):
 def _dumpToUniqueFile(code):
     '''Dump code to file whose name is unique
 
-    >>> _codeToFilename("int f(i){return i*i;}")
+    >>> _codeToFilename("int f(i){return i*i;}".encode('utf-8'))
     'dbf7e731.C'
     '''
     fileName = _codeToFilename(code)
