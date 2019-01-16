@@ -88,7 +88,6 @@ class Poller(Thread):
                 self.ro_ref().is_running = False
             else:
                 self.poll = False
-                self.ro_ref().is_running = False
         return
 
 class Runner(object):
@@ -108,7 +107,7 @@ class Runner(object):
     >>> r.AsyncRun("Asynchronous");print("Synchronous");time.sleep(1)
     Synchronous
     Asynchronous
-    >>> r.AsyncRun("Asynchronous"); time.sleep(.2); print(r.HasFinished())
+    >>> r.AsyncRun("Asynchronous"); print(r.HasFinished())
     False
     >>> time.sleep(1)
     Asynchronous
@@ -132,16 +131,20 @@ class Runner(object):
         return self.function(argument)
 
     def AsyncRun(self, argument):
+        self.is_running = True
         self.argument_queue.put(argument)
 
     def Wait(self):
         while self.is_running: pass
 
     def HasFinished(self):
-        return False if self.is_running else True
+        if self.is_running: return False
+        return True
 
     def Stop(self):
+        self.Wait()
         self.argument_queue.put(None)
+        self.Wait()
 
 
 class JupyROOTDeclarer(Runner):
