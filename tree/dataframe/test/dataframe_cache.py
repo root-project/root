@@ -24,13 +24,12 @@ class Cache(unittest.TestCase):
       ROOT.gInterpreter.Calc(code)
 
     def test_TakeArrays(self):
-        tdf = RDataFrame("t", "fileName.root")
-        ColType_t = "std::span<float>"
-        v = tdf.Take(ColType_t)("arr").GetVal()
-        d = tdf.Take(ColType_t+", std::deque("+ColType_t+")")("arr").GetVal()
+        rdf = RDataFrame("t", "fileName.root")
+        ColType_t = "ROOT::RVec<float>"
+        v = rdf.Take(ColType_t)("arr")
+        d = rdf.Take(ColType_t+", std::deque("+ColType_t+")")("arr")
         # commented out until we do not understand iteration
-        #l = tdf.Take(ColType_t+", std::list("+ColType_t+")")("arr").GetVal()
-
+        #l = rdf.Take(ColType_t+", std::list("+ColType_t+")")("arr")
 
         ifloat = 0.
         for i in xrange(4):
@@ -42,21 +41,21 @@ class Cache(unittest.TestCase):
                 self.assertEqual(ref, dv[j]);
 
     def test_Carrays(self):
-       tdf = RDataFrame("t", "fileName.root")
-       cache = tdf.Cache("arr")
-       arr = cache.Take('std::vector<float>')("arr")
+       rdf = RDataFrame("t", "fileName.root")
+       cache = rdf.Cache("arr")
+       arr = cache.Take('ROOT::RVec<float>')("arr")
        for e in arr:
            for i in xrange(4):
                self.assertEqual(float(i), e[i]);
 
     def test_EntryAndSlotColumns(self):
-       tdf = RDataFrame(8)
-       c = tdf.Filter("tdfentry_ % 2 == 0").Define("myEntry","tdfentry_").Cache()
-       ds_entries = c.Take('UInt64_t')('tdfentry_')
+       rdf = RDataFrame(8)
+       c = rdf.Filter("rdfentry_ % 2 == 0").Define("myEntry","rdfentry_").Cache()
+       ds_entries = c.Take('UInt64_t')('rdfentry_')
        ref_ds_entries = [0,1,2,3]
        for e, eref in zip (ds_entries, ref_ds_entries):
            self.assertEqual(e, eref)
-       old_entries = c.Take('UInt64_t')('tdfentry_')
+       old_entries = c.Take('UInt64_t')('rdfentry_')
        ref_old_entries = [0,2,4,6]
        for e, eref in zip (old_entries, ref_old_entries):
            self.assertEqual(e, eref)
