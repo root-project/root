@@ -107,6 +107,7 @@
 #pragma link C++ class TMemberInspector;
 #pragma link C++ class TMessageHandler+;
 #pragma link C++ class TNamed+;
+#pragma link C++ class TNotifyLinkBase+;
 #pragma link C++ class TObjString+;
 #pragma link C++ class TObject-;
 #pragma link C++ class TRemoteObject-;
