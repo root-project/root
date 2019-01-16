@@ -49,7 +49,6 @@ class RooListProxy ;
 class RooExpensiveObjectCache ;
 class RooWorkspace ;
 class RooRealProxy ;
-/* class TGraphStruct ; */
 
 class RooRefArray : public TObjArray {
  public:
@@ -319,8 +318,6 @@ public:
 
   void graphVizTree(const char* fileName, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
   void graphVizTree(std::ostream& os, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
-
-/*   TGraphStruct* graph(Bool_t useFactoryTag=kFALSE, Double_t textSize=0.03) ; */
 
   void printComponentTree(const char* indent="",const char* namePat=0, Int_t nLevel=999) ;
   void printCompactTree(const char* indent="",const char* fileName=0, const char* namePat=0, RooAbsArg* client=0) ;
