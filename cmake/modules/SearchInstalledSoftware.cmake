@@ -133,8 +133,7 @@ endif()
 #---Check for PCRE-------------------------------------------------------------------
 if(NOT builtin_pcre)
   message(STATUS "Looking for PCRE")
-  # Clear cache variables, or LLVM may use old values for PCRE
-  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE)
+  foreach(suffix FOUND INCLUDE_DIR PCRE_LIBRARY PCREPOSIX_LIBRARY)
     unset(PCRE_${suffix} CACHE)
   endforeach()
   find_package(PCRE)
