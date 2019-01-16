@@ -21,6 +21,7 @@
 #include "Riostream.h"
 #include "TError.h"
 #include "TVirtualCollectionProxy.h"
+#include "TNotifyLink.h"
 
 #include <list>
 #include <algorithm>
@@ -92,6 +93,8 @@ namespace Detail {
          TLeaf   *fLeafCount;    // eventual auxiliary leaf (for example holding the size)
       };
 
+      std::unique_ptr<TNotifyLink<TBranchProxy>> fNotify; // Callback object used by the TChain to update this proxy
+
       TTree   *fLastTree; // TTree containing the last entry read
       Long64_t fRead;     // Last entry read
 
@@ -116,10 +119,15 @@ namespace Detail {
 
       void Reset();
 
+      Bool_t Notify() {
+         return Setup();
+      }
+
       Bool_t Setup();
 
       Bool_t IsInitialized() {
-         return fLastTree && fCurrentTreeNumber == fDirector->GetTree()->GetTreeNumber() && fLastTree == fDirector->GetTree();
+         return fInitialized;
+         // return fLastTree && fCurrentTreeNumber == fDirector->GetTree()->GetTreeNumber() && fLastTree == fDirector->GetTree();
       }
 
       Bool_t IsaPointer() const {
@@ -127,9 +135,10 @@ namespace Detail {
       }
 
       Bool_t Read() {
-         if (fDirector==0) return false;
+         if (R__unlikely(fDirector==0)) return false;
 
-         if (fDirector->GetReadEntry()!=fRead) {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
             if (!IsInitialized()) {
                if (!Setup()) {
                   ::Error("TBranchProxy::Read","%s",Form("Unable to initialize %s\n",fBranchName.Data()));
@@ -141,11 +150,11 @@ namespace Detail {
                result = fParent->Read();
             } else {
                if (fBranchCount) {
-                  result &= (-1 != fBranchCount->GetEntry(fDirector->GetReadEntry()));
+                  result &= (-1 != fBranchCount->GetEntry(treeEntry));
                }
-               result &= (-1 != fBranch->GetEntry(fDirector->GetReadEntry()));
+               result &= (-1 != fBranch->GetEntry(treeEntry));
             }
-            fRead = fDirector->GetReadEntry();
+            fRead = treeEntry;
             if (R__unlikely(fCollection)) {
                fCollection->PopProxy(); // works even if no proxy env object was set.
                if (IsaPointer()) {
@@ -161,9 +170,10 @@ namespace Detail {
       }
 
       Bool_t ReadEntries() {
-         if (fDirector==0) return false;
+         if (R__unlikely(fDirector==0)) return false;
 
-         if (fDirector->GetReadEntry()!=fRead) {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
             if (!IsInitialized()) {
                if (!Setup()) {
                   ::Error("TBranchProxy::ReadEntries","%s",Form("Unable to initialize %s\n",fBranchName.Data()));
@@ -173,12 +183,12 @@ namespace Detail {
             if (fParent) fParent->ReadEntries();
             else {
                if (fBranchCount) {
-                  fBranchCount->TBranch::GetEntry(fDirector->GetReadEntry());
+                  fBranchCount->TBranch::GetEntry(treeEntry);
                }
-               fBranch->TBranch::GetEntry(fDirector->GetReadEntry());
+               fBranch->TBranch::GetEntry(treeEntry);
             }
             // NO - we only read the entries, not the contained objects!
-            // fRead = fDirector->GetReadEntry();
+            // fRead = treeEntry;
          }
          return IsInitialized();
       }
@@ -198,7 +208,8 @@ namespace Detail {
 
       TClass *GetClass() {
          if (fDirector==0) return 0;
-         if (fDirector->GetReadEntry()!=fRead) {
+
+         if (fDirector->GetReadEntry() != fRead) {
             if (!IsInitialized()) {
                if (!Setup()) {
                   return 0;
