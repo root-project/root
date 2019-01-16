@@ -46,5 +46,4 @@ ROOT_ADD_GTEST(datasource_lazy datasource_lazy.cxx LIBRARIES ROOTDataFrame)
 #### PYTHON TESTS ####
 ROOT_ADD_PYUNITTEST(dataframe_misc dataframe_misc.py)
 ROOT_ADD_PYUNITTEST(dataframe_histograms dataframe_histograms.py)
-# deactivate until Cache will be available through PyROOT
-#ROOT_ADD_PYUNITTEST(dataframe_cache dataframe_cache.py)
+ROOT_ADD_PYUNITTEST(dataframe_cache dataframe_cache.py)
