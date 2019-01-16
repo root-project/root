@@ -395,6 +395,7 @@ End_Macro
 #include "TVirtualMutex.h"
 
 #include "TBranchIMTHelper.h"
+#include "TNotifyLink.h"
 
 #include <chrono>
 #include <cstddef>
@@ -881,6 +882,9 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */,
 
 TTree::~TTree()
 {
+   if (auto link = dynamic_cast<TNotifyLinkBase*>(fNotify)) {
+      link->Clear();
+   }
    if (fAllocationCount && (gDebug > 0)) {
       Info("TTree::~TTree", "For tree %s, allocation count is %u.", GetName(), fAllocationCount.load());
 #ifdef R__TRACK_BASKET_ALLOC_TIME
