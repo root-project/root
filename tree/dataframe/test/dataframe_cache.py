@@ -48,7 +48,9 @@ class Cache(unittest.TestCase):
     def test_Carrays(self):
        rdf = RDataFrame("t", "fileName.root")
        cache = rdf.Cache("arr")
-       arr = cache.Take('ROOT::RVec<float>')("arr")
+       arrrp = cache.Take('ROOT::RVec<float>')("arr")
+       # Workaround for iteration on osx
+       arr = arrrp.GetValue()
        for ievt, e in enumerate(arr):
            for i in range(4):
                self.assertEqual(float(i + ievt), e[i])
@@ -56,11 +58,15 @@ class Cache(unittest.TestCase):
     def test_EntryAndSlotColumns(self):
        rdf = RDataFrame(8)
        c = rdf.Filter("rdfentry_ % 2 == 0").Define("myEntry","rdfentry_").Cache()
-       ds_entries = c.Take('ULong64_t')('rdfentry_')
+       ds_entriesrp = c.Take('ULong64_t')('rdfentry_')
+       # Workaround for iteration on osx
+       ds_entries = ds_entriesrp.GetValue()
        ref_ds_entries = [0,1,2,3]
        for e, eref in zip (ds_entries, ref_ds_entries):
            self.assertEqual(e, eref)
-       old_entries = c.Take('ULong64_t')('myEntry')
+       old_entriesrp = c.Take('ULong64_t')('myEntry')
+       # Workaround for iteration on osx
+       old_entries = old_entriesrp.GetValue()
        ref_old_entries = [0,2,4,6]
        for e, eref in zip (old_entries, ref_old_entries):
            self.assertEqual(e, eref)
