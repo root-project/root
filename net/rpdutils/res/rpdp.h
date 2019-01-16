@@ -87,9 +87,6 @@ int  RpdGetAuthProtocol();
 const char *RpdGetKeyRoot();
 int  RpdGetClientProtocol();
 int  RpdGetOffSet();
-#ifdef R__GLBS
-int  RpdGetShmIdCred();
-#endif
 int  RpdInitSession(int, std::string &, int &);
 int  RpdInitSession(int, std::string &, int &, int &, std::string &);
 int  RpdInitSession(int, std::string &, int &, int &, int &, std::string &);
