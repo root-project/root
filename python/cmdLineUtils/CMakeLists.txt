@@ -3,6 +3,11 @@ if (ROOT_python_FOUND AND NOT ROOT_CLASSIC_BUILD) # Do not run with classic buil
 configure_file(test.root . COPYONLY)
 configure_file(simpleTree.root . COPYONLY)
 
+# SimpleRootmkdirX tests only fail in Python3 with PyROOT experimental
+if(${PYTHON_VERSION_MAJOR} GREATER_EQUAL 3)
+  set(mkdir_willfail ${PYTESTS_WILLFAIL})
+endif()
+
 ############################## PATTERN TESTS ############################
 set (TESTPATTERN_EXE ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/testPatternToFileNameAndPathSplitList.py)
 ROOTTEST_ADD_TEST(SimplePattern1
@@ -154,7 +159,8 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir1PrepareInput
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir1
                   COMMAND ${TOOLS_PREFIX}/rootmkdir target1.root:new_directory
-                  DEPENDS SimpleRootmkdir1PrepareInput)
+                  DEPENDS SimpleRootmkdir1PrepareInput
+                  ${mkdir_willfail})
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir1CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls -1 target1.root
@@ -175,7 +181,8 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir2PrepareInput
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir2
                   COMMAND ${TOOLS_PREFIX}/rootmkdir target2.root:dir1 target2.root:dir2
-                  DEPENDS SimpleRootmkdir2PrepareInput)
+                  DEPENDS SimpleRootmkdir2PrepareInput
+                  ${mkdir_willfail})
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir2CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls -1 target2.root
@@ -196,7 +203,8 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir3PrepareInput
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir3
                   COMMAND ${TOOLS_PREFIX}/rootmkdir -p target3.root:aa/bb/cc
-                  DEPENDS SimpleRootmkdir3PrepareInput)
+                  DEPENDS SimpleRootmkdir3PrepareInput
+                  ${mkdir_willfail})
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir3CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls -1 target3.root:aa/bb
