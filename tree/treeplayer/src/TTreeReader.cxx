@@ -554,9 +554,7 @@ void TTreeReader::SetTree(TTree* tree, TEntryList* entryList /*= nullptr*/)
 
    if (fTree) {
       fLoadTreeStatus = kLoadTreeNone;
-      if (fTree->InheritsFrom(TChain::Class())) {
-         SetBit(kBitIsChain);
-      }
+      SetBit(kBitIsChain, fTree->InheritsFrom(TChain::Class()));
    } else {
       fLoadTreeStatus = kNoTree;
    }
