@@ -6,13 +6,15 @@ configure_file(simpleTree.root . COPYONLY)
 # SimpleRootmkdirX tests only fail in Python3 with PyROOT experimental
 if(${PYTHON_VERSION_MAJOR} GREATER_EQUAL 3)
   set(mkdir_willfail ${PYTESTS_WILLFAIL})
+  set(simplepattern_willfail ${PYTESTS_WILLFAIL})
 endif()
 
 ############################## PATTERN TESTS ############################
 set (TESTPATTERN_EXE ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/testPatternToFileNameAndPathSplitList.py)
 ROOTTEST_ADD_TEST(SimplePattern1
                   COMMAND ${TESTPATTERN_EXE} test.root
-                  OUTREF SimplePattern.ref)
+                  OUTREF SimplePattern.ref
+                  ${simplepattern_willfail})
 
 ROOTTEST_ADD_TEST(SimplePattern2
                   COMMAND ${TESTPATTERN_EXE} test.root:tof
