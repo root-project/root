@@ -99,7 +99,8 @@ ROOTTEST_ADD_TEST(SimpleRootrm1CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootrm1Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r victim1.root
-                  DEPENDS SimpleRootrm1CheckOutput)
+                  DEPENDS SimpleRootrm1CheckOutput
+                  ${PYTESTS_WILLFAIL})
 
 
 
@@ -120,7 +121,8 @@ ROOTTEST_ADD_TEST(SimpleRootrm2CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootrm2Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r victim2.root
-                  DEPENDS SimpleRootrm2CheckOutput)
+                  DEPENDS SimpleRootrm2CheckOutput
+                  ${PYTESTS_WILLFAIL})
 
 
 
@@ -141,7 +143,8 @@ ROOTTEST_ADD_TEST(SimpleRootrm3CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootrm3Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r victim3.root
-                  DEPENDS SimpleRootrm3CheckOutput)
+                  DEPENDS SimpleRootrm3CheckOutput
+                  ${PYTESTS_WILLFAIL})
 #########################################################################
 
 ############################# ROOMKDIR TESTS ############################
@@ -161,7 +164,8 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir1CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir1Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r target1.root
-                  DEPENDS SimpleRootmkdir1CheckOutput)
+                  DEPENDS SimpleRootmkdir1CheckOutput
+                  ${PYTESTS_WILLFAIL})
 
 
 
@@ -181,7 +185,8 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir2CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir2Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r target2.root
-                  DEPENDS SimpleRootmkdir2CheckOutput)
+                  DEPENDS SimpleRootmkdir2CheckOutput
+                  ${PYTESTS_WILLFAIL})
 
 
 
@@ -201,7 +206,8 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir3CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir3Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r target3.root
-                  DEPENDS SimpleRootmkdir3CheckOutput)
+                  DEPENDS SimpleRootmkdir3CheckOutput
+                  ${PYTESTS_WILLFAIL})
 #########################################################################
 
 ############################# ROOCP TESTS ############################
@@ -222,7 +228,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp1CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootcp1Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r copy1.root
-                  DEPENDS SimpleRootcp1CheckOutput)
+                  DEPENDS SimpleRootcp1CheckOutput
+                  ${PYTESTS_WILLFAIL})
 
 
 
@@ -243,7 +250,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp2CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootcp2Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r copy2.root
-                  DEPENDS SimpleRootcp2CheckOutput)
+                  DEPENDS SimpleRootcp2CheckOutput
+                  ${PYTESTS_WILLFAIL})
 
 
 
@@ -264,7 +272,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp3CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootcp3Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r copy3.root
-                  DEPENDS SimpleRootcp3CheckOutput)
+                  DEPENDS SimpleRootcp3CheckOutput
+                  ${PYTESTS_WILLFAIL})
 
 ROOTTEST_ADD_TEST(SimpleRootcp4PrepareInput
                   COMMAND ${TOOLS_PREFIX}/rootcp -r test.root copy4.root
@@ -283,7 +292,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp4CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootcp4Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r copy4.root
-                  DEPENDS SimpleRootcp4CheckOutput)
+                  DEPENDS SimpleRootcp4CheckOutput
+                  ${PYTESTS_WILLFAIL})
 
 
 
@@ -304,7 +314,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp5CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootcp5Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r copy5.root
-                  DEPENDS SimpleRootcp5CheckOutput)
+                  DEPENDS SimpleRootcp5CheckOutput
+                  ${PYTESTS_WILLFAIL})
 #########################################################################
 
 ############################# ROOMV TESTS ############################
@@ -325,7 +336,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv1CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootmv1Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r move1.root
-                  DEPENDS SimpleRootmv1CheckOutput)
+                  DEPENDS SimpleRootmv1CheckOutput
+                  ${PYTESTS_WILLFAIL})
 
 
 
@@ -346,7 +358,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv2CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootmv2Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r move2.root
-                  DEPENDS SimpleRootmv2CheckOutput)
+                  DEPENDS SimpleRootmv2CheckOutput
+                  ${PYTESTS_WILLFAIL})
 
 
 
@@ -367,7 +380,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv3CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootmv3Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r move3.root
-                  DEPENDS SimpleRootmv3CheckOutput)
+                  DEPENDS SimpleRootmv3CheckOutput
+                  ${PYTESTS_WILLFAIL})
 
 ROOTTEST_ADD_TEST(SimpleRootmv4PrepareInput
                   COMMAND ${TOOLS_PREFIX}/rootcp -r test.root move4.root
@@ -386,7 +400,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv4CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootmv4Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r move4.root
-                  DEPENDS SimpleRootmv4CheckOutput)
+                  DEPENDS SimpleRootmv4CheckOutput
+                  ${PYTESTS_WILLFAIL})
 
 ROOTTEST_ADD_TEST(SimpleRootmv5PrepareInput
                   COMMAND ${TOOLS_PREFIX}/rootcp -r test.root move5.root
@@ -405,7 +420,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv5CheckOutput
 
 ROOTTEST_ADD_TEST(SimpleRootmv5Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r move5.root
-                  DEPENDS SimpleRootmv5CheckOutput)
+                  DEPENDS SimpleRootmv5CheckOutput
+                  ${PYTESTS_WILLFAIL})
 #########################################################################
 
 ROOTTEST_ADD_TEST(ROOT_8197
