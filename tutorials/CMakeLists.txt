@@ -476,6 +476,13 @@ if(ROOT_python_FOUND)
                  tutorial-vecops-vo004_SortAndSelect-py
                  tutorial-vecops-vo005_Combinations-py)
 
+  if(${PYTHON_VERSION_MAJOR} GREATER_EQUAL 3)
+    # These tests only fail in Py3 with PyROOT experimental
+    list(APPEND pyexp_fail tutorial-pyroot-first-py)
+    list(APPEND pyexp_fail tutorial-pyroot-surfaces-py)
+    list(APPEND pyexp_fail tutorial-pyroot-zdemo-py)
+  endif()
+
   foreach(t ${pytutorials})
     list(FIND returncode_1 ${t} index)
     if(index EQUAL -1)
