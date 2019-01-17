@@ -426,23 +426,23 @@ if(ROOT_python_FOUND)
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
 
   #---Tutorials expected to fail in PyROOT experimental
-  set(pyexp_fail tutorial-dataframe-df001-introduction-py
-                 tutorial-dataframe-df002-dataModel-py
-                 tutorial-dataframe-df003-profiles-py
-                 tutorial-dataframe-df004-cutFlowReport-py
-                 tutorial-dataframe-df006-ranges-py
-                 tutorial-dataframe-df007-snapshot-py
-                 tutorial-dataframe-df008-createDataSetFromScratch-py
-                 tutorial-dataframe-df010-trivialDataSource-py
-                 tutorial-dataframe-df011-ROOTDataSource-py
-                 tutorial-dataframe-df012-DefinesAndFiltersAsStrings-py
-                 tutorial-dataframe-df014-CSVDataSource-py
-                 tutorial-dataframe-df016-vecOps-py
-                 tutorial-dataframe-df017-vecOpsHEP-py
-                 tutorial-dataframe-df019-Cache-py
-                 tutorial-dataframe-df021-createTGraph-py
-                 tutorial-dataframe-df024-Display-py
-                 tutorial-dataframe-df026-AsNumpyArrays-py
+  set(pyexp_fail tutorial-dataframe-df001_introduction-py
+                 tutorial-dataframe-df002_dataModel-py
+                 tutorial-dataframe-df003_profiles-py
+                 tutorial-dataframe-df004_cutFlowReport-py
+                 tutorial-dataframe-df006_ranges-py
+                 tutorial-dataframe-df007_snapshot-py
+                 tutorial-dataframe-df008_createDataSetFromScratch-py
+                 tutorial-dataframe-df010_trivialDataSource-py
+                 tutorial-dataframe-df011_ROOTDataSource-py
+                 tutorial-dataframe-df012_DefinesAndFiltersAsStrings-py
+                 tutorial-dataframe-df014_CSVDataSource-py
+                 tutorial-dataframe-df016_vecOps-py
+                 tutorial-dataframe-df017_vecOpsHEP-py
+                 tutorial-dataframe-df019_Cache-py
+                 tutorial-dataframe-df021_createTGraph-py
+                 tutorial-dataframe-df024_Display-py
+                 tutorial-dataframe-df026_AsNumpyArrays-py
                  tutorial-graphs-timeSeriesFromCSV-py
                  tutorial-hist-fillrandom-py
                  tutorial-math-Legendre-py
@@ -464,17 +464,17 @@ if(ROOT_python_FOUND)
                  tutorial-pyroot-staff-py
                  tutorial-pyroot-tornado-py
                  tutorial-pyroot-tree-py
-                 tutorial-roofit-rf104-classfactory-py
-                 tutorial-roofit-rf106-plotdecoration-py
-                 tutorial-roofit-rf315-projectpdf-py
-                 tutorial-roofit-rf402-datahandling-py
-                 tutorial-roofit-rf504-simwstool-py
-                 tutorial-roofit-rf509-wsinteractive-py
-                 tutorial-roofit-rf511-wsfactory-basic-py
-                 tutorial-roofit-rf610-visualerror-py
-                 tutorial-roofit-rf707-kernelestimation-py
-                 tutorial-vecops-vo004-SortAndSelect-py
-                 tutorial-vecops-vo005-Combinations-py)
+                 tutorial-roofit-rf104_classfactory-py
+                 tutorial-roofit-rf106_plotdecoration-py
+                 tutorial-roofit-rf315_projectpdf-py
+                 tutorial-roofit-rf402_datahandling-py
+                 tutorial-roofit-rf504_simwstool-py
+                 tutorial-roofit-rf509_wsinteractive-py
+                 tutorial-roofit-rf511_wsfactory_basic-py
+                 tutorial-roofit-rf610_visualerror-py
+                 tutorial-roofit-rf707_kernelestimation-py
+                 tutorial-vecops-vo004_SortAndSelect-py
+                 tutorial-vecops-vo005_Combinations-py)
 
   foreach(t ${pytutorials})
     list(FIND returncode_1 ${t} index)
