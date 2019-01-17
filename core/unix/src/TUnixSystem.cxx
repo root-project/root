@@ -28,7 +28,6 @@
 #include "TException.h"
 #include "Demangle.h"
 #include "TEnv.h"
-#include "TSocket.h"
 #include "Getline.h"
 #include "TInterpreter.h"
 #include "TApplication.h"
