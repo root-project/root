@@ -199,7 +199,7 @@ TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
 ////////////////////////////////////////////////////////////////////////////////
 /// Access data from the tree called keyname in the directory (e.g. TFile)
 /// dir, or the current directory if dir is NULL. If keyname cannot be
-/// found, or if it is not a TTree, IsZombie() will return true.
+/// found, or if it is not a TTree, IsInvalid() will return true.
 
 TTreeReader::TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList /*= nullptr*/):
    fEntryList(entryList),
@@ -241,13 +241,12 @@ void TTreeReader::Initialize()
 {
    fEntry = -1;
    if (!fTree) {
-      MakeZombie();
       fEntryStatus = kEntryNoTree;
-      fLoadTreeStatus = kLoadTreeNone;
+      fLoadTreeStatus = kNoTree;
       return;
    }
 
-   ResetBit(kZombie);
+   fLoadTreeStatus = kLoadTreeNone;
    if (fTree->InheritsFrom(TChain::Class())) {
       SetBit(kBitIsChain);
    }
@@ -437,7 +436,7 @@ Long64_t TTreeReader::GetEntries(Bool_t force) const {
 
 TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local)
 {
-   if (IsZombie()) {
+   if (IsInvalid()) {
       fEntryStatus = kEntryNoTree;
       fEntry = -1;
       return fEntryStatus;
@@ -554,10 +553,12 @@ void TTreeReader::SetTree(TTree* tree, TEntryList* entryList /*= nullptr*/)
    fEntry = -1;
 
    if (fTree) {
-      ResetBit(kZombie);
+      fLoadTreeStatus = kLoadTreeNone;
       if (fTree->InheritsFrom(TChain::Class())) {
          SetBit(kBitIsChain);
       }
+   } else {
+      fLoadTreeStatus = kNoTree;
    }
 
    if (!fDirector) {
@@ -566,8 +567,6 @@ void TTreeReader::SetTree(TTree* tree, TEntryList* entryList /*= nullptr*/)
    else {
       fDirector->SetTree(fTree);
       fDirector->SetReadEntry(-1);
-      // Distinguish from end-of-chain case:
-      fLoadTreeStatus = kLoadTreeNone;
    }
 }
 
