@@ -3,38 +3,61 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set(ROOT_TOOLS)
+
+#---ROOT tools------------------------------------------------------------------
 if(NOT WIN32)
+# rootn.exe binary tool
   ROOT_EXECUTABLE(rootn.exe rmain.cxx LIBRARIES New Core MathCore Rint)
   if(ROOT_PLATFORM MATCHES linux)
     SET_TARGET_PROPERTIES(rootn.exe PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
   endif()
+
+# roots.exe binary tool
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore)
+
+# xpdtest binary tool
   ROOT_EXECUTABLE(xpdtest xpdtest.cxx LIBRARIES Proof Tree Hist RIO Net Thread Matrix MathCore)
+  list(APPEND ROOT_TOOLS "rootn.exe" "roots.exe" "xpdtest")
 endif()
+
+# root.exe binary tool
 ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
+list(APPEND ROOT_TOOLS "root.exe")
 if(MSVC)
   set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
       /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index
       /STACK:4000000")
   set_property(TARGET root.exe APPEND_STRING PROPERTY LINK_FLAGS ${root_exports})
 endif()
+
+# proofserv.exe binary tool
 ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
+list(APPEND ROOT_TOOLS "proofserv.exe")
 if(MSVC)
+
+# hadd binary tool
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore)
 else()
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore MultiProc)
 endif()
-ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
-
-#---CreateHaddCommandLineOptions------------------------------------------------------------------
+list(APPEND ROOT_TOOLS "hadd")
+# CreateHaddCommandLineOptions tool (hadd man helper)
 generateHeaders(${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py ${CMAKE_BINARY_DIR}/include/haddCommandLineOptionsHelp.h hadd)
 
+# rootnb.exe binary tool
+ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
+list(APPEND ROOT_TOOLS "rootnb.exe")
+
+# g2root,h2root binary tools
 if(fortran AND CMAKE_Fortran_COMPILER)
   ROOT_EXECUTABLE(g2root g2root.f LIBRARIES minicern)
   set_target_properties(g2root PROPERTIES COMPILE_FLAGS "-w")
   ROOT_EXECUTABLE(h2root h2root.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore Thread minicern)
+  list(APPEND ROOT_TOOLS "g2root" "g2root")
 endif()
 
+# ROOT python binary tools
 if(python)
   file(GLOB utils RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} python/root*)
   foreach(rawUtilName ${utils})
@@ -66,7 +89,7 @@ if(python)
   configure_file(python/cmdLineUtils.py ${localruntimedir}/cmdLineUtils.py @ONLY)
 endif()
 
-
+#---ROOT tools - rootcling, rootcint, genreflex------------------------------------------------------------------
 if(NOT MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS} -Wno-unused-parameter")
 else()
@@ -77,6 +100,7 @@ ROOT_EXECUTABLE(rootcling src/rootcling.cxx
                           LIBRARIES RIO Core Cling ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ZLIB::ZLIB
                                     ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                                     ${corelinklibs})
+list(APPEND ROOT_TOOLS "rootcling")
 # rootcling includes the ROOT complex header which would build the complex
 # dictionary with modules. To make sure that rootcling_stage1 builds this
 # dict before we use it, we add a dependency here.
@@ -120,3 +144,10 @@ else()
                       DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
   endif()
 endif()
+
+#---ROOT tools - custom CMake target------------------------------------------------------------------
+# Helps on multicore builds to generate all needed ROOT tools binaries and could be added as a dependency for roottest
+add_custom_target(roottools)
+foreach(target_dependency ${ROOT_TOOLS})
+    add_dependencies(roottools ${target_dependency})
+endforeach()
