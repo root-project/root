@@ -16,6 +16,8 @@ IpoptMinimizer::IpoptMinimizer() : BasicMinimizer()
    fIpotApp = IpoptApplicationFactory();
    fInternalTNLP = new InternalTNLP(this);
    fIpotApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
+   fIpotApp->Options()->SetStringValue("linear_solver", "mumps");
+   fIpotApp->Options()->SetIntegerValue("print_level", 0);
    fOptions.SetMinimizerType("Ipopt");
    fOptions.SetMinimizerAlgorithm("mumps");
 }
@@ -27,6 +29,7 @@ IpoptMinimizer::IpoptMinimizer(const char *type)
    fInternalTNLP = new InternalTNLP(this);
    fIpotApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
    fIpotApp->Options()->SetStringValue("linear_solver", type);
+   fIpotApp->Options()->SetIntegerValue("print_level", 0);
    fOptions.SetMinimizerType("Ipopt");
    fOptions.SetMinimizerAlgorithm(type);
 }
