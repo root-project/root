@@ -19,6 +19,8 @@ of the autoloading of branches as well as all the generic setup routine.
 #include "TBranchElement.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
+#include "TRealData.h"
+#include "TDataMember.h"
 
 ClassImp(ROOT::Detail::TBranchProxy);
 
@@ -222,21 +224,18 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
          }
       }
 
-      fElement = (TStreamerElement*)pcl->GetStreamerInfo()->GetElements()->FindObject(fDataMember);
-      if (fElement == 0) {
+      fElement = (TStreamerElement*)pcl->GetStreamerInfo()->GetStreamerElement(fDataMember, fOffset);
+      if (fElement) {
+         fIsaPointer = fElement->IsaPointer();
+         fClass = fElement->GetClassPointer();
+         fMemberOffset = fElement->GetOffset();
+         fArrayLength = fElement->GetArrayLength();
+      } else {
          Error("Setup","Data member %s seems no longer be in class %s",fDataMember.Data(),pcl->GetName());
          return false;
       }
 
-      fIsaPointer = fElement->IsaPointer();
-      fClass = fElement->GetClassPointer();
-
-
       fIsClone = (fClass==TClonesArray::Class());
-
-      fOffset = fMemberOffset = fElement->GetOffset();
-
-      fArrayLength = fElement->GetArrayLength();
 
       fWhere = fParent->fWhere; // not really used ... it is reset by GetStart and GetClStart
 
@@ -310,7 +309,10 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
 
          TStreamerInfo * info = be->GetInfo();
          Int_t id = be->GetID();
-         if (id>=0) {
+         if (be->GetType() == 3) {
+            fClassName = "TClonesArray";
+            fClass = TClonesArray::Class();
+         } else if (id>=0) {
             fOffset = info->GetElementOffset(id);
             fElement = (TStreamerElement*)info->GetElements()->At(id);
             fIsaPointer = fElement->IsaPointer();
