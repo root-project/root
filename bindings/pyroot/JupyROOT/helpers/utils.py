@@ -201,21 +201,23 @@ def _invokeAclicMac(fileName):
 def _codeToFilename(code):
     '''Convert code to a unique file name
 
-    >>> _codeToFilename("int f(i){return i*i;}".encode('utf-8'))
+    >>> _codeToFilename("int f(i){return i*i;}")
     'dbf7e731.C'
     '''
-    fileNameBase = sha1(code).hexdigest()[0:8]
+    code_enc = code if type(code) == bytes else code.encode('utf-8')
+    fileNameBase = sha1(code_enc).hexdigest()[0:8]
     return fileNameBase + ".C"
 
 def _dumpToUniqueFile(code):
     '''Dump code to file whose name is unique
 
-    >>> _codeToFilename("int f(i){return i*i;}".encode('utf-8'))
+    >>> _dumpToUniqueFile("int f(i){return i*i;}")
     'dbf7e731.C'
     '''
     fileName = _codeToFilename(code)
     with open (fileName,'w') as ofile:
-      ofile.write(code.decode('utf-8'))
+      code_dec = code if type(code) != bytes else code.decode('utf-8')
+      ofile.write(code_dec)
     return fileName
 
 def isPlatformApple():
