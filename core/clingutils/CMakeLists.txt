@@ -57,21 +57,23 @@ foreach(dict ${stldicts})
 endforeach()
 
 set(CLANG_RESOURCE_DIR_STEM)
-set(CLANG_RESOURCE_DIR_VERSION)
 if (builtin_clang)
   set(CLANG_RESOURCE_DIR_STEM ${CMAKE_BINARY_DIR}/interpreter/llvm/src/${CMAKE_CFG_INTDIR}/lib/clang)
   set(CLANG_RESOURCE_DIR_VERSION ${LLVM_VERSION})
-else()
+else ()
   set(CLANG_RESOURCE_DIR_STEM ${LLVM_LIBRARY_DIR}/clang)
-  # There is no reasonable way to get the version of clang under which is its resource directory.
-  # For example, lib/clang/5.0.0/include. Deduce it.
-  file(GLOB CHILDREN RELATIVE ${CLANG_RESOURCE_DIR_STEM} ${CLANG_RESOURCE_DIR_STEM}/*)
-  list(LENGTH CHILDREN CHILDREN_LENGTH)
-  if (${CHILDREN_LENGTH} GREATER 1)
-    message(FATAL_ERROR "List must contain only one element. It contains ${CHILDREN}." )
-  endif()
+  # A user can define a clang version to use, otherwise find it (but will error if more than one version is present)
+  if (NOT DEFINED CLANG_RESOURCE_DIR_VERSION)
+    # There is no reasonable way to get the version of clang under which is its resource directory.
+    # For example, lib/clang/5.0.0/include. Deduce it.
+    file(GLOB CHILDREN RELATIVE ${CLANG_RESOURCE_DIR_STEM} ${CLANG_RESOURCE_DIR_STEM}/*)
+    list(LENGTH CHILDREN CHILDREN_LENGTH)
+    if (${CHILDREN_LENGTH} GREATER 1)
+      message(FATAL_ERROR "Found more than one version of clang. CLANG_RESOURCE_DIR_VERSION contains: '${CHILDREN}'." )
+    endif()
 
-  list(GET CHILDREN 0 CLANG_RESOURCE_DIR_VERSION)
+    list(GET CHILDREN 0 CLANG_RESOURCE_DIR_VERSION)
+  endif()
 endif()
 
 
