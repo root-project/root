@@ -135,7 +135,8 @@ public:
    };
 
    enum ELoadTreeStatus {
-      kLoadTreeNone = 0, ///< default state, Notify has not been called yet.
+      kNoTree = 0,       ///< default state, no TTree is connected (formerly 'Zombie' state)
+      kLoadTreeNone,     ///< Notify has not been called yet.
       kInternalLoadTree, ///< Notify/LoadTree was last called from SetEntryBase
       kExternalLoadTree  ///< User code called LoadTree directly.
    };
@@ -166,6 +167,8 @@ public:
    void SetTree(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
 
    Bool_t IsChain() const { return TestBit(kBitIsChain); }
+
+   Bool_t IsInvalid() const { return fLoadTreeStatus == kNoTree; }
 
    TTree* GetTree() const { return fTree; }
    TEntryList* GetEntryList() const { return fEntryList; }
@@ -283,7 +286,7 @@ private:
    TTree* fTree = nullptr; ///< tree that's read
    TEntryList* fEntryList = nullptr; ///< entry list to be used
    EEntryStatus fEntryStatus = kEntryNotLoaded; ///< status of most recent read request
-   ELoadTreeStatus fLoadTreeStatus = kLoadTreeNone; ///< Indicator on how LoadTree was called 'last' time.
+   ELoadTreeStatus fLoadTreeStatus = kNoTree;   ///< Indicator on how LoadTree was called 'last' time.
    TNotifyLink<TTreeReader> fNotify; // Callback object used by the TChain to update this proxy
    ROOT::Internal::TBranchProxyDirector* fDirector = nullptr; ///< proxying director, owned
    std::deque<ROOT::Internal::TFriendProxy*> fFriendProxies; ///< proxying for friend TTrees, owned
