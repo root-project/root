@@ -136,11 +136,11 @@ public:
     return _list.end();
   }
 
-  std::size_t size() const {
+  Storage_t::size_type size() const {
     return _list.size();
   }
 
-  void reserve(std::size_t count) {
+  void reserve(Storage_t::size_type count) {
     _list.reserve(count);
   }
 
@@ -153,7 +153,7 @@ public:
     return _list.front();
   }
 
-  RooAbsArg * operator[](std::size_t i) const {
+  RooAbsArg * operator[](Storage_t::size_type i) const {
     return _list[i];
   }
 
