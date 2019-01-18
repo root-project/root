@@ -173,7 +173,7 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir1CheckOutput
 ROOTTEST_ADD_TEST(SimpleRootmkdir1Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r target1.root
                   DEPENDS SimpleRootmkdir1CheckOutput
-                  ${PYTESTS_WILLFAIL})
+                  ${mkdir_willfail})
 
 
 
@@ -195,7 +195,7 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir2CheckOutput
 ROOTTEST_ADD_TEST(SimpleRootmkdir2Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r target2.root
                   DEPENDS SimpleRootmkdir2CheckOutput
-                  ${PYTESTS_WILLFAIL})
+                  ${mkdir_willfail})
 
 
 
@@ -217,7 +217,7 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir3CheckOutput
 ROOTTEST_ADD_TEST(SimpleRootmkdir3Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r target3.root
                   DEPENDS SimpleRootmkdir3CheckOutput
-                  ${PYTESTS_WILLFAIL})
+                  ${mkdir_willfail})
 #########################################################################
 
 ############################# ROOCP TESTS ############################
