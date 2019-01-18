@@ -28,12 +28,10 @@ an URL. The supported url format is:
 #include "TEnv.h"
 #include "TSystem.h"
 #include "TMap.h"
-#include "TVirtualMutex.h"
+#include "TROOT.h"
 
 TObjArray *TUrl::fgSpecialProtocols = 0;
 THashList *TUrl::fgHostFQDNs = 0;
-
-TVirtualMutex *gURLMutex = 0; // local mutex
 
 #ifdef R__COMPLETE_MEM_TERMINATION
 namespace {
@@ -477,7 +475,7 @@ const char *TUrl::GetHostFQDN() const
             fHostFQ = adr.GetHostName();
          } else
             fHostFQ = "-";
-         R__LOCKGUARD2(gURLMutex);
+         R__LOCKGUARD(gROOTMutex);
          if (!fgHostFQDNs) {
             fgHostFQDNs = new THashList;
             fgHostFQDNs->SetOwner();
@@ -570,10 +568,10 @@ void TUrl::Print(Option_t *) const
 
 TObjArray *TUrl::GetSpecialProtocols()
 {
+   R__LOCKGUARD(gROOTMutex);
    static Bool_t usedEnv = kFALSE;
 
    if (!gEnv) {
-      R__LOCKGUARD2(gURLMutex);
       if (!fgSpecialProtocols)
          fgSpecialProtocols = new TObjArray;
       if (fgSpecialProtocols->GetEntriesFast() == 0)
@@ -584,7 +582,6 @@ TObjArray *TUrl::GetSpecialProtocols()
    if (usedEnv)
       return fgSpecialProtocols;
 
-   R__LOCKGUARD2(gURLMutex);
    if (fgSpecialProtocols)
       fgSpecialProtocols->Delete();
 
