@@ -521,21 +521,29 @@
 #define R__DEPRECATED(MAJOR, MINOR, REASON) \
   _R__JOIN3_(_R__DEPRECATED_,MAJOR,MINOR)("will be removed in ROOT v" #MAJOR "." #MINOR ": " REASON)
 
-/* Mechanism to advise users to avoid legacy functions that will not be removed */
-#ifdef R__SUGGEST_FASTER_FUNCTIONS
-  #define R__SUGGEST_FUNCTION(ALTERNATIVE) \
-      _R__DEPRECATED_LATER("This function has faster/more secure alternatives: " ALTERNATIVE)
+
+/* Mechanism to help users switch to recommended interface. */
+#if defined(__clang__)
+#  define _R__WARN_FUNCTION(REASON) __attribute__((diagnose_if(true, REASON, "warning")))
+#elif defined(__GNUC__)
+#  define _R__WARN_FUNCTION(REASON) __attribute__((warning(REASON)))
 #else
-  #define R__SUGGEST_FUNCTION(ALTERNATIVE)
+#  define _R__WARN_FUNCTION(REASON) _R__DEPRECATED_LATER(REASON)
 #endif
 
-/* Mechanism to advise users to avoid legacy classes that will not be removed */
-#ifdef R__SUGGEST_FASTER_CLASSES
-  #define R__SUGGEST_CLASS(ALTERNATIVE) \
-      _R__DEPRECATED_LATER("This class has a faster/more secure alternative: " ALTERNATIVE)
+
+#ifdef R__SUGGEST_NEW_INTERFACE
+# define R__SUGGEST_FUNCTION(ALTERNATIVE) \
+     _R__WARN_FUNCTION("There is a superior alternative: " ALTERNATIVE)
+
+# define R__SUGGEST_CLASS(ALTERNATIVE) \
+     _R__DEPRECATED_LATER("There is a superior alternative: " ALTERNATIVE)
 #else
-  #define R__SUGGEST_CLASS(ALTERNATIVE)
+# define R__SUGGEST_FUNCTION(ALTERNATIVE)
+# define R__SUGGEST_CLASS(ALTERNATIVE)
 #endif
+
+
 /*---- misc ------------------------------------------------------------------*/
 
 #ifdef R__GNU
