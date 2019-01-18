@@ -84,6 +84,8 @@ The methods could be replaced by equivalent methods with other signature:
   - Improve and simplify the drawing the 2D histogram's option "ARR".
   - The option ARR can be combined with the option COL or COLZ.
   - `TBox::DistancetoPrimitive` and `TBox::ExecuteEvent` now work in log scales (by Jérémie Dudouet).
+  - Take the line attributes into account when drawing a histogram with option bar or hbar.
+    They were ignored until now.
 
 ## 3D Graphics Libraries
 
