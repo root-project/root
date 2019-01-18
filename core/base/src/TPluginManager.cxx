@@ -367,7 +367,7 @@ void TPluginManager::LoadHandlersFromEnv(TEnv *env)
             char *v = StrDup(val);
             s += 7;
             while (1) {
-               TString regexp = strtok(!cnt ? v : 0, "; ");
+               TString regexp = strtok(!cnt ? v : 0, "; "); // this method does not need to be reentrant
                if (regexp.IsNull()) break;
                TString clss   = strtok(0, "; ");
                if (clss.IsNull()) break;

@@ -152,21 +152,22 @@ TDataMember *TMethod::FindDataMember()
       Int_t i;
 
       strlcpy(argstr,argstring,nchs+1);       //let's move it to "workspace"  copy
-      ptr2 = strtok(argstr,"{}");     //extract the data!
+      char *rest;
+      ptr2 = strtok_r(argstr, "{}", &rest); // extract the data!
       if (ptr2 == 0) {
          Fatal("FindDataMember","Internal error found '*ARGS=\"' but not \"{}\" in %s",GetCommentString());
          delete [] argstr;
          return 0;
       }
-      ptr2 = strtok((char*)0,"{}");
+      ptr2 = strtok_r((char *)0, "{}", &rest);
 
       //extract argument tokens//
       char *tokens[20];
       Int_t cnt       = 0;
       Int_t token_cnt = 0;
       do {
-         ptr1 = strtok((char*) (cnt++ ? 0:ptr2),",;"); //extract tokens
-                                                        // separated by , or ;
+         ptr1 = strtok_r((char *)(cnt++ ? 0 : ptr2), ",;", &rest); // extract tokens
+                                                                   // separated by , or ;
          if (ptr1) {
             Int_t nch = strlen(ptr1);
             tok = new char[nch+1];
@@ -184,8 +185,8 @@ TDataMember *TMethod::FindDataMember()
 
       for (i=0; i<token_cnt;i++) {
          cnt = 0;
-         ptr1 = strtok(tokens[i],"=>");  //LeftHandedSide=methodarg
-         ptr2 = strtok((char*)0,"=>"); //RightHandedSide-points to datamember
+         ptr1 = strtok_r(tokens[i], "=>", &rest);         // LeftHandedSide=methodarg
+         ptr2 = strtok_r((char *)0, "=>", &rest);         // RightHandedSide-points to datamember
 
          //find the MethodArg
          a      = 0;

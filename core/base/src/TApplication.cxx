@@ -947,7 +947,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 
    if (!strncmp(line, ".which", 6)) {
       char *fn  = Strip(line+7);
-      char *s   = strtok(fn, "+(");
+      char *s = strtok(fn, "+("); // this method does not need to be reentrant
       char *mac = gSystem->Which(TROOT::GetMacroPath(), s, kReadPermission);
       if (!mac)
          Printf("No macro %s in path %s", s, TROOT::GetMacroPath());
