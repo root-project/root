@@ -4948,6 +4948,9 @@ void THistPainter::PaintBar(Option_t *)
    Int_t hstyle = fH->GetFillStyle();
    box.SetFillColor(hcolor);
    box.SetFillStyle(hstyle);
+   box.SetLineStyle(fH->GetLineStyle());
+   box.SetLineColor(fH->GetLineColor());
+   box.SetLineWidth(fH->GetLineWidth());
    for (Int_t bin=fXaxis->GetFirst();bin<=fXaxis->GetLast();bin++) {
       y    = fH->GetBinContent(bin);
       xmin = gPad->XtoPad(fXaxis->GetBinLowEdge(bin));
@@ -5008,6 +5011,9 @@ void THistPainter::PaintBarH(Option_t *)
    Int_t hstyle = fH->GetFillStyle();
    box.SetFillColor(hcolor);
    box.SetFillStyle(hstyle);
+   box.SetLineStyle(fH->GetLineStyle());
+   box.SetLineColor(fH->GetLineColor());
+   box.SetLineWidth(fH->GetLineWidth());
    for (Int_t bin=fYaxis->GetFirst();bin<=fYaxis->GetLast();bin++) {
       ymin = gPad->YtoPad(fYaxis->GetBinLowEdge(bin));
       ymax = gPad->YtoPad(fYaxis->GetBinUpEdge(bin));
