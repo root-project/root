@@ -3923,6 +3923,9 @@ int RootClingMain(int argc,
       ignoreExistingDict = true;
       ic++;
    } else if (argc > 1 && (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h"))) {
+      fprintf(stderr, shortHelp);
+      return 1;
+   } else if (argc > 1 && !strcmp(argv[1], "--help")) {
       fprintf(stderr, kCommandLineOptionsHelp);
       return 1;
    } else if (ic < argc && !strncmp(argv[ic], "-", 1)) {
@@ -3930,7 +3933,7 @@ int RootClingMain(int argc,
               argv[0]);
       fprintf(stderr, "Only one verbose flag is authorized (one of -v, -v0, -v1, -v2, -v3, -v4)\n"
               "and must be before the -f flags\n");
-      fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
+      fprintf(stderr, "For more extensive help type: %s --help\n", argv[0]);
       return 1;
    } else {
       force = 0;
