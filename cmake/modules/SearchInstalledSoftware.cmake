@@ -161,7 +161,7 @@ if(NOT builtin_lzma)
   endif()
 endif()
 if(builtin_lzma)
-  set(lzma_version 5.2.1)
+  set(lzma_version 5.2.4)
   set(LZMA_TARGET LZMA)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
@@ -169,7 +169,7 @@ if(builtin_lzma)
     ExternalProject_Add(
       LZMA
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
-      URL_HASH SHA256=ce92be2df485a2bd461939908ba9666c88f44e3194d4fb2d4990ac8de7c5929f
+      URL_HASH SHA256=c5910475aa8c7b4ed322f3e043c9cc9214e997f2a85b6b32f7702ac6d47364f8
       PREFIX LZMA
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ""
@@ -193,7 +193,7 @@ if(builtin_lzma)
     ExternalProject_Add(
       LZMA
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
-      URL_HASH SHA256=b918b6648076e74f8d7ae19db5ee663df800049e187259faf5eb997a7b974681
+      URL_HASH SHA256=b512f3b726d3b37b6dc4c8570e137b9311e7552e8ccbab4d39d47ce5f4177145
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib
                         --with-pic --disable-shared --quiet
