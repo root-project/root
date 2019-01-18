@@ -3049,7 +3049,7 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
    // Now we go through all indentifiers
    const char *tokenlist = "*+-";
    char *current = const_cast<char*>(working.c_str());
-   current = strtok(current,tokenlist);
+   current = strtok(current,tokenlist); // this method does not need to be reentrant
 
    while (current!=0) {
       // Check the token
