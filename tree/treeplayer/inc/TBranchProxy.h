@@ -119,6 +119,7 @@ namespace Detail {
       void Reset();
 
       Bool_t Notify() {
+         fRead = -1;
          return Setup();
       }
 
