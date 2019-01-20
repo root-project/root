@@ -5,12 +5,17 @@ set(NBDIFFUTIL ${CMAKE_CURRENT_SOURCE_DIR}/nbdiff.py )
 
 # List of notebook files
 # TODO: To be extended with the list of downloaded notebooks used in the
-# documentation and as tutorials. In order to spot problems with downloads
-# one should not use GLOB but rather list explicitely all the files
+# documentation and as tutorials.
 set(NOTEBOOKS ${CMAKE_CURRENT_SOURCE_DIR}/importROOT.ipynb
-              ${CMAKE_CURRENT_SOURCE_DIR}/simpleCppMagic.ipynb
+              ${CMAKE_CURRENT_SOURCE_DIR}/simpleCppMagic.ipynb)
+
+# Include cpp notebooks if metakernel is present
+execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c" "import metakernel" RESULT_VARIABLE FoundMetakernel)
+if(FoundMetakernel EQUAL 0)
+set(NOTEBOOKS ${NOTEBOOKS}
               ${CMAKE_CURRENT_SOURCE_DIR}/thread_local.ipynb
               ${CMAKE_CURRENT_SOURCE_DIR}/ROOT_kernel.ipynb)
+endif()
 
 find_python_module(IPython QUIET)
 
