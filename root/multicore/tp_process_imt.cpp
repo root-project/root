@@ -58,6 +58,9 @@ std::tuple<int,std::string,std::string,std::string,int> parseOptions(int argc, c
 
 int main(int argc, char** argv) {
 
+  // We do not want to limit the number of tasks for this particular test:
+  ROOT::TTreeProcessorMT::SetMaxTasksPerFilePerWorker(1024);
+
   auto options = parseOptions(argc,argv);
   const int kNThreads = std::get<0>(options);
   auto const kFileName = std::get<1>(options);
