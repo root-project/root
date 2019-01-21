@@ -18,8 +18,8 @@ from ._generic import add_len
 
 def remove_pyz(self, o):
 	# Parameters:
-    # self: collection
-    # o: object to remove from the collection
+    # - self: collection
+    # - o: object to remove from the collection
 	res = self.Remove(o)
 
 	if not res:
@@ -27,8 +27,8 @@ def remove_pyz(self, o):
 
 def extend_pyz(self, c):
 	# Parameters:
-    # self: collection
-    # c: collection to extend self with
+    # - self: collection
+    # - c: collection to extend self with
     lenc = c.GetEntries()
     it = TIter(c)
     for i in range(lenc):
@@ -36,8 +36,10 @@ def extend_pyz(self, c):
 
 def count_pyz(self, o):
 	# Parameters:
-    # self: collection
-    # o: object to be counted in the collection
+    # - self: collection
+    # - o: object to be counted in the collection
+    # Returns:
+    # - Number of occurrences of the object in the collection
 	n = 0
 
 	it = TIter(self)
