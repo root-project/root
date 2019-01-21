@@ -174,7 +174,7 @@ namespace ROOT {
 
       Internal::FriendInfo GetFriendInfo(TTree &tree);
       std::string FindTreeName();
-
+      static unsigned int fgMaxTasksPerFilePerWorker;
    public:
       TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
       TTreeProcessorMT(const std::vector<std::string_view> &filenames, std::string_view treename = "");
@@ -182,6 +182,8 @@ namespace ROOT {
       TTreeProcessorMT(TTree &tree);
 
       void Process(std::function<void(TTreeReader &)> func);
+      static void SetMaxTasksPerFilePerWorker(unsigned int m);
+      static unsigned int GetMaxTasksPerFilePerWorker();
    };
 
 } // End of namespace ROOT
