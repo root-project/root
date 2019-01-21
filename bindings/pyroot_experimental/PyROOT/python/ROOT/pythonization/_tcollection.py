@@ -29,11 +29,10 @@ def extend_pyz(self, c):
 	# Parameters:
     # self: collection
     # c: collection to extend self with
-	it = TIter(c)
-	o = it.Next()
-	while o:
-		self.Add(o)
-		o = it.Next()
+    lenc = c.GetEntries()
+    it = TIter(c)
+    for i in range(lenc):
+    	self.Add(it.Next())
 
 def count_pyz(self, o):
 	# Parameters:
@@ -49,6 +48,40 @@ def count_pyz(self, o):
 		obj = it.Next()
 
 	return n
+
+# Python operators
+
+def add_pyz(self, c):
+	# Parameters:
+    # - self: first collection to be added
+    # - c: second collection to be added
+    # Returns:
+    # - self + c
+	res = self.__class__()
+	extend_pyz(res, self)
+	extend_pyz(res, c)
+	return res
+
+def mul_pyz(self, n):
+	# Parameters:
+    # - self: collection to be multiplied
+    # - n: factor to multiply the collection by
+    # Returns:
+    # - self * n
+	res = self.__class__()
+	for _ in range(n):
+		extend_pyz(res, self)
+	return res
+
+def imul_pyz(self, n):
+	# Parameters:
+    # - self: collection to be multiplied (in place)
+    # - n: factor to multiply the collection by
+    # Returns:
+    # - self *= n
+	for _ in range(n - 1):
+		extend_pyz(self, self)
+	return self
 
 
 @pythonization()
@@ -66,3 +99,9 @@ def pythonize_tcollection(klass, name):
         klass.remove = remove_pyz
         klass.extend = extend_pyz
         klass.count = count_pyz
+
+        # Define Python operators
+        klass.__add__ = add_pyz
+        klass.__mul__ = mul_pyz
+        klass.__rmul__ = mul_pyz
+        klass.__imul__ = imul_pyz
