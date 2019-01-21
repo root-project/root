@@ -1,9 +1,0 @@
-From Danilo, 29/04/15:
-Updated to 5.2.1 with tarballs taken at http://tukaani.org/xz/
-Windows binaries were:
-o Manipulated by Bertrand: the .lib file was missing
-o renamed from xz-5.2.1-windows.zip to xz-5.2.1-win32.tar.gz
-
-From Fons, 10/11/11:
-Stock xz-5.0.3.tar.gz except I remove -Wlogical-op from "configure"
-as it produces many warnings in clang which does not support this option.
