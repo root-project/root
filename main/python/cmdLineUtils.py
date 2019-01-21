@@ -922,6 +922,7 @@ def _recursifTreePrinter(tree,indent):
             str(branch.GetTotBytes())]
         write(TREE_TEMPLATE.format(*rec,**dic),indent,end="\n")
         _recursifTreePrinter(branch,indent+2)
+    write("")
 
 def _prepareTime(time):
     """Get time in the proper shape
@@ -937,6 +938,21 @@ MONTH = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun', \
 LONG_TEMPLATE = \
     isSpecial(ANSI_BOLD,"{0:{classWidth}}")+"{1:{timeWidth}}" + \
     "{2:{nameWidth}}{3:{titleWidth}}"
+
+def _printClusters(tree, indent):
+    clusterStart = 0
+    nTotClusters = 0
+    clusterIter = tree.GetClusterIterator(0)
+    clusterStart = clusterIter()
+    write(isSpecial(ANSI_BOLD, "Cluster INCLUSIVE ranges:\n"), indent)
+    while clusterStart < tree.GetEntries():
+        # here we list the inclusive ranges, therefore we have a -1
+        clustLine = " - # %d: [%d, %d]\n" % (
+            nTotClusters, clusterStart, clusterIter.GetNextEntry() - 1)
+        write(clustLine, indent)
+        nTotClusters += 1
+        clusterStart = clusterIter()
+    write(isSpecial(ANSI_BOLD,"The total number of clusters is %d\n" % nTotClusters), indent)
 
 def _rootLsPrintLongLs(keyList,indent,treeListing):
     """Print a list of Tkey in columns
@@ -967,6 +983,8 @@ def _rootLsPrintLongLs(keyList,indent,treeListing):
         if treeListing and isTreeKey(key):
             tree = key.ReadObj()
             _recursifTreePrinter(tree,indent+2)
+            tree = tree.GetTree()
+            _printClusters(tree, indent+2)
         if treeListing and isTHnSparseKey(key):
             hs = key.ReadObj()
             hs.Print('all')
