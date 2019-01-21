@@ -241,46 +241,46 @@ public:
 
    // Convenience method to avoid code duplication between
    // SetEntry and InitSlot
-   void UncachedSlotLookup(unsigned int slot, ULong64_t entry)
+   arrow::Status UncachedSlotLookup(unsigned int slot, ULong64_t entry)
    {
       // If entry is greater than the previous one,
       // we can skip all the chunks before the last one we
       // queried.
       size_t ci = 0;
       assert(slot < fLastChunkPerSlot.size());
-      if (fLastEntryPerSlot[slot] < entry) {
-         ci = fLastChunkPerSlot.at(slot);
+      if (R__unlikely(fLastEntryPerSlot[slot] < entry)) {
+         ci = fLastChunkPerSlot[slot];
       }
 
-      for (size_t ce = fChunkIndex.size(); ci != ce; ++ci) {
-         if (entry < fChunkIndex[ci]) {
-            assert(slot < fLastChunkPerSlot.size());
-            fLastChunkPerSlot[slot] = ci;
-            break;
-         }
+      if (R__likely(entry >= fChunkIndex[ci])) {
+        ci++;
+        for (size_t ce = fChunkIndex.size(); ci != ce; ++ci) {
+           if (entry < fChunkIndex[ci]) {
+              assert(slot < fLastChunkPerSlot.size());
+              fLastChunkPerSlot[slot] = ci;
+              break;
+           }
+        }
       }
 
       // Update the pointer to the requested entry.
       // Notice that we need to find the entry
-      auto chunk = fChunks.at(fLastChunkPerSlot[slot]);
+      assert(fLastChunkPerSlot[slot] < fChunks.size());
+      auto chunk = fChunks[fLastChunkPerSlot[slot]];
       assert(slot < fArrayVisitorPerSlot.size());
       fArrayVisitorPerSlot[slot].SetEntry(entry - fFirstEntryPerChunk[fLastChunkPerSlot[slot]]);
-      auto status = chunk->Accept(fArrayVisitorPerSlot.data() + slot);
-      if (!status.ok()) {
-         std::string msg = "Could not get pointer for slot ";
-         msg += std::to_string(slot) + " looking at entry " + std::to_string(entry);
-         throw std::runtime_error(msg);
-      }
+      fLastEntryPerSlot[slot] = entry;
+      return chunk->Accept(fArrayVisitorPerSlot.data() + slot);
    }
 
    /// Set the current entry to be retrieved
-   void SetEntry(unsigned int slot, ULong64_t entry)
+   arrow::Status SetEntry(unsigned int slot, ULong64_t entry)
    {
       // Same entry as before
-      if (fLastEntryPerSlot[slot] == entry) {
-         return;
+      if (R__unlikely(fLastEntryPerSlot[slot] == entry)) {
+         return arrow::Status::OK();
       }
-      UncachedSlotLookup(slot, entry);
+      return UncachedSlotLookup(slot, entry);
    }
 };
 
@@ -496,18 +496,30 @@ bool RArrowDS::HasColumn(std::string_view colName) const
 
 bool RArrowDS::SetEntry(unsigned int slot, ULong64_t entry)
 {
+   arrow::Status s;
    for (auto link : fGetterIndex) {
       auto &getter = fValueGetters[link.second];
-      getter->SetEntry(slot, entry);
+      s &= getter->SetEntry(slot, entry);
+   }
+   if (R__unlikely(!s.ok())) {
+      std::string msg = "Could not get pointer for slot ";
+      msg += std::to_string(slot) + " looking at entry " + std::to_string(entry);
+      throw std::runtime_error(msg);
    }
    return true;
 }
 
 void RArrowDS::InitSlot(unsigned int slot, ULong64_t entry)
 {
+   arrow::Status s;
    for (auto link : fGetterIndex) {
       auto &getter = fValueGetters[link.second];
-      getter->UncachedSlotLookup(slot, entry);
+      s &= getter->UncachedSlotLookup(slot, entry);
+   }
+   if (R__unlikely(!s.ok())) {
+      std::string msg = "Could not get pointer for slot ";
+      msg += std::to_string(slot) + " looking at entry " + std::to_string(entry);
+      throw std::runtime_error(msg);
    }
 }
 
