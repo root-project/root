@@ -66,11 +66,6 @@
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
-#if defined(R__LINUX) || defined(R__HURD)
-#   ifndef SIGSYS
-#      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
-#   endif
-#endif
 #if defined(R__MACOSX)
 #   include <mach-o/dyld.h>
 #   include <sys/mount.h>
