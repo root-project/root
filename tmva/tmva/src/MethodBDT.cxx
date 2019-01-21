@@ -2767,18 +2767,18 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
    fout << "};" << std::endl << std::endl;
 
    if(GetAnalysisType() == Types::kMulticlass) {
-      fout << "std::vector<Float_t> ReadBDTG::GetMulticlassValues__( const std::vector<double>& inputValues ) const" << std::endl;
+      fout << "std::vector<double> ReadBDTG::GetMulticlassValues__( const std::vector<double>& inputValues ) const" << std::endl;
       fout << "{" << std::endl;
-      fout << "   UInt_t nClasses = " << DataInfo().GetNClasses() << ";" << std::endl;
-      fout << "   std::vector<Float_t> fMulticlassReturnVal;" << std::endl;
+      fout << "   uint nClasses = " << DataInfo().GetNClasses() << ";" << std::endl;
+      fout << "   std::vector<double> fMulticlassReturnVal;" << std::endl;
       fout << "   fMulticlassReturnVal.reserve(nClasses);" << std::endl;
       fout << std::endl;
-      fout << "   std::vector<Double_t> temp(nClasses);" << std::endl;
+      fout << "   std::vector<double> temp(nClasses);" << std::endl;
       fout << "   auto forestSize = fForest.size();" << std::endl;
       fout << "   // trees 0, nClasses, 2*nClasses, ... belong to class 0" << std::endl;
       fout << "   // trees 1, nClasses+1, 2*nClasses+1, ... belong to class 1 and so forth" << std::endl;
-      fout << "   UInt_t classOfTree = 0;" << std::endl;
-      fout << "   for (UInt_t itree = 0; itree < forestSize; ++itree) {" << std::endl;
+      fout << "   uint classOfTree = 0;" << std::endl;
+      fout << "   for (uint itree = 0; itree < forestSize; ++itree) {" << std::endl;
       fout << "      BDTGNode *current = fForest[itree];" << std::endl;
       fout << "      while (current->GetNodeType() == 0) { //intermediate node" << std::endl;
       fout << "         if (current->GoesRight(inputValues)) current=(BDTGNode*)current->GetRight();" << std::endl;
@@ -2790,11 +2790,11 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
       fout << std::endl;
       fout << "   // we want to calculate sum of exp(temp[j] - temp[i]) for all i,j (i!=j)" << std::endl;
       fout << "   // first calculate exp(), then replace minus with division." << std::endl;
-      fout << "   std::transform(temp.begin(), temp.end(), temp.begin(), [](Double_t d){return exp(d);});" << std::endl;
+      fout << "   std::transform(temp.begin(), temp.end(), temp.begin(), [](double d){return exp(d);});" << std::endl;
       fout << std::endl;
-      fout << "   for(UInt_t iClass=0; iClass<nClasses; iClass++){" << std::endl;
-      fout << "      Double_t norm = 0.0;" << std::endl;
-      fout << "      for(UInt_t j=0;j<nClasses;j++){" << std::endl;
+      fout << "   for(uint iClass=0; iClass<nClasses; iClass++){" << std::endl;
+      fout << "      double norm = 0.0;" << std::endl;
+      fout << "      for(uint j=0;j<nClasses;j++){" << std::endl;
       fout << "         if(iClass!=j)" << std::endl;
       fout << "            norm += temp[j] / temp[iClass];" << std::endl;
       fout << "      }" << std::endl;
@@ -2961,7 +2961,7 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    fout << "   bool result;" << std::endl;
    if (fUseFisherCuts){
       fout << "   if (fNFisherCoeff == 0){" << std::endl;
-      fout << "     result = (inputValues[fSelector] > fCutValue );" << std::endl;
+      fout << "     result = (inputValues[fSelector] >= fCutValue );" << std::endl;
       fout << "   }else{" << std::endl;
       fout << "     double fisher = fFisherCoeff.at(fFisherCoeff.size()-1);" << std::endl;
       fout << "     for (unsigned int ivar=0; ivar<fFisherCoeff.size()-1; ivar++)" << std::endl;
@@ -2969,7 +2969,7 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
       fout << "     result = fisher > fCutValue;" << std::endl;
       fout << "   }" << std::endl;
    }else{
-      fout << "     result = (inputValues[fSelector] > fCutValue );" << std::endl;
+      fout << "     result = (inputValues[fSelector] >= fCutValue );" << std::endl;
    }
    fout << "   if (fCutType == true) return result; //the cuts are selecting Signal ;" << std::endl;
    fout << "   else return !result;" << std::endl;
