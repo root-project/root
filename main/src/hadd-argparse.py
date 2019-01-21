@@ -16,9 +16,9 @@ The prefix can be optionally followed by B whose casing is ignored, eg. 1k, 1K, 
 	parser = argparse.ArgumentParser(add_help=False, prog='hadd',
 	description = DESCRIPTION, epilog = EPILOGUE)
 	parser.add_argument("-a", help="Append to the output")
-	parser.add_argument("-k", help="Skip corrupt or non-existant files, do not exit")
+	parser.add_argument("-k", help="Skip corrupt or non-existent files, do not exit")
 	parser.add_argument("-T", help="Do not merge Trees")
-	parser.add_argument("-O", help="Re-optimize basket size when mergin TTree")
+	parser.add_argument("-O", help="Re-optimize basket size when merging TTree")
 	parser.add_argument("-v", help="Explicitly set the verbosity level: 0 request no output, 99 is the default")
 	parser.add_argument("-j", help="Parallelize the execution in multiple processes")
 	parser.add_argument("-dbg", help="Parallelize the execution in multiple processes in debug mode (Does not delete partial files stored inside working directory)")
