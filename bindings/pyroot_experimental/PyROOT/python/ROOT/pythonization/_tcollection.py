@@ -16,7 +16,7 @@ from ._generic import add_len
 
 # Python-list-like methods
 
-def remove_pyz(self, o):
+def _remove_pyz(self, o):
 	# Parameters:
     # - self: collection
     # - o: object to remove from the collection
@@ -25,7 +25,7 @@ def remove_pyz(self, o):
 	if not res:
 		raise ValueError('list.remove(x): x not in list')
 
-def extend_pyz(self, c):
+def _extend_pyz(self, c):
 	# Parameters:
     # - self: collection
     # - c: collection to extend self with
@@ -34,7 +34,7 @@ def extend_pyz(self, c):
     for i in range(lenc):
     	self.Add(it.Next())
 
-def count_pyz(self, o):
+def _count_pyz(self, o):
 	# Parameters:
     # - self: collection
     # - o: object to be counted in the collection
@@ -53,18 +53,18 @@ def count_pyz(self, o):
 
 # Python operators
 
-def add_pyz(self, c):
+def _add_pyz(self, c):
 	# Parameters:
     # - self: first collection to be added
     # - c: second collection to be added
     # Returns:
     # - self + c
 	res = self.__class__()
-	extend_pyz(res, self)
-	extend_pyz(res, c)
+	_extend_pyz(res, self)
+	_extend_pyz(res, c)
 	return res
 
-def mul_pyz(self, n):
+def _mul_pyz(self, n):
 	# Parameters:
     # - self: collection to be multiplied
     # - n: factor to multiply the collection by
@@ -72,17 +72,17 @@ def mul_pyz(self, n):
     # - self * n
 	res = self.__class__()
 	for _ in range(n):
-		extend_pyz(res, self)
+		_extend_pyz(res, self)
 	return res
 
-def imul_pyz(self, n):
+def _imul_pyz(self, n):
 	# Parameters:
     # - self: collection to be multiplied (in place)
     # - n: factor to multiply the collection by
     # Returns:
     # - self *= n
 	for _ in range(n - 1):
-		extend_pyz(self, self)
+		_extend_pyz(self, self)
 	return self
 
 
@@ -98,12 +98,12 @@ def pythonize_tcollection(klass, name):
 
         # Add Python lists methods
         klass.append = klass.Add
-        klass.remove = remove_pyz
-        klass.extend = extend_pyz
-        klass.count = count_pyz
+        klass.remove = _remove_pyz
+        klass.extend = _extend_pyz
+        klass.count = _count_pyz
 
         # Define Python operators
-        klass.__add__ = add_pyz
-        klass.__mul__ = mul_pyz
-        klass.__rmul__ = mul_pyz
-        klass.__imul__ = imul_pyz
+        klass.__add__ = _add_pyz
+        klass.__mul__ = _mul_pyz
+        klass.__rmul__ = _mul_pyz
+        klass.__imul__ = _imul_pyz
