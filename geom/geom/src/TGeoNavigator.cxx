@@ -883,9 +883,7 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
                current->MasterToLocal(&mothpt[0], &dpt[0]);
                current->MasterToLocalVect(&vecpt[0], &dvec[0]);
                // Current point may be inside the other node - geometry error that we ignore
-               snext = TGeoShape::Big();
-               if (!current->GetVolume()->Contains(dpt))
-                  snext = current->GetVolume()->GetShape()->DistFromOutside(&dpt[0], &dvec[0], iact, fStep, &safe);
+               snext = current->GetVolume()->GetShape()->DistFromOutside(&dpt[0], &dvec[0], iact, fStep, &safe);
                if (snext<fStep-gTolerance) {
                   if (computeGlobal) {
                      fCurrentMatrix->CopyFrom(fGlobalMatrix);
@@ -1411,10 +1409,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
                current->cd();
                current->MasterToLocal(&mothpt[0], &dpt[0]);
                current->MasterToLocalVect(&vecpt[0], &dvec[0]);
-               // Current point may be inside the other node - geometry error that we ignore
-               snext = TGeoShape::Big();
-               if (!current->GetVolume()->Contains(dpt))
-                  snext = current->GetVolume()->GetShape()->DistFromOutside(dpt, dvec, iact, fStep);
+               snext = current->GetVolume()->GetShape()->DistFromOutside(dpt, dvec, iact, fStep);
                if (snext<fStep-gTolerance) {
                   PopDummy();
                   PushPath(safelevel+1);
