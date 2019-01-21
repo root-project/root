@@ -497,7 +497,6 @@ bool RArrowDS::HasColumn(std::string_view colName) const
 bool RArrowDS::SetEntry(unsigned int slot, ULong64_t entry)
 {
    for (auto link : fGetterIndex) {
-      auto column = fTable->column(link.first);
       auto &getter = fValueGetters[link.second];
       getter->SetEntry(slot, entry);
    }
@@ -507,7 +506,6 @@ bool RArrowDS::SetEntry(unsigned int slot, ULong64_t entry)
 void RArrowDS::InitSlot(unsigned int slot, ULong64_t entry)
 {
    for (auto link : fGetterIndex) {
-      auto column = fTable->column(link.first);
       auto &getter = fValueGetters[link.second];
       getter->UncachedSlotLookup(slot, entry);
    }
