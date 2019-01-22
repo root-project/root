@@ -29,7 +29,9 @@ elseif(vdt)
   target_include_directories(ROOTVecOps PUBLIC ${VDT_INCLUDE_DIRS})
 endif()
 
-if(NOT MSVC)
+if(MSVC)
+  target_compile_options(ROOTVecOps PRIVATE -O2 /fp:fast)
+else()
   target_compile_options(ROOTVecOps PRIVATE -O3 -ffast-math)
 endif()
 
