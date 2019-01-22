@@ -5,8 +5,10 @@
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wshadow"
+#endif
 
 #include "osr_handler.h"
 
