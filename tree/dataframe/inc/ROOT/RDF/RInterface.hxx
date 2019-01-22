@@ -310,7 +310,7 @@ public:
    /// The following two calls are equivalent, although `DefineSlot` is slightly more performant:
    /// ~~~{.cpp}
    /// int function(unsigned int, double, double);
-   /// df.Define("x", function, {"tdfslot_", "column1", "column2"})
+   /// df.Define("x", function, {"rdfslot_", "column1", "column2"})
    /// df.DefineSlot("x", function, {"column1", "column2"})
    /// ~~~
    ///
@@ -340,7 +340,7 @@ public:
    /// The following two `Define`s are equivalent, although `DefineSlotEntry` is slightly more performant:
    /// ~~~{.cpp}
    /// int function(unsigned int, ULong64_t, double, double);
-   /// Define("x", function, {"tdfslot_", "tdfentry_", "column1", "column2"})
+   /// Define("x", function, {"rdfslot_", "rdfentry_", "column1", "column2"})
    /// DefineSlotEntry("x", function, {"column1", "column2"})
    /// ~~~
    ///
