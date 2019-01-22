@@ -10,7 +10,7 @@ set(NOTEBOOKS ${CMAKE_CURRENT_SOURCE_DIR}/importROOT.ipynb
               ${CMAKE_CURRENT_SOURCE_DIR}/simpleCppMagic.ipynb)
 
 # Include cpp notebooks if metakernel is present
-execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c" "import metakernel" RESULT_VARIABLE FoundMetakernel)
+execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c" "import metakernel" RESULT_VARIABLE FoundMetakernel ERROR_QUIET)
 if(FoundMetakernel EQUAL 0)
 set(NOTEBOOKS ${NOTEBOOKS}
               ${CMAKE_CURRENT_SOURCE_DIR}/thread_local.ipynb
