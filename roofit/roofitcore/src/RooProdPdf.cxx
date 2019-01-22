@@ -64,27 +64,6 @@ have to appear in any specific place in the list.
 
 #ifndef _WIN32
 #include <strings.h>
-#else
-
-static char *strtok_r(char *s1, const char *s2, char **lasts)
-{
-  char *ret;
-
-  if (s1 == NULL)
-    s1 = *lasts;
-  while(*s1 && strchr(s2, *s1))
-    ++s1;
-  if(*s1 == '\0')
-    return NULL;
-  ret = s1;
-  while(*s1 && !strchr(s2, *s1))
-    ++s1;
-  if(*s1)
-    *s1++ = '\0';
-  *lasts = s1;
-  return ret;
-}
-
 #endif
 
 
@@ -1136,10 +1115,10 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
     char* buf = new char[strlen(_normRange.Data()) + 1] ;
     strcpy(buf,_normRange.Data()) ;
     char* save(0) ;
-    char* token = strtok_r(buf,",",&save) ;
+    char* token = R__STRTOK_R(buf,",",&save) ;
     while(token) {
       rangeComps.push_back(token) ;
-      token = strtok_r(0,",",&save) ;
+      token = R__STRTOK_R(0,",",&save) ;
     }
     delete[] buf;
   }
