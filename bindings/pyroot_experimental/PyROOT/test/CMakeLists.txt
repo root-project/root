@@ -24,6 +24,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_titer_iterator titer_iterator.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_len tcollection_len.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_listmethods tcollection_listmethods.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_operators tcollection_operators.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_iterable tcollection_iterable.py)
 
 # TArray and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_len tarray_len.py)
