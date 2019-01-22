@@ -938,6 +938,26 @@ class TestClassDATATYPES:
         c.s_voidp = c2
         address_equality_test(c.s_voidp, c2)
 
+    def test22_buffer_to_numpy(self):
+        """Wrap buffer with NumPy array"""
+
+        try:
+            import numpy as np
+        except:
+            return
+
+        import cppyy
+        c = cppyy.gbl.CppyyTestData()
+        N = cppyy.gbl.N
+
+        arr = c.get_double_array()
+        np_arr = np.frombuffer(arr, 'f8', N)
+        assert len(np_arr) == N
+
+        val = 1.0
+        arr[N-1] = val
+        assert arr[N-1] == np_arr[N-1] == val
+
 
 ## actual test run
 if __name__ == '__main__':
