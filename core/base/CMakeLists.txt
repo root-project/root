@@ -263,7 +263,8 @@ ROOT_GENERATE_DICTIONARY(G__Core
 # This is needed becuase LinkDef.h includes other LinkDef starting from  ${CMAKE_SOURCE_DIR}
 set_property(TARGET G__Core PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
 
-ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${BASE_SOURCES} BUILTINS PCRE)
+ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${BASE_SOURCES})
+target_include_directories(Base PRIVATE ${PCRE_INCLUDE_DIR})
 
 #---CreateTApplicationCommandLineOptions------------------------------------------------------------------
 generateHeaders(${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/include/TApplicationCommandLineOptionsHelp.h Base)
@@ -271,7 +272,6 @@ generateHeaders(${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_
 ROOT_INSTALL_HEADERS(${install_dirs})
 
 #---Extra options-----------------------------------------------------------------------
-set_source_files_properties(src/TPRegexp.cxx COMPILE_FLAGS -I${PCRE_INCLUDE_DIR})
 if(GCC_MAJOR EQUAL 4 AND GCC_MINOR EQUAL 1)
   set_source_files_properties(src/TString.cxx src/TContextMenu.cxx
                               COMPILE_FLAGS -Wno-strict-aliasing )
