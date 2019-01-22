@@ -68,11 +68,11 @@ ROOT_ARROW_STL_CONVERSION(bool, BooleanType)
 ROOT_ARROW_STL_CONVERSION(int8_t, Int8Type)
 ROOT_ARROW_STL_CONVERSION(int16_t, Int16Type)
 ROOT_ARROW_STL_CONVERSION(int32_t, Int32Type)
-ROOT_ARROW_STL_CONVERSION(int64_t, Int64Type)
+ROOT_ARROW_STL_CONVERSION(Long64_t, Int64Type)
 ROOT_ARROW_STL_CONVERSION(uint8_t, UInt8Type)
 ROOT_ARROW_STL_CONVERSION(uint16_t, UInt16Type)
 ROOT_ARROW_STL_CONVERSION(uint32_t, UInt32Type)
-ROOT_ARROW_STL_CONVERSION(uint64_t, UInt64Type)
+ROOT_ARROW_STL_CONVERSION(ULong64_t, UInt64Type)
 ROOT_ARROW_STL_CONVERSION(float, FloatType)
 ROOT_ARROW_STL_CONVERSION(double, DoubleType)
 ROOT_ARROW_STL_CONVERSION(std::string, StringType)
@@ -101,7 +101,9 @@ private:
       using ArrayType = typename arrow::TypeTraits<ArrowType>::ArrayType;
       auto values = reinterpret_cast<ArrayType *>(array.values().get());
       auto offset = array.value_offset(entry);
-      RVec<T> tmp(const_cast<T *>(values->raw_values()) + offset, array.value_length(entry));
+      // Here the cast to void* is a worksround while we figure out the
+      // issues we have with long long types, signed and unsigned.
+      RVec<T> tmp(reinterpret_cast<T *>((void *)values->raw_values()) + offset, array.value_length(entry));
       cache.swap(tmp);
       return (void *)(&cache);
    }
