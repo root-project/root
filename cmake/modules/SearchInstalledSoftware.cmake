@@ -133,7 +133,10 @@ endif()
 #---Check for PCRE-------------------------------------------------------------------
 if(NOT builtin_pcre)
   message(STATUS "Looking for PCRE")
-  foreach(suffix FOUND INCLUDE_DIR PCRE_LIBRARY PCREPOSIX_LIBRARY)
+  # Clear cache before calling find_package(PCRE),
+  # necessary to be able to toggle builtin_pcre and
+  # not have find_package(PCRE) find builtin pcre.
+  foreach(suffix FOUND INCLUDE_DIR PCRE_LIBRARY)
     unset(PCRE_${suffix} CACHE)
   endforeach()
   find_package(PCRE)
