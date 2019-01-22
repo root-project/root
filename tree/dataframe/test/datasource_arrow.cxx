@@ -104,18 +104,23 @@ TEST(RArrowDS, ColumnReaders)
 
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
-   auto vals = tds.GetColumnReaders<Long64_t>("Age");
+   auto valsAge = tds.GetColumnReaders<Long64_t>("Age");
+   auto valsBabies = tds.GetColumnReaders<unsigned int>("Babies");
+
    tds.Initialise();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
-   std::vector<Long64_t> ages = {64, 50, 40, 30, 2, 0};
+   std::vector<Long64_t> RefsAge = {64, 50, 40, 30, 2, 0};
+   std::vector<unsigned int> RefsBabies = {1, 0, 2, 3, 4, 21};
    for (auto &&range : ranges) {
       tds.InitSlot(slot, range.first);
-      ASSERT_LT(slot, vals.size());
+      ASSERT_LT(slot, valsAge.size());
       for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
          tds.SetEntry(slot, i);
-         auto val = **vals[slot];
-         EXPECT_EQ(ages[i], val);
+         auto valAge = **valsAge[slot];
+         EXPECT_EQ(RefsAge[i], valAge);
+         auto valBabies = **valsBabies[slot];
+         EXPECT_EQ(RefsBabies[i], valBabies);
       }
       slot++;
    }
