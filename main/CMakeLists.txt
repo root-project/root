@@ -73,10 +73,8 @@ else()
   set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS "-DNOMINMAX -D_XKEYCHECK_H")
 endif()
 
-ROOT_EXECUTABLE(rootcling src/rootcling.cxx
-                          LIBRARIES RIO Core Cling ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ZLIB::ZLIB
-                                    ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
-                                    ${corelinklibs})
+ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core)
+
 # rootcling includes the ROOT complex header which would build the complex
 # dictionary with modules. To make sure that rootcling_stage1 builds this
 # dict before we use it, we add a dependency here.
