@@ -16,7 +16,10 @@
 
 #---For the windows platform ODBC is located automatically
 if(WIN32)
-  set(ODBC_INCLUDE_DIR "")
+  find_path(ODBC_INCLUDE_DIR NAMES sql.h sqlext.h)
+  if(NOT ODBC_INCLUDE_DIR)
+    set(ODBC_INCLUDE_DIR "")
+  endif()
   set(ODBC_LIBRARY odbc32.lib)
 else()
   find_path(ODBC_INCLUDE_DIR sqlext.h
