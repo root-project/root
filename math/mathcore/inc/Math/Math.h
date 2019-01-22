@@ -13,16 +13,14 @@
 #ifndef ROOT_Math_Math
 #define ROOT_Math_Math
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #define _USE_MATH_DEFINES
-#define HAVE_NO_LOG1P
-#define HAVE_NO_EXPM1
 #endif
 
 #include <cmath>
 
-#if defined(__sun)
-//solaris definition of cmath does not include math.h which has the definitions of numerical constants
+#if defined(__sun) || defined(_MSC_VER)
+//Microsoft and solaris definition of cmath does not include math.h which has the definitions of numerical constants
 #include <math.h>
 #endif
 
