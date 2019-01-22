@@ -17,6 +17,9 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress ttree_setbranchaddress.py
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py
                     COPY_TO_BUILDDIR TreeHelper.h)
 
+# TIter pythonisations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_titer_iterator titer_iterator.py)
+
 # TCollection and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_len tcollection_len.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_listmethods tcollection_listmethods.py)
