@@ -421,28 +421,6 @@
 
 #ifndef _WIN32
 #include <strings.h>
-#else
-
-
-static char *strtok_r(char *s1, const char *s2, char **lasts)
-{
-  char *ret;
-  
-  if (s1 == NULL)
-    s1 = *lasts;
-  while(*s1 && strchr(s2, *s1))
-    ++s1;
-  if(*s1 == '\0')
-    return NULL;
-  ret = s1;
-  while(*s1 && !strchr(s2, *s1))
-    ++s1;
-  if(*s1)
-    *s1++ = '\0';
-  *lasts = s1;
-  return ret;
-}
-
 #endif
 
 #include "Riostream.h"
@@ -640,8 +618,8 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     char* tokenPtr(0) ;
     if (strchr(catName,'(')) {
 
-      catName = strtok_r(catName,"(",&tokenPtr) ;
-      stateList = strtok_r(0,")",&tokenPtr) ;
+      catName = R__STRTOK_R(catName,"(",&tokenPtr) ;
+      stateList = R__STRTOK_R(0,")",&tokenPtr) ;
 
     } else {
       stateList = 0 ;
@@ -666,7 +644,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       slist->SetName(catName) ;
       splitStateList.Add(slist) ;
 
-      char* stateLabel = strtok_r(stateList,",",&tokenPtr) ;
+      char* stateLabel = R__STRTOK_R(stateList,",",&tokenPtr) ;
 
       while(stateLabel) {
 	// Lookup state label and require it exists
@@ -680,7 +658,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	}
 	slist->Add((TObject*)type) ;
 
-	stateLabel = strtok_r(0,",",&tokenPtr) ;
+	stateLabel = R__STRTOK_R(0,",",&tokenPtr) ;
       }
     }
     
@@ -760,7 +738,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       strlcpy(buf,ruleStr->getVal(),buflen) ;
       char *tokenPtr(0) ;
 
-      char* token = strtok_r(buf,spaceChars,&tokenPtr) ;
+      char* token = R__STRTOK_R(buf,spaceChars,&tokenPtr) ;
       
       enum Mode { SplitCat, Colon, ParamList } ;
       Mode mode(SplitCat) ;
@@ -785,7 +763,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 		// Build now
 
 		char *tokptr = 0;
-		char *catName2 = strtok_r(token,",",&tokptr) ;
+		char *catName2 = R__STRTOK_R(token,",",&tokptr) ;
 
 		RooArgSet compCatSet ;
 		while(catName2) {
@@ -808,7 +786,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 		  }
 		  compCatSet.add(*cat) ;
 
-		  catName2 = strtok_r(0,",",&tokptr) ;
+		  catName2 = R__STRTOK_R(0,",",&tokptr) ;
 		}		
 
 
@@ -890,13 +868,13 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	    Bool_t lastCharIsComma = (token[strlen(token)-1]==',') ;
 
 	    char *tokptr = 0 ;
-	    char *paramName = strtok_r(token,",",&tokptr) ;
+	    char *paramName = R__STRTOK_R(token,",",&tokptr) ;
 
 	    // Check for fractional split option 'param_name[remainder_state]'
 	    char *remainderState = 0 ;
 	    char *tokptr2 = 0 ;
-	    if (paramName && strtok_r(paramName,"[",&tokptr2)) {
-	      remainderState = strtok_r(0,"]",&tokptr2) ;
+	    if (paramName && R__STRTOK_R(paramName,"[",&tokptr2)) {
+	      remainderState = R__STRTOK_R(0,"]",&tokptr2) ;
 	    }
 
 	    while(paramName) {
@@ -1009,9 +987,9 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	      }
 
 	      // Parse next parameter name
-	      paramName = strtok_r(0,",",&tokptr) ;
-	      if (paramName && strtok_r(paramName,"[",&tokptr2)) {
-		remainderState = strtok_r(0,"]",&tokptr2) ;
+	      paramName = R__STRTOK_R(0,",",&tokptr) ;
+	      if (paramName && R__STRTOK_R(paramName,"[",&tokptr2)) {
+		remainderState = R__STRTOK_R(0,"]",&tokptr2) ;
 	      }
 	    }
 
@@ -1025,7 +1003,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	  }
 	}
 
-	token = strtok_r(0,spaceChars,&tokenPtr) ;
+	token = R__STRTOK_R(0,spaceChars,&tokenPtr) ;
 
       }
       if (mode!=SplitCat) {

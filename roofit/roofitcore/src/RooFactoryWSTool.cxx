@@ -117,27 +117,6 @@ static Int_t init()
 
 #ifndef _WIN32
 #include <strings.h>
-#else
-
-static char *strtok_r(char *s1, const char *s2, char **lasts)
-{
-  char *ret;
-  
-  if (s1 == NULL)
-    s1 = *lasts;
-  while(*s1 && strchr(s2, *s1))
-    ++s1;
-  if(*s1 == '\0')
-    return NULL;
-  ret = s1;
-  while(*s1 && !strchr(s2, *s1))
-    ++s1;
-  if(*s1)
-    *s1++ = '\0';
-  *lasts = s1;
-  return ret;
-}
-
 #endif
 
 
@@ -200,7 +179,7 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
     char *tmp = new char[tmpSize] ;
     strlcpy(tmp,stateNameList,tmpSize) ;
     char* save ;
-    char* tok = strtok_r(tmp,",",&save) ;
+    char* tok = R__STRTOK_R(tmp,",",&save) ;
     while(tok) {
       char* sep = strchr(tok,'=') ;
       if (sep) {
@@ -211,7 +190,7 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
       } else {
 	cat.defineType(tok) ;
       }
-      tok = strtok_r(0,",",&save) ;
+      tok = R__STRTOK_R(0,",",&save) ;
     }
     delete[] tmp ;
   }
@@ -529,7 +508,7 @@ RooAddPdf* RooFactoryWSTool::add(const char *objName, const char* specList, Bool
     char buf[BUFFER_SIZE] ;
     strlcpy(buf,specList,BUFFER_SIZE) ;
     char* save ;
-    char* tok = strtok_r(buf,",",&save) ;
+    char* tok = R__STRTOK_R(buf,",",&save) ;
     while(tok) {
       char* star=strchr(tok,'*') ;
       if (star) {
@@ -539,7 +518,7 @@ RooAddPdf* RooFactoryWSTool::add(const char *objName, const char* specList, Bool
       } else {
 	pdfList2.add(asPDF(tok)) ;
       }
-      tok = strtok_r(0,",",&save) ;
+      tok = R__STRTOK_R(0,",",&save) ;
     }
     pdfList.add(pdfList2) ;
 
@@ -571,7 +550,7 @@ RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specLi
     char buf[BUFFER_SIZE] ;
     strlcpy(buf,specList,BUFFER_SIZE) ;
     char* save ;
-    char* tok = strtok_r(buf,",",&save) ;
+    char* tok = R__STRTOK_R(buf,",",&save) ;
     while(tok) {
       char* star=strchr(tok,'*') ;
       if (star) {
@@ -581,7 +560,7 @@ RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specLi
       } else {
 	amplList2.add(asFUNC(tok)) ;
       }
-      tok = strtok_r(0,",",&save) ;
+      tok = R__STRTOK_R(0,",",&save) ;
     }
     amplList.add(amplList2) ;
 
@@ -610,7 +589,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
   char buf[BUFFER_SIZE] ;
   strlcpy(buf,pdfList,BUFFER_SIZE) ;
   char* save ;
-  char* tok = strtok_r(buf,",",&save) ;
+  char* tok = R__STRTOK_R(buf,",",&save) ;
   while(tok) {
     char *sep = strchr(tok,'|') ;
     if (sep) {
@@ -640,7 +619,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
       }
       regPdfList += tok ;
     }
-    tok = strtok_r(0,",",&save) ;
+    tok = R__STRTOK_R(0,",",&save) ;
   }
   regPdfList += "}" ;
   
@@ -675,7 +654,7 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
   char buf[BUFFER_SIZE] ;
   strlcpy(buf,pdfMap,BUFFER_SIZE) ;
   char* save ;
-  char* tok = strtok_r(buf,",",&save) ;
+  char* tok = R__STRTOK_R(buf,",",&save) ;
   while(tok) {
     char* eq = strchr(tok,'=') ;
     if (!eq) {
@@ -693,7 +672,7 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
 	logError() ;
       }
     }
-    tok = strtok_r(0,",",&save) ;
+    tok = R__STRTOK_R(0,",",&save) ;
   }
 
 
@@ -727,7 +706,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
     char buf[BUFFER_SIZE] ;
     strlcpy(buf,specList,BUFFER_SIZE) ;
     char* save ;
-    char* tok = strtok_r(buf,",",&save) ;
+    char* tok = R__STRTOK_R(buf,",",&save) ;
     while(tok) {
       char* star=strchr(tok,'*') ;
       if (star) {
@@ -737,7 +716,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
       } else {
 	sumlist1.add(asFUNC(tok)) ;
       }
-      tok = strtok_r(0,",",&save) ;
+      tok = R__STRTOK_R(0,",",&save) ;
     }
 
   } catch (const string &err) {
@@ -1065,9 +1044,9 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
 
   // Process token into arguments
   char* save ;
-  char* tmpx = strtok_r(buf,"([",&save) ;
+  char* tmpx = R__STRTOK_R(buf,"([",&save) ;
   func = tmpx ? tmpx : "" ;
-  char* p = strtok_r(0,"",&save) ;
+  char* p = R__STRTOK_R(0,"",&save) ;
   
   // Return here if token is fundamental
   if (!p) {
@@ -1112,7 +1091,7 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
   
   // If there is a suffix left in the work buffer attach it to 
   // this argument
-  p = strtok_r(0,"",&save) ;
+  p = R__STRTOK_R(0,"",&save) ;
   if (p) tmp += p ;
   args.push_back(tmp) ;
 
@@ -1421,8 +1400,8 @@ string RooFactoryWSTool::processCreateArg(string& func, vector<string>& args)
 
   // Split function part in class name and instance name
   char* save ;
-  const char *className = strtok_r(buf,":",&save) ;
-  const char *instName = strtok_r(0,":",&save) ;
+  const char *className = R__STRTOK_R(buf,":",&save) ;
+  const char *instName = R__STRTOK_R(0,":",&save) ;
   if (!className) className = "";
   if (!instName) instName = "" ;
 
@@ -1497,9 +1476,9 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 
   // Process token into arguments
   char* save ;
-  char* tmpx = strtok_r(buf,"(",&save) ;  
+  char* tmpx = R__STRTOK_R(buf,"(",&save) ;  
   func = tmpx ? tmpx : "" ;
-  char* p = strtok_r(0,"",&save) ;
+  char* p = R__STRTOK_R(0,"",&save) ;
   
   // Return here if token is fundamental
   if (!p) {
@@ -1543,7 +1522,7 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
   
   // If there is a suffix left in the work buffer attach it to 
   // this argument
-  p = strtok_r(0,"",&save) ;
+  p = R__STRTOK_R(0,"",&save) ;
   if (p) tmp += p ;
   args.push_back(tmp) ;
 
@@ -1793,7 +1772,7 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
   }
 
   char* save ;
-  char* tok = strtok_r(tmp,",{}",&save) ;
+  char* tok = R__STRTOK_R(tmp,",{}",&save) ;
   int i(0);
   while(tok) {
 
@@ -1812,7 +1791,7 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
 	throw string(Form("RooAbsArg named %s not found",tok)) ;
       }
     }
-    tok = strtok_r(0,",{}",&save) ;
+    tok = R__STRTOK_R(0,",{}",&save) ;
   }
 
   return s ;
@@ -1830,7 +1809,7 @@ RooArgList RooFactoryWSTool::asLIST(const char* arg)
 
   RooArgList l ;
   char* save ;
-  char* tok = strtok_r(tmp,",{}",&save) ;
+  char* tok = R__STRTOK_R(tmp,",{}",&save) ;
   while(tok) {
 
     // If arg is a numeric string, make a RooConst() of it here
@@ -1848,7 +1827,7 @@ RooArgList RooFactoryWSTool::asLIST(const char* arg)
 	throw string(Form("RooAbsArg named %s not found",tok)) ;
       }
     }
-    tok = strtok_r(0,",{}",&save) ;
+    tok = R__STRTOK_R(0,",{}",&save) ;
   }
   
   return l ;
@@ -2137,10 +2116,10 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     char buf[256] ;
     strlcpy(buf,pargv[1].c_str(),256) ;
     char* save ;
-    const char* intobs = strtok_r(buf,"|",&save) ;
+    const char* intobs = R__STRTOK_R(buf,"|",&save) ;
     if (!intobs) intobs="" ;
 
-    const char* range = strtok_r(0,"",&save) ;
+    const char* range = R__STRTOK_R(0,"",&save) ;
     if (!range) range="" ;
 
     RooAbsReal* integral = 0 ;

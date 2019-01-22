@@ -319,7 +319,7 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
             if (line[line.size() - 1] == char(13)) {  // removing DOS CR character
                line.erase(line.end() - 1, line.end()) ;
             }
-            token = strtok_r(const_cast<char *>(line.c_str()), option, &rest);
+            token = R__STRTOK_R(const_cast<char *>(line.c_str()), option, &rest);
             while (token != NULL && value_idx < ntokensToBeSaved) {
                if (isTokenToBeSaved[token_idx]) {
                   token_str = TString(token) ;
@@ -332,7 +332,7 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
                      value_idx++ ;
                   }
                }
-               token = strtok_r(NULL, option, &rest); // next token
+               token = R__STRTOK_R(NULL, option, &rest); // next token
                token_idx++ ;
             }
             if (!isLineToBeSkipped && value_idx > 1) { //i.e. 2,3 or 4

@@ -271,12 +271,12 @@ void TDataMember::Init(bool afterReading)
 
       //let's cut the part lying between {}
       char *rest;
-      ptr1 = strtok_r(opt_ptr, "{}", &rest); // starts tokenizing:extracts "*OPTION={"
+      ptr1 = R__STRTOK_R(opt_ptr, "{}", &rest); // starts tokenizing:extracts "*OPTION={"
       if (ptr1 == 0) {
          Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",GetTitle());
          return;
       }
-      ptr1 = strtok_r(nullptr, "{}", &rest); // And now we have what we need in ptr1!!!
+      ptr1 = R__STRTOK_R(nullptr, "{}", &rest); // And now we have what we need in ptr1!!!
       if (ptr1 == 0) {
          Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",GetTitle());
          return;
@@ -294,7 +294,7 @@ void TDataMember::Init(bool afterReading)
       cnt       = 0;
 
       do {                          //tokenizing loop
-         ptr1 = strtok_r((char *)(cnt++ ? nullptr : opt), ";", &rest);
+         ptr1 = R__STRTOK_R((char *)(cnt++ ? nullptr : opt), ";", &rest);
          if (ptr1){
             Int_t nch = strlen(ptr1)+1;
             tok=new char[nch];
@@ -307,12 +307,12 @@ void TDataMember::Init(bool afterReading)
       // OK! Now let's check whether we have Get/Set methods encode in any string
       for (i=0;i<token_cnt;i++) {
          if (strstr(tokens[i],"GetMethod")) {
-            ptr1 = strtok_r(tokens[i], "\"", &rest); // tokenizing-strip text "GetMethod"
+            ptr1 = R__STRTOK_R(tokens[i], "\"", &rest); // tokenizing-strip text "GetMethod"
             if (ptr1 == 0) {
                Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",GetTitle());
                return;
             }
-            ptr1 = strtok_r(nullptr, "\"", &rest); // tokenizing - name is in ptr1!
+            ptr1 = R__STRTOK_R(nullptr, "\"", &rest); // tokenizing - name is in ptr1!
             if (ptr1 == 0) {
                Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",GetTitle());
                return;
@@ -326,12 +326,12 @@ void TDataMember::Init(bool afterReading)
          }
 
          if (strstr(tokens[i],"SetMethod")) {
-            ptr1 = strtok_r(tokens[i], "\"", &rest);
+            ptr1 = R__STRTOK_R(tokens[i], "\"", &rest);
             if (ptr1 == 0) {
                Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",GetTitle());
                return;
             }
-            ptr1 = strtok_r(nullptr, "\"", &rest); // name of Setter in ptr1
+            ptr1 = R__STRTOK_R(nullptr, "\"", &rest); // name of Setter in ptr1
             if (ptr1 == 0) {
                Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",GetTitle());
                return;
@@ -349,12 +349,12 @@ void TDataMember::Init(bool afterReading)
 
       for (i=0;i<token_cnt;i++) {
          if (strstr(tokens[i],"Items")) {
-            ptr1 = strtok_r(tokens[i], "()", &rest);
+            ptr1 = R__STRTOK_R(tokens[i], "()", &rest);
             if (ptr1 == 0) {
                Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",GetTitle());
                return;
             }
-            ptr1 = strtok_r(nullptr, "()", &rest);
+            ptr1 = R__STRTOK_R(nullptr, "()", &rest);
             if (ptr1 == 0) {
                Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",GetTitle());
                return;
@@ -369,7 +369,7 @@ void TDataMember::Init(bool afterReading)
             //from TObject and thus can be stored in TList.
             //It's not elegant but works.
             do {
-               ptr1 = strtok_r(opt_cnt++ ? nullptr : opts, ",", &rest); // options extraction
+               ptr1 = R__STRTOK_R(opt_cnt++ ? nullptr : opts, ",", &rest); // options extraction
                if (ptr1) {
                   TOptionListItem *it = new TOptionListItem(this,1,0,0,ptr1,"");
                   optionlist->Add(it);
@@ -392,8 +392,8 @@ void TDataMember::Init(bool afterReading)
 
          ptr1 = it->fOptName;  // We will change the value of OptName ... but it is fine since we delete the object at the end of the loop.
          Bool_t islabel = (ptr1[0]=='\"');   // value is label or numerical?
-         ptr2 = strtok_r((char *)ptr1, "=\"", &rest); // extract LeftHandeSide
-         ptr3 = strtok_r(nullptr, "=\"", &rest);            // extract RightHandedSize
+         ptr2 = R__STRTOK_R((char *)ptr1, "=\"", &rest); // extract LeftHandeSide
+         ptr3 = R__STRTOK_R(nullptr, "=\"", &rest);            // extract RightHandedSize
 
          if (islabel) {
             it1=new TOptionListItem(this,-9999,0,0,ptr3,ptr2);
