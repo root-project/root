@@ -5,6 +5,10 @@
 
 include_directories(res ../auth/res)
 
+if(MACOSX_SSL_DEPRECATED)
+  set_source_files_properties(src/rpdutils.cxx COMPILE_FLAGS "-Wno-deprecated-declarations")
+endif()
+
 if(shadowpw)
   add_definitions(-DR__SHADOWPW)
 endif()
