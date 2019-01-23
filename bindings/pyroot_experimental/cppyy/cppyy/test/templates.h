@@ -1,5 +1,6 @@
 #include <string>
 #include <sstream>
+#include <vector>
 
 
 //===========================================================================
@@ -56,6 +57,18 @@ int global_some_bar(T) {
     return 13;
 }
 
+template <typename F>
+struct SomeResult {
+    F m_retval;
+};
+
+template <class I, typename O = float>
+SomeResult<O> global_get_some_result(const std::vector<I>& carrier) {
+    SomeResult<O> r{};
+    r.m_retval = O(carrier[0]);
+    return r;
+}
+
 
 //===========================================================================
 // variadic functions
@@ -107,7 +120,7 @@ int some_bar() {
 }
 
 inline std::string tuplify(std::ostringstream& out) {
-    out.seekp(-2, out.cur); out << ')';
+    out << "NULL)";
     return out.str();
 }
 
@@ -143,3 +156,59 @@ struct DerivedClassUsingStatic : public BaseClassWithStatic<T> {
     T m_value;
 };
 */
+
+
+//===========================================================================
+// templated callable
+class TemplatedCallable {
+public:
+    template <class I , class O = double>
+    O operator() (const I& in) const { return O(in); }
+};
+
+
+//===========================================================================
+// templated typedefs
+namespace TemplatedTypedefs {
+
+template<typename IN, typename OUT, size_t _vsize = 4>
+struct BaseWithEnumAndTypedefs {
+    enum { vsize = _vsize };
+    typedef IN in_type;
+    typedef OUT out_type;
+};
+
+template <typename IN, typename OUT, size_t _vsize = 4>
+struct DerivedWithUsing : public BaseWithEnumAndTypedefs<IN, OUT, _vsize>
+{
+    typedef BaseWithEnumAndTypedefs<IN, OUT, _vsize> base_type;
+    using base_type::vsize;
+    using typename base_type::in_type;
+    typedef typename base_type::in_type in_type_tt;
+    using typename base_type::out_type;
+};
+
+struct SomeDummy {};
+
+} // namespace TemplatedTypedefs
+
+
+//===========================================================================
+// hiding templated methods
+namespace TemplateHiding {
+
+struct Base {
+    template<class T>
+    int callme(T t = T(1)) { return 2*t; }
+};
+
+struct Derived : public Base {
+    int callme(int t = 2) { return t; }
+};
+
+} // namespace TemplateHiding
+
+
+//===========================================================================
+// 'using' of templates
+template<typename T> using DA_vector = std::vector<T>;

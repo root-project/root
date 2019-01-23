@@ -43,7 +43,15 @@ __all__ = [
     'add_autoload_map',       # explicitly include an autoload map
     ]
 
-import os, sys
+from ._version import __version__
+
+import os, sys, sysconfig
+
+if not 'CLING_STANDARD_PCH' in os.environ:
+    local_pch = os.path.join(os.path.dirname(__file__), 'allDict.cxx.pch')
+    if os.path.exists(local_pch):
+        os.putenv('CLING_STANDARD_PCH', local_pch)
+        os.environ['CLING_STANDARD_PCH'] = local_pch
 
 try:
     import __pypy__
@@ -71,7 +79,12 @@ try:    gbl.gInterpreter.EnableAutoLoading()
 except: pass
 
 
-#--- pythonization factories -------------------------------------------------
+#- external typemap ----------------------------------------------------------
+from . import _typemap
+_typemap.initialize(_backend)
+
+
+#- pythonization factories ---------------------------------------------------
 from . import _pythonization as py
 py._set_backend(_backend)
 
@@ -79,9 +92,12 @@ py._set_backend(_backend)
 #--- CFFI style interface ----------------------------------------------------
 def cppdef(src):
     """Declare C++ source <src> to Cling."""
-    gbl.gInterpreter.Declare(src)
+    if not gbl.gInterpreter.Declare(src):
+        return False
+    return True
 
 def load_library(name):
+    """Explicitly load a shared library."""
     if name[:3] != 'lib':
         if not gbl.gSystem.FindDynamicLibrary(gbl.TString(name), True) and\
                gbl.gSystem.FindDynamicLibrary(gbl.TString('lib'+name), True):
@@ -92,11 +108,11 @@ def load_library(name):
 
 def include(header):
     """Load (and JIT) header file <header> into Cling."""
-    gbl.gInterpreter.ProcessLine('#include "%s"' % header)
+    gbl.gInterpreter.Declare('#include "%s"' % header)
 
 def c_include(header):
     """Load (and JIT) header file <header> into Cling."""
-    gbl.gInterpreter.ProcessLine("""extern "C" {
+    gbl.gInterpreter.Declare("""extern "C" {
 #include "%s"
 }""" % header)
 
@@ -105,6 +121,9 @@ def add_include_path(path):
     if not os.path.isdir(path):
         raise OSError("no such directory: %s" % path)
     gbl.gInterpreter.AddIncludePath(path)
+
+# add access to Python C-API headers
+add_include_path(sysconfig.get_path('include'))
 
 def add_autoload_map(fname):
     """Add the entries from a autoload (.rootmap) file to Cling."""

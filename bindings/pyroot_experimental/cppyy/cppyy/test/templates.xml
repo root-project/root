@@ -16,4 +16,9 @@
   <function name="SomeNS::some_bar" />
   <function name="SomeNS::tuplify" />
 
+  <class name="TemplatedCallable" />
+
+  <namespace name="TemplateHiding" />
+  <class pattern="TemplateHiding::*" />
+
 </lcgdict>
