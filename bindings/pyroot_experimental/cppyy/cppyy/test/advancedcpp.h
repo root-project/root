@@ -1,27 +1,31 @@
 #include <new>
+#include <ostream>
 #include <string>
 #include <vector>
 
 
 //===========================================================================
-#define DECLARE_DEFAULTER_CLASS(type, tname)                                \
+#define DECLARE_DEFAULTERS(type, tname)                                     \
 class tname##_defaulter {                                                   \
 public:                                                                     \
     tname##_defaulter(type a = 11, type b = 22, type c = 33);               \
                                                                             \
 public:                                                                     \
     type m_a, m_b, m_c;                                                     \
-};
-DECLARE_DEFAULTER_CLASS(short, short)   // for testing of default arguments
-DECLARE_DEFAULTER_CLASS(unsigned short, ushort)
-DECLARE_DEFAULTER_CLASS(int, int)
-DECLARE_DEFAULTER_CLASS(unsigned, uint)
-DECLARE_DEFAULTER_CLASS(long, long)
-DECLARE_DEFAULTER_CLASS(unsigned long, ulong)
-DECLARE_DEFAULTER_CLASS(long long, llong)
-DECLARE_DEFAULTER_CLASS(unsigned long long, ullong)
-DECLARE_DEFAULTER_CLASS(float, float)
-DECLARE_DEFAULTER_CLASS(double, double)
+};                                                                          \
+type tname##_defaulter_func(int idx = 0, type a = 11, type b = 22, type c = 33);
+DECLARE_DEFAULTERS(short, short)   // for testing of default arguments
+DECLARE_DEFAULTERS(unsigned short, ushort)
+DECLARE_DEFAULTERS(int, int)
+DECLARE_DEFAULTERS(unsigned, uint)
+DECLARE_DEFAULTERS(long, long)
+DECLARE_DEFAULTERS(unsigned long, ulong)
+DECLARE_DEFAULTERS(long long, llong)
+DECLARE_DEFAULTERS(unsigned long long, ullong)
+DECLARE_DEFAULTERS(float, float)
+DECLARE_DEFAULTERS(double, double)
+
+std::string string_defaulter_func(int idx, const std::string& name1 = "aap", std::string name2 = "noot");
 
 
 //===========================================================================
@@ -266,8 +270,8 @@ public:
 class some_comparable {
 };
 
-bool operator==(const some_comparable& c1, const some_comparable& c2 );
-bool operator!=( const some_comparable& c1, const some_comparable& c2 );
+bool operator==(const some_comparable& c1, const some_comparable& c2);
+bool operator!=(const some_comparable& c1, const some_comparable& c2);
 
 
 //===========================================================================
@@ -276,6 +280,17 @@ extern double my_global_array[500];
 extern double* my_global_ptr;
 static const char my_global_string1[] = "aap " " noot " " mies";
 extern const char my_global_string2[];
+
+class some_int_holder {
+public:
+    some_int_holder(int val) : m_val(val) {}
+
+public:
+    int m_val;
+    char gap[7];
+};
+extern some_int_holder my_global_int_holders[5];
+
 
 //===========================================================================
 class some_class_with_data {       // for life-line and identity testing
@@ -430,3 +445,39 @@ public:
     virtual char vcheck() { return 'B'; }
     int m_int2 = 42;
 };
+
+
+//===========================================================================
+class TypedefToPrivateClass {      // typedef resolution testing
+private:
+    class PC {
+    public:
+        PC(int i) : m_val(i) {}
+        int m_val;
+    };
+
+public:
+    typedef PC PP;
+    PP f() { return PC(42); }
+};
+
+
+//===========================================================================
+namespace Cpp2PyPrinting {         // operator to __str__ mapping
+
+class Printable1 {
+public:
+    std::ostream& operator<<(std::ostream& os);
+};
+
+class Printable2 { /* empty */ };
+class Printable3 { /* empty */ };
+
+std::ostream& operator<<(std::ostream& os, const Printable2&);
+
+} // namespace Cpp2PyPrinting
+
+class Printable4 { /* empty */ };
+
+std::ostream& operator<<(std::ostream& os, const Cpp2PyPrinting::Printable3&);
+std::ostream& operator<<(std::ostream& os, const Printable4&);

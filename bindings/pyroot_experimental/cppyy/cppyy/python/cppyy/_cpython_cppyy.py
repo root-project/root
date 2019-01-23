@@ -59,16 +59,22 @@ class Template(object):  # expected/used by ProxyWrappers.cxx in CPyCppyy
             if type(arg) == str:
                 arg = ','.join(map(lambda x: x.strip(), arg.split(',')))
             newargs.append(arg)
-        result = _backend.MakeCppTemplateClass(*newargs)
+        pyclass = _backend.MakeCppTemplateClass(*newargs)
 
       # special case pythonization (builtin_map is not available from the C-API)
-        if 'push_back' in result.__dict__:
-            def iadd(self, ll):
-                [self.push_back(x) for x in ll]
-                return self
-            result.__iadd__ = iadd
+        if 'push_back' in pyclass.__dict__ and not '__iadd__' in pyclass.__dict__:
+            if 'reserve' in pyclass.__dict__:
+                def iadd(self, ll):
+                    self.reserve(len(ll))
+                    for x in ll: self.push_back(x)
+                    return self
+            else:
+                def iadd(self, ll):
+                    for x in ll: self.push_back(x)
+                    return self
+            pyclass.__iadd__ = iadd
 
-        return result
+        return pyclass
 
     def __getitem__(self, *args):
         if args and type(args[0]) == tuple:

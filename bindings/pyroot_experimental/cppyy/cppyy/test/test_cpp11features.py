@@ -106,7 +106,7 @@ class TestCPP11FEATURES:
     def test04_initializer_list(self):
         """Initializer list construction"""
 
-        from cppyy.gbl import std, TestData
+        from cppyy.gbl import std, TestData, TestData2, WithInitList
 
         v = std.vector[int]((1, 2, 3, 4))
         assert list(v) == [1, 2, 3, 4]
@@ -116,14 +116,16 @@ class TestCPP11FEATURES:
 
         raises(TypeError, std.vector[int], [1., 2., 3., 4.])
 
-        l = list()
-        for i in range(10):
-            l.append(TestData(i))
+        for cls in [std.vector, WithInitList]:
+            for cls_arg in [TestData, TestData2]:
+                l = list()
+                for i in range(10):
+                    l.append(cls_arg(i))
 
-        v = std.vector[TestData](l)
-        assert len(v) == len(l)
-        for i in range(len(l)):
-            assert v[i].m_int == l[i].m_int
+                v = cls[cls_arg](l)
+                assert len(v) == len(l)
+                for i in range(len(l)):
+                    assert v[i].m_int == l[i].m_int
 
     def test05_lambda_calls(self):
         """Call (global) lambdas"""
@@ -135,3 +137,18 @@ class TestCPP11FEATURES:
         assert cppyy.gbl.gMyLambda
         assert cppyy.gbl.gMyLambda(2)  == 42
         assert cppyy.gbl.gMyLambda(40) == 80
+
+        cppyy.cppdef("auto gime_a_lambda1() { return []() { return 42; }; }")
+        l1 = cppyy.gbl.gime_a_lambda1()
+        assert l1
+        assert l1() == 42
+
+        cppyy.cppdef("auto gime_a_lambda2() { int a = 4; return [a](int b) { return 42+a+b; }; }")
+        l2 = cppyy.gbl.gime_a_lambda2()
+        assert l2
+        assert l2(2) == 48
+
+        cppyy.cppdef("auto gime_a_lambda3(int a ) { return [a](int b) { return 42+a+b; }; }")
+        l3 = cppyy.gbl.gime_a_lambda3(4)
+        assert l3
+        assert l3(2) == 48

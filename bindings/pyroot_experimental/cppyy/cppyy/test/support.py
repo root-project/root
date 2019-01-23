@@ -15,7 +15,9 @@ def setup_make(targetname):
 
 if sys.hexversion >= 0x3000000:
    pylong = int
+   pyunicode = str
    maxvalue = sys.maxsize
 else:
    pylong = long
+   pyunicode = unicode
    maxvalue = sys.maxint

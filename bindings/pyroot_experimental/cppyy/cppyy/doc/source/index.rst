@@ -6,9 +6,11 @@
 cppyy: Automatic Python-C++ bindings
 ====================================
 
-cppyy is an automatic Python-C++ bindings generator designed for large scale
-programs in high performance computing that use modern C++.
-Design and performance are described in this `PyHPC paper`_.
+cppyy is an automatic Python-C++ bindings generator, for calling C++ from
+Python and Python from C++, designed for large scale programs in high
+performance computing that use modern C++.
+Design and performance are described in this `PyHPC paper`_, albeit that the
+CPython/cppyy performance has been vastly improved since.
 
 cppyy is based on `Cling`_, the C++ interpreter, to match Python's dynamism
 and interactivity.
@@ -22,6 +24,8 @@ features (more examples are in the `tutorial`_):
    ... class MyClass {
    ... public:
    ...     MyClass(int i) : m_data(i) {}
+   ...     virtual ~MyClass() {}
+   ...     virtual int add_int(int i) { return m_data + i; }
    ...     int m_data;
    ... };""")
    True
@@ -38,6 +42,16 @@ features (more examples are in the `tutorial`_):
    >>> m.m_data = 13
    >>> m.say_hello()
    Hello, the number is: 13
+   >>> class PyMyClass(MyClass):
+   ...     def add_int(self, i):  # python side override (CPython only)
+   ...       return self.m_data + 2*i
+   ...
+   >>> cppyy.cppdef("int callback(MyClass* m, int i) { return m->add_int(i); }")
+   True
+   >>> cppyy.gbl.callback(m, 2)             # calls C++ add_int
+   15
+   >>> cppyy.gbl.callback(PyMyClass(1), 2)  # calls Python-side override
+   5
    >>>
 
 With a modern C++ compiler having its back, cppyy is future-proof.
@@ -61,7 +75,7 @@ and heavy use of templates:
      File "<stdin>", line 1, in <module>
    Exception: int boost::any_cast(boost::any&& operand) =>
        boost::bad_any_cast: failed conversion using boost::any_cast (C++ exception)
-   >>> extract = boost.any_cast[std.vector[int]](std.move(val))   # correct
+   >>> extract = boost.any_cast[std.vector[int]](val) # correct cast
    >>> type(extract) is std.vector[int]
    True
    >>> extract += xrange(100)
@@ -69,16 +83,16 @@ and heavy use of templates:
    100
    >>> val.__assign__(std.move(extract))    # move forced
    <cppyy.gbl.boost.any object at 0xf6a8a0>
-   >>> len(extract)                         # now empty
+   >>> len(extract)                         # now empty (or invalid)
    0
-   >>> extract = boost.any_cast[std.vector[int]](std.move(val))
+   >>> extract = boost.any_cast[std.vector[int]](val)
    >>> list(extract)
    [0, 1, 2, 3, 4, 5, 6, ..., 97, 98, 99]
    >>>
 
 And yes, there is no reason to use Boost from Python (in fact, this example
-calls out for :doc:`pythonizations <pythonizations>`),  but the example shows
-that cppyy seamlessly supports many advanced C++ features.
+calls out for :doc:`pythonizations <pythonizations>`), but it shows that
+cppyy seamlessly supports many advanced C++ features.
 
 cppyy is available for both `CPython`_ (v2 and v3) and `PyPy`_, reaching
 C++-like performance with the latter.

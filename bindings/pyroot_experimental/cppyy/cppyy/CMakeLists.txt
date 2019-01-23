@@ -2,7 +2,10 @@ set(py_sources
   cppyy/_stdcpp_fix.py
   cppyy/__init__.py
   cppyy/_cpython_cppyy.py
+  cppyy/_pypy_cppyy.py
   cppyy/_pythonization.py
+  cppyy/_typemap.py
+  cppyy/_version.py
 )
 
 set(d $ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/${runtimedir})

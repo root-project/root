@@ -105,6 +105,10 @@ class TestFRAGILE:
         cppyy.addressof(f)
         raises(TypeError, cppyy.addressof, o)
         raises(TypeError, cppyy.addressof, 1)
+
+        # regression (m_int is 0 by default, but its address is not)
+        assert cppyy.addressof(f, 'm_int')
+
         # see also test08_void_pointer_passing in test_advancedcpp.py
 
     def test06_wrong_this(self):

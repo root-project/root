@@ -16,22 +16,26 @@ class TestPYTHONIFY:
         cls.example01 = cppyy.load_reflection_info(cls.test_dct)
 
     def test01_load_dictionary_cache(self):
-        """Test whether loading a dictionary twice results in the same object."""
+        """Test whether loading a dictionary twice results in the same object"""
+
         import cppyy
         lib2 = cppyy.load_reflection_info(self.test_dct)
         assert self.example01 is lib2
 
     def test02_finding_classes(self):
-        """Test the lookup of a class, and its caching."""
+        """Test the lookup of a class, and its caching"""
+
         import cppyy
         example01_class = cppyy.gbl.example01
         cl2 = cppyy.gbl.example01
         assert example01_class is cl2
 
-        raises(AttributeError, 'cppyy.gbl.nonexistingclass')
+        with raises(AttributeError):
+            cppyy.gbl.nonexistingclass
 
     def test03_calling_static_functions(self):
-        """Test calling of static methods."""
+        """Test calling of static methods"""
+
         import cppyy, sys, math
         example01_class = cppyy.gbl.example01
         res = example01_class.staticAddOneToInt(1)
@@ -49,9 +53,9 @@ class TestPYTHONIFY:
         res = example01_class.staticAddOneToInt(maxint32)
         assert res == -maxint32-1
 
-        raises(TypeError, 'example01_class.staticAddOneToInt(1, [])')
-        raises(TypeError, 'example01_class.staticAddOneToInt(1.)')
-        raises(TypeError, 'example01_class.staticAddOneToInt(maxint32+1)')
+        raises(TypeError, example01_class.staticAddOneToInt, 1, [])
+        raises(TypeError, example01_class.staticAddOneToInt, 1.)
+        raises(TypeError, example01_class.staticAddOneToInt, maxint32+1)
         res = example01_class.staticAddToDouble(0.09)
         assert res == 0.09 + 0.01
 
@@ -60,14 +64,13 @@ class TestPYTHONIFY:
 
         res = example01_class.staticStrcpy("aap")     # TODO: this leaks
         assert res == "aap"
-
-        res = example01_class.staticStrcpy(u"aap")    # TODO: this leaks
+        res = example01_class.staticStrcpy(u"aap")    # TODO: id.
         assert res == "aap"
-
-        raises(TypeError, 'example01_class.staticStrcpy(1.)')   # TODO: this leaks
+        raises(TypeError, example01_class.staticStrcpy, 1.)    # TODO: id.
 
     def test04_constructing_and_calling(self):
-        """Test object and method calls."""
+        """Test object and method calls"""
+
         import cppyy
         example01_class = cppyy.gbl.example01
         assert example01_class.getCount() == 0
@@ -79,7 +82,7 @@ class TestPYTHONIFY:
         assert res == 3
         instance.__destruct__()
         assert example01_class.getCount() == 0
-        raises(ReferenceError, 'instance.addDataToInt(4)')
+        raises(ReferenceError, instance.addDataToInt, 4)
 
         instance = example01_class(7)
         instance2 = example01_class(8)
@@ -116,6 +119,8 @@ class TestPYTHONIFY:
         assert example01_class.getCount() == 0
 
     def test05_passing_object_by_pointer(self):
+        """Pass object by pointer"""
+
         import cppyy
         example01_class = cppyy.gbl.example01
         payload_class = cppyy.gbl.payload
@@ -139,6 +144,8 @@ class TestPYTHONIFY:
         assert example01_class.getCount() == 0
 
     def test06_returning_object_by_pointer(self):
+        """Return an object py pointer"""
+
         import cppyy
         example01_class = cppyy.gbl.example01
         payload_class = cppyy.gbl.payload
@@ -159,6 +166,8 @@ class TestPYTHONIFY:
         assert example01_class.getCount() == 0
 
     def test07_returning_object_by_value(self):
+        """Return an object by value"""
+
         import cppyy
         example01_class = cppyy.gbl.example01
         payload_class = cppyy.gbl.payload
@@ -181,6 +190,8 @@ class TestPYTHONIFY:
         assert example01_class.getCount() == 0
 
     def test08_global_functions(self):
+        """Call a global function"""
+
         import cppyy
 
         assert cppyy.gbl.globalAddOneToInt(3) == 4     # creation lookup
@@ -248,7 +259,7 @@ class TestPYTHONIFY:
 
         for itype in ['short', 'ushort', 'int', 'uint', 'long', 'ulong']:
             g = getattr(a, '%sValue' % itype)
-            raises(TypeError, 'g(1, 2, 3, 4, 6)')
+            raises(TypeError, g, 1, 2, 3, 4, 6)
             assert g(11, 0, 12, 13) == 11
             assert g(11, 1, 12, 13) == 12
             assert g(11, 1, 12)     == 12
@@ -259,7 +270,7 @@ class TestPYTHONIFY:
 
         for ftype in ['float', 'double']:
             g = getattr(a, '%sValue' % ftype)
-            raises(TypeError, 'g(1., 2, 3., 4., 6.)')
+            raises(TypeError, g, 1., 2, 3., 4., 6.)
             assert g(11., 0, 12., 13.) == 11.
             assert g(11., 1, 12., 13.) == 12.
             assert g(11., 1, 12.)      == 12.

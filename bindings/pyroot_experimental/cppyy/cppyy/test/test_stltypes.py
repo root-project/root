@@ -1,6 +1,13 @@
 import py, os, sys
 from pytest import raises
-from .support import setup_make, maxvalue
+from .support import setup_make, pyunicode, maxvalue
+
+try:
+    import __pypy__
+    is_pypy = True
+except ImportError:
+    is_pypy = False
+
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("stltypesDict.so"))
@@ -39,8 +46,8 @@ class TestSTLVECTOR:
             assert tv1.iterator is cppyy.gbl.std.vector(p_type).iterator
 
             #----- 
-            v = tv1(); v += range(self.N)    # default args from Reflex are useless :/
-            if p_type == int:                # only type with == and != reflected in .xml
+            v = tv1(); v += range(self.N)
+            if p_type == int:
                 assert v.begin().__eq__(v.begin())
                 assert v.begin() == v.begin()
                 assert v.end() == v.end()
@@ -55,6 +62,7 @@ class TestSTLVECTOR:
 
             assert v.size() == self.N
             assert len(v) == self.N
+            assert len(v.data()) == self.N
 
             #-----
             v = tv1()
@@ -178,8 +186,10 @@ class TestSTLVECTOR:
         for i in range(self.N):
             v.push_back(i)
 
-        raises(IndexError, 'v[self.N]')
-        raises(IndexError, 'v[self.N+1]')
+        with raises(IndexError):
+            v[self.N]
+        with raises(IndexError):
+            v[self.N+1]
 
         assert v[-1] == self.N-1
         assert v[-2] == self.N-2
@@ -211,61 +221,86 @@ class TestSTLVECTOR:
         assert len(vb[4:8]) == 4
         assert list(vb[4:8]) == [False]*3+[True]
 
-class estSTLSTRING:
+    def test08_vector_enum(self):
+        """Usability of std::vector<> of some enums"""
+
+        import cppyy
+
+        # TODO: would like to use cppyy.gbl.VecTestEnum but that's an int
+        assert cppyy.gbl.VecTestEnum
+        ve = cppyy.gbl.std.vector['VecTestEnum']()
+        ve.push_back(cppyy.gbl.EVal1);
+        assert ve[0] == 1
+        ve[0] = cppyy.gbl.EVal2
+        assert ve[0] == 3
+
+        assert cppyy.gbl.VecTestEnumNS.VecTestEnum
+        ve = cppyy.gbl.std.vector['VecTestEnumNS::VecTestEnum']()
+        ve.push_back(cppyy.gbl.VecTestEnumNS.EVal1);
+        assert ve[0] == 5
+        ve[0] = cppyy.gbl.VecTestEnumNS.EVal2
+        assert ve[0] == 42
+
+
+class TestSTLSTRING:
     def setup_class(cls):
         cls.test_dct = test_dct
         import cppyy
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
 
     def test01_string_argument_passing(self):
-        """Test mapping of python strings and std::string"""
+        """Test mapping of python strings and std::[w]string"""
 
         import cppyy
         std = cppyy.gbl.std
-        stringy_class = cppyy.gbl.stringy_class
 
-        c, s = stringy_class(""), std.string("test1")
+        for stp, pystp in [(std.string, str), (std.wstring, pyunicode)]:
+            stringy_class = cppyy.gbl.stringy_class[stp]
 
-        # pass through const std::string&
-        c.set_string1(s)
-        assert c.get_string1() == s
+            c, s = stringy_class(pystp("")), stp(pystp("test1"))
 
-        c.set_string1("test2")
-        assert c.get_string1() == "test2"
+            # pass through const std::[w]string&
+            c.set_string1(s)
+            assert c.get_string1() == s
 
-        # pass through std::string (by value)
-        s = std.string("test3")
-        c.set_string2(s)
-        assert c.get_string1() == s
+            c.set_string1(pystp("test2"))
+            assert c.get_string1() == pystp("test2")
 
-        c.set_string2("test4")
-        assert c.get_string1() == "test4"
+            # pass through std::string (by value)
+            s = stp(pystp("test3"))
+            c.set_string2(s)
+            assert c.get_string1() == s
 
-        # getting through std::string&
-        s2 = std.string()
-        c.get_string2(s2)
-        assert s2 == "test4"
+            c.set_string2(pystp("test4"))
+            assert c.get_string1() == pystp("test4")
 
-        raises(TypeError, c.get_string2, "temp string")
+            # getting through std::[w]string&
+            s2 = stp()
+            c.get_string2(s2)
+            assert s2 == "test4"
+
+            raises(TypeError, c.get_string2, "temp string")
 
     def test02_string_data_access(self):
         """Test access to std::string object data members"""
 
         import cppyy
         std = cppyy.gbl.std
-        stringy_class = cppyy.gbl.stringy_class
 
-        c, s = stringy_class("dummy"), std.string("test string")
+        for stp, pystp in [(std.string, str), (std.wstring, pyunicode)]:
+            stringy_class = cppyy.gbl.stringy_class[stp]
 
-        c.m_string = "another test"
-        assert c.m_string == "another test"
-        assert str(c.m_string) == c.m_string
-        assert c.get_string1() == "another test"
+            c, s = stringy_class(pystp("dummy")), stp(pystp("test string"))
 
-        c.m_string = s
-        assert str(c.m_string) == s
-        assert c.m_string == s
-        assert c.get_string1() == s
+            c.m_string = pystp("another test")
+            assert c.m_string == pystp("another test")
+            assert pystp(c.m_string) == c.m_string
+            assert c.get_string1() == pystp("another test")
+
+            c.m_string = s
+            assert pystp(c.m_string) == s
+            assert c.m_string == s
+            assert c.get_string1() == s
 
     def test03_string_with_null_character(self):
         """Test that strings with NULL do not get truncated"""
@@ -274,7 +309,7 @@ class estSTLSTRING:
 
         import cppyy
         std = cppyy.gbl.std
-        stringy_class = cppyy.gbl.stringy_class
+        stringy_class = cppyy.gbl.stringy_class["std::string"]
 
         t0 = "aap\0noot"
         assert t0 == "aap\0noot"
@@ -284,6 +319,33 @@ class estSTLSTRING:
         c.set_string1(s)
         assert t0 == c.get_string1()
         assert s == c.get_string1()
+
+    def test04_array_of_strings(self):
+        """Access to global arrays of strings"""
+
+        import cppyy
+
+        assert tuple(cppyy.gbl.str_array_1) == ('a', 'b', 'c')
+        str_array_2 = cppyy.gbl.str_array_2
+        # fix up the size
+        str_array_2.size = 4
+        assert tuple(str_array_2) == ('d', 'e', 'f', 'g')
+        assert tuple(str_array_2) == ('d', 'e', 'f', 'g')
+
+        # multi-dimensional
+        vals = ['a', 'b', 'c', 'd', 'e', 'f']
+        str_array_3 = cppyy.gbl.str_array_3
+        for i in range(3):
+            for j in range(2):
+                assert str_array_3[i][j] == vals[i*2+j]
+
+        vals = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+                'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p']
+        str_array_4 = cppyy.gbl.str_array_4
+        for i in range(4):
+            for j in range(2):
+                for k in range(2):
+                    assert str_array_4[i][j][k] == vals[i*4+j*2+k]
 
 
 class TestSTLLIST:
@@ -407,7 +469,7 @@ class TestSTLMAP:
         mui = std.map(str, 'unsigned int')()
         mui['one'] = 1
         assert mui['one'] == 1
-        raises(TypeError, mui.__setitem__, 'minus one', -1)
+        raises(ValueError, mui.__setitem__, 'minus one', -1)
 
         # UInt_t is always 32b, maxvalue is sys.maxint/maxsize and follows system int
         maxint32 = int(math.pow(2,31)-1)
@@ -420,7 +482,7 @@ class TestSTLMAP:
         mul['maxint'] = maxvalue + 3
         assert mul['maxint'] == maxvalue + 3
 
-        raises(TypeError, mul.__setitem__, 'minus two', -2)
+        raises(ValueError, mul.__setitem__, 'minus two', -2)
 
     def test05_STL_like_class_indexing_overloads(self):
         """Test overloading of operator[] in STL like class"""
@@ -435,20 +497,15 @@ class TestSTLMAP:
     def test06_STL_like_class_iterators(self):
         """Test the iterator protocol mapping for an STL like class"""
 
-        return
-
-        # TODO: reconsider this (this is a case where there is no return
-        # type available and the code should (?) fall back onto getitem
-        # iteration. (Python does, and that would break this.)
-
         import cppyy
         stl_like_class = cppyy.gbl.stl_like_class
 
         a = stl_like_class(int)()
-        for i in a:
-            pass
+        assert len(a) == 4
+        for i, j in enumerate(a):
+            assert i == j
 
-        assert i == 3
+        assert i == len(a)-1
 
 
 class TestSTLITERATOR:
@@ -518,6 +575,14 @@ class TestSTLARRAY:
             a[i].py = i**2
             assert a[i].py == i**2
 
+        if is_pypy:
+            raise RuntimeError("test fails with crash")
+        # test assignment
+        assert a[2]
+        a[2] = gbl.ArrayTest.Point(6, 7)
+        assert a[2].px == 6
+        assert a[2].py == 7
+
     def test03_array_of_pointer_to_pods(self):
         """Usage of std::array of pointer to PODs"""
 
@@ -532,6 +597,8 @@ class TestSTLARRAY:
 
         a = std.array['ArrayTest::Point*', 4]()
         assert len(a) == 4
+        if is_pypy:
+            raise RuntimeError("test fails with crash")
         for i in range(len(a)):
             a[i] = ll[i]
             assert a[i].px == 13*i
@@ -545,3 +612,47 @@ class TestSTLARRAY:
 
             assert gbl.ArrayTest.get_pa_px(a.data(), i) == 13*i
             assert gbl.ArrayTest.get_pa_py(a.data(), i) == 42*i
+
+
+class TestSTLSTRING_VIEW:
+    def setup_class(cls):
+        cls.test_dct = test_dct
+        import cppyy
+        cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
+
+    def test01_string_through_string_view(self):
+        """Usage of std::string_view as formal argument"""
+
+        import cppyy
+        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") <= 201402:
+            # string_view exists as of C++17
+            return
+        countit = cppyy.gbl.StringViewTest.count
+        countit_cr = cppyy.gbl.StringViewTest.count_cr
+
+        assert countit("aap")    == 3
+        assert countit_cr("aap") == 3
+        s = cppyy.gbl.std.string("noot")
+        assert countit(s)    == 4
+        assert countit_cr(s) == 4
+        v = cppyy.gbl.std.string_view(s.data(), s.size())
+        assert v[0] == 'n'
+        assert countit(v)    == 4
+        assert countit_cr(v) == 4
+
+
+class TestSTLDEQUE:
+    def setup_class(cls):
+        cls.test_dct = test_dct
+        import cppyy
+        cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
+        cls.N = cppyy.gbl.N
+
+    def test01_deque_byvalue_regression(self):
+        """Return by value of a deque used to crash"""
+
+        import cppyy
+        assert cppyy.cppdef("std::deque<long double> f() { std::deque<long double> d ; return d ; }")
+        x = cppyy.gbl.f()
+        assert x
+        del x

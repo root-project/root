@@ -50,3 +50,5 @@ unsigned int pyzables::pass_mine_sp_ptr(std::shared_ptr<Countable>* ptr) { retur
 unsigned int pyzables::pass_mine_rp(Countable c) { return c.m_check; }
 unsigned int pyzables::pass_mine_rp_ref(const Countable& c) { return c.m_check; }
 unsigned int pyzables::pass_mine_rp_ptr(const Countable* c) { return c->m_check; }
+
+pyzables::Countable* pyzables::gime_naked_countable() { return new Countable{}; }

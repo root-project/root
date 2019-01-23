@@ -1,11 +1,21 @@
 <lcgdict>
 
   <class name="just_a_class" />
-  <class name="stringy_class" />
+  <enum name="VecTestEnum" />
+  <namespace name="VecTestEnumNS" />
+  <enum name="VecTestEnumNS::VecTestEnum" />
   <class pattern="stl_like_class<*>" />
+
+  <class name="stringy_class_t" />
+  <class name="wstringy_class_t" />
 
   <namespace name="ArrayTest" />
   <class pattern="ArrayTest::*" />
   <function pattern="ArrayTest::*" />
+
+  <variable pattern="str_array_*" />
+
+  <namespace name="StringViewTest" />
+  <function pattern="StringViewTest::*" />
 
 </lcgdict>

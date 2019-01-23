@@ -6,6 +6,9 @@ class TestDOCFEATURES:
     def setup_class(cls):
         import cppyy
 
+        # touch __version__ as a test
+        assert hasattr(cppyy, '__version__')
+
         cppyy.cppdef("""
 #include <cmath>
 #include <iostream>
