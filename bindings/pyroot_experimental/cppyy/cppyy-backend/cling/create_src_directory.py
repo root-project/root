@@ -8,18 +8,38 @@ try:
 except ModuleNotFoundError:
     import urllib.request as urllib2  # p3
 
+if 'win32' in sys.platform:
+    def rename(f1, f2):
+        os.remove(f2)
+        os.rename(f1, f2)
+else:
+    rename = os.rename
+
+def is_manylinux():
+    _is_manylinux = False
+    try:
+        for line in open('/etc/redhat-release').readlines():
+            if 'CentOS release 5.11' in line:
+                _is_manylinux = True
+                break
+    except (OSError, IOError):
+        pass
+    return _is_manylinux
+
 
 DEBUG_TESTBUILD = False
 
 TARBALL_CACHE_DIR = 'releases'
 
 ROOT_KEEP = ['build', 'cmake', 'config', 'core', 'etc', 'interpreter',
-             'io', 'LICENSE', 'Makefile', 'CMakeLists.txt', 'math',
-             'main'] # main only needed in more recent root b/c of rootcling
+             'io', 'LICENSE', 'LGPL2_1.txt', 'Makefile', 'CMakeLists.txt', 'math',
+             'main', # main only needed in more recent root b/c of rootcling
+             'builtins']
 ROOT_CORE_KEEP = ['CMakeLists.txt', 'base', 'clib', 'clingutils', 'cont',
-                  'dictgen', 'foundation', 'lz4', 'lzma', 'macosx', 'meta',
+                  'dictgen', 'foundation', 'macosx', 'meta',
                   'metacling', 'metautils', 'rootcling_stage1', 'textinput',
                   'thread', 'unix', 'utils', 'winnt', 'zip', 'pcre']
+ROOT_BUILTINS_KEEP = ['openssl', 'xxhash', 'zlib']
 ROOT_IO_KEEP = ['CMakeLists.txt', 'io', 'rootpcm']
 ROOT_MATH_KEEP = ['CMakeLists.txt', 'mathcore']
 ROOT_ETC_KEEP = ['Makefile.arch', 'class.rules', 'cmake', 'dictpch',
@@ -28,7 +48,9 @@ ROOT_ETC_KEEP = ['Makefile.arch', 'class.rules', 'cmake', 'dictpch',
                  'valgrind-root-python.supp', 'valgrind-root.supp', 'vmc']
 ROOT_PLUGINS_KEEP = ['TVirtualStreamerInfo']
 
-ROOT_EXPLICIT_REMOVE = ['core/base/v7', 'math/mathcore/v7', 'io/io/v7']
+ROOT_EXPLICIT_REMOVE = [os.path.join('core', 'base', 'v7'),
+                        os.path.join('math', 'mathcore', 'v7'),
+                        os.path.join('io', 'io', 'v7')]
 
 
 ERR_RELEASE_NOT_FOUND = 2
@@ -80,8 +102,8 @@ def clean_directory(directory, keeplist, trim_cmake=True):
         return
 
     # now take the removed entries out of the CMakeLists.txt
-    if removed_entries:
-        inp = os.path.join(directory, 'CMakeLists.txt')
+    inp = os.path.join(directory, 'CMakeLists.txt')
+    if removed_entries and os.path.exists(inp):
         print('trimming', inp)
         outp = inp+'.new'
         new_cml = open(outp, 'w')
@@ -96,7 +118,7 @@ def clean_directory(directory, keeplist, trim_cmake=True):
                         break
             new_cml.write(line)
         new_cml.close()
-        os.rename(outp, inp)
+        rename(outp, inp)
     else:
         print('reusing existing %s/CMakeLists.txt' % (directory,))
  
@@ -140,59 +162,112 @@ try:
 except OSError:
     pass
 os.chdir(pkgdir)
-clean_directory(os.path.curdir, ROOT_KEEP)
-clean_directory('core',         ROOT_CORE_KEEP)
-clean_directory('etc',          ROOT_ETC_KEEP, trim_cmake=False)
-clean_directory('etc/plugins',  ROOT_PLUGINS_KEEP, trim_cmake=False)
-clean_directory('io',           ROOT_IO_KEEP)
-clean_directory('math',         ROOT_MATH_KEEP)
+clean_directory(os.path.curdir,                  ROOT_KEEP)
+clean_directory('core',                          ROOT_CORE_KEEP)
+clean_directory('builtins',                      ROOT_BUILTINS_KEEP)
+clean_directory('etc',                           ROOT_ETC_KEEP, trim_cmake=False)
+clean_directory(os.path.join('etc', 'plugins'),  ROOT_PLUGINS_KEEP, trim_cmake=False)
+clean_directory('io',                            ROOT_IO_KEEP)
+clean_directory('math',                          ROOT_MATH_KEEP)
 
 
 # trim main (only need rootcling)
 print('trimming main')
-for entry in os.listdir('main/src'):
+for entry in os.listdir(os.path.join('main', 'src')):
     if entry != 'rootcling.cxx':
-        os.remove('main/src/'+entry)
-inp = 'main/CMakeLists.txt'
+        os.remove(os.path.join('main', 'src', entry))
+inp = os.path.join('main', 'CMakeLists.txt')
 outp = inp+'.new'
 new_cml = open(outp, 'w')
 for line in open(inp).readlines():
-    if ('ROOT_EXECUTABLE' in line or\
+    if ('ROOT_EXECUTABLE' in line or 'root.exe' in line or \
         'SET_TARGET_PROPERTIES' in line) and\
        not 'rootcling' in line:
         line = '#'+line
     new_cml.write(line)
 new_cml.close()
-os.rename(outp, inp)
+rename(outp, inp)
 
-# trim core (gGLManager crashes on call)
-print('trimming main')
-os.remove("core/base/src/TVirtualGL.cxx")
-os.remove("core/base/inc/TVirtualGL.h")
+# trim core (remove lz4 and lzma, and gGLManager which otherwise crashes on call)
+print('trimming core/CMakeLists.txt')
+inp = os.path.join('core', 'CMakeLists.txt')
+outp = inp+'.new'
+new_cml = open(outp, 'w')
+for line in open(inp).readlines():
+    if ('Lzma' in line or 'Lz4' in line):
+        line = '#'+line
+    else:
+        line = line.replace(' ${LZMA_LIBRARIES}', '')
+        line = line.replace(' LZ4::LZ4', '')
+        line = line.replace(' LZMA', '')
+    new_cml.write(line)
+new_cml.close()
+rename(outp, inp)
 
-# remove afterimage and ftgl explicitly
-print('trimming externals')
-for cmf in ['AfterImage', 'FTGL']:
-    fname = 'cmake/modules/Find%s.cmake' % (cmf,)
-    if os.path.exists(fname):
-        os.remove(fname)
-inp = 'cmake/modules/SearchInstalledSoftware.cmake'
+print('trimming core/base')
+os.remove(os.path.join('core', 'base', 'src', 'TVirtualGL.cxx'))
+os.remove(os.path.join('core', 'base', 'inc', 'TVirtualGL.h'))
+inp = os.path.join('core', 'base', 'CMakeLists.txt')
 outp = inp+'.new'
 now_stripping = False
 new_cml = open(outp, 'w')
 for line in open(inp).readlines():
-    if '#---Check for ftgl if needed' == line[0:28] or\
-       '#---Check for AfterImage' == line[0:24]:
+    if 'if(cxx14 OR cxx17 OR root7)' == line[0:27]:   # get rid of v7 stuff
         now_stripping = True
-    elif '#---Check' == line[0:9]:
+    elif 'if(root7)' == line[0:9]:
         now_stripping = False
     if now_stripping:
         line = '#'+line
     new_cml.write(line)
 new_cml.close()
-os.rename(outp, inp)
+rename(outp, inp)
 
-inp = 'cmake/modules/RootBuildOptions.cmake'
+# do not copy wchar.h & friends b/c the pch should be generated at install time,
+# so preventing conflict
+print('trimming clingutils')
+inp = os.path.join('core', 'clingutils', 'CMakeLists.txt')
+outp = inp+'.new'
+now_stripping = False
+new_cml = open(outp, 'w')
+for line in open(inp).readlines():
+    if '# Capture their build-time' == line[0:26]:
+        now_stripping = True
+    elif 'set(stamp_file' == line[0:14]:
+        now_stripping = False
+    if now_stripping:
+        line = '#'+line
+    new_cml.write(line)
+new_cml.close()
+rename(outp, inp)
+
+# remove extraneous external software explicitly
+print('trimming externals')
+for cmf in ['AfterImage', 'FTGL']:
+    fname = os.path.join('cmake', 'modules', 'Find%s.cmake' % (cmf,))
+    if os.path.exists(fname):
+        os.remove(fname)
+inp = os.path.join('cmake', 'modules', 'SearchInstalledSoftware.cmake')
+outp = inp+'.new'
+now_stripping = False
+new_cml = open(outp, 'w')
+for line in open(inp).readlines():
+    if '#---Check for ftgl if needed' == line[0:28] or\
+       '#---Check for AfterImage' == line[0:24] or\
+       '#---Check for Freetype' == line[0:22] or\
+       '#---Check for LZMA' == line[0:18] or\
+       '#---Check for LZ4' == line[0:17] or\
+       '#-------' == line[0:8]:   # openui5 (doesn't follow convention)
+        now_stripping = True
+    elif '#---Check' == line[0:9] or\
+         '#---Report' == line[0:10]:
+        now_stripping = False
+    if now_stripping or 'builtin_freetype' in line:
+        line = '#'+line
+    new_cml.write(line)
+new_cml.close()
+rename(outp, inp)
+
+inp = os.path.join('cmake', 'modules', 'RootBuildOptions.cmake')
 outp = inp+'.new'
 new_cml = open(outp, 'w')
 for line in open(inp).readlines():
@@ -201,24 +276,9 @@ for line in open(inp).readlines():
         line = '#'+line
     new_cml.write(line)
 new_cml.close()
-os.rename(outp, inp)
+rename(outp, inp)
 
-# strip freetype
-inp = 'cmake/modules/SearchInstalledSoftware.cmake'
-outp = inp+'.new'
-new_cml = open(outp, 'w')
-for line in open(inp).readlines():
-    if '#---Check for Freetype' == line[0:22]:
-        now_stripping = True
-    elif '#---Check for PCRE' == line[0:18]:
-        now_stripping = False
-    if now_stripping or 'builtin_freetype' in line:
-        line = '#'+line
-    new_cml.write(line)
-new_cml.close()
-os.rename(outp, inp)
-
-# remove testing and examples
+# remove testing, examples, and notebook
 print('trimming testing')
 inp = 'CMakeLists.txt'
 outp = inp+'.new'
@@ -233,12 +293,14 @@ for line in open(inp).readlines():
         now_stripping = False
     if now_stripping:
         line = '#'+line
+    elif 'kernel.json' in line:
+        line = '#'+line
     new_cml.write(line)
 new_cml.close()
-os.rename(outp, inp)
+rename(outp, inp)
 
 print('trimming RootCPack')
-inp = 'cmake/modules/RootCPack.cmake'
+inp = os.path.join('cmake', 'modules', 'RootCPack.cmake')
 outp = inp+'.new'
 new_cml = open(outp, 'w')
 for line in open(inp):
@@ -246,7 +308,7 @@ for line in open(inp):
         line = '#'+line
     new_cml.write(line)
 new_cml.close()
-os.rename(outp, inp)
+rename(outp, inp)
 
 
 # some more explicit removes:
@@ -258,7 +320,7 @@ for dir_to_remove in ROOT_EXPLICIT_REMOVE:
 
 
 # special fixes
-inp = 'core/base/src/TVirtualPad.cxx'
+inp = os.path.join('core', 'base', 'src', 'TVirtualPad.cxx')
 outp = inp+'.new'
 new_cml = open(outp, 'w')
 for line in open(inp):
@@ -272,14 +334,15 @@ typedef struct _x3d_sizeof_ {
 """
     new_cml.write(line)
 new_cml.close()
-os.rename(outp, inp)
+rename(outp, inp)
 
-inp = 'core/unix/src/TUnixSystem.cxx'
-outp = inp+'.new'
-new_cml = open(outp, 'w')
-for line in open(inp):
-    if '#include "TSocket.h"' == line[0:20]:
-        line = """//#include "TSocket.h"
+for inp in [os.path.join('core', 'unix', 'src', 'TUnixSystem.cxx'),
+            os.path.join('core', 'winnt', 'src', 'TWinNTSystem.cxx')]:
+    outp = inp+'.new'
+    new_cml = open(outp, 'w')
+    for line in open(inp):
+        if '#include "TSocket.h"' == line[0:20]:
+            line = """//#include "TSocket.h"
 enum ESockOptions {
    kSendBuffer,        // size of send buffer
    kRecvBuffer,        // size of receive buffer
@@ -300,11 +363,12 @@ enum ESendRecvOptions {
    kDontBlock          // send/recv as much data as possible without blocking
 };
 """
-    new_cml.write(line)
-new_cml.close()
-os.rename(outp, inp)
+        new_cml.write(line)
+    new_cml.close()
+    rename(outp, inp)
 
-inp = 'math/mathcore/src/Fitter.cxx'
+print('trimming mathcore')
+inp = os.path.join('math', 'mathcore', 'src', 'Fitter.cxx')
 if os.path.exists(inp):
     outp = inp+'.new'
     new_cml = open(outp, 'w')
@@ -313,7 +377,23 @@ if os.path.exists(inp):
             continue
         new_cml.write(line)
     new_cml.close()
-    os.rename(outp, inp)
+    rename(outp, inp)
+
+os.remove(os.path.join('math', 'mathcore', 'src', 'triangle.h'))
+os.remove(os.path.join('math', 'mathcore', 'src', 'triangle.c'))
+os.remove(os.path.join('math', 'mathcore', 'inc', 'Math', 'Delaunay2D.h'))
+os.remove(os.path.join('math', 'mathcore', 'src', 'Delaunay2D.cxx'))
+
+inp = os.path.join('math', 'mathcore', 'CMakeLists.txt')
+outp = inp+'.new'
+now_stripping = False
+new_cml = open(outp, 'w')
+for line in open(inp).readlines():
+    if 'Delaunay2D' in line or 'triangle' in line:
+        new_cml.write('#')
+    new_cml.write(line)
+new_cml.close()
+rename(outp, inp)
 
 # done
 os.chdir(os.path.pardir)
@@ -326,7 +406,8 @@ if DEBUG_TESTBUILD:
         shutil.rmtree(tb)
     os.mkdir(tb)
     os.chdir(tb)
-    os.system('cmake ../%s -DCMAKE_INSTALL_PREFIX=../install -Dminimal=ON -Dasimage=OFF' % pkgdir)
+    os.system('cmake %s -DCMAKE_INSTALL_PREFIX=%s -Dminimal=ON -Dasimage=OFF' % \
+                 (os.path.join(os.pardir, pkgdir), os.path.join(os.pardir, 'install')))
     os.system('make -j 32')
 
 
@@ -351,16 +432,42 @@ for entry in os.listdir(pkgdir):
             shutil.copy2(fullp, dest)
 
 #
-## apply patches
+## apply patches (in order)
 #
-os.system('patch -p1 < patches/metacling.diff')
-os.system('patch -p1 < patches/scanner.diff')
-os.system('patch -p1 < patches/scanner_2.diff')
-os.system('patch -p1 < patches/faux_typedef.diff')
-os.system('patch -p1 < patches/template_fwd.diff')
-os.system('patch -p1 < patches/dep_template.diff')
-os.system('patch -p1 < patches/no_long64_t.diff')
-os.system('patch -p1 < patches/using_decls.diff')
-os.system('patch -p1 < patches/sfinae.diff')
+try:
+    import patch
+except ImportError:
+    class patch(object):
+        @staticmethod
+        def fromfile(fdiff):
+            return patch(fdiff)
+
+        def __init__(self, fdiff):
+            self.fdiff = fdiff
+
+        def apply(self):
+            res = os.system('patch -p1 < ' + self.fdiff)
+            return res == 0
+
+for fdiff in ('scanner', 'scanner_2', 'faux_typedef', 'classrules', 'template_fwd', 'dep_template',
+              'no_long64_t', 'using_decls', 'sfinae', 'typedef_of_private', 'optlevel2_forced',
+              'explicit_template', 'alias_template', 'lambda', 'helpers', 'pch', 'strip_lz4_lzma',
+              'msvc', 'win64'):
+    pset = patch.fromfile(os.path.join('patches', fdiff+'.diff'))
+    if not pset.apply():
+        print("Failed to apply patch:", fdiff)
+        sys.exit(2)
+
+#
+## manylinux1 specific patch, as there a different, older, compiler is used
+#
+if is_manylinux():
+    patch.fromfile(os.path.join('patches', 'manylinux1.diff')).apply()
+
+#
+## finally, remove the ROOT source directory, as it can not be reused
+#
+print("removing", pkgdir)
+shutil.rmtree(pkgdir)
 
 # done!

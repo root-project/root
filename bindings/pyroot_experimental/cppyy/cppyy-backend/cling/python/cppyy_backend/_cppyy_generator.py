@@ -227,7 +227,7 @@ class CppyyGenerator(object):
         # Use Clang to parse the source and return its AST.
         #
         self.tu = self.source_processor.compile(h_file)
-        m = (logging.ERROR - logging.WARNING)/(Diagnostic.Error - Diagnostic.Warning)
+        m = (logging.ERROR - logging.WARNING) // (Diagnostic.Error - Diagnostic.Warning)
         c = logging.ERROR - (Diagnostic.Error * m)
         for diag in self.tu.diagnostics:
             #
