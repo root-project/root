@@ -16,11 +16,11 @@ def _next_pyz(self):
     # - self: iterator on a collection
     # Returns:
     # - next object in the collection, or raises StopIteration if none
-	o = self.Next()
-	if o:
-		return o
-	else:
-		raise StopIteration()
+    o = self.Next()
+    if o:
+        return o
+    else:
+        raise StopIteration()
 
 # The TIter class does not go through the mechanism of lazy pythonisations of
 # cppyy, since it is used before such mechanism is put in place. Therefore, we

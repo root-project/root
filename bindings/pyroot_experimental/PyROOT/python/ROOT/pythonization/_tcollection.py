@@ -17,82 +17,82 @@ from ._generic import add_len
 # Python-list-like methods
 
 def _remove_pyz(self, o):
-	# Parameters:
+    # Parameters:
     # - self: collection
     # - o: object to remove from the collection
-	res = self.Remove(o)
+    res = self.Remove(o)
 
-	if not res:
-		raise ValueError('list.remove(x): x not in list')
+    if not res:
+        raise ValueError('list.remove(x): x not in list')
 
 def _extend_pyz(self, c):
-	# Parameters:
+    # Parameters:
     # - self: collection
     # - c: collection to extend self with
     lenc = c.GetEntries()
     it = TIter(c)
     for _ in range(lenc):
-    	self.Add(it.Next())
+        self.Add(it.Next())
 
 def _count_pyz(self, o):
-	# Parameters:
+    # Parameters:
     # - self: collection
     # - o: object to be counted in the collection
     # Returns:
     # - Number of occurrences of the object in the collection
-	n = 0
+    n = 0
 
-	it = TIter(self)
-	obj = it.Next()
-	while obj:
-		if obj == o:
-			n += 1
-		obj = it.Next()
+    it = TIter(self)
+    obj = it.Next()
+    while obj:
+        if obj == o:
+            n += 1
+        obj = it.Next()
 
-	return n
+    return n
 
 # Python operators
 
 def _add_pyz(self, c):
-	# Parameters:
+    # Parameters:
     # - self: first collection to be added
     # - c: second collection to be added
     # Returns:
     # - self + c
-	res = self.__class__()
-	_extend_pyz(res, self)
-	_extend_pyz(res, c)
-	return res
+    res = self.__class__()
+    _extend_pyz(res, self)
+    _extend_pyz(res, c)
+    return res
 
 def _mul_pyz(self, n):
-	# Parameters:
+    # Parameters:
     # - self: collection to be multiplied
     # - n: factor to multiply the collection by
     # Returns:
     # - self * n
-	res = self.__class__()
-	for _ in range(n):
-		_extend_pyz(res, self)
-	return res
+    res = self.__class__()
+    for _ in range(n):
+        _extend_pyz(res, self)
+    return res
 
 def _imul_pyz(self, n):
-	# Parameters:
+    # Parameters:
     # - self: collection to be multiplied (in place)
     # - n: factor to multiply the collection by
     # Returns:
     # - self *= n
-	for _ in range(n - 1):
-		_extend_pyz(self, self)
-	return self
+    for _ in range(n - 1):
+        _extend_pyz(self, self)
+    return self
 
 # Python iteration
 
 def _begin_pyz(self):
-	# Parameters:
+    # Parameters:
     # - self: collection to be iterated
     # Returns:
     # - TIter iterator on collection
-	return TIter(self)
+    return TIter(self)
 
 
 @pythonization()
