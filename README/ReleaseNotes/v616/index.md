@@ -410,7 +410,7 @@ The Ruby binding has been removed.
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9374'>ROOT-9374</a>] -         Re-enable dataframe_{interface,simple} and test_stringfiltercolumn tests
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9380'>ROOT-9380</a>] -         [TDF] Switch back to using Calc rather than ProcessLine when finished debugging test failures
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9416'>ROOT-9416</a>] -         [DF] Improve dataframe ownership model
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9453'>ROOT-9453</a>] -         [VecOps] Cannot instantiate RVec<bool>
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9453'>ROOT-9453</a>] -         [VecOps] Cannot instantiate `RVec<bool>`
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9456'>ROOT-9456</a>] -         [Jenkins][DF] Sporadic failures in test_snapshotNFiles
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9458'>ROOT-9458</a>] -         [DF] Allow to draw a computational graph with Dot
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9460'>ROOT-9460</a>] -         [DF] Add a Standard deviation action
@@ -491,7 +491,7 @@ The Ruby binding has been removed.
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9550'>ROOT-9550</a>] -         last ROOT versions don&#39;t support PostgreSQL less than 10.x
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9551'>ROOT-9551</a>] -         Automatic legend placement places legend over datapoints
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9552'>ROOT-9552</a>] -         Histograms filled with FillRandom do not display when using PLC, PMC options
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9555'>ROOT-9555</a>] -         [DF] Compilation fails for Reduce on a bool column due to std::vector<bool>
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9555'>ROOT-9555</a>] -         [DF] Compilation fails for Reduce on a bool column due to `std::vector<bool>`
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9560'>ROOT-9560</a>] -         TGraph axis titles are lost when gPad->SetLogx(1) is called
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9563'>ROOT-9563</a>] -         [TreeProcMT] Trees in subdirectories are not supported (and their usage lead to a crash)
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9571'>ROOT-9571</a>] -         segfault using RooKeysPdf
@@ -530,7 +530,7 @@ The Ruby binding has been removed.
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9662'>ROOT-9662</a>] -         Thread problem in I/O for ROOT master
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9664'>ROOT-9664</a>] -         "pmarker->Draw("nodraw #1" with SaveAs method
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9665'>ROOT-9665</a>] -         RooDataSet Import
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9666'>ROOT-9666</a>] -         [DF] Reading/writing std::vector<bool> and C-arrays of bool is broken
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9666'>ROOT-9666</a>] -         [DF] Reading/writing `std::vector<bool>` and C-arrays of bool is broken
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9667'>ROOT-9667</a>] -         BDT difference IMT=on and off
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9681'>ROOT-9681</a>] -         Typedef clash in global namespace between ROOT and Geant4
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9684'>ROOT-9684</a>] -         Wrong cast of functions in TGlobalMappedFunction
