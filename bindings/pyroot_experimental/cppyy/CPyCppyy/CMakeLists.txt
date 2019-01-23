@@ -19,6 +19,7 @@ set(sources
   src/CPPSetItem.cxx
   src/CPyCppyyModule.cxx
   src/CustomPyTypes.cxx
+  src/Dispatcher.cxx
   src/Executors.cxx
   src/LowLevelViews.cxx
   src/MemoryRegulator.cxx

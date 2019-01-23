@@ -23,6 +23,24 @@ protected:
     virtual bool InitExecutor_(Executor*&, CallContext* ctxt = nullptr);
 };
 
+
+// specializations of prohibiting constructors
+class CPPAbstractClassConstructor : public CPPConstructor {
+public:
+    using CPPConstructor::CPPConstructor;
+
+public:
+    virtual PyObject* Call(CPPInstance*&, PyObject*, PyObject*, CallContext* = nullptr);
+};
+
+class CPPNamespaceConstructor : public CPPConstructor {
+public:
+    using CPPConstructor::CPPConstructor;
+
+public:
+    virtual PyObject* Call(CPPInstance*&, PyObject*, PyObject*, CallContext* = nullptr);
+};
+
 } // namespace CPyCppyy
 
 #endif // !CPYCPPYY_CPPCONSTRUCTOR_H

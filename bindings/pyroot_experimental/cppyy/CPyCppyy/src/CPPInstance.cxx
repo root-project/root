@@ -9,6 +9,7 @@
 
 // Standard
 #include <algorithm>
+#include <sstream>
 
 
 //______________________________________________________________________________
@@ -44,6 +45,10 @@ void CPyCppyy::op_dealloc_nofree(CPPInstance* pyobj) {
         Cppyy::Destruct(klass, addr);
     }
     pyobj->fObject = nullptr;
+
+    for (auto& pc : pyobj->fDatamemberCache)
+        Py_XDECREF(pc.second);
+    pyobj->fDatamemberCache.clear();
 }
 
 
@@ -132,6 +137,7 @@ static CPPInstance* op_new(PyTypeObject* subtype, PyObject*, PyObject*)
     pyobj->fFlags  = 0;
     pyobj->fSmartPtrType = (Cppyy::TCppType_t)0;
     pyobj->fDereferencer = (Cppyy::TCppMethod_t)0;
+    new (&pyobj->fDatamemberCache) CI_DatamemberCache_t{};
 
     return pyobj;
 }
@@ -141,6 +147,7 @@ static void op_dealloc(CPPInstance* pyobj)
 {
 // Remove (Python-side) memory held by the object proxy.
     op_dealloc_nofree(pyobj);
+    pyobj->fDatamemberCache.~CI_DatamemberCache_t();
     Py_TYPE(pyobj)->tp_free((PyObject*)pyobj);
 }
 
@@ -203,6 +210,54 @@ static PyObject* op_repr(CPPInstance* pyobj)
     return repr;
 }
 
+//----------------------------------------------------------------------------
+static PyObject* op_str(CPPInstance* cppinst)
+{
+// Forward to C++ insertion operator if available, otherwise forward to repr.
+    PyObject* pyobj = (PyObject*)cppinst;
+    PyObject* lshift = PyObject_GetAttr(pyobj, PyStrings::gLShift);
+    bool bound_method = (bool)lshift;
+    if (!lshift) {
+        PyErr_Clear();
+        PyObject* pyclass = (PyObject*)Py_TYPE(pyobj);
+        lshift = PyObject_GetAttr(pyclass, PyStrings::gLShiftC);
+        if (!lshift) {
+            PyErr_Clear();
+        // attempt lazy install of global operator<<(ostream&)
+            std::string rcname = Utility::ClassName(pyobj);
+            Cppyy::TCppScope_t rnsID = Cppyy::GetScope(TypeManip::extract_namespace(rcname));
+            if (Utility::AddBinaryOperator(
+                    pyclass, "std::ostream", rcname, "<<", "__lshiftc__", nullptr, rnsID)) {
+                lshift = PyObject_GetAttr(pyclass, PyStrings::gLShiftC);
+            } else {
+                Py_INCREF(Py_None);
+                PyObject_SetAttr(pyclass, PyStrings::gLShiftC, Py_None);
+            }
+        } else if (lshift == Py_None) {
+            Py_DECREF(lshift);
+            lshift = nullptr;
+        }
+        bound_method = false;
+    }
+
+    if (lshift) {
+        static Cppyy::TCppScope_t sOStringStreamID = Cppyy::GetScope("std::ostringstream");
+        std::ostringstream s;
+        PyObject* pys = BindCppObjectNoCast(&s, sOStringStreamID);
+        PyObject* res;
+        if (bound_method) res = PyObject_CallFunctionObjArgs(lshift, pys, NULL);
+        else res = PyObject_CallFunctionObjArgs(lshift, pys, pyobj, NULL);
+        Py_DECREF(pys);
+        Py_DECREF(lshift);
+        if (res) {
+            Py_DECREF(res);
+            return CPyCppyy_PyUnicode_FromString(s.str().c_str());
+        }
+        PyErr_Clear();
+    }
+ 
+    return op_repr(cppinst);
+}
 
 //-----------------------------------------------------------------------------
 static PyObject* op_getownership(CPPInstance* pyobj, void*)
@@ -343,7 +398,7 @@ PyTypeObject CPPInstance_Type = {
     0,                             // tp_as_mapping
     PyBaseObject_Type.tp_hash,     // tp_hash
     0,                             // tp_call
-    0,                             // tp_str
+    (reprfunc)op_str,              // tp_str
     0,                             // tp_getattro
     0,                             // tp_setattro
     0,                             // tp_as_buffer

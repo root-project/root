@@ -27,7 +27,7 @@ PyObject* CPyCppyy::CPPSetItem::PreProcessArgs(
     CPPInstance*& self, PyObject* args, PyObject* kwds)
 {
 // Prepare executor with a buffer for the return value.
-    int nArgs = PyTuple_GET_SIZE(args);
+    Py_ssize_t nArgs = PyTuple_GET_SIZE(args);
     if (nArgs <= 1) {
         PyErr_SetString(PyExc_TypeError, "insufficient arguments to __setitem__");
         return nullptr;
@@ -39,7 +39,7 @@ PyObject* CPyCppyy::CPPSetItem::PreProcessArgs(
 
 // see whether any of the arguments is a tuple itself
     Py_ssize_t realsize = 0;
-    for (int i = 0; i < nArgs - 1; ++i) {
+    for (Py_ssize_t i = 0; i < nArgs - 1; ++i) {
         PyObject* item = PyTuple_GetItem(subset, i);
         realsize += PyTuple_Check(item) ? PyTuple_GET_SIZE(item) : 1;
     }

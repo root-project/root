@@ -55,7 +55,7 @@ static inline rtype GILCall##tcode(                                          \
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CPyCppyy::CallContext* ctxt)\
 {                                                                            \
     GILControl gc(ctxt);                                                     \
-    return Cppyy::Call##tcode(method, self, &ctxt->fArgs);                   \
+    return Cppyy::Call##tcode(method, self, ctxt->GetSize(), ctxt->GetArgs());\
 }
 
 CPPYY_IMPL_GILCALL(void,          V)
@@ -78,7 +78,7 @@ static inline char* GILCallS(
     GILControl gc(ctxt);
 // TODO: make use of getting the string length returned ...
     size_t len;
-    return Cppyy::CallS(method, self, &ctxt->fArgs, &len);
+    return Cppyy::CallS(method, self, ctxt->GetSize(), ctxt->GetArgs(), &len);
 }
 */
 
@@ -86,24 +86,40 @@ static inline Cppyy::TCppObject_t GILCallO(Cppyy::TCppMethod_t method,
     Cppyy::TCppObject_t self, CPyCppyy::CallContext* ctxt, Cppyy::TCppType_t klass)
 {
     GILControl gc(ctxt);
-    return Cppyy::CallO(method, self, &ctxt->fArgs, klass);
+    return Cppyy::CallO(method, self, ctxt->GetSize(), ctxt->GetArgs(), klass);
 }
 
 static inline Cppyy::TCppObject_t GILCallConstructor(
     Cppyy::TCppMethod_t method, Cppyy::TCppType_t klass, CPyCppyy::CallContext* ctxt)
 {
     GILControl gc(ctxt);
-    return Cppyy::CallConstructor(method, klass, &ctxt->fArgs);
+    return Cppyy::CallConstructor(method, klass, ctxt->GetSize(), ctxt->GetArgs());
 }
 
-static inline PyObject* CPyCppyy_PyUnicode_FromInt(int c)
+static inline PyObject* CPyCppyy_PyUnicode_FromLong(long cl)
 {
 // python chars are range(256)
+    if (cl < -256 || cl > 255) {
+        PyErr_SetString(PyExc_ValueError, "char conversion out of range");
+        return nullptr;
+    }
+    int c = (int)cl;
     if (c < 0) return CPyCppyy_PyUnicode_FromFormat("%c", 256 - std::abs(c));
     return CPyCppyy_PyUnicode_FromFormat("%c", c);
 }
 
-static inline PyObject* CPyCppyy_PyBool_FromInt(int b)
+static inline PyObject* CPyCppyy_PyUnicode_FromULong(unsigned long uc)
+{
+// TODO: range check here?
+    if (255 < uc) {
+        PyErr_SetString(PyExc_ValueError, "char conversion out of range");
+        return nullptr;
+    }
+    int c = (int)uc;
+    return CPyCppyy_PyUnicode_FromFormat("%c", c);
+}
+
+static inline PyObject* CPyCppyy_PyBool_FromLong(long b)
 {
     PyObject* result = (bool)b ? Py_True : Py_False;
     Py_INCREF(result);
@@ -127,7 +143,7 @@ PyObject* CPyCppyy::BoolConstRefExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // execute <method> with argument <self, ctxt>, construct python bool return value
-    return CPyCppyy_PyBool_FromInt(*((bool*)GILCallR(method, self, ctxt)));
+    return CPyCppyy_PyBool_FromLong(*((bool*)GILCallR(method, self, ctxt)));
 }
 
 //----------------------------------------------------------------------------
@@ -136,7 +152,7 @@ PyObject* CPyCppyy::CharExecutor::Execute(
 {
 // execute <method with argument <self, ctxt>, construct python string return value
 // with the single char
-    return CPyCppyy_PyUnicode_FromInt((int)GILCallC(method, self, ctxt));
+    return CPyCppyy_PyUnicode_FromLong((int)GILCallC(method, self, ctxt));
 }
 
 //----------------------------------------------------------------------------
@@ -145,7 +161,7 @@ PyObject* CPyCppyy::CharConstRefExecutor::Execute(
 {
 // execute <method> with argument <self, ctxt>, construct python string return value
 // with the single char
-    return CPyCppyy_PyUnicode_FromInt(*((char*)GILCallR(method, self, ctxt)));
+    return CPyCppyy_PyUnicode_FromLong(*((char*)GILCallR(method, self, ctxt)));
 }
 
 //----------------------------------------------------------------------------
@@ -154,7 +170,7 @@ PyObject* CPyCppyy::UCharExecutor::Execute(
 {
 // execute <method> with argument <self, args>, construct python string return value
 // with the single char
-    return CPyCppyy_PyUnicode_FromInt((unsigned char)GILCallB(method, self, ctxt));
+    return CPyCppyy_PyUnicode_FromLong((unsigned char)GILCallB(method, self, ctxt));
 }
 
 //----------------------------------------------------------------------------
@@ -163,7 +179,17 @@ PyObject* CPyCppyy::UCharConstRefExecutor::Execute(
 {
 // execute <method> with argument <self, ctxt>, construct python string return value
 // with the single char from the pointer return
-    return CPyCppyy_PyUnicode_FromInt(*((unsigned char*)GILCallR(method, self, ctxt)));
+    return CPyCppyy_PyUnicode_FromLong(*((unsigned char*)GILCallR(method, self, ctxt)));
+}
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::WCharExecutor::Execute(
+    Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
+{
+// execute <method> with argument <self, args>, construct python string return value
+// with the single char
+    wchar_t res = (wchar_t)GILCallL(method, self, ctxt);
+    return PyUnicode_FromWideChar(&res, 1);
 }
 
 //----------------------------------------------------------------------------
@@ -195,7 +221,7 @@ PyObject* CPyCppyy::ULongExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // execute <method> with argument <self, ctxt>, construct python unsigned long return value
-   return PyLong_FromUnsignedLong((ULong_t)GILCallLL(method, self, ctxt));
+    return PyLong_FromUnsignedLong((ULong_t)GILCallLL(method, self, ctxt));
 }
 
 //----------------------------------------------------------------------------
@@ -266,14 +292,16 @@ PyObject* CPyCppyy::name##RefExecutor::Execute(                              \
         *ref = (type)F2(fAssignable);                                        \
         Py_DECREF(fAssignable);                                              \
         fAssignable = nullptr;                                               \
+        if (*ref == (type)-1 && PyErr_Occurred())                            \
+            return nullptr;                                                  \
         Py_INCREF(Py_None);                                                  \
         return Py_None;                                                      \
     }                                                                        \
 }
 
-CPPYY_IMPL_REFEXEC(Bool,   bool,   Long_t,   CPyCppyy_PyBool_FromInt,    PyLong_AsLong)
-CPPYY_IMPL_REFEXEC(Char,   char,   Long_t,   CPyCppyy_PyUnicode_FromInt, PyLong_AsLong)
-CPPYY_IMPL_REFEXEC(UChar,  unsigned char,  ULong_t,  CPyCppyy_PyUnicode_FromInt, PyLongOrInt_AsULong)
+CPPYY_IMPL_REFEXEC(Bool,   bool,   Long_t,   CPyCppyy_PyBool_FromLong,    PyLong_AsLong)
+CPPYY_IMPL_REFEXEC(Char,   char,   Long_t,   CPyCppyy_PyUnicode_FromLong, PyLong_AsLong)
+CPPYY_IMPL_REFEXEC(UChar,  unsigned char,  ULong_t,  CPyCppyy_PyUnicode_FromULong, PyLongOrInt_AsULong)
 CPPYY_IMPL_REFEXEC(Short,  short,  Long_t,   PyInt_FromLong,     PyLong_AsLong)
 CPPYY_IMPL_REFEXEC(UShort, unsigned short, ULong_t,  PyInt_FromLong,     PyLongOrInt_AsULong)
 CPPYY_IMPL_REFEXEC(Int,    Int_t,    Long_t,   PyInt_FromLong,     PyLong_AsLong)
@@ -285,6 +313,21 @@ CPPYY_IMPL_REFEXEC(ULongLong, ULong64_t, ULong64_t,  PyLong_FromUnsignedLongLong
 CPPYY_IMPL_REFEXEC(Float,  float,  double, PyFloat_FromDouble, PyFloat_AsDouble)
 CPPYY_IMPL_REFEXEC(Double, double, double, PyFloat_FromDouble, PyFloat_AsDouble)
 CPPYY_IMPL_REFEXEC(LongDouble, LongDouble_t, LongDouble_t, PyFloat_FromDouble, PyFloat_AsDouble)
+
+template<typename T>
+static inline PyObject* PyComplex_FromComplex(const std::complex<T>& c) {
+    return PyComplex_FromDoubles(c.real(), c.imag());
+}
+
+template<typename T>
+static inline std::complex<T> PyComplex_AsComplex(PyObject* pycplx) {
+    Py_complex cplx = PyComplex_AsCComplex(pycplx);
+    return std::complex<T>(cplx.real, cplx.imag);
+}
+
+CPPYY_IMPL_REFEXEC(ComplexD, std::complex<double>,
+    std::complex<double>, PyComplex_FromComplex<double>, PyComplex_AsComplex<double>)
+
 
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::STLStringRefExecutor::Execute(
@@ -327,6 +370,20 @@ PyObject* CPyCppyy::CStringExecutor::Execute(
     return CPyCppyy_PyUnicode_FromString(result);
 }
 
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::WCStringExecutor::Execute(
+    Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
+{
+// execute <method> with argument <self, ctxt>, construct python unicode return value
+    wchar_t* result = (wchar_t*)GILCallR(method, self, ctxt);
+    if (!result) {
+        wchar_t w = L'\0';
+        return PyUnicode_FromWideChar(&w, 0);
+    }
+
+    return PyUnicode_FromWideChar(result, wcslen(result));
+}
+
 
 //- pointer/array executors --------------------------------------------------
 PyObject* CPyCppyy::VoidArrayExecutor::Execute(
@@ -349,21 +406,45 @@ PyObject* CPyCppyy::name##ArrayExecutor::Execute(                            \
     return CreateLowLevelView((type*)GILCallR(method, self, ctxt));          \
 }
 
-CPPYY_IMPL_ARRAY_EXEC(Bool,   bool)
-CPPYY_IMPL_ARRAY_EXEC(UChar,  unsigned char)
-CPPYY_IMPL_ARRAY_EXEC(Short,  short)
-CPPYY_IMPL_ARRAY_EXEC(UShort, unsigned short)
-CPPYY_IMPL_ARRAY_EXEC(Int,    int)
-CPPYY_IMPL_ARRAY_EXEC(UInt,   unsigned int)
-CPPYY_IMPL_ARRAY_EXEC(Long,   long)
-CPPYY_IMPL_ARRAY_EXEC(ULong,  unsigned long)
-CPPYY_IMPL_ARRAY_EXEC(LLong,  long long)
-CPPYY_IMPL_ARRAY_EXEC(ULLong, unsigned long long)
-CPPYY_IMPL_ARRAY_EXEC(Float,  float)
-CPPYY_IMPL_ARRAY_EXEC(Double, double)
+CPPYY_IMPL_ARRAY_EXEC(Bool,     bool)
+CPPYY_IMPL_ARRAY_EXEC(UChar,    unsigned char)
+CPPYY_IMPL_ARRAY_EXEC(Short,    short)
+CPPYY_IMPL_ARRAY_EXEC(UShort,   unsigned short)
+CPPYY_IMPL_ARRAY_EXEC(Int,      int)
+CPPYY_IMPL_ARRAY_EXEC(UInt,     unsigned int)
+CPPYY_IMPL_ARRAY_EXEC(Long,     long)
+CPPYY_IMPL_ARRAY_EXEC(ULong,    unsigned long)
+CPPYY_IMPL_ARRAY_EXEC(LLong,    long long)
+CPPYY_IMPL_ARRAY_EXEC(ULLong,   unsigned long long)
+CPPYY_IMPL_ARRAY_EXEC(Float,    float)
+CPPYY_IMPL_ARRAY_EXEC(Double,   double)
+CPPYY_IMPL_ARRAY_EXEC(ComplexF, std::complex<float>)
+CPPYY_IMPL_ARRAY_EXEC(ComplexD, std::complex<double>)
+CPPYY_IMPL_ARRAY_EXEC(ComplexI, std::complex<int>)
+CPPYY_IMPL_ARRAY_EXEC(ComplexL, std::complex<long>)
 
 
 //- special cases ------------------------------------------------------------
+#define CPPYY_COMPLEX_EXEC(code, type)                                       \
+PyObject* CPyCppyy::Complex##code##Executor::Execute(                        \
+    Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt) \
+{                                                                            \
+    static Cppyy::TCppScope_t scopeid = Cppyy::GetScope("std::complex<"#type">");\
+    std::complex<type>* result =                                             \
+        (std::complex<type>*)GILCallO(method, self, ctxt, scopeid);          \
+    if (!result) {                                                           \
+        PyErr_SetString(PyExc_ValueError, "NULL result where temporary expected");\
+        return nullptr;                                                      \
+    }                                                                        \
+                                                                             \
+    PyObject* pyres = PyComplex_FromDoubles(result->real(), result->imag()); \
+    ::operator delete(result); /* Cppyy::CallO calls ::operator new */       \
+    return pyres;                                                            \
+}
+
+CPPYY_COMPLEX_EXEC(D, double)
+
+//----------------------------------------------------------------------------
 PyObject* CPyCppyy::STLStringExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
@@ -385,7 +466,25 @@ PyObject* CPyCppyy::STLStringExecutor::Execute(
 }
 
 //----------------------------------------------------------------------------
-PyObject* CPyCppyy::CppObjectExecutor::Execute(
+PyObject* CPyCppyy::STLWStringExecutor::Execute(
+    Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
+{
+// execute <method> with argument <self, ctxt>, construct python string return value
+    static Cppyy::TCppScope_t sSTLWStringScope = Cppyy::GetScope("std::wstring");
+    std::wstring* result = (std::wstring*)GILCallO(method, self, ctxt, sSTLWStringScope);
+    if (!result) {
+        wchar_t w = L'\0';
+        return PyUnicode_FromWideChar(&w, 0);
+    }
+
+    PyObject* pyresult = PyUnicode_FromWideChar(result->c_str(), result->size());
+    ::operator delete(result); // calls Cppyy::CallO which calls ::operator new
+
+    return pyresult;
+}
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::InstancePtrExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // execute <method> with argument <self, ctxt>, construct python proxy object return value
@@ -393,7 +492,7 @@ PyObject* CPyCppyy::CppObjectExecutor::Execute(
 }
 
 //----------------------------------------------------------------------------
-PyObject* CPyCppyy::CppObjectByValueExecutor::Execute(
+PyObject* CPyCppyy::InstanceExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // execution will bring a temporary in existence
@@ -416,7 +515,7 @@ PyObject* CPyCppyy::CppObjectByValueExecutor::Execute(
 }
 
 //----------------------------------------------------------------------------
-PyObject* CPyCppyy::CppObjectRefExecutor::Execute(
+PyObject* CPyCppyy::InstanceRefExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // executor binds the result to the left-hand side, overwriting if an old object
@@ -430,10 +529,10 @@ PyObject* CPyCppyy::CppObjectRefExecutor::Execute(
             PyErr_Clear();
             PyObject* descr = PyObject_Str(result);
             if (descr && CPyCppyy_PyUnicode_CheckExact(descr)) {
-                PyErr_Format(PyExc_TypeError, "can not assign to return object (%s)",
+                PyErr_Format(PyExc_TypeError, "cannot assign to return object (%s)",
                              CPyCppyy_PyUnicode_AsString(descr));
             } else {
-                PyErr_SetString(PyExc_TypeError, "can not assign to result");
+                PyErr_SetString(PyExc_TypeError, "cannot assign to result");
             }
             Py_XDECREF(descr);
             Py_DECREF(result);
@@ -468,7 +567,7 @@ static inline PyObject* SetInstanceCheckError(PyObject* pyobj) {
     return nullptr;
 }
 
-PyObject* CPyCppyy::CppObjectPtrPtrExecutor::Execute(
+PyObject* CPyCppyy::InstancePtrPtrExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // execute <method> with argument <self, ctxt>, construct python C++ proxy object
@@ -491,7 +590,7 @@ PyObject* CPyCppyy::CppObjectPtrPtrExecutor::Execute(
 }
 
 //----------------------------------------------------------------------------
-PyObject* CPyCppyy::CppObjectPtrRefExecutor::Execute(
+PyObject* CPyCppyy::InstancePtrRefExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // execute <method> with argument <self, ctxt>, construct python C++ proxy object
@@ -514,7 +613,7 @@ PyObject* CPyCppyy::CppObjectPtrRefExecutor::Execute(
 
 
 //- smart pointers -----------------------------------------------------------
-PyObject* CPyCppyy::CppObjectBySmartPtrExecutor::Execute(
+PyObject* CPyCppyy::SmartPtrExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // smart pointer executor
@@ -537,7 +636,7 @@ PyObject* CPyCppyy::CppObjectBySmartPtrExecutor::Execute(
     return (PyObject*)pyobj;
 }
 
-PyObject* CPyCppyy::CppObjectBySmartPtrPtrExecutor::Execute(
+PyObject* CPyCppyy::SmartPtrPtrExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
     Cppyy::TCppObject_t value = GILCallR(method, self, ctxt);
@@ -553,7 +652,7 @@ PyObject* CPyCppyy::CppObjectBySmartPtrPtrExecutor::Execute(
     return (PyObject*)pyobj;
 }
 
-PyObject* CPyCppyy::CppObjectBySmartPtrRefExecutor::Execute(
+PyObject* CPyCppyy::SmartPtrRefExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
     Cppyy::TCppObject_t value = GILCallR(method, self, ctxt);
@@ -582,10 +681,10 @@ PyObject* CPyCppyy::CppObjectBySmartPtrRefExecutor::Execute(
            PyErr_Clear();
            PyObject* descr = PyObject_Str(result);
            if (descr && PyBytes_CheckExact(descr)) {
-               PyErr_Format(PyExc_TypeError, "can not assign to return object (%s)",
+               PyErr_Format(PyExc_TypeError, "cannot assign to return object (%s)",
                    PyBytes_AS_STRING(descr));
            } else {
-               PyErr_SetString(PyExc_TypeError, "can not assign to result");
+               PyErr_SetString(PyExc_TypeError, "cannot assign to result");
            }
            Py_XDECREF(descr);
            Py_DECREF(result);
@@ -613,12 +712,13 @@ PyObject* CPyCppyy::CppObjectBySmartPtrRefExecutor::Execute(
 
 
 //----------------------------------------------------------------------------
-PyObject* CPyCppyy::CppObjectArrayExecutor::Execute(
+PyObject* CPyCppyy::InstanceArrayExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // execute <method> with argument <self, ctxt>, construct TupleOfInstances from
 // return value
-    return BindCppObjectArray((void*)GILCallR(method, self, ctxt), fClass, fArraySize);
+    long dims[] = {1, (long)fArraySize};
+    return BindCppObjectArray((void*)GILCallR(method, self, ctxt), fClass, dims);
 }
 
 //----------------------------------------------------------------------------
@@ -640,8 +740,7 @@ PyObject* CPyCppyy::PyObjectExecutor::Execute(
 
 
 //- factories ----------------------------------------------------------------
-CPyCppyy::Executor* CPyCppyy::CreateExecutor(
-    const std::string& fullType, bool manage_smart_ptr)
+CPyCppyy::Executor* CPyCppyy::CreateExecutor(const std::string& fullType)
 {
 // The matching of the fulltype to an executor factory goes through up to 4 levels:
 //   1) full, qualified match
@@ -687,47 +786,42 @@ CPyCppyy::Executor* CPyCppyy::CreateExecutor(
 
 //-- still nothing? try pointer instead of array (for builtins)
     if (cpd == "[]") {
-    /* // CLING WORKAROUND -- if the type is a fixed-size array, it will have a funky
-    // resolved type like MyClass(&)[N], which TClass::GetClass() fails on. So, strip
-    // it down:
-        realType = TClassEdit::CleanType(realType.substr(0, realType.rfind("(")).c_str(), 1);
-    // -- CLING WORKAROUND */
         h = gExecFactories.find(realType + "*");
         if (h != gExecFactories.end())
             return (h->second)();           // TODO: use array size
     }
 
-// C++ classes and special cases (enum)
+// C++ classes and special cases
     Executor* result = 0;
     if (Cppyy::TCppType_t klass = Cppyy::GetScope(realType)) {
         Cppyy::TCppType_t raw; Cppyy::TCppMethod_t deref;
-        if (manage_smart_ptr && Cppyy::GetSmartPtrInfo(realType, raw, deref)) {
+        if (Cppyy::GetSmartPtrInfo(realType, raw, deref)) {
             if (cpd == "") {
-                result = new CppObjectBySmartPtrExecutor(klass, raw, deref);
+                result = new SmartPtrExecutor(klass, raw, deref);
             } else if (cpd == "*") {
-                result = new CppObjectBySmartPtrPtrExecutor(klass, raw, deref);
+                result = new SmartPtrPtrExecutor(klass, raw, deref);
             } else if (cpd == "&") {
-                result = new CppObjectBySmartPtrRefExecutor(klass, raw, deref);
+                result = new SmartPtrRefExecutor(klass, raw, deref);
             }
         }
 
         if (!result) {
             if (cpd == "")
-                result = new CppObjectByValueExecutor(klass);
+                result = new InstanceExecutor(klass);
             else if (cpd == "&")
-                result = new CppObjectRefExecutor(klass);
+                result = new InstanceRefExecutor(klass);
             else if (cpd == "**" || cpd == "*[]" || cpd == "&*")
-                result = new CppObjectPtrPtrExecutor(klass);
+                result = new InstancePtrPtrExecutor(klass);
             else if (cpd == "*&")
-                result = new CppObjectPtrRefExecutor(klass);
+                result = new InstancePtrRefExecutor(klass);
             else if (cpd == "[]") {
                 Py_ssize_t asize = Utility::ArraySize(resolvedType);
                 if (0 < asize)
-                    result = new CppObjectArrayExecutor(klass, asize);
+                    result = new InstanceArrayExecutor(klass, asize);
                 else
-                    result = new CppObjectPtrRefExecutor(klass);
+                    result = new InstancePtrRefExecutor(klass);
             } else
-                result = new CppObjectExecutor(klass);
+                result = new InstancePtrExecutor(klass);
         }
     } else {
     // unknown: void* may work ("user knows best"), void will fail on use of return value
@@ -746,6 +840,8 @@ CPyCppyy::Executor* CPyCppyy::CreateExecutor(
 namespace {
 
 using namespace CPyCppyy;
+
+#define WSTRING "basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >"
 
 struct InitExecFactories_t {
 public:
@@ -766,6 +862,7 @@ public:
         gf["const char&"] =                 (ef_t)+[]() { return new CharConstRefExecutor{}; };
         gf["const signed char&"] =          (ef_t)+[]() { return new CharConstRefExecutor{}; };
         gf["const unsigned char&"] =        (ef_t)+[]() { return new UCharConstRefExecutor{}; };
+        gf["wchar_t"] =                     (ef_t)+[]() { return new WCharExecutor{}; };
         gf["short"] =                       (ef_t)+[]() { return new ShortExecutor{}; };
         gf["short&"] =                      (ef_t)+[]() { return new ShortRefExecutor{}; };
         gf["unsigned short"] =              (ef_t)+[]() { return new IntExecutor{}; };
@@ -819,16 +916,26 @@ public:
         gf["ULong64_t*"] =                  (ef_t)+[]() { return new ULLongArrayExecutor{}; };
         gf["float*"] =                      (ef_t)+[]() { return new FloatArrayExecutor{}; };
         gf["double*"] =                     (ef_t)+[]() { return new DoubleArrayExecutor{}; };
+        gf["complex<float>*"] =             (ef_t)+[]() { return new ComplexFArrayExecutor{}; };
+        gf["complex<double>*"] =            (ef_t)+[]() { return new ComplexDArrayExecutor{}; };
+        gf["complex<int>*"] =               (ef_t)+[]() { return new ComplexIArrayExecutor{}; };
+        gf["complex<long>*"] =              (ef_t)+[]() { return new ComplexLArrayExecutor{}; };
 
     // factories for special cases
         gf["const char*"] =                 (ef_t)+[]() { return new CStringExecutor{}; };
         gf["char*"] =                       (ef_t)+[]() { return new CStringExecutor{}; };
         gf["const signed char*"] =          (ef_t)+[]() { return new CStringExecutor{}; };
         gf["signed char*"] =                (ef_t)+[]() { return new CStringExecutor{}; };
+        gf["wchar_t*"] =                    (ef_t)+[]() { return new WCStringExecutor{}; };
         gf["std::string"] =                 (ef_t)+[]() { return new STLStringExecutor{}; };
         gf["string"] =                      (ef_t)+[]() { return new STLStringExecutor{}; };
         gf["std::string&"] =                (ef_t)+[]() { return new STLStringRefExecutor{}; };
         gf["string&"] =                     (ef_t)+[]() { return new STLStringRefExecutor{}; };
+        gf["std::wstring"] =                (ef_t)+[]() { return new STLWStringExecutor{}; };
+        gf["std::" WSTRING] =               (ef_t)+[]() { return new STLWStringExecutor{}; };
+        gf[WSTRING] =                       (ef_t)+[]() { return new STLWStringExecutor{}; };
+        gf["complex<double>"] =             (ef_t)+[]() { return new ComplexDExecutor{}; };
+        gf["complex<double>&"] =            (ef_t)+[]() { return new ComplexDRefExecutor{}; };
         gf["__init__"] =                    (ef_t)+[]() { return new ConstructorExecutor{}; };
         gf["PyObject*"] =                   (ef_t)+[]() { return new PyObjectExecutor{}; };
         gf["_object*"] =                    (ef_t)+[]() { return new PyObjectExecutor{}; };

@@ -2,6 +2,7 @@
 #define CPYCPPYY_TYPEMANIP_H
 
 #include <string>
+#include <vector>
 
 
 namespace CPyCppyy {
@@ -13,6 +14,9 @@ namespace TypeManip {
             bool template_strip = true, bool const_strip = true);
 
     void cppscope_to_pyscope(std::string& cppscope);
+    std::string extract_namespace(const std::string& name);
+
+    std::vector<std::string> extract_arg_types(const std::string& sig);
 
 } // namespace TypeManip
 

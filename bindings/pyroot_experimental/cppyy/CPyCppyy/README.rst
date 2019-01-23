@@ -16,6 +16,7 @@ It thus requires the installation of the
 for use, which will pull in Cling.
 CPython/cppyy and PyPy/cppyy are designed to be compatible, although there
 are differences due to the former being reference counted and the latter
-being garbage collected.
+being garbage collected, as well as temporary differences due to different
+release cycles of the respective projects.
 
 Full documentation: `cppyy.readthedocs.io <http://cppyy.readthedocs.io/>`_.

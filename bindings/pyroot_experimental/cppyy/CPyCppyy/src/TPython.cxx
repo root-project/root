@@ -51,7 +51,7 @@
 //  (int)2
 //
 //  // Load a python module with a class definition, and use it. Casts are
-//  // necessary as the type information can not be otherwise derived.
+//  // necessary as the type information cannot be otherwise derived.
 //  root [6] TPython::LoadMacro("MyPyClass.py");
 //  creating class MyPyClass ...
 //  root [7] MyPyClass m;
@@ -377,30 +377,27 @@ const TPyReturn TPython::Eval(const char* expr)
         return TPyReturn(result);
 
 // explicit conversion for python type required
-    PyObject* pyclass = PyObject_GetAttr(result, CPyCppyy::PyStrings::gClass);
-    if (pyclass) {
-    // retrieve class name and the module in which it resides
-        PyObject* name = PyObject_GetAttr(pyclass, CPyCppyy::PyStrings::gName);
-        PyObject* module = PyObject_GetAttr(pyclass, CPyCppyy::PyStrings::gModule);
+    PyObject* pyclass = (PyObject*)Py_TYPE(result);
 
-    // concat name
-        std::string qname =
-            std::string(CPyCppyy_PyUnicode_AsString(module)) + \
-                        '.' + CPyCppyy_PyUnicode_AsString(name);
-        Py_DECREF(module);
-        Py_DECREF(name);
-        Py_DECREF(pyclass);
+// retrieve class name and the module in which it resides
+    PyObject* name = PyObject_GetAttr(pyclass, CPyCppyy::PyStrings::gName);
+    PyObject* module = PyObject_GetAttr(pyclass, CPyCppyy::PyStrings::gModule);
 
-   // locate cppyy style class with this name
+ // concat name
+    std::string qname =
+        std::string(CPyCppyy_PyUnicode_AsString(module)) + \
+                    '.' + CPyCppyy_PyUnicode_AsString(name);
+    Py_DECREF(module);
+    Py_DECREF(name);
+
+// locate cppyy style class with this name
     // TODO: use Cppyy.cxx ...
     //TClass* klass = TClass::GetClass(qname.c_str());
-        void* klass = nullptr;
+    void* klass = nullptr;
 
-   // construct general cppyy python object that pretends to be of class 'klass'
-        if (klass)
-            return TPyReturn(result);
-    } else
-        PyErr_Clear();
+// construct general cppyy python object that pretends to be of class 'klass'
+    if (klass)
+        return TPyReturn(result);
 
 // no conversion, return null pointer object
     Py_DECREF(result);

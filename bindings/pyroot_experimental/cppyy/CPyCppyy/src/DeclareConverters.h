@@ -5,6 +5,7 @@
 #include "Converters.h"
 
 // Standard
+#include <complex>
 #include <string>
 
 
@@ -71,6 +72,7 @@ public:
     using UCharConverter::UCharConverter;
     virtual PyObject* FromMemory(void*);
 };
+CPPYY_DECLARE_BASIC_CONVERTER(WChar);
 CPPYY_DECLARE_BASIC_CONVERTER(Short);
 CPPYY_DECLARE_BASIC_CONVERTER(UShort);
 CPPYY_DECLARE_BASIC_CONVERTER(Int);
@@ -114,6 +116,22 @@ public:
     virtual PyObject* FromMemory(void* address);
 };
 
+class WCStringConverter : public Converter {
+public:
+    WCStringConverter(long maxSize = -1) : fBuffer(nullptr), fMaxSize(maxSize) {}
+    ~WCStringConverter() { free(fBuffer); }
+
+public:
+    virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
+    virtual PyObject* FromMemory(void* address);
+    virtual bool ToMemory(PyObject* value, void* address);
+
+protected:
+    wchar_t* fBuffer;
+    long fMaxSize;
+};
+
+
 // pointer/array conversions
 CPPYY_DECLARE_ARRAY_CONVERTER(BoolArray);
 CPPYY_DECLARE_ARRAY_CONVERTER(UCharArray);
@@ -127,6 +145,7 @@ CPPYY_DECLARE_ARRAY_CONVERTER(LLongArray);
 CPPYY_DECLARE_ARRAY_CONVERTER(ULLongArray);
 CPPYY_DECLARE_ARRAY_CONVERTER(FloatArray);
 CPPYY_DECLARE_ARRAY_CONVERTER(DoubleArray);
+CPPYY_DECLARE_ARRAY_CONVERTER(ComplexDArray);
 
 class LongLongArrayConverter : public VoidArrayConverter {
 public:
@@ -134,15 +153,15 @@ public:
 };
 
 // converters for special cases
-class ValueCppObjectConverter : public StrictCppObjectConverter {
+class InstanceConverter : public StrictInstancePtrConverter {
 public:
-    using StrictCppObjectConverter::StrictCppObjectConverter;
+    using StrictInstancePtrConverter::StrictInstancePtrConverter;
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
 };
 
-class RefCppObjectConverter : public Converter  {
+class InstanceRefConverter : public Converter  {
 public:
-    RefCppObjectConverter(Cppyy::TCppType_t klass) : fClass(klass) {}
+    InstanceRefConverter(Cppyy::TCppType_t klass) : fClass(klass) {}
 
 public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
@@ -151,16 +170,16 @@ protected:
     Cppyy::TCppType_t fClass;
 };
 
-class MoveCppObjectConverter : public RefCppObjectConverter  {
+class InstanceMoveConverter : public InstanceRefConverter  {
 public:
-    using RefCppObjectConverter::RefCppObjectConverter;
+    using InstanceRefConverter::InstanceRefConverter;
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
 };
 
 template <bool ISREFERENCE>
-class CppObjectPtrConverter : public CppObjectConverter {
+class InstancePtrPtrConverter : public InstancePtrConverter {
 public:
-    using CppObjectConverter::CppObjectConverter;
+    using InstancePtrConverter::InstancePtrConverter;
 
 public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
@@ -168,13 +187,22 @@ public:
     virtual bool ToMemory(PyObject* value, void* address);
 };
 
-extern template class CppObjectPtrConverter<true>;
-extern template class CppObjectPtrConverter<false>;
+extern template class InstancePtrPtrConverter<true>;
+extern template class InstancePtrPtrConverter<false>;
 
-class CppObjectArrayConverter : public CppObjectConverter {
+class InstanceArrayConverter : public InstancePtrConverter {
 public:
-    CppObjectArrayConverter(Cppyy::TCppType_t klass, size_t size, bool keepControl = false) :
-        CppObjectConverter(klass, keepControl), m_size(size) {}
+    InstanceArrayConverter(Cppyy::TCppType_t klass, long* dims, bool keepControl = false) :
+            InstancePtrConverter(klass, keepControl) {
+        long size = (dims && 0 < dims[0]) ? dims[0]+1: 1;
+        m_dims = new long[size];
+        if (dims) {
+            for (long i = 0; i < size; ++i) m_dims[i] = dims[i];
+        } else {
+            m_dims[0] = -1;
+        }
+    }
+    ~InstanceArrayConverter() { delete [] m_dims; }
 
 public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
@@ -182,8 +210,23 @@ public:
     virtual bool ToMemory(PyObject* value, void* address);
 
 protected:
-    size_t m_size;
+    long* m_dims;
 };
+
+
+class ComplexDConverter: public InstanceConverter {
+public:
+    ComplexDConverter(bool keepControl = false);
+
+public:
+    virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
+    virtual PyObject* FromMemory(void* address);
+    virtual bool ToMemory(PyObject* value, void* address);
+
+private:
+    std::complex<double> fBuffer;
+};
+
 
 // CLING WORKAROUND -- classes for STL iterators are completely undefined in that
 // they come in a bazillion different guises, so just do whatever
@@ -192,6 +235,7 @@ public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
 };
 // -- END CLING WORKAROUND
+
 
 class VoidPtrRefConverter : public Converter {
 public:
@@ -206,43 +250,61 @@ public:
 
 CPPYY_DECLARE_BASIC_CONVERTER(PyObject);
 
+
 #define CPPYY_DECLARE_STRING_CONVERTER(name, strtype)                        \
-class name##Converter : public CppObjectConverter {                          \
+class name##Converter : public InstancePtrConverter {                        \
 public:                                                                      \
     name##Converter(bool keepControl = true);                                \
 public:                                                                      \
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);      \
     virtual PyObject* FromMemory(void* address);                             \
     virtual bool ToMemory(PyObject* value, void* address);                   \
-private:                                                                     \
+protected:                                                                   \
     strtype fBuffer;                                                         \
 }
 
 CPPYY_DECLARE_STRING_CONVERTER(STLString, std::string);
 #if __cplusplus > 201402L
-CPPYY_DECLARE_STRING_CONVERTER(STLStringView, std::string_view);
+CPPYY_DECLARE_STRING_CONVERTER(STLStringViewBase, std::string_view);
+class STLStringViewConverter : public STLStringViewBaseConverter {
+public:
+    virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
+};
 #endif
+CPPYY_DECLARE_STRING_CONVERTER(STLWString, std::wstring);
+
+class STLStringMoveConverter : public STLStringConverter {
+public:
+    using STLStringConverter::STLStringConverter;
+
+public:
+    virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
+};
+
 
 // function pointers
 class FunctionPointerConverter : public Converter {
 public:
-    FunctionPointerConverter(const std::string& sig) : fSignature(sig) {}
+    FunctionPointerConverter(const std::string& ret, const std::string& sig) :
+        fRetType(ret), fSignature(sig) {}
 
 public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
 
 protected:
+    std::string fRetType;
     std::string fSignature;
 };
 
+
 // smart pointer converter
-class SmartPtrCppObjectConverter : public Converter {
+class SmartPtrConverter : public Converter {
 public:
-    SmartPtrCppObjectConverter(Cppyy::TCppType_t smart,
-                               Cppyy::TCppType_t raw,
-                               Cppyy::TCppMethod_t deref,
-                               bool keepControl = false,
-                               bool isRef = false)
+    SmartPtrConverter(Cppyy::TCppType_t smart,
+                      Cppyy::TCppType_t raw,
+                      Cppyy::TCppMethod_t deref,
+                      bool keepControl = false,
+                      bool isRef = false)
         : fSmartPtrType(smart), fRawPtrType(raw), fDereferencer(deref),
           fKeepControl(keepControl), fIsRef(isRef) {}
 
@@ -261,6 +323,7 @@ protected:
     bool                fIsRef;
 };
 
+
 // initializer lists
 class InitializerListConverter : public Converter {
 public:
@@ -277,6 +340,7 @@ protected:
     Converter* fConverter;
     size_t     fValueSize;
 };
+
 
 // raising converter to take out overloads
 class NotImplementedConverter : public Converter {

@@ -9,12 +9,14 @@
 #include "PyStrings.h"
 #include "CustomPyTypes.h"
 #include "TemplateProxy.h"
+#include "TypeManip.h"
 
 // Standard
 #include <string.h>
 #include <algorithm>
 #include <list>
 #include <mutex>
+#include <set>
 #include <sstream>
 #include <utility>
 
@@ -25,6 +27,7 @@ bool CPyCppyy::gDictLookupActive = false;
 
 typedef std::map<std::string, std::string> TC2POperatorMapping_t;
 static TC2POperatorMapping_t gC2POperatorMapping;
+static std::set<std::string> gOpSkip;
 
 namespace {
 
@@ -35,10 +38,10 @@ namespace {
         InitOperatorMapping_t() {
         // Initialize the global map of operator names C++ -> python.
 
-         // gC2POperatorMapping["[]"]  = "__setitem__";     // depends on return type
-         // gC2POperatorMapping["+"]   = "__add__";         // depends on # of args (see __pos__)
-         // gC2POperatorMapping["-"]   = "__sub__";         // id. (eq. __neg__)
-         // gC2POperatorMapping["*"]   = "__mul__";         // double meaning in C++
+            gOpSkip.insert("[]");      // __s/getitem__, depends on return type
+            gOpSkip.insert("+");       // __add__, depends on # of args (see __pos__)
+            gOpSkip.insert("-");       // __sub__, id. (eq. __neg__)
+            gOpSkip.insert("+");       // __mul__, double meaning in C++
 
             gC2POperatorMapping["[]"]  = "__getitem__";
             gC2POperatorMapping["()"]  = "__call__";
@@ -100,18 +103,6 @@ namespace {
         }
     } initOperatorMapping_;
 
-    std::once_flag sOperatorTemplateFlag;
-    void InitOperatorTemplate() {
-    /* TODO: move to Cppyy.cxx
-       gROOT->ProcessLine(
-           "namespace _pycppyy_internal { template<class C1, class C2>"
-           " bool is_equal(const C1& c1, const C2& c2){ return (bool)(c1 == c2); } }");
-       gROOT->ProcessLine(
-           "namespace _cpycppyy_internal { template<class C1, class C2>"
-           " bool is_not_equal(const C1& c1, const C2& c2){ return (bool)(c1 != c2); } }");
-    */
-    }
-
 // TODO: this should live with Helpers
     inline void RemoveConst(std::string& cleanName) {
         std::string::size_type spos = std::string::npos;
@@ -136,6 +127,7 @@ unsigned long CPyCppyy::PyLongOrInt_AsULong(PyObject* pyobject)
         } else {
             PyErr_SetString(PyExc_ValueError,
                 "can\'t convert negative value to unsigned long");
+            return (unsigned long)-1;
         }
     }
 
@@ -163,7 +155,7 @@ ULong64_t CPyCppyy::PyLongOrInt_AsULong64(PyObject* pyobject)
 
 //----------------------------------------------------------------------------
 bool CPyCppyy::Utility::AddToClass(
-     PyObject* pyclass, const char* label, PyCFunction cfunc, int flags)
+    PyObject* pyclass, const char* label, PyCFunction cfunc, int flags)
 {
 // Add the given function to the class under name 'label'.
 
@@ -286,8 +278,8 @@ bool CPyCppyy::Utility::AddUsingToClass(PyObject* pyclass, const char* method)
 }
 
 //----------------------------------------------------------------------------
-bool CPyCppyy::Utility::AddBinaryOperator(
-        PyObject* left, PyObject* right, const char* op, const char* label, const char* alt)
+bool CPyCppyy::Utility::AddBinaryOperator(PyObject* left, PyObject* right, const char* op,
+    const char* label, const char* alt, Cppyy::TCppScope_t scope)
 {
 // Install the named operator (op) into the left object's class if such a function
 // exists as a global overload; a label must be given if the operator is not in
@@ -300,17 +292,15 @@ bool CPyCppyy::Utility::AddBinaryOperator(
 // retrieve the class names to match the signature of any found global functions
     std::string rcname = ClassName(right);
     std::string lcname = ClassName(left);
-    PyObject* pyclass = PyObject_GetAttr(left, PyStrings::gClass);
+    PyObject* pyclass = (PyObject*)Py_TYPE(left);
+    bool result = AddBinaryOperator(pyclass, lcname, rcname, op, label, alt, scope);
 
-    bool result = AddBinaryOperator(pyclass, lcname, rcname, op, label, alt);
-
-    Py_DECREF(pyclass);
     return result;
 }
 
 //----------------------------------------------------------------------------
-bool CPyCppyy::Utility::AddBinaryOperator(
-       PyObject* pyclass, const char* op, const char* label, const char* alt)
+bool CPyCppyy::Utility::AddBinaryOperator(PyObject* pyclass, const char* op,
+    const char* label, const char* alt, Cppyy::TCppScope_t scope)
 {
 // Install binary operator op in pyclass, working on two instances of pyclass.
     std::string cname;
@@ -322,13 +312,14 @@ bool CPyCppyy::Utility::AddBinaryOperator(
         Py_DECREF(pyname);
     }
 
-    return AddBinaryOperator(pyclass, cname, cname, op, label, alt);
+    return AddBinaryOperator(pyclass, cname, cname, op, label, alt, scope);
 }
 
 //----------------------------------------------------------------------------
 static inline
 Cppyy::TCppMethod_t FindAndAddOperator(const std::string& lcname, const std::string& rcname,
-        const char* op, Cppyy::TCppScope_t scope = Cppyy::gGlobalScope) {
+    const char* op, Cppyy::TCppScope_t scope = Cppyy::gGlobalScope)
+{
 // Helper to find a function with matching signature in 'funcs'.
     std::string opname = "operator";
     opname += op;
@@ -342,96 +333,86 @@ Cppyy::TCppMethod_t FindAndAddOperator(const std::string& lcname, const std::str
 }
 
 bool CPyCppyy::Utility::AddBinaryOperator(PyObject* pyclass, const std::string& lcname,
-        const std::string& rcname, const char* op, const char* label, const char* alt)
+    const std::string& rcname, const char* op, const char* label, const char* alt, Cppyy::TCppScope_t scope)
 {
 // Find a global function with a matching signature and install the result on pyclass;
-// in addition, __gnu_cxx, std::__1, and _cpycppyy_internal are searched pro-actively (as
+// in addition, __gnu_cxx, std::__1, and __cppyy_internal are searched pro-actively (as
 // there's AFAICS no way to unearth using information).
 
-// For GNU on clang, search the internal __gnu_cxx namespace for binary operators (is
-// typically the case for STL iterators operator==/!=.
-// TODO: only look in __gnu_cxx for iterators (and more generally: do lookups in the
-//       namespace where the class is defined
-    static Cppyy::TCppScope_t gnucxx = Cppyy::GetScope("__gnu_cxx");
-
-// Same for clang on Mac. TODO: find proper pre-processor magic to only use those specific
-// namespaces that are actually around; although to be sure, this isn't expensive.
-    static Cppyy::TCppScope_t std__1 = Cppyy::GetScope("std::__1");
-
-// One more, mostly for Mac, but again not sure whether this is not a general issue. Some
-// operators are declared as friends only in classes, so then they're not found in the
-// global namespace. That's why there's this little helper.
-    std::call_once(sOperatorTemplateFlag, InitOperatorTemplate);
-//    static Cppyy::TCppScope_t _pr_int = Cppyy::GetScope("_cpycppyy_internal");
+    if (rcname == "<unknown>" || lcname == "<unknown>")
+        return false;
 
     PyCallable* pyfunc = 0;
-    if (gnucxx) {
-        Cppyy::TCppMethod_t func = FindAndAddOperator(lcname, rcname, op, gnucxx);
-        if (func) pyfunc = new CPPFunction(gnucxx, func);
+
+    const std::string& lnsname = TypeManip::extract_namespace(lcname);
+    if (!scope) scope = Cppyy::GetScope(lnsname);
+    if (scope) {
+        Cppyy::TCppMethod_t func = FindAndAddOperator(lcname, rcname, op, scope);
+        if (func) pyfunc = new CPPFunction(scope, func);
     }
 
-    if (!pyfunc && std__1) {
-        Cppyy::TCppMethod_t func = FindAndAddOperator(lcname, rcname, op, std__1);
-        if (func) pyfunc = new CPPFunction(std__1, func);
-    }
-
-    if (!pyfunc) {
-        std::string::size_type pos = lcname.substr(0, lcname.find('<')).rfind("::");
-        if (pos != std::string::npos) {
-            Cppyy::TCppScope_t lcscope = Cppyy::GetScope(lcname.substr(0, pos).c_str());
-            if (lcscope) {
-                Cppyy::TCppMethod_t func = FindAndAddOperator(lcname, rcname, op, lcscope);
-                if (func) pyfunc = new CPPFunction(lcscope, func);
-            }
-        }
-    }
-
-    if (!pyfunc) {
+    if (!pyfunc && scope != Cppyy::gGlobalScope) {
+    // search in global scope
         Cppyy::TCppMethod_t func = FindAndAddOperator(lcname, rcname, op);
         if (func) pyfunc = new CPPFunction(Cppyy::gGlobalScope, func);
     }
 
-#if 0
-   // TODO: figure out what this was for ...
-    if (!pyfunc && _pr_int.GetClass() &&
-            lcname.find("iterator") != std::string::npos &&
-            rcname.find("iterator") != std::string::npos) {
-   // TODO: gets called too often; make sure it's purely lazy calls only; also try to
-   // find a better notion for which classes (other than iterators) this is supposed to
-   // work; right now it fails for cases where None is passed
-        std::stringstream fname;
-        if (strncmp(op, "==", 2) == 0) { fname << "is_equal<"; }
-        else if (strncmp(op, "!=", 2) == 0) { fname << "is_not_equal<"; }
-        else { fname << "not_implemented<"; }
-        fname << lcname << ", " << rcname << ">";
-        Cppyy::TCppMethod_t func = (Cppyy::TCppMethod_t)Cppyy_pr_int->GetMethodAny(fname.str().c_str());
-        if (func) pyfunc = new CPpFunction(Cppyy::GetScope("_cpycppyy_internal"), func);
+    if (!pyfunc) {
+    // For GNU on clang, search the internal __gnu_cxx namespace for binary operators (is
+    // typically the case for STL iterators operator==/!=.
+    // TODO: only look in __gnu_cxx for iterators (and more generally: do lookups in the
+    //       namespace where the class is defined
+        static Cppyy::TCppScope_t gnucxx = Cppyy::GetScope("__gnu_cxx");
+        if (gnucxx) {
+            Cppyy::TCppMethod_t func = FindAndAddOperator(lcname, rcname, op, gnucxx);
+            if (func) pyfunc = new CPPFunction(gnucxx, func);
+         }
     }
 
-// last chance: there could be a non-instantiated templated method
-    TClass* lc = TClass::GetClass(lcname.c_str());
-    if (lc && strcmp(op, "==") != 0 && strcmp(op, "!=") != 0) {
-        std::string opname = "operator"; opname += op;
-        gInterpreter->LoadFunctionTemplates(lc);
-        gInterpreter->GetFunctionTemplate(lc->GetClassInfo(), opname.c_str());
-        TFunctionTemplate* f = lc->GetFunctionTemplate(opname.c_str());
-        Cppyy::TCppMethod_t func =
-            (Cppyy::TCppMethod_t)lc->GetMethodWithPrototype(opname.c_str(), rcname.c_str());
-        if (func && f) pyfunc = new CPPMethod(Cppyy::GetScope(lcname), func);
-    }
+    if (!pyfunc) {
+    // Same for clang (on Mac only?). TODO: find proper pre-processor magic to only use those
+    // specific namespaces that are actually around; although to be sure, this isn't expensive.
+        static Cppyy::TCppScope_t std__1 = Cppyy::GetScope("std::__1");
+
+        if (std__1
+#ifdef __APPLE__
+ && lcname.find("__wrap_iter") == std::string::npos   // wrapper call does not compile
 #endif
+        ) {
+            Cppyy::TCppMethod_t func = FindAndAddOperator(lcname, rcname, op, std__1);
+            if (func) pyfunc = new CPPFunction(std__1, func);
+        }
+    }
+
+    if (!pyfunc) {
+    // One more, mostly for Mac, but again not sure whether this is not a general issue. Some
+    // operators are declared as friends only in classes, so then they're not found in the
+    // global namespace, so this helper let's the compiler resolve the operator.
+        static Cppyy::TCppScope_t s_intern = Cppyy::GetScope("__cppyy_internal");
+        if (s_intern) {
+            std::stringstream fname, proto;
+            if (strncmp(op, "==", 2) == 0) { fname << "is_equal<"; }
+            else if (strncmp(op, "!=", 2) == 0) { fname << "is_not_equal<"; }
+            else { fname << "not_implemented<"; }
+            fname << lcname << ", " << rcname << ">";
+            proto << "const " << lcname << "&, const " << rcname;
+            Cppyy::TCppMethod_t method = Cppyy::GetMethodTemplate(s_intern, fname.str(), proto.str());
+            if (method) pyfunc = new CPPFunction(s_intern, method);
+        }
+    }
 
     if (pyfunc) {  // found a matching overload; add to class
         bool ok = AddToClass(pyclass, label, pyfunc);
         if (ok && alt)
             return AddToClass(pyclass, alt, label);
+        return ok;
     }
 
     return false;
 }
 
 //----------------------------------------------------------------------------
-std::string CPyCppyy::Utility::ConstructTemplateArgs(PyObject* pyname, PyObject* args, int argoff)
+std::string CPyCppyy::Utility::ConstructTemplateArgs(PyObject* pyname, PyObject* tpArgs, PyObject* args, int argoff)
 {
 // Helper to construct the "<type, type, ...>" part of a templated name (either
 // for a class or method lookup
@@ -440,14 +421,30 @@ std::string CPyCppyy::Utility::ConstructTemplateArgs(PyObject* pyname, PyObject*
         tmpl_name << CPyCppyy_PyUnicode_AsString(pyname);
     tmpl_name << '<';
 
-    Py_ssize_t nArgs = PyTuple_GET_SIZE(args);
+    Py_ssize_t nArgs = PyTuple_GET_SIZE(tpArgs);
     for (int i = argoff; i < nArgs; ++i) {
     // add type as string to name
-        PyObject* tn = PyTuple_GET_ITEM(args, i);
+        PyObject* tn = PyTuple_GET_ITEM(tpArgs, i);
         if (CPyCppyy_PyUnicode_Check(tn)) {
             tmpl_name << CPyCppyy_PyUnicode_AsString(tn);
         } else if (CPPScope_Check(tn)) {
             tmpl_name << Cppyy::GetScopedFinalName(((CPPClass*)tn)->fCppType);
+            if (args) {
+            // try to specialize the type match for the given object
+                CPPInstance* pyobj = (CPPInstance*)PyTuple_GET_ITEM(args, i);
+                if (CPPInstance_Check(pyobj)) {
+                    if (pyobj->fFlags & CPPInstance::kIsRValue)
+                        tmpl_name << "&&";
+                    else if (pyobj->fFlags & CPPInstance::kIsReference)
+                        tmpl_name << '*';
+                    else
+                        tmpl_name << '&';
+                }
+            }
+        } else if (PyObject_HasAttr(tn, PyStrings::gCppName)) {
+            PyObject* tpName = PyObject_GetAttr(tn, PyStrings::gCppName);
+            tmpl_name << CPyCppyy_PyUnicode_AsString(tpName);
+            Py_DECREF(tpName);
         } else if (PyObject_HasAttr(tn, PyStrings::gName)) {
             PyObject* tpName = PyObject_GetAttr(tn, PyStrings::gName);
 
@@ -502,13 +499,19 @@ bool CPyCppyy::Utility::InitProxy(PyObject* module, PyTypeObject* pytype, const 
 }
 
 //----------------------------------------------------------------------------
-int CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, void*& buf, bool check)
+Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, void*& buf, bool check)
 {
 // Retrieve a linear buffer pointer from the given pyobject.
 
 // special case: don't handle character strings here (yes, they're buffers, but not quite)
     if (PyBytes_Check(pyobject))
         return 0;
+
+// special case: bytes array
+    if ((!check || tc == '*' || tc == 'B') && PyByteArray_CheckExact(pyobject)) {
+        buf = PyByteArray_AS_STRING(pyobject);
+        return PyByteArray_GET_SIZE(pyobject);
+    }
 
 // new-style buffer interface
     if (PyObject_CheckBuffer(pyobject)) {
@@ -518,15 +521,17 @@ int CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, void*& b
             if (tc == '*' || strchr(bufinfo.format, tc)) {
                 buf = bufinfo.buf;
                 if (buf && bufinfo.ndim == 0) {
-                    return 1;
-                } else if (buf && bufinfo.ndim == 1 && bufinfo.shape) {
-                    int size1d = (int)bufinfo.shape[0];
+                    PyBuffer_Release(&bufinfo);
+                    return bufinfo.len/bufinfo.itemsize;
+                } else if (buf && bufinfo.ndim == 1) {
+                    Py_ssize_t size1d = bufinfo.shape ? bufinfo.shape[0] : bufinfo.len;
                     PyBuffer_Release(&bufinfo);
                     return size1d;
                 }
             } else {
             // have buf, but format mismatch: bail out now, otherwise the old
             // code will return based on itemsize match
+                PyBuffer_Release(&bufinfo);
                 return 0;                
             }
         }
@@ -591,6 +596,7 @@ int CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, void*& b
             }
         }
 
+        if (!buf) return 0;
         return buflen;
     }
 
@@ -608,11 +614,15 @@ std::string CPyCppyy::Utility::MapOperatorName(const std::string& name, bool bTa
         std::string::size_type start = 0, end = op.size();
         while (start < end && isspace(op[start])) ++start;
         while (start < end && isspace(op[end-1])) --end;
-    // TODO: resolve name only if mapping failed
-        op = Cppyy::ResolveName(op.substr(start, end - start));
+
+    // check first if none, to prevent spurious deserializing downstream
+        TC2POperatorMapping_t::iterator pop = gC2POperatorMapping.find(op);
+        if (pop == gC2POperatorMapping.end() && gOpSkip.find(op) == gOpSkip.end()) {
+            op = Cppyy::ResolveName(op.substr(start, end - start));
+            pop = gC2POperatorMapping.find(op);
+        }
 
     // map C++ operator to python equivalent, or made up name if no equivalent exists
-        TC2POperatorMapping_t::iterator pop = gC2POperatorMapping.find(op);
         if (pop != gC2POperatorMapping.end()) {
             return pop->second;
 
@@ -646,7 +656,7 @@ std::string CPyCppyy::Utility::MapOperatorName(const std::string& name, bool bTa
 //----------------------------------------------------------------------------
 const std::string CPyCppyy::Utility::Compound(const std::string& name)
 {
-// TODO: consolidate with other string manipulations in Helpers.cxx
+// TODO: consolidate with other string manipulations in TypeManip.cxx
 // Break down the compound of a fully qualified type name.
     std::string cleanName = name;
     RemoveConst(cleanName);
@@ -690,25 +700,15 @@ Py_ssize_t CPyCppyy::Utility::ArraySize(const std::string& name)
 std::string CPyCppyy::Utility::ClassName(PyObject* pyobj)
 {
 // Retrieve the class name from the given Python instance.
-    if (CPPInstance_Check(pyobj))
-        return Cppyy::GetScopedFinalName(((CPPInstance*)pyobj)->ObjectIsA());
-
-// generic Python object ...
     std::string clname = "<unknown>";
-    PyObject* pyclass = PyObject_GetAttr(pyobj, PyStrings::gClass);
-    if (pyclass) {
-        PyObject* pyname = PyObject_GetAttr(pyclass, PyStrings::gName);
-        if (pyname) {
-            clname = CPyCppyy_PyUnicode_AsString(pyname);
-            Py_DECREF(pyname);
-        } else {
-            PyErr_Clear();
-        }
-        Py_DECREF(pyclass);
-    } else {
+    PyObject* pyclass = (PyObject*)Py_TYPE(pyobj);
+    PyObject* pyname = PyObject_GetAttr(pyclass, PyStrings::gCppName);
+    if (!pyname) pyname = PyObject_GetAttr(pyclass, PyStrings::gName);
+    if (pyname) {
+        clname = CPyCppyy_PyUnicode_AsString(pyname);
+        Py_DECREF(pyname);
+    } else
         PyErr_Clear();
-    }
-
     return clname;
 }
 
@@ -772,4 +772,53 @@ void CPyCppyy::Utility::SetDetailedException(std::vector<PyError_t>& errors, PyO
 // set the python exception
     PyErr_SetObject(exc_type, topmsg);
     Py_DECREF(topmsg);
+}
+
+
+//----------------------------------------------------------------------------
+static bool includesDone = false;
+bool CPyCppyy::Utility::IncludePython()
+{
+// setup Python API for callbacks
+    if (!includesDone) {
+        bool okay = Cppyy::Compile("#ifdef _WIN32\n"
+            "#pragma warning (disable : 4275)\n"
+            "#pragma warning (disable : 4251)\n"
+            "#pragma warning (disable : 4800)\n"
+            "#endif\n"
+            "#if defined(linux)\n"
+            "#include <stdio.h>\n"
+            "#ifdef _POSIX_C_SOURCE\n"
+            "#undef _POSIX_C_SOURCE\n"
+            "#endif\n"
+            "#ifdef _FILE_OFFSET_BITS\n"
+            "#undef _FILE_OFFSET_BITS\n"
+            "#endif\n"
+            "#ifdef _XOPEN_SOURCE\n"
+            "#undef _XOPEN_SOURCE\n"
+            "#endif\n"
+            "#endif\n"
+            "#include \"Python.h\"\n"
+       // the following really should live in a header ...
+            "extern \"C\" void* cppyy_create_converter(const char*, long* dims);\n"
+            "namespace CPyCppyy {\n"
+            "struct Parameter; struct CallContext;\n"
+            "class Converter {\n"
+            "public:\n"
+            "  virtual ~Converter() {}\n"
+            "  virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) = 0;\n"
+            "  virtual PyObject* FromMemory(void* address);\n"
+            "  virtual bool ToMemory(PyObject* value, void* address);\n"
+            "};\n"
+       // and this lives in a header, but isn't accessible ...
+            "class TPyException : public std::exception {\n"
+            "public:\n"
+            "    TPyException();\n"
+            "    virtual ~TPyException() noexcept;\n"
+            "    virtual const char* what() const noexcept;\n"
+            "};}\n");
+        includesDone = okay;
+    }
+
+    return includesDone;
 }

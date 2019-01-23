@@ -35,8 +35,16 @@ typedef std::map<Cppyy::TCppObject_t, PyObject*> CppToPyMap_t;
 
 class CPPScope {
 public:
+    enum EFlags {
+        kNone            = 0x0,
+        kIsDispatcher    = 0x0001,
+        kIsMeta          = 0x0002,
+        kIsPython        = 0x0004 };
+
+public:
     PyHeapTypeObject  fType;
     Cppyy::TCppType_t fCppType;
+    int               fFlags;
     CppToPyMap_t*     fCppObjects;
     char*             fModuleName;
 
@@ -59,6 +67,22 @@ template<typename T>
 inline bool CPPScope_CheckExact(T* object)
 {
     return object && Py_TYPE(object) == &CPPScope_Type;
+}
+
+//- creation -----------------------------------------------------------------
+inline CPPScope* CPPScopeMeta_New(Cppyy::TCppScope_t klass, PyObject* args)
+{
+// Create and initialize a new scope meta class
+    CPPScope* pymeta = (CPPScope*)PyType_Type.tp_new(&CPPScope_Type, args, nullptr);
+    if (!pymeta) return pymeta;
+
+// set the klass id, for instances and Python-side derived classes to pick up
+    pymeta->fCppType    = klass;
+    pymeta->fFlags      = CPPScope::kIsMeta;
+    pymeta->fCppObjects = nullptr;
+    pymeta->fModuleName = nullptr;
+
+    return pymeta;
 }
 
 } // namespace CPyCppyy
