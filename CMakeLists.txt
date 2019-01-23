@@ -108,6 +108,7 @@ include(RootBuildOptions)
 include(RootNewMacros)
 include(CheckCompiler)
 include(CheckAssembler)
+include(CheckIntrinsics)
 
 #---Enable CCache ------------------------------------------------------------------------------
 if(ccache)
