@@ -6,12 +6,20 @@ foreach(var PCRE_FOUND PCRE_VERSION PCRE_INCLUDE_DIR PCRE_PCRE_LIBRARY PCRE_LIBR
   unset(${var} CACHE)
 endforeach()
 
-if(winrtdebug)
-  set(DEBUG_POSTFIX d)
+if(WIN32)
+  set(PCRE_POSTFIX $<$<CONFIG:Debug>:d>)
 endif()
 
 set(PCRE_VERSION "8.42" CACHE INTERNAL "" FORCE)
-set(PCRE_LIBNAME ${CMAKE_STATIC_LIBRARY_PREFIX}pcre${DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX})
+set(PCRE_LIBNAME ${CMAKE_STATIC_LIBRARY_PREFIX}pcre${PCRE_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+# build byproducts only needed by Ninja
+if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
+  set(PCRE_BYPRODUCTS
+    <BINARY_DIR>/pcre.h
+    <BINARY_DIR>/${PCRE_LIBNAME}
+  )
+endif()
 
 ExternalProject_Add(PCRE
   URL ${CMAKE_CURRENT_SOURCE_DIR}/pcre-${PCRE_VERSION}.tar.gz
@@ -35,8 +43,7 @@ ExternalProject_Add(PCRE
     ${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG> --target pcre
 
   BUILD_BYPRODUCTS
-    <BINARY_DIR>/pcre.h
-    <BINARY_DIR>/${CMAKE_CFG_INTDIR}/${PCRE_LIBNAME}
+    ${PCRE_BYPRODUCTS}
 
   INSTALL_COMMAND ""
 )
