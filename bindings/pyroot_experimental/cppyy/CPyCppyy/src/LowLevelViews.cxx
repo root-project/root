@@ -16,17 +16,6 @@
 // converters, and typed results and assignments are supported. Code reused
 // under PSF License Version 2.
 
-namespace CPyCppyy {
-
-class LowLevelView {
-public:
-    PyObject_HEAD
-    Py_buffer   fBufInfo;
-    Converter*  fConverter;
-};
-
-} // namespace CPyCppyy
-
 //= CPyCppyy low level view construction/destruction =========================
 static CPyCppyy::LowLevelView* ll_new(PyTypeObject* subtype, PyObject*, PyObject*)
 {
@@ -34,6 +23,7 @@ static CPyCppyy::LowLevelView* ll_new(PyTypeObject* subtype, PyObject*, PyObject
     CPyCppyy::LowLevelView* pyobj = (CPyCppyy::LowLevelView*)subtype->tp_alloc(subtype, 0);
     if (!pyobj) PyErr_Print();
     memset(&pyobj->fBufInfo, 0, sizeof(Py_buffer));
+    pyobj->fBuf = nullptr;
     pyobj->fConverter = nullptr;
 
     return pyobj;
@@ -253,15 +243,17 @@ static char* lookup_dimension(Py_buffer& view, char* ptr, int dim, Py_ssize_t in
 
 // Get the pointer to the item at index.
 //---------------------------------------------------------------------------
-static inline void* ptr_from_index(Py_buffer& view, Py_ssize_t index)
+static inline void* ptr_from_index(CPyCppyy::LowLevelView* llview, Py_ssize_t index)
 {
-    return lookup_dimension(view, (char*)view.buf, 0, index);
+    Py_buffer& view = llview->fBufInfo;
+    return lookup_dimension(view, (char*)llview->get_buf(), 0, index);
 }
 
 // Get the pointer to the item at tuple.
 //---------------------------------------------------------------------------
-static void* ptr_from_tuple(Py_buffer& view, PyObject* tup)
+static void* ptr_from_tuple(CPyCppyy::LowLevelView* llview, PyObject* tup)
 {
+    Py_buffer& view = llview->fBufInfo;
     Py_ssize_t nindices = PyTuple_GET_SIZE(tup);
     if (nindices > view.ndim) {
         PyErr_Format(PyExc_TypeError,
@@ -269,7 +261,7 @@ static void* ptr_from_tuple(Py_buffer& view, PyObject* tup)
         return nullptr;
     }
 
-    char* ptr = (char*)view.buf;
+    char* ptr = (char*)llview->get_buf();
     for (Py_ssize_t dim = 0; dim < nindices; dim++) {
         Py_ssize_t index;
         index = PyNumber_AsSsize_t(PyTuple_GET_ITEM(tup, dim),
@@ -287,23 +279,24 @@ static void* ptr_from_tuple(Py_buffer& view, PyObject* tup)
 //= mapping methods =========================================================
 static Py_ssize_t ll_length(CPyCppyy::LowLevelView* self)
 {
-    if (!self->fBufInfo.buf)
+    if (!self->get_buf())
         return 0;
     return self->fBufInfo.ndim == 0 ? 1 : self->fBufInfo.shape[0];
 }
 
 //---------------------------------------------------------------------------
-static inline int init_slice(Py_buffer* base, PyObject* key, int dim)
+static inline int init_slice(Py_buffer* base, PyObject* _key, int dim)
 {
     Py_ssize_t start, stop, step, slicelength;
 
-    if (PySlice_GetIndicesEx(
 #if PY_VERSION_HEX < 0x03000000
-        (PySliceObject*)
+    PySliceObject* key = (PySliceObject*)_key;
+#else
+    PyObject* key = _key;
 #endif
-            key, base->shape[dim], &start, &stop, &step, &slicelength) < 0) {
+
+    if (PySlice_GetIndicesEx(key, base->shape[dim], &start, &stop, &step, &slicelength) < 0)
         return -1;
-    }
 
     if (!base->suboffsets || dim == 0) {
     adjust_buf:
@@ -365,7 +358,7 @@ static PyObject* ll_item(CPyCppyy::LowLevelView* self, Py_ssize_t index)
 {
     Py_buffer& view = self->fBufInfo;
 
-    if (!view.buf) {
+    if (!self->get_buf()) {
         PyErr_SetString(PyExc_ReferenceError, "attempt to access a null-pointer");
         return nullptr;
     }
@@ -376,7 +369,7 @@ static PyObject* ll_item(CPyCppyy::LowLevelView* self, Py_ssize_t index)
     }
 
     if (view.ndim == 1) {
-        void* ptr = ptr_from_index(view, index);
+        void* ptr = ptr_from_index(self, index);
         if (!ptr)
             return nullptr;
         return self->fConverter->FromMemory(ptr);
@@ -402,7 +395,7 @@ static PyObject* ll_item_multi(CPyCppyy::LowLevelView* self, PyObject *tup)
         return nullptr;
     }
 
-    void* ptr = ptr_from_tuple(view, tup);
+    void* ptr = ptr_from_tuple(self, tup);
     if (!ptr)
         return nullptr;
     return self->fConverter->FromMemory(ptr);
@@ -416,13 +409,13 @@ static PyObject* ll_item_multi(CPyCppyy::LowLevelView* self, PyObject *tup)
 // 0-d lowlevelptr objects can be referenced using llp[...] or llp[()]
 // but not with anything else.
 //---------------------------------------------------------------------------
-static PyObject* ll_subscript(CPyCppyy::LowLevelView* self, PyObject *key)
+static PyObject* ll_subscript(CPyCppyy::LowLevelView* self, PyObject* key)
 {
     Py_buffer& view = self->fBufInfo;
 
     if (view.ndim == 0) {
         if (PyTuple_Check(key) && PyTuple_GET_SIZE(key) == 0) {
-            return self->fConverter->FromMemory(view.buf);
+            return self->fConverter->FromMemory(self->get_buf());
         }
         else if (key == Py_Ellipsis) {
             Py_INCREF(self);
@@ -480,7 +473,7 @@ static int ll_ass_sub(CPyCppyy::LowLevelView* self, PyObject* key, PyObject* val
     if (view.ndim == 0) {
         if (key == Py_Ellipsis ||
             (PyTuple_Check(key) && PyTuple_GET_SIZE(key) == 0)) {
-            return self->fConverter->ToMemory(value, view.buf) ? 0 : -1;
+            return self->fConverter->ToMemory(value, self->get_buf()) ? 0 : -1;
         }
         else {
             PyErr_SetString(PyExc_TypeError,
@@ -499,7 +492,7 @@ static int ll_ass_sub(CPyCppyy::LowLevelView* self, PyObject* key, PyObject* val
         index = PyNumber_AsSsize_t(key, PyExc_IndexError);
         if (index == -1 && PyErr_Occurred())
             return -1;
-        void* ptr = ptr_from_index(view, index);
+        void* ptr = ptr_from_index(self, index);
         if (ptr == nullptr)
             return -1;
         return self->fConverter->ToMemory(value, ptr) ? 0 : -1;
@@ -536,7 +529,7 @@ static int ll_ass_sub(CPyCppyy::LowLevelView* self, PyObject* key, PyObject* val
                             "sub-views are not implemented");
             return -1;
         }
-        void* ptr = ptr_from_tuple(view, key);
+        void* ptr = ptr_from_tuple(self, key);
         if (ptr == nullptr)
             return -1;
         return self->fConverter->ToMemory(value, ptr) ? 0 : -1;
@@ -563,7 +556,7 @@ static Py_ssize_t ll_oldgetbuf(CPyCppyy::LowLevelView* self, Py_ssize_t seg, voi
         return -1;
     }
 
-    *pptr = self->fBufInfo.buf;
+    *pptr = self->get_buf();
     return self->fBufInfo.len;
 }
 
@@ -751,6 +744,14 @@ template<> struct typecode_traits<float> {
     static constexpr const char* format = "f"; static constexpr const char* name = "float"; };
 template<> struct typecode_traits<double> {
     static constexpr const char* format = "d"; static constexpr const char* name = "double"; };
+template<> struct typecode_traits<std::complex<float>> {
+    static constexpr const char* format = "Zf"; static constexpr const char* name = "std::complex<float>"; };
+template<> struct typecode_traits<std::complex<double>> {
+    static constexpr const char* format = "Zd"; static constexpr const char* name = "std::complex<double>"; };
+template<> struct typecode_traits<std::complex<int>> {
+    static constexpr const char* format = "Zi"; static constexpr const char* name = "std::complex<int>"; };
+template<> struct typecode_traits<std::complex<long>> {
+    static constexpr const char* format = "Zl"; static constexpr const char* name = "std::complex<long>"; };
 
 } // unnamed namespace
 
@@ -773,7 +774,7 @@ static inline PyObject* CreateLowLevelViewT(T* address, Py_ssize_t* shape)
     view.readonly       = 0;
     view.itemsize       = sizeof(T);
     view.format         = (char*)typecode_traits<T>::format;
-    view.ndim           = shape ? shape[0] : 1;
+    view.ndim           = shape ? (int)shape[0] : 1;
     view.shape          = (Py_ssize_t*)PyMem_Malloc(view.ndim * sizeof(Py_ssize_t));
     view.shape[0]       = nx; // view.len / view.itemsize
     view.strides        = (Py_ssize_t*)PyMem_Malloc(view.ndim * sizeof(Py_ssize_t));
@@ -787,50 +788,38 @@ static inline PyObject* CreateLowLevelViewT(T* address, Py_ssize_t* shape)
 }
 
 //---------------------------------------------------------------------------
-PyObject* CPyCppyy::CreateLowLevelView(bool* address, Py_ssize_t* shape) {
-    return CreateLowLevelViewT<bool>(address, shape);
+template<typename T>
+static inline PyObject* CreateLowLevelViewT(T** address, Py_ssize_t* shape)
+{
+    using namespace CPyCppyy;
+    T* buf = address ? *address : nullptr;
+    LowLevelView* llp = (LowLevelView*)CreateLowLevelViewT(buf, shape);
+    llp->set_buf((void**)address);
+    return (PyObject*)llp;
 }
 
-PyObject* CPyCppyy::CreateLowLevelView(unsigned char* address, Py_ssize_t* shape) {
-    return CreateLowLevelViewT<unsigned char>(address, shape);
+//---------------------------------------------------------------------------
+#define CPPYY_IMPL_VIEW_CREATOR(type)                                       \
+PyObject* CPyCppyy::CreateLowLevelView(type* address, Py_ssize_t* shape) {  \
+    return CreateLowLevelViewT<type>(address, shape);                       \
+}                                                                           \
+PyObject* CPyCppyy::CreateLowLevelView(type** address, Py_ssize_t* shape) { \
+    return CreateLowLevelViewT<type>(address, shape);                       \
 }
 
-PyObject* CPyCppyy::CreateLowLevelView(short* address, Py_ssize_t* shape) {
-    return CreateLowLevelViewT<short>(address, shape);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView(unsigned short* address, Py_ssize_t* shape) {
-    return CreateLowLevelViewT<unsigned short>(address, shape);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView(int* address, Py_ssize_t* shape) {
-    return CreateLowLevelViewT<int>(address, shape);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView(unsigned int* address, Py_ssize_t* shape) {
-    return CreateLowLevelViewT<unsigned int>(address, shape);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView(long* address, Py_ssize_t* shape) {
-    return CreateLowLevelViewT<long>(address, shape);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView(unsigned long* address, Py_ssize_t* shape) {
-    return CreateLowLevelViewT<unsigned long>(address, shape);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView(long long* address, Py_ssize_t* shape) {
-    return CreateLowLevelViewT<long long>(address, shape);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView(unsigned long long* address, Py_ssize_t* shape) {
-    return CreateLowLevelViewT<unsigned long long>(address, shape);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView(float* address, Py_ssize_t* shape) {
-    return CreateLowLevelViewT<float>(address, shape);
-}
-
-PyObject* CPyCppyy::CreateLowLevelView(double* address, Py_ssize_t* shape) {
-    return CreateLowLevelViewT<double>(address, shape);
-}
+CPPYY_IMPL_VIEW_CREATOR(bool);
+CPPYY_IMPL_VIEW_CREATOR(unsigned char);
+CPPYY_IMPL_VIEW_CREATOR(short);
+CPPYY_IMPL_VIEW_CREATOR(unsigned short);
+CPPYY_IMPL_VIEW_CREATOR(int);
+CPPYY_IMPL_VIEW_CREATOR(unsigned int);
+CPPYY_IMPL_VIEW_CREATOR(long);
+CPPYY_IMPL_VIEW_CREATOR(unsigned long);
+CPPYY_IMPL_VIEW_CREATOR(long long);
+CPPYY_IMPL_VIEW_CREATOR(unsigned long long);
+CPPYY_IMPL_VIEW_CREATOR(float);
+CPPYY_IMPL_VIEW_CREATOR(double);
+CPPYY_IMPL_VIEW_CREATOR(std::complex<float>);
+CPPYY_IMPL_VIEW_CREATOR(std::complex<double>);
+CPPYY_IMPL_VIEW_CREATOR(std::complex<int>);
+CPPYY_IMPL_VIEW_CREATOR(std::complex<long>);

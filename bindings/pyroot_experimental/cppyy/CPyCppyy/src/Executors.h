@@ -27,7 +27,7 @@ protected:
 };
 
 // create executor from fully qualified type
-Executor* CreateExecutor(const std::string& fullType, bool manage_smart_ptr = true);
+Executor* CreateExecutor(const std::string& fullType);
 
 } // namespace CPyCppyy
 

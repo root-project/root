@@ -10,9 +10,9 @@ namespace PyStrings {
     extern PyObject* gAssign;
     extern PyObject* gBases;
     extern PyObject* gBase;
-    extern PyObject* gClass;
     extern PyObject* gCppEq;
     extern PyObject* gCppNe;
+    extern PyObject* gCppName;
     extern PyObject* gDeref;
     extern PyObject* gDict;
     extern PyObject* gEmptyString;
@@ -33,6 +33,9 @@ namespace PyStrings {
     extern PyObject* gSub;
     extern PyObject* gMul;
     extern PyObject* gDiv;
+
+    extern PyObject* gLShift;
+    extern PyObject* gLShiftC;
 
     extern PyObject* gAt;
     extern PyObject* gBegin;

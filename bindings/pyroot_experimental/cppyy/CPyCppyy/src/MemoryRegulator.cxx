@@ -11,14 +11,11 @@
 
 
 // memory regulater callback for deletion of registered objects
-static PyMethodDef methoddef_ = {
+static PyMethodDef gObjectEraseMethodDef = {
     const_cast<char*>("MemoryRegulator_internal_raseCallback"),
     (PyCFunction)CPyCppyy::MemoryRegulator::EraseCallback,
     METH_O, nullptr
 };
-
-static PyObject* gEraseCallback = PyCFunction_New(&methoddef_, nullptr);
-
 
 //= pseudo-None type for masking out objects on the python side ===============
 static PyTypeObject CPyCppyy_NoneType;
@@ -140,6 +137,7 @@ bool CPyCppyy::MemoryRegulator::RecursiveRemove(
             CPyCppyy_NoneType.tp_clear      = Py_TYPE(pyobj)->tp_clear;
             CPyCppyy_NoneType.tp_free       = Py_TYPE(pyobj)->tp_free;
         } else if (CPyCppyy_NoneType.tp_traverse != Py_TYPE(pyobj)->tp_traverse) {
+        // TODO: SystemError?
             std::cerr << "in CPyCppyy::MemoryRegulater, unexpected object of type: "
                       << Py_TYPE(pyobj)->tp_name << std::endl;
 
@@ -149,7 +147,7 @@ bool CPyCppyy::MemoryRegulator::RecursiveRemove(
         }
 
     // notify any other weak referents by playing dead
-        int refcnt = ((PyObject*)pyobj)->ob_refcnt;
+        Py_ssize_t refcnt = ((PyObject*)pyobj)->ob_refcnt;
         ((PyObject*)pyobj)->ob_refcnt = 0;
         PyObject_ClearWeakRefs((PyObject*)pyobj);
         ((PyObject*)pyobj)->ob_refcnt = refcnt;
@@ -180,11 +178,13 @@ bool CPyCppyy::MemoryRegulator::RegisterPyObject(
     if (!(pyobj && cppobj))
         return false;
 
+    static PyObject* objectEraseCallback = PyCFunction_New(&gObjectEraseMethodDef, nullptr);
+
     CPPClass* pyclass = (CPPClass*)Py_TYPE(pyobj);
     CppToPyMap_t* cppobjs = ((CPPClass*)Py_TYPE(pyobj))->fCppObjects;    
     CppToPyMap_t::iterator ppo = cppobjs->find(cppobj);
     if (ppo == pyclass->fCppObjects->end()) {
-        PyObject* pyref = PyWeakref_NewRef((PyObject*)pyobj, gEraseCallback);
+        PyObject* pyref = PyWeakref_NewRef((PyObject*)pyobj, objectEraseCallback);
         pyclass->fCppObjects->insert(std::make_pair(cppobj, pyref));
         return true;
     }

@@ -24,6 +24,7 @@ CPPYY_DECL_EXEC(Char);
 CPPYY_DECL_EXEC(CharConstRef);
 CPPYY_DECL_EXEC(UChar);
 CPPYY_DECL_EXEC(UCharConstRef);
+CPPYY_DECL_EXEC(WChar);
 CPPYY_DECL_EXEC(Short);
 CPPYY_DECL_EXEC(Int);
 CPPYY_DECL_EXEC(Long);
@@ -35,6 +36,7 @@ CPPYY_DECL_EXEC(Double);
 CPPYY_DECL_EXEC(LongDouble);
 CPPYY_DECL_EXEC(Void);
 CPPYY_DECL_EXEC(CString);
+CPPYY_DECL_EXEC(WCString);
 
 // pointer/array executors
 CPPYY_DECL_EXEC(VoidArray);
@@ -50,13 +52,22 @@ CPPYY_DECL_EXEC(LLongArray);
 CPPYY_DECL_EXEC(ULLongArray);
 CPPYY_DECL_EXEC(FloatArray);
 CPPYY_DECL_EXEC(DoubleArray);
+CPPYY_DECL_EXEC(ComplexFArray);
+CPPYY_DECL_EXEC(ComplexDArray);
+CPPYY_DECL_EXEC(ComplexIArray);
+CPPYY_DECL_EXEC(ComplexLArray);
 
 // special cases
+CPPYY_DECL_EXEC(ComplexF);
+CPPYY_DECL_EXEC(ComplexD);
+CPPYY_DECL_EXEC(ComplexI);
+CPPYY_DECL_EXEC(ComplexL);
 CPPYY_DECL_EXEC(STLString);
+CPPYY_DECL_EXEC(STLWString);
 
-class CppObjectExecutor : public Executor {
+class InstancePtrExecutor : public Executor {
 public:
-    CppObjectExecutor(Cppyy::TCppType_t klass) : fClass(klass) {}
+    InstancePtrExecutor(Cppyy::TCppType_t klass) : fClass(klass) {}
     virtual PyObject* Execute(
         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
 
@@ -64,9 +75,9 @@ protected:
     Cppyy::TCppType_t fClass;
 };
 
-class CppObjectByValueExecutor : public CppObjectExecutor {
+class InstanceExecutor : public InstancePtrExecutor {
 public:
-    using CppObjectExecutor::CppObjectExecutor;
+    using InstancePtrExecutor::InstancePtrExecutor;
     virtual PyObject* Execute(
         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
 };
@@ -95,12 +106,13 @@ CPPYY_DECL_REFEXEC(ULongLong);
 CPPYY_DECL_REFEXEC(Float);
 CPPYY_DECL_REFEXEC(Double);
 CPPYY_DECL_REFEXEC(LongDouble);
+CPPYY_DECL_REFEXEC(ComplexD);
 CPPYY_DECL_REFEXEC(STLString);
 
 // special cases
-class CppObjectRefExecutor : public RefExecutor {
+class InstanceRefExecutor : public RefExecutor {
 public:
-    CppObjectRefExecutor(Cppyy::TCppType_t klass) : fClass(klass) {}
+    InstanceRefExecutor(Cppyy::TCppType_t klass) : fClass(klass) {}
     virtual PyObject* Execute(
         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
 
@@ -108,24 +120,24 @@ protected:
     Cppyy::TCppType_t fClass;
 };
 
-class CppObjectPtrPtrExecutor : public CppObjectRefExecutor {
+class InstancePtrPtrExecutor : public InstanceRefExecutor {
 public:
-    using CppObjectRefExecutor::CppObjectRefExecutor;
+    using InstanceRefExecutor::InstanceRefExecutor;
     virtual PyObject* Execute(
         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
 };
 
-class CppObjectPtrRefExecutor : public CppObjectRefExecutor {
+class InstancePtrRefExecutor : public InstanceRefExecutor {
 public:
-    using CppObjectRefExecutor::CppObjectRefExecutor;
+    using InstanceRefExecutor::InstanceRefExecutor;
     virtual PyObject* Execute(
         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
 };
 
-class CppObjectArrayExecutor : public CppObjectExecutor {
+class InstanceArrayExecutor : public InstancePtrExecutor {
 public:
-    CppObjectArrayExecutor(Cppyy::TCppType_t klass, Py_ssize_t array_size)
-        : CppObjectExecutor(klass), fArraySize(array_size) {}
+    InstanceArrayExecutor(Cppyy::TCppType_t klass, Py_ssize_t array_size)
+        : InstancePtrExecutor(klass), fArraySize(array_size) {}
     virtual PyObject* Execute(
         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
 
@@ -134,9 +146,9 @@ protected:
 };
 
 // smart pointer executors
-class CppObjectBySmartPtrExecutor : public Executor {
+class SmartPtrExecutor : public Executor {
 public:
-    CppObjectBySmartPtrExecutor(Cppyy::TCppType_t smart,
+    SmartPtrExecutor(Cppyy::TCppType_t smart,
             Cppyy::TCppType_t raw, Cppyy::TCppMethod_t deref)
         : fSmartPtrType(smart), fRawPtrType(raw), fDereferencer(deref) {}
 
@@ -149,16 +161,16 @@ protected:
     Cppyy::TCppMethod_t fDereferencer;
 };
 
-class CppObjectBySmartPtrPtrExecutor : public CppObjectBySmartPtrExecutor {
+class SmartPtrPtrExecutor : public SmartPtrExecutor {
 public:
-    using CppObjectBySmartPtrExecutor::CppObjectBySmartPtrExecutor;
+    using SmartPtrExecutor::SmartPtrExecutor;
     virtual PyObject* Execute(
         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
 };
 
-class CppObjectBySmartPtrRefExecutor : public RefExecutor {
+class SmartPtrRefExecutor : public RefExecutor {
 public:
-    CppObjectBySmartPtrRefExecutor(Cppyy::TCppType_t smart,
+    SmartPtrRefExecutor(Cppyy::TCppType_t smart,
             Cppyy::TCppType_t raw, Cppyy::TCppMethod_t deref)
         : fSmartPtrType(smart), fRawPtrType(raw), fDereferencer(deref) {}
 
@@ -166,8 +178,8 @@ public:
         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
 
 protected:
-    Cppyy::TCppType_t fSmartPtrType;
-    Cppyy::TCppType_t fRawPtrType;
+    Cppyy::TCppType_t   fSmartPtrType;
+    Cppyy::TCppType_t   fRawPtrType;
     Cppyy::TCppMethod_t fDereferencer;
 };
 
