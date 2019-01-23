@@ -29,15 +29,15 @@ bool AddToClass(PyObject* pyclass, const char* label, PyCallable* pyfunc);
 bool AddUsingToClass(PyObject* pyclass, const char* method);
 
 // helpers for dynamically constructing binary operators
-bool AddBinaryOperator(PyObject* left, PyObject* right,
-    const char* op, const char* label, const char* alt_label = nullptr);
-bool AddBinaryOperator(PyObject* pyclass,
-    const char* op, const char* label, const char* alt_label = nullptr);
+bool AddBinaryOperator(PyObject* left, PyObject* right, const char* op,
+    const char* label, const char* alt_label = nullptr, Cppyy::TCppScope_t scope = 0);
+bool AddBinaryOperator(PyObject* pyclass, const char* op,
+    const char* label, const char* alt_label = nullptr, Cppyy::TCppScope_t scope = 0);
 bool AddBinaryOperator(PyObject* pyclass, const std::string& lcname, const std::string& rcname,
-    const char* op, const char* label, const char* alt_label = nullptr);
+    const char* op, const char* label, const char* alt_label = nullptr, Cppyy::TCppScope_t scope = 0);
 
 // helper for template classes and methods
-std::string ConstructTemplateArgs(PyObject* pyname, PyObject* args, int argoff);
+std::string ConstructTemplateArgs(PyObject* pyname, PyObject* tpArgs, PyObject* args, int argoff);
 
 // initialize proxy type objects
 bool InitProxy(PyObject* module, PyTypeObject* pytype, const char* name);
@@ -45,7 +45,7 @@ bool InitProxy(PyObject* module, PyTypeObject* pytype, const char* name);
 // retrieve the memory buffer from pyobject, return buflength, tc (optional) is python
 // array.array type code, size is type size, buf will point to buffer, and if check is
 // true, some heuristics will be applied to check buffer compatibility with the type
-int GetBuffer(PyObject* pyobject, char tc, int size, void*& buf, bool check = true);
+Py_ssize_t GetBuffer(PyObject* pyobject, char tc, int size, void*& buf, bool check = true);
 
 // data/operator mappings
 std::string MapOperatorName(const std::string& name, bool bTakesParames);
@@ -75,6 +75,9 @@ struct PyError_t {
 size_t FetchError(std::vector<PyError_t>&);
 void SetDetailedException(
     std::vector<PyError_t>& errors /* clears */, PyObject* topmsg /* steals ref */, PyObject* defexc);
+
+// setup Python API for callbacks
+bool IncludePython();
 
 } // namespace Utility
 

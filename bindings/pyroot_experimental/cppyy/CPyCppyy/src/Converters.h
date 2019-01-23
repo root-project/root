@@ -21,10 +21,10 @@ public:
 };
 
 // create converter from fully qualified type
-Converter* CreateConverter(const std::string& fullType, Long_t size = -1);
+Converter* CreateConverter(const std::string& fullType, long* dims = nullptr);
 
 
-// converters for special cases (only here b/c of external use of StrictCppObjectConverter)
+// converters for special cases (only here b/c of external use of StrictInstancePtrConverter)
 class VoidArrayConverter : public Converter {
 public:
     VoidArrayConverter(bool keepControl = true) { fKeepControl = keepControl; }
@@ -42,9 +42,9 @@ private:
     bool fKeepControl;
 };
 
-class CppObjectConverter : public VoidArrayConverter {
+class InstancePtrConverter : public VoidArrayConverter {
 public:
-    CppObjectConverter(Cppyy::TCppType_t klass, bool keepControl = false) :
+    InstancePtrConverter(Cppyy::TCppType_t klass, bool keepControl = false) :
         VoidArrayConverter(keepControl), fClass(klass) {}
 
 public:
@@ -56,9 +56,9 @@ protected:
     Cppyy::TCppType_t fClass;
 };
 
-class StrictCppObjectConverter : public CppObjectConverter {
+class StrictInstancePtrConverter : public InstancePtrConverter {
 public:
-    using CppObjectConverter::CppObjectConverter;
+    using InstancePtrConverter::InstancePtrConverter;
 
 protected:
     virtual bool GetAddressSpecialCase(PyObject*, void*&) { return false; }
