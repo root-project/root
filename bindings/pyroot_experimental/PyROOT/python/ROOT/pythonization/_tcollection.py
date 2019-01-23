@@ -31,7 +31,7 @@ def _extend_pyz(self, c):
     # - c: collection to extend self with
     lenc = c.GetEntries()
     it = TIter(c)
-    for i in range(lenc):
+    for _ in range(lenc):
     	self.Add(it.Next())
 
 def _count_pyz(self, o):
