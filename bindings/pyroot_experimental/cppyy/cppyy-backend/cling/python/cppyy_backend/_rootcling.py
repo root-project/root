@@ -8,3 +8,7 @@ def main():
     if not os.path.exists(rootcling):
         raise RuntimeError("rootcling not installed in standard location")
     return subprocess.call([rootcling] + sys.argv[1:])
+
+
+if __name__ == "__main__":
+    sys.exit(main())

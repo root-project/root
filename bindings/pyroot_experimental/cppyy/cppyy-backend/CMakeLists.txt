@@ -1,12 +1,17 @@
 set(py_sources
   cppyy_backend/__init__.py
+  cppyy_backend/_cling_config.py
+  cppyy_backend/_cppyy_generator.py
+  cppyy_backend/_genreflex.py
+  cppyy_backend/_rootcling.py
+  cppyy_backend/bindings_utils.py
   cppyy_backend/loader.py
 )
 
 set(d $ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/${runtimedir})
 foreach(py_source ${py_sources})
-  file(COPY clingwrapper/python/${py_source} DESTINATION ${localruntimedir}/cppyy_backend)
-  install(FILES clingwrapper/python/${py_source} DESTINATION ${runtimedir}/cppyy_backend)
+  file(COPY cling/python/${py_source} DESTINATION ${localruntimedir}/cppyy_backend)
+  install(FILES cling/python/${py_source} DESTINATION ${runtimedir}/cppyy_backend)
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${d}/${py_source})")
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${d}/${py_source})")
 endforeach()
