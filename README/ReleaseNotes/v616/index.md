@@ -1,10 +1,10 @@
 % ROOT Version 6.16 Release Notes
-% 2018-06-25
+% 2019-01-23
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.16/00 is scheduled for release end of 2018.
+ROOT version 6.16/00 was released on January 23, 2019.
 
 For more information, see:
 
@@ -75,14 +75,14 @@ feature [here](../../README.CXXMODULES.md).
 
 ## Core Libraries
 
-### New command line flag "--version" for root
+### New command line flag "--version" for `root`
 
 `root --version` now displays ROOT version and build info and quits:
 
 ```
-ROOT Version: 6.15/01
-Built for linuxx8664gcc on Sep 20 2018, 11:04:35
-From heads/master@v6-13-04-1273-gea3f4333a2
+ROOT Version: 6.16/00
+Built for linuxx8664gcc on Jan 23 2019, 11:04:35
+From tags/v6-16-00@v6-16-00
 ```
 
 ### Fish support for thisroot script
@@ -206,9 +206,6 @@ root [4]
     This simplifies file layout and I/O at the cost of memory.  Recommended for
     simple file formats such as ntuples but not more complex data types.  To
     enable, invoke `tree->SetBit(TTree::kOnlyFlushAtCluster)`.
-
-## Histogram Libraries
-
 
 ## Math Libraries
 
@@ -352,25 +349,10 @@ available in cvmfs.
     objects handled on server side, web browser used just for display of produced primitives like polylines or text
 
 
-## Geometry Libraries
-
-
-## Database Libraries
-
-
-## Networking Libraries
-
-
-## GUI Libraries
-
-
-## Montecarlo Libraries
-
-
-## PROOF Libraries
-
-
 ## Language Bindings
+
+The Ruby binding has been removed.
+
 
 ### PyROOT
   - Fixed support for templated functions when in need of:
@@ -414,11 +396,16 @@ available in cvmfs.
   - Fixed `rooteventselector` when both applying a cut (based on branch values) and selecting only
   a subset of the branches. Previously, the size of the output file was bigger than expected.
 
-## Class Reference Guide
-
 
 ## Build, Configuration and Testing Infrastructure
 
   - The required version of CMake has been updated from 3.4.3 to 3.6. This is
     necessary because both Vc and VecCore builtins require it, and ROOT uses
     some features from newer CMake versions, namely `list(FILTER...)`.
+
+
+## HEAD of the v6-16-00-patches branch
+
+These changes will be part of the future 6.16/02.
+
+None so far!
