@@ -1316,31 +1316,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
       LoadModules(CoreModules, *fInterpreter);
 
-      // Take this branch only from ROOT because we don't need to preload modules in rootcling
-      if (!fromRootCling) {
-         // Dynamically get all the modules and load them if they are not in core modules
-         clang::CompilerInstance &CI = *fInterpreter->getCI();
-         clang::ModuleMap &moduleMap = CI.getPreprocessor().getHeaderSearchInfo().getModuleMap();
-         clang::Preprocessor &PP = CI.getPreprocessor();
-         std::vector<std::string> ModulesPreloaded;
-
-         for (auto I = moduleMap.module_begin(), E = moduleMap.module_end(); I != E; ++I) {
-            clang::Module *M = I->second;
-            assert(M);
-
-            std::string ModuleName = GetModuleNameAsString(M, PP);
-            if (!ModuleName.empty() &&
-                  std::find(CoreModules.begin(), CoreModules.end(), ModuleName) == CoreModules.end()
-                  && std::find(ExcludeModules.begin(), ExcludeModules.end(), ModuleName) == ExcludeModules.end()) {
-               if (M->IsSystem && !M->IsMissingRequirement)
-                  LoadModule(ModuleName, *fInterpreter);
-               else if (!M->IsSystem && !M->IsMissingRequirement)
-                  ModulesPreloaded.push_back(ModuleName);
-            }
-         }
-         LoadModules(ModulesPreloaded, *fInterpreter);
-      }
-
       // Check that the gROOT macro was exported by any core module.
       assert(fInterpreter->getMacro("gROOT") && "Couldn't load gROOT macro?");
 
