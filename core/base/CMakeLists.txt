@@ -5,7 +5,6 @@
 include_directories(res ../foundation/res)
 
 set(BASE_HEADERS
-  ROOT/RConfig.h
   ROOT/StringConv.hxx
   ROOT/TExecutor.hxx
   ROOT/TSequentialExecutor.hxx
