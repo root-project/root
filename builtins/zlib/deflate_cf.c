@@ -1131,16 +1131,18 @@ uint32_t crc32_16bytes_prefetch(const void* data, size_t length, uint32_t previo
 	return ~crc; // same as crc ^ 0xFFFFFFFF
 }
 
+// Solution to be used on Mac OS X (it gives better preciseness of data compression
+// as in case of zlib-cf)
+/*
 static uint32_t hash_func_default(deflate_state *s, uint32_t UNUSED(h), void* str) {
 	return crc32_8bytes(str, 32, 0) & s->hash_mask;
 }
+*/
 
 // CRC32 calculation from zlib 1.2.8 - Madler
-/*
 static uint32_t hash_func_default(deflate_state *s, uint32_t h, void* str) {
     return ((h << s->hash_shift) ^ (*(uint32_t*)str)) & s->hash_mask;
 }
-*/
 
 #if defined (__aarch64__)
 
