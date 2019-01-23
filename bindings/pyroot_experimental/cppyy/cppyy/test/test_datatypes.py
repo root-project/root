@@ -1,6 +1,6 @@
 import py, os, sys
 from pytest import raises
-from .support import setup_make, pylong
+from .support import setup_make, pylong, pyunicode
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("datatypesDict.so"))
@@ -33,6 +33,8 @@ class TestDATATYPES:
         assert c.m_char  == 'a'
         assert c.m_schar == 'b'
         assert c.m_uchar == 'c'
+        assert type(c.m_wchar) == pyunicode
+        assert c.m_wchar == u'D'
 
         # reading integer types
         assert c.m_short   == -11; assert c.get_short_cr()   == -11; assert c.get_short_r()   == -11
@@ -53,10 +55,35 @@ class TestDATATYPES:
         assert round(c.m_double         + 77., 11) == 0
         assert round(c.get_double_cr()  + 77., 11) == 0
         assert round(c.get_double_r()   + 77., 11) == 0
-        #assert round(c.m_ldouble        + 88., 24) == 0
-        #assert round(c.get_ldouble_cr() + 88., 24) == 0
-        #assert round(c.get_ldouble_r()  + 88., 24) == 0
-        assert round(c.m_double + 77., 8) == 0
+        assert round(c.m_ldouble        + 88., 24) == 0
+        assert round(c.get_ldouble_cr() + 88., 24) == 0
+        assert round(c.get_ldouble_r()  + 88., 24) == 0
+        assert round(c.get_ldouble_def()  -1., 24) == 0
+        assert round(c.get_ldouble_def(2) -2., 24) == 0
+
+        # complex<double> type
+        assert type(c.get_complex()) == complex
+        assert round(c.get_complex().real    -  99., 11) == 0
+        assert round(c.get_complex().imag    - 101., 11) == 0
+        assert repr(c.get_complex()) == '(99+101j)'
+        assert round(c.get_complex_cr().real -  99., 11) == 0
+        assert round(c.get_complex_cr().imag - 101., 11) == 0
+        assert round(c.get_complex_r().real  -  99., 11) == 0
+        assert round(c.get_complex_r().imag  - 101., 11) == 0
+        assert complex(cppyy.gbl.std.complex['double'](1, 2)) == complex(1, 2)
+
+        # complex<int> retains C++ type in all cases (but includes pythonization to
+        # resemble Python's complex more closely
+        assert type(c.get_icomplex()) == cppyy.gbl.std.complex[int]
+        assert round(c.get_icomplex().real    - 121., 11) == 0
+        assert round(c.get_icomplex().imag    - 141., 11) == 0
+        assert repr(c.get_icomplex()) == '(121+141j)'
+        assert round(c.get_icomplex_cr().real - 121., 11) == 0
+        assert round(c.get_icomplex_cr().imag - 141., 11) == 0
+        assert type(c.get_icomplex_r()) == cppyy.gbl.std.complex[int]
+        assert round(c.get_icomplex_r().real  - 121., 11) == 0
+        assert round(c.get_icomplex_r().imag  - 141., 11) == 0
+        assert complex(cppyy.gbl.std.complex['int'](1, 2)) == complex(1, 2)
 
         # reading of enum types
         assert c.m_enum == CppyyTestData.kNothing
@@ -123,12 +150,13 @@ class TestDATATYPES:
         c.set_bool(True);  assert c.m_bool     == True
         c.m_bool = 0;      assert c.get_bool() == False
         c.set_bool(0);     assert c.m_bool     == False
-
-        raises(ValueError, 'c.set_bool(10)')
+        raises(ValueError, c.set_bool, 10)
 
         # char types through functions
         c.set_char('c');   assert c.get_char()  == 'c'
         c.set_uchar('e');  assert c.get_uchar() == 'e'
+        c.set_wchar(u'F'); assert c.get_wchar() == u'F';
+        assert type(c.get_wchar()) == pyunicode
 
         # char types through data members
         c.m_char = 'b';    assert c.get_char()  ==     'b'
@@ -139,11 +167,14 @@ class TestDATATYPES:
         c.m_uchar = 42;    assert c.get_uchar() == chr(42)
         c.set_uchar('e');  assert c.m_uchar     ==     'e'
         c.set_uchar(43);   assert c.m_uchar     == chr(43)
+        c.m_wchar = u'G';  assert c.get_wchar() ==    u'G'
+        c.set_wchar(u'H'); assert c.m_wchar     ==    u'H'
 
-        raises(ValueError, 'c.set_char("string")')
-        raises(ValueError, 'c.set_char(500)')
-        raises(ValueError, 'c.set_uchar("string")')
-        raises(ValueError, 'c.set_uchar(-1)')
+        raises(ValueError, c.set_char, "string")
+        raises(ValueError, c.set_char, 500)
+        raises(ValueError, c.set_uchar, "string")
+        raises(ValueError, c.set_uchar, -1)
+        raises(ValueError, c.set_wchar, "string")
 
         # integer types
         names = ['short', 'ushort', 'int', 'uint', 'long', 'ulong', 'llong', 'ullong']
@@ -160,16 +191,20 @@ class TestDATATYPES:
             assert eval('c.m_%s' % names[i]) == 3*i
 
         # float types through functions
-        c.set_float( 0.123 );  assert round(c.get_float()  - 0.123, 5) == 0
-        c.set_double( 0.456 ); assert round(c.get_double() - 0.456, 8) == 0
+        c.set_float(0.123);   assert round(c.get_float()   - 0.123, 5) == 0
+        c.set_double(0.456);  assert round(c.get_double()  - 0.456, 8) == 0
+        c.set_ldouble(0.789); assert round(c.get_ldouble() - 0.789, 8) == 0
 
         # float types through data members
-        c.m_float = 0.123;      assert round(c.get_float()  - 0.123, 5) == 0
-        c.set_float(0.234);     assert round(c.m_float      - 0.234, 5) == 0
-        c.set_float_cr(0.456);  assert round(c.m_float      - 0.456, 5) == 0
-        c.m_double = 0.678;     assert round(c.get_double() - 0.678, 8) == 0
-        c.set_double(0.890);    assert round(c.m_double     - 0.890, 8) == 0
-        c.set_double_cr(0.012); assert round(c.m_double     - 0.012, 8) == 0
+        c.m_float = 0.123;       assert round(c.get_float()   - 0.123, 5) == 0
+        c.set_float(0.234);      assert round(c.m_float       - 0.234, 5) == 0
+        c.set_float_cr(0.456);   assert round(c.m_float       - 0.456, 5) == 0
+        c.m_double = 0.678;      assert round(c.get_double()  - 0.678, 8) == 0
+        c.set_double(0.890);     assert round(c.m_double      - 0.890, 8) == 0
+        c.set_double_cr(0.012);  assert round(c.m_double      - 0.012, 8) == 0
+        c.m_ldouble = 0.876;     assert round(c.get_ldouble() - 0.876, 8) == 0
+        c.set_ldouble(0.098);    assert round(c.m_ldouble     - 0.098, 8) == 0
+        c.set_ldouble_cr(0.210); assert round(c.m_ldouble     - 0.210, 8) == 0
 
         # arrays; there will be pointer copies, so destroy the current ones
         c.destroy_arrays()
@@ -178,7 +213,7 @@ class TestDATATYPES:
         names = ['uchar', 'short', 'ushort', 'int', 'uint', 'long', 'ulong']
         import array
         a = range(self.N)
-        atypes = ['B', 'h', 'H', 'i', 'I', 'l', 'L' ]
+        atypes = ['B', 'h', 'H', 'i', 'I', 'l', 'L']
         for j in range(len(names)):
             b = array.array(atypes[j], a)
             setattr(c, 'm_'+names[j]+'_array', b)     # buffer copies
@@ -208,7 +243,7 @@ class TestDATATYPES:
 
         a = range(self.N)
         # test arrays in mixed order, to give overload resolution a workout
-        for t in ['d', 'i', 'f', 'H', 'I', 'h', 'L', 'l' ]:
+        for t in ['d', 'i', 'f', 'H', 'I', 'h', 'L', 'l']:
             b = array.array(t, a)
 
             # typed passing
@@ -248,6 +283,11 @@ class TestDATATYPES:
         assert c.s_char                 == 'c'
         assert c.s_uchar                == 'u'
         assert CppyyTestData.s_uchar    == 'u'
+        assert c.s_wchar                == u'U'
+        assert CppyyTestData.s_wchar    == u'U'
+
+        assert type(c.s_wchar)             == pyunicode
+        assert type(CppyyTestData.s_wchar) == pyunicode
 
         # integer types
         assert CppyyTestData.s_short    == -101
@@ -268,10 +308,12 @@ class TestDATATYPES:
         assert CppyyTestData.s_ullong   ==  pylong(404)
 
         # floating point types
-        assert round(CppyyTestData.s_float  + 606., 5) == 0
-        assert round(c.s_float              + 606., 5) == 0
-        assert round(CppyyTestData.s_double + 707., 8) == 0
-        assert round(c.s_double             + 707., 8) == 0
+        assert round(CppyyTestData.s_float   + 606., 5) == 0
+        assert round(c.s_float               + 606., 5) == 0
+        assert round(CppyyTestData.s_double  + 707., 8) == 0
+        assert round(c.s_double              + 707., 8) == 0
+        assert round(CppyyTestData.s_ldouble + 808., 8) == 0
+        assert round(c.s_ldouble             + 808., 8) == 0
 
         c.__destruct__()
 
@@ -295,6 +337,10 @@ class TestDATATYPES:
         assert CppyyTestData.s_uchar    == 'd'
         raises(ValueError, setattr, CppyyTestData, 's_uchar', -1)
         raises(ValueError, setattr, c,             's_uchar', -1)
+        CppyyTestData.s_wchar            = u'K'
+        assert c.s_wchar                == u'K'
+        c.s_wchar                        = u'L'
+        assert CppyyTestData.s_wchar    == u'L'
 
         # integer types
         c.s_short                        = -102
@@ -336,6 +382,10 @@ class TestDATATYPES:
         assert CppyyTestData.s_double             == -math.pi
         CppyyTestData.s_double                     =  math.pi
         assert c.s_double                         ==  math.pi
+        c.s_ldouble                                = -math.pi
+        assert CppyyTestData.s_ldouble            == -math.pi
+        CppyyTestData.s_ldouble                    =  math.pi
+        assert c.s_ldouble                        ==  math.pi
 
         c.__destruct__()
 
@@ -395,7 +445,8 @@ class TestDATATYPES:
         import cppyy
         gbl = cppyy.gbl
 
-        raises(ReferenceError, 'gbl.g_pod.m_int')
+        with raises(ReferenceError):
+            gbl.g_pod.m_int
 
         c = gbl.CppyyTestPod()
         c.m_int = 42
@@ -472,6 +523,11 @@ class TestDATATYPES:
         assert gbl.EnumSpace.EnumClass.E1 == -1   # anonymous
         assert gbl.EnumSpace.EnumClass.E2 == -1   # named type
 
+        # typedef enum
+        assert gbl.EnumSpace.letter_code
+        assert gbl.EnumSpace.AA == 1
+        assert gbl.EnumSpace.BB == 2
+
     def test11_string_passing(self):
         """Test passing/returning of a const char*"""
 
@@ -480,9 +536,12 @@ class TestDATATYPES:
 
         c = CppyyTestData()
         assert c.get_valid_string('aap') == 'aap'
-        #assert c.get_invalid_string() == ''
+        assert c.get_invalid_string() == ''
 
-    def test12_copy_contructor(self):
+        assert c.get_valid_wstring(u'aap') == u'aap'
+        assert c.get_invalid_wstring() == u''
+
+    def test12_copy_constructor(self):
         """Test copy constructor"""
 
         import cppyy
@@ -751,15 +810,65 @@ class TestDATATYPES:
     def test21_function_pointers(self):
         """Function pointer passing"""
 
+        # TODO: currently crashes if fast path disabled
+        try:
+            if os.environ['CPPYY_DISABLE_FASTPATH']:
+                return
+        except KeyError:
+            pass
+
         import cppyy
 
-        f1 = cppyy.gbl.sum_of_int
-        f2 = cppyy.gbl.sum_of_double
-        f3 = cppyy.gbl.call_double_double
+        f1  = cppyy.gbl.sum_of_int
+        f2  = cppyy.gbl.sum_of_double
+        fdd = cppyy.gbl.call_double_double
 
         assert 5 == f1(2, 3)
         assert 5. == f2(5., 0.)
 
-        raises(TypeError, f3, f1, 2, 3)
+        raises(TypeError, fdd, f1, 2, 3)
 
-        assert 5. == f3(f2, 5., 0.)
+        assert 5. == fdd(f2, 5., 0.)
+
+    def test22_callable_passing(self):
+        """Passing callables through function pointers"""
+
+        import cppyy
+
+        fdd = cppyy.gbl.call_double_double
+        fii = cppyy.gbl.call_int_int
+
+        def pyf(arg0, arg1):
+            return arg0+arg1
+
+        assert type(fdd(pyf, 2, 3)) == float
+        assert fdd(pyf, 2, 3) == 5.
+
+        assert type(fii(pyf, 2, 3)) == int
+        assert fii(pyf, 2, 3) == 5
+
+        def pyf(arg0, arg1):
+            return arg0*arg1
+
+        assert fdd(pyf, 2, 3) == 6.
+        assert fii(pyf, 2, 3) == 6
+
+        # callable that does not accept weak-ref
+        import math
+        assert fdd(math.atan2, 0, 3.) == 0.
+
+        # error testing
+        raises(TypeError, fii, None, 2, 3)
+
+        def pyf(arg0, arg1):
+            return arg0/arg1
+
+        raises(ZeroDivisionError, fii, pyf, 1, 0)
+
+        def pyd(arg0, arg1):
+            return arg0*arg1
+        c = cppyy.gbl.StoreCallable(pyd)
+        assert c(3, 3) == 9.
+
+        c.set_callable(lambda x, y: x*y)
+        raises(TypeError, c, 3, 3)     # lambda gone out of scope

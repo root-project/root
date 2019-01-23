@@ -13,9 +13,8 @@ def _set_backend(backend):
 # user-provided, general pythonizations
 def add_pythonization(pythonizor, scope = ''):
     """<pythonizor> should be a callable taking two arguments: a class proxy,
-    and its C++ name. It is called on each time a named class from <scope>
-    (the global one by default, but a relevant C++ namespace is recommended)
-    is bound.
+    and its C++ name. It is called each time a named class from <scope> (the
+    global one by default, but a relevant C++ namespace is recommended) is bound.
     """
     return _backend.add_pythonization(pythonizor, scope)
 
