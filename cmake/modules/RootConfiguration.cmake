@@ -437,7 +437,7 @@ elseif(compression_default STREQUAL "lzma")
 endif()
 # cloudflare zlib is available only on x86 and aarch64 platforms with Linux
 # for other platforms we have available builtin zlib 1.2.8
-if((builtinzlib) AND (CMAKE_SYSTEM_PROCESSOR MATCHES "amd64|x86_64|AMD64|X86_64|aarch64") AND (CMAKE_SYSTEM_NAME MATCHES "Linux"))
+if(ZLIB_CF)
   set(usecloudflarezlib define)
 else()
   set(usecloudflarezlib undef)

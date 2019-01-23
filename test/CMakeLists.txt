@@ -125,7 +125,7 @@ if(ZLIB_CF)
   configure_file(stressGraphics_builtinzlib.ref stressGraphics_builtinzlib.ref COPYONLY)
 else()
   configure_file(stressGraphics.ref stressGraphics.ref COPYONLY)
-endif()  
+endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat COPYONLY)
 ROOT_ADD_TEST(test-stressgraphics ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH} COMMAND stressGraphics -b -k FAILREGEX "FAILED|Error in" LABELS longtest)
 ROOT_ADD_TEST(test-stressgraphics-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGraphics.cxx
@@ -198,7 +198,7 @@ ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l 
 #--stressRooFit----------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND)
   ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit)
-  configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY) 
+  configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY)
   ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressroofit )
@@ -209,7 +209,7 @@ endif()
 #--stressRooStats----------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND)
   ROOT_EXECUTABLE(stressRooStats stressRooStats.cxx LIBRARIES RooStats)
-  configure_file(stressRooStats_ref.root stressRooStats_ref.root COPYONLY) 
+  configure_file(stressRooStats_ref.root stressRooStats_ref.root COPYONLY)
   ROOT_ADD_TEST(test-stressroostats COMMAND stressRooStats FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressroostats-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooStats.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressroostats )
