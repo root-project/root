@@ -28,7 +28,6 @@
 #ifndef ROOT_TMVA_DataLoader
 #define ROOT_TMVA_DataLoader
 
-
 #include <string>
 #include <vector>
 #include <map>
@@ -40,7 +39,6 @@
 
 class TFile;
 class TTree;
-class TDirectory;
 class TH2;
 
 namespace TMVA {
@@ -49,10 +47,7 @@ namespace TMVA {
    class DataInputHandler;
    class DataSetInfo;
    class DataSetManager;
-   class MethodBase;
-   class IMethod;   
    class VariableTransformBase;
-   class VarTransformHandler;
 
    class DataLoader : public Configurable {
    public:
