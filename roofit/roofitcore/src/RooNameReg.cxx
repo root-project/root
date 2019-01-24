@@ -47,14 +47,6 @@ RooNameReg::~RooNameReg()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
-
-//RooNameReg::RooNameReg(const RooNameReg& other) : TNamed(other)
-//{
-//}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Return reference to singleton instance
 
 RooNameReg& RooNameReg::instance()
@@ -81,8 +73,6 @@ const TNamed* RooNameReg::constPtr(const char* inStr)
 {
   // Handle null pointer case explicitly
   if (inStr==0) return 0 ;
-
-//   cout << "RooNameReg::constPtr(inStr=" << inStr << ") _htable entries = " << _htable.entries() << endl ;
 
   // See if name is already registered ;
   auto elm = _map.find(inStr) ;

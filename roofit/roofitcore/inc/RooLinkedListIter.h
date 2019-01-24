@@ -26,6 +26,7 @@
 class GenericRooFIter
 {
   public:
+  /// Return next element or nullptr if at end.
   virtual RooAbsArg * next() = 0;
   virtual ~GenericRooFIter() {}
 };
@@ -43,6 +44,7 @@ class RooFIter final
   RooFIter & operator=(const RooFIter &) = delete;
   RooFIter & operator=(RooFIter &&) = default;
 
+  /// Return next element or nullptr if at end.
   RooAbsArg *next() {
     return fIterImpl->next();
   }
@@ -52,7 +54,7 @@ class RooFIter final
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-/// Implementation of a GenericRooFIter for the RooLinkedList
+/// Implementation of the GenericRooFIter interface for the RooLinkedList
 class RooFIterForLinkedList final : public GenericRooFIter
 {
   public:
@@ -77,20 +79,30 @@ class RooFIterForLinkedList final : public GenericRooFIter
 ////////////////////////////////////////////////////////////////////////////////////////////
 /// TIterator and GenericRooFIter front end with STL back end.
 ///
-/// By default, does index access to the underlying collection. Therefore, it can
-/// deal with reallocations while iterating. It will also check that the last element
-/// it was pointing to is the same element when it is invoked again. This ensures, that
+/// By default, this iterators counts, at which position the current element should be.
+/// On request, it does an index access to the underlying collection, and returns the element.
+/// This happens because the RooLinkedList, which used to be the default collection in RooFit,
+/// will not invalidate iterators when inserting elements. Since the default is now an STL collection,
+/// reallocations might invalidate the iterator.
+///
+/// With an iterator that counts, only inserting before or at the iterator position will create problems.
+/// deal with reallocations while iterating. Therefore, this iterator will also check that the last element
+/// it was pointing to is the the current element when it is invoked again. This ensures that
 /// inserting or removing before this iterator does not happen, which was possible with
 /// the linked list iterators of RooFit.
 /// When NDEBUG is defined, these checks will disappear.
+/// \note This is a legacy iterator that only exists to not break old code. Use begin(), end() and
+/// range-based for loops with RooArgList and RooArgSet.
 template<class STLContainer>
 class TIteratorToSTLInterface final : public TIterator , public GenericRooFIter {
-  public:
+public:
 
   TIteratorToSTLInterface(const STLContainer & container) :
     fSTLContainer{container},
     fIndex{0}
-#ifndef NDEBUG
+#ifdef NDEBUG
+    ,fCurrentElem{nullptr}
+#else
     ,fCurrentElem{fSTLContainer.empty() ? nullptr : fSTLContainer.front()}
 #endif
   {
@@ -105,24 +117,20 @@ class TIteratorToSTLInterface final : public TIterator , public GenericRooFIter 
     return nullptr;
   }
 
-
-
-#ifndef NDEBUG
   RooAbsArg * next() override {
     if (atEnd())
       return nullptr;
-    return nextChecked();
-  }
-#else
-  RooAbsArg * next() override {
-    if (atEnd())
-      return nullptr;
+#ifdef NDEBUG
     return fSTLContainer[fIndex++];
-  }
+#else
+    return nextChecked();
 #endif
+  }
 
 
-  TObject * Next() override;
+  TObject * Next() override {
+    return static_cast<TObject*>(next());
+  }
 
   void Reset() override {
     fIndex = 0;
@@ -139,21 +147,40 @@ class TIteratorToSTLInterface final : public TIterator , public GenericRooFIter 
         || fIndex == castedOther->fIndex;
   }
 
-  TObject * operator*() const override;
+  TObject * operator*() const override {
+      if (atEnd())
+        return nullptr;
 
-  private:
+    #ifndef NDEBUG
+      assert(fCurrentElem == fSTLContainer[fIndex]);
+    #endif
+
+      return static_cast<TObject*>(fSTLContainer[fIndex]);
+    }
+
+
+private:
   bool atEnd() const {
     return fSTLContainer.empty()
         || fIndex >= fSTLContainer.size();
   }
 
+
+  RooAbsArg * nextChecked() {
+    RooAbsArg * ret = fSTLContainer.at(fIndex);
+    if (fCurrentElem != nullptr && ret != fCurrentElem) {
+      throw std::logic_error("A RooCollection should not be modified while iterating. "
+          "Only inserting at end is acceptable.");
+    }
+    fCurrentElem = ++fIndex < fSTLContainer.size() ? fSTLContainer[fIndex] : nullptr;
+
+    return ret;
+  }
+
+
   const STLContainer & fSTLContainer; //!
   std::size_t fIndex; //!
-#ifndef NDEBUG
   const RooAbsArg * fCurrentElem; //!
-
-  RooAbsArg * nextChecked();
-#endif
 };
 
 
@@ -163,15 +190,14 @@ class TIteratorToSTLInterface final : public TIterator , public GenericRooFIter 
 /// A wrapper around TIterator derivatives.
 ///
 /// It is called RooLinkedListIter because all classes assume that the RooAbsCollections use
-/// a RooLinkedList.
+/// a RooLinkedList, which is not true, any more.
 /// The purpose of this wrapper is to act on the outside like a RooLinkedListIter, even though
 /// the underlying implementation may work an a different container, like e.g.
 /// an STL container. This is needed to not break user code that is using a RooLinkedList or
 /// a RooAbsCollection.
 ///
-/// The iterator forwards all calls to the underlying iterator implementation.
-/// All code using this iterator as an iterator over a RooAbsCollection should try to move away
-/// from it because begin() and end() in RooAbsCollection are faster.
+/// \note All code using this iterator as an iterator over a RooAbsCollection should move
+/// to begin() and end() or range-based for loops. These are faster.
 class RooLinkedListIter final : public TIterator {
 
   public:
@@ -198,7 +224,9 @@ class RooLinkedListIter final : public TIterator {
 };
 
 
-
+////////////////////////////////////////////////////////////////////////////////////////////
+/// Implementation of the actual iterator on RooLinkedLists.
+///
 class RooLinkedListIterImpl final : public TIterator {
 public:
 
@@ -280,10 +308,8 @@ public:
 protected:
   const RooLinkedList* _list ;     //! Collection iterated over
   const RooLinkedListElem* _ptr ;  //! Next link element
-  Bool_t _forward ;                //  Iterator direction
-
-//  ClassDef(RooLinkedListIterImpl,1) // Iterator for RooLinkedList container class
-} ;
+  Bool_t _forward ;                //!  Iterator direction
+};
 
 
 
