@@ -270,35 +270,10 @@ add_dependencies(move_artifacts copymodulemap)
 
 # Provide our own modulemap for implementations other than libcxx.
 if (NOT WIN32 AND NOT libcxx)
-  # Write a empty overlay file to the output directory that CMake can run its compiler tests.
-  # We will create the actual overlay later in the configuration.
-  file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
-  set(__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
-
-  if (cxxmodules)
-    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} ${__vfs_overlay}")
-  endif()
-
-  # Only use the first path from the HEADERS_LOCATION (which is separated by colons).
-  get_property(__libcpp_full_paths GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
-  string(REGEX MATCHALL "[^:]+" __libcpp_full_paths_list "${__libcpp_full_paths}")
-  if (__libcpp_full_paths_list)
-    list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
-
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in.build ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap-installed.overlay.yaml.in ${CMAKE_BINARY_DIR}/build/modulemap.overlay.yaml @ONLY)
-
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in.install ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml.install @ONLY)
-    install(FILES "${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml.install" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers RENAME "modulemap.overlay.yaml")
-
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.modulemap ${CMAKE_BINARY_DIR}/include/stl.modulemap)
-    install(FILES "${CMAKE_BINARY_DIR}/include/stl.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
-    install(FILES "${CMAKE_BINARY_DIR}/include/libc.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-
-  else()
-    message(SEND_ERROR "Couldn't find c++ library paths, no modulemap overlay will be installed! (__libcpp_full_paths = '${__libcpp_full_paths}')")
-  endif()
+  configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.modulemap ${CMAKE_BINARY_DIR}/include/stl.modulemap)
+  install(FILES "${CMAKE_BINARY_DIR}/include/stl.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+  configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
+  install(FILES "${CMAKE_BINARY_DIR}/include/libc.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 endif()
 
 if (cxxmodules)
