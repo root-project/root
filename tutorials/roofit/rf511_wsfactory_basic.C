@@ -73,7 +73,4 @@ void rf511_wsfactory_basic(Bool_t compact = kFALSE)
 
    // Print workspace contents
    w->Print();
-
-   // Make workspace visible on command line
-   gDirectory->Add(w);
 }
