@@ -34,16 +34,9 @@
 
 #include "TFile.h"
 #include "TTree.h"
-#include "TLeaf.h"
-#include "TEventList.h"
 #include "TH2.h"
-#include "TText.h"
-#include "TStyle.h"
-#include "TMatrixF.h"
-#include "TMatrixDSym.h"
-#include "TPaletteAxis.h"
 #include "TMath.h"
-#include "TRandom3.h"
+#include "TMatrixD.h"
 
 #include "TMVA/DataLoader.h"
 #include "TMVA/Config.h"
