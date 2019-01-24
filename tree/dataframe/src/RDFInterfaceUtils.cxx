@@ -26,7 +26,20 @@
 #include <TString.h>
 #include <TTree.h>
 
+// pragma to disable warnings on Rcpp which have
+// so many noise compiling
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
+#include "lexertk.hpp"
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 #include <iosfwd>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <typeinfo>
@@ -50,6 +63,52 @@ class RDataSource;
 namespace ROOT {
 namespace Internal {
 namespace RDF {
+
+/// A tokeniser for the expression which is in C++
+/// The goal is to extract all names which are potentially
+/// columns. The difficulty is to catch also the names containing dots.
+std::set<std::string> GetPotentialColumnNames(const std::string &expr)
+{
+   lexertk::generator generator;
+   generator.process(expr);
+
+   std::set<std::string> potCols;
+   const auto nToks = generator.size();
+   std::string potColWithDots;
+
+   auto IsSymbol = [](const lexertk::token &t) { return t.type == lexertk::token::e_symbol; };
+   auto IsDot = [](const lexertk::token &t) { return t.value == "."; };
+
+   // Now we start iterating over the tokens
+   for (auto i = 0ULL; i < nToks; ++i) {
+      auto &tok = generator[i];
+      if (!IsSymbol(tok))
+         continue;
+
+      if (i == 0 || (i > 0 && !IsDot(generator[i - 1])))
+         potCols.insert(tok.value);
+
+      // after the current token we may have a chain of .<symbol>.<symbol>...
+      // we need to build a set of potential columns incrementally
+      // and stop at the right point. All this advancing the token
+      // cursor.
+      potColWithDots = tok.value;
+      while (i < nToks) {
+         if (i + 2 == nToks)
+            break;
+         auto &nextTok = generator[i + 1];
+         auto &next2nextTok = generator[i + 2];
+         if (!IsDot(nextTok) || !IsSymbol(next2nextTok)) {
+            break;
+         }
+         potColWithDots += "." + next2nextTok.value;
+         potCols.insert(potColWithDots);
+         i += 2;
+      }
+      potColWithDots = "";
+   }
+   return potCols;
+}
 
 // The set here is used as a registry, the real list, which keeps the order, is
 // the one in the vector
@@ -333,62 +392,68 @@ unsigned int Replace(std::string &s, const std::string what, const std::string w
 
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
-std::vector<std::string> FindUsedColumnNames(std::string_view expression, const ColumnNames_t &branches,
+std::vector<std::string> FindUsedColumnNames(std::string_view expression, ColumnNames_t branches,
                                              const ColumnNames_t &customColumns, const ColumnNames_t &dsColumns,
                                              const std::map<std::string, std::string> &aliasMap)
 {
    // To help matching the regex
    const std::string paddedExpr = " " + std::string(expression) + " ";
    static const std::string regexBit("[^a-zA-Z0-9_]");
-   Ssiz_t matchedLen;
 
-   std::vector<std::string> usedBranches;
+   const auto potCols = GetPotentialColumnNames(std::string(expression));
+
+   if (potCols.size() == 0) return {};
+
+   std::set<std::string> usedBranches;
 
    // Check which custom columns match
    for (auto &brName : customColumns) {
-      std::string bNameRegexContent = regexBit + brName + regexBit;
-      TRegexp bNameRegex(bNameRegexContent.c_str());
-      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &matchedLen)) {
-         usedBranches.emplace_back(brName);
+      if (potCols.find(brName) != potCols.end()) {
+         usedBranches.insert(brName);
       }
    }
 
    // Check which tree branches match
+   // We need to match the longest
+
+   // First: reverse sort to have longer branches before, e.g.
+   // a.b.c
+   // a.b
+   // a
+   // We want that the longest branch ends up in usedBranches before.
+   std::sort(branches.begin(), branches.end(),
+             [](const std::string &s0, const std::string &s1) {return s0 >= s1;});
+
    for (auto &brName : branches) {
-      // Replace "." with "\." for a correct match of sub-branches/leaves
-      auto escapedBrName = brName;
-      Replace(escapedBrName, std::string("."), std::string("\\."));
-      std::string bNameRegexContent = regexBit + escapedBrName + regexBit;
-      TRegexp bNameRegex(bNameRegexContent.c_str());
-      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &matchedLen)) {
-         usedBranches.emplace_back(brName);
+      // If the branch is not in the potential columns, we simply move on
+      if (potCols.find(brName) == potCols.end()) {
+         continue;
+      }
+      // If not, we check if the branch name is contained in one of the branch
+      // names which we already added to the usedBranches.
+      auto isContained = [&brName](const std::string &s) { return s.find(brName) != std::string::npos; };
+      auto it = std::find_if(usedBranches.begin(), usedBranches.end(), isContained);
+      if (it == usedBranches.end()) {
+         usedBranches.insert(brName);
       }
    }
 
    // Check which data-source columns match
    for (auto &col : dsColumns) {
-      std::string bNameRegexContent = regexBit + col + regexBit;
-      TRegexp bNameRegex(bNameRegexContent.c_str());
-      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &matchedLen)) {
-         // if not already found among the other columns
-         if (std::find(usedBranches.begin(), usedBranches.end(), col) == usedBranches.end())
-            usedBranches.emplace_back(col);
+      if (potCols.find(col) != potCols.end()) {
+         usedBranches.insert(col);
       }
    }
 
    // Check which aliases match
    for (auto &alias_colName : aliasMap) {
       auto &alias = alias_colName.first;
-      std::string bNameRegexContent = regexBit + alias + regexBit;
-      TRegexp bNameRegex(bNameRegexContent.c_str());
-      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &matchedLen)) {
-         // if not already found among the other columns
-         if (std::find(usedBranches.begin(), usedBranches.end(), alias) == usedBranches.end())
-            usedBranches.emplace_back(alias);
+      if (potCols.find(alias) != potCols.end()) {
+         usedBranches.insert(alias);
       }
    }
 
-   return usedBranches;
+   return std::vector<std::string>(usedBranches.begin(), usedBranches.end());
 }
 
 // TODO we should also replace other invalid chars, like '[],' and spaces
