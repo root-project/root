@@ -32,7 +32,6 @@
 
 */
 
-#include "TROOT.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TLeaf.h"
@@ -43,16 +42,13 @@
 #include "TMatrixF.h"
 #include "TMatrixDSym.h"
 #include "TPaletteAxis.h"
-#include "TPrincipal.h"
 #include "TMath.h"
-#include "TObjString.h"
 #include "TRandom3.h"
 
 #include "TMVA/DataLoader.h"
 #include "TMVA/Config.h"
 #include "TMVA/CvSplit.h"
 #include "TMVA/Tools.h"
-#include "TMVA/Ranking.h"
 #include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/DataInputHandler.h"
