@@ -2851,10 +2851,8 @@ createVFSFromCompilerInvocation(const CompilerInvocation &CI,
                                 DiagnosticsEngine &Diags,
                                 IntrusiveRefCntPtr<vfs::FileSystem> BaseFS) {
   if (CI.getHeaderSearchOpts().VFSOverlayFiles.empty())
-    return BaseFS;
+    return CI.getOverlay();
 
-  IntrusiveRefCntPtr<vfs::OverlayFileSystem> Overlay(
-      new vfs::OverlayFileSystem(BaseFS));
   // earlier vfs files are on the bottom
   for (const std::string &File : CI.getHeaderSearchOpts().VFSOverlayFiles) {
     llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> Buffer =
@@ -2870,8 +2868,8 @@ createVFSFromCompilerInvocation(const CompilerInvocation &CI,
       Diags.Report(diag::err_invalid_vfs_overlay) << File;
       return IntrusiveRefCntPtr<vfs::FileSystem>();
     }
-    Overlay->pushOverlay(FS);
+    CI.getOverlay()->pushOverlay(FS);
   }
-  return Overlay;
+  return CI.getOverlay();
 }
 } // end namespace clang
