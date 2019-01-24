@@ -48,15 +48,11 @@
 #include "TObjString.h"
 #include "TRandom3.h"
 
-#include <string.h>
-
-#include "TMVA/Configurable.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Config.h"
 #include "TMVA/CvSplit.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Ranking.h"
-#include "TMVA/DataSet.h"
 #include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/DataInputHandler.h"
@@ -72,12 +68,6 @@
 #include "TMVA/VariableGaussTransform.h"
 #include "TMVA/VariableNormalizeTransform.h"
 #include "TMVA/VarTransformHandler.h"
-
-
-#include "TMVA/ResultsClassification.h"
-#include "TMVA/ResultsRegression.h"
-#include "TMVA/ResultsMulticlass.h"
-#include "TMVA/Types.h"
 
 ClassImp(TMVA::DataLoader);
 
