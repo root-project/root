@@ -40,6 +40,7 @@ double Checksum(TGeoManager *geom)
 int testoptical()
 {
    TString geofile = gROOT->GetTutorialDir() + "/geom/gdml/opticalsurfaces.gdml";
+   geofile.ReplaceAll("\\", "/");
    TGeoManager::SetExportPrecision(8);
    TGeoManager::SetVerboseLevel(0);
    printf("=== Importing %s ...\n", geofile.Data());
