@@ -103,7 +103,11 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
 
    if (arg.find("DOFIT:") == 0) {
       TString exec;
+#ifdef _MSC_VER
+      exec.Form("((ROOT::Experimental::RFitPanel *) 0x%p)->DoFit(%s);", this, arg.c_str() + 6);
+#else
       exec.Form("((ROOT::Experimental::RFitPanel *) %p)->DoFit(%s);", this, arg.c_str() + 6);
+#endif
       printf("Execute %s\n", exec.Data());
       gROOT->ProcessLine(exec.Data());
       return;
