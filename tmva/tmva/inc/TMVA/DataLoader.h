@@ -49,14 +49,12 @@ namespace TMVA {
    class DataInputHandler;
    class DataSetInfo;
    class DataSetManager;
-   class Envelope;
    class MethodBase;
    class IMethod;   
    class VariableTransformBase;
    class VarTransformHandler;
 
    class DataLoader : public Configurable {
-      friend class Envelope;
    public:
 
        DataLoader(TString thedlName="default");
