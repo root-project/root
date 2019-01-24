@@ -470,7 +470,6 @@ if(ROOT_python_FOUND)
                  tutorial-roofit-rf402_datahandling-py
                  tutorial-roofit-rf504_simwstool-py
                  tutorial-roofit-rf509_wsinteractive-py
-                 tutorial-roofit-rf511_wsfactory_basic-py
                  tutorial-roofit-rf610_visualerror-py
                  tutorial-roofit-rf707_kernelestimation-py
                  tutorial-vecops-vo004_SortAndSelect-py
