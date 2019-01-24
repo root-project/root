@@ -172,7 +172,7 @@ set(gui_veto fit/fitpanel_playback.C
              eve/*.C)
 
 if (NOT ROOT_tmva_FOUND)
-  set(tmva_veto tmva/*.C tmva/*.py tmva/keras/*.C tmva/keras/*.py)
+  set(tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py)
 else()
   #---These do not need to run for TMVA
   set(tmva_veto tmva/createData.C)
