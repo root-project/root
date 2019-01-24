@@ -747,7 +747,11 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          TObject *obj = FindPrimitive(sid.Data());
          if (obj && (buf.Length() > 0)) {
             TString exec;
+#ifdef _MSC_VER
+            exec.Form("((%s*) 0x%p)->%s;", obj->ClassName(), obj, buf.Data());
+#else
             exec.Form("((%s*) %p)->%s;", obj->ClassName(), obj, buf.Data());
+#endif
             Info("ProcessWS", "Obj %s Execute %s", obj->GetName(), exec.Data());
             gROOT->ProcessLine(exec);
 
@@ -778,7 +782,11 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       if (obj && (buf.Length() > 0) && (reply.Length() > 0)) {
          TString exec;
+#ifdef _MSC_VER
+         exec.Form("((%s*) 0x%p)->%s;", obj->ClassName(), obj, buf.Data());
+#else
          exec.Form("((%s*) %p)->%s;", obj->ClassName(), obj, buf.Data());
+#endif
          if (gDebug > 1)
             Info("ProcessData", "Obj %s Exec %s", obj->GetName(), exec.Data());
 
