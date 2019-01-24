@@ -45,7 +45,8 @@ private:
    TMemBlock   *fBlockSeek;               ///< Pointer to the block we seeked to.
    Long64_t     fBlockOffset;             ///< Seek offset within the block
 
-   static Long64_t fgDefaultBlockSize;
+   constexpr static Long64_t fgDefaultBlockSize = 2 * 1024 * 1024;
+   Long64_t fDefaultBlockSize = fgDefaultBlockSize;
 
    Long64_t MemRead(Int_t fd, void *buf, Long64_t len) const;
 
@@ -77,7 +78,8 @@ private:
    TMemFile &operator=(const TMemFile&); // Not implemented.
 
 public:
-   TMemFile(const char *name, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
+   TMemFile(const char *name, Option_t *option = "", const char *ftitle = "",
+            Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose, Long64_t defBlockSize = 0LL);
    TMemFile(const char *name, char *buffer, Long64_t size, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
    TMemFile(const char *name, ExternalDataPtr_t data);
    TMemFile(const TMemFile &orig);
