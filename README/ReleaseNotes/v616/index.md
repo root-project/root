@@ -71,7 +71,7 @@ header content by providing an efficient on-disk representation of C++ Code.
 
 This is an experimental feature which can be enabled by compiling ROOT with
 `-Druntime_cxxmodules=On`. You can read more about the current state of the
-feature [here](../../README.CXXMODULES.md).
+feature [here](https://github.com/root-project/root/blob/v6-16-00-patches/README/README.CXXMODULES.md).
 
 ## Core Libraries
 
@@ -480,14 +480,14 @@ The Ruby binding has been removed.
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9503'>ROOT-9503</a>] -         $ROOTSYS/tutorials/http/httpserver.C only shows blank page
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9504'>ROOT-9504</a>] -         RGL does not exist (official binary release for Fedora 28)
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9505'>ROOT-9505</a>] -         Template forward declaration is missing in the .rootmap
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9513'>ROOT-9513</a>] -         Data member not saved due to no streamer or dictionary 
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9513'>ROOT-9513</a>] -         Data member not saved due to no streamer or dictionary
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9521'>ROOT-9521</a>] -         Issue when building ROOT with Python 3.7
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9523'>ROOT-9523</a>] -         TPolyLine does not work with "f" draw option and SetNDC
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9526'>ROOT-9526</a>] -         [DF] RResultPtrs cannot be copy- or move-assigned
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9529'>ROOT-9529</a>] -         TBits::operator~() must be const
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9532'>ROOT-9532</a>] -         Built-in OpenSSL results in non-relocatable ROOT installation
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9542'>ROOT-9542</a>] -         RDataFrame Sum gets confused by std::string
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9546'>ROOT-9546</a>] -         Mistake in RDataFrame Documentation: Aliasing &amp; Friend-TTrees 
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9546'>ROOT-9546</a>] -         Mistake in RDataFrame Documentation: Aliasing &amp; Friend-TTrees
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9550'>ROOT-9550</a>] -         last ROOT versions don&#39;t support PostgreSQL less than 10.x
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9551'>ROOT-9551</a>] -         Automatic legend placement places legend over datapoints
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9552'>ROOT-9552</a>] -         Histograms filled with FillRandom do not display when using PLC, PMC options
