@@ -87,12 +87,15 @@ def _imul_pyz(self, n):
 
 # Python iteration
 
-def _begin_pyz(self):
+def _iter_pyz(self):
+    # Generator function to iterate on TCollections
     # Parameters:
     # - self: collection to be iterated
-    # Returns:
-    # - TIter iterator on collection
-    return TIter(self)
+    it = TIter(self)
+    o = it.Next()
+    while o:
+        yield o
+        o = it.Next()
 
 
 @pythonization()
@@ -117,20 +120,7 @@ def pythonize_tcollection(klass, name):
         klass.__rmul__ = _mul_pyz
         klass.__imul__ = _imul_pyz
 
-        # Make TCollections iterable.
-        # In Pythonize.cxx, cppyy injects an `__iter__` method into
-        # any class that has a `begin` and an `end` methods.
-        # This is the case of TCollection and its subclasses, where
-        # cppyy associates `__iter__` with a function that returns the
-        # result of calling `begin`, i.e. a TIter that already points
-        # to the first element of the collection.
-        # That setting breaks the iteration on TCollections, since the
-        # first time `Next` is called on the iterator it will return
-        # the second element of the collection (if any), thus skipping
-        # the first one.
-        # By pythonising `begin` here, we make sure the iterator returned
-        # points to nowhere, and it will return the first element of the
-        # collection on the first invocation of `Next`.
-        klass.begin = _begin_pyz
+        # Make TCollections iterable
+        klass.__iter__ = _iter_pyz
 
     return True
