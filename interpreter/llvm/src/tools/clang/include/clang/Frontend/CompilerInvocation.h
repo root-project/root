@@ -13,6 +13,7 @@
 #include "clang/Basic/DiagnosticOptions.h"
 #include "clang/Basic/FileSystemOptions.h"
 #include "clang/Basic/LangOptions.h"
+#include "clang/Basic/VirtualFileSystem.h"
 #include "clang/Frontend/CodeGenOptions.h"
 #include "clang/Frontend/DependencyOutputOptions.h"
 #include "clang/Frontend/FrontendOptions.h"
@@ -101,6 +102,10 @@ public:
     return *PreprocessorOpts;
   }
 };
+
+namespace vfs {
+  class FileSystem;
+}
   
 /// \brief Helper class for holding the data necessary to invoke the compiler.
 ///
@@ -128,8 +133,12 @@ class CompilerInvocation : public CompilerInvocationBase {
   /// Options controlling preprocessed output.
   PreprocessorOutputOptions PreprocessorOutputOpts;
 
+  /// List of overlay files
+  IntrusiveRefCntPtr<vfs::OverlayFileSystem> Overlay;
+
 public:
-  CompilerInvocation() : AnalyzerOpts(new AnalyzerOptions()) {}
+  CompilerInvocation() : AnalyzerOpts(new AnalyzerOptions()),
+   Overlay(new vfs::OverlayFileSystem(vfs::getRealFileSystem())) {}
 
   /// @name Utility Methods
   /// @{
@@ -197,6 +206,18 @@ public:
     return DependencyOutputOpts;
   }
 
+  void addOverlay(const IntrusiveRefCntPtr<vfs::FileSystem>& FS) {
+    Overlay->pushOverlay(FS);
+  }
+
+  IntrusiveRefCntPtr<vfs::OverlayFileSystem> &getOverlay() {
+    return Overlay;
+  }
+
+  const IntrusiveRefCntPtr<vfs::OverlayFileSystem> &getOverlay() const {
+    return Overlay;
+  }
+
   FileSystemOptions &getFileSystemOpts() { return FileSystemOpts; }
   const FileSystemOptions &getFileSystemOpts() const {
     return FileSystemOpts;
@@ -216,10 +237,6 @@ public:
 
   /// @}
 };
-
-namespace vfs {
-  class FileSystem;
-}
 
 IntrusiveRefCntPtr<vfs::FileSystem>
 createVFSFromCompilerInvocation(const CompilerInvocation &CI,
