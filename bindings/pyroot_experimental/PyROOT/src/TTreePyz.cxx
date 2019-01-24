@@ -88,8 +88,9 @@ static PyObject *WrapLeaf(TLeaf *leaf)
 {
    if (1 < leaf->GetLenStatic() || leaf->GetLeafCount()) {
       // array types
+      long dims[] = { 1, leaf->GetNdata() }; // first entry is the number of dims
       std::string typeName = leaf->GetTypeName();
-      Converter *pcnv = CreateConverter(typeName + '*', leaf->GetNdata());
+      Converter *pcnv = CreateConverter(typeName + '*', dims);
 
       void *address = 0;
       if (leaf->GetBranch())
