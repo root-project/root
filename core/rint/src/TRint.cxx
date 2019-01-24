@@ -143,7 +143,7 @@ ClassImp(TRint);
 TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
              Int_t numOptions, Bool_t noLogo):
    TApplication(appClassName, argc, argv, options, numOptions),
-   fCaughtSignal(0)
+   fCaughtSignal(-1)
 {
    fNcmd          = 0;
    fDefaultPrompt = "root [%d] ";
@@ -425,7 +425,7 @@ void TRint::Run(Bool_t retrn)
             // to call Getlinem(kInit, GetPrompt());
             needGetlinemInit = kTRUE;
 
-            if (error != 0 || fCaughtSignal) break;
+            if (error != 0 || fCaughtSignal != -1) break;
          }
       } ENDTRY;
 
@@ -433,7 +433,7 @@ void TRint::Run(Bool_t retrn)
          if (retrn) return;
          if (error) {
             retval = error;
-         } else if (fCaughtSignal) {
+         } else if (fCaughtSignal != -1) {
             retval = fCaughtSignal + 128;
          }
          // Bring retval into sensible range, 0..255.
@@ -454,13 +454,13 @@ void TRint::Run(Bool_t retrn)
    if (QuitOpt()) {
       printf("\n");
       if (retrn) return;
-      Terminate(fCaughtSignal ? fCaughtSignal + 128 : 0);
+      Terminate(fCaughtSignal != -1 ? fCaughtSignal + 128 : 0);
    }
 
    TApplication::Run(retrn);
 
    // Reset to happiness.
-   fCaughtSignal = 0;
+   fCaughtSignal = -1;
 
    Getlinem(kCleanUp, 0);
 }
