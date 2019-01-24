@@ -113,6 +113,7 @@
 #include <cmath>
 
 #ifdef R__WIN32
+#ifndef __CLING__
 #define FOREGROUND_BLUE      1
 #define FOREGROUND_GREEN     2
 #define FOREGROUND_RED       4
@@ -123,6 +124,7 @@ extern "C" {
    bool __stdcall SetConsoleTextAttribute(void *, unsigned int);
 }
 #pragma comment(lib, "Kernel32.lib")
+#endif
 #endif
 
 #include "Riostream.h"
@@ -511,10 +513,12 @@ void setColor(int red = 0)
       snprintf(command,13, "%c[%dm", 0x1B, 0); // reset to default
    printf("%s", command);
 #else
+#ifndef __CLING__
    if ( red )
       SetConsoleTextAttribute(GetStdHandle((unsigned long)-11), FOREGROUND_RED );
    else
       SetConsoleTextAttribute(GetStdHandle((unsigned long)-11), FOREGROUND_GREY );
+#endif
 #endif
 }
 
