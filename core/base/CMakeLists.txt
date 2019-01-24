@@ -269,7 +269,7 @@ target_include_directories(Base PRIVATE ${PCRE_INCLUDE_DIR})
 #---CreateTApplicationCommandLineOptions------------------------------------------------------------------
 generateHeaders(${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/include/TApplicationCommandLineOptionsHelp.h Base)
 
-ROOT_INSTALL_HEADERS(${install_dirs})
+ROOT_INSTALL_HEADERS(${BASE_HEADER_DIRS})
 
 #---Extra options-----------------------------------------------------------------------
 if(GCC_MAJOR EQUAL 4 AND GCC_MINOR EQUAL 1)
