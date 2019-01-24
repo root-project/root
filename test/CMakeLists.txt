@@ -213,10 +213,12 @@ endif()
 #--stressHistFactory--------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND AND GSL_FOUND AND ROOT_xml_FOUND)
   ROOT_EXECUTABLE(stressHistFactory stressHistFactory.cxx LIBRARIES RooStats HistFactory XMLParser)
+if(NOT MSVC)
   configure_file(HistFactoryTest.tar HistFactoryTest.tar COPYONLY)
   configure_file(stressHistFactory_ref.root stressHistFactory_ref.root COPYONLY)
   ROOT_ADD_TEST(test-stressHistFactory ENVIRONMENT ROOTSYS=${CMAKE_BINARY_DIR} COMMAND stressHistFactory FAILREGEX "FAILED|Error in")
   ROOT_ADD_TEST(test-stressHistFactory-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistFactory.cxx FAILREGEX "FAILED|Error in" DEPENDS test-stressHistFactory)
+endif()
 endif()
 
 #--stressFit---------------------------------------------------------------------------------
