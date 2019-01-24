@@ -362,16 +362,16 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    TString datasetname=loader->GetName();
 
    if( fAnalysisType == Types::kNoAnalysisType ){
-      if( loader->DefaultDataSetInfo().GetNClasses()==2
-          && loader->DefaultDataSetInfo().GetClassInfo("Signal") != NULL
-          && loader->DefaultDataSetInfo().GetClassInfo("Background") != NULL
+      if( loader->GetDataSetInfo().GetNClasses()==2
+          && loader->GetDataSetInfo().GetClassInfo("Signal") != NULL
+          && loader->GetDataSetInfo().GetClassInfo("Background") != NULL
           ){
          fAnalysisType = Types::kClassification; // default is classification
-      } else if( loader->DefaultDataSetInfo().GetNClasses() >= 2 ){
+      } else if( loader->GetDataSetInfo().GetNClasses() >= 2 ){
          fAnalysisType = Types::kMulticlass;    // if two classes, but not named "Signal" and "Background"
       } else
-         Log() << kFATAL << "No analysis type for " << loader->DefaultDataSetInfo().GetNClasses() << " classes and "
-               << loader->DefaultDataSetInfo().GetNTargets() << " regression targets." << Endl;
+         Log() << kFATAL << "No analysis type for " << loader->GetDataSetInfo().GetNClasses() << " classes and "
+               << loader->GetDataSetInfo().GetNTargets() << " regression targets." << Endl;
    }
 
    // booking via name; the names are translated into enums and the
@@ -408,12 +408,12 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    IMethod* im;
    if (!boostNum) {
       im = ClassifierFactory::Instance().Create(theMethodName.Data(), fJobName, methodTitle,
-                                                loader->DefaultDataSetInfo(), theOption);
+                                                loader->GetDataSetInfo(), theOption);
    }
    else {
       // boosted classifier, requires a specific definition, making it transparent for the user
      Log() << kDEBUG <<"Boost Number is " << boostNum << " > 0: train boosted classifier" << Endl;
-     im = ClassifierFactory::Instance().Create("Boost", fJobName, methodTitle, loader->DefaultDataSetInfo(), theOption);
+     im = ClassifierFactory::Instance().Create("Boost", fJobName, methodTitle, loader->GetDataSetInfo(), theOption);
      MethodBoost *methBoost = dynamic_cast<MethodBoost *>(im); // DSMTEST divided into two lines
      if (!methBoost)                                           // DSMTEST
         Log() << kFATAL << "Method with type kBoost cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
@@ -422,7 +422,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
         methBoost->SetWeightFileDir(fFileDir);
      methBoost->SetModelPersistence(fModelPersistence);
      methBoost->SetBoostedMethodName(theMethodName);       // DSMTEST divided into two lines
-     methBoost->fDataSetManager = loader->fDataSetManager; // DSMTEST
+     methBoost->fDataSetManager = loader->GetDataSetInfo().GetDataSetManager(); // DSMTEST
      methBoost->SetFile(fgTargetFile);
      methBoost->SetSilentFile(IsSilentFile());
    }
@@ -438,24 +438,24 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
 
       if(fModelPersistence) methCat->SetWeightFileDir(fFileDir);
       methCat->SetModelPersistence(fModelPersistence);
-      methCat->fDataSetManager = loader->fDataSetManager; // DSMTEST
+      methCat->fDataSetManager = loader->GetDataSetInfo().GetDataSetManager(); // DSMTEST
       methCat->SetFile(fgTargetFile);
       methCat->SetSilentFile(IsSilentFile());
    } // DSMTEST
 
 
    if (!method->HasAnalysisType( fAnalysisType,
-                                 loader->DefaultDataSetInfo().GetNClasses(),
-                                 loader->DefaultDataSetInfo().GetNTargets() )) {
+                                 loader->GetDataSetInfo().GetNClasses(),
+                                 loader->GetDataSetInfo().GetNTargets() )) {
       Log() << kWARNING << "Method " << method->GetMethodTypeName() << " is not capable of handling " ;
       if (fAnalysisType == Types::kRegression) {
-         Log() << "regression with " << loader->DefaultDataSetInfo().GetNTargets() << " targets." << Endl;
+         Log() << "regression with " << loader->GetDataSetInfo().GetNTargets() << " targets." << Endl;
       }
       else if (fAnalysisType == Types::kMulticlass ) {
-         Log() << "multiclass classification with " << loader->DefaultDataSetInfo().GetNClasses() << " classes." << Endl;
+         Log() << "multiclass classification with " << loader->GetDataSetInfo().GetNClasses() << " classes." << Endl;
       }
       else {
-         Log() << "classification with " << loader->DefaultDataSetInfo().GetNClasses() << " classes." << Endl;
+         Log() << "classification with " << loader->GetDataSetInfo().GetNClasses() << " classes." << Endl;
       }
       return 0;
    }
@@ -504,7 +504,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethodWeightfile(DataLoader *loader, TMVA::
 {
    TString datasetname = loader->GetName();
    std::string methodTypeName = std::string(Types::Instance().GetMethodName(methodType).Data());
-   DataSetInfo &dsi = loader->DefaultDataSetInfo();
+   DataSetInfo &dsi = loader->GetDataSetInfo();
    
    IMethod *im = ClassifierFactory::Instance().Create(methodTypeName, dsi, weightfile );
    MethodBase *method = (dynamic_cast<MethodBase*>(im));
@@ -1320,8 +1320,8 @@ void TMVA::Factory::EvaluateAllVariables(DataLoader *loader, TString options )
    Log() << kINFO << "Evaluating all variables..." << Endl;
    Event::SetIsTraining(kFALSE);
 
-   for (UInt_t i=0; i<loader->DefaultDataSetInfo().GetNVariables(); i++) {
-      TString s = loader->DefaultDataSetInfo().GetVariableInfo(i).GetLabel();
+   for (UInt_t i=0; i<loader->GetDataSetInfo().GetNVariables(); i++) {
+      TString s = loader->GetDataSetInfo().GetVariableInfo(i).GetLabel();
       if (options.Contains("V")) s += ":V";
       this->BookMethod(loader, "Variable", s );
    }
@@ -2151,7 +2151,7 @@ TH1F* TMVA::Factory::EvaluateImportance(DataLoader *loader,VIType vitype, Types:
   fSilentFile=kTRUE;//we need silent file here because we need fast classification results
 
   //getting number of variables and variable names from loader
-  const int nbits = loader->DefaultDataSetInfo().GetNVariables();
+  const int nbits = loader->GetDataSetInfo().GetNVariables();
   if(vitype==VIType::kShort)
   return EvaluateImportanceShort(loader,theMethod,methodTitle,theOption);
   else if(vitype==VIType::kAll)
@@ -2175,8 +2175,8 @@ TH1F* TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMe
   uint64_t y = 0;
 
   //getting number of variables and variable names from loader
-  const int nbits = loader->DefaultDataSetInfo().GetNVariables();
-  std::vector<TString> varNames = loader->DefaultDataSetInfo().GetListOfVariables();
+  const int nbits = loader->GetDataSetInfo().GetNVariables();
+  std::vector<TString> varNames = loader->GetDataSetInfo().GetListOfVariables();
 
   uint64_t range = pow(2, nbits);
 
@@ -2202,7 +2202,7 @@ TH1F* TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMe
     }
 
     DataLoaderCopy(seedloader,loader);
-    seedloader->PrepareTrainingAndTestTree(loader->DefaultDataSetInfo().GetCut("Signal"), loader->DefaultDataSetInfo().GetCut("Background"), loader->DefaultDataSetInfo().GetSplitOptions());
+    seedloader->PrepareTrainingAndTestTree(loader->GetDataSetInfo().GetCut("Signal"), loader->GetDataSetInfo().GetCut("Background"), loader->GetDataSetInfo().GetSplitOptions());
 
     //Booking Seed
     BookMethod(seedloader, theMethod, methodTitle, theOption);
@@ -2270,8 +2270,8 @@ TH1F* TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA the
   uint64_t y = 0;
 
   //getting number of variables and variable names from loader
-  const int nbits = loader->DefaultDataSetInfo().GetNVariables();
-  std::vector<TString> varNames = loader->DefaultDataSetInfo().GetListOfVariables();
+  const int nbits = loader->GetDataSetInfo().GetNVariables();
+  std::vector<TString> varNames = loader->GetDataSetInfo().GetListOfVariables();
 
   long int range = sum(nbits);
 //   std::cout<<range<<std::endl;
@@ -2377,8 +2377,8 @@ TH1F* TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds,
    uint64_t y = 0;
 
    //getting number of variables and variable names from loader
-   const int nbits = loader->DefaultDataSetInfo().GetNVariables();
-   std::vector<TString> varNames = loader->DefaultDataSetInfo().GetListOfVariables();
+   const int nbits = loader->GetDataSetInfo().GetNVariables();
+   std::vector<TString> varNames = loader->GetDataSetInfo().GetListOfVariables();
 
    long int range = pow(2, nbits);
 

@@ -34,7 +34,7 @@
 #include <map>
 #include "TCut.h"
 
-#include "TMVA/Factory.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/Types.h"
 #include "TMVA/DataSet.h"
 
@@ -56,11 +56,10 @@ namespace TMVA {
    class VarTransformHandler;
 
    class DataLoader : public Configurable {
-      friend class Factory;
       friend class Envelope;
    public:
 
-       DataLoader( TString thedlName="default");
+       DataLoader(TString thedlName="default");
 
       // default destructor
       virtual ~DataLoader();
