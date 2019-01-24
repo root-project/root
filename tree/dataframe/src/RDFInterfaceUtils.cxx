@@ -27,6 +27,7 @@
 #include <TTree.h>
 
 #include <iosfwd>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <typeinfo>
@@ -340,16 +341,15 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, const 
    // To help matching the regex
    const std::string paddedExpr = " " + std::string(expression) + " ";
    static const std::string regexBit("[^a-zA-Z0-9_]");
-   Ssiz_t matchedLen;
 
-   std::vector<std::string> usedBranches;
+   std::set<std::string> usedBranches;
 
    // Check which custom columns match
    for (auto &brName : customColumns) {
       std::string bNameRegexContent = regexBit + brName + regexBit;
-      TRegexp bNameRegex(bNameRegexContent.c_str());
-      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &matchedLen)) {
-         usedBranches.emplace_back(brName);
+      TPRegexp bNameRegex(bNameRegexContent.c_str());
+      if (bNameRegex.MatchB(paddedExpr.c_str(),"", 0, 1)) {
+         usedBranches.insert(brName);
       }
    }
 
@@ -359,20 +359,18 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, const 
       auto escapedBrName = brName;
       Replace(escapedBrName, std::string("."), std::string("\\."));
       std::string bNameRegexContent = regexBit + escapedBrName + regexBit;
-      TRegexp bNameRegex(bNameRegexContent.c_str());
-      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &matchedLen)) {
-         usedBranches.emplace_back(brName);
+      TPRegexp bNameRegex(bNameRegexContent.c_str());
+      if (bNameRegex.MatchB(paddedExpr.c_str(),"", 0, 1)) {
+         usedBranches.insert(brName);
       }
    }
 
    // Check which data-source columns match
    for (auto &col : dsColumns) {
       std::string bNameRegexContent = regexBit + col + regexBit;
-      TRegexp bNameRegex(bNameRegexContent.c_str());
-      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &matchedLen)) {
-         // if not already found among the other columns
-         if (std::find(usedBranches.begin(), usedBranches.end(), col) == usedBranches.end())
-            usedBranches.emplace_back(col);
+      TPRegexp bNameRegex(bNameRegexContent.c_str());
+      if (bNameRegex.MatchB(paddedExpr.c_str(),"", 0, 1)) {
+         usedBranches.insert(col);
       }
    }
 
@@ -380,15 +378,13 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, const 
    for (auto &alias_colName : aliasMap) {
       auto &alias = alias_colName.first;
       std::string bNameRegexContent = regexBit + alias + regexBit;
-      TRegexp bNameRegex(bNameRegexContent.c_str());
-      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &matchedLen)) {
-         // if not already found among the other columns
-         if (std::find(usedBranches.begin(), usedBranches.end(), alias) == usedBranches.end())
-            usedBranches.emplace_back(alias);
+      TPRegexp bNameRegex(bNameRegexContent.c_str());
+      if (bNameRegex.MatchB(paddedExpr.c_str(),"", 0, 1)) {
+         usedBranches.insert(alias);
       }
    }
 
-   return usedBranches;
+   return std::vector<std::string>(usedBranches.begin(), usedBranches.end());
 }
 
 // TODO we should also replace other invalid chars, like '[],' and spaces
