@@ -99,11 +99,11 @@ if(cxx11 OR cxx14 OR cxx17)
 
   # for backward compatibility
   if(cxx17)
-    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD 17 CACHE STRING "" FORCE)
   elseif(cxx14)
-    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD 14 CACHE STRING "" FORCE)
   elseif(cxx11)
-    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD 11 CACHE STRING "" FORCE)
   endif()
 
   unset(cxx17 CACHE)
