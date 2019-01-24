@@ -40,8 +40,6 @@ only from memory.
 
 ClassImp(TMemFile);
 
-Long64_t TMemFile::fgDefaultBlockSize = 2*1024*1024;
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
@@ -137,19 +135,24 @@ TMemFile::TMemFile(const char *path, ExternalDataPtr_t data) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Usual Constructor.  See the TFile constructor for details.
+/// \brief Usual Constructor.
+/// The defBlockSize parameter defines the size of the blocks of memory allocated
+/// when expanding the underlying TMemFileBuffer. If the value 0 is passed, the
+/// default block size, fgDefaultBlockSize, is adopted.
+/// See the TFile constructor for details.
 
-TMemFile::TMemFile(const char *path, Option_t *option,
-                   const char *ftitle, Int_t compress) :
-   TMemFile(path, nullptr, -1, option, ftitle, compress) {}
+TMemFile::TMemFile(const char *path, Option_t *option, const char *ftitle, Int_t compress, Long64_t defBlockSize)
+   : TMemFile(path, nullptr, -1, option, ftitle, compress)
+{
+   fDefaultBlockSize = defBlockSize == 0LL ? fgDefaultBlockSize : defBlockSize;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Usual Constructor.  See the TFile constructor for details. Copy data from buffer.
 
-TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *option,
-                   const char *ftitle, Int_t compress):
-   TFile(path, "WEB", ftitle, compress), fBlockList(size),
-   fSize(size), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
+TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *option, const char *ftitle, Int_t compress)
+   : TFile(path, "WEB", ftitle, compress), fBlockList(size), fSize(size), fSysOffset(0), fBlockSeek(&(fBlockList)),
+     fBlockOffset(0)
 {
    EMode optmode = ParseOption(option);
 
@@ -551,9 +554,9 @@ Long64_t TMemFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
 Int_t TMemFile::SysOpen(const char * /* pathname */, Int_t /* flags */, UInt_t /* mode */)
 {
    if (!fBlockList.fBuffer) {
-      fBlockList.fBuffer = new UChar_t[fgDefaultBlockSize];
-      fBlockList.fSize = fgDefaultBlockSize;
-      fSize = fgDefaultBlockSize;
+      fBlockList.fBuffer = new UChar_t[fDefaultBlockSize];
+      fBlockList.fSize = fDefaultBlockSize;
+      fSize = fDefaultBlockSize;
    }
    if (fBlockList.fBuffer) {
       return 0;
@@ -604,8 +607,8 @@ Int_t TMemFile::SysWriteImpl(Int_t /* fd */, const void *buf, Long64_t len)
          buf = (char*)buf + sublen;
          Int_t len_left = len - sublen;
          if (!fBlockSeek->fNext) {
-            fBlockSeek->CreateNext(fgDefaultBlockSize);
-            fSize += fgDefaultBlockSize;
+            fBlockSeek->CreateNext(fDefaultBlockSize);
+            fSize += fDefaultBlockSize;
          }
          fBlockSeek = fBlockSeek->fNext;
 
@@ -617,8 +620,8 @@ Int_t TMemFile::SysWriteImpl(Int_t /* fd */, const void *buf, Long64_t len)
             buf = (char*)buf + fBlockSeek->fSize;
             len_left -= fBlockSeek->fSize;
             if (!fBlockSeek->fNext) {
-               fBlockSeek->CreateNext(fgDefaultBlockSize);
-               fSize += fgDefaultBlockSize;
+               fBlockSeek->CreateNext(fDefaultBlockSize);
+               fSize += fDefaultBlockSize;
             }
             fBlockSeek = fBlockSeek->fNext;
          }
