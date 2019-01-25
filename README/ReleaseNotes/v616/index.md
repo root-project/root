@@ -167,21 +167,21 @@ root [4]
 ## TTree Libraries
 ### RDataFrame
   - Optimise the creation of the set of branch names of an input dataset, doing the work once and caching it in the RInterface.
-  - Add [StdDev](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a482c4e4f81fe1e421c016f89cd281572) action.
-  - Add [Display](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#aee68f4411f16f00a1d46eccb6d296f01) action and [tutorial](https://github.com/root-project/root/blob/master/tutorials/dataframe/df024_Display.C).
-  - Add [Graph](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a804b466ebdbddef5c7e3400cc6b89301) action and [tutorial](https://github.com/root-project/root/blob/master/tutorials/dataframe/df021_createTGraph.C).
-  - Improve [GetColumnNames](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a951fe60b74d3a9fda37df59fd1dac186) to have no redundancy in the returned names.
-  - Add [Kahan Summation tutorial](https://github.com/root-project/root/blob/master/tutorials/dataframe/df022_useKahan.C) to subscribe a Kahan summation action to the RDataFrame.
-  - Add [Aggregate tutorial](https://github.com/root-project/root/blob/master/tutorials/dataframe/df019_Cache.C) [Python version](https://github.com/root-project/root/blob/master/tutorials/dataframe/df019_Cache.py).
-  - Add [Cache tutorial](https://github.com/root-project/root/commit/cd3e2fdc4baa99111f57240bf8012dcc5f1b5dc6).
+  - Add [StdDev](https://root.cern/doc/v616/classROOT_1_1RDF_1_1RInterface.html#a482c4e4f81fe1e421c016f89cd281572) action.
+  - Add [Display](https://root.cern/doc/v616/classROOT_1_1RDF_1_1RInterface.html#aee68f4411f16f00a1d46eccb6d296f01) action and [tutorial](https://github.com/root-project/root/blob/v616/tutorials/dataframe/df024_Display.C).
+  - Add [Graph](https://root.cern/doc/v616/classROOT_1_1RDF_1_1RInterface.html#a804b466ebdbddef5c7e3400cc6b89301) action and [tutorial](https://github.com/root-project/root/blob/v616/tutorials/dataframe/df021_createTGraph.C).
+  - Improve [GetColumnNames](https://root.cern/doc/v616/classROOT_1_1RDF_1_1RInterface.html#a951fe60b74d3a9fda37df59fd1dac186) to have no redundancy in the returned names.
+  - Add [Kahan Summation tutorial](https://github.com/root-project/root/blob/v616/tutorials/dataframe/df022_useKahan.C) to subscribe a Kahan summation action to the RDataFrame.
+  - Add [Cache tutorial](https://github.com/root-project/root/blob/v616/tutorials/dataframe/df019_Cache.C) [Python version](https://github.com/root-project/root/blob/v616/tutorials/dataframe/df019_Cache.py).
+  - Add [Aggregate tutorial](https://github.com/root-project/root/blob/v616/tutorials/dataframe/df023_aggregate.C).
   - Fix ambiguous call on Cache() with one or two columns as parameters.
-  - Add [GetFilterNames](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a25026681111897058299161a70ad9bb2).
+  - Add [GetFilterNames](https://root.cern/doc/v616/classROOT_1_1RDF_1_1RInterface.html#a25026681111897058299161a70ad9bb2).
   - Improve RDF node ownership model. The net effect is that users do not have to worry about keeping the first node of a computation graph in scope anymore.
   - Make RResultPtr copy/move-assignable and copy/move-constructible.
-  - Add [GetColumnType](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#ad3ccd813d9fed014ae6a080411c5b5a8a) utility method to query the type of a RDF column (returned as a string).
-  - Add [PassAsVec](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a1ecc8a41e8f12e65e1bf0d2e65aec36d) helper function.
-  - Add [SaveGraph](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#adc17882b283c3d3ba85b1a236197c533) helper function to write out the RDF computation graph as a graphviz file.
-  - Add a [tutorial for RDataFrame helper functions](https://root.cern/doc/master/df020__helpers_8C.html).
+  - Add [GetColumnType](https://root.cern/doc/v616/classROOT_1_1RDF_1_1RInterface.html#ad3ccd813d9fed014ae6a080411c5b5a8a) utility method to query the type of a RDF column (returned as a string).
+  - Add [PassAsVec](https://root.cern/doc/v616/namespaceROOT_1_1RDF.html#a1ecc8a41e8f12e65e1bf0d2e65aec36d) helper function.
+  - Add [SaveGraph](https://root.cern/doc/v616/namespaceROOT_1_1RDF.html#adc17882b283c3d3ba85b1a236197c533) helper function to write out the RDF computation graph as a graphviz file.
+  - Add a [tutorial for RDataFrame helper functions](https://root.cern/doc/v616/df020__helpers_8C.html).
   - Throw if name of a custom column is not a valid C++ name.
   - Allow every RDataFrame variable be cast to a common type `ROOT::RDF::RNode`.
   - Speed up just-in-time compilation (and therefore runtime) of Snapshots with a large number of branches.
@@ -193,8 +193,9 @@ root [4]
   - Speed up interpreted usage of RDataFrame (i.e. in macros or from ROOT prompt) by removing certain cling runtime safety checks.
   - Streamline and better document usage of multi-thread RDataFrame: edge cases in which processing of an event could start
     before processing of another event finished have been removed, making it easier for user to write safe parallel RDF operations.
-    See the [relevant documentation](https://root.cern.ch/doc/master/classROOT_1_1RDataFrame.html#parallel-execution) for more information.
+    See the [relevant documentation](https://root.cern.ch/doc/v616/classROOT_1_1RDataFrame.html#parallel-execution) for more information.
   - In multi-thread runs, `rdfentry_` will not take values corresponding to the underlying TChain's global entries anymore.
+  - Allow to read sqlite files through the [RSqliteDS](https://root.cern/doc/v616/classROOT_1_1RDF_1_1RSqliteDS.html).
 
 ### TTreeProcessorMT
   - Parallelise search of cluster boundaries for input datasets with no friends or TEntryLists. The net effect is a faster initialization time in this common case.
