@@ -3713,12 +3713,6 @@ public:
    }
 };
 
-static bool FileExists(const char *file)
-{
-   struct stat buf;
-   return (stat(file, &buf) == 0);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom diag client for clang that verifies that each implicitly build module
 /// is a system module. If not, it will let the current rootcling invocation
