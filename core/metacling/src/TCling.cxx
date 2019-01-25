@@ -1127,12 +1127,6 @@ static void LoadModules(const std::vector<std::string> &modules, cling::Interpre
       LoadModule(modName, interp);
 }
 
-static bool FileExists(const char *file)
-{
-   struct stat buf;
-   return (stat(file, &buf) == 0);
-}
-
 static bool IsFromRootCling() {
   // rootcling also uses TCling for generating the dictionary ROOT files.
   const static bool foundSymbol = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
