@@ -145,3 +145,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     Matrix
     MathCore
 )
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
+
