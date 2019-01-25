@@ -2,7 +2,7 @@ import unittest
 from array import array
 
 import ROOT
-from libcppyy import SetOwnership
+from libcppyy import SetOwnership, addressof
 import numpy as np
 
 
@@ -124,7 +124,29 @@ class TTreeBranch(unittest.TestCase):
                 self.assertEqual(ms.myint1, self.ival)
                 self.assertEqual(ms.myint2, 2*self.ival)
 
-    def test09_write_vector_branch(self):
+    def test09_write_struct_separate_branches(self):
+        f,t = self.create_file_and_tree()
+
+        ms = ROOT.MyStruct()
+        ms.myint1, ms.myint2 = self.ival, 2*self.ival
+
+        # Use `addressof` to get the address of the struct members
+        t.Branch('myint1b', addressof(ms, 'myint1'), 'myint1balias/I')
+        t.Branch('myint2b', addressof(ms, 'myint2'), 'myint2balias/I')
+
+        self.fill_and_close(f, t)
+
+    def test10_read_struct_separate_branches(self):
+        f,t = self.get_tree()
+
+        for entry in t:
+            self.assertEqual(entry.myint1b, self.ival)
+            self.assertEqual(entry.myint2b, 2*self.ival)
+            # Test aliases
+            self.assertEqual(entry.myint1balias, self.ival)
+            self.assertEqual(entry.myint2balias, 2*self.ival)
+
+    def test11_write_vector_branch(self):
         f,t = self.create_file_and_tree()
 
         v = ROOT.std.vector('double')(self.arraysize*[ self.fval ])
@@ -139,7 +161,7 @@ class TTreeBranch(unittest.TestCase):
 
         self.fill_and_close(f, t)
 
-    def test10_read_vector_branch(self):
+    def test12_read_vector_branch(self):
         f,t = self.get_tree()
 
         for entry in t:
@@ -147,7 +169,7 @@ class TTreeBranch(unittest.TestCase):
                 for elem in v:
                     self.assertEqual(elem, self.fval)
 
-    def test11_write_fallback_case(self):
+    def test13_write_fallback_case(self):
         f,t = self.create_file_and_tree()
 
         # Test an overload that uses the original Branch proxy
@@ -160,7 +182,7 @@ class TTreeBranch(unittest.TestCase):
 
         self.fill_and_close(f, t)
 
-    def test12_read_fallback_case(self):
+    def test14_read_fallback_case(self):
         f,t = self.get_tree()
 
         for entry in t:
