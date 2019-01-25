@@ -603,13 +603,13 @@ void TApplication::HandleException(Int_t sig)
          gInterpreter->ClearFileBusy();
       }
       if (fExitOnException == kExit)
-         gSystem->Exit(sig);
+         gSystem->Exit(128 + sig);
       else if (fExitOnException == kAbort)
          gSystem->Abort();
       else
          Throw(sig);
    }
-   gSystem->Exit(sig);
+   gSystem->Exit(128 + sig);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
