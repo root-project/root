@@ -60,13 +60,9 @@ RooGaussian::RooGaussian(const RooGaussian& other, const char* name) :
 
 Double_t RooGaussian::evaluate() const
 {
-  Double_t arg= x - mean;
-  Double_t sig = sigma ;
-  Double_t ret =exp(-0.5*arg*arg/(sig*sig)) ;
-//   if (gDebug>2) {
-//     cout << "gauss(" << GetName() << ") x = " << x << " mean = " << mean << " sigma = " << sigma << " ret = " << ret << endl ;
-//   }
-  return ret ;
+  const double arg = x - mean;
+  const double sig = sigma;
+  return exp(-0.5*arg*arg/(sig*sig)) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,24 +98,38 @@ Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
 Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-  assert(code==1 || code==2) ;
+  assert(code==1 || code==2);
 
-  static const Double_t root2 = sqrt(2.) ;
-  static const Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
-  Double_t xscale = root2*sigma;
-  Double_t ret = 0;
-  if(code==1){
-    ret = rootPiBy2*sigma*(RooMath::erf((x.max(rangeName)-mean)/xscale)-RooMath::erf((x.min(rangeName)-mean)/xscale));
-//     if (gDebug>2) {
-//       cout << "Int_gauss_dx(mean=" << mean << ",sigma=" << sigma << ", xmin=" << x.min(rangeName) << ", xmax=" << x.max(rangeName) << ")=" << ret << endl ;
-//     }
-  } else if(code==2) {
-    ret = rootPiBy2*sigma*(RooMath::erf((mean.max(rangeName)-x)/xscale)-RooMath::erf((mean.min(rangeName)-x)/xscale));
-  } else{
-    cout << "Error in RooGaussian::analyticalIntegral" << endl;
+  //The normalisation constant 1./sqrt(2*pi*sigma^2) is left out in evaluate().
+  //Therefore, the integral is scaled up by that amount to make RooFit normalise
+  //correctly.
+  const double resultScale = sqrt(TMath::TwoPi()) * sigma;
+
+  //Here everything is scaled and shifted into a standard normal distribution:
+  const double xscale = TMath::Sqrt2() * sigma;
+  double max = 0.;
+  double min = 0.;
+  if (code == 1){
+    max = (x.max(rangeName)-mean)/xscale;
+    min = (x.min(rangeName)-mean)/xscale;
+  } else { //No == 2 test because of assert
+    max = (mean.max(rangeName)-x)/xscale;
+    min = (mean.min(rangeName)-x)/xscale;
   }
-  return ret ;
 
+
+  //Here we go for maximum precision: We compute all integrals in the UPPER
+  //tail of the Gaussian, because erfc has the highest precision there.
+  //Therefore, the different cases for range limits in the negative hemisphere are mapped onto
+  //the equivalent points in the upper hemisphere using erfc(-x) = 2. - erfc(x)
+  const double ecmin = std::erfc(std::abs(min));
+  const double ecmax = std::erfc(std::abs(max));
+
+
+  return resultScale * 0.5 * (
+      min*max < 0.0 ? 2.0 - (ecmin + ecmax)
+                    : max <= 0. ? ecmax - ecmin : ecmin - ecmax
+  );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
