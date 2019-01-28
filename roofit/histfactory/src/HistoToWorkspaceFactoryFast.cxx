@@ -1539,12 +1539,12 @@ namespace HistFactory{
 	      
 	      // Set an initial shape, if requested
 	      if( shapeFactor.GetInitialShape() != NULL ) {
-		TH1* initialShape = shapeFactor.GetInitialShape();
-		std::cout << "Setting Shape Factor: " << shapeFactor.GetName()
-			  << " to have initial shape from hist: "
-			  << initialShape->GetName()
-			  << std::endl;
-		shapeFactorFunc.setShape( initialShape );
+	        TH1* initialShape = static_cast<TH1*>(shapeFactor.GetInitialShape()->Clone());
+	        std::cout << "Setting Shape Factor: " << shapeFactor.GetName()
+			      << " to have initial shape from hist: "
+			      << initialShape->GetName()
+			      << std::endl;
+	        shapeFactorFunc.setShape( initialShape );
 	      }
 	      
 	      // Set the variables constant, if requested
@@ -1662,7 +1662,7 @@ namespace HistFactory{
 	    // as well as the list of constraint terms (constraintTermNames)
 	    
 	    // The syst should be a fractional error
-	    TH1* shapeErrorHist = shapeSys.GetErrorHist();
+	    const TH1* shapeErrorHist = shapeSys.GetErrorHist();
 
 	    // Constraint::Type shapeConstraintType = Constraint::Gaussian;
 	    Constraint::Type systype = shapeSys.GetConstraintType();
@@ -2557,7 +2557,7 @@ namespace HistFactory{
 
   RooArgList HistoToWorkspaceFactoryFast::
   createStatConstraintTerms( RooWorkspace* proto, vector<string>& constraintTermNames,
-			     ParamHistFunc& paramHist, TH1* uncertHist, 
+			     ParamHistFunc& paramHist, const TH1* uncertHist,
 			     Constraint::Type type, Double_t minSigma ) {
 
 

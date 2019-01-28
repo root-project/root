@@ -116,7 +116,7 @@ namespace RooStats{
 
       RooArgList createStatConstraintTerms( RooWorkspace* proto, 
 					    std::vector<std::string>& constraintTerms, 
-					    ParamHistFunc& paramHist, TH1* uncertHist, 
+					    ParamHistFunc& paramHist, const TH1* uncertHist,
 					    Constraint::Type type, Double_t minSigma );
 
       void ConfigureHistFactoryDataset(RooDataSet* obsData, TH1* nominal, RooWorkspace* proto,
