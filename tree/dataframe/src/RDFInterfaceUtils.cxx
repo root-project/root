@@ -422,7 +422,7 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, Column
    // a
    // We want that the longest branch ends up in usedBranches before.
    std::sort(branches.begin(), branches.end(),
-             [](const std::string &s0, const std::string &s1) {return s0 >= s1;});
+             [](const std::string &s0, const std::string &s1) {return s0 > s1;});
 
    for (auto &brName : branches) {
       // If the branch is not in the potential columns, we simply move on
