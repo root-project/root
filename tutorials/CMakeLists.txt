@@ -468,8 +468,6 @@ if(ROOT_python_FOUND)
                  tutorial-roofit-rf106_plotdecoration-py
                  tutorial-roofit-rf315_projectpdf-py
                  tutorial-roofit-rf402_datahandling-py
-                 tutorial-roofit-rf504_simwstool-py
-                 tutorial-roofit-rf509_wsinteractive-py
                  tutorial-roofit-rf610_visualerror-py
                  tutorial-roofit-rf707_kernelestimation-py
                  tutorial-vecops-vo004_SortAndSelect-py
