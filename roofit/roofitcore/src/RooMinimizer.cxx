@@ -691,12 +691,24 @@ RooFitResult* RooMinimizer::save(const char* userName, const char* userTitle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create and draw a TH2 with the error contours in parameters var1 and v2 at up to 6 'sigma' settings
-/// where 'sigma' is calculated as n*n*errorLevel
+/// Create and draw a TH2 with the error contours in the parameters `var1` and `var2`.
+/// \param[in] var1 The first parameter (x axis).
+/// \param[in] var2 The second parameter (y axis).
+/// \param[in] n1 First contour.
+/// \param[in] n2 Optional contour. 0 means don't draw.
+/// \param[in] n3 Optional contour. 0 means don't draw.
+/// \param[in] n4 Optional contour. 0 means don't draw.
+/// \param[in] n5 Optional contour. 0 means don't draw.
+/// \param[in] n6 Optional contour. 0 means don't draw.
+/// \param[in] npoints Number of points for evaluating the contour.
+///
+/// Up to six contours can be drawn using the arguments `n1` to `n6` to request the desired
+/// coverage in units of \f$ \sigma = n^2 \cdot \mathrm{ErrorDef} \f$.
+/// See ROOT::Math::Minimizer::ErrorDef().
 
 RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
 			       Double_t n1, Double_t n2, Double_t n3,
-			       Double_t n4, Double_t n5, Double_t n6)
+			       Double_t n4, Double_t n5, Double_t n6, unsigned int npoints)
 {
 
 
@@ -743,7 +755,6 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
 
   Double_t n[6] ;
   n[0] = n1 ; n[1] = n2 ; n[2] = n3 ; n[3] = n4 ; n[4] = n5 ; n[5] = n6 ;
-  unsigned int npoints(50);
 
   for (Int_t ic = 0 ; ic<6 ; ic++) {
     if(n[ic] > 0) {
