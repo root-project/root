@@ -8,7 +8,8 @@ ROOTTEST_ADD_TEST(execNormalizationInf
 
 ROOTTEST_ADD_TEST(execNormalizationInfPy
                   MACRO execNormalizationInf.py
-                  OUTREF execNormalizationInf.py.ref)
+                  OUTREF execNormalizationInf.py.ref
+		  ENVIRONMENT CLING_STANDARD_PCH=${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch)
 
 ROOTTEST_ADD_TEST(execROOT_6038
                   MACRO execROOT_6038.C
