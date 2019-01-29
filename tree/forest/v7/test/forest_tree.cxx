@@ -34,7 +34,7 @@ TEST(RForestTree, StorageRoot)
    auto model = std::make_shared<RTreeModel>();
    auto fieldPt = model->AddField<float>("pt");
 
-   sinkRoot.Create(*model);
+   sinkRoot.Create(model.get());
    file->Close();
 }
 

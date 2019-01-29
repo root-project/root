@@ -18,6 +18,8 @@
 
 #include <ROOT/RStringView.hxx>
 
+#include <string>
+
 namespace ROOT {
 namespace Experimental {
 
@@ -52,8 +54,18 @@ enum class EColumnType {
 */
 // clang-format on
 class RColumnModel {
+private:
+   std::string fName;
+   EColumnType fType;
+   bool fIsSorted;
+
 public:
-   RColumnModel(std::string_view name, EColumnType type, bool is_sorted);
+   RColumnModel(std::string_view name, EColumnType type, bool isSorted)
+      : fName(name), fType(type), fIsSorted(isSorted) {}
+
+   std::string GetName() const { return fName; }
+   EColumnType GetType() const { return fType; }
+   bool GetIsSorted() const { return fIsSorted; }
 };
 
 } // namespace Experimental

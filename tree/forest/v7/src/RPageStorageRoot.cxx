@@ -42,24 +42,29 @@ ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
 {
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(RColumn * /*column*/)
+void ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(RColumn* column)
 {
-
+   ROOT::Experimental::Internal::RColumnHeader columnHeader;
+   columnHeader.fName = column->GetModel().GetName();
+   columnHeader.fType = column->GetModel().GetType();
+   columnHeader.fIsSorted = column->GetModel().GetIsSorted();
+   fDirectory->WriteObject(&columnHeader, (kKeyColumnHeader + std::to_string(fColumn2Id.size())).c_str());
 }
 
 
-void ROOT::Experimental::Detail::RPageSinkRoot::Create(const RTreeModel &model)
+void ROOT::Experimental::Detail::RPageSinkRoot::Create(RTreeModel *model)
 {
    fDirectory = fSettings.fFile->mkdir(fForestName.c_str());
    ROOT::Experimental::Internal::RForestHeader forestHeader;
 
-   for (auto& f : model.GetRootField()) {
+   for (auto& f : *model->GetRootField()) {
       ROOT::Experimental::Internal::RFieldHeader fieldHeader;
       fieldHeader.fName = f.GetName();
       fieldHeader.fType = f.GetType();
       if (f.GetParent()) fieldHeader.fParentName = f.GetParent()->GetName();
 
       fDirectory->WriteObject(&fieldHeader, (kKeyFieldHeader + std::to_string(forestHeader.fNFields)).c_str());
+      f.GenerateColumns(this);
       forestHeader.fNFields++;
    }
 

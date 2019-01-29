@@ -8,6 +8,7 @@ if(root7)
   HEADERS
     ROOT/RColumn.hxx
     ROOT/RColumnElement.hxx
+    ROOT/RColumnModel.hxx
     ROOT/RForestUtil.hxx
     ROOT/RPage.hxx
     ROOT/RPagePool.hxx
@@ -20,6 +21,7 @@ if(root7)
     ROOT/RTreeValue.hxx
     ROOT/RTreeView.hxx
   SOURCES
+    RColumn.cxx
     RPageStorage.cxx
     RPageStorageRoot.cxx
     RTree.cxx

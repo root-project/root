@@ -23,6 +23,7 @@
 #include <TFile.h>
 
 #include <string>
+#include <unordered_map>
 
 namespace ROOT {
 namespace Experimental {
@@ -79,23 +80,26 @@ public:
 private:
    static constexpr const char* kKeyForestHeader = "RFH";
    static constexpr const char* kKeyFieldHeader = "RFFH";
+   static constexpr const char* kKeyColumnHeader = "RFCH";
 
    std::string fForestName;
    /// Currently, a forest is stored as a directory in a TFile
    TDirectory *fDirectory;
    RSettings fSettings;
 
+   std::unordered_map<RColumn*, int> fColumn2Id;
+
 public:
    RPageSinkRoot(std::string_view forestName, RSettings settings);
    virtual ~RPageSinkRoot();
 
    /// TODO(jblomer): keep abtract and let derived classed define
-   void AddColumn(RColumn * /*column*/) final;
+   void AddColumn(RColumn* /*column*/) final;
 
    /// Physically creates the storage container to hold the tree (e.g., a directory in a TFile or a S3 bucket)
-   void Create(const RTreeModel &model) final;
+   void Create(RTreeModel* model) final;
    /// Write a page to the storage. The column attached to the page must have been added before.
-   void CommitPage(RPage *page) final;
+   void CommitPage(RPage* page) final;
    /// Finalize the current cluster and create a new one for the following data.
    void CommitCluster(TreeIndex_t nEntries) final;
    /// Finalize the current cluster and the entrire data set.

@@ -90,7 +90,7 @@ class RTreeViewCollection : public RTreeView<TreeIndex_t> {
 public:
    template <typename T>
    RTreeView<T> GetView(std::string_view fieldName) {
-      auto field = std::make_unique<RTreeField<T>>(fieldName, fField->GetSource());
+      auto field = std::make_unique<RTreeField<T>>(fieldName);
       // ...
       return RTreeView<T>(std::move(field));
    }
