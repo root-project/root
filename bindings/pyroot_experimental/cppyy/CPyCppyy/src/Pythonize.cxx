@@ -323,7 +323,7 @@ static PyObject* vector_iter(PyObject* v) {
     vi->vi_len = vi->vi_pos = 0;
     vi->vi_len = PySequence_Size(v);
 
-    _PyObject_GC_TRACK(vi);
+    PyObject_GC_Track(vi);
     return (PyObject*)vi;
 }
 
