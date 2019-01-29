@@ -29,6 +29,14 @@ typedef struct { int dummy; } MYSQL_STMT;
 typedef struct { int dummy; } MYSQL_BIND;
 #endif
 
+// MariaDB is fork of MySQL and still include definition of my_bool
+// MariaDB major version is 10, therefore it confuses version ID here
+#ifndef MARIADB_VERSION_ID
+#if MYSQL_VERSION_ID > 80000
+typedef bool my_bool;
+#endif
+#endif
+
 #else
 struct MYSQL_STMT;
 struct MYSQL_BIND;
@@ -70,7 +78,7 @@ protected:
    void        SetBuffersNumber(Int_t n);
 
    void       *BeforeSet(const char* method, Int_t npar, Int_t sqltype, Bool_t sig = kTRUE, ULong_t size = 0);
-   
+
    static ULong64_t fgAllocSizeLimit;
 
 private:
@@ -80,7 +88,7 @@ private:
 public:
    TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout = kTRUE);
    virtual ~TMySQLStatement();
-   
+
    static ULong_t GetAllocSizeLimit() { return fgAllocSizeLimit; }
    static void SetAllocSizeLimit(ULong_t sz) { fgAllocSizeLimit = sz; }
 
