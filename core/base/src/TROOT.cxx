@@ -1773,12 +1773,6 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
       });
 
       TGlobalMappedFunction::MakeFunctor("gPad", "TVirtualPad*", TVirtualPad::Pad);
-      // FIXME: Sergey: TInterpreter::Instance() does not return reference and therefore one cannot get address
-      fGlobals->Add(new TGlobalMappedFunction(
-         "gInterpreter", "TInterpreter*", (TGlobalMappedFunction::GlobalFunc_t)((void *)(&TInterpreter::Instance))));
-      // fGlobals->Add(TGlobalMappedFunction::MakeFunctor("gInterpreter", "TInterpreter*", TInterpreter::Instance,
-      // false));
-
       TGlobalMappedFunction::MakeFunctor("gVirtualX", "TVirtualX*", TVirtualX::Instance);
       TGlobalMappedFunction::MakeFunctor("gDirectory", "TDirectory*", TDirectory::CurrentDirectory);
 
