@@ -57,7 +57,12 @@ namespace RooStats {
 
 /**
  * \ingroup HistFactory
- * hist2workspace executable main function to create RooFit models from an xml config and files with histograms.
+ * main function of the hist2workspace executable.
+ * It creates RooFit models from an xml config and files with histograms.
+ * See MakeModelAndMeasurementFast(), for further instructions.
+ * \param[in] -h Help
+ * \param[in] -standard_form Standard xml model definitions. See MakeModelAndMeasurementFast()
+ * \param[in] -number_counting_form Deprecated
  */
 int main(int argc, char** argv) {
 
