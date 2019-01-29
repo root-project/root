@@ -19,12 +19,12 @@ ROOTTEST_ADD_TEST(SimplePattern1
 ROOTTEST_ADD_TEST(SimplePattern2
                   COMMAND ${TESTPATTERN_EXE} test.root:tof
                   OUTREF SimplePattern2.ref
-                  ${PYTESTS_WILLFAIL})
+                  ${simplepattern_willfail})
 
 ROOTTEST_ADD_TEST(SimplePattern3
                   COMMAND ${TESTPATTERN_EXE} test.root:*
                   OUTREF SimplePattern3.ref
-                  ${PYTESTS_WILLFAIL})
+                  ${simplepattern_willfail})
 #########################################################################
 
 set(TOOLS_PREFIX ${ROOTSYS}/bin)
