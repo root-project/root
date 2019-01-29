@@ -44,8 +44,7 @@ void rf503_wspaceread()
    RooAbsData *data = w->data("modelData");
 
    // Print structure of composite p.d.f.
-   model->Print("t") ;
-
+   model->Print("t");
 
    // F i t   m o d e l   t o   d a t a ,   p l o t   m o d e l
    // ---------------------------------------------------------
