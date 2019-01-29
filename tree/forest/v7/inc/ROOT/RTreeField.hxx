@@ -65,11 +65,12 @@ private:
    /// Sub fields point to their mother field
    RTreeFieldBase* fParent;
 
+
 protected:
    /// All fields have a main column. For collection fields, the main column is the index field. Points into fColumns.
-   RColumn *fPrincipalColumn;
+   RColumn* fPrincipalColumn;
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
-   std::vector<RColumn> fColumns;
+   std::vector<std::unique_ptr<RColumn>> fColumns;
 
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
@@ -79,9 +80,9 @@ protected:
 
 public:
    /// Iterates over the sub fields in depth-first search order
-   class const_iterator : public std::iterator<std::forward_iterator_tag, const Detail::RTreeFieldBase> {
+   class RIterator : public std::iterator<std::forward_iterator_tag, Detail::RTreeFieldBase> {
    private:
-      using iterator = const_iterator;
+      using iterator = RIterator;
       struct Position {
          Position() : fFieldPtr(nullptr), fIdxInParent(-1) { }
          Position(pointer fieldPtr, int idxInParent) : fFieldPtr(fieldPtr), fIdxInParent(idxInParent) { }
@@ -91,9 +92,9 @@ public:
       /// The stack of nodes visited when walking down the tree of fields
       std::vector<Position> fStack;
    public:
-      const_iterator() { fStack.emplace_back(Position()); }
-      const_iterator(pointer val, int idxInParent) { fStack.emplace_back(Position(val, idxInParent)); }
-      ~const_iterator() {}
+      RIterator() { fStack.emplace_back(Position()); }
+      RIterator(pointer val, int idxInParent) { fStack.emplace_back(Position(val, idxInParent)); }
+      ~RIterator() {}
       /// Given that the iterator points to a valid field which is not the end iterator, go to the next field
       /// in depth-first search order
       void Advance();
@@ -111,7 +112,7 @@ public:
    virtual ~RTreeFieldBase();
 
    /// Registeres the backing columns with the physical storage
-   virtual void GenerateColumns(Detail::RPageStorage &storage) = 0;
+   virtual void GenerateColumns(Detail::RPageStorage *pageStorage) = 0;
 
    /// Generates a tree value of the field type.
    virtual RTreeValueBase GenerateValue() = 0;
@@ -163,14 +164,12 @@ public:
    /// Ensure that all received items are written from page buffers to the storage.
    void Flush();
 
-   RPageSource* GetSource();
    std::string GetName() const { return fName; }
    std::string GetType() const { return fType; }
    const RTreeFieldBase* GetParent() const { return fParent; }
 
-
-   const_iterator begin() const;
-   const_iterator end() const;
+   RIterator begin();
+   RIterator end();
 };
 
 } // namespace Detail
@@ -186,7 +185,7 @@ public:
    RTreeFieldCollection(std::string_view name);
    ~RTreeFieldCollection();
 
-   void GenerateColumns(Detail::RPageStorage &storage) final;
+   void GenerateColumns(Detail::RPageStorage* pageStorage) final;
    Detail::RTreeValueBase GenerateValue() final;
    void Attach(Detail::RTreeFieldBase* child);
 };
@@ -207,7 +206,7 @@ public:
    explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name, "float", true /* isSimple */) {}
    ~RTreeField() = default;
 
-   void GenerateColumns(ROOT::Experimental::Detail::RPageStorage& storage) final;
+   void GenerateColumns(ROOT::Experimental::Detail::RPageStorage* pageStorage) final;
    ROOT::Experimental::Detail::RTreeValueBase GenerateValue() final;
 };
 

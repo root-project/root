@@ -32,6 +32,11 @@ namespace Detail {
 class RTreeFieldBase;
 class RColumn;
 
+enum class EPageStorageType {
+   kSink,
+   kSource,
+};
+
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageStorage
@@ -42,9 +47,11 @@ The tree meta-data contains of a list of fields, a unique identifier, and proven
 */
 // clang-format on
 class RPageStorage {
+public:
    /// Register a new column.  When reading, the column must exist in the tree on disk corresponding to the meta-data.
    /// When writing, every column can only be attached once.
    virtual void AddColumn(RColumn *column) = 0;
+   virtual EPageStorageType GetType() = 0;
 };
 
 // clang-format off
@@ -62,14 +69,12 @@ class RPageSink : public RPageStorage {
 public:
    RPageSink(std::string_view treeName);
    virtual ~RPageSink();
-
-   /// TODO(jblomer): keep abtract and let derived classed define
-   virtual void AddColumn(RColumn * /*column*/) { }
+   EPageStorageType GetType() final { return EPageStorageType::kSink; }
 
    /// Physically creates the storage container to hold the tree (e.g., a directory in a TFile or a S3 bucket)
-   virtual void Create(const RTreeModel &model) = 0;
+   virtual void Create(RTreeModel* model) = 0;
    /// Write a page to the storage. The column attached to the page must have been added before.
-   virtual void CommitPage(RPage *page) = 0;
+   virtual void CommitPage(RPage* page) = 0;
    /// Finalize the current cluster and create a new one for the following data.
    virtual void CommitCluster(TreeIndex_t nEntries) = 0;
    /// Finalize the current cluster and the entrire data set.
@@ -90,6 +95,7 @@ class RPageSource : public RPageStorage {
 public:
    RPageSource(std::string_view treeName);
    virtual ~RPageSource();
+   EPageStorageType GetType() final { return EPageStorageType::kSource; }
    /// TODO: copy/assignment for creating clones in multiple threads.
 
    /// TODO(jblomer): keep abtract and let derived classes define
