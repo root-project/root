@@ -115,7 +115,9 @@ public:
   std::vector< RooStats::HistFactory::ShapeFactor >& GetShapeFactorList() { return fShapeFactorList; }
 
   RooStats::HistFactory::StatError& GetStatError() { return fStatError; }
-  void SetStatError( RooStats::HistFactory::StatError Error ) { fStatError = Error; }
+  void SetStatError( RooStats::HistFactory::StatError Error ) {
+    fStatError = std::move(Error);
+  }
 
 
 protected:

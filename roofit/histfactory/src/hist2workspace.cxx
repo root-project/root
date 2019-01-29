@@ -16,6 +16,8 @@
 #include <exception>
 #include <vector>
 
+#include <TROOT.h>
+
 //void topDriver(string input); // in MakeModelAndMeasurements
 //void fastDriver(string input); // in MakeModelAndMeasurementsFast
 
@@ -70,6 +72,10 @@ int main(int argc, char** argv) {
     std::cerr << "need input file" << std::endl;
     exit(1);
   }
+
+  //Switch off ROOT histogram memory management
+  gROOT->SetMustClean(false);
+  TDirectory::AddDirectory(false);
 
   if(argc==2){
     std::string input(argv[1]);
