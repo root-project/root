@@ -59,7 +59,7 @@ AddPseudoGlobals() {
    // This code here must not trigger it
    TGlobalMappedFunction::MakeFunctor("gClient", "TGClient*", TGClient::Instance, [] {
       TGClient::Instance(); // first ensure object is created;
-      return (void *) gClientGlobal;
+      return (void *) &gClientGlobal;
    });
 }
 } gAddPseudoGlobals;
