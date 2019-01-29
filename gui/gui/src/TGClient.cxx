@@ -50,17 +50,17 @@
 #include "TGlobal.h"
 
 // Global pointer to the TGClient object
-static TGClient *gClientGlobal = 0;
+static TGClient *gClientGlobal = nullptr;
 
 namespace {
 static struct AddPseudoGlobals {
 AddPseudoGlobals() {
    // User "gCling" as synonym for "libCore static initialization has happened".
    // This code here must not trigger it
-   // FIXME: TGClient::Instance() should return reference
-   // TGlobalMappedFunction::MakeFunctor("gClient", "TGClient*", TGClient::Instance);
-   TGlobalMappedFunction::Add(new TGlobalMappedFunction(
-      "gClient", "TGClient*", (TGlobalMappedFunction::GlobalFunc_t)((void *)&TGClient::Instance)));
+   TGlobalMappedFunction::MakeFunctor("gClient", "TGClient*", TGClient::Instance, [] {
+      TGClient::Instance(); // first ensure object is created;
+      return (void *) gClientGlobal;
+   });
 }
 } gAddPseudoGlobals;
 }
