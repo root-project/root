@@ -24,6 +24,7 @@
 namespace ROOT {
 namespace Experimental {
 
+class RTreeModel;
 // TODO(jblomer): factory methods to create tree sinks and sources outside Detail namespace
 
 namespace Detail {
@@ -66,7 +67,7 @@ public:
    virtual void AddColumn(RColumn * /*column*/) { }
 
    /// Physically creates the storage container to hold the tree (e.g., a directory in a TFile or a S3 bucket)
-   virtual void Create() = 0;
+   virtual void Create(const RTreeModel &model) = 0;
    /// Write a page to the storage. The column attached to the page must have been added before.
    virtual void CommitPage(RPage *page) = 0;
    /// Finalize the current cluster and create a new one for the following data.
@@ -91,7 +92,7 @@ public:
    virtual ~RPageSource();
    /// TODO: copy/assignment for creating clones in multiple threads.
 
-   /// TODO(jblomer): keep abtract and let derived classed define
+   /// TODO(jblomer): keep abtract and let derived classes define
    virtual void AddColumn(RColumn * /*column*/) { }
 
    /// Open the physical storage container for the tree

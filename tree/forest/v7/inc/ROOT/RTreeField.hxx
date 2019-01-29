@@ -21,11 +21,17 @@
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RTreeValue.hxx>
 
+#include <TError.h>
+
+#include <iterator>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace ROOT {
 namespace Experimental {
+
+class RTreeFieldCollection;
 
 namespace Detail {
 
@@ -36,24 +42,35 @@ class RPageStorage;
 /**
 \class ROOT::Experimental::RTreeFieldBase
 \ingroup Forest
-\brief An field translates read and write calls from/to underlying columns to/from tree values
+\brief A field translates read and write calls from/to underlying columns to/from tree values
 
 A field is a serializable C++ type or a container for a collection of sub fields. The RTreeFieldBase and its
-type-safe descendants provide the object to column mapper. They map C++ objects to primitive columns, where the
-mapping is trivial for simple types such as 'double'. The field knows based on its type and the field name the
-type(s) and name(s) of the columns.
+type-safe descendants provide the object to column mapper. They map C++ objects to primitive columns.  The
+mapping is trivial for simple types such as 'double'. Complex types resolve to multiple primitive columns.
+The field knows based on its type and the field name the type(s) and name(s) of the columns.
 */
 // clang-format on
 class RTreeFieldBase {
+   friend class ROOT::Experimental::RTreeFieldCollection;
+
 private:
+   /// The field name is a unique within a tree and also the basis for the column name(s)
+   std::string fName;
+   /// The C++ type captured by this field
+   std::string fType;
    /// A field on a trivial type that maps as-is to a single column
    bool fIsSimple;
+   /// Collections have sub fields
+   std::vector<RTreeFieldBase*> fSubFields;
+   /// Sub fields point to their mother field
+   RTreeFieldBase* fParent;
+
+protected:
    /// All fields have a main column. For collection fields, the main column is the index field. Points into fColumns.
    RColumn *fPrincipalColumn;
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
    std::vector<RColumn> fColumns;
 
-protected:
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
    virtual void DoAppend(const RTreeValueBase& value);
@@ -61,8 +78,36 @@ protected:
    virtual void DoReadV(TreeIndex_t index, TreeIndex_t count, void* dst);
 
 public:
+   /// Iterates over the sub fields in depth-first search order
+   class const_iterator : public std::iterator<std::forward_iterator_tag, const Detail::RTreeFieldBase> {
+   private:
+      using iterator = const_iterator;
+      struct Position {
+         Position() : fFieldPtr(nullptr), fIdxInParent(-1) { }
+         Position(pointer fieldPtr, int idxInParent) : fFieldPtr(fieldPtr), fIdxInParent(idxInParent) { }
+         pointer fFieldPtr;
+         int fIdxInParent;
+      };
+      /// The stack of nodes visited when walking down the tree of fields
+      std::vector<Position> fStack;
+   public:
+      const_iterator() { fStack.emplace_back(Position()); }
+      const_iterator(pointer val, int idxInParent) { fStack.emplace_back(Position(val, idxInParent)); }
+      ~const_iterator() {}
+      /// Given that the iterator points to a valid field which is not the end iterator, go to the next field
+      /// in depth-first search order
+      void Advance();
+
+      iterator  operator++(int) /* postfix */        { auto r = *this; Advance(); return r; }
+      iterator& operator++()    /* prefix */         { Advance(); return *this; }
+      reference operator* () const                   { return *fStack.back().fFieldPtr; }
+      pointer   operator->() const                   { return fStack.back().fFieldPtr; }
+      bool      operator==(const iterator& rh) const { return fStack.back().fFieldPtr == rh.fStack.back().fFieldPtr; }
+      bool      operator!=(const iterator& rh) const { return fStack.back().fFieldPtr != rh.fStack.back().fFieldPtr; }
+   };
+
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
-   RTreeFieldBase(std::string_view name);
+   RTreeFieldBase(std::string_view name, std::string_view type, bool isSimple);
    virtual ~RTreeFieldBase();
 
    /// Registeres the backing columns with the physical storage
@@ -119,6 +164,13 @@ public:
    void Flush();
 
    RPageSource* GetSource();
+   std::string GetName() const { return fName; }
+   std::string GetType() const { return fType; }
+   const RTreeFieldBase* GetParent() const { return fParent; }
+
+
+   const_iterator begin() const;
+   const_iterator end() const;
 };
 
 } // namespace Detail
@@ -152,7 +204,7 @@ class RTreeField : public Detail::RTreeFieldBase {
 template <>
 class ROOT::Experimental::RTreeField<float> : public ROOT::Experimental::Detail::RTreeFieldBase {
 public:
-   explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name) { }
+   explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name, "float", true /* isSimple */) {}
    ~RTreeField() = default;
 
    void GenerateColumns(ROOT::Experimental::Detail::RPageStorage& storage) final;
