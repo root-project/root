@@ -118,7 +118,6 @@ combData.plotOn(frame1, ROOT.RooFit.Cut("sample==sample::physics"))
 # NB2: The sampleSet *must* be named. It will not work to pass this as a temporary
 # because python will delete it. The same holds for fitTo() and plotOn() below.
 sampleSet = ROOT.RooArgSet(sample)
-simPdf.plotOn(frame1, ROOT.RooFit.Slice(sample, "physics"),
 simPdf.plotOn(frame1, ROOT.RooFit.Slice(sample, "physics"), ROOT.RooFit.Components(
     "px"), ROOT.RooFit.ProjWData(sampleSet, combData), ROOT.RooFit.LineStyle(ROOT.kDashed))
 
