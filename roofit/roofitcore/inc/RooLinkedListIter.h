@@ -124,7 +124,7 @@ protected:
   Bool_t _forward ;                //  Iterator direction
 
   ClassDef(RooLinkedListIter,2) // Iterator for RooLinkedList container class
-} R__SUGGEST_CLASS("RooFIter. It is faster.");
+} R__SUGGEST_ALTERNATIVE("RooFIter. It is faster.");
 
 
 

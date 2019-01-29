@@ -19,8 +19,6 @@
 Chebychev polynomial p.d.f. of the first kind
 **/
 
-#define R__SUGGEST_NEW_INTERFACE
-
 #include <cmath>
 #include <iostream>
 
