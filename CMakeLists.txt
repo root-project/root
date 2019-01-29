@@ -134,7 +134,7 @@ if (build_timing)
   # FIXME: This currently will override the use of ccache if -Dbuild_timing=On -Dccache=On is passed.
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CMAKE_COMMAND} -E time")
-  #set_property(GLOBAL PROPERTY RULE_LAUNCH_CUSTOM "${CMAKE_COMMAND} -E time") 
+  #set_property(GLOBAL PROPERTY RULE_LAUNCH_CUSTOM "${CMAKE_COMMAND} -E time")
 endif()
 
 #---Enable CTest package -----------------------------------------------------------------------
@@ -467,6 +467,12 @@ set(root_kernel_dir  notebook/kernels/root)
 set(root_kernel_file kernel.json)
 configure_file(etc/${root_kernel_dir}/${root_kernel_file}.in etc/${root_kernel_dir}/${root_kernel_file})
 install(FILES ${CMAKE_BINARY_DIR}/etc/${root_kernel_dir}/${root_kernel_file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/${root_kernel_dir})
+
+#---install clad header files-------------------------------------------------------------------
+if(clad)
+   install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/plugins/
+      DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/plugins)
+endif()
 
 #---Configure Testing using CTest----------------------------------------------------------------
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
