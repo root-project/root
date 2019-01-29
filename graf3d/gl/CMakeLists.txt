@@ -214,3 +214,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
   INSTALL_OPTIONS
     ${installoptions}
 )
+
+if(MACOSX_GLU_DEPRECATED)
+  target_compile_options(RGL PRIVATE -Wno-deprecated-declarations)
+endif()
