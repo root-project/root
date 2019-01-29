@@ -52,8 +52,9 @@
 #include "TObjString.h"
 #include "TObjArray.h"
 
+#if MYSQL_VERSION_ID < 80000
 #include <my_global.h>
-
+#endif
 
 ClassImp(TMySQLServer)
 
