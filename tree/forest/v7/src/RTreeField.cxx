@@ -13,6 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "ROOT/RColumn.hxx"
+#include "ROOT/RColumnModel.hxx"
 #include "ROOT/RTreeField.hxx"
 #include "ROOT/RTreeValue.hxx"
 
@@ -47,22 +49,22 @@ void ROOT::Experimental::Detail::RTreeFieldBase::DoReadV(
 }
 
 
-ROOT::Experimental::Detail::RTreeFieldBase::const_iterator ROOT::Experimental::Detail::RTreeFieldBase::begin() const
+ROOT::Experimental::Detail::RTreeFieldBase::RIterator ROOT::Experimental::Detail::RTreeFieldBase::begin()
 {
-   if (fSubFields.empty()) return const_iterator(this, -1);
-   return const_iterator(this->fSubFields[0], 0);
+   if (fSubFields.empty()) return RIterator(this, -1);
+   return RIterator(this->fSubFields[0], 0);
 }
 
-ROOT::Experimental::Detail::RTreeFieldBase::const_iterator ROOT::Experimental::Detail::RTreeFieldBase::end() const
+ROOT::Experimental::Detail::RTreeFieldBase::RIterator ROOT::Experimental::Detail::RTreeFieldBase::end()
 {
-   return const_iterator(this, -1);
+   return RIterator(this, -1);
 }
 
 
 //-----------------------------------------------------------------------------
 
 
-void ROOT::Experimental::Detail::RTreeFieldBase::const_iterator::Advance()
+void ROOT::Experimental::Detail::RTreeFieldBase::RIterator::Advance()
 {
    auto itr = fStack.rbegin();
    if (!itr->fFieldPtr->fSubFields.empty()) {
@@ -106,7 +108,7 @@ ROOT::Experimental::RTreeFieldCollection::~RTreeFieldCollection()
 }
 
 
-void ROOT::Experimental::RTreeFieldCollection::GenerateColumns(ROOT::Experimental::Detail::RPageStorage& /*storage*/)
+void ROOT::Experimental::RTreeFieldCollection::GenerateColumns(ROOT::Experimental::Detail::RPageStorage* /*storage*/)
 {
 }
 
@@ -133,8 +135,10 @@ void ROOT::Experimental::RTreeFieldCollection::DoReadV(TreeIndex_t /*index*/, Tr
 //-----------------------------------------------------------------------------
 
 
-void ROOT::Experimental::RTreeField<float>::GenerateColumns(ROOT::Experimental::Detail::RPageStorage& /*storage*/)
+void ROOT::Experimental::RTreeField<float>::GenerateColumns(ROOT::Experimental::Detail::RPageStorage* pageStorage)
 {
+   RColumnModel model(GetName(), EColumnType::kReal32, false /* isSorted*/);
+   fPrincipalColumn = new Detail::RColumn(model, pageStorage);
 }
 
 ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RTreeField<float>::GenerateValue()

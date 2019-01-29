@@ -25,9 +25,11 @@
 namespace ROOT {
 namespace Experimental {
 
+class RColumnModel;
+
 namespace Detail {
 
-class RColumnModel;
+class RPageStorage;
 class RPageSink;
 class RPageSource;
 
@@ -42,9 +44,13 @@ logical data layer.
 */
 // clang-format on
 class RColumn {
+private:
+   RColumnModel fModel;
+   RPageSink* fPageSink;
+   RPageSource* fPageSource;
+
 public:
-   RColumn(const RColumnModel &model, RPageSource &source);
-   RColumn(const RColumnModel &model, RPageSink &sink);
+   RColumn(const RColumnModel &model, RPageStorage *pageStorage);
    // TODO(jblomer) move constructor
 
    void Append(const RColumnElementBase &/*element*/) {/*...*/}
@@ -58,6 +64,7 @@ public:
    void ReadV(const TreeIndex_t /*index*/, const TreeIndex_t /*count*/, void * /*dst*/) {/*...*/}
 
    TreeIndex_t GetNElements();
+   const RColumnModel& GetModel() { return fModel; }
 };
 
 } // namespace Detail
