@@ -19,18 +19,20 @@
     \ingroup Roofitcore
 
 
-Class RooRealSumPdf implements a PDF constructed from a sum of
-functions:
-
+Class RooRealSumPdf implements a PDF constructed from a sum of functions:
 \f[
-
-                
-  pdf(x) = \frac{ \sum_{i=1}^{n-1} coef_i * func_i(x) + [ 1 - \sum_{i=1}^{n-1} coef_i ] * func_n(x) } 
-            {\sum_{i=1}^{n-1} coef_i * \int func_i(x)dx  + [ 1 - \sum_{i=1}^{n-1} coef_i ] * \int func_n(x) dx }
+  \mathrm{PDF}(x) = \frac{ \sum_{i=1}^{n-1} \mathrm{coef}_i * \mathrm{func}_i(x) + \left[ 1 - \sum_{i=1}^{n-1} \mathrm{coef}_i \right] * \mathrm{func}_n(x) }
+            {\sum_{i=1}^{n-1} \mathrm{coef}_i * \int \mathrm{func}_i(x)dx  + \left[ 1 - \sum_{i=1}^{n-1} \mathrm{coef}_i \right] * \int \mathrm{func}_n(x) dx }
 \f]
 
-where \f$coef_i\f$ and \f$func_i\f$ are RooAbsReal objects, and x is the collection of dependents. 
-In the present version \f$coef_i\f$ may not depend on x, but this limitation may be removed in the future
+where \f$\mathrm{coef}_i\f$ and \f$\mathrm{func}_i\f$ are RooAbsReal objects, and \f$ x \f$ is the collection of dependents.
+In the present version \f$\mathrm{coef}_i\f$ may not depend on \f$ x \f$, but this limitation could be removed should the need arise.
+
+If the number of coefficients is one less than the number of functions, the PDF is assumed to be normalised. Due to this additional constraint,
+\f$\mathrm{coef}_n\f$ is computed from the other coefficients.
+
+If an \f$ n^\mathrm{th} \f$ coefficient is provided, the PDF will behave as an extended PDF, *i.e.* the total number of events will be measured in addition
+to the fractions of the various functions.
 
 */
 
@@ -93,9 +95,9 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title) :
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct p.d.f consisting of coef1*func1 + (1-coef1)*func2
+/// Construct p.d.f consisting of \f$ \mathrm{coef}_1 * \mathrm{func}_1 + (1-\mathrm{coef}_1) * \mathrm{func}_2 \f$.
 /// The input coefficients and functions are allowed to be negative
-/// but the resulting sum is not, which is enforced at runtime
+/// but the resulting sum is not, which is enforced at runtime.
 
 RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
 		     RooAbsReal& func1, RooAbsReal& func2, RooAbsReal& coef1) : 
@@ -119,11 +121,22 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor p.d.f implementing sum_i [ coef_i * func_i ], if N_coef==N_func
-/// or sum_i [ coef_i * func_i ] + (1 - sum_i [ coef_i ] )* func_N if Ncoef==N_func-1
+/// Constructor for a PDF implementing
+/// \f[
+///   \sum_i \mathrm{coef}_i \cdot \mathrm{func}_i,
+/// \f]
+/// if \f$ N_\mathrm{coef} = N_\mathrm{func} \f$. With `extended=true`, the coefficients can take any values. With `extended=false`,
+/// there is the danger of getting a degenerate minimisation problem because a PDF has to be normalised, which needs one degree
+/// of freedom less.
+///
+/// A plain (normalised) PDF can therefore be implemented with one less coefficient. RooFit then computes
+/// \f[
+///   \sum_i^{N-1} \mathrm{coef}_i \cdot \mathrm{func}_i + (1 - \sum_i \mathrm{coef}_i ) \cdot \mathrm{func}_N,
+/// \f]
+/// if \f$ N_\mathrm{coef} = N_\mathrm{func} - 1 \f$.
 /// 
 /// All coefficients and functions are allowed to be negative
-/// but the sum is not, which is enforced at runtime.
+/// but the sum (*i.e.* the PDF) is not, which is enforced at runtime.
 
 RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgList& inFuncList, const RooArgList& inCoefList, Bool_t extended) :
   RooAbsPdf(name,title),
@@ -262,8 +275,8 @@ Double_t RooRealSumPdf::evaluate() const
     // Warn about coefficient degeneration
     if (lastCoef<0 || lastCoef>1) {
       coutW(Eval) << "RooRealSumPdf::evaluate(" << GetName() 
-		  << " WARNING: sum of FUNC coefficients not in range [0-1], value=" 
-		  << 1-lastCoef << endl ;
+		  << ") WARNING: sum of FUNC coefficients not in range [0-1], value=" 
+		  << 1-lastCoef << ". This means that the PDF is not properly normalised. If the PDF was meant to be extended, provide as many coefficients as functions." << endl ;
     } 
   }
 
@@ -315,7 +328,6 @@ Bool_t RooRealSumPdf::checkObservables(const RooArgSet* nset) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///cout << "RooRealSumPdf::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<",analVars,"<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << endl;
 /// Advertise that all integrals can be handled internally.
 
 Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
@@ -369,9 +381,8 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///cout << "RooRealSumPdf::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << endl;
 /// Implement analytical integrations by deferring integration of component
-/// functions to integrators of components
+/// functions to integrators of components.
 
 Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet2, const char* rangeName) const 
 {
