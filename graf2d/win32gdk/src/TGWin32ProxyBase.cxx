@@ -14,8 +14,7 @@
 
 Proxy classes provide thread-safe interface to global objects.
 
-For example: TGWin32VirtualXProxy (to gVirtualX),
-             TGWin32InterpreterProxy (to gInterpreter).
+For example: TGWin32VirtualXProxy (to gVirtualX).
 
 Proxy object creates callback object and posts a windows message to
 "processing thread". When windows message is received callback
@@ -66,9 +65,6 @@ Howto create proxy class:
     - the names of other macros say about itself.
 
       For example:
-         VOID_METHOD_ARG0(Interpreter,ClearFileBusy,1)
-            void TGWin32InterpreterProxy::ClearFileBusy()
-
          RETURN_METHOD_ARG0_CONST(VirtualX,Visual_t,GetVisual)
             Visual_t TGWin32VirtualXProxy::GetVisual() const
 

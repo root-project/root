@@ -19,7 +19,6 @@ interpreter.
 #include "TROOT.h"
 #include "TError.h"
 
-TInterpreter*   (*gPtr2Interpreter)() = 0; // returns pointer to global object
 TInterpreter*   gCling = 0; // returns pointer to global TCling object
 static TInterpreter *gInterpreterLocal = 0; // The real holder of the pointer.
 
@@ -46,6 +45,5 @@ TInterpreter *TInterpreter::Instance()
          ::Fatal("TInterpreter::Instance","TROOT object is required before accessing a TInterpreter");
       }
    }
-   if (gPtr2Interpreter) return gPtr2Interpreter();
    return gInterpreterLocal;
 }
