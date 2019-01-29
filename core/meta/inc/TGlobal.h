@@ -53,6 +53,7 @@ public:
 class TGlobalMappedFunction : public TGlobal {
 public:
    typedef void *(*GlobalFunc_t)();
+   typedef std::function<void *()> GlobalFunctor_t;
    TGlobalMappedFunction(const char *name, const char *type, GlobalFunc_t funcPtr) : fFuncPtr(funcPtr)
    {
       SetNameTitle(name, type);
@@ -69,19 +70,25 @@ public:
    static void Add(TGlobalMappedFunction *gmf);
 
    template<typename GlobFunc>
-   static TGlobalMappedFunction *MakeFunctor(const char *name, const char *type, GlobFunc &func, bool add_globals = true)
+   static void MakeFunctor(const char *name, const char *type, GlobFunc &func)
    {
       auto glob = new TGlobalMappedFunction(name, type, (GlobalFunc_t) ((void*) &func));
       glob->fFunctor = [&func] { auto &res = func(); return (void *) (&res); };
-      if (add_globals)
-         Add(glob);
-      return glob;
+      Add(glob);
+   }
+
+   template<typename GlobFunc>
+   static void MakeFunctor(const char *name, const char *type, GlobFunc &func, GlobalFunctor_t functor)
+   {
+      auto glob = new TGlobalMappedFunction(name, type, (GlobalFunc_t) ((void*) &func));
+      glob->fFunctor = functor;
+      Add(glob);
    }
 
 private:
    GlobalFunc_t fFuncPtr{nullptr}; // Function to call to get the address
 
-   std::function<void *()> fFunctor; // functor which correctly returns pointer
+   GlobalFunctor_t fFunctor; // functor which correctly returns pointer
 
    TGlobalMappedFunction &operator=(const TGlobal &); // not implemented.
    // Some of the special ones are created before the list is create e.g gFile
