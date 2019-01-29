@@ -36,9 +36,9 @@ struct  EstimateSummary : public TObject {
 
    class ShapeSys{
    public:
-     ShapeSys() : name(""), hist(NULL) {;}
+     ShapeSys() : name(), hist(nullptr), constraint{} {;}
      std::string name;
-     TH1* hist;
+     const TH1* hist;
      ConstraintType constraint;
    };
       

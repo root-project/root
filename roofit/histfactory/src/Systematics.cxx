@@ -58,7 +58,7 @@ RooStats::HistFactory::NormFactor::NormFactor() : fName(""), fVal(1.0),
 						  fLow(1.0), fHigh(1.0), 
 						  fConst(true) {;}
 
-void RooStats::HistFactory::NormFactor::Print( std::ostream& stream ) {
+void RooStats::HistFactory::NormFactor::Print( std::ostream& stream ) const {
   stream << "\t \t Name: " << fName
 	 << "\t Val: " << fVal
 	 << "\t Low: " << fLow
@@ -67,7 +67,7 @@ void RooStats::HistFactory::NormFactor::Print( std::ostream& stream ) {
 	 << std::endl;
 }
 
-void RooStats::HistFactory::NormFactor::PrintXML( std::ostream& xml ) {
+void RooStats::HistFactory::NormFactor::PrintXML( std::ostream& xml ) const {
   xml << "      <NormFactor Name=\"" << GetName() << "\" "
       << " Val=\""   << GetVal()   << "\" "
       << " High=\""  << GetHigh()  << "\" "
@@ -77,32 +77,22 @@ void RooStats::HistFactory::NormFactor::PrintXML( std::ostream& xml ) {
 }
 
 // Overall Sys
-void RooStats::HistFactory::OverallSys::Print( std::ostream& stream ) {
+void RooStats::HistFactory::OverallSys::Print( std::ostream& stream ) const {
   stream << "\t \t Name: " << fName
 	 << "\t Low: " << fLow
 	 << "\t High: " << fHigh
 	 << std::endl;
 }
 
-void RooStats::HistFactory::OverallSys::PrintXML( std::ostream& xml ) {
+void RooStats::HistFactory::OverallSys::PrintXML( std::ostream& xml ) const {
   xml << "      <OverallSys Name=\"" << GetName() << "\" "
       << " High=\"" << GetHigh() << "\" "
       << " Low=\""  << GetLow()  << "\" "
       << "  /> " << std::endl;
 }
 
-// HistoSys
-TH1* RooStats::HistFactory::HistoSys::GetHistoLow() {
-  TH1* histo_low = (TH1*) fhLow.GetObject();
-  return histo_low;
-}
 
-TH1* RooStats::HistFactory::HistoSys::GetHistoHigh() {
-  TH1* histo_high = (TH1*) fhHigh.GetObject();
-  return histo_high;
-}
-
-void RooStats::HistFactory::HistoSys::Print( std::ostream& stream ) {
+void RooStats::HistFactory::HistogramUncertaintyBase::Print( std::ostream& stream ) const {
   stream << "\t \t Name: " << fName
 	 << "\t HistoFileLow: " << fInputFileLow
 	 << "\t HistoNameLow: " << fHistoNameLow
@@ -113,25 +103,13 @@ void RooStats::HistFactory::HistoSys::Print( std::ostream& stream ) {
 	 << std::endl;
 }
 
-void RooStats::HistFactory::HistoSys::PrintXML( std::ostream& xml ) {
-  xml << "      <HistoSys Name=\"" << GetName() << "\" "
-      << " HistoFileLow=\""  << GetInputFileLow()  << "\" "
-      << " HistoNameLow=\""  << GetHistoNameLow()  << "\" "
-      << " HistoPathLow=\""  << GetHistoPathLow()  << "\" "
-
-      << " HistoFileHigh=\""  << GetInputFileHigh()  << "\" "
-      << " HistoNameHigh=\""  << GetHistoNameHigh()  << "\" "
-      << " HistoPathHigh=\""  << GetHistoPathHigh()  << "\" "
-      << "  /> " << std::endl;
-}
-
-void RooStats::HistFactory::HistoSys::writeToFile( const std::string& FileName, 
+void RooStats::HistFactory::HistogramUncertaintyBase::writeToFile( const std::string& FileName,
 						   const std::string& DirName ) {
 
   // This saves the histograms to a file and 
   // changes the name of the local file and histograms
   
-  TH1* histLow = GetHistoLow();
+  auto histLow = GetHistoLow();
   if( histLow==NULL ) {
     std::cout << "Error: Cannot write " << GetName()
 	      << " to file: " << FileName
@@ -144,7 +122,7 @@ void RooStats::HistFactory::HistoSys::writeToFile( const std::string& FileName,
   fHistoPathLow = DirName;
   fHistoNameLow = histLow->GetName(); 
 
-  TH1* histHigh = GetHistoHigh();
+  auto histHigh = GetHistoHigh();
   if( histHigh==NULL ) {
     std::cout << "Error: Cannot write " << GetName()
 	      << " to file: " << FileName
@@ -162,24 +140,30 @@ void RooStats::HistFactory::HistoSys::writeToFile( const std::string& FileName,
 }
 
 
-// Shape Sys
+void RooStats::HistFactory::HistoSys::PrintXML( std::ostream& xml ) const {
+  xml << "      <HistoSys Name=\"" << GetName() << "\" "
+      << " HistoFileLow=\""  << GetInputFileLow()  << "\" "
+      << " HistoNameLow=\""  << GetHistoNameLow()  << "\" "
+      << " HistoPathLow=\""  << GetHistoPathLow()  << "\" "
 
-TH1* RooStats::HistFactory::ShapeSys::GetErrorHist() {
-  TH1* error_hist = (TH1*) fhError.GetObject();
-  return error_hist;
+      << " HistoFileHigh=\""  << GetInputFileHigh()  << "\" "
+      << " HistoNameHigh=\""  << GetHistoNameHigh()  << "\" "
+      << " HistoPathHigh=\""  << GetHistoPathHigh()  << "\" "
+      << "  /> " << std::endl;
 }
 
+// Shape Sys
 
-void RooStats::HistFactory::ShapeSys::Print( std::ostream& stream ) {
+void RooStats::HistFactory::ShapeSys::Print( std::ostream& stream ) const {
   stream << "\t \t Name: " << fName
-	 << "\t InputFile: " << fInputFile
-	 << "\t HistoName: " << fHistoName
-	 << "\t HistoPath: " << fHistoPath
+	 << "\t InputFile: " << fInputFileHigh
+	 << "\t HistoName: " << fHistoNameHigh
+	 << "\t HistoPath: " << fHistoPathHigh
 	 << std::endl;
 }
 
 
-void RooStats::HistFactory::ShapeSys::PrintXML( std::ostream& xml ) {
+void RooStats::HistFactory::ShapeSys::PrintXML( std::ostream& xml ) const {
   xml << "      <ShapeSys Name=\"" << GetName() << "\" "
       << " InputFile=\""  << GetInputFile()  << "\" "
       << " HistoName=\""  << GetHistoName()  << "\" "
@@ -192,7 +176,7 @@ void RooStats::HistFactory::ShapeSys::PrintXML( std::ostream& xml ) {
 void RooStats::HistFactory::ShapeSys::writeToFile( const std::string& FileName, 
 						   const std::string& DirName ) {
 
-  TH1* histError = GetErrorHist();
+  auto histError = GetErrorHist();
   if( histError==NULL ) {
     std::cout << "Error: Cannot write " << GetName()
 	      << " to file: " << FileName
@@ -201,9 +185,9 @@ void RooStats::HistFactory::ShapeSys::writeToFile( const std::string& FileName,
     throw hf_exc();
   }
   histError->Write();
-  fInputFile = FileName;
-  fHistoPath = DirName;
-  fHistoName = histError->GetName(); 
+  fInputFileHigh = FileName;
+  fHistoPathHigh = DirName;
+  fHistoNameHigh = histError->GetName();
 
   return;
 
@@ -214,67 +198,7 @@ void RooStats::HistFactory::ShapeSys::writeToFile( const std::string& FileName,
 
 // HistoFactor
 
-void RooStats::HistFactory::HistoFactor::Print( std::ostream& stream ) {
-  stream << "\t \t Name: " << fName
-	 << "\t InputFileLow: " << fInputFileLow
-	 << "\t HistoNameLow: " << fHistoNameLow
-	 << "\t HistoPathLow: " << fHistoPathLow
-	 << "\t InputFileHigh: " << fInputFileHigh
-	 << "\t HistoNameHigh: " << fHistoNameHigh
-	 << "\t HistoPathHigh: " << fHistoPathHigh
-	 << std::endl;
-}
-
-
-TH1* RooStats::HistFactory::HistoFactor::GetHistoLow() {
-  TH1* histo_low = (TH1*) fhLow.GetObject();
-  return histo_low;
-}
-
-TH1* RooStats::HistFactory::HistoFactor::GetHistoHigh() {
-  TH1* histo_high = (TH1*) fhHigh.GetObject();
-  return histo_high;
-}
-
-
-void RooStats::HistFactory::HistoFactor::writeToFile( const std::string& FileName, 
-						      const std::string& DirName ) {
-
-
-  // This saves the histograms to a file and 
-  // changes the name of the local file and histograms
-  
-  TH1* histLow = GetHistoLow();
-  if( histLow==NULL ) {
-    std::cout << "Error: Cannot write " << GetName()
-	      << " to file: " << FileName
-	      << " HistoLow is NULL" 
-	      << std::endl;
-    throw hf_exc();
-  }
-  histLow->Write();
-  fInputFileLow = FileName;
-  fHistoPathLow = DirName;
-  fHistoNameLow = histLow->GetName(); 
-
-  TH1* histHigh = GetHistoHigh();
-  if( histHigh==NULL ) {
-    std::cout << "Error: Cannot write " << GetName()
-	      << " to file: " << FileName
-	      << " HistoHigh is NULL" 
-	      << std::endl;
-    throw hf_exc();
-  }
-  histHigh->Write();
-  fInputFileHigh = FileName;
-  fHistoPathHigh = DirName;
-  fHistoNameHigh = histHigh->GetName();
-
-  return;
-
-}
-
-void RooStats::HistFactory::HistoFactor::PrintXML( std::ostream& xml ) {
+void RooStats::HistFactory::HistoFactor::PrintXML( std::ostream& xml ) const {
   xml << "      <HistoFactor Name=\"" << GetName() << "\" "
 
       << " InputFileLow=\""  << GetInputFileLow()  << "\" "
@@ -289,19 +213,15 @@ void RooStats::HistFactory::HistoFactor::PrintXML( std::ostream& xml ) {
 
 
 // Shape Factor
-RooStats::HistFactory::ShapeFactor::ShapeFactor() : fConstant(false), 
-						    fHasInitialShape(false),
-						    fhInitialShape(NULL) {;}
-
-void RooStats::HistFactory::ShapeFactor::Print( std::ostream& stream ) {
+void RooStats::HistFactory::ShapeFactor::Print( std::ostream& stream ) const {
 
   stream << "\t \t Name: " << fName << std::endl;
   
-  if( fHistoName != "" ) {
+  if( fHistoNameHigh != "" ) {
     stream << "\t \t "
-	   << " Shape Hist Name: " << fHistoName
-	   << " Shape Hist Path Name: " << fHistoPath
-	   << " Shape Hist FileName: " << fInputFile
+	   << " Shape Hist Name: " << fHistoNameHigh
+	   << " Shape Hist Path Name: " << fHistoPathHigh
+	   << " Shape Hist FileName: " << fInputFileHigh
 	   << std::endl;
   }
 
@@ -314,7 +234,7 @@ void RooStats::HistFactory::ShapeFactor::writeToFile( const std::string& FileNam
 						      const std::string& DirName ) {
 
   if( HasInitialShape() ) {
-    TH1* histInitialShape = GetInitialShape();
+    auto histInitialShape = GetInitialShape();
     if( histInitialShape==NULL ) {
       std::cout << "Error: Cannot write " << GetName()
 		<< " to file: " << FileName
@@ -323,9 +243,9 @@ void RooStats::HistFactory::ShapeFactor::writeToFile( const std::string& FileNam
       throw hf_exc();
     }
     histInitialShape->Write();
-    fInputFile = FileName;
-    fHistoPath = DirName;
-    fHistoName = histInitialShape->GetName(); 
+    fInputFileHigh = FileName;
+    fHistoPathHigh = DirName;
+    fHistoNameHigh = histInitialShape->GetName();
   }
 
   return;
@@ -333,7 +253,7 @@ void RooStats::HistFactory::ShapeFactor::writeToFile( const std::string& FileNam
 }
 
 
-void RooStats::HistFactory::ShapeFactor::PrintXML( std::ostream& xml ) {
+void RooStats::HistFactory::ShapeFactor::PrintXML( std::ostream& xml ) const {
   xml << "      <ShapeFactor Name=\"" << GetName() << "\" ";
   if( fHasInitialShape ) {
     xml << " InputFile=\""  << GetInputFile()  << "\" "
@@ -345,13 +265,13 @@ void RooStats::HistFactory::ShapeFactor::PrintXML( std::ostream& xml ) {
 
 
 // Stat Error Config
-void RooStats::HistFactory::StatErrorConfig::Print( std::ostream& stream ) {
+void RooStats::HistFactory::StatErrorConfig::Print( std::ostream& stream ) const {
   stream << "\t \t RelErrorThreshold: " << fRelErrorThreshold
 	 << "\t ConstraintType: " << Constraint::Name( fConstraintType )
 	 << std::endl;
 }  
 
-void RooStats::HistFactory::StatErrorConfig::PrintXML( std::ostream& xml ) {
+void RooStats::HistFactory::StatErrorConfig::PrintXML( std::ostream& xml ) const {
   xml << "    <StatErrorConfig RelErrorThreshold=\"" << GetRelErrorThreshold() 
       << "\" "
       << "ConstraintType=\"" << Constraint::Name( GetConstraintType() ) 
@@ -362,20 +282,15 @@ void RooStats::HistFactory::StatErrorConfig::PrintXML( std::ostream& xml ) {
 
 
 // Stat Error
-TH1* RooStats::HistFactory::StatError::GetErrorHist() {
-  return (TH1*) fhError.GetObject();
-}
-
-
-void RooStats::HistFactory::StatError::Print( std::ostream& stream ) {
+void RooStats::HistFactory::StatError::Print( std::ostream& stream ) const {
   stream << "\t \t Activate: " << fActivate
-	 << "\t InputFile: " << fInputFile
-	 << "\t HistoName: " << fHistoName
-	 << "\t histoPath: " << fHistoPath
+	 << "\t InputFile: " << fInputFileHigh
+	 << "\t HistoName: " << fHistoNameHigh
+	 << "\t histoPath: " << fHistoPathHigh
 	 << std::endl;
 }  
 
-void RooStats::HistFactory::StatError::PrintXML( std::ostream& xml ) {
+void RooStats::HistFactory::StatError::PrintXML( std::ostream& xml ) const {
 
   if( GetActivate() ) {
     xml << "      <StatError Activate=\"" 
@@ -397,16 +312,16 @@ void RooStats::HistFactory::StatError::writeToFile( const std::string& OutputFil
     
     std::string statErrorHistName = "statisticalErrors";
     
-    TH1* hStatError = GetErrorHist();
+    auto hStatError = GetErrorHist();
     if( hStatError == NULL ) {
       std::cout << "Error: Stat Error error hist is NULL" << std::endl;
       throw hf_exc();
     }
     hStatError->Write(statErrorHistName.c_str());
     
-    fInputFile = OutputFileName;
-    fHistoName = statErrorHistName;
-    fHistoPath = DirName;
+    fInputFileHigh = OutputFileName;
+    fHistoNameHigh = statErrorHistName;
+    fHistoPathHigh = DirName;
     
   }
 

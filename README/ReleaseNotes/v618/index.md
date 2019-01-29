@@ -18,6 +18,7 @@ The following people have contributed to this new version:
  Olivier Couet, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
+ Stephan Hageboeck, CERN/SFT,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
@@ -73,7 +74,8 @@ The methods could be replaced by equivalent methods with other signature:
 
 
 ## RooFit Libraries
-
+  - HistFactory: hist2workspace performance optimisations. For a large, ATLAS-style Higgs-->bb workspace with > 100 systematic uncertainties and more than
+    10 channels, the run time decreases by a factor 11 to 12.
 
 ## 2D Graphics Libraries
 

@@ -40,6 +40,7 @@
 #pragma link C++ class RooStats::HistFactory::StatError+ ;
 #pragma link C++ class RooStats::HistFactory::StatErrorConfig+ ;
 #pragma link C++ class RooStats::HistFactory::PreprocessFunction+ ;
+#pragma link C++ class RooStats::HistFactory::HistogramUncertaintyBase+ ;
 
 #pragma link C++ class std::vector< RooStats::HistFactory::Channel >+ ;
 #pragma link C++ class std::vector< RooStats::HistFactory::Sample >+ ;
