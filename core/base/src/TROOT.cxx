@@ -1766,24 +1766,22 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
       fGlobals = new TListOfDataMembers(0);
       // We add to the list the "funcky-fake" globals.
 
-      // Sergey: workaround for gROOT, while ROOT::GetROOT() does not return reference
-      auto entry =
-         new TGlobalMappedFunction("gROOT", "TROOT*", (TGlobalMappedFunction::GlobalFunc_t)((void *)(&ROOT::GetROOT)));
-      entry->fFunctor = [] {
+      // provide special functor for gROOT, while ROOT::GetROOT() does not return reference
+      TGlobalMappedFunction::MakeFunctor("gROOT", "TROOT*", ROOT::GetROOT, [] {
          ROOT::GetROOT();
          return (void *)&ROOT::Internal::gROOTLocal;
-      };
-      fGlobals->Add(entry);
-      fGlobals->Add(TGlobalMappedFunction::MakeFunctor("gPad", "TVirtualPad*", TVirtualPad::Pad, false));
+      });
+
+      TGlobalMappedFunction::MakeFunctor("gPad", "TVirtualPad*", TVirtualPad::Pad);
       // FIXME: Sergey: TInterpreter::Instance() does not return reference and therefore one cannot get address
       fGlobals->Add(new TGlobalMappedFunction(
          "gInterpreter", "TInterpreter*", (TGlobalMappedFunction::GlobalFunc_t)((void *)(&TInterpreter::Instance))));
       // fGlobals->Add(TGlobalMappedFunction::MakeFunctor("gInterpreter", "TInterpreter*", TInterpreter::Instance,
       // false));
 
-      fGlobals->Add(TGlobalMappedFunction::MakeFunctor("gVirtualX", "TVirtualX*", TVirtualX::Instance, false));
-      fGlobals->Add(
-         TGlobalMappedFunction::MakeFunctor("gDirectory", "TDirectory*", TDirectory::CurrentDirectory, false));
+      TGlobalMappedFunction::MakeFunctor("gVirtualX", "TVirtualX*", TVirtualX::Instance);
+      TGlobalMappedFunction::MakeFunctor("gDirectory", "TDirectory*", TDirectory::CurrentDirectory);
+
       // Don't let TGlobalMappedFunction delete our globals, now that we take them.
       fGlobals->AddAll(&TGlobalMappedFunction::GetEarlyRegisteredGlobals());
       TGlobalMappedFunction::GetEarlyRegisteredGlobals().SetOwner(kFALSE);
