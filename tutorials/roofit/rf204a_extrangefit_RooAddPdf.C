@@ -3,7 +3,7 @@
 /// \notebook -js
 ///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #204a
 ///
-///  Extended maxiimum likelihood fit in multiple ranges.
+///  Extended maximum likelihood fit in multiple ranges.
 ///  When an extended pdf and multiple ranges are used, the
 ///  RooExtendPdf cannot correctly interpret the coefficients
 ///  used for extension.
