@@ -168,6 +168,20 @@ Bool_t TGlobal::Update(DataMemberInfo_t *info)
    return kTRUE;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
+TGlobalMappedFunction::TGlobalMappedFunction(const char *name, const char *type, GlobalFunc_t funcPtr)
+   : fFuncPtr(funcPtr)
+{
+   SetNameTitle(name, type);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns list collected globals
+/// Used to storeTGlobalMappedFunctions from other libs, before gROOT was initialized
+
 TList& TGlobalMappedFunction::GetEarlyRegisteredGlobals()
 {
    // Used to storeTGlobalMappedFunctions from other libs, before gROOT was initialized
@@ -180,11 +194,12 @@ TList& TGlobalMappedFunction::GetEarlyRegisteredGlobals()
    return fEarlyRegisteredGlobals;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add to GetEarlyRegisteredGlobals() if gROOT is not yet initialized; add to
+/// gROOT->GetListOfGlobals() otherwise.
+
 void TGlobalMappedFunction::Add(TGlobalMappedFunction* gmf)
 {
-   // Add to GetEarlyRegisteredGlobals() if gROOT is not yet initialized; add to
-   // gROOT->GetListOfGlobals() otherwise.
-
    // Use "gCling" as synonym for "gROOT is initialized"
    if (gCling) {
       gROOT->GetListOfGlobals()->Add(gmf);
