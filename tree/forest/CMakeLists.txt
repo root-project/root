@@ -12,6 +12,7 @@ if(root7)
     ROOT/RPage.hxx
     ROOT/RPagePool.hxx
     ROOT/RPageStorage.hxx
+    ROOT/RPageStorageRoot.hxx
     ROOT/RTree.hxx
     ROOT/RTreeEntry.hxx
     ROOT/RTreeField.hxx
@@ -20,6 +21,7 @@ if(root7)
     ROOT/RTreeView.hxx
   SOURCES
     RPageStorage.cxx
+    RPageStorageRoot.cxx
     RTree.cxx
     RTreeField.cxx
     RTreeModel.cxx

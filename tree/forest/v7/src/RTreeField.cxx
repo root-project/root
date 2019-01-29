@@ -18,7 +18,8 @@
 
 #include "TError.h"
 
-ROOT::Experimental::Detail::RTreeFieldBase::RTreeFieldBase(std::string_view /*name*/)
+ROOT::Experimental::Detail::RTreeFieldBase::RTreeFieldBase(std::string_view name, std::string_view type, bool isSimple)
+   : fName(name), fType(type), fIsSimple(isSimple), fParent(nullptr), fPrincipalColumn(nullptr)
 {
 }
 
@@ -46,16 +47,56 @@ void ROOT::Experimental::Detail::RTreeFieldBase::DoReadV(
 }
 
 
+ROOT::Experimental::Detail::RTreeFieldBase::const_iterator ROOT::Experimental::Detail::RTreeFieldBase::begin() const
+{
+   if (fSubFields.empty()) return const_iterator(this, -1);
+   return const_iterator(this->fSubFields[0], 0);
+}
+
+ROOT::Experimental::Detail::RTreeFieldBase::const_iterator ROOT::Experimental::Detail::RTreeFieldBase::end() const
+{
+   return const_iterator(this, -1);
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+void ROOT::Experimental::Detail::RTreeFieldBase::const_iterator::Advance()
+{
+   auto itr = fStack.rbegin();
+   if (!itr->fFieldPtr->fSubFields.empty()) {
+      fStack.emplace_back(Position(itr->fFieldPtr->fSubFields[0], 0));
+      return;
+   }
+
+   unsigned int nextIdxInParent = ++(itr->fIdxInParent);
+   while (nextIdxInParent >= itr->fFieldPtr->fParent->fSubFields.size()) {
+      if (fStack.size() == 1) {
+         itr->fFieldPtr = itr->fFieldPtr->fParent;
+         itr->fIdxInParent = -1;
+         return;
+      }
+      fStack.pop_back();
+      itr = fStack.rbegin();
+      nextIdxInParent = itr->fIdxInParent++;
+   }
+   itr->fFieldPtr = itr->fFieldPtr->fParent->fSubFields[nextIdxInParent];
+}
+
+
 //-----------------------------------------------------------------------------
 
 
 void ROOT::Experimental::RTreeFieldCollection::Attach(ROOT::Experimental::Detail::RTreeFieldBase* child)
 {
+   child->fParent = this;
+   fSubFields.emplace_back(child);
 }
 
 
 ROOT::Experimental::RTreeFieldCollection::RTreeFieldCollection(std::string_view name)
-   : ROOT::Experimental::Detail::RTreeFieldBase(name)
+   : ROOT::Experimental::Detail::RTreeFieldBase(name, "", false /* isSimple */)
 {
 }
 
@@ -72,6 +113,7 @@ void ROOT::Experimental::RTreeFieldCollection::GenerateColumns(ROOT::Experimenta
 
 ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RTreeFieldCollection::GenerateValue()
 {
+   R__ASSERT(false);
    //return nullptr;
 }
 
