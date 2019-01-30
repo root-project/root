@@ -245,9 +245,9 @@ public:
    ///\}
 
 private:
-   unsigned int fNBins;         ///< Number of bins including under- and overflow.
-   std::string fTitle;          ///< Title of this axis, used for graphics / text.
-   const bool fCanGrow = false; ///< Whether this axis can grow (and thus has no overflow bins).
+   unsigned int fNBins;   ///< Number of bins including under- and overflow.
+   std::string fTitle;    ///< Title of this axis, used for graphics / text.
+   bool fCanGrow = false; ///< Whether this axis can grow (and thus has no overflow bins).
 };
 
 ///\name RAxisBase::const_iterator comparison operators
