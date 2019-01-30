@@ -2791,16 +2791,17 @@ void TROOT::SetMacroPath(const char *newpath)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The input parameter `webdisplay` defines where web graphics should be rendered.
+/// \brief Specify where web graphics shall be rendered
 ///
-/// if `webdisplay` may contains:
+/// The input parameter `webdisplay` defines where web graphics is rendered.
+/// `webdisplay` parameter may contain:
 ///
-///  - "off": turns off the web display and come back to normal graphics in
+///  - "off": turns off the web display and comes back to normal graphics in
 ///    interactive mode.
-///  - "batch":  turns the web display in batch mode. It can be prepend with an
-///    other string which will be considered as the new current web display
-///  - "nobatch": turns the web display in interactive mode. It can be prepend with an
-///    other string which will be considered as the new current web display
+///  - "batch": turns the web display in batch mode. It can be prepended with
+///    another string which is considered as the new current web display.
+///  - "nobatch": turns the web display in interactive mode. It can be
+///    prepended with another string which is considered as the new current web display.
 ///
 /// If the option "off" is not set, this method turns the normal graphics to
 /// "Batch" to avoid the loading of local graphics libraries.
