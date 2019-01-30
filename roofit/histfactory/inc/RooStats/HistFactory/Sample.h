@@ -36,11 +36,11 @@ public:
   Sample(std::string Name, std::string HistoName, std::string InputFile, std::string HistoPath="");
   ~Sample();
 
-  void Print(std::ostream& = std::cout);  
+  void Print(std::ostream& = std::cout) const;
   void PrintXML( std::ofstream& xml );
   void writeToFile( std::string FileName, std::string DirName );
 
-  TH1* GetHisto();
+  const TH1* GetHisto() const;
   // set histogram for this sample
   void SetHisto( TH1* histo ) { fhNominal = histo; fHistoName=histo->GetName(); }
   void SetValue( Double_t Val );
@@ -75,31 +75,31 @@ public:
   /// defines whether the normalization scale with luminosity
   void SetNormalizeByTheory( bool norm ) { fNormalizeByTheory = norm; }
   /// does the normalization scale with luminosity
-  bool GetNormalizeByTheory() { return fNormalizeByTheory; }
+  bool GetNormalizeByTheory() const { return fNormalizeByTheory; }
 
 
   /// get name of sample
-  std::string GetName() { return fName; }
+  std::string GetName() const { return fName; }
   /// set name of sample
   void SetName(const std::string& Name) { fName = Name; }
 
   /// get input ROOT file
-  std::string GetInputFile() { return fInputFile; }
+  std::string GetInputFile() const { return fInputFile; }
   /// set input ROOT file
   void SetInputFile(const std::string& InputFile) { fInputFile = InputFile; }
 
   /// get histogram name
-  std::string GetHistoName() { return fHistoName; }
+  std::string GetHistoName() const { return fHistoName; }
   /// set histogram name
   void SetHistoName(const std::string& HistoName) { fHistoName = HistoName; }
 
   /// get histogram path
-  std::string GetHistoPath() { return fHistoPath; }
+  std::string GetHistoPath() const { return fHistoPath; }
   /// set histogram path
   void SetHistoPath(const std::string& HistoPath) { fHistoPath = HistoPath; }
 
   /// get name of associated channel
-  std::string GetChannelName() { return fChannelName; }
+  std::string GetChannelName() const { return fChannelName; }
   /// set name of associated channel
   void SetChannelName(const std::string& ChannelName) { fChannelName = ChannelName; }
 
