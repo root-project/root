@@ -124,7 +124,10 @@ namespace RooFit {
     // ACTUAL WORK
 
     void GradMinimizerFcn::evaluate_task(std::size_t task) {
+      RooWallTimer timer;
       run_derivator(task);
+      timer.stop();
+      std::cout << "worker_id: " << get_manager()->get_worker_id() << ", task: " << task << ", partial derivative time: " << timer.timing_s() << "s\n";
     }
 
     double GradMinimizerFcn::get_task_result(std::size_t task) {
@@ -168,7 +171,7 @@ namespace RooFit {
 //          #ifdef NDEBUG
           timer.stop();
 
-          std::cout << "update_state: " << time_update_state << "s, gradient work: " << timer.timing_s() << "s" << std::endl;
+          std::cout << "update_state: " << time_update_state << "s, gradient work: " << timer.timing_s() << "s\n";
 //          #endif // NDEBUG
         }
       }
