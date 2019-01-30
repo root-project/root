@@ -397,9 +397,6 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, Column
                                              const std::map<std::string, std::string> &aliasMap)
 {
    // To help matching the regex
-   const std::string paddedExpr = " " + std::string(expression) + " ";
-   static const std::string regexBit("[^a-zA-Z0-9_]");
-
    const auto potCols = GetPotentialColumnNames(std::string(expression));
 
    if (potCols.size() == 0) return {};
@@ -431,7 +428,14 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, Column
       }
       // If not, we check if the branch name is contained in one of the branch
       // names which we already added to the usedBranches.
-      auto isContained = [&brName](const std::string &s) { return s.find(brName) != std::string::npos; };
+      auto isContained = [&brName](const std::string &usedBr) {
+         // We check two things:
+         // 1. That the string is contained, e.g. a.b is contained in a.b.c.d
+         // 2. That the number of '.'s is greater, otherwise in situations where
+         //    2 branches have names like br0 and br01, br0 is not matched (ROOT-9929)
+         return usedBr.find(brName) != std::string::npos &&
+           std::count(usedBr.begin(), usedBr.end(), '.') > std::count(brName.begin(), brName.end(), '.');
+         };
       auto it = std::find_if(usedBranches.begin(), usedBranches.end(), isContained);
       if (it == usedBranches.end()) {
          usedBranches.insert(brName);
