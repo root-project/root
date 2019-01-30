@@ -30,6 +30,20 @@ TEST(ColNames, HasColumn)
 
 }
 
+// ROOT-9929
+TEST(ColNames, ContainedNames)
+{
+   TTree t("t","t");
+   int i = 1;
+   t.Branch("a", &i);
+   t.Branch("aa", &i);
+   t.Fill();
+
+   ROOT::RDataFrame df(t);
+   auto c = df.Filter("a == aa").Count();
+   EXPECT_EQ(1U, *c);
+}
+
 TEST(Aliases, DefineOnAlias)
 {
    ROOT::RDataFrame tdf(2);
