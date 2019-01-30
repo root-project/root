@@ -95,16 +95,12 @@ public:
   Bool_t overlaps(const RooAbsCollection& otherColl) const ;
 
   // export subset of THashList interface
-  TIterator* createIterator(Bool_t dir = kIterForward) const
-  R__SUGGEST_ALTERNATIVE("Use fwdIterator() because it is faster.")
-  {
+  inline TIterator* createIterator(Bool_t dir = kIterForward) const { 
     // Create and return an iterator over the elements in this collection
     return _list.MakeIterator(dir); 
   }
 
-  RooLinkedListIter iterator(Bool_t dir = kIterForward) const
-  R__SUGGEST_ALTERNATIVE("Use fwdIterator() because it is faster.");
-
+  RooLinkedListIter iterator(Bool_t dir = kIterForward) const ;
   RooFIter fwdIterator() const { return RooFIter(&_list); }
 
   inline Int_t getSize() const { 
