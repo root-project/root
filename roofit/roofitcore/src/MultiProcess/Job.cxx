@@ -95,7 +95,8 @@ namespace RooFit {
             }
 
             case Q2W::call_double_const_method:
-            case Q2W::update_real: {
+            case Q2W::update_real:
+            case Q2W::flush_ostreams: {
               std::cerr << "In worker_loop: " << message_q2w << " message invalid in work-mode!" << std::endl;
               break;
             }
@@ -140,6 +141,11 @@ namespace RooFit {
               break;
             }
 
+            case Q2W::flush_ostreams: {
+              TaskManager::instance()->flush_ostreams();
+            }
+            break;
+
             case Q2W::dequeue_accepted:
             case Q2W::dequeue_rejected: {
               if (!dequeue_acknowledged) {
@@ -180,6 +186,8 @@ namespace RooFit {
       if (!worker_loop_running && _manager->is_worker()) {
         Job::worker_loop();
         _manager->close_worker_connections();
+        // flush remaining output
+        _manager->flush_ostreams();
 //        std::cout << "exiting worker process " << getpid() << std::endl;
         std::_Exit(0);
       }

@@ -29,6 +29,7 @@ namespace RooFit {
         PROCESS_VAL(M2Q::update_real);
         PROCESS_VAL(M2Q::switch_work_mode);
         PROCESS_VAL(M2Q::call_double_const_method);
+        PROCESS_VAL(M2Q::flush_ostreams);
       }
       return out << s;
     }
@@ -61,6 +62,7 @@ namespace RooFit {
         PROCESS_VAL(Q2W::switch_work_mode);
         PROCESS_VAL(Q2W::result_received);
         PROCESS_VAL(Q2W::call_double_const_method);
+        PROCESS_VAL(Q2W::flush_ostreams);
       }
       return out << s;
     }

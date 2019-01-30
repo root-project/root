@@ -373,7 +373,7 @@ namespace RooFit {
         case M2Q::terminate: {
           carry_on = false;
         }
-          break;
+        break;
 
         case M2Q::enqueue: {
           // enqueue task
@@ -383,7 +383,7 @@ namespace RooFit {
           to_queue(job_task);
           N_tasks++;
         }
-          break;
+        break;
 
         case M2Q::retrieve: {
           // retrieve task results after queue is empty and all
@@ -402,7 +402,7 @@ namespace RooFit {
             send_from_queue_to_master(Q2M::retrieve_rejected);  // handshake message: tasks not done yet, try again
           }
         }
-          break;
+        break;
 
         case M2Q::update_real: {
           auto job_id = receive_from_master_on_queue<std::size_t>();
@@ -413,14 +413,14 @@ namespace RooFit {
             send_from_queue_to_worker(worker_ix, Q2W::update_real, job_id, ix, val, is_constant);
           }
         }
-          break;
+        break;
 
         case M2Q::switch_work_mode: {
           for (std::size_t worker_ix = 0; worker_ix < N_workers; ++worker_ix) {
             send_from_queue_to_worker(worker_ix, Q2W::switch_work_mode);
           }
         }
-          break;
+        break;
 
         case M2Q::call_double_const_method: {
           auto job_id = receive_from_master_on_queue<std::size_t>();
@@ -430,7 +430,12 @@ namespace RooFit {
           auto result = receive_from_worker_on_queue<double>(worker_id_call);
           send_from_queue_to_master(result);
         }
-          break;
+        break;
+
+        case M2Q::flush_ostreams: {
+          flush_ostreams();
+        }
+        break;
       }
 
       return carry_on;
@@ -591,6 +596,25 @@ namespace RooFit {
 
     std::size_t TaskManager::get_worker_id() {
       return worker_id;
+    }
+
+    void TaskManager::flush_ostreams() {
+      if (is_master()) {
+        send_from_master_to_queue(M2Q::flush_ostreams);
+      } else if (is_queue()) {
+        // flush output
+        std::cout << std::flush;
+        std::clog << std::flush;
+        for (std::size_t worker_ix = 0; worker_ix < N_workers; ++worker_ix) {
+          send_from_queue_to_worker(worker_ix, Q2W::flush_ostreams);
+        }
+      } else if (is_worker()) {
+        // flush output
+        std::cout << std::flush;
+        std::clog << std::flush;
+      } else {
+        throw std::logic_error("calling TaskManager::flush_ostreams from unknown type of process (not master, queue or worker)");
+      }
     }
 
 

@@ -27,7 +27,8 @@ namespace RooFit {
       update_real = 12,
 //      update_cat = 13,
       switch_work_mode = 14,
-      call_double_const_method = 15
+      call_double_const_method = 15,
+      flush_ostreams = 16
     };
 
     // Messages from queue to master
@@ -51,7 +52,8 @@ namespace RooFit {
       result_received = 43,
       update_real = 44,
 //      update_cat = 45
-      call_double_const_method = 46
+      call_double_const_method = 46,
+      flush_ostreams = 47
     };
 
     // stream output operators for debugging

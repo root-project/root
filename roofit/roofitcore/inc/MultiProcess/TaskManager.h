@@ -217,6 +217,7 @@ namespace RooFit {
         return receive_from_queue_on_master<value_t>();
       }
 
+      void flush_ostreams();
 
     private:
       void initialize_processes(bool cpu_pinning = true);

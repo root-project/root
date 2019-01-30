@@ -168,6 +168,7 @@ namespace RooFit {
 
           // end work mode
           get_manager()->set_work_mode(false);
+          get_manager()->flush_ostreams();
 //          #ifdef NDEBUG
           timer.stop();
 
