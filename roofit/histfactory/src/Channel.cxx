@@ -347,7 +347,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
 	// Check if any bins are negative
 	std::vector<int> NegativeBinNumber;
 	std::vector<double> NegativeBinContent;
-	TH1* histNominal = sample.GetHisto();
+	const TH1* histNominal = sample.GetHisto();
 	for(int ibin=1; ibin<=histNominal->GetNbinsX(); ++ibin) {
 	  if(histNominal->GetBinContent(ibin) < 0) {
 	    NegativeBinNumber.push_back(ibin);

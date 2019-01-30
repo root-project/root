@@ -85,7 +85,7 @@ namespace RooStats{
 			   std::map<std::string,double> logNormSyst, 
 			   std::map<std::string,double> noSyst);
 
-      void LinInterpWithConstraint(RooWorkspace* proto, TH1* nominal, std::vector<HistoSys>,  
+      void LinInterpWithConstraint(RooWorkspace* proto, const TH1* nominal, std::vector<HistoSys>,
 				   std::string prefix, std::string productPrefix, 
 				   std::string systTerm, 
 				   std::vector<std::string>& likelihoodTermNames);
@@ -103,14 +103,14 @@ namespace RooStats{
 				RooArgList obsList,
 				RooCategory* channelCat);
 
-      void ProcessExpectedHisto(TH1* hist, RooWorkspace* proto, std::string prefix, 
+      void ProcessExpectedHisto(const TH1* hist, RooWorkspace* proto, std::string prefix,
 				std::string productPrefix, std::string systTerm );
 
       void SetObsToExpected(RooWorkspace* proto, std::string obsPrefix, std::string expPrefix, 
 			    int lowBin, int highBin);
 
       TH1* MakeScaledUncertaintyHist(const std::string& Name, 
-				     std::vector< std::pair<TH1*, TH1*> > HistVec );
+				     std::vector< std::pair<const TH1*, const TH1*> > HistVec );
 
       TH1* MakeAbsolUncertaintyHist( const std::string& Name, const TH1* Hist );
 
@@ -131,7 +131,7 @@ namespace RooStats{
 
     private:
     
-      void GuessObsNameVec(TH1* hist);
+      void GuessObsNameVec(const TH1* hist);
     
       std::vector<std::string> fObsNameVec;
       std::string fObsName;
