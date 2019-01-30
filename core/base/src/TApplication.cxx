@@ -423,8 +423,12 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          TString argw;
          if (gROOT->IsBatch()) argw = "batch";
          if (*opt == '=') argw.Append(opt+1);
-         gROOT->SetWebDisplay(argw.Data());
-         gEnv->SetValue("Gui.Factory", "web");
+         if (gSystem->Load("libROOTWebDisplay") == 0) {
+            gROOT->SetWebDisplay(argw.Data());
+            gEnv->SetValue("Gui.Factory", "web");
+         } else {
+            Error("GetOptions", "--web option not supported, ROOT should be build with at least c++14 enabled");
+         }
       } else if (!strcmp(argv[i], "-e")) {
          argv[i] = null;
          ++i;
