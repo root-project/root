@@ -334,7 +334,7 @@ TGeoVolume *TGeoBuilder::MakeCone(const char *name, TGeoMedium *medium,
                                      Double_t dz, Double_t rmin1, Double_t rmax1,
                                      Double_t rmin2, Double_t rmax2)
 {
-   TGeoCone *cone = new TGeoCone(dz, rmin1, rmax1, rmin2, rmax2);
+   TGeoCone *cone = new TGeoCone(name, dz, rmin1, rmax1, rmin2, rmax2);
    TGeoVolume *vol = 0;
    if (cone->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
