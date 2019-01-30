@@ -1,4 +1,4 @@
-## \file
+## \file rf505_asciicfg.py 
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
@@ -53,13 +53,15 @@ params.writeToFile("rf505_asciicfg_example.txt")
 params.readFromFile("rf505_asciicfg_example.txt")
 params.Print("v")
 
+configFile = ROOT.gROOT.GetTutorialDir().Data() + "/roofit/rf505_asciicfg.txt"
+
 # Read parameters from section 'Section2' of file
-params.readFromFile("rf505_asciicfg.txt", "", "Section2")
+params.readFromFile(configFile, "", "Section2")
 params.Print("v")
 
 # Read parameters from section 'Section3' of file. Mark all
 # variables that were processed with the "READ" attribute
-params.readFromFile("rf505_asciicfg.txt", "READ", "Section3")
+params.readFromFile(configFile, "READ", "Section3")
 
 # Print the list of parameters that were not read from Section3
 print("The following parameters of the were _not_ read from Section3: ",
@@ -68,5 +70,5 @@ print("The following parameters of the were _not_ read from Section3: ",
 # Read parameters from section 'Section4' of file, contains
 # 'include file' statement of rf505_asciicfg_example.txt
 # so that we effective read the same
-params.readFromFile("rf505_asciicfg.txt", "", "Section4")
+params.readFromFile(configFile, "", "Section4")
 params.Print("v")
