@@ -76,8 +76,8 @@ public:
   Bool_t replace(const RooAbsCollection &other);
   Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
   template<class forwardIt>
-  void remove(forwardIt begin, forwardIt end, Bool_t silent = kFALSE, Bool_t matchByNameOnly = kFALSE) {
-      for (forwardIt it = begin; it != end; ++it) {
+  void remove(forwardIt rangeBegin, forwardIt rangeEnd, Bool_t silent = kFALSE, Bool_t matchByNameOnly = kFALSE) {
+      for (forwardIt it = rangeBegin; it != rangeEnd; ++it) {
         static_assert(std::is_same<
             typename std::iterator_traits<forwardIt>::value_type,
             RooAbsArg*>::value, "Can only remove lists of RooAbsArg*.");
