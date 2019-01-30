@@ -91,3 +91,6 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prepareHistFactory
                             GROUP_EXECUTE GROUP_READ
                             WORLD_EXECUTE WORLD_READ
                 DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
+

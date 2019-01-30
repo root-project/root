@@ -66,7 +66,7 @@ RooStats::HistFactory::Sample::~Sample() {
     delete fhCountingHist;
 }
 
-TH1* RooStats::HistFactory::Sample::GetHisto()  {
+const TH1* RooStats::HistFactory::Sample::GetHisto() const {
   TH1* histo = (TH1*) fhNominal.GetObject();
   return histo;
 }
@@ -74,7 +74,7 @@ TH1* RooStats::HistFactory::Sample::GetHisto()  {
 
 void RooStats::HistFactory::Sample::writeToFile( std::string OutputFileName, std::string DirName ) {
 
-  TH1* histNominal = GetHisto();
+  const TH1* histNominal = GetHisto();
   histNominal->Write();
   
   // Set the location of the data
@@ -131,7 +131,7 @@ void RooStats::HistFactory::Sample::SetValue( Double_t val ) {
 
 
 
-void RooStats::HistFactory::Sample::Print( std::ostream& stream ) {
+void RooStats::HistFactory::Sample::Print( std::ostream& stream ) const {
 
 
   stream << "\t \t Name: " << fName

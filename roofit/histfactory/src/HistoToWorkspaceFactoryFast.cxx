@@ -75,6 +75,7 @@
 #include "Helper.h"
 
 #include <algorithm>
+#include <utility>
 
 #define VERBOSE
 
@@ -322,7 +323,7 @@ namespace HistFactory{
 
   }
 
-  void HistoToWorkspaceFactoryFast::ProcessExpectedHisto(TH1* hist,RooWorkspace* proto, 
+  void HistoToWorkspaceFactoryFast::ProcessExpectedHisto(const TH1* hist,RooWorkspace* proto,
 							 string prefix, string productPrefix, 
 							 string systTerm ) {
     if(hist) {
@@ -350,7 +351,7 @@ namespace HistFactory{
     std::vector<std::string>::iterator itr = fObsNameVec.begin();
     for (int idx=0; itr!=fObsNameVec.end(); ++itr, ++idx ) {
       if ( !proto->var(itr->c_str()) ) {
-	TAxis* axis(0);
+	const TAxis* axis(0);
 	if (idx==0) { axis = hist->GetXaxis(); }
 	if (idx==1) { axis = hist->GetYaxis(); }
 	if (idx==2) { axis = hist->GetZaxis(); }
@@ -408,7 +409,7 @@ namespace HistFactory{
     constraintTermNames.push_back(constraint.GetName());
   }
 
-  void HistoToWorkspaceFactoryFast::LinInterpWithConstraint(RooWorkspace* proto, TH1* nominal, 
+  void HistoToWorkspaceFactoryFast::LinInterpWithConstraint(RooWorkspace* proto, const TH1* nominal,
 							    std::vector<HistoSys> histoSysList,
 							    string prefix, string productPrefix, 
 							    string systTerm, 
@@ -435,7 +436,7 @@ namespace HistFactory{
     std::vector<std::string>::iterator itr = fObsNameVec.begin();
     for (int idx=0; itr!=fObsNameVec.end(); ++itr, ++idx ) {
       if ( !proto->var(itr->c_str()) ) {
-	TAxis* axis(NULL);
+	const TAxis* axis(nullptr);
 	if (idx==0) { axis = nominal->GetXaxis(); }
 	else if (idx==1) { axis = nominal->GetYaxis(); }
 	else if (idx==2) { axis = nominal->GetZaxis(); }
@@ -1219,7 +1220,7 @@ namespace HistFactory{
     /// MB: label observables x,y,z, depending on histogram dimensionality
     /// GHL: Give it the first sample's nominal histogram as a template
     ///      since the data histogram may not be present
-    TH1* channel_hist_template = channel.GetSamples().at(0).GetHisto();
+    const TH1* channel_hist_template = channel.GetSamples().at(0).GetHisto();
     if (fObsNameVec.empty()) { GuessObsNameVec(channel_hist_template); }
 
     for ( unsigned int idx=0; idx<fObsNameVec.size(); ++idx ) {
@@ -1254,7 +1255,7 @@ namespace HistFactory{
     vector<string> likelihoodTermNames, constraintTermNames, totSystTermNames, syst_x_expectedPrefixNames, normalizationNames;
 
     vector< pair<string,string> >   statNamePairs;
-    vector< pair<TH1*,TH1*> >       statHistPairs; // <nominal, error>
+    vector< pair<const TH1*, const TH1*> > statHistPairs; // <nominal, error>
     std::string                     statFuncName; // the name of the ParamHistFunc
     std::string                     statNodeName; // the name of the McStat Node
     // Constraint::Type statConstraintType=Constraint::Gaussian;
@@ -1309,7 +1310,7 @@ namespace HistFactory{
 
       // get histogram
       //ES// TH1* nominal = it->nominal;
-      TH1* nominal = sample.GetHisto();
+      const TH1* nominal = sample.GetHisto();
 
       // MB : HACK no option to have both non-hist variations and hist variations ?
       // get histogram
@@ -1423,7 +1424,7 @@ namespace HistFactory{
 	
 	  // Save the nominal and error hists
 	  // for the building of constraint terms
-	  statHistPairs.push_back( pair<TH1*,TH1*>(nominal, statErrorHist) );
+	  statHistPairs.push_back( std::make_pair(nominal, statErrorHist) );
 
 	  // To do the 'conservative' version, we would need to do some
 	  // intervention here.  We would probably need to create a different
@@ -2073,7 +2074,7 @@ namespace HistFactory{
     }
   }
 
-  void HistoToWorkspaceFactoryFast::GuessObsNameVec(TH1* hist)
+  void HistoToWorkspaceFactoryFast::GuessObsNameVec(const TH1* hist)
   {
     fObsNameVec.clear();
 
@@ -2411,7 +2412,7 @@ namespace HistFactory{
   
   }
   
-  TH1* HistoToWorkspaceFactoryFast::MakeScaledUncertaintyHist( const std::string& Name, std::vector< std::pair<TH1*, TH1*> > HistVec ) {
+  TH1* HistoToWorkspaceFactoryFast::MakeScaledUncertaintyHist( const std::string& Name, std::vector< std::pair<const TH1*, const TH1*> > HistVec ) {
 
     // Take a list of < nominal, absolError > TH1* pairs
     // and construct a single histogram representing the 
@@ -2430,15 +2431,15 @@ namespace HistFactory{
       return NULL;
     }
     
-    TH1* HistTemplate = HistVec.at(0).first;
+    const TH1* HistTemplate = HistVec.at(0).first;
     Int_t numBins = HistTemplate->GetNbinsX()*HistTemplate->GetNbinsY()*HistTemplate->GetNbinsZ();
 
   // Check that all histograms
   // have the same bins
   for( unsigned int i = 0; i < HistVec.size(); ++i ) {
     
-    TH1* nominal = HistVec.at(i).first;
-    TH1* error   = HistVec.at(i).second;
+    const TH1* nominal = HistVec.at(i).first;
+    const TH1* error   = HistVec.at(i).second;
     
     if( nominal->GetNbinsX()*nominal->GetNbinsY()*nominal->GetNbinsZ() != numBins ) {
       std::cout << "Error: Provided hists have unequal bins" << std::endl;
@@ -2465,8 +2466,8 @@ namespace HistFactory{
     
     for( unsigned int i_hist = 0; i_hist < numHists; ++i_hist ) {
       
-      TH1* nominal = HistVec.at(i_hist).first;
-      TH1* error   = HistVec.at(i_hist).second;
+      const TH1* nominal = HistVec.at(i_hist).first;
+      const TH1* error   = HistVec.at(i_hist).second;
 
       //Int_t binNumber = i_bins + 1;
 

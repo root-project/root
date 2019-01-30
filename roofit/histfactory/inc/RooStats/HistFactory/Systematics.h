@@ -128,10 +128,11 @@ namespace HistFactory {
     fhHigh{oth.fhHigh ? static_cast<TH1*>(oth.fhHigh->Clone()) : nullptr} {
 
     }
+    HistogramUncertaintyBase(HistogramUncertaintyBase&&) = default;
 
     virtual ~HistogramUncertaintyBase() {};
 
-    HistogramUncertaintyBase(HistogramUncertaintyBase&&) = default;
+
     // Need deep copies because the class owns its histograms.
     HistogramUncertaintyBase& operator=(const HistogramUncertaintyBase& oth) {
       fName = oth.fName;
@@ -146,7 +147,6 @@ namespace HistFactory {
 
       return *this;
     }
-    // Fine with unique_ptr
     HistogramUncertaintyBase& operator=(HistogramUncertaintyBase&&) = default;
 
     virtual void Print(std::ostream& = std::cout) const;
@@ -232,8 +232,6 @@ public:
     ShapeSys(const ShapeSys& other) :
       HistogramUncertaintyBase(other),
       fConstraintType(other.fConstraintType) {}
-    ShapeSys(ShapeSys&&) = default;
-    ShapeSys& operator=(ShapeSys&&) = default;
 
     void SetInputFile( const std::string& InputFile ) { fInputFileHigh = InputFile; }
     std::string GetInputFile() const { return fInputFileHigh; }
@@ -327,9 +325,6 @@ public:
     StatError() :
       HistogramUncertaintyBase(),
       fActivate(false), fUseHisto(false) {}
-    StatError(StatError&&) = default;
-    StatError& operator=(StatError&&) = default;
-    StatError(const StatError&) = default;
 
     void Print(std::ostream& = std::cout) const override;
     void PrintXML(std::ostream&) const override;
