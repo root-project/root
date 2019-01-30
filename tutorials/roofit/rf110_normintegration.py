@@ -45,8 +45,8 @@ x.setRange("signal", -5, 5)
 # Create an integral of gx_Norm[x] over x in range "signal"
 # ROOT.This is the fraction of of p.d.f. gx_Norm[x] which is in the
 # range named "signal"
-igx_sig = gx.createIntegral(ROOT.RooArgSet(x), ROOT.RooFit.NormSet(
-    ROOT.RooArgSet(x)), ROOT.RooFit.Range("signal"))
+xset = ROOT.RooArgSet(x)
+igx_sig = gx.createIntegral(xset, ROOT.RooFit.NormSet(xset), ROOT.RooFit.Range("signal"))
 print("gx_Int[x|signal]_Norm[x] = ", igx_sig.getVal())
 
 # Construct cumulative distribution function from pdf
