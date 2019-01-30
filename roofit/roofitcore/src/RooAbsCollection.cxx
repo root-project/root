@@ -1243,15 +1243,23 @@ void RooAbsCollection::RecursiveRemove(TObject *obj)
 /// Sort collection using std::sort and name comparison
 
 void RooAbsCollection::sort(Bool_t reverse) {
-  const auto cmp = [](const RooAbsArg * l, const RooAbsArg * r) {
-    return strcmp(l->GetName(), r->GetName()) < 0;
-  };
+  //Windows seems to need an implementation where two different std::sorts are written
+  //down in two different blocks. Switching between the two comparators using a ternary
+  //operator does not compile on windows, although the signature is identical.
+  if (reverse) {
+    const auto cmpReverse = [](const RooAbsArg * l, const RooAbsArg * r) {
+      return strcmp(l->GetName(), r->GetName()) > 0;
+    };
 
-  const auto cmpReverse = [](const RooAbsArg * l, const RooAbsArg * r) {
-    return strcmp(l->GetName(), r->GetName()) > 0;
-  };
+    std::sort(_list.begin(), _list.end(), cmpReverse);
+  }
+  else {
+    const auto cmp = [](const RooAbsArg * l, const RooAbsArg * r) {
+      return strcmp(l->GetName(), r->GetName()) < 0;
+    };
 
-  std::sort(_list.begin(), _list.end(), reverse ? cmpReverse : cmp);
+    std::sort(_list.begin(), _list.end(), cmp);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
