@@ -521,6 +521,15 @@
 #define R__DEPRECATED(MAJOR, MINOR, REASON) \
   _R__JOIN3_(_R__DEPRECATED_,MAJOR,MINOR)("will be removed in ROOT v" #MAJOR "." #MINOR ": " REASON)
 
+/* Mechanism to advise users to avoid legacy functions that will not be removed */
+#ifdef R__SUGGEST_NEW_INTERFACE
+#  define R__SUGGEST_ALTERNATIVE(ALTERNATIVE) \
+      _R__DEPRECATED_LATER("There is a superior alternative: " ALTERNATIVE)
+#else
+#  define R__SUGGEST_ALTERNATIVE(ALTERNATIVE)
+#endif
+
+
 /*---- misc ------------------------------------------------------------------*/
 
 #ifdef R__GNU
