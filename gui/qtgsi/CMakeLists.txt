@@ -45,14 +45,16 @@ QT4_WRAP_CPP(moc_sources
   inc/TQRootDialog.h
 )
 
-ROOT_STANDARD_LIBRARY_PACKAGE(QtGSI
-                              HEADERS ${headers}
-                              SOURCES ${sources} ${moc_sources}
-                              LIBRARIES Qt4::QtCore Qt4::QtGui
-                              DEPENDENCIES Gui Gpad)
-
 # Avoid warnings about deprecated register from Qt4
 ROOT_ADD_CXX_FLAG(_QtGSI_FLAGS -Wno-deprecated-register)
 ROOT_ADD_CXX_FLAG(_QtGSI_FLAGS -Wno-register)
 separate_arguments(_QtGSI_FLAGS)
+
+ROOT_STANDARD_LIBRARY_PACKAGE(QtGSI
+                              HEADERS ${headers}
+                              SOURCES ${sources} ${moc_sources}
+                              LIBRARIES Qt4::QtCore Qt4::QtGui
+                              DICTIONARY_OPTIONS ${_QtGSI_FLAGS}
+                              DEPENDENCIES Gui Gpad)
+
 target_compile_options(QtGSI PRIVATE ${_QtGSI_FLAGS})
