@@ -7,7 +7,7 @@ if(ROOTTEST_OS_ID MATCHES Ubuntu)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
 
-set(DFLIBRARIES Core ROOTDataFrame Hist Tree RIO MathCore)
+set(DFLIBRARIES Core RIO Hist Tree MathCore TreePlayer ROOTDataFrame)
 
 # Linked to ROOT-9773: train cache with TTreeReader
 ROOTTEST_ADD_TEST(test_trainCache
