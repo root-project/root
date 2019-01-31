@@ -231,6 +231,7 @@ endmacro(ROOTTEST_COMPILE_MACRO)
 # macro ROOTTEST_GENERATE_DICTIONARY(<dictname>
 #                                    [LINKDEF linkdef]
 #                                    [DEPENDS deps]
+#                                    [OPTIONS opts]
 #                                    [files ...]      )
 #
 # This macro generates a dictionary <dictname> from the provided <files>.
@@ -240,7 +241,7 @@ endmacro(ROOTTEST_COMPILE_MACRO)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_DICTIONARY dictname)
-  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP" "" "LINKDEF;DEPENDS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP" "" "LINKDEF;DEPENDS;OPTIONS" ${ARGN})
 
   set(CMAKE_ROOTTEST_DICT ON)
 
@@ -251,6 +252,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   ROOT_GENERATE_DICTIONARY(${dictname} ${ARG_UNPARSED_ARGUMENTS}
                            MODULE ${dictname}
                            LINKDEF ${ARG_LINKDEF}
+                           OPTIONS ${ARG_OPTIONS}
                            DEPENDENCIES ${ARG_DEPENDS})
   
   ROOTTEST_TARGETNAME_FROM_FILE(GENERATE_DICTIONARY_TEST ${dictname})
