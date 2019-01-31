@@ -20,6 +20,7 @@
  *                                                                       *
  *************************************************************************/
 
-#include <ROOT/RConfig.h>
+// This include must use double quotes on case-insensitive file systems
+#include "ROOT/RConfig.h"
 
 #endif // ROOT_RConfig_fwd
