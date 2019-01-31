@@ -231,13 +231,21 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
           list(APPEND _list_of_header_dependencies ${f})
         endif()
       endforeach()
-    elseif(CMAKE_PROJECT_NAME STREQUAL ROOT AND
-           EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp}) # only for ROOT project
-      list(APPEND headerfiles ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
-      list(APPEND _list_of_header_dependencies ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
     elseif(IS_ABSOLUTE ${fp})
       list(APPEND headerfiles ${fp})
       list(APPEND _list_of_header_dependencies ${fp})
+    elseif(CMAKE_PROJECT_NAME STREQUAL ROOT AND
+           EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc/${fp})
+      list(APPEND headerfiles ${CMAKE_CURRENT_SOURCE_DIR}/inc/${fp})
+      list(APPEND _list_of_header_dependencies ${CMAKE_CURRENT_SOURCE_DIR}/inc/${fp})
+    elseif(CMAKE_PROJECT_NAME STREQUAL ROOT AND
+           EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/${fp})
+      list(APPEND headerfiles ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/${fp})
+      list(APPEND _list_of_header_dependencies ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/${fp})
+    elseif(CMAKE_PROJECT_NAME STREQUAL ROOT AND
+           EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+      list(APPEND headerfiles ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+      list(APPEND _list_of_header_dependencies ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
     elseif(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
       find_file(headerFile ${fp} HINTS ${localinclude} ${incdirs} NO_DEFAULT_PATH)
       find_file(headerFile ${fp} NO_SYSTEM_ENVIRONMENT_PATH)
