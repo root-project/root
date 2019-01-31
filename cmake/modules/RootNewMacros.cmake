@@ -263,17 +263,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  headerfiles "${headerfiles}")
   string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/" ""  headerfiles "${headerfiles}")
 
-  # Replace the non-standard folder layout of Core.
-  if (ARG_STAGE1 AND ARG_MODULE STREQUAL "Core")
-    # FIXME: Glob these folders.
-    set(core_folders base clib clingutils cont dictgen doc foundation lzma lz4
-                     macosx meta metacling multiproc newdelete pcre rint
-                     rootcling_stage1 textinput thread unix winnt zip)
-    foreach(core_folder ${core_folders})
-      string(REPLACE "${CMAKE_SOURCE_DIR}/core/${core_folder}/inc/" ""  headerfiles "${headerfiles}")
-    endforeach()
-  endif()
-
   # Check that each path here is relative so that it no longer points to the build folder.
   # If we don't do this, then for example the modulemap might contain absolute paths to the
   # build folder which would break module compilation.
