@@ -108,6 +108,7 @@ if(MSVC)
       ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
       ??1Value@cling@@QAE@XZ
       ?isValid@Value@cling@@QBE_NXZ
+      ?kEmptyCollection@valuePrinterInternal@cling@@3QBDB
       ?AssertOnUnsupportedTypeCast@Value@cling@@IBEXXZ
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D@Z
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DM@Z
@@ -116,12 +117,14 @@ if(MSVC)
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D_K@Z
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DPBX@Z
       ?setValueWithAlloc@internal@runtime@cling@@YAPAXPAX00D@Z
+      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBM@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBN@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBH@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBX@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PB_N@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBX@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBD@Z
+      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBV23@@Z
       ??$toUTF8@D@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBDID@Z
       ?EvaluateDynamicExpression@internal@runtime@cling@@YA?AVValue@3@PAVInterpreter@3@PAVDynamicExprInfo@123@PAVDeclContext@clang@@@Z
   )
