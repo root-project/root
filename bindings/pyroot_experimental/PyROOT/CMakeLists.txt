@@ -34,5 +34,8 @@ foreach(py_source ${py_sources})
 endforeach()
 
 ROOT_LINKER_LIBRARY(ROOTPython ${sources} LIBRARIES Core Tree cppyy)
+if(MSVC)
+  set_target_properties(ROOTPython PROPERTIES SUFFIX ".pyd")
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

@@ -38,8 +38,15 @@ set(sources
 )
 
 add_library(cppyy SHARED ${headers} ${sources})
-target_compile_options(cppyy PRIVATE
-  -Wno-shadow -Wno-strict-aliasing -Wno-unused-but-set-parameter)
+
+if(MSVC)
+  set_target_properties(cppyy PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  set_target_properties(cppyy PROPERTIES PREFIX "lib")
+  set_target_properties(cppyy PROPERTIES SUFFIX ".pyd")
+else()
+  target_compile_options(cppyy PRIVATE
+    -Wno-shadow -Wno-strict-aliasing -Wno-unused-but-set-parameter)
+endif()
 target_include_directories(cppyy PUBLIC ${PYTHON_INCLUDE_DIRS}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)

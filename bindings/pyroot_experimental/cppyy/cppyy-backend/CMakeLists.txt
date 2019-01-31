@@ -19,6 +19,10 @@ endforeach()
 add_library(cppyy_backend SHARED clingwrapper/src/clingwrapper.cxx)
 target_include_directories(cppyy_backend PRIVATE clingwrapper/src)
 target_link_libraries(cppyy_backend Core ${CMAKE_DL_LIBS})
+if(MSVC)
+  set_target_properties(cppyy_backend PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  set_target_properties(cppyy_backend PROPERTIES PREFIX "lib")
+endif()
 
 # cppyy uses ROOT headers from binary directory
 add_dependencies(cppyy_backend move_headers)

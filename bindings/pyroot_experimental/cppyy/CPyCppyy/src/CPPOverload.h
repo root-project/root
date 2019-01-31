@@ -73,7 +73,11 @@ private:
 
 
 //- method proxy type and type verification ----------------------------------
+#ifdef _MSC_VER
+__declspec(dllimport) PyTypeObject CPPOverload_Type;
+#else
 extern PyTypeObject CPPOverload_Type;
+#endif
 
 template<typename T>
 inline bool CPPOverload_Check(T* object)

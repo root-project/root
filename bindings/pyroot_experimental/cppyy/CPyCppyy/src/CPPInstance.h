@@ -98,7 +98,12 @@ private:
 
 
 //- object proxy type and type verification ----------------------------------
+#ifdef _MSC_VER
+__declspec(dllimport) PyTypeObject CPPInstance_Type;
+#else
 extern PyTypeObject CPPInstance_Type;
+#endif
+
 
 template<typename T>
 inline bool CPPInstance_Check(T* object)

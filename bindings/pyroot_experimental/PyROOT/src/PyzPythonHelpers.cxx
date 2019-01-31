@@ -41,7 +41,7 @@ PyObject *PyROOT::GetSizeOfType(PyObject * /*self*/, PyObject *args)
    // Call interpreter to get size of data-type using `sizeof`
    long size;
    std::stringstream code;
-   code << "*((long*)" << &size << ") = (long)sizeof(" << dtype << ")";
+   code << "*((long*)" << std::hex << std::showbase << (size_t)&size << ") = (long)sizeof(" << dtype << ")";
    gInterpreter->Calc(code.str().c_str());
 
    // Return size of data-type as integer
@@ -71,8 +71,8 @@ PyObject *PyROOT::GetVectorDataPointer(PyObject * /*self*/, PyObject *args)
    // Call interpreter to get pointer to data (using `data` method)
    long pointer;
    std::stringstream code;
-   code << "*((long*)" << &pointer << ") = reinterpret_cast<long>(reinterpret_cast<" << cppname << "*>(" << cppobj
-        << ")->data())";
+   code << "*((long*)" << std::hex << std::showbase << (size_t)&pointer << ") = reinterpret_cast<long>(reinterpret_cast<" << cppname
+        << "*>(" << std::hex << std::showbase << (size_t)cppobj << ")->data())";
    gInterpreter->Calc(code.str().c_str());
 
    // Return pointer as integer
