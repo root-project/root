@@ -10,7 +10,7 @@
 
 #include "ZipLZ4.h"
 
-#include "ROOT/RConfig.h"
+#include "ROOT/RConfig.hxx"
 
 #include <cinttypes>
 #include <cstdint>
