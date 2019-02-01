@@ -25,12 +25,21 @@ if(NOT builtin_clang)
 endif()
 
 ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
-                              $<TARGET_OBJECTS:Clib>
-                              $<TARGET_OBJECTS:ClingUtils>
-                              $<TARGET_OBJECTS:Dictgen>
-                              $<TARGET_OBJECTS:Foundation_Stage1>
-                              LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
-                              NOINSTALL)
+                NOINSTALL)
+
+target_link_libraries(rootcling_stage1
+  PRIVATE
+    Clib
+    ClingUtils
+    Dictgen
+    Foundation_Stage1
+  PUBLIC
+    ${CLING_LIBRARIES}
+    ${LINK_LIBS}
+    ${CMAKE_DL_LIBS}
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
 set_target_properties(rootcling_stage1 PROPERTIES RUNTIME_OUTPUT_DIRECTORY src)
 add_dependencies(rootcling_stage1 CLING LLVMRES)
 
