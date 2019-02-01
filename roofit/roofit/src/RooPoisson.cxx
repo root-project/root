@@ -12,9 +12,8 @@
 Poisson pdf
 **/
 
-#include <iostream>
-
 #include "RooPoisson.h"
+
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 
@@ -24,6 +23,8 @@ Poisson pdf
 #include "Math/ProbFuncMathCore.h"
 
 #include "TError.h"
+
+#include <limits>
 
 using namespace std;
 
@@ -135,50 +136,37 @@ Double_t RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
   if (code == 1) {
     // Implement integral over x as summation. Add special handling in case
     // range boundaries are not on integer values of x
-    Double_t xmin = x.min(rangeName) ;
-    Double_t xmax = x.max(rangeName) ;
+    const double xmin = std::max(0., x.min(rangeName));
+    const double xmax = x.max(rangeName);
 
-    // Protect against negative lower boundaries
-    if (xmin<0) xmin=0 ;
+    if (xmax < 0. || xmax < xmin) {
+      return 0.;
+    }
+    if (!x.hasMax() || RooNumber::isInfinite(xmax)) {
+      //Integrating the full Poisson distribution here 
+      return 1.;
+    }
 
-    Int_t ixmin = Int_t (xmin) ;
-    Int_t ixmax = Int_t (xmax)+1 ;
-
-    Double_t fracLoBin = 1-(xmin-ixmin) ;
-    Double_t fracHiBin = 1-(ixmax-xmax) ;
-
-    if (!x.hasMax()) {
-      if (xmin<1e-6) {
-        return 1 ;
-      } else {
-
-      // Return 1 minus integral from 0 to x.min()
-
-        if(ixmin == 0){ // first bin
-          return TMath::Poisson(0, mean)*(xmin-0);
-        }
-        Double_t sum(0) ;
-        sum += TMath::Poisson(0,mean)*fracLoBin ;
-        sum+= ROOT::Math::poisson_cdf(ixmin-2, mean) - ROOT::Math::poisson_cdf(0,mean) ;
-        sum += TMath::Poisson(ixmin-1,mean)*fracHiBin ;
-        return 1-sum ;
+    // The range as integers. ixmin is included, ixmax outside.
+    const unsigned int ixmin = xmin;
+    const unsigned int ixmax = std::min(xmax + 1.,
+                                        (double)std::numeric_limits<unsigned int>::max());
+    
+    // Sum from 0 to just before the bin outside of the range.
+    if (ixmin == 0) {
+      return ROOT::Math::poisson_cdf(ixmax - 1, mean);
+    }
+    else {
+      // If necessary, subtract from 0 to the beginning of the range
+      if (ixmin <= mean) {
+        return ROOT::Math::poisson_cdf(ixmax - 1, mean) - ROOT::Math::poisson_cdf(ixmin - 1, mean);
       }
-    }
+      else {
+        //Avoid catastrophic cancellation in the high tails:
+        return ROOT::Math::poisson_cdf_c(ixmin - 1, mean) - ROOT::Math::poisson_cdf_c(ixmax - 1, mean);
+      }
 
-    if(ixmin == ixmax-1){ // first bin
-      return TMath::Poisson(ixmin, mean)*(xmax-xmin);
     }
-
-    Double_t sum(0) ;
-    sum += TMath::Poisson(ixmin,mean)*fracLoBin ;
-    if (RooNumber::isInfinite(xmax)){
-      sum+= 1.-ROOT::Math::poisson_cdf(ixmin,mean) ;
-    }  else {
-      sum+= ROOT::Math::poisson_cdf(ixmax-2, mean) - ROOT::Math::poisson_cdf(ixmin,mean) ;
-      sum += TMath::Poisson(ixmax-1,mean)*fracHiBin ;
-    }
-
-    return sum ;
 
   } else if(code == 2) {
 
