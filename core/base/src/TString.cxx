@@ -35,7 +35,7 @@ as a TString, construct a TString from it, eg:
 ~~~
 */
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include <stdlib.h>
 #include <ctype.h>
 #include <list>

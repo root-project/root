@@ -70,7 +70,7 @@
            Toby Burnett implemented the possibility to use indirect files.
  */
 #include "Compression.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include "ROOT/TIOFeatures.hxx"
 #include <string>
 #include "TFile.h"

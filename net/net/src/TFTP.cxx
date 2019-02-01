@@ -19,7 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #include <fcntl.h>
 #include <errno.h>

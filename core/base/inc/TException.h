@@ -29,7 +29,7 @@ struct sigjmp_buf;
 struct jmp_buf;
 #endif
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include "DllImport.h"
 
 struct ExceptionContext_t {

@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <ROOT/RConfig.h>            /* for NEED_SNPRINTF */
+#include <ROOT/RConfig.hxx>            /* for NEED_SNPRINTF */
 
 #if defined(NEED_SNPRINTF) || defined(SNTEST)
 

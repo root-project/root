@@ -71,7 +71,7 @@ End_Macro
 The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 */
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #ifdef R__LINUX
 // for posix_fadvise

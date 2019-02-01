@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include "RConfigure.h"
 #include "TApplication.h"
 #include "TInterpreter.h"

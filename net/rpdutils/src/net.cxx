@@ -17,7 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #include <stdio.h>
 #include <string.h>

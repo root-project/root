@@ -18,7 +18,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include "TUnixSystem.h"
 #include "TROOT.h"
 #include "TError.h"

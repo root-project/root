@@ -1,4 +1,4 @@
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RSqliteDS.hxx>

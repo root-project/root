@@ -11,7 +11,7 @@
 #ifndef ROOT_Strlen
 #define ROOT_Strlen
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #ifdef NEED_STRING
 #include <string.h>

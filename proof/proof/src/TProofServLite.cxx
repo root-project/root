@@ -30,7 +30,7 @@ eliminated, optimizing the number of messages exchanged and created / destroyed.
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include "Riostream.h"
 
 #ifdef WIN32

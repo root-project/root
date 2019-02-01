@@ -17,7 +17,7 @@
 // clang-format on
 
 #include <ROOT/RSqliteDS.hxx>
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RMakeUnique.hxx>
 

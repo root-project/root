@@ -18,7 +18,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 // avoid warning due to wrong bzero prototype (used by FD_ZERO macro)
 #include <stdio.h>

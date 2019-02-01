@@ -18,7 +18,7 @@ const char *shortHelp =
 #include "rootclingCommandLineOptionsHelp.h"
 
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #include <iostream>
 #include <iomanip>
