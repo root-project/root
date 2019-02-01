@@ -18,7 +18,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include "TError.h"
+#include <ROOT/RConfig.hxx>
 
 #include <ctype.h>
 #include <fcntl.h>

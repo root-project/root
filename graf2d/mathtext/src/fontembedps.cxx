@@ -25,7 +25,7 @@
 #endif
 
 // ROOT integration
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #ifdef R__BYTESWAP
 #ifndef LITTLE_ENDIAN
 #define LITTLE_ENDIAN 1
