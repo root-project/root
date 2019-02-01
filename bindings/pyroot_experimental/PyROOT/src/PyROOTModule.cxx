@@ -110,12 +110,6 @@ extern "C" void initlibROOTPython()
    // keep gRootModule, but do not increase its reference count even as it is borrowed,
    // or a self-referencing cycle would be created
 
-   // policy labels
-   PyModule_AddObject(gRootModule, (char *)"kMemoryHeuristics", PyInt_FromLong((int)CallContext::kUseHeuristics));
-   PyModule_AddObject(gRootModule, (char *)"kMemoryStrict", PyInt_FromLong((int)CallContext::kUseStrict));
-   PyModule_AddObject(gRootModule, (char *)"kSignalFast", PyInt_FromLong((int)CallContext::kFast));
-   PyModule_AddObject(gRootModule, (char *)"kSignalSafe", PyInt_FromLong((int)CallContext::kSafe));
-
    // setup PyROOT
    PyROOT::Init();
 
