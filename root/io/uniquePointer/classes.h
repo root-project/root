@@ -79,4 +79,13 @@ private:
    TH1F* fTH1FPtr; // ->
 };
 
+class Aconst
+{
+   std::unique_ptr<const TH1> fPtr;
+
+ public:
+   Aconst(const char *c) : fPtr(new TH1F(c, c, 64, -1, 1)) {}
+   Aconst() {}
+};
+
 #endif
