@@ -205,6 +205,7 @@ set(BASE_SOURCES
   src/TVirtualPS.cxx
   src/TVirtualViewer3D.cxx
   src/TVirtualX.cxx
+  G__Core.cxx
 )
 
 if(CMAKE_CXX_STANDARD GREATER 11)
@@ -263,7 +264,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
 # This is needed becuase LinkDef.h includes other LinkDef starting from  ${CMAKE_SOURCE_DIR}
 set_property(TARGET G__Core PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
 
-ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${BASE_SOURCES})
+ROOT_OBJECT_LIBRARY(Base ${BASE_SOURCES})
 target_include_directories(Base PRIVATE ${PCRE_INCLUDE_DIR})
 
 #---CreateTApplicationCommandLineOptions------------------------------------------------------------------
