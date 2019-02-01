@@ -19,8 +19,11 @@
 
 #include "RooMsgService.h"
 
+#include <sstream>
+
 namespace RooHelpers {
 
+/// Switches the message service to verbose while the instance alive.
 class MakeVerbose {
   public:
     MakeVerbose() {
@@ -42,6 +45,21 @@ class MakeVerbose {
   private:
     RooFit::MsgLevel fOldKillBelow;
     RooMsgService::StreamConfig fOldConf;
+};
+
+
+/// Hijacks all messages with given level and topic (and optionally object name) while alive.
+/// Use like ostringstream afterwards. Useful for unit tests and debugging.
+class HijackMessageStream : public std::ostringstream {
+  public:
+    HijackMessageStream(RooFit::MsgLevel level, RooFit::MsgTopic topics, const char* objectName = nullptr);
+
+    virtual ~HijackMessageStream();
+
+  private:
+    RooFit::MsgLevel _oldKillBelow;
+    std::vector<RooMsgService::StreamConfig> _oldConf;
+    Int_t _thisStream;
 };
 
 std::vector<std::string> tokenise(const std::string &str, const std::string &delims);
