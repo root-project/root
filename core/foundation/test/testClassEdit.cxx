@@ -242,3 +242,17 @@ TEST(TClassEdit, SplitFuncErrors)
    EXPECT_TRUE(fsi.fFunctionTemplateArguments.empty());
    EXPECT_TRUE(fsi.fFunctionParameters.empty());
 }
+
+// ROOT-9926
+TEST(TClassEdit, GetNameForIO)
+{
+   const std::vector<std::pair<std::string, std::string>> names{{"T", "unique_ptr<const T>"},
+                                                                {"T", "unique_ptr<const T*>"},
+                                                                {"T", "unique_ptr<const T* const*>"},
+                                                                {"T", "unique_ptr<T * const>"},
+                                                                {"T", "unique_ptr<T * const**const**&* const>"}};
+   for (auto &&namesp : names) {
+      EXPECT_EQ(namesp.first, TClassEdit::GetNameForIO(namesp.second.c_str()))
+         << "Failure in transforming typename " << namesp.first << " into " << namesp.second;
+   }
+}
