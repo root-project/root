@@ -23,6 +23,9 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_len tcollection_len.py)
 # TArray and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_len tarray_len.py)
 
+# RVec and subclasses pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py)
+
 # RooAbsCollection and subclasses pythonizations
 if(ROOT_roofit_FOUND)
   ROOT_ADD_PYUNITTEST(pyroot_pyz_rooabscollection_len rooabscollection_len.py)
