@@ -9,6 +9,29 @@
 #include "gtest/gtest.h"
 
 
+TEST(RooPoisson, Bare) {
+  RooRealVar x("x", "x", 1, -1., 1.E20);
+  RooRealVar lambda("lambda", "lambda", 1);
+  RooPoisson pois("pois", "pois", x, lambda);
+
+  auto Poisson = [&](int val, double lambdaVal, double target) {
+    x = val;
+    lambda = lambdaVal;
+
+    EXPECT_NEAR(pois.getVal(x), target, 5.E-16)
+      << "Test was Pois(" << val << " | " << lambdaVal << ")";
+  };
+
+  //Poisson values computed with Mathematica (precision at least 10-20)
+  Poisson( 0,15., 3.0590232050182578837E-7);
+  Poisson(10,15., 0.04861075082960532);
+  Poisson(30,15., 0.00022113651863943598699);
+  Poisson(40,15., 4.145606394417426E-8);
+  Poisson(50,15., 6.413141934685235E-13);
+  Poisson(55,15., 1.16659821716496191614556984216E-15);
+}
+
+
 TEST(RooPoisson, AnalyticalIntegral)
 {
   RooRealVar x("x", "x", 1, -1., 1.E20);
@@ -21,7 +44,7 @@ TEST(RooPoisson, AnalyticalIntegral)
 
   //Test the bare CDF with some known values from publicly available tables:
   double precision = 5.E-5;
-  auto checkVal = [=, &x, &lambda, &integral](double lambdaVal, double max, double target) {
+  auto checkVal = [&](double lambdaVal, double max, double target) {
     x.setRange("range", 0., max);
     lambda.setVal(lambdaVal);
 
@@ -53,15 +76,18 @@ TEST(RooPoisson, AnalyticalIntegral)
   checkVal(15.0, 15., 0.5681);
   checkVal(15.0, 30., 0.9998);
 
+  precision = 1.E-15;
+  checkVal(15., 40., 0.999999976565575);
+  checkVal(15., 30., 0.999802686850312);
 
   //Now check various lambdas and ranges against ROOT's poisson_cdf:
-  precision = 1.E-9;
+  precision = 1.E-14;
   for (double lambdaVal : {0.1, 0.5, 1.0, 2., 3., 8., 10., 20., 0.}) {
     lambda.setVal(lambdaVal);
 
-    auto runTest = [=, &x, &lambdaVal, &integral](double min, double max, double target) {
+    auto runTest = [&](double min, double max, double target) {
       x.setRange("range", min, max);
-      EXPECT_NEAR(integral->getVal(), target, target*precision)
+      EXPECT_NEAR(integral->getVal(), target, precision)
         << "where test was CDF_Pois[" << min << "," << max << " | " << lambdaVal << "]";
     };
 
@@ -85,8 +111,24 @@ TEST(RooPoisson, AnalyticalIntegral)
 
     //Larger than max int:
     runTest(0., 1.E20, 1.);
+
+    // Test integral in the high tails.
+    // Implementation should switch to cdf_c here to avoid catastrophic cancellation.
+    double min = lambdaVal + 50.;
+    double max = lambdaVal + 100.;
+    runTest(min, max,
+        ROOT::Math::poisson_cdf_c(std::max(0., min - 1.), lambdaVal)
+        - ROOT::Math::poisson_cdf_c(max, lambdaVal));
+
+    min = lambdaVal;
+    max = lambdaVal + 20.;
+    if (lambdaVal < 1.) {
+      runTest(min, max, 1.);
+    }
+    else {
+      runTest(min, max,
+          ROOT::Math::poisson_cdf_c(std::max(0., min - 1.), lambdaVal)
+        - ROOT::Math::poisson_cdf_c(max, lambdaVal));
+    }
   }
-
-
-
 }
