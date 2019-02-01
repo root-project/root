@@ -413,12 +413,16 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     list(APPEND _implicitdeps CXX ${_dep})
   endforeach()
 
+  if(ARG_MODULE)
+    set(MODULE_LIB_DEPENDENCY ${ARG_DEPENDENCIES})
+  endif()
+
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
                      COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
                                         ${definitions} ${includedirs} ${ARG_OPTIONS} ${headerfiles} ${_linkdef}
                      IMPLICIT_DEPENDS ${_implicitdeps}
-                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP} ${ARG_DEPENDENCIES})
+                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP} ${MODULE_LIB_DEPENDENCY})
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
