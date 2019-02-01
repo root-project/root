@@ -5,12 +5,6 @@
 # These files depend on cling/clang/llvm; they need to be linked into libCling.
 # They are used by rootcling_stage1, rootcling and libCling.
 
-set(ClingUtils_dict_headers
-  root_std_complex.h
-  TClingRuntime.h
-  PARENT_SCOPE
-)
-
 ROOT_OBJECT_LIBRARY(ClingUtils
   src/RStl.cxx
   src/TClingUtils.cxx

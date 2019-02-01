@@ -2,20 +2,6 @@
 # CMakeLists.txt file for building ROOT core/foundation package
 ############################################################################
 
-set(Foundation_dict_headers
-  ESTLType.h
-  RStringView.h
-  TClassEdit.h
-  ROOT/RIntegerSequence.hxx
-  ROOT/RMakeUnique.hxx
-  ROOT/RNotFn.hxx
-  ROOT/RSpan.hxx
-  ROOT/RStringView.hxx
-  ROOT/span.hxx
-  ROOT/TypeTraits.hxx
-  PARENT_SCOPE
-)
-
 set(sources
   src/RConversionRuleParser.cxx
   src/TClassEdit.cxx
