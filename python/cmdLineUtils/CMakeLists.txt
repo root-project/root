@@ -436,7 +436,6 @@ ROOTTEST_ADD_TEST(SimpleRootmv5Clean
 
 ROOTTEST_ADD_TEST(ROOT_8197
                   MACRO ROOT_8197.C
-                  OUTREF ROOT_8197.ref
-                  ${PYTESTS_WILLFAIL})
+                  OUTREF ROOT_8197.ref)
 
 endif() # these tests are not run with the classic build
