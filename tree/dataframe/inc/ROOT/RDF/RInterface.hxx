@@ -1631,6 +1631,20 @@ public:
       return false;
    }
 
+   /// \brief Gets the number of data processing slots
+   /// \return The number of data processing slots used by this RDataFrame instance
+   ///
+   /// This method returns the number of data processing slots used by this RDataFrame
+   /// instance. This number is influenced by the global switch ROOT::EnableImplicitMT().
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// ROOT::EnableImplicitMT(6)
+   /// ROOT::RDataFrame df(1);
+   /// std::cout << df.GetNSlots() << std::endl; // prints "6"
+   /// ~~~
+   unsigned int GetNSlots() const { return fLoopManager->GetNSlots(); }
+
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
