@@ -26,6 +26,7 @@ PyObject *BranchPyz(PyObject *self, PyObject *args);
 PyObject *GetEndianess(PyObject *self);
 PyObject *GetVectorDataPointer(PyObject *self, PyObject *args);
 PyObject *GetSizeOfType(PyObject *self, PyObject *args);
+PyObject *AsRVec(PyObject *self, PyObject *obj);
 
 } // namespace PyROOT
 

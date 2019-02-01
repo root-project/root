@@ -9,7 +9,7 @@
 ################################################################################
 
 from ROOT import pythonization
-from libROOTPython import GetEndianess, GetVectorDataPointer, GetSizeOfType
+from libROOTPython import GetEndianess, GetVectorDataPointer, GetSizeOfType, AsRVec
 
 _array_interface_dtypes = [
     "float", "double", "int", "long", "unsigned int", "unsigned long"
@@ -60,3 +60,8 @@ def pythonize_rvec(klass, name):
         add_array_interface_property(klass, name)
 
     return True
+
+
+# Add AsRVec feature as free function to the ROOT module
+import cppyy
+cppyy.gbl.ROOT.VecOps.AsRVec = AsRVec

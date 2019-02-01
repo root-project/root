@@ -20,6 +20,7 @@ set(sources
   src/TFilePyz.cxx
   src/TTreePyz.cxx
   src/GenericPyz.cxx
+  src/RVecPyz.cxx
   src/PyzPythonHelpers.cxx
   src/PyzCppHelpers.cxx
 )
