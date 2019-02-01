@@ -840,7 +840,11 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
 
       auto el =  FindElementById(id);
       char cmd[128];
+#ifdef _MSC_VER
+      sprintf(cmd, "((%s*)0x%p)->%s;", ctype.c_str(), el, mir.c_str());
+#else
       sprintf(cmd, "((%s*)%p)->%s;", ctype.c_str(), el, mir.c_str());
+#endif
       printf("MIR cmd %s\n", cmd);
       gROOT->ProcessLine(cmd);
 

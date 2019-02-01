@@ -50,9 +50,15 @@ void REveDataCollection::SetFilterExpr(const TString& filter)
    fFilterExpr = filter;
 
    TString s;
+#ifdef _MSC_VER
+   s.Form("*((std::function<bool(%s*)>*)0x%p) = [](%s* p){%s &i=*p; return (%s); }",
+          fItemClass->GetName(), &fFilterFoo, fItemClass->GetName(), fItemClass->GetName(),
+          fFilterExpr.Data());
+#else
    s.Form("*((std::function<bool(%s*)>*)%p) = [](%s* p){%s &i=*p; return (%s); }",
           fItemClass->GetName(), &fFilterFoo, fItemClass->GetName(), fItemClass->GetName(),
           fFilterExpr.Data());
+#endif
 
    // printf("%s\n", s.Data());
    try {
@@ -208,9 +214,15 @@ void REveDataColumn::SetExpressionAndType(const TString& expr, FieldType_e type)
    }
 
    TString s;
+#ifdef _MSC_VER
+   s.Form("*((std::function<%s(%s*)>*)0x%p) = [](%s* p){%s &i=*p; return (%s); }",
+          rtyp, icls->GetName(), fooptr, icls->GetName(), icls->GetName(),
+          fExpression.Data());
+#else
    s.Form("*((std::function<%s(%s*)>*)%p) = [](%s* p){%s &i=*p; return (%s); }",
           rtyp, icls->GetName(), fooptr, icls->GetName(), icls->GetName(),
           fExpression.Data());
+#endif
 
    // printf("%s\n", s.Data());
    try {
