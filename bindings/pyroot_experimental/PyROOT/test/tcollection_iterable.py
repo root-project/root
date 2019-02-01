@@ -33,3 +33,8 @@ class TCollectionIterable(unittest.TestCase):
         itc = ROOT.TIter(c)
         for elem in c:
             self.assertEqual(elem, itc.Next())
+
+
+if __name__ == '__main__':
+    unittest.main()
+

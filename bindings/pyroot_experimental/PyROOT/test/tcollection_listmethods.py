@@ -105,3 +105,8 @@ class TCollectionListMethods(unittest.TestCase):
 
         self.assertEqual(c.count(o1), 2)
         self.assertEqual(c.count(o2), 1)
+
+
+if __name__ == '__main__':
+    unittest.main()
+
