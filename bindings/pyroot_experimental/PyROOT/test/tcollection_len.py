@@ -29,3 +29,8 @@ class TCollectionLen(unittest.TestCase):
 
     def test_thashtable(self):
         self.add_elems_check_len(ROOT.THashTable())
+
+
+if __name__ == '__main__':
+    unittest.main()
+

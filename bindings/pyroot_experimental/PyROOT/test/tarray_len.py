@@ -22,3 +22,8 @@ class TArrayLen(unittest.TestCase):
 
     def test_tarrayd(self):
         self.check_len(ROOT.TArrayD(self.num_elems))
+
+
+if __name__ == '__main__':
+    unittest.main()
+
