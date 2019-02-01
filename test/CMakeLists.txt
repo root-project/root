@@ -367,7 +367,10 @@ if (NOT cxxmodules)
   # the current test will not require the VecCore (as in the textual case).
   # Alternatively, we can trace the origin of the fatal error and try to remap
   # the source locations.
-  ROOT_ADD_TEST(test-periodic-build COMMAND ${CMAKE_CTEST_COMMAND}
-                                    --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
-                                    --build-generator ${CMAKE_GENERATOR})
+  ROOT_ADD_TEST(test-periodic-build
+    COMMAND
+      env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
+      ${CMAKE_CTEST_COMMAND} --build-generator ${CMAKE_GENERATOR}
+      --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
+  )
 endif()
