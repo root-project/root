@@ -336,7 +336,7 @@ TEST(RDataFrameInterface, GetColumnType)
 {
    const auto fname = "tdf_getcolumntype.root";
    TFile f(fname, "recreate");
-   TTree t("t", "t");   
+   TTree t("t", "t");
    S s{1,2};
    int x = 42;
    t.Branch("s", &s, "a/I:b/I");
@@ -372,4 +372,24 @@ TEST(RDFHelpers, CastToNode)
    auto df = ROOT::RDF::MakeTrivialDataFrame(10);
    auto df2 = ROOT::RDF::RNode(df.Filter([] { return true; }));
    EXPECT_EQ(*df2.Count(), 10ull);
+}
+
+// ROOT-9931
+TEST(RDataFrameInterface, GraphAndHistoNoColumns)
+{
+   int ret(1);
+   try {
+      ROOT::RDataFrame(1).Graph();
+   } catch (const std::runtime_error &) {
+      ret = 0;
+   }
+   EXPECT_EQ(0, ret) << "No exception thrown when booking a graph with no columns available.";
+
+   ret = 1;
+   try {
+      ROOT::RDataFrame(1).Histo1D();
+   } catch (const std::runtime_error &) {
+      ret = 0;
+   }
+   EXPECT_EQ(0, ret) << "No exception thrown when booking an histo with no columns available.";
 }
