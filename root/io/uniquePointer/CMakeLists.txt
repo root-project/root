@@ -70,3 +70,14 @@ ROOTTEST_ADD_TEST(simpleWriteRead
                   MACRO  rw.C
                   OUTREF simpleWriteRead.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
+
+ROOTTEST_ADD_TEST(simpleReadConst
+                  MACRO  rwconst.C
+                  MACROARG "0"
+                  OUTREF simpleReadconst.ref
+                  DEPENDS simpleWriteReadConst)
+
+ROOTTEST_ADD_TEST(simpleWriteReadConst
+                  MACRO  rwconst.C
+                  OUTREF simpleWriteReadconst.ref
+                  DEPENDS simpleWriteRead)
