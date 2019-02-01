@@ -16,7 +16,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <ROOT/RConfig.h>            /* for HAS_STRLCPY */
+#include <ROOT/RConfig.hxx>            /* for HAS_STRLCPY */
 
 #ifndef HAS_STRLCPY
 

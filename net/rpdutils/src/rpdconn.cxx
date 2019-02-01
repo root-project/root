@@ -32,7 +32,7 @@
 #include <sys/types.h>
 #include <sys/un.h>
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #define RPD_MAXLEN 8192
 
