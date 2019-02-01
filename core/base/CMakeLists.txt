@@ -205,7 +205,7 @@ set(BASE_SOURCES
   src/TVirtualPS.cxx
   src/TVirtualViewer3D.cxx
   src/TVirtualX.cxx
-  G__Core.cxx
+  G__Base.cxx
 )
 
 if(CMAKE_CXX_STANDARD GREATER 11)
@@ -228,7 +228,7 @@ if(root7)
 endif()
 
 # libCore is linked against zlib (based on the location returned by find_package or builtin_zlib). The dictionary of
-# libCore, G__Core.cxx, should contain the include path to zlib.h in order to keep the symbol and header files in sync.
+# libCore, G__Base.cxx, should contain the include path to zlib.h in order to keep the symbol and header files in sync.
 # The includePath variable of the dictionary is empty, but we do not notice it because, by chance, G__MathMore adds
 # the same includePath for GSL. OTOH, if we have a small test case which works only with libCore.so we never give a
 # chance MathMore's dictionary to hide the problem and thus we pick up the system zlib.h.
@@ -237,31 +237,21 @@ endif()
 # include path not only in the dictionary but as part of the compilation lines. It is harmless but suboptimal: we need a
 # mechanism throough which we can express that we only need the path in the dictionary.
 #
-# NOTE: We cannot use set_property(TARGET G__Core ...) becase this has to happen before registering the target.
+# NOTE: We cannot use set_property(TARGET G__Base ...) because this has to happen before registering the target.
 include_directories(${ZLIB_INCLUDE_DIR})
 
-ROOT_GENERATE_DICTIONARY(G__Core
+ROOT_GENERATE_DICTIONARY(G__Base
   ${BASE_HEADERS}
-  ${Clib_dict_headers}
-  ${Cont_dict_headers}
-  ${Foundation_dict_headers}
-  ${Macosx_dict_headers}
-  ${Unix_dict_headers}
-  ${Winnt_dict_headers}
-  ${ClingUtils_dict_headers}
-  ${Meta_dict_headers}
-  ${TextInput_dict_headers}
   STAGE1
+  MULTIDICT
   MODULE
     Core
-  OPTIONS
-    ${dict_opts}
   LINKDEF
     LinkDef.h
 )
 
 # This is needed becuase LinkDef.h includes other LinkDef starting from  ${CMAKE_SOURCE_DIR}
-set_property(TARGET G__Core PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
+set_property(TARGET G__Base PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
 
 ROOT_OBJECT_LIBRARY(Base ${BASE_SOURCES})
 target_include_directories(Base PRIVATE ${PCRE_INCLUDE_DIR})

@@ -1298,7 +1298,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // Load core modules
       // This should be vector in order to be able to pass it to LoadModules
       std::vector<std::string> CoreModules = {"ROOT_Foundation_C","ROOT_Config",
-         "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"};
+         "ROOT_Foundation_Stage1_NoRTTI", "Core_G__Base", "Core_G__Cont", "Core_G__Meta", "RIO"};
       // These modules contain global variables which conflict with users' code such as "PI".
       // FIXME: Reducing those will let us be less dependent on rootmap files
       static constexpr std::array<const char*, 4> ExcludeModules =
@@ -1692,7 +1692,12 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// List of dicts that have the PCM information already in the PCH.
-static const std::unordered_set<std::string> gIgnoredPCMNames = {"libCore",
+static const std::unordered_set<std::string> gIgnoredPCMNames = {"libCore_G__Base",
+                                                                 "libCore_G__Cont",
+                                                                 "libCore_G__Meta",
+                                                                 "libCore_G__Unix",
+                                                                 "libCore_G__Macosx",
+                                                                 "libCore_G__Windows",
                                                                  "libRint",
                                                                  "libThread",
                                                                  "libRIO",

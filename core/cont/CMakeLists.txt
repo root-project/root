@@ -32,7 +32,6 @@ set(Cont_dict_headers
   TSeqCollection.h
   TSortedList.h
   TVirtualCollectionProxy.h
-  PARENT_SCOPE
 )
 
 ROOT_OBJECT_LIBRARY(Cont
@@ -62,9 +61,20 @@ ROOT_OBJECT_LIBRARY(Cont
   src/TRefTable.cxx
   src/TSeqCollection.cxx
   src/TSortedList.cxx
+  G__Cont.cxx
 )
 
 target_include_directories(Cont PRIVATE res ../foundation/res)
+
+ROOT_GENERATE_DICTIONARY(G__Cont
+  ${Cont_dict_headers}
+  STAGE1
+  MULTIDICT
+  MODULE
+    Core
+  LINKDEF
+    LinkDef.h
+)
 
 ROOT_INSTALL_HEADERS()
 

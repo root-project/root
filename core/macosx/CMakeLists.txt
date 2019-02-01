@@ -4,14 +4,28 @@
 
 set(Macosx_dict_headers
   TMacOSXSystem.h
-  PARENT_SCOPE
 )
 
 ROOT_OBJECT_LIBRARY(Macosx
   src/CocoaUtils.mm
   src/TMacOSXSystem.mm
+  G__Macosx.cxx
 )
 
-target_compile_options(Macosx PRIVATE -ObjC++)
+set_source_files_properties(
+  src/CocoaUtils.mm
+  src/TMacOSXSystem.mm
+  PROPERTIES COMPILE_FLAGS -ObjC++
+)
+
+ROOT_GENERATE_DICTIONARY(G__Macosx
+  ${Macosx_dict_headers}
+  STAGE1
+  MULTIDICT
+  MODULE
+    Core
+  LINKDEF
+    LinkDef.h
+)
 
 ROOT_INSTALL_HEADERS()

@@ -45,7 +45,6 @@ set(Meta_dict_headers
   TVirtualIsAProxy.h
   TVirtualRefProxy.h
   TVirtualStreamerInfo.h
-  PARENT_SCOPE
 )
 
 ROOT_OBJECT_LIBRARY(Meta
@@ -85,9 +84,20 @@ ROOT_OBJECT_LIBRARY(Meta
   src/TViewPubDataMembers.cxx
   src/TViewPubFunctions.cxx
   src/TVirtualStreamerInfo.cxx
+  G__Meta.cxx
 )
 
 target_include_directories(Meta PRIVATE res ../foundation/res)
+
+ROOT_GENERATE_DICTIONARY(G__Meta
+  ${Meta_dict_headers}
+  STAGE1
+  MULTIDICT
+  MODULE
+    Core
+  LINKDEF
+    LinkDef.h
+)
 
 ROOT_INSTALL_HEADERS()
 ROOT_ADD_TEST_SUBDIRECTORY(test)
