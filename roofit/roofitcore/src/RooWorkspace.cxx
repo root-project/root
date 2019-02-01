@@ -35,6 +35,9 @@ This process is also organized by the workspace through the
 **/
 
 #include "RooWorkspace.h"
+#include "RooHelpers.h"
+#include "RooFit.h"
+#include "RooWorkspace.h"
 #include "RooWorkspaceHandle.h"
 #include "RooFit.h"
 #include "RooAbsPdf.h"
@@ -60,6 +63,8 @@ This process is also organized by the workspace through the
 #include "TFile.h"
 #include "TH1.h"
 #include <map>
+#include <sstream>
+#include <string>
 
 using namespace std ;
 
@@ -251,27 +256,32 @@ Bool_t RooWorkspace::import(const char* fileSpec,
 			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9) 
 {
   // Parse file/workspace/objectname specification
-  char buf[64000];
-  strlcpy(buf, fileSpec, 64000);
-  char* filename = strtok(buf,":") ;
-  char* wsname = strtok(0,":") ;
-  char* objname = strtok(0,":") ;
+  std::vector<std::string> tokens = RooHelpers::tokenise(fileSpec, ":");
 
   // Check that parsing was successful
-  if (!filename||!wsname||!objname) {
-    coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR in file specification, expecting for 'filename:wsname:objname'" << endl ;
+  if (tokens.size() != 3) {
+    std::ostringstream stream;
+    for (const auto& token : tokens) {
+      stream << "\n\t" << token;
+    }
+    coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR in file specification, expecting 'filename:wsname:objname', but '" << fileSpec << "' given."
+        << "\nTokens read are:" << stream.str() << endl;
     return kTRUE ;
   }
 
+  const std::string& filename = tokens[0];
+  const std::string& wsname = tokens[1];
+  const std::string& objname = tokens[2];
+
   // Check that file can be opened
-  TFile* f = TFile::Open(filename) ;
+  TFile* f = TFile::Open(filename.c_str()) ;
   if (f==0) {
     coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR opening file " << filename << endl ;
     return 0 ;
   }
 
   // That that file contains workspace
-  RooWorkspace* w = dynamic_cast<RooWorkspace*>(f->Get(wsname)) ;
+  RooWorkspace* w = dynamic_cast<RooWorkspace*>(f->Get(wsname.c_str())) ;
   if (w==0) {
     coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR: No object named " << wsname << " in file " << filename 
 			  << " or object is not a RooWorkspace" << endl ;
@@ -279,13 +289,13 @@ Bool_t RooWorkspace::import(const char* fileSpec,
   }
 
   // Check that workspace contains object and forward to appropriate import method
-  RooAbsArg* warg = w->arg(objname) ;
+  RooAbsArg* warg = w->arg(objname.c_str()) ;
   if (warg) {
     Bool_t ret = import(*warg,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9) ;
     delete f ;
     return ret ;    
   }
-  RooAbsData* wdata = w->data(objname) ;
+  RooAbsData* wdata = w->data(objname.c_str()) ;
   if (wdata) {
     Bool_t ret = import(*wdata,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9) ;
     delete f ;
@@ -410,38 +420,21 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   if (strlen(varChangeIn)>0) {
     
     // Parse comma separated lists into map<string,string>
-    char tmp[64000];
-    strlcpy(tmp, varChangeIn, 64000);
-    list<string> tmpIn,tmpOut ;
-    char* ptr = strtok(tmp,", ") ;
-    while (ptr) {
-      tmpIn.push_back(ptr) ;
-      ptr = strtok(0,", ") ;
+    const std::vector<std::string> tokIn = RooHelpers::tokenise(varChangeIn, ", ");
+    const std::vector<std::string> tokOut = RooHelpers::tokenise(varChangeOut, ", ");
+    for (unsigned int i=0; i < tokIn.size(); ++i) {
+      varMap.insert(std::make_pair(tokIn[i], tokOut[i]));
     }
-    strlcpy(tmp, varChangeOut, 64000);
-    ptr = strtok(tmp,", ") ;
-    while (ptr) {
-      tmpOut.push_back(ptr) ;
-      ptr = strtok(0,", ") ;
-    }    
-    list<string>::iterator iin = tmpIn.begin() ;
-    list<string>::iterator iout = tmpOut.begin() ;
-    for (;iin!=tmpIn.end() ; ++iin,++iout) {
-      varMap[*iin]=*iout ;
-    }       
+
+    assert(tokIn.size() == tokOut.size());
   }
 
   // Process RenameAllVariables argument if specified  
   // First convert exception list if provided
   std::set<string> exceptVarNames ;
-  char tmp[64000];
   if (exceptVars && strlen(exceptVars)) {
-     strlcpy(tmp, exceptVars, 64000);
-     char *ptr = strtok(tmp, ", ");
-     while (ptr) {
-        exceptVarNames.insert(ptr);
-        ptr = strtok(0, ", ");
-    }
+    const std::vector<std::string> toks = RooHelpers::tokenise(exceptVars, ", ");
+    exceptVarNames.insert(toks.begin(), toks.end());
   }
 
   if (suffixV != 0 && strlen(suffixV)>0) {
@@ -827,28 +820,12 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
 
   // Process any change in variable names 
   if (strlen(varChangeIn)>0) {
-    
     // Parse comma separated lists of variable name changes
-    char tmp[64000];
-    strlcpy(tmp, varChangeIn, 64000);
-    list<string> tmpIn,tmpOut ;
-    char* ptr = strtok(tmp,",") ;
-    while (ptr) {
-      tmpIn.push_back(ptr) ;
-      ptr = strtok(0,",") ;
-    }
-    strlcpy(tmp, varChangeOut, 64000);
-    ptr = strtok(tmp,",") ;
-    while (ptr) {
-      tmpOut.push_back(ptr) ;
-      ptr = strtok(0,",") ;
-    }    
-    list<string>::iterator iin = tmpIn.begin() ;
-    list<string>::iterator iout = tmpOut.begin() ;
-
-    for (; iin!=tmpIn.end() ; ++iin,++iout) {
-      coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset observable " << *iin << " to " << *iout << endl ;
-      clone->changeObservableName(iin->c_str(),iout->c_str()) ;
+    const std::vector<std::string> tokIn  = RooHelpers::tokenise(varChangeIn, ",");
+    const std::vector<std::string> tokOut = RooHelpers::tokenise(varChangeOut, ",");
+    for (unsigned int i=0; i < tokIn.size(); ++i) {
+      coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset observable " << tokIn[i] << " to " << tokOut[i] << endl ;
+      clone->changeObservableName(tokIn[i].c_str(), tokOut[i].c_str());
     }
   }
 
@@ -961,18 +938,14 @@ Bool_t RooWorkspace::defineSet(const char* name, const char* contentList)
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  char buf[64000];
-  strlcpy(buf, contentList, 64000);
-  char* token = strtok(buf,",") ;
-  while(token) {
+  for (const std::string& token : RooHelpers::tokenise(contentList, ",")) {
     // If missing, either import or report error
-    if (!arg(token)) {
+    if (!arg(token.c_str())) {
       coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent \"" << token
 			    << "\" is not in workspace" << endl ;
       return kTRUE ;
     }
-    wsargs.add(*arg(token)) ;    
-    token = strtok(0,",") ;
+    wsargs.add(*arg(token.c_str())) ;
   }
 
   // Install named set
@@ -994,18 +967,14 @@ Bool_t RooWorkspace::extendSet(const char* name, const char* newContents)
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  char buf[64000];
-  strlcpy(buf, newContents, 64000);
-  char* token = strtok(buf,",") ;
-  while(token) {
+  for (const std::string& token : RooHelpers::tokenise(newContents, ",")) {
     // If missing, either import or report error
-    if (!arg(token)) {
+    if (!arg(token.c_str())) {
       coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent \"" << token
 			    << "\" is not in workspace" << endl ;
       return kTRUE ;
     }
-    wsargs.add(*arg(token)) ;    
-    token = strtok(0,",") ;
+    wsargs.add(*arg(token.c_str())) ;
   }
 
   // Extend named set
@@ -1382,17 +1351,13 @@ RooArgSet RooWorkspace::argSet(const char* nameList) const
 {
   RooArgSet ret ;
 
-  char tmp[64000];
-  strlcpy(tmp, nameList, 64000);
-  char* token = strtok(tmp,",") ;
-  while(token) {
-    RooAbsArg* oneArg = arg(token) ;
+  for (const std::string& token : RooHelpers::tokenise(nameList, ",")) {
+    RooAbsArg* oneArg = arg(token.c_str()) ;
     if (oneArg) {
       ret.add(*oneArg) ;
     } else {
       coutE(InputArguments) << " RooWorkspace::argSet(" << GetName() << ") no RooAbsArg named \"" << token << "\" in workspace" << endl ;
     }
-    token = strtok(0,",") ; 
   }
   return ret ;
 }
