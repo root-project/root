@@ -272,12 +272,6 @@ generateHeaders(${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_
 
 ROOT_INSTALL_HEADERS(${BASE_HEADER_DIRS})
 
-#---Extra options-----------------------------------------------------------------------
-if(GCC_MAJOR EQUAL 4 AND GCC_MINOR EQUAL 1)
-  set_source_files_properties(src/TString.cxx src/TContextMenu.cxx
-                              COMPILE_FLAGS -Wno-strict-aliasing )
-endif()
-
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/man)
 
 if(NOT MSVC)
