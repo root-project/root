@@ -1,5 +1,6 @@
 import types
 
+import libcppyy as cppyy_backend
 from cppyy import gbl as gbl_namespace
 from libROOTPython import gROOT
 
@@ -17,6 +18,11 @@ class ROOTFacade(types.ModuleType):
 
         # Inject gROOT global
         self.gROOT = gROOT
+
+        # Expose some functionality from CPyCppyy extension module
+        cppyy_exports = [ 'Double', 'Long', 'nullptr' ]
+        for name in cppyy_exports:
+            setattr(self, name, getattr(cppyy_backend, name))
 
         # Redirect lookups to cppyy's global namespace
         self.__class__.__getattr__ = lambda self, name: getattr(gbl_namespace, name)
