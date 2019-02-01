@@ -891,6 +891,9 @@ public:
    RResultPtr<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.}, std::string_view vName = "")
    {
       const auto userColumns = vName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(vName)});
+
+      const auto validatedColumns = GetValidatedColumnNames(1, userColumns);
+
       std::shared_ptr<::TH1D> h(nullptr);
       {
          ROOT::Internal::RDF::RIgnoreErrorLevelRAII iel(kError);
@@ -900,7 +903,7 @@ public:
 
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
          RDFInternal::HistoUtils<::TH1D>::SetCanExtendAllAxes(*h);
-      return CreateAction<RDFInternal::ActionTags::Histo1D, V>(userColumns, h);
+      return CreateAction<RDFInternal::ActionTags::Histo1D, V>(validatedColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1155,8 +1158,10 @@ public:
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
 
-      // We build a default name and title based on the input columns
-      if (!(userColumns[0].empty() && userColumns[1].empty())) {
+      const auto validatedColumns = GetValidatedColumnNames(2, userColumns);
+
+         // We build a default name and title based on the input columns
+      if (!(validatedColumns[0].empty() && validatedColumns[1].empty())) {
          const auto v2Name_str = std::string(v2Name);
          const auto g_name = std::string(v1Name) + "*" + v2Name_str;
          graph->SetNameTitle(g_name.c_str(), g_name.c_str());
@@ -1164,7 +1169,7 @@ public:
          graph->GetYaxis()->SetTitle(v2Name_str.c_str());
       }
 
-      return CreateAction<RDFInternal::ActionTags::Graph, V1, V2>(userColumns, graph);
+      return CreateAction<RDFInternal::ActionTags::Graph, V1, V2>(validatedColumns, graph);
    }
 
    ////////////////////////////////////////////////////////////////////////////
