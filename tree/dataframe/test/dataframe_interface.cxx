@@ -393,3 +393,18 @@ TEST(RDataFrameInterface, GraphAndHistoNoColumns)
    }
    EXPECT_EQ(0, ret) << "No exception thrown when booking an histo with no columns available.";
 }
+
+// ROOT-9933
+TEST(RDataFrameInterface, GetNSlots)
+{
+   ROOT::RDataFrame df0(1);
+   EXPECT_EQ(1U, df0.GetNSlots());
+#ifdef R__USE_IMT
+   ROOT::EnableImplicitMT(3);
+   ROOT::RDataFrame df3(1);
+   EXPECT_EQ(3U, df3.GetNSlots());
+   ROOT::DisableImplicitMT();
+   ROOT::RDataFrame df1(1);
+   EXPECT_EQ(1U, df1.GetNSlots());
+#endif
+}
