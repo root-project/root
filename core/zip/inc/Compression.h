@@ -90,12 +90,16 @@ struct RCompressionSetting {
          kZLIB,
          /// Use LZMA compression
          kLZMA,
+         /// Use LZMABS (LZMA with Bitshuffle) compression
+         kLZMABS,
          /// Use the old compression algorithm
          kOldCompressionAlgo,
          /// Use LZ4 compression
          kLZ4,
          /// Use ZSTD compression
          kZSTD,
+         /// Use LZ4BS (LZ4 with Bitshuffle) compression
+         kLZ4BS,
          /// Undefined compression algorithm (must be kept the last of the list in case a new algorithm is added).
          kUndefined
       };
