@@ -48,35 +48,22 @@
 #ifndef IOCHAIN_H
 #define IOCHAIN_H
 
-
 #include <stdlib.h>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 
 #define IOC_SIZE 33
 
 
 typedef struct ioc_ptr_and_lock {
-#ifdef _OPENMP
-    omp_lock_t lock;
-#endif
     void *ptr;
 } ptr_and_lock;
 
 typedef struct ioc_const_ptr_and_lock {
-#ifdef _OPENMP
-    omp_lock_t lock;
-#endif
     const void *ptr;
 } const_ptr_and_lock;
 
 
 typedef struct ioc_chain {
-#ifdef _OPENMP
-    omp_lock_t next_lock;
-#endif
     size_t next;
     const_ptr_and_lock in_pl[IOC_SIZE];
     ptr_and_lock out_pl[IOC_SIZE];
