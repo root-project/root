@@ -18,6 +18,9 @@
 
 #include <ROOT/RColumnElement.hxx>
 #include <ROOT/RForestUtil.hxx>
+#include <ROOT/RPage.hxx>
+
+#include <TError.h>
 
 #include <memory>
 #include <vector>
@@ -44,17 +47,29 @@ logical data layer.
 */
 // clang-format on
 class RColumn {
+   friend class RPageSink; // to let it set fHeadPage
+
 private:
    RColumnModel fModel;
    RPageSink* fPageSink;
    RPageSource* fPageSource;
+   /// Open page into which new elements are being written
+   RPage fHeadPage;
+   TreeIndex_t fRangeEnd;
 
 public:
    RColumn(const RColumnModel &model, RPageStorage *pageStorage);
    // TODO(jblomer) move constructor
 
    void Append(const RColumnElementBase& element) {
-      printf("APPENDING %p\n", &element);
+      void* dst = fHeadPage.Reserve(1);
+      if (dst == nullptr) {
+         Flush();
+         dst = fHeadPage.Reserve(1);
+         R__ASSERT(dst != nullptr);
+      }
+      element.Serialize(dst);
+      fRangeEnd++;
    }
    void Flush();
 
@@ -66,7 +81,7 @@ public:
    void ReadV(const TreeIndex_t /*index*/, const TreeIndex_t /*count*/, void * /*dst*/) {/*...*/}
 
    TreeIndex_t GetNElements();
-   const RColumnModel& GetModel() { return fModel; }
+   const RColumnModel& GetModel() const { return fModel; }
 };
 
 } // namespace Detail

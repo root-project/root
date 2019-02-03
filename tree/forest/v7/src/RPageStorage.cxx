@@ -13,10 +13,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RPageStorage.hxx"
+#include <ROOT/RPageStorage.hxx>
+#include <ROOT/RColumn.hxx>
 
 #include <ROOT/RStringView.hxx>
 
+
+void ROOT::Experimental::Detail::RPageSink::SetHeadPage(
+   const ROOT::Experimental::Detail::RPage &page,
+   ROOT::Experimental::Detail::RColumn *column) const
+{
+   column->fHeadPage = page;
+}
 
 ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view /*treeName*/)
 {

@@ -20,6 +20,7 @@
 #include <ROOT/RForestUtil.hxx>
 
 #include <cstddef>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
@@ -43,14 +44,27 @@ facilitate pre-filling a cache, e.g. by read-ahead.
 */
 // clang-format on
 class RPagePool {
+private:
+   void* fMemory;
+   std::size_t fPageSize;
+   std::size_t fNPages;
+   /// TODO(jblomer): should be an efficient index structure that allows
+   ///   - random insert
+   ///   - random delete
+   ///   - searching by page
+   ///   - searching by tree index
+   std::vector<RPage> fPages;
+
 public:
    RPagePool(std::size_t pageSize, std::size_t nPages);
+   RPagePool(const RPagePool&) = delete;
+   RPagePool& operator =(const RPagePool&) = delete;
    ~RPagePool();
 
-   /// Get a new, empty page from the cache. Return nullptr if there is no more free space.
-   RPage* ReservePage(RColumn *column);
+   /// Get a new, empty page from the cache. Return a "null Page" if there is no more free space.
+   RPage ReservePage(RColumn *column);
    /// Registers a page that has previously been acquired by ReservePage() and was meanwhile filled with content.
-   void CommitPage(RPage* page);
+   void CommitPage(const RPage &page);
    /// Tries to find the page corresponding to column and index in the cache. On cache miss, load the page
    /// from the PageSource attached to the column and put it in the cache.
    RPage* GetPage(RColumn *column, TreeIndex_t index);

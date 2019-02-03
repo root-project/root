@@ -37,7 +37,7 @@ More complex types, such as classes, get translated into columns of such simple 
 */
 // clang-format on
 enum class EColumnType {
-   kUnknown,
+   kUnknown = 0,
    kIndex, // type for root columns of (nested) collections
    kByte,
    kReal64,
@@ -49,6 +49,13 @@ enum class EColumnType {
    kInt16,
    //...
 };
+
+/**
+ * Lookup table for the element size in bytes for column types. The array has to correspond to EColumnTypes.
+ */
+constexpr std::size_t kColumnElementSizes[] =
+  {0 /* kUnknown */, 8 /* kIndex */, 1 /* kByte */, 8 /* kReal64 */, 4 /* kReal32 */, 2 /* kReal16 */,
+   1 /* kReal8 */, 8 /* kInt64 */, 4 /* kInt32 */, 2 /* kInt16 */};
 
 // clang-format off
 /**
@@ -67,6 +74,7 @@ public:
    RColumnModel(std::string_view name, EColumnType type, bool isSorted)
       : fName(name), fType(type), fIsSorted(isSorted) {}
 
+   std::size_t GetElementSize() const { return kColumnElementSizes[static_cast<int>(fType)]; }
    std::string GetName() const { return fName; }
    EColumnType GetType() const { return fType; }
    bool GetIsSorted() const { return fIsSorted; }

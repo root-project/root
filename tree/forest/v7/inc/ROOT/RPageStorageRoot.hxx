@@ -61,6 +61,8 @@ struct RClusterHeader {
 
 namespace Detail {
 
+class RPagePool;
+
 /**
  * Maps the Forest meta-data to and from TFile
  */
@@ -91,10 +93,14 @@ public:
    };
 
 private:
+   static constexpr std::size_t kPageSize = 4096;
+
    std::string fForestName;
    /// Currently, a forest is stored as a directory in a TFile
    TDirectory *fDirectory;
    RSettings fSettings;
+   /// Set of open pages, one for each column
+   std::unique_ptr<RPagePool> fPagePool;
 
    RMapper fMapper;
 

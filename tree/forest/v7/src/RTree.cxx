@@ -58,6 +58,7 @@ ROOT::Experimental::ROutputTree::ROutputTree(
    : ROOT::Experimental::Detail::RTree(model)
    , fSink(std::move(sink))
 {
+   fSink->Create(model.get());
 }
 
 ROOT::Experimental::ROutputTree::~ROutputTree()

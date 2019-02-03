@@ -13,10 +13,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RPageStorageRoot.hxx"
-#include "ROOT/RTreeModel.hxx"
+#include <ROOT/RPageStorageRoot.hxx>
+#include <ROOT/RPagePool.hxx>
+#include <ROOT/RTreeModel.hxx>
 
-#include "TKey.h"
+#include <TKey.h>
 
 #include <utility>
 
@@ -67,6 +68,11 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RTreeModel *model)
    }
 
    forestHeader.fNColumns = fMapper.fColumn2Id.size();
+   fPagePool = std::make_unique<RPagePool>(kPageSize, forestHeader.fNColumns);
+   for (auto column : fMapper.fColumn2Id) {
+      SetHeadPage(fPagePool->ReservePage(column.first), column.first);
+   }
+
    fDirectory->WriteObject(&forestHeader, RMapper::kKeyForestHeader);
 }
 

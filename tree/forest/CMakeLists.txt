@@ -22,6 +22,7 @@ if(root7)
     ROOT/RTreeView.hxx
   SOURCES
     RColumn.cxx
+    RPagePool.cxx
     RPageStorage.cxx
     RPageStorageRoot.cxx
     RTree.cxx

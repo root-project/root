@@ -66,6 +66,10 @@ up to the given entry number are committed.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
+protected:
+   /// Allows the sink to assign an open page to every column on Create()
+   void SetHeadPage(const RPage &page, RColumn *column) const;
+
 public:
    RPageSink(std::string_view treeName);
    virtual ~RPageSink();
