@@ -35,19 +35,18 @@ namespace Experimental {
 */
 // clang-format on
 class RTreeEntry {
-   std::vector<Detail::RTreeValueBase> fTreeValues;
+   std::vector<std::unique_ptr<Detail::RTreeValueBase>> fTreeValues;
 
 public:
    RTreeEntry() = default;
 
    /// While building the entry, adds a new value to the list and return the value's shared pointer
-   template <typename T, typename... ArgsT>
-   std::shared_ptr<T> AddValue(Detail::RTreeFieldBase* /*field*/, ArgsT&&... args) {
-     RTreeValue<T> value(std::forward<ArgsT>(args)...);
-     auto value_ptr = value.Get();
-     fTreeValues.emplace_back(std::move(value));
-     return value_ptr;
+   void TakeValue(Detail::RTreeValueBase* value) {
+      fTreeValues.emplace_back(value);
    }
+
+   decltype(fTreeValues)::const_iterator begin() const { return fTreeValues.begin(); }
+   decltype(fTreeValues)::const_iterator end() const { return fTreeValues.end(); }
 };
 
 } // namespace Experimental

@@ -15,6 +15,3 @@
 
 #include "ROOT/RTreeModel.hxx"
 
-ROOT::Experimental::RTreeModel::RTreeModel() : fRootField("")
-{
-}
