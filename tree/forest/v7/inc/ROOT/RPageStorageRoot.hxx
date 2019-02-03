@@ -110,7 +110,7 @@ public:
 
    void AddColumn(RColumn* column) final;
    void Create(RTreeModel* model) final;
-   void CommitPage(RPage* page) final;
+   void CommitPage(const RPage &page, RColumn *column) final;
    void CommitCluster(TreeIndex_t nEntries) final;
    void CommitDataset(TreeIndex_t nEntries) final;
 };

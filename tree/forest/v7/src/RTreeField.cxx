@@ -50,10 +50,11 @@ void ROOT::Experimental::Detail::RTreeFieldBase::DoReadV(
    R__ASSERT(false);
 }
 
-void ROOT::Experimental::Detail::RTreeFieldBase::Attach(ROOT::Experimental::Detail::RTreeFieldBase* child)
+void ROOT::Experimental::Detail::RTreeFieldBase::Attach(
+   std::unique_ptr<ROOT::Experimental::Detail::RTreeFieldBase> child)
 {
    child->fParent = this;
-   fSubFields.emplace_back(child);
+   fSubFields.emplace_back(std::move(child));
 }
 
 std::string ROOT::Experimental::Detail::RTreeFieldBase::GetLeafName() const
@@ -65,7 +66,7 @@ std::string ROOT::Experimental::Detail::RTreeFieldBase::GetLeafName() const
 ROOT::Experimental::Detail::RTreeFieldBase::RIterator ROOT::Experimental::Detail::RTreeFieldBase::begin()
 {
    if (fSubFields.empty()) return RIterator(this, -1);
-   return RIterator(this->fSubFields[0], 0);
+   return RIterator(this->fSubFields[0].get(), 0);
 }
 
 ROOT::Experimental::Detail::RTreeFieldBase::RIterator ROOT::Experimental::Detail::RTreeFieldBase::end()
@@ -81,7 +82,7 @@ void ROOT::Experimental::Detail::RTreeFieldBase::RIterator::Advance()
 {
    auto itr = fStack.rbegin();
    if (!itr->fFieldPtr->fSubFields.empty()) {
-      fStack.emplace_back(Position(itr->fFieldPtr->fSubFields[0], 0));
+      fStack.emplace_back(Position(itr->fFieldPtr->fSubFields[0].get(), 0));
       return;
    }
 
@@ -96,7 +97,7 @@ void ROOT::Experimental::Detail::RTreeFieldBase::RIterator::Advance()
       itr = fStack.rbegin();
       nextIdxInParent = itr->fIdxInParent++;
    }
-   itr->fFieldPtr = itr->fFieldPtr->fParent->fSubFields[nextIdxInParent];
+   itr->fFieldPtr = itr->fFieldPtr->fParent->fSubFields[nextIdxInParent].get();
 }
 
 

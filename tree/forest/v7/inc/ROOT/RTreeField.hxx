@@ -59,8 +59,8 @@ private:
    std::string fType;
    /// A field on a trivial type that maps as-is to a single column
    bool fIsSimple;
-   /// Collections have sub fields
-   std::vector<RTreeFieldBase*> fSubFields;
+   /// Collections own sub fields
+   std::vector<std::unique_ptr<RTreeFieldBase>> fSubFields;
    /// Sub fields point to their mother field
    RTreeFieldBase* fParent;
 
@@ -110,6 +110,8 @@ public:
 
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
    RTreeFieldBase(std::string_view name, std::string_view type, bool isSimple);
+   RTreeFieldBase(const RTreeFieldBase&) = delete;
+   RTreeFieldBase& operator =(const RTreeFieldBase&) = delete;
    virtual ~RTreeFieldBase();
 
    /// Registeres the backing columns with the physical storage
@@ -165,7 +167,7 @@ public:
    /// Ensure that all received items are written from page buffers to the storage.
    void Flush();
 
-   void Attach(Detail::RTreeFieldBase* child);
+   void Attach(std::unique_ptr<Detail::RTreeFieldBase> child);
 
    std::string GetName() const { return fName; }
    /// Get the tail of the field name up to the last dot

@@ -22,6 +22,7 @@
 #include <ROOT/RTreeValue.hxx>
 
 #include <memory>
+#include <utility>
 
 namespace ROOT {
 namespace Experimental {
@@ -48,10 +49,10 @@ public:
    /// Creates a new field and a corresponding tree value.
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddField(std::string_view fieldName, ArgsT&&... args) {
-      RTreeField<T> *field = new RTreeField<T>(fieldName);
-      fRootField.Attach(field);
-
+      auto field = std::make_unique<RTreeField<T>>(fieldName);
       RTreeValue<T>* value = static_cast<RTreeValue<T>*>(field->GenerateValue(std::forward<ArgsT>(args)...));
+      fRootField.Attach(std::move(field));
+
       auto valuePtr = value->Get();
       fDefaultEntry.TakeValue(value);
       return valuePtr;

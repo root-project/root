@@ -59,7 +59,9 @@ private:
 
 public:
    RColumn(const RColumnModel &model, RPageStorage *pageStorage);
-   // TODO(jblomer) move constructor
+   RColumn(const RColumn&) = delete;
+   RColumn& operator =(const RColumn&) = delete;
+   ~RColumn() = default;
 
    void Append(const RColumnElementBase& element) {
       void* dst = fHeadPage.Reserve(1);
