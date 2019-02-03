@@ -53,7 +53,9 @@ public:
    RColumn(const RColumnModel &model, RPageStorage *pageStorage);
    // TODO(jblomer) move constructor
 
-   void Append(const RColumnElementBase &/*element*/) {/*...*/}
+   void Append(const RColumnElementBase& element) {
+      printf("APPENDING %p\n", &element);
+   }
    void Flush();
 
    void Read(const TreeIndex_t /*index*/, RColumnElementBase* /*element*/) {/*...*/}

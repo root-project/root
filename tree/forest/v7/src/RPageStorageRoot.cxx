@@ -18,16 +18,7 @@
 
 #include "TKey.h"
 
-namespace ROOT {
-namespace Experimental {
-
-class RSlotTFile : TKey {
-public:
-
-};
-
-} // namespace Experimental
-} // namespace ROOT
+#include <utility>
 
 
 ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forestName, RSettings settings)
@@ -40,6 +31,10 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forest
 
 ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
 {
+   if (fSettings.fTakeOwnership) {
+      fSettings.fFile->Close();
+      delete fSettings.fFile;
+   }
 }
 
 void ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(RColumn* column)
@@ -48,7 +43,10 @@ void ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(RColumn* column)
    columnHeader.fName = column->GetModel().GetName();
    columnHeader.fType = column->GetModel().GetType();
    columnHeader.fIsSorted = column->GetModel().GetIsSorted();
-   fDirectory->WriteObject(&columnHeader, (kKeyColumnHeader + std::to_string(fColumn2Id.size())).c_str());
+   fDirectory->WriteObject(&columnHeader,
+      (RMapper::kKeyColumnHeader + std::to_string(fMapper.fColumn2Id.size())).c_str());
+   fMapper.fColumn2Id[column] = fMapper.fColumn2Id.size();
+   printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
 }
 
 
@@ -63,12 +61,13 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RTreeModel *model)
       fieldHeader.fType = f.GetType();
       if (f.GetParent()) fieldHeader.fParentName = f.GetParent()->GetName();
 
-      fDirectory->WriteObject(&fieldHeader, (kKeyFieldHeader + std::to_string(forestHeader.fNFields)).c_str());
-      f.GenerateColumns(this);
+      fDirectory->WriteObject(&fieldHeader, (RMapper::kKeyFieldHeader + std::to_string(forestHeader.fNFields)).c_str());
+      f.GenerateColumns(this); // issues in turn one or several calls to AddColumn()
       forestHeader.fNFields++;
    }
 
-   fDirectory->WriteObject(&forestHeader, kKeyForestHeader);
+   forestHeader.fNColumns = fMapper.fColumn2Id.size();
+   fDirectory->WriteObject(&forestHeader, RMapper::kKeyForestHeader);
 }
 
 
@@ -86,4 +85,51 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitDataset(ROOT::Experimental::TreeIndex_t /*nEntries*/)
 {
 
+}
+
+
+//------------------------------------------------------------------------------
+
+
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view forestName, RSettings settings)
+   : ROOT::Experimental::Detail::RPageSource(forestName)
+   , fForestName(forestName)
+   , fDirectory(nullptr)
+   , fSettings(settings)
+{
+}
+
+
+ROOT::Experimental::Detail::RPageSourceRoot::~RPageSourceRoot()
+{
+}
+
+
+void ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(RColumn* /*column*/)
+{
+}
+
+
+void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
+{
+   fDirectory = fSettings.fFile->GetDirectory(fForestName.c_str());
+   auto keyForestHeader = fDirectory->GetKey(RMapper::kKeyForestHeader);
+   fForestHeader = keyForestHeader->ReadObject<ROOT::Experimental::Internal::RForestHeader>();
+   printf("Number of fields %d, of columns %d\n", fForestHeader->fNFields, fForestHeader->fNColumns);
+
+   for (std::int32_t id = 0; id < fForestHeader->fNColumns; ++id) {
+      ROOT::Experimental::Internal::RColumnHeader* columnHeader;
+      auto keyColumnHeader = fDirectory->GetKey((RMapper::kKeyColumnHeader + std::to_string(id)).c_str());
+      columnHeader = keyColumnHeader->ReadObject<ROOT::Experimental::Internal::RColumnHeader>();
+      auto columnModel = std::make_unique<RColumnModel>(
+         columnHeader->fName, columnHeader->fType, columnHeader->fIsSorted);
+      fMapper.fId2ColumnModel[id] = std::move(columnModel);
+      fMapper.fColumnName2Id[columnHeader->fName] = id;
+   }
+}
+
+
+std::unique_ptr<ROOT::Experimental::RTreeModel> ROOT::Experimental::Detail::RPageSourceRoot::GenerateModel()
+{
+   return nullptr;
 }

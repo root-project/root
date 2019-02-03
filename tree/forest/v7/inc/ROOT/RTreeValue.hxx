@@ -26,6 +26,10 @@ namespace Experimental {
 
 namespace Detail {
 
+// TODO(jblomer): only give RTreeField and descendants access to RTreeValue and descendants
+
+class RTreeFieldBase;
+
 // clang-format off
 /**
 \class ROOT::Experimental::TreeValueBase
@@ -38,9 +42,13 @@ or deserialized into by tree reading.
 // clang-format on
 class RTreeValueBase {
 public:
-   RTreeValueBase() : fPrincipalElement(nullptr) { }
+   RTreeValueBase(RTreeFieldBase *field) : fField(field) {}
 
-   RColumnElementBase* fPrincipalElement;
+   /// Every value is connected to a field of the corresponding type.
+   RTreeFieldBase* fField;
+   /// For simple types, the mapped element drills through the layers from the C++ data representation
+   /// to the primitive columns.  Otherwise, fMappedElements is not initialized.
+   RColumnElementBase fMappedElement;
 };
 
 } // namespace Detail
@@ -51,19 +59,19 @@ public:
 \class ROOT::Experimental::RTreeValue
 \ingroup Forest
 
-For simple C++ types, no more template specialization is necessary.
+For simple C++ types, the tree value maps directly to a column element.
 */
 // clang-format on
 template <typename T>
 class RTreeValue : public Detail::RTreeValueBase {
+
 private:
    std::shared_ptr<T> fValue;
 
 public:
    template <typename... ArgsT>
-   RTreeValue(ArgsT&&... args) : fValue(std::make_shared<T>(std::forward<ArgsT>(args)...))
-   {
-   }
+   RTreeValue(Detail::RTreeFieldBase* field, ArgsT&&... args)
+      : Detail::RTreeValueBase(field), fValue(std::make_shared<T>(std::forward<ArgsT>(args)...)) {}
 
    std::shared_ptr<T> Get() { return fValue; }
 };
@@ -82,7 +90,7 @@ private:
    T *fValue;
 
 public:
-   RTreeValueCaptured(T *value) : fValue(value)
+   RTreeValueCaptured(Detail::RTreeFieldBase* field, T* value) : Detail::RTreeValueBase(field), fValue(value)
    {
    }
 
@@ -98,6 +106,8 @@ A value that behaves like a tree and represents the entire collection in its sub
 */
 // clang-format on
 class RTreeValueCollection : public Detail::RTreeValueBase {
+public:
+   RTreeValueCollection(Detail::RTreeFieldBase* field) : Detail::RTreeValueBase(field) {}
 };
 
 } // namespace Experimental

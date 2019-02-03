@@ -34,11 +34,11 @@ namespace Detail {
 // clang-format on
 class RColumnElementBase {
 protected:
+   void *fRawContent;
+   unsigned int fSize;
+
    /// Indicates that fRawContent is bitwise identical to the type of the RColumnElement
    bool fIsMovable;
-   void *fRawContent;
-   unsigned fSize;
-
    EColumnType fColumnType;
 
    virtual void DoSerialize(void* /* destination */) const { }
@@ -46,10 +46,15 @@ protected:
 
 public:
    RColumnElementBase()
-     : fIsMovable(false)
-     , fRawContent(nullptr)
+     : fRawContent(nullptr)
      , fSize(0)
+     , fIsMovable(false)
      , fColumnType(EColumnType::kUnknown) { }
+   RColumnElementBase(void* rawContent, unsigned int size, bool isMovable, EColumnType columnType)
+     : fRawContent(rawContent)
+     , fSize(size)
+     , fIsMovable(isMovable)
+     , fColumnType(columnType) { }
    virtual ~RColumnElementBase() { }
 
    void Serialize(void *destination) const {
@@ -78,12 +83,14 @@ public:
    }
 };
 
+/**
+ * Column types that map bit-wise to C++ types
+ */
 template <typename T>
-class RColumnElement : public RColumnElementBase {
-   T* fValue;
-
+class RColumnElementDirect : public RColumnElementBase {
 public:
-   explicit RColumnElement(T* value);
+   explicit RColumnElementDirect(T* value, EColumnType columnType)
+      : RColumnElementBase(value, sizeof(T), true /* isMovable */, columnType) {}
 };
 
 } // namespace Detail
