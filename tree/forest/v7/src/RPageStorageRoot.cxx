@@ -77,9 +77,9 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RTreeModel *model)
 }
 
 
-void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(RPage* /*page*/)
+void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(const RPage &page, RColumn *column)
 {
-
+   printf("WRITING OUT PAGE\n");
 }
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental::TreeIndex_t /*nEntries*/)
