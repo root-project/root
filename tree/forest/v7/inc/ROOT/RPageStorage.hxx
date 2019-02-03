@@ -77,8 +77,8 @@ public:
 
    /// Physically creates the storage container to hold the tree (e.g., a directory in a TFile or a S3 bucket)
    virtual void Create(RTreeModel* model) = 0;
-   /// Write a page to the storage. The column attached to the page must have been added before.
-   virtual void CommitPage(RPage* page) = 0;
+   /// Write a page to the storage. The column must have been added before.
+   virtual void CommitPage(const RPage &page, RColumn *column) = 0;
    /// Finalize the current cluster and create a new one for the following data.
    virtual void CommitCluster(TreeIndex_t nEntries) = 0;
    /// Finalize the current cluster and the entrire data set.
