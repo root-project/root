@@ -40,26 +40,28 @@ A model needs to be frozen before it can be used to create an RTree.
 // clang-format on
 class RTreeModel {
    /// Hierarchy of fields consiting of simple types and collections (sub trees)
-   RTreeFieldCollection fRootField;
+   RTreeFieldRoot fRootField;
    /// Contains tree values corresponding to the created fields
    RTreeEntry fDefaultEntry;
 
 public:
-   RTreeModel();
-
    /// Creates a new field and a corresponding tree value.
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddField(std::string_view fieldName, ArgsT&&... args) {
       RTreeField<T> *field = new RTreeField<T>(fieldName);
       fRootField.Attach(field);
 
-      return fDefaultEntry.AddValue<T>(field, std::forward<ArgsT>(args)...);
+      RTreeValue<T>* value = static_cast<RTreeValue<T>*>(field->GenerateValue(std::forward<ArgsT>(args)...));
+      auto valuePtr = value->Get();
+      fDefaultEntry.TakeValue(value);
+      return valuePtr;
    }
 
    /// Mounts an existing model as a sub tree, which allows for composing of tree models
    std::shared_ptr<RTreeValueCollection> TreeFieldCollection(std::string_view fieldName, std::shared_ptr<RTreeModel> subModel);
 
-   RTreeFieldCollection* GetRootField() { return &fRootField; }
+   RTreeFieldRoot* GetRootField() { return &fRootField; }
+   const RTreeEntry& GetDefaultEntry() { return fDefaultEntry; }
 };
 
 } // namespace Exerimental

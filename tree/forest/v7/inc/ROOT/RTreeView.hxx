@@ -19,7 +19,6 @@
 #include <ROOT/RForestUtil.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RTreeField.hxx>
-#include <ROOT/RTreeView.hxx>
 
 #include <memory>
 #include <utility>

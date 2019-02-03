@@ -18,6 +18,7 @@
 
 #include <ROOT/RForestUtil.hxx>
 #include <ROOT/RStringView.hxx>
+#include <ROOT/RTreeModel.hxx>
 #include <ROOT/RTreeView.hxx>
 
 #include <memory>
@@ -50,13 +51,12 @@ the RTree can expose tree views that read only specific fields.
 */
 // clang-format on
 class RTree {
-private:
+protected:
    /// All trees that use the same model share its ownership
    std::shared_ptr<RTreeModel> fModel;
    /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
    TreeIndex_t fNentries;
 
-protected:
    /// Only the derived RInputTree and ROutputTree can be instantiated
    explicit RTree(std::shared_ptr<RTreeModel> model);
 
@@ -134,10 +134,16 @@ public:
    ~ROutputTree();
 
    /// The simplest user interface if the default entry that comes with the tree model is used
-   void Fill();
+   void Fill() { Fill(fModel->GetDefaultEntry()); }
    /// Multiple tree entries can have been instantiated from the tree model.  This method will perform
    /// a light check whether the entry comes from the tree's own model
-   void Fill(const RTreeEntry &entry);
+   void Fill(const RTreeEntry &entry) {
+      for (auto& treeValue : entry) {
+         treeValue->fField->Append(*treeValue);
+      }
+      fNentries++;
+      //if ((fNentries % fClusterSizeEntries) == 0) MakeCluster();
+   }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
    void Flush();
 };

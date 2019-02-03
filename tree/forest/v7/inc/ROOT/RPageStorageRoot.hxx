@@ -22,6 +22,7 @@
 #include <TDirectory.h>
 #include <TFile.h>
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -60,50 +61,84 @@ struct RClusterHeader {
 
 namespace Detail {
 
+/**
+ * Maps the Forest meta-data to and from TFile
+ */
+class RMapper {
+public:
+   static constexpr const char* kKeyForestHeader = "RFH";
+   static constexpr const char* kKeyFieldHeader = "RFFH";
+   static constexpr const char* kKeyColumnHeader = "RFCH";
+
+   std::unordered_map<RColumn*, std::int32_t> fColumn2Id;
+   std::unordered_map<std::int32_t, std::unique_ptr<RColumnModel>> fId2ColumnModel;
+   std::unordered_map<std::string, std::int32_t> fColumnName2Id;
+};
+
+
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageSinkRoot
 \ingroup Forest
-\brief Abstract interface to write data into a tree
-
-The page sink takes the list of columns and afterwards a series of page commits and cluster commits.
-The user is responsible to commit clusters at consistent point, i.e. when all pages corresponding to data
-up to the given entry number are committed.
+\brief Storage provider that write Forest pages into a ROOT TFile
 */
 // clang-format on
 class RPageSinkRoot : public RPageSink {
 public:
    struct RSettings {
       TFile *fFile = nullptr;
+      bool fTakeOwnership = false;
    };
 
 private:
-   static constexpr const char* kKeyForestHeader = "RFH";
-   static constexpr const char* kKeyFieldHeader = "RFFH";
-   static constexpr const char* kKeyColumnHeader = "RFCH";
-
    std::string fForestName;
    /// Currently, a forest is stored as a directory in a TFile
    TDirectory *fDirectory;
    RSettings fSettings;
 
-   std::unordered_map<RColumn*, int> fColumn2Id;
+   RMapper fMapper;
 
 public:
    RPageSinkRoot(std::string_view forestName, RSettings settings);
    virtual ~RPageSinkRoot();
 
-   /// TODO(jblomer): keep abtract and let derived classed define
-   void AddColumn(RColumn* /*column*/) final;
-
-   /// Physically creates the storage container to hold the tree (e.g., a directory in a TFile or a S3 bucket)
+   void AddColumn(RColumn* column) final;
    void Create(RTreeModel* model) final;
-   /// Write a page to the storage. The column attached to the page must have been added before.
    void CommitPage(RPage* page) final;
-   /// Finalize the current cluster and create a new one for the following data.
    void CommitCluster(TreeIndex_t nEntries) final;
-   /// Finalize the current cluster and the entrire data set.
    void CommitDataset(TreeIndex_t nEntries) final;
+};
+
+
+// clang-format off
+/**
+\class ROOT::Experimental::Detail::RPageSourceRoot
+\ingroup Forest
+\brief Storage provider that reads Forest pages from a ROOT TFile
+*/
+// clang-format on
+class RPageSourceRoot : public RPageSource {
+public:
+   struct RSettings {
+      TFile *fFile = nullptr;
+   };
+
+private:
+   std::string fForestName;
+   /// Currently, a forest is stored as a directory in a TFile
+   TDirectory *fDirectory;
+   RSettings fSettings;
+
+   ROOT::Experimental::Internal::RForestHeader* fForestHeader;
+   RMapper fMapper;
+
+public:
+   RPageSourceRoot(std::string_view forestName, RSettings settings);
+   virtual ~RPageSourceRoot();
+
+   void AddColumn(RColumn* /*column*/) final;
+   void Attach() final;
+   std::unique_ptr<ROOT::Experimental::RTreeModel> GenerateModel() final;
 };
 
 } // namespace Detail

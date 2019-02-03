@@ -107,6 +107,7 @@ public:
 
    // TODO(jblomer): virtual std::unique_ptr<RTreeFieldBase> ListFields() {/* Make me abstract */ return nullptr;}
    // TODO(jblomer): ListClusters()
+   virtual std::unique_ptr<ROOT::Experimental::RTreeModel> GenerateModel() = 0;
 
    /// Fills a page starting with index rangeStart; the corresponding column is taken from the page object
    void MapSlice(TreeIndex_t /*rangeStart*/, RPage * /*page*/) {/* Make me abstract */}

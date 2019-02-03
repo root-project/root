@@ -23,6 +23,10 @@
 namespace ROOT {
 namespace Experimental {
 
+namespace Detail {
+class RColumnElementBase;
+}
+
 // clang-format off
 /**
 \class ROOT::Experimental::EColumnType
@@ -34,7 +38,7 @@ More complex types, such as classes, get translated into columns of such simple 
 // clang-format on
 enum class EColumnType {
    kUnknown,
-   kIndex, // type for root columns of nested collections
+   kIndex, // type for root columns of (nested) collections
    kByte,
    kReal64,
    kReal32,
@@ -66,6 +70,8 @@ public:
    std::string GetName() const { return fName; }
    EColumnType GetType() const { return fType; }
    bool GetIsSorted() const { return fIsSorted; }
+
+   Detail::RColumnElementBase *GenerateElement();
 };
 
 } // namespace Experimental
