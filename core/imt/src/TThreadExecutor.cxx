@@ -1,4 +1,5 @@
 #include "ROOT/TThreadExecutor.hxx"
+#include "ROOT/TTaskGroup.hxx"
 
 #if !defined(_MSC_VER)
 #pragma GCC diagnostic push
