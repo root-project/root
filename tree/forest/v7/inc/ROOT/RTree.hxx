@@ -55,7 +55,7 @@ protected:
    /// All trees that use the same model share its ownership
    std::shared_ptr<RTreeModel> fModel;
    /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
-   TreeIndex_t fNentries;
+   TreeIndex_t fNEntries;
 
    /// Only the derived RInputTree and ROutputTree can be instantiated
    explicit RTree(std::shared_ptr<RTreeModel> model);
@@ -127,10 +127,15 @@ triggered by Flush() or by destructing the tree.  On I/O errors, an exception is
 // clang-format on
 class ROutputTree : public Detail::RTree {
 private:
+   static constexpr TreeIndex_t kDefaultClusterSizeEntries = 8192;
    std::unique_ptr<Detail::RPageSink> fSink;
+   TreeIndex_t fClusterSizeEntries;
+   TreeIndex_t fLastCommitted;
 
 public:
    ROutputTree(std::shared_ptr<RTreeModel> model, std::unique_ptr<Detail::RPageSink> sink);
+   ROutputTree(const ROutputTree&) = delete;
+   ROutputTree& operator=(const ROutputTree&) = delete;
    ~ROutputTree();
 
    /// The simplest user interface if the default entry that comes with the tree model is used
@@ -141,11 +146,11 @@ public:
       for (auto& treeValue : entry) {
          treeValue->fField->Append(*treeValue);
       }
-      fNentries++;
-      //if ((fNentries % fClusterSizeEntries) == 0) MakeCluster();
+      fNEntries++;
+      if ((fNEntries % fClusterSizeEntries) == 0) CommitCluster();
    }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
-   void Flush();
+   void CommitCluster();
 };
 
 } // namespace Experimental
