@@ -17,9 +17,12 @@
 #pragma link C++ nestedtypedefs;
 #pragma link C++ nestedclasses;
 
-#pragma link C++ ROOT::Experimental::Internal::RForestHeader+;
-#pragma link C++ ROOT::Experimental::Internal::RFieldHeader+;
-#pragma link C++ ROOT::Experimental::Internal::RColumnHeader+;
-#pragma link C++ ROOT::Experimental::Internal::RClusterHeader+;
+#pragma link C++ class ROOT::Experimental::Internal::RForestHeader+;
+#pragma link C++ class ROOT::Experimental::Internal::RForestFooter+;
+#pragma link C++ class ROOT::Experimental::Internal::RFieldHeader+;
+#pragma link C++ class ROOT::Experimental::Internal::RColumnHeader+;
+#pragma link C++ class ROOT::Experimental::Internal::RClusterFooter+;
+#pragma link C++ class ROOT::Experimental::Internal::RPageInfo+;
+#pragma link C++ class ROOT::Experimental::Internal::RPagePayload+;
 
 #endif

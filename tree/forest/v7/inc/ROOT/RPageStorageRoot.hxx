@@ -18,6 +18,7 @@
 
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RColumnModel.hxx>
+#include <ROOT/RForestUtil.hxx>
 
 #include <TDirectory.h>
 #include <TFile.h>
@@ -30,13 +31,6 @@ namespace ROOT {
 namespace Experimental {
 
 namespace Internal {
-
-struct RForestHeader {
-   std::int32_t fVersion = 0;
-   std::int32_t fNFields = 0;
-   std::int32_t fNColumns = 0;
-   std::string fModelUuid;
-};
 
 struct RFieldHeader {
    std::int32_t fVersion = 0;
@@ -52,8 +46,34 @@ struct RColumnHeader {
    bool fIsSorted;
 };
 
-struct RClusterHeader {
+struct RForestHeader {
    std::int32_t fVersion = 0;
+   std::string fModelUuid;
+   std::vector<RFieldHeader> fFields;
+   std::vector<RColumnHeader> fColumns;
+};
+
+struct RForestFooter {
+   std::int32_t fVersion = 0;
+   std::int32_t fNClusters = 0;
+   TreeIndex_t fNEntries = 0;
+};
+
+struct RPageInfo {
+   std::vector<TreeIndex_t> fRangeStarts;
+};
+
+struct RClusterFooter {
+   std::int32_t fVersion = 0;
+   TreeIndex_t fEntryRangeStart = 0;
+   TreeIndex_t fNEntries = 0;
+   std::vector<RPageInfo> fPagesPerColumn;
+};
+
+struct RPagePayload {
+   std::int32_t fVersion = 0;
+   int fSize = 0;
+   unsigned char* fContent = nullptr; //[fSize]
 };
 
 } // namespace Internal
@@ -68,13 +88,21 @@ class RPagePool;
  */
 class RMapper {
 public:
+   static constexpr const char* kKeySeparator = "_";
    static constexpr const char* kKeyForestHeader = "RFH";
-   static constexpr const char* kKeyFieldHeader = "RFFH";
-   static constexpr const char* kKeyColumnHeader = "RFCH";
+   static constexpr const char* kKeyForestFooter = "RFF";
+   static constexpr const char* kKeyClusterFooter = "RFCF";
+   static constexpr const char* kKeyPagePayload = "RFP";
+
+   struct RColumnIndex {
+      TreeIndex_t fNElements = 0;
+      std::vector<TreeIndex_t> fRangeStarts;
+   };
 
    std::unordered_map<RColumn*, std::int32_t> fColumn2Id;
    std::unordered_map<std::int32_t, std::unique_ptr<RColumnModel>> fId2ColumnModel;
    std::unordered_map<std::string, std::int32_t> fColumnName2Id;
+   std::vector<RColumnIndex> fColumnIndex;
 };
 
 
@@ -101,6 +129,10 @@ private:
    RSettings fSettings;
    /// Set of open pages, one for each column
    std::unique_ptr<RPagePool> fPagePool;
+   /// Updated on CommitPage and written and reset on CommitCluster
+   ROOT::Experimental::Internal::RClusterFooter fCurrentCluster;
+   ROOT::Experimental::Internal::RForestHeader fForestHeader;
+   ROOT::Experimental::Internal::RForestFooter fForestFooter;
 
    RMapper fMapper;
 
@@ -112,7 +144,7 @@ public:
    void Create(RTreeModel* model) final;
    void CommitPage(const RPage &page, RColumn *column) final;
    void CommitCluster(TreeIndex_t nEntries) final;
-   void CommitDataset(TreeIndex_t nEntries) final;
+   void CommitDataset() final;
 };
 
 
@@ -127,6 +159,7 @@ class RPageSourceRoot : public RPageSource {
 public:
    struct RSettings {
       TFile *fFile = nullptr;
+      bool fTakeOwnership = false;
    };
 
 private:
@@ -135,7 +168,6 @@ private:
    TDirectory *fDirectory;
    RSettings fSettings;
 
-   ROOT::Experimental::Internal::RForestHeader* fForestHeader;
    RMapper fMapper;
 
 public:
