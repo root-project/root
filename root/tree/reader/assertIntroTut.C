@@ -11,10 +11,10 @@
 int assertIntroTut()
 {
    // open the file
-   TFile *f = TFile::Open("http://lcg-heppkg.web.cern.ch/lcg-heppkg/ROOT/eventdata.root");
+   TFile *f = TFile::Open("http://root.cern/files/introtutorials/eventdata.root");
    if (f == 0) {
       // if we cannot open the file, print an error message and return immediatly
-      printf("Error: cannot open http://lcg-heppkg.web.cern.ch/lcg-heppkg/ROOT/eventdata.root!\n");
+      printf("Error: cannot open http://root.cern/files/introtutorials/eventdata.root!\n");
       return 1;
    }
 
