@@ -22,7 +22,7 @@
 
 ROOT::Experimental::Detail::RTree::RTree(std::shared_ptr<ROOT::Experimental::RTreeModel> model)
    : fModel(model)
-   , fNentries(0)
+   , fNEntries(0)
 {
 }
 
@@ -37,6 +37,10 @@ ROOT::Experimental::RInputTree::RInputTree(
    : ROOT::Experimental::Detail::RTree(model)
    , fSource(std::move(source))
 {
+   fSource->Attach();
+   for (auto& field : *model->GetRootField()) {
+      field.GenerateColumns(fSource.get());
+   }
 }
 
 
@@ -57,10 +61,25 @@ ROOT::Experimental::ROutputTree::ROutputTree(
    std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
    : ROOT::Experimental::Detail::RTree(model)
    , fSink(std::move(sink))
+   , fClusterSizeEntries(kDefaultClusterSizeEntries)
+   , fLastCommitted(0)
 {
    fSink->Create(model.get());
 }
 
 ROOT::Experimental::ROutputTree::~ROutputTree()
 {
+   CommitCluster();
+   fSink->CommitDataset();
+}
+
+
+void ROOT::Experimental::ROutputTree::CommitCluster()
+{
+   if (fNEntries == fLastCommitted) return;
+   for (auto& field : *fModel->GetRootField()) {
+      field.Flush();
+   }
+   fSink->CommitCluster(fNEntries);
+   fLastCommitted = fNEntries;
 }

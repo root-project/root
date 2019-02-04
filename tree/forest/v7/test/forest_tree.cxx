@@ -65,6 +65,14 @@ TEST(RForestTree, WriteRead)
    auto model = std::make_shared<RTreeModel>();
    auto fieldPt = model->AddField<float>("pt", 42.0);
 
-   ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", settingsWrite));
-   tree.Fill();
+   {
+      ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", settingsWrite));
+      tree.Fill();
+   }
+
+   file = TFile::Open("test.root", "READ");
+   RPageSourceRoot::RSettings settingsRead;
+   settingsRead.fFile = file;
+   settingsRead.fTakeOwnership = true;
+   RInputTree tree(model, std::make_unique<RPageSourceRoot>("myTree", settingsRead));
 }
