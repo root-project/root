@@ -20,7 +20,6 @@
 
 #include <chrono>
 #include <memory>
-#include <typeinfo>
 
 namespace ROOT {
 namespace Experimental {
@@ -47,7 +46,7 @@ public:
    {}
 
    template <class T>
-   explicit TDirectoryEntry(const std::shared_ptr<T> &ptr): fType(TClass::GetClass(typeid(T))), fObj(ptr)
+   explicit TDirectoryEntry(const std::shared_ptr<T> &ptr): fType(TClass::GetClass<T>()), fObj(ptr)
    {}
 
    /// Get the last change date of the entry.
@@ -78,7 +77,7 @@ public:
 template <class U>
 std::shared_ptr<U> TDirectoryEntry::CastPointer() const
 {
-   if (auto ptr = fType->DynamicCast(TClass::GetClass(typeid(U)), fObj.get()))
+   if (auto ptr = fType->DynamicCast(TClass::GetClass<U>(), fObj.get()))
       return std::shared_ptr<U>(fObj, static_cast<U *>(ptr));
    return std::shared_ptr<U>();
 }
