@@ -240,7 +240,6 @@ string::reference
 vector<string,allocator<string> >::pointer
 basic_ifstream<char,char_traits<char> >::pos_type
 char_traits<char>::off_type
-EGetLineMode
 vector<double,allocator<double> >::iterator::reference
 Font_t
 Style_t
