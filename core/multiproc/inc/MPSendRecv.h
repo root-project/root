@@ -90,7 +90,7 @@ T ReadBuffer(TBufferFile *buf);
 template<class T, typename std::enable_if<std::is_class<T>::value>::type *>
 int MPSend(TSocket *s, unsigned code, T obj)
 {
-   TClass *c = TClass::GetClass(typeid(T));
+   TClass *c = TClass::GetClass<T>();
    if (!c) {
       Error("MPSend", "[E] Could not find cling definition for class %s\n", typeid(T).name());
       return -1;

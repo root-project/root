@@ -96,7 +96,7 @@ protected:
    /// This is more user friendly version of TKey::ReadObjectAny.
    /// See TKey::ReadObjectAny for more details.
    template <typename T> T *ReadObject() {
-      return reinterpret_cast<T*>(ReadObjectAny(TClass::GetClass(typeid(T))));
+      return reinterpret_cast<T*>(ReadObjectAny(TClass::GetClass<T>()));
    }
    virtual void       *ReadObjectAny(const TClass *expectedClass);
    virtual void        ReadBuffer(char *&buffer);

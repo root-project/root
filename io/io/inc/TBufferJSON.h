@@ -50,7 +50,7 @@ public:
    template <class T>
    static TString ToJSON(const T *obj, Int_t compact = 0, const char *member_name = nullptr)
    {
-      return ConvertToJSON(obj, TBuffer::GetClass(typeid(T)), compact, member_name);
+      return ConvertToJSON(obj, TClass::GetClass<T>(), compact, member_name);
    }
 
    template <class T>
@@ -58,7 +58,7 @@ public:
    {
       if (obj)
          return kFALSE;
-      obj = (T *)ConvertFromJSONChecked(json, TBuffer::GetClass(typeid(T)));
+      obj = (T *)ConvertFromJSONChecked(json, TClass::GetClass<T>());
       return obj != nullptr;
    }
 

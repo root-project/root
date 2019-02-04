@@ -80,7 +80,7 @@ public:
 /// Invoke func with each attribute as argument.
 void ROOT::Experimental::RDrawingOptsBase::VisitAttributes(const RDrawingOptsBase::VisitFunc_t &func)
 {
-   TClass* clThis = TClass::GetClass(typeid(*this));
+   TClass* clThis = ROOT::GetClass(this);
    if (!clThis) {
       R__ERROR_HERE("Graf2d") << "Cannot find dictionary for the derived class with typeid " << typeid(*this).name();
       return;

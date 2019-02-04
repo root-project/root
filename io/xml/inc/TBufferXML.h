@@ -49,7 +49,7 @@ public:
    template <class T>
    static TString ToXML(const T *obj, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE)
    {
-      return ConvertToXML(obj, TBuffer::GetClass(typeid(T)), GenericLayout, UseNamespaces);
+      return ConvertToXML(obj, TClass::GetClass<T>(), GenericLayout, UseNamespaces);
    }
 
    static TObject *ConvertFromXML(const char *str, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
@@ -61,7 +61,7 @@ public:
    {
       if (obj)
          return kFALSE;
-      obj = (T *)ConvertFromXMLChecked(xml, TBuffer::GetClass(typeid(T)), GenericLayout, UseNamespaces);
+      obj = (T *)ConvertFromXMLChecked(xml, TClass::GetClass<T>(), GenericLayout, UseNamespaces);
       return obj != nullptr;
    }
 

@@ -336,22 +336,22 @@ public:
    template <class T> TBranch *Branch(const char* name, const char* classname, T* obj, Int_t bufsize = 32000, Int_t splitlevel = 99)
    {
       // See BranchImpRed for details. Here we __ignore
-      return BranchImpRef(name, classname, TBuffer::GetClass(typeid(T)), obj, bufsize, splitlevel);
+      return BranchImpRef(name, classname, TClass::GetClass<T>(), obj, bufsize, splitlevel);
    }
    template <class T> TBranch *Branch(const char* name, const char* classname, T** addobj, Int_t bufsize = 32000, Int_t splitlevel = 99)
    {
       // See BranchImp for details
-      return BranchImp(name, classname, TBuffer::GetClass(typeid(T)), addobj, bufsize, splitlevel);
+      return BranchImp(name, classname, TClass::GetClass<T>(), addobj, bufsize, splitlevel);
    }
    template <class T> TBranch *Branch(const char* name, T** addobj, Int_t bufsize = 32000, Int_t splitlevel = 99)
    {
       // See BranchImp for details
-      return BranchImp(name, TBuffer::GetClass(typeid(T)), addobj, bufsize, splitlevel);
+      return BranchImp(name, TClass::GetClass<T>(), addobj, bufsize, splitlevel);
    }
    template <class T> TBranch *Branch(const char* name, T* obj, Int_t bufsize = 32000, Int_t splitlevel = 99)
    {
       // See BranchImp for details
-      return BranchImpRef(name, TBuffer::GetClass(typeid(T)), TDataType::GetType(typeid(T)), obj, bufsize, splitlevel);
+      return BranchImpRef(name, TClass::GetClass<T>(), TDataType::GetType(typeid(T)), obj, bufsize, splitlevel);
    }
    virtual TBranch        *Bronch(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 99);
    virtual TBranch        *BranchOld(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 1);
@@ -522,7 +522,7 @@ public:
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
    template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {
-      TClass *cl = TClass::GetClass(typeid(T));
+      TClass *cl = TClass::GetClass<T>();
       EDataType type = kOther_t;
       if (cl==0) type = TDataType::GetType(typeid(T));
       return SetBranchAddress(bname,add,ptr,cl,type,true);
@@ -531,7 +531,7 @@ public:
    // This can only be used when the template overload resolution can distinguish between
    // T* and T**
    template <class T> Int_t SetBranchAddress(const char *bname, T *add, TBranch **ptr = 0) {
-      TClass *cl = TClass::GetClass(typeid(T));
+      TClass *cl = TClass::GetClass<T>();
       EDataType type = kOther_t;
       if (cl==0) type = TDataType::GetType(typeid(T));
       return SetBranchAddress(bname,add,ptr,cl,type,false);
