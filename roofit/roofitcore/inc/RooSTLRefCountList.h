@@ -1,9 +1,17 @@
-/*
- * RooRefCountListNew.h
- *
- *  Created on: 13 Dec 2018
- *      Author: shageboe
- */
+// Author: Stephan Hageboeck, CERN, 12/2018
+/*****************************************************************************
+ * Project: RooFit                                                           *
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+ *****************************************************************************/
 
 #ifndef ROOFIT_ROOFITCORE_INC_ROOSTLREFCOUNTLIST_H_
 #define ROOFIT_ROOFITCORE_INC_ROOSTLREFCOUNTLIST_H_
@@ -190,9 +198,11 @@ class RooSTLRefCountList {
 class RooAbsArg;
 class RooRefCountList;
 
+namespace RooFit {
 namespace STLRefCountListHelpers {
   /// Converter from the old RooRefCountList to RooSTLRefCountList.
   RooSTLRefCountList<RooAbsArg> convert(const RooRefCountList& old);
+}
 }
 
 #endif /* ROOFIT_ROOFITCORE_INC_ROOSTLREFCOUNTLIST_H_ */

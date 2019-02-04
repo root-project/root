@@ -803,7 +803,7 @@ RooAbsArg * RooAbsCollection::find(const char *name) const
   }
   else {
     const TNamed* nptr= RooNameReg::known(name);
-    if (!nptr) return 0;
+    if (!nptr) return nullptr;
 
     auto findByNamePtr = [nptr](const RooAbsArg* elm) {
       return nptr == elm->namePtr();

@@ -90,7 +90,7 @@ std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
 /// Default constructor
 
 RooAbsArg::RooAbsArg()
-   : TNamed(), _deleteWatch(kFALSE), _valueDirty(kTRUE), _shapeDirty(kTRUE), _operMode(Auto), _fast(kFALSE), _ownedComponents(0),
+   : TNamed(), _deleteWatch(kFALSE), _valueDirty(kTRUE), _shapeDirty(kTRUE), _operMode(Auto), _fast(kFALSE), _ownedComponents(nullptr),
      _prohibitServerRedirect(kFALSE), _eocache(0), _namePtr(0), _isConstant(kFALSE), _localNoInhibitDirty(kFALSE),
      _myws(0)
 {
@@ -731,7 +731,7 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg
 
   // Next test direct dependence
   RooAbsArg* foundServer = findServer(testArg) ;
-  if (foundServer!=0) {
+  if (foundServer) {
 
     // Return true if valueOnly is FALSE or if server is value server, otherwise keep looking
     if ( !valueOnly || foundServer->isValueServer(*this)) {
@@ -916,7 +916,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 
   //Copy original server list to not confuse the iterator while deleting
   std::vector<RooAbsArg*> origServerList, origServerValue, origServerShape;
-  std::size_t origSize = _serverList.size();
+  auto origSize = _serverList.size();
   origServerList.reserve(origSize);
   origServerValue.reserve(origSize);
 

@@ -87,7 +87,7 @@ ClassImp(RooAbsAnaConvPdf);
 
 RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
   _isCopy(kFALSE),
-  _convNormSet(0)
+  _convNormSet(nullptr)
 {
 }
 
@@ -103,7 +103,7 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title,
   _model("!model","Original resolution model",this,(RooResolutionModel&)model,kFALSE,kFALSE),
   _convVar("!convVar","Convolution variable",this,cVar,kFALSE,kFALSE),
   _convSet("!convSet","Set of resModel X basisFunc convolutions",this),
-  _convNormSet(0),
+  _convNormSet(nullptr),
   _coefNormMgr(this,10),
   _codeReg(10)
 {

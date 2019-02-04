@@ -2657,7 +2657,7 @@ void RooWorkspace::Streamer(TBuffer &R__b)
        for (auto client : clientsTmp) {
          if (!_allOwnedNodes.containsInstance(*client)) {
 
-           const std::size_t refCount = tmparg->_clientList.refCount(client);
+           const auto refCount = tmparg->_clientList.refCount(client);
            auto& bufferVec = extClients[tmparg];
 
            bufferVec.insert(bufferVec.end(), refCount, client);
@@ -2672,7 +2672,7 @@ void RooWorkspace::Streamer(TBuffer &R__b)
            cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
 				       << " has external value client link to " << vclient << " (" << vclient->GetName() << ") with ref count " << tmparg->_clientListValue.refCount(vclient) << endl ;
 
-           const std::size_t refCount = tmparg->_clientListValue.refCount(vclient);
+           const auto refCount = tmparg->_clientListValue.refCount(vclient);
            auto& bufferVec = extValueClients[tmparg];
 
            bufferVec.insert(bufferVec.end(), refCount, vclient);
@@ -2687,7 +2687,7 @@ void RooWorkspace::Streamer(TBuffer &R__b)
            cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
 				         << " has external shape client link to " << sclient << " (" << sclient->GetName() << ") with ref count " << tmparg->_clientListShape.refCount(sclient) << endl ;
 
-           const std::size_t refCount = tmparg->_clientListShape.refCount(sclient);
+           const auto refCount = tmparg->_clientListShape.refCount(sclient);
            auto& bufferVec = extShapeClients[tmparg];
 
            bufferVec.insert(bufferVec.end(), refCount, sclient);
@@ -2703,21 +2703,21 @@ void RooWorkspace::Streamer(TBuffer &R__b)
      // Reinstate clients here
 
      
-     for (auto iterx = extClients.begin() ; iterx!=extClients.end() ; ++iterx) {
-       for (auto client : iterx->second) {
-         iterx->first->_clientList.Add(client);
+     for (auto iterx : extClients) {
+       for (auto client : iterx.second) {
+         iterx.first->_clientList.Add(client);
        }
      }
 
-     for (auto iterx = extValueClients.begin() ; iterx!=extValueClients.end() ; ++iterx) {
-       for (auto client : iterx->second) {
-         iterx->first->_clientListValue.Add(client);
+     for (auto iterx : extValueClients) {
+       for (auto client : iterx.second) {
+         iterx.first->_clientListValue.Add(client);
        }
      }
 
-     for (auto iterx = extShapeClients.begin() ; iterx!=extShapeClients.end() ; ++iterx) {
-       for (auto client : iterx->second) {
-         iterx->first->_clientListShape.Add(client);
+     for (auto iterx : extShapeClients) {
+       for (auto client : iterx.second) {
+         iterx.first->_clientListShape.Add(client);
        }
      }
 

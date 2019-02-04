@@ -1069,7 +1069,7 @@ namespace RooStats {
         // Check if this client is a member of our pdf
         // (We probably don't want to mess with clients
         // if they aren't...)
-        if( findChild(client->GetName(), fModel)==NULL ) continue;
+        if( findChild(client->GetName(), fModel) == nullptr) continue;
 
         // Now, do the replacement:
         bool valueProp=false;
