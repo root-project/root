@@ -317,7 +317,6 @@ Double32_t
 double_t
 Double_t
 Drawable_t
-EGetLineMode
 ErrorHandlerFunc_t
 fd_mask
 fd_set
