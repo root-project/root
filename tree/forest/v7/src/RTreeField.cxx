@@ -63,6 +63,13 @@ std::string ROOT::Experimental::Detail::RTreeFieldBase::GetLeafName() const
    return (idx == std::string::npos) ? fName : fName.substr(idx + 1);
 }
 
+void ROOT::Experimental::Detail::RTreeFieldBase::Flush() const
+{
+   for (auto& column : fColumns) {
+      column->Flush();
+   }
+}
+
 ROOT::Experimental::Detail::RTreeFieldBase::RIterator ROOT::Experimental::Detail::RTreeFieldBase::begin()
 {
    if (fSubFields.empty()) return RIterator(this, -1);

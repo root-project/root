@@ -82,7 +82,7 @@ public:
    /// Finalize the current cluster and create a new one for the following data.
    virtual void CommitCluster(TreeIndex_t nEntries) = 0;
    /// Finalize the current cluster and the entrire data set.
-   virtual void CommitDataset(TreeIndex_t nEntries) = 0;
+   virtual void CommitDataset() = 0;
 };
 
 // clang-format off

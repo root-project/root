@@ -29,7 +29,7 @@ namespace Detail {
 /**
 \class ROOT::Experimental::Detail::RPage
 \ingroup Forest
-\brief A page is a fixed size slice of an column that is mapped into memory
+\brief A page is a fixed size slice of a column that is mapped into memory
 
 The page provides a fixed-size opaque memory buffer for uncompressed data. It does not know how to interpret
 the contents but it does now about the size (and thus the number) of the elements inside as well as the element

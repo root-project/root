@@ -165,7 +165,7 @@ public:
    TreeIndex_t GetNItems();
 
    /// Ensure that all received items are written from page buffers to the storage.
-   void Flush();
+   void Flush() const;
 
    void Attach(std::unique_ptr<Detail::RTreeFieldBase> child);
 

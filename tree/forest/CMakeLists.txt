@@ -6,30 +6,30 @@
 if(root7)
   ROOT_STANDARD_LIBRARY_PACKAGE(ROOTForest
   HEADERS
-    ROOT/RColumn.hxx
-    ROOT/RColumnElement.hxx
-    ROOT/RColumnModel.hxx
-    ROOT/RForestUtil.hxx
-    ROOT/RPage.hxx
-    ROOT/RPagePool.hxx
-    ROOT/RPageStorage.hxx
-    ROOT/RPageStorageRoot.hxx
-    ROOT/RTree.hxx
-    ROOT/RTreeEntry.hxx
-    ROOT/RTreeField.hxx
-    ROOT/RTreeModel.hxx
-    ROOT/RTreeValue.hxx
-    ROOT/RTreeView.hxx
+    v7/inc/ROOT/RColumn.hxx
+    v7/inc/ROOT/RColumnElement.hxx
+    v7/inc/ROOT/RColumnModel.hxx
+    v7/inc/ROOT/RForestUtil.hxx
+    v7/inc/ROOT/RPage.hxx
+    v7/inc/ROOT/RPagePool.hxx
+    v7/inc/ROOT/RPageStorage.hxx
+    v7/inc/ROOT/RPageStorageRoot.hxx
+    v7/inc/ROOT/RTree.hxx
+    v7/inc/ROOT/RTreeEntry.hxx
+    v7/inc/ROOT/RTreeField.hxx
+    v7/inc/ROOT/RTreeModel.hxx
+    v7/inc/ROOT/RTreeValue.hxx
+    v7/inc/ROOT/RTreeView.hxx
   SOURCES
-    RColumn.cxx
-    RPagePool.cxx
-    RPageStorage.cxx
-    RPageStorageRoot.cxx
-    RTree.cxx
-    RTreeField.cxx
-    RTreeModel.cxx
-  DICTIONARY_OPTIONS
-    -writeEmptyRootPCM
+    v7/src/RColumn.cxx
+    v7/src/RPagePool.cxx
+    v7/src/RPageStorage.cxx
+    v7/src/RPageStorageRoot.cxx
+    v7/src/RTree.cxx
+    v7/src/RTreeField.cxx
+    v7/src/RTreeModel.cxx
+  LINKDEF
+    LinkDef.h
   DEPENDENCIES
     RIO
   )

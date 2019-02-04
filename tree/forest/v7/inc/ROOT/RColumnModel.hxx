@@ -80,6 +80,9 @@ public:
    bool GetIsSorted() const { return fIsSorted; }
 
    Detail::RColumnElementBase *GenerateElement();
+   bool operator ==(const RColumnModel &other) const {
+      return (fName == other.fName) && (fType == other.fType) && (fIsSorted == other.fIsSorted);
+   }
 };
 
 } // namespace Experimental
