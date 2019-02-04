@@ -3058,8 +3058,7 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "   // constructor" << std::endl;
    fout << "   " << className << "( std::vector<std::string>& theInputVars )" << std::endl;
    fout << "      : IClassifierReader()," << std::endl;
-   fout << "        fClassName( \"" << className << "\" )," << std::endl;
-   fout << "        fNvars( " << GetNvar() << " )" << std::endl;
+   fout << "        fClassName( \"" << className << "\" )" << std::endl;
    fout << "   {" << std::endl;
    fout << "      // the training input variables" << std::endl;
    fout << "      const char* inputVars[] = { ";
@@ -3135,7 +3134,7 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "   // common member variables" << std::endl;
    fout << "   const char* fClassName;" << std::endl;
    fout << std::endl;
-   fout << "   const size_t fNvars;" << std::endl;
+   fout << "   constexpr static size_t fNvars{ " << GetNvar() << " };" << std::endl;
    fout << "   size_t GetNvar()           const { return fNvars; }" << std::endl;
    fout << "   char   GetType( int ivar ) const { return fType[ivar]; }" << std::endl;
    fout << std::endl;

@@ -842,7 +842,7 @@ void TMVA::VariableTransformBase::MakeFunction( std::ostream& fout, const TStrin
             Log() << kFATAL << "VariableTransformBase/GetInput : unknown type '" << type << "'." << Endl;
          }
       }
-      fout << "};" << std::endl << std::endl;
+      fout << "   };" << std::endl << std::endl;
 
       fout << "   std::array<int, fNvars> indicesPut{" << std::endl;
       for( ItVarTypeIdxConst itEntry = fPut.begin(), itEntryEnd = fPut.end(); itEntry != itEntryEnd; ++itEntry ) {
@@ -863,7 +863,7 @@ void TMVA::VariableTransformBase::MakeFunction( std::ostream& fout, const TStrin
             Log() << kFATAL << "VariableTransformBase/PutInput : unknown type '" << type << "'." << Endl;
          }
       }
-      fout << "};" << std::endl << std::endl;
+      fout << "   };" << std::endl << std::endl;
 
    }else if( part == 1){
    }
