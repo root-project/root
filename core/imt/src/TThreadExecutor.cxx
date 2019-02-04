@@ -1,4 +1,5 @@
 #include "ROOT/TThreadExecutor.hxx"
+#include "ROOT/TTaskGroup.hxx"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
