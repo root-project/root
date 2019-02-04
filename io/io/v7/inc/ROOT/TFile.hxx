@@ -22,7 +22,6 @@
 
 #include "ROOT/RStringView.hxx"
 #include <memory>
-#include <typeinfo>
 
 namespace ROOT {
 namespace Experimental {
@@ -145,14 +144,14 @@ public:
    template <class T>
    void Write(std::string_view name, const T &obj)
    {
-      WriteMemoryWithType(name, &obj, TClass::GetClass(typeid(T)));
+      WriteMemoryWithType(name, &obj, TClass::GetClass<T>());
    }
 
    /// Write an object that is not lifetime managed by this TFileImplBase.
    template <class T>
    void Write(std::string_view name, const T *obj)
    {
-      WriteMemoryWithType(name, obj, TClass::GetClass(typeid(T)));
+      WriteMemoryWithType(name, obj, TClass::GetClass<T>());
    }
 
    /// Write an object that is already lifetime managed by this TFileImplBase.
