@@ -1117,7 +1117,7 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
          fout << "         buffer[i] = fWeightMatrix" << i << "to" << i + 1 << "[o][i] * inputValues[i];" << std::endl;
          fout << "      } // loop over i" << std::endl;
          fout << "      buffer.back() = fWeightMatrix" << i << "to" << i + 1 << "[o]["
-              << ((TObjArray *)fNetwork->At(i))->GetEntries() - 1 << "];";
+              << ((TObjArray *)fNetwork->At(i))->GetEntries() - 1 << "];" << std::endl;
       } else {
          fout << "      std::array<double, " << ((TObjArray *)fNetwork->At(i))->GetEntries()
               << "> buffer; // no need to initialise" << std::endl;
