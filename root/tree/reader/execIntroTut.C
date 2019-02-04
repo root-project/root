@@ -58,10 +58,10 @@ bool checkLeaf2(TFile* file) {
 int execIntroTut()
 {
    // open the file
-   TFile *file = TFile::Open("http://lcg-heppkg.web.cern.ch/lcg-heppkg/ROOT/eventdata.root");
+   TFile *file = TFile::Open("http://root.cern/root/files/introtutorials/eventdata.root");
    if (file == 0) {
       // if we cannot open the file, print an error message and return immediatly
-      printf("Error: cannot open http://lcg-heppkg.web.cern.ch/lcg-heppkg/ROOT/eventdata.root!\n");
+      printf("Error: cannot open http://root.cern/root/files/introtutorials/eventdata.root!\n");
       return 42;
    }
 
