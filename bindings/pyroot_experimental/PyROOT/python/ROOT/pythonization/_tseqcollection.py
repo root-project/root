@@ -70,10 +70,6 @@ def _setitem_pyz(self, idx, val):
             raise TypeError('can only assign an iterable')
 
         indices = idx.indices(len(self))
-        step = indices[2]
-        if step == 0:
-            raise ValueError('slice step cannot be zero')
-
         rg = range(*indices)
         for elem in val:
             # Prevent this new Python proxy from owning the C++ object
@@ -100,13 +96,9 @@ def _delitem_pyz(self, idx):
     # Slice
     if isinstance(idx, slice):
         indices = idx.indices(len(self))
-
-        step = indices[2]
-        if step == 0:
-            raise ValueError('slice step cannot be zero')
-
         rg = range(*indices)
 
+        step = indices[2]
         if step > 0:
             # Need to remove starting from the end
             rg = reversed(rg)
