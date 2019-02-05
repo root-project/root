@@ -65,7 +65,7 @@ protected:
   static RooArgSet _emptySet ; // Supports named argument constructor
 
   Bool_t _extended ;
-  virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const ;
+  virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const;
   Bool_t _weightSq ; // Apply weights squared?
   mutable Bool_t _first ; //!
   Double_t _offsetSaveW2; //!

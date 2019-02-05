@@ -22,6 +22,7 @@
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooGlobalFunc.h"
+#include "RooSpan.h"
 
 class RooArgList ;
 class RooDataSet ;
@@ -49,6 +50,9 @@ class TH3F;
 #include <list>
 #include <string>
 #include <iostream>
+#include <sstream>
+
+//#define CHECK_CACHED_VALUES
 
 class RooAbsReal : public RooAbsArg {
 public:
@@ -77,14 +81,20 @@ public:
   /// the variables to normalise over.
   /// These are integrated over their current ranges to compute the normalisation constant,
   /// and the unnormalised result is divided by this value.
+#ifdef CHECK_CACHED_VALUES
+  Double_t getVal(const RooArgSet* normalisationSet = nullptr) const;
+#else
+
   inline Double_t getVal(const RooArgSet* normalisationSet = nullptr) const {
-/*     if (_fast && !_inhibitDirty && std::string("RooHistFunc")==IsA()->GetName()) std::cout << "RooAbsReal::getVal(" << GetName() << ") CLEAN value = " << _value << std::endl ;  */
 #ifndef _WIN32
     return (_fast && !_inhibitDirty) ? _value : getValV(normalisationSet) ;
 #else
     return (_fast && !inhibitDirty()) ? _value : getValV(normalisationSet) ;
 #endif
   }
+
+#endif
+
   /// Like getVal(const RooArgSet*), but always requires an argument for normalisation.
   inline  Double_t getVal(const RooArgSet& normalisationSet) const { return _fast ? _value : getValV(&normalisationSet) ; }
 
@@ -388,7 +398,10 @@ protected:
     return kFALSE ;
   }
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
-  virtual Double_t evaluate() const = 0 ;
+  virtual Double_t evaluate() const = 0;
+  virtual void evaluateBatch(RooSpan<double> output,
+      const std::vector<RooSpan<const double>>& inputs,
+      const RooArgSet& inputVars) const;
 
   // Hooks for RooDataSet interface
   friend class RooRealIntegral ;
@@ -423,8 +436,6 @@ protected:
   RooNumIntConfig* _specIntegratorConfig ; // Numeric integrator configuration specific for this object
 
   Bool_t   _treeVar ;       // !do not persist
-
-  static Bool_t _cacheCheck ; // If true, always validate contents of clean which outcome of evaluate()
 
   friend class RooDataProjBinding ;
   friend class RooAbsOptGoodnessOfFit ;

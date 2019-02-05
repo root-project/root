@@ -233,30 +233,36 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& in
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor from named argument list
+/// Constructor from named argument list.
+/// \param[in] name Name used by RooFit
+/// \param[in] title Title used for plotting
+/// \param[in] fullPdfSet Set of "regular" PDFs that are normalised over all their observables
+/// \param[in] argX Optional arguments according to table below.
 ///
-/// fullPdf -- Set of 'regular' PDFS that are normalized over all their observables
-/// Argument                   | Description
-/// ---------------------------|------------
-/// Conditional(pdfSet,depSet) | Add PDF to product with condition that it<br>only be normalized over specified observables<br>any remaining observables will be conditional<br>observables
+/// <table>
+/// <tr><th> Argument                 <th> Description
+/// <tr><td> `Conditional(pdfSet,depSet)` <td> Add PDF to product with condition that it
+/// only be normalized over specified observables. Any remaining observables will be conditional observables.
+/// </table>
 ///
+/// For example, given a PDF \f$ F(x,y) \f$ and \f$ G(y) \f$,
 ///
-/// For example, given a PDF F(x,y) and G(y)
+/// `RooProdPdf("P", "P", G, Conditional(F,x))` will construct a 2-dimensional PDF as follows:
+/// \f[
+///     P(x,y) = \frac{G(y)}{\int_y G(y)} \cdot \frac{F(x,y)}{\int_x F(x,y)},
+/// \f]
 ///
-/// RooProdPdf("P","P",G,Conditional(F,x)) will construct a 2-dimensional PDF as follows:
+/// which is a well normalised and properly defined PDF, but different from
+/// \f[
+///     P'(x,y) = \frac{F(x,y) \cdot G(y)}{\int_x\int_y F(x,y) \cdot G(y)}.
+/// \f]
 ///
-/// \f[P(x,y) = \frac{G(y)}{\int_y G(y)} * \frac{F(x,y)}{\int_x G(x,y)} \f]
+/// In the former case, the \f$ y \f$ distribution of \f$ P \f$ is identical to that of \f$ G \f$, while
+/// \f$ F \f$ only is used to determine the correlation between \f$ X \f$ and \f$ Y \f$. In the latter
+/// case, the \f$ Y \f$ distribution is defined by the product of \f$ F \f$ and \f$ G \f$.
 ///
-/// which is a well normalized and properly defined PDF, but different from the
-///
-/// \f[P'(x,y) = \frac{F(x,y)}{\int_y G(y)} / \int_x\int_y F(x,y)*G(y) \f]
-///
-/// In the former case the y distribution of P is identical to that of G, while
-/// F only is used to determine the correlation between X and Y. In the latter
-/// case the Y distribution is defined by the product of F and G.
-///
-/// This P(x,y) construction is analoguous to generating events from F(x,y) with
-/// a prototype dataset sampled from G(y)
+/// This \f$ P(x,y) \f$ construction is analoguous to generating events from \f$ F(x,y) \f$ with
+/// a prototype dataset sampled from \f$ G(y) \f$.
 
 RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet,
 		       const RooCmdArg& arg1, const RooCmdArg& arg2,
@@ -477,32 +483,6 @@ Double_t RooProdPdf::evaluate() const
 /// Calculate running product of pdfs terms, using the supplied
 /// normalization set in 'normSetList' for each component
 
-Double_t RooProdPdf::calculate(const RooArgList* partIntList, const RooLinkedList* normSetList) const
-{
-  RooAbsReal* partInt;
-  RooArgSet* normSet;
-  Double_t value = 1.0;
-  RooFIter plIter = partIntList->fwdIterator(), nlIter = normSetList->fwdIterator();
-
-    for (partInt = (RooAbsReal*) plIter.next(),
-	normSet = (RooArgSet*) nlIter.next(); partInt && normSet;
-      partInt = (RooAbsReal*) plIter.next(),
-      normSet = (RooArgSet*) nlIter.next()) {
-    const Double_t piVal = partInt->getVal(normSet->getSize() > 0 ? normSet : 0);
-//  cout << "RooProdPdf::calculate(" << GetName() << ") partInt(" << partInt->GetName() << ") = " << piVal << " normSet = " << normSet << " " << (normSet->getSize()>0 ? *normSet : RooArgSet()) << endl ;
-    value *= piVal;
-    if (value <= _cutOff) { break; }
-  }
-
-  return value ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Calculate running product of pdfs terms, using the supplied
-/// normalization set in 'normSetList' for each component
-
 Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verbose*/) const
 {
   //cout << "RooProdPdf::calculate from cache" << endl ;
@@ -529,7 +509,7 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
       value *= piVal ;
       if (value <= _cutOff) break;
     }
-//   cout << "return value = " << value << endl ;
+
     return value ;
   }
 }
@@ -903,43 +883,43 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 //       cout << "processing atomic item" << endl;
       RooArgSet* term = (RooArgSet*) group->At(0);
 
-      Int_t termIdx = terms.IndexOf(term);
-      norm = (RooArgSet*) norms.At(termIdx);
-      integ = (RooArgSet*) ints.At(termIdx);
-      xdeps = (RooArgSet*) cross.At(termIdx);
-      imps = (RooArgSet*) imp.At(termIdx);
+        Int_t termIdx = terms.IndexOf(term);
+        norm = (RooArgSet*) norms.At(termIdx);
+        integ = (RooArgSet*) ints.At(termIdx);
+        xdeps = (RooArgSet*) cross.At(termIdx);
+        imps = (RooArgSet*) imp.At(termIdx);
 
-      RooArgSet termNSet, termISet, termXSet, termImpSet;
+        RooArgSet termNSet, termISet, termXSet, termImpSet;
 
-      // Take list of normalization, integrated dependents from factorization algorithm
-      termISet.add(*integ);
-      termNSet.add(*norm);
+        // Take list of normalization, integrated dependents from factorization algorithm
+        termISet.add(*integ);
+        termNSet.add(*norm);
 
-      // Cross-imported integrated dependents
-      termXSet.add(*xdeps);
-      termImpSet.add(*imps);
+        // Cross-imported integrated dependents
+        termXSet.add(*xdeps);
+        termImpSet.add(*imps);
 
 //       cout << GetName() << ": termISet = " << termISet << endl;
 //       cout << GetName() << ": termNSet = " << termNSet << endl;
 //       cout << GetName() << ": termXSet = " << termXSet << endl;
 //       cout << GetName() << ": termImpSet = " << termImpSet << endl;
 
-      // Add prefab term to partIntList.
-      Bool_t isOwned(kFALSE);
-      vector<RooAbsReal*> func = processProductTerm(nset, iset, isetRangeName, term, termNSet, termISet, isOwned);
-      if (func[0]) {
-	cache->_partList.add(*func[0]);
-	if (isOwned) cache->_ownedList.addOwned(*func[0]);
+        // Add prefab term to partIntList.
+        Bool_t isOwned(kFALSE);
+        vector<RooAbsReal*> func = processProductTerm(nset, iset, isetRangeName, term, termNSet, termISet, isOwned);
+        if (func[0]) {
+          cache->_partList.add(*func[0]);
+          if (isOwned) cache->_ownedList.addOwned(*func[0]);
 
-	cache->_normList.emplace_back(norm->snapshot(kFALSE));
+          cache->_normList.emplace_back(norm->snapshot(kFALSE));
 
-	cache->_numList.addOwned(*func[1]);
-	cache->_denList.addOwned(*func[2]);
-// 	cout << "func[0]=" << func[0]->IsA()->GetName() << "::" << func[0]->GetName() << endl;
-// 	cout << "func[1]=" << func[1]->IsA()->GetName() << "::" << func[1]->GetName() << endl;
-// 	cout << "func[2]=" << func[2]->IsA()->GetName() << "::" << func[2]->GetName() << endl;
-      }
-    } else {
+          cache->_numList.addOwned(*func[1]);
+          cache->_denList.addOwned(*func[2]);
+//          cout << "func[0]=" << func[0]->IsA()->GetName() << "::" << func[0]->GetName() << endl;
+//          cout << "func[1]=" << func[1]->IsA()->GetName() << "::" << func[1]->GetName() << endl;
+//          cout << "func[2]=" << func[2]->IsA()->GetName() << "::" << func[2]->GetName() << endl;
+        }
+      } else {
 //        cout << "processing composite item" << endl;
       RooArgSet compTermSet, compTermNorm, compTermNum, compTermDen;
       RooFIter tIter = group->fwdIterator();
@@ -2082,16 +2062,13 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
 
 RooArgSet* RooProdPdf::getConnectedParameters(const RooArgSet& observables) const
 {
-  RooFIter iter = _pdfList.fwdIterator() ;
-  RooAbsArg* arg ;
   RooArgSet* connectedPars  = new RooArgSet("connectedPars") ;
-  while((arg=iter.next())) {
+  for (const auto arg : _pdfList) {
     // Check if term is relevant
     if (arg->dependsOn(observables)) {
       RooArgSet* tmp = arg->getParameters(observables) ;
       connectedPars->add(*tmp) ;
       delete tmp ;
-    } else {
     }
   }
   return connectedPars ;
@@ -2218,33 +2195,31 @@ std::list<Double_t>* RooProdPdf::binBoundaries(RooAbsRealLValue& obs, Double_t x
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Label OK'ed components of a RooProdPdf with cache-and-track, _and_ label all RooProdPdf
-/// descendants with extra informationa about (conditional) normalization, needed to be able
-/// to Cache-And-Track them outside the RooprodPdf context
+/// descendants with extra information about (conditional) normalization, needed to be able
+/// to Cache-And-Track them outside the RooProdPdf context.
 
 void RooProdPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
 {
-  RooFIter piter = pdfList().fwdIterator() ;
-  RooAbsArg* parg ;
-  while ((parg=piter.next())) {
+  for (const auto parg : _pdfList) {
 
     if (parg->canNodeBeCached()==Always) {
       trackNodes.add(*parg) ;
-      //cout << "tracking node RooProdPdf component " << parg->IsA()->GetName() << "::" << parg->GetName() << endl ;
+      cout << "tracking node RooProdPdf component " << parg << " " << parg->IsA()->GetName() << "::" << parg->GetName() << endl ;
 
       // Additional processing to fix normalization sets in case product defines conditional observables
       RooArgSet* pdf_nset = findPdfNSet((RooAbsPdf&)(*parg)) ;
       if (pdf_nset) {
-	// Check if conditional normalization is specified
-	if (string("nset")==pdf_nset->GetName() && pdf_nset->getSize()>0) {
-	  RooNameSet n(*pdf_nset) ;
-	  parg->setStringAttribute("CATNormSet",n.content()) ;
-	}
-	if (string("cset")==pdf_nset->GetName()) {
-	  RooNameSet c(*pdf_nset) ;
-	  parg->setStringAttribute("CATCondSet",c.content()) ;
-	}
+        // Check if conditional normalization is specified
+        if (string("nset")==pdf_nset->GetName() && pdf_nset->getSize()>0) {
+          RooNameSet n(*pdf_nset) ;
+          parg->setStringAttribute("CATNormSet",n.content()) ;
+        }
+        if (string("cset")==pdf_nset->GetName()) {
+          RooNameSet c(*pdf_nset) ;
+          parg->setStringAttribute("CATCondSet",c.content()) ;
+        }
       } else {
-	coutW(Optimization) << "RooProdPdf::setCacheAndTrackHints(" << GetName() << ") WARNING product pdf does not specify a normalization set for component " << parg->GetName() << endl ;
+        coutW(Optimization) << "RooProdPdf::setCacheAndTrackHints(" << GetName() << ") WARNING product pdf does not specify a normalization set for component " << parg->GetName() << endl ;
       }
     }
   }

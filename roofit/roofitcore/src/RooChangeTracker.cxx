@@ -26,7 +26,7 @@ additional validation step where it also compares the numeric
 values of the tracked arguments with reference values to ensure
 that values have actually changed. This may be useful in case some
 of the tracked observables are in binned datasets where each
-observable propates a valueDirty flag when an event is loaded even
+observable propagates a valueDirty flag when an event is loaded even
 though usually only one observable actually changes.
 **/
 
@@ -131,7 +131,7 @@ RooChangeTracker::RooChangeTracker(const RooChangeTracker& other, const char* na
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns true if state has changes since last call with clearState=kTRUE
+/// Returns true if state has changed since last call with clearState=kTRUE.
 /// If clearState is true, changeState flag will be cleared.
 
 Bool_t RooChangeTracker::hasChanged(Bool_t clearState) 

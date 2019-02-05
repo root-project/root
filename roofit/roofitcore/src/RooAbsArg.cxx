@@ -493,7 +493,7 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
       // Skip non-value server nodes if requested
       Bool_t isValueSrv = server->_clientListValue.containsByNamePtr(arg);
       if (valueOnly && !isValueSrv) {
-	continue ;
+        continue ;
       }
       treeNodeServerList(list,server,doBranch,doLeaf,valueOnly,recurseFundamental) ;
     }
@@ -526,11 +526,11 @@ void RooAbsArg::addParameters(RooArgSet& params, const RooArgSet* nset,Bool_t st
   for (const auto server : _serverList) {
     if (server->isValueServer(*this)) {
       if (server->isFundamental()) {
-	if (!nset || !server->dependsOn(*nset)) {
-	  nodeParamServers.add(*server) ;
-	}
+        if (!nset || !server->dependsOn(*nset)) {
+          nodeParamServers.add(*server) ;
+        }
       } else {
-	nodeBranchServers.add(*server) ;
+        nodeBranchServers.add(*server) ;
       }
     }
   }

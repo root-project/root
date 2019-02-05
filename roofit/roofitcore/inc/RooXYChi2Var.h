@@ -78,7 +78,7 @@ protected:
   void initIntegrator() ;
   Double_t xErrorContribution(Double_t ydata) const ;
 
-  virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const ;
+  virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const ;
 
   RooNumIntConfig   _intConfig ; // Numeric integrator configuration for integration of function over bin
   RooAbsReal*       _funcInt ; //! Function integral

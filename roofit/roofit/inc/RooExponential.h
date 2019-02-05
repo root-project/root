@@ -28,20 +28,24 @@ public:
   RooExponential(const char *name, const char *title,
        RooAbsReal& _x, RooAbsReal& _c);
   RooExponential(const RooExponential& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooExponential(*this,newname); }
+  virtual TObject* clone(const char* newname) const override { return new RooExponential(*this,newname); }
   inline virtual ~RooExponential() { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override;
 
 protected:
   RooRealProxy x;
   RooRealProxy c;
 
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
+
+  void evaluateBatch(RooSpan<double> output,
+    const std::vector<RooSpan<const double>>& inputs,
+    const RooArgSet& inputVars) const override;
 
 private:
-  ClassDef(RooExponential,1) // Exponential PDF
+  ClassDefOverride(RooExponential,1) // Exponential PDF
 };
 
 #endif

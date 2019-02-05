@@ -151,7 +151,6 @@ protected:
   RooAbsReal* specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
   RooAbsReal* specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
   Double_t calculate(const RooProdPdf::CacheElem& cache, Bool_t verbose=kFALSE) const ;
-  Double_t calculate(const RooArgList* partIntList, const RooLinkedList* normSetList) const ;
 
  
   friend class RooProdGenContext ;

@@ -3979,9 +3979,9 @@ RooAbsReal* RooAbsReal::createScanRI(const RooArgSet& iset, const RooArgSet& nse
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Utility function for createRunningIntegral that construct an
+/// Utility function for createRunningIntegral. It creates an
 /// object implementing the standard (analytical) integration
-/// technique for calculating the running integral
+/// technique for calculating the running integral.
 
 RooAbsReal* RooAbsReal::createIntRI(const RooArgSet& iset, const RooArgSet& nset)
 {
@@ -4763,3 +4763,55 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
   }
   setStringAttribute("CACHEPARAMINT",plist.c_str()) ;
 }
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate function for a batch of input data points. If not overridden by
+/// derived classes, this will call the slow, single-valued evaluate() in a loop.
+/// \param[out] output Write results to this span.
+/// \param[in]  inputs Spans with input variables.
+/// \param[in]  inputVars Variables corresponding to the span `inputs`.
+void RooAbsReal::evaluateBatch(RooSpan<double> output,
+    const std::vector<RooSpan<const double>>& inputs,
+    const RooArgSet& inputVars) const {
+
+//  std::cout << "evaluateBatch on\n";
+//  Print("V");
+
+  RooArgSet allServers;
+  leafNodeServerList(&allServers);
+//  allServers.Print("");
+
+  std::vector<std::pair<std::size_t, RooAbsRealLValue*>> serverVars;
+  //First find out which values from the inputVars we need to set,
+  //because we depend on them.
+  for (int i = 0; i < inputVars.size(); ++i) {
+    const RooAbsArg* var = inputVars[i];
+//    std::cout << "\n\nVar #" << i << " coming in:\n";
+//    var->Print("v");
+
+    RooAbsArg* server = allServers.find(*var);
+//    std::cout << "\nCorresponding server: " << server << std::endl;
+
+    if (server && dynamic_cast<RooAbsRealLValue*>(server)) {
+//      server->Print("");
+//      std::cout << "Saved." << std::endl;
+
+      auto lval = static_cast<RooAbsRealLValue*>(server);
+      serverVars.emplace_back(i, lval);
+    }
+  }
+
+  for (auto i = 0; i < output.size(); ++i) {
+    for (auto indexLVal : serverVars) {
+//      std::cout << "Setting var to " << inputs[indexLVal.first][i] << std::endl;
+      indexLVal.second->setVal(inputs[indexLVal.first][i]);
+    }
+
+    output[i] = evaluate();
+  }
+}
+
+
+

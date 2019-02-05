@@ -70,7 +70,7 @@ protected:
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
   virtual Double_t evaluate() const ;
 
-  virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const = 0 ;
+  virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const = 0 ;
   virtual Double_t getCarry() const;
 
   void setMPSet(Int_t setNum, Int_t numSets) ; 

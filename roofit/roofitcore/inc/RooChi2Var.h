@@ -71,7 +71,7 @@ protected:
   RooDataHist::ErrorType _etype ;     // Error type store in associated RooDataHist
   FuncMode _funcMode ;                // Function, P.d.f. or extended p.d.f?
 
-  virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const ;
+  virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const ;
   
   ClassDef(RooChi2Var,1) // Chi^2 function of p.d.f w.r.t a binned dataset
 };

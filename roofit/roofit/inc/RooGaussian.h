@@ -24,20 +24,20 @@ class RooRealVar;
 
 class RooGaussian : public RooAbsPdf {
 public:
-  RooGaussian() {    } ;
+  RooGaussian() { };
   RooGaussian(const char *name, const char *title,
          RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma);
-  RooGaussian(const RooGaussian& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooGaussian(*this,newname); }
-  inline virtual ~RooGaussian() {  }
+  RooGaussian(const RooGaussian& other, const char* name=0);
+  virtual TObject* clone(const char* newname) const override {
+    return new RooGaussian(*this,newname);
+  }
+  inline virtual ~RooGaussian() { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void generateEvent(Int_t code);
-
-  Double_t getLogVal(const RooArgSet* set) const ;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void generateEvent(Int_t code) override;
 
 protected:
 
@@ -45,11 +45,14 @@ protected:
   RooRealProxy mean ;
   RooRealProxy sigma ;
 
-  Double_t evaluate() const ;
+  Double_t evaluate() const override;
+  void evaluateBatch(RooSpan<double> output,
+        const std::vector<RooSpan<const double>>& inputs,
+        const RooArgSet& inputVars) const override;
 
 private:
 
-  ClassDef(RooGaussian,1) // Gaussian PDF
+  ClassDefOverride(RooGaussian,1) // Gaussian PDF
 };
 
 #endif
