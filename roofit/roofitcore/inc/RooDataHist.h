@@ -91,6 +91,17 @@ public:
   }
   virtual Bool_t isNonPoissonWeighted() const ;
 
+  virtual std::vector<RooSpan<const double>> getBatch(std::size_t first, std::size_t last) const {
+    assert(false);
+    std::vector<double> vec(first, last);
+    return {RooSpan<const double>(std::move(vec))};
+  }
+  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t last) const {
+    assert(false);
+    std::vector<double> vec(first, last);
+    return RooSpan<const double>(std::move(vec));
+  }
+
   Double_t sum(Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) const ;
   Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) ;
   Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize, Bool_t inverseCorr, const std::map<const RooAbsArg*, std::pair<Double_t, Double_t> >& ranges);

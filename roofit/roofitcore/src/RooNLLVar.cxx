@@ -19,13 +19,16 @@
 \class RooNLLVar
 \ingroup Roofitcore
 
-Class RooNLLVar implements a a -log(likelihood) calculation from a dataset
+Class RooNLLVar implements a -log(likelihood) calculation from a dataset
 and a PDF. The NLL is calculated as
-<pre>
- Sum[data] -log( pdf(x_data) )
-</pre>
-In extended mode, a (Nexpect - Nobserved*log(NExpected) term is added
+\f[
+ \sum_\mathrm{data} -\log( \mathrmp{pdf}(x_\mathrm{data})
+\f]
+In extended mode, a
+\f$ N_mathrm{expect} - N_mathrm{observed}*log(N_mathrm{expect}) \f$ term is added.
 **/
+
+#define BATCH_COMPUTATIONS
 
 #include <algorithm>
 
@@ -44,8 +47,7 @@ In extended mode, a (Nexpect - Nobserved*log(NExpected) term is added
 #include "RooRealVar.h"
 #include "RooProdPdf.h"
 
-ClassImp(RooNLLVar);
-;
+ClassImp(RooNLLVar)
 
 RooArgSet RooNLLVar::_emptySet ;
 
@@ -245,27 +247,31 @@ void RooNLLVar::applyWeightSquared(Bool_t flag)
 /// If this an extended likelihood, the extended term is added to the return likelihood
 /// in the batch that encounters the event with index 0.
 
-Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const
+Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
   // Throughout the calculation, we use Kahan's algorithm for summing to
   // prevent loss of precision - this is a factor four more expensive than
   // straight addition, but since evaluating the PDF is usually much more
   // expensive than that, we tolerate the additional cost...
-  Int_t i ;
   Double_t result(0), carry(0);
 
   RooAbsPdf* pdfClone = (RooAbsPdf*) _funcClone ;
 
   // cout << "RooNLLVar::evaluatePartition(" << GetName() << ") projDeps = " << (_projDeps?*_projDeps:RooArgSet()) << endl ;
 
-  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize,(_binnedPdf?kFALSE:kTRUE) ) ;
+  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?kFALSE:kTRUE) ) ;
+
+#ifdef BATCH_COMPUTATIONS
+  assert(stepSize == 1);
+  auto dataBatches = _dataClone->store()->getBatch(firstEvent, lastEvent);
+#endif
 
   Double_t sumWeight(0), sumWeightCarry(0);
 
   // If pdf is marked as binned - do a binned likelihood calculation here (sum of log-Poisson for each bin)
   if (_binnedPdf) {
 
-    for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
+    for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
 
       _dataClone->get(i) ;
 
@@ -282,7 +288,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
       if (mu<=0 && N>0) {
 
 	// Catch error condition: data present where zero events are predicted
-	logEvalError(Form("Observed %f events in bin %d with zero event yield",N,i)) ;
+	logEvalError(Form("Observed %f events in bin %lu with zero event yield",N,i)) ;
 
       } else if (fabs(mu)<1e-10 && fabs(N)<1e-10) {
 
@@ -308,15 +314,85 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     }
 
 
-  } else {
+  } else { //unbinned PDF
 
-    for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
+#ifdef BATCH_COMPUTATIONS
+    auto eventWeightBatch = _dataClone->getWeightBatch(firstEvent, lastEvent);
+
+    //TODO eliminate the copying if _weightSq: Write lambda that squares on the fly?
+    std::vector<double> eventWeights(eventWeightBatch.begin(), eventWeightBatch.end());
+
+    static std::vector<double> results;
+    results.resize(lastEvent - firstEvent, 0.);
+    auto& vars = *_dataClone->get();
+    pdfClone->getLogValBatch(RooSpan<double>(results.begin(), results.end()),
+        dataBatches, vars, _normSet);
+
+    if (_weightSq) {
+      for (auto& weight : eventWeights) {
+        weight *= weight;
+      }
+    }
+
+    if (eventWeights.size() == 1) {
+
+      //Sum the event weights
+      sumWeight = (lastEvent - firstEvent) * eventWeights.front();
+      sumWeightCarry = 0.;
+
+      //Sum the probabilities
+      const double negWeight = -eventWeights.front();
+      double myCarry = 0.;
+      double myResult = 0.;
+
+      for (int i = 0; i < (int)results.size(); ++i) {
+        double y = negWeight * results[i] - myCarry;
+        double t = myResult + y;
+        myCarry = (t - myResult) - y;
+        myResult = t;
+      }
+
+      carry = myCarry;
+      result = myResult;
+
+    } else {
+
+      //Sum the weights
+      double mySumWeightCarry = 0.;
+      double mySumWeight = 0.;
+      for (int i = 0; i < (int)eventWeights.size(); ++i) {
+        double y = eventWeights[i] - mySumWeightCarry;
+        double t = mySumWeight + y;
+        mySumWeightCarry = (t - mySumWeight) - y;
+        mySumWeight = t;
+      }
+
+      //Sum the probabilities
+      double myCarry = 0.;
+      double myResult = 0.;
+
+      for (int i = 0; i < (int)results.size(); ++i) {
+        results[i] = -eventWeights[i] * results[i];
+
+        double y = results[i] - myCarry;
+        double t = myResult + y;
+        myCarry = (t - myResult) - y;
+        myResult = t;
+
+      }
+
+      carry = myCarry;
+      result = myResult;
+    }
+#else
+
+    for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
 
       _dataClone->get(i) ;
 
       if (!_dataClone->valid()) continue;
 
-      Double_t eventWeight = _dataClone->weight();
+      Double_t eventWeight = _dataClone->weight(); //FIXME
       if (0. == eventWeight * eventWeight) continue ;
       if (_weightSq) eventWeight = _dataClone->weightSquared() ;
 
@@ -334,27 +410,30 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
       result = t;
     }
 
+#endif
+
     // include the extended maximum likelihood term, if requested
     if(_extended && _setNum==_extSet) {
       if (_weightSq) {
 
-	// Calculate sum of weights-squared here for extended term
-	Double_t sumW2(0), sumW2carry(0);
-	for (i=0 ; i<_dataClone->numEntries() ; i++) {
-	  _dataClone->get(i);
-	  Double_t y = _dataClone->weightSquared() - sumW2carry;
-	  Double_t t = sumW2 + y;
-	  sumW2carry = (t - sumW2) - y;
-	  sumW2 = t;
-	}
+        //TODO
+        // Calculate sum of weights-squared here for extended term
+        Double_t sumW2(0), sumW2carry(0);
+        for (decltype(_dataClone->numEntries()) i = 0; i < _dataClone->numEntries() ; i++) {
+          _dataClone->get(i);
+          Double_t y = _dataClone->weightSquared() - sumW2carry;
+          Double_t t = sumW2 + y;
+          sumW2carry = (t - sumW2) - y;
+          sumW2 = t;
+        }
 
-	Double_t expected= pdfClone->expectedEvents(_dataClone->get());
+        Double_t expected= pdfClone->expectedEvents(_dataClone->get());
 
-	// Adjust calculation of extended term with W^2 weighting: adjust poisson such that
-	// estimate of Nexpected stays at the same value, but has a different variance, rescale
+        // Adjust calculation of extended term with W^2 weighting: adjust poisson such that
+        // estimate of Nexpected stays at the same value, but has a different variance, rescale
         // both the observed and expected count of the Poisson with a factor sum[w] / sum[w^2] which is
         // the effective weight of the Poisson term.
-	// i.e. change Poisson(Nobs = sum[w]| Nexp ) --> Poisson( sum[w] * sum[w] / sum[w^2] | Nexp * sum[w] / sum[w^2] )
+        // i.e. change Poisson(Nobs = sum[w]| Nexp ) --> Poisson( sum[w] * sum[w] / sum[w^2] | Nexp * sum[w] / sum[w^2] )
         // weighted by the effective weight  sum[w^2]/ sum[w] in the likelihood.
         // Since here we compute the likelihood with the weight square we need to multiply by the
         // square of the effective weight
@@ -366,21 +445,21 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
         //  sum[w^2] / sum[w] * expected - sum[w^2] * log (expectedW)
         //  and since the weights are constants in the likelihood we can use log(expected) instead of log(expectedW)
 
-	Double_t expectedW2 = expected * sumW2 / _dataClone->sumEntries() ;
-	Double_t extra= expectedW2 - sumW2*log(expected );
+        Double_t expectedW2 = expected * sumW2 / _dataClone->sumEntries() ;
+        Double_t extra= expectedW2 - sumW2*log(expected );
 
-	// Double_t y = pdfClone->extendedTerm(sumW2, _dataClone->get()) - carry;
+        // Double_t y = pdfClone->extendedTerm(sumW2, _dataClone->get()) - carry;
 
-	Double_t y = extra - carry ;
+        Double_t y = extra - carry ;
 
-	Double_t t = result + y;
-	carry = (t - result) - y;
-	result = t;
+        Double_t t = result + y;
+        carry = (t - result) - y;
+        result = t;
       } else {
-	Double_t y = pdfClone->extendedTerm(_dataClone->sumEntries(), _dataClone->get()) - carry;
-	Double_t t = result + y;
-	carry = (t - result) - y;
-	result = t;
+        Double_t y = pdfClone->extendedTerm(_dataClone->sumEntries(), _dataClone->get()) - carry;
+        Double_t t = result + y;
+        carry = (t - result) - y;
+        result = t;
       }
     }
   }
@@ -415,7 +494,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
       _offsetCarry = carry;
     }
 
-    // Substract offset
+    // Subtract offset
     Double_t y = -_offset - (carry + _offsetCarry);
     Double_t t = result + y;
     carry = (t - result) - y;

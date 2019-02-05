@@ -384,7 +384,7 @@ Double_t RooXYChi2Var::fy() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate chi^2 in partition from firstEvent to lastEvent using given stepSize
 
-Double_t RooXYChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const 
+Double_t RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
   Double_t result(0), carry(0);
 
@@ -393,7 +393,7 @@ Double_t RooXYChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_
 
   _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize,kFALSE ) ;
 
-  for (Int_t i=firstEvent ; i<lastEvent ; i+=stepSize) {
+  for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
     
     // get the data values for this event
     xydata->get(i);

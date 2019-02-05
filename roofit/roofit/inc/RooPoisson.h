@@ -21,19 +21,17 @@ public:
   RooPoisson() { _noRounding = kFALSE ;   } ;
   RooPoisson(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, Bool_t noRounding=kFALSE);
   RooPoisson(const RooPoisson& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooPoisson(*this,newname); }
+  virtual TObject* clone(const char* newname) const override { return new RooPoisson(*this,newname); }
   inline virtual ~RooPoisson() {  }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void generateEvent(Int_t code) override;
   
-  void setNoRounding(bool flag = kTRUE){_noRounding = flag;}
-  void protectNegativeMean(bool flag = kTRUE){_protectNegative = flag;}
-
-  Double_t getLogVal(const RooArgSet* set=0) const ;
+  void setNoRounding(bool flag = kTRUE) {_noRounding = flag;}
+  void protectNegativeMean(bool flag = kTRUE) {_protectNegative = flag;}
 
 protected:
 
@@ -42,13 +40,12 @@ protected:
   Bool_t  _noRounding ;
   Bool_t  _protectNegative ;
   
-  Double_t evaluate() const ;
-  Double_t evaluate(Double_t k) const;
-  
+  Double_t evaluate() const override;
+  void evaluateBatch(RooSpan<double> output,
+          const std::vector<RooSpan<const double>>& inputs,
+          const RooArgSet& inputVars) const override;
 
-private:
-
-  ClassDef(RooPoisson,3) // A Poisson PDF
+  ClassDefOverride(RooPoisson,3) // A Poisson PDF
 };
  
 #endif

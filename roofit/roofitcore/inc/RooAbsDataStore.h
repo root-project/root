@@ -51,8 +51,14 @@ public:
   virtual void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const = 0 ; 
 
   virtual Double_t weight(Int_t index) const = 0 ;
-
   virtual Bool_t isWeighted() const = 0 ;
+
+  virtual std::vector<RooSpan<const double>> getBatch(std::size_t first, std::size_t last) const {
+    assert(false);
+    std::vector<double> vec(first, last);
+    return {RooSpan<const double>(vec)};
+  }
+  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t last) const;
 
   // Change observable name
   virtual Bool_t changeObservableName(const char* from, const char* to) =0 ;
