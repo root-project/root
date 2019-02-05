@@ -254,6 +254,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
   MODULE
     Core
   OPTIONS
+    -writeEmptyRootPCM 
     ${dict_opts}
   LINKDEF
     LinkDef.h
