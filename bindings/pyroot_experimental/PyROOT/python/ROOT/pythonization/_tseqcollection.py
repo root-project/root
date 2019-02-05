@@ -12,8 +12,28 @@ from ROOT import pythonization
 from cppyy.gbl import TIter
 from libcppyy import SetOwnership
 
+import sys
+
 
 # Item access
+
+def _check_index(self, idx):
+    if sys.version_info >= (3,0):
+        allowed_types = (int,)
+    else:
+        allowed_types = (int, long)
+
+    t = type(idx)
+    if not t in allowed_types:
+        raise TypeError('list indices must be integers, not {}'.format(t.__name__))
+
+    if (idx < 0):
+        idx = len(self) + idx
+
+    if idx < 0 or idx >= len(self):
+        raise IndexError('list assignment index out of range')
+
+    return idx
 
 def _getitem_pyz(self, idx):
     # Parameters:
@@ -30,10 +50,8 @@ def _getitem_pyz(self, idx):
             res.Add(self.At(i))
     # Number
     else:
+        idx = _check_index(self, idx)
         res = self.At(idx)
-
-        if not res:
-            raise IndexError('list index out of range')
 
     return res
 
@@ -70,7 +88,8 @@ def _setitem_pyz(self, idx, val):
                 self.append(elem)
     # Number
     else:
-        _delitem_pyz(self, idx)
+        idx = _check_index(self, idx)
+        self.RemoveAt(idx)
         self.AddAt(val, idx)
 
 def _delitem_pyz(self, idx):
@@ -96,11 +115,8 @@ def _delitem_pyz(self, idx):
             self.RemoveAt(i)
     # Number
     else:
-        res = self.RemoveAt(idx)
-
-        if not res:
-            raise IndexError('list assignment index out of range')
-
+        idx = _check_index(self, idx)
+        self.RemoveAt(idx)
 
 @pythonization()
 def pythonize_tseqcollection(klass, name):
