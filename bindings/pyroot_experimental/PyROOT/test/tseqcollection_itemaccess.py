@@ -37,6 +37,39 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         with self.assertRaises(IndexError):
             sc[self.num_elems]
 
+    def test_getitem_slice(self):
+        sc = self.create_tseqcollection()
+
+        # All items
+        slice1 = sc[:]
+        for i in range(slice1.GetEntries()):
+            self.assertEqual(sc[i], slice1[i])
+
+        # First two items
+        slice2 = sc[0:2]
+        self.assertEqual(sc[0], slice2[0])
+        self.assertEqual(sc[1], slice2[1])
+
+        # Last two items
+        slice3 = sc[-2:]
+        self.assertEqual(sc[1], slice3[0])
+        self.assertEqual(sc[2], slice3[1])
+
+        # First and third items
+        slice4 = sc[0::2]
+        self.assertEqual(sc[0], slice4[0])
+        self.assertEqual(sc[2], slice4[1])
+
+        # All items, reversed order
+        slice5 = sc[::-1]
+        for i in range(slice5.GetEntries()):
+            self.assertEqual(sc[i], slice5[self.num_elems - 1 - i])
+
+        # First and third items, reversed order
+        slice6 = sc[::-2]
+        self.assertEqual(sc[0], slice6[1])
+        self.assertEqual(sc[2], slice6[0])
+
     def test_setitem(self):
         sc = self.create_tseqcollection()
         l = []
@@ -55,6 +88,70 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         # Check invalid index case
         with self.assertRaises(IndexError):
             sc[self.num_elems] = ROOT.TObject()
+
+    def test_setitem_slice(self):
+        sc1 = self.create_tseqcollection()
+        sc2 = self.create_tseqcollection()
+
+        # Replace all items
+        sc1[:] = sc2
+        self.assertEquals(sc1.GetEntries(), self.num_elems)
+        for i in range(self.num_elems):
+            self.assertEquals(sc1[i], sc2[i])
+
+        # Append items
+        sc1 = self.create_tseqcollection()
+        l = [ elem for elem in sc1 ]
+
+        sc1[self.num_elems:] = sc2
+
+        self.assertEquals(sc1.GetEntries(), 2 * self.num_elems)
+        i = 0
+        for elem in l: # first half
+            self.assertEquals(sc1[i], elem)
+            i += 1
+        for elem in sc2: # second half
+            self.assertEquals(sc1[i], elem)
+            i += 1
+
+        # Assign second item.
+        # This time use a Python list as assigned value
+        sc3 = self.create_tseqcollection()
+        l2 = [ ROOT.TObject() ]
+        l3 = [ elem for elem in sc3 ]
+
+        sc3[1:2] = l2
+
+        self.assertEquals(sc3.GetEntries(), self.num_elems)
+        self.assertEquals(sc3[0], l3[0])
+        self.assertEquals(sc3[1], l2[0])
+        self.assertEquals(sc3[2], l3[2])
+
+        # Assign with step
+        sc4 = self.create_tseqcollection()
+        o = sc4[1]
+        len4 = 2
+        l4 = [ ROOT.TObject() for _ in range(len4) ]
+
+        sc4[::2] = l4
+
+        self.assertEquals(sc4.GetEntries(), self.num_elems)
+        self.assertEquals(sc4[0], l4[0])
+        self.assertEquals(sc4[1], o)
+        self.assertEquals(sc4[2], l4[1])
+
+        # Assign with step (start from end)
+        sc4[::-2] = l4
+
+        self.assertEquals(sc4.GetEntries(), self.num_elems)
+        self.assertEquals(sc4[0], l4[1])
+        self.assertEquals(sc4[1], o)
+        self.assertEquals(sc4[2], l4[0])
+
+        # Step cannot be zero
+        sc5 = self.create_tseqcollection()
+        with self.assertRaises(ValueError):
+            sc5[::0] = [ ROOT.TObject() ]
 
     def test_delitem(self):
         sc = self.create_tseqcollection()
@@ -87,6 +184,46 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         # Check invalid index case
         with self.assertRaises(IndexError):
             del sc[2]
+
+    def test_delitem_slice(self):
+        # Delete all items
+        sc1 = self.create_tseqcollection()
+        del sc1[:]
+        self.assertEquals(sc1.GetEntries(), 0)
+
+        # Do not delete anything (slice out of range)
+        sc2 = self.create_tseqcollection()
+        l2 = [ elem for elem in sc2 ]
+        del sc2[self.num_elems:]
+        self.assertEquals(sc2.GetEntries(), self.num_elems)
+        for el1, el2 in zip(sc2, l2):
+            self.assertEquals(el1, el2)
+
+        # Delete first two items
+        sc3 = self.create_tseqcollection()
+        o = sc3[2]
+        del sc3[0:2]
+        self.assertEquals(sc3.GetEntries(), 1)
+        self.assertEquals(sc3[0], o)
+
+        # Delete first and third items
+        sc4 = self.create_tseqcollection()
+        o = sc4[1]
+        del sc4[::2]
+        self.assertEquals(sc4.GetEntries(), 1)
+        self.assertEquals(sc4[0], o)
+
+        # Delete first and third items (start from end)
+        sc5 = self.create_tseqcollection()
+        o = sc5[1]
+        del sc5[::-2]
+        self.assertEquals(sc5.GetEntries(), 1)
+        self.assertEquals(sc5[0], o)
+
+        # Step cannot be zero
+        sc6 = self.create_tseqcollection()
+        with self.assertRaises(ValueError):
+            sc6[::0]
 
 
 if __name__ == '__main__':
