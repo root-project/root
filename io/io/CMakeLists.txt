@@ -86,7 +86,7 @@ else()
   set_source_files_properties(src/TStreamerInfoReadBuffer.cxx COMPILE_FLAGS "-O3")
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__RIO ${headers} STAGE1 MODULE RIO LINKDEF LinkDef.h DEPENDENCIES Core Thread)
+ROOT_GENERATE_DICTIONARY(G__RIO ${headers} STAGE1 MODULE RIO LINKDEF LinkDef.h OPTIONS -writeEmptyRootPCM DEPENDENCIES Core Thread)
 
 if(root7)
    ROOT_OBJECT_LIBRARY(RIOObjs G__RIO.cxx ${sources} ${sourcesv7})
