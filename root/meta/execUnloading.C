@@ -41,6 +41,9 @@ void execUnloading(){
    // ENUMS
    cout<< "\nUnloading of enum: EnumDecl and implicitly EnumConstDecl.\n";
 
+   // Trigger autoparsing now, not between enum decl and unloading!
+   TClass::GetClass("TEnumConstant")->GetClassInfo();
+
    gROOT->ProcessLine("enum MyEnum{c1,c2};");
    TEnum* e = (TEnum*)gROOT->GetListOfEnums()->FindObject("MyEnum");
    cout << "Check validity before unloading, expected: true.\n";
