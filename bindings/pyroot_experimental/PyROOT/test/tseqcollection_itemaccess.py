@@ -82,6 +82,10 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         self.assertEqual(sc[0], slice6[1])
         self.assertEqual(sc[2], slice6[0])
 
+        # Step cannot be zero
+        with self.assertRaises(ValueError):
+            sc[::0]
+
     def test_setitem(self):
         sc = self.create_tseqcollection()
         l = []
