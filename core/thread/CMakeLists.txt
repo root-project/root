@@ -57,6 +57,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
     src/TThreadImp.cxx
   OBJECT_LIBRARY
   STAGE1
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM 
   DEPENDENCIES
     Core
   INSTALL_OPTIONS ${installoptions}
