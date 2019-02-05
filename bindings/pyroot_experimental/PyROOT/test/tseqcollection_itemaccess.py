@@ -28,14 +28,26 @@ class TSeqCollectionItemAccess(unittest.TestCase):
     def test_getitem(self):
         sc = self.create_tseqcollection()
 
-        # Get elements in collection
+        # Get items
         it = ROOT.TIter(sc)
         for i in range(self.num_elems):
             self.assertEqual(it.Next(), sc[i])
 
-        # Check invalid index case
+        # Get items, negative indices
+        it2 = ROOT.TIter(sc)
+        neg_idcs = [ -i-1 for i in reversed(range(self.num_elems)) ]
+        for i in neg_idcs:
+            self.assertEqual(it2.Next(), sc[i])
+
+        # Check invalid index cases
         with self.assertRaises(IndexError):
             sc[self.num_elems]
+
+        with self.assertRaises(IndexError):
+            sc[-(self.num_elems + 1)]
+
+        with self.assertRaises(TypeError):
+            sc[1.0]
 
     def test_getitem_slice(self):
         sc = self.create_tseqcollection()
@@ -85,9 +97,28 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         for i in range(self.num_elems):
             self.assertEqual(it.Next(), l[i])
 
-        # Check invalid index case
+        # Set items, negative indices
+        l2 = []
+        neg_idcs = [ -i-1 for i in reversed(range(self.num_elems)) ]
+        for i in neg_idcs:
+            o = ROOT.TObject()
+            sc[i] = o
+            l2.append(o)
+
+        # Check previously set items
+        it2 = ROOT.TIter(sc)
+        for i in range(self.num_elems):
+            self.assertEqual(it2.Next(), l2[i])
+
+        # Check invalid index cases
         with self.assertRaises(IndexError):
             sc[self.num_elems] = ROOT.TObject()
+
+        with self.assertRaises(IndexError):
+            sc[-(self.num_elems + 1)] = ROOT.TObject()
+
+        with self.assertRaises(TypeError):
+            sc[1.0] = ROOT.TObject()
 
     def test_setitem_slice(self):
         sc1 = self.create_tseqcollection()
@@ -181,9 +212,15 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         for _ in range(2):
             self.assertEqual(it.Next(), o1)
 
-        # Check invalid index case
+        # Check invalid index cases
         with self.assertRaises(IndexError):
             del sc[2]
+
+        with self.assertRaises(IndexError):
+            del sc[-3]
+
+        with self.assertRaises(TypeError):
+            del sc[1.0]
 
     def test_delitem_slice(self):
         # Delete all items
