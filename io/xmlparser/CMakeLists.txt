@@ -3,7 +3,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-include_directories(${LIBXML2_INCLUDE_DIR})
+include_directories(${LIBXML2_INCLUDE_DIR} ${LIBXML2_INCLUDE_DIRS})
 add_definitions(${LIBXML2_DEFINITIONS})
 
 if(WIN32)
