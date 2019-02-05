@@ -8,7 +8,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
     """
     Test for the item access methods added to TSeqCollection (and subclasses):
     __getitem__, __setitem__, __delitem__.
-    Both the index (l[i]) and slice (l[i:j]) syntaxes are tested.
+    Both the index (l[i]) and slice (l[i:j:k]) syntaxes are tested.
     """
 
     num_elems = 3
@@ -72,12 +72,12 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         self.assertEqual(sc[0], slice4[0])
         self.assertEqual(sc[2], slice4[1])
 
-        # All items, reversed order
+        # All items, reverse order
         slice5 = sc[::-1]
         for i in range(slice5.GetEntries()):
             self.assertEqual(sc[i], slice5[self.num_elems - 1 - i])
 
-        # First and third items, reversed order
+        # First and third items, reverse order
         slice6 = sc[::-2]
         self.assertEqual(sc[0], slice6[1])
         self.assertEqual(sc[2], slice6[0])
