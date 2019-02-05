@@ -64,7 +64,6 @@ For simple C++ types, the tree value maps directly to a column element.
 // clang-format on
 template <typename T>
 class RTreeValue : public Detail::RTreeValueBase {
-
 private:
    std::shared_ptr<T> fValue;
 

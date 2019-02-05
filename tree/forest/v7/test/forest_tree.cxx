@@ -44,6 +44,7 @@ TEST(RForestTree, StorageRoot)
    auto nnlo = model->AddField<std::vector<std::vector<float>>>("nnlo");
 
    sinkRoot.Create(model.get());
+   sinkRoot.CommitDataset();
    file->Close();
 
    file = TFile::Open("test.root", "READ");
@@ -70,9 +71,14 @@ TEST(RForestTree, WriteRead)
       tree.Fill();
    }
 
+   *fieldPt = 0.0;
+
    file = TFile::Open("test.root", "READ");
    RPageSourceRoot::RSettings settingsRead;
    settingsRead.fFile = file;
    settingsRead.fTakeOwnership = true;
    RInputTree tree(model, std::make_unique<RPageSourceRoot>("myTree", settingsRead));
+   EXPECT_EQ(1U, tree.GetNEntries());
+   tree.GetEntry(0);
+   EXPECT_EQ(42.0, *fieldPt);
 }

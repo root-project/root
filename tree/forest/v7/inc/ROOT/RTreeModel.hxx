@@ -62,7 +62,7 @@ public:
    std::shared_ptr<RTreeValueCollection> TreeFieldCollection(std::string_view fieldName, std::shared_ptr<RTreeModel> subModel);
 
    RTreeFieldRoot* GetRootField() { return &fRootField; }
-   const RTreeEntry& GetDefaultEntry() { return fDefaultEntry; }
+   RTreeEntry* GetDefaultEntry() { return &fDefaultEntry; }
 };
 
 } // namespace Exerimental

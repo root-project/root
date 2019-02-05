@@ -54,6 +54,7 @@ private:
    ///   - searching by page
    ///   - searching by tree index
    std::vector<RPage> fPages;
+   std::vector<std::uint32_t> fReferences;
 
 public:
    RPagePool(std::size_t pageSize, std::size_t nPages);
@@ -62,14 +63,14 @@ public:
    ~RPagePool();
 
    /// Get a new, empty page from the cache. Return a "null Page" if there is no more free space.
-   RPage ReservePage(RColumn *column);
+   RPage ReservePage(RColumn* column);
    /// Registers a page that has previously been acquired by ReservePage() and was meanwhile filled with content.
-   void CommitPage(const RPage &page);
+   void CommitPage(const RPage& page);
    /// Tries to find the page corresponding to column and index in the cache. On cache miss, load the page
    /// from the PageSource attached to the column and put it in the cache.
-   RPage* GetPage(RColumn *column, TreeIndex_t index);
+   RPage GetPage(RColumn* column, TreeIndex_t index);
    /// Give back a page to the pool. There must not be any pointers anymore into this page.
-   void ReleasePage(RPage *page);
+   void ReleasePage(const RPage &page);
 };
 
 } // namespace Detail

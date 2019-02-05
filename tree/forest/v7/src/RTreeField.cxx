@@ -37,7 +37,7 @@ void ROOT::Experimental::Detail::RTreeFieldBase::DoAppend(const ROOT::Experiment
 
 void ROOT::Experimental::Detail::RTreeFieldBase::DoRead(
    ROOT::Experimental::TreeIndex_t /*index*/,
-   const RTreeValueBase& /*value*/)
+   RTreeValueBase* /*value*/)
 {
    R__ASSERT(false);
 }
@@ -67,6 +67,14 @@ void ROOT::Experimental::Detail::RTreeFieldBase::Flush() const
 {
    for (auto& column : fColumns) {
       column->Flush();
+   }
+}
+
+void ROOT::Experimental::Detail::RTreeFieldBase::ConnectColumns(RPageStorage *pageStorage)
+{
+   if (fColumns.empty()) DoGenerateColumns();
+   for (auto& column : fColumns) {
+      column->Connect(pageStorage);
    }
 }
 
@@ -102,7 +110,7 @@ void ROOT::Experimental::Detail::RTreeFieldBase::RIterator::Advance()
       }
       fStack.pop_back();
       itr = fStack.rbegin();
-      nextIdxInParent = itr->fIdxInParent++;
+      nextIdxInParent = ++(itr->fIdxInParent);
    }
    itr->fFieldPtr = itr->fFieldPtr->fParent->fSubFields[nextIdxInParent].get();
 }
@@ -111,7 +119,7 @@ void ROOT::Experimental::Detail::RTreeFieldBase::RIterator::Advance()
 //-----------------------------------------------------------------------------
 
 
-void ROOT::Experimental::RTreeFieldRoot::GenerateColumns(ROOT::Experimental::Detail::RPageStorage* /*storage*/)
+void ROOT::Experimental::RTreeFieldRoot::DoGenerateColumns()
 {
    R__ASSERT(false);
 }
@@ -127,10 +135,10 @@ ROOT::Experimental::Detail::RTreeValueBase* ROOT::Experimental::RTreeFieldRoot::
 //------------------------------------------------------------------------------
 
 
-void ROOT::Experimental::RTreeField<float>::GenerateColumns(ROOT::Experimental::Detail::RPageStorage* pageStorage)
+void ROOT::Experimental::RTreeField<float>::DoGenerateColumns()
 {
    RColumnModel model(GetName(), EColumnType::kReal32, false /* isSorted*/);
-   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model, pageStorage));
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
    fPrincipalColumn = fColumns[0].get();
 }
 
@@ -138,16 +146,16 @@ void ROOT::Experimental::RTreeField<float>::GenerateColumns(ROOT::Experimental::
 //------------------------------------------------------------------------------
 
 
-void ROOT::Experimental::RTreeField<std::string>::GenerateColumns(ROOT::Experimental::Detail::RPageStorage* pageStorage)
+void ROOT::Experimental::RTreeField<std::string>::DoGenerateColumns()
 {
    RColumnModel modelIndex(GetName(), EColumnType::kIndex, true /* isSorted*/);
-   fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex, pageStorage));
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex));
 
    std::string columnChars(GetName());
    columnChars.push_back(kLevelSeparator);
    columnChars.append(GetLeafName());
    RColumnModel modelChars(columnChars, EColumnType::kByte, false /* isSorted*/);
-   fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelChars, pageStorage));
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelChars));
    fPrincipalColumn = fColumns[0].get();
 }
 

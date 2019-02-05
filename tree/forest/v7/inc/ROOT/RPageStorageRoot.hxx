@@ -49,6 +49,7 @@ struct RColumnHeader {
 struct RForestHeader {
    std::int32_t fVersion = 0;
    std::string fModelUuid;
+   std::int32_t fPageSize = 0;
    std::vector<RFieldHeader> fFields;
    std::vector<RColumnHeader> fColumns;
 };
@@ -57,6 +58,7 @@ struct RForestFooter {
    std::int32_t fVersion = 0;
    std::int32_t fNClusters = 0;
    TreeIndex_t fNEntries = 0;
+   std::vector<TreeIndex_t> fNElementsPerColumn;
 };
 
 struct RPageInfo {
@@ -99,7 +101,7 @@ public:
       std::vector<TreeIndex_t> fRangeStarts;
    };
 
-   std::unordered_map<RColumn*, std::int32_t> fColumn2Id;
+   TreeIndex_t fNEntries = 0;
    std::unordered_map<std::int32_t, std::unique_ptr<RColumnModel>> fId2ColumnModel;
    std::unordered_map<std::string, std::int32_t> fColumnName2Id;
    std::vector<RColumnIndex> fColumnIndex;
@@ -127,8 +129,6 @@ private:
    /// Currently, a forest is stored as a directory in a TFile
    TDirectory *fDirectory;
    RSettings fSettings;
-   /// Set of open pages, one for each column
-   std::unique_ptr<RPagePool> fPagePool;
    /// Updated on CommitPage and written and reset on CommitCluster
    ROOT::Experimental::Internal::RClusterFooter fCurrentCluster;
    ROOT::Experimental::Internal::RForestHeader fForestHeader;
@@ -140,9 +140,9 @@ public:
    RPageSinkRoot(std::string_view forestName, RSettings settings);
    virtual ~RPageSinkRoot();
 
-   void AddColumn(RColumn* column) final;
+   ColumnHandle_t AddColumn(RColumn* column) final;
    void Create(RTreeModel* model) final;
-   void CommitPage(const RPage &page, RColumn *column) final;
+   void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitCluster(TreeIndex_t nEntries) final;
    void CommitDataset() final;
 };
@@ -174,9 +174,12 @@ public:
    RPageSourceRoot(std::string_view forestName, RSettings settings);
    virtual ~RPageSourceRoot();
 
-   void AddColumn(RColumn* /*column*/) final;
+   ColumnHandle_t AddColumn(RColumn* column) final;
    void Attach() final;
    std::unique_ptr<ROOT::Experimental::RTreeModel> GenerateModel() final;
+   void PopulatePage(ColumnHandle_t columnHandle, TreeIndex_t index, RPage* page) final;
+   TreeIndex_t GetNEntries() final;
+   TreeIndex_t GetNElements(ColumnHandle_t columnHandle) final;
 };
 
 } // namespace Detail

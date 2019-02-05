@@ -22,6 +22,7 @@ if(root7)
     v7/inc/ROOT/RTreeView.hxx
   SOURCES
     v7/src/RColumn.cxx
+    v7/src/RPage.cxx
     v7/src/RPagePool.cxx
     v7/src/RPageStorage.cxx
     v7/src/RPageStorageRoot.cxx

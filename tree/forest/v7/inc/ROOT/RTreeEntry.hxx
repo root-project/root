@@ -45,8 +45,8 @@ public:
       fTreeValues.emplace_back(value);
    }
 
-   decltype(fTreeValues)::const_iterator begin() const { return fTreeValues.begin(); }
-   decltype(fTreeValues)::const_iterator end() const { return fTreeValues.end(); }
+   decltype(fTreeValues)::iterator begin() { return fTreeValues.begin(); }
+   decltype(fTreeValues)::iterator end() { return fTreeValues.end(); }
 };
 
 } // namespace Experimental

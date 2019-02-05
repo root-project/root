@@ -37,6 +37,7 @@ number range within the backing column. The memory buffer is not managed by the 
 */
 // clang-format on
 class RPage {
+   TreeId_t fTreeId;
    void* fBuffer;
    std::size_t fCapacity;
    std::size_t fSize;
@@ -44,17 +45,22 @@ class RPage {
    TreeIndex_t fRangeStart;
 
 public:
-   RPage() : fBuffer(nullptr), fCapacity(0), fSize(0), fElementSize(0), fRangeStart(0) {}
-   RPage(void* buffer, std::size_t capacity, std::size_t elementSize)
-      : fBuffer(buffer), fCapacity(capacity), fSize(0), fElementSize(elementSize), fRangeStart(0) {}
+   RPage() : fTreeId(-1), fBuffer(nullptr), fCapacity(0), fSize(0), fElementSize(0), fRangeStart(0) {}
+   RPage(TreeId_t treeId, void* buffer, std::size_t capacity, std::size_t elementSize)
+      : fTreeId(treeId), fBuffer(buffer), fCapacity(capacity), fSize(0), fElementSize(elementSize), fRangeStart(0)
+      {}
    ~RPage() = default;
 
+   std::int64_t GetTreeId() { return fTreeId; }
    /// The total space available in the page
    std::size_t GetCapacity() const { return fCapacity; }
    /// The space taken by column elements in the buffer
    std::size_t GetSize() const { return fSize; }
    TreeIndex_t GetNElements() const { return fSize / fElementSize; }
    TreeIndex_t GetRangeStart() const { return fRangeStart; }
+   bool Contains(TreeIndex_t index) const {
+      return (index >= fRangeStart) && (index < (fRangeStart + GetNElements()));
+   }
    void* GetBuffer() const { return fBuffer; }
    /// Return a pointer after the last element that has space for nElements new elements. If there is not enough capacity,
    /// return nullptr
@@ -67,10 +73,12 @@ public:
       fSize += nbyte;
       return static_cast<unsigned char *>(fBuffer) + offset;
    }
+   void SetRangeStart(TreeIndex_t rangeStart) { fRangeStart = rangeStart; }
    /// Forget all currently stored elements (size == 0) and set a new starting index.
    void Reset(TreeIndex_t rangeStart) { fSize = 0; fRangeStart = rangeStart; }
 
    bool IsNull() const { return fBuffer == nullptr; }
+   bool operator ==(const RPage &other) const { return fBuffer == other.fBuffer; }
 };
 
 } // namespace Detail

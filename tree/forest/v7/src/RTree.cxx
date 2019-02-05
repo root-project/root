@@ -30,6 +30,7 @@ ROOT::Experimental::Detail::RTree::~RTree()
 {
 }
 
+//------------------------------------------------------------------------------
 
 ROOT::Experimental::RInputTree::RInputTree(
    std::shared_ptr<ROOT::Experimental::RTreeModel> model,
@@ -39,22 +40,23 @@ ROOT::Experimental::RInputTree::RInputTree(
 {
    fSource->Attach();
    for (auto& field : *model->GetRootField()) {
-      field.GenerateColumns(fSource.get());
+      field.ConnectColumns(fSource.get());
    }
+   fNEntries = fSource->GetNEntries();
 }
-
 
 ROOT::Experimental::RInputTree::RInputTree(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
    : ROOT::Experimental::Detail::RTree(std::make_shared<ROOT::Experimental::RTreeModel>())
    , fSource(std::move(source))
 {
+   // TODO
 }
-
 
 ROOT::Experimental::RInputTree::~RInputTree()
 {
 }
 
+//------------------------------------------------------------------------------
 
 ROOT::Experimental::ROutputTree::ROutputTree(
    std::shared_ptr<ROOT::Experimental::RTreeModel> model,

@@ -70,10 +70,13 @@ protected:
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
    std::vector<std::unique_ptr<RColumn>> fColumns;
 
+   /// Creates the backing columns corresponsing to the field type and name
+   virtual void DoGenerateColumns() = 0;
+
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
    virtual void DoAppend(const RTreeValueBase& value);
-   virtual void DoRead(TreeIndex_t index, const RTreeValueBase& value);
+   virtual void DoRead(TreeIndex_t index, RTreeValueBase* value);
    virtual void DoReadV(TreeIndex_t index, TreeIndex_t count, void* dst);
 
 public:
@@ -114,8 +117,10 @@ public:
    RTreeFieldBase& operator =(const RTreeFieldBase&) = delete;
    virtual ~RTreeFieldBase();
 
-   /// Registeres the backing columns with the physical storage
-   virtual void GenerateColumns(Detail::RPageStorage *pageStorage) = 0;
+   /// Registeres (or re-registers) the backing columns with the physical storage
+   void ConnectColumns(Detail::RPageStorage *pageStorage);
+   /// Returns the number of columns generated to store data for the field; defaults to 1
+   virtual unsigned int GetNColumns() const = 0;
 
    /// Generates a tree value of the field type.
    virtual RTreeValueBase* GenerateValue() = 0;
@@ -131,12 +136,13 @@ public:
 
    /// Populate a single value with data from the tree, which needs to be of the fitting type.
    /// Reading copies data into the memory wrapped by the tree value.
-   void Read(TreeIndex_t index, RTreeValueBase &value) {
+   void Read(TreeIndex_t index, RTreeValueBase* value) {
       if (!fIsSimple) {
          DoRead(index, value);
          return;
       }
-      fPrincipalColumn->Read(index, &value.fMappedElement);
+      printf("Simple reading index %lu in field %s\n", index, fName.c_str());
+      fPrincipalColumn->Read(index, &value->fMappedElement);
    }
 
    /// Type unsafe bulk read interface; dst must point to a vector of objects of the field type.
@@ -186,7 +192,8 @@ class RTreeFieldRoot : public Detail::RTreeFieldBase {
 public:
    RTreeFieldRoot() : Detail::RTreeFieldBase("", "", false /* isSimple */) {}
 
-   void GenerateColumns(Detail::RPageStorage* pageStorage) final;
+   void DoGenerateColumns() final;
+   unsigned int GetNColumns() const final { return 0; }
    Detail::RTreeValueBase* GenerateValue() final;
 };
 
@@ -198,7 +205,8 @@ public:
    RTreeField(std::string_view) : Detail::RTreeFieldBase("", "", false) {
       static_assert(sizeof(T) != sizeof(T), "No I/O support for this type in RForest");
    }
-   void GenerateColumns(ROOT::Experimental::Detail::RPageStorage*) final {}
+   void DoGenerateColumns() final {}
+   unsigned int GetNColumns() const final { return 0; }
    ROOT::Experimental::Detail::RTreeValueBase* GenerateValue() final { return nullptr; }
 };
 
@@ -208,24 +216,27 @@ public:
 template <typename ContainerT>
 class RTreeField<ContainerT, std::enable_if_t<ROOT::TypeTraits::IsContainer<ContainerT>::value>> : public Detail::RTreeFieldBase {
    using ElementT = typename ContainerT::value_type;
-   std::unique_ptr<RTreeField<ElementT>> fFieldElement;
 public:
    RTreeField(std::string_view name)
-      : Detail::RTreeFieldBase(name, "ROOT::Experimental::TreeIndex_t", false /*isSimple*/) {}
+      : Detail::RTreeFieldBase(name, "ROOT::Experimental::TreeIndex_t", false /*isSimple*/)
+   {
+      std::string elementName(GetName());
+      elementName.push_back(kLevelSeparator);
+      elementName.append(GetLeafName());
+      auto fieldElement = std::make_unique<RTreeField<ElementT>>(elementName);
+      Attach(std::move(fieldElement));
+   }
    ~RTreeField() = default;
 
-   void GenerateColumns(ROOT::Experimental::Detail::RPageStorage* pageStorage) final
+   void DoGenerateColumns() final
    {
-      // TODO(jblomer): distinguish full name and field name
       RColumnModel modelIndex(GetName(), EColumnType::kIndex, true /* isSorted*/);
-      fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex, pageStorage));
+      fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex));
       fPrincipalColumn = fColumns[0].get();
+   }
 
-      std::string elementColumn(GetName());
-      elementColumn.push_back(kLevelSeparator);
-      elementColumn.append(GetLeafName());
-      fFieldElement = std::make_unique<RTreeField<ElementT>>(elementColumn);
-      fFieldElement->GenerateColumns(pageStorage);
+   unsigned int GetNColumns() const final {
+      return 1;
    }
 
    template <typename... ArgsT>
@@ -246,7 +257,8 @@ public:
    explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name, "float", true /* isSimple */) {}
    ~RTreeField() = default;
 
-   void GenerateColumns(ROOT::Experimental::Detail::RPageStorage* pageStorage) final;
+   void DoGenerateColumns() final;
+   unsigned int GetNColumns() const { return 1; }
 
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase* GenerateValue(ArgsT&&... args)
@@ -265,7 +277,8 @@ public:
    explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name, "std::string", false /* isSimple */) {}
    ~RTreeField() = default;
 
-   void GenerateColumns(ROOT::Experimental::Detail::RPageStorage* pageStorage) final;
+   void DoGenerateColumns() final;
+   unsigned int GetNColumns() const { return 2; }
 
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase* GenerateValue(ArgsT&&... args)

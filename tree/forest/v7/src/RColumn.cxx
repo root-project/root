@@ -15,35 +15,52 @@
 
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RColumnModel.hxx>
+#include <ROOT/RPagePool.hxx>
 #include <ROOT/RPageStorage.hxx>
 
 #include <TError.h>
 
 
-ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel &model, RPageStorage *pageStorage)
-   : fModel(model), fPageSink(nullptr), fPageSource(nullptr), fHeadPage(), fRangeEnd(0)
+ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model)
+   : fModel(model), fPageSink(nullptr), fPageSource(nullptr), fHeadPage(), fNElements(0),
+     fCurrentPage(),
+     fCurrentPageFirst(ROOT::Experimental::kInvalidForestIndex),
+     fCurrentPageLast(ROOT::Experimental::kInvalidForestIndex),
+     fTreeId(-1)
+{
+}
+
+void ROOT::Experimental::Detail::RColumn::Connect(RPageStorage* pageStorage)
 {
    switch (pageStorage->GetType()) {
    case EPageStorageType::kSink:
-      R__ASSERT(fPageSink == nullptr);
       fPageSink = static_cast<RPageSink*>(pageStorage); // the page sink initializes fHeadPage on AddColumn
+      fHandleSink = fPageSink->AddColumn(this);
+      fHeadPage = fPageSink->GetPagePool()->ReservePage(this);
       break;
    case EPageStorageType::kSource:
-      R__ASSERT(fPageSource == nullptr);
       fPageSource = static_cast<RPageSource*>(pageStorage);
-      // TODO(jblomer): set fRangeEnd
+      fHandleSource = fPageSource->AddColumn(this);
+      fNElements = fPageSource->GetNElements(fHandleSource);
+      fTreeId = fPageSource->GetTreeId();
       break;
    default:
       R__ASSERT(false);
    }
-
-   pageStorage->AddColumn(this);
 }
 
 void ROOT::Experimental::Detail::RColumn::Flush()
 {
    if (fHeadPage.GetSize() == 0) return;
 
-   fPageSink->CommitPage(fHeadPage, this);
-   fHeadPage.Reset(fRangeEnd);
+   fPageSink->CommitPage(fHandleSink, fHeadPage);
+   fHeadPage.Reset(fNElements);
+}
+
+void ROOT::Experimental::Detail::RColumn::MapPage(const TreeIndex_t index)
+{
+   fPageSource->GetPagePool()->ReleasePage(fCurrentPage);
+   fCurrentPage = fPageSource->GetPagePool()->GetPage(this, index);
+   fCurrentPageFirst = fCurrentPage.GetRangeStart();
+   fCurrentPageLast = fCurrentPage.GetRangeStart() + fCurrentPage.GetNElements() - 1;
 }

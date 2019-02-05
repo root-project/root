@@ -19,6 +19,7 @@
 #include <ROOT/RColumnElement.hxx>
 #include <ROOT/RForestUtil.hxx>
 #include <ROOT/RPage.hxx>
+#include <ROOT/RPageStorage.hxx>
 
 #include <TError.h>
 
@@ -32,10 +33,6 @@ class RColumnModel;
 
 namespace Detail {
 
-class RPageStorage;
-class RPageSink;
-class RPageSource;
-
 // clang-format off
 /**
 \class ROOT::Experimental::RColumn
@@ -47,21 +44,32 @@ logical data layer.
 */
 // clang-format on
 class RColumn {
-   friend class RPageSink; // to let it set fHeadPage
-
 private:
    RColumnModel fModel;
    RPageSink* fPageSink;
    RPageSource* fPageSource;
+   RPageStorage::ColumnHandle_t fHandleSink;
+   RPageStorage::ColumnHandle_t fHandleSource;
    /// Open page into which new elements are being written
    RPage fHeadPage;
-   TreeIndex_t fRangeEnd;
+   /// The number of elements written resp. available in the input tree
+   TreeIndex_t fNElements;
+   /// The currently mapped page for reading
+   RPage fCurrentPage;
+   /// Index of the first element in fCurrentPage
+   TreeIndex_t fCurrentPageFirst;
+   /// Index of the last element in fCurrentPage
+   TreeIndex_t fCurrentPageLast;
+   /// The tree id is unused when writing but set when connected to a source
+   TreeId_t fTreeId;
 
 public:
-   RColumn(const RColumnModel &model, RPageStorage *pageStorage);
+   RColumn(const RColumnModel& model);
    RColumn(const RColumn&) = delete;
    RColumn& operator =(const RColumn&) = delete;
    ~RColumn() = default;
+
+   void Connect(RPageStorage* pageStorage);
 
    void Append(const RColumnElementBase& element) {
       void* dst = fHeadPage.Reserve(1);
@@ -71,19 +79,30 @@ public:
          R__ASSERT(dst != nullptr);
       }
       element.Serialize(dst);
-      fRangeEnd++;
+      fNElements++;
    }
-   void Flush();
 
-   void Read(const TreeIndex_t /*index*/, RColumnElementBase* /*element*/) {/*...*/}
+   void Read(const TreeIndex_t index, RColumnElementBase* element) {
+      if ((index < fCurrentPageFirst) || (index > fCurrentPageFirst)) {
+         MapPage(index);
+      }
+      void *src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
+                  (index - fCurrentPageFirst) * element->GetSize();
+      element->Deserialize(src);
+   }
    void Map(const TreeIndex_t /*index*/, void ** /*dst*/) {/*...*/}
 
    // Returns the number of mapped values
    TreeIndex_t MapV(const TreeIndex_t /*index*/, const TreeIndex_t /*count*/, void ** /*dst*/) {return 0;/*...*/}
    void ReadV(const TreeIndex_t /*index*/, const TreeIndex_t /*count*/, void * /*dst*/) {/*...*/}
 
+   void Flush();
+   void MapPage(const TreeIndex_t index);
    TreeIndex_t GetNElements();
    const RColumnModel& GetModel() const { return fModel; }
+   TreeId_t GetTreeId() const { return fTreeId; }
+   RPageSource* GetPageSource() const { return fPageSource; }
+   RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
 };
 
 } // namespace Detail
