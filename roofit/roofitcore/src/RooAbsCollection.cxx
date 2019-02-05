@@ -49,7 +49,11 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include <algorithm>
 #include <iomanip>
 
-using namespace std;
+using std::endl;
+using std::vector;
+using std::string;
+using std::ostream;
+using std::cout;
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( streampos&, char* );
@@ -947,7 +951,7 @@ void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbo
   }
 
   for (auto next : _list) {
-    os << indent << setw(3) << ++index << ") ";
+    os << indent << std::setw(3) << ++index << ") ";
     next->printStream(os,contents,kSingleLine,"");
   }
 
@@ -1034,7 +1038,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
 
   const char* outFile = pc.getString("outputFile") ;
   if (outFile && strlen(outFile)) {
-    ofstream ofs(outFile) ;
+    std::ofstream ofs(outFile) ;
     if (pc.hasProcessed("FormatArgs")) {
       RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
       formatCmd->addArg(RooFit::LatexTableStyle()) ;
