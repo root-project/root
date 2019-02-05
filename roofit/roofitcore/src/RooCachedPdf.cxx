@@ -122,7 +122,7 @@ void RooCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Defer preferred scan order to cached pdf prefernece
+/// Defer preferred scan order to cached pdf preference
 
 void RooCachedPdf::preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const
 {
