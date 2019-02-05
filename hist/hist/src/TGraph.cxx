@@ -2227,12 +2227,30 @@ void TGraph::SetName(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set graph title.
+/// Change (i.e. set) the title
+///
+/// if title is in the form `stringt;stringx;stringy;stringz`
+/// the graph title is set to `stringt`, the x axis title to `stringx`,
+/// the y axis title to `stringy`, and the z axis title to `stringz`.
+///
+/// To insert the character `;` in one of the titles, one should use `#;`
+/// or `#semicolon`.
 
 void TGraph::SetTitle(const char* title)
 {
    fTitle = title;
-   if (fHistogram) fHistogram->SetTitle(title);
+   fTitle.ReplaceAll("#;",2,"#semicolon",10);
+   Int_t p = fTitle.Index(";");
+
+   if (p>0) {
+      if (!fHistogram) GetHistogram();
+      fHistogram->SetTitle(title);
+      Int_t n = fTitle.Length()-p;
+      if (p>0) fTitle.Remove(p,n);
+      fTitle.ReplaceAll("#semicolon",10,"#;",2);
+   } else {
+      if (fHistogram) fHistogram->SetTitle(title);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
