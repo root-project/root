@@ -84,6 +84,7 @@ Individual fields can be read as well by instantiating a tree view.
 class RInputTree : public Detail::RTree {
 private:
    std::unique_ptr<Detail::RPageSource> fSource;
+   TreeIndex_t fNEntries;
 
 public:
    /// The user imposes a tree model, which must be compatible with the model found in the data on storage
@@ -94,9 +95,14 @@ public:
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the tree.
    /// On I/O errors, raises an expection.
-   bool GetEntry();
+   void GetEntry(TreeIndex_t index) { GetEntry(index, fModel->GetDefaultEntry()); }
    /// Fills a user provided entry after checking that the entry has been instantiated from the tree's model
-   bool GetEntry(RTreeEntry &entry);
+   void GetEntry(TreeIndex_t index, RTreeEntry* entry) {
+      for (auto& value : *entry) {
+         value->fField->Read(index, value.get());
+      }
+   }
+   TreeIndex_t GetNEntries() { return fNEntries; }
 
    /// Provides access to an individual field that can contain either a skalar value or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<RVec<double>>("particle").  It can as well be the index
@@ -142,8 +148,8 @@ public:
    void Fill() { Fill(fModel->GetDefaultEntry()); }
    /// Multiple tree entries can have been instantiated from the tree model.  This method will perform
    /// a light check whether the entry comes from the tree's own model
-   void Fill(const RTreeEntry &entry) {
-      for (auto& treeValue : entry) {
+   void Fill(RTreeEntry *entry) {
+      for (auto& treeValue : *entry) {
          treeValue->fField->Append(*treeValue);
       }
       fNEntries++;

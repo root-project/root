@@ -23,9 +23,12 @@
 ROOT::Experimental::Detail::RPagePool::RPagePool(std::size_t pageSize, std::size_t nPages)
    : fMemory(nullptr), fPageSize(pageSize), fNPages(nPages)
 {
-   fMemory = malloc(pageSize * nPages);
-   R__ASSERT(fMemory != nullptr);
-   fPages.resize(nPages);
+   if (nPages > 0) {
+      fMemory = malloc(pageSize * nPages);
+      R__ASSERT(fMemory != nullptr);
+      fPages.resize(nPages);
+      fReferences.resize(nPages, 0);
+   }
 }
 
 
@@ -41,11 +44,51 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::Reserve
    for (std::size_t i = 0; i < fNPages; ++i) {
       if (fPages[i].IsNull()) {
          void* buffer = static_cast<unsigned char *>(fMemory) + (fPageSize * i);
-         result = RPage(buffer, fPageSize, column->GetModel().GetElementSize());
+         result = RPage(column->GetTreeId(), buffer, fPageSize, column->GetModel().GetElementSize());
          fPages[i] = result;
          return result;
       }
    }
    /// No space left
    return result;
+}
+
+
+void ROOT::Experimental::Detail::RPagePool::CommitPage(const RPage& page)
+{
+   for (unsigned i = 0; i < fNPages; ++i) {
+      if (fPages[i] == page) {
+         fReferences[i] = 1;
+         return;
+      }
+   }
+   R__ASSERT(false);
+}
+
+void ROOT::Experimental::Detail::RPagePool::ReleasePage(const RPage& page)
+{
+   for (unsigned i = 0; i < fNPages; ++i) {
+      if (fPages[i] == page) {
+         if (--fReferences[i] == 0) {
+            fPages[i] = RPage();
+         }
+         return;
+      }
+   }
+   R__ASSERT(false);
+}
+
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::GetPage(RColumn* column, TreeIndex_t index)
+{
+   for (unsigned i = 0; i < fNPages; ++i) {
+      if (fReferences[i] == 0) continue;
+      if (fPages[i].GetTreeId() != column->GetTreeId()) continue;
+      if (!fPages[i].Contains(index) != column->GetTreeId()) continue;
+      fReferences[i]++;
+      return fPages[i];
+   }
+   RPage newPage = ReservePage(column);
+   column->GetPageSource()->PopulatePage(column->GetHandleSource(), index, &newPage);
+   CommitPage(newPage);
+   return newPage;
 }

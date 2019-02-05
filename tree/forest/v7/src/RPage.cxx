@@ -1,4 +1,4 @@
-/// \file ROOT/RForestUtil.hxx
+/// \file RPage.cxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
@@ -13,23 +13,4 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RForestUtil
-#define ROOT7_RForestUtil
-
-#include <cstdint>
-#include <limits>
-
-namespace ROOT {
-namespace Experimental {
-
-/// Integer types long enough to hold the maximum number of entries in a tree
-using TreeIndex_t = std::uint64_t;
-using TreeOffset_t = std::int64_t;
-using TreeId_t = std::int64_t;
-
-constexpr TreeIndex_t kInvalidForestIndex = std::numeric_limits<TreeIndex_t>::max();
-
-} // namespace Experimental
-} // namespace ROOT
-
-#endif
+#include <ROOT/RPage.hxx>
