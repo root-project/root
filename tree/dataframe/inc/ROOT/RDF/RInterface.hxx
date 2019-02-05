@@ -239,7 +239,11 @@ public:
    /// be valid C++ syntax in which variable names are substituted with the names
    /// of branches/columns.
    ///
-   /// Refer to the first overload of this method for the full documentation.
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto filtered_df = df.Filter("myCollection.size() > 3");
+   /// auto filtered_name_df = df.Filter("myCollection.size() > 3", "Minumum collection size");
+   /// ~~~
    RInterface<RDFDetail::RJittedFilter, DS_t> Filter(std::string_view expression, std::string_view name = "")
    {
       // deleted by the jitted call to JitFilterHelper
