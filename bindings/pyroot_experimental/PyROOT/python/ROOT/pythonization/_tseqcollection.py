@@ -18,6 +18,14 @@ import sys
 # Item access
 
 def _check_index(self, idx):
+    # Parameters:
+    # - self: collection
+    # - idx: index to be checked
+    # Returns:
+    # - An index >= 0, equivalent to the input idx, which is verified
+    # to be an integer and within the boundaries of the collection
+
+    # Python2 also allows long indices
     if sys.version_info >= (3,0):
         allowed_types = (int,)
     else:
