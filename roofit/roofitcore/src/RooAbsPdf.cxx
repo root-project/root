@@ -51,8 +51,8 @@ comparison to the `evaluate()` function.
 In addition, RooAbsPdf objects do not have a static concept of what
 variables are parameters and what variables are dependents (which
 need to be integrated over for a correct PDF normalization). 
-Instead the choice of normalization is always specified each time a
-normalized values is requested from the PDF via the getVal()
+Instead, the choice of normalization is always specified each time a
+normalized value is requested from the PDF via the getVal()
 method.
 
 RooAbsPdf manages the entire normalization logic of each PDF with
@@ -63,7 +63,7 @@ PDFs can advertise one or more (partial) analytical integrals of
 their function, and these will be used by RooRealIntegral, if it
 determines that this is safe (i.e. no hidden Jacobian terms,
 multiplication with other PDFs that have one or more dependents in
-commen etc)
+commen etc).
 
 #### Implementing analytical integrals
 To implement analytical integrals, two functions must be implemented. First,
@@ -76,19 +76,19 @@ is the set of dependents for which integration is requested. The
 function should copy the subset of dependents it can analytically
 integrate to `anaIntSet`, and return a unique identification code for
 this integration configuration.  If no integration can be
-performed, zero should be returned.  Second,
+performed, zero should be returned. Second,
 
 ```
 Double_t analyticalIntegral(Int_t code)
 ```
 
-Implements the actual analytical integral(s) advertised by
-getAnalyticalIntegral.  This functions will only be called with
-codes returned by getAnalyticalIntegral, except code zero.
+implements the actual analytical integral(s) advertised by
+`getAnalyticalIntegral()`.  This function will only be called with
+codes returned by `getAnalyticalIntegral()`, except code zero.
 
-The integration range for real each dependent to be integrated can
-be obtained from the dependents' proxy functions min() and
-max(). Never call these proxy functions for any proxy not known to
+The integration range for each dependent to be integrated can
+be obtained from the dependent's proxy functions `min()` and
+`max()`. Never call these proxy functions for any proxy not known to
 be a dependent via the integration code.  Doing so may be
 ill-defined, e.g. in case the proxy holds a function, and will
 trigger an assert. Integrated category dependents should always be
@@ -123,6 +123,15 @@ via the generation code.  Doing so may be ill-defined, e.g. in case
 the proxy holds a function, and will trigger an assert.
 
 
+### Batched function evaluations (Advanced usage)
+
+To speed up computations with large numbers of data events in unbinned fits,
+it is beneficial to override `evaluateBatch()`. Like this, large batches of
+computations can be done, without having to call `evaluate()` for each single data event.
+`evaluateBatch()` should execute the same computation as `evaluate()`, but it
+may choose an implementation that is capable of SIMD computations.
+If evaluateBatch is not implemented, the classic and slower `evaluate()` will be
+called for each data event.
 */
 
 #include "RooFit.h"
@@ -174,6 +183,11 @@ the proxy holds a function, and will trigger an assert.
 #include "Math/CholeskyDecomp.h"
 #include <string>
 #include "RooHelpers.h"
+
+#define USE_VDT
+#ifdef USE_VDT
+  #include "vdt/log.h"
+#endif
 
 using namespace std;
 
@@ -267,11 +281,6 @@ RooAbsPdf::~RooAbsPdf()
 
 Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 {
-  // Fast-track processing of clean-cache objects
-  //   if (_operMode==AClean) {
-  //     cout << "RooAbsPdf::getValV(" << this << "," << GetName() << ") CLEAN  value = " << _value << endl ;
-  //     return _value ;
-  //   }
 
   // Special handling of case without normalization set (used in numeric integration of pdfs)
   if (!nset) {
@@ -326,6 +335,71 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute batch of values for data in inputBatch, and normalise by integrating over
+/// the observables in `nset`. If 'nset' is `nullptr`, unnormalized values
+/// are returned. All elements of `nset` must be lvalues.
+///
+/// \param[out] outputs Write results into the range indicated by this span.
+/// \param[in] inputBatch Spans with the input data.
+/// \param[in] inputVars  Variables that the spans in `inputBatch` represent.
+/// \param[in] normSet    If not nullptr, normalise results by integrating over
+/// the variables in this set. The normalisation is only computed once, and applied
+/// to the full batch.
+///
+void RooAbsPdf::getValBatch(RooSpan<double> outputs,
+    const std::vector<RooSpan<const double>>& inputBatch,
+    const RooArgSet& inputVars,
+    const RooArgSet* normSet) const
+{
+
+  // Special handling of case without normalization set (used in numeric integration of pdfs)
+  if (!normSet) {
+    R__ASSERT(false); //TODO implement
+    RooArgSet* tmp = _normSet ;
+    _normSet = 0 ;
+    Double_t val = evaluate() ;
+    _normSet = tmp ;
+    Bool_t error = traceEvalPdf(val) ;
+
+    if (error) {
+//       raiseEvalError() ;
+      return;
+    }
+
+    //TODO FIXME
+//    return val ;
+  }
+
+
+  // Process change in last data set used
+  Bool_t nsetChanged(kFALSE) ;
+  if (normSet!=_normSet || _norm==0) {
+    nsetChanged = syncNormalization(normSet) ;
+  }
+
+  evaluateBatch(outputs, inputBatch, inputVars);
+  bool error = traceEvalBatch(outputs) ; // Error checking and printing
+
+
+  // Evaluate denominator
+  const double normDenom = _norm->getVal();
+  if (normDenom == 1.)
+    return;
+
+  if (normDenom <= 0.) {
+    error = true;
+    logEvalError(Form("p.d.f normalization integral is zero or negative."
+        "\n\tInt(%s) = %f", GetName(), normDenom));
+    return;
+  }
+
+  const double normVal = 1./normDenom;
+  for (double& val : outputs) {
+    val *= normVal;
+  }
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Analytical integral with normalization (see RooAbsReal::analyticalIntegralWN() for further information)
@@ -383,6 +457,51 @@ Bool_t RooAbsPdf::traceEvalPdf(Double_t value) const
   return error ;
 }
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check that all passed values are positive and not 'not-a-number'.
+/// Print in case of errors until the error counter reaches its set
+/// maximum.
+template<class T>
+bool RooAbsPdf::traceEvalBatch(const T& inputs) const
+{
+  // check for a math error or negative value
+  Bool_t error = false;
+  bool nan = false;
+  bool neg = false;
+
+  for (auto value : inputs) {
+    if (TMath::IsNaN(value))
+      nan = true;
+    if (value < 0)
+      neg = true;
+  }
+
+  if (nan) {
+    logEvalError(Form("p.d.f value is Not-a-Number, forcing value to zero (in %s)", GetName()));
+    error=kTRUE ;
+  }
+  if (neg) {
+    logEvalError(Form("p.d.f value is less than zero, forcing value to zero (in %s)", GetName()));
+    error=kTRUE ;
+  }
+
+  // do nothing if we are no longer tracing evaluations and there was no error
+  if(!error) return error ;
+
+  // otherwise, print out this evaluations input values and result
+  if(++_errorCount <= 10) {
+    cxcoutD(Tracing) << "*** Evaluation Error " << _errorCount << " ";
+    if(_errorCount == 10) cxcoutD(Tracing) << "(no more will be printed) ";
+  }
+  else {
+    return error;
+  }
+
+  Print();
+  return error;
+}
 
 
 
@@ -650,14 +769,60 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the log-likelihoods for all events in the input batch.
+/// The arguments are passed over to getValBatch(), and outputs will be written to
+/// `outputs`.
+void RooAbsPdf::getLogValBatch(RooSpan<double> outputs,
+    const std::vector<RooSpan<const double>>& inputBatch,
+    const RooArgSet& inputVars,
+    const RooArgSet* normSet) const
+{
+  getValBatch(outputs, inputBatch, inputVars, normSet);
+
+  /* TODO
+  if (fabs(prob)>1e6) {
+    coutW(Eval) << "RooAbsPdf::getLogVal(" << GetName() << ") WARNING: large likelihood value: " << prob << endl ;
+  }
+
+  if(prob < 0) {
+
+    logEvalError("getLogVal() top-level p.d.f evaluates to a negative number") ;
+
+    return 0;
+  }
+  if(prob == 0) {
+
+    logEvalError("getLogVal() top-level p.d.f evaluates to zero") ;
+
+    return log((double)0);
+  }
+
+  if (TMath::IsNaN(prob)) {
+    logEvalError("getLogVal() top-level p.d.f evaluates to NaN") ;
+
+    return log((double)0);
+
+  }
+  */
+
+  for (auto& item : outputs) {
+#ifdef USE_VDT
+    item = vdt::fast_log(item);
+#else
+    item = log(item);
+#endif
+  }
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returned the extended likelihood term (Nexpect - Nobserved*log(NExpected)
-/// of this PDF for the given number of observed events
+/// Return the extended likelihood term (\f$ N_\mathrm{expect} - N_\mathrm{observed} \cdot \log(N_\mathrm{expect} \f$) 
+/// of this PDF for the given number of observed events.
 ///
-/// For successfull operation the PDF implementation must indicate
-/// it is extendable by overloading canBeExtended() and must
-/// implemented the expectedEvents() function.
+/// For successful operation, the PDF implementation must indicate that
+/// it is extendable by overloading `canBeExtended()`, and must
+/// implement the `expectedEvents()` function.
 
 Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const 
 {
@@ -1030,7 +1195,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// <tr><td> `Range(const char* name)`         <td>  Fit only data inside range with given name. Multiple comma-separated range names can be specified.
 /// <tr><td> `Range(Double_t lo, Double_t hi)` <td>  Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 /// <tr><td> `SumCoefRange(const char* name)`  <td>  Set the range in which to interpret the coefficients of RooAddPdf components 
-/// <tr><td> `NumCPU(int num, int strat)`      <td> Parallelize NLL calculation on num CPUs
+/// <tr><td> `NumCPU(int num, int strat)`      <td> Parallelize NLL calculation on `num` CPUs
 ///   <table>
 ///   <tr><th> Strategy   <th> Effect
 ///   <tr><td> 0 = RooFit::BulkPartition (Default) <td> Divide events in N equal chunks 
@@ -1110,14 +1275,14 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 ///                                                  \warning Prefitting may give bad results when used in binned analysis.
 ///
 /// <tr><th><th> Options to control informational output
-/// <tr><td> `Verbose(Bool_t flag)`            <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit
-/// <tr><td> `Timer(Bool_t flag)`              <td>  Time CPU and wall clock consumption of fit steps, off by default
-/// <tr><td> `PrintLevel(Int_t level)`         <td>  Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational messages are suppressed as well.
+/// <tr><td> `Verbose(Bool_t flag)`            <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit).
+/// <tr><td> `Timer(Bool_t flag)`              <td>  Time CPU and wall clock consumption of fit steps, off by default.
+/// <tr><td> `PrintLevel(Int_t level)`         <td>  Set Minuit print level (-1 to 3, default is 1). At -1 all RooFit informational messages are suppressed as well.
 ///                                                  See RooMinimizer::PrintLevel for the meaning of the levels.
 /// <tr><td> `Warnings(Bool_t flag)`           <td>  Enable or disable MINUIT warnings (enabled by default)
 /// <tr><td> `PrintEvalErrors(Int_t numErr)`   <td>  Control number of p.d.f evaluation errors printed per likelihood evaluation.
 ///                                                A negative value suppresses output completely, a zero value will only print the error count per p.d.f component,
-///                                                a positive value will print details of each error up to numErr messages per p.d.f component.
+///                                                a positive value will print details of each error up to `numErr` messages per p.d.f component.
 /// </table>
 /// 
 
@@ -3124,7 +3289,7 @@ RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooArgSet& nset)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create an object that represents the integral of the function over one or more observables listed in iset
+/// Create an object that represents the integral of the function over one or more observables listed in `iset`.
 /// The actual integration calculation is only performed when the return object is evaluated. The name
 /// of the integral object is automatically constructed from the name of the input function, the variables
 /// it integrates and the range integrates over

@@ -30,7 +30,6 @@
 #include <stdexcept>
 #include <memory>
 #include <type_traits>
-#include <vector>
 #include <initializer_list>
 
 namespace ROOT {
@@ -158,15 +157,17 @@ public:
   /*
    * types
    */
-  typedef T value_type;
-  typedef value_type const* pointer;
-  typedef value_type const* const_pointer;
-  typedef value_type const& reference;
-  typedef value_type const& const_reference;
-  typedef value_type const* iterator;
-  typedef value_type const* const_iterator;
-  typedef size_t size_type;
-  typedef ptrdiff_t difference_type;
+  typedef T element_type;
+  typedef std::remove_cv<T>     value_type;
+  typedef element_type *        pointer;
+  typedef element_type const*   const_pointer;
+  typedef element_type &        reference;
+  typedef element_type const&   const_reference;
+  typedef element_type *        iterator;
+  typedef element_type const*   const_iterator;
+  typedef size_t                size_type;
+  typedef ptrdiff_t             difference_type;
+  typedef ptrdiff_t             index_type;
   typedef std::reverse_iterator<iterator> reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
@@ -196,11 +197,11 @@ public:
     static_assert(N > 0, "Zero-length array is not permitted in ISO C++.");
   }
 
-  /*implicit*/ span(std::vector<T> const& v) noexcept
+  /*implicit*/ span(std::vector<typename std::remove_cv<T>::type> const& v) noexcept
      : length_(v.size()), data_(v.empty() ? nullptr : v.data())
   {}
 
-  /*implicit*/ constexpr span(T const* a, size_type const n) noexcept
+  /*implicit*/ constexpr span(pointer a, size_type const n) noexcept
      : length_(n), data_(a)
   {}
 
@@ -208,13 +209,13 @@ public:
      class InputIterator,
      class = typename std::enable_if<
         std::is_same<
-           T,
+           typename std::remove_cv<T>::type,
            typename std::iterator_traits<InputIterator>::value_type
         >::value
      >::type
   >
-  explicit span(InputIterator start, InputIterator last)
-     : length_(std::distance(start, last)), data_(start)
+  span(InputIterator start, InputIterator last)
+     : length_(std::distance(start, last)), data_(&*start)
   {}
 
   span(std::initializer_list<T> const& l)
@@ -227,11 +228,11 @@ public:
   /*
    * iterator interfaces
    */
-  constexpr const_iterator begin() const noexcept
+  constexpr iterator begin() const noexcept
   {
     return data_;
   }
-  constexpr const_iterator end() const noexcept
+  constexpr iterator end() const noexcept
   {
     return data_ + length_;
   }
@@ -243,11 +244,11 @@ public:
   {
     return end();
   }
-  const_reverse_iterator rbegin() const
+  reverse_iterator rbegin() const
   {
     return {end()};
   }
-  const_reverse_iterator rend() const
+  reverse_iterator rend() const
   {
     return {begin()};
   }
@@ -279,18 +280,18 @@ public:
   {
     return length_ == 0;
   }
-  constexpr const_reference operator[](size_type const n) const noexcept
+  constexpr reference operator[](size_type const n) const noexcept
   {
     return *(data_ + n);
   }
-  constexpr const_reference at(size_type const n) const
+  constexpr reference at(size_type const n) const
   {
     //Works only in C++14
     //if (n >= length_) throw std::out_of_range("span::at()");
     //return *(data_ + n);
     return n >= length_ ? throw std::out_of_range("span::at()") : *(data_ + n);
   }
-  constexpr const_pointer data() const noexcept
+  constexpr pointer data() const noexcept
   {
     return data_;
   }
@@ -406,9 +407,9 @@ public:
   /*
    * others
    */
-  template<class Allocator = std::allocator<T>>
+  template<class Allocator = std::allocator<typename std::remove_cv<T>::type>>
   auto to_vector(Allocator const& alloc = Allocator{}) const
-  -> std::vector<T, Allocator>
+  -> std::vector<typename std::remove_cv<T>::type, Allocator>
   {
     return {begin(), end(), alloc};
   }
@@ -429,7 +430,7 @@ private:
 
 private:
   size_type const length_;
-  const_pointer const data_;
+  pointer const data_;
 };
 // }}}
 } // inline namespace __ROOT

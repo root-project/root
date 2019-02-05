@@ -22,9 +22,14 @@ Poisson pdf
 #include "TMath.h"
 #include "Math/ProbFuncMathCore.h"
 
-#include "TError.h"
+#include "BatchHelpers.h"
+#ifdef USE_VDT
+#include "vdt/exp.h"
+#include "vdt/log.h"
+#endif
 
 #include <limits>
+#include <cmath>
 
 using namespace std;
 
@@ -68,52 +73,84 @@ Double_t RooPoisson::evaluate() const
   return TMath::Poisson(k,mean) ;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// calculate and return the negative log-likelihood of the Poisson
 
-Double_t RooPoisson::getLogVal(const RooArgSet* s) const
-{
-  return RooAbsPdf::getLogVal(s) ;
-//   Double_t prob = getVal(s) ;
-//   return prob ;
 
-  // Make inputs to naming conventions of RooAbsPdf::extendedTerm
-  Double_t expected=mean ;
-  Double_t observed=x ;
+namespace {
 
-  // Explicitly handle case Nobs=Nexp=0
-  if (fabs(expected)<1e-10 && fabs(observed)<1e-10) {
-    return 0 ;
+template<class Tx, class TMean>
+void compute(RooSpan<double> output, Tx x, TMean mean, bool protectNegative) {
+  const int n = output.size();
+
+  for (int i = 0; i < n; ++i) {
+    output[i] = std::lgamma(x[i]+1.);
   }
 
-  // Explicitly handle case Nexp=0
-  if (fabs(observed)<1e-10) {
-    return -1*expected;
+  #pragma omp simd
+  for (int i = 0; i < n; ++i) {
+#ifdef USE_VDT
+    const double logMean = vdt::fast_log(mean[i]);
+#else
+    const double logMean = log(mean[i]);
+#endif
+
+    output[i] = x[i] * logMean - mean[i] - output[i];
+
+#ifdef USE_VDT
+    output[i] = vdt::fast_exp(output[i]);
+#else
+    output[i] = exp(output[i]);
+#endif
   }
 
-  // Michaels code for log(poisson) in RooAbsPdf::extendedTer with an approximated log(observed!) term
-  Double_t extra=0;
-  if(observed<1000000) {
-    extra = -observed*log(expected)+expected+TMath::LnGamma(observed+1.);
-  } else {
-    //if many observed events, use Gauss approximation
-    Double_t sigma_square=expected;
-    Double_t diff=observed-expected;
-    extra=-log(sigma_square)/2 + (diff*diff)/(2*sigma_square);
+  // Cosmetics
+
+  for (int i = 0; i < n; ++i) {
+    if (x[i] < 0.)
+      output[i] = 0.;
+    if (x[i] == 0.) {
+#ifdef USE_VDT
+      output[i] = 1./vdt::fast_exp(mean[i]);
+#else
+      output[i] = 1./exp(mean[i]);
+#endif
+    }
+    if(protectNegative && mean[i] < 0.)
+      output[i] = 1.E-3;
   }
-
-//   if (fabs(extra)>100 || log(prob)>100) {
-//     cout << "RooPoisson::getLogVal(" << GetName() << ") mu=" << expected << " x = " << x << " -log(P) = " << extra << " log(evaluate()) = " << log(prob) << endl ;
-//   }
-
-//   if (fabs(extra+log(prob))>1) {
-//     cout << "RooPoisson::getLogVal(" << GetName() << ") WARNING mu=" << expected << " x = " << x << " -log(P) = " << extra << " log(evaluate()) = " << log(prob) << endl ;
-//   }
-
-  //return log(prob);
-  return -extra-analyticalIntegral(1,0) ; //log(prob);
+}
 
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute Poisson values in batches.
+void RooPoisson::evaluateBatch(RooSpan<double> output,
+      const std::vector<RooSpan<const double>>& inputs,
+      const RooArgSet& inputVars) const {
+
+  BatchHelpers::LookupBatchData lu(inputs, inputVars, {x, mean});
+  assert(!lu.testOverlap(output));
+
+  const bool batchX = lu.isBatch(x);
+  const bool batchMean = lu.isBatch(mean);
+
+
+  if (batchX && batchMean) {
+    compute(output, lu.data(x), lu.data(mean), _protectNegative);
+  } else if (batchX && !batchMean) {
+    compute(output, lu.data(x), BatchHelpers::BracketAdapter<RooRealProxy>(mean), _protectNegative);
+  }
+  else if (!batchX && batchMean) {
+    compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), lu.data(mean), _protectNegative);
+  } else if (!batchX && !batchMean) {
+    compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), BatchHelpers::BracketAdapter<RooRealProxy>(mean), _protectNegative);
+  } else {
+    //Should not happen
+    assert(false);
+  }
+
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

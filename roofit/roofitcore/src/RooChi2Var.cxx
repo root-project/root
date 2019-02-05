@@ -240,13 +240,12 @@ RooChi2Var::~RooChi2Var()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate chi^2 in partition from firstEvent to lastEvent using given stepSize
 
-Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const 
+Double_t RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
   // Throughout the calculation, we use Kahan's algorithm for summing to
   // prevent loss of precision - this is a factor four more expensive than
   // straight addition, but since evaluating the PDF is usually much more
   // expensive than that, we tolerate the additional cost...
-  Int_t i ;
   Double_t result(0), carry(0);
 
   _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize, kFALSE) ;
@@ -262,7 +261,7 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t 
 
   // Loop over bins of dataset
   RooDataHist* hdata = (RooDataHist*) _dataClone ;
-  for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
+  for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
     
     // get the data values for this event
     hdata->get(i);

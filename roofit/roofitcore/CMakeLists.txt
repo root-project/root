@@ -230,6 +230,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooWorkspaceHandle.h
     RooXYChi2Var.h
     RooHelpers.h
+    RooSpan.h
   SOURCES
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -461,5 +462,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     MathCore
     Foam
 )
+
+if(builtin_vdt)
+#  target_link_libraries(RooFitCore PUBLIC $<INSTALL_INTERFACE:vdt>)
+  target_include_directories(RooFitCore PUBLIC $<INSTALL_INTERFACE:include>)
+elseif(vdt)
+#  target_link_libraries(RooFitCore PUBLIC ${VDT_LIBRARIES})
+  target_include_directories(RooFitCore PUBLIC ${VDT_INCLUDE_DIRS})
+endif()
+
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
