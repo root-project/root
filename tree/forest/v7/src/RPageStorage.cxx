@@ -15,15 +15,18 @@
 
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RColumn.hxx>
+#include <ROOT/RPagePool.hxx>
 
 #include <ROOT/RStringView.hxx>
 
+std::atomic<ROOT::Experimental::TreeId_t> ROOT::Experimental::Detail::RPageStorage::fgTreeId(0);
 
-void ROOT::Experimental::Detail::RPageSink::SetHeadPage(
-   const ROOT::Experimental::Detail::RPage &page,
-   ROOT::Experimental::Detail::RColumn *column) const
+ROOT::Experimental::Detail::RPageStorage::RPageStorage() : fTreeId(++fgTreeId)
 {
-   column->fHeadPage = page;
+}
+
+ROOT::Experimental::Detail::RPageStorage::~RPageStorage()
+{
 }
 
 ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view /*treeName*/)

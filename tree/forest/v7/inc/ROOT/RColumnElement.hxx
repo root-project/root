@@ -81,6 +81,8 @@ public:
      }
      fRawContent = source;
    }
+
+   decltype(fSize) GetSize() const { return fSize; }
 };
 
 /**
