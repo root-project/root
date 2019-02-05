@@ -10,40 +10,96 @@
 
 from ROOT import pythonization
 from cppyy.gbl import TIter
+from libcppyy import SetOwnership
 
 
 # Item access
 
 def _getitem_pyz(self, idx):
     # Parameters:
-    # - self: collection to get item from
-    # - idx: index of the item
+    # - self: collection to get the item/s from
+    # - idx: index/slice of the item/s
     # Returns:
     # - self[idx]
-    res = self.At(idx)
 
-    if not res:
-        raise IndexError('list index out of range')
+    # Slice
+    if isinstance(idx, slice):
+        res = self.__class__()
+        indices = idx.indices(len(self))
+        for i in range(*indices):
+            res.Add(self.At(i))
+    # Number
+    else:
+        res = self.At(idx)
+
+        if not res:
+            raise IndexError('list index out of range')
 
     return res
 
 def _setitem_pyz(self, idx, val):
     # Parameters:
-    # - self: collection where to set item
-    # - idx: index of the item
-    # - val: value of the item
-    _delitem_pyz(self, idx)
+    # - self: collection where to set item/s
+    # - idx: index/slice of the item/s
+    # - val: value to assign
 
-    self.AddAt(val, idx)
+    # Slice
+    if isinstance(idx, slice):
+        # The value we assign has to be iterable
+        try:
+            _ = iter(val)
+        except TypeError:
+            raise TypeError('can only assign an iterable')
+
+        indices = idx.indices(len(self))
+        step = indices[2]
+        if step == 0:
+            raise ValueError('slice step cannot be zero')
+
+        rg = range(*indices)
+        for elem in val:
+            # Prevent this new Python proxy from owning the C++ object
+            # Otherwise we get an 'already deleted' error in
+            # TList::Clear when the application ends
+            SetOwnership(elem, False)
+            try:
+                i = rg.pop(0)
+                self[i] = elem
+            except IndexError:
+                # Empty range, just append
+                self.append(elem)
+    # Number
+    else:
+        _delitem_pyz(self, idx)
+        self.AddAt(val, idx)
 
 def _delitem_pyz(self, idx):
     # Parameters:
     # - self: collection to delete item from
     # - idx: index of the item
-    res = self.RemoveAt(idx)
 
-    if not res:
-        raise IndexError('list assignment index out of range')
+    # Slice
+    if isinstance(idx, slice):
+        indices = idx.indices(len(self))
+
+        step = indices[2]
+        if step == 0:
+            raise ValueError('slice step cannot be zero')
+
+        rg = range(*indices)
+
+        if step > 0:
+            # Need to remove starting from the end
+            rg = reversed(rg)
+
+        for i in rg:
+            self.RemoveAt(i)
+    # Number
+    else:
+        res = self.RemoveAt(idx)
+
+        if not res:
+            raise IndexError('list assignment index out of range')
 
 
 @pythonization()
