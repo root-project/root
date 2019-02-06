@@ -204,7 +204,7 @@ char* cppstring_to_cstring(const std::string& cppstr)
     return cstr;
 }
 
-static inline 
+static inline
 bool match_name(const std::string& tname, const std::string fname)
 {
 // either match exactly, or match the name as template
@@ -567,7 +567,7 @@ char* Cppyy::CallS(
         cppresult->std::string::~basic_string();
     } else
         *length = 0;
-    free((void*)cppresult); 
+    free((void*)cppresult);
     return cstr;
 }
 
@@ -884,7 +884,7 @@ bool Cppyy::GetSmartPtrInfo(
         if (cr.GetClass()) {
             gInterpreter->UpdateListOfMethods(cr.GetClass());
             TFunction* func = nullptr;
-            TIter next(cr->GetListOfAllPublicMethods()); 
+            TIter next(cr->GetListOfAllPublicMethods());
             while ((func = (TFunction*)next())) {
                 if (strstr(func->GetName(), "operator->")) {
                     deref = (TCppMethod_t)new_CallWrapper(func);
@@ -984,7 +984,7 @@ std::vector<Cppyy::TCppIndex_t> Cppyy::GetMethodIndicesFromName(
         gInterpreter->UpdateListOfMethods(cr.GetClass());
         int imeth = 0;
         TFunction* func = nullptr;
-        TIter next(cr->GetListOfMethods()); 
+        TIter next(cr->GetListOfMethods());
         while ((func = (TFunction*)next())) {
             if (match_name(name, func->GetName())) {
                 if (func->Property() & kIsPublic)
@@ -994,7 +994,7 @@ std::vector<Cppyy::TCppIndex_t> Cppyy::GetMethodIndicesFromName(
         }
     } else if (scope == GLOBAL_HANDLE) {
         TCollection* funcs = gROOT->GetListOfGlobalFunctions(true);
-        
+
     // tickle deserialization
         if (!funcs->FindObject(name.c_str()))
             return indices;
@@ -1383,8 +1383,6 @@ std::string Cppyy::GetDatamemberType(TCppScope_t scope, TCppIndex_t idata)
     if (scope == GLOBAL_HANDLE) {
         TGlobal* gbl = g_globalvars[idata];
         std::string fullType = gbl->GetFullTypeName();
-        if (!strcmp(gbl->GetName(), "gInterpreter"))
-            return fullType;
 
         if (fullType[fullType.size()-1] == '*' && \
               fullType.compare(0, 4, "char") != 0)
@@ -2061,5 +2059,5 @@ int cppyy_vectorbool_getitem(cppyy_object_t ptr, int idx) {
 void cppyy_vectorbool_setitem(cppyy_object_t ptr, int idx, int value) {
     (*(std::vector<bool>*)ptr)[idx] = (bool)value;
 }
-   
+
 } // end C-linkage wrappers
