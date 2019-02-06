@@ -110,8 +110,7 @@ void TBufferMerger::Merge()
 
       while (!queue.empty()) {
          std::unique_ptr<TBufferFile> buffer{queue.front()};
-         fMerger.AddAdoptFile(
-            new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer(), buffer->BufferSize(), "READ"));
+         fMerger.AddAdoptFile(new TMemFile(fMerger.GetOutputFileName(), std::move(buffer)));
          queue.pop();
       }
 
