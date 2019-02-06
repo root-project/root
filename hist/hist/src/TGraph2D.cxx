@@ -1508,7 +1508,7 @@ void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   graph2d->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
 
    if (fDirectory == 0) {
-      out << "   " << GetName() << "->SetDirectory(0);" << std::endl;
+      out << "   graph2d->SetDirectory(0);" << std::endl;
    }
 
    SaveFillAttributes(out, "graph2d", 0, 1001);

@@ -93,7 +93,7 @@ int df001_introduction()
    for (auto b1_entry : *b1List)
       std::cout << b1_entry << " ";
    std::cout << std::endl;
-   auto b1VecCl = TClass::GetClass(typeid(*b1Vec));
+   auto b1VecCl = ROOT::GetClass(b1Vec.GetPtr());
    std::cout << "The type of b1Vec is " << b1VecCl->GetName() << std::endl;
 
    // ### `Histo1D` action

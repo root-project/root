@@ -12,7 +12,7 @@
 #include <iostream>
 // MemStat
 #include "TMemStatHook.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 // TODO: move it to a separate file
 #if defined(__APPLE__)

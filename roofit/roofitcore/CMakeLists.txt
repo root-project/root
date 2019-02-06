@@ -220,7 +220,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooUnitTest.h
     RooVectorDataStore.h
     RooWorkspace.h
+    RooWorkspaceHandle.h
     RooXYChi2Var.h
+    RooHelpers.h
   SOURCES
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -342,7 +344,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooLinearVar.cxx
     src/RooLinkedList.cxx
     src/RooLinkedListElem.cxx
-    src/RooLinkedListIter.cxx
     src/RooLinTransBinning.cxx
     src/RooList.cxx
     src/RooListProxy.cxx
@@ -438,6 +439,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooVectorDataStore.cxx
     src/RooWorkspace.cxx
     src/RooXYChi2Var.cxx
+    src/RooHelpers.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES

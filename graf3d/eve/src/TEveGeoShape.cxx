@@ -468,6 +468,14 @@ TEveGeoShapeProjected::TEveGeoShapeProjected() :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
+TEveGeoShapeProjected::~TEveGeoShapeProjected()
+{
+   delete fBuff;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// This should never be called as this class is only used for 3D
 /// projections.
 /// The implementation is required as this metod is abstract.

@@ -1,8 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-/// Addition and convolution: extended maximum likelihood fit with alternate range definition for observed number of
-/// events.
+///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #204
+///
+///  Extended maximum likelihood fit with alternate range definition
+///  for observed number of events.
+///  If multiple ranges are used, or only a part of the data is fitted,
+///  it is advisable to use a RooAddPdf to extend the model. See tutorial
+///  204a.
 ///
 /// \macro_output
 /// \macro_code
@@ -53,16 +58,17 @@ void rf204_extrangefit()
    x.setRange("signalRange", 4, 6);
 
    // Associated nsig/nbkg as expected number of events with sig/bkg _in_the_range_ "signalRange"
-   RooRealVar nsig("nsig", "number of signal events in signalRange", 500, 0., 10000);
-   RooRealVar nbkg("nbkg", "number of background events in signalRange", 500, 0, 10000);
-   RooExtendPdf esig("esig", "extended signal p.d.f", sig, nsig, "signalRange");
-   RooExtendPdf ebkg("ebkg", "extended background p.d.f", bkg, nbkg, "signalRange");
+   RooRealVar nsig("nsig", "number of signal events in signalRange", 500, 0., 10000) ;
+   RooRealVar nbkg("nbkg", "number of background events in signalRange", 500, 0, 10000) ;
+   
+   // Use AddPdf to extend the model:
+   RooAddPdf  model("model","(g1+g2)+a", RooArgList(bkg,sig), RooArgList(nbkg,nsig)) ;
+   
+   // Clone these models here because the interpretation of normalisation coefficients changes
+   // when different ranges are used:
+   RooAddPdf model2(model);
+   RooAddPdf model3(model);
 
-   // S u m   e x t e n d e d   c o m p o n e n t s
-   // ---------------------------------------------
-
-   // Construct sum of two extended p.d.f. (no coefficients required)
-   RooAddPdf model("model", "(g1+g2)+a", RooArgList(ebkg, esig));
 
    // S a m p l e   d a t a ,   f i t   m o d e l
    // -------------------------------------------
@@ -70,7 +76,17 @@ void rf204_extrangefit()
    // Generate 1000 events from model so that nsig,nbkg come out to numbers <<500 in fit
    RooDataSet *data = model.generate(x, 1000);
 
-   // Perform unbinned extended ML fit to data
-   RooFitResult *r = model.fitTo(*data, Extended(kTRUE), Save());
-   r->Print();
+   
+   auto canv = new TCanvas("Canvas", "Canvas", 1500, 600);
+   canv->Divide(3,1);
+
+   // Fit full range
+   // -------------------------------------------
+
+   canv->cd(1);
+
+   // Perform unbinned ML fit to data, full range
+   RooFitResult* r = model.fitTo(*data,Save()) ;
+   r->Print() ;
+
 }

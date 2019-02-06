@@ -343,7 +343,8 @@ Double_t TRandom::Gaus(Double_t mean, Double_t sigma)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns a random integer on [ 0, imax-1 ].
+/// Returns a random integer uniformly distributed on the interval [ 0, imax-1 ].
+/// Note that the interfal contains the values of 0 and imax-1 but not imax. 
 
 UInt_t TRandom::Integer(UInt_t imax)
 {

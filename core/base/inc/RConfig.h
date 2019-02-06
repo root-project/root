@@ -13,13 +13,13 @@
 
 /*************************************************************************
  *                                                                       *
- * Old RConfig.h forwarding to ROOT/RConfig.h                            *
+ * Old RConfig.h forwarding to ROOT/RConfig.hxx                            *
  *                                                                       *
- * Please #include ROOT/RConfig.h instead, e.g. to avoid clashes with    *
+ * Please #include ROOT/RConfig.hxx instead, e.g. to avoid clashes with    *
  * R's Rconfig.h                                                         *
  *                                                                       *
  *************************************************************************/
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #endif // ROOT_RConfig_fwd

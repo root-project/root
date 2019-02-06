@@ -24,7 +24,7 @@
 #include <unordered_set>
 
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include "Rtypes.h"
 
 #include "RStl.h"

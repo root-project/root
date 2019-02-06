@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #include "RStl.h"
 #include "TClassEdit.h"

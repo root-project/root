@@ -5,7 +5,6 @@
 include_directories(res ../foundation/res)
 
 set(BASE_HEADERS
-  ROOT/RConfig.h
   ROOT/StringConv.hxx
   ROOT/TExecutor.hxx
   ROOT/TSequentialExecutor.hxx
@@ -255,6 +254,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
   MODULE
     Core
   OPTIONS
+    -writeEmptyRootPCM 
     ${dict_opts}
   LINKDEF
     LinkDef.h

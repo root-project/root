@@ -1480,7 +1480,10 @@ bool TH1::CheckBinLimits(const TAxis* a1, const TAxis * a2)
       }
       else {
          for ( int i = 0; i < fN; ++i ) {
-            if ( ! TMath::AreEqualRel( h1Array->GetAt(i), h2Array->GetAt(i), 1E-10 ) ) {
+            // for i==fN (nbin+1) a->GetBinWidth() returns last bin width
+            // we do not need to exclude that case
+            double binWidth = a1->GetBinWidth(i); 
+            if ( ! TMath::AreEqualAbs( h1Array->GetAt(i), h2Array->GetAt(i), binWidth*1E-10 ) ) {
                throw DifferentBinLimits();
                return false;
             }
@@ -1528,8 +1531,10 @@ bool TH1::CheckBinLabels(const TAxis* a1, const TAxis * a2)
 
 bool TH1::CheckAxisLimits(const TAxis *a1, const TAxis *a2 )
 {
-   if ( ! TMath::AreEqualRel(a1->GetXmin(), a2->GetXmin(),1.E-12) ||
-        ! TMath::AreEqualRel(a1->GetXmax(), a2->GetXmax(),1.E-12) ) {
+   double firstBin = a1->GetBinWidth(1);
+   double lastBin = a1->GetBinWidth( a1->GetNbins() ); 
+   if ( ! TMath::AreEqualAbs(a1->GetXmin(), a2->GetXmin(), firstBin* 1.E-10) ||
+        ! TMath::AreEqualAbs(a1->GetXmax(), a2->GetXmax(), lastBin*1.E-10) ) {
       throw DifferentAxisLimits();
       return false;
    }
@@ -1598,8 +1603,10 @@ bool TH1::CheckConsistentSubAxes(const TAxis *a1, Int_t firstBin1, Int_t lastBin
       return false;
    }
 
-   if ( ! TMath::AreEqualRel(xmin1,xmin2,1.E-12) ||
-        ! TMath::AreEqualRel(xmax1,xmax2,1.E-12) ) {
+   Double_t firstBin = a1->GetBinWidth(firstBin1);
+   Double_t lastBin = a1->GetBinWidth(lastBin1);
+   if ( ! TMath::AreEqualAbs(xmin1,xmin2,1.E-10 * firstBin) ||
+        ! TMath::AreEqualAbs(xmax1,xmax2,1.E-10 * lastBin) ) {
       ::Info("CheckConsistentSubAxes","Axes have different limits");
       return false;
    }
@@ -5378,7 +5385,7 @@ static inline bool IsEquidistantBinning(const TAxis& axis)
    const Double_t firstBinWidth = axis.GetBinWidth(1);
    for (int i = 1; i < axis.GetNbins(); ++i) {
       const Double_t binWidth = axis.GetBinWidth(i);
-      const bool match = TMath::AreEqualRel(firstBinWidth, binWidth, TMath::Limits<Double_t>::Epsilon());
+      const bool match = TMath::AreEqualRel(firstBinWidth, binWidth, 1.E-10);
       isEquidistant &= match;
       if (!match)
          break;

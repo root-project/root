@@ -55,6 +55,7 @@ def pythonization(lazy = True):
 for _, module_name, _ in  pkgutil.walk_packages(pyz.__path__):
     module = importlib.import_module(pyz.__name__ + '.' + module_name)
 
-# Redirect ROOT to cppyy.gbl
+# Configure ROOT facade module
 import sys
-sys.modules['ROOT'] = cppyy.gbl
+from ._facade import ROOTFacade
+sys.modules[__name__] = ROOTFacade(sys.modules[__name__])

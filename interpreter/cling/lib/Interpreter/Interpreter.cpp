@@ -679,8 +679,8 @@ namespace cling {
   std::string Interpreter::toString(const char* type, void* obj) {
     LockCompilationDuringUserCodeExecutionRAII LCDUCER(*this);
     cling::valuePrinterInternal::declarePrintValue(*this);
-    std::string ret;
-    std::stringstream ss;
+    std::string buf, ret;
+    llvm::raw_string_ostream ss(buf);
     ss << "*((std::string*)" << &ret << ") = cling::printValue((" << type << "*)"
        << obj << ");";
     CompilationResult result = process(ss.str().c_str());

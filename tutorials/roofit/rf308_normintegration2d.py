@@ -40,7 +40,8 @@ print("gx_Norm[x,y] = ", gxy.getVal(nset_xy))
 
 # Create object representing integral over gx
 # which is used to calculate  gx_Norm[x,y] == gx / gx_Int[x,y]
-igxy = gxy.createIntegral(ROOT.RooArgSet(x, y))
+x_and_y = ROOT.RooArgSet(x, y)
+igxy = gxy.createIntegral(x_and_y)
 print("gx_Int[x,y] = ", igxy.getVal())
 
 # NB: it is also possible to do the following
@@ -65,8 +66,9 @@ y.setRange("signal", -3, 3)
 # Create an integral of gxy_Norm[x,y] over x and y in range "signal"
 # ROOT.This is the fraction of of p.d.f. gxy_Norm[x,y] which is in the
 # range named "signal"
-igxy_sig = gxy.createIntegral(ROOT.RooArgSet(x, y), ROOT.RooFit.NormSet(
-    ROOT.RooArgSet(x, y)), ROOT.RooFit.Range("signal"))
+
+igxy_sig = gxy.createIntegral(x_and_y, ROOT.RooFit.NormSet(
+    x_and_y), ROOT.RooFit.Range("signal"))
 print("gx_Int[x,y|signal]_Norm[x,y] = ", igxy_sig.getVal())
 
 # Construct cumulative distribution function from pdf

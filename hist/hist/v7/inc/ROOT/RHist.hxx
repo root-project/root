@@ -134,7 +134,7 @@ public:
    ImplBase_t *GetImpl() const noexcept { return fImpl.get(); }
 
    /// "Steal" the ImplBase_t this RHist points to.
-   std::unique_ptr<ImplBase_t> &&TakeImpl() noexcept { return std::move(fImpl); }
+   std::unique_ptr<ImplBase_t> TakeImpl() && noexcept { return std::move(fImpl); }
 
    /// Add `weight` to the bin containing coordinate `x`.
    void Fill(const CoordArray_t &x, Weight_t weight = (Weight_t)1) noexcept { (fImpl.get()->*fFillFunc)(x, weight); }

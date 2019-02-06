@@ -96,3 +96,8 @@ class TCollectionOperators(unittest.TestCase):
         for _ in range(self.factor - 1):
             for o in subc:
                 self.assertEqual(o, it.Next())
+
+
+if __name__ == '__main__':
+    unittest.main()
+

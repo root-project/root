@@ -71,7 +71,7 @@ End_Macro
 The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 */
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #ifdef R__LINUX
 // for posix_fadvise
@@ -165,8 +165,7 @@ static struct AddPseudoGlobals {
 AddPseudoGlobals() {
    // User "gCling" as synonym for "libCore static initialization has happened".
    // This code here must not trigger it.
-   TGlobalMappedFunction::Add(new TGlobalMappedFunction("gFile", "TFile*",
-            (TGlobalMappedFunction::GlobalFunc_t)((void*)&TFile::CurrentFile)));
+   TGlobalMappedFunction::MakeFunctor("gFile", "TFile*", TFile::CurrentFile);
 }
 } gAddPseudoGlobals;
 }

@@ -66,7 +66,7 @@ of a main program creating an interactive version is shown below:
 ~~~
 */
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
 #include "RVersion.h"
@@ -1763,18 +1763,19 @@ TCollection *TROOT::GetListOfFunctionTemplates()
 TCollection *TROOT::GetListOfGlobals(Bool_t load)
 {
    if (!fGlobals) {
-      // We add to the list the "funcky-fake" globals.
       fGlobals = new TListOfDataMembers(0);
-      fGlobals->Add(new TGlobalMappedFunction("gROOT", "TROOT*",
-               (TGlobalMappedFunction::GlobalFunc_t)((void*)&ROOT::GetROOT)));
-      fGlobals->Add(new TGlobalMappedFunction("gPad", "TVirtualPad*",
-               (TGlobalMappedFunction::GlobalFunc_t)((void*)&TVirtualPad::Pad)));
-      fGlobals->Add(new TGlobalMappedFunction("gInterpreter", "TInterpreter*",
-               (TGlobalMappedFunction::GlobalFunc_t)((void*)&TInterpreter::Instance)));
-      fGlobals->Add(new TGlobalMappedFunction("gVirtualX", "TVirtualX*",
-               (TGlobalMappedFunction::GlobalFunc_t)((void*)&TVirtualX::Instance)));
-      fGlobals->Add(new TGlobalMappedFunction("gDirectory", "TDirectory*",
-               (TGlobalMappedFunction::GlobalFunc_t)((void*)&TDirectory::CurrentDirectory)));
+      // We add to the list the "funcky-fake" globals.
+
+      // provide special functor for gROOT, while ROOT::GetROOT() does not return reference
+      TGlobalMappedFunction::MakeFunctor("gROOT", "TROOT*", ROOT::GetROOT, [] {
+         ROOT::GetROOT();
+         return (void *)&ROOT::Internal::gROOTLocal;
+      });
+
+      TGlobalMappedFunction::MakeFunctor("gPad", "TVirtualPad*", TVirtualPad::Pad);
+      TGlobalMappedFunction::MakeFunctor("gVirtualX", "TVirtualX*", TVirtualX::Instance);
+      TGlobalMappedFunction::MakeFunctor("gDirectory", "TDirectory*", TDirectory::CurrentDirectory);
+
       // Don't let TGlobalMappedFunction delete our globals, now that we take them.
       fGlobals->AddAll(&TGlobalMappedFunction::GetEarlyRegisteredGlobals());
       TGlobalMappedFunction::GetEarlyRegisteredGlobals().SetOwner(kFALSE);
@@ -2791,16 +2792,17 @@ void TROOT::SetMacroPath(const char *newpath)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The input parameter `webdisplay` defines where web graphics should be rendered.
+/// \brief Specify where web graphics shall be rendered
 ///
-/// if `webdisplay` may contains:
+/// The input parameter `webdisplay` defines where web graphics is rendered.
+/// `webdisplay` parameter may contain:
 ///
-///  - "off": turns off the web display and come back to normal graphics in
+///  - "off": turns off the web display and comes back to normal graphics in
 ///    interactive mode.
-///  - "batch":  turns the web display in batch mode. It can be prepend with an
-///    other string which will be considered as the new current web display
-///  - "nobatch": turns the web display in interactive mode. It can be prepend with an
-///    other string which will be considered as the new current web display
+///  - "batch": turns the web display in batch mode. It can be prepended with
+///    another string which is considered as the new current web display.
+///  - "nobatch": turns the web display in interactive mode. It can be
+///    prepended with another string which is considered as the new current web display.
 ///
 /// If the option "off" is not set, this method turns the normal graphics to
 /// "Batch" to avoid the loading of local graphics libraries.

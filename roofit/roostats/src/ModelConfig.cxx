@@ -156,7 +156,8 @@ void ModelConfig::Print(Option_t*) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set a workspace that owns all the necessary components for the analysis
+/// If a workspace already exists in this ModelConfig, RooWorkspace::merge(ws) will be called
+/// on the existing workspace.
 
 void ModelConfig::SetWS(RooWorkspace & ws) {
    if( !fRefWS.GetObject() ) {

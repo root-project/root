@@ -18,9 +18,6 @@
 namespace RooStats{
   namespace HistFactory{
 
-    //void fastDriver(std::string input);
-
-    /// Make a model from histograms
     RooWorkspace* MakeModelAndMeasurementFast( RooStats::HistFactory::Measurement& measurement );
     //RooWorkspace* MakeModelFast( RooStats::HistFactory::Measurement& measurement );
 
