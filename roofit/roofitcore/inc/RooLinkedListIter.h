@@ -98,8 +98,10 @@ class TIteratorToSTLInterface final : public TIterator , public GenericRooFIter 
 public:
 
   TIteratorToSTLInterface(const STLContainer & container) :
-    fSTLContainer{container},
-    fIndex{0}
+    TIterator(),
+    GenericRooFIter(),
+    fSTLContainer(container),
+    fIndex(0)
 #ifdef NDEBUG
     ,fCurrentElem{nullptr}
 #else
