@@ -86,17 +86,17 @@ def _setitem_pyz(self, idx, val):
             raise TypeError('can only assign an iterable')
 
         indices = idx.indices(len(self))
-        rg = range(*indices)
+        it = iter(range(*indices))
         for elem in val:
             # Prevent this new Python proxy from owning the C++ object
             # Otherwise we get an 'already deleted' error in
             # TList::Clear when the application ends
             SetOwnership(elem, False)
             try:
-                i = rg.pop(0)
+                i = next(it)
                 self[i] = elem
-            except IndexError:
-                # Empty range, just append
+            except StopIteration:
+                # No more indices in range, just append
                 self.append(elem)
     # Number
     else:
