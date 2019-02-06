@@ -1884,6 +1884,12 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
 
    int ret = -1;
    if (path) {
+      // If ROOT does not make a link to python, then try to load libpython for the user
+      #ifdef ROOT_PYTHON_NO_LINK
+      if(moduleBasename.Contains("PyROOT") || moduleBasename.Contains("PyMVA"))
+          gSystem->Load(ROOT_PYTHON_LIB_NAME);
+      #endif ROOT_PYTHON_NO_LINK
+
       // load any dependent libraries
       TString deplibs = gInterpreter->GetSharedLibDeps(moduleBasename);
       if (deplibs.IsNull()) {

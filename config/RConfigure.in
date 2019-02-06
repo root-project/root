@@ -17,6 +17,9 @@
 #define TTFFONTDIR    "@ttffontdir@"
 #endif
 
+#cmakedefine ROOT_PYTHON_NO_LINK
+#define ROOT_PYTHON_LIB_NAME "@ROOT_PYTHON_LIB_NAME@"
+
 #define EXTRAICONPATH "@extraiconpath@"
 
 #@setresuid@ R__HAS_SETRESUID   /**/

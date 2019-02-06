@@ -64,7 +64,15 @@ ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -Wno-register)
 separate_arguments(_PyROOT_FLAGS)
 
 target_compile_options(PyROOT PRIVATE ${_PyROOT_FLAGS})
-target_link_libraries(PyROOT PRIVATE ${PYTHON_LIBRARIES})
+
+if(ROOT_PYTHON_NO_LINK)
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+        set_property(TARGET PyROOT APPEND PROPERTY LINK_FLAGS "-undefined dynamic_lookup")
+    endif()
+else()
+    target_link_libraries(PyROOT PRIVATE ${PYTHON_LIBRARIES})
+endif()
+
 target_include_directories(PyROOT PRIVATE ${PYTHON_INCLUDE_DIRS})
 
 ROOT_LINKER_LIBRARY(JupyROOT JupyROOT/src/IOHandler.cxx DEPENDENCIES Core CMAKENOEXPORT)

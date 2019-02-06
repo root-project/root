@@ -178,6 +178,9 @@ option(rootbench "Build rootbench if rootbench exists in root or if it is a sibl
 option(roottest "Build roottest if roottest exists in root or if it is a sibling directory." OFF)
 option(testing "Enable testing with CTest" OFF)
 
+option(ROOT_PYTHON_NO_LINK "Avoid linking to Python for package managers like Conda" OFF)
+mark_as_advanced(ROOT_PYTHON_NO_LINK)
+
 set(gcctoolchain "" CACHE PATH "Set path to GCC toolchain used to build llvm/clang")
 
 if (runtime_cxxmodules)

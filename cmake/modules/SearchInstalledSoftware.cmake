@@ -440,6 +440,8 @@ if(python)
   message(STATUS "Looking for python")
   find_package(PythonInterp ${python_version} REQUIRED)
   find_package(PythonLibs ${python_version} REQUIRED)
+  get_filename_component(ROOT_PYTHON_LIB_NAME "${PYTHON_LIBRARY}" NAME)
+
   if (tmva AND tmva-pymva)
     message(STATUS "Looking for numpy (python package)")
     find_package(NumPy)
