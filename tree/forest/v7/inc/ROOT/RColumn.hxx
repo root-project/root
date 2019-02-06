@@ -83,14 +83,27 @@ public:
    }
 
    void Read(const TreeIndex_t index, RColumnElementBase* element) {
-      if ((index < fCurrentPageFirst) || (index > fCurrentPageFirst)) {
+      if ((index < fCurrentPageFirst) || (index > fCurrentPageLast)) {
          MapPage(index);
       }
-      void *src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
+      void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
                   (index - fCurrentPageFirst) * element->GetSize();
       element->Deserialize(src);
    }
-   void Map(const TreeIndex_t /*index*/, void ** /*dst*/) {/*...*/}
+
+   // TODO: template by the expected C++ type and decide whether to read or to map
+   template <typename CppT, EColumnType ColumnT>
+   void* Map(const TreeIndex_t index, RColumnElementBase* element) {
+      if (!RColumnElement<CppT, ColumnT>::kIsMappable) {
+         Read(index, element);
+         return element->GetRawContent();
+      }
+
+      if ((index < fCurrentPageFirst) || (index > fCurrentPageLast)) {
+         MapPage(index);
+      }
+      return nullptr;
+   }
 
    // Returns the number of mapped values
    TreeIndex_t MapV(const TreeIndex_t /*index*/, const TreeIndex_t /*count*/, void ** /*dst*/) {return 0;/*...*/}
@@ -98,7 +111,7 @@ public:
 
    void Flush();
    void MapPage(const TreeIndex_t index);
-   TreeIndex_t GetNElements();
+   TreeIndex_t GetNElements() { return fNElements; }
    const RColumnModel& GetModel() const { return fModel; }
    TreeId_t GetTreeId() const { return fTreeId; }
    RPageSource* GetPageSource() const { return fPageSource; }
