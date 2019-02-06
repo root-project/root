@@ -37,7 +37,7 @@ number range within the backing column. The memory buffer is not managed by the 
 */
 // clang-format on
 class RPage {
-   TreeId_t fTreeId;
+   ColumnId_t fColumnId;
    void* fBuffer;
    std::size_t fCapacity;
    std::size_t fSize;
@@ -45,13 +45,13 @@ class RPage {
    TreeIndex_t fRangeStart;
 
 public:
-   RPage() : fTreeId(-1), fBuffer(nullptr), fCapacity(0), fSize(0), fElementSize(0), fRangeStart(0) {}
-   RPage(TreeId_t treeId, void* buffer, std::size_t capacity, std::size_t elementSize)
-      : fTreeId(treeId), fBuffer(buffer), fCapacity(capacity), fSize(0), fElementSize(elementSize), fRangeStart(0)
+   RPage() : fColumnId(kInvalidColumnId), fBuffer(nullptr), fCapacity(0), fSize(0), fElementSize(0), fRangeStart(0) {}
+   RPage(ColumnId_t columnId, void* buffer, std::size_t capacity, std::size_t elementSize)
+      : fColumnId(columnId), fBuffer(buffer), fCapacity(capacity), fSize(0), fElementSize(elementSize), fRangeStart(0)
       {}
    ~RPage() = default;
 
-   std::int64_t GetTreeId() { return fTreeId; }
+   std::int64_t GetColumnId() { return fColumnId; }
    /// The total space available in the page
    std::size_t GetCapacity() const { return fCapacity; }
    /// The space taken by column elements in the buffer

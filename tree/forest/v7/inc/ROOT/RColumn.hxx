@@ -17,6 +17,7 @@
 #define ROOT7_RColumn
 
 #include <ROOT/RColumnElement.hxx>
+#include <ROOT/RColumnModel.hxx>
 #include <ROOT/RForestUtil.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageStorage.hxx>
@@ -60,8 +61,8 @@ private:
    TreeIndex_t fCurrentPageFirst;
    /// Index of the last element in fCurrentPage
    TreeIndex_t fCurrentPageLast;
-   /// The tree id is unused when writing but set when connected to a source
-   TreeId_t fTreeId;
+   /// The column id is used to find matching pages with content when reading
+   ColumnId_t fColumnIdSource;
 
 public:
    RColumn(const RColumnModel& model);
@@ -81,6 +82,7 @@ public:
       element.Serialize(dst);
       fNElements++;
    }
+   // TODO: AppendV
 
    void Read(const TreeIndex_t index, RColumnElementBase* element) {
       if ((index < fCurrentPageFirst) || (index > fCurrentPageLast)) {
@@ -91,7 +93,8 @@ public:
       element->Deserialize(src);
    }
 
-   // TODO: template by the expected C++ type and decide whether to read or to map
+   void ReadV(const TreeIndex_t /*index*/, const TreeIndex_t /*count*/, void * /*dst*/) {/*...*/}
+
    template <typename CppT, EColumnType ColumnT>
    void* Map(const TreeIndex_t index, RColumnElementBase* element) {
       if (!RColumnElement<CppT, ColumnT>::kIsMappable) {
@@ -102,18 +105,18 @@ public:
       if ((index < fCurrentPageFirst) || (index > fCurrentPageLast)) {
          MapPage(index);
       }
-      return nullptr;
+      return static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
+             (index - fCurrentPageFirst) * element->GetSize();
    }
 
    // Returns the number of mapped values
    TreeIndex_t MapV(const TreeIndex_t /*index*/, const TreeIndex_t /*count*/, void ** /*dst*/) {return 0;/*...*/}
-   void ReadV(const TreeIndex_t /*index*/, const TreeIndex_t /*count*/, void * /*dst*/) {/*...*/}
 
    void Flush();
    void MapPage(const TreeIndex_t index);
    TreeIndex_t GetNElements() { return fNElements; }
    const RColumnModel& GetModel() const { return fModel; }
-   TreeId_t GetTreeId() const { return fTreeId; }
+   ColumnId_t GetColumnIdSource() const { return fColumnIdSource; }
    RPageSource* GetPageSource() const { return fPageSource; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
 };

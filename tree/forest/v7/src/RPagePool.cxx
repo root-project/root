@@ -44,7 +44,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::Reserve
    for (std::size_t i = 0; i < fNPages; ++i) {
       if (fPages[i].IsNull()) {
          void* buffer = static_cast<unsigned char *>(fMemory) + (fPageSize * i);
-         result = RPage(column->GetTreeId(), buffer, fPageSize, column->GetModel().GetElementSize());
+         result = RPage(column->GetColumnIdSource(), buffer, fPageSize, column->GetModel().GetElementSize());
          fPages[i] = result;
          return result;
       }
@@ -67,6 +67,7 @@ void ROOT::Experimental::Detail::RPagePool::CommitPage(const RPage& page)
 
 void ROOT::Experimental::Detail::RPagePool::ReleasePage(const RPage& page)
 {
+   if (page.IsNull()) return;
    for (unsigned i = 0; i < fNPages; ++i) {
       if (fPages[i] == page) {
          if (--fReferences[i] == 0) {
@@ -82,8 +83,8 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::GetPage
 {
    for (unsigned i = 0; i < fNPages; ++i) {
       if (fReferences[i] == 0) continue;
-      if (fPages[i].GetTreeId() != column->GetTreeId()) continue;
-      if (!fPages[i].Contains(index) != column->GetTreeId()) continue;
+      if (fPages[i].GetColumnId() != column->GetColumnIdSource()) continue;
+      if (!fPages[i].Contains(index)) continue;
       fReferences[i]++;
       return fPages[i];
    }
