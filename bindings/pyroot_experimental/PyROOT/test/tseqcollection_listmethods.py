@@ -104,7 +104,7 @@ class TSeqCollectionListMethods(unittest.TestCase):
     def test_sort(self):
         sc = self.create_tseqcollection()
         l = [ elem for elem in sc ]
-        
+
         # Regular sort, rely on TList::Sort
         sc.sort()
         # We need to set `key` until the pythonization to

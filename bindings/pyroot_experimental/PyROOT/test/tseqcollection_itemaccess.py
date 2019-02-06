@@ -89,7 +89,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
     def test_setitem(self):
         sc = self.create_tseqcollection()
         l = []
-        
+
         # Set items
         for i in range(self.num_elems):
             o = ROOT.TObject()
