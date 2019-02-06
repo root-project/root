@@ -19,9 +19,7 @@
 
 #include <ROOT/RStringView.hxx>
 
-std::atomic<ROOT::Experimental::TreeId_t> ROOT::Experimental::Detail::RPageStorage::fgTreeId(0);
-
-ROOT::Experimental::Detail::RPageStorage::RPageStorage() : fTreeId(++fgTreeId)
+ROOT::Experimental::Detail::RPageStorage::RPageStorage()
 {
 }
 

@@ -50,11 +50,6 @@ The tree meta-data contains of a list of fields, a unique identifier, and proven
 */
 // clang-format on
 class RPageStorage {
-private:
-   /// Used to make claims about whether two physical trees are identical or not
-   static std::atomic<TreeId_t> fgTreeId;
-   TreeId_t fTreeId;
-
 protected:
    /// All data is shipped to and from physical storage in pages, and moderated through a page pool
    std::unique_ptr<RPagePool> fPagePool;
@@ -79,7 +74,6 @@ public:
    virtual ColumnHandle_t AddColumn(RColumn *column) = 0;
    virtual EPageStorageType GetType() = 0;
    RPagePool* GetPagePool() const { return fPagePool.get(); }
-   TreeId_t GetTreeId() const { return fTreeId; }
 };
 
 // clang-format off
@@ -137,6 +131,7 @@ public:
    virtual void PopulatePage(ColumnHandle_t columnHandle, TreeIndex_t index, RPage* page) = 0;
    virtual TreeIndex_t GetNEntries() = 0;
    virtual TreeIndex_t GetNElements(ColumnHandle_t columnHandle) = 0;
+   virtual ColumnId_t GetColumnId(ColumnHandle_t columnHandle) = 0;
 };
 
 } // namespace Detail

@@ -65,6 +65,7 @@ TEST(RForestTree, WriteRead)
 
    auto model = std::make_shared<RTreeModel>();
    auto fieldPt = model->AddField<float>("pt", 42.0);
+   auto fieldEnergy = model->AddField<float>("energy", 7.0);
    auto fieldTag = model->AddField<std::string>("tag", "xyz");
 
    {
@@ -73,6 +74,7 @@ TEST(RForestTree, WriteRead)
    }
 
    *fieldPt = 0.0;
+   *fieldEnergy = 0.0;
    fieldTag->clear();
 
    file = TFile::Open("test.root", "READ");
@@ -83,5 +85,6 @@ TEST(RForestTree, WriteRead)
    EXPECT_EQ(1U, tree.GetNEntries());
    tree.GetEntry(0);
    EXPECT_EQ(42.0, *fieldPt);
+   EXPECT_EQ(7.0, *fieldEnergy);
    EXPECT_STREQ("xyz", fieldTag->c_str());
 }

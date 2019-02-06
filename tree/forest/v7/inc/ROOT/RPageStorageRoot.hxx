@@ -180,6 +180,7 @@ public:
    void PopulatePage(ColumnHandle_t columnHandle, TreeIndex_t index, RPage* page) final;
    TreeIndex_t GetNEntries() final;
    TreeIndex_t GetNElements(ColumnHandle_t columnHandle) final;
+   ColumnId_t GetColumnId(ColumnHandle_t columnHandle) final;
 };
 
 } // namespace Detail

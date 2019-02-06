@@ -144,7 +144,9 @@ ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(RColumn* column)
    auto& model = column->GetModel();
    auto columnId = fMapper.fColumnName2Id[model.GetName()];
    R__ASSERT(model == *fMapper.fId2ColumnModel[columnId]);
-   printf("Attaching column %s id %d type %d\n", column->GetModel().GetName().c_str(), columnId, (int)(column->GetModel().GetType()));
+   printf("Attaching column %s id %d type %d length %lu\n",
+      column->GetModel().GetName().c_str(), columnId, (int)(column->GetModel().GetType()),
+      fMapper.fColumnIndex[columnId].fNElements);
    return ColumnHandle_t(columnId, column);
 }
 
@@ -239,7 +241,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
    R__ASSERT(buf != nullptr);
    page->SetRangeStart(firstInPage);
 
-   printf("Populating page %lu starting at %lu\n", pageNum, firstInPage);
+   printf("Populating page %lu for column %d starting at %lu\n", pageNum, columnId, firstInPage);
 
    std::string keyName = std::string(RMapper::kKeyPagePayload) +
       std::to_string(0 /* TODO */) + RMapper::kKeySeparator +
@@ -249,9 +251,6 @@ void ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
    auto pagePayload = pageKey->ReadObject<ROOT::Experimental::Internal::RPagePayload>();
    R__ASSERT(static_cast<std::size_t>(pagePayload->fSize) == page->GetSize());
    memcpy(page->GetBuffer(), pagePayload->fContent, pagePayload->fSize);
-
-   float *test = (float*)pagePayload->fContent;
-   printf("TEST: %f\n", *test);
 
    free(pagePayload->fContent);
    free(pagePayload);
@@ -265,4 +264,10 @@ ROOT::Experimental::TreeIndex_t ROOT::Experimental::Detail::RPageSourceRoot::Get
 ROOT::Experimental::TreeIndex_t ROOT::Experimental::Detail::RPageSourceRoot::GetNElements(ColumnHandle_t columnHandle)
 {
    return fMapper.fColumnIndex[columnHandle.fId].fNElements;
+}
+
+ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSourceRoot::GetColumnId(ColumnHandle_t columnHandle)
+{
+   // TODO(jblomer) distinguish trees
+   return columnHandle.fId;
 }

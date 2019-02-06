@@ -43,6 +43,7 @@ or deserialized into by tree reading.
 class RTreeValueBase {
 public:
    RTreeValueBase(RTreeFieldBase *field) : fField(field) {}
+   virtual ~RTreeValueBase() = default; // Prevent slicing
 
    /// Every value is connected to a field of the corresponding type.
    RTreeFieldBase* fField;
