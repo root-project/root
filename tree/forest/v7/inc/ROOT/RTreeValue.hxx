@@ -73,7 +73,7 @@ public:
    RTreeValue(Detail::RTreeFieldBase* field, ArgsT&&... args)
       : Detail::RTreeValueBase(field), fValue(std::make_shared<T>(std::forward<ArgsT>(args)...)) {}
 
-   std::shared_ptr<T> Get() { return fValue; }
+   std::shared_ptr<T> Get() const { return fValue; }
 };
 
 // clang-format off

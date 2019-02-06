@@ -79,10 +79,21 @@ public:
          dst = fHeadPage.Reserve(1);
          R__ASSERT(dst != nullptr);
       }
-      element.Serialize(dst);
+      element.Serialize(dst, 1);
       fNElements++;
    }
-   // TODO: AppendV
+
+   void AppendV(const RColumnElementBase& elemArray, std::size_t count) {
+      void* dst = fHeadPage.Reserve(count);
+      if (dst == nullptr) {
+         for (unsigned i = 0; i < count; ++i) {
+            Append(RColumnElementBase(elemArray, i));
+         }
+         return;
+      }
+      elemArray.Serialize(dst, count);
+      fNElements += count;
+   }
 
    void Read(const TreeIndex_t index, RColumnElementBase* element) {
       if ((index < fCurrentPageFirst) || (index > fCurrentPageLast)) {
@@ -90,11 +101,26 @@ public:
       }
       void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
                   (index - fCurrentPageFirst) * element->GetSize();
-      element->Deserialize(src);
+      element->Deserialize(src, 1);
    }
 
-   void ReadV(const TreeIndex_t /*index*/, const TreeIndex_t /*count*/, void * /*dst*/) {/*...*/}
+   void ReadV(const TreeIndex_t index, const TreeIndex_t count, RColumnElementBase* elemArray) {
+      if ((index < fCurrentPageFirst) || (index > fCurrentPageLast)) {
+         MapPage(index);
+      }
+      TreeIndex_t idxInPage = index - fCurrentPageFirst;
+      void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) + idxInPage * elemArray->GetSize();
+      if (index + count <= fCurrentPageLast + 1) {
+         elemArray->Deserialize(src, count);
+      } else {
+         TreeIndex_t nBatch = fCurrentPageLast - idxInPage;
+         elemArray->Deserialize(src, nBatch);
+         RColumnElementBase elemTail(*elemArray, nBatch);
+         ReadV(index + nBatch, count - nBatch, &elemTail);
+      }
+   }
 
+   /// Map may fall back to Read() and therefore requires a valid element
    template <typename CppT, EColumnType ColumnT>
    void* Map(const TreeIndex_t index, RColumnElementBase* element) {
       if (!RColumnElement<CppT, ColumnT>::kIsMappable) {
@@ -109,8 +135,17 @@ public:
              (index - fCurrentPageFirst) * element->GetSize();
    }
 
-   // Returns the number of mapped values
-   TreeIndex_t MapV(const TreeIndex_t /*index*/, const TreeIndex_t /*count*/, void ** /*dst*/) {return 0;/*...*/}
+   /// MapV may fail if there are less than count consecutive elements or if the type pair is not mappable
+   template <typename CppT, EColumnType ColumnT>
+   void* MapV(const TreeIndex_t index, const TreeIndex_t count) {
+      if (!RColumnElement<CppT, ColumnT>::kIsMappable) return nullptr;
+      if ((index < fCurrentPageFirst) || (index > fCurrentPageLast)) {
+         MapPage(index);
+      }
+      if (index + count > fCurrentPageLast + 1) return nullptr;
+      return static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
+             (index - fCurrentPageFirst) * kColumnElementSizes[static_cast<int>(ColumnT)];
+   }
 
    void Flush();
    void MapPage(const TreeIndex_t index);
