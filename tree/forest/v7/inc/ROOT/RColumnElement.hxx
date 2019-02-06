@@ -30,20 +30,28 @@ namespace Detail {
 /**
 \class ROOT::Experimental::Detail::RColumnElement
 \ingroup Forest
-\brief A column element points into a memory mapped page, to a particular data item
+\brief A column element points either to the content of an RTreeValue or into a memory mapped page.
+
+The content pointed to by fRawContent can be a single element or the first element of an array.
+Usually the on-disk element should map bitwise to the in-memory element. Sometimes that's not the case
+though, for instance on big endian platforms and for exotic physical columns like 8 bit float.
+
+This class does not provide protection around the raw pointer, fRawContent has to be managed correctly
+by the user of this class.
 */
 // clang-format on
 class RColumnElementBase {
 protected:
-   /// Points to valid C++ data
+   /// Points to valid C++ data, either a single value or an array of values
    void* fRawContent;
+   /// Size of the C++ value pointed to by fRawContent (not necessarily equal to the on-disk element size)
    unsigned int fSize;
 
-   /// Indicates that fRawContent is bitwise identical to the type of the RColumnElement
+   /// Indicates that *fRawContent is bitwise identical to the physical column element
    bool fIsMappable;
 
-   virtual void DoSerialize(void* /* destination */) const { }
-   virtual void DoDeserialize(void* /* source */) const { }
+   virtual void DoSerialize(void* /* destination */, std::size_t /*count*/) const { }
+   virtual void DoDeserialize(void* /* source */, std::size_t /*count*/) const { }
 
 public:
    RColumnElementBase()
@@ -56,22 +64,27 @@ public:
      , fSize(size)
      , fIsMappable(isMappable)
    {}
+   RColumnElementBase(const RColumnElementBase &elemArray, std::size_t at)
+     : fRawContent(static_cast<unsigned char *>(elemArray.fRawContent) + elemArray.fSize * at)
+     , fSize(elemArray.fSize)
+     , fIsMappable(elemArray.fIsMappable)
+   {}
    virtual ~RColumnElementBase() { }
 
-   void Serialize(void *destination) const {
+   void Serialize(void *destination, std::size_t count) const {
      if (!fIsMappable) {
-       DoSerialize(destination);
+       DoSerialize(destination, count);
        return;
      }
-     std::memcpy(destination, fRawContent, fSize);
+     std::memcpy(destination, fRawContent, fSize * count);
    }
 
-   void Deserialize(void *source) {
+   void Deserialize(void *source, std::size_t count) {
      if (!fIsMappable) {
-       DoDeserialize(source);
+       DoDeserialize(source, count);
        return;
      }
-     std::memcpy(fRawContent, source, fSize);
+     std::memcpy(fRawContent, source, fSize * count);
    }
 
    void SetRawContent(void* content) { fRawContent = content; }

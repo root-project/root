@@ -154,7 +154,7 @@ public:
          DoReadV(index, count, dst);
          return;
       }
-      fPrincipalColumn->ReadV(index, count, dst);
+      //fPrincipalColumn->ReadV(index, count, dst);
    }
 
    /// Only for simple types, let the pointer wrapped by the tree value simply point into the page buffer.
