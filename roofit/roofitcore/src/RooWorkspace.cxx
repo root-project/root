@@ -750,6 +750,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 /// <tr><th> Accepted arguments
 /// <tr><td> `Rename(const char* suffix)` <td> Rename dataset upon insertion
 /// <tr><td> `RenameVariable(const char* inputName, const char* outputName)` <td> Change names of observables in dataset upon insertion
+/// <tr><td> `Silence` <td> Be quiet, except in case of errors
 
 Bool_t RooWorkspace::import(RooAbsData& inData, 
 			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
@@ -757,8 +758,6 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
 			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9) 
 
 {
-
-  coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") importing dataset " << inData.GetName() << endl ;
 
   RooLinkedList args ;
   args.Add((TObject*)&arg1) ;
@@ -778,6 +777,7 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   pc.defineString("varChangeIn","RenameVar",0,"",kTRUE) ;
   pc.defineString("varChangeOut","RenameVar",1,"",kTRUE) ;
   pc.defineInt("embedded","Embedded",0,0) ;
+  pc.defineInt("silence","Silence",0,0) ;
 
   // Process and check varargs 
   pc.process(args) ;
@@ -790,6 +790,10 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   const char* varChangeIn = pc.getString("varChangeIn") ;
   const char* varChangeOut = pc.getString("varChangeOut") ;
   Bool_t embedded = pc.getInt("embedded") ;
+  Int_t silence = pc.getInt("silence") ;
+
+  if (!silence)
+    coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") importing dataset " << inData.GetName() << endl ;
 
   // Transform emtpy string into null pointer
   if (dsetName && strlen(dsetName)==0) {
@@ -811,7 +815,8 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   // Rename dataset if required
   RooAbsData* clone ;
   if (dsetName) {
-    coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset from  " << inData.GetName() << " to " << dsetName << endl ;
+    if (!silence)
+      coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset from  " << inData.GetName() << " to " << dsetName << endl ;
     clone = (RooAbsData*) inData.Clone(dsetName) ;
   } else {
     clone = (RooAbsData*) inData.Clone(inData.GetName()) ;
@@ -824,7 +829,8 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
     const std::vector<std::string> tokIn  = RooHelpers::tokenise(varChangeIn, ",");
     const std::vector<std::string> tokOut = RooHelpers::tokenise(varChangeOut, ",");
     for (unsigned int i=0; i < tokIn.size(); ++i) {
-      coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset observable " << tokIn[i] << " to " << tokOut[i] << endl ;
+      if (!silence)
+        coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset observable " << tokIn[i] << " to " << tokOut[i] << endl ;
       clone->changeObservableName(tokIn[i].c_str(), tokOut[i].c_str());
     }
   }
