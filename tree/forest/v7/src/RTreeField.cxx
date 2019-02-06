@@ -161,28 +161,24 @@ void ROOT::Experimental::RTreeField<std::string>::DoGenerateColumns()
 
 void ROOT::Experimental::RTreeField<std::string>::DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& value)
 {
-   auto typedValue = reinterpret_cast<const ROOT::Experimental::RTreeValue<std::string>&>(value);
-   fIndex = fColumns[1]->GetNElements();
-   fColumns[0]->Append(fElemIndex);
-   auto length = typedValue.Get()->length();
-   for (unsigned int i = 0; i < length; ++i) {
-      fChar = (*typedValue.Get())[i];
-      fColumns[1]->Append(fElemChar);
-   }
+   auto typedValue = reinterpret_cast<const ROOT::Experimental::RTreeValue<std::string>&>(value).Get();
+   auto index = fColumns[1]->GetNElements();
+   Detail::RColumnElement<TreeIndex_t, EColumnType::kIndex> elemIndex(&index);
+   fColumns[0]->Append(elemIndex);
+   Detail::RColumnElement<char, EColumnType::kByte> elemChars(const_cast<char*>(typedValue->data()));
+   fColumns[1]->AppendV(elemChars, typedValue->length());
 }
 
 void ROOT::Experimental::RTreeField<std::string>::DoRead(
    ROOT::Experimental::TreeIndex_t index, ROOT::Experimental::Detail::RTreeValueBase* value)
 {
-   auto typedValue = reinterpret_cast<ROOT::Experimental::RTreeValue<std::string>*>(value);
+   auto typedValue = reinterpret_cast<ROOT::Experimental::RTreeValue<std::string>*>(value)->Get();
    auto idxStart = *static_cast<TreeIndex_t *>(fColumns[0]->Map<TreeIndex_t, EColumnType::kIndex>(index, &fElemIndex));
    auto idxEnd = (index == (fColumns[0]->GetNElements() - 1)) ? fColumns[1]->GetNElements()
       : *static_cast<TreeIndex_t *>(fColumns[0]->Map<TreeIndex_t*, EColumnType::kIndex>(index + 1, &fElemIndex));
    auto nChars = idxEnd - idxStart;
-   typedValue->Get()->clear();
-   for (unsigned i = 0; i < nChars; ++i) {
-      fColumns[1]->Read(idxStart + i, &fElemChar);
-      typedValue->Get()->push_back(fChar);
-   }
+   typedValue->resize(nChars);
+   Detail::RColumnElement<char, EColumnType::kByte> elemChars(const_cast<char*>(typedValue->data()));
+   fColumns[1]->ReadV(idxStart, nChars, &elemChars);
 }
 
