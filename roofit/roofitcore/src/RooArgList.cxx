@@ -304,13 +304,10 @@ void RooArgList::writeToStream(ostream& os, Bool_t compact)
     return ;
   }
 
-  TIterator *iterat= createIterator();
-  RooAbsArg *next = 0;
-  while((0 != (next= (RooAbsArg*)iterat->Next()))) {
-      next->writeToStream(os,kTRUE) ;
-      os << " " ;
+  for (const auto obj : _list) {
+    obj->writeToStream(os,kTRUE);
+    os << " " ;
   }
-  delete iterat;  
   os << endl ;
 }
 
@@ -330,16 +327,13 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
     return kTRUE ;
   }    
 
-  TIterator *iterat= createIterator();
   RooStreamParser parser(is) ;
-  RooAbsArg *next = 0;
-  while((0 != (next= (RooAbsArg*)iterat->Next()))) {
+  for (auto next : _list) {
     if (!next->getAttribute("Dynamic")) {
       if (next->readFromStream(is,kTRUE,verbose)) {
-	parser.zapToEnd() ;
-	
-	delete iterat ;
-	return kTRUE ;
+        parser.zapToEnd() ;
+
+        return kTRUE ;
       }	
     } else {
     }
@@ -352,8 +346,7 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 			    << "): ignoring extra characters at end of line: '" << rest << "'" << endl ;
     }
   }
-  
-  delete iterat;    
+
   return kFALSE ;  
 }
 

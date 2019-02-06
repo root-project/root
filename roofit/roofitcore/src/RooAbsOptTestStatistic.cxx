@@ -639,10 +639,8 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     if (applyTrackingOpt) {
       RooArgSet branches ;
       _funcClone->branchNodeServerList(&branches) ;
-      RooFIter iter = branches.fwdIterator() ;
-      RooAbsArg* arg ;
-      while((arg=iter.next())) {
-	arg->setCacheAndTrackHints(trackNodes) ;
+      for (auto arg : branches) {
+        arg->setCacheAndTrackHints(trackNodes);
       }
       // Do not set CacheAndTrack on constant expressions
       RooArgSet* constNodes = (RooArgSet*) trackNodes.selectByAttrib("Constant",kTRUE) ;
@@ -670,12 +668,9 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
 
     
     // Put all cached nodes in AClean value caching mode so that their evaluate() is never called
-    TIterator* cIter = _cachedNodes.createIterator() ;
-    RooAbsArg *cacheArg ;
-    while((cacheArg=(RooAbsArg*)cIter->Next())){
+    for (auto cacheArg : _cachedNodes) {
       cacheArg->setOperMode(RooAbsArg::AClean) ;
     }
-    delete cIter ;  
 
 
 //     cout << "_cachedNodes = " << endl ;

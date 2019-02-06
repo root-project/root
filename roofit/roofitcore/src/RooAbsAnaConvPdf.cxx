@@ -15,44 +15,50 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-// 
-//  RooAbsAnaConvPdf is the base class of for PDFs that represents a
-//  physics model that can be analytically convolved with a resolution model
-//  
-//  To achieve factorization between the physics model and the resolution
-//  model, each physics model must be able to be written in the form
-//           _ _                 _              _ 
-//    Phys(x,a,b) = Sum_k coef_k(a) * basis_k(x,b)
-//  
-//  where basis_k are a limited number of functions in terms of the variable
-//  to be convoluted and coef_k are coefficients independent of the convolution
-//  variable.
-//  
-//  Classes derived from RooResolutionModel implement 
-//         _ _                        _                  _
-//   R_k(x,b,c) = Int(dx') basis_k(x',b) * resModel(x-x',c)
-// 
-//  which RooAbsAnaConvPdf uses to construct the pdf for [ Phys (x) R ] :
-//          _ _ _                 _          _ _
-//    PDF(x,a,b,c) = Sum_k coef_k(a) * R_k(x,b,c)
-//
-//  A minimal implementation of a RooAbsAnaConvPdf physics model consists of
-//  
-//  - A constructor that declares the required basis functions using the declareBasis() method.
-//    The declareBasis() function assigns a unique identifier code to each declare basis
-//
-//  - An implementation of coefficient(Int_t code) returning the coefficient value for each
-//    declared basis function
-//
-//  Optionally, analytical integrals can be provided for the coefficient functions. The
-//  interface for this is quite similar to that for integrals of regular PDFs. Two functions,
-//
-//   Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
-//   Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName) const 
-//
-//  advertise the coefficient integration capabilities and implement them respectively.
-//  Please see RooAbsPdf for additional details. Advertised analytical integrals must be
-//  valid for all coefficients.
+///  \class RooAbsAnaConvPdf
+///  \ingroup Roofitcore
+///
+///  RooAbsAnaConvPdf is the base class for PDFs that represent a
+///  physics model that can be analytically convolved with a resolution model
+///
+///  To achieve factorization between the physics model and the resolution
+///  model, each physics model must be able to be written in the form
+///  \f[
+///    \mathrm{Phys}(x, \bar{a}, \bar{b}) = \sum_k \mathrm{coef}_k(\bar{a}) * \mathrm{basis}_k(x,\bar{b})
+///  \f]
+///
+///  where \f$ \mathrm{basis}_k \f$ are a limited number of functions in terms of the variable
+///  to be convoluted, and \f$ \mathrm{coef}_k \f$ are coefficients independent of the convolution
+///  variable.
+///
+///  Classes derived from RooResolutionModel implement
+///  \f[
+///     R_k(x,\bar{b},\bar{c}) = \int \mathrm{basis}_k(x', \bar{b}) \cdot \mathrm{resModel}(x-x',\bar{c}) \; \mathrm{d}x',
+///  \f]
+///
+///  which RooAbsAnaConvPdf uses to construct the pdf for [ Phys (x) R ] :
+///  \f[
+///     \mathrm{PDF}(x,\bar{a},\bar{b},\bar{c}) = \sum_k \mathrm{coef}_k(\bar{a}) * R_k(x,\bar{b},\bar{c})
+///  \f]
+///
+///  A minimal implementation of a RooAbsAnaConvPdf physics model consists of
+///
+///  - A constructor that declares the required basis functions using the declareBasis() method.
+///    The declareBasis() function assigns a unique identifier code to each declare basis
+///
+///  - An implementation of `coefficient(Int_t code)` returning the coefficient value for each
+///    declared basis function
+///
+///  Optionally, analytical integrals can be provided for the coefficient functions. The
+///  interface for this is quite similar to that for integrals of regular PDFs. Two functions,
+///  \code{.cpp}
+///   Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
+///   Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName) const
+///  \endcode
+///
+///  advertise the coefficient integration capabilities and implement them respectively.
+///  Please see RooAbsPdf for additional details. Advertised analytical integrals must be
+///  valid for all coefficients.
 
 
 #include "RooFit.h"
@@ -81,8 +87,7 @@ ClassImp(RooAbsAnaConvPdf);
 
 RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
   _isCopy(kFALSE),
-  _convNormSet(0),
-  _convSetIter(_convSet.createIterator())
+  _convNormSet(0)
 {
 }
 
@@ -98,7 +103,7 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title,
   _model("!model","Original resolution model",this,(RooResolutionModel&)model,kFALSE,kFALSE),
   _convVar("!convVar","Convolution variable",this,cVar,kFALSE,kFALSE),
   _convSet("!convSet","Set of resModel X basisFunc convolutions",this),
-  _convNormSet(0), _convSetIter(_convSet.createIterator()),
+  _convNormSet(0),
   _coefNormMgr(this,10),
   _codeReg(10)
 {
@@ -117,7 +122,6 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* na
   _convSet("!convSet",this,other._convSet),
   // _basisList(other._basisList),
   _convNormSet(other._convNormSet? new RooArgSet(*other._convNormSet) : new RooArgSet() ),
-  _convSetIter(_convSet.createIterator()),
   _coefNormMgr(other._coefNormMgr,this),
   _codeReg(other._codeReg)
 {
@@ -138,17 +142,14 @@ RooAbsAnaConvPdf::~RooAbsAnaConvPdf()
   if (_convNormSet) {
     delete _convNormSet ;
   }
-    
-  delete _convSetIter ;
 
   if (!_isCopy) {
-    TIterator* iter = _convSet.createIterator() ;
-    RooAbsArg* arg ;
-    while (((arg = (RooAbsArg*)iter->Next()))) {
+    std::vector<RooAbsArg*> tmp(_convSet.begin(), _convSet.end());
+
+    for (auto arg : tmp) {
       _convSet.remove(*arg) ;
       delete arg ;
     }
-    delete iter ;
   }
 
 }
@@ -221,11 +222,10 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
 
 Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel) 
 {
-  TIterator* cIter = _convSet.createIterator() ;
-  RooResolutionModel* conv ;
   RooArgList newConvSet ;
   Bool_t allOK(kTRUE) ;
-  while(((conv=(RooResolutionModel*)cIter->Next()))) {
+  for (auto convArg : _convSet) {
+    auto conv = static_cast<RooResolutionModel*>(convArg);
 
     // Build new resolution model
     RooResolutionModel* newConv = newModel.convolution((RooFormulaVar*)&conv->basis(),this) ;
@@ -234,14 +234,11 @@ Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
       break ;
     }
   }
-  delete cIter ;
 
   // Check if all convolutions were successfully built
   if (!allOK) {
     // Delete new basis functions created sofar
-    TIterator* iter = newConvSet.createIterator() ;
-    while(((conv=(RooResolutionModel*)iter->Next()))) delete conv ;
-    delete iter ;
+    std::for_each(newConvSet.begin(), newConvSet.end(), [](RooAbsArg* arg){delete arg;});
 
     return kTRUE ;
   }
@@ -285,7 +282,7 @@ RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooD
     // Any resolution model with more dependents than the convolution variable
     // or pdf or resmodel do not support direct generation
     string reason ;
-    if (numAddDep>0) reason += "Resolution model has more onservables that the convolution variable. " ;
+    if (numAddDep>0) reason += "Resolution model has more observables than the convolution variable. " ;
     if (!pdfCanDir) reason += "PDF does not support internal generation of convolution observable. " ;
     if (!resCanDir) reason += "Resolution model does not support internal generation of convolution observable. " ;
 
@@ -343,10 +340,9 @@ Double_t RooAbsAnaConvPdf::evaluate() const
 {
   Double_t result(0) ;
 
-  _convSetIter->Reset() ;
-  RooAbsPdf* conv ;
   Int_t index(0) ;
-  while(((conv=(RooAbsPdf*)_convSetIter->Next()))) {
+  for (auto convArg : _convSet) {
+    auto conv = static_cast<RooAbsPdf*>(convArg);
     Double_t coef = coefficient(index++) ;
     if (coef!=0.) {
       Double_t c = conv->getVal(0) ;
@@ -481,24 +477,27 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
 /// by getAnalyticalIntegralWN()
 ///
 /// For unnormalized integrals the returned value is
-///                    _                _     
-///   PDF = sum_k Int(dx) coef_k * Int(dy) [ basis_k (x) ResModel ].
-///       _
-/// where x is the set of coefficient dependents to be integrated
-/// and y the set of basis function dependents to be integrated. 
+/// \f[
+///     \mathrm{PDF} = \sum_k \int \mathrm{coef}_k \; \mathrm{d}\bar{x}
+///         \cdot \int \mathrm{basis}_k (x) \mathrm{ResModel} \; \mathrm{d}\bar{y},
+/// \f]
+/// where \f$ \bar{x} \f$ is the set of coefficient dependents to be integrated,
+/// and \f$ \bar{y} \f$ the set of basis function dependents to be integrated.
 ///
 /// For normalized integrals this becomes
+/// \f[
+///   \mathrm{PDF} = \frac{\sum_k \int \mathrm{coef}_k \; \mathrm{d}x
+///         \cdot \int \mathrm{basis}_k (x) \mathrm{ResModel} \; \mathrm{d}y}
+///     {\sum_k \int \mathrm{coef}_k \; \mathrm{d}v
+///         \cdot \int \mathrm{basis}_k (x) \mathrm{ResModel} \; \mathrm{d}w},
+/// \f]
+/// where
+/// * \f$ x \f$ is the set of coefficient dependents to be integrated,
+/// * \f$ y \f$ the set of basis function dependents to be integrated,
+/// * \f$ v \f$ is the set of coefficient dependents over which is normalized and
+/// * \f$ w \f$ is the set of basis function dependents over which is normalized.
 ///
-///         sum_k Int(dx) coef_k * Int(dy) [ basis_k (x) ResModel ].
-///  PDF =  --------------------------------------------------------
-///         sum_k Int(dv) coef_k * Int(dw) [ basis_k (x) ResModel ].
-///
-/// where x is the set of coefficient dependents to be integrated,
-/// y the set of basis function dependents to be integrated,
-/// v is the set of coefficient dependents over which is normalized and
-/// w is the set of basis function dependents over which is normalized.
-///
-/// Set x must be contained in v and set y must be contained in w.
+/// Set \f$ x \f$ must be contained in \f$ v \f$ and set \f$ y \f$ must be contained in \f$ w \f$.
 ///
 
 Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const 
@@ -512,17 +511,16 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
   RooArgSet *intCoefSet, *intConvSet, *normCoefSet, *normConvSet ;
   _codeReg.retrieve(code-1,intCoefSet,intConvSet,normCoefSet,normConvSet) ;
 
-  RooResolutionModel* conv ;
   Int_t index(0) ;
   Double_t answer(0) ;
-  _convSetIter->Reset() ;
 
   if (normCoefSet==0&&normConvSet==0) {
 
     // Integral over unnormalized function
     Double_t integral(0) ;
     const TNamed *_rangeName = RooNameReg::ptr(rangeName);
-    while(((conv=(RooResolutionModel*)_convSetIter->Next()))) {
+    for (auto convArg : _convSet) {
+      auto conv = static_cast<RooResolutionModel*>(convArg);
       Double_t coef = getCoefNorm(index++,intCoefSet,_rangeName) ; 
       //cout << "coefInt[" << index << "] = " << coef << " " ; intCoefSet->Print("1") ; 
       if (coef!=0) {
@@ -539,7 +537,8 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
     Double_t integral(0) ;
     Double_t norm(0) ;
     const TNamed *_rangeName = RooNameReg::ptr(rangeName);
-    while(((conv=(RooResolutionModel*)_convSetIter->Next()))) {
+    for (auto convArg : _convSet) {
+      auto conv = static_cast<RooResolutionModel*>(convArg);
 
       Double_t coefInt = getCoefNorm(index,intCoefSet,_rangeName) ;
       //cout << "coefInt[" << index << "] = " << coefInt << "*" << term << " " << (intCoefSet?*intCoefSet:RooArgSet()) << endl ;
@@ -662,17 +661,17 @@ void RooAbsAnaConvPdf::makeCoefVarList(RooArgList& varList) const
 RooArgSet* RooAbsAnaConvPdf::coefVars(Int_t /*coefIdx*/) const 
 {
   RooArgSet* cVars = getParameters((RooArgSet*)0) ;
-  TIterator* iter = cVars->createIterator() ;
-  RooAbsArg* arg ;
-  Int_t i ;
-  while(((arg=(RooAbsArg*)iter->Next()))) {
-    for (i=0 ; i<_convSet.getSize() ; i++) {
-      if (_convSet.at(i)->dependsOn(*arg)) {
-	cVars->remove(*arg,kTRUE) ;
+  std::vector<RooAbsArg*> tmp;
+  for (auto arg : *cVars) {
+    for (auto convSetArg : _convSet) {
+      if (convSetArg->dependsOn(*arg)) {
+        tmp.push_back(arg);
       }
     }
   }
-  delete iter ;  
+
+  cVars->remove(tmp.begin(), tmp.end(), true, true);
+
   return cVars ;
 }
 

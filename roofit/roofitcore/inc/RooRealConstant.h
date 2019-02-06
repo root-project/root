@@ -39,7 +39,6 @@ protected:
   static void init() ;
 
   static RooArgList* _constDB ;    // List of already instantiated constants
-  static TIterator* _constDBIter ; // Iterator over constants list
 
   ClassDef(RooRealConstant,0) // RooRealVar constants factory
 };
