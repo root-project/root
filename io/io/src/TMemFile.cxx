@@ -116,23 +116,22 @@ TMemFile::EMode TMemFile::ParseOption(Option_t *option)
 /// Constructor to create a TMemFile re-using external storage.
 
 TMemFile::TMemFile(const char *path, ExternalDataPtr_t data) :
-   TFile(path, "WEB", "read-only memfile", 0 /*compress*/),
+   TFile(path, "WEB", "read-only TMemFile", 0 /*compress*/),
    fBlockList(reinterpret_cast<UChar_t*>(const_cast<char*>(data->data())), data->size()),
    fExternalData(std::move(data)), fSize(fExternalData->size()), fSysOffset(0), fBlockSeek(nullptr), fBlockOffset(0)
 {
-   EMode optmode = ParseOption("READ");
-   if (NeedsToWrite(optmode)) {
-      SysError("TMemFile", "file %s can not be opened", path);
-      // Error in opening file; make this a zombie
+   fD = 0;
+   fOption = "READ";
+   fWritable = kFALSE;
+
+   // This is read-only, so become a zombie if created with an empty buffer
+   if (!fBlockList.fBuffer) {
       MakeZombie();
       gDirectory = gROOT;
       return;
    }
 
-   fD = 0;
-   fWritable = kFALSE;
-
-   Init(!NeedsExistingFile(optmode));
+   Init(/* create */ false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
