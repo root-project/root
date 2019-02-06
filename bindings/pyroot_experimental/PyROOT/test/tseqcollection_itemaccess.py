@@ -130,9 +130,9 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
         # Replace all items
         sc1[:] = sc2
-        self.assertEquals(sc1.GetEntries(), self.num_elems)
+        self.assertEqual(sc1.GetEntries(), self.num_elems)
         for i in range(self.num_elems):
-            self.assertEquals(sc1[i], sc2[i])
+            self.assertEqual(sc1[i], sc2[i])
 
         # Append items
         sc1 = self.create_tseqcollection()
@@ -140,13 +140,13 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
         sc1[self.num_elems:] = sc2
 
-        self.assertEquals(sc1.GetEntries(), 2 * self.num_elems)
+        self.assertEqual(sc1.GetEntries(), 2 * self.num_elems)
         i = 0
         for elem in l: # first half
-            self.assertEquals(sc1[i], elem)
+            self.assertEqual(sc1[i], elem)
             i += 1
         for elem in sc2: # second half
-            self.assertEquals(sc1[i], elem)
+            self.assertEqual(sc1[i], elem)
             i += 1
 
         # Assign second item.
@@ -157,10 +157,10 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
         sc3[1:2] = l2
 
-        self.assertEquals(sc3.GetEntries(), self.num_elems)
-        self.assertEquals(sc3[0], l3[0])
-        self.assertEquals(sc3[1], l2[0])
-        self.assertEquals(sc3[2], l3[2])
+        self.assertEqual(sc3.GetEntries(), self.num_elems)
+        self.assertEqual(sc3[0], l3[0])
+        self.assertEqual(sc3[1], l2[0])
+        self.assertEqual(sc3[2], l3[2])
 
         # Assign with step
         sc4 = self.create_tseqcollection()
@@ -170,18 +170,18 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
         sc4[::2] = l4
 
-        self.assertEquals(sc4.GetEntries(), self.num_elems)
-        self.assertEquals(sc4[0], l4[0])
-        self.assertEquals(sc4[1], o)
-        self.assertEquals(sc4[2], l4[1])
+        self.assertEqual(sc4.GetEntries(), self.num_elems)
+        self.assertEqual(sc4[0], l4[0])
+        self.assertEqual(sc4[1], o)
+        self.assertEqual(sc4[2], l4[1])
 
         # Assign with step (start from end)
         sc4[::-2] = l4
 
-        self.assertEquals(sc4.GetEntries(), self.num_elems)
-        self.assertEquals(sc4[0], l4[1])
-        self.assertEquals(sc4[1], o)
-        self.assertEquals(sc4[2], l4[0])
+        self.assertEqual(sc4.GetEntries(), self.num_elems)
+        self.assertEqual(sc4[0], l4[1])
+        self.assertEqual(sc4[1], o)
+        self.assertEqual(sc4[2], l4[0])
 
         # Step cannot be zero
         sc5 = self.create_tseqcollection()
@@ -230,36 +230,36 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         # Delete all items
         sc1 = self.create_tseqcollection()
         del sc1[:]
-        self.assertEquals(sc1.GetEntries(), 0)
+        self.assertEqual(sc1.GetEntries(), 0)
 
         # Do not delete anything (slice out of range)
         sc2 = self.create_tseqcollection()
         l2 = [ elem for elem in sc2 ]
         del sc2[self.num_elems:]
-        self.assertEquals(sc2.GetEntries(), self.num_elems)
+        self.assertEqual(sc2.GetEntries(), self.num_elems)
         for el1, el2 in zip(sc2, l2):
-            self.assertEquals(el1, el2)
+            self.assertEqual(el1, el2)
 
         # Delete first two items
         sc3 = self.create_tseqcollection()
         o = sc3[2]
         del sc3[0:2]
-        self.assertEquals(sc3.GetEntries(), 1)
-        self.assertEquals(sc3[0], o)
+        self.assertEqual(sc3.GetEntries(), 1)
+        self.assertEqual(sc3[0], o)
 
         # Delete first and third items
         sc4 = self.create_tseqcollection()
         o = sc4[1]
         del sc4[::2]
-        self.assertEquals(sc4.GetEntries(), 1)
-        self.assertEquals(sc4[0], o)
+        self.assertEqual(sc4.GetEntries(), 1)
+        self.assertEqual(sc4[0], o)
 
         # Delete first and third items (start from end)
         sc5 = self.create_tseqcollection()
         o = sc5[1]
         del sc5[::-2]
-        self.assertEquals(sc5.GetEntries(), 1)
-        self.assertEquals(sc5[0], o)
+        self.assertEqual(sc5.GetEntries(), 1)
+        self.assertEqual(sc5[0], o)
 
         # Step cannot be zero
         sc6 = self.create_tseqcollection()
