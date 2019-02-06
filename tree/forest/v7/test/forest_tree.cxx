@@ -41,7 +41,7 @@ TEST(RForestTree, StorageRoot)
 
    //auto fieldFail = model->AddField<int>("jets");
    auto fieldJet = model->AddField<std::vector<float>>("jets" /* TODO(jblomer), {1.0, 2.0}*/);
-   auto nnlo = model->AddField<std::vector<std::vector<float>>>("nnlo");
+   //auto nnlo = model->AddField<std::vector<std::vector<float>>>("nnlo");
 
    sinkRoot.Create(model.get());
    sinkRoot.CommitDataset();
@@ -67,6 +67,9 @@ TEST(RForestTree, WriteRead)
    auto fieldPt = model->AddField<float>("pt", 42.0);
    auto fieldEnergy = model->AddField<float>("energy", 7.0);
    auto fieldTag = model->AddField<std::string>("tag", "xyz");
+   auto fieldJets = model->AddField<std::vector<float>>("jets");
+   fieldJets->push_back(1.0);
+   fieldJets->push_back(2.0);
 
    {
       ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", settingsWrite));
@@ -76,6 +79,7 @@ TEST(RForestTree, WriteRead)
    *fieldPt = 0.0;
    *fieldEnergy = 0.0;
    fieldTag->clear();
+   fieldJets->clear();
 
    file = TFile::Open("test.root", "READ");
    RPageSourceRoot::RSettings settingsRead;
@@ -87,4 +91,8 @@ TEST(RForestTree, WriteRead)
    EXPECT_EQ(42.0, *fieldPt);
    EXPECT_EQ(7.0, *fieldEnergy);
    EXPECT_STREQ("xyz", fieldTag->c_str());
+
+   EXPECT_EQ(2U, fieldJets->size());
+   EXPECT_EQ(1.0, (*fieldJets)[0]);
+   EXPECT_EQ(2.0, (*fieldJets)[1]);
 }

@@ -67,35 +67,27 @@ template <typename T>
 class RTreeValue : public Detail::RTreeValueBase {
 private:
    std::shared_ptr<T> fValue;
+   T* fValuePtr;
 
 public:
    template <typename... ArgsT>
    RTreeValue(Detail::RTreeFieldBase* field, ArgsT&&... args)
-      : Detail::RTreeValueBase(field), fValue(std::make_shared<T>(std::forward<ArgsT>(args)...)) {}
-
-   std::shared_ptr<T> Get() const { return fValue; }
-};
-
-// clang-format off
-/**
-\class ROOT::Experimental::RTreeValueCaptured
-\ingroup Forest
-
-Allows the user to handle storage allocation.
-*/
-// clang-format on
-template <typename T>
-class RTreeValueCaptured : public Detail::RTreeValueBase {
-private:
-   T *fValue;
-
-public:
-   RTreeValueCaptured(Detail::RTreeFieldBase* field, T* value) : Detail::RTreeValueBase(field), fValue(value)
+      : Detail::RTreeValueBase(field), fValue(std::make_shared<T>(std::forward<ArgsT>(args)...))
+      , fValuePtr(fValue.get())
    {
+      fMappedElement = Detail::RColumnElementBase(fValuePtr, sizeof(T), true);
    }
 
-   T *Get() { return fValue; }
+   RTreeValue(bool /*captureTag*/, Detail::RTreeFieldBase* field, T* value)
+      : Detail::RTreeValueBase(field), fValue(nullptr), fValuePtr(value)
+   {
+      fMappedElement = Detail::RColumnElementBase(fValuePtr, sizeof(T), true);
+   }
+
+   T* Get() const { return fValue.get(); }
+   std::shared_ptr<T> GetSharedPtr() const { return fValue; }
 };
+
 
 // clang-format off
 /**

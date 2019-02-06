@@ -53,7 +53,7 @@ public:
       RTreeValue<T>* value = static_cast<RTreeValue<T>*>(field->GenerateValue(std::forward<ArgsT>(args)...));
       fRootField.Attach(std::move(field));
 
-      auto valuePtr = value->Get();
+      auto valuePtr = value->GetSharedPtr();
       fDefaultEntry.TakeValue(value);
       return valuePtr;
    }

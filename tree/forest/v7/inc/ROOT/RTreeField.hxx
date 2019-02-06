@@ -25,6 +25,7 @@
 
 #include <TError.h>
 
+#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -60,12 +61,12 @@ private:
    std::string fType;
    /// A field on a trivial type that maps as-is to a single column
    bool fIsSimple;
+
+protected:
    /// Collections own sub fields
    std::vector<std::unique_ptr<RTreeFieldBase>> fSubFields;
    /// Sub fields point to their mother field
    RTreeFieldBase* fParent;
-
-protected:
    /// All fields have a main column. For collection fields, the main column is the index field. Points into fColumns.
    RColumn* fPrincipalColumn;
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
@@ -211,20 +212,59 @@ public:
    ROOT::Experimental::Detail::RTreeValueBase* GenerateValue() final { return nullptr; }
 };
 
+template <typename SrcT, typename DstT>
+void ContainerAppend(const SrcT& src, DstT& dst) {
+   std::copy(std::begin(src), std::end(src), std::back_inserter(dst));
+}
 
-/// Implementation for std::vector<ElementT> and other containers that can be iterated from begin() to end().
+/// Implementation for std::vector<ValueT> and other containers that can be iterated from begin() to end().
 /// The ContainerT type resolves to a single field (no sub fields) with multiple columns (index plus inner columns).
 template <typename ContainerT>
 class RTreeField<ContainerT, std::enable_if_t<ROOT::TypeTraits::IsContainer<ContainerT>::value>> : public Detail::RTreeFieldBase {
-   using ElementT = typename ContainerT::value_type;
+   using ValueT = typename ContainerT::value_type;
+
+private:
+   TreeIndex_t fNWritten;
+
+protected:
+   void DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& value) final {
+      auto typedValue = reinterpret_cast<const RTreeValue<ContainerT>&>(value).Get();
+      auto count = typedValue->size();
+      for (auto itr = typedValue->begin(); itr != typedValue->end(); ++itr) {
+         fSubFields[0]->Append(RTreeValue<ValueT>(true /*capture*/, fSubFields[0].get(), &(*itr)));
+      }
+      Detail::RColumnElement<TreeIndex_t, EColumnType::kIndex> elemIndex(&fNWritten);
+      fNWritten += count;
+      fColumns[0]->Append(elemIndex);
+   }
+
+   void DoRead(ROOT::Experimental::TreeIndex_t index, ROOT::Experimental::Detail::RTreeValueBase* value) final {
+      auto typedValue = reinterpret_cast<RTreeValue<ContainerT>*>(value)->Get();
+      TreeIndex_t dummy;
+      Detail::RColumnElement<TreeIndex_t, EColumnType::kIndex> elemIndex(&dummy);
+      auto idxStart = (index == 0) ? 0 : *static_cast<TreeIndex_t *>(
+         fColumns[0]->template Map<TreeIndex_t, EColumnType::kIndex>(index - 1, &elemIndex));
+      auto idxEnd = *static_cast<TreeIndex_t *>(
+         fColumns[0]->template Map<TreeIndex_t*, EColumnType::kIndex>(index, &elemIndex));
+      auto nItems = idxEnd - idxStart;
+      typedValue->clear();
+      ValueT item;
+      ROOT::Experimental::RTreeValue<ValueT> valueItem(true /*capture*/, fSubFields[0].get(), &item);
+      for (unsigned i = 0; i < nItems; ++i) {
+         fSubFields[0]->Read(idxStart + i, &valueItem);
+         // TODO: generalize
+         typedValue->push_back(item);
+      }
+   }
+
 public:
    RTreeField(std::string_view name)
-      : Detail::RTreeFieldBase(name, "ROOT::Experimental::TreeIndex_t", false /*isSimple*/)
+      : Detail::RTreeFieldBase(name, "ROOT::Experimental::TreeIndex_t", false /*isSimple*/), fNWritten(0)
    {
       std::string elementName(GetName());
       elementName.push_back(kLevelSeparator);
       elementName.append(GetLeafName());
-      auto fieldElement = std::make_unique<RTreeField<ElementT>>(elementName);
+      auto fieldElement = std::make_unique<RTreeField<ValueT>>(elementName);
       Attach(std::move(fieldElement));
    }
    ~RTreeField() = default;
@@ -236,9 +276,7 @@ public:
       fPrincipalColumn = fColumns[0].get();
    }
 
-   unsigned int GetNColumns() const final {
-      return 1;
-   }
+   unsigned int GetNColumns() const final { return 1; }
 
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase* GenerateValue(ArgsT&&... args)
@@ -265,8 +303,6 @@ public:
    ROOT::Experimental::Detail::RTreeValueBase* GenerateValue(ArgsT&&... args)
    {
       auto value = new ROOT::Experimental::RTreeValue<float>(this, std::forward<ArgsT>(args)...);
-      value->fMappedElement =
-         ROOT::Experimental::Detail::RColumnElement<float, EColumnType::kReal32>(value->Get().get());
       return value;
    }
    ROOT::Experimental::Detail::RTreeValueBase* GenerateValue() final { return GenerateValue(0.0); }
@@ -276,9 +312,7 @@ template <>
 class ROOT::Experimental::RTreeField<std::string> : public ROOT::Experimental::Detail::RTreeFieldBase {
 private:
    TreeIndex_t fIndex;
-   char fChar;
    Detail::RColumnElement<TreeIndex_t, EColumnType::kIndex> fElemIndex;
-   Detail::RColumnElement<char, EColumnType::kByte> fElemChar;
 
 protected:
    void DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& value) final;
@@ -286,8 +320,7 @@ protected:
 
 public:
    explicit RTreeField(std::string_view name)
-      : Detail::RTreeFieldBase(name, "std::string", false /* isSimple */)
-      , fElemIndex(&fIndex), fElemChar(&fChar) {}
+      : Detail::RTreeFieldBase(name, "std::string", false /* isSimple */), fIndex(0), fElemIndex(&fIndex) {}
    ~RTreeField() = default;
 
    void DoGenerateColumns() final;
