@@ -102,7 +102,8 @@ public:
   virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE);
   virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;
 
-  RooAbsArg& operator[](const char* name) const ;   
+  using RooAbsCollection::operator[];
+  RooAbsArg& operator[](const char* name) const;
 
   /// Shortcut for readFromStream(std::istream&, Bool_t, const char*, const char*, Bool_t), setting
   /// `flagReadAtt` and `section` to 0.
@@ -128,6 +129,15 @@ public:
   static void cleanup() ;
 
   Bool_t isInRange(const char* rangeSpec) ;
+
+  /// Use RooAbsCollection::snapshot(), but return as RooArgSet.
+  RooArgSet * snapshot(bool deepCopy = true) const {
+    return static_cast<RooArgSet*>(RooAbsCollection::snapshot(deepCopy));
+  }
+
+  Bool_t snapshot(RooAbsCollection& output, Bool_t deepCopy=kTRUE) const {
+    return RooAbsCollection::snapshot(output, deepCopy);
+  }
 
 protected:
 

@@ -344,7 +344,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooLinearVar.cxx
     src/RooLinkedList.cxx
     src/RooLinkedListElem.cxx
-    src/RooLinkedListIter.cxx
     src/RooLinTransBinning.cxx
     src/RooList.cxx
     src/RooListProxy.cxx

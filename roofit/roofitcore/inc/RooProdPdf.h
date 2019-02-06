@@ -115,8 +115,7 @@ protected:
   
 	
 	
-  void getPartIntList(const RooArgSet* nset, const RooArgSet* iset, pRooArgList& partList, pRooLinkedList& nsetList, 
-                      Int_t& code, const char* isetRangeName=0) const ;
+  Int_t getPartIntList(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName=0) const ;
   
   std::vector<RooAbsReal*> processProductTerm(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName,
 					      const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet, 
@@ -136,7 +135,7 @@ protected:
     RooArgList _numList ;
     RooArgList _denList ;
     RooArgList _ownedList ;
-    RooLinkedList _normList ;    
+    std::vector<RooArgSet*> _normList;
     Bool_t _isRearranged ;
     RooAbsReal* _rearrangedNum ;
     RooAbsReal* _rearrangedDen ;

@@ -96,7 +96,6 @@ protected:
   RooListProxy _convSet  ;             //  Set of (resModel (x) basisFunc) convolution objects
   RooArgList _basisList ;              //!  List of created basis functions
   mutable RooArgSet* _convNormSet ;    //!  Subset of last normalization that applies to convolutions
-  mutable TIterator* _convSetIter ;    //! Iterator over _convNormSet
 
 
   class CacheElem : public RooAbsCacheElement {

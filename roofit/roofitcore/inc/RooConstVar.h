@@ -22,7 +22,7 @@
 
 class RooArgSet ;
 
-class RooConstVar : public RooAbsReal {
+class RooConstVar final : public RooAbsReal {
 public:
   // Constructors, assignment etc
   inline RooConstVar() { 

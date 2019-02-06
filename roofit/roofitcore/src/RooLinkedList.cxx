@@ -38,6 +38,7 @@ Use RooAbsCollection derived objects for public use
 #include "Riostream.h"
 #include "TBuffer.h"
 #include "TROOT.h"
+#include "ROOT/RMakeUnique.hxx"
 
 #include <algorithm>
 
@@ -738,25 +739,32 @@ void RooLinkedList::Print(const char* opt) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create a TIterator for this list.
+/// \param forward Run in forward direction (default).
+/// \return Pointer to a TIterator. The caller owns the pointer.
 
-RooLinkedListIter RooLinkedList::iterator(Bool_t dir) const 
-{
-  return RooLinkedListIter(this,dir) ;
+TIterator* RooLinkedList::MakeIterator(Bool_t forward) const {
+  auto iterImpl = std::make_unique<RooLinkedListIterImpl>(this, forward);
+  return new RooLinkedListIter(std::move(iterImpl));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create an iterator for this list.
+/// \param forward Run in forward direction (default).
+/// \return RooLinkedListIter (subclass of TIterator) over this list
 
-RooFIter RooLinkedList::fwdIterator() const 
-{ 
-  return RooFIter(this) ; 
+RooLinkedListIter RooLinkedList::iterator(Bool_t forward) const {
+  auto iterImpl = std::make_unique<RooLinkedListIterImpl>(this, forward);
+  return RooLinkedListIter(std::move(iterImpl));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return an iterator over this list
+/// Create a one-time-use forward iterator for this list.
+/// \return RooFIter that only supports next()
 
-TIterator* RooLinkedList::MakeIterator(Bool_t dir) const 
-{
-  return new RooLinkedListIter(this,dir) ;
+RooFIter RooLinkedList::fwdIterator() const {
+  auto iterImpl = std::make_unique<RooFIterForLinkedList>(this);
+  return RooFIter(std::move(iterImpl));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

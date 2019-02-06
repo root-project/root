@@ -47,7 +47,6 @@ ClassImp(RooRealConstant);
 
 
 RooArgList* RooRealConstant::_constDB = 0;
-TIterator* RooRealConstant::_constDBIter = 0;
 
 
 
@@ -58,7 +57,6 @@ void RooRealConstant::cleanup()
 {
   if (_constDB) {
     delete _constDB ;
-    delete _constDBIter ;
     _constDB = 0 ;
   }
 }
@@ -74,8 +72,8 @@ RooConstVar& RooRealConstant::value(Double_t value)
 {
   // Lookup existing constant
   init() ;
-  RooConstVar* var ;
-  while((var=(RooConstVar*)_constDBIter->Next())) {
+  for (auto varArg : *_constDB) {
+    auto var = static_cast<RooConstVar*>(varArg);
     if ((var->getVal()==value) && (!var->getAttribute("REMOVAL_DUMMY"))) return *var ;
   }
 
@@ -83,7 +81,7 @@ RooConstVar& RooRealConstant::value(Double_t value)
   std::ostringstream s ;
   s << value ;
 
-  var = new RooConstVar(s.str().c_str(),s.str().c_str(),value) ;
+  auto var = new RooConstVar(s.str().c_str(),s.str().c_str(),value) ;
   var->setAttribute("RooRealConstant_Factory_Object",kTRUE) ;
   _constDB->addOwned(*var) ;
 
@@ -113,9 +111,6 @@ void RooRealConstant::init()
 {
   if (!_constDB) {
     _constDB = new RooArgList("RooRealVar Constants Database") ;
-    _constDBIter = _constDB->createIterator() ;
     RooSentinel::activate() ;
-  } else {
-    _constDBIter->Reset() ;
   }
 }

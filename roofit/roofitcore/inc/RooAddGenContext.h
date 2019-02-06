@@ -28,7 +28,6 @@ class RooDataSet;
 class RooRealIntegral;
 class RooAcceptReject;
 class TRandom;
-class TIterator;
 
 class RooAddGenContext : public RooAbsGenContext {
 public:

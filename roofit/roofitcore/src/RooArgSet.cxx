@@ -685,23 +685,19 @@ Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt, co
 
 void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* /*section*/) const
 {
-  TIterator *iterat= createIterator();
-  RooAbsArg *next = 0;
-
   if (compact) {
-    while((0 != (next= (RooAbsArg*)iterat->Next()))) {
-      next->writeToStream(os,true);
+    for (const auto next : _list) {
+      next->writeToStream(os, true);
       os << " ";
     }
     os << endl;
   } else {
-    while((0 != (next= (RooAbsArg*)iterat->Next()))) {
+    for (const auto next : _list) {
       os << next->GetName() << " = " ;
       next->writeToStream(os,kFALSE) ;
       os << endl ;
     }
   }
-  delete iterat;
 }
 
 

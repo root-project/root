@@ -74,8 +74,47 @@ The methods could be replaced by equivalent methods with other signature:
 
 
 ## RooFit Libraries
-  - HistFactory: hist2workspace performance optimisations. For a large, ATLAS-style Higgs-->bb workspace with > 100 systematic uncertainties and more than
-    10 channels, the run time decreases by a factor 11 to 12.
+### HistFactory
+hist2workspace performance optimisations. For a large, ATLAS-style Higgs-->bb workspace with > 100 systematic uncertainties and more than 10 channels, the run time decreases by a factor 11 to 12.
+
+### Faster, STL-like Collections in RooFit
+RooFit's collections `RooArgSet` and `RooArgList` have been made more STL-like. The underlying implementation used to be the `RooLinkedList`, but now both collections work with `std::vector`. The collections have an STL-like interface concerning iterators such that iterations over the two collections that looked like
+```
+TIterator* depIter = intDepList.createIterator() ;
+RooAbsArg* arg;
+while((arg=(RooAbsArg*)depIter->Next())) {
+  ...
+}
+delete depIter;
+```
+now look like:
+```
+for (auto arg : intDepList) {
+  ...
+}
+```
+Depending on how many elements are iterated, RooFit will be between 10 and 20% faster if the new iterators are used. Heavily using old iterators might slow it down by 5 to 10%. Iterators in key classes have been updated, such that many workflows in RooFit or 10% faster.
+
+#### Legacy iterators
+The (three kinds) of legacy iterators in RooFit are still supported, such that old code will not break, but they are slower than `begin(), end()` and range-based for loops.
+
+**Important caveat**:
+The old RooFit collections could be modified while iterating. The STL-like iterators do not support this (as for a *e.g.* std::vector)! Using the legacy iterators with the new collections (*i.e.* in existing code), mutating the collection is still possible in the following cases:
+- Inserting/deleting elements **after** the current iterator.
+- Changing an element at a position **other than** the current iterator
+- **But not** inserting/deleting before/at the current iterator position. With a debug build (with assertions), the legacy iterators will check that the collection is not mutated. In a release build, elements might be skipped or be iterated twice.
+
+#### Moving away from the slower iterators
+The legacy iterators have been flagged with a special deprecation macro that can be used help the user use the recommended ROOT interface. Defining `R__SUGGEST_NEW_INTERFACE`, (either in a single translation unit or in the build system), all uses of the legacy iterators will trigger a compiler warning like:
+```
+<path>/RooChebychev.cxx:66:34: warning: 'createIterator' is deprecated: There is a superior alternative: begin(), end() and range-based for loops. [-Wdeprecated-declarations]
+  TIterator* coefIter = coefList.createIterator() ;
+                                 ^
+1 warning generated.
+```
+
+
+
 
 ## 2D Graphics Libraries
 

@@ -19,13 +19,17 @@
 #include "TString.h"
 #include "RooAbsArg.h"
 #include "RooPrintable.h"
-#include "RooLinkedList.h"
 #include "RooCmdArg.h"
 #include "RooLinkedListIter.h"
 #include <string>
 
+class RooCmdArg;
+
 class RooAbsCollection : public TObject, public RooPrintable {
 public:
+  using Storage_t = std::vector<RooAbsArg*>;
+  using const_iterator = Storage_t::const_iterator;
+
 
   // Constructors, assignment etc.
   RooAbsCollection();
@@ -49,14 +53,13 @@ public:
   RooAbsCollection *snapshot(Bool_t deepCopy=kTRUE) const ;
   Bool_t snapshot(RooAbsCollection& output, Bool_t deepCopy=kTRUE) const ;
 
-  // Hash table control
-  void setHashTableSize(Int_t i) { 
+  /// \deprecated Without effect.
+  void setHashTableSize(Int_t) {
     // Set size of internal hash table to i (should be a prime number)
-    _list.setHashTableSize(i) ; 
   }
+  /// \deprecated Without effect.
   Int_t getHashTableSize() const { 
-    // Return size of internal hash table
-    return _list.getHashTableSize() ; 
+    return 0;
   }
 
   // List content management
@@ -72,6 +75,16 @@ public:
   virtual void   addClone(const RooAbsCollection& list, Bool_t silent=kFALSE);
   Bool_t replace(const RooAbsCollection &other);
   Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
+  template<class forwardIt>
+  void remove(forwardIt rangeBegin, forwardIt rangeEnd, Bool_t silent = kFALSE, Bool_t matchByNameOnly = kFALSE) {
+      for (forwardIt it = rangeBegin; it != rangeEnd; ++it) {
+        static_assert(std::is_same<
+            typename std::iterator_traits<forwardIt>::value_type,
+            RooAbsArg*>::value, "Can only remove lists of RooAbsArg*.");
+        auto castedElm = static_cast<RooAbsArg*>(*it);
+        remove(*castedElm, silent, matchByNameOnly);
+      }
+  }
 
   // Group operations on AbsArgs
   void setAttribAll(const Text_t* name, Bool_t value=kTRUE) ;
@@ -86,7 +99,7 @@ public:
   }
   Bool_t containsInstance(const RooAbsArg& var) const { 
     // Returns true if var is contained in this collection
-    return (0 == _list.FindObject(&var)) ? kFALSE:kTRUE; 
+    return std::find(_list.begin(), _list.end(), &var) != _list.end();
   }
   RooAbsCollection* selectByAttrib(const char* name, Bool_t value) const ;
   RooAbsCollection* selectCommon(const RooAbsCollection& refColl) const ;
@@ -94,22 +107,57 @@ public:
   Bool_t equals(const RooAbsCollection& otherColl) const ; 
   Bool_t overlaps(const RooAbsCollection& otherColl) const ;
 
-  // export subset of THashList interface
-  inline TIterator* createIterator(Bool_t dir = kIterForward) const { 
+  /// TIterator-style iteration over contained elements.
+  /// \note These iterators are slow. Use begin() and end() or
+  /// range-based for loop instead.
+  inline TIterator* createIterator(Bool_t dir = kIterForward) const
+  R__SUGGEST_ALTERNATIVE("begin(), end() and range-based for loops.") {
     // Create and return an iterator over the elements in this collection
-    return _list.MakeIterator(dir); 
+    return new RooLinkedListIter(makeLegacyIterator(dir));
   }
 
-  RooLinkedListIter iterator(Bool_t dir = kIterForward) const ;
-  RooFIter fwdIterator() const { return RooFIter(&_list); }
+  /// TIterator-style iteration over contained elements.
+  /// \note This iterator is slow. Use begin() and end() or range-based for loop instead.
+  RooLinkedListIter iterator(Bool_t dir = kIterForward) const
+  R__SUGGEST_ALTERNATIVE("begin(), end() and range-based for loops.") {
+    return RooLinkedListIter(makeLegacyIterator(dir));
+  }
+
+  /// One-time forward iterator.
+  /// \note Use begin() and end() or range-based for loop instead.
+  RooFIter fwdIterator() const
+  R__SUGGEST_ALTERNATIVE("begin(), end() and range-based for loops.") {
+    return RooFIter(makeLegacyIterator());
+  }
+
+  const_iterator begin() const {
+    return _list.begin();
+  }
+  
+  const_iterator end() const {
+    return _list.end();
+  }
+
+  Storage_t::size_type size() const {
+    return _list.size();
+  }
+
+  void reserve(Storage_t::size_type count) {
+    _list.reserve(count);
+  }
 
   inline Int_t getSize() const { 
     // Return the number of elements in the collection
-    return _list.GetSize(); 
+    return _list.size();
   }
+  
   inline RooAbsArg *first() const { 
     // Return the first element in this collection
-    return (RooAbsArg*)_list.First(); 
+    return _list.front();
+  }
+
+  RooAbsArg * operator[](Storage_t::size_type i) const {
+    return _list[i];
   }
 
   inline virtual void Print(Option_t *options= 0) const {
@@ -155,7 +203,7 @@ public:
   void releaseOwnership() { _ownCont = kFALSE ; }
   void takeOwnership() { _ownCont = kTRUE ; }
 
-  void sort(Bool_t ascend=kTRUE) { _list.Sort(ascend) ; }
+  void sort(Bool_t reverse = false);
 
   virtual void RecursiveRemove(TObject *obj);
 
@@ -163,7 +211,8 @@ protected:
 
   friend class RooMultiCatIter ;
 
-  RooLinkedList _list ; // Actual object store
+  Storage_t _list; // Actual object storage
+  using LegacyIterator_t = TIteratorToSTLInterface<Storage_t>;
 
   Bool_t _ownCont;  // Flag to identify a list that owns its contents.
   TString _name;    // Our name.
@@ -177,8 +226,8 @@ protected:
   inline TNamed* structureTag() { if (_structureTag==0) makeStructureTag() ; return _structureTag ; }
   inline TNamed* typedStructureTag() { if (_typedStructureTag==0) makeTypedStructureTag() ; return _typedStructureTag ; }
 
-  mutable TNamed* _structureTag ; //! Structure tag
-  mutable TNamed* _typedStructureTag ; //! Typed structure tag
+  mutable TNamed* _structureTag{nullptr}; //! Structure tag
+  mutable TNamed* _typedStructureTag{nullptr}; //! Typed structure tag
   
   inline void clearStructureTags() { _structureTag=0 ; _typedStructureTag = 0 ; }
 
@@ -186,8 +235,9 @@ protected:
   void makeTypedStructureTag() ;
   
 private:
+  std::unique_ptr<LegacyIterator_t> makeLegacyIterator (bool forward = true) const;
 
-  ClassDef(RooAbsCollection,2) // Collection of RooAbsArg objects
+  ClassDef(RooAbsCollection,3) // Collection of RooAbsArg objects
 };
 
 #endif

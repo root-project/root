@@ -490,9 +490,7 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
 //   }
 
   if (!arg) {
-//     if (list->getHashTableSize()==0) {
-//       list->setHashTableSize(1000) ;
-//     }
+    list->reserve(10);
     arg=this ;
   }
 
@@ -737,9 +735,7 @@ Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList, const RooAbsArg*
   // Test whether we depend on (ie, are served by) any object in the
   // specified collection. Uses the dependsOn(RooAbsArg&) member function.
 
-  RooFIter sIter = serverList.fwdIterator();
-  RooAbsArg* server ;
-  while ((server=sIter.next())) {
+  for (auto server : serverList) {
     if (dependsOn(*server,ignoreArg,valueOnly)) {
       return kTRUE;
     }
@@ -914,7 +910,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source) const
 /// Substitute our servers with those listed in newSet. If nameChange is false, servers and
 /// and substitutes are matched by name. If nameChange is true, servers are matched to args
 /// in newSet that have the 'ORIGNAME:<servername>' attribute set. If mustReplaceAll is set,
-/// a warning is printed and error status is returned if not all servers could be sucessfully
+/// a warning is printed and error status is returned if not all servers could be successfully
 /// substituted.
 
 Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursionStep)
@@ -923,15 +919,12 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
   if (!_serverList.First()) return kFALSE ;
   if (newSetOrig.getSize()==0) return kFALSE ;
 
-  // Strip any non-matchin removal nodes from newSetOrig
+  // Strip any non-matching removal nodes from newSetOrig
   RooAbsCollection* newSet ;
 
   if (nameChange) {
-
     newSet = new RooArgSet ;
-    RooFIter iter = newSetOrig.fwdIterator() ;
-    RooAbsArg* arg ;
-    while((arg=iter.next())) {
+    for (auto arg : newSetOrig) {
 
       if (string("REMOVAL_DUMMY")==arg->GetName()) {
 
@@ -957,27 +950,28 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
   Bool_t ret(kFALSE) ;
 
   //Copy original server list to not confuse the iterator while deleting
-  RooLinkedList origServerList, origServerValue, origServerShape ;
-  RooAbsArg *oldServer, *newServer ;
+  std::vector<RooAbsArg*> origServerList, origServerValue, origServerShape;
+  std::size_t origSize = _serverList.GetSize();
+  origServerList.reserve(origSize);
+  origServerValue.reserve(origSize);
+
   RooFIter sIter = _serverList.fwdIterator() ;
-  while ((oldServer=sIter.next())) {
-    origServerList.Add(oldServer) ;
+  for (RooAbsArg * oldServer = sIter.next(); oldServer; oldServer=sIter.next()) {
+    origServerList.push_back(oldServer) ;
 
     // Retrieve server side link state information
     if (oldServer->_clientListValue.findArg(this)) {
-      origServerValue.Add(oldServer) ;
+      origServerValue.push_back(oldServer) ;
     }
     if (oldServer->_clientListShape.findArg(this)) {
-      origServerShape.Add(oldServer) ;
+      origServerShape.push_back(oldServer) ;
     }
   }
 
   // Delete all previously registered servers
-  sIter = origServerList.fwdIterator() ;
-  Bool_t propValue, propShape ;
-  while ((oldServer=sIter.next())) {
+  for (auto oldServer : origServerList) {
 
-    newServer= oldServer->findNewServer(*newSet, nameChange);
+    RooAbsArg * newServer= oldServer->findNewServer(*newSet, nameChange);
 
     if (newServer && _verboseDirty) {
       cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
@@ -986,15 +980,18 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 
     if (!newServer) {
       if (mustReplaceAll) {
-	cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
+        coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
 			       << " (" << (void*)oldServer << ") not redirected" << (nameChange?"[nameChange]":"") << endl ;
-	ret = kTRUE ;
+        ret = kTRUE ;
       }
       continue ;
     }
 
-    propValue=origServerValue.findArg(oldServer)?kTRUE:kFALSE ;
-    propShape=origServerShape.findArg(oldServer)?kTRUE:kFALSE ;
+    auto findByNamePtr = [&oldServer](const RooAbsArg * item) {
+      return oldServer->namePtr() == item->namePtr();
+    };
+    bool propValue = std::any_of(origServerValue.begin(), origServerValue.end(), findByNamePtr);
+    bool propShape = std::any_of(origServerShape.begin(), origServerShape.end(), findByNamePtr);
     // cout << "replaceServer with name " << oldServer->GetName() << " old=" << oldServer << " new=" << newServer << endl ;
     if (newServer != this) {
       replaceServer(*oldServer,*newServer,propValue,propShape) ;
@@ -2224,6 +2221,7 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
 
   // Find the head node in the cloneSet
   RooAbsArg* head = clonedNodes->find(*this) ;
+  assert(head);
 
   // Remove the head node from the cloneSet
   // To release it from the set ownership
