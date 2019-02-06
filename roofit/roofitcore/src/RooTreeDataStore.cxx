@@ -673,16 +673,13 @@ const RooArgSet* RooTreeDataStore::get(Int_t index) const
 
   if (_doDirtyProp) {
     // Raise all dirty flags 
-    _iterator->Reset() ;
-    RooAbsArg* var = 0;
-    while ((var=(RooAbsArg*)_iterator->Next())) {
-      var->setValueDirty() ; // This triggers recalculation of all clients
+    for (auto var : _vars) {
+      var->setValueDirty(); // This triggers recalculation of all clients
     } 
     
-    _cacheIter->Reset() ;
-    while ((var=(RooAbsArg*)_cacheIter->Next())) {
-      var->setValueDirty()  ; // This triggers recalculation of all clients, but doesn't recalculate self
-      var->clearValueDirty() ; 
+    for (auto var : _cachedVars) {
+      var->setValueDirty(); // This triggers recalculation of all clients, but doesn't recalculate self
+      var->clearValueDirty();
     } 
   }
   

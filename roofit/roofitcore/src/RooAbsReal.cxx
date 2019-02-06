@@ -706,9 +706,7 @@ void RooAbsReal::findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& in
   RooArgSet obsServingAsRangeParams ;
 
   // Loop over all integrated observables
-  TIterator* oiter = allObs.createIterator() ;
-  RooAbsArg* aarg ;
-  while((aarg=(RooAbsArg*)oiter->Next())) {
+  for (const auto aarg : allObs) {
     // Check if observable is real-valued lvalue
     RooAbsRealLValue* arglv = dynamic_cast<RooAbsRealLValue*>(aarg) ;
     if (arglv) {
@@ -716,22 +714,21 @@ void RooAbsReal::findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& in
       // Check if range is parameterized
       RooAbsBinning& binning = arglv->getBinning(rangeName,kFALSE,kTRUE) ;
       if (binning.isParameterized()) {
-	RooArgSet* loBoundObs = binning.lowBoundFunc()->getObservables(allObs) ;
-	RooArgSet* hiBoundObs = binning.highBoundFunc()->getObservables(allObs) ;
+        RooArgSet* loBoundObs = binning.lowBoundFunc()->getObservables(allObs) ;
+        RooArgSet* hiBoundObs = binning.highBoundFunc()->getObservables(allObs) ;
 
-	// Check if range parameterization depends on other integrated observables
-	if (loBoundObs->overlaps(allObs) || hiBoundObs->overlaps(allObs)) {
-	  obsWithParamRange.add(*aarg) ;
-	  obsWithFixedRange.remove(*aarg) ;
-	  obsServingAsRangeParams.add(*loBoundObs,kFALSE) ;
-	  obsServingAsRangeParams.add(*hiBoundObs,kFALSE) ;
-	}
-	delete loBoundObs ;
-	delete hiBoundObs ;
+        // Check if range parameterization depends on other integrated observables
+        if (loBoundObs->overlaps(allObs) || hiBoundObs->overlaps(allObs)) {
+          obsWithParamRange.add(*aarg) ;
+          obsWithFixedRange.remove(*aarg) ;
+          obsServingAsRangeParams.add(*loBoundObs,kFALSE) ;
+          obsServingAsRangeParams.add(*hiBoundObs,kFALSE) ;
+        }
+        delete loBoundObs ;
+        delete hiBoundObs ;
       }
     }
   }
-  delete oiter ;
 
   // Make list of fixed-range observables that are _not_ involved in the parameterization of ranges of other observables
   RooArgSet obsWithFixedRangeNP(obsWithFixedRange) ;

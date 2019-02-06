@@ -612,34 +612,20 @@ RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly
   // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
   treeNodeServerList(&leafList,0,kFALSE,kTRUE,valueOnly) ;
-  //leafNodeServerList(&leafList) ;
-  RooFIter sIter = leafList.fwdIterator() ;
 
-  RooAbsArg* arg ;
   if (valueOnly) {
-    while ((arg=sIter.next())) {
+    for (const auto arg : leafList) {
       if (arg->dependsOnValue(*dataList) && arg->isLValue()) {
-	depList->add(*arg) ;
+        depList->add(*arg) ;
       }
     }
   } else {
-    while ((arg=sIter.next())) {
+    for (const auto arg : leafList) {
       if (arg->dependsOn(*dataList) && arg->isLValue()) {
-	depList->add(*arg) ;
+        depList->add(*arg) ;
       }
     }
   }
-  //delete sIter ;
-
-//   // Call hook function for all branch nodes
-//   RooArgSet branchList ;
-//   branchNodeServerList(&branchList) ;
-//   RooAbsArg* branch ;
-//   RooLinkedListIter bIter = branchList.iterator() ;
-//   while((branch=(RooAbsArg*)bIter.Next())) {
-//     branch->getObservablesHook(dataList, depList) ;
-//   }
-//   //delete bIter ;
 
   return depList ;
 }

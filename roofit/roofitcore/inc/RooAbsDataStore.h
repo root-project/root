@@ -120,10 +120,8 @@ public:
   
  protected:
 
-  RooArgSet _vars ;
-  RooArgSet _cachedVars ;
-  TIterator *_iterator;    //! Iterator over dimension variables
-  TIterator *_cacheIter ;  //! Iterator over cached variables
+  RooArgSet _vars;
+  RooArgSet _cachedVars;
 
   Bool_t _doDirtyProp ;    // Switch do (de)activate dirty state propagation when loading a data point
 
