@@ -159,3 +159,19 @@ void ROOT::Experimental::RTreeField<std::string>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+void ROOT::Experimental::RTreeField<std::string>::DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& value)
+{
+   auto typedValue = reinterpret_cast<const ROOT::Experimental::RTreeValue<std::string>&>(value);
+   TreeIndex_t index = fColumns[1]->GetNElements();
+   Detail::RColumnElement<TreeIndex_t, EColumnType::kIndex> elemIndex(&index);
+   fColumns[0]->Append(elemIndex);
+   Detail::RColumnElement<char, EColumnType::kByte> elemChars(const_cast<char*>(typedValue.Get()->data()));
+   fColumns[1]->Append(elemChars);
+}
+
+void ROOT::Experimental::RTreeField<std::string>::DoRead(
+   ROOT::Experimental::TreeIndex_t index, ROOT::Experimental::Detail::RTreeValueBase* value)
+{
+
+}
+

@@ -65,6 +65,7 @@ TEST(RForestTree, WriteRead)
 
    auto model = std::make_shared<RTreeModel>();
    auto fieldPt = model->AddField<float>("pt", 42.0);
+   auto fieldTag = model->AddField<std::string>("tag", "xyz");
 
    {
       ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", settingsWrite));
@@ -72,6 +73,7 @@ TEST(RForestTree, WriteRead)
    }
 
    *fieldPt = 0.0;
+   fieldTag->clear();
 
    file = TFile::Open("test.root", "READ");
    RPageSourceRoot::RSettings settingsRead;
@@ -81,4 +83,5 @@ TEST(RForestTree, WriteRead)
    EXPECT_EQ(1U, tree.GetNEntries());
    tree.GetEntry(0);
    EXPECT_EQ(42.0, *fieldPt);
+   EXPECT_STREQ("xyz", fieldTag->c_str());
 }
