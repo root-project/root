@@ -75,7 +75,7 @@ public:
 
    /** By default, TBufferMerger will call TFileMerger::PartialMerge() for each
     *  buffer pushed onto its merge queue. This function lets the user change
-    *  this behaviour by telling TBufferMerger to accumulate at least @param size
+    *  this behaviour by telling TBufferMerger to accumulate at least size
     *  bytes in memory before performing a partial merge and flushing to disk.
     *  This can be useful to avoid an excessive amount of work to happen in the
     *  output thread, as the number of TTree headers (which require compression)
