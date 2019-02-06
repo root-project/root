@@ -82,9 +82,20 @@ size_t TBufferMerger::GetAutoSave() const
    return fAutoSave;
 }
 
+const char *TBufferMerger::GetMergeOptions()
+{
+   return fMerger.GetMergeOptions();
+}
+
+
 void TBufferMerger::SetAutoSave(size_t size)
 {
    fAutoSave = size;
+}
+
+void TBufferMerger::SetMergeOptions(const TString& options)
+{
+   fMerger.SetMergeOptions(options);
 }
 
 void TBufferMerger::Merge()
