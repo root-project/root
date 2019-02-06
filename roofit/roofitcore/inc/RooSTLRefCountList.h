@@ -97,9 +97,9 @@ class RooSTLRefCountList {
       return _storage.size();
     }
 
-    void reserve(std::size_t size) {
-      _storage.reserve(size);
-      _refCount.reserve(size);
+    void reserve(std::size_t amount) {
+      _storage.reserve(amount);
+      _refCount.reserve(amount);
     }
 
 
@@ -173,7 +173,9 @@ class RooSTLRefCountList {
         const std::size_t pos = item - _storage.begin();
 
         if (force || --_refCount[pos] == 0) {
-          _storage.erase(item);
+          //gcc4.x doesn't know how to erase at the position of a const_iterator
+          //Therefore, erase at begin + pos instead of 'item'
+          _storage.erase(_storage.begin() + pos);
           _refCount.erase(_refCount.begin() + pos);
         }
       }
