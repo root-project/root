@@ -152,6 +152,10 @@ def _pop_pyz(self, *args):
     # Parameters:
     # - self: collection where to pop an item from
     # - args: either empty or index to pop
+    # Returns:
+    # - If args is empty, it returns the last element of
+    # the collection, else it returns the element for
+    # which the index was specified.
 
     # Check arguments
     nargs = len(args)
@@ -213,6 +217,8 @@ def _index_pyz(self, val):
     # Parameters:
     # - self: collection
     # - val: element to find the index of
+    # Returns:
+    # - Index of the element in the collection
 
     idx = self.IndexOf(val)
 
