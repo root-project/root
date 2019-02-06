@@ -74,6 +74,7 @@ public:
      std::memcpy(fRawContent, source, fSize);
    }
 
+   void SetRawContent(void* content) { fRawContent = content; }
    void* GetRawContent() const { return fRawContent; }
    decltype(fSize) GetSize() const { return fSize; }
 };
@@ -85,8 +86,7 @@ template <typename CppT, EColumnType ColumnT>
 class RColumnElement : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = false;
-   explicit RColumnElement(CppT* value)
-      : RColumnElementBase(value, sizeof(CppT), kIsMappable)
+   explicit RColumnElement(CppT* value) : RColumnElementBase(value, sizeof(CppT), kIsMappable)
    {
       static_assert(sizeof(CppT) != sizeof(CppT), "No column mapping for this C++ type");
    }
@@ -102,9 +102,7 @@ class ROOT::Experimental::Detail::RColumnElement<float, ROOT::Experimental::ECol
    : public ROOT::Experimental::Detail::RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
-   explicit RColumnElement(float* value)
-      : RColumnElementBase(value, sizeof(float), kIsMappable)
-   {}
+   explicit RColumnElement(float* value) : RColumnElementBase(value, sizeof(float), kIsMappable) {}
 };
 
 template <>
@@ -122,9 +120,7 @@ class ROOT::Experimental::Detail::RColumnElement<char, ROOT::Experimental::EColu
    : public ROOT::Experimental::Detail::RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
-   explicit RColumnElement(char* value)
-      : RColumnElementBase(value, sizeof(char), kIsMappable)
-   {}
+   explicit RColumnElement(char* value) : RColumnElementBase(value, sizeof(char), kIsMappable) {}
 };
 
 #endif
