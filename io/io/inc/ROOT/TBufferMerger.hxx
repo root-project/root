@@ -73,6 +73,9 @@ public:
    /** Returns the current value of the auto save setting in bytes (default = 0). */
    size_t GetAutoSave() const;
 
+   /** Returns the current merge options. */
+   const char* GetMergeOptions();
+
    /** By default, TBufferMerger will call TFileMerger::PartialMerge() for each
     *  buffer pushed onto its merge queue. This function lets the user change
     *  this behaviour by telling TBufferMerger to accumulate at least size
@@ -82,6 +85,13 @@ public:
     *  written to disk can be reduced.
     */
    void SetAutoSave(size_t size);
+
+   /** Sets the merge options. SetMergeOptions("fast") will disable
+    * recompression of input data into the output if they have different
+    * compression settings.
+    * @param options TFileMerger/TFileMergeInfo merge options
+    */
+   void SetMergeOptions(const TString& options);
 
    friend class TBufferMergerFile;
 
