@@ -160,11 +160,11 @@ public:
    /// The resulting tree value may only be used for as long as no request to another item of this field is made
    /// because another index might trigger a swap of the page buffer.
    /// The dst location must be an object of the field type.
-   void Map(TreeIndex_t index, void** dst) {
+   void Map(TreeIndex_t /*index*/, void** /*dst*/) {
       if (!fIsSimple) {
          // TODO(jblomer)
       }
-      fPrincipalColumn->Map(index, dst);
+      //fPrincipalColumn->Map(index, dst);
    }
 
    /// The number of elements in the principal column. For top level fields, the number of entries.
@@ -258,14 +258,14 @@ public:
    ~RTreeField() = default;
 
    void DoGenerateColumns() final;
-   unsigned int GetNColumns() const { return 1; }
+   unsigned int GetNColumns() const final { return 1; }
 
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase* GenerateValue(ArgsT&&... args)
    {
       auto value = new ROOT::Experimental::RTreeValue<float>(this, std::forward<ArgsT>(args)...);
-      value->fMappedElement = ROOT::Experimental::Detail::RColumnElementDirect<float>(
-         value->Get().get(), EColumnType::kReal32);
+      value->fMappedElement =
+         ROOT::Experimental::Detail::RColumnElement<float, EColumnType::kReal32>(value->Get().get());
       return value;
    }
    ROOT::Experimental::Detail::RTreeValueBase* GenerateValue() final { return GenerateValue(0.0); }
@@ -273,12 +273,16 @@ public:
 
 template <>
 class ROOT::Experimental::RTreeField<std::string> : public ROOT::Experimental::Detail::RTreeFieldBase {
+protected:
+   void DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& value) final;
+   void DoRead(ROOT::Experimental::TreeIndex_t index, ROOT::Experimental::Detail::RTreeValueBase* value) final;
+
 public:
    explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name, "std::string", false /* isSimple */) {}
    ~RTreeField() = default;
 
    void DoGenerateColumns() final;
-   unsigned int GetNColumns() const { return 2; }
+   unsigned int GetNColumns() const final { return 2; }
 
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase* GenerateValue(ArgsT&&... args)
