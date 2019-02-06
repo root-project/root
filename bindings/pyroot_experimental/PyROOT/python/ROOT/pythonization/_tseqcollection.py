@@ -17,13 +17,10 @@ import sys
 
 # Item access
 
-def _check_index(self, idx):
+def _check_type(idx, msg):
     # Parameters:
-    # - self: collection
-    # - idx: index to be checked
-    # Returns:
-    # - An index >= 0, equivalent to the input idx, which is verified
-    # to be an integer and within the boundaries of the collection
+    # - idx: index whose type needs to be checked
+    # - msg: message to show in case of type issue
 
     # Python2 also allows long indices
     if sys.version_info >= (3,0):
@@ -33,12 +30,23 @@ def _check_index(self, idx):
 
     t = type(idx)
     if not t in allowed_types:
-        raise TypeError('list indices must be integers, not {}'.format(t.__name__))
+        raise TypeError(msg.format(t.__name__))
 
-    if (idx < 0):
-        idx = len(self) + idx
+def _check_index(self, idx):
+    # Parameters:
+    # - self: collection
+    # - idx: index to be checked
+    # Returns:
+    # - An index >= 0, equivalent to the input idx, which is verified
+    # to be an integer and within the boundaries of the collection
 
-    if idx < 0 or idx >= len(self):
+    _check_type(idx, 'list indices must be integers, not {}')
+
+    lcol = len(self)
+    if idx < 0:
+        idx += lcol
+
+    if idx < 0 or idx >= lcol:
         raise IndexError('list assignment index out of range')
 
     return idx
@@ -118,6 +126,102 @@ def _delitem_pyz(self, idx):
         idx = _check_index(self, idx)
         self.RemoveAt(idx)
 
+# Python-list-like methods
+
+def _insert_pyz(self, idx, val):
+    # Parameters:
+    # - self: collection where to insert a new item
+    # - idx: index where to insert
+    # - val: value to insert
+
+    _check_type(idx, 'integer argument expected, got {}')
+
+    # Check index
+    lcol = len(self)
+    if (idx < 0):
+        idx += lcol
+
+    if idx < 0:
+        idx = 0
+    elif idx > lcol:
+        idx = lcol
+
+    self.AddAt(val, idx)
+
+def _pop_pyz(self, *args):
+    # Parameters:
+    # - self: collection where to pop an item from
+    # - args: either empty or index to pop
+
+    # Check arguments
+    nargs = len(args)
+    if nargs == 0:
+        idx = len(self) - 1
+    elif nargs > 1:
+        raise TypeError('pop() takes at most 1 argument ({} given)'.format(nargs))
+    else:
+        idx = args[0]
+        _check_type(idx, 'integer argument expected, got {}')
+
+    if len(self) == 0:
+        raise IndexError('pop from empty list')
+
+    # Check index
+    lcol = len(self)
+    if idx < 0:
+        idx += lcol
+
+    if idx < 0 or idx >= lcol:
+        raise IndexError('pop index out of range')
+
+    return self.RemoveAt(idx)
+
+def _reverse_pyz(self):
+    # Parameters:
+    # - self: collection to be reversed
+
+    if len(self) == 0:
+        return
+
+    t = tuple(self)
+    self.Clear()
+    for elem in t:
+        self.AddAt(elem, 0)
+
+def _sort_pyz(self, *args, **kwargs):
+    # Parameters:
+    # - self: collection to be reversed
+    # - args: positional arguments
+    # - kwargs: keyword arguments
+    # For both args and kwargs, the Python sort()
+    # arguments are accepted: key, reverse
+
+    if len(self) == 0:
+        return
+
+    if not args and not kwargs:
+        # No arguments -> rely on ROOT's Sort
+        self.Sort()
+    else:
+        # Sort in a Python list copy
+        l = list(self)
+        l.sort(*args, **kwargs)
+        self.Clear()
+        self.extend(l)
+
+def _index_pyz(self, val):
+    # Parameters:
+    # - self: collection
+    # - val: element to find the index of
+
+    idx = self.IndexOf(val)
+
+    if idx < 0:
+        raise ValueError('{} is not in list'.format(val))
+
+    return idx
+
+
 @pythonization()
 def pythonize_tseqcollection(klass, name):
     # Parameters:
@@ -125,8 +229,16 @@ def pythonize_tseqcollection(klass, name):
     # name: string containing the name of the class
 
     if name == 'TSeqCollection':
+        # Item access methods
         klass.__getitem__ = _getitem_pyz
         klass.__setitem__ = _setitem_pyz
         klass.__delitem__ = _delitem_pyz
+
+        # Python lists methods
+        klass.insert  = _insert_pyz
+        klass.pop     = _pop_pyz
+        klass.reverse = _reverse_pyz
+        klass.sort    = _sort_pyz
+        klass.index   = _index_pyz
 
     return True
