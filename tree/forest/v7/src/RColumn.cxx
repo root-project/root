@@ -26,7 +26,7 @@ ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model)
      fCurrentPage(),
      fCurrentPageFirst(ROOT::Experimental::kInvalidForestIndex),
      fCurrentPageLast(ROOT::Experimental::kInvalidForestIndex),
-     fTreeId(-1)
+     fColumnIdSource(kInvalidColumnId)
 {
 }
 
@@ -42,7 +42,7 @@ void ROOT::Experimental::Detail::RColumn::Connect(RPageStorage* pageStorage)
       fPageSource = static_cast<RPageSource*>(pageStorage);
       fHandleSource = fPageSource->AddColumn(this);
       fNElements = fPageSource->GetNElements(fHandleSource);
-      fTreeId = fPageSource->GetTreeId();
+      fColumnIdSource = fPageSource->GetColumnId(fHandleSource);
       break;
    default:
       R__ASSERT(false);

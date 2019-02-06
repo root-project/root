@@ -17,6 +17,7 @@
 #define ROOT7_RTreeField
 
 #include <ROOT/RColumn.hxx>
+#include <ROOT/RColumnElement.hxx>
 #include <ROOT/RForestUtil.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RTreeValue.hxx>
@@ -273,12 +274,20 @@ public:
 
 template <>
 class ROOT::Experimental::RTreeField<std::string> : public ROOT::Experimental::Detail::RTreeFieldBase {
+private:
+   TreeIndex_t fIndex;
+   char fChar;
+   Detail::RColumnElement<TreeIndex_t, EColumnType::kIndex> fElemIndex;
+   Detail::RColumnElement<char, EColumnType::kByte> fElemChar;
+
 protected:
    void DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& value) final;
    void DoRead(ROOT::Experimental::TreeIndex_t index, ROOT::Experimental::Detail::RTreeValueBase* value) final;
 
 public:
-   explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name, "std::string", false /* isSimple */) {}
+   explicit RTreeField(std::string_view name)
+      : Detail::RTreeFieldBase(name, "std::string", false /* isSimple */)
+      , fElemIndex(&fIndex), fElemChar(&fChar) {}
    ~RTreeField() = default;
 
    void DoGenerateColumns() final;
