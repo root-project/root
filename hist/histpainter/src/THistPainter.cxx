@@ -237,6 +237,7 @@ using `TH1::GetOption`:
 | "TEXTnn" | Draw bin contents as text at angle nn (0 < nn < 90). |
 | "X+"     | The X-axis is drawn on the top side of the plot. |
 | "Y+"     | The Y-axis is drawn on the right side of the plot. |
+| "MIN0"   | Set minimum value for the Y axis to 0, equivalent to gStyle->SetHistMinimumZero(). |
 
 #### <a name="HP01b"></a> Options supported for 1D histograms
 
@@ -1615,8 +1616,9 @@ It is also possible to use `TEXTnn` in order to draw the text with
 the angle `nn` (`0 < nn < 90`).
 
 For 2D histograms the text is plotted in the center of each non empty cells.
-It is possible to plot empty cells by calling `gStyle->SetHistMinimumZero()`.
-For 1D histogram the text is plotted at a y position equal to the bin content.
+It is possible to plot empty cells by calling `gStyle->SetHistMinimumZero()`
+or providing MIN0 draw option. For 1D histogram the text is plotted at a y
+position equal to the bin content.
 
 For 2D histograms when the option "E" (errors) is combined with the option
 text ("TEXTE"), the error for each bin is also printed.
@@ -2223,8 +2225,8 @@ End_Macro
 
 
 By default the base line used to draw the boxes for bar-charts and lego plots is
-the histogram minimum. It is possible to force this base line to be 0 with the
-command:
+the histogram minimum. It is possible to force this base line to be 0, using MIN0 draw
+option or with the command:
 
     gStyle->SetHistMinimumZero();
 
@@ -2232,7 +2234,6 @@ Begin_Macro(source)
 {
    auto c5 = new TCanvas("c5","c5",700,400);
    c5->Divide(2,1);
-   gStyle->SetHistMinimumZero(1);
    auto hz1 = new TH1F("hz1","Bar-chart drawn from 0",20,-3,3);
    auto hz2 = new TH2F("hz2","Lego plot drawn from 0",20,-3,3,20,-3,3);
    Int_t i;
@@ -2250,8 +2251,8 @@ Begin_Macro(source)
          hz2->Fill(x,y,-2);
       }
    }
-   c5->cd(1); hz1->Draw("bar2");
-   c5->cd(2); hz2->Draw("lego1");
+   c5->cd(1); hz1->Draw("bar2 min0");
+   c5->cd(2); hz2->Draw("lego1 min0");
 }
 End_Macro
 
@@ -2269,8 +2270,6 @@ Begin_Macro(source)
    auto cbh = new TCanvas("cbh","cbh",400,600);
    cbh->SetGrid();
 
-   gStyle->SetHistMinimumZero();
-
    auto h1bh = new TH1F("h1bh","Option HBAR centered on 0",nx,0,nx);
    h1bh->SetFillColor(4);
    h1bh->SetBarWidth(0.4);
@@ -2284,7 +2283,7 @@ Begin_Macro(source)
       h1bh->GetXaxis()->SetBinLabel(i,os_X[i-1].c_str());
    }
 
-   h1bh->Draw("hbar");
+   h1bh->Draw("hbar min0");
 
    auto h2bh = new TH1F("h2bh","h2bh",nx,0,nx);
    h2bh->SetFillColor(38);
@@ -2293,7 +2292,7 @@ Begin_Macro(source)
    h2bh->SetStats(0);
    for (i=1;i<=nx;i++) h2bh->Fill(os_X[i-1].c_str(), d_35_1[i-1]);
 
-   h2bh->Draw("hbar same");
+   h2bh->Draw("hbar min0 same");
 }
 End_Macro
 
