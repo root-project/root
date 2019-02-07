@@ -98,7 +98,7 @@ public:
   // Force to be a leaf-node of any expression tree, even if we have (shape) servers
   virtual Bool_t isDerived() const { 
     // Does value or shape of this arg depend on any other arg?
-    return (_serverList.GetSize()>0 || _proxyList.GetEntries()>0)?kTRUE:kFALSE; 
+    return (!_serverList.empty() || _proxyList.GetEntries()>0)?kTRUE:kFALSE;
   }
 
   // Printing interface (human readable)

@@ -109,7 +109,7 @@ Bool_t RooRefCountList::RemoveAll(TObject* obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return reference count associated with 'obj'
 
-Int_t RooRefCountList::refCount(TObject* obj) 
+Int_t RooRefCountList::refCount(TObject* obj) const
 {
   RooLinkedListElem* link = findLink(obj) ;
   if (!link) {

@@ -22,7 +22,7 @@
 #include "RooAbsArg.h"
 #include "RooArgList.h"
 
-class RooListProxy : public RooArgList, public RooAbsProxy  {
+class RooListProxy final : public RooArgList, public RooAbsProxy  {
 public:
 
   // Constructors, assignment etc.

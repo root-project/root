@@ -160,19 +160,10 @@ Double_t PiecewiseInterpolation::evaluate() const
   Double_t nominal = _nominal;
   Double_t sum(nominal) ;
 
-  RooAbsReal* param ;
-  RooAbsReal* high ;
-  RooAbsReal* low ;
-  int i=0;
-
-  RooFIter lowIter(_lowSet.fwdIterator()) ;
-  RooFIter highIter(_highSet.fwdIterator()) ;
-  RooFIter paramIter(_paramSet.fwdIterator()) ;
-
-  while((param=(RooAbsReal*)paramIter.next())) {
-    low = (RooAbsReal*)lowIter.next() ;
-    high = (RooAbsReal*)highIter.next() ;
-
+  for (unsigned int i=0; i < _paramSet.size(); ++i) {
+    auto param = static_cast<RooAbsReal*>(_paramSet.at(i));
+    auto low   = static_cast<RooAbsReal*>(_lowSet.at(i));
+    auto high  = static_cast<RooAbsReal*>(_highSet.at(i));
     Int_t icode = _interpCode[i] ;
 
     switch(icode) {
@@ -290,7 +281,6 @@ Double_t PiecewiseInterpolation::evaluate() const
       break ;
     }
     }
-    ++i;
   }
   
   if(_positiveDefinite && (sum<0)){

@@ -21,7 +21,7 @@
 #include "RooAbsArg.h"
 #include "RooArgSet.h"
 
-class RooSetProxy : public RooArgSet, public RooAbsProxy  {
+class RooSetProxy final : public RooArgSet, public RooAbsProxy  {
 public:
 
 #ifdef USEMEMPOOL
@@ -30,10 +30,11 @@ public:
 #endif
 
   // Constructors, assignment etc.
-  RooSetProxy() { 
-    // coverity[UNINIT_CTOR]
-    _iter = createIterator() ; _owner = 0 ; 
-  } ;
+  RooSetProxy() :
+  _owner{nullptr},
+  _defValueServer{false},
+  _defShapeServer{false} { }
+
   RooSetProxy(const char* name, const char* desc, RooAbsArg* owner, 
 	      Bool_t defValueServer=kTRUE, Bool_t defShapeServer=kFALSE) ;
   RooSetProxy(const char* name, RooAbsArg* owner, const RooSetProxy& other) ;
@@ -63,7 +64,6 @@ protected:
   RooAbsArg* _owner ;
   Bool_t _defValueServer ;
   Bool_t _defShapeServer ;
-  TIterator* _iter ; //! do not persist
 
   virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) ;
 

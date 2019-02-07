@@ -127,9 +127,10 @@ Double_t RooPolyVar::evaluate() const
   _wksp.reserve(sz);
   {
     const RooArgSet* nset = _coefList.nset();
-    RooFIter it = _coefList.fwdIterator();
-    RooAbsReal* c;
-    while ((c = (RooAbsReal*) it.next())) _wksp.push_back(c->getVal(nset));
+    for (const auto arg : _coefList) {
+      const auto c = static_cast<RooAbsReal*>(arg);
+      _wksp.push_back(c->getVal(nset));
+    }
   }
   const Double_t x = _x;
   Double_t retVal = _wksp[sz - 1];
