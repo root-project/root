@@ -4,9 +4,9 @@ set -ex
 
 CLANG_TIDY_CHECKS='-*'
 if [[ $TOOL == clang-tidy-analyzer ]]; then
-  CLANG_TIDY_CHECKS+='clang-analyzer-*,-clang-analyzer-alpha*'
+  CLANG_TIDY_CHECKS+=',clang-analyzer-*,-clang-analyzer-alpha*,bugprone*'
 elif [[ $TOOL == clang-tidy-modernize ]]; then
-  CLANG_TIDY_CHECKS+='modernize*'
+  CLANG_TIDY_CHECKS+=',modernize*'
 fi
 
 echo "Running clang-tidy only against the changes in branch $TRAVIS_BRANCH."
