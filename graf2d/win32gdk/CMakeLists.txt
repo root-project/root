@@ -93,7 +93,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
     src/gifquantize.c
     src/TGWin32.cxx
     src/TGWin32GL.cxx
-    src/TGWin32InterpreterProxy.cxx
     src/TGWin32ProxyBase.cxx
     src/TGWin32VirtualGLProxy.cxx
     src/TGWin32VirtualXProxy.cxx
