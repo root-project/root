@@ -14,8 +14,7 @@
 
 Proxy classes provide thread-safe interface to global objects.
 
-For example: TGWin32VirtualXProxy (to gVirtualX),
-             TGWin32InterpreterProxy (to gInterpreter).
+For example: TGWin32VirtualXProxy (to gVirtualX).
 
 Proxy object creates callback object and posts a windows message to
 "processing thread". When windows message is received callback
@@ -40,7 +39,7 @@ Howto create proxy class:
 
  2. Definition of global object
       As example check definition and implementation of
-      gVirtualX, gInterpreter global objects
+      gVirtualX global object
 
  3. Class definition.
       proxy class must be inherited from "virtual base class" and
@@ -55,28 +54,25 @@ Howto create proxy class:
       of virtual base class.
 
     For example:
-      static TInterpreter *RealObject();
-      static TInterpreter *ProxyObject();
+      static TVirtualX *RealObject();
+      static TVirtualX *ProxyObject();
 
  5. Implementation
       TGWin32ProxyDefs.h file contains a set of macros which very
       simplify implementation.
     - RETURN_PROXY_OBJECT macro implements ProxyObject() method, e.g.
-      RETURN_PROXY_OBJECT(Interpreter)
+      RETURN_PROXY_OBJECT(VirtualX)
     - the names of other macros say about itself.
 
       For example:
-         VOID_METHOD_ARG0(Interpreter,ClearFileBusy,1)
-            void TGWin32InterpreterProxy::ClearFileBusy()
+         VOID_METHOD_ARG0(VirtualX,SetFillAttributes,1)
+            void TGWin32VirtualXProxy::SetFillAttributes()
 
          RETURN_METHOD_ARG0_CONST(VirtualX,Visual_t,GetVisual)
             Visual_t TGWin32VirtualXProxy::GetVisual() const
 
          RETURN_METHOD_ARG2(VirtualX,Int_t,OpenPixmap,UInt_t,w,UInt_t,h)
             Int_t TGWin32VirtualXProxy::OpenPixmap,UInt_t w,UInt_t h)
-
-    - few methods has _LOCK part in the name
-         VOID_METHOD_ARG1_LOCK(Interpreter,CreateListOfMethods,TClass*,cl)
 
 */
 

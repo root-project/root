@@ -228,7 +228,6 @@ public:
 
    // All the functions below must be virtual with a dummy implementation
    // These functions are redefined in TCling.
-   //The dummy implementation avoids an implementation in TGWin32InterpreterProxy
 
    // Misc
    virtual int    DisplayClass(FILE * /* fout */,const char * /* name */,int /* base */,int /* start */) const {return 0;}
@@ -533,7 +532,6 @@ typedef void *DestroyInterpreter_t(TInterpreter*);
 
 #ifndef __CINT__
 #define gInterpreter (TInterpreter::Instance())
-R__EXTERN TInterpreter* (*gPtr2Interpreter)();
 R__EXTERN TInterpreter* gCling;
 #endif
 

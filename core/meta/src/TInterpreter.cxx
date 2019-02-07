@@ -21,7 +21,6 @@ interpreter.
 #include "TGlobal.h"
 
 
-TInterpreter*   (*gPtr2Interpreter)() = nullptr; // returns pointer to global object, NOT USED!
 TInterpreter*   gCling = nullptr; // returns pointer to global TCling object
 static TInterpreter *gInterpreterLocal = nullptr; // The real holder of the pointer.
 
@@ -64,6 +63,5 @@ TInterpreter *TInterpreter::Instance()
          ::Fatal("TInterpreter::Instance","TROOT object is required before accessing a TInterpreter");
       }
    }
-   if (gPtr2Interpreter) return gPtr2Interpreter();
    return gInterpreterLocal;
 }
