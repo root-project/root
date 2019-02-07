@@ -248,7 +248,8 @@ if(MSVC)
     G__Eve1.cxx
     G__Eve2.cxx
     LIBRARIES
-      ${OPENGL_LIBRARIES}
+      OpenGL::GL
+      OpenGL::GLU
       ${FTGL_LIBRARIES}
       ${GLEW_LIBRARIES}
     DEPENDENCIES
@@ -273,7 +274,8 @@ else()
     SOURCES
       ${EVE_SOURCES}
     LIBRARIES
-      ${OPENGL_LIBRARIES}
+      OpenGL::GL
+      OpenGL::GLU
       ${FTGL_LIBRARIES}
       ${GLEW_LIBRARIES}
     DEPENDENCIES
@@ -285,5 +287,3 @@ else()
       Physics
   )
 endif()
-
-target_include_directories(Eve PUBLIC ${OPENGL_INCLUDE_DIR})
