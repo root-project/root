@@ -14,12 +14,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PgSQL
     src/TPgSQLServer.cxx
     src/TPgSQLStatement.cxx
   DICTIONARY_OPTIONS
-    -I${POSTGRESQL_INCLUDE_DIR}
+    -I${PostgreSQL_INCLUDE_DIR}
   DEPENDENCIES
     Core
     Net
     RIO
 )
 
-target_include_directories(PgSQL PUBLIC ${POSTGRESQL_INCLUDE_DIR})
-target_link_libraries(PgSQL PUBLIC ${POSTGRESQL_LIBRARIES})
+target_include_directories(PgSQL PUBLIC ${PostgreSQL_INCLUDE_DIRS})
+target_link_libraries(PgSQL PUBLIC ${PostgreSQL_LIBRARIES})
