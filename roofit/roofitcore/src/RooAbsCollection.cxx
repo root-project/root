@@ -275,9 +275,7 @@ Bool_t RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
 {
   Bool_t ret(kFALSE) ;
 
-  RooFIter sIter = var.serverMIterator() ;
-  RooAbsArg* server ;
-  while ((server=sIter.next())) {
+  for (const auto server : var.servers()) {
     RooAbsArg* tmp = find(*server) ;
 
     if (!tmp) {
@@ -749,7 +747,7 @@ RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, Bool_t ve
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if this and other collection have identically named contents
+/// Check if this and other collection have identically-named contents
 
 Bool_t RooAbsCollection::equals(const RooAbsCollection& otherColl) const
 {
@@ -757,7 +755,13 @@ Bool_t RooAbsCollection::equals(const RooAbsCollection& otherColl) const
   if (getSize() != otherColl.getSize()) return kFALSE ;
 
   // Then check that each element of our list also occurs in the other list
-  return std::is_permutation(_list.begin(), _list.end(), otherColl._list.begin());
+  auto compareByNamePtr = [](const RooAbsArg * left, const RooAbsArg * right) {
+    return left->namePtr() == right->namePtr();
+  };
+
+  return std::is_permutation(_list.begin(), _list.end(),
+      otherColl._list.begin(),
+      compareByNamePtr);
 }
 
 
@@ -799,7 +803,7 @@ RooAbsArg * RooAbsCollection::find(const char *name) const
   }
   else {
     const TNamed* nptr= RooNameReg::known(name);
-    if (!nptr) return 0;
+    if (!nptr) return nullptr;
 
     auto findByNamePtr = [nptr](const RooAbsArg* elm) {
       return nptr == elm->namePtr();
