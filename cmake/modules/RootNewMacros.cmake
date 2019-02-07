@@ -657,13 +657,31 @@ function(ROOT_LINKER_LIBRARY library)
     endif()
   endif()
   if(TARGET G__${library})
+    # We have to make sure we first generate the dictionary source (G__*.cxx) before we
+    # start compiling the library. Otherwise the compilation might randomly fail with a missing
+    # G__*.cxx file.
     add_dependencies(${library} G__${library})
   else()
-    # Uncomment to see if we maybe forgot to add a dependency between linking
-    # a dictionary and generating the G__*.cxx file. We can't have this by
-    # default because right now quite few dictionaries don't have the associated
-    # ROOT_GENERATE_DICTIONARY call that prevents this warning.
-    #message(AUTHOR_WARNING "Couldn't find target: " ${library} "\n Forgot to call ROOT_GENERATE_DICTIONARY?")
+    # Check if we maybe forgot to add a dependency between linking
+    # a dictionary and generating the G__*.cxx file.
+    # There are a few dictionaries don't have the associated
+    # ROOT_GENERATE_DICTIONARY call so we have to explicitly whitelist
+    # those dictionaries here. If a library does call ROOT_GENERATE_DICTIONARY
+    # it must *not* be whitelisted as otherwise we could get race conditions
+    # in our build system (see the if-branch above).
+    set (whitelisted_dicts
+      Cling
+      FTGL
+      GLEW
+      Imt
+      JupyROOT
+      New
+      SrvAuth
+      mathtext
+    )
+    if (NOT "${library}" IN_LIST whitelisted_dicts)
+      message(AUTHOR_WARNING "Couldn't find target: " ${library} "\n Forgot to call ROOT_GENERATE_DICTIONARY?")
+    endif()
   endif()
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     add_dependencies(${library} move_headers)
