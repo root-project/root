@@ -4000,6 +4000,12 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       Hoption.Hist = 1; // Make sure something is drawn in case there is no drawing option specified.
    }
 
+   l = strstr(chopt,"MIN0");
+   if (l) {
+      Hoption.MinimumZero = 1;
+      memcpy(l,"    ",4);
+   }
+
    l = strstr(chopt,"SPEC");
    if (l) {
       Hoption.Scat = 0;
