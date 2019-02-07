@@ -3978,6 +3978,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    Hoption.Zero     = 0;
 
+   Hoption.MinimumZero = gStyle->GetHistMinimumZero() ? 1 : 0;
+
    //check for graphical cuts
    MakeCuts(chopt);
 
@@ -4960,7 +4962,7 @@ void THistPainter::PaintBar(Option_t *)
       if (ymax < gPad->GetUymin()) continue;
       if (ymax > gPad->GetUymax()) ymax = gPad->GetUymax();
       if (ymin < gPad->GetUymin()) ymin = gPad->GetUymin();
-      if (gStyle->GetHistMinimumZero() && ymin < 0)
+      if (Hoption.MinimumZero && ymin < 0)
          ymin=TMath::Min(0.,gPad->GetUymax());
       w    = (xmax-xmin)*width;
       xmin += offset*(xmax-xmin);
@@ -5022,7 +5024,7 @@ void THistPainter::PaintBarH(Option_t *)
       if (xmax < gPad->GetUxmin()) continue;
       if (xmax > gPad->GetUxmax()) xmax = gPad->GetUxmax();
       if (xmin < gPad->GetUxmin()) xmin = gPad->GetUxmin();
-      if (gStyle->GetHistMinimumZero() && xmin < 0)
+      if (Hoption.MinimumZero && xmin < 0)
          xmin=TMath::Min(0.,gPad->GetUxmax());
       w    = (ymax-ymin)*width;
       ymin += offset*(ymax-ymin);
@@ -7151,7 +7153,7 @@ Int_t THistPainter::PaintInit()
    //         if minimum is not set , then ymin is set to zero if >0
    //         or to ymin - margin if <0.
    if (!minimum) {
-      if (gStyle->GetHistMinimumZero()) {
+      if (Hoption.MinimumZero) {
          if (ymin >= 0) ymin = 0;
          else           ymin -= yMARGIN*(ymax-ymin);
       } else {
@@ -8297,7 +8299,7 @@ void THistPainter::PaintScatterPlot(Option_t *option)
    }
    if (fH->GetMinimumStored() == -1111) {
       Double_t yMARGIN = gStyle->GetHistTopMargin();
-      if (gStyle->GetHistMinimumZero()) {
+      if (Hoption.MinimumZero) {
          if (zmin >= 0) zmin = 0;
          else           zmin -= yMARGIN*(zmax-zmin);
       } else {
@@ -9862,7 +9864,7 @@ void THistPainter::PaintTH2PolyText(Option_t *)
          else continue;
       }
       z = b->GetContent();
-      if (z < Hparam.zmin || (z == 0 && !gStyle->GetHistMinimumZero()) ) continue;
+      if (z < Hparam.zmin || (z == 0 && !Hoption.MinimumZero)) continue;
       if (opt==2) {
          e = fH->GetBinError(b->GetBinNumber());
          snprintf(format,32,"#splitline{%s%s}{#pm %s%s}",
@@ -9921,7 +9923,7 @@ void THistPainter::PaintText(Option_t *)
          }
          y  = fH->GetBinContent(i);
          yt = y;
-         if (gStyle->GetHistMinimumZero() && y<0) y = 0;
+         if (Hoption.MinimumZero && y<0) y = 0;
          if (getentries) yt = hp->GetBinEntries(i);
          if (yt == 0.) continue;
          snprintf(value,50,format,yt);
@@ -9959,7 +9961,7 @@ void THistPainter::PaintText(Option_t *)
             }
             if (!IsInside(x,y)) continue;
             z = fH->GetBinContent(bin);
-            if (z < Hparam.zmin || (z == 0 && !gStyle->GetHistMinimumZero()) ) continue;
+            if (z < Hparam.zmin || (z == 0 && !Hoption.MinimumZero)) continue;
             if (Hoption.Text>2000) {
                e = fH->GetBinError(bin);
                snprintf(format,32,"#splitline{%s%s}{#pm %s%s}",
@@ -10513,7 +10515,7 @@ Int_t THistPainter::TableInit()
    //         if minimum is not set , then ymin is set to zero if >0
    //         or to ymin - yMARGIN if <0.
    if (!minimum) {
-      if (gStyle->GetHistMinimumZero()) {
+      if (Hoption.MinimumZero) {
          if (zmin >= 0) zmin = 0;
          else           zmin -= yMARGIN*(zmax-zmin);
       } else {
