@@ -127,6 +127,9 @@ The legacy iterators have been flagged with a special deprecation macro that can
   - `TBox::DistancetoPrimitive` and `TBox::ExecuteEvent` now work in log scales (by Jérémie Dudouet).
   - Take the line attributes into account when drawing a histogram with option bar or hbar.
     They were ignored until now.
+  - The new draw option MIN0 makes same effect as gStyle->SetHistMinimumZero(1), but can be specified 
+    individually for each histogram
+     
 
 ## 3D Graphics Libraries
 
