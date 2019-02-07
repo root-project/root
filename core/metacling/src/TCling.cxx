@@ -1100,10 +1100,11 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
 
       // Load libc and stl first.
 #ifdef R__MACOSX
-   LoadModules({"Darwin", "std"}, clingInterp);
+   LoadModule("Darwin", clingInterp);
 #else
-   LoadModules({"libc", "stl"}, clingInterp);
+   LoadModule("libc", clingInterp);
 #endif
+   LoadModule("std", clingInterp);
 
    // Load core modules
    // This should be vector in order to be able to pass it to LoadModules
