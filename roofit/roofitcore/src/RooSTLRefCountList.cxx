@@ -1,7 +1,6 @@
+// Author: Stephan Hageboeck, CERN, 12/2018
 /*****************************************************************************
  * Project: RooFit                                                           *
- * Package: RooFitCore                                                       *
- *    File: $Id: RooRefCountList.h,v 1.7 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,24 +12,33 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_REF_COUNT_LIST
-#define ROO_REF_COUNT_LIST
 
-#include "RooLinkedList.h"
+#include "RooSTLRefCountList.h"
 
-class RooRefCountList : public RooLinkedList {
-public:
-  RooRefCountList() ; 
-  virtual ~RooRefCountList() {} ;
+#include "RooRefCountList.h"
+#include "RooLinkedListIter.h"
+#include "RooAbsArg.h"
+#include <string>
 
-  virtual void Add(TObject* arg) { Add(arg,1) ; }
-  virtual void Add(TObject* obj, Int_t count) ;
-  virtual Bool_t Remove(TObject* obj) ;
-  virtual Bool_t RemoveAll(TObject* obj) ;
-  Int_t refCount(TObject* obj) const;
-  
-protected:  
-  ClassDef(RooRefCountList,1) // RooLinkedList with reference counting
-};
+/// Template specialisation used in RooAbsArg:
+ClassImp(RooSTLRefCountList<RooAbsArg>);
 
-#endif
+namespace RooFit {
+namespace STLRefCountListHelpers {
+/// Converts RooRefCountList to RooSTLRefCountList<RooAbsArg>.
+/// This converter only yields lists with T=RooAbsArg. This is ok because this
+/// the old RefCountList was only holding these.
+RooSTLRefCountList<RooAbsArg> convert(const RooRefCountList& old) {
+  RooSTLRefCountList<RooAbsArg> newList;
+  newList.reserve(old.GetSize());
+
+  auto it = old.fwdIterator();
+  for (RooAbsArg * elm = it.next(); elm != nullptr; elm = it.next()) {
+    newList.Add(elm, old.refCount(elm));
+  }
+
+  return newList;
+}
+}
+}
+

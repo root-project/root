@@ -507,10 +507,8 @@ const RooArgSet* RooVectorDataStore::get(Int_t index) const
 
   if (_doDirtyProp) {
     // Raise all dirty flags 
-    _iterator->Reset() ;
-    RooAbsArg* var = 0;
-    while ((var=(RooAbsArg*)_iterator->Next())) {
-      var->setValueDirty() ; // This triggers recalculation of all clients
+    for (auto var : _vars) {
+      var->setValueDirty(); // This triggers recalculation of all clients
     }     
   }
   
@@ -577,9 +575,7 @@ const RooArgSet* RooVectorDataStore::getNative(Int_t index) const
 
   if (_doDirtyProp) {
     // Raise all dirty flags 
-    _iterator->Reset() ;
-    RooAbsArg* var = 0;
-    while ((var=(RooAbsArg*)_iterator->Next())) {
+    for (auto var : _vars) {
       var->setValueDirty() ; // This triggers recalculation of all clients
     }     
   }

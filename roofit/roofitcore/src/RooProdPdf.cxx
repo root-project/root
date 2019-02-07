@@ -462,7 +462,7 @@ Double_t RooProdPdf::evaluate() const
 
   // If cache doesn't have our configuration, recalculate here
   if (!cache) {
-    code = getPartIntList(_curNormSet,0) ;
+    code = getPartIntList(_curNormSet, nullptr) ;
     cache = (CacheElem*) _cacheMgr.getObj(_curNormSet,0,&code) ;
   }
 
@@ -524,7 +524,7 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
       const auto& partInt = static_cast<const RooAbsReal&>(cache._partList[i]);
       const auto normSet = cache._normList[i];
 
-      const Double_t piVal = partInt.getVal(normSet->getSize() > 0 ? normSet : 0);
+      const Double_t piVal = partInt.getVal(normSet->getSize() > 0 ? normSet : nullptr);
       value *= piVal ;
       if (value <= _cutOff) break;
     }
@@ -966,7 +966,7 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 //   	cout << GetName() << ": termXSet = " << termXSet << endl;
 //   	cout << GetName() << ": termImpSet = " << termImpSet << endl;
 
-	Bool_t isOwned;
+	Bool_t isOwned = false;
 	vector<RooAbsReal*> func = processProductTerm(nset, iset, isetRangeName, term, termNSet, termISet, isOwned, kTRUE);
 //    	cout << GetName() << ": created composite term component " << func[0]->GetName() << endl;
 	if (func[0]) {
@@ -2118,7 +2118,7 @@ void RooProdPdf::getParametersHook(const RooArgSet* nset, RooArgSet* params, Boo
   if (!nset || nset->getSize()==0) return ;
 
   // Get/create appropriate term list for this normalization set
-  Int_t code = getPartIntList(nset,0);
+  Int_t code = getPartIntList(nset, nullptr);
   RooArgList & plist = static_cast<CacheElem*>(_cacheMgr.getObj(nset, &code))->_partList;
 
   // Strip any terms from params that do not depend on any term

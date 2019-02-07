@@ -114,8 +114,6 @@ protected:
   mutable RooSetProxy _facList ; // Set of observables on which function does not depends, which are integrated nevertheless
 
   mutable RooArgSet   _facListOwned ;  // Owned components in _facList
-  TIterator*          _facListIter ; //! Iterator over factorizing observables
-  TIterator*          _jacListIter ; //! Iterator over lvalue observables with Jacobian
   RooRealProxy       _function ;     // Function being integration
   RooArgSet*      _funcNormSet ;     // Optional normalization set passed to function
 
