@@ -1293,7 +1293,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // Setup core C++ modules if we have any to setup.
 
       // Load libc and stl first.
-      LoadModules({"libc", "stl"}, *fInterpreter);
+      LoadModules({"libc", "std"}, *fInterpreter);
 
       // Load core modules
       // This should be vector in order to be able to pass it to LoadModules

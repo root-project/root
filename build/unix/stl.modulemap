@@ -1,4 +1,4 @@
-module "stl" [system] {
+module "std" [system] {
   export *
   module "algorithm" {
     export *
