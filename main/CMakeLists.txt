@@ -5,7 +5,7 @@
 
 if(NOT WIN32)
   ROOT_EXECUTABLE(rootn.exe rmain.cxx LIBRARIES New Core MathCore Rint)
-  if(ROOT_PLATFORM MATCHES linux)
+  if(CMAKE_SYSTEM_NAME STREQUAL Linux)
     SET_TARGET_PROPERTIES(rootn.exe PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
   endif()
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore)
