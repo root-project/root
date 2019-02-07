@@ -328,8 +328,8 @@ add_dependencies(move_headers copymodulemap)
 
 # Provide our own modulemap for implementations other than libcxx.
 if (NOT WIN32 AND NOT libcxx)
-  configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.modulemap ${CMAKE_BINARY_DIR}/include/stl.modulemap)
-  install(FILES "${CMAKE_BINARY_DIR}/include/stl.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+  configure_file(${CMAKE_SOURCE_DIR}/build/unix/std.modulemap ${CMAKE_BINARY_DIR}/include/std.modulemap)
+  install(FILES "${CMAKE_BINARY_DIR}/include/std.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
   configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
   install(FILES "${CMAKE_BINARY_DIR}/include/libc.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 endif()
