@@ -112,10 +112,10 @@ module "stl" [system] {
   // See the include for stdlib.h (which is forwarded
   // to this C++ header) in clang's mm_malloc.h for the
   // problematic code which we can't fix.
-  module "cstdlib" {
-    export *
-    textual header "cstdlib"
-  }
+  //module "cstdlib" {
+  //  export *
+  //  textual header "cstdlib"
+  //}
   module "cstring" {
     export *
     header "cstring"
