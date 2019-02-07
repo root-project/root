@@ -2,8 +2,6 @@ set(ROOT_PLATFORM win32)
 
 #---Global variables for Win32 platform-------------------------------------------------
 set(SYSLIBS advapi32.lib)
-set(XLIBS)
-set(CILIBS)
 set(CRYPTLIBS)
 
 #----Check the compiler that is used-----------------------------------------------------
