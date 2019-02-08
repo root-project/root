@@ -102,5 +102,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
                               DEPENDENCIES RIO)
 
 if(ssl)
-  target_link_libraries(Net PRIVATE ${OPENSSL_LIBRARIES} ${CRYPTLIBS})
+  target_link_libraries(Net PRIVATE ${OPENSSL_LIBRARIES})
 endif()

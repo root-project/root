@@ -21,13 +21,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RootAuth
     src/TRootSecContext.cxx
   LINKDEF
     LinkDefRoot.h
-  LIBRARIES
-    ${CRYPTLIBS} rsa
   DEPENDENCIES
     Net
     RIO
 )
 
-if(ssl)
-  target_link_libraries(RootAuth PUBLIC ${OPENSSL_LIBRARIES})
-endif()
+target_link_libraries(RootAuth PRIVATE rsa $<$<PLATFORM_ID:Linux>:crypt>)
