@@ -1382,7 +1382,8 @@ void BayesianCalculator::ComputeIntervalFromApproxPosterior(double lowerCutOff, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// compute the shortest interval
+/// compute the shortest interval from the histogram representing the posterior
+
 
 void BayesianCalculator::ComputeShortestInterval( ) const {
    coutI(Eval) << "BayesianCalculator - computing shortest interval with CL = " << 1.-fSize << std::endl;
@@ -1396,9 +1397,11 @@ void BayesianCalculator::ComputeShortestInterval( ) const {
    h1->SetName(fApproxPosterior->GetName());
    // get bins and sort them
    double * bins = h1->GetArray();
-   int n = h1->GetSize()-2; // exclude under/overflow bins
+   // exclude under/overflow bins
+   int n = h1->GetSize()-2; 
    std::vector<int> index(n);
-   TMath::Sort(n, bins, &index[0]);
+   //  exclude bins[0] (the underflow bin content)
+   TMath::Sort(n, bins+1, &index[0]);
    // find cut off as test size
    double sum = 0;
    double actualCL = 0;
