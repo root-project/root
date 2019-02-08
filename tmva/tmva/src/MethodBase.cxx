@@ -2010,30 +2010,38 @@ TDirectory* TMVA::MethodBase::BaseDir() const
 /// returns the ROOT directory where all instances of the
 /// corresponding MVA method are stored
 
- TDirectory* TMVA::MethodBase::MethodBaseDir() const
- {
-    if (fMethodBaseDir != 0) return fMethodBaseDir;
-
-    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " not set yet --> check if already there.." <<Endl;
-
-
-    TDirectory *fFactoryBaseDir=GetFile();
-
-   fMethodBaseDir = fFactoryBaseDir->GetDirectory(DataInfo().GetName());
-   if(!fMethodBaseDir) //creating dataset directory
-      {
-         fMethodBaseDir = fFactoryBaseDir->mkdir(DataInfo().GetName(),Form("Base directory for dataset %s",DataInfo().GetName()));
-         if(!fMethodBaseDir)Log()<<kFATAL<<"Can not create dir "<<DataInfo().GetName();
-      }
-   TString _methodDir = Form("Method_%s",GetMethodName().Data());
-   fMethodBaseDir = fMethodBaseDir->GetDirectory(_methodDir.Data());
-
-   if(!fMethodBaseDir){
-      fMethodBaseDir = fFactoryBaseDir->GetDirectory(DataInfo().GetName())->mkdir(_methodDir.Data(),Form("Directory for all %s methods", GetMethodTypeName().Data()));
-      Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodName() << " does not exist yet--> created it" <<Endl;
+TDirectory *TMVA::MethodBase::MethodBaseDir() const
+{
+   if (fMethodBaseDir != 0) {
+      return fMethodBaseDir;
    }
 
-   Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<"Return from MethodBaseDir() after creating base directory "<<Endl;
+   const char *datasetName = DataInfo().GetName();
+
+   Log() << kDEBUG << Form("Dataset[%s] : ", datasetName) << " Base Directory for " << GetMethodTypeName()
+         << " not set yet --> check if already there.." << Endl;
+
+   TDirectory *factoryBaseDir = GetFile();
+   fMethodBaseDir = factoryBaseDir->GetDirectory(datasetName);
+   if (!fMethodBaseDir) {
+      fMethodBaseDir = factoryBaseDir->mkdir(datasetName, Form("Base directory for dataset %s", datasetName));
+      if (!fMethodBaseDir) {
+         Log() << kFATAL << "Can not create dir " << datasetName;
+      }
+   }
+   TString methodTypeDir = Form("Method_%s", GetMethodTypeName().Data());
+   fMethodBaseDir = fMethodBaseDir->GetDirectory(methodTypeDir.Data());
+
+   if (!fMethodBaseDir) {
+      TDirectory *datasetDir = factoryBaseDir->GetDirectory(datasetName);
+      TString methodTypeDirHelpStr = Form("Directory for all %s methods", GetMethodTypeName().Data());
+      fMethodBaseDir = datasetDir->mkdir(methodTypeDir.Data(), methodTypeDirHelpStr);
+      Log() << kDEBUG << Form("Dataset[%s] : ", datasetName) << " Base Directory for " << GetMethodName()
+            << " does not exist yet--> created it" << Endl;
+   }
+
+   Log() << kDEBUG << Form("Dataset[%s] : ", datasetName)
+         << "Return from MethodBaseDir() after creating base directory " << Endl;
    return fMethodBaseDir;
 }
 
