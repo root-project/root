@@ -5,11 +5,17 @@
 set(py_sources
   ROOT/__init__.py
   ROOT/pythonization/__init__.py
+  ROOT/pythonization/_generic.py
+  ROOT/pythonization/_rooabscollection.py
+  ROOT/pythonization/_rvec.py
+  ROOT/pythonization/_stl_vector.py
+  ROOT/pythonization/_tarray.py
+  ROOT/pythonization/_tcollection.py
   ROOT/pythonization/_tdirectory.py
   ROOT/pythonization/_tdirectoryfile.py
   ROOT/pythonization/_tfile.py
+  ROOT/pythonization/_tseqcollection.py
   ROOT/pythonization/_ttree.py
-  ROOT/pythonization/_generic.py
 )
 
 set(sources
