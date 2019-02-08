@@ -38,7 +38,8 @@
 #include "Riostream.h"
 
 #include "json.hpp"
-
+#include <sstream>
+#include <iostream>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -839,14 +840,10 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
       int id = cj["fElementId"];
 
       auto el =  FindElementById(id);
-      char cmd[128];
-#ifdef _MSC_VER
-      sprintf(cmd, "((%s*)0x%p)->%s;", ctype.c_str(), el, mir.c_str());
-#else
-      sprintf(cmd, "((%s*)%p)->%s;", ctype.c_str(), el, mir.c_str());
-#endif
-      printf("MIR cmd %s\n", cmd);
-      gROOT->ProcessLine(cmd);
+      std::stringstream cmd;
+      cmd << "((" << ctype << "*)" << std::hex << std::showbase << (size_t)el << ")->" << mir << ";";
+      std::cout << "MIR cmd " << cmd.str() << std::endl;
+      gROOT->ProcessLine(cmd.str().c_str());
 
       fScenes->AcceptChanges(false);
       Redraw3D();

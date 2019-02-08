@@ -16,6 +16,7 @@
 #include "TMethodArg.h"
 
 #include "json.hpp"
+#include <sstream>
 
 
 using namespace ROOT::Experimental;
@@ -49,20 +50,14 @@ void REveDataCollection::SetFilterExpr(const TString& filter)
 
    fFilterExpr = filter;
 
-   TString s;
-#ifdef _MSC_VER
-   s.Form("*((std::function<bool(%s*)>*)0x%p) = [](%s* p){%s &i=*p; return (%s); }",
-          fItemClass->GetName(), &fFilterFoo, fItemClass->GetName(), fItemClass->GetName(),
-          fFilterExpr.Data());
-#else
-   s.Form("*((std::function<bool(%s*)>*)%p) = [](%s* p){%s &i=*p; return (%s); }",
-          fItemClass->GetName(), &fFilterFoo, fItemClass->GetName(), fItemClass->GetName(),
-          fFilterExpr.Data());
-#endif
+   std::stringstream s;
+   s << "*((std::function<bool(" << fItemClass->GetName() << "*)>*)" << std::hex << std::showbase
+     << (size_t)&fFilterFoo << ") = [](" << fItemClass->GetName() << "* p){" << fItemClass->GetName()
+     << " &i=*p; return (" << fFilterExpr.Data() << "); }";
 
    // printf("%s\n", s.Data());
    try {
-      gROOT->ProcessLine(s.Data());
+      gROOT->ProcessLine(s.str().c_str());
    }
    catch (const std::exception &exc)
    {
@@ -213,20 +208,14 @@ void REveDataColumn::SetExpressionAndType(const TString& expr, FieldType_e type)
       case FT_String: rtyp = "std::string"; fooptr = &fStringFoo; break;
    }
 
-   TString s;
-#ifdef _MSC_VER
-   s.Form("*((std::function<%s(%s*)>*)0x%p) = [](%s* p){%s &i=*p; return (%s); }",
-          rtyp, icls->GetName(), fooptr, icls->GetName(), icls->GetName(),
-          fExpression.Data());
-#else
-   s.Form("*((std::function<%s(%s*)>*)%p) = [](%s* p){%s &i=*p; return (%s); }",
-          rtyp, icls->GetName(), fooptr, icls->GetName(), icls->GetName(),
-          fExpression.Data());
-#endif
+   std::stringstream s;
+   s << "*((std::function<" << rtyp << "(" << icls->GetName() << "*)>*)" << std::hex
+     << std::showbase << (size_t)fooptr << ") = [](" << icls->GetName() << "* p){"
+     << icls->GetName() << " &i=*p; return (" << fExpression.Data() << "); }";
 
    // printf("%s\n", s.Data());
    try {
-      gROOT->ProcessLine(s.Data());
+      gROOT->ProcessLine(s.str().c_str());
    }
    catch (const std::exception &exc)
    {
