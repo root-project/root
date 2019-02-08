@@ -96,9 +96,21 @@ public:
    /// method to perform the minimization
    virtual  bool Minimize();
 
-   //number of calls
+   /// number of calls
    unsigned int NCalls() const;
 
+   /// Get current minimizer options
+   virtual ROOT::Math::MinimizerOptions Options() const;
+
+   /// Get current minimizer option parameteres 
+   const GSLSimAnParams & MinimizerParameters() const { return fSolver.Params(); }
+   
+
+   /// set new minimizer options
+   virtual void SetOptions(const ROOT::Math::MinimizerOptions & opt);
+
+   /// set new minimizer option parameters using directly the GSLSimAnParams structure 
+   void SetParameters(const  GSLSimAnParams & params ) {  fSolver.SetParams(params); }
 
 protected:
 

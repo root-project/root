@@ -215,7 +215,7 @@ int GSLSimAnnealing::Solve(GSLSimAnFunc & fx, bool debug) {
    // the following parameters are for the Boltzmann distribution */
    simanParams.k =              fParams.k;
    simanParams.t_initial =      fParams.t_initial;
-   simanParams.mu_t =           fParams.mu;
+   simanParams.mu_t =           fParams.mu_t;
    simanParams.t_min =          fParams.t_min;
 
 
