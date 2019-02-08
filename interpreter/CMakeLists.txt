@@ -184,7 +184,7 @@ if(builtin_llvm)
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
-  find_program(LLVM_CONFIG NAMES "llvm-config-5.0" "llvm-config")
+  find_program(LLVM_CONFIG NAMES "llvm-config" "llvm-config-5.0")
   if(LLVM_CONFIG)
     message(STATUS "Found LLVM_CONFIG as ${LLVM_CONFIG}")
     set(CONFIG_COMMAND ${LLVM_CONFIG}
