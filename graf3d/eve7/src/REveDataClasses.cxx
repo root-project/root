@@ -51,9 +51,9 @@ void REveDataCollection::SetFilterExpr(const TString& filter)
    fFilterExpr = filter;
 
    std::stringstream s;
-   s << "*((std::function<bool(" << fItemClass->GetName() << "*)>*)" << std::hex << std::showbase
-     << (size_t)&fFilterFoo << ") = [](" << fItemClass->GetName() << "* p){" << fItemClass->GetName()
-     << " &i=*p; return (" << fFilterExpr.Data() << "); }";
+   s << "*((std::function<bool(" << fItemClass->GetName() << "*)>*)" << std::hex << std::showbase << (size_t)&fFilterFoo
+     << ") = [](" << fItemClass->GetName() << "* p){" << fItemClass->GetName() << " &i=*p; return ("
+     << fFilterExpr.Data() << "); }";
 
    // printf("%s\n", s.Data());
    try {
@@ -209,9 +209,9 @@ void REveDataColumn::SetExpressionAndType(const TString& expr, FieldType_e type)
    }
 
    std::stringstream s;
-   s << "*((std::function<" << rtyp << "(" << icls->GetName() << "*)>*)" << std::hex
-     << std::showbase << (size_t)fooptr << ") = [](" << icls->GetName() << "* p){"
-     << icls->GetName() << " &i=*p; return (" << fExpression.Data() << "); }";
+   s << "*((std::function<" << rtyp << "(" << icls->GetName() << "*)>*)" << std::hex << std::showbase << (size_t)fooptr
+     << ") = [](" << icls->GetName() << "* p){" << icls->GetName() << " &i=*p; return (" << fExpression.Data()
+     << "); }";
 
    // printf("%s\n", s.Data());
    try {
