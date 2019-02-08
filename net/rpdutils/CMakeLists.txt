@@ -25,7 +25,7 @@ add_library(rpdutil STATIC
   src/rpdutils.cxx
 )
 
-target_link_libraries(rpdutil INTERFACE ${CRYPTLIBS})
+target_link_libraries(rpdutil INTERFACE $<$<PLATFORM_ID:Linux>:crypt>)
 set_property(TARGET rpdutil PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_dependencies(rpdutil move_headers)
 
