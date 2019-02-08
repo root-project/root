@@ -83,8 +83,6 @@ public:
 
    virtual void     FillRandom(const char *fname, Int_t ntimes=5000);
    virtual void     FillRandom(TH1 *h, Int_t ntimes=5000);
-   virtual Int_t    FindFirstBinAbove(Double_t threshold=0, Int_t axis=1, Int_t firstBin=1, Int_t lastBin=-1) const;
-   virtual Int_t    FindLastBinAbove (Double_t threshold=0, Int_t axis=1, Int_t firstBin=1, Int_t lastBin=-1) const;
    virtual void     FitSlicesZ(TF1 *f1=0,Int_t binminx=1, Int_t binmaxx=0,Int_t binminy=1, Int_t binmaxy=0,
                                         Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
    virtual Int_t    GetBin(Int_t binx, Int_t biny, Int_t binz) const;

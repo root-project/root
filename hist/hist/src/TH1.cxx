@@ -3644,19 +3644,55 @@ Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis, Int_t firstBin, Int
 {
    if (fBuffer) ((TH1*)this)->BufferEmpty();
 
-   if (axis != 1) {
+   if (axis < 1 || (axis > 1 && GetDimension() == 1 ) ||
+       ( axis > 2 && GetDimension() == 2 ) || ( axis > 3 && GetDimension() > 3 ) ) {
       Warning("FindFirstBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
-   }
-   if (lastBin < 0 || lastBin > fXaxis.GetNbins()) {
-      lastBin = fXaxis.GetNbins();
    }
    if (firstBin < 1) {
       firstBin = 1;
    }
-   for (Int_t bin = firstBin; bin <= lastBin; bin++) {
-      if (RetrieveBinContent(bin) > threshold) return bin;
+   Int_t nbinsx = fXaxis.GetNbins();
+   Int_t nbinsy = (GetDimension() > 1 ) ? fYaxis.GetNbins() : 1;
+   Int_t nbinsz = (GetDimension() > 2 ) ? fZaxis.GetNbins() : 1;
+
+   if (axis == 1) {
+      if (lastBin < 0 || lastBin > fXaxis.GetNbins()) {
+         lastBin = fXaxis.GetNbins();
+      }
+      for (Int_t binx = firstBin; binx <= lastBin; binx++) {
+         for (Int_t biny = 1; biny <= nbinsy; biny++) {
+            for (Int_t binz = 1; binz <= nbinsz; binz++) {
+               if (RetrieveBinContent(GetBin(binx,biny,binz)) > threshold) return binx;
+            }
+         }
+      }
    }
+   else if (axis == 2) {
+      if (lastBin < 0 || lastBin > fYaxis.GetNbins()) {
+         lastBin = fYaxis.GetNbins();
+      }
+      for (Int_t biny = firstBin; biny <= lastBin; biny++) {
+         for (Int_t binx = 1; binx <= nbinsx; binx++) {
+            for (Int_t binz = 1; binz <= nbinsz; binz++) {
+               if (RetrieveBinContent(GetBin(binx,biny,binz)) > threshold) return biny; 
+           }
+         }
+      }
+   }
+   else if (axis == 3) {
+      if (lastBin < 0 || lastBin > fZaxis.GetNbins()) {
+         lastBin = fZaxis.GetNbins();
+      }
+      for (Int_t binz = firstBin; binz <= lastBin; binz++) {
+         for (Int_t binx = 1; binx <= nbinsx; binx++) {
+            for (Int_t biny = 1; biny <= nbinsy; biny++) {
+               if (RetrieveBinContent(GetBin(binx,biny,binz)) > threshold) return binz; 
+            }
+         }
+      }
+   }
+
    return -1;
 }
 
@@ -3671,19 +3707,56 @@ Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis, Int_t firstBin, Int_
 {
    if (fBuffer) ((TH1*)this)->BufferEmpty();
 
-   if (axis != 1) {
-      Warning("FindLastBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
+
+   if (axis < 1 || ( axis > 1 && GetDimension() == 1 ) ||
+       ( axis > 2 && GetDimension() == 2 ) || ( axis > 3 && GetDimension() > 3) ) {
+      Warning("FindFirstBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
-   }
-   if (lastBin < 0 || lastBin > fXaxis.GetNbins()) {
-      lastBin = fXaxis.GetNbins();
    }
    if (firstBin < 1) {
       firstBin = 1;
    }
-   for (Int_t bin = lastBin; bin >= firstBin; bin--) {
-      if (RetrieveBinContent(bin) > threshold) return bin;
+   Int_t nbinsx = fXaxis.GetNbins();
+   Int_t nbinsy = (GetDimension() > 1 ) ? fYaxis.GetNbins() : 1;
+   Int_t nbinsz = (GetDimension() > 2 ) ? fZaxis.GetNbins() : 1;
+
+   if (axis == 1) {
+      if (lastBin < 0 || lastBin > fXaxis.GetNbins()) {
+         lastBin = fXaxis.GetNbins();
+      }
+      for (Int_t binx = lastBin; binx >= firstBin; binx--) {
+         for (Int_t biny = 1; biny <= nbinsy; biny++) {
+            for (Int_t binz = 1; binz <= nbinsz; binz++) {
+               if (RetrieveBinContent(GetBin(binx, biny, binz)) > threshold) return binx;
+            }
+         }
+      }
    }
+   else if (axis == 2) {
+      if (lastBin < 0 || lastBin > fYaxis.GetNbins()) {
+         lastBin = fYaxis.GetNbins();
+      }
+      for (Int_t biny = lastBin; biny >= firstBin; biny--) {
+         for (Int_t binx = 1; binx <= nbinsx; binx++) {
+            for (Int_t binz = 1; binz <= nbinsz; binz++) {
+               if (RetrieveBinContent(GetBin(binx, biny, binz)) > threshold) return biny;
+            }
+         }
+      }
+   }
+   else if (axis == 3) {
+      if (lastBin < 0 || lastBin > fZaxis.GetNbins()) {
+         lastBin = fZaxis.GetNbins();
+      }
+      for (Int_t binz = lastBin; binz >= firstBin; binz--) {
+         for (Int_t binx = 1; binx <= nbinsx; binx++) {
+            for (Int_t biny = 1; biny <= nbinsy; biny++) {
+               if (RetrieveBinContent(GetBin(binx, biny, binz)) > threshold) return binz;
+            }
+         }
+      }
+   }
+
    return -1;
 }
 
