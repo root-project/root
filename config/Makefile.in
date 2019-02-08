@@ -297,9 +297,6 @@ COMERRLIBDIR   := @comerrlibdir@
 
 RESOLVLIB      := @resolvlib@
 
-CRYPTOLIB      := @cryptolib@
-CRYPTOLIBDIR   := @cryptolibdir@
-
 BUILDMONALISA  := @buildmonalisa@
 MONALISALIBDIR := @monalisalibdir@
 MONALISACLILIB := @monalisalib@

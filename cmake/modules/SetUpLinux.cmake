@@ -86,7 +86,6 @@ else()
 endif()
 
 set(SYSLIBS "-lm -ldl ${CMAKE_THREAD_LIBS_INIT} -rdynamic")
-set(CRYPTLIBS "-lcrypt")
 # JIT must be able to resolve symbols from all ROOT binaries.
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 
