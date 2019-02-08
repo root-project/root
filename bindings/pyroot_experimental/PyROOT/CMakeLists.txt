@@ -4,6 +4,7 @@
 
 set(py_sources
   ROOT/__init__.py
+  ROOT/_facade.py
   ROOT/pythonization/__init__.py
   ROOT/pythonization/_generic.py
   ROOT/pythonization/_rooabscollection.py
