@@ -11,6 +11,7 @@ set(py_sources
   ROOT/pythonization/_rvec.py
   ROOT/pythonization/_stl_vector.py
   ROOT/pythonization/_tarray.py
+  ROOT/pythonization/_tclonesarray.py
   ROOT/pythonization/_tcollection.py
   ROOT/pythonization/_tdirectory.py
   ROOT/pythonization/_tdirectoryfile.py
@@ -26,6 +27,7 @@ set(sources
   src/TDirectoryPyz.cxx
   src/TFilePyz.cxx
   src/TTreePyz.cxx
+  src/TClonesArrayPyz.cxx
   src/GenericPyz.cxx
   src/RVecPyz.cxx
   src/PyzPythonHelpers.cxx

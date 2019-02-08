@@ -49,6 +49,8 @@ static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunc
                                         (char *)"Fully enable the use of TTree::SetBranchAddress from Python"},
                                        {(char *)"BranchPyz", (PyCFunction)PyROOT::BranchPyz, METH_VARARGS,
                                         (char *)"Fully enable the use of TTree::Branch from Python"},
+                                       {(char *)"AddSetItemTCAPyz", (PyCFunction)PyROOT::AddSetItemTCAPyz, METH_VARARGS,
+                                        (char *)"Customize the setting of an item of a TClonesArray"},
                                        {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
                                         (char *)"Add pretty printing pythonization"},
                                        {(char *)"GetEndianess", (PyCFunction)PyROOT::GetEndianess, METH_NOARGS,
