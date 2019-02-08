@@ -69,6 +69,9 @@ else ()
   set(CLANG_RESOURCE_DIR_STEM ${LLVM_LIBRARY_DIR}/clang)
   # A user can define a clang version to use, otherwise find it (but will error if more than one version is present)
   if (NOT DEFINED CLANG_RESOURCE_DIR_VERSION)
+    if (NOT EXISTS ${CLANG_RESOURCE_DIR_STEM})
+      message(FATAL_ERROR "${CLANG_RESOURCE_DIR_STEM} does not exist. Please install clang.")
+    endif()
     # There is no reasonable way to get the version of clang under which is its resource directory.
     # For example, lib/clang/5.0.0/include. Deduce it.
     file(GLOB CHILDREN RELATIVE ${CLANG_RESOURCE_DIR_STEM} ${CLANG_RESOURCE_DIR_STEM}/*)
