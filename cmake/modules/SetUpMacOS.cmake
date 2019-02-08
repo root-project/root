@@ -2,7 +2,6 @@ set(ROOT_ARCHITECTURE macosx)
 set(ROOT_PLATFORM macosx)
 
 set(SYSLIBS "-lm ${EXTRA_LDFLAGS} ${FINK_LDFLAGS} ${CMAKE_THREAD_LIBS_INIT} -ldl")
-#set(CRYPTLIBS "-lcrypt")
 
 #---This is needed to help CMake to locate the X11 headers in the correct place and not under /usr/include
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} /usr/X11R6)
