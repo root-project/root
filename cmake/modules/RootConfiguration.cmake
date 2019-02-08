@@ -298,8 +298,6 @@ set(krb5init ${KRB5_INIT})
 set(comerrlib)
 set(comerrlibdir)
 set(resolvlib)
-set(cryptolib ${CRYPTLIBS})
-set(cryptolibdir)
 
 set(buildmonalisa ${value${monalisa}})
 set(monalisalibdir ${MONALISA_LIBRARY_DIR})
