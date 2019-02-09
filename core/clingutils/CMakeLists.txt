@@ -56,7 +56,7 @@ foreach(dict ${stldicts})
   ROOT_STANDARD_LIBRARY_PACKAGE(${dict}Dict
                                 NO_SOURCES NO_INSTALL_HEADERS NO_MODULE
                                 STAGE1
-                                HEADERS ${header}
+                                NODEPHEADERS ${header}
                                 LINKDEF src/${dict}Linkdef.h
                                 DEPENDENCIES Core)
 endforeach()
