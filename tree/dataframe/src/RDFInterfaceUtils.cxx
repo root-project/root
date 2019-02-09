@@ -576,9 +576,10 @@ BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const Colu
       ss.seekp(-2, ss.cur);
 
    if (hasReturnStmt)
-      ss << "){\n" << expr << "\n}";
+      ss << "){";
    else
-      ss << "){return " << expr << "\n;}";
+      ss << "){return ";
+   ss << expr << "\n;}";
 
    return ss.str();
 }
