@@ -218,7 +218,7 @@ TEST_P(RDFSimpleTests, Define_jitted_complex_array_sum)
 TEST_P(RDFSimpleTests, Define_jitted_defines_with_return)
 {
    RDataFrame tdf(10);
-   auto d = tdf.Define("my_return_x", "auto x = 3.0; return x")
+   auto d = tdf.Define("my_return_x", "return 3.0")
                .Define("return_y", "4.0 // with a comment")
                .Define("v", "std::array<double, 2> v{my_return_x, return_y}; return v; // also with comment")
                .Define("r", "double r2 = 0.0; for (auto&& w : v) r2 += w*w; return sqrt(r2);");
