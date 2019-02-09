@@ -3,10 +3,7 @@
 #include "core/base/inc/LinkDef3.h"
 #include "core/clib/inc/LinkDef.h"
 #include "core/cont/inc/LinkDef.h"
-#include "core/foundation/inc/LinkDef.h"
 #include "core/meta/inc/LinkDef.h"
-#include "core/textinput/inc/LinkDef.h"
-#include "core/zip/inc/LinkDef.h"
 
 #if defined(SYSTEM_TYPE_winnt)
 #include "core/winnt/inc/LinkDef.h"
