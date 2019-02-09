@@ -11,11 +11,11 @@ set(libname PyMVA)
 include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS})
 
 
-set(PY_HEADERS ${CMAKE_SOURCE_DIR}/tmva/pymva/inc/TMVA/PyMethodBase.h
-               ${CMAKE_SOURCE_DIR}/tmva/pymva/inc/TMVA/MethodPyRandomForest.h
-               ${CMAKE_SOURCE_DIR}/tmva/pymva/inc/TMVA/MethodPyAdaBoost.h
-               ${CMAKE_SOURCE_DIR}/tmva/pymva/inc/TMVA/MethodPyGTB.h
-               ${CMAKE_SOURCE_DIR}/tmva/pymva/inc/TMVA/MethodPyKeras.h)
+set(PY_HEADERS TMVA/PyMethodBase.h
+               TMVA/MethodPyRandomForest.h
+               TMVA/MethodPyAdaBoost.h
+               TMVA/MethodPyGTB.h
+               TMVA/MethodPyKeras.h)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
                               HEADERS ${PY_HEADERS}
