@@ -113,6 +113,8 @@ set(BASE_HEADERS
   TVirtualTableInterface.h
   TVirtualViewer3D.h
   TVirtualX.h
+
+  PARENT_SCOPE
 )
 
 set(BASE_SOURCES
@@ -205,7 +207,6 @@ set(BASE_SOURCES
   src/TVirtualPS.cxx
   src/TVirtualViewer3D.cxx
   src/TVirtualX.cxx
-  G__Core.cxx
 )
 
 if(CMAKE_CXX_STANDARD GREATER 11)
@@ -226,43 +227,6 @@ if(root7)
       v7/src/RDrawable.cxx
   )
 endif()
-
-# libCore is linked against zlib (based on the location returned by find_package or builtin_zlib). The dictionary of
-# libCore, G__Core.cxx, should contain the include path to zlib.h in order to keep the symbol and header files in sync.
-# The includePath variable of the dictionary is empty, but we do not notice it because, by chance, G__MathMore adds
-# the same includePath for GSL. OTOH, if we have a small test case which works only with libCore.so we never give a
-# chance MathMore's dictionary to hide the problem and thus we pick up the system zlib.h.
-#
-# FIXME: Using include_directories is too intrusive as it does much more than what we want, that is, it will add this
-# include path not only in the dictionary but as part of the compilation lines. It is harmless but suboptimal: we need a
-# mechanism throough which we can express that we only need the path in the dictionary.
-#
-# NOTE: We cannot use set_property(TARGET G__Core ...) becase this has to happen before registering the target.
-include_directories(${ZLIB_INCLUDE_DIR})
-
-ROOT_GENERATE_DICTIONARY(G__Core
-  ${BASE_HEADERS}
-  ${Clib_dict_headers}
-  ${Cont_dict_headers}
-  ${Foundation_dict_headers}
-  ${Macosx_dict_headers}
-  ${Unix_dict_headers}
-  ${Winnt_dict_headers}
-  ${ClingUtils_dict_headers}
-  ${Meta_dict_headers}
-  ${TextInput_dict_headers}
-  STAGE1
-  MODULE
-    Core
-  OPTIONS
-    -writeEmptyRootPCM 
-    ${dict_opts}
-  LINKDEF
-    LinkDef.h
-)
-
-# This is needed becuase LinkDef.h includes other LinkDef starting from  ${CMAKE_SOURCE_DIR}
-set_property(TARGET G__Core PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
 
 ROOT_OBJECT_LIBRARY(Base ${BASE_SOURCES})
 target_include_directories(Base PRIVATE ${PCRE_INCLUDE_DIR})
