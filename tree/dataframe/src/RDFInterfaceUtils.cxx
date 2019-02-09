@@ -609,7 +609,7 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::strin
    const auto usedColTypes =
       ColumnTypesAsString(usedBranches, varNames, aliasMap, tree, ds, dotlessExpr, namespaceID, customCols);
 
-   TRegexp re("[^a-zA-Z0-9_]return[^a-zA-Z0-9_]");
+   TRegexp re("[^a-zA-Z0-9_]?return[^a-zA-Z0-9_]");
    Ssiz_t matchedLen;
    const bool hasReturnStmt = re.Index(dotlessExpr, &matchedLen) != -1;
 
@@ -662,7 +662,7 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    const auto usedColTypes =
       ColumnTypesAsString(usedBranches, varNames, aliasMap, tree, ds, dotlessExpr, namespaceID, customCols);
 
-   TRegexp re("[^a-zA-Z0-9_]return[^a-zA-Z0-9_]");
+   TRegexp re("[^a-zA-Z0-9_]?return[^a-zA-Z0-9_]");
    Ssiz_t matchedLen;
    const bool hasReturnStmt = re.Index(dotlessExpr, &matchedLen) != -1;
 
