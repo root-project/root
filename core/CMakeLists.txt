@@ -24,6 +24,8 @@ if(NOT WIN32)
   add_subdirectory(newdelete)
 endif()
 
+add_subdirectory(base)
+
 if(UNIX)
   add_subdirectory(unix)
   set(unix_objects $<TARGET_OBJECTS:Unix>)
@@ -42,8 +44,56 @@ endif()
 
 set(CORE_OS_DICT_CXX_FLAGS ${dict_opts} PARENT_SCOPE)
 
-# Must come after the OS specific subdirs:
-add_subdirectory(base)
+#---G__Core--------------------------------------------------------------------
+
+# libCore is linked against zlib (based on the location returned by find_package or builtin_zlib). The dictionary of
+# libCore, G__Core.cxx, should contain the include path to zlib.h in order to keep the symbol and header files in sync.
+# The includePath variable of the dictionary is empty, but we do not notice it because, by chance, G__MathMore adds
+# the same includePath for GSL. OTOH, if we have a small test case which works only with libCore.so we never give a
+# chance MathMore's dictionary to hide the problem and thus we pick up the system zlib.h.
+#
+# FIXME: Using include_directories is too intrusive as it does much more than what we want, that is, it will add this
+# include path not only in the dictionary but as part of the compilation lines. It is harmless but suboptimal: we need a
+# mechanism throough which we can express that we only need the path in the dictionary.
+#
+# NOTE: We cannot use set_property(TARGET G__Core ...) becase this has to happen before registering the target.
+include_directories(
+  ${ZLIB_INCLUDE_DIR}
+  base/inc
+  clib/inc
+  cont/inc
+  foundation/inc
+  macosx/inc
+  unix/inc
+  winnt/inc
+  clingutils/inc
+  meta/inc
+  textinput/inc
+)
+
+ROOT_GENERATE_DICTIONARY(G__Core
+  ${BASE_HEADERS}
+  ${Clib_dict_headers}
+  ${Cont_dict_headers}
+  ${Foundation_dict_headers}
+  ${Macosx_dict_headers}
+  ${Unix_dict_headers}
+  ${Winnt_dict_headers}
+  ${ClingUtils_dict_headers}
+  ${Meta_dict_headers}
+  ${TextInput_dict_headers}
+  STAGE1
+  MODULE
+    Core
+  OPTIONS
+    -writeEmptyRootPCM
+    ${dict_opts}
+  LINKDEF
+    base/inc/LinkDef.h
+)
+
+# This is needed becuase LinkDef.h includes other LinkDef starting from  ${CMAKE_SOURCE_DIR}
+set_property(TARGET G__Core PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
 
 set(objectlibs $<TARGET_OBJECTS:Base>
                $<TARGET_OBJECTS:Clib>
@@ -115,7 +165,7 @@ endif()
 add_subdirectory(rootcling_stage1)
 
 #-------------------------------------------------------------------------------
-ROOT_LINKER_LIBRARY(Core $<TARGET_OBJECTS:BaseTROOT> ${objectlibs} BUILTINS LZMA)
+ROOT_LINKER_LIBRARY(Core G__Core.cxx $<TARGET_OBJECTS:BaseTROOT> ${objectlibs} BUILTINS LZMA)
 
 target_link_libraries(Core
   PRIVATE
