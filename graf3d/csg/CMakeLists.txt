@@ -1,8 +1,8 @@
 ROOT_STANDARD_LIBRARY_PACKAGE(RCsg
   HEADERS
-     inc/CsgOps.h
+     CsgOps.h
   SOURCES
-     src/CsgOps.cxx
+     CsgOps.cxx
   DEPENDENCIES
      MathCore   
 )
