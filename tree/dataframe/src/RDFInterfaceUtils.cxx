@@ -70,7 +70,11 @@ namespace RDF {
 std::set<std::string> GetPotentialColumnNames(const std::string &expr)
 {
    lexertk::generator generator;
-   generator.process(expr);
+   const auto ok = generator.process(expr);
+   if (!ok) {
+      const auto msg = "Failed to tokenize expression:\n" + expr + "\n\nMake sure it is valid C++.";
+      throw std::runtime_error(msg);
+   }
 
    std::set<std::string> potCols;
    const auto nToks = generator.size();
