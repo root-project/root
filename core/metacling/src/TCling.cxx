@@ -1293,7 +1293,11 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // Setup core C++ modules if we have any to setup.
 
       // Load libc and stl first.
+#ifdef R__MACOSX
+      LoadModules({"Darwin", "std"}, *fInterpreter);
+#else
       LoadModules({"libc", "stl"}, *fInterpreter);
+#endif
 
       // Load core modules
       // This should be vector in order to be able to pass it to LoadModules
