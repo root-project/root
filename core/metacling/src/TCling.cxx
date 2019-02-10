@@ -6061,7 +6061,7 @@ static bool LookupNormalSymbols(llvm::object::ObjectFile *RealSoFile, const std:
 
       llvm::Expected<StringRef> SymNameErr = S.getName();
       if (!SymNameErr) {
-         Warning("LazyFunctionCreatorAutoloadForModule", "Failed to read symbol");
+         Warning("LookupNormalSymbols", "Failed to read symbol");
          continue;
       }
 
