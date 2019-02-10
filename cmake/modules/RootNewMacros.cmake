@@ -492,7 +492,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   if (APPLE)
     # FIXME: Krb5Auth.h triggers "declaration of '__mb_cur_max' has a different language linkage"
     # problem.
-    if (${library} MATCHES "Krb5Auth" OR ${library} MATCHES "(GCocoa|GQuartz)")
+    if (${library} MATCHES "(Krb5Auth|GCocoa|GQuartz)")
       return()
     endif()
   endif(APPLE)
