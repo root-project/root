@@ -19,7 +19,6 @@ if(ROOT_python_FOUND)
                     MACRO exec_root_6023.py OPTS -b
                     COPY_TO_BUILDDIR root_6023.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARY}\"\)
-                                                     -e .L\ root_6023.h+
-                    ${PYTESTS_WILLFAIL})
+                                                     -e .L\ root_6023.h+)
 
 endif()
