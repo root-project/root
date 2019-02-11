@@ -4,7 +4,7 @@
 
 set(Macosx_dict_headers
   TMacOSXSystem.h
-  PARENT_SCOPE
+  CACHE INTERNAL ""
 )
 
 ROOT_OBJECT_LIBRARY(Macosx

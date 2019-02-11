@@ -8,8 +8,9 @@
 set(ClingUtils_dict_headers
   root_std_complex.h
   TClingRuntime.h
-  PARENT_SCOPE
+  CACHE INTERNAL ""
 )
+
 
 ROOT_OBJECT_LIBRARY(ClingUtils
   src/RStl.cxx
@@ -162,4 +163,3 @@ else()
         COMMENT "Copying LLVM resource and header files")
 endif()
 add_custom_target(LLVMRES DEPENDS ${stamp_file} CLING)
-

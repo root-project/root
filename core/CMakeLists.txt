@@ -46,7 +46,7 @@ if(CMAKE_CXX_STANDARD GREATER 11)
   set(dict_v7dirs base/v7/inc)
 endif()
 
-set(CORE_OS_DICT_CXX_FLAGS ${dict_opts} PARENT_SCOPE)
+set(CORE_OS_DICT_CXX_FLAGS ${dict_opts} CACHE INTERNAL "")
 
 #---G__Core--------------------------------------------------------------------
 

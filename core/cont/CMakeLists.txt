@@ -32,7 +32,7 @@ set(Cont_dict_headers
   TSeqCollection.h
   TSortedList.h
   TVirtualCollectionProxy.h
-  PARENT_SCOPE
+  CACHE INTERNAL ""
 )
 
 ROOT_OBJECT_LIBRARY(Cont

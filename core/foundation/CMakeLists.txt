@@ -13,7 +13,7 @@ set(Foundation_dict_headers
   ROOT/RStringView.hxx
   ROOT/span.hxx
   ROOT/TypeTraits.hxx
-  PARENT_SCOPE
+  CACHE INTERNAL ""
 )
 
 set(sources

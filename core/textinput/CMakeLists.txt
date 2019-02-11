@@ -4,7 +4,7 @@
 
 set(TextInput_dict_headers
   Getline.h
-  PARENT_SCOPE
+  CACHE INTERNAL ""
 )
 
 ROOT_OBJECT_LIBRARY(TextInput
