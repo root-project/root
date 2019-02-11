@@ -58,8 +58,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     src/Systematics.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
-  BUILTINS
-    GSL
   DEPENDENCIES
     RooFit
     RooFitCore
@@ -68,19 +66,22 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     Hist
     Matrix
     MathCore
-    Minuit
-    Foam
     Graf
     Gpad
     RooStats
     XMLParser
 )
 
-ROOT_EXECUTABLE(hist2workspace MakeModelAndMeasurements.cxx hist2workspace.cxx
-                LIBRARIES HistFactory RooFit RooFitCore Tree RIO Matrix Hist
-                   ${ROOT_MATHMORE_LIBRARY} ${GSL_LIBRARIES} MathCore Graf Gpad
-                   Minuit Foam RooStats XMLParser
-                BUILTINS GSL)
+ROOT_EXECUTABLE(hist2workspace
+  MakeModelAndMeasurements.cxx
+  hist2workspace.cxx
+  LIBRARIES
+    HistFactory
+    RooStats
+    RooFit
+    RooFitCore
+    RIO
+)
 
 #---Createhist2workspaceCommandLineOptions------------------------------------------------------------------
 generateHeaders(${CMAKE_CURRENT_SOURCE_DIR}/src/hist2workspace-argparse.py ${CMAKE_BINARY_DIR}/include/hist2workspaceCommandLineOptionsHelp.h hist2workspace)
