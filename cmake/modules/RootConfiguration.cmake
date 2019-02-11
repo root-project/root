@@ -558,6 +558,7 @@ string(REPLACE "c++11" "cxx11" features ${features}) # change the name of the c+
 set(configfeatures ${features})
 set(configargs ${ROOT_CONFIGARGS})
 set(configoptions ${ROOT_CONFIGARGS})
+set(configstd ${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION})
 get_filename_component(altcc ${CMAKE_C_COMPILER} NAME)
 get_filename_component(altcxx ${CMAKE_CXX_COMPILER} NAME)
 get_filename_component(altf77 "${CMAKE_Fortran_COMPILER}" NAME)
