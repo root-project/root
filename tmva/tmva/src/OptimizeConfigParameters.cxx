@@ -358,12 +358,20 @@ Double_t TMVA::OptimizeConfigParameters::GetFOM()
    }else{
       if      (fFOMType == "Separation")  fom = GetSeparation();
       else if (fFOMType == "ROCIntegral") fom = GetROCIntegral();
-      else if (fFOMType == "SigEffAtBkgEff01")  fom = GetSigEffAtBkgEff(0.1);
-      else if (fFOMType == "SigEffAtBkgEff001") fom = GetSigEffAtBkgEff(0.01);
-      else if (fFOMType == "SigEffAtBkgEff002") fom = GetSigEffAtBkgEff(0.02);
-      else if (fFOMType == "BkgRejAtSigEff05")  fom = GetBkgRejAtSigEff(0.5);
-      else if (fFOMType == "BkgEffAtSigEff05")  fom = GetBkgEffAtSigEff(0.5);
-      else {
+      else if (fFOMType.BeginsWith("SigEffAtBkgEff0")){
+         TString percent=TString(fFOMType(14,fFOMType.Sizeof())); //Strip down to number
+         //Support users giving a fraction and old formatting, both cases must start with a 0
+         if (!percent.CountChar('.')) percent.Insert(1,".");
+         fom = GetSigEffAtBkgEff(percent.Atof());
+      }else if (fFOMType.BeginsWith("BkgRejAtSigEff0")){
+         TString percent=TString(fFOMType(14,fFOMType.Sizeof())); 
+         if (!percent.CountChar('.')) percent.Insert(1,".");
+         fom = GetBkgRejAtSigEff(percent.Atof());
+      }else if (fFOMType.BeginsWith("BkgEffAtSigEff0")){
+         TString percent=TString(fFOMType(14,fFOMType.Sizeof())); 
+         if (!percent.CountChar('.')) percent.Insert(1,".");
+         fom = GetBkgEffAtSigEff(percent.Atof());
+      }else {
          Log()<<kFATAL << " ERROR, you've specified as Figure of Merit in the "
               << " parameter optimisation " << fFOMType << " which has not"
               << " been implemented yet!! ---> exit " << Endl;
