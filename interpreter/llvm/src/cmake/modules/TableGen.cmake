@@ -149,8 +149,8 @@ macro(add_tablegen target project)
   endif()
 
   # Effective tblgen executable to be used:
-  set(${project}_TABLEGEN_EXE ${${project}_TABLEGEN} PARENT_SCOPE)
-  set(${project}_TABLEGEN_TARGET ${${project}_TABLEGEN} PARENT_SCOPE)
+  set(${project}_TABLEGEN_EXE ${${project}_TABLEGEN} CACHE INTERNAL "")
+  set(${project}_TABLEGEN_TARGET ${${project}_TABLEGEN} CACHE INTERNAL "")
 
   if(LLVM_USE_HOST_TOOLS)
     if( ${${project}_TABLEGEN} STREQUAL "${target}" )

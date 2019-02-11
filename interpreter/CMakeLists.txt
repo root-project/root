@@ -238,8 +238,8 @@ else()
   # CMake assumes slashes as PATH.
   file(TO_CMAKE_PATH ${LLVM_CONFIG_CMAKE_PATH} LLVM_CMAKE_PATH)
 
-  find_program(LLVM_TABLEGEN_EXE "llvm-tblgen" ${LLVM_TOOLS_BINARY_DIR}
-    NO_DEFAULT_PATH)
+  find_program(LLVM_TABLEGEN_EXE "llvm-tblgen" ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH)
+  set(LLVM_TABLEGEN_EXE ${LLVM_TABLEGEN_EXE} CACHE PATH "Path to llvm-tblgen")
 
   set(LLVMCONFIG_FILE "${LLVM_CMAKE_PATH}/LLVMConfig.cmake")
   if(EXISTS ${LLVMCONFIG_FILE})
@@ -290,18 +290,17 @@ else()
   include_directories("${LLVM_BINARY_DIR}/include" "${LLVM_MAIN_INCLUDE_DIR}")
   link_directories("${LLVM_LIBRARY_DIR}")
 
-#  set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
-#  set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX} )
-#  set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX} )
+   #  set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
+   #  set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX} )
+   #  set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX} )
 
   if(LLVM_INCLUDE_TESTS OR clingtest)
     set(Python_ADDITIONAL_VERSIONS 2.7)
     include(FindPythonInterp)
     if(NOT PYTHONINTERP_FOUND)
       message(FATAL_ERROR
-"Unable to find Python interpreter, required for builds and testing.
-
-Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
+   "Unable to find Python interpreter, required for builds and testing.
+   Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
     endif()
 
     if( ${PYTHON_VERSION_STRING} VERSION_LESS 2.7 )
@@ -361,8 +360,6 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
 
   set( CLANG_BUILT_STANDALONE 1 )
   set(BACKEND_PACKAGE_STRING "LLVM ${LLVM_PACKAGE_VERSION}")
-
-
 if (builtin_clang)
   add_subdirectory(llvm/src/tools/clang EXCLUDE_FROM_ALL)
 else()
@@ -393,7 +390,7 @@ if(builtin_llvm)
       MESSAGE(FATAL_ERROR "Cannot extract LLVM version number (${versionpart}) from ${llvmconfigfile}")
     endif()
   endforeach()
-  set(LLVM_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}" PARENT_SCOPE)
+  set(LLVM_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}" CACHE INTERNAL "")
 else()
   set(LLVM_INCLUDE_DIRS ${LLVM_MAIN_INCLUDE_DIR}
     CACHE STRING "System LLVM include directories."
@@ -401,7 +398,7 @@ else()
   # We cannot include LLVMConfig.cmake here. We reply on builtin clang to discover the available
   # llvm version and set it in clang version.
   # FIXME: This is a very ugly workaround. Is there a better way to do this?
-  set(LLVM_VERSION ${CLANG_VERSION} PARENT_SCOPE)
+  set(LLVM_VERSION ${CLANG_VERSION} CACHE INTERNAL "")
 endif()
 
 #---Avoid to dependencies to system (e.g. atomic) libraries without modifying the LLVM code----------
