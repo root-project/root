@@ -9,7 +9,6 @@
 ################################################################################
 
 from ROOT import pythonization
-from cppyy.gbl import TIter
 from libcppyy import SetOwnership
 
 import sys
