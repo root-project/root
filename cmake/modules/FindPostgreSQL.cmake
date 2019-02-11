@@ -84,17 +84,12 @@ foreach(suffix ${PostgreSQL_KNOWN_VERSIONS})
         "PostgreSQL/${suffix}/lib")
     list(APPEND PostgreSQL_INCLUDE_ADDITIONAL_SEARCH_SUFFIXES
         "PostgreSQL/${suffix}/include")
-    list(APPEND PostgreSQL_TYPE_ADDITIONAL_SEARCH_SUFFIXES
-        "PostgreSQL/${suffix}/include/server")
   endif()
   if(UNIX)
     list(APPEND PostgreSQL_LIBRARY_ADDITIONAL_SEARCH_SUFFIXES
         "pgsql-${suffix}/lib")
     list(APPEND PostgreSQL_INCLUDE_ADDITIONAL_SEARCH_SUFFIXES
         "pgsql-${suffix}/include")
-    list(APPEND PostgreSQL_TYPE_ADDITIONAL_SEARCH_SUFFIXES
-        "postgresql/${suffix}/server"
-        "pgsql-${suffix}/include/server")
   endif()
 endforeach()
 
@@ -111,21 +106,6 @@ find_path(PostgreSQL_INCLUDE_DIR
     postgresql
     include
     ${PostgreSQL_INCLUDE_ADDITIONAL_SEARCH_SUFFIXES}
-  # Help the user find it if we cannot.
-  DOC "The ${PostgreSQL_INCLUDE_DIR_MESSAGE}"
-)
-
-find_path(PostgreSQL_TYPE_INCLUDE_DIR
-  NAMES catalog/pg_type.h
-  PATHS
-   # Look in other places.
-   ${PostgreSQL_ROOT_DIRECTORIES}
-  PATH_SUFFIXES
-    postgresql
-    pgsql/server
-    postgresql/server
-    include/server
-    ${PostgreSQL_TYPE_ADDITIONAL_SEARCH_SUFFIXES}
   # Help the user find it if we cannot.
   DOC "The ${PostgreSQL_INCLUDE_DIR_MESSAGE}"
 )
@@ -173,15 +153,15 @@ endif()
 # Did we find anything?
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(PostgreSQL
-                                  REQUIRED_VARS PostgreSQL_LIBRARY PostgreSQL_INCLUDE_DIR PostgreSQL_TYPE_INCLUDE_DIR
+                                  REQUIRED_VARS PostgreSQL_LIBRARY PostgreSQL_INCLUDE_DIR
                                   VERSION_VAR PostgreSQL_VERSION_STRING)
 set(PostgreSQL_FOUND  ${POSTGRESQL_FOUND})
 
 # Now try to get the include and library path.
 if(PostgreSQL_FOUND)
-  set(PostgreSQL_INCLUDE_DIRS ${PostgreSQL_INCLUDE_DIR} ${PostgreSQL_TYPE_INCLUDE_DIR} )
+  set(PostgreSQL_INCLUDE_DIRS ${PostgreSQL_INCLUDE_DIR})
   set(PostgreSQL_LIBRARY_DIRS ${PostgreSQL_LIBRARY_DIR} )
   set(PostgreSQL_LIBRARIES ${PostgreSQL_LIBRARY})
 endif()
 
-mark_as_advanced(PostgreSQL_INCLUDE_DIR PostgreSQL_TYPE_INCLUDE_DIR PostgreSQL_LIBRARY )
+mark_as_advanced(PostgreSQL_INCLUDE_DIR PostgreSQL_LIBRARY)
