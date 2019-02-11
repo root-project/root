@@ -714,7 +714,7 @@ public:
       // Put the confidence level so that we obtain a 68% confidence interval
       const Double_t confidenceLevel = 2 * normal_cdf(1) - 1;
       const Int_t obsValue = 3; // observed experiment value
-      const Int_t numberScans = 10000; // sufficient number of scans
+      const Int_t numberScans = 100000; // sufficient number of scans
 
       // names of tested variables must be the same in write / comparison modes
       const TString lowerLimitString = "tbc2_lower_limit_unif";
