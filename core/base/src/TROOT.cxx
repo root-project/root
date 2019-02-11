@@ -540,6 +540,9 @@ namespace Internal {
    /// In all threads, gDirectory defaults to gROOT, a singleton which supports thread-safe insertion and deletion of contents.
    /// gFile and gPad default to nullptr, as it is for single-thread programs.
    ///
+   /// The ROOT graphics subsystem is not made thread-safe by this method. In particular drawing or printing different
+   /// canvases from different threads (and analogous operations such as invoking `Draw` on a `TObject`) is not thread-safe.
+   ///
    /// Note that there is no `DisableThreadSafety()`. ROOT's thread-safety features cannot be disabled once activated.
    // clang-format on
    void EnableThreadSafety()
