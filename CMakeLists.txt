@@ -97,8 +97,10 @@ else()
 endif()
 
 
-#---Where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked-------------
+#---Where to look first for cmake modules, before ${CMAKE_ROOT}/modules/ is checked-------------
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
+#---New macros used for ROOT lazy-build system
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/configuration)
 
 #---Enable Folders in IDE like Visual Studio----------------------------------------------------
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
