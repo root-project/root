@@ -1254,6 +1254,10 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       }
    }
 
+   for (const auto &arg: TROOT::AddExtraInterpreterArgs({})) {
+      interpArgs.push_back(arg.c_str());
+   }
+
    fInterpreter = new cling::Interpreter(interpArgs.size(),
                                          &(interpArgs[0]),
                                          llvmResourceDir);
