@@ -30,6 +30,8 @@
 #include "RConfigure.h"
 
 #include <atomic>
+#include <string>
+#include <vector>
 
 class TClass;
 class TCanvas;
@@ -355,6 +357,7 @@ public:
    static Int_t       ConvertVersionCode2Int(Int_t code);
    static Int_t       ConvertVersionInt2Code(Int_t v);
    static Int_t       RootVersionCode();
+   static const std::vector<std::string> &AddExtraInterpreterArgs(const std::vector<std::string> &args);
    static const char**&GetExtraInterpreterArgs();
 
    static const TString& GetRootSys();

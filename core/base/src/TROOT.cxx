@@ -2901,8 +2901,22 @@ Int_t TROOT::RootVersionCode()
 {
    return ROOT_VERSION_CODE;
 }
+////////////////////////////////////////////////////////////////////////////////
+/// Provide command line arguments to the interpreter construction.
+/// These arguments are added to the existing flags (e.g. `-DNDEBUG`).
+/// They are evaluated once per process, at the time where TROOT (and thus
+/// TInterpreter) is constructed.
+/// Returns the new flags.
+
+const std::vector<std::string> &TROOT::AddExtraInterpreterArgs(const std::vector<std::string> &args) {
+   static std::vector<std::string> sArgs = {};
+   sArgs.insert(sArgs.begin(), args.begin(), args.end());
+   return sArgs;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
+/// INTERNAL function!
+/// Used by rootcling to inject interpreter arguments through a C-interface layer.
 
 const char**& TROOT::GetExtraInterpreterArgs() {
    static const char** extraInterpArgs = 0;
