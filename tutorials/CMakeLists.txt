@@ -443,6 +443,7 @@ if(ROOT_python_FOUND)
                  tutorial-dataframe-df021_createTGraph-py
                  tutorial-dataframe-df024_Display-py
                  tutorial-dataframe-df026_AsNumpyArrays-py
+                 tutorial-dataframe-df102_NanoAODDimuonAnalysis-py
                  tutorial-graphs-timeSeriesFromCSV-py
                  tutorial-hist-fillrandom-py
                  tutorial-math-Legendre-py
@@ -513,4 +514,3 @@ set(rootsite http://root.cern.ch/files)
 set(csvtimeout 60)
 set (df014_csv df014_CsvDataSource_MuRun2010B.csv)
 file(DOWNLOAD ${rootsite}/tutorials/${df014_csv} ${CMAKE_CURRENT_BINARY_DIR}/${df014_csv} TIMEOUT ${csvtimeout})
-
