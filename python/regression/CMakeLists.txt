@@ -19,6 +19,8 @@ if(ROOT_python_FOUND)
                     MACRO exec_root_6023.py OPTS -b
                     COPY_TO_BUILDDIR root_6023.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARY}\"\)
-                                                     -e .L\ root_6023.h+)
+                                                     -e .L\ root_6023.h+
+                    ENVIRONMENT CLING_STANDARD_PCH=${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch
+                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
 
 endif()
