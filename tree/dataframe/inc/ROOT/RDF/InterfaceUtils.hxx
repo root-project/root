@@ -265,7 +265,8 @@ template <typename Filter>
 void CheckFilter(Filter &)
 {
    using FilterRet_t = typename RDF::CallableTraits<Filter>::ret_type;
-   static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
+   static_assert(std::is_convertible<FilterRet_t, bool>::value,
+                 "filter expression returns a type that is not convertible to bool");
 }
 
 void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
