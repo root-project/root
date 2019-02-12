@@ -123,6 +123,34 @@ When most solids or volumes are added to the geometry they
 ClassImp(TGDMLParse);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
+TGDMLParse::TGDMLParse()
+{
+   fWorldName = "";
+   fWorld = 0;
+   fVolID = 0;
+   fFILENO = 0;
+   for (Int_t i=0; i<20; i++) fFileEngine[i] = 0;
+   fStartFile = 0;
+   fCurrentFile = 0;
+   auto def_units = TGeoManager::GetDefaultUnits();
+   switch (def_units) {
+      case TGeoManager::kG4Units:
+         fDefault_lunit = "mm";
+         fDefault_aunit = "rad";
+         break;
+      case TGeoManager::kRootUnits:
+         fDefault_lunit = "cm";
+         fDefault_aunit = "deg";
+         break;
+      default: // G4 units
+         fDefault_lunit = "mm";
+         fDefault_aunit = "rad";
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Creates the new instance of the XMLEngine called 'gdml', using the filename >>
 /// then parses the file and creates the DOM tree. Then passes the DOM to the
 /// next function to translate it.
