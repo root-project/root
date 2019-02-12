@@ -399,7 +399,7 @@ TEST_P(RDFSimpleTests, Define_Multiple)
 TEST_P(RDFSimpleTests, Define_Multiple_Filter)
 {
    RDataFrame tdf(3);
-   auto notFilteringFilter = [](int b1) { return b1 > 0; };
+   auto notFilteringFilter = [](int b1) { return b1; }; // also tests returning a type convertible to bool
    auto filteringFilter = [](int b2) { return b2 < 1; };
 
    auto root = tdf.Define("root", "0");
