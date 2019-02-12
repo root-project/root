@@ -13,8 +13,6 @@ CXXFLAGS=$5
 SOFLAGS=$6
 LDFLAGS=$7
 SOEXT=$8
-SYSLIBS=$9
-shift
 LIBDIR=$9
 shift
 ROOTLIBS=$9
@@ -123,7 +121,7 @@ else
    echo "#define MAKESHAREDLIB \"$CUSTOMSHARED\"" >> ${COMPILEDATA}.tmp
 fi
 if [ "$CUSTOMEXE" = "" ]; then
-   echo "#define MAKEEXE \"cd \$BuildDir ; $BXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles; $BXX \$ObjectFiles $LDFLAGS -o \$ExeName \$LinkedLibs $SYSLIBS\""  >> ${COMPILEDATA}.tmp
+   echo "#define MAKEEXE \"cd \$BuildDir ; $BXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles; $BXX \$ObjectFiles $LDFLAGS -o \$ExeName \$LinkedLibs\""  >> ${COMPILEDATA}.tmp
 else
    echo "#define MAKEEXE \"$CUSTOMEXE\"" >> ${COMPILEDATA}.tmp
 fi

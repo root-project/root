@@ -373,8 +373,8 @@ endif
 
 CXXFLAGS     += $(ROOTCFLAGS)
 LDFLAGS      += $(ROOTLDFLAGS)
-LIBS          = $(ROOTLIBS) $(SYSLIBS)
-GLIBS         = $(ROOTGLIBS) $(SYSLIBS)
+LIBS          = $(ROOTLIBS)
+GLIBS         = $(ROOTGLIBS)
 
 ifneq ($(ALTCC),)
    CC  = $(ALTCC)

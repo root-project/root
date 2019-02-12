@@ -51,7 +51,6 @@ else()
       ${PROOFD_SOURCES}
       LIBRARIES
         ${XROOTD_LIBRARIES}
-        ${SYSLIBS}
       BUILTINS
         XROOTD
     )
@@ -73,7 +72,5 @@ else()
     proofexecv.cxx
     ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
     ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdpriv.cxx
-    LIBRARIES
-      ${SYSLIBS}
   )
 endif()

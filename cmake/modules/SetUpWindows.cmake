@@ -1,8 +1,5 @@
 set(ROOT_PLATFORM win32)
 
-#---Global variables for Win32 platform-------------------------------------------------
-set(SYSLIBS advapi32.lib)
-
 #----Check the compiler that is used-----------------------------------------------------
 if(CMAKE_COMPILER_IS_GNUCXX)
 
