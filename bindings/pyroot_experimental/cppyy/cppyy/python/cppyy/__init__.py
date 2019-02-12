@@ -123,7 +123,7 @@ def add_include_path(path):
     gbl.gInterpreter.AddIncludePath(path)
 
 # add access to Python C-API headers
-add_include_path(sysconfig.get_path('include'))
+add_include_path(sysconfig.get_path('include', 'posix_prefix' if os.name == 'posix' else os.name))
 
 def add_autoload_map(fname):
     """Add the entries from a autoload (.rootmap) file to Cling."""
