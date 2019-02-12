@@ -618,8 +618,9 @@ void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
    }
    if (!opt && gPad->GetLogy()) {
       for (i=0;i<npoints;i++) {
-         if (gyworkl[i] > 0) gyworkl[i] = TMath::Log10(gyworkl[i]);
-         else                gyworkl[i] = gPad->GetY1();
+         //if (gyworkl[i] > 0)
+         gyworkl[i] = TMath::Log10(gyworkl[i]);
+         //else                gyworkl[i] = gPad->GetY1();
       }
    }
 }
@@ -2067,6 +2068,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
    //    Draw the histogram with a simple line
 
    if (optionLine) {
+      gPad->SetBit(TGraph::kClipFrame);
       wminstep = wmin + 0.5*delta;
       Axis_t ax1,ax2,ay1,ay2;
       gPad->GetRangeAxis(ax1,ay1,ax2,ay2);
@@ -2090,11 +2092,9 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             gywork[npt-1] = y[i-1];
             gywork[npt]   = y[i-1]; //new
             if ((gywork[npt-1] < rwymin) || ((gywork[npt-1] > rwymax) && !optionFill2)) {
-               if ((gywork[npt-1] < rwymin)) gywork[npt-1] = rwymin;
-               if ((gywork[npt-1] > rwymax)) gywork[npt-1] = rwymax;
                if (npt > 2) {
                   ComputeLogs(npt, optionZ);
-                  gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
+                  gPad->PaintPolyLine(npt,gxworkl,gyworkl);
                }
                gxwork[0] = gxwork[npt-1];
                gywork[0] = gywork[npt-1];
