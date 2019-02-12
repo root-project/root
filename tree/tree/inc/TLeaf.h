@@ -80,7 +80,7 @@ public:
       kNewValue = BIT(12)         ///< Set if we own the value buffer and so must delete it ourselves.
    };
 
-   enum DeserializeType {
+   enum class DeserializeType {
       kInvalid = 0,      // Invalid deserialization information.
       kDestructive,      // Deserialization of this Leaf requires a separate output buffer.
       kInPlace,          // Deserialization can be done directly in the input buffer.
@@ -97,7 +97,7 @@ public:
    virtual void     FillBasket(TBuffer &b);
    virtual Int_t   *GenerateOffsetArray(Int_t base, Int_t events) { return GenerateOffsetArrayBase(base, events); }
    TBranch         *GetBranch() const { return fBranch; }
-   virtual DeserializeType GetDeserializeType() const { return kDestructive; }
+   virtual DeserializeType GetDeserializeType() const { return DeserializeType::kDestructive; }
    ///  If this leaf stores a variable-sized array or a multi-dimensional array whose last dimension has variable size,
    ///  return a pointer to the TLeaf that stores such size. Return a nullptr otherwise.
    virtual TLeaf   *GetLeafCount() const { return fLeafCount; }

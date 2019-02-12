@@ -87,7 +87,7 @@ protected:
       kDoNotUseBufferMap = BIT(22) // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
    };
 
-   typedef std::unique_ptr<ROOT::Experimental::Internal::TBulkBranchRead> BulkPtr;
+   using BulkPtr = std::unique_ptr<ROOT::Experimental::Internal::TBulkBranchRead>;
    static Int_t fgCount;          ///<! branch counter
    Int_t       fCompress;         ///<  Compression level and algorithm
    Int_t       fBasketSize;       ///<  Initial Size of  Basket Buffer
@@ -125,7 +125,7 @@ protected:
    TBuffer    *fEntryBuffer;      ///<! Buffer used to directly pass the content without streaming
    TBuffer    *fTransientBuffer;  ///<! Pointer to the current transient buffer.
    TList      *fBrowsables;       ///<! List of TVirtualBranchBrowsables used for Browse()
-   BulkPtr     fBulk; ///<! Helper for performing bulk IO
+   BulkPtr     fBulk;             ///<! Helper for performing bulk IO
 
    Bool_t      fSkipZip;          ///<! After being read, the buffer will not be unzipped.
 
@@ -188,7 +188,7 @@ public:
            Long64_t *GetBasketEntry() const {return fBasketEntry;}
    virtual Long64_t  GetBasketSeek(Int_t basket) const;
    virtual Int_t     GetBasketSize() const {return fBasketSize;}
-           ROOT::Experimental::Internal::TBulkBranchRead &GetBulkRead() const {return *fBulk;}
+           ROOT::Experimental::Internal::TBulkBranchRead &GetBulkRead() const { return *fBulk; }
    virtual TList    *GetBrowsables();
    virtual const char* GetClassName() const;
            Int_t     GetCompressionAlgorithm() const;
@@ -258,7 +258,7 @@ public:
    virtual void      SetStatus(Bool_t status=1);
    virtual void      SetTree(TTree *tree) { fTree = tree;}
    virtual void      SetupAddresses();
-   Bool_t            SupportsBulkRead() const;
+           Bool_t    SupportsBulkRead() const;
    virtual void      UpdateAddress() {;}
    virtual void      UpdateFile();
 
