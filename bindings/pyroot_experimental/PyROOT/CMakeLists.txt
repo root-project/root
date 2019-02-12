@@ -8,6 +8,7 @@ set(py_sources
   ROOT/pythonization/_generic.py
   ROOT/pythonization/_rooabscollection.py
   ROOT/pythonization/_rvec.py
+  ROOT/pythonization/_rdataframe.py
   ROOT/pythonization/_stl_vector.py
   ROOT/pythonization/_tarray.py
   ROOT/pythonization/_tcollection.py
@@ -27,6 +28,7 @@ set(sources
   src/TTreePyz.cxx
   src/GenericPyz.cxx
   src/RVecPyz.cxx
+  src/RDataFramePyz.cxx
   src/PyzPythonHelpers.cxx
   src/PyzCppHelpers.cxx
 )

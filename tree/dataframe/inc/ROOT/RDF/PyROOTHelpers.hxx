@@ -12,6 +12,7 @@
 #define ROOT_PyROOTHelpers
 
 #include "ROOT/RDataFrame.hxx"
+#include "ROOT/RLazyDS.hxx"
 
 #include <vector>
 #include <string>
@@ -68,6 +69,31 @@ ROOT::RDF::RResultPtr<std::vector<T>> RDataFrameTake(ROOT::RDF::RNode df, std::s
 {
    return df.Take<T>(column);
 }
+
+// MakeRDataFrame helpers
+
+// Dummy RResultPtr class so that we can reuse RLazyDS for reading numpy arrays
+template <typename T>
+class RResultPtrDummy {
+private:
+   T* fPtr;
+public:
+   using Value_t = T;
+   RResultPtrDummy(T& obj) : fPtr(&obj) {};
+   T *operator->() { return fPtr; }
+   T &operator*() { return *fPtr; }
+};
+
+// MakeLazyDataFrame variant returning an RDataFrame on the heap so that we can
+// build a Python proxy for it.
+template <typename... Columns>
+RDataFrame* NewLazyDataFrame(std::pair<std::string, Columns> &&... colNameProxyPairs)
+{
+   return new RDataFrame(std::make_unique<RLazyDS<Columns...>>(
+      std::forward<std::pair<std::string, Columns>>(colNameProxyPairs)...));
+}
+
+
 
 } // namespace RDF
 } // namespace Internal

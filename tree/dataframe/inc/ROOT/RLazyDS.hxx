@@ -27,9 +27,8 @@ namespace RDF {
 template <typename... Columns>
 RDataFrame MakeLazyDataFrame(std::pair<std::string, Columns> &&... colNameProxyPairs)
 {
-   RDataFrame tdf(std::make_unique<RLazyDS<Columns...>>(
+   return RDataFrame(std::make_unique<RLazyDS<Columns...>>(
       std::forward<std::pair<std::string, Columns>>(colNameProxyPairs)...));
-   return tdf;
 }
 
 } // ns RDF

@@ -59,6 +59,8 @@ static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunc
                                         (char *)"Get size of data-type"},
                                        {(char *)"AsRVec", (PyCFunction)PyROOT::AsRVec, METH_O,
                                         (char *)"Get object with array interface as RVec"},
+                                       {(char *)"MakeRDataFrame", (PyCFunction)PyROOT::MakeRDataFrame, METH_O,
+                                        (char *)"Make RDataFrame from dictionary of numpy arrays"},
                                        {NULL, NULL, 0, NULL}};
 
 #if PY_VERSION_HEX >= 0x03000000
