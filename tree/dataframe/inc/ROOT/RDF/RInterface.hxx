@@ -2098,7 +2098,7 @@ private:
       RDFInternal::CheckTypesAndPars(sizeof...(BranchTypes), columnList.size());
 
       auto colHolders = std::make_tuple(Take<BranchTypes>(columnList[S])...);
-      auto ds = std::make_unique<RLazyDS<BranchTypes...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
+      auto ds = std::make_unique<RLazyDS<RResultPtr<std::vector<BranchTypes>>...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
 
       RInterface<RLoopManager> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnList));
 

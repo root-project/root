@@ -24,11 +24,11 @@ namespace RDF {
 /// \brief Factory method to create a Lazy RDataFrame.
 /// \param[in] colNameProxyPairs the series of pairs to describe the columns of the data source, first element of the pair is the name of the column and the second is the RResultPtr to the column in the parent data frame.
 // clang-format on
-template <typename... ColumnTypes>
-RDataFrame MakeLazyDataFrame(std::pair<std::string, RResultPtr<std::vector<ColumnTypes>>> &&... colNameProxyPairs)
+template <typename... Columns>
+RDataFrame MakeLazyDataFrame(std::pair<std::string, Columns> &&... colNameProxyPairs)
 {
-   RDataFrame tdf(std::make_unique<RLazyDS<ColumnTypes...>>(
-      std::forward<std::pair<std::string, RResultPtr<std::vector<ColumnTypes>>>>(colNameProxyPairs)...));
+   RDataFrame tdf(std::make_unique<RLazyDS<Columns...>>(
+      std::forward<std::pair<std::string, Columns>>(colNameProxyPairs)...));
    return tdf;
 }
 

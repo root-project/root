@@ -14,7 +14,6 @@
 #include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RDataSource.hxx"
-#include "ROOT/RResultPtr.hxx"
 #include "ROOT/TSeq.hxx"
 
 #include <algorithm>
@@ -37,11 +36,11 @@ namespace RDF {
 ///
 /// The implementation takes care of matching compile time information with runtime
 /// information, e.g. expanding in a smart way the template parameters packs.
-template <typename... ColumnTypes>
+template <typename... Columns>
 class RLazyDS final : public ROOT::RDF::RDataSource {
    using PointerHolderPtrs_t = std::vector<ROOT::Internal::TDS::TPointerHolder *>;
 
-   std::tuple<RResultPtr<std::vector<ColumnTypes>>...> fColumns;
+   std::tuple<Columns...> fColumns;
    const std::vector<std::string> fColNames;
    const std::map<std::string, std::string> fColTypesMap;
    // The role of the fPointerHoldersModels is to be initialised with the pack
@@ -88,7 +87,7 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
    void SetEntryHelper(unsigned int slot, ULong64_t entry, std::index_sequence<S...>)
    {
       std::initializer_list<int> expander{
-         (*static_cast<ColumnTypes *>(fPointerHolders[S][slot]->GetPointer()) = (*std::get<S>(fColumns))[entry], 0)...};
+         (*static_cast<typename Columns::Value_t::value_type*>(fPointerHolders[S][slot]->GetPointer()) = (*std::get<S>(fColumns))[entry], 0)...};
       (void)expander; // avoid unused variable warnings
    }
 
@@ -117,11 +116,11 @@ protected:
    std::string AsString() { return "lazy data source"; };
 
 public:
-   RLazyDS(std::pair<std::string, RResultPtr<std::vector<ColumnTypes>>>... colsNameVals)
-      : fColumns(std::tuple<RResultPtr<std::vector<ColumnTypes>>...>(colsNameVals.second...)),
+   RLazyDS(std::pair<std::string, Columns>... colsNameVals)
+      : fColumns(std::tuple<Columns...>(colsNameVals.second...)),
         fColNames({colsNameVals.first...}),
-        fColTypesMap({{colsNameVals.first, ROOT::Internal::RDF::TypeID2TypeName(typeid(ColumnTypes))}...}),
-        fPointerHoldersModels({new ROOT::Internal::TDS::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...})
+        fColTypesMap({{colsNameVals.first, ROOT::Internal::RDF::TypeID2TypeName(typeid(typename Columns::Value_t::value_type))}...}),
+        fPointerHoldersModels({new ROOT::Internal::TDS::TTypedPointerHolder<typename Columns::Value_t::value_type>(new typename Columns::Value_t::value_type())...})
    {
    }
 
@@ -157,7 +156,7 @@ public:
 
    bool SetEntry(unsigned int slot, ULong64_t entry)
    {
-      SetEntryHelper(slot, entry, std::index_sequence_for<ColumnTypes...>());
+      SetEntryHelper(slot, entry, std::index_sequence_for<typename Columns::Value_t::value_type...>());
       return true;
    }
 
@@ -181,7 +180,7 @@ public:
 
    void Initialise()
    {
-      ColLenghtChecker(std::index_sequence_for<ColumnTypes...>());
+      ColLenghtChecker(std::index_sequence_for<typename Columns::Value_t::value_type...>());
       const auto nEntries = GetEntriesNumber();
       const auto nEntriesInRange = nEntries / fNSlots; // between integers. Should make smaller?
       auto reminder = 1U == fNSlots ? 0 : nEntries % fNSlots;

@@ -1,5 +1,6 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RLazyDS.hxx>
+#include <ROOT/RResultPtr.hxx>
 #include <ROOT/TSeq.hxx>
 
 #include <gtest/gtest.h>
@@ -17,7 +18,7 @@ TEST(RLazyDS, Constructor)
    auto col1Init = 1.f;
    auto col0 = d.Define(col0Name, [&col0Init]() { return col0Init += 1.; }).Take<double>(col0Name);
    auto col1 = d.Define(col1Name, [&col1Init]() { return col1Init += 1.f; }).Take<float>(col1Name);
-   RLazyDS<double, float> tds({col0Name, col0}, {col1Name, col1});
+   RLazyDS<RResultPtr<std::vector<double>>, RResultPtr<std::vector<float>>> tds({col0Name, col0}, {col1Name, col1});
 
    auto colNames = tds.GetColumnNames();
    EXPECT_EQ(2U, colNames.size());
@@ -67,7 +68,7 @@ TEST(RLazyDS, RangesOneSlot)
    auto col0Name = "col0";
    auto col0Init = 0.;
    auto col0 = d.Define(col0Name, [&col0Init]() { return col0Init += 1.; }).Take<double>(col0Name);
-   RLazyDS<double> tds({col0Name, col0});
+   RLazyDS<RResultPtr<std::vector<double>>> tds({col0Name, col0});
 
    tds.SetNSlots(1);
    auto col0Readers = tds.GetColumnReaders<double>(col0Name);
@@ -87,7 +88,7 @@ TEST(RLazyDS, ColSizesCheck)
    auto col0 = d0.Define(colName, gend).Take<double>(colName);
    ROOT::RDataFrame d1(2);
    auto col1 = d1.Define(colName, genf).Take<float>(colName);
-   RLazyDS<double, float> tds({"zero", col0}, {"one", col1});
+   RLazyDS<RResultPtr<std::vector<double>>, RResultPtr<std::vector<float>>> tds({"zero", col0}, {"one", col1});
    tds.SetNSlots(4);
    int ret(1);
    try {
