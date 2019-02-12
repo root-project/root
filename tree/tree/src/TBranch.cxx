@@ -1200,7 +1200,7 @@ Int_t TBranch::FlushOneBasket(UInt_t ibasket)
 /// If a new buffer must be created and the user_buffer argument is non-null,
 /// then the memory in the user_bufer will be shared with the returned TBasket.
 
-TBasket* TBranch::GetBasketImpl(Int_t basketnumber, TBuffer* user_buffer)
+TBasket* TBranch::GetBasketImpl(Int_t basketnumber, TBuffer *user_buffer)
 {
    // This counter in the sequential case collects errors coming also from
    // different files (suppose to have a program reading f1.root, f2.root ...)
@@ -1323,8 +1323,8 @@ const char* TBranch::GetIconName() const
 /// the user_buffer will back the memory of the newly-constructed basket.
 ///
 /// Assumes that this branch is enabled.
-Int_t TBranch::GetBasketAndFirst(TBasket*&basket, Long64_t &first,
-                                 TBuffer* user_buffer)
+Int_t TBranch::GetBasketAndFirst(TBasket *&basket, Long64_t &first,
+                                 TBuffer *user_buffer)
 {
    Long64_t updatedNext = fNextBasketEntry;
    Long64_t entry = fReadEntry;

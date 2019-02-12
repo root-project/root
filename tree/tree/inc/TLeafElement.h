@@ -35,7 +35,7 @@ protected:
    char               *fAbsAddress;   ///<! Absolute leaf Address
    Int_t               fID;           ///<  element serial number in fInfo
    Int_t               fType;         ///<  leaf type
-   mutable std::atomic<DeserializeType> fDeserializeTypeCache{kInvalid}; ///<! Cache of the type of deserialization.
+   mutable std::atomic<DeserializeType> fDeserializeTypeCache{ DeserializeType::kInvalid }; ///<! Cache of the type of deserialization.
    mutable std::atomic<EDataType> fDataTypeCache{EDataType::kOther_t}; ///<! Cache of the EDataType of deserialization.
 
 private:
@@ -62,7 +62,7 @@ public:
    template<typename T> T GetTypedValueSubArray(Int_t i=0, Int_t j=0) const {return ((TBranchElement*)fBranch)->GetTypedValue<T>(i, j, kTRUE);}
 
    virtual bool     ReadBasketFast(TBuffer&, Long64_t);
-   virtual bool     ReadBasketSerialized(TBuffer&, Long64_t) { return GetDeserializeType() != kDestructive; }
+   virtual bool     ReadBasketSerialized(TBuffer&, Long64_t) { return GetDeserializeType() != DeserializeType::kDestructive; }
 
    virtual void    *GetValuePointer() const { return ((TBranchElement*)fBranch)->GetValuePointer(); }
    virtual Bool_t   IncludeRange(TLeaf *);
