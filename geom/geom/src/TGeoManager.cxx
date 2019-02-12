@@ -293,14 +293,15 @@ TGeoManager *gGeoManager = 0;
 ClassImp(TGeoManager);
 
 std::mutex TGeoManager::fgMutex;
-Bool_t TGeoManager::fgLock         = kFALSE;
-Bool_t TGeoManager::fgLockNavigators = kFALSE;
-Int_t  TGeoManager::fgVerboseLevel = 1;
-Int_t  TGeoManager::fgMaxLevel = 1;
-Int_t  TGeoManager::fgMaxDaughters = 1;
-Int_t  TGeoManager::fgMaxXtruVert = 1;
-Int_t  TGeoManager::fgNumThreads   = 0;
+Bool_t TGeoManager::fgLock            = kFALSE;
+Bool_t TGeoManager::fgLockNavigators  = kFALSE;
+Int_t  TGeoManager::fgVerboseLevel    = 1;
+Int_t  TGeoManager::fgMaxLevel        = 1;
+Int_t  TGeoManager::fgMaxDaughters    = 1;
+Int_t  TGeoManager::fgMaxXtruVert     = 1;
+Int_t  TGeoManager::fgNumThreads      = 0;
 UInt_t TGeoManager::fgExportPrecision = 17;
+TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kG4Units;
 TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4129,4 +4130,9 @@ void TGeoManager::SetUseParallelWorldNav(Bool_t flag)
    }
    // Closing the parallel world geometry is mandatory
    if (fParallelWorld->CloseGeometry()) fUsePWNav=kTRUE;
+}
+
+TGeoManager::EDefaultUnits TGeoManager::GetDefaultUnits()
+{
+  return fgDefaultUnits;
 }
