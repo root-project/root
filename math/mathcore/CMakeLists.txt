@@ -188,6 +188,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
 )
 
 target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
-target_link_libraries(MathCore PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(MathCore PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
