@@ -1,10 +1,6 @@
 set(ROOT_ARCHITECTURE macosx)
 set(ROOT_PLATFORM macosx)
 
-#---This is needed to help CMake to locate the X11 headers in the correct place and not under /usr/include
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} /usr/X11R6)
-#---------------------------------------------------------------------------------------------------------
-
 if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   EXECUTE_PROCESS(COMMAND sw_vers "-productVersion"
                   COMMAND cut -d . -f 1-2
