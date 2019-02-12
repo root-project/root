@@ -26,6 +26,7 @@ class RooAbsPdf;
 class RooPlot;
 class RooAbsReal;
 class TF1;
+class TH1;
 
 
 namespace RooStats {
@@ -55,10 +56,13 @@ namespace RooStats {
       // get the plot with option to get it normalized
       RooPlot* GetPosteriorPlot(bool norm = false, double precision = 0.01) const;
 
-      // return posterior pdf (object is managed by the BayesianCalculator class)
+      // return posterior pdf (object is managed by the user)
       RooAbsPdf* GetPosteriorPdf() const;
       // return posterior function (object is managed by the BayesianCalculator class)
       RooAbsReal* GetPosteriorFunction() const;
+
+      // return the approximate posterior as histogram (TH1 object). Note the object is managed by the BayesianCalculator class
+      TH1 * GetPosteriorHistogram() const; 
 
       // compute the interval. By Default a central interval is computed
       // By using SetLeftTileFraction can control if central/ upper/lower interval
