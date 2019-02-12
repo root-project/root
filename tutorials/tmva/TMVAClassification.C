@@ -527,7 +527,7 @@ int TMVAClassification( TString myMethodList = "" )
    //  Now you can optimize the setting (configuration) of the MVAs using the set of training events
    // STILL EXPERIMENTAL and only implemented for BDT's !
    //
-   //     factory->OptimizeAllMethods("SigEffAt001","Scan");
+   //     factory->OptimizeAllMethods("SigEffAtBkg0.01","Scan");
    //     factory->OptimizeAllMethods("ROCIntegral","FitGA");
    //
    // --------------------------------------------------------------------------------------------------
