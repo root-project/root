@@ -11,6 +11,16 @@
 #ifndef ROOT_TBulkBranchRead
 #define ROOT_TBulkBranchRead
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TBulkBranchRead                                                      //
+//                                                                      //
+// TBulkBranchRead is used to check if a branch supports bulk API;      //
+// it also includes a set of API that allows reading serialized data    //
+// directly into user-defined buffer without going through ROOT-        //
+// deserialization code path by default.                                //
+//////////////////////////////////////////////////////////////////////////
+
 #include "TBranch.h"
 
 namespace ROOT {

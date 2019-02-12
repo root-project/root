@@ -23,7 +23,7 @@ public:
 protected:
    virtual void SetUp()
    {
-      auto hfile = new TFile(fFileName.c_str(), "RECREATE", "TTree float micro benchmark ROOT file");
+      auto hfile = TFile::Open(fFileName.c_str(), "recreate", "TTree float micro benchmark ROOT file");
       hfile->SetCompressionLevel(0); // No compression at all.
 
       // Otherwise, we keep with the current ROOT defaults.
@@ -32,7 +32,7 @@ protected:
       tree->Branch("myFloat", &f, 320000, 1);
       for (Long64_t ev = 0; ev < fEventCount; ev++) {
         tree->Fill();
-        f ++;
+        ++f;
       }
       hfile = tree->GetCurrentFile();
       hfile->Write();
