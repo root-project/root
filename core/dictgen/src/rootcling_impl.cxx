@@ -2847,24 +2847,26 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootP
    if (!gDriverConfig->fCloseStreamerInfoROOTFile)
       return 0;
 
-   interp.parseForModule("#include \"TStreamerInfo.h\"\n"
-                           "#include \"TFile.h\"\n"
-                           "#include \"TObjArray.h\"\n"
-                           "#include \"TVirtualArray.h\"\n"
-                           "#include \"TStreamerElement.h\"\n"
-                           "#include \"TProtoClass.h\"\n"
-                           "#include \"TBaseClass.h\"\n"
-                           "#include \"TListOfDataMembers.h\"\n"
-                           "#include \"TListOfEnums.h\"\n"
-                           "#include \"TListOfEnumsWithLock.h\"\n"
-                           "#include \"TDataMember.h\"\n"
-                           "#include \"TEnum.h\"\n"
-                           "#include \"TEnumConstant.h\"\n"
-                           "#include \"TDictAttributeMap.h\"\n"
-                           "#include \"TMessageHandler.h\"\n"
-                           "#include \"TArray.h\"\n"
-                           "#include \"TRefArray.h\"\n"
-                           "#include \"root_std_complex.h\"\n");
+   if (interp.parseForModule("#include \"TStreamerInfo.h\"\n"
+                             "#include \"TFile.h\"\n"
+                             "#include \"TObjArray.h\"\n"
+                             "#include \"TVirtualArray.h\"\n"
+                             "#include \"TStreamerElement.h\"\n"
+                             "#include \"TProtoClass.h\"\n"
+                             "#include \"TBaseClass.h\"\n"
+                             "#include \"TListOfDataMembers.h\"\n"
+                             "#include \"TListOfEnums.h\"\n"
+                             "#include \"TListOfEnumsWithLock.h\"\n"
+                             "#include \"TDataMember.h\"\n"
+                             "#include \"TEnum.h\"\n"
+                             "#include \"TEnumConstant.h\"\n"
+                             "#include \"TDictAttributeMap.h\"\n"
+                             "#include \"TMessageHandler.h\"\n"
+                             "#include \"TArray.h\"\n"
+                             "#include \"TRefArray.h\"\n"
+                             "#include \"root_std_complex.h\"\n")
+       != cling::Interpreter::kSuccess)
+       return 1;
    if (!gDriverConfig->fCloseStreamerInfoROOTFile(writeEmptyRootPCM)) {
       return 1;
    }
