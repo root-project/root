@@ -9,16 +9,14 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   EXECUTE_PROCESS(COMMAND sw_vers "-productVersion"
                   COMMAND cut -d . -f 1-2
                   OUTPUT_VARIABLE MACOSX_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+
   MESSAGE(STATUS "Found a Mac OS X System ${MACOSX_VERSION}")
-  EXECUTE_PROCESS(COMMAND sw_vers "-productVersion"
-                  COMMAND cut -d . -f 2
-                  OUTPUT_VARIABLE MACOSX_MINOR OUTPUT_STRIP_TRAILING_WHITESPACE)
 
   if(MACOSX_VERSION VERSION_GREATER 10.7 AND ${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
     set(libcxx ON CACHE BOOL "Build using libc++" FORCE)
   endif()
 
-  if(${MACOSX_MINOR} GREATER 4)
+  if(MACOSX_VERSION VERSION_GREATER 10.4)
     #TODO: check haveconfig and rpath -> set rpath true
     #TODO: check Thread, define link command
     #TODO: more stuff check configure script
