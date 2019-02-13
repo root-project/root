@@ -249,7 +249,19 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
     set(CMAKE_ROOTTEST_NOROOTMAP ON)
   endif()
 
-  ROOT_GENERATE_DICTIONARY(${dictname} ${ARG_UNPARSED_ARGUMENTS}
+  # roottest dictionaries do not need to be relocatable. Instead, allow
+  # dictionaries to find the input headers even from the source directory
+  # - without ROOT_INCLUDE_PATH - by passing the full path to rootcling:
+  set(FULL_PATH_HEADERS )
+  foreach(hdr ${ARG_UNPARSED_ARGUMENTS})
+    if(IS_ABSOLUTE ${hdr})
+      list(APPEND FULL_PATH_HEADERS ${hdr})
+    else()
+      list(APPEND FULL_PATH_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/${hdr})
+    endif()
+  endforeach()
+
+  ROOT_GENERATE_DICTIONARY(${dictname} ${FULL_PATH_HEADERS}
                            MODULE ${dictname}
                            LINKDEF ${ARG_LINKDEF}
                            OPTIONS ${ARG_OPTIONS}
