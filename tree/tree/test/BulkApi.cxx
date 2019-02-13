@@ -29,8 +29,7 @@ protected:
       // Otherwise, we keep with the current ROOT defaults.
       auto tree = new TTree("T", "A ROOT tree of floats.");
       float f = 2;
-      TBranch *branch2 = tree->Branch("myFloat", &f, 320000, 1);
-      branch2->SetAutoDelete(kFALSE);
+      tree->Branch("myFloat", &f, 320000, 1);
       for (Long64_t ev = 0; ev < fEventCount; ev++) {
         tree->Fill();
         f ++;
@@ -62,7 +61,7 @@ TEST_F(BulkApiTest, stdRead)
    while (myReader.Next()) {
       if (R__unlikely(idx == events)) {break;}
       idx_f++;
-      if (R__unlikely((idx < 16000000) && (*myF != idx_f))) {
+      if (R__unlikely((idx < 16000000) && (abs((*myF) - idx_f) > std::numeric_limits<float>::epsilon()))) {
          printf("Incorrect value on myFloat branch: %f, expected %f (event %lld)\n", *myF, idx_f, idx);
          ASSERT_TRUE(false);
       }
@@ -139,7 +138,7 @@ TEST_F(BulkApiTest, fastRead)
       ASSERT_LT(reader_idx, events);
       ASSERT_EQ(reader_idx, idx);
       idx_f++;
-      if (R__unlikely((idx < 16000000) && (*myF != idx_f))) {
+      if (R__unlikely((idx < 16000000) && (abs((*myF) - idx_f) > std::numeric_limits<float>::epsilon()))) {
          printf("Incorrect value on myFloat branch: %f, expected %f (event %lld)\n", *myF, idx_f, idx);
          ASSERT_TRUE(false);
       }
