@@ -67,13 +67,13 @@ if(${LZ4_VERSION} VERSION_LESS "1.7.5")
    ROOTTEST_ADD_TEST(merged-lz4
                   PRECMD ${ROOT_hadd_CMD} -f404 mlz4file1-4.root mlz4file1-2.root mlz4file3-4.root
                   COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mlz4file1-4.root\",404,5441,5)"
-                  DEPENDS datagen-hadd-ml4zfile12
+                  DEPENDS datagen-hadd-mlz4file12
                   DEPENDS datagen-hadd-mlz4file34)
 elseif(${LZ4_VERSION} VERSION_GREATER_EQUAL "1.7.5")
    ROOTTEST_ADD_TEST(merged-lz4
                   PRECMD ${ROOT_hadd_CMD} -f404 mlz4file1-4.root mlz4file1-2.root mlz4file3-4.root
                   COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mlz4file1-4.root\",404,5407,5)"
-                  DEPENDS datagen-hadd-ml4zfile12
+                  DEPENDS datagen-hadd-mlz4file12
                   DEPENDS datagen-hadd-mlz4file34)
 endif()
 
