@@ -40,6 +40,11 @@ PyObject *PyROOT::MakeNumpyDataFrame(PyObject * /*self*/, PyObject * pydata)
       return NULL;
    }
 
+   if (PyDict_Size(pydata) == 0) {
+      PyErr_SetString(PyExc_RuntimeError, "Object not convertible: Dictionary is empty.");
+      return NULL;
+   }
+
    // Iterate over dictionary, convert numpy arrays to RVecs and put together interpreter code
    PyObject *key, *value;
    Py_ssize_t pos = 0;
