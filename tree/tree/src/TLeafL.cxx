@@ -20,7 +20,6 @@ A TLeaf for a 64 bit Integer data type.
 #include "TBuffer.h"
 #include "TClonesArray.h"
 #include "Riostream.h"
-#include "Bytes.h"
 
 ClassImp(TLeafL);
 
@@ -199,16 +198,7 @@ void TLeafL::ReadBasket(TBuffer &b)
 bool TLeafL::ReadBasketFast(TBuffer& input_buf, Long64_t N)
 {
    if (R__unlikely(fLeafCount)) {return false;}
-
-   Long64_t *buf __attribute__((aligned(8))) = reinterpret_cast<Long64_t*>(input_buf.GetCurrent());
-#ifdef R__BYTESWAP
-   for (int idx=0; idx<fLen*N; idx++) {
-      Long64_t tmp = *reinterpret_cast<Long64_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
-      char *tmp_ptr = reinterpret_cast<char *>(&tmp);
-      frombuf(tmp_ptr, buf + idx);
-   }
-#endif
-   return true;
+   return input_buf.ByteSwapBuffer(fLen*N, kLong64_t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

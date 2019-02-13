@@ -141,29 +141,10 @@ TLeafElement::GetDeserializeType() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Deserialize N events from an input buffer.
-Bool_t TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N) {
-
+Bool_t TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N)
+{
    EDataType type = fDataTypeCache.load(std::memory_order_consume);
-
-   if ((type == EDataType::kFloat_t) || (type == EDataType::kInt_t) || (type == EDataType::kUInt_t)) {
-      Float_t *buf __attribute__((aligned(8))) = reinterpret_cast<Float_t *>(input_buf.GetCurrent());
-      for (int idx=0; idx<fLen*N; idx++) {
-         Float_t tmp = *reinterpret_cast<Float_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
-         char *tmp_ptr = reinterpret_cast<char *>(&tmp);
-         frombuf(tmp_ptr, buf + idx);
-      }
-   } else if ((type == EDataType::kDouble_t) || (type == EDataType::kLong64_t) || (type == EDataType::kULong64_t)) {
-      Double_t *buf __attribute__((aligned(8))) = reinterpret_cast<Double_t*>(input_buf.GetCurrent());
-      for (int idx=0; idx<fLen*N; idx++) {
-         Double_t tmp = *reinterpret_cast<Double_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
-         char *tmp_ptr = reinterpret_cast<char *>(&tmp);
-         frombuf(tmp_ptr, buf + idx);
-      }
-   } else {
-      return false;
-   }
-
-   return true;
+   return input_buf.ByteSwapBuffer(fLen*N, type);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

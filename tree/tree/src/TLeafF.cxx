@@ -20,7 +20,6 @@ A TLeaf for a 32 bit floating point data type.
 #include "TBuffer.h"
 #include "TClonesArray.h"
 #include "Riostream.h"
-#include "Bytes.h"
 
 ClassImp(TLeafF);
 
@@ -137,16 +136,7 @@ void TLeafF::ReadBasket(TBuffer &b)
 // Deserialize N events from an input buffer.
 bool TLeafF::ReadBasketFast(TBuffer &input_buf, Long64_t N) {
   if (R__unlikely(fLeafCount)) {return false;}
-
-#ifdef R__BYTESWAP
-   Float_t *buf __attribute__((aligned(8))) = reinterpret_cast<Float_t*>(input_buf.GetCurrent());
-   for (int idx=0; idx<fLen*N; idx++) {
-      Float_t tmp = *reinterpret_cast<Float_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
-      char *tmp_ptr = reinterpret_cast<char *>(&tmp);
-      frombuf(tmp_ptr, buf + idx);
-   }
-#endif
-   return true;
+  return input_buf.ByteSwapBuffer(fLen*N, kFloat_t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
