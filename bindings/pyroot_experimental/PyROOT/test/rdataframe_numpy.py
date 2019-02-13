@@ -60,6 +60,15 @@ class MakeNumpyDataFrame(unittest.TestCase):
         self.assertEqual(df2.Mean("x").GetValue(), 2.5)
         self.assertEqual(df2.Mean("y").GetValue(), 5)
 
+    def test_delete_dict(self):
+        """
+        Test behaviour with data dictionary going out of scope
+        """
+        data = {"x": np.array([1, 2, 3], dtype="float32")}
+        df = ROOT.ROOT.RDF.MakeNumpyDataFrame(data)
+        del data
+        self.assertEqual(df.Mean("x").GetValue(), 2)
+
 
 if __name__ == '__main__':
     unittest.main()
