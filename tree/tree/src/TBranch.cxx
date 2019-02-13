@@ -1317,7 +1317,7 @@ const char* TBranch::GetIconName() const
 ////////////////////////////////////////////////////////////////////////////////
 /// A helper function to locate the correct basket - and its first entry.
 /// Extracted to a common private function because it is needed by both GetEntry
-/// and GetEntriesFast.  It should not be called directly.
+/// and GetBulkEntries.  It should not be called directly.
 ///
 /// If a new basket must be constructed and the user_buffer is provided, then
 /// the user_buffer will back the memory of the newly-constructed basket.
@@ -1420,7 +1420,7 @@ Bool_t TBranch::SupportsBulkRead() const {
 /// - This only returns events 
 /// 
 
-Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
+Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
 {
    // TODO: eventually support multiple leaves.
    if (R__unlikely(fNleaves != 1)) {return -1;}
@@ -1447,12 +1447,12 @@ Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
 
    // Test for very old ROOT files.
    if (R__unlikely(!buf)) {
-      Error("GetEntriesFast", "Failed to get a new buffer.\n");
+      Error("GetBulkEntries", "Failed to get a new buffer.\n");
       return -1;
    }
    // Test for displacements, which aren't supported in fast mode.
    if (R__unlikely(basket->GetDisplacement())) {
-      Error("GetEntriesFast", "Basket has displacement.\n");
+      Error("GetBulkEntries", "Basket has displacement.\n");
       return -1;
    }
 
@@ -1462,7 +1462,7 @@ Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
    Int_t N = ((fNextBasketEntry < 0) ? fEntryNumber : fNextBasketEntry) - first;
    //printf("Requesting %d events; fNextBasketEntry=%lld; first=%lld.\n", N, fNextBasketEntry, first);
    if (R__unlikely(!leaf->ReadBasketFast(*buf, N))) {
-      Error("GetEntriesFast", "Leaf failed to read.\n");
+      Error("GetBulkEntries", "Leaf failed to read.\n");
       return -1;
    }
    user_buf.SetBufferOffset(bufbegin);
