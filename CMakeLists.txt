@@ -47,6 +47,7 @@ if(DEFINED ROOT_SOURCE_DIR)
   set(ROOT_INCLUDE_DIRS ${ROOT_INCLUDE_DIR})
   set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
   set(ROOT_root_CMD ${ROOTSYS}/bin/root.exe)
+  set(ROOT_hadd_CMD ${ROOTSYS}/bin/hadd)
   set(ROOT_genreflex_CMD ${ROOTSYS}/bin/genreflex)
   set(ROOT_rootcint_CMD ${ROOTSYS}/bin/rootcint)
   set(ROOT_rootcling_CMD rootcling)
@@ -56,6 +57,7 @@ else()# testing using an installation
   if(DEFINED ROOT_CONFIG_EXECUTABLE) #---If ROOT was built with the classic configure/make---
     set(ROOT_CLASSIC_BUILD TRUE)
     find_program(ROOT_root_CMD root.exe PATHS ${ROOTSYS}/bin)
+    find_program(ROOT_hadd_CMD hadd PATHS ${ROOTSYS}/bin)
     find_program(ROOT_genreflex_CMD genreflex PATHS ${ROOTSYS}/bin)
     find_program(ROOT_rootcint_CMD rootcint PATHS ${ROOTSYS}/bin)
     find_program(ROOT_rootcling_CMD rootcling PATHS ${ROOTSYS}/bin)
@@ -88,7 +90,7 @@ set(ROOTTEST_ENV_PYTHONPATH ${ROOT_LIBRARY_DIR})
 set(ROOTTEST_ENV_LIBRARYPATH ${ROOT_LIBRARY_DIR})
 set(ROOTTEST_ENV_EXTRA)
 
-set(ROOTTEST_ENVIRONMENT 
+set(ROOTTEST_ENVIRONMENT
     ROOTSYS=${ROOTSYS}
     PATH=${ROOTTEST_ENV_PATH}:$ENV{PATH}
     PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH}:$ENV{PYTHONPATH}
@@ -122,7 +124,7 @@ if(ROOT_pyroot_experimental_FOUND)
   set(PYTESTS_WILLFAIL WILLFAIL)
 endif()
 
-# Find OpenGL 
+# Find OpenGL
 find_library(OPENGL_gl_LIBRARY NAMES GL)
 
 # Setup standard includes / links.
