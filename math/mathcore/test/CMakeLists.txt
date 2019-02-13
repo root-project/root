@@ -14,7 +14,6 @@ set(TestSource
     stressTMath.cxx
     stressTF1.cxx
     testIntegration.cxx
-    testRootFinder.cxx
     testSampleQuantiles.cxx
     kDTreeTest.cxx
     testkdTreeBinning.cxx
@@ -81,6 +80,10 @@ ROOT_ADD_GTEST(GradientUnit testGradient.cxx
 
 ROOT_ADD_GTEST(GradientFittingUnit testGradientFitting.cxx
   LIBRARIES Core MathCore Hist RIO Tree GenVector)
+
+ROOT_ADD_GTEST(testRootFinder testRootFinder.cxx  LIBRARIES ${Libraries} )
+
+
 
 if(ROOT_clad_FOUND)
   ROOT_ADD_GTEST(CladDerivatorTests CladDerivatorTests.cxx LIBRARIES MathCore)

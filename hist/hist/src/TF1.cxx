@@ -1762,8 +1762,9 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax, Double_t epsilon, 
    brf.SetFunction(wf1, xmin, xmax);
    brf.SetNpx(fNpx);
    brf.SetLogScan(logx);
-   brf.Solve(maxiter, epsilon, epsilon);
-   return brf.Root();
+   bool ret = brf.Solve(maxiter, epsilon, epsilon);
+   if (!ret) Error("GetX","[%f,%f] is not a valid interval",xmin,xmax);
+   return (ret) ? brf.Root() : TMath::QuietNaN(); 
 
 }
 
