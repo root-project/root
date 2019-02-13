@@ -17,7 +17,7 @@
 #include "TInterpreter.h"
 
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Get size of C++ data-type
+/// \brief Adopt memory of a Python object with array interface using an RVec
 /// \param[in] obj PyObject with array interface
 ///
 /// This function returns an RVec which adopts the memory of the given
