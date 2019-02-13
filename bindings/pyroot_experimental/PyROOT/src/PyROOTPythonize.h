@@ -27,7 +27,7 @@ PyObject *GetEndianess(PyObject *self);
 PyObject *GetVectorDataPointer(PyObject *self, PyObject *args);
 PyObject *GetSizeOfType(PyObject *self, PyObject *args);
 PyObject *AsRVec(PyObject *self, PyObject *obj);
-PyObject *MakeRDataFrame(PyObject *self, PyObject *obj);
+PyObject *MakeNumpyDataFrame(PyObject *self, PyObject *obj);
 
 } // namespace PyROOT
 

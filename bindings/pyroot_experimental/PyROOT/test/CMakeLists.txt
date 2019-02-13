@@ -34,7 +34,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_len tarray_len.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py)
 
 # RDataFrame and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makerdataframe rdataframe_makerdataframe.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_numpy rdataframe_numpy.py)
 
 # RooAbsCollection and subclasses pythonizations
 if(ROOT_roofit_FOUND)

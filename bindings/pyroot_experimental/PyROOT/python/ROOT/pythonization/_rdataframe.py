@@ -9,9 +9,9 @@
 ################################################################################
 
 from ROOT import pythonization
-from libROOTPython import MakeRDataFrame
+from libROOTPython import MakeNumpyDataFrame
 
 
-# Add MakeRDataFrame feature as free function to the ROOT module
+# Add MakeNumpyDataFrame feature as free function to the ROOT module
 import cppyy
-cppyy.gbl.ROOT.RDF.MakeRDataFrame = MakeRDataFrame
+cppyy.gbl.ROOT.RDF.MakeNumpyDataFrame = MakeNumpyDataFrame
