@@ -37,7 +37,7 @@ set(TestSource
     fit/testBinnedFitExecPolicy.cxx
     fit/testLogLExecPolicy.cxx )
 
-set(testMathRandom_LABELS longtest)
+##set(testMathRandom_LABELS longtest)
 
 if(ROOT_mathmore_FOUND)
   list(APPEND TestSource stressGoFTest.cxx)

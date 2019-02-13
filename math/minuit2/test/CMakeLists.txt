@@ -26,7 +26,7 @@ set(TestSourceMnSim
     MnSim/demoMinimizer.cxx
 )
 
-
+set(ParallelTest_LABELS longtest)
 
 
 #---For the simple Minuit2 tests build and defined them---------------
