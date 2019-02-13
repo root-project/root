@@ -552,9 +552,10 @@ void TList::Delete(Option_t *option)
    Changed();
 }
 
+#if 0
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete a TObjLink object.
-#if 0
+
 void TList::DeleteLink(TObjLink *lnk)
 {
    R__COLLECTION_WRITE_GUARD();
