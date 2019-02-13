@@ -26,7 +26,7 @@ ROOTTEST_ADD_TEST(ptrconst
                   OUTREF ptrconst.ref
                   LABELS roottest regression cling)
 
-ROOTTEST_GENERATE_DICTIONARY(TTestClass_h LINKDEF TTestClass.h)
+ROOTTEST_GENERATE_DICTIONARY(TTestClass_h TTestClass.h)
 
 ROOTTEST_ADD_TEST(runTTestClass
                   MACRO runTTestClass.C
