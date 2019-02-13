@@ -27,6 +27,8 @@ set(TestMathMoreSource
 
 set(testFunctor_LABELS longtest)
 set(testPermute_LABELS longtest)
+set(testRandom_LABELS longtest)
+set(testMCIntegration_LABELS longtest)
 
 if(ROOT_unuran_FOUND)
   list(APPEND Libraries Unuran)
