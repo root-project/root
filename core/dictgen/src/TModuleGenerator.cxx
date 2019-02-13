@@ -520,19 +520,29 @@ void TModuleGenerator::WriteContentHeader(std::ostream &out) const
 bool TModuleGenerator::FindHeader(const std::string &hdrName, std::string &hdrFullPath) const
 {
    hdrFullPath = hdrName;
-   bool headerFound = false;
-   if (llvm::sys::fs::exists(hdrFullPath)) {
+   if (llvm::sys::fs::exists(hdrFullPath))
       return true;
-   } else {
-      for (auto const & incDir : fCompI) {
-         hdrFullPath = incDir + ROOT::TMetaUtils::GetPathSeparator() + hdrName;
-         if (llvm::sys::fs::exists(hdrFullPath)) {
-            headerFound = true;
-            break;
-         }
+   for (auto const &incDir : fCompI) {
+      hdrFullPath = incDir + ROOT::TMetaUtils::GetPathSeparator() + hdrName;
+      if (llvm::sys::fs::exists(hdrFullPath)) {
+         return true;
       }
    }
-   return headerFound;
+   clang::Preprocessor &PP = fCI->getPreprocessor();
+   clang::HeaderSearch &HdrSearch = PP.getHeaderSearchInfo();
+   const clang::DirectoryLookup *CurDir = 0;
+   if (const clang::FileEntry *hdrFileEntry
+         =  HdrSearch.LookupFile(hdrName, clang::SourceLocation(),
+                                 true /*isAngled*/, 0 /*FromDir*/, CurDir,
+                                 clang::ArrayRef<std::pair<const clang::FileEntry*,
+                                                         const clang::DirectoryEntry*>>(),
+                                 0 /*IsMapped*/, 0 /*SearchPath*/, 0 /*RelativePath*/,
+                                 0 /*RequestingModule*/, 0/*SuggestedModule*/)) {
+      hdrFullPath = hdrFileEntry->getName();
+      return true;
+   }
+
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
