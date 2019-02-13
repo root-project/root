@@ -124,9 +124,9 @@ TEST_F(BulkApiSillyStructTest, fastRead)
    double   evD = 0.0;
 
    while (events) {
-      auto countF = branchF->GetBulkRead().GetEntriesFast(evt_idx, bufF);
-      auto countI = branchI->GetBulkRead().GetEntriesFast(evt_idx, bufI);
-      auto countD = branchD->GetBulkRead().GetEntriesFast(evt_idx, bufD);
+      auto countF = branchF->GetBulkRead().GetBulkEntries(evt_idx, bufF);
+      auto countI = branchI->GetBulkRead().GetBulkEntries(evt_idx, bufI);
+      auto countD = branchD->GetBulkRead().GetBulkEntries(evt_idx, bufD);
       ASSERT_EQ(countF, count);
       ASSERT_EQ(countI, count);
       ASSERT_EQ(countD, count);
