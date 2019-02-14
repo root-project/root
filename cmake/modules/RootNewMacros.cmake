@@ -242,10 +242,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
           list(APPEND _list_of_header_dependencies ${f})
         endif()
       endforeach()
-    elseif(IS_ABSOLUTE ${fp})
-      string(REGEX REPLACE "^${CMAKE_CURRENT_SOURCE_DIR}/" "" fp_no_csd ${fp})
-      list(APPEND headerfiles ${fp_no_csd})
-      list(APPEND _list_of_header_dependencies ${fp})
     else()
       find_file(headerFile ${fp} HINTS ${incdirs} NO_DEFAULT_PATH NO_SYSTEM_ENVIRONMENT_PATH)
       if(NOT headerFile)
@@ -878,10 +874,10 @@ endfunction()
 #---ROOT_STANDARD_LIBRARY_PACKAGE(libname
 #                                 [NO_INSTALL_HEADERS]         : don't install headers for this package
 #                                 [STAGE1]                     : use rootcling_stage1 for generating
-#                                 HEADERS header1 header2      : if not specified, globbing for *.h is used)
+#                                 HEADERS header1 header2      : relative header path as #included; pass -I to find them. If not specified, globbing for *.h is used
 #                                 NODEPHEADERS header1 header2 : like HEADERS, but no dependency is generated
 #                                 [NO_HEADERS]                 : don't glob to fill HEADERS variable
-#                                 SOURCES source1 source2      : if not specified, globbing for *.cxx is used)
+#                                 SOURCES source1 source2      : if not specified, globbing for *.cxx is used
 #                                 [NO_SOURCES]                 : don't glob to fill SOURCES variable
 #                                 [OBJECT_LIBRARY]             : use ROOT_OBJECT_LIBRARY to generate object files
 #                                                                and then use those for linking.
