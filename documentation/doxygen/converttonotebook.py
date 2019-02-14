@@ -727,11 +727,11 @@ def mainfunction(text):
 
     # add the corresponding metadata
     if extension == "py":
-        json_data[u'metadata'] = {
+        json_data['metadata'] = {
             "kernelspec": {
-                "display_name": "Python 2",
+                "display_name": "Python " + str(sys.version_info[0]),
                 "language": "python",
-                "name": "python2"
+                "name": "python" + str(sys.version_info[0])
             },
             "language_info": {
                 "codemirror_mode": {
@@ -747,7 +747,7 @@ def mainfunction(text):
             }
         }
     elif isCpp():
-        json_data[u'metadata'] = {
+        json_data['metadata'] = {
             "kernelspec": {
                 "display_name": "ROOT C++",
                 "language": "c++",

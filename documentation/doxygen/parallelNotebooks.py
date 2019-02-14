@@ -52,10 +52,10 @@ try:
             iterator.remove(element)
 
     for i in newinputs:
-        print i
+        print(i)
 
     def processInput(inputFile):
-        subprocess.call(['python', 
+        subprocess.call([sys.executable,
                          './converttonotebook.py', 
                          os.path.join(os.environ['DOXYGEN_SOURCE_DIRECTORY'], 'tutorials', inputFile), 
                          outDir])
@@ -69,5 +69,5 @@ try:
         parallel(input)
 
 except:
-    print 'Parallel notebooks converter failed!!'
+    print('Parallel notebooks converter failed!!')
     pass
