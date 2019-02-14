@@ -14,7 +14,7 @@ static constexpr ULong64_t gNEvents = 8ull;
 class RDFCallbacks : public ::testing::Test {
 private:
    ROOT::RDataFrame fLoopManager;
-   RInterface<RLoopManager> DefineRandomCol()
+   RNode DefineRandomCol()
    {
       TRandom r;
       return fLoopManager.Define("x", [r]() mutable { return r.Gaus(); });
@@ -22,7 +22,7 @@ private:
 
 protected:
    RDFCallbacks() : fLoopManager(gNEvents), tdf(DefineRandomCol()) {}
-   RInterface<RLoopManager> tdf;
+   RNode tdf;
 };
 
 #ifdef R__USE_IMT
@@ -40,7 +40,7 @@ class RDFCallbacksMT : public ::testing::Test {
 private:
    TIMTEnabler fIMTEnabler;
    ROOT::RDataFrame fLoopManager;
-   RInterface<RLoopManager> DefineRandomCol()
+   RNode DefineRandomCol()
    {
       std::vector<TRandom> rs(gNSlots);
       return fLoopManager.DefineSlot("x", [rs](unsigned int slot) mutable { return rs[slot].Gaus(); });
@@ -48,7 +48,7 @@ private:
 
 protected:
    RDFCallbacksMT() : fIMTEnabler(gNSlots), fLoopManager(gNEvents), tdf(DefineRandomCol()) {}
-   RInterface<RLoopManager> tdf;
+   RNode tdf;
 };
 #endif
 

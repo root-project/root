@@ -48,9 +48,9 @@ class RNodeBase;
 namespace RDF {
 template <typename T>
 class RResultPtr;
-template<typename T, typename V>
+template<typename T, typename DS, typename Def>
 class RInterface;
-using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
+using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void, void>;
 class RDataSource;
 } // namespace RDF
 
@@ -77,7 +77,7 @@ bool InterpreterDeclare(const std::string &code);
 //   - 1 otherwise
 std::pair<Long64_t, int> InterpreterCalc(const std::string &code);
 
-using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;
+using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void, void>>;
 HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
                             std::string_view treeName,
                             std::string_view fileName,

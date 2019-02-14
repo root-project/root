@@ -20,14 +20,14 @@ protected:
 
 private:
    RDataFrame fTdf;
-   RInterface<RLoopManager> DefineAns()
+   RNode DefineAns()
    {
       return fTdf.Define("ans", []() { return 42; });
    }
 
 protected:
    RDFSnapshot() : fTdf(nEvents), tdf(DefineAns()) {}
-   RInterface<RLoopManager> tdf;
+   RNode tdf;
 };
 
 #ifdef R__USE_IMT
@@ -47,14 +47,14 @@ protected:
 private:
    TIMTEnabler fIMTEnabler;
    RDataFrame fTdf;
-   RInterface<RLoopManager> DefineAns()
+   RNode DefineAns()
    {
       return fTdf.Define("ans", []() { return 42; });
    }
 
 protected:
    RDFSnapshotMT() : fIMTEnabler(kNSlots), fTdf(kNEvents), tdf(DefineAns()) {}
-   RInterface<RLoopManager> tdf;
+   RNode tdf;
 };
 #endif // R__USE_IMT
 
@@ -168,7 +168,7 @@ TEST_F(RDFSnapshot, Snapshot_nocolumnmatch)
    gSystem->Unlink(fname);
 }
 
-void test_snapshot_update(RInterface<RLoopManager> &tdf)
+void test_snapshot_update(RNode tdf)
 {
    // test snapshotting two trees to the same file with two snapshots and the "UPDATE" option
    const auto outfile = "snapshot_test_update.root";
@@ -210,7 +210,7 @@ TEST_F(RDFSnapshot, Snapshot_update)
    test_snapshot_update(tdf);
 }
 
-void test_snapshot_options(RInterface<RLoopManager> &tdf)
+void test_snapshot_options(RNode tdf)
 {
    RSnapshotOptions opts;
    opts.fAutoFlush = 10;

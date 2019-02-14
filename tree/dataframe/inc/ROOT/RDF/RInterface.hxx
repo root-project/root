@@ -67,10 +67,10 @@ namespace RDFDetail = ROOT::Detail::RDF;
 namespace RDFInternal = ROOT::Internal::RDF;
 namespace TTraits = ROOT::TypeTraits;
 
-template <typename Proxied, typename DataSource>
+template <typename Proxied, typename DataSource, typename DefinedCol>
 class RInterface;
 
-using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
+using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void, void>;
 
 // clang-format off
 /**
@@ -84,8 +84,12 @@ using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
  * the majority of the template parameters are automatically deduced requiring no or very little effort by the user.
  */
 // clang-format on
-template <typename Proxied, typename DataSource = void>
+template <typename Proxied, typename DataSource = void, typename DefinedCol = void>
 class RInterface {
+public:
+   using DefinedCol_t = DefinedCol;
+
+private:
    using DS_t = DataSource;
    using ColumnNames_t = RDFDetail::ColumnNames_t;
    using RFilterBase = RDFDetail::RFilterBase;
@@ -94,7 +98,7 @@ class RInterface {
    friend std::string cling::printValue(::ROOT::RDataFrame *tdf); // For a nice printing at the prompt
    friend class RDFInternal::GraphDrawing::GraphCreatorHelper;
 
-   template <typename T, typename W>
+   template <typename T, typename W, typename D>
    friend class RInterface;
 
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
@@ -290,12 +294,13 @@ public:
    /// // alternatively, we can pass the body of the function as a string, as in Filter:
    /// auto df_with_define = df.Define("newColumn", "x*x + y*y");
    /// ~~~
-   template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   RInterface<Proxied, DS_t> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
-   {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::None>(name, std::move(expression), columns);
-   }
    // clang-format on
+   template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0,
+             typename RetType = typename TTraits::CallableTraits<F>::ret_type>
+   RInterface<Proxied, DS_t, RetType> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   {
+      return DefineImpl<F, RDFDetail::CustomColExtraArgs::None, RetType>(name, std::move(expression), columns);
+   }
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
@@ -319,12 +324,12 @@ public:
    /// ~~~
    ///
    /// See Define for more information.
-   template <typename F>
-   RInterface<Proxied, DS_t> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
-   {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::Slot>(name, std::move(expression), columns);
-   }
    // clang-format on
+   template <typename F, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
+   RInterface<Proxied, DS_t, RetType> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   {
+      return DefineImpl<F, RDFDetail::CustomColExtraArgs::Slot, RetType>(name, std::move(expression), columns);
+   }
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
@@ -349,12 +354,13 @@ public:
    /// ~~~
    ///
    /// See Define for more information.
-   template <typename F>
-   RInterface<Proxied, DS_t> DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
-   {
-      return DefineImpl<F, RDFDetail::CustomColExtraArgs::SlotAndEntry>(name, std::move(expression), columns);
-   }
    // clang-format on
+   template <typename F, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
+   RInterface<Proxied, DS_t, RetType>
+   DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   {
+      return DefineImpl<F, RDFDetail::CustomColExtraArgs::SlotAndEntry, RetType>(name, std::move(expression), columns);
+   }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column
@@ -1965,8 +1971,8 @@ private:
       return MakeResultPtr(r, *fLoopManager, *jittedActionOnHeap);
    }
 
-   template <typename F, typename CustomColumnType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
-   typename std::enable_if<std::is_default_constructible<RetType>::value, RInterface<Proxied, DS_t>>::type
+   template <typename F, typename CustomColumnType, typename RetType>
+   typename std::enable_if<std::is_default_constructible<RetType>::value, RInterface<Proxied, DS_t, RetType>>::type
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns)
    {
       RDFInternal::CheckCustomColumn(name, fLoopManager->GetTree(), fCustomColumns.GetNames(),
@@ -2012,7 +2018,8 @@ private:
       newCols.AddName(name);
       newCols.AddColumn(newColumn, name);
 
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied, DataSource, RetType> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols),
+                                                            fDataSource);
 
       return newInterface;
    }
