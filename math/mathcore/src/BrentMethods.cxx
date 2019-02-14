@@ -51,9 +51,16 @@ namespace BrentMethods {
       yymin = (*function)(xxmin);
    else if (type < 4)
       yymin = -(*function)(xxmin);
-   else
+   else { 
       yymin = (*function)(xxmin)-fy;
 
+      // case root is at the interval boundaries
+      if (yymin==0) {
+         xmin = xxmin; 
+         xmax = xxmin; 
+         return xxmin; 
+      }
+   }
    for (int i=1; i<=npx-1; i++) {
       double x = xmin + i*dx;
       if (logStep) x = std::exp(x);
@@ -71,8 +78,16 @@ namespace BrentMethods {
       }
       // when looking for root break at first instance
       if (type == 4 ) {
-         // found good interval if sign product is negative
-         if ( std::copysign(1.,y)*std::copysign(1.,yymin) < 0 ) {
+         // if root is at interval boundaries
+         if (y == 0) {
+            xmin = x;
+            xmax = x;
+            xmiddle = x;
+            foundInterval = true;
+            break; 
+         }
+         // found good interval if sign product is negative or equal zero to
+         if (std::copysign(1.,y)*std::copysign(1.,yymin) < 0 ) {
             xmin = xxmin; // previous value
             xmax = x;  // current value
             xmiddle = 0.5*(xmax+xmin);
@@ -81,7 +96,7 @@ namespace BrentMethods {
          }
          // continue bracketing
          xxmin = x;
-         yymin = y; 
+         yymin = y;
       }
    }
    
@@ -102,6 +117,8 @@ namespace BrentMethods {
       xmin = 1;
       xmax = 0; 
    }
+   // else 
+   //    std::cout << " root found !!! " << std::endl;
 
    return xmiddle;
 }

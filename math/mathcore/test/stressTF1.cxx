@@ -10,7 +10,7 @@
 
 using namespace std;
 
-const double XMIN = 0, XMAX = 2*TMath::Pi();
+const double XMIN = 0, XMAX = 2*TMath::Pi() + 1.E-15;  // add an eps to avoid failing the search
 const Int_t NB = 100;
 const Int_t REP = 100000;
 const double TNORM = REP / 1000000.;
@@ -80,13 +80,15 @@ int TestRoot(TF1* f1)
    TStopwatch w;
    double totalTime = 0;
 
+   double eps = 0;
+
    cout << "ROOT TEST\n"
         << "---------------------------------------------------------"
         << endl;
 
    w.Start(kTRUE);
    for ( int j = 0; j < REP; ++j )
-      x = f1->GetX(0, XMIN, 1);
+      x = f1->GetX(0, XMIN-eps, 1);
    w.Stop();
    root = 0;
    status += PrintStatus("Root", x, root, w.RealTime()/TNORM );
@@ -102,7 +104,7 @@ int TestRoot(TF1* f1)
 
    w.Start(kTRUE);
    for ( int j = 0; j < REP; ++j )
-      x = f1->GetX(0, 6, XMAX);
+      x = f1->GetX(0, 6, XMAX+eps);
    w.Stop();
    root = TMath::Pi() * 2;
    status += PrintStatus("Root", x, root, w.RealTime()/ TNORM );
