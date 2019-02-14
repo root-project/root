@@ -446,17 +446,16 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   else()
     install(DIRECTORY README DESTINATION ${CMAKE_INSTALL_DOCDIR})
   endif()
+  if (NOT root7)
+    set(excludeeve7 PATTERN "eve7" EXCLUDE)
+  endif()
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
                          PATTERN "system.rootrc" EXCLUDE
                          PATTERN "system.rootauthrc" EXCLUDE
                          PATTERN "system.rootdaemonrc" EXCLUDE
-                         PATTERN "rootd.rc.d" EXCLUDE
-                         PATTERN "proofd.rc.d" EXCLUDE
-                         PATTERN "rootd.xinetd" EXCLUDE
-                         PATTERN "proofd.xinetd" EXCLUDE
                          PATTERN "root.mimes" EXCLUDE
-                         PATTERN "cmake" EXCLUDE
-                         PATTERN "*.in" EXCLUDE)
+                         PATTERN "*.in" EXCLUDE
+                         ${excludeeve7})
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})
