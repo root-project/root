@@ -19,8 +19,21 @@
 #include <cstdint>
 #include <limits>
 
+#include <string>
+#include <vector>
+
 namespace ROOT {
 namespace Experimental {
+
+/**
+ * Used in unit tests to serialize and deserialize classes with TClass
+ */
+struct RForestTest {
+  float a = 0.0;
+  std::vector<float> v1;
+  std::vector<std::vector<float>> v2;
+  std::string s;
+};
 
 /// Integer types long enough to hold the maximum number of entries in a tree
 using TreeIndex_t = std::uint64_t;

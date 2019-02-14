@@ -50,7 +50,10 @@ public:
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddField(std::string_view fieldName, ArgsT&&... args) {
       auto field = std::make_unique<RTreeField<T>>(fieldName);
-      RTreeValue<T>* value = static_cast<RTreeValue<T>*>(field->GenerateValue(std::forward<ArgsT>(args)...));
+      T* valueLocation = static_cast<T*>(malloc(field->GetValueSize()));
+      R__ASSERT(valueLocation != nullptr);
+      RTreeValue<T>* value = static_cast<RTreeValue<T>*>(
+         field->GenerateValue(valueLocation, std::forward<ArgsT>(args)...));
       fRootField.Attach(std::move(field));
 
       auto valuePtr = value->GetSharedPtr();

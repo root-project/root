@@ -3,10 +3,12 @@
 #include "ROOT/RPageStorage.hxx"
 #include "ROOT/RPageStorageRoot.hxx"
 
-#include "TFile.h"  // Remove me
+#include <TClass.h>
+#include <TFile.h>
 
 #include "gtest/gtest.h"
 
+#include <exception>
 #include <memory>
 #include <string>
 #include <utility>
@@ -17,6 +19,7 @@ using RTreeModel = ROOT::Experimental::RTreeModel;
 using RPageSource = ROOT::Experimental::Detail::RPageSource;
 using RPageSinkRoot = ROOT::Experimental::Detail::RPageSinkRoot;
 using RPageSourceRoot = ROOT::Experimental::Detail::RPageSourceRoot;
+using RTreeFieldBase = ROOT::Experimental::Detail::RTreeFieldBase;
 
 TEST(RForestTree, Basics)
 {
@@ -25,6 +28,11 @@ TEST(RForestTree, Basics)
 
    //RInputTree tree(model, std::make_unique<RPageSource>("T"));
    //RInputTree tree2(std::make_unique<RPageSource>("T"));
+}
+
+TEST(RForestTree, ResurrectModel)
+{
+   //auto field = std::unique_ptr<RTreeFieldBase>(RTreeFieldBase::Create("grid", "std::vector<std::vector<float>>"));
 }
 
 TEST(RForestTree, StorageRoot)
@@ -41,7 +49,7 @@ TEST(RForestTree, StorageRoot)
 
    //auto fieldFail = model->AddField<int>("jets");
    auto fieldJet = model->AddField<std::vector<float>>("jets" /* TODO(jblomer), {1.0, 2.0}*/);
-   //auto nnlo = model->AddField<std::vector<std::vector<float>>>("nnlo");
+   auto nnlo = model->AddField<std::vector<std::vector<float>>>("nnlo");
 
    sinkRoot.Create(model.get());
    sinkRoot.CommitDataset();
@@ -70,6 +78,8 @@ TEST(RForestTree, WriteRead)
    auto fieldJets = model->AddField<std::vector<float>>("jets");
    fieldJets->push_back(1.0);
    fieldJets->push_back(2.0);
+   auto fieldKlass = model->AddField<ROOT::Experimental::RForestTest>("klass");
+   fieldKlass->s = "abc";
 
    {
       ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", settingsWrite));
@@ -80,6 +90,7 @@ TEST(RForestTree, WriteRead)
    *fieldEnergy = 0.0;
    fieldTag->clear();
    fieldJets->clear();
+   fieldKlass->s.clear();
 
    file = TFile::Open("test.root", "READ");
    RPageSourceRoot::RSettings settingsRead;
@@ -88,6 +99,7 @@ TEST(RForestTree, WriteRead)
    RInputTree tree(model, std::make_unique<RPageSourceRoot>("myTree", settingsRead));
    EXPECT_EQ(1U, tree.GetNEntries());
    tree.GetEntry(0);
+
    EXPECT_EQ(42.0, *fieldPt);
    EXPECT_EQ(7.0, *fieldEnergy);
    EXPECT_STREQ("xyz", fieldTag->c_str());
@@ -95,4 +107,32 @@ TEST(RForestTree, WriteRead)
    EXPECT_EQ(2U, fieldJets->size());
    EXPECT_EQ(1.0, (*fieldJets)[0]);
    EXPECT_EQ(2.0, (*fieldJets)[1]);
+
+   EXPECT_STREQ("abc", fieldKlass->s.c_str());
+}
+
+TEST(RForestTree, TypeName) {
+   EXPECT_STREQ("float", ROOT::Experimental::RTreeField<float>::MyTypeName().c_str());
+   EXPECT_STREQ("std::vector<std::string>",
+                ROOT::Experimental::RTreeField<std::vector<std::string>>::MyTypeName().c_str());
+   EXPECT_STREQ("ROOT::Experimental::RForestTest",
+                ROOT::Experimental::RTreeField<ROOT::Experimental::RForestTest>::MyTypeName().c_str());
+}
+
+namespace {
+class RNoDictionary {};
+} // namespace
+
+TEST(RForestTree, TClass) {
+   auto modelFail = std::make_shared<RTreeModel>();
+   EXPECT_THROW(modelFail->AddField<RNoDictionary>("nodict"), std::runtime_error);
+
+   auto model = std::make_shared<RTreeModel>();
+   auto ptrKlass = model->AddField<ROOT::Experimental::RForestTest>("klass");
+
+   TFile *file = TFile::Open("test.root", "RECREATE");
+   RPageSinkRoot::RSettings settingsWrite;
+   settingsWrite.fFile = file;
+   settingsWrite.fTakeOwnership = true;
+   ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", settingsWrite));
 }
