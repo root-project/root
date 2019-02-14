@@ -610,6 +610,18 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
        varmax = var->getMax();
    }
 
+
+   // find ymin and ymax  and corresponding values
+   double ymin = TMath::MinElement(n,y);
+   double ymax = TMath::MaxElement(n,y);
+   // cannot find intercept in the full range - return min or max valie
+   if (ymax < y0) {
+      return (lowSearch) ? varmax : varmin; 
+   }
+   if (ymin > y0) {
+      return (lowSearch) ? varmin : varmax; 
+   }
+
    double xmin = axmin;
    double xmax = axmax;
 
@@ -626,13 +638,10 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
       double yfirst = graph.GetY()[0];
       double ylast = graph.GetY()[n-1];
 
-      // case we have lower/upper limits
-
-      // find ymin and ymax  and corresponding values
-      //double ymin = TMath::MinElement(n,y);
-      double ymax = TMath::MaxElement(n,y);
+      // distinguish the case we have lower /upper limits
+      // check if a possible crossing exists otherwise return variable min/max
+      
       // do lower extrapolation
-
       if ( (ymax < y0 && !lowSearch) || ( yfirst > y0 && lowSearch) ) {
          xmin = varmin;
       }
@@ -650,9 +659,16 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
    ROOT::Math::BrentRootFinder brf;
    brf.SetFunction(f1d,xmin,xmax);
    brf.SetNpx(TMath::Max(graph.GetN()*2,100) );
+#ifdef DO_DEBUG
+   std::cout << "findind root for " << xmin << " ,  "<< xmax << "f(x) : " << graph.Eval(xmin) << " , " << graph.Eval(0.5*(xmax+xmin))
+             << " , " << graph.Eval(xmax) << " target " << y0 << std::endl;
+#endif
+   
    bool ret = brf.Solve(100, 1.E-16, 1.E-6);
    if (!ret) {
-      ooccoutE(this,Eval) << "HypoTestInverterResult - interpolation failed - return inf" << std::endl;
+      ooccoutE(this,Eval) << "HypoTestInverterResult - interpolation failed for interval [" << xmin << "," << xmax
+                          << " ]  g(xmin,xmax) =" << graph.Eval(xmin) << "," << graph.Eval(xmax)
+                          << " target=" << y0 << " return inf" << std::endl;
          return TMath::Infinity();
    }
    double limit =  brf.Root();
@@ -674,7 +690,6 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
    auto file = TFile::Open(fname,"RECREATE");
    graph.Write("graph");
    file->Close();
-
 #endif
 
    // look in case if a new intersection exists
@@ -834,7 +849,7 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
       << "the computed " << limitType << " limit is " << limit << " +/- " << error << std::endl;
 
 #ifdef DO_DEBUG
-   std::cout << "Found limit is " << limit << " +/- " << error << astd::endl;
+   std::cout << "Found limit is " << limit << " +/- " << error << std::endl;
 #endif
 
 
