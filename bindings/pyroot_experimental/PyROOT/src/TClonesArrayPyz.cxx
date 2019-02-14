@@ -20,10 +20,41 @@
 // ROOT
 #include "TClass.h"
 #include "TClonesArray.h"
+#include "TBufferFile.h"
 
 using namespace CPyCppyy;
 
-// Helper: converts Python index into straight C index.
+// Clone an object into a position of a TClonesArray
+static TObject *CloneObjectInPlace(const TObject *obj, TClonesArray *cla, int index)
+{
+   // Create object with default constructor at index
+   char *arrObj = (char *)cla->New(index);
+   if (!arrObj) {
+      PyErr_Format(PyExc_RuntimeError, "Failed to create new object at index %d of TClonesArray", index);
+      return nullptr;
+   }
+
+   auto baseOffset = obj->IsA()->GetBaseClassOffset(TObject::Class());
+   auto newObj = (TObject *)(arrObj + baseOffset);
+
+   // Create a buffer where the object will be streamed
+   TBufferFile buffer(TBuffer::kWrite, cla->GetClass()->Size());
+   buffer.MapObject(obj); // register obj in map to handle self reference
+   const_cast<TObject *>(obj)->Streamer(buffer);
+
+   // Read new object from buffer
+   buffer.SetReadMode();
+   buffer.ResetMap();
+   buffer.SetBufferOffset(0);
+   buffer.MapObject(newObj); // register obj in map to handle self reference
+   newObj->Streamer(buffer);
+   newObj->ResetBit(kIsReferenced);
+   newObj->ResetBit(kCanDelete);
+
+   return newObj;
+}
+
+// Convert Python index into straight C index
 static PyObject *PyStyleIndex(PyObject *self, PyObject *index)
 {
    Py_ssize_t idx = PyInt_AsSsize_t(index);
@@ -68,10 +99,10 @@ PyObject *SetItem(CPPInstance *self, PyObject *args)
       return nullptr;
    }
 
-   PyObject *pyindex = PyStyleIndex((PyObject *)self, idx);
+   auto pyindex = PyStyleIndex((PyObject *)self, idx);
    if (!pyindex)
       return nullptr;
-   int index = (int)PyLong_AsLong(pyindex);
+   auto index = (int)PyLong_AsLong(pyindex);
    Py_DECREF(pyindex);
 
    // Get hold of the actual TClonesArray
@@ -85,6 +116,7 @@ PyObject *SetItem(CPPInstance *self, PyObject *args)
    if (Cppyy::GetScope(cla->GetClass()->GetName()) != pyobj->ObjectIsA()) {
       PyErr_Format(PyExc_TypeError, "require object of type %s, but %s given", cla->GetClass()->GetName(),
                    Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str());
+      return nullptr;
    }
 
    // Destroy old object, if applicable
@@ -93,11 +125,13 @@ PyObject *SetItem(CPPInstance *self, PyObject *args)
    }
 
    if (pyobj->GetObject()) {
-      // Accessing an entry will result in new, uninitialized memory (if properly used)
-      TObject *object = (*cla)[index];
+      auto object = CloneObjectInPlace((TObject *)pyobj->GetObject(), cla, index);
+      if (!object)
+         return nullptr;
+
+      // A TClonesArray is always the owner of the objects it contains
       pyobj->CppOwns();
       MemoryRegulator::RegisterPyObject(pyobj, object);
-      memcpy((void *)object, pyobj->GetObject(), cla->GetClass()->Size());
    }
 
    Py_RETURN_NONE;
