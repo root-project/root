@@ -1583,6 +1583,9 @@ int stressMathCore(double nscale = 1) {
 
 
 int main(int argc,const char *argv[]) {
+   std::string inclRootSys = ("-I" + TROOT::GetRootSys() + "/test").Data();
+   TROOT::AddExtraInterpreterArgs({inclRootSys});
+
    double nscale = 1;
    if (argc > 1) {
       nscale = atof(argv[1]);
