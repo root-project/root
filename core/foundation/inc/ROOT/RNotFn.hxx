@@ -14,7 +14,10 @@
 #ifndef ROOT_RNotFn
 #define ROOT_RNotFn
 
-#if __cplusplus < 201703L && !defined(_MSC_VER)
+#include <functional>
+
+// Backport if not_fn is not available
+#ifndef __cpp_lib_not_fn
 
 #include <type_traits> // std::decay
 #include <utility>     // std::forward, std::declval
@@ -54,8 +57,6 @@ Detail::not_fn_t<F> not_fn(F &&f)
 }
 }
 
-#else
-#include <functional>
 #endif
 
 #endif
