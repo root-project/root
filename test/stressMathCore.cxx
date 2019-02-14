@@ -85,6 +85,8 @@
 #include "Math/SVector.h"
 #include "Math/SMatrix.h"
 
+R__ADD_INCLUDE_PATH($ROOTSYS/test)
+
 #include "TrackMathCore.h"
 #include "Math/GenVector/RotationZ.h" // Workaround to autoload libGenVector ROOT-7056
 
