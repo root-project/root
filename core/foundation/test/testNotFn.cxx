@@ -1,7 +1,7 @@
 // Including functional for __cpp_lib_not_fn
 #include <functional>
 
-#ifdef __cpp_lib_not_fn
+#ifndef __cpp_lib_not_fn
 
 #include "ROOT/RNotFn.hxx"
 
