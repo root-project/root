@@ -9,6 +9,7 @@ file(GLOB headers RELATIVE ${CMAKE_SOURCE_DIR} *.h)
 list(REMOVE_ITEM headers NdbLinkDef.h)
 
 include(${ROOT_USE_FILE})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 ROOT_GENERATE_DICTIONARY(G__NdbDict ${headers} LINKDEF NdbLinkDef.h)
 
 #---Create a shared library with geneated dictionary
