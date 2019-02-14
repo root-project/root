@@ -1,9 +1,6 @@
-// Including functional for __cpp_lib_not_fn
-#include <functional>
+#include "ROOT/RNotFn.hxx"
 
 #ifndef __cpp_lib_not_fn
-
-#include "ROOT/RNotFn.hxx"
 
 #include "gtest/gtest.h"
 
