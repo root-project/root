@@ -17,6 +17,8 @@
 #pragma link C++ nestedtypedefs;
 #pragma link C++ nestedclasses;
 
+#pragma link C++ class ROOT::Experimental::RForestTest+;
+
 #pragma link C++ class ROOT::Experimental::Internal::RForestHeader+;
 #pragma link C++ class ROOT::Experimental::Internal::RForestFooter+;
 #pragma link C++ class ROOT::Experimental::Internal::RFieldHeader+;
