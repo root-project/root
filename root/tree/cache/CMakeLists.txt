@@ -47,7 +47,7 @@ ROOTTEST_ADD_TEST(LastCluster
                   MACRO execLastCluster.C
                   OUTREF execLastCluster.ref)
 
-ROOT_GENERATE_DICTIONARY(TheEventDict Event.h LINKDEF EventLinkDef.h)
+ROOT_GENERATE_DICTIONARY(TheEventDict ${CMAKE_CURRENT_SOURCE_DIR}/Event.h LINKDEF EventLinkDef.h)
 ROOT_LINKER_LIBRARY(TheEvent TEST Event.cxx TheEventDict.cxx LIBRARIES ${ROOT_LIBRARIES})
 ROOTTEST_ADD_TEST(perfstattest-libevent-build 
                   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target TheEvent${fast} -- ${always-make})
