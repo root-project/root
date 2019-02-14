@@ -69,6 +69,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RTreeModel *model)
       ROOT::Experimental::Internal::RFieldHeader fieldHeader;
       fieldHeader.fName = f.GetName();
       fieldHeader.fType = f.GetType();
+      printf("Added field %s type [%s]\n", f.GetName().c_str(), f.GetType().c_str());
       if (f.GetParent()) fieldHeader.fParentName = f.GetParent()->GetName();
       fForestHeader.fFields.emplace_back(fieldHeader);
 
