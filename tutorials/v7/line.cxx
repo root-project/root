@@ -6,7 +6,6 @@
 /// "normal" coordinates' system and changing the line color linearly from black
 /// to red.
 ///
-/// \macro_image (line.png)
 /// \macro_code
 ///
 /// \date 2018-03-18
@@ -43,6 +42,5 @@ void line()
    canvas->Draw(RLine({0.1_normal, 0.1_normal}, {0.1_normal,0.9_normal}));
    canvas->Draw(RLine({0.0_normal, 1.0_normal}, {1.0_normal,0.0_normal}));
 
-  // canvas->Show();
-   canvas->SaveAs("line.png");
+   canvas->Show();
 }
