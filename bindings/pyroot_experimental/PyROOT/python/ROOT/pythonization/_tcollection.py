@@ -9,7 +9,7 @@
 ################################################################################
 
 from ROOT import pythonization
-from cppyy.gbl import TIter
+import cppyy
 
 from ._generic import add_len
 
@@ -87,7 +87,7 @@ def _iter_pyz(self):
     # Generator function to iterate on TCollections
     # Parameters:
     # - self: collection to be iterated
-    it = TIter(self)
+    it = cppyy.gbl.TIter(self)
     o = it.Next()
     while o:
         yield o
