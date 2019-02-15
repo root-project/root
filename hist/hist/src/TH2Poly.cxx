@@ -523,6 +523,7 @@ void TH2Poly::ClearBinContents()
 
    // Clears the statistics
    fTsumw   = 0;
+   fTsumw2  = 0;
    fTsumwx  = 0;
    fTsumwx2 = 0;
    fTsumwy  = 0;
@@ -661,6 +662,7 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
 
          // Statistics
          fTsumw   = fTsumw + w;
+         fTsumw2  = fTsumw2 + w*w;
          fTsumwx  = fTsumwx + w*x;
          fTsumwx2 = fTsumwx2 + w*x*x;
          fTsumwy  = fTsumwy + w*y;
@@ -974,6 +976,7 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
    // Statistics
    fEntries = 0;   // The total number of entries
    fTsumw   = 0.;  // Total amount of content in the histogram
+   fTsumw2  = 0.;  // Sum square of the weights
    fTsumwx  = 0.;  // Weighted sum of x coordinates
    fTsumwx2 = 0.;  // Weighted sum of the squares of x coordinates
    fTsumwy2 = 0.;  // Weighted sum of the squares of y coordinates
