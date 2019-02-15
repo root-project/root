@@ -114,7 +114,7 @@ void runTestTF1(int testcase = 0) {
    double tol = 1.E-14;
    int maxiter = 100;
 
-   TF1* f1 = new TF1("f1", myfunc_p, xmin, xmax);
+   TF1  f1("f1", myfunc_p, xmin, xmax);
    timer.Reset(); timer.Start(); myfuncCalls = 0;
    double y0 = 0;
    double delta = 0;
@@ -134,12 +134,12 @@ void runTestTF1(int testcase = 0) {
          y0 = (log(xmax)*log(xmax))/double(iterTest)*(i+0.5) - Y0_P2; 
       }
       
-      double root1 = f1->GetX(y0, xmin, xmax,tol,maxiter,logx);
+      double root1 = f1.GetX(y0, xmin, xmax,tol,maxiter,logx);
       EXPECT_NEAR(root1,  ExactResult(y0,-1), ERRORLIMIT );
       root = root1; 
       // for the parabola test cases find also second root
       if (gTestCase < 2) { 
-         double root2 = f1->GetX(y0, root1+ delta, xmax,tol,maxiter, logx);
+         double root2 = f1.GetX(y0, root1+ delta, xmax,tol,maxiter, logx);
          EXPECT_NEAR(root2, ExactResult(y0, 1), ERRORLIMIT);
          root = root2;
          
@@ -194,7 +194,7 @@ void runTestBrent(int testcase = 0, ROOT::Math::RootFinder::EType rf_type = ROOT
    double tol = 1.E-14;
    int maxiter = 100;
 
-   ROOT::Math::Functor1D    *func = new ROOT::Math::Functor1D (&myfunc);
+   ROOT::Math::Functor1D  func(&myfunc);
 
    double y0 = 0;
    double delta = 0;
@@ -219,7 +219,7 @@ void runTestBrent(int testcase = 0, ROOT::Math::RootFinder::EType rf_type = ROOT
          y0 = (log(xmax)*log(xmax))/double(iterTest)*(i+0.5) - 5.; 
          Y0_P2 = 5.0 + y0; 
       }
-      brf.SetFunction( *func, xmin, xmax1 );
+      brf.SetFunction( func, xmin, xmax1 );
       bool ret1 = brf.Solve(maxiter,tol,tol);
       if (!ret1 ) std::cout << "Error returned from RootFinder::Solve BRENT - interval [ "
                            << xmin << " , " << xmax1 << " ]  i = " << i << std::endl;
@@ -228,7 +228,7 @@ void runTestBrent(int testcase = 0, ROOT::Math::RootFinder::EType rf_type = ROOT
       EXPECT_NEAR(root1,  ExactResult(0, -1), ERRORLIMIT );
       root = root1; 
       if (gTestCase < 2) { 
-         brf.SetFunction( *func, root1+delta, xmax );
+         brf.SetFunction( func, root1+delta, xmax );
          bool ret2 = brf.Solve(maxiter,tol,tol);
          if (!ret2) std::cout << "Error returned from RootFinder::Solve BRENT - interval [ "
                               << root1+delta << " , " << xmax << " ]  i = " << i << std::endl;
