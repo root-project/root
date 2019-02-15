@@ -366,6 +366,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(cpp_module ${ARG_MODULE})
       if(runtime_cxxmodules)
         set(cpp_module_file ${library_output_dir}/${cpp_module}.pcm)
+        if (APPLE)
+          # FIXME: Krb5Auth.h triggers "declaration of '__mb_cur_max' has a different language linkage"
+          # problem.
+          if (${cpp_module} MATCHES "(Krb5Auth|GCocoa|GQuartz)")
+            set(cpp_module_file)
+          endif()
+        endif(APPLE)
       endif()
     endif()
   else()
@@ -488,14 +495,6 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
                     FILTER "LinkDef" ${d}/*)
     list(APPEND found_headers "${dir_headers}")
   endforeach()
-
-  if (APPLE)
-    # FIXME: Krb5Auth.h triggers "declaration of '__mb_cur_max' has a different language linkage"
-    # problem.
-    if (${library} MATCHES "(Krb5Auth|GCocoa|GQuartz)")
-      return()
-    endif()
-  endif(APPLE)
 
   set(excluded_headers RConfig.h RVersion.h RtypesImp.h
                         RtypesCore.h TClassEdit.h
