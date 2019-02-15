@@ -473,7 +473,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(cpp_module)
     ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${cpp_module}" "${headerfiles}")
   endif()
-endfunction()
+endfunction(ROOT_GENERATE_DICTIONARY)
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_CXXMODULES_APPEND_TO_MODULEMAP( library library_headers )
