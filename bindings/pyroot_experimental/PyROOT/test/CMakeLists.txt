@@ -2,6 +2,9 @@
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py)
 
+# TObject and subclasses pythonisations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_contains tobject_contains.py)
+
 # TDirectory and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectory_attrsyntax tdirectory_attrsyntax.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectoryfile_attrsyntax_get tdirectoryfile_attrsyntax_get.py)
