@@ -234,7 +234,7 @@ void runTestBrent(int testcase = 0, ROOT::Math::RootFinder::EType rf_type = ROOT
                               << root1+delta << " , " << xmax << " ]  i = " << i << std::endl;
          ASSERT_EQ(ret2,true);
          double root2 = brf.Root();
-         EXPECT_NEAR(abs(root2), ExactResult(0, 1), ERRORLIMIT);
+         EXPECT_NEAR(root2, ExactResult(0, 1), ERRORLIMIT);
          root = root2;
          if (debug) std::cout << "tested #" << i << " y0=" << y0 << " in ["<< xmin << "," << xmax1 << "] and ["
                               << root1+delta << "," << xmax << "]  x : f(x)=y0 is " << root1  << " and " << root << std::endl; 
