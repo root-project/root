@@ -1359,7 +1359,7 @@ if (vecgeom)
 endif()
 
 #---Check for CUDA and BLAS ---------------------------------------------------------
-if(tmva AND cuda AND tmva-gpu)
+if(tmva AND tmva-gpu)
   message(STATUS "Looking for CUDA for optional parts of TMVA")
 
   if(CMAKE_CXX_STANDARD EQUAL 11)
