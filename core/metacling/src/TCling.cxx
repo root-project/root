@@ -5014,110 +5014,112 @@ static bool requiresRootMap(const char* rootmapfile, cling::Interpreter* interp)
 
 int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString)
 {
+   if (!(rootmapfile && *rootmapfile))
+      return 0;
+
    if (!requiresRootMap(rootmapfile, fInterpreter))
       return 0; // success
 
    // For "class ", "namespace ", "typedef ", "header ", "enum ", "var " respectively
    const std::map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7},{'e',5},{'v',4}};
 
-   if (rootmapfile && *rootmapfile) {
-      std::string rootmapfileNoBackslash(rootmapfile);
+   std::string rootmapfileNoBackslash(rootmapfile);
 #ifdef _MSC_VER
-      std::replace(rootmapfileNoBackslash.begin(), rootmapfileNoBackslash.end(), '\\', '/');
+   std::replace(rootmapfileNoBackslash.begin(), rootmapfileNoBackslash.end(), '\\', '/');
 #endif
-      // Add content of a specific rootmap file
-      if (fRootmapFiles->FindObject(rootmapfileNoBackslash.c_str()))
-         return -1;
+   // Add content of a specific rootmap file
+   if (fRootmapFiles->FindObject(rootmapfileNoBackslash.c_str()))
+      return -1;
 
-      if (uniqueString)
-         uniqueString->Append(std::string("\n#line 1 \"Forward declarations from ") + rootmapfileNoBackslash + "\"\n");
+   if (uniqueString)
+      uniqueString->Append(std::string("\n#line 1 \"Forward declarations from ") + rootmapfileNoBackslash + "\"\n");
 
-      std::ifstream file(rootmapfileNoBackslash);
-      std::string line; line.reserve(200);
-      std::string lib_name; line.reserve(100);
-      bool newFormat=false;
-      while (getline(file, line, '\n')) {
-         if (!newFormat &&
-             (line.compare(0, 8, "Library.") == 0 || line.compare(0, 8, "Declare.") == 0)) {
-            file.close();
-            return -3; // old format
-         }
-         newFormat=true;
+   std::ifstream file(rootmapfileNoBackslash);
+   std::string line;
+   line.reserve(200);
+   std::string lib_name;
+   line.reserve(100);
+   bool newFormat = false;
+   while (getline(file, line, '\n')) {
+      if (!newFormat && (line.compare(0, 8, "Library.") == 0 || line.compare(0, 8, "Declare.") == 0)) {
+         file.close();
+         return -3; // old format
+      }
+      newFormat = true;
 
-         if (line.compare(0, 9, "{ decls }") == 0 && requiresRootMap(rootmapfile, fInterpreter)) {
-            // forward declarations
+      if (line.compare(0, 9, "{ decls }") == 0) {
+         // forward declarations
 
-            while (getline(file, line, '\n')) {
-               if (line[0] == '[') break;
-               if (!uniqueString) {
-                  Error("ReadRootmapFile", "Cannot handle \"{ decls }\" sections in custom rootmap file %s",
-                        rootmapfileNoBackslash.c_str());
-                  return -4;
-               }
-               uniqueString->Append(line);
+         while (getline(file, line, '\n')) {
+            if (line[0] == '[')
+               break;
+            if (!uniqueString) {
+               Error("ReadRootmapFile", "Cannot handle \"{ decls }\" sections in custom rootmap file %s",
+                     rootmapfileNoBackslash.c_str());
+               return -4;
             }
-         }
-         const char firstChar=line[0];
-         if (firstChar == '[') {
-            // new section (library)
-            auto brpos = line.find(']');
-            if (brpos == string::npos) continue;
-            lib_name = line.substr(1, brpos-1);
-            size_t nspaces = 0;
-            while( lib_name[nspaces] == ' ' ) ++nspaces;
-            if (nspaces) lib_name.replace(0, nspaces, "");
-            if (gDebug > 3) {
-               TString lib_nameTstr(lib_name.c_str());
-               TObjArray* tokens = lib_nameTstr.Tokenize(" ");
-               const char* lib = ((TObjString *)tokens->At(0))->GetName();
-               const char* wlib = gSystem->DynamicPathName(lib, kTRUE);
-               if (wlib) {
-                  Info("ReadRootmapFile", "new section for %s", lib_nameTstr.Data());
-               }
-               else {
-                  Info("ReadRootmapFile", "section for %s (library does not exist)", lib_nameTstr.Data());
-               }
-               delete[] wlib;
-               delete tokens;
-            }
-         }
-         else {
-            auto keyLenIt = keyLenMap.find(firstChar);
-            if (keyLenIt == keyLenMap.end()) continue;
-            unsigned int keyLen = keyLenIt->second;
-            // Do not make a copy, just start after the key
-            const char *keyname = line.c_str()+keyLen;
-            if (gDebug > 6)
-               Info("ReadRootmapFile", "class %s in %s", keyname, lib_name.c_str());
-            TEnvRec* isThere = fMapfile->Lookup(keyname);
-            if (isThere){
-               if(lib_name != isThere->GetValue()){ // the same key for two different libs
-                  if (firstChar == 'n') {
-                     if (gDebug > 3)
-                        Info("ReadRootmapFile", "namespace %s found in %s is already in %s",
-                           keyname, lib_name.c_str(), isThere->GetValue());
-                  } else if (firstChar == 'h'){ // it is a header: add the libname to the list of libs to be loaded.
-                     lib_name+=" ";
-                     lib_name+=isThere->GetValue();
-                     fMapfile->SetValue(keyname, lib_name.c_str());
-                  }
-                  else if (!TClassEdit::IsSTLCont(keyname)) {
-                     Warning("ReadRootmapFile", "%s %s found in %s is already in %s", line.substr(0, keyLen).c_str(),
-                           keyname, lib_name.c_str(), isThere->GetValue());
-                  }
-               } else { // the same key for the same lib
-                  if (gDebug > 3)
-                        Info("ReadRootmapFile","Key %s was already defined for %s", keyname, lib_name.c_str());
-               }
-
-            } else {
-               fMapfile->SetValue(keyname, lib_name.c_str());
-            }
+            uniqueString->Append(line);
          }
       }
-      file.close();
+      const char firstChar = line[0];
+      if (firstChar == '[') {
+         // new section (library)
+         auto brpos = line.find(']');
+         if (brpos == string::npos)
+            continue;
+         lib_name = line.substr(1, brpos - 1);
+         size_t nspaces = 0;
+         while (lib_name[nspaces] == ' ')
+            ++nspaces;
+         if (nspaces)
+            lib_name.replace(0, nspaces, "");
+         if (gDebug > 3) {
+            TString lib_nameTstr(lib_name.c_str());
+            TObjArray *tokens = lib_nameTstr.Tokenize(" ");
+            const char *lib = ((TObjString *)tokens->At(0))->GetName();
+            const char *wlib = gSystem->DynamicPathName(lib, kTRUE);
+            if (wlib) {
+               Info("ReadRootmapFile", "new section for %s", lib_nameTstr.Data());
+            } else {
+               Info("ReadRootmapFile", "section for %s (library does not exist)", lib_nameTstr.Data());
+            }
+            delete[] wlib;
+            delete tokens;
+         }
+      } else {
+         auto keyLenIt = keyLenMap.find(firstChar);
+         if (keyLenIt == keyLenMap.end())
+            continue;
+         unsigned int keyLen = keyLenIt->second;
+         // Do not make a copy, just start after the key
+         const char *keyname = line.c_str() + keyLen;
+         if (gDebug > 6)
+            Info("ReadRootmapFile", "class %s in %s", keyname, lib_name.c_str());
+         TEnvRec *isThere = fMapfile->Lookup(keyname);
+         if (isThere) {
+            if (lib_name != isThere->GetValue()) { // the same key for two different libs
+               if (firstChar == 'n') {
+                  if (gDebug > 3)
+                     Info("ReadRootmapFile", "namespace %s found in %s is already in %s", keyname, lib_name.c_str(),
+                          isThere->GetValue());
+               } else if (firstChar == 'h') { // it is a header: add the libname to the list of libs to be loaded.
+                  lib_name += " ";
+                  lib_name += isThere->GetValue();
+                  fMapfile->SetValue(keyname, lib_name.c_str());
+               } else if (!TClassEdit::IsSTLCont(keyname)) {
+                  Warning("ReadRootmapFile", "%s %s found in %s is already in %s", line.substr(0, keyLen).c_str(),
+                          keyname, lib_name.c_str(), isThere->GetValue());
+               }
+            } else { // the same key for the same lib
+               if (gDebug > 3)
+                  Info("ReadRootmapFile", "Key %s was already defined for %s", keyname, lib_name.c_str());
+            }
+         } else {
+            fMapfile->SetValue(keyname, lib_name.c_str());
+         }
+      }
    }
-
+   file.close();
    return 0;
 }
 
