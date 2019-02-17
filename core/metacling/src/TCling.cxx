@@ -4998,16 +4998,12 @@ const char* TCling::TypeName(const char* typeDesc)
 
 static bool requiresRootMap(const char* rootmapfile, cling::Interpreter* interp)
 {
-   if (!rootmapfile || !*rootmapfile)
-      return true;
+   assert(rootmapfile && *rootmapfile);
 
-   llvm::StringRef moduleName = llvm::sys::path::filename(rootmapfile);
-   moduleName.consume_front("lib");
-   moduleName.consume_back(".rootmap");
+   llvm::StringRef libName = llvm::sys::path::filename(rootmapfile);
+   libName.consume_back(".rootmap");
 
-   Module *M = interp->getCI()->getPreprocessor().getHeaderSearchInfo().lookupModule(moduleName);
-
-   return !(M && interp->getSema().isModuleVisible(M));
+   return !gInterpreter->HasPCMForLibrary(libName.str().c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5018,6 +5014,9 @@ static bool requiresRootMap(const char* rootmapfile, cling::Interpreter* interp)
 
 int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString)
 {
+   if (!requiresRootMap(rootmapfile, fInterpreter))
+      return 0; // success
+
    // For "class ", "namespace ", "typedef ", "header ", "enum ", "var " respectively
    const std::map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7},{'e',5},{'v',4}};
 
@@ -5134,6 +5133,11 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
 
 void TCling::InitRootmapFile(const char *name)
 {
+   assert(requiresRootMap(name, fInterpreter) && "We have a module!");
+
+   if (!requiresRootMap(name, fInterpreter))
+      return;
+
    Bool_t ignore = fMapfile->IgnoreDuplicates(kFALSE);
 
    fMapfile->SetRcName(name);
@@ -5200,7 +5204,11 @@ namespace {
 
 Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 {
+   if (rootmapfile == nullptr || *rootmapfile = '\0' || !requiresRootMap(rootmapfile, fInterpreter))
+      return 0;
+
    R__LOCKGUARD(gInterpreterMutex);
+
    // open the [system].rootmap files
    if (!fMapfile) {
       fMapfile = new TEnv();
@@ -5211,9 +5219,6 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
       fRootmapFiles->SetOwner();
       InitRootmapFile(".rootmap");
    }
-   bool needsRootMap = true;
-   if (rootmapfile && *rootmapfile)
-      needsRootMap = requiresRootMap(rootmapfile, fInterpreter);
 
    // Prepare a list of all forward declarations for cling
    // For some experiments it is easily as big as 500k characters. To be on the
@@ -5259,11 +5264,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
                            if (gDebug > 4) {
                               Info("LoadLibraryMap", "   rootmap file: %s", p.Data());
                            }
-                           Int_t ret;
-                           if (needsRootMap)
-                              ret = ReadRootmapFile(p,&uniqueString);
-                           else
-                              ret = ReadRootmapFile(p);
+                           Int_t ret = ReadRootmapFile(p, &uniqueString);
 
                            if (ret == 0)
                               fRootmapFiles->Add(new TNamed(gSystem->BaseName(f), p.Data()));
@@ -5298,11 +5299,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
       }
    }
    if (rootmapfile && *rootmapfile) {
-      Int_t res;
-      if (needsRootMap)
-         res = ReadRootmapFile(rootmapfile, &uniqueString);
-      else
-         res = ReadRootmapFile(rootmapfile);
+      Int_t res = ReadRootmapFile(rootmapfile, &uniqueString);
       if (res == 0) {
          //TString p = gSystem->ConcatFileName(gSystem->pwd(), rootmapfile);
          //fRootmapFiles->Add(new TNamed(gSystem->BaseName(rootmapfile), p.Data()));
