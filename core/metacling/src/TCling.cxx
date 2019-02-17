@@ -6098,6 +6098,16 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
       sFirstRun = false;
    }
 
+   // The JIT gives us a mangled name which has only one leading underscore on
+   // all platforms, for instance _ZN8TRandom34RndmEv. However, on OSX the
+   // linker stores this symbol as __ZN8TRandom34RndmEv (adding an extra _).
+#ifdef R__MACOSX
+   std::string name_in_so = "_" + mangled_name;
+#else
+   std::string name_in_so = mangled_name;
+#endif
+
+
    // Iterate over files under this path. We want to get each ".so" files
    for (std::pair<uint32_t, std::string> &P : sLibraries) {
       llvm::SmallString<400> Vec(sPaths[P.first]);
@@ -6108,7 +6118,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
       if (!SoFile)
          continue;
 
-      if (LookupNormalSymbols(SoFile.get().getBinary(), mangled_name, LibName)) {
+      if (LookupNormalSymbols(SoFile.get().getBinary(), name_in_so, LibName)) {
          if (gSystem->Load(LibName.c_str(), "", false) < 0)
             Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
 
@@ -6137,7 +6147,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
 
       auto RealSoFile = SoFile.get().getBinary();
 
-      if (LookupNormalSymbols(RealSoFile, mangled_name, LibName)) {
+      if (LookupNormalSymbols(RealSoFile, name_in_so, LibName)) {
          if (gSystem->Load(LibName.c_str(), "", false) < 0)
             Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
 
