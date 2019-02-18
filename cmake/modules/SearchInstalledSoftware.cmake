@@ -1361,6 +1361,7 @@ endif()
 #---Check for CUDA and BLAS ---------------------------------------------------------
 if(tmva AND tmva-gpu)
   message(STATUS "Looking for CUDA for optional parts of TMVA")
+  set(cuda ON CACHE BOOL "Enabled the cuda flag for TMVA-GPU" FORCE)
 
   if(CMAKE_CXX_STANDARD EQUAL 11)
     find_package(CUDA 7.5)
