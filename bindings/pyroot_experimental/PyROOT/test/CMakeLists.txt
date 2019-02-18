@@ -4,6 +4,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py)
 
 # TObject and subclasses pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_contains tobject_contains.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_comparisonops tobject_comparisonops.py)
 
 # TDirectory and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectory_attrsyntax tdirectory_attrsyntax.py)
