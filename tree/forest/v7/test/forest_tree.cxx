@@ -78,6 +78,10 @@ TEST(RForestTree, WriteRead)
    auto fieldJets = model->AddField<std::vector<float>>("jets");
    fieldJets->push_back(1.0);
    fieldJets->push_back(2.0);
+   auto fieldNnlo = model->AddField<std::vector<std::vector<float>>>("nnlo");
+   fieldNnlo->push_back(std::vector<float>());
+   fieldNnlo->push_back(std::vector<float>{1.0});
+   fieldNnlo->push_back(std::vector<float>{1.0, 2.0, 4.0, 8.0});
    auto fieldKlass = model->AddField<ROOT::Experimental::RForestTest>("klass");
    fieldKlass->s = "abc";
 
@@ -90,6 +94,7 @@ TEST(RForestTree, WriteRead)
    *fieldEnergy = 0.0;
    fieldTag->clear();
    fieldJets->clear();
+   fieldNnlo->clear();
    fieldKlass->s.clear();
 
    file = TFile::Open("test.root", "READ");
@@ -107,6 +112,16 @@ TEST(RForestTree, WriteRead)
    EXPECT_EQ(2U, fieldJets->size());
    EXPECT_EQ(1.0, (*fieldJets)[0]);
    EXPECT_EQ(2.0, (*fieldJets)[1]);
+
+   EXPECT_EQ(3U, fieldNnlo->size());
+   EXPECT_EQ(0U, (*fieldNnlo)[0].size());
+   EXPECT_EQ(1U, (*fieldNnlo)[1].size());
+   EXPECT_EQ(4U, (*fieldNnlo)[2].size());
+   EXPECT_EQ(1.0, (*fieldNnlo)[1][0]);
+   EXPECT_EQ(1.0, (*fieldNnlo)[2][0]);
+   EXPECT_EQ(2.0, (*fieldNnlo)[2][1]);
+   EXPECT_EQ(4.0, (*fieldNnlo)[2][2]);
+   EXPECT_EQ(8.0, (*fieldNnlo)[2][3]);
 
    EXPECT_STREQ("abc", fieldKlass->s.c_str());
 }
