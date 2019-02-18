@@ -154,7 +154,7 @@ std::string DemangleTypeIdName(const std::type_info &typeInfo)
    return TClassEdit::DemangleTypeIdName(typeInfo, dummy);
 }
 
-ColumnNames_t ConvertRegexToColumns(RDFInternal::RBookedCustomColumns & customColumns,
+ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedCustomColumns & customColumns,
                                     TTree *tree,
                                     ROOT::RDF::RDataSource *dataSource,
                                     std::string_view columnNameRegexp,
