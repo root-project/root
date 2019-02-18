@@ -25,9 +25,9 @@
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h" // for ULong64_t
-#include "TH1.h" // For Histo actions
-#include "TH2.h" // For Histo actions
-#include "TH3.h" // For Histo actions
+#include "TH1.h"        // For Histo actions
+#include "TH2.h"        // For Histo actions
+#include "TH3.h"        // For Histo actions
 #include "TProfile.h"
 #include "TProfile2D.h"
 
@@ -47,9 +47,9 @@ class TGraph;
 
 // Windows requires a forward decl of printValue to accept it as a valid friend function in RInterface
 namespace ROOT {
-void 	DisableImplicitMT ();
-bool 	IsImplicitMTEnabled ();
-void 	EnableImplicitMT (UInt_t numthreads);
+void DisableImplicitMT();
+bool IsImplicitMTEnabled();
+void EnableImplicitMT(UInt_t numthreads);
 class RDataFrame;
 namespace Internal {
 namespace RDF {
@@ -525,7 +525,8 @@ public:
       // jit snapCall, return result
       auto calcRes = RDFInternal::InterpreterCalc(snapCall.str());
       if (0 != calcRes.second) {
-         std::string msg = "Cannot jit Snapshot call. Interpreter error code is " + std::to_string(calcRes.second) + ".";
+         std::string msg =
+            "Cannot jit Snapshot call. Interpreter error code is " + std::to_string(calcRes.second) + ".";
          throw std::runtime_error(msg);
       }
       return resPtr;
@@ -659,11 +660,8 @@ public:
    RInterface<RLoopManager> Cache(std::string_view columnNameRegexp = "")
    {
 
-      auto selectedColumns = RDFInternal::ConvertRegexToColumns(fCustomColumns,
-                                                                fLoopManager->GetTree(),
-                                                                fDataSource,
-                                                                columnNameRegexp,
-                                                                "Cache");
+      auto selectedColumns = RDFInternal::ConvertRegexToColumns(fCustomColumns, fLoopManager->GetTree(), fDataSource,
+                                                                columnNameRegexp, "Cache");
       return Cache(selectedColumns);
    }
 
@@ -1167,7 +1165,7 @@ public:
 
       const auto validatedColumns = GetValidatedColumnNames(2, userColumns);
 
-         // We build a default name and title based on the input columns
+      // We build a default name and title based on the input columns
       if (!(validatedColumns[0].empty() && validatedColumns[1].empty())) {
          const auto v2Name_str = std::string(v2Name);
          const auto g_name = std::string(v1Name) + "*" + v2Name_str;
@@ -1625,15 +1623,18 @@ public:
    /// ~~~
    bool HasColumn(std::string_view columnName)
    {
-      if(fCustomColumns.HasName(columnName)) return true;
+      if (fCustomColumns.HasName(columnName))
+         return true;
 
       if (auto tree = fLoopManager->GetTree()) {
          const auto &branchNames = fLoopManager->GetBranchNames();
          const auto branchNamesEnd = branchNames.end();
-         if (branchNamesEnd != std::find(branchNames.begin(), branchNamesEnd, columnName)) return true;
+         if (branchNamesEnd != std::find(branchNames.begin(), branchNamesEnd, columnName))
+            return true;
       }
 
-      if (fDataSource && fDataSource->HasColumn(columnName)) return true;
+      if (fDataSource && fDataSource->HasColumn(columnName))
+         return true;
 
       return false;
    }
@@ -1828,11 +1829,8 @@ public:
    /// See the previous overloads for further details.
    RResultPtr<RDisplay> Display(std::string_view columnNameRegexp = "", const int &nRows = 5)
    {
-      auto selectedColumns = RDFInternal::ConvertRegexToColumns(fCustomColumns,
-                                                                fLoopManager->GetTree(),
-                                                                fDataSource,
-                                                                columnNameRegexp,
-                                                                "Display");
+      auto selectedColumns = RDFInternal::ConvertRegexToColumns(fCustomColumns, fLoopManager->GetTree(), fDataSource,
+                                                                columnNameRegexp, "Display");
       return Display(selectedColumns, nRows);
    }
 
