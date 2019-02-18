@@ -75,7 +75,7 @@ rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -l
           -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
           -lMultiProc"
 
-if [ `uname -m` != 'i686' ]; then
+if [ "@UNIX@" != "1" ] || [ "@CMAKE_SIZEOF_VOID_P@" != "4" ]; then
    rootlibs="$rootlibs -lROOTDataFrame"
 fi
 
