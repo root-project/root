@@ -61,9 +61,6 @@ public:
       return valuePtr;
    }
 
-   /// Mounts an existing model as a sub tree, which allows for composing of tree models
-   std::shared_ptr<RTreeValueCollection> TreeFieldCollection(std::string_view fieldName, std::shared_ptr<RTreeModel> subModel);
-
    RTreeFieldRoot* GetRootField() { return &fRootField; }
    RTreeEntry* GetDefaultEntry() { return &fDefaultEntry; }
 };

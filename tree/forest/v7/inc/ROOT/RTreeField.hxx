@@ -85,6 +85,12 @@ protected:
    virtual void DoRead(TreeIndex_t index, RTreeValueBase* value);
    virtual void DoReadV(TreeIndex_t index, TreeIndex_t count, void* dst);
 
+   /// Simple fields resolve directly to a column. When simple fields generate a value, they use
+   /// MakeSimpleValue to connect the value's fMappedElement member to the principal column
+   void MakeSimpleValue(const RColumnElementBase &mappedElement, RTreeValueBase *value) {
+      value->SetMappedElement(mappedElement);
+   }
+
 public:
    /// Field names convey the level of subfields; sub fields (nested collections) are separated by a dot
    static constexpr char kCollectionSeparator = '/';
@@ -289,11 +295,16 @@ public:
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase* GenerateValue(void* where, ArgsT&&... args)
    {
-      return new ROOT::Experimental::RTreeValue<float>(this, static_cast<float*>(where), std::forward<ArgsT>(args)...);
+      auto v =
+         new ROOT::Experimental::RTreeValue<float>(this, static_cast<float*>(where), std::forward<ArgsT>(args)...);
+      MakeSimpleValue(Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)), v);
+      return v;
    }
    ROOT::Experimental::Detail::RTreeValueBase* GenerateValue(void* where) final { return GenerateValue(where, 0.0); }
    Detail::RTreeValueBase CaptureValue(void *where) final {
-      return ROOT::Experimental::RTreeValue<float>(true, this, static_cast<float*>(where));
+      ROOT::Experimental::RTreeValue<float> v(true, this, static_cast<float*>(where));
+      MakeSimpleValue(Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)), &v);
+      return v;
    }
    size_t GetValueSize() const final { return sizeof(float); }
 };
