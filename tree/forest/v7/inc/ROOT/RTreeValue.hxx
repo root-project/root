@@ -27,8 +27,6 @@ namespace Experimental {
 
 namespace Detail {
 
-// TODO(jblomer): only give RTreeField and descendants access to RTreeValue and descendants
-
 class RTreeFieldBase;
 
 // clang-format off
@@ -38,26 +36,35 @@ class RTreeFieldBase;
 \brief Represents transient storage of simple or complex C++ values.
 
 The data carried by the tree value is used by the computational code and it is supposed to be serialized on Fill
-or deserialized into by tree reading.
+or deserialized into by tree reading.  Only fields can generate their corresponding tree values.
 */
 // clang-format on
 class RTreeValueBase {
+   friend class RTreeFieldBase;
+
 protected:
+   /// Every value is connected to a field of the corresponding type that has created the value.
+   RTreeFieldBase* fField;
    /// The memory location containing (constructed) data of a certain C++ type
    void* fRawPtr;
 
-public:
-   RTreeValueBase(RTreeFieldBase *field) : fRawPtr(nullptr), fField(field) {}
-   RTreeValueBase(RTreeFieldBase *field, void* rawPtr) : fRawPtr(rawPtr), fField(field) {}
-   virtual ~RTreeValueBase() = default; // Prevent slicing
-
-   /// Every value is connected to a field of the corresponding type.
-   RTreeFieldBase* fField;
    /// For simple types, the mapped element drills through the layers from the C++ data representation
    /// to the primitive columns.  Otherwise, using fMappedElements is undefined.
+   /// Only RTreeFieldBase used fMappedElement
    RColumnElementBase fMappedElement;
 
+   /// To be called only by RTreeFieldBase
+   void SetMappedElement(const Detail::RColumnElementBase &element) {
+      fMappedElement = element;
+   }
+
+public:
+   RTreeValueBase(RTreeFieldBase *field) : fField(field), fRawPtr(nullptr) {}
+   RTreeValueBase(RTreeFieldBase *field, void* rawPtr) : fField(field), fRawPtr(rawPtr) {}
+   virtual ~RTreeValueBase() = default; // Prevent slicing
+
    void* GetRawPtr() const { return fRawPtr; }
+   RTreeFieldBase* GetField() const { return fField; }
 };
 
 } // namespace Detail
@@ -67,8 +74,9 @@ public:
 /**
 \class ROOT::Experimental::RTreeValue
 \ingroup Forest
+\brief A type-safe and memory-managed front for RTreeValueBase
 
-For simple C++ types, the tree value maps directly to a column element.
+Used when types are available at compile time by RTreeModel::AddField()
 */
 // clang-format on
 template <typename T>
@@ -83,34 +91,16 @@ public:
       , fValue(std::shared_ptr<T>(new (where) T(std::forward<ArgsT>(args)...)))
    {
       fRawPtr = fValue.get();
-      // fMappedElement is only used for simple types
-      fMappedElement = Detail::RColumnElementBase(fRawPtr, sizeof(T), true);
    }
 
    RTreeValue(bool /*captureTag*/, Detail::RTreeFieldBase* field, T* value)
       : Detail::RTreeValueBase(field), fValue(nullptr)
    {
       fRawPtr = value;
-      // fMappedElement is only used for simple types
-      fMappedElement = Detail::RColumnElementBase(fRawPtr, sizeof(T), true);
    }
 
    T* Get() const { return static_cast<T*>(fRawPtr); }
    std::shared_ptr<T> GetSharedPtr() const { return fValue; }
-};
-
-
-// clang-format off
-/**
-\class ROOT::Experimental::RTreeValueCollection
-\ingroup Forest
-
-A value that behaves like a tree and represents the entire collection in its subtree
-*/
-// clang-format on
-class RTreeValueCollection : public Detail::RTreeValueBase {
-public:
-   RTreeValueCollection(Detail::RTreeFieldBase* field) : Detail::RTreeValueBase(field) {}
 };
 
 } // namespace Experimental
