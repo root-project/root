@@ -26,14 +26,15 @@ set(sources
   src/PyROOTModule.cxx
   src/PyROOTStrings.cxx
   src/PyROOTWrapper.cxx
+  src/GenericPyz.cxx
+  src/RVecPyz.cxx
+  src/TClassPyz.cxx
+  src/TClonesArrayPyz.cxx
   src/TDirectoryPyz.cxx
   src/TFilePyz.cxx
   src/TTreePyz.cxx
-  src/TClonesArrayPyz.cxx
-  src/GenericPyz.cxx
-  src/RVecPyz.cxx
-  src/PyzPythonHelpers.cxx
   src/PyzCppHelpers.cxx
+  src/PyzPythonHelpers.cxx
 )
 
 file(COPY python/ROOT DESTINATION ${localruntimedir})

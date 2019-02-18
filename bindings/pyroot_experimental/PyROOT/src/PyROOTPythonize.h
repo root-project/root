@@ -17,17 +17,24 @@
 namespace PyROOT {
 
 PyObject *AddPrettyPrintingPyz(PyObject *self, PyObject *args);
-PyObject *AddDirectoryWritePyz(PyObject *self, PyObject *args);
+
 PyObject *AddDirectoryAttrSyntaxPyz(PyObject *self, PyObject *args);
-PyObject *AddBranchAttrSyntax(PyObject *self, PyObject *args);
+PyObject *AddDirectoryWritePyz(PyObject *self, PyObject *args);
 PyObject *AddFileOpenPyz(PyObject *self, PyObject *args);
-PyObject *AddSetItemTCAPyz(PyObject *self, PyObject *args);
-PyObject *SetBranchAddressPyz(PyObject *self, PyObject *args);
+
+PyObject *AddBranchAttrSyntax(PyObject *self, PyObject *args);
 PyObject *BranchPyz(PyObject *self, PyObject *args);
+PyObject *SetBranchAddressPyz(PyObject *self, PyObject *args);
+
+PyObject *AddTClassDynamicCastPyz(PyObject *self, PyObject *args);
+
+PyObject *AddSetItemTCAPyz(PyObject *self, PyObject *args);
+
+PyObject *AsRVec(PyObject *self, PyObject *obj);
+
 PyObject *GetEndianess(PyObject *self);
 PyObject *GetVectorDataPointer(PyObject *self, PyObject *args);
 PyObject *GetSizeOfType(PyObject *self, PyObject *args);
-PyObject *AsRVec(PyObject *self, PyObject *obj);
 
 } // namespace PyROOT
 
