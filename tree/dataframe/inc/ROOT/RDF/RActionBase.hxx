@@ -55,7 +55,7 @@ private:
    RBookedCustomColumns fCustomColumns;
 
 public:
-   RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RBookedCustomColumns &customColumns);
+   RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, RBookedCustomColumns &&customColumns);
    RActionBase(const RActionBase &) = delete;
    RActionBase &operator=(const RActionBase &) = delete;
    virtual ~RActionBase();
