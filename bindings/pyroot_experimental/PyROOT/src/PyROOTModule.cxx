@@ -45,6 +45,8 @@ static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunc
                                         (char *)"Allow to access branches as tree attributes"},
                                        {(char *)"AddFileOpenPyz", (PyCFunction)PyROOT::AddFileOpenPyz, METH_VARARGS,
                                         (char *)"Make TFile::Open a constructor, adjusting for example the reference count"},
+                                        {(char *)"AddTClassDynamicCastPyz", (PyCFunction)PyROOT::AddTClassDynamicCastPyz, METH_VARARGS,
+                                        (char *)"Cast the void* returned by TClass::DynamicCast to the right type"},
                                        {(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
                                         (char *)"Fully enable the use of TTree::SetBranchAddress from Python"},
                                        {(char *)"BranchPyz", (PyCFunction)PyROOT::BranchPyz, METH_VARARGS,
