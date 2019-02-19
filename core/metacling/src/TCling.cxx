@@ -1074,40 +1074,18 @@ std::string TCling::ToString(const char* type, void* obj)
 ///\returns true if the module was loaded.
 static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp, bool Complain = true)
 {
-   clang::CompilerInstance &CI = *interp.getCI();
-
-   assert(CI.getLangOpts().Modules && "Function only relevant when C++ modules are turned on!");
-
-   clang::Preprocessor &PP = CI.getPreprocessor();
-   clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
-
-   cling::Interpreter::PushTransactionRAII RAII(&interp);
-   if (clang::Module *M = headerSearch.lookupModule(ModuleName, true /*AllowSearch*/, true /*AllowExtraSearch*/)) {
-      clang::IdentifierInfo *II = PP.getIdentifierInfo(M->Name);
-      SourceLocation ValidLoc = M->DefinitionLoc;
-      bool success = !CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(II, ValidLoc)).isInvalid();
-      if (success) {
-         // Also make the module visible in the preprocessor to export its macros.
-         PP.makeModuleVisible(M, ValidLoc);
-         return success;
-      }
-      if (Complain) {
-         if (M->IsSystem)
-            Error("TCling::LoadModule", "Module %s failed to load", M->Name.c_str());
-         else
-            Info("TCling::LoadModule", "Module %s failed to load", M->Name.c_str());
-      }
-   }
+   if (interp.loadModule(ModuleName, Complain))
+      return true;
 
    // Load modulemap if we have one in current directory
-   SourceManager& SM = PP.getSourceManager();
-   FileManager& FM = SM.getFileManager();
-   const clang::DirectoryEntry *DE = FM.getDirectory(".");
+   Preprocessor &PP = interp.getCI()->getPreprocessor();
+   FileManager& FM = PP.getFileManager();
+   const DirectoryEntry *DE = FM.getDirectory(".");
    if (DE) {
-      const clang::FileEntry *FE = headerSearch.lookupModuleMapFile(DE, /*IsFramework*/ false);
-      // Check if "./module.modulemap is already loaded or not
-      if (!gCling->IsLoaded("./module.modulemap") && FE) {
-         if(!headerSearch.loadModuleMapFile(FE, /*IsSystem*/ false))
+      HeaderSearch& HS = PP.getHeaderSearchInfo();
+      const FileEntry *FE = HS.lookupModuleMapFile(DE, /*IsFramework*/ false);
+      if (FE && !gCling->IsLoaded("./module.modulemap")) {
+         if (!HS.loadModuleMapFile(FE, /*IsSystem*/ false))
             return LoadModule(ModuleName, interp, Complain);
          Error("TCling::LoadModule", "Could not load modulemap in the current directory");
       }
@@ -1115,6 +1093,7 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
 
    if (Complain)
       Error("TCling::LoadModule", "Module %s not found!", ModuleName.c_str());
+
    return false;
 }
 
