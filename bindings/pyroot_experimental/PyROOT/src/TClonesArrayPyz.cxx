@@ -64,7 +64,7 @@ static PyObject *PyStyleIndex(PyObject *self, PyObject *index)
    // To know the capacity of a TClonesArray, we need to invoke GetSize
    PyObject *pysize = CallPyObjMethod(self, "GetSize");
    if (!pysize) {
-      PyErr_Clear();
+      PyErr_SetString(PyExc_RuntimeError, "unable to get the size of TClonesArray");
       return nullptr;
    }
 
