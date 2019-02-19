@@ -18,9 +18,7 @@
 
 #include <ROOT/RColumnElement.hxx>
 
-#include <memory>
 #include <new>
-#include <utility>
 
 namespace ROOT {
 namespace Experimental {
@@ -36,7 +34,8 @@ class RTreeFieldBase;
 \brief Represents transient storage of simple or complex C++ values.
 
 The data carried by the tree value is used by the computational code and it is supposed to be serialized on Fill
-or deserialized into by tree reading.  Only fields can generate their corresponding tree values.
+or deserialized into by tree reading.  Only fields can generate their corresponding tree values. This class is a mere
+wrapper around the memory location, it does not own it.  Memory ownership is managed through the RTreeEntry.
 */
 // clang-format on
 class RTreeValueBase {
@@ -59,9 +58,8 @@ protected:
    }
 
 public:
-   RTreeValueBase(RTreeFieldBase *field) : fField(field), fRawPtr(nullptr) {}
+   RTreeValueBase() : fField(nullptr), fRawPtr(nullptr) {}
    RTreeValueBase(RTreeFieldBase *field, void* rawPtr) : fField(field), fRawPtr(rawPtr) {}
-   virtual ~RTreeValueBase() = default; // Prevent slicing
 
    void* GetRawPtr() const { return fRawPtr; }
    RTreeFieldBase* GetField() const { return fField; }
@@ -74,33 +72,22 @@ public:
 /**
 \class ROOT::Experimental::RTreeValue
 \ingroup Forest
-\brief A type-safe and memory-managed front for RTreeValueBase
+\brief A type-safe front for RTreeValueBase
 
 Used when types are available at compile time by RTreeModel::AddField()
 */
 // clang-format on
 template <typename T>
 class RTreeValue : public Detail::RTreeValueBase {
-private:
-   std::shared_ptr<T> fValue;
-
 public:
    template <typename... ArgsT>
-   RTreeValue(Detail::RTreeFieldBase* field, T* where, ArgsT&&... args)
-      : Detail::RTreeValueBase(field)
-      , fValue(std::shared_ptr<T>(new (where) T(std::forward<ArgsT>(args)...)))
+   RTreeValue(Detail::RTreeFieldBase* field, T* where, ArgsT&&... args) : Detail::RTreeValueBase(field, where)
    {
-      fRawPtr = fValue.get();
+      new (where) T(std::forward<ArgsT>(args)...);
    }
-
-   RTreeValue(bool /*captureTag*/, Detail::RTreeFieldBase* field, T* value)
-      : Detail::RTreeValueBase(field), fValue(nullptr)
-   {
-      fRawPtr = value;
-   }
+   RTreeValue(bool /*captureTag*/, Detail::RTreeFieldBase* field, T* value) : Detail::RTreeValueBase(field, value) {}
 
    T* Get() const { return static_cast<T*>(fRawPtr); }
-   std::shared_ptr<T> GetSharedPtr() const { return fValue; }
 };
 
 } // namespace Experimental

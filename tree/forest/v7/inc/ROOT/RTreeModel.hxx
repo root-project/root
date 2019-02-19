@@ -46,22 +46,16 @@ class RTreeModel {
    RTreeEntry fDefaultEntry;
 
 public:
-   /// Adds a pre-created field and takes ownership of that passed field
-   void TakeField(Detail::RTreeFieldBase* field);
+   /// Adds a field whose type is not known at compile time.  Thus there is no shared pointer returned.
+   void AddField(std::unique_ptr<Detail::RTreeFieldBase> field);
 
-   /// Creates a new field and a corresponding tree value.
+   /// Creates a new field and a corresponding tree value that is managed by a shared pointer.
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddField(std::string_view fieldName, ArgsT&&... args) {
       auto field = std::make_unique<RTreeField<T>>(fieldName);
-      T* valueLocation = static_cast<T*>(malloc(field->GetValueSize()));
-      R__ASSERT(valueLocation != nullptr);
-      RTreeValue<T>* value = static_cast<RTreeValue<T>*>(
-         field->GenerateValue(valueLocation, std::forward<ArgsT>(args)...));
+      auto ptr = fDefaultEntry.AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
       fRootField.Attach(std::move(field));
-
-      auto valuePtr = value->GetSharedPtr();
-      fDefaultEntry.TakeValue(value);
-      return valuePtr;
+      return ptr;
    }
 
    RTreeFieldRoot* GetRootField() { return &fRootField; }
