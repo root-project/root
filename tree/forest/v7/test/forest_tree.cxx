@@ -30,9 +30,31 @@ TEST(RForestTree, Basics)
    //RInputTree tree2(std::make_unique<RPageSource>("T"));
 }
 
-TEST(RForestTree, ResurrectModel)
+TEST(RForestTree, ReconstructModel)
 {
-   //auto field = std::unique_ptr<RTreeFieldBase>(RTreeFieldBase::Create("grid", "std::vector<std::vector<float>>"));
+   TFile *file = TFile::Open("test.root", "RECREATE");
+   RPageSinkRoot::RSettings settingsWrite;
+   settingsWrite.fFile = file;
+   settingsWrite.fTakeOwnership = true;
+
+   auto model = std::make_shared<RTreeModel>();
+   auto fieldPt = model->AddField<float>("pt", 42.0);
+   auto fieldNnlo = model->AddField<std::vector<std::vector<float>>>("nnlo");
+   auto fieldKlass = model->AddField<ROOT::Experimental::RForestTest>("klass");
+   {
+      RPageSinkRoot sinkRoot("myTree", settingsWrite);
+      sinkRoot.Create(model.get());
+      sinkRoot.CommitDataset();
+   }
+
+   file = TFile::Open("test.root", "READ");
+   RPageSourceRoot::RSettings settingsRead;
+   settingsRead.fFile = file;
+   settingsRead.fTakeOwnership = true;
+   RPageSourceRoot sourceRoot("myTree", settingsRead);
+   sourceRoot.Attach();
+
+   auto modelReconstructed = sourceRoot.GenerateModel();
 }
 
 TEST(RForestTree, StorageRoot)

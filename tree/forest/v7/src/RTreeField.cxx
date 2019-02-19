@@ -54,6 +54,10 @@ ROOT::Experimental::Detail::RTreeFieldBase::Create(const std::string &fieldName,
       auto itemField = Create(GetCollectionName(fieldName), itemTypeName);
       return new RTreeFieldVector(fieldName, std::unique_ptr<Detail::RTreeFieldBase>(itemField));
    }
+   auto cl = TClass::GetClass(normalizedType.c_str());
+   if (cl != nullptr) {
+      return new RTreeFieldClass(fieldName, normalizedType);
+   }
    R__ASSERT(false);
    return nullptr;
 }
