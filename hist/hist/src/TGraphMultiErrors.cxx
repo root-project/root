@@ -31,7 +31,6 @@
 #include "TGraphPainter.h"
 #include "TBox.h"
 #include "TArrow.h"
-#include "TRegexp.h"
 #include "Math/QuantFuncMathCore.h"
 
 #include "TGraphMultiErrors.h"

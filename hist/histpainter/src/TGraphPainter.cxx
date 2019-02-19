@@ -33,6 +33,7 @@
 #include "TFrame.h"
 #include "TMarker.h"
 #include "TVirtualPadEditor.h"
+#include "TRegexp.h"
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 Int_t TGraphPainter::fgMaxPointsPerLine = 50;
@@ -2615,7 +2616,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option) {
 
     Int_t NErrorDimensions = tg->GetNErrorDimensions();
 
-    TString tsOpt = optio;
+    TString tsOpt = option;
     tsOpt.ToLower();
 
     TString* options = new TString[NErrorDimensions + 1];
