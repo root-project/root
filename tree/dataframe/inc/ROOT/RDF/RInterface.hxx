@@ -1861,7 +1861,7 @@ private:
          RDFDetail::RCustomColumn<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
 
       auto entryColumn = std::make_shared<NewColEntry_t>(fLoopManager, entryColName, std::move(entryColGen),
-                                                         newCols.GetNames(), fLoopManager->GetNSlots(), newCols);
+                                                         ColumnNames_t{}, fLoopManager->GetNSlots(), newCols);
       newCols.AddName(entryColName);
       newCols.AddColumn(entryColumn, entryColName);
 
@@ -1878,7 +1878,7 @@ private:
       using NewColSlot_t = RDFDetail::RCustomColumn<decltype(slotColGen), RDFDetail::CustomColExtraArgs::Slot>;
 
       auto slotColumn = std::make_shared<NewColSlot_t>(fLoopManager, slotColName, std::move(slotColGen),
-                                                       newCols.GetNames(), fLoopManager->GetNSlots(), newCols);
+                                                       ColumnNames_t{}, fLoopManager->GetNSlots(), newCols);
 
       newCols.AddName(slotColName);
       newCols.AddColumn(slotColumn, slotColName);
