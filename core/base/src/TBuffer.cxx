@@ -364,3 +364,43 @@ TVirtualArray *TBuffer::PopDataCache()
    return val;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Byte-swap N primitive-elements in the buffer.
+/// Bulk API relies on this function.
+
+Bool_t TBuffer::ByteSwapBuffer(Long64_t n, EDataType type)
+{
+   char *input_buf = GetCurrent();
+   if ((type == EDataType::kShort_t) || (type == EDataType::kUShort_t)) {
+#ifdef R__BYTESWAP
+      Short_t *buf __attribute__((aligned(8))) = reinterpret_cast<Short_t*>(input_buf);
+      for (int idx=0; idx<n; idx++) {
+         Short_t tmp = *reinterpret_cast<Short_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
+         char *tmp_ptr = reinterpret_cast<char *>(&tmp);
+         frombuf(tmp_ptr, buf + idx);
+      }
+#endif
+   } else if ((type == EDataType::kFloat_t) || (type == EDataType::kInt_t) || (type == EDataType::kUInt_t)) {
+#ifdef R__BYTESWAP
+      Float_t *buf __attribute__((aligned(8))) = reinterpret_cast<Float_t*>(input_buf);
+      for (int idx=0; idx<n; idx++) {
+         Float_t tmp = *reinterpret_cast<Float_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
+         char *tmp_ptr = reinterpret_cast<char *>(&tmp);
+         frombuf(tmp_ptr, buf + idx);
+      }
+#endif
+   } else if ((type == EDataType::kDouble_t) || (type == EDataType::kLong64_t) || (type == EDataType::kULong64_t)) {
+#ifdef R__BYTESWAP
+      Double_t *buf __attribute__((aligned(8))) = reinterpret_cast<Double_t*>(input_buf);
+      for (int idx=0; idx<n; idx++) {
+         Double_t tmp = *reinterpret_cast<Double_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
+         char *tmp_ptr = reinterpret_cast<char*>(&tmp);
+         frombuf(tmp_ptr, buf + idx);
+      }
+#endif
+   } else {
+      return false;
+   }
+
+   return true;
+}
