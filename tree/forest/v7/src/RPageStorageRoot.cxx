@@ -33,6 +33,16 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forest
 {
 }
 
+ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forestName, std::string_view path)
+   : ROOT::Experimental::Detail::RPageSink(forestName)
+   , fForestName(forestName)
+   , fDirectory(nullptr)
+{
+   TFile *file = TFile::Open(path.to_string().c_str(), "RECREATE");
+   fSettings.fFile = file;
+   fSettings.fTakeOwnership = true;
+}
+
 ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
 {
    if (fSettings.fTakeOwnership) {
@@ -128,6 +138,16 @@ ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view fo
    , fDirectory(nullptr)
    , fSettings(settings)
 {
+}
+
+ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view forestName, std::string_view path)
+   : ROOT::Experimental::Detail::RPageSource(forestName)
+   , fForestName(forestName)
+   , fDirectory(nullptr)
+{
+   TFile *file = TFile::Open(path.to_string().c_str(), "READ");
+   fSettings.fFile = file;
+   fSettings.fTakeOwnership = true;
 }
 
 
