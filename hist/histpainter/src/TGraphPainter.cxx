@@ -2582,7 +2582,7 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint this TGraphBentErrors with its current attributes.
+/// Paint this TGraphMultiErrors with its current attributes.
 ///
 /// To be able to define different drawing options for the multiple error dimensions
 /// the option string can consist of multiple blocks separated by semicolons.
