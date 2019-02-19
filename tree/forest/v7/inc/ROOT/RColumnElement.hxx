@@ -20,6 +20,7 @@
 #include <ROOT/RForestUtil.hxx>
 
 #include <cstring> // for memcpy
+#include <type_traits>
 
 namespace ROOT {
 namespace Experimental {
@@ -45,10 +46,10 @@ protected:
    /// Points to valid C++ data, either a single value or an array of values
    void* fRawContent;
    /// Size of the C++ value pointed to by fRawContent (not necessarily equal to the on-disk element size)
-   unsigned int fSize;
+   const unsigned int fSize;
 
    /// Indicates that *fRawContent is bitwise identical to the physical column element
-   bool fIsMappable;
+   const bool fIsMappable;
 
    virtual void DoSerialize(void* /* destination */, std::size_t /*count*/) const { }
    virtual void DoDeserialize(void* /* source */, std::size_t /*count*/) const { }
@@ -89,7 +90,7 @@ public:
 
    void SetRawContent(void* content) { fRawContent = content; }
    void* GetRawContent() const { return fRawContent; }
-   decltype(fSize) GetSize() const { return fSize; }
+   unsigned int GetSize() const { return fSize; }
 };
 
 /**
