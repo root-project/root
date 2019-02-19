@@ -85,6 +85,8 @@ weighted histograms (because the likelihood computation will be incorrect).
 #include "Fit/Fitter.h"
 #include "TFitResult.h"
 #include "Math/Functor.h"
+#include "Math/Functor.h"
+#include "Math/WrappedTF1.h"
 
 #include <limits>
 
@@ -273,7 +275,9 @@ TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
       fFitter->Config().MinimizerOptions().SetPrintLevel(0);
    }
 
-
+   // set model function in fitter to have it in FitResult
+   // in this way one can compute for example the confidence intervals   
+   fFitter->SetFunction(ROOT::Math::WrappedTF1(*f1), false); 
 
    // perform the actual fit
 

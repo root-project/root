@@ -180,6 +180,7 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot = false, bool debu
           TFitResultPtr res = hM2E->Fit(fM2Fit, optFit);
           if (plot) {
              hM2E->DrawCopy("E");
+             fM2Fit->SetLineColor(kBlue);
              fM2Fit->DrawCopy("SAME");
           }
           if (debug) res->Print();
@@ -201,8 +202,8 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot = false, bool debu
           // gPad = pad;
 
           TBinomialEfficiencyFitter bef(hM2N, hM2D);
-          TString optFit = "RI";
-          if (debug) optFit += TString("SV");
+          TString optFit = "RI S";
+          if (debug) optFit += TString("V");
           TFitResultPtr res = bef.Fit(fM2Fit2,optFit);
           status = res;
           if (status !=0) {
@@ -214,6 +215,19 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot = false, bool debu
           if (plot) {
              fM2Fit2->SetLineColor(kRed);
              fM2Fit2->DrawCopy("SAME");
+          
+             bool confint = (status == 0);
+             if (confint) {
+                // compute confidence interval on fitted function
+                auto htemp = fM2Fit2->GetHistogram();
+                ROOT::Fit::BinData xdata;
+                ROOT::Fit::FillData(xdata, fM2Fit2->GetHistogram() );
+                TGraphErrors gr(fM2Fit2->GetHistogram() );
+                res->GetConfidenceIntervals(xdata, gr.GetEY(), 0.68, false);
+                gr.SetFillColor(6);
+                gr.SetFillStyle(3005);
+                gr.DrawClone("4 same");
+             }
           }
           if (debug) {
              res->Print();
