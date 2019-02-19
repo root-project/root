@@ -17,6 +17,7 @@ set(py_sources
   ROOT/pythonization/_tdirectory.py
   ROOT/pythonization/_tdirectoryfile.py
   ROOT/pythonization/_tfile.py
+  ROOT/pythonization/_titer.py
   ROOT/pythonization/_tobject.py
   ROOT/pythonization/_tseqcollection.py
   ROOT/pythonization/_ttree.py
