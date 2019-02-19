@@ -2641,13 +2641,6 @@ void TGraphMultiErrors::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option
     for (Int_t i = filled; i <= NErrorDimensions; i++)
         options[i] = "";
 
-
-    TGraphPainter* painter = (TGraphPainter*) TVirtualGraphPainter::GetPainter();
-
-    if (!painter)
-	return;
-
-
     Double_t*  xline = NULL;
     Double_t** yline = new Double_t*[NErrorDimensions];
     Int_t if1 = 0;
@@ -2744,7 +2737,7 @@ void TGraphMultiErrors::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option
     }
 
     if (!AnyErrors && !DrawErrorsX) {
-	painter->PaintGraphSimple(tg, options[0].Data());
+	PaintGraphSimple(tg, options[0].Data());
         return;
     }
 
@@ -2752,7 +2745,7 @@ void TGraphMultiErrors::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option
     Bool_t IndividualStyles = options[0].Contains("s");
 
     if (DrawAxis)
-        painter->PaintGraphSimple(tg, options[0].Data());
+        PaintGraphSimple(tg, options[0].Data());
 
     Int_t NPointsInside = AnyOption0 ? theNpoints : 0;
 
@@ -2993,7 +2986,7 @@ void TGraphMultiErrors::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option
     }
 
     if (DrawMarker && !DrawAxis)
-	painter->PaintGraphSimple(tg, options[0].Data());
+	PaintGraphSimple(tg, options[0].Data());
     gPad->ResetBit(TGraph::kClipFrame);
 
     TGraph* tgDummy = new TGraph();
@@ -3012,8 +3005,8 @@ void TGraphMultiErrors::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option
 	    Int_t logy = gPad->GetLogy();
 	    gPad->SetLogx(0);
 	    gPad->SetLogy(0);
-	    if (Option4[j]) painter->PaintGraph(tgDummy, 2*NPointsInside, xline, yline[j], "FC");
-	    else            painter->PaintGraph(tgDummy, 2*NPointsInside, xline, yline[j], "F");
+	    if (Option4[j]) PaintGraph(tgDummy, 2*NPointsInside, xline, yline[j], "FC");
+	    else            PaintGraph(tgDummy, 2*NPointsInside, xline, yline[j], "F");
 	    gPad->SetLogx(logx);
 	    gPad->SetLogy(logy);
 	    delete [] yline[j];
