@@ -27,8 +27,8 @@ using namespace CPyCppyy;
 // Clone an object into a position of a TClonesArray
 static TObject *CloneObjectInPlace(const TObject *obj, TClonesArray *cla, int index)
 {
-   // Create object with default constructor at index
-   char *arrObj = (char *)cla->New(index);
+   // Get or create object with default constructor at index
+   char *arrObj = (char *)cla->ConstructedAt(index);
    if (!arrObj) {
       PyErr_Format(PyExc_RuntimeError, "Failed to create new object at index %d of TClonesArray", index);
       return nullptr;
