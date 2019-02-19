@@ -45,7 +45,7 @@ protected:
     virtual Bool_t     CopyPointsY(Double_t** arrays, Int_t ibegin, Int_t iend, Int_t obegin);
     Bool_t             CtorAllocate();
     virtual void       FillZero(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE);
-    virtual void       FillZeroY(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE);
+    virtual void       FillZeroY(Int_t begin, Int_t end);
     virtual Bool_t     DoMerge(const TGraph* tg);
     virtual void       CalcYErrorSum();
 

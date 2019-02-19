@@ -2605,7 +2605,7 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 /// Per default the Fill and Line Styles of the Graph are being used for all error
 /// dimensions. To use the specific ones add the draw option s to the first block.
 
-void TGraphMultiErrors::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option) {
+void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option) {
     if (!theGraph->InheritsFrom(TGraphMultiErrors::Class())) {
 	PaintHelper(theGraph, option);
 	return;

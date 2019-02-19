@@ -1183,7 +1183,7 @@ void TGraphMultiErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor) {
 ///
 /// Necessary for correct treatment of multiple y error dimensions
 
-void TGraphMultiErrors::FillZeroY(Int_t begin, Int_t end, Bool_t from_ctor) {
+void TGraphMultiErrors::FillZeroY(Int_t begin, Int_t end) {
     Int_t n = fNpoints * sizeof(Double_t);
 
     for (Int_t j = begin; j < end; j++) {
