@@ -1126,8 +1126,8 @@ static std::string GetModuleNameAsString(clang::Module *M, const clang::Preproce
 
    std::string ModuleFileName;
    if (!HSOpts.PrebuiltModulePaths.empty())
-      // Load the module from the prebuilt module path.
-      ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(M->Name, "", /*UsePrebuiltPath*/ true);
+      // Load the module from *only* in the prebuilt module path.
+      ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(M->Name, /*ModuleMapPath*/"", /*UsePrebuiltPath*/ true);
    if (ModuleFileName.empty()) return "";
 
    std::string ModuleName = llvm::sys::path::filename(ModuleFileName);
