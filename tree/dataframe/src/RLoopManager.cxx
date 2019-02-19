@@ -240,6 +240,7 @@ void RLoopManager::RunEmptySource()
    for (ULong64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
       RunAndCheckFilters(0, currEntry);
    }
+   CleanUpTask(0u);
 }
 
 /// Run event loop over one or multiple ROOT files, in parallel.
@@ -281,6 +282,7 @@ void RLoopManager::RunTreeReader()
    while (r.Next() && fNStopsReceived < fNChildren) {
       RunAndCheckFilters(0, r.GetCurrentEntry());
    }
+   CleanUpTask(0u);
 }
 
 /// Run event loop over data accessed through a DataSource, in sequence.
@@ -300,6 +302,7 @@ void RLoopManager::RunDataSource()
             }
          }
       }
+      CleanUpTask(0u);
       fDataSource->FinaliseSlot(0u);
       ranges = fDataSource->GetEntryRanges();
    }

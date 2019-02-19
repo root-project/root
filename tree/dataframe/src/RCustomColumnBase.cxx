@@ -29,7 +29,8 @@ unsigned int RCustomColumnBase::GetNextID()
 
 RCustomColumnBase::RCustomColumnBase(RLoopManager *lm, std::string_view name, const unsigned int nSlots,
                                      const bool isDSColumn, const RDFInternal::RBookedCustomColumns &customColumns)
-   : fLoopManager(lm), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn), fCustomColumns(customColumns)
+   : fLoopManager(lm), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn), fCustomColumns(customColumns),
+     fIsInitialized(nSlots, false)
 {
    fLoopManager->RegisterCustomColumn(this);
 }
