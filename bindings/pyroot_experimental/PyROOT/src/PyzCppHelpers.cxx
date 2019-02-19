@@ -24,10 +24,7 @@ pythonizations.
 PyObject *CallPyObjMethod(PyObject *obj, const char *meth)
 {
    // Helper; call method with signature: obj->meth()
-   Py_INCREF(obj);
-   PyObject* result = PyObject_CallMethod(obj, const_cast<char*>(meth), const_cast<char*>(""));
-   Py_DECREF(obj);
-   return result;
+   return PyObject_CallMethod(obj, const_cast<char*>(meth), const_cast<char*>(""));
 }
 
 TClass *GetTClass(const CPyCppyy::CPPInstance *pyobj)
