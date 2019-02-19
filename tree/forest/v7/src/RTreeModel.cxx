@@ -15,3 +15,15 @@
 
 #include "ROOT/RTreeModel.hxx"
 
+#include <TError.h>
+
+#include <cstdlib>
+
+void ROOT::Experimental::RTreeModel::TakeField(Detail::RTreeFieldBase* field)
+{
+   auto valueLocation = malloc(field->GetValueSize());
+   R__ASSERT(valueLocation != nullptr);
+   fDefaultEntry.TakeValue(field->GenerateValue());
+   fRootField.Attach(std::unique_ptr<Detail::RTreeFieldBase>(field));
+}
+
