@@ -84,12 +84,6 @@ protected:
    virtual void DoRead(TreeIndex_t index, RTreeValueBase* value);
    virtual void DoReadV(TreeIndex_t index, TreeIndex_t count, void* dst);
 
-   /// Simple fields resolve directly to a column. When simple fields generate a value, they use
-   /// MakeSimpleValue to connect the value's fMappedElement member to the principal column
-   void MakeSimpleValue(const RColumnElementBase &mappedElement, RTreeValueBase *value) {
-      value->SetMappedElement(mappedElement);
-   }
-
 public:
    /// Field names convey the level of subfields; sub fields (nested collections) are separated by a dot
    static constexpr char kCollectionSeparator = '/';
@@ -206,6 +200,7 @@ public:
    std::string GetName() const { return fName; }
    std::string GetType() const { return fType; }
    const RTreeFieldBase* GetParent() const { return fParent; }
+   bool IsSimple() const { return fIsSimple; }
 
    RIterator begin();
    RIterator end();
@@ -300,14 +295,16 @@ public:
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
    {
-      ROOT::Experimental::RTreeValue<float> v(this, static_cast<float*>(where), std::forward<ArgsT>(args)...);
-      MakeSimpleValue(Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)), &v);
+      ROOT::Experimental::RTreeValue<float> v(
+         Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)),
+         this, static_cast<float*>(where), std::forward<ArgsT>(args)...);
       return v;
    }
    ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where) final { return GenerateValue(where, 0.0); }
    Detail::RTreeValueBase CaptureValue(void *where) final {
-      ROOT::Experimental::RTreeValue<float> v(true, this, static_cast<float*>(where));
-      MakeSimpleValue(Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)), &v);
+      ROOT::Experimental::RTreeValue<float> v(true,
+         Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)),
+         this, static_cast<float*>(where));
       return v;
    }
    size_t GetValueSize() const final { return sizeof(float); }

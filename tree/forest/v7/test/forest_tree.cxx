@@ -32,26 +32,17 @@ TEST(RForestTree, Basics)
 
 TEST(RForestTree, ReconstructModel)
 {
-   TFile *file = TFile::Open("test.root", "RECREATE");
-   RPageSinkRoot::RSettings settingsWrite;
-   settingsWrite.fFile = file;
-   settingsWrite.fTakeOwnership = true;
-
    auto model = std::make_shared<RTreeModel>();
    auto fieldPt = model->AddField<float>("pt", 42.0);
    auto fieldNnlo = model->AddField<std::vector<std::vector<float>>>("nnlo");
    auto fieldKlass = model->AddField<ROOT::Experimental::RForestTest>("klass");
    {
-      RPageSinkRoot sinkRoot("myTree", settingsWrite);
+      RPageSinkRoot sinkRoot("myTree", "test.root");
       sinkRoot.Create(model.get());
       sinkRoot.CommitDataset();
    }
 
-   file = TFile::Open("test.root", "READ");
-   RPageSourceRoot::RSettings settingsRead;
-   settingsRead.fFile = file;
-   settingsRead.fTakeOwnership = true;
-   RPageSourceRoot sourceRoot("myTree", settingsRead);
+   RPageSourceRoot sourceRoot("myTree", "test.root");
    sourceRoot.Attach();
 
    auto modelReconstructed = sourceRoot.GenerateModel();
@@ -93,11 +84,6 @@ TEST(RForestTree, StorageRoot)
 
 TEST(RForestTree, WriteRead)
 {
-   TFile *file = TFile::Open("test.root", "RECREATE");
-   RPageSinkRoot::RSettings settingsWrite;
-   settingsWrite.fFile = file;
-   settingsWrite.fTakeOwnership = true;
-
    auto model = std::make_shared<RTreeModel>();
    auto fieldPt = model->AddField<float>("pt", 42.0);
    auto fieldEnergy = model->AddField<float>("energy", 7.0);
@@ -113,7 +99,7 @@ TEST(RForestTree, WriteRead)
    fieldKlass->s = "abc";
 
    {
-      ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", settingsWrite));
+      ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", "test.root"));
       tree.Fill();
    }
 
@@ -124,11 +110,7 @@ TEST(RForestTree, WriteRead)
    fieldNnlo->clear();
    fieldKlass->s.clear();
 
-   file = TFile::Open("test.root", "READ");
-   RPageSourceRoot::RSettings settingsRead;
-   settingsRead.fFile = file;
-   settingsRead.fTakeOwnership = true;
-   RInputTree tree(model, std::make_unique<RPageSourceRoot>("myTree", settingsRead));
+   RInputTree tree(model, std::make_unique<RPageSourceRoot>("myTree", "test.root"));
    EXPECT_EQ(1U, tree.GetNEntries());
    tree.GetEntry(0);
 
@@ -172,9 +154,5 @@ TEST(RForestTree, TClass) {
    auto model = std::make_shared<RTreeModel>();
    auto ptrKlass = model->AddField<ROOT::Experimental::RForestTest>("klass");
 
-   TFile *file = TFile::Open("test.root", "RECREATE");
-   RPageSinkRoot::RSettings settingsWrite;
-   settingsWrite.fFile = file;
-   settingsWrite.fTakeOwnership = true;
-   ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", settingsWrite));
+   ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", "test.root"));
 }

@@ -145,6 +145,7 @@ private:
 
 public:
    RPageSinkRoot(std::string_view forestName, RSettings settings);
+   RPageSinkRoot(std::string_view forestName, std::string_view path);
    virtual ~RPageSinkRoot();
 
    ColumnHandle_t AddColumn(RColumn* column) final;
@@ -179,6 +180,7 @@ private:
 
 public:
    RPageSourceRoot(std::string_view forestName, RSettings settings);
+   RPageSourceRoot(std::string_view forestName, std::string_view path);
    virtual ~RPageSourceRoot();
 
    ColumnHandle_t AddColumn(RColumn* column) final;
