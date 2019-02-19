@@ -59,10 +59,13 @@ class RCustomColumn final : public RCustomColumnBase {
       typename std::conditional<std::is_same<ret_type, bool>::value, std::deque<ret_type>, std::vector<ret_type>>::type;
 
    F fExpression;
-   const ColumnNames_t fBranches;
+   const ColumnNames_t fColumnNames;
    ValuesPerSlot_t fLastResults;
 
    std::vector<RDFInternal::RDFValueTuple_t<ColumnTypes_t>> fValues;
+
+   /// The nth flag signals whether the nth input column is a custom column or not.
+   std::array<bool, ColumnTypes_t::list_size> fIsCustomColumn;
 
    template <std::size_t... S, typename... BranchTypes>
    void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, NoneTag)
@@ -93,11 +96,14 @@ class RCustomColumn final : public RCustomColumnBase {
    }
 
 public:
-   RCustomColumn(RLoopManager *lm, std::string_view name, F &&expression, const ColumnNames_t &bl, unsigned int nSlots,
-                 const RDFInternal::RBookedCustomColumns &customColumns, bool isDSColumn = false)
+   RCustomColumn(RLoopManager *lm, std::string_view name, F &&expression, const ColumnNames_t &columns,
+                 unsigned int nSlots, const RDFInternal::RBookedCustomColumns &customColumns, bool isDSColumn = false)
       : RCustomColumnBase(lm, name, nSlots, isDSColumn, customColumns), fExpression(std::forward<F>(expression)),
-        fBranches(bl), fLastResults(fNSlots), fValues(fNSlots)
+        fColumnNames(columns), fLastResults(fNSlots), fValues(fNSlots), fIsCustomColumn()
    {
+      const auto nColumns = fColumnNames.size();
+      for (auto i = 0u; i < nColumns; ++i)
+         fIsCustomColumn[i] = fCustomColumns.HasName(fColumnNames[i]);
    }
 
    RCustomColumn(const RCustomColumn &) = delete;
@@ -107,7 +113,7 @@ public:
    {
       // TODO: Each node calls this method for each column it uses. Multiple nodes may share the same columns, and this
       // would lead to this method being called multiple times.
-      RDFInternal::InitRDFValues(slot, fValues[slot], r, fBranches, fCustomColumns, TypeInd_t());
+      RDFInternal::InitRDFValues(slot, fValues[slot], r, fColumnNames, fCustomColumns, TypeInd_t(), fIsCustomColumn);
    }
 
    void *GetValuePtr(unsigned int slot) final { return static_cast<void *>(&fLastResults[slot]); }

@@ -56,17 +56,24 @@ class RFilter final : public RFilterBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    FilterF fFilter;
-   const ColumnNames_t fBranches;
+   const ColumnNames_t fColumnNames;
    const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
    PrevDataFrame &fPrevData;
    std::vector<RDFInternal::RDFValueTuple_t<ColumnTypes_t>> fValues;
+   /// The nth flag signals whether the nth input column is a custom column or not.
+   std::array<bool, ColumnTypes_t::list_size> fIsCustomColumn;
 
 public:
-   RFilter(FilterF &&f, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
+   RFilter(FilterF &&f, const ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
            const RDFInternal::RBookedCustomColumns &customColumns, std::string_view name = "")
       : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), customColumns),
-        fFilter(std::forward<FilterF>(f)), fBranches(bl), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr),
-        fValues(fNSlots) { }
+        fFilter(std::forward<FilterF>(f)), fColumnNames(columns), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr),
+        fValues(fNSlots), fIsCustomColumn()
+   {
+      const auto nColumns = fColumnNames.size();
+      for (auto i = 0u; i < nColumns; ++i)
+         fIsCustomColumn[i] = fCustomColumns.HasName(fColumnNames[i]);
+   }
 
    RFilter(const RFilter &) = delete;
    RFilter &operator=(const RFilter &) = delete;
@@ -104,7 +111,7 @@ public:
    {
       for (auto &bookedBranch : fCustomColumns.GetColumns())
          bookedBranch.second->InitSlot(r, slot);
-      RDFInternal::InitRDFValues(slot, fValues[slot], r, fBranches, fCustomColumns, TypeInd_t());
+      RDFInternal::InitRDFValues(slot, fValues[slot], r, fColumnNames, fCustomColumns, TypeInd_t(), fIsCustomColumn);
    }
 
    // recursive chain of `Report`s

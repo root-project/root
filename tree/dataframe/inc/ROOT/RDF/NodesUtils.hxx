@@ -52,21 +52,13 @@ using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 /// is passed instead.
 template <typename RDFValueTuple, std::size_t... S>
 void InitRDFValues(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader *r, const ColumnNames_t &bn,
-                   const RBookedCustomColumns &customCols, std::index_sequence<S...>)
+                   const RBookedCustomColumns &customCols, std::index_sequence<S...>,
+                   const std::array<bool, sizeof...(S)> &isCustomColumn)
 {
-   // isTmpBranch has length bn.size(). Elements are true if the corresponding
-   // branch is a temporary branch created with Define, false if they are
-   // actual branches present in the TTree.
-   // TODO: evaluate this once, pass it down
-   std::array<bool, sizeof...(S)> isTmpColumn;
-   for (auto i = 0u; i < isTmpColumn.size(); ++i)
-      isTmpColumn[i] = customCols.HasName(bn[i]);
-
    // hack to expand a parameter pack without c++17 fold expressions.
    // The statement defines a variable with type std::initializer_list<int>, containing all zeroes, and SetTmpColumn or
    // SetProxy are conditionally executed as the braced init list is expanded. The final ... expands S.
-   //- TODO
-   int expander[] = {(isTmpColumn[S]
+   int expander[] = {(isCustomColumn[S]
                          ? std::get<S>(valueTuple).SetTmpColumn(slot, customCols.GetColumns().at(bn[S]).get())
                          : std::get<S>(valueTuple).MakeProxy(r, bn[S]),
                       0)...,
