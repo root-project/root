@@ -48,7 +48,6 @@ protected:
     virtual void       FillZeroY(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE);
     virtual Bool_t     DoMerge(const TGraph* tg);
     virtual void       CalcYErrorSum();
-    virtual void       PaintReverse(Option_t* opt);
 
 public:
     enum ESummationModes {
@@ -173,10 +172,6 @@ public:
     virtual void  SetLineColorAlpha(Int_t dim, Color_t lcolor, Float_t lalpha);
     virtual void  SetLineStyle(Int_t dim, Style_t lstyle);
     virtual void  SetLineWidth(Int_t dim, Width_t lwidth);
-
-    virtual void  Paint(Option_t* opt = "APZ;2");
-
-    static  void  PaintGraphMultiErrors(TGraphMultiErrors* tg, Option_t* opt);
 
     ClassDef(TGraphMultiErrors, 1)  //A Graph with asymmetric error bars and multiple y error dimensions
 };
