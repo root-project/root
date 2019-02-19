@@ -218,7 +218,7 @@ TEST_P(RDFSimpleTests, Define_jitted_complex_array_sum)
 TEST_P(RDFSimpleTests, Define_jitted_defines_with_return)
 {
    RDataFrame tdf(10);
-   auto d = tdf.Define("my_return_x", "3.0")
+   auto d = tdf.Define("my_return_x", "return 3.0")
                .Define("return_y", "4.0 // with a comment")
                .Define("v", "std::array<double, 2> v{my_return_x, return_y}; return v; // also with comment")
                .Define("r", "double r2 = 0.0; for (auto&& w : v) r2 += w*w; return sqrt(r2);");
@@ -399,7 +399,7 @@ TEST_P(RDFSimpleTests, Define_Multiple)
 TEST_P(RDFSimpleTests, Define_Multiple_Filter)
 {
    RDataFrame tdf(3);
-   auto notFilteringFilter = [](int b1) { return b1 > 0; };
+   auto notFilteringFilter = [](int b1) { return b1; }; // also tests returning a type convertible to bool
    auto filteringFilter = [](int b2) { return b2 < 1; };
 
    auto root = tdf.Define("root", "0");

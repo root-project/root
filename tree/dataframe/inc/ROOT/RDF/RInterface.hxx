@@ -239,7 +239,11 @@ public:
    /// be valid C++ syntax in which variable names are substituted with the names
    /// of branches/columns.
    ///
-   /// Refer to the first overload of this method for the full documentation.
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto filtered_df = df.Filter("myCollection.size() > 3");
+   /// auto filtered_name_df = df.Filter("myCollection.size() > 3", "Minumum collection size");
+   /// ~~~
    RInterface<RDFDetail::RJittedFilter, DS_t> Filter(std::string_view expression, std::string_view name = "")
    {
       // deleted by the jitted call to JitFilterHelper
@@ -310,7 +314,7 @@ public:
    /// The following two calls are equivalent, although `DefineSlot` is slightly more performant:
    /// ~~~{.cpp}
    /// int function(unsigned int, double, double);
-   /// df.Define("x", function, {"tdfslot_", "column1", "column2"})
+   /// df.Define("x", function, {"rdfslot_", "column1", "column2"})
    /// df.DefineSlot("x", function, {"column1", "column2"})
    /// ~~~
    ///
@@ -340,7 +344,7 @@ public:
    /// The following two `Define`s are equivalent, although `DefineSlotEntry` is slightly more performant:
    /// ~~~{.cpp}
    /// int function(unsigned int, ULong64_t, double, double);
-   /// Define("x", function, {"tdfslot_", "tdfentry_", "column1", "column2"})
+   /// Define("x", function, {"rdfslot_", "rdfentry_", "column1", "column2"})
    /// DefineSlotEntry("x", function, {"column1", "column2"})
    /// ~~~
    ///
@@ -891,6 +895,9 @@ public:
    RResultPtr<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.}, std::string_view vName = "")
    {
       const auto userColumns = vName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(vName)});
+
+      const auto validatedColumns = GetValidatedColumnNames(1, userColumns);
+
       std::shared_ptr<::TH1D> h(nullptr);
       {
          ROOT::Internal::RDF::RIgnoreErrorLevelRAII iel(kError);
@@ -900,7 +907,7 @@ public:
 
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
          RDFInternal::HistoUtils<::TH1D>::SetCanExtendAllAxes(*h);
-      return CreateAction<RDFInternal::ActionTags::Histo1D, V>(userColumns, h);
+      return CreateAction<RDFInternal::ActionTags::Histo1D, V>(validatedColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1155,8 +1162,10 @@ public:
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
 
-      // We build a default name and title based on the input columns
-      if (!(userColumns[0].empty() && userColumns[1].empty())) {
+      const auto validatedColumns = GetValidatedColumnNames(2, userColumns);
+
+         // We build a default name and title based on the input columns
+      if (!(validatedColumns[0].empty() && validatedColumns[1].empty())) {
          const auto v2Name_str = std::string(v2Name);
          const auto g_name = std::string(v1Name) + "*" + v2Name_str;
          graph->SetNameTitle(g_name.c_str(), g_name.c_str());
@@ -1164,7 +1173,7 @@ public:
          graph->GetYaxis()->SetTitle(v2Name_str.c_str());
       }
 
-      return CreateAction<RDFInternal::ActionTags::Graph, V1, V2>(userColumns, graph);
+      return CreateAction<RDFInternal::ActionTags::Graph, V1, V2>(validatedColumns, graph);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1625,6 +1634,20 @@ public:
 
       return false;
    }
+
+   /// \brief Gets the number of data processing slots
+   /// \return The number of data processing slots used by this RDataFrame instance
+   ///
+   /// This method returns the number of data processing slots used by this RDataFrame
+   /// instance. This number is influenced by the global switch ROOT::EnableImplicitMT().
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// ROOT::EnableImplicitMT(6)
+   /// ROOT::RDataFrame df(1);
+   /// std::cout << df.GetNSlots() << std::endl; // prints "6"
+   /// ~~~
+   unsigned int GetNSlots() const { return fLoopManager->GetNSlots(); }
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////

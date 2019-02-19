@@ -29,19 +29,6 @@ set(LLVM_TOOL_LLVM_AR_BUILD OFF CACHE BOOL "")
 set(CLANG_TOOL_CLANG_OFFLOAD_BUNDLER_BUILD OFF CACHE BOOL "")
 set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 
-# FIXME: We cannot use etcdir or prefix from RootConfiguration.cmake because it
-# is included very late.
-if(gnuinstall)
-  set(prefix ${CMAKE_INSTALL_PREFIX})
-else()
-  set(prefix ${ROOTSYS})
-endif()
-if(IS_ABSOLUTE ${CMAKE_INSTALL_SYSCONFDIR})
-  set(etcdir ${CMAKE_INSTALL_SYSCONFDIR})
-else()
-  set(etcdir ${prefix}/${CMAKE_INSTALL_SYSCONFDIR})
-endif()
-set(CLING_PLUGIN_INSTALL_PREFIX "${etcdir}/cling/plugins/" CACHE STRING "" FORCE)
 set(LLVM_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm/src")
 if (clad)
   set(CLING_BUILD_PLUGINS ON)
@@ -197,7 +184,7 @@ if(builtin_llvm)
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
-  find_program(LLVM_CONFIG NAMES "llvm-config-5.0" "llvm-config")
+  find_program(LLVM_CONFIG NAMES "llvm-config" "llvm-config-5.0")
   if(LLVM_CONFIG)
     message(STATUS "Found LLVM_CONFIG as ${LLVM_CONFIG}")
     set(CONFIG_COMMAND ${LLVM_CONFIG}

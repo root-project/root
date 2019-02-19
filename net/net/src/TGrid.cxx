@@ -17,8 +17,7 @@
 //                                                                      //
 // To open a connection to a GRID use the static method Connect().      //
 // The argument of Connect() is of the form:                            //
-//    <grid>[://<host>][:<port>], e.g.                                  //
-// alien, alien://alice.cern.ch, globus://glsvr1.cern.ch, ...           //
+//    <grid>[://<host>][:<port>], e.g. alien://alice.cern.ch            //
 // Depending on the <grid> specified an appropriate plugin library      //
 // will be loaded which will provide the real interface.                //
 //                                                                      //
@@ -38,7 +37,7 @@ ClassImp(TGrid);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The grid should be of the form:  <grid>://<host>[:<port>],
-/// e.g.:  alien://alice.cern.ch, globus://glsrv1.cern.ch, ...
+/// e.g.:  alien://alice.cern.ch
 /// The uid is the username and pw the password that should be used for
 /// the connection. Depending on the <grid> the shared library (plugin)
 /// for the selected system will be loaded. When the connection could not

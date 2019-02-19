@@ -237,6 +237,7 @@ using `TH1::GetOption`:
 | "TEXTnn" | Draw bin contents as text at angle nn (0 < nn < 90). |
 | "X+"     | The X-axis is drawn on the top side of the plot. |
 | "Y+"     | The Y-axis is drawn on the right side of the plot. |
+| "MIN0"   | Set minimum value for the Y axis to 0, equivalent to gStyle->SetHistMinimumZero(). |
 
 #### <a name="HP01b"></a> Options supported for 1D histograms
 
@@ -1615,8 +1616,9 @@ It is also possible to use `TEXTnn` in order to draw the text with
 the angle `nn` (`0 < nn < 90`).
 
 For 2D histograms the text is plotted in the center of each non empty cells.
-It is possible to plot empty cells by calling `gStyle->SetHistMinimumZero()`.
-For 1D histogram the text is plotted at a y position equal to the bin content.
+It is possible to plot empty cells by calling `gStyle->SetHistMinimumZero()`
+or providing MIN0 draw option. For 1D histogram the text is plotted at a y
+position equal to the bin content.
 
 For 2D histograms when the option "E" (errors) is combined with the option
 text ("TEXTE"), the error for each bin is also printed.
@@ -2223,8 +2225,8 @@ End_Macro
 
 
 By default the base line used to draw the boxes for bar-charts and lego plots is
-the histogram minimum. It is possible to force this base line to be 0 with the
-command:
+the histogram minimum. It is possible to force this base line to be 0, using MIN0 draw
+option or with the command:
 
     gStyle->SetHistMinimumZero();
 
@@ -2232,7 +2234,6 @@ Begin_Macro(source)
 {
    auto c5 = new TCanvas("c5","c5",700,400);
    c5->Divide(2,1);
-   gStyle->SetHistMinimumZero(1);
    auto hz1 = new TH1F("hz1","Bar-chart drawn from 0",20,-3,3);
    auto hz2 = new TH2F("hz2","Lego plot drawn from 0",20,-3,3,20,-3,3);
    Int_t i;
@@ -2250,8 +2251,8 @@ Begin_Macro(source)
          hz2->Fill(x,y,-2);
       }
    }
-   c5->cd(1); hz1->Draw("bar2");
-   c5->cd(2); hz2->Draw("lego1");
+   c5->cd(1); hz1->Draw("bar2 min0");
+   c5->cd(2); hz2->Draw("lego1 min0");
 }
 End_Macro
 
@@ -2269,8 +2270,6 @@ Begin_Macro(source)
    auto cbh = new TCanvas("cbh","cbh",400,600);
    cbh->SetGrid();
 
-   gStyle->SetHistMinimumZero();
-
    auto h1bh = new TH1F("h1bh","Option HBAR centered on 0",nx,0,nx);
    h1bh->SetFillColor(4);
    h1bh->SetBarWidth(0.4);
@@ -2284,7 +2283,7 @@ Begin_Macro(source)
       h1bh->GetXaxis()->SetBinLabel(i,os_X[i-1].c_str());
    }
 
-   h1bh->Draw("hbar");
+   h1bh->Draw("hbar min0");
 
    auto h2bh = new TH1F("h2bh","h2bh",nx,0,nx);
    h2bh->SetFillColor(38);
@@ -2293,7 +2292,7 @@ Begin_Macro(source)
    h2bh->SetStats(0);
    for (i=1;i<=nx;i++) h2bh->Fill(os_X[i-1].c_str(), d_35_1[i-1]);
 
-   h2bh->Draw("hbar same");
+   h2bh->Draw("hbar min0 same");
 }
 End_Macro
 
@@ -3978,6 +3977,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    Hoption.Zero     = 0;
 
+   Hoption.MinimumZero = gStyle->GetHistMinimumZero() ? 1 : 0;
+
    //check for graphical cuts
    MakeCuts(chopt);
 
@@ -3996,6 +3997,12 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l2) {memcpy(l2,"   ",3); fH->SetLineColor(i);}
       if (l3) {memcpy(l3,"   ",3); fH->SetMarkerColor(i);}
       Hoption.Hist = 1; // Make sure something is drawn in case there is no drawing option specified.
+   }
+
+   l = strstr(chopt,"MIN0");
+   if (l) {
+      Hoption.MinimumZero = 1;
+      memcpy(l,"    ",4);
    }
 
    l = strstr(chopt,"SPEC");
@@ -4948,6 +4955,9 @@ void THistPainter::PaintBar(Option_t *)
    Int_t hstyle = fH->GetFillStyle();
    box.SetFillColor(hcolor);
    box.SetFillStyle(hstyle);
+   box.SetLineStyle(fH->GetLineStyle());
+   box.SetLineColor(fH->GetLineColor());
+   box.SetLineWidth(fH->GetLineWidth());
    for (Int_t bin=fXaxis->GetFirst();bin<=fXaxis->GetLast();bin++) {
       y    = fH->GetBinContent(bin);
       xmin = gPad->XtoPad(fXaxis->GetBinLowEdge(bin));
@@ -4957,7 +4967,7 @@ void THistPainter::PaintBar(Option_t *)
       if (ymax < gPad->GetUymin()) continue;
       if (ymax > gPad->GetUymax()) ymax = gPad->GetUymax();
       if (ymin < gPad->GetUymin()) ymin = gPad->GetUymin();
-      if (gStyle->GetHistMinimumZero() && ymin < 0)
+      if (Hoption.MinimumZero && ymin < 0)
          ymin=TMath::Min(0.,gPad->GetUymax());
       w    = (xmax-xmin)*width;
       xmin += offset*(xmax-xmin);
@@ -5008,6 +5018,9 @@ void THistPainter::PaintBarH(Option_t *)
    Int_t hstyle = fH->GetFillStyle();
    box.SetFillColor(hcolor);
    box.SetFillStyle(hstyle);
+   box.SetLineStyle(fH->GetLineStyle());
+   box.SetLineColor(fH->GetLineColor());
+   box.SetLineWidth(fH->GetLineWidth());
    for (Int_t bin=fYaxis->GetFirst();bin<=fYaxis->GetLast();bin++) {
       ymin = gPad->YtoPad(fYaxis->GetBinLowEdge(bin));
       ymax = gPad->YtoPad(fYaxis->GetBinUpEdge(bin));
@@ -5016,7 +5029,7 @@ void THistPainter::PaintBarH(Option_t *)
       if (xmax < gPad->GetUxmin()) continue;
       if (xmax > gPad->GetUxmax()) xmax = gPad->GetUxmax();
       if (xmin < gPad->GetUxmin()) xmin = gPad->GetUxmin();
-      if (gStyle->GetHistMinimumZero() && xmin < 0)
+      if (Hoption.MinimumZero && xmin < 0)
          xmin=TMath::Min(0.,gPad->GetUxmax());
       w    = (ymax-ymin)*width;
       ymin += offset*(ymax-ymin);
@@ -7145,7 +7158,7 @@ Int_t THistPainter::PaintInit()
    //         if minimum is not set , then ymin is set to zero if >0
    //         or to ymin - margin if <0.
    if (!minimum) {
-      if (gStyle->GetHistMinimumZero()) {
+      if (Hoption.MinimumZero) {
          if (ymin >= 0) ymin = 0;
          else           ymin -= yMARGIN*(ymax-ymin);
       } else {
@@ -8291,7 +8304,7 @@ void THistPainter::PaintScatterPlot(Option_t *option)
    }
    if (fH->GetMinimumStored() == -1111) {
       Double_t yMARGIN = gStyle->GetHistTopMargin();
-      if (gStyle->GetHistMinimumZero()) {
+      if (Hoption.MinimumZero) {
          if (zmin >= 0) zmin = 0;
          else           zmin -= yMARGIN*(zmax-zmin);
       } else {
@@ -9856,7 +9869,7 @@ void THistPainter::PaintTH2PolyText(Option_t *)
          else continue;
       }
       z = b->GetContent();
-      if (z < Hparam.zmin || (z == 0 && !gStyle->GetHistMinimumZero()) ) continue;
+      if (z < Hparam.zmin || (z == 0 && !Hoption.MinimumZero)) continue;
       if (opt==2) {
          e = fH->GetBinError(b->GetBinNumber());
          snprintf(format,32,"#splitline{%s%s}{#pm %s%s}",
@@ -9915,7 +9928,7 @@ void THistPainter::PaintText(Option_t *)
          }
          y  = fH->GetBinContent(i);
          yt = y;
-         if (gStyle->GetHistMinimumZero() && y<0) y = 0;
+         if (Hoption.MinimumZero && y<0) y = 0;
          if (getentries) yt = hp->GetBinEntries(i);
          if (yt == 0.) continue;
          snprintf(value,50,format,yt);
@@ -9953,7 +9966,7 @@ void THistPainter::PaintText(Option_t *)
             }
             if (!IsInside(x,y)) continue;
             z = fH->GetBinContent(bin);
-            if (z < Hparam.zmin || (z == 0 && !gStyle->GetHistMinimumZero()) ) continue;
+            if (z < Hparam.zmin || (z == 0 && !Hoption.MinimumZero)) continue;
             if (Hoption.Text>2000) {
                e = fH->GetBinError(bin);
                snprintf(format,32,"#splitline{%s%s}{#pm %s%s}",
@@ -10507,7 +10520,7 @@ Int_t THistPainter::TableInit()
    //         if minimum is not set , then ymin is set to zero if >0
    //         or to ymin - yMARGIN if <0.
    if (!minimum) {
-      if (gStyle->GetHistMinimumZero()) {
+      if (Hoption.MinimumZero) {
          if (zmin >= 0) zmin = 0;
          else           zmin -= yMARGIN*(zmax-zmin);
       } else {

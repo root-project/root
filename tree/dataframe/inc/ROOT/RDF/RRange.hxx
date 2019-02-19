@@ -11,6 +11,7 @@
 #ifndef ROOT_RDFRANGE
 #define ROOT_RDFRANGE
 
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
 #include "RtypesCore.h"
 
@@ -43,6 +44,9 @@ public:
 
    RRange(const RRange &) = delete;
    RRange &operator=(const RRange &) = delete;
+   // must call Deregister here, before fPrevDataFrame is destroyed,
+   // otherwise if fPrevDataFrame is fLoopManager we get a use after delete
+   ~RRange() { fLoopManager->Deregister(this); }
 
    /// Ranges act as filters when it comes to selecting entries that downstream nodes should process
    bool CheckFilters(unsigned int slot, Long64_t entry) final

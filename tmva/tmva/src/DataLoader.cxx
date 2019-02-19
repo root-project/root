@@ -32,31 +32,16 @@
 
 */
 
-#include "TROOT.h"
 #include "TFile.h"
 #include "TTree.h"
-#include "TLeaf.h"
-#include "TEventList.h"
 #include "TH2.h"
-#include "TText.h"
-#include "TStyle.h"
-#include "TMatrixF.h"
-#include "TMatrixDSym.h"
-#include "TPaletteAxis.h"
-#include "TPrincipal.h"
 #include "TMath.h"
-#include "TObjString.h"
-#include "TRandom3.h"
+#include "TMatrixD.h"
 
-#include <string.h>
-
-#include "TMVA/Configurable.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Config.h"
 #include "TMVA/CvSplit.h"
 #include "TMVA/Tools.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/DataSet.h"
 #include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/DataInputHandler.h"
@@ -72,12 +57,6 @@
 #include "TMVA/VariableGaussTransform.h"
 #include "TMVA/VariableNormalizeTransform.h"
 #include "TMVA/VarTransformHandler.h"
-
-
-#include "TMVA/ResultsClassification.h"
-#include "TMVA/ResultsRegression.h"
-#include "TMVA/ResultsMulticlass.h"
-#include "TMVA/Types.h"
 
 ClassImp(TMVA::DataLoader);
 

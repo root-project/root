@@ -53,6 +53,13 @@ ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(const char *browser)
 void ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
 {
    std::string kind = _kind;
+
+   auto pos = kind.find("?");
+   if (pos == 0) {
+      SetUrlOpt(kind.substr(1));
+      kind.clear();
+   }
+
    if (kind.empty())
       kind = gROOT->GetWebDisplay().Data();
 
@@ -71,6 +78,9 @@ void ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &_kin
    else
       SetCustomExec(kind);
 }
+
+/////////////////////////////////////////////////////////////////////
+/// Returns configured browser name
 
 std::string ROOT::Experimental::RWebDisplayArgs::GetBrowserName() const
 {

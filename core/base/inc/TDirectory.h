@@ -138,7 +138,7 @@ public:
    virtual TDirectory *GetDirectory(const char *namecycle, Bool_t printError = false, const char *funcname = "GetDirectory");
    template <class T> inline void GetObject(const char* namecycle, T*& ptr) // See TDirectory::Get for information
       {
-         ptr = (T*)GetObjectChecked(namecycle,TBuffer::GetClass(typeid(T)));
+         ptr = (T *)GetObjectChecked(namecycle, TClass::GetClass<T>());
       }
    virtual void       *GetObjectChecked(const char *namecycle, const char* classname);
    virtual void       *GetObjectChecked(const char *namecycle, const TClass* cl);
@@ -195,7 +195,7 @@ private:
 public:
    template <class T> inline Int_t WriteObject(const T* obj, const char* name, Option_t *option="", Int_t bufsize=0) // see TDirectory::WriteTObject or TDirectoryWriteObjectAny for explanation
       {
-         return WriteObjectAny(obj,TBuffer::GetClass(typeid(T)),name,option,bufsize);
+         return WriteObjectAny(obj, TClass::GetClass<T>(), name, option, bufsize);
       }
    virtual Int_t       WriteObjectAny(const void *, const char * /*classname*/, const char * /*name*/, Option_t * /*option*/="", Int_t /*bufsize*/ =0) {return 0;}
    virtual Int_t       WriteObjectAny(const void *, const TClass * /*cl*/, const char * /*name*/, Option_t * /*option*/="", Int_t /*bufsize*/ =0) {return 0;}

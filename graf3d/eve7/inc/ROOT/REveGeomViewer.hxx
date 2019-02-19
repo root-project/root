@@ -32,22 +32,34 @@ class REveGeomViewer {
 protected:
 
    TGeoManager *fGeoManager{nullptr};        ///<! geometry to show
-   REveGeomDescription fDesc;                ///<! description
+   REveGeomDescription fDesc;                ///<! geometry description, send to the client as first message
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to show geometry
 
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
+   std::vector<int> GetStackFromJson(const std::string &json);
+
 public:
 
-   REveGeomViewer(TGeoManager *mgr);
+   REveGeomViewer(TGeoManager *mgr = nullptr);
    virtual ~REveGeomViewer();
+
+   void SetGeometry(TGeoManager *mgr);
 
    void SelectVolume(const std::string &volname);
 
+   /** Configures maximal number of visible nodes and faces */
+   void SetLimits(int nnodes = 5000, int nfaces = 100000)
+   {
+      fDesc.SetMaxVisNodes(nnodes);
+      fDesc.SetMaxVisFaces(nfaces);
+   }
+
+   /** Configures default draw option for geometry */
    void SetDrawOptions(const std::string &opt) { fDesc.SetDrawOptions(opt); }
 
-   void Show(const RWebDisplayArgs &args = "");
+   void Show(const RWebDisplayArgs &args = "", bool always_start_new_browser = false);
 
 };
 

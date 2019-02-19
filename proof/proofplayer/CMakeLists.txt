@@ -3,25 +3,67 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_GLOB_HEADERS(headers inc/*.h)
-list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/TProofDraw.h
-                         ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef.h
-                         ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDefDraw.h)
-
-ROOT_GLOB_SOURCES(sources src/*.cxx)
-list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TProofDraw.cxx)
-
 ROOT_STANDARD_LIBRARY_PACKAGE(ProofPlayer
-                              NO_INSTALL_HEADERS
-                              HEADERS ${headers}
-                              SOURCES ${sources}
-                              DEPENDENCIES Proof Hist RIO Tree Net Thread MathCore)
+  NO_INSTALL_HEADERS
+  HEADERS
+    TDrawFeedback.h
+    TEventIter.h
+    TOutputListSelectorDataMap.h
+    TPacketizerAdaptive.h
+    TPacketizerFile.h
+    TPacketizer.h
+    TPacketizerMulti.h
+    TPacketizerUnit.h
+    TPerfStats.h
+    TProofLimitsFinder.h
+    TProofMonSender.h
+    TProofMonSenderML.h
+    TProofMonSenderSQL.h
+    TProofPlayer.h
+    TProofPlayerLite.h
+    TStatsFeedback.h
+    TStatus.h
+    TVirtualPacketizer.h
+  SOURCES
+    TDrawFeedback.cxx
+    TEventIter.cxx
+    TOutputListSelectorDataMap.cxx
+    TPacketizerAdaptive.cxx
+    TPacketizer.cxx
+    TPacketizerFile.cxx
+    TPacketizerMulti.cxx
+    TPacketizerUnit.cxx
+    TPerfStats.cxx
+    TProofLimitsFinder.cxx
+    TProofMonSender.cxx
+    TProofMonSenderML.cxx
+    TProofMonSenderSQL.cxx
+    TProofPlayer.cxx
+    TProofPlayerLite.cxx
+    TStatsFeedback.cxx
+    TStatus.cxx
+    TVirtualPacketizer.cxx
+  DEPENDENCIES
+    Hist
+    Net
+    MathCore
+    Proof
+    RIO
+    Thread
+    Tree
+)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ProofDraw
-                              NO_INSTALL_HEADERS
-                              HEADERS TProofDraw.h
-                              LINKDEF LinkDefDraw.h
-                              SOURCES TProofDraw.cxx
-                              DEPENDENCIES ProofPlayer TreePlayer)
+  NO_INSTALL_HEADERS
+  HEADERS
+    TProofDraw.h
+  SOURCES
+    TProofDraw.cxx
+  LINKDEF
+    LinkDefDraw.h
+  DEPENDENCIES
+    ProofPlayer
+    TreePlayer
+)
 
 ROOT_INSTALL_HEADERS()

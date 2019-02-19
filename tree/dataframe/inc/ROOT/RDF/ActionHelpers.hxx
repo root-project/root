@@ -424,14 +424,14 @@ public:
 // 3. The column is an RVec, the collection is not a vector
 // 4. The column is an RVec, the collection is a vector
 
-template <typename T, typename COLL>
-void FillColl(const T& v, COLL& c) {
+template <typename V, typename COLL>
+void FillColl(V&& v, COLL& c) {
    c.emplace_back(v);
 }
 
-// Use push_back for std::vector<bool> since some compilers do not support emplace_back.
+// Use push_back for bool since some compilers do not support emplace_back.
 template <typename COLL>
-void FillColl(const bool v, COLL& c) {
+void FillColl(bool v, COLL& c) {
    c.push_back(v);
 }
 
@@ -462,9 +462,12 @@ public:
    {
       auto rColl = fColls[0];
       for (unsigned int i = 1; i < fColls.size(); ++i) {
-         auto &coll = fColls[i];
-         for (const T &v : *coll) {
-            FillColl(v, *rColl);
+         const auto &coll = fColls[i];
+         const auto end = coll->end();
+         // Use an explicit loop here to prevent compiler warnings introduced by
+         // clang's range-based loop analysis and vector<bool> references.
+         for (auto j = coll->begin(); j != end; j++) {
+            FillColl(*j, *rColl);
          }
       }
    }

@@ -166,8 +166,8 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
 
   set(include_dirs -I${CMAKE_CURRENT_SOURCE_DIR})
   get_directory_property(incdirs INCLUDE_DIRECTORIES)
-  foreach( d ${incdirs})
-    if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
+  foreach(d ${incdirs})
+    if(NOT "${d}" MATCHES "^(AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM)$")
       set(include_dirs ${include_dirs} -I${d})
     endif()
   endforeach()
@@ -249,7 +249,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     elseif(IS_ABSOLUTE ${fp})
       list(APPEND headerfiles ${fp})
       list(APPEND _list_of_header_dependencies ${fp})
-    else()
+    elseif(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
       find_file(headerFile ${fp} HINTS ${localinclude} ${incdirs} NO_DEFAULT_PATH)
       find_file(headerFile ${fp} NO_SYSTEM_ENVIRONMENT_PATH)
       if(headerFile)
@@ -259,6 +259,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
         list(APPEND headerfiles ${fp})
       endif()
       unset(headerFile CACHE)
+    else()
+      list(APPEND headerfiles ${fp})
     endif()
   endforeach()
   string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  headerfiles "${headerfiles}")
@@ -364,6 +366,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(cpp_module ${ARG_MODULE})
       if(runtime_cxxmodules)
         set(cpp_module_file ${library_output_dir}/${cpp_module}.pcm)
+        if (APPLE)
+          # FIXME: Krb5Auth.h triggers "declaration of '__mb_cur_max' has a different language linkage"
+          # problem.
+          if (${cpp_module} MATCHES "(Krb5Auth|GCocoa|GQuartz)")
+            set(cpp_module_file)
+          endif()
+        endif(APPLE)
       endif()
     endif()
   else()
@@ -464,7 +473,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(cpp_module)
     ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${cpp_module}" "${headerfiles}")
   endif()
-endfunction()
+endfunction(ROOT_GENERATE_DICTIONARY)
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_CXXMODULES_APPEND_TO_MODULEMAP( library library_headers )
@@ -486,15 +495,6 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
                     FILTER "LinkDef" ${d}/*)
     list(APPEND found_headers "${dir_headers}")
   endforeach()
-
-  if (APPLE)
-    # FIXME: Krb5Auth.h triggers "declaration of '__mb_cur_max' has a different language linkage"
-    # problem.
-    # FIXME: error: declaration of 'NSObject' must be imported from module 'ROOT.libBonjour.so.TBonjourBrowser.h' before it is required
-    if (${library} MATCHES "Krb5Auth" OR ${library} MATCHES "(GCocoa|GQuartz)")
-      return()
-    endif()
-  endif(APPLE)
 
   set(excluded_headers RConfig.h RVersion.h RtypesImp.h
                         RtypesCore.h TClassEdit.h
@@ -645,11 +645,6 @@ function(ROOT_LINKER_LIBRARY library)
     target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
     set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   else()
-    #---Need to add a dummy source file if all sources are OBJECT libraries (Xcode, ...)
-    if(NOT lib_srcs MATCHES "(^|[;])[^$][^<]")
-      add_custom_command(OUTPUT dummy.cxx COMMAND ${CMAKE_COMMAND} -E touch dummy.cxx)
-      set(lib_srcs ${lib_srcs} dummy.cxx)
-    endif()
     add_library( ${library} ${_all} ${ARG_TYPE} ${lib_srcs})
     if(ARG_TYPE STREQUAL SHARED)
       set_target_properties(${library} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
@@ -1374,7 +1369,7 @@ endfunction()
 # ROOT_ADD_PYUNITTEST( <name> <file>)
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTEST name file)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "COPY_TO_BUILDDIR" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR" ${ARGN})
 
   set(ROOT_ENV ROOTSYS=${ROOTSYS}
       PATH=${ROOTSYS}/bin:$ENV{PATH}
@@ -1392,10 +1387,15 @@ function(ROOT_ADD_PYUNITTEST name file)
     set(copy_to_builddir COPY_TO_BUILDDIR ${copy_files})
   endif()
 
+  if(ARG_WILLFAIL)
+    set(will_fail WILLFAIL)
+  endif()
+
   ROOT_ADD_TEST(pyunittests-${good_name}
                 COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
                 ENVIRONMENT ${ROOT_ENV}
-                ${copy_to_builddir})
+                ${copy_to_builddir}
+                ${will_fail})
 endfunction()
 
 #----------------------------------------------------------------------------

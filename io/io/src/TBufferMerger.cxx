@@ -82,9 +82,20 @@ size_t TBufferMerger::GetAutoSave() const
    return fAutoSave;
 }
 
+const char *TBufferMerger::GetMergeOptions()
+{
+   return fMerger.GetMergeOptions();
+}
+
+
 void TBufferMerger::SetAutoSave(size_t size)
 {
    fAutoSave = size;
+}
+
+void TBufferMerger::SetMergeOptions(const TString& options)
+{
+   fMerger.SetMergeOptions(options);
 }
 
 void TBufferMerger::Merge()
@@ -99,8 +110,7 @@ void TBufferMerger::Merge()
 
       while (!queue.empty()) {
          std::unique_ptr<TBufferFile> buffer{queue.front()};
-         fMerger.AddAdoptFile(
-            new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer(), buffer->BufferSize(), "READ"));
+         fMerger.AddAdoptFile(new TMemFile(fMerger.GetOutputFileName(), std::move(buffer)));
          queue.pop();
       }
 

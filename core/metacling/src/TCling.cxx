@@ -1127,12 +1127,6 @@ static void LoadModules(const std::vector<std::string> &modules, cling::Interpre
       LoadModule(modName, interp);
 }
 
-static bool FileExists(const char *file)
-{
-   struct stat buf;
-   return (stat(file, &buf) == 0);
-}
-
 static bool IsFromRootCling() {
   // rootcling also uses TCling for generating the dictionary ROOT files.
   const static bool foundSymbol = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
@@ -1225,6 +1219,10 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       }
    }
 
+   if (fCxxModulesEnabled) {
+      clingArgsStorage.push_back("-modulemap_overlay=" + std::string(TROOT::GetIncludeDir().Data()));
+   }
+
    // FIXME: This only will enable frontend timing reports.
    EnvOpt = llvm::sys::Process::GetEnv("ROOT_CLING_TIMING");
    if (EnvOpt.hasValue())
@@ -1246,14 +1244,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // module build remarks from clang to make it easier to spot when we do
       // this by accident.
       interpArgs.push_back("-Rmodule-build");
-
-      TString vfsPath = TROOT::GetIncludeDir() + "/modulemap.overlay.yaml";
-      // On modules aware build systems (such as OSX) we do not need an overlay file and thus the build system does not
-      // generate it.
-      if (FileExists(vfsPath.Data())) {
-         vfsArg = "-ivfsoverlay" + vfsPath;
-         interpArgs.push_back(vfsArg.Data());
-      }
    }
 
 #ifdef R__FAST_MATH
@@ -1303,7 +1293,11 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // Setup core C++ modules if we have any to setup.
 
       // Load libc and stl first.
+#ifdef R__MACOSX
+      LoadModules({"Darwin", "std"}, *fInterpreter);
+#else
       LoadModules({"libc", "stl"}, *fInterpreter);
+#endif
 
       // Load core modules
       // This should be vector in order to be able to pass it to LoadModules
@@ -2002,7 +1996,10 @@ void TCling::RegisterModule(const char* modulename,
 
    bool ModuleWasSuccessfullyLoaded = false;
    if (hasCxxModule) {
-      std::string ModuleName = llvm::StringRef(modulename).substr(3).str();
+      std::string ModuleName = modulename;
+      if (llvm::StringRef(modulename).startswith("lib"))
+         ModuleName = llvm::StringRef(modulename).substr(3).str();
+
       // FIXME: We should only complain for modules which we know to exist. For example, we should not complain about
       // modules such as GenVector32 because it needs to fall back to GenVector.
       ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter, /*Complain=*/ false);
@@ -6064,7 +6061,7 @@ static bool LookupNormalSymbols(llvm::object::ObjectFile *RealSoFile, const std:
 
       llvm::Expected<StringRef> SymNameErr = S.getName();
       if (!SymNameErr) {
-         Warning("LazyFunctionCreatorAutoloadForModule", "Failed to read symbol");
+         Warning("LookupNormalSymbols", "Failed to read symbol");
          continue;
       }
 
@@ -6101,6 +6098,16 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
       sFirstRun = false;
    }
 
+   // The JIT gives us a mangled name which has only one leading underscore on
+   // all platforms, for instance _ZN8TRandom34RndmEv. However, on OSX the
+   // linker stores this symbol as __ZN8TRandom34RndmEv (adding an extra _).
+#ifdef R__MACOSX
+   std::string name_in_so = "_" + mangled_name;
+#else
+   std::string name_in_so = mangled_name;
+#endif
+
+
    // Iterate over files under this path. We want to get each ".so" files
    for (std::pair<uint32_t, std::string> &P : sLibraries) {
       llvm::SmallString<400> Vec(sPaths[P.first]);
@@ -6111,7 +6118,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
       if (!SoFile)
          continue;
 
-      if (LookupNormalSymbols(SoFile.get().getBinary(), mangled_name, LibName)) {
+      if (LookupNormalSymbols(SoFile.get().getBinary(), name_in_so, LibName)) {
          if (gSystem->Load(LibName.c_str(), "", false) < 0)
             Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
 
@@ -6140,7 +6147,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
 
       auto RealSoFile = SoFile.get().getBinary();
 
-      if (LookupNormalSymbols(RealSoFile, mangled_name, LibName)) {
+      if (LookupNormalSymbols(RealSoFile, name_in_so, LibName)) {
          if (gSystem->Load(LibName.c_str(), "", false) < 0)
             Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
 

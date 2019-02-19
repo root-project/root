@@ -1,6 +1,19 @@
 <lcgdict>
 
+  <!-- group: empty -->
   <function name="empty_call" />
-  <function name="take_an_int" />
+  <class name="EmptyCall" />
+
+  <!-- group: builtin-args -->
+  <function pattern="take_*" />
+  <struct name="Value" />
+  <class name="TakeAValue" />
+
+  <!-- group: do_work -->
+  <function name="do_work" />
+  <class name="DoWork" />
+
+  <!-- group: overload -->
+  <class name="OverloadedCall" />
 
 </lcgdict>

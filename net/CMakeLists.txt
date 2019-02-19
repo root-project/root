@@ -1,14 +1,6 @@
 add_subdirectory(net)
 add_subdirectory(auth)
 
-if(afs)
-  add_subdirectory(afs)
-endif()
-
-if(bonjour)
-  add_subdirectory(bonjour)
-endif()
-
 if(krb5)
   add_subdirectory(krb5auth)
 endif()
@@ -31,10 +23,6 @@ endif()
 
 if(ldap)
    add_subdirectory(ldap)
-endif()
-
-if(globus)
-   add_subdirectory(globusauth)
 endif()
 
 if(davix)

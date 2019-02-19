@@ -1,3 +1,0 @@
-libroot-unuran@libvers@: postinst-has-useless-call-to-ldconfig
-libroot-unuran@libvers@: postrm-has-useless-call-to-ldconfig
-

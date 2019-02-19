@@ -3,28 +3,12 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_GLOB_SOURCES(rpdutilsrcs RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
-list(REMOVE_ITEM rpdutilsrcs src/rpdpriv.cxx src/rpdconn.cxx)
-
-include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/res
-  ${CMAKE_CURRENT_SOURCE_DIR}/../auth/res)
-
-if(globus)
-  add_definitions(-DR__GLBS)
-  include_directories(${GLOBUS_INCLUDE_DIRS})
-  if(GLOBUS_gsi_credential_FOUND)
-    add_definitions(-DR__GLBS22)
-  endif()
-else()
-  list(REMOVE_ITEM rpdutilsrcs src/globus.cxx)
-endif()
+include_directories(res ../auth/res)
 
 if(MACOSX_SSL_DEPRECATED)
-  set_source_files_properties(src/rpdutils.cxx COMPILE_FLAGS "-Wno-deprecated-declarations" )
+  set_source_files_properties(src/rpdutils.cxx COMPILE_FLAGS "-Wno-deprecated-declarations")
 endif()
 
-#---Authentication methods-----------------------------------------------------------------
 if(shadowpw)
   add_definitions(-DR__SHADOWPW)
 endif()
@@ -33,13 +17,25 @@ if(ssl)
   include_directories(${OPENSSL_INCLUDE_DIR})
 endif()
 
-#---static library needed for rootd and proofd --------------------------------------------
-add_library(rpdutil STATIC ${rpdutilsrcs})
-target_link_libraries(rpdutil INTERFACE ${CRYPTLIBS})
+add_library(rpdutil STATIC
+  src/daemon.cxx
+  src/error.cxx
+  src/net.cxx
+  src/netpar.cxx
+  src/rpdutils.cxx
+)
+
+target_link_libraries(rpdutil INTERFACE $<$<PLATFORM_ID:Linux>:crypt>)
 set_property(TARGET rpdutil PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_dependencies(rpdutil move_headers)
 
 ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx
-  LIBRARIES rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES}
-  DEPENDENCIES Net
-  BUILTINS OPENSSL)
+  LIBRARIES
+    ${OPENSSL_LIBRARIES}
+    rpdutil
+    rsa
+  DEPENDENCIES
+    Net
+  BUILTINS
+    OPENSSL
+)

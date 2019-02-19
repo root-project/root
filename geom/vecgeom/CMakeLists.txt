@@ -15,4 +15,4 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(ConverterVG
                               HEADERS TGeoVGConverter.h TGeoVGShape.h
                               DEPENDENCIES Geom
-                              LIBRARIES ${VECGEOM_LIBRARIES} -ldl)
+                              LIBRARIES ${VECGEOM_LIBRARIES} ${CMAKE_DL_LIBS})

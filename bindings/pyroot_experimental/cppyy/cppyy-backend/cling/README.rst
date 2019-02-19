@@ -1,26 +1,24 @@
 cppyy-cling
 ===========
 
-A repackaging of Cling, the interactive C++ interpreter, including a version
-of LLVM that is patched for interactive use.
+A repackaging of Cling, the LLVM-based interactive C++ interpreter, as a
+library for use as the backend to cppyy. This version of Cling is patched for
+improved performance and better use with Python.
 
-Compilation of LLVM may take a long time, so when building from source, it is
-recommended to set MAKE_NPROCS to the number of cores on your machine and to
-use the verbose flag to see progress:
+Wheels are available for the major platforms, but if you have to build from
+source, building of LLVM will take a long time. By default, all cores will be
+used, but it is also recommended to add the verbose flag to see progress:
 
-  $ MAKE_NPROCS=32 pip install --verbose cppyy-cling
+  $ python -m pip install --verbose cppyy-cling
 
-Alternatively, there are binary wheels (Mac 10.12, Linux/Gentoo)
-available here:
-  https://cern.ch/wlav/wheels
+For further details, see cppyy's installation instructions:
+  https://cppyy.readthedocs.io/en/latest/installation.html
 
-Use '--extra-index https://cern.ch/wlav/wheels' as an argument to pip to
-pick them up.
 
 Cling documentation is here:
   https://root.cern.ch/cling
 
 ----
 
-Find the cppyy documentation here:
+Full cppyy documentation is here:
   http://cppyy.readthedocs.io/

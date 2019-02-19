@@ -1,6 +1,6 @@
-#if __cplusplus < 201703L && !defined(_MSC_VER)
-
 #include "ROOT/RNotFn.hxx"
+
+#ifndef __cpp_lib_not_fn
 
 #include "gtest/gtest.h"
 

@@ -30,3 +30,8 @@ class RooAbsCollectionLen(unittest.TestCase):
 
     def test_rooargset(self):
         self.check_len(ROOT.RooArgSet(self.tlist))
+
+
+if __name__ == '__main__':
+    unittest.main()
+

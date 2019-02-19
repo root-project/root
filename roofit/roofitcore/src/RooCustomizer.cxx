@@ -129,25 +129,6 @@
 
 #ifndef _WIN32
 #include <strings.h>
-#else
-static char *strtok_r(char *s1, const char *s2, char **lasts)
-{
-  char *ret;
-  
-  if (s1 == NULL)
-    s1 = *lasts;
-  while(*s1 && strchr(s2, *s1))
-    ++s1;
-  if(*s1 == '\0')
-    return NULL;
-  ret = s1;
-  while(*s1 && !strchr(s2, *s1))
-    ++s1;
-  if(*s1)
-    *s1++ = '\0';
-  *lasts = s1;
-  return ret;
-}
 #endif
 
 
@@ -728,11 +709,11 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
 	char buf2[1024] ;
 	strlcpy(buf2,sep2+1,1024) ;
 	char* saveptr ;
-	char* tok = strtok_r(buf2,",)",&saveptr) ;
+	char* tok = R__STRTOK_R(buf2,",)",&saveptr) ;
 	while(tok) {
 	  //cout << "$REMOVE is restricted to " << tok << endl ;
 	  subst->setAttribute(Form("REMOVE_FROM_%s",tok)) ;
-	  tok = strtok_r(0,",)",&saveptr) ;
+	  tok = R__STRTOK_R(0,",)",&saveptr) ;
 	}
       } else {
 	// Otherwise mark as universal removal node

@@ -39,15 +39,30 @@ public:
    std::vector<int> chlds;  ///< list of childs id
    std::string name;        ///< node name
    std::vector<float> matr; ///< matrix for the node, can have reduced number of elements
+   int vis{0};              ///< visibility flag, also delivered to client, use int for shorter JSON
    double vol{0};           ///<! volume estimation
    int nfaces{0};           ///<! number of shape faces
-   bool vis{false};         ///<! visibility flags used in selection
    int visdepth{0};         ///<! how far to check daughters visibility
    int numvischld{0};       ///<! number of visible childs, if all can be jump over
    int idshift{0};          ///<! used to jump over then scan all geom hierarchy
 
    REveGeomNode() = default;
    REveGeomNode(int _id) : id(_id) {}
+
+   /** True when there is shape and it can be displayed */
+   bool CanDisplay() const { return (vol > 0.) && (nfaces > 0); }
+
+};
+
+class REveShapeRenderInfo {
+public:
+   // render data, equivalent of REveElement::WriteCoreJson
+   int rnr_offset{-1};     ///< rnr_offset;
+   std::string rnr_func;  ///< fRenderData->GetRnrFunc();
+   int vert_size{0};      ///< fRenderData->SizeV();
+   int norm_size{0};      ///< fRenderData->SizeN();
+   int index_size{0};     ///< fRenderData->SizeI();
+   // int trans_size{0};     ///< fRenderData->SizeT(); not used in GeomViewer
 };
 
 /** REveGeomVisisble contains description of visible node
@@ -56,18 +71,11 @@ public:
 
 class REveGeomVisisble {
 public:
-   int nodeid{0};           ///< selected node id,
-   std::vector<int> stack;  ///< path to the node, index in list of childs
-   std::string color;       ///< color in rgb format
-   double opacity{1};       ///< opacity
-
-   // render data, equivalent of REveElement::WriteCoreJson
-   int rnr_offset{0};     ///< rnr_offset;
-   std::string rnr_func;  ///< fRenderData->GetRnrFunc();
-   int vert_size{0};      ///< fRenderData->SizeV();
-   int norm_size{0};      ///< fRenderData->SizeN();
-   int index_size{0};     ///< fRenderData->SizeI();
-   // int trans_size{0};     ///< fRenderData->SizeT(); not used in GeomViewer
+   int nodeid{0};                    ///< selected node id,
+   std::vector<int> stack;           ///< path to the node, index in list of childs
+   std::string color;                ///< color in rgb format
+   double opacity{1};                ///< opacity
+   REveShapeRenderInfo *ri{nullptr}; ///< render information for the shape, can be same for different nodes
 
    REveGeomVisisble() = default;
    REveGeomVisisble(int id, const std::vector<int> &_stack) : nodeid(id), stack(_stack) {}
@@ -79,12 +87,15 @@ class REveGeomDescription {
 
    class ShapeDescr {
    public:
-      int id{0};                    ///<! sequential id
-      TGeoShape *fShape{nullptr};   ///<! original shape
-      int nfaces{0};                ///<! number of faces in render data
-      std::unique_ptr<REveRenderData> fRenderData;  ///<! binary render data
-      int render_offest{-1};        ///<! offset in current binary array, transient
+      int id{0};                                   ///<! sequential id
+      TGeoShape *fShape{nullptr};                  ///<! original shape
+      int nfaces{0};                               ///<! number of faces in render data
+      std::unique_ptr<REveRenderData> fRenderData; ///<! binary render data
+      REveShapeRenderInfo fRenderInfo;             ///<! render information for client
       ShapeDescr(TGeoShape *s) : fShape(s) {}
+
+      /// Provide render info for visible item
+      REveShapeRenderInfo *rndr_info() { return (nfaces>0) && (fRenderInfo.rnr_offset>=0) ? &fRenderInfo : nullptr; }
    };
 
    std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
@@ -94,6 +105,14 @@ class REveGeomDescription {
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
    int fNSegments{0};               ///<! number of segments for cylindrical shapes
    std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
+   std::vector<REveRenderData*> fRndrShapes; ///<! list of shapes which should be packet into binary
+   int fRndrOffest{0};              ///<! current render offset
+
+   std::string fDrawJson;           ///<! JSON with main nodes drawn by client
+   std::vector<char> fDrawBinary;   ///<! binary data for main draw nodes
+   int fDrawIdCut{0};               ///<! sortid used for selection of most-significant nodes
+   int fFacesLimit{0};              ///<! maximal number of faces to be selected for drawing
+   int fNodesLimit{0};              ///<! maximal number of nodes to be selected for drawing
 
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 
@@ -103,14 +122,55 @@ class REveGeomDescription {
 
    void ScanVisible(REveGeomScanFunc_t func);
 
-   ShapeDescr &FindShapeDescr(TGeoShape *s);
+   void ResetRndrInfos();
+
+   ShapeDescr &FindShapeDescr(TGeoShape *shape);
+
+   ShapeDescr &MakeShapeDescr(TGeoShape *shape, bool acc_rndr = false);
+
+   void BuildRndrBinary(std::vector<char> &buf);
+
+   void CopyMaterialProperties(TGeoVolume *col, REveGeomVisisble &item);
 
 public:
    REveGeomDescription() = default;
 
    void Build(TGeoManager *mgr);
 
-   void CollectVisibles(int maxnumfaces, std::string &json, std::vector<char> &binary);
+   /** Number of unique nodes in the geometry */
+   int GetNumNodes() const { return fDesc.size(); }
+
+   /** Return summary object for specified nodeid */
+   REveGeomNode &GetGeomNode(int nodeid) { return fDesc[nodeid]; }
+
+   /** Set maximal number of nodes which should be selected for drawing */
+   void SetMaxVisNodes(int cnt) { fNodesLimit = cnt; }
+
+   /** Returns maximal visible number of nodes, ignored when non-positive */
+   int GetMaxVisNodes() const { return fNodesLimit; }
+
+   /** Set maximal number of faces which should be selected for drawing */
+   void SetMaxVisFaces(int cnt) { fFacesLimit = cnt; }
+
+   /** Returns maximal visible number of faces, ignored when non-positive */
+   int GetMaxVisFaces() const { return fFacesLimit; }
+
+   bool CollectVisibles();
+
+   bool IsPrincipalNode(int nodeid);
+
+   bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawBinary.size() > 0) && (fDrawIdCut > 0); }
+   const std::string &GetDrawJson() const { return fDrawJson; }
+   const std::vector<char> &GetDrawBinary() const { return fDrawBinary; }
+   void ClearRawData();
+
+   int SearchVisibles(const std::string &find, std::string &json, std::vector<char> &binary);
+
+   int FindNodeId(const std::vector<int> &stack);
+
+   bool ProduceDrawingFor(int nodeid, std::string &json, std::vector<char> &binary);
+
+   bool ChangeNodeVisibility(int nodeid, bool selected);
 
    void SelectVolume(TGeoVolume *);
 

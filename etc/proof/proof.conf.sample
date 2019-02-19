@@ -35,7 +35,7 @@
 #
 # For backward compatibility it is still possible to specify the methods
 # used for worker authentication as a list following the 'worker <hostname>'
-# (e.g. worker <hostname> uidgid usrpwd srp), this is however deprecated.
+# (e.g. worker <hostname> usrpwd), this is however deprecated.
 # Authentication directives are specified via $ROOTSYS/etc/system.rootauthrc
 # and/or $HOME/.rootauthrc files. See $ROOTSYS/etc/system.rootauthrc for details.
 #

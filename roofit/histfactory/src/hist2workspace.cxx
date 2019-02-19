@@ -16,6 +16,8 @@
 #include <exception>
 #include <vector>
 
+#include <TROOT.h>
+
 //void topDriver(string input); // in MakeModelAndMeasurements
 //void fastDriver(string input); // in MakeModelAndMeasurementsFast
 
@@ -57,7 +59,12 @@ namespace RooStats {
 
 /**
  * \ingroup HistFactory
- * hist2workspace executable main function to create RooFit models from an xml config and files with histograms.
+ * main function of the hist2workspace executable.
+ * It creates RooFit models from an xml config and files with histograms.
+ * See MakeModelAndMeasurementFast(), for further instructions.
+ * \param[in] -h Help
+ * \param[in] -standard_form Standard xml model definitions. See MakeModelAndMeasurementFast()
+ * \param[in] -number_counting_form Deprecated
  */
 int main(int argc, char** argv) {
 
@@ -65,6 +72,10 @@ int main(int argc, char** argv) {
     std::cerr << "need input file" << std::endl;
     exit(1);
   }
+
+  //Switch off ROOT histogram memory management
+  gROOT->SetMustClean(false);
+  TDirectory::AddDirectory(false);
 
   if(argc==2){
     std::string input(argv[1]);

@@ -28,19 +28,17 @@
 #ifndef ROOT_TMVA_DataLoader
 #define ROOT_TMVA_DataLoader
 
-
 #include <string>
 #include <vector>
 #include <map>
 #include "TCut.h"
 
-#include "TMVA/Factory.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/Types.h"
 #include "TMVA/DataSet.h"
 
 class TFile;
 class TTree;
-class TDirectory;
 class TH2;
 
 namespace TMVA {
@@ -49,18 +47,12 @@ namespace TMVA {
    class DataInputHandler;
    class DataSetInfo;
    class DataSetManager;
-   class Envelope;
-   class MethodBase;
-   class IMethod;   
    class VariableTransformBase;
-   class VarTransformHandler;
 
    class DataLoader : public Configurable {
-      friend class Factory;
-      friend class Envelope;
    public:
 
-       DataLoader( TString thedlName="default");
+       DataLoader(TString thedlName="default");
 
       // default destructor
       virtual ~DataLoader();

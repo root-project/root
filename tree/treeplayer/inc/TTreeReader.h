@@ -25,6 +25,7 @@
 #include "THashTable.h"
 #include "TTree.h"
 #include "TTreeReaderUtils.h"
+#include "TNotifyLink.h"
 
 #include <deque>
 #include <iterator>
@@ -129,7 +130,15 @@ public:
       kEntryChainSetupError, ///< problem in accessing a chain element, e.g. file without the tree
       kEntryChainFileError, ///< problem in opening a chain's file
       kEntryDictionaryError, ///< problem reading dictionary info from tree
-      kEntryBeyondEnd ///< last entry loop has reached its end
+      kEntryBeyondEnd, ///< last entry loop has reached its end
+      kEntryUnknownError ///< LoadTree return less than -4, likely a 'newer' error code.
+   };
+
+   enum ELoadTreeStatus {
+      kNoTree = 0,       ///< default state, no TTree is connected (formerly 'Zombie' state)
+      kLoadTreeNone,     ///< Notify has not been called yet.
+      kInternalLoadTree, ///< Notify/LoadTree was last called from SetEntryBase
+      kExternalLoadTree  ///< User code called LoadTree directly.
    };
 
    static constexpr const char * const fgEntryStatusText[kEntryBeyondEnd + 1] = {
@@ -142,7 +151,7 @@ public:
       "last entry loop has reached its end"
    };
 
-   TTreeReader() = default;
+   TTreeReader();
 
    TTreeReader(TTree* tree, TEntryList* entryList = nullptr);
    TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
@@ -158,6 +167,8 @@ public:
    void SetTree(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
 
    Bool_t IsChain() const { return TestBit(kBitIsChain); }
+
+   Bool_t IsInvalid() const { return fLoadTreeStatus == kNoTree; }
 
    TTree* GetTree() const { return fTree; }
    TEntryList* GetEntryList() const { return fEntryList; }
@@ -219,6 +230,8 @@ public:
    /// through `reader.GetEntryList()->GetEntry(reader.GetCurrentEntry())`.
    Long64_t GetCurrentEntry() const { return fEntry; }
 
+   Bool_t Notify();
+
    /// Return an iterator to the 0th TTree entry.
    Iterator_t begin() {
       return Iterator_t(*this, 0);
@@ -253,6 +266,8 @@ protected:
 
    EEntryStatus SetEntryBase(Long64_t entry, Bool_t local);
 
+   Bool_t SetProxies();
+
 private:
 
    std::string GetProxyKey(const char *branchname)
@@ -264,14 +279,17 @@ private:
 
    enum EStatusBits {
       kBitIsChain = BIT(14), ///< our tree is a chain
-      kBitHaveWarnedAboutEntryListAttachedToTTree = BIT(15) ///< the tree had a TEntryList and we have warned about that
+      kBitHaveWarnedAboutEntryListAttachedToTTree = BIT(15), ///< the tree had a TEntryList and we have warned about that
+      kBitSetEntryBaseCallingLoadTree = BIT(16) ///< SetEntryBase is in the process of calling TChain/TTree::LoadTree.
    };
 
    TTree* fTree = nullptr; ///< tree that's read
    TEntryList* fEntryList = nullptr; ///< entry list to be used
    EEntryStatus fEntryStatus = kEntryNotLoaded; ///< status of most recent read request
-   Int_t fMostRecentTreeNumber = -1; ///< TTree::GetTreeNumber() of the most recent tree
+   ELoadTreeStatus fLoadTreeStatus = kNoTree;   ///< Indicator on how LoadTree was called 'last' time.
+   TNotifyLink<TTreeReader> fNotify; // Callback object used by the TChain to update this proxy
    ROOT::Internal::TBranchProxyDirector* fDirector = nullptr; ///< proxying director, owned
+   std::deque<ROOT::Internal::TFriendProxy*> fFriendProxies; ///< proxying for friend TTrees, owned
    std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director
    NamedProxies_t fProxies; ///< attached ROOT::TNamedBranchProxies; owned
 
@@ -283,6 +301,7 @@ private:
    Long64_t fEndEntry = -1LL;
    Long64_t fBeginEntry = 0LL; ///< This allows us to propagate the range to the TTreeCache
    Bool_t fProxiesSet = kFALSE; ///< True if the proxies have been set, false otherwise
+   Bool_t fSetEntryBaseCallingLoadTree = kFALSE; ///< True if during the LoadTree execution triggered by SetEntryBase.
 
    friend class ROOT::Internal::TTreeReaderValueBase;
    friend class ROOT::Internal::TTreeReaderArrayBase;

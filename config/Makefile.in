@@ -75,7 +75,7 @@ CTORSINITARRAY := @ctorsinitarray@
 CXXMKDEPFLAGS  := @cxxmkdepflags@
 
 GLBPATCHFLAGS  := @glbpatchcflags@
-EXTRA_AUTHFLAGS:= @srpextracflags@ @krb5extracflags@ @glbextracflags@ @sslextracflags@
+EXTRA_AUTHFLAGS:= @krb5extracflags@ @glbextracflags@ @sslextracflags@
 
 BINDIR         := @bindir@
 LIBDIR         := @libdir@
@@ -179,40 +179,10 @@ SQLITELIBDIR    := @sqlitelibdir@
 SQLITECLILIB    := @sqlitelib@
 SQLITEINCDIR    := $(filter-out /usr/include, @sqliteincdir@)
 
-BUILDSAPDB     := @buildsapdb@
-SAPDBLIBDIR    := @sapdblibdir@
-SAPDBCLILIB    := @sapdblib@
-SAPDBINCDIR    := $(filter-out /usr/include, @sapdbincdir@)
-
 BUILDODBC      := @buildodbc@
 ODBCLIBDIR     := @odbclibdir@
 ODBCCLILIB     := @odbclib@
 ODBCINCDIR     := $(filter-out /usr/include, @odbcincdir@)
-
-BUILDGEOCAD    := @buildgeocad@
-OCCLIBDIR      := @occlibdir@
-OCCLIB         := @occlib@
-OCCINCDIR      := $(filter-out /usr/include, @occincdir@)
-
-BUILDQT        := @buildqt@
-BUILDQTGSI     := @buildqtgsi@
-QTLIBDIR       := @qtlibdir@
-QTLIB          := @qtlib@
-QTINCDIR       := $(filter-out /usr/include, @qtincdir@)
-QTVERS	       := @qtvers@
-QTMOCEXE       := @qtmocexe@
-
-BUILDRFIO      := @buildrfio@
-SHIFTLIBDIR    := @shiftlibdir@
-SHIFTLIB       := @shiftlib@
-SHIFTINCDIR    := $(filter-out /usr/include, @shiftincdir@)
-SHIFTCFLAGS    := @shiftcflags@
-
-BUILDCASTOR    := @buildcastor@
-CASTORLIBDIR   := @castorlibdir@
-CASTORCLILIB   := @castorlib@
-CASTORINCDIR   := $(filter-out /usr/include, @castorincdir@)
-CASTORCFLAGS   := @castorcflags@
 
 BUILDDAVIX      := @builddavix@
 DAVIXLIBDIR     := @davixlibdir@
@@ -247,27 +217,7 @@ GFALINCDIR     := $(filter-out /usr/include, @gfalincdir@)
 SRMIFCEINCDIR  := $(filter-out /usr/include, @srmifceincdir@)
 GLIB2INCDIR    := $(filter-out /usr/include, @glib2incdir@)
 
-BUILDGLITE     := @buildglite@
-GLITELIBDIR    := @glitelibdir@
-GAWLIB         := @glitelib@
-GAW_CPPFLAGS   := $(filter-out /usr/include, @gaw_cppflags@)
-
 BUILDMEMSTAT   := @buildmemstat@
-
-BUILDBONJOUR   := @buildbonjour@
-DNSSDLIBDIR    := @dnssdlibdir@
-DNSSDLIB       := @dnssdlib@
-DNSSDINCDIR    := $(filter-out /usr/include, @dnssdincdir@)
-
-BUILDCHIRP     := @buildchirp@
-CHIRPLIBDIR    := @chirplibdir@
-CHIRPCLILIB    := @chirplib@
-CHIRPINCDIR    := $(filter-out /usr/include, @chirpincdir@)
-
-BUILDHDFS      := @buildhdfs@
-HDFSLIBDIR     := @hdfslibdir@
-HDFSCLILIB     := @hdfslib@
-HDFSINCDIR     := $(filter-out /usr/include, @hdfsincdir@)
 
 BUILDALIEN     := @buildalien@
 ALIENLIBDIR    := @alienlibdir@
@@ -305,12 +255,6 @@ CFITSIOLIBDIR  := @cfitsiolibdir@
 CFITSIOLIB     := @cfitsiolib@
 CFITSIOINCDIR  := $(filter-out /usr/include, @cfitsioincdir@)
 
-BUILDGVIZ      := @buildgviz@
-GRAPHVIZLIBDIR := @gvizlibdir@
-GRAPHVIZLIB    := @gvizlib@
-GRAPHVIZINCDIR := $(filter-out /usr/include, @gvizincdir@)
-GRAPHVIZCFLAGS := @gvizcflags@
-
 BUILDPYTHON    := @buildpython@
 PYTHONLIBDIR   := @pythonlibdir@
 PYTHONLIB      := @pythonlib@
@@ -339,21 +283,6 @@ BUILDNETXNG    := @buildnetxng@
 BUILDXPROOFD   := @buildxproofd@
 BUILDXRDCLT    := @buildxrdclt@
 
-SRPLIBDIR      := @srplibdir@
-SRPLIB         := @srplib@
-SRPINCDIR      := $(filter-out /usr/include, @srpincdir@)
-
-BUILDSRPUTIL   := @buildsrputil@
-SRPUTILLIBDIR  := @srputillibdir@
-SRPUTILLIB     := @srputillib@
-SRPUTILINCDIR  := $(filter-out /usr/include, @srputilincdir@)
-
-AFSLIB         := @afslib@
-AFSLIBDIR      := @afslibdir@
-AFSINCDIR      := @afsincdir@
-AFSEXTRACFLAGS := @afsextracflags@
-AFSSHARED      := @afsshared@
-
 ALLOCLIB       := @alloclib@
 ALLOCLIBDIR    := @alloclibdir@
 
@@ -367,14 +296,6 @@ COMERRLIB      := @comerrlib@
 COMERRLIBDIR   := @comerrlibdir@
 
 RESOLVLIB      := @resolvlib@
-
-CRYPTOLIB      := @cryptolib@
-CRYPTOLIBDIR   := @cryptolibdir@
-
-BUILDGLOBUS    := @buildglobus@
-GLOBUSLIB      := @globuslib@
-GLOBUSLIBDIR   := @globuslibdir@
-GLOBUSINCDIR   := $(filter-out /usr/include, @globusincdir@)
 
 BUILDMONALISA  := @buildmonalisa@
 MONALISALIBDIR := @monalisalibdir@
@@ -426,9 +347,6 @@ BUILDGDML      := @buildgdml@
 BUILDTABLE     := @buildtable@
 
 BUILDTMVA      := @buildtmva@
-
-BUILDAFDSMGRD  := @buildafdsmgrd@
-AFDSMGRDAPMON  := @afdsmgrdapmon@
 
 BUILDHTTP      := @buildhttp@
 USEFASCGI      := @usefastcgi@

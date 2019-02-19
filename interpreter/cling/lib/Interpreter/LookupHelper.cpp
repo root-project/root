@@ -976,7 +976,6 @@ namespace cling {
     //  Convert the passed decl into a nested name specifier,
     //  a scope spec, and a decl context.
     //
-    NestedNameSpecifier* classNNS = 0;
     if (isa<NamespaceDecl>(scopeDecl)) {
       return foundDC;
     }
@@ -987,7 +986,7 @@ namespace cling {
       } else {
         //const Type* T = Context.getRecordType(RD).getTypePtr();
         const Type* T = Context.getTypeDeclType(RD).getTypePtr();
-        classNNS = NestedNameSpecifier::Create(Context, 0, false, T);
+        NestedNameSpecifier* classNNS = NestedNameSpecifier::Create(Context, 0, false, T);
         // We pass a 'random' but valid source range.
         CXXScopeSpec SS;
         SS.MakeTrivial(Context, classNNS, scopeDecl->getSourceRange());
@@ -1438,7 +1437,41 @@ namespace cling {
     LookupResult Result(S, FuncName, FuncNameLoc, Sema::LookupMemberName,
                         Sema::NotForRedeclaration);
     Result.suppressDiagnostics();
-    if (!S.LookupQualifiedName(Result, foundDC)) {
+
+    bool LookupSuccess = true;
+    if (FuncTemplateArgsBuffer.size()) {
+      // It's a template. Calculate the NNS and do qualified template lookup.
+      NestedNameSpecifier* scopeNNS = nullptr;
+      SourceRange scopeSrcRange;
+      if (isa<TranslationUnitDecl>(foundDC)) {
+        scopeNNS = NestedNameSpecifier::GlobalSpecifier(Context);
+      } else if (const auto *foundNS = dyn_cast<NamespaceDecl>(foundDC)) {
+        scopeNNS = NestedNameSpecifier::Create(Context, /*NNSPrefix*/ nullptr,
+                                               foundNS);
+        scopeSrcRange = foundNS->getSourceRange();
+      } else if (const auto *foundRD = dyn_cast<RecordDecl>(foundDC)) {
+        // a type
+        const Type* foundTy = Context.getTypeDeclType(foundRD).getTypePtr();
+        scopeNNS = NestedNameSpecifier::Create(Context, /*NNSPrefix*/ nullptr,
+                                               /*Template*/ false, foundTy);
+        scopeSrcRange = foundRD->getSourceRange();
+      }
+      CXXScopeSpec SS;
+      if (scopeNNS)
+        SS.MakeTrivial(Context, scopeNNS, scopeSrcRange);
+      bool MemberOfUnknownSpecialization;
+      S.LookupTemplateName(Result, P.getCurScope(), SS, QualType(),
+                           /*EnteringContext*/false,
+                           MemberOfUnknownSpecialization);
+      // "Translation" of the TemplateDecl to the specialization is done
+      // in findAnyFunctionSelector() given the ExplicitTemplateArgs.
+      if (Result.empty())
+        LookupSuccess = false;
+    } else {
+      LookupSuccess = S.LookupQualifiedName(Result, foundDC);
+    }
+
+    if (!LookupSuccess) {
       // Lookup failed.
       // Destroy the scope we created first, and
       // restore the original.

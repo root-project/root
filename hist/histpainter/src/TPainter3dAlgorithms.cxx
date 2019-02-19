@@ -2191,12 +2191,12 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
    vv[2] = Hparam.factor*gCurrentHist->GetBinContent(ixt, iyt);
 
    // In linear scale, 3D boxes all start from 0.
-   if (Hparam.zmin<0 && !Hoption.Logz && gStyle->GetHistMinimumZero()) {
+   if (Hparam.zmin<0 && !Hoption.Logz && Hoption.MinimumZero) {
       if (vv[2]<0) {
          vv[1] = vv[2];
          vv[2] = 0;
       } else {
-         vv[1]=0;
+         vv[1] = 0;
       }
    }
 

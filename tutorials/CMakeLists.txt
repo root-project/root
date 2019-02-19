@@ -89,10 +89,6 @@ if(NOT XROOTD_FOUND)
                   dataframe/df103_NanoAODHiggsAnalysis.C)
 endif()
 
-if(NOT ROOT_geocad_FOUND)
-  set(geocad_veto geom/geo2stp.C)
-endif()
-
 # variables identifying the package must have the package name  in lower case (it corresponds to the CMake option name)
 if(NOT ROOT_r_FOUND)
   set(r_veto  r/*.C)
@@ -141,10 +137,6 @@ if(NOT ROOT_opengl_FOUND)
                   gl/*.C)
 endif()
 
-if(NOT GRAPHVIZ_FOUND)
-  set(gviz_veto graphs/graphstruct.C)
-endif()
-
 if(NOT TBB_FOUND AND NOT builtin_tbb)
   set(tbb_veto  multicore/mtbb*.C)
 endif()
@@ -166,7 +158,7 @@ endif()
 set(gui_veto fit/fitpanel_playback.C
              cocoa/*.C
              geom/building.C geom/cheongwadae.C geom/geom*.C geom/lego.C geom/robot.C geom/south_gate.C geom/station*.C geom/tank.C
-             gl/glViewerExercise.C gl/glViewerLOD.C gl/gviz3d.C gl/nucleus.C gl/viewer3DLocal.C gl/viewer3DMaster.C
+             gl/glViewerExercise.C gl/glViewerLOD.C gl/nucleus.C gl/viewer3DLocal.C gl/viewer3DMaster.C
              gui/*.C
              hist/exec1.C
              hist/exec2.C
@@ -180,7 +172,7 @@ set(gui_veto fit/fitpanel_playback.C
              eve/*.C)
 
 if (NOT ROOT_tmva_FOUND)
-  set(tmva_veto tmva/*.C tmva/*.py tmva/keras/*.C tmva/keras/*.py)
+  set(tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py)
 else()
   #---These do not need to run for TMVA
   set(tmva_veto tmva/createData.C)
@@ -247,13 +239,11 @@ set(all_veto hsimple.C
              ${roofit_veto}
              ${unuran_veto}
              ${xml_veto}
-             ${geocad_veto}
              ${fitsio_veto}
              ${tmva_veto}
              ${mathmore_veto}
              ${fftw3_veto}
              ${opengl_veto}
-             ${gviz_veto}
              ${r_veto}
              ${runtime_cxxmodules_veto}
              ${histfactory_veto}
@@ -400,7 +390,6 @@ if(ROOT_python_FOUND)
              pyroot/na49geomfile.py # ????
              pyroot/na49visible.py  # ????
              pyroot/parse_CSV_file_with_TTree_ReadStream.py # not a tutorial
-             pyroot/qtexample.py    # requires GUI/Qt
              pyroot/numberEntry.py  # requires GUI
              histfactory/example.py # not a tutorial
              histfactory/makeQuickModel.py # not a tutorial
@@ -436,6 +425,59 @@ if(ROOT_python_FOUND)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
 
+  #---Tutorials expected to fail in PyROOT experimental
+  set(pyexp_fail tutorial-dataframe-df001_introduction-py
+                 tutorial-dataframe-df002_dataModel-py
+                 tutorial-dataframe-df003_profiles-py
+                 tutorial-dataframe-df004_cutFlowReport-py
+                 tutorial-dataframe-df006_ranges-py
+                 tutorial-dataframe-df007_snapshot-py
+                 tutorial-dataframe-df008_createDataSetFromScratch-py
+                 tutorial-dataframe-df010_trivialDataSource-py
+                 tutorial-dataframe-df011_ROOTDataSource-py
+                 tutorial-dataframe-df012_DefinesAndFiltersAsStrings-py
+                 tutorial-dataframe-df014_CSVDataSource-py
+                 tutorial-dataframe-df016_vecOps-py
+                 tutorial-dataframe-df017_vecOpsHEP-py
+                 tutorial-dataframe-df019_Cache-py
+                 tutorial-dataframe-df021_createTGraph-py
+                 tutorial-dataframe-df024_Display-py
+                 tutorial-dataframe-df026_AsNumpyArrays-py
+                 tutorial-graphs-timeSeriesFromCSV-py
+                 tutorial-hist-fillrandom-py
+                 tutorial-math-Legendre-py
+                 tutorial-math-tStudent-py
+                 tutorial-pyroot-benchmarks-py
+                 tutorial-pyroot-fillrandom-py
+                 tutorial-pyroot-fit1-py
+                 tutorial-pyroot-geometry-py
+                 tutorial-pyroot-h1draw-py
+                 tutorial-pyroot-hsimple-py
+                 tutorial-pyroot-hsum-py
+                 tutorial-pyroot-na49view-py
+                 tutorial-pyroot-ntuple1-py
+                 tutorial-pyroot-pyroot002_TTreeAsMatrix-py
+                 tutorial-pyroot-ratioplot-py
+                 tutorial-pyroot-rootmarks-py
+                 tutorial-pyroot-shapes-py
+                 tutorial-pyroot-staff-py
+                 tutorial-pyroot-tornado-py
+                 tutorial-pyroot-tree-py
+                 tutorial-roofit-rf106_plotdecoration-py
+                 tutorial-roofit-rf315_projectpdf-py
+                 tutorial-roofit-rf402_datahandling-py
+                 tutorial-roofit-rf610_visualerror-py
+                 tutorial-roofit-rf707_kernelestimation-py
+                 tutorial-vecops-vo004_SortAndSelect-py
+                 tutorial-vecops-vo005_Combinations-py)
+
+  if(${PYTHON_VERSION_MAJOR} GREATER_EQUAL 3)
+    # These tests only fail in Py3 with PyROOT experimental
+    list(APPEND pyexp_fail tutorial-pyroot-first-py)
+    list(APPEND pyexp_fail tutorial-pyroot-surfaces-py)
+    list(APPEND pyexp_fail tutorial-pyroot-zdemo-py)
+  endif()
+
   foreach(t ${pytutorials})
     list(FIND returncode_1 ${t} index)
     if(index EQUAL -1)
@@ -447,12 +489,22 @@ if(ROOT_python_FOUND)
     string(REPLACE ".py" "" tname ${t})
     string(REPLACE "/" "-" tname ${tname})
 
-    ROOT_ADD_TEST(tutorial-${tname}-py
+    set(tutorial_name tutorial-${tname}-py)
+
+    list(FIND pyexp_fail ${tutorial_name} index)
+    if(index EQUAL -1)
+      set(py_will_fail "")
+    else()
+      set(py_will_fail ${PYTESTS_WILLFAIL})
+    endif()
+
+    ROOT_ADD_TEST(${tutorial_name}
                 COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t} -b
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS tutorial
                 DEPENDS ${${tname}-depends}
-                ENVIRONMENT ${ROOT_environ})
+                ENVIRONMENT ${ROOT_environ}
+                ${py_will_fail})
   endforeach()
 endif()
 

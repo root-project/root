@@ -31,7 +31,7 @@
 // should be used. Depending on the driver used for an ODBC connection,
 // the appropriate object instance will be created. For the moment there are
 // six different implementations of the TSQLStatement class: for MySQL,
-// Oracle, SAPDB, PostgreSQL, SQLite3 and ODBC. Hopefully, support of ODBC will allow usage of
+// Oracle, PostgreSQL, SQLite3 and ODBC. Hopefully, support of ODBC will allow usage of
 // statements for most existing RDBMS.
 //
 //   // first, connect to the database

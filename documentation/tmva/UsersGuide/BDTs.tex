@@ -143,7 +143,7 @@ almost completely eliminated.
 \subsubsection{Boosting, Bagging and Randomising}
 
 The different ``boosting'' algorithms (in the following we will 
-call also baggand and randomised trees ``boosted'') available
+call also bagged and and randomised trees ``boosted'') available
 for decision trees in TMVA are currently:
 \begin{itemize}
 \item AdaBoost (Discreate AdaBoost, see Sec.~\ref{sec:adaboost}),  RealAdaBoost (see below and \cite{RealAdaBoost}) and AdaBoostR2(see Sec.~\ref{eq:adaboostr2}) for regression
@@ -152,9 +152,10 @@ for decision trees in TMVA are currently:
 \item Randomised Trees\index{Randomising}, like the Random Forests of L.~Breiman~\cite{Breiman2001}. 
   Each tree is grown in such a way that at each split only a random
   subset of all variables is considered. Moreover, each tree in the forest
-  is grown using only a (resampled) subset of the original training events.
+  can be grown using only a (resampled) subset of the original training events.
   The size of the subset as well as the number of variables considered at each
-  split can be set using the options~\code{UseNTrainEvents} and \code{UseNVars}.
+  split can be set using the options~\code{BaggedSampleFraction} (this requires
+  the option \code{UseBaggedBoost=True}) and \code{UseNVars}.
 \end{itemize}
 
 A possible modification of Eq.~(\ref{eq:adaboost}) for the result of

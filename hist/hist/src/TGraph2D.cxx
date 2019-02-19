@@ -447,12 +447,13 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
       Int_t value_idx = 0 ;
 
       // Looping
+      char *rest;
       while (std::getline(infile, line, '\n')) {
          if (line != "") {
             if (line[line.size() - 1] == char(13)) {  // removing DOS CR character
                line.erase(line.end() - 1, line.end()) ;
             }
-            token = strtok(const_cast<char*>(line.c_str()), option) ;
+            token = R__STRTOK_R(const_cast<char*>(line.c_str()), option, &rest);
             while (token != NULL && value_idx < 3) {
                if (isTokenToBeSaved[token_idx]) {
                   token_str = TString(token) ;
@@ -465,7 +466,7 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
                      value_idx++ ;
                   }
                }
-               token = strtok(NULL, option) ; //next token
+               token = R__STRTOK_R(NULL, option, &rest); // next token
                token_idx++ ;
             }
             if (!isLineToBeSkipped && value_idx == 3) {
@@ -1507,7 +1508,7 @@ void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   graph2d->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
 
    if (fDirectory == 0) {
-      out << "   " << GetName() << "->SetDirectory(0);" << std::endl;
+      out << "   graph2d->SetDirectory(0);" << std::endl;
    }
 
    SaveFillAttributes(out, "graph2d", 0, 1001);

@@ -18,10 +18,27 @@ interpreter.
 
 #include "TROOT.h"
 #include "TError.h"
+#include "TGlobal.h"
 
-TInterpreter*   (*gPtr2Interpreter)() = 0; // returns pointer to global object
-TInterpreter*   gCling = 0; // returns pointer to global TCling object
-static TInterpreter *gInterpreterLocal = 0; // The real holder of the pointer.
+
+TInterpreter*   gCling = nullptr; // returns pointer to global TCling object
+static TInterpreter *gInterpreterLocal = nullptr; // The real holder of the pointer.
+
+
+namespace {
+static struct AddPseudoGlobals {
+AddPseudoGlobals() {
+
+   // use special functor to extract pointer on gInterpreterLocal variable
+   TGlobalMappedFunction::MakeFunctor("gInterpreter", "TInterpreter*", TInterpreter::Instance, [] {
+      TInterpreter::Instance();
+      return (void *) &gInterpreterLocal;
+   });
+
+}
+} gAddPseudoGlobals;
+}
+
 
 ClassImp(TInterpreter);
 
@@ -46,6 +63,5 @@ TInterpreter *TInterpreter::Instance()
          ::Fatal("TInterpreter::Instance","TROOT object is required before accessing a TInterpreter");
       }
    }
-   if (gPtr2Interpreter) return gPtr2Interpreter();
    return gInterpreterLocal;
 }

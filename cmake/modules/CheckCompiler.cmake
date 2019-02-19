@@ -60,10 +60,9 @@ endif()
 
 #---Obtain the major and minor version of the GNU compiler-------------------------------------------
 if (CMAKE_COMPILER_IS_GNUCXX)
-  exec_program(${CMAKE_C_COMPILER} ARGS "-dumpversion" OUTPUT_VARIABLE _gcc_version_info)
-  string(REGEX REPLACE "^([0-9]+).*$"                   "\\1" GCC_MAJOR ${_gcc_version_info})
-  string(REGEX REPLACE "^[0-9]+\\.([0-9]+).*$"          "\\1" GCC_MINOR ${_gcc_version_info})
-  string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9]+).*$" "\\1" GCC_PATCH ${_gcc_version_info})
+  string(REGEX REPLACE "^([0-9]+).*$"                   "\\1" GCC_MAJOR ${CMAKE_CXX_COMPILER_VERSION})
+  string(REGEX REPLACE "^[0-9]+\\.([0-9]+).*$"          "\\1" GCC_MINOR ${CMAKE_CXX_COMPILER_VERSION})
+  string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9]+).*$" "\\1" GCC_PATCH ${CMAKE_CXX_COMPILER_VERSION})
 
   if(GCC_PATCH MATCHES "\\.+")
     set(GCC_PATCH "")
@@ -99,11 +98,11 @@ if(cxx11 OR cxx14 OR cxx17)
 
   # for backward compatibility
   if(cxx17)
-    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD 17 CACHE STRING "" FORCE)
   elseif(cxx14)
-    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD 14 CACHE STRING "" FORCE)
   elseif(cxx11)
-    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD 11 CACHE STRING "" FORCE)
   endif()
 
   unset(cxx17 CACHE)

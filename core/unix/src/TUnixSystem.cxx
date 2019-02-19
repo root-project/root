@@ -18,7 +18,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include "TUnixSystem.h"
 #include "TROOT.h"
 #include "TError.h"
@@ -28,7 +28,6 @@
 #include "TException.h"
 #include "Demangle.h"
 #include "TEnv.h"
-#include "TSocket.h"
 #include "Getline.h"
 #include "TInterpreter.h"
 #include "TApplication.h"
@@ -66,11 +65,6 @@
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
-#endif
-#if defined(R__LINUX) || defined(R__HURD)
-#   ifndef SIGSYS
-#      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
-#   endif
 #endif
 #if defined(R__MACOSX)
 #   include <mach-o/dyld.h>
@@ -505,19 +499,6 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 #ifdef ROOTPREFIX
    if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
 #endif
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-   // first loaded is the app so set ROOTSYS to app bundle
-   if (i == 1) {
-      char respath[kMAXPATHLEN];
-      if (!realpath(lib, respath)) {
-         if (!gSystem->Getenv("ROOTSYS"))
-            ::SysError("TUnixSystem::DylibAdded", "error getting realpath of %s", gSystem->BaseName(lib));
-      } else {
-         TString rs = gSystem->DirName(respath);
-         gSystem->Setenv("ROOTSYS", rs);
-      }
-   }
-#else
    if (lib.EndsWith("libCore.dylib") || lib.EndsWith("libCore.so") ||
        lib.Index(sovers) != kNPOS    || lib.Index(dyvers) != kNPOS) {
       char respath[kMAXPATHLEN];
@@ -529,7 +510,6 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
          gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
       }
    }
-#endif
 #ifdef ROOTPREFIX
    }
 #endif

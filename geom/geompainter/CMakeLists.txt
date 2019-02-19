@@ -4,5 +4,21 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(GeomPainter
-                              HEADERS T*.h
-                              DEPENDENCIES Geom Tree Graf3d Hist Gpad RIO)
+  HEADERS
+    TGeoChecker.h
+    TGeoOverlap.h
+    TGeoPainter.h
+    TGeoTrack.h
+  SOURCES
+    src/TGeoChecker.cxx
+    src/TGeoOverlap.cxx
+    src/TGeoPainter.cxx
+    src/TGeoTrack.cxx
+  DEPENDENCIES
+    Geom
+    Gpad
+    Graf3d
+    Hist
+    RIO
+    Tree
+)

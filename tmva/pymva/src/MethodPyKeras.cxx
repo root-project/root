@@ -18,6 +18,18 @@
 
 using namespace TMVA;
 
+namespace TMVA {
+namespace Internal {
+class PyGILRAII {
+   PyGILState_STATE m_GILState;
+
+public:
+   PyGILRAII() : m_GILState(PyGILState_Ensure()) {}
+   ~PyGILRAII() { PyGILState_Release(m_GILState); }
+};
+} // namespace Internal
+} // namespace TMVA
+
 REGISTER_METHOD(PyKeras)
 
 ClassImp(MethodPyKeras);
@@ -195,6 +207,7 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
 }
 
 void MethodPyKeras::Init() {
+   TMVA::Internal::PyGILRAII raii;
    if (!PyIsInitialized()) {
       Log() << kFATAL << "Python is not initialized" << Endl;
    }

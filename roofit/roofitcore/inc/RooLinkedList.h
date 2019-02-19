@@ -18,12 +18,13 @@
 
 #include <map>
 #include <list>
+#include <vector>
 
 #include "TNamed.h"
 #include "RooLinkedListElem.h"
 #include "RooHashTable.h"
 class RooLinkedListIter ;
-class RooFIter ;
+class RooFIter;
 class TIterator ;
 class RooAbsArg ;
 
@@ -63,9 +64,9 @@ public:
   virtual Bool_t Remove(TObject* arg) ;
   TObject* At(Int_t index) const ;
   Bool_t Replace(const TObject* oldArg, const TObject* newArg) ;
-  TIterator* MakeIterator(Bool_t dir=kTRUE) const ;
-  RooLinkedListIter iterator(Bool_t dir=kTRUE) const ;
-  RooFIter fwdIterator() const ; 
+  TIterator* MakeIterator(Bool_t forward = kTRUE) const ;
+  RooLinkedListIter iterator(Bool_t forward = kTRUE) const ;
+  RooFIter fwdIterator() const ;
 
   void Clear(Option_t *o=0) ;
   void Delete(Option_t *o=0) ;
@@ -101,8 +102,8 @@ protected:
   void deleteElement(RooLinkedListElem*) ;
 
 
-  friend class RooLinkedListIter ;
-  friend class RooFIter ;
+  friend class RooLinkedListIterImpl ;
+  friend class RooFIterForLinkedList ;
 
   virtual void Add(TObject* arg, Int_t refCount) ;
 
@@ -126,6 +127,8 @@ private:
   typedef RooLinkedListImplDetails::Pool Pool;
   /// shared memory pool for allocation of RooLinkedListElems
   static Pool* _pool; //!
+
+  std::vector<RooLinkedListElem *> _at; //! index list for quick index through ::At
 
   ClassDef(RooLinkedList,3) // Doubly linked list for storage of RooAbsArg objects
 };

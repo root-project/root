@@ -350,7 +350,6 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       TString host;
       if ( !url.IsValid() ||
           (strncmp(url.GetProtocol(),"root", 4) &&
-           strncmp(url.GetProtocol(),"rfio", 4) &&
            strncmp(url.GetProtocol(),"file", 4)) ) {
          host = "no-host";
       } else if ( url.IsValid() && !strncmp(url.GetProtocol(),"file", 4)) {
@@ -495,7 +494,6 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       TString host;
       if ( !url.IsValid() ||
           (strncmp(url.GetProtocol(),"root", 4) &&
-           strncmp(url.GetProtocol(),"rfio", 4) &&
            strncmp(url.GetProtocol(),"file", 4)) ) {
          host = "no-host";
       } else if ( url.IsValid() && !strncmp(url.GetProtocol(),"file", 4)) {

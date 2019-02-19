@@ -18,6 +18,8 @@
 #include "TBranchSTL.h"
 #include "TBranchProxyDirector.h"
 #include "TClassEdit.h"
+#include "TFriendElement.h"
+#include "TFriendProxy.h"
 #include "TLeaf.h"
 #include "TTreeProxyGenerator.h"
 #include "TTreeReaderValue.h"
@@ -133,9 +135,71 @@ void ROOT::Internal::TTreeReaderValueBase::RegisterWithTreeReader() {
 /// Try to read the value from the TBranchProxy, returns
 /// the status of the read.
 
+
+
+template <ROOT::Internal::TTreeReaderValueBase::BranchProxyRead_t Func>
+ROOT::Internal::TTreeReaderValueBase::EReadStatus ROOT::Internal::TTreeReaderValueBase::ProxyReadTemplate()
+{
+   if ((fProxy->*Func)()) {
+      fReadStatus = kReadSuccess;
+   } else {
+      fReadStatus = kReadError;
+   }
+   return fReadStatus;
+}
+
 ROOT::Internal::TTreeReaderValueBase::EReadStatus
-ROOT::Internal::TTreeReaderValueBase::ProxyRead() {
+ROOT::Internal::TTreeReaderValueBase::ProxyReadDefaultImpl() {
    if (!fProxy) return kReadNothingYet;
+   if (fProxy->IsInitialized() || fProxy->Setup()) {
+
+      using EReadType = ROOT::Detail::TBranchProxy::EReadType;
+      using TBranchPoxy = ROOT::Detail::TBranchProxy;
+
+      EReadType readtype = EReadType::kNoDirector;
+      if (fProxy) readtype = fProxy->GetReadType();
+
+      switch (readtype) {
+         case EReadType::kNoDirector:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoDirector>;
+            break;
+         case EReadType::kReadParentNoCollection:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadParentNoCollection>;
+            break;
+         case EReadType::kReadParentCollectionNoPointer:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadParentCollectionNoPointer>;
+            break;
+         case EReadType::kReadParentCollectionPointer:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadParentCollectionPointer>;
+            break;
+         case EReadType::kReadNoParentNoBranchCountCollectionPointer:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoParentNoBranchCountCollectionPointer>;
+            break;
+         case EReadType::kReadNoParentNoBranchCountCollectionNoPointer:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoParentNoBranchCountCollectionNoPointer>;
+            break;
+         case EReadType::kReadNoParentNoBranchCountNoCollection:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoParentNoBranchCountNoCollection>;
+            break;
+         case EReadType::kReadNoParentBranchCountCollectionPointer:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoParentBranchCountCollectionPointer>;
+            break;
+         case EReadType::kReadNoParentBranchCountCollectionNoPointer:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoParentBranchCountCollectionNoPointer>;
+            break;
+         case EReadType::kReadNoParentBranchCountNoCollection:
+            fProxyReadFunc = &TTreeReaderValueBase::ProxyReadTemplate<&TBranchPoxy::ReadNoParentBranchCountNoCollection>;
+            break;
+         case EReadType::kDefault:
+            // intentional fall through.
+         default: fProxyReadFunc = &TTreeReaderValueBase::ProxyReadDefaultImpl;
+      }
+      return (this->*fProxyReadFunc)();
+   }
+
+   // If somehow the Setup fails call the original Read to
+   // have the proper error handling (message only if the Setup fails
+   // and the current proxy entry is different than the TTree's current entry)
    if (fProxy->Read()) {
       fReadStatus = kReadSuccess;
    } else {
@@ -158,8 +222,14 @@ std::string ROOT::Internal::TTreeReaderValueBase::GetElementTypeName(const std::
 /// The TTreeReader has switched to a new TTree. Update the leaf.
 
 void ROOT::Internal::TTreeReaderValueBase::NotifyNewTree(TTree* newTree) {
-   if (!fHaveLeaf)
+   // Since the TTree structure might have change, let's make sure we
+   // use the right reading function.
+   fProxyReadFunc = &TTreeReaderValueBase::ProxyReadDefaultImpl;
+
+   if (!fHaveLeaf || !newTree) {
+      fLeaf = nullptr;
       return;
+   }
 
    TBranch *myBranch = newTree->GetBranch(fBranchName);
 
@@ -446,10 +516,14 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
             errMsg += fBranchName.Data();
             errMsg += ". You could check with TTree::Print() for available branches.";
          }
+#if !defined(_MSC_VER)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-security"
+#endif
          Error(errPrefix, errMsg.c_str());
+#if !defined(_MSC_VER)
 #pragma GCC diagnostic pop
+#endif
          return;
       } else {
          // The branch found with the simplest search approach was successful.
@@ -511,7 +585,57 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
             membername = branch->GetName();
          }
       }
-      namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, originalBranchName.c_str(), membername);
+      auto director = fTreeReader->fDirector;
+      // Determine if the branch is actually in a Friend TTree and if so which.
+      if (branch->GetTree() != fTreeReader->GetTree()->GetTree()) {
+         // It is in a friend, let's find the 'index' in the list of friend ...
+         int index = -1;
+         int current = 0;
+         TFriendElement *fe_found = nullptr;
+         for(auto fe : TRangeDynCast<TFriendElement>( fTreeReader->GetTree()->GetTree()->GetListOfFriends())) {
+            if (branch->GetTree() == fe->GetTree()) {
+               index = current;
+               fe_found = fe;
+               break;
+            }
+            ++current;
+         }
+         if (index == -1) {
+            Error(errPrefix, "The branch %s is contained in a Friend TTree that is not directly attached to the main.\n"
+                  "This is not yet supported by TTreeReader.",
+                  fBranchName.Data());
+            return;
+         }
+         const char *localBranchName =  originalBranchName.c_str();
+         if (branch != branch->GetTree()->GetBranch(localBranchName)) {
+            // Try removing the name of the TTree.
+            auto len = strlen( branch->GetTree()->GetName());
+            if (strncmp(localBranchName, branch->GetTree()->GetName(), len) == 0
+                && localBranchName[len] == '.'
+                && branch != branch->GetTree()->GetBranch(localBranchName+len+1)) {
+               localBranchName = localBranchName + len + 1;
+            } else {
+               len = strlen(fe_found->GetName());
+               if (strncmp(localBranchName, fe_found->GetName(), len) == 0
+                  && localBranchName[len] == '.'
+                  && branch != branch->GetTree()->GetBranch(localBranchName+len+1)) {
+                  localBranchName = localBranchName + len + 1;
+               }
+            }
+         }
+         TFriendProxy *feproxy = nullptr;
+         if ((size_t)index < fTreeReader->fFriendProxies.size()) {
+            feproxy = fTreeReader->fFriendProxies.at(index);
+         }
+         if (!feproxy) {
+            feproxy = new ROOT::Internal::TFriendProxy(director, fTreeReader->GetTree(), index);
+            fTreeReader->fFriendProxies.resize(index+1);
+            fTreeReader->fFriendProxies.at(index) = feproxy;
+         }
+         namedProxy = new TNamedBranchProxy(feproxy->GetDirector(), branch, originalBranchName.c_str(), branch->GetName(), membername);
+      } else {
+         namedProxy = new TNamedBranchProxy(director, branch, originalBranchName.c_str(), membername);
+      }
       fTreeReader->AddProxy(namedProxy);
    }
 

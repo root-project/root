@@ -456,12 +456,14 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       Int_t value_idx = 0 ;
 
       // Looping
+      char *rest;
       while (std::getline(infile, line, '\n')) {
          if (line != "") {
             if (line[line.size() - 1] == char(13)) {  // removing DOS CR character
                line.erase(line.end() - 1, line.end()) ;
             }
-            token = strtok(const_cast<char*>(line.c_str()), option) ;
+            //token = R__STRTOK_R(const_cast<char *>(line.c_str()), option, rest);
+            token = R__STRTOK_R(const_cast<char *>(line.c_str()), option, &rest);
             while (token != NULL && value_idx < 2) {
                if (isTokenToBeSaved[token_idx]) {
                   token_str = TString(token) ;
@@ -474,7 +476,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
                      value_idx++ ;
                   }
                }
-               token = strtok(NULL, option) ; //next token
+               token = R__STRTOK_R(NULL, option, &rest); // next token
                token_idx++ ;
             }
             if (!isLineToBeSkipped && value_idx == 2) {
@@ -2225,12 +2227,30 @@ void TGraph::SetName(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set graph title.
+/// Change (i.e. set) the title
+///
+/// if title is in the form `stringt;stringx;stringy;stringz`
+/// the graph title is set to `stringt`, the x axis title to `stringx`,
+/// the y axis title to `stringy`, and the z axis title to `stringz`.
+///
+/// To insert the character `;` in one of the titles, one should use `#;`
+/// or `#semicolon`.
 
 void TGraph::SetTitle(const char* title)
 {
    fTitle = title;
-   if (fHistogram) fHistogram->SetTitle(title);
+   fTitle.ReplaceAll("#;",2,"#semicolon",10);
+   Int_t p = fTitle.Index(";");
+
+   if (p>0) {
+      if (!fHistogram) GetHistogram();
+      fHistogram->SetTitle(title);
+      Int_t n = fTitle.Length()-p;
+      if (p>0) fTitle.Remove(p,n);
+      fTitle.ReplaceAll("#semicolon",10,"#;",2);
+   } else {
+      if (fHistogram) fHistogram->SetTitle(title);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

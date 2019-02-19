@@ -431,9 +431,7 @@ Root.Html.Copyright:        * Copyright
 ### GUI Specific Settings
 
 
-Set the "`native`" ROOT GUI interface to be used in a ROOT session. If
-set to "`qt`", the "`native`" GUI interface is replaced with one based
-on Qt by the regular ROOT plug-in mechanism.
+Set the "`native`" ROOT GUI interface to be used in a ROOT session.
 
 ``` {.cpp}
 Gui.Backend:                native
@@ -648,12 +646,6 @@ Check of host equivalence via `/etc/hosts`.`equiv` or `$HOME/.rhosts`.
 
 ``` {.cpp}
 SrvAuth.CheckHostsEquivalence: 1
-```
-
-SRP: pass file (default `$HOME/.srootdpass`).
-
-``` {.cpp}
-SrvAuth.SRPpassfile:     $HOME/.srootdpass
 ```
 
 Globus/GSI: `hostcert` configuration file.

@@ -22,10 +22,10 @@
 // library to load to get a specific class that is used to extend the   //
 // functionality of a specific base class and how to create an object   //
 // of this class. For example, to extend the base class TFile to be     //
-// able to read RFIO files one needs to load the plugin library         //
-// libRFIO.so which defines the TRFIOFile class. This loading should    //
-// be triggered when a given URI contains a regular expression defined  //
-// by the handler.                                                      //
+// able to read SQLite files one needs to load the plugin library       //
+// libRSQLite.so which defines the TSQLiteServer class. This loading    //
+// should be triggered when a given URI contains a regular expression   //
+// defined by the handler.                                              //
 // Plugin handlers can be defined via macros in a list of plugin        //
 // directories. With $ROOTSYS/etc/plugins the default top plugin        //
 // directory specified in $ROOTSYS/etc/system.rootrc. Additional        //
@@ -34,7 +34,7 @@
 // override previous ones (the inverse of normal search path behavior). //
 // The macros must have names like <BaseClass>/PX0_<PluginClass>.C,     //
 // e.g.:                                                                //
-//    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.        //
+//    TSQLServer/P20_TMySQLServer.C, etc.                               //
 // to allow easy sorting and grouping. If the BaseClass is in a         //
 // namespace the directory must have the name NameSpace@@BaseClass as   //
 // : is a reserved pathname character on some operating systems.        //
@@ -51,7 +51,6 @@
 // file. Although now deprecated this method still works for backward   //
 // compatibility, e.g.:                                                 //
 //                                                                      //
-//   Plugin.TFile:       ^rfio:   TRFIOFile    RFIO   "<constructor>"   //
 //   Plugin.TSQLServer:  ^mysql:  TMySQLServer MySQL  "<constructor>"   //
 //   +Plugin.TSQLServer: ^pgsql:  TPgSQLServer PgSQL  "<constructor>"   //
 //   Plugin.TVirtualFitter: *     TFitter      Minuit "TFitter(Int_t)"  //
@@ -70,9 +69,9 @@
 //                                                                      //
 // Plugin handlers can also be registered at run time, e.g.:            //
 //                                                                      //
-//   gPluginMgr->AddHandler("TSQLServer", "^sapdb:",                    //
-//                          "TSapDBServer", "SapDB",                    //
-//             "TSapDBServer(const char*,const char*, const char*)");   //
+//   gPluginMgr->AddHandler("TSQLServer", "^sqlite:",                   //
+//                          "TSQLiteServer", "RSQLite",                 //
+//             "TSQLiteServer(const char*,const char*,const char*)");   //
 //                                                                      //
 // A list of currently defined handlers can be printed using:           //
 //                                                                      //

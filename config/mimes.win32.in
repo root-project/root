@@ -161,7 +161,7 @@ icon = rootdb_s.xpm rootdb_t.xpm
 action = THbookFile *ftmp = new THbookFile("%s")
 
 [root/tfile]
-pattern = TFile TNetFile TRFIOFile TWebFile
+pattern = TFile TNetFile TWebFile
 icon = rootdb_s.xpm rootdb_t.xpm
 action = ->Browse()
 

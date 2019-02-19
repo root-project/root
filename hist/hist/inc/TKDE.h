@@ -63,7 +63,10 @@ public:
       kForcedBinning
    };
 
-   explicit TKDE(UInt_t events = 0, const Double_t* data = 0, Double_t xMin = 0.0, Double_t xMax = 0.0, const Option_t* option =
+   
+   TKDE();                    // defaul constructor used only by I/O 
+
+   TKDE(UInt_t events, const Double_t* data, Double_t xMin = 0.0, Double_t xMax = 0.0, const Option_t* option =
                  "KernelType:Gaussian;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0) {
       Instantiate( nullptr,  events, data, nullptr, xMin, xMax, option, rho);
    }
@@ -132,27 +135,28 @@ private:
    TKDE operator=(TKDE& kde); // Disallowed assign operator
 
    typedef ROOT::Math::IBaseFunctionOneDim* KernelFunction_Ptr;
-   KernelFunction_Ptr fKernelFunction;
+   KernelFunction_Ptr fKernelFunction;  //! pointer to kernel function
 
    class TKernel;
    friend class TKernel;
 
-   TKernel* fKernel;
+   TKernel* fKernel;             //! internal kernel class. Transient because it is recreated after reading from a file
 
    std::vector<Double_t> fData;   // Data events
    std::vector<Double_t> fEvents; // Original data storage
    std::vector<Double_t> fEventWeights; // Original data weights
 
-   TF1* fPDF;             // Output Kernel Density Estimation PDF function
-   TF1* fUpperPDF;        // Output Kernel Density Estimation upper confidence interval PDF function
-   TF1* fLowerPDF;        // Output Kernel Density Estimation lower confidence interval PDF function
-   TF1* fApproximateBias; // Output Kernel Density Estimation approximate bias
-   TGraphErrors* fGraph;  // Graph with the errors
+   TF1* fPDF;             //! Output Kernel Density Estimation PDF function
+   TF1* fUpperPDF;        //! Output Kernel Density Estimation upper confidence interval PDF function
+   TF1* fLowerPDF;        //! Output Kernel Density Estimation lower confidence interval PDF function
+   TF1* fApproximateBias; //! Output Kernel Density Estimation approximate bias
+   TGraphErrors* fGraph;  //! Graph with the errors
 
-   EKernelType fKernelType;
+   EKernelType fKernelType;    
    EIteration fIteration;
    EMirror fMirror;
    EBinning fBinning;
+
 
    Bool_t fUseMirroring, fMirrorLeft, fMirrorRight, fAsymLeft, fAsymRight;
    Bool_t fUseBins;
@@ -162,7 +166,7 @@ private:
    UInt_t fNBins;          // Number of bins for binned data option
    UInt_t fNEvents;        // Data's number of events
    Double_t fSumOfCounts; // Data sum of weights
-   UInt_t fUseBinsNEvents; // If the algorithm is allowed to use binning this is the minimum number of events to do so
+   UInt_t fUseBinsNEvents; // If the algorithm is allowed to use automatic (relaxed) binning this is the minimum number of events to do so
 
    Double_t fMean;  // Data mean
    Double_t fSigma; // Data std deviation
@@ -234,6 +238,7 @@ private:
    void GetOptions(std::string optionType, std::string option);
    void AssureOptions();
    void SetData(const Double_t* data, const Double_t * weights);
+   void ReInit();
    void InitFromNewData();
    void SetMirroredEvents();
    void SetDrawOptions(const Option_t* option, TString& plotOpt, TString& drawOpt);

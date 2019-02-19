@@ -16,6 +16,19 @@
             right: 0;
             padding: 1
          }
+
+         .eveColorBox {                  /* style the CSS class that has been written by the renderer method */
+            display: inline-block;   /* enable squares to appear next to each other within one line */
+            border: 1px solid white;   /* add some border, so the square can actually be seen */
+            background-color: #000;
+            padding: 1px;
+            width: 12px;
+            height: 12px;
+            text-align: center;
+            -moz-box-sizing: border-box; /* consider padding+border part of the width/height */
+            box-sizing: border-box;
+         }
+
        </style>
 
    </head>
@@ -27,13 +40,11 @@
 
       <script type='text/javascript'>
 
-        var evedir = JSROOT.source_dir.replace(/jsrootsys/g, "evedir");
+        var evedir = "evedir/";
 
         function InitUI(handle) {
 
            jQuery.sap.registerModulePath("eve", evedir);
-           
-           console.log('ADD eve dir', evedir);
 
            new JSROOT.sap.ui.xmlview({
                id: "TopEveId",
@@ -44,14 +55,14 @@
 
         JSROOT.ConnectWebWindow({
            prereq: "openui5;geom;user:" + evedir + "EveManager.js;" + evedir + "EveElements.js;",
-           openui5src: "https://openui5.hana.ondemand.com/",    // or "jsroot"
-//           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified", // customize openui5 libs
+           openui5src: "jsroot", // "https://openui5.hana.ondemand.com/",    // or "jsroot"
+           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table", // customize openui5 libs
            prereq_logdiv: "GeomDiv",
            callback: InitUI
         });
 
       </script>
-   
+
    </body>
-   
+
 </html>

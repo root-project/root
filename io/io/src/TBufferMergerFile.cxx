@@ -32,7 +32,7 @@ Int_t TBufferMergerFile::Write(const char *name, Int_t opt, Int_t bufsize)
    Int_t nbytes = TMemFile::Write(name, opt, bufsize);
 
    if (nbytes) {
-      TBufferFile *buffer = new TBufferFile(TBuffer::kWrite);
+      TBufferFile *buffer = new TBufferFile(TBuffer::kWrite, GetSize());
       CopyTo(*buffer);
       buffer->SetReadMode();
       fMerger.Push(buffer);

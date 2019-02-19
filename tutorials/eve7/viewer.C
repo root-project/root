@@ -45,6 +45,10 @@ void viewer()
    // specify JSROOT draw options - here clipping on X,Y,Z axes
    vvv->SetDrawOptions("clipxyz");
 
+   // set default limits for number of visible nodes and faces
+   // when viewer created, initial values exported from TGeoManager
+   vvv->SetLimits();
+
    // start browser
    vvv->Show();
 }

@@ -85,7 +85,7 @@ protected:
 
 public:
    TEveGeoShapeProjected();
-   virtual ~TEveGeoShapeProjected() {}
+   virtual ~TEveGeoShapeProjected();
 
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
    virtual void UpdateProjection();

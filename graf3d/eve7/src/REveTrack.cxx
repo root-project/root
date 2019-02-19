@@ -12,7 +12,6 @@
 #include <ROOT/REveTrack.hxx>
 #include <ROOT/REveTrackPropagator.hxx>
 #include <ROOT/REvePointSet.hxx>
-#include <ROOT/REveRenderData.hxx>
 
 #include "TParticle.h"
 #include "TPolyLine3D.h"

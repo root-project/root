@@ -1374,7 +1374,7 @@
       // dummy function, will be redefined when jquery part loaded
    }
 
-   HierarchyPainter.prototype.actiavte = function(items, force) {
+   HierarchyPainter.prototype.activate = function(items, force) {
       // activate (select) specified item
       // if force specified, all required sub-levels will be opened
 

@@ -1,42 +1,71 @@
-import os, glob, subprocess
+import codecs, glob, os, sys, subprocess
 from setuptools import setup, find_packages, Extension
 from distutils import log
+
+from setuptools.dist import Distribution
+from setuptools.command.install import install as _install
 from distutils.command.build_ext import build_ext as _build_ext
 from distutils.command.clean import clean as _clean
 from distutils.dir_util import remove_tree
-from setuptools.command.install import install as _install
-from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
+try:
+    from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
+    has_wheel = True
+except ImportError:
+    has_wheel = False
 from distutils.errors import DistutilsSetupError
-from codecs import open
 
+
+requirements = ['cppyy-cling>=6.15.2.2']
+setup_requirements = ['wheel']
+if 'build' in sys.argv or 'install' in sys.argv:
+    setup_requirements += requirements
 
 here = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
+with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-try:
-    root_install = os.environ["ROOTSYS"]
-    requirements = []
-    add_pkg = ['cppyy_backend']
-except KeyError:
-    root_install = None
-    requirements = ['cppyy-cling']
-    add_pkg = []
+
+#
+# platform-dependent helpers
+#
+def is_manylinux():
+    try:
+        for line in open('/etc/redhat-release').readlines():
+            if 'CentOS release 5.11' in line:
+                return True
+    except (OSError, IOError):
+        pass
+    return False
+
+def _get_linker_options():
+    if 'win32' in sys.platform:
+        link_libraries = ['libCore', 'libThread', 'libRIO', 'libCling']
+        import cppyy_backend
+        link_dirs = [os.path.join(os.path.dirname(cppyy_backend.__file__), 'lib')]
+    else:
+        link_libraries = None
+        link_dirs = None
+    return link_libraries, link_dirs
+
+def _get_config_exec():
+    return ['python', '-m', 'cppyy_backend._cling_config']
 
 def get_include_path():
-    config_exec = 'cling-config'
-    if root_install:
-        config_exec = 'root-config'
-    cli_arg = subprocess.check_output([config_exec, '--incdir'])
+    config_exec_args = _get_config_exec()
+    config_exec_args.append('--incdir')
+    cli_arg = subprocess.check_output(config_exec_args)
     return cli_arg.decode("utf-8").strip()
 
 def get_cflags():
-    config_exec = 'cling-config'
-    if root_install:
-        config_exec = 'root-config'
-    cli_arg = subprocess.check_output([config_exec, '--auxcflags'])
+    config_exec_args = _get_config_exec()
+    config_exec_args.append('--auxcflags')
+    cli_arg = subprocess.check_output(config_exec_args)
     return cli_arg.decode("utf-8").strip()
 
+
+#
+# customized commands
+#
 class my_build_cpplib(_build_ext):
     def build_extension(self, ext):
         include_dirs = ext.include_dirs + [get_include_path()]
@@ -53,15 +82,26 @@ class my_build_cpplib(_build_ext):
 
         ext_path = self.get_ext_fullpath(ext.name)
         output_dir = os.path.dirname(ext_path)
-        full_libname = 'libcppyy_backend.so' # forced, b/c hard-wired in pypy-c/cppyy
+        libname_base = 'libcppyy_backend'
+        libname = libname_base+self.compiler.shared_lib_extension
+        extra_postargs = list()
+        if 'linux' in sys.platform:
+            extra_postargs.append('-Wl,-Bsymbolic-functions')
+        elif 'win32' in sys.platform:
+            # force the export results in the proper directory.
+            extra_postargs.append('/IMPLIB:'+os.path.join(output_dir, libname_base+'.lib'))
 
-        log.info("now building %s", full_libname)
+        log.info("now building %s", libname)
+        link_libraries, link_dirs = _get_linker_options()
         self.compiler.link_shared_object(
-            objects, full_libname,
+            objects, libname,
+            libraries=link_libraries, library_dirs=link_dirs,
+            # export_symbols=[], # ie. all (hum, that puts the output in the wrong directory)
             build_temp=self.build_temp,
             output_dir=output_dir,
             debug=self.debug,
-            target_lang='c++')
+            target_lang='c++',
+            extra_postargs=extra_postargs)
 
 class my_clean(_clean):
     def run(self):
@@ -110,19 +150,45 @@ class my_install(_install):
         #outputs.append(os.path.join(self._get_install_path(), 'cppyy_backend'))
         return outputs
 
-class my_bdist_wheel(_bdist_wheel):
-    def run(self, *args):
-     # wheels do not respect dependencies; make this a no-op so that it fails (mostly) silently
-        pass
 
-    def finalize_options(self):
-     # this is a universal, but platform-specific package; a combination
-     # that wheel does not recognize, thus simply fool it
-        from distutils.util import get_platform
-        self.plat_name = get_platform()
-        self.universal = True
-        _bdist_wheel.finalize_options(self)
-        self.root_is_pure = True
+cmdclass = {
+        'build_ext': my_build_cpplib,
+        'clean': my_clean,
+        'install': my_install }
+if has_wheel:
+    class my_bdist_wheel(_bdist_wheel):
+        def finalize_options(self):
+         # this is a universal, but platform-specific package; a combination
+         # that wheel does not recognize, thus simply fool it
+            from distutils.util import get_platform
+            self.plat_name = get_platform()
+            self.universal = True
+            _bdist_wheel.finalize_options(self)
+            self.root_is_pure = True
+    cmdclass['bdist_wheel'] = my_bdist_wheel
+
+
+#
+# customized distribition to disable binaries
+#
+class MyDistribution(Distribution):
+    def run_commands(self):
+        # pip does not resolve dependencies before building binaries, so unless
+        # packages are installed one-by-one, on old install is used or the build
+        # will simply fail hard. The following is not completely quiet, but at
+        # least a lot less conspicuous.
+        if not is_manylinux():
+            disabled = set((
+                'bdist_wheel', 'bdist_egg', 'bdist_wininst', 'bdist_rpm'))
+            for cmd in self.commands:
+                if not cmd in disabled:
+                    self.run_command(cmd)
+                else:
+                    log.info('Command "%s" is disabled', cmd)
+                    cmd_obj = self.get_command_obj(cmd)
+                    cmd_obj.get_outputs = lambda: None
+        else:
+            return Distribution.run_commands(self)
 
 
 setup(
@@ -135,7 +201,7 @@ setup(
     author='PyPy Developers',
     author_email='pypy-dev@python.org',
 
-    version='1.0.0',
+    version='1.7.0',
 
     license='LBNL BSD',
 
@@ -162,20 +228,14 @@ setup(
 
     keywords='C++ bindings data science',
 
-    setup_requires=requirements,
+    setup_requires=setup_requirements,
     install_requires=requirements,
 
-    package_dir={'': 'python'},
-    packages=find_packages('python', include=add_pkg),
+    ext_modules=[Extension(os.path.join('cppyy_backend', 'lib', 'libcppyy_backend'),
+        sources=glob.glob(os.path.join('src', 'clingwrapper.cxx')))],
 
-    ext_modules=[Extension('cppyy_backend/lib/libcppyy_backend',
-        sources=glob.glob('src/clingwrapper.cxx'))],
+    cmdclass=cmdclass,
+    distclass=MyDistribution,
+
     zip_safe=False,
-
-    cmdclass = {
-        'build_ext': my_build_cpplib,
-        'clean': my_clean,
-        'install': my_install,
-        'bdist_wheel': my_bdist_wheel
-    }
 )

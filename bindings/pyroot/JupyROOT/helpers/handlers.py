@@ -1,4 +1,4 @@
-   # -*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 #-----------------------------------------------------------------------------
 #  Copyright (c) 2015, ROOT Team.
 #  Authors: Danilo Piparo
@@ -12,6 +12,12 @@ from threading import Thread
 from time import sleep as timeSleep
 from sys import platform
 from os import path
+import weakref
+import sys
+if sys.hexversion >= 0x3000000:
+    import queue
+else:
+    import Queue as queue
 
 _lib = CDLL(path.join(path.dirname(path.dirname(path.dirname(__file__))), 'libJupyROOT.so'))
 
@@ -68,6 +74,22 @@ class IOHandler(object):
        errDict = {'name': 'stderr', 'text': err} if err != "" else None
        return outDict,errDict
 
+class Poller(Thread):
+    def __init__(self, runner_obj, name):
+        Thread.__init__(self, group=None, target=None, name=name)
+        self.poll = True
+        self.ro_ref = weakref.ref(runner_obj)
+    def run(self):
+        while self.poll:
+            work_item_argument = self.ro_ref().argument_queue.get()
+            if work_item_argument is not None:
+                self.ro_ref().is_running = True
+                self.ro_ref().Run(work_item_argument)
+                self.ro_ref().is_running = False
+            else:
+                self.poll = False
+        return
+
 class Runner(object):
     ''' Asynchrously run functions
     >>> import time
@@ -91,32 +113,38 @@ class Runner(object):
     Asynchronous
     >>> print(r.HasFinished())
     True
+    >>> r.Stop()
     '''
     def __init__(self, function):
         self.function = function
-        self.thread = None
+        self.is_running = False
+        self.argument_queue = queue.Queue()
+        self.poller = Poller(runner_obj=self, name = "JupyROOT Runner Thread")
+        self.poller.start()
+
+    def __del__(self):
+        if self.poller.is_alive():
+            self.Stop()
+        self.poller.join()
 
     def Run(self, argument):
         return self.function(argument)
 
     def AsyncRun(self, argument):
-        self.thread = Thread(target=self.Run, args =(argument,))
-        self.thread.start()
+        self.is_running = True
+        self.argument_queue.put(argument)
 
     def Wait(self):
-        if not self.thread: return
-        self.thread.join()
+        while self.is_running: pass
 
     def HasFinished(self):
-        if not self.thread: return True
-
-        finished = not self.thread.is_alive()
-        if not finished: return False
-
-        self.thread.join()
-        self.thread = None
-
+        if self.is_running: return False
         return True
+
+    def Stop(self):
+        self.Wait()
+        self.argument_queue.put(None)
+        self.Wait()
 
 
 class JupyROOTDeclarer(Runner):
@@ -127,6 +155,7 @@ class JupyROOTDeclarer(Runner):
     1
     >>> ROOT.f()
     3
+    >>> d.Stop()
     '''
     def __init__(self):
        super(JupyROOTDeclarer, self).__init__(_lib.JupyROOTDeclarer)
@@ -137,6 +166,7 @@ class JupyROOTExecutor(Runner):
     >>> d = JupyROOTExecutor()
     >>> d.Run('cout << "Here am I" << endl;'.encode("utf-8"))
     1
+    >>> d.Stop()
     '''
     def __init__(self):
        super(JupyROOTExecutor, self).__init__(_lib.JupyROOTExecutor)

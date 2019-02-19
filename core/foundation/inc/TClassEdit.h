@@ -13,7 +13,7 @@
 #ifndef ROOT_TClassEdit
 #define ROOT_TClassEdit
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include "RConfigure.h"
 #include <stdlib.h>
 #ifdef R__WIN32

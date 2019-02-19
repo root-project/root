@@ -35,10 +35,10 @@ namespace ROOT {
 namespace Internal {
 
    // Helper function to call Reset on each TBranchProxy
-   void Reset(Detail::TBranchProxy *x) { x->Reset(); }
+   void NotifyDirected(Detail::TBranchProxy *x) { x->Notify(); }
 
    // Helper function to call SetReadEntry on all TFriendProxy
-   void ResetReadEntry(TFriendProxy *x) { x->ResetReadEntry(); }
+   void ResetReadEntry(TFriendProxy *fp) { fp->ResetReadEntry(); }
 
    // Helper class to call Update on all TFriendProxy
    struct Update {
@@ -128,15 +128,6 @@ namespace Internal {
       return hist;
    }
 
-   void TBranchProxyDirector::SetReadEntry(Long64_t entry) {
-
-      // move to a new entry to read
-      fEntry = entry;
-      if (!fFriends.empty()) {
-         for_each(fFriends.begin(),fFriends.end(),ResetReadEntry);
-      }
-   }
-
    TTree* TBranchProxyDirector::SetTree(TTree *newtree) {
 
       // Set the BranchProxy to be looking at a new tree.
@@ -145,13 +136,17 @@ namespace Internal {
 
       TTree* oldtree = fTree;
       fTree = newtree;
+      Notify();
+      return oldtree;
+   }
+
+   Bool_t TBranchProxyDirector::Notify() {
       fEntry = -1;
-      //if (fInitialized) fInitialized = setup();
-      //fprintf(stderr,"calling SetTree for %p\n",this);
-      for_each(fDirected.begin(),fDirected.end(),Reset);
+
+      for_each(fDirected.begin(),fDirected.end(),NotifyDirected);
       Update update(fTree);
       for_each(fFriends.begin(),fFriends.end(),update);
-      return oldtree;
+      return kTRUE;
    }
 
 } // namespace Internal

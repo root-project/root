@@ -36,7 +36,6 @@ The $ROOTSYS/tutorials directory include several sub-directories
 -pyroot:   python tutorials
 -pythia:   Example with pythia6
 -quadp:    Quadratic Programming
--ruby:     ruby tutorials
 -smatrix:  Matrices with a templated package
 -spectrum: Peak finder, background, deconvolutions
 -splot:    Example of the TSplot class (signal/background estimator)

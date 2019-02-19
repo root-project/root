@@ -36,7 +36,6 @@
 #pragma link C++ class RooLinearVar+ ;
 #pragma link C++ class RooLinkedListElem+ ;
 #pragma link C++ class RooLinkedList- ;
-#pragma link C++ class RooLinkedListIter+ ;
 #pragma link C++ class RooLinTransBinning+ ;
 #pragma link C++ class RooList+ ;
 #pragma link C++ class RooListProxy+ ;
@@ -49,7 +48,7 @@
 #pragma link C++ class RooMPSentinel+ ;
 #pragma link C++ class RooMultiCategory+ ;
 #pragma link C++ class RooMultiCatIter+ ;
-#pragma link C++ class RooNameReg+ ;
+#pragma link off class RooNameReg+ ;
 #pragma link C++ class RooNameSet+ ;
 #pragma link C++ class RooNLLVar+ ;
 #pragma link C++ class RooNormSetCache+ ;

@@ -1,8 +1,0 @@
-@prefix@/share/root/proof/
-@prefix@/bin/proofserv
-@prefix@/bin/proofserv.exe
-@prefix@/bin/proofserv.bin
-@prefix@/share/man/man1/proofserv.1*
-
-
-

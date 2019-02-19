@@ -102,6 +102,10 @@ typedef unsigned long long ULong64_t;//Portable unsigned long integer 8 bytes
 #define CPyCppyy_PyUnicode_Append             PyString_Concat
 #define CPyCppyy_PyUnicode_AppendAndDel       PyString_ConcatAndDel
 #define CPyCppyy_PyUnicode_FromStringAndSize  PyString_FromStringAndSize
+static inline Py_ssize_t CPyCppyy_PyUnicode_AsWideChar(PyObject* pyobj, wchar_t* w, Py_ssize_t size)
+{
+     return PyUnicode_AsWideChar((PyUnicodeObject*)pyobj, w, size);
+}
 
 #define CPyCppyy_PyUnicode_Type PyString_Type
 
@@ -137,6 +141,7 @@ static inline void* CPyCppyy_PyCapsule_GetPointer(PyObject* capsule, const char*
 #define CPyCppyy_PyUnicode_Append             PyUnicode_Append
 #define CPyCppyy_PyUnicode_AppendAndDel       PyUnicode_AppendAndDel
 #define CPyCppyy_PyUnicode_FromStringAndSize  PyUnicode_FromStringAndSize
+#define CPyCppyy_PyUnicode_AsWideChar         PyUnicode_AsWideChar
 
 #define CPyCppyy_PyUnicode_Type PyUnicode_Type
 
@@ -170,6 +175,7 @@ static inline void* CPyCppyy_PyCapsule_GetPointer(PyObject* capsule, const char*
 
 #if PY_VERSION_HEX >= 0x03020000
 #define CPyCppyy_PySliceCast   PyObject*
+#define PyUnicode_GetSize      PyUnicode_GetLength
 #else
 #define CPyCppyy_PySliceCast   PySliceObject*
 #endif  // >= 3.2

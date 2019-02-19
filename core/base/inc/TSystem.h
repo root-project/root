@@ -214,6 +214,26 @@ struct RedirectHandle_t {
                   fStdOutDup = -1; fStdErrDup = -1; fReadOffSet = -1; }
 };
 
+enum ESockOptions {
+   kSendBuffer,        // size of send buffer
+   kRecvBuffer,        // size of receive buffer
+   kOobInline,         // OOB message inline
+   kKeepAlive,         // keep socket alive
+   kReuseAddr,         // allow reuse of local portion of address 5-tuple
+   kNoDelay,           // send without delay
+   kNoBlock,           // non-blocking I/O
+   kProcessGroup,      // socket process group (used for SIGURG and SIGIO)
+   kAtMark,            // are we at out-of-band mark (read only)
+   kBytesToRead        // get number of bytes to read, FIONREAD (read only)
+};
+
+enum ESendRecvOptions {
+   kDefault,           // default option (= 0)
+   kOob,               // send or receive out-of-band data
+   kPeek,              // peek at incoming message (receive only)
+   kDontBlock          // send/recv as much data as possible without blocking
+};
+
 #ifdef __CINT__
 typedef void *Func_t;
 #else

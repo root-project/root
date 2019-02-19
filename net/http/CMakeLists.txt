@@ -3,9 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_GLOB_HEADERS(headers inc/*.h)
-ROOT_GLOB_SOURCES(sources src/*.cxx civetweb/civetweb.c)
-
 find_path(FASTCGI_INCLUDE_DIR fcgiapp.h
   $ENV{FASTCGI_DIR}/include
   /usr/local/include
@@ -47,10 +44,38 @@ if(RT_LIBRARY)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RHTTP
-                              HEADERS ${headers}
-                              SOURCES ${sources}
-                              LIBRARIES ZLIB::ZLIB ${RT_LIBRARIES} ${FASTCGI_LIBRARY} ${CMAKE_DL_LIBS}
-                              DEPENDENCIES Thread RIO)
+  HEADERS
+    THttpCallArg.h
+    THttpEngine.h
+    THttpServer.h
+    THttpWSHandler.h
+    TRootSniffer.h
+    TRootSnifferStore.h
+  SOURCES
+    src/TCivetweb.cxx
+    src/TCivetweb.h
+    src/TFastCgi.cxx
+    src/TFastCgi.h
+    src/THttpCallArg.cxx
+    src/THttpEngine.cxx
+    src/THttpLongPollEngine.cxx
+    src/THttpLongPollEngine.h
+    src/THttpServer.cxx
+    src/THttpWSEngine.cxx
+    src/THttpWSEngine.h
+    src/THttpWSHandler.cxx
+    src/TRootSniffer.cxx
+    src/TRootSnifferStore.cxx
+    civetweb/civetweb.c
+  LIBRARIES
+    ZLIB::ZLIB
+    ${RT_LIBRARIES}
+    ${FASTCGI_LIBRARY}
+    ${CMAKE_DL_LIBS}
+  DEPENDENCIES
+    RIO
+    Thread
+)
 
 target_compile_definitions(RHTTP PUBLIC -DUSE_WEBSOCKET)
 

@@ -10,7 +10,7 @@
 
 #include "rootcling_impl.h"
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include <stdlib.h>
 
 extern "C" {

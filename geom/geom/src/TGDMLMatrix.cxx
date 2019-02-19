@@ -84,7 +84,7 @@ Double_t TGDMLMatrix::Get(size_t r, size_t c) const
 void TGDMLMatrix::Print(Option_t *) const
 {
 // Print info about this matrix
-   printf("*** matrix: %-20s coldim = %ld  rows = %ld\n", GetName(), fNcols, fNrows);
+   printf("*** matrix: %-20s coldim = %zu  rows = %zu\n", GetName(), fNcols, fNrows);
    if (!fTitle.IsNull()) {
       printf("   %s\n", fTitle.Data());
       return;

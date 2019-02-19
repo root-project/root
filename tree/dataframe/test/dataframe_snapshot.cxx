@@ -597,6 +597,8 @@ TEST(RDFSnapshotMore, Lazy)
    const auto treename = "t";
    const auto fname0 = "lazy0.root";
    const auto fname1 = "lazy1.root";
+   // make sure the file is not here beforehand
+   gSystem->Unlink(fname0);
    RDataFrame d(1);
    auto v = 0U;
    auto genf = [&v](){++v;return 42;};
@@ -641,6 +643,8 @@ TEST(RDFSnapshotMore, ManyTasksPerThread)
 {
    const auto nSlots = 4u;
    ROOT::EnableImplicitMT(nSlots);
+   // make sure the file is not here beforehand
+   gSystem->Unlink("snapshot_manytasks_out.root");
 
    // easiest way to be sure reading requires spawning of several tasks: create several input files
    const std::string inputFilePrefix = "snapshot_manytasks_";

@@ -721,8 +721,6 @@ class ModuleFacade( types.ModuleType ):
 
     # must be called after gApplication creation:
       if _is_ipython:
-       # IPython's FakeModule hack otherwise prevents usage of python from Cling (TODO: verify necessity)
-         _root.gROOT.ProcessLine( 'TPython::Exec( "" );' )
          sys.modules[ '__main__' ].__builtins__ = __builtins__
 
     # special case for cout (backwards compatibility)

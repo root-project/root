@@ -145,7 +145,7 @@ fi
 ### machine dependent settings ###
 
 # Set the C++ standard version
-cxxversionflag="-std=c++@CMAKE_CXX_STANDARD@ "
+cxxversionflag="@configstd@ "
 
 case $arch in
 aix5)

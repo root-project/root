@@ -112,7 +112,7 @@ class TestClassPYTHONIZATION:
 
         import cppyy
 
-        cppyy.gbl.pyzables.GimeDerived._creates = True
+        cppyy.gbl.pyzables.GimeDerived.__creates__ = True
 
         result = cppyy.gbl.pyzables.GimeDerived()
         assert type(result) == cppyy.gbl.pyzables.MyDerived
@@ -188,6 +188,38 @@ class TestClassPYTHONIZATION:
         assert type(mine.__smartptr__()) == cppyy.gbl.std.shared_ptr(Countable)
         assert mine.__smartptr__().get().m_check == 0xcdcdcdcd
         assert mine.say_hi() == "Hi!"
+
+    def test07_creates_flag(self):
+        """Effect of creates flag on return type"""
+
+        import cppyy, gc
+
+        pz = cppyy.gbl.pyzables
+        Countable = pz.Countable
+
+        gc.collect()
+        oldcount = Countable.sInstances     # there's eg. one global variable
+
+        pz.gime_naked_countable.__creates__ = True
+        for i in range(10):
+            cnt = pz.gime_naked_countable()
+            gc.collect()
+            assert Countable.sInstances == oldcount + 1
+        del cnt
+        gc.collect()
+
+        assert Countable.sInstances == oldcount
+
+    def test08_base_class_pythonization(self):
+        """Derived class should not re-pythonize base class pythonization"""
+
+        import cppyy
+
+        d = cppyy.gbl.pyzables.IndexableDerived()
+
+        assert d[0]  == 42
+        assert d[-1] == 42
+        raises(IndexError, d.__getitem__, 1)
 
 
 ## actual test run

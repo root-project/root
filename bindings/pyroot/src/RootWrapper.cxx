@@ -30,6 +30,8 @@
 #include "TInterpreter.h"
 #include "TGlobal.h"
 #include "DllImport.h"
+#include "TFunctionTemplate.h"
+#include "TCollection.h"
 
 // Standard
 #include <map>
@@ -206,6 +208,21 @@ static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
 // bypass custom __getattr__ for efficiency
    getattrofunc oldgetattro = Py_TYPE(pyclass)->tp_getattro;
    Py_TYPE(pyclass)->tp_getattro = PyType_Type.tp_getattro;
+
+   // Add function templates that have not been instantiated to the class dictionary
+   auto cppClass = TClass::GetClass(Cppyy::GetFinalName(scope).c_str());
+   for (auto templ : ROOT::Detail::TRangeStaticCast<TFunctionTemplate>(cppClass->GetListOfFunctionTemplates())) {
+      if (templ->Property() & kIsPublic) { // Discard private templates
+         auto templName = templ->GetName();
+         auto attr = PyObject_GetAttrString(pyclass, templName);
+         if (!TemplateProxy_Check(attr)) {
+            auto templProxy = TemplateProxy_New(templName, pyclass);
+            PyObject_SetAttrString(pyclass, templName, (PyObject*)templProxy);
+            Py_DECREF(templProxy);
+         }
+         Py_XDECREF(attr);
+      }
+   }
 
 // functions in namespaces are properly found through lazy lookup, so do not
 // create them until needed (the same is not true for data members)

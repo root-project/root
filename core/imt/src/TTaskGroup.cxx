@@ -16,6 +16,7 @@
 #ifdef R__USE_IMT
 #include "TROOT.h"
 #include "tbb/task_group.h"
+#include "tbb/task_arena.h"
 #endif
 
 #include <type_traits>
@@ -25,13 +26,32 @@
 \ingroup Parallelism
 \brief A class to manage the asynchronous execution of work items.
 
-A TTaskGroup represents concurrent execution of a group of tasks. Tasks may be dynamically added to the group as it is
-executing.
+A TTaskGroup represents concurrent execution of a group of tasks.
+Tasks may be dynamically added to the group as it is executing.
+Nesting TTaskGroup instances may result in a runtime overhead.
 */
 
 namespace ROOT {
 
+namespace Internal {
+
+#ifdef R__USE_IMT
+tbb::task_group *CastToTG(void* p) {
+   return (tbb::task_group *) p;
+}
+
+tbb::task_arena *CastToTA(void *p)
+{
+   return (tbb::task_arena *)p;
+}
+
+#endif
+
+} // namespace Internal
+
 namespace Experimental {
+
+using namespace ROOT::Internal;
 
 // in the constructor and destructor the casts are present in order to be able
 // to be independent from the runtime used.
@@ -43,7 +63,8 @@ TTaskGroup::TTaskGroup()
    if (!ROOT::IsImplicitMTEnabled()) {
       throw std::runtime_error("Implicit parallelism not enabled. Cannot instantiate a TTaskGroup.");
    }
-   fTaskContainer = ((TaskContainerPtr_t *)new tbb::task_group());
+   fTaskContainer = ((void *)new tbb::task_group());
+   fTaskArena = ((void *)new tbb::task_arena(ROOT::GetImplicitMTPoolSize()));
 #endif
 }
 
@@ -56,6 +77,8 @@ TTaskGroup &TTaskGroup::operator=(TTaskGroup &&other)
 {
    fTaskContainer = other.fTaskContainer;
    other.fTaskContainer = nullptr;
+   fTaskArena = other.fTaskArena;
+   fTaskArena = nullptr;
    fCanRun.store(other.fCanRun);
    return *this;
 }
@@ -66,7 +89,20 @@ TTaskGroup::~TTaskGroup()
    if (!fTaskContainer)
       return;
    Wait();
-   delete ((tbb::task_group *)fTaskContainer);
+   delete CastToTG(fTaskContainer);
+   delete CastToTA(fTaskArena);
+#endif
+}
+
+/////////////////////////////////////////////////////////////////////////////
+/// Run operation in the internal task arena to implement work isolation, i.e.
+/// prevent stealing of work items spawned by ancestors.
+void TTaskGroup::ExecuteInIsolation(const std::function<void(void)> &operation)
+{
+#ifdef R__USE_IMT
+   CastToTA(fTaskArena)->execute([&] { operation(); });
+#else
+   operation();
 #endif
 }
 
@@ -76,7 +112,7 @@ void TTaskGroup::Cancel()
 {
 #ifdef R__USE_IMT
    fCanRun = false;
-   ((tbb::task_group *)fTaskContainer)->cancel();
+   ExecuteInIsolation([&] { CastToTG(fTaskContainer)->cancel(); });
    fCanRun = true;
 #endif
 }
@@ -95,7 +131,7 @@ void TTaskGroup::Run(const std::function<void(void)> &closure)
    while (!fCanRun)
       /* empty */;
 
-   ((tbb::task_group *)fTaskContainer)->run(closure);
+   ExecuteInIsolation([&] { CastToTG(fTaskContainer)->run(closure); });
 #else
    closure();
 #endif
@@ -108,9 +144,9 @@ void TTaskGroup::Wait()
 {
 #ifdef R__USE_IMT
    fCanRun = false;
-   ((tbb::task_group *)fTaskContainer)->wait();
+   ExecuteInIsolation([&] { CastToTG(fTaskContainer)->wait(); });
    fCanRun = true;
 #endif
 }
-}
-}
+} // namespace Experimental
+} // namespace ROOT

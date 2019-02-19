@@ -57,6 +57,8 @@ static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunc
                                         (char *)"Get pointer to data of vector"},
                                        {(char *)"GetSizeOfType", (PyCFunction)PyROOT::GetSizeOfType, METH_VARARGS,
                                         (char *)"Get size of data-type"},
+                                       {(char *)"AsRVec", (PyCFunction)PyROOT::AsRVec, METH_O,
+                                        (char *)"Get object with array interface as RVec"},
                                        {NULL, NULL, 0, NULL}};
 
 #if PY_VERSION_HEX >= 0x03000000
@@ -109,12 +111,6 @@ extern "C" void initlibROOTPython()
 
    // keep gRootModule, but do not increase its reference count even as it is borrowed,
    // or a self-referencing cycle would be created
-
-   // policy labels
-   PyModule_AddObject(gRootModule, (char *)"kMemoryHeuristics", PyInt_FromLong((int)CallContext::kUseHeuristics));
-   PyModule_AddObject(gRootModule, (char *)"kMemoryStrict", PyInt_FromLong((int)CallContext::kUseStrict));
-   PyModule_AddObject(gRootModule, (char *)"kSignalFast", PyInt_FromLong((int)CallContext::kFast));
-   PyModule_AddObject(gRootModule, (char *)"kSignalSafe", PyInt_FromLong((int)CallContext::kSafe));
 
    // setup PyROOT
    PyROOT::Init();

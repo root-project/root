@@ -854,7 +854,7 @@ void TLegend::PaintPrimitives()
          }
          entrymarker.SetNDC();
          entry->TAttMarker::Copy(entrymarker);
-         if (entrymarker.GetMarkerStyle() != 1 ) symbolsize = entrymarker.GetMarkerSize();
+         if (entrymarker.GetMarkerStyle() >= 5 ) symbolsize = entrymarker.GetMarkerSize();
       }
 
       // Draw line

@@ -52,13 +52,12 @@
 #pragma link C++ class TApplicationRemote;
 #pragma link C++ class TApplicationServer;
 #pragma link C++ class TUDPSocket;
-#ifndef R__NO_CRYPTO
+#pragma link C++ class TParallelMergingFile+;
+
+#ifdef R__SSL
 #pragma link C++ class TS3HTTPRequest+;
 #pragma link C++ class TS3WebFile+;
-#endif
-#ifdef R__SSL
 #pragma link C++ class TSSLSocket;
 #endif
-#pragma link C++ class TParallelMergingFile+;
 
 #endif

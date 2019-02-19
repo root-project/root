@@ -3,9 +3,50 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_GLOB_SOURCES(root6src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.cxx)
 ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
-                              HEADERS *.h
-                              SOURCES ${root6src}
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Graf Hist)
+  HEADERS
+    TAttCanvas.h
+    TButton.h
+    TCanvas.h
+    TClassTree.h
+    TColorWheel.h
+    TControlBarButton.h
+    TControlBar.h
+    TCreatePrimitives.h
+    TDialogCanvas.h
+    TGroupButton.h
+    TInspectCanvas.h
+    TPad.h
+    TPadPainter.h
+    TPaveClass.h
+    TRatioPlot.h
+    TSliderBox.h
+    TSlider.h
+    TViewer3DPad.h
+    TView.h
+  SOURCES
+    src/TAttCanvas.cxx
+    src/TButton.cxx
+    src/TCanvas.cxx
+    src/TClassTree.cxx
+    src/TColorWheel.cxx
+    src/TControlBarButton.cxx
+    src/TControlBar.cxx
+    src/TCreatePrimitives.cxx
+    src/TDialogCanvas.cxx
+    src/TGroupButton.cxx
+    src/TInspectCanvas.cxx
+    src/TPad.cxx
+    src/TPadPainter.cxx
+    src/TPaveClass.cxx
+    src/TRatioPlot.cxx
+    src/TSliderBox.cxx
+    src/TSlider.cxx
+    src/TView.cxx
+    src/TViewer3DPad.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  DEPENDENCIES
+    Graf
+    Hist
+)

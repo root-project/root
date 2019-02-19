@@ -301,10 +301,7 @@ first. See
 
 7.7.  SapDB Client:
 -------------------
-To build the SapDB interface you need to install the SapDB calling
-interface first, which can be found in the rpm sapdb-callif-xxxx. See
-
-   http://www.sapdb.org
+Not supported any longer
 
 
 7.8. Pythia Event Generators:
@@ -330,34 +327,15 @@ Venus libraries.  The sources can be downloaded from
 
     ftp://root.cern.ch/root/venus/
 
-7.10. Secure Remote Password (SRP) Authentication (LEGACY):
------------------------------------------------------------
-To build the strong authentication module used by TServerSocket,
-you first have to install the SRP (Secure Remote Password)
-system. See:
 
-   http://srp.stanford.edu/
-
-Please note, that the library "libsrp-dev" as distributed by Standford
-is not enough to build the two utility program in the srputil
-directory of the ROOT source tree.
+7.10. Secure Remote Password (SRP) Authentication:
+--------------------------------------------------
+Not supported any longer
 
 
-7.11. AFS Authentication (LEGACY):
-----------------------------------
-To use AFS authentication in TServerSocket, you
-first have to install AFS client libraries system. There are a few AFS
-distributions available.
-
-* OpenAFS
-  IBMs OpenSource AFS distribution - see
-
-    http://www.openafs.org
-
-* Transarc AFS
-  IBMs commercial AFS ditribution - see
-
-    http://www.transarc.ibm.com/Support/afs
+7.11. AFS Authentication:
+-------------------------
+Not supported any longer
 
 
 7.12. Kerberos Authentication (LEGACY):

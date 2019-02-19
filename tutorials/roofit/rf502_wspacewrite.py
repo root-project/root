@@ -67,5 +67,3 @@ w.Print()
 # Save the workspace into a ROOT file
 w.writeToFile("rf502_workspace.root")
 
-# Workspace will remain in memory after macro finishes
-ROOT.gDirectory.Add(w)

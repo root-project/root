@@ -13,3 +13,7 @@ def main():
     if not os.path.exists(genreflex):
         raise RuntimeError("genreflex not installed in standard location")
     return subprocess.call([genreflex] + sys.argv[1:])
+
+
+if __name__ == "__main__":
+    sys.exit(main())

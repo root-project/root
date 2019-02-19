@@ -18,7 +18,7 @@ const char *shortHelp =
 #include "rootclingCommandLineOptionsHelp.h"
 
 #include "RConfigure.h"
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #include <iostream>
 #include <iomanip>
@@ -2153,6 +2153,12 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *modul
 static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
                            StringRef LinkdefPath, const std::string &moduleName)
 {
+#ifdef __APPLE__
+
+   if (moduleName == "Krb5Auth" || moduleName == "GCocoa" || moduleName == "GQuartz")
+      return true;
+#endif
+
    clang::CompilerInstance *CI = interpreter.getCI();
    clang::HeaderSearch &headerSearch = CI->getPreprocessor().getHeaderSearchInfo();
    headerSearch.loadTopLevelSystemModules();
@@ -3713,12 +3719,6 @@ public:
    }
 };
 
-static bool FileExists(const char *file)
-{
-   struct stat buf;
-   return (stat(file, &buf) == 0);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom diag client for clang that verifies that each implicitly build module
 /// is a system module. If not, it will let the current rootcling invocation
@@ -3830,7 +3830,7 @@ int RootClingMain(int argc,
       fprintf(stderr,
               shortHelp,
               argv[0]);
-      fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
+      fprintf(stderr, "For more extensive help type: %s --help\n", argv[0]);
       return 1;
    }
 
@@ -3923,14 +3923,16 @@ int RootClingMain(int argc,
       ignoreExistingDict = true;
       ic++;
    } else if (argc > 1 && (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h"))) {
+      fprintf(stderr, "%s\n", shortHelp);
+      return 1;
+   } else if (argc > 1 && !strcmp(argv[1], "--help")) {
       fprintf(stderr, kCommandLineOptionsHelp);
       return 1;
    } else if (ic < argc && !strncmp(argv[ic], "-", 1)) {
-      fprintf(stderr, shortHelp,
-              argv[0]);
+      fprintf(stderr, "%s\n", shortHelp);
       fprintf(stderr, "Only one verbose flag is authorized (one of -v, -v0, -v1, -v2, -v3, -v4)\n"
               "and must be before the -f flags\n");
-      fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
+      fprintf(stderr, "For more extensive help type: %s --help\n", argv[0]);
       return 1;
    } else {
       force = 0;
@@ -4175,7 +4177,8 @@ int RootClingMain(int argc,
    }
 
    ic = nextStart;
-   clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(gDriverConfig->fTROOT__GetIncludeDir()));
+   std::string includeDir = llvm::sys::path::convert_to_slash(gDriverConfig->fTROOT__GetIncludeDir());
+   clingArgs.push_back(std::string("-I") + includeDir);
 
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
@@ -4235,6 +4238,9 @@ int RootClingMain(int argc,
    }
 
    if (!isPCH && cxxmodule) {
+      // includeDir is where modulemaps exist.
+      clingArgsInterpreter.push_back("-modulemap_overlay=" + includeDir);
+
       // We just pass -fmodules, the CIFactory will do the rest and configure
       // clang correctly once it sees this flag.
       clingArgsInterpreter.push_back("-fmodules");
@@ -4248,14 +4254,6 @@ int RootClingMain(int argc,
 
       clingArgsInterpreter.push_back("-fmodule-name");
       clingArgsInterpreter.push_back(moduleName.str());
-
-      std::string vfsPath = std::string(gDriverConfig->fTROOT__GetIncludeDir()) + "/modulemap.overlay.yaml";
-      // On modules aware build systems (such as OSX) we do not need an overlay file and thus the build system does not
-      // generate it.
-      if (FileExists(vfsPath.c_str())) {
-         vfsArg = "-ivfsoverlay" + vfsPath;
-         clingArgsInterpreter.push_back(vfsArg.c_str());
-      }
 
       // Set the C++ modules output directory to the directory where we generate
       // the shared library.
@@ -5199,6 +5197,7 @@ namespace genreflex {
                        bool interpreteronly,
                        bool doSplit,
                        bool isDeep,
+                       bool isCxxmodule,
                        bool writeEmptyRootPCM,
                        bool selSyntaxOnly,
                        bool noIncludePaths,
@@ -5214,6 +5213,9 @@ namespace genreflex {
       argvVector.push_back(string2charptr(verbosity));
       argvVector.push_back(string2charptr("-f"));
       argvVector.push_back(string2charptr(ofilename));
+
+      if (isCxxmodule)
+         argvVector.push_back(string2charptr("-cxxmodule"));
 
       // Extract the path to the dictionary
       std::string dictLocation;
@@ -5346,6 +5348,7 @@ namespace genreflex {
                            bool interpreteronly,
                            bool doSplit,
                            bool isDeep,
+                           bool isCxxmodule,
                            bool writeEmptyRootPCM,
                            bool selSyntaxOnly,
                            bool noIncludePaths,
@@ -5382,6 +5385,7 @@ namespace genreflex {
                                           interpreteronly,
                                           doSplit,
                                           isDeep,
+                                          isCxxmodule,
                                           writeEmptyRootPCM,
                                           selSyntaxOnly,
                                           noIncludePaths,
@@ -5501,6 +5505,7 @@ int GenReflexMain(int argc, char **argv)
                        VERBOSE,
                        QUIET,
                        SILENT,
+                       CXXMODULE,
                        WRITEEMPTYROOTPCM,
                        HELP,
                        FAILONWARNINGS,
@@ -5752,6 +5757,15 @@ int GenReflexMain(int argc, char **argv)
       },
 
       {
+         CXXMODULE,
+         NOTYPE ,
+         "" , "cxxmodule",
+         ROOT::option::Arg::None,
+         "--cxxmodule\tGenerates a PCM for C++ Modules.\n"
+      },
+
+
+      {
          HELP,
          NOTYPE,
          "h" , "help",
@@ -5922,6 +5936,8 @@ int GenReflexMain(int argc, char **argv)
       }
    }
 
+   bool isCxxmodule = options[CXXMODULE];
+
    bool multidict = false;
    if (options[MULTIDICT]) multidict = true;
 
@@ -6014,6 +6030,7 @@ int GenReflexMain(int argc, char **argv)
                                     interpreteronly,
                                     doSplit,
                                     isDeep,
+                                    isCxxmodule,
                                     writeEmptyRootPCM,
                                     selSyntaxOnly,
                                     noIncludePaths,
@@ -6036,6 +6053,7 @@ int GenReflexMain(int argc, char **argv)
                                         interpreteronly,
                                         doSplit,
                                         isDeep,
+                                        isCxxmodule,
                                         writeEmptyRootPCM,
                                         selSyntaxOnly,
                                         noIncludePaths,

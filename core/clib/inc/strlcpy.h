@@ -9,7 +9,7 @@
 #ifndef ROOT_strlcpy
 #define ROOT_strlcpy
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #ifndef HAS_STRLCPY
 

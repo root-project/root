@@ -1965,6 +1965,9 @@ public:
       // Perhaps we could treat atomics as well like this?
       if (!fMother && TClassEdit::IsUniquePtr(fName+"<")) {
          name = fArgumentNodes.front()->ToString();
+         // ROOT-9933: we remove const if present.
+         TClassEdit::TSplitType tst(name.c_str());
+         tst.ShortType(name, 1);
          fHasChanged = true;
          return name;
       }
@@ -2001,6 +2004,7 @@ std::string TClassEdit::GetNameForIO(const std::string& templateInstanceName,
    // Decompose template name into pieces and remount it applying the necessary
    // transformations necessary for the ROOT IO subsystem, namely:
    // - Transform std::unique_ptr<T> into T (for selections) (also nested)
+   // - Transform std::unique_ptr<const T> into T (for selections) (also nested)
    // - Transform std::COLL<std::unique_ptr<T>> into std::COLL<T*> (also nested)
    // Name normalisation is respected (e.g. spaces).
    // The implementation uses an internal class defined in the cxx file.

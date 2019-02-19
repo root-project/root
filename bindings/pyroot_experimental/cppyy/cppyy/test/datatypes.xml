@@ -6,6 +6,7 @@
   <enum name="EFruit" />
   <enum name="EnumSpace::E" />
   <class name="EnumSpace::EnumClass" />
+  <enum name="EnumSpace::letter_code" />
 
   <function pattern="get_*" />
   <function pattern="set_*" />
@@ -19,5 +20,8 @@
   <function name="sum_of_int" />
   <function name="sum_of_double" />
   <function name="call_double_double" />
+
+  <function name="Call_int_int" />
+  <class name="StoreCallable" />
 
 </lcgdict>

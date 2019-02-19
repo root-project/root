@@ -37,7 +37,7 @@ def Debug(msg):
      print('Kernel main: %r' % msg, file=sys.__stderr__)
 
 class ROOTKernel(MetaKernel):
-    # These two regexes are considered by the parser of the metakernel 
+    # These two regexes are considered by the parser of the metakernel
     # there is no need to create one explicitly
     identifier_regex = r'(?:\w(?:\w|\.|->|::|\d)*)'
     func_call_regex = r'(?:\w(?:(?:\w|\.|->|::|\d))*)\([^\)\()]*\Z'
@@ -63,6 +63,10 @@ class ROOTKernel(MetaKernel):
         self.magicloader = MagicLoader(self)
         self.completer = CppCompleter()
         self.completer.activate()
+
+    def __del__(self):
+        self.Executor.Stop()
+        self.Declarer.Stop()
 
     def get_completions(self, info):
         return self.completer._completeImpl(info['code'])

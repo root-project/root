@@ -1,13 +1,10 @@
-#!/usr/bin/env python
-
-import os, glob
+import codecs, glob, os, sys, re
 from setuptools import setup, find_packages, Extension
-from codecs import open
+from distutils import log
 
+from setuptools.dist import Distribution
+from setuptools.command.install import install as _install
 
-here = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
-    long_description = f.read()
 
 add_pkg = ['cppyy']
 try:
@@ -20,13 +17,102 @@ try:
             add_pkg += ['cppyy_compat']
         elif version[1] <= 10:
             requirements = ['cppyy-cling', 'cppyy-backend<0.4']
+    elif version[0] == 6:
+        if version[1] <= 0:
+            requirements = ['cppyy-cling', 'cppyy-backend<1.1']
 except ImportError:
     # CPython
-    requirements = ['CPyCppyy>=1.0.0']
+    requirements = ['cppyy-cling', 'cppyy-backend', 'CPyCppyy>=1.5.1']
+
+setup_requirements = ['wheel']
+if 'build' in sys.argv or 'install' in sys.argv:
+    setup_requirements += requirements
+
+here = os.path.abspath(os.path.dirname(__file__))
+with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
+    long_description = f.read()
+
+# https://packaging.python.org/guides/single-sourcing-package-version/
+def read(*parts):
+    with codecs.open(os.path.join(here, *parts), 'r') as fp:
+        return fp.read()
+
+def find_version(*file_paths):
+    version_file = read(*file_paths)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
+
+#
+# platform-dependent helpers
+#
+def is_manylinux():
+    try:
+       for line in open('/etc/redhat-release').readlines():
+           if 'CentOS release 5.11' in line:
+               return True
+    except (OSError, IOError):
+        pass
+    return False
+
+
+#
+# customized commands
+#
+class my_install(_install):
+    def run(self):
+        # base install
+        _install.run(self)
+
+        if 'linux' in sys.platform:
+            # force build of the .pch underneath the cppyy package, so that
+            # it will be removed on upgrade/uninstall
+            install_path = os.path.join(os.getcwd(), self.install_libbase, 'cppyy')
+
+            try:
+                import cppyy_backend.loader as l
+                log.info("installing pre-compiled header in %s", install_path)
+                l.set_cling_compile_options(True)
+                l.ensure_precompiled_header(install_path)
+            except (ImportError, AttributeError):
+                # ImportError may occur with wrong pip requirements resolution (unlikely)
+                # AttributeError will occur with (older) PyPy as it relies on older backends
+                pass
+
+
+cmdclass = {
+        'install': my_install }
+
+
+#
+# customized distribition to disable binaries
+#
+class MyDistribution(Distribution):
+    def run_commands(self):
+        # pip does not resolve dependencies before building binaries, so unless
+        # packages are installed one-by-one, on old install is used or the build
+        # will simply fail hard. The following is not completely quiet, but at
+        # least a lot less conspicuous.
+        if not is_manylinux():
+            disabled = set((
+                'bdist_wheel', 'bdist_egg', 'bdist_wininst', 'bdist_rpm'))
+            for cmd in self.commands:
+                if not cmd in disabled:
+                    self.run_command(cmd)
+                else:
+                    log.info('Command "%s" is disabled', cmd)
+                    cmd_obj = self.get_command_obj(cmd)
+                    cmd_obj.get_outputs = lambda: None
+        else:
+            return Distribution.run_commands(self)
+
 
 setup(
     name='cppyy',
-    version='1.0.0',
+    version=find_version('python', 'cppyy', '_version.py'),
     description='Cling-based Python-C++ bindings',
     long_description=long_description,
 
@@ -53,16 +139,23 @@ setup(
         'Programming Language :: Python :: Implementation :: PyPy',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: C',
         'Programming Language :: C++',
 
         'Natural Language :: English'
     ],
 
+    setup_requires=setup_requirements,
     install_requires=requirements,
 
-    keywords='C++ bindings data science',
+    keywords='C++ bindings data science calling language integration',
 
     package_dir={'': 'python'},
     packages=find_packages('python', include=add_pkg),
+
+    cmdclass=cmdclass,
+    distclass=MyDistribution,
+
+    zip_safe=False,
 )

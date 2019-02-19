@@ -15,18 +15,14 @@
 //     stressIOPlugins [name]
 //
 //   The name parameter is a protocol name, as expected
-//   in a url. The supported names are: xroot, root, http, https,
-//   rfio. If the name is omitted a selection of schemes are
-//   tested based on feature availability:
+//   in a url. The supported names are: xroot, root, http, https.
+//   If the name is omitted a selection of schemes are tested
+//   based on feature availability:
 //
 //           feature          protocol    multithreaded test available
 //
 //            xrootd           root                no
 //            davix            http                no
-//            rfio(*)          rfio                no
-//
-// (*) Also requires a cern.ch kerberos token for sftnight to run the test,
-//     and rfio is not selected unless explicitly given as [name]
 //
 // An example of output of a non multithreaded test, when all the tests
 // run OK is shown below:
@@ -164,11 +160,6 @@ int setPath(const char *proto)
       gPfx = p + "://root.cern.ch/files/StressIOPluginsTestFiles/";
       return 0;
    }
-   if (p == "rfio") {
-      gSystem->Setenv("STAGE_HOST","castorpublic.cern.ch");
-      gPfx = p + ":/castor/cern.ch/user/s/sftnight/StressIOPluginsTestFiles/";
-      return 0;
-   }
    return -1;
 }
 
@@ -200,14 +191,6 @@ void stressIOPluginsForProto(const char *protoName /*=0*/, int multithread /*=0*
         printf("* Skipping http protocol test because 'davix' feature not available\n");
      }
      return;
-   }
-
-   if (!strcmp(protoName,"rfio")) {
-     if (!running_as_sftnight_with_kerberos()) {
-       printf("* Skipping protocol test for '%s' because it needs to be "
-              "run as the CERN sftnight user and have its kerberos token\n", protoName);
-       return;
-     }
    }
 
    if (setPath(protoName)) {
@@ -422,11 +405,6 @@ void stressIOPlugins4()
    const char *title = "Filename formats when adding files to TChain";
    Bprint(4,title);
    printf("using Event_8a.root and Event_8b.root\n");
-
-   if (gCurProtoName == "rfio") {
-      tryquery = kFALSE;
-      trywildcard = kTRUE;
-   }
 
    if (gCurProtoName == "xroot" || gCurProtoName == "root") {
       trywildcard = kTRUE;

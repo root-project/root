@@ -18,10 +18,15 @@
     \ingroup Roofit
 
 RooPolynomial implements a polynomial p.d.f of the form
-\f[ f(x) = \sum_{i} a_{i} * x^i \f]
-By default coefficient a_0 is chosen to be 1, as polynomial
+\f[ f(x) = \mathcal{N} \cdot \sum_{i} a_{i} * x^i \f]
+By default, the coefficient \f$ a_0 \f$ is chosen to be 1, as polynomial
 probability density functions have one degree of freedom
-less than polynomial functions due to the normalization condition
+less than polynomial functions due to the normalisation condition. \f$ \mathcal{N} \f$
+is a normalisation constant that is automatically calculated when the polynomial is used
+in computations.
+
+The sum can be truncated at the low end. See the main constructor
+RooPolynomial::RooPolynomial(const char*, const char*, RooAbsReal&, const RooArgList&, Int_t)
 **/
 
 #include <cmath>
@@ -46,7 +51,25 @@ RooPolynomial::RooPolynomial()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor
+/// Create a polynomial in the variable `x`.
+/// \param[in] name Name of the PDF
+/// \param[in] title Title for plotting the PDF
+/// \param[in] x The variable of the polynomial
+/// \param[in] coefList The coefficients \f$ a_i \f$
+/// \param[in] lowestOrder [optional] Truncate the sum such that it skips the lower orders:
+/// \f[
+///     1. + \sum_{i=0}^{\mathrm{coefList.size()}} a_{i} * x^{(i + \mathrm{lowestOrder})}
+/// \f]
+///
+/// This means that
+/// \code{.cpp}
+/// RooPolynomial pol("pol", "pol", x, RooArgList(a, b), lowestOrder = 2)
+/// \endcode
+/// computes
+/// \f[
+///   \mathrm{pol}(x) = 1 * x^0 + (0 * x^{\ldots}) + a * x^2 + b * x^3.
+/// \f]
+
 
 RooPolynomial::RooPolynomial(const char* name, const char* title,
               RooAbsReal& x, const RooArgList& coefList, Int_t lowestOrder) :
@@ -124,7 +147,7 @@ Double_t RooPolynomial::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Advertise to RooFit that this function can be analytically integrated.
 Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
@@ -132,7 +155,7 @@ Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Do the analytical integral according to the code that was returned by getAnalyticalIntegral().
 Double_t RooPolynomial::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;

@@ -35,7 +35,7 @@ as a TString, construct a TString from it, eg:
 ~~~
 */
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include <stdlib.h>
 #include <ctype.h>
 #include <list>
@@ -125,6 +125,10 @@ TString::TString(const std::string &s)
 
 TString::TString(const char *cs, Ssiz_t n)
 {
+   if (n < 0) {
+      Error("TString::TString", "Negative length!");
+      return;
+   }
    char *data = Init(n, n);
    memcpy(data, cs, n);
 }
@@ -204,6 +208,14 @@ TString::TString(const TSubString& substr)
 
 TString::TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2)
 {
+   if (n1 < 0) {
+      Error("TString::TString", "Negative first length!");
+      return;
+   }
+   if (n2 < 0) {
+      Error("TString::TString", "Negative second length!");
+      return;
+   }
    if (!a1) n1=0;
    if (!a2) n2=0;
    Ssiz_t tot = n1+n2;
@@ -850,6 +862,10 @@ static int MemIsEqual(const char *p, const char *q, Ssiz_t n)
 Ssiz_t TString::Index(const char *pattern, Ssiz_t plen, Ssiz_t startIndex,
                       ECaseCompare cmp) const
 {
+   if (plen < 0) {
+      Error("TString::Index", "Negative first pattern length!");
+      return kNPOS;
+   }
    Ssiz_t slen = Length();
    if (slen < startIndex + plen) return kNPOS;
    if (plen == 0) return startIndex;
@@ -920,7 +936,8 @@ Bool_t TString::MaybeWildcard() const
 
 TString& TString::Prepend(char c, Ssiz_t rep)
 {
-   if (!rep) return *this;
+   if (rep <= 0)
+      return *this;
 
    Ssiz_t len = Length();
    Ssiz_t tot = len + rep;  // Final string length
@@ -965,6 +982,14 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
    if (pos <= kNPOS || pos > len) {
       Error("TString::Replace",
             "first argument out of bounds: pos = %d, Length = %d", pos, len);
+      return *this;
+   }
+   if (n1 < 0) {
+      Error("TString::Replace", "Negative number of characters to remove!");
+      return *this;
+   }
+   if (n2 < 0) {
+      Error("TString::Replace", "Negative number of replacement characters!");
       return *this;
    }
 

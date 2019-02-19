@@ -1,6 +1,7 @@
 dicts = advancedcppDict.so \
         advancedcpp2Dict.so \
         cpp11featuresDict.so \
+        crossinheritanceDict.so \
         datatypesDict.so \
         example01Dict.so \
         fragileDict.so \

@@ -623,7 +623,6 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       TString host;
       if ( !url.IsValid() ||
           (strncmp(url.GetProtocol(),"root", 4) &&
-           strncmp(url.GetProtocol(),"rfio", 4) &&
            strncmp(url.GetProtocol(),"file", 4)) ) {
          host = "no-host";
       } else if ( url.IsValid() && !strncmp(url.GetProtocol(),"file", 4)) {
@@ -803,7 +802,6 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       TString host;
       if ( !url.IsValid() ||
           (strncmp(url.GetProtocol(),"root", 4) &&
-           strncmp(url.GetProtocol(),"rfio", 4) &&
            strncmp(url.GetProtocol(),"file", 4)) ) {
          host = "no-host";
       } else if ( url.IsValid() && !strncmp(url.GetProtocol(),"file", 4)) {
@@ -2139,9 +2137,7 @@ Int_t TPacketizerAdaptive::ReassignPacket(TDSetElement *e,
    // Check the host from which 'e' was previously read.
    // Map non URL filenames to dummy host
    TString host;
-   if ( !url.IsValid() ||
-       (strncmp(url.GetProtocol(),"root", 4) &&
-        strncmp(url.GetProtocol(),"rfio", 4))) {
+   if (!url.IsValid() || strncmp(url.GetProtocol(),"root", 4)) {
       host = "no-host";
    } else {
       host = url.GetHost();

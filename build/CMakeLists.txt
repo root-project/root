@@ -3,13 +3,18 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-file(GLOB rmkdepend_srcs ${CMAKE_CURRENT_SOURCE_DIR}/rmkdepend/*.cxx ${CMAKE_CURRENT_SOURCE_DIR}/rmkdepend/*.c )
-set_source_files_properties(${rmkdepend_srcs} PROPERTIES 
-                                              COMPILE_DEFINITIONS "INCLUDEDIR=\"/usr/include\";OBJSUFFIX=\".o\";USE_CHMOD")
-
-ROOT_EXECUTABLE(rmkdepend ${rmkdepend_srcs})
-
 if(WIN32)
-  ROOT_EXECUTABLE(bindexplib  ${CMAKE_CURRENT_SOURCE_DIR}/win/bindexplib/*.cxx)
+  ROOT_EXECUTABLE(bindexplib
+    win/bindexplib/bindexplib.cxx
+  )
 endif()
 
+ROOT_EXECUTABLE(rmkdepend
+  rmkdepend/cppsetup.c
+  rmkdepend/ifparser.c
+  rmkdepend/include.c
+  rmkdepend/main.c
+  rmkdepend/mainroot.cxx
+  rmkdepend/parse.c
+  rmkdepend/pr.c
+)

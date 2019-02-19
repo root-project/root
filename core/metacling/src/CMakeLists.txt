@@ -1,18 +1,21 @@
 # TInterpreter implementation for cling. Only in libCling; needs to resolve
 # symbols from libCore.
 
-ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/*.cxx)
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../res
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../clingutils/res
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../foundation/res)
-include_directories(${CLING_INCLUDE_DIRS})
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
-include_directories(SYSTEM ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
+include_directories(SYSTEM
+  ${CLANG_INCLUDE_DIRS}
+  ${LLVM_INCLUDE_DIRS}
+  ${CLAD_INCLUDE_DIRS}
+)
 
-include_directories(SYSTEM ${CLAD_INCLUDE_DIRS})
+include_directories(
+  ../res
+  ../../clingutils/res
+  ../../foundation/res
+  ${CLING_INCLUDE_DIRS}
+)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
@@ -33,9 +36,22 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-maybe-uninitialized)
 endif()
 
-ROOT_OBJECT_LIBRARY(MetaCling ${sources})
-add_dependencies(MetaCling CLING)
+ROOT_OBJECT_LIBRARY(MetaCling
+  rootclingTCling.cxx
+  TClingBaseClassInfo.cxx
+  TClingCallbacks.cxx
+  TClingCallFunc.cxx
+  TClingClassInfo.cxx
+  TCling.cxx
+  TClingDataMemberInfo.cxx
+  TClingMethodArgInfo.cxx
+  TClingMethodInfo.cxx
+  TClingTypedefInfo.cxx
+  TClingTypeInfo.cxx
+  TClingValue.cxx
+)
 
+add_dependencies(MetaCling CLING)
 
 ##### libCling #############################################################
 
@@ -92,6 +108,7 @@ if(MSVC)
       ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
       ??1Value@cling@@QAE@XZ
       ?isValid@Value@cling@@QBE_NXZ
+      ?kEmptyCollection@valuePrinterInternal@cling@@3QBDB
       ?AssertOnUnsupportedTypeCast@Value@cling@@IBEXXZ
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D@Z
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DM@Z
@@ -100,12 +117,14 @@ if(MSVC)
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D_K@Z
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DPBX@Z
       ?setValueWithAlloc@internal@runtime@cling@@YAPAXPAX00D@Z
+      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBM@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBN@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBH@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBX@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PB_N@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBX@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBD@Z
+      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBV23@@Z
       ??$toUTF8@D@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBDID@Z
       ?EvaluateDynamicExpression@internal@runtime@cling@@YA?AVValue@3@PAVInterpreter@3@PAVDynamicExprInfo@123@PAVDeclContext@clang@@@Z
   )

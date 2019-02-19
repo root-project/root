@@ -43,7 +43,11 @@ void ROOT::Experimental::RObjectDrawable::Execute(const std::string &exec)
    TObject *obj = fObj.get();
 
    TString cmd;
+#ifdef _MSC_VER
+   cmd.Form("((%s*) 0x%p)->%s;", obj->ClassName(), obj, exec.c_str());
+#else
    cmd.Form("((%s*) %p)->%s;", obj->ClassName(), obj, exec.c_str());
+#endif
    printf("RObjectDrawable::Execute Obj %s Cmd %s\n", obj->GetName(), cmd.Data());
    gROOT->ProcessLine(cmd);
 }

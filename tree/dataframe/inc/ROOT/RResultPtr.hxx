@@ -232,8 +232,9 @@ public:
    ///   one call to the next
    /// - might be executed by a different worker thread at different times: the value of `std::this_thread::get_id()`
    ///   might change between calls
+   ///
    /// To register a callback that is called by _each_ worker thread (concurrently) every N events one can use
-   /// OnPartialResultSlot.
+   /// OnPartialResultSlot().
    // clang-format on
    RResultPtr<T> &OnPartialResult(ULong64_t everyNEvents, std::function<void(T &)> callback)
    {

@@ -117,7 +117,9 @@ example might be useful. The geometry here represents the word ROOT that
 is replicated in some symmetric manner. You might for instance ask some
 questions after having a first look:
 
-***`Q: "OK, I understand the first lines that load the libGeom library and create a geometry manager object. I also recognize from the previous example the following lines creating some materials and media, but what about the geometrical transformations below?"`***
+***`Q:`*** "OK, I understand the first lines that load the libGeom library and create
+a geometry manager object. I also recognize from the previous example the following
+lines creating some materials and media, but what about the geometrical transformations below?"
 
 ***`A:`*** As explained before, the model that we are trying to create
 is a hierarchy of volumes based on ***`containment`***. This is
@@ -130,7 +132,8 @@ accomplished by defining a ***`local geometrical transformation`*** of
 the daughter with respect to the mother coordinate system. These
 transformations will be subsequently used in the example.
 
-***`Q: "I see the lines defining the top level volume as in the previous example, but what about the other volumes named REPLICA and ROOT?"`***
+***`Q:`*** "I see the lines defining the top level volume as in the previous example,
+but what about the other volumes named REPLICA and ROOT?"
 
 ***`A:`*** You will also notice that several other volumes are created
 by using lines like:
@@ -149,7 +152,8 @@ Volumes"). As for REPLICA and ROOT volumes, they are just some
 structure represented by (a real or) a virtual volume can be
 ***`replicated`*** several times in the geometry.
 
-***`Q: "Fine, so probably the real volumes are the ones composing the letters R, O and T. Why one have to define so many volumes to make an R?"`***
+***`Q:`*** "Fine, so probably the real volumes are the ones composing the letters R,
+O and T. Why one have to define so many volumes to make an R?"
 
 ***`A:`*** Well, in real life some objects have much more complex shapes
 that an ***`R`***. The modeller cannot just know all of them; the idea
@@ -157,7 +161,8 @@ is to make a complex object by using elementary building blocks that
 have known shapes (called ***`primitive shapes`***). Gluing these
 together in the appropriate way is the user responsibility.
 
-***`Q: "I am getting the global picture but not making much out of it... There are also a lot of calls to TGeoVolume::AddNode() that I do not understand."`***
+***`Q:`*** "I am getting the global picture but not making much out of it... There
+are also a lot of calls to TGeoVolume::AddNode() that I do not understand."
 
 ***`A:`*** A volume is positioned inside another one by using this
 method. The relative geometrical transformation as well as a copy number

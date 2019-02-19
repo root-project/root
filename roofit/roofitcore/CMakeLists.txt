@@ -187,6 +187,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooRealVarSharedProperties.h
     RooRecursiveFraction.h
     RooRefCountList.h
+    RooSTLRefCountList.h
     RooResolutionModel.h
     RooScaledFunc.h
     RooSecondMoment.h
@@ -220,7 +221,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooUnitTest.h
     RooVectorDataStore.h
     RooWorkspace.h
+    RooWorkspaceHandle.h
     RooXYChi2Var.h
+    RooHelpers.h
   SOURCES
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -342,7 +345,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooLinearVar.cxx
     src/RooLinkedList.cxx
     src/RooLinkedListElem.cxx
-    src/RooLinkedListIter.cxx
     src/RooLinTransBinning.cxx
     src/RooList.cxx
     src/RooListProxy.cxx
@@ -404,6 +406,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooRealVarSharedProperties.cxx
     src/RooRecursiveFraction.cxx
     src/RooRefCountList.cxx
+    src/RooSTLRefCountList.cxx
     src/RooResolutionModel.cxx
     src/RooScaledFunc.cxx
     src/RooSecondMoment.cxx
@@ -438,6 +441,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooVectorDataStore.cxx
     src/RooWorkspace.cxx
     src/RooXYChi2Var.cxx
+    src/RooHelpers.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES

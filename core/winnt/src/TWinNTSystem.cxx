@@ -30,7 +30,6 @@
 #include "TRegexp.h"
 #include "TException.h"
 #include "TEnv.h"
-#include "TSocket.h"
 #include "TApplication.h"
 #include "TWin32SplashThread.h"
 #include "Win32Constants.h"

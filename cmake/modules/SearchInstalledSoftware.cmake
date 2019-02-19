@@ -106,7 +106,7 @@ if(builtin_freetype)
   else()
     set(_freetype_cflags -O)
     set(_freetype_cc ${CMAKE_C_COMPILER})
-    if(ROOT_ARCHITECTURE MATCHES aix)
+    if(CMAKE_SYSTEM_NAME STREQUAL AIX)
       set(_freetype_zlib --without-zlib)
     endif()
     if(CMAKE_OSX_SYSROOT)
@@ -133,8 +133,10 @@ endif()
 #---Check for PCRE-------------------------------------------------------------------
 if(NOT builtin_pcre)
   message(STATUS "Looking for PCRE")
-  # Clear cache variables, or LLVM may use old values for PCRE
-  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE)
+  # Clear cache before calling find_package(PCRE),
+  # necessary to be able to toggle builtin_pcre and
+  # not have find_package(PCRE) find builtin pcre.
+  foreach(suffix FOUND INCLUDE_DIR PCRE_LIBRARY)
     unset(PCRE_${suffix} CACHE)
   endforeach()
   find_package(PCRE)
@@ -159,7 +161,7 @@ if(NOT builtin_lzma)
   endif()
 endif()
 if(builtin_lzma)
-  set(lzma_version 5.2.1)
+  set(lzma_version 5.2.4)
   set(LZMA_TARGET LZMA)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
@@ -167,7 +169,7 @@ if(builtin_lzma)
     ExternalProject_Add(
       LZMA
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
-      URL_HASH SHA256=ce92be2df485a2bd461939908ba9666c88f44e3194d4fb2d4990ac8de7c5929f
+      URL_HASH SHA256=c5910475aa8c7b4ed322f3e043c9cc9214e997f2a85b6b32f7702ac6d47364f8
       PREFIX LZMA
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ""
@@ -191,7 +193,7 @@ if(builtin_lzma)
     ExternalProject_Add(
       LZMA
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
-      URL_HASH SHA256=b918b6648076e74f8d7ae19db5ee663df800049e187259faf5eb997a7b974681
+      URL_HASH SHA256=b512f3b726d3b37b6dc4c8570e137b9311e7552e8ccbab4d39d47ce5f4177145
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib
                         --with-pic --disable-shared --quiet
@@ -456,38 +458,10 @@ if(python)
   endif()
 endif()
 
-#---Check for Ruby installation-------------------------------------------------------
-if(ruby)
-  message(STATUS "Looking for Ruby")
-  find_package(Ruby)
-  if(NOT RUBY_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Ruby package not found and ruby component required")
-    else()
-      message(STATUS "Ruby not found. Switching off ruby option")
-      set(ruby OFF CACHE BOOL "Disabled because Ruby not found (${ruby_description})" FORCE)
-    endif()
-  else()
-    string(REGEX REPLACE "([0-9]+).*$" "\\1" RUBY_MAJOR_VERSION "${RUBY_VERSION}")
-    string(REGEX REPLACE "[0-9]+\\.([0-9]+).*$" "\\1" RUBY_MINOR_VERSION "${RUBY_VERSION}")
-    string(REGEX REPLACE "[0-9]+\\.[0-9]+\\.([0-9]+).*$" "\\1" RUBY_PATCH_VERSION "${RUBY_VERSION}")
-  endif()
-endif()
-
 #---Check for OpenGL installation-------------------------------------------------------
 if(opengl)
   message(STATUS "Looking for OpenGL")
-  if(APPLE AND NOT cocoa)
-    find_path(OPENGL_INCLUDE_DIR GL/gl.h  PATHS /usr/X11R6/include /opt/X11/include)
-    find_library(OPENGL_gl_LIBRARY NAMES GL PATHS /usr/X11R6/lib /opt/X11/lib)
-    find_library(OPENGL_glu_LIBRARY NAMES GLU PATHS /usr/X11R6/lib /opt/X11/lib)
-    find_package_handle_standard_args(OpenGL REQUIRED_VARS OPENGL_INCLUDE_DIR OPENGL_gl_LIBRARY)
-    find_package_handle_standard_args(OpenGL_GLU REQUIRED_VARS OPENGL_glu_LIBRARY)
-    set(OPENGL_LIBRARIES ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
-    mark_as_advanced(OPENGL_INCLUDE_DIR OPENGL_glu_LIBRARY OPENGL_gl_LIBRARY)
-  else()
-    find_package(OpenGL)
-  endif()
+  find_package(OpenGL)
   if(NOT OPENGL_FOUND OR NOT OPENGL_GLU_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "OpenGL package (with GLU) not found and opengl option required")
@@ -522,35 +496,6 @@ if(opengl AND NOT builtin_gl2ps)
   endif()
 endif()
 
-#---Check for Graphviz installation-------------------------------------------------------
-if(gviz)
-  message(STATUS "Looking for Graphviz")
-  find_package(Graphviz)
-  if(NOT GRAPHVIZ_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Graphviz package not found and gviz option required")
-    else()
-      message(STATUS "Graphviz not found. Switching off gviz option")
-      set(gviz OFF CACHE BOOL "Disabled because Graphviz not found (${gviz_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-#---Check for Bonjour installation-------------------------------------------------------
-if(bonjour)
-  message(STATUS "Looking for Bonjour")
-  find_package(Bonjour)
-  if(NOT BONJOUR_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Bonjour/Avahi libraries not found and Bonjour component required")
-    else()
-      message(STATUS "Bonjour not found. Switching off bonjour option")
-      set(bonjour OFF CACHE BOOL "Disabled because Bonjour not found (${bonjour_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-
 #---Check for krb5 Support-----------------------------------------------------------
 if(krb5)
   message(STATUS "Looking for Kerberos 5")
@@ -565,7 +510,7 @@ if(krb5)
   endif()
 endif()
 
-if(krb5 OR afs)
+if(krb5)
   find_library(COMERR_LIBRARY com_err)
   if(COMERR_LIBRARY)
     set(COMERR_LIBRARIES ${COMERR_LIBRARY})
@@ -614,35 +559,6 @@ if(builtin_openssl)
   add_subdirectory(builtins/openssl)
 endif()
 
-#---Check for Castor-------------------------------------------------------------------
-if(castor)
-  message(STATUS "Looking for Castor")
-  find_package(Castor)
-  if(NOT CASTOR_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Castor libraries not found and they are required (castor option enabled)")
-    else()
-      message(STATUS "Castor not found. Switching off castor option")
-      set(castor OFF CACHE BOOL "Disabled because Castor not found (${castor_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-#---Check for RFIO-------------------------------------------------------------------
-if(rfio)
-  message(STATUS "Looking for RFIO")
-  find_package(Castor)
-  find_package(DPM)
-  if(NOT CASTOR_FOUND AND NOT DPM_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Castor or DPM libraries not found and one of them is required (rfio option enabled)")
-    else()
-      message(STATUS "Castor or DPM not found. Switching off rfio option")
-      set(rfio OFF CACHE BOOL "Disabled because Castor or DPM not found (${rfio_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for MySQL-------------------------------------------------------------------
 if(mysql)
   message(STATUS "Looking for MySQL")
@@ -689,7 +605,7 @@ endif()
 if(pgsql)
   message(STATUS "Looking for PostgreSQL")
   find_package(PostgreSQL)
-  if(NOT POSTGRESQL_FOUND)
+  if(NOT PostgreSQL_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "PostgreSQL libraries not found and they are required (pgsql option enabled)")
     else()
@@ -1024,20 +940,6 @@ if(ldap)
   endif()
 endif()
 
-#---Check for globus--------------------------------------------------------------------
-if(globus)
-  find_package(Globus)
-  if(NOT GLOBUS_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "globus libraries not found and is required ('globus' option enabled)")
-    else()
-      message(STATUS "globus libraries not found. Set environment var GLOBUS_LOCATION or varibale GLOBUS_DIR to point to your globus installation")
-      message(STATUS "For the time being switching OFF 'globus' option")
-      set(globus OFF CACHE BOOL "Disabled because globus not found (${globus_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for ftgl if needed----------------------------------------------------------
 if(opengl AND NOT builtin_ftgl)
   find_package(FTGL)
@@ -1069,21 +971,6 @@ if(r)
        message(STATUS "R installation not found. Set variable R_DIR to point to your R installation")
        message(STATUS "For the time being switching OFF 'r' option")
        set(r OFF CACHE BOOL "Disabled because R not found (${r_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-
-#---Check for hdfs--------------------------------------------------------------------
-if(hdfs)
-  find_package(hdfs)
-  if(NOT HDFS_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "hdfs library not found and is required (hdfs option enabled)")
-    else()
-      message(STATUS "hdfs library not found. Set variable HDFS_DIR to point to your hdfs installation")
-      message(STATUS "For the time being switching OFF 'hdfs' option")
-      set(hdfs OFF CACHE BOOL "Disabled because hdfs not found (${hdfs_description})" FORCE)
     endif()
   endif()
 endif()
@@ -1233,21 +1120,6 @@ if(builtin_tbb)
   endif()
   set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
   set(TBB_TARGET TBB)
-endif()
-
-#---Check for OCC--------------------------------------------------------------------
-if(geocad)
-  find_package(OCC COMPONENTS TKPrim TKBRep TKOffset TKGeomBase TKShHealing TKTopAlgo
-                              TKSTEP TKG2d TKBool TKBO TKXCAF TKXDESTEP TKLCAF TKernel TKXSBase TKG3d TKMath)
-  if(NOT OCC_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "OpenCascade libraries not found and is required (geocad option enabled)")
-    else()
-      message(STATUS "OpenCascade libraries not found. Set variable CASROOT to point to your OpenCascade installation")
-      message(STATUS "For the time being switching OFF 'geocad' option")
-      set(geocad OFF CACHE BOOL "Disabled because OpenCascade not found (${geocad_description})" FORCE)
-    endif()
-  endif()
 endif()
 
 #---Check for Vc---------------------------------------------------------------------
@@ -1597,22 +1469,8 @@ endif()
 ExternalProject_Add(
    OPENUI5
    URL ${CMAKE_SOURCE_DIR}/net/http/openui5/openui5.tar.gz
-   URL_HASH SHA256=32e50e3e8808295c67ecb7561ea9cd9beb76dd934263170fbbd05ff59b6d501d
+   URL_HASH SHA256=cbe503155fb5fc563c9dce02f4b5bf2163963b3bf118dd20756aa05d0a8693a3
    CONFIGURE_COMMAND ""
    BUILD_COMMAND ""
    INSTALL_COMMAND ""
    SOURCE_DIR ${CMAKE_BINARY_DIR}/etc/http/openui5dist)
-
-#---Report removed options---------------------------------------------------
-foreach(opt afs glite sapdb srp chirp ios)
-  if(${opt})
-    message(FATAL_ERROR ">>> Option '${opt}' has been removed in ROOT v6.16.")
-  endif()
-endforeach()
-
-#---Report deprecated options---------------------------------------------------
-foreach(opt afdsmgrd bonjour castor geocad globus gviz hdfs krb5 ldap memstat odbc qt qtgsi rfio table)
-  if(${opt})
-    message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in ROOT v6.18. Please inform rootdev@cern.ch should you still need it.")
-  endif()
-endforeach()
