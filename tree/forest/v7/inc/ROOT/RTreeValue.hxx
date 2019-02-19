@@ -49,17 +49,14 @@ protected:
 
    /// For simple types, the mapped element drills through the layers from the C++ data representation
    /// to the primitive columns.  Otherwise, using fMappedElements is undefined.
-   /// Only RTreeFieldBase used fMappedElement
+   /// Only RTreeFieldBase uses fMappedElement
    RColumnElementBase fMappedElement;
-
-   /// To be called only by RTreeFieldBase
-   void SetMappedElement(const Detail::RColumnElementBase &element) {
-      fMappedElement = element;
-   }
 
 public:
    RTreeValueBase() : fField(nullptr), fRawPtr(nullptr) {}
-   RTreeValueBase(RTreeFieldBase *field, void* rawPtr) : fField(field), fRawPtr(rawPtr) {}
+   RTreeValueBase(RTreeFieldBase* field, void* rawPtr) : fField(field), fRawPtr(rawPtr) {}
+   RTreeValueBase(RTreeFieldBase* field, void* rawPtr, const RColumnElementBase& mappedElement)
+      : fField(field), fRawPtr(rawPtr), fMappedElement(mappedElement) {}
 
    void* GetRawPtr() const { return fRawPtr; }
    RTreeFieldBase* GetField() const { return fField; }
@@ -85,7 +82,17 @@ public:
    {
       new (where) T(std::forward<ArgsT>(args)...);
    }
+   template <typename... ArgsT>
+   RTreeValue(const Detail::RColumnElementBase& elem, Detail::RTreeFieldBase* field, T* where, ArgsT&&... args)
+      : Detail::RTreeValueBase(field, where, elem)
+   {
+      new (where) T(std::forward<ArgsT>(args)...);
+   }
+   template <typename... ArgsT>
    RTreeValue(bool /*captureTag*/, Detail::RTreeFieldBase* field, T* value) : Detail::RTreeValueBase(field, value) {}
+   template <typename... ArgsT>
+   RTreeValue(bool /*captureTag*/, const Detail::RColumnElementBase& elem, Detail::RTreeFieldBase* field, T* value)
+      : Detail::RTreeValueBase(field, value, elem) {}
 
    T* Get() const { return static_cast<T*>(fRawPtr); }
 };
