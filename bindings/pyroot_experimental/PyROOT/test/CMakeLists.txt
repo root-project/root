@@ -34,6 +34,9 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_iterable tcollection_iterable.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tseqcollection_itemaccess tseqcollection_itemaccess.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tseqcollection_listmethods tseqcollection_listmethods.py)
 
+# TIter pythonisations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_titer_iterator titer_iterator.py)
+
 # TClonesArray pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tclonesarray_itemaccess tclonesarray_itemaccess.py)
 
