@@ -203,6 +203,10 @@ bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * pa
    // (remember that cloned copy will still depends on data and model function pointers)
    fObjFunction = std::unique_ptr<ROOT::Math::IMultiGenFunction> ( fcn.Clone() );
 
+   // in case a model function and data exists from a previous fit - reset shared-ptr
+   if (fFunc && fResult->FittedFunction() == 0) fFunc.reset();
+   if (fData) fData.reset(); 
+
    return true;
 }
 
@@ -292,15 +296,12 @@ bool Fitter::FitFCN(MinuitFCN_t fcn, int npar, const double * params , unsigned 
 bool Fitter::FitFCN() {
    // fit using the previously set  FCN function
 
-   // in case a model function exists from a previous fit - reset shared-ptr
-   if (fFunc && fResult->FittedFunction() == 0) fFunc.reset();
-
    if (!fObjFunction) {
       MATH_ERROR_MSG("Fitter::FitFCN","Objective function has not been set");
       return false;
    }
    // look if FCN s of a known type and we can get some modelfunction and data objects
-   ExamineFCN();
+   if (!fFunc || !fData) ExamineFCN();
    // init the minimizer
    if (!DoInitMinimizer() ) return false;
    // perform the minimization
