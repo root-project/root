@@ -23,6 +23,7 @@
 #include "TPaveStats.h"
 #include "TGaxis.h"
 #include "TGraphAsymmErrors.h"
+#include "TGraphMultiErrors.h"
 #include "TGraphBentErrors.h"
 #include "TGraphPolargram.h"
 #include "TGraphPolar.h"
@@ -32,6 +33,7 @@
 #include "TFrame.h"
 #include "TMarker.h"
 #include "TVirtualPadEditor.h"
+#include "TRegexp.h"
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 Int_t TGraphPainter::fgMaxPointsPerLine = 50;
@@ -56,6 +58,7 @@ ClassImp(TGraphPainter);
    - [TGraphErrors](#GP03a)
    - [TGraphAsymmErrors](#GP03b)
    - [TGraphBentErrors](#GP03c)
+   - [TGraphMultiErrors](#GP03d)
 - [TGraphPolar options](#GP04)
 - [Colors automatically picked in palette](#GP05)
 - [Reverse graphs' axis](#GP06)
@@ -386,6 +389,58 @@ Begin_Macro(source)
    gr->SetMarkerColor(4);
    gr->SetMarkerStyle(21);
    gr->Draw("ALP");
+}
+End_Macro
+
+
+#### <a name="GP03d"></a> TGraphMultiErrors
+A `TGraphMultiErrors` works basically the same way like a `TGraphAsymmErrors`.
+It has the possibility to define more than one type / dimension of y-Errors.
+This is useful if you want to plot statistic and systematic errors at once.
+
+To be able to define different drawing options for the multiple error dimensions
+the option string can consist of multiple blocks separated by semicolons.
+The painting method assigns these blocks to the error dimensions. The first block
+is always used for the general draw options and options concerning the x-Errors.
+In case there are less than NErrorDimensions + 1 blocks in the option string
+the first block is also used for the first error dimension which is reserved for
+statistical errors. The remaining blocks are assigned to the remaining dimensions.
+
+In addition to the draw options of options of `TGraphAsymmErrors` the following are possible:
+
+| Option   | Block          | Description                                                       |
+|----------|----------------|-------------------------------------------------------------------|
+| "X0"     | First one only | Do not draw errors for points with x = 0 |
+| "Y0"     | First one only | Do not draw errors for points with y = 0 |
+| "s=%f"   | Any            | Scales the x-Errors with %f similar to `gStyle->SetErrorX(dx)` but does not affect them directly (Useful when used in addition with box errors to make the box only half as wide as the x-Errors e.g. s=0.5) |
+| "S"      | First one only | Use individual TAttFill and TAttLine attributes for the different error dimensions instead of the global ones. |
+
+
+Per default the Fill and Line Styles of the Graph are being used for all error
+dimensions. To use the specific ones add the draw option "S" to the first block.
+
+Begin_Macro(source)
+{
+   auto c47 = new TCanvas("c47","c47",200,10,600,400);
+   double ax[]      = {0, 1, 2, 3, 4};
+   double ay[]      = {0, 2, 4, 1, 3};
+   double aexl[]    = {0.3, 0.3, 0.3, 0.3, 0.3};
+   double aexh[]    = {0.3, 0.3, 0.3, 0.3, 0.3};
+   double* aeylstat = new double[5]  {1, 0.5, 1, 0.5, 1};
+   double* aeyhstat = new double[5]  {0.5, 1, 0.5, 1, 0.5};
+   double* aeylsys  = new double[5]  {0.5, 0.4, 0.8, 0.3, 1.2};
+   double* aeyhsys  = new double[5]  {0.6, 0.7, 0.6, 0.4, 0.8};
+   double** aeyl    = new double*[2] {aeylstat, aeylsys};
+   double** aeyh    = new double*[2] {aeyhstat, aeyhsys};
+
+   TGraphMultiErrors* gme = new TGraphMultiErrors(5, 2, ax, ay, aexl, aexh, aeyl, aeyh);
+   gme->SetMarkerStyle(20);
+   gme->SetLineColor(kRed);
+   gme->GetAttLine(0)->SetLineColor(kRed);
+   gme->GetAttLine(1)->SetLineColor(kBlue);
+   gme->GetAttFill(1)->SetFillStyle(0);
+
+   gme->Draw("a p s ; ; 5 s=0.5");
 }
 End_Macro
 
@@ -1168,7 +1223,9 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
       } else if (theGraph->InheritsFrom(TGraphQQ::Class())) {
          PaintGraphQQ(theGraph,chopt);
       } else if (theGraph->InheritsFrom(TGraphAsymmErrors::Class())) {
-         PaintGraphAsymmErrors(theGraph,chopt);
+	  PaintGraphAsymmErrors(theGraph,chopt);
+      } else if (theGraph->InheritsFrom(TGraphMultiErrors::Class())) {
+	  PaintGraphMultiErrors(theGraph,chopt);
       } else if (theGraph->InheritsFrom(TGraphErrors::Class())) {
          if (theGraph->InheritsFrom(TGraphPolar::Class())) {
             PaintGraphPolar(theGraph,chopt);
@@ -2577,6 +2634,425 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// [Paint this TGraphMultiErrors with its current attributes.]($GP03)
+
+void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
+{
+    if (!theGraph->InheritsFrom(TGraphMultiErrors::Class())) {
+	PaintHelper(theGraph, option);
+	return;
+    }
+
+    TGraphMultiErrors* tg = (TGraphMultiErrors*) theGraph;
+
+    Int_t NErrorDimensions = tg->GetNErrorDimensions();
+
+    TString tsOpt = option;
+    tsOpt.ToLower();
+
+    TString* options = new TString[NErrorDimensions + 1];
+    Int_t filled = 0;
+
+    if (tsOpt.CountChar(';') < NErrorDimensions) {
+	options[0] = tsOpt.Contains(";") ? tsOpt(0, tsOpt.First(';')) : tsOpt.Copy();
+	filled++;
+    }
+
+    Ssiz_t firstSemicolon;
+    while ((firstSemicolon = tsOpt.First(';')) != kNPOS && filled <= NErrorDimensions) {
+	options[filled] = tsOpt(0, firstSemicolon);
+	tsOpt = tsOpt(firstSemicolon + 1, tsOpt.Length());
+	filled++;
+    }
+
+    if (filled <= NErrorDimensions) {
+	options[filled] = tsOpt.Copy();
+	filled++;
+    }
+
+    for (Int_t i = filled; i <= NErrorDimensions; i++)
+        options[i] = "";
+
+    Double_t*  xline = NULL;
+    Double_t** yline = new Double_t*[NErrorDimensions];
+    Int_t if1 = 0;
+    Int_t if2 = 0;
+    Double_t xb[4], yb[4];
+
+    const Int_t kBASEMARKER = 8;
+    Double_t s2x, s2y, symbolsize, sbase;
+    Double_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
+    static Float_t cxx[15] = {1., 1., 0.6, 0.6, 1., 1., 0.6, 0.5, 1., 0.6, 0.6, 1., 0.6, 1., 1.};
+    static Float_t cyy[15] = {1., 1., 1. , 1. , 1., 1., 1. , 1. , 1., 0.5, 0.6, 1., 1. , 1., 1.};
+    Int_t theNpoints = tg->GetN();
+    Double_t*  theX   = tg->GetX();
+    Double_t*  theY   = tg->GetY();
+    Double_t*  theExL = tg->GetEXlow();
+    Double_t*  theExH = tg->GetEXhigh();
+    Double_t** theEyL = new Double_t*[NErrorDimensions];
+    Double_t** theEyH = new Double_t*[NErrorDimensions];
+
+    for (Int_t j = 0; j < NErrorDimensions; j++) {
+        theEyL[j] = tg->GetEYlow(j);
+	theEyH[j] = tg->GetEYhigh(j);
+    }
+
+    if (!theX || !theY || !theExL || !theExH || !theEyL || !theEyH)
+        return;
+
+    Bool_t*   DrawErrors = new Bool_t  [NErrorDimensions];
+    Bool_t    AnyErrors  = kFALSE;
+    Bool_t    NoErrorsX  = kTRUE;
+    Bool_t    Option0X   = kFALSE;
+    Bool_t    DrawMarker = kFALSE;
+    Bool_t*   Braticks   = new Bool_t  [NErrorDimensions];
+    Bool_t*   Brackets   = new Bool_t  [NErrorDimensions];
+    Bool_t*   EndLines   = new Bool_t  [NErrorDimensions];
+    Char_t**  ArrowOpt   = new Char_t* [NErrorDimensions];
+    Bool_t*   Option5    = new Bool_t  [NErrorDimensions];
+    Bool_t*   Option4    = new Bool_t  [NErrorDimensions];
+    Bool_t*   Option3    = new Bool_t  [NErrorDimensions];
+    Bool_t    AnyOption3 = kFALSE;
+    Bool_t*   Option2    = new Bool_t  [NErrorDimensions];
+    Bool_t*   Option0    = new Bool_t  [NErrorDimensions];
+    Bool_t    AnyOption0 = kFALSE;
+    Double_t* Scale      = new Double_t[NErrorDimensions];
+
+    for (Int_t j = 0; j < NErrorDimensions; j++) {
+        if (options[j + 1].Contains("s=")) {
+	    sscanf(strstr(options[j + 1].Data(), "s="), "s=%lf", &Scale[j]);
+            options[j + 1].ReplaceAll(options[j + 1](TRegexp("s=*[0-9]\\.*[0-9]")), "");
+	} else
+	    Scale[j] = 1.;
+
+	DrawErrors[j] = !options[j + 1].Contains("x");
+	AnyErrors    |=  DrawErrors[j];
+        Braticks[j]   =  options[j + 1].Contains("[]");
+	Brackets[j]   =  options[j + 1].Contains("||") || Braticks[j];
+	EndLines[j]   = !options[j + 1].Contains("z");
+
+	if      (options[j + 1].Contains("|>")) ArrowOpt[j] = (Char_t*) "|>";
+	else if (options[j + 1].Contains(">"))  ArrowOpt[j] = (Char_t*) ">";
+        else                                    ArrowOpt[j] = NULL;
+
+        Option5[j]    = options[j + 1].Contains("5");
+        Option4[j]    = options[j + 1].Contains("4");
+	Option3[j]    = options[j + 1].Contains("3") || Option4[j];
+        AnyOption3   |= Option3[j];
+	Option2[j]    = options[j + 1].Contains("2") || Option5[j];
+	Option0[j]    = options[j + 1].Contains("0");
+	AnyOption0   |= Option0[j];
+
+        NoErrorsX    &=  (Option3[j] || Option2[j]);
+        Option0X     |= !(Option3[j] || Option2[j]) && Option0[j];
+        DrawMarker   |= !(Brackets[j] || Option3[j] || Option2[j]);
+    }
+
+    Bool_t Draw0PointsX = !options[0].Contains("x0") && (gPad->GetLogx() == 0);
+    Bool_t Draw0PointsY = !options[0].Contains("y0") && (gPad->GetLogy() == 0);
+    options[0].ReplaceAll("x0", "");
+    options[0].ReplaceAll("y0", "");
+
+    Bool_t DrawErrorsX  = !options[0].Contains("x");
+    Bool_t BraticksX    =  options[0].Contains("[]");
+    Bool_t BracketsX    =  options[0].Contains("||") || BraticksX;
+    Bool_t EndLinesX    = !options[0].Contains("z");
+
+    Char_t* ArrowOptX = NULL;
+    if      (options[0].Contains("|>")) ArrowOptX = (Char_t*) "|>";
+    else if (options[0].Contains(">"))  ArrowOptX = (Char_t*) ">";
+
+    Double_t ScaleX = 1.;
+    if (options[0].Contains("s=")) {
+	sscanf(strstr(options[0].Data(), "s="), "s=%lf", &ScaleX);
+        options[0].ReplaceAll(options[0](TRegexp("s=*[0-9]\\.*[0-9]")), "");
+    }
+
+    if (!AnyErrors && !DrawErrorsX) {
+	PaintGraphSimple(tg, options[0].Data());
+        return;
+    }
+
+    Bool_t DrawAxis         = options[0].Contains("a");
+    Bool_t IndividualStyles = options[0].Contains("s");
+
+    if (DrawAxis)
+        PaintGraphSimple(tg, options[0].Data());
+
+    Int_t NPointsInside = AnyOption0 ? theNpoints : 0;
+
+    for (Int_t i = 0; i < theNpoints && !AnyOption0; i++) {
+	x = gPad->XtoPad(theX[i]);
+	y = gPad->YtoPad(theY[i]);
+
+	if ((x >= gPad->GetUxmin()) && (x <= gPad->GetUxmax()) && (y >= gPad->GetUymin()) && (y <= gPad->GetUymax()) && (Draw0PointsX || theX[i] != 0.) && (Draw0PointsY || theY[i] != 0.))
+	    NPointsInside++;
+    }
+
+    if (AnyOption3) {
+	xline = new Double_t[2*NPointsInside];
+
+	if (!xline) {
+	    Error("Paint", "too many points, out of memory");
+	    return;
+	}
+
+        if1 = 1;
+	if2 = 2*NPointsInside;
+    }
+
+    for (Int_t j = 0; j < NErrorDimensions; j++) {
+	if (Option3[j] && DrawErrors[j]) {
+	    yline[j] = new Double_t[2*NPointsInside];
+
+	    if (!yline[j]) {
+		Error("Paint", "too many points, out of memory");
+		return;
+	    }
+	}
+    }
+
+    tg->TAttLine::Modify();
+
+    TArrow arrow;
+    arrow.SetLineWidth(tg->GetLineWidth());
+    arrow.SetLineColor(tg->GetLineColor());
+    arrow.SetFillColor(tg->GetFillColor());
+
+    TBox box;
+    Double_t x1b, y1b, x2b, y2b;
+    box.SetLineWidth(tg->GetLineWidth());
+    box.SetLineColor(tg->GetLineColor());
+    box.SetFillColor(tg->GetFillColor());
+    box.SetFillStyle(tg->GetFillStyle());
+ 
+    symbolsize  = tg->GetMarkerSize();
+    sbase       = symbolsize * kBASEMARKER;
+    Int_t mark  = tg->GetMarkerStyle();
+    Double_t cx = 0.;
+    Double_t cy = 0.;
+
+    if (mark >= 20 && mark <= 34) {
+       cx = cxx[mark - 20];
+       cy = cyy[mark - 20];
+    }
+ 
+    // Define the offset of the error bars due to the symbol size
+    s2x =  gPad->PixeltoX(Int_t(0.5 * sbase)) - gPad->PixeltoX(0);
+    s2y = -gPad->PixeltoY(Int_t(0.5 * sbase)) + gPad->PixeltoY(0);
+    Int_t dxend = Int_t(gStyle->GetEndErrorSize());
+    tx  =  gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+    ty  = -gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
+    Float_t asize = 0.6 * symbolsize * kBASEMARKER / gPad->GetWh();
+ 
+    gPad->SetBit(TGraph::kClipFrame, tg->TestBit(TGraph::kClipFrame));
+
+    for (Int_t i = 0; i < theNpoints; i++) {
+	x = gPad->XtoPad(theX[i]);
+	y = gPad->YtoPad(theY[i]);
+
+        Bool_t isOutside = (x < gPad->GetUxmin()) || (x > gPad->GetUxmax()) || (y < gPad->GetUymin()) || (y > gPad->GetUymax());
+
+        if ((isOutside && !AnyOption0) || (!Draw0PointsX && theX[i] == 0.) || (!Draw0PointsY && theY[i] == 0.))
+	    continue;
+
+	if (AnyOption3) {
+	    if (isOutside) {
+                if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
+		if (x > gPad->GetUxmax()) x = gPad->GetUxmax();
+		if (y < gPad->GetUymin()) y = gPad->GetUymin();
+		if (y > gPad->GetUymax()) y = gPad->GetUymax();
+	    }
+
+            xline[if1 - 1] = x;
+	    xline[if2 - 1] = x;
+
+            if1++;
+	    if2--;
+	}
+
+	for (Int_t j = 0; j < NErrorDimensions; j++) {
+	    if (!DrawErrors[j])
+                continue;
+
+	    //  draw the error rectangles
+	    if (Option2[j] && (!isOutside || Option0[j])) {
+		if (IndividualStyles) {
+                    box.SetLineWidth(tg->GetLineWidth(j));
+		    box.SetLineColor(tg->GetLineColor(j));
+		    box.SetFillColor(tg->GetFillColor(j));
+		    box.SetFillStyle(tg->GetFillStyle(j));
+		}
+
+		x1b = gPad->XtoPad(theX[i] - Scale[j] * theExL[i]);
+		y1b = gPad->YtoPad(theY[i] - theEyL[j][i]);
+		x2b = gPad->XtoPad(theX[i] + Scale[j] * theExH[i]);
+		y2b = gPad->YtoPad(theY[i] + theEyH[j][i]);
+		if (x1b < gPad->GetUxmin()) x1b = gPad->GetUxmin();
+		if (x1b > gPad->GetUxmax()) x1b = gPad->GetUxmax();
+		if (y1b < gPad->GetUymin()) y1b = gPad->GetUymin();
+		if (y1b > gPad->GetUymax()) y1b = gPad->GetUymax();
+		if (x2b < gPad->GetUxmin()) x2b = gPad->GetUxmin();
+		if (x2b > gPad->GetUxmax()) x2b = gPad->GetUxmax();
+		if (y2b < gPad->GetUymin()) y2b = gPad->GetUymin();
+		if (y2b > gPad->GetUymax()) y2b = gPad->GetUymax();
+		if (Option5[j]) box.PaintBox(x1b, y1b, x2b, y2b, "l");
+		else            box.PaintBox(x1b, y1b, x2b, y2b);
+	    }
+
+            //  keep points for fill area drawing
+	    if (Option3[j]) {
+		if (!isOutside || Option0[j]) {
+		    yline[j][if1 - 2] = gPad->YtoPad(theY[i] + theEyH[j][i]);
+		    yline[j][if2]     = gPad->YtoPad(theY[i] - theEyL[j][i]);
+		} else {
+		    yline[j][if1 - 2] = gPad->GetUymin();
+		    yline[j][if2]     = gPad->GetUymin();
+		}
+	    }
+
+	    if (IndividualStyles) {
+                tg->GetAttLine(j)->Modify();
+
+		arrow.SetLineWidth(tg->GetLineWidth(j));
+		arrow.SetLineColor(tg->GetLineColor(j));
+		arrow.SetFillColor(tg->GetFillColor(j));
+	    }
+
+            ylow1 = y - s2y*cy;
+	    ylow2 = gPad->YtoPad(theY[i] - theEyL[j][i]);
+	    if (ylow2 < gPad->GetUymin()) ylow2 = gPad->GetUymin();
+	    if (ylow2 < ylow1 && DrawErrors[j] && !Option2[j] && !Option3[j] && (!isOutside || Option0[j])) {
+		if (ArrowOpt[j])
+		    arrow.PaintArrow(x, ylow1, x, ylow2, asize, ArrowOpt[j]);
+		else {
+		    if (!Brackets[j])
+			gPad->PaintLine(x, ylow1, x, ylow2);
+		    if (EndLines[j]) {
+			if (Braticks[j]) {
+			    xb[0] = x - tx; yb[0] = ylow2 + ty;
+			    xb[1] = x - tx; yb[1] = ylow2;
+			    xb[2] = x + tx; yb[2] = ylow2;
+			    xb[3] = x + tx; yb[3] = ylow2 + ty;
+			    gPad->PaintPolyLine(4, xb, yb);
+			} else
+			    gPad->PaintLine(x - tx, ylow2, x + tx, ylow2);
+		    }
+		}
+	    }
+
+            yup1 = y + s2y*cy;
+	    yup2 = gPad->YtoPad(theY[i] + theEyH[j][i]);
+	    if (yup2 > gPad->GetUymax()) yup2 = gPad->GetUymax();
+	    if (yup2 > yup1 && DrawErrors[j] && !Option2[j] && !Option3[j] && (!isOutside || Option0[j])) {
+		if (ArrowOpt[j])
+		    arrow.PaintArrow(x, yup1, x, yup2, asize, ArrowOpt[j]);
+		else {
+		    if (!Brackets[j])
+			gPad->PaintLine(x, yup1, x, yup2);
+		    if (EndLines[j]) {
+			if (Braticks[j]) {
+			    xb[0] = x - tx; yb[0] = yup2 - ty;
+			    xb[1] = x - tx; yb[1] = yup2;
+			    xb[2] = x + tx; yb[2] = yup2;
+			    xb[3] = x + tx; yb[3] = yup2 - ty;
+			    gPad->PaintPolyLine(4, xb, yb);
+			} else
+			    gPad->PaintLine(x - tx, yup2, x + tx, yup2);
+		    }
+		}
+	    }
+	}
+
+	if (DrawErrorsX) {
+            if (IndividualStyles) {
+                tg->TAttLine::Modify();
+
+		arrow.SetLineWidth(tg->GetLineWidth());
+		arrow.SetLineColor(tg->GetLineColor());
+		arrow.SetFillColor(tg->GetFillColor());
+	    }
+
+	    xl1 = x - s2x*cx;
+	    xl2 = gPad->XtoPad(theX[i] - ScaleX * theExL[i]);
+	    if (xl1 > xl2 && !NoErrorsX && (!isOutside || Option0X)) {
+		if (ArrowOptX)
+		    arrow.PaintArrow(xl1, y, xl2, y, asize, ArrowOptX);
+		else {
+		    if (!BracketsX)
+			gPad->PaintLine(xl1, y, xl2, y);
+		    if (EndLinesX) {
+			if (BraticksX) {
+			    xb[0] = xl2 + tx; yb[0] = y - ty;
+			    xb[1] = xl2;      yb[1] = y - ty;
+			    xb[2] = xl2;      yb[2] = y + ty;
+			    xb[3] = xl2 + tx; yb[3] = y + ty;
+			    gPad->PaintPolyLine(4, xb, yb);
+			} else
+			    gPad->PaintLine(xl2, y - ty, xl2, y + ty);
+		    }
+		}
+	    }
+
+	    xr1 = x + s2x*cx;
+	    xr2 = gPad->XtoPad(theX[i] + ScaleX * theExH[i]);
+	    if (xr1 < xr2 && !NoErrorsX && (!isOutside || Option0X)) {
+		if (ArrowOptX)
+		    arrow.PaintArrow(xr1, y, xr2, y, asize, ArrowOptX);
+		else {
+		    if (!BracketsX)
+			gPad->PaintLine(xr1, y, xr2, y);
+		    if (EndLinesX) {
+			if (BraticksX) {
+			    xb[0] = xr2 - tx; yb[0] = y - ty;
+			    xb[1] = xr2;      yb[1] = y - ty;
+			    xb[2] = xr2;      yb[2] = y + ty;
+			    xb[3] = xr2 - tx; yb[3] = y + ty;
+			    gPad->PaintPolyLine(4, xb, yb);
+			} else
+			    gPad->PaintLine(xr2, y - ty, xr2, y + ty);
+		    }
+		}
+	    }
+	}
+    }
+
+    if (DrawMarker && !DrawAxis)
+	PaintGraphSimple(tg, options[0].Data());
+    gPad->ResetBit(TGraph::kClipFrame);
+
+    TGraph* tgDummy = new TGraph();
+    tg->TAttFill::Copy(*tgDummy);
+    tg->TAttLine::Copy(*tgDummy);
+    tg->TAttMarker::Copy(*tgDummy);
+
+    for (Int_t j = 0; j < NErrorDimensions; j++) {
+	if (Option3[j] && DrawErrors[j]) {
+	    if (IndividualStyles) {
+                tg->GetAttFill(j)->Copy(*tgDummy);
+		tg->GetAttLine(j)->Copy(*tgDummy);
+	    }
+
+	    Int_t logx = gPad->GetLogx();
+	    Int_t logy = gPad->GetLogy();
+	    gPad->SetLogx(0);
+	    gPad->SetLogy(0);
+	    if (Option4[j]) PaintGraph(tgDummy, 2*NPointsInside, xline, yline[j], "FC");
+	    else            PaintGraph(tgDummy, 2*NPointsInside, xline, yline[j], "F");
+	    gPad->SetLogx(logx);
+	    gPad->SetLogy(logy);
+	    delete [] yline[j];
+	}
+    }
+
+    delete tgDummy;
+
+    if (AnyOption3) {
+        delete [] xline;
+	delete [] yline;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Paint this TGraphBentErrors with its current attributes.]($GP03)

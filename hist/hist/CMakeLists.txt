@@ -32,6 +32,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TGraph2DErrors.h
     TGraph2D.h
     TGraphAsymmErrors.h
+    TGraphMultiErrors.h
     TGraphBentErrors.h
     TGraphDelaunay2D.h
     TGraphDelaunay.h
@@ -117,6 +118,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TGraph2D.cxx
     TGraph2DErrors.cxx
     TGraphAsymmErrors.cxx
+    TGraphMultiErrors.cxx
     TGraphBentErrors.cxx
     TGraph.cxx
     TGraphDelaunay2D.cxx
