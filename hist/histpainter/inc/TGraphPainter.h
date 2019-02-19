@@ -46,6 +46,7 @@ public:
    virtual void   PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
    virtual void   PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
    void           PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option);
+   void           PaintGraphMultiErrors(TGraph *theGraph, Option_t *option);
    void           PaintGraphBentErrors(TGraph *theGraph, Option_t *option);
    void           PaintGraphErrors(TGraph *theGraph, Option_t *option);
    void           PaintGraphPolar(TGraph *theGraph, Option_t *option);
