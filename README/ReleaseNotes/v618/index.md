@@ -64,7 +64,17 @@ The methods could be replaced by equivalent methods with other signature:
 
 ### RDataFrame
   - Use TPRegexp instead of TRegexp to interpret the regex used to select columns
-  in the invocation of `Cache` and `Snapshot`.
+    in the invocation of `Cache` and `Snapshot`. This allows usage of a larger set
+    of regular expressions to specify which columns should be written out.
+  - Speed up jitting of Filter and Define expressions passed as string
+  - Speed up event loop, improve scaling in the presence of a large amount of Defines
+  - Allow Filter expressions to return types convertible to bool, rather than only bool
+  - Add `GetNSlots` method to easily retrieve the number of slots that will be used by
+    `DefineSlot, `ForeachSlot`, `OnPartialResultSlot`, ...
+  - Add support for TTrees/TChains with TEntryLists (currently only for single-thread event loops)
+  - Add `HasColumn` method to check whether a column is available to a given RDF node
+  - PyROOT: add `AsRNode` helper function to convert RDF nodes to the common RNode type
+  - PyROOT: add `AsNumpy` method to export contents of a RDataFrame as a dictionary of numpy arrays
 
 
 ## Histogram Libraries
