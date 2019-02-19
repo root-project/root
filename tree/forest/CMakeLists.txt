@@ -27,6 +27,7 @@ if(root7)
     v7/src/RPageStorage.cxx
     v7/src/RPageStorageRoot.cxx
     v7/src/RTree.cxx
+    v7/src/RTreeEntry.cxx
     v7/src/RTreeField.cxx
     v7/src/RTreeModel.cxx
   LINKDEF

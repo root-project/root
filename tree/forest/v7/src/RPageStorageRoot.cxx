@@ -210,7 +210,7 @@ std::unique_ptr<ROOT::Experimental::RTreeModel> ROOT::Experimental::Detail::RPag
    auto model = std::make_unique<RTreeModel>();
    for (auto& f : fMapper.fRootFields) {
       auto field = Detail::RTreeFieldBase::Create(f.fFieldName, f.fTypeName);
-      model->TakeField(field);
+      model->AddField(std::unique_ptr<Detail::RTreeFieldBase>(field));
    }
    return model;
 }

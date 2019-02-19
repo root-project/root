@@ -99,7 +99,7 @@ public:
    /// Fills a user provided entry after checking that the entry has been instantiated from the tree's model
    void GetEntry(TreeIndex_t index, RTreeEntry* entry) {
       for (auto& value : *entry) {
-         value->GetField()->Read(index, value.get());
+         value.GetField()->Read(index, &value);
       }
    }
    TreeIndex_t GetNEntries() { return fNEntries; }
@@ -150,7 +150,7 @@ public:
    /// a light check whether the entry comes from the tree's own model
    void Fill(RTreeEntry *entry) {
       for (auto& treeValue : *entry) {
-         treeValue->GetField()->Append(*treeValue);
+         treeValue.GetField()->Append(treeValue);
       }
       fNEntries++;
       if ((fNEntries % fClusterSizeEntries) == 0) CommitCluster();

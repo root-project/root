@@ -26,7 +26,7 @@
 
 #include <algorithm>
 #include <cctype> // for isspace
-#include <cstdlib> // for malloc
+#include <cstdlib> // for malloc, free
 #include <exception>
 #include <utility>
 
@@ -81,11 +81,17 @@ void ROOT::Experimental::Detail::RTreeFieldBase::DoReadV(
    R__ASSERT(false);
 }
 
-ROOT::Experimental::Detail::RTreeValueBase* ROOT::Experimental::Detail::RTreeFieldBase::GenerateValue()
+ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::Detail::RTreeFieldBase::GenerateValue()
 {
    void *where = malloc(GetValueSize());
    R__ASSERT(where != nullptr);
    return GenerateValue(where);
+}
+
+void ROOT::Experimental::Detail::RTreeFieldBase::DestroyValue(const RTreeValueBase &value, bool dtorOnly)
+{
+   if (!dtorOnly)
+      free(value.GetRawPtr());
 }
 
 void ROOT::Experimental::Detail::RTreeFieldBase::Attach(
@@ -246,7 +252,7 @@ void ROOT::Experimental::RTreeFieldClass::DoRead(TreeIndex_t index, Detail::RTre
    while (auto dataMember = static_cast<TDataMember *>(next())) {
       auto memberValue = fSubFields[i]->GenerateValue(
          reinterpret_cast<unsigned char*>(value->GetRawPtr()) + dataMember->GetOffset());
-      fSubFields[i]->Read(index, memberValue);
+      fSubFields[i]->Read(index, &memberValue);
       i++;
    }
 }
@@ -260,9 +266,16 @@ unsigned int ROOT::Experimental::RTreeFieldClass::GetNColumns() const
    return 0;
 }
 
-ROOT::Experimental::Detail::RTreeValueBase* ROOT::Experimental::RTreeFieldClass::GenerateValue(void* where)
+ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RTreeFieldClass::GenerateValue(void* where)
 {
-   return new Detail::RTreeValueBase(this, fClass->New(where));
+   return Detail::RTreeValueBase(this, fClass->New(where));
+}
+
+void ROOT::Experimental::RTreeFieldClass::DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly)
+{
+   fClass->Destructor(value.GetRawPtr(), true /* dtorOnly */);
+   if (!dtorOnly)
+      free(value.GetRawPtr());
 }
 
 ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RTreeFieldClass::CaptureValue(void* where)
@@ -315,7 +328,7 @@ void ROOT::Experimental::RTreeFieldVector::DoRead(TreeIndex_t index, Detail::RTr
    typedValue->resize(nItems * fItemSize);
    for (unsigned i = 0; i < nItems; ++i) {
       auto itemValue = fSubFields[0]->GenerateValue(typedValue->data() + (i * fItemSize));
-      fSubFields[0]->Read(idxStart + i, itemValue);
+      fSubFields[0]->Read(idxStart + i, &itemValue);
    }
 }
 
@@ -331,10 +344,24 @@ unsigned int ROOT::Experimental::RTreeFieldVector::GetNColumns() const
    return 1;
 }
 
-ROOT::Experimental::Detail::RTreeValueBase* ROOT::Experimental::RTreeFieldVector::GenerateValue(void* where)
+ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RTreeFieldVector::GenerateValue(void* where)
 {
    // The memory location can be used as a vector of any type except bool (TODO)
-   return new Detail::RTreeValueBase(this, new (where) std::vector<char>());
+   return Detail::RTreeValueBase(this, new (where) std::vector<char>());
+}
+
+void ROOT::Experimental::RTreeFieldVector::DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly)
+{
+   auto vec = static_cast<std::vector<char>*>(value.GetRawPtr());
+   R__ASSERT((vec->size() % fItemSize) == 0);
+   auto nItems = vec->size() / fItemSize;
+   for (unsigned i = 0; i < nItems; ++i) {
+      auto itemValue = fSubFields[0]->CaptureValue(vec->data() + (i * fItemSize));
+      fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+   }
+   vec->~vector();
+   if (!dtorOnly)
+      free(vec);
 }
 
 ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RTreeFieldVector::CaptureValue(void* where)

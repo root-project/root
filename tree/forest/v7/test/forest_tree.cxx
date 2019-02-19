@@ -55,6 +55,11 @@ TEST(RForestTree, ReconstructModel)
    sourceRoot.Attach();
 
    auto modelReconstructed = sourceRoot.GenerateModel();
+   EXPECT_EQ(nullptr, modelReconstructed->GetDefaultEntry()->Get<float>("xyz"));
+   auto vecPtr = modelReconstructed->GetDefaultEntry()->Get<std::vector<std::vector<float>>>("nnlo");
+   EXPECT_TRUE(vecPtr != nullptr);
+   // Don't crash
+   vecPtr->push_back(std::vector<float>{1.0});
 }
 
 TEST(RForestTree, StorageRoot)
