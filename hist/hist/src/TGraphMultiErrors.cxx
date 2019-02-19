@@ -1791,7 +1791,7 @@ void TGraphMultiErrors::SetNErrorDimensions(Int_t dim) {
     Double_t** ps = AllocateArrays(2*dim, fNpoints);
     CopyAndReleaseY(ps, 0, dim, 0);
     if (dim > fNErrorDimensions)
-	FillZeroY(fNErrorDimensions, dim, kFALSE);
+	FillZeroY(fNErrorDimensions, dim);
 
     TAttFill* newAttFill = new TAttFill[dim];
     TAttLine* newAttLine = new TAttLine[dim];
