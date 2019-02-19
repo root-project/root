@@ -46,6 +46,9 @@ class RTreeModel {
    RTreeEntry fDefaultEntry;
 
 public:
+   /// Adds a pre-created field and takes ownership of that passed field
+   void TakeField(Detail::RTreeFieldBase* field);
+
    /// Creates a new field and a corresponding tree value.
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddField(std::string_view fieldName, ArgsT&&... args) {
