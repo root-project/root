@@ -511,7 +511,7 @@ public:
 
       for (auto &c : validColumnNames) {
          const auto isCustom = std::find(customCols.begin(), customCols.end(), c) != customCols.end();
-         const auto customColID = isCustom ? fCustomColumns.GetColumns()[c]->GetID() : 0;
+         const auto customColID = isCustom ? fCustomColumns.GetColumns().at(c)->GetID() : 0;
          snapCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom, dontConvertVector,
                                                             customColID)
                   << ", ";
@@ -631,7 +631,7 @@ public:
       const auto &customCols = fCustomColumns.GetNames();
       for (auto &c : columnList) {
          const auto isCustom = std::find(customCols.begin(), customCols.end(), c) != customCols.end();
-         const auto customColID = isCustom ? fCustomColumns.GetColumns()[c]->GetID() : 0;
+         const auto customColID = isCustom ? fCustomColumns.GetColumns().at(c)->GetID() : 0;
          cacheCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom,
                                                              /*vector2rvec=*/true, customColID)
                    << ", ";
@@ -1571,7 +1571,7 @@ public:
                                                        convertVector2RVec);
       } else {
          // must convert the alias "__tdf::column_type" to a readable type
-         const auto colID = std::to_string(fCustomColumns.GetColumns()[std::string(column)]->GetID());
+         const auto colID = std::to_string(fCustomColumns.GetColumns().at(std::string(column))->GetID());
          const auto call = "ROOT::Internal::RDF::TypeID2TypeName(typeid(__tdf" + std::to_string(fLoopManager->GetID()) +
                            "::" + std::string(column) + colID + "_type))";
          const auto calcRes = RDFInternal::InterpreterCalc(call.c_str());

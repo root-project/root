@@ -524,7 +524,7 @@ std::vector<std::string> ColumnTypesAsString(ColumnNames_t &colNames, ColumnName
       const auto &realColName = aliasMapEnd == aliasMapIt ? colName : aliasMapIt->second;
       // The map is a const reference, so no operator[]
       const auto isCustomCol = customCols.HasName(realColName);
-      const auto customColID = isCustomCol ? customCols.GetColumns()[realColName]->GetID() : 0;
+      const auto customColID = isCustomCol ? customCols.GetColumns().at(realColName)->GetID() : 0;
       const auto colTypeName =
          ColumnName2ColumnTypeName(realColName, namespaceID, tree, ds, isCustomCol, /*vector2rvec=*/true, customColID);
       colTypes.emplace_back(colTypeName);
@@ -720,7 +720,7 @@ std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::t
    std::vector<std::string> columnTypeNames(nBranches);
    for (auto i = 0u; i < nBranches; ++i) {
       const auto isCustomCol = customCols.HasName(bl[i]);
-      const auto customColID = isCustomCol ? customCols.GetColumns()[bl[i]]->GetID() : 0;
+      const auto customColID = isCustomCol ? customCols.GetColumns().at(bl[i])->GetID() : 0;
       const auto columnTypeName =
          ColumnName2ColumnTypeName(bl[i], namespaceID, tree, ds, isCustomCol, /*vector2rvec=*/true, customColID);
       if (columnTypeName.empty()) {

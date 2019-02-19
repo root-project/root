@@ -82,7 +82,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Returns the list of the pointers to the defined columns
-   RCustomColumnBasePtrMap_t GetColumns() const { return *fCustomColumns; }
+   const RCustomColumnBasePtrMap_t &GetColumns() const { return *fCustomColumns; }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Check if the provided name is tracked in the names list
