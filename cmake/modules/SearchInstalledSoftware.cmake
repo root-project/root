@@ -1341,8 +1341,6 @@ endif()
 #---Check for CUDA-----------------------------------------------------------------------
 
 if(cuda OR tmva-gpu)
-  message(STATUS "Looking for CUDA")
-
   if(CMAKE_CXX_STANDARD EQUAL 11)
     find_package(CUDA 7.5)
   elseif(CMAKE_CXX_STANDARD EQUAL 14)
@@ -1351,6 +1349,7 @@ if(cuda OR tmva-gpu)
   else()
     message(FATAL_ERROR "CUDA not supported with C++${CMAKE_CXX_STANDARD}")
   endif()
+  enable_language(CUDA)
 endif()
 
 #---TMVA and its dependencies------------------------------------------------------------
