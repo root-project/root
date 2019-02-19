@@ -88,10 +88,9 @@ def _iter_pyz(self):
     # Parameters:
     # - self: collection to be iterated
     it = cppyy.gbl.TIter(self)
-    o = it.Next()
-    while o:
+    # TIter instances are iterable
+    for o in it:
         yield o
-        o = it.Next()
 
 
 @pythonization()
