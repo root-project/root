@@ -83,6 +83,7 @@ static PyObject *PyStyleIndex(PyObject *self, PyObject *index)
       pyindex = PyLong_FromSsize_t(size + idx);
    }
 
+   // We transfer ownership to the caller, who needs to decref
    return pyindex;
 }
 
