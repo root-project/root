@@ -16,6 +16,7 @@
 #include <ROOT/RPageStorageRoot.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPagePool.hxx>
+#include <ROOT/RTreeField.hxx>
 #include <ROOT/RTreeModel.hxx>
 
 #include <TKey.h>
@@ -159,6 +160,12 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
    auto forestHeader = keyForestHeader->ReadObject<ROOT::Experimental::Internal::RForestHeader>();
    printf("Number of fields %lu, of columns %lu\n", forestHeader->fFields.size(), forestHeader->fColumns.size());
 
+   for (auto &fieldHeader : forestHeader->fFields) {
+      if (fieldHeader.fParentName.empty()) {
+         fMapper.fRootFields.push_back(RMapper::RFieldDescriptor(fieldHeader.fName, fieldHeader.fType));
+      }
+   }
+
    auto nColumns = forestHeader->fColumns.size();
    fPagePool = std::make_unique<RPagePool>(forestHeader->fPageSize, nColumns);
    fMapper.fColumnIndex.resize(nColumns);
@@ -200,7 +207,12 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 
 std::unique_ptr<ROOT::Experimental::RTreeModel> ROOT::Experimental::Detail::RPageSourceRoot::GenerateModel()
 {
-   return nullptr;
+   auto model = std::make_unique<RTreeModel>();
+   for (auto& f : fMapper.fRootFields) {
+      auto field = Detail::RTreeFieldBase::Create(f.fFieldName, f.fTypeName);
+      model->TakeField(field);
+   }
+   return model;
 }
 
 void ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(

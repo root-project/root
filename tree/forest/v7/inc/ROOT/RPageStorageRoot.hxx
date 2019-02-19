@@ -101,10 +101,17 @@ public:
       std::vector<TreeIndex_t> fRangeStarts;
    };
 
+   struct RFieldDescriptor {
+      RFieldDescriptor(const std::string &f, const std::string &t) : fFieldName(f), fTypeName(t) {}
+      std::string fFieldName;
+      std::string fTypeName;
+   };
+
    TreeIndex_t fNEntries = 0;
    std::unordered_map<std::int32_t, std::unique_ptr<RColumnModel>> fId2ColumnModel;
    std::unordered_map<std::string, std::int32_t> fColumnName2Id;
    std::vector<RColumnIndex> fColumnIndex;
+   std::vector<RFieldDescriptor> fRootFields;
 };
 
 
