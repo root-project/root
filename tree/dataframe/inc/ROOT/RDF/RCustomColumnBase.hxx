@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <deque>
 
 class TTreeReader;
 
@@ -41,6 +42,7 @@ protected:
    /// Used e.g. to distinguish custom columns with the same name in different branches of the computation graph.
    const unsigned int fID = GetNextID();
    RDFInternal::RBookedCustomColumns fCustomColumns;
+   std::deque<bool> fIsInitialized; // because vector<bool> is not thread-safe
 
    static unsigned int GetNextID();
 
