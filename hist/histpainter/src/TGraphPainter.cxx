@@ -2768,7 +2768,7 @@ void TGraphMultiErrors::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option
 	xline = new Double_t[2*NPointsInside];
 
 	if (!xline) {
-	    //Error("Paint", "too many points, out of memory");
+	    Error("Paint", "too many points, out of memory");
 	    return;
 	}
 
@@ -2781,7 +2781,7 @@ void TGraphMultiErrors::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option
 	    yline[j] = new Double_t[2*NPointsInside];
 
 	    if (!yline[j]) {
-		//Error("Paint", "too many points, out of memory");
+		Error("Paint", "too many points, out of memory");
 		return;
 	    }
 	}
