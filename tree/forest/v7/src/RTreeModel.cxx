@@ -25,4 +25,3 @@ void ROOT::Experimental::RTreeModel::AddField(std::unique_ptr<Detail::RTreeField
    fDefaultEntry.AddValue(field->GenerateValue());
    fRootField.Attach(std::move(field));
 }
-

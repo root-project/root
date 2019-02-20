@@ -70,7 +70,11 @@ public:
      , fSize(elemArray.fSize)
      , fIsMappable(elemArray.fIsMappable)
    {}
-   virtual ~RColumnElementBase() { }
+   RColumnElementBase(const RColumnElementBase& other) = default;
+   RColumnElementBase(RColumnElementBase&& other) = default;
+   RColumnElementBase& operator =(const RColumnElementBase& other) = delete;
+   RColumnElementBase& operator =(RColumnElementBase&& other) = default;
+   virtual ~RColumnElementBase() = default;
 
    void Serialize(void *destination, std::size_t count) const {
      if (!fIsMappable) {

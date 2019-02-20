@@ -84,6 +84,9 @@ Individual fields can be read as well by instantiating a tree view.
 class RInputTree : public Detail::RTree {
 private:
    std::unique_ptr<Detail::RPageSource> fSource;
+   /// Encapsulates the entry number for the current iteration. All views share the same current
+   /// entry number. Concurrent iterations need to use different contexts.
+   RTreeViewContext fDefaultViewContext;
    TreeIndex_t fNEntries;
 
 public:
@@ -108,15 +111,11 @@ public:
    /// GetView<double>("particles.pt") or GetView<RVec<double>>("particle").  It can as well be the index
    /// field of a collection itself, like GetView<TreeIndex_t>("particle")
    template <typename T>
-   RTreeView<T> GetView(std::string_view fieldName) {
-      auto field = std::make_unique<RTreeField<T>>(fieldName, fSource.get());
-      // ...
-      return RTreeView<T>(std::move(field));
+   RTreeView<T> GetView(std::string_view fieldName, RTreeViewContext* context = nullptr) {
+      if (context == nullptr)
+         context = &fDefaultViewContext;
+      return RTreeView<T>(fieldName, context);
    }
-
-   /// Returns a tree view on which one can call again GetView() and GetViewCollection.  The field name
-   /// has refer to a collection
-   RTreeViewCollection GetViewCollection(std::string_view fieldName);
 };
 
 // clang-format off
