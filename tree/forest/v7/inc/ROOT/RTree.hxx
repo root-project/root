@@ -86,7 +86,7 @@ private:
    std::unique_ptr<Detail::RPageSource> fSource;
    /// Encapsulates the entry number for the current iteration. All views share the same current
    /// entry number. Concurrent iterations need to use different contexts.
-   RTreeViewContext fDefaultViewContext;
+   std::unique_ptr<RTreeViewContext> fDefaultViewContext;
    TreeIndex_t fNEntries;
 
 public:
@@ -114,12 +114,12 @@ public:
    template <typename T>
    RTreeView<T> GetView(std::string_view fieldName, RTreeViewContext* context = nullptr) {
       if (context == nullptr)
-         context = &fDefaultViewContext;
+         context = fDefaultViewContext.get();
       return RTreeView<T>(fieldName, context);
    }
    std::unique_ptr<RTreeViewContext> GetViewContext();
-   void ViewReset() { fDefaultViewContext.Reset(); }
-   bool ViewNext() { return fDefaultViewContext.Next(); }
+   void ViewReset() { fDefaultViewContext->Reset(); }
+   bool ViewNext() { return fDefaultViewContext->Next(); }
 };
 
 // clang-format off

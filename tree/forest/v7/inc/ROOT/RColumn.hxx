@@ -122,17 +122,18 @@ public:
 
    /// Map may fall back to Read() and therefore requires a valid element
    template <typename CppT, EColumnType ColumnT>
-   void* Map(const TreeIndex_t index, RColumnElementBase* element) {
+   CppT* Map(const TreeIndex_t index, RColumnElementBase* element) {
       if (!RColumnElement<CppT, ColumnT>::kIsMappable) {
          Read(index, element);
-         return element->GetRawContent();
+         return static_cast<CppT*>(element->GetRawContent());
       }
 
       if ((index < fCurrentPageFirst) || (index > fCurrentPageLast)) {
          MapPage(index);
       }
-      return static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
-             (index - fCurrentPageFirst) * element->GetSize();
+      return reinterpret_cast<CppT*>(
+         static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
+         (index - fCurrentPageFirst) * RColumnElement<CppT, ColumnT>::kSize);
    }
 
    /// MapV may fail if there are less than count consecutive elements or if the type pair is not mappable

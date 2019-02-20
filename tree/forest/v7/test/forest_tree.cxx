@@ -151,17 +151,23 @@ TEST(RForestTree, View)
 
    RInputTree tree(std::make_unique<RPageSourceRoot>("myTree", "test.root"));
    auto viewPt = tree.GetView<float>("pt");
+   int i = 0;
    while (tree.ViewNext()) {
       EXPECT_EQ(42.0, viewPt());
+      i++;
    }
+   EXPECT_EQ(1, i);
 
    auto ctx = tree.GetViewContext();
    auto viewJets = tree.GetView<std::vector<float>>("jets", ctx.get());
+   i = 0;
    while (ctx->Next()) {
       EXPECT_EQ(2U, viewJets().size());
       EXPECT_EQ(1.0, viewJets()[0]);
-      EXPECT_EQ(2.0, viewJets()[0]);
+      EXPECT_EQ(2.0, viewJets()[1]);
+      i++;
    }
+   EXPECT_EQ(1, i);
 }
 
 TEST(RForestTree, TypeName) {
