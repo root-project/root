@@ -179,6 +179,9 @@ public:
   /// \returns true if the identifier is known to the index, false otherwise.
   bool lookupIdentifier(StringRef Name, HitSet &Hits);
 
+  typedef llvm::SmallPtrSet<std::string *, 4> FileNameHitSet;
+  bool lookupIdentifier(StringRef Name, FileNameHitSet &Hits);
+
   /// \brief Note that the given module file has been loaded.
   ///
   /// \returns false if the global module index has information about this
