@@ -20,6 +20,7 @@
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RTreeField.hxx>
 
+#include <iterator>
 #include <memory>
 #include <utility>
 
@@ -37,21 +38,24 @@ class RTreeViewContext {
    friend class RInputTree;
 
 private:
+   const TreeIndex_t fNEntries;
    TreeIndex_t fIndex;
    Detail::RPageSource* fPageSource;
 
-   explicit RTreeViewContext(Detail::RPageSource* pageSource) : fIndex(0), fPageSource(pageSource) {}
+   explicit RTreeViewContext(Detail::RPageSource* pageSource)
+      : fNEntries(pageSource->GetNEntries()), fIndex(0), fPageSource(pageSource) {}
+
+public:
    RTreeViewContext(const RTreeViewContext& other) = delete;
    RTreeViewContext& operator=(const RTreeViewContext& other) = delete;
    ~RTreeViewContext() = default;
 
-   void Advance() { fIndex++; }
+   bool Next() { fIndex++; return fIndex < fNEntries; }
    void Reset() { fIndex = 0; }
-
-public:
    TreeIndex_t GetIndex() const { return fIndex; }
    Detail::RPageSource* GetPageSource() const { return fPageSource; }
 };
+
 
 class RTreeViewBase {
 protected:
