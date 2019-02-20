@@ -51,7 +51,7 @@ ClassImp(TGraphMultiErrors)
 ///////////////////////////////////////////////////////////////////////////////
 /// TGraphMultiErrors default constructor.
 
-TGraphMultiErrors::TGraphMultiErrors() : TGraph(), fNErrorDimensions(0), fExL(NULL), fExH(NULL), fEyL(NULL), fEyH(NULL), fEyLSum(NULL), fEyHSum(NULL), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst), fAttFill(NULL), fAttLine(NULL) {}
+TGraphMultiErrors::TGraphMultiErrors() : TGraph(), fNErrorDimensions(0), fExL(nullptr), fExH(nullptr), fEyL(nullptr), fEyH(nullptr), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst), fAttFill(nullptr), fAttLine(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphMultiErrors normal constructor.
@@ -60,13 +60,13 @@ TGraphMultiErrors::TGraphMultiErrors() : TGraph(), fNErrorDimensions(0), fExL(NU
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim) : TGraph(n), fNErrorDimensions(dim), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
 {
-    if (!CtorAllocate())
-	return;
+   if (!CtorAllocate())
+      return;
 
-    FillZero(0, fNpoints);
+   FillZero(0, fNpoints);
 
-    fAttFill = new TAttFill[fNErrorDimensions];
-    fAttLine = new TAttLine[fNErrorDimensions];
+   fAttFill = new TAttFill[fNErrorDimensions];
+   fAttLine = new TAttLine[fNErrorDimensions];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,29 +74,37 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim) : TGraph(n), fNErrorDim
 ///
 /// if exL,H or eyL,H are null, the corresponding arrays are preset to zero
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t n, const Float_t* x, const Float_t* y, const Float_t* exL, const Float_t* exH, const Float_t* eyL, const Float_t* eyH, Int_t m) : TGraph(n, x, y), fNErrorDimensions(1), fEyLSum(NULL), fEyHSum(NULL), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(Int_t n, const Float_t* x, const Float_t* y, const Float_t* exL, const Float_t* exH, const Float_t* eyL, const Float_t* eyH, Int_t m) : TGraph(n, x, y), fNErrorDimensions(1), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
 {
-    if(!CtorAllocate())
-	return;
+   if(!CtorAllocate())
+      return;
 
-    for (Int_t i = 0; i < n; i++) {
-	if (exL) fExL[i] = exL[i];
-	else     fExL[i] = 0.;
+   for (Int_t i = 0; i < n; i++) {
+      if (exL)
+	 fExL[i] = exL[i];
+      else
+	 fExL[i] = 0.;
 
-	if (exH) fExH[i] = exH[i];
-	else     fExH[i] = 0.;
+      if (exH)
+	 fExH[i] = exH[i];
+      else
+	 fExH[i] = 0.;
 
-	if (eyL) fEyL[0][i] = eyL[i];
-	else     fEyL[0][i] = 0.;
+      if (eyL)
+	 fEyL[0][i] = eyL[i];
+      else
+	 fEyL[0][i] = 0.;
 
-	if (eyH) fEyH[0][i] = eyH[i];
-	else     fEyH[0][i] = 0.;
-    }
+      if (eyH)
+	 fEyH[0][i] = eyH[i];
+      else
+	 fEyH[0][i] = 0.;
+   }
 
-    CalcYErrorSum();
+   CalcYErrorSum();
 
-    fAttFill = new TAttFill[fNErrorDimensions];
-    fAttLine = new TAttLine[fNErrorDimensions];
+   fAttFill = new TAttFill[fNErrorDimensions];
+   fAttLine = new TAttLine[fNErrorDimensions];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -104,29 +112,37 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t n, const Float_t* x, const Float_t* y
 ///
 /// if exL,H or eyL,H are null, the corresponding arrays are preset to zero
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t n, const Double_t* x, const Double_t* y, const Double_t* exL, const Double_t* exH, const Double_t* eyL, const Double_t* eyH, Int_t m) : TGraph(n, x, y), fNErrorDimensions(1), fEyLSum(NULL), fEyHSum(NULL), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(Int_t n, const Double_t* x, const Double_t* y, const Double_t* exL, const Double_t* exH, const Double_t* eyL, const Double_t* eyH, Int_t m) : TGraph(n, x, y), fNErrorDimensions(1), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
 {
-    if (!CtorAllocate())
-	return;
+   if (!CtorAllocate())
+      return;
 
-    n = fNpoints * sizeof(Double_t);
+   n = fNpoints * sizeof(Double_t);
 
-    if (exL) memcpy(fExL, exL, n);
-    else     memset(fExL,   0, n);
+   if (exL)
+      memcpy(fExL, exL, n);
+   else
+      memset(fExL,   0, n);
 
-    if (exH) memcpy(fExH, exH, n);
-    else     memset(fExH,   0, n);
+   if (exH)
+      memcpy(fExH, exH, n);
+   else
+      memset(fExH,   0, n);
 
-    if (eyL) memcpy(fEyL[0], eyL, n);
-    else     memset(fEyL[0],   0, n);
+   if (eyL)
+      memcpy(fEyL[0], eyL, n);
+   else
+      memset(fEyL[0],   0, n);
 
-    if (eyH) memcpy(fEyH[0], eyH, n);
-    else     memset(fEyH[0],   0, n);
+   if (eyH)
+      memcpy(fEyH[0], eyH, n);
+   else
+      memset(fEyH[0],   0, n);
 
-    CalcYErrorSum();
+   CalcYErrorSum();
 
-    fAttFill = new TAttFill[fNErrorDimensions];
-    fAttLine = new TAttLine[fNErrorDimensions];
+   fAttFill = new TAttFill[fNErrorDimensions];
+   fAttLine = new TAttLine[fNErrorDimensions];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,31 +150,39 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t n, const Double_t* x, const Double_t*
 ///
 /// if exL,H or eyL,H are null, the corresponding arrays are preset to zero
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim, const Float_t* x, const Float_t* y, const Float_t* exL, const Float_t* exH, Float_t** eyL, Float_t** eyH, Int_t m) : TGraph(n, x, y), fNErrorDimensions(dim), fEyLSum(NULL), fEyHSum(NULL), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim, const Float_t* x, const Float_t* y, const Float_t* exL, const Float_t* exH, Float_t** eyL, Float_t** eyH, Int_t m) : TGraph(n, x, y), fNErrorDimensions(dim), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
 {
-    if(!CtorAllocate())
-	return;
+   if(!CtorAllocate())
+      return;
 
-    for (Int_t i = 0; i < n; i++) {
-	if (exL) fExL[i] = exL[i];
-	else     fExL[i] = 0.;
+   for (Int_t i = 0; i < n; i++) {
+      if (exL)
+	 fExL[i] = exL[i];
+      else
+	 fExL[i] = 0.;
 
-	if (exH) fExH[i] = exH[i];
-	else     fExH[i] = 0.;
+      if (exH)
+	 fExH[i] = exH[i];
+      else
+	 fExH[i] = 0.;
 
-	for (Int_t j = 0; j < dim; j++) {
-	    if (eyL) fEyL[j][i] = eyL[j][i];
-	    else     fEyL[j][i] = 0.;
+      for (Int_t j = 0; j < dim; j++) {
+	 if (eyL)
+	    fEyL[j][i] = eyL[j][i];
+	 else
+	    fEyL[j][i] = 0.;
 
-	    if (eyH) fEyH[j][i] = eyH[j][i];
-	    else     fEyH[j][i] = 0.;
-	}
-    }
+	 if (eyH)
+	    fEyH[j][i] = eyH[j][i];
+	 else
+	    fEyH[j][i] = 0.;
+      }
+   }
 
-    CalcYErrorSum();
+   CalcYErrorSum();
 
-    fAttFill = new TAttFill[fNErrorDimensions];
-    fAttLine = new TAttLine[fNErrorDimensions];
+   fAttFill = new TAttFill[fNErrorDimensions];
+   fAttLine = new TAttLine[fNErrorDimensions];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -166,31 +190,39 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim, const Float_t* x, const
 ///
 /// if exL,H or eyL,H are null, the corresponding arrays are preset to zero
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim, const Double_t* x, const Double_t* y, const Double_t* exL, const Double_t* exH, Double_t** eyL, Double_t** eyH, Int_t m) : TGraph(n, x, y), fNErrorDimensions(dim), fEyLSum(NULL), fEyHSum(NULL), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim, const Double_t* x, const Double_t* y, const Double_t* exL, const Double_t* exH, Double_t** eyL, Double_t** eyH, Int_t m) : TGraph(n, x, y), fNErrorDimensions(dim), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
 {
-    if (!CtorAllocate())
-	return;
+   if (!CtorAllocate())
+      return;
 
-    n = fNpoints * sizeof(Double_t);
+   n = fNpoints * sizeof(Double_t);
 
-    if (exL) memcpy(fExL, exL, n);
-    else     memset(fExL,   0, n);
+   if (exL)
+      memcpy(fExL, exL, n);
+   else
+      memset(fExL,   0, n);
 
-    if (exH) memcpy(fExH, exH, n);
-    else     memset(fExH,   0, n);
+   if (exH)
+      memcpy(fExH, exH, n);
+   else
+      memset(fExH,   0, n);
 
-    for (Int_t j = 0; j < fNErrorDimensions; j++) {
-	if (eyL) memcpy(fEyL[j], eyL[j], n);
-	else     memset(fEyL[j],      0, n);
+   for (Int_t j = 0; j < fNErrorDimensions; j++) {
+      if (eyL)
+	 memcpy(fEyL[j], eyL[j], n);
+      else
+	 memset(fEyL[j],      0, n);
 
-	if (eyH) memcpy(fEyH[j], eyH[j], n);
-	else     memset(fEyH[j],      0, n);
-    }
+      if (eyH)
+	 memcpy(fEyH[j], eyH[j], n);
+      else
+	 memset(fEyH[j],      0, n);
+   }
 
-    CalcYErrorSum();
+   CalcYErrorSum();
 
-    fAttFill = new TAttFill[fNErrorDimensions];
-    fAttLine = new TAttLine[fNErrorDimensions];
+   fAttFill = new TAttFill[fNErrorDimensions];
+   fAttLine = new TAttLine[fNErrorDimensions];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,36 +232,36 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim, const Double_t* x, cons
 /// The number of points in the graph is the minimum of number of points
 /// in tvX and tvY.
 
-TGraphMultiErrors::TGraphMultiErrors(const TVectorF& tvX, const TVectorF& tvY, const TVectorF& tvExL, const TVectorF& tvExH, const TVectorF& tvEyL, const TVectorF& tvEyH, Int_t m) : TGraph(), fNErrorDimensions(1), fEyLSum(NULL), fEyHSum(NULL), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(const TVectorF& tvX, const TVectorF& tvY, const TVectorF& tvExL, const TVectorF& tvExH, const TVectorF& tvEyL, const TVectorF& tvEyH, Int_t m) : TGraph(), fNErrorDimensions(1), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
 {
-    fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
+   fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
 
-    if (!TGraph::CtorAllocate())
-	return;
+   if (!TGraph::CtorAllocate())
+      return;
 
-    if (!CtorAllocate())
-	return;
+   if (!CtorAllocate())
+      return;
 
-    Int_t itvXL   = tvX.GetLwb();
-    Int_t itvYL   = tvY.GetLwb();
-    Int_t itvExLL = tvExL.GetLwb();
-    Int_t itvExHL = tvExH.GetLwb();
-    Int_t itvEyLL = tvEyL.GetLwb();
-    Int_t itvEyHL = tvEyH.GetLwb();
+   Int_t itvXL   = tvX.GetLwb();
+   Int_t itvYL   = tvY.GetLwb();
+   Int_t itvExLL = tvExL.GetLwb();
+   Int_t itvExHL = tvExH.GetLwb();
+   Int_t itvEyLL = tvEyL.GetLwb();
+   Int_t itvEyHL = tvEyH.GetLwb();
 
-    for (Int_t i = 0; i < fNpoints; i++) {
-	fX[i]      = tvX(i + itvXL);
-	fY[i]      = tvY(i + itvYL);
-        fExL[i]    = tvExL(i + itvExLL);
-	fExH[i]    = tvExH(i + itvExHL);
-	fEyL[0][i] = tvEyL(i + itvEyLL);
-	fEyH[0][i] = tvEyH(i + itvEyHL);
-    }
+   for (Int_t i = 0; i < fNpoints; i++) {
+      fX[i]      = tvX(i + itvXL);
+      fY[i]      = tvY(i + itvYL);
+      fExL[i]    = tvExL(i + itvExLL);
+      fExH[i]    = tvExH(i + itvExHL);
+      fEyL[0][i] = tvEyL(i + itvEyLL);
+      fEyH[0][i] = tvEyH(i + itvEyHL);
+   }
 
-    CalcYErrorSum();
+   CalcYErrorSum();
 
-    fAttFill = new TAttFill[fNErrorDimensions];
-    fAttLine = new TAttLine[fNErrorDimensions];
+   fAttFill = new TAttFill[fNErrorDimensions];
+   fAttLine = new TAttLine[fNErrorDimensions];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -239,36 +271,36 @@ TGraphMultiErrors::TGraphMultiErrors(const TVectorF& tvX, const TVectorF& tvY, c
 /// The number of points in the graph is the minimum of number of points
 /// in tvX and tvY.
 
-TGraphMultiErrors::TGraphMultiErrors(const TVectorD& tvX, const TVectorD& tvY, const TVectorD& tvExL, const TVectorD& tvExH, const TVectorD& tvEyL, const TVectorD& tvEyH, Int_t m) : TGraph(), fNErrorDimensions(1), fEyLSum(NULL), fEyHSum(NULL), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(const TVectorD& tvX, const TVectorD& tvY, const TVectorD& tvExL, const TVectorD& tvExH, const TVectorD& tvEyL, const TVectorD& tvEyH, Int_t m) : TGraph(), fNErrorDimensions(1), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
 {
-    fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
+   fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
 
-    if (!TGraph::CtorAllocate())
-	return;
+   if (!TGraph::CtorAllocate())
+      return;
 
-    if (!CtorAllocate())
-	return;
+   if (!CtorAllocate())
+      return;
 
-    Int_t itvXL   = tvX.GetLwb();
-    Int_t itvYL   = tvY.GetLwb();
-    Int_t itvExLL = tvExL.GetLwb();
-    Int_t itvExHL = tvExH.GetLwb();
-    Int_t itvEyLL = tvEyL.GetLwb();
-    Int_t itvEyHL = tvEyH.GetLwb();
+   Int_t itvXL   = tvX.GetLwb();
+   Int_t itvYL   = tvY.GetLwb();
+   Int_t itvExLL = tvExL.GetLwb();
+   Int_t itvExHL = tvExH.GetLwb();
+   Int_t itvEyLL = tvEyL.GetLwb();
+   Int_t itvEyHL = tvEyH.GetLwb();
 
-    for (Int_t i = 0; i < fNpoints; i++) {
-	fX[i]      = tvX(i + itvXL);
-	fY[i]      = tvY(i + itvYL);
-        fExL[i]    = tvExL(i + itvExLL);
-	fExH[i]    = tvExH(i + itvExHL);
-	fEyL[0][i] = tvEyL(i + itvEyLL);
-	fEyH[0][i] = tvEyH(i + itvEyHL);
-    }
+   for (Int_t i = 0; i < fNpoints; i++) {
+      fX[i]      = tvX(i + itvXL);
+      fY[i]      = tvY(i + itvYL);
+      fExL[i]    = tvExL(i + itvExLL);
+      fExH[i]    = tvExH(i + itvExHL);
+      fEyL[0][i] = tvEyL(i + itvEyLL);
+      fEyH[0][i] = tvEyH(i + itvEyHL);
+   }
 
-    CalcYErrorSum();
+   CalcYErrorSum();
 
-    fAttFill = new TAttFill[fNErrorDimensions];
-    fAttLine = new TAttLine[fNErrorDimensions];
+   fAttFill = new TAttFill[fNErrorDimensions];
+   fAttLine = new TAttLine[fNErrorDimensions];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -278,37 +310,37 @@ TGraphMultiErrors::TGraphMultiErrors(const TVectorD& tvX, const TVectorD& tvY, c
 /// The number of points in the graph is the minimum of number of points
 /// in tvX and tvY.
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t dim, const TVectorF& tvX, const TVectorF& tvY, const TVectorF& tvExL, const TVectorF& tvExH, const TVectorF* tvEyL, const TVectorF* tvEyH, Int_t m) : TGraph(), fNErrorDimensions(dim), fEyLSum(NULL), fEyHSum(NULL), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(Int_t dim, const TVectorF& tvX, const TVectorF& tvY, const TVectorF& tvExL, const TVectorF& tvExH, const TVectorF* tvEyL, const TVectorF* tvEyH, Int_t m) : TGraph(), fNErrorDimensions(dim), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
 {
-    fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
+   fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
 
-    if (!TGraph::CtorAllocate())
-	return;
+   if (!TGraph::CtorAllocate())
+      return;
 
-    if (!CtorAllocate())
-	return;
+   if (!CtorAllocate())
+      return;
 
-    Int_t itvXL   = tvX.GetLwb();
-    Int_t itvYL   = tvY.GetLwb();
-    Int_t itvExLL = tvExL.GetLwb();
-    Int_t itvExHL = tvExH.GetLwb();
+   Int_t itvXL   = tvX.GetLwb();
+   Int_t itvYL   = tvY.GetLwb();
+   Int_t itvExLL = tvExL.GetLwb();
+   Int_t itvExHL = tvExH.GetLwb();
 
-    for (Int_t i = 0; i < fNpoints; i++) {
-	fX[i]      = tvX(i + itvXL);
-	fY[i]      = tvY(i + itvYL);
-        fExL[i]    = tvExL(i + itvExLL);
-	fExH[i]    = tvExH(i + itvExHL);
+   for (Int_t i = 0; i < fNpoints; i++) {
+      fX[i]      = tvX(i + itvXL);
+      fY[i]      = tvY(i + itvYL);
+      fExL[i]    = tvExL(i + itvExLL);
+      fExH[i]    = tvExH(i + itvExHL);
 
-        for (Int_t j = 0; j < dim; j++) {
-	    fEyL[j][i] = tvEyL[j](i + tvEyL[j].GetLwb());
-	    fEyH[j][i] = tvEyH[j](i + tvEyH[j].GetLwb());
-	}
-    }
+      for (Int_t j = 0; j < dim; j++) {
+	 fEyL[j][i] = tvEyL[j](i + tvEyL[j].GetLwb());
+	 fEyH[j][i] = tvEyH[j](i + tvEyH[j].GetLwb());
+      }
+   }
 
-    CalcYErrorSum();
+   CalcYErrorSum();
 
-    fAttFill = new TAttFill[fNErrorDimensions];
-    fAttLine = new TAttLine[fNErrorDimensions];
+   fAttFill = new TAttFill[fNErrorDimensions];
+   fAttLine = new TAttLine[fNErrorDimensions];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -318,68 +350,68 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t dim, const TVectorF& tvX, const TVect
 /// The number of points in the graph is the minimum of number of points
 /// in tvX and tvY.
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t dim, const TVectorD& tvX, const TVectorD& tvY, const TVectorD& tvExL, const TVectorD& tvExH, const TVectorD* tvEyL, const TVectorD* tvEyH, Int_t m) : TGraph(), fNErrorDimensions(dim), fEyLSum(NULL), fEyHSum(NULL), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(Int_t dim, const TVectorD& tvX, const TVectorD& tvY, const TVectorD& tvExL, const TVectorD& tvExH, const TVectorD* tvEyL, const TVectorD* tvEyH, Int_t m) : TGraph(), fNErrorDimensions(dim), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
 {
-    fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
+   fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
 
-    if (!TGraph::CtorAllocate())
+   if (!TGraph::CtorAllocate())
+      return;
+
+   if (!CtorAllocate())
 	return;
 
-    if (!CtorAllocate())
-	return;
+   Int_t itvXL   = tvX.GetLwb();
+   Int_t itvYL   = tvY.GetLwb();
+   Int_t itvExLL = tvExL.GetLwb();
+   Int_t itvExHL = tvExH.GetLwb();
 
-    Int_t itvXL   = tvX.GetLwb();
-    Int_t itvYL   = tvY.GetLwb();
-    Int_t itvExLL = tvExL.GetLwb();
-    Int_t itvExHL = tvExH.GetLwb();
+   for (Int_t i = 0; i < fNpoints; i++) {
+      fX[i]      = tvX(i + itvXL);
+      fY[i]      = tvY(i + itvYL);
+      fExL[i]    = tvExL(i + itvExLL);
+      fExH[i]    = tvExH(i + itvExHL);
 
-    for (Int_t i = 0; i < fNpoints; i++) {
-	fX[i]      = tvX(i + itvXL);
-	fY[i]      = tvY(i + itvYL);
-        fExL[i]    = tvExL(i + itvExLL);
-	fExH[i]    = tvExH(i + itvExHL);
+      for (Int_t j = 0; j < dim; j++) {
+	 fEyL[j][i] = tvEyL[j](i + tvEyL[j].GetLwb());
+	 fEyH[j][i] = tvEyH[j](i + tvEyH[j].GetLwb());
+      }
+   }
 
-        for (Int_t j = 0; j < dim; j++) {
-	    fEyL[j][i] = tvEyL[j](i + tvEyL[j].GetLwb());
-	    fEyH[j][i] = tvEyH[j](i + tvEyH[j].GetLwb());
-	}
-    }
+   CalcYErrorSum();
 
-    CalcYErrorSum();
-
-    fAttFill = new TAttFill[fNErrorDimensions];
-    fAttLine = new TAttLine[fNErrorDimensions];
+   fAttFill = new TAttFill[fNErrorDimensions];
+   fAttLine = new TAttLine[fNErrorDimensions];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphMultiErrors copy constructor
 
-TGraphMultiErrors::TGraphMultiErrors(const TGraphMultiErrors& tgme) : TGraph(tgme), fEyLSum(NULL), fEyHSum(NULL)
+TGraphMultiErrors::TGraphMultiErrors(const TGraphMultiErrors& tgme) : TGraph(tgme), fEyLSum(nullptr), fEyHSum(nullptr)
 {
-    fNErrorDimensions = tgme.fNErrorDimensions;
-    fSumErrorsMode    = tgme.fSumErrorsMode;
+   fNErrorDimensions = tgme.fNErrorDimensions;
+   fSumErrorsMode    = tgme.fSumErrorsMode;
 
-    if (!CtorAllocate())
-	return;
+   if (!CtorAllocate())
+      return;
 
-    Int_t n = fNpoints * sizeof(Double_t);
-    memcpy(fExL, tgme.fExL, n);
-    memcpy(fExH, tgme.fExH, n);
+   Int_t n = fNpoints * sizeof(Double_t);
+   memcpy(fExL, tgme.fExL, n);
+   memcpy(fExH, tgme.fExH, n);
 
-    for (Int_t j = 0; j < fNErrorDimensions; j++) {
-	memcpy(fEyL[j], tgme.fEyL[j], n);
-	memcpy(fEyH[j], tgme.fEyH[j], n);
-    }
+   for (Int_t j = 0; j < fNErrorDimensions; j++) {
+      memcpy(fEyL[j], tgme.fEyL[j], n);
+      memcpy(fEyH[j], tgme.fEyH[j], n);
+   }
 
-    CalcYErrorSum();
+   CalcYErrorSum();
 
-    fAttFill = new TAttFill[fNErrorDimensions];
-    fAttLine = new TAttLine[fNErrorDimensions];
+   fAttFill = new TAttFill[fNErrorDimensions];
+   fAttLine = new TAttLine[fNErrorDimensions];
 
-    for (Int_t j = 0; j < fNErrorDimensions; j++) {
-        tgme.GetAttFill(j)->Copy(fAttFill[j]);
-	tgme.GetAttLine(j)->Copy(fAttLine[j]);
-    }
+   for (Int_t j = 0; j < fNErrorDimensions; j++) {
+      tgme.GetAttFill(j)->Copy(fAttFill[j]);
+      tgme.GetAttLine(j)->Copy(fAttLine[j]);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -387,115 +419,119 @@ TGraphMultiErrors::TGraphMultiErrors(const TGraphMultiErrors& tgme) : TGraph(tgm
 
 TGraphMultiErrors& TGraphMultiErrors::operator = (const TGraphMultiErrors& tgme)
 {
-    if (this != &tgme) {
-	TGraph::operator = (tgme);
-	// delete arrays
-	if (fExL) delete [] fExL;
-	if (fExH) delete [] fExH;
+   if (this != &tgme) {
+      TGraph::operator = (tgme);
+      // delete arrays
+      if (fExL)
+	 delete [] fExL;
+      if (fExH)
+	 delete [] fExH;
 
-	if (fEyL) {
-            for (Int_t j = 0; j < fNErrorDimensions; j++)
-		delete [] fEyL[j];
-	    delete [] fEyL;
-	}
-        if (fEyH) {
-            for (Int_t j = 0; j < fNErrorDimensions; j++)
-		delete [] fEyH[j];
-	    delete [] fEyH;
-	}
+      if (fEyL) {
+	 for (Int_t j = 0; j < fNErrorDimensions; j++)
+	       delete [] fEyL[j];
+	 delete [] fEyL;
+      }
+      if (fEyH) {
+	 for (Int_t j = 0; j < fNErrorDimensions; j++)
+	    delete [] fEyH[j];
+	 delete [] fEyH;
+      }
 
-        if (fAttFill) delete [] fAttFill;
-	if (fAttLine) delete [] fAttLine;
+      if (fAttFill)
+	 delete [] fAttFill;
+      if (fAttLine)
+	 delete [] fAttLine;
 
-        fNErrorDimensions = tgme.fNErrorDimensions;
-	fSumErrorsMode    = tgme.fSumErrorsMode;
+      fNErrorDimensions = tgme.fNErrorDimensions;
+      fSumErrorsMode    = tgme.fSumErrorsMode;
 
-	if (!CtorAllocate())
-	    return *this;
+      if (!CtorAllocate())
+	 return *this;
 
-        Int_t n = fNpoints * sizeof(Double_t);
-	memcpy(fExL, tgme.fExL, n);
-	memcpy(fExH, tgme.fExH, n);
+      Int_t n = fNpoints * sizeof(Double_t);
+      memcpy(fExL, tgme.fExL, n);
+      memcpy(fExH, tgme.fExH, n);
 
-        for (Int_t j = 0; j < fNErrorDimensions; j++) {
-	    memcpy(fEyL[j], tgme.fEyL[j], n);
-	    memcpy(fEyH[j], tgme.fEyH[j], n);
-	}
+      for (Int_t j = 0; j < fNErrorDimensions; j++) {
+	 memcpy(fEyL[j], tgme.fEyL[j], n);
+	 memcpy(fEyH[j], tgme.fEyH[j], n);
+      }
 
-	CalcYErrorSum();
+      CalcYErrorSum();
 
-        fAttFill = new TAttFill[fNErrorDimensions];
-	fAttLine = new TAttLine[fNErrorDimensions];
+      fAttFill = new TAttFill[fNErrorDimensions];
+      fAttLine = new TAttLine[fNErrorDimensions];
 
-	for (Int_t j = 0; j < fNErrorDimensions; j++) {
-	    tgme.GetAttFill(j)->Copy(fAttFill[j]);
-	    tgme.GetAttLine(j)->Copy(fAttLine[j]);
-	}
-    }
-    return *this;
+      for (Int_t j = 0; j < fNErrorDimensions; j++) {
+	 tgme.GetAttFill(j)->Copy(fAttFill[j]);
+	 tgme.GetAttLine(j)->Copy(fAttLine[j]);
+      }
+   }
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphMultiErrors constructor importing its parameters from the TH1 object passed as argument
 /// the low and high errors are set to the bin error of the histogram.
 
-TGraphMultiErrors::TGraphMultiErrors(const TH1* h, Int_t dim) : TGraph(h), fNErrorDimensions(dim), fEyLSum(NULL), fEyHSum(NULL), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
+TGraphMultiErrors::TGraphMultiErrors(const TH1* h, Int_t dim) : TGraph(h), fNErrorDimensions(dim), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
 {
-    if (!CtorAllocate())
-	return;
+   if (!CtorAllocate())
+      return;
 
-    for (Int_t i = 0; i < fNpoints; i++) {
-	fExL[i]    = h->GetBinWidth(i + 1) * gStyle->GetErrorX();
-	fExH[i]    = h->GetBinWidth(i + 1) * gStyle->GetErrorX();
-	fEyL[0][i] = h->GetBinError(i + 1);
-	fEyH[0][i] = h->GetBinError(i + 1);
+   for (Int_t i = 0; i < fNpoints; i++) {
+      fExL[i]    = h->GetBinWidth(i + 1) * gStyle->GetErrorX();
+      fExH[i]    = h->GetBinWidth(i + 1) * gStyle->GetErrorX();
+      fEyL[0][i] = h->GetBinError(i + 1);
+      fEyH[0][i] = h->GetBinError(i + 1);
 
-	for (Int_t j = 1; j < fNErrorDimensions; j++) {
-            fEyL[j][i] = 0.;
-	    fEyH[j][i] = 0.;
-	}
-    }
+      for (Int_t j = 1; j < fNErrorDimensions; j++) {
+	 fEyL[j][i] = 0.;
+	 fEyH[j][i] = 0.;
+      }
+   }
 
-    CalcYErrorSum();
+   CalcYErrorSum();
 
-    fAttFill = new TAttFill[fNErrorDimensions];
-    fAttLine = new TAttLine[fNErrorDimensions];
+   fAttFill = new TAttFill[fNErrorDimensions];
+   fAttLine = new TAttLine[fNErrorDimensions];
 
-    TAttFill::Copy(fAttFill[0]);
-    TAttLine::Copy(fAttLine[0]);
+   TAttFill::Copy(fAttFill[0]);
+   TAttLine::Copy(fAttLine[0]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates a TGraphMultiErrors by dividing two input TH1 histograms:
 /// pass/total. (see TGraphMultiErrors::Divide)
 
-TGraphMultiErrors::TGraphMultiErrors(const TH1* pass, const TH1* total, Int_t dim, Option_t *option) : TGraph(pass ? pass->GetNbinsX() : 0), fNErrorDimensions(dim), fEyLSum(NULL), fEyHSum(NULL), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
+TGraphMultiErrors::TGraphMultiErrors(const TH1* pass, const TH1* total, Int_t dim, Option_t *option) : TGraph(pass ? pass->GetNbinsX() : 0), fNErrorDimensions(dim), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
 {
-    if (!pass || !total) {
-	Error("TGraphMultiErrors", "Invalid histogram pointers");
-	return;
-    }
+   if (!pass || !total) {
+      Error("TGraphMultiErrors", "Invalid histogram pointers");
+      return;
+   }
 
-    if (!CtorAllocate())
-	return;
+   if (!CtorAllocate())
+      return;
 
-    std::string sname = "divide_" + std::string(pass->GetName()) + "_by_" + std::string(total->GetName());
-    SetName(sname.c_str());
-    SetTitle(pass->GetTitle());
+   std::string sname = "divide_" + std::string(pass->GetName()) + "_by_" + std::string(total->GetName());
+   SetName(sname.c_str());
+   SetTitle(pass->GetTitle());
 
-    //copy style from pass
-    pass->TAttLine::Copy(*this);
-    pass->TAttFill::Copy(*this);
-    pass->TAttMarker::Copy(*this);
+   //copy style from pass
+   pass->TAttLine::Copy(*this);
+   pass->TAttFill::Copy(*this);
+   pass->TAttMarker::Copy(*this);
 
-    Divide(pass, total, option);
-    CalcYErrorSum();
+   Divide(pass, total, option);
+   CalcYErrorSum();
 
-    fAttFill = new TAttFill[fNErrorDimensions];
-    fAttLine = new TAttLine[fNErrorDimensions];
+   fAttFill = new TAttFill[fNErrorDimensions];
+   fAttLine = new TAttLine[fNErrorDimensions];
 
-    TAttFill::Copy(fAttFill[0]);
-    TAttLine::Copy(fAttLine[0]);
+   TAttFill::Copy(fAttFill[0]);
+   TAttLine::Copy(fAttLine[0]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -503,25 +539,31 @@ TGraphMultiErrors::TGraphMultiErrors(const TH1* pass, const TH1* total, Int_t di
 
 TGraphMultiErrors::~TGraphMultiErrors()
 {
-    if (fExL) delete [] fExL;
-    if (fExH) delete [] fExH;
+   if (fExL)
+      delete [] fExL;
+   if (fExH)
+      delete [] fExH;
 
-    if (fEyL) {
-	for (Int_t j = 0; j < fNErrorDimensions; j++)
-	    delete [] fEyL[j];
-	delete [] fEyL;
-    }
-    if (fEyH) {
-	for (Int_t j = 0; j < fNErrorDimensions; j++)
-	    delete [] fEyH[j];
-	delete [] fEyH;
-    }
+   if (fEyL) {
+      for (Int_t j = 0; j < fNErrorDimensions; j++)
+	 delete [] fEyL[j];
+      delete [] fEyL;
+   }
+   if (fEyH) {
+      for (Int_t j = 0; j < fNErrorDimensions; j++)
+	 delete [] fEyH[j];
+      delete [] fEyH;
+   }
 
-    if (fEyLSum) delete [] fEyLSum;
-    if (fEyHSum) delete [] fEyHSum;
+   if (fEyLSum)
+      delete [] fEyLSum;
+   if (fEyHSum)
+      delete [] fEyHSum;
 
-    if (fAttFill) delete [] fAttFill;
-    if (fAttLine) delete [] fAttLine;
+   if (fAttFill)
+      delete [] fAttFill;
+   if (fAttLine)
+      delete [] fAttLine;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -537,35 +579,35 @@ TGraphMultiErrors::~TGraphMultiErrors()
 
 void TGraphMultiErrors::Apply(TF1* f)
 {
-    Double_t x, y, eyL, eyH, eyLNew, eyHNew, fxy;
+   Double_t x, y, eyL, eyH, eyLNew, eyHNew, fxy;
 
-    if (fHistogram) {
-	delete fHistogram;
-	fHistogram = 0;
+   if (fHistogram) {
+      delete fHistogram;
+      fHistogram = 0;
+   }
+
+   for (Int_t i = 0; i < fNpoints; i++) {
+      GetPoint(i, x, y);
+      eyL = GetErrorYlow(i, 0);
+      eyH = GetErrorYhigh(i, 0);
+
+      fxy = f->Eval(x, y);
+      SetPoint(i, x, fxy);
+
+      if (f->Eval(x, y - eyL) < f->Eval(x, y + eyH)) {
+	 eyLNew = TMath::Abs(fxy - f->Eval(x, y - eyL));
+	 eyHNew = TMath::Abs(f->Eval(x, y + eyH) - fxy);
+      } else {
+	 eyHNew = TMath::Abs(fxy - f->Eval(x, y - eyL));
+	 eyLNew = TMath::Abs(f->Eval(x, y + eyH) - fxy);
+      }
+
+      //systematic errors and error on x doesn't change
+      SetPointEY(i, 0, eyLNew, eyHNew);
     }
 
-    for (Int_t i = 0; i < fNpoints; i++) {
-	GetPoint(i, x, y);
-	eyL = GetErrorYlow(i, 0);
-	eyH = GetErrorYhigh(i, 0);
-
-	fxy = f->Eval(x, y);
-	SetPoint(i, x, fxy);
-
-	if (f->Eval(x, y - eyL) < f->Eval(x, y + eyH)) {
-	    eyLNew = TMath::Abs(fxy - f->Eval(x, y - eyL));
-	    eyHNew = TMath::Abs(f->Eval(x, y + eyH) - fxy);
-	} else {
-	    eyHNew = TMath::Abs(fxy - f->Eval(x, y - eyL));
-	    eyLNew = TMath::Abs(f->Eval(x, y + eyH) - fxy);
-	}
-
-	//systematic errors and error on x doesn't change
-        SetPointEY(i, 0, eyLNew, eyHNew);
-    }
-
-    if (gPad)
-	gPad->Modified();
+   if (gPad)
+      gPad->Modified();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -576,7 +618,7 @@ void TGraphMultiErrors::Apply(TF1* f)
 
 void TGraphMultiErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t*)
 {
-    Divide(pass, total, "cl=0.683 b(1,1) mode");
+   Divide(pass, total, "cl=0.683 b(1,1) mode");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -587,379 +629,374 @@ void TGraphMultiErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t*
 
 void TGraphMultiErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 {
-    //check pointers
-    if(!pass || !total) {
-	Error("Divide", "one of the passed pointers is zero");
-	return;
-    }
+   //check pointers
+   if(!pass || !total) {
+      Error("Divide", "one of the passed pointers is zero");
+      return;
+   }
 
-    //check dimension of histograms; only 1-dimensional ones are accepted
-    if((pass->GetDimension() > 1) || (total->GetDimension() > 1)) {
-	Error("Divide","passed histograms are not one-dimensional");
-	return;
-    }
+   //check dimension of histograms; only 1-dimensional ones are accepted
+   if((pass->GetDimension() > 1) || (total->GetDimension() > 1)) {
+      Error("Divide","passed histograms are not one-dimensional");
+      return;
+   }
 
-    //check whether histograms are filled with weights -> use number of effective
-    //entries
-    Bool_t bEffective = false;
-    //compare sum of weights with sum of squares of weights
-    // re-compute here to be sure to get the right values
-    Double_t psumw = 0;
-    Double_t psumw2 = 0;
-    if (pass->GetSumw2()->fN > 0) {
-	for (int i = 0; i < pass->GetNbinsX(); ++i) {
-	    psumw += pass->GetBinContent(i);
-	    psumw2 += pass->GetSumw2()->At(i);
-	}
-    } else {
-	psumw = pass->GetSumOfWeights();
-	psumw2 = psumw;
-    }
-    if (TMath::Abs(psumw - psumw2) > 1e-6)
-	bEffective = true;
+   //check whether histograms are filled with weights -> use number of effective
+   //entries
+   Bool_t bEffective = false;
+   //compare sum of weights with sum of squares of weights
+   // re-compute here to be sure to get the right values
+   Double_t psumw = 0;
+   Double_t psumw2 = 0;
+   if (pass->GetSumw2()->fN > 0) {
+      for (int i = 0; i < pass->GetNbinsX(); ++i) {
+	 psumw += pass->GetBinContent(i);
+	 psumw2 += pass->GetSumw2()->At(i);
+      }
+   } else {
+      psumw = pass->GetSumOfWeights();
+      psumw2 = psumw;
+   }
+   if (TMath::Abs(psumw - psumw2) > 1e-6)
+      bEffective = true;
+
+   Double_t tsumw = 0;
+   Double_t tsumw2 = 0;
+   if (total->GetSumw2()->fN > 0) {
+      for (int i = 0; i < total->GetNbinsX(); ++i) {
+	 tsumw += total->GetBinContent(i);
+	 tsumw2 += total->GetSumw2()->At(i);
+      }
+   } else {
+      tsumw = total->GetSumOfWeights();
+      tsumw2 = tsumw;
+   }
+   if (TMath::Abs(tsumw - tsumw2) > 1e-6)
+      bEffective = true;
+
+
+
+   // we do not want to ignore the weights
+   // if (bEffective && (pass->GetSumw2()->fN == 0 || total->GetSumw2()->fN == 0) ) {
+   //    Warning("Divide","histogram have been computed with weights but the sum of weight squares are not stored in the histogram. Error calculation is performed ignoring the weights");
+   //    bEffective = false;
+   // }
+
+   //parse option
+   TString option = opt;
+   option.ToLower();
  
-    Double_t tsumw = 0;
-    Double_t tsumw2 = 0;
-    if (total->GetSumw2()->fN > 0) {
-	for (int i = 0; i < total->GetNbinsX(); ++i) {
-	    tsumw += total->GetBinContent(i);
-	    tsumw2 += total->GetSumw2()->At(i);
-	}
-    } else {
-	tsumw = total->GetSumOfWeights();
-	tsumw2 = tsumw;
-    }
-    if (TMath::Abs(tsumw - tsumw2) > 1e-6)
-	bEffective = true;
+   Bool_t bVerbose = false;
+   //pointer to function returning the boundaries of the confidence interval
+   //(is only used in the frequentist cases.)
+   //Double_t (*pBound)(Int_t,Int_t,Double_t,Bool_t) = &TEfficiency::ClopperPearson; // default method
+   Double_t (*pBound)(Double_t,Double_t,Double_t,Bool_t) = &TEfficiency::ClopperPearson; // default method
+   //confidence level
+   Double_t conf = 0.682689492137;
+   //values for bayesian statistics
+   Bool_t bIsBayesian = false;
+   Double_t alpha = 1;
+   Double_t beta = 1;
+
+   //verbose mode
+   if(option.Contains("v")) {
+      option.ReplaceAll("v", "");
+      bVerbose = true;
+      if (bEffective)
+	 Info("Divide", "weight will be considered in the Histogram Ratio");
+   }
 
 
+   //confidence level
+   if(option.Contains("cl=")) {
+      Double_t level = -1;
+      // coverity [secure_coding : FALSE]
+      sscanf(strstr(option.Data(),"cl="),"cl=%lf",&level);
+      if((level > 0) && (level < 1))
+	 conf = level;
+      else
+	 Warning("Divide","given confidence level %.3lf is invalid",level);
+      option.ReplaceAll("cl=","");
+   }
 
-    // we do not want to ignore the weights
-    // if (bEffective && (pass->GetSumw2()->fN == 0 || total->GetSumw2()->fN == 0) ) {
-    //    Warning("Divide","histogram have been computed with weights but the sum of weight squares are not stored in the histogram. Error calculation is performed ignoring the weights");
-    //    bEffective = false;
-    // }
+   //normal approximation
+   if(option.Contains("n")) {
+      option.ReplaceAll("n","");
+      pBound = &TEfficiency::Normal;
+   }
 
-    //parse option
-    TString option = opt;
-    option.ToLower();
+   //clopper pearson interval
+   if(option.Contains("cp")) {
+      option.ReplaceAll("cp","");
+      pBound = &TEfficiency::ClopperPearson;
+   }
+
+   //wilson interval
+   if(option.Contains("w")) {
+      option.ReplaceAll("w","");
+      pBound = &TEfficiency::Wilson;
+   }
+
+   //agresti coull interval
+   if(option.Contains("ac")) {
+      option.ReplaceAll("ac","");
+      pBound = &TEfficiency::AgrestiCoull;
+   }
+   // Feldman-Cousins interval
+   if(option.Contains("fc")) {
+      option.ReplaceAll("fc","");
+      pBound = &TEfficiency::FeldmanCousins;
+   }
+   // mid-P Lancaster interval (In a later ROOT Version!)
+   if(option.Contains("midp")) {
+      option.ReplaceAll("midp","");
+      //pBound = &TEfficiency::MidPInterval;
+   }
+
+   //bayesian with prior
+   if(option.Contains("b(")) {
+      Double_t a = 0;
+      Double_t b = 0;
+      sscanf(strstr(option.Data(),"b("),"b(%lf,%lf)",&a,&b);
+      if(a > 0)
+	 alpha = a;
+      else
+	 Warning("Divide", "given shape parameter for alpha %.2lf is invalid",a);
+      if(b > 0)
+	 beta = b;
+      else
+	 Warning("Divide","given shape parameter for beta %.2lf is invalid",b);
+      option.ReplaceAll("b(","");
+      bIsBayesian = true;
+   }
+
+   // use posterior mode
+   Bool_t usePosteriorMode = false;
+   if(bIsBayesian && option.Contains("mode") ) {
+      usePosteriorMode = true;
+      option.ReplaceAll("mode","");
+   }
  
-    Bool_t bVerbose = false;
-    //pointer to function returning the boundaries of the confidence interval
-    //(is only used in the frequentist cases.)
-    //Double_t (*pBound)(Int_t,Int_t,Double_t,Bool_t) = &TEfficiency::ClopperPearson; // default method
-    Double_t (*pBound)(Double_t,Double_t,Double_t,Bool_t) = &TEfficiency::ClopperPearson; // default method
-    //confidence level
-    Double_t conf = 0.682689492137;
-    //values for bayesian statistics
-    Bool_t bIsBayesian = false;
-    Double_t alpha = 1;
-    Double_t beta = 1;
-
-    //verbose mode
-    if(option.Contains("v")) {
-	option.ReplaceAll("v", "");
-	bVerbose = true;
-	if (bEffective)
-	    Info("Divide", "weight will be considered in the Histogram Ratio");
-    }
-
-
-    //confidence level
-    if(option.Contains("cl=")) {
-	Double_t level = -1;
-	// coverity [secure_coding : FALSE]
-	sscanf(strstr(option.Data(),"cl="),"cl=%lf",&level);
-	if((level > 0) && (level < 1))
-	    conf = level;
-	else
-	    Warning("Divide","given confidence level %.3lf is invalid",level);
-	option.ReplaceAll("cl=","");
-    }
-
-    //normal approximation
-    if(option.Contains("n")) {
-	option.ReplaceAll("n","");
-	pBound = &TEfficiency::Normal;
-    }
-
-    //clopper pearson interval
-    if(option.Contains("cp")) {
-	option.ReplaceAll("cp","");
-	pBound = &TEfficiency::ClopperPearson;
-    }
-
-    //wilson interval
-    if(option.Contains("w")) {
-	option.ReplaceAll("w","");
-	pBound = &TEfficiency::Wilson;
-    }
-
-    //agresti coull interval
-    if(option.Contains("ac")) {
-	option.ReplaceAll("ac","");
-	pBound = &TEfficiency::AgrestiCoull;
-    }
-    // Feldman-Cousins interval
-    if(option.Contains("fc")) {
-	option.ReplaceAll("fc","");
-	pBound = &TEfficiency::FeldmanCousins;
-    }
-    // mid-P Lancaster interval (In a later ROOT Version!)
-    if(option.Contains("midp")) {
-	option.ReplaceAll("midp","");
-	//pBound = &TEfficiency::MidPInterval;
-    }
-
-    //bayesian with prior
-    if(option.Contains("b(")) {
-	Double_t a = 0;
-	Double_t b = 0;
-	sscanf(strstr(option.Data(),"b("),"b(%lf,%lf)",&a,&b);
-	if(a > 0)
-	    alpha = a;
-	else
-	    Warning("Divide", "given shape parameter for alpha %.2lf is invalid",a);
-	if(b > 0)
-	    beta = b;
-	else
-	    Warning("Divide","given shape parameter for beta %.2lf is invalid",b);
-	option.ReplaceAll("b(","");
-	bIsBayesian = true;
-    }
-
-    // use posterior mode
-    Bool_t usePosteriorMode = false;
-    if(bIsBayesian && option.Contains("mode") ) {
-	usePosteriorMode = true;
-	option.ReplaceAll("mode","");
-    }
+   Bool_t plot0Bins = false;
+   if(option.Contains("e0") ) {
+      plot0Bins = true;
+      option.ReplaceAll("e0","");
+   }
  
-    Bool_t plot0Bins = false;
-    if(option.Contains("e0") ) {
-	plot0Bins = true;
-	option.ReplaceAll("e0","");
-    }
+   Bool_t useShortestInterval = false;
+   if (bIsBayesian && ( option.Contains("sh") || (usePosteriorMode && !option.Contains("cen") ) ) ) {
+      useShortestInterval = true;
+   }
  
-    Bool_t useShortestInterval = false;
-    if (bIsBayesian && ( option.Contains("sh") || (usePosteriorMode && !option.Contains("cen") ) ) ) {
-	useShortestInterval = true;
-    }
+   // interpret as Poisson ratio
+   Bool_t bPoissonRatio = false;
+   if(option.Contains("pois") ) {
+      bPoissonRatio = true;
+      option.ReplaceAll("pois","");
+   }
  
-    // interpret as Poisson ratio
-    Bool_t bPoissonRatio = false;
-    if(option.Contains("pois") ) {
-	bPoissonRatio = true;
-	option.ReplaceAll("pois","");
-    }
+   // weights works only in case of Normal approximation or Bayesian for binomial interval
+   // in case of Poisson ratio we can use weights by rescaling the obtained results using the effective entries
+   if ( ( bEffective && !bPoissonRatio) && !bIsBayesian && pBound != &TEfficiency::Normal ) {
+      Warning("Divide","Histograms have weights: only Normal or Bayesian error calculation is supported");
+      Info("Divide","Using now the Normal approximation for weighted histograms");
+   }
  
-    // weights works only in case of Normal approximation or Bayesian for binomial interval
-    // in case of Poisson ratio we can use weights by rescaling the obtained results using the effective entries
-    if ( ( bEffective && !bPoissonRatio) && !bIsBayesian && pBound != &TEfficiency::Normal ) {
-	Warning("Divide","Histograms have weights: only Normal or Bayesian error calculation is supported");
-	Info("Divide","Using now the Normal approximation for weighted histograms");
-    }
+   if(bPoissonRatio) {
+      if(pass->GetDimension() != total->GetDimension()) {
+	 Error("Divide","passed histograms are not of the same dimension");
+	 return;
+      }
  
-    if(bPoissonRatio) {
-	if(pass->GetDimension() != total->GetDimension()) {
-	    Error("Divide","passed histograms are not of the same dimension");
-	    return;
-	}
- 
-	if(!TEfficiency::CheckBinning(*pass,*total)) {
-	    Error("Divide","passed histograms are not consistent");
-	    return;
-	}
-    } else {
-	//check consistency of histograms, allowing weights
-	if(!TEfficiency::CheckConsistency(*pass,*total,"w")) {
-	    Error("Divide","passed histograms are not consistent");
-	    return;
-	}
-    }
+      if(!TEfficiency::CheckBinning(*pass,*total)) {
+	 Error("Divide","passed histograms are not consistent");
+	 return;
+      }
+   } else {
+      //check consistency of histograms, allowing weights
+      if(!TEfficiency::CheckConsistency(*pass,*total,"w")) {
+	 Error("Divide","passed histograms are not consistent");
+	 return;
+      }
+   }
 
-    //Set the graph to have a number of points equal to the number of histogram
-    //bins
-    Int_t nbins = pass->GetNbinsX();
-    Set(nbins);
+   //Set the graph to have a number of points equal to the number of histogram
+   //bins
+   Int_t nbins = pass->GetNbinsX();
+   Set(nbins);
 
-    // Ok, now set the points for each bin
-    // (Note: the TH1 bin content is shifted to the right by one:
-    //  bin=0 is underflow, bin=nbins+1 is overflow.)
+   // Ok, now set the points for each bin
+   // (Note: the TH1 bin content is shifted to the right by one:
+   //  bin=0 is underflow, bin=nbins+1 is overflow.)
  
-    //efficiency with lower and upper boundary of confidence interval
-    double eff, low, upper;
-    //this keeps track of the number of points added to the graph
-    int npoint=0;
-    //number of total and passed events
-    Double_t t = 0 , p = 0;
-    Double_t tw = 0, tw2 = 0, pw = 0, pw2 = 0, wratio = 1; // for the case of weights
-    //loop over all bins and fill the graph
-    for (Int_t b=1; b<=nbins; ++b) {
-	// default value when total =0;
-	eff = 0;
-	low = 0;
-	upper = 0;
- 
-	// special case in case of weights we have to consider the sum of weights and the sum of weight squares
-	if(bEffective) {
-	    tw =  total->GetBinContent(b);
-	    tw2 = (total->GetSumw2()->fN > 0) ? total->GetSumw2()->At(b) : tw;
-	    pw =  pass->GetBinContent(b);
-	    pw2 = (pass->GetSumw2()->fN > 0) ? pass->GetSumw2()->At(b) : pw;
+   //this keeps track of the number of points added to the graph
+   Int_t npoint=0;
+   //number of total and passed events
+   Double_t t = 0 , p = 0;
+   Double_t tw = 0, tw2 = 0, pw = 0, pw2 = 0, wratio = 1; // for the case of weights
+   //loop over all bins and fill the graph
+   for (Int_t b=1; b<=nbins; ++b) {
+      //efficiency with lower and upper boundary of confidence interval default value when total =0;
+      Double_t eff = 0., low = 0., upper = 0.;
 
-	    if(bPoissonRatio) {
-		// tw += pw;
-		// tw2 += pw2;
-		// compute ratio on the effective entries ( p and t)
-		// special case is when (pw=0, pw2=0) in this case we cannot get the bin weight.
-		// we use then the overall weight of the full histogram
-		if (pw == 0 && pw2 == 0)
-		    p = 0;
-		else
-		    p = (pw*pw)/pw2;
+      // special case in case of weights we have to consider the sum of weights and the sum of weight squares
+      if(bEffective) {
+	 tw =  total->GetBinContent(b);
+	 tw2 = (total->GetSumw2()->fN > 0) ? total->GetSumw2()->At(b) : tw;
+	 pw =  pass->GetBinContent(b);
+	 pw2 = (pass->GetSumw2()->fN > 0) ? pass->GetSumw2()->At(b) : pw;
 
-		if (tw == 0 && tw2 == 0)
-		    t = 0;
-		else
-		    t = (tw*tw)/tw2;
- 
-		if (pw > 0 && tw > 0)
-		    // this is the ratio of the two bin weights ( pw/p  / t/tw )
-		    wratio = (pw*t)/(p * tw);
-		else if (pw == 0 && tw > 0)
-		    // case p histogram has zero  compute the weights from all the histogram
-		    // weight of histogram - sumw2/sumw
-		    wratio = (psumw2 * t) /(psumw * tw );
-		else if (tw == 0 && pw > 0)
-		    // case t histogram has zero  compute the weights from all the histogram
-		    // weight of histogram - sumw2/sumw
-		    wratio = (pw * tsumw) /(p * tsumw2 );
-		else if (p > 0)
-		    wratio = pw/p; //not sure if needed
-		else {
-		    // case both pw and tw are zero - we skip these bins
-		    if (!plot0Bins) continue; // skip bins with total <= 0
-		}
+	 if(bPoissonRatio) {
+	    // tw += pw;
+	    // tw2 += pw2;
+	    // compute ratio on the effective entries ( p and t)
+	    // special case is when (pw=0, pw2=0) in this case we cannot get the bin weight.
+	    // we use then the overall weight of the full histogram
+	    if (pw == 0 && pw2 == 0)
+	       p = 0;
+	    else
+	       p = (pw*pw)/pw2;
 
-		t += p;
-		//std::cout << p << "   " << t << "  " << wratio << std::endl;
-	    } else if (tw <= 0 && !plot0Bins) continue; // skip bins with total <= 0
+	    if (tw == 0 && tw2 == 0)
+	       t = 0;
+	    else
+	       t = (tw*tw)/tw2;
  
-	    // in the case of weights have the formula only for
-	    // the normal and  bayesian statistics (see below)
- 
-	}
-
-	//use bin contents
-	else {
-	    t = int( total->GetBinContent(b) + 0.5);
-	    p = int(pass->GetBinContent(b) + 0.5);
- 
-	    if(bPoissonRatio) t += p;
- 
-	    if (!t && !plot0Bins) continue; // skip bins with total = 0
-	}
-
- 
-	//using bayesian statistics
-	if(bIsBayesian) {
-	    double aa,bb;
- 
-	    if ((bEffective && !bPoissonRatio) && tw2 <= 0) {
-		// case of bins with zero errors
-		eff = pw/tw;
-		low = eff; upper = eff;
-	    } else {
-		if (bEffective && !bPoissonRatio) {
-		    // tw/tw2 re-normalize the weights
-		    double norm = tw/tw2;  // case of tw2 = 0 is treated above
-		    aa =  pw * norm + alpha;
-		    bb =  (tw - pw) * norm + beta;
-		} else {
-		    aa = double(p) + alpha;
-		    bb = double(t-p) + beta;
-		}
-		if (usePosteriorMode)
-		    eff = TEfficiency::BetaMode(aa,bb);
-		else
-		    eff = TEfficiency::BetaMean(aa,bb);
-
-		if (useShortestInterval) {
-		    TEfficiency::BetaShortestInterval(conf,aa,bb,low,upper);
-		}
-		else {
-		    low = TEfficiency::BetaCentralInterval(conf,aa,bb,false);
-		    upper = TEfficiency::BetaCentralInterval(conf,aa,bb,true);
-		}
+	    if (pw > 0 && tw > 0)
+	       // this is the ratio of the two bin weights ( pw/p  / t/tw )
+	       wratio = (pw*t)/(p * tw);
+	    else if (pw == 0 && tw > 0)
+	       // case p histogram has zero  compute the weights from all the histogram
+	       // weight of histogram - sumw2/sumw
+	       wratio = (psumw2 * t) /(psumw * tw );
+	    else if (tw == 0 && pw > 0)
+	       // case t histogram has zero  compute the weights from all the histogram
+	       // weight of histogram - sumw2/sumw
+	       wratio = (pw * tsumw) /(p * tsumw2 );
+	    else if (p > 0)
+	       wratio = pw/p; //not sure if needed
+	    else {
+	       // case both pw and tw are zero - we skip these bins
+	       if (!plot0Bins) continue; // skip bins with total <= 0
 	    }
-	}
-	// case of non-bayesian statistics
-	else {
+
+	    t += p;
+	    //std::cout << p << "   " << t << "  " << wratio << std::endl;
+	 } else if (tw <= 0 && !plot0Bins) continue; // skip bins with total <= 0
+ 
+	 // in the case of weights have the formula only for
+	 // the normal and  bayesian statistics (see below)
+
+      }
+
+      //use bin contents
+      else {
+	 t = int( total->GetBinContent(b) + 0.5);
+	 p = int(pass->GetBinContent(b) + 0.5);
+ 
+	 if(bPoissonRatio) t += p;
+
+	 if (!t && !plot0Bins) continue; // skip bins with total = 0
+      }
+
+ 
+      //using bayesian statistics
+      if(bIsBayesian) {
+	 if ((bEffective && !bPoissonRatio) && tw2 <= 0) {
+	    // case of bins with zero errors
+	    eff = pw/tw;
+	    low = eff; upper = eff;
+	 } else {
+            Double_t aa,bb;
+
 	    if (bEffective && !bPoissonRatio) {
-
-		if (tw > 0) {
- 
-		    eff = pw/tw;
- 
-		    // use normal error calculation using variance of MLE with weights (F.James 8.5.2)
-		    // this is the same formula used in ROOT for TH1::Divide("B")
- 
-		    double variance = ( pw2 * (1. - 2 * eff) + tw2 * eff *eff ) / ( tw * tw) ;
-		    double sigma = sqrt(variance);
- 
-		    double prob = 0.5 * (1.-conf);
-		    double delta = ROOT::Math::normal_quantile_c(prob, sigma);
-		    low = eff - delta;
-		    upper = eff + delta;
-		    if (low < 0) low = 0;
-		    if (upper > 1) upper = 1.;
-		}
+	       // tw/tw2 re-normalize the weights
+	       double norm = tw/tw2;  // case of tw2 = 0 is treated above
+	       aa =  pw * norm + alpha;
+	       bb =  (tw - pw) * norm + beta;
 	    } else {
-		// when not using weights (all cases) or in case of  Poisson ratio with weights
-		if(t)
-		    eff = ((Double_t)p)/t;
- 
-		low = pBound(t,p,conf,false);
-		upper = pBound(t,p,conf,true);
+	       aa = double(p) + alpha;
+	       bb = double(t-p) + beta;
 	    }
-	}
-	// treat as Poisson ratio
-	if(bPoissonRatio)
-	{
-	    Double_t ratio = eff/(1 - eff);
-	    // take the intervals in eff as intervals in the Poisson ratio
-	    low = low/(1. - low);
-	    upper = upper/(1.-upper);
-	    eff = ratio;
-	    if (bEffective) {
-		//scale result by the ratio of the weight
-		eff *= wratio;
-		low *= wratio;
-		upper *= wratio;
+	    if (usePosteriorMode)
+	       eff = TEfficiency::BetaMode(aa,bb);
+	    else
+	       eff = TEfficiency::BetaMean(aa,bb);
+
+	    if (useShortestInterval) {
+	       TEfficiency::BetaShortestInterval(conf,aa,bb,low,upper);
 	    }
-	}
-	//Set the point center and its errors
-	if (TMath::Finite(eff)) {
-	    SetPoint(npoint,pass->GetBinCenter(b),eff);
-	    SetPointEX(npoint, pass->GetBinCenter(b)-pass->GetBinLowEdge(b), pass->GetBinLowEdge(b)-pass->GetBinCenter(b)+pass->GetBinWidth(b));
-            SetPointEY(npoint, 0, eff - low, upper - eff);
-	    npoint++;//we have added a point to the graph
-	}
-    }
+	    else {
+	       low = TEfficiency::BetaCentralInterval(conf,aa,bb,false);
+	       upper = TEfficiency::BetaCentralInterval(conf,aa,bb,true);
+	    }
+	 }
+      }
+      // case of non-bayesian statistics
+      else {
+	 if (bEffective && !bPoissonRatio) {
+
+	    if (tw > 0) {
  
-    Set(npoint);//tell the graph how many points we've really added
-    if (npoint < nbins)
-	Warning("Divide","Number of graph points is different than histogram bins - %d points have been skipped",nbins-npoint);
+	       eff = pw/tw;
  
+	       // use normal error calculation using variance of MLE with weights (F.James 8.5.2)
+	       // this is the same formula used in ROOT for TH1::Divide("B")
  
-    if (bVerbose) {
-	Info("Divide","made a graph with %d points from %d bins",npoint,nbins);
-	Info("Divide","used confidence level: %.2lf\n",conf);
-	if(bIsBayesian)
-	    Info("Divide","used prior probability ~ beta(%.2lf,%.2lf)",alpha,beta);
-	Print();
-    }
+	       double variance = ( pw2 * (1. - 2 * eff) + tw2 * eff *eff ) / ( tw * tw) ;
+	       double sigma = sqrt(variance);
+ 
+	       double prob = 0.5 * (1.-conf);
+	       double delta = ROOT::Math::normal_quantile_c(prob, sigma);
+	       low = eff - delta;
+	       upper = eff + delta;
+	       if (low < 0) low = 0;
+	       if (upper > 1) upper = 1.;
+	    }
+	 } else {
+	    // when not using weights (all cases) or in case of  Poisson ratio with weights
+	    if(t)
+	       eff = ((Double_t)p)/t;
+ 
+	    low = pBound(t,p,conf,false);
+	    upper = pBound(t,p,conf,true);
+	 }
+      }
+      // treat as Poisson ratio
+      if(bPoissonRatio) {
+	 Double_t ratio = eff/(1 - eff);
+	 // take the intervals in eff as intervals in the Poisson ratio
+	 low = low/(1. - low);
+	 upper = upper/(1.-upper);
+	 eff = ratio;
+	 if (bEffective) {
+	    //scale result by the ratio of the weight
+	    eff *= wratio;
+	    low *= wratio;
+	    upper *= wratio;
+	 }
+      }
+      //Set the point center and its errors
+      if (TMath::Finite(eff)) {
+	 SetPoint(npoint,pass->GetBinCenter(b),eff);
+	 SetPointEX(npoint, pass->GetBinCenter(b)-pass->GetBinLowEdge(b), pass->GetBinLowEdge(b)-pass->GetBinCenter(b)+pass->GetBinWidth(b));
+	 SetPointEY(npoint, 0, eff - low, upper - eff);
+	 npoint++;//we have added a point to the graph
+      }
+   }
+ 
+   Set(npoint);//tell the graph how many points we've really added
+   if (npoint < nbins)
+      Warning("Divide","Number of graph points is different than histogram bins - %d points have been skipped",nbins-npoint);
+
+
+   if (bVerbose) {
+      Info("Divide","made a graph with %d points from %d bins",npoint,nbins);
+      Info("Divide","used confidence level: %.2lf\n",conf);
+      if(bIsBayesian)
+	 Info("Divide","used prior probability ~ beta(%.2lf,%.2lf)",alpha,beta);
+      Print();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -967,41 +1004,41 @@ void TGraphMultiErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 
 void TGraphMultiErrors::ComputeRange(Double_t& xmin, Double_t& ymin, Double_t& xmax, Double_t& ymax) const
 {
-    TGraph::ComputeRange(xmin, ymin, xmax, ymax);
+   TGraph::ComputeRange(xmin, ymin, xmax, ymax);
 
-    for (Int_t i = 0; i < fNpoints; i++) {
-	if (fX[i] - fExL[i] < xmin) {
-	    if (gPad && gPad->GetLogx()) {
-		if (fExL[i] < fX[i])
-		    xmin = fX[i] - fExL[i];
-		else
-		    xmin = TMath::Min(xmin, fX[i] / 3.);
-	    } else
-		xmin = fX[i] - fExL[i];
-	}
+   for (Int_t i = 0; i < fNpoints; i++) {
+      if (fX[i] - fExL[i] < xmin) {
+	 if (gPad && gPad->GetLogx()) {
+	    if (fExL[i] < fX[i])
+	       xmin = fX[i] - fExL[i];
+	    else
+	       xmin = TMath::Min(xmin, fX[i] / 3.);
+	 } else
+	    xmin = fX[i] - fExL[i];
+      }
 
-        if (fX[i] + fExH[i] > xmax)
-	    xmax = fX[i] + fExH[i];
+      if (fX[i] + fExH[i] > xmax)
+	 xmax = fX[i] + fExH[i];
 
-	Double_t eyLMax = 0., eyHMax = 0.;
-	for (Int_t j = 0; j < fNErrorDimensions; j++) {
-	    eyLMax = TMath::Max(eyLMax, fEyL[j][i]);
-	    eyHMax = TMath::Max(eyHMax, fEyH[j][i]);
-	}
+      Double_t eyLMax = 0., eyHMax = 0.;
+      for (Int_t j = 0; j < fNErrorDimensions; j++) {
+	 eyLMax = TMath::Max(eyLMax, fEyL[j][i]);
+	 eyHMax = TMath::Max(eyHMax, fEyH[j][i]);
+      }
 
-	if (fY[i] - eyLMax < ymin) {
-	    if (gPad && gPad->GetLogy()) {
-		if (eyLMax < fY[i])
-		    ymin = fY[i] - eyLMax;
-		else
-		    ymin = TMath::Min(ymin, fY[i] / 3.);
-	    } else
-		ymin = fY[i] - eyLMax;
-	}
+      if (fY[i] - eyLMax < ymin) {
+	 if (gPad && gPad->GetLogy()) {
+	    if (eyLMax < fY[i])
+	       ymin = fY[i] - eyLMax;
+	    else
+	       ymin = TMath::Min(ymin, fY[i] / 3.);
+	 } else
+	    ymin = fY[i] - eyLMax;
+      }
 
-	if (fY[i] + eyHMax > ymax)
-	    ymax = fY[i] + eyHMax;
-    }
+      if (fY[i] + eyHMax > ymax)
+	 ymax = fY[i] + eyHMax;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1009,36 +1046,36 @@ void TGraphMultiErrors::ComputeRange(Double_t& xmin, Double_t& ymin, Double_t& x
 
 void TGraphMultiErrors::CopyAndRelease(Double_t** newarrays, Int_t ibegin, Int_t iend, Int_t obegin)
 {
-    CopyPoints(newarrays, ibegin, iend, obegin);
-    if (newarrays) {
-        delete[] fX;
-	fX = newarrays[0];
-	delete[] fY;
-	fY = newarrays[1];
+   CopyPoints(newarrays, ibegin, iend, obegin);
+   if (newarrays) {
+      delete[] fX;
+      fX = newarrays[0];
+      delete[] fY;
+      fY = newarrays[1];
 
-	delete[] fExL;
-	fExL = newarrays[2];
-	delete[] fExH;
-	fExH = newarrays[3];
+      delete[] fExL;
+      fExL = newarrays[2];
+      delete[] fExH;
+      fExH = newarrays[3];
 
-	for (Int_t j = 0; j < fNErrorDimensions; j++)
-	    delete [] fEyL[j];
-	delete [] fEyL;
-	fEyL = new Double_t*[fNErrorDimensions];
-	for (Int_t j = 0; j < fNErrorDimensions; j++)
-	    fEyL[j] = newarrays[2*j + 4];
+      for (Int_t j = 0; j < fNErrorDimensions; j++)
+	 delete [] fEyL[j];
+      delete [] fEyL;
+      fEyL = new Double_t*[fNErrorDimensions];
+      for (Int_t j = 0; j < fNErrorDimensions; j++)
+	 fEyL[j] = newarrays[2*j + 4];
 
-        for (Int_t j = 0; j < fNErrorDimensions; j++)
-	    delete [] fEyH[j];
-	delete [] fEyH;
-	fEyH = new Double_t*[fNErrorDimensions];
-	for (Int_t j = 0; j < fNErrorDimensions; j++)
-            fEyH[j] = newarrays[2*j + 5];
+      for (Int_t j = 0; j < fNErrorDimensions; j++)
+	 delete [] fEyH[j];
+      delete [] fEyH;
+      fEyH = new Double_t*[fNErrorDimensions];
+      for (Int_t j = 0; j < fNErrorDimensions; j++)
+	 fEyH[j] = newarrays[2*j + 5];
 
-	delete[] newarrays;
-    }
+      delete[] newarrays;
+   }
 
-    CalcYErrorSum();
+   CalcYErrorSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1047,30 +1084,30 @@ void TGraphMultiErrors::CopyAndRelease(Double_t** newarrays, Int_t ibegin, Int_t
 
 Bool_t TGraphMultiErrors::CopyPoints(Double_t** arrays, Int_t ibegin, Int_t iend, Int_t obegin)
 {
-    if (TGraph::CopyPoints(arrays, ibegin, iend, obegin)) {
-	Int_t n = (iend - ibegin) * sizeof(Double_t);
+   if (TGraph::CopyPoints(arrays, ibegin, iend, obegin)) {
+      Int_t n = (iend - ibegin) * sizeof(Double_t);
 
-	if (arrays) {
-	    memmove(&arrays[2][obegin], &fExL[ibegin], n);
-	    memmove(&arrays[3][obegin], &fExH[ibegin], n);
+      if (arrays) {
+	 memmove(&arrays[2][obegin], &fExL[ibegin], n);
+	 memmove(&arrays[3][obegin], &fExH[ibegin], n);
 
-	    for (Int_t j = 0; j < fNErrorDimensions; j++) {
-		memmove(&arrays[2*j + 4][obegin], &fEyL[j][ibegin], n);
-		memmove(&arrays[2*j + 5][obegin], &fEyH[j][ibegin], n);
-	    }
-	} else {
-	    memmove(&fExL[obegin], &fExL[ibegin], n);
-	    memmove(&fExH[obegin], &fExH[ibegin], n);
+	 for (Int_t j = 0; j < fNErrorDimensions; j++) {
+	    memmove(&arrays[2*j + 4][obegin], &fEyL[j][ibegin], n);
+	    memmove(&arrays[2*j + 5][obegin], &fEyH[j][ibegin], n);
+	 }
+      } else {
+	 memmove(&fExL[obegin], &fExL[ibegin], n);
+	 memmove(&fExH[obegin], &fExH[ibegin], n);
 
-            for (Int_t j = 0; j < fNErrorDimensions; j++) {
-		memmove(&fEyL[j][obegin], &fEyL[j][ibegin], n);
-		memmove(&fEyH[j][obegin], &fEyH[j][ibegin], n);
-	    }
-	}
+	 for (Int_t j = 0; j < fNErrorDimensions; j++) {
+	    memmove(&fEyL[j][obegin], &fEyL[j][ibegin], n);
+	    memmove(&fEyH[j][obegin], &fEyH[j][ibegin], n);
+	 }
+      }
 
-	return kTRUE;
-    } else
-	return kFALSE;
+      return kTRUE;
+   } else
+      return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1080,26 +1117,26 @@ Bool_t TGraphMultiErrors::CopyPoints(Double_t** arrays, Int_t ibegin, Int_t iend
 
 void TGraphMultiErrors::CopyAndReleaseY(Double_t** newarrays, Int_t ibegin, Int_t iend, Int_t obegin)
 {
-    CopyPointsY(newarrays, ibegin, TMath::Min(iend, fNErrorDimensions), obegin);
-    if (newarrays) {
-	for (Int_t j = 0; j < fNErrorDimensions; j++)
-	    delete [] fEyL[j];
-	delete [] fEyL;
-	fEyL = new Double_t*[iend - ibegin];
-	for (Int_t j = 0; j < iend - ibegin; j++)
-	    fEyL[j] = newarrays[2*j];
+   CopyPointsY(newarrays, ibegin, TMath::Min(iend, fNErrorDimensions), obegin);
+   if (newarrays) {
+      for (Int_t j = 0; j < fNErrorDimensions; j++)
+	 delete [] fEyL[j];
+      delete [] fEyL;
+      fEyL = new Double_t*[iend - ibegin];
+      for (Int_t j = 0; j < iend - ibegin; j++)
+	 fEyL[j] = newarrays[2*j];
 
-        for (Int_t j = 0; j < fNErrorDimensions; j++)
-	    delete [] fEyH[j];
-	delete [] fEyH;
-	fEyH = new Double_t*[iend - ibegin];
-	for (Int_t j = 0; j < iend - ibegin; j++)
-            fEyH[j] = newarrays[2*j + 1];
+      for (Int_t j = 0; j < fNErrorDimensions; j++)
+	 delete [] fEyH[j];
+      delete [] fEyH;
+      fEyH = new Double_t*[iend - ibegin];
+      for (Int_t j = 0; j < iend - ibegin; j++)
+	 fEyH[j] = newarrays[2*j + 1];
 
-	delete[] newarrays;
-    }
+      delete[] newarrays;
+   }
 
-    CalcYErrorSum();
+   CalcYErrorSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1110,19 +1147,19 @@ void TGraphMultiErrors::CopyAndReleaseY(Double_t** newarrays, Int_t ibegin, Int_
 
 Bool_t TGraphMultiErrors::CopyPointsY(Double_t** arrays, Int_t ibegin, Int_t iend, Int_t obegin)
 {
-    Int_t n = fNpoints * sizeof(Double_t);
+   Int_t n = fNpoints * sizeof(Double_t);
 
-    for (Int_t j = ibegin; j < iend; j++) {
-	if (arrays) {
-	    memmove(&arrays[2*j     - ibegin + obegin][0], &fEyL[j][0], n);
-	    memmove(&arrays[2*j + 1 - ibegin + obegin][0], &fEyH[j][0], n);
-	} else {
-	    memmove(&fEyL[j - ibegin + obegin][0], &fEyL[j][0], n);
-	    memmove(&fEyH[j - ibegin + obegin][0], &fEyH[j][0], n);
-	}
-    }
+   for (Int_t j = ibegin; j < iend; j++) {
+      if (arrays) {
+	 memmove(&arrays[2*j     - ibegin + obegin][0], &fEyL[j][0], n);
+	 memmove(&arrays[2*j + 1 - ibegin + obegin][0], &fEyH[j][0], n);
+      } else {
+	 memmove(&fEyL[j - ibegin + obegin][0], &fEyL[j][0], n);
+	 memmove(&fEyH[j - ibegin + obegin][0], &fEyH[j][0], n);
+      }
+   }
 
-    return kTRUE;
+   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1130,27 +1167,27 @@ Bool_t TGraphMultiErrors::CopyPointsY(Double_t** arrays, Int_t ibegin, Int_t ien
 /// Note: This function should be called only from the constructor
 /// since it does not delete previously existing arrays
 
-Bool_t TGraphMultiErrors::CtorAllocate(void)
+Bool_t TGraphMultiErrors::CtorAllocate()
 {
-    if (!fNpoints || !fNErrorDimensions) {
-	fExL = fExH = NULL;
-	fEyL = fEyH = NULL;
-	return kFALSE;
-    }
+   if (!fNpoints || !fNErrorDimensions) {
+      fExL = fExH = nullptr;
+      fEyL = fEyH = nullptr;
+      return kFALSE;
+   }
 
-    fExL = new Double_t [fMaxSize];
-    fExH = new Double_t [fMaxSize];
-    fEyL = new Double_t*[fNErrorDimensions];
-    fEyH = new Double_t*[fNErrorDimensions];
-    fEyLSum = new Double_t[fNpoints];
-    fEyHSum = new Double_t[fNpoints];
+   fExL = new Double_t [fMaxSize];
+   fExH = new Double_t [fMaxSize];
+   fEyL = new Double_t*[fNErrorDimensions];
+   fEyH = new Double_t*[fNErrorDimensions];
+   fEyLSum = new Double_t[fNpoints];
+   fEyHSum = new Double_t[fNpoints];
 
-    for (Int_t j = 0; j < fNErrorDimensions; j++) {
-        fEyL[j] = new Double_t[fMaxSize];
-        fEyH[j] = new Double_t[fMaxSize];
-    }
+   for (Int_t j = 0; j < fNErrorDimensions; j++) {
+      fEyL[j] = new Double_t[fMaxSize];
+      fEyH[j] = new Double_t[fMaxSize];
+   }
 
-    return kTRUE;
+   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1158,28 +1195,29 @@ Bool_t TGraphMultiErrors::CtorAllocate(void)
 
 Bool_t TGraphMultiErrors::DoMerge(const TGraph* tg)
 {
-    if (tg->GetN() == 0) return kFALSE;
+   if (tg->GetN() == 0)
+      return kFALSE;
 
-    if (tg->IsA() == TGraphMultiErrors::Class()) {
-        TGraphMultiErrors* tgme = (TGraphMultiErrors*) tg;
+   if (tg->IsA() == TGraphMultiErrors::Class()) {
+      auto tgme = (TGraphMultiErrors*) tg;
 
-        for (Int_t i = 0 ; i < tgme->GetN(); i++) {
-	    Int_t ipoint = GetN();
-	    Double_t x, y;
-	    tgme->GetPoint(i, x, y);
-	    SetPoint(ipoint, x, y);
-	    SetPointEX(ipoint, tgme->GetErrorXlow(i), tgme->GetErrorXhigh(i));
-	    for (Int_t j = 0; j < tgme->GetNErrorDimensions(); j++)
-		SetPointEY(ipoint, j, tgme->GetErrorYlow(i, j), tgme->GetErrorYhigh(i, j));
-	}
+      for (Int_t i = 0 ; i < tgme->GetN(); i++) {
+	 Int_t ipoint = GetN();
+	 Double_t x, y;
+	 tgme->GetPoint(i, x, y);
+	 SetPoint(ipoint, x, y);
+	 SetPointEX(ipoint, tgme->GetErrorXlow(i), tgme->GetErrorXhigh(i));
+	 for (Int_t j = 0; j < tgme->GetNErrorDimensions(); j++)
+	    SetPointEY(ipoint, j, tgme->GetErrorYlow(i, j), tgme->GetErrorYhigh(i, j));
+      }
 
-        return kTRUE;
-    } else {
-	Warning("DoMerge", "Merging a %s is not compatible with a TGraphMultiErrors - Errors will be ignored", tg->IsA()->GetName());
-        return TGraph::DoMerge(tg);
-    }
+      return kTRUE;
+   } else {
+      Warning("DoMerge", "Merging a %s is not compatible with a TGraphMultiErrors - Errors will be ignored", tg->IsA()->GetName());
+      return TGraph::DoMerge(tg);
+   }
 
-    return kFALSE;
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1187,19 +1225,19 @@ Bool_t TGraphMultiErrors::DoMerge(const TGraph* tg)
 
 void TGraphMultiErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
 {
-    if (!from_ctor)
-	TGraph::FillZero(begin, end, from_ctor);
+   if (!from_ctor)
+      TGraph::FillZero(begin, end, from_ctor);
 
-    Int_t n = (end - begin) * sizeof(Double_t);
-    memset(fExL + begin, 0, n);
-    memset(fExH + begin, 0, n);
-    memset(fEyLSum + begin, 0, n);
-    memset(fEyHSum + begin, 0, n);
+   Int_t n = (end - begin) * sizeof(Double_t);
+   memset(fExL + begin, 0, n);
+   memset(fExH + begin, 0, n);
+   memset(fEyLSum + begin, 0, n);
+   memset(fEyHSum + begin, 0, n);
 
-    for (Int_t j = 0; j < fNErrorDimensions; j++) {
-	memset(fEyL[j] + begin, 0, n);
-	memset(fEyH[j] + begin, 0, n);
-    }
+   for (Int_t j = 0; j < fNErrorDimensions; j++) {
+      memset(fEyL[j] + begin, 0, n);
+      memset(fEyH[j] + begin, 0, n);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1222,10 +1260,10 @@ void TGraphMultiErrors::FillZeroY(Int_t begin, Int_t end)
 
 Double_t TGraphMultiErrors::GetPointX(Int_t i) const
 {
-    if (i < 0 || i >= fNpoints || !fX)
-	return -1.;
+   if (i < 0 || i >= fNpoints || !fX)
+      return -1.;
 
-    return fX[i];
+   return fX[i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1233,10 +1271,10 @@ Double_t TGraphMultiErrors::GetPointX(Int_t i) const
 
 Double_t TGraphMultiErrors::GetPointY(Int_t i) const
 {
-    if (i < 0 || i >= fNpoints || !fY)
-	return -1.;
+   if (i < 0 || i >= fNpoints || !fY)
+      return -1.;
 
-    return fY[i];
+   return fY[i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1245,12 +1283,12 @@ Double_t TGraphMultiErrors::GetPointY(Int_t i) const
 
 Double_t TGraphMultiErrors::GetErrorX(Int_t i) const
 {
-    if (i < 0 || i >= fNpoints || (!fExL && !fExH))
-	return -1.;
+   if (i < 0 || i >= fNpoints || (!fExL && !fExH))
+      return -1.;
 
-    Double_t exL = fExL ? fExL[i] : 0.;
-    Double_t exH = fExH ? fExH[i] : 0.;
-    return TMath::Sqrt((exL*exL + exH*exH) / 2.);
+   Double_t exL = fExL ? fExL[i] : 0.;
+   Double_t exH = fExH ? fExH[i] : 0.;
+   return TMath::Sqrt((exL*exL + exH*exH) / 2.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1260,12 +1298,12 @@ Double_t TGraphMultiErrors::GetErrorX(Int_t i) const
 
 Double_t TGraphMultiErrors::GetErrorY(Int_t i) const
 {
-    if (i < 0 || i >= fNpoints || (!fEyL && !fEyH))
-	return -1.;
+   if (i < 0 || i >= fNpoints || (!fEyL && !fEyH))
+      return -1.;
 
-    Double_t eyL = GetErrorYlow(i);
-    Double_t eyH = GetErrorYhigh(i);
-    return TMath::Sqrt((eyL*eyL + eyH*eyH) / 2.);
+   Double_t eyL = GetErrorYlow(i);
+   Double_t eyH = GetErrorYhigh(i);
+   return TMath::Sqrt((eyL*eyL + eyH*eyH) / 2.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1274,12 +1312,12 @@ Double_t TGraphMultiErrors::GetErrorY(Int_t i) const
 
 Double_t TGraphMultiErrors::GetErrorY(Int_t i, Int_t dim) const
 {
-    if (i < 0 || i >= fNpoints || dim >= fNErrorDimensions || (!fEyL && !fEyH))
-	return -1.;
+   if (i < 0 || i >= fNpoints || dim >= fNErrorDimensions || (!fEyL && !fEyH))
+      return -1.;
 
-    Double_t eyL = fEyL ? fEyL[dim][i] : 0.;
-    Double_t eyH = fEyH ? fEyH[dim][i] : 0.;
-    return TMath::Sqrt((eyL*eyL + eyH*eyH) / 2.);
+   Double_t eyL = fEyL ? fEyL[dim][i] : 0.;
+   Double_t eyH = fEyH ? fEyH[dim][i] : 0.;
+   return TMath::Sqrt((eyL*eyL + eyH*eyH) / 2.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1287,10 +1325,10 @@ Double_t TGraphMultiErrors::GetErrorY(Int_t i, Int_t dim) const
 
 Double_t TGraphMultiErrors::GetErrorXlow(Int_t i) const
 {
-    if (i < 0 || i >= fNpoints || !fExL)
-	return -1.;
-    else
-        return fExL[i];
+   if (i < 0 || i >= fNpoints || !fExL)
+      return -1.;
+   else
+      return fExL[i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1298,10 +1336,10 @@ Double_t TGraphMultiErrors::GetErrorXlow(Int_t i) const
 
 Double_t TGraphMultiErrors::GetErrorXhigh(Int_t i) const
 {
-    if (i < 0 || i >= fNpoints || !fExH)
-	return -1.;
-    else
-        return fExH[i];
+   if (i < 0 || i >= fNpoints || !fExH)
+      return -1.;
+   else
+      return fExH[i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1310,24 +1348,24 @@ Double_t TGraphMultiErrors::GetErrorXhigh(Int_t i) const
 
 Double_t TGraphMultiErrors::GetErrorYlow(Int_t i) const
 {
-    if (i < 0 || i >= fNpoints || !fEyL)
-	return -1.;
+   if (i < 0 || i >= fNpoints || !fEyL)
+      return -1.;
 
-    if (fSumErrorsMode == TGraphMultiErrors::kOnlyFirst)
-	return fEyL[0][i];
-    else if (fSumErrorsMode == TGraphMultiErrors::kSquareSum) {
-	Double_t sum = 0.;
-	for (Int_t j = 0; j < fNErrorDimensions; j++)
-            sum += fEyL[j][i]*fEyL[j][i];
-	return TMath::Sqrt(sum);
-    } else if (fSumErrorsMode == TGraphMultiErrors::kSum) {
-        Double_t sum = 0.;
-	for (Int_t j = 0; j < fNErrorDimensions; j++)
-            sum += fEyL[j][i];
-	return sum;
-    }
+   if (fSumErrorsMode == TGraphMultiErrors::kOnlyFirst)
+      return fEyL[0][i];
+   else if (fSumErrorsMode == TGraphMultiErrors::kSquareSum) {
+      Double_t sum = 0.;
+      for (Int_t j = 0; j < fNErrorDimensions; j++)
+	 sum += fEyL[j][i]*fEyL[j][i];
+      return TMath::Sqrt(sum);
+   } else if (fSumErrorsMode == TGraphMultiErrors::kSum) {
+      Double_t sum = 0.;
+      for (Int_t j = 0; j < fNErrorDimensions; j++)
+	 sum += fEyL[j][i];
+      return sum;
+   }
 
-    return -1.;
+   return -1.;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1336,24 +1374,24 @@ Double_t TGraphMultiErrors::GetErrorYlow(Int_t i) const
 
 Double_t TGraphMultiErrors::GetErrorYhigh(Int_t i) const
 {
-    if (i < 0 || i >= fNpoints || !fEyH)
-	return -1.;
+   if (i < 0 || i >= fNpoints || !fEyH)
+      return -1.;
 
-    if (fSumErrorsMode == TGraphMultiErrors::kOnlyFirst)
-	return fEyH[0][i];
-    else if (fSumErrorsMode == TGraphMultiErrors::kSquareSum) {
-	Double_t sum = 0.;
-	for (Int_t j = 0; j < fNErrorDimensions; j++)
-            sum += fEyH[j][i]*fEyH[j][i];
-	return TMath::Sqrt(sum);
-    } else if (fSumErrorsMode == TGraphMultiErrors::kSum) {
-        Double_t sum = 0.;
-	for (Int_t j = 0; j < fNErrorDimensions; j++)
-            sum += fEyH[j][i];
-	return sum;
-    }
+   if (fSumErrorsMode == TGraphMultiErrors::kOnlyFirst)
+      return fEyH[0][i];
+   else if (fSumErrorsMode == TGraphMultiErrors::kSquareSum) {
+      Double_t sum = 0.;
+      for (Int_t j = 0; j < fNErrorDimensions; j++)
+	 sum += fEyH[j][i]*fEyH[j][i];
+      return TMath::Sqrt(sum);
+   } else if (fSumErrorsMode == TGraphMultiErrors::kSum) {
+      Double_t sum = 0.;
+      for (Int_t j = 0; j < fNErrorDimensions; j++)
+	 sum += fEyH[j][i];
+      return sum;
+   }
 
-    return -1.;
+   return -1.;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1361,10 +1399,10 @@ Double_t TGraphMultiErrors::GetErrorYhigh(Int_t i) const
 
 Double_t TGraphMultiErrors::GetErrorYlow(Int_t i, Int_t dim) const
 {
-    if (i < 0 || i >= fNpoints || dim >= fNErrorDimensions || !fEyL)
-	return -1.;
-    else
-        return fEyL[dim][i];
+   if (i < 0 || i >= fNpoints || dim >= fNErrorDimensions || !fEyL)
+      return -1.;
+   else
+      return fEyL[dim][i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1372,10 +1410,10 @@ Double_t TGraphMultiErrors::GetErrorYlow(Int_t i, Int_t dim) const
 
 Double_t TGraphMultiErrors::GetErrorYhigh(Int_t i, Int_t dim) const
 {
-    if (i < 0 || i >= fNpoints || dim >= fNErrorDimensions || !fEyH)
-	return -1.;
-    else
-        return fEyH[dim][i];
+   if (i < 0 || i >= fNpoints || dim >= fNErrorDimensions || !fEyH)
+      return -1.;
+   else
+      return fEyH[dim][i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1383,10 +1421,10 @@ Double_t TGraphMultiErrors::GetErrorYhigh(Int_t i, Int_t dim) const
 
 TAttFill* TGraphMultiErrors::GetAttFill(Int_t dim) const
 {
-    if (dim >= 0 && dim < fNErrorDimensions)
-	return (fAttFill + dim);
-    else
-	return NULL;
+   if (dim >= 0 && dim < fNErrorDimensions)
+      return (fAttFill + dim);
+   else
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1394,10 +1432,10 @@ TAttFill* TGraphMultiErrors::GetAttFill(Int_t dim) const
 
 TAttLine* TGraphMultiErrors::GetAttLine(Int_t dim) const
 {
-    if (dim >= 0 && dim < fNErrorDimensions)
-	return (fAttLine + dim);
-    else
-	return NULL;
+   if (dim >= 0 && dim < fNErrorDimensions)
+      return (fAttLine + dim);
+   else
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1405,12 +1443,12 @@ TAttLine* TGraphMultiErrors::GetAttLine(Int_t dim) const
 
 Color_t TGraphMultiErrors::GetFillColor(Int_t dim) const
 {
-    if (dim == -1)
-	return GetFillColor();
-    else if (dim >= 0 && dim < fNErrorDimensions)
-	return fAttFill[dim].GetFillColor();
-    else
-	return 0;
+   if (dim == -1)
+      return GetFillColor();
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      return fAttFill[dim].GetFillColor();
+   else
+      return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1418,12 +1456,12 @@ Color_t TGraphMultiErrors::GetFillColor(Int_t dim) const
 
 Style_t TGraphMultiErrors::GetFillStyle(Int_t dim) const
 {
-    if (dim == -1)
-	return GetFillStyle();
-    else if (dim >= 0 && dim < fNErrorDimensions)
-	return fAttFill[dim].GetFillStyle();
-    else
-	return 0;
+   if (dim == -1)
+      return GetFillStyle();
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      return fAttFill[dim].GetFillStyle();
+   else
+      return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1431,12 +1469,12 @@ Style_t TGraphMultiErrors::GetFillStyle(Int_t dim) const
 
 Color_t TGraphMultiErrors::GetLineColor(Int_t dim) const
 {
-    if (dim == -1)
-	return GetLineColor();
-    else if (dim >= 0 && dim < fNErrorDimensions)
-	return fAttLine[dim].GetLineColor();
-    else
-	return 0;
+   if (dim == -1)
+      return GetLineColor();
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      return fAttLine[dim].GetLineColor();
+   else
+      return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1444,12 +1482,12 @@ Color_t TGraphMultiErrors::GetLineColor(Int_t dim) const
 
 Style_t TGraphMultiErrors::GetLineStyle(Int_t dim) const
 {
-    if (dim == -1)
-	return GetLineStyle();
-    else if (dim >= 0 && dim < fNErrorDimensions)
-	return fAttLine[dim].GetLineStyle();
-    else
-	return 0;
+   if (dim == -1)
+      return GetLineStyle();
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      return fAttLine[dim].GetLineStyle();
+   else
+      return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1457,12 +1495,12 @@ Style_t TGraphMultiErrors::GetLineStyle(Int_t dim) const
 
 Width_t TGraphMultiErrors::GetLineWidth(Int_t dim) const
 {
-    if (dim == -1)
-	return GetLineWidth();
-    else if (dim >= 0 && dim < fNErrorDimensions)
-	return fAttLine[dim].GetLineWidth();
-    else
-	return 0;
+   if (dim == -1)
+      return GetLineWidth();
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      return fAttLine[dim].GetLineWidth();
+   else
+      return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1470,18 +1508,18 @@ Width_t TGraphMultiErrors::GetLineWidth(Int_t dim) const
 
 void TGraphMultiErrors::CalcYErrorSum()
 {
-    if (fEyLSum)
-	delete [] fEyLSum;
-    if (fEyHSum)
-	delete [] fEyHSum;
+   if (fEyLSum)
+      delete [] fEyLSum;
+   if (fEyHSum)
+      delete [] fEyHSum;
 
-    fEyLSum = new Double_t[fNpoints];
-    fEyHSum = new Double_t[fNpoints];
+   fEyLSum = new Double_t[fNpoints];
+   fEyHSum = new Double_t[fNpoints];
 
-    for (Int_t i = 0; i < fNpoints; i++) {
-        fEyLSum[i] = GetErrorYlow(i);
-        fEyHSum[i] = GetErrorYhigh(i);
-    }
+   for (Int_t i = 0; i < fNpoints; i++) {
+      fEyLSum[i] = GetErrorYlow(i);
+      fEyHSum[i] = GetErrorYhigh(i);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1489,10 +1527,10 @@ void TGraphMultiErrors::CalcYErrorSum()
 
 Double_t* TGraphMultiErrors::GetEYlow(Int_t dim)
 {
-    if (dim >= fNErrorDimensions || !fEyL)
-	return NULL;
-    else
-        return fEyL[dim];
+   if (dim >= fNErrorDimensions || !fEyL)
+      return nullptr;
+   else
+      return fEyL[dim];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1500,10 +1538,10 @@ Double_t* TGraphMultiErrors::GetEYlow(Int_t dim)
 
 Double_t* TGraphMultiErrors::GetEYhigh(Int_t dim)
 {
-    if (dim >= fNErrorDimensions || !fEyH)
-	return NULL;
-    else
-        return fEyH[dim];
+   if (dim >= fNErrorDimensions || !fEyH)
+      return nullptr;
+   else
+      return fEyH[dim];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1512,34 +1550,34 @@ Double_t* TGraphMultiErrors::GetEYhigh(Int_t dim)
 
 char* TGraphMultiErrors::GetObjectInfo(Int_t px, Int_t py) const
 {
-    //localize point
-    Int_t ipoint = -2;
-    Int_t i;
-    // start with a small window (in case the mouse is very close to one point)
-    for (i = 0; i < fNpoints; i++) {
-	Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
-	Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+   //localize point
+   Int_t ipoint = -2;
+   Int_t i;
+   // start with a small window (in case the mouse is very close to one point)
+   for (i = 0; i < fNpoints; i++) {
+      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
 
-	if (dpx*dpx+dpy*dpy < 25) {
-	    ipoint = i;
-	    break;
-	}
-    }
+      if (dpx*dpx+dpy*dpy < 25) {
+	 ipoint = i;
+	 break;
+      }
+   }
 
-    Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
-    Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
 
-    if (ipoint == -2)
-	return Form("x=%g, y=%g", x, y);
+   if (ipoint == -2)
+      return Form("x=%g, y=%g", x, y);
 
-    Double_t xval        = fX[ipoint];
-    Double_t yval        = fY[ipoint];
-    //Double_t xvalErr     = fEx[ipoint];
-    //Double_t yvalErrStat = fEyStat[ipoint];
-    //Double_t yvalErrSysL = fEySysL[ipoint];
-    //Double_t yvalErrSysH = fEySysH[ipoint];
+   Double_t xval        = fX[ipoint];
+   Double_t yval        = fY[ipoint];
+   //Double_t xvalErr     = fEx[ipoint];
+   //Double_t yvalErrStat = fEyStat[ipoint];
+   //Double_t yvalErrSysL = fEySysL[ipoint];
+   //Double_t yvalErrSysH = fEySysH[ipoint];
 
-    return Form("x=%g, y=%g, point=%d, xval=%g, yval=%g", x, y, ipoint, xval, yval);
+   return Form("x=%g, y=%g, point=%d, xval=%g, yval=%g", x, y, ipoint, xval, yval);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1547,20 +1585,20 @@ char* TGraphMultiErrors::GetObjectInfo(Int_t px, Int_t py) const
 
 void TGraphMultiErrors::Print(Option_t*) const
 {
-    for (Int_t i = 0; i < fNpoints; i++) {
-	printf("x[%d]=%g, y[%d]=%g", i, fX[i], i, fY[i]);
-	if (fExL)
-	    printf(", exl[%d]=%g", i, fExL[i]);
-        if (fExH)
-	    printf(", exh[%d]=%g", i, fExH[i]);
-	if (fEyL)
-	    for (Int_t j = 0; j < fNErrorDimensions; j++)
-		printf(", eyl[%d][%d]=%g", j, i, fEyL[j][i]);
-        if (fEyH)
-	    for (Int_t j = 0; j < fNErrorDimensions; j++)
-		printf(", eyh[%d][%d]=%g", j, i, fEyH[j][i]);
-        printf("\n");
-    }
+   for (Int_t i = 0; i < fNpoints; i++) {
+      printf("x[%d]=%g, y[%d]=%g", i, fX[i], i, fY[i]);
+      if (fExL)
+	 printf(", exl[%d]=%g", i, fExL[i]);
+      if (fExH)
+	 printf(", exh[%d]=%g", i, fExH[i]);
+      if (fEyL)
+	 for (Int_t j = 0; j < fNErrorDimensions; j++)
+	    printf(", eyl[%d][%d]=%g", j, i, fEyL[j][i]);
+      if (fEyH)
+	 for (Int_t j = 0; j < fNErrorDimensions; j++)
+	    printf(", eyh[%d][%d]=%g", j, i, fEyH[j][i]);
+      printf("\n");
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1568,63 +1606,63 @@ void TGraphMultiErrors::Print(Option_t*) const
 
 void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t* option /*= ""*/)
 {
-    char quote = '"';
-    out << "    " << std::endl;
+   char quote = '"';
+   out << "    " << std::endl;
 
-    if (gROOT->ClassSaved(TGraphMultiErrors::Class()))
-	out << "    ";
-    else
-	out << "    TGraphMultiErrors* ";
+   if (gROOT->ClassSaved(TGraphMultiErrors::Class()))
+      out << "    ";
+   else
+      out << "    TGraphMultiErrors* ";
 
-    out << "tgme = new TGraphMultiErrors(" << fNpoints << ", " << fNErrorDimensions << ");" << std::endl;
-    out << "    tgme->SetName(" << quote << GetName() << quote << ");" << std::endl;
-    out << "    tgme->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
+   out << "tgme = new TGraphMultiErrors(" << fNpoints << ", " << fNErrorDimensions << ");" << std::endl;
+   out << "    tgme->SetName(" << quote << GetName() << quote << ");" << std::endl;
+   out << "    tgme->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
 
-    SaveFillAttributes(out, "tgme", 0, 1001);
-    SaveLineAttributes(out, "tgme", 1, 1, 1);
-    SaveMarkerAttributes(out, "tgme", 1, 1, 1);
+   SaveFillAttributes(out, "tgme", 0, 1001);
+   SaveLineAttributes(out, "tgme", 1, 1, 1);
+   SaveMarkerAttributes(out, "tgme", 1, 1, 1);
 
-    for (Int_t j = 0; j < fNErrorDimensions; j++) {
-        SaveFillAttributes(out, Form("tgme->GetAttFill(%d)", j), 0, 1001);
-	SaveLineAttributes(out, Form("tgme->GetAttLine(%d)", j), 1, 1, 1);
-    }
+   for (Int_t j = 0; j < fNErrorDimensions; j++) {
+      SaveFillAttributes(out, Form("tgme->GetAttFill(%d)", j), 0, 1001);
+      SaveLineAttributes(out, Form("tgme->GetAttLine(%d)", j), 1, 1, 1);
+   }
 
-    for (Int_t i = 0; i < fNpoints; i++) {
-	out << "    tgme->SetPoint(" << i << ", " << fX[i] << ", " << fY[i] << ");" << std::endl;
-	out << "    tgme->SetPointEX(" << i << ", " << fExL[i] << ", " << fExH[i] << ");" << std::endl;
+   for (Int_t i = 0; i < fNpoints; i++) {
+      out << "    tgme->SetPoint(" << i << ", " << fX[i] << ", " << fY[i] << ");" << std::endl;
+      out << "    tgme->SetPointEX(" << i << ", " << fExL[i] << ", " << fExH[i] << ");" << std::endl;
 
-	for (Int_t j = 0; j < fNErrorDimensions; j++)
-            out << "    tgme->SetPointEY(" << i << ", " << j << ", " << fEyL[j][i] << ", " << fEyH[j][i] << ");" << std::endl;
-    }
+      for (Int_t j = 0; j < fNErrorDimensions; j++)
+	 out << "    tgme->SetPointEY(" << i << ", " << j << ", " << fEyL[j][i] << ", " << fEyH[j][i] << ");" << std::endl;
+   }
 
-    static Int_t frameNumber = 0;
-    if (fHistogram) {
-	frameNumber++;
-	TString hname = fHistogram->GetName();
-	hname += frameNumber;
-	fHistogram->SetName(Form("Graph_%s", hname.Data()));
-	fHistogram->SavePrimitive(out, "nodraw");
-	out << "    tgme->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
-	out << "    " << std::endl;
-    }
+   static Int_t frameNumber = 0;
+   if (fHistogram) {
+      frameNumber++;
+      TString hname = fHistogram->GetName();
+      hname += frameNumber;
+      fHistogram->SetName(Form("Graph_%s", hname.Data()));
+      fHistogram->SavePrimitive(out, "nodraw");
+      out << "    tgme->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
+      out << "    " << std::endl;
+   }
 
-    // save list of functions
-    TIter next(fFunctions);
-    TObject *obj;
-    while ((obj = next())) {
-	obj->SavePrimitive(out, "nodraw");
-	if (obj->InheritsFrom("TPaveStats")) {
-	    out << "    tgme->GetListOfFunctions()->Add(ptstats);" << std::endl;
-	    out << "    ptstats->SetParent(tgme->GetListOfFunctions());" << std::endl;
-	} else
-	    out << "    tgme->GetListOfFunctions()->Add(" << obj->GetName() << ");" << std::endl;
-    }
+   // save list of functions
+   TIter next(fFunctions);
+   TObject *obj;
+   while ((obj = next())) {
+      obj->SavePrimitive(out, "nodraw");
+      if (obj->InheritsFrom("TPaveStats")) {
+	 out << "    tgme->GetListOfFunctions()->Add(ptstats);" << std::endl;
+	 out << "    ptstats->SetParent(tgme->GetListOfFunctions());" << std::endl;
+      } else
+	 out << "    tgme->GetListOfFunctions()->Add(" << obj->GetName() << ");" << std::endl;
+   }
 
-    const char *l = strstr(option, "multigraph");
-    if (l)
-	out << "    multigraph->Add(tgme, " << quote << l + 10 << quote << ");" << std::endl;
-    else
-	out << "    tgme->Draw(" << quote << option << quote << ");" << std::endl;
+   const char *l = strstr(option, "multigraph");
+   if (l)
+      out << "    multigraph->Add(tgme, " << quote << l + 10 << quote << ");" << std::endl;
+   else
+      out << "    tgme->Draw(" << quote << option << quote << ");" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1632,14 +1670,14 @@ void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t* option /*= ""
 
 void TGraphMultiErrors::SetPointX(Int_t i, Double_t x)
 {
-    if (i < 0)
-	return;
+   if (i < 0)
+      return;
 
-    if (i >= fNpoints) {
-	// re-allocate the object
-	TGraphMultiErrors::SetPoint(i, x, 0.);
-    } else
-        fX[i] = x;
+   if (i >= fNpoints) {
+      // re-allocate the object
+      TGraphMultiErrors::SetPoint(i, x, 0.);
+   } else
+      fX[i] = x;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1647,14 +1685,14 @@ void TGraphMultiErrors::SetPointX(Int_t i, Double_t x)
 
 void TGraphMultiErrors::SetPointY(Int_t i, Double_t y)
 {
-    if (i < 0)
-	return;
+   if (i < 0)
+      return;
 
-    if (i >= fNpoints) {
-	// re-allocate the object
-	TGraphMultiErrors::SetPoint(i, 0., y);
-    } else
-        fY[i] = y;
+   if (i >= fNpoints) {
+      // re-allocate the object
+      TGraphMultiErrors::SetPoint(i, 0., y);
+   } else
+      fY[i] = y;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1664,35 +1702,35 @@ void TGraphMultiErrors::SetPointY(Int_t i, Double_t y)
 
 void TGraphMultiErrors::SetPointError(Double_t exL, Double_t exH, Double_t eyL1, Double_t eyH1, Double_t eyL2, Double_t eyH2, Double_t eyL3, Double_t eyH3)
 {
-    Int_t px = gPad->GetEventX();
-    Int_t py = gPad->GetEventY();
+   Int_t px = gPad->GetEventX();
+   Int_t py = gPad->GetEventY();
 
-    //localize point to be deleted
-    Int_t ipoint = -2;
-    Int_t i;
-    // start with a small window (in case the mouse is very close to one point)
-    for (i = 0; i < fNpoints; i++) {
-	Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
-	Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+   //localize point to be deleted
+   Int_t ipoint = -2;
+   Int_t i;
+   // start with a small window (in case the mouse is very close to one point)
+   for (i = 0; i < fNpoints; i++) {
+      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
 
-	if (dpx*dpx+dpy*dpy < 25) {
-	    ipoint = i;
-	    break;
-	}
-    }
+      if (dpx*dpx+dpy*dpy < 25) {
+	 ipoint = i;
+	 break;
+      }
+   }
 
-    if (ipoint == -2)
-	return;
+   if (ipoint == -2)
+      return;
 
-    SetPointEX(ipoint, exL, exH);
+   SetPointEX(ipoint, exL, exH);
 
-    if (fNErrorDimensions > 0)
-	SetPointEY(ipoint, 0, eyL1, eyH1);
-    if (fNErrorDimensions > 1)
-	SetPointEY(ipoint, 1, eyL2, eyH2);
-    if (fNErrorDimensions > 2)
-	SetPointEY(ipoint, 2, eyL3, eyH3);
-    gPad->Modified();
+   if (fNErrorDimensions > 0)
+      SetPointEY(ipoint, 0, eyL1, eyH1);
+   if (fNErrorDimensions > 1)
+      SetPointEY(ipoint, 1, eyL2, eyH2);
+   if (fNErrorDimensions > 2)
+      SetPointEY(ipoint, 2, eyL3, eyH3);
+   gPad->Modified();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1700,8 +1738,8 @@ void TGraphMultiErrors::SetPointError(Double_t exL, Double_t exH, Double_t eyL1,
 
 void TGraphMultiErrors::SetPointError(Int_t i, Double_t exL, Double_t exH, Double_t* eyL, Double_t* eyH)
 {
-    SetPointEX(i, exL, exH);
-    SetPointEY(i, eyL, eyH);
+   SetPointEX(i, exL, exH);
+   SetPointEY(i, eyL, eyH);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1709,8 +1747,8 @@ void TGraphMultiErrors::SetPointError(Int_t i, Double_t exL, Double_t exH, Doubl
 
 void TGraphMultiErrors::SetPointEX(Int_t i, Double_t exL, Double_t exH)
 {
-    SetPointEXL(i, exL);
-    SetPointEXH(i, exH);
+   SetPointEXL(i, exL);
+   SetPointEXH(i, exH);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1718,15 +1756,15 @@ void TGraphMultiErrors::SetPointEX(Int_t i, Double_t exL, Double_t exH)
 
 void TGraphMultiErrors::SetPointEXL(Int_t i, Double_t exL)
 {
-    if (i < 0)
-	return;
+   if (i < 0)
+      return;
 
-    if (i >= fNpoints) {
-	// re-allocate the object
-	TGraphMultiErrors::SetPoint(i, 0., 0.);
-    }
+   if (i >= fNpoints) {
+      // re-allocate the object
+      TGraphMultiErrors::SetPoint(i, 0., 0.);
+   }
 
-    fExL[i] = exL;
+   fExL[i] = exL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1734,15 +1772,15 @@ void TGraphMultiErrors::SetPointEXL(Int_t i, Double_t exL)
 
 void TGraphMultiErrors::SetPointEXH(Int_t i, Double_t exH)
 {
-    if (i < 0)
-	return;
+   if (i < 0)
+      return;
 
-    if (i >= fNpoints) {
-	// re-allocate the object
-	TGraphMultiErrors::SetPoint(i, 0., 0.);
-    }
+   if (i >= fNpoints) {
+      // re-allocate the object
+      TGraphMultiErrors::SetPoint(i, 0., 0.);
+   }
 
-    fExH[i] = exH;
+   fExH[i] = exH;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1750,8 +1788,8 @@ void TGraphMultiErrors::SetPointEXH(Int_t i, Double_t exH)
 
 void TGraphMultiErrors::SetPointEY(Int_t i, Double_t* eyL, Double_t* eyH)
 {
-    SetPointEYL(i, eyL);
-    SetPointEYH(i, eyH);
+   SetPointEYL(i, eyL);
+   SetPointEYH(i, eyH);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1759,8 +1797,8 @@ void TGraphMultiErrors::SetPointEY(Int_t i, Double_t* eyL, Double_t* eyH)
 
 void TGraphMultiErrors::SetPointEYL(Int_t i, Double_t* eyL)
 {
-    for (Int_t j = 0; j < fNErrorDimensions; j++)
-        SetPointEYL(i, j, eyL[j]);
+   for (Int_t j = 0; j < fNErrorDimensions; j++)
+      SetPointEYL(i, j, eyL[j]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1768,8 +1806,8 @@ void TGraphMultiErrors::SetPointEYL(Int_t i, Double_t* eyL)
 
 void TGraphMultiErrors::SetPointEYH(Int_t i, Double_t* eyH)
 {
-    for (Int_t j = 0; j < fNErrorDimensions; j++)
-        SetPointEYH(i, j, eyH[j]);
+   for (Int_t j = 0; j < fNErrorDimensions; j++)
+      SetPointEYH(i, j, eyH[j]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1777,8 +1815,8 @@ void TGraphMultiErrors::SetPointEYH(Int_t i, Double_t* eyH)
 
 void TGraphMultiErrors::SetPointEY(Int_t i, Int_t dim, Double_t eyL, Double_t eyH)
 {
-    SetPointEYL(i, dim, eyL);
-    SetPointEYH(i, dim, eyH);
+   SetPointEYL(i, dim, eyL);
+   SetPointEYH(i, dim, eyH);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1786,18 +1824,18 @@ void TGraphMultiErrors::SetPointEY(Int_t i, Int_t dim, Double_t eyL, Double_t ey
 
 void TGraphMultiErrors::SetPointEYL(Int_t i, Int_t dim, Double_t eyL)
 {
-    if (i < 0 || dim < 0)
-	return;
+   if (i < 0 || dim < 0)
+      return;
 
-    if (i >= fNpoints)
-        // re-allocate the object
-	TGraphMultiErrors::SetPoint(i, 0., 0.); 
+   if (i >= fNpoints)
+      // re-allocate the object
+      TGraphMultiErrors::SetPoint(i, 0., 0.);
 
-    if (dim >= fNErrorDimensions)
-        SetNErrorDimensions(dim + 1);
+   if (dim >= fNErrorDimensions)
+      SetNErrorDimensions(dim + 1);
 
-    fEyL[dim][i] = eyL;
-    fEyLSum[i] = GetErrorYlow(i);
+   fEyL[dim][i] = eyL;
+   fEyLSum[i] = GetErrorYlow(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1805,18 +1843,18 @@ void TGraphMultiErrors::SetPointEYL(Int_t i, Int_t dim, Double_t eyL)
 
 void TGraphMultiErrors::SetPointEYH(Int_t i, Int_t dim, Double_t eyH)
 {
-    if (i < 0 || dim < 0)
-	return;
+   if (i < 0 || dim < 0)
+      return;
 
-    if (i >= fNpoints)
-	// re-allocate the object
-	TGraphMultiErrors::SetPoint(i, 0., 0.);
+   if (i >= fNpoints)
+      // re-allocate the object
+      TGraphMultiErrors::SetPoint(i, 0., 0.);
 
-    if (dim >= fNErrorDimensions)
-        SetNErrorDimensions(dim + 1);
+   if (dim >= fNErrorDimensions)
+      SetNErrorDimensions(dim + 1);
 
-    fEyH[dim][i] = eyH;
-    fEyHSum[i] = GetErrorYhigh(i);
+   fEyH[dim][i] = eyH;
+   fEyHSum[i] = GetErrorYhigh(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1824,8 +1862,8 @@ void TGraphMultiErrors::SetPointEYH(Int_t i, Int_t dim, Double_t eyH)
 
 void TGraphMultiErrors::SetDimensionEY(Int_t dim, Double_t* eyL, Double_t* eyH)
 {
-    SetDimensionEYL(dim, eyL);
-    SetDimensionEYH(dim, eyH);
+   SetDimensionEYL(dim, eyL);
+   SetDimensionEYH(dim, eyH);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1833,8 +1871,8 @@ void TGraphMultiErrors::SetDimensionEY(Int_t dim, Double_t* eyL, Double_t* eyH)
 
 void TGraphMultiErrors::SetDimensionEYL(Int_t dim, Double_t* eyL)
 {
-    for (Int_t i = 0; i < fNpoints; i++)
-        SetPointEYL(i, dim, eyL[i]);
+   for (Int_t i = 0; i < fNpoints; i++)
+      SetPointEYL(i, dim, eyL[i]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1842,8 +1880,8 @@ void TGraphMultiErrors::SetDimensionEYL(Int_t dim, Double_t* eyL)
 
 void TGraphMultiErrors::SetDimensionEYH(Int_t dim, Double_t* eyH)
 {
-    for (Int_t i = 0; i < fNpoints; i++)
-        SetPointEYH(i, dim, eyH[i]);
+   for (Int_t i = 0; i < fNpoints; i++)
+      SetPointEYH(i, dim, eyH[i]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1851,29 +1889,29 @@ void TGraphMultiErrors::SetDimensionEYH(Int_t dim, Double_t* eyH)
 
 void TGraphMultiErrors::SetNErrorDimensions(Int_t dim)
 {
-    if (dim < 0) dim = 0;
-    if (dim == fNErrorDimensions) return;
+   if (dim < 0) dim = 0;
+   if (dim == fNErrorDimensions) return;
 
-    Double_t** ps = AllocateArrays(2*dim, fNpoints);
-    CopyAndReleaseY(ps, 0, dim, 0);
-    if (dim > fNErrorDimensions)
-	FillZeroY(fNErrorDimensions, dim);
+   Double_t** ps = AllocateArrays(2*dim, fNpoints);
+   CopyAndReleaseY(ps, 0, dim, 0);
+   if (dim > fNErrorDimensions)
+      FillZeroY(fNErrorDimensions, dim);
 
-    TAttFill* newAttFill = new TAttFill[dim];
-    TAttLine* newAttLine = new TAttLine[dim];
+   auto newAttFill = new TAttFill[dim];
+   auto newAttLine = new TAttLine[dim];
 
-    for (Int_t j = 0; j < TMath::Min(fNErrorDimensions, dim); j++) {
-        fAttFill[j].Copy(newAttFill[j]);
-	fAttLine[j].Copy(newAttLine[j]);
-    }
+   for (Int_t j = 0; j < TMath::Min(fNErrorDimensions, dim); j++) {
+      fAttFill[j].Copy(newAttFill[j]);
+      fAttLine[j].Copy(newAttLine[j]);
+   }
 
-    delete [] fAttFill;
-    delete [] fAttLine;
+   delete [] fAttFill;
+   delete [] fAttLine;
 
-    fAttFill = newAttFill;
-    fAttLine = newAttLine;
+   fAttFill = newAttFill;
+   fAttLine = newAttLine;
 
-    fNErrorDimensions = dim;
+   fNErrorDimensions = dim;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1881,10 +1919,10 @@ void TGraphMultiErrors::SetNErrorDimensions(Int_t dim)
 
 void TGraphMultiErrors::SetAttFill(Int_t dim, TAttFill* taf)
 {
-    if (dim == -1)
-	taf->TAttFill::Copy(*this);
-    else if (dim >= 0 && dim < fNErrorDimensions)
-	taf->TAttFill::Copy(fAttFill[dim]);
+   if (dim == -1)
+      taf->TAttFill::Copy(*this);
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      taf->TAttFill::Copy(fAttFill[dim]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1892,10 +1930,10 @@ void TGraphMultiErrors::SetAttFill(Int_t dim, TAttFill* taf)
 
 void TGraphMultiErrors::SetAttLine(Int_t dim, TAttLine* taf)
 {
-    if (dim == -1)
-	taf->TAttLine::Copy(*this);
-    else if (dim >= 0 && dim < fNErrorDimensions)
-	taf->TAttLine::Copy(fAttLine[dim]);
+   if (dim == -1)
+      taf->TAttLine::Copy(*this);
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      taf->TAttLine::Copy(fAttLine[dim]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1903,10 +1941,10 @@ void TGraphMultiErrors::SetAttLine(Int_t dim, TAttLine* taf)
 
 void TGraphMultiErrors::SetFillColor(Int_t dim, Color_t fcolor)
 {
-    if (dim == -1)
-	SetFillColor(fcolor);
-    else if (dim >= 0 && dim < fNErrorDimensions)
-        fAttFill[dim].SetFillColor(fcolor);
+   if (dim == -1)
+      SetFillColor(fcolor);
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      fAttFill[dim].SetFillColor(fcolor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1914,10 +1952,10 @@ void TGraphMultiErrors::SetFillColor(Int_t dim, Color_t fcolor)
 
 void TGraphMultiErrors::SetFillColorAlpha(Int_t dim, Color_t fcolor, Float_t falpha)
 {
-    if (dim == -1)
-        SetFillColorAlpha(fcolor, falpha);
-    else if (dim >= 0 && dim < fNErrorDimensions)
-        fAttFill[dim].SetFillColorAlpha(fcolor, falpha);
+   if (dim == -1)
+      SetFillColorAlpha(fcolor, falpha);
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      fAttFill[dim].SetFillColorAlpha(fcolor, falpha);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1925,10 +1963,10 @@ void TGraphMultiErrors::SetFillColorAlpha(Int_t dim, Color_t fcolor, Float_t fal
 
 void TGraphMultiErrors::SetFillStyle(Int_t dim, Style_t fstyle)
 {
-    if (dim == -1)
-        SetFillStyle(fstyle);
-    else if (dim >= 0 && dim < fNErrorDimensions)
-        fAttFill[dim].SetFillStyle(fstyle);
+   if (dim == -1)
+      SetFillStyle(fstyle);
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      fAttFill[dim].SetFillStyle(fstyle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1936,10 +1974,10 @@ void TGraphMultiErrors::SetFillStyle(Int_t dim, Style_t fstyle)
 
 void TGraphMultiErrors::SetLineColor(Int_t dim, Color_t lcolor)
 {
-    if (dim == -1)
-        SetLineColor(lcolor);
-    else if (dim >= 0 && dim < fNErrorDimensions)
-        fAttLine[dim].SetLineColor(lcolor);
+   if (dim == -1)
+      SetLineColor(lcolor);
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      fAttLine[dim].SetLineColor(lcolor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1947,10 +1985,10 @@ void TGraphMultiErrors::SetLineColor(Int_t dim, Color_t lcolor)
 
 void TGraphMultiErrors::SetLineColorAlpha(Int_t dim, Color_t lcolor, Float_t lalpha)
 {
-    if (dim == -1)
-        SetLineColorAlpha(lcolor, lalpha);
-    else if (dim >= 0 && dim < fNErrorDimensions)
-        fAttLine[dim].SetLineColorAlpha(lcolor, lalpha);
+   if (dim == -1)
+      SetLineColorAlpha(lcolor, lalpha);
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      fAttLine[dim].SetLineColorAlpha(lcolor, lalpha);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1958,10 +1996,10 @@ void TGraphMultiErrors::SetLineColorAlpha(Int_t dim, Color_t lcolor, Float_t lal
 
 void TGraphMultiErrors::SetLineStyle(Int_t dim, Style_t lstyle)
 {
-    if (dim == -1)
-        SetLineStyle(lstyle);
-    else if (dim >= 0 && dim < fNErrorDimensions)
-        fAttLine[dim].SetLineStyle(lstyle);
+   if (dim == -1)
+      SetLineStyle(lstyle);
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      fAttLine[dim].SetLineStyle(lstyle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1969,10 +2007,10 @@ void TGraphMultiErrors::SetLineStyle(Int_t dim, Style_t lstyle)
 
 void TGraphMultiErrors::SetLineWidth(Int_t dim, Width_t lwidth)
 {
-    if (dim == -1)
-        SetLineWidth(lwidth);
-    else if (dim >= 0 && dim < fNErrorDimensions)
-        fAttLine[dim].SetLineWidth(lwidth);
+   if (dim == -1)
+      SetLineWidth(lwidth);
+   else if (dim >= 0 && dim < fNErrorDimensions)
+      fAttLine[dim].SetLineWidth(lwidth);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2058,13 +2096,13 @@ void TGraphMultiErrors::Streamer(TBuffer &R__b)
 
 void TGraphMultiErrors::SwapPoints(Int_t pos1, Int_t pos2)
 {
-    SwapValues(fExL, pos1, pos2);
-    SwapValues(fExH, pos1, pos2);
+   SwapValues(fExL, pos1, pos2);
+   SwapValues(fExH, pos1, pos2);
 
-    for (Int_t j = 0; j <= fNErrorDimensions; j++) {
-	SwapValues(fEyL[j], pos1, pos2);
-	SwapValues(fEyH[j], pos1, pos2);
-    }
+   for (Int_t j = 0; j <= fNErrorDimensions; j++) {
+      SwapValues(fEyL[j], pos1, pos2);
+      SwapValues(fEyH[j], pos1, pos2);
+   }
 
-    TGraph::SwapPoints(pos1, pos2);
+   TGraph::SwapPoints(pos1, pos2);
 }
