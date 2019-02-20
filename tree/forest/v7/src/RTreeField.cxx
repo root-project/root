@@ -206,9 +206,8 @@ void ROOT::Experimental::RTreeField<std::string>::DoRead(
    ROOT::Experimental::TreeIndex_t index, ROOT::Experimental::Detail::RTreeValueBase* value)
 {
    auto typedValue = reinterpret_cast<ROOT::Experimental::RTreeValue<std::string>*>(value)->Get();
-   auto idxStart = (index == 0) ? 0
-      : *static_cast<TreeIndex_t *>(fColumns[0]->Map<TreeIndex_t, EColumnType::kIndex>(index - 1, &fElemIndex));
-   auto idxEnd = *static_cast<TreeIndex_t *>(fColumns[0]->Map<TreeIndex_t*, EColumnType::kIndex>(index, &fElemIndex));
+   auto idxStart = (index == 0) ? 0 : *fColumns[0]->Map<TreeIndex_t, EColumnType::kIndex>(index - 1, &fElemIndex);
+   auto idxEnd = *fColumns[0]->Map<TreeIndex_t, EColumnType::kIndex>(index, &fElemIndex);
    auto nChars = idxEnd - idxStart;
    typedValue->resize(nChars);
    Detail::RColumnElement<char, EColumnType::kByte> elemChars(const_cast<char*>(typedValue->data()));
@@ -319,10 +318,9 @@ void ROOT::Experimental::RTreeFieldVector::DoRead(TreeIndex_t index, Detail::RTr
 
    TreeIndex_t dummy;
    Detail::RColumnElement<TreeIndex_t, EColumnType::kIndex> elemIndex(&dummy);
-   auto idxStart = (index == 0) ? 0 : *static_cast<TreeIndex_t *>(
-      fColumns[0]->template Map<TreeIndex_t, EColumnType::kIndex>(index - 1, &elemIndex));
-   auto idxEnd = *static_cast<TreeIndex_t *>(
-      fColumns[0]->template Map<TreeIndex_t*, EColumnType::kIndex>(index, &elemIndex));
+   auto idxStart = (index == 0) ? 0
+      : *fColumns[0]->template Map<TreeIndex_t, EColumnType::kIndex>(index - 1, &elemIndex);
+   auto idxEnd = *fColumns[0]->template Map<TreeIndex_t, EColumnType::kIndex>(index, &elemIndex);
    auto nItems = idxEnd - idxStart;
 
    typedValue->resize(nItems * fItemSize);
