@@ -77,6 +77,8 @@ Used when types are available at compile time by RTreeModel::AddField()
 template <typename T>
 class RTreeValue : public Detail::RTreeValueBase {
 public:
+   RTreeValue() : Detail::RTreeValueBase(nullptr, nullptr) {}
+   RTreeValue(const Detail::RTreeValueBase &other) : Detail::RTreeValueBase(other) {}
    template <typename... ArgsT>
    RTreeValue(Detail::RTreeFieldBase* field, T* where, ArgsT&&... args) : Detail::RTreeValueBase(field, where)
    {
