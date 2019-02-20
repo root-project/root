@@ -141,19 +141,27 @@ TEST(RForestTree, View)
    auto fieldPt = model->AddField<float>("pt", 42.0);
    auto fieldTag = model->AddField<std::string>("tag", "xyz");
    auto fieldJets = model->AddField<std::vector<float>>("jets");
+   fieldJets->push_back(1.0);
+   fieldJets->push_back(2.0);
 
    {
       ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", "test.root"));
       tree.Fill();
    }
 
-   *fieldPt = 0.0;
-   fieldTag->clear();
-   fieldJets->clear();
-
    RInputTree tree(std::make_unique<RPageSourceRoot>("myTree", "test.root"));
    auto viewPt = tree.GetView<float>("pt");
-   EXPECT_EQ(42.0, viewPt());
+   while (tree.ViewNext()) {
+      EXPECT_EQ(42.0, viewPt());
+   }
+
+   auto ctx = tree.GetViewContext();
+   auto viewJets = tree.GetView<std::vector<float>>("jets", ctx.get());
+   while (ctx->Next()) {
+      EXPECT_EQ(2U, viewJets().size());
+      EXPECT_EQ(1.0, viewJets()[0]);
+      EXPECT_EQ(2.0, viewJets()[0]);
+   }
 }
 
 TEST(RForestTree, TypeName) {

@@ -96,6 +96,8 @@ public:
    RInputTree(std::unique_ptr<Detail::RPageSource> source);
    ~RInputTree();
 
+   TreeIndex_t GetNEntries() { return fNEntries; }
+
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the tree.
    /// On I/O errors, raises an expection.
    void GetEntry(TreeIndex_t index) { GetEntry(index, fModel->GetDefaultEntry()); }
@@ -105,7 +107,6 @@ public:
          value.GetField()->Read(index, &value);
       }
    }
-   TreeIndex_t GetNEntries() { return fNEntries; }
 
    /// Provides access to an individual field that can contain either a skalar value or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<RVec<double>>("particle").  It can as well be the index
@@ -116,6 +117,9 @@ public:
          context = &fDefaultViewContext;
       return RTreeView<T>(fieldName, context);
    }
+   std::unique_ptr<RTreeViewContext> GetViewContext();
+   void ViewReset() { fDefaultViewContext.Reset(); }
+   bool ViewNext() { return fDefaultViewContext.Next(); }
 };
 
 // clang-format off
