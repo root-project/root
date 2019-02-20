@@ -201,7 +201,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 
    auto keyForestFooter = fDirectory->GetKey(RMapper::kKeyForestFooter);
    auto forestFooter = keyForestFooter->ReadObject<ROOT::Experimental::Internal::RForestFooter>();
-   printf("Number of clusters: %d\n", forestFooter->fNClusters);
+   printf("Number of clusters: %d, entries %ld\n", forestFooter->fNClusters, forestFooter->fNEntries);
 
    for (std::int32_t iCluster = 0; iCluster < forestFooter->fNClusters; ++iCluster) {
       auto keyClusterFooter = fDirectory->GetKey((RMapper::kKeyClusterFooter + std::to_string(iCluster)).c_str());

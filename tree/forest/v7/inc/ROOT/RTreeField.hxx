@@ -180,17 +180,6 @@ public:
       //fPrincipalColumn->ReadV(index, count, dst);
    }
 
-   /// Only for simple types, let the pointer wrapped by the tree value simply point into the page buffer.
-   /// The resulting tree value may only be used for as long as no request to another item of this field is made
-   /// because another index might trigger a swap of the page buffer.
-   /// The dst location must be an object of the field type.
-   void Map(TreeIndex_t /*index*/, void** /*dst*/) {
-      if (!fIsSimple) {
-         // TODO(jblomer)
-      }
-      //fPrincipalColumn->Map(index, dst);
-   }
-
    /// The number of elements in the principal column. For top level fields, the number of entries.
    TreeIndex_t GetNItems();
 
@@ -305,6 +294,12 @@ public:
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
+
+   float* Map(TreeIndex_t index) {
+      static_assert(Detail::RColumnElement<float, EColumnType::kReal32>::kIsMappable,
+                    "(float, EColumnType::kReal32) is not identical on this platform");
+      return fPrincipalColumn->Map<float, EColumnType::kReal32>(index, nullptr);
+   }
 
    using Detail::RTreeFieldBase::GenerateValue;
    template <typename... ArgsT>
