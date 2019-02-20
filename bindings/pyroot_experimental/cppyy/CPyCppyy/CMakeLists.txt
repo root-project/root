@@ -38,6 +38,7 @@ set(sources
 )
 
 add_library(cppyy SHARED ${headers} ${sources})
+target_include_directories(cppyy PRIVATE ${CMAKE_BINARY_DIR}/include) # needed for string_view backport
 target_compile_options(cppyy PRIVATE
   -Wno-shadow -Wno-strict-aliasing -Wno-unused-but-set-parameter)
 target_include_directories(cppyy PUBLIC ${PYTHON_INCLUDE_DIRS}
