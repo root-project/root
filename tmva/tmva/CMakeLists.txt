@@ -395,6 +395,7 @@ if(tmva-cpu)
     #src/DNN/Architectures/Cpu/RecurrentPropagation.cxx
     #src/DNN/Architectures/Cpu/Regularization.cxx
   )
+  target_include_directories(TMVA PRIVATE ${TBB_INCLUDE_DIRS})
   target_link_libraries(TMVA PRIVATE ${TBB_LIBRARIES} ${TMVA_CPU_LIBRARIES})
 endif()
 
