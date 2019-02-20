@@ -313,6 +313,32 @@ bool GlobalModuleIndex::lookupIdentifier(StringRef Name, HitSet &Hits) {
   return true;
 }
 
+bool GlobalModuleIndex::lookupIdentifier(StringRef Name, FileNameHitSet &Hits) {
+  Hits.clear();
+
+  // If there's no identifier index, there is nothing we can do.
+  if (!IdentifierIndex)
+    return false;
+
+  // Look into the identifier index.
+  ++NumIdentifierLookups;
+  IdentifierIndexTable &Table =
+      *static_cast<IdentifierIndexTable *>(IdentifierIndex);
+  IdentifierIndexTable::iterator Known = Table.find(Name);
+  if (Known == Table.end()) {
+    return true;
+  }
+
+  SmallVector<unsigned, 2> ModuleIDs = *Known;
+  for (unsigned I = 0, N = ModuleIDs.size(); I != N; ++I) {
+    assert(!Modules[ModuleIDs[I]].FileName.empty());
+    Hits.insert(&Modules[ModuleIDs[I]].FileName);
+  }
+
+  ++NumIdentifierLookupHits;
+  return true;
+}
+
 bool GlobalModuleIndex::loadedModuleFile(ModuleFile *File) {
   // Look for the module in the global module index based on the module name.
   StringRef Name = File->ModuleName;
@@ -660,10 +686,7 @@ bool GlobalModuleIndexBuilder::loadModuleFile(const FileEntry *File) {
                                                      DEnd = Table->data_end();
            D != DEnd; ++D) {
         std::pair<StringRef, bool> Ident = *D;
-        if (Ident.second)
-          InterestingIdentifiers[Ident.first].push_back(ID);
-        else
-          (void)InterestingIdentifiers[Ident.first];
+        InterestingIdentifiers[Ident.first].push_back(ID);
       }
     }
 
@@ -725,14 +748,14 @@ bool GlobalModuleIndexBuilder::writeIndex(llvm::BitstreamWriter &Stream) {
   for (auto MapEntry : ImportedModuleFiles) {
     auto *File = MapEntry.first;
     ImportedModuleFileInfo &Info = MapEntry.second;
-    if (getModuleFileInfo(File).Signature) {
-      if (getModuleFileInfo(File).Signature != Info.StoredSignature)
-        // Verify Signature.
-        return true;
-    } else if (Info.StoredSize != File->getSize() ||
-               Info.StoredModTime != File->getModificationTime())
-      // Verify Size and ModTime.
-      return true;
+    // if (getModuleFileInfo(File).Signature) {
+    //   if (getModuleFileInfo(File).Signature != Info.StoredSignature)
+    //     // Verify Signature.
+    //     return true;
+    // } else if (Info.StoredSize != File->getSize() ||
+    //            Info.StoredModTime != File->getModificationTime())
+    //   // Verify Size and ModTime.
+    //   return true;
   }
 
   using namespace llvm;

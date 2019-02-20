@@ -95,9 +95,11 @@ clang/LLVM technology.
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/PreprocessorOptions.h"
+#include "clang/Parse/Parser.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
-#include "clang/Parse/Parser.h"
+#include "clang/Serialization/ASTReader.h"
+#include "clang/Serialization/GlobalModuleIndex.h"
 
 #include "cling/Interpreter/ClangInternalState.h"
 #include "cling/Interpreter/DynamicLibraryManager.h"
@@ -1194,6 +1196,51 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
    clingInterp.declare(PreIncludes);
 }
 
+static bool HaveFullGlobalModuleIndex = false;
+static GlobalModuleIndex *loadGlobalModuleIndex(cling::Interpreter &interp, SourceLocation TriggerLoc)
+{
+   CompilerInstance &CI = *interp.getCI();
+   Preprocessor &PP = CI.getPreprocessor();
+   auto ModuleManager = CI.getModuleManager();
+   assert(ModuleManager);
+   // StringRef ModuleIndexPath = HSI.getModuleCachePath();
+   // HeaderSearch& HSI = PP.getHeaderSearchInfo();
+   // HSI.setModuleCachePath(TROOT::GetLibDir().Data());
+   std::string ModuleIndexPath = TROOT::GetLibDir().Data();
+   if (ModuleIndexPath.empty())
+      return nullptr;
+   // Get an existing global index. This loads it if not already loaded.
+   ModuleManager->resetForReload();
+   ModuleManager->loadGlobalIndex();
+   GlobalModuleIndex *GlobalIndex = ModuleManager->getGlobalIndex();
+   if (!GlobalIndex && CI.hasFileManager()) {
+   }
+
+   // For finding modules needing to be imported for fixit messages,
+   // we need to make the global index cover all modules, so we do that here.
+   if (!GlobalIndex && !HaveFullGlobalModuleIndex) {
+      ModuleMap &MMap = PP.getHeaderSearchInfo().getModuleMap();
+      bool RecreateIndex = false;
+      for (ModuleMap::module_iterator I = MMap.module_begin(), E = MMap.module_end(); I != E; ++I) {
+         Module *TheModule = I->second;
+         // We do want the index only of the prebuilt modules
+         std::string ModuleName = GetModuleNameAsString(TheModule, PP);
+         if (ModuleName.empty())
+            continue;
+         LoadModule(ModuleName, interp);
+         RecreateIndex = true;
+      }
+      if (RecreateIndex) {
+         GlobalModuleIndex::writeIndex(CI.getFileManager(), CI.getPCHContainerReader(), ModuleIndexPath);
+         ModuleManager->resetForReload();
+         ModuleManager->loadGlobalIndex();
+         GlobalIndex = ModuleManager->getGlobalIndex();
+      }
+      HaveFullGlobalModuleIndex = true;
+   }
+   return GlobalIndex;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the cling interpreter interface.
 /// \param argv - array of arguments passed to the cling::Interpreter constructor
@@ -1325,6 +1372,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
          clingArgsStorage.push_back("-fmodule-map-file=" + ModuleMapLoc);
       }
+      clingArgsStorage.push_back("-fmodules-cache-path=" + std::string(TROOT::GetLibDir()));
    }
 
    std::vector<const char*> interpArgs;
@@ -1401,7 +1449,34 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    static llvm::raw_fd_ostream fMPOuts (STDOUT_FILENO, /*ShouldClose*/false);
    fMetaProcessor = llvm::make_unique<cling::MetaProcessor>(*fInterpreter, fMPOuts);
 
-   RegisterCxxModules(*fInterpreter);
+   if (fInterpreter->getCI()->getLangOpts().Modules) {
+      // Setup core C++ modules if we have any to setup.
+
+      // Load libc and stl first.
+#ifdef R__MACOSX
+      LoadModules({"Darwin", "std"}, *fInterpreter);
+#else
+      LoadModules({"libc", "stl"}, *fInterpreter);
+#endif
+
+      if (!fromRootCling)
+         loadGlobalModuleIndex(*fInterpreter, SourceLocation());
+
+      // C99 decided that it's a very good idea to name a macro `I` (the letter I).
+      // This seems to screw up nearly all the template code out there as `I` is
+      // common template parameter name and iterator variable name.
+      // Let's follow the GCC recommendation and undefine `I` in case any of the
+      // core modules have defined it:
+      // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
+      fInterpreter->declare("#ifdef I\n #undef I\n #endif\n");
+
+      // These macros are from loading R related modules, which conflict with
+      // user's code.
+      fInterpreter->declare("#ifdef PI\n #undef PI\n #endif\n");
+      fInterpreter->declare("#ifdef ERROR\n #undef ERROR\n #endif\n");
+   }
+
+   // RegisterCxxModules(*fInterpreter);
    RegisterPreIncludedHeaders(*fInterpreter);
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.

@@ -16196,7 +16196,7 @@ DeclResult Sema::ActOnModuleImport(SourceLocation StartLoc,
 
   VisibleModules.setVisible(Mod, ImportLoc);
 
-  checkModuleImportContext(*this, Mod, ImportLoc, CurContext);
+  // checkModuleImportContext(*this, Mod, ImportLoc, CurContext);
 
   // FIXME: we should support importing a submodule within a different submodule
   // of the same top-level module. Until we do, make it an error rather than
