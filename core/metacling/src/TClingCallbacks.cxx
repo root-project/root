@@ -29,6 +29,8 @@
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Scope.h"
+#include "clang/Serialization/ASTReader.h"
+#include "clang/Serialization/GlobalModuleIndex.h"
 
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
@@ -285,6 +287,28 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
    return tryResolveAtRuntimeInternal(R, S);
 }
 
+static bool findInGlobalIndex(cling::Interpreter &Interp, DeclarationName Name, bool loadFirstMatchOnly = true)
+{
+   GlobalModuleIndex *Index = Interp.getCI()->getModuleManager()->getGlobalIndex();
+   if (!Index)
+      return false;
+
+   GlobalModuleIndex::FileNameHitSet FoundModules;
+
+   // Find the modules that reference the identifier.
+   // Note that this only finds top-level modules.
+   if (Index->lookupIdentifier(Name.getAsString(), FoundModules)) {
+      for (auto FileName : FoundModules) {
+         StringRef ModuleName = llvm::sys::path::stem(*FileName);
+         Interp.loadModule(ModuleName);
+         if (loadFirstMatchOnly)
+            break;
+      }
+      return true;
+   }
+   return false;
+}
+
 bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) {
    if (!fROOTSpecialNamespace) {
       // init error or rootcling
@@ -293,9 +317,21 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
 
    if (!IsAutoLoadingEnabled() || fIsAutoLoadingRecursively) return false;
 
-   if (Name.getNameKind() != DeclarationName::Identifier) return false;
+   // We are currently building a module, we should not autoload.
+   Sema &SemaR = m_Interpreter->getSema();
+   const LangOptions &LangOpts = SemaR.getPreprocessor().getLangOpts();
+   if (LangOpts.Modules) {
+      if (LangOpts.isCompilingModule())
+         return false;
 
+      // FIXME: We should load only the first available and rely on other callbacks
+      // such as RequireCompleteType and LookupUnqualified to load all.
+      if (findInGlobalIndex(*m_Interpreter, Name, /*loadFirstMatchOnly*/ false))
+         return true;
+   }
 
+   if (Name.getNameKind() != DeclarationName::Identifier)
+      return false;
 
    // Get the 'lookup' decl context.
    // We need to cast away the constness because we will lookup items of this
@@ -311,7 +347,6 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    if (primaryDC != DC)
       return false;
 
-   Sema &SemaR = m_Interpreter->getSema();
    LookupResult R(SemaR, Name, SourceLocation(), Sema::LookupOrdinaryName);
    R.suppressDiagnostics();
    // We need the qualified name for TCling to find the right library.
