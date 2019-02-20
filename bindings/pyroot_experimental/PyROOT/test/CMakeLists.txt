@@ -33,3 +33,6 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py)
 if(ROOT_roofit_FOUND)
   ROOT_ADD_PYUNITTEST(pyroot_pyz_rooabscollection_len rooabscollection_len.py)
 endif()
+
+# std::string_view backport in CPyCppyy
+ROOT_ADD_PYUNITTEST(pyroot_string_view_backport string_view_backport.py)
