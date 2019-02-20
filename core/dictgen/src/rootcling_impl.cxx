@@ -4336,12 +4336,8 @@ int RootClingMain(int argc,
       if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
             // CINT uses to define a few header implicitly, we need to do it explicitly.
             || interp.declare("#include <assert.h>\n"
-                              "#include <stdlib.h>\n"
-                              "#include <stddef.h>\n"
-                              "#include <string.h>\n"
                              ) != cling::Interpreter::kSuccess
             || interp.declare("#include \"Rtypes.h\"\n"
-                              "#include \"TClingRuntime.h\"\n"
                               "#include \"TObject.h\""
                              ) != cling::Interpreter::kSuccess
          ) {
