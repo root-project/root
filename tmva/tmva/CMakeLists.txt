@@ -3,27 +3,14 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(tmva-cpu)
-  if(BLAS_FOUND)
-    set(TMVA_CPU_LIBRARIES ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
-  elseif(GSL_FOUND)
-    add_definitions(-DDNN_USE_CBLAS)
-    set(TMVA_CPU_LIBRARIES ${GSL_LIBRARIES})
-  else()
-    message(FATAL_ERROR "tmva-cpu enabled but neither BLAS nor GSL BLAS were found")
-  endif()
-else()
+if(NOT tmva-cpu)
   set(installoptions ${installoptions} FILTER "Cpu")
 endif()
 
 if(tmva-gpu)
-  include_directories(${CUDA_INCLUDE_DIRS})
+  set(dictoptions -I${CUDA_TOOLKIT_INCLUDE})
 else()
   set(installoptions ${installoptions} FILTER "Cuda")
-endif()
-
-if(vdt AND NOT builtin_vdt)
-  include_directories(${VDT_INCLUDE_DIRS})
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
@@ -363,6 +350,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     #src/DNN/Architectures/Reference/Regularization.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
+    ${dictoptions}
   DEPENDENCIES
     TreePlayer
     Tree
@@ -378,6 +366,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
   INSTALL_OPTIONS
     ${installoptions}
 )
+
+if(builtin_vdt)
+  # cannot export include for vdt, as it points to build dir
+  target_include_directories(TMVA PRIVATE ${VDT_INCLUDE_DIRS})
+elseif(vdt)
+  target_include_directories(TMVA PUBLIC ${VDT_INCLUDE_DIRS})
+endif()
 
 if(tmva-cpu)
   target_sources(TMVA PRIVATE
@@ -396,7 +391,17 @@ if(tmva-cpu)
     #src/DNN/Architectures/Cpu/Regularization.cxx
   )
   target_include_directories(TMVA PRIVATE ${TBB_INCLUDE_DIRS})
-  target_link_libraries(TMVA PRIVATE ${TBB_LIBRARIES} ${TMVA_CPU_LIBRARIES})
+  target_link_libraries(TMVA PRIVATE ${TBB_LIBRARIES})
+
+  if(BLAS_FOUND)
+    target_link_libraries(TMVA PRIVATE ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
+  elseif(GSL_FOUND)
+    target_compile_definitions(TMVA PRIVATE -DDNN_USE_CBLAS)
+    target_include_directories(TMVA PRIVATE ${GSL_INCLUDE_DIR})
+    target_link_libraries(TMVA PRIVATE ${GSL_CBLAS_LIBRARY})
+  else()
+    message(FATAL_ERROR "tmva-cpu enabled but neither BLAS nor GSL BLAS were found")
+  endif()
 endif()
 
 if(tmva-gpu)
@@ -405,6 +410,7 @@ if(tmva-gpu)
     src/DNN/Architectures/Cuda/CudaBuffers.cxx
     src/DNN/Architectures/Cuda/CudaMatrix.cu
   )
+  target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS})
   target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
