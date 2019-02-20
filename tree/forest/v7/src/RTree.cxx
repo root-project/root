@@ -55,6 +55,12 @@ ROOT::Experimental::RInputTree::RInputTree(std::unique_ptr<ROOT::Experimental::D
    fNEntries = fSource->GetNEntries();
 }
 
+std::unique_ptr<ROOT::Experimental::RTreeViewContext> ROOT::Experimental::RInputTree::GetViewContext()
+{
+   auto ctx = new RTreeViewContext(fSource.get());
+   return std::unique_ptr<RTreeViewContext>(ctx);
+}
+
 ROOT::Experimental::RInputTree::~RInputTree()
 {
 }
