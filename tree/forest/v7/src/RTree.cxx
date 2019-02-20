@@ -37,22 +37,22 @@ ROOT::Experimental::RInputTree::RInputTree(
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
    : ROOT::Experimental::Detail::RTree(model)
    , fSource(std::move(source))
-   , fDefaultViewContext(fSource.get())
 {
    fSource->Attach();
    for (auto& field : *model->GetRootField()) {
       field.ConnectColumns(fSource.get());
    }
    fNEntries = fSource->GetNEntries();
+   fDefaultViewContext = std::unique_ptr<RTreeViewContext>(new RTreeViewContext(fSource.get()));
 }
 
 ROOT::Experimental::RInputTree::RInputTree(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
    : ROOT::Experimental::Detail::RTree(std::make_shared<ROOT::Experimental::RTreeModel>())
    , fSource(std::move(source))
-   , fDefaultViewContext(fSource.get())
 {
    fSource->Attach();
    fNEntries = fSource->GetNEntries();
+   fDefaultViewContext = std::unique_ptr<RTreeViewContext>(new RTreeViewContext(fSource.get()));
 }
 
 std::unique_ptr<ROOT::Experimental::RTreeViewContext> ROOT::Experimental::RInputTree::GetViewContext()

@@ -120,6 +120,7 @@ class ROOT::Experimental::Detail::RColumnElement<float, ROOT::Experimental::ECol
    : public ROOT::Experimental::Detail::RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
+   static constexpr size_t kSize = sizeof(float);
    explicit RColumnElement(float* value) : RColumnElementBase(value, sizeof(float), kIsMappable) {}
 };
 
@@ -129,6 +130,7 @@ class ROOT::Experimental::Detail::RColumnElement<
    : public ROOT::Experimental::Detail::RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
+   static constexpr size_t kSize = sizeof(ROOT::Experimental::TreeIndex_t);
    explicit RColumnElement(ROOT::Experimental::TreeIndex_t* value)
       : RColumnElementBase(value, sizeof(ROOT::Experimental::TreeIndex_t), kIsMappable) {}
 };
@@ -138,6 +140,7 @@ class ROOT::Experimental::Detail::RColumnElement<char, ROOT::Experimental::EColu
    : public ROOT::Experimental::Detail::RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
+   static constexpr size_t kSize = sizeof(char);
    explicit RColumnElement(char* value) : RColumnElementBase(value, sizeof(char), kIsMappable) {}
 };
 

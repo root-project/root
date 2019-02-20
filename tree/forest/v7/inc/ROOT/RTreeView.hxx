@@ -43,7 +43,7 @@ private:
    Detail::RPageSource* fPageSource;
 
    explicit RTreeViewContext(Detail::RPageSource* pageSource)
-      : fNEntries(pageSource->GetNEntries()), fIndex(0), fPageSource(pageSource) {}
+      : fNEntries(pageSource->GetNEntries()), fIndex(kInvalidForestIndex), fPageSource(pageSource) {}
 
 public:
    RTreeViewContext(const RTreeViewContext& other) = delete;
@@ -51,7 +51,7 @@ public:
    ~RTreeViewContext() = default;
 
    bool Next() { fIndex++; return fIndex < fNEntries; }
-   void Reset() { fIndex = 0; }
+   void Reset() { fIndex = kInvalidForestIndex; }
    TreeIndex_t GetIndex() const { return fIndex; }
    Detail::RPageSource* GetPageSource() const { return fPageSource; }
 };
@@ -93,6 +93,9 @@ private:
       : RTreeViewBase(context), fField(fieldName), fValue(fField.GenerateValue())
    {
       fField.ConnectColumns(fContext.GetPageSource());
+      for (auto& f : fField) {
+         f.ConnectColumns(fContext.GetPageSource());
+      }
    }
 
 public:
@@ -108,26 +111,30 @@ public:
    }
 };
 
+template <>
+class RTreeView<float> : public RTreeViewBase {
+   friend class RInputTree;
 
-// clang-format off
-/**
-\class ROOT::Experimental::RTreeView<TreeIndex_t>
-\ingroup Forest
-\brief An RTreeView specialization for an index field without its sub fields
-*/
-// clang-format on
-//template <>
-//class RTreeView<TreeIndex_t> {
-//protected:
-//   std::unique_ptr<RTreeField<TreeIndex_t>> fField;
-//   RTreeValue<TreeIndex_t> fValue;
-//
-//public:
-//   RTreeView(std::unique_ptr<RTreeField<TreeIndex_t>> field);
-//
-//   /// Use the field to read the referenced element into the tree value object. To be inlined
-//   TreeIndex_t operator ()(TreeIndex_t index);
-//};
+private:
+   RTreeField<float> fField;
+   RTreeView(std::string_view fieldName, RTreeViewContext* context)
+      : RTreeViewBase(context), fField(fieldName)
+   {
+      R__ASSERT(fField.IsSimple());
+      fField.ConnectColumns(fContext.GetPageSource());
+   }
+
+public:
+   RTreeView(const RTreeView& other) = delete;
+   RTreeView(RTreeView&& other) = default;
+   RTreeView& operator=(const RTreeView& other) = delete;
+   RTreeView& operator=(RTreeView&& other) = default;
+   ~RTreeView() = default;
+
+   const float& operator()() {
+      return *fField.Map(fContext.GetIndex());
+   }
+};
 
 
 // clang-format off
