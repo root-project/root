@@ -1077,9 +1077,17 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
    if (interp.loadModule(ModuleName, Complain))
       return true;
 
-   // Load modulemap if we have one in current directory
+   // When starting up ROOT, cling would load all modulemap files on the include
+   // paths. However, in a ROOT session, it is very common to run aclic which
+   // will invoke rootcling and possibly produce a modulemap and a module in
+   // the current folder.
+   //
+   // Before failing, try loading the modulemap in the current folder and try
+   // loading the requested module from it.
    Preprocessor &PP = interp.getCI()->getPreprocessor();
    FileManager& FM = PP.getFileManager();
+   // FIXME: In a ROOT session we can add an include path (through .I /inc/path)
+   // We should look for modulemap files there too.
    const DirectoryEntry *DE = FM.getDirectory(".");
    if (DE) {
       HeaderSearch& HS = PP.getHeaderSearchInfo();
