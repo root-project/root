@@ -1,6 +1,5 @@
 import unittest
 
-import ROOT
 from ROOT import TClass, TObject, TObjString
 
 
