@@ -21,6 +21,8 @@
 #include <ROOT/RTreeField.hxx>
 #include <ROOT/RTreeValue.hxx>
 
+#include <TError.h>
+
 #include <memory>
 #include <utility>
 

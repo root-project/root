@@ -135,6 +135,27 @@ TEST(RForestTree, WriteRead)
    EXPECT_STREQ("abc", fieldKlass->s.c_str());
 }
 
+TEST(RForestTree, View)
+{
+   auto model = std::make_shared<RTreeModel>();
+   auto fieldPt = model->AddField<float>("pt", 42.0);
+   auto fieldTag = model->AddField<std::string>("tag", "xyz");
+   auto fieldJets = model->AddField<std::vector<float>>("jets");
+
+   {
+      ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", "test.root"));
+      tree.Fill();
+   }
+
+   *fieldPt = 0.0;
+   fieldTag->clear();
+   fieldJets->clear();
+
+   RInputTree tree(std::make_unique<RPageSourceRoot>("myTree", "test.root"));
+   auto viewPt = tree.GetView<float>("pt");
+   EXPECT_EQ(42.0, viewPt());
+}
+
 TEST(RForestTree, TypeName) {
    EXPECT_STREQ("float", ROOT::Experimental::RTreeField<float>::MyTypeName().c_str());
    EXPECT_STREQ("std::vector<std::string>",

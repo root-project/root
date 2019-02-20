@@ -119,7 +119,9 @@ public:
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
    RTreeFieldBase(std::string_view name, std::string_view type, bool isSimple);
    RTreeFieldBase(const RTreeFieldBase&) = delete;
+   RTreeFieldBase(RTreeFieldBase&&) = default;
    RTreeFieldBase& operator =(const RTreeFieldBase&) = delete;
+   RTreeFieldBase& operator =(RTreeFieldBase&&) = default;
    virtual ~RTreeFieldBase();
 
    /// Factory method to resurrect a field from the stored on-disk type information
@@ -215,6 +217,7 @@ public:
 
    void DoGenerateColumns() final {}
    unsigned int GetNColumns() const final { return 0; }
+   using Detail::RTreeFieldBase::GenerateValue;
    Detail::RTreeValueBase GenerateValue(void*) { return Detail::RTreeValueBase(); }
    Detail::RTreeValueBase CaptureValue(void*) final { return Detail::RTreeValueBase(); }
    size_t GetValueSize() const final { return 0; }
@@ -229,10 +232,13 @@ protected:
    void DoRead(TreeIndex_t index, Detail::RTreeValueBase* value) final;
 public:
    RTreeFieldClass(std::string_view fieldName, std::string_view className);
+   RTreeFieldClass(RTreeFieldClass&& other) = default;
+   RTreeFieldClass& operator =(RTreeFieldClass&& other) = default;
    ~RTreeFieldClass() = default;
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final;
+   using Detail::RTreeFieldBase::GenerateValue;
    Detail::RTreeValueBase GenerateValue(void* where) override;
    void DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly = false) final;
    Detail::RTreeValueBase CaptureValue(void *where) final;
@@ -251,10 +257,13 @@ protected:
 
 public:
    RTreeFieldVector(std::string_view fieldName, std::unique_ptr<Detail::RTreeFieldBase> itemField);
+   RTreeFieldVector(RTreeFieldVector&& other) = default;
+   RTreeFieldVector& operator =(RTreeFieldVector&& other) = default;
    ~RTreeFieldVector() = default;
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final;
+   using Detail::RTreeFieldBase::GenerateValue;
    Detail::RTreeValueBase GenerateValue(void* where) override;
    void DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly = false) final;
    Detail::RTreeValueBase CaptureValue(void *where) override;
@@ -268,8 +277,11 @@ class RTreeField : public RTreeFieldClass {
 public:
    static std::string MyTypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
    RTreeField(std::string_view name) : RTreeFieldClass(name, MyTypeName()) {}
+   RTreeField(RTreeField&& other) = default;
+   RTreeField& operator =(RTreeField&& other) = default;
    ~RTreeField() = default;
 
+   using Detail::RTreeFieldBase::GenerateValue;
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
    {
@@ -287,11 +299,14 @@ class ROOT::Experimental::RTreeField<float> : public ROOT::Experimental::Detail:
 public:
    static std::string MyTypeName() { return "float"; }
    explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name, MyTypeName(), true /* isSimple */) {}
+   RTreeField(RTreeField&& other) = default;
+   RTreeField& operator =(RTreeField&& other) = default;
    ~RTreeField() = default;
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
+   using Detail::RTreeFieldBase::GenerateValue;
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
    {
@@ -323,11 +338,14 @@ public:
    static std::string MyTypeName() { return "std::string"; }
    explicit RTreeField(std::string_view name)
       : Detail::RTreeFieldBase(name, MyTypeName(), false /* isSimple */), fIndex(0), fElemIndex(&fIndex) {}
+   RTreeField(RTreeField&& other) = default;
+   RTreeField& operator =(RTreeField&& other) = default;
    ~RTreeField() = default;
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 2; }
 
+   using Detail::RTreeFieldBase::GenerateValue;
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
    {
@@ -356,8 +374,11 @@ public:
    explicit RTreeField(std::string_view name)
       : RTreeFieldVector(name, std::make_unique<RTreeField<ItemT>>(GetCollectionName(name.to_string())))
    {}
+   RTreeField(RTreeField&& other) = default;
+   RTreeField& operator =(RTreeField&& other) = default;
    ~RTreeField() = default;
 
+   using Detail::RTreeFieldBase::GenerateValue;
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
    {

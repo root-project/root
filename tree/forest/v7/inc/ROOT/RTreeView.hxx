@@ -28,6 +28,41 @@ namespace Experimental {
 
 // clang-format off
 /**
+\class ROOT::Experimental::RTreeViewContext
+\ingroup Forest
+\brief The TreeViewContext wraps the entry number (index) for a group of TreeView objects
+*/
+// clang-format on
+class RTreeViewContext {
+   friend class RInputTree;
+
+private:
+   TreeIndex_t fIndex;
+   Detail::RPageSource* fPageSource;
+
+   explicit RTreeViewContext(Detail::RPageSource* pageSource) : fIndex(0), fPageSource(pageSource) {}
+   RTreeViewContext(const RTreeViewContext& other) = delete;
+   RTreeViewContext& operator=(const RTreeViewContext& other) = delete;
+   ~RTreeViewContext() = default;
+
+   void Advance() { fIndex++; }
+   void Reset() { fIndex = 0; }
+
+public:
+   TreeIndex_t GetIndex() const { return fIndex; }
+   Detail::RPageSource* GetPageSource() const { return fPageSource; }
+};
+
+class RTreeViewBase {
+protected:
+   const RTreeViewContext& fContext;
+public:
+   RTreeViewBase(RTreeViewContext* context) : fContext(*context) {}
+   ~RTreeViewBase() = default;
+};
+
+// clang-format off
+/**
 \class ROOT::Experimental::RTreeView
 \ingroup Forest
 \brief An RTreeView provides read-only access to a single field of the tree
@@ -44,16 +79,29 @@ For simple types, template specializations let the reading become a pure mapping
 */
 // clang-format on
 template <typename T>
-class RTreeView {
+class RTreeView : public RTreeViewBase {
+   friend class RInputTree;
+
 private:
-   std::unique_ptr<RTreeField<T>> fField;
+   RTreeField<T> fField;
    RTreeValue<T> fValue;
+   RTreeView(std::string_view fieldName, RTreeViewContext* context)
+      : RTreeViewBase(context), fField(fieldName), fValue(fField.GenerateValue())
+   {
+      fField.ConnectColumns(fContext.GetPageSource());
+   }
 
 public:
-   RTreeView(std::unique_ptr<RTreeField<T>> field);
+   RTreeView(const RTreeView& other) = delete;
+   RTreeView(RTreeView&& other) = default;
+   RTreeView& operator=(const RTreeView& other) = delete;
+   RTreeView& operator=(RTreeView&& other) = default;
+   ~RTreeView() { fField.DestroyValue(fValue); }
 
-   /// Use the field to read the referenced element into the tree value object. To be inlined.
-   const T& operator ()(TreeIndex_t index);
+   const T& operator()() {
+      fField.Read(fContext.GetIndex(), &fValue);
+      return *fValue.Get();
+   }
 };
 
 
@@ -64,18 +112,18 @@ public:
 \brief An RTreeView specialization for an index field without its sub fields
 */
 // clang-format on
-template <>
-class RTreeView<TreeIndex_t> {
-protected:
-   std::unique_ptr<RTreeField<TreeIndex_t>> fField;
-   RTreeValue<TreeIndex_t> fValue;
-
-public:
-   RTreeView(std::unique_ptr<RTreeField<TreeIndex_t>> field);
-
-   /// Use the field to read the referenced element into the tree value object. To be inlined
-   TreeIndex_t operator ()(TreeIndex_t index);
-};
+//template <>
+//class RTreeView<TreeIndex_t> {
+//protected:
+//   std::unique_ptr<RTreeField<TreeIndex_t>> fField;
+//   RTreeValue<TreeIndex_t> fValue;
+//
+//public:
+//   RTreeView(std::unique_ptr<RTreeField<TreeIndex_t>> field);
+//
+//   /// Use the field to read the referenced element into the tree value object. To be inlined
+//   TreeIndex_t operator ()(TreeIndex_t index);
+//};
 
 
 // clang-format off
@@ -85,17 +133,17 @@ public:
 \brief A tree view for a collection, that can itself generate new tree views for its nested fields.
 */
 // clang-format on
-class RTreeViewCollection : public RTreeView<TreeIndex_t> {
-public:
-   template <typename T>
-   RTreeView<T> GetView(std::string_view fieldName) {
-      auto field = std::make_unique<RTreeField<T>>(fieldName);
-      // ...
-      return RTreeView<T>(std::move(field));
-   }
-
-   RTreeViewCollection GetViewCollection(std::string_view fieldName);
-};
+//class RTreeViewCollection : public RTreeView<TreeIndex_t> {
+//public:
+//   template <typename T>
+//   RTreeView<T> GetView(std::string_view fieldName) {
+//      auto field = std::make_unique<RTreeField<T>>(fieldName);
+//      // ...
+//      return RTreeView<T>(std::move(field));
+//   }
+//
+//   RTreeViewCollection GetViewCollection(std::string_view fieldName);
+//};
 
 } // namespace Experimental
 } // namespace ROOT
