@@ -11,8 +11,6 @@
 from ROOT import pythonization
 import cppyy
 
-from ._generic import add_len
-
 
 # Python-list-like methods
 
@@ -101,7 +99,7 @@ def pythonize_tcollection(klass, name):
 
     if name == 'TCollection':
         # Support `len(c)` as `c.GetEntries()`
-        add_len(klass, 'GetEntries')
+        klass.__len__ = klass.GetEntries
 
         # Add Python lists methods
         klass.append = klass.Add

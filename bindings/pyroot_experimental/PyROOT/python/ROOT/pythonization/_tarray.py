@@ -10,7 +10,6 @@
 
 from ROOT import pythonization
 
-from ._generic import add_len
 
 @pythonization()
 def pythonize_tarray(klass, name):
@@ -20,4 +19,4 @@ def pythonize_tarray(klass, name):
 
     if name == 'TArray':
         # Support `len(a)` as `a.GetSize()`
-        add_len(klass, 'GetSize')
+        klass.__len__ = klass.GetSize
