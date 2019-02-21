@@ -11,12 +11,6 @@
 from libROOTPython import AddPrettyPrintingPyz
 from ROOT import pythonization
 
-def add_len(klass, getter_name):
-    # Parameters:
-    # klass: class to be pythonized
-    # getter_name: name of the method to be associated with `len` in `klass`
-
-    klass.__len__ = getattr(klass, getter_name)
 
 @pythonization()
 def pythonizegeneric(klass, name):
