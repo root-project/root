@@ -3627,14 +3627,15 @@ void TBufferJSON::JsonWriteBasic(Long64_t value)
 
 void TBufferJSON::JsonWriteBasic(Float_t value)
 {
-   char buf[200];
-   if (std::isinf(value))
-      strcpy(buf, (value < 0.) ? "-2e308" : "2e308"); // Number.MAX_VALUE is approx 1.79e308
-   else if (std::isnan(value))
-      strcpy(buf, "null");
-   else
+   if (std::isinf(value)) {
+      fValue.Append((value < 0.) ? "-2e308" : "2e308"); // Number.MAX_VALUE is approx 1.79e308
+   } else if (std::isnan(value)) {
+      fValue.Append("null");
+   } else {
+      char buf[200];
       ConvertFloat(value, buf, sizeof(buf));
-   fValue.Append(buf);
+      fValue.Append(buf);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3642,14 +3643,15 @@ void TBufferJSON::JsonWriteBasic(Float_t value)
 
 void TBufferJSON::JsonWriteBasic(Double_t value)
 {
-   char buf[200];
-   if (std::isinf(value))
-      strcpy(buf, (value < 0.) ? "-2e308" : "2e308"); // Number.MAX_VALUE is approx 1.79e308
-   else if (std::isnan(value))
-      strcpy(buf, "null");
-   else
+   if (std::isinf(value)) {
+      fValue.Append((value < 0.) ? "-2e308" : "2e308"); // Number.MAX_VALUE is approx 1.79e308
+   } else if (std::isnan(value)) {
+      fValue.Append("null");
+   } else {
+      char buf[200];
       ConvertDouble(value, buf, sizeof(buf));
-   fValue.Append(buf);
+      fValue.Append(buf);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
