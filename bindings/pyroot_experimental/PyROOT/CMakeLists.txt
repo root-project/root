@@ -20,6 +20,7 @@ set(py_sources
   ROOT/pythonization/_titer.py
   ROOT/pythonization/_tobject.py
   ROOT/pythonization/_tseqcollection.py
+  ROOT/pythonisation/_tstring.py
   ROOT/pythonization/_ttree.py
 )
 
