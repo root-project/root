@@ -41,9 +41,6 @@ else()
       IMPORT_PREFIX ${libprefix} )
 endif()
 
-set(CMAKE_VERBOSE_MAKEFILES OFF)
-set(CMAKE_INCLUDE_CURRENT_DIR OFF)
-
 include(CMakeParseArguments)
 
 #---------------------------------------------------------------------------------------------------
