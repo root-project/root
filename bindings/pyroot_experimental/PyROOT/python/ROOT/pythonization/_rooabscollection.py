@@ -10,7 +10,6 @@
 
 from ROOT import pythonization
 
-from ._generic import add_len
 
 @pythonization()
 def pythonize_rooabscollection(klass, name):
@@ -20,4 +19,4 @@ def pythonize_rooabscollection(klass, name):
 
     if name == 'RooAbsCollection':
         # Support `len(c)` as `c.getSize()`
-        add_len(klass, 'getSize')
+        klass.__len__ = klass.getSize
