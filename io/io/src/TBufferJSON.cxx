@@ -3628,7 +3628,9 @@ void TBufferJSON::JsonWriteBasic(Long64_t value)
 void TBufferJSON::JsonWriteBasic(Float_t value)
 {
    char buf[200];
-   if (std::isnan(value) || std::isinf(value))
+   if (std::isinf(value))
+      strcpy(buf, (value < 0.) ? "-2e308" : "2e308"); // Number.MAX_VALUE is approx 1.79e308
+   else if (std::isnan(value))
       strcpy(buf, "null");
    else
       ConvertFloat(value, buf, sizeof(buf));
@@ -3641,7 +3643,9 @@ void TBufferJSON::JsonWriteBasic(Float_t value)
 void TBufferJSON::JsonWriteBasic(Double_t value)
 {
    char buf[200];
-   if (std::isnan(value) || std::isinf(value))
+   if (std::isinf(value))
+      strcpy(buf, (value < 0.) ? "-2e308" : "2e308"); // Number.MAX_VALUE is approx 1.79e308
+   else if (std::isnan(value))
       strcpy(buf, "null");
    else
       ConvertDouble(value, buf, sizeof(buf));
