@@ -8170,6 +8170,11 @@ void TTree::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
       return;
    }
 
+   if (0 == strcmp(bname, "")) {
+      Error("SetBranchStatus", "Input regexp is an empty string: no match against branch names will be attempted.");
+      return;
+   }
+
    TBranch *branch, *bcount, *bson;
    TLeaf *leaf, *leafcount;
 
