@@ -437,8 +437,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
          
          prnt.end_node = true;
-         prnt.color = "rgb(" + color + ")";
-         prnt.color_visible = true;
+         prnt.color = color ? "rgb(" + color + ")" : "";
+         prnt.color_visible = prnt.color.length > 0;
       },
       
       /** Build complete tree of all existing nodes. 
@@ -461,8 +461,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             var dnode = this.data.Nodes[0];
             for (var n=0;n<item.stack.length;++n)
                dnode = dnode.chlds[item.stack[n]];
-            dnode.color = "rgb(" + item.color + ")";
-            dnode.color_visible = true;
+            dnode.color = item.color ? "rgb(" + item.color + ")" : "";
+            dnode.color_visible = dnode.color.length > 0;
          }
          this.model.refresh(); // refresh browser
       },
