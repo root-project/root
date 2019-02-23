@@ -47,9 +47,10 @@ TLeafF16::TLeafF16(TBranch *parent, const char *name, const char *type) : TLeaf(
    fValue = nullptr;
    fPointer = nullptr;
    tseFloat16 = nullptr;
+   fTitle = type;
 
    if (strchr(type, '['))
-      tseFloat16 = new TStreamerElement(Form("%s_tseFloat16", name), type, 0, 0, "");
+      tseFloat16 = new TStreamerElement(Form("%s_tseFloat16", name), type, 0, 0, "Float16_t");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,5 +206,20 @@ void TLeafF16::SetAddress(void *add)
    } else {
       fValue = new Float16_t[fNdata];
       fValue[0] = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TLeafF16.
+
+void TLeafF16::Streamer(TBuffer &R__b)
+{
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(TLeafF16::Class(), this);
+
+      if (fTitle.Contains("["))
+	 tseFloat16 = new TStreamerElement(Form("%s_tseFloat16", fName.Data()), fTitle.Data(), 0, 0, "Float16_t");
+   } else {
+      R__b.WriteClassBuffer(TLeafF16::Class(), this);
    }
 }

@@ -30,7 +30,7 @@ protected:
    Double32_t fMaximum;           ///<  Maximum value if leaf range is specified
    Double32_t *fValue;            ///<! Pointer to data buffer
    Double32_t **fPointer;         ///<! Address of pointer to data buffer
-   TStreamerElement *tseDouble32; ///<  StreamerElement used for TBuffer read / write
+   TStreamerElement *tseDouble32; ///<! StreamerElement used for TBuffer read / write
 
 public:
    TLeafD32();
