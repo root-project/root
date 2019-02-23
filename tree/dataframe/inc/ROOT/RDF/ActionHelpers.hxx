@@ -198,15 +198,30 @@ public:
    void Exec(unsigned int slot, const T &vs, const W &ws)
    {
       auto &thisBuf = fBuffers[slot];
+
       for (auto &v : vs) {
          UpdateMinMax(slot, v);
-         thisBuf.emplace_back(v); // TODO: Can be optimised in case T == BufEl_t
+         thisBuf.emplace_back(v);
       }
 
       auto &thisWBuf = fWBuffers[slot];
       for (auto &w : ws) {
          thisWBuf.emplace_back(w); // TODO: Can be optimised in case T == BufEl_t
       }
+   }
+
+   template <typename T, typename W,
+             typename std::enable_if<IsContainer<T>::value && !IsContainer<W>::value, int>::type = 0>
+   void Exec(unsigned int slot, const T &vs, const W w)
+   {
+      auto &thisBuf = fBuffers[slot];
+      for (auto &v : vs) {
+         UpdateMinMax(slot, v);
+         thisBuf.emplace_back(v); // TODO: Can be optimised in case T == BufEl_t
+      }
+
+      auto &thisWBuf = fWBuffers[slot];
+      thisWBuf.insert(thisWBuf.end(), vs.size(), w);
    }
 
    Hist_t &PartialUpdate(unsigned int);
@@ -295,6 +310,16 @@ public:
       }
    }
 
+   template <typename X0, typename W,
+             typename std::enable_if<IsContainer<X0>::value && !IsContainer<W>::value, int>::type = 0>
+   void Exec(unsigned int slot, const X0 &x0s, const W w)
+   {
+      auto thisSlotH = fObjects[slot];
+      for (auto &&x : x0s) {
+         thisSlotH->Fill(x, w);
+      }
+   }
+
    template <typename X0, typename X1, typename X2,
              typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value && IsContainer<X2>::value,
                                      int>::type = 0>
@@ -312,6 +337,24 @@ public:
          thisSlotH->Fill(*x0sIt, *x1sIt, *x2sIt); // TODO: Can be optimised in case T == vector<double>
       }
    }
+
+   template <typename X0, typename X1, typename W,
+             typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value && !IsContainer<W>::value,
+                                     int>::type = 0>
+   void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const W w)
+   {
+      auto thisSlotH = fObjects[slot];
+      if (x0s.size() != x1s.size()) {
+         throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
+      }
+      auto x0sIt = std::begin(x0s);
+      const auto x0sEnd = std::end(x0s);
+      auto x1sIt = std::begin(x1s);
+      for (; x0sIt != x0sEnd; x0sIt++, x1sIt++) {
+         thisSlotH->Fill(*x0sIt, *x1sIt, w); // TODO: Can be optimised in case T == vector<double>
+      }
+   }
+
    template <typename X0, typename X1, typename X2, typename X3,
              typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value && IsContainer<X2>::value &&
                                         IsContainer<X3>::value,
@@ -329,6 +372,25 @@ public:
       auto x3sIt = std::begin(x3s);
       for (; x0sIt != x0sEnd; x0sIt++, x1sIt++, x2sIt++, x3sIt++) {
          thisSlotH->Fill(*x0sIt, *x1sIt, *x2sIt, *x3sIt); // TODO: Can be optimised in case T == vector<double>
+      }
+   }
+
+   template <typename X0, typename X1, typename X2, typename W,
+             typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value && IsContainer<X2>::value &&
+                                        !IsContainer<W>::value,
+                                     int>::type = 0>
+   void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s, const W w)
+   {
+      auto thisSlotH = fObjects[slot];
+      if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size())) {
+         throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
+      }
+      auto x0sIt = std::begin(x0s);
+      const auto x0sEnd = std::end(x0s);
+      auto x1sIt = std::begin(x1s);
+      auto x2sIt = std::begin(x2s);
+      for (; x0sIt != x0sEnd; x0sIt++, x1sIt++, x2sIt++) {
+         thisSlotH->Fill(*x0sIt, *x1sIt, *x2sIt, w);
       }
    }
 
