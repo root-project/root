@@ -47,9 +47,10 @@ TLeafD32::TLeafD32(TBranch *parent, const char *name, const char *type) : TLeaf(
    fValue = nullptr;
    fPointer = nullptr;
    tseDouble32 = nullptr;
+   fTitle = type;
 
    if (strchr(type, '['))
-      tseDouble32 = new TStreamerElement(Form("%s_tseDouble32", name), type, 0, 0, "");
+      tseDouble32 = new TStreamerElement(Form("%s_tseDouble32", name), type, 0, 0, "Double32_t");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -192,5 +193,20 @@ void TLeafD32::SetAddress(void *add)
    } else {
       fValue = new Double32_t[fNdata];
       fValue[0] = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TLeafD32.
+
+void TLeafD32::Streamer(TBuffer &R__b)
+{
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(TLeafD32::Class(), this);
+
+      if (fTitle.Contains("["))
+	 tseDouble32 = new TStreamerElement(Form("%s_tseDouble32", fName.Data()), fTitle.Data(), 0, 0, "Double32_t");
+   } else {
+      R__b.WriteClassBuffer(TLeafD32::Class(), this);
    }
 }
