@@ -31,8 +31,8 @@ TLeafD32::TLeafD32() : TLeaf()
    fLenType = 8;
    fMinimum = 0;
    fMaximum = 0;
-   fValue = 0;
-   fPointer = 0;
+   fValue = nullptr;
+   fPointer = nullptr;
    tseDouble32 = nullptr;
 }
 
@@ -44,8 +44,8 @@ TLeafD32::TLeafD32(TBranch *parent, const char *name, const char *type) : TLeaf(
    fLenType = 8;
    fMinimum = 0;
    fMaximum = 0;
-   fValue = 0;
-   fPointer = 0;
+   fValue = nullptr;
+   fPointer = nullptr;
    tseDouble32 = nullptr;
 
    if (strchr(type, '['))
@@ -57,7 +57,7 @@ TLeafD32::TLeafD32(TBranch *parent, const char *name, const char *type) : TLeaf(
 
 TLeafD32::~TLeafD32()
 {
-   if (ResetAddress(0, kTRUE))
+   if (ResetAddress(nullptr, kTRUE))
       delete[] fValue;
 
    if (tseDouble32)
@@ -94,9 +94,8 @@ void TLeafD32::Import(TClonesArray *list, Int_t n)
 {
    const Double32_t kDoubleUndefined = -9999.;
    Int_t j = 0;
-   char *clone;
    for (Int_t i = 0; i < n; i++) {
-      clone = (char *)list->UncheckedAt(i);
+      auto clone = (char *)list->UncheckedAt(i);
       if (clone)
          memcpy(&fValue[j], clone + fOffset, 8 * fLen);
       else
@@ -110,7 +109,7 @@ void TLeafD32::Import(TClonesArray *list, Int_t n)
 
 void TLeafD32::PrintValue(Int_t l) const
 {
-   Double32_t *value = (Double32_t *)GetValuePointer();
+   auto value = (Double32_t *)GetValuePointer();
    printf("%g", value[l]);
 }
 
@@ -127,7 +126,7 @@ void TLeafD32::ReadBasket(TBuffer &b)
          if (fLeafCount->GetBranch()->GetReadEntry() != entry) {
             fLeafCount->GetBranch()->GetEntry(entry);
          }
-         Int_t len = Int_t(fLeafCount->GetValue());
+         auto len = Int_t(fLeafCount->GetValue());
          if (len > fLeafCount->GetMaximum()) {
             printf("ERROR leaf:%s, len=%d and max=%d\n", GetName(), len, fLeafCount->GetMaximum());
             len = fLeafCount->GetMaximum();
@@ -160,7 +159,7 @@ void TLeafD32::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 
 void TLeafD32::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 {
-   Double32_t *value = (Double32_t *)GetValuePointer();
+   auto value = (Double32_t *)GetValuePointer();
    for (Int_t i = 0; i < fLen; i++)
       s >> value[i];
 }
@@ -179,7 +178,7 @@ void TLeafD32::SetAddress(void *add)
          Int_t ncountmax = fLen;
          if (fLeafCount)
             ncountmax = fLen * (fLeafCount->GetMaximum() + 1);
-         if ((fLeafCount && ncountmax > Int_t(fLeafCount->GetValue())) || ncountmax > fNdata || *fPointer == 0) {
+         if ((fLeafCount && ncountmax > Int_t(fLeafCount->GetValue())) || ncountmax > fNdata || *fPointer == nullptr) {
             if (*fPointer)
                delete[] * fPointer;
             if (ncountmax > fNdata)

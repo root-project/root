@@ -31,8 +31,8 @@ TLeafF16::TLeafF16() : TLeaf()
    fLenType = 4;
    fMinimum = 0;
    fMaximum = 0;
-   fValue = 0;
-   fPointer = 0;
+   fValue = nullptr;
+   fPointer = nullptr;
    tseFloat16 = nullptr;
 }
 
@@ -44,8 +44,8 @@ TLeafF16::TLeafF16(TBranch *parent, const char *name, const char *type) : TLeaf(
    fLenType = 4;
    fMinimum = 0;
    fMaximum = 0;
-   fValue = 0;
-   fPointer = 0;
+   fValue = nullptr;
+   fPointer = nullptr;
    tseFloat16 = nullptr;
 
    if (strchr(type, '['))
@@ -57,7 +57,7 @@ TLeafF16::TLeafF16(TBranch *parent, const char *name, const char *type) : TLeaf(
 
 TLeafF16::~TLeafF16()
 {
-   if (ResetAddress(0, kTRUE))
+   if (ResetAddress(nullptr, kTRUE))
       delete[] fValue;
 
    if (tseFloat16)
@@ -71,8 +71,8 @@ void TLeafF16::Export(TClonesArray *list, Int_t n)
 {
    Float16_t *value = fValue;
    for (Int_t i = 0; i < n; i++) {
-      char *first = (char *)list->UncheckedAt(i);
-      Float16_t *ff = (Float16_t *)&first[fOffset];
+      auto first = (char *)list->UncheckedAt(i);
+      auto ff = (Float16_t *)&first[fOffset];
       for (Int_t j = 0; j < fLen; j++) {
          ff[j] = value[j];
       }
@@ -98,9 +98,8 @@ void TLeafF16::Import(TClonesArray *list, Int_t n)
 {
    const Float16_t kFloatUndefined = -9999.;
    Int_t j = 0;
-   char *clone;
    for (Int_t i = 0; i < n; i++) {
-      clone = (char *)list->UncheckedAt(i);
+      auto clone = (char *)list->UncheckedAt(i);
       if (clone)
          memcpy(&fValue[j], clone + fOffset, 4 * fLen);
       else
@@ -114,7 +113,7 @@ void TLeafF16::Import(TClonesArray *list, Int_t n)
 
 void TLeafF16::PrintValue(Int_t l) const
 {
-   Float16_t *value = (Float16_t *)GetValuePointer();
+   auto value = (Float16_t *)GetValuePointer();
    printf("%g", value[l]);
 }
 
@@ -131,7 +130,7 @@ void TLeafF16::ReadBasket(TBuffer &b)
          if (fLeafCount->GetBranch()->GetReadEntry() != entry) {
             fLeafCount->GetBranch()->GetEntry(entry);
          }
-         Int_t len = Int_t(fLeafCount->GetValue());
+         auto len = Int_t(fLeafCount->GetValue());
          if (len > fLeafCount->GetMaximum()) {
             printf("ERROR leaf:%s, len=%d and max=%d\n", GetName(), len, fLeafCount->GetMaximum());
             len = fLeafCount->GetMaximum();
@@ -158,8 +157,8 @@ void TLeafF16::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 
    Float16_t *value = fValue;
    for (Int_t i = 0; i < n; i++) {
-      char *first = (char *)list->UncheckedAt(i);
-      Float16_t *ff = (Float16_t *)&first[fOffset];
+      auto first = (char *)list->UncheckedAt(i);
+      auto ff = (Float16_t *)&first[fOffset];
       for (Int_t j = 0; j < fLen; j++) {
          ff[j] = value[j];
       }
@@ -172,7 +171,7 @@ void TLeafF16::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 
 void TLeafF16::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 {
-   Float16_t *value = (Float16_t *)GetValuePointer();
+   auto value = (Float16_t *)GetValuePointer();
    for (Int_t i = 0; i < fLen; i++)
       s >> value[i];
 }
@@ -192,7 +191,7 @@ void TLeafF16::SetAddress(void *add)
          Int_t ncountmax = fLen;
          if (fLeafCount)
             ncountmax = fLen * (fLeafCount->GetMaximum() + 1);
-         if ((fLeafCount && ncountmax > Int_t(fLeafCount->GetValue())) || ncountmax > fNdata || *fPointer == 0) {
+         if ((fLeafCount && ncountmax > Int_t(fLeafCount->GetValue())) || ncountmax > fNdata || *fPointer == nullptr) {
             if (*fPointer)
                delete[] * fPointer;
             if (ncountmax > fNdata)
