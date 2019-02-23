@@ -211,7 +211,7 @@ TTreeReader::TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entry
       std::string msg = "No TTree called ";
       msg += keyname;
       msg += " was found in the selected TDirectory.";
-      Error("TTreeReader", msg.c_str());
+      Error("TTreeReader", "%s", msg.c_str());
    }
    Initialize();
 }
