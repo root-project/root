@@ -40,7 +40,9 @@
 #pragma link C++ class TLeafB+;
 #pragma link C++ class TLeafC+;
 #pragma link C++ class TLeafD+;
+#pragma link C++ class TLeafD32+;
 #pragma link C++ class TLeafF+;
+#pragma link C++ class TLeafF16+;
 #pragma link C++ class TLeafI+;
 #pragma link C++ class TLeafS+;
 #pragma link C++ class TLeafL+;

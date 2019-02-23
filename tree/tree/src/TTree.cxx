@@ -75,7 +75,9 @@ Various kinds of branches can be added to a tree:
    - `I` : a 32 bit signed integer (`Int_t`)
    - `i` : a 32 bit unsigned integer (`UInt_t`)
    - `F` : a 32 bit floating point (`Float_t`)
+   - `f` : a 24 bit floating point with truncated mantissa (`Float16_t`)
    - `D` : a 64 bit floating point (`Double_t`)
+   - `d` : a 24 bit truncated floating point (`Double32_t`)
    - `L` : a 64 bit signed integer (`Long64_t`)
    - `l` : a 64 bit unsigned integer (`ULong64_t`)
    - `O` : [the letter `o`, not a zero] a boolean (`Bool_t`)
@@ -87,6 +89,9 @@ Various kinds of branches can be added to a tree:
   result in a non-portable (even between CINT and compiled code on the platform)
   TTree (i.e. you will not be able to read it back on a platform with a different
   padding strategy).
+- In case of the truncated floating point types (Float16_t and Double32_t) you can
+  furthermore specify the range in the style [xmin,xmax] or [xmin,xmax,nbits] after
+  the type character. See `TStreamerElement::GetRange()` for further information.
 
 
 ## Case B
@@ -439,10 +444,10 @@ static char DataTypeToChar(EDataType datatype)
    case kCounter:
    case kInt_t:      return 'I';
    case kUInt_t:     return 'i';
-   case kDouble_t:
-   case kDouble32_t: return 'D';
-   case kFloat_t:
-   case kFloat16_t:  return 'F';
+   case kDouble_t:   return 'D';
+   case kDouble32_t: return 'd';
+   case kFloat_t:    return 'F';
+   case kFloat16_t:  return 'f';
    case kLong_t:     return 0; // unsupported
    case kULong_t:    return 0; // unsupported?
    case kchar:       return 0; // unsupported
@@ -1835,7 +1840,9 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
 ///         - `I` : a 32 bit signed integer (`Int_t`)
 ///         - `i` : a 32 bit unsigned integer (`UInt_t`)
 ///         - `F` : a 32 bit floating point (`Float_t`)
+///         - `f` : a 24 bit floating point with truncated mantissa (`Float16_t`)
 ///         - `D` : a 64 bit floating point (`Double_t`)
+///         - `d` : a 24 bit truncated floating point (`Double32_t`)
 ///         - `L` : a 64 bit signed integer (`Long64_t`)
 ///         - `l` : a 64 bit unsigned integer (`ULong64_t`)
 ///         - `O` : [the letter `o`, not a zero] a boolean (`Bool_t`)
@@ -1849,6 +1856,9 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
 ///         - If leaf name has the form of a multi-dimensional array (e.g. var[nelem][nelem2])
 ///           where nelem and nelem2 are non-negative integer) then
 ///           it is used as a 2 dimensional array of fixed size.
+///         - In case of the truncated floating point types (Float16_t and Double32_t) you can
+///           furthermore specify the range in the style [xmin,xmax] or [xmin,xmax,nbits] after
+///           the type character. See `TStreamerElement::GetRange()` for further information.
 ///
 ///      Any of other form is not supported.
 ///

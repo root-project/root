@@ -26,7 +26,9 @@
 #include "TLeafB.h"
 #include "TLeafC.h"
 #include "TLeafD.h"
+#include "TLeafD32.h"
 #include "TLeafF.h"
+#include "TLeafF16.h"
 #include "TLeafI.h"
 #include "TLeafL.h"
 #include "TLeafO.h"
@@ -145,7 +147,9 @@ TBranch::TBranch()
 ///            - `I` : a 32 bit signed integer (`Int_t`)
 ///            - `i` : a 32 bit unsigned integer (`UInt_t`)
 ///            - `F` : a 32 bit floating point (`Float_t`)
+///            - `f` : a 24 bit floating point with truncated mantissa (`Float16_t`)
 ///            - `D` : a 64 bit floating point (`Double_t`)
+///            - `d` : a 24 bit truncated floating point (`Double32_t`)
 ///            - `L` : a 64 bit signed integer (`Long64_t`)
 ///            - `l` : a 64 bit unsigned integer (`ULong64_t`)
 ///            - `O` : [the letter `o`, not a zero] a boolean (`Bool_t`)
@@ -160,6 +164,9 @@ TBranch::TBranch()
 ///         - If leaf name has the form of a multi dimension array (e.g. var[nelem][nelem2])
 ///              where nelem and nelem2 are non-negative integers) then
 ///              it is used as a 2 dimensional array of fixed size.
+///         - In case of the truncated floating point types (Float16_t and Double32_t) you can
+///              furthermore specify the range in the style [xmin,xmax] or [xmin,xmax,nbits] after
+///              the type character. See `TStreamerElement::GetRange()` for further information.
 ///         - Any of other form is not supported.
 ///
 ///    Note that the TTree will assume that all the item are contiguous in memory.
@@ -334,10 +341,10 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
             snprintf(leafname,640,"__noname%d",fNleaves);
          }
          TLeaf* leaf = 0;
-         if (leaftype[1] == '[') {
-            Warning("TBranch", "Array size for branch '%s' must be specified after leaf name, not after the type name!", name);
+         if (leaftype[1] == '[' && !strchr(leaftype, ',')) {
+            Warning("TBranch", "Array size or range for branch '%s' must be specified after leaf name, not after the type name!", name);
             // and continue for backward compatibility?
-          } else if (leaftype[1]) {
+          } else if (leaftype[1] && !strchr(leaftype, ',')) {
             Warning("TBranch", "Extra characters after type tag '%s' for branch '%s'; must be one character.", leaftype, name);
             // and continue for backward compatibility?
          }
@@ -363,7 +370,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
          } else if (*leaftype == 'F') {
             leaf = new TLeafF(this, leafname, leaftype);
          } else if (*leaftype == 'f') {
-            leaf = new TLeafF(this, leafname, leaftype);
+            leaf = new TLeafF16(this, leafname, leaftype);
          } else if (*leaftype == 'L') {
             leaf = new TLeafL(this, leafname, leaftype);
          } else if (*leaftype == 'l') {
@@ -372,7 +379,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
          } else if (*leaftype == 'D') {
             leaf = new TLeafD(this, leafname, leaftype);
          } else if (*leaftype == 'd') {
-            leaf = new TLeafD(this, leafname, leaftype);
+            leaf = new TLeafD32(this, leafname, leaftype);
          }
          if (!leaf) {
             Error("TLeaf", "Illegal data type for %s/%s", name, leaflist);
