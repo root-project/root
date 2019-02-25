@@ -25,3 +25,9 @@ void ROOT::Experimental::RTreeModel::AddField(std::unique_ptr<Detail::RTreeField
    fDefaultEntry.AddValue(field->GenerateValue());
    fRootField.Attach(std::move(field));
 }
+
+void ROOT::Experimental::RTreeModel::AddCollection(
+   std::string_view fieldName, std::shared_ptr<RTreeModel> collectionModel)
+{
+
+}
