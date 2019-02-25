@@ -223,14 +223,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       
       /** Callback from geo painter when mesh object is highlighted. Use for update of TreeTable */
       HighlightMesh: function(active_mesh, color, geo_object, geo_index, geo_stack) {
-         var rows = this.getView().byId("treeTable").getRows();
+         var rows = this.getView().byId("treeTable").getRows(), best_cmp = 0, best_indx = 0;
          
          for (var i=0;i<rows.length;++i) {
-            var col = "";
-            if (geo_stack && JSROOT.GEO.IsSameStack(this.getRowStack(rows[i]), geo_stack))
-               col = "yellow";
-            rows[i].$().css("background-color", col);
+            rows[i].$().css("background-color", "");
+            if (geo_stack) {
+               var cmp = JSROOT.GEO.CompareStacks(geo_stack, this.getRowStack(rows[i]));
+               if (cmp > best_cmp) { best_cmp = cmp; best_indx = i; }
+            }
          }
+         
+         if (best_cmp > 0)
+            rows[best_indx].$().css("background-color", best_cmp == geo_stack.length ? "yellow" : "lightgrey");
       },
       
       /** Extract shapes from binary data using appropriate draw message 
