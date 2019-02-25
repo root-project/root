@@ -13,8 +13,21 @@
 
 #include <iostream>
 #include <memory>
+#include <stack>
+#include <thread>
 
 namespace ROOT {
+
+namespace Internal {
+namespace VecOps {
+const std::size_t gBuffersSize = 256ULL;
+// for autoloading
+struct RBufferStack {
+   static std::stack<void *> *Get(std::size_t);
+};
+} // namespace VecOps
+} // namespace Internal
+
 namespace Detail {
 namespace VecOps {
 
@@ -70,9 +83,24 @@ public:
 private:
    enum class EAllocType : char { kOwning, kAdopting, kAdoptingNoAllocYet };
    using StdAllocTraits_t = std::allocator_traits<StdAlloc_t>;
+   static const bool fgCanUseStack = true;//std::is_arithmetic<T>::value;
+   static const std::size_t fgTSize = sizeof(T);
    pointer fInitialAddress = nullptr;
    EAllocType fAllocType = EAllocType::kOwning;
    StdAlloc_t fStdAllocator;
+   std::thread::id fThreadId {0};
+   std::allocator<char> fCharAlloc;
+   std::stack<void *> *fLocalStackPtr = nullptr;
+   std::stack<void *> *GetStackPtr()
+   {
+      const auto thisThreadId = std::this_thread::get_id();
+      if (fThreadId != thisThreadId) {
+         fThreadId = thisThreadId;
+         fLocalStackPtr = ::ROOT::Internal::VecOps::RBufferStack::Get(fgTSize);
+      }
+
+      return fLocalStackPtr;
+   }
 
 public:
    /// This is the constructor which allows the allocator to adopt a certain memory region.
@@ -104,21 +132,42 @@ public:
    /// Subsequent calls will make "decay" the allocator to a regular stl allocator.
    pointer allocate(std::size_t n)
    {
-      if (n > std::size_t(-1) / sizeof(T))
+      if (n > std::size_t(-1) / fgTSize)
          throw std::bad_alloc();
       if (EAllocType::kAdoptingNoAllocYet == fAllocType) {
          fAllocType = EAllocType::kAdopting;
          return fInitialAddress;
       }
       fAllocType = EAllocType::kOwning;
-      return StdAllocTraits_t::allocate(fStdAllocator, n);
+
+      // Try to get an address from the internal buffer else allocate
+      auto stackPtr = GetStackPtr();
+      if (stackPtr && n < ::ROOT::Internal::VecOps::gBuffersSize) {
+         pointer ptr;
+         if (stackPtr->empty()) {
+            const std::size_t size = ::ROOT::Internal::VecOps::gBuffersSize * fgTSize * fgTSize / sizeof(char);
+            return (pointer)std::allocator_traits<std::allocator<char>>::allocate(fCharAlloc, size);
+         }
+         ptr = (pointer)stackPtr->top();
+         stackPtr->pop();
+         return ptr;
+      } else {
+         //std::cout << "Allocating mem for "<< typeid(T).name() << "\n";
+         return StdAllocTraits_t::allocate(fStdAllocator, n);
+      }
    }
 
    /// \brief Dellocate some memory if that had not been adopted.
    void deallocate(pointer p, std::size_t n)
    {
-      if (p != fInitialAddress)
-         StdAllocTraits_t::deallocate(fStdAllocator, p, n);
+      if (p != fInitialAddress) {
+         auto stackPtr = GetStackPtr();
+         if (stackPtr && n < ::ROOT::Internal::VecOps::gBuffersSize) {
+            stackPtr->push((void *)p);
+         } else {
+            StdAllocTraits_t::deallocate(fStdAllocator, p, n);
+         }
+      }
    }
 
    template <class U>
@@ -200,10 +249,12 @@ public:
 };
 
 template <typename T>
-RAdoptAllocator<T>::RAdoptAllocator(const RAdoptAllocator<bool> &o) : fStdAllocator(o.fStdAllocator) {}
+RAdoptAllocator<T>::RAdoptAllocator(const RAdoptAllocator<bool> &o) : fStdAllocator(o.fStdAllocator)
+{
+}
 
-} // End NS VecOps
-} // End NS Detail
-} // End NS ROOT
+} // namespace VecOps
+} // namespace Detail
+} // namespace ROOT
 
 #endif

@@ -45,4 +45,6 @@
 #pragma link C++ class ROOT::VecOps::RVec<unsigned long>::Impl_t+;
 #pragma link C++ class ROOT::VecOps::RVec<unsigned long long>::Impl_t+;
 
+#pragma link C++ class ROOT::Internal::VecOps::RBufferStack-;
+
 #endif
