@@ -140,9 +140,6 @@ public:
    /** Number of unique nodes in the geometry */
    int GetNumNodes() const { return fDesc.size(); }
 
-   /** Return summary object for specified nodeid */
-   REveGeomNode &GetGeomNode(int nodeid) { return fDesc[nodeid]; }
-
    /** Set maximal number of nodes which should be selected for drawing */
    void SetMaxVisNodes(int cnt) { fNodesLimit = cnt; }
 
@@ -168,7 +165,9 @@ public:
 
    int FindNodeId(const std::vector<int> &stack);
 
-   bool ProduceDrawingFor(int nodeid, std::string &json, std::vector<char> &binary);
+   std::string ProduceModifyReply(int nodeid);
+
+   bool ProduceDrawingFor(int nodeid, std::string &json, std::vector<char> &binary, bool check_volume = false);
 
    bool ChangeNodeVisibility(int nodeid, bool selected);
 

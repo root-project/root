@@ -383,31 +383,47 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       
       /** When single node element is modified from server side */ 
       modifyDescription: function(msg) {
-         var newitem = JSON.parse(msg);
+         var arr = JSON.parse(msg), can_refresh = true;
          
-         if (!newitem || !this.geo_clones) return;
+         if (!arr || !this.geo_clones) return;
          
-         this.formatNodeElement(newitem);
+         console.log('Modify items', arr.length);
          
-         var item = this.geo_clones.nodes[newitem.id];
-         
-         if (!item)
-            return console.error('Fail to find item ' + newitem.id);
-         
-         item.vis = newitem.vis;
-         item.matrix = newitem.matrix;
+         for (var k=0;k<arr.length;++k) {
+            var moditem = arr[k];
 
-         var dnode = this.originalCache ? this.originalCache[newitem.id] : null;
+            console.log('Modify item', moditem.id)
 
-         if (dnode) {
-            // here we can modify only node which was changed
+            this.formatNodeElement(moditem);
+         
+            var item = this.geo_clones.nodes[moditem.id];
+         
+            if (!item)
+               return console.error('Fail to find item ' + moditem.id);
+         
+            item.vis = moditem.vis;
+            item.matrix = moditem.matrix;
+
+            var dnode = this.originalCache ? this.originalCache[moditem.id] : null;
+
+            if (dnode) {
+               // here we can modify only node which was changed
             
-            dnode.title = newitem.name;
-            dnode.color_visible = false;
-            dnode.node_visible = newitem.vis != 0;
+               console.log('Modify tree node', moditem.id, moditem.vis);
+               
+               dnode.title = moditem.name;
+               dnode.color_visible = false;
+               dnode.node_visible = moditem.vis != 0;
+            } else {
+               can_refresh = false;
+            }
             
+            if (!moditem.vis && this.geo_painter)
+               this.geo_painter.RemoveDrawnNode(moditem.id);
+         }
+         
+         if (can_refresh) {
             this.model.refresh();
-            
          } else {
             // rebuild complete tree for TreeBrowser
             this.buildTree();
@@ -415,8 +431,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.setNodesDrawProperties(this.last_draw_msg);
          }
          
-         if (!item.vis && this.geo_painter)
-            this.geo_painter.RemoveDrawnNode(item.id);
       },
       
       // here try to append only given stack to the tree

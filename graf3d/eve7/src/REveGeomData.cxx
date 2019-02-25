@@ -545,7 +545,8 @@ void ROOT::Experimental::REveGeomDescription::ClearRawData()
 
 bool ROOT::Experimental::REveGeomDescription::IsPrincipalNode(int nodeid)
 {
-   if ((nodeid<0) || (nodeid >= (int) fDesc.size())) return false;
+   if ((nodeid < 0) || (nodeid >= (int)fDesc.size()))
+      return false;
 
    auto &desc = fDesc[nodeid];
 
@@ -685,15 +686,39 @@ int ROOT::Experimental::REveGeomDescription::FindNodeId(const std::vector<int> &
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Return string with only part of nodes description which were modified
+/// Checks also volume
+
+std::string ROOT::Experimental::REveGeomDescription::ProduceModifyReply(int nodeid)
+{
+   std::vector<REveGeomNode *> nodes;
+   auto vol = fNodes[nodeid]->GetVolume();
+
+   // we take not only single node, but all there same volume is referenced
+   // nodes.push_back(&fDesc[nodeid]);
+
+   int id{0};
+   for (auto &desc : fDesc)
+      if (fNodes[id++]->GetVolume() == vol)
+         nodes.emplace_back(&desc);
+
+   std::string res = "MODIF:";
+   res.append(TBufferJSON::ToJSON(&nodes,103).Data());
+   return res;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Produce shape rendering data for given stack
 /// All nodes, which are referencing same shape will be transferred
 
-bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, std::vector<char> &binary)
+bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, std::vector<char> &binary, bool check_volume)
 {
    // only this shape is interesting
-   TGeoShape *shape = (nodeid < 0) ? nullptr : fNodes[nodeid]->GetVolume()->GetShape();
 
-   if (!shape) {
+   TGeoVolume *vol = (nodeid < 0) ? nullptr : fNodes[nodeid]->GetVolume();
+
+   if (!vol || !vol->GetShape()) {
       json.append("NO");
       return true;
    }
@@ -702,11 +727,16 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
 
    ScanVisible([&, this](REveGeomNode &node, std::vector<int> &stack) {
       // select only nodes which reference same shape
-      if (node.id != nodeid) return true;
+
+      if (check_volume) {
+         if (fNodes[node.id]->GetVolume() != vol) return true;
+      } else {
+         if (node.id != nodeid) return true;
+      }
 
       visibles.emplace_back(node.id, stack);
       auto &item = visibles.back();
-      CopyMaterialProperties(fNodes[nodeid]->GetVolume(), item);
+      CopyMaterialProperties(vol, item);
       return true;
    });
 
@@ -718,7 +748,7 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
 
    ResetRndrInfos();
 
-   auto &sd = MakeShapeDescr(shape, true);
+   auto &sd = MakeShapeDescr(vol->GetShape(), true);
 
    // assign shape data
    for (auto &item : visibles)
@@ -743,8 +773,13 @@ bool ROOT::Experimental::REveGeomDescription::ChangeNodeVisibility(int nodeid, b
    if (fDesc[nodeid].vis == iselected)
       return false;
 
-   fNodes[nodeid]->GetVolume()->SetVisibility(selected);
-   fDesc[nodeid].vis = iselected;
+   auto vol = fNodes[nodeid]->GetVolume();
+   vol->SetVisibility(selected);
+
+   int id{0};
+   for (auto &desc: fDesc)
+      if (fNodes[id++]->GetVolume() == vol)
+         desc.vis = iselected;
 
    ClearRawData(); // after change raw data is no longer valid
 
