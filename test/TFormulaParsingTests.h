@@ -962,7 +962,7 @@ bool test49() {
    // create a copy
    TF1 fr2 = *fr;
    bool ok = (fr->Eval(2.) == 4.);
-   ok |= ( fr2.Eval(2.) == fr->Eval(2.) ); 
+   ok &= ( fr2.Eval(2.) == fr->Eval(2.) );
 
    // now read using an indpendent process (ROOT session)
    // this should cause ROOT-9801
@@ -988,18 +988,28 @@ bool test50() {
 
    TF2 f2("f2","[0]*x+[1]*y");
    f2.Print("V");
-   ok |= f2.GetFormula()->IsValid();
+   ok &= f2.GetFormula()->IsValid();
 
    // create using lambda expression, need to pass ndim and npar
    TFormula f3("f3","[](double *x, double *p){ return p[0]*x[0] + p[1]; } ",1,2);
    f3.Print("V");
-   ok |= f3.IsValid();
+   ok &= f3.IsValid();
 
    // create again using lambda from TF1, need to pass xmin(0.),xmax(1.), npar (1)
    TF1 f4("f3","[](double *x, double *p){ return p[0]*x[0]; } ",0.,1.,1);  
    f4.Print("V");
-   ok |= f3.IsValid();
+   ok &= f3.IsValid();
 
+   return ok;
+}
+
+bool test51() {
+   TFormula f("fMissingParenthesis", "exp(x");
+   bool ok = !f.IsValid();
+   TFormula f2("fEmpty", "");
+   ok &= !f2.IsValid();
+   TFormula f3("fNonsense", "skmg#$#@!1");
+   ok &= !f3.IsValid();
    return ok;
 }
 
@@ -1072,6 +1082,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test48() ) { PrintError(itest); }
    IncrTest(itest); if (!test49() ) { PrintError(itest); }
    IncrTest(itest); if (!test50() ) { PrintError(itest); }
+   IncrTest(itest); if (!test51() ) { PrintError(itest); }
 
    std::cout << ".\n";
 
