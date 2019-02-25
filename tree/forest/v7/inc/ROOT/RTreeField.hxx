@@ -165,7 +165,6 @@ public:
          DoRead(index, value);
          return;
       }
-      printf("Simple reading index %lu in field %s\n", index, fName.c_str());
       fPrincipalColumn->Read(index, &value->fMappedElement);
    }
 
@@ -265,7 +264,9 @@ template <typename T, typename=void>
 class RTreeField : public RTreeFieldClass {
 public:
    static std::string MyTypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
-   RTreeField(std::string_view name) : RTreeFieldClass(name, MyTypeName()) {}
+   RTreeField(std::string_view name) : RTreeFieldClass(name, MyTypeName()) {
+      static_assert(std::is_class<T>::value, "no I/O support for this basic C++ type");
+   }
    RTreeField(RTreeField&& other) = default;
    RTreeField& operator =(RTreeField&& other) = default;
    ~RTreeField() = default;
@@ -319,6 +320,82 @@ public:
    }
    size_t GetValueSize() const final { return sizeof(float); }
 };
+
+
+template <>
+class ROOT::Experimental::RTreeField<double> : public ROOT::Experimental::Detail::RTreeFieldBase {
+public:
+   static std::string MyTypeName() { return "double"; }
+   explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name, MyTypeName(), true /* isSimple */) {}
+   RTreeField(RTreeField&& other) = default;
+   RTreeField& operator =(RTreeField&& other) = default;
+   ~RTreeField() = default;
+
+   void DoGenerateColumns() final;
+   unsigned int GetNColumns() const final { return 1; }
+
+   double* Map(TreeIndex_t index) {
+      static_assert(Detail::RColumnElement<double, EColumnType::kReal64>::kIsMappable,
+                    "(double, EColumnType::kReal64) is not identical on this platform");
+      return fPrincipalColumn->Map<double, EColumnType::kReal64>(index, nullptr);
+   }
+
+   using Detail::RTreeFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
+   {
+      ROOT::Experimental::RTreeValue<double> v(
+         Detail::RColumnElement<double, EColumnType::kReal64>(static_cast<double*>(where)),
+         this, static_cast<double*>(where), std::forward<ArgsT>(args)...);
+      return v;
+   }
+   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where) final { return GenerateValue(where, 0.0); }
+   Detail::RTreeValueBase CaptureValue(void *where) final {
+      ROOT::Experimental::RTreeValue<double> v(true,
+         Detail::RColumnElement<double, EColumnType::kReal64>(static_cast<double*>(where)),
+         this, static_cast<double*>(where));
+      return v;
+   }
+   size_t GetValueSize() const final { return sizeof(double); }
+};
+
+template <>
+class ROOT::Experimental::RTreeField<std::uint32_t> : public ROOT::Experimental::Detail::RTreeFieldBase {
+public:
+   static std::string MyTypeName() { return "std::uint32_t"; }
+   explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name, MyTypeName(), true /* isSimple */) {}
+   RTreeField(RTreeField&& other) = default;
+   RTreeField& operator =(RTreeField&& other) = default;
+   ~RTreeField() = default;
+
+   void DoGenerateColumns() final;
+   unsigned int GetNColumns() const final { return 1; }
+
+   std::uint32_t* Map(TreeIndex_t index) {
+      static_assert(Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>::kIsMappable,
+                    "(std::uint32_t, EColumnType::kInt32) is not identical on this platform");
+      return fPrincipalColumn->Map<std::uint32_t, EColumnType::kInt32>(index, nullptr);
+   }
+
+   using Detail::RTreeFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
+   {
+      ROOT::Experimental::RTreeValue<std::uint32_t> v(
+         Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>(static_cast<std::uint32_t*>(where)),
+         this, static_cast<std::uint32_t*>(where), std::forward<ArgsT>(args)...);
+      return v;
+   }
+   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where) final { return GenerateValue(where, 0); }
+   Detail::RTreeValueBase CaptureValue(void *where) final {
+      ROOT::Experimental::RTreeValue<std::uint32_t> v(true,
+         Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>(static_cast<std::uint32_t*>(where)),
+         this, static_cast<std::uint32_t*>(where));
+      return v;
+   }
+   size_t GetValueSize() const final { return sizeof(std::uint32_t); }
+};
+
 
 template <>
 class ROOT::Experimental::RTreeField<std::string> : public ROOT::Experimental::Detail::RTreeFieldBase {

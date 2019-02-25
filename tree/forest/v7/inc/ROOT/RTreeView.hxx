@@ -120,7 +120,6 @@ private:
    RTreeView(std::string_view fieldName, RTreeViewContext* context)
       : RTreeViewBase(context), fField(fieldName)
    {
-      R__ASSERT(fField.IsSimple());
       fField.ConnectColumns(fContext.GetPageSource());
    }
 
