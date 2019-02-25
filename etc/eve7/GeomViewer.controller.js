@@ -157,7 +157,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             return;
          }
 
-         var msg = "SETVI" + (oEvent.getParameter("selected") ? 1 : 0) + ":" + JSON.stringify(nodeid);
+         var msg = "SETVI" + (oEvent.getParameter("selected") ? "1:" : "0:") + JSON.stringify(nodeid);
          
          // send info message to client to change visibility  
          this.websocket.Send(msg);
@@ -315,7 +315,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case "APPND:":
             this.append_msg = JSROOT.parse(msg); // use JSROOT.parse while refs are used
-            this.setNodesDrawProperties(this.append_msg);
+            this.setNodesDrawProperties(this.append_msg); // set properties
             break;
          case "FOUND:": 
             this.processSearchReply(msg, false);
@@ -387,34 +387,32 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          
          var item = this.geo_clones.nodes[newitem.id];
          
+         if (!item)
+            return console.error('Fail to find item ' + newitem.id);
+         
          item.vis = newitem.vis;
          item.matrix = newitem.matrix;
 
-         // console.log('Modify item', item.id, newitem.id);
-         
-         this.buildTree();
-         
-         if (!item.vis && this.geo_painter) 
-            this.geo_painter.RemoveDrawnNode(item.id);
-      },
-      
-      buildTreeNode: function(cache, indx) {
-         var tnode = cache[indx];
-         if (tnode) return tnode;
+         var dnode = this.originalCache ? this.originalCache[newitem.id] : null;
 
-         var node = this.geo_clones.nodes[indx];
-         
-         cache[indx] = tnode = { title: node.name, id: indx, color_visible: false, node_visible: node.vis != 0 };
-         
-         if (node.chlds && (node.chlds.length>0)) {
-            tnode.chlds = [];
-            for (var k=0;k<node.chlds.length;++k) 
-               tnode.chlds.push(this.buildTreeNode(cache, node.chlds[k]));
+         if (dnode) {
+            // here we can modify only node which was changed
+            
+            dnode.title = newitem.name;
+            dnode.color_visible = false;
+            dnode.node_visible = newitem.vis != 0;
+            
+            this.model.refresh();
+            
          } else {
-            tnode.end_node = true;
+            // rebuild complete tree for TreeBrowser
+            this.buildTree();
+            // set all available properties
+            this.setNodesDrawProperties(this.last_draw_msg);
          }
          
-         return tnode;
+         if (!item.vis && this.geo_painter)
+            this.geo_painter.RemoveDrawnNode(item.id);
       },
       
       // here try to append only given stack to the tree
@@ -440,13 +438,34 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          prnt.color = color ? "rgb(" + color + ")" : "";
          prnt.color_visible = prnt.color.length > 0;
       },
+
+      buildTreeNode: function(cache, indx) {
+         var tnode = cache[indx];
+         if (tnode) return tnode;
+
+         var node = this.geo_clones.nodes[indx];
+         
+         cache[indx] = tnode = { title: node.name, id: indx, color_visible: false, node_visible: node.vis != 0 };
+         
+         if (node.chlds && (node.chlds.length>0)) {
+            tnode.chlds = [];
+            for (var k=0;k<node.chlds.length;++k) 
+               tnode.chlds.push(this.buildTreeNode(cache, node.chlds[k]));
+         } else {
+            tnode.end_node = true;
+         }
+         
+         return tnode;
+      },
       
       /** Build complete tree of all existing nodes. 
        * Produced structure can be very large, therefore later one should move this functionality to the server */
       buildTree: function() {
          if (!this.geo_clones) return;
          
-         this.data.Nodes = [ this.buildTreeNode([], 0) ];
+         this.originalCache = [];
+         
+         this.data.Nodes = [ this.buildTreeNode(this.originalCache, 0) ];
          
          this.originalNodes = this.data.Nodes; 
          
