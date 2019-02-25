@@ -30,6 +30,7 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forest
    , fForestName(forestName)
    , fDirectory(nullptr)
    , fSettings(settings)
+   , fPrevClusterNEntries(0)
 {
 }
 
@@ -39,6 +40,7 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forest
    , fDirectory(nullptr)
 {
    TFile *file = TFile::Open(path.to_string().c_str(), "RECREATE");
+   file->SetCompressionSettings(0);
    fSettings.fFile = file;
    fSettings.fTakeOwnership = true;
 }
@@ -110,11 +112,12 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t column
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental::TreeIndex_t nEntries)
 {
-   fCurrentCluster.fNEntries = nEntries;
+   fCurrentCluster.fNEntries = nEntries - fPrevClusterNEntries;
+   fPrevClusterNEntries = nEntries;
    std::string key = RMapper::kKeyClusterFooter + std::to_string(fForestFooter.fNClusters);
    fDirectory->WriteObject(&fCurrentCluster, key.c_str());
    fForestFooter.fNClusters++;
-   fForestFooter.fNEntries += nEntries;
+   fForestFooter.fNEntries = nEntries;
 
    for (auto& pageInfo : fCurrentCluster.fPagesPerColumn) {
       pageInfo.fRangeStarts.clear();
@@ -208,8 +211,12 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
       auto clusterFooter = keyClusterFooter->ReadObject<ROOT::Experimental::Internal::RClusterFooter>();
       R__ASSERT(clusterFooter->fPagesPerColumn.size() == nColumns);
       for (unsigned iColumn = 0; iColumn < nColumns; ++iColumn) {
+         TreeIndex_t pageInCluster = 0;
          for (auto rangeStart : clusterFooter->fPagesPerColumn[iColumn].fRangeStarts) {
             fMapper.fColumnIndex[iColumn].fRangeStarts.push_back(rangeStart);
+            fMapper.fColumnIndex[iColumn].fClusterId.push_back(iCluster);
+            fMapper.fColumnIndex[iColumn].fPageInCluster.push_back(pageInCluster);
+            pageInCluster++;
          }
       }
       delete clusterFooter;
@@ -244,7 +251,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
 
    TreeIndex_t firstInPage = 0;
    TreeIndex_t firstOutsidePage = nElems;
-   TreeIndex_t pageNum = 0;
+   TreeIndex_t pageIdx = 0;
 
    std::size_t iLower = 0;
    std::size_t iUpper = fMapper.fColumnIndex[columnId].fRangeStarts.size() - 1;
@@ -261,7 +268,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
          if ((pivot == index) || (next > index)) {
             firstOutsidePage = next;
             firstInPage = pivot;
-            pageNum = iPivot;
+            pageIdx = iPivot;
             break;
          } else {
             iLower = iPivot + 1;
@@ -274,12 +281,15 @@ void ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
    R__ASSERT(buf != nullptr);
    page->SetRangeStart(firstInPage);
 
-   printf("Populating page %lu for column %d starting at %lu\n", pageNum, columnId, firstInPage);
+   auto clusterId = fMapper.fColumnIndex[columnId].fClusterId[pageIdx];
+   auto pageInCluster = fMapper.fColumnIndex[columnId].fPageInCluster[pageIdx];
+
+   //printf("Populating page %lu/%lu [%lu] for column %d starting at %lu\n", clusterId, pageInCluster, pageIdx, columnId, firstInPage);
 
    std::string keyName = std::string(RMapper::kKeyPagePayload) +
-      std::to_string(0 /* TODO */) + RMapper::kKeySeparator +
+      std::to_string(clusterId) + RMapper::kKeySeparator +
       std::to_string(columnId) + RMapper::kKeySeparator +
-      std::to_string(pageNum);
+      std::to_string(pageInCluster);
    auto pageKey = fDirectory->GetKey(keyName.c_str());
    auto pagePayload = pageKey->ReadObject<ROOT::Experimental::Internal::RPagePayload>();
    R__ASSERT(static_cast<std::size_t>(pagePayload->fSize) == page->GetSize());

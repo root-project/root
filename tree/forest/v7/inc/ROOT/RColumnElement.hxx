@@ -92,7 +92,6 @@ public:
      std::memcpy(fRawContent, source, fSize * count);
    }
 
-   void SetRawContent(void* content) { fRawContent = content; }
    void* GetRawContent() const { return fRawContent; }
    unsigned int GetSize() const { return fSize; }
 };
@@ -115,13 +114,32 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
+
 template <>
 class ROOT::Experimental::Detail::RColumnElement<float, ROOT::Experimental::EColumnType::kReal32>
    : public ROOT::Experimental::Detail::RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
    static constexpr size_t kSize = sizeof(float);
-   explicit RColumnElement(float* value) : RColumnElementBase(value, sizeof(float), kIsMappable) {}
+   explicit RColumnElement(float* value) : RColumnElementBase(value, kSize, kIsMappable) {}
+};
+
+template <>
+class ROOT::Experimental::Detail::RColumnElement<double, ROOT::Experimental::EColumnType::kReal64>
+   : public ROOT::Experimental::Detail::RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = true;
+   static constexpr size_t kSize = sizeof(double);
+   explicit RColumnElement(double* value) : RColumnElementBase(value, kSize, kIsMappable) {}
+};
+
+template <>
+class ROOT::Experimental::Detail::RColumnElement<std::uint32_t, ROOT::Experimental::EColumnType::kInt32>
+   : public ROOT::Experimental::Detail::RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = true;
+   static constexpr size_t kSize = sizeof(std::uint32_t);
+   explicit RColumnElement(std::uint32_t* value) : RColumnElementBase(value, kSize, kIsMappable) {}
 };
 
 template <>
@@ -131,8 +149,7 @@ class ROOT::Experimental::Detail::RColumnElement<
 public:
    static constexpr bool kIsMappable = true;
    static constexpr size_t kSize = sizeof(ROOT::Experimental::TreeIndex_t);
-   explicit RColumnElement(ROOT::Experimental::TreeIndex_t* value)
-      : RColumnElementBase(value, sizeof(ROOT::Experimental::TreeIndex_t), kIsMappable) {}
+   explicit RColumnElement(ROOT::Experimental::TreeIndex_t* value) : RColumnElementBase(value, kSize, kIsMappable) {}
 };
 
 template <>
@@ -141,7 +158,7 @@ class ROOT::Experimental::Detail::RColumnElement<char, ROOT::Experimental::EColu
 public:
    static constexpr bool kIsMappable = true;
    static constexpr size_t kSize = sizeof(char);
-   explicit RColumnElement(char* value) : RColumnElementBase(value, sizeof(char), kIsMappable) {}
+   explicit RColumnElement(char* value) : RColumnElementBase(value, kSize, kIsMappable) {}
 };
 
 #endif

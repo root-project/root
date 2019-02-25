@@ -99,6 +99,8 @@ public:
    struct RColumnIndex {
       TreeIndex_t fNElements = 0;
       std::vector<TreeIndex_t> fRangeStarts;
+      std::vector<TreeIndex_t> fClusterId;
+      std::vector<TreeIndex_t> fPageInCluster;
    };
 
    struct RFieldDescriptor {
@@ -130,7 +132,7 @@ public:
    };
 
 private:
-   static constexpr std::size_t kPageSize = 4096;
+   static constexpr std::size_t kPageSize = 32000;
 
    std::string fForestName;
    /// Currently, a forest is stored as a directory in a TFile
@@ -142,6 +144,7 @@ private:
    ROOT::Experimental::Internal::RForestFooter fForestFooter;
 
    RMapper fMapper;
+   TreeIndex_t fPrevClusterNEntries;
 
 public:
    RPageSinkRoot(std::string_view forestName, RSettings settings);

@@ -178,6 +178,25 @@ void ROOT::Experimental::RTreeField<float>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+//------------------------------------------------------------------------------
+
+void ROOT::Experimental::RTreeField<double>::DoGenerateColumns()
+{
+   RColumnModel model(GetName(), EColumnType::kReal64, false /* isSorted*/);
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
+   fPrincipalColumn = fColumns[0].get();
+}
+
+
+//------------------------------------------------------------------------------
+
+void ROOT::Experimental::RTreeField<std::uint32_t>::DoGenerateColumns()
+{
+   RColumnModel model(GetName(), EColumnType::kInt32, false /* isSorted*/);
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
+   fPrincipalColumn = fColumns[0].get();
+}
+
 
 //------------------------------------------------------------------------------
 

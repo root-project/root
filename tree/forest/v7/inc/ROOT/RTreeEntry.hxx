@@ -54,6 +54,9 @@ public:
    /// Adds a value whose storage is managed by the entry
    void AddValue(const Detail::RTreeValueBase& value);
 
+   /// Adds a value whose storage is _not_ managed by the entry
+   void CaptureValue(const Detail::RTreeValueBase& value);
+
    /// While building the entry, adds a new value to the list and return the value's shared pointer
    template<typename T, typename... ArgsT>
    std::shared_ptr<T> AddValue(RTreeField<T>* field, ArgsT&&... args) {
