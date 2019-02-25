@@ -183,8 +183,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          
          if (!this.geo_painter) return;
          
-         var found_mesh = this.geo_painter.HighlightMesh(null, 0x00ff00, null, this._hover_stack, true);
-
+         var found_mesh = this.geo_painter.HighlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
+         
          // request given stack
          if (this._hover_stack && !found_mesh) 
             this.submitSearchQuery(this._hover_stack, true);
@@ -549,7 +549,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (!this.geo_painter) return; 
          this.geo_painter.appendMoreNodes(matches);
          if (this._hover_stack)
-            this.geo_painter.HighlightMesh(null, 0x00ff00, null, this._hover_stack, true);
+            this.geo_painter.HighlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
       },
 
       OnWebsocketClosed: function() {
