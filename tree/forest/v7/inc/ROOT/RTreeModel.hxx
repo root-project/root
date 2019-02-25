@@ -60,6 +60,20 @@ public:
       return ptr;
    }
 
+   template <typename T, typename... ArgsT>
+   T& AddFieldRef(std::string_view fieldName, ArgsT&&... args) {
+      return *AddField<T>(fieldName, std::forward<ArgsT>(args)...);
+   }
+
+   template <typename T>
+   void CaptureField(std::string_view fieldName, T* fromWhere) {
+      auto field = std::make_unique<RTreeField<T>>(fieldName);
+      fDefaultEntry.CaptureValue(field->CaptureValue(fromWhere));
+      fRootField.Attach(std::move(field));
+   }
+
+   void AddCollection(std::string_view fieldName, std::shared_ptr<RTreeModel> collectionModel);
+
    RTreeFieldRoot* GetRootField() { return &fRootField; }
    RTreeEntry* GetDefaultEntry() { return &fDefaultEntry; }
 };
