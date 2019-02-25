@@ -222,7 +222,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
       
       /** Callback from geo painter when mesh object is highlighted. Use for update of TreeTable */
-      HighlightMesh: function(active_mesh, color, geo_object, geo_stack) {
+      HighlightMesh: function(active_mesh, color, geo_object, geo_index, geo_stack) {
          var rows = this.getView().byId("treeTable").getRows();
          
          for (var i=0;i<rows.length;++i) {
