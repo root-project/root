@@ -9,6 +9,7 @@ if(root7)
     v7/inc/ROOT/RColumn.hxx
     v7/inc/ROOT/RColumnElement.hxx
     v7/inc/ROOT/RColumnModel.hxx
+    v7/inc/ROOT/RField.hxx
     v7/inc/ROOT/RForest.hxx
     v7/inc/ROOT/RForestEntry.hxx
     v7/inc/ROOT/RForestModel.hxx
@@ -18,10 +19,10 @@ if(root7)
     v7/inc/ROOT/RPagePool.hxx
     v7/inc/ROOT/RPageStorage.hxx
     v7/inc/ROOT/RPageStorageRoot.hxx
-    v7/inc/ROOT/RTreeField.hxx
     v7/inc/ROOT/RTreeValue.hxx
   SOURCES
     v7/src/RColumn.cxx
+    v7/src/RField.cxx
     v7/src/RForest.cxx
     v7/src/RForestEntry.cxx
     v7/src/RForestModel.cxx
@@ -29,7 +30,6 @@ if(root7)
     v7/src/RPagePool.cxx
     v7/src/RPageStorage.cxx
     v7/src/RPageStorageRoot.cxx
-    v7/src/RTreeField.cxx
   LINKDEF
     LinkDef.h
   DEPENDENCIES

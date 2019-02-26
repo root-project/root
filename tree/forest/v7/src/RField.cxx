@@ -1,4 +1,4 @@
-/// \file RTreeField.cxx
+/// \file RField.cxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-15
@@ -15,7 +15,7 @@
 
 #include "ROOT/RColumn.hxx"
 #include "ROOT/RColumnModel.hxx"
-#include "ROOT/RTreeField.hxx"
+#include "ROOT/RField.hxx"
 #include "ROOT/RTreeValue.hxx"
 
 #include <TClass.h>
@@ -30,50 +30,50 @@
 #include <exception>
 #include <utility>
 
-ROOT::Experimental::Detail::RTreeFieldBase::RTreeFieldBase(std::string_view name, std::string_view type, bool isSimple)
+ROOT::Experimental::Detail::RFieldBase::RFieldBase(std::string_view name, std::string_view type, bool isSimple)
    : fName(name), fType(type), fIsSimple(isSimple), fParent(nullptr), fPrincipalColumn(nullptr)
 {
 }
 
-ROOT::Experimental::Detail::RTreeFieldBase::~RTreeFieldBase()
+ROOT::Experimental::Detail::RFieldBase::~RFieldBase()
 {
 }
 
-ROOT::Experimental::Detail::RTreeFieldBase*
-ROOT::Experimental::Detail::RTreeFieldBase::Create(const std::string &fieldName, const std::string &typeName)
+ROOT::Experimental::Detail::RFieldBase*
+ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
    std::string normalizedType(typeName);
    normalizedType.erase(remove_if(normalizedType.begin(), normalizedType.end(), isspace), normalizedType.end());
    if (normalizedType == "string") normalizedType = "std::string";
    if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
 
-   if (normalizedType == "float") return new RTreeField<float>(fieldName);
-   if (normalizedType == "std::string") return new RTreeField<std::string>(fieldName);
+   if (normalizedType == "float") return new RField<float>(fieldName);
+   if (normalizedType == "std::string") return new RField<std::string>(fieldName);
    if (normalizedType.substr(0, 12) == "std::vector<") {
       std::string itemTypeName = normalizedType.substr(12, normalizedType.length() - 13);
       auto itemField = Create(GetCollectionName(fieldName), itemTypeName);
-      return new RTreeFieldVector(fieldName, std::unique_ptr<Detail::RTreeFieldBase>(itemField));
+      return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
    }
    auto cl = TClass::GetClass(normalizedType.c_str());
    if (cl != nullptr) {
-      return new RTreeFieldClass(fieldName, normalizedType);
+      return new RFieldClass(fieldName, normalizedType);
    }
    R__ASSERT(false);
    return nullptr;
 }
 
-void ROOT::Experimental::Detail::RTreeFieldBase::DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& /*value*/) {
+void ROOT::Experimental::Detail::RFieldBase::DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& /*value*/) {
    R__ASSERT(false);
 }
 
-void ROOT::Experimental::Detail::RTreeFieldBase::DoRead(
+void ROOT::Experimental::Detail::RFieldBase::DoRead(
    ROOT::Experimental::ForestIndex_t /*index*/,
    RTreeValueBase* /*value*/)
 {
    R__ASSERT(false);
 }
 
-void ROOT::Experimental::Detail::RTreeFieldBase::DoReadV(
+void ROOT::Experimental::Detail::RFieldBase::DoReadV(
    ROOT::Experimental::ForestIndex_t /*index*/,
    ROOT::Experimental::ForestIndex_t /*count*/,
    void* /*dst*/)
@@ -81,33 +81,33 @@ void ROOT::Experimental::Detail::RTreeFieldBase::DoReadV(
    R__ASSERT(false);
 }
 
-ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::Detail::RTreeFieldBase::GenerateValue()
+ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::Detail::RFieldBase::GenerateValue()
 {
    void *where = malloc(GetValueSize());
    R__ASSERT(where != nullptr);
    return GenerateValue(where);
 }
 
-void ROOT::Experimental::Detail::RTreeFieldBase::DestroyValue(const RTreeValueBase &value, bool dtorOnly)
+void ROOT::Experimental::Detail::RFieldBase::DestroyValue(const RTreeValueBase &value, bool dtorOnly)
 {
    if (!dtorOnly)
       free(value.GetRawPtr());
 }
 
-void ROOT::Experimental::Detail::RTreeFieldBase::Attach(
-   std::unique_ptr<ROOT::Experimental::Detail::RTreeFieldBase> child)
+void ROOT::Experimental::Detail::RFieldBase::Attach(
+   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> child)
 {
    child->fParent = this;
    fSubFields.emplace_back(std::move(child));
 }
 
-std::string ROOT::Experimental::Detail::RTreeFieldBase::GetLeafName(const std::string &fullName)
+std::string ROOT::Experimental::Detail::RFieldBase::GetLeafName(const std::string &fullName)
 {
    auto idx = fullName.find_last_of(kCollectionSeparator);
    return (idx == std::string::npos) ? fullName : fullName.substr(idx + 1);
 }
 
-std::string ROOT::Experimental::Detail::RTreeFieldBase::GetCollectionName(const std::string &parentName)
+std::string ROOT::Experimental::Detail::RFieldBase::GetCollectionName(const std::string &parentName)
 {
    std::string result(parentName);
    result.push_back(kCollectionSeparator);
@@ -115,14 +115,14 @@ std::string ROOT::Experimental::Detail::RTreeFieldBase::GetCollectionName(const 
    return result;
 }
 
-void ROOT::Experimental::Detail::RTreeFieldBase::Flush() const
+void ROOT::Experimental::Detail::RFieldBase::Flush() const
 {
    for (auto& column : fColumns) {
       column->Flush();
    }
 }
 
-void ROOT::Experimental::Detail::RTreeFieldBase::ConnectColumns(RPageStorage *pageStorage)
+void ROOT::Experimental::Detail::RFieldBase::ConnectColumns(RPageStorage *pageStorage)
 {
    if (fColumns.empty()) DoGenerateColumns();
    for (auto& column : fColumns) {
@@ -130,13 +130,13 @@ void ROOT::Experimental::Detail::RTreeFieldBase::ConnectColumns(RPageStorage *pa
    }
 }
 
-ROOT::Experimental::Detail::RTreeFieldBase::RIterator ROOT::Experimental::Detail::RTreeFieldBase::begin()
+ROOT::Experimental::Detail::RFieldBase::RIterator ROOT::Experimental::Detail::RFieldBase::begin()
 {
    if (fSubFields.empty()) return RIterator(this, -1);
    return RIterator(this->fSubFields[0].get(), 0);
 }
 
-ROOT::Experimental::Detail::RTreeFieldBase::RIterator ROOT::Experimental::Detail::RTreeFieldBase::end()
+ROOT::Experimental::Detail::RFieldBase::RIterator ROOT::Experimental::Detail::RFieldBase::end()
 {
    return RIterator(this, -1);
 }
@@ -145,7 +145,7 @@ ROOT::Experimental::Detail::RTreeFieldBase::RIterator ROOT::Experimental::Detail
 //-----------------------------------------------------------------------------
 
 
-void ROOT::Experimental::Detail::RTreeFieldBase::RIterator::Advance()
+void ROOT::Experimental::Detail::RFieldBase::RIterator::Advance()
 {
    auto itr = fStack.rbegin();
    if (!itr->fFieldPtr->fSubFields.empty()) {
@@ -171,7 +171,7 @@ void ROOT::Experimental::Detail::RTreeFieldBase::RIterator::Advance()
 //------------------------------------------------------------------------------
 
 
-void ROOT::Experimental::RTreeField<float>::DoGenerateColumns()
+void ROOT::Experimental::RField<float>::DoGenerateColumns()
 {
    RColumnModel model(GetName(), EColumnType::kReal32, false /* isSorted*/);
    fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
@@ -180,7 +180,7 @@ void ROOT::Experimental::RTreeField<float>::DoGenerateColumns()
 
 //------------------------------------------------------------------------------
 
-void ROOT::Experimental::RTreeField<double>::DoGenerateColumns()
+void ROOT::Experimental::RField<double>::DoGenerateColumns()
 {
    RColumnModel model(GetName(), EColumnType::kReal64, false /* isSorted*/);
    fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
@@ -190,7 +190,7 @@ void ROOT::Experimental::RTreeField<double>::DoGenerateColumns()
 
 //------------------------------------------------------------------------------
 
-void ROOT::Experimental::RTreeField<std::uint32_t>::DoGenerateColumns()
+void ROOT::Experimental::RField<std::uint32_t>::DoGenerateColumns()
 {
    RColumnModel model(GetName(), EColumnType::kInt32, false /* isSorted*/);
    fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
@@ -201,7 +201,7 @@ void ROOT::Experimental::RTreeField<std::uint32_t>::DoGenerateColumns()
 //------------------------------------------------------------------------------
 
 
-void ROOT::Experimental::RTreeField<std::string>::DoGenerateColumns()
+void ROOT::Experimental::RField<std::string>::DoGenerateColumns()
 {
    RColumnModel modelIndex(GetName(), EColumnType::kIndex, true /* isSorted*/);
    fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex));
@@ -211,7 +211,7 @@ void ROOT::Experimental::RTreeField<std::string>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
-void ROOT::Experimental::RTreeField<std::string>::DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& value)
+void ROOT::Experimental::RField<std::string>::DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& value)
 {
    auto typedValue = reinterpret_cast<const ROOT::Experimental::RTreeValue<std::string>&>(value).Get();
    auto length = typedValue->length();
@@ -221,7 +221,7 @@ void ROOT::Experimental::RTreeField<std::string>::DoAppend(const ROOT::Experimen
    fColumns[0]->Append(fElemIndex);
 }
 
-void ROOT::Experimental::RTreeField<std::string>::DoRead(
+void ROOT::Experimental::RField<std::string>::DoRead(
    ROOT::Experimental::ForestIndex_t index, ROOT::Experimental::Detail::RTreeValueBase* value)
 {
    auto typedValue = reinterpret_cast<ROOT::Experimental::RTreeValue<std::string>*>(value)->Get();
@@ -237,23 +237,23 @@ void ROOT::Experimental::RTreeField<std::string>::DoRead(
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::RTreeFieldClass::RTreeFieldClass(std::string_view fieldName, std::string_view className)
-   : ROOT::Experimental::Detail::RTreeFieldBase(fieldName, className, false /* isSimple */)
+ROOT::Experimental::RFieldClass::RFieldClass(std::string_view fieldName, std::string_view className)
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, className, false /* isSimple */)
    , fClass(TClass::GetClass(className.to_string().c_str()))
 {
    if (fClass == nullptr) {
-      throw std::runtime_error("RTreeField: no I/O support for type " + className.to_string());
+      throw std::runtime_error("RField: no I/O support for type " + className.to_string());
    }
    TIter next(fClass->GetListOfDataMembers());
    while (auto dataMember = static_cast<TDataMember *>(next())) {
       printf("Now looking at %s %s\n", dataMember->GetName(), dataMember->GetFullTypeName());
-      auto subField = Detail::RTreeFieldBase::Create(
+      auto subField = Detail::RFieldBase::Create(
          GetName() + "." + dataMember->GetName(), dataMember->GetFullTypeName());
-      Attach(std::unique_ptr<Detail::RTreeFieldBase>(subField));
+      Attach(std::unique_ptr<Detail::RFieldBase>(subField));
    }
 }
 
-void ROOT::Experimental::RTreeFieldClass::DoAppend(const Detail::RTreeValueBase& value) {
+void ROOT::Experimental::RFieldClass::DoAppend(const Detail::RTreeValueBase& value) {
    TIter next(fClass->GetListOfDataMembers());
    unsigned i = 0;
    while (auto dataMember = static_cast<TDataMember *>(next())) {
@@ -264,7 +264,7 @@ void ROOT::Experimental::RTreeFieldClass::DoAppend(const Detail::RTreeValueBase&
    }
 }
 
-void ROOT::Experimental::RTreeFieldClass::DoRead(ForestIndex_t index, Detail::RTreeValueBase* value) {
+void ROOT::Experimental::RFieldClass::DoRead(ForestIndex_t index, Detail::RTreeValueBase* value) {
    TIter next(fClass->GetListOfDataMembers());
    unsigned i = 0;
    while (auto dataMember = static_cast<TDataMember *>(next())) {
@@ -275,33 +275,33 @@ void ROOT::Experimental::RTreeFieldClass::DoRead(ForestIndex_t index, Detail::RT
    }
 }
 
-void ROOT::Experimental::RTreeFieldClass::DoGenerateColumns()
+void ROOT::Experimental::RFieldClass::DoGenerateColumns()
 {
 }
 
-unsigned int ROOT::Experimental::RTreeFieldClass::GetNColumns() const
+unsigned int ROOT::Experimental::RFieldClass::GetNColumns() const
 {
    return 0;
 }
 
-ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RTreeFieldClass::GenerateValue(void* where)
+ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RFieldClass::GenerateValue(void* where)
 {
    return Detail::RTreeValueBase(this, fClass->New(where));
 }
 
-void ROOT::Experimental::RTreeFieldClass::DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly)
+void ROOT::Experimental::RFieldClass::DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly)
 {
    fClass->Destructor(value.GetRawPtr(), true /* dtorOnly */);
    if (!dtorOnly)
       free(value.GetRawPtr());
 }
 
-ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RTreeFieldClass::CaptureValue(void* where)
+ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RFieldClass::CaptureValue(void* where)
 {
    return Detail::RTreeValueBase(this, where);
 }
 
-size_t ROOT::Experimental::RTreeFieldClass::GetValueSize() const
+size_t ROOT::Experimental::RFieldClass::GetValueSize() const
 {
    return fClass->GetClassSize();
 }
@@ -310,16 +310,16 @@ size_t ROOT::Experimental::RTreeFieldClass::GetValueSize() const
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::RTreeFieldVector::RTreeFieldVector(
-   std::string_view fieldName, std::unique_ptr<Detail::RTreeFieldBase> itemField)
-   : ROOT::Experimental::Detail::RTreeFieldBase(
+ROOT::Experimental::RFieldVector::RFieldVector(
+   std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField)
+   : ROOT::Experimental::Detail::RFieldBase(
       fieldName, "std::vector<" + itemField->GetType() + ">", false /* isSimple */)
    , fItemSize(itemField->GetValueSize()), fNWritten(0)
 {
    Attach(std::move(itemField));
 }
 
-void ROOT::Experimental::RTreeFieldVector::DoAppend(const Detail::RTreeValueBase& value) {
+void ROOT::Experimental::RFieldVector::DoAppend(const Detail::RTreeValueBase& value) {
    auto typedValue = reinterpret_cast<const RTreeValue<std::vector<char>>&>(value).Get();
    R__ASSERT((typedValue->size() % fItemSize) == 0);
    auto count = typedValue->size() / fItemSize;
@@ -332,7 +332,7 @@ void ROOT::Experimental::RTreeFieldVector::DoAppend(const Detail::RTreeValueBase
    fColumns[0]->Append(elemIndex);
 }
 
-void ROOT::Experimental::RTreeFieldVector::DoRead(ForestIndex_t index, Detail::RTreeValueBase* value) {
+void ROOT::Experimental::RFieldVector::DoRead(ForestIndex_t index, Detail::RTreeValueBase* value) {
    auto typedValue = reinterpret_cast<RTreeValue<std::vector<char>>*>(value)->Get();
 
    ForestIndex_t dummy;
@@ -349,25 +349,25 @@ void ROOT::Experimental::RTreeFieldVector::DoRead(ForestIndex_t index, Detail::R
    }
 }
 
-void ROOT::Experimental::RTreeFieldVector::DoGenerateColumns()
+void ROOT::Experimental::RFieldVector::DoGenerateColumns()
 {
    RColumnModel modelIndex(GetName(), EColumnType::kIndex, true /* isSorted*/);
    fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex));
    fPrincipalColumn = fColumns[0].get();
 }
 
-unsigned int ROOT::Experimental::RTreeFieldVector::GetNColumns() const
+unsigned int ROOT::Experimental::RFieldVector::GetNColumns() const
 {
    return 1;
 }
 
-ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RTreeFieldVector::GenerateValue(void* where)
+ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RFieldVector::GenerateValue(void* where)
 {
    // The memory location can be used as a vector of any type except bool (TODO)
    return Detail::RTreeValueBase(this, new (where) std::vector<char>());
 }
 
-void ROOT::Experimental::RTreeFieldVector::DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly)
+void ROOT::Experimental::RFieldVector::DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly)
 {
    auto vec = static_cast<std::vector<char>*>(value.GetRawPtr());
    R__ASSERT((vec->size() % fItemSize) == 0);
@@ -381,12 +381,12 @@ void ROOT::Experimental::RTreeFieldVector::DestroyValue(const Detail::RTreeValue
       free(vec);
 }
 
-ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RTreeFieldVector::CaptureValue(void* where)
+ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RFieldVector::CaptureValue(void* where)
 {
    return Detail::RTreeValueBase(this, where);
 }
 
-size_t ROOT::Experimental::RTreeFieldVector::GetValueSize() const
+size_t ROOT::Experimental::RFieldVector::GetValueSize() const
 {
    return sizeof(std::vector<char>);
 }

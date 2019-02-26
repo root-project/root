@@ -13,11 +13,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RField.hxx>
 #include <ROOT/RForestModel.hxx>
 #include <ROOT/RPageStorageRoot.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPagePool.hxx>
-#include <ROOT/RTreeField.hxx>
 
 #include <TKey.h>
 
@@ -236,8 +236,8 @@ std::unique_ptr<ROOT::Experimental::RForestModel> ROOT::Experimental::Detail::RP
 {
    auto model = std::make_unique<RForestModel>();
    for (auto& f : fMapper.fRootFields) {
-      auto field = Detail::RTreeFieldBase::Create(f.fFieldName, f.fTypeName);
-      model->AddField(std::unique_ptr<Detail::RTreeFieldBase>(field));
+      auto field = Detail::RFieldBase::Create(f.fFieldName, f.fTypeName);
+      model->AddField(std::unique_ptr<Detail::RFieldBase>(field));
    }
    return model;
 }

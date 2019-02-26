@@ -16,9 +16,9 @@
 #ifndef ROOT7_RForestModel
 #define ROOT7_RForestModel
 
+#include <ROOT/RField.hxx>
 #include <ROOT/RForestEntry.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RTreeField.hxx>
 #include <ROOT/RTreeValue.hxx>
 
 #include <TError.h>
@@ -43,18 +43,18 @@ A model needs to be frozen before it can be used to create an RTree.
 // clang-format on
 class RForestModel {
    /// Hierarchy of fields consiting of simple types and collections (sub trees)
-   RTreeFieldRoot fRootField;
+   RFieldRoot fRootField;
    /// Contains tree values corresponding to the created fields
    RForestEntry fDefaultEntry;
 
 public:
    /// Adds a field whose type is not known at compile time.  Thus there is no shared pointer returned.
-   void AddField(std::unique_ptr<Detail::RTreeFieldBase> field);
+   void AddField(std::unique_ptr<Detail::RFieldBase> field);
 
    /// Creates a new field and a corresponding tree value that is managed by a shared pointer.
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddField(std::string_view fieldName, ArgsT&&... args) {
-      auto field = std::make_unique<RTreeField<T>>(fieldName);
+      auto field = std::make_unique<RField<T>>(fieldName);
       auto ptr = fDefaultEntry.AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
       fRootField.Attach(std::move(field));
       return ptr;
@@ -67,14 +67,14 @@ public:
 
    template <typename T>
    void CaptureField(std::string_view fieldName, T* fromWhere) {
-      auto field = std::make_unique<RTreeField<T>>(fieldName);
+      auto field = std::make_unique<RField<T>>(fieldName);
       fDefaultEntry.CaptureValue(field->CaptureValue(fromWhere));
       fRootField.Attach(std::move(field));
    }
 
    void AddCollection(std::string_view fieldName, std::shared_ptr<RForestModel> collectionModel);
 
-   RTreeFieldRoot* GetRootField() { return &fRootField; }
+   RFieldRoot* GetRootField() { return &fRootField; }
    RForestEntry* GetDefaultEntry() { return &fDefaultEntry; }
 };
 
