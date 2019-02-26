@@ -48,7 +48,7 @@ int REveRenderData::Write(char *msg, int maxlen)
 
    int off{0};
 
-   auto append = [&, this](void *buf, int len) {
+   auto append = [&](void *buf, int len) {
       if (off + len > maxlen)
          throw eh + "output buffer does not have enough memory";
       memcpy(msg + off, buf, len);
