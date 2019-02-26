@@ -164,6 +164,8 @@ public:
    virtual void      Show() { MapRaised(); }
    Option_t         *GetDrawOption() const;
    TGMainFrame      *GetMainFrame() const { return (TGMainFrame *)this; }
+   Bool_t            IsWebGUI() { TString factory = gEnv->GetValue("Gui.Factory", "native");
+                                  return (factory.Contains("web", TString::kIgnoreCase)); }
 
    virtual Long_t    ExecPlugin(const char *name = 0, const char *fname = 0,
                                 const char *cmd = 0, Int_t pos = kRight,
