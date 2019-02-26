@@ -113,3 +113,5 @@ target_include_directories(ROOTEve
     ${CMAKE_SOURCE_DIR}/io/io/res
     ${CMAKE_SOURCE_DIR}/graf3d/eve7
 )
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
