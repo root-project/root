@@ -194,6 +194,13 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
             auto chld = dynamic_cast<TGeoNode *> (chlds->At(n));
             desc.chlds.emplace_back(chld->GetNumber()-offset);
          }
+
+      // ignore shapes where childs are exists
+      // FIXME: seems to be, in some situations shape has to be drawn
+      if ((desc.chlds.size() > 0) && shape && (shape->IsA() == TGeoBBox::Class())) {
+         desc.vol = 0;
+         desc.nfaces = 0;
+      }
    }
 
    // recover numbers
@@ -252,22 +259,29 @@ int ROOT::Experimental::REveGeomDescription::MarkVisible(bool on_screen)
    for (auto &node: fNodes) {
       auto &desc = fDesc[cnt++];
 
-      desc.vis = 0;
-      desc.visdepth = 9999999;
+      desc.vis = REveGeomNode::vis_off;
       desc.numvischld = 1;
       desc.idshift = 0;
 
       if (on_screen) {
-         if (node->IsOnScreen()) desc.vis = 1;
+         if (node->IsOnScreen())
+            desc.vis = REveGeomNode::vis_this;
       } else {
          auto vol = node->GetVolume();
 
-         if (vol->IsVisible() && !vol->TestAttBit(TGeoAtt::kVisNone) && !node->GetFinder()) desc.vis = 1;
-         if (!vol->IsVisDaughters())
-            desc.visdepth = vol->TestAttBit(TGeoAtt::kVisOneLevel) ? 1 : 0;
+         if (desc.chlds.size() > 0) {
+            if (vol->IsVisDaughters()) {
+               desc.vis = REveGeomNode::vis_chlds;
+            } else if (vol->TestAttBit(TGeoAtt::kVisOneLevel)) {
+               desc.vis = REveGeomNode::vis_lvl1;
+            }
+         } else {
+            if (vol->IsVisible() && !vol->TestAttBit(TGeoAtt::kVisNone) && !node->GetFinder())
+               desc.vis = REveGeomNode::vis_this;
+         }
       }
 
-      if (desc.vis && desc.CanDisplay()) res++;
+      if (desc.IsVisible() && desc.CanDisplay()) res++;
    }
 
    return res;
@@ -290,15 +304,15 @@ void ROOT::Experimental::REveGeomDescription::ScanVisible(REveGeomScanFunc_t fun
 
       auto &desc = fDesc[nodeid];
       int res = 0;
-      if (desc.vis && desc.CanDisplay() && (lvl >= 0) && (inside_visisble_branch > 0))
+      if (desc.IsVisible() && desc.CanDisplay() && (lvl >= 0) && (inside_visisble_branch > 0))
          if (func(desc, stack))
             res++;
 
       seqid++; // count sequence id of current position in scan, will be used later for merging drawing lists
 
       // limit depth to which it scans
-      if (lvl > desc.visdepth)
-         lvl = desc.visdepth;
+      if (lvl > desc.GetVisDepth())
+         lvl = desc.GetVisDepth();
 
       if ((desc.chlds.size() > 0) && (desc.numvischld > 0)) {
          auto pos = stack.size();
@@ -763,23 +777,31 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Change visibility for specified element
-/// Returns node id when changes were performed or -1 if no changes were done
+/// Returns true if changes was performed
 
 bool ROOT::Experimental::REveGeomDescription::ChangeNodeVisibility(int nodeid, bool selected)
 {
-   int iselected = (selected ? 1 : 0);
+   auto &dnode = fDesc[nodeid];
 
    // nothing changed
-   if (fDesc[nodeid].vis == iselected)
+   if ((dnode.vis && selected) || (!dnode.vis && !selected))
       return false;
 
    auto vol = fNodes[nodeid]->GetVolume();
-   vol->SetVisibility(selected);
+
+   if (dnode.chlds.size() > 0) {
+      vol->SetVisDaughters(selected);
+      vol->SetAttBit(TGeoAtt::kVisOneLevel, kFALSE); // disable one level when toggling visibility
+      dnode.vis = selected ? REveGeomNode::vis_chlds : REveGeomNode::vis_off;
+   } else {
+      vol->SetVisibility(selected);
+      dnode.vis = selected ? REveGeomNode::vis_this : REveGeomNode::vis_off;
+   }
 
    int id{0};
    for (auto &desc: fDesc)
       if (fNodes[id++]->GetVolume() == vol)
-         desc.vis = iselected;
+         desc.vis = dnode.vis;
 
    ClearRawData(); // after change raw data is no longer valid
 
