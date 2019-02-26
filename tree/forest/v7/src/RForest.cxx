@@ -43,7 +43,7 @@ ROOT::Experimental::RInputForest::RInputForest(
       field.ConnectColumns(fSource.get());
    }
    fNEntries = fSource->GetNEntries();
-   fDefaultViewContext = std::unique_ptr<RTreeViewContext>(new RTreeViewContext(fSource.get()));
+   fDefaultViewContext = std::unique_ptr<RForestViewContext>(new RForestViewContext(fSource.get()));
 }
 
 ROOT::Experimental::RInputForest::RInputForest(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
@@ -52,13 +52,13 @@ ROOT::Experimental::RInputForest::RInputForest(std::unique_ptr<ROOT::Experimenta
 {
    fSource->Attach();
    fNEntries = fSource->GetNEntries();
-   fDefaultViewContext = std::unique_ptr<RTreeViewContext>(new RTreeViewContext(fSource.get()));
+   fDefaultViewContext = std::unique_ptr<RForestViewContext>(new RForestViewContext(fSource.get()));
 }
 
-std::unique_ptr<ROOT::Experimental::RTreeViewContext> ROOT::Experimental::RInputForest::GetViewContext()
+std::unique_ptr<ROOT::Experimental::RForestViewContext> ROOT::Experimental::RInputForest::GetViewContext()
 {
-   auto ctx = new RTreeViewContext(fSource.get());
-   return std::unique_ptr<RTreeViewContext>(ctx);
+   auto ctx = new RForestViewContext(fSource.get());
+   return std::unique_ptr<RForestViewContext>(ctx);
 }
 
 ROOT::Experimental::RInputForest::~RInputForest()
