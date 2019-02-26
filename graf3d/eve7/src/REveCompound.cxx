@@ -167,7 +167,7 @@ void REveCompound::FillImpliedSelectedSet(Set_t& impSelSet)
 
 TClass* REveCompound::ProjectedClass(const REveProjection*) const
 {
-   return TClass::GetClass(typeid(REveCompoundProjected));
+   return TClass::GetClass<REveCompoundProjected>();
 }
 
 

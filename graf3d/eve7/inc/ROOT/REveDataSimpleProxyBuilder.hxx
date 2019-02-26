@@ -1,3 +1,14 @@
+// @(#)root/eve7:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel, 2019
+
+/*************************************************************************
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT7_REveDataProxySimpleBuilder
 #define ROOT7_REveDataProxySimpleBuilder
 
@@ -12,7 +23,7 @@ class REveElement;
 class REveDataSimpleProxyBuilder : public REveDataProxyBuilderBase
 {
 public:
-   REveDataSimpleProxyBuilder(std::string type);
+   REveDataSimpleProxyBuilder(const std::string &type);
    virtual ~REveDataSimpleProxyBuilder();
 
 protected:
@@ -34,10 +45,6 @@ private:
 
    virtual bool VisibilityModelChanges(int idx, REveElement*,  const REveViewContext*);
 
-
-   // ---------- member data --------------------------------
-
-   ClassDef(REveDataSimpleProxyBuilder, 0);
 };
 
 } // namespace Experimental

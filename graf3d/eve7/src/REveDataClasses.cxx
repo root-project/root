@@ -16,7 +16,7 @@
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TColor.h"
-
+#include "TClass.h"
 
 #include "json.hpp"
 
@@ -34,10 +34,10 @@ Color_t  REveDataCollection::fgDefaultColor  = kBlue;
 REveDataCollection::REveDataCollection(const std::string& n, const std::string& t) :
    REveElement(n, t)
 {
-   fChildClass = REveDataItem::Class();
+   fChildClass = TClass::GetClass<REveDataItem>();
 
    SetupDefaultColorAndTransparency(fgDefaultColor, true, true);
-   
+
    _handler_func = 0;
    _handler_func_ids = 0;
 }
@@ -56,7 +56,7 @@ void REveDataCollection::SetFilterExpr(const TString& filter)
 {
    static const REveException eh("REveDataCollection::SetFilterExpr ");
 
-   if ( ! fItemClass) throw eh + "item class has to be set before the filter expression.";
+   if (!fItemClass) throw eh + "item class has to be set before the filter expression.";
 
    fFilterExpr = filter;
 
@@ -227,7 +227,7 @@ void REveDataItem::SetFiltered(bool f)
 REveDataTable::REveDataTable(const std::string& n, const std::string& t) :
    REveElement(n, t)
 {
-   fChildClass = REveDataColumn::Class();
+   fChildClass = TClass::GetClass<REveDataColumn>();
 }
 
 void REveDataTable::PrintTable()

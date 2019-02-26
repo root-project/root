@@ -42,7 +42,7 @@ public:
 
    // ---------- constructor/destructor  ---------------------
 
-   REveDataProxyBuilderBase(std::string type);
+   REveDataProxyBuilderBase(const std::string &type);
    virtual ~REveDataProxyBuilderBase() {}
 
    void SetCollection(REveDataCollection*);
