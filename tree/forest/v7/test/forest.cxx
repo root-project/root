@@ -218,16 +218,16 @@ TEST(RForest, Capture) {
 TEST(RForest, RealWorld1)
 {
    // See https://github.com/olifre/root-io-bench/blob/master/benchmark.cpp
-   TRandom3 rnd(42);
-   auto model = std::make_shared<RForestModel>();
+   auto model = RForestModel::Create();
    auto& fldEvent = model->AddFieldRef<std::uint32_t>("event");
    auto& fldEnergy = model->AddFieldRef<double>("energy");
    auto& fldTimes = model->AddFieldRef<std::vector<double>>("times");
    auto& fldIndices = model->AddFieldRef<std::vector<std::uint32_t>>("indices");
 
+   TRandom3 rnd(42);
    double chksumWrite = 0.0;
    {
-      ROutputForest forest(model, std::make_unique<RPageSinkRoot>("f", "test.root"));
+      auto forest = ROutputForest::Create(model, "f", "test.root");
       constexpr unsigned int nEvents = 60000;
       for (unsigned int i = 0; i < nEvents; ++i) {
          fldEvent = i;
@@ -250,14 +250,14 @@ TEST(RForest, RealWorld1)
             chksumWrite += double(fldIndices[n]);
          }
 
-         forest.Fill();
+         forest->Fill();
       }
    }
 
    double chksumRead = 0.0;
-   RInputForest forest(model, std::make_unique<RPageSourceRoot>("f", "test.root"));
-   for (unsigned int i = 0; i < forest.GetNEntries(); ++i) {
-      forest.GetEntry(i);
+   auto forest = RInputForest::Create(model, "f", "test.root");
+   for (unsigned int i = 0; i < forest->GetNEntries(); ++i) {
+      forest->GetEntry(i);
       chksumRead += double(fldEvent) + fldEnergy;
       for (auto t : fldTimes) chksumRead += t;
       for (auto ind : fldIndices) chksumRead += double(ind);

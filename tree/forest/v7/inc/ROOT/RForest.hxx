@@ -90,6 +90,10 @@ private:
    ForestIndex_t fNEntries;
 
 public:
+   static std::unique_ptr<RInputForest> Create(std::shared_ptr<RForestModel> model,
+                                               std::string_view forestName,
+                                               std::string_view storage);
+
    /// The user imposes a forest model, which must be compatible with the model found in the data on storage
    RInputForest(std::shared_ptr<RForestModel> model, std::unique_ptr<Detail::RPageSource> source);
    /// The model is generated from the forest metadata on storage
@@ -142,6 +146,9 @@ private:
    ForestIndex_t fLastCommitted;
 
 public:
+   static std::unique_ptr<ROutputForest> Create(std::shared_ptr<RForestModel> model,
+                                                std::string_view forestName,
+                                                std::string_view storage);
    ROutputForest(std::shared_ptr<RForestModel> model, std::unique_ptr<Detail::RPageSink> sink);
    ROutputForest(const ROutputForest&) = delete;
    ROutputForest& operator=(const ROutputForest&) = delete;
