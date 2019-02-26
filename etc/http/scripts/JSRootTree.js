@@ -999,7 +999,7 @@
            case 3:
               var var1 = this.vars[1].buf, var2 = this.vars[2].buf;
               for (var n=0;n<len;++n)
-                 this.Fill2DHistogram(var0[n], var1[n], var2[n], cut ? cut[n] : 1.);
+                 this.Fill3DHistogram(var0[n], var1[n], var2[n], cut ? cut[n] : 1.);
               delete this.vars[1].buf;
               delete this.vars[2].buf;
               break;

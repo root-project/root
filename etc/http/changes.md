@@ -8,7 +8,11 @@
 5. Use gStyle attributes to draw histogram title 
 6. Add support of TProfile2Poly class
 7. Support eve7 geometry viewer - render data generated in ROOT itself
-8. Provide initial WebVR support (#176), thanks to Diego Marcos (@dmarcos)    
+8. Provide initial WebVR support (#176), thanks to Diego Marcos (@dmarcos)
+9. Improve windows handling in flex(ible) layout    
+10. Fix - support clipping for tracks and points in geo painter
+11. Fix - drawing of TGeoNode with finder   
+12. Fix - key press events processed only in actvie pad (ROOT-9128)  
 
  
 ## Changes in 5.6.2

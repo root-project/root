@@ -2,7 +2,7 @@
    xmlns:mvc="sap.ui.core.mvc" xmlns:l="sap.ui.layout" xmlns="sap.m">
    <Page title="" showNavButton="false" showFooter="false"
       showSubHeader="false" id="CanvasMainPage">
-      <headerContent>
+      <customHeader>
          <OverflowToolbar id="otb1">
             <Button icon="sap-icon://log" type="Transparent"
                tooltip="Quit ROOT session" press="onQuitRootPress" />
@@ -65,7 +65,7 @@
             <ToolbarSpacer />
             <Button text="Help" type="Transparent"/>
          </OverflowToolbar>
-      </headerContent>
+      </customHeader>
       <subHeader>
          <OverflowToolbar>
             <Button icon="sap-icon://user-edit" type="Transparent"

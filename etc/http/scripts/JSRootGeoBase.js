@@ -2021,8 +2021,21 @@
       return geom.vertices.length;
    }
 
+   /** Compares two stacks. Returns length where stacks are the same
+    * @memberOf JSROOT.GEO
+    * @private */
+   JSROOT.GEO.CompareStacks = function(stack1, stack2) {
+      if (!stack1 || !stack2) return 0;
+      if (stack1 === stack2) return stack1.length;
+      var len = Math.min(stack1.length, stack2.length);
+      for (var k=0;k<len;++k)
+         if (stack1[k] !== stack2[k]) return k;
+      return len;
+   }
+
    /** Checks if two stack arrays are identical
-    * @memberOf JSROOT.GEO */
+    * @memberOf JSROOT.GEO
+    * @private */
    JSROOT.GEO.IsSameStack = function(stack1, stack2) {
       if (!stack1 || !stack2) return false;
       if (stack1 === stack2) return true;
@@ -2417,6 +2430,22 @@
       }
 
       return stack;
+   }
+
+   /** Returns true if stack includes at any place provided nodeid */
+   JSROOT.GEO.ClonedNodes.prototype.IsNodeInStack = function(nodeid, stack) {
+
+      if (!nodeid) return true;
+
+      var node = this.nodes[0], id = 0;
+
+      for(var lvl = 0; lvl < stack.length; ++lvl) {
+         id = node.chlds[stack[lvl]];
+         if (id == nodeid) return true;
+         node = this.nodes[id];
+      }
+
+      return false;
    }
 
    /** find stack by name which include names of all parents */
