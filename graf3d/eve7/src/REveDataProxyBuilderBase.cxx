@@ -1,7 +1,22 @@
+// @(#)root/eve7:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel, 2018
+
+/*************************************************************************
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+
 #include <ROOT/REveDataProxyBuilderBase.hxx>
 #include <ROOT/REveProjectionManager.hxx>
 #include <ROOT/REveViewContext.hxx>
 #include <ROOT/REveCompound.hxx>
+
+#include <cassert>
+
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -16,9 +31,9 @@ REveDataProxyBuilderBase::Product::Product(std::string iViewType, const REveView
 //______________________________________________________________________________
 
 
-REveDataProxyBuilderBase::REveDataProxyBuilderBase(std::string type):
+REveDataProxyBuilderBase::REveDataProxyBuilderBase(const std::string &type):
    m_type(type),
-   m_collection(0),
+   m_collection(nullptr),
    //   m_interactionList(0),
    m_haveWindow(false)
 {
