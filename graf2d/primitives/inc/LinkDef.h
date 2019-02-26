@@ -14,16 +14,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class ROOT::Experimental::RDisplayItem+;
-#pragma link C++ class ROOT::Experimental::RPalette+;
-#pragma link C++ class ROOT::Experimental::RColor+;
-#pragma link C++ class ROOT::Experimental::RStringEnumAttrBase+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttrBase+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttr<ROOT::Experimental::RColor>+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttr<int>+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttr<float>+;
-#pragma link C++ class ROOT::Experimental::RDrawingOptsBase+;
-#pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RCanvas>+;
 #pragma link C++ class ROOT::Experimental::RText+;
 #pragma link C++ class ROOT::Experimental::RText::DrawingOpts+;
 #pragma link C++ class ROOT::Experimental::RDrawableBase<ROOT::Experimental::RText>+;
