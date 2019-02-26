@@ -24,7 +24,7 @@
 
 R__LOAD_LIBRARY(libROOTWebDisplay);
 
-#include "ROOT/RHist.hxx"
+#include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 
 #include "TRandom3.h"

@@ -21,7 +21,7 @@
 
 // R__LOAD_LIBRARY(libROOTGpadv7);
 
-#include "ROOT/RHist.hxx"
+#include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 
 void draw_rh1() {
