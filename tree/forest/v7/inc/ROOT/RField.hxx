@@ -1,4 +1,4 @@
-/// \file ROOT/RTreeField.hxx
+/// \file ROOT/RField.hxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RTreeField
-#define ROOT7_RTreeField
+#ifndef ROOT7_RField
+#define ROOT7_RField
 
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RColumnElement.hxx>
@@ -46,17 +46,17 @@ class RPageStorage;
 
 // clang-format off
 /**
-\class ROOT::Experimental::RTreeFieldBase
+\class ROOT::Experimental::RFieldBase
 \ingroup Forest
 \brief A field translates read and write calls from/to underlying columns to/from tree values
 
-A field is a serializable C++ type or a container for a collection of sub fields. The RTreeFieldBase and its
+A field is a serializable C++ type or a container for a collection of sub fields. The RFieldBase and its
 type-safe descendants provide the object to column mapper. They map C++ objects to primitive columns.  The
 mapping is trivial for simple types such as 'double'. Complex types resolve to multiple primitive columns.
 The field knows based on its type and the field name the type(s) and name(s) of the columns.
 */
 // clang-format on
-class RTreeFieldBase {
+class RFieldBase {
 private:
    /// The field name is a unique within a tree and also the basis for the column name(s)
    std::string fName;
@@ -67,9 +67,9 @@ private:
 
 protected:
    /// Collections an classes own sub fields
-   std::vector<std::unique_ptr<RTreeFieldBase>> fSubFields;
+   std::vector<std::unique_ptr<RFieldBase>> fSubFields;
    /// Sub fields point to their mother field
-   RTreeFieldBase* fParent;
+   RFieldBase* fParent;
    /// All fields have a main column. For collection fields, the main column is the index field. Points into fColumns.
    RColumn* fPrincipalColumn;
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
@@ -89,7 +89,7 @@ public:
    static constexpr char kCollectionSeparator = '/';
 
    /// Iterates over the sub fields in depth-first search order
-   class RIterator : public std::iterator<std::forward_iterator_tag, Detail::RTreeFieldBase> {
+   class RIterator : public std::iterator<std::forward_iterator_tag, Detail::RFieldBase> {
    private:
       using iterator = RIterator;
       struct Position {
@@ -117,15 +117,15 @@ public:
    };
 
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
-   RTreeFieldBase(std::string_view name, std::string_view type, bool isSimple);
-   RTreeFieldBase(const RTreeFieldBase&) = delete;
-   RTreeFieldBase(RTreeFieldBase&&) = default;
-   RTreeFieldBase& operator =(const RTreeFieldBase&) = delete;
-   RTreeFieldBase& operator =(RTreeFieldBase&&) = default;
-   virtual ~RTreeFieldBase();
+   RFieldBase(std::string_view name, std::string_view type, bool isSimple);
+   RFieldBase(const RFieldBase&) = delete;
+   RFieldBase(RFieldBase&&) = default;
+   RFieldBase& operator =(const RFieldBase&) = delete;
+   RFieldBase& operator =(RFieldBase&&) = default;
+   virtual ~RFieldBase();
 
    /// Factory method to resurrect a field from the stored on-disk type information
-   static RTreeFieldBase *Create(const std::string &fieldName, const std::string &typeName);
+   static RFieldBase *Create(const std::string &fieldName, const std::string &typeName);
    /// Get the tail of the field name up to the last dot
    static std::string GetLeafName(const std::string &fullName);
    /// Get the name for an item sub field that is part of a collection, e.g. the float field of std::vector<float>
@@ -185,11 +185,11 @@ public:
    /// Ensure that all received items are written from page buffers to the storage.
    void Flush() const;
 
-   void Attach(std::unique_ptr<Detail::RTreeFieldBase> child);
+   void Attach(std::unique_ptr<Detail::RFieldBase> child);
 
    std::string GetName() const { return fName; }
    std::string GetType() const { return fType; }
-   const RTreeFieldBase* GetParent() const { return fParent; }
+   const RFieldBase* GetParent() const { return fParent; }
    bool IsSimple() const { return fIsSimple; }
 
    RIterator begin();
@@ -199,34 +199,34 @@ public:
 } // namespace Detail
 
 /// The container field for a tree model, which itself has no physical representation
-class RTreeFieldRoot : public Detail::RTreeFieldBase {
+class RFieldRoot : public Detail::RFieldBase {
 public:
-   RTreeFieldRoot() : Detail::RTreeFieldBase("", "", false /* isSimple */) {}
+   RFieldRoot() : Detail::RFieldBase("", "", false /* isSimple */) {}
 
    void DoGenerateColumns() final {}
    unsigned int GetNColumns() const final { return 0; }
-   using Detail::RTreeFieldBase::GenerateValue;
+   using Detail::RFieldBase::GenerateValue;
    Detail::RTreeValueBase GenerateValue(void*) { return Detail::RTreeValueBase(); }
    Detail::RTreeValueBase CaptureValue(void*) final { return Detail::RTreeValueBase(); }
    size_t GetValueSize() const final { return 0; }
 };
 
 /// The field for a class with dictionary
-class RTreeFieldClass : public Detail::RTreeFieldBase {
+class RFieldClass : public Detail::RFieldBase {
 private:
    TClass* fClass;
 protected:
    void DoAppend(const Detail::RTreeValueBase& value) final;
    void DoRead(ForestIndex_t index, Detail::RTreeValueBase* value) final;
 public:
-   RTreeFieldClass(std::string_view fieldName, std::string_view className);
-   RTreeFieldClass(RTreeFieldClass&& other) = default;
-   RTreeFieldClass& operator =(RTreeFieldClass&& other) = default;
-   ~RTreeFieldClass() = default;
+   RFieldClass(std::string_view fieldName, std::string_view className);
+   RFieldClass(RFieldClass&& other) = default;
+   RFieldClass& operator =(RFieldClass&& other) = default;
+   ~RFieldClass() = default;
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final;
-   using Detail::RTreeFieldBase::GenerateValue;
+   using Detail::RFieldBase::GenerateValue;
    Detail::RTreeValueBase GenerateValue(void* where) override;
    void DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly = false) final;
    Detail::RTreeValueBase CaptureValue(void *where) final;
@@ -234,7 +234,7 @@ public:
 };
 
 /// The generic field for a (nested) vector
-class RTreeFieldVector : public Detail::RTreeFieldBase {
+class RFieldVector : public Detail::RFieldBase {
 private:
    size_t fItemSize;
    ForestIndex_t fNWritten;
@@ -244,14 +244,14 @@ protected:
    void DoRead(ForestIndex_t index, Detail::RTreeValueBase* value) final;
 
 public:
-   RTreeFieldVector(std::string_view fieldName, std::unique_ptr<Detail::RTreeFieldBase> itemField);
-   RTreeFieldVector(RTreeFieldVector&& other) = default;
-   RTreeFieldVector& operator =(RTreeFieldVector&& other) = default;
-   ~RTreeFieldVector() = default;
+   RFieldVector(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
+   RFieldVector(RFieldVector&& other) = default;
+   RFieldVector& operator =(RFieldVector&& other) = default;
+   ~RFieldVector() = default;
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final;
-   using Detail::RTreeFieldBase::GenerateValue;
+   using Detail::RFieldBase::GenerateValue;
    Detail::RTreeValueBase GenerateValue(void* where) override;
    void DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly = false) final;
    Detail::RTreeValueBase CaptureValue(void *where) override;
@@ -261,17 +261,17 @@ public:
 
 /// Classes with dictionaries that can be inspected by TClass
 template <typename T, typename=void>
-class RTreeField : public RTreeFieldClass {
+class RField : public RFieldClass {
 public:
    static std::string MyTypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
-   RTreeField(std::string_view name) : RTreeFieldClass(name, MyTypeName()) {
+   RField(std::string_view name) : RFieldClass(name, MyTypeName()) {
       static_assert(std::is_class<T>::value, "no I/O support for this basic C++ type");
    }
-   RTreeField(RTreeField&& other) = default;
-   RTreeField& operator =(RTreeField&& other) = default;
-   ~RTreeField() = default;
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
 
-   using Detail::RTreeFieldBase::GenerateValue;
+   using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
    {
@@ -285,13 +285,13 @@ public:
 
 
 template <>
-class ROOT::Experimental::RTreeField<float> : public ROOT::Experimental::Detail::RTreeFieldBase {
+class ROOT::Experimental::RField<float> : public ROOT::Experimental::Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "float"; }
-   explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name, MyTypeName(), true /* isSimple */) {}
-   RTreeField(RTreeField&& other) = default;
-   RTreeField& operator =(RTreeField&& other) = default;
-   ~RTreeField() = default;
+   explicit RField(std::string_view name) : Detail::RFieldBase(name, MyTypeName(), true /* isSimple */) {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
@@ -302,7 +302,7 @@ public:
       return fPrincipalColumn->Map<float, EColumnType::kReal32>(index, nullptr);
    }
 
-   using Detail::RTreeFieldBase::GenerateValue;
+   using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
    {
@@ -323,13 +323,13 @@ public:
 
 
 template <>
-class ROOT::Experimental::RTreeField<double> : public ROOT::Experimental::Detail::RTreeFieldBase {
+class ROOT::Experimental::RField<double> : public ROOT::Experimental::Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "double"; }
-   explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name, MyTypeName(), true /* isSimple */) {}
-   RTreeField(RTreeField&& other) = default;
-   RTreeField& operator =(RTreeField&& other) = default;
-   ~RTreeField() = default;
+   explicit RField(std::string_view name) : Detail::RFieldBase(name, MyTypeName(), true /* isSimple */) {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
@@ -340,7 +340,7 @@ public:
       return fPrincipalColumn->Map<double, EColumnType::kReal64>(index, nullptr);
    }
 
-   using Detail::RTreeFieldBase::GenerateValue;
+   using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
    {
@@ -360,13 +360,13 @@ public:
 };
 
 template <>
-class ROOT::Experimental::RTreeField<std::uint32_t> : public ROOT::Experimental::Detail::RTreeFieldBase {
+class ROOT::Experimental::RField<std::uint32_t> : public ROOT::Experimental::Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "std::uint32_t"; }
-   explicit RTreeField(std::string_view name) : Detail::RTreeFieldBase(name, MyTypeName(), true /* isSimple */) {}
-   RTreeField(RTreeField&& other) = default;
-   RTreeField& operator =(RTreeField&& other) = default;
-   ~RTreeField() = default;
+   explicit RField(std::string_view name) : Detail::RFieldBase(name, MyTypeName(), true /* isSimple */) {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
@@ -377,7 +377,7 @@ public:
       return fPrincipalColumn->Map<std::uint32_t, EColumnType::kInt32>(index, nullptr);
    }
 
-   using Detail::RTreeFieldBase::GenerateValue;
+   using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
    {
@@ -398,7 +398,7 @@ public:
 
 
 template <>
-class ROOT::Experimental::RTreeField<std::string> : public ROOT::Experimental::Detail::RTreeFieldBase {
+class ROOT::Experimental::RField<std::string> : public ROOT::Experimental::Detail::RFieldBase {
 private:
    ForestIndex_t fIndex;
    Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex> fElemIndex;
@@ -408,16 +408,16 @@ private:
 
 public:
    static std::string MyTypeName() { return "std::string"; }
-   explicit RTreeField(std::string_view name)
-      : Detail::RTreeFieldBase(name, MyTypeName(), false /* isSimple */), fIndex(0), fElemIndex(&fIndex) {}
-   RTreeField(RTreeField&& other) = default;
-   RTreeField& operator =(RTreeField&& other) = default;
-   ~RTreeField() = default;
+   explicit RField(std::string_view name)
+      : Detail::RFieldBase(name, MyTypeName(), false /* isSimple */), fIndex(0), fElemIndex(&fIndex) {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 2; }
 
-   using Detail::RTreeFieldBase::GenerateValue;
+   using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
    {
@@ -439,18 +439,18 @@ public:
 
 
 template <typename ItemT>
-class ROOT::Experimental::RTreeField<std::vector<ItemT>> : public ROOT::Experimental::RTreeFieldVector {
+class ROOT::Experimental::RField<std::vector<ItemT>> : public ROOT::Experimental::RFieldVector {
    using ContainerT = typename std::vector<ItemT>;
 public:
-   static std::string MyTypeName() { return "std::vector<" + RTreeField<ItemT>::MyTypeName() + ">"; }
-   explicit RTreeField(std::string_view name)
-      : RTreeFieldVector(name, std::make_unique<RTreeField<ItemT>>(GetCollectionName(name.to_string())))
+   static std::string MyTypeName() { return "std::vector<" + RField<ItemT>::MyTypeName() + ">"; }
+   explicit RField(std::string_view name)
+      : RFieldVector(name, std::make_unique<RField<ItemT>>(GetCollectionName(name.to_string())))
    {}
-   RTreeField(RTreeField&& other) = default;
-   RTreeField& operator =(RTreeField&& other) = default;
-   ~RTreeField() = default;
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
 
-   using Detail::RTreeFieldBase::GenerateValue;
+   using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
    {
