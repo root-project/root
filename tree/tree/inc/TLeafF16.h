@@ -26,11 +26,11 @@
 class TLeafF16 : public TLeaf {
 
 protected:
-   Float16_t fMinimum;           ///<  Minimum value if leaf range is specified
-   Float16_t fMaximum;           ///<  Maximum value if leaf range is specified
-   Float16_t *fValue;            ///<! Pointer to data buffer
-   Float16_t **fPointer;         ///<! Address of pointer to data buffer!
-   TStreamerElement *tseFloat16; ///<! StreamerElement used for TBuffer read / write
+   Float16_t fMinimum;               ///<  Minimum value if leaf range is specified
+   Float16_t fMaximum;               ///<  Maximum value if leaf range is specified
+   Float16_t *fValue;                ///<! Pointer to data buffer
+   Float16_t **fPointer;             ///<! Address of pointer to data buffer!
+   TStreamerElement *fStreamingInfo; ///<! StreamerElement used for TBuffer read / write
 
 public:
    TLeafF16();
