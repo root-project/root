@@ -321,24 +321,6 @@ void Add(RHist<DIMENSIONS, PRECISION_TO, STAT_TO...> &to, const RHist<DIMENSIONS
    from.GetImpl()->ApplyXC(add);
 }
 
-/// Interface to graphics taking a shared_ptr<RHist>.
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
-std::shared_ptr<RHistDrawable<DIMENSIONS>>
-GetDrawable(const std::shared_ptr<RHist<DIMENSIONS, PRECISION, STAT...>> &hist,
-            const RHistDrawingOpts<DIMENSIONS> &opts = {})
-{
-   return std::make_unique<RHistDrawable<DIMENSIONS>>(hist, opts);
-}
-
-/// Interface to graphics taking a unique_ptr<RHist>.
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
-std::shared_ptr<RHistDrawable<DIMENSIONS>>
-GetDrawable(std::unique_ptr<RHist<DIMENSIONS, PRECISION, STAT...>> &&hist,
-            const RHistDrawingOpts<DIMENSIONS> &opts = {})
-{
-   return std::make_unique<RHistDrawable<DIMENSIONS>>(std::move(hist), opts);
-}
-
 } // namespace Experimental
 } // namespace ROOT
 
