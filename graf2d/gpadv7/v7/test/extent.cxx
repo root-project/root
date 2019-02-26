@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
- #include "gtest/gtest.h"
+#include "gtest/gtest.h"
 
 #include "ROOT/RPadExtent.hxx"
 
 // Test addition of Extents
 TEST(PadExtent, Add) {
    using namespace ROOT::Experimental;
-   
+
    RPadExtent cn{0.3_normal, 40_px};
    EXPECT_DOUBLE_EQ(0.3, cn.fHoriz.fNormal.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fHoriz.fPixel.fVal);
@@ -74,7 +74,7 @@ TEST(PadExtent, Add) {
    EXPECT_DOUBLE_EQ(4.2, subtr.fVert.fNormal.fVal);
    EXPECT_DOUBLE_EQ(480., subtr.fVert.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., subtr.fVert.fUser.fVal);
-                 
+
    sum -= subtr;
    static constexpr double delta = 1E-15;
    EXPECT_NEAR(0.,sum.fHoriz.fPixel.fVal, delta);

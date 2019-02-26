@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
- #include "gtest/gtest.h"
+#include "gtest/gtest.h"
 
 #include "ROOT/RPadExtent.hxx"
 #include "ROOT/RPadPos.hxx"
@@ -17,7 +17,7 @@
 // Test reading of Extent from empty string.
 TEST(ExtentFromAttrString, Empty) {
    using namespace ROOT::Experimental;
-   
+
    RPadExtent cn{0.3_normal, 40_px};
    InitializeAttrFromString("FromEmpty", "", cn);
    EXPECT_DOUBLE_EQ(0.3, cn.fHoriz.fNormal.fVal);
@@ -31,7 +31,7 @@ TEST(ExtentFromAttrString, Empty) {
 // Test reading of Pos from string.
 TEST(PosFromAttrString, String) {
    using namespace ROOT::Experimental;
-   
+
    RPadPos cn{0.3_normal, 40_px}; // NOTE: initial values are intentionally overwritten!
    InitializeAttrFromString("One", "  -10   px    +0.1user, 0.12 normal -    -0.2  user + 22pixel - 12px", cn);
    EXPECT_DOUBLE_EQ(0., cn.fHoriz.fNormal.fVal);
