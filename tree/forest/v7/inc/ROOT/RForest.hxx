@@ -55,7 +55,7 @@ protected:
    /// All forests that use the same model share its ownership
    std::shared_ptr<RForestModel> fModel;
    /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
-   TreeIndex_t fNEntries;
+   ForestIndex_t fNEntries;
 
    /// Only the derived RInputForest and ROutputForest can be instantiated
    explicit RForest(std::shared_ptr<RForestModel> model);
@@ -87,7 +87,7 @@ private:
    /// Encapsulates the entry number for the current iteration. All views share the same current
    /// entry number. Concurrent iterations need to use different contexts.
    std::unique_ptr<RTreeViewContext> fDefaultViewContext;
-   TreeIndex_t fNEntries;
+   ForestIndex_t fNEntries;
 
 public:
    /// The user imposes a forest model, which must be compatible with the model found in the data on storage
@@ -96,13 +96,13 @@ public:
    RInputForest(std::unique_ptr<Detail::RPageSource> source);
    ~RInputForest();
 
-   TreeIndex_t GetNEntries() { return fNEntries; }
+   ForestIndex_t GetNEntries() { return fNEntries; }
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the forest.
    /// On I/O errors, raises an expection.
-   void GetEntry(TreeIndex_t index) { GetEntry(index, fModel->GetDefaultEntry()); }
+   void GetEntry(ForestIndex_t index) { GetEntry(index, fModel->GetDefaultEntry()); }
    /// Fills a user provided entry after checking that the entry has been instantiated from the forest model
-   void GetEntry(TreeIndex_t index, RTreeEntry* entry) {
+   void GetEntry(ForestIndex_t index, RTreeEntry* entry) {
       for (auto& value : *entry) {
          value.GetField()->Read(index, &value);
       }
@@ -110,7 +110,7 @@ public:
 
    /// Provides access to an individual field that can contain either a skalar value or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<RVec<double>>("particle").  It can as well be the index
-   /// field of a collection itself, like GetView<TreeIndex_t>("particle")
+   /// field of a collection itself, like GetView<ForestIndex_t>("particle")
    template <typename T>
    RTreeView<T> GetView(std::string_view fieldName, RTreeViewContext* context = nullptr) {
       if (context == nullptr)
@@ -136,10 +136,10 @@ triggered by Flush() or by destructing the forest.  On I/O errors, an exception 
 // clang-format on
 class ROutputForest : public Detail::RForest {
 private:
-   static constexpr TreeIndex_t kDefaultClusterSizeEntries = 8192;
+   static constexpr ForestIndex_t kDefaultClusterSizeEntries = 8192;
    std::unique_ptr<Detail::RPageSink> fSink;
-   TreeIndex_t fClusterSizeEntries;
-   TreeIndex_t fLastCommitted;
+   ForestIndex_t fClusterSizeEntries;
+   ForestIndex_t fLastCommitted;
 
 public:
    ROutputForest(std::shared_ptr<RForestModel> model, std::unique_ptr<Detail::RPageSink> sink);
