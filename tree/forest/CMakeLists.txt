@@ -13,13 +13,13 @@ if(root7)
     v7/inc/ROOT/RForestEntry.hxx
     v7/inc/ROOT/RForestModel.hxx
     v7/inc/ROOT/RForestUtil.hxx
+    v7/inc/ROOT/RForestView.hxx
     v7/inc/ROOT/RPage.hxx
     v7/inc/ROOT/RPagePool.hxx
     v7/inc/ROOT/RPageStorage.hxx
     v7/inc/ROOT/RPageStorageRoot.hxx
     v7/inc/ROOT/RTreeField.hxx
     v7/inc/ROOT/RTreeValue.hxx
-    v7/inc/ROOT/RTreeView.hxx
   SOURCES
     v7/src/RColumn.cxx
     v7/src/RForest.cxx
