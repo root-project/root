@@ -21,6 +21,11 @@
 namespace ROOT {
 namespace Experimental {
 
+// =========================================================================
+// REveShape
+// Abstract base-class for 2D/3D shapes.
+// =========================================================================
+
 class REveShape : public REveElement,
                   public TAttBBox
 {
@@ -76,15 +81,13 @@ public:
 
    // ----------------------------------------------------------------
 
-   static Int_t FindConvexHull(const vVector2_t &pin, vVector2_t &pout, REveElement *caller = 0);
+   static Int_t FindConvexHull(const vVector2_t &pin, vVector2_t &pout, REveElement *caller = nullptr);
 
    static Bool_t IsBoxOrientationConsistentEv(const REveVector box[8]);
    static Bool_t IsBoxOrientationConsistentFv(const Float_t box[8][3]);
 
    static void CheckAndFixBoxOrientationEv(REveVector box[8]);
    static void CheckAndFixBoxOrientationFv(Float_t box[8][3]);
-
-   ClassDef(REveShape, 0); // Abstract base-class for 2D/3D shapes.
 };
 
 } // namespace Experimental

@@ -1,8 +1,8 @@
 // @(#)root/eve:$Id$
-// Author: Matevz Tadel 2007
+// Author: Matevz Tadel 2007, 1018
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -23,6 +23,12 @@ namespace ROOT {
 namespace Experimental {
 
 class REveGeoShapeExtract;
+
+// ==========================================================================================
+// REveGeoShape
+// Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted
+// TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
+// ==========================================================================================
 
 class REveGeoShape : public REveShape,
                      public REveProjectable
@@ -68,12 +74,13 @@ public:
 
    static TGeoManager *GetGeoManager();
    static TGeoHMatrix *GetGeoHMatrixIdentity();
-
-   ClassDef(REveGeoShape, 0); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted
-                              // TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
 };
 
 //------------------------------------------------------------------------------
+
+// ==========================================================================================
+// REveGeoShapeProjected
+// ==========================================================================================
 
 class REveGeoShapeProjected : public REveShape, public REveProjected {
 private:
@@ -83,19 +90,17 @@ private:
 protected:
    std::unique_ptr<TBuffer3D> fBuff;    //! 3d buffer
 
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
    REveGeoShapeProjected();
    virtual ~REveGeoShapeProjected();
 
-   virtual void SetProjection(REveProjectionManager *proj, REveProjectable *model);
-   virtual void UpdateProjection();
-   virtual REveElement *GetProjectedAsElement() { return this; }
+   void SetProjection(REveProjectionManager *proj, REveProjectable *model) override;
+   void UpdateProjection() override;
+   REveElement *GetProjectedAsElement() override { return this; }
 
-   virtual void ComputeBBox();
-
-   ClassDef(REveGeoShapeProjected, 0);
+   void ComputeBBox() override;
 };
 
 } // namespace Experimental
