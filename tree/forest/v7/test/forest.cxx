@@ -1,5 +1,5 @@
 #include "ROOT/RForest.hxx"
-#include "ROOT/RTreeModel.hxx"
+#include "ROOT/RForestModel.hxx"
 #include "ROOT/RPageStorage.hxx"
 #include "ROOT/RPageStorageRoot.hxx"
 
@@ -16,7 +16,7 @@
 
 using RInputForest = ROOT::Experimental::RInputForest;
 using ROutputForest = ROOT::Experimental::ROutputForest;
-using RTreeModel = ROOT::Experimental::RTreeModel;
+using RForestModel = ROOT::Experimental::RForestModel;
 using RPageSource = ROOT::Experimental::Detail::RPageSource;
 using RPageSinkRoot = ROOT::Experimental::Detail::RPageSinkRoot;
 using RPageSourceRoot = ROOT::Experimental::Detail::RPageSourceRoot;
@@ -24,7 +24,7 @@ using RTreeFieldBase = ROOT::Experimental::Detail::RTreeFieldBase;
 
 TEST(RForest, Basics)
 {
-   auto model = std::make_shared<RTreeModel>();
+   auto model = std::make_shared<RForestModel>();
    auto fieldPt = model->AddField<float>("pt");
 
    //RInputTree tree(model, std::make_unique<RPageSource>("T"));
@@ -33,7 +33,7 @@ TEST(RForest, Basics)
 
 TEST(RForest, ReconstructModel)
 {
-   auto model = std::make_shared<RTreeModel>();
+   auto model = std::make_shared<RForestModel>();
    auto fieldPt = model->AddField<float>("pt", 42.0);
    auto fieldNnlo = model->AddField<std::vector<std::vector<float>>>("nnlo");
    auto fieldKlass = model->AddField<ROOT::Experimental::RForestTest>("klass");
@@ -61,7 +61,7 @@ TEST(RForest, StorageRoot)
    settingsWrite.fFile = file;
    RPageSinkRoot sinkRoot("myTree", settingsWrite);
 
-   auto model = std::make_shared<RTreeModel>();
+   auto model = std::make_shared<RForestModel>();
    auto fieldPt = model->AddField<float>("pt", 42.0);
    auto fieldX = model->AddField<float>("energy");
    auto fieldStr = model->AddField<std::string>("string", "abc");
@@ -85,7 +85,7 @@ TEST(RForest, StorageRoot)
 
 TEST(RForest, WriteRead)
 {
-   auto model = std::make_shared<RTreeModel>();
+   auto model = std::make_shared<RForestModel>();
    auto fieldPt = model->AddField<float>("pt", 42.0);
    auto fieldEnergy = model->AddField<float>("energy", 7.0);
    auto fieldTag = model->AddField<std::string>("tag", "xyz");
@@ -138,7 +138,7 @@ TEST(RForest, WriteRead)
 
 TEST(RForest, View)
 {
-   auto model = std::make_shared<RTreeModel>();
+   auto model = std::make_shared<RForestModel>();
    auto fieldPt = model->AddField<float>("pt", 42.0);
    auto fieldTag = model->AddField<std::string>("tag", "xyz");
    auto fieldJets = model->AddField<std::vector<float>>("jets");
@@ -173,14 +173,14 @@ TEST(RForest, View)
 
 TEST(RForest, Compositional)
 {
-   auto event_model = std::make_shared<RTreeModel>();
+   auto event_model = std::make_shared<RForestModel>();
    auto h1_px = event_model->AddField<float>("h1_px", 0.0);
 
-   auto hit_model = std::make_shared<RTreeModel>();
+   auto hit_model = std::make_shared<RForestModel>();
    auto hit_x = hit_model->AddField<float>("x", 0.0);
    auto hit_y = hit_model->AddField<float>("y", 0.0);
 
-   auto track_model = std::make_shared<RTreeModel>();
+   auto track_model = std::make_shared<RForestModel>();
    auto track_energy = track_model->AddField<float>("energy", 0.0);
 
    /*auto hits =*/ track_model->AddCollection("hits", hit_model);
@@ -199,10 +199,10 @@ class RNoDictionary {};
 } // namespace
 
 TEST(RForest, TClass) {
-   auto modelFail = std::make_shared<RTreeModel>();
+   auto modelFail = std::make_shared<RForestModel>();
    EXPECT_THROW(modelFail->AddField<RNoDictionary>("nodict"), std::runtime_error);
 
-   auto model = std::make_shared<RTreeModel>();
+   auto model = std::make_shared<RForestModel>();
    auto ptrKlass = model->AddField<ROOT::Experimental::RForestTest>("klass");
 
    ROutputForest forest(model, std::make_unique<RPageSinkRoot>("f", "test.root"));
@@ -210,7 +210,7 @@ TEST(RForest, TClass) {
 
 
 TEST(RForest, Capture) {
-   auto model = std::make_shared<RTreeModel>();
+   auto model = std::make_shared<RForestModel>();
    float pt;
    model->CaptureField("pt", &pt);
 }
@@ -219,7 +219,7 @@ TEST(RForest, RealWorld1)
 {
    // See https://github.com/olifre/root-io-bench/blob/master/benchmark.cpp
    TRandom3 rnd(42);
-   auto model = std::make_shared<RTreeModel>();
+   auto model = std::make_shared<RForestModel>();
    auto& fldEvent = model->AddFieldRef<std::uint32_t>("event");
    auto& fldEnergy = model->AddFieldRef<double>("energy");
    auto& fldTimes = model->AddFieldRef<std::vector<double>>("times");

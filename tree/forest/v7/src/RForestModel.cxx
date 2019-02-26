@@ -13,21 +13,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RTreeModel.hxx"
+#include "ROOT/RForestModel.hxx"
 
 #include <TError.h>
 
 #include <cstdlib>
 #include <utility>
 
-void ROOT::Experimental::RTreeModel::AddField(std::unique_ptr<Detail::RTreeFieldBase> field)
+void ROOT::Experimental::RForestModel::AddField(std::unique_ptr<Detail::RTreeFieldBase> field)
 {
    fDefaultEntry.AddValue(field->GenerateValue());
    fRootField.Attach(std::move(field));
 }
 
-void ROOT::Experimental::RTreeModel::AddCollection(
-   std::string_view fieldName, std::shared_ptr<RTreeModel> collectionModel)
+void ROOT::Experimental::RForestModel::AddCollection(
+   std::string_view fieldName, std::shared_ptr<RForestModel> collectionModel)
 {
 
 }
