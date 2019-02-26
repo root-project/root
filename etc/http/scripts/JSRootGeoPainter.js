@@ -897,6 +897,7 @@
                   this.focusCamera(intersects[indx].object);
                });
 
+               if (!menu.painter._geom_viewer)
                menu.add("Hide", n, function(indx) {
                   var resolve = menu.painter._clones.ResolveStack(intersects[indx].object.stack);
 
@@ -940,6 +941,8 @@
 
          if (unique && obj.material && (obj.material.opacity !== undefined))
             unique = obj.material.opacity >= 0.1;
+
+         if (obj.jsroot_special) unique = false;
 
          for (var k=0;(k<n) && unique;++k)
             if (intersects[k].object === obj) unique = false;
@@ -1003,21 +1006,60 @@
       this._highlight_handlers.push(handler);
    }
 
-   TGeoPainter.prototype.HighlightMesh = function(active_mesh, color, geo_object, geo_stack, no_recursive) {
+   //////////////////////
 
-      // if selected mesh has geo_object property, try to highligh all correspondent objects from extras
-      if (!geo_object && active_mesh && active_mesh.geo_object)
-         geo_object = active_mesh.geo_object;
+   function GeoDrawingControl(mesh) {
+      JSROOT.Painter.InteractiveControl.call(this);
+      this.mesh = (mesh && mesh.material) ? mesh : null;
+   }
+
+   GeoDrawingControl.prototype = Object.create(JSROOT.Painter.InteractiveControl.prototype);
+
+   GeoDrawingControl.prototype.setHighlight = function(col, indx) {
+      return this.drawSpecial(col, indx);
+   }
+
+   GeoDrawingControl.prototype.drawSpecial = function(col, indx) {
+      var c = this.mesh;
+      if (!c || !c.material) return;
+
+      if (col) {
+         if (!c.origin)
+            c.origin = {
+              color: c.material.color,
+              opacity: c.material.opacity,
+              width: c.material.linewidth,
+              size: c.material.size
+           };
+         c.material.color = new THREE.Color( col );
+         c.material.opacity = 1.;
+         if (c.hightlightWidthScale && !JSROOT.browser.isWin)
+            c.material.linewidth = c.origin.width * c.hightlightWidthScale;
+         if (c.highlightScale)
+            c.material.size = c.origin.size * c.highlightScale;
+         return true;
+      } else if (c.origin) {
+         c.material.color = c.origin.color;
+         c.material.opacity = c.origin.opacity;
+         if (c.hightlightWidthScale)
+            c.material.linewidth = c.origin.width;
+         if (c.highlightScale)
+            c.material.size = c.origin.size;
+         return true;
+      }
+   }
+
+   ////////////////////////
+
+   TGeoPainter.prototype.HighlightMesh = function(active_mesh, color, geo_object, geo_index, geo_stack, no_recursive) {
 
       if (geo_object) {
          active_mesh = active_mesh ? [ active_mesh ] : [];
          var extras = this.getExtrasContainer();
-         if (extras && extras.children)
-            for (var k=0;k<extras.children.length;++k)
-               if (extras.children[k].geo_object === geo_object) {
-                  var elem = extras.children[k].geo_highlight || extras.children[k];
-                  if (active_mesh.indexOf(elem)<0) active_mesh.push(elem);
-               }
+         if (extras)
+            extras.traverse(function(obj3d) {
+               if ((obj3d.geo_object === geo_object) && (active_mesh.indexOf(obj3d)<0)) active_mesh.push(obj3d);
+            });
       } else if (geo_stack && this._toplevel) {
          active_mesh = [];
          this._toplevel.traverse(function(mesh) {
@@ -1049,64 +1091,57 @@
          var lst = this._highlight_handlers || (!this._main_painter ? this._slave_painters : this._main_painter._slave_painters.concat([this._main_painter]));
 
          for (var k=0;k<lst.length;++k)
-            if (lst[k]!==this) lst[k].HighlightMesh(null, color, geo_object, geo_stack, true);
+            if (lst[k]!==this) lst[k].HighlightMesh(null, color, geo_object, geo_index, geo_stack, true);
       }
 
       var curr_mesh = this._selected_mesh;
+
+      function get_ctrl(mesh) {
+         return mesh.get_ctrl ? mesh.get_ctrl() : new GeoDrawingControl(mesh);
+      }
 
       // check if selections are the same
       if (!curr_mesh && !active_mesh) return false;
       var same = false;
       if (curr_mesh && active_mesh && (curr_mesh.length == active_mesh.length)) {
          same = true;
-         for (var k=0;k<curr_mesh.length;++k)
-            if (curr_mesh[k] !== active_mesh[k]) same = false;
+         for (var k=0;(k<curr_mesh.length) && same;++k) {
+            if ((curr_mesh[k] !== active_mesh[k]) || get_ctrl(curr_mesh[k]).checkHighlightIndex(geo_index)) same = false;
+         }
       }
       if (same) return !!curr_mesh;
 
       if (curr_mesh)
-         for (var k=0;k<curr_mesh.length;++k) {
-            var c = curr_mesh[k];
-            if (!c.material) continue;
-            c.material.color = c.originalColor;
-            c.material.opacity = c.originalOpacity;
-            delete c.originalColor;
-            delete c.originalOpacity;
-            if (c.originalWidth) {
-               c.material.linewidth = c.originalWidth;
-               delete c.originalWidth;
-            }
-            if (c.originalSize) {
-               c.material.size = c.originalSize;
-               delete c.originalSize;
-            }
-         }
+         for (var k=0;k<curr_mesh.length;++k)
+            get_ctrl(curr_mesh[k]).setHighlight();
 
       this._selected_mesh = active_mesh;
 
       if (active_mesh)
-         for (var k=0;k<active_mesh.length;++k) {
-            var a = active_mesh[k];
-            if (!a.material) continue;
-            a.originalColor = a.material.color;
-            a.originalOpacity = a.material.opacity;
-
-            a.material.color = new THREE.Color( color || 0xffaa33 );
-            a.material.opacity = 1.;
-
-            if (a.hightlightWidthScale && !JSROOT.browser.isWin) {
-               a.originalWidth = a.material.linewidth;
-               a.material.linewidth *= a.hightlightWidthScale;
-            }
-            if (a.highlightScale) {
-               a.originalSize = a.material.size;
-               a.material.size *= a.highlightScale;
-            }
-         }
+         for (var k=0;k<active_mesh.length;++k)
+            get_ctrl(active_mesh[k]).setHighlight(color || 0xffaa33, geo_index);
 
       this.Render3D(0);
 
       return !!active_mesh;
+   }
+
+   TGeoPainter.prototype.ProcessMouseClick = function(pnt, intersects, evnt) {
+      if (!intersects.length) return;
+
+      var mesh = intersects[0].object;
+      if (!mesh.get_ctrl) return;
+
+      var ctrl = mesh.get_ctrl();
+
+      var click_indx = ctrl.extractIndex(intersects[0]);
+
+      ctrl.evnt = evnt;
+
+      if (ctrl.setSelected("blue", click_indx))
+         this.Render3D();
+
+      ctrl.evnt = null;
    }
 
    TGeoPainter.prototype.addOrbitControls = function() {
@@ -1125,7 +1160,7 @@
 
       this._controls.ProcessMouseMove = function(intersects) {
 
-         var active_mesh = null, tooltip = null, resolve = null, names = [];
+         var active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index;
 
          // try to find mesh from intersections
          for (var k=0;k<intersects.length;++k) {
@@ -1143,11 +1178,16 @@
             if (!active_mesh) {
                active_mesh = obj;
                tooltip = info;
+               geo_object = obj.geo_object;
+               if (obj.get_ctrl) {
+                  geo_index = obj.get_ctrl().extractIndex(intersects[k]);
+                  if ((geo_index !== undefined) && (typeof tooltip == "string")) tooltip += " indx:" + JSON.stringify(geo_index);
+               }
                if (active_mesh.stack) resolve = painter.ResolveStack(active_mesh.stack);
             }
          }
 
-         painter.HighlightMesh(active_mesh);
+         painter.HighlightMesh(active_mesh, undefined, geo_object, geo_index);
 
          if (painter.options.update_browser) {
             if (painter.options.highlight && tooltip) names = [ tooltip ];
@@ -1163,8 +1203,7 @@
       }
 
       this._controls.ProcessMouseLeave = function() {
-         if (painter.options.update_browser)
-            painter.ActivateInBrowser([]);
+         this.ProcessMouseMove([]); // to disable highlight and reset browser
       }
 
       this._controls.ProcessDblClick = function() {
@@ -1975,6 +2014,9 @@
 
       var box = this.getGeomBoundingBox(this._toplevel);
 
+      // if detect of coordinates fails - ignore
+      if (isNaN(box.min.x)) return;
+
       var sizex = box.max.x - box.min.x,
           sizey = box.max.y - box.min.y,
           sizez = box.max.z - box.min.z,
@@ -2004,8 +2046,8 @@
       if (this.options.ortho_camera) {
          this._camera.left = box.min.x;
          this._camera.right = box.max.x;
-         this._camera.top = box.min.y;
-         this._camera.bottom = box.max.y;
+         this._camera.top = box.max.y;
+         this._camera.bottom = box.min.y;
       }
 
       // this._camera.far = 100000000000;
@@ -2015,12 +2057,12 @@
       var k = 2*this.options.zoom;
 
       if (this.options.ortho_camera) {
-         this._camera.position.set(0, 0, Math.max(sizey,sizez));
+         this._camera.position.set(midx, midy, Math.max(sizex,sizey));
       } else if (this.options.project) {
          switch (this.options.project) {
-            case 'x': this._camera.position.set(k*1.5*Math.max(sizey,sizez), 0, 0); break
-            case 'y': this._camera.position.set(0, k*1.5*Math.max(sizex,sizez), 0); break
-            case 'z': this._camera.position.set(0, 0, k*1.5*Math.max(sizex,sizey)); break
+            case 'x': this._camera.position.set(k*1.5*Math.max(sizey,sizez), 0, 0); break;
+            case 'y': this._camera.position.set(0, k*1.5*Math.max(sizex,sizez), 0); break;
+            case 'z': this._camera.position.set(0, 0, k*1.5*Math.max(sizex,sizey)); break;
          }
       } else if (this.options._yup) {
          this._camera.position.set(midx-k*Math.max(sizex,sizez), midy+k*sizey, midz-k*Math.max(sizex,sizez));
@@ -3102,7 +3144,13 @@
       var container = this.getExtrasContainer('create', 'axis');
 
       var text_size = 0.02 * Math.max( (box.max.x - box.min.x), (box.max.y - box.min.y), (box.max.z - box.min.z)),
-          names = ['x','y','z'], center = [0,0,0];
+          center = [0,0,0],
+          names = ['x','y','z'],
+          labels = ['X','Y','Z'],
+          colors = ["red","green","blue"],
+          ortho = this.options.ortho_camera,
+          yup = [this.options._yup, this.options._yup, this.options._yup],
+          numaxis = 3;
 
       if (this.options._axis_center)
          for (var naxis=0;naxis<3;++naxis) {
@@ -3111,9 +3159,18 @@
             center[naxis] = (box.min[name] + box.max[name])/2;
          }
 
-      for (var naxis=0;naxis<3;++naxis) {
+      // only two dimensions are seen by ortho camera, X draws Z, can be configured better later
+      if (this.options.ortho_camera) {
+         numaxis = 2;
+         labels[0] = labels[2];
+         colors[0] = colors[2];
+         yup[0] = yup[2];
+         ortho = true;
+      }
 
-         var buf = new Float32Array(6), axiscol, name = names[naxis];
+      for (var naxis=0;naxis<numaxis;++naxis) {
+
+         var buf = new Float32Array(6), axiscol = colors[naxis], name = names[naxis];
 
          function Convert(value) {
             var range = box.max[name] - box.min[name];
@@ -3133,9 +3190,9 @@
          buf[5] = box.min.z;
 
          switch (naxis) {
-           case 0: buf[3] = box.max.x; axiscol = "red"; if (this.options._yup) lbl = "X "+lbl; else lbl+=" X"; break;
-           case 1: buf[4] = box.max.y; axiscol = "green"; if (this.options._yup) lbl+=" Y"; else lbl = "Y " + lbl; break;
-           case 2: buf[5] = box.max.z; axiscol = "blue"; lbl += " Z"; break;
+           case 0: buf[3] = box.max.x; if (yup[0] && !ortho) lbl = labels[0] + " " + lbl; else lbl += " " + labels[0]; break;
+           case 1: buf[4] = box.max.y; if (yup[1]) lbl += " " + labels[1]; else lbl = labels[1] + " " + lbl; break;
+           case 2: buf[5] = box.max.z; lbl += " " + labels[2]; break;
          }
 
          if (this.options._axis_center)
@@ -3151,7 +3208,8 @@
 
          if ((center[naxis]===0) && (center[naxis]>=box.min[name]) && (center[naxis]<=box.max[name]))
            if (!this.options._axis_center || (naxis===0)) {
-               var geom = new THREE.SphereBufferGeometry(text_size*0.25);
+               var geom = ortho ? new THREE.CircleBufferGeometry(text_size*0.25) :
+                                  new THREE.SphereBufferGeometry(text_size*0.25);
                mesh = new THREE.Mesh(geom, textMaterial);
                mesh.translateX((naxis===0) ? center[0] : buf[0]);
                mesh.translateY((naxis===1) ? center[1] : buf[1]);
@@ -3167,10 +3225,27 @@
          mesh.translateY(buf[4]);
          mesh.translateZ(buf[5]);
 
-         if (this.options._yup) {
+         if (yup[naxis]) {
             switch (naxis) {
-               case 0: mesh.rotateY(Math.PI); mesh.translateX(-textbox.max.x - text_size*0.5); mesh.translateY(-textbox.max.y/2);  break;
-               case 1: mesh.rotateX(-Math.PI/2); mesh.rotateY(-Math.PI/2); mesh.translateX(text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
+               case 0:
+                  if (!ortho) {
+                     mesh.rotateY(Math.PI);
+                     mesh.translateX(-textbox.max.x-text_size*0.5);
+                  } else {
+                     mesh.translateX(text_size*0.5);
+                  }
+                  mesh.translateY(-textbox.max.y/2);
+                  break;
+               case 1:
+                  if (!ortho) {
+                     mesh.rotateX(-Math.PI/2);
+                     mesh.rotateY(-Math.PI/2);
+                  } else {
+                     mesh.rotateZ(Math.PI/2);
+                  }
+                  mesh.translateX(text_size*0.5);
+                  mesh.translateY(-textbox.max.y/2);
+                  break;
                case 2: mesh.rotateY(-Math.PI/2); mesh.translateX(text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
            }
          } else {
@@ -3192,10 +3267,27 @@
          mesh.translateY(buf[1]);
          mesh.translateZ(buf[2]);
 
-         if (this.options._yup) {
+         if (yup[naxis]) {
             switch (naxis) {
-               case 0: mesh.rotateY(Math.PI); mesh.translateX(text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
-               case 1: mesh.rotateX(-Math.PI/2); mesh.rotateY(-Math.PI/2); mesh.translateY(-textbox.max.y/2); mesh.translateX(-textbox.max.x-text_size*0.5); break;
+               case 0:
+                  if (!ortho) {
+                     mesh.rotateY(Math.PI);
+                     mesh.translateX(text_size*0.5);
+                  } else {
+                     mesh.translateX(-textbox.max.x-text_size*0.5);
+                  }
+                  mesh.translateY(-textbox.max.y/2);
+                  break;
+               case 1:
+                  if (!ortho) {
+                     mesh.rotateX(-Math.PI/2);
+                     mesh.rotateY(-Math.PI/2);
+                  } else {
+                     mesh.rotateZ(Math.PI/2);
+                  }
+                  mesh.translateY(-textbox.max.y/2);
+                  mesh.translateX(-textbox.max.x-text_size*0.5);
+                  break;
                case 2: mesh.rotateY(-Math.PI/2);  mesh.translateX(-textbox.max.x-text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
             }
          } else {
@@ -3321,9 +3413,9 @@
 
       var new_nodes = [];
 
-      for (var n=0;n<this._draw_nodes.length;++n) {
+      for (var n = 0; n < this._draw_nodes.length; ++n) {
          var entry = this._draw_nodes[n];
-         if (entry.nodeid === nodeid) {
+         if ((entry.nodeid === nodeid) || (this._clones.IsNodeInStack(nodeid, entry.stack))) {
             this._clones.CreateObject3D(entry.stack, this._toplevel, 'delete_mesh');
          } else {
             new_nodes.push(entry);
@@ -3453,14 +3545,8 @@
       this._scene_height = sz.height;
 
       if (this._camera && this._renderer) {
-         if (this._camera.type == "OrthographicCamera") {
-            this._camera.left = -sz.width;
-            this._camera.right = sz.width;
-            this._camera.top = -sz.height;
-            this._camera.bottom = sz.height;
-         } else {
+         if (this._camera.type == "PerspectiveCamera")
             this._camera.aspect = this._scene_width / this._scene_height;
-         }
          this._camera.updateProjectionMatrix();
          this._renderer.setSize( this._scene_width, this._scene_height, !this._fit_main_area );
 
@@ -4031,6 +4117,8 @@
    JSROOT.addDrawFunc({ name: "TEveTrack", icon_get: JSROOT.GEO.getBrowserIcon, icon_click: JSROOT.GEO.browserIconClick });
 
    JSROOT.TGeoPainter = TGeoPainter;
+
+   JSROOT.Painter.GeoDrawingControl = GeoDrawingControl;
 
    return JSROOT.Painter;
 

@@ -227,16 +227,25 @@
       }
    }
 
-   JSROOT.TFramePainter.prototype.Render3D = function(tmout) {
-      // call 3D rendering of the histogram drawing
-      // tmout specified delay, after which actual rendering will be invoked
-      // Timeout used to avoid multiple rendering of the picture when several 3D drawings
-      // superimposed with each other.
-      // If tmeout<=0, rendering performed immediately
-      // Several special values are used:
-      //   -1111 - immediate rendering with SVG renderer
-      //   -2222 - rendering performed only if there were previous calls, which causes timeout activation
+   /** @brief Set frame activity flag
+    * @private */
 
+   JSROOT.TFramePainter.prototype.SetActive = function(on) {
+      if (this.control)
+         this.control.enableKeys = on;
+   }
+
+   /** @brief call 3D rendering of the histogram drawing
+     * @desc tmout specified delay, after which actual rendering will be invoked
+     * Timeout used to avoid multiple rendering of the picture when several 3D drawings
+     * superimposed with each other.
+     * If tmeout<=0, rendering performed immediately
+     * Several special values are used:
+     *  -1111 - immediate rendering with SVG renderer
+     *  -2222 - rendering performed only if there were previous calls, which causes timeout activation
+     * @private */
+
+   JSROOT.TFramePainter.prototype.Render3D = function(tmout) {
 
       if (tmout === -1111) {
          // special handling for direct SVG renderer

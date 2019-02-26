@@ -1516,9 +1516,8 @@
                            .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s")
                            .end().next().toggleClass("ui-accordion-content-active").slideToggle(0);
                      var sub = $(this).next(), hide_drawing = sub.is(":hidden");
-                     sub.attr('frame_active', hide_drawing ? "false" : "true")
-                        .css('display', hide_drawing ? 'none' : '');
-                     if (!hide_drawing) JSROOT.resize(sub.attr('id'));
+                     sub.css('display', hide_drawing ? 'none' : '');
+                     if (!hide_drawing) JSROOT.resize(sub.get(0));
                   })
             .next()
             .addClass("ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom")
@@ -1608,12 +1607,10 @@
                        .tabs({
                           heightStyle : "fill",
                           activate : function (event,ui) {
-                             console.log('tabs activate');
-                             $(ui.oldPanel).attr('frame_active', 'false');
-                             $(ui.newPanel).css('overflow', 'hidden').attr('frame_active', 'true');
-                             JSROOT.resize($(ui.newPanel).attr('id'));
+                             $(ui.newPanel).css('overflow', 'hidden');
+                             JSROOT.resize($(ui.newPanel).get(0));
                            }
-                          });
+                        });
 
          tabs.delegate("span.ui-icon-close", "click", function() {
             var panelId = $(this).closest("li").remove().attr("aria-controls");
@@ -1633,7 +1630,6 @@
       $('#' + hid)
          .empty()
          .css('overflow', 'hidden')
-         .attr('frame_active', 'true')
          .attr('frame_title', title);
 
       return $('#' + hid).get(0);
@@ -1679,7 +1675,6 @@
       return found;
    }
 
-
    FlexibleDisplay.prototype.ActivateFrame = function(frame) {
       this.active_frame_title = d3.select(frame).attr('frame_title');
    }
@@ -1711,6 +1706,27 @@
 
       top.append(entry);
 
+      function PopupWindow(div) {
+         if (div === 'first') {
+            div = null;
+            $('#' + topid + ' .flex_frame').each(function() {
+               if (!$(this).is(":hidden") && ($(this).prop('state') != "minimal")) div = $(this);
+            });
+            if (!div) return;
+         }
+
+         div.appendTo(div.parent());
+
+         if (div.prop('state') == "minimal") return;
+
+         div = div.find(".flex_draw").get(0);
+         var dummy = new JSROOT.TObjectPainter();
+         dummy.SetDivId(div, -1);
+         JSROOT.Painter.SelectActivePad({ pp: dummy.canv_painter(), active: true });
+
+         JSROOT.resize(div);
+      }
+
       function ChangeWindowState(main, state) {
          var curr = main.prop('state');
          if (!curr) curr = "normal";
@@ -1733,12 +1749,12 @@
              .toggleClass("ui-icon-triangle-2-n-s", state=="maximal");
 
          switch (state) {
-            case "minimal" :
+            case "minimal":
                main.height(main.find('.flex_header').height()).width("auto");
                main.find(".flex_draw").css("display","none");
                main.find(".ui-resizable-handle").css("display","none");
                break;
-            case "maximal" :
+            case "maximal":
                main.height("100%").width("100%").css('left','').css('top','');
                main.find(".flex_draw").css("display","");
                main.find(".ui-resizable-handle").css("display","none");
@@ -1753,10 +1769,10 @@
                       .css('top', main.prop('original_top'));
          }
 
-         main.find(".flex_draw").attr('frame_active', state !== "minimal" ? "true" : "false");
-
          if (state !== "minimal")
-            JSROOT.resize(main.find(".flex_draw").get(0));
+            PopupWindow(main);
+         else
+            PopupWindow("first");
       }
 
       $("#" + subid)
@@ -1768,7 +1784,7 @@
             helper: "jsroot-flex-resizable-helper",
             start: function(event, ui) {
                // bring element to front when start resizing
-               $(this).appendTo($(this).parent());
+               PopupWindow($(this));
             },
             stop: function(event, ui) {
                var rect = { width : ui.size.width-1, height : ui.size.height - $(this).find(".flex_header").height()-1 };
@@ -1779,7 +1795,8 @@
             containment: "parent",
             start: function(event, ui) {
                // bring element to front when start dragging
-               $(this).appendTo($(this).parent());
+               PopupWindow($(this));
+
                var ddd = $(this).find(".flex_draw");
 
                // block dragging when mouse below header
@@ -1789,11 +1806,18 @@
                if (isparent) return false;
             }
          })
+       .click(function() { PopupWindow($(this)); })
        .find('.flex_header')
          // .hover(function() { $(this).toggleClass("ui-state-hover"); })
          .click(function() {
-            var div = $(this).parent();
-            div.appendTo(div.parent());
+            PopupWindow($(this).parent());
+         })
+         .dblclick(function() {
+            var main = $(this).parent();
+            if (main.prop('state') == "normal")
+               ChangeWindowState(main, "maximal");
+            else
+               ChangeWindowState(main, "normal");
          })
         .find("button")
            .first()
@@ -1803,6 +1827,7 @@
               var main = $(this).parent().parent();
               mdi.CleanupFrame(main.find(".flex_draw").get(0));
               main.remove();
+              PopupWindow('first'); // set active as first window
            })
            .next()
            .attr('title','maximize canvas')
