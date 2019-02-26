@@ -45,5 +45,15 @@
 #pragma link C++ class ROOT::Experimental::RPadLength::CoordSysBase<ROOT::Experimental::RPadLength::Pixel>+;
 #pragma link C++ class ROOT::Experimental::RPadLength::CoordSysBase<ROOT::Experimental::RPadLength::Normal>+;
 #pragma link C++ class ROOT::Experimental::RPadLength::CoordSysBase<ROOT::Experimental::RPadLength::User>+;
+#pragma link C++ class ROOT::Experimental::RDisplayItem+;
+#pragma link C++ class ROOT::Experimental::RPalette+;
+#pragma link C++ class ROOT::Experimental::RColor+;
+#pragma link C++ class ROOT::Experimental::RStringEnumAttrBase+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttrBase+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr<ROOT::Experimental::RColor>+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr<int>+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr<float>+;
+#pragma link C++ class ROOT::Experimental::RDrawingOptsBase+;
+#pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RCanvas>+;
 
 #endif
