@@ -88,7 +88,7 @@ class RForestView : public RForestViewBase {
 
 private:
    RField<T> fField;
-   RTreeValue<T> fValue;
+   RFieldValue<T> fValue;
    RForestView(std::string_view fieldName, RForestViewContext* context)
       : RForestViewBase(context), fField(fieldName), fValue(fField.GenerateValue())
    {
