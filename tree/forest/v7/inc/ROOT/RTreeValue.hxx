@@ -35,7 +35,7 @@ class RTreeFieldBase;
 
 The data carried by the tree value is used by the computational code and it is supposed to be serialized on Fill
 or deserialized into by tree reading.  Only fields can generate their corresponding tree values. This class is a mere
-wrapper around the memory location, it does not own it.  Memory ownership is managed through the RTreeEntry.
+wrapper around the memory location, it does not own it.  Memory ownership is managed through the RForestEntry.
 */
 // clang-format on
 class RTreeValueBase {
