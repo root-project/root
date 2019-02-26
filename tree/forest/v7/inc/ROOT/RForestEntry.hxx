@@ -1,4 +1,4 @@
-/// \file ROOT/RTreeEntry.hxx
+/// \file ROOT/RForestEntry.hxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-07-19
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RTreeEntry
-#define ROOT7_RTreeEntry
+#ifndef ROOT7_RForestEntry
+#define ROOT7_RForestEntry
 
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RTreeField.hxx>
@@ -31,13 +31,13 @@ namespace Experimental {
 /**
 \class ROOT::Experimental::RTreeEntry
 \ingroup Forest
-\brief The RTreeEntry is a collection of tree values corresponding to a complete row in the data set
+\brief The RTreeEntry is a collection of values in a forest corresponding to a complete row in the data set
 
 The entry provides a memory-managed binder for a set of values. Through shared pointers, the memory locations
 that are associated to values are managed.
 */
 // clang-format on
-class RTreeEntry {
+class RForestEntry {
    std::vector<Detail::RTreeValueBase> fTreeValues;
    /// The objects involed in serialization and deserialization might be used long after the entry is gone:
    /// hence the shared pointer
@@ -46,10 +46,10 @@ class RTreeEntry {
    std::vector<std::size_t> fManagedValues;
 
 public:
-   RTreeEntry() = default;
-   RTreeEntry(const RTreeEntry& other) = delete;
-   RTreeEntry& operator=(const RTreeEntry& other) = delete;
-   ~RTreeEntry();
+   RForestEntry() = default;
+   RForestEntry(const RForestEntry& other) = delete;
+   RForestEntry& operator=(const RForestEntry& other) = delete;
+   ~RForestEntry();
 
    /// Adds a value whose storage is managed by the entry
    void AddValue(const Detail::RTreeValueBase& value);

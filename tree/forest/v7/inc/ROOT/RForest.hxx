@@ -27,7 +27,7 @@
 namespace ROOT {
 namespace Experimental {
 
-class RTreeEntry;
+class RForestEntry;
 class RForestModel;
 
 namespace Detail {
@@ -102,7 +102,7 @@ public:
    /// On I/O errors, raises an expection.
    void GetEntry(ForestIndex_t index) { GetEntry(index, fModel->GetDefaultEntry()); }
    /// Fills a user provided entry after checking that the entry has been instantiated from the forest model
-   void GetEntry(ForestIndex_t index, RTreeEntry* entry) {
+   void GetEntry(ForestIndex_t index, RForestEntry* entry) {
       for (auto& value : *entry) {
          value.GetField()->Read(index, &value);
       }
@@ -151,7 +151,7 @@ public:
    void Fill() { Fill(fModel->GetDefaultEntry()); }
    /// Multiple entries can have been instantiated from the forest model.  This method will perform
    /// a light check whether the entry comes from the forest's own model
-   void Fill(RTreeEntry *entry) {
+   void Fill(RForestEntry *entry) {
       for (auto& treeValue : *entry) {
          treeValue.GetField()->Append(treeValue);
       }
