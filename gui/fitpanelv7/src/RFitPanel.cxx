@@ -16,6 +16,7 @@
 #include <ROOT/RFitPanel.hxx>
 
 #include <ROOT/RWebWindowsManager.hxx>
+#include <ROOT/RHistDrawable.hxx>
 #include <ROOT/TLogger.hxx>
 #include "ROOT/TDirectory.hxx"
 
