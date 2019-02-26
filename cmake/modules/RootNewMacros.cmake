@@ -190,12 +190,20 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
 endmacro()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_GENERATE_DICTIONARY( dictionary headerfiles MODULE module DEPENDENCIES dep1 dep2
+#---ROOT_GENERATE_DICTIONARY( dictionary headerfiles NODEPHEADERS ghdr1 ghdr2 ...
+#                                                    MODULE module DEPENDENCIES dep1 dep2
 #                                                    BUILTINS dep1 dep2
 #                                                    STAGE1 LINKDEF linkdef OPTIONS opt1 opt2 ...)
+#
+# <dictionary> is the dictionary stem; the macro creates (among other files) the dictionary source as
+#   <dictionary>.cxx
+# <headerfiles> are "as included"; set appropriate INCLUDE_DIRECTORIES property on the directory.
+#   The dictionary target depends on these headers. These files must exist.
+# <NODEPHEADERS> same as <headerfiles>. If these files are not found (given the target include path)
+#   no error is emitted. The dictionary does not depend on these headers.
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL" "MODULE" "LINKDEF;OPTIONS;DEPENDENCIES;BUILTINS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL" "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
   if (ARG_OPTIONS)
@@ -214,69 +222,47 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---Get the list of include directories------------------
   get_directory_property(incdirs INCLUDE_DIRECTORIES)
-  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-    set(localinclude ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-  else()
-    set(localinclude ${CMAKE_CURRENT_SOURCE_DIR})
-  endif()
+  # rootcling invoked on foo.h should find foo.h in the current source dir,
+  # no matter what.
+  list(APPEND incdirs ${CMAKE_CURRENT_SOURCE_DIR})
+
   #---Get the list of header files-------------------------
+  # CMake needs dependencies from ${CMAKE_CURRENT_SOURCE_DIR} while rootcling wants
+  # header files "as included" (and thus as passed as argument to this CMake function).
   set(headerfiles)
   set(_list_of_header_dependencies)
   foreach(fp ${ARG_UNPARSED_ARGUMENTS})
     if(${fp} MATCHES "[*?]") # Is this header a globbing expression?
-      file(GLOB files inc/${fp} ${fp})
+      file(GLOB files inc/${fp} ${fp}) # Elements of ${fp} have the complete path.
       foreach(f ${files})
         if(NOT f MATCHES LinkDef) # skip LinkDefs from globbing result
-          list(APPEND headerfiles ${f})
+          set(add_inc_as_include On)
+          string(REGEX REPLACE "^${CMAKE_CURRENT_SOURCE_DIR}/inc/" "" f_no_inc ${f})
+          list(APPEND headerfiles ${f_no_inc})
           list(APPEND _list_of_header_dependencies ${f})
         endif()
       endforeach()
     elseif(IS_ABSOLUTE ${fp})
-      list(APPEND headerfiles ${fp})
+      string(REGEX REPLACE "^${CMAKE_CURRENT_SOURCE_DIR}/" "" fp_no_csd ${fp})
+      list(APPEND headerfiles ${fp_no_csd})
       list(APPEND _list_of_header_dependencies ${fp})
-    elseif(CMAKE_PROJECT_NAME STREQUAL ROOT AND
-           EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc/${fp})
-      list(APPEND headerfiles ${CMAKE_CURRENT_SOURCE_DIR}/inc/${fp})
-      list(APPEND _list_of_header_dependencies ${CMAKE_CURRENT_SOURCE_DIR}/inc/${fp})
-    elseif(CMAKE_PROJECT_NAME STREQUAL ROOT AND
-           EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/${fp})
-      list(APPEND headerfiles ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/${fp})
-      list(APPEND _list_of_header_dependencies ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/${fp})
-    elseif(CMAKE_PROJECT_NAME STREQUAL ROOT AND
-           EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
-      list(APPEND headerfiles ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
-      list(APPEND _list_of_header_dependencies ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
-    elseif(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
-      find_file(headerFile ${fp} HINTS ${localinclude} ${incdirs} NO_DEFAULT_PATH)
-      find_file(headerFile ${fp} NO_SYSTEM_ENVIRONMENT_PATH)
-      if(headerFile)
-        list(APPEND headerfiles ${headerFile})
-        list(APPEND _list_of_header_dependencies ${headerFile})
-      else()
-        list(APPEND headerfiles ${fp})
-      endif()
-      unset(headerFile CACHE)
     else()
+      find_file(headerFile ${fp} HINTS ${incdirs} NO_DEFAULT_PATH NO_SYSTEM_ENVIRONMENT_PATH)
+      if(NOT headerFile)
+        message(FATAL_ERROR "Cannot find header ${fp} to generate dictionary ${dictionary} for. Did you forget to set the INCLUDE_DIRECTORIES property for the current directory?")
+      endif()
       list(APPEND headerfiles ${fp})
+      list(APPEND _list_of_header_dependencies ${headerFile})
     endif()
   endforeach()
-  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  headerfiles "${headerfiles}")
-  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/" ""  headerfiles "${headerfiles}")
 
-  # Check that each path here is relative so that it no longer points to the build folder.
-  # If we don't do this, then for example the modulemap might contain absolute paths to the
-  # build folder which would break module compilation.
-  if(PROJECT_NAME STREQUAL ROOT)
-    foreach(hf ${headerfiles})
-      string(REPLACE "${PROJECT_SOURCE_DIR}" "" hfrel "${hf}")
-      # Test folders don't follow this pattern and need absolute paths,
-      # so we don't run our sanity check on them.
-      if(NOT "${hfrel}" MATCHES "/test/")
-        if(IS_ABSOLUTE "${hf}")
-          message(SEND_ERROR "Header path '${hf}' ${hfrel} is not relative!")
-        endif()
-      endif()
-    endforeach()
+  foreach(fp ${ARG_NODEPHEADERS})
+    list(APPEND headerfiles ${fp})
+    # no dependency - think "vector" etc.
+  endforeach()
+
+  if(NOT (headerfiles OR ARG_LINKDEF))
+    message(FATAL_ERROR "No headers nor LinkDef.h supplied / found for dictionary ${dictionary}!")
   endif()
 
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
@@ -409,6 +395,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endforeach()
 
   #---build the implicit dependencies arguments
+  # NOTE: only the Makefile generator respects this!
   foreach(_dep ${_linkdef} ${_list_of_header_dependencies})
     list(APPEND _implicitdeps CXX ${_dep})
   endforeach()
@@ -427,6 +414,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---roottest compability
   add_custom_target(${dictname} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
+
   if(NOT ARG_NOINSTALL AND NOT CMAKE_ROOTTEST_DICT AND DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_TARGETS ${dictname})
     set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.cxx)
@@ -891,6 +879,7 @@ endfunction()
 #                                 [NO_INSTALL_HEADERS]         : don't install headers for this package
 #                                 [STAGE1]                     : use rootcling_stage1 for generating
 #                                 HEADERS header1 header2      : if not specified, globbing for *.h is used)
+#                                 NODEPHEADERS header1 header2 : like HEADERS, but no dependency is generated
 #                                 [NO_HEADERS]                 : don't glob to fill HEADERS variable
 #                                 SOURCES source1 source2      : if not specified, globbing for *.cxx is used)
 #                                 [NO_SOURCES]                 : don't glob to fill SOURCES variable
@@ -908,15 +897,15 @@ endfunction()
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_MODULE)
   set(oneValueArgs)
-  set(multiValueArgs DEPENDENCIES HEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS LINKDEF INSTALL_OPTIONS)
+  set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS LINKDEF INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Check if we have any unparsed arguments
   if(ARG_UNPARSED_ARGUMENTS)
     message(AUTHOR_WARNING "Unparsed arguments for ROOT_STANDARD_LIBRARY_PACKAGE: ${ARG_UNPARSED_ARGUMENTS}")
   endif()
-  # Check that the user doesn't parse NO_HEADERS to disable globbing and HEADERS at the same time.
-  if (ARG_HEADERS AND ARG_NO_HEADERS)
+  # Check that the user doesn't pass NO_HEADERS (to disable globbing) and HEADERS at the same time.
+  if ((ARG_HEADERS OR ARG_NODEPHEADERS) AND ARG_NO_HEADERS)
     message(AUTHOR_WARNING "HEADERS and NO_HEADERS arguments are mutually exclusive.")
   endif()
   if (ARG_SOURCES AND ARG_NO_SOURCES)
@@ -925,7 +914,7 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
 
   # Set default values
   # If HEADERS/SOURCES are not parsed, we glob for those files.
-  if (NOT ARG_HEADERS AND NOT ARG_NO_HEADERS)
+  if (NOT (ARG_HEADERS OR ARG_NO_HEADERS OR ARG_NODEPHEADERS))
     set(ARG_HEADERS "*.h")
   endif()
   if (NOT ARG_SOURCES AND NOT ARG_NO_SOURCES)
@@ -951,10 +940,18 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     set(ROOT_LIBRARY_TARGETS "${ROOT_LIBRARY_TARGETS};${libname}" CACHE STRING "List of ROOT targets generated from ROOT_STANDARD_LIBRARY_PACKAGE()" FORCE)
   endif()
 
+  if (PROJECT_NAME STREQUAL ROOT)
+    include_directories(BEFORE "inc")
+    if(IS_DIRECTORY "v7/inc")
+      include_directories(BEFORE "v7/inc")
+    endif()
+  endif()
+
   ROOT_GENERATE_DICTIONARY(G__${libname} ${ARG_HEADERS}
                           ${MODULE_GEN_ARG}
                           ${STAGE1_FLAG}
                           LINKDEF ${ARG_LINKDEF}
+                          NODEPHEADERS ${ARG_NODEPHEADERS}
                           OPTIONS ${ARG_DICTIONARY_OPTIONS}
                           DEPENDENCIES ${ARG_DEPENDENCIES}
                           BUILTINS ${ARG_BUILTINS}
@@ -974,6 +971,11 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
                         BUILTINS ${ARG_BUILTINS}
                        )
   endif(ARG_OBJECT_LIBRARY)
+
+  # Dictionary might include things from the current src dir, e.g. tests. Alas
+  # there is no way to set the include directory for a source file (except for
+  # the generic COMPILE_FLAGS), so this needs to be glued to the target.
+  target_include_directories(${libname} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
   # Install headers if we have any headers and if the user didn't explicitly
   # disabled this.
