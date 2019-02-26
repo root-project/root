@@ -13,6 +13,7 @@
 #define ROOT_TRootBrowser
 
 #include "TGFrame.h"
+#include "TEnv.h"
 
 #include "TBrowserImp.h"
 
