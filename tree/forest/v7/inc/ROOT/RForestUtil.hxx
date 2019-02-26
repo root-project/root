@@ -17,7 +17,6 @@
 #define ROOT7_RForestUtil
 
 #include <cstdint>
-#include <limits>
 
 #include <string>
 #include <vector>
@@ -36,9 +35,8 @@ struct RForestTest {
 };
 
 /// Integer types long enough to hold the maximum number of entries in a tree
-using TreeIndex_t = std::uint64_t;
-using TreeOffset_t = std::int64_t;
-constexpr TreeIndex_t kInvalidForestIndex = std::numeric_limits<TreeIndex_t>::max();
+using ForestIndex_t = std::uint64_t;
+constexpr ForestIndex_t kInvalidForestIndex = std::uint64_t(-1);
 
 /// Uniquely identifies a physical column within the scope of the current process, used to tag pages
 using ColumnId_t = std::int64_t;
