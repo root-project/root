@@ -17,6 +17,7 @@
 
 #include "ROOT/RForestModel.hxx"
 #include "ROOT/RPageStorage.hxx"
+#include "ROOT/RPageStorageRoot.hxx"
 
 #include <utility>
 
@@ -44,6 +45,15 @@ ROOT::Experimental::RInputForest::RInputForest(
    }
    fNEntries = fSource->GetNEntries();
    fDefaultViewContext = std::unique_ptr<RForestViewContext>(new RForestViewContext(fSource.get()));
+}
+
+std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputForest::Create(
+   std::shared_ptr<RForestModel> model,
+   std::string_view forestName,
+   std::string_view storage)
+{
+   // TODO(jblomer): heuristics based on storage
+   return std::make_unique<RInputForest>(model, std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
 }
 
 ROOT::Experimental::RInputForest::RInputForest(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
@@ -82,6 +92,16 @@ ROOT::Experimental::ROutputForest::~ROutputForest()
 {
    CommitCluster();
    fSink->CommitDataset();
+}
+
+
+std::unique_ptr<ROOT::Experimental::ROutputForest> ROOT::Experimental::ROutputForest::Create(
+   std::shared_ptr<RForestModel> model,
+   std::string_view forestName,
+   std::string_view storage)
+{
+   // TODO(jblomer): heuristics based on storage
+   return std::make_unique<ROutputForest>(model, std::make_unique<Detail::RPageSinkRoot>(forestName, storage));
 }
 
 
