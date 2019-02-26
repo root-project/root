@@ -808,6 +808,7 @@ bool TFormula::PrepareEvalMethod()
       Bool_t hasVariables = (fNdim > 0);
       fMethod = prepareMethod(hasParameters, hasVariables, fClingName,
                               fVectorized).release();
+      if (!fMethod) return false; 
       fFuncPtr = prepareFuncPtr(fMethod);
    }
    return fFuncPtr;
