@@ -16,8 +16,8 @@
 #ifndef ROOT7_RForestModel
 #define ROOT7_RForestModel
 
+#include <ROOT/RForestEntry.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RTreeEntry.hxx>
 #include <ROOT/RTreeField.hxx>
 #include <ROOT/RTreeValue.hxx>
 
@@ -45,7 +45,7 @@ class RForestModel {
    /// Hierarchy of fields consiting of simple types and collections (sub trees)
    RTreeFieldRoot fRootField;
    /// Contains tree values corresponding to the created fields
-   RTreeEntry fDefaultEntry;
+   RForestEntry fDefaultEntry;
 
 public:
    /// Adds a field whose type is not known at compile time.  Thus there is no shared pointer returned.
@@ -75,7 +75,7 @@ public:
    void AddCollection(std::string_view fieldName, std::shared_ptr<RForestModel> collectionModel);
 
    RTreeFieldRoot* GetRootField() { return &fRootField; }
-   RTreeEntry* GetDefaultEntry() { return &fDefaultEntry; }
+   RForestEntry* GetDefaultEntry() { return &fDefaultEntry; }
 };
 
 } // namespace Exerimental
