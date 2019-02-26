@@ -13,11 +13,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RForestModel.hxx>
 #include <ROOT/RPageStorageRoot.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RTreeField.hxx>
-#include <ROOT/RTreeModel.hxx>
 
 #include <TKey.h>
 
@@ -67,7 +67,7 @@ ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(RColumn* column)
 }
 
 
-void ROOT::Experimental::Detail::RPageSinkRoot::Create(RTreeModel *model)
+void ROOT::Experimental::Detail::RPageSinkRoot::Create(RForestModel *model)
 {
    fForestHeader.fPageSize = kPageSize;
    fDirectory = fSettings.fFile->mkdir(fForestName.c_str());
@@ -232,9 +232,9 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 }
 
 
-std::unique_ptr<ROOT::Experimental::RTreeModel> ROOT::Experimental::Detail::RPageSourceRoot::GenerateModel()
+std::unique_ptr<ROOT::Experimental::RForestModel> ROOT::Experimental::Detail::RPageSourceRoot::GenerateModel()
 {
-   auto model = std::make_unique<RTreeModel>();
+   auto model = std::make_unique<RForestModel>();
    for (auto& f : fMapper.fRootFields) {
       auto field = Detail::RTreeFieldBase::Create(f.fFieldName, f.fTypeName);
       model->AddField(std::unique_ptr<Detail::RTreeFieldBase>(field));

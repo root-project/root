@@ -15,12 +15,12 @@
 
 #include "ROOT/RForest.hxx"
 
-#include "ROOT/RTreeModel.hxx"
+#include "ROOT/RForestModel.hxx"
 #include "ROOT/RPageStorage.hxx"
 
 #include <utility>
 
-ROOT::Experimental::Detail::RForest::RForest(std::shared_ptr<ROOT::Experimental::RTreeModel> model)
+ROOT::Experimental::Detail::RForest::RForest(std::shared_ptr<ROOT::Experimental::RForestModel> model)
    : fModel(model)
    , fNEntries(0)
 {
@@ -33,7 +33,7 @@ ROOT::Experimental::Detail::RForest::~RForest()
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RInputForest::RInputForest(
-   std::shared_ptr<ROOT::Experimental::RTreeModel> model,
+   std::shared_ptr<ROOT::Experimental::RForestModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
    : ROOT::Experimental::Detail::RForest(model)
    , fSource(std::move(source))
@@ -47,7 +47,7 @@ ROOT::Experimental::RInputForest::RInputForest(
 }
 
 ROOT::Experimental::RInputForest::RInputForest(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
-   : ROOT::Experimental::Detail::RForest(std::make_shared<ROOT::Experimental::RTreeModel>())
+   : ROOT::Experimental::Detail::RForest(std::make_shared<ROOT::Experimental::RForestModel>())
    , fSource(std::move(source))
 {
    fSource->Attach();
@@ -68,7 +68,7 @@ ROOT::Experimental::RInputForest::~RInputForest()
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::ROutputForest::ROutputForest(
-   std::shared_ptr<ROOT::Experimental::RTreeModel> model,
+   std::shared_ptr<ROOT::Experimental::RForestModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
    : ROOT::Experimental::Detail::RForest(model)
    , fSink(std::move(sink))

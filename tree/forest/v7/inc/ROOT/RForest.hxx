@@ -16,9 +16,9 @@
 #ifndef ROOT7_RForest
 #define ROOT7_RForest
 
+#include <ROOT/RForestModel.hxx>
 #include <ROOT/RForestUtil.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RTreeModel.hxx>
 #include <ROOT/RTreeView.hxx>
 
 #include <memory>
@@ -28,7 +28,7 @@ namespace ROOT {
 namespace Experimental {
 
 class RTreeEntry;
-class RTreeModel;
+class RForestModel;
 
 namespace Detail {
 class RPageSink;
@@ -41,9 +41,9 @@ namespace Detail {
 /**
 \class ROOT::Experimental::RForest
 \ingroup Forest
-\brief The RForest represents a live dataset, whose structure is defined by an RTreeModel
+\brief The RForest represents a live dataset, whose structure is defined by an RForestModel
 
-RForest connects the static information of the RTreeModel to a source or sink on physical storage.
+RForest connects the static information of the RForestModel to a source or sink on physical storage.
 Reading and writing requires use of the corresponding derived class RInputForest or ROutputForest.
 RForest writes only complete entries (rows of the data set).  The entry itself is not kept within the
 RForest, which allows for multiple concurrent entries for the same RForest.  Besides reading an entire entry,
@@ -53,12 +53,12 @@ the RForest can expose views that read only specific fields.
 class RForest {
 protected:
    /// All forests that use the same model share its ownership
-   std::shared_ptr<RTreeModel> fModel;
+   std::shared_ptr<RForestModel> fModel;
    /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
    TreeIndex_t fNEntries;
 
-   /// Only the derived RInputTree and ROutputTree can be instantiated
-   explicit RForest(std::shared_ptr<RTreeModel> model);
+   /// Only the derived RInputForest and ROutputForest can be instantiated
+   explicit RForest(std::shared_ptr<RForestModel> model);
 
 public:
    RForest(const RForest&) = delete;
@@ -75,9 +75,9 @@ public:
 \ingroup Forest
 \brief An RForest that is used to read data from storage
 
-An input forest provides data from storage as C++ objects. The tree model can be created from the data on storage
-or it can be imposed by the user. The latter case allows users to read into a specialized tree model that covers
-only a subset of the fields in the forest. The tree model is used when reading complete entries.
+An input forest provides data from storage as C++ objects. The forest model can be created from the data on storage
+or it can be imposed by the user. The latter case allows users to read into a specialized forest model that covers
+only a subset of the fields in the forest. The forest model is used when reading complete entries.
 Individual fields can be read as well by instantiating a tree view.
 */
 // clang-format on
@@ -90,8 +90,8 @@ private:
    TreeIndex_t fNEntries;
 
 public:
-   /// The user imposes a tree model, which must be compatible with the model found in the data on storage
-   RInputForest(std::shared_ptr<RTreeModel> model, std::unique_ptr<Detail::RPageSource> source);
+   /// The user imposes a forest model, which must be compatible with the model found in the data on storage
+   RInputForest(std::shared_ptr<RForestModel> model, std::unique_ptr<Detail::RPageSource> source);
    /// The model is generated from the forest metadata on storage
    RInputForest(std::unique_ptr<Detail::RPageSource> source);
    ~RInputForest();
@@ -142,15 +142,15 @@ private:
    TreeIndex_t fLastCommitted;
 
 public:
-   ROutputForest(std::shared_ptr<RTreeModel> model, std::unique_ptr<Detail::RPageSink> sink);
+   ROutputForest(std::shared_ptr<RForestModel> model, std::unique_ptr<Detail::RPageSink> sink);
    ROutputForest(const ROutputForest&) = delete;
    ROutputForest& operator=(const ROutputForest&) = delete;
    ~ROutputForest();
 
-   /// The simplest user interface if the default entry that comes with the tree model is used
+   /// The simplest user interface if the default entry that comes with the forest model is used
    void Fill() { Fill(fModel->GetDefaultEntry()); }
-   /// Multiple tree entries can have been instantiated from the tree model.  This method will perform
-   /// a light check whether the entry comes from the tree's own model
+   /// Multiple entries can have been instantiated from the forest model.  This method will perform
+   /// a light check whether the entry comes from the forest's own model
    void Fill(RTreeEntry *entry) {
       for (auto& treeValue : *entry) {
          treeValue.GetField()->Append(treeValue);
