@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "ROOT/RHist.hxx"
+#include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RColor.hxx"
 #include "ROOT/TFile.hxx"
