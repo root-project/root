@@ -859,6 +859,12 @@
       return this;
    }
 
+   /** @summary Set active flag for frame - can block some events
+    * @private */
+   TFramePainter.prototype.SetActive = function(on) {
+      // do nothing here - key handler is handled differently
+   }
+
    TFramePainter.prototype.GetTipName = function(append) {
       var res = JSROOT.TooltipHandler.prototype.GetTipName.call(this) || "TFrame";
       if (append) res+=append;
@@ -2300,8 +2306,6 @@
 
       var main = this.select_main();
       if (main.empty()) return;
-      var isactive = main.attr('frame_active');
-      if (isactive && isactive!=='true') return;
 
       var key = "";
       switch (evnt.keyCode) {
@@ -2592,6 +2596,8 @@
       this.this_pad_name = "";
       this.has_canvas = false;
 
+      JSROOT.Painter.SelectActivePad({ pp: this, active: false });
+
       JSROOT.TObjectPainter.prototype.Cleanup.call(this);
    }
 
@@ -2642,11 +2648,20 @@
       if (pos && !istoppad)
           this.CalcAbsolutePosition(this.svg_pad(this.this_pad_name), pos);
 
+      JSROOT.Painter.SelectActivePad({ pp: pp, active: true });
+
       if (typeof canp.SelectActivePad == "function")
           canp.SelectActivePad(pp, _painter, pos);
 
       if (canp.pad_events_receiver)
          canp.pad_events_receiver({ what: "select", padpainter: pp, painter: _painter, position: pos });
+   }
+
+   /** @brief Called by framework when pad is supposed to be active and get focus
+    * @private */
+   TPadPainter.prototype.SetActive = function(on) {
+      var fp = this.frame_painter();
+      if (fp && (typeof fp.SetActive == 'function')) fp.SetActive(on);
    }
 
    TPadPainter.prototype.CreateCanvasSvg = function(check_resize, new_size) {
@@ -3887,6 +3902,8 @@
       // we select current pad, where all drawing is performed
       var prev_name = painter.has_canvas ? painter.CurrentPadName(painter.this_pad_name) : undefined;
 
+      JSROOT.Painter.SelectActivePad({ pp: painter, active: false });
+
       // flag used to prevent immediate pad redraw during first draw
       painter.DrawPrimitives(0, function() {
          painter.ShowButtons();
@@ -4266,6 +4283,8 @@
 
       if (painter.enlarge_main('verify'))
          painter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
+
+      JSROOT.Painter.SelectActivePad({ pp: painter, active: false });
 
       painter.DrawPrimitives(0, function() {
          painter.ShowButtons();
