@@ -18,11 +18,6 @@
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
-namespace
-{
-   inline Float_t sqr(Float_t x) { return x*x; }
-}
-
 /** \class REveLine
 \ingroup REve
 An arbitrary polyline with fixed line and marker attributes.

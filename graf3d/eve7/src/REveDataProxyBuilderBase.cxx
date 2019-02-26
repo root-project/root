@@ -206,21 +206,21 @@ REveDataProxyBuilderBase::CreateProduct( std::string viewType, const REveViewCon
 
 //______________________________________________________________________________
 
-namespace {
-   void applyVisAttrToChildren(REveElement* p) {
-      for (auto it = p->BeginChildren(); it != p->EndChildren(); ++it)
-      {
-         REveElement* c = *it;
-         if (c->GetMainColor() != p->GetMainColor())
-         {
-            c->SetMainColor(p->GetMainColor());
-            printf("apply color %d to %s\n", p->GetMainColor(), c->GetCName());
-         }
-         c->SetRnrSelf(p->GetRnrSelf());
-         applyVisAttrToChildren(c);
-      }
-   }
-}
+//namespace {
+//   void applyVisAttrToChildren(REveElement* p) {
+//      for (auto it = p->BeginChildren(); it != p->EndChildren(); ++it)
+//      {
+//         REveElement* c = *it;
+//         if (c->GetMainColor() != p->GetMainColor())
+//         {
+//            c->SetMainColor(p->GetMainColor());
+//            printf("apply color %d to %s\n", p->GetMainColor(), c->GetCName());
+//         }
+//         c->SetRnrSelf(p->GetRnrSelf());
+//         applyVisAttrToChildren(c);
+//      }
+//   }
+//}
 
 void
 REveDataProxyBuilderBase::ModelChanges(const REveDataCollection::Ids_t& iIds, Product* p)
@@ -241,6 +241,7 @@ REveDataProxyBuilderBase::ModelChanges(const REveDataCollection::Ids_t& iIds, Pr
       REveElement* comp = *itElement;
       comp->SetMainColor(item->GetMainColor());
       comp->SetRnrSelf(item->GetRnrSelf());
+
       // AMT temporary workaround for use of compunds
       // applyVisAttrToChildren(comp);
 
