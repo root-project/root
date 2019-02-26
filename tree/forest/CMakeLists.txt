@@ -10,6 +10,7 @@ if(root7)
     v7/inc/ROOT/RColumnElement.hxx
     v7/inc/ROOT/RColumnModel.hxx
     v7/inc/ROOT/RField.hxx
+    v7/inc/ROOT/RFieldValue.hxx
     v7/inc/ROOT/RForest.hxx
     v7/inc/ROOT/RForestEntry.hxx
     v7/inc/ROOT/RForestModel.hxx
@@ -19,7 +20,6 @@ if(root7)
     v7/inc/ROOT/RPagePool.hxx
     v7/inc/ROOT/RPageStorage.hxx
     v7/inc/ROOT/RPageStorageRoot.hxx
-    v7/inc/ROOT/RTreeValue.hxx
   SOURCES
     v7/src/RColumn.cxx
     v7/src/RField.cxx

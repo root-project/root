@@ -17,8 +17,8 @@
 #define ROOT7_RForestEntry
 
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RTreeValue.hxx>
 
 #include <memory>
 #include <utility>
@@ -38,7 +38,7 @@ that are associated to values are managed.
 */
 // clang-format on
 class RForestEntry {
-   std::vector<Detail::RTreeValueBase> fTreeValues;
+   std::vector<Detail::RFieldValueBase> fTreeValues;
    /// The objects involed in serialization and deserialization might be used long after the entry is gone:
    /// hence the shared pointer
    std::vector<std::shared_ptr<void>> fValuePtrs;
@@ -52,16 +52,16 @@ public:
    ~RForestEntry();
 
    /// Adds a value whose storage is managed by the entry
-   void AddValue(const Detail::RTreeValueBase& value);
+   void AddValue(const Detail::RFieldValueBase& value);
 
    /// Adds a value whose storage is _not_ managed by the entry
-   void CaptureValue(const Detail::RTreeValueBase& value);
+   void CaptureValue(const Detail::RFieldValueBase& value);
 
    /// While building the entry, adds a new value to the list and return the value's shared pointer
    template<typename T, typename... ArgsT>
    std::shared_ptr<T> AddValue(RField<T>* field, ArgsT&&... args) {
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
-      fTreeValues.emplace_back(Detail::RTreeValueBase(field->CaptureValue(ptr.get())));
+      fTreeValues.emplace_back(Detail::RFieldValueBase(field->CaptureValue(ptr.get())));
       fValuePtrs.emplace_back(ptr);
       return ptr;
    }

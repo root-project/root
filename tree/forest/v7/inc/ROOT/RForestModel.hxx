@@ -17,9 +17,9 @@
 #define ROOT7_RForestModel
 
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RForestEntry.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RTreeValue.hxx>
 
 #include <TError.h>
 
@@ -33,12 +33,12 @@ namespace Experimental {
 /**
 \class ROOT::Experimental::RForestModel
 \ingroup Forest
-\brief The RForestModel encapulates the schema of a tree.
+\brief The RForestModel encapulates the schema of a forest.
 
-The tree model comprises a collection of hierarchically organized fields. From a frozen model, "entries"
+The forest model comprises a collection of hierarchically organized fields. From a frozen model, "entries"
 can be extracted. For convenience, the model provides a default entry. Models have a unique model identifier
 that faciliates checking whether entries are compatible with it (i.e.: have been extracted from that model).
-A model needs to be frozen before it can be used to create an RTree.
+A model needs to be frozen before it can be used to create an RForest.
 */
 // clang-format on
 class RForestModel {

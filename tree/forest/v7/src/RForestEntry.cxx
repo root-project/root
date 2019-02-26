@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RForestEntry.hxx>
-#include <ROOT/RTreeValue.hxx>
 
 ROOT::Experimental::RForestEntry::~RForestEntry()
 {
@@ -23,13 +23,13 @@ ROOT::Experimental::RForestEntry::~RForestEntry()
    }
 }
 
-void ROOT::Experimental::RForestEntry::AddValue(const Detail::RTreeValueBase& value)
+void ROOT::Experimental::RForestEntry::AddValue(const Detail::RFieldValueBase& value)
 {
    fManagedValues.emplace_back(fTreeValues.size());
    fTreeValues.push_back(value);
 }
 
-void ROOT::Experimental::RForestEntry::CaptureValue(const Detail::RTreeValueBase& value)
+void ROOT::Experimental::RForestEntry::CaptureValue(const Detail::RFieldValueBase& value)
 {
    fTreeValues.push_back(value);
 }

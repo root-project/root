@@ -16,7 +16,7 @@
 #include "ROOT/RColumn.hxx"
 #include "ROOT/RColumnModel.hxx"
 #include "ROOT/RField.hxx"
-#include "ROOT/RTreeValue.hxx"
+#include "ROOT/RFieldValue.hxx"
 
 #include <TClass.h>
 #include <TCollection.h>
@@ -62,13 +62,13 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    return nullptr;
 }
 
-void ROOT::Experimental::Detail::RFieldBase::DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& /*value*/) {
+void ROOT::Experimental::Detail::RFieldBase::DoAppend(const ROOT::Experimental::Detail::RFieldValueBase& /*value*/) {
    R__ASSERT(false);
 }
 
 void ROOT::Experimental::Detail::RFieldBase::DoRead(
    ROOT::Experimental::ForestIndex_t /*index*/,
-   RTreeValueBase* /*value*/)
+   RFieldValueBase* /*value*/)
 {
    R__ASSERT(false);
 }
@@ -81,14 +81,14 @@ void ROOT::Experimental::Detail::RFieldBase::DoReadV(
    R__ASSERT(false);
 }
 
-ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::Detail::RFieldBase::GenerateValue()
+ROOT::Experimental::Detail::RFieldValueBase ROOT::Experimental::Detail::RFieldBase::GenerateValue()
 {
    void *where = malloc(GetValueSize());
    R__ASSERT(where != nullptr);
    return GenerateValue(where);
 }
 
-void ROOT::Experimental::Detail::RFieldBase::DestroyValue(const RTreeValueBase &value, bool dtorOnly)
+void ROOT::Experimental::Detail::RFieldBase::DestroyValue(const RFieldValueBase &value, bool dtorOnly)
 {
    if (!dtorOnly)
       free(value.GetRawPtr());
@@ -211,9 +211,9 @@ void ROOT::Experimental::RField<std::string>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
-void ROOT::Experimental::RField<std::string>::DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& value)
+void ROOT::Experimental::RField<std::string>::DoAppend(const ROOT::Experimental::Detail::RFieldValueBase& value)
 {
-   auto typedValue = reinterpret_cast<const ROOT::Experimental::RTreeValue<std::string>&>(value).Get();
+   auto typedValue = reinterpret_cast<const ROOT::Experimental::RFieldValue<std::string>&>(value).Get();
    auto length = typedValue->length();
    Detail::RColumnElement<char, EColumnType::kByte> elemChars(const_cast<char*>(typedValue->data()));
    fColumns[1]->AppendV(elemChars, length);
@@ -222,9 +222,9 @@ void ROOT::Experimental::RField<std::string>::DoAppend(const ROOT::Experimental:
 }
 
 void ROOT::Experimental::RField<std::string>::DoRead(
-   ROOT::Experimental::ForestIndex_t index, ROOT::Experimental::Detail::RTreeValueBase* value)
+   ROOT::Experimental::ForestIndex_t index, ROOT::Experimental::Detail::RFieldValueBase* value)
 {
-   auto typedValue = reinterpret_cast<ROOT::Experimental::RTreeValue<std::string>*>(value)->Get();
+   auto typedValue = reinterpret_cast<ROOT::Experimental::RFieldValue<std::string>*>(value)->Get();
    auto idxStart = (index == 0) ? 0 : *fColumns[0]->Map<ForestIndex_t, EColumnType::kIndex>(index - 1, &fElemIndex);
    auto idxEnd = *fColumns[0]->Map<ForestIndex_t, EColumnType::kIndex>(index, &fElemIndex);
    auto nChars = idxEnd - idxStart;
@@ -253,7 +253,7 @@ ROOT::Experimental::RFieldClass::RFieldClass(std::string_view fieldName, std::st
    }
 }
 
-void ROOT::Experimental::RFieldClass::DoAppend(const Detail::RTreeValueBase& value) {
+void ROOT::Experimental::RFieldClass::DoAppend(const Detail::RFieldValueBase& value) {
    TIter next(fClass->GetListOfDataMembers());
    unsigned i = 0;
    while (auto dataMember = static_cast<TDataMember *>(next())) {
@@ -264,7 +264,7 @@ void ROOT::Experimental::RFieldClass::DoAppend(const Detail::RTreeValueBase& val
    }
 }
 
-void ROOT::Experimental::RFieldClass::DoRead(ForestIndex_t index, Detail::RTreeValueBase* value) {
+void ROOT::Experimental::RFieldClass::DoRead(ForestIndex_t index, Detail::RFieldValueBase* value) {
    TIter next(fClass->GetListOfDataMembers());
    unsigned i = 0;
    while (auto dataMember = static_cast<TDataMember *>(next())) {
@@ -284,21 +284,21 @@ unsigned int ROOT::Experimental::RFieldClass::GetNColumns() const
    return 0;
 }
 
-ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RFieldClass::GenerateValue(void* where)
+ROOT::Experimental::Detail::RFieldValueBase ROOT::Experimental::RFieldClass::GenerateValue(void* where)
 {
-   return Detail::RTreeValueBase(this, fClass->New(where));
+   return Detail::RFieldValueBase(this, fClass->New(where));
 }
 
-void ROOT::Experimental::RFieldClass::DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly)
+void ROOT::Experimental::RFieldClass::DestroyValue(const Detail::RFieldValueBase& value, bool dtorOnly)
 {
    fClass->Destructor(value.GetRawPtr(), true /* dtorOnly */);
    if (!dtorOnly)
       free(value.GetRawPtr());
 }
 
-ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RFieldClass::CaptureValue(void* where)
+ROOT::Experimental::Detail::RFieldValueBase ROOT::Experimental::RFieldClass::CaptureValue(void* where)
 {
-   return Detail::RTreeValueBase(this, where);
+   return Detail::RFieldValueBase(this, where);
 }
 
 size_t ROOT::Experimental::RFieldClass::GetValueSize() const
@@ -319,8 +319,8 @@ ROOT::Experimental::RFieldVector::RFieldVector(
    Attach(std::move(itemField));
 }
 
-void ROOT::Experimental::RFieldVector::DoAppend(const Detail::RTreeValueBase& value) {
-   auto typedValue = reinterpret_cast<const RTreeValue<std::vector<char>>&>(value).Get();
+void ROOT::Experimental::RFieldVector::DoAppend(const Detail::RFieldValueBase& value) {
+   auto typedValue = reinterpret_cast<const RFieldValue<std::vector<char>>&>(value).Get();
    R__ASSERT((typedValue->size() % fItemSize) == 0);
    auto count = typedValue->size() / fItemSize;
    for (unsigned i = 0; i < count; ++i) {
@@ -332,8 +332,8 @@ void ROOT::Experimental::RFieldVector::DoAppend(const Detail::RTreeValueBase& va
    fColumns[0]->Append(elemIndex);
 }
 
-void ROOT::Experimental::RFieldVector::DoRead(ForestIndex_t index, Detail::RTreeValueBase* value) {
-   auto typedValue = reinterpret_cast<RTreeValue<std::vector<char>>*>(value)->Get();
+void ROOT::Experimental::RFieldVector::DoRead(ForestIndex_t index, Detail::RFieldValueBase* value) {
+   auto typedValue = reinterpret_cast<RFieldValue<std::vector<char>>*>(value)->Get();
 
    ForestIndex_t dummy;
    Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex> elemIndex(&dummy);
@@ -361,13 +361,13 @@ unsigned int ROOT::Experimental::RFieldVector::GetNColumns() const
    return 1;
 }
 
-ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RFieldVector::GenerateValue(void* where)
+ROOT::Experimental::Detail::RFieldValueBase ROOT::Experimental::RFieldVector::GenerateValue(void* where)
 {
    // The memory location can be used as a vector of any type except bool (TODO)
-   return Detail::RTreeValueBase(this, new (where) std::vector<char>());
+   return Detail::RFieldValueBase(this, new (where) std::vector<char>());
 }
 
-void ROOT::Experimental::RFieldVector::DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly)
+void ROOT::Experimental::RFieldVector::DestroyValue(const Detail::RFieldValueBase& value, bool dtorOnly)
 {
    auto vec = static_cast<std::vector<char>*>(value.GetRawPtr());
    R__ASSERT((vec->size() % fItemSize) == 0);
@@ -381,9 +381,9 @@ void ROOT::Experimental::RFieldVector::DestroyValue(const Detail::RTreeValueBase
       free(vec);
 }
 
-ROOT::Experimental::Detail::RTreeValueBase ROOT::Experimental::RFieldVector::CaptureValue(void* where)
+ROOT::Experimental::Detail::RFieldValueBase ROOT::Experimental::RFieldVector::CaptureValue(void* where)
 {
-   return Detail::RTreeValueBase(this, where);
+   return Detail::RFieldValueBase(this, where);
 }
 
 size_t ROOT::Experimental::RFieldVector::GetValueSize() const

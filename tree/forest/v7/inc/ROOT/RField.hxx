@@ -18,9 +18,9 @@
 
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RColumnElement.hxx>
+#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RForestUtil.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RTreeValue.hxx>
 #include <ROOT/TypeTraits.hxx>
 
 #include <TGenericClassInfo.h>
@@ -80,8 +80,8 @@ protected:
 
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
-   virtual void DoAppend(const RTreeValueBase& value);
-   virtual void DoRead(ForestIndex_t index, RTreeValueBase* value);
+   virtual void DoAppend(const RFieldValueBase& value);
+   virtual void DoRead(ForestIndex_t index, RFieldValueBase* value);
    virtual void DoReadV(ForestIndex_t index, ForestIndex_t count, void* dst);
 
 public:
@@ -137,20 +137,20 @@ public:
    virtual unsigned int GetNColumns() const = 0;
 
    /// Generates a tree value of the field type and allocates new initialized memory according to the type.
-   RTreeValueBase GenerateValue();
+   RFieldValueBase GenerateValue();
    /// Generates a tree value in a given location of size at least GetValueSize(). Assumes that where has been
    /// allocated by malloc().
-   virtual RTreeValueBase GenerateValue(void *where) = 0;
+   virtual RFieldValueBase GenerateValue(void *where) = 0;
    /// Releases the resources acquired during GenerateValue (memory and constructor)
    /// This implementation works for simple types but needs to be overwritten for complex ones
-   virtual void DestroyValue(const RTreeValueBase &value, bool dtorOnly = false);
+   virtual void DestroyValue(const RFieldValueBase &value, bool dtorOnly = false);
    /// Creates a value from a memory location with an already constructed object
-   virtual RTreeValueBase CaptureValue(void *where) = 0;
+   virtual RFieldValueBase CaptureValue(void *where) = 0;
    /// The number of bytes taken by a value of the appropriate type
    virtual size_t GetValueSize() const = 0;
 
    /// Write the given value to a tree. The value object has to be of the same type as the field.
-   void Append(const RTreeValueBase& value) {
+   void Append(const RFieldValueBase& value) {
       if (!fIsSimple) {
          DoAppend(value);
          return;
@@ -160,7 +160,7 @@ public:
 
    /// Populate a single value with data from the tree, which needs to be of the fitting type.
    /// Reading copies data into the memory wrapped by the tree value.
-   void Read(ForestIndex_t index, RTreeValueBase* value) {
+   void Read(ForestIndex_t index, RFieldValueBase* value) {
       if (!fIsSimple) {
          DoRead(index, value);
          return;
@@ -206,8 +206,8 @@ public:
    void DoGenerateColumns() final {}
    unsigned int GetNColumns() const final { return 0; }
    using Detail::RFieldBase::GenerateValue;
-   Detail::RTreeValueBase GenerateValue(void*) { return Detail::RTreeValueBase(); }
-   Detail::RTreeValueBase CaptureValue(void*) final { return Detail::RTreeValueBase(); }
+   Detail::RFieldValueBase GenerateValue(void*) { return Detail::RFieldValueBase(); }
+   Detail::RFieldValueBase CaptureValue(void*) final { return Detail::RFieldValueBase(); }
    size_t GetValueSize() const final { return 0; }
 };
 
@@ -216,8 +216,8 @@ class RFieldClass : public Detail::RFieldBase {
 private:
    TClass* fClass;
 protected:
-   void DoAppend(const Detail::RTreeValueBase& value) final;
-   void DoRead(ForestIndex_t index, Detail::RTreeValueBase* value) final;
+   void DoAppend(const Detail::RFieldValueBase& value) final;
+   void DoRead(ForestIndex_t index, Detail::RFieldValueBase* value) final;
 public:
    RFieldClass(std::string_view fieldName, std::string_view className);
    RFieldClass(RFieldClass&& other) = default;
@@ -227,9 +227,9 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final;
    using Detail::RFieldBase::GenerateValue;
-   Detail::RTreeValueBase GenerateValue(void* where) override;
-   void DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly = false) final;
-   Detail::RTreeValueBase CaptureValue(void *where) final;
+   Detail::RFieldValueBase GenerateValue(void* where) override;
+   void DestroyValue(const Detail::RFieldValueBase& value, bool dtorOnly = false) final;
+   Detail::RFieldValueBase CaptureValue(void *where) final;
    size_t GetValueSize() const override;
 };
 
@@ -240,8 +240,8 @@ private:
    ForestIndex_t fNWritten;
 
 protected:
-   void DoAppend(const Detail::RTreeValueBase& value) final;
-   void DoRead(ForestIndex_t index, Detail::RTreeValueBase* value) final;
+   void DoAppend(const Detail::RFieldValueBase& value) final;
+   void DoRead(ForestIndex_t index, Detail::RFieldValueBase* value) final;
 
 public:
    RFieldVector(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
@@ -252,9 +252,9 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final;
    using Detail::RFieldBase::GenerateValue;
-   Detail::RTreeValueBase GenerateValue(void* where) override;
-   void DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly = false) final;
-   Detail::RTreeValueBase CaptureValue(void *where) override;
+   Detail::RFieldValueBase GenerateValue(void* where) override;
+   void DestroyValue(const Detail::RFieldValueBase& value, bool dtorOnly = false) final;
+   Detail::RFieldValueBase CaptureValue(void *where) override;
    size_t GetValueSize() const override;
 };
 
@@ -273,11 +273,11 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
-   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where, ArgsT&&... args)
    {
-      return ROOT::Experimental::RTreeValue<T>(this, static_cast<T*>(where), std::forward<ArgsT>(args)...);
+      return ROOT::Experimental::RFieldValue<T>(this, static_cast<T*>(where), std::forward<ArgsT>(args)...);
    }
-   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where) final { return GenerateValue(where, T()); }
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final { return GenerateValue(where, T()); }
 };
 
 } // namespace Experimental
@@ -304,16 +304,16 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
-   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where, ArgsT&&... args)
    {
-      ROOT::Experimental::RTreeValue<float> v(
+      ROOT::Experimental::RFieldValue<float> v(
          Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)),
          this, static_cast<float*>(where), std::forward<ArgsT>(args)...);
       return v;
    }
-   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where) final { return GenerateValue(where, 0.0); }
-   Detail::RTreeValueBase CaptureValue(void *where) final {
-      ROOT::Experimental::RTreeValue<float> v(true,
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final { return GenerateValue(where, 0.0); }
+   Detail::RFieldValueBase CaptureValue(void *where) final {
+      ROOT::Experimental::RFieldValue<float> v(true,
          Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)),
          this, static_cast<float*>(where));
       return v;
@@ -342,16 +342,16 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
-   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where, ArgsT&&... args)
    {
-      ROOT::Experimental::RTreeValue<double> v(
+      ROOT::Experimental::RFieldValue<double> v(
          Detail::RColumnElement<double, EColumnType::kReal64>(static_cast<double*>(where)),
          this, static_cast<double*>(where), std::forward<ArgsT>(args)...);
       return v;
    }
-   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where) final { return GenerateValue(where, 0.0); }
-   Detail::RTreeValueBase CaptureValue(void *where) final {
-      ROOT::Experimental::RTreeValue<double> v(true,
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final { return GenerateValue(where, 0.0); }
+   Detail::RFieldValueBase CaptureValue(void *where) final {
+      ROOT::Experimental::RFieldValue<double> v(true,
          Detail::RColumnElement<double, EColumnType::kReal64>(static_cast<double*>(where)),
          this, static_cast<double*>(where));
       return v;
@@ -379,16 +379,16 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
-   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where, ArgsT&&... args)
    {
-      ROOT::Experimental::RTreeValue<std::uint32_t> v(
+      ROOT::Experimental::RFieldValue<std::uint32_t> v(
          Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>(static_cast<std::uint32_t*>(where)),
          this, static_cast<std::uint32_t*>(where), std::forward<ArgsT>(args)...);
       return v;
    }
-   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where) final { return GenerateValue(where, 0); }
-   Detail::RTreeValueBase CaptureValue(void *where) final {
-      ROOT::Experimental::RTreeValue<std::uint32_t> v(true,
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final { return GenerateValue(where, 0); }
+   Detail::RFieldValueBase CaptureValue(void *where) final {
+      ROOT::Experimental::RFieldValue<std::uint32_t> v(true,
          Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>(static_cast<std::uint32_t*>(where)),
          this, static_cast<std::uint32_t*>(where));
       return v;
@@ -403,8 +403,8 @@ private:
    ForestIndex_t fIndex;
    Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex> fElemIndex;
 
-   void DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& value) final;
-   void DoRead(ROOT::Experimental::ForestIndex_t index, ROOT::Experimental::Detail::RTreeValueBase* value) final;
+   void DoAppend(const ROOT::Experimental::Detail::RFieldValueBase& value) final;
+   void DoRead(ROOT::Experimental::ForestIndex_t index, ROOT::Experimental::Detail::RFieldValueBase* value) final;
 
 public:
    static std::string MyTypeName() { return "std::string"; }
@@ -419,20 +419,20 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
-   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where, ArgsT&&... args)
    {
-      return ROOT::Experimental::RTreeValue<std::string>(
+      return ROOT::Experimental::RFieldValue<std::string>(
          this, static_cast<std::string*>(where), std::forward<ArgsT>(args)...);
    }
-   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where) final { return GenerateValue(where, ""); }
-   void DestroyValue(const Detail::RTreeValueBase& value, bool dtorOnly = false) {
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final { return GenerateValue(where, ""); }
+   void DestroyValue(const Detail::RFieldValueBase& value, bool dtorOnly = false) {
       auto str = static_cast<std::string*>(value.GetRawPtr());
       str->~basic_string(); // TODO(jblomer) C++17 std::destroy_at
       if (!dtorOnly)
          free(str);
    }
-   Detail::RTreeValueBase CaptureValue(void *where) {
-      return ROOT::Experimental::RTreeValue<std::string>(true, this, static_cast<std::string*>(where));
+   Detail::RFieldValueBase CaptureValue(void *where) {
+      return ROOT::Experimental::RFieldValue<std::string>(true, this, static_cast<std::string*>(where));
    }
    size_t GetValueSize() const final { return sizeof(std::string); }
 };
@@ -452,16 +452,16 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
-   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where, ArgsT&&... args)
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where, ArgsT&&... args)
    {
-      return ROOT::Experimental::RTreeValue<ContainerT>(
+      return ROOT::Experimental::RFieldValue<ContainerT>(
          this, static_cast<ContainerT*>(where), std::forward<ArgsT>(args)...);
    }
-   ROOT::Experimental::Detail::RTreeValueBase GenerateValue(void* where) final {
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final {
       return GenerateValue(where, ContainerT());
    }
-   Detail::RTreeValueBase CaptureValue(void *where) final {
-      return ROOT::Experimental::RTreeValue<ContainerT>(true, this, static_cast<ContainerT*>(where));
+   Detail::RFieldValueBase CaptureValue(void *where) final {
+      return ROOT::Experimental::RFieldValue<ContainerT>(true, this, static_cast<ContainerT*>(where));
    }
    size_t GetValueSize() const final { return sizeof(ContainerT); }
 };

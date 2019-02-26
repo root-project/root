@@ -31,7 +31,7 @@ namespace Detail {
 /**
 \class ROOT::Experimental::Detail::RColumnElement
 \ingroup Forest
-\brief A column element points either to the content of an RTreeValue or into a memory mapped page.
+\brief A column element points either to the content of an RFieldValue or into a memory mapped page.
 
 The content pointed to by fRawContent can be a single element or the first element of an array.
 Usually the on-disk element should map bitwise to the in-memory element. Sometimes that's not the case
