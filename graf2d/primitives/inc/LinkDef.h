@@ -45,5 +45,16 @@
 #pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::RMarker>+;
 #pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RMarker>+;
 #pragma link C++ class ROOT::Experimental::RStyle+;
+#pragma link C++ class ROOT::Experimental::RPadLength+;
+#pragma link C++ class ROOT::Experimental::RPadLength::Pixel+;
+#pragma link C++ class ROOT::Experimental::RPadLength::Normal+;
+#pragma link C++ class ROOT::Experimental::RPadLength::User+;
+#pragma link C++ class ROOT::Experimental::RPadLength::CoordSysBase<ROOT::Experimental::RPadLength::Pixel>+;
+#pragma link C++ class ROOT::Experimental::RPadLength::CoordSysBase<ROOT::Experimental::RPadLength::Normal>+;
+#pragma link C++ class ROOT::Experimental::RPadLength::CoordSysBase<ROOT::Experimental::RPadLength::User>+;
+#pragma link C++ struct ROOT::Experimental::RPadExtent+;
+#pragma link C++ struct ROOT::Experimental::RPadPos+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttr<ROOT::Experimental::RPadPos>+;
+
 
 #endif

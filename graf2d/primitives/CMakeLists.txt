@@ -12,6 +12,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGraphicsPrimitives
     ROOT/RDrawingOptsBase.hxx
     ROOT/RLine.hxx
     ROOT/RMarker.hxx
+    ROOT/RPadExtent.hxx
+    ROOT/RPadLength.hxx
+    ROOT/RPadPos.hxx
     ROOT/RPalette.hxx
     ROOT/RStringEnumAttr.hxx
     ROOT/RStyle.hxx
@@ -24,6 +27,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGraphicsPrimitives
     v7/src/RDrawingOptsBase.cxx
     v7/src/RLine.cxx
     v7/src/RMarker.cxx
+    v7/src/RPadExtent.cxx
+    v7/src/RPadLength.cxx
+    v7/src/RPadPos.cxx
     v7/src/RPalette.cxx
     v7/src/RStringEnumAttr.cxx
     v7/src/RStyle.cxx

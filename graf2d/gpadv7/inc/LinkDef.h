@@ -28,9 +28,6 @@
 #pragma link C++ class ROOT::Experimental::RPadUserAxisBase+;
 #pragma link C++ class ROOT::Experimental::RPadCartesianUserAxis+;
 #pragma link C++ struct ROOT::Experimental::Internal::RPadHorizVert+;
-#pragma link C++ struct ROOT::Experimental::RPadExtent+;
-#pragma link C++ struct ROOT::Experimental::RPadPos+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttr<ROOT::Experimental::RPadPos>+;
 #pragma link C++ class std::vector<std::unique_ptr<ROOT::Experimental::RDrawable>>+;
 #pragma link C++ class ROOT::Experimental::RPadBase+;
 #pragma link C++ class ROOT::Experimental::RPadDrawingOpts+;
@@ -38,12 +35,5 @@
 #pragma link C++ class ROOT::Experimental::RPadDrawable+;
 #pragma link C++ class ROOT::Experimental::RCanvas+;
 #pragma link C++ class ROOT::Experimental::RFrame+;
-#pragma link C++ class ROOT::Experimental::RPadLength+;
-#pragma link C++ class ROOT::Experimental::RPadLength::Pixel+;
-#pragma link C++ class ROOT::Experimental::RPadLength::Normal+;
-#pragma link C++ class ROOT::Experimental::RPadLength::User+;
-#pragma link C++ class ROOT::Experimental::RPadLength::CoordSysBase<ROOT::Experimental::RPadLength::Pixel>+;
-#pragma link C++ class ROOT::Experimental::RPadLength::CoordSysBase<ROOT::Experimental::RPadLength::Normal>+;
-#pragma link C++ class ROOT::Experimental::RPadLength::CoordSysBase<ROOT::Experimental::RPadLength::User>+;
 
 #endif
