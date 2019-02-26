@@ -195,6 +195,9 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
             desc.chlds.emplace_back(chld->GetNumber()-offset);
          }
 
+      if ((desc.chlds.size() > 0) && shape)
+         printf("parent shape class is %s\n", shape->ClassName());
+
       // ignore shapes where childs are exists
       // FIXME: seems to be, in some situations shape has to be drawn
       if ((desc.chlds.size() > 0) && shape && (shape->IsA() == TGeoBBox::Class())) {
@@ -564,7 +567,7 @@ bool ROOT::Experimental::REveGeomDescription::IsPrincipalNode(int nodeid)
 
    auto &desc = fDesc[nodeid];
 
-   return desc.sortid < fDrawIdCut;
+   return (desc.sortid < fDrawIdCut) && desc.IsVisible() && desc.CanDisplay();
 }
 
 /////////////////////////////////////////////////////////////////////

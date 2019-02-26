@@ -214,7 +214,8 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
          fWebWindow->Send(connid, json0);
 
          if (selected && fDesc.IsPrincipalNode(nodeid)) {
-            // we need to send changes in drawing nodes
+            // we need to send changes in drawing elements
+            // there can be many elements, which reference same volume
 
             std::string json{"APPND:"};
             std::vector<char> binary;
@@ -228,7 +229,10 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
                fWebWindow->SendBinary(connid, &binary[0], binary.size());
             }
          } else if (selected) {
+
             // just resend full geometry
+            // TODO: one can improve here and send only nodes which are not exists on client
+            // TODO: for that one should remember all information send to client
             SendGeometry(connid);
          }
       }
