@@ -33,7 +33,7 @@ namespace Detail {
 
 class RColumn;
 class RPagePool;
-class RTreeFieldBase;
+class RFieldBase;
 
 enum class EPageStorageType {
    kSink,
@@ -123,7 +123,7 @@ public:
    /// Open the physical storage container for the tree
    virtual void Attach() = 0;
 
-   // TODO(jblomer): virtual std::unique_ptr<RTreeFieldBase> ListFields() {/* Make me abstract */ return nullptr;}
+   // TODO(jblomer): virtual std::unique_ptr<RFieldBase> ListFields() {/* Make me abstract */ return nullptr;}
    // TODO(jblomer): ListClusters()
    virtual std::unique_ptr<ROOT::Experimental::RForestModel> GenerateModel() = 0;
 

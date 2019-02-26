@@ -17,8 +17,8 @@
 #define ROOT7_RForestView
 
 #include <ROOT/RForestUtil.hxx>
+#include <ROOT/RField.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RTreeField.hxx>
 
 #include <iterator>
 #include <memory>
@@ -87,7 +87,7 @@ class RForestView : public RForestViewBase {
    friend class RInputForest;
 
 private:
-   RTreeField<T> fField;
+   RField<T> fField;
    RTreeValue<T> fValue;
    RForestView(std::string_view fieldName, RForestViewContext* context)
       : RForestViewBase(context), fField(fieldName), fValue(fField.GenerateValue())
@@ -116,7 +116,7 @@ class RForestView<float> : public RForestViewBase {
    friend class RInputForest;
 
 private:
-   RTreeField<float> fField;
+   RField<float> fField;
    RForestView(std::string_view fieldName, RForestViewContext* context)
       : RForestViewBase(context), fField(fieldName)
    {
@@ -147,7 +147,7 @@ public:
 //public:
 //   template <typename T>
 //   RForestView<T> GetView(std::string_view fieldName) {
-//      auto field = std::make_unique<RTreeField<T>>(fieldName);
+//      auto field = std::make_unique<RField<T>>(fieldName);
 //      // ...
 //      return RForestView<T>(std::move(field));
 //   }

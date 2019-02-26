@@ -25,7 +25,7 @@ namespace Experimental {
 
 namespace Detail {
 
-class RTreeFieldBase;
+class RFieldBase;
 
 // clang-format off
 /**
@@ -39,27 +39,27 @@ wrapper around the memory location, it does not own it.  Memory ownership is man
 */
 // clang-format on
 class RTreeValueBase {
-   friend class RTreeFieldBase;
+   friend class RFieldBase;
 
 protected:
    /// Every value is connected to a field of the corresponding type that has created the value.
-   RTreeFieldBase* fField;
+   RFieldBase* fField;
    /// The memory location containing (constructed) data of a certain C++ type
    void* fRawPtr;
 
    /// For simple types, the mapped element drills through the layers from the C++ data representation
    /// to the primitive columns.  Otherwise, using fMappedElements is undefined.
-   /// Only RTreeFieldBase uses fMappedElement
+   /// Only RFieldBase uses fMappedElement
    RColumnElementBase fMappedElement;
 
 public:
    RTreeValueBase() : fField(nullptr), fRawPtr(nullptr) {}
-   RTreeValueBase(RTreeFieldBase* field, void* rawPtr) : fField(field), fRawPtr(rawPtr) {}
-   RTreeValueBase(RTreeFieldBase* field, void* rawPtr, const RColumnElementBase& mappedElement)
+   RTreeValueBase(RFieldBase* field, void* rawPtr) : fField(field), fRawPtr(rawPtr) {}
+   RTreeValueBase(RFieldBase* field, void* rawPtr, const RColumnElementBase& mappedElement)
       : fField(field), fRawPtr(rawPtr), fMappedElement(mappedElement) {}
 
    void* GetRawPtr() const { return fRawPtr; }
-   RTreeFieldBase* GetField() const { return fField; }
+   RFieldBase* GetField() const { return fField; }
 };
 
 } // namespace Detail
@@ -80,20 +80,20 @@ public:
    RTreeValue() : Detail::RTreeValueBase(nullptr, nullptr) {}
    RTreeValue(const Detail::RTreeValueBase &other) : Detail::RTreeValueBase(other) {}
    template <typename... ArgsT>
-   RTreeValue(Detail::RTreeFieldBase* field, T* where, ArgsT&&... args) : Detail::RTreeValueBase(field, where)
+   RTreeValue(Detail::RFieldBase* field, T* where, ArgsT&&... args) : Detail::RTreeValueBase(field, where)
    {
       new (where) T(std::forward<ArgsT>(args)...);
    }
    template <typename... ArgsT>
-   RTreeValue(const Detail::RColumnElementBase& elem, Detail::RTreeFieldBase* field, T* where, ArgsT&&... args)
+   RTreeValue(const Detail::RColumnElementBase& elem, Detail::RFieldBase* field, T* where, ArgsT&&... args)
       : Detail::RTreeValueBase(field, where, elem)
    {
       new (where) T(std::forward<ArgsT>(args)...);
    }
    template <typename... ArgsT>
-   RTreeValue(bool /*captureTag*/, Detail::RTreeFieldBase* field, T* value) : Detail::RTreeValueBase(field, value) {}
+   RTreeValue(bool /*captureTag*/, Detail::RFieldBase* field, T* value) : Detail::RTreeValueBase(field, value) {}
    template <typename... ArgsT>
-   RTreeValue(bool /*captureTag*/, const Detail::RColumnElementBase& elem, Detail::RTreeFieldBase* field, T* value)
+   RTreeValue(bool /*captureTag*/, const Detail::RColumnElementBase& elem, Detail::RFieldBase* field, T* value)
       : Detail::RTreeValueBase(field, value, elem) {}
 
    T* Get() const { return static_cast<T*>(fRawPtr); }

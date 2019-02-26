@@ -20,7 +20,7 @@ using RForestModel = ROOT::Experimental::RForestModel;
 using RPageSource = ROOT::Experimental::Detail::RPageSource;
 using RPageSinkRoot = ROOT::Experimental::Detail::RPageSinkRoot;
 using RPageSourceRoot = ROOT::Experimental::Detail::RPageSourceRoot;
-using RTreeFieldBase = ROOT::Experimental::Detail::RTreeFieldBase;
+using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
 
 TEST(RForest, Basics)
 {
@@ -187,11 +187,11 @@ TEST(RForest, Compositional)
 }
 
 TEST(RForest, TypeName) {
-   EXPECT_STREQ("float", ROOT::Experimental::RTreeField<float>::MyTypeName().c_str());
+   EXPECT_STREQ("float", ROOT::Experimental::RField<float>::MyTypeName().c_str());
    EXPECT_STREQ("std::vector<std::string>",
-                ROOT::Experimental::RTreeField<std::vector<std::string>>::MyTypeName().c_str());
+                ROOT::Experimental::RField<std::vector<std::string>>::MyTypeName().c_str());
    EXPECT_STREQ("ROOT::Experimental::RForestTest",
-                ROOT::Experimental::RTreeField<ROOT::Experimental::RForestTest>::MyTypeName().c_str());
+                ROOT::Experimental::RField<ROOT::Experimental::RForestTest>::MyTypeName().c_str());
 }
 
 namespace {

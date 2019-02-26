@@ -16,8 +16,8 @@
 #ifndef ROOT7_RForestEntry
 #define ROOT7_RForestEntry
 
+#include <ROOT/RField.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RTreeField.hxx>
 #include <ROOT/RTreeValue.hxx>
 
 #include <memory>
@@ -29,9 +29,9 @@ namespace Experimental {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RTreeEntry
+\class ROOT::Experimental::RForestEntry
 \ingroup Forest
-\brief The RTreeEntry is a collection of values in a forest corresponding to a complete row in the data set
+\brief The RForestEntry is a collection of values in a forest corresponding to a complete row in the data set
 
 The entry provides a memory-managed binder for a set of values. Through shared pointers, the memory locations
 that are associated to values are managed.
@@ -59,7 +59,7 @@ public:
 
    /// While building the entry, adds a new value to the list and return the value's shared pointer
    template<typename T, typename... ArgsT>
-   std::shared_ptr<T> AddValue(RTreeField<T>* field, ArgsT&&... args) {
+   std::shared_ptr<T> AddValue(RField<T>* field, ArgsT&&... args) {
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
       fTreeValues.emplace_back(Detail::RTreeValueBase(field->CaptureValue(ptr.get())));
       fValuePtrs.emplace_back(ptr);

@@ -20,7 +20,7 @@
 #include <cstdlib>
 #include <utility>
 
-void ROOT::Experimental::RForestModel::AddField(std::unique_ptr<Detail::RTreeFieldBase> field)
+void ROOT::Experimental::RForestModel::AddField(std::unique_ptr<Detail::RFieldBase> field)
 {
    fDefaultEntry.AddValue(field->GenerateValue());
    fRootField.Attach(std::move(field));
