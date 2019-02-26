@@ -20,6 +20,7 @@ namespace Experimental {
 
 //==============================================================================
 // REveCompound
+// Container for managing compounds of EveElements.
 //==============================================================================
 
 class REveCompound : public REveElement,
@@ -30,9 +31,9 @@ private:
    REveCompound &operator=(const REveCompound &); // Not implemented
 
 protected:
-   Short_t fCompoundOpen; // If more than zero, tag new children as compound members.
-   Bool_t  fDoColor;
-   Bool_t  fDoTransparency;
+   Short_t fCompoundOpen{0}; // If more than zero, tag new children as compound members.
+   Bool_t  fDoColor{kFALSE};
+   Bool_t  fDoTransparency{kFALSE};
 
 public:
    REveCompound(const std::string& n = "REveCompound", const std::string& t = "",
@@ -43,22 +44,21 @@ public:
    void   CloseCompound()  { --fCompoundOpen; }
    Bool_t IsCompoundOpen() const { return fCompoundOpen > 0; }
 
-   void SetMainColor(Color_t color); // override;
-   void SetMainTransparency(Char_t t); // override;
+   void SetMainColor(Color_t color) override;
+   void SetMainTransparency(Char_t t) override;
 
-   void AddElement(REveElement *el); // override;
-   void RemoveElementLocal(REveElement *el); // override;
-   void RemoveElementsLocal(); // override;
+   void AddElement(REveElement *el) override;
+   void RemoveElementLocal(REveElement *el) override;
+   void RemoveElementsLocal() override;
 
-   void FillImpliedSelectedSet(Set_t &impSelSet); // override;
+   void FillImpliedSelectedSet(Set_t &impSelSet) override;
 
-   TClass *ProjectedClass(const REveProjection *p) const; // override;
-
-   ClassDef(REveCompound, 0); // Container for managing compounds of EveElements.
+   TClass *ProjectedClass(const REveProjection *p) const override;
 };
 
 //==============================================================================
 // REveCompoundProjected
+// Projected EveCompund container.
 //==============================================================================
 
 class REveCompoundProjected : public REveCompound,
@@ -76,8 +76,6 @@ public:
 
    virtual void UpdateProjection() {}
    virtual REveElement *GetProjectedAsElement() { return this; }
-
-   ClassDef(REveCompoundProjected, 0); // Projected EveCompund container.
 };
 
 } // namespace Experimental

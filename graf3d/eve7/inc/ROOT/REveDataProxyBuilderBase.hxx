@@ -1,3 +1,14 @@
+// @(#)root/eve7:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel, 2018
+
+/*************************************************************************
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT7_REveDataProxyBuilderBase
 #define ROOT7_REveDataProxyBuilderBase
 
@@ -8,7 +19,6 @@
 namespace ROOT {
 namespace Experimental {
 
-//class REveDataInteractionList;
 class REveViewContext;
 class REveTrackPropagator;
 
@@ -18,8 +28,8 @@ public:
    struct Product
    {
       std::string              m_viewType;
-      const REveViewContext   *m_viewContext;
-      REveCompound            *m_elements;
+      const REveViewContext   *m_viewContext{nullptr};
+      REveCompound            *m_elements{nullptr};
 
       Product(std::string viewType, const REveViewContext* c);
       virtual ~Product();
@@ -81,18 +91,13 @@ protected:
 private:
    std::string           m_type;
 
-   const REveDataCollection*   m_collection;
+   const REveDataCollection*   m_collection{nullptr};
 
    float                 m_layer;
    //   REveDataInteractionList*  m_interactionList;
    bool                  m_haveWindow;
    bool                  m_modelsChanged;
-
-
-   ClassDef(REveDataProxyBuilderBase, 0);
-
 };
-
 
 } // namespace Experimental
 } // namespace ROOT
