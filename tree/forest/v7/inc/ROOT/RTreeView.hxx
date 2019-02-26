@@ -35,7 +35,7 @@ namespace Experimental {
 */
 // clang-format on
 class RTreeViewContext {
-   friend class RInputTree;
+   friend class RInputForest;
 
 private:
    const TreeIndex_t fNEntries;
@@ -84,7 +84,7 @@ For simple types, template specializations let the reading become a pure mapping
 // clang-format on
 template <typename T>
 class RTreeView : public RTreeViewBase {
-   friend class RInputTree;
+   friend class RInputForest;
 
 private:
    RTreeField<T> fField;
@@ -113,7 +113,7 @@ public:
 
 template <>
 class RTreeView<float> : public RTreeViewBase {
-   friend class RInputTree;
+   friend class RInputForest;
 
 private:
    RTreeField<float> fField;

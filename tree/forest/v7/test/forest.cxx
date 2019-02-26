@@ -1,4 +1,4 @@
-#include "ROOT/RTree.hxx"
+#include "ROOT/RForest.hxx"
 #include "ROOT/RTreeModel.hxx"
 #include "ROOT/RPageStorage.hxx"
 #include "ROOT/RPageStorageRoot.hxx"
@@ -14,8 +14,8 @@
 #include <string>
 #include <utility>
 
-using RInputTree = ROOT::Experimental::RInputTree;
-using ROutputTree = ROOT::Experimental::ROutputTree;
+using RInputForest = ROOT::Experimental::RInputForest;
+using ROutputForest = ROOT::Experimental::ROutputForest;
 using RTreeModel = ROOT::Experimental::RTreeModel;
 using RPageSource = ROOT::Experimental::Detail::RPageSource;
 using RPageSinkRoot = ROOT::Experimental::Detail::RPageSinkRoot;
@@ -100,8 +100,8 @@ TEST(RForest, WriteRead)
    fieldKlass->s = "abc";
 
    {
-      ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", "test.root"));
-      tree.Fill();
+      ROutputForest forest(model, std::make_unique<RPageSinkRoot>("f", "test.root"));
+      forest.Fill();
    }
 
    *fieldPt = 0.0;
@@ -111,9 +111,9 @@ TEST(RForest, WriteRead)
    fieldNnlo->clear();
    fieldKlass->s.clear();
 
-   RInputTree tree(model, std::make_unique<RPageSourceRoot>("myTree", "test.root"));
-   EXPECT_EQ(1U, tree.GetNEntries());
-   tree.GetEntry(0);
+   RInputForest forest(model, std::make_unique<RPageSourceRoot>("f", "test.root"));
+   EXPECT_EQ(1U, forest.GetNEntries());
+   forest.GetEntry(0);
 
    EXPECT_EQ(42.0, *fieldPt);
    EXPECT_EQ(7.0, *fieldEnergy);
@@ -146,21 +146,21 @@ TEST(RForest, View)
    fieldJets->push_back(2.0);
 
    {
-      ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", "test.root"));
-      tree.Fill();
+      ROutputForest forest(model, std::make_unique<RPageSinkRoot>("f", "test.root"));
+      forest.Fill();
    }
 
-   RInputTree tree(std::make_unique<RPageSourceRoot>("myTree", "test.root"));
-   auto viewPt = tree.GetView<float>("pt");
+   RInputForest forest(std::make_unique<RPageSourceRoot>("f", "test.root"));
+   auto viewPt = forest.GetView<float>("pt");
    int i = 0;
-   while (tree.ViewNext()) {
+   while (forest.ViewNext()) {
       EXPECT_EQ(42.0, viewPt());
       i++;
    }
    EXPECT_EQ(1, i);
 
-   auto ctx = tree.GetViewContext();
-   auto viewJets = tree.GetView<std::vector<float>>("jets", ctx.get());
+   auto ctx = forest.GetViewContext();
+   auto viewJets = forest.GetView<std::vector<float>>("jets", ctx.get());
    i = 0;
    while (ctx->Next()) {
       EXPECT_EQ(2U, viewJets().size());
@@ -205,7 +205,7 @@ TEST(RForest, TClass) {
    auto model = std::make_shared<RTreeModel>();
    auto ptrKlass = model->AddField<ROOT::Experimental::RForestTest>("klass");
 
-   ROutputTree tree(model, std::make_unique<RPageSinkRoot>("myTree", "test.root"));
+   ROutputForest forest(model, std::make_unique<RPageSinkRoot>("f", "test.root"));
 }
 
 
@@ -227,7 +227,7 @@ TEST(RForest, RealWorld1)
 
    double chksumWrite = 0.0;
    {
-      ROutputTree tree(model, std::make_unique<RPageSinkRoot>("t", "test.root"));
+      ROutputForest forest(model, std::make_unique<RPageSinkRoot>("f", "test.root"));
       constexpr unsigned int nEvents = 60000;
       for (unsigned int i = 0; i < nEvents; ++i) {
          fldEvent = i;
@@ -250,14 +250,14 @@ TEST(RForest, RealWorld1)
             chksumWrite += double(fldIndices[n]);
          }
 
-         tree.Fill();
+         forest.Fill();
       }
    }
 
    double chksumRead = 0.0;
-   RInputTree tree(model, std::make_unique<RPageSourceRoot>("t", "test.root"));
-   for (unsigned int i = 0; i < tree.GetNEntries(); ++i) {
-      tree.GetEntry(i);
+   RInputForest forest(model, std::make_unique<RPageSourceRoot>("f", "test.root"));
+   for (unsigned int i = 0; i < forest.GetNEntries(); ++i) {
+      forest.GetEntry(i);
       chksumRead += double(fldEvent) + fldEnergy;
       for (auto t : fldTimes) chksumRead += t;
       for (auto ind : fldIndices) chksumRead += double(ind);
