@@ -1,4 +1,4 @@
-/// \file RTreeEntry.cxx
+/// \file RForestEntry.cxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-15
@@ -13,23 +13,23 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RTreeEntry.hxx>
+#include <ROOT/RForestEntry.hxx>
 #include <ROOT/RTreeValue.hxx>
 
-ROOT::Experimental::RTreeEntry::~RTreeEntry()
+ROOT::Experimental::RForestEntry::~RForestEntry()
 {
    for (auto idx : fManagedValues) {
       fTreeValues[idx].GetField()->DestroyValue(fTreeValues[idx]);
    }
 }
 
-void ROOT::Experimental::RTreeEntry::AddValue(const Detail::RTreeValueBase& value)
+void ROOT::Experimental::RForestEntry::AddValue(const Detail::RTreeValueBase& value)
 {
    fManagedValues.emplace_back(fTreeValues.size());
    fTreeValues.push_back(value);
 }
 
-void ROOT::Experimental::RTreeEntry::CaptureValue(const Detail::RTreeValueBase& value)
+void ROOT::Experimental::RForestEntry::CaptureValue(const Detail::RTreeValueBase& value)
 {
    fTreeValues.push_back(value);
 }
