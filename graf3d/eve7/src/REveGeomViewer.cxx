@@ -122,6 +122,29 @@ std::vector<int> ROOT::Experimental::REveGeomViewer::GetStackFromJson(const std:
    return res;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Send geometry description and principal drawing nodes
+
+void ROOT::Experimental::REveGeomViewer::SendGeometry(unsigned connid)
+{
+   std::string sbuf = "DESCR:";
+   sbuf.append(TBufferJSON::ToJSON(&fDesc,103).Data());
+   printf("Send description %d\n", (int) sbuf.length());
+   fWebWindow->Send(connid, sbuf);
+
+   if (!fDesc.HasDrawData())
+      fDesc.CollectVisibles();
+
+   auto &json = fDesc.GetDrawJson();
+   auto &binary = fDesc.GetDrawBinary();
+
+   printf("Produce JSON %d binary %d\n", (int) json.length(), (int) binary.size());
+
+   fWebWindow->Send(connid, json);
+
+   fWebWindow->SendBinary(connid, &binary[0], binary.size());
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// receive data from client
@@ -135,22 +158,8 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       if (arg == "RELOAD")
          fDesc.Build(fGeoManager);
 
-      std::string sbuf = "DESCR:";
-      sbuf.append(TBufferJSON::ToJSON(&fDesc,103).Data());
-      printf("Send description %d\n", (int) sbuf.length());
-      fWebWindow->Send(connid, sbuf);
+      SendGeometry(connid);
 
-      if (!fDesc.HasDrawData())
-         fDesc.CollectVisibles();
-
-      auto &json = fDesc.GetDrawJson();
-      auto &binary = fDesc.GetDrawBinary();
-
-      printf("Produce JSON %d binary %d\n", (int) json.length(), (int) binary.size());
-
-      fWebWindow->Send(connid, json);
-
-      fWebWindow->SendBinary(connid, &binary[0], binary.size());
    } else if (arg == "QUIT_ROOT") {
 
       RWebWindowsManager::Instance()->Terminate();
@@ -218,6 +227,9 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
                fWebWindow->Send(connid, json);
                fWebWindow->SendBinary(connid, &binary[0], binary.size());
             }
+         } else if (selected) {
+            // just resend full geometry
+            SendGeometry(connid);
          }
       }
    }
