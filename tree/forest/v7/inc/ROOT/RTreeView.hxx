@@ -38,8 +38,8 @@ class RTreeViewContext {
    friend class RInputForest;
 
 private:
-   const TreeIndex_t fNEntries;
-   TreeIndex_t fIndex;
+   const ForestIndex_t fNEntries;
+   ForestIndex_t fIndex;
    Detail::RPageSource* fPageSource;
 
    explicit RTreeViewContext(Detail::RPageSource* pageSource)
@@ -52,7 +52,7 @@ public:
 
    bool Next() { fIndex++; return fIndex < fNEntries; }
    void Reset() { fIndex = kInvalidForestIndex; }
-   TreeIndex_t GetIndex() const { return fIndex; }
+   ForestIndex_t GetIndex() const { return fIndex; }
    Detail::RPageSource* GetPageSource() const { return fPageSource; }
 };
 
@@ -143,7 +143,7 @@ public:
 \brief A tree view for a collection, that can itself generate new tree views for its nested fields.
 */
 // clang-format on
-//class RTreeViewCollection : public RTreeView<TreeIndex_t> {
+//class RTreeViewCollection : public RTreeView<ForestIndex_t> {
 //public:
 //   template <typename T>
 //   RTreeView<T> GetView(std::string_view fieldName) {

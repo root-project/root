@@ -81,8 +81,8 @@ protected:
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
    virtual void DoAppend(const RTreeValueBase& value);
-   virtual void DoRead(TreeIndex_t index, RTreeValueBase* value);
-   virtual void DoReadV(TreeIndex_t index, TreeIndex_t count, void* dst);
+   virtual void DoRead(ForestIndex_t index, RTreeValueBase* value);
+   virtual void DoReadV(ForestIndex_t index, ForestIndex_t count, void* dst);
 
 public:
    /// Field names convey the level of subfields; sub fields (nested collections) are separated by a dot
@@ -160,7 +160,7 @@ public:
 
    /// Populate a single value with data from the tree, which needs to be of the fitting type.
    /// Reading copies data into the memory wrapped by the tree value.
-   void Read(TreeIndex_t index, RTreeValueBase* value) {
+   void Read(ForestIndex_t index, RTreeValueBase* value) {
       if (!fIsSimple) {
          DoRead(index, value);
          return;
@@ -170,7 +170,7 @@ public:
 
    /// Type unsafe bulk read interface; dst must point to a vector of objects of the field type.
    /// TODO(jblomer): can this be type safe?
-   void ReadV(TreeIndex_t index, TreeIndex_t count, void *dst)
+   void ReadV(ForestIndex_t index, ForestIndex_t count, void *dst)
    {
       if (!fIsSimple) {
          DoReadV(index, count, dst);
@@ -180,7 +180,7 @@ public:
    }
 
    /// The number of elements in the principal column. For top level fields, the number of entries.
-   TreeIndex_t GetNItems();
+   ForestIndex_t GetNItems();
 
    /// Ensure that all received items are written from page buffers to the storage.
    void Flush() const;
@@ -217,7 +217,7 @@ private:
    TClass* fClass;
 protected:
    void DoAppend(const Detail::RTreeValueBase& value) final;
-   void DoRead(TreeIndex_t index, Detail::RTreeValueBase* value) final;
+   void DoRead(ForestIndex_t index, Detail::RTreeValueBase* value) final;
 public:
    RTreeFieldClass(std::string_view fieldName, std::string_view className);
    RTreeFieldClass(RTreeFieldClass&& other) = default;
@@ -237,11 +237,11 @@ public:
 class RTreeFieldVector : public Detail::RTreeFieldBase {
 private:
    size_t fItemSize;
-   TreeIndex_t fNWritten;
+   ForestIndex_t fNWritten;
 
 protected:
    void DoAppend(const Detail::RTreeValueBase& value) final;
-   void DoRead(TreeIndex_t index, Detail::RTreeValueBase* value) final;
+   void DoRead(ForestIndex_t index, Detail::RTreeValueBase* value) final;
 
 public:
    RTreeFieldVector(std::string_view fieldName, std::unique_ptr<Detail::RTreeFieldBase> itemField);
@@ -296,7 +296,7 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   float* Map(TreeIndex_t index) {
+   float* Map(ForestIndex_t index) {
       static_assert(Detail::RColumnElement<float, EColumnType::kReal32>::kIsMappable,
                     "(float, EColumnType::kReal32) is not identical on this platform");
       return fPrincipalColumn->Map<float, EColumnType::kReal32>(index, nullptr);
@@ -334,7 +334,7 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   double* Map(TreeIndex_t index) {
+   double* Map(ForestIndex_t index) {
       static_assert(Detail::RColumnElement<double, EColumnType::kReal64>::kIsMappable,
                     "(double, EColumnType::kReal64) is not identical on this platform");
       return fPrincipalColumn->Map<double, EColumnType::kReal64>(index, nullptr);
@@ -371,7 +371,7 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   std::uint32_t* Map(TreeIndex_t index) {
+   std::uint32_t* Map(ForestIndex_t index) {
       static_assert(Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>::kIsMappable,
                     "(std::uint32_t, EColumnType::kInt32) is not identical on this platform");
       return fPrincipalColumn->Map<std::uint32_t, EColumnType::kInt32>(index, nullptr);
@@ -400,11 +400,11 @@ public:
 template <>
 class ROOT::Experimental::RTreeField<std::string> : public ROOT::Experimental::Detail::RTreeFieldBase {
 private:
-   TreeIndex_t fIndex;
-   Detail::RColumnElement<TreeIndex_t, EColumnType::kIndex> fElemIndex;
+   ForestIndex_t fIndex;
+   Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex> fElemIndex;
 
    void DoAppend(const ROOT::Experimental::Detail::RTreeValueBase& value) final;
-   void DoRead(ROOT::Experimental::TreeIndex_t index, ROOT::Experimental::Detail::RTreeValueBase* value) final;
+   void DoRead(ROOT::Experimental::ForestIndex_t index, ROOT::Experimental::Detail::RTreeValueBase* value) final;
 
 public:
    static std::string MyTypeName() { return "std::string"; }
