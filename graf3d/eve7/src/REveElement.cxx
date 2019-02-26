@@ -136,7 +136,7 @@ REveElement::~REveElement()
 
       if (fMother)
       {
-         fMother->RemoveElementLocal(this);         
+         fMother->RemoveElementLocal(this);
         fMother->fChildren.remove(this);
         --(fMother->fNumChildren);
       }
@@ -607,6 +607,14 @@ void REveElement::CheckReferenceCount(const std::string& from)
 void REveElement::CollectScenes(List_t& scenes)
 {
    if (fScene) scenes.push_back(fScene);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return class for this element
+
+TClass *REveElement::IsA() const
+{
+   return TClass::GetClass(typeid(*this), kTRUE, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

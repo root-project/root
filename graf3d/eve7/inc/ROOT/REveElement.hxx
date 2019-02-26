@@ -60,6 +60,8 @@ class REveRenderData;
 
 //==============================================================================
 // REveElement
+// Base class for ROOT Event Visualization Environment (EVE)
+// providing hierarchy management and selection and rendering control.
 //==============================================================================
 
 class REveElement
@@ -138,8 +140,8 @@ public:
    ElementId_t GetElementId() const { return fElementId; }
 
    virtual REveElement* CloneElement() const;
-   virtual REveElement* CloneElementRecurse(Int_t level=0) const;
-   virtual void         CloneChildrenRecurse(REveElement* dest, Int_t level=0) const;
+   virtual REveElement* CloneElementRecurse(Int_t level = 0) const;
+   virtual void         CloneChildrenRecurse(REveElement *dest, Int_t level = 0) const;
 
    std::string GetName()   const { return fName;  }
    const char* GetCName()  const { return fName.c_str();  }
@@ -156,7 +158,7 @@ public:
    const TString& GetVizTag() const               { return fVizTag; }
    void           SetVizTag(const TString& tag)   { fVizTag = tag;  }
 
-   REveElement*   GetVizModel() const             { return fVizModel; }
+   REveElement   *GetVizModel() const             { return fVizModel; }
    void           SetVizModel(REveElement* model);
    Bool_t         SetVizModelByTag();
 
@@ -222,6 +224,8 @@ public:
 
    // --------------------------------
 
+   TClass *IsA() const;
+
    virtual void ExportToCINT(char *var_name); // *MENU*
 
    virtual Bool_t AcceptElement(REveElement* el);
@@ -242,8 +246,8 @@ public:
    virtual void DestroyOrWarn();
    virtual void DestroyElements();              // *MENU*
 
-   virtual Bool_t HandleElementPaste(REveElement* el);
-   virtual void   ElementChanged(Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE);
+   virtual Bool_t HandleElementPaste(REveElement *el);
+   virtual void   ElementChanged(Bool_t update_scenes = kTRUE, Bool_t redraw = kFALSE);
 
    virtual Bool_t CanEditElement() const { return kTRUE;    }
    virtual Bool_t SingleRnrState() const { return kFALSE;   }
@@ -383,15 +387,12 @@ public:
 
    UChar_t GetChangeBits() const { return fChangeBits; }
 
-
    // Menu entries for VizDB communication (here so they are last in the menu).
 
    void VizDB_Apply(const std::string& tag);    // *MENU*
    void VizDB_Reapply();                        // *MENU*
    void VizDB_UpdateModel(Bool_t update=kTRUE); // *MENU*
    void VizDB_Insert(const std::string& tag, Bool_t replace=kTRUE, Bool_t update=kTRUE); // *MENU*
-
-   ClassDef(REveElement, 0); // Base class for ROOT Event Visualization Environment (EVE) providing hierarchy management and selection and rendering control.
 };
 
 
@@ -424,8 +425,6 @@ public:
    virtual void RemoveNieceInternal(REveElement *el) = 0;
 
    virtual void RemoveNieces() = 0;
-
-   ClassDef(REveAunt, 0);
 };
 
 
@@ -444,33 +443,31 @@ public:
       for (auto &n : fNieces) n->RemoveAunt(this);
    }
 
-   bool HasNiece(REveElement *el) const // override
+   bool HasNiece(REveElement *el) const override
    {
       return std::find(fNieces.begin(), fNieces.end(), el) != fNieces.end();
    }
 
-   bool HasNieces() const // override
+   bool HasNieces() const override
    {
       return ! fNieces.empty();
    }
 
-   void AddNieceInternal(REveElement *el) //override
+   void AddNieceInternal(REveElement *el) override
    {
       fNieces.push_back(el);
    }
 
-   void RemoveNieceInternal(REveElement *el) //override
+   void RemoveNieceInternal(REveElement *el) override
    {
       fNieces.remove(el);
    }
 
-   void RemoveNieces() // override
+   void RemoveNieces() override
    {
       for (auto &n : fNieces) n->RemoveAunt(this);
       fNieces.clear();
    }
-
-   ClassDef(REveAuntAsList, 0);
 };
 
 } // namespace Experimental
