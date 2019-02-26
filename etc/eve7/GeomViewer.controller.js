@@ -387,12 +387,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          
          if (!arr || !this.geo_clones) return;
          
-         console.log('Modify items', arr.length);
-         
          for (var k=0;k<arr.length;++k) {
             var moditem = arr[k];
-
-            console.log('Modify item', moditem.id)
 
             this.formatNodeElement(moditem);
          
@@ -408,9 +404,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             if (dnode) {
                // here we can modify only node which was changed
-            
-               console.log('Modify tree node', moditem.id, moditem.vis);
-               
                dnode.title = moditem.name;
                dnode.color_visible = false;
                dnode.node_visible = moditem.vis != 0;

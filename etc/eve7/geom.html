@@ -52,6 +52,9 @@
                viewData: { conn_handle: handle }
            }).placeAt("GeomDiv");
         }
+        
+        if (JSROOT.GetUrlOption('nogl')!==null) JSROOT.gStyle.NoWebGL = true;
+        if (JSROOT.GetUrlOption('libs')!==null) JSROOT.use_full_libs = true;
 
         JSROOT.ConnectWebWindow({
            prereq: "openui5;geom;user:" + evedir + "EveManager.js;" + evedir + "EveElements.js;",

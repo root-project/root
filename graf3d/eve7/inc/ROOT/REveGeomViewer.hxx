@@ -40,6 +40,8 @@ protected:
 
    std::vector<int> GetStackFromJson(const std::string &json);
 
+   void SendGeometry(unsigned connid);
+
 public:
 
    REveGeomViewer(TGeoManager *mgr = nullptr);
