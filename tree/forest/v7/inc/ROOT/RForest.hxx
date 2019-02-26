@@ -18,8 +18,8 @@
 
 #include <ROOT/RForestModel.hxx>
 #include <ROOT/RForestUtil.hxx>
+#include <ROOT/RForestView.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RTreeView.hxx>
 
 #include <memory>
 #include <utility>
@@ -86,7 +86,7 @@ private:
    std::unique_ptr<Detail::RPageSource> fSource;
    /// Encapsulates the entry number for the current iteration. All views share the same current
    /// entry number. Concurrent iterations need to use different contexts.
-   std::unique_ptr<RTreeViewContext> fDefaultViewContext;
+   std::unique_ptr<RForestViewContext> fDefaultViewContext;
    ForestIndex_t fNEntries;
 
 public:
@@ -112,12 +112,12 @@ public:
    /// GetView<double>("particles.pt") or GetView<RVec<double>>("particle").  It can as well be the index
    /// field of a collection itself, like GetView<ForestIndex_t>("particle")
    template <typename T>
-   RTreeView<T> GetView(std::string_view fieldName, RTreeViewContext* context = nullptr) {
+   RForestView<T> GetView(std::string_view fieldName, RForestViewContext* context = nullptr) {
       if (context == nullptr)
          context = fDefaultViewContext.get();
-      return RTreeView<T>(fieldName, context);
+      return RForestView<T>(fieldName, context);
    }
-   std::unique_ptr<RTreeViewContext> GetViewContext();
+   std::unique_ptr<RForestViewContext> GetViewContext();
    void ViewReset() { fDefaultViewContext->Reset(); }
    bool ViewNext() { return fDefaultViewContext->Next(); }
 };
