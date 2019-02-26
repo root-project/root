@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
-// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
+// @(#)root/eve7:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2018
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -71,21 +71,21 @@ public:
 
    struct iterator
    {
-      REveChunkManager *fPlex;
-      Char_t           *fCurrent;
-      Int_t             fAtomIndex;
-      Int_t             fNextChunk;
-      Int_t             fAtomsToGo;
+      REveChunkManager *fPlex{nullptr};
+      Char_t           *fCurrent{nullptr};
+      Int_t             fAtomIndex{-1};
+      Int_t             fNextChunk{0};
+      Int_t             fAtomsToGo{0};
 
-      const std::set<Int_t>           *fSelection;
+      const std::set<Int_t>           *fSelection{nullptr};
       std::set<Int_t>::const_iterator  fSelectionIterator;
 
       iterator(REveChunkManager* p) :
-         fPlex(p), fCurrent(0), fAtomIndex(-1),
-         fNextChunk(0), fAtomsToGo(0), fSelection(0), fSelectionIterator() {}
+         fPlex(p), fCurrent(nullptr), fAtomIndex(-1),
+         fNextChunk(0), fAtomsToGo(0), fSelection(nullptr), fSelectionIterator() {}
       iterator(REveChunkManager& p) :
-         fPlex(&p), fCurrent(0), fAtomIndex(-1),
-         fNextChunk(0), fAtomsToGo(0), fSelection(0), fSelectionIterator() {}
+         fPlex(&p), fCurrent(nullptr), fAtomIndex(-1),
+         fNextChunk(0), fAtomsToGo(0), fSelection(nullptr), fSelectionIterator() {}
       iterator(const iterator& i) :
          fPlex(i.fPlex), fCurrent(i.fCurrent), fAtomIndex(i.fAtomIndex),
          fNextChunk(i.fNextChunk), fAtomsToGo(i.fAtomsToGo),
@@ -99,14 +99,13 @@ public:
       }
 
       Bool_t  next();
-      void    reset() { fCurrent = 0; fAtomIndex = -1; fNextChunk = fAtomsToGo = 0; }
+      void    reset() { fCurrent = nullptr; fAtomIndex = -1; fNextChunk = fAtomsToGo = 0; }
 
       Char_t* operator()() { return fCurrent; }
       Char_t* operator*()  { return fCurrent; }
       Int_t   index()      { return fAtomIndex; }
    };
 
-   ClassDef(REveChunkManager, 0); // Vector-like container with chunked memory allocation.
 };
 
 
@@ -139,8 +138,6 @@ public:
 
    T* At(Int_t idx)  { return reinterpret_cast<T*>(Atom(idx)); }
    T& Ref(Int_t idx) { return *At(idx); }
-
-   // ClassDef(REveChunkVector, 1); // Templated class for specific atom classes (given as template argument).
 };
 
 } // namespace Experimental

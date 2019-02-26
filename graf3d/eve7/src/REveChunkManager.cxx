@@ -23,8 +23,6 @@ Holes in the structure are not supported, neither is removal of atoms.
 The structure can be Refit() to occupy a single contiguous array.
 */
 
-//ClassImp(REveChunkManager);
-//ClassImp(REveChunkManager::iterator);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Release all memory chunks.
