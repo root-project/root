@@ -1,4 +1,4 @@
-/// \file ROOT/RTreeModel.hxx
+/// \file ROOT/RForestModel.hxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RTreeModel
-#define ROOT7_RTreeModel
+#ifndef ROOT7_RForestModel
+#define ROOT7_RForestModel
 
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RTreeEntry.hxx>
@@ -31,9 +31,9 @@ namespace Experimental {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RTreeModel
+\class ROOT::Experimental::RForestModel
 \ingroup Forest
-\brief The RTreeModel encapulates the schema of a tree.
+\brief The RForestModel encapulates the schema of a tree.
 
 The tree model comprises a collection of hierarchically organized fields. From a frozen model, "entries"
 can be extracted. For convenience, the model provides a default entry. Models have a unique model identifier
@@ -41,7 +41,7 @@ that faciliates checking whether entries are compatible with it (i.e.: have been
 A model needs to be frozen before it can be used to create an RTree.
 */
 // clang-format on
-class RTreeModel {
+class RForestModel {
    /// Hierarchy of fields consiting of simple types and collections (sub trees)
    RTreeFieldRoot fRootField;
    /// Contains tree values corresponding to the created fields
@@ -72,7 +72,7 @@ public:
       fRootField.Attach(std::move(field));
    }
 
-   void AddCollection(std::string_view fieldName, std::shared_ptr<RTreeModel> collectionModel);
+   void AddCollection(std::string_view fieldName, std::shared_ptr<RForestModel> collectionModel);
 
    RTreeFieldRoot* GetRootField() { return &fRootField; }
    RTreeEntry* GetDefaultEntry() { return &fDefaultEntry; }

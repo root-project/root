@@ -26,7 +26,7 @@
 namespace ROOT {
 namespace Experimental {
 
-class RTreeModel;
+class RForestModel;
 // TODO(jblomer): factory methods to create tree sinks and sources outside Detail namespace
 
 namespace Detail {
@@ -94,7 +94,7 @@ public:
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
 
    /// Physically creates the storage container to hold the tree (e.g., a directory in a TFile or a S3 bucket)
-   virtual void Create(RTreeModel* model) = 0;
+   virtual void Create(RForestModel* model) = 0;
    /// Write a page to the storage. The column must have been added before.
    virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
    /// Finalize the current cluster and create a new one for the following data.
@@ -125,7 +125,7 @@ public:
 
    // TODO(jblomer): virtual std::unique_ptr<RTreeFieldBase> ListFields() {/* Make me abstract */ return nullptr;}
    // TODO(jblomer): ListClusters()
-   virtual std::unique_ptr<ROOT::Experimental::RTreeModel> GenerateModel() = 0;
+   virtual std::unique_ptr<ROOT::Experimental::RForestModel> GenerateModel() = 0;
 
    /// Fills a page starting with index rangeStart; the corresponding column is taken from the page object
    virtual void PopulatePage(ColumnHandle_t columnHandle, TreeIndex_t index, RPage* page) = 0;

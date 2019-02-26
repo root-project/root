@@ -152,7 +152,7 @@ public:
    virtual ~RPageSinkRoot();
 
    ColumnHandle_t AddColumn(RColumn* column) final;
-   void Create(RTreeModel* model) final;
+   void Create(RForestModel* model) final;
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitCluster(TreeIndex_t nEntries) final;
    void CommitDataset() final;
@@ -188,7 +188,7 @@ public:
 
    ColumnHandle_t AddColumn(RColumn* column) final;
    void Attach() final;
-   std::unique_ptr<ROOT::Experimental::RTreeModel> GenerateModel() final;
+   std::unique_ptr<ROOT::Experimental::RForestModel> GenerateModel() final;
    void PopulatePage(ColumnHandle_t columnHandle, TreeIndex_t index, RPage* page) final;
    TreeIndex_t GetNEntries() final;
    TreeIndex_t GetNElements(ColumnHandle_t columnHandle) final;
