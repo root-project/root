@@ -16,6 +16,7 @@
 #include "ROOT/RMenuItem.hxx"
 
 #include "TROOT.h"
+#include "TString.h"
 #include "TClass.h"
 #include "TList.h"
 #include "TMethod.h"

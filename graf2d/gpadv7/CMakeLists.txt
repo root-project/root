@@ -15,6 +15,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RDrawingOptsBase.hxx
     ROOT/RPalette.hxx
     ROOT/RStringEnumAttr.hxx
+    ROOT/RStyle.hxx
     ROOT/RPadDisplayItem.hxx
     ROOT/RPadExtent.hxx
     ROOT/RPad.hxx
@@ -34,6 +35,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     v7/src/RDrawingOptsBase.cxx
     v7/src/RPalette.cxx
     v7/src/RStringEnumAttr.cxx
+    v7/src/RStyle.cxx
+    v7/src/RStyleReader.cxx
     v7/src/RPad.cxx
     v7/src/RPadExtent.cxx
     v7/src/RPadLength.cxx
@@ -43,6 +46,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     v7/src/RVirtualCanvasPainter.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
+  DEPENDENCIES
+    Core
+    RIO
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
