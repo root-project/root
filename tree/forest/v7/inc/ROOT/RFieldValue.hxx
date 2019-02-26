@@ -1,4 +1,4 @@
-/// \file ROOT/RTreeValue.hxx
+/// \file ROOT/RFieldValue.hxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RTreeValue
-#define ROOT7_RTreeValue
+#ifndef ROOT7_RFieldValue
+#define ROOT7_RFieldValue
 
 #include <ROOT/RColumnElement.hxx>
 
@@ -38,7 +38,7 @@ or deserialized into by tree reading.  Only fields can generate their correspond
 wrapper around the memory location, it does not own it.  Memory ownership is managed through the RForestEntry.
 */
 // clang-format on
-class RTreeValueBase {
+class RFieldValueBase {
    friend class RFieldBase;
 
 protected:
@@ -53,9 +53,9 @@ protected:
    RColumnElementBase fMappedElement;
 
 public:
-   RTreeValueBase() : fField(nullptr), fRawPtr(nullptr) {}
-   RTreeValueBase(RFieldBase* field, void* rawPtr) : fField(field), fRawPtr(rawPtr) {}
-   RTreeValueBase(RFieldBase* field, void* rawPtr, const RColumnElementBase& mappedElement)
+   RFieldValueBase() : fField(nullptr), fRawPtr(nullptr) {}
+   RFieldValueBase(RFieldBase* field, void* rawPtr) : fField(field), fRawPtr(rawPtr) {}
+   RFieldValueBase(RFieldBase* field, void* rawPtr, const RColumnElementBase& mappedElement)
       : fField(field), fRawPtr(rawPtr), fMappedElement(mappedElement) {}
 
    void* GetRawPtr() const { return fRawPtr; }
@@ -67,34 +67,34 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RTreeValue
+\class ROOT::Experimental::RFieldValue
 \ingroup Forest
-\brief A type-safe front for RTreeValueBase
+\brief A type-safe front for RFieldValueBase
 
-Used when types are available at compile time by RTreeModel::AddField()
+Used when types are available at compile time by RForestModel::AddField()
 */
 // clang-format on
 template <typename T>
-class RTreeValue : public Detail::RTreeValueBase {
+class RFieldValue : public Detail::RFieldValueBase {
 public:
-   RTreeValue() : Detail::RTreeValueBase(nullptr, nullptr) {}
-   RTreeValue(const Detail::RTreeValueBase &other) : Detail::RTreeValueBase(other) {}
+   RFieldValue() : Detail::RFieldValueBase(nullptr, nullptr) {}
+   RFieldValue(const Detail::RFieldValueBase &other) : Detail::RFieldValueBase(other) {}
    template <typename... ArgsT>
-   RTreeValue(Detail::RFieldBase* field, T* where, ArgsT&&... args) : Detail::RTreeValueBase(field, where)
+   RFieldValue(Detail::RFieldBase* field, T* where, ArgsT&&... args) : Detail::RFieldValueBase(field, where)
    {
       new (where) T(std::forward<ArgsT>(args)...);
    }
    template <typename... ArgsT>
-   RTreeValue(const Detail::RColumnElementBase& elem, Detail::RFieldBase* field, T* where, ArgsT&&... args)
-      : Detail::RTreeValueBase(field, where, elem)
+   RFieldValue(const Detail::RColumnElementBase& elem, Detail::RFieldBase* field, T* where, ArgsT&&... args)
+      : Detail::RFieldValueBase(field, where, elem)
    {
       new (where) T(std::forward<ArgsT>(args)...);
    }
    template <typename... ArgsT>
-   RTreeValue(bool /*captureTag*/, Detail::RFieldBase* field, T* value) : Detail::RTreeValueBase(field, value) {}
+   RFieldValue(bool /*captureTag*/, Detail::RFieldBase* field, T* value) : Detail::RFieldValueBase(field, value) {}
    template <typename... ArgsT>
-   RTreeValue(bool /*captureTag*/, const Detail::RColumnElementBase& elem, Detail::RFieldBase* field, T* value)
-      : Detail::RTreeValueBase(field, value, elem) {}
+   RFieldValue(bool /*captureTag*/, const Detail::RColumnElementBase& elem, Detail::RFieldBase* field, T* value)
+      : Detail::RFieldValueBase(field, value, elem) {}
 
    T* Get() const { return static_cast<T*>(fRawPtr); }
 };
