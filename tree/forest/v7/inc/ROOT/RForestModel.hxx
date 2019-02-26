@@ -48,6 +48,7 @@ class RForestModel {
    RForestEntry fDefaultEntry;
 
 public:
+   static std::shared_ptr<RForestModel> Create() { return std::make_shared<RForestModel>(); }
    /// Adds a field whose type is not known at compile time.  Thus there is no shared pointer returned.
    void AddField(std::unique_ptr<Detail::RFieldBase> field);
 
