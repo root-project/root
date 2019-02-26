@@ -16,6 +16,7 @@
  *************************************************************************/
 
 #include "ROOT/RHist.hxx"
+#include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RFitPanel.hxx"
 #include "ROOT/TDirectory.hxx"

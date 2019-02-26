@@ -20,7 +20,7 @@
 
 R__LOAD_LIBRARY(libROOTHistDraw);
 
-#include "ROOT/RHist.hxx"
+#include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RColor.hxx"
 #include "ROOT/TDirectory.hxx"
