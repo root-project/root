@@ -195,15 +195,12 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
             desc.chlds.emplace_back(chld->GetNumber()-offset);
          }
 
-      if ((desc.chlds.size() > 0) && shape)
-         printf("parent shape class is %s\n", shape->ClassName());
-
       // ignore shapes where childs are exists
       // FIXME: seems to be, in some situations shape has to be drawn
-      if ((desc.chlds.size() > 0) && shape && (shape->IsA() == TGeoBBox::Class())) {
-         desc.vol = 0;
-         desc.nfaces = 0;
-      }
+      //if ((desc.chlds.size() > 0) && shape && (shape->IsA() == TGeoBBox::Class())) {
+      //   desc.vol = 0;
+      //   desc.nfaces = 0;
+      //}
    }
 
    // recover numbers
@@ -272,15 +269,15 @@ int ROOT::Experimental::REveGeomDescription::MarkVisible(bool on_screen)
       } else {
          auto vol = node->GetVolume();
 
+         if (vol->IsVisible() && !vol->TestAttBit(TGeoAtt::kVisNone) && !node->GetFinder())
+            desc.vis = REveGeomNode::vis_this;
+
          if (desc.chlds.size() > 0) {
             if (vol->IsVisDaughters()) {
-               desc.vis = REveGeomNode::vis_chlds;
+               desc.vis |= REveGeomNode::vis_chlds;
             } else if (vol->TestAttBit(TGeoAtt::kVisOneLevel)) {
-               desc.vis = REveGeomNode::vis_lvl1;
+               desc.vis |= REveGeomNode::vis_lvl1;
             }
-         } else {
-            if (vol->IsVisible() && !vol->TestAttBit(TGeoAtt::kVisNone) && !node->GetFinder())
-               desc.vis = REveGeomNode::vis_this;
          }
       }
 
@@ -558,17 +555,19 @@ void ROOT::Experimental::REveGeomDescription::ClearRawData()
 }
 
 /////////////////////////////////////////////////////////////////////
-/// return true when node used in main geometry drawing
+/// return true when node used in main geometry drawing and does not have childs
+/// for such nodes one could provide optimize toggling of visibility flags
 
-bool ROOT::Experimental::REveGeomDescription::IsPrincipalNode(int nodeid)
+bool ROOT::Experimental::REveGeomDescription::IsPrincipalEndNode(int nodeid)
 {
    if ((nodeid < 0) || (nodeid >= (int)fDesc.size()))
       return false;
 
    auto &desc = fDesc[nodeid];
 
-   return (desc.sortid < fDrawIdCut) && desc.IsVisible() && desc.CanDisplay();
+   return (desc.sortid < fDrawIdCut) && desc.IsVisible() && desc.CanDisplay() && (desc.chlds.size()==0);
 }
+
 
 /////////////////////////////////////////////////////////////////////
 /// Search visible nodes for provided name
@@ -792,13 +791,12 @@ bool ROOT::Experimental::REveGeomDescription::ChangeNodeVisibility(int nodeid, b
 
    auto vol = fNodes[nodeid]->GetVolume();
 
+   dnode.vis = selected ? REveGeomNode::vis_this : REveGeomNode::vis_off;
+   vol->SetVisibility(selected);
    if (dnode.chlds.size() > 0) {
       vol->SetVisDaughters(selected);
       vol->SetAttBit(TGeoAtt::kVisOneLevel, kFALSE); // disable one level when toggling visibility
-      dnode.vis = selected ? REveGeomNode::vis_chlds : REveGeomNode::vis_off;
-   } else {
-      vol->SetVisibility(selected);
-      dnode.vis = selected ? REveGeomNode::vis_this : REveGeomNode::vis_off;
+      if (selected) dnode.vis |= REveGeomNode::vis_chlds;
    }
 
    int id{0};

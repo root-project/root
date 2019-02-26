@@ -159,7 +159,7 @@ public:
 
    bool CollectVisibles();
 
-   bool IsPrincipalNode(int nodeid);
+   bool IsPrincipalEndNode(int nodeid);
 
    bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawBinary.size() > 0) && (fDrawIdCut > 0); }
    const std::string &GetDrawJson() const { return fDrawJson; }
