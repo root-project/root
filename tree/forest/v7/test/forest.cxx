@@ -25,7 +25,7 @@ using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
 TEST(RForest, Basics)
 {
    auto model = std::make_shared<RForestModel>();
-   auto fieldPt = model->AddField<float>("pt");
+   auto fieldPt = model->MakeField<float>("pt");
 
    //RInputTree tree(model, std::make_unique<RPageSource>("T"));
    //RInputTree tree2(std::make_unique<RPageSource>("T"));
@@ -34,9 +34,9 @@ TEST(RForest, Basics)
 TEST(RForest, ReconstructModel)
 {
    auto model = std::make_shared<RForestModel>();
-   auto fieldPt = model->AddField<float>("pt", 42.0);
-   auto fieldNnlo = model->AddField<std::vector<std::vector<float>>>("nnlo");
-   auto fieldKlass = model->AddField<ROOT::Experimental::RForestTest>("klass");
+   auto fieldPt = model->MakeField<float>("pt", 42.0);
+   auto fieldNnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
+   auto fieldKlass = model->MakeField<ROOT::Experimental::RForestTest>("klass");
    {
       RPageSinkRoot sinkRoot("myTree", "test.root");
       sinkRoot.Create(model.get());
@@ -62,13 +62,13 @@ TEST(RForest, StorageRoot)
    RPageSinkRoot sinkRoot("myTree", settingsWrite);
 
    auto model = std::make_shared<RForestModel>();
-   auto fieldPt = model->AddField<float>("pt", 42.0);
-   auto fieldX = model->AddField<float>("energy");
-   auto fieldStr = model->AddField<std::string>("string", "abc");
+   auto fieldPt = model->MakeField<float>("pt", 42.0);
+   auto fieldX = model->MakeField<float>("energy");
+   auto fieldStr = model->MakeField<std::string>("string", "abc");
 
    //auto fieldFail = model->AddField<int>("jets");
-   auto fieldJet = model->AddField<std::vector<float>>("jets" /* TODO(jblomer), {1.0, 2.0}*/);
-   auto nnlo = model->AddField<std::vector<std::vector<float>>>("nnlo");
+   auto fieldJet = model->MakeField<std::vector<float>>("jets" /* TODO(jblomer), {1.0, 2.0}*/);
+   auto nnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
 
    sinkRoot.Create(model.get());
    sinkRoot.CommitDataset();
@@ -86,17 +86,17 @@ TEST(RForest, StorageRoot)
 TEST(RForest, WriteRead)
 {
    auto model = std::make_shared<RForestModel>();
-   auto fieldPt = model->AddField<float>("pt", 42.0);
-   auto fieldEnergy = model->AddField<float>("energy", 7.0);
-   auto fieldTag = model->AddField<std::string>("tag", "xyz");
-   auto fieldJets = model->AddField<std::vector<float>>("jets");
+   auto fieldPt = model->MakeField<float>("pt", 42.0);
+   auto fieldEnergy = model->MakeField<float>("energy", 7.0);
+   auto fieldTag = model->MakeField<std::string>("tag", "xyz");
+   auto fieldJets = model->MakeField<std::vector<float>>("jets");
    fieldJets->push_back(1.0);
    fieldJets->push_back(2.0);
-   auto fieldNnlo = model->AddField<std::vector<std::vector<float>>>("nnlo");
+   auto fieldNnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
    fieldNnlo->push_back(std::vector<float>());
    fieldNnlo->push_back(std::vector<float>{1.0});
    fieldNnlo->push_back(std::vector<float>{1.0, 2.0, 4.0, 8.0});
-   auto fieldKlass = model->AddField<ROOT::Experimental::RForestTest>("klass");
+   auto fieldKlass = model->MakeField<ROOT::Experimental::RForestTest>("klass");
    fieldKlass->s = "abc";
 
    {
@@ -139,9 +139,9 @@ TEST(RForest, WriteRead)
 TEST(RForest, View)
 {
    auto model = std::make_shared<RForestModel>();
-   auto fieldPt = model->AddField<float>("pt", 42.0);
-   auto fieldTag = model->AddField<std::string>("tag", "xyz");
-   auto fieldJets = model->AddField<std::vector<float>>("jets");
+   auto fieldPt = model->MakeField<float>("pt", 42.0);
+   auto fieldTag = model->MakeField<std::string>("tag", "xyz");
+   auto fieldJets = model->MakeField<std::vector<float>>("jets");
    fieldJets->push_back(1.0);
    fieldJets->push_back(2.0);
 
@@ -174,14 +174,14 @@ TEST(RForest, View)
 TEST(RForest, Compositional)
 {
    auto event_model = std::make_shared<RForestModel>();
-   auto h1_px = event_model->AddField<float>("h1_px", 0.0);
+   auto h1_px = event_model->MakeField<float>("h1_px", 0.0);
 
    auto hit_model = std::make_shared<RForestModel>();
-   auto hit_x = hit_model->AddField<float>("x", 0.0);
-   auto hit_y = hit_model->AddField<float>("y", 0.0);
+   auto hit_x = hit_model->MakeField<float>("x", 0.0);
+   auto hit_y = hit_model->MakeField<float>("y", 0.0);
 
    auto track_model = std::make_shared<RForestModel>();
-   auto track_energy = track_model->AddField<float>("energy", 0.0);
+   auto track_energy = track_model->MakeField<float>("energy", 0.0);
 
    /*auto hits =*/ track_model->AddCollection("hits", hit_model);
 }
@@ -200,10 +200,10 @@ class RNoDictionary {};
 
 TEST(RForest, TClass) {
    auto modelFail = std::make_shared<RForestModel>();
-   EXPECT_THROW(modelFail->AddField<RNoDictionary>("nodict"), std::runtime_error);
+   EXPECT_THROW(modelFail->MakeField<RNoDictionary>("nodict"), std::runtime_error);
 
    auto model = std::make_shared<RForestModel>();
-   auto ptrKlass = model->AddField<ROOT::Experimental::RForestTest>("klass");
+   auto ptrKlass = model->MakeField<ROOT::Experimental::RForestTest>("klass");
 
    ROutputForest forest(model, std::make_unique<RPageSinkRoot>("f", "test.root"));
 }
@@ -212,17 +212,17 @@ TEST(RForest, TClass) {
 TEST(RForest, Capture) {
    auto model = std::make_shared<RForestModel>();
    float pt;
-   model->CaptureField("pt", &pt);
+   model->AddField("pt", &pt);
 }
 
 TEST(RForest, RealWorld1)
 {
    // See https://github.com/olifre/root-io-bench/blob/master/benchmark.cpp
    auto model = RForestModel::Create();
-   auto& fldEvent = model->AddFieldRef<std::uint32_t>("event");
-   auto& fldEnergy = model->AddFieldRef<double>("energy");
-   auto& fldTimes = model->AddFieldRef<std::vector<double>>("times");
-   auto& fldIndices = model->AddFieldRef<std::vector<std::uint32_t>>("indices");
+   auto& fldEvent = *model->MakeField<std::uint32_t>("event");
+   auto& fldEnergy = *model->MakeField<double>("energy");
+   auto& fldTimes = *model->MakeField<std::vector<double>>("times");
+   auto& fldIndices = *model->MakeField<std::vector<std::uint32_t>>("indices");
 
    TRandom3 rnd(42);
    double chksumWrite = 0.0;
