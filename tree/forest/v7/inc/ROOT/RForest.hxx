@@ -1,4 +1,4 @@
-/// \file ROOT/RTree.hxx
+/// \file ROOT/RForest.hxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RTree
-#define ROOT7_RTree
+#ifndef ROOT7_RForest
+#define ROOT7_RForest
 
 #include <ROOT/RForestUtil.hxx>
 #include <ROOT/RStringView.hxx>
@@ -39,49 +39,49 @@ namespace Detail {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RTree
+\class ROOT::Experimental::RForest
 \ingroup Forest
-\brief The RTree represents a live dataset, whose structure is defined by an RTreeModel
+\brief The RForest represents a live dataset, whose structure is defined by an RTreeModel
 
-RTree connects the static information of the RTreeModel to a source or sink on physical storage.
-Reading and writing requires use of the corresponding derived class RInputTree or ROutputTree.
-RTree writes only complete entries (rows of the data set).  The entry itself is not kept within the
-RTree, which allows for multiple concurrent entries for the same RTree.  Besides reading an entire entry,
-the RTree can expose tree views that read only specific fields.
+RForest connects the static information of the RTreeModel to a source or sink on physical storage.
+Reading and writing requires use of the corresponding derived class RInputForest or ROutputForest.
+RForest writes only complete entries (rows of the data set).  The entry itself is not kept within the
+RForest, which allows for multiple concurrent entries for the same RForest.  Besides reading an entire entry,
+the RForest can expose views that read only specific fields.
 */
 // clang-format on
-class RTree {
+class RForest {
 protected:
-   /// All trees that use the same model share its ownership
+   /// All forests that use the same model share its ownership
    std::shared_ptr<RTreeModel> fModel;
    /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
    TreeIndex_t fNEntries;
 
    /// Only the derived RInputTree and ROutputTree can be instantiated
-   explicit RTree(std::shared_ptr<RTreeModel> model);
+   explicit RForest(std::shared_ptr<RTreeModel> model);
 
 public:
-   RTree(const RTree&) = delete;
-   RTree& operator =(const RTree&) = delete;
-   ~RTree();
-}; // RTree
+   RForest(const RForest&) = delete;
+   RForest& operator =(const RForest&) = delete;
+   ~RForest();
+}; // RForest
 
 } // namespace Detail
 
 
 // clang-format off
 /**
-\class ROOT::Experimental::RInputTree
+\class ROOT::Experimental::RInputForest
 \ingroup Forest
-\brief An RTree that is used to read data from storage
+\brief An RForest that is used to read data from storage
 
-An input tree provides data from storage as C++ objects. The tree model can be created from the data on storage
+An input forest provides data from storage as C++ objects. The tree model can be created from the data on storage
 or it can be imposed by the user. The latter case allows users to read into a specialized tree model that covers
-only a subset of the fields in the tree. The tree model is used when reading complete entries.
+only a subset of the fields in the forest. The tree model is used when reading complete entries.
 Individual fields can be read as well by instantiating a tree view.
 */
 // clang-format on
-class RInputTree : public Detail::RTree {
+class RInputForest : public Detail::RForest {
 private:
    std::unique_ptr<Detail::RPageSource> fSource;
    /// Encapsulates the entry number for the current iteration. All views share the same current
@@ -91,17 +91,17 @@ private:
 
 public:
    /// The user imposes a tree model, which must be compatible with the model found in the data on storage
-   RInputTree(std::shared_ptr<RTreeModel> model, std::unique_ptr<Detail::RPageSource> source);
-   /// The model is generated from the tree metadata on storage
-   RInputTree(std::unique_ptr<Detail::RPageSource> source);
-   ~RInputTree();
+   RInputForest(std::shared_ptr<RTreeModel> model, std::unique_ptr<Detail::RPageSource> source);
+   /// The model is generated from the forest metadata on storage
+   RInputForest(std::unique_ptr<Detail::RPageSource> source);
+   ~RInputForest();
 
    TreeIndex_t GetNEntries() { return fNEntries; }
 
-   /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the tree.
+   /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the forest.
    /// On I/O errors, raises an expection.
    void GetEntry(TreeIndex_t index) { GetEntry(index, fModel->GetDefaultEntry()); }
-   /// Fills a user provided entry after checking that the entry has been instantiated from the tree's model
+   /// Fills a user provided entry after checking that the entry has been instantiated from the forest model
    void GetEntry(TreeIndex_t index, RTreeEntry* entry) {
       for (auto& value : *entry) {
          value.GetField()->Read(index, &value);
@@ -124,17 +124,17 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::ROutputTree
+\class ROOT::Experimental::ROutputForest
 \ingroup Forest
-\brief An RTree that gets filled with entries (data) and writes them to storage
+\brief An RForest that gets filled with entries (data) and writes them to storage
 
-An output tree can be filled with entries. The caller has to make sure that the data that gets filled into a tree
+An output forest can be filled with entries. The caller has to make sure that the data that gets filled into a forest
 is not modified for the time of the Fill() call. The fill call serializes the C++ object into the column format and
 writes data into the corresponding column page buffers.  Writing of the buffers to storage is deferred and can be
-triggered by Flush() or by destructing the tree.  On I/O errors, an exception is thrown.
+triggered by Flush() or by destructing the forest.  On I/O errors, an exception is thrown.
 */
 // clang-format on
-class ROutputTree : public Detail::RTree {
+class ROutputForest : public Detail::RForest {
 private:
    static constexpr TreeIndex_t kDefaultClusterSizeEntries = 8192;
    std::unique_ptr<Detail::RPageSink> fSink;
@@ -142,10 +142,10 @@ private:
    TreeIndex_t fLastCommitted;
 
 public:
-   ROutputTree(std::shared_ptr<RTreeModel> model, std::unique_ptr<Detail::RPageSink> sink);
-   ROutputTree(const ROutputTree&) = delete;
-   ROutputTree& operator=(const ROutputTree&) = delete;
-   ~ROutputTree();
+   ROutputForest(std::shared_ptr<RTreeModel> model, std::unique_ptr<Detail::RPageSink> sink);
+   ROutputForest(const ROutputForest&) = delete;
+   ROutputForest& operator=(const ROutputForest&) = delete;
+   ~ROutputForest();
 
    /// The simplest user interface if the default entry that comes with the tree model is used
    void Fill() { Fill(fModel->GetDefaultEntry()); }
