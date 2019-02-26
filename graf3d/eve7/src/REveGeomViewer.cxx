@@ -213,7 +213,7 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
          // when visibility disabled, client will automatically remove node from drawing
          fWebWindow->Send(connid, json0);
 
-         if (selected && fDesc.IsPrincipalNode(nodeid)) {
+         if (selected && fDesc.IsPrincipalEndNode(nodeid)) {
             // we need to send changes in drawing elements
             // there can be many elements, which reference same volume
 
