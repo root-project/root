@@ -16,7 +16,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHistDraw
     -writeEmptyRootPCM
   DEPENDENCIES
     Hist
-    ROOTGraphicsPrimitives
+    ROOTGpadv7
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(v7/test)

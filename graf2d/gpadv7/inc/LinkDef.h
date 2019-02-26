@@ -55,5 +55,6 @@
 #pragma link C++ class ROOT::Experimental::RDrawingAttr<float>+;
 #pragma link C++ class ROOT::Experimental::RDrawingOptsBase+;
 #pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RCanvas>+;
+#pragma link C++ class ROOT::Experimental::RStyle+;
 
 #endif
