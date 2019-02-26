@@ -20,7 +20,6 @@
 #include "ROOT/RAxis.hxx"
 #include "ROOT/RDrawable.hxx"
 #include "ROOT/RHistBinIter.hxx"
-#include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RHistImpl.hxx"
 #include "ROOT/RHistData.hxx"
 #include <initializer_list>
