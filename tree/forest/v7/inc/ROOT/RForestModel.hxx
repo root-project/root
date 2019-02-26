@@ -49,25 +49,21 @@ class RForestModel {
 
 public:
    static std::shared_ptr<RForestModel> Create() { return std::make_shared<RForestModel>(); }
-   /// Adds a field whose type is not known at compile time.  Thus there is no shared pointer returned.
-   void AddField(std::unique_ptr<Detail::RFieldBase> field);
 
    /// Creates a new field and a corresponding tree value that is managed by a shared pointer.
    template <typename T, typename... ArgsT>
-   std::shared_ptr<T> AddField(std::string_view fieldName, ArgsT&&... args) {
+   std::shared_ptr<T> MakeField(std::string_view fieldName, ArgsT&&... args) {
       auto field = std::make_unique<RField<T>>(fieldName);
       auto ptr = fDefaultEntry.AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
       fRootField.Attach(std::move(field));
       return ptr;
    }
 
-   template <typename T, typename... ArgsT>
-   T& AddFieldRef(std::string_view fieldName, ArgsT&&... args) {
-      return *AddField<T>(fieldName, std::forward<ArgsT>(args)...);
-   }
+   /// Adds a field whose type is not known at compile time.  Thus there is no shared pointer returned.
+   void AddField(std::unique_ptr<Detail::RFieldBase> field);
 
    template <typename T>
-   void CaptureField(std::string_view fieldName, T* fromWhere) {
+   void AddField(std::string_view fieldName, T* fromWhere) {
       auto field = std::make_unique<RField<T>>(fieldName);
       fDefaultEntry.CaptureValue(field->CaptureValue(fromWhere));
       fRootField.Attach(std::move(field));
