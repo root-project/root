@@ -86,14 +86,14 @@ void REveDataProxyBuilderBase::Build()
       printf("Base %p %s %s\n", m_collection, m_collection->GetCName(), m_type.c_str());
       try
       {
-         size_t itemSize = (size_t)m_collection->GetNItems(); //cashed
+         auto itemSize = m_collection->GetNItems(); //cashed
 
          Clean();
          for (Product_it i = m_products.begin(); i != m_products.end(); ++i)
          {
             printf("build() %s \n", m_collection->GetCName());
             REveElement* elms = (*i)->m_elements;
-            size_t oldSize = elms->NumChildren();
+            auto oldSize = elms->NumChildren();
 
             if (HaveSingleProduct())
             {
@@ -116,23 +116,23 @@ void REveDataProxyBuilderBase::Build()
                   REveProjectionManager *pmgr = (*pi)->GetManager();
                   Float_t oldDepth = pmgr->GetCurrentDepth();
                   pmgr->SetCurrentDepth(m_layer);
-                  size_t cnt = 0;
+                  Int_t cnt = 0;
 
-                  REveElement* projectedAsElement = (*pi)->GetProjectedAsElement();
-                  REveElement::List_i parentIt = projectedAsElement->BeginChildren();
-                  for (REveElement::List_i prodIt = elms->BeginChildren(); prodIt != elms->EndChildren(); ++prodIt, ++cnt)
+                  REveElement *projectedAsElement = (*pi)->GetProjectedAsElement();
+                  auto parentIt = projectedAsElement->RefChildren().begin();
+                  for (auto &prod: elms->RefChildren())
                   {
                       // reused projected holder
                      if (cnt < oldSize)
                      {
                         if ((*parentIt)->NumChildren()) {
                             // update projected (mislleading name)
-                           for ( REveElement::List_i pci = (*parentIt)->BeginChildren(); pci != (*parentIt)->EndChildren(); pci++)
-                               pmgr->ProjectChildrenRecurse(*parentIt);
+                           for ( auto &pci: (*parentIt)->RefChildren())
+                               pmgr->ProjectChildrenRecurse(pci /* *parentIt */);  // SL: was *parentIt here, seems to be wrong
                         }
                         else {
                             // import projectable
-                           pmgr->SubImportChildren(*prodIt, *parentIt);
+                           pmgr->SubImportChildren(prod, *parentIt);
                         }
 
                         ++parentIt;
@@ -140,12 +140,13 @@ void REveDataProxyBuilderBase::Build()
                      else if (cnt < itemSize)
                      {
                         // new product holder
-                        pmgr->SubImportElements(*prodIt, projectedAsElement);
+                        pmgr->SubImportElements(prod, projectedAsElement);
                      }
                      else
                      {
                         break;
                      }
+                     ++cnt;
                   }
                   pmgr->SetCurrentDepth(oldDepth);
                }
@@ -154,7 +155,7 @@ void REveDataProxyBuilderBase::Build()
             /*
             if (m_interactionList && itemSize > oldSize)
             {
-               REveElement::List_i elIt = elms->BeginChildren();
+               auto elIt = elms->RefChildren().begin();
                for (size_t cnt = 0; cnt < itemSize; ++cnt, ++elIt)
                {
                   if (cnt >= oldSize )
@@ -244,25 +245,24 @@ REveDataProxyBuilderBase::ModelChanges(const REveDataCollection::Ids_t& iIds, Pr
    REveElement* elms = p->m_elements;
    assert(m_collection && static_cast<int>(m_collection->GetNItems()) <= elms->NumChildren() && "can not use default modelChanges implementation");
 
-   for (REveDataCollection::Ids_t::const_iterator it = iIds.begin(); it != iIds.end(); ++it)
+   for (auto itemIdx: iIds)
    {
-      int itemIdx = *it;
-      REveDataItem* item = m_collection->GetDataItem(itemIdx);
+      REveDataItem *item = m_collection->GetDataItem(itemIdx);
 
       // printf("Edit compound for item index %d \n", itemIdx);
       // imitate FWInteractionList::modelChanges
-      REveElement::List_i itElement = elms->BeginChildren();
+      auto itElement = elms->RefChildren().begin();
       std::advance(itElement, itemIdx);
-      REveElement* comp = *itElement;
+      auto comp = *itElement;
       comp->SetMainColor(item->GetMainColor());
       comp->SetRnrSelf(item->GetRnrSelf());
 
       // AMT temporary workaround for use of compunds
       // applyVisAttrToChildren(comp);
 
-      if (VisibilityModelChanges(*it, *itElement, p->m_viewContext))
+      if (VisibilityModelChanges(itemIdx, comp, p->m_viewContext))
       {
-         elms->ProjectChild(*itElement);
+         elms->ProjectChild(comp);
          printf("---REveDataProxyBuilderBase project child\n ");
       }
    }
