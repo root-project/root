@@ -57,13 +57,12 @@ void REveViewer::Redraw(Bool_t /*resetCameras*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add 'scene' to the list of scenes.
 
-void REveViewer::AddScene(REveScene* scene)
+void REveViewer::AddScene(REveScene *scene)
 {
    static const REveException eh("REveViewer::AddScene ");
 
-   for (auto i = BeginChildren(); i != EndChildren(); ++i)
-   {
-      auto sinfo = dynamic_cast<REveSceneInfo*>(*i);
+   for (auto &c: RefChildren()) {
+      auto sinfo = dynamic_cast<REveSceneInfo*>(c);
 
       if (sinfo && sinfo->GetScene() == scene)
       {
@@ -71,7 +70,7 @@ void REveViewer::AddScene(REveScene* scene)
       }
    }
 
-   REveSceneInfo* si = new REveSceneInfo(this, scene);
+   auto si = new REveSceneInfo(this, scene);
    AddElement(si);
 }
 
@@ -286,14 +285,9 @@ void REveViewerList::DeleteAnnotations()
 
 void REveViewerList::SceneDestructing(REveScene* scene)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      REveViewer* viewer = (REveViewer*) *i;
-      List_i j = viewer->BeginChildren();
-      while (j != viewer->EndChildren())
-      {
-         REveSceneInfo* sinfo = (REveSceneInfo*) *j;
-         ++j;
+   for (auto &viewer: fChildren) {
+      for (auto &j: viewer->RefChildren()) {
+         REveSceneInfo* sinfo = (REveSceneInfo *) j;
          if (sinfo->GetScene() == scene)
             viewer->RemoveElement(sinfo);
       }
