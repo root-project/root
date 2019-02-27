@@ -111,6 +111,7 @@
       if (!cmd || !this.handle) return;
       var obj = { "mir": cmd.func, "fElementId": cmd.elementid, "class": cmd.elementclass };
       this.handle.Send(JSON.stringify(obj));
+      if ((cmd.name == "QuitRoot") && window) window.close();
    }
 
    EveManager.prototype.SendMIR = function(mir)
