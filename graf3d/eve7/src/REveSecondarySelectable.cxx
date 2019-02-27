@@ -38,14 +38,6 @@ See EveDigitSet for an example.
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-REveSecondarySelectable::REveSecondarySelectable() :
-   fAlwaysSecSelect(kFALSE)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Process secondary GL selection and populate selected set accordingly.
 
 /*

@@ -147,18 +147,14 @@ int REvePointSet::SetPoint(int n, float x, float y, float z)
 
 void REvePointSet::SetMarkerStyle(Style_t mstyle)
 {
-   static const REveException eh("REvePointSet::SetMarkerStyle ");
-
-   std::list<REveProjected*>::iterator pi = fProjectedList.begin();
-   while (pi != fProjectedList.end())
+   for (auto &pi: fProjectedList)
    {
-      REvePointSet* pt = dynamic_cast<REvePointSet*>(*pi);
+      REvePointSet* pt = dynamic_cast<REvePointSet *>(pi);
       if (pt)
       {
          pt->SetMarkerStyle(mstyle);
          pt->StampObjProps();
       }
-      ++pi;
    }
    TAttMarker::SetMarkerStyle(mstyle);
 }
@@ -168,18 +164,14 @@ void REvePointSet::SetMarkerStyle(Style_t mstyle)
 
 void REvePointSet::SetMarkerSize(Size_t msize)
 {
-   static const REveException eh("REvePointSet::SetMarkerSize ");
-
-   std::list<REveProjected*>::iterator pi = fProjectedList.begin();
-   while (pi != fProjectedList.end())
+   for (auto &pi: fProjectedList)
    {
-      REvePointSet* pt = dynamic_cast<REvePointSet*>(*pi);
+      REvePointSet* pt = dynamic_cast<REvePointSet *>(pi);
       if (pt)
       {
          pt->SetMarkerSize(msize);
          pt->StampObjProps();
       }
-      ++pi;
    }
    TAttMarker::SetMarkerSize(msize);
    StampObjProps();

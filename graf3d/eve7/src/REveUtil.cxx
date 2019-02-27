@@ -438,7 +438,7 @@ void REveRefBackPtr::IncRefCount(REveElement* re)
 
 void REveRefBackPtr::DecRefCount(REveElement *re)
 {
-   RefMap_i i = fBackRefs.find(re);
+   auto i = fBackRefs.find(re);
    if (i != fBackRefs.end()) {
       if (--(i->second) <= 0)
          fBackRefs.erase(i);
@@ -453,10 +453,6 @@ void REveRefBackPtr::DecRefCount(REveElement *re)
 
 void REveRefBackPtr::StampBackPtrElements(UChar_t stamps)
 {
-   RefMap_i i = fBackRefs.begin();
-   while (i != fBackRefs.end())
-   {
-      i->first->AddStamp(stamps);
-      ++i;
-   }
+   for (auto &i: fBackRefs)
+      i.first->AddStamp(stamps);
 }

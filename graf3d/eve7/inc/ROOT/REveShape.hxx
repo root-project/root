@@ -35,7 +35,6 @@ private:
 
 public:
    typedef std::vector<REveVector2> vVector2_t;
-   typedef vVector2_t::iterator     vVector2_i;
 
 protected:
    Color_t fFillColor; // fill color of polygons

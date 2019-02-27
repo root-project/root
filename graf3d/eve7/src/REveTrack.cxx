@@ -244,9 +244,9 @@ void REveTrack::ComputeBBox()
       {
          BBoxCheckPoint(p);
       }
-      for (vPathMark_ci i = fPathMarks.begin(); i != fPathMarks.end(); ++i)
+      for (const auto &pm: fPathMarks)
       {
-         BBoxCheckPoint(i->fV.fX, i->fV.fY, i->fV.fZ);
+         BBoxCheckPoint(pm.fV.fX, pm.fV.fY, pm.fV.fZ);
       }
    }
    else
@@ -347,7 +347,7 @@ void REveTrack::MakeTrack(Bool_t recurse)
          REveVectorD currP = fP;
          Bool_t decay = kFALSE;
          rTP.InitTrack(fV, fCharge);
-         for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm, ++fLastPMIdx)
+         for (auto pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm, ++fLastPMIdx)
          {
             Int_t start_point = rTP.GetCurrentPoint();
 
@@ -522,14 +522,14 @@ void REveTrack::PrintPathMarks()
    printf("REveTrack '%s', number of path marks %d, label %d\n",
           GetCName(), (Int_t)fPathMarks.size(), fLabel);
 
-   for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
+   for (auto &pm: fPathMarks)
    {
       printf("  %-9s  p: %8f %8f %8f Vertex: %8e %8e %8e %g Extra:%8f %8f %8f\n",
-             pm->TypeName(),
-             pm->fP.fX,  pm->fP.fY, pm->fP.fZ,
-             pm->fV.fX,  pm->fV.fY, pm->fV.fZ,
-             pm->fE.fX,  pm->fE.fY, pm->fE.fZ,
-             pm->fTime);
+             pm.TypeName(),
+             pm.fP.fX,  pm.fP.fY, pm.fP.fZ,
+             pm.fV.fX,  pm.fV.fY, pm.fV.fZ,
+             pm.fE.fX,  pm.fE.fY, pm.fE.fZ,
+             pm.fTime);
    }
 }
 

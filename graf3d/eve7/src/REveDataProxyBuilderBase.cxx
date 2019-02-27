@@ -111,14 +111,14 @@ void REveDataProxyBuilderBase::Build()
             if (pable->HasProjecteds())
             {
                // loop projected holders
-               for (REveProjectable::ProjList_i pi = pable->BeginProjecteds(); pi != pable->EndProjecteds(); ++pi)
+               for (auto &prj: pable->RefProjecteds())
                {
-                  REveProjectionManager *pmgr = (*pi)->GetManager();
+                  REveProjectionManager *pmgr = prj->GetManager();
                   Float_t oldDepth = pmgr->GetCurrentDepth();
                   pmgr->SetCurrentDepth(m_layer);
                   Int_t cnt = 0;
 
-                  REveElement *projectedAsElement = (*pi)->GetProjectedAsElement();
+                  REveElement *projectedAsElement = prj->GetProjectedAsElement();
                   auto parentIt = projectedAsElement->RefChildren().begin();
                   for (auto &prod: elms->RefChildren())
                   {

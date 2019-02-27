@@ -291,13 +291,9 @@ void REveTrackPropagator::CheckReferenceCount(const std::string& from)
 
 void REveTrackPropagator::ElementChanged(Bool_t update_scenes, Bool_t redraw)
 {
-   REveTrack* track;
-   RefMap_i i = fBackRefs.begin();
-   while (i != fBackRefs.end())
-   {
-      track = dynamic_cast<REveTrack*>(i->first);
-      track->StampObjProps();
-      ++i;
+   for (auto &i: fBackRefs) {
+      auto track = dynamic_cast<REveTrack *>(i.first);
+      if (track) track->StampObjProps();
    }
    REveElement::ElementChanged(update_scenes, redraw);
 }
@@ -999,14 +995,12 @@ void REveTrackPropagator::FillPointSet(REvePointSet* ps) const
 
 void REveTrackPropagator::RebuildTracks()
 {
-   REveTrack* track;
-   RefMap_i i = fBackRefs.begin();
-   while (i != fBackRefs.end())
-   {
-      track = dynamic_cast<REveTrack*>(i->first);
-      track->MakeTrack();
-      track->StampObjProps();
-      ++i;
+   for (auto &i: fBackRefs) {
+      auto track = dynamic_cast<REveTrack *>(i.first);
+      if (track) {
+         track->MakeTrack();
+         track->StampObjProps();
+      }
    }
 }
 
