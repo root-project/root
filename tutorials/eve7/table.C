@@ -86,7 +86,7 @@ void table()
 {
    eveMng = REX::REveManager::Create();
 
-   REX::REveElement* defaultViewer = (*eveMng->GetViewers()->BeginChildren());
+   REX::REveElement *defaultViewer = eveMng->GetViewers()->RefChildren().front();
    defaultViewer->SetRnrSelf(false);
 
    fill_ext_col(100);

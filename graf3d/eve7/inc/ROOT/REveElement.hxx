@@ -75,12 +75,8 @@ public:
    typedef std::list<REveElement*>              List_t;
 
    typedef std::set<REveElement*>               Set_t;
-   typedef Set_t::iterator                      Set_i;
-   typedef Set_t::const_iterator                Set_ci;
 
    typedef std::list<REveAunt*>                 AuntList_t;
-   typedef AuntList_t::iterator                 AuntList_i;
-   typedef AuntList_t::const_iterator           AuntList_ci;
 
 private:
    ElementId_t      fElementId{0};        // Unique ID of an element.
@@ -183,20 +179,18 @@ public:
    virtual void CheckReferenceCount(const std::string& from="<unknown>");
    virtual void CollectScenes(List_t& scenes);
 
-   AuntList_i  BeginAunts()        { return  fAunts.begin();  }
-   AuntList_i  EndAunts()          { return  fAunts.end();    }
-   AuntList_ci BeginAunts()  const { return  fAunts.begin();  }
-   AuntList_ci EndAunts()    const { return  fAunts.end();    }
-   Int_t       NumAunts()    const { return  fAunts.size();   }
-   Bool_t      HasAunts()    const { return !fAunts.empty();  }
+   AuntList_t       &RefAunts()       { return fAunts; }
+   const AuntList_t &RefAunts() const { return fAunts; }
+   Int_t             NumAunts() const { return fAunts.size(); }
+   Bool_t            HasAunts() const { return !fAunts.empty(); }
 
    TClass* GetChildClass() const { return fChildClass; }
    void    SetChildClass(TClass* c) { fChildClass = c; }
 
-   List_t  &RefChildren()        { return  fChildren;  }
-   const List_t  &RefChildren() const { return  fChildren;  }
-   Int_t   NumChildren()   const { return  fChildren.size();  }
-   Bool_t  HasChildren()   const { return  fChildren.size() != 0; }
+   List_t       &RefChildren()       { return fChildren; }
+   const List_t &RefChildren() const { return fChildren; }
+   Int_t         NumChildren() const { return fChildren.size(); }
+   Bool_t        HasChildren() const { return !fChildren.empty(); }
 
    Bool_t       HasChild(REveElement *el);
    REveElement *FindChild(const TString &name, const TClass *cls = nullptr);

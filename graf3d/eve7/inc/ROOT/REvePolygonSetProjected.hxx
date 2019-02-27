@@ -16,7 +16,6 @@
 #include <ROOT/REveShape.hxx>
 
 #include <vector>
-#include <iterator>
 
 class TBuffer3D;
 

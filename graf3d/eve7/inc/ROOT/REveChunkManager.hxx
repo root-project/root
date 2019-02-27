@@ -14,7 +14,6 @@
 
 #include <ROOT/REveUtil.hxx>
 
-#include "TObject.h"
 #include "TArrayC.h"
 
 #include <vector>
@@ -80,13 +79,11 @@ public:
       const std::set<Int_t>           *fSelection{nullptr};
       std::set<Int_t>::const_iterator  fSelectionIterator;
 
-      iterator(REveChunkManager* p) :
-         fPlex(p), fCurrent(nullptr), fAtomIndex(-1),
-         fNextChunk(0), fAtomsToGo(0), fSelection(nullptr), fSelectionIterator() {}
-      iterator(REveChunkManager& p) :
-         fPlex(&p), fCurrent(nullptr), fAtomIndex(-1),
-         fNextChunk(0), fAtomsToGo(0), fSelection(nullptr), fSelectionIterator() {}
-      iterator(const iterator& i) :
+      iterator(REveChunkManager *p) : fPlex(p) {}
+
+      iterator(REveChunkManager &p) : fPlex(&p) {}
+
+      iterator(const iterator &i) :
          fPlex(i.fPlex), fCurrent(i.fCurrent), fAtomIndex(i.fAtomIndex),
          fNextChunk(i.fNextChunk), fAtomsToGo(i.fAtomsToGo),
          fSelection(i.fSelection), fSelectionIterator(i.fSelectionIterator) {}
@@ -130,14 +127,14 @@ private:
    REveChunkVector& operator=(const REveChunkVector&); // Not implemented
 
 public:
-   REveChunkVector()                 : REveChunkManager() {}
+   REveChunkVector() = default;
    REveChunkVector(Int_t chunk_size) : REveChunkManager(sizeof(T), chunk_size) {}
    virtual ~REveChunkVector() {}
 
    void Reset(Int_t chunk_size) { Reset(sizeof(T), chunk_size); }
 
-   T* At(Int_t idx)  { return reinterpret_cast<T*>(Atom(idx)); }
-   T& Ref(Int_t idx) { return *At(idx); }
+   T *At(Int_t idx)  { return reinterpret_cast<T*>(Atom(idx)); }
+   T &Ref(Int_t idx) { return *At(idx); }
 };
 
 } // namespace Experimental

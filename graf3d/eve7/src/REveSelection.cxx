@@ -83,7 +83,7 @@ void REveSelection::DoElementSelect(SelMap_i entry)
 
    entry->first->FillImpliedSelectedSet(imp_set);
 
-   for (auto &imp_el : imp_set)  imp_el->IncImpliedSelected();
+   for (auto &imp_el: imp_set) imp_el->IncImpliedSelected();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +94,7 @@ void REveSelection::DoElementUnselect(SelMap_i entry)
 {
    Set_t &imp_set = entry->second.f_implied;
 
-   for (auto &imp_el : imp_set)  imp_el->DecImpliedSelected();
+   for (auto &imp_el: imp_set) imp_el->DecImpliedSelected();
 
    imp_set.clear();
 }
@@ -187,7 +187,7 @@ void REveSelection::RemoveImpliedSelected(REveElement* el)
 {
    for (SelMap_i i = fMap.begin(); i != fMap.end(); ++i)
    {
-      Set_i j = i->second.f_implied.find(el);
+      auto j = i->second.f_implied.find(el);
       if (j != i->second.f_implied.end())
          i->second.f_implied.erase(j);
    }
