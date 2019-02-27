@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from libROOTPython import AddPrettyPrintingPyz
+from libROOTPython import AddPrettyPrintingPyz, GetCppCallableClass
 from ROOT import pythonization
 
 def _add_getitem_checked(klass):
@@ -44,3 +44,9 @@ def pythonizegeneric(klass, name):
     AddPrettyPrintingPyz(klass)
 
     return True
+
+
+# Add the decorator class to convert Python callables to C++ callables as
+# free function to the ROOT module
+import cppyy
+cppyy.gbl.DeclareCppCallable = GetCppCallableClass()
