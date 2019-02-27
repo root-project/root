@@ -89,8 +89,10 @@ ROOT::Experimental::RWebWindowsManager::RWebWindowsManager() = default;
 
 ROOT::Experimental::RWebWindowsManager::~RWebWindowsManager()
 {
-   if (gApplication && fServer && !fServer->IsTerminated())
-      gApplication->Disconnect("Terminate(Int_t)", "THttpServer", fServer.get(), "SetTerminate()");
+   if (gApplication && fServer && !fServer->IsTerminated()){
+      gApplication->Disconnect("Terminate(Int_t)", fServer.get(), "SetTerminate()");
+      fServer->SetTerminate();
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
