@@ -82,10 +82,10 @@ protected:
    // void RetransHierarchicallyRecurse(REveElement* el, const REveTrans& tp);
 
 public:
-   REveScene(const std::string& n = "REveScene", const std::string& t = "");
+   REveScene(const std::string &n = "REveScene", const std::string &t = "");
    virtual ~REveScene();
 
-   void CollectSceneParents(List_t &scenes); // override;
+   void CollectSceneParents(List_t &scenes);
 
    virtual Bool_t SingleRnrState() const { return kTRUE; }
 

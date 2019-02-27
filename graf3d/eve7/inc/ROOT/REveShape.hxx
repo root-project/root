@@ -1,5 +1,5 @@
 // @(#)root/eve7:$Id$
-// Author: Matevz Tadel, 2010
+// Author: Matevz Tadel, 2010, 2018
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -49,10 +49,10 @@ public:
    REveShape(const std::string &n = "REveShape", const std::string &t = "");
    virtual ~REveShape();
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 
    // Rendering parameters.
-   virtual void SetMainColor(Color_t color);
+   void SetMainColor(Color_t color) override;
 
    virtual Color_t GetFillColor() const { return fFillColor; }
    virtual Color_t GetLineColor() const { return fLineColor; }
