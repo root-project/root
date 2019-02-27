@@ -525,11 +525,11 @@ REveElement* REveElement::GetMaster()
 /// Adding aunt is subordinate to adding a niece.
 /// This is an internal function.
 
-void REveElement::AddAunt(REveAunt* au)
+void REveElement::AddAunt(REveAunt *au)
 {
-   assert(au != 0);
+   assert(au != nullptr);
 
-   fAunts.push_back(au);
+   fAunts.emplace_back(au);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -537,9 +537,9 @@ void REveElement::AddAunt(REveAunt* au)
 /// Removing aunt is subordinate to removing a niece.
 /// This is an internal function.
 
-void REveElement::RemoveAunt(REveAunt* au)
+void REveElement::RemoveAunt(REveAunt *au)
 {
-   assert(au != 0);
+   assert(au != nullptr);
 
    fAunts.remove(au);
 }

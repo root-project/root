@@ -1,5 +1,5 @@
 // @(#)root/eve7:$Id$
-// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006 - 2009
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006 - 2019
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -10,7 +10,7 @@
  *************************************************************************/
 
 //==============================================================================
-// LinkDef1.h - Core EVE objects and services.
+// LinkDef.h - REve objects and services.
 //==============================================================================
 
 // REveVector
@@ -115,12 +115,8 @@
 #pragma link C++ class std::list<ROOT::Experimental::REveElement*>+;
 #pragma link C++ typedef ROOT::Experimental::REveElement::List_t;
 
-#pragma link C++ class std::set<ROOT::Experimental::REveElement*>;
-#pragma link C++ class std::set<ROOT::Experimental::REveElement*>::iterator;
-#pragma link C++ class std::set<ROOT::Experimental::REveElement*>::const_iterator;
+#pragma link C++ class std::set<ROOT::Experimental::REveElement*>+;
 #pragma link C++ typedef ROOT::Experimental::REveElement::Set_t;
-#pragma link C++ typedef ROOT::Experimental::REveElement::Set_i;
-#pragma link C++ typedef ROOT::Experimental::REveElement::Set_ci;
 
 // REveCompound
 #pragma link C++ class ROOT::Experimental::REveCompound+;
@@ -152,10 +148,7 @@
 #pragma link C++ class ROOT::Experimental::REveProjection+;
 #pragma link C++ class ROOT::Experimental::REveProjection::PreScaleEntry_t+;
 #pragma link C++ class std::vector<ROOT::Experimental::REveProjection::PreScaleEntry_t>;
-#pragma link C++ class std::vector<ROOT::Experimental::REveProjection::PreScaleEntry_t>::iterator;
-#pragma link C++ operators std::vector<ROOT::Experimental::REveProjection::PreScaleEntry_t>::iterator;
 #pragma link C++ typedef ROOT::Experimental::REveProjection::vPreScale_t;
-#pragma link C++ typedef ROOT::Experimental::REveProjection::vPreScale_i;
 #pragma link C++ class ROOT::Experimental::REveRhoZProjection+;
 #pragma link C++ class ROOT::Experimental::REveRPhiProjection+;
 #pragma link C++ class ROOT::Experimental::REve3DProjection+;
