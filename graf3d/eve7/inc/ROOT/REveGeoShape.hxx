@@ -53,15 +53,15 @@ public:
    REveGeoShape(const char *name = "REveGeoShape", const char *title = "");
    virtual ~REveGeoShape();
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
-   void BuildRenderData();                                   // override;
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   void BuildRenderData() override;
 
    Int_t GetNSegments() const { return fNSegments; }
    TGeoShape *GetShape() const { return fShape; }
    void SetNSegments(Int_t s);
    void SetShape(TGeoShape *s);
 
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
 
    void SaveExtract(const char *file, const char *name);
    void WriteExtract(const char *name);
