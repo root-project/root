@@ -152,9 +152,8 @@ Int_t REveShape::FindConvexHull(const vVector2_t& pin, vVector2_t& pout, REveEle
    {
       std::vector<Int_t> new_idcs;
       new_idcs.push_back(idcs[0]);
-      std::vector<Int_t>::iterator a, b;
-      a = idcs.begin(); ++a;
-      b = a; ++b;
+      auto a = idcs.begin(); ++a;
+      auto b = a; ++b;
       while (b != idcs.end())
       {
          if (TMath::Abs(angles[*a] - angles[*b]) < 1e-5f)

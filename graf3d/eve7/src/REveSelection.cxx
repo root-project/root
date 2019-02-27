@@ -77,7 +77,7 @@ void REveSelection::SetHighlightMode()
 /// Select element indicated by the entry and fill its
 /// implied-selected set.
 
-void REveSelection::DoElementSelect(SelMap_i entry)
+void REveSelection::DoElementSelect(SelMap_i &entry)
 {
    Set_t &imp_set = entry->second.f_implied;
 
@@ -90,7 +90,7 @@ void REveSelection::DoElementSelect(SelMap_i entry)
 /// Deselect element indicated by the entry and clear its
 /// implied-selected set.
 
-void REveSelection::DoElementUnselect(SelMap_i entry)
+void REveSelection::DoElementUnselect(SelMap_i &entry)
 {
    Set_t &imp_set = entry->second.f_implied;
 
@@ -130,10 +130,10 @@ bool REveSelection::AcceptNiece(REveElement* el)
 
 void REveSelection::AddNieceInternal(REveElement* el)
 {
-   SelMap_i i = fMap.insert(std::make_pair(el, Record(el))).first;
+   auto res = fMap.emplace(el, Record(el));
    if (fActive)
    {
-      DoElementSelect(i);
+      DoElementSelect(res.first);
       SelectionAdded(el);
    }
 }
@@ -143,7 +143,7 @@ void REveSelection::AddNieceInternal(REveElement* el)
 
 void REveSelection::RemoveNieceInternal(REveElement* el)
 {
-   SelMap_i i = fMap.find(el);
+   auto i = fMap.find(el);
 
    if (i != fMap.end())
    {
@@ -167,7 +167,7 @@ void REveSelection::RemoveNieceInternal(REveElement* el)
 
 void REveSelection::RemoveNieces()
 {
-   for (SelMap_i i = fMap.begin(); i != fMap.end(); ++i)
+   for (auto i = fMap.begin(); i != fMap.end(); ++i)
    {
       i->first->RemoveAunt(this);
       DoElementUnselect(i);
@@ -198,16 +198,16 @@ void REveSelection::RemoveImpliedSelected(REveElement* el)
 /// Add new elements to implied-selected set and increase their
 /// implied-selected count.
 
-void REveSelection::RecheckImpliedSet(SelMap_i smi)
+void REveSelection::RecheckImpliedSet(SelMap_i &smi)
 {
    Set_t set;
    smi->first->FillImpliedSelectedSet(set);
-   for (auto i = set.begin(); i != set.end(); ++i)
+   for (auto &i: set)
    {
-      if (smi->second.f_implied.find(*i) == smi->second.f_implied.end())
+      if (smi->second.f_implied.find(i) == smi->second.f_implied.end())
       {
-         smi->second.f_implied.insert(*i);
-         (*i)->IncImpliedSelected();
+         smi->second.f_implied.insert(i);
+         i->IncImpliedSelected();
       }
    }
 }
@@ -216,11 +216,11 @@ void REveSelection::RecheckImpliedSet(SelMap_i smi)
 /// If given element is selected or implied-selected within this
 /// selection then recheck implied-set for given selection entry.
 
-void REveSelection::RecheckImpliedSetForElement(REveElement* el)
+void REveSelection::RecheckImpliedSetForElement(REveElement *el)
 {
    // Top-level selected.
    {
-      SelMap_i i = fMap.find(el);
+      auto i = fMap.find(el);
       if (i != fMap.end())
          RecheckImpliedSet(i);
    }
@@ -229,7 +229,7 @@ void REveSelection::RecheckImpliedSetForElement(REveElement* el)
    // then we need to loop over all.
    if (el->GetImpliedSelected() > 0)
    {
-      for (SelMap_i i = fMap.begin(); i != fMap.end(); ++i)
+      for (auto i = fMap.begin(); i != fMap.end(); ++i)
       {
          if (i->second.f_implied.find(el) != i->second.f_implied.end())
             RecheckImpliedSet(i);
@@ -281,7 +281,7 @@ void REveSelection::ActivateSelection()
    if (fActive) return;
 
    fActive = kTRUE;
-   for (SelMap_i i = fMap.begin(); i != fMap.end(); ++i)
+   for (auto i = fMap.begin(); i != fMap.end(); ++i)
    {
       DoElementSelect(i);
       SelectionAdded(i->first);
@@ -293,9 +293,9 @@ void REveSelection::ActivateSelection()
 
 void REveSelection::DeactivateSelection()
 {
-   if ( ! fActive) return;
+   if (!fActive) return;
 
-   for (SelMap_i i = fMap.begin(); i != fMap.end(); ++i)
+   for (auto i = fMap.begin(); i != fMap.end(); ++i)
    {
       DoElementUnselect(i);
    }
