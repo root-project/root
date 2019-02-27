@@ -73,8 +73,6 @@ class REveElement
 
 public:
    typedef std::list<REveElement*>              List_t;
-   typedef List_t::iterator                     List_i;
-   typedef List_t::const_iterator               List_ci;
 
    typedef std::set<REveElement*>               Set_t;
    typedef Set_t::iterator                      Set_i;
@@ -107,7 +105,6 @@ protected:
    REveElement     *fVizModel{nullptr};    //! Element used as model from VizDB.
    TString          fVizTag;               //  Tag used to query VizDB for model element.
 
-   Int_t            fNumChildren{0};          //!
    Int_t            fDenyDestroy{0};          //! Deny-destroy count.
    Bool_t           fDestroyOnZeroRefCnt{kTRUE};  //  Auto-destruct when ref-count reaches zero.
 
@@ -196,14 +193,10 @@ public:
    TClass* GetChildClass() const { return fChildClass; }
    void    SetChildClass(TClass* c) { fChildClass = c; }
 
-   List_t  &RefChildren()        { return  fChildren;     }
-   const List_t  &RefChildren() const { return  fChildren;     }
-   List_i  BeginChildren()       { return  fChildren.begin(); }
-   List_i  EndChildren()         { return  fChildren.end();   }
-   List_ci BeginChildren() const { return  fChildren.begin(); }
-   List_ci EndChildren()   const { return  fChildren.end();   }
-   Int_t   NumChildren()   const { return  fNumChildren;      }
-   Bool_t  HasChildren()   const { return  fNumChildren != 0; }
+   List_t  &RefChildren()        { return  fChildren;  }
+   const List_t  &RefChildren() const { return  fChildren;  }
+   Int_t   NumChildren()   const { return  fChildren.size();  }
+   Bool_t  HasChildren()   const { return  fChildren.size() != 0; }
 
    Bool_t       HasChild(REveElement *el);
    REveElement *FindChild(const TString &name, const TClass *cls = nullptr);

@@ -112,12 +112,8 @@
 #pragma link C++ class ROOT::Experimental::REveAunt+;
 #pragma link C++ class ROOT::Experimental::REveAuntAsList+;
 
-#pragma link C++ class std::list<ROOT::Experimental::REveElement*>;
-#pragma link C++ class std::list<ROOT::Experimental::REveElement*>::iterator;
-#pragma link C++ class std::list<ROOT::Experimental::REveElement*>::const_iterator;
+#pragma link C++ class std::list<ROOT::Experimental::REveElement*>+;
 #pragma link C++ typedef ROOT::Experimental::REveElement::List_t;
-#pragma link C++ typedef ROOT::Experimental::REveElement::List_i;
-#pragma link C++ typedef ROOT::Experimental::REveElement::List_ci;
 
 #pragma link C++ class std::set<ROOT::Experimental::REveElement*>;
 #pragma link C++ class std::set<ROOT::Experimental::REveElement*>::iterator;

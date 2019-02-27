@@ -439,9 +439,9 @@ void REveScene::Paint(Option_t* option)
 {
    if (GetRnrState())
    {
-      for(List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+      for (auto &c: fChildren)
       {
-         // (*i)->PadPaint(option);
+         // c->PadPaint(option);
       }
    }
 }
@@ -488,11 +488,11 @@ REveSceneList::REveSceneList(const std::string& n, const std::string& t) :
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destroy all scenes and their contents.
-/// Tho object with non-zero deny-destroy will still survive.
+/// The object with non-zero deny-destroy will still survive.
 
 void REveSceneList::DestroyScenes()
 {
-   List_i i = fChildren.begin();
+   auto i = fChildren.begin();
    while (i != fChildren.end())
    {
       REveScene* s = (REveScene*) *(i++);
@@ -506,9 +506,9 @@ void REveSceneList::DestroyScenes()
 
 void REveSceneList::AcceptChanges(bool on)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c: fChildren)
    {
-      REveScene* s = (REveScene*) *i;
+      REveScene *s = (REveScene *)c;
       if (on)
          s->BeginAcceptingChanges();
       else
@@ -521,9 +521,9 @@ void REveSceneList::AcceptChanges(bool on)
 
 void REveSceneList::RepaintChangedScenes(Bool_t dropLogicals)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c: fChildren)
    {
-      REveScene* s = (REveScene*) *i;
+      REveScene* s = (REveScene*) c;
       if (s->IsChanged())
       {
          s->Repaint(dropLogicals);
@@ -536,9 +536,9 @@ void REveSceneList::RepaintChangedScenes(Bool_t dropLogicals)
 
 void REveSceneList::RepaintAllScenes(Bool_t dropLogicals)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c: fChildren)
    {
-      ((REveScene*) *i)->Repaint(dropLogicals);
+      ((REveScene *)c)->Repaint(dropLogicals);
    }
 }
 
@@ -550,9 +550,9 @@ void REveSceneList::DestroyElementRenderers(REveElement* element)
    static const REveException eh("REveSceneList::DestroyElementRenderers ");
 
    TObject* obj = element->GetRenderObject(eh);
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c: fChildren)
    {
-      ((REveScene*)*i)->DestroyElementRenderers(obj);
+      ((REveScene *)c)->DestroyElementRenderers(obj);
    }
 }
 

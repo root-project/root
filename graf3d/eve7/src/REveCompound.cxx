@@ -49,7 +49,7 @@ REveCompound::REveCompound(const std::string& n, const std::string& t,
 
 void REveCompound::SetMainColor(Color_t color)
 {
-   if ( ! fDoColor) return;
+   if (!fDoColor) return;
 
    Color_t old_color = GetMainColor();
 
@@ -58,12 +58,12 @@ void REveCompound::SetMainColor(Color_t color)
    Bool_t color_all      = TestCSCBits(kCSCBApplyMainColorToAllChildren);
    Bool_t color_matching = TestCSCBits(kCSCBApplyMainColorToMatchingChildren);
 
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c: fChildren)
    {
-      if (color_all || (color_matching && (*i)->GetMainColor() == old_color) ||
-          ((*i)->GetCompound() == this && (*i)->GetMainColor() == old_color))
+      if (color_all || (color_matching && c->GetMainColor() == old_color) ||
+          (c->GetCompound() == this && c->GetMainColor() == old_color))
       {
-         (*i)->SetMainColor(color);
+         c->SetMainColor(color);
       }
    }
 }
@@ -89,12 +89,11 @@ void REveCompound::SetMainTransparency(Char_t t)
    Bool_t chg_all      = TestCSCBits(kCSCBApplyMainTransparencyToAllChildren);
    Bool_t chg_matching = TestCSCBits(kCSCBApplyMainTransparencyToMatchingChildren);
 
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      if (chg_all || (chg_matching && (*i)->GetMainTransparency() == old_t) ||
-          ((*i)->GetCompound() == this && (*i)->GetMainTransparency() == old_t))
+   for (auto &c: fChildren) {
+      if (chg_all || (chg_matching && c->GetMainTransparency() == old_t) ||
+          (c->GetCompound() == this && c->GetMainTransparency() == old_t))
       {
-         (*i)->SetMainTransparency(t);
+         c->SetMainTransparency(t);
       }
    }
 }
@@ -108,7 +107,7 @@ void REveCompound::SetMainTransparency(Char_t t)
 void REveCompound::AddElement(REveElement* el)
 {
    REveElement::AddElement(el);
-   if (IsCompoundOpen() && el->GetCompound() == 0)
+   if (IsCompoundOpen() && el->GetCompound() == nullptr)
       el->SetCompound(this);
 }
 
@@ -128,10 +127,9 @@ void REveCompound::RemoveElementLocal(REveElement* el)
 
 void REveCompound::RemoveElementsLocal()
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      if ((*i)->GetCompound() == this)
-         (*i)->SetCompound(0);
+   for (auto &c: fChildren) {
+      if (c->GetCompound() == this)
+         c->SetCompound(nullptr);
    }
 
    REveElement::RemoveElementsLocal();
@@ -150,12 +148,10 @@ void REveCompound::FillImpliedSelectedSet(Set_t& impSelSet)
 {
    Bool_t select_all = TestCSCBits(kCSCBImplySelectAllChildren);
 
-   for (List_i i = fChildren.begin(); i != fChildren.end(); ++i)
-   {
-      if (select_all || (*i)->GetCompound() == this)
-      {
-         if (impSelSet.insert(*i).second)
-            (*i)->FillImpliedSelectedSet(impSelSet);
+   for (auto &c: fChildren) {
+      if (select_all || c->GetCompound() == this) {
+         if (impSelSet.insert(c).second)
+            c->FillImpliedSelectedSet(impSelSet);
       }
    }
 
