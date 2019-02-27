@@ -48,6 +48,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_len tarray_len.py)
 
 # TVectorT pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort_len tvectort_len.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort_getitem tvectort_getitem.py)
 
 # TString pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_len tstring_len.py)
