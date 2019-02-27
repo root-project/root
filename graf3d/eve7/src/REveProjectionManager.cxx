@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -157,12 +157,12 @@ Bool_t REveProjectionManager::HandleElementPaste(REveElement* el)
 ///   false - el or any of its children must be projectable (default);
 ///   true  - always import.
 
-Bool_t REveProjectionManager::ShouldImport(REveElement* el)
+Bool_t REveProjectionManager::ShouldImport(REveElement *el)
 {
    if (fImportEmpty)
       return kTRUE;
 
-   if (el->IsA()->InheritsFrom(REveProjectable::Class()))
+   if (el->IsA()->InheritsFrom(TClass::GetClass<REveProjectable>()))
       return kTRUE;
    for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
       if (ShouldImport(*i))

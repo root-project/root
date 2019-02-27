@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
-// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
+// @(#)root/eve7:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -22,6 +22,7 @@ namespace Experimental {
 
 //------------------------------------------------------------------------------
 // REveLine
+// An arbitrary polyline with fixed line and marker attributes.
 //------------------------------------------------------------------------------
 
 class REveLine : public REvePointSet,
@@ -38,15 +39,15 @@ protected:
    static Bool_t fgDefaultSmooth;
 
 public:
-   REveLine(const char *name="", const char *title="", Int_t n_points = 0);
+   REveLine(const char *name = "", const char *title = "", Int_t n_points = 0);
    REveLine(const REveLine &l);
    virtual ~REveLine() {}
 
-   virtual void SetMarkerColor(Color_t col);
+   void SetMarkerColor(Color_t col) override;
 
-   virtual void SetLineColor(Color_t col) { SetMainColor(col); }
-   virtual void SetLineStyle(Style_t lstyle);
-   virtual void SetLineWidth(Width_t lwidth);
+   void SetLineColor(Color_t col) override { SetMainColor(col); }
+   void SetLineStyle(Style_t lstyle) override;
+   void SetLineWidth(Width_t lwidth) override;
 
    Bool_t GetRnrLine() const { return fRnrLine; }
    Bool_t GetRnrPoints() const { return fRnrPoints; }
@@ -61,18 +62,16 @@ public:
    REveVector GetLineStart() const;
    REveVector GetLineEnd() const;
 
-   virtual void CopyVizParams(const REveElement *el);
-   virtual void WriteVizParams(std::ostream &out, const TString &var);
+   void CopyVizParams(const REveElement *el) override;
+   void WriteVizParams(std::ostream &out, const TString &var) override;
 
-   virtual TClass *ProjectedClass(const REveProjection *p) const;
+   TClass *ProjectedClass(const REveProjection *p) const override;
 
-   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset); // override
-   void BuildRenderData();                                    // override {}
+   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
+   void BuildRenderData() override;
 
    static Bool_t GetDefaultSmooth();
    static void SetDefaultSmooth(Bool_t r);
-
-   ClassDef(REveLine, 0); // An arbitrary polyline with fixed line and marker attributes.
 };
 
 //------------------------------------------------------------------------------
@@ -85,17 +84,15 @@ private:
    REveLineProjected &operator=(const REveLineProjected &); // Not implemented
 
 protected:
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
    REveLineProjected();
    virtual ~REveLineProjected() {}
 
-   virtual void SetProjection(REveProjectionManager *mng, REveProjectable *model);
-   virtual void UpdateProjection();
-   virtual REveElement *GetProjectedAsElement() { return this; }
-
-   ClassDef(REveLineProjected, 0); // Projected replica of a REveLine.
+   void SetProjection(REveProjectionManager *mng, REveProjectable *model) override;
+   void UpdateProjection() override;
+   REveElement *GetProjectedAsElement() override { return this; }
 };
 
 } // namespace Experimental

@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,6 +12,8 @@
 #include <ROOT/REveTrack.hxx>
 #include <ROOT/REveTrackPropagator.hxx>
 #include <ROOT/REvePointSet.hxx>
+#include <ROOT/REveManager.hxx>
+#include <ROOT/REveTrackProjected.hxx>
 
 #include "TParticle.h"
 #include "TPolyLine3D.h"
@@ -19,11 +21,7 @@
 #include "TPolyMarker3D.h"
 #include "TColor.h"
 #include "TParticlePDG.h"
-
-// Updates
-#include <ROOT/REveManager.hxx>
-#include <ROOT/REveTrackProjected.hxx>
-
+#include "TClass.h"
 #include "Riostream.h"
 
 #include <vector>
@@ -495,7 +493,7 @@ void REveTrack::WriteVizParams(std::ostream& out, const TString& var)
 
 TClass* REveTrack::ProjectedClass(const REveProjection*) const
 {
-   return REveTrackProjected::Class();
+   return TClass::GetClass<REveTrackProjected>();
 }
 
 namespace
@@ -590,11 +588,11 @@ REveTrackList::REveTrackList(REveTrackPropagator* prop) :
    fMinP  (0), fMaxP  (0), fLimP  (0)
 {
 
-   fChildClass = REveTrack::Class(); // override member from base REveElementList
+   fChildClass = TClass::GetClass<REveTrack>(); // override member from base REveElementList
 
    fMainColorPtr = &fLineColor;
 
-   if (prop == 0) prop = new REveTrackPropagator;
+   if (!prop) prop = new REveTrackPropagator;
    SetPropagator(prop);
 }
 
@@ -615,11 +613,11 @@ REveTrackList::REveTrackList(const std::string& name, REveTrackPropagator* prop)
    fMinPt (0), fMaxPt (0), fLimPt (0),
    fMinP  (0), fMaxP  (0), fLimP  (0)
 {
-   fChildClass = REveTrack::Class(); // override member from base REveElementList
+   fChildClass = TClass::GetClass<REveTrack>(); // override member from base REveElementList
 
    fMainColorPtr = &fLineColor;
 
-   if (prop == 0) prop = new REveTrackPropagator;
+   if (!prop) prop = new REveTrackPropagator;
    SetPropagator(prop);
 }
 
