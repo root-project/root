@@ -224,9 +224,8 @@ REveDataProxyBuilderBase::CreateProduct( std::string viewType, const REveViewCon
 
 //namespace {
 //   void applyVisAttrToChildren(REveElement* p) {
-//      for (auto it = p->BeginChildren(); it != p->EndChildren(); ++it)
+//      for (auto &c: p->RefChildren())
 //      {
-//         REveElement* c = *it;
 //         if (c->GetMainColor() != p->GetMainColor())
 //         {
 //            c->SetMainColor(p->GetMainColor());

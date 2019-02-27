@@ -19,13 +19,13 @@ REveDataSimpleProxyBuilder::~REveDataSimpleProxyBuilder()
 void
 REveDataSimpleProxyBuilder::Clean()
 {
-   for (Product_it i = m_products.begin(); i != m_products.end(); ++i)
+   for (auto &p: m_products)
    {
-      if ((*i)->m_elements)
+      if (p->m_elements)
       {
-         REveElement* elms = (*i)->m_elements;
-         for (REveElement::List_i it = elms->BeginChildren(); it != elms->EndChildren(); ++it)
-            (*it)->DestroyElements();
+         REveElement *elms = p->m_elements;
+         for (auto &c: elms->RefChildren())
+            c->DestroyElements();
       }
    }
 
@@ -35,14 +35,14 @@ REveDataSimpleProxyBuilder::Clean()
 //______________________________________________________________________________
 
 void
-REveDataSimpleProxyBuilder::Build(const REveDataCollection* collection,
+REveDataSimpleProxyBuilder::Build(const REveDataCollection *collection,
                                   REveElement* product, const REveViewContext* vc)
 {
-   size_t size = collection->GetNItems();
-   REveElement::List_i pIdx = product->BeginChildren();
-   for (int index = 0; index < static_cast<int>(size); ++index)
+   auto size = collection->GetNItems();
+   REveElement::List_i pIdx = product->RefChildren().begin();
+   for (int index = 0; index < size; ++index)
    {
-      REveElement* itemHolder = 0;
+      REveElement *itemHolder = nullptr;
       if (index <  product->NumChildren())
       {
          itemHolder = *pIdx;
@@ -69,11 +69,11 @@ void
 REveDataSimpleProxyBuilder::BuildViewType(const REveDataCollection* collection,
                                           REveElement* product, std::string viewType, const REveViewContext* vc)
 {
-   size_t size = collection->GetNItems();
-   REveElement::List_i pIdx = product->BeginChildren();
-   for (int index = 0; index < static_cast<int>(size); ++index)
+   auto size = collection->GetNItems();
+   REveElement::List_i pIdx = product->RefChildren().begin();
+   for (int index = 0; index < size; ++index)
    {
-      REveElement* itemHolder = 0;
+      REveElement* itemHolder = nullptr;
       if (index <  product->NumChildren())
       {
          itemHolder = *pIdx;

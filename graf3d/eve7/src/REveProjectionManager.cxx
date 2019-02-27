@@ -164,8 +164,8 @@ Bool_t REveProjectionManager::ShouldImport(REveElement *el)
 
    if (el->IsA()->InheritsFrom(TClass::GetClass<REveProjectable>()))
       return kTRUE;
-   for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
-      if (ShouldImport(*i))
+   for (auto &c: el->RefChildren())
+      if (ShouldImport(c))
          return kTRUE;
    return kFALSE;
 }
@@ -233,10 +233,9 @@ REveElement* REveProjectionManager::ImportElementsRecurse(REveElement* el,
 
       REveCompound *cmpnd    = dynamic_cast<REveCompound*>(el);
       REveCompound *cmpnd_pr = dynamic_cast<REveCompound*>(new_el);
-      for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
-      {
-         REveElement* child_pr = ImportElementsRecurse(*i, new_el);
-         if (cmpnd && (*i)->GetCompound() == cmpnd)
+      for (auto &c: el->RefChildren()) {
+         REveElement *child_pr = ImportElementsRecurse(c, new_el);
+         if (cmpnd && c->GetCompound() == cmpnd)
             child_pr->SetCompound(cmpnd_pr);
       }
    }
@@ -320,20 +319,17 @@ REveElement* REveProjectionManager::SubImportElements(REveElement* el,
 Int_t REveProjectionManager::SubImportChildren(REveElement* el, REveElement* proj_parent)
 {
    List_t new_els;
-   for (List_i i = el->BeginChildren(); i != el->EndChildren(); ++i)
-   {
-      REveElement* new_el = ImportElementsRecurse(*i, proj_parent);
+   for (auto &c: el->RefChildren()) {
+      auto new_el = ImportElementsRecurse(c, proj_parent);
       if (new_el)
          new_els.push_back(new_el);
    }
 
-   if ( ! new_els.empty())
+   if (!new_els.empty())
    {
       AssertBBox();
-      for (List_i i = new_els.begin(); i != new_els.end(); ++i)
-      {
-         ProjectChildrenRecurse(*i);
-      }
+      for (auto &nel: new_els)
+         ProjectChildrenRecurse(nel);
       AssertBBoxExtents(0.1);
       StampTransBBox();
 

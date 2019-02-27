@@ -760,9 +760,9 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
       printf("   for now assume world-scene has no render data, binary-size=%d\n", fWorld->fTotalBinarySize);
       assert(fWorld->fTotalBinarySize == 0);
 
-      for (REveElement::List_i it = fScenes->BeginChildren(); it != fScenes->EndChildren(); ++it)
+      for (auto &c: fScenes->RefChildren())
       {
-         REveScene* scene = dynamic_cast<REveScene*>(*it);
+         REveScene* scene = dynamic_cast<REveScene *>(c);
 
          scene->AddSubscriber(std::make_unique<REveClient>(connid, fWebWindow));
          printf("\nEVEMNG ............. streaming scene %s [%s]\n",
@@ -806,9 +806,9 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
    if (arg == "CONN_CLOSED") {
       printf("connection closed\n");
       fConnList.erase(conn);
-      for (auto i = fScenes->BeginChildren(); i != fScenes->EndChildren(); ++i)
+      for (auto &c: fScenes->RefChildren())
       {
-         REveScene* scene = dynamic_cast<REveScene*>(*i);
+         REveScene* scene = dynamic_cast<REveScene *>(c);
          scene->RemoveSubscriber(connid);
       }
       fWorld->RemoveSubscriber(connid);

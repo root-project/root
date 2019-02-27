@@ -296,16 +296,14 @@ void REveTrackListProjected::SetDepth(Float_t d)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set depth of all children of el inheriting from REveTrackProjected.
 
-void REveTrackListProjected::SetDepth(Float_t d, REveElement* el)
+void REveTrackListProjected::SetDepth(Float_t d, REveElement *el)
 {
-   REveTrackProjected* ptrack;
-   for (List_i i = el->BeginChildren(); i != el->EndChildren(); ++i)
-   {
-      ptrack = dynamic_cast<REveTrackProjected*>(*i);
+   for (auto &c: el->RefChildren()) {
+      auto ptrack = dynamic_cast<REveTrackProjected *>(c);
       if (ptrack)
          ptrack->SetDepth(d);
       if (fRecurse)
-         SetDepth(d, *i);
+         SetDepth(d, c);
    }
 }
 

@@ -421,10 +421,10 @@ void REveScene::RetransHierarchicallyRecurse(REveElement* el, const REveTrans& t
 
    if (el->GetRnrChildren())
    {
-      for (List_i i = el->BeginChildren(); i != el->EndChildren(); ++i)
+      for (auto &c: el->RefChildren())
       {
-         if ((*i)->GetRnrAnything())
-            RetransHierarchicallyRecurse(*i, t);
+         if (c->GetRnrAnything())
+            RetransHierarchicallyRecurse(c, t);
       }
    }
 }
