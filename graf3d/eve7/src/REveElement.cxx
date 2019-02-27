@@ -1327,15 +1327,13 @@ void REveElement::Destroy()
 
 void REveElement::DestroyOrWarn()
 {
-   static const REveException eh("REveElement::DestroyOrWarn ");
-
    try
    {
       Destroy();
    }
-   catch (REveException& exc)
+   catch (REveException &exc)
    {
-      Warning(eh, "%s", exc.Data());
+      Warning("REveElement::DestroyOrWarn", exc.what());
    }
 }
 
@@ -1344,8 +1342,6 @@ void REveElement::DestroyOrWarn()
 
 void REveElement::DestroyElements()
 {
-   static const REveException eh("REveElement::DestroyElements ");
-
    while (HasChildren())
    {
       REveElement* c = fChildren.front();
@@ -1354,15 +1350,15 @@ void REveElement::DestroyElements()
          try {
             c->Destroy();
          }
-         catch (REveException& exc) {
-            Warning(eh, "element destruction failed: '%s'.", exc.Data());
+         catch (REveException &exc) {
+            Warning("REveElement::DestroyElements", "element destruction failed: '%s'.", exc.what());
             RemoveElement(c);
          }
       }
       else
       {
          if (gDebug > 0)
-            Info(eh, "element '%s' is protected agains destruction, removing locally.", c->GetCName());
+            Info("REveElement::DestroyElements", "element '%s' is protected against destruction, removing locally.", c->GetCName());
          RemoveElement(c);
       }
    }

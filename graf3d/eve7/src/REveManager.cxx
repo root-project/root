@@ -374,8 +374,6 @@ next_free_id:
 
 void REveManager::PreDeleteElement(REveElement* el)
 {
-   static const REveException eh("REveManager::PreDeleteElement ");
-
    if (el->fImpliedSelected > 0)
    {
       for (auto slc : fSelectionList->fChildren)
@@ -385,7 +383,7 @@ void REveManager::PreDeleteElement(REveElement* el)
       }
 
       if (el->fImpliedSelected != 0)
-         Error(eh, "ImpliedSelected not zero (%d) after cleanup of selections.", el->fImpliedSelected);
+         Error("REveManager::PreDeleteElement", "ImpliedSelected not zero (%d) after cleanup of selections.", el->fImpliedSelected);
    }
 
    if (el->fElementId != 0)
@@ -591,7 +589,7 @@ TGeoManager* REveManager::GetGeometry(const TString& filename)
 
    TString exp_filename = filename;
    gSystem->ExpandPathName(exp_filename);
-   printf("%s loading: '%s' -> '%s'.\n", eh.Data(),
+   printf("REveManager::GetGeometry loading: '%s' -> '%s'.\n",
           filename.Data(), exp_filename.Data());
 
    gGeoManager = (TGeoManager*) fGeometries->GetValue(filename);
@@ -603,7 +601,7 @@ TGeoManager* REveManager::GetGeometry(const TString& filename)
    {
       Bool_t locked = TGeoManager::IsLocked();
       if (locked) {
-         Warning(eh, "TGeoManager is locked ... unlocking it.");
+         Warning("REveManager::GetGeometry", "TGeoManager is locked ... unlocking it.");
          TGeoManager::UnlockGeometry();
       }
       if (TGeoManager::Import(filename) == 0) {
@@ -725,11 +723,11 @@ Exception handler for Eve exceptions.
 /// Handle exceptions deriving from REveException.
 
 TStdExceptionHandler::EStatus
-REveManager::RExceptionHandler::Handle(std::exception& exc)
+REveManager::RExceptionHandler::Handle(std::exception &exc)
 {
    REveException* ex = dynamic_cast<REveException*>(&exc);
    if (ex) {
-      Info("Handle", "%s", ex->Data());
+      Info("REveManager::RExceptionHandler::Handle", ex->what());
       // REX::gEve->SetStatusLine(ex->Data());
       gSystem->Beep();
       return kSEHandled;

@@ -105,14 +105,14 @@ void REveViewer::RemoveElementsLocal()
 
 Bool_t REveViewer::HandleElementPaste(REveElement* el)
 {
-   static const REveException eh("REveViewer::HandleElementPaste ");
+   static const REveException eh("REveViewer::HandleElementPaste");
 
    REveScene* scene = dynamic_cast<REveScene*>(el);
-   if (scene != 0) {
+   if (scene) {
       AddScene(scene);
       return kTRUE;
    } else {
-      Warning(eh.Data(), "class REveViewer only accepts REveScene paste argument.");
+      Warning("REveViewer::HandleElementPaste", "class REveViewer only accepts REveScene paste argument.");
       return kFALSE;
    }
 }

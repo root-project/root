@@ -151,53 +151,38 @@ void REveVSD::WriteTrees()
 
 void REveVSD::LoadTrees()
 {
-   static const REveException eH("REveVSD::LoadTrees ");
+   static const REveException eH("REveVSD::LoadTrees");
 
-   if (fDirectory == nullptr)
-      throw eH + "directory not set.";
+   if (!fDirectory)
+      throw eH + " directory not set.";
 
    fTreeK = (TTree*) fDirectory->Get("Kinematics");
-   if (fTreeK == nullptr && fVerbose) {
-      printf("%s Kinematics not available in fDirectory %s.\n",
-             eH.Data(), fDirectory->GetName());
-   }
+   if (!fTreeK && fVerbose)
+      Error("REveVSD::LoadTrees","Kinematics not available in fDirectory %s.", fDirectory->GetName());
 
    fTreeH = (TTree*) fDirectory->Get("Hits");
-   if (fTreeH == nullptr && fVerbose) {
-      printf("%s Hits not available in fDirectory %s.\n",
-             eH.Data(), fDirectory->GetName());
-   }
+   if (!fTreeH && fVerbose)
+      Error("REveVSD::LoadTrees", "Hits not available in fDirectory %s.", fDirectory->GetName());
 
    fTreeC = (TTree*) fDirectory->Get("Clusters");
-   if (fTreeC == nullptr && fVerbose) {
-      printf("%s Clusters not available in fDirectory %s.\n",
-             eH.Data(), fDirectory->GetName());
-   }
+   if (!fTreeC && fVerbose)
+      Error("REveVSD::LoadTrees", "Clusters not available in fDirectory %s.", fDirectory->GetName());
 
    fTreeR = (TTree*) fDirectory->Get("RecTracks");
-   if (fTreeR == nullptr && fVerbose) {
-      printf("%s RecTracks not available in fDirectory %s.\n",
-             eH.Data(), fDirectory->GetName());
-   }
+   if (!fTreeR && fVerbose)
+      Error("REveVSD::LoadTrees", "RecTracks not available in fDirectory %s.", fDirectory->GetName());
 
    fTreeKK =  (TTree*) fDirectory->Get("RecKinks");
-   if (fTreeKK == nullptr && fVerbose) {
-      printf("%s Kinks not available in fDirectory %s.\n",
-             eH.Data(), fDirectory->GetName());
-   }
+   if (!fTreeKK && fVerbose)
+      Error("REveVSD::LoadTrees", "RecKinks not available in fDirectory %s.", fDirectory->GetName());
 
    fTreeV0 =  (TTree*) fDirectory->Get("RecV0s");
-   if (fTreeV0 == nullptr && fVerbose) {
-      printf("%s V0 not available in fDirectory %s.\n",
-             eH.Data(), fDirectory->GetName());
-   }
+   if (!fTreeV0  && fVerbose)
+      Error("REveVSD::LoadTrees", "RecV0 not available in fDirectory %s.", fDirectory->GetName());
 
    fTreeGI = (TTree*)fDirectory->Get("REveMCRecCrossRef");
-   if(fTreeGI == nullptr && fVerbose) {
-      printf("%s REveMCRecCrossRef not available in fDirectory %s.\n",
-             eH.Data(), fDirectory->GetName());
-   }
-
+   if(!fTreeGI && fVerbose)
+      Error("REveVSD::LoadTrees", "REveMCRecCrossRef not available in fDirectory %s.", fDirectory->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

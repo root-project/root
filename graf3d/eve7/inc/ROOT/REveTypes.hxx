@@ -20,19 +20,27 @@ typedef unsigned int ElementId_t;
 bool operator==(const TString &t, const std::string &s);
 bool operator==(const std::string &s, const TString &t);
 
-class REveException : public std::exception, public TString
+////////////////////////////////////////////////////////////////////////////////
+/// REveException
+/// Exception-type thrown by Eve classes.
+////////////////////////////////////////////////////////////////////////////////
+
+class REveException : public std::exception
 {
+   std::string fWhat;
 public:
-   REveException() {}
-   REveException(const TString &s) : TString(s) {}
-   REveException(const char *s) : TString(s) {}
-   REveException(const std::string &s);
+   REveException() = default;
+   REveException(const TString &s) : fWhat(s.Data()) {}
+   REveException(const char *s) : fWhat(s) {}
+   REveException(const std::string &s) : fWhat(s) {}
 
    virtual ~REveException() noexcept {}
 
-   virtual const char *what() const noexcept { return Data(); }
+   void append(const char *s) { fWhat.append(s); }
+   void append(const TString &s) { fWhat.append(s.Data()); }
+   void append(const std::string &s) { fWhat.append(s); }
 
-   ClassDef(REveException, 1); // Exception-type thrown by Eve classes.
+   const char *what() const noexcept override { return fWhat.c_str(); }
 };
 
 REveException operator+(const REveException &s1, const std::string &s2);

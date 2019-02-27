@@ -436,18 +436,15 @@ void REveRefBackPtr::IncRefCount(REveElement* re)
 ////////////////////////////////////////////////////////////////////////////////
 /// Decrease reference count and remove re from the list of back-references.
 
-void REveRefBackPtr::DecRefCount(REveElement* re)
+void REveRefBackPtr::DecRefCount(REveElement *re)
 {
-   static const REveException eh("REveRefBackPtr::DecRefCount ");
-
    RefMap_i i = fBackRefs.find(re);
    if (i != fBackRefs.end()) {
       if (--(i->second) <= 0)
          fBackRefs.erase(i);
       REveRefCnt::DecRefCount();
    } else {
-      Warning(eh, "element '%s' not found in back-refs.",
-                  re->GetCName());
+      Warning("REveRefBackPtr::DecRefCount", "element '%s' not found in back-refs.", re->GetCName());
    }
 }
 

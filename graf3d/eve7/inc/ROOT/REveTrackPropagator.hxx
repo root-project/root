@@ -25,9 +25,10 @@ namespace Experimental {
 
 class REvePointSet;
 
-//==============================================================================
-// REveMagField
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// REveMagField
+/// Abstract interface to magnetic field
+////////////////////////////////////////////////////////////////////////////////
 
 class REveMagField
 {
@@ -60,12 +61,12 @@ public:
    virtual REveVector GetField(Float_t, Float_t, Float_t) const { return REveVector(); }
    virtual Float_t GetMaxFieldMag() const { return 4; } // not abstract because of backward compatibility
 
-   // ClassDef(REveMagField, 0); // Abstract interface to magnetic field
 };
 
-//==============================================================================
-// REveMagFieldConst
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// REveMagFieldConst
+/// Interface to constant magnetic field.
+////////////////////////////////////////////////////////////////////////////////
 
 class REveMagFieldConst : public REveMagField
 {
@@ -79,13 +80,12 @@ public:
    REveVectorD GetFieldD(Double_t /*x*/, Double_t /*y*/, Double_t /*z*/) const override { return fB; }
 
    Double_t GetMaxFieldMagD() const override { return fB.Mag(); };
-
-   // ClassDef(REveMagFieldConst, 0); // Interface to constant magnetic field.
 };
 
-//==============================================================================
-// REveMagFieldDuo
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// REveMagFieldDuo
+/// Interface to magnetic field with two different values depending on radius.
+////////////////////////////////////////////////////////////////////////////////
 
 class REveMagFieldDuo : public REveMagField
 {
@@ -112,13 +112,12 @@ public:
       Double_t b1 = fBIn.Mag(), b2 = fBOut.Mag();
       return b1 > b2 ? b1 : b2;
    }
-
-   // ClassDef(REveMagFieldDuo, 0); // Interface to magnetic field with two different values depending on radius.
 };
 
-//==============================================================================
-// REveTrackPropagator
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// REveTrackPropagator
+/// Calculates path of a particle taking into account special path-marks and imposed boundaries.
+////////////////////////////////////////////////////////////////////////////////
 
 class REveTrackPropagator : public REveElement,
                             public REveRefBackPtr
@@ -181,7 +180,7 @@ protected:
    EStepper_e fStepper;
 
    REveMagField *fMagFieldObj{nullptr};
-   Bool_t fOwnMagFiledObj;
+   Bool_t fOwnMagFiledObj{kFALSE};
 
    // Track extrapolation limits
    Double_t fMaxR; // Max radius for track extrapolation
@@ -241,15 +240,15 @@ protected:
                                    REveVectorD &out);
 
 public:
-   REveTrackPropagator(const std::string& n = "REveTrackPropagator", const std::string& t = "", REveMagField *field = 0,
+   REveTrackPropagator(const std::string& n = "REveTrackPropagator", const std::string& t = "", REveMagField *field = nullptr,
                        Bool_t own_field = kTRUE);
    virtual ~REveTrackPropagator();
 
-   void OnZeroRefCount(); // override
+   void OnZeroRefCount() override;
 
-   void CheckReferenceCount(const std::string& from="<unknown>"); // override
+   void CheckReferenceCount(const std::string &from = "<unknown>") override;
 
-   void ElementChanged(Bool_t update_scenes = kTRUE, Bool_t redraw = kFALSE); // override
+   void ElementChanged(Bool_t update_scenes = kTRUE, Bool_t redraw = kFALSE) override;
 
    // propagation
    void InitTrack(const REveVectorD &v, Int_t charge);
@@ -341,8 +340,6 @@ public:
 
    static Double_t fgEditorMaxR; // Max R that can be set in GUI editor.
    static Double_t fgEditorMaxZ; // Max Z that can be set in GUI editor.
-
-   ClassDef(REveTrackPropagator, 0); // Calculates path of a particle taking into account special path-marks and imposed boundaries.
 };
 
 //______________________________________________________________________________
