@@ -85,13 +85,11 @@ protected:
    virtual void Clean();
    virtual void CleanLocal();
 
-   typedef std::vector<Product*>::iterator Product_it;
    std::vector<Product*> m_products;
 
 private:
-   std::string           m_type;
-
-   const REveDataCollection*   m_collection{nullptr};
+   std::string              m_type;
+   const REveDataCollection *m_collection{nullptr};
 
    float                 m_layer;
    //   REveDataInteractionList*  m_interactionList;

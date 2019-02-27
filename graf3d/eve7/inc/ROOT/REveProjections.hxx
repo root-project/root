@@ -47,7 +47,6 @@ public:
    };
 
    typedef std::vector<PreScaleEntry_t> vPreScale_t;
-   typedef std::vector<PreScaleEntry_t>::iterator vPreScale_i;
 
 protected:
    EPType_e fType;      // type

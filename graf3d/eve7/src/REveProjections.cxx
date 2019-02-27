@@ -137,7 +137,7 @@ void REveProjection::PreScaleVariable(Int_t dim, Float_t& v)
          v    = -v;
          invp = kTRUE;
       }
-      vPreScale_i i = fPreScales[dim].begin();
+      auto i = fPreScales[dim].begin();
       while (v > i->fMax)
          ++i;
       v = i->fOffset + (v - i->fMin)*i->fScale;

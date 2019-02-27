@@ -256,9 +256,8 @@ void REveScene::StreamRepresentationChanges()
 
    // jarr.push_back(jhdr);
 
-   for (Set_i i = fChangedElements.begin(); i != fChangedElements.end(); ++i)
+   for (auto &el: fChangedElements)
    {
-      REveElement* el = *i;
       UChar_t bits = el->GetChangeBits();
 
       nlohmann::json jobj = {};

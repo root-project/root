@@ -66,7 +66,7 @@ public:
    int N_tracks;
    int N_jets;
 
-   
+
    void MakeJets(int N)
    {
       TRandom &r = * gRandom;
@@ -144,7 +144,7 @@ public:
 class XYJetProxyBuilder: public REX::REveDataSimpleProxyBuilderTemplate<XYJet>
 {
    virtual bool HaveSingleProduct() const { return false; }
-   
+
    using REveDataSimpleProxyBuilderTemplate<XYJet>::BuildViewType;
    virtual void BuildViewType(const XYJet& dj, REX::REveElement* iItemHolder, std::string viewType, const REX::REveViewContext* context)
    {
@@ -167,7 +167,7 @@ class XYJetProxyBuilder: public REX::REveDataSimpleProxyBuilderTemplate<XYJet>
          static const float_t offr = 6;
          float r_ecal = context->GetMaxR() + offr;
          float z_ecal = context->GetMaxZ() + offr;
-         
+
          float transAngle = abs(atan(r_ecal/z_ecal));
          double r(0);
          bool debug = false;
@@ -188,21 +188,21 @@ class XYJetProxyBuilder: public REX::REveDataSimpleProxyBuilderTemplate<XYJet>
 
          auto marker = new REX::REveScalableStraightLineSet("jetline");
          marker->SetScaleCenter(p1.fX, p1.fY, p1.fZ);
-         marker->AddLine(p1, p2);   
-         
+         marker->AddLine(p1, p2);
+
          marker->SetLineWidth(4);
          if (debug)
              marker->AddMarker(0, 0.9);
-         
+
          SetupAddElement(marker, iItemHolder, true);
       }
-     
+
       jet->SetName(Form("element %s", iItemHolder->GetName().c_str()));
    }
 };
 
 class TrackProxyBuilder : public REX::REveDataSimpleProxyBuilderTemplate<TParticle>
-{   
+{
    using REveDataSimpleProxyBuilderTemplate<TParticle>::Build;
    virtual void Build(const TParticle& p, REX::REveElement* iItemHolder, const REX::REveViewContext* context)
    {
@@ -226,7 +226,7 @@ class XYManager
 {
 private:
    Event* m_event;
-   
+
    std::vector <REX::REveScene*> m_scenes;
    REX::REveViewContext* m_viewContext;
 
@@ -247,7 +247,7 @@ public:
       prop->SetMaxZ(z);
       prop->SetMaxOrbs(6);
       prop->IncRefCount();
-      
+
       m_viewContext = new REX::REveViewContext();
        m_viewContext->SetBarrel(r, z);
       m_viewContext->SetTrackPropagator(prop);
@@ -278,13 +278,13 @@ public:
       // 3D
       m_scenes.push_back(REX::gEve->GetEventScene());
 
-      // Geometry 
+      // Geometry
       auto b1 = new REX::REveGeoShape("Barrel 1");
       float dr = 3;
       b1->SetShape(new TGeoTube(m_viewContext->GetMaxR() , m_viewContext->GetMaxR() + dr, m_viewContext->GetMaxZ()));
       b1->SetMainColor(kCyan);
       REX::gEve->GetGlobalScene()->AddElement(b1);
-      
+
 
       // RhoZ
       if (gRhoZView) {
@@ -294,7 +294,7 @@ public:
          auto rhoZView = REX::gEve->SpawnNewViewer("RhoZ View", "");
          rhoZView->AddScene(rhoZEventScene);
          m_scenes.push_back(rhoZEventScene);
-         
+
          auto pgeoScene  = REX::gEve->SpawnNewScene("Projection Geometry","xxx");
          m_mngRhoZ->ImportElements(b1,pgeoScene );
          rhoZView->AddScene(pgeoScene);
@@ -336,34 +336,34 @@ public:
             // printf("collection for list %s %s\n", collection->GetCName(), l->GetName());
             collection->ClearItems();
             collection->DestroyElements();
-            
+
             for (int i = 0; i <= l->GetLast(); ++i)
             {
                TString pname; pname.Form("item %2d", i);
                collection->AddItem(l->At(i), pname.Data(), "");
             }
          }
-      }      
+      }
    }
 
    void NextEvent() {
-      for (auto it = m_collections->BeginChildren(); it !=  m_collections->EndChildren(); it++)
+      for (auto& el: m_collections->RefChildren())
       {
-         REX::REveDataCollection* c = dynamic_cast<REX::REveDataCollection*>(*it);
+         REX::REveDataCollection* c = dynamic_cast<REX::REveDataCollection *>(el);
          LoadCurrentEvent(c);
       }
-      
+
       for (auto proxy : m_builders) {
          // printf("call proxy builder %s \n", proxy->Collection()->GetCName());
          proxy->Build();
       }
    }
-   
+
    void addCollection(REX::REveDataCollection* collection)
    {
       // load data
       LoadCurrentEvent(collection);
-      
+
       // GL view types
       auto glBuilder = makeGLBuilderForType(collection->GetItemClass());
       glBuilder->SetCollection(collection);
@@ -399,7 +399,7 @@ public:
 
          m_builders.push_back(tableBuilder);
       }
-      
+
       m_collections->AddElement(collection);
       collection->SetHandlerFunc([&] (REX::REveDataCollection* collection) { this->CollectionChanged( collection ); });
       collection->SetHandlerFuncIds([&] (REX::REveDataCollection* collection, const REX::REveDataCollection::Ids_t& ids) { this->ModelChanged( collection, ids ); });
@@ -408,10 +408,10 @@ public:
    void finishViewCreate() {
       auto mngTable = m_viewContext->GetTableViewInfo();
       if (mngTable) {
-         for (auto it = m_collections->BeginChildren(); it !=  m_collections->EndChildren(); it++)
+         for (auto& el: m_collections->RefChildren())
          {
-            if ((*it)->GetName() == "XYTracks")
-               mngTable->SetDisplayedCollection((*it)->GetElementId());
+            if (el->GetName() == "XYTracks")
+               mngTable->SetDisplayedCollection(el->GetElementId());
          }
       }
    }
@@ -442,7 +442,7 @@ class EventManager : public REX::REveElement
 private:
    Event* m_event;
    XYManager* m_xymng;
-   
+
 public:
    EventManager(Event* e, XYManager* m): m_event(e), m_xymng(m) {}
 
@@ -470,7 +470,7 @@ void collection_proxies(bool proj=true)
    event->N_jets = 4;
 
    gRhoZView = true;
-   
+
    // debug settings
    auto xyManager = new XYManager(event);
 
@@ -481,7 +481,7 @@ void collection_proxies(bool proj=true)
       //trackCollection->SetFilterExpr("i.Pt() > 0.1 && std::abs(i.Eta()) < 1");
       xyManager->addCollection(trackCollection);
    }
-   
+
    if (1) {
       REX::REveDataCollection* jetCollection = new REX::REveDataCollection("XYJets");
       jetCollection->SetItemClass(XYJet::Class());
@@ -489,11 +489,11 @@ void collection_proxies(bool proj=true)
       xyManager->addCollection(jetCollection);
    }
    xyManager->finishViewCreate();
-   
+
    auto eventMng = new EventManager(event, xyManager);
    eventMng->SetName("EventManager");
    REX::gEve->GetWorld()->AddElement(eventMng);
    REX::gEve->GetWorld()->AddCommand("NextEvent", "sap-icon://step", eventMng, "NextEvent()");
-   
+
    REX::gEve->Show();
 }
