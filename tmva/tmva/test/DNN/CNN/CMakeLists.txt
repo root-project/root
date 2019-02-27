@@ -11,7 +11,7 @@ set(Libraries Core MathCore Matrix TMVA)
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND AND tmva-gpu)
 
-set(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
+set(DNN_CUDA_LIBRARIES ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 
 CUDA_ADD_EXECUTABLE(testIm2ColCuda TestIm2ColCuda.cxx)
 target_link_libraries(testIm2ColCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
