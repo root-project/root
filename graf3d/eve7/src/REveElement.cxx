@@ -336,7 +336,7 @@ void REveElement::PropagateVizParamsToProjecteds()
 
 void REveElement::PropagateVizParamsToChildren(REveElement* el)
 {
-   if (el == 0) el = this;
+   if (!el) el = this;
 
    for (auto &c : fChildren)
    {
@@ -484,7 +484,7 @@ void REveElement::VizDB_Insert(const std::string& tag, Bool_t replace, Bool_t up
 
    TClass* cls     = IsA();
    REveElement* el = reinterpret_cast<REveElement*>(cls->New());
-   if (el == 0) {
+   if (!el) {
       Error("VizDB_Insert", "Creation of replica failed.");
       return;
    }
@@ -501,7 +501,7 @@ void REveElement::VizDB_Insert(const std::string& tag, Bool_t replace, Bool_t up
 /// - master of mother, if kSCBTakeMotherAsMaster bit is set;
 /// If non of the above is true, *this* is returned.
 
-REveElement* REveElement::GetMaster()
+REveElement *REveElement::GetMaster()
 {
    REveProjected* proj = dynamic_cast<REveProjected*>(this);
    if (proj)

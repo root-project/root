@@ -355,7 +355,7 @@ REveGeoShape *REveGeoShape::SubImportShapeExtract(REveGeoShapeExtract* gse,
    {
       TIter next(gse->GetElements());
       REveGeoShapeExtract* chld;
-      while ((chld = (REveGeoShapeExtract*) next()) != 0)
+      while ((chld = (REveGeoShapeExtract*) next()) != nullptr)
          SubImportShapeExtract(chld, gsre);
    }
 

@@ -93,7 +93,7 @@ Long64_t REvePointSelector::Select(const char* selection)
    }
 
    TString sel;
-   if (selection != 0)
+   if (selection)
       sel = selection;
    else
       sel = fSelection;

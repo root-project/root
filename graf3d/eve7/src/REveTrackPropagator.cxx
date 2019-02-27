@@ -247,7 +247,7 @@ REveTrackPropagator::REveTrackPropagator(const std::string& n, const std::string
    fPTBAtt.SetMarkerStyle(4);
    fPTBAtt.SetMarkerSize(0.8);
 
-   if (fMagFieldObj == 0) {
+   if (!fMagFieldObj) {
       fMagFieldObj = new REveMagFieldConst(0., 0., fgDefMagField);
       fOwnMagFiledObj = kTRUE;
    }

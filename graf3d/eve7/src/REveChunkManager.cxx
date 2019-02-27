@@ -111,7 +111,7 @@ Char_t* REveChunkManager::NewChunk()
 
 Bool_t REveChunkManager::iterator::next()
 {
-   if (fSelection == 0)
+   if (fSelection == nullptr)
    {
       if (fAtomsToGo <= 0)
       {
