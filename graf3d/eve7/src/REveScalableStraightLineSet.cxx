@@ -13,7 +13,7 @@ namespace REX = ROOT::Experimental;
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveScalableStraightLineSet::REveScalableStraightLineSet(const char* n, const char* t):
+REveScalableStraightLineSet::REveScalableStraightLineSet(const std::string &n, const std::string &t):
    REveStraightLineSet (n, t),
    fCurrentScale(1.0)
 {

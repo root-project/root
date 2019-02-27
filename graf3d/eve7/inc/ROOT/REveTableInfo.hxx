@@ -25,12 +25,19 @@ namespace Experimental {
 class REveTableEntry {
 public:
    std::string    fName;
-   std::string    fExpression;
    int            fPrecision;
+   std::string    fExpression;
    REveDataColumn::FieldType_e fType;
 
    REveTableEntry() : fName("unknown"), fPrecision(2), fType(REveDataColumn::FT_Double) {}
-   void Print() const {
+
+   REveTableEntry(const std::string &name, int precision, const std::string &expression)
+      : fName(name), fPrecision(precision), fExpression(expression), fType(REveDataColumn::FT_Double)
+   {
+   }
+
+   void Print() const
+   {
       printf("TableEntry\n");
       printf("name: %s expression: %s\n", fName.c_str(), fExpression.c_str());
    }
@@ -51,18 +58,13 @@ public:
    // REveTableHandle() {}
 
    REveTableHandle&
-   column(const char *name, int precision, const char *expression)
+   column(const std::string &name, int precision, const std::string &expression)
    {
-      REveTableEntry columnEntry;
-      columnEntry.fName = name;
-      columnEntry.fPrecision = precision;
-      columnEntry.fExpression = expression;
-
-      fSpecs[fCollectionName].push_back(columnEntry);
+      fSpecs[fCollectionName].emplace_back(name, precision, expression);
       return *this;
    }
 
-   REveTableHandle &column(const char *label, int precision)
+   REveTableHandle &column(const std::string &label, int precision)
    {
       return column(label, precision, label);
    }
