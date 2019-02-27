@@ -7,6 +7,10 @@
 namespace ROOT {
 namespace Experimental {
 
+///////////////////////////////////////////////////////////////////////////////
+/// REveTableEntry
+///////////////////////////////////////////////////////////////////////////////
+
 class REveTableEntry {
 public:
    std::string    fName;
@@ -20,6 +24,10 @@ public:
       printf("name: %s expression: %s\n", fName.c_str(), fExpression.c_str());
    }
 };
+
+///////////////////////////////////////////////////////////////////////////////
+/// REveTableHandle
+///////////////////////////////////////////////////////////////////////////////
 
 class REveTableHandle
 {
@@ -59,13 +67,17 @@ protected:
    Specs_t&  fSpecs;
 };
 
-//==============================================================================
-//==============================================================================
+///////////////////////////////////////////////////////////////////////////////
+/// REveTableViewInfo
+///////////////////////////////////////////////////////////////////////////////
 
 class REveTableViewInfo : public REveElement
 {
 public:
-   REveTableViewInfo(const std::string& name="TableViewManager", const std::string& title=""){ fName=name; fTitle=title; }
+   REveTableViewInfo(const std::string &name = "TableViewManager", const std::string &title = "")
+      : REveElement(name, title)
+   {
+   }
 
    typedef std::function<void (ElementId_t)> Delegate_t;
 
@@ -74,23 +86,22 @@ public:
 
    void AddDelegate(Delegate_t d) { fDelegates.push_back(d); }
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 
    // read
-   REveTableHandle::Entries_t& RefTableEntries(std::string cname) { return fSpecs[cname]; }
+   REveTableHandle::Entries_t &RefTableEntries(std::string cname) { return fSpecs[cname]; }
 
    // filling
-   REveTableHandle table(std::string collectionName) {
+   REveTableHandle table(std::string collectionName)
+   {
       REveTableHandle handle(collectionName, fSpecs);
       return handle;
    }
 
 private:
-   int fDisplayedCollection;
+   int fDisplayedCollection{0};
    std::vector<Delegate_t> fDelegates;
    REveTableHandle::Specs_t  fSpecs;
-
-   ClassDef(REveTableViewInfo, 0); // Short description.
 };
 
 

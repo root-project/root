@@ -37,7 +37,7 @@ Float_t REX::REveProjection::fgEpsSqr = 0.000025f;
 REveProjection::REveProjection() :
    fType          (kPT_Unknown),
    fGeoMode       (kGM_Unknown),
-   fName          (0),
+   fName          (),
    fCenter        (),
    fDisplaceOrigin (kFALSE),
    fUsePreScale   (kFALSE),
