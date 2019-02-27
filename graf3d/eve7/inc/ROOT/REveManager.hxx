@@ -51,7 +51,7 @@ public:
       RRedrawDisabler(const RRedrawDisabler &);            // Not implemented
       RRedrawDisabler &operator=(const RRedrawDisabler &); // Not implemented
 
-      REveManager *fMgr = nullptr;
+      REveManager *fMgr{nullptr};
 
    public:
       RRedrawDisabler(REveManager *m) : fMgr(m)
@@ -66,63 +66,62 @@ public:
       }
    };
 
-   class RExceptionHandler : public TStdExceptionHandler
-   {
+   class RExceptionHandler : public TStdExceptionHandler {
    public:
       RExceptionHandler() : TStdExceptionHandler() { Add(); }
       virtual ~RExceptionHandler()                 { Remove(); }
 
       virtual EStatus  Handle(std::exception& exc);
 
-      ClassDef(REveManager::RExceptionHandler, 0); // Exception handler for Eve exceptions.
+      ClassDef(RExceptionHandler, 0);
    };
 
    struct Conn
    {
-      unsigned fId;
+      unsigned fId{0};
 
-      Conn() : fId(0) {}
+      Conn() = default;
       Conn(unsigned int cId) : fId(cId) {}
    };
 
 protected:
-   RExceptionHandler        *fExcHandler;
+   RExceptionHandler        *fExcHandler{nullptr};   //!< exception handler
 
-   TMap                     *fVizDB;
-   Bool_t                    fVizDBReplace;
-   Bool_t                    fVizDBUpdate;
+   TMap                     *fVizDB{nullptr};
+   Bool_t                    fVizDBReplace{kFALSE};
+   Bool_t                    fVizDBUpdate{kFALSE};
 
-   TMap                     *fGeometries;      //  TODO: use std::map<std::string, std::unique_ptr<TGeoManager>>
-   TMap                     *fGeometryAliases; //  TODO: use std::map<std::string, std::string>
+   TMap                     *fGeometries{nullptr};      //  TODO: use std::map<std::string, std::unique_ptr<TGeoManager>>
+   TMap                     *fGeometryAliases{nullptr}; //  TODO: use std::map<std::string, std::string>
 
-   TFolder                  *fMacroFolder;
+   TFolder                  *fMacroFolder{nullptr};
 
-   REveScene                *fWorld   = nullptr;
+   REveScene                *fWorld{nullptr};
 
-   REveViewerList           *fViewers = nullptr;
-   REveSceneList            *fScenes  = nullptr;
+   REveViewerList           *fViewers{nullptr};
+   REveSceneList            *fScenes{nullptr};
 
-   REveScene                *fGlobalScene = nullptr;
-   REveScene                *fEventScene  = nullptr;
+   REveScene                *fGlobalScene{nullptr};
+   REveScene                *fEventScene{nullptr};
 
-   Int_t                     fRedrawDisabled;
-   Bool_t                    fFullRedraw;
-   Bool_t                    fResetCameras;
-   Bool_t                    fDropLogicals;
-   Bool_t                    fKeepEmptyCont;
-   Bool_t                    fTimerActive;
+   Int_t                     fRedrawDisabled{0};
+   Bool_t                    fFullRedraw{kFALSE};
+   Bool_t                    fResetCameras{kFALSE};
+   Bool_t                    fDropLogicals{kFALSE};
+   Bool_t                    fKeepEmptyCont{kFALSE};
+   Bool_t                    fTimerActive{kFALSE};
    TTimer                    fRedrawTimer;
 
    // ElementId management
    std::unordered_map<ElementId_t, REveElement*> fElementIdMap;
-   ElementId_t                                   fLastElementId = 0;
-   ElementId_t                                   fNumElementIds = 0;
-   ElementId_t                                   fMaxElementIds = std::numeric_limits<ElementId_t>::max();
+   ElementId_t                                   fLastElementId{0};
+   ElementId_t                                   fNumElementIds{0};
+   ElementId_t                                   fMaxElementIds{std::numeric_limits<ElementId_t>::max()};
 
    // Selection / highlight elements
-   REveElement              *fSelectionList = nullptr;
-   REveSelection            *fSelection     = nullptr;
-   REveSelection            *fHighlight     = nullptr;
+   REveElement              *fSelectionList{nullptr};
+   REveSelection            *fSelection{nullptr};
+   REveSelection            *fHighlight{nullptr};
 
    std::shared_ptr<ROOT::Experimental::RWebWindow>  fWebWindow;
    std::vector<Conn>                                fConnList;
@@ -152,12 +151,12 @@ public:
    TFolder*     GetMacroFolder() const { return fMacroFolder; }
    TMacro*      GetMacro(const char* name) const;
 
-   void EditElement(REveElement* element);
+   void EditElement(REveElement *element);
 
    void DisableRedraw() { ++fRedrawDisabled; }
    void EnableRedraw()  { --fRedrawDisabled; if (fRedrawDisabled <= 0) Redraw3D(); }
 
-   void Redraw3D(Bool_t resetCameras=kFALSE, Bool_t dropLogicals=kFALSE)
+   void Redraw3D(Bool_t resetCameras = kFALSE, Bool_t dropLogicals = kFALSE)
    {
       if (fRedrawDisabled <= 0 && !fTimerActive) RegisterRedraw3D();
       if (resetCameras) fResetCameras = kTRUE;
@@ -165,7 +164,7 @@ public:
    }
    void RegisterRedraw3D();
    void DoRedraw3D();
-   void FullRedraw3D(Bool_t resetCameras=kFALSE, Bool_t dropLogicals=kFALSE);
+   void FullRedraw3D(Bool_t resetCameras = kFALSE, Bool_t dropLogicals = kFALSE);
 
    Bool_t GetKeepEmptyCont() const   { return fKeepEmptyCont; }
    void   SetKeepEmptyCont(Bool_t k) { fKeepEmptyCont = k; }
@@ -229,8 +228,6 @@ public:
    void Show(const RWebDisplayArgs &args = "");
 
    std::shared_ptr<REveGeomViewer> ShowGeometry(const RWebDisplayArgs &args = "");
-
-   ClassDef(REveManager, 0); // Eve application manager.
 };
 
 R__EXTERN REveManager* gEve;

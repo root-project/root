@@ -14,10 +14,10 @@
 
 #include <ROOT/REveElement.hxx>
 
+#include "TClass.h"
+
 #include <vector>
 #include <memory>
-
-#include "TClass.h"
 
 namespace ROOT {
 namespace Experimental {
@@ -27,6 +27,7 @@ class REveManager;
 
 /******************************************************************************/
 // REveScene
+// REve representation of TGLScene.
 /******************************************************************************/
 
 class REveScene : public REveElement
@@ -56,27 +57,27 @@ protected:
       {}
    };
 
-   Bool_t fSmartRefresh{kTRUE};
-   Bool_t fHierarchical{kFALSE};
+   Bool_t fSmartRefresh{kTRUE};            ///<!
+   Bool_t fHierarchical{kFALSE};           ///<!
 
-   Bool_t fAcceptingChanges{kFALSE};
-   Bool_t fChanged{kFALSE};
-   Set_t  fChangedElements;
-   // For the following two have to rethink how the hierarchy will be handled.
+   Bool_t fAcceptingChanges{kFALSE};       ///<!
+   Bool_t fChanged{kFALSE};                ///<!
+   Set_t  fChangedElements;                ///<!
+   // For the following two have to re-think how the hierarchy will be handled.
    // If I remove a parent, i have to remove all the children.
    // So this has to be done right on both sides (on eve element and here).
    // I might need a set, so i can easily check if parent is in the removed / added list already.
-   List_t fAddedElements;
-   std::vector<ElementId_t> fRemovedElements;
+   List_t fAddedElements;                     ///<!
+   std::vector<ElementId_t> fRemovedElements; ///<!
 
-   std::vector<std::unique_ptr<REveClient>> fSubscribers;
+   std::vector<std::unique_ptr<REveClient>> fSubscribers; ///<!
 
    List_t fElsWithBinaryData;
    std::string fOutputJson;               ///<!
    std::vector<char> fOutputBinary;       ///<!
    Int_t fTotalBinarySize;                ///<!
 
-   std::vector<SceneCommand> fCommands;
+   std::vector<SceneCommand> fCommands;   ///<!
 
    // void RetransHierarchicallyRecurse(REveElement* el, const REveTrans& tp);
 
@@ -121,12 +122,11 @@ public:
 
    void AddCommand(const std::string &name, const std::string &icon, const REveElement *element, const std::string &action)
    { fCommands.emplace_back(name, icon, element, action); }
-
-   ClassDef(REveScene, 0); // Reve representation of TGLScene.
 };
 
 /******************************************************************************/
 // REveSceneList
+// List of Scenes providing common operations on REveScene collections.
 /******************************************************************************/
 
 class REveSceneList : public REveElement
@@ -149,8 +149,6 @@ public:
    void AcceptChanges(bool);
 
    void ProcessSceneChanges();
-
-   ClassDef(REveSceneList, 0); // List of Scenes providing common operations on REveScene collections.
 };
 
 } // namespace Experimental

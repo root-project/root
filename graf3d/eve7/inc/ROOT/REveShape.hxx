@@ -47,7 +47,7 @@ protected:
    Bool_t fMiniFrame;      // draw minimal frame
 
 public:
-   REveShape(const std::string& n = "REveShape", const std::string& t = "");
+   REveShape(const std::string &n = "REveShape", const std::string &t = "");
    virtual ~REveShape();
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
