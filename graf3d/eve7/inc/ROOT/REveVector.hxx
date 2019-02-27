@@ -20,9 +20,10 @@ class TVector3;
 namespace ROOT {
 namespace Experimental {
 
-//==============================================================================
-// REveVectorT
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// REveVectorT
+/// A three-vector template without TObject inheritance and virtual functions.
+////////////////////////////////////////////////////////////////////////////////
 
 template <typename TT>
 class REveVectorT {
@@ -113,8 +114,6 @@ public:
    void         OrthoNormBase(REveVectorT& a, REveVectorT& b) const;
 
    Bool_t       IsZero() const { return fX == 0 && fY == 0 && fZ == 0; }
-
-   //   ClassDefNV(REveVectorT, 2); // A three-vector template without TObject inheritance and virtual functions.
 };
 
 typedef REveVectorT<Float_t>  REveVector;
@@ -230,10 +229,10 @@ inline REveVectorT<TT> operator*(TT b, const REveVectorT<TT>& a)
    return r *= b;
 }
 
-
-//==============================================================================
-// REveVector4T
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// REveVector4T
+/// A four-vector template without TObject inheritance and virtual functions.
+////////////////////////////////////////////////////////////////////////////////
 
 template <typename TT>
 class REveVector4T : public REveVectorT<TT>
@@ -262,8 +261,6 @@ public:
 
    using TP::operator+=;
    using TP::operator-=;
-
-   ClassDefNV(REveVector4T, 1); // A four-vector template without TObject inheritance and virtual functions.
 };
 
 typedef REveVector4T<Float_t>  REveVector4;
@@ -298,10 +295,10 @@ inline REveVector4T<TT> operator*(TT b, const REveVector4T<TT>& a)
    return REveVector4T<TT>(a.fX*b, a.fY*b, a.fZ*b, a.fT*b);
 }
 
-
-//==============================================================================
-// REveVector2T
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// REveVector2T
+/// A two-vector template without TObject inheritance and virtual functions.
+////////////////////////////////////////////////////////////////////////////////
 
 template <typename TT>
 class REveVector2T
@@ -355,8 +352,6 @@ public:
    REveVector2T& Sub(const REveVector2T& p, const REveVector2T& q);
 
    REveVector2T& Mult(const REveVector2T& a, TT af);
-
-   ClassDefNV(REveVector2T, 1); // // A two-vector template without TObject inheritance and virtual functions.
 };
 
 typedef REveVector2T<Float_t>  REveVector2;
