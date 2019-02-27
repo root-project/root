@@ -24,6 +24,7 @@ set(py_sources
   ROOT/pythonization/_tseqcollection.py
   ROOT/pythonisation/_tstring.py
   ROOT/pythonization/_ttree.py
+  ROOT/pythonization/_tvectort.py
 )
 
 set(sources
