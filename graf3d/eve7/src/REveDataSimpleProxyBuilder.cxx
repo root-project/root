@@ -39,7 +39,7 @@ REveDataSimpleProxyBuilder::Build(const REveDataCollection *collection,
                                   REveElement* product, const REveViewContext* vc)
 {
    auto size = collection->GetNItems();
-   REveElement::List_i pIdx = product->RefChildren().begin();
+   auto pIdx = product->RefChildren().begin();
    for (int index = 0; index < size; ++index)
    {
       REveElement *itemHolder = nullptr;
@@ -70,7 +70,7 @@ REveDataSimpleProxyBuilder::BuildViewType(const REveDataCollection* collection,
                                           REveElement* product, std::string viewType, const REveViewContext* vc)
 {
    auto size = collection->GetNItems();
-   REveElement::List_i pIdx = product->RefChildren().begin();
+   auto pIdx = product->RefChildren().begin();
    for (int index = 0; index < size; ++index)
    {
       REveElement* itemHolder = nullptr;

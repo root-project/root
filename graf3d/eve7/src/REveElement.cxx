@@ -106,11 +106,9 @@ REveElement::~REveElement()
       fDestructing = kStandard;
       RemoveElementsInternal();
 
-      if (fMother)
-      {
+      if (fMother) {
         fMother->RemoveElementLocal(this);
         fMother->fChildren.remove(this);
-        --(fMother->fNumChildren);
       }
 
       for (auto &au : fAunts)
@@ -897,7 +895,7 @@ void REveElement::AddElement(REveElement *el)
 
    el->fMother = this;
 
-   fChildren.push_back(el); ++fNumChildren;
+   fChildren.emplace_back(el);
 
    // XXXX This should be element added. Also, should be different for
    // "full (re)construction". Scenes should manage that and have
@@ -929,7 +927,7 @@ void REveElement::RemoveElement(REveElement* el)
 
    el->CheckReferenceCount();
 
-   fChildren.remove(el); --fNumChildren;
+   fChildren.remove(el);
 
    // XXXX This should be ElementRemoved(). Also, think about recursion, deletion etc.
    // Also, this seems to be done above, in the call to fScene.
@@ -968,13 +966,13 @@ void REveElement::RemoveElementsInternal()
          fScene->SceneElementRemoved(fElementId);
       }
 
-      c->fMother = 0;
-      c->fScene  = 0;
+      c->fMother = nullptr;
+      c->fScene  = nullptr;
 
       c->CheckReferenceCount();
    }
 
-   fChildren.clear(); fNumChildren = 0;
+   fChildren.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1208,7 +1206,6 @@ void REveElement::AnnihilateRecursively()
       c->AnnihilateRecursively();
 
    fChildren.clear();
-   fNumChildren = 0;
 
    fDestructing = kAnnihilate;
    PreDeleteElement();
@@ -1259,8 +1256,6 @@ void REveElement::AnnihilateElements()
       auto c = fChildren.front();
       c->Annihilate();
    }
-
-   fNumChildren = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

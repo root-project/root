@@ -292,19 +292,19 @@ void REveManager::ElementChanged(REveElement* element, Bool_t update_scenes, Boo
 ////////////////////////////////////////////////////////////////////////////////
 /// Mark all scenes from the given list as changed.
 
-void REveManager::ScenesChanged(REveElement::List_t& scenes)
+void REveManager::ScenesChanged(REveElement::List_t &scenes)
 {
-   for (REveElement::List_i s=scenes.begin(); s!=scenes.end(); ++s)
-      ((REveScene*)*s)->Changed();
+   for (auto &s: scenes)
+      ((REveScene*)s)->Changed();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add an element. If parent is not specified it is added into
 /// current event (which is created if does not exist).
 
-void REveManager::AddElement(REveElement* element, REveElement* parent)
+void REveManager::AddElement(REveElement *element, REveElement *parent)
 {
-   if (parent == 0) {
+   if (parent == nullptr) {
       // XXXX
    }
 
