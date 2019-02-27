@@ -173,9 +173,9 @@ void REveViewerList::RemoveElementsLocal()
 {
    // This was needed as viewer was in EveWindowManager hierarchy, too.
    // el->DecParentIgnoreCnt();
-   // for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   // for (auto &c: fChildren)
    // {
-   //    (*i)->DecParentIgnoreCnt();
+   //    c->DecParentIgnoreCnt();
    // }
 
    REveElement::RemoveElementsLocal();
@@ -234,9 +234,8 @@ void REveViewerList::Disconnect()
 
 void REveViewerList::RepaintChangedViewers(Bool_t /*resetCameras*/, Bool_t /*dropLogicals*/)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      // TGLViewer* glv = ((REveViewer*)*i)->GetGLViewer();
+   //for (auto &c: fChildren)  {
+      // TGLViewer* glv = ((REveViewer*)c)->GetGLViewer();
       // if (glv->IsChanged())
       // {
       //    if (resetCameras) glv->PostSceneBuildSetup(kTRUE);
@@ -246,7 +245,7 @@ void REveViewerList::RepaintChangedViewers(Bool_t /*resetCameras*/, Bool_t /*dro
 
       //    if (dropLogicals) glv->SetSmartRefresh(kTRUE);
       // }
-   }
+   //}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,9 +253,8 @@ void REveViewerList::RepaintChangedViewers(Bool_t /*resetCameras*/, Bool_t /*dro
 
 void REveViewerList::RepaintAllViewers(Bool_t /*resetCameras*/, Bool_t /*dropLogicals*/)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      // TGLViewer* glv = ((REveViewer*)*i)->GetGLViewer();
+   // for (auto &c: fChildren) {
+      // TGLViewer* glv = ((REveViewer *)c)->GetGLViewer();
 
       // if (resetCameras) glv->PostSceneBuildSetup(kTRUE);
       // if (dropLogicals) glv->SetSmartRefresh(kFALSE);
@@ -264,7 +262,7 @@ void REveViewerList::RepaintAllViewers(Bool_t /*resetCameras*/, Bool_t /*dropLog
       // glv->RequestDraw(TGLRnrCtx::kLODHigh);
 
       // if (dropLogicals) glv->SetSmartRefresh(kTRUE);
-   }
+   // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -272,11 +270,10 @@ void REveViewerList::RepaintAllViewers(Bool_t /*resetCameras*/, Bool_t /*dropLog
 
 void REveViewerList::DeleteAnnotations()
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      // TGLViewer* glv = ((REveViewer*)*i)->GetGLViewer();
+   // for (auto &c: fChildren) {
+      // TGLViewer* glv = ((REveViewer *)c)->GetGLViewer();
       // glv->DeleteOverlayAnnotations();
-   }
+  // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -329,11 +326,11 @@ void REveViewerList::HandleTooltip()
 ///
 /// Highlight is always in single-selection mode.
 
-void REveViewerList::OnMouseOver(TObject *obj, UInt_t /*state*/)
+void REveViewerList::OnMouseOver(TObject *, UInt_t /*state*/)
 {
-   REveElement *el = dynamic_cast<REveElement*>(obj);
-   if (el && !el->IsPickable())
-      el = 0;
+   // REveElement *el = dynamic_cast<REveElement*>(obj);
+   // if (el && !el->IsPickable())
+   //   el = nullptr;
 
    // void *qsender = gTQSender;
    // REX::gEve->GetHighlight()->UserPickedElement(el, kFALSE);
@@ -451,14 +448,13 @@ void REveViewerList::SetColorBrightness(Float_t b)
 void REveViewerList::SwitchColorSet()
 {
    fUseLightColorSet = ! fUseLightColorSet;
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      // TGLViewer* glv = ((REveViewer*)*i)->GetGLViewer();
+   // for (auto &c: fChildren) {
+      // TGLViewer* glv = ((REveViewer *)c)->GetGLViewer();
       // if ( fUseLightColorSet)
       //    glv->UseLightColorSet();
       // else
       //    glv->UseDarkColorSet();
 
       // glv->RequestDraw(TGLRnrCtx::kLODHigh);
-   }
+   // }
 }
