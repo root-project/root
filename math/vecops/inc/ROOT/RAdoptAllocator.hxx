@@ -11,6 +11,7 @@
 #ifndef ROOT_TADOPTALLOCATOR
 #define ROOT_TADOPTALLOCATOR
 
+#include <array>
 #include <iostream>
 #include <memory>
 
@@ -70,18 +71,52 @@ public:
 private:
    enum class EAllocType : char { kOwning, kAdopting, kAdoptingNoAllocYet };
    using StdAllocTraits_t = std::allocator_traits<StdAlloc_t>;
+   static constexpr std::size_t fgBufferSize{std::is_trivially_copyable<T>::value ? 64 : 0};
    pointer fInitialAddress = nullptr;
    EAllocType fAllocType = EAllocType::kOwning;
    StdAlloc_t fStdAllocator;
+   std::array<T, fgBufferSize> fBuffer {};
+   const T *fBufferStart {fBuffer.data()};
+   std::size_t fSpaceInBuffer{fgBufferSize};
 
 public:
    /// This is the constructor which allows the allocator to adopt a certain memory region.
    RAdoptAllocator(pointer p) : fInitialAddress(p), fAllocType(EAllocType::kAdoptingNoAllocYet){};
    RAdoptAllocator() = default;
-   RAdoptAllocator(const RAdoptAllocator &) = default;
-   RAdoptAllocator(RAdoptAllocator &&) = default;
-   RAdoptAllocator &operator=(const RAdoptAllocator &) = default;
-   RAdoptAllocator &operator=(RAdoptAllocator &&) = default;
+   RAdoptAllocator(const RAdoptAllocator &o)
+   {
+      fInitialAddress = o.fInitialAddress;
+      fAllocType = o.fAllocType;
+      fStdAllocator = o.fStdAllocator;
+      fBufferStart = o.fBufferStart;
+      fSpaceInBuffer = 0;
+   }
+   RAdoptAllocator(RAdoptAllocator &&o)
+   {
+      fInitialAddress = o.fInitialAddress;
+      fAllocType = o.fAllocType;
+      fStdAllocator = std::move(o.fStdAllocator);
+      fBufferStart = o.fBufferStart;
+      fSpaceInBuffer = 0;
+   }
+   RAdoptAllocator &operator=(const RAdoptAllocator &o)
+   {
+      fInitialAddress = o.fInitialAddress;
+      fAllocType = o.fAllocType;
+      fStdAllocator = o.fStdAllocator;
+      fBufferStart = o.fBufferStart;
+      fSpaceInBuffer = 0;
+      return *this;
+   }
+   RAdoptAllocator &operator=(RAdoptAllocator &&o)
+   {
+      fInitialAddress = o.fInitialAddress;
+      fAllocType = o.fAllocType;
+      fStdAllocator = std::move(o.fStdAllocator);
+      fBufferStart = o.fBufferStart;
+      fSpaceInBuffer = 0;
+      return *this;
+   }
    RAdoptAllocator(const RAdoptAllocator<bool> &);
 
    /// Construct an object at a certain memory address
@@ -111,14 +146,20 @@ public:
          return fInitialAddress;
       }
       fAllocType = EAllocType::kOwning;
+      if (n < fSpaceInBuffer) {
+         auto ptr = &(fBuffer[fgBufferSize - fSpaceInBuffer]);
+         fSpaceInBuffer -= n;
+         return ptr;
+      }
       return StdAllocTraits_t::allocate(fStdAllocator, n);
    }
 
    /// \brief Dellocate some memory if that had not been adopted.
    void deallocate(pointer p, std::size_t n)
    {
-      if (p != fInitialAddress)
+      if (p != fInitialAddress && (p < fBufferStart || p >= (fBufferStart + fgBufferSize))) {
          StdAllocTraits_t::deallocate(fStdAllocator, p, n);
+      }
    }
 
    template <class U>
