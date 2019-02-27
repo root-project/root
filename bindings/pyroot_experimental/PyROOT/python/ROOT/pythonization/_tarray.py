@@ -20,3 +20,5 @@ def pythonize_tarray(klass, name):
     if name == 'TArray':
         # Support `len(a)` as `a.GetSize()`
         klass.__len__ = klass.GetSize
+
+    return True
