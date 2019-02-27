@@ -1188,5 +1188,5 @@ void REveTrackList::WriteVizParams(std::ostream& out, const TString& var)
 
 TClass* REveTrackList::ProjectedClass(const REveProjection*) const
 {
-   return REveTrackListProjected::Class();
+   return TClass::GetClass<REveTrackListProjected>();
 }

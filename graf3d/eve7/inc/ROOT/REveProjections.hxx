@@ -22,9 +22,10 @@ namespace Experimental {
 
 class REveTrans;
 
-//==============================================================================
-// REveProjection
-//==============================================================================
+///////////////////////////////////////////////////////////////////////////////
+/// REveProjection
+/// Base for specific classes that implement non-linear projections.
+///////////////////////////////////////////////////////////////////////////////
 
 class REveProjection {
 public:
@@ -90,8 +91,8 @@ public:
    void ProjectPointdv(const REveTrans *t, const Double_t *p, Double_t *v, Float_t d);
    void ProjectVector(const REveTrans *t, REveVector &v, Float_t d);
 
-   const Char_t *GetName() const { return fName.Data(); }
-   void SetName(const Char_t *txt) { fName = txt; }
+   const char *GetName() const { return fName.Data(); }
+   void SetName(const char *txt) { fName = txt; }
 
    const REveVector &RefCenter() const { return fCenter; }
    virtual void SetCenter(REveVector &v) { fCenter = v; }
@@ -145,12 +146,11 @@ public:
 
    static Float_t fgEps;    // resolution of projected points
    static Float_t fgEpsSqr; // square of resolution of projected points
-
-   ClassDef(REveProjection, 0); // Base for specific classes that implement non-linear projections.
 };
 
 //==============================================================================
 // REveRhoZProjection
+// Rho/Z non-linear projection.
 //==============================================================================
 
 class REveRhoZProjection : public REveProjection {
@@ -161,25 +161,24 @@ public:
    REveRhoZProjection();
    virtual ~REveRhoZProjection() {}
 
-   virtual Bool_t Is2D() const { return kTRUE; }
-   virtual Bool_t Is3D() const { return kFALSE; }
+   Bool_t Is2D() const override { return kTRUE; }
+   Bool_t Is3D() const override { return kFALSE; }
 
-   virtual void ProjectPoint(Float_t &x, Float_t &y, Float_t &z, Float_t d, EPProc_e proc = kPP_Full);
+   void ProjectPoint(Float_t &x, Float_t &y, Float_t &z, Float_t d, EPProc_e proc = kPP_Full) override;
 
-   virtual void SetCenter(REveVector &v);
-   virtual Float_t *GetProjectedCenter() { return fProjectedCenter.Arr(); }
+   void SetCenter(REveVector &v) override;
+   Float_t *GetProjectedCenter() override { return fProjectedCenter.Arr(); }
 
-   virtual Bool_t HasSeveralSubSpaces() const { return kTRUE; }
-   virtual Bool_t AcceptSegment(REveVector &v1, REveVector &v2, Float_t tolerance) const;
-   virtual Int_t SubSpaceId(const REveVector &v) const;
-   virtual Bool_t IsOnSubSpaceBoundrary(const REveVector &v) const;
-   virtual void SetDirectionalVector(Int_t screenAxis, REveVector &vec);
-
-   ClassDef(REveRhoZProjection, 0); // Rho/Z non-linear projection.
+   Bool_t HasSeveralSubSpaces() const override { return kTRUE; }
+   Bool_t AcceptSegment(REveVector &v1, REveVector &v2, Float_t tolerance) const override;
+   Int_t SubSpaceId(const REveVector &v) const override;
+   Bool_t IsOnSubSpaceBoundrary(const REveVector &v) const override;
+   void SetDirectionalVector(Int_t screenAxis, REveVector &vec) override;
 };
 
 //==============================================================================
 // REveRPhiProjection
+// XY non-linear projection.
 //==============================================================================
 
 class REveRPhiProjection : public REveProjection {
@@ -187,16 +186,15 @@ public:
    REveRPhiProjection();
    virtual ~REveRPhiProjection() {}
 
-   virtual Bool_t Is2D() const { return kTRUE; }
-   virtual Bool_t Is3D() const { return kFALSE; }
+   Bool_t Is2D() const override { return kTRUE; }
+   Bool_t Is3D() const override { return kFALSE; }
 
-   virtual void ProjectPoint(Float_t &x, Float_t &y, Float_t &z, Float_t d, EPProc_e proc = kPP_Full);
-
-   ClassDef(REveRPhiProjection, 0); // XY non-linear projection.
+   void ProjectPoint(Float_t &x, Float_t &y, Float_t &z, Float_t d, EPProc_e proc = kPP_Full) override;
 };
 
 //==============================================================================
 // REve3DProjection
+// 3D scaling "projection"
 //==============================================================================
 
 class REve3DProjection : public REveProjection {
@@ -204,12 +202,10 @@ public:
    REve3DProjection();
    virtual ~REve3DProjection() {}
 
-   virtual Bool_t Is2D() const { return kFALSE; }
-   virtual Bool_t Is3D() const { return kTRUE; }
+   Bool_t Is2D() const override { return kFALSE; }
+   Bool_t Is3D() const override { return kTRUE; }
 
-   virtual void ProjectPoint(Float_t &x, Float_t &y, Float_t &z, Float_t d, EPProc_e proc = kPP_Full);
-
-   ClassDef(REve3DProjection, 0); // 3D scaling "projection"
+   void ProjectPoint(Float_t &x, Float_t &y, Float_t &z, Float_t d, EPProc_e proc = kPP_Full) override;
 };
 
 } // namespace Experimental

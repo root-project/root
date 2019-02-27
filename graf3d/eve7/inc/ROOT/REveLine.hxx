@@ -20,10 +20,10 @@
 namespace ROOT {
 namespace Experimental {
 
-//------------------------------------------------------------------------------
-// REveLine
-// An arbitrary polyline with fixed line and marker attributes.
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// REveLine
+/// An arbitrary polyline with fixed line and marker attributes.
+////////////////////////////////////////////////////////////////////////////////
 
 class REveLine : public REvePointSet,
                  public TAttLine

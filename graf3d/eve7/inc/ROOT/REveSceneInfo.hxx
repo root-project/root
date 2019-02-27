@@ -20,6 +20,11 @@ namespace Experimental {
 class REveViewer;
 class REveScene;
 
+/////////////////////////////////////////////////////////////////////////////
+/// REveSceneInfo
+/// Scene in a viewer.
+/////////////////////////////////////////////////////////////////////////////
+
 class REveSceneInfo : public REveElement
 {
 private:
@@ -27,26 +32,24 @@ private:
    REveSceneInfo &operator=(const REveSceneInfo &); // Not implemented
 
 protected:
-   REveViewer *fViewer{nullptr};
-   REveScene *fScene{nullptr};
+   REveViewer *fViewer{nullptr};   ///<!
+   REveScene *fScene{nullptr};     ///<!
 
 public:
    REveSceneInfo(REveViewer *viewer, REveScene *scene);
    virtual ~REveSceneInfo() {}
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 
    REveViewer *GetViewer() const { return fViewer; }
    REveScene *GetScene() const { return fScene; }
 
-   virtual Bool_t SingleRnrState() const { return kTRUE; }
+   Bool_t SingleRnrState() const override { return kTRUE; }
 
-   virtual void AddStamp(UChar_t bits);
+   void AddStamp(UChar_t bits) override;
 
-   virtual Bool_t AcceptElement(REveElement *el);
-   virtual Bool_t HandleElementPaste(REveElement *el);
-
-   ClassDef(REveSceneInfo, 0); // Scene in a viewer.
+   Bool_t AcceptElement(REveElement *el) override;
+   Bool_t HandleElementPaste(REveElement *el) override;
 };
 
 } // namespace Experimental
