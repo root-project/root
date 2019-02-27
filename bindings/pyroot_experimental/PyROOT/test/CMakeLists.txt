@@ -90,3 +90,6 @@ endif()
 
 # std::string_view backport in CPyCppyy
 ROOT_ADD_PYUNITTEST(pyroot_string_view_backport string_view_backport.py)
+
+# Test wrapping Python callables for use in C++
+ROOT_ADD_PYUNITTEST(pyroot_cppcallable cppcallable.py)

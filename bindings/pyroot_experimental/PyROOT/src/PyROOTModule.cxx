@@ -63,6 +63,8 @@ static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunc
                                         (char *)"Get pointer to data of vector"},
                                        {(char *)"GetSizeOfType", (PyCFunction)PyROOT::GetSizeOfType, METH_VARARGS,
                                         (char *)"Get size of data-type"},
+                                       {(char *)"GetCppCallableClass", (PyCFunction)PyROOT::GetCppCallableClass, METH_VARARGS,
+                                        (char *)"Get class to wrap Python callable as C++ callable"},
                                        {(char *)"AsRVec", (PyCFunction)PyROOT::AsRVec, METH_O,
                                         (char *)"Get object with array interface as RVec"},
                                        {NULL, NULL, 0, NULL}};
