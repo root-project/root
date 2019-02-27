@@ -33,7 +33,7 @@ It provides:
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveShape::REveShape(const std::string& n, const std::string& t) :
+REveShape::REveShape(const std::string &n, const std::string &t) :
    REveElement(n, t),
    fFillColor(5),
    fLineColor(5),

@@ -16,7 +16,7 @@ protected:
    Float_t       fScaleCenter[3];
 
 public:
-   REveScalableStraightLineSet(const char* n="ScalableStraightLineSet", const char* t="");
+   REveScalableStraightLineSet(const std::string &n = "ScalableStraightLineSet", const std::string &t = "");
    virtual ~REveScalableStraightLineSet() {}
 
    void SetScaleCenter(Float_t x, Float_t y, Float_t z);
