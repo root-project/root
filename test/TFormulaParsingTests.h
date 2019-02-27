@@ -1004,12 +1004,16 @@ bool test50() {
 }
 
 bool test51() {
+   //switch off error messages to have test passing
+   int prevLevel = gErrorIgnoreLevel; 
+   gErrorIgnoreLevel= kFatal; 
    TFormula f("fMissingParenthesis", "exp(x");
    bool ok = !f.IsValid();
    TFormula f2("fEmpty", "");
    ok &= !f2.IsValid();
    TFormula f3("fNonsense", "skmg#$#@!1");
    ok &= !f3.IsValid();
+   gErrorIgnoreLevel = prevLevel; 
    return ok;
 }
 
