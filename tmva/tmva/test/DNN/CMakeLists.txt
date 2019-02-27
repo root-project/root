@@ -7,15 +7,17 @@ set(Libraries Core MathCore Matrix TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
 
 ROOT_ADD_TEST_SUBDIRECTORY(CNN)
-ROOT_ADD_TEST_SUBDIRECTORY(DAE)
 ROOT_ADD_TEST_SUBDIRECTORY(RNN)
+
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND AND tmva-gpu)
 
   include_directories(${ROOT_INCLUDE_DIRS}  ${CUDA_INCLUDE_DIRS})
 
 
-  SET(DNN_CUDA_LIBRARIES ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+  #if using CUDA_ADD_EXECUTABLE CUDA_LIBRARIES are added automatically
+  SET(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES})
+
 
   # DNN - Activation Functions Cuda
   CUDA_ADD_EXECUTABLE(testActivationFunctionsCuda TestActivationFunctionsCuda.cxx)
@@ -38,8 +40,7 @@ if (CUDA_FOUND AND tmva-gpu)
   ROOT_ADD_TEST(TMVA-DNN-BackpropagationCuda COMMAND testBackpropagationCuda)
 
   # DNN - Backpropagation DL Cuda
-  message(STATUS "Cuda libraries: ${DNN_CUDA_LIBRARIES}")
-  ROOT_EXECUTABLE(testBackpropagationDLCuda TestBackpropagationDLCuda.cxx LIBRARIES ${Libraries})
+  CUDA_ADD_EXECUTABLE(testBackpropagationDLCuda TestBackpropagationDLCuda.cxx )
   TARGET_LINK_LIBRARIES(testBackpropagationDLCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DLCuda COMMAND testBackpropagationDLCuda)
 
