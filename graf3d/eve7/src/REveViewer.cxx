@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -36,7 +36,7 @@ Eve representation of a GL view. In a gist, it's a camera + a list of scenes.
 REveViewer::REveViewer(const std::string& n, const std::string& t) :
    REveElement(n, t)
 {
-   // SetChildClass(REveSceneInfo::Class());
+   // SetChildClass(TClass::GetClass<REveSceneInfo>());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +125,7 @@ List of Viewers providing common operations on REveViewer collections.
 
 ////////////////////////////////////////////////////////////////////////////////
 
-REveViewerList::REveViewerList(const std::string& n, const std::string& t) :
+REveViewerList::REveViewerList(const std::string &n, const std::string &t) :
    REveElement  (n, t),
    fShowTooltip (kTRUE),
 
@@ -134,7 +134,7 @@ REveViewerList::REveViewerList(const std::string& n, const std::string& t) :
 {
    // Constructor.
 
-   SetChildClass(REveViewer::Class());
+   SetChildClass(TClass::GetClass<REveViewer>());
    Connect();
 }
 
