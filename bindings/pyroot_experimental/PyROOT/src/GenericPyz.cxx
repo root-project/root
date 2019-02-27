@@ -9,12 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Python.h"
+
 #include "CPyCppyy.h"
 #include "PyROOTPythonize.h"
 #include "CPPInstance.h"
 #include "Utility.h"
 #include "TInterpreter.h"
 #include "TInterpreterValue.h"
+
+#include <sstream>
 
 using namespace CPyCppyy;
 
