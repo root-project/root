@@ -1027,7 +1027,7 @@ void REveTrackList::SelectByPt(Double_t min_pt, Double_t max_pt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Select visibility of el's children tracks by transverse momentum.
 
-void REveTrackList::SelectByPt(Double_t min_pt, Double_t max_pt, REveElement* el)
+void REveTrackList::SelectByPt(Double_t min_pt, Double_t max_pt, REveElement *el)
 {
    const Double_t minptsq = min_pt*min_pt;
    const Double_t maxptsq = max_pt*max_pt;

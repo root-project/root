@@ -306,12 +306,9 @@ REveGeoShapeExtract *REveGeoShape::DumpShapeTree(REveGeoShape* gsre,
       TList* ele = new TList();
       she->SetElements(ele);
       she->GetElements()->SetOwner(true);
-      REveElement::List_i i = gsre->BeginChildren();
-      while (i != gsre->EndChildren()) {
-         REveGeoShape* l = dynamic_cast<REveGeoShape*>(*i);
-         DumpShapeTree(l, she);
-         i++;
-      }
+
+      for (auto &c: gsre->RefChildren())
+         DumpShapeTree(dynamic_cast<REveGeoShape *>(c), she);
    }
    if (parent)
       parent->GetElements()->Add(she);
