@@ -26,10 +26,15 @@ namespace REX = ROOT::Experimental;
 Projected copy of a REveTrack.
 */
 
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor.
 
-REveTrackProjected::REveTrackProjected() : REveTrack(), fOrigPnts(0) {}
+REveTrackProjected::~REveTrackProjected()
+{
+   if (fOrigPnts) {
+      delete [] fOrigPnts;
+      fOrigPnts = nullptr;
+   }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This is virtual method from base-class REveProjected.
@@ -56,9 +61,9 @@ void REveTrackProjected::SetDepthLocal(Float_t d)
       fPoints[i].fZ = fDepth;
    }
 
-   for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
+   for (auto &pm: fPathMarks)
    {
-      pm->fV.fZ = fDepth;
+      pm.fV.fZ = fDepth;
    }
 }
 
@@ -197,19 +202,20 @@ void REveTrackProjected::MakeTrack(Bool_t recurse)
    }
 
    Reset((Int_t)vvec.size());
-   for (std::vector<REveVector>::iterator i=vvec.begin(); i!=vvec.end(); ++i)
+   for (auto &i: vvec)
    {
       if (fix_y)
-         SetNextPoint((*i).fX, TMath::Sign((*i).fY, sign_y), (*i).fZ);
+         SetNextPoint(i.fX, TMath::Sign(i.fY, sign_y), i.fZ);
       else
-         SetNextPoint((*i).fX, (*i).fY, (*i).fZ);
+         SetNextPoint(i.fX, i.fY, i.fZ);
    }
-   delete [] fOrigPnts; fOrigPnts = 0;
+   delete [] fOrigPnts;
+   fOrigPnts = nullptr;
 
    // Project path-marks
-   for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
+   for (auto &pm: fPathMarks)
    {
-      projection->ProjectPointdv(trans, pm->fV.Arr(), pm->fV.Arr(), fDepth);
+      projection->ProjectPointdv(trans, pm.fV.Arr(), pm.fV.Arr(), fDepth);
    }
 }
 
@@ -223,13 +229,12 @@ void REveTrackProjected::PrintLineSegments()
    Int_t start = 0;
    Int_t segment = 0;
 
-   for (std::vector<Int_t>::iterator bpi = fBreakPoints.begin();
-        bpi != fBreakPoints.end(); ++bpi)
+   for (auto &bpi: fBreakPoints)
    {
-      Int_t size = *bpi - start;
+      Int_t size = bpi - start;
 
       const REveVector &sVec = RefPoint(start);
-      const REveVector &bPnt = RefPoint((*bpi)-1);
+      const REveVector &bPnt = RefPoint(bpi-1);
       printf("seg %d size %d start %d ::(%f, %f, %f) (%f, %f, %f)\n",
              segment, size, start, sVec.fX, sVec.fY, sVec.fZ,
              bPnt.fX, bPnt.fY, bPnt.fZ);

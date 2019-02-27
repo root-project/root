@@ -1014,13 +1014,13 @@ void REveElement::ProjectChild(REveElement* el, Bool_t same_depth)
    REveProjectable* pable = dynamic_cast<REveProjectable*>(this);
    if (pable && HasChild(el))
    {
-      for (REveProjectable::ProjList_i i = pable->BeginProjecteds(); i != pable->EndProjecteds(); ++i)
+      for (auto &pp: pable->RefProjecteds())
       {
-         REveProjectionManager *pmgr = (*i)->GetManager();
+         auto pmgr = pp->GetManager();
          Float_t cd = pmgr->GetCurrentDepth();
-         if (same_depth) pmgr->SetCurrentDepth((*i)->GetDepth());
+         if (same_depth) pmgr->SetCurrentDepth(pp->GetDepth());
 
-         pmgr->SubImportElements(el, (*i)->GetProjectedAsElement());
+         pmgr->SubImportElements(el, pp->GetProjectedAsElement());
 
          if (same_depth) pmgr->SetCurrentDepth(cd);
       }
@@ -1044,13 +1044,13 @@ void REveElement::ProjectAllChildren(Bool_t same_depth)
    REveProjectable* pable = dynamic_cast<REveProjectable*>(this);
    if (pable)
    {
-      for (REveProjectable::ProjList_i i = pable->BeginProjecteds(); i != pable->EndProjecteds(); ++i)
+      for (auto &pp: pable->RefProjecteds())
       {
-         REveProjectionManager *pmgr = (*i)->GetManager();
+         REveProjectionManager *pmgr = pp->GetManager();
          Float_t cd = pmgr->GetCurrentDepth();
-         if (same_depth) pmgr->SetCurrentDepth((*i)->GetDepth());
+         if (same_depth) pmgr->SetCurrentDepth(pp->GetDepth());
 
-         pmgr->SubImportChildren(this, (*i)->GetProjectedAsElement());
+         pmgr->SubImportChildren(this, pp->GetProjectedAsElement());
 
          if (same_depth) pmgr->SetCurrentDepth(cd);
       }

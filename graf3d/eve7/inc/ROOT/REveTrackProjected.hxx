@@ -40,8 +40,8 @@ protected:
    void SetDepthLocal(Float_t d) override;
 
 public:
-   REveTrackProjected();
-   virtual ~REveTrackProjected() {}
+   REveTrackProjected() = default;
+   virtual ~REveTrackProjected();
 
    void SetProjection(REveProjectionManager *mng, REveProjectable *model) override;
 

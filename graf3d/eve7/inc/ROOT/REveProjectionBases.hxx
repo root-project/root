@@ -41,7 +41,6 @@ private:
 
 public:
    typedef std::list<REveProjected *> ProjList_t;
-   typedef ProjList_t::iterator       ProjList_i;
 
 protected:
    ProjList_t fProjectedList; // references to projected instances.
@@ -56,10 +55,8 @@ public:
    virtual Bool_t HasProjecteds() const { return !fProjectedList.empty(); }
 
    ProjList_t &RefProjecteds()   { return fProjectedList;         }
-   ProjList_i  BeginProjecteds() { return fProjectedList.begin(); }
-   ProjList_i  EndProjecteds()   { return fProjectedList.end();   }
 
-   virtual void AddProjected(REveProjected *p) { fProjectedList.push_back(p); }
+   virtual void AddProjected(REveProjected *p) { fProjectedList.emplace_back(p); }
    virtual void RemoveProjected(REveProjected *p) { fProjectedList.remove(p); }
 
    virtual void AnnihilateProjecteds();

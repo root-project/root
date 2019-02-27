@@ -45,8 +45,6 @@ private:
 
 public:
    typedef std::vector<REvePathMarkD> vPathMark_t;
-   typedef vPathMark_t::iterator vPathMark_i;
-   typedef vPathMark_t::const_iterator vPathMark_ci;
 
    // Deprecated -- to be removed.
    enum EBreakProjectedTracks_e { kBPTDefault, kBPTAlways, kBPTNever };

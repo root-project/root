@@ -788,7 +788,7 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
    }
 
    // find connection object
-   std::vector<Conn>::iterator conn = fConnList.end();
+   auto conn = fConnList.end();
    for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
    {
       if (i->fId == connid)

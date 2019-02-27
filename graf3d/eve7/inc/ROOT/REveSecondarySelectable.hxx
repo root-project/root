@@ -29,11 +29,9 @@ private:
 
 public:
    typedef std::set<Int_t>                SelectionSet_t;
-   typedef SelectionSet_t::iterator       SelectionSet_i;
-   typedef SelectionSet_t::const_iterator SelectionSet_ci;
 
 protected:
-   Bool_t fAlwaysSecSelect; // Always do secondary-selection in GL.
+   Bool_t fAlwaysSecSelect{kFALSE}; // Always do secondary-selection in GL.
 
    SelectionSet_t fSelectedSet;    // Selected indices.
    SelectionSet_t fHighlightedSet; // Highlighted indices.
@@ -42,7 +40,7 @@ protected:
    // void ProcessGLSelectionInternal(TGLSelectRecord& rec, SelectionSet_t& sset);
 
 public:
-   REveSecondarySelectable();
+   REveSecondarySelectable() = default;
    virtual ~REveSecondarySelectable() {}
 
    Bool_t GetAlwaysSecSelect()   const { return fAlwaysSecSelect; }

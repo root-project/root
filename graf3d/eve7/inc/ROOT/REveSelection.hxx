@@ -62,8 +62,8 @@ public:
       bool is_secondary() const { return f_is_sec; }
    };
 
-   typedef std::map<REveElement*, Record> SelMap_t;
-   typedef SelMap_t::iterator             SelMap_i;
+   typedef std::map<REveElement*, Record>  SelMap_t;
+   typedef SelMap_t::iterator              SelMap_i;
 
 private:
    REveSelection(const REveSelection &);            // Not implemented
@@ -82,10 +82,10 @@ protected:
       return i != fMap.end() ? & i->second : nullptr;
    }
 
-   void DoElementSelect  (SelMap_i entry);
-   void DoElementUnselect(SelMap_i entry);
+   void DoElementSelect  (SelMap_i &entry);
+   void DoElementUnselect(SelMap_i &entry);
 
-   void RecheckImpliedSet(SelMap_i smi);
+   void RecheckImpliedSet(SelMap_i &entry);
 
 public:
    REveSelection(const std::string &n = "REveSelection", const std::string &t = "", Color_t col = kViolet);

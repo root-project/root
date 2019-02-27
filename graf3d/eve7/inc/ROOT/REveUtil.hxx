@@ -132,7 +132,6 @@ class REveRefBackPtr : public REveRefCnt
 {
 protected:
    typedef std::map<REveElement *, Int_t> RefMap_t;
-   typedef RefMap_t::iterator RefMap_i;
 
    RefMap_t fBackRefs;
 
