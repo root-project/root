@@ -5,7 +5,7 @@
           xmlns:commons="sap.ui.commons">
    <Page title="" showNavButton="false" showFooter="false"
       showSubHeader="false" id="CanvasMainPage">
-      <headerContent>
+      <customHeader>
          <OverflowToolbar id="otb1">
             <!--  Button id="newEvent" icon="sap-icon://step" type="Transparent"
                tooltip="New event" press="newEvent" visible="false "/-->
@@ -74,9 +74,8 @@
                 </Menu>
               </menu>
             </MenuButton>
-
          </OverflowToolbar>
-      </headerContent>
+      </customHeader>
       <subHeader>
          <OverflowToolbar>
             <Button icon="sap-icon://open-folder" type="Transparent" />

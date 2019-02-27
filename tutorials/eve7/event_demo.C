@@ -13,6 +13,7 @@
 #include "TRandom.h"
 #include "TGeoTube.h"
 #include "TParticle.h"
+#include "TApplication.h"
 
 #include <ROOT/REveGeoShape.hxx>
 #include <ROOT/REveScene.hxx>
@@ -237,6 +238,12 @@ public:
       eveMng->BroadcastElementsOf(ev_scenes);
    }
 
+   virtual void QuitRoot()
+   {
+      printf("Quit ROOT\n");
+      if (gApplication) gApplication->Terminate();
+   }
+
    ClassDef(EventManager, 1);
 };
 
@@ -252,6 +259,8 @@ void event_demo()
    auto eventMng = new EventManager();
    eventMng->SetName("EventManager");
    eveMng->GetWorld()->AddElement(eventMng);
+
+   eveMng->GetWorld()->AddCommand("QuitRoot", "sap-icon://log", eventMng, "QuitRoot()");
 
    eveMng->GetWorld()->AddCommand("NextEvent", "sap-icon://step", eventMng, "NextEvent()");
 
