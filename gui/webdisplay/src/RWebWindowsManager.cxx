@@ -474,7 +474,6 @@ void ROOT::Experimental::RWebWindowsManager::Terminate()
    if (fServer)
       fServer->SetTerminate();
 
-   // use timer to avoid situation when calling object is deleted by terminate
    if (gApplication)
-      TTimer::SingleShot(100, "TApplication", gApplication, "Terminate()");
+      gApplication->Terminate();
 }
