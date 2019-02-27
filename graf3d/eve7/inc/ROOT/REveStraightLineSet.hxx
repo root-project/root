@@ -27,9 +27,11 @@ class TRandom;
 namespace ROOT {
 namespace Experimental {
 
-//------------------------------------------------------------------------------
-// REveStraightLineSet
-//------------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
+/// REveStraightLineSet
+/// Set of straight lines with optional markers along the lines.
+///////////////////////////////////////////////////////////////////////////////
+
 class REveStraightLineSet : public REveElement,
                             public REveProjectable,
                             public TAttLine,
@@ -78,25 +80,25 @@ protected:
 
    Bool_t            fDepthTest;
 
-   Line_t*           fLastLine; //!
+   Line_t           *fLastLine{nullptr}; ///<!
 
 public:
-   REveStraightLineSet(const std::string& n="StraightLineSet", const std::string& t="");
+   REveStraightLineSet(const std::string &n="StraightLineSet", const std::string &t="");
    virtual ~REveStraightLineSet() {}
 
-   virtual void SetLineColor(Color_t col) { SetMainColor(col); }
+   void SetLineColor(Color_t col) override { SetMainColor(col); }
 
-   Line_t*   AddLine(Float_t x1, Float_t y1, Float_t z1, Float_t x2, Float_t y2, Float_t z2);
-   Line_t*   AddLine(const REveVector& p1, const REveVector& p2);
-   Marker_t* AddMarker(Float_t x, Float_t y, Float_t z, Int_t line_id=-1);
-   Marker_t* AddMarker(const REveVector& p, Int_t line_id=-1);
-   Marker_t* AddMarker(Int_t line_id, Float_t pos);
+   Line_t   *AddLine(Float_t x1, Float_t y1, Float_t z1, Float_t x2, Float_t y2, Float_t z2);
+   Line_t   *AddLine(const REveVector& p1, const REveVector& p2);
+   Marker_t *AddMarker(Float_t x, Float_t y, Float_t z, Int_t line_id=-1);
+   Marker_t *AddMarker(const REveVector& p, Int_t line_id=-1);
+   Marker_t *AddMarker(Int_t line_id, Float_t pos);
 
    void      SetLine(int idx, Float_t x1, Float_t y1, Float_t z1, Float_t x2, Float_t y2, Float_t z2);
    void      SetLine(int idx, const REveVector& p1, const REveVector& p2);
 
-   REveChunkManager& GetLinePlex()   { return fLinePlex;   }
-   REveChunkManager& GetMarkerPlex() { return fMarkerPlex; }
+   REveChunkManager &GetLinePlex()   { return fLinePlex;   }
+   REveChunkManager &GetMarkerPlex() { return fMarkerPlex; }
 
    virtual Bool_t GetRnrMarkers() { return fRnrMarkers; }
    virtual Bool_t GetRnrLines()   { return fRnrLines;   }
@@ -106,23 +108,22 @@ public:
    virtual void SetRnrLines(Bool_t x)   { fRnrLines   = x; }
    virtual void SetDepthTest(Bool_t x)  { fDepthTest   = x; }
 
-   virtual void CopyVizParams(const REveElement* el);
-   virtual void WriteVizParams(std::ostream& out, const TString& var);
+   void CopyVizParams(const REveElement* el) override;
+   void WriteVizParams(std::ostream& out, const TString& var) override;
 
-   virtual TClass* ProjectedClass(const REveProjection* p) const; // override;
+   TClass* ProjectedClass(const REveProjection* p) const override;
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
-   void  BuildRenderData(); // override;
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   void  BuildRenderData() override;
 
-   void ComputeBBox(); // override;
-
-   ClassDef(REveStraightLineSet, 0); // Set of straight lines with optional markers along the lines.
+   void ComputeBBox() override;
 };
 
 
-//==============================================================================
-// REveStraightLineSetProjected
-//==============================================================================
+///////////////////////////////////////////////////////////////////////////////
+/// REveStraightLineSetProjected
+/// Projected copy of a REveStraightLineSet.
+///////////////////////////////////////////////////////////////////////////////
 
 class REveStraightLineSetProjected : public REveStraightLineSet,
                                      public REveProjected
@@ -132,17 +133,15 @@ private:
    REveStraightLineSetProjected& operator=(const REveStraightLineSetProjected&); // Not implemented
 
 protected:
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
    REveStraightLineSetProjected();
    virtual ~REveStraightLineSetProjected() {}
 
-   virtual void SetProjection(REveProjectionManager* mng, REveProjectable* model);
-   virtual void UpdateProjection();
-   virtual REveElement* GetProjectedAsElement() { return this; }
-
-   ClassDef(REveStraightLineSetProjected, 0); // Projected copy of a REveStraightLineSet.
+   void SetProjection(REveProjectionManager* mng, REveProjectable* model) override;
+   void UpdateProjection() override;
+   REveElement* GetProjectedAsElement() override { return this; }
 };
 
 } // namespace Experimental
