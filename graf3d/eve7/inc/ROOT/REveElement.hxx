@@ -85,11 +85,11 @@ public:
    typedef AuntList_t::const_iterator           AuntList_ci;
 
 private:
-   ElementId_t      fElementId = 0;        // Unique ID of an element.
+   ElementId_t      fElementId{0};        // Unique ID of an element.
 
 protected:
-   REveElement     *fMother = nullptr;
-   REveScene       *fScene  = nullptr;
+   REveElement     *fMother{nullptr};
+   REveScene       *fScene{nullptr};
 
    ElementId_t get_mother_id() const;
    ElementId_t get_scene_id()  const;
@@ -102,27 +102,27 @@ protected:
    std::string      fTitle;                //  Element title / tooltip
    AuntList_t       fAunts;                //  List of aunts.
    List_t           fChildren;             //  List of children.
-   TClass          *fChildClass = nullptr; //  Class of acceptable children, others are rejected.
-   REveCompound    *fCompound   = nullptr; //  Compound this object belongs to.
-   REveElement     *fVizModel   = nullptr; //! Element used as model from VizDB.
+   TClass          *fChildClass{nullptr};  //  Class of acceptable children, others are rejected.
+   REveCompound    *fCompound{nullptr};    //  Compound this object belongs to.
+   REveElement     *fVizModel{nullptr};    //! Element used as model from VizDB.
    TString          fVizTag;               //  Tag used to query VizDB for model element.
 
-   Int_t            fNumChildren;          //!
-   Int_t            fDenyDestroy;          //! Deny-destroy count.
-   Bool_t           fDestroyOnZeroRefCnt;  //  Auto-destruct when ref-count reaches zero.
+   Int_t            fNumChildren{0};          //!
+   Int_t            fDenyDestroy{0};          //! Deny-destroy count.
+   Bool_t           fDestroyOnZeroRefCnt{kTRUE};  //  Auto-destruct when ref-count reaches zero.
 
-   Bool_t           fRnrSelf;                 //  Render this element.
-   Bool_t           fRnrChildren;             //  Render children of this element.
-   Bool_t           fCanEditMainColor;        //  Allow editing of main color.
-   Bool_t           fCanEditMainTransparency; //  Allow editing of main transparency.
-   Bool_t           fCanEditMainTrans;        //  Allow editing of main transformation.
+   Bool_t           fRnrSelf{kTRUE};                 //  Render this element.
+   Bool_t           fRnrChildren{kTRUE};             //  Render children of this element.
+   Bool_t           fCanEditMainColor{kFALSE};        //  Allow editing of main color.
+   Bool_t           fCanEditMainTransparency{kFALSE}; //  Allow editing of main transparency.
+   Bool_t           fCanEditMainTrans{kFALSE};        //  Allow editing of main transformation.
 
-   Char_t           fMainTransparency;      //  Main-transparency variable.
-   Color_t          fDefaultColor = kPink;  //  Default color for sub-classes that enable it.
-   Color_t         *fMainColorPtr = nullptr;//  Pointer to main-color variable.
+   Char_t           fMainTransparency{0};      //  Main-transparency variable.
+   Color_t          fDefaultColor{kPink};  //  Default color for sub-classes that enable it.
+   Color_t         *fMainColorPtr{nullptr};//  Pointer to main-color variable.
    std::unique_ptr<REveTrans> fMainTrans;   //  Pointer to main transformation matrix.
 
-   void            *fUserData = nullptr;    //! Externally assigned and controlled user data.
+   void            *fUserData{nullptr};     //! Externally assigned and controlled user data.
 
    std::unique_ptr<REveRenderData> fRenderData;//! Vertex / normal / triangle index information for rendering.
 
@@ -133,7 +133,7 @@ protected:
    static const std::string& ToString(Bool_t b);
 
 public:
-   REveElement(const std::string& name="", const std::string& title="");
+   REveElement(const std::string &name = "", const std::string &title = "");
    REveElement(const REveElement& e);
    virtual ~REveElement();
 
@@ -150,9 +150,9 @@ public:
 
    virtual std::string GetHighlightTooltip() const { return fTitle; }
 
-   void SetName (const std::string& name);
-   void SetTitle(const std::string& title);
-   void SetNameTitle(const std::string& name, const std::string& title);
+   void SetName (const std::string &name);
+   void SetTitle(const std::string &title);
+   void SetNameTitle(const std::string &name, const std::string &title);
    virtual void NameTitleChanged();
 
    const TString& GetVizTag() const               { return fVizTag; }
@@ -196,7 +196,8 @@ public:
    TClass* GetChildClass() const { return fChildClass; }
    void    SetChildClass(TClass* c) { fChildClass = c; }
 
-   List_t  RefChildren()         { return  fChildren;     }
+   List_t  &RefChildren()        { return  fChildren;     }
+   const List_t  &RefChildren() const { return  fChildren;     }
    List_i  BeginChildren()       { return  fChildren.begin(); }
    List_i  EndChildren()         { return  fChildren.end();   }
    List_ci BeginChildren() const { return  fChildren.begin(); }
@@ -324,9 +325,9 @@ protected:
       kAnnihilate
    };
 
-   Short_t fImpliedSelected = 0;   // How many times the element is implied selected -- needed during destruction.
-   Bool_t  fPickable;              // Can element be selected.
-   UChar_t fCSCBits;               // Compound Selection Color flags.
+   Short_t fImpliedSelected{0};   // How many times the element is implied selected -- needed during destruction.
+   Bool_t  fPickable{0};          // Can element be selected.
+   UChar_t fCSCBits{0};           // Compound Selection Color flags.
 
 public:
    Bool_t IsPickable()    const { return fPickable; }
@@ -372,8 +373,8 @@ public:
    };
 
 protected:
-   UChar_t      fChangeBits;  //!
-   Char_t       fDestructing; //!
+   UChar_t      fChangeBits{0};  //!
+   Char_t       fDestructing{kNone}; //!
 
 public:
    void StampColorSelection() { AddStamp(kCBColorSelection); }
