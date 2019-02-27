@@ -13,7 +13,6 @@
 #define ROOT7_REveProjections
 
 #include <ROOT/REveVector.hxx>
-#include "TString.h"
 
 #include <vector>
 
@@ -49,9 +48,9 @@ public:
    typedef std::vector<PreScaleEntry_t> vPreScale_t;
 
 protected:
-   EPType_e fType;      // type
-   EGeoMode_e fGeoMode; // strategy of polygon projection (what to try first)
-   TString fName;       // name
+   EPType_e fType;       // type
+   EGeoMode_e fGeoMode;  // strategy of polygon projection (what to try first)
+   std::string fName;    // name
 
    REveVector fCenter; // center of distortion
 
@@ -90,7 +89,7 @@ public:
    void ProjectPointdv(const REveTrans *t, const Double_t *p, Double_t *v, Float_t d);
    void ProjectVector(const REveTrans *t, REveVector &v, Float_t d);
 
-   const char *GetName() const { return fName.Data(); }
+   const char *GetName() const { return fName.c_str(); }
    void SetName(const char *txt) { fName = txt; }
 
    const REveVector &RefCenter() const { return fCenter; }

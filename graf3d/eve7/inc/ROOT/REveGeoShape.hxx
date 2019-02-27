@@ -50,7 +50,7 @@ protected:
    TGeoShape *MakePolyShape();
 
 public:
-   REveGeoShape(const char *name = "REveGeoShape", const char *title = "");
+   REveGeoShape(const std::string &name = "REveGeoShape", const std::string &title = "");
    virtual ~REveGeoShape();
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
@@ -70,7 +70,7 @@ public:
 
    // GeoProjectable
    virtual std::unique_ptr<TBuffer3D> MakeBuffer3D();
-   virtual TClass *ProjectedClass(const REveProjection *p) const;
+   TClass *ProjectedClass(const REveProjection *p) const override;
 
    static TGeoManager *GetGeoManager();
    static TGeoHMatrix *GetGeoHMatrixIdentity();

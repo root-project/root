@@ -109,7 +109,7 @@ TGeoHMatrix *REveGeoShape::GetGeoHMatrixIdentity()
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveGeoShape::REveGeoShape(const char *name, const char *title)
+REveGeoShape::REveGeoShape(const std::string &name, const std::string &title)
    : REveShape(name, title), fNSegments(0), fShape(nullptr), fCompositeShape(nullptr)
 {
    InitMainTrans();

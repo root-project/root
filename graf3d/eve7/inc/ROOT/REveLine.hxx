@@ -39,7 +39,7 @@ protected:
    static Bool_t fgDefaultSmooth;
 
 public:
-   REveLine(const char *name = "", const char *title = "", Int_t n_points = 0);
+   REveLine(const std::string &name = "", const std::string &title = "", Int_t n_points = 0);
    REveLine(const REveLine &l);
    virtual ~REveLine() {}
 

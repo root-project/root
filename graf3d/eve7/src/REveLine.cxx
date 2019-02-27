@@ -31,7 +31,7 @@ Bool_t REveLine::fgDefaultSmooth = kFALSE;
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveLine::REveLine(const char* name, const char *title, Int_t n_points) :
+REveLine::REveLine(const std::string &name, const std::string &title, Int_t n_points) :
    REvePointSet(name, title, n_points),
    fRnrLine   (kTRUE),
    fRnrPoints (kFALSE),

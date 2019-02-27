@@ -70,8 +70,8 @@ public:
 
    // ----------------------------------------------------------------
 
-   virtual void CopyVizParams(const REveElement *el);
-   virtual void WriteVizParams(std::ostream &out, const TString &var);
+   void CopyVizParams(const REveElement *el) override;
+   void WriteVizParams(std::ostream &out, const TString &var) override;
 
    // ----------------------------------------------------------------
 

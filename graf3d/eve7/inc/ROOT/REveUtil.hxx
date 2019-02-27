@@ -14,7 +14,6 @@
 
 #include "REveTypes.hxx"
 
-#include "TObject.h"
 #include "TError.h"
 
 #include <list>
