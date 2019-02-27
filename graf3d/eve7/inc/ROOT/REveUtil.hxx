@@ -29,9 +29,10 @@ namespace Experimental {
 
 class REveElement;
 
-/******************************************************************************/
-// REveUtil
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveUtil
+/// Standard utility functions for Reve.
+////////////////////////////////////////////////////////////////////////////////
 
 class REveUtil
 {
@@ -66,8 +67,6 @@ public:
    static Bool_t IsU1IntervalOverlappingByMeanDelta(Float_t meanM, Float_t deltaM, Float_t meanQ, Float_t deltaQ);
 
    static Float_t GetFraction(Float_t minM, Float_t maxM, Float_t minQ, Float_t maxQ);
-
-   ClassDef(REveUtil, 0); // Standard utility functions for Reve.
 };
 
 inline Bool_t REveUtil::IsU1IntervalContainedByMeanDelta(Float_t meanM, Float_t deltaM, Float_t meanQ, Float_t deltaQ)
@@ -81,9 +80,10 @@ inline Bool_t REveUtil::IsU1IntervalOverlappingByMeanDelta(Float_t meanM, Float_
 }
 
 
-/******************************************************************************/
-// Exception-safe global variable holders
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveGeoManagerHolder
+/// Exception-safe global variable holders
+////////////////////////////////////////////////////////////////////////////////
 
 class REveGeoManagerHolder
 {
@@ -96,17 +96,18 @@ public:
    ~REveGeoManagerHolder();
 };
 
-/******************************************************************************/
-// REveRefCnt base-class (interface)
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveRefCnt
+/// REveRefCnt base-class (interface)
+////////////////////////////////////////////////////////////////////////////////
 
 class REveRefCnt
 {
 protected:
-   Int_t fRefCount;
+   Int_t fRefCount{0};
 
 public:
-   REveRefCnt() : fRefCount(0) {}
+   REveRefCnt() = default;
    virtual ~REveRefCnt() {}
 
    REveRefCnt(const REveRefCnt &) : fRefCount(0) {}
@@ -120,13 +121,12 @@ public:
    }
 
    virtual void OnZeroRefCount() { delete this; }
-
-   ClassDef(REveRefCnt, 0); // Base-class for reference-counted objects.
 };
 
-/******************************************************************************/
-// REveRefBackPtr reference-count with back pointers
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveRefBackPtr
+/// reference-count with back pointers
+////////////////////////////////////////////////////////////////////////////////
 
 class REveRefBackPtr : public REveRefCnt
 {
@@ -149,9 +149,6 @@ public:
    virtual void DecRefCount(REveElement *re);
 
    virtual void StampBackPtrElements(UChar_t stamps);
-
-   ClassDef(REveRefBackPtr,
-            0); // Base-class for reference-counted objects with reverse references to REveElement objects.
 };
 
 } // namespace Experimental

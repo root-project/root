@@ -1,5 +1,5 @@
 // @(#)root/eve7:$Id$
-// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -12,13 +12,13 @@
 #ifndef ROOT7_REveVSDStructs
 #define ROOT7_REveVSDStructs
 
-// #include "TObject.h"
 #include "TParticle.h"
+
 #include <ROOT/REveVector.hxx>
 
-/******************************************************************************/
-// VSD Structures
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// VSD Structures
+////////////////////////////////////////////////////////////////////////////////
 
 // Basic structures for Reve VSD concept. Design criteria:
 //
@@ -37,24 +37,24 @@
 namespace ROOT {
 namespace Experimental {
 
-/******************************************************************************/
-// REveMCTrack
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveMCTrack
+////////////////////////////////////////////////////////////////////////////////
 
 class REveMCTrack : public TParticle // ?? Copy stuff over ??
 {
 public:
-   Int_t fLabel;    // Label of the track
-   Int_t fIndex;    // Index of the track (in some source array)
-   Int_t fEvaLabel; // Label of primary particle
+   Int_t fLabel{-1};    // Label of the track
+   Int_t fIndex{-1};    // Index of the track (in some source array)
+   Int_t fEvaLabel{-1}; // Label of primary particle
 
-   Bool_t fDecayed; // True if decayed during tracking.
+   Bool_t fDecayed{kFALSE}; // True if decayed during tracking.
    // ?? Perhaps end-of-tracking point/momentum would be better.
-   Float_t fTDecay;    // Decay time
+   Float_t fTDecay{0};    // Decay time
    REveVector fVDecay; // Decay vertex
    REveVector fPDecay; // Decay momentum
 
-   REveMCTrack() : fLabel(-1), fIndex(-1), fEvaLabel(-1), fDecayed(kFALSE), fTDecay(0), fVDecay(), fPDecay() {}
+   REveMCTrack() = default;
    virtual ~REveMCTrack() {}
 
    REveMCTrack &operator=(const TParticle &p)
@@ -68,36 +68,36 @@ public:
    ClassDef(REveMCTrack, 1); // Monte Carlo track (also used in VSD).
 };
 
-/******************************************************************************/
-// REveHit
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveHit
+/// Monte Carlo hit (also used in VSD).
+///
+/// Representation of a hit.
+/// Members det_id (and fSubdetId) serve for cross-referencing into
+/// geometry. Hits should be stored in fDetId (+some label ordering) in
+/// order to maximize branch compression.
+////////////////////////////////////////////////////////////////////////////////
 
-// Representation of a hit.
 
-// Members det_id (and fSubdetId) serve for cross-referencing into
-// geometry. Hits should be stored in fDetId (+some label ordering) in
-// order to maximize branch compression.
-
-class REveHit // : public TObject
+class REveHit
 {
 public:
-   UShort_t fDetId;    // Custom detector id.
-   UShort_t fSubdetId; // Custom sub-detector id.
-   Int_t fLabel;       // Label of particle that produced the hit.
-   Int_t fEvaLabel;    // Label of primary particle, ancestor of label.
+   UShort_t fDetId{0};    // Custom detector id.
+   UShort_t fSubdetId{0}; // Custom sub-detector id.
+   Int_t fLabel{0};       // Label of particle that produced the hit.
+   Int_t fEvaLabel{0};    // Label of primary particle, ancestor of label.
    REveVector fV;      // Hit position.
 
    // Float_t charge; probably specific.
 
-   REveHit() : fDetId(0), fSubdetId(0), fLabel(0), fEvaLabel(0), fV() {}
+   REveHit() = default;
    virtual ~REveHit() {}
-
-   ClassDef(REveHit, 1); // Monte Carlo hit (also used in VSD).
 };
 
-/******************************************************************************/
-// REveCluster
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveCluster
+/// Reconstructed cluster (also used in VSD).
+////////////////////////////////////////////////////////////////////////////////
 
 // Base class for reconstructed clusters
 
@@ -106,8 +106,8 @@ public:
 class REveCluster // : public TObject
 {
 public:
-   UShort_t fDetId;    // Custom detector id.
-   UShort_t fSubdetId; // Custom sub-detector id.
+   UShort_t fDetId{0};    // Custom detector id.
+   UShort_t fSubdetId{0}; // Custom sub-detector id.
    Int_t fLabel[3];    // Labels of particles that contributed hits.
 
    // ?? Should include reconstructed track(s) using it? Rather not, separate.
@@ -116,53 +116,47 @@ public:
    // REveVector   fW;      // Cluster widths.
    // Coord system? Errors and/or widths Wz, Wy?
 
-   REveCluster() : fDetId(0), fSubdetId(0), fV() { fLabel[0] = fLabel[1] = fLabel[2] = 0; }
+   REveCluster() { fLabel[0] = fLabel[1] = fLabel[2] = 0; }
    virtual ~REveCluster() {}
-
-   // ClassDef(REveCluster, 1); // Reconstructed cluster (also used in VSD).
 };
 
-/******************************************************************************/
-// REveRecTrack
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveRecTrack
+/// Template for reconstructed track (also used in VSD).
+////////////////////////////////////////////////////////////////////////////////
+
 template <typename TT>
-class REveRecTrackT // : public TObject
+class REveRecTrackT
 {
 public:
-   Int_t fLabel;       // Label of the track.
-   Int_t fIndex;       // Index of the track (in some source array).
-   Int_t fStatus;      // Status as exported from reconstruction.
-   Int_t fSign;        // Charge of the track.
+   Int_t fLabel{-1};       // Label of the track.
+   Int_t fIndex{-1};       // Index of the track (in some source array).
+   Int_t fStatus{0};      // Status as exported from reconstruction.
+   Int_t fSign{0};        // Charge of the track.
    REveVectorT<TT> fV; // Start vertex from reconstruction.
    REveVectorT<TT> fP; // Reconstructed momentum at start vertex.
-   TT fBeta;           // Relativistic beta factor.
-   Double32_t fDcaXY;  // dca xy to the primary vertex
-   Double32_t fDcaZ;   // dca z to the primary vertex
-   Double32_t fPVX;    //
-   Double32_t fPVY;    //
-   Double32_t fPVZ;    //
+   TT fBeta{0};           // Relativistic beta factor.
+   Double32_t fDcaXY{0};  // dca xy to the primary vertex
+   Double32_t fDcaZ{0};   // dca z to the primary vertex
+   Double32_t fPVX{0};    //
+   Double32_t fPVY{0};    //
+   Double32_t fPVZ{0};    //
    // PID data missing
 
-   REveRecTrackT()
-      : fLabel(-1), fIndex(-1), fStatus(0), fSign(0), fV(), fP(), fBeta(0), fDcaXY(0), fDcaZ(0), fPVX(0), fPVY(0),
-        fPVZ(0)
-   {
-   }
+   REveRecTrackT() = default;
    virtual ~REveRecTrackT() {}
 
    Float_t Pt() { return fP.Perp(); }
-
-   // ClassDef(REveRecTrackT, 1); // Template for reconstructed track (also used in VSD).
-   ClassDef(REveRecTrackT, 1); // Template for reconstructed track (also used in VSD).
 };
 
 typedef REveRecTrackT<Float_t> REveRecTrack;
 typedef REveRecTrackT<Float_t> REveRecTrackF;
 typedef REveRecTrackT<Double_t> REveRecTrackD;
 
-/******************************************************************************/
-// REveRecKink
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveRecKink
+/// Reconstructed kink (also used in VSD).
+////////////////////////////////////////////////////////////////////////////////
 
 class REveRecKink // : public TObject
 {
@@ -173,15 +167,15 @@ public:
    REveVector fPDaughter;    // Momentum of the daughter track
    REveVector fVDaughter;    // Vertex of the daughter track
    Double32_t fKinkAngle[3]; // three angles
-   Int_t fSign;              // sign of the track
-   Int_t fStatus;            // Status as exported from reconstruction
+   Int_t fSign{0};           // sign of the track
+   Int_t fStatus{0};         // Status as exported from reconstruction
 
    // Data from simulation
    Int_t fKinkLabel[2]; // Labels of the mother and daughter tracks
    Int_t fKinkIndex[2]; // Indices of the mother and daughter tracks
    Int_t fKinkPdg[2];   // PDG code of mother and daughter.
 
-   REveRecKink() : fVKink(), fPMother(), fVMother(), fPDaughter(), fVDaughter(), fSign(0), fStatus(0)
+   REveRecKink()
    {
       fKinkAngle[0] = fKinkAngle[1] = fKinkAngle[2] = 0;
       fKinkLabel[0] = fKinkLabel[1] = 0;
@@ -189,18 +183,16 @@ public:
       fKinkPdg[0] = fKinkPdg[1] = 0;
    }
    virtual ~REveRecKink() {}
-
-   // ClassDef(REveRecKink, 1); // Reconstructed kink (also used in VSD).
 };
 
-/******************************************************************************/
-// REveRecV0
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveRecV0
+////////////////////////////////////////////////////////////////////////////////
 
-class REveRecV0 // : public TObject
+class REveRecV0
 {
 public:
-   Int_t fStatus;
+   Int_t fStatus{0};
 
    REveVector fVNeg; // Vertex of negative track.
    REveVector fPNeg; // Momentum of negative track.
@@ -208,70 +200,62 @@ public:
    REveVector fPPos; // Momentum of positive track.
 
    REveVector fVCa;     // Point of closest approach.
-   REveVector fV0Birth; // Reconstucted birth point of neutral particle.
+   REveVector fV0Birth; // Reconstructed birth point of neutral particle.
 
    // ? Data from simulation.
-   Int_t fLabel;     // Neutral mother label read from kinematics.
-   Int_t fPdg;       // PDG code of mother.
-   Int_t fDLabel[2]; // Daughter labels.
+   Int_t fLabel{0};     // Neutral mother label read from kinematics.
+   Int_t fPdg{0};       // PDG code of mother.
+   Int_t fDLabel[2];    // Daughter labels.
 
-   REveRecV0() : fStatus(), fVNeg(), fPNeg(), fVPos(), fPPos(), fVCa(), fV0Birth(), fLabel(0), fPdg(0)
-   {
-      fDLabel[0] = fDLabel[1] = 0;
-   }
+   REveRecV0() { fDLabel[0] = fDLabel[1] = 0; }
    virtual ~REveRecV0() {}
-
-   // ClassDef(REveRecV0, 1); // Reconstructed V0 (also used in VSD).
 };
 
-/******************************************************************************/
-// REveRecCascade
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveRecCascade
+////////////////////////////////////////////////////////////////////////////////
 
-class REveRecCascade // : public TObject
+class REveRecCascade
 {
 public:
-   Int_t fStatus;
+   Int_t fStatus{0};
 
    REveVector fVBac; // Vertex of bachelor track.
    REveVector fPBac; // Momentum of bachelor track.
 
    REveVector fCascadeVCa;   // Point of closest approach for Cascade.
-   REveVector fCascadeBirth; // Reconstucted birth point of cascade particle.
+   REveVector fCascadeBirth; // Reconstructed birth point of cascade particle.
 
    // ? Data from simulation.
-   Int_t fLabel;  // Cascade mother label read from kinematics.
-   Int_t fPdg;    // PDG code of mother.
-   Int_t fDLabel; // Daughter label.
+   Int_t fLabel{0};  // Cascade mother label read from kinematics.
+   Int_t fPdg{0};    // PDG code of mother.
+   Int_t fDLabel{0}; // Daughter label.
 
-   REveRecCascade() : fStatus(), fVBac(), fPBac(), fCascadeVCa(), fCascadeBirth(), fLabel(0), fPdg(0), fDLabel(0) {}
+   REveRecCascade() = default;
    virtual ~REveRecCascade() {}
-
-   // ClassDef(REveRecCascade, 1); // Reconstructed Cascade (also used in VSD).
 };
 
-/******************************************************************************/
-// REveMCRecCrossRef
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveMCRecCrossRef
+/// Cross-reference of sim/rec data per particle (also used in VSD).
+////////////////////////////////////////////////////////////////////////////////
 
 class REveMCRecCrossRef {
 public:
-   Bool_t fIsRec; // Is reconstructed.
-   Bool_t fHasV0;
-   Bool_t fHasKink;
-   Int_t fLabel;
-   Int_t fNHits;
-   Int_t fNClus;
+   Bool_t fIsRec{kFALSE}; // Is reconstructed.
+   Bool_t fHasV0{kFALSE};
+   Bool_t fHasKink{kFALSE};
+   Int_t fLabel{0};
+   Int_t fNHits{0};
+   Int_t fNClus{0};
 
-   REveMCRecCrossRef() : fIsRec(false), fHasV0(false), fHasKink(false), fLabel(0), fNHits(0), fNClus(0) {}
+   REveMCRecCrossRef() = default;
    virtual ~REveMCRecCrossRef() {}
-
-   // ClassDef(REveMCRecCrossRef, 1); // Cross-reference of sim/rec data per particle (also used in VSD).
 };
 
-/******************************************************************************/
-// Missing primary vertex class.
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Missing primary vertex class.
+////////////////////////////////////////////////////////////////////////////////
 
 /******************************************************************************/
 /******************************************************************************/
