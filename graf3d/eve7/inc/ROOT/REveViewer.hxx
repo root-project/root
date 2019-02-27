@@ -19,9 +19,10 @@ namespace Experimental {
 
 class REveScene;
 
-/******************************************************************************/
-// REveViewer
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveViewer
+/// Reve representation of TGLViewer.
+////////////////////////////////////////////////////////////////////////////////
 
 class REveViewer : public REveElement
 {
@@ -30,7 +31,7 @@ private:
    REveViewer& operator=(const REveViewer&); // Not implemented
 
 public:
-   REveViewer(const std::string& n="REveViewer", const std::string& t="");
+   REveViewer(const std::string &n="REveViewer", const std::string &t="");
    virtual ~REveViewer();
 
    void Redraw(Bool_t resetCameras=kFALSE);
@@ -38,20 +39,19 @@ public:
    virtual void AddScene(REveScene* scene);
    // XXX Missing RemoveScene() ????
 
-   virtual void RemoveElementLocal(REveElement* el);
-   virtual void RemoveElementsLocal();
+   void RemoveElementLocal(REveElement *el) override;
+   void RemoveElementsLocal() override;
 
-   virtual Bool_t HandleElementPaste(REveElement* el);
+   Bool_t HandleElementPaste(REveElement* el) override;
 
    // virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
-
-   ClassDef(REveViewer, 0); // Reve representation of TGLViewer.
 };
 
 
-/******************************************************************************/
-// REveViewerList
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveViewerList
+/// List of Viewers providing common operations on REveViewer collections.
+////////////////////////////////////////////////////////////////////////////////
 
 class REveViewerList : public REveElement
 {
@@ -68,12 +68,12 @@ protected:
    void HandleTooltip();
 
 public:
-   REveViewerList(const std::string& n="REveViewerList", const std::string& t="");
+   REveViewerList(const std::string &n="REveViewerList", const std::string &t="");
    virtual ~REveViewerList();
 
-   virtual void AddElement(REveElement* el);
-   virtual void RemoveElementLocal(REveElement* el);
-   virtual void RemoveElementsLocal();
+   void AddElement(REveElement* el) override;
+   void RemoveElementLocal(REveElement* el) override;
+   void RemoveElementsLocal() override;
 
    // --------------------------------
 
@@ -105,8 +105,6 @@ public:
 
    Bool_t  UseLightColorSet()   const { return fUseLightColorSet; }
    void    SwitchColorSet();
-
-   ClassDef(REveViewerList, 0); // List of Viewers providing common operations on REveViewer collections.
 };
 
 } // namespace Experimental
