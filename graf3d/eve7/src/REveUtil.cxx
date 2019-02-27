@@ -215,7 +215,7 @@ void REveUtil::SetColorBrightness(Float_t value, Bool_t full_redraw)
       return;
    }
 
-   TObjArray   *colors = (TObjArray*) gROOT->GetListOfColors();
+   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
 
    if (fgDefaultColors == 0)
    {
@@ -235,8 +235,8 @@ void REveUtil::SetColorBrightness(Float_t value, Bool_t full_redraw)
       TColor* cdef = (TColor*) fgDefaultColors->At(i);
       if (cdef)
       {
-         TColor* croot = (TColor*)  colors->At(i);
-         if (croot == 0)
+         TColor* croot = (TColor*) colors->At(i);
+         if (!croot)
          {
             croot = new TColor(*cdef);
             colors->AddAt(croot, i);
@@ -264,7 +264,7 @@ void REveUtil::SetColorBrightness(Float_t value, Bool_t full_redraw)
       }
    }
 
-   if (full_redraw && REX::gEve != 0)
+   if (full_redraw && REX::gEve)
       REX::gEve->FullRedraw3D();
 }
 
