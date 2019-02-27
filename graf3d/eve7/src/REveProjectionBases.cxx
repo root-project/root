@@ -94,9 +94,9 @@ void REveProjectable::ClearProjectedList()
 /// Add the projected elements to the set, dyn-casting them to
 /// REveElement.
 
-void REveProjectable::AddProjectedsToSet(std::set<REveElement*>& set)
+void REveProjectable::AddProjectedsToSet(std::set<REveElement*> &set)
 {
-   for (auto &&proj : fProjectedList)
+   for (auto &proj : fProjectedList)
       set.insert(proj->GetProjectedAsElement());
 }
 
@@ -105,12 +105,12 @@ void REveProjectable::AddProjectedsToSet(std::set<REveElement*>& set)
 /// Use element el as model. If el == 0 (default), this casted to
 /// REveElement is used.
 
-void REveProjectable::PropagateVizParams(REveElement* el)
+void REveProjectable::PropagateVizParams(REveElement *el)
 {
    if (el == nullptr)
       el = dynamic_cast<REveElement*>(this);
 
-   for (auto &&proj : fProjectedList)
+   for (auto &proj : fProjectedList)
       proj->GetProjectedAsElement()->CopyVizParams(el);
 }
 

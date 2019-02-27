@@ -78,8 +78,8 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
 
    static const REveException eh("REveManager::REveManager ");
 
-   if (REX::gEve != 0)
-      throw eh + "There can be only one!";
+   if (REX::gEve)
+      throw eh + "There can be only one REve!";
 
    REX::gEve = this;
 
@@ -318,7 +318,7 @@ void REveManager::AddElement(REveElement *element, REveElement *parent)
 
 void REveManager::AddGlobalElement(REveElement* element, REveElement* parent)
 {
-   if (parent == 0)
+   if (!parent)
       parent = fGlobalScene;
 
    parent->AddElement(element);
@@ -409,7 +409,7 @@ void REveManager::PreDeleteElement(REveElement* el)
 
 void REveManager::ElementSelect(REveElement* element)
 {
-   if (element != 0)
+   if (element)
       EditElement(element);
 }
 
@@ -618,10 +618,10 @@ TGeoManager* REveManager::GetGeometry(const TString& filename)
          TFile f(exp_filename, "READ");
          TObjArray* collist = (TObjArray*) f.Get("ColorList");
          f.Close();
-         if (collist != 0) {
+         if (collist) {
             TIter next(gGeoManager->GetListOfVolumes());
             TGeoVolume* vol;
-            while ((vol = (TGeoVolume*) next()) != 0)
+            while ((vol = (TGeoVolume*) next()) != nullptr)
             {
                Int_t oldID = vol->GetLineColor();
                TColor* col = (TColor*)collist->At(oldID);
@@ -902,14 +902,14 @@ void REveManager::DestroyElementsOf(REveElement::List_t& els)
    }
 }
 
-void REveManager::BroadcastElementsOf(REveElement::List_t& els)
+void REveManager::BroadcastElementsOf(REveElement::List_t &els)
 {
    // XXXXX - not called, what's with begin accepting changes?
 
    for (auto & ep : els)
    {
       REveScene* scene = dynamic_cast<REveScene*>(ep);
-      assert (scene != 0);
+      assert (scene != nullptr);
 
       printf("\nEVEMNG ............. streaming scene %s [%s]\n",
              scene->GetCTitle(), scene->GetCName());

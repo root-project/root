@@ -337,7 +337,7 @@ void REveTrack::MakeTrack(Bool_t recurse)
       Reset(0);
       fLastPMIdx = 0;
 
-      REveTrackPropagator& rTP((fPropagator != 0) ? *fPropagator : REveTrackPropagator::fgDefault);
+      REveTrackPropagator& rTP((fPropagator != nullptr) ? *fPropagator : REveTrackPropagator::fgDefault);
 
       const Double_t maxRsq = rTP.GetMaxR() * rTP.GetMaxR();
       const Double_t maxZ   = rTP.GetMaxZ();
@@ -731,12 +731,10 @@ Double_t REveTrackList::RoundMomentumLimit(Double_t x)
 
 void REveTrackList::SanitizeMinMaxCuts()
 {
-   using namespace TMath;
-
-   fMinPt = Min(fMinPt, fLimPt);
-   fMaxPt = fMaxPt == 0 ? fLimPt : Min(fMaxPt, fLimPt);
-   fMinP  = Min(fMinP,  fLimP);
-   fMaxP  = fMaxP  == 0 ? fLimP  : Min(fMaxP,  fLimP);
+   fMinPt = TMath::Min(fMinPt, fLimPt);
+   fMaxPt = (fMaxPt == 0) ? fLimPt : TMath::Min(fMaxPt, fLimPt);
+   fMinP  = TMath::Min(fMinP,  fLimP);
+   fMaxP  = (fMaxP  == 0) ? fLimP  : TMath::Min(fMaxP,  fLimP);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
