@@ -10,6 +10,8 @@
 
 from ROOT import pythonization
 
+from ._generic import _add_getitem_checked
+
 
 @pythonization()
 def pythonize_tvectort(klass, name):
@@ -20,5 +22,10 @@ def pythonize_tvectort(klass, name):
     if name.startswith('TVectorT'):
         # Support `len(v)` as `v.GetNoElements()`
         klass.__len__ = klass.GetNoElements
+
+        # Add checked __getitem__.
+        # Allows to throw pythonic IndexError when index is out of range
+        # and to iterate over the vector.
+        _add_getitem_checked(klass)
 
     return True
