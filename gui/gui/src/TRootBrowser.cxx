@@ -911,6 +911,15 @@ void TRootBrowser::InitPlugins(Option_t *opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check if the GUI factory is set to use the Web GUI.
+
+Bool_t TRootBrowser::IsWebGUI()
+{
+   TString factory = gEnv->GetValue("Gui.Factory", "native");
+   return (factory.Contains("web", TString::kIgnoreCase));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Really delete the browser and the this GUI.
 
 void TRootBrowser::ReallyDelete()
