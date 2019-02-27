@@ -1,5 +1,5 @@
 // @(#)root/eve7:$Id$
-// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -18,6 +18,7 @@
 #include <ROOT/RWebWindow.hxx>
 
 #include "json.hpp"
+
 #include <cassert>
 
 

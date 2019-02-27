@@ -51,7 +51,7 @@ array in REvePolygonSetProjected.
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REvePolygonSetProjected::REvePolygonSetProjected(const char* n, const char* t) :
+REvePolygonSetProjected::REvePolygonSetProjected(const std::string &n, const std::string &t) :
    REveShape(n, t),
    fBuff(),
    fPnts()

@@ -24,9 +24,12 @@
 namespace ROOT {
 namespace Experimental {
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
 // REvePointSet
-/******************************************************************************/
+// Set of 3D points with same marker attributes;
+// optionally each point can be assigned an
+// external TRef or a number of integer indices.
+////////////////////////////////////////////////////////////////////////////////
 
 class REvePointSet : public REveElement,
                      public REveProjectable,
@@ -40,15 +43,15 @@ private:
 
 protected:
    std::vector<REveVector> fPoints;
-   int                     fCapacity;
-   int                     fSize;
+   int                     fCapacity{0};
+   int                     fSize{0};
 
 public:
    REvePointSet(const std::string& name="", const std::string& title="", Int_t n_points = 0);
    REvePointSet(const REvePointSet &e);
    virtual ~REvePointSet();
 
-   virtual REvePointSet *CloneElement() const { return new REvePointSet(*this); }
+   REvePointSet *CloneElement() const override { return new REvePointSet(*this); }
 
    virtual void ClonePoints(const REvePointSet &e);
 
@@ -58,34 +61,33 @@ public:
    int   SetNextPoint(float x, float y, float z);
    int   SetPoint(int n, float x, float y, float z);
 
-   int         GetCapacity() const { return fCapacity; }
-   int         GetSize()     const { return fSize;     }
+   int   GetCapacity() const { return fCapacity; }
+   int   GetSize()     const { return fSize;     }
 
          REveVector& RefPoint(int n)       { assert (n < fSize); return fPoints[n]; }
    const REveVector& RefPoint(int n) const { assert (n < fSize); return fPoints[n]; }
 
-   void SetMarkerColor(Color_t col) /* override */ { SetMainColor(col); }
-   void SetMarkerStyle(Style_t mstyle = 1); // override;
-   void SetMarkerSize(Size_t msize = 1); // override;
+   void SetMarkerColor(Color_t col) override { SetMainColor(col); }
+   void SetMarkerStyle(Style_t mstyle = 1) override;
+   void SetMarkerSize(Size_t msize = 1) override;
 
-   virtual void CopyVizParams(const REveElement *el);
-   virtual void WriteVizParams(std::ostream &out, const TString &var);
+   void CopyVizParams(const REveElement *el) override;
+   void WriteVizParams(std::ostream &out, const TString &var) override;
 
-   virtual TClass* ProjectedClass(const REveProjection *p) const;
+   TClass* ProjectedClass(const REveProjection *p) const override;
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
-   void  BuildRenderData();                                  // override;
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   void  BuildRenderData()override;
 
-   void ComputeBBox(); // override;
+   void ComputeBBox() override;
 
-   virtual void PointSelected(Int_t id); // *SIGNAL*
-
-   ClassDef(REvePointSet, 0); // Set of 3D points with same marker attributes; optionally each point can be assigned an
-                              // external TRef or a number of integer indices.
+   void PointSelected(Int_t id); // *SIGNAL*
 };
 
 /******************************************************************************/
 // REvePointSetArray
+// Array of REvePointSet's filled via a common point-source; range of displayed REvePointSet's can be
+// controlled, based on a separating quantity provided on fill-time by a user.
 /******************************************************************************/
 
 class REvePointSetArray : public REveElement,
@@ -106,17 +108,17 @@ protected:
    std::string    fQuantName;           //  Name of the separating quantity.
 
 public:
-   REvePointSetArray(const std::string& name = "REvePointSetArray", const std::string& title = "");
+   REvePointSetArray(const std::string &name = "REvePointSetArray", const std::string &title = "");
    virtual ~REvePointSetArray();
 
-   virtual void RemoveElementLocal(REveElement *el);
-   virtual void RemoveElementsLocal();
+   void RemoveElementLocal(REveElement *el) override;
+   void RemoveElementsLocal() override;
 
-   virtual void SetMarkerColor(Color_t tcolor = 1);
-   virtual void SetMarkerStyle(Style_t mstyle = 1);
-   virtual void SetMarkerSize(Size_t msize = 1);
+   void SetMarkerColor(Color_t tcolor = 1) override;
+   void SetMarkerStyle(Style_t mstyle = 1) override;
+   void SetMarkerSize(Size_t msize = 1) override;
 
-   virtual Int_t Size(Bool_t under = kFALSE, Bool_t over = kFALSE) const;
+   Int_t Size(Bool_t under = kFALSE, Bool_t over = kFALSE) const;
 
    void InitBins(const std::string& quant_name, Int_t nbins, Double_t min, Double_t max);
    Bool_t Fill(Double_t x, Double_t y, Double_t z, Double_t quant);
@@ -134,13 +136,11 @@ public:
    Double_t GetCurMax() const { return fCurMax; }
 
    void SetRange(Double_t min, Double_t max);
-
-   ClassDef(REvePointSetArray, 0); // Array of REvePointSet's filled via a common point-source; range of displayed REvePointSet's can be
-                                   // controlled, based on a separating quantity provided on fill-time by a user.
 };
 
 /******************************************************************************/
 // REvePointSetProjected
+// Projected copy of a REvePointSet.
 /******************************************************************************/
 
 class REvePointSetProjected : public REvePointSet,
@@ -151,19 +151,17 @@ private:
    REvePointSetProjected &operator=(const REvePointSetProjected &); // Not implemented
 
 protected:
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
    REvePointSetProjected();
    virtual ~REvePointSetProjected() {}
 
-   virtual void SetProjection(REveProjectionManager *proj, REveProjectable *model);
-   virtual void UpdateProjection();
-   virtual REveElement *GetProjectedAsElement() { return this; }
+   void SetProjection(REveProjectionManager *proj, REveProjectable *model) override;
+   void UpdateProjection() override;
+   REveElement *GetProjectedAsElement() override { return this; }
 
-   virtual void PointSelected(Int_t id);
-
-   ClassDef(REvePointSetProjected, 0); // Projected copy of a REvePointSet.
+   void PointSelected(Int_t id);
 };
 
 } // namespace Experimental

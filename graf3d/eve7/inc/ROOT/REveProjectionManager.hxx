@@ -19,6 +19,11 @@
 namespace ROOT {
 namespace Experimental {
 
+////////////////////////////////////////////////////////////////////////////////
+/// REveProjectionManager
+/// Manager class for steering of projections and managing projected objects.
+////////////////////////////////////////////////////////////////////////////////
+
 class REveProjectionManager : public REveElement,
                               public REveAuntAsList,
                               public TAttBBox
@@ -30,13 +35,13 @@ private:
 protected:
    REveProjection *fProjections[REveProjection::kPT_End];
 
-   REveProjection *fProjection = nullptr; // current projection
+   REveProjection *fProjection{nullptr};  // current projection
    REveVector      fCenter;               // center of distortion
-   Float_t         fCurrentDepth = 0;     // z depth of object being projected
+   Float_t         fCurrentDepth{0.};     // z depth of object being projected
 
    List_t fDependentEls;                  // elements that depend on manager and need to be destroyed with it
 
-   Bool_t fImportEmpty = kFALSE;          // import sub-trees with no projectable elements
+   Bool_t fImportEmpty{kFALSE};           // import sub-trees with no projectable elements
 
    virtual Bool_t ShouldImport(REveElement *el);
    virtual void   UpdateDependentElsAndScenes(REveElement *root);
@@ -62,7 +67,7 @@ public:
    void SetImportEmpty(Bool_t ie) { fImportEmpty = ie; }
    Bool_t GetImportEmpty() const { return fImportEmpty; }
 
-   virtual Bool_t HandleElementPaste(REveElement *el);
+   Bool_t HandleElementPaste(REveElement *el) override;
 
    virtual REveElement *ImportElementsRecurse(REveElement *el, REveElement *parent);
    virtual REveElement *ImportElements(REveElement *el, REveElement *ext_list = nullptr);
@@ -73,9 +78,7 @@ public:
    virtual void ProjectChildren();
    virtual void ProjectChildrenRecurse(REveElement *el);
 
-   virtual void ComputeBBox();
-
-   ClassDef(REveProjectionManager, 0); // Manager class for steering of projections and managing projected objects.
+   void ComputeBBox() override;
 };
 
 } // namespace Experimental
