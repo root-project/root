@@ -16,23 +16,16 @@ bool REX::operator==(const TString& t, const std::string& s)
 bool REX::operator==(const std::string&  s, const TString& t)
 { return (s == t.Data()); }
 
-// Exc
-
-REveException::REveException(const std::string& s) : TString(s.c_str())
-{
-   // Constructor.
-}
-
 // Exc + ops
 
 REveException REX::operator+(const REveException &s1, const std::string &s2)
-{ REveException r(s1); r += s2; return r; }
+{ REveException r(s1); r.append(s2); return r; }
 
 REveException REX::operator+(const REveException &s1, const TString &s2)
-{ REveException r(s1); r += s2; return r; }
+{ REveException r(s1); r.append(s2); return r; }
 
 REveException REX::operator+(const REveException &s1,  const char *s2)
-{ REveException r(s1); r += s2; return r; }
+{ REveException r(s1); r.append(s2); return r; }
 
 REveException REX::operator+(const REveException &s1, ElementId_t x)
-{ REveException r(s1); r += std::to_string(x); return r; }
+{ REveException r(s1); r.append(std::to_string(x)); return r; }

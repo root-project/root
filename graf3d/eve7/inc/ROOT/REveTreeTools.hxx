@@ -18,9 +18,10 @@
 namespace ROOT {
 namespace Experimental {
 
-/******************************************************************************/
-// REveSelectorToEventList
-/******************************************************************************/
+/////////////////////////////////////////////////////////////////////////////////
+/// REveSelectorToEventList
+/// TSelector that stores entry numbers of matching TTree entries into an event-list.
+/////////////////////////////////////////////////////////////////////////////////
 
 class REveSelectorToEventList : public TSelectorDraw
 {
@@ -33,6 +34,7 @@ protected:
 
 public:
    REveSelectorToEventList(TEventList *evl, const char *sel);
+   virtual ~REveSelectorToEventList() {}
 
    virtual Int_t Version() const { return 1; }
    virtual Bool_t Process(Long64_t entry);
@@ -40,9 +42,10 @@ public:
    ClassDef(REveSelectorToEventList, 1); // TSelector that stores entry numbers of matching TTree entries into an event-list.
 };
 
-/******************************************************************************/
-// REvePointSelectorConsumer, REvePointSelector
-/******************************************************************************/
+/////////////////////////////////////////////////////////////////////////////////
+/// REvePointSelectorConsumer
+/// Virtual base for classes that can be filled from TTree data via the REvePointSelector class.
+/////////////////////////////////////////////////////////////////////////////////
 
 class REvePointSelector;
 
@@ -63,9 +66,12 @@ public:
 
    ETreeVarType_e GetSourceCS() const { return fSourceCS; }
    void SetSourceCS(ETreeVarType_e cs) { fSourceCS = cs; }
-
-   ClassDef(REvePointSelectorConsumer, 1); // Virtual base for classes that can be filled from TTree data via the REvePointSelector class.
 };
+
+/////////////////////////////////////////////////////////////////////////////////
+/// REvePointSelector
+/// TSelector for direct extraction of point-like data from a Tree.
+/////////////////////////////////////////////////////////////////////////////////
 
 class REvePointSelector : public TSelectorDraw
 {
