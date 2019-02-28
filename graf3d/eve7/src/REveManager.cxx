@@ -39,7 +39,8 @@
 #include "Riostream.h"
 
 #include "json.hpp"
-
+#include <sstream>
+#include <iostream>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -828,13 +829,10 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
       int id = cj["fElementId"];
 
       auto el =  FindElementById(id);
-      char cmd[1024];
-      int  np = snprintf(cmd, 1024, "((%s*)%p)->%s;", ctype.c_str(), el, mir.c_str());
-      if (np >= 1024)
-         throw eh + "MIR command buffer too small -- tell Matevz to implement auto resizing.";
-
-      printf("MIR cmd %s\n", cmd);
-      gROOT->ProcessLine(cmd);
+      std::stringstream cmd;
+      cmd << "((" << ctype << "*)" << std::hex << std::showbase << (size_t)el << ")->" << mir << ";";
+      std::cout << "MIR cmd " << cmd.str() << std::endl;
+      gROOT->ProcessLine(cmd.str().c_str());
 
       fScenes->AcceptChanges(false);
       fWorld->EndAcceptingChanges();
