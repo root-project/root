@@ -37,19 +37,12 @@ bool operator==(const std::string &s, const TString &t);
 /// Exception-type thrown by Eve classes.
 ////////////////////////////////////////////////////////////////////////////////
 
-class REveException : public std::exception
-{
+class REveException : public std::exception {
    std::string fWhat;
 public:
    REveException() = default;
-   REveException(const TString &s) : fWhat(s.Data()) {}
-   REveException(const char *s) : fWhat(s) {}
-   REveException(const std::string &s) : fWhat(s) {}
-
+   explicit REveException(const std::string &s) : fWhat(s) {}
    virtual ~REveException() noexcept {}
-
-   void append(const char *s) { fWhat.append(s); }
-   void append(const TString &s) { fWhat.append(s.Data()); }
    void append(const std::string &s) { fWhat.append(s); }
 
    const char *what() const noexcept override { return fWhat.c_str(); }

@@ -22,7 +22,7 @@ REveException REX::operator+(const REveException &s1, const std::string &s2)
 { REveException r(s1); r.append(s2); return r; }
 
 REveException REX::operator+(const REveException &s1, const TString &s2)
-{ REveException r(s1); r.append(s2); return r; }
+{ REveException r(s1); r.append(s2.Data()); return r; }
 
 REveException REX::operator+(const REveException &s1,  const char *s2)
 { REveException r(s1); r.append(s2); return r; }
