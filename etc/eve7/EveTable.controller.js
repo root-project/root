@@ -13,18 +13,14 @@ sap.ui.define([
    return Controller.extend("eve.EveTable", {
 
       onInit : function() {
-
          var data = this.getView().getViewData();
          // console.log("VIEW DATA", data);
 
          var id = this.getView().getId();
          console.log("eve.GL.onInit id = ", id );
 
-
          this._load_scripts = true;
          this._render_html = false;
-
-         // console.log("TABLE VIEW CREATED");
 
          this.mgr = data.mgr;
          this.elementid = data.elementid;
@@ -35,66 +31,76 @@ sap.ui.define([
          for (var k=0;k<element.childs.length;++k) {
             var scene = element.childs[k];
             this.mgr.RegisterSceneReceiver(scene.fSceneId, this);
-            this.setEveData();
+            this.build();
          }
 
-         this.mgr.RegisterUpdate(this, "setEveData");
+         this.mgr.RegisterUpdate(this, "build");
       },
 
-      findTable: function(holder) {
-         // presume table view manger is first child of table scene
-         var mng = holder.childs[0];
-         this.collectionMng = mng;
-         this.collection = this.mgr.GetElement(mng.fDisplayedCollection);
-         for (var i = 1; i < holder.childs.length; i++ )
-         {
-            var product = holder.childs[i];
-            if (product.childs.length)
-               return product.childs[0];
-         }
-
-      },
-
-      setEveData: function() {
+      locateEveTable: function()
+      {
+         this.eveTable = 0;
          var element = this.mgr.GetElement(this.elementid);
-         console.log("table ", element);
-         for (var k=0;k<element.childs.length;++k) {
-            var sceneInfo = element.childs[k];
-            var scene = this.mgr.GetElement(sceneInfo.fSceneId);
-            this.tableEveElement = this.findTable(scene)
-            this.setupTable(this.tableEveElement);
+         var sceneInfo = element.childs[0];
+         var scene = this.mgr.GetElement(sceneInfo.fSceneId);
+
+         // presume table view manger is first child of table scene
+         this.collectionMgr = scene.childs[0];
+         this.collection = this.mgr.GetElement(this.collectionMgr.fDisplayedCollection);
+
+         // look for a REveDataTable in list of proxy builder products
+         for (var i = 1; i < scene.childs.length; i++) {
+            var product = scene.childs[i];
+            // console.log("product ", product);
+            if (product.childs && product.childs.length > 0) {
+               if (product.childs[0].fCollectionId == this.collection.fElementId) {
+                  this.eveTable =  product.childs[0];
+                  // console.log("eveTable = ", this.eveTable);
+                  break;
+               }
+            }
          }
       },
 
-      setupTable: function(eveData) {
+      build: function()
+      {
+         console.log("EveTable controller build()");
+         this.locateEveTable();
+         if (this.eveTable) {
+            this.buildTableHeader();
+            this.buildTableBody();
+         }
+         else {
+            console.log("ERROR can't find table in table scene !!!!");
+         }
+      },
+
+      buildTableBody: function()
+      {
          var oTable = this.getView().byId("table");
-         console.log(oTable);
 
+         // column definition
          var columnData = [];
+
          columnData.push({columnName:"Name"});
-         columnData.push({columnName:"Rnr"});
+         columnData.push({columnName:"Filtered"});
 
-         for (var i = 0; i < eveData.childs.length; i++)
+         var eveColumns = this.eveTable.childs;
+         for (var i = 0; i < eveColumns.length; i++)
          {
-            columnData.push({columnName:eveData.childs[i].fName});
+            var cname = eveColumns[i].fName;
+            columnData.push({columnName : cname});
          }
 
-         var rowData = eveData.body;
-
-         var collection = this.mgr.GetElement(eveData.fCollectionId);
-         var pass = 0;
-
-         for (var i = 0; i < collection.childs.length; i++)
+         // row definition
+         var rowData = this.eveTable.body;
+         for (var i = 0; i < this.collection.childs.length; i++)
          {
-            rowData[i].Name =  collection.childs[i].fName;
-            rowData[i].Rnr =  collection.childs[i].fFiltered === true ? "" : "*";
-            if ( !collection.childs[i].fFiltered) pass++;
+            rowData[i].Name =  this.collection.childs[i].fName;
+            rowData[i].Filtered =  this.collection.childs[i].fFiltered === true ? "--" : "*";
          }
 
-         // console.log("collection ",collection );
-         // console.log("rowData ", rowData );
-         // console.log("columnData", columnData);
-
+         // table model
          var oModel = new sap.ui.model.json.JSONModel();
          oModel.setData({
             rows: rowData,
@@ -102,12 +108,10 @@ sap.ui.define([
          });
          oTable.setModel(oModel);
 
-         var uuu= this;
-
+         // bind rows and columns
          oTable.bindColumns("/columns", function(sId, oContext) {
             var columnName = oContext.getObject().columnName;
             var oColumn = new sap.ui.table.Column({
-
                label: columnName,
                template: columnName,
                sortProperty: columnName,
@@ -119,13 +123,14 @@ sap.ui.define([
 
          oTable.bindRows("/rows");
 
+      },
 
-         //______________________________________________________________________________
-         // get list of collections
-
+      buildTableHeader: function()
+      {
          var oModel = new sap.ui.model.json.JSONModel();
-         var clist = this.mgr.GetElement(this.collection.fMotherId);
-         console.log("collection list ", clist);
+         var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
+         var clist = this.mgr.GetElement(collection.fMotherId);
+         // console.log("collection list ", clist);
 
 	 var mData = {
 	    "itemx": [
@@ -138,21 +143,14 @@ sap.ui.define([
          oModel.setData(mData);
          this.getView().setModel(oModel, "collections");
 
-
          var combo = this.getView().byId("ccombo");
-         combo.setSelectedKey("XYTracks");
+         combo.setSelectedKey(collection.fName);
          combo.data("controller", this);
-
       },
 
       onLoadScripts: function() {
          this._load_scripts = true;
          this.checkScenes();
-      },
-
-      acm: function()
-      {
-         alert("Custom Menu");
       },
 
       // function called from GuiPanelController
@@ -161,8 +159,8 @@ sap.ui.define([
       },
 
       onSceneCreate: function(element, id) {
-         console.log("EveTable onSceneChanged", id);
-         this.setEveData();
+         // console.log("EveTable onSceneChanged", id);
+         this.build();
       },
 
       UpdateMgr : function(mgr) {
@@ -194,15 +192,13 @@ sap.ui.define([
             this.editor = new sap.ui.layout.VerticalLayout("tableEdit", {"width":"100%"});
 
             header.addContent(this.editor);
-            // this.editor.bindElement("abc>/gedcol");
+
             // expression row
             {
-
-               var collection = this.mgr.GetElement(this.tableEveElement.fCollectionId);
+               var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
                var oModel = new sap.ui.model.json.JSONModel();
                oModel.setData(collection.publicFunction);
                // oModel.setData(aData);
-               console.log("XXX suggest ", oModel);
                this.getView().setModel(oModel);
 
                var exprIn = new sap.m.Input("expression", { width:"98%",
@@ -214,23 +210,21 @@ sap.ui.define([
                exprIn.setModel(oModel);
                exprIn.bindAggregation("suggestionItems", "/", new sap.ui.core.Item({text: "{name}"}));
                exprIn.setFilterFunction(function(sTerm, oItem) {
-             // A case-insensitive 'string contains' style filter
-                  console.log("filter sterm", sTerm);
+                  // A case-insensitive 'string contains' style filter
+                  // console.log("filter sterm", sTerm);
                   var base = sTerm;
                   var n = base.lastIndexOf("i.");
-                  console.log("last index ", n);
+                  // console.log("last index ", n);
                   if (n>=0) n+=2;
                   var txt = base.substring(n,this.getFocusInfo().cursorPos );
-                  console.log("suggest filter ", txt);
-                  console.log("focus 1", this.getFocusInfo());
+                  // console.log("suggest filter ", txt);
+                  // console.log("focus 1", this.getFocusInfo());
 
-             return oItem.getText().match(new RegExp(txt, "i"));
-          });
-
-
-
+                  return oItem.getText().match(new RegExp(txt, "i"));
+               });
                this.editor.addContent(exprIn);
             }
+
             // title & prec
             {
                var hl = new sap.ui.layout.HorizontalLayout();
@@ -248,6 +242,7 @@ sap.ui.define([
                this.editor.addContent(hl);
 
             }
+
             //  button actions
             {
                var ll = new sap.ui.layout.HorizontalLayout();
@@ -271,21 +266,14 @@ sap.ui.define([
          else {
             header.addContent(this.editor);
             this.editor.visible = true;
-
          }
-
       },
+
       addColumn: function(event) {
-         console.log("add column s", event.getSource(), this);
-         console.log("add column p", this.data("controller"));
+         // console.log("add column s", event.getSource(), this);
+         // console.log("add column p", this.data("controller"));
          var pthis = this.data("controller");
          var ws = pthis.editor.getContent();
-
-         /*
-           console.log("properties ", ws[0].getProperty("value"));
-           var title = pthis.editor.byId("expression");
-           console.log("title ", title.getParameters.value());
-         */
 
          var expr = ws[0].getProperty("value");
          if (!expr) {
@@ -299,40 +287,20 @@ sap.ui.define([
 
          var mir = "AddNewColumn( \"" + expr + "\", \"" + title + "\" )";
 
-         console.log("table element id ", pthis.tableEveElement.fElementId);
+         // console.log("table element id ", pthis.eveTable.fElementId);
 
-         var obj = {"mir" : mir, "fElementId" : pthis.tableEveElement.fElementId, "class" : pthis.tableEveElement._typename};
-         console.log("MIR obj ", obj);
+         var obj = {"mir" : mir, "fElementId" : pthis.eveTable.fElementId, "class" : pthis.eveTable._typename};
+         // console.log("MIR obj ", obj);
          pthis.mgr.handle.Send(JSON.stringify(obj));
-
-
-      },
-/*
-     replaceElement: function(el) {
-           console.log("REPLACE TABLE !!! ");
-         this.setupTable( this.tableEveElement);
       },
 
-
-      elementAdded : function(el) {
-           this.setEveData();
-      },
-      elementRemoved: function() {
-      },
-
-
-      beginChanges : function() {
-      },
-*/
       collectionChanged: function(oEvent) {
-         console.log("collectionChanged ", oEvent.getSource());
-         console.log("xxx ", this);
-       //  var pthis = this.data("controller");
+         // console.log("collectionChanged ", oEvent.getSource());
          var model = oEvent.oSource.getSelectedItem().getBindingContext("collections");
          var path = model.getPath();
          var entry = model.getProperty(path);
          var coll = entry.elementId;
-         var mng = this.collectionMng;
+         var mng =  this.collectionMgr;
          var mir = {"elementid" : mng.fElementId, "elementclass":mng._typename};
          mir.func = "SetDisplayedCollection(" + coll + ")";
 
@@ -347,16 +315,13 @@ sap.ui.define([
       },
 
       endChanges : function(oEvent) {
-         console.log("table controller endchanges ",this.tableEveElement );
-         this.setEveData();
+         // console.log("table controller endChanges ",this.eveTable );
+         this.build();
       },
 
-
       elementRemoved: function(elId) {
-
-      var el = this.mgr.GetElement(elId);
-         console.log("EveTable element remobedf ", el);
-
+         var el = this.mgr.GetElement(elId);
+         // console.log("EveTable element removed ", el);
       }
    });
 });

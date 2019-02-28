@@ -13,10 +13,10 @@ class REveTableProxyBuilder : public REveDataProxyBuilderBase
 {
 private:
    //TableHandle::TableEntries m_specs;
-   REveDataTable* m_table; // cached
+   REveDataTable* fTable; // cached
 
 public:
-   REveTableProxyBuilder() : REveDataProxyBuilderBase("Table"), m_table(0) {}
+   REveTableProxyBuilder() : REveDataProxyBuilderBase("Table"), fTable(0) {}
    virtual bool WillHandleInteraction() const { return true; }
 
    using REveDataProxyBuilderBase::ModelChanges;
@@ -26,6 +26,9 @@ public:
    virtual void Build(const REveDataCollection* collection, REveElement* product, const REveViewContext* context);
 
    void DisplayedCollectionChanged(ElementId_t);
+
+
+   virtual void CleanLocal();
 };
 }
 }

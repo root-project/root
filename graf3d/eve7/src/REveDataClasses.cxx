@@ -91,8 +91,6 @@ void REveDataCollection::ApplyFilter()
 
       ii.fItemPtr->SetFiltered( ! res );
 
-      // AMT : not sure if ApplyFilter is the right place to set visibility
-      ii.fItemPtr->SetRnrSelf( res );
       ids.push_back(idx++);
    }
    StampObjProps();

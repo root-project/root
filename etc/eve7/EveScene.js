@@ -176,6 +176,7 @@
 
    EveScene.prototype.colorChanged = function(el)
    {
+      if (!el.render_data) return;
       console.log("color change ", el.fElementId, el.fMainColor);
 
       this.replaceElement(el);
@@ -350,7 +351,7 @@
       // id = obj3d.eveId;
 
       // MT XXXX
-      console.log("EveScene.prototype.processElementHighlighted", obj3d, col, indx, evnt);
+    //  console.log("EveScene.prototype.processElementHighlighted", obj3d, col, indx, evnt);
 
       this.setElementHighlighted(id, col, indx, true);
 
@@ -451,9 +452,7 @@
    EveScene.prototype.sceneElementChange = function(msg)
    {
       var el = this.mgr.GetElement(msg.fElementId);
-      if (el.render_data) {
-         this[msg.tag](el);
-      }
+      this[msg.tag](el);
    }
 
    EveScene.prototype.elementsRemoved = function(ids) {
