@@ -530,18 +530,18 @@ Int_t REveSelection::WriteCoreJson(nlohmann::json &j, Int_t /* rnr_offset */)
 
    nlohmann::json sel_list = nlohmann::json::array();
 
-   for (SelMap_i i = fMap.begin(); i != fMap.end(); ++i)
+   for (auto &i : fMap)
    {
       nlohmann::json rec = {}, imp = nlohmann::json::array(), sec = nlohmann::json::array();
 
-      rec["primary"] = i->first->GetElementId();
+      rec["primary"] = i.first->GetElementId();
 
       // XXX if not empty ???
-      for (auto &imp_el : i->second.f_implied) imp.push_back(imp_el->GetElementId());
+      for (auto &imp_el : i.second.f_implied) imp.push_back(imp_el->GetElementId());
       rec["implied"]  = imp;
 
       // XXX if not empty / f_is_sec is false ???
-      for (auto &sec_id : i->second.f_sec_idcs) sec.push_back(sec_id);
+      for (auto &sec_id : i.second.f_sec_idcs) sec.push_back(sec_id);
       rec["sec_idcs"] = sec;
 
       sel_list.push_back(rec);
@@ -550,8 +550,6 @@ Int_t REveSelection::WriteCoreJson(nlohmann::json &j, Int_t /* rnr_offset */)
    j["sel_list"] = sel_list;
 
    j["UT_PostStream"] = "UT_Selection_Refresh_State"; // XXXX to be canonized
-
-   // std::cout << j.dump(2) << std::endl;
 
    return 0;
 }

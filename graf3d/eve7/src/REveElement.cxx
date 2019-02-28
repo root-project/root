@@ -1514,32 +1514,26 @@ Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["fMainTransparency"] = GetMainTransparency();
    j["fPickable"]         = fPickable;
 
-   if (rnr_offset >= 0)
-   {
+   Int_t ret = 0;
+
+   if (rnr_offset >= 0) {
       BuildRenderData();
 
-      if (fRenderData.get())
-      {
+      if (fRenderData) {
          nlohmann::json rd = {};
 
          rd["rnr_offset"] = rnr_offset;
-         rd["rnr_func"]   = fRenderData->GetRnrFunc();
-         rd["vert_size"]  = fRenderData->SizeV();
-         rd["norm_size"]  = fRenderData->SizeN();
+         rd["rnr_func"] = fRenderData->GetRnrFunc();
+         rd["vert_size"] = fRenderData->SizeV();
+         rd["norm_size"] = fRenderData->SizeN();
          rd["index_size"] = fRenderData->SizeI();
          rd["trans_size"] = fRenderData->SizeT();
 
          j["render_data"] = rd;
 
-         return fRenderData->GetBinarySize();
-      }
-      else
-      {
-         return 0;
+         ret = fRenderData->GetBinarySize();
       }
    }
-   else
-   {
-      return 0;
-   }
+
+   return ret;
 }
