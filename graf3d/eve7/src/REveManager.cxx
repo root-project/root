@@ -842,10 +842,8 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
       nlohmann::json resp;
       resp["function"] = "replaceElement";
       //el->SetCoreJson(resp);
-      for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
-      {
-         fWebWindow->Send(i->fId, resp.dump());
-      }
+      for (auto &conn : fConnList)
+         fWebWindow->Send(conn.fId, resp.dump());
       */
    }
 }
@@ -902,7 +900,7 @@ void REveManager::BroadcastElementsOf(REveElement::List_t &els)
 {
    // XXXXX - not called, what's with begin accepting changes?
 
-   for (auto & ep : els)
+   for (auto &ep : els)
    {
       REveScene* scene = dynamic_cast<REveScene*>(ep);
       assert (scene != nullptr);
@@ -913,12 +911,11 @@ void REveManager::BroadcastElementsOf(REveElement::List_t &els)
       // This prepares core and render data buffers.
       scene->StreamElements();
 
-      for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
-      {
-         printf("   sending json, len = %d --> to conn_id = %d\n", (int) scene->fOutputJson.size(), i->fId);
-         fWebWindow->Send(i->fId, scene->fOutputJson);
-         printf("   sending binary, len = %d --> to conn_id = %d\n", scene->fTotalBinarySize, i->fId);
-         fWebWindow->SendBinary(i->fId, &scene->fOutputBinary[0], scene->fTotalBinarySize);
+      for (auto &conn : fConnList) {
+         printf("   sending json, len = %d --> to conn_id = %d\n", (int)scene->fOutputJson.size(), conn.fId);
+         fWebWindow->Send(conn.fId, scene->fOutputJson);
+         printf("   sending binary, len = %d --> to conn_id = %d\n", scene->fTotalBinarySize, conn.fId);
+         fWebWindow->SendBinary(conn.fId, &scene->fOutputBinary[0], scene->fTotalBinarySize);
       }
    }
 

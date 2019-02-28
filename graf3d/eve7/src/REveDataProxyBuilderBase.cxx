@@ -259,10 +259,9 @@ REveDataProxyBuilderBase::ModelChanges(const REveDataCollection::Ids_t& iIds, Pr
       // AMT temporary workaround for use of compunds
       // applyVisAttrToChildren(comp);
 
-      if (VisibilityModelChanges(itemIdx, comp, p->m_viewContext))
-      {
+      if (VisibilityModelChanges(itemIdx, comp, p->m_viewContext)) {
          elms->ProjectChild(comp);
-         printf("---REveDataProxyBuilderBase project child\n ");
+         printf("---REveDataProxyBuilderBase project child\n");
       }
    }
 }
