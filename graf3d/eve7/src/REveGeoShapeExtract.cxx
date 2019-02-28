@@ -60,7 +60,7 @@ REveGeoShapeExtract::~REveGeoShapeExtract()
 
 Bool_t REveGeoShapeExtract::HasElements()
 {
-   return fElements && fElements->GetSize() > 0;
+   return fElements && (fElements->GetSize() > 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

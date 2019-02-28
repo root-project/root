@@ -115,10 +115,10 @@ Bool_t REveChunkManager::iterator::next()
    {
       if (fAtomsToGo <= 0)
       {
-         if (fNextChunk < fPlex->VecSize())
+         if (fNextChunk < fPlex.VecSize())
          {
-            fCurrent   = fPlex->Chunk(fNextChunk);
-            fAtomsToGo = fPlex->NAtoms(fNextChunk);
+            fCurrent   = fPlex.Chunk(fNextChunk);
+            fAtomsToGo = fPlex.NAtoms(fNextChunk);
             ++fNextChunk;
          }
          else
@@ -128,7 +128,7 @@ Bool_t REveChunkManager::iterator::next()
       }
       else
       {
-         fCurrent += fPlex->S();
+         fCurrent += fPlex.S();
       }
       ++fAtomIndex;
       --fAtomsToGo;
@@ -144,7 +144,7 @@ Bool_t REveChunkManager::iterator::next()
       if (fSelectionIterator != fSelection->end())
       {
          fAtomIndex = *fSelectionIterator;
-         fCurrent   =  fPlex->Atom(fAtomIndex);
+         fCurrent   =  fPlex.Atom(fAtomIndex);
          return kTRUE;
       }
       else
