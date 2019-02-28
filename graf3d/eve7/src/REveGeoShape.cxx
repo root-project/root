@@ -136,13 +136,9 @@ TGeoShape* REveGeoShape::MakePolyShape()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveGeoShape::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
+Int_t REveGeoShape::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-   Int_t ret = REveShape::WriteCoreJson(j, rnr_offset);
-
-   // XXXXX Apaprently don't need this one ...
-
-   return ret;
+   return REveShape::WriteCoreJson(j, rnr_offset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

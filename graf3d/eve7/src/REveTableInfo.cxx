@@ -15,17 +15,20 @@
 
 using namespace ROOT::Experimental;
 
-void REveTableViewInfo::SetDisplayedCollection( ElementId_t collectionId)
+void REveTableViewInfo::SetDisplayedCollection(ElementId_t collectionId)
 {
     fDisplayedCollection = collectionId;
-    for (auto &it: fDelegates)
+    for (auto &it : fDelegates)
        it(collectionId);
 }
 
-Int_t REveTableViewInfo::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
+////////////////////////////////////////////////////////////////////////////////
+/// Fill core part of JSON representation.
+
+Int_t REveTableViewInfo::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-   int off = REveElement::WriteCoreJson(j, rnr_offset);
+   auto ret = REveElement::WriteCoreJson(j, rnr_offset);
    j["fDisplayedCollection"] = fDisplayedCollection;
    //j["_typename"]  = IsA()->GetName();
-   return off;
+   return ret;
 }

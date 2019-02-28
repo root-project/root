@@ -155,7 +155,7 @@ void REveStraightLineSet::WriteVizParams(std::ostream& out, const TString& var)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveStraightLineSet::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
+Int_t REveStraightLineSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 

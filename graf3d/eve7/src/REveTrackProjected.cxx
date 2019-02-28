@@ -312,7 +312,6 @@ void REveTrackListProjected::SetDepth(Float_t d, REveElement *el)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates client representation.
 
@@ -332,8 +331,7 @@ void REveTrackProjected::BuildRenderData()
 {
    REveTrack::BuildRenderData();
 
-   if (fRenderData && ! fBreakPoints.empty())
-   {
+   if (fRenderData && !fBreakPoints.empty()) {
       fRenderData->Reserve(0, 0, fBreakPoints.size());
       fRenderData->PushI(fBreakPoints);
    }

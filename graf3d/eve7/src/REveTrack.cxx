@@ -533,13 +533,13 @@ void REveTrack::PrintPathMarks()
    }
 }
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Fill core part of JSON representation.
 
 Int_t REveTrack::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
    // TODO: missing streaming of fitting points
-   Int_t ret = REveLine::WriteCoreJson(j, rnr_offset);
-   return ret;
+   return REveLine::WriteCoreJson(j, rnr_offset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

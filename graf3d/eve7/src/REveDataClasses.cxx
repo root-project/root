@@ -109,11 +109,9 @@ Int_t REveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
    TIter x( fItemClass->GetListOfAllPublicMethods());
    while (TObject *obj = x()) {
-      // printf("func %s \n", obj->GetName());
+      TMethod *method = dynamic_cast<TMethod *>(obj);
+
       nlohmann::json m;
-
-
-      TMethod* method = dynamic_cast<TMethod*>(obj);
       m["name"] = method->GetPrototype();
       j["publicFunction"].push_back(m);
    }
@@ -259,16 +257,12 @@ Int_t REveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
    nlohmann::json jarr = nlohmann::json::array();
 
-   for (Int_t i = 0; i< Nit; ++i)
-   {
-      void         *data = fCollection->GetDataPtr(i);
+   for (Int_t i = 0; i < Nit; ++i) {
+      void *data = fCollection->GetDataPtr(i);
       nlohmann::json row;
-      for (auto & chld : fChildren)
-      {
-         auto clmn = dynamic_cast<REveDataColumn*>(chld);
+      for (auto &chld : fChildren) {
+         auto clmn = dynamic_cast<REveDataColumn *>(chld);
          row[chld->GetCName()] = clmn->EvalExpr(data);
-         // printf(" %10s |", clmn->EvalExpr(data).c_str());
-
       }
       jarr.push_back(row);
    }
