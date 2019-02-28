@@ -29,7 +29,7 @@ def _add_getitem_checked(klass):
             return o._getitem__unchecked(i)
         else:
             raise IndexError('index out of range')
-    
+
     klass._getitem__unchecked = klass.__getitem__
     klass.__getitem__ = getitem_checked
 
