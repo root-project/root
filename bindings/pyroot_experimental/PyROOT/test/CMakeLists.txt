@@ -45,6 +45,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tclonesarray_itemaccess tclonesarray_itemaccess.p
 
 # TArray and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_len tarray_len.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_getitem tarray_getitem.py)
 
 # TVectorT pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort_len tvectort_len.py)
