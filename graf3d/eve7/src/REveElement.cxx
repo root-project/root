@@ -1242,7 +1242,7 @@ void REveElement::Annihilate()
 
    AnnihilateRecursively();
 
-   // XXXX ????? Anihalate flag ???? Is it different than regular remove ????
+   // XXXX ????? Annihilate flag ???? Is it different than regular remove ????
    // REX::gEve->Redraw3D();
 }
 
@@ -1269,8 +1269,8 @@ void REveElement::Destroy()
    static const REveException eh("REveElement::Destroy ");
 
    if (fDenyDestroy > 0)
-      throw eh + TString::Format("element '%s' (%s*) 0x%lx is protected against destruction.",
-                                 GetCName(), IsA()->GetName(), (ULong_t)this);
+      throw eh + TString::Format("element '%s' (%s*) %p is protected against destruction.",
+                                 GetCName(), IsA()->GetName(), this);
 
    PreDeleteElement();
    delete this;
@@ -1288,7 +1288,7 @@ void REveElement::DestroyOrWarn()
    }
    catch (REveException &exc)
    {
-      Warning("REveElement::DestroyOrWarn", exc.what());
+      ::Warning("REveElement::DestroyOrWarn", "Error while destroy element %p : %s", this, exc.what());
    }
 }
 
@@ -1306,14 +1306,14 @@ void REveElement::DestroyElements()
             c->Destroy();
          }
          catch (REveException &exc) {
-            Warning("REveElement::DestroyElements", "element destruction failed: '%s'.", exc.what());
+            ::Warning("REveElement::DestroyElements", "element destruction failed: '%s'.", exc.what());
             RemoveElement(c);
          }
       }
       else
       {
          if (gDebug > 0)
-            Info("REveElement::DestroyElements", "element '%s' is protected against destruction, removing locally.", c->GetCName());
+           ::Info("REveElement::DestroyElements", "element '%s' is protected against destruction, removing locally.", c->GetCName());
          RemoveElement(c);
       }
    }
