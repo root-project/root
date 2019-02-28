@@ -10,6 +10,8 @@
 
 from ROOT import pythonization
 
+from ._generic import _add_getitem_checked
+
 
 @pythonization()
 def pythonize_tvector3(klass, name):
@@ -20,5 +22,10 @@ def pythonize_tvector3(klass, name):
     if name == 'TVector3':
         # `len(v)` is always 3
         klass.__len__ = lambda _: 3
+
+        # Add checked __getitem__.
+        # Allows to throw pythonic IndexError when index is out of range
+        # and to iterate over the vector.
+        _add_getitem_checked(klass)
 
     return True
