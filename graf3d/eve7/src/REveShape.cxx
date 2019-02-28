@@ -57,7 +57,7 @@ REveShape::~REveShape()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveShape::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
+Int_t REveShape::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 
