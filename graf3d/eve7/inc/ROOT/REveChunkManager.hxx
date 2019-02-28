@@ -70,7 +70,7 @@ public:
 
    struct iterator
    {
-      REveChunkManager *fPlex{nullptr};
+      REveChunkManager &fPlex;
       Char_t           *fCurrent{nullptr};
       Int_t             fAtomIndex{-1};
       Int_t             fNextChunk{0};
@@ -79,11 +79,9 @@ public:
       const std::set<Int_t>           *fSelection{nullptr};
       std::set<Int_t>::const_iterator  fSelectionIterator;
 
-      iterator(REveChunkManager *p) : fPlex(p) {}
+      iterator(REveChunkManager &p) : fPlex(p) {}
 
-      iterator(REveChunkManager &p) : fPlex(&p) {}
-
-      iterator(const iterator &i) :
+/*      iterator(const iterator &i) :
          fPlex(i.fPlex), fCurrent(i.fCurrent), fAtomIndex(i.fAtomIndex),
          fNextChunk(i.fNextChunk), fAtomsToGo(i.fAtomsToGo),
          fSelection(i.fSelection), fSelectionIterator(i.fSelectionIterator) {}
@@ -94,6 +92,7 @@ public:
          fSelection = i.fSelection; fSelectionIterator = i.fSelectionIterator;
          return *this;
       }
+*/
 
       Bool_t  next();
       void    reset() { fCurrent = nullptr; fAtomIndex = -1; fNextChunk = fAtomsToGo = 0; }
