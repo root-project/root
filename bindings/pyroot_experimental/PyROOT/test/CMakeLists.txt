@@ -52,6 +52,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort_getitem tvectort_getitem.py)
 
 # TVector3 pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tvector3_len tvector3_len.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tvector3_getitem tvector3_getitem.py)
 
 # TString pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_len tstring_len.py)
