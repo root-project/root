@@ -726,15 +726,14 @@ Exception handler for Eve exceptions.
 TStdExceptionHandler::EStatus
 REveManager::RExceptionHandler::Handle(std::exception &exc)
 {
-   REveException* ex = dynamic_cast<REveException*>(&exc);
+   REveException *ex = dynamic_cast<REveException *>(&exc);
    if (ex) {
-      Info("REveManager::RExceptionHandler::Handle", ex->what());
+      Info("Handle", "Exception %s", ex->what());
       // REX::gEve->SetStatusLine(ex->Data());
       gSystem->Beep();
       return kSEHandled;
-   } else {
-      return kSEProceed;
    }
+   return kSEProceed;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -748,7 +747,6 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
    {
       fConnList.emplace_back(connid);
       printf("connection established %u\n", connid);
-
 
       // This prepares core and render data buffers.
       printf("\nEVEMNG ............. streaming the world scene.\n");
