@@ -131,8 +131,7 @@ bool REveSelection::AcceptNiece(REveElement* el)
 void REveSelection::AddNieceInternal(REveElement* el)
 {
    auto res = fMap.emplace(el, Record(el));
-   if (fActive)
-   {
+   if (fActive) {
       DoElementSelect(res.first);
       SelectionAdded(el);
    }
@@ -183,13 +182,12 @@ void REveSelection::RemoveNieces()
 /// REveManager::PreDeleteElement() and should not be called
 /// directly.
 
-void REveSelection::RemoveImpliedSelected(REveElement* el)
+void REveSelection::RemoveImpliedSelected(REveElement *el)
 {
-   for (SelMap_i i = fMap.begin(); i != fMap.end(); ++i)
-   {
-      auto j = i->second.f_implied.find(el);
-      if (j != i->second.f_implied.end())
-         i->second.f_implied.erase(j);
+   for (auto &i : fMap) {
+      auto j = i.second.f_implied.find(el);
+      if (j != i.second.f_implied.end())
+         i.second.f_implied.erase(j);
    }
 }
 
@@ -281,8 +279,7 @@ void REveSelection::ActivateSelection()
    if (fActive) return;
 
    fActive = kTRUE;
-   for (auto i = fMap.begin(); i != fMap.end(); ++i)
-   {
+   for (auto i = fMap.begin(); i != fMap.end(); ++i) {
       DoElementSelect(i);
       SelectionAdded(i->first);
    }
@@ -295,8 +292,7 @@ void REveSelection::DeactivateSelection()
 {
    if (!fActive) return;
 
-   for (auto i = fMap.begin(); i != fMap.end(); ++i)
-   {
+   for (auto i = fMap.begin(); i != fMap.end(); ++i) {
       DoElementUnselect(i);
    }
    SelectionCleared();
@@ -506,20 +502,17 @@ int REveSelection::RemoveImpliedSelectedReferencesTo(REveElement *el)
 {
    int count = 0;
 
-   for (SelMap_i i = fMap.begin(); i != fMap.end(); ++i)
-   {
-      auto j = i->second.f_implied.find(el);
+   for (auto &i : fMap) {
+      auto j = i.second.f_implied.find(el);
 
-      if (j != i->second.f_implied.end())
-      {
-         i->second.f_implied.erase(j);
+      if (j != i.second.f_implied.end()) {
+         i.second.f_implied.erase(j);
          ++count;
       }
    }
 
    return count;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write core json. If rnr_offset negative, render data will not be written
