@@ -132,24 +132,24 @@ public:
    REveManager(); // (Bool_t map_window=kTRUE, Option_t* opt="FI");
    virtual ~REveManager();
 
-   RExceptionHandler* GetExcHandler() const { return fExcHandler; }
+   RExceptionHandler *GetExcHandler() const { return fExcHandler; }
 
-   REveSelection*     GetSelection() const { return fSelection; }
-   REveSelection*     GetHighlight() const { return fHighlight; }
+   REveSelection *GetSelection() const { return fSelection; }
+   REveSelection *GetHighlight() const { return fHighlight; }
 
-   REveSceneList*    GetScenes()   const { return fScenes;  }
-   REveViewerList*   GetViewers()  const { return fViewers; }
+   REveSceneList *GetScenes() const { return fScenes; }
+   REveViewerList *GetViewers() const { return fViewers; }
 
-   REveScene*        GetGlobalScene()  const { return fGlobalScene; }
-   REveScene*        GetEventScene()   const { return fEventScene; }
+   REveScene *GetGlobalScene() const { return fGlobalScene; }
+   REveScene *GetEventScene() const { return fEventScene; }
 
-   REveScene*        GetWorld()        const { return fWorld; }
+   REveScene *GetWorld() const { return fWorld; }
 
-   REveViewer*  SpawnNewViewer(const char* name, const char* title="");
-   REveScene*   SpawnNewScene (const char* name, const char* title="");
+   REveViewer *SpawnNewViewer(const char *name, const char *title = "");
+   REveScene *SpawnNewScene(const char *name, const char *title = "");
 
-   TFolder*     GetMacroFolder() const { return fMacroFolder; }
-   TMacro*      GetMacro(const char* name) const;
+   TFolder *GetMacroFolder() const { return fMacroFolder; }
+   TMacro *GetMacro(const char *name) const;
 
    void EditElement(REveElement *element);
 

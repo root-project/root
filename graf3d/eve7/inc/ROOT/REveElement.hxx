@@ -227,8 +227,8 @@ public:
    virtual void AnnihilateElements();
    virtual void Annihilate();
 
-   virtual void ProjectChild(REveElement* el, Bool_t same_depth=kTRUE);
-   virtual void ProjectAllChildren(Bool_t same_depth=kTRUE);
+   virtual void ProjectChild(REveElement *el, Bool_t same_depth = kTRUE);
+   virtual void ProjectAllChildren(Bool_t same_depth = kTRUE);
 
    virtual void Destroy();                      // *MENU*
    virtual void DestroyOrWarn();
