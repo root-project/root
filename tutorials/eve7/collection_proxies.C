@@ -36,6 +36,7 @@
 namespace REX = ROOT::Experimental;
 
 bool gRhoZView = false;
+
 //==============================================================================
 //============== EMULATE FRAMEWORK CLASSES =====================================
 //==============================================================================
@@ -234,9 +235,9 @@ private:
 
    std::vector<REX::REveDataProxyBuilderBase*> m_builders;
    REX::REveScene* m_collections;
-
+   bool m_inEventLoading;
 public:
-   XYManager(Event* event): m_event(event), m_viewContext(0), m_mngRhoZ(0), m_collections(0)
+   XYManager(Event* event): m_event(event), m_viewContext(0), m_mngRhoZ(0), m_collections(0), m_inEventLoading(false)
    {
       //view context
       float r = 300;
@@ -249,7 +250,7 @@ public:
       prop->IncRefCount();
 
       m_viewContext = new REX::REveViewContext();
-       m_viewContext->SetBarrel(r, z);
+      m_viewContext->SetBarrel(r, z);
       m_viewContext->SetTrackPropagator(prop);
 
       // table specs
@@ -343,20 +344,24 @@ public:
                collection->AddItem(l->At(i), pname.Data(), "");
             }
          }
-      }
+         //collections->RefChildren())
+       }
    }
 
    void NextEvent() {
+      m_inEventLoading = true;
       for (auto& el: m_collections->RefChildren())
       {
          REX::REveDataCollection* c = dynamic_cast<REX::REveDataCollection *>(el);
          LoadCurrentEvent(c);
+         c->ApplyFilter();
       }
 
       for (auto proxy : m_builders) {
          // printf("call proxy builder %s \n", proxy->Collection()->GetCName());
          proxy->Build();
       }
+      m_inEventLoading = false;
    }
 
    void addCollection(REX::REveDataCollection* collection)
@@ -384,6 +389,7 @@ public:
       if (1) {
          // Table view types      {
          auto tableBuilder = new REX::REveTableProxyBuilder();
+         tableBuilder->SetHaveAWindow(true);
          tableBuilder->SetCollection(collection);
          REX::REveElement* tablep = tableBuilder->CreateProduct("table-type", m_viewContext);
 
@@ -421,6 +427,8 @@ public:
    }
 
    void ModelChanged(REX::REveDataCollection* collection, const REX::REveDataCollection::Ids_t& ids) {
+      if (m_inEventLoading) return;
+      
       for (auto proxy : m_builders) {
          if (proxy->Collection() == collection) {
             // printf("Model changes check proxy %s: \n", proxy->Type().c_str());
@@ -485,7 +493,7 @@ void collection_proxies(bool proj=true)
    if (1) {
       REX::REveDataCollection* jetCollection = new REX::REveDataCollection("XYJets");
       jetCollection->SetItemClass(XYJet::Class());
-      jetCollection->SetMainColor(kYellow);
+      jetCollection->SetMainColor(kRed);
       xyManager->addCollection(jetCollection);
    }
    xyManager->finishViewCreate();

@@ -13,7 +13,7 @@ void REveTableProxyBuilder::Build(const REveDataCollection* collection, REveElem
    if (collection->GetElementId() != info->GetDisplayedCollection())
       return;
 
-   printf("REveTableProxyBuilder::Build() body for %s (%p, %p)\n",collection->GetCName(), collection, Collection() );
+   // printf("REveTableProxyBuilder::Build() body for %s (%p, %p)\n",collection->GetCName(), collection, Collection() );
    auto table = new REveDataTable("testTable");
    table->SetCollection(collection);
    product->AddElement(table);
@@ -28,15 +28,22 @@ void REveTableProxyBuilder::Build(const REveDataCollection* collection, REveElem
       c->SetPrecision(spec.fPrecision);
    }
 
-   m_table = table;
+   fTable = table;
+}
+
+void REveTableProxyBuilder::CleanLocal()
+{
+   // all product elements are destroyed in Clean(), here is just a reset of cached variable
+   fTable = 0;
 }
 
 void REveTableProxyBuilder::ModelChanges(const REveDataCollection::Ids_t&, REveDataProxyBuilderBase::Product*)
 {
-   m_table->StampObjProps();
+   // printf("REveTableProxyBuilder::ModelChanges\n");
+   if (fTable) fTable->StampObjProps();
 }
 
-void REveTableProxyBuilder::DisplayedCollectionChanged(ElementId_t id) {
-   printf("displayed collection changed %d (%p) \n", id, Collection());
+void REveTableProxyBuilder::DisplayedCollectionChanged(ElementId_t /*id*/) {
+   // printf("displayed collection changed %d (%p) \n", id, Collection());
    Build();
 }

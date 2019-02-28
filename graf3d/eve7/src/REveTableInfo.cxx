@@ -18,8 +18,10 @@ using namespace ROOT::Experimental;
 void REveTableViewInfo::SetDisplayedCollection(ElementId_t collectionId)
 {
     fDisplayedCollection = collectionId;
+
     for (auto &it : fDelegates)
        it(collectionId);
+    StampObjProps();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

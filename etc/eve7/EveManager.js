@@ -387,6 +387,7 @@
          if (n < nModified )
          {
             var obj = this.map[em.fElementId];
+            if(!obj) {console.log("ERRROR can't find element in map ", em); continue;}
             var tag = "changeBit";
             if (em.changeBit & this.EChangeBits.kCBVisibility)
             {
@@ -396,6 +397,7 @@
                }
                if (obj.fRnrChildren != em.fRnrChildren) {
                   obj.fRnrChildren = em.fRnrChildren;
+                  console.log("xxxdxx visibility children");
                   tag = "visibilityChildrenChanged";
                }
             }

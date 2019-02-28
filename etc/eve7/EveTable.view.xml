@@ -13,7 +13,6 @@
         <layout:VerticalLayout>
           <m:Label text="Choose Collection:" />
 	  <m:ComboBox id="ccombo" change="collectionChanged"
-                                enabled="false"
 				items="{
 				       path: 'collections>/itemx'
 				}">

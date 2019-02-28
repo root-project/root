@@ -125,15 +125,16 @@ void REveDataProxyBuilderBase::Build()
                       // reused projected holder
                      if (cnt < oldSize)
                      {
+                        /*
+                        // AMT no use case for this at the moment
                         if ((*parentIt)->NumChildren()) {
                             // update projected (mislleading name)
-                           for ( auto &pci: (*parentIt)->RefChildren())
-                               pmgr->ProjectChildrenRecurse(pci /* *parentIt */);  // SL: was *parentIt here, seems to be wrong
+                           for ( REveElement::List_i pci = (*parentIt)->BeginChildren(); pci != (*parentIt)->EndChildren(); pci++)
+                               pmgr->ProjectChildrenRecurse(*pci);
                         }
-                        else {
-                            // import projectable
-                           pmgr->SubImportChildren(prod, *parentIt);
-                        }
+                        */
+                        // import projectable
+                        pmgr->SubImportChildren(prod, *parentIt);
 
                         ++parentIt;
                      }
@@ -221,21 +222,20 @@ REveDataProxyBuilderBase::CreateProduct( std::string viewType, const REveViewCon
 }
 
 //______________________________________________________________________________
-
-//namespace {
-//   void applyVisAttrToChildren(REveElement* p) {
-//      for (auto &c: p->RefChildren())
-//      {
-//         if (c->GetMainColor() != p->GetMainColor())
-//         {
-//            c->SetMainColor(p->GetMainColor());
-//            printf("apply color %d to %s\n", p->GetMainColor(), c->GetCName());
-//         }
-//         c->SetRnrSelf(p->GetRnrSelf());
-//         applyVisAttrToChildren(c);
-//      }
-//   }
-//}
+namespace {
+   void applyColorAttrToChildren(REveElement* p) {
+      for (auto &it: p->RefChildren())
+      {
+         REveElement* c = it;
+         if (c->GetMainColor() != p->GetMainColor())
+         {
+            c->SetMainColor(p->GetMainColor());
+            // printf("apply color %d to %s\n", p->GetMainColor(), c->GetCName());
+         }
+         applyColorAttrToChildren(c);
+      }
+   }
+}
 
 void
 REveDataProxyBuilderBase::ModelChanges(const REveDataCollection::Ids_t& iIds, Product* p)
@@ -252,12 +252,13 @@ REveDataProxyBuilderBase::ModelChanges(const REveDataCollection::Ids_t& iIds, Pr
       // imitate FWInteractionList::modelChanges
       auto itElement = elms->RefChildren().begin();
       std::advance(itElement, itemIdx);
-      auto comp = *itElement;
-      comp->SetMainColor(item->GetMainColor());
-      comp->SetRnrSelf(item->GetRnrSelf());
+      REveElement* comp = *itElement;
+      bool visible = (!item->GetFiltered()) && item->GetRnrSelf();
+      comp->SetRnrSelf(visible);
+      comp->SetRnrChildren(visible);
 
-      // AMT temporary workaround for use of compunds
-      // applyVisAttrToChildren(comp);
+      if (item->GetMainColor() != comp->GetMainColor()) comp->SetMainColor(item->GetMainColor());
+      applyColorAttrToChildren(comp);
 
       if (VisibilityModelChanges(itemIdx, comp, p->m_viewContext)) {
          elms->ProjectChild(comp);
