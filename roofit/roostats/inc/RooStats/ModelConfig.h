@@ -300,7 +300,7 @@ protected:
 
    std::string fObservablesName; /// name for RooArgSet specifying observable parameters.
 
-   ClassDefOverride(ModelConfig,4) /// A class that holds configuration information for a model using a workspace as a store
+   ClassDefOverride(ModelConfig,5) /// A class that holds configuration information for a model using a workspace as a store
 
 };
 
