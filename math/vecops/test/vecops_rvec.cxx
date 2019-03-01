@@ -106,7 +106,6 @@ TEST(VecOps, MoveCtor)
 {
    ROOT::VecOps::RVec<int> v1{1, 2, 3};
    ROOT::VecOps::RVec<int> v2(std::move(v1));
-   EXPECT_EQ(v1.size(), 0u);
    EXPECT_EQ(v2.size(), 3u);
 }
 
@@ -772,7 +771,7 @@ TEST(VecOps, CombinationsTwoVectors)
    CheckEqual(idx2[1], empty_size);
 }
 
-TEST(VecOps, UnqiueCombinationsSingleVector)
+TEST(VecOps, UniqueCombinationsSingleVector)
 {
    // Doubles: x + y
    ROOT::VecOps::RVec<int> v1{1, 2, 3};
