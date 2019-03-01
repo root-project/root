@@ -1,8 +1,9 @@
-sap.ui.define(['sap/ui/core/mvc/Controller',
+sap.ui.define(['sap/ui/core/Component',
+               'sap/ui/core/mvc/Controller',
                'sap/ui/layout/Splitter',
                'sap/ui/layout/SplitterLayoutData',
                'rootui5/eve7/lib/EveManager'
-], function(Controller, Splitter, SplitterLayoutData, EveManager) {
+], function(Component, Controller, Splitter, SplitterLayoutData, EveManager) {
 
    "use strict";
 
@@ -13,11 +14,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.mgr = new EveManager();
 
-         this.mgr.UseConnection(this.getView().getViewData().conn_handle);
+         var conn_handle = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
+         this.mgr.UseConnection(conn_handle);
+         // this.mgr.UseConnection(this.getView().getViewData().conn_handle);
 
          // method to found summary controller by ID and set manager to it
          var elem = this.byId("Summary");
-         var ctrl = sap.ui.getCore().byId(elem.getId()).getController();
+         var ctrl = elem.getController();
          ctrl.SetMgr(this.mgr);
 
          this.mgr.RegisterUpdate(this, "onManagerUpdate");
