@@ -466,8 +466,6 @@ sap.ui.define([
       }
    }
    
-   JSROOT.EVE.EveScene = EveScene;
-
    return EveScene;
 
 });
