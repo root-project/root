@@ -5,9 +5,9 @@
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
       <title>Eve7</title>
       <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
-      <script type="text/javascript" src="evedir/Colors.js"></script>
+      <!-- script type="text/javascript" src="evedir/Colors.js"></script-->
       <!-- script type="text/javascript" src="evedir/EveManager.js"></script-->
-      <link rel="stylesheet" type="text/css" href="evedir/eve.css"/>
+      <!-- link rel="stylesheet" type="text/css" href="evedir/eve.css"/-->
       <style>
          html { height: 100%; }
          body { min-height: 100%; margin: 0; overflow: hidden }
@@ -30,24 +30,26 @@
 
       <script type='text/javascript'>
 
-        var evedir = JSROOT.source_dir.replace(/jsrootsys/g, "evedir");
+        // var evedir = 
+        
+        var evedir = JSROOT.source_dir.replace(/jsrootsys/g, "rootui5sys/eve7");
 
         function InitUI(handle) {
 
-           jQuery.sap.registerModulePath("eve", evedir);
+           // jQuery.sap.registerModulePath("eve", evedir);
 
            var kind = JSROOT.GetUrlOption('view');
 
            if (!kind) {
               new JSROOT.sap.ui.xmlview({
                   id: "TopEveId",
-                  viewName: "eve.Main",
+                  viewName: "rootui5.eve7.view.Main",
                   viewData: { conn_handle: handle }
               }).placeAt("EveDiv");
            } else {
               new JSROOT.sap.ui.xmlview({
                  id: "TopGlId",
-                 viewName: "eve.GL",
+                 viewName: "rootui5.eve7.view.GL",
                  viewData: { conn_handle: handle, standalone: kind }
              }).placeAt("EveDiv");
            }
@@ -57,7 +59,7 @@
         if (JSROOT.GetUrlOption('libs')!==null) JSROOT.use_full_libs = true;
 
         JSROOT.ConnectWebWindow({
-           prereq: "openui5;user:" + evedir + "EveManager.js",
+           prereq: "openui5;user:" + evedir + "lib/EveManager.js",
 //           openui5src: "jsroot",    // use JSROOT provided package, experimental
            openui5src: "https://openui5.hana.ondemand.com/",
            openui5libs: "sap.m, sap.ui.layout, sap.ui.table, sap.ui.commons", // customize openui5 libs

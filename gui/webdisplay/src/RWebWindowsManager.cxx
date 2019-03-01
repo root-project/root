@@ -185,7 +185,9 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
          ui5dir = ".";
       }
 
-      fServer->AddLocation("ui5rootsys/", ui5dir);
+      printf("Assign UI5 dir %s\n", ui5dir.Data());
+
+      fServer->AddLocation("rootui5sys/", ui5dir);
    }
 
    if (!with_http || !fAddr.empty())

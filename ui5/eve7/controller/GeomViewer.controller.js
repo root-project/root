@@ -10,7 +10,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
    "use strict";
    
-   CoreControl.extend("eve.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
+   CoreControl.extend("rootui5.eve7.controller.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
 
       // the control API:
       metadata : {
@@ -98,7 +98,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       }
    });
 
-   return Controller.extend("eve.GeomViewer", {
+   return Controller.extend("rootui5.eve7.controller.GeomViewer", {
       onInit: function () {
          
          this.websocket = this.getView().getViewData().conn_handle;

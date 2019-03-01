@@ -10,7 +10,7 @@ sap.ui.define([
 
    "use strict";
 
-   return Controller.extend("eve.EveTable", {
+   return Controller.extend("rootui5.eve7.controller.EveTable", {
 
       onInit : function() {
          var data = this.getView().getViewData();

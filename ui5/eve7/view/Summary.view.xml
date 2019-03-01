@@ -1,5 +1,5 @@
 <mvc:View
-    controllerName="eve.Summary"
+    controllerName="rootui5.eve7.controller.Summary"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns:core="sap.ui.core"
     xmlns:form="sap.ui.layout.form"

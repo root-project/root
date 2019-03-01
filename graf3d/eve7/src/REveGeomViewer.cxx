@@ -20,20 +20,13 @@
 #include "TBufferJSON.h"
 #include "TGeoManager.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr)
 {
-
-   TString evedir = TString::Format("%s/eve7", TROOT::GetEtcDir().Data());
-
-   if (gSystem->ExpandPathName(evedir)) {
-      R__WARNING_HERE("webeve") << "Problems resolve path " << evedir << " for HTML sources";
-      evedir = ".";
-   }
-
    fWebWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
-
-   fWebWindow->GetServer()->AddLocation("/evedir/",  evedir.Data());
-   fWebWindow->SetDefaultPage(Form("file:%s/geom.html", evedir.Data()));
+   fWebWindow->SetDefaultPage(Form("file:%s/ui5/eve7/geom.html", TROOT::GetDataDir().Data()));
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->WebWindowCallback(connid, arg); });

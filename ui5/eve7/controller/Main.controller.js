@@ -5,7 +5,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
    "use strict";
 
-   return Controller.extend("eve.Main", {
+   return Controller.extend("rootui5.eve7.controller.Main", {
       onInit: function () {
 
          console.log('MAIN CONTROLLER INIT');
@@ -78,8 +78,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             if ((count == 1) && (total_count>1))
                oLd = new SplitterLayoutData({resizable: true, size: "50%"});
 
-            var vtype = "eve.GL";
-            if (elem.fName === "Table") vtype = "eve.EveTable"; // AMT temporary solution
+            var vtype = "rootui5.eve7.view.GL";
+            if (elem.fName === "Table") vtype = "rootui5.eve7.view.EveTable"; // AMT temporary solution
 
             var view = new JSROOT.sap.ui.xmlview({
                id: viewid,
