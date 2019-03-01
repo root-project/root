@@ -51,8 +51,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          var need_geom = false, staged = [];
          for (var n=0;n<viewers.length;++n) {
             var elem = viewers[n];
-            if (elem.$view_created || elem.$view_staged) continue;
-            if (elem.fRnrSelf) {
+            if (!elem.$view_created && elem.fRnrSelf) {
                staged.push(elem);
                if (viewers[n].fName != "Table") need_geom = true;
             }
@@ -67,22 +66,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          console.log("FOUND viewers", viewers.length, "not yet exists", staged.length);
 
-         for (var n=0;n<staged.length;++n)
-            staged[n].$view_staged = true; // mark view which will be created in this loop, do we need this??
-         
          var main = this, vv = null, count = 0, sv = this.getView().byId("MainAreaSplitter");
 
          for (var n=0;n<staged.length;++n) {
             var elem = staged[n];
-            console.log("ELEMENT", elem.fName);
             var viewid = "EveViewer" + elem.fElementId;
 
             // create missing view
             elem.$view_created = true;
-            delete elem.$view_staged;
-
             console.log("Creating view", viewid);
-
             count++;
 
             var oLd = undefined;
