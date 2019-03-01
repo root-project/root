@@ -257,6 +257,10 @@ Browser.ExpandDirectories    yes
 # Start URL for the TRootBrowser embedded HTML renderer
 Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 
+# THttpServer specific settings 
+# location of JavaScript ROOT sources
+#HttpServ.JSRootPath:        @jsrootdir@
+
 # WebGui specific settings (defaults are shown)
 # fixed http port number for server, 0 - not fixed, -1 - disabled completely
 WebGui.HttpPort:            0
@@ -277,6 +281,9 @@ WebGui.Chrome:             @chromeexe@
 WebGui.Firefox:            @firefoxexe@
 # http port number for headless (batch) chrome on Windows
 WebGui.HeadlessPort:        9222
+# location of OpenUi5 applications for ROOT like canvas, eve, fitpanel, ... 
+#WebGui.Openui5Path:        @openui5dir@
+
 
 # OpenGL options (defaults are shown)
 # Default user interaction model for 3D view manipulation assumes that user
