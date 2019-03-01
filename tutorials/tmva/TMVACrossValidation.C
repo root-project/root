@@ -85,8 +85,6 @@ TTree *genTree(Int_t nPoints, Double_t offset, Double_t scale, UInt_t seed = 100
    TTree *data = new TTree();
    data->Branch("x", &x, "x/F");
    data->Branch("y", &y, "y/F");
-
-   // EventID's can be large, set branch type to unsigned long
    data->Branch("eventID", &eventID, "eventID/I");
 
    for (Int_t n = 0; n < nPoints; ++n) {
