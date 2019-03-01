@@ -76,6 +76,14 @@ The methods could be replaced by equivalent methods with other signature:
   - PyROOT: add `AsRNode` helper function to convert RDF nodes to the common RNode type
   - PyROOT: add `AsNumpy` method to export contents of a RDataFrame as a dictionary of numpy arrays
 
+### TLeafF16 and TLeafD32
+  - New leaf classes allowing to store Float and Double values using the truncation methods from TBuffer 
+    (See for example `TBuffer::WriteDouble32`)
+  - The new types can be specified using the type characters 'f' (Float16_t) and 'd' (Double32_t)
+  - It is also possible to specify a range and a number of bits to be stored using the syntax from `TStreamerElement::GetRange`.
+    Therefore the range and bits specifier has to be attached to the type character.
+  - All functionalities of the other datatypes have been reimplemented.
+  - The documentation of `TTree` and `TBuffer` has been updated accordingly.
 
 ## Histogram Libraries
 
