@@ -8,7 +8,7 @@ sap.ui.define([
 
    var direct_threejs = false;
 
-   return Controller.extend("eve.GL", {
+   return Controller.extend("rootui5.eve7.controller.GL", {
 
       onInit : function()
       {

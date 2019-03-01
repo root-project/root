@@ -1,5 +1,5 @@
 <core:View
-   controllerName="eve.EveTable"
+   controllerName="rootui5.eve7.controller.EveTable"
    xmlns:core="sap.ui.core"
    xmlns="sap.uxap"
    xmlns:layout="sap.ui.layout"
