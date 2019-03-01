@@ -1,17 +1,11 @@
 /// @file EveScene.js
 
-(function( factory ) {
-   if ( typeof define === "function" && define.amd ) {
-      define( ['JSRootCore'], factory );
-   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
-      factory(require("./JSRootCore.js"));
-   } else {
-      if (typeof JSROOT == 'undefined')
-        throw new Error('JSROOT is not defined', 'EveScene.js');
+// TODO: add dependency from JSROOT components
 
-      factory(JSROOT);
-   }
-} (function(JSROOT) {
+sap.ui.define([
+    'rootui5/eve7/lib/EveManager',
+    'rootui5/eve7/lib/EveElements'
+], function(EveManager, EveElements) {
 
    "use strict";
 
@@ -23,7 +17,7 @@
       this.scene   = scene;
       this.id      = scene.fSceneId;
       this.viewer  = viewer;
-      this.creator = new JSROOT.EVE.EveElements();
+      this.creator = new EveElements();
       this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
       this.id2obj_map  = {}; // base on element id
       this.mid2obj_map = {}; // base on master id
@@ -474,6 +468,6 @@
    
    JSROOT.EVE.EveScene = EveScene;
 
-   return JSROOT;
+   return EveScene;
 
-}));
+});

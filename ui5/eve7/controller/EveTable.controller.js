@@ -89,7 +89,7 @@ sap.ui.define([
          }
 
          // table model
-         var oModel = new sap.ui.model.json.JSONModel();
+         var oModel = new JSONModel();
          oModel.setData({
             rows: rowData,
             columns: columnData
@@ -115,7 +115,7 @@ sap.ui.define([
 
       buildTableHeader: function()
       {
-         var oModel = new sap.ui.model.json.JSONModel();
+         var oModel = new JSONModel();
          var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
          var clist = this.mgr.GetElement(collection.fMotherId);
          // console.log("collection list ", clist);
@@ -184,7 +184,7 @@ sap.ui.define([
             // expression row
             {
                var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
-               var oModel = new sap.ui.model.json.JSONModel();
+               var oModel = new JSONModel();
                oModel.setData(collection.publicFunction);
                // oModel.setData(aData);
                this.getView().setModel(oModel);
