@@ -71,6 +71,9 @@ public:
    /// Used by the webcanvas
    virtual TString GetDefaultPageContent() { return ""; }
 
+   /// If returns kTRUE, allows to serve files from subdirectories where page content is situated
+   virtual Bool_t CanServeFiles() const { return kFALSE; }
+
    /// Allow processing of WS requests in arbitrary thread
    virtual Bool_t AllowMTProcess() const { return kFALSE; }
 
