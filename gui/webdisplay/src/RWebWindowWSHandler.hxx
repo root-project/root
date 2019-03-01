@@ -48,6 +48,9 @@ public:
    /// THttpWSHandler interface
    TString GetDefaultPageContent() override { return IsDisabled() ? "" : fWindow.fDefaultPage.c_str(); }
 
+   /// returns true when window allowed to serve files relative to default page
+   Bool_t CanServeFiles() const override { return !IsDisabled(); }
+
    /// Process websocket request - called from THttpServer thread
    /// THttpWSHandler interface
    Bool_t ProcessWS(THttpCallArg *arg) override { return arg && !IsDisabled() ? fWindow.ProcessWS(*arg) : kFALSE; }
