@@ -1,32 +1,15 @@
-sap.ui.define(['sap/ui/core/UIComponent'],
-   function(UIComponent) {
+sap.ui.define([
+   'sap/ui/core/UIComponent', 'sap/ui/core/mvc/XMLView', 'sap/m/routing/Router' /* Router is only needed for packaging */
+], function(UIComponent, XMLView) {
    "use strict";
 
    var Component = UIComponent.extend("eve.Component", {
-
       metadata : {
-         rootView : "eve.Main",
-         dependencies : {
-            libs : [
-               "sap.ui.commons",
-               "sap.ui.layout"
-            ]
-         },
-         config : {
-            sample : {
-               files : [
-                  "Main.view.xml",
-                  "Main.controller.js",
-                  "GL.view.xml",
-                  "GL.controller.js",
-                  "Summary.view.xml",
-                  "Summary.controller.js"
-               ]
-            }
-         }
+         manifest: "json"
       },
-
-      onAfterRendering : function() {
+      init: function() {
+         UIComponent.prototype.init.apply(this, arguments);
+         this.getRouter().initialize();
       }
    });
 

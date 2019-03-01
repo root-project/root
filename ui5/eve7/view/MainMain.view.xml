@@ -1,0 +1,6 @@
+<mvc:View height="100%" class="sapUiSizeCompact"
+   xmlns:mvc="sap.ui.core.mvc"
+   xmlns="sap.m">
+   <App id="myApp"></App>
+</mvc:View>
+
