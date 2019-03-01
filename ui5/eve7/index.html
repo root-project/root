@@ -49,9 +49,12 @@
 
         if (JSROOT.GetUrlOption('nogl')!==null) JSROOT.gStyle.NoWebGL = true;
         if (JSROOT.GetUrlOption('libs')!==null) JSROOT.use_full_libs = true;
+        
+        var jsroot_prereq = "openui5";
+        if (JSROOT.GetUrlOption('view')) jsroot_prereq += ";geom";
 
         JSROOT.ConnectWebWindow({
-           prereq: "openui5",
+           prereq: jsroot_prereq,
 //           openui5src: "jsroot",    // use JSROOT provided package, experimental
            openui5src: "https://openui5.hana.ondemand.com/",
            openui5libs: "sap.m, sap.ui.layout, sap.ui.table, sap.ui.commons", // customize openui5 libs
