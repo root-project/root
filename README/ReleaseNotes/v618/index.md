@@ -84,6 +84,21 @@ The methods could be replaced by equivalent methods with other signature:
     Therefore the range and bits specifier has to be attached to the type character.
   - All functionalities of the other datatypes have been reimplemented.
   - The documentation of `TTree` and `TBuffer` has been updated accordingly.
+  - The following exmple shows how to use the new features:
+~~~ {.cpp}
+      {
+         Float16_t  floatVal;
+         Float16_t  floatArray[7];
+         Double32_t doubleVal;
+         Double32_t doubleArray[5];
+
+         TTree *tree = new TTree("tree", "An example tree using the new data types");
+         tree->Branch("floatVal",   &floatVal,    "floatVal/f");               // Float16_t value with default settings
+         tree->Branch("floatArray",  floatArray,  "floatArray[7]/f[0,100]");   // Float16_t array with range from 0 to 100
+         tree->Branch("doubleVal",  &doubleVal,   "doubleVal/d[0,1000,20]");   // Double32_t value with range from 0 to 1000 and 20 bits
+         tree->Branch("doubleArray", doubleArray, "doubleArray[5]/d[0,0,18]"); // Double32_t array without range and 18 bits
+      }
+~~~  
 
 ## Histogram Libraries
 
