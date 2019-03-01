@@ -38,6 +38,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <sstream>
+#include <iostream>
 
 TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
    : TCanvasImp(c, name, x, y, width, height)
@@ -746,14 +748,11 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
          TObject *obj = FindPrimitive(sid.Data());
          if (obj && (buf.Length() > 0)) {
-            TString exec;
-#ifdef _MSC_VER
-            exec.Form("((%s*) 0x%p)->%s;", obj->ClassName(), obj, buf.Data());
-#else
-            exec.Form("((%s*) %p)->%s;", obj->ClassName(), obj, buf.Data());
-#endif
-            Info("ProcessWS", "Obj %s Execute %s", obj->GetName(), exec.Data());
-            gROOT->ProcessLine(exec);
+            std::stringstream exec;
+            exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj
+                 << ")->" << buf.Data() << ";";
+            Info("ProcessWS", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
+            gROOT->ProcessLine(exec.str().c_str());
 
             // PerformUpdate(); // check that canvas was changed
             if (IsAnyPadModified(Canvas()))
@@ -781,16 +780,13 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       }
 
       if (obj && (buf.Length() > 0) && (reply.Length() > 0)) {
-         TString exec;
-#ifdef _MSC_VER
-         exec.Form("((%s*) 0x%p)->%s;", obj->ClassName(), obj, buf.Data());
-#else
-         exec.Form("((%s*) %p)->%s;", obj->ClassName(), obj, buf.Data());
-#endif
+         std::stringstream exec;
+         exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj
+              << ")->" << buf.Data() << ";";
          if (gDebug > 1)
-            Info("ProcessData", "Obj %s Exec %s", obj->GetName(), exec.Data());
+            Info("ProcessData", "Obj %s Exec %s", obj->GetName(), exec.str().c_str());
 
-         Long_t res = gROOT->ProcessLine(exec);
+         Long_t res = gROOT->ProcessLine(exec.str().c_str());
          TObject *resobj = (TObject *)res;
          if (resobj) {
             conn->fSend = reply.Data();

@@ -23,6 +23,8 @@
 #include "TString.h"
 #include "TROOT.h"
 #include "TBufferJSON.h"
+#include <sstream>
+#include <iostream>
 
 /** \class ROOT::Experimental::RFitPanel
 \ingroup webdisplay
@@ -103,14 +105,11 @@ void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::stri
    }
 
    if (arg.find("DOFIT:") == 0) {
-      TString exec;
-#ifdef _MSC_VER
-      exec.Form("((ROOT::Experimental::RFitPanel *) 0x%p)->DoFit(%s);", this, arg.c_str() + 6);
-#else
-      exec.Form("((ROOT::Experimental::RFitPanel *) %p)->DoFit(%s);", this, arg.c_str() + 6);
-#endif
-      printf("Execute %s\n", exec.Data());
-      gROOT->ProcessLine(exec.Data());
+      std::stringstream exec;
+      exec << "((ROOT::Experimental::RFitPanel *) " << std::hex << std::showbase << (size_t)this
+           << ")->DoFit(" << arg.c_str() + 6 << ");";
+      std::cout << "Execute " << exec.str() << std::endl;
+      gROOT->ProcessLine(exec.str().c_str());
       return;
    }
 }

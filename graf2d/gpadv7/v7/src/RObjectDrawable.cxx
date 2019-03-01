@@ -24,6 +24,8 @@
 #include "TROOT.h"
 
 #include <exception>
+#include <sstream>
+#include <iostream>
 
 void ROOT::Experimental::RObjectDrawable::Paint(Internal::RPadPainter &pad)
 {
@@ -42,12 +44,8 @@ void ROOT::Experimental::RObjectDrawable::Execute(const std::string &exec)
 {
    TObject *obj = fObj.get();
 
-   TString cmd;
-#ifdef _MSC_VER
-   cmd.Form("((%s*) 0x%p)->%s;", obj->ClassName(), obj, exec.c_str());
-#else
-   cmd.Form("((%s*) %p)->%s;", obj->ClassName(), obj, exec.c_str());
-#endif
-   printf("RObjectDrawable::Execute Obj %s Cmd %s\n", obj->GetName(), cmd.Data());
-   gROOT->ProcessLine(cmd);
+   std::stringstream cmd;
+   cmd << "((" << obj->ClassName() << "* ) " << std::hex << std::showbase << (size_t)obj << ")->" << exec << ";";
+   std::cout << "RObjectDrawable::Execute Obj " <<  obj->GetName() << "Cmd " << cmd.str() << std::endl;;
+   gROOT->ProcessLine(cmd.str().c_str());
 }
