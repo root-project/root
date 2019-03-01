@@ -1,8 +1,11 @@
 sap.ui.define([
    'sap/ui/core/mvc/Controller',
    'sap/ui/model/json/JSONModel',
-   "sap/ui/core/ResizeHandler"
-], function (Controller, JSONModel, ResizeHandler) {
+   "sap/ui/core/ResizeHandler",
+   'rootui5/eve7/lib/EveManager',
+   'rootui5/eve7/lib/EveElements',
+   'rootui5/eve7/lib/EveScene'
+], function (Controller, JSONModel, ResizeHandler, EveElements, EveScene) {
 
    "use strict";
 
@@ -20,7 +23,7 @@ sap.ui.define([
 
          if (data.standalone && data.conn_handle)
          {
-            this.mgr = new JSROOT.EVE.EveManager();
+            this.mgr = new EveManager();
             this.mgr.UseConnection(data.conn_handle);
             this.standalone = data.standalone;
             this.mgr.RegisterUpdate(this, "onManagerUpdate");
@@ -40,8 +43,7 @@ sap.ui.define([
          this.geo_painter = null;
          // this.painter_ready = false;
 
-         JSROOT.AssertPrerequisites("geom;user:evedir/EveElements.js;evedir/EveScene.js", this.onLoadScripts.bind(this));
-
+         JSROOT.AssertPrerequisites("geom", this.onLoadScripts.bind(this));
       },
 
       // MT-HAKA
@@ -225,7 +227,7 @@ sap.ui.define([
          {
             var scene = element.childs[k];
 
-            var handler = new JSROOT.EVE.EveScene(this.mgr, scene, this);
+            var handler = new EveScene(this.mgr, scene, this);
 
             this.created_scenes.push(handler);
             this.mgr.addSceneHandler(handler);

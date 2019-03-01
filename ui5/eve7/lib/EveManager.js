@@ -1,17 +1,9 @@
 /// @file EveManager.js
+/// used only together with OpenUI5
 
-(function( factory ) {
-   if ( typeof define === "function" && define.amd ) {
-      define( ['JSRootCore'], factory );
-   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
-      factory(require("./JSRootCore.js"));
-   } else {
-      if (typeof JSROOT == 'undefined')
-        throw new Error('JSROOT is not defined', 'EveManager.js');
+// TODO: add dependency from JSROOT components
 
-      factory(JSROOT);
-   }
-} (function(JSROOT) {
+sap.ui.define([], function() {
 
    "use strict";
 
@@ -607,9 +599,9 @@
 
    JSROOT.EVE.EveManager = EveManager;
 
-   return JSROOT;
+   return EveManager;
 
-}));
+});
 
 // Matevz's notes ... here for lack of better ideas.
 //

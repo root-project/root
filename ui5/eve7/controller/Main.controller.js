@@ -1,7 +1,8 @@
 sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/layout/Splitter',
-               'sap/ui/layout/SplitterLayoutData'
-],function(Controller, Splitter, SplitterLayoutData) {
+               'sap/ui/layout/SplitterLayoutData',
+               'rootui5/eve7/lib/EveManager'
+], function(Controller, Splitter, SplitterLayoutData, EveManager) {
 
    "use strict";
 
@@ -10,7 +11,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          console.log('MAIN CONTROLLER INIT');
 
-         this.mgr = new JSROOT.EVE.EveManager();
+         this.mgr = new EveManager();
 
          this.mgr.UseConnection(this.getView().getViewData().conn_handle);
 
