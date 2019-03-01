@@ -54,16 +54,19 @@
       painter.SetDivId(divid);
 
       painter.Draw = function(lst) {
-         if (lst == null) return;
+         if (!lst) return;
 
-         var frame = d3.select("#" + this.divid);
+         var frame = this.select_main();
 
          var main = frame.select("div");
-         if (main.empty())
+         if (main.empty()) {
             main = frame.append("div")
                         .style('max-width','100%')
                         .style('max-height','100%')
                         .style('overflow','auto');
+            // (re) set painter to first child element
+            this.SetDivId(this.divid);
+         }
 
          var old = main.selectAll("pre");
          var newsize = old.size() + lst.arr.length - 1;
@@ -74,9 +77,6 @@
 
          for (var i=lst.arr.length-1;i>0;i--)
             main.append("pre").style('margin','2px').html(lst.arr[i].fString);
-
-         // (re) set painter to first child element
-         this.SetDivId(this.divid);
       }
 
       painter.RedrawObject = function(obj) {
