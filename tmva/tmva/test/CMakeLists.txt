@@ -16,6 +16,9 @@ include_directories(${ROOT_INCLUDE_DIRS})
 ROOT_ADD_GTEST(TestRandomGenerator
                TestRandomGenerator.cxx
                LIBRARIES ${Libraries})
+ROOT_ADD_GTEST(TestOptimizeConfigParameters
+               TestOptimizeConfigParameters.cxx
+               LIBRARIES ${Libraries})
 
 if(dataframe)
     # RTensor
