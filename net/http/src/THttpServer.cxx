@@ -430,7 +430,8 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 
 void THttpServer::CreateServerThread()
 {
-   if (fOwnThread) return;
+   if (fOwnThread)
+      return;
 
    SetTimer(0);
    fMainThrdId = 0;
@@ -460,7 +461,8 @@ void THttpServer::CreateServerThread()
 
 void THttpServer::StopServerThread()
 {
-   if (!fOwnThread) return;
+   if (!fOwnThread)
+      return;
 
    fOwnThread = false;
    fThrd.join();
@@ -571,7 +573,6 @@ Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg)
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Submit http request, specified in THttpCallArg structure
 /// Contrary to ExecuteHttp, it will not block calling thread.
@@ -608,7 +609,6 @@ Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run
 /// gSystem->ProcessEvents() is called.
 /// User can call serv->ProcessRequests() directly, but only from main thread.
 /// If special server thread is created, called from that thread
-
 
 Int_t THttpServer::ProcessRequests()
 {
@@ -851,7 +851,45 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       return;
    }
 
+   // check if websocket handler may serve file request
+   if (!arg->fPathName.IsNull() && !arg->fFileName.IsNull()) {
+      TString wsname = arg->fPathName, fname;
+      auto pos = wsname.First('/');
+      if (pos == kNPOS) {
+         wsname = arg->fPathName;
+      } else {
+         wsname = arg->fPathName(0, pos);
+         fname = arg->fPathName(pos + 1, arg->fPathName.Length() - pos);
+         fname.Append("/");
+      }
+
+      fname.Append(arg->fFileName);
+
+      if (VerifyFilePath(fname.Data())) {
+
+         auto ws = FindWS(wsname.Data());
+
+         if (ws && ws->CanServeFiles()) {
+            TString fdir = ws->GetDefaultPageContent();
+            // only when file is specified, can take directory, append prefix and file name
+            if (fdir.Index("file:") == 0) {
+               fdir.Remove(0, 5);
+               auto separ = fdir.Last('/');
+               if (separ != kNPOS)
+                  fdir.Resize(separ + 1);
+               else
+                  fdir = "./";
+
+               fdir.Append(fname);
+               arg->SetFile(fdir);
+               return;
+            }
+         }
+      }
+   }
+
    filename = arg->fFileName;
+
    Bool_t iszip = kFALSE;
    if (filename.EndsWith(".gz")) {
       filename.Resize(filename.Length() - 3);
@@ -974,9 +1012,9 @@ void THttpServer::UnregisterWS(std::shared_ptr<THttpWSHandler> ws)
 std::shared_ptr<THttpWSHandler> THttpServer::FindWS(const char *name)
 {
    std::lock_guard<std::mutex> grd(fWSMutex);
-   for (int n = 0; n < (int)fWSHandlers.size(); ++n) {
-      if (strcmp(name, fWSHandlers[n]->GetName()) == 0)
-         return fWSHandlers[n];
+   for (auto &ws : fWSHandlers) {
+      if (strcmp(name, ws->GetName()) == 0)
+         return ws;
    }
 
    return nullptr;
@@ -1003,7 +1041,8 @@ Bool_t THttpServer::ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t externa
       std::unique_lock<std::mutex> lk(fMutex);
       fArgs.push(arg);
       // and now wait until request is processed
-      if (wait_process) arg->fCond.wait(lk);
+      if (wait_process)
+         arg->fCond.wait(lk);
 
       return kTRUE;
    }
@@ -1055,7 +1094,8 @@ Bool_t THttpServer::ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t externa
       }
    }
 
-   if (!process) arg->Set404();
+   if (!process)
+      arg->Set404();
 
    return process;
 }
@@ -1217,7 +1257,7 @@ const char *THttpServer::GetMimeType(const char *path)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// reads file content
+/// \deprecated reads file content
 
 char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
 {
@@ -1225,7 +1265,7 @@ char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
 
    std::ifstream is(filename);
    if (!is)
-      return 0;
+      return nullptr;
 
    is.seekg(0, is.end);
    len = is.tellg();
@@ -1236,7 +1276,7 @@ char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
    if (!is) {
       free(buf);
       len = 0;
-      return 0;
+      return nullptr;
    }
 
    return buf;
