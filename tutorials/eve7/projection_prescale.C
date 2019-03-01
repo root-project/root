@@ -1,3 +1,11 @@
+/// \file
+/// \ingroup tutorial_eve7
+///  This example display projection prescale
+///
+/// \macro_code
+///
+
+
 #include <sstream>
 #include <iostream>
 
@@ -8,6 +16,7 @@
 #include "TSystem.h"
 #include "TFile.h"
 #include "TRandom.h"
+
 #include <ROOT/REveGeoShape.hxx>
 #include <ROOT/REveTrans.hxx>
 #include <ROOT/REveScene.hxx>
@@ -16,19 +25,18 @@
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REvePointSet.hxx>
 #include <ROOT/REveLine.hxx>
-
 #include <ROOT/REveProjectionManager.hxx>
 #include <ROOT/REveProjectionBases.hxx>
-R__LOAD_LIBRARY(libGeom);
-R__LOAD_LIBRARY(libROOTEve);
 
 namespace REX = ROOT::Experimental;
+
+REX::REveManager *eveMng = nullptr;
 
 REX::REvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
 {
    TRandom &r = *gRandom;
 
-   auto ps = new REX::REvePointSet("testPnts", npoints);
+   auto ps = new REX::REvePointSet("testPnts", "title", npoints);
 
    for (Int_t i=0; i<npoints; ++i)
        ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
@@ -41,8 +49,8 @@ REX::REvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
 
 void makeProjectedViewsAndScene(REX::REveProjection::EPType_e type, bool scale)
 {
-   auto rPhiGeomScene  = REX::gEve->SpawnNewScene(Form("Project%s Geo", scale ? "PreScaled" : ""));
-   auto  rPhiEventScene = REX::gEve->SpawnNewScene(Form("Project%s Event", scale ? "PreScaled" : ""));
+   auto rPhiGeomScene  = eveMng->SpawnNewScene(Form("Project%s Geo", scale ? "PreScaled" : ""));
+   auto rPhiEventScene = eveMng->SpawnNewScene(Form("Project%s Event", scale ? "PreScaled" : ""));
 
    auto mngRhoPhi = new REX::REveProjectionManager(type);
    if (scale) {
@@ -52,14 +60,14 @@ void makeProjectedViewsAndScene(REX::REveProjection::EPType_e type, bool scale)
       p->AddPreScaleEntry(0, 310, 0.5);
       p->SetUsePreScale(kTRUE);
    }
-   auto rphiView = REX::gEve->SpawnNewViewer("Projected View", "");
+   auto rphiView = eveMng->SpawnNewViewer("Projected View", "");
    rphiView->AddScene(rPhiGeomScene);
    rphiView->AddScene(rPhiEventScene);
 
-   for (auto & ie : REX::gEve->GetGlobalScene()->RefChildren())
+   for (auto &ie : eveMng->GetGlobalScene()->RefChildren())
       mngRhoPhi->ImportElements(ie, rPhiGeomScene);
 
-   for (auto & ie : REX::gEve->GetEventScene()->RefChildren())
+   for (auto &ie : eveMng->GetEventScene()->RefChildren())
       mngRhoPhi->ImportElements(ie, rPhiEventScene);
 }
 
@@ -77,20 +85,20 @@ TGeoNode* getNodeFromPath( TGeoNode* top, std::string path)
 
 void projection_prescale(std::string type = "RhPhi")
 {
-   REX::REveManager::Create();
+   eveMng = REX::REveManager::Create();
 
    // static scene
    TFile::SetCacheFileDir(".");
-   auto geoManager = REX::gEve->GetGeometry("http://root.cern.ch/files/cms.root");
+   auto geoManager = eveMng->GetGeometry("http://root.cern.ch/files/cms.root");
    TGeoNode* top = geoManager->GetTopVolume()->FindNode("CMSE_1");
    auto holder = new REX::REveElement("MUON");
-   REX::gEve->GetGlobalScene()->AddElement(holder);
+   eveMng->GetGlobalScene()->AddElement(holder);
    auto n = getNodeFromPath(top, "MUON_1/MB_1");
    auto m = new REX::REveGeoShape("MB_1");
    m->SetShape(n->GetVolume()->GetShape());
    m->SetMainColor(kOrange);
    holder->AddElement(m);
-       
+
    auto bv =  n->GetVolume();
    for (int i = 1; i < 5; ++i ) {
 
@@ -110,17 +118,17 @@ void projection_prescale(std::string type = "RhPhi")
    line->SetNextPoint(0, 0, 0);
    float a = 300;
    line->SetNextPoint(a, a, a);
-   REX::gEve->GetEventScene()->AddElement(line);
-      
+   eveMng->GetEventScene()->AddElement(line);
+
    auto line2 = new REX::REveLine();
    line2->SetNextPoint(0, 0, 0);
    float b = 30;
    line2->SetNextPoint(b, b+5, b);
    line2->SetMainColor(kRed);
-   REX::gEve->GetEventScene()->AddElement(line2);
-      
+   eveMng->GetEventScene()->AddElement(line2);
+
    auto points = getPointSet(10, 30);
-   REX::gEve->GetEventScene()->AddElement(points);
+   eveMng->GetEventScene()->AddElement(points);
 
    // make scaled and plain projected views
    if (type == "RPhi") {
@@ -132,6 +140,6 @@ void projection_prescale(std::string type = "RhPhi")
       makeProjectedViewsAndScene(REX::REveProjection::kPT_RhoZ, false);
    }
 
-   REX::gEve->Show();
+   eveMng->Show();
 }
- 
+

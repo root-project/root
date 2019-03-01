@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_eve
+/// \ingroup tutorial_eve7
 /// Demonstrates usage of class REveStraightLineSet.
 ///
 /// \macro_code
@@ -15,8 +15,6 @@
 //#include <ROOT/REveJetCone.hxx>
 namespace REX = ROOT::Experimental;
 
-
-
 void lineset(Int_t nlines = 40, Int_t nmarkers = 4)
 {
    auto eveMng = REX::REveManager::Create();
@@ -28,18 +26,18 @@ void lineset(Int_t nlines = 40, Int_t nmarkers = 4)
    ls->SetMainColor(kBlue);
    ls->SetMarkerColor(kRed);
 
-   for (Int_t i = 0; i<nlines; i++) {
+   for (Int_t i = 0; i < nlines; i++) {
       ls->AddLine( r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s),
                    r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
       // add random number of markers
       Int_t nm = Int_t(nmarkers* r.Rndm());
-      for (Int_t m = 0; m < nm; m++) ls->AddMarker(i, r.Rndm());
+      for (Int_t m = 0; m < nm; m++)
+         ls->AddMarker(i, r.Rndm());
    }
 
    ls->SetMarkerSize(1.5);
    ls->SetMarkerStyle(4);
    eveMng->GetEventScene()->AddElement(ls);
-   
-   
+
    eveMng->Show();
 }
