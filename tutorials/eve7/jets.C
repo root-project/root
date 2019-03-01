@@ -18,11 +18,9 @@ const Double_t kR_min = 240;
 const Double_t kR_max = 250;
 const Double_t kZ_d   = 300;
 
-void makeJets(int N_Jets, REX::REveElement* jetHolder)
+void makeJets(int N_Jets, REX::REveElement *jetHolder)
 {
    TRandom &r = *gRandom;
-
-   REX::REveElement* event = REX::gEve->GetEventScene();
 
    for (int i = 0; i < N_Jets; i++)
    {
@@ -41,7 +39,7 @@ void jets()
 {
    auto eveMng = REX::REveManager::Create();
 
-   REX::REveElement* jetHolder = new REX::REveElement("Jets");
+   REX::REveElement *jetHolder = new REX::REveElement("Jets");
    eveMng->GetEventScene()->AddElement(jetHolder);
    makeJets(10, jetHolder);
 

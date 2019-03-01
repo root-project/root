@@ -47,7 +47,7 @@ const Int_t N_Tracks =   40;
 const Int_t N_Jets   =   20;
 
 
-REX::REvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
+REX::REvePointSet *getPointSet(int npoints = 2, float s=2, int color=28)
 {
    TRandom &r = *gRandom;
 
@@ -118,7 +118,7 @@ void addJets()
 {
    TRandom &r = *gRandom;
 
-   REX::REveElement* event = eveMng->GetEventScene();
+   REX::REveElement *event = eveMng->GetEventScene();
    auto jetHolder = new REX::REveElement("Jets");
 
    for (int i = 0; i < N_Jets; i++)
@@ -183,7 +183,7 @@ void projectScenes(bool geomp, bool eventp)
 {
    if (geomp)
    {
-      for (auto & ie : eveMng->GetGlobalScene()->RefChildren())
+      for (auto &ie : eveMng->GetGlobalScene()->RefChildren())
       {
          mngRhoPhi->ImportElements(ie, rPhiGeomScene);
          mngRhoZ  ->ImportElements(ie, rhoZGeomScene);
@@ -191,7 +191,7 @@ void projectScenes(bool geomp, bool eventp)
    }
    if (eventp)
    {
-      for (auto & ie : eveMng->GetEventScene()->RefChildren())
+      for (auto &ie : eveMng->GetEventScene()->RefChildren())
       {
          mngRhoPhi->ImportElements(ie, rPhiEventScene);
          mngRhoZ  ->ImportElements(ie, rhoZEventScene);
@@ -208,8 +208,6 @@ void projectScenes(bool geomp, bool eventp)
 }
 
 //==============================================================================
-
-#pragma link C++ class EventManager+;
 
 class EventManager : public REX::REveElement
 {
@@ -244,7 +242,6 @@ public:
       if (gApplication) gApplication->Terminate();
    }
 
-   ClassDef(EventManager, 1);
 };
 
 void event_demo()

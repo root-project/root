@@ -34,7 +34,7 @@ void compound()
    ml->SetMainColor(kRed);
    ml->SetLineStyle(2);
    ml->SetLineWidth(3);
-   REX::gEve->InsertVizDBEntry("BigLine", ml);
+   eveMng->InsertVizDBEntry("BigLine", ml);
    */
    auto cmp = new REX::REveCompound;
    cmp->SetMainColor(kGreen);
