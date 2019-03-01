@@ -135,6 +135,15 @@ int TMVACrossValidation()
    // Spectator used for split
    dataloader->AddSpectator("eventID", 'I');
 
+   // NOTE: Currently TMVA treats all input variables, spectators etc as
+   //       floats. Thus, if the absolute value of the input is too large
+   //       there can be precision loss. This can especially be a problem for
+   //       cross validation with large event numbers.
+   //       A workaround is to define your splitting variable as:
+   //           `dataloader->AddSpectator("eventID := eventID % 4096", 'I');`
+   //       where 4096 should be a number much larger than the number of folds
+   //       you intend to run with.
+
    // Attaches the trees so they can be read from
    dataloader->AddSignalTree(sigTree, 1.0);
    dataloader->AddBackgroundTree(bkgTree, 1.0);
