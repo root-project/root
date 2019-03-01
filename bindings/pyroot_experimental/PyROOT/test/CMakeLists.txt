@@ -71,7 +71,10 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py)
 # RDataFrame and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py)
 
-# RooAbsCollection and subclasses pythonizations
-if(ROOT_roofit_FOUND)
+if(roofit)
+  # RooAbsCollection and subclasses pythonizations
   ROOT_ADD_PYUNITTEST(pyroot_pyz_rooabscollection_len rooabscollection_len.py)
+
+  # RooDataHist pythonisations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_roodatahist_ploton roodatahist_ploton.py)
 endif()
