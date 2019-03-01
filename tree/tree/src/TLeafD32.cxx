@@ -33,7 +33,7 @@ TLeafD32::TLeafD32() : TLeaf()
    fMaximum = 0;
    fValue = nullptr;
    fPointer = nullptr;
-   fStreamingInfo = nullptr;
+   fElement = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,11 +46,11 @@ TLeafD32::TLeafD32(TBranch *parent, const char *name, const char *type) : TLeaf(
    fMaximum = 0;
    fValue = nullptr;
    fPointer = nullptr;
-   fStreamingInfo = nullptr;
+   fElement = nullptr;
    fTitle = type;
 
    if (strchr(type, '['))
-      fStreamingInfo = new TStreamerElement(Form("%s_StreamingInfo", name), type, 0, 0, "Double32_t");
+      fElement = new TStreamerElement(Form("%s_Element", name), type, 0, 0, "Double32_t");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,8 +61,8 @@ TLeafD32::~TLeafD32()
    if (ResetAddress(nullptr, kTRUE))
       delete[] fValue;
 
-   if (fStreamingInfo)
-      delete fStreamingInfo;
+   if (fElement)
+      delete fElement;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +85,7 @@ void TLeafD32::FillBasket(TBuffer &b)
    Int_t len = GetLen();
    if (fPointer)
       fValue = *fPointer;
-   b.WriteFastArrayDouble32(fValue, len, fStreamingInfo);
+   b.WriteFastArrayDouble32(fValue, len, fElement);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +120,7 @@ void TLeafD32::PrintValue(Int_t l) const
 void TLeafD32::ReadBasket(TBuffer &b)
 {
    if (!fLeafCount && fNdata == 1) {
-      b.ReadDouble32(fValue, fStreamingInfo);
+      b.ReadDouble32(fValue, fElement);
    } else {
       if (fLeafCount) {
          Long64_t entry = fBranch->GetReadEntry();
@@ -133,9 +133,9 @@ void TLeafD32::ReadBasket(TBuffer &b)
             len = fLeafCount->GetMaximum();
          }
          fNdata = len * fLen;
-         b.ReadFastArrayDouble32(fValue, len * fLen, fStreamingInfo);
+         b.ReadFastArrayDouble32(fValue, len * fLen, fElement);
       } else {
-         b.ReadFastArrayDouble32(fValue, fLen, fStreamingInfo);
+         b.ReadFastArrayDouble32(fValue, fLen, fElement);
       }
    }
 }
@@ -146,7 +146,7 @@ void TLeafD32::ReadBasket(TBuffer &b)
 
 void TLeafD32::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 {
-   b.ReadFastArrayDouble32(fValue, n * fLen, fStreamingInfo);
+   b.ReadFastArrayDouble32(fValue, n * fLen, fElement);
 
    Int_t j = 0;
    for (Int_t i = 0; i < n; i++) {
@@ -205,7 +205,7 @@ void TLeafD32::Streamer(TBuffer &R__b)
       R__b.ReadClassBuffer(TLeafD32::Class(), this);
 
       if (fTitle.Contains("["))
-	 fStreamingInfo = new TStreamerElement(Form("%s_StreamingInfo", fName.Data()), fTitle.Data(), 0, 0, "Double32_t");
+	 fElement = new TStreamerElement(Form("%s_Element", fName.Data()), fTitle.Data(), 0, 0, "Double32_t");
    } else {
       R__b.WriteClassBuffer(TLeafD32::Class(), this);
    }
