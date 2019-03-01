@@ -1,0 +1,75 @@
+<!--  this file used for display different panels in ROOT7 -->
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <title>ROOT7 web panel</title>
+      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
+   </head>
+   
+   <style>
+      html { height: 100%; }
+      body { min-height: 100%; margin: 0; overflow: hidden }
+      #PanelDiv {
+         position: absolute;
+         left: 0;
+         top: 0;
+         bottom: 0;
+         right: 0;
+         padding: 1
+      }
+   </style>
+
+   <body>
+      <div id="PanelDiv">
+         loading scripts...
+      </div>
+   </body>
+   
+   <script type='text/javascript'>
+
+      function ShowOpenui5Panel(panel_handle, arg) {
+         
+         if (!panel_handle || !arg.first_msg || !JSROOT.sap) return false;
+           
+         var panelid = "TopPanelId";
+
+         var oModel = new JSROOT.sap.ui.model.json.JSONModel({
+            handle: panel_handle   
+         });
+         
+         sap.ui.getCore().setModel(oModel, panelid);
+         
+         var viewName, p = arg.first_msg.indexOf(".");
+         
+         if (p>=0) {
+            console.log('Register module path', arg.first_msg.substr(0,p));
+            viewName = arg.first_msg;
+            jQuery.sap.registerModulePath(arg.first_msg.substr(0,p), "/currentdir/");
+         } else {
+            viewName = "sap.ui.jsroot.view." + arg.first_msg;
+         }
+            
+         JSROOT.sap.ui.xmlview({
+            id: panelid,
+            viewName : viewName,
+            // layoutData: oLd,
+            // height: "100%"
+         }).placeAt("PanelDiv");
+      }
+      
+      JSROOT.ConnectWebWindow({
+         
+         prereq_logdiv: "PanelDiv",
+         
+         first_recv: "SHOWPANEL:",
+         
+         prereq2: "openui5",
+         
+         callback: ShowOpenui5Panel
+      });
+
+   </script>
+
+</html>

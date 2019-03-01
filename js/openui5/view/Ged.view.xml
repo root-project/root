@@ -1,0 +1,20 @@
+<mvc:View
+   class="sapUiSizeCompact"
+   height="100%"
+   controllerName="sap.ui.jsroot.controller.Ged"
+   xmlns:mvc="sap.ui.core.mvc"
+   xmlns="sap.m">
+   <Page id="ged_page" title="class: {/SelectedClass}" showHeader="true">
+<!-- 
+    <footer>
+       <Bar>
+          <contentRight>
+             <Button id="edit" text="Edit" press="handleEditPress" />
+             <Button id="save" text="Save" type="Emphasized" visible="false" press="handleSavePress" />
+             <Button id="cancel" text="Cancel" visible="false" press="handleCancelPress" />
+          </contentRight>
+       </Bar>
+    </footer>
+ -->
+   </Page>
+</mvc:View>
