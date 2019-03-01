@@ -31,16 +31,19 @@ class TUserHandler : public THttpWSHandler {
 
         if (arg->IsMethod("WS_READY")) {
             fWSId = arg->GetWSId();
+            printf("Client connected %d\n", fWSId);
             return kTRUE;
         }
 
         if (arg->IsMethod("WS_CLOSE")) {
            fWSId = 0;
+           printf("Client disconnected\n");
            return kTRUE;
         }
 
         if (arg->IsMethod("WS_DATA")) {
-           TString str = arg->GetPostDataAsString();
+           TString str;
+           str.Append((const char *)arg->GetPostData(), arg->GetPostDataLength());
            printf("Client msg: %s\n", str.Data());
            TDatime now;
            SendCharStarWS(arg->GetWSId(), Form("Server replies:%s server counter:%d", now.AsString(), fServCnt++));
@@ -64,7 +67,7 @@ void ws()
 {
    THttpServer *serv = new THttpServer("http:8090");
 
-   TUserHandler *handler = new TUserHandler("name1","title1");
+   TUserHandler *handler = new TUserHandler("name1", "title1");
 
    serv->Register("/folder1", handler);
 
