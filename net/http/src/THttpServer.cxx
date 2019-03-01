@@ -527,14 +527,14 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 
    TString fname(uri);
 
-   for (auto iter = fLocations.begin(); iter != fLocations.end(); iter++) {
-      Ssiz_t pos = fname.Index(iter->first.c_str());
+   for (auto &entry : fLocations) {
+      Ssiz_t pos = fname.Index(entry.first.c_str());
       if (pos == kNPOS)
          continue;
-      fname.Remove(0, pos + (iter->first.length() - 1));
+      fname.Remove(0, pos + (entry.first.length() - 1));
       if (!VerifyFilePath(fname.Data()))
          return kFALSE;
-      res = iter->second.c_str();
+      res = entry.second.c_str();
       if ((fname[0] == '/') && (res[res.Length() - 1] == '/'))
          res.Resize(res.Length() - 1);
       res.Append(fname);
