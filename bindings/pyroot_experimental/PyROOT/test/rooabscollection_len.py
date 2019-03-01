@@ -19,6 +19,11 @@ class RooAbsCollectionLen(unittest.TestCase):
         for elem in cls.rooabsarg_list:
             cls.tlist.Add(elem)
 
+    @classmethod
+    def tearDownClass(cls):
+        # Clear TList before Python list deletes the objects
+        cls.tlist.Clear()
+
     # Helpers
     def check_len(self, c):
         self.assertEqual(len(c), self.num_elems)
@@ -34,4 +39,3 @@ class RooAbsCollectionLen(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
