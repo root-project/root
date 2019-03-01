@@ -16,9 +16,9 @@
 #define ROOT_TVEC
 
 #ifdef _WIN32
-   #define _VECOPS_USE_EXTERN_TEMPLATES false
+#define _VECOPS_USE_EXTERN_TEMPLATES false
 #else
-   #define _VECOPS_USE_EXTERN_TEMPLATES true
+#define _VECOPS_USE_EXTERN_TEMPLATES true
 #endif
 
 #include <ROOT/RAdoptAllocator.hxx>
@@ -39,7 +39,7 @@
 
 namespace ROOT {
 namespace VecOps {
-template<typename T>
+template <typename T>
 class RVec;
 }
 namespace Internal {
@@ -60,8 +60,8 @@ void EmplaceBack(std::vector<bool> &v, Args &&... args)
    v.push_back(std::forward<Args>(args)...);
 }
 
-} // End of VecOps NS
-} // End of Internal NS
+} // namespace VecOps
+} // namespace Internal
 
 namespace VecOps {
 // clang-format off
@@ -211,15 +211,37 @@ hpt->Draw();
 <a name="RVecdoxyref"></a>
 **/
 // clang-format on
+
+template <typename RVec_t, std::size_t BufferSize = RVec_t::fgBufferSize>
+class RStorageVectorFactory {
+public:
+   static typename RVec_t::Impl_t Get(typename RVec_t::pointer buf)
+   {
+      typename RVec_t::Impl_t v(BufferSize, typename RVec_t::value_type(),
+                                ::ROOT::Detail::VecOps::MakeAdoptAllocator(buf, BufferSize));
+      v.resize(0);
+      return v;
+}
+};
+
+template <typename RVec_t>
+class RStorageVectorFactory<RVec_t, 0> {
+public:
+   static typename RVec_t::Impl_t Get(typename RVec_t::value_type *) { return typename RVec_t::Impl_t(); }
+};
+
 template <typename T>
 class RVec {
    // Here we check if T is a bool. This is done in order to decide what type
    // to use as a storage. If T is anything but bool, we use a vector<T, RAdoptAllocator<T>>.
    // If T is a bool, we opt for a plain vector<bool> otherwise we'll not be able
    // to write the data type given the shortcomings of TCollectionProxy design.
-   static constexpr const auto IsVecBool = std::is_same<bool, T>::value;
+   static constexpr const auto fgIsVecBool = std::is_same<bool, T>::value;
+   using Alloc_t =
+      typename std::conditional<fgIsVecBool, std::allocator<T>, ::ROOT::Detail::VecOps::RAdoptAllocator<T>>::type;
+
 public:
-   using Impl_t = typename std::conditional<IsVecBool, std::vector<bool>, std::vector<T, ::ROOT::Detail::VecOps::RAdoptAllocator<T>>>::type;
+   using Impl_t = std::vector<T, Alloc_t>;
    using value_type = typename Impl_t::value_type;
    using size_type = typename Impl_t::size_type;
    using difference_type = typename Impl_t::difference_type;
@@ -229,53 +251,139 @@ public:
    using const_pointer = typename Impl_t::const_pointer;
    // The data_t and const_data_t types are chosen to be void in case T is a bool.
    // This way we can as elegantly as in the STL return void upon calling the data() method.
-   using data_t = typename std::conditional<IsVecBool, void, typename Impl_t::pointer>::type;
-   using const_data_t = typename std::conditional<IsVecBool, void, typename Impl_t::const_pointer>::type;
+   using data_t = typename std::conditional<fgIsVecBool, void, typename Impl_t::pointer>::type;
+   using const_data_t = typename std::conditional<fgIsVecBool, void, typename Impl_t::const_pointer>::type;
    using iterator = typename Impl_t::iterator;
    using const_iterator = typename Impl_t::const_iterator;
    using reverse_iterator = typename Impl_t::reverse_iterator;
    using const_reverse_iterator = typename Impl_t::const_reverse_iterator;
+   static constexpr std::size_t fgBufferSize = std::is_arithmetic<T>::value && !fgIsVecBool ? 8 : 0;
 
 private:
-   Impl_t fData;
+   using Buffer_t = std::array<T, fgBufferSize>;
+   Buffer_t fBuffer;
+   Alloc_t fAlloc = ::ROOT::Detail::VecOps::MakeAdoptAllocator(fgBufferSize ? fBuffer.data() : nullptr, fgBufferSize);
+   Impl_t fData{fAlloc};
+   bool CanUseBuffer(std::size_t s)
+   {
+      const auto thisBufSize = ::ROOT::Detail::VecOps::GetBufferSize(fAlloc);
+      return thisBufSize && s <= thisBufSize;
+   }
+   bool CanUseBuffer(const RVec &v)
+   {
+      const auto thisBufSize = ::ROOT::Detail::VecOps::GetBufferSize(fAlloc);
+      const auto otherBufSize = ::ROOT::Detail::VecOps::GetBufferSize(v.fAlloc);
+      if (thisBufSize == 0 && otherBufSize == 0)
+         return false;
+      return thisBufSize && v.size() <= thisBufSize;
+   }
+   bool HasBuffer()
+   {
+      // We use the constexpr quantity first for performance reasons. In case it is
+      // 0, the last part of the statement will not even be compiled.
+      return fgBufferSize && 0 != ::ROOT::Detail::VecOps::GetBufferSize(fAlloc);
+   }
+   bool IsAdoptingExternalMemory() { return ::ROOT::Detail::VecOps::IsAdoptingExternalMemory(fAlloc); }
 
 public:
    // constructors
-   RVec() {}
 
-   explicit RVec(size_type count) : fData(count) {}
+   RVec() : fData(RStorageVectorFactory<RVec>::Get(fBuffer.data())) {}
 
-   RVec(size_type count, const T &value) : fData(count, value) {}
+   RVec(pointer p, size_type n) : fAlloc(ROOT::Detail::VecOps::MakeAdoptAllocator(p)), fData(n, T(), fAlloc) {}
 
-   RVec(const RVec<T> &v) : fData(v.fData) {}
+   explicit RVec(size_type count) : fData(count <= fgBufferSize ? fgBufferSize : 0, T(), fAlloc)
+   {
+      resize(count);
+   }
 
-   RVec(RVec<T> &&v) : fData(std::move(v.fData)) {}
+   RVec(size_type count, const T &value) : fData(count <= fgBufferSize ? fgBufferSize : 0, value, fAlloc)
+   {
+      if (CanUseBuffer(count)) {
+         resize(count);
+      } else {
+         resize(count, value);
+      }
+   }
 
-   RVec(const std::vector<T> &v) : fData(v.cbegin(), v.cend()) {}
+   RVec(const RVec &v) : fData(v.size() <= fgBufferSize ? fgBufferSize : 0, T(), fAlloc)
+   {
+      if (CanUseBuffer(v.size()))
+      {
+         resize(v.size());
+         std::copy(v.begin(), v.end(), begin());
+      } else {
+         resize(v.size());
+         std::copy(v.begin(), v.end(), begin());
+      }
+   }
 
-   RVec(pointer p, size_type n) : fData(n, T(), ROOT::Detail::VecOps::RAdoptAllocator<T>(p)) {}
+   RVec(const std::vector<T> &v) : fData(v.size(), T(), fAlloc)
+   {
+      if (CanUseBuffer(v.size())) {
+         std::copy(v.begin(), v.end(), fBuffer.begin());
+      } else {
+         std::copy(v.begin(), v.end(), fData.begin());
+      }
+   }
+
+   RVec(RVec<T> &&v) : fData(v.size(), T(), fAlloc)
+   {
+      if (v.IsAdoptingExternalMemory())
+      {
+         fAlloc = std::move(v.fAlloc);
+         fData = std::move(v.fData);
+      } else if (CanUseBuffer(v)) {
+         std::copy(v.begin(), v.end(), fBuffer.begin());
+      } else {
+         fData = std::move(v.fData);
+      }
+   }
 
    template <class InputIt>
-   RVec(InputIt first, InputIt last) : fData(first, last) {}
+   RVec(InputIt first, InputIt last) : fData(first, last, fAlloc)
+   {
+   }
 
-   RVec(std::initializer_list<T> init) : fData(init) {}
+   RVec(std::initializer_list<T> ilist) : fData(ilist.size(), T(), fAlloc)
+   {
+      std::copy(ilist.begin(), ilist.end(), fData.begin());
+   }
 
    // assignment
    RVec<T> &operator=(const RVec<T> &v)
    {
-      fData = v.fData;
+      if (CanUseBuffer(v.size())) {
+         resize(v.size());
+         std::copy(v.begin(), v.end(), fBuffer.begin());
+      } else {
+         fData = v.fData;
+      }
       return *this;
    }
 
    RVec<T> &operator=(RVec<T> &&v)
    {
-      std::swap(fData, v.fData);
+      if (v.IsAdoptingExternalMemory()) {
+         fAlloc = std::move(v.fAlloc);
+         fData = std::move(v.fData);
+      } else if (CanUseBuffer(v)) {
+         resize(v.size());
+         std::copy(v.begin(), v.end(), fBuffer.begin());
+      } else {
+         fData = std::move(v.fData);
+      }
       return *this;
    }
 
    RVec<T> &operator=(std::initializer_list<T> ilist)
    {
-      fData = ilist;
+      if (CanUseBuffer(ilist.size())) {
+         resize(ilist.size());
+      } else {
+         fData = Impl_t(ilist.size(), T(), fAlloc);
+      }
+      std::copy(ilist.begin(), ilist.end(), fData.begin());
       return *this;
    }
 
@@ -344,7 +452,7 @@ public:
    iterator erase(iterator pos) { return fData.erase(pos); }
    iterator erase(iterator first, iterator last) { return fData.erase(first, last); }
    void push_back(T &&value) { fData.push_back(std::forward<T>(value)); }
-   void push_back(const value_type& value) { fData.push_back(value); };
+   void push_back(const value_type &value) { fData.push_back(value); };
    template <class... Args>
    reference emplace_back(Args &&... args)
    {
@@ -353,7 +461,7 @@ public:
    }
    /// This method is intended only for arithmetic types unlike the std::vector
    /// corresponding one which is generic.
-   template<typename U = T, typename std::enable_if<std::is_arithmetic<U>::value, int>* = nullptr>
+   template <typename U = T, typename std::enable_if<std::is_arithmetic<U>::value, int> * = nullptr>
    iterator emplace(const_iterator pos, U value)
    {
       return fData.emplace(pos, value);
@@ -361,21 +469,59 @@ public:
    void pop_back() { fData.pop_back(); }
    void resize(size_type count) { fData.resize(count); }
    void resize(size_type count, const value_type &value) { fData.resize(count, value); }
-   void swap(RVec<T> &other) { std::swap(fData, other.fData); }
+   /*
+   void swap(RVec<T> &other)
+   {
+      const auto hasBuf = HasBuffer();
+      const auto otherHasBuf = other.HasBuffer();
+
+      // Case 1: Neither is using a buffer. They could be adopting an
+      // external buffer or own their memory
+      if (!hasBuf && !otherHasBuf) {
+         std::swap(fData, other.fData);
+      // Case 2: This RVec has a buffer and the other one does not.
+      // There are two possibilities here: either the content of the one
+      // which is not using the SMO fits in the one using it or not.
+      } else if (hasBuf && !otherHasBuf) {
+         resize(other.size());
+         if (other.size() <= fgBufferSize) {
+            auto tmpBuf(fBuffer);
+            resize(other.size());
+            std::copy(other.begin(), other.end(), fBuffer.begin());
+            other.resize(tmpBuf.size());
+            std::copy(tmpBuf.begin(), tmpBuf.end(), other.begin());
+         } else {
+            // both have data on the heap.
+            std::swap(fData, other.fData);
+         }
+      // Case 3: This is case 2 but with the operands inverted.
+      } else if (!hasBuf && otherHasBuf) {
+         other.swap(*this);
+      // Case 4: both are in SMO mode. We need to resize and swap contents,
+      // in this order, otherwise we will overwrite the content of the buffer
+      // in case we expand.
+      } else if (hasBuf && otherHasBuf) {
+         const auto thisSize = size();
+         resize(other.size());
+         other.resize(thisSize);
+         std::swap(fBuffer, other.fBuffer);
+      }
+   }
+   */
 };
 
 ///@name RVec Unary Arithmetic Operators
 ///@{
 
-#define TVEC_UNARY_OPERATOR(OP)                                                \
-template <typename T>                                                          \
-RVec<T> operator OP(const RVec<T> &v)                                          \
-{                                                                              \
-   RVec<T> ret(v);                                                             \
-   for (auto &x : ret)                                                         \
-      x = OP x;                                                                \
-return ret;                                                                    \
-}                                                                              \
+#define TVEC_UNARY_OPERATOR(OP)          \
+   template <typename T>                 \
+   RVec<T> operator OP(const RVec<T> &v) \
+   {                                     \
+      RVec<T> ret(v);                    \
+      for (auto &x : ret)                \
+         x = OP x;                       \
+      return ret;                        \
+   }
 
 TVEC_UNARY_OPERATOR(+)
 TVEC_UNARY_OPERATOR(-)
@@ -387,49 +533,45 @@ TVEC_UNARY_OPERATOR(!)
 ///@name RVec Binary Arithmetic Operators
 ///@{
 
-#define ERROR_MESSAGE(OP) \
- "Cannot call operator " #OP " on vectors of different sizes."
+#define ERROR_MESSAGE(OP) "Cannot call operator " #OP " on vectors of different sizes."
 
-#define TVEC_BINARY_OPERATOR(OP)                                               \
-template <typename T0, typename T1>                                            \
-auto operator OP(const RVec<T0> &v, const T1 &y)                               \
-  -> RVec<decltype(v[0] OP y)>                                                 \
-{                                                                              \
-   RVec<decltype(v[0] OP y)> ret(v.size());                                    \
-   auto op = [&y](const T0 &x) { return x OP y; };                             \
-   std::transform(v.begin(), v.end(), ret.begin(), op);                        \
-   return ret;                                                                 \
-}                                                                              \
-                                                                               \
-template <typename T0, typename T1>                                            \
-auto operator OP(const T0 &x, const RVec<T1> &v)                               \
-  -> RVec<decltype(x OP v[0])>                                                 \
-{                                                                              \
-   RVec<decltype(x OP v[0])> ret(v.size());                                    \
-   auto op = [&x](const T1 &y) { return x OP y; };                             \
-   std::transform(v.begin(), v.end(), ret.begin(), op);                        \
-   return ret;                                                                 \
-}                                                                              \
-                                                                               \
-template <typename T0, typename T1>                                            \
-auto operator OP(const RVec<T0> &v0, const RVec<T1> &v1)                       \
-  -> RVec<decltype(v0[0] OP v1[0])>                                            \
-{                                                                              \
-   if (v0.size() != v1.size())                                                 \
-      throw std::runtime_error(ERROR_MESSAGE(OP));                             \
-                                                                               \
-   RVec<decltype(v0[0] OP v1[0])> ret(v0.size());                              \
-   auto op = [](const T0 &x, const T1 &y) { return x OP y; };                  \
-   std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), op);          \
-   return ret;                                                                 \
-}                                                                              \
+#define TVEC_BINARY_OPERATOR(OP)                                                            \
+   template <typename T0, typename T1>                                                      \
+   auto operator OP(const RVec<T0> &v, const T1 &y)->RVec<decltype(v[0] OP y)>              \
+   {                                                                                        \
+      RVec<decltype(v[0] OP y)> ret(v.size());                                              \
+      auto op = [&y](const T0 &x) { return x OP y; };                                       \
+      std::transform(v.begin(), v.end(), ret.begin(), op);                                  \
+      return ret;                                                                           \
+   }                                                                                        \
+                                                                                            \
+   template <typename T0, typename T1>                                                      \
+   auto operator OP(const T0 &x, const RVec<T1> &v)->RVec<decltype(x OP v[0])>              \
+   {                                                                                        \
+      RVec<decltype(x OP v[0])> ret(v.size());                                              \
+      auto op = [&x](const T1 &y) { return x OP y; };                                       \
+      std::transform(v.begin(), v.end(), ret.begin(), op);                                  \
+      return ret;                                                                           \
+   }                                                                                        \
+                                                                                            \
+   template <typename T0, typename T1>                                                      \
+   auto operator OP(const RVec<T0> &v0, const RVec<T1> &v1)->RVec<decltype(v0[0] OP v1[0])> \
+   {                                                                                        \
+      if (v0.size() != v1.size())                                                           \
+         throw std::runtime_error(ERROR_MESSAGE(OP));                                       \
+                                                                                            \
+      RVec<decltype(v0[0] OP v1[0])> ret(v0.size());                                        \
+      auto op = [](const T0 &x, const T1 &y) { return x OP y; };                            \
+      std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), op);                    \
+      return ret;                                                                           \
+   }
 
 TVEC_BINARY_OPERATOR(+)
 TVEC_BINARY_OPERATOR(-)
 TVEC_BINARY_OPERATOR(*)
 TVEC_BINARY_OPERATOR(/)
 TVEC_BINARY_OPERATOR(%)
-TVEC_BINARY_OPERATOR(^)
+TVEC_BINARY_OPERATOR (^)
 TVEC_BINARY_OPERATOR(|)
 TVEC_BINARY_OPERATOR(&)
 #undef TVEC_BINARY_OPERATOR
@@ -438,25 +580,25 @@ TVEC_BINARY_OPERATOR(&)
 ///@name RVec Assignment Arithmetic Operators
 ///@{
 
-#define TVEC_ASSIGNMENT_OPERATOR(OP)                                           \
-template <typename T0, typename T1>                                            \
-RVec<T0>& operator OP(RVec<T0> &v, const T1 &y)                                \
-{                                                                              \
-   auto op = [&y](T0 &x) { return x OP y; };                                   \
-   std::transform(v.begin(), v.end(), v.begin(), op);                          \
-   return v;                                                                   \
-}                                                                              \
-                                                                               \
-template <typename T0, typename T1>                                            \
-RVec<T0>& operator OP(RVec<T0> &v0, const RVec<T1> &v1)                        \
-{                                                                              \
-   if (v0.size() != v1.size())                                                 \
-      throw std::runtime_error(ERROR_MESSAGE(OP));                             \
-                                                                               \
-   auto op = [](T0 &x, const T1 &y) { return x OP y; };                        \
-   std::transform(v0.begin(), v0.end(), v1.begin(), v0.begin(), op);           \
-   return v0;                                                                  \
-}                                                                              \
+#define TVEC_ASSIGNMENT_OPERATOR(OP)                                    \
+   template <typename T0, typename T1>                                  \
+   RVec<T0> &operator OP(RVec<T0> &v, const T1 &y)                      \
+   {                                                                    \
+      auto op = [&y](T0 &x) { return x OP y; };                         \
+      std::transform(v.begin(), v.end(), v.begin(), op);                \
+      return v;                                                         \
+   }                                                                    \
+                                                                        \
+   template <typename T0, typename T1>                                  \
+   RVec<T0> &operator OP(RVec<T0> &v0, const RVec<T1> &v1)              \
+   {                                                                    \
+      if (v0.size() != v1.size())                                       \
+         throw std::runtime_error(ERROR_MESSAGE(OP));                   \
+                                                                        \
+      auto op = [](T0 &x, const T1 &y) { return x OP y; };              \
+      std::transform(v0.begin(), v0.end(), v1.begin(), v0.begin(), op); \
+      return v0;                                                        \
+   }
 
 TVEC_ASSIGNMENT_OPERATOR(+=)
 TVEC_ASSIGNMENT_OPERATOR(-=)
@@ -474,39 +616,36 @@ TVEC_ASSIGNMENT_OPERATOR(<<=)
 ///@name RVec Comparison and Logical Operators
 ///@{
 
-#define TVEC_LOGICAL_OPERATOR(OP)                                              \
-template <typename T0, typename T1>                                            \
-auto operator OP(const RVec<T0> &v, const T1 &y)                               \
-  -> RVec<int> /* avoid std::vector<bool> */                                   \
-{                                                                              \
-   RVec<int> ret(v.size());                                                    \
-   auto op = [y](const T0 &x) -> int { return x OP y; };                       \
-   std::transform(v.begin(), v.end(), ret.begin(), op);                        \
-   return ret;                                                                 \
-}                                                                              \
-                                                                               \
-template <typename T0, typename T1>                                            \
-auto operator OP(const T0 &x, const RVec<T1> &v)                               \
-  -> RVec<int> /* avoid std::vector<bool> */                                   \
-{                                                                              \
-   RVec<int> ret(v.size());                                                    \
-   auto op = [x](const T1 &y) -> int { return x OP y; };                       \
-   std::transform(v.begin(), v.end(), ret.begin(), op);                        \
-   return ret;                                                                 \
-}                                                                              \
-                                                                               \
-template <typename T0, typename T1>                                            \
-auto operator OP(const RVec<T0> &v0, const RVec<T1> &v1)                       \
-  -> RVec<int> /* avoid std::vector<bool> */                                   \
-{                                                                              \
-   if (v0.size() != v1.size())                                                 \
-      throw std::runtime_error(ERROR_MESSAGE(OP));                             \
-                                                                               \
-   RVec<int> ret(v0.size());                                                   \
-   auto op = [](const T0 &x, const T1 &y) -> int { return x OP y; };           \
-   std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), op);          \
-   return ret;                                                                 \
-}                                                                              \
+#define TVEC_LOGICAL_OPERATOR(OP)                                                                    \
+   template <typename T0, typename T1>                                                               \
+   auto operator OP(const RVec<T0> &v, const T1 &y)->RVec<int> /* avoid std::vector<bool> */         \
+   {                                                                                                 \
+      RVec<int> ret(v.size());                                                                       \
+      auto op = [y](const T0 &x) -> int { return x OP y; };                                          \
+      std::transform(v.begin(), v.end(), ret.begin(), op);                                           \
+      return ret;                                                                                    \
+   }                                                                                                 \
+                                                                                                     \
+   template <typename T0, typename T1>                                                               \
+   auto operator OP(const T0 &x, const RVec<T1> &v)->RVec<int> /* avoid std::vector<bool> */         \
+   {                                                                                                 \
+      RVec<int> ret(v.size());                                                                       \
+      auto op = [x](const T1 &y) -> int { return x OP y; };                                          \
+      std::transform(v.begin(), v.end(), ret.begin(), op);                                           \
+      return ret;                                                                                    \
+   }                                                                                                 \
+                                                                                                     \
+   template <typename T0, typename T1>                                                               \
+   auto operator OP(const RVec<T0> &v0, const RVec<T1> &v1)->RVec<int> /* avoid std::vector<bool> */ \
+   {                                                                                                 \
+      if (v0.size() != v1.size())                                                                    \
+         throw std::runtime_error(ERROR_MESSAGE(OP));                                                \
+                                                                                                     \
+      RVec<int> ret(v0.size());                                                                      \
+      auto op = [](const T0 &x, const T1 &y) -> int { return x OP y; };                              \
+      std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), op);                             \
+      return ret;                                                                                    \
+   }
 
 TVEC_LOGICAL_OPERATOR(<)
 TVEC_LOGICAL_OPERATOR(>)
@@ -523,13 +662,26 @@ TVEC_LOGICAL_OPERATOR(||)
 ///@{
 
 /// \cond
-template <typename T> struct PromoteTypeImpl;
+template <typename T>
+struct PromoteTypeImpl;
 
-template <> struct PromoteTypeImpl<float>       { using Type = float;       };
-template <> struct PromoteTypeImpl<double>      { using Type = double;      };
-template <> struct PromoteTypeImpl<long double> { using Type = long double; };
+template <>
+struct PromoteTypeImpl<float> {
+   using Type = float;
+};
+template <>
+struct PromoteTypeImpl<double> {
+   using Type = double;
+};
+template <>
+struct PromoteTypeImpl<long double> {
+   using Type = long double;
+};
 
-template <typename T> struct PromoteTypeImpl { using Type = double; };
+template <typename T>
+struct PromoteTypeImpl {
+   using Type = double;
+};
 
 template <typename T>
 using PromoteType = typename PromoteTypeImpl<T>::Type;
@@ -539,46 +691,46 @@ using PromoteTypes = decltype(PromoteType<U>() + PromoteType<V>());
 
 /// \endcond
 
-#define TVEC_UNARY_FUNCTION(NAME, FUNC)                                        \
-   template <typename T>                                                       \
-   RVec<PromoteType<T>> NAME(const RVec<T> &v)                                 \
-   {                                                                           \
-      RVec<PromoteType<T>> ret(v.size());                                      \
-      auto f = [](const T &x) { return FUNC(x); };                             \
-      std::transform(v.begin(), v.end(), ret.begin(), f);                      \
-      return ret;                                                              \
+#define TVEC_UNARY_FUNCTION(NAME, FUNC)                   \
+   template <typename T>                                  \
+   RVec<PromoteType<T>> NAME(const RVec<T> &v)            \
+   {                                                      \
+      RVec<PromoteType<T>> ret(v.size());                 \
+      auto f = [](const T &x) { return FUNC(x); };        \
+      std::transform(v.begin(), v.end(), ret.begin(), f); \
+      return ret;                                         \
    }
 
-#define TVEC_BINARY_FUNCTION(NAME, FUNC)                                       \
-   template <typename T0, typename T1>                                         \
-   RVec<PromoteTypes<T0, T1>> NAME(const T0 &x, const RVec<T1> &v)             \
-   {                                                                           \
-      RVec<PromoteTypes<T0, T1>> ret(v.size());                                \
-      auto f = [&x](const T1 &y) { return FUNC(x, y); };                       \
-      std::transform(v.begin(), v.end(), ret.begin(), f);                      \
-      return ret;                                                              \
-   }                                                                           \
-                                                                               \
-   template <typename T0, typename T1>                                         \
-   RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &v, const T1 &y)             \
-   {                                                                           \
-      RVec<PromoteTypes<T0, T1>> ret(v.size());                                \
-      auto f = [&y](const T1 &x) { return FUNC(x, y); };                       \
-      std::transform(v.begin(), v.end(), ret.begin(), f);                      \
-      return ret;                                                              \
-   }                                                                           \
-                                                                               \
-   template <typename T0, typename T1>                                         \
-   RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &v0, const RVec<T1> &v1)     \
-   {                                                                           \
-      if (v0.size() != v1.size())                                              \
-         throw std::runtime_error(ERROR_MESSAGE(NAME));                        \
-                                                                               \
-      RVec<PromoteTypes<T0, T1>> ret(v0.size());                               \
-      auto f = [](const T0 &x, const T1 &y) { return FUNC(x, y); };            \
-      std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), f);        \
-      return ret;                                                              \
-   }                                                                           \
+#define TVEC_BINARY_FUNCTION(NAME, FUNC)                                   \
+   template <typename T0, typename T1>                                     \
+   RVec<PromoteTypes<T0, T1>> NAME(const T0 &x, const RVec<T1> &v)         \
+   {                                                                       \
+      RVec<PromoteTypes<T0, T1>> ret(v.size());                            \
+      auto f = [&x](const T1 &y) { return FUNC(x, y); };                   \
+      std::transform(v.begin(), v.end(), ret.begin(), f);                  \
+      return ret;                                                          \
+   }                                                                       \
+                                                                           \
+   template <typename T0, typename T1>                                     \
+   RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &v, const T1 &y)         \
+   {                                                                       \
+      RVec<PromoteTypes<T0, T1>> ret(v.size());                            \
+      auto f = [&y](const T1 &x) { return FUNC(x, y); };                   \
+      std::transform(v.begin(), v.end(), ret.begin(), f);                  \
+      return ret;                                                          \
+   }                                                                       \
+                                                                           \
+   template <typename T0, typename T1>                                     \
+   RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &v0, const RVec<T1> &v1) \
+   {                                                                       \
+      if (v0.size() != v1.size())                                          \
+         throw std::runtime_error(ERROR_MESSAGE(NAME));                    \
+                                                                           \
+      RVec<PromoteTypes<T0, T1>> ret(v0.size());                           \
+      auto f = [](const T0 &x, const T1 &y) { return FUNC(x, y); };        \
+      std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), f);    \
+      return ret;                                                          \
+   }
 
 #define TVEC_STD_UNARY_FUNCTION(F) TVEC_UNARY_FUNCTION(F, std::F)
 #define TVEC_STD_BINARY_FUNCTION(F) TVEC_BINARY_FUNCTION(F, std::F)
@@ -711,7 +863,8 @@ T Sum(const RVec<T> &v)
 template <typename T>
 double Mean(const RVec<T> &v)
 {
-   if (v.empty()) return 0.;
+   if (v.empty())
+      return 0.;
    return double(Sum(v)) / v.size();
 }
 
@@ -798,13 +951,17 @@ template <typename T>
 double Var(const RVec<T> &v)
 {
    const std::size_t size = v.size();
-   if (size < std::size_t(2)) return 0.;
+   if (size < std::size_t(2))
+      return 0.;
    T sum_squares(0), squared_sum(0);
-   auto pred = [&sum_squares, &squared_sum](const T& x) {sum_squares+=x*x; squared_sum+=x;};
+   auto pred = [&sum_squares, &squared_sum](const T &x) {
+      sum_squares += x * x;
+      squared_sum += x;
+   };
    std::for_each(v.begin(), v.end(), pred);
    squared_sum *= squared_sum;
-   const auto dsize = (double) size;
-   return 1. / (dsize - 1.) * (sum_squares - squared_sum / dsize );
+   const auto dsize = (double)size;
+   return 1. / (dsize - 1.) * (sum_squares - squared_sum / dsize);
 }
 
 /// Get the standard deviation of the elements of an RVec
@@ -901,12 +1058,6 @@ auto All(const RVec<T> &v) -> decltype(v[0] == false)
       if (e == false)
          return false;
    return true;
-}
-
-template <typename T>
-void swap(RVec<T> &lhs, RVec<T> &rhs)
-{
-   lhs.swap(rhs);
 }
 
 /// Return an RVec of indices that sort the input RVec
@@ -1063,7 +1214,8 @@ RVec<T> Sort(const RVec<T> &v, Compare &&c)
 /// RVec<double> v2 {-4., -5.};
 /// auto comb_idx = Combinations(v1, v2);
 /// comb_idx
-/// // (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 1, 1, 2, 2 }, { 0, 1, 0, 1, 0, 1 } }
+/// // (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 1, 1, 2, 2 }, { 0, 1,
+/// 0, 1, 0, 1 } }
 /// ~~~
 template <typename T1, typename T2>
 RVec<RVec<typename RVec<T1>::size_type>> Combinations(const RVec<T1> &v1, const RVec<T2> &v2)
@@ -1072,11 +1224,11 @@ RVec<RVec<typename RVec<T1>::size_type>> Combinations(const RVec<T1> &v1, const 
    size_type size1 = v1.size();
    size_type size2 = v2.size();
    RVec<RVec<size_type>> r(2);
-   r[0].resize(size1*size2);
-   r[1].resize(size1*size2);
+   r[0].resize(size1 * size2);
+   r[1].resize(size1 * size2);
    size_type c = 0;
-   for(size_type i=0; i<size1; i++) {
-      for(size_type j=0; j<size2; j++) {
+   for (size_type i = 0; i < size1; i++) {
+      for (size_type j = 0; j < size2; j++) {
          r[0][c] = i;
          r[1][c] = j;
          c++;
@@ -1096,16 +1248,14 @@ RVec<RVec<typename RVec<T1>::size_type>> Combinations(const RVec<T1> &v1, const 
 /// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 1, 2, 3 } }
 /// auto v_2 = Combinations(v, 2);
 /// auto v_2
-/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 0, 1, 1, 2 }, { 1, 2, 3, 2, 3, 3 } }
-/// auto v_3 = Combinations(v, 3);
-/// v_3
-/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 0, 1 }, { 1, 1, 2, 2 }, { 2, 3, 3, 3 } }
-/// auto v_4 = Combinations(v, 4);
-/// v_4
+/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 0, 1, 1, 2 }, { 1, 2, 3,
+/// 2, 3, 3 } } auto v_3 = Combinations(v, 3); v_3
+/// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 0, 1 }, { 1, 1, 2, 2 }, {
+/// 2, 3, 3, 3 } } auto v_4 = Combinations(v, 4); v_4
 /// (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0 }, { 1 }, { 2 }, { 3 } }
 /// ~~~
 template <typename T>
-RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T>& v, const typename RVec<T>::size_type n)
+RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T> &v, const typename RVec<T>::size_type n)
 {
    using size_type = typename RVec<T>::size_type;
    const size_type s = v.size();
@@ -1115,16 +1265,16 @@ RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T>& v, const typ
       throw std::runtime_error(ss.str());
    }
    RVec<size_type> indices(s);
-   for(size_type k=0; k<s; k++)
+   for (size_type k = 0; k < s; k++)
       indices[k] = k;
    RVec<RVec<size_type>> c(n);
-   for(size_type k=0; k<n; k++)
+   for (size_type k = 0; k < n; k++)
       c[k].emplace_back(indices[k]);
    while (true) {
       bool run_through = true;
       long i = n - 1;
-      for (; i>=0; i--) {
-         if (indices[i] != i + s - n){
+      for (; i >= 0; i--) {
+         if (indices[i] != i + s - n) {
             run_through = false;
             break;
          }
@@ -1133,9 +1283,9 @@ RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T>& v, const typ
          return c;
       }
       indices[i]++;
-      for (long j=i+1; j<(long)n; j++)
-         indices[j] = indices[j-1] + 1;
-      for(size_type k=0; k<n; k++)
+      for (long j = i + 1; j < (long)n; j++)
+         indices[j] = indices[j - 1] + 1;
+      for (size_type k = 0; k < n; k++)
          c[k].emplace_back(indices[k]);
    }
 }
@@ -1157,8 +1307,8 @@ RVec<typename RVec<T>::size_type> Nonzero(const RVec<T> &v)
    RVec<size_type> r;
    const auto size = v.size();
    r.reserve(size);
-   for(size_type i=0; i<size; i++) {
-      if(v[i] != 0) {
+   for (size_type i = 0; i < size; i++) {
+      if (v[i] != 0) {
          r.emplace_back(i);
       }
    }
@@ -1182,17 +1332,18 @@ RVec<typename RVec<T>::size_type> Nonzero(const RVec<T> &v)
 /// // (ROOT::VecOps::RVec<double>) { 1.0000000, 2.0000000 }
 /// ~~~
 template <typename T>
-RVec<T> Intersect(const RVec<T>& v1, const RVec<T>& v2, bool v2_is_sorted = false)
+RVec<T> Intersect(const RVec<T> &v1, const RVec<T> &v2, bool v2_is_sorted = false)
 {
    RVec<T> v2_sorted;
-   if (!v2_is_sorted) v2_sorted = Sort(v2);
+   if (!v2_is_sorted)
+      v2_sorted = Sort(v2);
    const auto v2_begin = v2_is_sorted ? v2.begin() : v2_sorted.begin();
    const auto v2_end = v2_is_sorted ? v2.end() : v2_sorted.end();
    RVec<T> r;
    const auto size = v1.size();
    r.reserve(size);
    using size_type = typename RVec<T>::size_type;
-   for(size_type i=0; i<size; i++) {
+   for (size_type i = 0; i < size; i++) {
       if (std::binary_search(v2_begin, v2_end, v1[i])) {
          r.emplace_back(v1[i]);
       }
@@ -1216,13 +1367,13 @@ RVec<T> Intersect(const RVec<T>& v1, const RVec<T>& v2, bool v2_is_sorted = fals
 /// // (ROOT::VecOps::RVec<double> &) { -1.0000000, 2.0000000, 3.0000000 }
 /// ~~~
 template <typename T>
-RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, const RVec<T>& v2)
+RVec<T> Where(const RVec<int> &c, const RVec<T> &v1, const RVec<T> &v2)
 {
    using size_type = typename RVec<T>::size_type;
    const size_type size = c.size();
    RVec<T> r;
    r.reserve(size);
-   for (size_type i=0; i<size; i++) {
+   for (size_type i = 0; i < size; i++) {
       r.emplace_back(c[i] != 0 ? v1[i] : v2[i]);
    }
    return r;
@@ -1244,13 +1395,13 @@ RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, const RVec<T>& v2)
 /// // (ROOT::VecOps::RVec<double>) { 4.0000000, 2.0000000, 3.0000000 }
 /// ~~~
 template <typename T>
-RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, T v2)
+RVec<T> Where(const RVec<int> &c, const RVec<T> &v1, T v2)
 {
    using size_type = typename RVec<T>::size_type;
    const size_type size = c.size();
    RVec<T> r;
    r.reserve(size);
-   for (size_type i=0; i<size; i++) {
+   for (size_type i = 0; i < size; i++) {
       r.emplace_back(c[i] != 0 ? v1[i] : v2);
    }
    return r;
@@ -1272,13 +1423,13 @@ RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, T v2)
 /// // (ROOT::VecOps::RVec<double>) { 1.0000000, 4.0000000, 4.0000000 }
 /// ~~~
 template <typename T>
-RVec<T> Where(const RVec<int>& c, T v1, const RVec<T>& v2)
+RVec<T> Where(const RVec<int> &c, T v1, const RVec<T> &v2)
 {
    using size_type = typename RVec<T>::size_type;
    const size_type size = c.size();
    RVec<T> r;
    r.reserve(size);
-   for (size_type i=0; i<size; i++) {
+   for (size_type i = 0; i < size; i++) {
       r.emplace_back(c[i] != 0 ? v1 : v2[i]);
    }
    return r;
@@ -1298,13 +1449,13 @@ RVec<T> Where(const RVec<int>& c, T v1, const RVec<T>& v2)
 /// // (ROOT::VecOps::RVec<double>) { 2.0000000, 4.0000000, 4.0000000 }
 /// ~~~
 template <typename T>
-RVec<T> Where(const RVec<int>& c, T v1, T v2)
+RVec<T> Where(const RVec<int> &c, T v1, T v2)
 {
    using size_type = typename RVec<T>::size_type;
    const size_type size = c.size();
    RVec<T> r;
    r.reserve(size);
-   for (size_type i=0; i<size; i++) {
+   for (size_type i = 0; i < size; i++) {
       r.emplace_back(c[i] != 0 ? v1 : v2);
    }
    return r;
@@ -1334,16 +1485,12 @@ std::ostream &operator<<(std::ostream &os, const RVec<T> &v)
 
 #if (_VECOPS_USE_EXTERN_TEMPLATES)
 
-#define TVEC_EXTERN_UNARY_OPERATOR(T, OP) \
-   extern template RVec<T> operator OP<T>(const RVec<T> &);
+#define TVEC_EXTERN_UNARY_OPERATOR(T, OP) extern template RVec<T> operator OP<T>(const RVec<T> &);
 
-#define TVEC_EXTERN_BINARY_OPERATOR(T, OP)                                     \
-   extern template auto operator OP<T, T>(const T &x, const RVec<T> &v)        \
-      -> RVec<decltype(x OP v[0])>;                                            \
-   extern template auto operator OP<T, T>(const RVec<T> &v, const T &y)        \
-      -> RVec<decltype(v[0] OP y)>;                                            \
-   extern template auto operator OP<T, T>(const RVec<T> &v0, const RVec<T> &v1)\
-      -> RVec<decltype(v0[0] OP v1[0])>;
+#define TVEC_EXTERN_BINARY_OPERATOR(T, OP)                                                          \
+   extern template auto operator OP<T, T>(const T &x, const RVec<T> &v)->RVec<decltype(x OP v[0])>; \
+   extern template auto operator OP<T, T>(const RVec<T> &v, const T &y)->RVec<decltype(v[0] OP y)>; \
+   extern template auto operator OP<T, T>(const RVec<T> &v0, const RVec<T> &v1)->RVec<decltype(v0[0] OP v1[0])>;
 
 #define TVEC_EXTERN_ASSIGN_OPERATOR(T, OP)                           \
    extern template RVec<T> &operator OP<T, T>(RVec<T> &, const T &); \
@@ -1354,26 +1501,26 @@ std::ostream &operator<<(std::ostream &os, const RVec<T> &v)
    extern template RVec<int> operator OP<T, T>(const T &, const RVec<T> &); \
    extern template RVec<int> operator OP<T, T>(const RVec<T> &, const RVec<T> &);
 
-#define TVEC_EXTERN_FLOAT_TEMPLATE(T)   \
-   extern template class RVec<T>;       \
-   TVEC_EXTERN_UNARY_OPERATOR(T, +)     \
-   TVEC_EXTERN_UNARY_OPERATOR(T, -)     \
-   TVEC_EXTERN_UNARY_OPERATOR(T, !)     \
-   TVEC_EXTERN_BINARY_OPERATOR(T, +)    \
-   TVEC_EXTERN_BINARY_OPERATOR(T, -)    \
-   TVEC_EXTERN_BINARY_OPERATOR(T, *)    \
-   TVEC_EXTERN_BINARY_OPERATOR(T, /)    \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, +=)   \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, -=)   \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, *=)   \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, /=)   \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, <)   \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, >)   \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, ==)  \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, !=)  \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, <=)  \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, >=)  \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, &&)  \
+#define TVEC_EXTERN_FLOAT_TEMPLATE(T)  \
+   extern template class RVec<T>;      \
+   TVEC_EXTERN_UNARY_OPERATOR(T, +)    \
+   TVEC_EXTERN_UNARY_OPERATOR(T, -)    \
+   TVEC_EXTERN_UNARY_OPERATOR(T, !)    \
+   TVEC_EXTERN_BINARY_OPERATOR(T, +)   \
+   TVEC_EXTERN_BINARY_OPERATOR(T, -)   \
+   TVEC_EXTERN_BINARY_OPERATOR(T, *)   \
+   TVEC_EXTERN_BINARY_OPERATOR(T, /)   \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, +=)  \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, -=)  \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, *=)  \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, /=)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, <)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, >)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, ==) \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, !=) \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, <=) \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, >=) \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, &&) \
    TVEC_EXTERN_LOGICAL_OPERATOR(T, ||)
 
 #define TVEC_EXTERN_INTEGER_TEMPLATE(T) \
@@ -1413,13 +1560,13 @@ TVEC_EXTERN_INTEGER_TEMPLATE(char)
 TVEC_EXTERN_INTEGER_TEMPLATE(short)
 TVEC_EXTERN_INTEGER_TEMPLATE(int)
 TVEC_EXTERN_INTEGER_TEMPLATE(long)
-//TVEC_EXTERN_INTEGER_TEMPLATE(long long)
+// TVEC_EXTERN_INTEGER_TEMPLATE(long long)
 
 TVEC_EXTERN_INTEGER_TEMPLATE(unsigned char)
 TVEC_EXTERN_INTEGER_TEMPLATE(unsigned short)
 TVEC_EXTERN_INTEGER_TEMPLATE(unsigned int)
 TVEC_EXTERN_INTEGER_TEMPLATE(unsigned long)
-//TVEC_EXTERN_INTEGER_TEMPLATE(unsigned long long)
+// TVEC_EXTERN_INTEGER_TEMPLATE(unsigned long long)
 
 TVEC_EXTERN_FLOAT_TEMPLATE(float)
 TVEC_EXTERN_FLOAT_TEMPLATE(double)
@@ -1431,12 +1578,11 @@ TVEC_EXTERN_FLOAT_TEMPLATE(double)
 #undef TVEC_EXTERN_INTEGER_TEMPLATE
 #undef TVEC_EXTERN_FLOAT_TEMPLATE
 
-#define TVEC_EXTERN_UNARY_FUNCTION(T, NAME, FUNC) \
-   extern template RVec<PromoteType<T>> NAME(const RVec<T> &);
+#define TVEC_EXTERN_UNARY_FUNCTION(T, NAME, FUNC) extern template RVec<PromoteType<T>> NAME(const RVec<T> &);
 
 #define TVEC_EXTERN_STD_UNARY_FUNCTION(T, F) TVEC_EXTERN_UNARY_FUNCTION(T, F, std::F)
 
-#define TVEC_EXTERN_BINARY_FUNCTION(T0, T1, NAME, FUNC)                            \
+#define TVEC_EXTERN_BINARY_FUNCTION(T0, T1, NAME, FUNC)                           \
    extern template RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &, const T1 &); \
    extern template RVec<PromoteTypes<T0, T1>> NAME(const T0 &, const RVec<T1> &); \
    extern template RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &, const RVec<T1> &);
@@ -1479,7 +1625,7 @@ TVEC_EXTERN_FLOAT_TEMPLATE(double)
    TVEC_EXTERN_STD_UNARY_FUNCTION(T, erf)        \
    TVEC_EXTERN_STD_UNARY_FUNCTION(T, erfc)       \
    TVEC_EXTERN_STD_UNARY_FUNCTION(T, lgamma)     \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, tgamma)     \
+   TVEC_EXTERN_STD_UNARY_FUNCTION(T, tgamma)
 
 TVEC_EXTERN_STD_FUNCTIONS(float)
 TVEC_EXTERN_STD_FUNCTIONS(double)
@@ -1513,11 +1659,23 @@ TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
 
 #endif // _VECOPS_USE_EXTERN_TEMPLATES
 
-} // End of VecOps NS
+} // namespace VecOps
 
 // Allow to use RVec as ROOT::RVec
 using ROOT::VecOps::RVec;
 
-} // End of ROOT NS
+} // namespace ROOT
+
+
+namespace std {
+template <typename T>
+void swap(ROOT::VecOps::RVec<T> &lhs, ROOT::VecOps::RVec<T> &rhs)
+{
+   auto tmp(std::move(lhs));
+   lhs = std::move(rhs);
+   rhs = std::move(tmp);
+}
+} // namespace std
+
 
 #endif
