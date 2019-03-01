@@ -42,7 +42,7 @@ sap.ui.define([
 
    });
 
-   return Controller.extend("eve.Summary", {
+   return Controller.extend("rootui5.eve7.controller.Summary", {
 
       onInit: function () {
 

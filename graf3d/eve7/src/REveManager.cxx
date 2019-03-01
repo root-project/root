@@ -136,20 +136,8 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
    // !!! AMT increase threshold to enable color pick on client
    TColor::SetColorThreshold(0.1);
 
-   fWebWindow =  ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
-
-   TString evedir = gEnv->GetValue("WebEve.Eve7JsDir", "");
-   if (evedir.IsNull())
-   {
-      evedir = TString::Format("%s/eve7", TROOT::GetEtcDir().Data());
-   }
-   if (gSystem->ExpandPathName(evedir)) {
-      Warning("REveManager", "problems resolving %s for HTML sources", evedir.Data());
-      evedir = ".";
-   }
-
-   fWebWindow->GetServer()->AddLocation("/evedir/",  evedir.Data());
-   fWebWindow->SetDefaultPage(Form("file:%s/index.html", evedir.Data()));
+   fWebWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
+   fWebWindow->SetDefaultPage(Form("file:%s/ui5/eve7/index.html", TROOT::GetDataDir().Data()));
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->HttpServerCallback(connid, arg); });
