@@ -5,8 +5,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/m/CheckBox',
                'sap/ui/layout/Splitter',
                'sap/ui/layout/SplitterLayoutData',
-               "sap/ui/core/ResizeHandler"
-],function(Controller, CoreControl, JSONModel, mText, mCheckBox, MCSplitter, SplitterLayoutData, ResizeHandler) {
+               "sap/ui/core/ResizeHandler",
+               'rootui5/eve7/lib/EveElements'
+],function(Controller, CoreControl, JSONModel, mText, mCheckBox, MCSplitter, SplitterLayoutData, ResizeHandler, EveElements) {
 
    "use strict";
    
@@ -113,7 +114,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          
          // PART 2: instantiate Control and place it onto the page
 
-         this.creator = new JSROOT.EVE.EveElements();
+         this.creator = new EveElements();
          
          this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
          

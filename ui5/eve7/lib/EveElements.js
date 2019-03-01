@@ -1,27 +1,11 @@
-/** @file EveElements.js */
+/** @file EveElements.js 
+ * used only together with OpenUI5 */
 
-(function( factory ) {
-   if ( typeof define === "function" && define.amd ) {
-      define( [ 'JSRootCore', 'threejs' ], factory );
-   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
-      factory(require("./JSRootCore.js"), require("./three.min.js"));
-   } else {
+// TODO: add dependency from JSROOT components
 
-       if (typeof JSROOT == 'undefined')
-          throw new Error('JSROOT is not defined', 'EveElements.js');
-
-       if (typeof JSROOT.EVE == 'undefined')
-          throw new Error('JSROOT.EVE is not defined', 'EveElements.js');
-
-       if (typeof THREE == 'undefined')
-          throw new Error('THREE is not defined', 'EveElements.js');
-
-       factory(JSROOT, THREE);
-    }
-} (function( JSROOT, THREE ) {
+sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    "use strict";
-
 
    function EveElemControl(mesh) {
       // JSROOT.Painter.GeoDrawingControl.call(this);
@@ -32,7 +16,7 @@
 
    EveElemControl.prototype.invokeSceneMethod = function(fname, arg1, arg2)
    {
-      if ( ! this.mesh) return false;
+      if (!this.mesh) return false;
 
       var s = this.mesh.scene;
       if (s && (typeof s[fname] == "function"))
@@ -696,6 +680,6 @@
 
    JSROOT.EVE.EveElements = EveElements;
 
-   return JSROOT;
+   return EveElements;
 
-}));
+});
