@@ -26,11 +26,11 @@
 class TLeafD32 : public TLeaf {
 
 protected:
-   Double32_t fMinimum;              ///<  Minimum value if leaf range is specified
-   Double32_t fMaximum;              ///<  Maximum value if leaf range is specified
-   Double32_t *fValue;               ///<! Pointer to data buffer
-   Double32_t **fPointer;            ///<! Address of pointer to data buffer
-   TStreamerElement *fStreamingInfo; ///<! StreamerElement used for TBuffer read / write
+   Double32_t fMinimum;        ///<  Minimum value if leaf range is specified
+   Double32_t fMaximum;        ///<  Maximum value if leaf range is specified
+   Double32_t *fValue;         ///<! Pointer to data buffer
+   Double32_t **fPointer;      ///<! Address of pointer to data buffer
+   TStreamerElement *fElement; ///<! StreamerElement used for TBuffer read / write
 
 public:
    TLeafD32();
