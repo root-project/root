@@ -33,7 +33,7 @@ TLeafF16::TLeafF16() : TLeaf()
    fMaximum = 0;
    fValue = nullptr;
    fPointer = nullptr;
-   fStreamingInfo = nullptr;
+   fElement = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,11 +46,11 @@ TLeafF16::TLeafF16(TBranch *parent, const char *name, const char *type) : TLeaf(
    fMaximum = 0;
    fValue = nullptr;
    fPointer = nullptr;
-   fStreamingInfo = nullptr;
+   fElement = nullptr;
    fTitle = type;
 
    if (strchr(type, '['))
-      fStreamingInfo = new TStreamerElement(Form("%s_StreamingInfo", name), type, 0, 0, "Float16_t");
+      fElement = new TStreamerElement(Form("%s_Element", name), type, 0, 0, "Float16_t");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,8 +61,8 @@ TLeafF16::~TLeafF16()
    if (ResetAddress(nullptr, kTRUE))
       delete[] fValue;
 
-   if (fStreamingInfo)
-      delete fStreamingInfo;
+   if (fElement)
+      delete fElement;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,7 +89,7 @@ void TLeafF16::FillBasket(TBuffer &b)
    Int_t len = GetLen();
    if (fPointer)
       fValue = *fPointer;
-   b.WriteFastArrayFloat16(fValue, len, fStreamingInfo);
+   b.WriteFastArrayFloat16(fValue, len, fElement);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +124,7 @@ void TLeafF16::PrintValue(Int_t l) const
 void TLeafF16::ReadBasket(TBuffer &b)
 {
    if (!fLeafCount && fNdata == 1) {
-      b.ReadFloat16(fValue, fStreamingInfo);
+      b.ReadFloat16(fValue, fElement);
    } else {
       if (fLeafCount) {
          Long64_t entry = fBranch->GetReadEntry();
@@ -137,9 +137,9 @@ void TLeafF16::ReadBasket(TBuffer &b)
             len = fLeafCount->GetMaximum();
          }
          fNdata = len * fLen;
-         b.ReadFastArrayFloat16(fValue, len * fLen, fStreamingInfo);
+         b.ReadFastArrayFloat16(fValue, len * fLen, fElement);
       } else {
-         b.ReadFastArrayFloat16(fValue, fLen, fStreamingInfo);
+         b.ReadFastArrayFloat16(fValue, fLen, fElement);
       }
    }
 }
@@ -151,9 +151,9 @@ void TLeafF16::ReadBasket(TBuffer &b)
 void TLeafF16::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 {
    if (n * fLen == 1) {
-      b.ReadFloat16(fValue, fStreamingInfo);
+      b.ReadFloat16(fValue, fElement);
    } else {
-      b.ReadFastArrayFloat16(fValue, n * fLen, fStreamingInfo);
+      b.ReadFastArrayFloat16(fValue, n * fLen, fElement);
    }
 
    Float16_t *value = fValue;
@@ -218,7 +218,7 @@ void TLeafF16::Streamer(TBuffer &R__b)
       R__b.ReadClassBuffer(TLeafF16::Class(), this);
 
       if (fTitle.Contains("["))
-	 fStreamingInfo = new TStreamerElement(Form("%s_StreamingInfo", fName.Data()), fTitle.Data(), 0, 0, "Float16_t");
+	 fElement = new TStreamerElement(Form("%s_Element", fName.Data()), fTitle.Data(), 0, 0, "Float16_t");
    } else {
       R__b.WriteClassBuffer(TLeafF16::Class(), this);
    }
