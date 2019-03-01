@@ -173,15 +173,15 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
 
       // this is location where all ROOT UI5 sources are collected
       // normally it is $ROOTSYS/ui5 or <prefix>/ui5 location
-      TString ui5dir = gSystem->Getenv("UI5ROOTSYS");
+      TString ui5dir = gSystem->Getenv("ROOTUI5SYS");
       if (ui5dir.Length() == 0)
-         ui5dir = gEnv->GetValue("WebGui.Openui5Path","");
+         ui5dir = gEnv->GetValue("WebGui.RootUi5Path","");
 
       if (ui5dir.Length() == 0)
          ui5dir.Form("%s/ui5", TROOT::GetDataDir().Data());
 
       if (gSystem->ExpandPathName(ui5dir)) {
-         R__ERROR_HERE("WebDisplay") << "Path to UI5 sources " << ui5dir << " not found, set UI5ROOTSYS to openui5 sources";
+         R__ERROR_HERE("WebDisplay") << "Path to ROOT ui5 sources " << ui5dir << " not found, set ROOTUI5SYS correctly";
          ui5dir = ".";
       }
 

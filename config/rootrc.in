@@ -282,7 +282,7 @@ WebGui.Firefox:            @firefoxexe@
 # http port number for headless (batch) chrome on Windows
 WebGui.HeadlessPort:        9222
 # location of OpenUi5 applications for ROOT like canvas, eve, fitpanel, ... 
-#WebGui.Openui5Path:        @openui5dir@
+#WebGui.RootUi5Path:        @openui5dir@
 
 
 # OpenGL options (defaults are shown)
