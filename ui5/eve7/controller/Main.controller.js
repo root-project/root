@@ -43,29 +43,39 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
              toolbar.insertContent(btn, 0);
           }
       },
-
-      updateViewers: function() {
+      
+      updateViewers: function(loading_done) {
          var viewers = this.mgr.FindViewers();
 
          // first check number of views to create
-         var total_count = 0;
-         for (var n=0;n<viewers.length;++n) {
-            if (viewers[n].$view_created || viewers[n].$view_staged) continue;
-            viewers[n].$view_staged = true; // mark view which will be created in this loop
-            if (viewers[n].fRnrSelf) total_count++;
-         }
-
-         if (total_count == 0) return;
-
-         console.log("FOUND viewers", viewers.length, "not yet exists", total_count);
-
-         var main = this, vv = null, count = 0, sv = this.getView().byId("MainAreaSplitter");
-
+         var need_geom = false, staged = [];
          for (var n=0;n<viewers.length;++n) {
             var elem = viewers[n];
+            if (elem.$view_created || elem.$view_staged) continue;
+            if (elem.fRnrSelf) {
+               staged.push(elem);
+               if (viewers[n].fName != "Table") need_geom = true;
+            }
+         }
+
+         if (staged.length == 0) return;
+         
+         // if geometry loading was requested - do it now
+         // TODO: this should be done via sap.define[] API
+         if (need_geom && !loading_done)
+            return JSROOT.AssertPrerequisites("geom", this.updateViewers.bind(this, true));
+
+         console.log("FOUND viewers", viewers.length, "not yet exists", staged.length);
+
+         for (var n=0;n<staged.length;++n)
+            staged[n].$view_staged = true; // mark view which will be created in this loop, do we need this??
+         
+         var main = this, vv = null, count = 0, sv = this.getView().byId("MainAreaSplitter");
+
+         for (var n=0;n<staged.length;++n) {
+            var elem = staged[n];
             console.log("ELEMENT", elem.fName);
             var viewid = "EveViewer" + elem.fElementId;
-            if (elem.$view_created || !viewers[n].fRnrSelf) continue;
 
             // create missing view
             elem.$view_created = true;
@@ -76,8 +86,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             count++;
 
             var oLd = undefined;
-            if ((count == 1) && (total_count>1))
-               oLd = new SplitterLayoutData({resizable: true, size: "50%"});
+            if ((count == 1) && (staged.length > 1))
+               oLd = new SplitterLayoutData({ resizable: true, size: "50%" });
 
             var vtype = "rootui5.eve7.view.GL";
             if (elem.fName === "Table") vtype = "rootui5.eve7.view.EveTable"; // AMT temporary solution

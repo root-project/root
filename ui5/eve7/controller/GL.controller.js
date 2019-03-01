@@ -5,7 +5,7 @@ sap.ui.define([
    'rootui5/eve7/lib/EveManager',
    'rootui5/eve7/lib/EveElements',
    'rootui5/eve7/lib/EveScene'
-], function (Controller, JSONModel, ResizeHandler, EveElements, EveScene) {
+], function (Controller, JSONModel, ResizeHandler, EveManager, EveElements, EveScene) {
 
    "use strict";
 
@@ -232,7 +232,6 @@ sap.ui.define([
             this.created_scenes.push(handler);
             this.mgr.addSceneHandler(handler);
          }
-
       },
 
       redrawScenes: function() {
