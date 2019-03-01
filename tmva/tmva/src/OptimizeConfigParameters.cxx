@@ -365,7 +365,7 @@ Double_t TMVA::OptimizeConfigParameters::GetFOM()
       }
    };
 
-   Double_t fom=0;
+   Double_t fom = 0;
    if (fMethod->DoRegression()){
       std::cout << " ERROR: Sorry, Regression is not yet implement for automatic parameter optimisation"
                 << " --> exit" << std::endl;
@@ -382,6 +382,7 @@ Double_t TMVA::OptimizeConfigParameters::GetFOM()
               << " been implemented yet!! ---> exit " << Endl;
       }
    }
+
    fFOMvsIter.push_back(fom);
    //   std::cout << "fom="<<fom<<std::endl; // should write that into a debug log (as option)
    return fom;
