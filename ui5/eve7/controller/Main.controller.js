@@ -51,22 +51,13 @@ sap.ui.define(['sap/ui/core/Component',
          var viewers = this.mgr.FindViewers();
 
          // first check number of views to create
-         var need_geom = false, staged = [];
+         var staged = [];
          for (var n=0;n<viewers.length;++n) {
             var elem = viewers[n];
-            if (!elem.$view_created && elem.fRnrSelf) {
-               staged.push(elem);
-               if (viewers[n].fName != "Table") need_geom = true;
-            }
+            if (!elem.$view_created && elem.fRnrSelf)  staged.push(elem);
          }
-
          if (staged.length == 0) return;
          
-         // if geometry loading was requested - do it now
-         // TODO: this should be done via sap.define[] API
-         if (need_geom && !loading_done)
-            return JSROOT.AssertPrerequisites("geom", this.updateViewers.bind(this, true));
-
          console.log("FOUND viewers", viewers.length, "not yet exists", staged.length);
 
          var main = this, vv = null, count = 0, sv = this.getView().byId("MainAreaSplitter");
@@ -86,12 +77,15 @@ sap.ui.define(['sap/ui/core/Component',
 
             var vtype = "rootui5.eve7.view.GL";
             if (elem.fName === "Table") vtype = "rootui5.eve7.view.EveTable"; // AMT temporary solution
-
-            var view = new JSROOT.sap.ui.xmlview({
-               id: viewid,
-               viewName: vtype,
-               viewData: { mgr: main.mgr, elementid: elem.fElementId, kind: (count==1) ? "3D" : "2D" },
-               layoutData: oLd
+            
+            var oOwnerComponent = Component.getOwnerComponentFor(this.getView());
+            var view = oOwnerComponent.runAsOwner(function() {
+               return new JSROOT.sap.ui.xmlview({
+                  id: viewid,
+                  viewName: vtype,
+                  viewData: { mgr: main.mgr, elementid: elem.fElementId, kind: (count==1) ? "3D" : "2D" },
+                  layoutData: oLd
+               });
             });
 
             if (count == 1) {

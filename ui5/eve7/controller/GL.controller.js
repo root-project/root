@@ -28,7 +28,7 @@ sap.ui.define([
          }
          
          var oRouter = UIComponent.getRouterFor(this);
-         if (oRouter) oRouter.getRoute("View").attachPatternMatched(this._onObjectMatched, this);
+         oRouter.getRoute("View").attachPatternMatched(this._onObjectMatched, this);
 
          ResizeHandler.register(this.getView(), this.onResize.bind(this));
          this.fast_event = [];
