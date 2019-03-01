@@ -46,6 +46,6 @@ void ROOT::Experimental::RObjectDrawable::Execute(const std::string &exec)
 
    std::stringstream cmd;
    cmd << "((" << obj->ClassName() << "* ) " << std::hex << std::showbase << (size_t)obj << ")->" << exec << ";";
-   std::cout << "RObjectDrawable::Execute Obj " <<  obj->GetName() << "Cmd " << cmd.str() << std::endl;;
+   std::cout << "RObjectDrawable::Execute Obj " << obj->GetName() << "Cmd " << cmd.str() << std::endl;
    gROOT->ProcessLine(cmd.str().c_str());
 }
