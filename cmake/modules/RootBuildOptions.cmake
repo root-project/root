@@ -143,6 +143,7 @@ ROOT_BUILD_OPTION(python ON "Enable support for automatic Python bindings (PyROO
 ROOT_BUILD_OPTION(qt5web OFF "Enable support for Qt5 web-based display (requires Qt5WebEngine)")
 ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RInside)")
 ROOT_BUILD_OPTION(roofit ON "Build RooFit advanced fitting package")
+ROOT_BUILD_OPTION(webui ON "Build Web-based UI components of ROOT (requires C++14 standard or higher)")
 ROOT_BUILD_OPTION(root7 ON "Build ROOT 7 components of ROOT (requires C++14 standard or higher)")
 ROOT_BUILD_OPTION(rpath OFF "Link libraries with built-in RPATH (run-time search path)")
 ROOT_BUILD_OPTION(runtime_cxxmodules OFF "Enable runtime support for C++ modules")
@@ -288,6 +289,15 @@ endforeach()
 #---ROOT 7 requires C++14 standard or higher---------------------------------------------------
 if(NOT CMAKE_CXX_STANDARD GREATER 11)
   set(root7_defvalue OFF)
+  set(webui_defvalue OFF)
+endif()
+
+if(webui)
+  if(CMAKE_CXX_STANDARD EQUAL 11)
+    message(FATAL_ERROR "WebUI requires C++14 or higher")
+  elseif(NOT http)
+    set(http ON CACHE BOOL "(Enabled since it's needed by webui)" FORCE)
+  endif()
 endif()
 
 #---roottest option implies testing

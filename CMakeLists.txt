@@ -194,8 +194,15 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
                    COMMENT "Copying directories such as etc, icons, fonts, js, ui5, etc. to build area")
 
+if(http)
+set(jsroot_files js/*)
+endif()
+if(webui)
+set(openui5_files ui5/*)
+endif()
+
 #---Copy files to the build area, with dependency---------------------------------
-file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/* js/* ui5/*)
+file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/* ${jsroot_files} ${openui5_files})
 set(artifact_files_builddir)
 foreach(artifact_file ${artifact_files})
   # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
@@ -460,9 +467,13 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})
-  install(DIRECTORY js/     DESTINATION ${CMAKE_INSTALL_JSROOTDIR})
-  install(DIRECTORY ui5/    DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}
-                            PATTERN "*.tar.gz" EXCLUDE)
+  if(http)  
+     install(DIRECTORY js/     DESTINATION ${CMAKE_INSTALL_JSROOTDIR})
+  endif()
+  if(webui)
+     install(DIRECTORY ui5/    DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}
+                               PATTERN "*.tar.gz" EXCLUDE)
+  endif()                             
   install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR})
   install(DIRECTORY test/      DESTINATION ${CMAKE_INSTALL_TESTDIR} COMPONENT tests)
   install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)

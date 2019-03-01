@@ -117,14 +117,6 @@ endif()
 # needed by roottest, to be removed once roottest is fixed
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${CMAKE_CXX_STANDARD}")
 
-if(root7)
-  if(CMAKE_CXX_STANDARD EQUAL 11)
-    message(FATAL_ERROR "ROOT 7 requires C++14 or higher")
-  elseif(NOT http)
-    set(http ON CACHE BOOL "(Enabled since it's needed by ROOT 7)" FORCE)
-  endif()
-endif()
-
 #---Check for libcxx option------------------------------------------------------------
 if(libcxx)
   CHECK_CXX_COMPILER_FLAG("-stdlib=libc++" HAS_LIBCXX11)
