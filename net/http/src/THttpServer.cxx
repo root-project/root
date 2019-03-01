@@ -16,6 +16,7 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TUrl.h"
+#include "TEnv.h"
 #include "TClass.h"
 #include "RVersion.h"
 #include "RConfigure.h"
@@ -138,7 +139,10 @@ ClassImp(THttpServer);
 THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server")
 {
    const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
-   if (jsrootsys)
+   if (!jsrootsys)
+      jsrootsys = gEnv->GetValue("HttpServ.JSRootPath", jsrootsys);
+
+   if (jsrootsys && *jsrootsys)
       fJSROOTSYS = jsrootsys;
 
    if (fJSROOTSYS.Length() == 0) {
