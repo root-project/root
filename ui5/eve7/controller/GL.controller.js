@@ -1,15 +1,18 @@
 sap.ui.define([
+   'sap/ui/core/Component',
+   'sap/ui/core/UIComponent',
    'sap/ui/core/mvc/Controller',
    'sap/ui/model/json/JSONModel',
    "sap/ui/core/ResizeHandler",
-   'rootui5/eve7/lib/EveManager',
-   'rootui5/eve7/lib/EveElements',
-   'rootui5/eve7/lib/EveScene'
-], function (Controller, JSONModel, ResizeHandler, EveManager, EveElements, EveScene) {
+   'rootui5/eve7/lib/EveManager'
+], function (Component, UIComponent, Controller, JSONModel, ResizeHandler, EveManager) {
 
    "use strict";
 
+   // for debug purposes - do not create geometry painter, just three.js renderer 
    var direct_threejs = false;
+   
+   var EveScene = null;
 
    return Controller.extend("rootui5.eve7.controller.GL", {
 
@@ -18,7 +21,49 @@ sap.ui.define([
          var id = this.getView().getId();
          console.log("eve.GL.onInit id = ", id);
 
-         var data = this.getView().getViewData();
+         var viewData = this.getView().getViewData();
+         if (viewData) {
+            console.log("Create with view data");
+            this.createXXX(viewData);
+         }
+         
+         var oRouter = UIComponent.getRouterFor(this);
+         if (oRouter) oRouter.getRoute("View").attachPatternMatched(this._onObjectMatched, this);
+
+         ResizeHandler.register(this.getView(), this.onResize.bind(this));
+         this.fast_event = [];
+
+         this._load_scripts = false;
+         this._render_html = false;
+         this.geo_painter = null;
+         // this.painter_ready = false;
+
+         JSROOT.AssertPrerequisites("geom", this.onLoadScripts.bind(this));
+      },
+      
+      onLoadScripts: function()
+      {
+         var pthis = this;
+         
+         sap.ui.define(['rootui5/eve7/lib/EveScene'], function (_handle) {
+            EveScene = _handle;
+            pthis._load_scripts = true;
+            pthis.checkViewReady();
+         });
+      },
+      
+      _onObjectMatched: function(oEvent) {
+         var args = oEvent.getParameter("arguments");
+         this.createXXX(Component.getOwnerComponentFor(this.getView()).getComponentData(), args.viewName);
+      },
+
+      createXXX: function(data, viewName) {
+
+         if (viewName) {
+            data.standalone = viewName;
+            data.kind = viewName;
+         }
+         //var data = this.getView().getViewData();
          // console.log("VIEW DATA", data);
 
          if (data.standalone && data.conn_handle)
@@ -35,15 +80,6 @@ sap.ui.define([
             this.kind = data.kind;
          }
 
-         ResizeHandler.register(this.getView(), this.onResize.bind(this));
-         this.fast_event = [];
-
-         this._load_scripts = false;
-         this._render_html = false;
-         this.geo_painter = null;
-         // this.painter_ready = false;
-
-         JSROOT.AssertPrerequisites("geom", this.onLoadScripts.bind(this));
       },
 
       // MT-HAKA
@@ -169,12 +205,6 @@ sap.ui.define([
          // this.controls.update( );
 
          this.renderer.render( this.scene, this.camera );
-      },
-
-      onLoadScripts: function()
-      {
-         this._load_scripts = true;
-         this.checkViewReady();
       },
 
       onManagerUpdate: function()
