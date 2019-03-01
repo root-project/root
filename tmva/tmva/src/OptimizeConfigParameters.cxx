@@ -350,29 +350,34 @@ Double_t TMVA::OptimizeConfigParameters::EstimatorFunction( std::vector<Double_t
 
 Double_t TMVA::OptimizeConfigParameters::GetFOM()
 {
+   auto parsePercent = [this](TString input) -> Double_t {
+      // Expects input e.g. SigEffAtBkgEff0 (14 chars) followed by a fraction
+      // either as e.g. 01 or .01 (meaning the same thing 1 %).
+      TString percent = TString(input(14, input.Sizeof()));
+      if (!percent.CountChar('.')) percent.Insert(1,".");
+
+      if (percent.IsFloat()) {
+         return percent.Atof();
+      } else {
+         Log() << kFATAL << " ERROR, " << percent << " in " << fFOMType
+               << " is not a valid floating point number" << Endl;
+         return 0; // Cannot happen
+      }
+   };
+
    Double_t fom=0;
    if (fMethod->DoRegression()){
       std::cout << " ERROR: Sorry, Regression is not yet implement for automatic parameter optimisation"
                 << " --> exit" << std::endl;
       std::exit(1);
-   }else{
+   } else {
       if      (fFOMType == "Separation")  fom = GetSeparation();
       else if (fFOMType == "ROCIntegral") fom = GetROCIntegral();
-      else if (fFOMType.BeginsWith("SigEffAtBkgEff0")){
-         TString percent=TString(fFOMType(14,fFOMType.Sizeof())); //Strip down to number
-         //Support users giving a fraction and old formatting, both cases must start with a 0
-         if (!percent.CountChar('.')) percent.Insert(1,".");
-         fom = GetSigEffAtBkgEff(percent.Atof());
-      }else if (fFOMType.BeginsWith("BkgRejAtSigEff0")){
-         TString percent=TString(fFOMType(14,fFOMType.Sizeof())); 
-         if (!percent.CountChar('.')) percent.Insert(1,".");
-         fom = GetBkgRejAtSigEff(percent.Atof());
-      }else if (fFOMType.BeginsWith("BkgEffAtSigEff0")){
-         TString percent=TString(fFOMType(14,fFOMType.Sizeof())); 
-         if (!percent.CountChar('.')) percent.Insert(1,".");
-         fom = GetBkgEffAtSigEff(percent.Atof());
-      }else {
-         Log()<<kFATAL << " ERROR, you've specified as Figure of Merit in the "
+      else if (fFOMType.BeginsWith("SigEffAtBkgEff0")) fom = GetSigEffAtBkgEff(parsePercent(fFOMType));
+      else if (fFOMType.BeginsWith("BkgRejAtSigEff0")) fom = GetBkgRejAtSigEff(parsePercent(fFOMType));
+      else if (fFOMType.BeginsWith("BkgEffAtSigEff0")) fom = GetBkgEffAtSigEff(parsePercent(fFOMType));
+      else {
+         Log()<< kFATAL << " ERROR, you've specified as Figure of Merit in the "
               << " parameter optimisation " << fFOMType << " which has not"
               << " been implemented yet!! ---> exit " << Endl;
       }
