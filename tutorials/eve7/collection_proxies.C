@@ -358,13 +358,12 @@ public:
       }
 
       for (auto proxy : m_builders) {
-         // printf("call proxy builder %s \n", proxy->Collection()->GetCName());
          proxy->Build();
       }
       m_inEventLoading = false;
    }
 
-   void addCollection(REX::REveDataCollection* collection)
+   void addCollection(REX::REveDataCollection* collection, bool makeTable)
    {
       // load data
       LoadCurrentEvent(collection);
@@ -386,7 +385,7 @@ public:
       m_builders.push_back(glBuilder);
       glBuilder->Build();
 
-      if (1) {
+      if (makeTable) {
          // Table view types      {
          auto tableBuilder = new REX::REveTableProxyBuilder();
          tableBuilder->SetHaveAWindow(true);
@@ -394,6 +393,7 @@ public:
          REX::REveElement* tablep = tableBuilder->CreateProduct("table-type", m_viewContext);
 
          auto tableMng =  m_viewContext->GetTableViewInfo();
+         tableMng->SetDisplayedCollection(collection->GetElementId());
          tableMng->AddDelegate([=](REX::ElementId_t elId) { tableBuilder->DisplayedCollectionChanged(elId); });
 
          for (REX::REveScene* scene : m_scenes) {
@@ -409,17 +409,6 @@ public:
       m_collections->AddElement(collection);
       collection->SetHandlerFunc([&] (REX::REveDataCollection* collection) { this->CollectionChanged( collection ); });
       collection->SetHandlerFuncIds([&] (REX::REveDataCollection* collection, const REX::REveDataCollection::Ids_t& ids) { this->ModelChanged( collection, ids ); });
-   }
-
-   void finishViewCreate() {
-      auto mngTable = m_viewContext->GetTableViewInfo();
-      if (mngTable) {
-         for (auto& el: m_collections->RefChildren())
-         {
-            if (el->GetName() == "XYTracks")
-               mngTable->SetDisplayedCollection(el->GetElementId());
-         }
-      }
    }
 
    void CollectionChanged(REX::REveDataCollection* collection) {
@@ -487,16 +476,15 @@ void collection_proxies(bool proj=true)
       trackCollection->SetItemClass(TParticle::Class());
       trackCollection->SetMainColor(kGreen);
       //trackCollection->SetFilterExpr("i.Pt() > 0.1 && std::abs(i.Eta()) < 1");
-      xyManager->addCollection(trackCollection);
+      xyManager->addCollection(trackCollection, true);
    }
 
    if (1) {
       REX::REveDataCollection* jetCollection = new REX::REveDataCollection("XYJets");
       jetCollection->SetItemClass(XYJet::Class());
       jetCollection->SetMainColor(kRed);
-      xyManager->addCollection(jetCollection);
+      xyManager->addCollection(jetCollection, false);
    }
-   xyManager->finishViewCreate();
 
    auto eventMng = new EventManager(event, xyManager);
    eventMng->SetName("EventManager");
