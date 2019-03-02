@@ -24,6 +24,13 @@ void REveTableViewInfo::SetDisplayedCollection(ElementId_t collectionId)
     StampObjProps();
 }
 
+
+void REveTableViewInfo::SetTableId(ElementId_t id)
+{
+   fTableId = id;
+   StampObjProps();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
@@ -31,6 +38,6 @@ Int_t REveTableViewInfo::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
    auto ret = REveElement::WriteCoreJson(j, rnr_offset);
    j["fDisplayedCollection"] = fDisplayedCollection;
-   //j["_typename"]  = IsA()->GetName();
+   j["fTableId"] = fTableId;
    return ret;
 }
