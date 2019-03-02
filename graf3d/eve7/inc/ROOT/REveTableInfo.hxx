@@ -101,6 +101,8 @@ public:
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 
+   void SetTableId(ElementId_t id);
+
    // read
    REveTableHandle::Entries_t &RefTableEntries(std::string cname) { return fSpecs[cname]; }
 
@@ -113,6 +115,7 @@ public:
 
 private:
    int fDisplayedCollection{0};
+   int fTableId{0};
    std::vector<Delegate_t> fDelegates;
    REveTableHandle::Specs_t  fSpecs;
 };
