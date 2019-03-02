@@ -33,8 +33,6 @@ sap.ui.define([
             this.mgr.RegisterSceneReceiver(scene.fSceneId, this);
             this.build();
          }
-
-         this.mgr.RegisterUpdate(this, "build");
       },
 
       locateEveTable: function()
@@ -43,28 +41,18 @@ sap.ui.define([
          var element = this.mgr.GetElement(this.elementid);
          var sceneInfo = element.childs[0];
          var scene = this.mgr.GetElement(sceneInfo.fSceneId);
-
-         // presume table view manger is first child of table scene
-         this.collectionMgr = scene.childs[0];
-         this.collection = this.mgr.GetElement(this.collectionMgr.fDisplayedCollection);
-
-         // look for a REveDataTable in list of proxy builder products
-         for (var i = 1; i < scene.childs.length; i++) {
-            var product = scene.childs[i];
-            // console.log("product ", product);
-            if (product.childs && product.childs.length > 0) {
-               if (product.childs[0].fCollectionId == this.collection.fElementId) {
-                  this.eveTable =  product.childs[0];
-                  // console.log("eveTable = ", this.eveTable);
-                  break;
-               }
-            }
+         // console.log(">>>table scene", scene);
+         if (scene.childs[0]._typename == "ROOT::Experimental::REveTableViewInfo") {
+            // presume table view manger is first child of table scene
+            this.collectionMgr = scene.childs[0];
+            this.eveTable =  this.mgr.GetElement(this.collectionMgr.fTableId);
+            this.collection = this.mgr.GetElement(this.eveTable.fCollectionId);
          }
       },
 
       build: function()
       {
-         console.log("EveTable controller build()");
+         // console.log("EveTable controller build()");
          this.locateEveTable();
          if (this.eveTable) {
             this.buildTableHeader();
