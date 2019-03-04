@@ -71,10 +71,6 @@ sap.ui.define([
             this.inspectorDialog.open();
          }.bind(this, obj));
       },
-      
-      showMethodsDialog: function() {
-         
-      },
 
       getCanvasPainter : function(also_without_websocket) {
          var elem = this.getView().byId("MainPanel");
@@ -84,7 +80,8 @@ sap.ui.define([
          return (p && (p._websocket || also_without_websocket)) ? p : null;
       },
 
-      closeMethodDialog : function(method, call_back) {
+
+      closeMethodDialog : function(painter, method, menu_obj_id) {
 
          var args = "";
 
@@ -118,10 +115,28 @@ sap.ui.define([
 
          this.methodDialog.close();
          this.methodDialog.destroy();
-         JSROOT.CallBack(call_back, args);
+
+        if (painter && method && args) {
+          
+           if (painter.ExecuteMenuCommand(method, args)) return;
+            var exec = method.fExec;
+            if (args) exec = exec.substr(0,exec.length-1) + args + ')';
+            // invoked only when user press Ok button
+            console.log('execute method for object ' + menu_obj_id + ' exec= ' + exec);
+            
+            var canvp = this.getCanvasPainter();
+
+            if (canvp)
+               canvp.SendWebsocket('OBJEXEC:' + menu_obj_id + ":" + exec);
+         }
       },
 
-      showMethodsDialog : function(method, call_back) {
+      showMethodsDialog : function(painter, method, menu_obj_id) {
+         
+         // TODO: deliver class name together with menu items
+         method.fClassName = painter.GetClassName();
+         if ((menu_obj_id.indexOf("#x")>0) || (menu_obj_id.indexOf("#y")>0) || (menu_obj_id.indexOf("#z")>0)) method.fClassName = "TAxis";
+         
          var items = [];
 
          for (var n=0;n<method.fArgs.length;++n) {
@@ -138,22 +153,15 @@ sap.ui.define([
          this.methodDialog = new Dialog({
             title: method.fClassName + '::' + method.fName,
             content: new List({
-                 items: items
-//              items: {
-//                 path: '/Method/fArgs',
-//                 template: new InputListItem({
-//                    label: "{fName} ({fTitle})",
-//                    content: new Input({placeholder: "{fName}", value: "{fValue}" })
-//                 })
-//              }
+                items: items
              }),
              beginButton: new Button({
                text: 'Cancel',
-               press: this.closeMethodDialog.bind(this, null, null)
+               press: this.closeMethodDialog.bind(this)
              }),
              endButton: new Button({
                text: 'Ok',
-               press: this.closeMethodDialog.bind(this, method, call_back)
+               press: this.closeMethodDialog.bind(this, painter, method, menu_obj_id)
              })
          });
 
