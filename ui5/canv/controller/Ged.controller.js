@@ -1,13 +1,14 @@
 sap.ui.define([
    'sap/ui/core/mvc/Controller',
    'sap/ui/model/json/JSONModel',
+   'sap/ui/core/Fragment',
    'sap/m/Dialog',
    'sap/m/Button',
    'sap/ui/core/HTML'
-], function (Controller, JSONModel, Dialog, Button, HTML) {
+], function (Controller, JSONModel, Fragment, Dialog, Button, HTML) {
    "use strict";
 
-   return Controller.extend("sap.ui.jsroot.controller.Ged", {
+   return Controller.extend("rootui5.canv.controller.Ged", {
 
       currentPainter: null,
 
@@ -45,11 +46,19 @@ sap.ui.define([
       addFragment : function(page, kind, model) {
          var fragm = this.gedFragments[kind];
 
+         // old code, now try async
+         // fragm = this.gedFragments[kind] = sap.ui.xmlfragment(this.getView().getId(), "rootui5.canv.view." + kind, this);
+
          if (!fragm)
-            fragm = this.gedFragments[kind] = sap.ui.xmlfragment(this.getView().getId(), "sap.ui.jsroot.view." + kind, this);
-
-         if (!fragm) return;
-
+            return Fragment.load({
+               name: "rootui5.canv.view." + kind,
+               type: "XML",
+               controller: this
+            }).then(function(_page, _kind, _model, oFragm) {
+               this.gedFragments[_kind] = oFragm;
+               this.addFragment(_page, _kind, _model);
+            }.bind(this, page, kind, model));
+            
          fragm.ged_fragment = true; // mark as ged fragment
 
          var html = new HTML();
