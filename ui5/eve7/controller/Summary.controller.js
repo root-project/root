@@ -162,7 +162,8 @@ sap.ui.define([
    };// colorButton colors
    
    
-   var EVEColorButton = Button.extend("sap.ui.jsroot.EVEColorButton", {
+   // TODO: move to separate file
+   var EVEColorButton = Button.extend("rootui5.eve7.controller.EVEColorButton", {
       // when default value not specified - openui tries to load custom
       renderer: {}, // ButtonRenderer.render,
 

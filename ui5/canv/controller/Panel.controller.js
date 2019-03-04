@@ -4,7 +4,7 @@ sap.ui.define([
 ], function (Controller, ResizeHandler) {
    "use strict";
 
-   return Controller.extend("sap.ui.jsroot.controller.Panel", {
+   return Controller.extend("rootui5.canv.controller.Panel", {
 
       onBeforeRendering: function() {
          console.log("Cleanup Panel", this.getView().getId());

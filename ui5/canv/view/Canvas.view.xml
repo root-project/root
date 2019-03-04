@@ -1,4 +1,4 @@
-<mvc:View height="100%" class="sapUiSizeCompact" controllerName="sap.ui.jsroot.controller.Canvas"
+<mvc:View height="100%" class="sapUiSizeCompact" controllerName="rootui5.canv.controller.Canvas"
    xmlns:mvc="sap.ui.core.mvc" xmlns:l="sap.ui.layout" xmlns="sap.m">
    <Page title="" showNavButton="false" showFooter="false"
       showSubHeader="false" id="CanvasMainPage">
@@ -81,7 +81,7 @@
       <content>
          <l:Splitter orientation="Horizontal" id="MainAreaSplitter">
             <mvc:XMLView id="MainPanel" width="100%"
-               height="100%" viewName="sap.ui.jsroot.view.CanvasPanel">
+               height="100%" viewName="rootui5.canv.view.CanvasPanel">
             </mvc:XMLView>
          </l:Splitter>
       </content>
@@ -95,4 +95,3 @@
       </footer>
    </Page>
 </mvc:View>
-
