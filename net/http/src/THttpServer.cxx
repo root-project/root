@@ -148,7 +148,7 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
    if (fJSROOTSYS.Length() == 0) {
       TString jsdir = TString::Format("%s/js", TROOT::GetDataDir().Data());
       if (gSystem->ExpandPathName(jsdir)) {
-         Warning("THttpServer", "problems resolving '%s', set JSROOTSYS to proper JavaScript ROOT location",
+         ::Warning("THttpServer::THttpServer", "problems resolving '%s', set JSROOTSYS to proper JavaScript ROOT location",
                  jsdir.Data());
          fJSROOTSYS = ".";
       } else {
@@ -214,8 +214,7 @@ THttpServer::~THttpServer()
 
    if (fTerminated) {
       TIter iter(&fEngines);
-      THttpEngine *engine = nullptr;
-      while ((engine = (THttpEngine *)iter()) != nullptr)
+      while (auto engine = dynamic_cast<THttpEngine *>(iter()))
          engine->Terminate();
    }
 
@@ -285,8 +284,8 @@ void THttpServer::AddLocation(const char *prefix, const char *path)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set location of JSROOT to use with the server
 /// One could specify address like:
-///   https://root.cern.ch/js/3.3/
-///   http://web-docs.gsi.de/~linev/js/3.3/
+///   https://root.cern.ch/js/5.6.3/
+///   http://jsroot.gsi.de/5.6.3/
 /// This allows to get new JSROOT features with old server,
 /// reduce load on THttpServer instance, also startup time can be improved
 /// When empty string specified (default), local copy of JSROOT is used (distributed with ROOT)
