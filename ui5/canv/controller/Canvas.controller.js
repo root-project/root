@@ -35,7 +35,7 @@ sap.ui.define([
             
             this.getView().byId("MainPanel").getController().setPainter(cp);
             
-            cp.showInspector = this.showsUi5Inspector.bind(this);
+            cp.showInspector = this.showInspector.bind(this);
             
             cp.showMethodsDialog = this.showMethodsDialog.bind(this);
          }
@@ -49,15 +49,15 @@ sap.ui.define([
          // this.toggleGedEditor();
       },
       
-      showsUi5Inspector: function(obj) {
+      closeInspector: function() {
+         this.inspectorDialog.close();
+         this.inspectorDialog.destroy();
+         delete this.inspectorDialog;
+      },
+      
+      showInspector: function(obj) {
          
          if (!obj) return;
-         
-         var handle = {}; // should be controller?
-         handle.closeObjectInspector = function() {
-            this.dialog.close();
-            this.dialog.destroy();
-         }
          
          Fragment.load({
             name: "rootui5.canv.view.Inspector",

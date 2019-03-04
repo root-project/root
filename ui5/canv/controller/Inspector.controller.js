@@ -3,7 +3,7 @@ sap.ui.define([
 ], function (Controller) {
    "use strict";
 
-   return Controller.extend("sap.ui.jsroot.controller.Inspector", {
+   return Controller.extend("openui5.canv.controller.Inspector", {
 
        renderObj:  null,
 
