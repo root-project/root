@@ -146,7 +146,6 @@ void REveSelection::RemoveNieceInternal(REveElement* el)
 
    if (i != fMap.end())
    {
-      el->RemoveAunt(this);
       if (fActive)
       {
          DoElementUnselect(i);
@@ -502,11 +501,14 @@ int REveSelection::RemoveImpliedSelectedReferencesTo(REveElement *el)
 {
    int count = 0;
 
-   for (auto &i : fMap) {
+   for (auto &i : fMap)
+   {
       auto j = i.second.f_implied.find(el);
 
-      if (j != i.second.f_implied.end()) {
+      if (j != i.second.f_implied.end())
+      {
          i.second.f_implied.erase(j);
+         el->DecImpliedSelected();
          ++count;
       }
    }
