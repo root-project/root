@@ -8,7 +8,7 @@ sap.ui.define([
 
    "use strict";
 
-   var ColorButton = Button.extend("sap.ui.jsroot.ColorButton", {
+   var ColorButton = Button.extend("rootui5.canv.controller.ColorButton", {
       metadata: {
          properties: {
             attrcolor : { type : "string", group : "Misc", defaultValue : null }

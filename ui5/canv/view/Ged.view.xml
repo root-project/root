@@ -1,7 +1,7 @@
 <mvc:View
    class="sapUiSizeCompact"
    height="100%"
-   controllerName="sap.ui.jsroot.controller.Ged"
+   controllerName="rootui5.canv.controller.Ged"
    xmlns:mvc="sap.ui.core.mvc"
    xmlns="sap.m">
    <Page id="ged_page" title="class: {/SelectedClass}" showHeader="true">

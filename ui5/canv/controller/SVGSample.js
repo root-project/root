@@ -4,7 +4,7 @@ sap.ui.define([
 ], function (Control, ResizeHandler) {
    "use strict";
 
-   return Control.extend("sap.ui.jsroot.SVGSample", {
+   return Control.extend("rootui5.canv.controller.SVGSample", {
       metadata: {
          properties: {
             svgsample : { type: "object", group: "Misc", defaultValue: null }

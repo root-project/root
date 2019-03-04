@@ -3,7 +3,7 @@ sap.ui.define([
 ], function(UIComponent, XMLView) {
    "use strict";
 
-   var Component = UIComponent.extend("eve.Component", {
+   var Component = UIComponent.extend("rootui5.eve7.Component", {
       metadata : {
          manifest: "json"
       },
