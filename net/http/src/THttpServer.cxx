@@ -740,10 +740,10 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->fContent = handler->GetDefaultPageContent().Data();
 
             if (arg->fContent.find("file:") == 0) {
-               TString fname = arg->fContent.c_str() + 5;
-               fname.ReplaceAll("$jsrootsys", fJSROOTSYS);
-
-               arg->fContent = ReadFileContent(fname.Data());
+               const char *fname = arg->fContent.c_str() + 5;
+               TString resolve;
+               if (!IsFileRequested(fname, resolve)) resolve = fname;
+               arg->fContent = ReadFileContent(resolve.Data());
                arg->AddNoCacheHeader();
             }
          }
