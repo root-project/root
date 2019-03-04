@@ -27,7 +27,6 @@ sap.ui.define([
          var model = new JSONModel({ GedIcon: "", StatusIcon: "", ToolbarIcon: "", TooltipIcon: "sap-icon://accept",
                                      StatusLbl1:"", StatusLbl2:"", StatusLbl3:"", StatusLbl4:"" });
          this.getView().setModel(model);
-
          
          var cp = Component.getOwnerComponentFor(this.getView()).getComponentData().canvas_painter;
          
@@ -35,19 +34,68 @@ sap.ui.define([
             
             this.getView().byId("MainPanel").getController().setPainter(cp);
             
-            cp.showInspector = this.showInspector.bind(this);
+            cp.executeObjectMethod = this.executeObjectMethod.bind(this);
+
+            // overwriting method of canvas with standalone handling of GED
+            cp.ActivateGed = this.openuiActivateGed.bind(this); 
+            cp.RemoveGed = this.cleanupIfGed.bind(this);
+            cp.HasGed = this.isGedEditor.bind(this);
             
-            cp.showMethodsDialog = this.showMethodsDialog.bind(this);
+            cp.HasEventStatus = this.isStatusShown.bind(this);
+            cp.ActivateStatusBar = this.toggleShowStatus.bind(this);
+            cp.ShowCanvasStatus = this.showCanvasStatus.bind(this);
+            cp.ShowMessage = this.showMessage.bind(this);
+            cp.ShowSection = this.showSection.bind(this);
+            
+            cp.ShowUI5ProjectionArea = this.showProjectionArea.bind(this);
+            cp.DrawInUI5ProjectionArea = this.drawInProjectionArea.bind(this);
          }
-         
-         //var data = this.getView().getViewData();
-         //if (data) {
-         //   this.getView().byId("MainPanel").getController().setPainter(data.canvas_painter);
-         //   delete data.canvas_painter;
-         //}
 
          // this.toggleGedEditor();
       },
+      
+      executeObjectMethod: function(painter, method, menu_obj_id) {
+         
+         if (method.fArgs!==undefined) {
+            this.showMethodsDialog(painter, method, menu_obj_id);
+            return true;
+         }
+
+         if (method.fName == "Inspect") { 
+            this.showInspector(painter.GetObject());
+            return true;
+         }
+         
+         if (method.fName == "FitPanel") {
+            this.showLeftArea("FitPanel");
+            return true;
+         }
+         
+         if ((method.fName == "DrawPanel") || (method.fName == "SetLineAttributes")
+               || (method.fName == "SetFillAttributes") || (method.fName == "SetMarkerAttributes")) {
+            
+            this.openuiActivateGed(painter);
+
+            return true;
+         }
+         
+         return false; // not processed
+
+      },
+      
+      openuiActivateGed: function(painter, kind, mode) {
+         // function used to activate GED in full canvas
+
+         this.showGeEditor(true);
+         
+         var canvp = this.getCanvasPainter();
+         
+         cannp.SelectObjectPainter(painter);
+
+         if (typeof canvp.ProcessChanges == 'function')
+            canvp.ProcessChanges("sbits", canvp);
+      }
+
       
       closeInspector: function() {
          this.inspectorDialog.close();
@@ -243,8 +291,9 @@ sap.ui.define([
       cleanupIfGed : function() {
          var ged = this.getLeftController("Ged"),
              p = this.getCanvasPainter();
-         if (ged) ged.cleanupGed();
          if (p) p.RegisterForPadEvents(null);
+         if (ged) ged.cleanupGed();
+         if (p) p.ProcessChanges("sbits", p);
       },
 
       getLeftController : function(name) {
@@ -429,7 +478,7 @@ sap.ui.define([
 
       },
 
-      ShowCanvasStatus : function (text1,text2,text3,text4) {
+      showCanvasStatus : function (text1,text2,text3,text4) {
          var model = this.getView().getModel();
          model.setProperty("/StatusLbl1", text1);
          model.setProperty("/StatusLbl2", text2);
@@ -446,6 +495,9 @@ sap.ui.define([
 
          this._Page.setShowFooter(new_state);
          this.getView().getModel().setProperty("/StatusIcon", new_state ? "sap-icon://accept" : "");
+         
+         var canvp = this.getCanvasPainter();
+         if (canvp) canvp.ProcessChanges("sbits", canvp);
       },
 
       toggleToolBar : function(new_state) {
@@ -507,6 +559,7 @@ sap.ui.define([
          }
       }
    });
+   
    return CController;
 
 });
