@@ -26,7 +26,7 @@
 ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr)
 {
    fWebWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
-   fWebWindow->SetDefaultPage(Form("file:%s/ui5/eve7/geom.html", TROOT::GetDataDir().Data()));
+   fWebWindow->SetDefaultPage("file:rootui5sys/eve7/geom.html");
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->WebWindowCallback(connid, arg); });

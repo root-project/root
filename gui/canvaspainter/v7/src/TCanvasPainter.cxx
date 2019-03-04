@@ -532,7 +532,7 @@ void ROOT::Experimental::TCanvasPainter::CreateWindow()
 
    fWindow = RWebWindowsManager::Instance()->CreateWindow();
    fWindow->SetConnLimit(0); // allow any number of connections
-   fWindow->SetDefaultPage("file:$jsrootsys/files/canvas.htm");
+   fWindow->SetDefaultPage("file:rootui5sys/canv/canvas.html");
    fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
    // fWindow->SetGeometry(500,300);
 }

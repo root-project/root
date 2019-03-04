@@ -457,7 +457,7 @@ TString TWebCanvas::CreateWebWindow(int limit)
 
       fWindow->SetConnLimit(limit); // allow any number of connections
 
-      fWindow->SetDefaultPage(Form("file:%s/ui5/canv/canvas6.htm", TROOT::GetDataDir().Data()));
+      fWindow->SetDefaultPage("file:rootui5sys/canv/canvas6.html");
 
       fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
    }

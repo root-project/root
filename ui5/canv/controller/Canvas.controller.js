@@ -277,9 +277,10 @@ sap.ui.define([
 
          var oLd = new SplitterLayoutData({
             resizable : true,
-            size      : "250px",
-            maxSize   : "500px"
+            size      : "250px"
          });
+         
+         var canvp = this.getCanvasPainter();
 
          XMLView.create({
             viewName : "rootui5.canv.view." + panel_name,
@@ -290,10 +291,10 @@ sap.ui.define([
             split.insertContentArea(oView, 0);
 
             if (panel_name === "Ged") {
-               var ged = oView.getController(), p = this.getCanvasPainter();
-               if (p && ged && (typeof p.RegisterForPadEvents == "function")) {
-                  p.RegisterForPadEvents(ged.padEventsReceiver.bind(ged));
-                  p.SelectObjectPainter(p);
+               var ged = oView.getController();
+               if (canvp && ged && (typeof canvp.RegisterForPadEvents == "function")) {
+                  canvp.RegisterForPadEvents(ged.padEventsReceiver.bind(ged));
+                  canvp.SelectObjectPainter(canvp);
                }
             }
             

@@ -137,7 +137,7 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
    TColor::SetColorThreshold(0.1);
 
    fWebWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
-   fWebWindow->SetDefaultPage(Form("file:%s/ui5/eve7/index.html", TROOT::GetDataDir().Data()));
+   fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->HttpServerCallback(connid, arg); });

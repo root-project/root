@@ -111,7 +111,7 @@ void ROOT::Experimental::RWebWindow::SetPanelName(const std::string &name)
    }
 
    fPanelName = name;
-   SetDefaultPage("file:$jsrootsys/files/panel.htm");
+   SetDefaultPage("file:rootui5sys/files/panel.html");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
