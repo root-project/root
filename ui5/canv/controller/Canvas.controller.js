@@ -4,6 +4,7 @@ sap.ui.define([
    'sap/ui/core/Component',
    'sap/ui/model/json/JSONModel',
    "sap/ui/core/mvc/XMLView",
+   'sap/ui/core/Fragment',
    'sap/m/MessageToast',
    'sap/m/Dialog',
    'sap/m/List',
@@ -15,7 +16,7 @@ sap.ui.define([
    'sap/ui/layout/SplitterLayoutData',
    'sap/ui/unified/Menu',
    'sap/ui/unified/MenuItem'
-], function (jQuery, Controller, Component, JSONModel, XMLView, MessageToast, Dialog, List, InputListItem, Input, Button, Label, Splitter, SplitterLayoutData, Menu, MenuItem) {
+], function (jQuery, Controller, Component, JSONModel, XMLView, Fragment, MessageToast, Dialog, List, InputListItem, Input, Button, Label, Splitter, SplitterLayoutData, Menu, MenuItem) {
    "use strict";
 
    var CController = Controller.extend("rootui5.canv.controller.Canvas", {
@@ -30,10 +31,14 @@ sap.ui.define([
          
          var cp = Component.getOwnerComponentFor(this.getView()).getComponentData().canvas_painter;
          
-         console.log('HAS PAINTER ', !!cp);
-         
-         if (cp)
+         if (cp) {
+            
             this.getView().byId("MainPanel").getController().setPainter(cp);
+            
+            cp.showInspector = this.showsUi5Inspector.bind(this);
+            
+            cp.showMethodsDialog = this.showMethodsDialog.bind(this);
+         }
          
          //var data = this.getView().getViewData();
          //if (data) {
@@ -42,6 +47,33 @@ sap.ui.define([
          //}
 
          // this.toggleGedEditor();
+      },
+      
+      showsUi5Inspector: function(obj) {
+         
+         if (!obj) return;
+         
+         var handle = {}; // should be controller?
+         handle.closeObjectInspector = function() {
+            this.dialog.close();
+            this.dialog.destroy();
+         }
+         
+         Fragment.load({
+            name: "rootui5.canv.view.Inspector",
+            type: "XML",
+            controller: this
+         }).then(function(_obj, oFragm) {
+            this.inspectorDialog = oFragm;
+            // FIXME: global id is used, should find better solution later
+            var view = sap.ui.getCore().byId("object_inspector");
+            view.getController().setObject(_obj);
+            this.inspectorDialog.open();
+         }.bind(this, obj));
+      },
+      
+      showMethodsDialog: function() {
+         
       },
 
       getCanvasPainter : function(also_without_websocket) {
