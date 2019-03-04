@@ -53,8 +53,8 @@ sap.ui.define(['sap/ui/core/Component',
          // first check number of views to create
          var staged = [];
          for (var n=0;n<viewers.length;++n) {
-            var elem = viewers[n];
-            if (!elem.$view_created && elem.fRnrSelf)  staged.push(elem);
+            var el = viewers[n];
+            if (!el.$view_created && el.fRnrSelf) staged.push(el);
          }
          if (staged.length == 0) return;
          
