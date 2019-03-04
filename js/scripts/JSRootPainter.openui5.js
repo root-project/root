@@ -37,6 +37,16 @@
       console.log('complete ui5 loading');
       JSROOT.sap = sap;
 
+      var rootui5sys = JSROOT.source_dir.replace(/jsrootsys/g, "rootui5sys");
+
+      sap.ui.loader.config({
+         paths: {
+            "jsroot": JSROOT.source_dir,
+            "rootui5": rootui5sys
+         }
+      });
+
+
       // var cust_style = document.createElement("link");
       // cust_style.setAttribute("rel", "stylesheet");
       // cust_style.setAttribute("type", "text/css");
@@ -89,20 +99,24 @@
       document.getElementsByTagName("head")[0].appendChild(element);
    }
 
-   var sources = [], openui5_dflt = "https://openui5.hana.ondemand.com/", openui5_jsroot = JSROOT.source_dir + "openui5dist/";
+   var sources = [],
+       openui5_dflt = "https://openui5.hana.ondemand.com/",
+       openui5_root = JSROOT.source_dir.replace(/jsrootsys/g, "ui5rootsys/distribution");
+
+   if (openui5_root == JSROOT.source_dir) openui5_root = "";
 
    if (typeof JSROOT.openui5src == 'string') {
       switch (JSROOT.openui5src) {
          case "nodefault": openui5_dflt = ""; break;
          case "default": sources.push(openui5_dflt); openui5_dflt = ""; break;
-         case "nojsroot": openui5_jsroot = ""; break;
-         case "jsroot": sources.push(openui5_jsroot); openui5_jsroot = ""; break;
+         case "nojsroot": openui5_root = ""; break;
+         case "jsroot": sources.push(openui5_root); openui5_root = ""; break;
          default: sources.push(JSROOT.openui5src); break;
       }
 
    }
 
-   if (openui5_jsroot && (sources.indexOf(openui5_jsroot)<0)) sources.push(openui5_jsroot);
+   if (openui5_root && (sources.indexOf(openui5_root)<0)) sources.push(openui5_root);
    if (openui5_dflt && (sources.indexOf(openui5_dflt)<0)) sources.push(openui5_dflt);
 
    TryOpenOpenUI(sources);
@@ -339,21 +353,6 @@
       return menu;
    }
 
-   JSROOT.TObjectPainter.prototype.ShowInpsector = function() {
-      var handle = {}; // should be controller?
-      handle.closeObjectInspector = function() {
-         this.dialog.close();
-         this.dialog.destroy();
-      }
-      handle.dialog = JSROOT.sap.ui.xmlfragment("sap.ui.jsroot.view.Inspector", handle);
-
-      // FIXME: global id is used, should find better solution later
-      var view = sap.ui.getCore().byId("object_inspector");
-      view.getController().setObject(this.GetObject());
-
-      handle.dialog.open();
-   }
-
    // ===================================================================================================
 
    JSROOT.TCanvasPainter.prototype.ShowGed = function(objpainter) {
@@ -481,31 +480,6 @@
    JSROOT.TCanvasPainter.prototype.fullShowSection = function(that, on) {
       var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
       if (main) main.getController().showSection(that, on);
-   }
-
-   JSROOT.TCanvasPainter.prototype.MethodsDialog = function(painter, method, menu_obj_id) {
-
-      var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
-      if (!main) return;
-
-      var pthis = this;
-
-      method.fClassName = painter.GetClassName();
-      // TODO: deliver class name together with menu items
-      if ((menu_obj_id.indexOf("#x")>0) || (menu_obj_id.indexOf("#y")>0) || (menu_obj_id.indexOf("#z")>0)) method.fClassName = "TAxis";
-
-      main.getController().showMethodsDialog(method, function(args) {
-
-         if (painter.ExecuteMenuCommand(method, args)) return;
-
-         var exec = method.fExec;
-         if (args) exec = exec.substr(0,exec.length-1) + args + ')';
-
-         // invoked only when user press Ok button
-         console.log('execute method for object ' + menu_obj_id + ' exec= ' + exec);
-
-         pthis.SendWebsocket('OBJEXEC:' + menu_obj_id + ":" + exec);
-      });
    }
 
    // ====================================================================================
