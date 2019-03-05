@@ -975,7 +975,7 @@ bool test49() {
              "return ok; }");
 
    m.SaveSource("TFormulaTest49.C");
-   int ret = gSystem->Exec("root -q -l -i TFormulaTest49.C");
+   int ret = gSystem->Exec("root.exe -q -l -i TFormulaTest49.C");
    ok |= (ret == 0);
    return ok;
 }
