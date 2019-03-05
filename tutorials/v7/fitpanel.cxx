@@ -25,30 +25,11 @@ void fitpanel0() {
 
   using namespace ROOT::Experimental;
 
-  // Create the histogram.
-  RAxisConfig xaxis(10, 0., 10.);
-  auto pHist = std::make_shared<RH1D>(xaxis);
-
-  // Fill a few points.
-  pHist->Fill(1);
-  pHist->Fill(2);
-  pHist->Fill(2);
-  pHist->Fill(3);
-
-
   auto panel = std::make_shared<RFitPanel>("FitPanel Title");
   panel->Show();
 
   // Register the histogram with ROOT: now it lives even after draw() ends.
   ROOT::Experimental::TDirectory::Heap().Add("fitpanel", panel);
-
-
-  // Create a canvas to be displayed.
-  // auto canvas = Experimental::RCanvas::Create("Canvas Title");
-  // canvas->Draw(pHist)->SetLineColor(Experimental::TColor::kRed);
-  // canvas->Draw(pHist2)->SetLineColor(Experimental::TColor::kBlue);
-
-  // canvas->Show();
 }
 
 void fitpanel() {
