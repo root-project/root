@@ -178,7 +178,7 @@ public:
    /// Set content of default window HTML page
    /// This page returns when URL address of the window will be requested
    /// Either HTML code or file name in the form "file:/home/user/data/file.htm"
-   /// One also can use configure JSROOT location like "file:$jsrootsys/files/canvas.htm"
+   /// One also can using default locations like "file:rootui5sys/canv/canvas.html"
    void SetDefaultPage(const std::string &page) { fDefaultPage = page; }
 
    void SetPanelName(const std::string &name);
