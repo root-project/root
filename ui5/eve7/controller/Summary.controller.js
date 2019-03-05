@@ -245,9 +245,9 @@ sap.ui.define([
             oTree.bindItems("treeModel>/", oItemTemplate);
          }
 
-         this.oModelGED = new JSONModel({ "widgetlist" : []});
-         sap.ui.getCore().setModel(this.oModelGED, "ged");
-
+         this.oModelGED = new JSONModel({ "widgetlist" : [] });
+         this.getView().setModel(this.oModelGED, "ged");
+         
          this.oGuiClassDef = {
             "REveElement" : [{
                name : "RnrSelf",
@@ -340,7 +340,7 @@ sap.ui.define([
 
       },
 
-      SetMgr : function(mgr) {
+      SetMgr: function(mgr) {
          this.mgr = mgr;
 
          this.mgr.RegisterUpdate(this, "UpdateMgr");
@@ -351,7 +351,7 @@ sap.ui.define([
          this.mgr.addSceneHandler(this);
       },
 
-      UpdateMgr : function(mgr) {
+      UpdateMgr: function(mgr) {
 
          console.log('UPDATE MGR', (new Date).toTimeString());
          var model = this.getView().getModel("treeModel");
@@ -363,12 +363,8 @@ sap.ui.define([
 
          // hide editor
          if (this.ged) {
-            /*
-            var pp = this.byId("sumSplitter");
-            this.ged.visible = false;
-            pp.removeContentArea(this.ged);
-*/        var gedFrame =  this.gedVert;//this.getView().byId("GED");
-         gedFrame.unbindElement();
+            var gedFrame =  this.gedVert;
+            gedFrame.unbindElement();
             gedFrame.destroyContent();
          }
       },
@@ -380,7 +376,7 @@ sap.ui.define([
          if (el.arr) {
             model.arr = new Array(el.arr.length);
             for (var n=0; n< el.arr.length; ++n) {
-               model.arr[n]= {"fName" : "unset"};
+               model.arr[n]= { fName: "unset"};
                this.addNodesToTreeItemModel(el.arr[n], model.arr[n]);
             }
          }
@@ -427,20 +423,18 @@ sap.ui.define([
          this.addNodesToTreeItemModel(lst, oTreeData);
          // console.log("event model ", { "top" : oTreeData});
 
-         this.model.setData({ "fName" : "Top", "arr" : oTreeData }); // ??? is this necessary
+         this.model.setData({ fName: "Top", arr: oTreeData }); // ??? is this necessary
 
-         // console.log("tree ", this.tree.getItems());
          this.model.refresh(true);
          this.tree.expandToLevel(2);
-         sap.ui.getCore().setModel(this.model, "treeModel");
-
+         this.getView().setModel(this.model, "treeModel");
 
          this.oProductModel = new JSONModel();
          this.oProductModel.setData([this._event]);
-         sap.ui.getCore().setModel(this.oProductModel, "event");
+         this.getView().setModel(this.oProductModel, "event");
       },
 
-      makeDataForGED : function (element) {
+      makeDataForGED: function (element) {
          // remove ROOT::Experimental::
          var shtype = element._typename.substring(20);
          var cgd = this.oGuiClassDef[shtype];
@@ -485,17 +479,17 @@ sap.ui.define([
                v = JSROOT.Painter.root_colors[v];
             }
             var labeledInput = {
-               "value" : v,
-               "name"  : arrw[i].name,
-               "data"  : arrw[i]
+               value: v,
+               name: arrw[i].name,
+               data: arrw[i]
             };
-
-            modelw.push({"value" : v, "name" : arrw[i].name, "data" : arrw[i]});
+            
+            modelw.push({ value: v, name: arrw[i].name, data: arrw[i]});
 
             if (this.maxLabelLength < arrw[i].name.length) this.maxLabelLength = arrw[i].name.length;
           }
-
-         this.getView().getModel("ged").setData({"widgetlist":modelw});
+          
+          this.oModelGED.setData({ "widgetlist": modelw });
       },
 
       /** Selection of element in the other editors */
@@ -614,14 +608,14 @@ sap.ui.define([
       toggleEditor: function() {
          var pp = this.byId("sumSplitter");
          if (!this.ged) {
-            var panel = new mPanel("productDetailsPanel", { height: "100%" ,width : "97%"});
+            var panel = new mPanel("productDetailsPanel", { height: "100%", width: "97%" });
             panel.setHeaderText("ElementGED");
             panel.addStyleClass("sapUiSizeCompact");
 
             panel.setLayoutData(new SplitterLayoutData("sld", {size : "30%"}));
             pp.addContentArea(panel);
 
-            var vert = new sap.ui.layout.VerticalLayout("GED",  {});
+            var vert = new VerticalLayout("GED",  {});
             vert.addStyleClass("sapUiSizeCompact");
             vert.addStyleClass("eveTreeItem");
             vert.addStyleClass("sapUiNoMarginTop");
@@ -669,16 +663,18 @@ sap.ui.define([
          var eventPath = item.getBindingContext("treeModel").getPath();
          oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
 
-         var gedFrame =  this.gedVert;//this.getView().byId("GED");
+         var gedFrame =  this.gedVert;
          gedFrame.unbindElement();
          gedFrame.destroyContent();
+
          this.makeDataForGED(this.editorElement);
+
          // console.log("going to bind >>> ", this.getView().getModel("ged"));
          gedFrame.bindAggregation("content", "ged>/widgetlist",  this.gedFactory.bind(this) );
+
       },
 
-      gedFactory:function(sId, oContext) {
-         // console.log("factory id ",sId);
+      gedFactory: function(sId, oContext) {
          var base = "/widgetlist/";
          var path = oContext.getPath();
          var idx = path.substring(base.length);
@@ -856,12 +852,11 @@ sap.ui.define([
             gedFrame.unbindElement();
             gedFrame.destroyContent();
             this.makeDataForGED(this.editorElement);
-            // console.log("going to bind >>> ", this.getView().getModel("ged"));
-            gedFrame.bindAggregation("content", "ged>/widgetlist", this.gedFactory.bind(this) );
+            gedFrame.bindAggregation("content", "ged>/widgetlist", this.gedFactory.bind(this));
          }
       },
 
-      canEdit : function(elem) {
+      canEdit: function(elem) {
          var t = elem._typename.substring(20);
          var ledit = this.oGuiClassDef;
          if (ledit.hasOwnProperty(t))
@@ -869,7 +864,7 @@ sap.ui.define([
          return false;
       },
 
-      AnyVisible : function(arr) {
+      anyVisible: function(arr) {
          if (!arr) return false;
          for (var k=0;k<arr.length;++k) {
             if (arr[k].fName) return true;
@@ -877,7 +872,7 @@ sap.ui.define([
          return false;
       },
 
-      createSummaryModel : function(tgt, src) {
+      createSummaryModel: function(tgt, src) {
          if (tgt === undefined) {
             tgt = [];
             src = this.mgr.childs;
@@ -896,7 +891,7 @@ sap.ui.define([
             newelem.masterid = elem.fMasterId || elem.fElementId;
 
             tgt.push(newelem);
-            if ((elem.childs !== undefined) && this.AnyVisible(elem.childs))
+            if ((elem.childs !== undefined) && this.anyVisible(elem.childs))
                newelem.childs = this.createSummaryModel([], elem.childs);
          }
 
