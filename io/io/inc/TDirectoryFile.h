@@ -75,6 +75,11 @@ public:
    virtual TObject    *FindObjectAny(const char *name) const;
    virtual TObject    *FindObjectAnyFile(const char *name) const;
    virtual TObject    *Get(const char *namecycle);
+   /// See documentation of TDirectoryFile::Get(const char *namecycle)
+   template <class T> inline T* Get(const char* namecycle)
+   {
+      return static_cast<T*>(GetObjectChecked(namecycle, TClass::GetClass<T>()));
+   }
    virtual TDirectory *GetDirectory(const char *apath, Bool_t printError = false, const char *funcname = "GetDirectory");
    template <class T> inline void GetObject(const char* namecycle, T*& ptr) // See TDirectory::Get for information
       {
