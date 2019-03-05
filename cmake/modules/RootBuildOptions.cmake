@@ -292,6 +292,15 @@ if(NOT CMAKE_CXX_STANDARD GREATER 11)
   set(webui_defvalue OFF)
 endif()
 
+#---roottest option implies testing
+if(roottest OR rootbench)
+  set(testing ON CACHE BOOL "" FORCE)
+endif()
+
+#---Define at moment the options with the selected default values-----------------------------
+ROOT_APPLY_OPTIONS()
+
+#---check if webui can be build-------------------------------
 if(webui)
   if(CMAKE_CXX_STANDARD EQUAL 11)
     message(FATAL_ERROR "WebUI requires C++14 or higher")
@@ -300,13 +309,6 @@ if(webui)
   endif()
 endif()
 
-#---roottest option implies testing
-if(roottest OR rootbench)
-  set(testing ON CACHE BOOL "" FORCE)
-endif()
-
-#---Define at moment the options with the selected default values-----------------------------
-ROOT_APPLY_OPTIONS()
 
 #---Removed options------------------------------------------------------------
 foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus gviz hdfs ios qt qtgsi rfio ruby sapdb srp table)
