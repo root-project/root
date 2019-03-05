@@ -1,5 +1,9 @@
-<mvc:View class="sapUiSizeCompact" height="100%" controllerName="sap.ui.jsroot.controller.FitPanel"
-   xmlns:mvc="sap.ui.core.mvc" xmlns:core="sap.ui.core"  xmlns="sap.m">
+<mvc:View 
+   controllerName="rootui5.fitpanel.controller.FitPanel"
+   class="sapUiSizeCompact" height="100%" 
+   xmlns:mvc="sap.ui.core.mvc" 
+   xmlns:core="sap.ui.core"  
+   xmlns="sap.m">
    <Page id="fitpanel_page" title="Fit Panel" showHeader="true">
        <content>
          <VBox>

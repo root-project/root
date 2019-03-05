@@ -97,7 +97,7 @@ ROOT::Experimental::RWebWindow::~RWebWindow()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Configure window to show some of existing JSROOT panels
-/// It uses "file:$jsrootsys/files/panel.htm" as default HTML page
+/// It uses "file:rootui5sys/panel/panel.html" as default HTML page
 /// At the moment only FitPanel is existing
 
 void ROOT::Experimental::RWebWindow::SetPanelName(const std::string &name)
@@ -111,7 +111,7 @@ void ROOT::Experimental::RWebWindow::SetPanelName(const std::string &name)
    }
 
    fPanelName = name;
-   SetDefaultPage("file:rootui5sys/files/panel.html");
+   SetDefaultPage("file:rootui5sys/panel/panel.html");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -183,12 +183,12 @@ unsigned ROOT::Experimental::RWebWindow::FindBatch()
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   for (auto &&entry : fPendingConn) {
+   for (auto &entry : fPendingConn) {
       if (entry->fBatchMode)
          return entry->fConnId;
    }
 
-   for (auto &&conn : fConn) {
+   for (auto &conn : fConn) {
       if (conn->fBatchMode)
          return conn->fConnId;
    }
