@@ -13,6 +13,7 @@
 10. Fix - support clipping for tracks and points in geo painter
 11. Fix - drawing of TGeoNode with finder   
 12. Fix - key press events processed only in actvie pad (ROOT-9128)  
+13. Move most of ui5-specific code into ROOT repository, where it will be maintained 
 
  
 ## Changes in 5.6.2

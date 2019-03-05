@@ -3912,17 +3912,6 @@
       var canvp = this.canv_painter();
       if (!canvp) return false;
 
-      if ((method.fName == "FitPanel") && canvp.ActivateFitPanel) {
-         canvp.ActivateFitPanel(this);
-         return true;
-      }
-
-      if (canvp.ActivateGed && ((method.fName == "DrawPanel") || (method.fName == "SetLineAttributes")
-            || (method.fName == "SetFillAttributes") || (method.fName == "SetMarkerAttributes"))) {
-         canvp.ActivateGed(this); // activate GED
-         return true;
-      }
-
       return false;
    }
 
@@ -3942,11 +3931,8 @@
 
          if (!item || !item.fName) return;
 
-         if ((item.fArgs!==undefined) && canvp.showMethodsDialog)
-            return canvp.showMethodsDialog(execp, item, execp.args_menu_id);
-
-         if ((item.fName == "Inspect") && canvp.showInspector)
-            return canvp.showInspector(execp.GetObject());
+         if (typeof canvp.executeObjectMethod == 'function')
+            if (canvp.executeObjectMethod(execp, item, execp.args_menu_id)) return;
 
          if (execp.ExecuteMenuCommand(item)) return;
 
@@ -4182,7 +4168,7 @@
 
       var pp = this.canv_painter(), res = JSROOT.Painter.ShowStatus;
 
-      if (pp && pp.use_openui && (typeof pp.fullShowStatus === 'function')) res = pp.fullShowStatus.bind(pp);
+      if (pp && (typeof pp.ShowCanvasStatus === 'function')) res = pp.ShowCanvasStatus.bind(pp);
 
       if (res && (this.enlarge_main('state')==='on')) res = null;
 
