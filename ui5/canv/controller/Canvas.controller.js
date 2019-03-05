@@ -327,14 +327,15 @@ sap.ui.define([
             size      : "250px"
          });
 
-         var panelid = "LeftPanelId";
+         var panelid = "LeftPanelId", viewName = panel_name;
+         if (viewName.indexOf(".") < 0) viewName = "rootui5.canv.view." + panel_name; 
 
          XMLView.create({
             id: panelid,
-            viewName: "rootui5.canv.view." + panel_name,
+            viewName: viewName,
             viewData: { handle: panel_handle },
             layoutData: oLd,
-            height: panel_name=="Panel" ? "100%" : undefined
+            height: (panel_name == "Panel") ? "100%" : undefined
          }).then(function(oView) {
             split.insertContentArea(oView, 0);
             JSROOT.CallBack(call_back, true);
