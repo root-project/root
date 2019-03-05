@@ -43,7 +43,7 @@ sap.ui.define([
             
             cp.HasEventStatus = this.isStatusShown.bind(this);
             cp.ActivateStatusBar = this.toggleShowStatus.bind(this);
-            cp.ShowCanvasStatus = this.showCanvasStatus.bind(this);
+            cp.ShowCanvasStatus = this.showCanvasStatus.bind(this); // used only for UI5, otherwise global func
             cp.ShowMessage = this.showMessage.bind(this);
             cp.ShowSection = this.showSection.bind(this);
             
@@ -71,11 +71,9 @@ sap.ui.define([
             return true;
          }
          
-         if ((method.fName == "DrawPanel") || (method.fName == "SetLineAttributes")
-               || (method.fName == "SetFillAttributes") || (method.fName == "SetMarkerAttributes")) {
-            
+         if ((method.fName == "DrawPanel") || (method.fName == "SetLineAttributes") ||
+             (method.fName == "SetFillAttributes") || (method.fName == "SetMarkerAttributes")) {
             this.openuiActivateGed(painter);
-
             return true;
          }
          
@@ -90,12 +88,11 @@ sap.ui.define([
          
          var canvp = this.getCanvasPainter();
          
-         cannp.SelectObjectPainter(painter);
+         canvp.SelectObjectPainter(painter);
 
          if (typeof canvp.ProcessChanges == 'function')
             canvp.ProcessChanges("sbits", canvp);
-      }
-
+      },
       
       closeInspector: function() {
          this.inspectorDialog.close();
@@ -325,8 +322,7 @@ sap.ui.define([
 
          var oLd = new SplitterLayoutData({
             resizable : true,
-            size      : "250px",
-            maxSize   : "500px"
+            size      : "250px"
          });
 
          var panelid = "LeftPanelId";
@@ -412,7 +408,7 @@ sap.ui.define([
       },
 
       showProjectionArea : function(kind, call_back) {
-         this.showBottomArea(kind == "X", function(bottom) {
+         this.showBottomArea((kind == "X"), function(bottom) {
             this.showLeftArea(kind == "Y" ? "Panel" : "", function(left) {
                
                var ctrl = bottom || left;
@@ -425,8 +421,7 @@ sap.ui.define([
                // FIXME: one should have much easier way to get callback when rendering done
                ctrl.after_render_callback = call_back;
             });   
-         });
-
+         }.bind(this));
       },
 
       showBottomArea : function(is_on, call_back) {
@@ -463,11 +458,10 @@ sap.ui.define([
 
          var oLd = new SplitterLayoutData({
             resizable : true,
-            size      : "200px",
-            maxSize   : "500px"
+            size      : "200px"
          });
 
-         XMLview.create({
+         XMLView.create({
             viewName : "rootui5.canv.view.Panel",
             layoutData: oLd,
             height: "100%"

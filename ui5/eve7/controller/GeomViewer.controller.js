@@ -4,10 +4,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/m/Text',
                'sap/m/CheckBox',
                'sap/ui/layout/Splitter',
-               'sap/ui/layout/SplitterLayoutData',
                "sap/ui/core/ResizeHandler",
                'rootui5/eve7/lib/EveElements'
-],function(Controller, CoreControl, JSONModel, mText, mCheckBox, MCSplitter, SplitterLayoutData, ResizeHandler, EveElements) {
+],function(Controller, CoreControl, JSONModel, mText, mCheckBox, MCSplitter, ResizeHandler, EveElements) {
 
    "use strict";
    
