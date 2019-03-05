@@ -103,6 +103,8 @@ public:
    /*! Read the information and the weights about the layer from XML node. */
    virtual void ReadWeightsFromXML(void *parent);
 
+   /*! Set dropout probabilities */
+   virtual void SetDropoutProbability(Scalar_t dropoutProbability) { fDropoutProbability = dropoutProbability; }
 
    /*! Getters */
    Scalar_t GetDropoutProbability() const { return fDropoutProbability; }
