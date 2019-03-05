@@ -46,9 +46,6 @@ sap.ui.define([
       addFragment : function(page, kind, model) {
          var fragm = this.gedFragments[kind];
 
-         // old code, now try async
-         // fragm = this.gedFragments[kind] = sap.ui.xmlfragment(this.getView().getId(), "rootui5.canv.view." + kind, this);
-
          if (!fragm)
             return Fragment.load({
                name: "rootui5.canv.view." + kind,

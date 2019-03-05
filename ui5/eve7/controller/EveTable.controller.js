@@ -4,9 +4,15 @@ sap.ui.define([
    'sap/ui/commons/CheckBox',
    'sap/ui/commons/Menu',
    'sap/ui/commons/MenuItem',
+   'sap/ui/core/Item',
    'sap/ui/table/Column',
-   "sap/ui/core/ResizeHandler"
-], function (Controller, JSONModel, ResizeHandler) {
+   'sap/m/Input',
+   'sap/m/Button',
+   "sap/ui/core/ResizeHandler",
+   "sap/ui/layout/VerticalLayout",
+   "sap/ui/layout/HorizontalLayout"
+], function (Controller, JSONModel, CheckBox, Menu, MenuItem, coreItem, Column, 
+             mInput, mButton, ResizeHandler, VerticalLayout, HorizontalLayout) {
 
    "use strict";
 
@@ -99,7 +105,7 @@ sap.ui.define([
          // bind rows and columns
          oTable.bindColumns("/columns", function(sId, oContext) {
             var columnName = oContext.getObject().columnName;
-            var oColumn = new sap.ui.table.Column({
+            var oColumn = new Column({
                label: columnName,
                template: columnName,
                sortProperty: columnName,
@@ -177,7 +183,7 @@ sap.ui.define([
 
          var header = this.getView().byId("header");
          if (!this.editor) {
-            this.editor = new sap.ui.layout.VerticalLayout("tableEdit", {"width":"100%"});
+            this.editor = new VerticalLayout("tableEdit", {"width":"100%"});
 
             header.addContent(this.editor);
 
@@ -189,14 +195,14 @@ sap.ui.define([
                // oModel.setData(aData);
                this.getView().setModel(oModel);
 
-               var exprIn = new sap.m.Input("expression", { width:"98%",
-                                                            type : sap.m.InputType.Text,
-                                                            placeholder:"Expression",
-                                                            showSuggestion: true
-                                                          }
-                                           );
+               var exprIn = new mInput("expression", { 
+                                         width:"98%",
+                                         type : sap.m.InputType.Text,
+                                         placeholder: "Expression",
+                                         showSuggestion: true
+                                       });
                exprIn.setModel(oModel);
-               exprIn.bindAggregation("suggestionItems", "/", new sap.ui.core.Item({text: "{name}"}));
+               exprIn.bindAggregation("suggestionItems", "/", new coreItem({text: "{name}"}));
                exprIn.setFilterFunction(function(sTerm, oItem) {
                   // A case-insensitive 'string contains' style filter
                   // console.log("filter sterm", sTerm);
@@ -215,13 +221,13 @@ sap.ui.define([
 
             // title & prec
             {
-               var hl = new sap.ui.layout.HorizontalLayout();
-               var titleIn = new sap.m.Input("title", {placeholder:"Title", tooltip:"title"});
+               var hl = new HorizontalLayout();
+               var titleIn = new mInput("title", {placeholder:"Title", tooltip:"title"});
                titleIn.setWidth("98%");
                hl.addContent(titleIn);
                //this.editor.addContent(titleIn);
 
-               var precIn = new sap.m.Input("precision", {placeholder:"Precision", type:sap.m.InputType.Number, constraints:{minimum:"0", maximum:"9"}});
+               var precIn = new mInput("precision", {placeholder:"Precision", type: sap.m.InputType.Number, constraints: {minimum:"0", maximum:"9"}});
                // precIn.bindProperty("value", "abc>precision");
                precIn.setWidth("100px");
 
@@ -233,13 +239,10 @@ sap.ui.define([
 
             //  button actions
             {
-               var ll = new sap.ui.layout.HorizontalLayout();
-               //   var precision = new sap.m.Input("precsion", {placeholder:"Precision"});
-               //   ll.addContent(precision);
-               var addBut = new sap.m.Button("AddCol", {text:"Add", press: this.addColumn});
+               var ll = new HorizontalLayout();
+               var addBut = new mButton("AddCol", {text:"Add", press: this.addColumn});
                addBut.data("controller", this);
                ll.addContent(addBut);
-               //   ll.addContent(new sap.m.Button("ModifyCol", {text:"Modify", press:"modifyColumn"}));
                this.editor.visible = true;
                this.editor.addContent(ll);
             }
