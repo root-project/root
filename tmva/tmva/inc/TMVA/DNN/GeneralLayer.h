@@ -137,6 +137,9 @@ public:
    /*! Read the information and the weights about the layer from XML node. */
    virtual void ReadWeightsFromXML(void *parent) = 0;
 
+   /*! Set Dropout probability. Reimplemented for layesrs supporting droput */
+   virtual void SetDropoutProbability(Scalar_t ) {}
+
    /*! Getters */
    size_t GetBatchSize() const { return fBatchSize; }
    size_t GetInputDepth() const { return fInputDepth; }
