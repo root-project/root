@@ -874,17 +874,16 @@ TObject *TDirectoryFile::FindObjectAny(const char *aname) const
 /// |  foo;1  | get cycle 1 of foo on file |
 ///
 /// The retrieved object should in principle derive from TObject.
-/// If not, the function TDirectoryFile::GetObject should be called.
+/// If not, the function TDirectoryFile::Get<T> should be called.
 /// However, this function will still work for a non-TObject, provided that
 /// the calling application cast the return type to the correct type (which
 /// is the actual type of the object).
 ///
-/// ### The GetObjectMethod
-/// The method GetObject offers better protection and avoids the need
-/// for any cast:
+/// ### The Get<T> Method
+/// The method Get<T> offers better protection and avoids the need for any
+/// cast:
 /// ~~~{.cpp}
-/// MyClass *obj;
-/// directory->GetObject("some object",obj);
+/// auto obj = directory->Get<MyClass>("some object");
 /// if (obj) { ... the object exist and inherits from MyClass ... }
 /// ~~~
 ///
@@ -1009,10 +1008,9 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const char* classn
 ///
 /// auto objPtr = (MyClass*)directory->GetObjectChecked("some object of MyClass","MyClass"));
 ///
-/// Note: We recommend using the method TDirectoryFile::GetObject:
+/// Note: We recommend using the method TDirectoryFile::Get<T>:
 /// ~~~{.cpp}
-/// MyClass *obj = nullptr;
-/// directory->GetObject("some object inheriting from MyClass",obj);
+/// auto obj = directory->Get<MyClass>("some object inheriting from MyClass");
 /// if (obj) { ... we found what we are looking for ... }
 /// ~~~
 
