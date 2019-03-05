@@ -327,7 +327,7 @@ sap.ui.define([
 
          var panelid = "LeftPanelId";
 
-         var oModel = new JSROOT.sap.ui.model.json.JSONModel({
+         var oModel = new JSONModel({
             handle: panel_handle
          });
          sap.ui.getCore().setModel(oModel, panelid);

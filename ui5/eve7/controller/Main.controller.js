@@ -2,8 +2,10 @@ sap.ui.define(['sap/ui/core/Component',
                'sap/ui/core/mvc/Controller',
                'sap/ui/layout/Splitter',
                'sap/ui/layout/SplitterLayoutData',
+               'sap/m/library',
+               'sap/m/Button',
                'rootui5/eve7/lib/EveManager'
-], function(Component, Controller, Splitter, SplitterLayoutData, EveManager) {
+], function(Component, Controller, Splitter, SplitterLayoutData, MobileLibrary, mButton, EveManager) {
 
    "use strict";
 
@@ -37,7 +39,7 @@ sap.ui.define(['sap/ui/core/Component',
 
           this.commands = cmds;
           for (var k=cmds.length-1;k>=0;--k) {
-             var btn = new sap.m.Button({
+             var btn = new mButton({
                 // text: "ButtonNew",
                 icon: cmds[k].icon,
                 tooltip: cmds[k].name,
@@ -157,7 +159,7 @@ sap.ui.define(['sap/ui/core/Component',
          alert("User support: root-webgui@cern.ch");
       },
       showUserURL : function(oEvent) {
-         sap.m.URLHelper.redirect("https://github.com/alja/jsroot/blob/dev/eve7.md", true);
+         MobileLibrary.URLHelper.redirect("https://github.com/alja/jsroot/blob/dev/eve7.md", true);
       }
    });
 });
