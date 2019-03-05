@@ -1174,6 +1174,9 @@ void MethodDL::TrainDeepNet()
       // Add all appropriate layers to deepNet and (if fBuildNet is true) also to fNet
       CreateDeepNet(deepNet, nets);
 
+      // set droput probabilities
+      deepNet.SetDropoutProbabilities(settings.dropoutProbabilities);
+
       if (trainingPhase > 1) {
          // copy initial weights from fNet to deepnet
          for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
