@@ -46,7 +46,6 @@
          if (painter.use_openui && !painter.batch_mode) {
 
             painter._window_handle = handle;
-
             
             return JSROOT.AssertPrerequisites('openui5', function() {
                
@@ -64,12 +63,6 @@
                   }).placeAt("CanvasDiv")
                });
                
-            
-//               new JSROOT.sap.ui.xmlview({
-//                  id: "TopCanvasId",
-//                  viewName: "rootui5.canv.view.Canvas",
-//                  viewData: { canvas_painter: painter }
-//               }).placeAt("CanvasDiv");
             });
          }
 
