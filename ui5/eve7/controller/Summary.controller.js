@@ -5,8 +5,9 @@ sap.ui.define([
    "sap/m/ColorPalettePopover",
    "sap/m/StandardTreeItem",
    "sap/m/Input",
-   "sap/m/CheckBox"
-], function(Controller, JSONModel, Button, ColorPalettePopover, StandardTreeItem, mInput, mCheckBox) {
+   "sap/m/CheckBox",
+   "sap/ui/layout/SplitterLayoutData"
+], function(Controller, JSONModel, Button, ColorPalettePopover, StandardTreeItem, mInput, mCheckBox, SplitterLayoutData) {
 
    "use strict";
    
@@ -611,7 +612,7 @@ sap.ui.define([
             panel.setHeaderText("ElementGED");
             panel.addStyleClass("sapUiSizeCompact");
 
-            panel.setLayoutData(new sap.ui.layout.SplitterLayoutData("sld", {size : "30%"}));
+            panel.setLayoutData(new SplitterLayoutData("sld", {size : "30%"}));
             pp.addContentArea(panel);
 
             var vert = new sap.ui.layout.VerticalLayout("GED",  {});
