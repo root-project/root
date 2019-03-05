@@ -49,6 +49,8 @@ sap.ui.define([
             
             cp.ShowUI5ProjectionArea = this.showProjectionArea.bind(this);
             cp.DrawInUI5ProjectionArea = this.drawInProjectionArea.bind(this);
+            
+            cp.ShowUI5Panel = this.showPanelInLeftArea.bind(this);
          }
 
          // this.toggleGedEditor();
@@ -303,7 +305,7 @@ sap.ui.define([
          this.showGeEditor(!this.isGedEditor());
       },
 
-      showPanelInLeftArea : function(panel_name, panel_handle, call_back) {
+      showPanelInLeftArea: function(panel_name, panel_handle, call_back) {
 
          var split = this.getView().byId("MainAreaSplitter");
          var curr = this.getView().getModel().getProperty("/LeftArea");
@@ -327,14 +329,10 @@ sap.ui.define([
 
          var panelid = "LeftPanelId";
 
-         var oModel = new JSONModel({
-            handle: panel_handle
-         });
-         sap.ui.getCore().setModel(oModel, panelid);
-
          XMLView.create({
             id: panelid,
-            viewName : "rootui5.canv.view." + panel_name,
+            viewName: "rootui5.canv.view." + panel_name,
+            viewData: { handle: panel_handle },
             layoutData: oLd,
             height: panel_name=="Panel" ? "100%" : undefined
          }).then(function(oView) {
@@ -344,7 +342,7 @@ sap.ui.define([
 
       },
 
-      showLeftArea : function(panel_name, call_back) {
+      showLeftArea: function(panel_name, call_back) {
          var split = this.getView().byId("MainAreaSplitter");
          var curr = this.getView().getModel().getProperty("/LeftArea");
          if (!split || (curr === panel_name)) return JSROOT.CallBack(call_back, null);
