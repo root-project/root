@@ -4455,7 +4455,7 @@
 
       if (kind) this.proj_painter = 1; // just indicator that drawing can be preformed
 
-      if (this.use_openui && this.ShowUI5ProjectionArea)
+      if (this.ShowUI5ProjectionArea)
          return this.ShowUI5ProjectionArea(kind, call_back);
 
       var layout = 'simple';
@@ -4493,7 +4493,7 @@
 
          canv.fPrimitives.Add(hist, "hist");
 
-         if (this.use_openui && this.DrawInUI5ProjectionArea) {
+         if (this.DrawInUI5ProjectionArea) {
             // copy frame attributes
             this.DrawInUI5ProjectionArea(canv, drawopt, function(painter) { pthis.proj_painter = painter; })
          } else {
@@ -4513,6 +4513,7 @@
    }
 
    TCanvasPainter.prototype.ShowMessage = function(msg) {
+      if (this.testUI5()) return;
       JSROOT.progress(msg, 7000);
    }
 
@@ -4652,45 +4653,47 @@
       TPadPainter.prototype.PadButtonClick.call(this, funcname);
    }
 
-   TCanvasPainter.prototype.HasEventStatus = function() {
-      if (this.use_openui) return this.openuiHasEventStatus();
+   TCanvasPainter.prototype.testUI5 = function() {
+      if (!this.use_openui) return false;
+      console.warn("full ui5 should be used - not loaded yet? Please check!!");
+      return true;
+   }
 
+   TCanvasPainter.prototype.HasEventStatus = function() {
+      if (this.testUI5()) return false;
       return this.brlayout ? this.brlayout.HasStatus() : false;
    }
 
    TCanvasPainter.prototype.ActivateStatusBar = function(state) {
-      if (this.use_openui)
-         this.openuiToggleEventStatus(state);
-      else if (this.brlayout)
+      if (this.testUI5()) return;
+      if (this.brlayout)
          this.brlayout.CreateStatusLine(23, state);
-
       this.ProcessChanges("sbits", this);
    }
 
    TCanvasPainter.prototype.HasGed = function() {
-      if (this.use_openui)
-         return this.openuiHasGed();
-
+      if (this.testUI5()) return false;
       return this.brlayout ? this.brlayout.HasContent() : false;
    }
 
    TCanvasPainter.prototype.RemoveGed = function() {
-      if (typeof this.CleanupGed == 'function')
-         this.CleanupGed();
+      if (this.testUI5()) return;
+
+      this.RegisterForPadEvents(null);
+
+      if (this.ged_panelid) {
+         sap.ui.getCore().byId(this.ged_panelid).getController().cleanupGed();
+         delete this.ged_panelid;
+      }
       if (this.brlayout)
          this.brlayout.DeleteContent();
 
       this.ProcessChanges("sbits", this);
    }
 
-
    TCanvasPainter.prototype.ActivateGed = function(objpainter, kind, mode) {
       // function used to activate GED
-
-      if (this.use_openui)
-         return this.openuiActivateGed(objpainter, kind, mode);
-
-      if (!this.brlayout) return;
+      if (this.testUI5() || !this.brlayout) return;
 
       if (this.brlayout.HasContent()) {
          if ((mode === "toggle") || (mode === false))
@@ -4719,14 +4722,38 @@
       var pthis = this;
 
       JSROOT.AssertPrerequisites('openui5', function() {
-         pthis.ShowGed(objpainter);
-         pthis.ProcessChanges("sbits", pthis);
+
+         d3.select("#ged_placeholder").text("");
+
+         sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/core/mvc/XMLView"],
+                       function(JSONModel,XMLView) {
+
+            pthis.ged_panelid = "CanvasGedId";
+
+            var oModel = new JSONModel({ handle: null });
+
+            sap.ui.getCore().setModel(oModel, pthis.ged_panelid);
+
+            XMLView.create({
+               id: pthis.ged_panelid,
+               viewName : "rootui5.canv.view.Ged"
+            }).then(function(oGed) {
+
+               oGed.placeAt("ged_placeholder");
+
+               // TODO: should be moved into Ged controller - it must be able to detect canvas painter itself
+               pthis.RegisterForPadEvents(oGed.getController().padEventsReceiver.bind(oGed.getController()));
+
+               pthis.SelectObjectPainter(objpainter);
+
+               pthis.ProcessChanges("sbits", pthis);
+            });
+         });
       });
    }
 
    TCanvasPainter.prototype.ShowSection = function(that, on) {
-      if (this.use_openui)
-         return this.fullShowSection(that, on);
+      if (this.testUI5()) return;
 
       console.log('Show section ' + that + ' flag = ' + on);
 
