@@ -1,10 +1,11 @@
 sap.ui.define([
-   'sap/ui/jsroot/GuiPanelController',
+   'rootui5/panel/Controller',
    'sap/ui/model/json/JSONModel'
-], function (GuiPanelController, JSONModel) {
+], function (panelController, JSONModel) {
+   
    "use strict";
 
-   return GuiPanelController.extend("sap.ui.jsroot.controller.FitPanel", {
+   return panelController.extend("rootui5.fitpanel.controller.FitPanel", {
 
       // function called from GuiPanelController
       onPanelInit : function() {

@@ -4,16 +4,13 @@ sap.ui.define([
 ], function (Controller, JSONModel) {
    "use strict";
 
-   return Controller.extend("sap.ui.jsroot.GuiPanelController", {
+   return Controller.extend("rootui5.panel.Controller", {
 
       onInit : function() {
-         var id = this.getView().getId();
-         console.log("Initialization GuiPanel id = " + id);
+         var data = this.getView().getViewData();
 
-         var oModel = sap.ui.getCore().getModel(id);
-
-         if (oModel) {
-            this.websocket = oModel.getData().handle;
+         if (data && data.handle) {
+            this.websocket = data.handle;
             this.websocket.SetReceiver(this); // redirect websocket handling on controller itself
             this.websocket.Send("PANEL_READY"); // confirm panel creation, only then GUI can send commands
          }

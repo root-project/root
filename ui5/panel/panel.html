@@ -31,42 +31,39 @@
 
       function ShowOpenui5Panel(panel_handle, arg) {
          
-         if (!panel_handle || !arg.first_msg || !JSROOT.sap) return false;
+         if (!panel_handle || !arg.first_msg || !sap) return false;
            
          var panelid = "TopPanelId";
-
-         var oModel = new JSROOT.sap.ui.model.json.JSONModel({
-            handle: panel_handle   
-         });
          
-         sap.ui.getCore().setModel(oModel, panelid);
+         var viewName = arg.first_msg;
          
-         var viewName, p = arg.first_msg.indexOf(".");
-         
-         if (p>=0) {
-            console.log('Register module path', arg.first_msg.substr(0,p));
-            viewName = arg.first_msg;
-            jQuery.sap.registerModulePath(arg.first_msg.substr(0,p), "/currentdir/");
-         } else {
-            viewName = "sap.ui.jsroot.view." + arg.first_msg;
+         if ((viewName.indexOf("rootui5.") !== 0) && (viewName.indexOf("jsroot.") !== 0) && (viewName.indexOf("sap.") !== 0)) {
+            var p = viewName.indexOf(".");
+            if ((p > 1) && (p < viewName.length - 1)) {
+               console.log('Register module path', viewName.substr(0,p));
+               sap.registerModulePath(viewName.substr(0,p), "/currentdir/");
+            }
          }
-            
-         JSROOT.sap.ui.xmlview({
-            id: panelid,
-            viewName : viewName,
-            // layoutData: oLd,
-            // height: "100%"
-         }).placeAt("PanelDiv");
+         
+         sap.ui.require(["sap/ui/core/mvc/XMLView"], function(XMLView) {
+            XMLView.create({
+               id: panelid,
+               viewName: viewName,
+               viewData: { handle: panel_handle }
+            }).then(function(oView) {
+               oView.placeAt("PanelDiv");
+            });
+
+         });
       }
       
       JSROOT.ConnectWebWindow({
-         
          prereq_logdiv: "PanelDiv",
-         
+         // openui5src: "jsroot",
+         openui5src: "https://openui5.hana.ondemand.com/",
+         // openui5libs: "sap.ui.core, sap.ui.layout, sap.m",
          first_recv: "SHOWPANEL:",
-         
          prereq2: "openui5",
-         
          callback: ShowOpenui5Panel
       });
 

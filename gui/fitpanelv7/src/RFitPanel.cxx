@@ -40,7 +40,7 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RFitPanel::G
    if (!fWindow) {
       fWindow = RWebWindowsManager::Instance()->CreateWindow();
 
-      fWindow->SetPanelName("FitPanel");
+      fWindow->SetPanelName("rootui5.fitpanel.view.FitPanel");
 
       fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
 
