@@ -7,7 +7,7 @@
             "viewName": "rootui5.canv.view.Canvas",
             "type": "XML",
             "async": true,
-            "id": "app"
+            "id": "RootCanvas"
         },
         "dependencies": {
             "libs": {
