@@ -41,7 +41,8 @@
             var p = viewName.indexOf(".");
             if ((p > 1) && (p < viewName.length - 1)) {
                console.log('Register module path', viewName.substr(0,p));
-               sap.registerModulePath(viewName.substr(0,p), "/currentdir/");
+               var _paths = {}; _paths[viewName.substr(0,p)] = "/currentdir/"; 
+               sap.ui.loader.config({ paths: _paths });
             }
          }
          
