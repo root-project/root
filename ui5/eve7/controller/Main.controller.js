@@ -109,7 +109,7 @@ sap.ui.define(['sap/ui/core/Component',
             
             var oOwnerComponent = Component.getOwnerComponentFor(this.getView());
             var view = oOwnerComponent.runAsOwner(function() {
-               return new JSROOT.sap.ui.xmlview({
+               return new sap.ui.xmlview({
                   id: viewid,
                   viewName: vtype,
                   viewData: { mgr: main.mgr, elementid: elem.fElementId, kind: elem.view_kind },
