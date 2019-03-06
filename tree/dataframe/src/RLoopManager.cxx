@@ -8,6 +8,8 @@
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TBranchElement.h"
+#include "TBranchObject.h"
+#include "TEntryList.h"
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled
@@ -119,6 +121,10 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
                auto fullName = branchName + "." + leafName;
                UpdateList(bNamesReg, bNames, fullName, friendName, foundLeaves, castLeaf, allowDuplicates);
             }
+         } else if (branch->IsA() == TBranchObject::Class()) {
+            // TBranchObject
+            ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName);
+            UpdateList(bNamesReg, bNames, branchName, friendName);
          } else {
             // TBranchElement
             // Check if there is explicit or implicit dot in the name
