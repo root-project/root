@@ -6,13 +6,18 @@ sap.ui.define([
 
    return Controller.extend("rootui5.panel.Controller", {
 
-      onInit : function() {
+      onInit: function() {
          var data = this.getView().getViewData();
 
          if (data && data.handle) {
             this.websocket = data.handle;
             this.websocket.SetReceiver(this); // redirect websocket handling on controller itself
             this.websocket.Send("PANEL_READY"); // confirm panel creation, only then GUI can send commands
+         }
+         
+         // TODO: use more specific API between Canvas and Panel
+         if (data && data.masterPanel) {
+            this.masterPanel = data.masterPanel;
          }
 
          if (this.onPanelInit) this.onPanelInit();
@@ -32,19 +37,22 @@ sap.ui.define([
           delete this.websocket; // remove reference on websocket
       },
 
-      onExit : function() {
-         if (this.onPanelExit) this.onPanelExit();
-         console.log("Closing GuiPanel id = " + this.getView().getId());
+      onExit: function() {
+         if (this.onPanelExit) 
+            this.onPanelExit();
          if (this.websocket) {
             this.websocket.Close();
             delete this.websocket;
          }
       },
 
-      closePanel : function() {
-         var main = sap.ui.getCore().byId("TopCanvasId");
-         if (main) main.getController().showLeftArea("");
-         else if (window) window.open('','_self').close(); // window.close();
+      closePanel: function() {
+         
+         if (this.masterPanel) {
+            if (this.masterPanel.showLeftArea) this.masterPanel.showLeftArea("");
+         } else {
+            if (window) window.open('','_self').close(); // window.close();
+         }
       }
 
    });

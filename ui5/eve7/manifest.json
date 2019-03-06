@@ -7,7 +7,7 @@
             "viewName": "rootui5.eve7.view.MainMain",
             "type": "XML",
             "async": true,
-            "id": "app"
+            "id": "Eve7"
         },
         "resources": {
             "css": [
@@ -19,6 +19,7 @@
         "dependencies": {
             "libs": {
                 "sap.ui.core": {},
+                "sap.ui.commons": {},
                 "sap.ui.layout": {},
                 "sap.m": {},
                 "sap.uxap": {},

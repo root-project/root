@@ -65,7 +65,7 @@
               </menu>
             </MenuButton>
             <ToolbarSpacer />
-            <MenuButton text="Help" type="Solid"  enabled="true">
+            <MenuButton text="Help" type="Default"  enabled="true">
               <menu>
                 <Menu >
                   <items>

@@ -17,7 +17,7 @@
             padding: 1
          }
 
-         .eveColorBox {                  /* style the CSS class that has been written by the renderer method */
+         .geomColorBox {                  /* style the CSS class that has been written by the renderer method */
             display: inline-block;   /* enable squares to appear next to each other within one line */
             border: 1px solid white;   /* add some border, so the square can actually be seen */
             background-color: #000;
@@ -40,25 +40,27 @@
 
       <script type='text/javascript'>
 
-        var evedir = "evedir/";
-
         function InitUI(handle) {
 
-           jQuery.sap.registerModulePath("eve", evedir);
+           sap.ui.require(["sap/ui/core/mvc/XMLView"], function(XMLView) {
+              XMLView.create({
+                 id: "TopEveId",
+                 viewName: "rootui5.eve7.view.GeomViewer",
+                 viewData: { conn_handle: handle }
+              }).then(function(oView) {
+                 oView.placeAt("GeomDiv");
+              });
 
-           new JSROOT.sap.ui.xmlview({
-               id: "TopEveId",
-               viewName: "eve.GeomViewer",
-               viewData: { conn_handle: handle }
-           }).placeAt("GeomDiv");
+           });
         }
         
         if (JSROOT.GetUrlOption('nogl')!==null) JSROOT.gStyle.NoWebGL = true;
         if (JSROOT.GetUrlOption('libs')!==null) JSROOT.use_full_libs = true;
-
+        
         JSROOT.ConnectWebWindow({
-           prereq: "openui5;geom;user:" + evedir + "EveManager.js;" + evedir + "EveElements.js;",
-           openui5src: "jsroot", // "https://openui5.hana.ondemand.com/",    // or "jsroot"
+           prereq: "geom;openui5",
+//           openui5src: "jsroot",    // use JSROOT provided package, experimental
+//           openui5src: "https://openui5.hana.ondemand.com/",
            openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table", // customize openui5 libs
            prereq_logdiv: "GeomDiv",
            callback: InitUI

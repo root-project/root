@@ -13,7 +13,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
    "use strict";
    
-   CoreControl.extend("rootui5.eve7.controller.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
+   var geomColorBox = CoreControl.extend("rootui5.eve7.controller.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
 
       // the control API:
       metadata : {
@@ -30,7 +30,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          oRm.writeControlData(oControl);  // writes the Control ID and enables event handling - important!
          oRm.addStyle("background-color", oControl.getColor());  // write the color property; UI5 has validated it to be a valid CSS color
          oRm.writeStyles();
-         oRm.addClass("eveColorBox");      // add a CSS class for styles common to all control instances
+         oRm.addClass("geomColorBox");      // add a CSS class for styles common to all control instances
          oRm.writeClasses();              // this call writes the above class plus enables support for Square.addStyleClass(...)
          oRm.write(">"); 
          oRm.write("</div>"); // no text content to render; close the tag
@@ -134,7 +134,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                template: new HorizontalLayout({
                   content: [
                      new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}", select: vis_selected_handler }), 
-                     new eve.ColorBox({color:"{color}", visible: "{color_visible}" }),
+                     new geomColorBox({color:"{color}", visible: "{color_visible}" }),
                      new mText({text:"{title}", wrapping: false })
                   ]
                })
