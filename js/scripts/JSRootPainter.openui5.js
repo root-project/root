@@ -34,24 +34,17 @@
    delete JSROOT.complete_script_load; // normal callback is intercepted - we need to instantiate openui5
 
    JSROOT.completeUI5Loading = function() {
-      console.log('complete ui5 loading');
-      JSROOT.sap = sap;
-
-      var rootui5sys = JSROOT.source_dir.replace(/jsrootsys/g, "rootui5sys");
+      // when running with THttpServer, automatically set "rootui5" folder
+      var rootui5sys = undefined;
+      if (JSROOT.source_dir.indexOf("jsrootsys") >= 0)
+         rootui5sys = JSROOT.source_dir.replace(/jsrootsys/g, "rootui5sys");
 
       sap.ui.loader.config({
          paths: {
-            "jsroot": JSROOT.source_dir,
-            "rootui5": rootui5sys
+            jsroot: JSROOT.source_dir,
+            rootui5: rootui5sys
          }
       });
-
-
-      // var cust_style = document.createElement("link");
-      // cust_style.setAttribute("rel", "stylesheet");
-      // cust_style.setAttribute("type", "text/css");
-      // cust_style.setAttribute("href", JSROOT.source_dir + "openui5/custom.css");
-      // document.getElementsByTagName("head")[0].appendChild(cust_style);
 
       JSROOT.CallBack(load_callback);
       load_callback = null;
@@ -198,8 +191,8 @@
          rm.write("</li>");
       }
 
-      JSROOT.sap.ui.define([ 'sap/ui/unified/Menu', 'sap/ui/unified/MenuItem', 'sap/ui/unified/MenuItemBase' ],
-                            function(sapMenu, sapMenuItem, sapMenuItemBase) {
+      sap.ui.define(['sap/ui/unified/Menu', 'sap/ui/unified/MenuItem', 'sap/ui/unified/MenuItemBase'],
+                       function(sapMenu, sapMenuItem, sapMenuItemBase) {
 
          menu.add = function(name, arg, func) {
             if (name == "separator") { this.separ = true; return; }
