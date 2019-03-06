@@ -133,7 +133,7 @@ ClassImp(THttpServer);
 /// one should provide "http:8080;cors;noglobal" as parameter
 ///
 /// THttpServer uses JavaScript ROOT (https://root.cern/js) to implement web clients UI.
-/// Normally JSROOT sources are used from $ROOTSYS/etc/http directory,
+/// Normally JSROOT sources are used from $ROOTSYS/js directory,
 /// but one could set JSROOTSYS shell variable to specify alternative location
 
 THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server")
@@ -143,7 +143,10 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
       jsrootsys = gEnv->GetValue("HttpServ.JSRootPath", jsrootsys);
 
    if (jsrootsys && *jsrootsys)
-      fJSROOTSYS = jsrootsys;
+      if ((strncmp(jsrootsys, "http://", 7)==0) || (strncmp(jsrootsys, "https://", 8)==0))
+         fJSROOT = jsrootsys;
+      else
+         fJSROOTSYS = jsrootsys;
 
    if (fJSROOTSYS.Length() == 0) {
       TString jsdir = TString::Format("%s/js", TROOT::GetDataDir().Data());
@@ -157,7 +160,7 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
    }
 
    AddLocation("currentdir/", ".");
-   AddLocation("jsrootsys/", fJSROOTSYS);
+   AddLocation("jsrootsys/", fJSROOTSYS.Data());
    AddLocation("rootsys/", TROOT::GetRootSys());
 
    fDefaultPage = fJSROOTSYS + "/files/online.htm";
@@ -298,7 +301,7 @@ void THttpServer::SetJSROOT(const char *location)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set file name of HTML page, delivered by the server when
 /// http address is opened in the browser.
-/// By default, $ROOTSYS/etc/http/files/online.htm page is used
+/// By default, $ROOTSYS/js/files/online.htm page is used
 /// When empty filename is specified, default page will be used
 
 void THttpServer::SetDefaultPage(const std::string &filename)
@@ -315,7 +318,7 @@ void THttpServer::SetDefaultPage(const std::string &filename)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set file name of HTML page, delivered by the server when
 /// objects drawing page is requested from the browser
-/// By default, $ROOTSYS/etc/http/files/draw.htm page is used
+/// By default, $ROOTSYS/js/files/draw.htm page is used
 /// When empty filename is specified, default page will be used
 
 void THttpServer::SetDrawPage(const std::string &filename)
