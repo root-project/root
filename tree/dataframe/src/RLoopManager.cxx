@@ -36,13 +36,13 @@ bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
 ///////////////////////////////////////////////////////////////////////////////
 /// This overload does not perform any check on the duplicates.
 /// It is used for TBranch objects.
-void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::string &branchName,
-                std::string &friendName)
+void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
+                const std::string &friendName)
 {
 
    if (!friendName.empty()) {
       // In case of a friend tree, users might prepend its name/alias to the branch names
-      auto friendBName = friendName + "." + branchName;
+      const auto friendBName = friendName + "." + branchName;
       if (bNamesReg.insert(friendBName).second)
          bNames.push_back(friendBName);
    }
@@ -53,8 +53,8 @@ void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::st
 
 ///////////////////////////////////////////////////////////////////////////////
 /// This overloads makes sure that the TLeaf has not been already inserted.
-void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::string &branchName,
-                std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
+void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
+                const std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
 {
    const bool canAdd = allowDuplicates ? true : !ContainsLeaf(foundLeaves, leaf);
    if (!canAdd) {
@@ -99,16 +99,15 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
 
    const auto branches = t.GetListOfBranches();
    if (branches) {
-      std::string prefix = "";
       for (auto b : *branches) {
          TBranch *branch = static_cast<TBranch *>(b);
-         auto branchName = std::string(branch->GetName());
+         const auto branchName = std::string(branch->GetName());
          if (branch->IsA() == TBranch::Class()) {
             // Leaf list
             auto listOfLeaves = branch->GetListOfLeaves();
             if (listOfLeaves->GetEntries() == 1) {
                auto leaf = static_cast<TLeaf *>(listOfLeaves->At(0));
-               auto leafName = std::string(leaf->GetName());
+               const auto leafName = std::string(leaf->GetName());
                if (leafName == branchName) {
                   UpdateList(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
                }
@@ -116,8 +115,8 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
 
             for (auto leaf : *listOfLeaves) {
                auto castLeaf = static_cast<TLeaf *>(leaf);
-               auto leafName = std::string(leaf->GetName());
-               auto fullName = branchName + "." + leafName;
+               const auto leafName = std::string(leaf->GetName());
+               const auto fullName = branchName + "." + leafName;
                UpdateList(bNamesReg, bNames, fullName, friendName, foundLeaves, castLeaf, allowDuplicates);
             }
          } else {
