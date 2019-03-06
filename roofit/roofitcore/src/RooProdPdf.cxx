@@ -1368,8 +1368,8 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
   // WVE DEBUG
   //RooMsgService::instance().debugWorkspace()->import(RooArgSet(*numerator,*norm)) ;
 
-  cache._rearrangedNum = numerator ;
-  cache._rearrangedDen = norm ;
+  cache._rearrangedNum.reset(numerator);
+  cache._rearrangedDen.reset(norm);
   cache._isRearranged = kTRUE ;
 
 }
@@ -1969,8 +1969,6 @@ void RooProdPdf::generateEvent(Int_t code)
 RooProdPdf::CacheElem::~CacheElem()
 {
   _normList.Delete() ; //WVE THIS IS AN INTENTIAL LEAK -- MUST FIX LATER
-  if (_rearrangedNum) delete _rearrangedNum ;
-  if (_rearrangedDen) delete _rearrangedDen ;
 //   cout << "RooProdPdf::CacheElem dtor, this = " << this << endl ;
 }
 
