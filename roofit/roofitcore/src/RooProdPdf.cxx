@@ -522,7 +522,7 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
     assert(cache._normList.size() == cache._partList.size());
     for (std::size_t i = 0; i < cache._partList.size(); ++i) {
       const auto& partInt = static_cast<const RooAbsReal&>(cache._partList[i]);
-      const auto normSet = cache._normList[i];
+      const auto normSet = cache._normList[i].get();
 
       const Double_t piVal = partInt.getVal(normSet->getSize() > 0 ? normSet : nullptr);
       value *= piVal ;
@@ -930,7 +930,7 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 	cache->_partList.add(*func[0]);
 	if (isOwned) cache->_ownedList.addOwned(*func[0]);
 
-	cache->_normList.push_back(norm->snapshot(kFALSE));
+	cache->_normList.emplace_back(norm->snapshot(kFALSE));
 
 	cache->_numList.addOwned(*func[1]);
 	cache->_denList.addOwned(*func[2]);
@@ -1027,7 +1027,7 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 
       cache->_numList.addOwned(*numtmp);
       cache->_denList.addOwned(*(RooAbsArg*)RooFit::RooConst(1).clone("1"));
-      cache->_normList.push_back(compTermNorm.snapshot(kFALSE));
+      cache->_normList.emplace_back(compTermNorm.snapshot(kFALSE));
     }
   }
 
@@ -1355,8 +1355,8 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
   // WVE DEBUG
   //RooMsgService::instance().debugWorkspace()->import(RooArgSet(*numerator,*norm)) ;
 
-  cache._rearrangedNum = numerator ;
-  cache._rearrangedDen = norm ;
+  cache._rearrangedNum.reset(numerator);
+  cache._rearrangedDen.reset(norm);
   cache._isRearranged = kTRUE ;
 
 }
@@ -1932,17 +1932,6 @@ void RooProdPdf::generateEvent(Int_t code)
     }
     i++ ;
   }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooProdPdf::CacheElem::~CacheElem()
-{
-  if (_rearrangedNum) delete _rearrangedNum ;
-  if (_rearrangedDen) delete _rearrangedDen ;
 }
 
 
