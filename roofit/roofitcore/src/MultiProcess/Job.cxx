@@ -50,10 +50,15 @@ namespace RooFit {
       // use a flag to not ask twice
       bool dequeue_acknowledged = true;
 
+      auto get_time = [](){return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();};
+
       while (carry_on) {
         if (work_mode) {
+          decltype(get_time()) t1, t2, t3;
+
           // try to dequeue a task
           if (dequeue_acknowledged) {  // don't ask twice
+            t1 = get_time();
             TaskManager::instance()->send_from_worker_to_queue(W2Q::dequeue);
             dequeue_acknowledged = false;
           }
@@ -68,6 +73,9 @@ namespace RooFit {
             }
 
             case Q2W::dequeue_rejected: {
+              t2 = get_time();
+              std::cout << "no work: worker " << TaskManager::instance()->get_worker_id() << " asked at " << t1 << " and got rejected at " << t2 << std::endl;
+
               dequeue_acknowledged = true;
               break;
             }
@@ -75,7 +83,12 @@ namespace RooFit {
               dequeue_acknowledged = true;
               job_id = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
               task = TaskManager::instance()->receive_from_queue_on_worker<Task>();
+
+              t2 = get_time();
               TaskManager::get_job_object(job_id)->evaluate_task(task);
+
+              t3 = get_time();
+              std::cout << "job done: worker " << TaskManager::instance()->get_worker_id() << " asked at " << t1 << ", started at " << t2 << " and finished at " << t3 << std::endl;
 
               TaskManager::instance()->send_from_worker_to_queue(W2Q::send_result);
               TaskManager::get_job_object(job_id)->send_back_task_result_from_worker(task);
@@ -117,11 +130,18 @@ namespace RooFit {
             }
 
             case Q2W::update_real: {
+              auto get_time = [](){return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();};
+              auto t1 = get_time();
+
               job_id = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
               std::size_t ix = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
               double val = TaskManager::instance()->receive_from_queue_on_worker<double>();
               bool is_constant = TaskManager::instance()->receive_from_queue_on_worker<bool>();
               TaskManager::get_job_object(job_id)->update_real(ix, val, is_constant);
+
+              auto t2 = get_time();
+              std::cout << "update_real on worker " << TaskManager::instance()->get_worker_id() << ": " << (t2 - t1)/1.e9 << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
+
               break;
             }
 

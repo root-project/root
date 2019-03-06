@@ -137,22 +137,20 @@ namespace RooFit {
 
 
     void GradMinimizerFcn::CalculateAll(const double *x) {
+      auto get_time = [](){return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();};
+      decltype(get_time()) t1, t2;
+
       if (get_manager()->is_master()) {
         // do Grad, G2 and Gstep here and then just return results from the
         // separate functions below
         bool was_not_synced = sync_parameters(x);
         if (was_not_synced) {
           // update parameters and object states that changed since last calculation (or creation if first time)
-//          #ifdef NDEBUG
-          RooWallTimer timer;
-//          #endif // NDEBUG
+          t1 = get_time();
           update_state();
-//          #ifdef NDEBUG
-          timer.stop();
-          auto time_update_state = timer.timing_s();
+          t2 = get_time();
 
-          timer.start();
-//          #endif // NDEBUG
+          RooWallTimer timer;
           // activate work mode
           get_manager()->set_work_mode(true);
 
@@ -168,12 +166,9 @@ namespace RooFit {
 
           // end work mode
           get_manager()->set_work_mode(false);
-//          get_manager()->flush_ostreams();
-//          #ifdef NDEBUG
           timer.stop();
 
-          std::cout << "update_state: " << time_update_state << "s, gradient work: " << timer.timing_s() << "s" << std::endl;
-//          #endif // NDEBUG
+          std::cout << "update_state: " << (t2 - t1)/1.e9 << "s (from " << t1 << " to " << t2 << "ns), gradient work: " << timer.timing_s() << "s" << std::endl;
         }
       }
     }

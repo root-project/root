@@ -405,6 +405,8 @@ namespace RooFit {
         break;
 
         case M2Q::update_real: {
+          auto get_time = [](){return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();};
+          auto t1 = get_time();
           auto job_id = receive_from_master_on_queue<std::size_t>();
           auto ix = receive_from_master_on_queue<std::size_t>();
           auto val = receive_from_master_on_queue<double>();
@@ -412,6 +414,8 @@ namespace RooFit {
           for (std::size_t worker_ix = 0; worker_ix < N_workers; ++worker_ix) {
             send_from_queue_to_worker(worker_ix, Q2W::update_real, job_id, ix, val, is_constant);
           }
+          auto t2 = get_time();
+          std::cout << "update_real on queue: " << (t2 - t1)/1.e9 << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
         }
         break;
 
