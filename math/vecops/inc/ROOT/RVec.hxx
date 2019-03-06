@@ -715,6 +715,38 @@ double Mean(const RVec<T> &v)
    return double(Sum(v)) / v.size();
 }
 
+/// Get the greatest element of an RVec
+///
+/// Example code, at the ROOT prompt:
+/// ~~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<float> v {1.f, 2.f, 4.f};
+/// auto v_max = Max(v)
+/// v_max
+/// (float) 4.f
+/// ~~~~
+template <typename T>
+T Max(const RVec<T> &v)
+{
+   return *std::max_element(v.begin(), v.end());
+}
+
+/// Get the smallest element of an RVec
+///
+/// Example code, at the ROOT prompt:
+/// ~~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<float> v {1.f, 2.f, 4.f};
+/// auto v_min = Min(v)
+/// v_min
+/// (float) 1.f
+/// ~~~~
+template <typename T>
+T Min(const RVec<T> &v)
+{
+   return *std::min_element(v.begin(), v.end());
+}
+
 /// Get the variance of the elements of an RVec
 ///
 /// The return type is a double precision floating point number.
