@@ -519,11 +519,11 @@ sap.ui.define([
          if (p) p.SetTooltipAllowed(new_state);
       },
 
-      setShowMenu : function(new_state) {
+      setShowMenu: function(new_state) {
          this._Page.setShowHeader(new_state);
       },
 
-      onViewMenuAction : function (oEvent) {
+      onViewMenuAction: function (oEvent) {
 
          var item = oEvent.getParameter("item");
 
