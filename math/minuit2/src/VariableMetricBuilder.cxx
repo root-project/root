@@ -27,6 +27,10 @@
 //#define DEBUG
 #include "Minuit2/MnPrint.h"
 
+// for benchmarking:
+#include <chrono>
+#include <iostream>
+
 // #if defined(DEBUG) || defined(WARNINGMSG)
 // #endif
 
@@ -315,8 +319,12 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
             return FunctionMinimum(seed, result, fcn.Up());
          }
       }
-      
+
+      auto get_time = [](){return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();};
+      auto t1 = get_time();
       MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
+      auto t2 = get_time();
+      std::cout << "line_search: " << (t2 - t1)/1.e9 << "s" << std::endl;
 
       // <= needed for case 0 <= 0
       if(fabs(pp.Y() - s0.Fval()) <=  fabs(s0.Fval())*prec.Eps() ) {
