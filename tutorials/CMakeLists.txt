@@ -443,7 +443,6 @@ if(ROOT_python_FOUND)
                  tutorial-dataframe-df021_createTGraph-py
                  tutorial-dataframe-df024_Display-py
                  tutorial-dataframe-df026_AsNumpyArrays-py
-                 tutorial-graphs-timeSeriesFromCSV-py
                  tutorial-hist-fillrandom-py
                  tutorial-math-Legendre-py
                  tutorial-math-tStudent-py
@@ -464,9 +463,6 @@ if(ROOT_python_FOUND)
                  tutorial-pyroot-tornado-py
                  tutorial-pyroot-tree-py
                  tutorial-roofit-rf106_plotdecoration-py
-                 tutorial-roofit-rf315_projectpdf-py
-                 tutorial-roofit-rf402_datahandling-py
-                 tutorial-roofit-rf610_visualerror-py
                  tutorial-roofit-rf707_kernelestimation-py
                  tutorial-vecops-vo004_SortAndSelect-py
                  tutorial-vecops-vo005_Combinations-py)
