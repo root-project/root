@@ -13,6 +13,8 @@
 
 #include <unistd.h> // getpid
 
+#include <RooMsgService.h>
+
 #include <MultiProcess/Job.h>
 #include <MultiProcess/TaskManager.h>
 #include <MultiProcess/messages.h>
@@ -74,7 +76,7 @@ namespace RooFit {
 
             case Q2W::dequeue_rejected: {
               t2 = get_time();
-              std::cout << "no work: worker " << TaskManager::instance()->get_worker_id() << " asked at " << t1 << " and got rejected at " << t2 << std::endl;
+              oocxcoutD((TObject*)nullptr,Benchmarking2) << "no work: worker " << TaskManager::instance()->get_worker_id() << " asked at " << t1 << " and got rejected at " << t2 << std::endl;
 
               dequeue_acknowledged = true;
               break;
@@ -88,7 +90,7 @@ namespace RooFit {
               TaskManager::get_job_object(job_id)->evaluate_task(task);
 
               t3 = get_time();
-              std::cout << "job done: worker " << TaskManager::instance()->get_worker_id() << " asked at " << t1 << ", started at " << t2 << " and finished at " << t3 << std::endl;
+              oocxcoutD((TObject*)nullptr,Benchmarking2) << "job done: worker " << TaskManager::instance()->get_worker_id() << " asked at " << t1 << ", started at " << t2 << " and finished at " << t3 << std::endl;
 
               TaskManager::instance()->send_from_worker_to_queue(W2Q::send_result);
               TaskManager::get_job_object(job_id)->send_back_task_result_from_worker(task);
@@ -140,7 +142,7 @@ namespace RooFit {
               TaskManager::get_job_object(job_id)->update_real(ix, val, is_constant);
 
               auto t2 = get_time();
-              std::cout << "update_real on worker " << TaskManager::instance()->get_worker_id() << ": " << (t2 - t1)/1.e9 << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
+              oocxcoutD((TObject*)nullptr,Benchmarking1) << "update_real on worker " << TaskManager::instance()->get_worker_id() << ": " << (t2 - t1)/1.e9 << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
 
               break;
             }

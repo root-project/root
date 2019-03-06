@@ -19,6 +19,8 @@
 #include <sched.h>
 #endif
 
+#include <RooMsgService.h>
+
 #include <ROOT/RMakeUnique.hxx>  // make_unique in C++11
 #include <MultiProcess/TaskManager.h>
 #include <MultiProcess/Job.h>
@@ -415,7 +417,7 @@ namespace RooFit {
             send_from_queue_to_worker(worker_ix, Q2W::update_real, job_id, ix, val, is_constant);
           }
           auto t2 = get_time();
-          std::cout << "update_real on queue: " << (t2 - t1)/1.e9 << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
+          oocxcoutD((TObject*)nullptr,Benchmarking1) << "update_real on queue: " << (t2 - t1)/1.e9 << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
         }
         break;
 

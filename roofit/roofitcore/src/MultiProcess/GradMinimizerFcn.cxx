@@ -127,7 +127,7 @@ namespace RooFit {
       RooWallTimer timer;
       run_derivator(task);
       timer.stop();
-      std::cout << "worker_id: " << get_manager()->get_worker_id() << ", task: " << task << ", partial derivative time: " << timer.timing_s() << "s" << std::endl;
+      oocxcoutD((TObject*)nullptr,Benchmarking1) << "worker_id: " << get_manager()->get_worker_id() << ", task: " << task << ", partial derivative time: " << timer.timing_s() << "s" << std::endl;
     }
 
     double GradMinimizerFcn::get_task_result(std::size_t task) {
@@ -168,7 +168,7 @@ namespace RooFit {
           get_manager()->set_work_mode(false);
           timer.stop();
 
-          std::cout << "update_state: " << (t2 - t1)/1.e9 << "s (from " << t1 << " to " << t2 << "ns), gradient work: " << timer.timing_s() << "s" << std::endl;
+          oocxcoutD((TObject*)nullptr,Benchmarking1) << "update_state: " << (t2 - t1)/1.e9 << "s (from " << t1 << " to " << t2 << "ns), gradient work: " << timer.timing_s() << "s" << std::endl;
         }
       }
     }
