@@ -138,6 +138,8 @@ namespace RooFit {
             case Q2W::switch_work_mode: {
               // change to work-mode
               work_mode = true;
+              // reset dequeue_acknowledged
+              dequeue_acknowledged = true;
               break;
             }
 
