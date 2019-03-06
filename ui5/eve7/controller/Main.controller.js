@@ -1,11 +1,13 @@
 sap.ui.define(['sap/ui/core/Component',
+               'sap/ui/core/UIComponent',
                'sap/ui/core/mvc/Controller',
                'sap/ui/layout/Splitter',
                'sap/ui/layout/SplitterLayoutData',
                'sap/m/library',
                'sap/m/Button',
+               'sap/m/MenuItem',
                'rootui5/eve7/lib/EveManager'
-], function(Component, Controller, Splitter, SplitterLayoutData, MobileLibrary, mButton, EveManager) {
+], function(Component, UIComponent, Controller, Splitter, SplitterLayoutData, MobileLibrary, mButton, mMenuItem, EveManager) {
 
    "use strict";
 
@@ -49,6 +51,17 @@ sap.ui.define(['sap/ui/core/Component',
           }
       },
       
+      viewItemPressed: function (oEvent) {
+         var item = oEvent.getSource();
+         console.log('item pressed', item.getText());
+         
+         var name = item.getText();
+         if (name.indexOf(" ")>0) name = name.substr(0, name.indexOf(" "));
+         
+         var oRouter = UIComponent.getRouterFor(this);
+         oRouter.navTo("View", { viewName: name });
+      },
+      
       updateViewers: function(loading_done) {
          var viewers = this.mgr.FindViewers();
 
@@ -61,6 +74,14 @@ sap.ui.define(['sap/ui/core/Component',
          if (staged.length == 0) return;
          
          console.log("FOUND viewers", viewers.length, "not yet exists", staged.length);
+         
+         if (staged.length > 1) {
+            var vMenu = this.getView().byId("menuViewId");
+            var item = new mMenuItem({text:"Browse to"});
+            vMenu.addItem(item);
+            for (var n=0;n<staged.length;++n) 
+               item.addItem(new mMenuItem({text: staged[n].fName, press: this.viewItemPressed.bind(this) }));
+         }
 
          var main = this, vv = null, count = 0, sv = this.getView().byId("MainAreaSplitter");
 
