@@ -1473,7 +1473,7 @@ endif()
 if(webui)
   ExternalProject_Add(
      OPENUI5
-     URL ${CMAKE_SOURCE_DIR}/ui5/openui5.tar.gz
+     URL ${CMAKE_SOURCE_DIR}/gui/webdisplay/res/openui5.tar.gz
      URL_HASH SHA256=a7302c819bbe9c306b9c1c6661d9ea194f01e2fcbb894c32cad60479ed7a3950
      CONFIGURE_COMMAND ""
      BUILD_COMMAND ""
