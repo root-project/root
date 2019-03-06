@@ -47,12 +47,12 @@
             "targets": {
                 "Main": {
                     "transition": "slide",
-                    "clearAggregation": true,
+                    "clearAggregation": false,
                     "viewName": "Main"
                 },
                 "GL": {
                     "transition": "slide",
-                    "clearAggregation": true,
+                    "clearAggregation": false,
                     "viewName": "GL"
                 }
             }

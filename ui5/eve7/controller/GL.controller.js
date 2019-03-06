@@ -19,16 +19,14 @@ sap.ui.define([
       onInit : function()
       {
          var id = this.getView().getId();
-         console.log("eve.GL.onInit id = ", id);
 
          var viewData = this.getView().getViewData();
          if (viewData) {
-            console.log("Create with view data");
             this.createXXX(viewData);
+         } else {
+            var oRouter = UIComponent.getRouterFor(this);
+            oRouter.getRoute("View").attachPatternMatched(this._onObjectMatched, this);
          }
-         
-         var oRouter = UIComponent.getRouterFor(this);
-         oRouter.getRoute("View").attachPatternMatched(this._onObjectMatched, this);
 
          ResizeHandler.register(this.getView(), this.onResize.bind(this));
          this.fast_event = [];
@@ -36,7 +34,6 @@ sap.ui.define([
          this._load_scripts = false;
          this._render_html = false;
          this.geo_painter = null;
-         // this.painter_ready = false;
 
          JSROOT.AssertPrerequisites("geom", this.onLoadScripts.bind(this));
       },
@@ -45,8 +42,9 @@ sap.ui.define([
       {
          var pthis = this;
          
-         sap.ui.define(['rootui5/eve7/lib/EveScene'], function (_handle) {
-            EveScene = _handle;
+         // one only can load EveScene after geometry painter 
+         sap.ui.define(['rootui5/eve7/lib/EveScene'], function (_EveScene) {
+            EveScene = _EveScene;
             pthis._load_scripts = true;
             pthis.checkViewReady();
          });
@@ -54,10 +52,13 @@ sap.ui.define([
       
       _onObjectMatched: function(oEvent) {
          var args = oEvent.getParameter("arguments");
-         this.createXXX(Component.getOwnerComponentFor(this.getView()).getComponentData(), args.viewName);
+         
+         this.createXXX(Component.getOwnerComponentFor(this.getView()).getComponentData(), args.viewName, JSROOT.$eve7tmp);
+         
+         delete JSROOT.$eve7tmp;
       },
 
-      createXXX: function(data, viewName) {
+      createXXX: function(data, viewName, moredata) {
 
          if (viewName) {
             data.standalone = viewName;
@@ -66,15 +67,20 @@ sap.ui.define([
          //var data = this.getView().getViewData();
          // console.log("VIEW DATA", data);
 
-         if (data.standalone && data.conn_handle)
-         {
+         if (moredata && moredata.mgr) {
+            this.mgr = moredata.mgr;
+            this.elementid = moredata.elementid;
+            this.kind = moredata.kind;
+            this.standalone = viewName;
+            
+            this.checkViewReady();
+            
+         } else if (data.standalone && data.conn_handle) {
             this.mgr = new EveManager();
             this.mgr.UseConnection(data.conn_handle);
             this.standalone = data.standalone;
             this.mgr.RegisterUpdate(this, "onManagerUpdate");
-         }
-         else
-         {
+         } else {
             this.mgr = data.mgr;
             this.elementid = data.elementid;
             this.kind = data.kind;
@@ -297,7 +303,6 @@ sap.ui.define([
 
          this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), null, options);
 
-         this.painter_ready = false;
          // assign callback function - when needed
          this.geo_painter.WhenReady(this.onGeoPainterReady.bind(this));
 
@@ -317,7 +322,6 @@ sap.ui.define([
             this.geo_painter._camera.updateProjectionMatrix();
          }
 
-         this.painter_ready = true;
          // this.geo_painter._highlight_handlers = [ this ]; // register ourself for highlight handling
          this.last_highlight = null;
 
