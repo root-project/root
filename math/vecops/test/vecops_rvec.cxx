@@ -592,20 +592,34 @@ TEST(VecOps, SimpleStatOps)
    ROOT::VecOps::RVec<double> v1 {42.};
    ASSERT_DOUBLE_EQ(Sum(v1), 42.);
    ASSERT_DOUBLE_EQ(Mean(v1), 42.);
+   ASSERT_DOUBLE_EQ(Max(v1), 42.);
+   ASSERT_DOUBLE_EQ(Min(v1), 42.);
    ASSERT_DOUBLE_EQ(StdDev(v1), 0.);
    ASSERT_DOUBLE_EQ(Var(v1), 0.);
 
    ROOT::VecOps::RVec<double> v2 {1., 2., 3.};
    ASSERT_DOUBLE_EQ(Sum(v2), 6.);
    ASSERT_DOUBLE_EQ(Mean(v2), 2.);
+   ASSERT_DOUBLE_EQ(Max(v2), 3.);
+   ASSERT_DOUBLE_EQ(Min(v2), 1.);
    ASSERT_DOUBLE_EQ(Var(v2), 1.);
    ASSERT_DOUBLE_EQ(StdDev(v2), 1.);
 
    ROOT::VecOps::RVec<double> v3 {10., 20., 32.};
    ASSERT_DOUBLE_EQ(Sum(v3), 62.);
    ASSERT_DOUBLE_EQ(Mean(v3), 20.666666666666668);
+   ASSERT_DOUBLE_EQ(Max(v3), 32.);
+   ASSERT_DOUBLE_EQ(Min(v3), 10.);
    ASSERT_DOUBLE_EQ(Var(v3), 121.33333333333337);
    ASSERT_DOUBLE_EQ(StdDev(v3), 11.015141094572206);
+
+   ROOT::VecOps::RVec<int> v4 {1, 2, 3};
+   ASSERT_DOUBLE_EQ(Sum(v4), 6.);
+   ASSERT_DOUBLE_EQ(Mean(v4), 2.);
+   ASSERT_DOUBLE_EQ(Max(v4), 3);
+   ASSERT_DOUBLE_EQ(Min(v4), 1);
+   ASSERT_DOUBLE_EQ(Var(v4), 1.);
+   ASSERT_DOUBLE_EQ(StdDev(v4), 1.);
 }
 
 TEST(VecOps, Any)
