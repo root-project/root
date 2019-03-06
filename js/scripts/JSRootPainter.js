@@ -1952,6 +1952,7 @@
          var conn = null;
          if (!href) {
             href = window.location.href;
+            if (href && href.indexOf("#")>0) href = href.substr(0, href.indexOf("#"));
             if (href && href.lastIndexOf("/")>0) href = href.substr(0, href.lastIndexOf("/")+1);
          }
          pthis.href = href;
