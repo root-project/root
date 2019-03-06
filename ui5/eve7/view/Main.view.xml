@@ -40,14 +40,14 @@
             -->
             <MenuButton text="View" type="Transparent"  enabled="true">
               <menu>
-                <Menu itemSelected="onViewMenuAction">
+                <Menu itemSelected="onViewMenuAction" id="menuViewId">
                   <items>
                     <MenuItem text="New Viewer" >
                       <items>
                         <MenuItem text="3D"  enabled="false"/>
                         <MenuItem text="RhoZ" enabled="false" />
-                        <MenuItem text="RhoPhi"  enabled="false"/>
-                        <MenuItem text="Table"  startsSection="true"  enabled="false"/>
+                        <MenuItem text="RhoPhi" enabled="false"/>
+                        <MenuItem text="Table" startsSection="true" enabled="false"/>
                       </items>
                     </MenuItem>
                   </items>
