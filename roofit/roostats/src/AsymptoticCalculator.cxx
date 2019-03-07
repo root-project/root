@@ -1165,6 +1165,11 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
        return 0;
     }
 
+    if (asimovDataMap.count(string(channelCat.getLabel())) != 0) {
+      oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::GenerateAsimovData(): The PDF for " << channelCat.getLabel()
+          << " was already defined. It will be overridden. The faulty category definitions follow:" << endl;
+      channelCat.Print("V");
+    }
 
     asimovDataMap[string(channelCat.getLabel())] = (RooDataSet*) dataSinglePdf;
 
@@ -1182,6 +1187,10 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
 
   RooDataSet* asimovData = new RooDataSet("asimovDataFullModel","asimovDataFullModel",RooArgSet(obsAndWeight,channelCat),
                                           RooFit::Index(channelCat),RooFit::Import(asimovDataMap),RooFit::WeightVar(*weightVar));
+
+  for (auto element : asimovDataMap) {
+    delete element.second;
+  }
 
   return asimovData;
 

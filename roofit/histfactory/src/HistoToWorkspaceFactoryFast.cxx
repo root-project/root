@@ -140,12 +140,12 @@ namespace HistFactory{
     }
     cout << endl;
 
-    RooArgSet * params= new RooArgSet;
+    RooArgSet params;
     for( unsigned int i = 0; i < poi_list.size(); ++i ) {
       std::string poi_name = poi_list.at(i);
       RooRealVar* poi = (RooRealVar*) ws_single->var( poi_name.c_str() );
       if(poi){
-	params->add(*poi);
+        params.add(*poi);
       }
       else {
 	std::cout << "WARNING: Can't find parameter of interest: " << poi_name 
@@ -153,7 +153,7 @@ namespace HistFactory{
 	//throw hf_exc();
       }
     }
-    proto_config->SetParametersOfInterest(*params);
+    proto_config->SetParametersOfInterest(params);
 
     // Name of an 'edited' model, if necessary
     std::string NewModelName = "newSimPdf"; // <- This name is hard-coded in HistoToWorkspaceFactoryFast::EditSyt.  Probably should be changed to : std::string("new") + ModelName;
