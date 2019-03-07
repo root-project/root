@@ -128,17 +128,17 @@ protected:
   // The cache object
   class CacheElem : public RooAbsCacheElement {
   public:
-    CacheElem() : _isRearranged(kFALSE), _rearrangedNum(0), _rearrangedDen(0) {} 
-    virtual ~CacheElem() ;
+    CacheElem() : _isRearranged(kFALSE) { } 
+    virtual ~CacheElem() = default;
     // Payload
     RooArgList _partList ;
     RooArgList _numList ;
     RooArgList _denList ;
     RooArgList _ownedList ;
-    std::vector<RooArgSet*> _normList;
+    std::vector<std::unique_ptr<RooArgSet>> _normList;
     Bool_t _isRearranged ;
-    RooAbsReal* _rearrangedNum ;
-    RooAbsReal* _rearrangedDen ;
+    std::unique_ptr<RooAbsReal> _rearrangedNum{};
+    std::unique_ptr<RooAbsReal> _rearrangedDen{};
     // Cache management functions
     virtual RooArgList containedArgs(Action) ;
     virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
