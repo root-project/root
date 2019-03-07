@@ -760,7 +760,7 @@ T Min(const RVec<T> &v)
 /// // (int) 2
 /// ~~~~
 template <typename T>
-long ArgMax(const RVec<T> &v)
+std::size_t ArgMax(const RVec<T> &v)
 {
    return std::distance(v.begin(), std::max_element(v.begin(), v.end()));
 }
@@ -778,7 +778,7 @@ long ArgMax(const RVec<T> &v)
 /// // (int) 0
 /// ~~~~
 template <typename T>
-long ArgMin(const RVec<T> &v)
+std::size_t ArgMin(const RVec<T> &v)
 {
    return std::distance(v.begin(), std::min_element(v.begin(), v.end()));
 }
