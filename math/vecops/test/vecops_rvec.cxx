@@ -619,11 +619,13 @@ TEST(VecOps, SimpleStatOps)
    ASSERT_DOUBLE_EQ(Var(v3), 121.33333333333337);
    ASSERT_DOUBLE_EQ(StdDev(v3), 11.015141094572206);
 
-   ROOT::VecOps::RVec<int> v4 {1, 2, 3};
+   ROOT::VecOps::RVec<int> v4 {2, 3, 1};
    ASSERT_DOUBLE_EQ(Sum(v4), 6.);
    ASSERT_DOUBLE_EQ(Mean(v4), 2.);
    ASSERT_DOUBLE_EQ(Max(v4), 3);
    ASSERT_DOUBLE_EQ(Min(v4), 1);
+   ASSERT_DOUBLE_EQ(ArgMax(v4), 1);
+   ASSERT_DOUBLE_EQ(ArgMin(v4), 2);
    ASSERT_DOUBLE_EQ(Var(v4), 1.);
    ASSERT_DOUBLE_EQ(StdDev(v4), 1.);
 }
