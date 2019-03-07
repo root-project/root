@@ -594,6 +594,8 @@ TEST(VecOps, SimpleStatOps)
    ASSERT_DOUBLE_EQ(Mean(v1), 42.);
    ASSERT_DOUBLE_EQ(Max(v1), 42.);
    ASSERT_DOUBLE_EQ(Min(v1), 42.);
+   ASSERT_DOUBLE_EQ(ArgMax(v1), 0);
+   ASSERT_DOUBLE_EQ(ArgMin(v1), 0);
    ASSERT_DOUBLE_EQ(StdDev(v1), 0.);
    ASSERT_DOUBLE_EQ(Var(v1), 0.);
 
@@ -602,6 +604,8 @@ TEST(VecOps, SimpleStatOps)
    ASSERT_DOUBLE_EQ(Mean(v2), 2.);
    ASSERT_DOUBLE_EQ(Max(v2), 3.);
    ASSERT_DOUBLE_EQ(Min(v2), 1.);
+   ASSERT_DOUBLE_EQ(ArgMax(v2), 2);
+   ASSERT_DOUBLE_EQ(ArgMin(v2), 0);
    ASSERT_DOUBLE_EQ(Var(v2), 1.);
    ASSERT_DOUBLE_EQ(StdDev(v2), 1.);
 
@@ -610,6 +614,8 @@ TEST(VecOps, SimpleStatOps)
    ASSERT_DOUBLE_EQ(Mean(v3), 20.666666666666668);
    ASSERT_DOUBLE_EQ(Max(v3), 32.);
    ASSERT_DOUBLE_EQ(Min(v3), 10.);
+   ASSERT_DOUBLE_EQ(ArgMax(v3), 2);
+   ASSERT_DOUBLE_EQ(ArgMin(v3), 0);
    ASSERT_DOUBLE_EQ(Var(v3), 121.33333333333337);
    ASSERT_DOUBLE_EQ(StdDev(v3), 11.015141094572206);
 
