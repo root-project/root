@@ -142,11 +142,12 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
    if (!jsrootsys)
       jsrootsys = gEnv->GetValue("HttpServ.JSRootPath", jsrootsys);
 
-   if (jsrootsys && *jsrootsys)
+   if (jsrootsys && *jsrootsys) {
       if ((strncmp(jsrootsys, "http://", 7)==0) || (strncmp(jsrootsys, "https://", 8)==0))
          fJSROOT = jsrootsys;
       else
          fJSROOTSYS = jsrootsys;
+   }
 
    if (fJSROOTSYS.Length() == 0) {
       TString jsdir = TString::Format("%s/js", TROOT::GetDataDir().Data());
