@@ -31,8 +31,6 @@ Defined levels:
 - 3  detailed info for each step
 */
 
-ClassImp(TMCVerbose);
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Standard constructor
 
@@ -324,4 +322,3 @@ void TMCVerbose::FinishEvent()
    if (fLevel>0)
       std::cout << "--- Finish event " << std::endl;
 }
-

@@ -21,5 +21,9 @@
 #pragma link C++ class TVirtualMCStack + ;
 #pragma link C++ class TMCVerbose + ;
 #pragma link C++ class TGeoMCGeometry + ;
+#pragma link C++ class TMCManager + ;
+#pragma link C++ class TMCManagerStack + ;
+#pragma link C++ struct TMCParticleStatus + ;
+#pragma link C++ class TGeoMCBranchArrayContainer + ;
 
 #endif
