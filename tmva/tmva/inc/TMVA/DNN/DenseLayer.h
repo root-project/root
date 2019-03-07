@@ -33,6 +33,7 @@
 #include "TMVA/DNN/Functions.h"
 
 #include <iostream>
+#include <iomanip>
 
 namespace TMVA {
 namespace DNN {
@@ -200,15 +201,17 @@ auto TDenseLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_back
 template <typename Architecture_t>
 void TDenseLayer<Architecture_t>::Print() const
 {
-   std::cout << " DENSE Layer: \t ";
-   std::cout << " ( Input = " << this->GetWeightsAt(0).GetNcols();  // input size 
-   std::cout << " , Width = " << this->GetWeightsAt(0).GetNrows() << " ) ";  // layer width
+   std::cout << " DENSE Layer: \t";
+   std::cout << " ( Input =" << std::setw(6) << this->GetWeightsAt(0).GetNcols();  // input size 
+   std::cout << " , Width =" << std::setw(6) << this->GetWeightsAt(0).GetNrows() << " ) ";  // layer width
    if (this->GetOutput().size() > 0) {
-      std::cout << "\tOutput = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " ) ";
+      std::cout << "\tOutput = ( " << std::setw(2) << this->GetOutput().size() << " ," << std::setw(6) << this->GetOutput()[0].GetNrows() << " ," << std::setw(6) << this->GetOutput()[0].GetNcols() << " ) ";
    }
    std::vector<std::string> activationNames = { "Identity","Relu","Sigmoid","Tanh","SymmRelu","SoftSign","Gauss" };
    std::cout << "\t Activation Function = ";
-   std::cout << activationNames[ static_cast<int>(fF) ] << std::endl;
+   std::cout << activationNames[ static_cast<int>(fF) ];
+   if (fDropoutProbability != 1.) std::cout << "\t Dropout prob. = " << fDropoutProbability;
+   std::cout << std::endl;
 }
 
 //______________________________________________________________________________
