@@ -236,10 +236,14 @@ void RooNLLVar::applyWeightSquared(Bool_t flag)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate and return likelihood on subset of data from firstEvent to lastEvent
-/// processed with a step size of 'stepSize'. If this an extended likelihood and
-/// and the zero event is processed the extended term is added to the return
-/// likelihood.
+/// Calculate and return likelihood on subset of data.
+/// \param[in] firstEvent First event to be processed.
+/// \param[in] lastEvent  First event not to be processed, any more.
+/// \param[in] stepSize   Steps between events.
+/// \note For efficient batch computations, the step size **must** be one.
+///
+/// If this an extended likelihood, the extended term is added to the return likelihood
+/// in the batch that encounters the event with index 0.
 
 Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const
 {

@@ -18,17 +18,21 @@
 /** \class RooAbsPdf
     \ingroup Roofitcore
 
+## RooAbsPdf, the base class of all PDFs
+
 RooAbsPdf is the abstract interface for all probability density
-functions The class provides hybrid analytical/numerical
+functions. The class provides hybrid analytical/numerical
 normalization for its implementations, error tracing and a MC
 generator interface.
 
+### A Minimal PDF Implementation
+
 A minimal implementation of a PDF class derived from RooAbsPdf
-should overload the evaluate() function. This functions should
-return PDFs value.
+should override the `evaluate()` function. This function should
+return the PDF's value (which does not need to be normalised).
 
 
-### Normalization/Integration
+#### Normalization/Integration
 
 Although the normalization of a PDF is an integral part of a
 probability density function, normalization is treated separately
@@ -38,10 +42,11 @@ if any of its variables are functions instead of variables. In
 such cases the normalization of the composite may not be simply the
 integral over the dependents of the top level PDF as these are
 functions with potentially non-trivial Jacobian terms themselves.
-Therefore 
-
-**--> No explicit attempt should be made to normalize 
-    the functions output in evaluate().** 
+\note Therefore, no explicit attempt should be made to normalize the
+function output in evaluate(). In particular, normalisation constants
+can be omitted to speed up the function evaluations, and included later
+in the integration of the PDF (see below), which is called rarely in
+comparison to the `evaluate()` function.
 
 In addition, RooAbsPdf objects do not have a static concept of what
 variables are parameters and what variables are dependents (which
@@ -60,18 +65,22 @@ determines that this is safe (i.e. no hidden Jacobian terms,
 multiplication with other PDFs that have one or more dependents in
 commen etc)
 
+#### Implementing analytical integrals
 To implement analytical integrals, two functions must be implemented. First,
 
-``Int_t getAnalyticalIntegral(const RooArgSet& integSet, RooArgSet& anaIntSet)``
-
-advertises the analytical integrals that are supported. 'integSet'
+```
+Int_t getAnalyticalIntegral(const RooArgSet& integSet, RooArgSet& anaIntSet)
+```
+should return the analytical integrals that are supported. `integSet`
 is the set of dependents for which integration is requested. The
 function should copy the subset of dependents it can analytically
-integrate to anaIntSet and return a unique identification code for
+integrate to `anaIntSet`, and return a unique identification code for
 this integration configuration.  If no integration can be
 performed, zero should be returned.  Second,
 
-``Double_t analyticalIntegral(Int_t code)``
+```
+Double_t analyticalIntegral(Int_t code)
+```
 
 Implements the actual analytical integral(s) advertised by
 getAnalyticalIntegral.  This functions will only be called with
@@ -89,24 +98,29 @@ summed over all of their states.
 
 ### Direct generation of observables
 
-Any PDF dependent can be generated with the accept/reject method,
-but for certain PDFs more efficient methods may be implemented. To
+Distributions for any PDF can be generated with the accept/reject method,
+but for certain PDFs, more efficient methods may be implemented. To
 implement direct generation of one or more observables, two
 functions need to be implemented, similar to those for analytical
 integrals:
 
-``Int_t getGenerator(const RooArgSet& generateVars, RooArgSet& directVars)`` and
-``void generateEvent(Int_t code)``
+```
+Int_t getGenerator(const RooArgSet& generateVars, RooArgSet& directVars)
+```
+and
+```
+void generateEvent(Int_t code)
+```
 
-The first function advertises observables that can be generated,
+The first function advertises observables, for which distributions can be generated,
 similar to the way analytical integrals are advertised. The second
-function implements the generator for the advertised observables
+function implements the actual generator for the advertised observables.
 
-The generated dependent values should be store in the proxy
-objects. For this the assignment operator can be used (i.e. xProxy
-= 3.0 ). Never call assign to any proxy not known to be a dependent
+The generated dependent values should be stored in the proxy
+objects. For this, the assignment operator can be used (i.e. `xProxy
+= 3.0` ). Never call assign to any proxy not known to be a dependent
 via the generation code.  Doing so may be ill-defined, e.g. in case
-the proxy holds a function, and will trigger an assert
+the proxy holds a function, and will trigger an assert.
 
 
 */
@@ -241,11 +255,11 @@ RooAbsPdf::~RooAbsPdf()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current value, normalized by integrating over
-/// the observables in 'nset'. If 'nset' is 0, the unnormalized value
-/// is returned. All elements of 'nset' must be lvalues
+/// the observables in `nset`. If `nset` is 0, the unnormalized value
+/// is returned. All elements of `nset` must be lvalues.
 ///
 /// Unnormalized values are not cached.
-/// Doing so would be complicated as _norm->getVal() could
+/// Doing so would be complicated as `_norm->getVal()` could
 /// spoil the cache and interfere with returning the cached
 /// return value. Since unnormalized calls are typically
 /// done in integration calls, there is no performance hit.
@@ -740,7 +754,7 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
 ///   </table>
 /// <tr><td> `Optimize(Bool_t flag)`           <td> Activate constant term optimization (on by default)
 /// <tr><td> `SplitRange(Bool_t flag)`         <td> Use separate fit ranges in a simultaneous fit. Actual range name for each subsample is assumed to
-///                                               by rangeName_{indexState} where indexState is the state of the master index category of the simultaneous fit
+///                                               be `rangeName_{indexState}`, where `indexState` is the state of the master index category of the simultaneous fit.
 /// <tr><td> `Constrain(const RooArgSet&pars)`          <td> For p.d.f.s that contain internal parameter constraint terms, only apply constraints to
 ///                                                        given subset of parameters
 /// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td> Include given external constraints to likelihood
@@ -1507,7 +1521,7 @@ RooFitResult* RooAbsPdf::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdLi
 /// <tr><td> `NumCPU()`     <td>  Activate parallel processing feature
 /// <tr><td> `Range()`      <td>  Fit only selected region
 /// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components 
-/// <tr><td> `SplitRange()`   <td>  Fit range is split by index catory of simultaneous PDF
+/// <tr><td> `SplitRange()`   <td>  Fit range is split by index category of simultaneous PDF
 /// <tr><td> `ConditionalObservables()` <td>  Define projected observables 
 /// </table>
 
@@ -2060,7 +2074,7 @@ void RooAbsPdf::initGenerator(Int_t /*code*/)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interface for generation of anan event using the algorithm
+/// Interface for generation of an event using the algorithm
 /// corresponding to the specified code. The meaning of each code is
 /// defined by the getGenerator() implementation. The default
 /// implementation does nothing.
@@ -2372,10 +2386,10 @@ RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvent
 ///                                                 of the plotted observabled (recommended for expensive functions such as profile likelihoods)
 /// <tr><td> `Invisible(Bool_t flag)`           <td>  Add curve to frame, but do not display. Useful in combination AddTo()
 /// <tr><td> `VisualizeError(const RooFitResult& fitres, Double_t Z=1, Bool_t linearMethod=kTRUE)`
-///                                  <td> Visualize the uncertainty on the parameters, as given in fitres, at 'Z' sigma'
+///                                  <td> Visualize the uncertainty on the parameters, as given in fitres, at 'Z' sigma.
 ///
 /// <tr><td> `VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z=1, Bool_t linearMethod=kTRUE)`
-///                                  <td> Visualize the uncertainty on the subset of parameters 'param', as given in fitres, at 'Z' sigma'
+///                                  <td> Visualize the uncertainty on the subset of parameters 'param', as given in fitres, at 'Z' sigma.
 /// </table>
 
 RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const

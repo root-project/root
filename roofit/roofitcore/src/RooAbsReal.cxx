@@ -2737,9 +2737,9 @@ Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet 
 /// \param[in] fr The RooFitResult, where errors can be extracted
 /// \param[in] Z  The desired significance (width) of the error band
 /// \param[in] params If non-zero, consider only the subset of the parameters in fr for the error evaluation
-/// \param[in] argList Optional RooCmdArg that can be applied to a regular plotOn() operation
-/// \param[in] linMethod By default (linMethod=kTRUE) a linearized error is shown.
-/// \return The RooPlot the band was plotted on (for chaining)
+/// \param[in] argList Optional `RooCmdArg` that can be applied to a regular plotOn() operation
+/// \param[in] linMethod By default (linMethod=kTRUE), a linearized error is shown.
+/// \return The RooPlot the band was plotted on (for chaining of plotting commands).
 ///
 /// The linearized error is calculated as follows:
 /// \f[
