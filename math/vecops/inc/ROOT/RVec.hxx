@@ -747,6 +747,42 @@ T Min(const RVec<T> &v)
    return *std::min_element(v.begin(), v.end());
 }
 
+// Get the position of the greatest element of an RVec
+// In case of multiple occurrences of the maximum values,
+// the indices corresponding to the first occurrence are returned.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<float> v {1.f, 2.f, 4.f};
+/// auto v_argmax = ArgMax(v);
+/// v_argmax
+/// // (int) 2
+/// ~~~~
+template <typename T>
+long ArgMax(const RVec<T> &v)
+{
+   return std::distance(v.begin(), std::max_element(v.begin(), v.end()));
+}
+
+// Get the position of the smallest element of an RVec
+// In case of multiple occurrences of the minimum values,
+// the indices corresponding to the first occurrence are returned.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<float> v {1.f, 2.f, 4.f};
+/// auto v_argmin = ArgMin(v);
+/// v_argmin
+/// // (int) 0
+/// ~~~~
+template <typename T>
+long ArgMin(const RVec<T> &v)
+{
+   return std::distance(v.begin(), std::min_element(v.begin(), v.end()));
+}
+
 /// Get the variance of the elements of an RVec
 ///
 /// The return type is a double precision floating point number.
