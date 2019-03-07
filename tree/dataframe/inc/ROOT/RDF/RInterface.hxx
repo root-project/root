@@ -177,7 +177,7 @@ public:
    /// ~~~{.cpp}
    /// // C++ callable (function, functor class, lambda...) that takes two parameters of the types of "x" and "y"
    /// auto filtered = df.Filter(myCut, {"x", "y"});
-   //
+   ///
    /// // String: it must contain valid C++ except that column names can be used instead of variable names
    /// auto filtered = df.Filter("x*y > 0");
    /// ~~~
