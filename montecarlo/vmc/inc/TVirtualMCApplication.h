@@ -23,6 +23,9 @@
 
 #include "TMCtls.h"
 
+class TVirtualMC;
+class TMCManager;
+
 class TVirtualMCApplication : public TNamed {
 
 public:
@@ -36,17 +39,26 @@ public:
    virtual ~TVirtualMCApplication();
 
    /// Static access method
-   static TVirtualMCApplication* Instance();
+   static TVirtualMCApplication *Instance();
 
    //
    // methods
    //
 
+   /// Request a TMCManager which is required if multiple engines should be run
+   void RequestMCManager();
+
+   /// Register the an engine.
+   void Register(TVirtualMC *mc);
+
+   /// Return the transport engine registered to this application
+   TVirtualMC *GetMC() const;
+
    /// Construct user geometry
    virtual void ConstructGeometry() = 0;
 
    /// Misalign user geometry (optional)
-   virtual Bool_t MisalignGeometry() {return kFALSE;}
+   virtual Bool_t MisalignGeometry() { return kFALSE; }
 
    /// Define parameters for optical processes (optional)
    virtual void ConstructOpGeometry() {}
@@ -95,14 +107,14 @@ public:
    virtual Double_t TrackingZmax() const { return DBL_MAX; }
 
    /// Calculate user field \a b at point \a x
-   virtual void Field(const Double_t* x, Double_t* b) const;
+   virtual void Field(const Double_t *x, Double_t *b) const;
 
    /// Define action at each step for Geane
-   virtual void GeaneStepping() {;}
+   virtual void GeaneStepping() { ; }
 
    // Functions for multi-threading applications
    /// Clone MC application on worker
-   virtual TVirtualMCApplication* CloneForWorker() const { return 0;}
+   virtual TVirtualMCApplication *CloneForWorker() const { return 0; }
 
    /// Const Initialize MC application on worker  - now deprecated
    /// Use new non-const InitOnWorker()  instead
@@ -121,23 +133,37 @@ public:
    /// Define actions at the end of the worker run if needed
    virtual void FinishRunOnWorker() {}
    /// Merge the data accumulated on workers to the master if needed
-   virtual void Merge(TVirtualMCApplication* /*localMCApplication*/) {}
+   virtual void Merge(TVirtualMCApplication * /*localMCApplication*/) {}
+
+protected:
+   /// The current transport engine in use. In case of a multi-run the TMCManager
+   /// will update this whenever the engine changes.
+   TVirtualMC *fMC;
+
+   /// Pointer to requested TMCManager which will only be instantiated by a call
+   /// to RequestMCManager()
+   TMCManager *fMCManager;
 
 private:
    // static data members
 #if !defined(__CINT__)
-   static TMCThreadLocal TVirtualMCApplication* fgInstance; ///< Singleton instance
+   static TMCThreadLocal TVirtualMCApplication
+      *fgInstance; ///< Singleton instance
 #else
-   static                TVirtualMCApplication* fgInstance; ///< Singleton instance
+   static TVirtualMCApplication *fgInstance; ///< Singleton instance
 #endif
+                   /// Forbid multithreading mode if multi run via global static flag
+   static Bool_t fLockMultiThreading;
 
-   ClassDef(TVirtualMCApplication,1)  //Interface to MonteCarlo application
+   ClassDef(TVirtualMCApplication, 1) // Interface to MonteCarlo application
 };
 
-inline void TVirtualMCApplication::Field(const Double_t* /*x*/, Double_t* b) const {
+inline void TVirtualMCApplication::Field(const Double_t * /*x*/, Double_t *b) const
+{
    // No magnetic field
-   b[0] = 0; b[1] = 0; b[2] = 0;
+   b[0] = 0;
+   b[1] = 0;
+   b[2] = 0;
 }
 
-#endif //ROOT_TVirtualMCApplication
-
+#endif // ROOT_TVirtualMCApplication
