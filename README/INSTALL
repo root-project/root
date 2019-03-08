@@ -209,8 +209,6 @@ Here's the complete list:
 * docdir (<prefix>/doc/root)
   Documentation, like the LICENCE, README, etc. files will be
   installed into this directory.
-* testdir (<docdir>/test)
-  The test applications and libraries will be installed here.
 * tutdir (<docdir>/tutorial)
   All the tutorials will be installed in this directory.
 
