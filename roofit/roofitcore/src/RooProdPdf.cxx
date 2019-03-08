@@ -20,24 +20,25 @@
 \ingroup Roofitcore
 
 RooProdPdf is an efficient implementation of a product of PDFs of the form
+\f[ \prod_{i=1}^{N} \mathrm{PDF}_i (x, \ldots) \f]
 
-\f[PDF_1 * PDF_2 * ... * PDF_N  \f]
+PDFs may share observables. If that is the case any irreducible subset
+of PDFs that share observables will be normalised with explicit numeric
+integration as any built-in normalisation will no longer be valid.
 
-PDFs may share observables. If that is the case any irreducable subset
-of PDFS that share observables will be normalized with explicit numeric
-integration as any built-in normalization will no longer be valid.
-Alternatively, products using conditional PDFs can be defined, e.g.
+Alternatively, products using conditional PDFs can be defined, *e.g.*
 
-\f[F(x|y) * G(y) \f]
+\f[ F(x|y) \cdot G(y), \f]
 
-meaning a pdf F(x) _given_ y and a PDF G(y). In this contruction F is only
-normalized w.r.t x and G is normalized w.r.t y. The product in this construction
-is properly normalized.
+meaning a PDF \f$ F(x) \f$ **given** \f$ y \f$ and a PDF \f$ G(y) \f$.
+In this construction, \f$ F \f$ is only
+normalised w.r.t \f$ x\f$, and \f$ G \f$ is normalised w.r.t \f$ y \f$. The product in this construction
+is properly normalised.
+
 If exactly one of the component PDFs supports extended likelihood fits, the
 product will also be usable in extended mode, returning the number of expected
 events from the extendable component PDF. The extendable component does not
 have to appear in any specific place in the list.
-
 **/
 
 #include "RooProdPdf.h"
@@ -170,7 +171,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor from a list of PDFs
+/// Constructor from a list of PDFs.
 ///
 /// The optional cutOff parameter can be used as a speed optimization if
 /// one or more of the PDF have sizable regions with very small values,

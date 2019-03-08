@@ -28,11 +28,11 @@ The fractional term is defined as
       \int_\mathrm{normRegion[x]} \mathrm{pdf}(x,y) \; \mathrm{d}x \mathrm{d}y}
 \f]
 
-where x is the set of dependents involved in the selection region and y
+where \f$ x \f$ is the set of dependents involved in the selection region and \f$ y \f$
 is the set of remaining dependents.
 
-cutRegion[x] is a limited integration range that is contained in
-the nominal integration range normRegion[x]
+\f$ \mathrm{cutRegion}[x] \f$ is a limited integration range that is contained in
+the nominal integration range \f$ \mathrm{normRegion}[x] \f$.
 */
 
 #include "RooFit.h"
@@ -61,12 +61,14 @@ RooExtendPdf::RooExtendPdf() : _rangeName(0)
 
 /// Constructor. The ExtendPdf behaves identical to the supplied input pdf,
 /// but adds an extended likelihood term. expectedEvents() will return 
-/// `norm` (or `norm` scaled to the full range of the variable if `rangeName` is used)
+/// `norm` if `rangeName` remains empty. If `rangeName` is not empty,
+/// `norm` will refer to this range, and expectedEvents will return the
+/// total number of events over the full range of the observables.
 /// \param[in] name   Name of the pdf
 /// \param[in] title  Title of the pdf (for plotting)
 /// \param[in] pdf    The pdf to be extended
 /// \param[in] norm   Expected number of events
-/// \param[in] rangeName  If given, the number of events is interpreted as
+/// \param[in] rangeName  If given, the number of events denoted by `norm` is interpreted as
 /// the number of events in this range only
 RooExtendPdf::RooExtendPdf(const char *name, const char *title, const RooAbsPdf& pdf,
 			   const RooAbsReal& norm, const char* rangeName) :
@@ -100,15 +102,18 @@ RooExtendPdf::~RooExtendPdf()
 }
 
 
-  /// Return the number of expected events. That is
-  /// \f[
-  ///     N = \mathrm{norm} \; / \; \frac{\int_{(x_C,y_F)} \mathrm{pdf}(x,y)}{\int_{(x_F,y_F)} \mathrm{pdf}(x,y) }
-  /// \f]
-  /// Where \f$ x \f$ is the set of dependents with cuts defined (`rangeName` in the constructor)
-  /// and \f$ y \f$ are the other dependents. \f$ x_C \f$ is the integration
-  /// of \f$ x \f$ over the cut range, \f$ x_F \f$ is the integration of
-  /// \f$ x \f$ over the full range, `norm` is the number of events from the constructor.
-  /// If the nested PDF can be extended, \f$ N \f$ is scaled by its expected number of events.
+/// Return the number of expected events over the full range of all variables.
+/// `norm`, the variable set as normalisation constant in the constructor,
+/// will yield the number of events in the range set in the constructor. That is, the function returns
+/// \f[
+///     N = \mathrm{norm} \; \cdot \; \frac{\int_{(x_F,y_F)} \mathrm{pdf}(x,y) }{\int_{(x_C,y_F)} \mathrm{pdf}(x,y)}
+/// \f]
+/// Where \f$ x \f$ is the set of dependents with a restricted range (defined by `rangeName` in the constructor),
+/// and \f$ y \f$ are the other dependents. \f$ x_C \f$ is the integration
+/// of \f$ x \f$ over the restricted range, and \f$ x_F \f$ is the integration of
+/// \f$ x \f$ over the full range. `norm` is the number of events given as parameter to the constructor.
+///
+/// If the nested PDF can be extended, \f$ N \f$ is further scaled by its expected number of events.
 Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const 
 {
   RooAbsPdf& pdf = (RooAbsPdf&)_pdf.arg() ;

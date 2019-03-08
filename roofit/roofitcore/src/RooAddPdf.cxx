@@ -382,15 +382,15 @@ void RooAddPdf::fixCoefNormalization(const RooArgSet& refCoefNorm)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// By default the interpretation of the fraction coefficients is
-/// performed in the default range. This make the shape of a RooAddPdf
-/// explicitly dependent on the range of the observables. To allow
-/// a range independent definition of the fraction this function
-/// instructs RooAddPdf to freeze its interpretation in the given
-/// named range. If the current normalization range is different
-/// from the reference range, the appropriate fraction coefficients
-/// are automically calculation from the reference fractions using
-/// ratios if integrals
+/// By default, fraction coefficients are assumed to refer to the default
+/// fit range. This makes the shape of a RooAddPdf
+/// explicitly dependent on the range of the observables. Calling this function
+/// allows for a range-independent definition of the fractions, because it
+/// ties all coefficients to the given
+/// named range. If the normalisation range is different
+/// from this reference range, the appropriate fraction coefficients
+/// are automatically calculated from the reference fractions by
+/// integrating over the ranges, and comparing these integrals.
 
 void RooAddPdf::fixCoefRange(const char* rangeName)
 {
@@ -401,11 +401,15 @@ void RooAddPdf::fixCoefRange(const char* rangeName)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retrieve cache element with for calculation of p.d.f value with normalization set nset and integrated over iset
-/// in range 'rangeName'. If cache element does not exist, create and fill it on the fly. The cache contains
-/// suplemental normalization terms (in case not all added p.d.f.s have the same observables), projection
-/// integrals to calculated transformed fraction coefficients when a frozen reference frame is provided
-/// and projection integrals for similar transformations when a frozen reference range is provided.
+/// Retrieve cache element for the computation of the PDF normalisation.
+/// \param[in] nset Current normalisation set (integration over these variables yields 1).
+/// \param[in] iset Integration set. Variables to be integrated over (if integrations are performed).
+/// \param[in] rangeName Reference range for the integrals.
+///
+/// If a cache element does not exist, create and fill it on the fly. The cache also contains
+/// - Supplemental normalization terms (in case not all added p.d.f.s have the same observables)
+/// - Projection integrals to calculate transformed fraction coefficients when a frozen reference frame is provided
+/// - Projection integrals for similar transformations when a frozen reference range is provided.
 
 RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
 {
@@ -646,9 +650,9 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update the coefficient values in the given cache element: calculate new remainder
-/// fraction, normalize fractions obtained from extended ML terms to unity and
-/// multiply these the various range and dimensional corrections needed in the
-/// current use context
+/// fraction, normalize fractions obtained from extended ML terms to unity, and
+/// multiply the various range and dimensional corrections needed in the
+/// current use context.
 
 void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) const 
 {

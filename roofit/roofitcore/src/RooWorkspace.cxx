@@ -1245,11 +1245,11 @@ Bool_t RooWorkspace::loadSnapshot(const char* name)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the RooArgSet containgin a snapshot of variables contained in the workspace
+/// Return the RooArgSet containing a snapshot of variables contained in the workspace
 ///
-/// Note that the variables of the objects in the snapshots are _copies_ of the
+/// Note that the variables of the objects in the snapshots are **copies** of the
 /// variables in the workspace. To load the values of a snapshot in the workspace
-/// variables use loadSnapshot() instead
+/// variables, use loadSnapshot() instead.
 
 const RooArgSet* RooWorkspace::getSnapshot(const char* name) const
 {

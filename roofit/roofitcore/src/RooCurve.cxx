@@ -23,14 +23,17 @@ A RooCurve is a one-dimensional graphical representation of a real-valued functi
 A curve is approximated by straight line segments with endpoints chosen to give
 a "good" approximation to the true curve. The goodness of the approximation is
 controlled by a precision and a resolution parameter. To view the points where
-a function y(x) is actually evaluated to approximate a smooth curve, use:
-**/
-//  RooPlot *p= y.plotOn(x.frame());
-//  p->getAttMarker("curve_y")->SetMarkerStyle(20);
-//  p->setDrawOptions("curve_y","PL");
-//  p->Draw();
-//
+a function y(x) is actually evaluated to approximate a smooth curve, use the fact
+that a RooCurve is a TGraph:
+```
+RooPlot *p = y.plotOn(x.frame());
+p->getAttMarker("curve_y")->SetMarkerStyle(20);
+p->setDrawOptions("curve_y","PL");
+p->Draw();
+```
 
+To retrieve a RooCurve form a RooPlot, use RooPlot::getCurve().
+**/
 
 #include "RooFit.h"
 

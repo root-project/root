@@ -58,7 +58,7 @@ RooPoisson::RooPoisson(const char *name, const char *title,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Implementation in terms of the TMath Poisson function
+/// Implementation in terms of the TMath::Poisson() function.
 
 Double_t RooPoisson::evaluate() const
 {
