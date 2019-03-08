@@ -883,8 +883,8 @@ TObject *TDirectoryFile::FindObjectAny(const char *aname) const
 /// The method Get<T> offers better protection and avoids the need for any
 /// cast:
 /// ~~~{.cpp}
-/// auto obj = directory->Get<MyClass>("some object");
-/// if (obj) { ... the object exist and inherits from MyClass ... }
+/// auto objPtr = directory->Get<MyClass>("some object");
+/// if (objPtr) { ... the object exist and inherits from MyClass ... }
 /// ~~~
 ///
 /// ### Very important note about inheritance
@@ -1010,8 +1010,8 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const char* classn
 ///
 /// Note: We recommend using the method TDirectoryFile::Get<T>:
 /// ~~~{.cpp}
-/// auto obj = directory->Get<MyClass>("some object inheriting from MyClass");
-/// if (obj) { ... we found what we are looking for ... }
+/// auto objPtr = directory->Get<MyClass>("some object inheriting from MyClass");
+/// if (objPtr) { ... we found what we are looking for ... }
 /// ~~~
 
 void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expectedClass)
