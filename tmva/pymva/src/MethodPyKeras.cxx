@@ -167,43 +167,45 @@ void MethodPyKeras::ProcessOptions() {
    //  -  set up number of threads for CPU if NumThreads option was specified
 
    // check first if using tensorflow backend
-   if (GetKerasBackend() == kTensorFlow) { 
-      Log() << kINFO << "Using tensorflow backend - setting special config options "  << Endl;
+   if (GetKerasBackend() == kTensorFlow) {
+      Log() << kINFO << "Using TensorFlow backend - setting special configuration options "  << Endl;
       PyRunString("import tensorflow as tf");
       PyRunString("from keras.backend import tensorflow_backend as K");
       // in case specify number of threads
       int num_threads = fNumThreads;
       if (num_threads > 0) {
-         std::cout << "init Pykeras with " << num_threads << std::endl;
+         Log() << kINFO << "Setting the CPU number of threads =  "  << num_threads << Endl;
          PyRunString(TString::Format("session_conf = tf.ConfigProto(intra_op_parallelism_threads=%d,inter_op_parallelism_threads=%d)",
                                      num_threads,num_threads));
       }
       else
          PyRunString("session_conf = tf.ConfigProto()");
 
-      std::cout << "GPU options " << fGpuOptions << std::endl;
+      // applying GPU options such as allow_growth=True to avoid allocating all memory on GPU
+      // that prevents running later TMVA-GPU
+      // Also new Nvidia RTX cards (e.g. RTX 2070)  require this option
       if (!fGpuOptions.IsNull() ) {
          TObjArray * optlist = fGpuOptions.Tokenize(",");
          for (int item = 0; item < optlist->GetEntries(); ++item) {
-            
-            std::cout << "apply option " << optlist->At(item)->GetName() << std::endl;
-             // for GPU's (needed for new RTX cards)
+            Log() << kINFO << "Applying GPU option:  gpu_options." << optlist->At(item)->GetName() << Endl;
             PyRunString(TString::Format("session_conf.gpu_options.%s", optlist->At(item)->GetName()));
          }
-      }   
+      }
       PyRunString("sess = tf.Session(config=session_conf)");
       PyRunString("K.set_session(sess)");
    }
    else {
       if (fNumThreads > 0)
          Log() << kWARNING << "Cannot set the given " << fNumThreads << " threads when not using tensorflow as  backend"  << Endl;
+      if (!fGpuOptions.IsNull() ) {
+         Log() << kWARNING << "Cannot set the given GPU option " << fGpuOptions << " when not using tensorflow as  backend"  << Endl;
+      }
    }
 
    // Setup model, either the initial model from `fFilenameModel` or
    // the trained model from `fFilenameTrainedModel`
    if (fContinueTraining) Log() << kINFO << "Continue training with trained model" << Endl;
    SetupKerasModel(fContinueTraining);
-
 }
 
 void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
@@ -601,24 +603,24 @@ void MethodPyKeras::GetHelpMessage() const {
 }
 
 MethodPyKeras::EBackendType MethodPyKeras::GetKerasBackend()  {
-   // get the keras backend 
+   // get the keras backend
    // check first if using tensorflow backend
    PyRunString("keras_backend_is_set =  keras.backend.backend() == \"tensorflow\"");
    PyObject * keras_backend = PyDict_GetItemString(fLocalNS,"keras_backend_is_set");
    if (keras_backend  != nullptr && keras_backend == Py_True)
-      return kTensorFlow; 
+      return kTensorFlow;
 
    PyRunString("keras_backend_is_set =  keras.backend.backend() == \"theano\"");
    keras_backend = PyDict_GetItemString(fLocalNS,"keras_backend_is_set");
    if (keras_backend != nullptr && keras_backend == Py_True)
-      return kTheano; 
+      return kTheano;
 
    PyRunString("keras_backend_is_set =  keras.backend.backend() == \"cntk\"");
    keras_backend = PyDict_GetItemString(fLocalNS,"keras_backend_is_set");
    if (keras_backend != nullptr && keras_backend == Py_True)
-      return kCNTK; 
+      return kCNTK;
 
-   return kUndefined; 
+   return kUndefined;
 }
 
 TString MethodPyKeras::GetKerasBackendName()  {
