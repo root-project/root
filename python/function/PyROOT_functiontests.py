@@ -29,7 +29,7 @@ gROOT.LoadMacro( "InstallableFunction.C+" )
 
 
 ### helpers for general test cases -------------------------------------------
-def identity( x ):
+def identity( x, par = None ):
    return x[0]
 
 class Linear:
