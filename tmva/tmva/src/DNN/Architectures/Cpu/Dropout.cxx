@@ -32,6 +32,8 @@ void TCpu<AFloat>::Dropout(TCpuMatrix<AFloat> &A,
    size_t nElements =  A.GetNoElements();
    const size_t nSteps = TCpuMatrix<AFloat>::GetNWorkItems(nElements);
 
+   // apply droput. The probability is actually the probability to keep the node
+   // (i.e. 1 - dropout_prob)
    auto f = [&data, dropoutProbability, &nSteps, &nElements, &seed](UInt_t workerID)
    {
       TRandom rand(seed+workerID);
