@@ -19,17 +19,17 @@
 ROOT::Experimental::RForestEntry::~RForestEntry()
 {
    for (auto idx : fManagedValues) {
-      fTreeValues[idx].GetField()->DestroyValue(fTreeValues[idx]);
+      fValues[idx].GetField()->DestroyValue(fValues[idx]);
    }
 }
 
 void ROOT::Experimental::RForestEntry::AddValue(const Detail::RFieldValueBase& value)
 {
-   fManagedValues.emplace_back(fTreeValues.size());
-   fTreeValues.push_back(value);
+   fManagedValues.emplace_back(fValues.size());
+   fValues.push_back(value);
 }
 
 void ROOT::Experimental::RForestEntry::CaptureValue(const Detail::RFieldValueBase& value)
 {
-   fTreeValues.push_back(value);
+   fValues.push_back(value);
 }
