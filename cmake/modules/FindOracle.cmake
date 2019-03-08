@@ -75,8 +75,8 @@ IF (NOT DEFINED ORACLE_OCI_VERSION)
       ${ORACLE_HOME}/bin
     )
     IF(SQLPLUS_EXECUTABLE)
-       get_filename_component(bindir ${SQLPLUS_EXECUTABLE} PATH)         # sqlplus executable needs its shared libraries
-       set(ENV{LD_LIBRARY_PATH} ${bindir}/../lib:$ENV{LD_LIBRARY_PATH})
+      get_filename_component(_bindir ${SQLPLUS_EXECUTABLE} PATH) # sqlplus executable needs its shared libraries
+      set(ENV{LD_LIBRARY_PATH} ${_bindir}/../lib:$ENV{LD_LIBRARY_PATH})
       EXECUTE_PROCESS(COMMAND ${SQLPLUS_EXECUTABLE} -version OUTPUT_VARIABLE sqlplus_out)
       STRING(REGEX MATCH "([0-9.]+)" sqlplus_version ${sqlplus_out})
       MESSAGE(STATUS "Found sqlplus version: ${sqlplus_version}")
