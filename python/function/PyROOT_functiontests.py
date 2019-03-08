@@ -103,7 +103,8 @@ class Func1CallFunctionTestCase( MyTestCase ):
    def test2CallableObject( self ):
       """Test calling of a python callable object"""
 
-      f = TF1( "pyf2", Linear(), -1., 1., 2 )
+      pycal = Linear()
+      f = TF1( "pyf2", pycal, -1., 1., 2 )
       f.SetParameters( 5., 2. )
 
       self.assertEqual( f.Eval( -0.1 ), 4.8 )
