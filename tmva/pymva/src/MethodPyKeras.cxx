@@ -79,6 +79,7 @@ void MethodPyKeras::DeclareOptions() {
    DeclareOptionRef(fBatchSize, "BatchSize", "Training batch size");
    DeclareOptionRef(fNumEpochs, "NumEpochs", "Number of training epochs");
    DeclareOptionRef(fNumThreads, "NumThreads", "Number of CPU threads (only for Tensorflow backend)");
+   DeclareOptionRef(fGpuOptions, "GpuOptions", "GPU options for tensorflow, such as allow_growth");
    DeclareOptionRef(fVerbose, "Verbose", "Keras verbosity during training");
    DeclareOptionRef(fContinueTraining, "ContinueTraining", "Load weights from previous training");
    DeclareOptionRef(fSaveBestOnly, "SaveBestOnly", "Store only weights with smallest validation loss");
@@ -166,9 +167,7 @@ void MethodPyKeras::ProcessOptions() {
    //  -  set up number of threads for CPU if NumThreads option was specified
 
    // check first if using tensorflow backend
-   PyRunString("keras_backend_is_tf =  keras.backend.backend() == \"tensorflow\"");
-   PyObject * keras_backend_is_tf = PyDict_GetItemString(fLocalNS,"keras_backend_is_tf");
-   if (keras_backend_is_tf != nullptr && keras_backend_is_tf == Py_True)  {
+   if (GetKerasBackend() == kTensorFlow) { 
       Log() << kINFO << "Using tensorflow backend - setting special config options "  << Endl;
       PyRunString("import tensorflow as tf");
       PyRunString("from keras.backend import tensorflow_backend as K");
@@ -182,10 +181,18 @@ void MethodPyKeras::ProcessOptions() {
       else
          PyRunString("session_conf = tf.ConfigProto()");
 
-      PyRunString("session_conf.gpu_options.allow_growth = True"); // for GPU's (needed for new RTX cards)
+      std::cout << "GPU options " << fGpuOptions << std::endl;
+      if (!fGpuOptions.IsNull() ) {
+         TObjArray * optlist = fGpuOptions.Tokenize(",");
+         for (int item = 0; item < optlist->GetEntries(); ++item) {
+            
+            std::cout << "apply option " << optlist->At(item)->GetName() << std::endl;
+             // for GPU's (needed for new RTX cards)
+            PyRunString(TString::Format("session_conf.gpu_options.%s", optlist->At(item)->GetName()));
+         }
+      }   
       PyRunString("sess = tf.Session(config=session_conf)");
       PyRunString("K.set_session(sess)");
-
    }
    else {
       if (fNumThreads > 0)
@@ -591,4 +598,34 @@ void MethodPyKeras::GetHelpMessage() const {
    Log() << "interface, you have to generate a model with Keras first. Then," << Endl;
    Log() << "this model can be loaded and trained in TMVA." << Endl;
    Log() << Endl;
+}
+
+MethodPyKeras::EBackendType MethodPyKeras::GetKerasBackend()  {
+   // get the keras backend 
+   // check first if using tensorflow backend
+   PyRunString("keras_backend_is_set =  keras.backend.backend() == \"tensorflow\"");
+   PyObject * keras_backend = PyDict_GetItemString(fLocalNS,"keras_backend_is_set");
+   if (keras_backend  != nullptr && keras_backend == Py_True)
+      return kTensorFlow; 
+
+   PyRunString("keras_backend_is_set =  keras.backend.backend() == \"theano\"");
+   keras_backend = PyDict_GetItemString(fLocalNS,"keras_backend_is_set");
+   if (keras_backend != nullptr && keras_backend == Py_True)
+      return kTheano; 
+
+   PyRunString("keras_backend_is_set =  keras.backend.backend() == \"cntk\"");
+   keras_backend = PyDict_GetItemString(fLocalNS,"keras_backend_is_set");
+   if (keras_backend != nullptr && keras_backend == Py_True)
+      return kCNTK; 
+
+   return kUndefined; 
+}
+
+TString MethodPyKeras::GetKerasBackendName()  {
+   // get the keras backend name
+   EBackendType type = GetKerasBackend();
+   if (type == kTensorFlow) return "TensorFlow";
+   if (type == kTheano) return "Theano";
+   if (type == kCNTK) return "CNTK";
+   return "Undefined";
 }
