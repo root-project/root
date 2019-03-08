@@ -89,7 +89,6 @@ MACRODIR       := @macrodir@
 SRCDIR         := @srcdir@
 ICONPATH       := @iconpath@
 DOCDIR         := @docdir@
-TESTDIR        := @testdir@
 TUTDIR         := @tutdir@
 ACLOCALDIR     := @aclocaldir@
 
