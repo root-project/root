@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_roofit
-/// \notebook -js
+/// \notebook -js -nodraw
 /// Addition and convolution: options for plotting components of composite p.d.f.s.
 ///
 /// \macro_image
@@ -109,4 +109,5 @@ void rf205_compplot()
    gPad->SetLeftMargin(0.15);
    xframe2->GetYaxis()->SetTitleOffset(1.4);
    xframe2->Draw();
+   c->Draw();
 }

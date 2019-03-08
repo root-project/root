@@ -487,15 +487,20 @@ RooAbsReal* RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create an object that represents the integral of the function over one or more observables listed in iset
-/// The actual integration calculation is only performed when the return object is evaluated. The name
+/// Create an object that represents the integral of the function over one or more observables listed in `iset`.
+/// The actual integration calculation is only performed when the returned object is evaluated. The name
 /// of the integral object is automatically constructed from the name of the input function, the variables
-/// it integrates and the range integrates over
+/// it integrates and the range integrates over.
+///
+/// \note The integral over a PDF is usually not normalised (*i.e.*, it is usually not
+/// 1 when integrating the PDF over the full range). In fact, this integral is used *to compute*
+/// the normalisation of each PDF. See the rf110 tutorial at https://root.cern.ch/doc/master/group__tutorial__roofit.html
+/// for details on PDF normalisation.
 ///
 /// The following named arguments are accepted
 /// |  | Effect on integral creation
 /// |--|-------------------------------
-/// | `NormSet(const RooArgSet&)`            | Specify normalization set, mostly useful when working with PDFS
+/// | `NormSet(const RooArgSet&)`            | Specify normalization set, mostly useful when working with PDFs
 /// | `NumIntConfig(const RooNumIntConfig&)` | Use given configuration for any numeric integration, if necessary
 /// | `Range(const char* name)`              | Integrate only over given range. Multiple ranges may be specified by passing multiple Range() arguments
 
@@ -2729,9 +2734,9 @@ Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet 
 /// \param[in] fr The RooFitResult, where errors can be extracted
 /// \param[in] Z  The desired significance (width) of the error band
 /// \param[in] params If non-zero, consider only the subset of the parameters in fr for the error evaluation
-/// \param[in] argList Optional RooCmdArg that can be applied to a regular plotOn() operation
-/// \param[in] linMethod By default (linMethod=kTRUE) a linearized error is shown.
-/// \return The RooPlot the band was plotted on (for chaining)
+/// \param[in] argList Optional `RooCmdArg` that can be applied to a regular plotOn() operation
+/// \param[in] linMethod By default (linMethod=kTRUE), a linearized error is shown.
+/// \return The RooPlot the band was plotted on (for chaining of plotting commands).
 ///
 /// The linearized error is calculated as follows:
 /// \f[
