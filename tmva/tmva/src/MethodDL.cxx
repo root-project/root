@@ -1180,7 +1180,12 @@ void MethodDL::TrainDeepNet()
       CreateDeepNet(deepNet, nets);
 
       // set droput probabilities
-      deepNet.SetDropoutProbabilities(settings.dropoutProbabilities);
+      // use convention to store in the layer 1.- dropout probabilities
+      std::vector<Double_t> dropoutVector(settings.dropoutProbabilities);
+      for (auto & p : dropoutVector) {
+         p = 1.0 - p;
+      }
+      deepNet.SetDropoutProbabilities(dropoutVector);
 
       if (trainingPhase > 1) {
          // copy initial weights from fNet to deepnet
