@@ -20,6 +20,8 @@
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <TError.h>
+
 #include <memory>
 #include <utility>
 #include <vector>
@@ -38,11 +40,11 @@ that are associated to values are managed.
 */
 // clang-format on
 class RForestEntry {
-   std::vector<Detail::RFieldValueBase> fTreeValues;
+   std::vector<Detail::RFieldValueBase> fValues;
    /// The objects involed in serialization and deserialization might be used long after the entry is gone:
    /// hence the shared pointer
    std::vector<std::shared_ptr<void>> fValuePtrs;
-   /// Points into fTreeValues and indicates the values that are owned by the entry and need to be destructed
+   /// Points into fValues and indicates the values that are owned by the entry and need to be destructed
    std::vector<std::size_t> fManagedValues;
 
 public:
@@ -61,22 +63,24 @@ public:
    template<typename T, typename... ArgsT>
    std::shared_ptr<T> AddValue(RField<T>* field, ArgsT&&... args) {
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
-      fTreeValues.emplace_back(Detail::RFieldValueBase(field->CaptureValue(ptr.get())));
+      fValues.emplace_back(Detail::RFieldValueBase(field->CaptureValue(ptr.get())));
       fValuePtrs.emplace_back(ptr);
       return ptr;
    }
 
    template<typename T>
    T* Get(std::string_view fieldName) {
-      for (auto& v : fTreeValues) {
-         if (v.GetField()->GetName() == fieldName)
+      for (auto& v : fValues) {
+         if (v.GetField()->GetName() == fieldName) {
+            R__ASSERT(v.GetField()->GetType() == RField<T>::MyTypeName());
             return static_cast<T*>(v.GetRawPtr());
+         }
       }
       return nullptr;
    }
 
-   decltype(fTreeValues)::iterator begin() { return fTreeValues.begin(); }
-   decltype(fTreeValues)::iterator end() { return fTreeValues.end(); }
+   decltype(fValues)::iterator begin() { return fValues.begin(); }
+   decltype(fValues)::iterator end() { return fValues.end(); }
 };
 
 } // namespace Experimental
