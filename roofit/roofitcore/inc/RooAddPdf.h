@@ -40,7 +40,6 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooAddPdf(*this,newname) ; }
   virtual ~RooAddPdf() ;
 
-  Double_t evaluate() const ;
   virtual Bool_t checkObservables(const RooArgSet* nset) const ;	
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { 
@@ -128,6 +127,7 @@ protected:
                                        const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
 
 
+  Double_t evaluate() const;
   mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes
 
   RooListProxy _pdfList ;   //  List of component PDFs
