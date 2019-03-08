@@ -27,43 +27,41 @@
 namespace ROOT {
 namespace Experimental {
 
+
 // clang-format off
 /**
 \class ROOT::Experimental::RForestViewContext
 \ingroup Forest
-\brief The TreeViewContext wraps the entry number (index) for a group of TreeView objects
+\brief Used to loop over indexes (entries or collections) between start and end
 */
 // clang-format on
-class RForestViewContext {
-   friend class RInputForest;
-
+class RForestViewRange {
 private:
-   const ForestIndex_t fNEntries;
-   ForestIndex_t fIndex;
-   Detail::RPageSource* fPageSource;
-
-   explicit RForestViewContext(Detail::RPageSource* pageSource)
-      : fNEntries(pageSource->GetNEntries()), fIndex(kInvalidForestIndex), fPageSource(pageSource) {}
-
+   const ForestIndex_t fStart;
+   const ForestIndex_t fEnd;
 public:
-   RForestViewContext(const RForestViewContext& other) = delete;
-   RForestViewContext& operator=(const RForestViewContext& other) = delete;
-   ~RForestViewContext() = default;
+   class RIterator : public std::iterator<std::forward_iterator_tag, ForestIndex_t> {
+   private:
+      using iterator = RIterator;
+      ForestIndex_t fIndex = kInvalidForestIndex;
+   public:
+      RIterator() = default;
+      explicit RIterator(ForestIndex_t index) : fIndex(index) {}
+      ~RIterator() = default;
 
-   bool Next() { fIndex++; return fIndex < fNEntries; }
-   void Reset() { fIndex = kInvalidForestIndex; }
-   ForestIndex_t GetIndex() const { return fIndex; }
-   Detail::RPageSource* GetPageSource() const { return fPageSource; }
+      iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
+      iterator& operator++()    /* prefix */         { fIndex++; return *this; }
+      reference operator* ()                         { return fIndex; }
+      pointer   operator->()                         { return &fIndex; }
+      bool      operator==(const iterator& rh) const { return fIndex == rh.fIndex; }
+      bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
+   };
+
+   RForestViewRange(ForestIndex_t start, ForestIndex_t end) : fStart(start), fEnd(end) {}
+   RIterator begin() { return RIterator(fStart); }
+   RIterator end() { return RIterator(fEnd); }
 };
 
-
-class RForestViewBase {
-protected:
-   const RForestViewContext& fContext;
-public:
-   RForestViewBase(RForestViewContext* context) : fContext(*context) {}
-   ~RForestViewBase() = default;
-};
 
 // clang-format off
 /**
@@ -83,18 +81,19 @@ For simple types, template specializations let the reading become a pure mapping
 */
 // clang-format on
 template <typename T>
-class RForestView : public RForestViewBase {
+class RForestView {
    friend class RInputForest;
+   friend class RForestViewCollection;
 
-private:
+protected:
    RField<T> fField;
    RFieldValue<T> fValue;
-   RForestView(std::string_view fieldName, RForestViewContext* context)
-      : RForestViewBase(context), fField(fieldName), fValue(fField.GenerateValue())
+   RForestView(std::string_view fieldName, Detail::RPageSource* pageSource)
+     : fField(fieldName), fValue(fField.GenerateValue())
    {
-      fField.ConnectColumns(fContext.GetPageSource());
+      fField.ConnectColumns(pageSource);
       for (auto& f : fField) {
-         f.ConnectColumns(fContext.GetPageSource());
+         f.ConnectColumns(pageSource);
       }
    }
 
@@ -105,22 +104,23 @@ public:
    RForestView& operator=(RForestView&& other) = default;
    ~RForestView() { fField.DestroyValue(fValue); }
 
-   const T& operator()() {
-      fField.Read(fContext.GetIndex(), &fValue);
+   const T& operator()(ForestIndex_t index) {
+      fField.Read(index, &fValue);
       return *fValue.Get();
    }
 };
 
-template <>
-class RForestView<float> : public RForestViewBase {
-   friend class RInputForest;
+// Template specializations in order to directly map simple types into the page pool
 
-private:
+template <>
+class RForestView<float> {
+   friend class RInputForest;
+   friend class RForestViewCollection;
+
+protected:
    RField<float> fField;
-   RForestView(std::string_view fieldName, RForestViewContext* context)
-      : RForestViewBase(context), fField(fieldName)
-   {
-      fField.ConnectColumns(fContext.GetPageSource());
+   RForestView(std::string_view fieldName, Detail::RPageSource* pageSource) : fField(fieldName) {
+      fField.ConnectColumns(pageSource);
    }
 
 public:
@@ -130,9 +130,7 @@ public:
    RForestView& operator=(RForestView&& other) = default;
    ~RForestView() = default;
 
-   const float& operator()() {
-      return *fField.Map(fContext.GetIndex());
-   }
+   float operator()(ForestIndex_t index) { return *fField.Map(index); }
 };
 
 
@@ -143,17 +141,47 @@ public:
 \brief A tree view for a collection, that can itself generate new tree views for its nested fields.
 */
 // clang-format on
-//class RForestViewCollection : public RForestView<ForestIndex_t> {
-//public:
-//   template <typename T>
-//   RForestView<T> GetView(std::string_view fieldName) {
-//      auto field = std::make_unique<RField<T>>(fieldName);
-//      // ...
-//      return RForestView<T>(std::move(field));
-//   }
-//
-//   RForestViewCollection GetViewCollection(std::string_view fieldName);
-//};
+class RForestViewCollection : public RForestView<ForestIndex_t> {
+    friend class RInputForest;
+
+private:
+   std::string fCollectionName;
+   Detail::RPageSource* fSource;
+
+   RForestViewCollection(std::string_view fieldName, Detail::RPageSource* source)
+      : RForestView<ForestIndex_t>(fieldName, source)
+      , fCollectionName(fieldName)
+      , fSource(source)
+   {}
+
+   std::string GetSubName(std::string_view name) {
+      std::string prefix(fCollectionName);
+      prefix.push_back(Detail::RFieldBase::kCollectionSeparator);
+      return prefix + name.to_string();
+   }
+
+public:
+   RForestViewCollection(const RForestViewCollection& other) = delete;
+   RForestViewCollection(RForestViewCollection&& other) = default;
+   RForestViewCollection& operator=(const RForestViewCollection& other) = delete;
+   RForestViewCollection& operator=(RForestViewCollection&& other) = default;
+   ~RForestViewCollection() = default;
+
+   RForestViewRange GetViewRange(ForestIndex_t index) {
+      ForestIndex_t start = (index == 0) ? 0 : *fField.Map(index - 1);
+      return RForestViewRange(start, *fField.Map(index));
+   }
+   template <typename T>
+   RForestView<T> GetView(std::string_view fieldName) { return RForestView<T>(GetSubName(fieldName), fSource); }
+   RForestViewCollection GetViewCollection(std::string_view fieldName) {
+      return RForestViewCollection(GetSubName(fieldName), fSource);
+   }
+
+   ForestIndex_t operator()(ForestIndex_t index) {
+      ForestIndex_t offsetPrev = (index == 0) ? 0 : *fField.Map(index - 1);
+      return *fField.Map(index) - offsetPrev;
+   }
+};
 
 } // namespace Experimental
 } // namespace ROOT

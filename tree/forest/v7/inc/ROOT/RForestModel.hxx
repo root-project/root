@@ -29,6 +29,8 @@
 namespace ROOT {
 namespace Experimental {
 
+class RCollectionForest;
+
 // clang-format off
 /**
 \class ROOT::Experimental::RForestModel
@@ -42,20 +44,26 @@ A model needs to be frozen before it can be used to create an RForest.
 */
 // clang-format on
 class RForestModel {
-   /// Hierarchy of fields consiting of simple types and collections (sub trees)
-   RFieldRoot fRootField;
-   /// Contains tree values corresponding to the created fields
-   RForestEntry fDefaultEntry;
+   /// Hierarchy of fields consisting of simple types and collections (sub trees)
+   std::unique_ptr<RFieldRoot> fRootField;
+   /// Contains field values corresponding to the created top-level fields
+   std::unique_ptr<RForestEntry> fDefaultEntry;
 
 public:
-   static std::shared_ptr<RForestModel> Create() { return std::make_shared<RForestModel>(); }
+   RForestModel();
+   RForestModel(const RForestModel&) = delete;
+   RForestModel& operator =(const RForestModel&) = delete;
+   ~RForestModel() = default;
+
+   RForestModel* Clone();
+   static std::unique_ptr<RForestModel> Create() { return std::make_unique<RForestModel>(); }
 
    /// Creates a new field and a corresponding tree value that is managed by a shared pointer.
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> MakeField(std::string_view fieldName, ArgsT&&... args) {
       auto field = std::make_unique<RField<T>>(fieldName);
-      auto ptr = fDefaultEntry.AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
-      fRootField.Attach(std::move(field));
+      auto ptr = fDefaultEntry->AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
+      fRootField->Attach(std::move(field));
       return ptr;
    }
 
@@ -65,14 +73,22 @@ public:
    template <typename T>
    void AddField(std::string_view fieldName, T* fromWhere) {
       auto field = std::make_unique<RField<T>>(fieldName);
-      fDefaultEntry.CaptureValue(field->CaptureValue(fromWhere));
-      fRootField.Attach(std::move(field));
+      fDefaultEntry->CaptureValue(field->CaptureValue(fromWhere));
+      fRootField->Attach(std::move(field));
    }
 
-   void AddCollection(std::string_view fieldName, std::shared_ptr<RForestModel> collectionModel);
+   template <typename T>
+   T* Get(std::string_view fieldName) {
+      return fDefaultEntry->Get<T>(fieldName);
+   }
 
-   RFieldRoot* GetRootField() { return &fRootField; }
-   RForestEntry* GetDefaultEntry() { return &fDefaultEntry; }
+   /// Ingests a model for a sub collection and attaches it to the current model
+   std::shared_ptr<RCollectionForest> MakeCollection(
+      std::string_view fieldName,
+      std::unique_ptr<RForestModel> collectionModel);
+
+   RFieldRoot* GetRootField() { return fRootField.get(); }
+   RForestEntry* GetDefaultEntry() { return fDefaultEntry.get(); }
 };
 
 } // namespace Exerimental

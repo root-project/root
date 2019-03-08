@@ -40,6 +40,10 @@ class TClass;
 namespace ROOT {
 namespace Experimental {
 
+class RForestEntry;
+class RForestModel;
+class RFieldCollection;
+
 namespace Detail {
 
 class RPageStorage;
@@ -57,6 +61,7 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 */
 // clang-format on
 class RFieldBase {
+   friend class ROOT::Experimental::RFieldCollection; // to change the field names when collections are attached
 private:
    /// The field name is a unique within a tree and also the basis for the column name(s)
    std::string fName;
@@ -66,7 +71,7 @@ private:
    bool fIsSimple;
 
 protected:
-   /// Collections an classes own sub fields
+   /// Collections and classes own sub fields
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
    /// Sub fields point to their mother field
    RFieldBase* fParent;
@@ -124,6 +129,9 @@ public:
    RFieldBase& operator =(RFieldBase&&) = default;
    virtual ~RFieldBase();
 
+   ///// Copies the field and its sub fields using a possibly new name and a new, unconnected set of columns
+   virtual RFieldBase* Clone(std::string_view newName) = 0;
+
    /// Factory method to resurrect a field from the stored on-disk type information
    static RFieldBase *Create(const std::string &fieldName, const std::string &typeName);
    /// Get the tail of the field name up to the last dot
@@ -155,6 +163,7 @@ public:
          DoAppend(value);
          return;
       }
+      //printf("Appending simple value for %lu %s\n", *(unsigned long *)(value.GetRawPtr()), fName.c_str());
       fPrincipalColumn->Append(value.fMappedElement);
    }
 
@@ -202,6 +211,7 @@ public:
 class RFieldRoot : public Detail::RFieldBase {
 public:
    RFieldRoot() : Detail::RFieldBase("", "", false /* isSimple */) {}
+   RFieldBase* Clone(std::string_view newName);
 
    void DoGenerateColumns() final {}
    unsigned int GetNColumns() const final { return 0; }
@@ -209,6 +219,9 @@ public:
    Detail::RFieldValueBase GenerateValue(void*) { return Detail::RFieldValueBase(); }
    Detail::RFieldValueBase CaptureValue(void*) final { return Detail::RFieldValueBase(); }
    size_t GetValueSize() const final { return 0; }
+
+   /// Generates managed values for the top-level sub fields
+   RForestEntry* GenerateEntry();
 };
 
 /// The field for a class with dictionary
@@ -223,6 +236,7 @@ public:
    RFieldClass(RFieldClass&& other) = default;
    RFieldClass& operator =(RFieldClass&& other) = default;
    ~RFieldClass() = default;
+   RFieldBase* Clone(std::string_view newName) final;
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final;
@@ -248,6 +262,7 @@ public:
    RFieldVector(RFieldVector&& other) = default;
    RFieldVector& operator =(RFieldVector&& other) = default;
    ~RFieldVector() = default;
+   RFieldBase* Clone(std::string_view newName) final;
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final;
@@ -280,8 +295,77 @@ public:
    ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final { return GenerateValue(where, T()); }
 };
 
+
+class RFieldCollection : public ROOT::Experimental::Detail::RFieldBase {
+public:
+   static std::string MyTypeName() { return ":RFieldCollection:"; }
+   RFieldCollection(std::string_view name, std::unique_ptr<RForestModel> collectionModel);
+   RFieldCollection(RFieldCollection&& other) = default;
+   RFieldCollection& operator =(RFieldCollection&& other) = default;
+   ~RFieldCollection() = default;
+   RFieldBase* Clone(std::string_view newName) final;
+
+   void DoGenerateColumns() final;
+   unsigned int GetNColumns() const final { return 1; }
+
+   using Detail::RFieldBase::GenerateValue;
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final {
+      return ROOT::Experimental::RFieldValue<ForestIndex_t>(
+         Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex>(static_cast<ForestIndex_t*>(where)),
+         this, static_cast<ForestIndex_t*>(where));
+   }
+   Detail::RFieldValueBase CaptureValue(void* where) final {
+      return ROOT::Experimental::RFieldValue<ForestIndex_t>(true,
+         Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex>(static_cast<ForestIndex_t*>(where)),
+         this, static_cast<ForestIndex_t*>(where));
+   }
+   size_t GetValueSize() const final { return 0; }
+};
+
 } // namespace Experimental
 } // namespace ROOT
+
+
+template <>
+class ROOT::Experimental::RField<ROOT::Experimental::ForestIndex_t> : public ROOT::Experimental::Detail::RFieldBase {
+public:
+   static std::string MyTypeName() { return "ROOT::Experimental::ForestIndex_t"; }
+   explicit RField(std::string_view name) : Detail::RFieldBase(name, MyTypeName(), true /* isSimple */) {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+
+   void DoGenerateColumns() final;
+   unsigned int GetNColumns() const final { return 1; }
+
+   ForestIndex_t* Map(ForestIndex_t index) {
+      static_assert(Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex>::kIsMappable,
+                    "(ForestIndex_t, EColumnType::kIndex) is not identical on this platform");
+      return fPrincipalColumn->Map<ForestIndex_t, EColumnType::kIndex>(index, nullptr);
+   }
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where, ArgsT&&... args)
+   {
+      ROOT::Experimental::RFieldValue<ForestIndex_t> v(
+         Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex>(static_cast<ForestIndex_t*>(where)),
+         this, static_cast<ForestIndex_t*>(where), std::forward<ArgsT>(args)...);
+      return v;
+   }
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final { return GenerateValue(where, 0); }
+   Detail::RFieldValueBase CaptureValue(void *where) final {
+      ROOT::Experimental::RFieldValue<ForestIndex_t> v(true,
+         Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex>(static_cast<ForestIndex_t*>(where)),
+         this, static_cast<ForestIndex_t*>(where));
+      return v;
+   }
+   size_t GetValueSize() const final { return sizeof(ForestIndex_t); }
+};
+
+
+/// Template specializations for concrete C++ types
 
 
 template <>
@@ -292,6 +376,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
+   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
@@ -330,6 +415,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
+   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
@@ -367,6 +453,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
+   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
@@ -413,6 +500,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
+   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
 
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 2; }

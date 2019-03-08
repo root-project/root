@@ -44,6 +44,7 @@ struct RColumnHeader {
    std::string fName;
    EColumnType fType;
    bool fIsSorted;
+   // Depends on which offset column
 };
 
 struct RForestHeader {

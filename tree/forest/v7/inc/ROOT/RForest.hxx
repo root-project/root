@@ -52,13 +52,12 @@ the RForest can expose views that read only specific fields.
 // clang-format on
 class RForest {
 protected:
-   /// All forests that use the same model share its ownership
-   std::shared_ptr<RForestModel> fModel;
+   std::unique_ptr<RForestModel> fModel;
    /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
    ForestIndex_t fNEntries;
 
    /// Only the derived RInputForest and ROutputForest can be instantiated
-   explicit RForest(std::shared_ptr<RForestModel> model);
+   explicit RForest(std::unique_ptr<RForestModel> model);
 
 public:
    RForest(const RForest&) = delete;
@@ -84,18 +83,15 @@ Individual fields can be read as well by instantiating a tree view.
 class RInputForest : public Detail::RForest {
 private:
    std::unique_ptr<Detail::RPageSource> fSource;
-   /// Encapsulates the entry number for the current iteration. All views share the same current
-   /// entry number. Concurrent iterations need to use different contexts.
-   std::unique_ptr<RForestViewContext> fDefaultViewContext;
    ForestIndex_t fNEntries;
 
 public:
-   static std::unique_ptr<RInputForest> Create(std::shared_ptr<RForestModel> model,
+   static std::unique_ptr<RInputForest> Create(std::unique_ptr<RForestModel> model,
                                                std::string_view forestName,
                                                std::string_view storage);
 
    /// The user imposes a forest model, which must be compatible with the model found in the data on storage
-   RInputForest(std::shared_ptr<RForestModel> model, std::unique_ptr<Detail::RPageSource> source);
+   RInputForest(std::unique_ptr<RForestModel> model, std::unique_ptr<Detail::RPageSource> source);
    /// The model is generated from the forest metadata on storage
    RInputForest(std::unique_ptr<Detail::RPageSource> source);
    ~RInputForest();
@@ -112,18 +108,16 @@ public:
       }
    }
 
+   RForestViewRange GetViewRange() { return RForestViewRange(0, fNEntries); }
+
    /// Provides access to an individual field that can contain either a skalar value or a collection, e.g.
-   /// GetView<double>("particles.pt") or GetView<RVec<double>>("particle").  It can as well be the index
+   /// GetView<double>("particles.pt") or GetView<std::vector<double>>("particle").  It can as well be the index
    /// field of a collection itself, like GetView<ForestIndex_t>("particle")
    template <typename T>
-   RForestView<T> GetView(std::string_view fieldName, RForestViewContext* context = nullptr) {
-      if (context == nullptr)
-         context = fDefaultViewContext.get();
-      return RForestView<T>(fieldName, context);
+   RForestView<T> GetView(std::string_view fieldName) { return RForestView<T>(fieldName, fSource.get()); }
+   RForestViewCollection GetViewCollection(std::string_view fieldName) {
+      return RForestViewCollection(fieldName, fSource.get());
    }
-   std::unique_ptr<RForestViewContext> GetViewContext();
-   void ViewReset() { fDefaultViewContext->Reset(); }
-   bool ViewNext() { return fDefaultViewContext->Next(); }
 };
 
 // clang-format off
@@ -146,10 +140,10 @@ private:
    ForestIndex_t fLastCommitted;
 
 public:
-   static std::unique_ptr<ROutputForest> Create(std::shared_ptr<RForestModel> model,
+   static std::unique_ptr<ROutputForest> Create(std::unique_ptr<RForestModel> model,
                                                 std::string_view forestName,
                                                 std::string_view storage);
-   ROutputForest(std::shared_ptr<RForestModel> model, std::unique_ptr<Detail::RPageSink> sink);
+   ROutputForest(std::unique_ptr<RForestModel> model, std::unique_ptr<Detail::RPageSink> sink);
    ROutputForest(const ROutputForest&) = delete;
    ROutputForest& operator=(const ROutputForest&) = delete;
    ~ROutputForest();
@@ -167,6 +161,38 @@ public:
    }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
    void CommitCluster();
+};
+
+// clang-format off
+/**
+\class ROOT::Experimental::RCollectionForest
+\ingroup Forest
+\brief A virtual forest for collections that can be used to some extent like a real forest
+*
+* This class is between a field and a forest.  It carries the offset column for the collection and the default entry
+* taken from the collection model.  It does not, however, have a tree model because the collection model has been merged
+* into the larger forest model.
+*/
+// clang-format on
+class RCollectionForest {
+private:
+   ForestIndex_t fOffset;
+   std::unique_ptr<RForestEntry> fDefaultEntry;
+public:
+   explicit RCollectionForest(std::unique_ptr<RForestEntry> defaultEntry);
+   RCollectionForest(const RCollectionForest&) = delete;
+   RCollectionForest& operator=(const RCollectionForest&) = delete;
+   ~RCollectionForest() = default;
+
+   void Fill() { Fill(fDefaultEntry.get()); }
+   void Fill(RForestEntry *entry) {
+      for (auto& treeValue : *entry) {
+         treeValue.GetField()->Append(treeValue);
+      }
+      fOffset++;
+   }
+
+   ForestIndex_t* GetOffsetPtr() { return &fOffset; }
 };
 
 } // namespace Experimental

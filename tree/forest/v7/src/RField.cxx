@@ -13,10 +13,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RColumn.hxx"
-#include "ROOT/RColumnModel.hxx"
-#include "ROOT/RField.hxx"
-#include "ROOT/RFieldValue.hxx"
+#include <ROOT/RColumn.hxx>
+#include <ROOT/RColumnModel.hxx>
+#include <ROOT/RField.hxx>
+#include <ROOT/RFieldValue.hxx>
+#include <ROOT/RForestEntry.hxx>
+#include <ROOT/RForestModel.hxx>
 
 #include <TClass.h>
 #include <TCollection.h>
@@ -47,7 +49,10 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType == "string") normalizedType = "std::string";
    if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
 
+   if (normalizedType == "ROOT::Experimental::ForestIndex_t") return new RField<ForestIndex_t>(fieldName);
+   if (normalizedType == "std::uint32_t") return new RField<std::uint32_t>(fieldName);
    if (normalizedType == "float") return new RField<float>(fieldName);
+   if (normalizedType == "double") return new RField<double>(fieldName);
    if (normalizedType == "std::string") return new RField<std::string>(fieldName);
    if (normalizedType.substr(0, 12) == "std::vector<") {
       std::string itemTypeName = normalizedType.substr(12, normalizedType.length() - 13);
@@ -171,6 +176,41 @@ void ROOT::Experimental::Detail::RFieldBase::RIterator::Advance()
 //------------------------------------------------------------------------------
 
 
+ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldRoot::Clone(std::string_view /*newName*/)
+{
+   Detail::RFieldBase* result = new RFieldRoot();
+   for (auto& f : fSubFields) {
+      auto clone = f->Clone(f->GetName());
+      result->Attach(std::unique_ptr<RFieldBase>(clone));
+   }
+   return result;
+}
+
+
+ROOT::Experimental::RForestEntry* ROOT::Experimental::RFieldRoot::GenerateEntry()
+{
+   auto entry = new RForestEntry();
+   for (auto& f : fSubFields) {
+      entry->AddValue(f->GenerateValue());
+   }
+   return entry;
+}
+
+
+//------------------------------------------------------------------------------
+
+
+void ROOT::Experimental::RField<ROOT::Experimental::ForestIndex_t>::DoGenerateColumns()
+{
+   RColumnModel model(GetName(), EColumnType::kIndex, true /* isSorted*/);
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
+   fPrincipalColumn = fColumns[0].get();
+}
+
+
+//------------------------------------------------------------------------------
+
+
 void ROOT::Experimental::RField<float>::DoGenerateColumns()
 {
    RColumnModel model(GetName(), EColumnType::kReal32, false /* isSorted*/);
@@ -253,6 +293,11 @@ ROOT::Experimental::RFieldClass::RFieldClass(std::string_view fieldName, std::st
    }
 }
 
+ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldClass::Clone(std::string_view newName)
+{
+   return new RFieldClass(newName, GetType());
+}
+
 void ROOT::Experimental::RFieldClass::DoAppend(const Detail::RFieldValueBase& value) {
    TIter next(fClass->GetListOfDataMembers());
    unsigned i = 0;
@@ -317,6 +362,12 @@ ROOT::Experimental::RFieldVector::RFieldVector(
    , fItemSize(itemField->GetValueSize()), fNWritten(0)
 {
    Attach(std::move(itemField));
+}
+
+ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldVector::Clone(std::string_view newName)
+{
+   auto newItemField = fSubFields[0]->Clone(GetCollectionName(newName.to_string()));
+   return new RFieldVector(newName, std::unique_ptr<Detail::RFieldBase>(newItemField));
 }
 
 void ROOT::Experimental::RFieldVector::DoAppend(const Detail::RFieldValueBase& value) {
@@ -389,5 +440,46 @@ ROOT::Experimental::Detail::RFieldValueBase ROOT::Experimental::RFieldVector::Ca
 size_t ROOT::Experimental::RFieldVector::GetValueSize() const
 {
    return sizeof(std::vector<char>);
+}
+
+
+//------------------------------------------------------------------------------
+
+
+ROOT::Experimental::RFieldCollection::RFieldCollection(
+   std::string_view name, std::unique_ptr<RForestModel> collectionModel)
+   : RFieldBase(name, ":Collection:", true /* isSimple */)
+{
+   std::string namePrefix(name);
+   namePrefix.push_back(kCollectionSeparator);
+   for (unsigned i = 0; i < collectionModel->GetRootField()->fSubFields.size(); ++i) {
+      auto& subField = collectionModel->GetRootField()->fSubFields[i];
+      subField->fName = namePrefix + subField->fName;
+      for (auto& grandChild : subField->fSubFields) {
+         grandChild->fName = namePrefix + grandChild->fName;
+      }
+      Attach(std::move(subField));
+   }
+}
+
+
+void ROOT::Experimental::RFieldCollection::DoGenerateColumns()
+{
+   RColumnModel modelIndex(GetName(), EColumnType::kIndex, true /* isSorted*/);
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex));
+   fPrincipalColumn = fColumns[0].get();
+}
+
+
+ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldCollection::Clone(std::string_view newName)
+{
+   auto result = new RFieldCollection(newName, RForestModel::Create());
+   for (auto& f : fSubFields) {
+      // switch the name prefix for the new parent name
+      std::string cloneName = newName.to_string() + f->GetName().substr(GetName().length());
+      auto clone = f->Clone(cloneName);
+      result->Attach(std::unique_ptr<RFieldBase>(clone));
+   }
+   return result;
 }
 

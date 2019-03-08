@@ -21,8 +21,8 @@
 
 #include <utility>
 
-ROOT::Experimental::Detail::RForest::RForest(std::shared_ptr<ROOT::Experimental::RForestModel> model)
-   : fModel(model)
+ROOT::Experimental::Detail::RForest::RForest(std::unique_ptr<ROOT::Experimental::RForestModel> model)
+   : fModel(std::move(model))
    , fNEntries(0)
 {
 }
@@ -34,41 +34,34 @@ ROOT::Experimental::Detail::RForest::~RForest()
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RInputForest::RInputForest(
-   std::shared_ptr<ROOT::Experimental::RForestModel> model,
+   std::unique_ptr<ROOT::Experimental::RForestModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
-   : ROOT::Experimental::Detail::RForest(model)
+   : ROOT::Experimental::Detail::RForest(std::move(model))
    , fSource(std::move(source))
 {
    fSource->Attach();
-   for (auto& field : *model->GetRootField()) {
+   for (auto& field : *fModel->GetRootField()) {
       field.ConnectColumns(fSource.get());
    }
    fNEntries = fSource->GetNEntries();
-   fDefaultViewContext = std::unique_ptr<RForestViewContext>(new RForestViewContext(fSource.get()));
 }
 
 std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputForest::Create(
-   std::shared_ptr<RForestModel> model,
+   std::unique_ptr<RForestModel> model,
    std::string_view forestName,
    std::string_view storage)
 {
    // TODO(jblomer): heuristics based on storage
-   return std::make_unique<RInputForest>(model, std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
+   return std::make_unique<RInputForest>(
+      std::move(model), std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
 }
 
 ROOT::Experimental::RInputForest::RInputForest(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
-   : ROOT::Experimental::Detail::RForest(std::make_shared<ROOT::Experimental::RForestModel>())
+   : ROOT::Experimental::Detail::RForest(RForestModel::Create())
    , fSource(std::move(source))
 {
    fSource->Attach();
    fNEntries = fSource->GetNEntries();
-   fDefaultViewContext = std::unique_ptr<RForestViewContext>(new RForestViewContext(fSource.get()));
-}
-
-std::unique_ptr<ROOT::Experimental::RForestViewContext> ROOT::Experimental::RInputForest::GetViewContext()
-{
-   auto ctx = new RForestViewContext(fSource.get());
-   return std::unique_ptr<RForestViewContext>(ctx);
 }
 
 ROOT::Experimental::RInputForest::~RInputForest()
@@ -78,14 +71,14 @@ ROOT::Experimental::RInputForest::~RInputForest()
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::ROutputForest::ROutputForest(
-   std::shared_ptr<ROOT::Experimental::RForestModel> model,
+   std::unique_ptr<ROOT::Experimental::RForestModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
-   : ROOT::Experimental::Detail::RForest(model)
+   : ROOT::Experimental::Detail::RForest(std::move(model))
    , fSink(std::move(sink))
    , fClusterSizeEntries(kDefaultClusterSizeEntries)
    , fLastCommitted(0)
 {
-   fSink->Create(model.get());
+   fSink->Create(fModel.get());
 }
 
 ROOT::Experimental::ROutputForest::~ROutputForest()
@@ -96,12 +89,13 @@ ROOT::Experimental::ROutputForest::~ROutputForest()
 
 
 std::unique_ptr<ROOT::Experimental::ROutputForest> ROOT::Experimental::ROutputForest::Create(
-   std::shared_ptr<RForestModel> model,
+   std::unique_ptr<RForestModel> model,
    std::string_view forestName,
    std::string_view storage)
 {
    // TODO(jblomer): heuristics based on storage
-   return std::make_unique<ROutputForest>(model, std::make_unique<Detail::RPageSinkRoot>(forestName, storage));
+   return std::make_unique<ROutputForest>(
+      std::move(model), std::make_unique<Detail::RPageSinkRoot>(forestName, storage));
 }
 
 
@@ -113,4 +107,13 @@ void ROOT::Experimental::ROutputForest::CommitCluster()
    }
    fSink->CommitCluster(fNEntries);
    fLastCommitted = fNEntries;
+}
+
+
+//------------------------------------------------------------------------------
+
+
+ROOT::Experimental::RCollectionForest::RCollectionForest(std::unique_ptr<RForestEntry> defaultEntry)
+   : fOffset(0), fDefaultEntry(std::move(defaultEntry))
+{
 }

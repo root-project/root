@@ -90,9 +90,7 @@ public:
    {
       new (where) T(std::forward<ArgsT>(args)...);
    }
-   template <typename... ArgsT>
    RFieldValue(bool /*captureTag*/, Detail::RFieldBase* field, T* value) : Detail::RFieldValueBase(field, value) {}
-   template <typename... ArgsT>
    RFieldValue(bool /*captureTag*/, const Detail::RColumnElementBase& elem, Detail::RFieldBase* field, T* value)
       : Detail::RFieldValueBase(field, value, elem) {}
 
