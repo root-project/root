@@ -69,10 +69,12 @@ namespace TMVA {
 
       void GetHelpMessage() const;
 
+      /// enumeration defining the used Keras backend
+      enum EBackendType { kUndefined = -1, kTensorFlow = 0, kTheano = 1, kCNTK = 2 };
+
       /// Get the Keras backend (can be: TensorFlow, Theano or CNTK)
-      enum EBackendType { kUndefined = -1, kTensorFlow = 0, kTheano = 1, kCNTK = 2 }; 
-      EBackendType GetKerasBackend(); 
-      TString GetKerasBackendName(); 
+      EBackendType GetKerasBackend();
+      TString GetKerasBackendName();
 
     private:
 
