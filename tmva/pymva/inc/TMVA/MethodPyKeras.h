@@ -69,6 +69,11 @@ namespace TMVA {
 
       void GetHelpMessage() const;
 
+      /// Get the Keras backend (can be: TensorFlow, Theano or CNTK)
+      enum EBackendType { kUndefined = -1, kTensorFlow = 0, kTheano = 1, kCNTK = 2 }; 
+      EBackendType GetKerasBackend(); 
+      TString GetKerasBackendName(); 
+
     private:
 
       TString fFilenameModel; // Filename of the previously exported Keras model
@@ -82,6 +87,7 @@ namespace TMVA {
       TString fLearningRateSchedule; // Set new learning rate at specific epochs
       TString fTensorBoard;          // Store log files during training
       TString fNumValidationString;  // option string defining the number of validation events
+      TString fGpuOptions;    // GPU options (for Tensorflow to set in session_config.gpu_options)
 
       bool fModelIsSetup = false; // flag whether model is loaded, neede for getMvaValue during evaluation
       float* fVals = nullptr; // variables array used for GetMvaValue
