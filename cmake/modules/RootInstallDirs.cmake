@@ -18,7 +18,6 @@
 #  SRCDIR           - sources (DATAROOTDIR/src)
 #  FONTDIR          - fonts (DATAROOTDIR/fonts)
 #  DOCDIR           - documentation root (DATAROOTDIR/doc/PROJECT_NAME)
-#  TESTDIR          - tests (DOCDIR/test)
 #  TUTDIR           - tutorials (DOCDIR/tutorials)
 #  ACLOCALDIR       - locale-dependent data (DATAROOTDIR/aclocal)
 #  CMAKEDIR         - cmake modules (DATAROOTDIR/cmake)
@@ -204,15 +203,6 @@ if(NOT CMAKE_INSTALL_DOCDIR)
   endif()
 endif()
 
-if(NOT CMAKE_INSTALL_TESTDIR)
-  set(CMAKE_INSTALL_TESTDIR "" CACHE PATH "root tests (DOCDIR/test)")
-  if(gnuinstall)
-    set(CMAKE_INSTALL_TESTDIR "${CMAKE_INSTALL_DOCDIR}/test")
-  else()
-    set(CMAKE_INSTALL_TESTDIR "test")
-  endif()
-endif()
-
 if(NOT CMAKE_INSTALL_TUTDIR)
   set(CMAKE_INSTALL_TUTDIR "" CACHE PATH "root tutorials (DOCDIR/tutorials)")
   if(gnuinstall)
@@ -239,7 +229,6 @@ mark_as_advanced(
   CMAKE_INSTALL_FONTDIR
   CMAKE_INSTALL_SRCDIR
   CMAKE_INSTALL_DOCDIR
-  CMAKE_INSTALL_TESTDIR
   CMAKE_INSTALL_TUTDIR
   CMAKE_INSTALL_ACLOCALDIR
   CMAKE_INSTALL_ELISPDIR
@@ -261,7 +250,6 @@ foreach(dir BINDIR
             FONTDIR
             SRCDIR
             DOCDIR
-            TESTDIR
             TUTDIR
             ACLOCALDIR
             ELISPDIR
