@@ -1,4 +1,4 @@
-/// \file RTree.cxx
+/// \file RForest.cxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
