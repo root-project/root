@@ -1,4 +1,6 @@
+#include "ROOT/RDataFrame.hxx"
 #include "ROOT/RForest.hxx"
+#include "ROOT/RForestDS.hxx"
 #include "ROOT/RForestModel.hxx"
 #include "ROOT/RPageStorage.hxx"
 #include "ROOT/RPageStorageRoot.hxx"
@@ -320,4 +322,11 @@ TEST(RForest, RealWorld1)
    }
 
    EXPECT_EQ(chksumRead, chksumWrite);
+}
+
+
+TEST(RForest, RDF)
+{
+   RInputForest *forest = nullptr;
+   auto rdf = std::make_unique<ROOT::RDataFrame>(std::make_unique<ROOT::RDF::RForestDS>(forest));
 }

@@ -23,6 +23,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDataFrame.hxx
     ROOT/RDataSource.hxx
     ROOT/RDFHelpers.hxx
+    ROOT/RForestDS.hxx
     ROOT/RLazyDS.hxx
     ROOT/RResultPtr.hxx
     ROOT/RRootDS.hxx
@@ -72,6 +73,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFInterfaceUtils.cxx
     src/RDFUtils.cxx
     src/RFilterBase.cxx
+    src/RForestDS.cxx
     src/RJittedAction.cxx
     src/RJittedCustomColumn.cxx
     src/RJittedFilter.cxx
