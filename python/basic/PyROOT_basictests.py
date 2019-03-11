@@ -66,7 +66,20 @@ class Basic2SetupTestCase( MyTestCase ):
       ROOT.gMyOwnGlobal = 3.1415
 
       proxy = gROOT.GetGlobal( 'gMyOwnGlobal', 1 )
-      self.assertEqual( proxy.__get__( proxy ), 3.1415 )
+      try:
+         self.assertEqual( proxy.__get__( proxy ), 3.1415 )
+      except AttributeError:
+         # In the old PyROOT, if we try to bind a new global,
+         # such global is defined on the C++ side too, but
+         # only if its type is basic or string (see ROOT.py).
+         # The new PyROOT will discontinue this feature.
+
+         # Note that in the new PyROOT we can still define a
+         # global in C++ and access/modify it from Python
+         ROOT.gInterpreter.Declare("int gMyOwnGlobal2 = 1;")
+         self.assertEqual(ROOT.gMyOwnGlobal2, 1)
+         ROOT.gMyOwnGlobal2 = -1
+         self.assert_(gROOT.ProcessLine('gMyOwnGlobal2 == -1'))
 
    def test4AutoLoading( self ):
       """Test auto-loading by retrieving a non-preloaded class"""
