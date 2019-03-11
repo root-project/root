@@ -365,22 +365,18 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    // Parent task, spawns tasks that process each of the entry clusters for each input file
    using Internal::EntryCluster;
    auto processFile = [&](std::size_t fileIdx) {
-
-      // If cluster information is already present, build TChains with all input files and use global entry numbers
-      // Otherwise get cluster information only for the file we need to process and use local entry numbers
-      const bool shouldUseGlobalEntries = hasFriends || hasEntryList;
       // theseFiles contains either all files or just the single file to process
-      const auto &theseFiles = shouldUseGlobalEntries ? fFileNames : std::vector<std::string>({fFileNames[fileIdx]});
+      const auto &theseFiles = shouldRetrieveAllClusters ? fFileNames : std::vector<std::string>({fFileNames[fileIdx]});
       // Evaluate clusters (with local entry numbers) and number of entries for this file, if needed
       const auto theseClustersAndEntries =
-         shouldUseGlobalEntries ? Internal::ClustersAndEntries{} : Internal::MakeClusters(fTreeName, theseFiles);
+         shouldRetrieveAllClusters ? Internal::ClustersAndEntries{} : Internal::MakeClusters(fTreeName, theseFiles);
 
       // All clusters for the file to process, either with global or local entry numbers
-      const auto &thisFileClusters = shouldUseGlobalEntries ? clusters[fileIdx] : theseClustersAndEntries.first[0];
+      const auto &thisFileClusters = shouldRetrieveAllClusters ? clusters[fileIdx] : theseClustersAndEntries.first[0];
 
       // Either all number of entries or just the ones for this file
       const auto &theseEntries =
-         shouldUseGlobalEntries ? entries : std::vector<Long64_t>({theseClustersAndEntries.second[0]});
+         shouldRetrieveAllClusters ? entries : std::vector<Long64_t>({theseClustersAndEntries.second[0]});
 
       auto processCluster = [&](const Internal::EntryCluster &c) {
          std::unique_ptr<TTreeReader> reader;
