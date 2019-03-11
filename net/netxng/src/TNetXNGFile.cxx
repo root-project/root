@@ -128,15 +128,15 @@ TNetXNGFile::TNetXNGFile(const char *url,
                          Int_t       compress,
                          Int_t       netopt,
                          Bool_t      parallelopen) :
-	TNetXNGFile(url,mode,title,compress,netopt,parallelopen,0){}
+	TNetXNGFile(url,0,mode,title,compress,netopt,parallelopen){}
 
 TNetXNGFile::TNetXNGFile(const char *url,
+		         const char *lurl,
                          Option_t   *mode,
                          const char *title,
                          Int_t       compress,
                          Int_t       /*netopt*/,
-                         Bool_t      parallelopen,
-			 const char *lurl) :
+                         Bool_t      parallelopen) :
    TFile((lurl ? lurl : url), "NET", title, compress)
 {
    using namespace XrdCl;
