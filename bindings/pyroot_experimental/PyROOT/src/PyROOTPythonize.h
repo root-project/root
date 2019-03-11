@@ -33,7 +33,7 @@ PyObject *AddSetItemTCAPyz(PyObject *self, PyObject *args);
 PyObject *AsRVec(PyObject *self, PyObject *obj);
 
 PyObject *AddUsingToClass(PyObject *self, PyObject *args);
-PyObject *GetEndianess(PyObject *self);
+PyObject *GetEndianess(PyObject *self, PyObject *args);
 PyObject *GetVectorDataPointer(PyObject *self, PyObject *args);
 PyObject *GetSizeOfType(PyObject *self, PyObject *args);
 
