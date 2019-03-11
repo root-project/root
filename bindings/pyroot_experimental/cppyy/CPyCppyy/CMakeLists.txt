@@ -39,8 +39,13 @@ set(sources
 
 add_library(cppyy SHARED ${headers} ${sources})
 target_include_directories(cppyy PRIVATE ${CMAKE_BINARY_DIR}/include) # needed for string_view backport
+
 target_compile_options(cppyy PRIVATE
   -Wno-shadow -Wno-strict-aliasing -Wno-unused-but-set-parameter)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 8)
+  target_compile_options(cppyy PRIVATE -Wno-cast-function-type)
+endif()
+
 target_include_directories(cppyy PUBLIC ${PYTHON_INCLUDE_DIRS}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
