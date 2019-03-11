@@ -1461,20 +1461,22 @@ function(find_python_module module)
 endfunction()
 
 #----------------------------------------------------------------------------
-# Generate headers files containing the command line options help
-# The first argument pythonInput is the path of the python argparse file for this command
-# The second argument output is the of path/name of the output file
-# The third argument is the name of the target that should be linked to the generated
-# library( the executable that includes it or the library that uses it)
+# generateHeader(target input output)
+# Generate a help header file with build/misc/argparse2help.py script
+# The 1st argument is the target to which the custom command will be attached
+# The 2nd argument is the path to the python argparse input file
+# The 3rd argument is the path to the output header file
 #----------------------------------------------------------------------------
-function(generateHeaders pythonInput output target)
-     add_custom_command(OUTPUT ${output}
-          DEPENDS ${pythonInput} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
-          COMMAND ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
-                                          ${pythonInput}
-                                          ${output}
-     )
-     target_sources(${target} PRIVATE ${output})
+function(generateHeader target input output)
+  add_custom_command(OUTPUT ${output}
+    MAIN_DEPENDENCY
+      ${input}
+    DEPENDS
+      ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+    COMMAND
+      ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+  )
+  target_sources(${target} PRIVATE ${output})
 endfunction()
 
 #----------------------------------------------------------------------------
