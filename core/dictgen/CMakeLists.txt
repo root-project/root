@@ -47,4 +47,7 @@ if(CXX_HAS_fno_rtti)
 endif()
 
 #---CreateRootClingCommandLineOptions------------------------------------------------------------------
-generateHeaders(${CMAKE_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py ${CMAKE_BINARY_DIR}/include/rootclingCommandLineOptionsHelp.h Dictgen)
+generateHeader(Dictgen
+  ${CMAKE_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py
+  ${CMAKE_BINARY_DIR}/include/rootclingCommandLineOptionsHelp.h
+)

@@ -45,6 +45,8 @@ elseif(cocoa)
 endif()
 
 if(x11 OR cocoa)
-  generateHeaders(${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py
-                  ${CMAKE_BINARY_DIR}/include/rootCommandLineOptionsHelp.h root)
+  generateHeader(root
+    ${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py
+    ${CMAKE_BINARY_DIR}/include/rootCommandLineOptionsHelp.h
+  )
 endif()
