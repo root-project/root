@@ -18,12 +18,12 @@
 
 using namespace CPyCppyy;
 
-std::string GetCppName(CPPInstance *self)
+std::string GetCppName(const CPPInstance *self)
 {
    return Cppyy::GetScopedFinalName(self->ObjectIsA());
 }
 
-PyObject *ClingPrintValue(CPPInstance *self)
+PyObject *ClingPrintValue(const CPPInstance *self, PyObject * /* args */)
 {
    const std::string className = GetCppName(self);
    auto printResult = gInterpreter->ToString(className.c_str(), self->GetObject());
