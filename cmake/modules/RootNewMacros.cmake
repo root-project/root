@@ -1478,16 +1478,22 @@ function(generateHeaders pythonInput output target)
 endfunction()
 
 #----------------------------------------------------------------------------
-# Generate man page through argparse method
-# The first argument pythonInput is the path of the python argparse file for this command
-# The second argument output is the of path/name of the output file
+# Generate and install manual page with build/misc/argparse2help.py script
+# The 1st argument is the name of the manual page
+# The 2nd argument is the path to the python argparse input file
+# The 3rd argument is the path to the output manual page
 #----------------------------------------------------------------------------
-function(generateManual name pythonInput output)
-     add_custom_target(${name} ALL
-          DEPENDS ${pythonInput} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
-          COMMAND ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
-                                          ${pythonInput}
-                                          ${output}
-     )
-     install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR})
+function(generateManual name input output)
+  add_custom_target(${name} ALL DEPENDS ${output})
+
+  add_custom_command(OUTPUT ${output}
+    MAIN_DEPENDENCY
+      ${input}
+    DEPENDS
+      ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+    COMMAND
+      ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+  )
+
+  install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR})
 endfunction()
