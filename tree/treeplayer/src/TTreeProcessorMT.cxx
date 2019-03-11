@@ -111,34 +111,25 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
                        [&clustersPerFileIt](const EntryCluster &clust) { clustersPerFileIt->emplace_back(clust); });
          continue;
       }
-      // Otherwise, we have to merge clusters, distributing the reminder eavenly
+      // Otherwise, we have to merge clusters, distributing the reminder evenly
       // onto the first clusters
       auto nReminderClusters = clustersInThisFileSize % maxClustersPerFile;
-      auto clustIt = clustersPerFileProtoIt->begin();
-      Long64_t start = clustIt->start;
-      clustIt++;
-      Long64_t end = 0ULL;
-      auto clusterCursor = 1U;
-      for (; clustIt != clustersPerFileProtoIt->end(); clustIt++, clusterCursor++) {
-         const auto reminderCluster = nReminderClusters != 0 ? 1U : 0U;
-         if (clusterCursor == (nFolds + reminderCluster))
-         {
-            clustersPerFileIt->emplace_back(EntryCluster({start, end}));
-            start = clustIt->start;
-            clusterCursor = 0U;
-            if (nReminderClusters!=0) {
-               nReminderClusters--;
-            }
+      const auto clustersInThisFile = *clustersPerFileProtoIt;
+      for(auto i = 0ULL; i < (clustersInThisFileSize-1); ++i) {
+         const auto start = clustersInThisFile[i].start;
+         // We lump together at least nFolds clusters, therefore
+         // we need to jump ahead of nFolds-1.
+         i += (nFolds - 1);
+         // We now add a cluster if we have some reminder left
+         if (nReminderClusters > 0) {
+            i += 1U;
+            nReminderClusters--;
          }
-         else {
-            end = clustIt->end;
-         }
+         const auto end = clustersInThisFile[i].end;
+         std::cout << "**** Task events: " << start << " - " << end << '\n';
+         clustersPerFileIt->emplace_back(EntryCluster({start, end}));
       }
-      // Here we need to add the last cluster to the set because
-      // the iteration ends before we have the possibility to do this
-      clustersPerFileIt->emplace_back(EntryCluster({start, end}));
    }
-
 
    return std::make_pair(std::move(clustersPerFile), std::move(entriesPerFile));
 }
