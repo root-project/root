@@ -84,7 +84,10 @@ ROOT_EXECUTABLE(hist2workspace
 )
 
 #---Createhist2workspaceCommandLineOptions------------------------------------------------------------------
-generateHeaders(${CMAKE_CURRENT_SOURCE_DIR}/src/hist2workspace-argparse.py ${CMAKE_BINARY_DIR}/include/hist2workspaceCommandLineOptionsHelp.h hist2workspace)
+generateHeader(hist2workspace
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/hist2workspace-argparse.py
+  ${CMAKE_BINARY_DIR}/include/hist2workspaceCommandLineOptionsHelp.h
+)
 
 file(COPY config/prepareHistFactory DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prepareHistFactory
