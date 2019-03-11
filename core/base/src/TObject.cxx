@@ -147,7 +147,7 @@ TObject *TObject::Clone(const char *) const
      return gDirectory->CloneObject(this);
    } else {
      // Some of the streamer (eg. roofit's) expect(ed?) a valid gDirectory during streaming.
-     return gROOT->Clone();
+     return gROOT->CloneObject(this);
    }
 }
 
