@@ -127,7 +127,12 @@ class Basic3PythonLanguageTestCase( MyTestCase ):
    def test3ThreadingSupport( self ):
       """Test whether the GIL can be properly released"""
 
-      gROOT.GetVersion._threaded = 1
+      try:
+         gROOT.GetVersion._threaded = 1
+      except AttributeError:
+         # Attribute name change in new Cppyy
+         gROOT.GetVersion.__release_gil__ = 1
+
       gROOT.GetVersion()
 
    def test4ClassAndTypedefEquality( self ):
