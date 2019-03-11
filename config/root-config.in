@@ -47,6 +47,7 @@ bindir=@bindir@
 libdir=@libdir@
 incdir=@incdir@
 etcdir=@etcdir@
+tutdir=@tutdir@
 features="@features@"
 configargs="@configargs@"
 altcc="@altcc@"
@@ -441,7 +442,7 @@ noldflags=no
 usage="\
 Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version]\
  [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs] [--glibs]\
- [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--srcdir]\
+ [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--tutdir] [--srcdir]\
  [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch]\
  [--platform] [--config] [--features] [--ncpu] [--git-revision]\
  [--python-version] [--cc] [--cxx] [--f77] [--ld ] [--help]"
@@ -738,6 +739,10 @@ while test $# -gt 0; do
       ### output the etc directory
       out="$out $etcdir"
       ;;
+    --tutdir)
+      ### output the tutorials directory
+      out="$out $tutdir"
+      ;;
     --srcdir)
       ### output the src directory
       out="$out $srcdir"
@@ -806,6 +811,7 @@ while test $# -gt 0; do
       echo "  --libdir              Print the library directory"
       echo "  --incdir              Print the header directory"
       echo "  --etcdir              Print the configuration directory"
+      echo "  --tutdir              Print the tutorials directory"
       echo "  --srcdir              Print the top of the original source directory"
       echo "  --auxlibs             Print auxiliary libraries"
       echo "  --auxcflags           Print auxiliary compiler flags"

@@ -670,7 +670,7 @@ install(EXPORT ${CMAKE_PROJECT_NAME}Exports NAMESPACE ROOT:: FILE ROOTConfig-tar
 
 #---Especial definitions for root-config et al.--------------------------------------------------------------
 if(prefix STREQUAL "$(ROOTSYS)")
-  foreach(d prefix bindir libdir incdir etcdir mandir)
+  foreach(d prefix bindir libdir incdir etcdir tutdir mandir)
     string(REPLACE "$(ROOTSYS)" "$ROOTSYS"  ${d} ${${d}})
   endforeach()
 endif()
@@ -716,6 +716,7 @@ set(bindir $ROOTSYS/bin)
 set(libdir $ROOTSYS/lib)
 set(incdir $ROOTSYS/include)
 set(etcdir $ROOTSYS/etc)
+set(tutdir $ROOTSYS/tutorials)
 set(mandir $ROOTSYS/man)
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY NEWLINE_STYLE UNIX)
 
