@@ -944,6 +944,16 @@ TEST_P(RDFSimpleTests, HistosOneWeightPerEvent)
    EXPECT_DOUBLE_EQ(h3->GetMean(), 2.);
 }
 
+TEST_P(RDFSimpleTests, ManyRangesPerWorker)
+{
+   auto filename = "ManyRangesPerWorker_file.root";
+   {
+      ROOT::RDataFrame(184).Define("i",[](){return 0;})
+        .Snapshot<int>("t",filename,{"i"},{"RECREATE", ROOT::kZLIB, 1, 1, 99, false});
+   }
+   ROOT::RDataFrame("t",filename).Mean<int>("i");
+   gSystem->Unlink(filename);
+}
 // run single-thread tests
 INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
