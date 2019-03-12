@@ -747,9 +747,9 @@ T Min(const RVec<T> &v)
    return *std::min_element(v.begin(), v.end());
 }
 
-// Get the position of the greatest element of an RVec
-// In case of multiple occurrences of the maximum values,
-// the indices corresponding to the first occurrence are returned.
+/// Get the index of the greatest element of an RVec
+/// In case of multiple occurrences of the maximum values,
+/// the index corresponding to the first occurrence is returned.
 ///
 /// Example code, at the ROOT prompt:
 /// ~~~~{.cpp}
@@ -765,9 +765,9 @@ std::size_t ArgMax(const RVec<T> &v)
    return std::distance(v.begin(), std::max_element(v.begin(), v.end()));
 }
 
-// Get the position of the smallest element of an RVec
-// In case of multiple occurrences of the minimum values,
-// the indices corresponding to the first occurrence are returned.
+/// Get the index of the smallest element of an RVec
+/// In case of multiple occurrences of the minimum values,
+/// the index corresponding to the first occurrence is returned.
 ///
 /// Example code, at the ROOT prompt:
 /// ~~~~{.cpp}
