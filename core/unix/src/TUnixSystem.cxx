@@ -682,6 +682,13 @@ void TUnixSystem::SetDisplay()
 #endif
          }
       }
+#ifndef R__HAS_COCOA
+      if (!gROOT->IsBatch() && !getenv("DISPLAY")) {
+         Error("SetDisplay", "Can't figure out DISPLAY, set it manually\n"
+            "In case you run a remote ssh session, restart your ssh session with:\n"
+            "=========>  ssh -Y");
+      }
+#endif
    }
 }
 
