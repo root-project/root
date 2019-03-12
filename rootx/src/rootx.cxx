@@ -477,7 +477,7 @@ int main(int argc, char **argv)
       if (!strcmp(argv[i], "-ll"))        gNoLogo  = true;
       if (!strcmp(argv[i], "-a"))         about    = true;
       if (!strcmp(argv[i], "-config"))    gNoLogo  = true;
-      if (!strcmp(argv[i], "--version"))    gNoLogo  = true;
+      if (!strcmp(argv[i], "--version"))  gNoLogo  = true;
       if (!strcmp(argv[i], "--notebook")) notebook = true;
    }
 
