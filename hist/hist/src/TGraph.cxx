@@ -983,7 +983,6 @@ void TGraph::Expand(Int_t newsize)
 ////////////////////////////////////////////////////////////////////////////////
 /// If graph capacity is less than newsize points then make array sizes
 /// equal to least multiple of step to contain newsize points.
-/// Returns kTRUE if size was altered
 
 void TGraph::Expand(Int_t newsize, Int_t step)
 {
