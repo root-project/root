@@ -45,7 +45,7 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
    // analysis once, all necessary streamers will be loaded into memory.
    TDirectory::TContext c;
    const auto nFileNames = fileNames.size();
-   std::vector<std::vector<EntryCluster>> clustersPerFileProto;
+   std::vector<std::vector<EntryCluster>> clustersPerFile;
    std::vector<Long64_t> entriesPerFile; entriesPerFile.reserve(nFileNames);
    Long64_t offset = 0ll;
    for (const auto &fileName : fileNames) {
@@ -55,7 +55,7 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
          Error("TTreeProcessorMT::Process",
                "An error occurred while opening file %s: skipping it.",
                fileNameC);
-         clustersPerFileProto.emplace_back(std::vector<EntryCluster>());
+         clustersPerFile.emplace_back(std::vector<EntryCluster>());
          entriesPerFile.emplace_back(0ULL);
          continue;
       }
@@ -66,7 +66,7 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
          Error("TTreeProcessorMT::Process",
                "An error occurred while getting tree %s from file %s: skipping this file.",
                treeName.c_str(), fileNameC);
-         clustersPerFileProto.emplace_back(std::vector<EntryCluster>());
+         clustersPerFile.emplace_back(std::vector<EntryCluster>());
          entriesPerFile.emplace_back(0ULL);
          continue;
       }
@@ -82,7 +82,7 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
          clusters.emplace_back(EntryCluster{start + offset, end + offset});
       }
       offset += entries;
-      clustersPerFileProto.emplace_back(std::move(clusters));
+      clustersPerFile.emplace_back(std::move(clusters));
       entriesPerFile.emplace_back(entries);
    }
 
@@ -91,30 +91,30 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
    // the parallelisation detrimental for performance.
    // For example, this is the case when following a merging of many small files a file
    // contains a tree with many entries and with clusters of just a few entries.
-   // The criterium according to which we fuse clusters together is to have at most
+   // The criterion according to which we fuse clusters together is to have at most
    // TTreeProcessorMT::GetMaxTasksPerFilePerWorker() clusters per file per slot.
    // For example: given 2 files and 16 workers, at most
    // 16 * 2 * TTreeProcessorMT::GetMaxTasksPerFilePerWorker() clusters will be created, at most
    // 16 * TTreeProcessorMT::GetMaxTasksPerFilePerWorker() per file.
 
-   const auto maxClustersPerFile = TTreeProcessorMT::GetMaxTasksPerFilePerWorker() * ROOT::GetImplicitMTPoolSize();
-   std::vector<std::vector<EntryCluster>> clustersPerFile(clustersPerFileProto.size());
-   auto clustersPerFileProtoIt = clustersPerFileProto.begin();
+   const auto maxTasksPerFile = TTreeProcessorMT::GetMaxTasksPerFilePerWorker() * ROOT::GetImplicitMTPoolSize();
+   std::vector<std::vector<EntryCluster>> eventRangesPerFile(clustersPerFile.size());
    auto clustersPerFileIt = clustersPerFile.begin();
-   for (; clustersPerFileProtoIt != clustersPerFileProto.end(); clustersPerFileProtoIt++, clustersPerFileIt++) {
-      const auto clustersInThisFileSize = clustersPerFileProtoIt->size();
-      const auto nFolds = clustersInThisFileSize / maxClustersPerFile;
-      // If the number of clusters is less than maxClustersPerFile
+   auto eventRangesPerFileIt = eventRangesPerFile.begin();
+   for (; clustersPerFileIt != clustersPerFile.end(); clustersPerFileIt++, eventRangesPerFileIt++) {
+      const auto clustersInThisFileSize = clustersPerFileIt->size();
+      const auto nFolds = clustersInThisFileSize / maxTasksPerFile;
+      // If the number of clusters is less than maxTasksPerFile
       // we take the clusters as they are
       if (nFolds == 0) {
-         std::for_each(clustersPerFileProtoIt->begin(), clustersPerFileProtoIt->end(),
-                       [&clustersPerFileIt](const EntryCluster &clust) { clustersPerFileIt->emplace_back(clust); });
+         std::for_each(clustersPerFileIt->begin(), clustersPerFileIt->end(),
+                       [&eventRangesPerFileIt](const EntryCluster &clust) { eventRangesPerFileIt->emplace_back(clust); });
          continue;
       }
       // Otherwise, we have to merge clusters, distributing the reminder evenly
       // onto the first clusters
-      auto nReminderClusters = clustersInThisFileSize % maxClustersPerFile;
-      const auto clustersInThisFile = *clustersPerFileProtoIt;
+      auto nReminderClusters = clustersInThisFileSize % maxTasksPerFile;
+      const auto clustersInThisFile = *clustersPerFileIt;
       for(auto i = 0ULL; i < (clustersInThisFileSize-1); ++i) {
          const auto start = clustersInThisFile[i].start;
          // We lump together at least nFolds clusters, therefore
@@ -126,12 +126,11 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
             nReminderClusters--;
          }
          const auto end = clustersInThisFile[i].end;
-         std::cout << "**** Task events: " << start << " - " << end << '\n';
-         clustersPerFileIt->emplace_back(EntryCluster({start, end}));
+         eventRangesPerFileIt->emplace_back(EntryCluster({start, end}));
       }
    }
 
-   return std::make_pair(std::move(clustersPerFile), std::move(entriesPerFile));
+   return std::make_pair(std::move(eventRangesPerFile), std::move(entriesPerFile));
 }
 
 ////////////////////////////////////////////////////////////////////////
