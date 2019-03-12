@@ -8,11 +8,6 @@
 ///  root > .x pythia8.C
 /// ~~~
 ///
-/// Note that before executing this script, for some Pythia8 builds:
-///
-///  - the env variable PYTHIA8 must point to the pythia8100 (or newer) directory
-///  - the env variable PYTHIA8DATA must be defined and it must point to $PYTHIA8/xmldoc
-///
 /// \macro_code
 ///
 /// \author Andreas Morsch
