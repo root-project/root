@@ -338,6 +338,11 @@ int main(int argc, char **argv)
       return 1;
    }
 
+#ifndef R__HAS_COCOA
+   if (!getenv("DISPLAY")) {
+      gNoLogo = true;
+   }
+#endif
    if (batch)
       gNoLogo = true;
    if (about) {
