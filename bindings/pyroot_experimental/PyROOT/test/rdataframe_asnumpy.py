@@ -239,6 +239,23 @@ class RDataFrameAsNumpy(unittest.TestCase):
         self.assertTrue(all(x == ref))
         self.assertTrue(hasattr(x, "result_ptr"))
 
+    def test_empty_array(self):
+        """
+        Testing readout of empty std::vectors
+        """
+        df = ROOT.ROOT.RDataFrame(1).Define("x", "std::vector<float>()")
+        npy = df.AsNumpy(["x"])
+        self.assertEqual(npy["x"].size, 1)
+        self.assertTrue(npy["x"][0].empty())
+
+    def test_empty_selection(self):
+        """
+        Testing readout of empty selection
+        """
+        df = ROOT.ROOT.RDataFrame(10).Define("x", "1.0").Filter("x<0")
+        npy = df.AsNumpy(["x"])
+        self.assertEqual(npy["x"].size, 0)
+
 
 if __name__ == '__main__':
     unittest.main()
