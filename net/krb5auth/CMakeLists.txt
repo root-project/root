@@ -11,6 +11,15 @@ if(MACOSX_KRB5_DEPRECATED)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Krb5Auth
-                              HEADERS TKSocket.h
-                              LIBRARIES ${KRB5_LIBRARIES} ${COMERR_LIBRARIES}
-                              DEPENDENCIES RootAuth Net)
+  HEADERS
+    TKSocket.h
+  SOURCES
+    src/Krb5Auth.cxx
+    src/TKSocket.cxx
+  LIBRARIES
+    ${KRB5_LIBRARIES}
+    ${COMERR_LIBRARIES}
+  DEPENDENCIES
+    RootAuth
+    Net
+)
