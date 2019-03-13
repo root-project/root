@@ -4,6 +4,11 @@ import numpy as np
 
 
 class ArrayInterface(unittest.TestCase):
+    """
+    Test memory adoption of std::vector and ROOT::RVec with the numpy
+    array interface.
+    """
+
     # Helpers
     dtypes = [
         "int", "unsigned int", "long", "unsigned long", "float", "double"
@@ -32,6 +37,9 @@ class ArrayInterface(unittest.TestCase):
 
     # Tests
     def test_RVec(self):
+        """
+        Test correct adoption of different datatypes for std::vector
+        """
         for dtype in self.dtypes:
             root_obj = ROOT.ROOT.VecOps.RVec(dtype)(2)
             np_obj = np.asarray(root_obj)
@@ -39,11 +47,32 @@ class ArrayInterface(unittest.TestCase):
             self.check_shape((2, ), np_obj)
 
     def test_STLVector(self):
+        """
+        Test correct adoption of different datatypes for ROOT::RVec
+        """
         for dtype in self.dtypes:
             root_obj = ROOT.std.vector(dtype)(2)
             np_obj = np.asarray(root_obj)
             self.check_memory_adoption(root_obj, np_obj)
             self.check_shape((2, ), np_obj)
+
+    def test_STLVector_empty(self):
+        """
+        Test adoption of empty std::vector
+        """
+        root_obj = ROOT.std.vector("float")()
+        np_obj = np.asarray(root_obj)
+        self.assertEqual(np_obj.shape, (0,))
+        self.assertEqual(np_obj.__array_interface__["data"][0], 1)
+
+    def test_RVec_empty(self):
+        """
+        Test adoption of empty ROOT::RVec
+        """
+        root_obj = ROOT.ROOT.VecOps.RVec("float")()
+        np_obj = np.asarray(root_obj)
+        self.assertEqual(np_obj.shape, (0,))
+        self.assertEqual(np_obj.__array_interface__["data"][0], 1)
 
 
 if __name__ == '__main__':
