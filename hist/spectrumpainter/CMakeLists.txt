@@ -3,5 +3,13 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(SpectrumPainter
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Graf Hist)
+  HEADERS
+    TSpectrum2Painter.h
+  SOURCES
+    src/TSpectrum2Painter.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  DEPENDENCIES
+    Graf
+    Hist
+)
