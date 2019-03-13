@@ -13,6 +13,15 @@ if ( Vc_FOUND )
 endif()
    
 ROOT_STANDARD_LIBRARY_PACKAGE(ConverterVG
-                              HEADERS TGeoVGConverter.h TGeoVGShape.h
-                              DEPENDENCIES Geom
-                              LIBRARIES ${VECGEOM_LIBRARIES} ${CMAKE_DL_LIBS})
+  HEADERS
+    TGeoVGConverter.h
+    TGeoVGShape.h
+  SOURCES
+    src/TGeoVGConverter.cxx
+    src/TGeoVGShape.cxx
+  LIBRARIES
+    ${VECGEOM_LIBRARIES}
+    ${CMAKE_DL_LIBS}
+  DEPENDENCIES
+    Geom
+)
