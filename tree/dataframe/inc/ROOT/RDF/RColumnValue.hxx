@@ -175,10 +175,10 @@ public:
                // the address returned by the GetAddress method
                auto readerArrayAddr = &readerArray.At(0);
                T rvec(readerArrayAddr, readerArraySize);
-               swap(fRVec, rvec);
+               std::swap(fRVec, rvec);
             } else {
                T emptyVec{};
-               swap(fRVec, emptyVec);
+               std::swap(fRVec, emptyVec);
             }
          } else {
             // The storage is not contiguous or we don't know yet: we cannot but copy into the rvec
@@ -195,10 +195,10 @@ public:
 #endif
             if (readerArraySize > 0) {
                T rvec(readerArray.begin(), readerArray.end());
-               swap(fRVec, rvec);
+               std::swap(fRVec, rvec);
             } else {
                T emptyVec{};
-               swap(fRVec, emptyVec);
+               std::swap(fRVec, emptyVec);
             }
          }
          return fRVec;
@@ -225,10 +225,10 @@ public:
          if (readerArraySize > 0) {
             // always perform a copy
             T rvec(readerArray.begin(), readerArray.end());
-            swap(fRVec, rvec);
+            std::swap(fRVec, rvec);
          } else {
             T emptyVec{};
-            swap(fRVec, emptyVec);
+            std::swap(fRVec, emptyVec);
          }
          return fRVec;
       } else {
