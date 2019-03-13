@@ -2301,45 +2301,45 @@ namespace {
       Py_DECREF(r);
    }
 
-   template <typename dtype>
-   PyObject *FillArrayInterfaceDict(char type)
+   template <typename T, char typestr>
+   PyObject *ArrayInterface(ObjectProxy *self)
    {
-      PyObject *dict = PyDict_New();
-      PyDict_SetItemString(dict, "version", PyLong_FromLong(3));
-#ifdef R__BYTESWAP
+      T *cobj = reinterpret_cast<T*>(self->GetObject());
+
+      // Create array interface dict
+      auto dict = PyDict_New();
+
+      // Version
+      auto pyversion = PyLong_FromLong(3);
+      PyDict_SetItemString(dict, "version", pyversion);
+      Py_DECREF(pyversion);
+
+      // Type string
+      #ifdef R__BYTESWAP
       const char endianess = '<';
 #else
       const char endianess = '>';
 #endif
-      const UInt_t bytes = sizeof(dtype);
-      PyDict_SetItemString(dict, "typestr",
-                           PyROOT_PyUnicode_FromString(TString::Format("%c%c%i", endianess, type, bytes).Data()));
-      return dict;
-   }
+      const UInt_t bytes = sizeof(typename T::value_type);
+      auto pytypestr = PyROOT_PyUnicode_FromString(TString::Format("%c%c%i", endianess, typestr, bytes).Data());
+      PyDict_SetItemString(dict, "typestr", pytypestr);
+      Py_DECREF(pytypestr);
 
-   template <typename dtype, char typestr>
-   PyObject *STLVectorArrayInterface(ObjectProxy *self)
-   {
-      std::vector<dtype> *cobj = (std::vector<dtype> *)(self->GetObject());
+      // Shape
+      auto pysize = PyLong_FromLong(cobj->size());
+      auto pyshape = PyTuple_Pack(1, pysize);
+      PyDict_SetItemString(dict, "shape", pyshape);
+      Py_DECREF(pysize);
+      Py_DECREF(pyshape);
 
-      PyObject *dict = FillArrayInterfaceDict<dtype>(typestr);
-      PyDict_SetItemString(dict, "shape", PyTuple_Pack(1, PyLong_FromLong(cobj->size())));
-      PyDict_SetItemString(dict, "data",
-                           PyTuple_Pack(2, PyLong_FromLong(reinterpret_cast<long>(cobj->data())), Py_False));
-
-      return dict;
-   }
-
-   template <typename dtype, char typestr>
-   PyObject *RVecArrayInterface(ObjectProxy *self)
-   {
-      using ROOT::VecOps::RVec;
-      RVec<dtype> *cobj = (RVec<dtype> *)(self->GetObject());
-
-      PyObject *dict = FillArrayInterfaceDict<dtype>(typestr);
-      PyDict_SetItemString(dict, "shape", PyTuple_Pack(1, PyLong_FromLong(cobj->size())));
-      PyDict_SetItemString(dict, "data",
-                           PyTuple_Pack(2, PyLong_FromLong(reinterpret_cast<long>(cobj->data())), Py_False));
+      // Pointer
+      auto ptr = reinterpret_cast<unsigned long long>(cobj->data());
+      if (cobj->empty()) ptr = 1; // Numpy breaks for data pointer of 0 even though the array is empty.
+      auto pyptr = PyLong_FromUnsignedLongLong(ptr);
+      auto pydata = PyTuple_Pack(2, pyptr, Py_False);
+      PyDict_SetItemString(dict, "data", pydata);
+      Py_DECREF(pyptr);
+      Py_DECREF(pydata);
 
       return dict;
    }
@@ -2554,33 +2554,33 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       // add array interface for STL vectors
       if (name.find("ROOT::VecOps::RVec<") == 0) {
       } else if (name == "vector<float>") {
-         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<float, 'f'>);
+         AddArrayInterface(pyclass, (PyCFunction)ArrayInterface<std::vector<float>, 'f'>);
       } else if (name == "vector<double>") {
-         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<double, 'f'>);
+         AddArrayInterface(pyclass, (PyCFunction)ArrayInterface<std::vector<double>, 'f'>);
       } else if (name == "vector<int>") {
-         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<int, 'i'>);
+         AddArrayInterface(pyclass, (PyCFunction)ArrayInterface<std::vector<int>, 'i'>);
       } else if (name == "vector<unsigned int>") {
-         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<unsigned int, 'u'>);
+         AddArrayInterface(pyclass, (PyCFunction)ArrayInterface<std::vector<unsigned int>, 'u'>);
       } else if (name == "vector<long>") {
-         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<long, 'i'>);
+         AddArrayInterface(pyclass, (PyCFunction)ArrayInterface<std::vector<long>, 'i'>);
       } else if (name == "vector<unsigned long>") {
-         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<unsigned long, 'u'>);
+         AddArrayInterface(pyclass, (PyCFunction)ArrayInterface<std::vector<unsigned long>, 'u'>);
       }
 
       // add array interface for RVecs
       if (name.find("ROOT::VecOps::RVec<") != 0) {
       } else if (name == "ROOT::VecOps::RVec<float>") {
-         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<float, 'f'>);
+         AddArrayInterface(pyclass, (PyCFunction)ArrayInterface<ROOT::VecOps::RVec<float>, 'f'>);
       } else if (name == "ROOT::VecOps::RVec<double>") {
-         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<double, 'f'>);
+         AddArrayInterface(pyclass, (PyCFunction)ArrayInterface<ROOT::VecOps::RVec<double>, 'f'>);
       } else if (name == "ROOT::VecOps::RVec<int>") {
-         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<int, 'i'>);
+         AddArrayInterface(pyclass, (PyCFunction)ArrayInterface<ROOT::VecOps::RVec<int>, 'i'>);
       } else if (name == "ROOT::VecOps::RVec<unsigned int>") {
-         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<unsigned int, 'u'>);
+         AddArrayInterface(pyclass, (PyCFunction)ArrayInterface<ROOT::VecOps::RVec<unsigned int>, 'u'>);
       } else if (name == "ROOT::VecOps::RVec<long>") {
-         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<long, 'i'>);
+         AddArrayInterface(pyclass, (PyCFunction)ArrayInterface<ROOT::VecOps::RVec<long>, 'i'>);
       } else if (name == "ROOT::VecOps::RVec<unsigned long>") {
-         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<unsigned long, 'u'>);
+         AddArrayInterface(pyclass, (PyCFunction)ArrayInterface<ROOT::VecOps::RVec<unsigned long>, 'u'>);
       }
    }
 
