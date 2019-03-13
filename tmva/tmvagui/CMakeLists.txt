@@ -90,18 +90,3 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAGui
     Gui
     Core
 )
-
-if(NOT gnuinstall)
-  install(DIRECTORY test DESTINATION tmva 
-  FILES_MATCHING PATTERN "*.C" 
-                 PATTERN "*.gif" 
-                 PATTERN "*.png" 
-                 PATTERN "README"
-                 PATTERN "data" EXCLUDE)
-endif()
-
-#ROOT_ADD_TEST_SUBDIRECTORY(test)
-
-
-
-
