@@ -3,5 +3,15 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Gdml
-                              DEPENDENCIES Geom XMLIO Hist RIO)
-
+  HEADERS
+    TGDMLParse.h
+    TGDMLWrite.h
+  SOURCES
+    src/TGDMLParse.cxx
+    src/TGDMLWrite.cxx
+  DEPENDENCIES
+    Geom
+    XMLIO
+    Hist
+    RIO
+)
