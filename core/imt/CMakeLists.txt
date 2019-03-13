@@ -15,6 +15,8 @@ if(imt)
   target_include_directories(Imt PRIVATE ${TBB_INCLUDE_DIRS})
   target_link_libraries(Imt PRIVATE ${TBB_LIBRARIES})
 
+  include_directories(BEFORE "inc")
+
   ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
     ROOT/TFuture.hxx
     ROOT/TPoolManager.hxx

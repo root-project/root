@@ -2,6 +2,8 @@
 # CMakeLists.txt file for building ROOT math/genvector package
 ############################################################################
 
+include_directories(BEFORE "inc")
+
 ROOT_GENERATE_DICTIONARY(G__GenVector
     Math/AxisAngle.h
     Math/Boost.h

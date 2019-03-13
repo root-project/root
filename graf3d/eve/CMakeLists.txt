@@ -210,6 +210,8 @@ set(EVE_SOURCES
 )
 
 if(MSVC)
+  include_directories(BEFORE "inc")
+
   ROOT_GENERATE_DICTIONARY(G__Eve1
     ${EVE_HEADERS1}
     LINKDEF

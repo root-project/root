@@ -2,6 +2,8 @@
 # CMakeLists.txt file for building ROOT math/smatrix package
 ############################################################################
 
+include_directories(BEFORE "inc")
+
 ROOT_GENERATE_DICTIONARY(G__Smatrix
     Math/BinaryOperators.h
     Math/BinaryOpPolicy.h
