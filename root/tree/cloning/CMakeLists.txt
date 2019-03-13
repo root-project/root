@@ -77,11 +77,15 @@ if(NOT TARGET hsimple)
                 ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root
                 hsimple2.root)
 else()
-      add_custom_target(hsimple-file ALL DEPENDS ${CMAKE_BINARY_DIR}/tutorials/hsimple.root)
+      add_custom_target(hsimple-file ALL DEPENDS
+        ${CMAKE_CURRENT_BINARY_DIR}/hsimple1.root
+        ${CMAKE_CURRENT_BINARY_DIR}/hsimple2.root
+      )
       set(HSimpleDependencies "hsimple")
       add_dependencies(hsimple-file ${HSimpleDependencies})
-      add_custom_command(
-        TARGET  hsimple-file
+      add_custom_command(OUTPUT
+        ${CMAKE_CURRENT_BINARY_DIR}/hsimple1.root
+        ${CMAKE_CURRENT_BINARY_DIR}/hsimple2.root
         COMMAND ${CMAKE_COMMAND} -E copy
                 ${CMAKE_BINARY_DIR}/tutorials/hsimple.root
                 hsimple1.root
