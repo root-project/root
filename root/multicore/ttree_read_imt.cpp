@@ -69,8 +69,6 @@ int main(int argc, char** argv) {
   const int nentries  = std::get<1>(options);
   auto const filename = std::get<2>(options);
 
-  gSystem->Load("generate_imt_tree_C.so");
-
   TFile *file = TFile::Open(filename.c_str());
   
   Int_t nbreadseq, nbreadseq2, nbreadpar, nbreadpar2;
