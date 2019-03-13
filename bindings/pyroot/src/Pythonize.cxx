@@ -2334,7 +2334,9 @@ namespace {
 
       // Pointer
       auto ptr = reinterpret_cast<unsigned long long>(cobj->data());
-      if (cobj->empty()) ptr = 1; // Numpy breaks for data pointer of 0 even though the array is empty.
+      // Numpy breaks for data pointer of 0 even though the array is empty.
+      // We set the pointer to 1 but the value itself is arbitrary and never accessed.
+      if (cobj->empty()) ptr = 1;
       auto pyptr = PyLong_FromUnsignedLongLong(ptr);
       auto pydata = PyTuple_Pack(2, pyptr, Py_False);
       PyDict_SetItemString(dict, "data", pydata);
