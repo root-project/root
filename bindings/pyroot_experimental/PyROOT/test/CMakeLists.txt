@@ -60,6 +60,9 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_len tstring_len.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_str_repr tstring_str_repr.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_comparisonops tstring_comparisonops.py)
 
+# TString converter
+ROOT_ADD_PYUNITTEST(pyroot_conv_tstring tstring_converter.py)
+
 # TObjString pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_len tobjstring_len.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_str_repr tobjstring_str_repr.py)
