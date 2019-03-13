@@ -2324,8 +2324,14 @@ namespace {
 
       PyObject *dict = FillArrayInterfaceDict<dtype>(typestr);
       PyDict_SetItemString(dict, "shape", PyTuple_Pack(1, PyLong_FromLong(cobj->size())));
-      PyDict_SetItemString(dict, "data",
-                           PyTuple_Pack(2, PyLong_FromLong(reinterpret_cast<long>(cobj->data())), Py_False));
+      if(cobj->empty()){
+         PyDict_SetItemString(dict, "data",
+                           PyTuple_Pack(2, PyLong_FromLong(-1l), Py_False));
+      }
+      else{
+         PyDict_SetItemString(dict, "data",
+                           PyTuple_Pack(2, PyLong_FromLong(reinterpret_cast<long>(cobj->data())), Py_False));         
+      }
 
       return dict;
    }
