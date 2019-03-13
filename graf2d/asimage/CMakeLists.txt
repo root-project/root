@@ -7,24 +7,51 @@ if(cocoa)  # Not needed to locate PNG, JPG, TIFF libraries
   set(ASEXTRA_LIBRARIES)
 endif()
 
-#---Build ASImage/ASImageGui libraries---------------------------------------
 include_directories(SYSTEM ${FREETYPE_INCLUDE_DIRS} ${AFTERIMAGE_INCLUDE_DIR} ${X11_INCLUDE_DIR})
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
-                              NO_INSTALL_HEADERS
-                              HEADERS TASImage.h TASImagePlugin.h TASPluginGS.h
-                              SOURCES TASImage.cxx TASPluginGS.cxx
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES Core ${AFTERIMAGE_LIBRARIES} ${FREETYPE_LIBRARIES} ${ASEXTRA_LIBRARIES} ${X11_LIBRARIES} ZLIB::ZLIB
-                              DEPENDENCIES Graf BUILTINS AFTERIMAGE)
-
+  NO_INSTALL_HEADERS
+  HEADERS
+    TASImage.h
+    TASImagePlugin.h
+    TASPluginGS.h
+  SOURCES
+    TASImage.cxx
+    TASPluginGS.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  LIBRARIES
+    ${AFTERIMAGE_LIBRARIES}
+    ${ASEXTRA_LIBRARIES}
+    ${FREETYPE_LIBRARIES}
+    ${X11_LIBRARIES}
+    ZLIB::ZLIB
+  DEPENDENCIES
+    Core
+    Graf
+  BUILTINS
+    AFTERIMAGE
+)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ASImageGui
-                              NO_INSTALL_HEADERS
-                              HEADERS TASPaletteEditor.h
-                              SOURCES TASPaletteEditor.cxx
-                              LINKDEF LinkDefGui.h
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Gui ASImage
-                              LIBRARIES ${AFTERIMAGE_LIBRARIES} ${FREETYPE_LIBRARIES} ${ASEXTRA_LIBRARIES} ${X11_LIBRARIES} ZLIB::ZLIB)
+  NO_INSTALL_HEADERS
+  HEADERS
+    TASPaletteEditor.h
+  SOURCES
+    src/TASPaletteEditor.cxx
+  LINKDEF
+    LinkDefGui.h
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  LIBRARIES
+    ${AFTERIMAGE_LIBRARIES}
+    ${ASEXTRA_LIBRARIES}
+    ${FREETYPE_LIBRARIES}
+    ${X11_LIBRARIES}
+    ZLIB::ZLIB
+  DEPENDENCIES
+    Gui
+    ASImage
+)
+
 ROOT_INSTALL_HEADERS()
