@@ -4,36 +4,200 @@
 
 include_directories(${CMAKE_SOURCE_DIR}/gui/ged/inc)
 
-set(libname Gui)
-
-set(headers1 TGObject.h TGClient.h TGWindow.h TGPicture.h TGDimension.h
-             TGFrame.h TGLayout.h TGString.h TGWidget.h TGIcon.h TGLabel.h
-             TGButton.h TGTextBuffer.h TGTextEntry.h TGMsgBox.h TGMenu.h
-             TGGC.h TGShutter.h TG3DLine.h TGProgressBar.h TGButtonGroup.h
-             TGNumberEntry.h TGTableLayout.h WidgetMessageTypes.h
-             TGIdleHandler.h TGInputDialog.h TGPack.h)
-set(headers2 TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h
-             TGTab.h TGSlider.h  TGListView.h TGMimeTypes.h
-             TGFSContainer.h TGFileDialog.h TGStatusBar.h TGToolTip.h
-             TGToolBar.h TGListTree.h TGText.h TGView.h TGTextView.h
-             TGTextEdit.h TGTextEditDialogs.h TGDoubleSlider.h TGSplitter.h
-             TGFSComboBox.h TGImageMap.h TGApplication.h TGXYLayout.h
-             TGResourcePool.h TGFont.h TGTripleSlider.h)
-set(headers3 TRootGuiFactory.h TRootApplication.h TRootCanvas.h
-             TRootBrowserLite.h TRootContextMenu.h TRootDialog.h
-             TRootControlBar.h TRootHelpDialog.h TRootEmbeddedCanvas.h
-             TGColorDialog.h TGColorSelect.h TGFontDialog.h
-             TGDockableFrame.h TGMdi.h TGMdiFrame.h TGMdiMainFrame.h
-             TGMdiDecorFrame.h TGMdiMenu.h TVirtualDragManager.h
-             TGuiBuilder.h TGRedirectOutputGuard.h TGPasswdDialog.h
-             TGTextEditor.h TGSpeedo.h TGDNDManager.h TGTable.h
-             TGSimpleTableInterface.h TGSimpleTable.h TGTableCell.h
-             TGTableHeader.h TGTableContainer.h
-             TGCommandPlugin.h TGFileBrowser.h
-             TRootBrowser.h TGSplitFrame.h TGShapedFrame.h TGEventHandler.h
-             TGTextViewStream.h)
-
 ROOT_STANDARD_LIBRARY_PACKAGE(Gui
-                              HEADERS ${headers1} ${headers2} ${headers3}
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Core Gpad Graf MathCore)
+  HEADERS
+    HelpText.h
+    TG3DLine.h
+    TGApplication.h
+    TGButton.h
+    TGButtonGroup.h
+    TGCanvas.h
+    TGClient.h
+    TGColorDialog.h
+    TGColorSelect.h
+    TGComboBox.h
+    TGCommandPlugin.h
+    TGDNDManager.h
+    TGDimension.h
+    TGDockableFrame.h
+    TGDoubleSlider.h
+    TGEventHandler.h
+    TGFSComboBox.h
+    TGFSContainer.h
+    TGFileBrowser.h
+    TGFileDialog.h
+    TGFont.h
+    TGFontDialog.h
+    TGFrame.h
+    TGGC.h
+    TGIcon.h
+    TGIdleHandler.h
+    TGImageMap.h
+    TGInputDialog.h
+    TGLabel.h
+    TGLayout.h
+    TGListBox.h
+    TGListTree.h
+    TGListView.h
+    TGMdi.h
+    TGMdiDecorFrame.h
+    TGMdiFrame.h
+    TGMdiMainFrame.h
+    TGMdiMenu.h
+    TGMenu.h
+    TGMimeTypes.h
+    TGMsgBox.h
+    TGNumberEntry.h
+    TGObject.h
+    TGPack.h
+    TGPasswdDialog.h
+    TGPicture.h
+    TGProgressBar.h
+    TGRedirectOutputGuard.h
+    TGResourcePool.h
+    TGScrollBar.h
+    TGShapedFrame.h
+    TGShutter.h
+    TGSimpleTable.h
+    TGSimpleTableInterface.h
+    TGSlider.h
+    TGSpeedo.h
+    TGSplitFrame.h
+    TGSplitter.h
+    TGStatusBar.h
+    TGString.h
+    TGTab.h
+    TGTable.h
+    TGTableCell.h
+    TGTableContainer.h
+    TGTableHeader.h
+    TGTableLayout.h
+    TGText.h
+    TGTextBuffer.h
+    TGTextEdit.h
+    TGTextEditDialogs.h
+    TGTextEditor.h
+    TGTextEntry.h
+    TGTextView.h
+    TGTextViewStream.h
+    TGToolBar.h
+    TGToolTip.h
+    TGTripleSlider.h
+    TGView.h
+    TGWidget.h
+    TGWindow.h
+    TGXYLayout.h
+    TGuiBuilder.h
+    TRootApplication.h
+    TRootBrowser.h
+    TRootBrowserLite.h
+    TRootCanvas.h
+    TRootContextMenu.h
+    TRootControlBar.h
+    TRootDialog.h
+    TRootEmbeddedCanvas.h
+    TRootGuiFactory.h
+    TRootHelpDialog.h
+    TVirtualDragManager.h
+    WidgetMessageTypes.h
+  SOURCES
+    src/HelpText.cxx
+    src/TG3DLine.cxx
+    src/TGApplication.cxx
+    src/TGButton.cxx
+    src/TGButtonGroup.cxx
+    src/TGCanvas.cxx
+    src/TGClient.cxx
+    src/TGColorDialog.cxx
+    src/TGColorSelect.cxx
+    src/TGComboBox.cxx
+    src/TGCommandPlugin.cxx
+    src/TGDNDManager.cxx
+    src/TGDimension.cxx
+    src/TGDockableFrame.cxx
+    src/TGDoubleSlider.cxx
+    src/TGEventHandler.cxx
+    src/TGFSComboBox.cxx
+    src/TGFSContainer.cxx
+    src/TGFileBrowser.cxx
+    src/TGFileDialog.cxx
+    src/TGFont.cxx
+    src/TGFontDialog.cxx
+    src/TGFrame.cxx
+    src/TGGC.cxx
+    src/TGIcon.cxx
+    src/TGIdleHandler.cxx
+    src/TGImageMap.cxx
+    src/TGInputDialog.cxx
+    src/TGLabel.cxx
+    src/TGLayout.cxx
+    src/TGListBox.cxx
+    src/TGListTree.cxx
+    src/TGListView.cxx
+    src/TGMdiDecorFrame.cxx
+    src/TGMdiFrame.cxx
+    src/TGMdiMainFrame.cxx
+    src/TGMdiMenu.cxx
+    src/TGMenu.cxx
+    src/TGMimeTypes.cxx
+    src/TGMsgBox.cxx
+    src/TGNumberEntry.cxx
+    src/TGObject.cxx
+    src/TGPack.cxx
+    src/TGPasswdDialog.cxx
+    src/TGPicture.cxx
+    src/TGProgressBar.cxx
+    src/TGRedirectOutputGuard.cxx
+    src/TGResourcePool.cxx
+    src/TGScrollBar.cxx
+    src/TGShapedFrame.cxx
+    src/TGShutter.cxx
+    src/TGSimpleTable.cxx
+    src/TGSimpleTableInterface.cxx
+    src/TGSlider.cxx
+    src/TGSpeedo.cxx
+    src/TGSplitFrame.cxx
+    src/TGSplitter.cxx
+    src/TGStatusBar.cxx
+    src/TGString.cxx
+    src/TGTab.cxx
+    src/TGTable.cxx
+    src/TGTableCell.cxx
+    src/TGTableContainer.cxx
+    src/TGTableHeader.cxx
+    src/TGTableLayout.cxx
+    src/TGText.cxx
+    src/TGTextBuffer.cxx
+    src/TGTextEdit.cxx
+    src/TGTextEditDialogs.cxx
+    src/TGTextEditor.cxx
+    src/TGTextEntry.cxx
+    src/TGTextView.cxx
+    src/TGTextViewStream.cxx
+    src/TGToolBar.cxx
+    src/TGToolTip.cxx
+    src/TGTripleSlider.cxx
+    src/TGView.cxx
+    src/TGWidget.cxx
+    src/TGWindow.cxx
+    src/TGXYLayout.cxx
+    src/TGuiBuilder.cxx
+    src/TRootApplication.cxx
+    src/TRootBrowser.cxx
+    src/TRootBrowserLite.cxx
+    src/TRootCanvas.cxx
+    src/TRootContextMenu.cxx
+    src/TRootControlBar.cxx
+    src/TRootDialog.cxx
+    src/TRootEmbeddedCanvas.cxx
+    src/TRootGuiFactory.cxx
+    src/TRootHelpDialog.cxx
+    src/TVirtualDragManager.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  DEPENDENCIES
+    Core
+    Gpad
+    Graf
+    MathCore
+)
