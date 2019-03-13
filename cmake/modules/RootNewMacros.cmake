@@ -249,6 +249,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       endif()
       list(APPEND headerfiles ${fp})
       list(APPEND _list_of_header_dependencies ${headerFile})
+      unset(headerFile CACHE) # find_file, forget headerFile!
     endif()
   endforeach()
 
