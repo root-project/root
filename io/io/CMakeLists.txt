@@ -2,6 +2,8 @@
 # CMakeLists.txt file for building ROOT io/io package
 ############################################################################
 
+include_directories(BEFORE "inc")
+
 set(headers ROOT/TBufferMerger.hxx
    TArchiveFile.h
    TBufferFile.h
