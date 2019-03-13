@@ -3,6 +3,15 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Rint
-                              STAGE1
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Core)
+  STAGE1
+  HEADERS
+    TRint.h
+    TTabCom.h
+  SOURCES
+    src/TRint.cxx
+    src/TTabCom.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  DEPENDENCIES
+    Core
+)
