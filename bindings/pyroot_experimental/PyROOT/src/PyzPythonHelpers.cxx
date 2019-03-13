@@ -72,14 +72,14 @@ PyObject *PyROOT::GetVectorDataPointer(PyObject * /*self*/, PyObject *args)
    std::string cppname = CPyCppyy_PyUnicode_AsString(pycppname);
 
    // Call interpreter to get pointer to data (using `data` method)
-   long pointer;
+   unsigned long long pointer;
    std::stringstream code;
    code << "*((long*)" << &pointer << ") = reinterpret_cast<long>(reinterpret_cast<" << cppname << "*>(" << cppobj
         << ")->data())";
    gInterpreter->Calc(code.str().c_str());
 
    // Return pointer as integer
-   PyObject *pypointer = PyInt_FromLong(pointer);
+   PyObject *pypointer = PyLong_FromUnsignedLongLong(pointer);
    return pypointer;
 }
 
