@@ -1026,6 +1026,7 @@ bool CPyCppyy::name##Converter::ToMemory(PyObject* value, void* address)     \
     return InstancePtrConverter::ToMemory(value, address);                   \
 }
 
+CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(TString, TString, Data, Length)
 CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLString, std::string, c_str, size)
 CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLStringViewBase, std::string_view, data, size)
 bool CPyCppyy::STLStringViewConverter::SetArg(
@@ -2068,6 +2069,8 @@ public:
         gf["const ULong64_t&"] =            gf["const unsigned long long&"];
 
     // factories for special cases
+        gf["TString"] =                     (cf_t)+[](long) { return new TStringConverter{}; };
+        gf["const TString&"] =              (cf_t)+[](long) { return new TStringConverter{}; };
         gf["const char*"] =                 (cf_t)+[](long) { return new CStringConverter{}; };
         gf["const char[]"] =                (cf_t)+[](long) { return new CStringConverter{}; };
         gf["char*"] =                       (cf_t)+[](long) { return new NonConstCStringConverter{}; };
