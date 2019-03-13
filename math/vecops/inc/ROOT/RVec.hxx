@@ -257,10 +257,18 @@ public:
    using const_iterator = typename Impl_t::const_iterator;
    using reverse_iterator = typename Impl_t::reverse_iterator;
    using const_reverse_iterator = typename Impl_t::const_reverse_iterator;
-   static constexpr std::size_t fgBufferSize = std::is_arithmetic<T>::value && !fgIsVecBool ? 8 : 0;
+   static constexpr std::size_t fgBufferSize = std::is_arithmetic<T>::value && !fgIsVecBool ? 32 : 0;
 
 private:
-   using Buffer_t = std::array<T, fgBufferSize>;
+   // We need this class for the case where fgBufferSize is 0, otherwise array<NonCopiable, 0>
+   // will not compile on osx.
+   class RArrayPlaceHolder
+   {
+      public:
+      std::size_t size() {return 0U;}
+      T * data() {return nullptr;}
+   };
+   using Buffer_t = typename std::conditional<fgBufferSize == 0, RArrayPlaceHolder, std::array<T, fgBufferSize>>::type;
    Buffer_t fBuffer;
    Alloc_t fAlloc = ::ROOT::Detail::VecOps::MakeAdoptAllocator(fgBufferSize ? fBuffer.data() : nullptr, fgBufferSize);
    Impl_t fData{fAlloc};
@@ -277,12 +285,7 @@ private:
          return false;
       return thisBufSize && v.size() <= thisBufSize;
    }
-   bool HasBuffer()
-   {
-      // We use the constexpr quantity first for performance reasons. In case it is
-      // 0, the last part of the statement will not even be compiled.
-      return fgBufferSize && 0 != ::ROOT::Detail::VecOps::GetBufferSize(fAlloc);
-   }
+
    bool IsAdoptingExternalMemory() { return ::ROOT::Detail::VecOps::IsAdoptingExternalMemory(fAlloc); }
 
 public:
@@ -321,7 +324,7 @@ public:
    RVec(const std::vector<T> &v) : fData(v.size(), T(), fAlloc)
    {
       if (CanUseBuffer(v.size())) {
-         std::copy(v.begin(), v.end(), fBuffer.begin());
+         std::copy(v.begin(), v.end(), fData.begin());
       } else {
          std::copy(v.begin(), v.end(), fData.begin());
       }
@@ -334,7 +337,7 @@ public:
          fAlloc = std::move(v.fAlloc);
          fData = std::move(v.fData);
       } else if (CanUseBuffer(v)) {
-         std::copy(v.begin(), v.end(), fBuffer.begin());
+         std::copy(v.begin(), v.end(), fData.begin());
       } else {
          fData = std::move(v.fData);
       }
@@ -355,7 +358,7 @@ public:
    {
       if (CanUseBuffer(v.size())) {
          resize(v.size());
-         std::copy(v.begin(), v.end(), fBuffer.begin());
+         std::copy(v.begin(), v.end(), fData.begin());
       } else {
          fData = v.fData;
       }
@@ -369,7 +372,7 @@ public:
          fData = std::move(v.fData);
       } else if (CanUseBuffer(v)) {
          resize(v.size());
-         std::copy(v.begin(), v.end(), fBuffer.begin());
+         std::copy(v.begin(), v.end(), fData.begin());
       } else {
          fData = std::move(v.fData);
       }
@@ -469,45 +472,6 @@ public:
    void pop_back() { fData.pop_back(); }
    void resize(size_type count) { fData.resize(count); }
    void resize(size_type count, const value_type &value) { fData.resize(count, value); }
-   /*
-   void swap(RVec<T> &other)
-   {
-      const auto hasBuf = HasBuffer();
-      const auto otherHasBuf = other.HasBuffer();
-
-      // Case 1: Neither is using a buffer. They could be adopting an
-      // external buffer or own their memory
-      if (!hasBuf && !otherHasBuf) {
-         std::swap(fData, other.fData);
-      // Case 2: This RVec has a buffer and the other one does not.
-      // There are two possibilities here: either the content of the one
-      // which is not using the SMO fits in the one using it or not.
-      } else if (hasBuf && !otherHasBuf) {
-         resize(other.size());
-         if (other.size() <= fgBufferSize) {
-            auto tmpBuf(fBuffer);
-            resize(other.size());
-            std::copy(other.begin(), other.end(), fBuffer.begin());
-            other.resize(tmpBuf.size());
-            std::copy(tmpBuf.begin(), tmpBuf.end(), other.begin());
-         } else {
-            // both have data on the heap.
-            std::swap(fData, other.fData);
-         }
-      // Case 3: This is case 2 but with the operands inverted.
-      } else if (!hasBuf && otherHasBuf) {
-         other.swap(*this);
-      // Case 4: both are in SMO mode. We need to resize and swap contents,
-      // in this order, otherwise we will overwrite the content of the buffer
-      // in case we expand.
-      } else if (hasBuf && otherHasBuf) {
-         const auto thisSize = size();
-         resize(other.size());
-         other.resize(thisSize);
-         std::swap(fBuffer, other.fBuffer);
-      }
-   }
-   */
 };
 
 ///@name RVec Unary Arithmetic Operators
@@ -1665,17 +1629,5 @@ TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
 using ROOT::VecOps::RVec;
 
 } // namespace ROOT
-
-
-namespace std {
-template <typename T>
-void swap(ROOT::VecOps::RVec<T> &lhs, ROOT::VecOps::RVec<T> &rhs)
-{
-   auto tmp(std::move(lhs));
-   lhs = std::move(rhs);
-   rhs = std::move(tmp);
-}
-} // namespace std
-
 
 #endif
