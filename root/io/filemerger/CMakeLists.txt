@@ -91,11 +91,10 @@ if(NOT TARGET hsimple)
                 ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root
                 hsimple.root)
 else()
-      add_custom_target(hsimple-filemergerfile ALL DEPENDS ${CMAKE_BINARY_DIR}/tutorials/hsimple.root)
+      add_custom_target(hsimple-filemergerfile ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root)
       set(HSimpleDependencies "hsimple")
       add_dependencies(hsimple-filemergerfile ${HSimpleDependencies})
-      add_custom_command(
-        TARGET  hsimple-filemergerfile
+      add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root
         COMMAND ${CMAKE_COMMAND} -E copy
                 ${CMAKE_BINARY_DIR}/tutorials/hsimple.root
                 hsimple.root)
