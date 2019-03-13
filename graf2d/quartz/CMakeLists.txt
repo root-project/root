@@ -6,7 +6,15 @@
 add_definitions("-ObjC++")
 
 ROOT_STANDARD_LIBRARY_PACKAGE(GQuartz
-                              NO_HEADERS
-                              SOURCES *.mm
-                              DEPENDENCIES Core
-                              LIBRARIES "-framework Cocoa")
+  NO_HEADERS
+  SOURCES
+    src/QuartzFillArea.mm
+    src/QuartzLine.mm
+    src/QuartzMarker.mm
+    src/QuartzText.mm
+    src/QuartzUtils.mm
+  LIBRARIES
+    "-framework Cocoa"
+  DEPENDENCIES
+    Core
+)
