@@ -4,6 +4,23 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Postscript
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES  ZLIB::ZLIB mathtext
-                              DEPENDENCIES Graf)
+  HEADERS
+    TImageDump.h
+    TPDF.h
+    TPostScript.h
+    TSVG.h
+    TTeXDump.h
+  SOURCES
+    src/TImageDump.cxx
+    src/TPDF.cxx
+    src/TPostScript.cxx
+    src/TSVG.cxx
+    src/TTeXDump.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  LIBRARIES
+    ZLIB::ZLIB
+    mathtext
+  DEPENDENCIES
+    Graf
+)
