@@ -31,7 +31,7 @@ class ArrayInterface(unittest.TestCase):
         self.assertEqual(expected_shape, np_obj.shape)
 
     # Tests
-    def test_TVec(self):
+    def test_RVec(self):
         for dtype in self.dtypes:
             root_obj = ROOT.VecOps.RVec(dtype)(2)
             np_obj = np.asarray(root_obj)
@@ -44,6 +44,18 @@ class ArrayInterface(unittest.TestCase):
             np_obj = np.asarray(root_obj)
             self.check_memory_adoption(root_obj, np_obj)
             self.check_shape((2, ), np_obj)
+
+    def test_STLVector_empty(self):
+        root_obj = ROOT.std.vector("float")()
+        np_obj = np.asarray(root_obj)
+        self.assertEqual(np_obj.shape, (0,))
+        self.assertEqual(np_obj.__array_interface__["data"][0], 1)
+
+    def test_RVec_empty(self):
+        root_obj = ROOT.VecOps.RVec("float")()
+        np_obj = np.asarray(root_obj)
+        self.assertEqual(np_obj.shape, (0,))
+        self.assertEqual(np_obj.__array_interface__["data"][0], 1)
 
 
 if __name__ == '__main__':
