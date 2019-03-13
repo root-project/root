@@ -658,12 +658,15 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
       std::vector<std::string> inside;
       int nestedLoc;
       unsigned int narg = TClassEdit::GetSplit( name, inside, nestedLoc, TClassEdit::kLong64 );
-      if (nestedLoc) --narg;
+
       Int_t stlkind =  TMath::Abs(TClassEdit::STLKind(inside[0]));
 
       for(unsigned int i = 1; i<narg; ++i) {
          inside[i] = UpdateAssociativeToVector( inside[i].c_str() );
       }
+
+      if (nestedLoc) narg = nestedLoc;
+
       // Remove default allocator if any.
       static const char* allocPrefix = "std::allocator<";
       static const unsigned int allocPrefixLen (strlen(allocPrefix));
