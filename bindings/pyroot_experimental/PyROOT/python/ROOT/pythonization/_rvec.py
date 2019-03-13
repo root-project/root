@@ -33,7 +33,9 @@ def get_array_interface(self):
             dtype_size = GetSizeOfType(dtype)
             endianess = GetEndianess()
             size = self.size()
-            if self.empty(): # Numpy sees a null pointer as error even though the data is never accessed.
+            # Numpy breaks for data pointer of 0 even though the array is empty.
+            # We set the pointer to 1 but the value itself is arbitrary and never accessed.
+            if self.empty():
                 pointer = 1
             else:
                 pointer = GetVectorDataPointer(self, cppname)
