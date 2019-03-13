@@ -10,5 +10,20 @@ if(MACOSX_LDAP_DEPRECATED)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RLDAP
-                              LIBRARIES Core ${LDAP_LIBRARIES}
-                              DEPENDENCIES Core Net)
+  HEADERS
+    CintLDAP.h
+    TLDAPAttribute.h
+    TLDAPEntry.h
+    TLDAPResult.h
+    TLDAPServer.h
+  SOURCES
+    src/TLDAPAttribute.cxx
+    src/TLDAPEntry.cxx
+    src/TLDAPResult.cxx
+    src/TLDAPServer.cxx
+  LIBRARIES
+    ${LDAP_LIBRARIES}
+  DEPENDENCIES
+    Net
+    Core
+  )
