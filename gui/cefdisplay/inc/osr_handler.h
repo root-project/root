@@ -18,6 +18,8 @@
 
 #include "base_handler.h"
 
+#include "include/cef_version.h"
+
 /// Class used to handle off-screen application and should emulate some render requests
 
 class OsrHandler : public BaseHandler, public CefRenderHandler {
@@ -30,7 +32,11 @@ public:
 
    // CefRenderHandler methods.
    virtual bool GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect) OVERRIDE;
+#if CEF_COMMIT_NUMBER > 1894
+   virtual void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect) OVERRIDE;
+#else
    virtual bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect) OVERRIDE;
+#endif
    virtual bool GetScreenPoint(CefRefPtr<CefBrowser> browser, int viewX, int viewY, int &screenX,
                                int &screenY) OVERRIDE;
    virtual bool GetScreenInfo(CefRefPtr<CefBrowser> browser, CefScreenInfo &screen_info) OVERRIDE;
