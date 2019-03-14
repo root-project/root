@@ -276,10 +276,6 @@ SimpleApp::SimpleApp(const std::string &cef_main, const std::string &url, bool i
    fFirstRect.Set(0, 0, width, height);
 }
 
-SimpleApp::~SimpleApp()
-{
-}
-
 void SimpleApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar)
 {
    // registrar->AddCustomScheme("rootscheme", true, true, true, true, true, true);
