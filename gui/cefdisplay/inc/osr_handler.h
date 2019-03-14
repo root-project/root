@@ -24,8 +24,8 @@
 
 class OsrHandler : public BaseHandler, public CefRenderHandler {
 public:
-   explicit OsrHandler(THttpServer *serv = 0);
-   ~OsrHandler();
+   explicit OsrHandler(THttpServer *serv = nullptr);
+   virtual ~OsrHandler() {}
 
    // CefClient methods:
    virtual CefRefPtr<CefRenderHandler> GetRenderHandler() OVERRIDE { return this; }
