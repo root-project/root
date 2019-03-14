@@ -19,6 +19,7 @@ The following people have contributed to this new version:
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
  Stephan Hageboeck, CERN/SFT,\
+ Jan Knedlik, GSI,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
@@ -59,6 +60,10 @@ The methods could be replaced by equivalent methods with other signature:
 
 ## I/O Libraries
 
+### TNetXNGFile
+Added necessary changes to allow [XRootD local redirection](https://github.com/xrootd/xrootd/blob/8c9d0a9cc7f00cbb2db35be275c35126f3e091c0/docs/ReleaseNotes.txt#L14)
+  - Uses standard VectorReadLimits and does not query a XRootD data server (which is unknown in local redirection), when it is redirected to a local file
+  - Adds a, const char *lurl (defaulted to 0) to TNetXNGFile's ctor, and passes it to TFile, if set. This allows redirection to files that have a different name in the local file system and is important to allow derivation (for example TAlien and TJAlienFile) and to still keep functionality via TArchiveFile when the file name in the local file system does not match *.zip
 
 ## TTree Libraries
 
