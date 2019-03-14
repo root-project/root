@@ -1116,12 +1116,14 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ROOT::TMetaUtils::NeedDestructor(const clang::CXXRecordDecl *cl)
+bool ROOT::TMetaUtils::NeedDestructor(const clang::CXXRecordDecl *cl,
+                                      const cling::Interpreter& interp)
 {
    if (!cl) return false;
 
    if (cl->hasUserDeclaredDestructor()) {
 
+      cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interp));
       clang::CXXDestructorDecl *dest = cl->getDestructor();
       if (dest) {
          return (dest->getAccess() == clang::AS_public);
@@ -1678,7 +1680,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    if (HasIOConstructor(decl, args, ctorTypes, interp)) {
       finalString << "   static void *new_" << mappedname.c_str() << "(void *p = 0);" << "\n";
 
-      if (args.size()==0 && NeedDestructor(decl))
+      if (args.size()==0 && NeedDestructor(decl, interp))
       {
          finalString << "   static void *newArray_";
          finalString << mappedname.c_str();
@@ -1687,7 +1689,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       }
    }
 
-   if (NeedDestructor(decl)) {
+   if (NeedDestructor(decl, interp)) {
       finalString << "   static void delete_" << mappedname.c_str() << "(void *p);" << "\n" << "   static void deleteArray_" << mappedname.c_str() << "(void *p);" << "\n" << "   static void destruct_" << mappedname.c_str() << "(void *p);" << "\n";
    }
    if (HasDirectoryAutoAdd(decl, interp)) {
@@ -1864,10 +1866,10 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    finalString << "isa_proxy, " << rootflag << "," << "\n" << "                  sizeof(" << csymbol << ") );" << "\n";
    if (HasIOConstructor(decl, args, ctorTypes, interp)) {
       finalString << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << "\n";
-      if (args.size()==0 && NeedDestructor(decl))
+      if (args.size()==0 && NeedDestructor(decl, interp))
          finalString << "      instance.SetNewArray(&newArray_" << mappedname.c_str() << ");" << "\n";
    }
-   if (NeedDestructor(decl)) {
+   if (NeedDestructor(decl, interp)) {
       finalString << "      instance.SetDelete(&delete_" << mappedname.c_str() << ");" << "\n" << "      instance.SetDeleteArray(&deleteArray_" << mappedname.c_str() << ");" << "\n" << "      instance.SetDestructor(&destruct_" << mappedname.c_str() << ");" << "\n";
    }
    if (HasDirectoryAutoAdd(decl, interp)) {
@@ -2334,7 +2336,7 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
       finalString << "new " << classname.c_str() << args << ";" << "\n";
       finalString << "   }" << "\n";
 
-      if (args.size()==0 && NeedDestructor(decl)) {
+      if (args.size()==0 && NeedDestructor(decl, interp)) {
          // Can not can newArray if the destructor is not public.
          finalString << "   static void *newArray_";
          finalString << mappedname.c_str();
@@ -2359,7 +2361,7 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
       }
    }
 
-   if (NeedDestructor(decl)) {
+   if (NeedDestructor(decl, interp)) {
       finalString << "   // Wrapper around operator delete" << "\n" << "   static void delete_" << mappedname.c_str() << "(void *p) {" << "\n" << "      delete ((" << classname.c_str() << "*)p);" << "\n" << "   }" << "\n" << "   static void deleteArray_" << mappedname.c_str() << "(void *p) {" << "\n" << "      delete [] ((" << classname.c_str() << "*)p);" << "\n" << "   }" << "\n" << "   static void destruct_" << mappedname.c_str() << "(void *p) {" << "\n" << "      typedef " << classname.c_str() << " current_t;" << "\n" << "      ((current_t*)p)->~current_t();" << "\n" << "   }" << "\n";
    }
 

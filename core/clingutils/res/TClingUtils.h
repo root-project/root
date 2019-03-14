@@ -400,7 +400,7 @@ bool hasOpaqueTypedef(const AnnotatedRecordDecl &cl, const cling::Interpreter &i
 bool HasResetAfterMerge(clang::CXXRecordDecl const*, const cling::Interpreter&);
 
 //______________________________________________________________________________
-bool NeedDestructor(clang::CXXRecordDecl const*);
+bool NeedDestructor(clang::CXXRecordDecl const*, const cling::Interpreter&);
 
 //______________________________________________________________________________
 bool NeedTemplateKeyword(clang::CXXRecordDecl const*);
