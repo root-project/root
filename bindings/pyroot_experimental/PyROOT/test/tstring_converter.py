@@ -32,6 +32,13 @@ class TStringConverter(unittest.TestCase):
 
     def test_by_reference(self):
         ROOT.gInterpreter.Declare("""
+        const char* myfun(TString &s) { return s.Data(); }
+        """)
+
+        self.check_type_conversion()
+
+    def test_by_const_reference(self):
+        ROOT.gInterpreter.Declare("""
         const char* myfun(const TString &s) { return s.Data(); }
         """)
 
