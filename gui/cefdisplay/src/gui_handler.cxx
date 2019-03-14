@@ -1,5 +1,5 @@
 /// \file gui_handler.h
-/// \ingroup CanvasPainter ROOT7
+/// \ingroup WebUI
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-06-29
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -33,10 +33,6 @@
 GuiHandler::GuiHandler(THttpServer *serv, bool use_views) : BaseHandler(serv), use_views_(use_views)
 {
    PlatformInit();
-}
-
-GuiHandler::~GuiHandler()
-{
 }
 
 void GuiHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
