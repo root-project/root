@@ -27,6 +27,9 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_operators th1_operators.py)
 
+# TGraph, TGraph2D and error subclasses pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tgraph_getters tgraph_getters.py)
+
 # TCollection and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_len tcollection_len.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_listmethods tcollection_listmethods.py)
