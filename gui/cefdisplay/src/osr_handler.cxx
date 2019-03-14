@@ -44,7 +44,11 @@ bool OsrHandler::GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
    // return osr_delegate_->GetRootScreenRect(browser, rect);
 }
 
+#if CEF_COMMIT_NUMBER > 1894
+void OsrHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
+#else
 bool OsrHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
+#endif
 {
    CEF_REQUIRE_UI_THREAD();
 
@@ -52,8 +56,9 @@ bool OsrHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
    rect.width = 800;
    rect.height = 600;
 
+#if CEF_COMMIT_NUMBER <= 1894
    return true;
-
+#endif
    // if (!osr_delegate_) return false;
    // return osr_delegate_->GetViewRect(browser, rect);
 }
