@@ -1995,21 +1995,17 @@ private:
 
       // Declare return type to the interpreter, for future use by jitted actions
       auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
-      std::string retTypeNameFwdDecl; // different from "" only if the type does not exist
       if (retTypeName.empty()) {
-         // If we are here, it means that the type is not known to the interpreter.
-         // We extract its name, forward declare it and add a meaningful comment.
-         // This string will be jitted flawlessly. If the user later on uses the product of this define
-         // and therefore an incomplete type, the interpreter will prompt an error and also display
-         // the comment we nicely built which reminds the user about the absence of information about
-         // this type in the interpreter.
-         retTypeName = RDFInternal::DemangleTypeIdName(typeid(RetType));
-         retTypeNameFwdDecl =
-            "class " + retTypeName + ";/* Did you forget to declare type " + retTypeName + " in the interpreter?*/";
+         // The type is not known to the interpreter.
+         // Forward-declare it as void + helpful comment, so that if this Define'd quantity is
+         // ever used by jitted code users will have some way to know what went wrong
+         const auto demangledType = RDFInternal::DemangleTypeIdName(typeid(RetType));
+         retTypeName = "void /* The type of column \"" + std::string(name) + "\" (" + demangledType +
+                       ") is not known to the interpreter. */";
       }
-      const auto retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { " +
-                                      retTypeNameFwdDecl + " using " + std::string(name) +
-                                      std::to_string(newColumn->GetID()) + "_type = " + retTypeName + "; }";
+      const auto retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) +
+                                      " { " + +" using " + std::string(name) + std::to_string(newColumn->GetID()) +
+                                      "_type = " + retTypeName + "; }";
       RDFInternal::InterpreterDeclare(retTypeDeclaration);
 
       fLoopManager->RegisterCustomColumn(newColumn.get());
