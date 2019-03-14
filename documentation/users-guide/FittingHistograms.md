@@ -558,7 +558,7 @@ of functions (`fFunctions`) associated to each histogram. A call to
 
 If the histogram (or graph) is made persistent, the list of associated
 functions is also persistent. Retrieve a pointer to the function with
-the **`TH1`**::GetFunction()` method. Then you can retrieve the fit
+the `TH1::GetFunction()` method. Then you can retrieve the fit
 parameters from the function (**`TF1`**) with calls such as:
 
 ``` {.cpp}
