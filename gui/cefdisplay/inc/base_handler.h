@@ -1,12 +1,12 @@
 /// \file base_handler.h
-/// \ingroup CanvasPainter ROOT7
+/// \ingroup WebUI
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-06-29
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -26,7 +26,7 @@ class THttpServer;
 
 class BaseHandler : public CefClient, public CefLifeSpanHandler, public CefLoadHandler, public CefDisplayHandler {
 protected:
-   THttpServer *fServer;
+   THttpServer *fServer{nullptr};
 
 public:
    explicit BaseHandler(THttpServer *serv = nullptr);

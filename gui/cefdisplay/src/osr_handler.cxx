@@ -1,5 +1,5 @@
 /// \file osr_handler.cxx
-/// \ingroup CanvasPainter ROOT7
+/// \ingroup WebUI
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-06-29
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -41,10 +41,16 @@ bool OsrHandler::GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
 }
 
 #if CEF_COMMIT_NUMBER > 1894
-void OsrHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
+void OsrHandler::GetViewRect(CefRefPtr<CefBrowser> /*browser*/, CefRect &rect)
+{
+   CEF_REQUIRE_UI_THREAD();
+
+   rect.x = rect.y = 0;
+   rect.width = 800;
+   rect.height = 600;
+}
 #else
-bool OsrHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
-#endif
+bool OsrHandler::GetViewRect(CefRefPtr<CefBrowser> /*browser*/, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
 
@@ -52,12 +58,11 @@ bool OsrHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
    rect.width = 800;
    rect.height = 600;
 
-#if CEF_COMMIT_NUMBER <= 1894
    return true;
-#endif
    // if (!osr_delegate_) return false;
    // return osr_delegate_->GetViewRect(browser, rect);
 }
+#endif
 
 bool OsrHandler::GetScreenPoint(CefRefPtr<CefBrowser> browser, int viewX, int viewY, int &screenX, int &screenY)
 {
