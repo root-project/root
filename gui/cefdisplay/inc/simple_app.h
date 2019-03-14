@@ -1,4 +1,4 @@
-/// \file base_handler.h
+/// \file simple_app.h
 /// \ingroup WebUI
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-06-29
