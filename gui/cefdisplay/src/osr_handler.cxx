@@ -26,10 +26,6 @@ OsrHandler::OsrHandler(THttpServer *serv) : BaseHandler(serv)
 {
 }
 
-OsrHandler::~OsrHandler()
-{
-}
-
 bool OsrHandler::GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
