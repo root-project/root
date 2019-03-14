@@ -2070,6 +2070,7 @@ public:
 
     // factories for special cases
         gf["TString"] =                     (cf_t)+[](long) { return new TStringConverter{}; };
+        gf["TString&"] =                    (cf_t)+[](long) { return new TStringConverter{}; };
         gf["const TString&"] =              (cf_t)+[](long) { return new TStringConverter{}; };
         gf["const char*"] =                 (cf_t)+[](long) { return new CStringConverter{}; };
         gf["const char[]"] =                (cf_t)+[](long) { return new CStringConverter{}; };
