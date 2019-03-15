@@ -378,6 +378,7 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 ///   WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
 ///   WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
 ///   WebGui.RecordData: if specified enables data recording for each web window 0 - off, 1 - on
+///   WebGui.ForceHttp: 0 - off (default), 1 - always create real http server to run web window
 ///
 ///   Http-server related parameters documented in RWebWindowsManager::CreateServer() method
 
@@ -417,7 +418,11 @@ unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(ROOT::Experimental::
    if (args.GetWidth() <= 0) args.SetWidth(win.GetWidth());
    if (args.GetHeight() <= 0) args.SetHeight(win.GetHeight());
 
-   std::string url = GetUrl(win, batch_mode, !args.IsLocalDisplay());
+   bool normal_http = !args.IsLocalDisplay();
+   if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp",0) == 1))
+      normal_http = true;
+
+   std::string url = GetUrl(win, batch_mode, normal_http);
    if (url.empty()) {
       R__ERROR_HERE("WebDisplay") << "Cannot create URL for the window";
       return 0;
@@ -431,7 +436,8 @@ unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(ROOT::Experimental::
 
    args.SetUrl(url);
 
-   args.SetHttpServer(GetServer());
+   if (!normal_http)
+      args.SetHttpServer(GetServer());
 
    auto handle = RWebDisplayHandle::Display(args);
 
