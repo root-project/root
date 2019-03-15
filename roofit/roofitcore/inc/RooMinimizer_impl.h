@@ -58,6 +58,7 @@ class making use of this template is RooGradMinimizer.
 #include <fstream>
 #include <iomanip>
 #include <string>
+#include <chrono>
 
 #include "TH1.h"
 #include "TH2.h"
