@@ -37,7 +37,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TError.h"
 #include "TList.h"
 #include "TString.h"
 #include "TVirtualQConnection.h"
