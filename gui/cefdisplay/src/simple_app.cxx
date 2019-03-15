@@ -348,8 +348,7 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
    std::string url;
 
-   // TODO: later one should be able both remote and local
-
+   // TODO: later one should be able both remote and local at the same time
    if (gHandlingServer) {
       url = "http://rootserver.local";
       url.append(addr);
@@ -431,7 +430,7 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 class TCefTimer : public TTimer {
 public:
    TCefTimer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode) {}
-   virtual void Timeout()
+   void Timeout() override
    {
       // just let run loop
       CefDoMessageLoopWork();
@@ -491,18 +490,10 @@ protected:
          //         XSetErrorHandler(XErrorHandlerImpl);
          //         XSetIOErrorHandler(XIOErrorHandlerImpl);
 
-         const char *rootsys = gSystem->Getenv("ROOTSYS");
-
-         if (!rootsys) {
-            R__ERROR_HERE("CEF") << "ROOTSYS not configured to use CEF";
-            return nullptr;
-         }
-
          // Specify CEF global settings here.
          CefSettings settings;
 
-         TString  cef_main;
-         cef_main.Form("%s/bin/cef_main", rootsys);
+         TString cef_main = TROOT::GetBinDir() + "/cef_main";
 
          // cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.resources_dir_path);
          // cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
