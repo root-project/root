@@ -21,7 +21,7 @@ elseif(MSVC)
    set(CEF_BLOBS ${CEF_root}/Release)
    set(CEF_LIBRARY ${CEF_root}/Release/libcef.lib)
    set(CEF_DLL_WRAPPER ${CEF_root}/build/libcef_dll_wrapper/Release/libcef_dll_wrapper.lib)
-   configure_file(${CEF_root}/Release/libcef.dll "../../bin/libcef.dll" COPYONLY)
+   configure_file(${CEF_root}/Release/libcef.dll ${CMAKE_BINARY_DIR}/bin/ COPYONLY)
 else ()
    set(CEF_platform src/gui_handler_linux.cxx)
    set(CEF_RESOURCES ${CEF_root}/Resources)
@@ -34,12 +34,22 @@ endif()
 include_directories($ENV{CEF_PATH} inc)
 set(CEF_MAIN src/cef_main.cxx)
 
-configure_file(${CEF_RESOURCES}/icudtl.dat "../../bin/icudtl.dat" COPYONLY)
-configure_file(${CEF_BLOBS}/natives_blob.bin "../../bin/natives_blob.bin" COPYONLY)
-configure_file(${CEF_BLOBS}/snapshot_blob.bin "../../bin/snapshot_blob.bin" COPYONLY)
-configure_file(${CEF_BLOBS}/v8_context_snapshot.bin "../../bin/v8_context_snapshot.bin" COPYONLY)
+## copy different CEF files into binary directory to avoid CEF_PATH when running ROOT
 
-ROOT_LINKER_LIBRARY(${libname} ${CEF_sources} ${CEF_platform} 
+file(GLOB cef_bins ${CEF_BLOBS}/*.bin)
+
+foreach(cef_b ${cef_bins})
+  configure_file(${cef_b} ${CMAKE_BINARY_DIR}/bin/ COPYONLY)
+endforeach()
+
+file(GLOB_RECURSE cef_resources RELATIVE ${CEF_RESOURCES} ${CEF_RESOURCES}/*)
+
+foreach(cef_r ${cef_resources})
+  configure_file(${CEF_RESOURCES}/${cef_r} ${CMAKE_BINARY_DIR}/bin/${cef_r} COPYONLY)
+endforeach()
+
+
+ROOT_LINKER_LIBRARY(${libname} ${CEF_sources} ${CEF_platform}
                     LIBRARIES ${CMAKE_DL_LIBS} ${CEF_LIBRARY} ${CEF_DLL_WRAPPER} ${CEF_LIB_DEPENDENCY}
                     DEPENDENCIES RHTTP ROOTWebDisplay)
 
