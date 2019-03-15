@@ -943,7 +943,7 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
 
   if (PROJECT_NAME STREQUAL ROOT)
     include_directories(BEFORE "inc")
-    if(IS_DIRECTORY "v7/inc")
+    if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/v7/inc")
       include_directories(BEFORE "v7/inc")
     endif()
   endif()
