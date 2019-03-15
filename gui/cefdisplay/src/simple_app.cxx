@@ -51,7 +51,6 @@
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/TLogger.hxx>
 
-
 THttpServer *gHandlingServer = nullptr;
 
 class TCefHttpCallArg : public THttpCallArg {
@@ -158,8 +157,6 @@ public:
 
          bytes_read = transfer_size;
       }
-
-      printf("ReadResponse  bytes_to_read %d bytes_read %d Total size %d Offset %d\n", bytes_to_read, bytes_read, fArg->GetContentLength(), fTransferOffset);
 
       // if content fully copied - can release reference, object will be cleaned up
       if (fTransferOffset >= fArg->GetContentLength())
@@ -366,8 +363,7 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
       url = addr;
    }
 
-   printf("HANDLING SERVER %p url %s\n", gHandlingServer, url.c_str());
-
+   // printf("HANDLING SERVER %p url %s\n", gHandlingServer, url.c_str());
 
    // Specify CEF browser settings here.
    CefBrowserSettings browser_settings;
@@ -495,13 +491,7 @@ protected:
          //         XSetErrorHandler(XErrorHandlerImpl);
          //         XSetIOErrorHandler(XIOErrorHandlerImpl);
 
-         const char *cef_path = gSystem->Getenv("CEF_PATH");
          const char *rootsys = gSystem->Getenv("ROOTSYS");
-
-         if (!cef_path) {
-            R__ERROR_HERE("CEF") << "CEF_PATH not configured to use CEF";
-            return nullptr;
-         }
 
          if (!rootsys) {
             R__ERROR_HERE("CEF") << "ROOTSYS not configured to use CEF";
@@ -511,13 +501,10 @@ protected:
          // Specify CEF global settings here.
          CefSettings settings;
 
-         TString path, path2, cef_main;
-         path.Form("%s/Resources/", cef_path);
-         path2.Form("%s/Resources/locales/", cef_path);
+         TString  cef_main;
          cef_main.Form("%s/bin/cef_main", rootsys);
 
          // cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.resources_dir_path);
-
          // cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
 
          settings.no_sandbox = 1;
