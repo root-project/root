@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -39,7 +39,7 @@ signals:
    void drop(QDropEvent* event);
 
 public:
-   RootWebView(QWidget *parent = 0, unsigned width = 0, unsigned height = 0);
+   RootWebView(QWidget *parent = nullptr, unsigned width = 0, unsigned height = 0);
    virtual ~RootWebView() = default;
 
    virtual QSize  sizeHint() const;
