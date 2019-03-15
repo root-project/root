@@ -1,4 +1,4 @@
-/// \file rootqt5.cpp
+/// \file rooturlschemehandler.cpp
 /// \ingroup WebUI
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-06-29
@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -128,13 +128,26 @@ public:
 };
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
+/// Returns fully qualified URL, required to open in QWindow
 
-RootUrlSchemeHandler::RootUrlSchemeHandler(THttpServer *server, int counter)
-   : QWebEngineUrlSchemeHandler(), fServer(server)
+QString RootUrlSchemeHandler::MakeFullUrl(THttpServer *serv, const QString &url)
 {
-   fProtocol = Form("roothandler%d", counter);
+   // TODO: provide support for many servers
+   fServer = serv;
+
+   QString res = "rootscheme://root.server1";
+   res.append(url);
+   if (url.indexOf("?") < 0)
+      res.append("?");
+   else
+      res.append("&");
+
+   // TODO: with should be solved different way - maybe via replacements in main HTML page
+   res.append("platform=qt5&ws=rawlongpoll");
+   return res;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Start processing of emulated HTTP request in WebEngine scheme handler
@@ -153,6 +166,8 @@ void RootUrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
    QString inp_path = url.path();
    QString inp_query = url.query();
    QString inp_method = request->requestMethod();
+
+   // printf("REQUEST PATH:%s QUERY:%s\n", inp_path.toLatin1().data(), inp_query.toLatin1().data());
 
    auto arg = std::make_shared<TWebGuiCallArg>(request);
 
@@ -180,20 +195,4 @@ void RootUrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
 
    // can process immediately - function called in main thread
    fServer->SubmitHttp(arg, kTRUE);
-}
-
-/////////////////////////////////////////////////////////////////
-/// Returns fully qualified URL, required to open in QWindow
-
-QString RootUrlSchemeHandler::MakeFullUrl(const QString &url)
-{
-   QString res = fProtocol;
-   res.append(":");
-   res.append(url);
-   if (url.indexOf("?")<0)
-      res.append("?");
-   else
-      res.append("&");
-   res.append("platform=qt5&ws=rawlongpoll");
-   return res;
 }

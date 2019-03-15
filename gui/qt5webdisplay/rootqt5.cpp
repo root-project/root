@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -19,6 +19,7 @@
 #include <QThread>
 #include <QWebEngineSettings>
 #include <QWebEngineProfile>
+#include <QWebEngineUrlScheme>
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -40,10 +41,11 @@
 class TQt5Timer : public TTimer {
 public:
    TQt5Timer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode) {}
-   virtual void Timeout()
+
+   /// timeout handler
+   /// used to process all qt5 events in main ROOT thread
+   void Timeout() override
    {
-      // timeout handler
-      // used to process all qt5 events in main ROOT thread
       QApplication::sendPostedEvents();
       QApplication::processEvents();
    }
@@ -60,10 +62,17 @@ protected:
       int qargc{1};                 ///< arg counter
       char *qargv[10];              ///< arg values
       bool fInitEngine{false};      ///< does engine was initialized
-      TQt5Timer *fTimer{nullptr};   ///< timer to process ROOT events
+      std::unique_ptr<TQt5Timer> fTimer; ///< timer to process ROOT events
+      std::unique_ptr<RootUrlSchemeHandler> fHandler; ///< specialized handler
    public:
 
       Qt5Creator() = default;
+
+      virtual ~Qt5Creator()
+      {
+         if (fHandler)
+            QWebEngineProfile::defaultProfile()->removeUrlSchemeHandler(fHandler.get());
+      }
 
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override
       {
@@ -76,6 +85,12 @@ protected:
                R__ERROR_HERE("Qt5") << "NOT FOUND gApplication to create QApplication";
                return nullptr;
             }
+
+            QWebEngineUrlScheme scheme("rootscheme");
+            scheme.setSyntax(QWebEngineUrlScheme::Syntax::HostAndPort);
+            scheme.setDefaultPort(2345);
+            scheme.setFlags(QWebEngineUrlScheme::SecureScheme);
+            QWebEngineUrlScheme::registerScheme(scheme);
 
             qargv[0] = gApplication->Argv(0);
             qargv[1] = nullptr;
@@ -90,18 +105,21 @@ protected:
          if (!fTimer) {
             Int_t interval = gEnv->GetValue("WebGui.Qt5Timer", 1);
             if (interval > 0) {
-               fTimer = new TQt5Timer(interval, kTRUE);
+               fTimer = std::make_unique<TQt5Timer>(interval, kTRUE);
                fTimer->TurnOn();
             }
          }
 
-         std::unique_ptr<RootUrlSchemeHandler> handler;
          QString fullurl = QString(args.GetUrl().c_str());
 
          // if no server provided - normal HTTP will be allowed to use
          if (args.GetHttpServer()) {
-            handler = std::make_unique<RootUrlSchemeHandler>(args.GetHttpServer(), fCounter++);
-            fullurl = handler->MakeFullUrl(fullurl);
+            if (!fHandler) {
+               fHandler = std::make_unique<RootUrlSchemeHandler>();
+               QWebEngineProfile::defaultProfile()->installUrlSchemeHandler("rootscheme", fHandler.get());
+            }
+
+            fullurl = fHandler->MakeFullUrl(args.GetHttpServer(), fullurl);
          }
 
          QWidget *qparent = (QWidget *) args.GetDriverData();
@@ -111,7 +129,7 @@ protected:
             fullurl.append(QString(args.GetUrlOpt().c_str()));
          }
 
-         auto handle = std::make_unique<RQt5WebDisplayHandle>(fullurl.toLatin1().constData(), handler);
+         auto handle = std::make_unique<RQt5WebDisplayHandle>(fullurl.toLatin1().constData());
 
          if (args.IsHeadless()) {
             RootWebPage *page = new RootWebPage();
@@ -128,26 +146,10 @@ protected:
          return handle;
       }
 
-      virtual ~Qt5Creator()
-      {
-         if (fTimer) {
-            fTimer->TurnOff();
-            delete fTimer;
-         }
-
-      }
    };
 
-   std::unique_ptr<RootUrlSchemeHandler> fHandler;
-
 public:
-   RQt5WebDisplayHandle(const std::string &url, std::unique_ptr<RootUrlSchemeHandler> &handler)
-      : RWebDisplayHandle(url)
-   {
-      std::swap(fHandler, handler);
-      if (fHandler)
-         QWebEngineProfile::defaultProfile()->installUrlSchemeHandler(QByteArray(fHandler->GetProtocol()), fHandler.get());
-   }
+   RQt5WebDisplayHandle(const std::string &url) : RWebDisplayHandle(url) {}
 
    static void AddCreator()
    {
@@ -156,11 +158,6 @@ public:
          GetMap().emplace("qt5", std::make_unique<Qt5Creator>());
    }
 
-   virtual ~RQt5WebDisplayHandle()
-   {
-      if (fHandler)
-         QWebEngineProfile::defaultProfile()->removeUrlSchemeHandler(fHandler.get());
-   }
 };
 
 struct RQt5CreatorReg {
