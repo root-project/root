@@ -371,14 +371,25 @@ Int_t RooMinimizerTemplate<MF, dmt, MinFcnCArgs...>::minimize(const char* type, 
 template <class MF, RooFit::MinimizerType dmt, typename... MinFcnCArgs>
 Int_t RooMinimizerTemplate<MF, dmt, MinFcnCArgs...>::migrad()
 {
+  auto get_time = [](){return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();};
+  decltype(get_time()) t1, t2, t3, t4, t5, t6, t7, t8, t9, t10;
+
+  t1 = get_time();
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
 		    _optConst,_verbose) ;
+  t2 = get_time();
+
   profileStart() ;
+  t3 = get_time();
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
+  t4 = get_time();
   RooAbsReal::clearEvalErrorLog() ;
+  t5 = get_time();
 
   _theFitter->Config().SetMinimizer(_minimizerType.c_str(),"migrad");
+  t6 = get_time();
   bool ret = _theFitter->FitFCN(*_fcn);
+  t7 = get_time();
   _status = ((ret) ? _theFitter->Result().Status() : -1);
 
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
@@ -386,6 +397,8 @@ Int_t RooMinimizerTemplate<MF, dmt, MinFcnCArgs...>::migrad()
   _fcn->BackProp(_theFitter->Result());
 
   saveStatus("MIGRAD",_status) ;
+
+  oocxcoutD((TObject*)nullptr,Benchmarking2) << "migrad timestamps: " << t1 << " " << t2 << " " << t3 << " " << t4 << " " << t5 << " " << t6 << " " << t7 << " " << std::endl;
 
   return _status ;
 }
