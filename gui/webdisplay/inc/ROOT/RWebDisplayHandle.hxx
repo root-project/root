@@ -84,7 +84,7 @@ protected:
 
 public:
 
-   /// Function should return URL for the widget dislpayed - local or http
+   /// Function should return URL for the widget displayed - local or http
    using CreateUrlFunc_t = std::function<std::string(bool)>;
 
    RWebDisplayHandle(const std::string &url) : fUrl(url) {}
