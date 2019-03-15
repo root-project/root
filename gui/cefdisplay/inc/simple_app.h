@@ -17,8 +17,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef CEF_TESTS_CEFSIMPLE_SIMPLE_APP_H_
-#define CEF_TESTS_CEFSIMPLE_SIMPLE_APP_H_
+#ifndef ROOT_cef_simple_app
+#define ROOT_cef_simple_app
 
 #include "include/cef_app.h"
 
@@ -69,4 +69,4 @@ private:
    DISALLOW_COPY_AND_ASSIGN(SimpleApp);
 };
 
-#endif // CEF_TESTS_CEFSIMPLE_SIMPLE_APP_H_
+#endif // ROOT_cef_simple_app

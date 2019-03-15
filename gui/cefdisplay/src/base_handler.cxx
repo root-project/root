@@ -138,7 +138,7 @@ bool BaseHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
       R__ERROR_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
       break;
    default:
-      if (gDebug > 0)
+      // if (gDebug > 0)
          R__DEBUG_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
       break;
    }

@@ -117,14 +117,16 @@ public:
          response->SetStatus(200);
          response_length = fArg->GetContentLength();
 
+         printf("SET RESPONSE len %d type %s\n", (int) response_length, fArg->GetContentType());
+
          if (fArg->NumHeader() > 0) {
-            //printf("******* Response with extra headers\n");
+            printf("******* Response with extra headers\n");
             CefResponse::HeaderMap headers;
             for (Int_t n = 0; n < fArg->NumHeader(); ++n) {
                TString name = fArg->GetHeaderName(n);
                TString value = fArg->GetHeader(name.Data());
                headers.emplace(CefString(name.Data()), CefString(value.Data()));
-               //printf("   header %s %s\n", name.Data(), value.Data());
+               printf("   header %s %s\n", name.Data(), value.Data());
             }
             response->SetHeaderMap(headers);
          }
@@ -154,6 +156,8 @@ public:
 
          bytes_read = transfer_size;
       }
+
+      printf("ReadResponse  bytes_to_read %d bytes_read %d Total size %d Offset %d\n", bytes_to_read, bytes_read, fArg->GetContentLength(), fTransferOffset);
 
       // if content fully copied - can release reference, object will be cleaned up
       if (fTransferOffset >= fArg->GetContentLength())
@@ -205,13 +209,14 @@ private:
 class ROOTSchemeHandlerFactory : public CefSchemeHandlerFactory {
 protected:
 public:
-   explicit ROOTSchemeHandlerFactory() : CefSchemeHandlerFactory() {}
+   explicit ROOTSchemeHandlerFactory() = default;
 
    CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
                                         const CefString &scheme_name, CefRefPtr<CefRequest> request) OVERRIDE
    {
       std::string addr = request->GetURL().ToString();
 
+      printf("REQUEST %s\n", addr.c_str());
 
       TUrl url(addr.c_str());
 
@@ -224,15 +229,17 @@ public:
       if (gHandlingServer->IsFileRequested(inp_path, fname)) {
          // process file - no need for special requests handling
 
-         // printf("Sending file %s via cef\n", fname.Data());
-
          const char *mime = THttpServer::GetMimeType(fname.Data());
 
-         std::string str_content = THttpServer::ReadFileContent(fname.Data());
+         // static std::string str_content = THttpServer::ReadFileContent(fname.Data());
+
+         printf("Sending file %s mime %s\n", fname.Data(), mime);
 
          // Create a stream reader for |html_content|.
-         CefRefPtr<CefStreamReader> stream = CefStreamReader::CreateForData(
-            static_cast<void *>(const_cast<char *>(str_content.c_str())), str_content.size());
+         //CefRefPtr<CefStreamReader> stream = CefStreamReader::CreateForData(
+         //   static_cast<void *>(const_cast<char *>(str_content.c_str())), str_content.size());
+
+         CefRefPtr<CefStreamReader> stream = CefStreamReader::CreateForFile(fname.Data());
 
          // Constructor for HTTP status code 200 and no custom response headers.
          // There’s also a version of the constructor for custom status code and response headers.
@@ -240,6 +247,8 @@ public:
       }
 
       std::string inp_method = request->GetMethod().ToString();
+
+      printf("REQUEST METHOD %s\n", inp_method.c_str());
 
       TGuiResourceHandler *handler = new TGuiResourceHandler();
       handler->fArg->SetMethod(inp_method.c_str());
@@ -300,9 +309,9 @@ void SimpleApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar)
 
 void SimpleApp::OnBeforeCommandLineProcessing(const CefString &process_type, CefRefPtr<CefCommandLine> command_line)
 {
-//   std::string name = process_type.ToString();
-//   std::string prog = command_line->GetProgram().ToString();
-//   printf("OnBeforeCommandLineProcessing %s %s\n", name.c_str(), prog.c_str());
+   std::string name = process_type.ToString();
+   std::string prog = command_line->GetProgram().ToString();
+   printf("OnBeforeCommandLineProcessing %s %s\n", name.c_str(), prog.c_str());
 //   if (fBatch) {
 //      command_line->AppendSwitch("disable-gpu");
 //      command_line->AppendSwitch("disable-gpu-compositing");
@@ -315,20 +324,27 @@ void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_lin
    std::string newprog = fCefMain;
    command_line->SetProgram(newprog);
 
-   // printf("OnBeforeChildProcessLaunch %s\n", command_line->GetProgram().ToString().c_str());
+   printf("OnBeforeChildProcessLaunch %s LastBatch %s\n", command_line->GetProgram().ToString().c_str(), fLastBatch ? "true" : "false");
+
+
    if (fLastBatch) {
       command_line->AppendSwitch("disable-webgl");
       command_line->AppendSwitch("disable-gpu");
       command_line->AppendSwitch("disable-gpu-compositing");
 //      command_line->AppendSwitch("disable-gpu-sandbox");
    }
+
+   auto str = command_line->GetCommandLineString().ToString();
+   printf("RUNNING %s\n", str.c_str());
+
+
 }
 
 void SimpleApp::OnContextInitialized()
 {
    CEF_REQUIRE_UI_THREAD();
 
-   CefRegisterSchemeHandlerFactory("http", "rootserver.local", new ROOTSchemeHandlerFactory());
+   // CefRegisterSchemeHandlerFactory("http", "rootserver.local", new ROOTSchemeHandlerFactory());
 
    if (!fFirstUrl.empty())
       StartWindow(fFirstUrl, fFirstBatch, fFirstRect);
@@ -340,14 +356,25 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
    fLastBatch = batch;
 
-   std::string url = "http://rootserver.local";
-   url.append(addr);
-   if (url.find("?") != std::string::npos)
-      url.append("&");
-   else
-      url.append("?");
+   std::string url;
 
-   url.append("platform=cef3&ws=longpoll");
+   // TODO: later one should be able both remote and local
+
+   if (gHandlingServer) {
+      url = "http://rootserver.local";
+      url.append(addr);
+      if (url.find("?") != std::string::npos)
+         url.append("&");
+      else
+         url.append("?");
+
+      url.append("platform=cef3&ws=longpoll");
+   } else {
+      url = addr;
+   }
+
+   printf("HANDLING SERVER %p url %s\n", gHandlingServer, url.c_str());
+
 
    // Specify CEF browser settings here.
    CefBrowserSettings browser_settings;
@@ -382,18 +409,12 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
    // via the command-line. Otherwise, create the browser using the native
    // platform framework. The Views framework is currently only supported on
    // Windows and Linux.
-
-   CefRefPtr<CefCommandLine> command_line = CefCommandLine::GetGlobalCommandLine();
-
-// bool use_views = command_line->HasSwitch("use-views");
 #else
-// bool use_views = false;
+   fUseViewes = false;
 #endif
 
-   if (!fGuiHandler) {
-      fUseViewes = false;
+   if (!fGuiHandler)
       fGuiHandler = new GuiHandler(gHandlingServer, fUseViewes);
-   }
 
    // SimpleHandler implements browser-level callbacks.
    // CefRefPtr<GuiHandler> handler(new GuiHandler(gHandlingServer, use_views));
@@ -441,10 +462,10 @@ protected:
 
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override
       {
-         if (!args.GetHttpServer()) {
-            R__ERROR_HERE("CEF") << "CEF do not support loading of external HTTP pages";
-            return nullptr;
-         }
+         // if (!args.GetHttpServer()) {
+         //    R__ERROR_HERE("CEF") << "CEF do not support loading of external HTTP pages";
+         //   return nullptr;
+         // }
 
          if (fCefApp) {
             if (gHandlingServer != args.GetHttpServer()) {
@@ -502,21 +523,26 @@ protected:
          path2.Form("%s/Resources/locales/", cef_path);
          cef_main.Form("%s/bin/cef_main", rootsys);
 
-         cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.resources_dir_path);
+         // cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.resources_dir_path);
 
-         cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
+         // cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
 
-         settings.no_sandbox = true;
+         // settings.no_sandbox = 1;
          // if (gROOT->IsWebDisplayBatch()) settings.single_process = true;
 
          // if (batch_mode)
-         settings.windowless_rendering_enabled = true;
+         // settings.windowless_rendering_enabled = true;
 
-         TString plog = "cef.log";
-         cef_string_ascii_to_utf16(plog.Data(), plog.Length(), &settings.log_file);
-         settings.log_severity = LOGSEVERITY_INFO; // LOGSEVERITY_VERBOSE;
+         settings.external_message_pump = true;
+         settings.multi_threaded_message_loop = false;
+
+         std::string plog = "cef.log";
+         cef_string_ascii_to_utf16(plog.c_str(), plog.length(), &settings.log_file);
+
+         settings.log_severity = LOGSEVERITY_VERBOSE; // LOGSEVERITY_INFO, LOGSEVERITY_WARNING, LOGSEVERITY_ERROR, LOGSEVERITY_DISABLE
          // settings.uncaught_exception_stack_size = 100;
          // settings.ignore_certificate_errors = true;
+
          // settings.remote_debugging_port = 7890;
 
          gHandlingServer = args.GetHttpServer();
