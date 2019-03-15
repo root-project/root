@@ -73,4 +73,4 @@ private:
    DISALLOW_COPY_AND_ASSIGN(BaseHandler);
 };
 
-#endif // ROOT_cef_osr_handler
+#endif // ROOT_cef_base_handler
