@@ -30,11 +30,11 @@ class THttpServer;
 // Implement application-level callbacks for the browser process.
 class SimpleApp : public CefApp, public CefBrowserProcessHandler /*, public CefRenderProcessHandler */ {
 protected:
-   std::string fCefMain;   ///<! extra executable used for additional processes
-   bool fLastBatch{false}; ///<! indicate if last started window was batch
-   std::string fFirstUrl;     ///<! first URL to open
-   bool fFirstBatch{false};   ///<! indicate batch mode
-   CefRect fFirstRect;        ///<! original width
+   std::string fCefMain;    ///<! extra executable used for additional processes
+   bool fLastBatch{false};  ///<! indicate if last started window was batch
+   std::string fFirstUrl;   ///<! first URL to open
+   bool fFirstBatch{false}; ///<! indicate batch mode
+   CefRect fFirstRect;      ///<! original width
 
    CefRefPtr<OsrHandler> fOsrHandler; ///<! batch-mode handler
    bool fUseViewes{false};            ///<! is views are used
