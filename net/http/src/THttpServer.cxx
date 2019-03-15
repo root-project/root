@@ -17,6 +17,7 @@
 #include "TROOT.h"
 #include "TUrl.h"
 #include "TEnv.h"
+#include "TError.h"
 #include "TClass.h"
 #include "RVersion.h"
 #include "RConfigure.h"
