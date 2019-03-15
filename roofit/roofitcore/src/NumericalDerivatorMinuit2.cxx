@@ -34,6 +34,8 @@
 
 #include <Math/Minimizer.h>  // needed here because in Fitter is only a forward declaration
 
+#include <RooTimer.h>
+#include <RooMsgService.h>
 
 namespace RooFit {
 
@@ -328,6 +330,11 @@ namespace RooFit {
   void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) {
     // set an initial gradient using some given steps
     // (used in the first iteration)
+    auto get_time = [](){return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();};
+    decltype(get_time()) t1, t2;
+
+    RooWallTimer timer;
+    t1 = get_time();
 
     assert(fFunction != 0);
     assert(fFunction->NDim() == fN);
@@ -380,6 +387,11 @@ namespace RooFit {
       mutable_g2()(ix) = g2;
       mutable_gstep()(ix) = gstep;
     }
+
+    t2 = get_time();
+    timer.stop();
+    oocxcoutD((TObject*)nullptr,Benchmarking1) << "SetInitialGradient time: " << timer.timing_s() << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
+
   }
 
   bool NumericalDerivatorMinuit2::always_exactly_mimic_minuit2() const {
