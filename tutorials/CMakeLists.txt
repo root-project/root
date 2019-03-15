@@ -454,7 +454,6 @@ if(ROOT_python_FOUND)
                  tutorial-pyroot-tornado-py
                  tutorial-pyroot-tree-py
                  tutorial-roofit-rf106_plotdecoration-py
-                 tutorial-roofit-rf707_kernelestimation-py
                  tutorial-vecops-vo004_SortAndSelect-py
                  tutorial-vecops-vo005_Combinations-py)
 
