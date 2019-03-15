@@ -125,9 +125,11 @@ namespace RooFit {
 
     void GradMinimizerFcn::evaluate_task(std::size_t task) {
       RooWallTimer timer;
+      RooCPUTimer ctimer;
       run_derivator(task);
+      ctimer.stop();
       timer.stop();
-      oocxcoutD((TObject*)nullptr,Benchmarking1) << "worker_id: " << get_manager()->get_worker_id() << ", task: " << task << ", partial derivative time: " << timer.timing_s() << "s" << std::endl;
+      oocxcoutD((TObject*)nullptr,Benchmarking1) << "worker_id: " << get_manager()->get_worker_id() << ", task: " << task << ", partial derivative time: " << timer.timing_s() << "s -- cputime: " << ctimer.timing_s() << "s" << std::endl;
     }
 
     double GradMinimizerFcn::get_task_result(std::size_t task) {
