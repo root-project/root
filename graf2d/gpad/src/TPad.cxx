@@ -5129,6 +5129,8 @@ void TPad::Print(const char *filenam, Option_t *option)
       } else {
          gVirtualPS->SetTitle("PDF");
       }
+      if (noScreen) GetCanvas()->SetBatch(kFALSE);
+
       if (mustClose) {
          if (cclose) Info("Print", "Current canvas added to %s file %s and file closed", opt.Data(), psname.Data());
          else        Info("Print", "%s file %s has been closed", opt.Data(), psname.Data());
