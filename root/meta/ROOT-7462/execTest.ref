@@ -1,8 +1,8 @@
 
 Processing execTest.C...
-Warning in <TStreamerInfo::Build>: Outer: pair<string,Inner<int> > has no streamer or dictionary, data member "fContent" will not be saved
 Name of real 'variable' seen as: 'fContent.'
 Info: ClassInfo is not valid
+Warning in <TStreamerInfo::Build>: Outer: pair<string,Inner<int> > has no streamer or dictionary, data member "fContent" will not be saved
 string=not set
 value=-1
 Info: Decl for instantation is valid

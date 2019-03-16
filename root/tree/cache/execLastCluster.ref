@@ -27,10 +27,10 @@ Cluster Range #  Entry Start      Last Entry        Size
 17               850              899                  0
 18               900              949                 10
 19               950              999              -2000000
-Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
 Start entry: 983
 Next entry 1: 983
 Next entry 2: 983
 Next entry 2: 986
 Cache size:100
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
 (int) 0

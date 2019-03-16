@@ -1,5 +1,6 @@
 
 Processing runBoolOrder.C...
+G__catchexception=0
 Warning in <TClass::Init>: no dictionary for class MkEvent is available
 Warning in <TClass::Init>: no dictionary for class MkTot is available
 Warning in <TClass::Init>: no dictionary for class MkZ is available
@@ -39,4 +40,3 @@ Warning in <TClass::Init>: no dictionary for class TMBL2EM is available
 Warning in <TClass::Init>: no dictionary for class TMBL2Jet is available
 Warning in <TClass::Init>: no dictionary for class TMBL2Muon is available
 Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
-G__catchexception=0
