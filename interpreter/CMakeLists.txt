@@ -111,7 +111,6 @@ if(clingtest)
 else()
   #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
-  set(CLANG_ENABLE_COMPILER OFF CACHE BOOL "")
 endif()
 
 #--- Build LLVM/Clang with modules -----------------------------------------------------------------
