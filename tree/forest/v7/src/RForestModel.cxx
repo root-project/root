@@ -55,3 +55,14 @@ std::shared_ptr<ROOT::Experimental::RCollectionForest> ROOT::Experimental::RFore
    fRootField->Attach(std::move(field));
    return collectionForest;
 }
+
+std::unique_ptr<ROOT::Experimental::RForestEntry> ROOT::Experimental::RForestModel::CreateEntry()
+{
+   auto entry = std::make_unique<RForestEntry>();
+   for (auto& f : *fRootField) {
+      if (f.GetParent() != GetRootField())
+         continue;
+      entry->AddValue(f.GenerateValue());
+   }
+   return entry;
+}

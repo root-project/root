@@ -327,6 +327,27 @@ TEST(RForest, RealWorld1)
 
 TEST(RForest, RDF)
 {
-   RInputForest *forest = nullptr;
-   auto rdf = std::make_unique<ROOT::RDataFrame>(std::make_unique<ROOT::RDF::RForestDS>(forest));
+   auto modelWrite = RForestModel::Create();
+   auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
+   auto wrEnergy = modelWrite->MakeField<float>("energy", 7.0);
+   auto wrTag = modelWrite->MakeField<std::string>("tag", "xyz");
+   auto wrJets = modelWrite->MakeField<std::vector<float>>("jets");
+   wrJets->push_back(1.0);
+   wrJets->push_back(2.0);
+   auto wrNnlo = modelWrite->MakeField<std::vector<std::vector<float>>>("nnlo");
+   wrNnlo->push_back(std::vector<float>());
+   wrNnlo->push_back(std::vector<float>{1.0});
+   wrNnlo->push_back(std::vector<float>{1.0, 2.0, 4.0, 8.0});
+   auto wrKlass = modelWrite->MakeField<ROOT::Experimental::RForestTest>("klass");
+   wrKlass->s = "abc";
+
+   {
+      ROutputForest forest(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
+      forest.Fill();
+   }
+
+   auto forest = RInputForest::Create("f", "test.root");
+   auto rdf = std::make_unique<ROOT::RDataFrame>(std::make_unique<ROOT::RDF::RForestDS>(forest.get()));
+
+   EXPECT_EQ(42.0, *rdf->Min("pt"));
 }

@@ -30,6 +30,7 @@
 #include <cctype> // for isspace
 #include <cstdlib> // for malloc, free
 #include <exception>
+#include <iostream>
 #include <utility>
 
 ROOT::Experimental::Detail::RFieldBase::RFieldBase(std::string_view name, std::string_view type, bool isSimple)
@@ -59,6 +60,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto itemField = Create(GetCollectionName(fieldName), itemTypeName);
       return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
    }
+   // TODO: create an RFieldCollection?
+   if (normalizedType == ":Collection:") return new RField<ForestIndex_t>(fieldName);
    auto cl = TClass::GetClass(normalizedType.c_str());
    if (cl != nullptr) {
       return new RFieldClass(fieldName, normalizedType);

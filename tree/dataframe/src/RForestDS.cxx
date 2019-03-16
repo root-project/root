@@ -17,6 +17,8 @@
 #include <ROOT/RForestDS.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <TError.h>
+
 #include <string>
 #include <vector>
 #include <typeinfo>
@@ -26,8 +28,17 @@ namespace ROOT {
 
 namespace RDF {
 
-RForestDS::RForestDS(ROOT::Experimental::RInputForest* /*forest*/)
+RForestDS::RForestDS(ROOT::Experimental::RInputForest* forest)
+  : fForest(forest), fEntry(fForest->GetModel()->CreateEntry()), fNSlots(1), fHasSeenAllRanges(false)
 {
+   auto rootField = fForest->GetModel()->GetRootField();
+   for (auto& f : *rootField) {
+      if (f.GetParent() != rootField)
+         continue;
+      fColumnNames.push_back(f.GetName());
+      fColumnTypes.push_back(f.GetType());
+      fValuePtrs.push_back(fEntry->GetValue(f.GetName()).GetRawPtr());
+   }
 }
 
 
@@ -38,42 +49,73 @@ RForestDS::~RForestDS()
 
 const std::vector<std::string>& RForestDS::GetColumnNames() const
 {
-   return std::vector<std::string>();
+   return fColumnNames;
 }
 
 
-RDataSource::Record_t RForestDS::GetColumnReadersImpl(std::string_view /*name*/, const std::type_info& /* ti */)
+RDataSource::Record_t RForestDS::GetColumnReadersImpl(std::string_view name, const std::type_info& /* ti */)
 {
+   const auto index = std::distance(
+      fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
+
+   std::vector<void*> ptrs;
+   R__ASSERT(fNSlots == 1);
+   ptrs.push_back(&fValuePtrs[index]);
+
+   return ptrs;
 }
 
-bool RForestDS::SetEntry(unsigned int /*slot*/, ULong64_t /*entry*/) {
-   return false;
+bool RForestDS::SetEntry(unsigned int /*slot*/, ULong64_t entryIndex) {
+   fForest->GetEntry(entryIndex, fEntry.get());
+   return true;
 }
 
 std::vector<std::pair<ULong64_t, ULong64_t>> RForestDS::GetEntryRanges()
 {
-   return std::vector<std::pair<ULong64_t, ULong64_t>>();
+   std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
+   if (fHasSeenAllRanges) return ranges;
+
+   auto nEntries = fForest->GetNEntries();
+   const auto chunkSize = nEntries / fNSlots;
+   const auto reminder = 1U == fNSlots ? 0 : nEntries % fNSlots;
+   auto start = 0UL;
+   auto end = 0UL;
+   for (auto i : ROOT::TSeqU(fNSlots)) {
+      start = end;
+      end += chunkSize;
+      ranges.emplace_back(start, end);
+      (void)i;
+   }
+   ranges.back().second += reminder;
+   fHasSeenAllRanges = true;
+   return ranges;
 }
 
 
-std::string RForestDS::GetTypeName(std::string_view /*colName*/) const
+std::string RForestDS::GetTypeName(std::string_view colName) const
 {
-   return "";
+   const auto index = std::distance(
+      fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), colName));
+   return fColumnTypes[index];
 }
 
 
-bool RForestDS::HasColumn(std::string_view /*colName*/) const
+bool RForestDS::HasColumn(std::string_view colName) const
 {
-   return false;
+   return std::find(fColumnNames.begin(), fColumnNames.end(), colName) !=
+          fColumnNames.end();
 }
 
 
-void RForestDS::Initialise() {
-}
-
-
-void RForestDS::SetNSlots(unsigned int /*nSlots*/)
+void RForestDS::Initialise()
 {
+   fHasSeenAllRanges = false;
+}
+
+
+void RForestDS::SetNSlots(unsigned int nSlots)
+{
+   fNSlots = nSlots;
 }
 
 

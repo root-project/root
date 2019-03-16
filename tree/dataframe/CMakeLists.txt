@@ -17,13 +17,17 @@ if(sqlite)
   list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RSqliteDS.hxx)
 endif()
 
+if(root7)
+  list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RForestDS.hxx)
+  list(APPEND RDATAFRAME_EXTRA_DEPS ROOTForest)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
   HEADERS
     ROOT/RCsvDS.hxx
     ROOT/RDataFrame.hxx
     ROOT/RDataSource.hxx
     ROOT/RDFHelpers.hxx
-    ROOT/RForestDS.hxx
     ROOT/RLazyDS.hxx
     ROOT/RResultPtr.hxx
     ROOT/RRootDS.hxx
@@ -73,7 +77,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFInterfaceUtils.cxx
     src/RDFUtils.cxx
     src/RFilterBase.cxx
-    src/RForestDS.cxx
     src/RJittedAction.cxx
     src/RJittedCustomColumn.cxx
     src/RJittedFilter.cxx
@@ -92,6 +95,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     RIO
     ROOTVecOps
     Imt
+    ${RDATAFRAME_EXTRA_DEPS}
 )
 
 if(arrow)
@@ -117,5 +121,9 @@ if(sqlite)
     endif()
   endif()
 endif()
+
+if(root7)
+  target_sources(ROOTDataFrame PRIVATE src/RForestDS.cxx)
+endif(root7)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

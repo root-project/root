@@ -89,6 +89,7 @@ public:
 
    RFieldRoot* GetRootField() { return fRootField.get(); }
    RForestEntry* GetDefaultEntry() { return fDefaultEntry.get(); }
+   std::unique_ptr<RForestEntry> CreateEntry();
 };
 
 } // namespace Exerimental
