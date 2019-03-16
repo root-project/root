@@ -46,6 +46,18 @@ ROOT::Experimental::RInputForest::RInputForest(
    fNEntries = fSource->GetNEntries();
 }
 
+ROOT::Experimental::RInputForest::RInputForest(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
+   : ROOT::Experimental::Detail::RForest(nullptr)
+   , fSource(std::move(source))
+{
+   fSource->Attach();
+   fModel = fSource->GenerateModel();
+   for (auto& field : *fModel->GetRootField()) {
+      field.ConnectColumns(fSource.get());
+   }
+   fNEntries = fSource->GetNEntries();
+}
+
 std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputForest::Create(
    std::unique_ptr<RForestModel> model,
    std::string_view forestName,
@@ -56,12 +68,11 @@ std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputFore
       std::move(model), std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
 }
 
-ROOT::Experimental::RInputForest::RInputForest(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
-   : ROOT::Experimental::Detail::RForest(RForestModel::Create())
-   , fSource(std::move(source))
+std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputForest::Create(
+   std::string_view forestName,
+   std::string_view storage)
 {
-   fSource->Attach();
-   fNEntries = fSource->GetNEntries();
+   return std::make_unique<RInputForest>(std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
 }
 
 ROOT::Experimental::RInputForest::~RInputForest()
