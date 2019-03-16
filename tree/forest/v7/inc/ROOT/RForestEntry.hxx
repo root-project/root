@@ -68,6 +68,14 @@ public:
       return ptr;
    }
 
+   Detail::RFieldValueBase GetValue(std::string_view fieldName) {
+      for (auto& v : fValues) {
+         if (v.GetField()->GetName() == fieldName)
+            return v;
+      }
+      return Detail::RFieldValueBase();
+   }
+
    template<typename T>
    T* Get(std::string_view fieldName) {
       for (auto& v : fValues) {
