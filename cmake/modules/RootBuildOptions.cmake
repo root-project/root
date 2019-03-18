@@ -293,6 +293,10 @@ if(NOT CMAKE_CXX_STANDARD GREATER 11)
   set(webui_defvalue OFF)
 endif()
 
+if("${webui}" STREQUAL "OFF")
+   set(webui_disabled ON)
+endif()
+
 #---roottest option implies testing
 if(roottest OR rootbench)
   set(testing ON CACHE BOOL "" FORCE)
@@ -303,7 +307,10 @@ ROOT_APPLY_OPTIONS()
 
 if(root7)
   if(NOT CMAKE_CXX_STANDARD GREATER 11)
-      set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ standard to be used")
+      set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++14 standard used with root7")
+   endif()
+   if(NOT webui AND NOT webui_disabled)
+      set(webui ON CACHE BOOL "(webui build automatically when root7 is enabled)" FORCE)
    endif()   
 endif()
 
