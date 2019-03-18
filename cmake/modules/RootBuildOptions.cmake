@@ -301,6 +301,12 @@ endif()
 #---Define at moment the options with the selected default values-----------------------------
 ROOT_APPLY_OPTIONS()
 
+if(root7)
+  if(NOT CMAKE_CXX_STANDARD GREATER 11)
+      set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ standard to be used")
+   endif()   
+endif()
+
 #---check if webui can be build-------------------------------
 if(webui)
   if(NOT CMAKE_CXX_STANDARD GREATER 11)
