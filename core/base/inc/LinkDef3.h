@@ -270,8 +270,7 @@
 #pragma link C++ class TParameter<Long_t>+;
 #pragma link C++ class TParameter<Long64_t>+;
 
-#ifdef GENERATE_v7_DICT
-#pragma link C++ namespace ROOT::Experimental;
+#ifdef ROOT7_RDrawable
 #pragma link C++ class ROOT::Experimental::RDrawable+;
 #endif
 
