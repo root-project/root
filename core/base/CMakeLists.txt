@@ -113,8 +113,6 @@ set(BASE_HEADERS
   TVirtualTableInterface.h
   TVirtualViewer3D.h
   TVirtualX.h
-
-  PARENT_SCOPE
 )
 
 set(BASE_SOURCES
@@ -227,6 +225,10 @@ if(root7)
       v7/src/RDrawable.cxx
   )
 endif()
+
+
+# only here complete list of headers can be propogated to parent cmake file
+set(Core_dict_headers ${BASE_HEADERS} PARENT_SCOPE)
 
 ROOT_OBJECT_LIBRARY(Base ${BASE_SOURCES})
 target_include_directories(Base PRIVATE ${PCRE_INCLUDE_DIR})
