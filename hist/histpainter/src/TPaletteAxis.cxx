@@ -18,6 +18,7 @@
 #include "TView.h"
 #include "TH1.h"
 #include "TGaxis.h"
+#include "TLatex.h"
 
 ClassImp(TPaletteAxis);
 
@@ -73,6 +74,15 @@ The palette can be interactively moved and resized. The context menu
 can be used to set the axis attributes.
 
 It is possible to select a range on the axis to set the min/max in z
+
+As default labels and ticks are drawn by `TGAxis` at equidistant (lin or log) 
+points as controlled by SetNdivisions.
+If option "CJUST" is given labels and ticks are justified at the 
+color boundaries defined by the contour levels. 
+In this case no optimization can be done. It is responsiblity of the
+user to adjust minimum, maximum of the histogram and/or the contour levels
+to get a reasonable look of the plot.
+Only overlap of the labels is avoided if too many contour levels are used.
 
 */
 
@@ -392,6 +402,22 @@ void TPaletteAxis::Paint(Option_t *)
    if (ndivz == 0) return;
    ndivz = TMath::Abs(ndivz);
    Int_t theColor, color;
+   // import Attributes already here since we might need them for CJUST
+   fAxis.ImportAxisAttributes(fH->GetZaxis());
+   // case option "CJUST": put labels directly at color boundaries
+   TLatex *label = NULL;
+   TLine *line = NULL;
+   Double_t prevlab = 0;
+   TString opt(fH->GetDrawOption());
+   if (opt.Contains("CJUST", TString::kIgnoreCase)) {
+      label = new TLatex();
+      label->SetTextFont(fAxis.GetLabelFont());
+      label->SetTextColor(fAxis.GetLabelColor());
+      label->SetTextAlign(kHAlignLeft+kVAlignCenter);
+      line = new TLine();
+      line->SetLineColor(fAxis.GetLineColor());
+      line->PaintLine(xmax, ymin, xmax, ymax);
+   }
    Double_t scale = ndivz / (wlmax - wlmin);
    for (Int_t i = 0; i < ndivz; i++) {
 
@@ -423,6 +449,30 @@ void TPaletteAxis::Paint(Option_t *)
       SetFillColor(gStyle->GetColorPalette(theColor));
       TAttFill::Modify();
       gPad->PaintBox(xmin, y1, xmax, y2);
+      // case option "CJUST": put labels directly
+      if (label) {
+         Double_t lof = fAxis.GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin());
+         // the following assumes option "S"
+         Double_t tlength = fAxis.GetTickSize() * (ymax-ymin);
+         Double_t lsize = fAxis.GetLabelSize();
+         Double_t lsize_user = lsize*(gPad->GetUymax()-gPad->GetUymin());
+         Double_t zlab = fH->GetContourLevel(i);
+         if (gPad->GetLogz()&& !fH->TestBit(TH1::kUserContour)) {
+            zlab = TMath::Power(10, zlab);
+         }
+         // make sure labels dont overlap
+         if (i == 0 || (y1 - prevlab) > lsize_user) {
+            label->PaintLatex(xmax + lof, y1, 0, lsize, Form("%g", zlab));
+            prevlab = y1;
+         }
+         line->PaintLine(xmax-tlength, y1, xmax, y1); 
+         if (i == ndivz-1) {
+            // label + tick at top of axis
+            if ((y1 - prevlab > lsize_user))
+               label->PaintLatex(xmax + lof, y2, 0, lsize, Form("%g",fH->GetMaximum())); 
+            line->PaintLine(xmax-tlength, y2, xmax, y2); 
+         }
+      }  
    }
    Int_t ndiv  = fH->GetZaxis()->GetNdivisions() % 100; //take primary divisions only
    char chopt[6] = "S   ";
@@ -437,8 +487,14 @@ void TPaletteAxis::Paint(Option_t *)
       wmax = TMath::Power(10., wlmax);
       strncat(chopt, "G", 2);
    }
-   fAxis.ImportAxisAttributes(fH->GetZaxis());
-   fAxis.PaintAxis(xmax, ymin, xmax, ymax, wmin, wmax, ndiv, chopt);
+   if (label) {
+   // case option "CJUST", cleanup
+      delete label;
+      delete line;
+   } else { 
+      // default
+      fAxis.PaintAxis(xmax, ymin, xmax, ymax, wmin, wmax, ndiv, chopt);
+   }
 }
 
 
