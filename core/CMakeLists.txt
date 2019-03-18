@@ -42,6 +42,10 @@ if(cocoa)
   set(dict_opts -DSYSTEM_TYPE_macosx)
 endif()
 
+if(root7)
+  set(dict_v7opts -DGENERATE_v7_DICT)
+endif()
+
 set(CORE_OS_DICT_CXX_FLAGS ${dict_opts} PARENT_SCOPE)
 
 #---G__Core--------------------------------------------------------------------
@@ -88,6 +92,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
   OPTIONS
     -writeEmptyRootPCM
     ${dict_opts}
+    ${dict_v7opts}
   LINKDEF
     base/inc/LinkDef.h
 )
