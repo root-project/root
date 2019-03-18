@@ -42,7 +42,8 @@ if(cocoa)
   set(dict_opts -DSYSTEM_TYPE_macosx)
 endif()
 
-if(root7)
+if(CMAKE_CXX_STANDARD GREATER 11)
+  set(dict_v7dirs base/v7/inc)
   set(dict_v7opts -DGENERATE_v7_DICT)
 endif()
 
@@ -64,6 +65,7 @@ set(CORE_OS_DICT_CXX_FLAGS ${dict_opts} PARENT_SCOPE)
 include_directories(
   ${ZLIB_INCLUDE_DIR}
   base/inc
+  ${dict_v7dirs}
   clib/inc
   cont/inc
   foundation/inc
@@ -76,7 +78,7 @@ include_directories(
 )
 
 ROOT_GENERATE_DICTIONARY(G__Core
-  ${BASE_HEADERS}
+  ${Core_dict_headers}
   ${Clib_dict_headers}
   ${Cont_dict_headers}
   ${Foundation_dict_headers}
