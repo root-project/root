@@ -16,9 +16,8 @@ if not any(var in environ for var in ('LD_LIBRARY_PATH','DYLD_LIBRARY_PATH')):
     _lcb_path = path.join(_lib_dir, 'libcppyy_backend')
     environ['CPPYY_BACKEND_LIBRARY'] = _lcb_path
 
-# Inform cppyy that we have already generated the PCH
-_etc_dir = path.join(path.dirname(path.dirname(path.dirname(__file__))), 'etc')
-environ['CLING_STANDARD_PCH'] = path.join(_etc_dir, 'allDict.cxx.pch')
+# Prevent cppyy's check for the PCH
+environ['CLING_STANDARD_PCH'] = 'none'
 
 import cppyy
 import ROOT.pythonization as pyz
