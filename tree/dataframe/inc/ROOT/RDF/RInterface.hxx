@@ -376,6 +376,7 @@ public:
    {
       // this check must be done before jitting lest we throw exceptions in jitted code
       RDFInternal::CheckCustomColumn(name, fLoopManager->GetTree(), fCustomColumns.GetNames(),
+                                     fLoopManager->GetAliasMap(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       auto jittedCustomColumn =
@@ -417,7 +418,8 @@ public:
       auto &dsColumnNames = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
 
       // If the alias name is a column name, there is a problem
-      RDFInternal::CheckCustomColumn(alias, fLoopManager->GetTree(), fCustomColumns.GetNames(), dsColumnNames);
+      RDFInternal::CheckCustomColumn(alias, fLoopManager->GetTree(), fCustomColumns.GetNames(),
+                                     fLoopManager->GetAliasMap(), dsColumnNames);
 
       const auto validColumnName = GetValidatedColumnNames(1, {std::string(columnName)})[0];
 
@@ -1919,6 +1921,7 @@ private:
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns)
    {
       RDFInternal::CheckCustomColumn(name, fLoopManager->GetTree(), fCustomColumns.GetNames(),
+                                     fLoopManager->GetAliasMap(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
