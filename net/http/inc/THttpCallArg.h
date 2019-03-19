@@ -61,6 +61,8 @@ protected:
 
    TString CountHeader(const TString &buf, Int_t number = -1111) const;
 
+   void ReplaceAllinContent(const std::string &from, const std::string &to, bool once = false);
+
 private:
    std::shared_ptr<THttpWSEngine> fWSEngine; ///<!  web-socket engine, which supplied to run created web socket
 
@@ -69,8 +71,6 @@ private:
 
    void AssignWSId();
    std::shared_ptr<THttpWSEngine> TakeWSEngine();
-
-   void ReplaceAllinContent(const std::string &from, const std::string &to);
 
    /** Method used to modify content of web page used by web socket handler */
    virtual void CheckWSPageContent(THttpWSHandler *) {}
