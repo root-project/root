@@ -206,10 +206,9 @@ TEST(Cache, evtCounter)
 
    const std::vector<ULong64_t> evenE_ref{0, 2};
    const std::vector<ULong64_t> allE_ref{0, 1};
-   ROOT::RDataFrame tdf(4);
 
    auto test = [&](std::string_view entryColName){
-      auto c0 = tdf.Alias("entry", entryColName)
+      auto c0 = ROOT::RDataFrame(4).Alias("entry", entryColName)
                   .Filter([](ULong64_t e) { return 0 == e % 2; }, {"entry"})
                   .Cache<ULong64_t>({"entry"});
       auto evenE = c0.Take<ULong64_t>("entry");
