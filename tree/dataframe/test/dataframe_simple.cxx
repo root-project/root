@@ -11,6 +11,7 @@
 #include <TTree.h>
 
 #include <algorithm> // std::sort
+#include <array>
 #include <chrono>
 #include <thread>
 #include <set>
@@ -181,6 +182,7 @@ TEST_P(RDFSimpleTests, Define_jitted_type_unknown_to_interpreter)
 {
    RDataFrame tdf(10);
    auto d = tdf.Define("foo", [](){return RFoo();});
+   auto d2 = tdf.Define("foo2", [](){return std::array<RFoo, 2>();});
 
    // We check that the if nothing is done with RFoo in jitted strings
    // everything works fine
