@@ -58,6 +58,11 @@ protected:
 
    CefRefPtr<CefCallback> fCallBack{nullptr};
 
+   void CheckWSPageContent(THttpWSHandler *) override
+   {
+
+   }
+
 public:
    explicit TCefHttpCallArg() = default;
 
