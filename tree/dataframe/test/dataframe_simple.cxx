@@ -187,6 +187,17 @@ TEST_P(RDFSimpleTests, Define_jitted_type_unknown_to_interpreter)
    // We check that the if nothing is done with RFoo in jitted strings
    // everything works fine
    EXPECT_EQ(10U, *d.Count());
+
+   // We try to use the column: an exception is thrown
+   int ret = 1;
+   try {
+      // Here the system tries to understand the type of foo3 and will fail
+      auto d3 = d.Define("foo3", "foo*2");
+   } catch (const std::runtime_error &) {
+      ret = 0;
+   }
+   EXPECT_EQ(0, ret);
+
 }
 
 TEST_P(RDFSimpleTests, Define_jitted_complex)
