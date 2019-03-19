@@ -62,7 +62,7 @@ private:
 
    static bool IsMainThrd();
 
-   std::string GetUrl(const RWebWindow &win, bool batch_mode, bool remote = false);
+   std::string GetUrl(const RWebWindow &win, bool remote = false);
 
    bool CreateServer(bool with_http = false);
 

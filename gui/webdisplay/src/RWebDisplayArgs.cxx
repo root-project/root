@@ -110,6 +110,21 @@ std::string ROOT::Experimental::RWebDisplayArgs::GetBrowserName() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+/// Append string to url options
+/// Add "&" as separator if any options already exsists
+
+void ROOT::Experimental::RWebDisplayArgs::AppendUrlOpt(const std::string &opt)
+{
+   if (opt.empty()) return;
+
+   if (!fUrlOpt.empty())
+      fUrlOpt.append("&");
+
+   fUrlOpt.append(opt);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
 /// Returns full url, which is combined from URL and extra URL options
 /// Takes into account "#" symbol in url - options are inserted before that symbol
 
