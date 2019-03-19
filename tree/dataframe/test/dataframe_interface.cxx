@@ -408,3 +408,19 @@ TEST(RDataFrameInterface, GetNSlots)
    EXPECT_EQ(1U, df1.GetNSlots());
 #endif
 }
+
+// ROOT-10043
+TEST(RDataFrameInterface, DefineAliasedColumn)
+{
+   ROOT::RDataFrame rdf(1);
+   auto r0 = rdf.Define("myVar", [](){return 1;});
+   auto r1 = r0.Alias("newVar", "myVar");
+
+   int ret = 1;
+   try {
+      auto r2 = r0.Define("newVar", [](int i){return i;}, {"myVar"});
+   } catch (const std::runtime_error &) {
+      ret = 0;
+   }
+   EXPECT_EQ(0, ret) << "No exception thrown when defining a column with a name which is already an alias.";
+}
