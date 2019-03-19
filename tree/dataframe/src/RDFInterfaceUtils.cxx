@@ -277,7 +277,7 @@ bool IsValidCppVarName(const std::string &var)
 }
 
 void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
-                       const ColumnNames_t &dataSourceColumns)
+                       const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &dataSourceColumns)
 {
    const std::string definedColStr(definedCol);
 
@@ -299,6 +299,15 @@ void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const Column
       const auto msg = "Redefinition of column \"" + definedColStr + "\"";
       throw std::runtime_error(msg);
    }
+
+   // Check if the definedCol is an alias
+   const auto aliasColNameIt = aliasMap.find(definedColStr);
+   if (aliasColNameIt != aliasMap.end()) {
+      const auto msg = "An alias with name " + definedColStr + " pointing to column " +
+      aliasColNameIt->second + " is already existing.";
+      throw std::runtime_error(msg);
+   }
+
    // check if definedCol is already present in the DataSource (but has not yet been `Define`d)
    if (!dataSourceColumns.empty()) {
       if (std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end()) {
