@@ -64,6 +64,10 @@ protected:
 
    void CheckWSPageContent(THttpWSHandler *) override
    {
+      std::string search = "JSROOT.ConnectWebWindow({";
+      std::string replace = search + "platform:\"qt5\",socket_kind:\"rawlongpoll\",";
+
+      ReplaceAllinContent(search, replace, true);
    }
 
 public:
@@ -142,13 +146,6 @@ QString RootUrlSchemeHandler::MakeFullUrl(THttpServer *serv, const QString &url)
 
    QString res = "rootscheme://root.server1";
    res.append(url);
-   if (url.indexOf("?") < 0)
-      res.append("?");
-   else
-      res.append("&");
-
-   // TODO: with should be solved different way - maybe via replacements in main HTML page
-   res.append("platform=qt5&ws=rawlongpoll");
    return res;
 }
 
