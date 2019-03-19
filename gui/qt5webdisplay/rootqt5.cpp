@@ -110,7 +110,7 @@ protected:
             }
          }
 
-         QString fullurl = QString(args.GetUrl().c_str());
+         QString fullurl = QString(args.GetFullUrl().c_str());
 
          // if no server provided - normal HTTP will be allowed to use
          if (args.GetHttpServer()) {
@@ -123,11 +123,6 @@ protected:
          }
 
          QWidget *qparent = (QWidget *) args.GetDriverData();
-
-         if (!args.GetUrlOpt().empty()) {
-            fullurl.append(QString("&"));
-            fullurl.append(QString(args.GetUrlOpt().c_str()));
-         }
 
          auto handle = std::make_unique<RQt5WebDisplayHandle>(fullurl.toLatin1().constData());
 

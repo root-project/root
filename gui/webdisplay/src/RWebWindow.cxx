@@ -136,7 +136,7 @@ ROOT::Experimental::RWebWindow::CreateWSHandler(std::shared_ptr<RWebWindowsManag
 
 std::string ROOT::Experimental::RWebWindow::GetUrl(bool remote)
 {
-   return fMgr->GetUrl(*this, false, remote);
+   return fMgr->GetUrl(*this, remote);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

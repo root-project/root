@@ -84,6 +84,9 @@ public:
    /// returns window url options
    std::string GetUrlOpt() const { return fUrlOpt; }
 
+   /// append extra url options, add "&" as separator if required
+   void AppendUrlOpt(const std::string &opt);
+
    /// returns window url with append options
    std::string GetFullUrl() const;
 

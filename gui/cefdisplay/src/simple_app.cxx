@@ -60,7 +60,10 @@ protected:
 
    void CheckWSPageContent(THttpWSHandler *) override
    {
+      std::string search = "JSROOT.ConnectWebWindow({";
+      std::string replace = search + "platform:\"cef3\",socket_kind:\"longpoll\",";
 
+      ReplaceAllinContent(search, replace, true);
    }
 
 public:
@@ -357,12 +360,6 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
    if (gHandlingServer) {
       url = "http://rootserver.local";
       url.append(addr);
-      if (url.find("?") != std::string::npos)
-         url.append("&");
-      else
-         url.append("?");
-
-      url.append("platform=cef3&ws=longpoll");
    } else {
       url = addr;
    }
