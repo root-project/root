@@ -62,6 +62,10 @@ class TWebGuiCallArg : public THttpCallArg {
 protected:
    UrlRequestJobHolder fRequest;
 
+   void CheckWSPageContent(THttpWSHandler *) override
+   {
+   }
+
 public:
    explicit TWebGuiCallArg(QWebEngineUrlRequestJob *req = nullptr) : THttpCallArg(), fRequest(req) {}
 
