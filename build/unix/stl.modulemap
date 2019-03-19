@@ -357,6 +357,14 @@ module "stl" [system] {
     export *
     header "vector"
   }
+  module "codecvt" {
+    export *
+    header "codecvt"
+  }
+  module "cuchar" {
+    export *
+    header "cuchar"
+  }
   //module "experimental/algorithm" {
   //  export *
   //  header "experimental/algorithm"
