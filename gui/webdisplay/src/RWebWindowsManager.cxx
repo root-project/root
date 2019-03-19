@@ -318,7 +318,7 @@ void ROOT::Experimental::RWebWindowsManager::Unregister(ROOT::Experimental::RWeb
 //////////////////////////////////////////////////////////////////////////
 /// Provide URL address to access specified window from inside or from remote
 
-std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimental::RWebWindow &win, bool batch_mode, bool remote)
+std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimental::RWebWindow &win, bool remote)
 {
    if (!fServer) {
       R__ERROR_HERE("WebDisplay") << "Server instance not exists when requesting window URL";
@@ -329,10 +329,7 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 
    addr.append(win.fWSHandler->GetName());
 
-   if (batch_mode)
-      addr.append("/?batch_mode");
-   else
-      addr.append("/");
+   addr.append("/");
 
    if (remote) {
       if (!CreateServer(true)) {
@@ -349,24 +346,15 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Show web window in specified location.
 ///
-/// One could provide string like "chrome" or "firefox".
-/// More details see in RWebDisplayArgs constructor description
-/// Parameter "where" specifies that kind of window display should be used. Possible values:
+/// \param batch_mode indicates that browser will run in headless mode
+/// \param user_args specifies where and how display web window
 ///
-///  chrome  - use Google Chrome web browser, supports headless mode from v60, default
-///  firefox - use Mozilla Firefox browser, supports headless mode from v57
-///   native - (or empty string) either chrome or firefox, only these browsers support batch (headless) mode
-///  browser - default system web-browser, no batch mode
-///      cef - Chromium Embeded Framework, local display, local communication
-///      qt5 - Qt5 WebEngine, local display, local communication
-///    local - either cef or qt5
-///   <prog> - any program name which will be started instead of default browser, like /usr/bin/opera
-///            one could use following parameters:
-///                  $url - URL address of the widget
-///                $width - widget width
-///               $height - widget height
+/// As display args one can use string like "firefox" or "chrome" - these are two main supported web browsers.
+/// See RWebDisplayArgs::SetBrowserKind() for all available options. Default value for the browser can be configured
+/// when starting root with --web argument like: "root --web=chrome"
 ///
 ///  If allowed, same window can be displayed several times (like for TCanvas)
+///
 ///  Following parameters can be configured in rootrc file:
 ///
 ///   WebGui.Chrome:  full path to Google Chrome executable
@@ -425,19 +413,16 @@ unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(ROOT::Experimental::
    if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp",0) == 1))
       normal_http = true;
 
-   std::string url = GetUrl(win, batch_mode, normal_http);
+   std::string url = GetUrl(win, normal_http);
    if (url.empty()) {
       R__ERROR_HERE("WebDisplay") << "Cannot create URL for the window";
       return 0;
    }
 
-   if (url.find("?") != std::string::npos)
-         url.append("&key=");
-      else
-         url.append("?key=");
-   url.append(key);
-
    args.SetUrl(url);
+
+   args.AppendUrlOpt(std::string("key=") + key);
+   if (batch_mode) args.AppendUrlOpt("batch_mode");
 
    if (!normal_http)
       args.SetHttpServer(GetServer());
