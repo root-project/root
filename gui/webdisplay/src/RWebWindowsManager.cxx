@@ -347,7 +347,10 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Show window in specified location
+/// Show web window in specified location.
+///
+/// One could provide string like "chrome" or "firefox".
+/// More details see in RWebDisplayArgs constructor description
 /// Parameter "where" specifies that kind of window display should be used. Possible values:
 ///
 ///  chrome  - use Google Chrome web browser, supports headless mode from v60, default
