@@ -1764,7 +1764,7 @@ public:
    template <typename... ColumnTypes, typename Helper>
    RResultPtr<typename Helper::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})
    {
-      const auto nColumns = columns.size();
+      constexpr auto nColumns = sizeof...(ColumnTypes);
       RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columns.size());
 
       const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
@@ -1777,8 +1777,11 @@ public:
       using Action_t = typename RDFInternal::RAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
       auto resPtr = helper.GetResultPtr();
 
+      auto newColumns = CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<nColumns>(),
+                                              RDFInternal::TypeList<ColumnTypes...>());
+
       auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(helper)), validColumnNames, fProxiedPtr,
-                                               RDFInternal::RBookedCustomColumns(fCustomColumns));
+                                               RDFInternal::RBookedCustomColumns(newColumns));
       fLoopManager->Book(action.get());
       return MakeResultPtr(resPtr, *fLoopManager, std::move(action));
    }
