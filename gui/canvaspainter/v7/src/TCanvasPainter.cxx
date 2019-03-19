@@ -447,7 +447,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
    };
 
    auto conn =
-      std::find_if(fWebConn.begin(), fWebConn.begin(), [connid](WebConn &item) { return item.fConnId == connid; });
+      std::find_if(fWebConn.begin(), fWebConn.end(), [connid](WebConn &item) { return item.fConnId == connid; });
 
    if (conn == fWebConn.end())
       return; // no connection found
