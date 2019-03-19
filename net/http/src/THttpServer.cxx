@@ -751,6 +751,8 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
                arg->fContent = ReadFileContent(resolve.Data());
                arg->AddNoCacheHeader();
             }
+
+            arg->CheckWSPageContent(handler);
          }
       }
 

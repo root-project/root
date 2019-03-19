@@ -25,6 +25,7 @@ class THttpWSEngine;
 class THttpWSHandler;
 
 class THttpCallArg : public TObject {
+
    friend class THttpServer;
    friend class THttpWSEngine;
    friend class THttpWSHandler;
@@ -63,13 +64,16 @@ protected:
 private:
    std::shared_ptr<THttpWSEngine> fWSEngine; ///<!  web-socket engine, which supplied to run created web socket
 
-   std::string  fContent;  ///!< content - text or binary
+   std::string  fContent;  ///<! content - text or binary
    std::string  fPostData; ///<! data received with post request - text - or binary
 
    void AssignWSId();
    std::shared_ptr<THttpWSEngine> TakeWSEngine();
 
    void ReplaceAllinContent(const std::string &from, const std::string &to);
+
+   /** Method used to modify content of web page used by web socket handler */
+   virtual void CheckWSPageContent(THttpWSHandler *) {}
 
 public:
    explicit THttpCallArg() = default;
