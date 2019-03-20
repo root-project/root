@@ -5,8 +5,10 @@
 #include <TInterpreter.h>
 #include <TTree.h>
 #include <TSystem.h>
+#include <TLorentzVector.h>
 #include <vector>
 #include <sstream>
+#include <cmath>
 
 using namespace ROOT::VecOps;
 
@@ -902,4 +904,60 @@ TEST(VecOps, Concatenate)
    const auto res = Concatenate(rvf, rvi);
    const RVec<float> ref { 0.00000f, 1.00000f, 2.00000f, 7.00000f, 8.00000f, 9.00000f };
    CheckEqual(res, ref);
+}
+
+TEST(VecOps, DeltaPhi)
+{
+   using namespace ROOT::VecOps;
+
+   // Two scalars (radians)
+   // NOTE: These tests include the checks of the poundary effects
+   const float c1 = M_PI;
+   EXPECT_EQ(DeltaPhi(0.f, 2.f), 2.f);
+   EXPECT_EQ(DeltaPhi(1.f, 0.f), -1.f);
+   EXPECT_EQ(DeltaPhi(-0.5f, 0.5f), 1.f);
+   EXPECT_EQ(DeltaPhi(0.f, 2.f * c1 - 1.f), -1.f);
+   EXPECT_EQ(DeltaPhi(0.f, 4.f * c1 - 1.f), -1.f);
+   EXPECT_EQ(DeltaPhi(0.f, -2.f * c1 + 1.f), 1.f);
+   EXPECT_EQ(DeltaPhi(0.f, -4.f * c1 + 1.f), 1.f);
+
+   // Two scalars (degrees)
+   const float c2 = 180.f;
+   EXPECT_EQ(DeltaPhi(0.f, 2.f, c2), 2.f);
+   EXPECT_EQ(DeltaPhi(1.f, 0.f, c2), -1.f);
+   EXPECT_EQ(DeltaPhi(-0.5f, 0.5f, c2), 1.f);
+   EXPECT_EQ(DeltaPhi(0.f, 2.f * c2 - 1.f, c2), -1.f);
+   EXPECT_EQ(DeltaPhi(0.f, 4.f * c2 - 1.f, c2), -1.f);
+   EXPECT_EQ(DeltaPhi(0.f, -2.f * c2 + 1.f, c2), 1.f);
+   EXPECT_EQ(DeltaPhi(0.f, -4.f * c2 + 1.f, c2), 1.f);
+
+   // Two vectors
+   RVec<float> v1 = {0.f, 1.f, -0.5f, 0.f, 0.f, 0.f, 0.f};
+   RVec<float> v2 = {2.f, 0.f, 0.5f, 2.f * c1 - 1.f, 4.f * c1 - 1.f, -2.f * c1 + 1.f, -4.f * c1 + 1.f};
+   auto dphi1 = DeltaPhi(v1, v2);
+   RVec<float> r1 = {2.f, -1.f, 1.f, -1.f, -1.f, 1.f, 1.f};
+   CheckEqual(dphi1, r1);
+
+   auto dphi2 = DeltaPhi(v2, v1);
+   auto r2 = r1 * -1.f;
+   CheckEqual(dphi2, r2);
+
+   // Check against TLorentzVector
+   for (std::size_t i = 0; i < v1.size(); i++) {
+       TLorentzVector p1, p2;
+       p1.SetPtEtaPhiM(1.f, 1.f, v1[i], 1.f);
+       p2.SetPtEtaPhiM(1.f, 1.f, v2[i], 1.f);
+       EXPECT_NEAR(float(p2.DeltaPhi(p1)), dphi1[i], 1e-6);
+   }
+
+   // Vector and scalar
+   RVec<float> v3 = {0.f, 1.f, c1, c1 + 1.f, 2.f * c1, 2.f * c1 + 1.f, -1.f, -c1, -c1 + 1.f, -2.f * c1, -2.f * c1 + 1.f};
+   float v4 = 1.f;
+   auto dphi3 = DeltaPhi(v3, v4);
+   RVec<float> r3 = {1.f, 0.f, 1.f - c1, c1, 1.f, 0.f, 2.f, -c1 + 1.f, c1, 1.f, 0.f};
+   CheckEqual(dphi3, r3);
+
+   auto dphi4 = DeltaPhi(v4, v3);
+   auto r4 = -1.f * r3;
+   CheckEqual(dphi4, r4);
 }
