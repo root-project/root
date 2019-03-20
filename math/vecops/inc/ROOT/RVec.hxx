@@ -1447,6 +1447,81 @@ RVec<Common_t> Concatenate(const RVec<T0> &v0, const RVec<T1> &v1)
    return res;
 }
 
+/// Return the angle difference \f$\Delta \phi\f$ of two scalars.
+///
+/// The function computes the closest angle from v1 to v2 with sign and is
+/// therefore in the range \f$[-\pi, \pi]\f$.
+/// The computation is done per default in radians \f$c = \pi\f$ but can be switched
+/// to degrees \f$c = 180\f$.
+template <typename T>
+T DeltaPhi(T v1, T v2, const T c = M_PI)
+{
+   static_assert(std::is_floating_point<T>::value,
+                 "DeltaPhi must be called with floating point values.");
+   auto r = std::fmod(v2 - v1, 2.0 * c);
+   if (r < -c) {
+      r += 2.0 * c;
+   }
+   else if (r > c) {
+      r -= 2.0 * c;
+   }
+   return r;
+}
+
+/// Return the angle difference \f$\Delta \phi\f$ in radians of two vectors.
+///
+/// The function computes the closest angle from v1 to v2 with sign and is
+/// therefore in the range \f$[-\pi, \pi]\f$.
+/// The computation is done per default in radians \f$c = \pi\f$ but can be switched
+/// to degrees \f$c = 180\f$.
+template <typename T>
+RVec<T> DeltaPhi(const RVec<T>& v1, const RVec<T>& v2, const T c = M_PI)
+{
+   using size_type = typename RVec<T>::size_type;
+   const size_type size = v1.size();
+   auto r = RVec<T>(size);
+   for (size_type i = 0; i < size; i++) {
+      r[i] = DeltaPhi(v1[i], v2[i], c);
+   }
+   return r;
+}
+
+/// Return the angle difference \f$\Delta \phi\f$ in radians of a vector and a scalar.
+///
+/// The function computes the closest angle from v1 to v2 with sign and is
+/// therefore in the range \f$[-\pi, \pi]\f$.
+/// The computation is done per default in radians \f$c = \pi\f$ but can be switched
+/// to degrees \f$c = 180\f$.
+template <typename T>
+RVec<T> DeltaPhi(const RVec<T>& v1, T v2, const T c = M_PI)
+{
+   using size_type = typename RVec<T>::size_type;
+   const size_type size = v1.size();
+   auto r = RVec<T>(size);
+   for (size_type i = 0; i < size; i++) {
+      r[i] = DeltaPhi(v1[i], v2, c);
+   }
+   return r;
+}
+
+/// Return the angle difference \f$\Delta \phi\f$ in radians of a scalar and a vector.
+///
+/// The function computes the closest angle from v1 to v2 with sign and is
+/// therefore in the range \f$[-\pi, \pi]\f$.
+/// The computation is done per default in radians \f$c = \pi\f$ but can be switched
+/// to degrees \f$c = 180\f$.
+template <typename T>
+RVec<T> DeltaPhi(T v1, const RVec<T>& v2, const T c = M_PI)
+{
+   using size_type = typename RVec<T>::size_type;
+   const size_type size = v2.size();
+   auto r = RVec<T>(size);
+   for (size_type i = 0; i < size; i++) {
+      r[i] = DeltaPhi(v1, v2[i], c);
+   }
+   return r;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:
 template <class T>
