@@ -38,12 +38,12 @@ def removeLeftOvers():
 def getParams():
    """
    Extract parameters from the commandline, which looks like
-   makePCHInput.py ZZZ XXX YYY -- CXXFLAGS
+   makePCHInput.py WWW XXX YYY ZZZ -- CXXFLAGS
    """
    argv = sys.argv
-   rootSrcDir, modules = argv[1:3]
+   rootSrcDir, modules, expPyROOT = argv[1:4]
    posDelim = argv.index('--')
-   clingetpchList = argv[3:posDelim]
+   clingetpchList = argv[4:posDelim]
    cxxflags = argv[posDelim + 1:]
    #print (', '.join(cxxflags))
    cxxflagsNoW = [flag for flag in cxxflags if (flag[0:2] != '-W' and flag[0:3] != '-wd' and \
@@ -54,7 +54,7 @@ def getParams():
       cxxflagsNoW.remove('-Wno-noexcept-type')
    #print (', '.join(cxxflagsNoW))
 
-   return rootSrcDir, modules, clingetpchList, cxxflagsNoW
+   return rootSrcDir, modules, expPyROOT == 'ON', clingetpchList, cxxflagsNoW
 
 #-------------------------------------------------------------------------------
 def getGuardedStlInclude(headerName):
@@ -189,7 +189,8 @@ def getDictNames(theDirName):
    """
    #`find $modules -name 'G__*.cxx' 2> /dev/null | grep -v core/metautils/src/G__std_`; do
    wildcards = (os.path.join(theDirName , "*", "*", "G__*.cxx"),
-                os.path.join(theDirName , "*", "G__*.cxx"))
+                os.path.join(theDirName , "*", "G__*.cxx"),
+                os.path.join(theDirName , "*", "*", "*", "*", "G__*.cxx")) # CPyCppyy
    allDictNames = []
    for wildcard in wildcards:
       allDictNames += glob.glob(wildcard)
@@ -224,7 +225,7 @@ def isAnyPatternInString(patterns,theString):
    return False
 
 #-------------------------------------------------------------------------------
-def isDirForPCH(dirName):
+def isDirForPCH(dirName, expPyROOT):
    """
    Check if the directory corresponds to a module whose headers must belong to
    the PCH
@@ -243,10 +244,14 @@ def isDirForPCH(dirName):
                            "gui/gui",
                            "gui/fitpanel",
                            "rootx",
-                           "bindings/pyroot",
                            "roofit/",
                            "tmva",
                            "main"]
+   if expPyROOT:
+      PCHPatternsWhitelist.append("bindings/pyroot_experimental/cppyy/CPyCppyy")
+   else:
+      PCHPatternsWhitelist.append("bindings/pyroot")
+
    PCHPatternsBlacklist = ["gui/guihtml",
                            "gui/guibuilder",
                            "math/fftw",
@@ -358,7 +363,8 @@ def copyLinkDefs(rootSrcDir, outdir):
    os.chdir(rootSrcDir)
    wildcards = (os.path.join("*", "inc", "*LinkDef*.h"),
                 os.path.join("*", "*", "inc", "*LinkDef*.h"),
-                os.path.join("*", "*", "inc", "*" , "*LinkDef*.h"))
+                os.path.join("*", "*", "inc", "*" , "*LinkDef*.h"),
+                os.path.join("*", "*", "*", "*", "inc", "*LinkDef*.h")) # CPyCppyy
    linkDefNames = []
    for wildcard in wildcards:
       linkDefNames += glob.glob(wildcard)
@@ -376,7 +382,8 @@ def getLocalLinkDefs(rootSrcDir, outdir , dirName):
    curDir = os.getcwd()
    os.chdir(rootSrcDir)
    wildcards = (os.path.join(dirName , "*", "*", "*LinkDef*.h"),
-                os.path.join(dirName , "*", "*LinkDef*.h"))
+                os.path.join(dirName , "*", "*LinkDef*.h"),
+                os.path.join(dirName , "*", "*", "*", "*", "*LinkDef*.h")) # CPyCppyy
    linkDefNames = []
    for wildcard in wildcards:
       linkDefNames += glob.glob(wildcard)
@@ -456,8 +463,7 @@ def makePCHInput():
       * etc/dictpch/allHeaders.h
       * etc/dictpch/allCppflags.txt
    """
-   rootSrcDir, modules, clingetpchList, cxxflags = getParams()
-
+   rootSrcDir, modules, expPyROOT, clingetpchList, cxxflags = getParams()
    removeLeftOvers()
 
    outdir = os.path.join("etc","dictpch")
@@ -485,7 +491,7 @@ def makePCHInput():
    allIncPathsList = []
    for dictName in dictNames:
       dirName = getDirName(dictName)
-      if not isDirForPCH(dirName): continue
+      if not isDirForPCH(dirName, expPyROOT): continue
 
       selModules.add(dirName)
 
