@@ -183,6 +183,9 @@ else
    setenv JUPYTER_PATH ${ROOTSYS}/etc/notebook
 endif
 
+# Prevent Cppyy from checking the PCH (and avoid warning)
+setenv CLING_STANDARD_PCH none
+
 endif # if ("$thisroot" != "")
 
 set thisroot=
