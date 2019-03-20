@@ -811,12 +811,15 @@ bool CPyCppyy::Utility::IncludePython()
             "  virtual bool ToMemory(PyObject* value, void* address);\n"
             "};\n"
        // and this lives in a header, but isn't accessible ...
+            "#ifndef CPYCPPYY_TPyException\n"
             "class TPyException : public std::exception {\n"
             "public:\n"
             "    TPyException();\n"
             "    virtual ~TPyException() noexcept;\n"
             "    virtual const char* what() const noexcept;\n"
-            "};}\n");
+            "};\n"
+            "#endif\n"
+            "}\n");
         includesDone = okay;
     }
 
