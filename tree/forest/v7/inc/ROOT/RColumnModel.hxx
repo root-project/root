@@ -38,7 +38,9 @@ More complex types, such as classes, get translated into columns of such simple 
 // clang-format on
 enum class EColumnType {
    kUnknown = 0,
-   kIndex, // type for root columns of (nested) collections
+   // type for root columns of (nested) collections; 32bit integers that count
+   // relative to the current cluster
+   kIndex,
    kByte,
    kReal64,
    kReal32,

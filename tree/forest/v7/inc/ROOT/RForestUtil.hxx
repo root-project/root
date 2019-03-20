@@ -34,9 +34,12 @@ struct RForestTest {
   std::string s;
 };
 
-/// Integer types long enough to hold the maximum number of entries in a tree
+/// Integer type long enough to hold the maximum number of entries in a column
 using ForestIndex_t = std::uint64_t;
 constexpr ForestIndex_t kInvalidForestIndex = std::uint64_t(-1);
+/// Integer type long enough to hold the maximum number of entries in a single cluster
+using ClusterIndex_t = std::uint32_t;
+constexpr ClusterIndex_t kInvalidClusterIndex = std::uint32_t(-1);
 
 /// Uniquely identifies a physical column within the scope of the current process, used to tag pages
 using ColumnId_t = std::int64_t;
