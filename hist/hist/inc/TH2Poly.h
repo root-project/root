@@ -85,20 +85,11 @@ public:
    virtual Int_t Fill(Double_t x,Double_t y, Double_t w);
    virtual Int_t Fill(const char* name, Double_t w);
    void         FillN(Int_t ntimes, const Double_t* x, const Double_t* y, const Double_t* w, Int_t stride = 1);
-   Int_t        Fill(Double_t){return -1;}                              //MayNotUse
-   Int_t        Fill(Double_t , const char *, Double_t){return -1;}     //MayNotUse
-   Int_t        Fill(const char *, Double_t , Double_t ){return -1;}    //MayNotUse
-   Int_t        Fill(const char *, const char *, Double_t ){return -1;} //MayNotUse
-   void         FillN(Int_t, const Double_t*, const Double_t*, Int_t){return;}  //MayNotUse
    Int_t        FindBin(Double_t x, Double_t y, Double_t z = 0);
    TList       *GetBins(){return fBins;}                                // Returns the TList of all bins in the histogram
    virtual Double_t     GetBinContent(Int_t bin) const;
-   virtual Double_t     GetBinContent(Int_t, Int_t) const {return 0;}           //MayNotUse
-   virtual Double_t     GetBinContent(Int_t, Int_t, Int_t) const {return 0;}    //MayNotUse
    Bool_t       GetBinContentChanged() const{return fBinContentChanged;}
    virtual Double_t GetBinError(Int_t bin) const;
-   virtual Double_t GetBinError(Int_t , Int_t) const {return 0;}            //MayNotUse
-   virtual Double_t GetBinError(Int_t , Int_t , Int_t) const {return 0;}    //MayNotUse
    const char  *GetBinName(Int_t bin) const;
    const char  *GetBinTitle(Int_t bin) const;
    Bool_t       GetFloat(){return fFloat;}
@@ -110,21 +101,43 @@ public:
    Int_t        GetNumberOfBins() const{return fNcells-kNOverflow;}
    void         Honeycomb(Double_t xstart, Double_t ystart, Double_t a, Int_t k, Int_t s);   // Bins the histogram using a honeycomb structure
    Double_t     Integral(Option_t* option = "") const;
-   Double_t     Integral(Int_t, Int_t, const Option_t*) const{return 0;}                             //MayNotUse
-   Double_t     Integral(Int_t, Int_t, Int_t, Int_t, const Option_t*) const{return 0;}               //MayNotUse
-   Double_t     Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, const Option_t*) const{return 0;} //MayNotUse
    Long64_t     Merge(TCollection *);
    virtual void Reset(Option_t *option);
    virtual void Scale(Double_t c1 = 1, Option_t* option = "");
    void         SavePrimitive(std::ostream& out, Option_t* option = "");
-   void         SetBinContent(Int_t bin, Double_t content);
-   void         SetBinContent(Int_t, Int_t, Double_t){return;}           //MayNotUse
-   void         SetBinContent(Int_t, Int_t, Int_t, Double_t){return;}    //MayNotUse
+   virtual void SetBinContent(Int_t bin, Double_t content);
+   virtual void SetBinError(Int_t bin, Double_t error);
    void         SetBinContentChanged(Bool_t flag){fBinContentChanged = flag;}
    void         SetFloat(Bool_t flag = true);
    void         SetNewBinAdded(Bool_t flag){fNewBinAdded = flag;}
    Bool_t       IsInsideBin(Int_t binnr, Double_t x, Double_t y);
    virtual void GetStats(Double_t *stats) const;
+
+   
+protected:
+
+   //functions not to be used for TH2Poly
+
+   Int_t        Fill(Double_t){return -1;}                              //MayNotUse
+   Int_t        Fill(Double_t , const char *, Double_t){return -1;}     //MayNotUse
+   Int_t        Fill(const char *, Double_t , Double_t ){return -1;}    //MayNotUse
+   Int_t        Fill(const char *, const char *, Double_t ){return -1;} //MayNotUse
+   void         FillN(Int_t, const Double_t*, const Double_t*, Int_t){return;}  //MayNotUse
+
+   Double_t     Integral(Int_t, Int_t, const Option_t*) const{return 0;}                             //MayNotUse
+   Double_t     Integral(Int_t, Int_t, Int_t, Int_t, const Option_t*) const{return 0;}               //MayNotUse
+   Double_t     Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, const Option_t*) const{return 0;} //MayNotUse
+
+   virtual Double_t     GetBinContent(Int_t, Int_t) const {return 0;}           //MayNotUse
+   virtual Double_t     GetBinContent(Int_t, Int_t, Int_t) const {return 0;}    //MayNotUse
+
+   virtual Double_t GetBinError(Int_t , Int_t) const {return 0;}            //MayNotUse
+   virtual Double_t GetBinError(Int_t , Int_t , Int_t) const {return 0;}    //MayNotUse
+
+   virtual void         SetBinContent(Int_t, Int_t, Double_t){}           //MayNotUse
+   virtual void         SetBinContent(Int_t, Int_t, Int_t, Double_t){}    //MayNotUse
+   virtual void         SetBinError(Int_t, Int_t, Double_t) {}
+   virtual void         SetBinError(Int_t, Int_t, Int_t, Double_t) {}  
 
 
 protected:

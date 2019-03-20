@@ -618,7 +618,18 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y)
 
 Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
 {
+   // see GetBinCOntent for definition of overflow bins
+   // in case of weighted events store weight square in fSumw2.fArray
+   // but with this indexing:
+   // fSumw2.fArray[0:kNOverflow-1] : sum of weight squares for the overflow bins 
+   // fSumw2.fArray[kNOverflow:fNcells] : sum of weight squares for the standard bins
+   // where fNcells = kNOverflow + Number of bins. kNOverflow=9
+
    if (fNcells <= kNOverflow) return 0;
+
+   // create sum of weight square array if weights are different than 1
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW) )  Sumw2();   
+
    Int_t overflow = 0;
    if      (y > fYaxis.GetXmax()) overflow += -1;
    else if (y > fYaxis.GetXmin()) overflow += -4;
@@ -777,19 +788,47 @@ Double_t TH2Poly::GetBinContent(Int_t bin) const
 /// If the sum of squares of weights has been defined (via Sumw2),
 /// this function returns the sqrt(sum of w2).
 /// otherwise it returns the sqrt(contents) for this bin.
+/// Bins are in range [1:nbins] and for bin < 0 in range [-9:-1] it returns errors for overflow bins.
+/// See also TH2Poly::GetBinContent
 
 Double_t TH2Poly::GetBinError(Int_t bin) const
 {
    if (bin == 0 || bin > GetNumberOfBins() || bin < - kNOverflow) return 0;
    if (fBuffer) ((TH1*)this)->BufferEmpty();
+   // in case of weighted events the sum of the weights are stored in a different way than
+   // a normal histogram
+   // fSumw2.fArray[0:kNOverflow-1] : sum of weight squares for the overflow bins (
+   // fSumw2.fArray[kNOverflow:fNcells] : sum of weight squares for the standard bins
+   //  fNcells = kNOverflow (9) + Number of bins
    if (fSumw2.fN) {
-      Int_t binIndex = (bin < 0) ? bin+kNOverflow-1 : -(bin+1);
+      Int_t binIndex = (bin > 0) ? bin+kNOverflow-1 : -(bin+1);
       Double_t err2 = fSumw2.fArray[binIndex];
       return TMath::Sqrt(err2);
    }
    Double_t error2 = TMath::Abs(GetBinContent(bin));
    return TMath::Sqrt(error2);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the bin Error.
+/// Re-implementation for TH2Poly given the different bin indexing in the
+/// stored squared error array.
+/// See also notes in TH1::SetBinError
+///
+/// Bins are in range [1:nbins] and for bin < 0 in the range [-9:-1] the  errors is set for the overflow bins
+
+
+void TH2Poly::SetBinError(Int_t bin, Double_t error) 
+{
+   if (bin == 0 || bin > GetNumberOfBins() || bin < - kNOverflow) return;
+   if (!fSumw2.fN) Sumw2();
+   SetBinErrorOption(kNormal);
+   // see comment in GetBinError for special convention of bin index in fSumw2 array
+   Int_t binIndex = (bin > 0) ? bin+kNOverflow-1 : -(bin+1);
+   fSumw2.fArray[binIndex] = error * error; 
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the bin name.
@@ -1260,7 +1299,9 @@ void TH2Poly::SetBinContent(Int_t bin, Double_t content)
    }
    else
       fOverflow[-bin - 1] = content;
+
    SetBinContentChanged(kTRUE);
+   fEntries++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
