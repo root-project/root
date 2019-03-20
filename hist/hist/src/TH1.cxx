@@ -8615,16 +8615,17 @@ void TH1::GetLowEdge(Double_t *edge) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the bin Error
 /// Note that this resets the bin eror option to be of Normal Type and for the
-/// non-empty bin the bin error is set by default to the square root of their content,
-/// but in case the user sets explicitly a new bin content (using SetBinContent) he needs to provide also
-/// the error, otherwise a default error = 0 is used.
+/// non-empty bin the bin error is set by default to the square root of their content.
+/// Note that in case the user sets after calling SetBinError explicitly a new bin content (e.g. using SetBinContent)
+/// he needs then to provide also the corresponding bin error (using SetBinError) since the bin error
+/// will not recalcualated after setting the content and a default error = 0 will be used for those bins.
 ///
 /// See convention for numbering bins in TH1::GetBin
 
 void TH1::SetBinError(Int_t bin, Double_t error)
 {
-   if (!fSumw2.fN) Sumw2();
    if (bin < 0 || bin>= fSumw2.fN) return;
+   if (!fSumw2.fN) Sumw2();
    fSumw2.fArray[bin] = error * error;
    // reset the bin error option
    SetBinErrorOption(kNormal);
