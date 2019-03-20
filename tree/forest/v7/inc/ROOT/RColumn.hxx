@@ -53,14 +53,10 @@ private:
    RPageStorage::ColumnHandle_t fHandleSource;
    /// Open page into which new elements are being written
    RPage fHeadPage;
-   /// The number of elements written resp. available in the input tree
+   /// The number of elements written resp. available in the column
    ForestIndex_t fNElements;
    /// The currently mapped page for reading
    RPage fCurrentPage;
-   /// Index of the first element in fCurrentPage
-   ForestIndex_t fCurrentPageFirst;
-   /// Index of the last element in fCurrentPage
-   ForestIndex_t fCurrentPageLast;
    /// The column id is used to find matching pages with content when reading
    ColumnId_t fColumnIdSource;
 
@@ -96,24 +92,25 @@ public:
    }
 
    void Read(const ForestIndex_t index, RColumnElementBase* element) {
-      if ((index < fCurrentPageFirst) || (index > fCurrentPageLast)) {
+      if (!fCurrentPage.Contains(index)) {
          MapPage(index);
       }
       void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
-                  (index - fCurrentPageFirst) * element->GetSize();
+                  (index - fCurrentPage.GetRangeFirst()) * element->GetSize();
       element->Deserialize(src, 1);
    }
 
    void ReadV(const ForestIndex_t index, const ForestIndex_t count, RColumnElementBase* elemArray) {
-      if ((index < fCurrentPageFirst) || (index > fCurrentPageLast)) {
+      if (!fCurrentPage.Contains(index)) {
          MapPage(index);
       }
-      ForestIndex_t idxInPage = index - fCurrentPageFirst;
+      ForestIndex_t idxInPage = index - fCurrentPage.GetRangeFirst();
+
       void* src = static_cast<unsigned char *>(fCurrentPage.GetBuffer()) + idxInPage * elemArray->GetSize();
-      if (index + count <= fCurrentPageLast + 1) {
+      if (index + count <= fCurrentPage.GetRangeLast() + 1) {
          elemArray->Deserialize(src, count);
       } else {
-         ForestIndex_t nBatch = fCurrentPageLast - idxInPage;
+         ForestIndex_t nBatch = fCurrentPage.GetRangeLast() - idxInPage;
          elemArray->Deserialize(src, nBatch);
          RColumnElementBase elemTail(*elemArray, nBatch);
          ReadV(index + nBatch, count - nBatch, &elemTail);
@@ -128,24 +125,24 @@ public:
          return static_cast<CppT*>(element->GetRawContent());
       }
 
-      if ((index < fCurrentPageFirst) || (index > fCurrentPageLast)) {
+      if (!fCurrentPage.Contains(index)) {
          MapPage(index);
       }
       return reinterpret_cast<CppT*>(
          static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
-         (index - fCurrentPageFirst) * RColumnElement<CppT, ColumnT>::kSize);
+         (index - fCurrentPage.GetRangeFirst()) * RColumnElement<CppT, ColumnT>::kSize);
    }
 
    /// MapV may fail if there are less than count consecutive elements or if the type pair is not mappable
    template <typename CppT, EColumnType ColumnT>
    void* MapV(const ForestIndex_t index, const ForestIndex_t count) {
       if (!RColumnElement<CppT, ColumnT>::kIsMappable) return nullptr;
-      if ((index < fCurrentPageFirst) || (index > fCurrentPageLast)) {
+      if (!fCurrentPage.Contains(index)) {
          MapPage(index);
       }
-      if (index + count > fCurrentPageLast + 1) return nullptr;
+      if (index + count > fCurrentPage.GetRangeLast() + 1) return nullptr;
       return static_cast<unsigned char *>(fCurrentPage.GetBuffer()) +
-             (index - fCurrentPageFirst) * kColumnElementSizes[static_cast<int>(ColumnT)];
+             (index - fCurrentPage.GetRangeFirst()) * kColumnElementSizes[static_cast<int>(ColumnT)];
    }
 
    void Flush();

@@ -24,8 +24,6 @@
 ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model)
    : fModel(model), fPageSink(nullptr), fPageSource(nullptr), fHeadPage(), fNElements(0),
      fCurrentPage(),
-     fCurrentPageFirst(ROOT::Experimental::kInvalidForestIndex),
-     fCurrentPageLast(ROOT::Experimental::kInvalidForestIndex),
      fColumnIdSource(kInvalidColumnId)
 {
 }
@@ -61,6 +59,4 @@ void ROOT::Experimental::Detail::RColumn::MapPage(const ForestIndex_t index)
 {
    fPageSource->GetPagePool()->ReleasePage(fCurrentPage);
    fCurrentPage = fPageSource->GetPagePool()->GetPage(this, index);
-   fCurrentPageFirst = fCurrentPage.GetRangeStart();
-   fCurrentPageLast = fCurrentPage.GetRangeStart() + fCurrentPage.GetNElements() - 1;
 }

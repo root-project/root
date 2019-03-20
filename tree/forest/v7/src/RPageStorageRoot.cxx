@@ -107,7 +107,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t column
       std::to_string(columnId) + RMapper::kKeySeparator +
       std::to_string(fCurrentCluster.fPagesPerColumn[columnId].fRangeStarts.size());
    fDirectory->WriteObject(&pagePayload, key.c_str());
-   fCurrentCluster.fPagesPerColumn[columnId].fRangeStarts.push_back(page.GetRangeStart());
+   fCurrentCluster.fPagesPerColumn[columnId].fRangeStarts.push_back(page.GetRangeFirst());
    fForestFooter.fNElementsPerColumn[columnId] += page.GetNElements();
 }
 
@@ -280,7 +280,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
    auto elemsInPage = firstOutsidePage - firstInPage;
    void* buf = page->Reserve(elemsInPage);
    R__ASSERT(buf != nullptr);
-   page->SetRangeStart(firstInPage);
+   page->SetRangeFirst(firstInPage);
 
    auto clusterId = fMapper.fColumnIndex[columnId].fClusterId[pageIdx];
    auto pageInCluster = fMapper.fColumnIndex[columnId].fPageInCluster[pageIdx];
