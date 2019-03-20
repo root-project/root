@@ -1568,9 +1568,9 @@ public:
                                                        fLoopManager->GetTree(), fLoopManager->GetDataSource(), isCustom,
                                                        convertVector2RVec);
       } else {
-         // must convert the alias "__tdf::column_type" to a readable type
+         // must convert the alias "__rdf::column_type" to a readable type
          const auto colID = std::to_string(fCustomColumns.GetColumns().at(std::string(column))->GetID());
-         const auto call = "ROOT::Internal::RDF::TypeID2TypeName(typeid(__tdf" + std::to_string(fLoopManager->GetID()) +
+         const auto call = "ROOT::Internal::RDF::TypeID2TypeName(typeid(__rdf" + std::to_string(fLoopManager->GetID()) +
                            "::" + std::string(column) + colID + "_type))";
          const auto calcRes = RDFInternal::InterpreterCalc(call.c_str());
          return *reinterpret_cast<std::string *>(calcRes.first); // copy result to stack
@@ -1869,7 +1869,7 @@ private:
       fLoopManager->RegisterCustomColumn(entryColumn.get());
 
       // Declare return type to the interpreter, for future use by jitted actions
-      auto retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { using " + entryColName +
+      auto retTypeDeclaration = "namespace __rdf" + std::to_string(fLoopManager->GetID()) + " { using " + entryColName +
                                 std::to_string(entryColumn->GetID()) + "_type = ULong64_t; }";
       RDFInternal::InterpreterDeclare(retTypeDeclaration);
 
@@ -1889,7 +1889,7 @@ private:
       fCustomColumns = std::move(newCols);
 
       // Declare return type to the interpreter, for future use by jitted actions
-      retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { using " + slotColName +
+      retTypeDeclaration = "namespace __rdf" + std::to_string(fLoopManager->GetID()) + " { using " + slotColName +
                            std::to_string(slotColumn->GetID()) + "_type = unsigned int; }";
       RDFInternal::InterpreterDeclare(retTypeDeclaration);
 
@@ -2003,7 +2003,7 @@ private:
          retTypeName = "void /* The type of column \"" + std::string(name) + "\" (" + demangledType +
                        ") is not known to the interpreter. */";
       }
-      const auto retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) +
+      const auto retTypeDeclaration = "namespace __rdf" + std::to_string(fLoopManager->GetID()) +
                                       " { " + +" using " + std::string(name) + std::to_string(newColumn->GetID()) +
                                       "_type = " + retTypeName + "; }";
       RDFInternal::InterpreterDeclare(retTypeDeclaration);
