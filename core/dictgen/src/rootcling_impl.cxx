@@ -4240,8 +4240,10 @@ int RootClingMain(int argc,
    }
 
    if (!isPCH && cxxmodule) {
+#ifndef R__MACOSX
       // includeDir is where modulemaps exist.
       clingArgsInterpreter.push_back("-modulemap_overlay=" + includeDir);
+#endif //R__MACOSX
 
       // We just pass -fmodules, the CIFactory will do the rest and configure
       // clang correctly once it sees this flag.
