@@ -42,8 +42,8 @@ class RPage {
    std::size_t fCapacity;
    std::size_t fSize;
    std::size_t fElementSize;
-   ForestIndex_t fRangeFirst;
-   ForestIndex_t fNElements;
+   ForestSize_t fRangeFirst;
+   ForestSize_t fNElements;
 
 public:
    RPage()
@@ -61,10 +61,10 @@ public:
    std::size_t GetCapacity() const { return fCapacity; }
    /// The space taken by column elements in the buffer
    std::size_t GetSize() const { return fSize; }
-   ForestIndex_t GetNElements() const { return fSize / fElementSize; }
-   ForestIndex_t GetRangeFirst() const { return fRangeFirst; }
-   ForestIndex_t GetRangeLast() const { return fRangeFirst + fNElements - 1; }
-   bool Contains(ForestIndex_t index) const {
+   ForestSize_t GetNElements() const { return fSize / fElementSize; }
+   ForestSize_t GetRangeFirst() const { return fRangeFirst; }
+   ForestSize_t GetRangeLast() const { return fRangeFirst + fNElements - 1; }
+   bool Contains(ForestSize_t index) const {
       return (index >= fRangeFirst) && (index < fRangeFirst + fNElements);
    }
    void* GetBuffer() const { return fBuffer; }
@@ -80,9 +80,9 @@ public:
       fNElements = nElements;
       return static_cast<unsigned char *>(fBuffer) + offset;
    }
-   void SetRangeFirst(ForestIndex_t rangeFirst) { fRangeFirst = rangeFirst; }
+   void SetRangeFirst(ForestSize_t rangeFirst) { fRangeFirst = rangeFirst; }
    /// Forget all currently stored elements (size == 0) and set a new starting index.
-   void Reset(ForestIndex_t rangeFirst) { fSize = 0; fRangeFirst = rangeFirst; }
+   void Reset(ForestSize_t rangeFirst) { fSize = 0; fRangeFirst = rangeFirst; }
 
    bool IsNull() const { return fBuffer == nullptr; }
    bool operator ==(const RPage &other) const { return fBuffer == other.fBuffer; }

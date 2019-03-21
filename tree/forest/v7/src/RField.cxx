@@ -50,7 +50,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType == "string") normalizedType = "std::string";
    if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
 
-   if (normalizedType == "ROOT::Experimental::ForestIndex_t") return new RField<ForestIndex_t>(fieldName);
+   if (normalizedType == "ROOT::Experimental::ForestSize_t") return new RField<ForestSize_t>(fieldName);
    if (normalizedType == "std::uint32_t") return new RField<std::uint32_t>(fieldName);
    if (normalizedType == "float") return new RField<float>(fieldName);
    if (normalizedType == "double") return new RField<double>(fieldName);
@@ -61,7 +61,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
    }
    // TODO: create an RFieldCollection?
-   if (normalizedType == ":Collection:") return new RField<ForestIndex_t>(fieldName);
+   if (normalizedType == ":Collection:") return new RField<ForestSize_t>(fieldName);
    auto cl = TClass::GetClass(normalizedType.c_str());
    if (cl != nullptr) {
       return new RFieldClass(fieldName, normalizedType);
@@ -75,15 +75,15 @@ void ROOT::Experimental::Detail::RFieldBase::DoAppend(const ROOT::Experimental::
 }
 
 void ROOT::Experimental::Detail::RFieldBase::DoRead(
-   ROOT::Experimental::ForestIndex_t /*index*/,
+   ROOT::Experimental::ForestSize_t /*index*/,
    RFieldValueBase* /*value*/)
 {
    R__ASSERT(false);
 }
 
 void ROOT::Experimental::Detail::RFieldBase::DoReadV(
-   ROOT::Experimental::ForestIndex_t /*index*/,
-   ROOT::Experimental::ForestIndex_t /*count*/,
+   ROOT::Experimental::ForestSize_t /*index*/,
+   ROOT::Experimental::ForestSize_t /*count*/,
    void* /*dst*/)
 {
    R__ASSERT(false);
@@ -203,7 +203,7 @@ ROOT::Experimental::RForestEntry* ROOT::Experimental::RFieldRoot::GenerateEntry(
 //------------------------------------------------------------------------------
 
 
-void ROOT::Experimental::RField<ROOT::Experimental::ForestIndex_t>::DoGenerateColumns()
+void ROOT::Experimental::RField<ROOT::Experimental::ForestSize_t>::DoGenerateColumns()
 {
    RColumnModel model(GetName(), EColumnType::kIndex, true /* isSorted*/);
    fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
@@ -265,11 +265,11 @@ void ROOT::Experimental::RField<std::string>::DoAppend(const ROOT::Experimental:
 }
 
 void ROOT::Experimental::RField<std::string>::DoRead(
-   ROOT::Experimental::ForestIndex_t index, ROOT::Experimental::Detail::RFieldValueBase* value)
+   ROOT::Experimental::ForestSize_t index, ROOT::Experimental::Detail::RFieldValueBase* value)
 {
    auto typedValue = reinterpret_cast<ROOT::Experimental::RFieldValue<std::string>*>(value)->Get();
-   auto idxStart = (index == 0) ? 0 : *fColumns[0]->Map<ForestIndex_t, EColumnType::kIndex>(index - 1, &fElemIndex);
-   auto idxEnd = *fColumns[0]->Map<ForestIndex_t, EColumnType::kIndex>(index, &fElemIndex);
+   auto idxStart = (index == 0) ? 0 : *fColumns[0]->Map<ForestSize_t, EColumnType::kIndex>(index - 1, &fElemIndex);
+   auto idxEnd = *fColumns[0]->Map<ForestSize_t, EColumnType::kIndex>(index, &fElemIndex);
    auto nChars = idxEnd - idxStart;
    typedValue->resize(nChars);
    Detail::RColumnElement<char, EColumnType::kByte> elemChars(const_cast<char*>(typedValue->data()));
@@ -312,7 +312,7 @@ void ROOT::Experimental::RFieldClass::DoAppend(const Detail::RFieldValueBase& va
    }
 }
 
-void ROOT::Experimental::RFieldClass::DoRead(ForestIndex_t index, Detail::RFieldValueBase* value) {
+void ROOT::Experimental::RFieldClass::DoRead(ForestSize_t index, Detail::RFieldValueBase* value) {
    TIter next(fClass->GetListOfDataMembers());
    unsigned i = 0;
    while (auto dataMember = static_cast<TDataMember *>(next())) {
@@ -381,19 +381,19 @@ void ROOT::Experimental::RFieldVector::DoAppend(const Detail::RFieldValueBase& v
       auto itemValue = fSubFields[0]->CaptureValue(typedValue->data() + (i * fItemSize));
       fSubFields[0]->Append(itemValue);
    }
-   Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex> elemIndex(&fNWritten);
+   Detail::RColumnElement<ForestSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
    fNWritten += count;
    fColumns[0]->Append(elemIndex);
 }
 
-void ROOT::Experimental::RFieldVector::DoRead(ForestIndex_t index, Detail::RFieldValueBase* value) {
+void ROOT::Experimental::RFieldVector::DoRead(ForestSize_t index, Detail::RFieldValueBase* value) {
    auto typedValue = reinterpret_cast<RFieldValue<std::vector<char>>*>(value)->Get();
 
-   ForestIndex_t dummy;
-   Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex> elemIndex(&dummy);
+   ForestSize_t dummy;
+   Detail::RColumnElement<ForestSize_t, EColumnType::kIndex> elemIndex(&dummy);
    auto idxStart = (index == 0) ? 0
-      : *fColumns[0]->template Map<ForestIndex_t, EColumnType::kIndex>(index - 1, &elemIndex);
-   auto idxEnd = *fColumns[0]->template Map<ForestIndex_t, EColumnType::kIndex>(index, &elemIndex);
+      : *fColumns[0]->template Map<ForestSize_t, EColumnType::kIndex>(index - 1, &elemIndex);
+   auto idxEnd = *fColumns[0]->template Map<ForestSize_t, EColumnType::kIndex>(index, &elemIndex);
    auto nItems = idxEnd - idxStart;
 
    typedValue->resize(nItems * fItemSize);
