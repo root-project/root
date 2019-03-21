@@ -37,9 +37,18 @@ struct RForestTest {
 /// Integer type long enough to hold the maximum number of entries in a column
 using ForestIndex_t = std::uint64_t;
 constexpr ForestIndex_t kInvalidForestIndex = std::uint64_t(-1);
-/// Integer type long enough to hold the maximum number of entries in a single cluster
-using ClusterIndex_t = std::uint32_t;
-constexpr ClusterIndex_t kInvalidClusterIndex = std::uint32_t(-1);
+/// Wrap the 32bit integer in a struct in order to avoid template specialization clash with std::uint32_t
+struct RClusterIndex {
+   RClusterIndex() : fValue(0) {}
+   explicit constexpr RClusterIndex(std::uint32_t value) : fValue(value) {}
+   RClusterIndex& operator =(const std::uint32_t value) { fValue = value; return *this; }
+   RClusterIndex& operator +=(const std::uint32_t value) { fValue += value; return *this; }
+   operator std::uint32_t() const { return fValue; }
+
+   std::uint32_t fValue;
+};
+using ClusterIndex_t = RClusterIndex;
+constexpr ClusterIndex_t kInvalidClusterIndex(std::uint32_t(-1));
 
 /// Uniquely identifies a physical column within the scope of the current process, used to tag pages
 using ColumnId_t = std::int64_t;
