@@ -1949,7 +1949,7 @@
       }
 
       player.ShowExtraButtons = function(args) {
-         var main = $("#" + this.divid);
+         var main = $(this.select_main().node());
 
           main.find(".treedraw_buttons")
              .append(" Cut: <input class='treedraw_cut ui-corner-all ui-widget' style='width:8em;margin-left:5px' title='cut expression'></input>"+
@@ -1975,7 +1975,7 @@
 
          var show_extra = args && (args.parse_cut || args.numentries || args.firstentry);
 
-         var main =$("#" + divid);
+         var main = $("#" + divid);
 
          main.html("<div class='treedraw_buttons' style='padding-left:0.5em'>" +
                "<button class='treedraw_exe' title='Execute draw expression'>Draw</button>" +

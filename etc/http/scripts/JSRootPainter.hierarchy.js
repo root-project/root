@@ -2779,19 +2779,17 @@
             this.CreateSeparator(handle, main, handle.groups[cnt]);
    }
 
-   GridDisplay.prototype.ForEachFrame = function(userfunc,  only_visible) {
-      var main = this.select_main();
-
+   GridDisplay.prototype.ForEachFrame = function(userfunc, only_visible) {
       if (this.simple_layout)
-         userfunc(main.node());
+         userfunc(this.GetFrame());
       else
-      main.selectAll('.jsroot_newgrid').each(function() {
+      this.select_main().selectAll('.jsroot_newgrid').each(function() {
          userfunc(d3.select(this).node());
       });
    }
 
    GridDisplay.prototype.GetActiveFrame = function() {
-      if (this.simple_layout) return this.select_main().node();
+      if (this.simple_layout) return this.GetFrame();
 
       var found = MDIDisplay.prototype.GetActiveFrame.call(this);
       if (found) return found;
@@ -2808,10 +2806,10 @@
    }
 
    GridDisplay.prototype.GetFrame = function(id) {
-      var main = this.select_main();
-      if (this.simple_layout) return main.node();
+      if (this.simple_layout)
+         return this.select_main('origin').node();
       var res = null;
-      main.selectAll('.jsroot_newgrid').each(function() {
+      this.select_main().selectAll('.jsroot_newgrid').each(function() {
          if (id-- === 0) res = this;
       });
       return res;
