@@ -16,6 +16,7 @@
 #include "TClass.h"
 #include "TList.h"
 #include "TMath.h"
+#include <cassert>
 
 ClassImp(TH2Poly);
 
@@ -207,6 +208,8 @@ TH2PolyBin *TH2Poly::CreateBin(TObject *poly)
 
    fNcells++;
    Int_t ibin = fNcells - kNOverflow;
+   // if structure fsumw2 is created extend it
+   if (fSumw2.fN) fSumw2.Set(fNcells); 
    return new TH2PolyBin(poly, ibin);
 }
 
@@ -326,6 +329,9 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
       GetStats(s1);
       h1->GetStats(s2);
    }
+   //   get number of entries now because afterwards UpdateBinContent will change it 
+   Double_t entries = TMath::Abs( GetEntries() + c1 * h1->GetEntries() );
+
 
    // Perform the Add.
    Double_t factor = 1;
@@ -359,7 +365,7 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
          else        s1[i] += c1 * s2[i];
       }
       PutStats(s1);
-      SetEntries(std::abs(GetEntries() + c1 * h1->GetEntries()));
+      SetEntries(entries);
    }
    return kTRUE;
 }
@@ -678,7 +684,10 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
          fTsumwx2 = fTsumwx2 + w*x*x;
          fTsumwy  = fTsumwy + w*y;
          fTsumwy2 = fTsumwy2 + w*y*y;
-         if (fSumw2.fN) fSumw2.fArray[bi] += w*w;
+         if (fSumw2.fN) {
+            assert(bi < fSumw2.fN);
+            fSumw2.fArray[bi] += w*w;
+         }
          fEntries++;
 
          SetBinContentChanged(kTRUE);
