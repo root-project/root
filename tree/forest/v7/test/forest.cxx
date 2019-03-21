@@ -140,8 +140,64 @@ TEST(RForest, WriteRead)
    EXPECT_STREQ("abc", rdKlass->s.c_str());
 }
 
+TEST(RForest, Clusters)
+{
+   auto modelWrite = RForestModel::Create();
+   auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
+   auto wrTag = modelWrite->MakeField<std::string>("tag", "xyz");
+   auto wrNnlo = modelWrite->MakeField<std::vector<std::vector<float>>>("nnlo");
+   wrNnlo->push_back(std::vector<float>());
+   wrNnlo->push_back(std::vector<float>{1.0});
+   wrNnlo->push_back(std::vector<float>{1.0, 2.0, 4.0, 8.0});
+
+   auto modelRead = std::unique_ptr<RForestModel>(modelWrite->Clone());
+
+   {
+      ROutputForest forest(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
+      forest.Fill();
+      forest.CommitCluster();
+      *wrPt = 24.0;
+      wrNnlo->clear();
+      wrNnlo->push_back(std::vector<float>{42.0});
+      *wrTag = "12345";
+      forest.Fill();
+   }
+
+   auto rdPt = modelRead->Get<float>("pt");
+   auto rdTag = modelRead->Get<std::string>("tag");
+   auto rdNnlo = modelRead->Get<std::vector<std::vector<float>>>("nnlo");
+
+   RInputForest forest(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", "test.root"));
+   EXPECT_EQ(2U, forest.GetNEntries());
+   forest.GetEntry(0);
+
+   EXPECT_EQ(42.0, *rdPt);
+   EXPECT_STREQ("xyz", rdTag->c_str());
+
+   EXPECT_EQ(3U, rdNnlo->size());
+   EXPECT_EQ(0U, (*rdNnlo)[0].size());
+   EXPECT_EQ(1U, (*rdNnlo)[1].size());
+   EXPECT_EQ(4U, (*rdNnlo)[2].size());
+   EXPECT_EQ(1.0, (*rdNnlo)[1][0]);
+   EXPECT_EQ(1.0, (*rdNnlo)[2][0]);
+   EXPECT_EQ(2.0, (*rdNnlo)[2][1]);
+   EXPECT_EQ(4.0, (*rdNnlo)[2][2]);
+   EXPECT_EQ(8.0, (*rdNnlo)[2][3]);
+
+   forest.GetEntry(1);
+
+   EXPECT_EQ(24.0, *rdPt);
+   EXPECT_STREQ("12345", rdTag->c_str());
+
+   EXPECT_EQ(1U, rdNnlo->size());
+   EXPECT_EQ(1U, (*rdNnlo)[0].size());
+   EXPECT_EQ(42.0, (*rdNnlo)[0][0]);
+}
+
+
 TEST(RForest, View)
 {
+   // TODO(jblomer): test with multiple clusters
    auto model = RForestModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
    auto fieldTag = model->MakeField<std::string>("tag", "xyz");
