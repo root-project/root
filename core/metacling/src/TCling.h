@@ -277,6 +277,8 @@ public: // Public Interface
    void     GetFunctionOverloads(ClassInfo_t *cl, const char *funcname, std::vector<DeclId_t>& res) const;
    virtual void     LoadFunctionTemplates(TClass* cl) const;
 
+   virtual std::vector<std::string> GetUsingNamespaces(ClassInfo_t *cl) const;
+
    void    GetInterpreterTypeName(const char* name, std::string &output, Bool_t full = kFALSE);
    void    Execute(const char* function, const char* params, int* error = 0);
    void    Execute(TObject* obj, TClass* cl, const char* method, const char* params, int* error = 0);

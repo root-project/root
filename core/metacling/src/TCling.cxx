@@ -3961,6 +3961,16 @@ void TCling::LoadFunctionTemplates(TClass* cl) const
       }
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the scopes representing using declarations of namespace
+
+std::vector<std::string> TCling::GetUsingNamespaces(ClassInfo_t *cl) const
+{
+   TClingClassInfo *ci = (TClingClassInfo*)cl;
+   return ci->GetUsingNamespaces();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create list of pointers to data members for TClass cl.
 /// This is now a nop.  The creation and updating is handled in
