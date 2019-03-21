@@ -58,18 +58,18 @@ struct RForestHeader {
 struct RForestFooter {
    std::int32_t fVersion = 0;
    std::int32_t fNClusters = 0;
-   ForestIndex_t fNEntries = 0;
-   std::vector<ForestIndex_t> fNElementsPerColumn;
+   ForestSize_t fNEntries = 0;
+   std::vector<ForestSize_t> fNElementsPerColumn;
 };
 
 struct RPageInfo {
-   std::vector<ForestIndex_t> fRangeStarts;
+   std::vector<ForestSize_t> fRangeStarts;
 };
 
 struct RClusterFooter {
    std::int32_t fVersion = 0;
-   ForestIndex_t fEntryRangeStart = 0;
-   ForestIndex_t fNEntries = 0;
+   ForestSize_t fEntryRangeStart = 0;
+   ForestSize_t fNEntries = 0;
    std::vector<RPageInfo> fPagesPerColumn;
 };
 
@@ -98,10 +98,10 @@ public:
    static constexpr const char* kKeyPagePayload = "RFP";
 
    struct RColumnIndex {
-      ForestIndex_t fNElements = 0;
-      std::vector<ForestIndex_t> fRangeStarts;
-      std::vector<ForestIndex_t> fClusterId;
-      std::vector<ForestIndex_t> fPageInCluster;
+      ForestSize_t fNElements = 0;
+      std::vector<ForestSize_t> fRangeStarts;
+      std::vector<ForestSize_t> fClusterId;
+      std::vector<ForestSize_t> fPageInCluster;
    };
 
    struct RFieldDescriptor {
@@ -110,7 +110,7 @@ public:
       std::string fTypeName;
    };
 
-   ForestIndex_t fNEntries = 0;
+   ForestSize_t fNEntries = 0;
    std::unordered_map<std::int32_t, std::unique_ptr<RColumnModel>> fId2ColumnModel;
    std::unordered_map<std::string, std::int32_t> fColumnName2Id;
    std::vector<RColumnIndex> fColumnIndex;
@@ -145,7 +145,7 @@ private:
    ROOT::Experimental::Internal::RForestFooter fForestFooter;
 
    RMapper fMapper;
-   ForestIndex_t fPrevClusterNEntries;
+   ForestSize_t fPrevClusterNEntries;
 
 public:
    RPageSinkRoot(std::string_view forestName, RSettings settings);
@@ -155,7 +155,7 @@ public:
    ColumnHandle_t AddColumn(RColumn* column) final;
    void Create(RForestModel* model) final;
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
-   void CommitCluster(ForestIndex_t nEntries) final;
+   void CommitCluster(ForestSize_t nEntries) final;
    void CommitDataset() final;
 };
 
@@ -190,9 +190,9 @@ public:
    ColumnHandle_t AddColumn(RColumn* column) final;
    void Attach() final;
    std::unique_ptr<ROOT::Experimental::RForestModel> GenerateModel() final;
-   void PopulatePage(ColumnHandle_t columnHandle, ForestIndex_t index, RPage* page) final;
-   ForestIndex_t GetNEntries() final;
-   ForestIndex_t GetNElements(ColumnHandle_t columnHandle) final;
+   void PopulatePage(ColumnHandle_t columnHandle, ForestSize_t index, RPage* page) final;
+   ForestSize_t GetNEntries() final;
+   ForestSize_t GetNElements(ColumnHandle_t columnHandle) final;
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle) final;
 };
 
