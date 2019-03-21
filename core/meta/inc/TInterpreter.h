@@ -287,6 +287,7 @@ public:
    virtual DeclId_t GetFunctionTemplate(ClassInfo_t *cl, const char *funcname) = 0;
    virtual void     GetFunctionOverloads(ClassInfo_t *cl, const char *funcname, std::vector<DeclId_t>& res) const = 0;
    virtual void     LoadFunctionTemplates(TClass* cl) const = 0;
+   virtual std::vector<std::string> GetUsingNamespaces(ClassInfo_t *cl) const = 0;
 
    // CallFunc interface
    virtual void   CallFunc_Delete(CallFunc_t * /* func */) const {;}
