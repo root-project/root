@@ -1958,12 +1958,15 @@
 
          this.BuildContour(handle, levels, palette,
             function(colindx,xp,yp,iminus,iplus) {
+                // no need for duplicated point
+                if ((xp[iplus] === xp[iminus]) && (yp[iplus] === yp[iminus])) iplus--;
+
                 // ignore less than three points
                 if (iplus - iminus < 3) return;
 
                 var pnts = [];
 
-                for (var i = iminus; i<=iplus; ++i)
+                for (var i = iminus; i <= iplus; ++i)
                    if ((i === iminus) || (xp[i] !== xp[i-1]) || (yp[i] !== yp[i-1]))
                       pnts.push(new THREE.Vector2(xp[i], yp[i]));
 
