@@ -977,7 +977,7 @@
       switch(fmt) {
          case "stat" : fmt = pave.fStatFormat || JSROOT.gStyle.fStatFormat; break;
          case "fit": fmt = pave.fFitFormat || JSROOT.gStyle.fFitFormat; break;
-         case "entries": if (value < 1e9) return value.toFixed(0); fmt = "14.7g"; break;
+         case "entries": if ((Math.abs(value) < 1e9) && (Math.round(value) == value)) return value.toFixed(0); fmt = "14.7g"; break;
          case "last": fmt = this.lastformat; break;
       }
 
@@ -2995,7 +2995,7 @@
 
       var main = this.main_painter(),
           fp = this.frame_painter();
-      if ((main !== this) && main.fContour) {
+      if (main && (main !== this) && main.fContour) {
          this.fContour = main.fContour;
          this.fCustomContour = main.fCustomContour;
          this.colzmin = main.colzmin;
@@ -3154,9 +3154,10 @@
 
          var zaxis = this.GetHisto().fZaxis;
 
-         JSROOT.extend(pal.fAxis, { fTitle: zaxis.fTitle, fTitleSize: zaxis.fTitleSize, fTextColor: zaxis.fTitleColor, fChopt: "+",
+         JSROOT.extend(pal.fAxis, { fTitle: zaxis.fTitle, fTitleSize: zaxis.fTitleSize, fChopt: "+",
                                     fLineColor: zaxis.fAxisColor, fLineSyle: 1, fLineWidth: 1,
-                                    fTextAngle: 0, fTextSize: zaxis.fLabelSize, fTextAlign: 11, fTextColor: zaxis.fLabelColor, fTextFont: zaxis.fLabelFont });
+                                    fTextAngle: 0, fTextSize: zaxis.fLabelSize, fTextAlign: 11,
+                                    fTextColor: zaxis.fLabelColor, fTextFont: zaxis.fLabelFont });
 
          // place colz in the beginning, that stat box is always drawn on the top
          this.AddFunction(pal, true);

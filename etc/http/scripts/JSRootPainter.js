@@ -2867,12 +2867,14 @@
       if (!pad_name || c.empty()) return c;
 
       var cp = c.property('pad_painter');
-      if (cp.pads_cache && cp.pads_cache[pad_name])
+      if (cp && cp.pads_cache && cp.pads_cache[pad_name])
          return d3.select(cp.pads_cache[pad_name]);
 
       c = c.select(".primitives_layer .__root_pad_" + pad_name);
-      if (!cp.pads_cache) cp.pads_cache = {};
-      cp.pads_cache[pad_name] = c.node();
+      if (cp) {
+         if (!cp.pads_cache) cp.pads_cache = {};
+         cp.pads_cache[pad_name] = c.node();
+      }
       return c;
    }
 
