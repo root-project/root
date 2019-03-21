@@ -37,16 +37,16 @@ namespace Experimental {
 // clang-format on
 class RForestViewRange {
 private:
-   const ForestIndex_t fStart;
-   const ForestIndex_t fEnd;
+   const ForestSize_t fStart;
+   const ForestSize_t fEnd;
 public:
-   class RIterator : public std::iterator<std::forward_iterator_tag, ForestIndex_t> {
+   class RIterator : public std::iterator<std::forward_iterator_tag, ForestSize_t> {
    private:
       using iterator = RIterator;
-      ForestIndex_t fIndex = kInvalidForestIndex;
+      ForestSize_t fIndex = kInvalidForestIndex;
    public:
       RIterator() = default;
-      explicit RIterator(ForestIndex_t index) : fIndex(index) {}
+      explicit RIterator(ForestSize_t index) : fIndex(index) {}
       ~RIterator() = default;
 
       iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
@@ -57,7 +57,7 @@ public:
       bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
    };
 
-   RForestViewRange(ForestIndex_t start, ForestIndex_t end) : fStart(start), fEnd(end) {}
+   RForestViewRange(ForestSize_t start, ForestSize_t end) : fStart(start), fEnd(end) {}
    RIterator begin() { return RIterator(fStart); }
    RIterator end() { return RIterator(fEnd); }
 };
@@ -104,7 +104,7 @@ public:
    RForestView& operator=(RForestView&& other) = default;
    ~RForestView() { fField.DestroyValue(fValue); }
 
-   const T& operator()(ForestIndex_t index) {
+   const T& operator()(ForestSize_t index) {
       fField.Read(index, &fValue);
       return *fValue.Get();
    }
@@ -130,7 +130,7 @@ public:
    RForestView& operator=(RForestView&& other) = default;
    ~RForestView() = default;
 
-   float operator()(ForestIndex_t index) { return *fField.Map(index); }
+   float operator()(ForestSize_t index) { return *fField.Map(index); }
 };
 
 
@@ -141,7 +141,7 @@ public:
 \brief A tree view for a collection, that can itself generate new tree views for its nested fields.
 */
 // clang-format on
-class RForestViewCollection : public RForestView<ForestIndex_t> {
+class RForestViewCollection : public RForestView<ForestSize_t> {
     friend class RInputForest;
 
 private:
@@ -149,7 +149,7 @@ private:
    Detail::RPageSource* fSource;
 
    RForestViewCollection(std::string_view fieldName, Detail::RPageSource* source)
-      : RForestView<ForestIndex_t>(fieldName, source)
+      : RForestView<ForestSize_t>(fieldName, source)
       , fCollectionName(fieldName)
       , fSource(source)
    {}
@@ -167,8 +167,8 @@ public:
    RForestViewCollection& operator=(RForestViewCollection&& other) = default;
    ~RForestViewCollection() = default;
 
-   RForestViewRange GetViewRange(ForestIndex_t index) {
-      ForestIndex_t start = (index == 0) ? 0 : *fField.Map(index - 1);
+   RForestViewRange GetViewRange(ForestSize_t index) {
+      ForestSize_t start = (index == 0) ? 0 : *fField.Map(index - 1);
       return RForestViewRange(start, *fField.Map(index));
    }
    template <typename T>
@@ -177,8 +177,8 @@ public:
       return RForestViewCollection(GetSubName(fieldName), fSource);
    }
 
-   ForestIndex_t operator()(ForestIndex_t index) {
-      ForestIndex_t offsetPrev = (index == 0) ? 0 : *fField.Map(index - 1);
+   ForestSize_t operator()(ForestSize_t index) {
+      ForestSize_t offsetPrev = (index == 0) ? 0 : *fField.Map(index - 1);
       return *fField.Map(index) - offsetPrev;
    }
 };
