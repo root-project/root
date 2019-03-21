@@ -59,7 +59,8 @@ void Background_width2() {
    d3->Draw("SAME L");
 
    for (i = 0; i < nbins; i++) source[i]=back->GetBinContent(i + 1);
-   s->Background(source,nbins,10,TSpectrum::kBackDecreasingWindow,TSpectrum::kBackOrder2,kFALSE,
+   s->Background(source,nbins,40,TSpectrum::kBackDecreasingWindow,
+                 TSpectrum::kBackOrder2,kFALSE,
                  TSpectrum::kBackSmoothing3,kFALSE);
    for (i = 0; i < nbins; i++) d4->SetBinContent(i + 1,source[i]);
    d4->SetLineColor(kMagenta);
