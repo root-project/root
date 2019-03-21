@@ -12,12 +12,11 @@
 ## \author Danilo Piparo
 
 import ROOT
-RDataFrame = ROOT.ROOT.RDataFrame
 
 # A simple helper function to fill a test tree: this makes the example
 # stand-alone.
 def fill_tree(treeName, fileName):
-    d = RDataFrame(25000)
+    d = ROOT.ROOT.RDataFrame(25000)
     d.Define("px", "gRandom->Gaus()")\
      .Define("py", "gRandom->Gaus()")\
      .Define("pz", "sqrt(px * px + py * py)")\
@@ -35,7 +34,7 @@ columns = ROOT.vector('string')()
 columns.push_back("px")
 columns.push_back("py")
 columns.push_back("pz")
-d = RDataFrame(treeName, fileName, columns)
+d = ROOT.ROOT.RDataFrame(treeName, fileName, columns)
 
 # Create the profiles
 hprof1d = d.Profile1D(("hprof1d", "Profile of pz versus px", 64, -4, 4))
