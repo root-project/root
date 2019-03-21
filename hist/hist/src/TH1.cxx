@@ -8624,7 +8624,7 @@ void TH1::GetLowEdge(Double_t *edge) const
 
 void TH1::SetBinError(Int_t bin, Double_t error)
 {
-   if (bin < 0 || bin>= fSumw2.fN) return;
+   if (bin < 0 || bin>= fNcells) return;
    if (!fSumw2.fN) Sumw2();
    fSumw2.fArray[bin] = error * error;
    // reset the bin error option
