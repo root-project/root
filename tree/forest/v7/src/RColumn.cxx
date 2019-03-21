@@ -55,7 +55,7 @@ void ROOT::Experimental::Detail::RColumn::Flush()
    fHeadPage.Reset(fNElements);
 }
 
-void ROOT::Experimental::Detail::RColumn::MapPage(const ForestIndex_t index)
+void ROOT::Experimental::Detail::RColumn::MapPage(const ForestSize_t index)
 {
    fPageSource->GetPagePool()->ReleasePage(fCurrentPage);
    fCurrentPage = fPageSource->GetPagePool()->GetPage(this, index);

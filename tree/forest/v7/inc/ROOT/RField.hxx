@@ -86,8 +86,8 @@ protected:
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
    virtual void DoAppend(const RFieldValueBase& value);
-   virtual void DoRead(ForestIndex_t index, RFieldValueBase* value);
-   virtual void DoReadV(ForestIndex_t index, ForestIndex_t count, void* dst);
+   virtual void DoRead(ForestSize_t index, RFieldValueBase* value);
+   virtual void DoReadV(ForestSize_t index, ForestSize_t count, void* dst);
 
 public:
    /// Field names convey the level of subfields; sub fields (nested collections) are separated by a dot
@@ -169,7 +169,7 @@ public:
 
    /// Populate a single value with data from the tree, which needs to be of the fitting type.
    /// Reading copies data into the memory wrapped by the tree value.
-   void Read(ForestIndex_t index, RFieldValueBase* value) {
+   void Read(ForestSize_t index, RFieldValueBase* value) {
       if (!fIsSimple) {
          DoRead(index, value);
          return;
@@ -179,7 +179,7 @@ public:
 
    /// Type unsafe bulk read interface; dst must point to a vector of objects of the field type.
    /// TODO(jblomer): can this be type safe?
-   void ReadV(ForestIndex_t index, ForestIndex_t count, void *dst)
+   void ReadV(ForestSize_t index, ForestSize_t count, void *dst)
    {
       if (!fIsSimple) {
          DoReadV(index, count, dst);
@@ -189,7 +189,7 @@ public:
    }
 
    /// The number of elements in the principal column. For top level fields, the number of entries.
-   ForestIndex_t GetNItems();
+   ForestSize_t GetNItems();
 
    /// Ensure that all received items are written from page buffers to the storage.
    void Flush() const;
@@ -230,7 +230,7 @@ private:
    TClass* fClass;
 protected:
    void DoAppend(const Detail::RFieldValueBase& value) final;
-   void DoRead(ForestIndex_t index, Detail::RFieldValueBase* value) final;
+   void DoRead(ForestSize_t index, Detail::RFieldValueBase* value) final;
 public:
    RFieldClass(std::string_view fieldName, std::string_view className);
    RFieldClass(RFieldClass&& other) = default;
@@ -251,11 +251,11 @@ public:
 class RFieldVector : public Detail::RFieldBase {
 private:
    size_t fItemSize;
-   ForestIndex_t fNWritten;
+   ForestSize_t fNWritten;
 
 protected:
    void DoAppend(const Detail::RFieldValueBase& value) final;
-   void DoRead(ForestIndex_t index, Detail::RFieldValueBase* value) final;
+   void DoRead(ForestSize_t index, Detail::RFieldValueBase* value) final;
 
 public:
    RFieldVector(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
@@ -310,14 +310,14 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final {
-      return ROOT::Experimental::RFieldValue<ForestIndex_t>(
-         Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex>(static_cast<ForestIndex_t*>(where)),
-         this, static_cast<ForestIndex_t*>(where));
+      return ROOT::Experimental::RFieldValue<ForestSize_t>(
+         Detail::RColumnElement<ForestSize_t, EColumnType::kIndex>(static_cast<ForestSize_t*>(where)),
+         this, static_cast<ForestSize_t*>(where));
    }
    Detail::RFieldValueBase CaptureValue(void* where) final {
-      return ROOT::Experimental::RFieldValue<ForestIndex_t>(true,
-         Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex>(static_cast<ForestIndex_t*>(where)),
-         this, static_cast<ForestIndex_t*>(where));
+      return ROOT::Experimental::RFieldValue<ForestSize_t>(true,
+         Detail::RColumnElement<ForestSize_t, EColumnType::kIndex>(static_cast<ForestSize_t*>(where)),
+         this, static_cast<ForestSize_t*>(where));
    }
    size_t GetValueSize() const final { return 0; }
 };
@@ -327,9 +327,9 @@ public:
 
 
 template <>
-class ROOT::Experimental::RField<ROOT::Experimental::ForestIndex_t> : public ROOT::Experimental::Detail::RFieldBase {
+class ROOT::Experimental::RField<ROOT::Experimental::ForestSize_t> : public ROOT::Experimental::Detail::RFieldBase {
 public:
-   static std::string MyTypeName() { return "ROOT::Experimental::ForestIndex_t"; }
+   static std::string MyTypeName() { return "ROOT::Experimental::ForestSize_t"; }
    explicit RField(std::string_view name) : Detail::RFieldBase(name, MyTypeName(), true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -339,29 +339,29 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   ForestIndex_t* Map(ForestIndex_t index) {
-      static_assert(Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex>::kIsMappable,
-                    "(ForestIndex_t, EColumnType::kIndex) is not identical on this platform");
-      return fPrincipalColumn->Map<ForestIndex_t, EColumnType::kIndex>(index, nullptr);
+   ForestSize_t* Map(ForestSize_t index) {
+      static_assert(Detail::RColumnElement<ForestSize_t, EColumnType::kIndex>::kIsMappable,
+                    "(ForestSize_t, EColumnType::kIndex) is not identical on this platform");
+      return fPrincipalColumn->Map<ForestSize_t, EColumnType::kIndex>(index, nullptr);
    }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where, ArgsT&&... args)
    {
-      ROOT::Experimental::RFieldValue<ForestIndex_t> v(
-         Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex>(static_cast<ForestIndex_t*>(where)),
-         this, static_cast<ForestIndex_t*>(where), std::forward<ArgsT>(args)...);
+      ROOT::Experimental::RFieldValue<ForestSize_t> v(
+         Detail::RColumnElement<ForestSize_t, EColumnType::kIndex>(static_cast<ForestSize_t*>(where)),
+         this, static_cast<ForestSize_t*>(where), std::forward<ArgsT>(args)...);
       return v;
    }
    ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final { return GenerateValue(where, 0); }
    Detail::RFieldValueBase CaptureValue(void *where) final {
-      ROOT::Experimental::RFieldValue<ForestIndex_t> v(true,
-         Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex>(static_cast<ForestIndex_t*>(where)),
-         this, static_cast<ForestIndex_t*>(where));
+      ROOT::Experimental::RFieldValue<ForestSize_t> v(true,
+         Detail::RColumnElement<ForestSize_t, EColumnType::kIndex>(static_cast<ForestSize_t*>(where)),
+         this, static_cast<ForestSize_t*>(where));
       return v;
    }
-   size_t GetValueSize() const final { return sizeof(ForestIndex_t); }
+   size_t GetValueSize() const final { return sizeof(ForestSize_t); }
 };
 
 
@@ -381,7 +381,7 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   float* Map(ForestIndex_t index) {
+   float* Map(ForestSize_t index) {
       static_assert(Detail::RColumnElement<float, EColumnType::kReal32>::kIsMappable,
                     "(float, EColumnType::kReal32) is not identical on this platform");
       return fPrincipalColumn->Map<float, EColumnType::kReal32>(index, nullptr);
@@ -420,7 +420,7 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   double* Map(ForestIndex_t index) {
+   double* Map(ForestSize_t index) {
       static_assert(Detail::RColumnElement<double, EColumnType::kReal64>::kIsMappable,
                     "(double, EColumnType::kReal64) is not identical on this platform");
       return fPrincipalColumn->Map<double, EColumnType::kReal64>(index, nullptr);
@@ -458,7 +458,7 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   std::uint32_t* Map(ForestIndex_t index) {
+   std::uint32_t* Map(ForestSize_t index) {
       static_assert(Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>::kIsMappable,
                     "(std::uint32_t, EColumnType::kInt32) is not identical on this platform");
       return fPrincipalColumn->Map<std::uint32_t, EColumnType::kInt32>(index, nullptr);
@@ -487,11 +487,11 @@ public:
 template <>
 class ROOT::Experimental::RField<std::string> : public ROOT::Experimental::Detail::RFieldBase {
 private:
-   ForestIndex_t fIndex;
-   Detail::RColumnElement<ForestIndex_t, EColumnType::kIndex> fElemIndex;
+   ForestSize_t fIndex;
+   Detail::RColumnElement<ForestSize_t, EColumnType::kIndex> fElemIndex;
 
    void DoAppend(const ROOT::Experimental::Detail::RFieldValueBase& value) final;
-   void DoRead(ROOT::Experimental::ForestIndex_t index, ROOT::Experimental::Detail::RFieldValueBase* value) final;
+   void DoRead(ROOT::Experimental::ForestSize_t index, ROOT::Experimental::Detail::RFieldValueBase* value) final;
 
 public:
    static std::string MyTypeName() { return "std::string"; }

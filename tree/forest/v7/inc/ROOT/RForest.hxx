@@ -54,7 +54,7 @@ class RForest {
 protected:
    std::unique_ptr<RForestModel> fModel;
    /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
-   ForestIndex_t fNEntries;
+   ForestSize_t fNEntries;
 
    /// Only the derived RInputForest and ROutputForest can be instantiated
    explicit RForest(std::unique_ptr<RForestModel> model);
@@ -85,7 +85,7 @@ Individual fields can be read as well by instantiating a tree view.
 class RInputForest : public Detail::RForest {
 private:
    std::unique_ptr<Detail::RPageSource> fSource;
-   ForestIndex_t fNEntries;
+   ForestSize_t fNEntries;
 
 public:
    static std::unique_ptr<RInputForest> Create(std::unique_ptr<RForestModel> model,
@@ -99,13 +99,13 @@ public:
    RInputForest(std::unique_ptr<Detail::RPageSource> source);
    ~RInputForest();
 
-   ForestIndex_t GetNEntries() { return fNEntries; }
+   ForestSize_t GetNEntries() { return fNEntries; }
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the forest.
    /// On I/O errors, raises an expection.
-   void GetEntry(ForestIndex_t index) { GetEntry(index, fModel->GetDefaultEntry()); }
+   void GetEntry(ForestSize_t index) { GetEntry(index, fModel->GetDefaultEntry()); }
    /// Fills a user provided entry after checking that the entry has been instantiated from the forest model
-   void GetEntry(ForestIndex_t index, RForestEntry* entry) {
+   void GetEntry(ForestSize_t index, RForestEntry* entry) {
       for (auto& value : *entry) {
          value.GetField()->Read(index, &value);
       }
@@ -115,7 +115,7 @@ public:
 
    /// Provides access to an individual field that can contain either a skalar value or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<std::vector<double>>("particle").  It can as well be the index
-   /// field of a collection itself, like GetView<ForestIndex_t>("particle")
+   /// field of a collection itself, like GetView<ForestSize_t>("particle")
    template <typename T>
    RForestView<T> GetView(std::string_view fieldName) { return RForestView<T>(fieldName, fSource.get()); }
    RForestViewCollection GetViewCollection(std::string_view fieldName) {
@@ -137,10 +137,10 @@ triggered by Flush() or by destructing the forest.  On I/O errors, an exception 
 // clang-format on
 class ROutputForest : public Detail::RForest {
 private:
-   static constexpr ForestIndex_t kDefaultClusterSizeEntries = 8192;
+   static constexpr ForestSize_t kDefaultClusterSizeEntries = 8192;
    std::unique_ptr<Detail::RPageSink> fSink;
-   ForestIndex_t fClusterSizeEntries;
-   ForestIndex_t fLastCommitted;
+   ForestSize_t fClusterSizeEntries;
+   ForestSize_t fLastCommitted;
 
 public:
    static std::unique_ptr<ROutputForest> Create(std::unique_ptr<RForestModel> model,
@@ -179,7 +179,7 @@ public:
 // clang-format on
 class RCollectionForest {
 private:
-   ForestIndex_t fOffset;
+   ForestSize_t fOffset;
    std::unique_ptr<RForestEntry> fDefaultEntry;
 public:
    explicit RCollectionForest(std::unique_ptr<RForestEntry> defaultEntry);
@@ -195,7 +195,7 @@ public:
       fOffset++;
    }
 
-   ForestIndex_t* GetOffsetPtr() { return &fOffset; }
+   ForestSize_t* GetOffsetPtr() { return &fOffset; }
 };
 
 } // namespace Experimental

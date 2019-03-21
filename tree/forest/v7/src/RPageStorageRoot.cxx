@@ -111,7 +111,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitPage(ColumnHandle_t column
    fForestFooter.fNElementsPerColumn[columnId] += page.GetNElements();
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental::ForestIndex_t nEntries)
+void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental::ForestSize_t nEntries)
 {
    fCurrentCluster.fNEntries = nEntries - fPrevClusterNEntries;
    fPrevClusterNEntries = nEntries;
@@ -212,7 +212,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
       auto clusterFooter = keyClusterFooter->ReadObject<ROOT::Experimental::Internal::RClusterFooter>();
       R__ASSERT(clusterFooter->fPagesPerColumn.size() == nColumns);
       for (unsigned iColumn = 0; iColumn < nColumns; ++iColumn) {
-         ForestIndex_t pageInCluster = 0;
+         ForestSize_t pageInCluster = 0;
          for (auto rangeStart : clusterFooter->fPagesPerColumn[iColumn].fRangeStarts) {
             fMapper.fColumnIndex[iColumn].fRangeStarts.push_back(rangeStart);
             fMapper.fColumnIndex[iColumn].fClusterId.push_back(iCluster);
@@ -244,15 +244,15 @@ std::unique_ptr<ROOT::Experimental::RForestModel> ROOT::Experimental::Detail::RP
 }
 
 void ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
-   ColumnHandle_t columnHandle, ForestIndex_t index, RPage* page)
+   ColumnHandle_t columnHandle, ForestSize_t index, RPage* page)
 {
    auto columnId = columnHandle.fId;
    auto nElems = fMapper.fColumnIndex[columnId].fNElements;
    R__ASSERT(index < nElems);
 
-   ForestIndex_t firstInPage = 0;
-   ForestIndex_t firstOutsidePage = nElems;
-   ForestIndex_t pageIdx = 0;
+   ForestSize_t firstInPage = 0;
+   ForestSize_t firstOutsidePage = nElems;
+   ForestSize_t pageIdx = 0;
 
    std::size_t iLower = 0;
    std::size_t iUpper = fMapper.fColumnIndex[columnId].fRangeStarts.size() - 1;
@@ -260,7 +260,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
    unsigned iLast = iUpper;
    while (iLower <= iUpper) {
       std::size_t iPivot = (iLower + iUpper) / 2;
-      ForestIndex_t pivot = fMapper.fColumnIndex[columnId].fRangeStarts[iPivot];
+      ForestSize_t pivot = fMapper.fColumnIndex[columnId].fRangeStarts[iPivot];
       if (pivot > index) {
          iUpper = iPivot - 1;
       } else {
@@ -300,12 +300,12 @@ void ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
    free(pagePayload);
 }
 
-ROOT::Experimental::ForestIndex_t ROOT::Experimental::Detail::RPageSourceRoot::GetNEntries()
+ROOT::Experimental::ForestSize_t ROOT::Experimental::Detail::RPageSourceRoot::GetNEntries()
 {
    return fMapper.fNEntries;
 }
 
-ROOT::Experimental::ForestIndex_t ROOT::Experimental::Detail::RPageSourceRoot::GetNElements(ColumnHandle_t columnHandle)
+ROOT::Experimental::ForestSize_t ROOT::Experimental::Detail::RPageSourceRoot::GetNElements(ColumnHandle_t columnHandle)
 {
    return fMapper.fColumnIndex[columnHandle.fId].fNElements;
 }
