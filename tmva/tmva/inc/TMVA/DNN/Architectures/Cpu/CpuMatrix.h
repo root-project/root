@@ -152,7 +152,7 @@ public:
    AFloat *       GetRawDataPointer()        {return fBuffer;}
    const AFloat * GetRawDataPointer()  const {return fBuffer;}
 
-   static ROOT::TThreadExecutor &GetThreadExecutor() { return TMVA::Config::Instance().GetThreadExecutor(); }
+   static Executor &GetThreadExecutor() { return TMVA::Config::Instance().GetThreadExecutor(); }
 
     // static function to get the number of elements for task
    static size_t GetNWorkItems(size_t nelements);
@@ -214,12 +214,11 @@ inline void TCpuMatrix<AFloat>::Map(Function_t &f)
    };
 
    if (nsteps < nelements) {
-#ifdef DL_USE_MTE
       TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(0,nelements,nsteps));
-#else
-      for (size_t i = 0;  i < nelements; i+=nsteps)
-         ff(i);
-#endif
+
+      // for (size_t i = 0;  i < nelements; i+=nsteps)
+      //    ff(i);
+
    }
    else {
       R__ASSERT(nelements == nsteps);
@@ -248,12 +247,10 @@ inline void TCpuMatrix<AFloat>::MapFrom(Function_t &f, const TCpuMatrix &A)
       return 0;
    };
    if (nsteps < nelements) { 
-#ifdef DL_USE_MTE
       TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(0,nelements,nsteps));
-#else
-      for (size_t i = 0;  i < nelements; i+=nsteps)
-         ff(i);
-#endif
+      // for (size_t i = 0;  i < nelements; i+=nsteps)
+      //    ff(i);
+
    }
    else {
       R__ASSERT(nelements == nsteps);
