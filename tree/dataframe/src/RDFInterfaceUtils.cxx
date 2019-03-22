@@ -118,11 +118,6 @@ std::set<std::string> GetPotentialColumnNames(const std::string &expr)
 // the one in the vector
 class RActionBase;
 
-bool InterpreterDeclare(const std::string &code)
-{
-   return gInterpreter->Declare(code.c_str());
-}
-
 std::pair<Long64_t, int> InterpreterCalc(const std::string &code)
 {
    TInterpreter::EErrorCode errorCode(TInterpreter::kNoError);
