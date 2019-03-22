@@ -116,15 +116,20 @@ std::vector<int> ROOT::Experimental::REveGeomViewer::GetStackFromJson(const std:
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Send geometry description and principal drawing nodes
+/// Send hierarchical data
+
+void ROOT::Experimental::REveGeomViewer::SendHierarchy(unsigned connid)
+{
+   auto sbuf = fDesc.GetHierachyJson("DESCR:");
+   printf("Send description %d\n", (int) sbuf.length());
+   fWebWindow->Send(connid, sbuf);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Send data for principal geometry draw
 
 void ROOT::Experimental::REveGeomViewer::SendGeometry(unsigned connid)
 {
-   std::string sbuf = "DESCR:";
-   sbuf.append(TBufferJSON::ToJSON(&fDesc,103).Data());
-   printf("Send description %d\n", (int) sbuf.length());
-   fWebWindow->Send(connid, sbuf);
-
    if (!fDesc.HasDrawData())
       fDesc.CollectVisibles();
 
@@ -146,10 +151,14 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 {
    printf("Recv %s\n", arg.c_str());
 
-   if ((arg == "CONN_READY") || (arg == "RELOAD")) {
+   if (arg == "CONN_READY") {
 
-      if (arg == "RELOAD")
-         fDesc.Build(fGeoManager);
+   } else if (arg == "RELOAD") {
+
+      fDesc.Build(fGeoManager);
+      SendHierarchy(connid);
+
+   } else if (arg == "GETDRAW") {
 
       SendGeometry(connid);
 
@@ -226,6 +235,9 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
             // just resend full geometry
             // TODO: one can improve here and send only nodes which are not exists on client
             // TODO: for that one should remember all information send to client
+
+            SendHierarchy(connid);
+
             SendGeometry(connid);
          }
       }

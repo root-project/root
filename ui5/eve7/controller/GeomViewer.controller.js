@@ -163,7 +163,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             sap.ui.define(['rootui5/eve7/lib/EveElements'], function(EveElements) {
                this.creator = new EveElements();
                this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
-               this.checkDrawMsg();
+               this.checkRequestMsg();
             }.bind(this));
          }.bind(this));
       },
@@ -256,10 +256,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             rows[best_indx].$().css("background-color", best_cmp == geo_stack.length ? "yellow" : "lightgrey");
       },
 
-      createGeoPainter: function() {
+      createGeoPainter: function(drawopt) {
          if (this.geo_painter) return;
 
-         this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.geomControl.getDomRef(), null, this.draw_options);
+         this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.geomControl.getDomRef(), null, drawopt);
          this.geomControl.geo_painter = this.geo_painter;
 
          this.geo_painter.AddHighlightHandler(this);
@@ -267,19 +267,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.geo_painter.assignClones(this.geo_clones);
       },
-
-      assignClones: function(clones, drawopt) {
-         this.geo_clones = clones;
-         this.draw_options = drawopt;
-
-         if (this.geo_painter) {
-            // this.geo_painter.options = this.geo_painter.decodeOptions(drawopt);
-            this.geo_painter.assignClones(this.geo_clones);
-         } else {
-            this.createGeoPainter();
-         }
-      },
-
 
       /** Extract shapes from binary data using appropriate draw message
        * Draw message is vector of REveGeomVisisble objects, including info where shape is in raw data */
@@ -367,7 +354,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                this.setNodesDrawProperties(msg.visibles);
 
                // after clones are existing - ensure geo painter is there
-               this.createGeoPainter();
+               this.createGeoPainter(msg.drawopt);
 
                this.geo_painter.prepareObjectDraw(msg.visibles, "__geom_viewer_selection__");
 
@@ -388,9 +375,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                break;
 
          }
-
       },
 
+      OnWebsocketOpened: function(handle) {
+         this.isConnected = true;
+
+         // when connection established, checked if we can submit requested
+         this.checkRequestMsg();
+      },
+
+
+      OnWebsocketClosed: function() {
+         // when connection closed, close panel as well
+         console.log('CLOSE WINDOW WHEN CONNECTION CLOSED');
+
+         if (window) window.close();
+
+         this.isConnected = false;
+      },
 
       /** Entry point for all data from server */
       OnWebsocketMsg: function(handle, msg, offset) {
@@ -490,9 +492,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          // this.assignClones(clones, descr.fDrawOptions);
 
-         this.draw_options = descr.fDrawOptions;
+         // this.draw_options = descr.fDrawOptions;
 
-         this.buildTree(descr.fDesc);
+         this.buildTree(descr);
       },
 
       /** When single node element is modified from server side */
@@ -698,13 +700,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.geo_painter.HighlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
       },
 
-      OnWebsocketClosed: function() {
-         // when connection closed, close panel as well
-         console.log('CLOSE WINDOW WHEN CONNECTION CLOSED');
-
-         if (window) window.close();
-      },
-
       omBeforeRendering: function() {
          this.renderingDone = false;
       },
@@ -712,7 +707,22 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onAfterRendering: function() {
          this.renderingDone = true;
 
-         this.checkDrawMsg();
+         this.checkRequestMsg();
+      },
+
+      checkRequestMsg: function() {
+          if (this.isConnected && this.renderingDone) {
+
+             if (!this.ask_reload) {
+                this.ask_reload = true;
+                this.websocket.Send("RELOAD");
+             }
+
+             if (this.creator && !this.ask_getdraw) {
+                this.websocket.Send("GETDRAW");
+                this.ask_getdraw = true;
+             }
+          }
       },
 
       /** method called from geom painter when specific node need to be activated in the browser
