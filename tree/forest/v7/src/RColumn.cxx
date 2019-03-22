@@ -24,7 +24,8 @@
 ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model)
    : fModel(model), fPageSink(nullptr), fPageSource(nullptr), fHeadPage(), fNElements(0),
      fCurrentPage(),
-     fColumnIdSource(kInvalidColumnId)
+     fColumnIdSource(kInvalidColumnId),
+     fOffsetColumn(nullptr)
 {
 }
 
