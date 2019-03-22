@@ -254,9 +254,7 @@ if(cxxmodules)
     # for glew.h to it its trick.
     set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem")
   endif()
-endif(cxxmodules)
 
-if (cxxmodules)
   # These vars are useful when we want to compile things without cxxmodules.
   set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules -Xclang -fmodules-local-submodule-visibility -Wno-module-import-in-extern-c" CACHE STRING "Useful to filter out the modules-related cxxflags.")
   set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")
