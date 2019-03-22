@@ -162,7 +162,6 @@ public:
    void Deregister(RRangeBase *rangePtr);
    bool CheckFilters(unsigned int, Long64_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
-   bool MustRunNamedFilters() const { return fMustRunNamedFilters; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
    void PartialReport(ROOT::RDF::RCutFlowReport &) const final {}
