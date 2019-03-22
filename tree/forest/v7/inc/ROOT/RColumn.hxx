@@ -59,6 +59,8 @@ private:
    RPage fCurrentPage;
    /// The column id is used to find matching pages with content when reading
    ColumnId_t fColumnIdSource;
+   /// Optional link to a parent offset column that points into this column
+   RColumn* fOffsetColumn;
 
 public:
    RColumn(const RColumnModel& model);
@@ -145,6 +147,22 @@ public:
              (index - fCurrentPage.GetRangeFirst()) * kColumnElementSizes[static_cast<int>(ColumnT)];
    }
 
+   /// For offset columns only, do index arithmetic from cluster-local to global indizes
+   void GetCollectionInfo(const ForestSize_t index, ForestSize_t* collectionStart, ClusterSize_t* collectionSize) {
+      ForestSize_t dummy;
+      RColumnElement<ForestSize_t, EColumnType::kIndex> fElemDummy(&dummy);
+      auto idxStart = (index == 0) ? 0 : *Map<ForestSize_t, EColumnType::kIndex>(index - 1, &fElemDummy);
+      auto idxEnd = *Map<ForestSize_t, EColumnType::kIndex>(index, &fElemDummy);
+      auto selfOffset = fCurrentPage.GetClusterInfo().GetSelfOffset();
+      auto pointeeOffset = fCurrentPage.GetClusterInfo().GetPointeeOffset();
+      if (index == selfOffset) {
+         // Passed cluster boundary
+         idxStart = 0;
+      }
+      *collectionSize = idxEnd - idxStart;
+      *collectionStart = pointeeOffset + idxStart;
+   }
+
    void Flush();
    void MapPage(const ForestSize_t index);
    ForestSize_t GetNElements() { return fNElements; }
@@ -152,6 +170,8 @@ public:
    ColumnId_t GetColumnIdSource() const { return fColumnIdSource; }
    RPageSource* GetPageSource() const { return fPageSource; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
+   void SetOffsetColumn(RColumn* offsetColumn) { fOffsetColumn = offsetColumn; }
+   RColumn* GetOffsetColumn() const { return fOffsetColumn; }
 };
 
 } // namespace Detail
