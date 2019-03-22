@@ -345,6 +345,41 @@ void ROOT::Experimental::REveGeomDescription::ScanVisible(REveGeomScanFunc_t fun
 }
 
 /////////////////////////////////////////////////////////////////////
+/// Collect nodes which are used in visibles
+
+void ROOT::Experimental::REveGeomDescription::CollectNodes(REveGeomDrawing &drawing)
+{
+   // TODO: for now reset all flags, later can be kept longer
+   for (auto &node : fDesc)
+      node.useflag = false;
+
+   drawing.numnodes = fDesc.size();
+
+   for (auto &item : drawing.visibles) {
+      int nodeid{0};
+      for (auto &chindx : item.stack) {
+         auto &node = fDesc[nodeid];
+         if (!node.useflag) {
+            node.useflag = true;
+            drawing.nodes.emplace_back(&node);
+         }
+         if (chindx >= (int)node.chlds.size())
+            break;
+         nodeid = node.chlds[chindx];
+      }
+
+      auto &node = fDesc[nodeid];
+      if (!node.useflag) {
+         node.useflag = true;
+         drawing.nodes.emplace_back(&node);
+      }
+   }
+
+   printf("SELECT NODES %d\n", (int) drawing.nodes.size());
+}
+
+
+/////////////////////////////////////////////////////////////////////
 /// Find description object for requested shape
 /// If not exists - will be created
 
@@ -535,6 +570,8 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
       return true;
    });
 
+   CollectNodes(drawing);
+
    // finally, create binary data with all produced shapes
 
    fDrawJson = "GDRAW:";
@@ -678,6 +715,8 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       return true;
    });
 
+   CollectNodes(drawing);
+
    json = "FOUND:";
    json.append(TBufferJSON::ToJSON(&drawing, 103).Data());
 
@@ -752,8 +791,8 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
       }
 
       drawing.visibles.emplace_back(node.id, stack);
-      auto &item = drawing.visibles.back();
-      CopyMaterialProperties(vol, item);
+
+      CopyMaterialProperties(vol, drawing.visibles.back());
       return true;
    });
 
@@ -770,6 +809,8 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
    // assign shape data
    for (auto &item : drawing.visibles)
       item.ri = sd.rndr_info();
+
+   CollectNodes(drawing);
 
    json.append(TBufferJSON::ToJSON(&drawing, 103).Data());
 
