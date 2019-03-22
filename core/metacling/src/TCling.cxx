@@ -1207,7 +1207,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    }
 
    if (fCxxModulesEnabled) {
-      clingArgsStorage.push_back("-modulemap_overlay=" + std::string(TROOT::GetIncludeDir().Data()));
+      clingArgsStorage.push_back("-includedir_loc=" + std::string(TROOT::GetIncludeDir().Data()));
    }
 
    // FIXME: This only will enable frontend timing reports.
