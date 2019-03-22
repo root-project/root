@@ -53,15 +53,15 @@
 
            });
         }
-        
+
         if (JSROOT.GetUrlOption('nogl')!==null) JSROOT.gStyle.NoWebGL = true;
         if (JSROOT.GetUrlOption('libs')!==null) JSROOT.use_full_libs = true;
-        
+
         JSROOT.ConnectWebWindow({
-           prereq: "geom;openui5",
+           prereq: "openui5",
 //           openui5src: "jsroot",    // use JSROOT provided package, experimental
 //           openui5src: "https://openui5.hana.ondemand.com/",
-           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table", // customize openui5 libs
+           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table", // customize openui5 libs later
            prereq_logdiv: "GeomDiv",
            callback: InitUI
         });

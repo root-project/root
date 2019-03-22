@@ -6,10 +6,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/layout/Splitter',
                "sap/ui/core/ResizeHandler",
                "sap/ui/layout/HorizontalLayout",
-               "sap/ui/table/Column",
-               'rootui5/eve7/lib/EveElements'
+               "sap/ui/table/Column"
 ],function(Controller, CoreControl, JSONModel, mText, mCheckBox, Splitter, ResizeHandler,
-           HorizontalLayout, tableColumn, EveElements) {
+           HorizontalLayout, tableColumn) {
 
    "use strict";
 
@@ -101,6 +100,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       }
    });
 
+
+   /** Central geometry viewer contoller
+    * All TGeo functionality is loaded after main ui5 rendering is performed,
+    * To start drawing, following stages should be completed:
+    *    - ui5 element is rendered (onAfterRendering is called)
+    *    - TGeo-related JSROOT functionality is loaded
+    *    - REveGeomDrawing object delivered from the server
+    * Only after all this stages are completed, one could start to analyze  */
+
+
+
    return Controller.extend("rootui5.eve7.controller.GeomViewer", {
       onInit: function () {
 
@@ -109,6 +119,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.websocket.SetReceiver(this);
          this.websocket.Connect();
 
+         this.queue = []; // received draw messages
+
          this.data = { Nodes: null };
 
          this.model = new JSONModel(this.data);
@@ -116,12 +128,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          // PART 2: instantiate Control and place it onto the page
 
-         this.creator = new EveElements();
-
-         this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
-
          if (JSROOT.GetUrlOption('nobrowser') !== null) {
-            // remove complete area - plan geometry drawing
+            // remove complete area - plain geometry drawing
             this.getView().byId("mainSplitter").removeAllContentAreas();
          } else {
 
@@ -147,9 +155,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          }
 
-         // geometry painter
+         // placeholder for geometry painter
          this.geomControl = new eve.GeomDraw({color:"#f00"});
          this.getView().byId("mainSplitter").addContentArea(this.geomControl);
+
+         JSROOT.AssertPrerequisites("geom", function() {
+            sap.ui.define(['rootui5/eve7/lib/EveElements'], function(EveElements) {
+               this.creator = new EveElements();
+               this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
+               this.checkDrawMsg();
+            }.bind(this));
+         }.bind(this));
       },
 
       /** invoked when visibility checkbox clicked */
@@ -240,11 +256,55 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             rows[best_indx].$().css("background-color", best_cmp == geo_stack.length ? "yellow" : "lightgrey");
       },
 
+      createGeoPainter: function() {
+         if (this.geo_painter) return;
+
+         this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.geomControl.getDomRef(), null, this.draw_options);
+         this.geomControl.geo_painter = this.geo_painter;
+
+         this.geo_painter.AddHighlightHandler(this);
+         this.geo_painter.ActivateInBrowser = this.activateInTreeTable.bind(this);
+
+         this.geo_painter.assignClones(this.geo_clones);
+      },
+
+      assignClones: function(clones, drawopt) {
+         this.geo_clones = clones;
+         this.draw_options = drawopt;
+
+         if (this.geo_painter) {
+            // this.geo_painter.options = this.geo_painter.decodeOptions(drawopt);
+            this.geo_painter.assignClones(this.geo_clones);
+         } else {
+            this.createGeoPainter();
+         }
+      },
+
+
       /** Extract shapes from binary data using appropriate draw message
        * Draw message is vector of REveGeomVisisble objects, including info where shape is in raw data */
       extractRawShapes: function(draw_msg, msg, offset) {
 
-         for (var cnt=0;cnt < draw_msg.visibles.length;++cnt) {
+         var nodes = null;
+
+         if (!this.geo_clones)
+            nodes = new Array(draw_msg.numnodes); // array for all nodes
+
+         for (var cnt=0;cnt < draw_msg.nodes.length; ++cnt) {
+            var node = draw_msg.nodes[cnt];
+            this.formatNodeElement(node);
+            if (nodes)
+               nodes[node.id] = node;
+            else
+               this.geo_clones.updateNode(node);
+         }
+
+         if (!this.geo_clones) {
+            this.geo_clones = new JSROOT.GEO.ClonedNodes(null, nodes);
+            this.geo_clones.name_prefix = this.geo_clones.GetNodeName(0);
+         }
+
+         for (var cnt = 0; cnt < draw_msg.visibles.length; ++cnt) {
             var item = draw_msg.visibles[cnt], rd = item.ri;
 
             // entry may be provided without shape - it is ok
@@ -278,24 +338,73 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
+      /** function to accumulate and process all drawings messages
+       * if not all scripts are loaded, messages are quied and processed later */
+
+      checkDrawMsg: function(kind, msg, _raw, _offset) {
+         if (kind) {
+            msg.kind = kind;
+            msg.raw = _raw;
+            msg.offset = _offset;
+
+            this.queue.push(msg);
+         }
+
+         if (!this.creator ||             // complete JSROOT/EVE7 TGeo functionality is loaded
+            (this.queue.length == 0) ||   // drawing messages are created
+            !this.renderingDone) return;  // UI5 rendering is performed
+
+         // only from here we can start to analyze messages and create TGeo painter, clones objects and so on
+
+
+         msg = this.queue.shift();
+
+         switch (msg.kind) {
+            case "draw":
+               // here we should decode render data
+               this.extractRawShapes(msg, msg.raw, msg.offset);
+
+               this.setNodesDrawProperties(msg.visibles);
+
+               // after clones are existing - ensure geo painter is there
+               this.createGeoPainter();
+
+               this.geo_painter.prepareObjectDraw(msg.visibles, "__geom_viewer_selection__");
+
+               // TODO: handle completion of geo drawing
+
+               // this is just start drawing, main work will be done asynchronous
+               break;
+
+            case "found":
+               this.extractRawShapes(msg, msg.raw, msg.offset);
+               this.processSearchReply("BIN");
+               break;
+
+            case "append":
+               this.setNodesDrawProperties(msg.visibles); // set properties
+               this.extractRawShapes(msg, msg.raw, msg.offset);
+               this.appendNodes(msg.visibles);
+               break;
+
+         }
+
+      },
+
+
       /** Entry point for all data from server */
       OnWebsocketMsg: function(handle, msg, offset) {
 
          if (typeof msg != "string") {
 
             if (this.draw_msg) {
-               // here we should decode render data
-               this.extractRawShapes(this.draw_msg, msg, offset);
-               // this is just start drawing, main work will be done asynchronous
-               this.startDrawing(this.draw_msg.visibles);
+               this.checkDrawMsg("draw", this.draw_msg, msg, offset);
                delete this.draw_msg;
             } else if (this.found_msg) {
-               this.extractRawShapes(this.found_msg, msg, offset);
-               this.processSearchReply("BIN");
+               this.checkDrawMsg("found", this.found_msg, msg, offset);
                delete this.found_msg;
             } else if (this.append_msg) {
-               this.extractRawShapes(this.append_msg, msg, offset);
-               this.appendNodes(this.append_msg.visibles);
+               this.checkDrawMsg("append", this.append_msg, msg, offset);
                delete this.append_msg;
             } else {
                console.error('not process binary data len=' + (msg ? msg.byteLength : 0))
@@ -318,11 +427,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case "GDRAW:":
             this.last_draw_msg = this.draw_msg = JSROOT.parse(msg); // use JSROOT.parse while refs are used
-            this.setNodesDrawProperties(this.draw_msg);
             break;
          case "APPND:":
             this.append_msg = JSROOT.parse(msg); // use JSROOT.parse while refs are used
-            this.setNodesDrawProperties(this.append_msg); // set properties
             break;
          case "FOUND:":
             this.processSearchReply(msg, false);
@@ -366,22 +473,26 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      /** Parse and format base geometry description, initialize hierarchy browser */
+      /** Parse and format base geometry description,
+       * Used only to initialize hierarchy browser with full Tree,
+       * later should be done differently */
       parseDescription: function(msg) {
          var descr = JSON.parse(msg);
 
-         var nodes = descr.fDesc;
+         // var nodes = descr.fDesc;
 
          // we need to calculate matrixes here
-         for (var cnt = 0; cnt < nodes.length; ++cnt)
-            this.formatNodeElement(nodes[cnt]);
+         // for (var cnt = 0; cnt < nodes.length; ++cnt)
+         //    this.formatNodeElement(nodes[cnt]);
 
-         var clones = new JSROOT.GEO.ClonedNodes(null, nodes);
-         clones.name_prefix = clones.GetNodeName(0);
+         // var clones = new JSROOT.GEO.ClonedNodes(null, nodes);
+         // clones.name_prefix = clones.GetNodeName(0);
 
-         this.assignClones(clones, descr.fDrawOptions);
+         // this.assignClones(clones, descr.fDrawOptions);
 
-         this.buildTree();
+         this.draw_options = descr.fDrawOptions;
+
+         this.buildTree(descr.fDesc);
       },
 
       /** When single node element is modified from server side */
@@ -453,18 +564,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          prnt.color_visible = prnt.color.length > 0;
       },
 
-      buildTreeNode: function(cache, indx) {
+      buildTreeNode: function(nodes, cache, indx) {
          var tnode = cache[indx];
          if (tnode) return tnode;
 
-         var node = this.geo_clones.nodes[indx];
+         var node = nodes[indx];
 
          cache[indx] = tnode = { title: node.name, id: indx, color_visible: false, node_visible: node.vis != 0 };
 
          if (node.chlds && (node.chlds.length>0)) {
             tnode.chlds = [];
             for (var k=0;k<node.chlds.length;++k)
-               tnode.chlds.push(this.buildTreeNode(cache, node.chlds[k]));
+               tnode.chlds.push(this.buildTreeNode(nodes, cache, node.chlds[k]));
          } else {
             tnode.end_node = true;
          }
@@ -473,13 +584,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** Build complete tree of all existing nodes.
-       * Produced structure can be very large, therefore later one should move this functionality to the server */
-      buildTree: function() {
-         if (!this.geo_clones) return;
+       * Produced structure can be very large, therefore later
+       * one should move this functionality to the server */
+      buildTree: function(nodes) {
+
+         if (!nodes) return;
 
          this.originalCache = [];
 
-         this.data.Nodes = [ this.buildTreeNode(this.originalCache, 0) ];
+         this.data.Nodes = [ this.buildTreeNode(nodes, this.originalCache, 0) ];
 
          this.originalNodes = this.data.Nodes;
 
@@ -592,43 +705,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (window) window.close();
       },
 
+      omBeforeRendering: function() {
+         this.renderingDone = false;
+      },
+
       onAfterRendering: function() {
-         if (this.geo_clones) this.createGeoPainter();
-      },
+         this.renderingDone = true;
 
-      createGeoPainter: function() {
-         this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.geomControl.getDomRef(), null, this.draw_options);
-         this.geomControl.geo_painter = this.geo_painter;
-
-         this.geo_painter.AddHighlightHandler(this);
-         this.geo_painter.ActivateInBrowser = this.activateInTreeTable.bind(this);
-
-         if (this.geo_clones)
-            this.geo_painter.assignClones(this.geo_clones);
-
-         if (this.geo_visisble) {
-            this.geo_painter.prepareObjectDraw(this.geo_visisble, "__geom_viewer_selection__");
-            delete this.geo_visisble;
-         }
-      },
-
-      assignClones: function(clones, drawopt) {
-         this.geo_clones = clones;
-         this.draw_options = drawopt;
-
-         if (this.geo_painter) {
-            // this.geo_painter.options = this.geo_painter.decodeOptions(drawopt);
-            this.geo_painter.assignClones(this.geo_clones);
-         } else {
-            this.createGeoPainter();
-         }
-      },
-
-      startDrawing: function(visible) {
-         if (this.geo_painter)
-            this.geo_painter.prepareObjectDraw(visible, "__geom_viewer_selection__");
-         else
-            this.geo_visisble = visible;
+         this.checkDrawMsg();
       },
 
       /** method called from geom painter when specific node need to be activated in the browser
@@ -685,6 +769,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }
          }
       },
+
 
       /** called when new portion of data received from server */
       processSearchReply: function(msg, is_shape) {
