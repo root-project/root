@@ -179,7 +179,7 @@ public:
 // clang-format on
 class RCollectionForest {
 private:
-   ForestSize_t fOffset;
+   ClusterSize_t fOffset;
    std::unique_ptr<RForestEntry> fDefaultEntry;
 public:
    explicit RCollectionForest(std::unique_ptr<RForestEntry> defaultEntry);
@@ -195,7 +195,7 @@ public:
       fOffset++;
    }
 
-   ForestSize_t* GetOffsetPtr() { return &fOffset; }
+   ClusterSize_t* GetOffsetPtr() { return &fOffset; }
 };
 
 } // namespace Experimental
