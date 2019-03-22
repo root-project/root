@@ -121,7 +121,7 @@ private:
    std::string RepresentGraph(RInterface<Proxied, DataSource> &rInterface)
    {
       auto loopManager = rInterface.GetLoopManager();
-      if (!loopManager->fToJit.empty())
+      if (!loopManager->fToJitExec.empty())
          loopManager->BuildJittedNodes();
 
       return FromGraphLeafToDot(rInterface.GetProxiedPtr()->GetGraph());
@@ -140,7 +140,7 @@ private:
          return RepresentGraph(loopManager);
       }
 
-      if (!loopManager->fToJit.empty())
+      if (!loopManager->fToJitExec.empty())
          loopManager->BuildJittedNodes();
 
       auto actionPtr = resultPtr.fActionPtr;

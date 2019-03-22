@@ -58,7 +58,7 @@ std::string GraphCreatorHelper::RepresentGraph(ROOT::RDataFrame &rDataFrame)
 {
    auto loopManager = rDataFrame.GetLoopManager();
    // Jitting is triggered because nodes must not be empty at the time of the calling in order to draw the graph.
-   if (!loopManager->fToJit.empty())
+   if (!loopManager->fToJitExec.empty())
       loopManager->BuildJittedNodes();
 
    return RepresentGraph(loopManager);

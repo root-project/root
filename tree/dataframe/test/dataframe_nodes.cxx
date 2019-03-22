@@ -49,7 +49,7 @@ TEST(RDataFrameNodes, RLoopManagerGetLoopManagerUnchecked)
 TEST(RDataFrameNodes, RLoopManagerJit)
 {
    ROOT::Detail::RDF::RLoopManager lm(nullptr, {});
-   lm.ToJit("souble d = 3.14");
+   lm.ToJitExec("souble d = 3.14");
    int ret(1);
    try {
       testing::internal::CaptureStderr();
