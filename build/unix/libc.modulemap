@@ -36,6 +36,10 @@ module "libc" [system] {
     export *
     header "stdio.h"
   }
+  module "wchar.h" {
+    export *
+    header "wchar.h"
+  }
 }
 
 // glib specific header. In it's own module because it
