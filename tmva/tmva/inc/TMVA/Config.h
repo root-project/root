@@ -42,9 +42,7 @@
 #include "Rtypes.h"
 #include "TString.h"
 
-#ifdef R__USE_IMT
-#include <ROOT/TThreadExecutor.hxx>
-#endif
+#include "Executor.h"
 
 namespace TMVA {
 
@@ -52,10 +50,8 @@ namespace TMVA {
 
    class Config {
    protected:
-#ifdef R__USE_IMT
-      ROOT::TThreadExecutor fPool;   // Pool for multi-thread execution
-#endif
-      UInt_t fNCpu = 0;              // number of machine CPU
+
+      Executor fExecutor;   // Executor for multi-thread or serial execution
 
    public:
 
@@ -73,14 +69,28 @@ namespace TMVA {
 
       Bool_t DrawProgressBar() const { return fDrawProgressBar; }
       void   SetDrawProgressBar( Bool_t d ) { fDrawProgressBar = d; }
-      UInt_t GetNCpu() { return fNCpu; }
+      UInt_t GetNCpu() { return fExecutor.GetPoolSize(); }
 
       UInt_t GetNumWorkers() const { return fNWorkers; }
       void   SetNumWorkers(UInt_t n) { fNWorkers = n; }
 
 #ifdef R__USE_IMT
-      ROOT::TThreadExecutor &GetThreadExecutor() { return fPool; }
+      ROOT::TThreadExecutor &GetMultiThreadExecutor() { return *(fExecutor.GetMultiThreadExecutor()); }
+//      ROOT::TSequentialExecutor &GetSeqExecutor() { return *fSeqfPool; }
 #endif
+      /// Get executor class for multi-thread usage
+      /// In case when  MT is not enabled will return a serial executor 
+      Executor & GetThreadExecutor() { return fExecutor; }
+
+      /// Enable MT in TMVA (by default is on when ROOT::EnableImplicitMT() is set
+      void EnableMT(int numthreads) { fExecutor = Executor(numthreads); }
+
+      /// Force disabling MT running and release the thread pool by using instead seriaql execution
+      void DisableMT() {  fExecutor = Executor(1); }
+
+      ///Check if IMT is enabled
+      Bool_t IsMTEnabled() const { return  fExecutor.GetPoolSize() > 1; }
+      
    public:
 
       class VariablePlotting;
