@@ -61,6 +61,7 @@ public:
          fSeqExecImpl = std::unique_ptr<ROOT::TSequentialExecutor>(new ROOT::TSequentialExecutor());
    }
 
+#ifdef R__USE_IMT
    ROOT::TThreadExecutor * GetMultiThreadExecutor() {
       if (fMTExecImpl) return fMTExecImpl.get();
       else {
@@ -69,6 +70,7 @@ public:
          return fMTExecImpl.get();
       }
    }
+#endif
 
    unsigned int GetPoolSize() const {
       if (!fMTExecImpl) return 1;
@@ -116,8 +118,6 @@ public:
       else return fSeqExecImpl->MapReduce(func, args, redfunc); 
    }
   
-   
-
    ///Wrap Reduce function
    template<class T, class R>
    auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs)) {
