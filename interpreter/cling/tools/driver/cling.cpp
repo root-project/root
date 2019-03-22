@@ -15,14 +15,14 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/FrontendTool/Utils.h"
 
-#include "llvm/Support/Signals.h"
-#include "llvm/Support/PrettyStackTrace.h"
 #include "llvm/Support/ManagedStatic.h"
+#include "llvm/Support/PrettyStackTrace.h"
+#include "llvm/Support/Signals.h"
 
-#include <iostream>
 #include <fstream>
-#include <vector>
+#include <iostream>
 #include <string>
+#include <vector>
 
 #if defined(WIN32) && defined(_MSC_VER)
 #include <crtdbg.h>
