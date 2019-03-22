@@ -149,10 +149,10 @@ public:
 
    /// For offset columns only, do index arithmetic from cluster-local to global indizes
    void GetCollectionInfo(const ForestSize_t index, ForestSize_t* collectionStart, ClusterSize_t* collectionSize) {
-      ForestSize_t dummy;
-      RColumnElement<ForestSize_t, EColumnType::kIndex> fElemDummy(&dummy);
-      auto idxStart = (index == 0) ? 0 : *Map<ForestSize_t, EColumnType::kIndex>(index - 1, &fElemDummy);
-      auto idxEnd = *Map<ForestSize_t, EColumnType::kIndex>(index, &fElemDummy);
+      ClusterSize_t dummy;
+      RColumnElement<ClusterSize_t, EColumnType::kIndex> fElemDummy(&dummy);
+      auto idxStart = (index == 0) ? 0 : *Map<ClusterSize_t, EColumnType::kIndex>(index - 1, &fElemDummy);
+      auto idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(index, &fElemDummy);
       auto selfOffset = fCurrentPage.GetClusterInfo().GetSelfOffset();
       auto pointeeOffset = fCurrentPage.GetClusterInfo().GetPointeeOffset();
       if (index == selfOffset) {

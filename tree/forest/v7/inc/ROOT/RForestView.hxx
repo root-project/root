@@ -141,7 +141,7 @@ public:
 \brief A tree view for a collection, that can itself generate new tree views for its nested fields.
 */
 // clang-format on
-class RForestViewCollection : public RForestView<ForestSize_t> {
+class RForestViewCollection : public RForestView<ClusterSize_t> {
     friend class RInputForest;
 
 private:
@@ -149,7 +149,7 @@ private:
    Detail::RPageSource* fSource;
 
    RForestViewCollection(std::string_view fieldName, Detail::RPageSource* source)
-      : RForestView<ForestSize_t>(fieldName, source)
+      : RForestView<ClusterSize_t>(fieldName, source)
       , fCollectionName(fieldName)
       , fSource(source)
    {}
@@ -168,8 +168,10 @@ public:
    ~RForestViewCollection() = default;
 
    RForestViewRange GetViewRange(ForestSize_t index) {
-      ForestSize_t start = (index == 0) ? 0 : *fField.Map(index - 1);
-      return RForestViewRange(start, *fField.Map(index));
+      ClusterSize_t size;
+      ForestSize_t idxStart;
+      fField.GetCollectionInfo(index, &idxStart, &size);
+      return RForestViewRange(idxStart, idxStart + size);
    }
    template <typename T>
    RForestView<T> GetView(std::string_view fieldName) { return RForestView<T>(GetSubName(fieldName), fSource); }
@@ -177,9 +179,11 @@ public:
       return RForestViewCollection(GetSubName(fieldName), fSource);
    }
 
-   ForestSize_t operator()(ForestSize_t index) {
-      ForestSize_t offsetPrev = (index == 0) ? 0 : *fField.Map(index - 1);
-      return *fField.Map(index) - offsetPrev;
+   ClusterSize_t operator()(ForestSize_t index) {
+      ClusterSize_t size;
+      ForestSize_t idxStart;
+      fField.GetCollectionInfo(index, &idxStart, &size);
+      return size;
    }
 };
 

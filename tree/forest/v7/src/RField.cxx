@@ -50,7 +50,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType == "string") normalizedType = "std::string";
    if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
 
-   if (normalizedType == "ROOT::Experimental::ForestSize_t") return new RField<ForestSize_t>(fieldName);
+   if (normalizedType == "ROOT::Experimental::ClusterSize_t") return new RField<ClusterSize_t>(fieldName);
    if (normalizedType == "std::uint32_t") return new RField<std::uint32_t>(fieldName);
    if (normalizedType == "float") return new RField<float>(fieldName);
    if (normalizedType == "double") return new RField<double>(fieldName);
@@ -61,7 +61,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
    }
    // TODO: create an RFieldCollection?
-   if (normalizedType == ":Collection:") return new RField<ForestSize_t>(fieldName);
+   if (normalizedType == ":Collection:") return new RField<ClusterSize_t>(fieldName);
    auto cl = TClass::GetClass(normalizedType.c_str());
    if (cl != nullptr) {
       return new RFieldClass(fieldName, normalizedType);
@@ -205,7 +205,7 @@ ROOT::Experimental::RForestEntry* ROOT::Experimental::RFieldRoot::GenerateEntry(
 //------------------------------------------------------------------------------
 
 
-void ROOT::Experimental::RField<ROOT::Experimental::ForestSize_t>::DoGenerateColumns()
+void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::DoGenerateColumns()
 {
    RColumnModel model(GetName(), EColumnType::kIndex, true /* isSorted*/);
    fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
@@ -389,7 +389,7 @@ void ROOT::Experimental::RFieldVector::DoAppend(const Detail::RFieldValueBase& v
       auto itemValue = fSubFields[0]->CaptureValue(typedValue->data() + (i * fItemSize));
       fSubFields[0]->Append(itemValue);
    }
-   Detail::RColumnElement<ForestSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
+   Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
    fNWritten += count;
    fColumns[0]->Append(elemIndex);
 }
@@ -397,12 +397,9 @@ void ROOT::Experimental::RFieldVector::DoAppend(const Detail::RFieldValueBase& v
 void ROOT::Experimental::RFieldVector::DoRead(ForestSize_t index, Detail::RFieldValueBase* value) {
    auto typedValue = reinterpret_cast<RFieldValue<std::vector<char>>*>(value)->Get();
 
-   ForestSize_t dummy;
-   Detail::RColumnElement<ForestSize_t, EColumnType::kIndex> elemIndex(&dummy);
-   auto idxStart = (index == 0) ? 0
-      : *fColumns[0]->template Map<ForestSize_t, EColumnType::kIndex>(index - 1, &elemIndex);
-   auto idxEnd = *fColumns[0]->template Map<ForestSize_t, EColumnType::kIndex>(index, &elemIndex);
-   auto nItems = idxEnd - idxStart;
+   ClusterSize_t nItems;
+   ForestSize_t idxStart;
+   fPrincipalColumn->GetCollectionInfo(index, &idxStart, &nItems);
 
    typedValue->resize(nItems * fItemSize);
    for (unsigned i = 0; i < nItems; ++i) {
@@ -451,6 +448,11 @@ ROOT::Experimental::Detail::RFieldValueBase ROOT::Experimental::RFieldVector::Ca
 size_t ROOT::Experimental::RFieldVector::GetValueSize() const
 {
    return sizeof(std::vector<char>);
+}
+
+void ROOT::Experimental::RFieldVector::CommitCluster()
+{
+   fNWritten = 0;
 }
 
 
