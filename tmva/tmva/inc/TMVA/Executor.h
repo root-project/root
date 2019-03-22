@@ -110,6 +110,21 @@ public:
       if (fMTExecImpl) return fMTExecImpl->MapReduce(func, args, redfunc);
       else return fSeqExecImpl->MapReduce(func, args, redfunc); 
    }
+   template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
+   auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type {
+      if (fMTExecImpl) return fMTExecImpl->MapReduce(func, args, redfunc, nChunks);
+      else return fSeqExecImpl->MapReduce(func, args, redfunc); 
+   }
+  
+   
+
+   ///Wrap Reduce function
+   template<class T, class R>
+   auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs)) {
+      if (fMTExecImpl) return fMTExecImpl->Reduce(objs, redfunc);
+      else return fSeqExecImpl->Reduce(objs, redfunc); 
+   }
+   //template<class T> T* Reduce(const std::vector<T*> &mergeObjs);
    
 #ifdef R__USE_IMT
    std::unique_ptr<ROOT::TThreadExecutor>  fMTExecImpl;
