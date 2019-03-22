@@ -134,6 +134,8 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectColumns(RPageStorage *pageSt
 {
    if (fColumns.empty()) DoGenerateColumns();
    for (auto& column : fColumns) {
+      if ((fParent != nullptr) && (column->GetOffsetColumn() == nullptr))
+         column->SetOffsetColumn(fParent->fPrincipalColumn);
       column->Connect(pageStorage);
    }
 }
@@ -252,6 +254,7 @@ void ROOT::Experimental::RField<std::string>::DoGenerateColumns()
    RColumnModel modelChars(GetCollectionName(GetName()), EColumnType::kByte, false /* isSorted*/);
    fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelChars));
    fPrincipalColumn = fColumns[0].get();
+   fColumns[1]->SetOffsetColumn(fPrincipalColumn);
 }
 
 void ROOT::Experimental::RField<std::string>::DoAppend(const ROOT::Experimental::Detail::RFieldValueBase& value)
@@ -268,12 +271,17 @@ void ROOT::Experimental::RField<std::string>::DoRead(
    ROOT::Experimental::ForestSize_t index, ROOT::Experimental::Detail::RFieldValueBase* value)
 {
    auto typedValue = reinterpret_cast<ROOT::Experimental::RFieldValue<std::string>*>(value)->Get();
-   auto idxStart = (index == 0) ? 0 : *fColumns[0]->Map<ForestSize_t, EColumnType::kIndex>(index - 1, &fElemIndex);
-   auto idxEnd = *fColumns[0]->Map<ForestSize_t, EColumnType::kIndex>(index, &fElemIndex);
-   auto nChars = idxEnd - idxStart;
+   ForestSize_t idxStart;
+   ClusterSize_t nChars;
+   fPrincipalColumn->GetCollectionInfo(index, &idxStart, &nChars);
    typedValue->resize(nChars);
    Detail::RColumnElement<char, EColumnType::kByte> elemChars(const_cast<char*>(typedValue->data()));
    fColumns[1]->ReadV(idxStart, nChars, &elemChars);
+}
+
+void ROOT::Experimental::RField<std::string>::CommitCluster()
+{
+   fIndex = 0;
 }
 
 

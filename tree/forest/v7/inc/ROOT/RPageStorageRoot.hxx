@@ -44,7 +44,7 @@ struct RColumnHeader {
    std::string fName;
    EColumnType fType;
    bool fIsSorted;
-   // Depends on which offset column
+   std::string fOffsetColumn;
 };
 
 struct RForestHeader {
@@ -102,6 +102,8 @@ public:
       std::vector<ForestSize_t> fRangeStarts;
       std::vector<ForestSize_t> fClusterId;
       std::vector<ForestSize_t> fPageInCluster;
+      std::vector<ForestSize_t> fSelfClusterOffset;
+      std::vector<ForestSize_t> fPointeeClusterOffset;
    };
 
    struct RFieldDescriptor {
@@ -113,6 +115,7 @@ public:
    ForestSize_t fNEntries = 0;
    std::unordered_map<std::int32_t, std::unique_ptr<RColumnModel>> fId2ColumnModel;
    std::unordered_map<std::string, std::int32_t> fColumnName2Id;
+   std::unordered_map<std::int32_t, std::int32_t> fColumn2Pointee;
    std::vector<RColumnIndex> fColumnIndex;
    std::vector<RFieldDescriptor> fRootFields;
 };

@@ -115,6 +115,7 @@ void ROOT::Experimental::ROutputForest::CommitCluster()
    if (fNEntries == fLastCommitted) return;
    for (auto& field : *fModel->GetRootField()) {
       field.Flush();
+      field.CommitCluster();
    }
    fSink->CommitCluster(fNEntries);
    fLastCommitted = fNEntries;

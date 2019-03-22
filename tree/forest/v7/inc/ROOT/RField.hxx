@@ -193,6 +193,8 @@ public:
 
    /// Ensure that all received items are written from page buffers to the storage.
    void Flush() const;
+   /// Perform housekeeping tasks for global to cluster-local index translation
+   virtual void CommitCluster() {}
 
    void Attach(std::unique_ptr<Detail::RFieldBase> child);
 
@@ -523,6 +525,7 @@ public:
       return ROOT::Experimental::RFieldValue<std::string>(true, this, static_cast<std::string*>(where));
    }
    size_t GetValueSize() const final { return sizeof(std::string); }
+   void CommitCluster() final;
 };
 
 

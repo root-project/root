@@ -61,6 +61,9 @@ ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(RColumn* column)
    columnHeader.fName = column->GetModel().GetName();
    columnHeader.fType = column->GetModel().GetType();
    columnHeader.fIsSorted = column->GetModel().GetIsSorted();
+   if (column->GetOffsetColumn() != nullptr) {
+      columnHeader.fOffsetColumn = column->GetOffsetColumn()->GetModel().GetName();
+   }
    auto columnId = fForestHeader.fColumns.size();
    fForestHeader.fColumns.emplace_back(columnHeader);
    printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
@@ -203,6 +206,13 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
       columnId++;
    }
 
+   /// Determine column dependencies (offset - pointee relationships)
+   for (auto &columnHeader : forestHeader->fColumns) {
+      if (columnHeader.fOffsetColumn.empty()) continue;
+      fMapper.fColumn2Pointee[fMapper.fColumnName2Id[columnHeader.fOffsetColumn]] =
+        fMapper.fColumnName2Id[columnHeader.fName];
+   }
+
    auto keyForestFooter = fDirectory->GetKey(RMapper::kKeyForestFooter);
    auto forestFooter = keyForestFooter->ReadObject<ROOT::Experimental::Internal::RForestFooter>();
    printf("Number of clusters: %d, entries %ld\n", forestFooter->fNClusters, forestFooter->fNEntries);
@@ -212,11 +222,26 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
       auto clusterFooter = keyClusterFooter->ReadObject<ROOT::Experimental::Internal::RClusterFooter>();
       R__ASSERT(clusterFooter->fPagesPerColumn.size() == nColumns);
       for (unsigned iColumn = 0; iColumn < nColumns; ++iColumn) {
+         if (clusterFooter->fPagesPerColumn[iColumn].fRangeStarts.empty())
+            continue;
+         ForestSize_t selfClusterOffset = clusterFooter->fPagesPerColumn[iColumn].fRangeStarts[0];
+         ForestSize_t pointeeClusterOffset = kInvalidForestIndex;
+         auto itrPointee = fMapper.fColumn2Pointee.find(iColumn);
+         if (itrPointee != fMapper.fColumn2Pointee.end()) {
+            //printf("COLUMN %s wants to know pointee offset of column %s\n",
+            //  fMapper.fId2ColumnModel[iColumn]->GetName().c_str(),
+            //  fMapper.fId2ColumnModel[itrPointee->second]->GetName().c_str());
+            /// The pointee might not have any pages in this cluster (e.g. all empty collections)
+            if (!clusterFooter->fPagesPerColumn[itrPointee->second].fRangeStarts.empty())
+               pointeeClusterOffset = clusterFooter->fPagesPerColumn[itrPointee->second].fRangeStarts[0];
+         }
          ForestSize_t pageInCluster = 0;
          for (auto rangeStart : clusterFooter->fPagesPerColumn[iColumn].fRangeStarts) {
             fMapper.fColumnIndex[iColumn].fRangeStarts.push_back(rangeStart);
             fMapper.fColumnIndex[iColumn].fClusterId.push_back(iCluster);
             fMapper.fColumnIndex[iColumn].fPageInCluster.push_back(pageInCluster);
+            fMapper.fColumnIndex[iColumn].fSelfClusterOffset.push_back(selfClusterOffset);
+            fMapper.fColumnIndex[iColumn].fPointeeClusterOffset.push_back(pointeeClusterOffset);
             pageInCluster++;
          }
       }
@@ -280,10 +305,12 @@ void ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
    auto elemsInPage = firstOutsidePage - firstInPage;
    void* buf = page->Reserve(elemsInPage);
    R__ASSERT(buf != nullptr);
-   page->SetRangeFirst(firstInPage);
 
    auto clusterId = fMapper.fColumnIndex[columnId].fClusterId[pageIdx];
    auto pageInCluster = fMapper.fColumnIndex[columnId].fPageInCluster[pageIdx];
+   auto selfOffset = fMapper.fColumnIndex[columnId].fSelfClusterOffset[pageIdx];
+   auto pointeeOffset = fMapper.fColumnIndex[columnId].fPointeeClusterOffset[pageIdx];
+   page->SetWindow(firstInPage, RPage::RClusterInfo(clusterId, selfOffset, pointeeOffset));
 
    //printf("Populating page %lu/%lu [%lu] for column %d starting at %lu\n", clusterId, pageInCluster, pageIdx, columnId, firstInPage);
 
