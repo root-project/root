@@ -122,7 +122,7 @@ private:
    {
       auto loopManager = rInterface.GetLoopManager();
       if (!loopManager->fToJitExec.empty())
-         loopManager->BuildJittedNodes();
+         loopManager->Jit();
 
       return FromGraphLeafToDot(rInterface.GetProxiedPtr()->GetGraph());
    }
@@ -141,7 +141,7 @@ private:
       }
 
       if (!loopManager->fToJitExec.empty())
-         loopManager->BuildJittedNodes();
+         loopManager->Jit();
 
       auto actionPtr = resultPtr.fActionPtr;
       return FromGraphLeafToDot(actionPtr->GetGraph());
