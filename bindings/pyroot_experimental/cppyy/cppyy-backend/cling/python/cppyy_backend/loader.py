@@ -8,7 +8,7 @@ __all__ = [
     'ensure_precompiled_header'   # build precompiled header as necessary
 ]
 
-import os, sys, ctypes, subprocess
+import os, sys, ctypes, subprocess, warnings
 
 if 'win32' in sys.platform:
     soext = '.dll'
@@ -20,7 +20,7 @@ _precompiled_header_ensured = False
 def load_cpp_backend():
     set_cling_compile_options()
 
-    if 'linux' in sys.platform and not _precompiled_header_ensured:
+    if not _precompiled_header_ensured:
      # the precompiled header of standard and system headers is not part of the
      # distribution as there are too many varieties; create it now if needed
         ensure_precompiled_header()
@@ -82,8 +82,18 @@ def set_cling_compile_options(add_defaults = False):
 
 
 def _warn_no_pch(msg):
-    import warnings
     warnings.warn('No precompiled header available (%s); this may impact performance.' % msg)
+
+def _is_uptodate(pchname, incpath):
+  # test whether the pch is older than the include directory
+    try:
+        return os.stat(pchname).st_mtime >= os.stat(incpath).st_mtime
+    except Exception:
+        pass
+    return False
+
+def _disable_pch():
+    os.putenv('CLING_STANDARD_PCH', 'none')
 
 def ensure_precompiled_header(pchdir = '', pchname = ''):
   # the precompiled header of standard and system headers is not part of the
@@ -93,10 +103,15 @@ def ensure_precompiled_header(pchdir = '', pchname = ''):
 
      olddir = os.getcwd()
      try:
-         pkgpath = os.path.dirname(__file__)
+         pkgpath = os.path.abspath(os.path.dirname(__file__))
          if 'CLING_STANDARD_PCH' in os.environ:
-             pchdir = os.path.dirname(os.environ['CLING_STANDARD_PCH'])
-             pchname = os.path.basename(os.environ['CLING_STANDARD_PCH'])
+             stdpch = os.environ['CLING_STANDARD_PCH']
+             if stdpch.lower() == 'none':   # magic keyword to disable pch
+                 _disable_pch()
+                 os.chdir(olddir)
+                 return                     # quiet
+             pchdir = os.path.dirname(stdpch)
+             pchname = os.path.basename(stdpch)
          else:
              if not pchdir:
                  pchdir = os.path.join(pkgpath, 'etc')
@@ -104,16 +119,21 @@ def ensure_precompiled_header(pchdir = '', pchname = ''):
                  pchname = 'allDict.cxx.pch'
 
          os.chdir(pkgpath)
-         if not os.path.exists(os.path.join(pchdir, pchname)):
+         full_pchname = os.path.join(pchdir, pchname)
+         incpath = os.path.join(pkgpath, 'include')
+         is_uptodate = _is_uptodate(full_pchname, incpath)
+         if not os.path.exists(full_pchname) or not is_uptodate:
              if os.access(pchdir, os.R_OK|os.W_OK):
-                 print('Building pre-compiled headers (options:%s); this make take a minute ...' % os.environ.get('EXTRA_CLING_ARGS', ' none'))
+                 print('(Re-)building pre-compiled headers (options:%s); this make take a minute ...' % os.environ.get('EXTRA_CLING_ARGS', ' none'))
                  makepch = os.path.join(pkgpath, 'etc', 'dictpch', 'makepch.py')
-                 incpath = os.path.join(pkgpath, 'include')
-                 if subprocess.call(['python', makepch, os.path.join(pchdir, pchname), '-I'+incpath]) != 0:
+                 if subprocess.call(['python', makepch, full_pchname, '-I'+incpath]) != 0:
                      _warn_no_pch('failed to build')
              else:
+                 _disable_pch()
                  _warn_no_pch('%s not writable' % pchdir)
+
      except Exception as e:
+         _disable_pch()
          _warn_no_pch(str(e))
      finally:
          os.chdir(olddir)
