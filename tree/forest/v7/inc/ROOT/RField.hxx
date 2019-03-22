@@ -253,7 +253,7 @@ public:
 class RFieldVector : public Detail::RFieldBase {
 private:
    size_t fItemSize;
-   ForestSize_t fNWritten;
+   ClusterSize_t fNWritten;
 
 protected:
    void DoAppend(const Detail::RFieldValueBase& value) final;
@@ -273,6 +273,7 @@ public:
    void DestroyValue(const Detail::RFieldValueBase& value, bool dtorOnly = false) final;
    Detail::RFieldValueBase CaptureValue(void *where) override;
    size_t GetValueSize() const override;
+   void CommitCluster() final;
 };
 
 
@@ -312,14 +313,14 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final {
-      return ROOT::Experimental::RFieldValue<ForestSize_t>(
-         Detail::RColumnElement<ForestSize_t, EColumnType::kIndex>(static_cast<ForestSize_t*>(where)),
-         this, static_cast<ForestSize_t*>(where));
+      return ROOT::Experimental::RFieldValue<ClusterSize_t>(
+         Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex>(static_cast<ClusterSize_t*>(where)),
+         this, static_cast<ClusterSize_t*>(where));
    }
    Detail::RFieldValueBase CaptureValue(void* where) final {
-      return ROOT::Experimental::RFieldValue<ForestSize_t>(true,
-         Detail::RColumnElement<ForestSize_t, EColumnType::kIndex>(static_cast<ForestSize_t*>(where)),
-         this, static_cast<ForestSize_t*>(where));
+      return ROOT::Experimental::RFieldValue<ClusterSize_t>(true,
+         Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex>(static_cast<ClusterSize_t*>(where)),
+         this, static_cast<ClusterSize_t*>(where));
    }
    size_t GetValueSize() const final { return 0; }
 };
@@ -329,9 +330,9 @@ public:
 
 
 template <>
-class ROOT::Experimental::RField<ROOT::Experimental::ForestSize_t> : public ROOT::Experimental::Detail::RFieldBase {
+class ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t> : public ROOT::Experimental::Detail::RFieldBase {
 public:
-   static std::string MyTypeName() { return "ROOT::Experimental::ForestSize_t"; }
+   static std::string MyTypeName() { return "ROOT::Experimental::ClusterSize_t"; }
    explicit RField(std::string_view name) : Detail::RFieldBase(name, MyTypeName(), true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -341,29 +342,34 @@ public:
    void DoGenerateColumns() final;
    unsigned int GetNColumns() const final { return 1; }
 
-   ForestSize_t* Map(ForestSize_t index) {
-      static_assert(Detail::RColumnElement<ForestSize_t, EColumnType::kIndex>::kIsMappable,
-                    "(ForestSize_t, EColumnType::kIndex) is not identical on this platform");
-      return fPrincipalColumn->Map<ForestSize_t, EColumnType::kIndex>(index, nullptr);
+   ClusterSize_t* Map(ForestSize_t index) {
+      static_assert(Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex>::kIsMappable,
+                    "(ClusterSize_t, EColumnType::kIndex) is not identical on this platform");
+      return fPrincipalColumn->Map<ClusterSize_t, EColumnType::kIndex>(index, nullptr);
    }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where, ArgsT&&... args)
    {
-      ROOT::Experimental::RFieldValue<ForestSize_t> v(
-         Detail::RColumnElement<ForestSize_t, EColumnType::kIndex>(static_cast<ForestSize_t*>(where)),
-         this, static_cast<ForestSize_t*>(where), std::forward<ArgsT>(args)...);
+      ROOT::Experimental::RFieldValue<ClusterSize_t> v(
+         Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex>(static_cast<ClusterSize_t*>(where)),
+         this, static_cast<ClusterSize_t*>(where), std::forward<ArgsT>(args)...);
       return v;
    }
    ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final { return GenerateValue(where, 0); }
    Detail::RFieldValueBase CaptureValue(void *where) final {
-      ROOT::Experimental::RFieldValue<ForestSize_t> v(true,
-         Detail::RColumnElement<ForestSize_t, EColumnType::kIndex>(static_cast<ForestSize_t*>(where)),
-         this, static_cast<ForestSize_t*>(where));
+      ROOT::Experimental::RFieldValue<ClusterSize_t> v(true,
+         Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex>(static_cast<ClusterSize_t*>(where)),
+         this, static_cast<ClusterSize_t*>(where));
       return v;
    }
-   size_t GetValueSize() const final { return sizeof(ForestSize_t); }
+   size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
+
+   /// Special help for offset fields
+   void GetCollectionInfo(ForestSize_t index, ForestSize_t* idxStart, ClusterSize_t* size) {
+      fPrincipalColumn->GetCollectionInfo(index, idxStart, size);
+   }
 };
 
 
@@ -489,8 +495,8 @@ public:
 template <>
 class ROOT::Experimental::RField<std::string> : public ROOT::Experimental::Detail::RFieldBase {
 private:
-   ForestSize_t fIndex;
-   Detail::RColumnElement<ForestSize_t, EColumnType::kIndex> fElemIndex;
+   ClusterSize_t fIndex;
+   Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> fElemIndex;
 
    void DoAppend(const ROOT::Experimental::Detail::RFieldValueBase& value) final;
    void DoRead(ROOT::Experimental::ForestSize_t index, ROOT::Experimental::Detail::RFieldValueBase* value) final;

@@ -56,7 +56,7 @@ enum class EColumnType {
  * Lookup table for the element size in bytes for column types. The array has to correspond to EColumnTypes.
  */
 constexpr std::size_t kColumnElementSizes[] =
-  {0 /* kUnknown */, 8 /* kIndex */, 1 /* kByte */, 8 /* kReal64 */, 4 /* kReal32 */, 2 /* kReal16 */,
+  {0 /* kUnknown */, 4 /* kIndex */, 1 /* kByte */, 8 /* kReal64 */, 4 /* kReal32 */, 2 /* kReal16 */,
    1 /* kReal8 */, 8 /* kInt64 */, 4 /* kInt32 */, 2 /* kInt16 */};
 
 // clang-format off
