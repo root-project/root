@@ -47,6 +47,7 @@ public:
    int nfaces{0};           ///<! number of shape faces
    int numvischld{0};       ///<! number of visible childs, if all can be jump over
    int idshift{0};          ///<! used to jump over then scan all geom hierarchy
+   bool useflag{false};     ///<! extra flag, used for selection
 
    REveGeomNode() = default;
    REveGeomNode(int _id) : id(_id) {}
@@ -91,8 +92,9 @@ public:
 
 class REveGeomDrawing {
 public:
-   std::vector<REveGeomVisisble> visibles;
-   std::vector<REveGeomNode> nodes;
+   int numnodes{0};                         ///< total number of nodes in description
+   std::vector<REveGeomNode*> nodes;        ///< all used nodes to display visibles and not known for client
+   std::vector<REveGeomVisisble> visibles;  ///< all visibles items with
 
    REveGeomDrawing() = default;
 };
@@ -147,6 +149,8 @@ class REveGeomDescription {
    void BuildRndrBinary(std::vector<char> &buf);
 
    void CopyMaterialProperties(TGeoVolume *col, REveGeomVisisble &item);
+
+   void CollectNodes(REveGeomDrawing &drawing);
 
 public:
    REveGeomDescription() = default;
