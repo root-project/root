@@ -517,14 +517,14 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
    // finally we should create data for streaming to the client
    // it includes list of visible nodes and rawdata
 
-   std::vector<REveGeomVisisble> visibles;
+   REveGeomDrawing drawing;
    ResetRndrInfos();
 
    ScanVisible([&, this](REveGeomNode &node, std::vector<int> &stack) {
       if (node.sortid < fDrawIdCut) {
-         visibles.emplace_back(node.id, stack);
+         drawing.visibles.emplace_back(node.id, stack);
 
-         auto &item = visibles.back();
+         auto &item = drawing.visibles.back();
          auto volume = fNodes[node.id]->GetVolume();
          CopyMaterialProperties(volume, item);
 
@@ -538,7 +538,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
    // finally, create binary data with all produced shapes
 
    fDrawJson = "GDRAW:";
-   fDrawJson.append(TBufferJSON::ToJSON(&visibles, 103).Data());
+   fDrawJson.append(TBufferJSON::ToJSON(&drawing, 103).Data());
 
    BuildRndrBinary(fDrawBinary);
 
@@ -650,14 +650,15 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    // it includes list of visible nodes and rawdata (if there is enough space)
 
    ResetRndrInfos();
-   std::vector<REveGeomVisisble> visibles;
+
+   REveGeomDrawing drawing;
 
    ScanVisible([&, this](REveGeomNode &node, std::vector<int> &stack) {
       // select only nodes which should match
       if (!match_func(node))
          return true;
 
-      visibles.emplace_back(node.id, stack);
+      drawing.visibles.emplace_back(node.id, stack);
 
       // no need to transfer shape if it provided with main drawing list
       // also no binary will be transported when too many matches are there
@@ -666,7 +667,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
          return true;
       }
 
-      auto &item = visibles.back();
+      auto &item = drawing.visibles.back();
       auto volume = fNodes[node.id]->GetVolume();
 
       CopyMaterialProperties(volume, item);
@@ -678,7 +679,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    });
 
    json = "FOUND:";
-   json.append(TBufferJSON::ToJSON(&visibles, 103).Data());
+   json.append(TBufferJSON::ToJSON(&drawing, 103).Data());
 
    BuildRndrBinary(binary);
 
@@ -739,7 +740,7 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
       return true;
    }
 
-   std::vector<REveGeomVisisble> visibles;
+   REveGeomDrawing drawing;
 
    ScanVisible([&, this](REveGeomNode &node, std::vector<int> &stack) {
       // select only nodes which reference same shape
@@ -750,14 +751,14 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
          if (node.id != nodeid) return true;
       }
 
-      visibles.emplace_back(node.id, stack);
-      auto &item = visibles.back();
+      drawing.visibles.emplace_back(node.id, stack);
+      auto &item = drawing.visibles.back();
       CopyMaterialProperties(vol, item);
       return true;
    });
 
    // no any visible nodes were done
-   if (visibles.size()==0) {
+   if (drawing.visibles.size()==0) {
       json.append("NO");
       return true;
    }
@@ -767,10 +768,10 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
    auto &sd = MakeShapeDescr(vol->GetShape(), true);
 
    // assign shape data
-   for (auto &item : visibles)
+   for (auto &item : drawing.visibles)
       item.ri = sd.rndr_info();
 
-   json.append(TBufferJSON::ToJSON(&visibles, 103).Data());
+   json.append(TBufferJSON::ToJSON(&drawing, 103).Data());
 
    BuildRndrBinary(binary);
 
