@@ -17,6 +17,7 @@
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
+#include <ROOT/RForest.hxx>
 #include <ROOT/RForestEntry.hxx>
 #include <ROOT/RForestModel.hxx>
 
@@ -460,8 +461,11 @@ void ROOT::Experimental::RFieldVector::CommitCluster()
 
 
 ROOT::Experimental::RFieldCollection::RFieldCollection(
-   std::string_view name, std::unique_ptr<RForestModel> collectionModel)
+   std::string_view name,
+   std::shared_ptr<RCollectionForest> collectionForest,
+   std::unique_ptr<RForestModel> collectionModel)
    : RFieldBase(name, ":Collection:", true /* isSimple */)
+   , fCollectionForest(collectionForest)
 {
    std::string namePrefix(name);
    namePrefix.push_back(kCollectionSeparator);
@@ -484,15 +488,21 @@ void ROOT::Experimental::RFieldCollection::DoGenerateColumns()
 }
 
 
-ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldCollection::Clone(std::string_view newName)
+ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldCollection::Clone(std::string_view /*newName*/)
 {
-   auto result = new RFieldCollection(newName, RForestModel::Create());
-   for (auto& f : fSubFields) {
-      // switch the name prefix for the new parent name
-      std::string cloneName = newName.to_string() + f->GetName().substr(GetName().length());
-      auto clone = f->Clone(cloneName);
-      result->Attach(std::unique_ptr<RFieldBase>(clone));
-   }
-   return result;
+   // TODO(jblomer)
+   return nullptr;
+   //auto result = new RFieldCollection(newName, fCollectionForest, RForestModel::Create());
+   //for (auto& f : fSubFields) {
+   //   // switch the name prefix for the new parent name
+   //   std::string cloneName = newName.to_string() + f->GetName().substr(GetName().length());
+   //   auto clone = f->Clone(cloneName);
+   //   result->Attach(std::unique_ptr<RFieldBase>(clone));
+   //}
+   //return result;
+}
+
+void ROOT::Experimental::RFieldCollection::CommitCluster() {
+   *fCollectionForest->GetOffsetPtr() = 0;
 }
 
