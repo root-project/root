@@ -86,6 +86,17 @@ public:
    REveGeomVisisble(int id, const std::vector<int> &_stack) : nodeid(id), stack(_stack) {}
 };
 
+/** Object with full description for drawing geometry
+ * It include list of visibles and list of nodes required to build them */
+
+class REveGeomDrawing {
+public:
+   std::vector<REveGeomVisisble> visibles;
+   std::vector<REveGeomNode> nodes;
+
+   REveGeomDrawing() = default;
+};
+
 using REveGeomScanFunc_t = std::function<bool(REveGeomNode&, std::vector<int>&)>;
 
 class REveGeomDescription {
