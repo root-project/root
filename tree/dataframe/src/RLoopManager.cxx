@@ -434,7 +434,7 @@ void RLoopManager::JitDeclarations()
 
 /// Add RDF nodes that require just-in-time compilation to the computation graph.
 /// This method also invokes JitDeclarations() if needed, and clears the `fToJitExec` member variable.
-void RLoopManager::BuildJittedNodes()
+void RLoopManager::Jit()
 {
    JitDeclarations();
 
@@ -474,7 +474,7 @@ unsigned int RLoopManager::GetNextID()
 void RLoopManager::Run()
 {
    if (!fToJitExec.empty())
-      BuildJittedNodes();
+      Jit();
 
    InitNodes();
 

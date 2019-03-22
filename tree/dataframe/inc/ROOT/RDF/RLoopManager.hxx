@@ -146,7 +146,7 @@ public:
    RLoopManager &operator=(const RLoopManager &) = delete;
 
    void JitDeclarations();
-   void BuildJittedNodes();
+   void Jit();
    RLoopManager *GetLoopManagerUnchecked() final { return this; }
    void Run();
    const ColumnNames_t &GetDefaultColumnNames() const;
