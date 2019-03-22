@@ -378,6 +378,24 @@ void ROOT::Experimental::REveGeomDescription::CollectNodes(REveGeomDrawing &draw
    printf("SELECT NODES %d\n", (int) drawing.nodes.size());
 }
 
+/////////////////////////////////////////////////////////////////////
+/// Produce JSON for array of all existing nodes to build hierarchy
+
+std::string ROOT::Experimental::REveGeomDescription::GetHierachyJson(const std::string &prepend)
+{
+   /// use pointer on REveGeomNodeBase to convert only minimal required data
+   std::vector<REveGeomNodeBase *> vect(fDesc.size(), nullptr);
+
+   int cnt = 0;
+   for (auto &item : fDesc)
+      vect[cnt++]= &item;
+
+   auto res = prepend;
+
+   res.append(TBufferJSON::ToJSON(&vect,103).Data());
+
+   return res;
+}
 
 /////////////////////////////////////////////////////////////////////
 /// Find description object for requested shape
@@ -572,6 +590,8 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
 
    CollectNodes(drawing);
 
+   drawing.drawopt = fDrawOptions;
+
    // finally, create binary data with all produced shapes
 
    fDrawJson = "GDRAW:";
@@ -717,6 +737,8 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 
    CollectNodes(drawing);
 
+   drawing.drawopt = fDrawOptions;
+
    json = "FOUND:";
    json.append(TBufferJSON::ToJSON(&drawing, 103).Data());
 
@@ -811,6 +833,8 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
       item.ri = sd.rndr_info();
 
    CollectNodes(drawing);
+
+   drawing.drawopt = fDrawOptions;
 
    json.append(TBufferJSON::ToJSON(&drawing, 103).Data());
 
