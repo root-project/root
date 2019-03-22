@@ -144,12 +144,12 @@ public:
 
 template <>
 class ROOT::Experimental::Detail::RColumnElement<
-   ROOT::Experimental::ForestSize_t, ROOT::Experimental::EColumnType::kIndex>
+   ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex>
    : public ROOT::Experimental::Detail::RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
-   static constexpr size_t kSize = sizeof(ROOT::Experimental::ForestSize_t);
-   explicit RColumnElement(ROOT::Experimental::ForestSize_t* value) : RColumnElementBase(value, kSize, kIsMappable) {}
+   static constexpr size_t kSize = sizeof(ROOT::Experimental::ClusterSize_t);
+   explicit RColumnElement(ROOT::Experimental::ClusterSize_t* value) : RColumnElementBase(value, kSize, kIsMappable) {}
 };
 
 template <>

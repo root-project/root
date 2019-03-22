@@ -202,7 +202,6 @@ TEST(RForest, Clusters)
 
 TEST(RForest, View)
 {
-   // TODO(jblomer): test with multiple clusters
    auto model = RForestModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
    auto fieldTag = model->MakeField<std::string>("tag", "xyz");
@@ -213,6 +212,9 @@ TEST(RForest, View)
    {
       ROutputForest forest(std::move(model), std::make_unique<RPageSinkRoot>("f", "test.root"));
       forest.Fill();
+      forest.CommitCluster();
+      fieldJets->clear();
+      forest.Fill();
    }
 
    RInputForest forest(std::make_unique<RPageSourceRoot>("f", "test.root"));
@@ -222,17 +224,21 @@ TEST(RForest, View)
       EXPECT_EQ(42.0, viewPt(i));
       n++;
    }
-   EXPECT_EQ(1, n);
+   EXPECT_EQ(2, n);
 
    auto viewJets = forest.GetView<std::vector<float>>("jets");
    n = 0;
    for (auto i : forest.GetViewRange()) {
-      EXPECT_EQ(2U, viewJets(i).size());
-      EXPECT_EQ(1.0, viewJets(i)[0]);
-      EXPECT_EQ(2.0, viewJets(i)[1]);
+      if (i == 0) {
+         EXPECT_EQ(2U, viewJets(i).size());
+         EXPECT_EQ(1.0, viewJets(i)[0]);
+         EXPECT_EQ(2.0, viewJets(i)[1]);
+      } else {
+         EXPECT_EQ(0U, viewJets(i).size());
+      }
       n++;
    }
-   EXPECT_EQ(1, n);
+   EXPECT_EQ(2, n);
 }
 
 TEST(RForest, Capture) {
@@ -270,6 +276,8 @@ TEST(RForest, Composable)
             fldTracks->Fill();
          }
          *fldPt = float(i);
+         //if (i == 2)
+         //   forest->CommitCluster();
          forest->Fill();
       }
    }
