@@ -4214,7 +4214,7 @@ int RootClingMain(int argc,
       // flag is passed.
 
       // includeDir is where modulemaps exist.
-      clingArgsInterpreter.push_back("-modulemap_overlay=" + includeDir);
+      clingArgsInterpreter.push_back("-includedir_loc=" + includeDir);
 #endif //R__MACOSX
 
       // We just pass -fmodules, the CIFactory will do the rest and configure
