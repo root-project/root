@@ -371,6 +371,7 @@ public:
    {
       // this check must be done before jitting lest we throw exceptions in jitted code
       RDFInternal::CheckCustomColumn(name, fLoopManager->GetTree(), fCustomColumns.GetNames(),
+                                     fLoopManager->GetAliasMap(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       auto jittedCustomColumn =
@@ -412,7 +413,8 @@ public:
       auto &dsColumnNames = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
 
       // If the alias name is a column name, there is a problem
-      RDFInternal::CheckCustomColumn(alias, fLoopManager->GetTree(), fCustomColumns.GetNames(), dsColumnNames);
+      RDFInternal::CheckCustomColumn(alias, fLoopManager->GetTree(), fCustomColumns.GetNames(),
+                                     fLoopManager->GetAliasMap(), dsColumnNames);
 
       const auto validColumnName = GetValidatedColumnNames(1, {std::string(columnName)})[0];
 
@@ -1568,9 +1570,9 @@ public:
                                                        fLoopManager->GetTree(), fLoopManager->GetDataSource(), isCustom,
                                                        convertVector2RVec);
       } else {
-         // must convert the alias "__tdf::column_type" to a readable type
+         // must convert the alias "__rdf::column_type" to a readable type
          const auto colID = std::to_string(fCustomColumns.GetColumns().at(std::string(column))->GetID());
-         const auto call = "ROOT::Internal::RDF::TypeID2TypeName(typeid(__tdf" + std::to_string(fLoopManager->GetID()) +
+         const auto call = "ROOT::Internal::RDF::TypeID2TypeName(typeid(__rdf" + std::to_string(fLoopManager->GetID()) +
                            "::" + std::string(column) + colID + "_type))";
          const auto calcRes = RDFInternal::InterpreterCalc(call.c_str());
          return *reinterpret_cast<std::string *>(calcRes.first); // copy result to stack
@@ -1764,7 +1766,7 @@ public:
    template <typename... ColumnTypes, typename Helper>
    RResultPtr<typename Helper::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})
    {
-      const auto nColumns = columns.size();
+      constexpr auto nColumns = sizeof...(ColumnTypes);
       RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columns.size());
 
       const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
@@ -1777,8 +1779,11 @@ public:
       using Action_t = typename RDFInternal::RAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
       auto resPtr = helper.GetResultPtr();
 
+      auto newColumns = CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<nColumns>(),
+                                              RDFInternal::TypeList<ColumnTypes...>());
+
       auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(helper)), validColumnNames, fProxiedPtr,
-                                               RDFInternal::RBookedCustomColumns(fCustomColumns));
+                                               RDFInternal::RBookedCustomColumns(newColumns));
       fLoopManager->Book(action.get());
       return MakeResultPtr(resPtr, *fLoopManager, std::move(action));
    }
@@ -1866,7 +1871,7 @@ private:
       fLoopManager->RegisterCustomColumn(entryColumn.get());
 
       // Declare return type to the interpreter, for future use by jitted actions
-      auto retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { using " + entryColName +
+      auto retTypeDeclaration = "namespace __rdf" + std::to_string(fLoopManager->GetID()) + " { using " + entryColName +
                                 std::to_string(entryColumn->GetID()) + "_type = ULong64_t; }";
       RDFInternal::InterpreterDeclare(retTypeDeclaration);
 
@@ -1886,7 +1891,7 @@ private:
       fCustomColumns = std::move(newCols);
 
       // Declare return type to the interpreter, for future use by jitted actions
-      retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { using " + slotColName +
+      retTypeDeclaration = "namespace __rdf" + std::to_string(fLoopManager->GetID()) + " { using " + slotColName +
                            std::to_string(slotColumn->GetID()) + "_type = unsigned int; }";
       RDFInternal::InterpreterDeclare(retTypeDeclaration);
 
@@ -1971,6 +1976,7 @@ private:
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns)
    {
       RDFInternal::CheckCustomColumn(name, fLoopManager->GetTree(), fCustomColumns.GetNames(),
+                                     fLoopManager->GetAliasMap(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
@@ -1992,21 +1998,17 @@ private:
 
       // Declare return type to the interpreter, for future use by jitted actions
       auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
-      std::string retTypeNameFwdDecl; // different from "" only if the type does not exist
       if (retTypeName.empty()) {
-         // If we are here, it means that the type is not known to the interpreter.
-         // We extract its name, forward declare it and add a meaningful comment.
-         // This string will be jitted flawlessly. If the user later on uses the product of this define
-         // and therefore an incomplete type, the interpreter will prompt an error and also display
-         // the comment we nicely built which reminds the user about the absence of information about
-         // this type in the interpreter.
-         retTypeName = RDFInternal::DemangleTypeIdName(typeid(RetType));
-         retTypeNameFwdDecl =
-            "class " + retTypeName + ";/* Did you forget to declare type " + retTypeName + " in the interpreter?*/";
+         // The type is not known to the interpreter.
+         // Forward-declare it as void + helpful comment, so that if this Define'd quantity is
+         // ever used by jitted code users will have some way to know what went wrong
+         const auto demangledType = RDFInternal::DemangleTypeIdName(typeid(RetType));
+         retTypeName = "void /* The type of column \"" + std::string(name) + "\" (" + demangledType +
+                       ") is not known to the interpreter. */";
       }
-      const auto retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { " +
-                                      retTypeNameFwdDecl + " using " + std::string(name) +
-                                      std::to_string(newColumn->GetID()) + "_type = " + retTypeName + "; }";
+      const auto retTypeDeclaration = "namespace __rdf" + std::to_string(fLoopManager->GetID()) +
+                                      " { " + +" using " + std::string(name) + std::to_string(newColumn->GetID()) +
+                                      "_type = " + retTypeName + "; }";
       RDFInternal::InterpreterDeclare(retTypeDeclaration);
 
       fLoopManager->RegisterCustomColumn(newColumn.get());

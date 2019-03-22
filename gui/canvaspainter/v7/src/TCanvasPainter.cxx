@@ -213,7 +213,7 @@ ROOT::Experimental::TCanvasPainter::~TCanvasPainter()
 void ROOT::Experimental::TCanvasPainter::CancelUpdates()
 {
    fSnapshotDelivered = 0;
-   for (auto &&item: fUpdatesLst)
+   for (auto &item: fUpdatesLst)
       item.fCallback(false);
    fUpdatesLst.clear();
 }
@@ -244,7 +244,7 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
 {
    uint64_t min_delivered = 0;
 
-   for (auto &&conn : fWebConn) {
+   for (auto &conn : fWebConn) {
 
       if (conn.fDelivered && (!min_delivered || (min_delivered < conn.fDelivered)))
          min_delivered = conn.fDelivered;
@@ -447,7 +447,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
    };
 
    auto conn =
-      std::find_if(fWebConn.begin(), fWebConn.begin(), [connid](WebConn &item) { return item.fConnId == connid; });
+      std::find_if(fWebConn.begin(), fWebConn.end(), [connid](WebConn &item) { return item.fConnId == connid; });
 
    if (conn == fWebConn.end())
       return; // no connection found

@@ -4,8 +4,7 @@
 ///
 /// \macro_code
 ///
-/// \author Andrei Gheata
-/// \author Sergey Linev
+/// \author Andrei Gheata and Sergey Linev
 
 #include "TMath.h"
 #include "TControlBar.h"

@@ -332,6 +332,9 @@ public:
    inline void SetInitialization(EInitialization I) { fI = I; }
    inline void SetRegularization(ERegularization R) { fR = R; }
    inline void SetWeightDecay(Scalar_t weightDecay) { fWeightDecay = weightDecay; }
+
+   void SetDropoutProbabilities(const std::vector<Double_t> & probabilities);
+
 };
 
 //
@@ -1160,6 +1163,22 @@ auto TDeepNet<Architecture_t, Layer_t>::Print() const -> void
       fLayers[i]->Print();
    }
 }
+
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+void TDeepNet<Architecture_t, Layer_t>::SetDropoutProbabilities(
+    const std::vector<Double_t> & probabilities)
+{
+   for (size_t i = 0; i < fLayers.size(); i++) {
+      if (i < probabilities.size()) {
+         fLayers[i]->SetDropoutProbability(probabilities[i]);
+      } else {
+         fLayers[i]->SetDropoutProbability(1.0);
+      }
+   }
+}
+
+
 } // namespace DNN
 } // namespace TMVA
 

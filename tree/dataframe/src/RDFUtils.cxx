@@ -204,7 +204,7 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, unsigned int n
 
    if (colType.empty() && isCustomColumn) {
       // this must be a temporary branch, we know there is an alias for its type
-      colType = "__tdf" + std::to_string(namespaceID) + "::" + colName + std::to_string(customColID) + "_type";
+      colType = "__rdf" + std::to_string(namespaceID) + "::" + colName + std::to_string(customColID) + "_type";
    }
 
    if (colType.empty())

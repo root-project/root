@@ -1,9 +1,17 @@
 /// \file base_handler.cxx
-/// \ingroup CanvasPainter ROOT7
+/// \ingroup WebUI
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-06-29
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
+
+/*************************************************************************
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #if !defined(_MSC_VER)
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -130,7 +138,7 @@ bool BaseHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
       R__ERROR_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
       break;
    default:
-      if (gDebug > 0)
+      // if (gDebug > 0)
          R__DEBUG_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
       break;
    }

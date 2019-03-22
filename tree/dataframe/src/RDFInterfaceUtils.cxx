@@ -277,7 +277,7 @@ bool IsValidCppVarName(const std::string &var)
 }
 
 void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
-                       const ColumnNames_t &dataSourceColumns)
+                       const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &dataSourceColumns)
 {
    const std::string definedColStr(definedCol);
 
@@ -299,6 +299,15 @@ void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const Column
       const auto msg = "Redefinition of column \"" + definedColStr + "\"";
       throw std::runtime_error(msg);
    }
+
+   // Check if the definedCol is an alias
+   const auto aliasColNameIt = aliasMap.find(definedColStr);
+   if (aliasColNameIt != aliasMap.end()) {
+      const auto msg = "An alias with name " + definedColStr + " pointing to column " +
+      aliasColNameIt->second + " is already existing.";
+      throw std::runtime_error(msg);
+   }
+
    // check if definedCol is already present in the DataSource (but has not yet been `Define`d)
    if (!dataSourceColumns.empty()) {
       if (std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end()) {
@@ -472,7 +481,7 @@ std::vector<std::string> ReplaceDots(const ColumnNames_t &colNames)
       const bool hasDot = c.find_first_of('.') != std::string::npos;
       if (hasDot) {
          std::replace(c.begin(), c.end(), '.', '_');
-         c.insert(0u, "__tdf_arg_");
+         c.insert(0u, "__rdf_arg_");
       }
    }
    return dotlessNames;
@@ -543,14 +552,14 @@ void TryToJitExpression(const std::string &expression, const ColumnNames_t &colN
 
    static unsigned int iNs = 0U;
    std::stringstream dummyDecl;
-   dummyDecl << "namespace __tdf_" << std::to_string(iNs++) << "{ auto tdf_f = []() {";
+   dummyDecl << "namespace __rdf_" << std::to_string(iNs++) << "{ auto rdf_f = []() {";
 
    for (auto col = colNames.begin(), type = colTypes.begin(); col != colNames.end(); ++col, ++type) {
       dummyDecl << *type << " " << *col << ";\n";
    }
 
    // Now that branches are declared as variables, put the body of the
-   // lambda in dummyDecl and close scopes of f and namespace __tdf_N
+   // lambda in dummyDecl and close scopes of f and namespace __rdf_N
    if (hasReturnStmt)
       dummyDecl << expression << "\n;};}";
    else
@@ -675,12 +684,12 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    const auto definelambda = BuildLambdaString(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
    const auto customColID = std::to_string(jittedCustomColumn->GetID());
    const auto lambdaName = "eval_" + std::string(name) + customColID;
-   const auto ns = "__tdf" + std::to_string(namespaceID);
+   const auto ns = "__rdf" + std::to_string(namespaceID);
 
    auto customColumnsCopy = new RDFInternal::RBookedCustomColumns(customCols);
    auto customColumnsAddr = PrettyPrintAddr(customColumnsCopy);
 
-   // Declare the lambda variable and an alias for the type of the defined column in namespace __tdf
+   // Declare the lambda variable and an alias for the type of the defined column in namespace __rdf
    // This assumes that a given variable is Define'd once per RDataFrame -- we might want to relax this requirement
    // to let python users execute a Define cell multiple times
    const auto defineDeclaration =

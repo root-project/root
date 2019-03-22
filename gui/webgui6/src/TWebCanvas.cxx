@@ -26,6 +26,7 @@
 #include "TList.h"
 #include "TH1.h"
 #include "TEnv.h"
+#include "TError.h"
 #include "TGraph.h"
 #include "TBufferJSON.h"
 #include "Riostream.h"

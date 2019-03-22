@@ -45,11 +45,20 @@
 #endif
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Static holder of registered creators of web displays
+
 std::map<std::string, std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator>> &ROOT::Experimental::RWebDisplayHandle::GetMap()
 {
    static std::map<std::string, std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator>> sMap;
    return sMap;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Search for specific browser creator
+/// If not found, try to add one
+/// \param name - creator name like ChromeCreator
+/// \param libname - shared library name where creator could be provided
 
 std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator> &ROOT::Experimental::RWebDisplayHandle::FindCreator(const std::string &name, const std::string &libname)
 {
@@ -79,6 +88,10 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator> &ROOT::Experimen
 
 namespace ROOT {
 namespace Experimental {
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Specialized handle to hold information about running browser process
+/// Used to correctly cleanup all processes and temporary directories
 
 class RWebBrowserHandle : public RWebDisplayHandle {
 
@@ -119,6 +132,7 @@ public:
 } // namespace ROOT
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
+/// Class to handle starting of web-browsers like Chrome or Firefox
 
 ROOT::Experimental::RWebDisplayHandle::BrowserCreator::BrowserCreator(bool custom, const std::string &exec)
 {
@@ -134,6 +148,9 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::BrowserCreator(bool custo
       fExec = "xdg-open \'$url\' &";
    }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Check if browser executable exists and can be used
 
 void ROOT::Experimental::RWebDisplayHandle::BrowserCreator::TestProg(const std::string &nexttry, bool check_std_paths)
 {
@@ -165,6 +182,9 @@ void ROOT::Experimental::RWebDisplayHandle::BrowserCreator::TestProg(const std::
       TestProg(ProgramFilesx86 + nexttry, false);
 #endif
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Display given URL in web browser
 
 std::unique_ptr<ROOT::Experimental::RWebDisplayHandle>
 ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
@@ -307,6 +327,7 @@ ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserC
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
+/// Constructor
 
 ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
 {
@@ -332,6 +353,9 @@ ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : Browse
    fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width $width -height $height $profile \'$url\' &");
 #endif
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Create Firefox profile to run independent browser window
 
 std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(TString &exec, bool batch_mode)
 {
@@ -378,9 +402,9 @@ std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(T
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create web display
-/// \param where - defines kind of display
-/// \param func - creates local or remote URL
-
+/// \param args - defines where and how to display web window
+/// Returns RWebDisplayHandle, which holds information of running browser application
+/// Can be used fully independent from RWebWindow classes just to show any web page
 
 std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> ROOT::Experimental::RWebDisplayHandle::Display(const RWebDisplayArgs &args)
 {
