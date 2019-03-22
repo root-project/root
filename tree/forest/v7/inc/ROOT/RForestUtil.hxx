@@ -43,6 +43,7 @@ struct RClusterSize {
    explicit constexpr RClusterSize(std::uint32_t value) : fValue(value) {}
    RClusterSize& operator =(const std::uint32_t value) { fValue = value; return *this; }
    RClusterSize& operator +=(const std::uint32_t value) { fValue += value; return *this; }
+   RClusterSize operator++(int) { auto result = *this; fValue++; return result; }
    operator std::uint32_t() const { return fValue; }
 
    std::uint32_t fValue;

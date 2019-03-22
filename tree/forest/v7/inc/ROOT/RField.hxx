@@ -40,6 +40,7 @@ class TClass;
 namespace ROOT {
 namespace Experimental {
 
+class RCollectionForest;
 class RForestEntry;
 class RForestModel;
 class RFieldCollection;
@@ -300,9 +301,14 @@ public:
 
 
 class RFieldCollection : public ROOT::Experimental::Detail::RFieldBase {
+private:
+   /// Save the link to the collection forest in order to reset the offset counter when committing the cluster
+   std::shared_ptr<RCollectionForest> fCollectionForest;
 public:
    static std::string MyTypeName() { return ":RFieldCollection:"; }
-   RFieldCollection(std::string_view name, std::unique_ptr<RForestModel> collectionModel);
+   RFieldCollection(std::string_view name,
+                    std::shared_ptr<RCollectionForest> collectionForest,
+                    std::unique_ptr<RForestModel> collectionModel);
    RFieldCollection(RFieldCollection&& other) = default;
    RFieldCollection& operator =(RFieldCollection&& other) = default;
    ~RFieldCollection() = default;
@@ -323,6 +329,7 @@ public:
          this, static_cast<ClusterSize_t*>(where));
    }
    size_t GetValueSize() const final { return 0; }
+   void CommitCluster() final;
 };
 
 } // namespace Experimental

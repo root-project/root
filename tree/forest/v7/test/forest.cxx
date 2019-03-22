@@ -272,13 +272,13 @@ TEST(RForest, Composable)
                *fldHitY = 8.0;
                fldHits->Fill();
             }
-            *fldTrackEnergy = 1.0;
+            *fldTrackEnergy = i * t;
             fldTracks->Fill();
          }
          *fldPt = float(i);
-         //if (i == 2)
-         //   forest->CommitCluster();
          forest->Fill();
+         if (i == 2)
+            forest->CommitCluster();
       }
    }
 
@@ -297,14 +297,14 @@ TEST(RForest, Composable)
 
       int nTr = 0;
       for (auto t : viewTracks.GetViewRange(e)) {
-         nTr++;
-         EXPECT_EQ(1.0, viewTrackEnergy(t));
+         EXPECT_EQ(nEv * nTr, viewTrackEnergy(t));
 
          EXPECT_EQ(2.0, viewHits(t));
          for (auto h : viewHits.GetViewRange(t)) {
             EXPECT_EQ(4.0, viewHitX(h));
             EXPECT_EQ(8.0, viewHitY(h));
          }
+         nTr++;
       }
       EXPECT_EQ(3, nTr);
 

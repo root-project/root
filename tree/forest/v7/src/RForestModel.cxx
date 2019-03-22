@@ -50,7 +50,7 @@ std::shared_ptr<ROOT::Experimental::RCollectionForest> ROOT::Experimental::RFore
    std::string_view fieldName, std::unique_ptr<RForestModel> collectionModel)
 {
    auto collectionForest = std::make_shared<RCollectionForest>(std::move(collectionModel->fDefaultEntry));
-   auto field = std::make_unique<RFieldCollection>(fieldName, std::move(collectionModel));
+   auto field = std::make_unique<RFieldCollection>(fieldName, collectionForest, std::move(collectionModel));
    fDefaultEntry->CaptureValue(field->CaptureValue(collectionForest->GetOffsetPtr()));
    fRootField->Attach(std::move(field));
    return collectionForest;
