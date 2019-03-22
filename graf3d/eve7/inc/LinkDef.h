@@ -208,6 +208,7 @@
 #pragma link C++ class ROOT::Experimental::REveChunkManager::iterator;
 
 // Geometry viewer
+#pragma link C++ class ROOT::Experimental::REveGeomNodeBase+;
 #pragma link C++ class ROOT::Experimental::REveGeomNode+;
 #pragma link C++ class ROOT::Experimental::REveGeomVisisble+;
 #pragma link C++ class ROOT::Experimental::REveShapeRenderInfo+;

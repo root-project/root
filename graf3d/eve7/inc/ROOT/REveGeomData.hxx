@@ -32,32 +32,41 @@ namespace Experimental {
 
 class REveRenderData;
 
-class REveGeomNode {
-public:
 
+/** Base description of geometry node, required only to build hierarchy */
+
+class REveGeomNodeBase {
+public:
    enum EVis { vis_off = 0, vis_this = 1, vis_chlds = 2, vis_lvl1 = 4 };
 
    int id{0};               ///< node id, index in array
    int sortid{0};           ///< place in sorted array, to check cuts
-   std::vector<int> chlds;  ///< list of childs id
    std::string name;        ///< node name
-   std::vector<float> matr; ///< matrix for the node, can have reduced number of elements
+   std::vector<int> chlds;  ///< list of childs id
    int vis{vis_off};        ///< visibility flag, 0 - off, 1 - volume, 2 - daughters, 4 - single lvl
+
+   REveGeomNodeBase(int _id = 0) : id(_id) {}
+
+   bool IsVisible() const { return vis & vis_this; }
+
+   int GetVisDepth() const { return (vis & vis_chlds) ? 999999 : ((vis & vis_lvl1) ? 1 : 0); }
+};
+
+/** Full node description including matrices and other attributes */
+
+class REveGeomNode : public REveGeomNodeBase  {
+public:
+   std::vector<float> matr; ///< matrix for the node, can have reduced number of elements
    double vol{0};           ///<! volume estimation
    int nfaces{0};           ///<! number of shape faces
    int numvischld{0};       ///<! number of visible childs, if all can be jump over
    int idshift{0};          ///<! used to jump over then scan all geom hierarchy
    bool useflag{false};     ///<! extra flag, used for selection
 
-   REveGeomNode() = default;
-   REveGeomNode(int _id) : id(_id) {}
+   REveGeomNode(int _id = 0) : REveGeomNodeBase(_id) {}
 
    /** True when there is shape and it can be displayed */
    bool CanDisplay() const { return (vol > 0.) && (nfaces > 0); }
-
-   bool IsVisible() const { return vis & vis_this; }
-
-   int GetVisDepth() const { return (vis & vis_chlds) ? 999999 : ((vis & vis_lvl1) ? 1 : 0); }
 };
 
 class REveShapeRenderInfo {
@@ -95,6 +104,7 @@ public:
    int numnodes{0};                         ///< total number of nodes in description
    std::vector<REveGeomNode*> nodes;        ///< all used nodes to display visibles and not known for client
    std::vector<REveGeomVisisble> visibles;  ///< all visibles items with
+   std::string drawopt;                     ///< draw options for TGeoPainter
 
    REveGeomDrawing() = default;
 };
@@ -175,6 +185,8 @@ public:
    bool CollectVisibles();
 
    bool IsPrincipalEndNode(int nodeid);
+
+   std::string GetHierachyJson(const std::string &prepend);
 
    bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawBinary.size() > 0) && (fDrawIdCut > 0); }
    const std::string &GetDrawJson() const { return fDrawJson; }
