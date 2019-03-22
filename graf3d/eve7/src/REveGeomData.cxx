@@ -172,7 +172,7 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
    int cnt = 0;
    for (auto &node: fNodes) {
 
-      fDesc.emplace_back(node->GetNumber()-offset);
+      fDesc.emplace_back(node->GetNumber() - offset);
       auto &desc = fDesc[cnt++];
 
       sortarr.emplace_back(&desc);
@@ -184,6 +184,8 @@ void ROOT::Experimental::REveGeomDescription::Build(TGeoManager *mgr)
          desc.vol = shape->GetDX()*shape->GetDY()*shape->GetDZ();
          desc.nfaces = 12; // TODO: get better value for each shape - excluding composite
       }
+
+      CopyMaterialProperties(node->GetVolume(), desc);
 
       auto chlds = node->GetNodes();
 
@@ -462,8 +464,10 @@ ROOT::Experimental::REveGeomDescription::MakeShapeDescr(TGeoShape *shape, bool a
 /////////////////////////////////////////////////////////////////////
 /// Copy material properties
 
-void ROOT::Experimental::REveGeomDescription::CopyMaterialProperties(TGeoVolume *volume, REveGeomVisisble &item)
+void ROOT::Experimental::REveGeomDescription::CopyMaterialProperties(TGeoVolume *volume, REveGeomNode &node)
 {
+   if (!volume) return;
+
    TColor *col{nullptr};
 
    if ((volume->GetFillColor() > 1) && (volume->GetLineColor() == 1))
@@ -475,18 +479,18 @@ void ROOT::Experimental::REveGeomDescription::CopyMaterialProperties(TGeoVolume 
       auto material = volume->GetMedium()->GetMaterial();
 
       auto fillstyle = material->GetFillStyle();
-      if ((fillstyle>=3000) && (fillstyle<=3100)) item.opacity = (3100 - fillstyle) / 100.;
+      if ((fillstyle>=3000) && (fillstyle<=3100)) node.opacity = (3100 - fillstyle) / 100.;
       if (!col) col = gROOT->GetColor(material->GetFillColor());
    }
 
    if (col) {
-      item.color = std::to_string((int)(col->GetRed()*255)) + "," +
+      node.color = std::to_string((int)(col->GetRed()*255)) + "," +
                    std::to_string((int)(col->GetGreen()*255)) + "," +
                    std::to_string((int)(col->GetBlue()*255));
-      if (item.opacity == 1.)
-        item.opacity = col->GetAlpha();
+      if (node.opacity == 1.)
+         node.opacity = col->GetAlpha();
    } else {
-      item.color = "200,200,200";
+      node.color.clear();
    }
 }
 
@@ -539,6 +543,9 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
 
    fDrawIdCut = 0;
 
+   //for (auto &node : fDesc)
+   //   node.SetDisplayed(false);
+
    // build all shapes in volume decreasing order
    for (auto &sid: fSortMap) {
       fDrawIdCut++; //
@@ -565,6 +572,8 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
       // also avoid too many nodes
       totalnumnodes += viscnt[sid];
       if ((GetMaxVisNodes() > 0) && (totalnumnodes > GetMaxVisNodes())) break;
+
+      // desc.SetDisplayed(true);
    }
 
    // finally we should create data for streaming to the client
@@ -578,8 +587,10 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
          drawing.visibles.emplace_back(node.id, stack);
 
          auto &item = drawing.visibles.back();
+         item.color = node.color;
+         item.opacity = node.opacity;
+
          auto volume = fNodes[node.id]->GetVolume();
-         CopyMaterialProperties(volume, item);
 
          auto &sd = MakeShapeDescr(volume->GetShape(), true);
 
@@ -727,7 +738,8 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       auto &item = drawing.visibles.back();
       auto volume = fNodes[node.id]->GetVolume();
 
-      CopyMaterialProperties(volume, item);
+      item.color = node.color;
+      item.opacity = node.opacity;
 
       auto &sd = MakeShapeDescr(volume->GetShape(), true);
 
@@ -769,7 +781,7 @@ int ROOT::Experimental::REveGeomDescription::FindNodeId(const std::vector<int> &
 
 std::string ROOT::Experimental::REveGeomDescription::ProduceModifyReply(int nodeid)
 {
-   std::vector<REveGeomNode *> nodes;
+   std::vector<REveGeomNodeBase *> nodes;
    auto vol = fNodes[nodeid]->GetVolume();
 
    // we take not only single node, but all there same volume is referenced
@@ -814,7 +826,10 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
 
       drawing.visibles.emplace_back(node.id, stack);
 
-      CopyMaterialProperties(vol, drawing.visibles.back());
+      auto &item = drawing.visibles.back();
+
+      item.color = node.color;
+      item.opacity = node.opacity;
       return true;
    });
 
@@ -851,8 +866,10 @@ bool ROOT::Experimental::REveGeomDescription::ChangeNodeVisibility(int nodeid, b
 {
    auto &dnode = fDesc[nodeid];
 
+   bool isoff = dnode.vis & REveGeomNode::vis_off;
+
    // nothing changed
-   if ((dnode.vis && selected) || (!dnode.vis && !selected))
+   if ((!isoff && selected) || (isoff && !selected))
       return false;
 
    auto vol = fNodes[nodeid]->GetVolume();

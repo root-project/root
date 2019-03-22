@@ -269,7 +269,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** Extract shapes from binary data using appropriate draw message
-       * Draw message is vector of REveGeomVisisble objects, including info where shape is in raw data */
+       * Draw message is vector of REveGeomVisible objects, including info where shape is in raw data */
       extractRawShapes: function(draw_msg, msg, offset) {
 
          var nodes = null;
@@ -351,8 +351,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                // here we should decode render data
                this.extractRawShapes(msg, msg.raw, msg.offset);
 
-               this.setNodesDrawProperties(msg.visibles);
-
                // after clones are existing - ensure geo painter is there
                this.createGeoPainter(msg.drawopt);
 
@@ -369,7 +367,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                break;
 
             case "append":
-               this.setNodesDrawProperties(msg.visibles); // set properties
                this.extractRawShapes(msg, msg.raw, msg.offset);
                this.appendNodes(msg.visibles);
                break;
@@ -497,7 +494,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.buildTree(descr);
       },
 
-      /** When single node element is modified from server side */
+      /** When single node element is modified on the server side */
       modifyDescription: function(msg) {
          var arr = JSON.parse(msg), can_refresh = true;
 
@@ -536,8 +533,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          } else {
             // rebuild complete tree for TreeBrowser
             this.buildTree();
-            // set all available properties
-            this.setNodesDrawProperties(this.last_draw_msg);
          }
 
       },
@@ -574,6 +569,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          cache[indx] = tnode = { title: node.name, id: indx, color_visible: false, node_visible: node.vis != 0 };
 
+         if (node.color) {
+            tnode.color = "rgb(" + node.color + ")";
+            tnode.color_visisble = true;
+         }
+
          if (node.chlds && (node.chlds.length>0)) {
             tnode.chlds = [];
             for (var k=0;k<node.chlds.length;++k)
@@ -601,27 +601,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.model.refresh();
       },
 
-      /** Set draw properties of nodes which are displayed, currently only draw colors */
-      setNodesDrawProperties: function(draw_msg) {
-         if (!this.data.Nodes) return;
-         for (var k=0;k<draw_msg.length;++k) {
-            var item = draw_msg[k];
-            var dnode = this.data.Nodes[0];
-            for (var n=0;n<item.stack.length;++n)
-               dnode = dnode.chlds[item.stack[n]];
-            dnode.color = item.color ? "rgb(" + item.color + ")" : "";
-            dnode.color_visible = dnode.color.length > 0;
-         }
-         this.model.refresh(); // refresh browser
-      },
-
       /** search main drawn nodes for matches */
       findMatchesFromDraw: function(func) {
          var matches = [];
 
-         if (this.last_draw_msg)
-            for (var k=0;k<this.last_draw_msg.length;++k) {
-               var item = this.last_draw_msg[k];
+         if (this.last_draw_msg && this.last_draw_msg.visisbles && this.geo_clones)
+            for (var k=0;k<this.last_draw_msg.visisbles.length;++k) {
+               var item = this.last_draw_msg.visisbles[k];
                var res = this.geo_clones.ResolveStack(item.stack);
                if (func(res.node))
                   matches.push({ stack: item.stack, color: item.color });

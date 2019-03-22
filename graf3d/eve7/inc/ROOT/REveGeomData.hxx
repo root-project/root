@@ -43,13 +43,18 @@ public:
    int sortid{0};           ///< place in sorted array, to check cuts
    std::string name;        ///< node name
    std::vector<int> chlds;  ///< list of childs id
-   int vis{vis_off};        ///< visibility flag, 0 - off, 1 - volume, 2 - daughters, 4 - single lvl
+   int vis{vis_off};        ///< visibility flag, combination of EVis flags
+   std::string color;       ///< rgb code without rgb() prefix
 
    REveGeomNodeBase(int _id = 0) : id(_id) {}
 
    bool IsVisible() const { return vis & vis_this; }
 
    int GetVisDepth() const { return (vis & vis_chlds) ? 999999 : ((vis & vis_lvl1) ? 1 : 0); }
+
+   /** Set indication if node really rendered - depends from selection */
+   // void SetDisplayed(bool on) { vis = on ? (vis | vis_displayed) : (vis & ~vis_displayed); }
+   // bool IsDisplayed() const { return vis & vis_displayed; }
 };
 
 /** Full node description including matrices and other attributes */
@@ -62,6 +67,7 @@ public:
    int numvischld{0};       ///<! number of visible childs, if all can be jump over
    int idshift{0};          ///<! used to jump over then scan all geom hierarchy
    bool useflag{false};     ///<! extra flag, used for selection
+   float opacity{1.};       ///<! opacity of the color
 
    REveGeomNode(int _id = 0) : REveGeomNodeBase(_id) {}
 
@@ -80,11 +86,11 @@ public:
    // int trans_size{0};     ///< fRenderData->SizeT(); not used in GeomViewer
 };
 
-/** REveGeomVisisble contains description of visible node
+/** REveGeomVisible contains description of visible node
  * It is path to the node plus reference to shape rendering data
  */
 
-class REveGeomVisisble {
+class REveGeomVisible {
 public:
    int nodeid{0};                    ///< selected node id,
    std::vector<int> stack;           ///< path to the node, index in list of childs
@@ -92,8 +98,8 @@ public:
    double opacity{1};                ///< opacity
    REveShapeRenderInfo *ri{nullptr}; ///< render information for the shape, can be same for different nodes
 
-   REveGeomVisisble() = default;
-   REveGeomVisisble(int id, const std::vector<int> &_stack) : nodeid(id), stack(_stack) {}
+   REveGeomVisible() = default;
+   REveGeomVisible(int id, const std::vector<int> &_stack) : nodeid(id), stack(_stack) {}
 };
 
 /** Object with full description for drawing geometry
@@ -103,7 +109,7 @@ class REveGeomDrawing {
 public:
    int numnodes{0};                         ///< total number of nodes in description
    std::vector<REveGeomNode*> nodes;        ///< all used nodes to display visibles and not known for client
-   std::vector<REveGeomVisisble> visibles;  ///< all visibles items with
+   std::vector<REveGeomVisible> visibles;  ///< all visibles items with
    std::string drawopt;                     ///< draw options for TGeoPainter
 
    REveGeomDrawing() = default;
@@ -158,7 +164,7 @@ class REveGeomDescription {
 
    void BuildRndrBinary(std::vector<char> &buf);
 
-   void CopyMaterialProperties(TGeoVolume *col, REveGeomVisisble &item);
+   void CopyMaterialProperties(TGeoVolume *vol, REveGeomNode &node);
 
    void CollectNodes(REveGeomDrawing &drawing);
 

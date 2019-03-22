@@ -210,7 +210,7 @@
 // Geometry viewer
 #pragma link C++ class ROOT::Experimental::REveGeomNodeBase+;
 #pragma link C++ class ROOT::Experimental::REveGeomNode+;
-#pragma link C++ class ROOT::Experimental::REveGeomVisisble+;
+#pragma link C++ class ROOT::Experimental::REveGeomVisible+;
 #pragma link C++ class ROOT::Experimental::REveShapeRenderInfo+;
 #pragma link C++ class ROOT::Experimental::REveGeomDescription+;
 #pragma link C++ class ROOT::Experimental::REveGeomDrawing+;
