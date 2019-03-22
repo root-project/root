@@ -158,6 +158,9 @@ TEST(RForest, Clusters)
       forest.CommitCluster();
       *wrPt = 24.0;
       wrNnlo->clear();
+      *wrTag = "";
+      forest.Fill();
+      *wrPt = 12.0;
       wrNnlo->push_back(std::vector<float>{42.0});
       *wrTag = "12345";
       forest.Fill();
@@ -168,12 +171,11 @@ TEST(RForest, Clusters)
    auto rdNnlo = modelRead->Get<std::vector<std::vector<float>>>("nnlo");
 
    RInputForest forest(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", "test.root"));
-   EXPECT_EQ(2U, forest.GetNEntries());
-   forest.GetEntry(0);
+   EXPECT_EQ(3U, forest.GetNEntries());
 
+   forest.GetEntry(0);
    EXPECT_EQ(42.0, *rdPt);
    EXPECT_STREQ("xyz", rdTag->c_str());
-
    EXPECT_EQ(3U, rdNnlo->size());
    EXPECT_EQ(0U, (*rdNnlo)[0].size());
    EXPECT_EQ(1U, (*rdNnlo)[1].size());
@@ -185,10 +187,13 @@ TEST(RForest, Clusters)
    EXPECT_EQ(8.0, (*rdNnlo)[2][3]);
 
    forest.GetEntry(1);
-
    EXPECT_EQ(24.0, *rdPt);
-   EXPECT_STREQ("12345", rdTag->c_str());
+   EXPECT_STREQ("", rdTag->c_str());
+   EXPECT_TRUE(rdNnlo->empty());
 
+   forest.GetEntry(2);
+   EXPECT_EQ(12.0, *rdPt);
+   EXPECT_STREQ("12345", rdTag->c_str());
    EXPECT_EQ(1U, rdNnlo->size());
    EXPECT_EQ(1U, (*rdNnlo)[0].size());
    EXPECT_EQ(42.0, (*rdNnlo)[0][0]);
