@@ -42,6 +42,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     TMVA/Envelope.h
     TMVA/Event.h
     TMVA/ExpectedErrorPruneTool.h
+    TMVA/Executor.h
     TMVA/Factory.h
     TMVA/FitterBase.h
     TMVA/GeneticAlgorithm.h
