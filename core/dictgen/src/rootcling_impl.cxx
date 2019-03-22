@@ -87,6 +87,8 @@ const char *shortHelp =
 
 #include "llvm/Bitcode/BitstreamWriter.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/PrettyStackTrace.h"
+#include "llvm/Support/Signals.h"
 
 #include "RtypesCore.h"
 #include "TModuleGenerator.h"
@@ -3828,6 +3830,28 @@ int RootClingMain(int argc,
               bool isDeep = false,
               bool isGenreflex = false)
 {
+   // Copied from cling driver.
+   llvm::llvm_shutdown_obj shutdownTrigger;
+
+   llvm::sys::PrintStackTraceOnErrorSignal(argv[0]);
+   llvm::PrettyStackTraceProgram X(argc, argv);
+
+#if defined(_WIN32) && defined(_MSC_VER)
+   // Suppress error dialogs to avoid hangs on build nodes.
+   // One can use an environment variable (Cling_GuiOnAssert) to enable
+   // the error dialogs.
+   const char *EnablePopups = getenv("Cling_GuiOnAssert");
+   if (EnablePopups == nullptr || EnablePopups[0] == '0') {
+      ::_set_error_mode(_OUT_TO_STDERR);
+      _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+      _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+      _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+      _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
+      _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+      _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
+   }
+#endif
+
    if (argc < 2) {
       fprintf(stderr,
               shortHelp,
