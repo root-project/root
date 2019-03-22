@@ -3831,7 +3831,8 @@ int RootClingMain(int argc,
               bool isGenreflex = false)
 {
    // Copied from cling driver.
-   llvm::llvm_shutdown_obj shutdownTrigger;
+   // FIXME: Uncomment once we fix ROOT's teardown order.
+   //llvm::llvm_shutdown_obj shutdownTrigger;
 
    llvm::sys::PrintStackTraceOnErrorSignal(argv[0]);
    llvm::PrettyStackTraceProgram X(argc, argv);
