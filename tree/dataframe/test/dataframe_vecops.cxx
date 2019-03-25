@@ -54,7 +54,7 @@ TEST(RDFAndVecOps, SnapshotRVec)
 
    // check the RVec was written as a RVec
    TFile f(fname);
-   auto t = static_cast<TTree *>(f.Get(treename));
+   auto t = f.Get<TTree>(treename);
    auto b = static_cast<TBranchElement *>(t->GetBranch("v"));
    ASSERT_TRUE(b != nullptr);
    auto branchTypeName = b->GetClassName();

@@ -30,8 +30,7 @@ void TestTreeWithEntryList()
    elist.Enter(nEntries - 1);
 
    TFile f(filename);
-   TTree *t = nullptr;
-   f.GetObject(treename, t);
+   auto t = f.Get<TTree>(treename);
    t->SetEntryList(&elist);
 
    auto entries = ROOT::RDataFrame(*t).Take<int>("e");
