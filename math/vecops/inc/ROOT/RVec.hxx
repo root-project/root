@@ -1522,6 +1522,61 @@ RVec<T> DeltaPhi(T v1, const RVec<T>& v2, const T c = M_PI)
    return r;
 }
 
+/// Return the invariant mass of two particles given the collections of the quantities
+/// transverse momentum (pt), rapidity (eta), azimuth (phi) and mass.
+///
+/// The function computes the invariant mass of two particles with the four-vectors
+/// (pt1, eta2, phi1, mass1) and (pt2, eta2, phi2, mass2).
+template <typename T>
+RVec<T> InvariantMass(
+        const RVec<T>& pt1, const RVec<T>& eta1, const RVec<T>& phi1, const RVec<T>& mass1,
+        const RVec<T>& pt2, const RVec<T>& eta2, const RVec<T>& phi2, const RVec<T>& mass2)
+{
+   // Conversion from (pt, eta, phi, mass) to (x, y, z, e) coordinate system
+   const auto x1 = pt1 * cos(phi1);
+   const auto y1 = pt1 * sin(phi1);
+   const auto z1 = pt1 * sinh(eta1);
+   const auto e1 = sqrt(x1 * x1 + y1 * y1 + z1 * z1 + mass1 * mass1);
+
+   const auto x2 = pt2 * cos(phi2);
+   const auto y2 = pt2 * sin(phi2);
+   const auto z2 = pt2 * sinh(eta2);
+   const auto e2 = sqrt(x2 * x2 + y2 * y2 + z2 * z2 + mass2 * mass2);
+
+   // Addition of particle four-vectors
+   const auto e = e1 + e2;
+   const auto x = x1 + x2;
+   const auto y = y1 + y2;
+   const auto z = z1 + z2;
+
+   // Return invariant mass with (+, -, -, -) metric
+   return sqrt(e * e - x * x - y * y - z * z);
+}
+
+/// Return the invariant mass of multiple particles given the collections of the
+/// quantities transverse momentum (pt), rapidity (eta), azimuth (phi) and mass.
+///
+/// The function computes the invariant mass of multiple particles with the
+/// four-vectors (pt, eta, phi, mass).
+template <typename T>
+T InvariantMass(const RVec<T>& pt, const RVec<T>& eta, const RVec<T>& phi, const RVec<T>& mass)
+{
+   // Conversion from (mass, pt, eta, phi) to (e, x, y, z) coordinate system
+   const auto x = pt * cos(phi);
+   const auto y = pt * sin(phi);
+   const auto z = pt * sinh(eta);
+   const auto e = sqrt(x * x + y * y + z * z + mass * mass);
+
+   // Addition of particle four-vectors
+   const auto xs = Sum(x);
+   const auto ys = Sum(y);
+   const auto zs = Sum(z);
+   const auto es = Sum(e);
+
+   // Return invariant mass with (+, -, -, -) metric
+   return std::sqrt(es * es - xs * xs - ys * ys - zs * zs);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:
 template <class T>

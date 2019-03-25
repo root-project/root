@@ -908,8 +908,6 @@ TEST(VecOps, Concatenate)
 
 TEST(VecOps, DeltaPhi)
 {
-   using namespace ROOT::VecOps;
-
    // Two scalars (radians)
    // NOTE: These tests include the checks of the poundary effects
    const float c1 = M_PI;
@@ -960,4 +958,55 @@ TEST(VecOps, DeltaPhi)
    auto dphi4 = DeltaPhi(v4, v3);
    auto r4 = -1.f * r3;
    CheckEqual(dphi4, r4);
+}
+
+TEST(VecOps, InvariantMass)
+{
+   // Dummy particle collections
+   RVec<float> mass1 = {50,  50,  50,   50,   100};
+   RVec<float> pt1 =   {0,   5,   5,    10,   10};
+   RVec<float> eta1 =  {0.0, 0.0, -1.0, 0.5,  2.5};
+   RVec<float> phi1 =  {0.0, 0.0, 0.0,  -0.5, -2.4};
+
+   RVec<float> mass2 = {40,  40,  40,  40,  30};
+   RVec<float> pt2 =   {0,   5,   5,   10,  2};
+   RVec<float> eta2 =  {0.0, 0.0, 0.5, 0.4, 1.2};
+   RVec<float> phi2 =  {0.0, 0.0, 0.0, 0.5, 2.4};
+
+   // Compute invariant mass of two particle system using both collections
+   const auto invMass = InvariantMass(pt1, eta1, phi1, mass1, pt2, eta2, phi2, mass2);
+
+   for(size_t i=0; i<mass1.size(); i++) {
+      TLorentzVector p1, p2;
+      p1.SetPtEtaPhiM(pt1[i], eta1[i], phi1[i], mass1[i]);
+      p2.SetPtEtaPhiM(pt2[i], eta2[i], phi2[i], mass2[i]);
+      // NOTE: The accuracy of the optimized trigonometric functions is relatively
+      // low and the test start to fail with an accuracy of 1e-5.
+      EXPECT_NEAR((p1 + p2).M(), invMass[i], 1e-4);
+   }
+
+   // Compute invariant mass of multiple-particle system using a single collection
+   const auto invMass2 = InvariantMass(pt1, eta1, phi1, mass1);
+
+   TLorentzVector p3;
+   p3.SetPtEtaPhiM(pt1[0], eta1[0], phi1[0], mass1[0]);
+   for(size_t i=1; i<mass1.size(); i++) {
+      TLorentzVector p4;
+      p4.SetPtEtaPhiM(pt1[i], eta1[i], phi1[i], mass1[i]);
+      p3 += p4;
+   }
+
+   EXPECT_NEAR(p3.M(), invMass2, 1e-4);
+
+   const auto invMass3 = InvariantMass(pt2, eta2, phi2, mass2);
+
+   TLorentzVector p5;
+   p5.SetPtEtaPhiM(pt2[0], eta2[0], phi2[0], mass2[0]);
+   for(size_t i=1; i<mass2.size(); i++) {
+      TLorentzVector p6;
+      p6.SetPtEtaPhiM(pt2[i], eta2[i], phi2[i], mass2[i]);
+      p5 += p6;
+   }
+
+   EXPECT_NEAR(p5.M(), invMass3, 1e-4);
 }
