@@ -95,7 +95,7 @@ except:
 if sys.platform == 'darwin':
    import warnings
    warnings.filterwarnings( action='ignore', category=RuntimeWarning, module='ROOT',\
-      message='class \S* already in TClassTable$' )
+      message=r'class \S* already in TClassTable$' )
 
 ### load PyROOT C++ extension module, special case for linux and Sun ------------
 _root = cppyy._backend
