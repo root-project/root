@@ -930,8 +930,7 @@ TEST_P(RDFSimpleTests, DifferentTreesInDifferentThreads)
    }
 
    TFile f(filename);
-   TTree *t;
-   f.GetObject(treename, t);
+   auto t = f.Get<TTree>(treename);
    RDataFrame df(*t);
    *df.Define("xy", [](int x, int y) { return x * y; }, {"x", "y"})
        .Filter([](int xy) { return xy > 0; }, {"xy"})

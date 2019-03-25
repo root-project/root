@@ -177,8 +177,7 @@ d.Filter(IsGoodEvent).Foreach(DoStuff);
 <tr>
    <td>
 ~~~{.cpp}
-TTree *t = nullptr;
-file->GetObject("myTree", t);
+auto t = file->Get<TTree>("myTree");
 t->Draw("x", "y > 2");
 ~~~
    </td>
@@ -204,8 +203,7 @@ operations should work with. Here are the most common methods to construct a RDa
 ~~~{.cpp}
 // single file -- all ctors are equivalent
 TFile *f = TFile::Open("file.root");
-TTree *t = nullptr;
-f.GetObject("treeName", t);
+auto t = f.Get<TTree>("treeName");
 
 RDataFrame d1("treeName", "file.root");
 RDataFrame d2("treeName", f); // same as TTreeReader
