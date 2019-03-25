@@ -1488,7 +1488,10 @@ void MethodDL::Train()
       return;
    } else if (this->GetArchitectureString() == "CPU") {
 #ifdef R__HAS_TMVACPU
-      Log() << kINFO << "Start of deep neural network training on CPU." << Endl << Endl;
+      // note that number of threads used for BLAS might be different
+      // e.g use openblas_set_num_threads(num_threads) for OPENBLAS backend      
+      Log() << kINFO << "Start of deep neural network training on CPU using (for ROOT-IMT) nthreads = "
+            << gConfig().GetNCpu() << Endl << Endl;
       TrainDeepNet<DNN::TCpu<ScalarImpl_t> >(); 
 #else
       Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
