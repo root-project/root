@@ -601,14 +601,14 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
 
    CollectNodes(drawing);
 
-   drawing.drawopt = fDrawOptions;
+   // create binary data with all produced shapes
+   BuildRndrBinary(fDrawBinary);
 
-   // finally, create binary data with all produced shapes
+   drawing.drawopt = fDrawOptions;
+   drawing.binlen = fDrawBinary.size();
 
    fDrawJson = "GDRAW:";
    fDrawJson.append(TBufferJSON::ToJSON(&drawing, 103).Data());
-
-   BuildRndrBinary(fDrawBinary);
 
    return true;
 }
@@ -642,7 +642,7 @@ bool ROOT::Experimental::REveGeomDescription::IsPrincipalEndNode(int nodeid)
 /// If number of found elements less than 100, create description and shapes for them
 /// Returns number of match elements
 
-int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &find, std::string &json, std::vector<char> &binary)
+int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &find, std::string &hjson, std::string &json, std::vector<char> &binary)
 {
    std::vector<int> viscnt(fDesc.size(), 0);
 
@@ -662,17 +662,18 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    });
 
 
+   hjson.clear();
    json.clear();
    binary.clear();
 
    // do not send too much data, limit could be made configurable later
    if (nmatches==0) {
-      json = "FOUND:NO";
+      hjson = "FOUND:NO";
       return nmatches;
    }
 
    if (nmatches > 10 * GetMaxVisNodes()) {
-      json = "FOUND:TOOMANY:" + std::to_string(nmatches);
+      hjson = "FOUND:Too many " + std::to_string(nmatches);
       return nmatches;
    }
 
@@ -717,6 +718,17 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    // finally we should create data for streaming to the client
    // it includes list of visible nodes and rawdata (if there is enough space)
 
+   // these are only selected nodes to produce hierarchy
+   fFound.clear();
+   fFoundMap.clear();
+   fFoundMap.resize(fDesc.size(), -1);
+
+   fFound.emplace_back(0);
+   fFound[0].vis = fDesc[0].vis;
+   fFound[0].name = fDesc[0].name;
+   fFound[0].color = fDesc[0].color;
+   fFoundMap[0] = 0;
+
    ResetRndrInfos();
 
    REveGeomDrawing drawing;
@@ -725,6 +737,31 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       // select only nodes which should match
       if (!match_func(node))
          return true;
+
+      // add entries into hierarchy of found elements
+      int prntid = 0;
+      for (auto &s : stack) {
+         int chldid = fDesc[prntid].chlds[s];
+         if (fFoundMap[chldid] <= 0) {
+            int newid = fFound.size();
+            fFound.emplace_back(newid);
+            fFoundMap[chldid] = newid; // remap into reduced hierarchy
+
+            fFound.back().vis = fDesc[chldid].vis;
+            fFound.back().name = fDesc[chldid].name;
+            fFound.back().color = fDesc[chldid].color;
+         }
+
+         auto pid = fFoundMap[prntid];
+         auto cid = fFoundMap[chldid];
+
+         // now add entry into childs lists
+         auto &pchlds = fFound[pid].chlds;
+         if (std::find(pchlds.begin(), pchlds.end(), cid) == pchlds.end())
+            pchlds.emplace_back(cid);
+
+         prntid = chldid;
+      }
 
       drawing.visibles.emplace_back(node.id, stack);
 
@@ -747,14 +784,18 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       return true;
    });
 
+   hjson = "FESCR:";
+   hjson.append(TBufferJSON::ToJSON(&fFound, 103).Data());
+
    CollectNodes(drawing);
 
-   drawing.drawopt = fDrawOptions;
-
-   json = "FOUND:";
-   json.append(TBufferJSON::ToJSON(&drawing, 103).Data());
-
    BuildRndrBinary(binary);
+
+   drawing.drawopt = fDrawOptions;
+   drawing.binlen = binary.size();
+
+   json = "FDRAW:";
+   json.append(TBufferJSON::ToJSON(&drawing, 103).Data());
 
    return nmatches;
 }
@@ -849,11 +890,12 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
 
    CollectNodes(drawing);
 
+   BuildRndrBinary(binary);
+
    drawing.drawopt = fDrawOptions;
+   drawing.binlen = binary.size();
 
    json.append(TBufferJSON::ToJSON(&drawing, 103).Data());
-
-   BuildRndrBinary(binary);
 
    return true;
 }

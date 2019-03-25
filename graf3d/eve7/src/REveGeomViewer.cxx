@@ -169,15 +169,18 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
    } else if (arg.compare(0, 7, "SEARCH:") == 0) {
       std::string query = arg.substr(7);
 
-      std::string json;
+      std::string hjson, json;
       std::vector<char> binary;
 
-      auto nmatches = fDesc.SearchVisibles(query, json, binary);
+      auto nmatches = fDesc.SearchVisibles(query, hjson, json, binary);
 
       printf("Searches %s found %d json %d binary %d\n", query.c_str(), nmatches, (int) json.length(), (int) binary.size());
 
       // send reply with appropriate header - NOFOUND, FOUND0:, FOUND1:
-      fWebWindow->Send(connid, json);
+      fWebWindow->Send(connid, hjson);
+
+      if (!json.empty())
+         fWebWindow->Send(connid, json);
 
       if (binary.size() > 0)
          fWebWindow->SendBinary(connid, &binary[0], binary.size());
