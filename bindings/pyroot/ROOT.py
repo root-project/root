@@ -847,37 +847,39 @@ def cleanup():
       sys.excepthook = sys.__excepthook__
    __builtin__.__import__ = _orig_ihook
 
-   facade = sys.modules[ __name__ ]
-
  # shutdown GUI thread, as appropriate (always save to call)
    if hasattr( _root, 'RemoveGUIEventInputHook' ):
       _root.RemoveGUIEventInputHook()
 
- # prevent further spurious lookups into ROOT libraries
-   del facade.__class__.__getattr__
-   del facade.__class__.__setattr__
+   if __name__ in sys.modules:
 
- # shutdown GUI thread, as appropriate
-   if hasattr( facade, 'PyGUIThread' ):
-      facade.keeppolling = 0
+      facade = sys.modules[ __name__ ]
 
-    # if not shutdown from GUI (often the case), wait for it
-      import threading
-      if threading.currentThread() != facade.PyGUIThread:
-         facade.PyGUIThread.join( 3. )                 # arbitrary
-      del threading
+    # prevent further spurious lookups into ROOT libraries
+      del facade.__class__.__getattr__
+      del facade.__class__.__setattr__
 
- # remove otherwise (potentially) circular references
-   import types
-   items = facade.module.__dict__.items()
-   for k, v in items:
-      if type(v) == types.ModuleType:
-         facade.module.__dict__[ k ] = None
-   del v, k, items, types
+    # shutdown GUI thread, as appropriate
+      if hasattr( facade, 'PyGUIThread' ):
+         facade.keeppolling = 0
 
- # destroy facade
-   facade.__dict__.clear()
-   del facade
+       # if not shutdown from GUI (often the case), wait for it
+         import threading
+         if threading.currentThread() != facade.PyGUIThread:
+            facade.PyGUIThread.join( 3. )                 # arbitrary
+         del threading
+
+    # remove otherwise (potentially) circular references
+      import types
+      items = facade.module.__dict__.items()
+      for k, v in items:
+         if type(v) == types.ModuleType:
+            facade.module.__dict__[ k ] = None
+      del v, k, items, types
+
+    # destroy facade
+      facade.__dict__.clear()
+      del facade
 
    if 'libPyROOT' in sys.modules:
     # run part the gROOT shutdown sequence ... running it here ensures that
@@ -894,7 +896,8 @@ def cleanup():
       del sys.modules[ 'libPyROOT' ]
 
  # destroy ROOT module
-   del sys.modules[ 'ROOT' ]
+   if 'ROOT' in sys.modules:
+      del sys.modules[ 'ROOT' ]
 
 atexit.register( cleanup )
 del cleanup, atexit
