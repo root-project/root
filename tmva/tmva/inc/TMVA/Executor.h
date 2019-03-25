@@ -25,6 +25,8 @@
 #include <ROOT/TThreadExecutor.hxx>
 #endif
 
+#include <TROOT.h>
+#include <TError.h>
 
 namespace TMVA {
 
