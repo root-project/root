@@ -1649,6 +1649,12 @@ namespace cling {
     // Return a symbol's address, and whether it was jitted.
     std::string mangledName;
     utils::Analyze::maybeMangleDeclName(GD, mangledName);
+#if defined(LLVM_ON_WIN32)
+    if (mangledName.size() > 2 && mangledName[1] == '?' && \
+         mangledName.find(std::string("?__cling_Un1Qu")) == std::string::npos) {
+       mangledName.erase(0,1);
+    }
+#endif
     return getAddressOfGlobal(mangledName, fromJIT);
   }
 
