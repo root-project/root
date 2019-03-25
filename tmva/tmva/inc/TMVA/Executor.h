@@ -74,7 +74,11 @@ public:
 
    unsigned int GetPoolSize() const {
       if (!fMTExecImpl) return 1;
-      return fMTExecImpl->GetPoolSize(); 
+#ifdef R__USE_IMT
+      return fMTExecImpl->GetPoolSize();
+#else
+      return 1;
+#endif
    }
 
    /// wrap TExecutor::Foreach
