@@ -270,12 +270,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** Extract shapes from binary data using appropriate draw message
        * Draw message is vector of REveGeomVisible objects, including info where shape is in raw data */
-      extractRawShapes: function(draw_msg, msg, offset) {
+      extractRawShapes: function(draw_msg) {
 
          var nodes = null;
 
-         if (!this.geo_clones)
-            nodes = new Array(draw_msg.numnodes); // array for all nodes
+         // array for descriptors for each node
+         // if array too large (>1M), use JS object while only ~1K nodes are expected to be used
+         if (!this.geo_clones) {
+            if (draw_msg.kind !== "draw") return false;
+            nodes = (draw_msg.numnodes > 1e6) ? { length: draw_msg.numnodes } : new Array(draw_msg.numnodes); // array for all nodes
+         }
 
          for (var cnt=0;cnt < draw_msg.nodes.length; ++cnt) {
             var node = draw_msg.nodes[cnt];
@@ -303,53 +307,75 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }
 
             // reconstruct render data
-            var off = offset + rd.rnr_offset;
+            var off = draw_msg.offset + rd.rnr_offset;
 
             if (rd.vert_size) {
-               rd.vtxBuff = new Float32Array(msg, off, rd.vert_size);
+               rd.vtxBuff = new Float32Array(draw_msg.raw, off, rd.vert_size);
                off += rd.vert_size*4;
             }
 
             if (rd.norm_size) {
-               rd.nrmBuff = new Float32Array(msg, off, rd.norm_size);
+               rd.nrmBuff = new Float32Array(draw_msg.raw, off, rd.norm_size);
                off += rd.norm_size*4;
             }
 
             if (rd.index_size) {
-               rd.idxBuff = new Uint32Array(msg, off, rd.index_size);
+               rd.idxBuff = new Uint32Array(draw_msg.raw, off, rd.index_size);
                off += rd.index_size*4;
             }
 
             // shape handle is similar to created in JSROOT.GeoPainter
             item.server_shape = rd.server_shape = { geom: this.creator.makeEveGeometry(rd), nfaces: (rd.index_size-2)/3, ready: true };
          }
+
+         return true;
       },
 
       /** function to accumulate and process all drawings messages
        * if not all scripts are loaded, messages are quied and processed later */
 
       checkDrawMsg: function(kind, msg, _raw, _offset) {
-         if (kind) {
+         if (kind == "binary") {
+            for (var k = 0; k < this.queue.length; ++k) {
+               if (this.queue[k].binlen && !this.queue[k].raw) {
+                  this.queue[k].raw = _raw;
+                  this.queue[k].offset = _offset;
+                  _raw = null;
+                  break;
+               }
+            }
+
+            if (_raw)
+               return console.error("Did not process raw data " + _raw.byteLength + " offset " + _offset);
+         } else if (kind) {
+            if (!msg)
+               return console.error("No message is provided for " + kind);
+
             msg.kind = kind;
-            msg.raw = _raw;
-            msg.offset = _offset;
 
             this.queue.push(msg);
          }
 
-         if (!this.creator ||             // complete JSROOT/EVE7 TGeo functionality is loaded
-            (this.queue.length == 0) ||   // drawing messages are created
-            !this.renderingDone) return;  // UI5 rendering is performed
+         if (!this.creator ||            // complete JSROOT/EVE7 TGeo functionality is loaded
+            !this.queue.length ||        // drawing messages are created
+            !this.renderingDone) return; // UI5 rendering is performed
+
+         // first message in the queue still waiting for raw data
+         if (this.queue[0].binlen && !this.queue[0].raw)
+            return;
 
          // only from here we can start to analyze messages and create TGeo painter, clones objects and so on
-
 
          msg = this.queue.shift();
 
          switch (msg.kind) {
             case "draw":
+
+               // keep for history
+               this.last_draw_msg = msg;
+
                // here we should decode render data
-               this.extractRawShapes(msg, msg.raw, msg.offset);
+               this.extractRawShapes(msg);
 
                // after clones are existing - ensure geo painter is there
                this.createGeoPainter(msg.drawopt);
@@ -362,15 +388,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                break;
 
             case "found":
-               this.extractRawShapes(msg, msg.raw, msg.offset);
-               this.processSearchReply("BIN");
+               // only extend nodes and decode shapes
+               if (this.extractRawShapes(msg))
+                  this.paintFoundNodes(msg.visibles, true, msg.binlen > 0);
                break;
 
             case "append":
-               this.extractRawShapes(msg, msg.raw, msg.offset);
+               this.extractRawShapes(msg);
                this.appendNodes(msg.visibles);
                break;
-
          }
       },
 
@@ -394,48 +420,44 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** Entry point for all data from server */
       OnWebsocketMsg: function(handle, msg, offset) {
 
-         if (typeof msg != "string") {
-
-            if (this.draw_msg) {
-               this.checkDrawMsg("draw", this.draw_msg, msg, offset);
-               delete this.draw_msg;
-            } else if (this.found_msg) {
-               this.checkDrawMsg("found", this.found_msg, msg, offset);
-               delete this.found_msg;
-            } else if (this.append_msg) {
-               this.checkDrawMsg("append", this.append_msg, msg, offset);
-               delete this.append_msg;
-            } else {
-               console.error('not process binary data len=' + (msg ? msg.byteLength : 0))
-            }
-
-            return;
-         }
+         // binary data can be send only as addition to draw message
+         // here data can be placed in the queue and processed when all other prerequicities are done
+         if (typeof msg != "string")
+            return this.checkDrawMsg("binary", null, msg, offset);
 
          var mhdr = msg.substr(0,6);
          msg = msg.substr(6);
 
-         // console.log(mhdr, msg.length, msg.substr(0,70), "...");
+         console.log(mhdr, msg.length, msg.substr(0,70), "...");
 
          switch (mhdr) {
-         case "DESCR:":
-            this.parseDescription(msg);
+         case "DESCR:":  // browser hierarchy
+            this.parseDescription(msg, true);
+            break;
+         case "FESCR:":  // searching hierarchy
+            this.waiting_search = false;
+            this.parseDescription(msg, false);
+            break;
+         case "FOUND:":  // text message for found query
+            this.waiting_search = false;
+            this.showFoundNodes(msg);
+            this.paintFoundNodes(null); // nothing can be shown
             break;
          case "MODIF:":
             this.modifyDescription(msg);
             break;
-         case "GDRAW:":
-            this.last_draw_msg = this.draw_msg = JSROOT.parse(msg); // use JSROOT.parse while refs are used
+         case "GDRAW:":   // normal drawing of geometry
+            this.checkDrawMsg("draw", JSROOT.parse(msg)); // use JSROOT.parse while refs are used
+            break;
+         case "FDRAW:":   // drawing of found nodes
+            this.checkDrawMsg("found", JSROOT.parse(msg));
             break;
          case "APPND:":
-            this.append_msg = JSROOT.parse(msg); // use JSROOT.parse while refs are used
-            break;
-         case "FOUND:":
-            this.processSearchReply(msg, false);
+            this.checkDrawMsg("append", JSROOT.parse(msg));
             break;
          case "SHAPE:":
-            this.processSearchReply(msg, true);
-            break
+            // this.processSearchReply(msg, true);
+            break;
          default:
             console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
          }
@@ -472,29 +494,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      /** Parse and format base geometry description,
+      /** Parse compact geometry description,
        * Used only to initialize hierarchy browser with full Tree,
        * later should be done differently */
-      parseDescription: function(msg) {
+      parseDescription: function(msg, is_original) {
          var descr = JSON.parse(msg);
 
-         // var nodes = descr.fDesc;
+         this.buildTree(descr, is_original);
 
-         // we need to calculate matrixes here
-         // for (var cnt = 0; cnt < nodes.length; ++cnt)
-         //    this.formatNodeElement(nodes[cnt]);
-
-         // var clones = new JSROOT.GEO.ClonedNodes(null, nodes);
-         // clones.name_prefix = clones.GetNodeName(0);
-
-         // this.assignClones(clones, descr.fDrawOptions);
-
-         // this.draw_options = descr.fDrawOptions;
-
-         this.buildTree(descr);
+         this.byId("treeTable").expandToLevel(is_original ? 1 : 99);
       },
 
-      /** When single node element is modified on the server side */
+      /** TO BE CHANGED !!! When single node element is modified on the server side */
       modifyDescription: function(msg) {
          var arr = JSON.parse(msg), can_refresh = true;
 
@@ -588,15 +599,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** Build complete tree of all existing nodes.
        * Produced structure can be very large, therefore later
        * one should move this functionality to the server */
-      buildTree: function(nodes) {
+      buildTree: function(nodes, is_original) {
 
          if (!nodes) return;
 
-         this.originalCache = [];
+         var cache = [];
+         this.data.Nodes = [ this.buildTreeNode(nodes, cache, 0) ];
 
-         this.data.Nodes = [ this.buildTreeNode(nodes, this.originalCache, 0) ];
-
-         this.originalNodes = this.data.Nodes;
+         if (is_original) {
+            // remember nodes
+            this.originalCache = cache;
+            this.originalNodes = this.data.Nodes;
+         }
 
          this.model.refresh();
       },
@@ -616,17 +630,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return matches;
       },
 
-      /** try to show selected nodes. With server may be provided shapes */
-      showFoundNodes: function(matches, append_more, with_binaries) {
+
+      /** Show found nodes in the browser */
+      showFoundNodes: function(matches) {
 
          if (typeof matches == "string") {
             this.byId("treeTable").collapseAll();
             this.data.Nodes = [ { title: matches } ];
             this.model.refresh();
-            if (this.geo_painter) {
-               if (append_more) this.geo_painter.appendMoreNodes(null);
-               this.geo_painter.changeGlobalTransparency();
-            }
             return;
          }
 
@@ -636,11 +647,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.data.Nodes = this.originalNodes || null;
             this.model.refresh();
             this.byId("treeTable").expandToLevel(1);
-
-            if (this.geo_painter) {
-               if (append_more) this.geo_painter.appendMoreNodes(matches);
-               this.geo_painter.changeGlobalTransparency();
-            }
             return;
          }
 
@@ -656,24 +662,30 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             if (matches.length < 100)
                this.byId("treeTable").expandToLevel(99);
          }
+      },
 
-         if (this.geo_painter) {
-            if (append_more && with_binaries) this.geo_painter.appendMoreNodes(matches);
+      /** Paint extra node - or remove them from painting */
+      paintFoundNodes: function(visibles, append_more, with_binaries) {
+         if (!this.geo_painter) return;
 
-            if ((matches.length>0) && (matches.length<100)) {
-               var dflt = Math.max(this.geo_painter.options.transparency, 0.98);
-               this.geo_painter.changeGlobalTransparency(function(node) {
-                  if (node.stack)
-                     for (var n=0;n<matches.length;++n)
-                        if (JSROOT.GEO.IsSameStack(node.stack, matches[n].stack))
-                           return 0;
-                  return dflt;
-               });
-            } else {
-               this.geo_painter.changeGlobalTransparency();
-            }
+         if (append_more && (with_binaries || !visibles))
+            this.geo_painter.appendMoreNodes(visibles || null);
+
+         if (visibles && visibles.length && (visibles.length < 100)) {
+            var dflt = Math.max(this.geo_painter.options.transparency, 0.98);
+            this.geo_painter.changeGlobalTransparency(function(node) {
+               if (node.stack)
+                  for (var n=0;n<visibles.length;++n)
+                     if (JSROOT.GEO.IsSameStack(node.stack, visibles[n].stack))
+                        return 0;
+               return dflt;
+            });
+
+         } else {
+            this.geo_painter.changeGlobalTransparency();
          }
       },
+
 
       appendNodes: function(nodes) {
          if (this.geo_painter) this.geo_painter.prepareObjectDraw(nodes, "__geom_viewer_append__");
@@ -766,37 +778,42 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-
-      /** called when new portion of data received from server */
+      /** called when new portion of data received from server
+       * OLD CODE, TO BE REMOVED */
       processSearchReply: function(msg, is_shape) {
          // not waiting search - ignore any replies
          if (!this.waiting_search) return;
 
          var lst = [], has_binaries = false;
 
-         if (msg == "BIN") {
+         if ((typeof msg != "string") && msg && msg.visibles) {
             has_binaries = true;
-            lst = this.found_msg; is_shape = this.found_shape;
-            delete this.found_msg;
-            delete this.found_shape;
+            lst = msg.visibles;
+            is_shape = msg.is_shape;
          } else if (msg == "NO") {
-            lst = "Not found";
+            this.showFoundNodes("Not found");
+            lst = null;
          } else if (msg.substr(0,7) == "TOOMANY") {
-            lst = "Too many " + msg.substr(8);
+            this.showFoundNodes("Too many " + msg.substr(8));
+            lst = null;
          } else {
-            lst = JSROOT.parse(msg);
-            for (var k=0;k<lst.length;++k)
-               if (lst[k].ri) { // wait for binary render data
-                  this.found_msg = lst;
-                  this.found_shape = is_shape;
+            // get draw message with all data
+            msg = JSROOT.parse(msg);
+            for (var k=0;k<msg.visibles.length;++k)
+               if (msg.visibles[k].ri) { // wait for binary render data
+                  this.found_msg = msg;
+                  msg.is_shape = is_shape;
                   return;
                }
+            lst = msg.visibles;
+
+            console.log('FOUND NODES ', lst.length);
          }
 
          if (is_shape) {
             this.showMoreNodes(lst);
          } else {
-            this.showFoundNodes(lst, true, has_binaries);
+            this.paintFoundNodes(lst, true, has_binaries);
          }
 
          if (this.next_search) {
@@ -828,6 +845,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.waiting_search = false;
             delete this.next_search;
             this.showFoundNodes(null);
+            this.paintFoundNodes(null);
             return;
          }
 
@@ -852,13 +870,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (this.websocket.kind != "file") {
             this.submitSearchQuery(query);
          } else if (query) {
-            this.showFoundNodes(
-               this.findMatchesFromDraw(function(node) {
-                  return node.name.indexOf(query)==0;
-               })
-            );
+            var lst = this.findMatchesFromDraw(function(node) {
+               return node.name.indexOf(query)==0;
+            });
+
+            this.showFoundNodes(lst);
+            this.paintFoundNodes(lst);
+
          } else {
             this.showFoundNodes(null);
+            this.paintFoundNodes(null);
          }
       },
 

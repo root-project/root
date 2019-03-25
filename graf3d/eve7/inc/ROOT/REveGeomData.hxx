@@ -40,7 +40,6 @@ public:
    enum EVis { vis_off = 0, vis_this = 1, vis_chlds = 2, vis_lvl1 = 4 };
 
    int id{0};               ///< node id, index in array
-   int sortid{0};           ///< place in sorted array, to check cuts
    std::string name;        ///< node name
    std::vector<int> chlds;  ///< list of childs id
    int vis{vis_off};        ///< visibility flag, combination of EVis flags
@@ -61,6 +60,7 @@ public:
 
 class REveGeomNode : public REveGeomNodeBase  {
 public:
+   int sortid{0};           ///< place in sorted array, to check cuts
    std::vector<float> matr; ///< matrix for the node, can have reduced number of elements
    double vol{0};           ///<! volume estimation
    int nfaces{0};           ///<! number of shape faces
@@ -109,8 +109,9 @@ class REveGeomDrawing {
 public:
    int numnodes{0};                         ///< total number of nodes in description
    std::vector<REveGeomNode*> nodes;        ///< all used nodes to display visibles and not known for client
-   std::vector<REveGeomVisible> visibles;  ///< all visibles items with
+   std::vector<REveGeomVisible> visibles;   ///< all visibles items with
    std::string drawopt;                     ///< draw options for TGeoPainter
+   int binlen{0};                           ///< extra binary data for that drawing
 
    REveGeomDrawing() = default;
 };
@@ -135,6 +136,9 @@ class REveGeomDescription {
    std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
    std::string fDrawOptions;        ///< default draw options for client
    std::vector<REveGeomNode> fDesc; ///< converted description, send to client
+   std::vector<REveGeomNodeBase> fFound; ///<! hierarchy of nodes, used for search
+   std::vector<int> fFoundMap;           ///<! mapping between nodeid - > foundid
+
    int fTopDrawNode{0};             ///<! selected top node
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
    int fNSegments{0};               ///<! number of segments for cylindrical shapes
@@ -199,7 +203,7 @@ public:
    const std::vector<char> &GetDrawBinary() const { return fDrawBinary; }
    void ClearRawData();
 
-   int SearchVisibles(const std::string &find, std::string &json, std::vector<char> &binary);
+   int SearchVisibles(const std::string &find, std::string &hjson, std::string &json, std::vector<char> &binary);
 
    int FindNodeId(const std::vector<int> &stack);
 
