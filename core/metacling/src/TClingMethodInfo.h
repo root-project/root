@@ -54,6 +54,7 @@ class TClingTypeInfo;
 class TClingMethodInfo final : public TClingDeclInfo {
 private:
    class SpecIterator;
+   class UsingIterator;
 
    cling::Interpreter                          *fInterp; // Cling interpreter, we do *not* own.
    llvm::SmallVector<clang::DeclContext *, 2>   fContexts; // Set of DeclContext that we will iterate over.
@@ -62,13 +63,14 @@ private:
    clang::DeclContext::decl_iterator            fIter; // Our iterator.
    std::string                                  fTitle; // The meta info for the method.
    SpecIterator                                *fTemplateSpecIter; // Iter over template specialization. [We own]
+   UsingIterator                               *fUsingIter; // for internal loop over using functions
 
    const clang::Decl* GetDeclSlow() const;
 
 public:
    explicit TClingMethodInfo(cling::Interpreter *interp)
       : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
-        fTemplateSpecIter(0) {}
+        fTemplateSpecIter(0), fUsingIter(0) {}
 
    TClingMethodInfo(const TClingMethodInfo&);
 

@@ -82,6 +82,48 @@ private:
    Iterator fEnd;
 };
 
+class TClingMethodInfo::UsingIterator
+{
+public:
+   typedef clang::UsingDecl::shadow_iterator Iterator;
+
+   UsingIterator(cling::Interpreter* interp, Iterator begin, Iterator end) : fInterp(interp), fIter(begin), fEnd(end) {}
+   explicit UsingIterator(cling::Interpreter* interp, clang::UsingDecl *decl) :
+       fInterp(interp), fIter(decl->shadow_begin()), fEnd(decl->shadow_end()) {}
+
+   FunctionDecl *operator* () const {
+      clang::ConstructorUsingShadowDecl* shadow_ctor = llvm::dyn_cast<clang::ConstructorUsingShadowDecl>(*fIter);
+      if (shadow_ctor) {
+          clang::CXXConstructorDecl* base_ctor = llvm::dyn_cast<clang::CXXConstructorDecl>(shadow_ctor->getTargetDecl());
+          if (base_ctor) {
+              if (base_ctor->isImplicit()) return nullptr; // skip as Cling will generate these anyway
+              return fInterp->getSema().findInheritingConstructor(base_ctor->getLocStart(), base_ctor, shadow_ctor);
+          }
+      } else {
+          clang::UsingShadowDecl* shadow_decl = llvm::dyn_cast<clang::UsingShadowDecl>(*fIter);
+          if (shadow_decl) {
+              clang::CXXMethodDecl* method = llvm::dyn_cast<clang::CXXMethodDecl>(shadow_decl->getTargetDecl());
+              if (method) return method;
+          }
+      }
+      return llvm::dyn_cast<clang::FunctionDecl>((*fIter)->getTargetDecl()); }
+   FunctionDecl *operator-> () const { return this->operator*(); }
+   UsingIterator & operator++ () { ++fIter; return *this; }
+   UsingIterator   operator++ (int) {
+      UsingIterator tmp(fInterp, fIter,fEnd);
+      ++(*this);
+      return tmp;
+   }
+   bool operator!() { return fIter == fEnd; }
+   operator bool() { return fIter != fEnd; }
+
+private:
+   cling::Interpreter* fInterp;
+   Iterator fIter;
+   Iterator fEnd;
+};
+
+
 TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo &rhs) :
    TClingDeclInfo(rhs),
    fInterp(rhs.fInterp),
@@ -90,12 +132,19 @@ TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo &rhs) :
    fContextIdx(rhs.fContextIdx),
    fIter(rhs.fIter),
    fTitle(rhs.fTitle),
-   fTemplateSpecIter(nullptr)
+   fTemplateSpecIter(nullptr),
+   fUsingIter(nullptr)
 {
    if (rhs.fTemplateSpecIter) {
       // The SpecIterator query the decl.
       R__LOCKGUARD(gInterpreterMutex);
       fTemplateSpecIter = new SpecIterator(*rhs.fTemplateSpecIter);
+   }
+
+   if (rhs.fUsingIter) {
+      // Internal loop over using shadow decls active
+      R__LOCKGUARD(gInterpreterMutex);
+      fUsingIter = new UsingIterator(*rhs.fUsingIter);
    }
 }
 
@@ -103,7 +152,7 @@ TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo &rhs) :
 TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
                                    TClingClassInfo *ci)
    : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
-     fTemplateSpecIter(0)
+     fTemplateSpecIter(0), fUsingIter(0)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -132,7 +181,7 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
 TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
                                    const clang::FunctionDecl *FD)
    : TClingDeclInfo(FD), fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
-     fTemplateSpecIter(0)
+     fTemplateSpecIter(0), fUsingIter(0)
 {
 
 }
@@ -140,6 +189,7 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
 TClingMethodInfo::~TClingMethodInfo()
 {
    delete fTemplateSpecIter;
+   delete fUsingIter;
 }
 
 TDictionary::DeclId_t TClingMethodInfo::GetDeclId() const
@@ -152,6 +202,9 @@ TDictionary::DeclId_t TClingMethodInfo::GetDeclId() const
 
 const clang::FunctionDecl *TClingMethodInfo::GetMethodDecl() const
 {
+   if (fUsingIter)
+      return *(*fUsingIter);
+
    return cast_or_null<FunctionDecl>(GetDecl());
 }
 
@@ -194,6 +247,8 @@ void TClingMethodInfo::Init(const clang::FunctionDecl *decl)
    delete fTemplateSpecIter;
    fTemplateSpecIter = 0;
    fDecl = decl;
+   delete fUsingIter;
+   fUsingIter = 0;
 }
 
 void *TClingMethodInfo::InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
@@ -214,6 +269,10 @@ const clang::Decl* TClingMethodInfo::GetDeclSlow() const
       R__LOCKGUARD(gInterpreterMutex);
       cling::Interpreter::PushTransactionRAII RAII(fInterp);
       return *(*fTemplateSpecIter);
+   } else if (fUsingIter) {
+      R__LOCKGUARD(gInterpreterMutex);
+      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      return *(*fUsingIter);
    }
    return *fIter;
 }
@@ -389,6 +448,13 @@ int TClingMethodInfo::InternalNext()
             } else {
                return 1;
             }
+         } else if (fUsingIter) {
+            while (++(*fUsingIter)) {
+               if (*(*fUsingIter))
+                  return 1;
+            }
+            delete fUsingIter; fUsingIter = 0;
+            ++fIter;
          } else {
             ++fIter;
          }
@@ -434,6 +500,17 @@ int TClingMethodInfo::InternalNext()
             fTemplateSpecIter = new SpecIterator(templateDecl);
             return 1;
          }
+      }
+
+      clang::UsingDecl* udecl =
+          llvm::dyn_cast<clang::UsingDecl>(*fIter);
+
+      if ( udecl ) {
+          // A UsingDecl potentially brings in a bunch of functions, so
+          // start an inner loop to catch them all
+          delete fUsingIter;
+          fUsingIter = new UsingIterator(fInterp, udecl);
+          return 1;
       }
 
       // Return if this decl is a function or method.
