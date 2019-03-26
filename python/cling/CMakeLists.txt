@@ -1,11 +1,15 @@
 if(ROOT_python_FOUND)
+  if (ROOT_pyroot_experimental_FOUND)
+    set(api_macro_file runPyAPITestCppyy.C) # Uses new Cppyy API
+  else()
+    set(api_macro_file runPyAPITest.C)
+  endif()
   ROOTTEST_ADD_TEST(api
-                    MACRO runPyAPITest.C
+                    MACRO ${api_macro_file}
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                     OUTREF PyAPITest.ref
                     ENVIRONMENT CLING_STANDARD_PCH=none
-                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so
-                    ${PYTESTS_WILLFAIL})
+                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
 
   ROOTTEST_ADD_TEST(class MACRO
                     runPyClassTest.C
