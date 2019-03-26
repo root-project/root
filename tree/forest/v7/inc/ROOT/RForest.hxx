@@ -85,7 +85,6 @@ Individual fields can be read as well by instantiating a tree view.
 class RInputForest : public Detail::RForest {
 private:
    std::unique_ptr<Detail::RPageSource> fSource;
-   ForestSize_t fNEntries;
 
 public:
    static std::unique_ptr<RInputForest> Create(std::unique_ptr<RForestModel> model,
