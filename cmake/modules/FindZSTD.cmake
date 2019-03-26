@@ -29,11 +29,11 @@
 #   - ZSTD_LIBRARIES, the Zstandard library path
 #   - ZSTD_FOUND, whether Zstandard has been found
 
-# Find header files  
+# Find header files
 if(ZSTD_SEARCH_HEADER_PATHS)
-  find_path( 
-      ZSTD_INCLUDE_DIR zstd.h 
-      PATHS ${ZSTD_SEARCH_HEADER_PATHS}   
+  find_path(
+      ZSTD_INCLUDE_DIR zstd.h
+      PATHS ${ZSTD_SEARCH_HEADER_PATHS}
       NO_DEFAULT_PATH
   )
 else()
@@ -60,4 +60,19 @@ endif()
 
 if(ZSTD_FIND_REQUIRED AND NOT ZSTD_FOUND)
   message(FATAL_ERROR "Could not find the Zstandard library.")
+endif()
+
+if(ZSTD_FOUND)
+  set(ZSTD_INCLUDE_DIRS "${ZSTD_INCLUDE_DIR}")
+
+  if(NOT ZSTD_LIBRARIES)
+    set(ZSTD_LIBRARIES ${ZSTD_LIBRARY})
+  endif()
+
+  if(NOT TARGET ZSTD::ZSTD)
+    add_library(ZSTD::ZSTD UNKNOWN IMPORTED)
+    set_target_properties(ZSTD::ZSTD PROPERTIES
+      IMPORTED_LOCATION "${ZSTD_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${ZSTD_INCLUDE_DIRS}")
+  endif()
 endif()
