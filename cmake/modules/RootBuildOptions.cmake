@@ -20,7 +20,7 @@ endfunction()
 function(ROOT_APPLY_OPTIONS)
   foreach(opt ${root_build_options})
      option(${opt} "${${opt}_description}" ${${opt}_defvalue})
-  endforeach()  
+  endforeach()
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
@@ -273,7 +273,7 @@ endif()
 
 #---Options depending of CMake Generator-------------------------------------------------------
 if( CMAKE_GENERATOR STREQUAL Ninja)
-   set(fortran_defvalue OFF) 
+   set(fortran_defvalue OFF)
 endif()
 
 #---Apply minimal or gminimal------------------------------------------------------------------
@@ -293,7 +293,7 @@ if(NOT CMAKE_CXX_STANDARD GREATER 11)
   set(webui_defvalue OFF)
 endif()
 
-if("${webui}" STREQUAL "OFF")
+if (NOT webui AND NOT "${webui}" STREQUAL "")
    set(webui_disabled ON)
 endif()
 
@@ -311,7 +311,7 @@ if(root7)
    endif()
    if(NOT webui AND NOT webui_disabled)
       set(webui ON CACHE BOOL "(webui build automatically when root7 is enabled)" FORCE)
-   endif()   
+   endif()
 endif()
 
 #---check if webui can be build-------------------------------
