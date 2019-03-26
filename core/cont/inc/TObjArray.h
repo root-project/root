@@ -64,6 +64,7 @@ public:
    Int_t            GetEntriesFast() const {
       return GetAbsLast() + 1;   //only OK when no gaps
    }
+   Int_t            GetEntriesUnsafe() const;
    Int_t            GetLast() const;
    TObject        **GetObjectRef() const { return fCont; };
    TObject        **GetObjectRef(const TObject *obj) const;

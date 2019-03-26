@@ -555,6 +555,19 @@ Int_t TObjArray::GetAbsLast() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the number of objects in array (i.e. number of non-empty slots).
+/// This is a thread-unsafe version of GetEntriesFast. Use it only if sure
+/// it will not be invoked concurrently.
+
+Int_t TObjArray::GetEntriesUnsafe() const
+{
+   if (R__unlikely(fLast == -2))
+      return GetEntriesFast();
+   else
+      return fLast + 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return index of last object in array. Returns lowerBound-1 in case
 /// array is empty.
 
