@@ -116,11 +116,11 @@ if(builtin_freetype)
       FREETYPE
       URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
       URL_HASH SHA256=0a3c7dfbda6da1e8fce29232e8e96d987ababbbf71ebc8c75659e4132c367014
-      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic 
-                         --disable-shared --with-png=no --with-bzip2=no 
+      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic
+                         --disable-shared --with-png=no --with-bzip2=no
                          --with-harfbuzz=no ${_freetype_zlib}
                           "CC=${_freetype_cc}" CFLAGS=${_freetype_cflags}
-      INSTALL_COMMAND ""                    
+      INSTALL_COMMAND ""
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
       BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
   endif()
@@ -204,6 +204,24 @@ if(builtin_lzma)
   endif()
 endif()
 
+#---Check for ZSTD-------------------------------------------------------------------
+if(NOT builtin_zstd)
+  message(STATUS "Looking for ZSTD")
+  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE)
+    unset(ZSTD_${suffix} CACHE)
+  endforeach()
+  find_package(ZSTD)
+  if(NOT ZSTD_FOUND)
+    message(STATUS "LZ4 not found. Switching on builtin_zstd option")
+    set(builtin_zstd ON CACHE BOOL "Enabled because ZSTD not found (${builtin_zstd_description})" FORCE)
+  endif()
+endif()
+
+if(builtin_zstd)
+  list(APPEND ROOT_BUILTINS ZSTD)
+  add_subdirectory(builtins/zstd)
+endif()
+
 #---Check for xxHash-----------------------------------------------------------------
 if(NOT builtin_xxhash)
   message(STATUS "Looking for xxHash")
@@ -217,43 +235,6 @@ endif()
 if(builtin_xxhash)
   list(APPEND ROOT_BUILTINS xxHash)
   add_subdirectory(builtins/xxhash)
-endif()
-
-#---Check for ZSTD-------------------------------------------------------------------
-# Potentially, this if() block will enable builtin_zstd.
-if (NOT builtin_zstd)
-  message(STATUS "Looking for ZSTD")
-  find_package(ZSTD)
-  if (ZSTD_FOUND)
-    message(STATUS "System ZSTD found; using that.")
-  else()
-    message(STATUS "System ZSTD not found. Switching on builtin_zstd option")
-    set(builtin_zstd ON CACHE BOOL "" FORCE)
-  endif()
-endif()
-
-if (builtin_zstd)
-  set(zstd_version v1.3.2)
-  message(STATUS "Building ZSTD version ${zstd_version} included in ROOT itself")
-  set(ZSTD_URL https://github.com/facebook/zstd/archive/v1.3.2.tar.gz)
-  set(ZSTD_SHA256 ac5054a3c64e6510bc1ae890d05e3d271cc33ceebc9d06ac9f08105766d2798a)
-  set(ZSTD_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zstd${CMAKE_STATIC_LIBRARY_SUFFIX})
-  set(ZSTD_C_FLAGS "-fPIC -Wno-unused-variable -O3")
-  ExternalProject_Add(
-    ZSTD
-    URL ${ZSTD_URL}
-    URL_HASH SHA256=${ZSTD_SHA256}
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    SOURCE_SUBDIR build/cmake
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-               -DCMAKE_C_FLAGS=${ZSTD_C_FLAGS}
-               -DCMAKE_AR=${CMAKE_AR}
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS ${ZSTD_LIBRARIES})
-  set(ZSTD_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-  set(ZSTD_DEFINITIONS -DBUILTIN_ZSTD)
 endif()
 
 #---Check for LZ4--------------------------------------------------------------------
@@ -411,10 +392,10 @@ if(builtin_afterimage)
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR>
-                        --libdir=<INSTALL_DIR>/lib 
-                        --with-ttf ${_ttf_include} --with-afterbase=no 
-                        --without-svg --disable-glx ${_after_mmx} 
-                        --with-builtin-ungif  --with-jpeg ${_jpeginclude} 
+                        --libdir=<INSTALL_DIR>/lib
+                        --with-ttf ${_ttf_include} --with-afterbase=no
+                        --without-svg --disable-glx ${_after_mmx}
+                        --with-builtin-ungif  --with-jpeg ${_jpeginclude}
                         --with-png ${_pnginclude} ${_tiffinclude}
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
@@ -826,7 +807,7 @@ if(builtin_xrootd)
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
   string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
-  string(REPLACE "-Woverloaded-virtual" "" __cxxflags "${__cxxflags}")  # Otherwise it produces manywarnings  
+  string(REPLACE "-Woverloaded-virtual" "" __cxxflags "${__cxxflags}")  # Otherwise it produces manywarnings
   set(XROOTD_LIBRARIES ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -1073,7 +1054,7 @@ if(imt)
           set(builtin_tbb ON CACHE BOOL "Enabled because imt requested and external TBB version < ${tbb_min_version} (${builtin_tbb})" FORCE)
         endif()
       endif()
-    endif()  
+    endif()
     if(NOT TBB_FOUND)
       if(fail-on-missing)
         message(FATAL_ERROR "TBB not found. You can enable the option 'builtin_tbb' to build the library internally")
@@ -1083,7 +1064,7 @@ if(imt)
       endif()
     endif()
   endif()
-endif()  
+endif()
 if(builtin_tbb)
   set(tbb_builtin_version 2019_U1)
   set(tbb_sha256 d40aa6f62f2b2fb38c89b9f309859e3e6ff90487e8bc45abb0e096a6a165bec5)
@@ -1113,7 +1094,7 @@ if(builtin_tbb)
               COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.pdb ${CMAKE_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.pdb ${CMAKE_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.pdb ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR> 
+              COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
       BUILD_IN_SOURCE 1
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -1350,7 +1331,7 @@ if(vdt OR builtin_vdt)
       BUILD_BYPRODUCTS ${VDT_LIBRARIES}
     )
     set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
-    install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX} 
+    install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}
             DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
