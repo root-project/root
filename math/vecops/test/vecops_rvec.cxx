@@ -942,10 +942,10 @@ TEST(VecOps, DeltaPhi)
 
    // Check against TLorentzVector
    for (std::size_t i = 0; i < v1.size(); i++) {
-       TLorentzVector p1, p2;
-       p1.SetPtEtaPhiM(1.f, 1.f, v1[i], 1.f);
-       p2.SetPtEtaPhiM(1.f, 1.f, v2[i], 1.f);
-       EXPECT_NEAR(float(p2.DeltaPhi(p1)), dphi1[i], 1e-6);
+      TLorentzVector p1, p2;
+      p1.SetPtEtaPhiM(1.f, 1.f, v1[i], 1.f);
+      p2.SetPtEtaPhiM(1.f, 1.f, v2[i], 1.f);
+      EXPECT_NEAR(float(p2.DeltaPhi(p1)), dphi1[i], 1e-6);
    }
 
    // Vector and scalar
@@ -1009,4 +1009,29 @@ TEST(VecOps, InvariantMass)
    }
 
    EXPECT_NEAR(p5.M(), invMass3, 1e-4);
+}
+
+TEST(VecOps, DeltaR)
+{
+   RVec<float> eta1 =  {0.1, -1.0, -1.0, 0.5,  -2.5};
+   RVec<float> eta2 =  {0.0, 0.0, 0.5, 2.4, 1.2};
+   RVec<float> phi1 =  {1.0, 5.0, -1.0,  -0.5, -2.4};
+   RVec<float> phi2 =  {0.0, 3.0, 6.0, 1.5, 1.4};
+
+   auto dr = DeltaR(eta1, eta2, phi1, phi2);
+   auto dr2 = DeltaR(eta2, eta1, phi2, phi1);
+
+   for (std::size_t i = 0; i < eta1.size(); i++) {
+      // Check against TLorentzVector
+      TLorentzVector p1, p2;
+      p1.SetPtEtaPhiM(1.f, eta1[i], phi1[i], 1.f);
+      p2.SetPtEtaPhiM(1.f, eta2[i], phi2[i], 1.f);
+      auto dr3 = float(p2.DeltaR(p1));
+      EXPECT_NEAR(dr3, dr[i], 1e-6);
+      EXPECT_NEAR(dr3, dr2[i], 1e-6);
+
+      // Check scalar implementation
+      auto dr4 = DeltaR(eta1[i], eta2[i], phi1[i], phi2[i]);
+      EXPECT_NEAR(dr3, dr4, 1e-6);
+   }
 }
