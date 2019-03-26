@@ -3,12 +3,16 @@ if(ROOT_python_FOUND)
                     MACRO runPyAPITest.C
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                     OUTREF PyAPITest.ref
+                    ENVIRONMENT CLING_STANDARD_PCH=none
+                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so
                     ${PYTESTS_WILLFAIL})
 
   ROOTTEST_ADD_TEST(class MACRO
                     runPyClassTest.C
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                     OUTREF PyClassTest.ref
+                    ENVIRONMENT CLING_STANDARD_PCH=none
+                    CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so
                     ${PYTESTS_WILLFAIL})
 
   ROOTTEST_ADD_TEST(cling
