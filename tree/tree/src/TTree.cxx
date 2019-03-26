@@ -5429,8 +5429,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    };
 
 #ifdef R__USE_IMT
-   const auto nBranches = GetListOfBranches()->GetEntries();
-   if (nBranches > 1 && ROOT::IsImplicitMTEnabled() && fIMTEnabled && !TTreeCacheUnzip::IsParallelUnzip()) {
+   if (nbranches > 1 && ROOT::IsImplicitMTEnabled() && fIMTEnabled && !TTreeCacheUnzip::IsParallelUnzip()) {
       if (fSortedBranches.empty())
          InitializeBranchLists(true);
 
