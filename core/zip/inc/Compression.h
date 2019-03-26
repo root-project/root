@@ -90,8 +90,6 @@ struct RCompressionSetting {
          kZLIB,
          /// Use LZMA compression
          kLZMA,
-         /// Use LZMABS (LZMA with Bitshuffle) compression
-         kLZMABS,
          /// Use the old compression algorithm
          kOldCompressionAlgo,
          /// Use LZ4 compression
@@ -123,8 +121,6 @@ enum ECompressionAlgorithm {
    kZSTD = RCompressionSetting::EAlgorithm::kZSTD,
    /// Deprecated name, do *not* use:
    kUndefinedCompressionAlgorithm = RCompressionSetting::EAlgorithm::kUndefined
-   /// Use LZMA + BitShuffle compression
-   kLZMABS = RCompressionSetting::EAlgorithm::kLZMABS,
    /// Use LZ4 + BitShuffle compression
    kLZ4BS = RCompressionSetting::EAlgorithm::kLZ4BS,
 };

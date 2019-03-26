@@ -101,40 +101,6 @@ void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
    *irep = (int)stream.total_out + kHeaderSize;
 }
 
-void R__zipLZMABS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
-{
-   if (*srcsize % sizeof(float) != 0) {
-      R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
-      return;
-   }
-
-   size_t elem_count = *srcsize / sizeof(float);
-   char *temp_buffer = (char *)malloc(*srcsize);
-   int64_t result = bshuf_bitshuffle(src, temp_buffer, elem_count, sizeof(float), 0);
-   if (result != *srcsize) {
-      fprintf(stderr, "Bitshuffle failed: %ld\n", result);
-      free(temp_buffer);
-      return;
-   }
-   R__zipLZMA(cxlevel, srcsize, temp_buffer, tgtsize, tgt, irep);
-   if (*irep <= 0) {
-      free(temp_buffer);
-     return;
-   }
-   int bs_variant = *irep;
-   R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
-   if (*irep > 0) {
-       if (bs_variant < *irep) {
-         fprintf(stderr, "Using bitshuffle variant - %d bs versus %d orig.\n", bs_variant, *irep);
-         R__zipLZMA(cxlevel, srcsize, temp_buffer, tgtsize, tgt, irep);
-         tgt[2] = 'B';
-       } else {
-         fprintf(stderr, "NOT Using bitshuffle variant - %d bs versus %d orig.\n", bs_variant, *irep);
-       }
-   }
-   free(temp_buffer);
-}
-
 void R__unzipLZMA(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
 {
    lzma_stream stream = LZMA_STREAM_INIT;
@@ -168,10 +134,4 @@ void R__unzipLZMA(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
    lzma_end(&stream);
 
    *irep = (int)stream.total_out;
-}
-
-void R__unzipLZMABS(int * srcsize, unsigned char * src, int * tgtsize, unsigned char * tgt, int * irep)
-{
-  *irep = 0;
-  return;
 }
