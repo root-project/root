@@ -5415,7 +5415,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    if (fCacheDoAutoInit)
       SetCacheSizeAux();
 
-   Int_t nbranches = fBranches.GetEntriesFast();
+   Int_t nbranches = fBranches.GetEntriesUnsafe();
    Int_t nb=0;
 
    auto seqprocessing = [&]() {
