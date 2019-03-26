@@ -42,8 +42,7 @@ int mp103_processSelector()
 // #define __reproduce_davix
 #if defined(__reproduce_davix)
    auto fp = std::make_unique<TTree>(TFile::Open(file0));
-   TTree *tree;
-   fp->GetObject("h42", tree);
+   auto tree = fp->Get<TTree>("h42");
 #endif
 
    ROOT::TTreeProcessorMP pool(3);

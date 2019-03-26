@@ -46,8 +46,7 @@ Int_t mt102_readNtuplesFillHistosAndFit()
    // We define our work item
    auto workItem = [&histograms](UInt_t workerID) {
       TFile f(Form("mt101_multiCore_%u.root", workerID));
-      TNtuple *ntuple = nullptr;
-      f.GetObject("multiCore", ntuple);
+      auto ntuple = f.Get<TNtuple>("multiCore");
       auto &histo = histograms.at(workerID);
       for (auto index : ROOT::TSeqL(ntuple->GetEntriesFast())) {
          ntuple->GetEntry(index);
