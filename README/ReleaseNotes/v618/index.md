@@ -109,7 +109,7 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
 
 
 ## Math Libraries
-
+  - Add to the documentation of TLorentzVector a link to ROOT::Math::LorentzVector, which is a superior tool.
 
 ## RooFit Libraries
 ### HistFactory
