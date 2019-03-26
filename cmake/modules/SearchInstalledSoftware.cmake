@@ -224,6 +224,24 @@ if(builtin_lzma)
   endif()
 endif()
 
+#---Check for ZSTD-------------------------------------------------------------------
+if(NOT builtin_zstd)
+  message(STATUS "Looking for ZSTD")
+  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE)
+    unset(ZSTD_${suffix} CACHE)
+  endforeach()
+  find_package(ZSTD)
+  if(NOT ZSTD_FOUND)
+    message(STATUS "LZ4 not found. Switching on builtin_zstd option")
+    set(builtin_zstd ON CACHE BOOL "Enabled because ZSTD not found (${builtin_zstd_description})" FORCE)
+  endif()
+endif()
+
+if(builtin_zstd)
+  list(APPEND ROOT_BUILTINS ZSTD)
+  add_subdirectory(builtins/zstd)
+endif()
+
 #---Check for xxHash-----------------------------------------------------------------
 if(NOT builtin_xxhash)
   message(STATUS "Looking for xxHash")
