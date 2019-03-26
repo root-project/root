@@ -35,7 +35,7 @@
 #include "TH1D.h"
 #include "TLatex.h"
 #include "TLegend.h"
-#include "TLorentzVector.h"
+#include "Math/Vector4Dfwd.h"
 #include "TStyle.h"
 
 using namespace ROOT::VecOps;
@@ -135,9 +135,8 @@ RVec<RVec<size_t>> reco_zz_to_4l(rvec_f pt, rvec_f eta, rvec_f phi, rvec_f mass,
       const auto i1 = idx_cmb[0][i];
       const auto i2 = idx_cmb[1][i];
       if (charge[i1] != charge[i2]) {
-         TLorentzVector p1, p2;
-         p1.SetPtEtaPhiM(pt[i1], eta[i1], phi[i1], mass[i1]);
-         p2.SetPtEtaPhiM(pt[i2], eta[i2], phi[i2], mass[i2]);
+         ROOT::Math::PtEtaPhiMVector p1(pt[i1], eta[i1], phi[i1], mass[i1]);
+         ROOT::Math::PtEtaPhiMVector p2(pt[i2], eta[i2], phi[i2], mass[i2]);
          const auto this_mass = (p1 + p2).M();
          if (std::abs(z_mass - this_mass) < std::abs(z_mass - best_mass)) {
             best_mass = this_mass;
@@ -165,10 +164,9 @@ RVec<float> compute_z_masses_4l(const RVec<RVec<size_t>> &idx, rvec_f pt, rvec_f
 {
    RVec<float> z_masses(2);
    for (size_t i = 0; i < 2; i++) {
-      TLorentzVector p1, p2;
       const auto i1 = idx[i][0]; const auto i2 = idx[i][1];
-      p1.SetPtEtaPhiM(pt[i1], eta[i1], phi[i1], mass[i1]);
-      p2.SetPtEtaPhiM(pt[i2], eta[i2], phi[i2], mass[i2]);
+      ROOT::Math::PtEtaPhiMVector p1(pt[i1], eta[i1], phi[i1], mass[i1]);
+      ROOT::Math::PtEtaPhiMVector p2(pt[i2], eta[i2], phi[i2], mass[i2]);
       z_masses[i] = (p1 + p2).M();
    }
    if (std::abs(z_masses[0] - z_mass) < std::abs(z_masses[1] - z_mass)) {
@@ -181,13 +179,12 @@ RVec<float> compute_z_masses_4l(const RVec<RVec<size_t>> &idx, rvec_f pt, rvec_f
 // Compute mass of Higgs from four leptons of the same kind
 float compute_higgs_mass_4l(const RVec<RVec<size_t>> &idx, rvec_f pt, rvec_f eta, rvec_f phi, rvec_f mass)
 {
-   TLorentzVector p1, p2, p3, p4;
    const auto i1 = idx[0][0]; const auto i2 = idx[0][1];
    const auto i3 = idx[1][0]; const auto i4 = idx[1][1];
-   p1.SetPtEtaPhiM(pt[i1], eta[i1], phi[i1], mass[i1]);
-   p2.SetPtEtaPhiM(pt[i2], eta[i2], phi[i2], mass[i2]);
-   p3.SetPtEtaPhiM(pt[i3], eta[i3], phi[i3], mass[i3]);
-   p4.SetPtEtaPhiM(pt[i4], eta[i4], phi[i4], mass[i4]);
+   ROOT::Math::PtEtaPhiMVector p1(pt[i1], eta[i1], phi[i1], mass[i1]);
+   ROOT::Math::PtEtaPhiMVector p2(pt[i2], eta[i2], phi[i2], mass[i2]);
+   ROOT::Math::PtEtaPhiMVector p3(pt[i3], eta[i3], phi[i3], mass[i3]);
+   ROOT::Math::PtEtaPhiMVector p4(pt[i4], eta[i4], phi[i4], mass[i4]);
    return (p1 + p2 + p3 + p4).M();
 }
 
@@ -281,11 +278,10 @@ RNode reco_higgs_to_4el(RNode df)
 RVec<float> compute_z_masses_2el2mu(rvec_f el_pt, rvec_f el_eta, rvec_f el_phi, rvec_f el_mass, rvec_f mu_pt,
                                   rvec_f mu_eta, rvec_f mu_phi, rvec_f mu_mass)
 {
-   TLorentzVector p1, p2, p3, p4;
-   p1.SetPtEtaPhiM(mu_pt[0], mu_eta[0], mu_phi[0], mu_mass[0]);
-   p2.SetPtEtaPhiM(mu_pt[1], mu_eta[1], mu_phi[1], mu_mass[1]);
-   p3.SetPtEtaPhiM(el_pt[0], el_eta[0], el_phi[0], el_mass[0]);
-   p4.SetPtEtaPhiM(el_pt[1], el_eta[1], el_phi[1], el_mass[1]);
+   ROOT::Math::PtEtaPhiMVector p1(mu_pt[0], mu_eta[0], mu_phi[0], mu_mass[0]);
+   ROOT::Math::PtEtaPhiMVector p2(mu_pt[1], mu_eta[1], mu_phi[1], mu_mass[1]);
+   ROOT::Math::PtEtaPhiMVector p3(el_pt[0], el_eta[0], el_phi[0], el_mass[0]);
+   ROOT::Math::PtEtaPhiMVector p4(el_pt[1], el_eta[1], el_phi[1], el_mass[1]);
    auto mu_z = (p1 + p2).M();
    auto el_z = (p3 + p4).M();
    RVec<float> z_masses(2);
@@ -303,11 +299,10 @@ RVec<float> compute_z_masses_2el2mu(rvec_f el_pt, rvec_f el_eta, rvec_f el_phi, 
 float compute_higgs_mass_2el2mu(rvec_f el_pt, rvec_f el_eta, rvec_f el_phi, rvec_f el_mass, rvec_f mu_pt, rvec_f mu_eta,
                                 rvec_f mu_phi, rvec_f mu_mass)
 {
-   TLorentzVector p1, p2, p3, p4;
-   p1.SetPtEtaPhiM(mu_pt[0], mu_eta[0], mu_phi[0], mu_mass[0]);
-   p2.SetPtEtaPhiM(mu_pt[1], mu_eta[1], mu_phi[1], mu_mass[1]);
-   p3.SetPtEtaPhiM(el_pt[0], el_eta[0], el_phi[0], el_mass[0]);
-   p4.SetPtEtaPhiM(el_pt[1], el_eta[1], el_phi[1], el_mass[1]);
+   ROOT::Math::PtEtaPhiMVector p1(mu_pt[0], mu_eta[0], mu_phi[0], mu_mass[0]);
+   ROOT::Math::PtEtaPhiMVector p2(mu_pt[1], mu_eta[1], mu_phi[1], mu_mass[1]);
+   ROOT::Math::PtEtaPhiMVector p3(el_pt[0], el_eta[0], el_phi[0], el_mass[0]);
+   ROOT::Math::PtEtaPhiMVector p4(el_pt[1], el_eta[1], el_phi[1], el_mass[1]);
    return (p1 + p2 + p3 + p4).M();
 }
 

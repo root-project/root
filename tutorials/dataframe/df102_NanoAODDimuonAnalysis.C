@@ -26,7 +26,7 @@
 #include "TCanvas.h"
 #include "TH1D.h"
 #include "TLatex.h"
-#include "TLorentzVector.h"
+#include "Math/Vector4Dfwd.h"
 #include "TStyle.h"
 
 using namespace ROOT::VecOps;
@@ -48,9 +48,8 @@ void df102_NanoAODDimuonAnalysis()
    // Compute invariant mass of the dimuon system
    auto compute_mass = [](RVec<float> &pt, RVec<float> &eta, RVec<float> &phi, RVec<float> &mass) {
       // Compose four-vectors of both muons
-      TLorentzVector p1, p2;
-      p1.SetPtEtaPhiM(pt[0], eta[0], phi[0], mass[0]);
-      p2.SetPtEtaPhiM(pt[1], eta[1], phi[1], mass[1]);
+      ROOT::Math::PtEtaPhiMVector p1(pt[0], eta[0], phi[0], mass[0]);
+      ROOT::Math::PtEtaPhiMVector p2(pt[1], eta[1], phi[1], mass[1]);
 
       // Add four-vectors to build dimuon system and return the invariant mass
       return (p1 + p2).M();
