@@ -19,6 +19,7 @@
 #include <ROOT/RForestUtil.hxx>
 
 #include <cstddef>
+#include <cstdint>
 
 namespace ROOT {
 namespace Experimental {
