@@ -101,6 +101,7 @@ private: // Data Members
    TString         fIncludePath;      // Interpreter include path.
    TString         fRootmapLoadPath;  // Dynamic load path for rootmap files.
    TEnv*           fMapfile;          // Association of classes to libraries.
+   std::vector<std::string> fAutoLoadLibStorage; // A storage to return a const char* from GetClassSharedLibsForModule.
    std::map<size_t,std::vector<const char*>> fClassesHeadersMap; // Map of classes hashes and headers associated
    std::map<const cling::Transaction*,size_t> fTransactionHeadersMap; // Map which transaction contains which autoparse.
    std::set<size_t> fLookedUpClasses; // Set of classes for which headers were looked up already

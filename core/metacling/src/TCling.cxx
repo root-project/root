@@ -79,6 +79,7 @@ clang/LLVM technology.
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/GlobalDecl.h"
 #include "clang/AST/RecordLayout.h"
+#include "clang/AST/DeclVisitor.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/SourceLocation.h"
@@ -5213,7 +5214,7 @@ namespace {
 
 Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 {
-   if (rootmapfile == nullptr || *rootmapfile = '\0' || !requiresRootMap(rootmapfile, fInterpreter))
+   if (rootmapfile && *rootmapfile && !requiresRootMap(rootmapfile, fInterpreter))
       return 0;
 
    R__LOCKGUARD(gInterpreterMutex);
@@ -6705,6 +6706,85 @@ const char* TCling::GetSharedLibs()
    return fSharedLibs;
 }
 
+static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHelper &LH)
+{
+   if (!cls || !*cls)
+      return {};
+
+   using namespace clang;
+   if (const Decl *D = LH.findScope(cls, cling::LookupHelper::NoDiagnostics)) {
+      if (!D->isFromASTFile()) {
+         if (gDebug > 5)
+            Warning("GetClassSharedLibsForModule", "Decl found for %s is not part of a module", cls);
+         return {};
+      }
+      class ModuleCollector : public ConstDeclVisitor<ModuleCollector> {
+         llvm::DenseSet<Module *> &m_TopLevelModules;
+
+      public:
+         ModuleCollector(llvm::DenseSet<Module *> &TopLevelModules) : m_TopLevelModules(TopLevelModules) {}
+         void Collect(const Decl *D) { Visit(D); }
+
+         void VisitDecl(const Decl *D)
+         {
+            if (Module *M = D->getOwningModule()->getTopLevelModule())
+               m_TopLevelModules.insert(M);
+         }
+
+         void VisitTemplateArgument(const TemplateArgument &TA)
+         {
+            switch (TA.getKind()) {
+            case TemplateArgument::Null:
+            case TemplateArgument::Integral:
+            case TemplateArgument::Pack:
+            case TemplateArgument::NullPtr:
+            case TemplateArgument::Expression:
+            case TemplateArgument::Template:
+            case TemplateArgument::TemplateExpansion: return;
+            case TemplateArgument::Type:
+               if (const TagType *TagTy = dyn_cast<TagType>(TA.getAsType()))
+                  return Visit(TagTy->getDecl());
+               return;
+            case TemplateArgument::Declaration: return Visit(TA.getAsDecl());
+            }
+            llvm_unreachable("Invalid TemplateArgument::Kind!");
+         }
+
+         void VisitClassTemplateSpecializationDecl(const ClassTemplateSpecializationDecl *CTSD)
+         {
+            if (CTSD->getOwningModule())
+               VisitDecl(CTSD);
+            else
+               VisitDecl(CTSD->getSpecializedTemplate());
+            const TemplateArgumentList &ArgList = CTSD->getTemplateArgs();
+            for (const TemplateArgument *Arg = ArgList.data(), *ArgEnd = Arg + ArgList.size(); Arg != ArgEnd; ++Arg) {
+               VisitTemplateArgument(*Arg);
+            }
+         }
+      };
+
+      llvm::DenseSet<Module *> TopLevelModules;
+      ModuleCollector m(TopLevelModules);
+      m.Collect(D);
+      std::string result;
+      for (auto M : TopLevelModules) {
+         // ROOT-unaware modules (i.e. not processed by rootcling) do not have a
+         // link declaration.
+         if (!M->LinkLibraries.size())
+            continue;
+         // We have preloaded the Core module thus libCore.so
+         if (M->Name == "Core")
+            continue;
+         assert(M->LinkLibraries.size() == 1);
+         if (!result.empty())
+            result += ' ';
+         result += M->LinkLibraries[0].Library;
+      }
+      return result;
+   }
+   return {};
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the list of shared libraries containing the code for class cls.
 /// The first library in the list is the one containing the class, the
@@ -6713,6 +6793,14 @@ const char* TCling::GetSharedLibs()
 
 const char* TCling::GetClassSharedLibs(const char* cls)
 {
+   if (fCxxModulesEnabled) {
+      std::string libs = GetClassSharedLibsForModule(cls, fInterpreter->getLookupHelper());
+      if (!libs.empty()) {
+         fAutoLoadLibStorage.push_back(libs);
+         return fAutoLoadLibStorage.back().c_str();
+      }
+   }
+
    if (!cls || !*cls) {
       return 0;
    }

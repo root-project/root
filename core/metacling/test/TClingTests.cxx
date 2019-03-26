@@ -2,6 +2,8 @@
 #include "TInterpreter.h"
 #include "TSystem.h"
 
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Path.h"
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -122,3 +124,58 @@ TEST_F(TClingTests, MakeInterpreterValue)
    ASSERT_THAT(v->ToString(), testing::HasSubstr("void my_func_to_print"));
 }
 #endif
+
+static std::string MakeLibNamePlatformIndependent(llvm::StringRef libName)
+{
+   if (libName.empty())
+      return {};
+   EXPECT_TRUE(libName.startswith("lib"));
+   EXPECT_TRUE(llvm::sys::path::has_extension(libName));
+   libName.consume_front("lib");
+   // Remove the extension.
+   return libName.substr(0, libName.find_last_of('.')).str();
+}
+
+// Shortens the invocation.
+static const char *GetLibs(const char *cls)
+{
+   return gInterpreter->GetClassSharedLibs(cls);
+}
+
+// Check if the heavily used interface in TCling::AutoLoad returns consistent
+// results.
+TEST_F(TClingTests, GetClassSharedLibs)
+{
+   llvm::StringRef lib = GetLibs("TLorentzVector");
+   ASSERT_STREQ("Physics", MakeLibNamePlatformIndependent(lib).c_str());
+
+   // FIXME: This should return GenVector. The default args of the LorentzVector
+   // are shadowed by Vector4Dfwd.h.
+   lib = GetLibs("ROOT::Math::LorentzVector");
+   ASSERT_STREQ("", MakeLibNamePlatformIndependent(lib).c_str());
+
+   lib = GetLibs("ROOT::Math::PxPyPzE4D<float>");
+   ASSERT_STREQ("GenVector", MakeLibNamePlatformIndependent(lib).c_str());
+
+   // FIXME: We should probably resolve again to GenVector as it contains the
+   // template pattern.
+   lib = GetLibs("ROOT::Math::PxPyPzE4D<int>");
+   ASSERT_STREQ("", MakeLibNamePlatformIndependent(lib).c_str());
+
+   lib = GetLibs("vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >");
+   ASSERT_STREQ("GenVector", MakeLibNamePlatformIndependent(lib).c_str());
+
+   lib = GetLibs("ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > ");
+#ifdef R__USE_CXXMODULES
+   ASSERT_STREQ("GenVector", MakeLibNamePlatformIndependent(lib).c_str());
+#else
+   // FIXME: This is another bug in the non-modules functionality. Note the
+   // trailing space...
+   ASSERT_STREQ("", MakeLibNamePlatformIndependent(lib).c_str());
+#endif
+
+   // FIXME: Another bug in non-modules:
+   // GetLibs("ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> >")
+   //    != GetLibs("ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float>>")
+   // note the missing space.
+}
