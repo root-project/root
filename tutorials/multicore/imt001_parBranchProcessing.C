@@ -23,8 +23,7 @@ int imt001_parBranchProcessing()
    auto file = TFile::Open("http://root.cern.ch/files/h1/dstarmb.root");
 
    // Get the tree
-   TTree *tree = nullptr;
-   file->GetObject<TTree>("h42", tree);
+   auto tree = file->Get<TTree>("h42");
 
    const auto nEntries = tree->GetEntries();
 
