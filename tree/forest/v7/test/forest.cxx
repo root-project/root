@@ -117,7 +117,7 @@ TEST(RForest, WriteRead)
 
    RInputForest forest(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", "test.root"));
    EXPECT_EQ(1U, forest.GetNEntries());
-   forest.GetEntry(0);
+   forest.SetEntry(0);
 
    EXPECT_EQ(42.0, *rdPt);
    EXPECT_EQ(7.0, *rdEnergy);
@@ -173,7 +173,7 @@ TEST(RForest, Clusters)
    RInputForest forest(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", "test.root"));
    EXPECT_EQ(3U, forest.GetNEntries());
 
-   forest.GetEntry(0);
+   forest.SetEntry(0);
    EXPECT_EQ(42.0, *rdPt);
    EXPECT_STREQ("xyz", rdTag->c_str());
    EXPECT_EQ(3U, rdNnlo->size());
@@ -186,12 +186,12 @@ TEST(RForest, Clusters)
    EXPECT_EQ(4.0, (*rdNnlo)[2][2]);
    EXPECT_EQ(8.0, (*rdNnlo)[2][3]);
 
-   forest.GetEntry(1);
+   forest.SetEntry(1);
    EXPECT_EQ(24.0, *rdPt);
    EXPECT_STREQ("", rdTag->c_str());
    EXPECT_TRUE(rdNnlo->empty());
 
-   forest.GetEntry(2);
+   forest.SetEntry(2);
    EXPECT_EQ(12.0, *rdPt);
    EXPECT_STREQ("12345", rdTag->c_str());
    EXPECT_EQ(1U, rdNnlo->size());
@@ -384,7 +384,7 @@ TEST(RForest, RealWorld1)
    double chksumRead = 0.0;
    auto forest = RInputForest::Create(std::move(modelRead), "f", "test.root");
    for (unsigned int i = 0; i < forest->GetNEntries(); ++i) {
-      forest->GetEntry(i);
+      forest->SetEntry(i);
       chksumRead += double(rdEvent) + rdEnergy;
       for (auto t : rdTimes) chksumRead += t;
       for (auto ind : rdIndices) chksumRead += double(ind);
