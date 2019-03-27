@@ -109,8 +109,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
     *    - REveGeomDrawing object delivered from the server
     * Only after all this stages are completed, one could start to analyze  */
 
-
-
    return Controller.extend("rootui5.eve7.controller.GeomViewer", {
       onInit: function () {
 
@@ -435,11 +433,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.parseDescription(msg, true);
             break;
          case "FESCR:":  // searching hierarchy
-            this.waiting_search = false;
             this.parseDescription(msg, false);
             break;
          case "FOUND:":  // text message for found query
-            this.waiting_search = false;
             this.showFoundNodes(msg);
             this.paintFoundNodes(null); // nothing can be shown
             break;
@@ -634,7 +630,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** Show found nodes in the browser */
       showFoundNodes: function(matches) {
 
-         if (typeof matches == "string") {
+         if ((typeof matches == "string") && (matches !== "RESET")) {
             this.byId("treeTable").collapseAll();
             this.data.Nodes = [ { title: matches } ];
             this.model.refresh();
@@ -642,7 +638,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
 
          // fully reset search selection
-         if ((matches === null) || (matches === undefined)) {
+         if ((matches === null) || (matches === undefined) || (matches === "RESET")) {
             this.byId("treeTable").collapseAll();
             this.data.Nodes = this.originalNodes || null;
             this.model.refresh();
@@ -782,7 +778,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
        * OLD CODE, TO BE REMOVED */
       processSearchReply: function(msg, is_shape) {
          // not waiting search - ignore any replies
-         if (!this.waiting_search) return;
 
          var lst = [], has_binaries = false;
 
@@ -816,12 +811,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.paintFoundNodes(lst, true, has_binaries);
          }
 
-         if (this.next_search) {
-            this.websocket.Send(this.next_search);
-            delete this.next_search;
-         } else {
-            this.waiting_search = false;
-         }
       },
 
       /** Submit node search query to server, ignore in offline case */
@@ -840,28 +829,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          delete this.search_handler;
 
-         if (!query) {
-            // if empty query specified - restore geometry drawing and ignore any possible reply from server
-            this.waiting_search = false;
-            delete this.next_search;
-            this.showFoundNodes(null);
-            this.paintFoundNodes(null);
-            return;
-         }
+         if (!query) query = "";
 
          if (typeof query == "string")
             query = "SEARCH:" + query;
          else
             query = "GET:" + JSON.stringify(query);
 
-         if (this.waiting_search) {
-            // do not submit next search query when prvious not yet proceed
-            this.next_search = query;
-            return;
-         }
-
          this.websocket.Send(query);
-         this.waiting_search = true;
       },
 
       /** when new query entered in the seach field */

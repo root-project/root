@@ -644,6 +644,19 @@ bool ROOT::Experimental::REveGeomDescription::IsPrincipalEndNode(int nodeid)
 
 int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &find, std::string &hjson, std::string &json, std::vector<char> &binary)
 {
+   hjson.clear();
+   json.clear();
+   binary.clear();
+
+   // structure of found items
+   fFound.clear();
+   fFoundMap.clear();
+
+   if (find.empty()) {
+      hjson = "FOUND:RESET";
+      return 0;
+   }
+
    std::vector<int> viscnt(fDesc.size(), 0);
 
    int nmatches{0};
@@ -660,11 +673,6 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       };
       return true;
    });
-
-
-   hjson.clear();
-   json.clear();
-   binary.clear();
 
    // do not send too much data, limit could be made configurable later
    if (nmatches==0) {
@@ -719,8 +727,6 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    // it includes list of visible nodes and rawdata (if there is enough space)
 
    // these are only selected nodes to produce hierarchy
-   fFound.clear();
-   fFoundMap.clear();
    fFoundMap.resize(fDesc.size(), -1);
 
    fFound.emplace_back(0);
