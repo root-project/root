@@ -82,7 +82,7 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
   - PyROOT: add `AsNumpy` method to export contents of a RDataFrame as a dictionary of numpy arrays
 
 ### TLeafF16 and TLeafD32
-  - New leaf classes allowing to store Float and Double values using the truncation methods from TBuffer
+  - New leaf classes allowing to store Float16_t and Double32_t values using the truncation methods from TBuffer
     (See for example `TBuffer::WriteDouble32`)
   - The new types can be specified using the type characters 'f' (Float16_t) and 'd' (Double32_t)
   - It is also possible to specify a range and a number of bits to be stored using the syntax from `TStreamerElement::GetRange`.
