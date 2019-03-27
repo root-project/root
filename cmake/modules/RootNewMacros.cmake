@@ -535,7 +535,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
       set(modulemap_entry "${modulemap_entry}  module \"${header}\" { ${textual_header}header \"${header}\" export * }\n")
     endif()
   endforeach()
-  #set(modulemap_entry "${modulemap_entry}  link \"lib/${library}\"\n")
+  set(modulemap_entry "${modulemap_entry}  link \"${library}\"\n")
   set(modulemap_entry "${modulemap_entry}  export *\n}\n\n")
   # Non ROOT projects need a modulemap generated for them in the current
   # directory. The same happens with test dictionaries in ROOT which are not

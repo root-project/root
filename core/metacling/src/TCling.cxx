@@ -1203,13 +1203,20 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    // to rootcling to set this flag depending on whether it wants to produce
    // C++ modules.
    TString vfsArg;
-   if (fCxxModulesEnabled && !fromRootCling) {
-      // We only set this flag, rest is done by the CIFactory.
-      interpArgs.push_back("-fmodules");
-      // We should never build modules during runtime, so let's enable the
-      // module build remarks from clang to make it easier to spot when we do
-      // this by accident.
-      interpArgs.push_back("-Rmodule-build");
+   if (fCxxModulesEnabled) {
+      if (!fromRootCling) {
+         // We only set this flag, rest is done by the CIFactory.
+         interpArgs.push_back("-fmodules");
+         // We should never build modules during runtime, so let's enable the
+         // module build remarks from clang to make it easier to spot when we do
+         // this by accident.
+         interpArgs.push_back("-Rmodule-build");
+      }
+      // ROOT implements its autoloading upon module's link directives. We
+      // generate module A { header "A.h" link "A.so" export * } where ROOT's
+      // facilities use the link directive to dynamically load the relevant
+      // library. So, we need to suppress clang's default autolink behavior.
+      interpArgs.push_back("-fno-autolink");
    }
 
 #ifdef R__FAST_MATH
