@@ -82,7 +82,7 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
   - PyROOT: add `AsNumpy` method to export contents of a RDataFrame as a dictionary of numpy arrays
 
 ### TLeafF16 and TLeafD32
-  - New leaf classes allowing to store Float and Double values using the truncation methods from TBuffer 
+  - New leaf classes allowing to store Float and Double values using the truncation methods from TBuffer
     (See for example `TBuffer::WriteDouble32`)
   - The new types can be specified using the type characters 'f' (Float16_t) and 'd' (Double32_t)
   - It is also possible to specify a range and a number of bits to be stored using the syntax from `TStreamerElement::GetRange`.
@@ -103,7 +103,7 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
          tree->Branch("doubleVal",  &doubleVal,   "doubleVal/d[0,1000,20]");   // Double32_t value with range from 0 to 1000 and 20 bits
          tree->Branch("doubleArray", doubleArray, "doubleArray[5]/d[0,0,18]"); // Double32_t array without range and 18 bits
       }
-~~~  
+~~~
 
 ## Histogram Libraries
 
@@ -211,6 +211,10 @@ The legacy iterators have been flagged with a special deprecation macro that can
 
 
 ## JavaScript ROOT
+
+### New files location
+
+JSROOT sources were moved from `etc/http/` into `js/` subfolder in ROOT sources tree. After ROOT compilation  procedure JSROOT can be found in `$ROOTSYS/js/` subfolder.
 
 
 ## Tutorials
