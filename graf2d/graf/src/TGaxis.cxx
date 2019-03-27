@@ -1466,16 +1466,20 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                if (fAxis->TestBit(TAxis::kLabelsDown)) angle =-20;
                if (angle ==   0) textaxis->SetTextAlign(23);
                if (angle == -20) textaxis->SetTextAlign(12);
+               textaxis->SetTextAngle(angle);
                Double_t s = -3;
                if (ymin == gPad->GetUymax()) {
                   if (angle == 0) textaxis->SetTextAlign(21);
                   s = 3;
                }
+               strncpy(chtemp, fAxis->GetBinLabel(i), 255);
+               if (fNModLabs) ChangeLabelAttributes(i, fAxis->GetLabels()->GetSize()-1, textaxis, chtemp);
                textaxis->PaintLatex(fAxis->GetBinCenter(i),
                                     ymin + s*fAxis->GetLabelOffset()*(gPad->GetUymax()-gPad->GetUymin()),
-                                    angle,
+                                    textaxis->GetTextAngle(),
                                     textaxis->GetTextSize(),
-                                    fAxis->GetBinLabel(i));
+                                    chtemp);
+               if (fNModLabs) ResetLabelAttributes(textaxis);
             } else if ((!strcmp(fAxis->GetName(),"yaxis") && !gPad->TestBit(kHori))
                     || (!strcmp(fAxis->GetName(),"xaxis") &&  gPad->TestBit(kHori))) {
                Double_t s = -3;

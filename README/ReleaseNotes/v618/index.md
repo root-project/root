@@ -183,6 +183,7 @@ The legacy iterators have been flagged with a special deprecation macro that can
          gPad->SetLogy();
       }
 ~~~
+  - `ChangeLabel` is now available for alphanumeric axis.
 
 ## 3D Graphics Libraries
 
