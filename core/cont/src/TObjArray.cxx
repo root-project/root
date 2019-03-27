@@ -546,9 +546,11 @@ Int_t TObjArray::GetAbsLast() const
    if (fLast == -2) {
       for (Int_t i = fSize-1; i >= 0; i--)
          if (fCont[i]) {
+            R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
             ((TObjArray*)this)->fLast = i;
             return fLast;
          }
+      R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
       ((TObjArray*)this)->fLast = -1;
    }
    return fLast;
