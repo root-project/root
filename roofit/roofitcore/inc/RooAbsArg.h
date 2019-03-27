@@ -82,8 +82,9 @@ public:
   virtual RooAbsArg* cloneTree(const char* newname=0) const ;
 
   // Accessors to client-server relation information
+
+  /// Does value or shape of this arg depend on any other arg?
   virtual Bool_t isDerived() const {
-    // Does value or shape of this arg depend on any other arg?
     return kTRUE ;
     //std::cout << IsA()->GetName() << "::isDerived(" << GetName() << ") = " << (_serverList.GetSize()>0 || _proxyList.GetSize()>0) << std::endl ;
     //return (_serverList.GetSize()>0 || _proxyList.GetSize()>0)?kTRUE:kFALSE;
@@ -195,11 +196,11 @@ public:
 			  Bool_t valueOnly=kFALSE, Bool_t recurseNonDerived=kFALSE) const ;
 
 
+  /// Is this object a fundamental type that can be added to a dataset?
+  /// Fundamental-type subclasses override this method to return kTRUE.
+  /// Note that this test is subtlely different from the dynamic isDerived()
+  /// test, e.g. a constant is not derived but is also not fundamental.
   inline virtual Bool_t isFundamental() const {
-    // Is this object a fundamental type that can be added to a dataset?
-    // Fundamental-type subclasses override this method to return kTRUE.
-    // Note that this test is subtlely different from the dynamic isDerived()
-    // test, e.g. a constant is not derived but is also not fundamental.
     return kFALSE;
   }
 
@@ -232,13 +233,13 @@ public:
     return getParameters(&set,stripDisconnected) ;
   }
   virtual RooArgSet* getParameters(const RooArgSet* depList, Bool_t stripDisconnected=kTRUE) const ;
+  /// Return the observables of this pdf given a set of observables
   RooArgSet* getObservables(const RooArgSet& set, Bool_t valueOnly=kTRUE) const {
-    // Return the observables of _this_ pdf given a set of observables
     return getObservables(&set,valueOnly) ;
   }
   RooArgSet* getObservables(const RooAbsData* data) const ;
+  // Return the observables of this pdf given the observables defined by `data`.
   RooArgSet* getObservables(const RooAbsData& data) const {
-    // Return the observables of _this_ pdf given the observables defined by 'data'
     return getObservables(&data) ;
   }
   RooArgSet* getObservables(const RooArgSet* depList, Bool_t valueOnly=kTRUE) const ;
