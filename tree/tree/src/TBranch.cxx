@@ -1380,6 +1380,9 @@ Int_t TBranch::GetBasketAndFirst(TBasket *&basket, Long64_t &first,
          fNextBasketEntry = updatedNext;
       }
       if (user_buffer) {
+         // Disassociate basket from memory buffer for bulk IO
+         // When the user provides a memory buffer (i.e., for bulk IO), we should
+         // make sure to drop all references to that buffer in the TTree afterward.
          fCurrentBasket = nullptr;
          fBaskets[fReadBasket] = nullptr;
       } else {
