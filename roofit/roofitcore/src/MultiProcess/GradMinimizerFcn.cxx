@@ -44,7 +44,11 @@ namespace RooFit {
       RooFit::MultiProcess::M2Q msg = RooFit::MultiProcess::M2Q::update_real;
       for (std::size_t ix = 0; ix < NDim(); ++ix) {
         get_manager()->send_from_master_to_queue(msg, id, ix, _grad.Grad()(ix), false);
+      }
+      for (std::size_t ix = 0; ix < NDim(); ++ix) {
         get_manager()->send_from_master_to_queue(msg, id, ix + 1 * NDim(), _grad.G2()(ix), false);
+      }
+      for (std::size_t ix = 0; ix < NDim(); ++ix) {
         get_manager()->send_from_master_to_queue(msg, id, ix + 2 * NDim(), _grad.Gstep()(ix), false);
       }
 
