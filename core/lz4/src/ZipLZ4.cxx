@@ -166,3 +166,9 @@ void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, 
    }
    free(temp_buffer);
 }
+
+void R__unzipLZ4BS(int * srcsize, unsigned char * src, int * tgtsize, unsigned char * tgt, int * irep)
+{
+  *irep = 0;
+  return;
+}
