@@ -31,8 +31,8 @@ protected:
       float f = 2;
       tree->Branch("myFloat", &f, 320000, 1);
       for (Long64_t ev = 0; ev < fEventCount; ev++) {
-        tree->Fill();
-        ++f;
+         tree->Fill();
+         ++f;
       }
       hfile = tree->GetCurrentFile();
       hfile->Write();
@@ -59,7 +59,9 @@ TEST_F(BulkApiTest, stdRead)
    Int_t events = fEventCount;
    sw.Start();
    while (myReader.Next()) {
-      if (R__unlikely(idx == events)) {break;}
+      if (R__unlikely(idx == events)) {
+         break;
+      }
       idx_f++;
       if (R__unlikely((idx < 16000000) && (abs((*myF) - idx_f) > std::numeric_limits<float>::epsilon()))) {
          printf("Incorrect value on myFloat branch: %f, expected %f (event %lld)\n", *myF, idx_f, idx);
@@ -79,8 +81,8 @@ TEST_F(BulkApiTest, simpleRead)
    TStopwatch sw;
 
    printf("Using inline bulk read APIs.\n");
-   TBufferFile branchbuf(TBuffer::kWrite, 32*1024);
-   TTree *tree = dynamic_cast<TTree*>(hfile->Get("T"));
+   TBufferFile branchbuf(TBuffer::kWrite, 32 * 1024);
+   TTree *tree = dynamic_cast<TTree *>(hfile->Get("T"));
    ASSERT_TRUE(tree);
 
    TBranch *branchF = tree->GetBranch("myFloat");
@@ -94,16 +96,16 @@ TEST_F(BulkApiTest, simpleRead)
       ASSERT_GE(count, 0);
       events = events > count ? (events - count) : 0;
 
-      float *entry = reinterpret_cast<float*>(branchbuf.GetCurrent());
-      for (Int_t idx=0; idx<count; idx++) {
+      float *entry = reinterpret_cast<float *>(branchbuf.GetCurrent());
+      for (Int_t idx = 0; idx < count; idx++) {
          idx_f++;
-         Int_t tmp = *reinterpret_cast<Int_t*>(&entry[idx]);
+         Int_t tmp = *reinterpret_cast<Int_t *>(&entry[idx]);
          char *tmp_ptr = reinterpret_cast<char *>(&tmp);
          frombuf(tmp_ptr, entry + idx);
 
          if (R__unlikely((evt_idx < 16000000) && (entry[idx] != idx_f))) {
-             printf("Incorrect value on myFloat branch: %f (event %lld)\n", entry[idx], evt_idx + idx);
-             ASSERT_TRUE(false);
+            printf("Incorrect value on myFloat branch: %f (event %lld)\n", entry[idx], evt_idx + idx);
+            ASSERT_TRUE(false);
          }
       }
       evt_idx += count;
