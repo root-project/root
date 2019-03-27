@@ -823,6 +823,36 @@ int ROOT::Experimental::REveGeomDescription::FindNodeId(const std::vector<int> &
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Creates stack for given array of ids, first element always should be 0
+
+std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByIds(const std::vector<int> &ids)
+{
+   std::vector<int> stack;
+
+   if (ids[0] != 0) {
+      printf("Wrong first id\n");
+      return stack;
+   }
+
+   auto &node = fDesc[0];
+
+   for (unsigned k = 1; k < ids.size(); ++k) {
+      auto pos = std::find(node.chlds.begin(), node.chlds.end(), ids[k]);
+      if (pos == node.chlds.end()) {
+         printf("Wrong id %d not a child of %d - fail to find stack\n", ids[k], ids[k - 1]);
+         stack.clear();
+         return stack;
+      }
+
+      stack.emplace_back(std::distance(node.chlds.begin(), pos));
+      node = fDesc[ids[k]];
+   }
+
+   return stack;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Return string with only part of nodes description which were modified
 /// Checks also volume
 
