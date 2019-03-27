@@ -162,6 +162,8 @@ class REveGeomDescription {
 
    void ResetRndrInfos();
 
+   std::vector<int> MakeStackByIds(const std::vector<int> &ids);
+
    ShapeDescr &FindShapeDescr(TGeoShape *shape);
 
    ShapeDescr &MakeShapeDescr(TGeoShape *shape, bool acc_rndr = false);

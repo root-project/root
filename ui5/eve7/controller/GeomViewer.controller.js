@@ -214,8 +214,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return ttt && (ttt.id!==undefined) ? ttt.id : -1;
       },
 
-      /** try to produce stack out of row path */
-      getRowStack: function(row) {
+      /** Return arrys of ids for this row  */
+      getRowIds: function(row) {
          var ctxt = row.getBindingContext();
          if (!ctxt) return null;
 
@@ -234,8 +234,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             ids.push(ttt.id);
          }
+         return ids;
+      },
 
-         return this.geo_clones.MakeStackByIds(ids);
+      /** try to produce stack out of row path */
+      getRowStack: function(row) {
+         var ids = this.getRowIds(row);
+         return ids ? this.geo_clones.MakeStackByIds(ids) : null;
       },
 
       /** Callback from geo painter when mesh object is highlighted. Use for update of TreeTable */
@@ -629,35 +634,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** Show found nodes in the browser */
       showFoundNodes: function(matches) {
-
-         if ((typeof matches == "string") && (matches !== "RESET")) {
-            this.byId("treeTable").collapseAll();
-            this.data.Nodes = [ { title: matches } ];
-            this.model.refresh();
-            return;
-         }
+         var level = 0;
 
          // fully reset search selection
          if ((matches === null) || (matches === undefined) || (matches === "RESET")) {
             this.byId("treeTable").collapseAll();
             this.data.Nodes = this.originalNodes || null;
-            this.model.refresh();
-            this.byId("treeTable").expandToLevel(1);
-            return;
-         }
-
-         if (!matches || (matches.length == 0)) {
+            level = 1;
+         } else if (typeof matches == "string") {
+            this.byId("treeTable").collapseAll();
+            this.data.Nodes = [ { title: matches } ];
+         } else if (!matches || (matches.length == 0)) {
             this.data.Nodes = null;
-            this.model.refresh();
          } else {
             var nodes = [];
             for (var k=0;k<matches.length;++k)
                this.appendStackToTree(nodes, matches[k].stack, matches[k].color);
             this.data.Nodes = [ nodes[0] ];
-            this.model.refresh();
-            if (matches.length < 100)
-               this.byId("treeTable").expandToLevel(99);
+            if (matches.length < 100) level = 99;
          }
+
+         this.model.refresh();
+         if (level > 0) this.byId("treeTable").expandToLevel(level);
       },
 
       /** Paint extra node - or remove them from painting */
