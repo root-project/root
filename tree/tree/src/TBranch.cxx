@@ -1423,7 +1423,7 @@ Bool_t TBranch::SupportsBulkRead() const {
 Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
 {
    // TODO: eventually support multiple leaves.
-   if (R__unlikely(fNleaves != 1)) {return -1;}
+   if (R__unlikely(fNleaves != 1)) return -1;
    TLeaf *leaf = static_cast<TLeaf*>(fLeaves.UncheckedAt(0));
    if (R__unlikely(leaf->GetDeserializeType() == TLeaf::DeserializeType::kDestructive)) {return -1;}
 
@@ -1431,11 +1431,11 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
    fReadEntry = entry;
 
    Bool_t enabled = !TestBit(kDoNotProcess);
-   if (R__unlikely(!enabled)) {return -1;}
+   if (R__unlikely(!enabled)) return -1;
    TBasket *basket = nullptr;
    Long64_t first;
    Int_t result = GetBasketAndFirst(basket, first, &user_buf);
-   if (R__unlikely(result <= 0)) {return -1;}
+   if (R__unlikely(result <= 0)) return -1;
    // Only support reading from full clusters.
    if (R__unlikely(entry != first)) {
        //printf("Failed to read from full cluster; first entry is %ld; requested entry is %ld.\n", first, entry);
