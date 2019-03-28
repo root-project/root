@@ -50,6 +50,7 @@
 #include "RooGradientFunction.h"
 
 #include <algorithm> // std::equal
+#include <chrono>    // quick benchmarking with timestamps
 
 
 RooGradientFunction::RooGradientFunction(RooAbsReal *funct, bool verbose, GradientCalculatorMode grad_mode) :
@@ -161,11 +162,15 @@ unsigned int RooGradientFunction::Function::NDim() const {
 Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
                                                            Bool_t optConst, Bool_t verbose) {
   // Update parameter_settings with current information in RooAbsReal function parameters
+  auto get_time = [](){return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();};
+  decltype(get_time()) t1, t2, t3, t4, t5, t6, t7;
 
   Bool_t constValChange(kFALSE);
   Bool_t constStatChange(kFALSE);
 
   Int_t index(0);
+
+  t1 = get_time();
 
   // Handle eventual migrations from constParamList -> floatParamList
   for(index= 0; index < _function._constParamList->getSize() ; index++) {
@@ -206,8 +211,12 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
 
   }
 
+  t2 = get_time();
+
   // Update reference list
   *_function._initConstParamList = *_function._constParamList;
+
+  t3 = get_time();
 
   // Synchronize MINUIT with function state
   // Handle floatParamList
@@ -380,6 +389,8 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
     }
   }
 
+  t4 = get_time();
+
   if (optConst) {
     if (constStatChange) {
 
@@ -395,9 +406,17 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
   }
 
+  t5 = get_time();
+
   _function.updateFloatVec();
 
+  t6 = get_time();
+
   synchronize_gradient_parameter_settings(parameter_settings);
+
+  t7 = get_time();
+
+  oocxcoutD((TObject*)nullptr,Benchmarking2) << "RooGradientFunction::synchronize_parameter_settings timestamps: " << t1 << " " << t2 << " " << t3 << " " << t4 << " " << t5 << " " << t6 << " " << t7 << std::endl;
 
   return 0;
 }
