@@ -139,22 +139,32 @@ namespace RooFit {
     assert(fFunction != 0);
     assert(fFunction->NDim() == fN);
 
+    auto get_time = [](){return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();};
+    decltype(get_time()) t1, t2, t3, t4, t5, t6, t7, t8;
+
+    t1 = get_time();
     if (vx.size() != fFunction->NDim()) {
       vx.resize(fFunction->NDim());
     }
+    t2 = get_time();
     if (vx_external.size() != fFunction->NDim()) {
       vx_external.resize(fFunction->NDim());
     }
+    t3 = get_time();
     if (vx_fVal_cache.size() != fFunction->NDim()) {
       vx_fVal_cache.resize(fFunction->NDim());
     }
+    t4 = get_time();
 
     std::copy(cx, cx + fFunction->NDim(), vx.data());
+    t5 = get_time();
 
     // convert to Minuit external parameters
     for (unsigned i = 0; i < fFunction->NDim(); i++) {
       vx_external[i] = Int2ext(parameters[i], vx[i]);
     }
+
+    t6 = get_time();
 
     if (vx != vx_fVal_cache) {
 //#ifndef NDEBUG
@@ -166,9 +176,14 @@ namespace RooFit {
 //      std::cout << "NumericalDerivatorMinuit2::setup_differentiate, fVal evaluations: " << fVal_eval_counter << std::endl;
 //#endif
     }
+    t7 = get_time();
 
     dfmin = 8. * precision.Eps2() * (std::abs(fVal) + Up);
     vrysml = 8. * precision.Eps() * precision.Eps();
+
+    t8 = get_time();
+
+    oocxcoutD((TObject*)nullptr,Benchmarking2) << "NumericalDerivatorMinuit2::setup_differentiate timestamps: " << t1 << " " << t2 << " " << t3 << " " << t4 << " " << t5 << " " << t6 << " " << t7 << " " << t8 << std::endl;
   }
 
   std::tuple<double, double, double> NumericalDerivatorMinuit2::partial_derivative(const double *x, const std::vector<ROOT::Fit::ParameterSettings>& parameters, unsigned int i_component) {
