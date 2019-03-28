@@ -60,7 +60,7 @@ void EmplaceBack(std::vector<bool> &v, Args &&... args)
    v.push_back(std::forward<Args>(args)...);
 }
 
-// This template and specialisation allow to create vectors of size 0 and with T 
+// This template and specialisation allow to create vectors of size 0 and with T
 // w/o a default constructor
 template <typename RVec_t, std::size_t BufferSize = RVec_t::fgBufferSize>
 class RStorageVectorFactory {
@@ -71,7 +71,7 @@ public:
                                 ::ROOT::Detail::VecOps::MakeAdoptAllocator(buf, BufferSize));
       v.resize(0);
       return v;
-}
+   }
 };
 
 template <typename RVec_t>
@@ -95,7 +95,7 @@ A RVec is a container designed to make analysis of values' collections fast and 
 Its storage is contiguous in memory and its interface is designed such to resemble to the one
 of the stl vector. In addition the interface features methods and external functions to ease
 the manipulation and analysis of the data in the RVec.
-RVec implements for arithmetic types a small buffer optimisation, relying on the stack rather 
+RVec implements for arithmetic types a small buffer optimisation, relying on the stack rather
 than the heap to represent small collections.
 
 \htmlonly
@@ -266,16 +266,15 @@ public:
 private:
    // We need this class for the case where fgBufferSize is 0, otherwise array<NonCopiable, 0>
    // will not compile on macos.
-   class RArrayPlaceHolder
-   {
-      public:
-      std::size_t size() {return 0U;}
-      T *data() {return nullptr;}
+   class RArrayPlaceHolder {
+   public:
+      std::size_t size() { return 0U; }
+      T *data() { return nullptr; }
    };
 
    /// The type of the buffer the RVec keeps for small buffer optimisation.
    /// If the size of the buffer is 0, a place holder internal type is used, if not an std::array
-   /// is used because its content resides on the stack. The RAdoptAllocator adopts if needed this 
+   /// is used because its content resides on the stack. The RAdoptAllocator adopts if needed this
    /// memory.
    using Buffer_t = typename std::conditional<fgBufferSize == 0, RArrayPlaceHolder, std::array<T, fgBufferSize>>::type;
 
@@ -304,10 +303,6 @@ private:
       return thisBufSize && v.size() <= thisBufSize;
    }
 
-   /// Helper method to know whether the allocator is adopting a memory region which is
-   /// not the small buffer.
-   bool IsAdoptingExternalMemory() { return ::ROOT::Detail::VecOps::IsAdoptingExternalMemory(fAlloc); }
-
 public:
    // constructors
 
@@ -321,19 +316,9 @@ public:
    // than such size to then resize back to count.
    // This step is carried out in order for the capacity of fData to be equal to the size of the
    // buffer.
-   explicit RVec(size_type count) : fData(count <= fgBufferSize ? fgBufferSize : 0, T(), fAlloc)
-   {
-      resize(count);
-   }
+   explicit RVec(size_type count) : fData(count, T(), fAlloc) {}
 
-   RVec(size_type count, const T &value) : fData(count <= fgBufferSize ? fgBufferSize : 0, value, fAlloc)
-   {
-      if (CanUseBuffer(count)) {
-         resize(count);
-      } else {
-         resize(count, value);
-      }
-   }
+   RVec(size_type count, const T &value) : fData(count, value, fAlloc) {}
 
    RVec(const RVec &v) : fData(v.size() <= fgBufferSize ? fgBufferSize : 0, T(), fAlloc)
    {
@@ -347,16 +332,12 @@ public:
       std::copy(v.begin(), v.end(), fData.begin());
    }
 
-   RVec(RVec<T> &&v) : fData(v.size() <= fgBufferSize ? fgBufferSize : 0, T(), fAlloc)
+   RVec(RVec<T> &&v)
    {
-      if (v.IsAdoptingExternalMemory())
-      {
-         fAlloc = std::move(v.fAlloc);
-         fData = std::move(v.fData);
-      } else if (CanUseBuffer(v)) {
-         resize(v.size());
-         std::copy(v.begin(), v.end(), fData.begin());
+      if (CanUseBuffer(v)) {
+         fData.assign(v.fData.begin(), v.fData.end());
       } else {
+         fAlloc = std::move(v.fAlloc);
          fData = std::move(v.fData);
       }
    }
@@ -374,12 +355,7 @@ public:
    // assignment
    RVec<T> &operator=(const RVec<T> &v)
    {
-      if (CanUseBuffer(v.size())) {
-         resize(v.size());
-         std::copy(v.begin(), v.end(), fData.begin());
-      } else {
-         fData = v.fData;
-      }
+      fData.assign(v.fData.begin(), v.fData.end());
       return *this;
    }
 
