@@ -220,7 +220,24 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       json = std::string("HOVER:") + json;
       fWebWindow->Send(connid, json);
 
-   } else if ((arg.compare(0, 6, "SETVI0:") == 0) || (arg.compare(0,7,"SETVI1:") == 0)) {
+   } else if (arg.compare(0, 6, "HIGHL:") == 0) {
+
+      std::string msg = arg.substr(6), json;
+
+      if (msg.compare("OFF") != 0) {
+         auto stack = GetStackFromJson(msg);
+
+         auto ids = fDesc.MakeIdsByStack(stack);
+
+         if (ids.size() > 0)
+            json = TBufferJSON::ToJSON(&ids, 103);
+      }
+
+      if (json.empty()) json = "OFF";
+      json = std::string("HIGHL:") + json;
+      fWebWindow->Send(connid, json);
+
+   } else if ((arg.compare(0, 7, "SETVI0:") == 0) || (arg.compare(0, 7, "SETVI1:") == 0)) {
       // change visibility for specified nodeid
 
       auto nodeid = std::stoi(arg.substr(7));

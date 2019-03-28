@@ -44,6 +44,7 @@ public:
    std::vector<int> chlds;  ///< list of childs id
    int vis{vis_off};        ///< visibility flag, combination of EVis flags
    std::string color;       ///< rgb code without rgb() prefix
+   int sortid{0};           ///<! place in sorted array, to check cuts, or id of original node when used search structures
 
    REveGeomNodeBase(int _id = 0) : id(_id) {}
 
@@ -60,7 +61,6 @@ public:
 
 class REveGeomNode : public REveGeomNodeBase  {
 public:
-   int sortid{0};           ///< place in sorted array, to check cuts
    std::vector<float> matr; ///< matrix for the node, can have reduced number of elements
    double vol{0};           ///<! volume estimation
    int nfaces{0};           ///<! number of shape faces
@@ -210,6 +210,8 @@ public:
    std::string ProduceModifyReply(int nodeid);
 
    std::vector<int> MakeStackByIds(const std::vector<int> &ids);
+
+   std::vector<int> MakeIdsByStack(const std::vector<int> &stack);
 
    bool ProduceDrawingFor(int nodeid, std::string &json, std::vector<char> &binary, bool check_volume = false);
 
