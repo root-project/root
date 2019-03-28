@@ -199,11 +199,17 @@ bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * pa
    fBinFit = chi2fit;
    fDataSize = dataSize;
 
+   auto get_time = [](){return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();};
+   decltype(get_time()) t1, t2;
+
    // keep also a copy of FCN function and set this in minimizer so they will be managed together
    // (remember that cloned copy will still depends on data and model function pointers)
+   t1 = get_time();
    fObjFunction = std::unique_ptr<ROOT::Math::IMultiGenFunction> ( fcn.Clone() );
+   t2 = get_time();
+   std::cout << "Fitter::SetFCN timestamps: " << t1 << " " << t2 << std::endl;
 
-   return true;
+  return true;
 }
 
 bool Fitter::SetFCN(const ROOT::Math::IMultiGradFunction & fcn, const double * params, unsigned int dataSize , bool chi2fit) {
