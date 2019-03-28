@@ -258,6 +258,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** Callback from geo painter when mesh object is highlighted. Use for update of TreeTable */
       HighlightMesh: function(active_mesh, color, geo_object, geo_index, geo_stack) {
+         if (!this.standalone) {
+            var req = geo_stack ? JSON.stringify(geo_stack) : "OFF";
+            // avoid multiple time submitting same request
+            if (this._last_highlight_req === req) return;
+            this._last_highlight_req = req;
+            return this.websocket.Send("HIGHL:" + req);
+         }
+
          var rows = this.getView().byId("treeTable").getRows(), best_cmp = 0, best_indx = 0;
 
          for (var i=0;i<rows.length;++i) {
@@ -270,6 +278,32 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          if (best_cmp > 0)
             rows[best_indx].$().css("background-color", best_cmp == geo_stack.length ? "yellow" : "lightgrey");
+      },
+
+      /** compare row ids which id to be selected */
+      compareIds: function(rowids, hids) {
+         if (!rowids || !hids) return 0;
+         var len = Math.min(rowids.length, hids.length);
+         for (var k=0;k<len;++k)
+            if (rowids[k] !== hids[k])
+               return k-1;
+         return len;
+      },
+
+      highlighRowWithIds: function(hids) {
+         var rows = this.getView().byId("treeTable").getRows(), best_cmp = 0, best_indx = 0;
+
+         for (var i=0;i<rows.length;++i) {
+            rows[i].$().css("background-color", "");
+            if (hids) {
+               var rowids = this.getRowIds(rows[i]);
+               var cmp = this.compareIds(rowids, hids);
+               if (cmp > best_cmp) { best_cmp = cmp; best_indx = i; }
+            }
+         }
+
+         if (best_cmp > 0)
+            rows[best_indx].$().css("background-color", best_cmp == hids.length ? "yellow" : "lightgrey");
       },
 
       createGeoPainter: function(drawopt) {
@@ -470,9 +504,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.checkDrawMsg("append", JSROOT.parse(msg));
             break;
          case "HOVER:":
-            console.log('HOVER:', msg);
             this._hover_stack = (msg == "OFF") ? null : JSON.parse(msg);
             this.geo_painter.HighlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
+            break;
+         case "HIGHL:":
+            this.highlighRowWithIds((msg == "OFF") ? null : JSON.parse(msg));
             break;
          case "SHAPE:":
             // this.processSearchReply(msg, true);
