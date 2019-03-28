@@ -834,18 +834,23 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByIds(const s
       return stack;
    }
 
-   auto &node = fDesc[0];
-
    for (unsigned k = 1; k < ids.size(); ++k) {
-      auto pos = std::find(node.chlds.begin(), node.chlds.end(), ids[k]);
-      if (pos == node.chlds.end()) {
-         printf("Wrong id %d not a child of %d - fail to find stack\n", ids[k], ids[k - 1]);
+      if (ids[k-1] >= fDesc.size()) {
+         printf("Wrong node id %d\n", ids[k-1]);
+         stack.clear();
+         return stack;
+      }
+      auto &chlds = fDesc[ids[k-1]].chlds;
+      auto pos = std::find(chlds.begin(), chlds.end(), ids[k]);
+      if (pos == chlds.end()) {
+         printf("Wrong id %d not a child of %d - fail to find stack num %d\n", ids[k], ids[k-1], (int) chlds.size());
+         for (auto ch : chlds)
+            printf("node %d is child of %d\n", ch, ids[k-1]);
          stack.clear();
          return stack;
       }
 
-      stack.emplace_back(std::distance(node.chlds.begin(), pos));
-      node = fDesc[ids[k]];
+      stack.emplace_back(std::distance(chlds.begin(), pos));
    }
 
    return stack;
