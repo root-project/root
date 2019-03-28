@@ -167,7 +167,7 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       if (sa_local == (kALoadAndInterpLookup)) {
          auto scope = TClass::GetClass(scopeName, true);
          TEnum *en = nullptr;
-         if (scope) en = findEnumInList(scope->GetListOfEnums(kFALSE), enName, sa_local);
+         if (scope) en = findEnumInList(scope->GetListOfEnums(), enName, sa_local);
          return en;
       }
 
