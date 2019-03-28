@@ -733,6 +733,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    fFound[0].vis = fDesc[0].vis;
    fFound[0].name = fDesc[0].name;
    fFound[0].color = fDesc[0].color;
+   fFound[0].sortid = 0; // backreference to original id
    fFoundMap[0] = 0;
 
    ResetRndrInfos();
@@ -756,6 +757,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
             fFound.back().vis = fDesc[chldid].vis;
             fFound.back().name = fDesc[chldid].name;
             fFound.back().color = fDesc[chldid].color;
+            fFound.back().sortid = chldid;
          }
 
          auto pid = fFoundMap[prntid];
@@ -834,18 +836,31 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByIds(const s
       return stack;
    }
 
+   int nodeid = 0;
+
    for (unsigned k = 1; k < ids.size(); ++k) {
-      if (ids[k-1] >= fDesc.size()) {
-         printf("Wrong node id %d\n", ids[k-1]);
+
+      int prntid = nodeid;
+      nodeid = ids[k];
+
+      if (fFound.size() > 0) {
+         if (nodeid >= (int) fFound.size()) {
+            printf("Wrong nodeid %d in found array\n", nodeid);
+            stack.clear();
+            return stack;
+         }
+         nodeid = fFound[nodeid].sortid; // extract reference to original node
+      }
+
+      if (nodeid >= (int) fDesc.size()) {
+         printf("Wrong node id %d\n", nodeid);
          stack.clear();
          return stack;
       }
-      auto &chlds = fDesc[ids[k-1]].chlds;
-      auto pos = std::find(chlds.begin(), chlds.end(), ids[k]);
+      auto &chlds = fDesc[prntid].chlds;
+      auto pos = std::find(chlds.begin(), chlds.end(), nodeid);
       if (pos == chlds.end()) {
-         printf("Wrong id %d not a child of %d - fail to find stack num %d\n", ids[k], ids[k-1], (int) chlds.size());
-         for (auto ch : chlds)
-            printf("node %d is child of %d\n", ch, ids[k-1]);
+         printf("Wrong id %d not a child of %d - fail to find stack num %d\n", nodeid, prntid, (int) chlds.size());
          stack.clear();
          return stack;
       }
@@ -854,6 +869,50 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByIds(const s
    }
 
    return stack;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Produce list of node ids for given stack
+/// If found nodes preselected - use their ids
+
+std::vector<int> ROOT::Experimental::REveGeomDescription::MakeIdsByStack(const std::vector<int> &stack)
+{
+   std::vector<int> ids;
+
+   ids.emplace_back(0);
+   int nodeid = 0;
+   bool failure = false;
+
+   for (auto s : stack) {
+      auto &chlds = fDesc[nodeid].chlds;
+      if (s >= (int) chlds.size()) { failure = true; break; }
+      if (fFound.size() == 0) {
+         ids.emplace_back(chlds[s]);
+      } else {
+         // parent node in "found" structure
+         auto &prnt = fFound[fFoundMap[nodeid]];
+         failure = true;
+         // find if any child in reduced structure match with given id
+         for (auto ch : prnt.chlds) {
+            auto &chld = fFound[ch];
+            if (chld.sortid == chlds[s]) {
+               ids.emplace_back(chld.id);
+               failure = false;
+               break;
+            }
+         }
+         if (failure) break;
+      }
+
+      nodeid = chlds[s];
+   }
+
+   if (failure) {
+      printf("Fail to convert stack into list of nodes\n");
+      ids.clear();
+   }
+
+   return ids;
 }
 
 
