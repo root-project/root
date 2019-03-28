@@ -119,6 +119,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.queue = []; // received draw messages
 
+         // if true, most operations are performed locally without involving server
+         this.standalone = this.websocket.kind == "file";
+
          this.data = { Nodes: null };
 
          this.model = new JSONModel(this.data);
@@ -195,8 +198,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          var ctxt = row.getBindingContext(),
              prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
+         var ids = (is_enter && prop && prop.end_node) ? this.getRowIds(row) : null;
+
+         if (!this.standalone) {
+            var req = ids ? JSON.stringify(ids) : "OFF";
+            // avoid multiple time submitting same request
+            if (this._last_hover_req === req) return;
+            this._last_hover_req = req;
+            return this.websocket.Send("HOVER:" + req);
+         }
+
          // remember current element with hover stack
-         this._hover_stack = (is_enter && prop && prop.end_node) ? this.getRowStack(row) : null;
+         this._hover_stack = this.geo_clones.MakeStackByIds(ids);
 
          if (!this.geo_painter) return;
 
@@ -455,6 +468,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case "APPND:":
             this.checkDrawMsg("append", JSROOT.parse(msg));
+            break;
+         case "HOVER:":
+            console.log('HOVER:', msg);
+            this._hover_stack = (msg == "OFF") ? null : JSON.parse(msg);
+            this.geo_painter.HighlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
             break;
          case "SHAPE:":
             // this.processSearchReply(msg, true);
@@ -815,7 +833,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       submitSearchQuery: function(query, from_handler) {
 
          // ignore query in file description mode
-         if (this.websocket.kind == "file") return;
+         if (this.standalone) return;
 
          if (!from_handler) {
             // do not submit immediately, but after very short timeout
@@ -840,7 +858,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** when new query entered in the seach field */
       onSearch : function(oEvt) {
          var query = oEvt.getSource().getValue();
-         if (this.websocket.kind != "file") {
+         if (!this.standalone) {
             this.submitSearchQuery(query);
          } else if (query) {
             var lst = this.findMatchesFromDraw(function(node) {

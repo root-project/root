@@ -101,12 +101,13 @@ void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args, bool 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// convert JSON into stack array
 
-std::vector<int> ROOT::Experimental::REveGeomViewer::GetStackFromJson(const std::string &json)
+std::vector<int> ROOT::Experimental::REveGeomViewer::GetStackFromJson(const std::string &json, bool node_ids)
 {
    std::vector<int> *stack{nullptr}, res;
 
    if (TBufferJSON::FromJSON(stack, json.c_str())) {
-      res = *stack;
+      if (node_ids) res = fDesc.MakeStackByIds(*stack);
+               else res = *stack;
       delete stack;
    } else {
       R__ERROR_HERE("webeve") << "Fail convert " << json << " into vector<int>";
@@ -167,6 +168,7 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       RWebWindowsManager::Instance()->Terminate();
 
    } else if (arg.compare(0, 7, "SEARCH:") == 0) {
+
       std::string query = arg.substr(7);
 
       std::string hjson, json;
@@ -184,6 +186,7 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 
       if (binary.size() > 0)
          fWebWindow->SendBinary(connid, &binary[0], binary.size());
+
    } else if (arg.compare(0,4,"GET:") == 0) {
       // provide exact shape
 
@@ -203,7 +206,21 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       if (binary.size() > 0)
          fWebWindow->SendBinary(connid, &binary[0], binary.size());
 
-   } else if ((arg.compare(0,7,"SETVI0:") == 0) || (arg.compare(0,7,"SETVI1:") == 0)) {
+   } else if (arg.compare(0, 6, "HOVER:") == 0) {
+
+      std::string msg = arg.substr(6), json;
+
+      if (msg.compare("OFF") != 0) {
+         auto stack = GetStackFromJson(msg, true);
+         if (stack.size() > 0)
+            json = TBufferJSON::ToJSON(&stack, 103);
+      }
+
+      if (json.empty()) json = "OFF";
+      json = std::string("HOVER:") + json;
+      fWebWindow->Send(connid, json);
+
+   } else if ((arg.compare(0, 6, "SETVI0:") == 0) || (arg.compare(0,7,"SETVI1:") == 0)) {
       // change visibility for specified nodeid
 
       auto nodeid = std::stoi(arg.substr(7));

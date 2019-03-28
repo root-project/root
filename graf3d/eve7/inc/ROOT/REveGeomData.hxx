@@ -162,8 +162,6 @@ class REveGeomDescription {
 
    void ResetRndrInfos();
 
-   std::vector<int> MakeStackByIds(const std::vector<int> &ids);
-
    ShapeDescr &FindShapeDescr(TGeoShape *shape);
 
    ShapeDescr &MakeShapeDescr(TGeoShape *shape, bool acc_rndr = false);
@@ -210,6 +208,8 @@ public:
    int FindNodeId(const std::vector<int> &stack);
 
    std::string ProduceModifyReply(int nodeid);
+
+   std::vector<int> MakeStackByIds(const std::vector<int> &ids);
 
    bool ProduceDrawingFor(int nodeid, std::string &json, std::vector<char> &binary, bool check_volume = false);
 

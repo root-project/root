@@ -38,7 +38,7 @@ protected:
 
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
-   std::vector<int> GetStackFromJson(const std::string &json);
+   std::vector<int> GetStackFromJson(const std::string &json, bool node_ids = false);
 
    void SendHierarchy(unsigned connid);
 
