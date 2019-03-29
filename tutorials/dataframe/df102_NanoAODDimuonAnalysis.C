@@ -26,7 +26,7 @@
 #include "TCanvas.h"
 #include "TH1D.h"
 #include "TLatex.h"
-#include "Math/Vector4Dfwd.h"
+#include "Math/Vector4D.h"
 #include "TStyle.h"
 
 using namespace ROOT::VecOps;
