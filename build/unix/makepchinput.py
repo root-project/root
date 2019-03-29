@@ -192,7 +192,7 @@ def getDictNames(theDirName):
    allDictNames = []
    for wildcard in wildcards:
       allDictNames += glob.glob(wildcard)
-   stdDictpattern = os.path.join("core","metautils","src","G__std_")
+   stdDictpattern = os.path.join("core","metautils","src","G__std_", "roottest")
    dictNames = filter (lambda dictName: not (stdDictpattern in dictName),allDictNames )
    return dictNames
 
