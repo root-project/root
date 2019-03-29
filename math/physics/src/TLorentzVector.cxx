@@ -9,14 +9,15 @@
     \ingroup Physics
 
 ## Disclaimer
-In order to represent 4-vectors, TLorentzVector shall not be used.
+TLorentzVector is a legacy class.
+It is slower and worse for serialization than the recommended superior ROOT::Math::LorentzVector.
 ROOT provides specialisations of the ROOT::Math::LorentzVector template which
 are superior from the runtime performance offered, i.e.:
-  - ROOT::Math::XYZTVector vector based on x,y,z,t coordinates (cartesian) in double precision
-  - ROOT::Math::XYZTVectorF vector based on x,y,z,t coordinates (cartesian) in float precision
-  - ROOT::Math::PtEtaPhiEVector vector based on pt (rho),eta,phi and E (t) coordinates in double precision
-  - ROOT::Math::PtEtaPhiMVector vector based on pt (rho),eta,phi and M (t) coordinates in double precision
-  - ROOT::Math::PxPyPzMVector vector based on px,py,pz and M (mass) coordinates in double precision
+  - ROOT::Math::PtEtaPhiMVector based on pt (rho),eta,phi and M (t) coordinates in double precision
+  - ROOT::Math::PtEtaPhiEVector based on pt (rho),eta,phi and E (t) coordinates in double precision
+  - ROOT::Math::PxPyPzMVector based on px,py,pz and M (mass) coordinates in double precision
+  - ROOT::Math::XYZTVector based on x,y,z,t coordinates (cartesian) in double precision
+  - ROOT::Math::XYZTVectorF based on x,y,z,t coordinates (cartesian) in float precision
 
 More details about the GenVector package can be found [here](Vector.html).
 
