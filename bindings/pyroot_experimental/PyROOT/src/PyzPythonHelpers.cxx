@@ -100,26 +100,3 @@ PyObject *PyROOT::GetEndianess(PyObject * /* self */, PyObject * /* args */)
 #endif
 }
 
-////////////////////////////////////////////////////////////////////////////
-/// \brief Add base class overloads of a given method to a derived class
-/// \param[in] self Always null, since this is a module function.
-/// \param[in] args[0] Derived class.
-/// \param[in] args[1] Name of the method whose base class overloads to
-///                    inject in the derived class.
-///
-/// This function adds base class overloads to a derived class for a given
-/// method. This covers the 'using' case, which is not supported by default
-/// by the bindings.
-PyObject *PyROOT::AddUsingToClass(PyObject * /* self */, PyObject *args)
-{
-   // Get derived class to pythonize
-   PyObject *pyclass = PyTuple_GetItem(args, 0);
-
-   // Get method name where to add overloads
-   PyObject *pyname = PyTuple_GetItem(args, 1);
-   auto cppname = CPyCppyy_PyUnicode_AsString(pyname);
-
-   CPyCppyy::Utility::AddUsingToClass(pyclass, cppname);
-
-   Py_RETURN_NONE;
-}

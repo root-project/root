@@ -8,7 +8,6 @@ set(py_sources
   ROOT/pythonization/__init__.py
   ROOT/pythonization/_generic.py
   ROOT/pythonization/_rooabscollection.py
-  ROOT/pythonization/_roodatahist.py
   ROOT/pythonization/_rdataframe.py
   ROOT/pythonization/_rvec.py
   ROOT/pythonization/_stl_vector.py

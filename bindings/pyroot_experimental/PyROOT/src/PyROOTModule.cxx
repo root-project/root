@@ -55,8 +55,6 @@ static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunc
                                         (char *)"Customize the setting of an item of a TClonesArray"},
                                        {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
                                         (char *)"Add pretty printing pythonization"},
-                                       {(char *)"AddUsingToClass", (PyCFunction)PyROOT::AddUsingToClass, METH_VARARGS,
-                                        (char *)"Add 'using' overloads for a given method to a class"},
                                        {(char *)"GetEndianess", (PyCFunction)PyROOT::GetEndianess, METH_NOARGS,
                                         (char *)"Get endianess of the system"},
                                        {(char *)"GetVectorDataPointer", (PyCFunction)PyROOT::GetVectorDataPointer, METH_VARARGS,
