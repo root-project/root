@@ -750,6 +750,33 @@ Int_t TGeoManager::AddRegion(TGeoRegion *region)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Add a user-defined property. Returns true if added, false if existing.
+
+Bool_t TGeoManager::AddProperty(const char* property, Double_t value)
+{
+   auto pos = fProperties.insert(ConstPropMap_t::value_type(property, value));
+   if (!pos.second) {
+      Warning("AddProperty", "Property \"%s\" already exists with value %g", property, (pos.first)->second);
+      return false;
+   }
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get a user-defined property
+
+Double_t TGeoManager::GetProperty(const char *property, Bool_t *error) const
+{
+   auto pos = fProperties.find(property);
+   if (pos == fProperties.end()) {
+      if (error) *error = kTRUE;
+      return 0.;
+   }
+   if (error) *error = kFALSE;
+   return pos->second;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add a matrix to the list. Returns index of the matrix in list.
 
 Int_t TGeoManager::AddTransformation(const TGeoMatrix *matrix)
