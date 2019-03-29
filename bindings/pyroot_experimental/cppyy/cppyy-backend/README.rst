@@ -13,3 +13,5 @@ Cling documentation is here:
 
 Find the cppyy documentation here:
   http://cppyy.readthedocs.io/
+
+Please report bugs in the `cppyy issue tracker <https://bitbucket.org/wlav/cppyy/issues>`_.

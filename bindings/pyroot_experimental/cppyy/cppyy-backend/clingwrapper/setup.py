@@ -15,7 +15,7 @@ except ImportError:
 from distutils.errors import DistutilsSetupError
 
 
-requirements = ['cppyy-cling>=6.15.2.2']
+requirements = ['cppyy-cling>=6.15.2.6']
 setup_requirements = ['wheel']
 if 'build' in sys.argv or 'install' in sys.argv:
     setup_requirements += requirements
@@ -73,12 +73,15 @@ class my_build_cpplib(_build_ext):
         if not os.path.exists(self.build_temp):
             log.info('creating %s', self.build_temp)
             os.makedirs(self.build_temp)
+        extra_postargs = ['-O2']+get_cflags().split()
+        if 'win32' in sys.platform:
+            extra_postargs += ['/GR', '/EHsc-']  # note '/EHsc' hardwired by distutils :(
         objects = self.compiler.compile(
             ext.sources,
             output_dir=self.build_temp,
             include_dirs=include_dirs,
             debug=self.debug,
-            extra_postargs=['-O2']+get_cflags().split())
+            extra_postargs=extra_postargs)
 
         ext_path = self.get_ext_fullpath(ext.name)
         output_dir = os.path.dirname(ext_path)
@@ -201,7 +204,7 @@ setup(
     author='PyPy Developers',
     author_email='pypy-dev@python.org',
 
-    version='1.7.0',
+    version='1.8.1',
 
     license='LBNL BSD',
 
