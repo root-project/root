@@ -384,6 +384,10 @@ public:
    // accessors
    reference at(size_type pos) { return fData.at(pos); }
    const_reference at(size_type pos) const { return fData.at(pos); }
+   /// No exception thrown. The user specifies the desired value in case the RVec is shorter than `pos`.
+   value_type at(size_type pos, value_type fallback) { return pos < fData.size() ? fData[pos] : fallback; }
+   /// No exception thrown. The user specifies the desired value in case the RVec is shorter than `pos`.
+   value_type at(size_type pos, value_type fallback) const { return pos < fData.size() ? fData[pos] : fallback; }
    reference operator[](size_type pos) { return fData[pos]; }
    const_reference operator[](size_type pos) const { return fData[pos]; }
 
