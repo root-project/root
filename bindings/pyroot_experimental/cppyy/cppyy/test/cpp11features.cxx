@@ -10,6 +10,18 @@ std::shared_ptr<TestSharedPtr> create_shared_ptr_instance() {
     return std::shared_ptr<TestSharedPtr>(new TestSharedPtr);
 }
 
+int TestSharedPtr::get_value() {
+    return 17;
+}
+
+int DerivedTestSharedPtr::get_value() {
+    return m_int + 76;
+}
+
+int pass_shared_ptr(std::shared_ptr<TestSharedPtr> p) {
+    return p->get_value();
+}
+
 
 // for move ctors etc.
 int TestMoving1::s_move_counter = 0;

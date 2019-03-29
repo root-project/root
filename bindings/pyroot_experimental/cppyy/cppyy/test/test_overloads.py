@@ -3,10 +3,10 @@ from pytest import raises
 from .support import setup_make
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("overloadsDict.so"))
+test_dct = str(currpath.join("overloadsDict"))
 
 def setup_module(mod):
-    setup_make("overloadsDict.so")
+    setup_make("overloads")
 
 
 class TestOVERLOADS:

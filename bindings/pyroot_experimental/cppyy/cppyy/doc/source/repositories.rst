@@ -26,7 +26,7 @@ Except for cppyy-cling, the structure in the repositories follows a normal
 PyPA package and they are thus are ready to build with `setuptools`_: simply
 checkout the package and either run ``python setup.py``, or use ``pip``.
 It is highly recommended to follow the dependency chain when manually
-upgrading packages individually (i.e. cppyy-cling, cppyy-backend, CPyCppy
+upgrading packages individually (i.e. cppyy-cling, cppyy-backend, CPyCppyy
 if on CPython, and then finally cppyy).
 
 As an example, to upgrade CPyCppyy to the latest version in the repository,

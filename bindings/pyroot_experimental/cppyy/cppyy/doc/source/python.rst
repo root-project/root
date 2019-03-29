@@ -1,8 +1,5 @@
 .. _python:
 
-.. role:: toconly
-   :class: toconly
-
 
 Python
 ======
@@ -19,15 +16,15 @@ Download it, save it under the name ``features.h``, and load it:
     >>>
 
 
-:toconly:`PyObject`
-"""""""""""""""""""
+`PyObject`
+----------
 
 Arguments and return types of ``PyObject*`` can be used, and passed on to
 CPython API calls (or through ``cpyext`` in PyPy).
 
 
-:toconly:`Doc Strings`
-""""""""""""""""""""""
+`Doc Strings`
+-------------
 
 The documentation string of a method or function contains the C++
 arguments and return types of all overloads of that name, as applicable.
@@ -42,8 +39,8 @@ Example:
     >>>
 
 
-:toconly:`Help`
-"""""""""""""""
+`Help`
+------
 
 Bound C++ class is first-class Python and can thus be inspected like any
 Python objects can.

@@ -49,6 +49,10 @@ File features.h
             std::cout << std::endl;
         }
 
+        void uint_ref_assign(unsigned int& target, unsigned int value) {
+            target = value;
+        }
+
         Abstract* show_autocast() {
             return this;
         }
@@ -69,6 +73,10 @@ File features.h
 
     int Concrete::s_int = 321;
 
+    void call_abstract_method(Abstract* a) {
+        a->abstract_method();
+    }
+
     //-----
     int global_function(int) {
         return 42;
@@ -76,6 +84,10 @@ File features.h
 
     double global_function(double) {
         return std::exp(1);
+    }
+
+    int call_int_int(int (*f)(int, int), int i1, int i2) {
+        return f(i1, i2);
     }
 
     //-----

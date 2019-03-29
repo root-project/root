@@ -12,10 +12,24 @@ public:
 public:
     TestSharedPtr() { ++s_counter; }
     TestSharedPtr(const TestSharedPtr&) { ++s_counter; }
-    ~TestSharedPtr() { --s_counter; }
+    virtual ~TestSharedPtr() { --s_counter; }
+
+public:
+    virtual int get_value();
 };
 
 std::shared_ptr<TestSharedPtr> create_shared_ptr_instance();
+
+class DerivedTestSharedPtr : TestSharedPtr {
+public:
+    DerivedTestSharedPtr(int i) : m_int(i) {}
+    virtual int get_value();
+
+public:
+    int m_int;
+};
+
+int pass_shared_ptr(std::shared_ptr<TestSharedPtr> p);
 
 
 //===========================================================================

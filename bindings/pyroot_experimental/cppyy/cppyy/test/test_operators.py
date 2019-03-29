@@ -3,10 +3,10 @@ from pytest import raises
 from .support import setup_make, pylong, maxvalue
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("operatorsDict.so"))
+test_dct = str(currpath.join("operatorsDict"))
 
 def setup_module(mod):
-    setup_make("operatorsDict.so")
+    setup_make("operators")
 
 
 class TestOPERATORS:
@@ -171,3 +171,51 @@ class TestOPERATORS:
         assert not b1 == d2
         assert not d2 == b1
         
+    def test08_call_to_getsetitem_mapping(self):
+        """Map () to []"""
+
+        import cppyy
+
+        m = cppyy.gbl.YAMatrix1()
+        assert m.m_val == 42
+        assert m[1,2]  == 42
+        assert m(1,2)  == 42
+        m[1,2] = 27
+        assert m.m_val == 27
+        assert m[1,2]  == 27
+        assert m(1,2)  == 27
+
+        m = cppyy.gbl.YAMatrix2()
+        assert m.m_val == 42
+        assert m[1]    == 42
+        m[1] = 27
+        assert m.m_val == 27
+        assert m[1]    == 27
+
+        for cls in [cppyy.gbl.YAMatrix3, cppyy.gbl.YAMatrix4,
+                    cppyy.gbl.YAMatrix5, cppyy.gbl.YAMatrix6,
+                    cppyy.gbl.YAMatrix7]:
+            m = cls()
+            assert m.m_val == 42
+            assert m[1,2]  == 42
+            assert m[1]    == 42
+            assert m(1,2)  == 42
+
+            m[1,2]  = 27
+            assert m.m_val == 27
+            assert m[1,2]  == 27
+            assert m[1]    == 27
+            assert m(1,2)  == 27
+
+            m[1]    = 83
+            assert m.m_val == 83
+            assert m[1,2]  == 83
+            assert m[1]    == 83
+            assert m(1,2)  == 83
+
+            m.m_val = 74
+            assert m.m_val == 74
+            assert m[1,2]  == 74
+            assert m[1]    == 74
+            assert m(1,2)  == 74
+

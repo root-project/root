@@ -1,13 +1,13 @@
 import py, os, sys
 from pytest import raises
-from .support import setup_make, pylong
+from .support import setup_make, pylong, IS_WINDOWS
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("advancedcppDict.so"))
+test_dct = str(currpath.join("advancedcppDict"))
 
 def setup_module(mod):
-    setup_make("advancedcppDict.so")
-    setup_make("advancedcpp2Dict.so")
+    setup_make("advancedcpp")
+    setup_make("advancedcpp2")
 
 
 class TestADVANCEDCPP:
@@ -159,7 +159,7 @@ class TestADVANCEDCPP:
         import cppyy
         gbl = cppyy.gbl
 
-        lib2 = cppyy.load_reflection_info("advancedcpp2Dict.so")
+        lib2 = cppyy.load_reflection_info("advancedcpp2Dict")
 
         assert gbl.a_ns      is gbl.a_ns
         assert gbl.a_ns.d_ns is gbl.a_ns.d_ns
@@ -404,9 +404,11 @@ class TestADVANCEDCPP:
         assert cppyy.addressof(o) == pp.gime_address_ptr_ptr(o)
         assert cppyy.addressof(o) == pp.gime_address_ptr_ref(o)
 
-        import array
-        addressofo = array.array('l', [cppyy.addressof(o)])
-        assert addressofo[0] == pp.gime_address_ptr_ptr(addressofo)
+        if IS_WINDOWS != 64:
+          # there is no 8-byte integer type array on Windows 64b
+            import array
+            addressofo = array.array('l', [cppyy.addressof(o)])
+            assert addressofo[0] == pp.gime_address_ptr_ptr(addressofo)
 
         assert 0 == pp.gime_address_ptr(0)
         raises(TypeError, pp.gime_address_ptr, None)
@@ -610,7 +612,7 @@ class TestADVANCEDCPP:
         assert f(3.) == 3.
         assert type(f(4.)) == type(4.)
 
-    def test17_assign_to_return_byref( self ):
+    def test17_assign_to_return_byref(self):
         """Test assignment to an instance returned by reference"""
 
         from cppyy import gbl
@@ -710,25 +712,33 @@ class TestADVANCEDCPP:
 
         import cppyy
 
-        assert cppyy.gbl.UsingBase().vcheck() == 'A'
+        assert cppyy.gbl.UsingBase1().vcheck() == 'A'
 
-        B = cppyy.gbl.UsingDerived
-        assert not 'UsingBase' in B.__init__.__doc__
+        D1 = cppyy.gbl.UsingDerived1
+        assert not 'UsingBase1' in D1.__init__.__doc__
 
-        b1 = B()
-        assert b1.m_int    == 13
-        assert b1.m_int2   == 42
-        assert b1.vcheck() == 'B'
+        d1a = D1()
+        assert d1a.m_int    == 13
+        assert d1a.m_int2   == 42
+        assert d1a.vcheck() == 'B'
 
-        b2 = B(10)
-        assert b2.m_int    == 10
-        assert b2.m_int2   == 42
-        assert b2.vcheck() == 'B'
+        d1b = D1(10)
+        assert d1b.m_int    == 10
+        assert d1b.m_int2   == 42
+        assert d1b.vcheck() == 'B'
 
-        b3 = B(b2)
-        assert b3.m_int    == 10
-        assert b3.m_int2   == 42
-        assert b3.vcheck() == 'B'
+        d1c = D1(d1b)
+        assert d1c.m_int    == 10
+        assert d1c.m_int2   == 42
+        assert d1c.vcheck() == 'B'
+
+        D2 = cppyy.gbl.UsingDerived2
+        assert 'vcheck(int)' in D2.vcheck.__doc__
+        assert 'vcheck()' in D2.vcheck.__doc__
+
+        d2 = D2()
+        assert d2.vcheck()  == 'A'
+        assert d2.vcheck(1) == 'B'
 
     def test24_typedef_to_private_class(self):
         """Typedefs to private classes should not resolve"""
@@ -757,3 +767,12 @@ class TestADVANCEDCPP:
             s = cppyy.gbl.std.ostringstream()
             tst[0].__lshiftc__(s, tst[0]())
             assert s.str() == tst[1]
+
+    def test26_using_directive(self):
+        """Test using directive in namespaces"""
+
+        import cppyy
+
+        assert cppyy.gbl.UserDirs.foo1() == cppyy.gbl.UsedSpace1.foo1()
+        assert cppyy.gbl.UserDirs.bar()  == cppyy.gbl.UsedSpace2.bar()
+        assert cppyy.gbl.UserDirs.foo2() == cppyy.gbl.UsedSpace1.inner.foo2()

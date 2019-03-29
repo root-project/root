@@ -1,6 +1,10 @@
 <lcgdict>
 
   <class name="TestSharedPtr" />
+  <class name="DerivedTestSharedPtr" />
+  <function name="create_shared_ptr_instance" />
+  <function name="pass_shared_ptr" />
+
   <class pattern="TestMoving*" />
   <class name="TestData" />
 

@@ -19,7 +19,12 @@ c = loader.load_cpp_backend()
 import libcppyy as _backend
 _backend._cpp_backend = c
 
+# explicitly expose APIs from libcppyy
+import ctypes
+_w = ctypes.CDLL(_backend.__file__, ctypes.RTLD_GLOBAL)
 
+
+# some beautification for inspect (only on p2)
 import sys
 if sys.hexversion < 0x3000000:
   # TODO: this reliese on CPPOverload cooking up a func_code object, which atm

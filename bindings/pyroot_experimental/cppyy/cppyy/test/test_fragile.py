@@ -3,10 +3,10 @@ from pytest import raises
 from .support import setup_make
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("fragileDict.so"))
+test_dct = str(currpath.join("fragileDict"))
 
 def setup_module(mod):
-    setup_make("fragileDict.so")
+    setup_make("fragile")
 
 
 class TestFRAGILE:
@@ -19,12 +19,12 @@ class TestFRAGILE:
         """Test failure to load dictionary"""
 
         import cppyy
-        raises(RuntimeError, cppyy.load_reflection_info, "does_not_exist.so")
+        raises(RuntimeError, cppyy.load_reflection_info, "does_not_exist")
 
         try:
-            cppyy.load_reflection_info("does_not_exist.so")
+            cppyy.load_reflection_info("does_not_exist")
         except RuntimeError as e:
-            assert "does_not_exist.so" in str(e)
+            assert "does_not_exist" in str(e)
 
     def test02_missing_classes(self):
         """Test (non-)access to missing classes"""
@@ -327,3 +327,22 @@ class TestFRAGILE:
         assert M.kOnce == N.kOnce
         assert M.kTwice == N.kTwice
         assert M.__dict__['kTwice'] is not N.__dict__['kTwice']
+
+    def test15_const_in_name(self):
+        """Make sure 'const' is not erased when part of a name"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+            struct Some0Class {}        myvar0;
+            struct constSome1Class {}   myvar1;
+            struct Some2Classconst {}   myvar2;
+            struct Some_const_Class3 {} myvar3;
+            struct SomeconstClass4 {}   myvar4;
+        """)
+
+        assert cppyy.gbl.myvar0
+        assert cppyy.gbl.myvar1
+        assert cppyy.gbl.myvar2
+        assert cppyy.gbl.myvar3
+        assert cppyy.gbl.myvar4

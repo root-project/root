@@ -3,10 +3,10 @@ from pytest import raises
 from .support import setup_make, pylong, pyunicode
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("datatypesDict.so"))
+test_dct = str(currpath.join("datatypesDict"))
 
 def setup_module(mod):
-    setup_make("datatypesDict.so")
+    setup_make("datatypes")
 
 
 class TestDATATYPES:
@@ -189,6 +189,10 @@ class TestDATATYPES:
         for i in range(len(names)):
             getattr(c, 'set_'+names[i]+'_cr')(3*i)
             assert eval('c.m_%s' % names[i]) == 3*i
+
+        for i in range(len(names)):
+            getattr(c, 'set_'+names[i]+'_rv')(4*i)
+            assert eval('c.m_%s' % names[i]) == 4*i
 
         # float types through functions
         c.set_float(0.123);   assert round(c.get_float()   - 0.123, 5) == 0
@@ -830,6 +834,9 @@ class TestDATATYPES:
 
         assert 5. == fdd(f2, 5., 0.)
 
+        f1p = cppyy.gbl.sum_of_int_ptr
+        assert 5 == f1p(2, 3)
+
     def test22_callable_passing(self):
         """Passing callables through function pointers"""
 
@@ -837,6 +844,13 @@ class TestDATATYPES:
 
         fdd = cppyy.gbl.call_double_double
         fii = cppyy.gbl.call_int_int
+        fv  = cppyy.gbl.call_void
+        fri = cppyy.gbl.call_refi
+        frl = cppyy.gbl.call_refl
+        frd = cppyy.gbl.call_refd
+
+        assert 'call_double_double' in str(fdd)
+        assert 'call_refd' in str(frd)
 
         def pyf(arg0, arg1):
             return arg0+arg1
@@ -852,6 +866,24 @@ class TestDATATYPES:
 
         assert fdd(pyf, 2, 3) == 6.
         assert fii(pyf, 2, 3) == 6
+
+        # call of void function
+        global retval
+        retval = None
+        def voidf(i):
+            global retval
+            retval = i
+
+        assert retval is None
+        assert fv(voidf, 5) == None
+        assert retval == 5
+
+        # call of function with reference argument
+        def reff(ref):
+            ref.value = 5
+        assert fri(reff) == 5
+        assert frl(reff) == pylong(5)
+        assert frd(reff) == 5.
 
         # callable that does not accept weak-ref
         import math

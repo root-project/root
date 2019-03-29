@@ -3,10 +3,10 @@ from pytest import raises
 from .support import setup_make, pylong
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("templatesDict.so"))
+test_dct = str(currpath.join("templatesDict"))
 
 def setup_module(mod):
-    setup_make("templatesDict.so")
+    setup_make("templates")
 
 
 class TestTEMPLATES:
@@ -224,6 +224,135 @@ class TestTEMPLATES:
         assert D().callme(2) == 2
 
 
+    def test11_templated_ctor(self):
+        """Test templated constructors"""
+
+        import cppyy
+        cppyy.cppdef("""
+            template <typename T>
+            class RTTest_SomeClassWithTCtor {
+            public:
+                template<typename R>
+                RTTest_SomeClassWithTCtor(int n, R val) : m_double(n+val) {}
+                double m_double;
+            };
+
+            namespace RTTest_SomeNamespace {
+
+            template <typename T>
+            class RTTest_SomeClassWithTCtor {
+            public:
+                RTTest_SomeClassWithTCtor() : m_double(-1.) {}
+                template<typename R>
+                RTTest_SomeClassWithTCtor(int n, R val) : m_double(n+val) {}
+                double m_double;
+            };
+
+            }
+        """)
+
+        from cppyy import gbl
+
+        assert round(gbl.RTTest_SomeClassWithTCtor[int](1, 3.1).m_double - 4.1, 8) == 0.
+
+        RTTest2 = gbl.RTTest_SomeNamespace.RTTest_SomeClassWithTCtor
+        assert round(RTTest2[int](1, 3.1).m_double - 4.1, 8) == 0.
+        assert round(RTTest2[int]().m_double + 1., 8) == 0.
+
+    def test11_template_aliases(self):
+        """Access to templates made available with 'using'"""
+
+        import cppyy
+
+      # through dictionary
+        davec = cppyy.gbl.DA_vector["float"]()
+        davec += range(10)
+        assert davec[5] == 5
+
+      # through interpreter
+        cppyy.cppdef("template<typename T> using IA_vector = std::vector<T>;")
+        iavec = cppyy.gbl.IA_vector["float"]()
+        iavec += range(10)
+        assert iavec[5] == 5
+
+      # with variadic template
+        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") > 201402:
+            assert cppyy.gbl.using_problem.matryoshka[int, 3].type
+            assert cppyy.gbl.using_problem.matryoshka[int, 3, 4].type
+            assert cppyy.gbl.using_problem.make_vector[int , 3]
+            assert cppyy.gbl.using_problem.make_vector[int , 3]().m_val == 3
+            assert cppyy.gbl.using_problem.make_vector[int , 4]().m_val == 4
+
+    def test12_using_templated_method(self):
+        """Access to base class templated methods through 'using'"""
+
+        import cppyy
+
+        b = cppyy.gbl.using_problem.Base[int]()
+        assert type(b.get3()) == int
+        assert b.get3() == 5
+        assert type(b.get3['double'](5)) == float
+        assert b.get3['double'](5) == 10.
+
+        d = cppyy.gbl.using_problem.Derived[int]()
+        #assert type(d.get1['double'](5)) == float
+        #assert d.get1['double'](5) == 10.
+
+        assert type(d.get2()) == int
+        assert d.get2() == 5
+
+        assert type(d.get3['double'](5)) == float
+        assert d.get3['double'](5) == 10.
+        assert type(d.get3()) == int
+        assert d.get3() == 5
+
+    def test13_templated_return_type(self):
+        import cppyy
+
+        cppyy.cppdef("""
+            struct RTTest_SomeStruct1 {};
+            template<class ...T> struct RTTest_TemplatedList {};
+            template<class ...T> auto rttest_make_tlist(T ... args) {
+                return RTTest_TemplatedList<T...>{};
+            }
+
+            namespace RTTest_SomeNamespace {
+               struct RTTest_SomeStruct2 {};
+               template<class ...T> struct RTTest_TemplatedList2 {};
+            }
+
+            template<class ...T> auto rttest_make_tlist2(T ... args) {
+                return RTTest_SomeNamespace::RTTest_TemplatedList2<T...>{};
+            }
+        """)
+
+        from cppyy.gbl import rttest_make_tlist, rttest_make_tlist2, \
+            RTTest_SomeNamespace, RTTest_SomeStruct1
+
+        assert rttest_make_tlist(RTTest_SomeStruct1())
+        assert rttest_make_tlist(RTTest_SomeNamespace.RTTest_SomeStruct2())
+        assert rttest_make_tlist2(RTTest_SomeStruct1())
+        assert rttest_make_tlist2(RTTest_SomeNamespace.RTTest_SomeStruct2())
+
+    def test14_rvalue_templates(self):
+        """Us3 of a template with r-values; should accept builtin types"""
+
+        import cppyy
+
+        is_valid = cppyy.gbl.T_WithRValue.is_valid
+
+      # bit of regression testing
+        assert is_valid['int&'](3)
+        assert is_valid(3)
+        assert is_valid['int'](3)      # used to crash
+
+      # actual method calls
+        assert is_valid[int](1)
+        assert not is_valid(0)
+        assert is_valid(1.)
+        assert not is_valid(0.)
+
+
 class TestTEMPLATED_TYPEDEFS:
     def setup_class(cls):
         cls.test_dct = test_dct
@@ -293,19 +422,15 @@ class TestTEMPLATED_TYPEDEFS:
         assert tct['long double', dum, 4] is tct[in_type, dum, 4]
         assert tct['double', dum, 4] is not tct[in_type, dum, 4]
 
-
-    def test04_template_aliases(self):
-        """Access to templates made available with 'using'"""
-
+    def test04_type_deduction(self):
         import cppyy
 
-      # through dictionary
-        davec = cppyy.gbl.DA_vector["float"]()
-        davec += range(10)
-        assert davec[5] == 5
+        cppyy.cppdef("""
+           template <typename T> struct DeductTest_Wrap {
+               static auto whatis(T t) { return t; }
+           };
+        """)
 
-      # through interpreter
-        cppyy.cppdef("template<typename T> using IA_vector = std::vector<T>;")
-        iavec = cppyy.gbl.IA_vector["float"]()
-        iavec += range(10)
-        assert iavec[5] == 5
+        w = cppyy.gbl.DeductTest_Wrap[int]()
+        three = w.whatis(3)
+        assert three == 3

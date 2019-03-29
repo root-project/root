@@ -1,5 +1,6 @@
 .. _functions:
 
+
 Functions
 =========
 
@@ -18,6 +19,9 @@ Download it, save it under the name ``features.h``, and load it:
     >>> cppyy.include('features.h')
     >>>
 
+
+`Free functions`
+----------------
 
 All bound C++ code starts off from the global C++ namespace, represented in
 Python by ``gbl``.
@@ -62,7 +66,11 @@ function can be called directly with a signature:
      2.718281828459045
      >>>
 
-C++ default arguments work as expected, but python keywords are not yet
+
+`\*args and \*\*kwds`
+---------------------
+
+C++ default arguments work as expected, but python keywords are not (yet)
 supported.
 (It is technically possible to support keywords, but for the C++ interface,
 the formal argument names have no meaning and are not considered part of the
@@ -78,4 +86,34 @@ Example:
     >>> c = Concrete(13)     # uses provided argument
     >>> c.m_int
     13
+    >>> args = (27,)
+    >>> c = Concrete(*args)  # argument pack
+    >>> c.m_int
+    27
     >>>
+
+
+`Callbacks`
+-----------
+
+Python callables (functions/lambdas/instances) can be passed to C++ through
+function pointers and/or ``std::function``.
+This involves creation of a temporary wrapper, which has the same life time as
+the Python callable it wraps, so the callable needs to be kept alive on the
+Python side if the C++ side stores the callback.
+Example:
+
+  .. code-block:: python
+
+    >>> from cppyy.gbl import call_int_int
+    >>> print(call_int_int.__doc__)
+    int ::call_int_int(int(*)(int,int) f, int i1, int i2)
+    >>> def add(a, b):
+    ...    return a+b
+    ...
+    >>> call_int_int(add, 3, 7)
+    7
+    >>> call_int_int(lambda x, y: x*y, 3, 7)
+    21
+    >>>
+

@@ -1,8 +1,5 @@
 .. _type_conversions:
 
-.. role:: toconly
-   :class: toconly
-
 
 Type Conversions
 ================
@@ -23,8 +20,8 @@ Download it, save it under the name ``features.h``, and load it:
     >>>
 
 
-:toconly:`Casting`
-""""""""""""""""""
+`Casting`
+---------
 
 Object pointer returns from functions provide the most derived class known
 (i.e. exposed in header files) in the hierarchy of the object being returned.
@@ -65,8 +62,8 @@ object:
     >>>
 
 
-:toconly:`Operators`
-""""""""""""""""""""
+`Operators`
+-----------
 
 If conversion operators are defined in the C++ class and a Python equivalent
 exists (i.e. all builtin integer and floating point types, as well as

@@ -10,10 +10,10 @@ except ImportError:
 
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp11featuresDict.so"))
+test_dct = str(currpath.join("cpp11featuresDict"))
 
 def setup_module(mod):
-    setup_make("cpp11featuresDict.so")
+    setup_make("cpp11features")
 
 class TestCPP11FEATURES:
     def setup_class(cls):
@@ -47,7 +47,85 @@ class TestCPP11FEATURES:
         gc.collect()
         assert TestSharedPtr.s_counter == 0
 
-    def test02_nullptr(self):
+    def test02_shared_ptr_construction(self):
+        """Shared pointer ctor is templated, taking special care"""
+
+        from cppyy.gbl import std, TestSharedPtr
+
+      # proper memory accounting
+        assert TestSharedPtr.s_counter == 0
+
+        class C(TestSharedPtr):
+            pass
+
+        c = C()
+        assert TestSharedPtr.s_counter == 1
+        c.__python_owns__ = False
+        cc = std.shared_ptr[TestSharedPtr](c)
+
+        del c
+
+        assert cc
+        assert TestSharedPtr.s_counter == 1
+
+        del cc
+
+        import gc
+        gc.collect()
+        assert TestSharedPtr.s_counter == 0
+
+    def test03_shared_ptr_memory_handling(self):
+        """Test shared pointer memory ownership"""
+
+        from cppyy.gbl import std, TestSharedPtr
+
+      # proper memory accounting
+        assert TestSharedPtr.s_counter == 0
+
+        t = TestSharedPtr()
+        assert TestSharedPtr.s_counter == 1
+        assert t.__python_owns__
+
+        tt = std.shared_ptr[TestSharedPtr](t)
+        assert not t.__python_owns__
+
+        class C(TestSharedPtr):
+            pass
+
+        c = C()
+        assert TestSharedPtr.s_counter == 2
+        assert c.__python_owns__
+
+        cc = std.shared_ptr[TestSharedPtr](c)
+        assert not c.__python_owns__
+
+        del cc, tt
+
+        import gc
+        gc.collect()
+        assert TestSharedPtr.s_counter == 0
+
+    def test04_shared_ptr_passing(self):
+        """Ability to pass shared_ptr<Derived> through shared_ptr<Base>"""
+
+        from cppyy.gbl import std, TestSharedPtr, DerivedTestSharedPtr
+        from cppyy.gbl import pass_shared_ptr
+
+    # proper memory accounting
+        assert TestSharedPtr.s_counter == 0
+
+        dd = std.make_shared[DerivedTestSharedPtr](DerivedTestSharedPtr(24))
+        assert TestSharedPtr.s_counter == 1
+
+        assert pass_shared_ptr(dd) == 100
+
+        del dd
+
+        import gc
+        gc.collect()
+        assert TestSharedPtr.s_counter == 0
+
+    def test05_nullptr(self):
         """Allow the programmer to pass NULL in certain cases"""
       
         import cppyy
@@ -58,7 +136,7 @@ class TestCPP11FEATURES:
 
       # usage is tested in datatypes.py:test15_nullptr_passing
  
-    def test03_move(self):
+    def test06_move(self):
         """Move construction, assignment, and methods"""
 
         import cppyy
@@ -103,7 +181,7 @@ class TestCPP11FEATURES:
         moveit(cppyy.gbl.TestMoving1)
         moveit(cppyy.gbl.TestMoving2)
 
-    def test04_initializer_list(self):
+    def test07_initializer_list(self):
         """Initializer list construction"""
 
         from cppyy.gbl import std, TestData, TestData2, WithInitList
@@ -127,7 +205,7 @@ class TestCPP11FEATURES:
                 for i in range(len(l)):
                     assert v[i].m_int == l[i].m_int
 
-    def test05_lambda_calls(self):
+    def test08_lambda_calls(self):
         """Call (global) lambdas"""
 
         import cppyy
@@ -138,17 +216,18 @@ class TestCPP11FEATURES:
         assert cppyy.gbl.gMyLambda(2)  == 42
         assert cppyy.gbl.gMyLambda(40) == 80
 
-        cppyy.cppdef("auto gime_a_lambda1() { return []() { return 42; }; }")
-        l1 = cppyy.gbl.gime_a_lambda1()
-        assert l1
-        assert l1() == 42
+        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") >= 201402:
+            cppyy.cppdef("auto gime_a_lambda1() { return []() { return 42; }; }")
+            l1 = cppyy.gbl.gime_a_lambda1()
+            assert l1
+            assert l1() == 42
 
-        cppyy.cppdef("auto gime_a_lambda2() { int a = 4; return [a](int b) { return 42+a+b; }; }")
-        l2 = cppyy.gbl.gime_a_lambda2()
-        assert l2
-        assert l2(2) == 48
+            cppyy.cppdef("auto gime_a_lambda2() { int a = 4; return [a](int b) { return 42+a+b; }; }")
+            l2 = cppyy.gbl.gime_a_lambda2()
+            assert l2
+            assert l2(2) == 48
 
-        cppyy.cppdef("auto gime_a_lambda3(int a ) { return [a](int b) { return 42+a+b; }; }")
-        l3 = cppyy.gbl.gime_a_lambda3(4)
-        assert l3
-        assert l3(2) == 48
+            cppyy.cppdef("auto gime_a_lambda3(int a ) { return [a](int b) { return 42+a+b; }; }")
+            l3 = cppyy.gbl.gime_a_lambda3(4)
+            assert l3
+            assert l3(2) == 48
