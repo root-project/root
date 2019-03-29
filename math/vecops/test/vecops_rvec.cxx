@@ -886,3 +886,12 @@ TEST(VecOps, AtWithFallback)
    ROOT::VecOps::RVec<float> v({1.f, 2.f, 3.f});
    EXPECT_FLOAT_EQ(v.at(7, 99.f), 99.f);
 }
+
+TEST(VecOps, Concatenate)
+{
+   RVec<float> rvf {0.f, 1.f, 2.f};
+   RVec<int> rvi {7, 8, 9};
+   const auto res = Concatenate(rvf, rvi);
+   const RVec<float> ref { 0.00000f, 1.00000f, 2.00000f, 7.00000f, 8.00000f, 9.00000f };
+   CheckEqual(res, ref);
+}
