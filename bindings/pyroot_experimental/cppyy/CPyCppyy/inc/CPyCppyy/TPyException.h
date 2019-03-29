@@ -29,10 +29,13 @@
 // Standard
 #include <exception>
 
+// Bindings
+#include "CPyCppyy/CommonDefs.h"
+
 
 namespace CPyCppyy {
 
-class TPyException : public std::exception {
+class CPYCPPYY_CLASS_EXPORT TPyException : public std::exception {
 public:
 // default constructor
     TPyException();

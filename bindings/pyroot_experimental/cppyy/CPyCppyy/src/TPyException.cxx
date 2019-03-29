@@ -1,6 +1,6 @@
 // Bindings
 #include "CPyCppyy.h"
-#include "TPyException.h"
+#include "CPyCppyy/TPyException.h"
 
 
 //______________________________________________________________________________

@@ -2,8 +2,9 @@
 #include "CPyCppyy.h"
 #include "PyStrings.h"
 #include "TPyClassGenerator.h"
-#include "TPyReturn.h"
 #include "Utility.h"
+
+#include "CPyCppyy/TPyReturn.h"
 
 // TODO: not sure if any of this still makes sense ...
 #if 0

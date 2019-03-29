@@ -43,7 +43,7 @@ CPPYY_DECL_VIEW_CREATOR(std::complex<long>);
 
 inline PyObject* CreatePointerView(void* ptr) {
     Py_ssize_t shape[] = {1, 1};
-    return CreateLowLevelView((long*)ptr, shape);
+    return CreateLowLevelView((intptr_t*)ptr, shape);
 }
 
 //- low level view type and type verification --------------------------------

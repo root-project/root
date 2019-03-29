@@ -2,7 +2,7 @@
 include LICENSE.txt
 
 # Include all headers
-include include/*.h
+include include/CPyCppyy/*.h
 include src/*.h
 
 # Include source files

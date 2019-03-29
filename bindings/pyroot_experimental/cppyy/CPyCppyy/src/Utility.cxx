@@ -226,58 +226,6 @@ bool CPyCppyy::Utility::AddToClass(PyObject* pyclass, const char* label, PyCalla
 }
 
 //----------------------------------------------------------------------------
-bool CPyCppyy::Utility::AddUsingToClass(PyObject* pyclass, const char* method)
-{
-// Helper to add base class methods to the derived class one (this covers the
-// 'using' cases, which the dictionary does not provide).
-    CPPOverload* derivedMethod =
-        (CPPOverload*)PyObject_GetAttrString(pyclass, const_cast<char*>(method));
-    if (!CPPOverload_Check(derivedMethod)) {
-        Py_XDECREF(derivedMethod);
-        return false;
-    }
-
-    PyObject* mro = PyObject_GetAttr(pyclass, PyStrings::gMRO);
-    if (!mro || ! PyTuple_Check(mro)) {
-        Py_XDECREF(mro);
-        Py_DECREF(derivedMethod);
-        return false;
-    }
-
-    CPPOverload* baseMethod = 0;
-    for (int i = 1; i < PyTuple_GET_SIZE(mro); ++i) {
-        baseMethod = (CPPOverload*)PyObject_GetAttrString(
-            PyTuple_GET_ITEM(mro, i), const_cast<char*>(method));
-
-        if (!baseMethod) {
-            PyErr_Clear();
-            continue;
-        }
-
-        if (CPPOverload_Check(baseMethod))
-            break;
-
-        Py_DECREF(baseMethod);
-        baseMethod = 0;
-    }
-
-    Py_DECREF(mro);
-
-    if (!CPPOverload_Check(baseMethod)) {
-        Py_XDECREF(baseMethod);
-        Py_DECREF(derivedMethod);
-        return false;
-    }
-
-    derivedMethod->AddMethod(baseMethod);
-
-    Py_DECREF(baseMethod);
-    Py_DECREF(derivedMethod);
-
-    return true;
-}
-
-//----------------------------------------------------------------------------
 bool CPyCppyy::Utility::AddBinaryOperator(PyObject* left, PyObject* right, const char* op,
     const char* label, const char* alt, Cppyy::TCppScope_t scope)
 {
@@ -412,7 +360,8 @@ bool CPyCppyy::Utility::AddBinaryOperator(PyObject* pyclass, const std::string& 
 }
 
 //----------------------------------------------------------------------------
-std::string CPyCppyy::Utility::ConstructTemplateArgs(PyObject* pyname, PyObject* tpArgs, PyObject* args, int argoff)
+std::string CPyCppyy::Utility::ConstructTemplateArgs(
+    PyObject* pyname, PyObject* tpArgs, PyObject* args, ArgPreference pref, int argoff)
 {
 // Helper to construct the "<type, type, ...>" part of a templated name (either
 // for a class or method lookup
@@ -435,9 +384,9 @@ std::string CPyCppyy::Utility::ConstructTemplateArgs(PyObject* pyname, PyObject*
                 if (CPPInstance_Check(pyobj)) {
                     if (pyobj->fFlags & CPPInstance::kIsRValue)
                         tmpl_name << "&&";
-                    else if (pyobj->fFlags & CPPInstance::kIsReference)
+                    else if ((pyobj->fFlags & CPPInstance::kIsReference) || pref == kPointer)
                         tmpl_name << '*';
-                    else
+                    else if (pref != kValue)
                         tmpl_name << '&';
                 }
             }
@@ -448,9 +397,11 @@ std::string CPyCppyy::Utility::ConstructTemplateArgs(PyObject* pyname, PyObject*
         } else if (PyObject_HasAttr(tn, PyStrings::gName)) {
             PyObject* tpName = PyObject_GetAttr(tn, PyStrings::gName);
 
-        // special case for strings
+        // special case for strings; and floats (Python-speak for double) if from argument
             if (strcmp(CPyCppyy_PyUnicode_AsString(tpName), "str") == 0)
                 tmpl_name << "std::string";
+            else if (args && strcmp(CPyCppyy_PyUnicode_AsString(tpName), "float") == 0)
+                tmpl_name << "double";
             else
                 tmpl_name << CPyCppyy_PyUnicode_AsString(tpName);
             Py_DECREF(tpName);
@@ -467,15 +418,80 @@ std::string CPyCppyy::Utility::ConstructTemplateArgs(PyObject* pyname, PyObject*
             return "";
         }
 
-    // add a comma, as needed
+    // add a comma, as needed (no space as internally, final names don't have them)
         if (i != nArgs-1)
-            tmpl_name << ", ";
+            tmpl_name << ",";
     }
 
 // close template name
     tmpl_name << '>';
 
     return tmpl_name.str();
+}
+
+//----------------------------------------------------------------------------
+void CPyCppyy::Utility::ConstructCallbackPreamble(const std::string& retType,
+    const std::vector<std::string>& argtypes, std::ostringstream& code)
+{
+// Generate function setup to be used in callbacks (wrappers and overrides).
+    int nArgs = (int)argtypes.size();
+
+// return value and argument type converters
+    bool isVoid = (retType == "void");
+    if (!isVoid)
+        code << "    CPYCPPYY_STATIC std::unique_ptr<CPyCppyy::Converter> retconv{CPyCppyy::CreateConverter(\""
+             << retType << "\")};\n";
+    if (nArgs) {
+        code << "    CPYCPPYY_STATIC std::vector<std::unique_ptr<CPyCppyy::Converter>> argcvs;\n"
+             << "    if (argcvs.empty()) {\n"
+             << "      argcvs.reserve(" << nArgs << ");\n";
+        for (int i = 0; i < nArgs; ++i)
+            code << "      argcvs.emplace_back(CPyCppyy::CreateConverter(\"" << argtypes[i] << "\"));\n";
+        code << "    }\n";
+    }
+
+// declare return value (TODO: this does not work for most non-builtin values)
+    if (!isVoid)
+        code << "    " << retType << " ret{};\n";
+
+// acquire GIL
+    code << "    PyGILState_STATE state = PyGILState_Ensure();\n";
+
+// build argument tuple if needed
+    if (nArgs) {
+        code << "    std::vector<PyObject*> pyargs;\n";
+        code << "    pyargs.reserve(" << nArgs << ");\n"
+             << "    try {\n";
+        for (int i = 0; i < nArgs; ++i) {
+            code << "      pyargs.emplace_back(argcvs[" << i << "]->FromMemory((void*)&arg" << i << "));\n"
+                 << "      if (!pyargs.back()) throw " << i << ";\n";
+        }
+        code << "    } catch(int) {\n"
+             << "      for (auto pyarg : pyargs) Py_XDECREF(pyarg);\n"
+             << "      PyGILState_Release(state); throw CPyCppyy::TPyException{};\n"
+             << "    }\n";
+    }
+}
+
+void CPyCppyy::Utility::ConstructCallbackReturn(bool isVoid, int nArgs, std::ostringstream& code)
+{
+// Generate code for return value conversion and error handling.
+    if (nArgs)
+        code << "    for (auto pyarg : pyargs) Py_DECREF(pyarg);\n";
+    code << "    bool cOk = (bool)pyresult;\n"
+            "    if (pyresult) { " << (isVoid ? "" : "cOk = retconv->ToMemory(pyresult, &ret); ")
+                                   << "Py_DECREF(pyresult); }\n"
+            "    if (!cOk) {"     // assume error set when converter failed
+// TODO: On Windows, throwing a C++ exception here makes the code hang; leave
+// the error be which allows at least one layer of propagation
+#ifdef _WIN32
+            " /* do nothing */ }\n"
+#else
+            " PyGILState_Release(state); throw CPyCppyy::TPyException{}; }\n"
+#endif
+            "    PyGILState_Release(state);\n"
+            "    return";
+    code << (isVoid ? ";\n  }\n" : " ret;\n  }\n");
 }
 
 //----------------------------------------------------------------------------
@@ -799,20 +815,29 @@ bool CPyCppyy::Utility::IncludePython()
             "#endif\n"
             "#endif\n"
             "#include \"Python.h\"\n"
+            "#ifdef _WIN32\n"
+            "#define CPYCPPYY_STATIC\n"
+            "#define CPYCPPYY_IMPORT extern __declspec(dllimport)\n"
+            "#define CPYCPPYY_CLASS_IMPORT __declspec(dllimport)\n"
+            "#else\n"
+            "#define CPYCPPYY_IMPORT extern\n"
+            "#define CPYCPPYY_STATIC static\n"
+            "#define CPYCPPYY_CLASS_IMPORT\n"
+            "#endif\n"
        // the following really should live in a header ...
-            "extern \"C\" void* cppyy_create_converter(const char*, long* dims);\n"
             "namespace CPyCppyy {\n"
             "struct Parameter; struct CallContext;\n"
-            "class Converter {\n"
+            "class CPYCPPYY_CLASS_IMPORT Converter {\n"
             "public:\n"
             "  virtual ~Converter() {}\n"
             "  virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) = 0;\n"
             "  virtual PyObject* FromMemory(void* address);\n"
             "  virtual bool ToMemory(PyObject* value, void* address);\n"
             "};\n"
+            "CPYCPPYY_IMPORT Converter* CreateConverter(const std::string& fullType, long* dims = nullptr);\n"
        // and this lives in a header, but isn't accessible ...
             "#ifndef CPYCPPYY_TPyException\n"
-            "class TPyException : public std::exception {\n"
+            "class CPYCPPYY_CLASS_IMPORT TPyException : public std::exception {\n"
             "public:\n"
             "    TPyException();\n"
             "    virtual ~TPyException() noexcept;\n"
