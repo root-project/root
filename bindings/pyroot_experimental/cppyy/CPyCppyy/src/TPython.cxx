@@ -1,6 +1,7 @@
 // Bindings
 #include "CPyCppyy.h"
-#include "TPython.h"
+#include "CPyCppyy/TPython.h"
+
 #include "CPPInstance.h"
 #include "CPPOverload.h"
 #include "ProxyWrappers.h"

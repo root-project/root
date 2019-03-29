@@ -20,3 +20,5 @@ being garbage collected, as well as temporary differences due to different
 release cycles of the respective projects.
 
 Full documentation: `cppyy.readthedocs.io <http://cppyy.readthedocs.io/>`_.
+
+Please report bugs in the `cppyy issue tracker <https://bitbucket.org/wlav/cppyy/issues>`_.

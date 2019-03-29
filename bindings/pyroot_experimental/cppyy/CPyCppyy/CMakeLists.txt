@@ -3,10 +3,11 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(cppyy
   HEADERS
-    TPyArg.h
-    TPyException.h
-    TPyReturn.h
-    TPython.h
+    CPyCppyy/CommonDefs.h
+    CPyCppyy/TPyArg.h
+    CPyCppyy/TPyException.h
+    CPyCppyy/TPyReturn.h
+    CPyCppyy/TPython.h
   SOURCES
     src/CallContext.cxx
     src/Converters.cxx
@@ -18,7 +19,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(cppyy
     src/CPPMethod.cxx
     src/CPPOverload.cxx
     src/CPPScope.cxx
-    src/CPPSetItem.cxx
+    src/CPPGetSetItem.cxx
     src/CPyCppyyModule.cxx
     src/CustomPyTypes.cxx
     src/Dispatcher.cxx
@@ -50,6 +51,6 @@ endif()
 target_include_directories(cppyy PRIVATE ${CMAKE_BINARY_DIR}/include) # needed for string_view backport
 
 target_include_directories(cppyy PUBLIC ${PYTHON_INCLUDE_DIRS}
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
 target_link_libraries(cppyy cppyy_backend ${PYTHON_LIBRARIES})

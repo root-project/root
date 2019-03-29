@@ -1,6 +1,7 @@
 // Bindings
 #include "CPyCppyy.h"
-#include "TPyReturn.h"
+#include "CPyCppyy/TPyReturn.h"
+
 #include "CPPInstance.h"
 
 // Standard

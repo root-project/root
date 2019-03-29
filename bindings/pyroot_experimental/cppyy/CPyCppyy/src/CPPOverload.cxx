@@ -13,12 +13,12 @@
 #include "CPPOverload.h"
 #include "CPPInstance.h"
 #include "CallContext.h"
-#include "TPyException.h"
 #include "PyStrings.h"
 #include "Utility.h"
 
 // Standard
 #include <algorithm>
+#include <sstream>
 #include <vector>
 
 
@@ -46,8 +46,8 @@ public:
             PyErr_SetString(PyExc_TypeError, "parameter must be callable");
             return;
         }
+        Py_INCREF(callable);
         fCallable = callable;
-        Py_INCREF(fCallable);
     }
 
     virtual ~TPythonCallback() {
@@ -114,7 +114,7 @@ public:
 // helper to test whether a method is used in a pseudo-function modus
 static inline bool IsPseudoFunc(CPPOverload* pymeth)
 {
-    return (void*)pymeth == (void*)pymeth->fSelf;
+    return pymeth->fMethodInfo->fFlags & CallContext::kIsPseudoFunc;
 }
 
 // helper to sort on method priority
@@ -224,9 +224,9 @@ static PyObject* mp_meth_func(CPPOverload* pymeth, void*)
     *pymeth->fMethodInfo->fRefCount += 1;
     newPyMeth->fMethodInfo = pymeth->fMethodInfo;
 
-// new method is unbound, use of 'meth' is for keeping track whether this
-// proxy is used in the capacity of a method or a function
-    newPyMeth->fSelf = (CPPInstance*)newPyMeth;
+// new method is unbound, track whether this proxy is used in the capacity of a
+// method or a function (which normally is a CPPFunction)
+    newPyMeth->fMethodInfo->fFlags |= CallContext::kIsPseudoFunc;
 
     return (PyObject*)newPyMeth;
 }
@@ -517,11 +517,6 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
 {
 // Call the appropriate overload of this method.
 
-// if called through im_func pseudo-representation (this can be gamed if the
-// user really wants to ...)
-    if (IsPseudoFunc(pymeth))
-        pymeth->fSelf = nullptr;
-
     CPPInstance* oldSelf = pymeth->fSelf;
 
 // get local handles to proxy internals
@@ -537,8 +532,18 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
     if (!ctxt.fFlags) ctxt.fFlags |= CallContext::sMemoryPolicy;
     ctxt.fFlags |= (mflags & CallContext::kReleaseGIL);
 
+// magic variable to prevent recursion passed by keyword?
+    if (kwds && PyDict_CheckExact(kwds) && PyDict_Size(kwds) != 0) {
+        if (PyDict_DelItem(kwds, PyStrings::gNoImplicit) == 0) {
+            ctxt.fFlags |= CallContext::kNoImplicit;
+            if (!PyDict_Size(kwds)) kwds = nullptr;
+        } else
+           PyErr_Clear();
+    }
+
 // simple case
     if (nMethods == 1) {
+        ctxt.fFlags |= CallContext::kAllowImplicit;   // no two rounds needed
         PyObject* result = methods[0]->Call(pymeth->fSelf, args, kwds, &ctxt);
         return HandleReturn(pymeth, oldSelf, result);
     }
@@ -572,27 +577,41 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
     }
 
     std::vector<Utility::PyError_t> errors;
-    for (CPPOverload::Methods_t::size_type i = 0; i < nMethods; ++i) {
-        PyObject* result = methods[i]->Call(pymeth->fSelf, args, kwds, &ctxt);
+    for (int stage = 0; stage < 2; ++stage) {
+        for (CPPOverload::Methods_t::size_type i = 0; i < nMethods; ++i) {
+            PyObject* result = methods[i]->Call(pymeth->fSelf, args, kwds, &ctxt);
 
-        if (result != 0) {
-        // success: update the dispatch map for subsequent calls
-            dispatchMap.push_back(std::make_pair(sighash, methods[i]));
-            if (!errors.empty())
-                std::for_each(errors.begin(), errors.end(), Utility::PyError_t::Clear);
-            return HandleReturn(pymeth, oldSelf, result);
+            if (result != 0) {
+            // success: update the dispatch map for subsequent calls
+                dispatchMap.push_back(std::make_pair(sighash, methods[i]));
+                if (!errors.empty())
+                    std::for_each(errors.begin(), errors.end(), Utility::PyError_t::Clear);
+                return HandleReturn(pymeth, oldSelf, result);
+            }
+
+        // else failure ..
+            if (stage != 0) {
+                PyErr_Clear();    // first stage errors should be more informative
+                continue;
+            }
+
+        // collect error message/trace (automatically clears exception, too)
+            if (!PyErr_Occurred()) {
+            // this should not happen; set an error to prevent core dump and report
+                PyObject* sig = methods[i]->GetPrototype();
+                PyErr_Format(PyExc_SystemError, "%s =>\n    %s",
+                    CPyCppyy_PyUnicode_AsString(sig), (char*)"nullptr result without error in mp_call");
+                Py_DECREF(sig);
+            }
+            Utility::FetchError(errors);
+            ResetCallState(pymeth->fSelf, oldSelf, false);
         }
 
-    // failure: collect error message/trace (automatically clears exception, too)
-        if (!PyErr_Occurred()) {
-        // this should not happen; set an error to prevent core dump and report
-            PyObject* sig = methods[i]->GetPrototype();
-            PyErr_Format(PyExc_SystemError, "%s =>\n    %s",
-                CPyCppyy_PyUnicode_AsString(sig), (char*)"nullptr result without error in mp_call");
-            Py_DECREF(sig);
-        }
-        Utility::FetchError(errors);
-        ResetCallState(pymeth->fSelf, oldSelf, false);
+    // only move forward if implicit conversions are available
+        if (!HaveImplicit(&ctxt))
+            break;
+
+        ctxt.fFlags |= CallContext::kAllowImplicit;
     }
 
 // first summarize, then add details
@@ -602,6 +621,15 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
 
 // report failure
     return nullptr;
+}
+
+//----------------------------------------------------------------------------
+static PyObject* mp_str(CPPOverload* cppinst)
+{
+// Print a description that includes the C++ name
+     std::ostringstream s;
+     s << "<C++ overload \"" << cppinst->fMethodInfo->fName << "\" at " << (void*)cppinst << ">";
+     return CPyCppyy_PyUnicode_FromString(s.str().c_str());
 }
 
 //-----------------------------------------------------------------------------
@@ -630,8 +658,8 @@ static CPPOverload* mp_descrget(CPPOverload* pymeth, CPPInstance* pyobj, PyObjec
     *pymeth->fMethodInfo->fRefCount += 1;
     newPyMeth->fMethodInfo = pymeth->fMethodInfo;
 
-// new method is to be bound to current object (may be nullptr)
-    Py_XINCREF((PyObject*)pyobj);
+// new method is to be bound to current object
+    Py_INCREF((PyObject*)pyobj);
     newPyMeth->fSelf = pyobj;
 
     PyObject_GC_Track(newPyMeth);
@@ -657,9 +685,7 @@ static void mp_dealloc(CPPOverload* pymeth)
 // Deallocate memory held by method proxy object.
     PyObject_GC_UnTrack(pymeth);
 
-    if (!IsPseudoFunc(pymeth))
-        Py_CLEAR(pymeth->fSelf);
-    pymeth->fSelf = nullptr;
+    Py_CLEAR(pymeth->fSelf);
 
     if (--(*pymeth->fMethodInfo->fRefCount) <= 0) {
         delete pymeth->fMethodInfo;
@@ -687,7 +713,7 @@ static Py_ssize_t mp_hash(CPPOverload* pymeth)
 static int mp_traverse(CPPOverload* pymeth, visitproc visit, void* args)
 {
 // Garbage collector traverse of held python member objects.
-    if (pymeth->fSelf && ! IsPseudoFunc(pymeth))
+    if (pymeth->fSelf)
         return visit((PyObject*)pymeth->fSelf, args);
 
     return 0;
@@ -697,9 +723,7 @@ static int mp_traverse(CPPOverload* pymeth, visitproc visit, void* args)
 static int mp_clear(CPPOverload* pymeth)
 {
 // Garbage collector clear of held python member objects.
-    if (!IsPseudoFunc(pymeth))
-        Py_CLEAR(pymeth->fSelf);
-    pymeth->fSelf = nullptr;
+    Py_CLEAR(pymeth->fSelf);
 
     return 0;
 }
@@ -744,10 +768,11 @@ static PyObject* mp_overload(CPPOverload* pymeth, PyObject* sigarg)
             CPPOverload::Methods_t vec; vec.push_back(meth->Clone());
             newmeth->Set(pymeth->fMethodInfo->fName, vec);
 
-            if (pymeth->fSelf && !IsPseudoFunc(pymeth)) {
+            if (pymeth->fSelf) {
                 Py_INCREF(pymeth->fSelf);
                 newmeth->fSelf = pymeth->fSelf;
             }
+            newmeth->fMethodInfo->fFlags = pymeth->fMethodInfo->fFlags;
 
             Py_DECREF(sig1);
             return (PyObject*)newmeth;
@@ -798,7 +823,7 @@ PyTypeObject CPPOverload_Type = {
     0,                             // tp_as_mapping
     (hashfunc)mp_hash,             // tp_hash
     (ternaryfunc)mp_call,          // tp_call
-    0,                             // tp_str
+    (reprfunc)mp_str,              // tp_str
     0,                             // tp_getattro
     0,                             // tp_setattro
     0,                             // tp_as_buffer
@@ -874,6 +899,7 @@ void CPyCppyy::CPPOverload::AddMethod(CPPOverload* meth)
     fMethodInfo->fMethods.insert(fMethodInfo->fMethods.end(),
         meth->fMethodInfo->fMethods.begin(), meth->fMethodInfo->fMethods.end());
     fMethodInfo->fFlags &= ~CallContext::kIsSorted;
+    meth->fMethodInfo->fMethods.clear();
 }
 
 //-----------------------------------------------------------------------------

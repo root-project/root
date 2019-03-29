@@ -13,7 +13,7 @@
 #include "CPPOverload.h"
 #include "CallContext.h"
 #include "PyROOTPythonize.h"
-#include "TPython.h"
+#include "CPyCppyy/TPython.h"
 #include "Utility.h"
 #include "PyzCppHelpers.hxx"
 #include "TFile.h"

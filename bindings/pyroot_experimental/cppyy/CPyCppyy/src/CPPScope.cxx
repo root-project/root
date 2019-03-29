@@ -33,7 +33,15 @@ static PyObject* meta_alloc(PyTypeObject* meta, Py_ssize_t nitems)
 //----------------------------------------------------------------------------
 static void meta_dealloc(CPPScope* scope)
 {
-    delete scope->fCppObjects; scope->fCppObjects = nullptr;
+    if (scope->fFlags & CPPScope::kIsNamespace) {
+        if (scope->fImp.fUsing) {
+            for (auto pyobj : *scope->fImp.fUsing) Py_DECREF(pyobj);
+            delete scope->fImp.fUsing; scope->fImp.fUsing = nullptr;
+        }
+    } else {
+        for (auto& pp : *scope->fImp.fCppObjects) Py_DECREF(pp.second);
+        delete scope->fImp.fCppObjects; scope->fImp.fCppObjects = nullptr;
+    }
     free(scope->fModuleName);
     return PyType_Type.tp_dealloc((PyObject*)scope);
 }
@@ -127,7 +135,7 @@ static PyObject* meta_repr(CPPScope* scope)
 // printing of C++ classes
     PyObject* modname = meta_getmodule(scope, nullptr);
     std::string clName = Cppyy::GetFinalName(scope->fCppType);
-    const char* kind = Cppyy::IsNamespace(scope->fCppType) ? "namespace" : "class";
+    const char* kind = (scope->fFlags & CPPScope::kIsNamespace) ? "namespace" : "class";
 
     PyObject* repr = CPyCppyy_PyUnicode_FromFormat("<%s %s.%s at %p>",
         kind, CPyCppyy_PyUnicode_AsString(modname), clName.c_str(), scope);
@@ -155,7 +163,6 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds)
         return nullptr;
 
     result->fFlags      = CPPScope::kNone;
-    result->fCppObjects = new CppToPyMap_t;
     result->fModuleName = nullptr;
 
 // initialization of class (based on metatype)
@@ -191,6 +198,13 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds)
         }
     }
 
+    if (!Cppyy::IsNamespace(result->fCppType))
+        result->fImp.fCppObjects = new CppToPyMap_t;
+    else {
+        result->fImp.fUsing = nullptr;
+        result->fFlags |= CPPScope::kIsNamespace;
+    }
+
     return (PyObject*)result;
 }
 
@@ -216,13 +230,14 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
     Utility::FetchError(errors);
     attr = CreateScopeProxy(name, pyclass);
 
+    CPPScope* klass = ((CPPScope*)pyclass);
     if (!attr) {
         Utility::FetchError(errors);
-        Cppyy::TCppScope_t scope = ((CPPScope*)pyclass)->fCppType;
+        Cppyy::TCppScope_t scope = klass->fCppType;
 
     // namespaces may have seen updates in their list of global functions, which
     // are available as "methods" even though they're not really that
-        if (Cppyy::IsNamespace(scope)) {
+        if (klass->fFlags & CPPScope::kIsNamespace) {
         // tickle lazy lookup of functions
             const std::vector<Cppyy::TCppIndex_t> methods =
                 Cppyy::GetMethodIndicesFromName(scope, name);
@@ -291,6 +306,39 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
         }
     }
 
+    if (!attr && (klass->fFlags & CPPScope::kIsNamespace)) {
+    // refresh using list as necessary
+        const std::vector<Cppyy::TCppScope_t>& uv = Cppyy::GetUsingNamespaces(klass->fCppType);
+        if (!klass->fImp.fUsing || uv.size() != klass->fImp.fUsing->size()) {
+            if (klass->fImp.fUsing) {
+                for (auto pyref : *klass->fImp.fUsing) Py_DECREF(pyref);
+                klass->fImp.fUsing->clear();
+            } else
+                klass->fImp.fUsing = new std::vector<PyObject*>;
+
+        // reload and reset weak refs
+            for (auto uid : uv) {
+                PyObject* pyuscope = CreateScopeProxy(Cppyy::GetScopedFinalName(uid));
+                if (pyuscope) {
+                    klass->fImp.fUsing->push_back(PyWeakref_NewRef(pyuscope, nullptr));
+                // the namespace may not otherwise be held, so tie the lifetimes
+                    PyObject_SetAttr(pyclass, pyname, pyuscope);
+                    Py_DECREF(pyuscope);
+                }
+            }
+        }
+
+    // try all outstanding using namespaces in turn to find the attribute (will cache
+    // locally later; TODO: doing so may cause pathological cases)
+        for (auto pyref : *klass->fImp.fUsing) {
+            PyObject* pyuscope = PyWeakref_GetObject(pyref);
+            if (pyuscope) {
+                attr = PyObject_GetAttr(pyuscope, pyname);
+                if (attr) break;
+            }
+        }
+    }
+
     if (attr)
         std::for_each(errors.begin(), errors.end(), Utility::PyError_t::Clear);
     else {
@@ -333,7 +381,7 @@ static PyObject* meta_dir(CPPScope* klass)
     }
 
     PyObject* dirlist = _generic_dir((PyObject*)klass);
-    if (!IsNamespace(klass->fCppType))
+    if (!(klass->fFlags & CPPScope::kIsNamespace))
         return dirlist;
 
     std::set<std::string> cppnames;

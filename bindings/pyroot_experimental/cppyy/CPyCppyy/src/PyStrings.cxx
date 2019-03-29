@@ -16,6 +16,7 @@ PyObject* CPyCppyy::PyStrings::gEmptyString      = nullptr;
 PyObject* CPyCppyy::PyStrings::gEq               = nullptr;
 PyObject* CPyCppyy::PyStrings::gFollow           = nullptr;
 PyObject* CPyCppyy::PyStrings::gGetItem          = nullptr;
+PyObject* CPyCppyy::PyStrings::gGetNoCheck       = nullptr;
 PyObject* CPyCppyy::PyStrings::gInit             = nullptr;
 PyObject* CPyCppyy::PyStrings::gIter             = nullptr;
 PyObject* CPyCppyy::PyStrings::gLen              = nullptr;
@@ -43,7 +44,12 @@ PyObject* CPyCppyy::PyStrings::gSize             = nullptr;
 PyObject* CPyCppyy::PyStrings::gTemplate         = nullptr;
 PyObject* CPyCppyy::PyStrings::gVectorAt         = nullptr;
 
+PyObject* CPyCppyy::PyStrings::gCppReal          = nullptr;
+PyObject* CPyCppyy::PyStrings::gCppImag          = nullptr;
+
 PyObject* CPyCppyy::PyStrings::gThisModule       = nullptr;
+
+PyObject* CPyCppyy::PyStrings::gNoImplicit       = nullptr;
 
 
 //-----------------------------------------------------------------------------
@@ -67,6 +73,7 @@ bool CPyCppyy::CreatePyStrings() {
     CPPYY_INITIALIZE_STRING(gEq,             __eq__);
     CPPYY_INITIALIZE_STRING(gFollow,         __follow__);
     CPPYY_INITIALIZE_STRING(gGetItem,        __getitem__);
+    CPPYY_INITIALIZE_STRING(gGetNoCheck,     _getitem__unchecked);
     CPPYY_INITIALIZE_STRING(gInit,           __init__);
     CPPYY_INITIALIZE_STRING(gIter,           __iter__);
     CPPYY_INITIALIZE_STRING(gLen,            __len__);
@@ -94,7 +101,12 @@ bool CPyCppyy::CreatePyStrings() {
     CPPYY_INITIALIZE_STRING(gTemplate,       Template);
     CPPYY_INITIALIZE_STRING(gVectorAt,       _vector__at);
 
+    CPPYY_INITIALIZE_STRING(gCppReal,        __cpp_real);
+    CPPYY_INITIALIZE_STRING(gCppImag,        __cpp_imag);
+
     CPPYY_INITIALIZE_STRING(gThisModule,     cppyy);
+
+    CPPYY_INITIALIZE_STRING(gNoImplicit,     __cppyy_no_implicit);
 
     return true;
 }
@@ -114,6 +126,7 @@ PyObject* CPyCppyy::DestroyPyStrings() {
     Py_DECREF(PyStrings::gEq);          PyStrings::gEq          = nullptr;
     Py_DECREF(PyStrings::gFollow);      PyStrings::gFollow      = nullptr;
     Py_DECREF(PyStrings::gGetItem);     PyStrings::gGetItem     = nullptr;
+    Py_DECREF(PyStrings::gGetNoCheck);  PyStrings::gGetNoCheck  = nullptr;
     Py_DECREF(PyStrings::gInit);        PyStrings::gInit        = nullptr;
     Py_DECREF(PyStrings::gIter);        PyStrings::gIter        = nullptr;
     Py_DECREF(PyStrings::gLen);         PyStrings::gLen         = nullptr;
@@ -141,7 +154,12 @@ PyObject* CPyCppyy::DestroyPyStrings() {
     Py_DECREF(PyStrings::gTemplate);    PyStrings::gTemplate    = nullptr;
     Py_DECREF(PyStrings::gVectorAt);    PyStrings::gVectorAt    = nullptr;
 
+    Py_DECREF(PyStrings::gCppReal);     PyStrings::gCppReal     = nullptr;
+    Py_DECREF(PyStrings::gCppImag);     PyStrings::gCppImag     = nullptr;
+
     Py_DECREF(PyStrings::gThisModule);  PyStrings::gThisModule  = nullptr;
+
+    Py_DECREF(PyStrings::gNoImplicit);  PyStrings::gNoImplicit  = nullptr;
 
     Py_RETURN_NONE;
 }

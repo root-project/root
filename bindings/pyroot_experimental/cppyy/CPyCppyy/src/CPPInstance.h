@@ -98,7 +98,7 @@ private:
 
 
 //- object proxy type and type verification ----------------------------------
-extern PyTypeObject CPPInstance_Type;
+CPYCPPYY_IMPORT PyTypeObject CPPInstance_Type;
 
 template<typename T>
 inline bool CPPInstance_Check(T* object)

@@ -6,9 +6,10 @@
 #include "Executors.h"
 #include "ProxyWrappers.h"
 #include "PyStrings.h"
-#include "TPyException.h"
 #include "TypeManip.h"
 #include "Utility.h"
+
+#include "CPyCppyy/TPyException.h"
 
 // Standard
 #include <assert.h>
@@ -101,6 +102,16 @@ inline PyObject* CPyCppyy::CPPMethod::CallFast(
         PyErr_SetString(PyExc_Exception, "unhandled, unknown C++ exception");
         result = nullptr;
     }
+
+// TODO: covers the TPyException throw case, which does not seem to work on Windows, so
+// instead leaves the error be
+#ifdef _WIN32
+    if (PyErr_Occurred()) {
+        Py_XDECREF(result);
+        result = nullptr;
+    }
+#endif
+
     return result;
 }
 
@@ -146,11 +157,11 @@ bool CPyCppyy::CPPMethod::InitConverters_()
 }
 
 //----------------------------------------------------------------------------
-bool CPyCppyy::CPPMethod::InitExecutor_(Executor*& executor, CallContext* ctxt)
+bool CPyCppyy::CPPMethod::InitExecutor_(Executor*& executor, CallContext* /* ctxt */)
 {
 // install executor conform to the return type
     executor = CreateExecutor(
-        (bool)fMethod == true ? Cppyy::ResolveName(Cppyy::GetMethodResultType(fMethod))\
+        (bool)fMethod == true ? Cppyy::GetMethodResultType(fMethod) \
                               : Cppyy::GetScopedFinalName(fScope));
 
     if (!executor)
@@ -308,6 +319,9 @@ int CPyCppyy::CPPMethod::GetPriority()
             else if (strstr(aname.c_str(), "bool"))
                 priority += 1;         // bool over int (does accept 1 and 0)
 
+        } else if (aname.find("initializer_list") != std::string::npos) {
+        // difficult conversion, push it way down
+            priority -= 2000;
         } else if (aname.rfind("&&", aname.size()-2) != std::string::npos) {
             priority += 100;
         } else if (!aname.empty() && !Cppyy::IsComplete(aname)) {
@@ -445,8 +459,8 @@ PyObject* CPyCppyy::CPPMethod::PreProcessArgs(
              (Cppyy::IsSubtype(pyobj->ObjectIsA(), fScope)))) { // matching types
 
         // reset self
+            Py_INCREF(pyobj);      // corresponding Py_DECREF is in CPPOverload
             self = pyobj;
-            Py_INCREF(self);       // corresponding Py_DECREF is in CPPOverload
 
         // offset args by 1 (new ref)
             return PyTuple_GetSlice(args, 1, PyTuple_GET_SIZE(args));
@@ -479,16 +493,17 @@ bool CPyCppyy::CPPMethod::ConvertAndSetArgs(PyObject* args, CallContext* ctxt)
     }
 
 // convert the arguments to the method call array
+    bool isOK = true;
     Parameter* cppArgs = ctxt->GetArgs(argc);
     for (int i = 0; i < (int)argc; ++i) {
-        if (!fConverters[i]->SetArg(
-                PyTuple_GET_ITEM(args, i), cppArgs[i], ctxt)) {
+        if (!fConverters[i]->SetArg(PyTuple_GET_ITEM(args, i), cppArgs[i], ctxt)) {
             SetPyError_(CPyCppyy_PyUnicode_FromFormat("could not convert argument %d", i+1));
-            return false;
+            isOK = false;
+            break;
         }
     }
 
-    return true;
+    return isOK;
 }
 
 //----------------------------------------------------------------------------

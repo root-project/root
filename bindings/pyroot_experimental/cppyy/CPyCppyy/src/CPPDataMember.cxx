@@ -25,7 +25,7 @@ enum ETypeDetails {
 };
 
 //= CPyCppyy data member as Python property behavior =========================
-static PyObject* pp_get(CPPDataMember* pyprop, CPPInstance* pyobj, PyObject* kls)
+static PyObject* pp_get(CPPDataMember* pyprop, CPPInstance* pyobj, PyObject* /* kls */)
 {
 // cache lookup for low level views
     if (pyprop->fProperty & kIsCachable) {

@@ -3,6 +3,7 @@
 
 // Bindings
 #include "CPPScope.h"
+#include "Utility.h"
 
 // Standard
 #include <string>
@@ -46,7 +47,7 @@ public:
     void AddOverload(CPPOverload* mp);
     void AddOverload(PyCallable* pc);
     void AddTemplate(PyCallable* pc);
-    PyCallable* Instantiate(const std::string& fullname, PyObject* tmplArgs);
+    PyCallable* Instantiate(const std::string& fullname, PyObject* tmplArgs, Utility::ArgPreference);
 
 private:                // private, as the python C-API will handle creation
     TemplateProxy() = delete;

@@ -34,7 +34,7 @@ void CPyCppyy::op_dealloc_nofree(CPPInstance* pyobj) {
     Cppyy::TCppType_t klass = isSmartPtr ? pyobj->fSmartPtrType : pyobj->ObjectIsA();
 
     if (!(pyobj->fFlags & CPPInstance::kIsReference))
-        MemoryRegulator::UnregisterPyObject(pyobj, klass);
+        MemoryRegulator::UnregisterPyObject(pyobj->GetObject(), klass);
 
     if (pyobj->fFlags & CPPInstance::kIsValue) {
         void* addr = isSmartPtr ? pyobj->fObject : pyobj->GetObject();
@@ -185,7 +185,6 @@ static PyObject* op_repr(CPPInstance* pyobj)
 // of the C++ object that is held, as well as its type.
     PyObject* pyclass = (PyObject*)Py_TYPE(pyobj);
     PyObject* modname = PyObject_GetAttr(pyclass, PyStrings::gModule);
-    Py_DECREF(pyclass);
 
     Cppyy::TCppType_t klass = pyobj->ObjectIsA();
     std::string clName = klass ? Cppyy::GetFinalName(klass) : "<unknown>";
@@ -229,10 +228,8 @@ static PyObject* op_str(CPPInstance* cppinst)
             if (Utility::AddBinaryOperator(
                     pyclass, "std::ostream", rcname, "<<", "__lshiftc__", nullptr, rnsID)) {
                 lshift = PyObject_GetAttr(pyclass, PyStrings::gLShiftC);
-            } else {
-                Py_INCREF(Py_None);
+            } else
                 PyObject_SetAttr(pyclass, PyStrings::gLShiftC, Py_None);
-            }
         } else if (lshift == Py_None) {
             Py_DECREF(lshift);
             lshift = nullptr;

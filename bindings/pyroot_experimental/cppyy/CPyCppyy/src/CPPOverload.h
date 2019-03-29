@@ -73,7 +73,7 @@ private:
 
 
 //- method proxy type and type verification ----------------------------------
-extern PyTypeObject CPPOverload_Type;
+CPYCPPYY_IMPORT PyTypeObject CPPOverload_Type;
 
 template<typename T>
 inline bool CPPOverload_Check(T* object)

@@ -11,7 +11,7 @@ except ImportError:
     has_wheel = False
 
 
-requirements = ['cppyy-cling', 'cppyy-backend>=1.7.0']
+requirements = ['cppyy-cling', 'cppyy-backend>=1.8.0']
 setup_requirements = ['wheel']
 if 'build' in sys.argv or 'install' in sys.argv:
     setup_requirements += requirements
@@ -75,6 +75,10 @@ class my_build_extension(_build_ext):
                 ['-Wno-register']                # C++17, Python headers
         if 'linux' in sys.platform:
             ext.extra_link_args += ['-Wl,-Bsymbolic-functions']
+        elif 'win32' in sys.platform:
+            ext.extra_compile_args += ['/GR', '/EHsc-']    # note '/EHsc' hardwired by distutils :(
+            ext.extra_link_args += ['/EXPORT:_Init_thread_abort', '/EXPORT:_Init_thread_epoch',
+                '/EXPORT:_Init_thread_footer', '/EXPORT:_Init_thread_header', '/EXPORT:_tls_index']
         return _build_ext.build_extension(self, ext)
 
 
@@ -107,7 +111,7 @@ class MyDistribution(Distribution):
 
 setup(
     name='CPyCppyy',
-    version='1.5.1',
+    version='1.7.1',
     description='Cling-based Python-C++ bindings for CPython',
     long_description=long_description,
 

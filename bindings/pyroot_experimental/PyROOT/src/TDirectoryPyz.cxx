@@ -14,7 +14,7 @@
 #include "CallContext.h"
 #include "PyROOTPythonize.h"
 #include "ProxyWrappers.h"
-#include "TPython.h"
+#include "CPyCppyy/TPython.h"
 #include "Utility.h"
 #include "PyzCppHelpers.hxx"
 #include "TClass.h"
