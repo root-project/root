@@ -19,7 +19,7 @@
 ///
 /// RooCustomizer is a factory class to produce clones
 /// of a prototype composite PDF object with the same structure but
-/// different leaf servers (parameters or dependents)
+/// different leaf servers (parameters or dependents).
 ///
 /// RooCustomizer supports two kinds of modifications:
 ///

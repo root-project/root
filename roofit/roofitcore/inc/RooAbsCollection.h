@@ -142,6 +142,10 @@ public:
     return _list.size();
   }
 
+  bool empty() const {
+    return _list.empty();
+  }
+
   void reserve(Storage_t::size_type count) {
     _list.reserve(count);
   }

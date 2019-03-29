@@ -754,7 +754,12 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
 ///   </table>
 /// <tr><td> `Optimize(Bool_t flag)`           <td> Activate constant term optimization (on by default)
 /// <tr><td> `SplitRange(Bool_t flag)`         <td> Use separate fit ranges in a simultaneous fit. Actual range name for each subsample is assumed to
-///                                               be `rangeName_{indexState}`, where `indexState` is the state of the master index category of the simultaneous fit.
+///                                               be `rangeName_indexState`, where `indexState` is the state of the master index category of the simultaneous fit.
+/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
+/// ```
+/// myVariable.setRange("range_pi0", 135, 210);
+/// myVariable.setRange("range_gamma", 50, 210);
+/// ```
 /// <tr><td> `Constrain(const RooArgSet&pars)`          <td> For p.d.f.s that contain internal parameter constraint terms, only apply constraints to
 ///                                                        given subset of parameters
 /// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td> Include given external constraints to likelihood
@@ -1041,7 +1046,12 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 ///                     30 dataset entries, for which strategy 2 is followed.
 ///   </table>
 /// <tr><td> `SplitRange(Bool_t flag)`          <td>  Use separate fit ranges in a simultaneous fit. Actual range name for each subsample is assumed
-///                                                 to by rangeName_{indexState} where indexState is the state of the master index category of the simultaneous fit
+///                                                 to by `rangeName_indexState` where indexState is the state of the master index category of the simultaneous fit.
+/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
+/// ```
+/// myVariable.setRange("range_pi0", 135, 210);
+/// myVariable.setRange("range_gamma", 50, 210);
+/// ```
 /// <tr><td> `Constrained()`                    <td>  Apply all constrained contained in the p.d.f. in the likelihood 
 /// <tr><td> `Constrain(const RooArgSet&pars)`  <td>  Apply constraints to listed parameters in likelihood using internal constrains in p.d.f
 /// <tr><td> `GlobalObservables(const RooArgSet&)`  <td>  Define the set of normalization observables to be used for the constraint terms.
@@ -1521,7 +1531,12 @@ RooFitResult* RooAbsPdf::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdLi
 /// <tr><td> `NumCPU()`     <td>  Activate parallel processing feature
 /// <tr><td> `Range()`      <td>  Fit only selected region
 /// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components 
-/// <tr><td> `SplitRange()`   <td>  Fit range is split by index category of simultaneous PDF
+/// <tr><td> `SplitRange()`   <td>  Fit ranges used in different categories get named after the category.
+/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
+/// ```
+/// myVariable.setRange("range_pi0", 135, 210);
+/// myVariable.setRange("range_gamma", 50, 210);
+/// ```
 /// <tr><td> `ConditionalObservables()` <td>  Define projected observables 
 /// </table>
 
