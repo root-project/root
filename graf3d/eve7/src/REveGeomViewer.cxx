@@ -176,7 +176,7 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 
       auto nmatches = fDesc.SearchVisibles(query, hjson, json, binary);
 
-      printf("Searches %s found %d json %d binary %d\n", query.c_str(), nmatches, (int) json.length(), (int) binary.size());
+      printf("Searches %s found %d hjson %d json %d binary %d\n", query.c_str(), nmatches, (int) hjson.length(), (int) json.length(), (int) binary.size());
 
       // send reply with appropriate header - NOFOUND, FOUND0:, FOUND1:
       fWebWindow->Send(connid, hjson);
