@@ -5,8 +5,13 @@ import ROOT
 
 class RooDataHistPlotOn(unittest.TestCase):
     """
-    Test for the pythonization that allows RooDataHist to use the
-    overloads of plotOn defined in RooAbsData.
+    Initially, this was a test for the pythonization that allowed
+    RooDataHist to use the overloads of plotOn defined in RooAbsData.
+    Currently, such functionality is automatically provided by Cppyy
+    and ROOT meta: the overloads obtained with 'using' declarations
+    are taken into account when calling a method.
+    We keep this test to check that the aforementioned functionality
+    works properly in a case that is important for RooFit.
     """
 
     # Helpers
