@@ -69,8 +69,8 @@ static std::string FullyQualifiedName(const Decl *decl) {
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, Bool_t all)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(all),
-     fIsIter(true), fDecl(0), fType(0), fOffsetCache(0)
+   : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(all),
+     fIsIter(true), fType(0), fOffsetCache(0)
 {
    TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
@@ -80,7 +80,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, Bool_t all)
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE), fIsIter(false), fDecl(0),
+   : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE), fIsIter(false),
      fType(0), fTitle(""), fOffsetCache(0)
 {
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
@@ -115,16 +115,16 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const Type &tag)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE),
-     fIsIter(false), fDecl(0), fType(0), fTitle(""), fOffsetCache(0)
+   : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE),
+     fIsIter(false), fType(0), fTitle(""), fOffsetCache(0)
 {
    Init(tag);
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const Decl *D)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE),
-     fIsIter(false), fDecl(0), fType(0), fTitle(""), fOffsetCache(0)
+   : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE),
+     fIsIter(false), fType(0), fTitle(""), fOffsetCache(0)
 {
    Init(D);
 }
@@ -696,7 +696,7 @@ void TClingClassInfo::Init(const char *name)
    fDescend = false;
    fIsIter = false;
    fIter = DeclContext::decl_iterator();
-   fDecl = 0;
+   fDecl = nullptr;
    fType = 0;
    fIterStack.clear();
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
@@ -823,11 +823,6 @@ bool TClingClassInfo::IsLoaded() const
    return true;
 }
 
-bool TClingClassInfo::IsValid() const
-{
-   return fDecl;
-}
-
 bool TClingClassInfo::IsValidMethod(const char *method, const char *proto,
                                     Bool_t objectIsConst,
                                     long *offset,
@@ -849,6 +844,7 @@ int TClingClassInfo::InternalNext()
    R__LOCKGUARD(gInterpreterMutex);
 
    fDeclFileName.clear(); // invalidate decl file name.
+   fNameCache.clear(); // invalidate the cache.
 
    cling::Interpreter::PushTransactionRAII RAII(fInterp);
    if (fFirstTime) {
@@ -1279,24 +1275,6 @@ void TClingClassInfo::FullName(std::string &output, const ROOT::TMetaUtils::TNor
          ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
       }
    }
-}
-
-const char *TClingClassInfo::Name() const
-{
-   // Return unqualified name.
-   if (!IsValid()) {
-      return 0;
-   }
-   // Note: This *must* be static/thread_local because we are returning a pointer inside it!
-   TTHREAD_TLS_DECL( std::string, buf);
-
-   buf.clear();
-   if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(fDecl)) {
-      PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
-      llvm::raw_string_ostream stream(buf);
-      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
-   }
-   return buf.c_str();
 }
 
 const char *TClingClassInfo::Title()

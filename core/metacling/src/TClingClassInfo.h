@@ -2,7 +2,7 @@
 // Author: Paul Russo   30/07/2012
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -25,6 +25,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TClingDeclInfo.h"
 #include "TClingMethodInfo.h"
 #include "TDictionary.h"
 
@@ -50,7 +51,7 @@ namespace ROOT {
 
 extern "C" typedef ptrdiff_t (*OffsetPtrFunc_t)(void*, bool);
 
-class TClingClassInfo {
+class TClingClassInfo final : public TClingDeclInfo {
 
 private:
 
@@ -60,7 +61,6 @@ private:
    bool                  fIterAll : 1;  // Flag whether iteration should be as complete as possible.
    bool                  fIsIter : 1;   // Flag whether this object was setup for iteration.
    clang::DeclContext::decl_iterator fIter; // Current decl in scope.
-   const clang::Decl    *fDecl; // Current decl, we do *not* own.
    const clang::Type    *fType; // Type representing the decl (conserves typedefs like Double32_t). (we do *not* own)
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
    std::string           fTitle; // The meta info for the class.
@@ -89,7 +89,6 @@ public:
    void                 DeleteArray(void *arena, bool dtorOnly, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    void                 Destruct(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const clang::ValueDecl *GetDataMember(const char *name) const;
-   const clang::Decl      *GetDecl() const { return fDecl; } // Underlying representation without Double32_t
    TDictionary::DeclId_t   GetDeclId() const { return (const clang::Decl*)(fDecl->getCanonicalDecl()); }
    const clang::FunctionTemplateDecl *GetFunctionTemplate(const char *fname) const;
    TClingMethodInfo     GetMethod(const char *fname) const;
@@ -125,7 +124,6 @@ public:
    bool                 IsBase(const char *name) const;
    static bool          IsEnum(cling::Interpreter *interp, const char *name);
    bool                 IsLoaded() const;
-   bool                 IsValid() const;
    bool                 IsValidMethod(const char *method, const char *proto, Bool_t objectIsConst, long *offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    int                  InternalNext();
    int                  Next();
@@ -139,7 +137,6 @@ public:
    long                 Tagnum() const;
    const char          *FileName();
    void                 FullName(std::string &output, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
-   const char          *Name() const;
    const char          *Title();
    const char          *TmpltName() const;
 

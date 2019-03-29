@@ -163,7 +163,7 @@ TClingClassInfo *TClingBaseClassInfo::GetBase() const
 }
 
 OffsetPtrFunc_t
-TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClassInfo * fromDerivedClass,
+TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo * fromDerivedClass,
                                                 TClingClassInfo* toBaseClass,
                                                 void* address, bool isDerivedObject) const
 {
@@ -262,6 +262,7 @@ int TClingBaseClassInfo::InternalNext(int onlyDirect)
          (fIter == llvm::dyn_cast<clang::CXXRecordDecl>(fDecl)->bases_end())) {
       return 0;
    }
+
    // Advance to the next valid base.
    while (1) {
       // Advance the iterator.

@@ -79,7 +79,7 @@ public:
    const char   *TmpltName() const;
 
 private:
-   OffsetPtrFunc_t GenerateBaseOffsetFunction(const TClingClassInfo* derivedClass, TClingClassInfo* targetClass, void* address, bool isDerivedObject) const;
+   OffsetPtrFunc_t GenerateBaseOffsetFunction(TClingClassInfo* derivedClass, TClingClassInfo* targetClass, void* address, bool isDerivedObject) const;
 };
 
 #endif // ROOT_TClingBaseClassInfo
