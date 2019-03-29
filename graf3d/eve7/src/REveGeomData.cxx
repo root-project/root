@@ -733,7 +733,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    fFound[0].vis = fDesc[0].vis;
    fFound[0].name = fDesc[0].name;
    fFound[0].color = fDesc[0].color;
-   fFound[0].sortid = 0; // backreference to original id
+   fFound[0].sortid = 0; // back-reference to original nodeid
    fFoundMap[0] = 0;
 
    ResetRndrInfos();
@@ -752,12 +752,12 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
          if (fFoundMap[chldid] <= 0) {
             int newid = fFound.size();
             fFound.emplace_back(newid);
-            fFoundMap[chldid] = newid; // remap into reduced hierarchy
+            fFoundMap[chldid] = newid; // re-map into reduced hierarchy
 
             fFound.back().vis = fDesc[chldid].vis;
             fFound.back().name = fDesc[chldid].name;
             fFound.back().color = fDesc[chldid].color;
-            fFound.back().sortid = chldid;
+            fFound.back().sortid = chldid; // back-reference to original nodeid
          }
 
          auto pid = fFoundMap[prntid];
