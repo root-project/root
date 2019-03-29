@@ -83,14 +83,14 @@ private:
 };
 
 TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo &rhs) :
+   TClingDeclInfo(rhs),
    fInterp(rhs.fInterp),
    fContexts(rhs.fContexts),
    fFirstTime(rhs.fFirstTime),
    fContextIdx(rhs.fContextIdx),
    fIter(rhs.fIter),
    fTitle(rhs.fTitle),
-   fTemplateSpecIter(nullptr),
-   fSingleDecl(rhs.fSingleDecl)
+   fTemplateSpecIter(nullptr)
 {
    if (rhs.fTemplateSpecIter) {
       // The SpecIterator query the decl.
@@ -102,8 +102,8 @@ TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo &rhs) :
 
 TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
                                    TClingClassInfo *ci)
-   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
-     fTemplateSpecIter(0), fSingleDecl(0)
+   : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
+     fTemplateSpecIter(0)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -131,8 +131,8 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
 
 TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
                                    const clang::FunctionDecl *FD)
-   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
-     fTemplateSpecIter(0), fSingleDecl(FD)
+   : TClingDeclInfo(FD), fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
+     fTemplateSpecIter(0)
 {
 
 }
@@ -152,17 +152,7 @@ TDictionary::DeclId_t TClingMethodInfo::GetDeclId() const
 
 const clang::FunctionDecl *TClingMethodInfo::GetMethodDecl() const
 {
-   if (!IsValid()) {
-      return 0;
-   }
-
-   if (fSingleDecl)
-      return fSingleDecl;
-
-   if (fTemplateSpecIter)
-      return *(*fTemplateSpecIter);
-
-   return llvm::dyn_cast<clang::FunctionDecl>(*fIter);
+   return cast_or_null<FunctionDecl>(GetDecl());
 }
 
 void TClingMethodInfo::CreateSignature(TString &signature) const
@@ -203,7 +193,7 @@ void TClingMethodInfo::Init(const clang::FunctionDecl *decl)
    fIter = clang::DeclContext::decl_iterator();
    delete fTemplateSpecIter;
    fTemplateSpecIter = 0;
-   fSingleDecl = decl;
+   fDecl = decl;
 }
 
 void *TClingMethodInfo::InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
@@ -217,7 +207,7 @@ void *TClingMethodInfo::InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt 
    return cf.InterfaceMethod();
 }
 
-bool TClingMethodInfo::IsValidSlow() const
+const clang::Decl* TClingMethodInfo::GetDeclSlow() const
 {
    if (fTemplateSpecIter) {
       // Could trigger deserialization of decls.
@@ -374,7 +364,9 @@ static void InstantiateFuncTemplateWithDefaults(clang::FunctionTemplateDecl* FTD
 int TClingMethodInfo::InternalNext()
 {
 
-   assert(!fSingleDecl && "This is not an iterator!");
+   assert(!fDecl && "This is not an iterator!");
+
+   fNameCache.clear(); // invalidate the cache.
 
    if (!fFirstTime && !*fIter) {
       // Iterator is already invalid.
@@ -619,7 +611,7 @@ std::string TClingMethodInfo::GetMangledName() const
    return mangled_name;
 }
 
-const char *TClingMethodInfo::GetPrototype(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
+const char *TClingMethodInfo::GetPrototype()
 {
    if (!IsValid()) {
       return 0;
@@ -643,7 +635,7 @@ const char *TClingMethodInfo::GetPrototype(const ROOT::TMetaUtils::TNormalizedCt
       buf += name;
       buf += "::";
    }
-   buf += Name(normCtxt);
+   buf += Name();
    buf += '(';
    TClingMethodArgInfo arg(fInterp, this);
    int idx = 0;
@@ -672,14 +664,16 @@ const char *TClingMethodInfo::GetPrototype(const ROOT::TMetaUtils::TNormalizedCt
    return buf.c_str();
 }
 
-const char *TClingMethodInfo::Name(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
+const char *TClingMethodInfo::Name()
 {
    if (!IsValid()) {
       return 0;
    }
-   TTHREAD_TLS_DECL( std::string, buf );
-   ((TCling*)gCling)->GetFunctionName(GetMethodDecl(),buf);
-   return buf.c_str();
+   if (!fNameCache.empty())
+     return fNameCache.c_str();
+
+   ((TCling*)gCling)->GetFunctionName(GetMethodDecl(), fNameCache);
+   return fNameCache.c_str();
 }
 
 const char *TClingMethodInfo::TypeName() const
