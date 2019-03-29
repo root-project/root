@@ -345,7 +345,7 @@ public:
    }
    bool operator != (const PtEtaPhiM4D & rhs) const {return !(operator==(rhs));}
 
-   // ============= Compatibility secition ==================
+   // ============= Compatibility section ==================
 
    // The following make this coordinate system look enough like a CLHEP
    // vector that an assignment member template can work with either
