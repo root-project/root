@@ -72,18 +72,29 @@ RooAbsTestStatistic::RooAbsTestStatistic() :
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor taking function (real), a dataset (data), a set of projected observables (projSet). If
-/// rangeName is not null, only events in the dataset inside the range will be used in the test
-/// statistic calculation. If addCoefRangeName is not null, all RooAddPdf component of 'real' will be
-/// instructed to fix their fraction definitions to the given named range. If nCPU is greater than
-/// 1 the test statistic calculation will be paralellized over multiple processes. By default the data
-/// is split with 'bulk' partitioning (each process calculates a contigious block of fraction 1/nCPU
+/// Create a test statistic from the given function and the data.
+/// \param[in] name Name of the test statistic
+/// \param[in] title Title (for plotting)
+/// \param[in] real Function to be used for tests
+/// \param[in] data Data to fit function to
+/// \param[in] projDeps A set of projected observables
+/// \param[in] rangeName Fit data only in range with given name
+/// \param[in] addCoefRangeName If not null, all RooAddPdf components of `real` will be instructed to fix their fraction definitions to the given named range.
+/// \param[in] nCPU If larger than one, the test statistic calculation will be parallelized over multiple processes.
+/// By default the data is split with 'bulk' partitioning (each process calculates a contigious block of fraction 1/nCPU
 /// of the data). For binned data this approach may be suboptimal as the number of bins with >0 entries
 /// in each processing block many vary greatly thereby distributing the workload rather unevenly.
-/// If interleave is set to true, the interleave partitioning strategy is used where each partition
+/// \param[in] interleave is set to true, the interleave partitioning strategy is used where each partition
 /// i takes all bins for which (ibin % ncpu == i) which is more likely to result in an even workload.
-/// If splitCutRange is true, a different rangeName constructed as rangeName_{catName} will be used
-/// as range definition for each index state of a RooSimultaneous
+/// \param[in] verbose Be more verbose.
+/// \param[in] splitCutRange If true, a different rangeName constructed as rangeName_{catName} will be used
+/// as range definition for each index state of a RooSimultaneous. This means that a different range can be defined
+/// for each category such as
+/// ```
+/// myVariable.setRange("range_pi0", 135, 210);
+/// myVariable.setRange("range_gamma", 50, 210);
+/// ```
+/// if the categories are called "pi0" and "gamma".
 
 RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 					 const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,

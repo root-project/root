@@ -3876,7 +3876,7 @@ void RooAbsReal::fixAddCoefRange(const char* rangeName, Bool_t force)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interface method for function objects to indicate their prefferred order of observables
+/// Interface method for function objects to indicate their preferred order of observables
 /// for scanning their values into a (multi-dimensional) histogram or RooDataSet. The observables
 /// to be ordered are offered in argument 'obs' and should be copied in their preferred
 /// order into argument 'orderdObs', This default implementation indicates no preference

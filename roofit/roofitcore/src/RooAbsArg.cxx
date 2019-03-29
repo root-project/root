@@ -458,6 +458,12 @@ void RooAbsArg::branchNodeServerList(RooAbsCollection* list, const RooAbsArg* ar
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill supplied list with nodes of the arg tree, following all server links,
 /// starting with ourself as top node.
+/// \param[in] list Output list
+/// \param[in] arg Start searching at this element of the tree.
+/// \param[in] doBranch Add branch nodes to the list.
+/// \param[in] doLeaf Add leaf nodes to the list.
+/// \param[in] valueOnly Only check if an element is a value server (no shape server).
+/// \param[in] recurseFundamental
 
 void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf, Bool_t valueOnly, Bool_t recurseFundamental) const
 {
@@ -585,7 +591,7 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset, Bool_t stripDisconnec
 /// ourself as top node that match any of the names of the variable list
 /// of the supplied data set (the dependents). The caller of this
 /// function is responsible for deleting the returned argset.
-/// The complement of this function is getObservables()
+/// The complement of this function is getParameters().
 
 RooArgSet* RooAbsArg::getObservables(const RooAbsData* set) const
 {
@@ -600,7 +606,7 @@ RooArgSet* RooAbsArg::getObservables(const RooAbsData* set) const
 /// ourself as top node that match any of the names the args in the
 /// supplied argset. The caller of this function is responsible
 /// for deleting the returned argset. The complement of this function
-/// is getObservables()
+/// is getParameters().
 
 RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly) const
 {
