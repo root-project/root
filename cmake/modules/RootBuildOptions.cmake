@@ -229,7 +229,6 @@ if(all)
  set(r_defvalue ON)
  set(roofit_defvalue ON)
  set(root7_defvalue ON)
- set(webui_defvalue ON)
  set(shadowpw_defvalue ON)
  set(table_defvalue ON)
  set(unuran_defvalue ON)
@@ -265,6 +264,9 @@ if(builtin_all)
   set(builtin_zlib_defvalue ON)
 endif()
 
+#---webui always build together with root7----------------------------------------------------
+set(webui_defvalue ${root7})
+
 #---Vc supports only x86_64 architecture-------------------------------------------------------
 if (NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
   message(STATUS "Vc does not support ${CMAKE_SYSTEM_PROCESSOR}. Support for Vc disabled.")
@@ -290,11 +292,6 @@ endforeach()
 #---ROOT 7 requires C++14 standard or higher---------------------------------------------------
 if(NOT CMAKE_CXX_STANDARD GREATER 11)
   set(root7_defvalue OFF)
-  set(webui_defvalue OFF)
-endif()
-
-if (NOT webui AND NOT "${webui}" STREQUAL "")
-   set(webui_disabled ON)
 endif()
 
 #---roottest option implies testing
@@ -311,9 +308,6 @@ if(root7)
       message(STATUS "Enabling C++14 for compilation of root7 components")
   elseif(NOT CMAKE_CXX_STANDARD GREATER 11)
       message(FATAL_ERROR ">>> At least C++14 standard required with root7")
-   endif()
-   if(NOT webui AND NOT webui_disabled)
-      set(webui ON CACHE BOOL "(webui built automatically when root7 is enabled)" FORCE)
    endif()
 endif()
 
