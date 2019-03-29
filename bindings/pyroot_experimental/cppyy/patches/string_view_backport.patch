@@ -1,17 +1,5 @@
-diff --git a/bindings/pyroot_experimental/cppyy/CPyCppyy/CMakeLists.txt b/bindings/pyroot_experimental/cppyy/CPyCppyy/CMakeLists.txt
-index 75bb6b5..75c5eb1 100644
---- a/bindings/pyroot_experimental/cppyy/CPyCppyy/CMakeLists.txt
-+++ b/bindings/pyroot_experimental/cppyy/CPyCppyy/CMakeLists.txt
-@@ -38,6 +38,7 @@ set(sources
- )
- 
- add_library(cppyy SHARED ${headers} ${sources})
-+target_include_directories(cppyy PRIVATE ${CMAKE_BINARY_DIR}/include) # needed for string_view backport
- target_compile_options(cppyy PRIVATE
-   -Wno-shadow -Wno-strict-aliasing -Wno-unused-but-set-parameter)
- target_include_directories(cppyy PUBLIC ${PYTHON_INCLUDE_DIRS}
 diff --git a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
-index d6cda51..a470a41 100644
+index 5474d9c..9b6807d 100644
 --- a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
 +++ b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
 @@ -20,9 +20,7 @@
@@ -25,7 +13,7 @@ index d6cda51..a470a41 100644
  
  // FIXME: Should refer to CPyCppyy::Parameter in the code.
  #ifdef R__CXXMODULES
-@@ -1029,7 +1027,6 @@ bool CPyCppyy::name##Converter::ToMemory(PyObject* value, void* address)     \
+@@ -1047,7 +1045,6 @@ bool CPyCppyy::name##Converter::ToMemory(PyObject* value, void* address)     \
  }
  
  CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLString, std::string, c_str, size)
@@ -33,7 +21,7 @@ index d6cda51..a470a41 100644
  CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLStringViewBase, std::string_view, data, size)
  bool CPyCppyy::STLStringViewConverter::SetArg(
      PyObject* pyobject, Parameter& para, CallContext* ctxt)
-@@ -1055,7 +1052,6 @@ bool CPyCppyy::STLStringViewConverter::SetArg(
+@@ -1073,7 +1070,6 @@ bool CPyCppyy::STLStringViewConverter::SetArg(
  
      return false;
  }
@@ -41,7 +29,7 @@ index d6cda51..a470a41 100644
  
  CPyCppyy::STLWStringConverter::STLWStringConverter(bool keepControl) :
      InstancePtrConverter(Cppyy::GetScope("std::wstring"), keepControl) {}
-@@ -2082,14 +2078,13 @@ public:
+@@ -2188,14 +2184,13 @@ public:
          gf["const string&"] =               (cf_t)+[](long) { return new STLStringConverter{}; };
          gf["string&&"] =                    (cf_t)+[](long) { return new STLStringMoveConverter{}; };
          gf["std::string&&"] =               (cf_t)+[](long) { return new STLStringMoveConverter{}; };
@@ -58,7 +46,7 @@ index d6cda51..a470a41 100644
          gf[WSTRING] =                       (cf_t)+[](long) { return new STLWStringConverter{}; };
          gf["std::" WSTRING] =               (cf_t)+[](long) { return new STLWStringConverter{}; };
 diff --git a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h
-index 2bea10f..172d19a 100644
+index f1f5f61..c395d3b 100644
 --- a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h
 +++ b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h
 @@ -7,6 +7,7 @@
@@ -69,7 +57,7 @@ index 2bea10f..172d19a 100644
  
  
  namespace CPyCppyy {
-@@ -264,13 +265,11 @@ protected:                                                                   \
+@@ -267,13 +268,11 @@ protected:                                                                   \
  }
  
  CPPYY_DECLARE_STRING_CONVERTER(STLString, std::string);
