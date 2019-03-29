@@ -26,6 +26,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TClingDeclInfo.h"
+
 #include "TString.h"
 #include "TDictionary.h"
 
@@ -49,7 +51,7 @@ namespace ROOT {
 class TClingClassInfo;
 class TClingTypeInfo;
 
-class TClingMethodInfo {
+class TClingMethodInfo final : public TClingDeclInfo {
 private:
    class SpecIterator;
 
@@ -60,14 +62,13 @@ private:
    clang::DeclContext::decl_iterator            fIter; // Our iterator.
    std::string                                  fTitle; // The meta info for the method.
    SpecIterator                                *fTemplateSpecIter; // Iter over template specialization. [We own]
-   const clang::FunctionDecl                   *fSingleDecl; // The single member
 
-   bool IsValidSlow() const;
+   const clang::Decl* GetDeclSlow() const;
 
 public:
    explicit TClingMethodInfo(cling::Interpreter *interp)
-      : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
-        fTemplateSpecIter(0), fSingleDecl(0) {}
+      : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
+        fTemplateSpecIter(0) {}
 
    TClingMethodInfo(const TClingMethodInfo&);
 
@@ -83,9 +84,11 @@ public:
    void                                         CreateSignature(TString &signature) const;
    void                                         Init(const clang::FunctionDecl *);
    void                                        *InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
-   bool                                         IsValid() const {
-      if (fSingleDecl) return fSingleDecl;
-      return IsValidSlow();
+
+   const clang::Decl *GetDecl() const override {
+     if (const clang::Decl* SingleDecl = TClingDeclInfo::GetDecl())
+       return SingleDecl;
+     return GetDeclSlow();
    }
    int                                          NArg() const;
    int                                          NDefaultArg() const;
@@ -95,8 +98,8 @@ public:
    long                                         ExtraProperty() const;
    TClingTypeInfo                              *Type() const;
    std::string                                  GetMangledName() const;
-   const char                                  *GetPrototype(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
-   const char                                  *Name(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
+   const char                                  *GetPrototype();
+   const char                                  *Name() override;
    const char                                  *TypeName() const;
    const char                                  *Title();
 };
