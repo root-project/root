@@ -28,6 +28,8 @@
 
 #include "TClingClassInfo.h"
 
+#include "TClingDeclInfo.h"
+
 #include "cling/Interpreter/Interpreter.h"
 
 #include "clang/AST/ASTContext.h"
@@ -50,7 +52,7 @@ namespace ROOT {
 
 class TClingClassInfo;
 
-class TClingDataMemberInfo {
+class TClingDataMemberInfo final : public TClingDeclInfo {
 
 private:
 
@@ -60,7 +62,6 @@ private:
    clang::DeclContext::decl_iterator fIter; // Current decl.
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested transparent scopes.
    std::string            fTitle; // The meta info for the member.
-   const clang::ValueDecl *fSingleDecl; // The single member
 
    llvm::SmallVector<clang::DeclContext *, 2>   fContexts; // Set of DeclContext that we will iterate over.
 
@@ -79,7 +80,7 @@ public:
    ~TClingDataMemberInfo() { delete fClassInfo; }
 
    explicit TClingDataMemberInfo(cling::Interpreter *interp)
-   : fInterp(interp), fClassInfo(0), fFirstTime(true), fSingleDecl(0), fContextIdx(0U)
+   : TClingDeclInfo(nullptr), fInterp(interp), fClassInfo(0), fFirstTime(true), fContextIdx(0U)
    {
       fClassInfo = new TClingClassInfo(fInterp);
       fIter = fInterp->getCI()->getASTContext().getTranslationUnitDecl()->decls_begin();
@@ -94,14 +95,13 @@ public:
    TClingDataMemberInfo(cling::Interpreter *, const clang::ValueDecl *, TClingClassInfo *);
 
    TClingDataMemberInfo(const TClingDataMemberInfo &rhs):
-      fContextIdx(0)
+   TClingDeclInfo(rhs), fContextIdx(0)
    {
       fInterp = rhs.fInterp;
       fClassInfo = new TClingClassInfo(*rhs.fClassInfo);
       fFirstTime = rhs.fFirstTime;
       fIter = rhs.fIter;
       fIterStack = rhs.fIterStack;
-      fSingleDecl = rhs.fSingleDecl;
       fContexts = rhs.fContexts;
       fContextIdx = rhs.fContextIdx;
    }
@@ -125,9 +125,12 @@ public:
 
    int                ArrayDim() const;
    TClingClassInfo   *GetClassInfo() const { return fClassInfo; }
-   const clang::Decl *GetDecl() const { return fSingleDecl ? fSingleDecl : *fIter; }
+   const clang::Decl *GetDecl() const override {
+     if (const clang::Decl* SingleDecl = TClingDeclInfo::GetDecl())
+       return SingleDecl;
+     return *fIter;
+   }
    DeclId_t           GetDeclId() const;
-   bool               IsValid() const { return GetDecl(); }
    int                MaxIndex(int dim) const;
    int                InternalNext();
    bool               Next() { return InternalNext(); }
@@ -137,7 +140,7 @@ public:
    int                TypeSize() const;
    const char        *TypeName() const;
    const char        *TypeTrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
-   const char        *Name() const;
+   const char        *Name() override;
    const char        *Title();
    llvm::StringRef    ValidArrayIndex() const;
 

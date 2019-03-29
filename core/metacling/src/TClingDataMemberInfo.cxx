@@ -47,7 +47,7 @@ using namespace clang;
 
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            TClingClassInfo *ci)
-: fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), fSingleDecl(0), fContextIdx(0U), fIoType(""), fIoName("")
+: TClingDeclInfo(nullptr), fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), fContextIdx(0U), fIoType(""), fIoName("")
 {
    if (!ci) {
       // We are meant to iterate over the global namespace (well at least CINT did).
@@ -78,8 +78,8 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            const clang::ValueDecl *ValD,
                                            TClingClassInfo *ci)
-: fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp, ValD)), fFirstTime(true),
-    fTitle(""), fSingleDecl(ValD), fContextIdx(0U), fIoType(""), fIoName(""){
+: TClingDeclInfo(ValD), fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp, ValD)), fFirstTime(true),
+  fTitle(""), fContextIdx(0U), fIoType(""), fIoName(""){
 
    using namespace llvm;
    assert((ci || isa<TranslationUnitDecl>(ValD->getDeclContext()) ||
@@ -235,8 +235,10 @@ int TClingDataMemberInfo::MaxIndex(int dim) const
 
 int TClingDataMemberInfo::InternalNext()
 {
-   assert(!fSingleDecl && "This is not an iterator!");
+   assert(!fDecl
+          && "This is a single decl, not an iterator!");
 
+   fNameCache.clear(); // invalidate the cache.
    bool increment = true;
    // Move to next acceptable data member.
    while (fFirstTime || *fIter) {
@@ -581,7 +583,7 @@ const char *TClingDataMemberInfo::TypeTrueName(const ROOT::TMetaUtils::TNormaliz
    return 0;
 }
 
-const char *TClingDataMemberInfo::Name() const
+const char *TClingDataMemberInfo::Name()
 {
    if (!IsValid()) {
       return 0;
@@ -590,18 +592,7 @@ const char *TClingDataMemberInfo::Name() const
    CheckForIoTypeAndName();
    if (!fIoName.empty()) return fIoName.c_str();
 
-   // Note: This must be static because we return a pointer inside it!
-   static std::string buf;
-   buf.clear();
-
-   if (const clang::NamedDecl *nd = llvm::dyn_cast<clang::NamedDecl>(GetDecl())) {
-      clang::PrintingPolicy policy(GetDecl()->getASTContext().getPrintingPolicy());
-      llvm::raw_string_ostream stream(buf);
-      nd->getNameForDiagnostic(stream, policy, /*Qualified=*/false);
-      stream.flush();
-      return buf.c_str();
-   }
-   return 0;
+   return TClingDeclInfo::Name();
 }
 
 const char *TClingDataMemberInfo::Title()
