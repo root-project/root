@@ -268,6 +268,7 @@ public:
    TGeoIterator   &operator=(const TGeoIterator &iter);
    TGeoNode       *operator()();
    TGeoNode       *Next();
+   void            Up() { if (fLevel > 0) fLevel--; }
 
    const TGeoMatrix *GetCurrentMatrix() const;
    Int_t           GetIndex(Int_t i) const {return ((i<=fLevel)?fArray[i]:-1);}
