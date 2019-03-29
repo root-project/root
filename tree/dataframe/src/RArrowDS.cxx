@@ -104,7 +104,7 @@ private:
       // Here the cast to void* is a worksround while we figure out the
       // issues we have with long long types, signed and unsigned.
       RVec<T> tmp(reinterpret_cast<T *>((void *)values->raw_values()) + offset, array.value_length(entry));
-      cache.swap(tmp);
+      std::swap(cache, tmp);
       return (void *)(&cache);
    }
 
