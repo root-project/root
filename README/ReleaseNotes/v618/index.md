@@ -111,6 +111,7 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
 ## Math Libraries
   - Add to the documentation of TLorentzVector a link to ROOT::Math::LorentzVector, which is a superior tool.
   - Add `T RVec<T>::at>(size_t, T)` method to allow users to specify a default value to be returned in case the vector is shorter than the position specified. No exception is thrown.
+  - Add the `Concatenate` helper to merge the content of two `RVec<T>` instances.
 
 ## RooFit Libraries
 ### HistFactory
