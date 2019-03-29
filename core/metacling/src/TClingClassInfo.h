@@ -89,6 +89,11 @@ public:
    void                 DeleteArray(void *arena, bool dtorOnly, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    void                 Destruct(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const clang::ValueDecl *GetDataMember(const char *name) const;
+   void SetDecl(const clang::Decl* D) {
+     // FIXME: We should track down all sets and potentially avoid them.
+     fDecl = D;
+     fNameCache.clear(); // invalidate the cache.
+   }
    TDictionary::DeclId_t   GetDeclId() const { return (const clang::Decl*)(fDecl->getCanonicalDecl()); }
    const clang::FunctionTemplateDecl *GetFunctionTemplate(const char *fname) const;
    TClingMethodInfo     GetMethod(const char *fname) const;
