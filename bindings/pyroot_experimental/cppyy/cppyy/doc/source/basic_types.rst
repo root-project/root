@@ -1,8 +1,5 @@
 .. _basic_types:
 
-.. role:: toconly
-   :class: toconly
-
 
 Basic Types
 ===========
@@ -26,8 +23,8 @@ Download it, save it under the name ``features.h``, and load it:
     >>>
 
 
-:toconly:`Basics`
-"""""""""""""""""
+`Builtins`
+""""""""""
 
 Most builtin data types map onto the expected equivalent Python types, with
 the caveats that there may be size differences, different precision or
@@ -49,11 +46,13 @@ unsigned-ness is still honored:
     >>>
 
 
-:toconly:`Arrays`
-"""""""""""""""""
+`Arrays`
+""""""""
 
-Builtin arrays are supported by through arrays from module ``array`` (or any
-other builtin-type array that implements the Python buffer interface).
+Builtin arrays are supported through arrays from module ``array`` (or any
+other builtin-type array that implements the Python buffer interface, such
+as numpy arrays) and a low-level view type from ``cppyy`` for returns and
+variable access (that implements the buffer interface as well).
 Out-of-bounds checking is limited to those cases where the size is known at
 compile time.
 Example:
@@ -72,23 +71,33 @@ Example:
     >>>
 
 
-:toconly:`Pointers`
-"""""""""""""""""""
+`Pointers`
+""""""""""
 
 When the C++ code takes a pointer or reference type to a specific builtin
 type (such as an ``unsigned int`` for example), then types need to match
 exactly.
 ``cppyy`` supports the types provided by the standard modules ``ctypes`` and
 ``array`` for those cases.
+Example of using a reference to builtin:
 
-For objects, a pointer to an object and an object are represented the same,
-with the necessary (de)referencing applied automatically.
+  .. code-block:: python
+
+    >>> from ctypes import c_uint
+    >>> u = c_uint(0)
+    >>> c.uint_ref_assign(u, 42)
+    >>> u.value
+    42
+    >>>
+
+For objects, a pointer to an object and an object are represented the same
+way, with the necessary (de)referencing applied automatically.
 Pointer variables are also bound by reference, so that updates on either the
 C++ or Python side are reflected on the other side as well.
 
 
-:toconly:`Enums`
-""""""""""""""""
+`Enums`
+"""""""
 
 Both named and anonymous enums are supported.
 The type of an enum is implementation dependent and may even be different for
@@ -101,5 +110,5 @@ Python3:
 
     >>> from cppyy.gbl import kApple, kBanana, kCitrus
     >>> cppyy.gbl.kApple
-    78L
+    78
     >>>

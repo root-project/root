@@ -17,8 +17,19 @@ created directory::
 
   $ rm -rf WORK
 
+If you use anaconda, it is recommended to use an anaconda python and (modern)
+c++ compiler, rather than the system ones.
+For example::
+
+ $ conda create -n WORK
+ $ conda activate WORK
+ (WORK) $ conda install python
+ (WORK) $ conda install -c conda-forge cxx-compiler
+ (WORK) [x86_64-conda_cos6-linux-gnu] $ python -m pip install cppyy
+
 Wheels for the backend are available for GNU/Linux, MacOS-X, and MS Windows
-(support for MS Windows is in beta).
+(support for MS Windows is in beta, 32b Windows support in vastly better shape
+than 64b Windows).
 The Linux wheels are built on manylinux, but with gcc 5.5, not the 4.8.2 that
 ships with manylinux, since ``cppyy`` exposes C++ APIs.
 Using 4.8.2 would have meant that any software using ``cppyy`` would have to
