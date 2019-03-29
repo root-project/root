@@ -753,7 +753,18 @@ namespace ROOT {
 
 } // end namespace ROOT
 
+#include <sstream>
+namespace cling
+{
+template<typename CoordSystem>
+std::string printValue(const ROOT::Math::LorentzVector<CoordSystem> *v)
+{
+   std::stringstream s;
+   s << *v;
+   return s.str();
+}
 
+} // end namespace cling
 
 #endif
 
