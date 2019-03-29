@@ -89,7 +89,8 @@ def _is_uptodate(pchname, incpath):
     try:
         return os.stat(pchname).st_mtime >= os.stat(incpath).st_mtime
     except Exception:
-        pass
+        if not os.path.exists(incpath):
+            return True     # no point in updating as it will fail 
     return False
 
 def _disable_pch():
