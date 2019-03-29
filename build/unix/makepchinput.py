@@ -20,18 +20,16 @@ def removeFiles(filesList):
    map(os.unlink, existingFilesList)
 
 #-------------------------------------------------------------------------------
-def removeLeftOvers():
+def removeLeftOvers(filesToRemove):
    """
    Remove leftover files from old versions of this script.
    """
-   filesToRemove = [os.path.join("include","allHeaders.h"),
-                    os.path.join("include","allHeaders.h.pch"),
-                    os.path.join("include","allLinkDef.h"),
-                    "all.h",
-                    "cppflags.txt",
-                    os.path.join("include","allLinkDef.h"),
+   filesToRemove.extend(
+                    [os.path.join("include","allHeaders.h.pch"),
                     os.path.join("etc","allDict.cxx"),
-                    os.path.join("etc","allDict.cxx.h")]
+                    os.path.join("etc","allDict.cxx.h"),
+                    os.path.join("etc","allDict.cxx.pch")]
+                    )
    removeFiles(filesToRemove)
 
 #-------------------------------------------------------------------------------
@@ -464,7 +462,6 @@ def makePCHInput():
       * etc/dictpch/allCppflags.txt
    """
    rootSrcDir, modules, expPyROOT, clingetpchList, cxxflags = getParams()
-   removeLeftOvers()
 
    outdir = os.path.join("etc","dictpch")
    allHeadersFilename = os.path.join(outdir,"allHeaders.h")
@@ -478,7 +475,7 @@ def makePCHInput():
       cppFlagsFilename.replace("\\","/")
 
    mkdirIfNotThere(outdir)
-   removeFiles((allHeadersFilename,allLinkdefsFilename))
+   removeLeftOvers([allHeadersFilename, allLinkdefsFilename, cppFlagsFilename])
 
    allHeadersContent = getSTLIncludes()
    allHeadersContent += getExtraIncludes(clingetpchList)
