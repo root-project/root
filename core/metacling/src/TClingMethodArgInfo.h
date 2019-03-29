@@ -2,7 +2,7 @@
 // Author: Paul Russo   30/07/2012
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -26,32 +26,43 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TClingDeclInfo.h"
+
+#include "clang/AST/Decl.h"
+
+namespace clang {
+   class ParmVarDecl;
+}
 
 namespace cling {
-class Interpreter;
+   class Interpreter;
 }
 
 class TClingMethodInfo;
 class TClingTypeInfo;
 
-class TClingMethodArgInfo {
+class TClingMethodArgInfo final : public TClingDeclInfo {
 
 private:
 
    cling::Interpreter       *fInterp; // Cling interpreter, we do *not* own.
-   const TClingMethodInfo   *fMethodInfo; // Function we return info about, we do *not* own.
    int                       fIdx; // Iterator, current parameter index.
 
 public:
 
-   explicit TClingMethodArgInfo(cling::Interpreter *interp) : fInterp(interp), fMethodInfo(0), fIdx(-1) {}
-   TClingMethodArgInfo(cling::Interpreter *interp, const TClingMethodInfo *mi) : fInterp(interp), fMethodInfo(mi), fIdx(-1) {}
+   explicit TClingMethodArgInfo(cling::Interpreter *interp) : TClingDeclInfo(nullptr), fInterp(interp), fIdx(-1) {}
+   TClingMethodArgInfo(cling::Interpreter *interp, const TClingMethodInfo *mi);
 
-   bool                   IsValid() const;
+   // Add a covariant return type for handy use.
+   const clang::ParmVarDecl* GetDecl() const override {
+      if (const auto FD = llvm::cast_or_null<clang::FunctionDecl>(TClingDeclInfo::GetDecl()))
+         return FD->getParamDecl(fIdx);
+      return nullptr;
+   }
+   bool                   IsValid() const override;
    int                    Next();
    long                   Property() const;
    const char            *DefaultValue() const;
-   const char            *Name() const;
    const TClingTypeInfo  *Type() const;
    const char            *TypeName() const;
 
