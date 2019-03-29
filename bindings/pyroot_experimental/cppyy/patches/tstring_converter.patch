@@ -1,8 +1,8 @@
 diff --git a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
-index a470a41..56d486d 100644
+index 9b6807d..9ad6adc 100644
 --- a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
 +++ b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
-@@ -1026,6 +1026,7 @@ bool CPyCppyy::name##Converter::ToMemory(PyObject* value, void* address)     \
+@@ -1044,6 +1044,7 @@ bool CPyCppyy::name##Converter::ToMemory(PyObject* value, void* address)     \
      return InstancePtrConverter::ToMemory(value, address);                   \
  }
  
@@ -10,7 +10,7 @@ index a470a41..56d486d 100644
  CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLString, std::string, c_str, size)
  CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLStringViewBase, std::string_view, data, size)
  bool CPyCppyy::STLStringViewConverter::SetArg(
-@@ -2068,6 +2069,9 @@ public:
+@@ -2174,6 +2175,9 @@ public:
          gf["const ULong64_t&"] =            gf["const unsigned long long&"];
  
      // factories for special cases
@@ -21,7 +21,7 @@ index a470a41..56d486d 100644
          gf["const char[]"] =                (cf_t)+[](long) { return new CStringConverter{}; };
          gf["char*"] =                       (cf_t)+[](long) { return new NonConstCStringConverter{}; };
 diff --git a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h
-index 172d19a..880ae04 100644
+index c395d3b..1045279 100644
 --- a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h
 +++ b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h
 @@ -9,6 +9,9 @@
@@ -34,7 +34,7 @@ index 172d19a..880ae04 100644
  
  namespace CPyCppyy {
  
-@@ -264,6 +267,7 @@ protected:                                                                   \
+@@ -267,6 +270,7 @@ protected:                                                                   \
      strtype fBuffer;                                                         \
  }
  
