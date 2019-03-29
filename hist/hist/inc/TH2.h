@@ -124,7 +124,7 @@ public:
    virtual Int_t    ShowPeaks(Double_t sigma=2, Option_t *option="", Double_t threshold=0.05); // *MENU*
    virtual void     Smooth(Int_t ntimes=1, Option_t *option=""); // *MENU*
 
-   ClassDef(TH2,4)  //2-Dim histogram base class
+   ClassDef(TH2,5)  //2-Dim histogram base class
 };
 
 
@@ -163,7 +163,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Char_t (content); }
 
-   ClassDef(TH2C,3)  //2-Dim histograms (one char per channel)
+   ClassDef(TH2C,4)  //2-Dim histograms (one char per channel)
 };
 
 
@@ -202,7 +202,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Short_t (content); }
 
-   ClassDef(TH2S,3)  //2-Dim histograms (one short per channel)
+   ClassDef(TH2S,4)  //2-Dim histograms (one short per channel)
 };
 
 
@@ -241,7 +241,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Int_t (content); }
 
-   ClassDef(TH2I,3)  //2-Dim histograms (one 32 bits integer per channel)
+   ClassDef(TH2I,4)  //2-Dim histograms (one 32 bits integer per channel)
 };
 
 
@@ -282,7 +282,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Float_t (content); }
 
-   ClassDef(TH2F,3)  //2-Dim histograms (one float per channel)
+   ClassDef(TH2F,4)  //2-Dim histograms (one float per channel)
 };
 
 
@@ -323,7 +323,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray[bin]; }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = content; }
 
-   ClassDef(TH2D,3)  //2-Dim histograms (one double per channel)
+   ClassDef(TH2D,4)  //2-Dim histograms (one double per channel)
 };
 
 #endif
