@@ -78,6 +78,7 @@ private:
 // cached values
     Py_ssize_t fArgsRequired;
 
+protected:
 // admin
     bool fIsInitialized;
 };

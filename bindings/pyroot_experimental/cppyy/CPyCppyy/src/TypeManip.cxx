@@ -8,13 +8,18 @@
 
 //- helpers ------------------------------------------------------------------
 static inline
+bool is_varchar(char c) {
+    return isalnum((int)c) || c == '_';
+}
+
+static inline
 std::string::size_type find_qualifier_index(const std::string& name)
 {
 // Find the first location that is not part of the class name proper.
     std::string::size_type i = name.size() - 1;
     for ( ; 0 < i; --i) {
         std::string::value_type c = name[i];
-        if (isalnum((int)c) || c == '>')
+        if (is_varchar(c) || c == '>')
             break;
     }
 
@@ -25,7 +30,19 @@ static inline void erase_const(std::string& name)
 {
 // Find and remove all occurrence of 'const'.
     std::string::size_type spos = std::string::npos;
-    while ((spos = name.find("const") ) != std::string::npos) {
+    std::string::size_type start = 0;
+    while ((spos = name.find("const", start)) != std::string::npos) {
+    // make sure not to erase 'const' as part of the name: if it is
+    // connected, before or after, to a variable name, then keep it
+        std::string::size_type after = spos+5;
+        if (after < name.size() && is_varchar(name[after])) {
+            start = after;
+            continue;
+        } else if (after == name.size()) {
+            if (spos > 0 && is_varchar(name[spos - 1]))
+                break;
+        }
+
         std::string::size_type i = 5;
         while (name[spos+i] == ' ') ++i;
         name.swap(name.erase(spos, i));
@@ -67,7 +84,6 @@ std::string CPyCppyy::TypeManip::remove_const(const std::string& cppname)
     return clean_name;
 }
 
-
 //----------------------------------------------------------------------------
 std::string CPyCppyy::TypeManip::clean_type(
     const std::string& cppname, bool template_strip, bool const_strip)
@@ -91,6 +107,30 @@ std::string CPyCppyy::TypeManip::clean_type(
             name = remove_const(name);
     }
     return name;
+}
+
+//----------------------------------------------------------------------------
+std::string CPyCppyy::TypeManip::template_base(const std::string& cppname)
+{
+// If this is a template, return the underlying template name w/o arguments
+    if (cppname.empty() || cppname.back() != '>')
+        return cppname;
+
+    int tpl_open = 0;
+    for (std::string::size_type pos = cppname.size()-1; 0 < pos; --pos) {
+        std::string::value_type c = cppname[pos];
+
+    // count '<' and '>' to be able to skip template contents
+        if (c == '>')
+            ++tpl_open;
+        else if (c == '<')
+            --tpl_open;
+
+        if (tpl_open == 0)
+            return cppname.substr(0, pos);
+    }
+
+    return cppname;
 }
 
 //----------------------------------------------------------------------------

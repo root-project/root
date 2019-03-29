@@ -8,13 +8,7 @@
 PyObject* CPyCppyy::CPPFunction::PreProcessArgs(
         CPPInstance*& self, PyObject* args, PyObject*)
 {
-// no self means called as a free function; all ok
-    if (!self) {
-        Py_INCREF(args);
-        return args;
-    }
-
-// otherwise, add self as part of the function arguments (means bound member)
+// add self as part of the function arguments (means bound member)
     Py_ssize_t sz = PyTuple_GET_SIZE(args);
     PyObject* newArgs = PyTuple_New(sz+1);
     for (int i = 0; i < sz; ++i) {
@@ -40,16 +34,17 @@ PyObject* CPyCppyy::CPPFunction::Call(
     }
 
 // setup as necessary
-    if (!this->Initialize(ctxt))
+    if (!fIsInitialized && !this->Initialize(ctxt))
         return nullptr;
 
-// reorder self into args, if necessary
-    if (!(args = this->PreProcessArgs(self, args, kwds)))
-        return nullptr;
+// if function was attached to a class, self will be non-zero and should be
+// the first function argument, so reorder 
+    if (self) args = this->PreProcessArgs(self, args, kwds);
 
-// translate the arguments
+// translate the arguments as normal
     bool bConvertOk = this->ConvertAndSetArgs(args, ctxt);
-    Py_DECREF(args);
+
+    if (self) Py_DECREF(args);
 
     if (bConvertOk == false)
         return nullptr;

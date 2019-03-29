@@ -19,6 +19,7 @@ namespace PyStrings {
     extern PyObject* gEq;
     extern PyObject* gFollow;
     extern PyObject* gGetItem;
+    extern PyObject* gGetNoCheck;
     extern PyObject* gInit;
     extern PyObject* gIter;
     extern PyObject* gLen;
@@ -46,7 +47,12 @@ namespace PyStrings {
     extern PyObject* gTemplate;
     extern PyObject* gVectorAt;
 
+    extern PyObject* gCppReal;
+    extern PyObject* gCppImag;
+
     extern PyObject* gThisModule;
+
+    extern PyObject* gNoImplicit;
 
 } // namespace PyStrings
 

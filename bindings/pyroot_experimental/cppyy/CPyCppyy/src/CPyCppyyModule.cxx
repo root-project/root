@@ -349,7 +349,7 @@ PyObject* MakeCppTemplateClass(PyObject*, PyObject* args)
 
 // build "< type, type, ... >" part of class name (modifies pyname)
     const std::string& tmpl_name =
-        Utility::ConstructTemplateArgs(PyTuple_GET_ITEM(args, 0), args, nullptr, 1);
+        Utility::ConstructTemplateArgs(PyTuple_GET_ITEM(args, 0), args, nullptr, Utility::kNone, 1);
     if (!tmpl_name.size())
         return nullptr;
 
@@ -418,7 +418,7 @@ PyObject* addressof(PyObject* pyobj, PyObject* args)
 // error message
     PyObject* str = PyObject_Str(pyobj);
     if (str && CPyCppyy_PyUnicode_Check(str))
-        PyErr_Format(PyExc_TypeError, "unknown object %s", PyBytes_AS_STRING(str));
+        PyErr_Format(PyExc_TypeError, "unknown object %s", CPyCppyy_PyUnicode_AsString(str));
     else
         PyErr_Format(PyExc_TypeError, "unknown object at %p", (void*)pyobj);
     Py_XDECREF(str);
@@ -656,13 +656,6 @@ PyObject* Cast(PyObject*, PyObject* args)
                                obj->fFlags & CPPInstance::kIsReference);
 }
 
-
-//----------------------------------------------------------------------------
-void* create_converter(const char* type_name, long* dims)
-{
-    return (void*)CreateConverter(type_name, dims);
-}
-
 } // unnamed namespace
 
 
@@ -825,6 +818,13 @@ extern "C" void initlibcppyy()
     if (PyType_Ready(&LowLevelView_Type) < 0)
         CPYCPPYY_INIT_ERROR;
 
+// custom iterators
+    if (PyType_Ready(&IndexIter_Type) < 0)
+        CPYCPPYY_INIT_ERROR;
+
+    if (PyType_Ready(&VectorIter_Type) < 0)
+        CPYCPPYY_INIT_ERROR;
+
 // inject identifiable nullptr
     gNullPtrObject = (PyObject*)&_CPyCppyy_NullPtrStruct;
     Py_INCREF(gNullPtrObject);
@@ -844,9 +844,6 @@ extern "C" void initlibcppyy()
 
 // create the memory regulator
     static MemoryRegulator s_memory_regulator;
-
-// setup the converter creator callback
-    cppyy_set_converter_creator(create_converter);
 
 #if PY_VERSION_HEX >= 0x03000000
     Py_INCREF(gThisModule);

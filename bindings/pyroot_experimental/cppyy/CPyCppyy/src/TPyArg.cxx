@@ -1,6 +1,6 @@
 // Bindings
 #include "CPyCppyy.h"
-#include "TPyArg.h"
+#include "CPyCppyy/TPyArg.h"
 
 
 //______________________________________________________________________________

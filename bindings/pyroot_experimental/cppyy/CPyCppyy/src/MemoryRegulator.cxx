@@ -107,23 +107,26 @@ bool CPyCppyy::MemoryRegulator::RecursiveRemove(
         return false;
 
     PyObject* pyscope = GetScopeProxy(klass);
-    if (!CPPScope_Check(pyscope))
+    if (!CPPScope_Check(pyscope)) {
+        Py_XDECREF(pyscope);
         return false;
+    }
 
     CPPClass* pyclass = (CPPClass*)pyscope;
-    if (!pyclass->fCppObjects)     // table may have been deleted on shutdown
-        return false;
+    if (!pyclass->fImp.fCppObjects)    // table may have been deleted on shutdown
+        return false;                  // TODO: should decref anyway?
 
 // see whether we're tracking this object
-    CppToPyMap_t* cppobjs = pyclass->fCppObjects;
+    CppToPyMap_t* cppobjs = pyclass->fImp.fCppObjects;
     CppToPyMap_t::iterator ppo = cppobjs->find(cppobj);
 
     if (ppo != cppobjs->end()) {
     // get the tracked object and cleanup weak reference
         CPPInstance* pyobj = (CPPInstance*)PyWeakref_GetObject(ppo->second);
         Py_DECREF(ppo->second);
-        if (!pyobj) {
+        if ((PyObject*)pyobj == Py_None) {
             cppobjs->erase(ppo);
+            Py_DECREF(pyscope);
             return false;
         }
 
@@ -143,6 +146,7 @@ bool CPyCppyy::MemoryRegulator::RecursiveRemove(
 
         // drop object and leave before too much damage is done
             cppobjs->erase(ppo);
+            Py_DECREF(pyscope);
             return false;
         }
 
@@ -163,10 +167,12 @@ bool CPyCppyy::MemoryRegulator::RecursiveRemove(
 
     // erase the object from tracking (weakref table already cleared, above)
         cppobjs->erase(ppo);
+        Py_DECREF(pyscope);
         return true;
     }
 
 // unknown cppobj
+    Py_DECREF(pyscope);
     return false;
 }
 
@@ -181,11 +187,11 @@ bool CPyCppyy::MemoryRegulator::RegisterPyObject(
     static PyObject* objectEraseCallback = PyCFunction_New(&gObjectEraseMethodDef, nullptr);
 
     CPPClass* pyclass = (CPPClass*)Py_TYPE(pyobj);
-    CppToPyMap_t* cppobjs = ((CPPClass*)Py_TYPE(pyobj))->fCppObjects;    
+    CppToPyMap_t* cppobjs = ((CPPClass*)Py_TYPE(pyobj))->fImp.fCppObjects;
     CppToPyMap_t::iterator ppo = cppobjs->find(cppobj);
-    if (ppo == pyclass->fCppObjects->end()) {
+    if (ppo == pyclass->fImp.fCppObjects->end()) {
         PyObject* pyref = PyWeakref_NewRef((PyObject*)pyobj, objectEraseCallback);
-        pyclass->fCppObjects->insert(std::make_pair(cppobj, pyref));
+        pyclass->fImp.fCppObjects->insert(std::make_pair(cppobj, pyref));
         return true;
     }
 
@@ -201,17 +207,21 @@ bool CPyCppyy::MemoryRegulator::UnregisterPyObject(
         return false;
 
     PyObject* pyscope = GetScopeProxy(klass);
-    if (!CPPScope_Check(pyscope))
+    if (!CPPScope_Check(pyscope)) {
+        Py_XDECREF(pyscope);
         return false;
+    }
 
     CPPClass* pyclass = (CPPClass*)pyscope;
-    CppToPyMap_t::iterator ppo = pyclass->fCppObjects->find(cppobj);
-    if (ppo != pyclass->fCppObjects->end()) {
+    CppToPyMap_t::iterator ppo = pyclass->fImp.fCppObjects->find(cppobj);
+    if (ppo != pyclass->fImp.fCppObjects->end()) {
         Py_DECREF(ppo->second);
-        pyclass->fCppObjects->erase(ppo);
+        pyclass->fImp.fCppObjects->erase(ppo);
+        Py_DECREF(pyscope);
         return true;
     }
 
+    Py_DECREF(pyscope);
     return false;
 }
 
@@ -224,22 +234,27 @@ PyObject* CPyCppyy::MemoryRegulator::RetrievePyObject(
        return nullptr;
 
     PyObject* pyscope = GetScopeProxy(klass);
-    if (!CPPScope_Check(pyscope))
+    if (!CPPScope_Check(pyscope)) {
+        Py_XDECREF(pyscope);
         return nullptr;
+    }
 
     CPPClass* pyclass = (CPPClass*)pyscope;
-    CppToPyMap_t::iterator ppo = pyclass->fCppObjects->find(cppobj);
-    if (ppo != pyclass->fCppObjects->end() ) {
+    CppToPyMap_t::iterator ppo = pyclass->fImp.fCppObjects->find(cppobj);
+    if (ppo != pyclass->fImp.fCppObjects->end() ) {
         PyObject* pyobj = PyWeakref_GetObject(ppo->second);
         if (pyobj == Py_None) {
             Py_DECREF(ppo->second);
-            pyclass->fCppObjects->erase(ppo);
+            pyclass->fImp.fCppObjects->erase(ppo);
+            Py_DECREF(pyscope);
             return nullptr;
         }
+        Py_DECREF(pyscope);
         Py_INCREF(pyobj);
         return pyobj;
     }
 
+    Py_DECREF(pyscope);
     return nullptr;
 }
 
@@ -254,14 +269,13 @@ PyObject* CPyCppyy::MemoryRegulator::EraseCallback(PyObject*, PyObject* pyref)
         if (pyobj->GetObject()) {
         // erase if tracked
             void* cppobj = pyobj->GetObject();
-            CppToPyMap_t::iterator ppo = pyclass->fCppObjects->find(cppobj);
-            if (ppo != pyclass->fCppObjects->end()) {
+            CppToPyMap_t::iterator ppo = pyclass->fImp.fCppObjects->find(cppobj);
+            if (ppo != pyclass->fImp.fCppObjects->end()) {
                 Py_DECREF(ppo->second);
-                pyclass->fCppObjects->erase(ppo);
+                pyclass->fImp.fCppObjects->erase(ppo);
             }
         }
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }

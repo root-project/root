@@ -1,6 +1,6 @@
 // Bindings
 #include "CPyCppyy.h"
-#include "CPPSetItem.h"
+#include "CPPGetSetItem.h"
 #include "Executors.h"
 
 
@@ -40,7 +40,7 @@ PyObject* CPyCppyy::CPPSetItem::PreProcessArgs(
 // see whether any of the arguments is a tuple itself
     Py_ssize_t realsize = 0;
     for (Py_ssize_t i = 0; i < nArgs - 1; ++i) {
-        PyObject* item = PyTuple_GetItem(subset, i);
+        PyObject* item = PyTuple_GET_ITEM(subset, i);
         realsize += PyTuple_Check(item) ? PyTuple_GET_SIZE(item) : 1;
     }
 
@@ -51,23 +51,69 @@ PyObject* CPyCppyy::CPPSetItem::PreProcessArgs(
 
         int current = 0;
         for (int i = 0; i < nArgs - 1; ++i, ++current) {
-            PyObject* item = PyTuple_GetItem(subset, i);
+            PyObject* item = PyTuple_GET_ITEM(subset, i);
             if (PyTuple_Check(item)) {
                 for (int j = 0; j < PyTuple_GET_SIZE(item); ++j, ++current) {
-                    PyObject* subitem = PyTuple_GetItem(item, j);
+                    PyObject* subitem = PyTuple_GET_ITEM(item, j);
                     Py_INCREF(subitem);
-                    PyTuple_SetItem(unrolled, current, subitem);
+                    PyTuple_SET_ITEM(unrolled, current, subitem);
                 }
             } else {
                 Py_INCREF(item);
-                PyTuple_SetItem(unrolled, current, item);
+                PyTuple_SET_ITEM(unrolled, current, item);
             }
         }
     }
 
-// actual call into C++
+// continue normal method processing
     PyObject* result = CPPMethod::PreProcessArgs(self, unrolled ? unrolled : subset, kwds);
+
     Py_XDECREF(unrolled);
     Py_DECREF(subset);
+    return result;
+}
+
+
+//-----------------------------------------------------------------------------
+PyObject* CPyCppyy::CPPGetItem::PreProcessArgs(
+    CPPInstance*& self, PyObject* args, PyObject* kwds)
+{
+// Unroll tuples for call, otherwise just like CPPMethod (this is very similar
+// to the code in CPPSetItem above, but subtly different in the details, hence
+// not factored out).
+    Py_ssize_t nArgs = PyTuple_GET_SIZE(args);
+
+// see whether any of the arguments is a tuple itself
+    Py_ssize_t realsize = 0;
+    for (Py_ssize_t i = 0; i < nArgs; ++i) {
+        PyObject* item = PyTuple_GET_ITEM(args, i);
+        realsize += PyTuple_Check(item) ? PyTuple_GET_SIZE(item) : 1;
+    }
+
+// unroll any tuples, if present in the arguments
+    PyObject* unrolled = 0;
+    if (realsize != nArgs-1) {
+        unrolled = PyTuple_New(realsize);
+
+        int current = 0;
+        for (int i = 0; i < nArgs; ++i, ++current) {
+            PyObject* item = PyTuple_GET_ITEM(args, i);
+            if (PyTuple_Check(item)) {
+                for (int j = 0; j < PyTuple_GET_SIZE(item); ++j, ++current) {
+                    PyObject* subitem = PyTuple_GET_ITEM(item, j);
+                    Py_INCREF(subitem);
+                    PyTuple_SET_ITEM(unrolled, current, subitem);
+                }
+            } else {
+                Py_INCREF(item);
+                PyTuple_SET_ITEM(unrolled, current, item);
+            }
+        }
+    }
+
+// continue normal method processing
+    PyObject* result = CPPMethod::PreProcessArgs(self, unrolled ? unrolled : args, kwds);
+
+    Py_XDECREF(unrolled);
     return result;
 }

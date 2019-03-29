@@ -34,36 +34,48 @@ struct Parameter {
 
 // extra call information
 struct CallContext {
-    CallContext() : fFlags(0), fNArgs(0), fArgsVec(nullptr) {}
+    CallContext() : fFlags(0), fArgsVec(nullptr), fNArgs(0), fTemps(nullptr) {}
     CallContext(const CallContext&) = delete;
     CallContext& operator=(const CallContext&) = delete;
-    ~CallContext() { delete fArgsVec; }
+    ~CallContext() { if (fTemps) Cleanup(); delete fArgsVec; }
 
     enum ECallFlags {
         kNone           =    0,
         kIsSorted       =    1,   // if method overload priority determined
         kIsCreator      =    2,   // if method creates python-owned objects
         kIsConstructor  =    4,   // if method is a C++ constructor
-        kUseHeuristics  =    8,   // if method applies heuristics memory policy
-        kUseStrict      =   16,   // if method applies strict memory policy
-        kReleaseGIL     =   32,   // if method should release the GIL
-        kFast           =   64,   // if method should NOT handle signals
-        kSafe           =  128    // if method should return on signals
+        kHaveImplicit   =    8,   // indicate that implicit converters are available
+        kAllowImplicit  =   16,   // indicate that implicit coversions are allowed
+        kNoImplicit     =   32,   // disable implicit to prevent recursion
+        kUseHeuristics  =   64,   // if method applies heuristics memory policy
+        kUseStrict      =  128,   // if method applies strict memory policy
+        kReleaseGIL     =  256,   // if method should release the GIL
+        kFast           =  512,   // if method should NOT handle signals
+        kSafe           = 1024,   // if method should return on signals
+        kIsPseudoFunc   = 2048    // internal, used for introspection
     };
 
 // memory handling
     static ECallFlags sMemoryPolicy;
     static bool SetMemoryPolicy(ECallFlags e);
 
+    void AddTemporary(PyObject* pyobj);
+    void Cleanup();
+
 // signal safety
     static ECallFlags sSignalPolicy;
     static bool SetSignalPolicy(ECallFlags e);
 
-    Parameter* GetArgs(size_t sz = (size_t)-1) {
+    Parameter* GetArgs(size_t sz) {
         if (sz != (size_t)-1) fNArgs = sz;
         if (fNArgs <= SMALL_ARGS_N) return fArgs;
         if (!fArgsVec) fArgsVec = new std::vector<Parameter>();
         fArgsVec->resize(fNArgs);
+        return fArgsVec->data();
+    }
+
+    Parameter* GetArgs() {
+        if (fNArgs <= SMALL_ARGS_N) return fArgs;
         return fArgsVec->data();
     }
  
@@ -75,8 +87,10 @@ public:
 private:
 // payload
     Parameter fArgs[SMALL_ARGS_N];
-    size_t fNArgs;
     std::vector<Parameter>* fArgsVec;
+    size_t fNArgs;
+    struct Temporary { PyObject* fPyObject; Temporary* fNext; };
+    Temporary* fTemps;
 };
 
 inline bool IsSorted(uint64_t flags) {
@@ -91,8 +105,12 @@ inline bool IsConstructor(uint64_t flags) {
     return flags & CallContext::kIsConstructor;
 }
 
-inline bool ReleasesGIL(uint64_t flags) {
-    return flags & CallContext::kReleaseGIL;
+inline bool HaveImplicit(CallContext* ctxt) {
+    return ctxt ? (!(ctxt->fFlags & CallContext::kNoImplicit) && (ctxt->fFlags & CallContext::kHaveImplicit)) : false;
+}
+
+inline bool AllowImplicit(CallContext* ctxt) {
+    return ctxt ? (!(ctxt->fFlags & CallContext::kNoImplicit) && (ctxt->fFlags & CallContext::kAllowImplicit)) : false;
 }
 
 inline bool ReleasesGIL(CallContext* ctxt) {
