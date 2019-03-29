@@ -238,34 +238,45 @@ class my_install(_install):
             raise DistutilsSetupError('Failed to install cppyy-cling')
         if env_make: os.putenv("MAKE", env_make)
 
-        if 'linux' in sys.platform:
-         # remove allDict.cxx.pch as it's not portable (rebuild on first run, see cppyy)
-            log.info('removing allDict.cxx.pch')
-            os.remove(os.path.join(get_prefix(), 'etc', 'allDict.cxx.pch'))
-         # for manylinux, reset the default cxxversion to 17 if no user override
-            if not 'STDCXX' in os.environ and is_manylinux():
-                log.info('updating root-config to C++17 for manylinux')
-                inp = os.path.join(get_prefix(), 'bin', 'root-config')
-                outp = inp+'.new'
-                outfile = open(outp, 'w')
-                for line in open(inp).readlines():
-                    if 'cxxversion=' == line[:11]:
-                        line = 'cxxversion=cxx17\n'
-                    outfile.write(line)
-                outfile.close()
-                os.rename(outp, inp)
-                os.chmod(inp, stat.S_IMODE(os.lstat(inp).st_mode) | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+     # remove allDict.cxx.pch as it's not portable (rebuild on first run, see cppyy)
+        log.info('removing allDict.cxx.pch')
+        os.remove(os.path.join(get_prefix(), 'etc', 'allDict.cxx.pch'))
+     # for manylinux, reset the default cxxversion to 17 if no user override
+        if not 'STDCXX' in os.environ and is_manylinux():
+            log.info('updating root-config to C++17 for manylinux')
+            inp = os.path.join(get_prefix(), 'bin', 'root-config')
+            outp = inp+'.new'
+            outfile = open(outp, 'w')
+            for line in open(inp).readlines():
+                if line.find('cxxversion=', 0, 11) == 0:
+                    line = 'cxxversion=cxx17\n'
+                elif line.find('features=', 0, 9) == 0:
+                    line = line.replace('cxx11', 'cxx17')
+                outfile.write(line)
+            outfile.close()
+            os.rename(outp, inp)
+            os.chmod(inp, stat.S_IMODE(os.lstat(inp).st_mode) | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
-                log.info('updating allCppflags.txt to C++17 for manylinux')
-                inp = os.path.join(get_prefix(), 'etc', 'dictpch', 'allCppflags.txt')
-                outp = inp+'.new'
-                outfile = open(outp, 'w')
-                for line in open(inp).readlines():
-                    if '-std=' == line[:5]:
-                        line = '-std=c++1z\n'
-                    outfile.write(line)
-                outfile.close()
-                os.rename(outp, inp)
+            log.info('updating allCppflags.txt to C++17 for manylinux')
+            inp = os.path.join(get_prefix(), 'etc', 'dictpch', 'allCppflags.txt')
+            outp = inp+'.new'
+            outfile = open(outp, 'w')
+            for line in open(inp).readlines():
+                if '-std=' == line[:5]:
+                    line = '-std=c++1z\n'
+                outfile.write(line)
+            outfile.close()
+            os.rename(outp, inp)
+
+            log.info('updating compiledata.h to C++17 for manylinux')
+            inp = os.path.join(get_prefix(), 'include', 'compiledata.h')
+            outp = inp+'.new'
+            outfile = open(outp, 'w')
+            for line in open(inp).readlines():
+                line = line.replace('-std=c++11', '-std=c++1z')
+                outfile.write(line)
+            outfile.close()
+            os.rename(outp, inp)
 
         install_path = self._get_install_path()
         log.info('Copying installation to: %s ...', install_path)
@@ -276,6 +287,7 @@ class my_install(_install):
     def get_outputs(self):
         outputs = _install.get_outputs(self)
         outputs.append(os.path.join(self._get_install_path(), 'cppyy_backend'))
+        outputs.append(os.path.join(self._get_install_path(), 'cppyy_backend', 'etc', 'allDict.cxx.pch'))
         return outputs
 
 
@@ -283,6 +295,7 @@ cmdclass = {
         'build': my_cmake_build,
         'clean': my_clean,
         'install': my_install }
+
 if has_wheel:
     class my_bdist_wheel(_bdist_wheel):
         def finalize_options(self):
@@ -292,6 +305,15 @@ if has_wheel:
             self.plat_name = get_platform()
             _bdist_wheel.finalize_options(self)
             self.root_is_pure = True
+
+        def write_record(self, bdist_dir, distinfo_dir):
+            _bdist_wheel.write_record(self, bdist_dir, distinfo_dir)
+
+         # add allDict.cxx.pch to record
+            record_path = os.path.join(distinfo_dir, 'RECORD')
+            with open(record_path, 'a') as record_file:
+                record_file.write(os.path.join('cppyy_backend', 'etc', 'allDict.cxx.pch')+',,\n')
+
     cmdclass['bdist_wheel'] = my_bdist_wheel
 
 
@@ -323,7 +345,7 @@ setup(
     author='ROOT Developers',
     author_email='rootdev@cern.ch',
 
-    version='6.15.2.2',
+    version='6.15.2.6',
 
     license='LLVM: UoI-NCSA; ROOT: LGPL 2.1',
 
