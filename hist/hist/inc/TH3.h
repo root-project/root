@@ -148,7 +148,7 @@ protected:
       return h.DoProject2D(name, title, projX,projY, computeErrors, originalRange, useUF, useOF);
    }
 
-   ClassDef(TH3,5)  //3-Dim histogram base class
+   ClassDef(TH3,6)  //3-Dim histogram base class
 };
 
 //________________________________________________________________________
@@ -184,7 +184,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Char_t (content); }
 
-   ClassDef(TH3C,3)  //3-Dim histograms (one char per channel)
+   ClassDef(TH3C,4)  //3-Dim histograms (one char per channel)
 };
 
 //________________________________________________________________________
@@ -220,7 +220,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Short_t (content); }
 
-   ClassDef(TH3S,3)  //3-Dim histograms (one short per channel)
+   ClassDef(TH3S,4)  //3-Dim histograms (one short per channel)
 };
 
 //________________________________________________________________________
@@ -256,7 +256,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Int_t (content); }
 
-   ClassDef(TH3I,3)  //3-Dim histograms (one 32 bits integer per channel)
+   ClassDef(TH3I,4)  //3-Dim histograms (one 32 bits integer per channel)
 };
 
 
@@ -294,7 +294,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Float_t (content); }
 
-   ClassDef(TH3F,3)  //3-Dim histograms (one float per channel)
+   ClassDef(TH3F,4)  //3-Dim histograms (one float per channel)
 };
 
 //________________________________________________________________________
@@ -331,7 +331,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray[bin]; }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = content; }
 
-   ClassDef(TH3D,3)  //3-Dim histograms (one double per channel)
+   ClassDef(TH3D,4)  //3-Dim histograms (one double per channel)
 };
 
 #endif
