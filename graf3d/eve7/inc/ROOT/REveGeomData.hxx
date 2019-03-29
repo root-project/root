@@ -116,7 +116,7 @@ public:
    REveGeomDrawing() = default;
 };
 
-using REveGeomScanFunc_t = std::function<bool(REveGeomNode&, std::vector<int>&)>;
+using REveGeomScanFunc_t = std::function<bool(REveGeomNode &, std::vector<int> &, bool)>;
 
 class REveGeomDescription {
 
@@ -158,7 +158,7 @@ class REveGeomDescription {
 
    int MarkVisible(bool on_screen = false);
 
-   void ScanVisible(REveGeomScanFunc_t func);
+   void ScanNodes(bool only_visible, REveGeomScanFunc_t func);
 
    void ResetRndrInfos();
 

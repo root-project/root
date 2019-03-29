@@ -292,10 +292,10 @@ int ROOT::Experimental::REveGeomDescription::MarkVisible(bool on_screen)
 /////////////////////////////////////////////////////////////////////
 /// Iterate over all visible nodes and call function
 
-void ROOT::Experimental::REveGeomDescription::ScanVisible(REveGeomScanFunc_t func)
+void ROOT::Experimental::REveGeomDescription::ScanNodes(bool only_visible, REveGeomScanFunc_t func)
 {
    std::vector<int> stack;
-   stack.reserve(200);
+   stack.reserve(25); // reserve enough space for most use-cases
    int seqid{0}, inside_visisble_branch{0};
 
    using ScanFunc_t = std::function<int(int, int)>;
@@ -306,20 +306,25 @@ void ROOT::Experimental::REveGeomDescription::ScanVisible(REveGeomScanFunc_t fun
 
       auto &desc = fDesc[nodeid];
       int res = 0;
-      if (desc.IsVisible() && desc.CanDisplay() && (lvl >= 0) && (inside_visisble_branch > 0))
-         if (func(desc, stack))
+      bool is_visible = (desc.IsVisible() && desc.CanDisplay() && (lvl >= 0) && (inside_visisble_branch > 0));
+
+      if (is_visible || !only_visible)
+         if (func(desc, stack, is_visible))
             res++;
 
       seqid++; // count sequence id of current position in scan, will be used later for merging drawing lists
+
+      // if (gDebug>1)
+      //   printf("%*s %s vis %d chlds %d lvl %d inside %d isvis %d candispl %d\n", (int) stack.size()*2+1, "", desc.name.c_str(), desc.vis, (int) desc.chlds.size(), lvl, inside_visisble_branch, desc.IsVisible(), desc.CanDisplay());
 
       // limit depth to which it scans
       if (lvl > desc.GetVisDepth())
          lvl = desc.GetVisDepth();
 
-      if ((desc.chlds.size() > 0) && (desc.numvischld > 0)) {
+      if ((desc.chlds.size() > 0) && ((desc.numvischld > 0) || !only_visible)) {
          auto pos = stack.size();
          int numvischld = 0, previd = seqid;
-         stack.push_back(0);
+         stack.emplace_back(0);
          for (unsigned k = 0; k < desc.chlds.size(); ++k) {
             stack[pos] = k; // stack provides index in list of chdils
             numvischld += scan_func(desc.chlds[k], lvl - 1);
@@ -327,7 +332,7 @@ void ROOT::Experimental::REveGeomDescription::ScanVisible(REveGeomScanFunc_t fun
          stack.pop_back();
 
          // if no child is visible, skip it again and correctly calculate seqid
-         if (numvischld == 0) {
+         if ((numvischld == 0) && only_visible) {
             desc.numvischld = 0;
             desc.idshift = seqid - previd;
          }
@@ -534,7 +539,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
    std::vector<int> viscnt(fDesc.size(), 0);
 
    // first count how many times each individual node appears
-   ScanVisible([&viscnt](REveGeomNode &node, std::vector<int> &) {
+   ScanNodes(true, [&viscnt](REveGeomNode &node, std::vector<int> &, bool) {
       viscnt[node.id]++;
       return true;
    });
@@ -582,7 +587,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
    REveGeomDrawing drawing;
    ResetRndrInfos();
 
-   ScanVisible([&, this](REveGeomNode &node, std::vector<int> &stack) {
+   ScanNodes(true, [&, this](REveGeomNode &node, std::vector<int> &stack, bool) {
       if (node.sortid < fDrawIdCut) {
          drawing.visibles.emplace_back(node.id, stack);
 
@@ -657,7 +662,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       return 0;
    }
 
-   std::vector<int> viscnt(fDesc.size(), 0);
+   std::vector<int> nodescnt(fDesc.size(), 0), viscnt(fDesc.size(), 0);
 
    int nmatches{0};
 
@@ -666,10 +671,12 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    };
 
    // first count how many times each individual node appears
-   ScanVisible([&viscnt,&match_func,&nmatches](REveGeomNode &node, std::vector<int> &) {
+   ScanNodes(false, [&nodescnt,&viscnt,&match_func,&nmatches](REveGeomNode &node, std::vector<int> &, bool is_vis) {
+
       if (match_func(node)) {
          nmatches++;
-         viscnt[node.id]++;
+         nodescnt[node.id]++;
+         if (is_vis) viscnt[node.id]++;
       };
       return true;
    });
@@ -740,7 +747,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 
    REveGeomDrawing drawing;
 
-   ScanVisible([&, this](REveGeomNode &node, std::vector<int> &stack) {
+   ScanNodes(false, [&, this](REveGeomNode &node, std::vector<int> &stack, bool is_vis) {
       // select only nodes which should match
       if (!match_func(node))
          return true;
@@ -770,6 +777,9 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 
          prntid = chldid;
       }
+
+      // no need to add visibles
+      if (!is_vis) return true;
 
       drawing.visibles.emplace_back(node.id, stack);
 
@@ -956,7 +966,7 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
 
    REveGeomDrawing drawing;
 
-   ScanVisible([&, this](REveGeomNode &node, std::vector<int> &stack) {
+   ScanNodes(true, [&, this](REveGeomNode &node, std::vector<int> &stack, bool) {
       // select only nodes which reference same shape
 
       if (check_volume) {
