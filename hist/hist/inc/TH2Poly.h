@@ -169,7 +169,7 @@ protected:
       return (bin>=kNOverflow) ? SetBinContent(bin-kNOverflow+1,content) : SetBinContent(-bin-1,content);
    }
 
-   ClassDef(TH2Poly,1)  //2-Dim histogram with polygon bins
+   ClassDef(TH2Poly,2)  //2-Dim histogram with polygon bins
  };
 
 #endif
