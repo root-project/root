@@ -190,7 +190,7 @@ TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
    fNotify(this)
 {
    if (!fTree) {
-      Error("TTreeReader", "TTree is NULL!");
+      ::Error("TTreeReader::TTreeReader", "TTree is NULL!");
    } else {
       Initialize();
    }
