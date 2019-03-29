@@ -133,7 +133,7 @@ public:
    virtual void     SetErrorOption(Option_t *option=""); // *MENU*
    virtual void     Sumw2(Bool_t flag = kTRUE);
 
-   ClassDef(TProfile,6)  //Profile histogram class
+   ClassDef(TProfile,7)  //Profile histogram class
 };
 
 #endif
