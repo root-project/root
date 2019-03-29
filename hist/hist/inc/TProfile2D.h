@@ -143,7 +143,7 @@ public:
    virtual void      Sumw2(Bool_t flag = kTRUE);
    Double_t GetNumberOfBins() { return fBinEntries.GetSize(); }
 
-   ClassDef(TProfile2D,7)  //Profile2D histogram class
+   ClassDef(TProfile2D,8)  //Profile2D histogram class
 };
 
 #endif
