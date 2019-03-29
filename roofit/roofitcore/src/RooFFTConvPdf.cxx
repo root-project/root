@@ -29,15 +29,15 @@
 /// vastly superior to that of RooNumConvPdf.
 ///
 /// An important feature of FFT convolutions is that the observable is assumed to be
-/// cyclical. This is correct cyclical observables such as angles,
-/// but it may not be for other observables. For non-cyclical variables, wrap-around artifacts may be
+/// cyclical. This is correct for cyclical observables such as angles,
+/// but does not hold in general. For non-cyclical variables, wrap-around artifacts may be
 /// encountered, *e.g.* if the PDF is zero at xMin and non-zero at xMax. A rising tail may appear at xMin.
-/// This is inevitable when using FFTs, because the FFT sees a distribution with three bins as follows:
+/// This is inevitable when using FFTs. A distribution with 3 bins therefore looks like:
 /// ```
 /// ... 0 1 2 0 1 2 0 1 2 ...
 /// ```
 ///
-/// Therefore, if bins 0 and 2 are not equal, the FFT sees a cyclical function with a step at the 2|1 boundary, which causes
+/// Therefore, if bins 0 and 2 are not equal, the FFT sees a cyclical function with a step at the 2|0 boundary, which causes
 /// artifacts in Fourier space.
 ///
 /// The spillover or discontinuity can be reduced or eliminated by
@@ -243,7 +243,7 @@ void RooFFTConvPdf::prepareFFTBinning(RooRealVar& convVar) const {
           << " This can be done manually by setting an additional binning named 'cache'." << std::endl;
       convVar.setBinning(RooUniformBinning(varBinning.lowBound(), varBinning.highBound(), optimal, "cache"), "cache");
     } else {
-      coutW(Caching) << "The internal binning of variable " << convVar.GetName()
+      coutE(Caching) << "The internal binning of variable " << convVar.GetName()
           << " is not uniform. The numerical FFT will likely yield wrong results." << std::endl;
       convVar.setBinning(varBinning, "cache");
     }
@@ -705,16 +705,16 @@ Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooData
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the observables to be cached given the normalization set nset
+/// Return the observables to be cached given the normalization set nset.
 ///
-/// If the cache observables is in nset then this is 
+/// If the cache observable is in nset then this is
 ///    - the convolution observable plus 
 ///    - any member of nset that is either a RooCategory, 
 ///    - or was previously specified through setCacheObservables().
 ///
-/// In case the cache observable is _not_ in nset, then it is
+/// In case the cache observable is *not* in nset, then it is
 ///    - the convolution observable plus 
-///    - all member of nset are observables of this p.d.f.
+///    - all member of nset that are observables of this p.d.f.
 /// 
 
 RooArgSet* RooFFTConvPdf::actualObservables(const RooArgSet& nset) const 
@@ -777,7 +777,7 @@ RooArgSet* RooFFTConvPdf::actualObservables(const RooArgSet& nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the parameters on which the cache depends given normalization
 /// set nset. For this p.d.f these are the parameters of the input p.d.f.
-/// but never the convolution variable, it case it is not part of nset
+/// but never the convolution variable, in case it is not part of nset.
 
 RooArgSet* RooFFTConvPdf::actualParameters(const RooArgSet& nset) const 
 {  
@@ -793,7 +793,7 @@ RooArgSet* RooFFTConvPdf::actualParameters(const RooArgSet& nset) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return p.d.f. observable (which can be a function) to substitute given
-/// p.d.f. observable. Substitute x by xprime if xprime is set
+/// p.d.f. observable. Substitutes x by xprime if xprime is set.
 
 RooAbsArg& RooFFTConvPdf::pdfObservable(RooAbsArg& histObservable) const 
 {
