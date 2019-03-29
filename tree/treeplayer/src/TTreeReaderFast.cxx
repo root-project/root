@@ -23,7 +23,7 @@ TTreeReaderFast::TTreeReaderFast(TTree* tree):
    fTree(tree)
 {
    if (!fTree) {
-      Error("TTreeReaderFast", "TTree is NULL!");
+      ::Error("TTreeReaderFast::TTreeReaderFast", "TTree is NULL!");
    } else {
       Initialize();
    }
