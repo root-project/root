@@ -78,8 +78,9 @@ class TestREGRESSION:
         """Help on a generated pyfunc used to crash."""
 
         import cppyy, distutils, pydoc, sys
+        import distutils.sysconfig as sc
 
-        cppyy.add_include_path(distutils.sysconfig_get_python_inc())
+        cppyy.add_include_path(sc.get_python_inc())
         if sys.hexversion < 0x3000000:
             cppyy.cppdef("#undef _POSIX_C_SOURCE")
             cppyy.cppdef("#undef _XOPEN_SOURCE")
@@ -135,3 +136,37 @@ class TestREGRESSION:
         a = cppyy.gbl.AllDefault[int](24)
         a.m_t = 21;
         assert a.do_stuff() == 24
+
+    def test06_class_refcounting(self):
+        """The memory regulator would leave an additional refcount on classes"""
+
+        import cppyy, gc, sys
+
+        x = cppyy.gbl.std.vector['float']
+        old_refcnt = sys.getrefcount(x)
+
+        y = x()
+        del y
+        gc.collect()
+
+        assert sys.getrefcount(x) == old_refcnt
+
+    def test07_typedef_identity(self):
+        """Nested typedefs should retain identity"""
+
+        import cppyy
+
+        cppyy.cppdef("""namespace PyABC {
+            struct S1 {};
+            struct S2 {
+                typedef std::vector<const PyABC::S1*> S1_coll;
+            };
+        }""")
+
+        from cppyy.gbl import PyABC
+
+        assert PyABC.S2.S1_coll
+        assert 'S1_coll' in dir(PyABC.S2)
+        assert not 'vector<const PyABC::S1*>' in dir(PyABC.S2)
+        assert PyABC.S2.S1_coll is cppyy.gbl.std.vector('const PyABC::S1*')
+

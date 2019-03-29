@@ -1,0 +1,7 @@
+<lcgdict>
+
+  <namespace name="CNS" />
+
+  <function pattern="CNS::*" />
+
+</lcgdict>

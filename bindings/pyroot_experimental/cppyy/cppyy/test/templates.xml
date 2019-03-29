@@ -21,4 +21,6 @@
   <namespace name="TemplateHiding" />
   <class pattern="TemplateHiding::*" />
 
+  <namespace name="using_problem" />
+
 </lcgdict>

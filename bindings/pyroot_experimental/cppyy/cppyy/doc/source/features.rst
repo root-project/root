@@ -1,6 +1,6 @@
 .. _features:
 
-More Features
+Miscellaneous
 =============
 
 .. toctree::
@@ -8,9 +8,8 @@ More Features
 
    cppyy_features_header
 
-
-The following is not meant to be an exhaustive list, but more of a show case.
-Most features will be fairly obvious in their use.
+This is a collection of a few more features listed that do not have a proper
+place yet in the rest of the documentation.
 
 The C++ code used for the examples below can be found
 :doc:`here <cppyy_features_header>`, and it is assumed that that code is
@@ -23,6 +22,9 @@ Download it, save it under the name ``features.h``, and load it:
     >>> cppyy.include('features.h')
     >>>
 
+
+`Odds and ends`
+---------------
 
 * **memory**: C++ instances created by calling their constructor from python
   are owned by python.
@@ -52,7 +54,7 @@ Download it, save it under the name ``features.h``, and load it:
   Fixing these bootstrap problems is on the TODO list.
   The global namespace is ``cppyy.gbl``.
 
-* **NULL**: Is represented as ``cppyy.gbl.nullptr``.
+* **NULL**: Is represented as ``cppyy.nullptr``.
   In C++11, the keyword ``nullptr`` is used to represent ``NULL``.
   For clarity of intent, it is recommended to use this instead of ``None``
   (or the integer ``0``, which can serve in some cases), as ``None`` is better

@@ -171,17 +171,17 @@ public:
 // templated typedefs
 namespace TemplatedTypedefs {
 
-template<typename IN, typename OUT, size_t _vsize = 4>
+template<typename TYPE_IN, typename TYPE_OUT, size_t _vsize = 4>
 struct BaseWithEnumAndTypedefs {
     enum { vsize = _vsize };
-    typedef IN in_type;
-    typedef OUT out_type;
+    typedef TYPE_IN in_type;
+    typedef TYPE_OUT out_type;
 };
 
-template <typename IN, typename OUT, size_t _vsize = 4>
-struct DerivedWithUsing : public BaseWithEnumAndTypedefs<IN, OUT, _vsize>
+template <typename TYPE_IN, typename TYPE_OUT, size_t _vsize = 4>
+struct DerivedWithUsing : public BaseWithEnumAndTypedefs<TYPE_IN, TYPE_OUT, _vsize>
 {
-    typedef BaseWithEnumAndTypedefs<IN, OUT, _vsize> base_type;
+    typedef BaseWithEnumAndTypedefs<TYPE_IN, TYPE_OUT, _vsize> base_type;
     using base_type::vsize;
     using typename base_type::in_type;
     typedef typename base_type::in_type in_type_tt;
@@ -212,3 +212,64 @@ struct Derived : public Base {
 //===========================================================================
 // 'using' of templates
 template<typename T> using DA_vector = std::vector<T>;
+
+#if __cplusplus > 201402L
+namespace using_problem {
+
+template <typename T, size_t SZ>
+struct vector {
+    vector() : m_val(SZ) {}
+    T m_val;
+};
+
+template <typename T, size_t ... sizes>
+struct matryoshka {
+    typedef T type;
+};
+
+template <typename T, size_t SZ, size_t ... sizes>
+struct matryoshka<T, SZ, sizes ... > {
+    typedef vector<typename matryoshka<T, sizes ...>::type, SZ> type;
+};
+
+template <typename T, size_t ... sizes>
+using make_vector = typename matryoshka<T, sizes ...>::type;
+    typedef make_vector<int, 2, 3> iiv_t;
+};
+#endif
+
+namespace using_problem {
+
+template<typename T>
+class Base {
+public:
+    template<typename R>
+    R get1(T t) { return t + R{5}; }
+    T get2() { return T{5}; }
+    template<typename R>
+    R get3(T t) { return t + R{5}; }
+    T get3() { return T{5}; }
+};
+
+template<typename T>
+class Derived : public Base<T> {
+public:
+    typedef Base<T> _Mybase;
+    using _Mybase::get1;
+    using _Mybase::get2;
+    using _Mybase::get3;
+};
+
+}
+
+
+//===========================================================================
+// template with r-value
+namespace T_WithRValue {
+
+template<typename T>
+bool is_valid(T&& new_value) {
+    return new_value != T{};
+}
+
+}

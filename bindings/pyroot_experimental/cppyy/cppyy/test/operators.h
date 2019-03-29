@@ -46,6 +46,7 @@ private:
    int m_int;
 };
 
+
 //----------------------------------------------------------------------------
 struct operator_char_star {       // for testing user-defined implicit casts
    operator_char_star() : m_str((char*)"operator_char_star") {}
@@ -94,6 +95,7 @@ struct operator_float {
    float m_float;
 };
 
+
 //----------------------------------------------------------------------------
 class v_opeq_base {
 public:
@@ -112,4 +114,88 @@ public:
    virtual ~v_opeq_derived();
 
    virtual bool operator==(const v_opeq_derived& other);
+};
+
+
+//----------------------------------------------------------------------------
+class YAMatrix1 {        // YetAnotherMatrix class for indexing tests
+public:
+    YAMatrix1() : m_val(42) {}
+
+    int& operator() (int i, int j);
+    const int& operator() (int i, int j) const;
+
+    int m_val;
+};
+
+class YAMatrix2 {
+public:
+    YAMatrix2() : m_val(42) {}
+
+    int& operator[] (int i);
+    const int& operator[] (int i) const;
+
+    int m_val;
+};
+
+class YAMatrix3 {
+public:
+    YAMatrix3() : m_val(42) {}
+
+    int& operator() (int i, int j);
+    const int& operator() (int i, int j) const;
+
+    int& operator[] (int i);
+    const int& operator[] (int i) const;
+
+    int m_val;
+};
+
+class YAMatrix4 {
+public:
+    YAMatrix4() : m_val(42) {}
+
+// opposite order of method declarations from YAMatrix3
+    int& operator[] (int i);
+    const int& operator[] (int i) const;
+
+    int& operator() (int i, int j);
+    const int& operator() (int i, int j) const;
+
+    int m_val;
+};
+
+class YAMatrix5 {
+public:
+    YAMatrix5() : m_val(42) {}
+
+    int& operator[] (int i);
+    int operator[] (int i) const;
+
+    int& operator() (int i, int j);
+    int operator() (int i, int j) const;
+
+    int m_val;
+};
+
+class YAMatrix6 {
+public:
+    YAMatrix6() : m_val(42) {}
+
+    int& operator[] (int i);
+    int operator[] (int i) const;
+
+    int& operator() (int i, int j);
+
+    int m_val;
+};
+
+class YAMatrix7 {
+public:
+    YAMatrix7() : m_val(42) {}
+
+    int& operator[] (int i);
+    int& operator() (int i, int j);
+
+    int m_val;
 };

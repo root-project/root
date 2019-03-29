@@ -1,8 +1,5 @@
 .. _classes:
 
-.. role:: toconly
-   :class: toconly
-
 
 Classes
 =======
@@ -23,8 +20,8 @@ Download it, save it under the name ``features.h``, and load it:
     >>>
 
 
-:toconly:`Basics`
-"""""""""""""""""
+`Basics`
+--------
 
 All bound C++ code starts off from the global C++ namespace, represented in
 Python by ``gbl``.
@@ -65,8 +62,8 @@ for e.g. pickling:
     >>>
 
 
-:toconly:`Inheritance`
-""""""""""""""""""""""
+`Inheritance`
+-------------
 
 The output of help shows the inheritance hierarchy, constructors, public
 methods, and public data.
@@ -98,8 +95,36 @@ As the output of ``help`` showed, the ``Concrete`` constructor takes
 an integer argument, that by default is 42.
 
 
-:toconly:`Typedefs`
-""""""""""""""""""""
+`Cross-inheritance`
+-------------------
+
+Python classes that derive from C++ classes can override virtual methods as
+long as those methods are declared on class instantiation (adding methods to
+the Python class after the fact will not provide overrides on the C++ side,
+only on the Python side).
+Example:
+
+  .. code-block:: python
+
+    >>> from cppyy.gbl import Abstract, call_abstract_method
+    >>> class PyConcrete(Abstract):
+    ...     def abstract_method(self):
+    ...         print("Hello, Python World!\n")
+    ...     def concrete_method(self):
+    ...         pass
+    ...
+    >>> pc = PyConcrete()
+    >>> call_abstract_method(pc)
+    Hello, Python World!
+    >>> 
+
+Note that it is not necessary to provide a constructor (``__init__``), but
+if you do, you *must* call the base class constructor through the ``super``
+mechanism.
+
+
+`Typedefs`
+----------
 
 Typedefs are simple python references to the actual classes to which
 they refer.
@@ -112,8 +137,8 @@ they refer.
     >>>
 
 
-:toconly:`Data members`
-"""""""""""""""""""""""
+`Data members`
+--------------
 
 The ``Concrete`` instances have a public data member ``m_int`` that
 is treated as a Python property, albeit a typed one:
@@ -155,8 +180,8 @@ behave as expected:
      123
 
 
-:toconly:`Methods`
-""""""""""""""""""
+`Methods`
+---------
 
 C++ methods are represented as Python ones: these are first-class objects and
 can be bound to an instance.
@@ -176,8 +201,8 @@ Similarly, if all classes are bound, the normal Python rules apply:
     >>>
 
 
-:toconly:`Templates`
-""""""""""""""""""""
+`Templates`
+-----------
 
 Templated classes are instantiated using square brackets.
 (For backwards compatibility reasons, parentheses work as well.)

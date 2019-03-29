@@ -325,24 +325,24 @@ public:
 //===========================================================================
 class pointer_pass {               // for testing passing of void*'s
 public:
-    long gime_address_ptr(void* obj) {
-        return (long)obj;
+    intptr_t gime_address_ptr(void* obj) {
+        return (intptr_t)obj;
     }
 
-    long gime_address_ptr_ptr(void** obj) {
-        return (long)*((long**)obj);
+    intptr_t gime_address_ptr_ptr(void** obj) {
+        return (intptr_t)*((long**)obj);
     }
 
-    long gime_address_ptr_ref(void*& obj) {
-        return (long)obj;
+    intptr_t gime_address_ptr_ref(void*& obj) {
+        return (intptr_t)obj;
     }
 
-    static long set_address_ptr_ptr(void** obj) {
-        (*(long**)obj) = (long*)0x4321;
+    static intptr_t set_address_ptr_ptr(void** obj) {
+        (*(intptr_t**)obj) = (intptr_t*)0x4321;
         return 42;
     }
 
-    static long set_address_ptr_ref(void*& obj) {
+    static intptr_t set_address_ptr_ref(void*& obj) {
         obj = (void*)0x1234;
         return 21;
     }
@@ -432,18 +432,31 @@ public:
 
 
 //===========================================================================
-class UsingBase {                  // using declaration testing
+class UsingBase1 {                 // using declaration testing
 public:
-    UsingBase(int n = 13) : m_int(n) {} 
+    UsingBase1(int n = 13) : m_int(n) {} 
+    virtual ~UsingBase1() {}
     virtual char vcheck() { return 'A'; }
     int m_int;
 };
 
-class UsingDerived : public UsingBase {
+class UsingDerived1 : public UsingBase1 {
 public:
-    using UsingBase::UsingBase;
+    using UsingBase1::UsingBase1;
     virtual char vcheck() { return 'B'; }
     int m_int2 = 42;
+};
+
+class UsingBase2 {
+public:
+    virtual ~UsingBase2() {}
+    virtual char vcheck() { return 'A'; }
+};
+
+class UsingDerived2 : public UsingBase2 {
+public:
+    using UsingBase2::vcheck;
+    virtual char vcheck(int) { return 'B'; }
 };
 
 
@@ -481,3 +494,24 @@ class Printable4 { /* empty */ };
 
 std::ostream& operator<<(std::ostream& os, const Cpp2PyPrinting::Printable3&);
 std::ostream& operator<<(std::ostream& os, const Printable4&);
+
+
+//===========================================================================
+namespace UsedSpace1 {             // for using directives testing
+    int foo1();
+
+    namespace inner {
+        int foo2();
+    }
+}
+
+namespace UsedSpace2 {
+    int bar();
+}
+
+namespace UserDirs {
+    using namespace UsedSpace1;
+    using namespace UsedSpace2;
+    using namespace UsedSpace1::inner;
+}
+
