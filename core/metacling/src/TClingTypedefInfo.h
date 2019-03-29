@@ -26,6 +26,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TClingDeclInfo.h"
+
 #include "cling/Interpreter/Interpreter.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -40,7 +42,7 @@ namespace ROOT {
    }
 }
 
-class TClingTypedefInfo {
+class TClingTypedefInfo final : public TClingDeclInfo {
 
 private:
 
@@ -48,14 +50,13 @@ private:
    bool                 fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
    bool                 fDescend; // Flag for signaling the need to descend on this advancement.
    clang::DeclContext::decl_iterator fIter; // Current decl in scope.
-   const clang::Decl    *fDecl; // Current decl.
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
    std::string          fTitle; // The meta info for the typedef.
 
 public:
 
    explicit TClingTypedefInfo(cling::Interpreter *interp)
-      : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fTitle("")
+      : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fDescend(false), fTitle("")
    {
       const clang::TranslationUnitDecl *TU = fInterp->getCI()->getASTContext().getTranslationUnitDecl();
       const clang::DeclContext *DC = llvm::cast<clang::DeclContext>(TU);
@@ -67,15 +68,13 @@ public:
 
    explicit TClingTypedefInfo(cling::Interpreter *, const clang::TypedefNameDecl *);
 
-   const clang::Decl   *GetDecl() const;
    void                 Init(const char *name);
-   bool                 IsValid() const;
    int                  InternalNext();
    int                  Next();
    long                 Property() const;
    int                  Size() const;
    const char          *TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
-   const char          *Name() const;
+   const char          *Name() override;
    const char          *Title();
 
 };
