@@ -8414,7 +8414,7 @@ const char* TCling::MethodInfo_GetMangledName(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_GetPrototype(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
-   return info->GetPrototype(*fNormalizedCtxt);
+   return info->GetPrototype();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8422,7 +8422,7 @@ const char* TCling::MethodInfo_GetPrototype(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_Name(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
-   return info->Name(*fNormalizedCtxt);
+   return info->Name();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
