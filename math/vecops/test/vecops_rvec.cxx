@@ -880,3 +880,9 @@ TEST(VecOps, Where)
    RVec<float> ref4{1, -1, 1, -1};
    CheckEqual(v6, ref4);
 }
+
+TEST(VecOps, AtWithFallback)
+{
+   ROOT::VecOps::RVec<float> v({1.f, 2.f, 3.f});
+   EXPECT_FLOAT_EQ(v.at(7, 99.f), 99.f);
+}
