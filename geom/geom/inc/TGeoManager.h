@@ -115,6 +115,8 @@ private :
    typedef NavigatorsMap_t::iterator                         NavigatorsMapIt_t;
    typedef std::map<std::thread::id, Int_t>                  ThreadsMap_t;
    typedef ThreadsMap_t::const_iterator                      ThreadsMapIt_t;
+   // Map of constant properties
+   typedef std::map<std::string, Double_t>                   ConstPropMap_t;
 
    NavigatorsMap_t       fNavigators;       //! Map between thread id's and navigator arrays
    static ThreadsMap_t  *fgThreadId;        //! Thread id's map
@@ -147,6 +149,7 @@ private :
    Int_t                 fRaytraceMode;     //! Raytrace mode: 0=normal, 1=pass through, 2=transparent
    Bool_t                fUsePWNav;         // Activate usage of parallel world in navigation
    TGeoParallelWorld    *fParallelWorld;    // Parallel world
+   ConstPropMap_t        fProperties;       // Map of user-defined constant properties
 //--- private methods
    Bool_t                IsLoopingVolumes() const     {return fLoopVolumes;}
    void                  Init();
@@ -172,6 +175,9 @@ public:
    Int_t                  AddTrack(TVirtualGeoTrack *track);
    Int_t                  AddVolume(TGeoVolume *volume);
    TGeoNavigator         *AddNavigator();
+   Bool_t                 AddProperty(const char *property, Double_t value);
+   Double_t               GetProperty(const char *name, Bool_t *error = nullptr) const;
+   Int_t                  GetNproperties() const { return fProperties.size(); }
    void                   ClearOverlaps();
    void                   RegisterMatrix(const TGeoMatrix *matrix);
    void                   SortOverlaps();
@@ -588,7 +594,7 @@ public:
    void                  SetUseParallelWorldNav(Bool_t flag);
    Bool_t                IsParallelWorldNav() const {return fUsePWNav;}
 
-   ClassDef(TGeoManager, 16)          // geometry manager
+   ClassDef(TGeoManager, 17)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;
