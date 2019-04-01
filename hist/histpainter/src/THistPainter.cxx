@@ -225,6 +225,7 @@ using `TH1::GetOption`:
 | <a name="OPTHIST">"HIST"</a>   | When an histogram has errors it is visualized by default with error bars. To visualize it without errors use the option "HIST" together with the required option (eg "hist same c").  The "HIST" option can also be used to plot only the histogram and not the associated function(s). |
 | "FUNC"   | When an histogram has a fitted function, this option allows to draw the fit result only. |
 | "SAME"   | Superimpose on previous picture in the same pad. |
+| "SAMES"  | Same as "SAME" and draw the statistics box|
 | "PFC"    | Palette Fill Color: histogram's fill color is taken in the current palette. |
 | "PLC"    | Palette Line Color: histogram's line color is taken in the current palette. |
 | "PMC"    | Palette Marker Color: histogram's marker color is taken in the current palette. |
@@ -299,7 +300,7 @@ using `TH1::GetOption`:
 | "CYL"     | Use Cylindrical coordinates. The X coordinate is mapped on the angle and the Y coordinate on the cylinder length.|
 | "POL"     | Use Polar coordinates. The X coordinate is mapped on the angle and the Y coordinate on the radius.|
 | "SAME0"   | Same as "SAME" but do not use the z-axis range of the first plot. |
-| "SAMES0"  | Same as "SAME" but do not use the z-axis range of the first plot. |
+| "SAMES0"  | Same as "SAMES" but do not use the z-axis range of the first plot. |
 | "SPH"     | Use Spherical coordinates. The X coordinate is mapped on the latitude and the Y coordinate on the longitude.|
 | "PSR"     | Use PseudoRapidity/Phi coordinates. The X coordinate is mapped on Phi.|
 | "SURF"    | Draw a surface plot with hidden line removal.|
@@ -963,12 +964,10 @@ Begin_Macro(source)
    auto hf = (TH2F*)h2->Clone("hf");
    h2->SetBit(TH1::kNoStats);
    hf->SetBit(TH1::kNoStats);
-
    h2->Fill(5,22);
    h2->Fill(5,23);
    h2->Fill(6,22);
    h2->Fill(6,23);
-
    hf->Fill(6,23);
    hf->Fill(6,23);
    hf->Fill(6,23);
@@ -976,11 +975,9 @@ Begin_Macro(source)
    hf->Fill(5,23);
 
    auto hf_copy1 = hf->Clone("hf_copy1");
-   auto hf_copy2 = hf->Clone("hf_copy2");
-   auto hf_copy3 = hf->Clone("hf_copy3");
-
    auto* lt = new TLatex();
-   auto* cx = new TCanvas(); cx->Divide(2,2);
+
+   auto* cx = new TCanvas(); cx->Divide(2,1);
 
    cx->cd(1);
    h2->Draw("box");
@@ -991,16 +988,6 @@ Begin_Macro(source)
    h2->Draw("box");
    hf_copy1->Draw("text colz same0");
    lt->DrawLatexNDC(0.3,0.5,"SAME0");
-
-   cx->cd(3);
-   h2->Draw("box");
-   hf_copy2->Draw("text colz sameS");
-   lt->DrawLatexNDC(0.3,0.5,"SAMES");
-
-   cx->cd(4);
-   h2->Draw("box");
-   hf_copy3->Draw("text colz sameS0");
-   lt->DrawLatexNDC(0.3,0.5,"SAMES0");
 }
 End_Macro
 
