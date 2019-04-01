@@ -122,12 +122,14 @@ public:
    ESurfaceType GetType() const { return fType; }
    ESurfaceModel GetModel() const { return fModel; }
    ESurfaceFinish GetFinish() const { return fFinish; }
+   Double_t GetPolish() const { return fPolish; }
    Double_t GetValue() const { return fValue; }
    Double_t GetSigmaAlpha() const { return fSigmaAlpha; }
 
    void SetType(ESurfaceType type) { fType = type; }
    void SetModel(ESurfaceModel model) { fModel = model; }
    void SetFinish(ESurfaceFinish finish) { fFinish = finish; }
+   void SetPolish(Double_t polish) { fPolish = polish; }
    void SetValue(Double_t value) { fValue = value; }
    void SetSigmaAlpha(Double_t sigmaalpha) { fSigmaAlpha = sigmaalpha; }
 
