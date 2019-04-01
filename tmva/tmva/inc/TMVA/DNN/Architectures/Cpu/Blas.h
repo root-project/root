@@ -104,11 +104,7 @@ inline void Axpy<double>(const int * n, const double * alpha,
                          const double * x, const int * incx,
                          double * y, const int * incy)
 {
-#ifdef DNN_USE_CBLAS
-   cblas_daxpy(*n, *alpha, x, *incx, y, *incy);
-#else
    daxpy_(n, alpha, x, incx, y, incy);
-#endif
 }
 
 template<>
@@ -175,7 +171,7 @@ inline void Ger<float>(const int * m, const int * n, const float * alpha,
    sger_(m, n, alpha, x, incx, y, incy, A, lda);
 }
 
-#else
+#else  // use cblas
 //--------------------------------------------------------
 // cblas implementation
 //-----------------------------------------------------------
