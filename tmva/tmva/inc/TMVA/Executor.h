@@ -43,19 +43,41 @@ public:
   
 
    //////////////////////////////////////
-   /// constructor of TMVA Executor class
+   /// Default constructor of TMVA Executor class
    /// if ROOT::EnableIMplicitMT has not been called then by default a serial executor will be created
    /// A user can create a thread pool and enable multi-thread excution by calling TMVA::Config::Instance()::EnableMT(nthreads)
-   /// FOr releasing the thread pool used by TMVA one can do it by calling  TMVA::Config::Instance()::DisableMT() or
+   /// For releasing the thread pool used by TMVA one can do it by calling  TMVA::Config::Instance()::DisableMT() or
    /// calling TMVA::Config::Instance()::EnableMT with only one thread 
    ////////////////////////////////////////////
-   explicit Executor(int nthreads  = 0) {
-      if (ROOT::IsImplicitMTEnabled() || nthreads > 1 ) {
+   Executor() {
+      // enable MT in TMVA if ROOT::IsImplicitMT is enabled
+      if (ROOT::IsImplicitMTEnabled() ) {
 #ifdef R__USE_IMT 
-         fMTExecImpl = (nthreads == 0) ? std::unique_ptr< ROOT::TThreadExecutor>(new ROOT::TThreadExecutor()) :
-            std::unique_ptr< ROOT::TThreadExecutor>(new ROOT::TThreadExecutor(nthreads));
+         fMTExecImpl = std::unique_ptr< ROOT::TThreadExecutor>(new ROOT::TThreadExecutor());
 #else
-         ::Error("Executor","Cannot have multi threads when ROOT is built without IMT");
+         ::Error("Executor","Cannot have TMVA in multi-threads mode when ROOT is built without IMT");
+#endif
+      }
+      // case of single thread usage
+      if (!fMTExecImpl)
+         fSeqExecImpl = std::unique_ptr<ROOT::TSequentialExecutor>(new ROOT::TSequentialExecutor());
+   }
+
+   //////////////////////////////////////
+   /// Constructor of TMVA Executor class
+   /// Explicit specify the number of threads. In this case if nthreads is > 1 a multi-threaded executor will be created and
+   /// TMVA will run in MT.
+   /// If nthreads = 1 instead TMVA will run in sequential mode
+   /// If nthreads = 0 TMVA will use the default thread pool size 
+   ////////////////////////////////////////////
+   explicit Executor(int nthreads) {
+      // enable MT in TMVA if :
+      //  - no specific MT 
+      if ( nthreads != 1 ) {
+#ifdef R__USE_IMT 
+         fMTExecImpl = std::unique_ptr< ROOT::TThreadExecutor>(new ROOT::TThreadExecutor(nthreads));
+#else
+         ::Error("Executor","Cannot have TMVA in multi-threads mode when ROOT is built without IMT");
 #endif
       }
       // case of single thread usage
