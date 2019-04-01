@@ -1206,14 +1206,16 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       }
    }
 
-   if (fCxxModulesEnabled) {
-      clingArgsStorage.push_back("-modulemap_overlay=" + std::string(TROOT::GetIncludeDir().Data()));
-   }
-
    // FIXME: This only will enable frontend timing reports.
    EnvOpt = llvm::sys::Process::GetEnv("ROOT_CLING_TIMING");
    if (EnvOpt.hasValue())
      clingArgsStorage.push_back("-ftime-report");
+
+   // Add the overlay file. Note that we cannot factor it out for both root
+   // and rootcling because rootcling activates modules only if -cxxmodule
+   // flag is passed.
+   if (fCxxModulesEnabled && !fromRootCling)
+      clingArgsStorage.push_back("-modulemap_overlay=" + std::string(TROOT::GetIncludeDir().Data()));
 
    std::vector<const char*> interpArgs;
    for (std::vector<std::string>::const_iterator iArg = clingArgsStorage.begin(),

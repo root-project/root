@@ -4266,6 +4266,10 @@ int RootClingMain(int argc,
 
    if (!isPCH && cxxmodule) {
 #ifndef R__MACOSX
+      // Add the overlay file. Note that we cannot factor it out for both root
+      // and rootcling because rootcling activates modules only if -cxxmodule
+      // flag is passed.
+
       // includeDir is where modulemaps exist.
       clingArgsInterpreter.push_back("-modulemap_overlay=" + includeDir);
 #endif //R__MACOSX
