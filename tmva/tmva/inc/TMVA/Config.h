@@ -83,7 +83,7 @@ namespace TMVA {
       Executor & GetThreadExecutor() { return fExecutor; }
 
       /// Enable MT in TMVA (by default is on when ROOT::EnableImplicitMT() is set
-      void EnableMT(int numthreads) { fExecutor = Executor(numthreads); }
+      void EnableMT(int numthreads = 0) { fExecutor = Executor(numthreads); }
 
       /// Force disabling MT running and release the thread pool by using instead seriaql execution
       void DisableMT() {  fExecutor = Executor(1); }
