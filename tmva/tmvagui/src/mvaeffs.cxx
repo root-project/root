@@ -95,10 +95,26 @@ void TMVA::StatDialogMVAEffs::SetNBackground()
 
 TString TMVA::StatDialogMVAEffs::GetFormula() 
 {
-   TString f = fFormula;
-   f.ReplaceAll("S","x");
-   f.ReplaceAll("B","y");
-   return f;
+   // replace all occurrence of S and B but only if neighbours are not alphanumerics
+   auto replace_vars = [](TString & f, char oldLetter, char newLetter ) {
+      auto pos = f.First(oldLetter);
+      while(pos != kNPOS) {
+         if ( ( pos > 0 && !TString(f[pos-1]).IsAlpha() ) ||
+              ( pos < f.Length()-1 &&  !TString(f[pos+1]).IsAlpha() ) )
+         {
+            f[pos] = newLetter;
+         }
+      int pos2 = pos+1;
+      pos = f.Index(oldLetter,pos2);
+      }
+   };
+
+   TString formula = fFormula;
+   replace_vars(formula,'S','x');
+   replace_vars(formula,'B','y');
+   // f.ReplaceAll("S","x");
+   // f.ReplaceAll("B","y");
+   return formula;
 }
 
 
