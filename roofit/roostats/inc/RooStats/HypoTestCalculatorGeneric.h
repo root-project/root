@@ -55,19 +55,19 @@ namespace RooStats {
       const RooAbsData * GetData(void) const { return fData; }
       const ModelConfig* GetNullModel(void) const { return fNullModel; }
       virtual const RooArgSet* GetFitInfo() const { return NULL; }
-      // set the model for the alternate hypothesis  (S+B)
+      /// Set the model for the alternate hypothesis  (S+B)
       virtual void SetAlternateModel(const ModelConfig &altModel) { fAltModel = &altModel; }
       const ModelConfig* GetAlternateModel(void) const { return fAltModel; }
-      // Set the DataSet
+      /// Set the DataSet
       virtual void SetData(RooAbsData &data) { fData = &data; }
 
-      // Returns instance of TestStatSampler. Use to change properties of
-      // TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
+      /// Returns instance of TestStatSampler. Use to change properties of
+      /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
       TestStatSampler* GetTestStatSampler(void) const { return fTestStatSampler; }
 
-      // set this for re-using always the same toys for alternate hypothesis in
-      // case of calls at different null parameter points
-      // This is useful to get more stable bands when running the HypoTest inversion
+      /// Set this for re-using always the same toys for alternate hypothesis in
+      /// case of calls at different null parameter points
+      /// This is useful to get more stable bands when running the HypoTest inversion
       void UseSameAltToys();
 
 
