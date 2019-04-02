@@ -1035,3 +1035,18 @@ TEST(VecOps, DeltaR)
       EXPECT_NEAR(dr3, dr4, 1e-6);
    }
 }
+
+TEST(VecOps, Map)
+{
+   RVec<float> a({1.f, 2.f, 3.f});
+   RVec<float> b({4.f, 5.f, 6.f});
+   RVec<float> c({7.f, 8.f, 9.f});
+
+   auto mod = [](float x, int y, double z) { return sqrt(x * x + y * y + z * z); };
+
+   auto res = Map(a, c, c, mod);
+
+   ROOT::VecOps::RVec<double> ref{9.9498743710661994, 11.489125293076057, 13.076696830622021};
+   CheckEqual(res, ref);
+}
+
