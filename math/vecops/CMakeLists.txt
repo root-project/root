@@ -31,6 +31,7 @@ endif()
 
 if(MSVC)
   target_compile_options(ROOTVecOps PRIVATE -O2 /fp:fast)
+  target_compile_definitions(ROOTVecOps PRIVATE _USE_MATH_DEFINES)
 else()
   target_compile_options(ROOTVecOps PRIVATE -O3 -ffast-math)
 endif()
