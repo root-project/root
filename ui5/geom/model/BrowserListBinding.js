@@ -10,6 +10,8 @@ sap.ui.define([
 
         // called by the TreeTable to know the amount of entries
         getLength: function() {
+           console.log('returning length', this.getModel().getLength());
+
             // Log.warning("root.model.hListBinding#getLength()");
             return this.getModel().getLength();
         },
@@ -50,7 +52,7 @@ sap.ui.define([
               }
            }
 
-           Log.warning("root.model.hListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ") res = " + aNodes.length);
+           console.log("root.model.hListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ") res = " + aNodes.length);
 
            return aNodes;
         },
