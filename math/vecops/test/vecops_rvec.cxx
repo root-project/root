@@ -763,6 +763,14 @@ TEST(VecOps, CombinationsTwoVectors)
    RVec<int> ref{-4, -5, -8, -10, -12, -15};
    CheckEqual(v3, ref);
 
+   // Test overload with size as input
+   auto idx3 = Combinations(v1.size(), v2.size());
+   auto c3 = Take(v1, idx3[0]);
+   auto c4 = Take(v2, idx3[1]);
+   auto v4 = c3 * c4;
+
+   CheckEqual(v4, ref);
+
    // Corner-case: One collection is empty
    RVec<int> empty_int{};
    auto idx2 = Combinations(v1, empty_int);
