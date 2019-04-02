@@ -4,7 +4,7 @@
     },
     "sap.ui5": {
         "rootView": {
-            "viewName": "rootui5.eve7.view.GeomViewer",
+            "viewName": "rootui5.geom.view.GeomViewer",
             "type": "XML",
             "async": true,
             "id": "Geom"

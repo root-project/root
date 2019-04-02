@@ -31,7 +31,37 @@ namespace ROOT {
 namespace Experimental {
 
 class REveRenderData;
+class RGeomBrowserIter;
 
+
+/** Request send from client to get content of path element */
+class RBrowserRequest {
+public:
+   std::string path;
+   int first{0};
+   int number{0};
+   std::string sort;
+};
+
+/** Representation of single item */
+class RBrowserItem {
+public:
+   std::string name;     // item name
+   int nchilds{0};       // number of childs
+   bool checked{false};  // is checked
+   bool expanded{false}; // is expanded
+   RBrowserItem() = default;
+   RBrowserItem(const std::string &_name, int _nchilds = 0) : name(_name), nchilds(_nchilds) {}
+};
+
+/** Reply on browser request */
+class RBrowserReply {
+public:
+   std::string path;     // reply path
+   int first{0};         // first node in childs
+   int nchilds{0};       // number of childs
+   std::vector<RBrowserItem> nodes;
+};
 
 /** Base description of geometry node, required only to build hierarchy */
 
@@ -74,6 +104,9 @@ public:
    /** True when there is shape and it can be displayed */
    bool CanDisplay() const { return (vol > 0.) && (nfaces > 0); }
 };
+
+
+/** Information block for render data, stored in binarz buffer */
 
 class REveShapeRenderInfo {
 public:
@@ -119,6 +152,8 @@ public:
 using REveGeomScanFunc_t = std::function<bool(REveGeomNode &, std::vector<int> &, bool)>;
 
 class REveGeomDescription {
+
+   friend class RGeomBrowserIter;
 
    class ShapeDescr {
    public:
@@ -197,6 +232,8 @@ public:
    bool IsPrincipalEndNode(int nodeid);
 
    std::string GetHierachyJson(const std::string &prepend);
+
+   std::string ProcessBrowserRequest(const std::string &req);
 
    bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawBinary.size() > 0) && (fDrawIdCut > 0); }
    const std::string &GetDrawJson() const { return fDrawJson; }
