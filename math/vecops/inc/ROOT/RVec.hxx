@@ -43,6 +43,44 @@ namespace VecOps {
 template <typename T>
 class RVec;
 }
+
+namespace Detail {
+namespace VecOps {
+
+template<typename T>
+using RVec = ROOT::VecOps::RVec<T>;
+
+template <typename F, typename... T>
+auto MapImpl(F &&f, const RVec<T> &... vs) -> RVec<decltype(f(vs[0]...))>
+{
+   constexpr const auto nArgs = sizeof...(T);
+   const std::size_t sizes[] = {vs.size()...};
+   if (nArgs > 1) {
+      for (auto i = 1UL; i < nArgs; i++) {
+         if (sizes[0] == sizes[i])
+            continue;
+         throw std::runtime_error("Map: input RVec instances have different lengths!");
+      }
+   }
+   RVec<decltype(f(vs[0]...))> ret(sizes[0]);
+
+   for (auto i = 0UL; i < sizes[0]; i++)
+      ret[i] = f(vs[i]...);
+
+   return ret;
+}
+
+template <typename Tuple_t, std::size_t... Is>
+auto MapFromTuple(Tuple_t &&t, std::index_sequence<Is...>)
+   -> decltype(MapImpl(std::get<std::tuple_size<Tuple_t>::value - 1>(t), std::get<Is>(t)...))
+{
+   constexpr const auto tupleSizeM1 = std::tuple_size<Tuple_t>::value - 1;
+   return MapImpl(std::get<tupleSizeM1>(t), std::get<Is>(t)...);
+}
+
+}
+}
+
 namespace Internal {
 namespace VecOps {
 
@@ -938,13 +976,32 @@ double StdDev(const RVec<T> &v)
 /// auto v_square = Map(v, [](float f){return f* 2.f;});
 /// v_square
 /// // (ROOT::VecOps::RVec<float> &) { 2.00000f, 4.00000f, 8.00000f }
+///
+/// RVec<float> x({1.f, 2.f, 3.f});
+/// RVec<float> y({4.f, 5.f, 6.f});
+/// RVec<float> z({7.f, 8.f, 9.f});
+/// auto mod = [](float x, float y, float z) { return sqrt(x * x + y * y + z * z); };
+/// auto v_mod = Map(x, y, z, mod);
+/// v_mod
+/// // (ROOT::VecOps::RVec<float> &) { 8.12404f, 9.64365f, 11.2250f }
 /// ~~~
-template <typename T, typename F>
-auto Map(const RVec<T> &v, F &&f) -> RVec<decltype(f(v[0]))>
+template <typename... Args>
+auto Map(Args &&... args)
+   -> decltype(ROOT::Detail::VecOps::MapFromTuple(std::forward_as_tuple(args...),
+                                                  std::make_index_sequence<sizeof...(args) - 1>()))
 {
-   RVec<decltype(f(v[0]))> ret(v.size());
-   std::transform(v.begin(), v.end(), ret.begin(), f);
-   return ret;
+   /*
+   Here the strategy in order to generalise the previous implementation of Map, i.e.
+   `RVec Map(RVec, F)`, here we need to move the last parameter of the pack in first
+   position in order to be able to invoke the Map function with automatic type deduction.
+   This is achieved in two steps:
+   1. Forward as tuple the pack to MapFromTuple
+   2. Invoke the MapImpl helper which has the signature `template<...T, F> RVec MapImpl(F &&f, RVec<T>...)`
+   NOTA BENE: the signature is very heavy but it is one of the lightest ways to manage in C++11
+   to build the return type based on the template args.
+   */
+   return ROOT::Detail::VecOps::MapFromTuple(std::forward_as_tuple(args...),
+                                             std::make_index_sequence<sizeof...(args) - 1>());
 }
 
 /// Create a new collection with the elements passing the filter expressed by the predicate
