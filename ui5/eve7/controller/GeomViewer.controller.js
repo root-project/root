@@ -1,4 +1,5 @@
-sap.ui.define(['sap/ui/core/mvc/Controller',
+sap.ui.define(['sap/ui/core/Component',
+               'sap/ui/core/mvc/Controller',
                'sap/ui/core/Control',
                'sap/ui/model/json/JSONModel',
                'sap/m/Text',
@@ -6,9 +7,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/layout/Splitter',
                "sap/ui/core/ResizeHandler",
                "sap/ui/layout/HorizontalLayout",
-               "sap/ui/table/Column"
-],function(Controller, CoreControl, JSONModel, mText, mCheckBox, Splitter, ResizeHandler,
-           HorizontalLayout, tableColumn) {
+               "sap/ui/table/Column",
+               "rootui5/eve7/model/BrowserModel"
+],function(Component, Controller, CoreControl, JSONModel, mText, mCheckBox, Splitter, ResizeHandler,
+           HorizontalLayout, tableColumn, BrowserModel) {
 
    "use strict";
 
@@ -112,7 +114,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
    return Controller.extend("rootui5.eve7.controller.GeomViewer", {
       onInit: function () {
 
-         this.websocket = this.getView().getViewData().conn_handle;
+         // this.websocket = this.getView().getViewData().conn_handle;
+
+         this.websocket = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
 
          this.websocket.SetReceiver(this);
          this.websocket.Connect();
@@ -122,10 +126,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // if true, most operations are performed locally without involving server
          this.standalone = this.websocket.kind == "file";
 
-         this.data = { Nodes: null };
+         this.data = { nodes: null };
 
-         this.model = new JSONModel(this.data);
-         this.getView().setModel(this.model);
+         this.plainModel = false;
+
+         if (this.plainModel) {
+            this.model = new JSONModel(this.data);
+            this.getView().setModel(this.model);
+         } else {
+            this.model = this.getView().getModel();
+            console.log('USE PROVIDED MODEL', typeof this.model.sendFirstRequest)
+         }
+
 
          // PART 2: instantiate Control and place it onto the page
 
@@ -136,18 +148,32 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             var t = this.getView().byId("treeTable");
 
-            var vis_selected_handler = this.visibilitySelected.bind(this);
+            if (this.plainModel) {
 
-            t.addColumn(new tableColumn({
-               label: "Description",
-               template: new HorizontalLayout({
-                  content: [
-                     new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}", select: vis_selected_handler }),
-                     new geomColorBox({color:"{color}", visible: "{color_visible}" }),
-                     new mText({text:"{title}", wrapping: false })
-                  ]
-               })
-             }));
+               var vis_selected_handler = this.visibilitySelected.bind(this);
+
+               t.addColumn(new tableColumn({
+                  label: "Description",
+                  template: new HorizontalLayout({
+                     content: [
+                        new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}", select: vis_selected_handler }),
+                        new geomColorBox({color:"{color}", visible: "{color_visible}" }),
+                        new mText({text:"{title}", wrapping: false })
+                     ]
+                  })
+                }));
+
+            } else {
+              /* t.addColumn(new tableColumn({
+                  label: "Description",
+                  template: new HorizontalLayout({
+                     content: [
+                        new mText({text:"{name}", wrapping: false })
+                     ]
+                  })
+                }));
+                */
+            }
 
             // catch re-rendering of the table to assign handlers
             t.addEventDelegate({
@@ -457,6 +483,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          // when connection established, checked if we can submit requested
          this.checkRequestMsg();
+
+         if (!this.plainModel) {
+            this.model.sendFirstRequest(this.websocket);
+         }
       },
 
 
@@ -484,10 +514,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          switch (mhdr) {
          case "DESCR:":  // browser hierarchy
-            this.parseDescription(msg, true);
+            if (this.plainModel)
+               this.parseDescription(msg, true);
             break;
          case "FESCR:":  // searching hierarchy
-            this.parseDescription(msg, false);
+            if (this.plainModel)
+               this.parseDescription(msg, false);
+            break;
+         case "BREPL:":   // browser reply
+            if (!this.plainModel)
+               this.model.processResponse(JSON.parse(msg));
             break;
          case "FOUND:":  // text message for found query
             this.showTextInBrowser(msg);
@@ -507,10 +543,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case "HOVER:":
             this._hover_stack = (msg == "OFF") ? null : JSON.parse(msg);
-            this.geo_painter.HighlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
+            if (this.geo_painter)
+               this.geo_painter.HighlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
             break;
          case "HIGHL:":
-            this.highlighRowWithIds((msg == "OFF") ? null : JSON.parse(msg));
+            if (this.plainModel)
+               this.highlighRowWithIds((msg == "OFF") ? null : JSON.parse(msg));
+            else
+               console.warn("Not yet implemented!!!");
             break;
          default:
             console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
@@ -552,6 +592,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
        * Used only to initialize hierarchy browser with full Tree,
        * later should be done differently */
       parseDescription: function(msg, is_original) {
+
+         if (!this.plainModel)
+            return console.error('Not allowed to directly set hierarchy in such mode');
+
          var descr = JSON.parse(msg);
 
          this.buildTree(descr, is_original);
@@ -634,12 +678,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (!nodes) return;
 
          var cache = [];
-         this.data.Nodes = [ this.buildTreeNode(nodes, cache, 0) ];
+         this.data.nodes = [ this.buildTreeNode(nodes, cache, 0) ];
 
          if (is_original) {
             // remember nodes
             this.originalCache = cache;
-            this.originalNodes = this.data.Nodes;
+            this.originalNodes = this.data.nodes;
          }
 
          this.model.refresh();
@@ -665,9 +709,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          var br = this.byId("treeTable");
          br.collapseAll();
          if (!text || (text === "RESET")) {
-            this.data.Nodes = this.originalNodes || null;
+            this.data.nodes = this.originalNodes || null;
          } else {
-            this.data.Nodes = [ { title: text } ];
+            this.data.nodes = [ { title: text } ];
          }
          this.model.refresh();
          br.expandToLevel(1);
@@ -681,7 +725,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          var nodes = [];
          for (var k=0;k<matches.length;++k)
              this.appendStackToTree(nodes, matches[k].stack, matches[k].color);
-         this.data.Nodes = [ nodes[0] ];
+         this.data.nodes = [ nodes[0] ];
 
          this.model.refresh();
          if (matches.length < 100)
@@ -762,7 +806,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             if (!this.ask_reload) {
                this.ask_reload = true;
-               this.websocket.Send("RELOAD");
+
+               // THIS IS REQUIRED FOR RELOAD OF FULL HIERARCHY
+               if (this.plainModel)
+                  this.websocket.Send("RELOAD");
             }
 
             if (this.creator && !this.ask_getdraw) {

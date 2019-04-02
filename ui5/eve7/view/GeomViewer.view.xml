@@ -1,4 +1,4 @@
-<mvc:View height="100%" width="100%" class="sapUiSizeCompact" 
+<mvc:View height="100%" width="100%" class="sapUiSizeCompact"
           controllerName="rootui5.eve7.controller.GeomViewer"
           xmlns="sap.m"
           xmlns:mvc="sap.ui.core.mvc"
@@ -15,28 +15,29 @@
             <l:layoutData><l:SplitterLayoutData size="300px" /></l:layoutData>
             <Toolbar>
                <layoutData><l:SplitterLayoutData size="30px" resizable="false"/></layoutData>
-               <Button icon="sap-icon://synchronize" type="Transparent" 
+               <Button icon="sap-icon://synchronize" type="Transparent"
                     tooltip="Reload geometry drawing" press="onRealoadPress"/>
-               <Button icon="sap-icon://log" type="Transparent" 
+               <Button icon="sap-icon://log" type="Transparent"
                     tooltip="Quit ROOT session" press="onQuitRootPress"/>
                <ToolbarSpacer/>
                <SearchField liveChange="onSearch"/>
             </Toolbar>
             <t:TreeTable
               id="treeTable"
+              title="Browser"
               selectionMode="Single"
+              selectionBehavior="RowOnly"
+              editable="false"
+              enableSelectAll="false"
+              columnHeaderVisible="false"
               enableColumnReordering="false"
               expandFirstLevel="true"
               visibleRowCountMode="Auto"
-              rows="{ path:'/Nodes',  parameters : { arrayNames: ['chlds']}}" >
-
-              <!-- t:columns>
-                  <t:Column label="Description">
-                      <t:template>
-                          <m:Text text="{title}" wrapping="false"/>
-                      </t:template>
-                  </t:Column>
-              </t:columns -->
+              rows="{/nodes}">
+              <!--  rows="{ path:'/nodes',  parameters : { arrayNames: ['chlds']}}"> -->
+              <t:columns>
+                 <t:Column label="Name" template="name"></t:Column>
+              </t:columns>
 
             </t:TreeTable>
           </l:Splitter>
@@ -45,4 +46,6 @@
       </content>
     </Page>
 </mvc:View>
+
+
 
