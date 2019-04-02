@@ -3159,7 +3159,7 @@ bool TFormula::GenerateGradientPar()
          fGradGenerationInput = std::string("#pragma cling optimize(2)\n") +
             "#pragma clad ON\n" +
             "void " + GradReqFuncName + "() {\n" +
-            "clad::gradient(" + std::string(fClingName) + ");\n }\n" +
+            "clad::gradient(" + std::string(fClingName.Data()) + ");\n }\n" +
             "#pragma clad OFF";
 
          if (!gInterpreter->Declare(fGradGenerationInput.c_str()))

@@ -122,7 +122,7 @@ private:
    void ReInitializeEvalMethod();
    std::string GetGradientFuncName() const {
       assert(fClingName.Length() && "TFormula is not initialized yet!");
-      return std::string(fClingName) + "_grad";
+      return std::string(fClingName.Data()) + "_grad";
    }
    bool HasGradientGenerationFailed() const {
       return !fGradMethod && !fGradGenerationInput.empty();
