@@ -593,14 +593,17 @@ sap.ui.define(['sap/ui/core/Component',
        * later should be done differently */
       parseDescription: function(msg, is_original) {
 
-         if (!this.plainModel)
-            return console.error('Not allowed to directly set hierarchy in such mode');
-
          var descr = JSON.parse(msg);
 
-         this.buildTree(descr, is_original);
+         if (this.plainModel) {
+            this.buildTree(descr, is_original);
+            this.byId("treeTable").expandToLevel(is_original ? 1 : 99);
+         } else {
+            var topnode = this.buildTreeNode(descr, [], 0);
 
-         this.byId("treeTable").expandToLevel(is_original ? 1 : 99);
+            this.model.setFullModel(topnode);
+
+         }
       },
 
       /** TO BE CHANGED !!! When single node element is modified on the server side */
@@ -661,10 +664,11 @@ sap.ui.define(['sap/ui/core/Component',
 
          if (node.chlds && (node.chlds.length>0)) {
             tnode.chlds = [];
-            for (var k=0;k<node.chlds.length;++k)
+            tnode.nchilds = node.chlds.length;
+            for (var k=0;k<tnode.nchilds;++k)
                tnode.chlds.push(this.buildTreeNode(nodes, cache, node.chlds[k]));
          } else {
-            tnode.end_node = true;
+            tnode.end_node = true; // TODO: no need for such flag
          }
 
          return tnode;

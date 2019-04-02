@@ -141,9 +141,34 @@ public:
       return false;
    }
 
-   bool Navigate(const std::string &)
+   /** Navigate to specified path. For now path should start from '/' */
+
+   bool Navigate(const std::string &path)
    {
+      size_t pos = path.find("/");
+      if (pos != 0) return false;
+
       Reset(); // set to the top of element
+
+      while (++pos < path.length()) {
+         auto last = pos;
+
+         pos = path.find("/", last);
+
+         if (pos == std::string::npos) pos = path.length();
+
+         std::string folder = path.substr(last, pos-last);
+
+         if (!Enter()) return false;
+
+         bool find = false;
+
+         do {
+            find = (folder.compare(GetName()) == 0);
+         } while (!find && Next());
+
+         if (!find) return false;
+      }
 
       return true;
    }
@@ -544,11 +569,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
 
    RBrowserRequest *request = nullptr;
 
-   printf("PROCESS BRREQ %s\n", msg.c_str());
-
    if (TBufferJSON::FromJSON(request, msg.c_str())) {
-
-      printf("DECODE BRREQ %s\n", request->path.c_str());
 
       RBrowserReply reply;
       reply.path = request->path;
