@@ -24,7 +24,7 @@
 class RooSetProxy final : public RooArgSet, public RooAbsProxy  {
 public:
 
-#ifdef USEMEMPOOL
+#ifdef USEMEMPOOLFORARGSET
   void* operator new (size_t bytes);
   void operator delete (void *ptr);
 #endif

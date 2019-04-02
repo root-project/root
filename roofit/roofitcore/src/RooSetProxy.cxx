@@ -45,7 +45,7 @@ ClassImp(RooSetProxy);
 ;
 
 
-#ifdef USEMEMPOOL
+#ifdef USEMEMPOOLFORARGSET
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Overload new operator must be implemented because it is overloaded
