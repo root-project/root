@@ -1157,6 +1157,36 @@ RVec<T> Sort(const RVec<T> &v, Compare &&c)
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
+/// auto comb_idx = Combinations(3, 2);
+/// comb_idx
+/// // (ROOT::VecOps::RVec<ROOT::VecOps::RVec<ROOT::VecOps::RVec<double>::size_type> >) { { 0, 0, 1, 1, 2, 2 }, { 0, 1,
+/// 0, 1, 0, 1 } }
+/// ~~~
+inline RVec<RVec<std::size_t>> Combinations(const std::size_t s1, const std::size_t s2)
+{
+   using size_type = std::size_t;
+   RVec<RVec<size_type>> r(2);
+   r[0].resize(s1 * s2);
+   r[1].resize(s1 * s2);
+   size_type c = 0;
+   for (size_type i = 0; i < s1; i++) {
+      for (size_type j = 0; j < s2; j++) {
+         r[0][c] = i;
+         r[1][c] = j;
+         c++;
+      }
+   }
+   return r;
+}
+
+/// Return the indices that represent all combinations of the elements of two
+/// RVecs.
+///
+/// The type of the return value is an RVec of two RVecs containing indices.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
 /// RVec<double> v1 {1., 2., 3.};
 /// RVec<double> v2 {-4., -5.};
 /// auto comb_idx = Combinations(v1, v2);
@@ -1167,21 +1197,7 @@ RVec<T> Sort(const RVec<T> &v, Compare &&c)
 template <typename T1, typename T2>
 RVec<RVec<typename RVec<T1>::size_type>> Combinations(const RVec<T1> &v1, const RVec<T2> &v2)
 {
-   using size_type = typename RVec<T1>::size_type;
-   size_type size1 = v1.size();
-   size_type size2 = v2.size();
-   RVec<RVec<size_type>> r(2);
-   r[0].resize(size1 * size2);
-   r[1].resize(size1 * size2);
-   size_type c = 0;
-   for (size_type i = 0; i < size1; i++) {
-      for (size_type j = 0; j < size2; j++) {
-         r[0][c] = i;
-         r[1][c] = j;
-         c++;
-      }
-   }
-   return r;
+   return Combinations(v1.size(), v2.size());
 }
 
 /// Return the indices that represent all unique combinations of the
