@@ -3979,6 +3979,10 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
             TCutG *gcut = (TCutG*)fExternalCuts.At(0);
             TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
             TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
+            if (fDidBooleanOptimization) {
+               fx->ResetLoading();
+               fy->ResetLoading();
+            }
             T xcut = fx->EvalInstance<T>(instance);
             T ycut = fy->EvalInstance<T>(instance);
             return gcut->IsInside(xcut,ycut);
@@ -3986,6 +3990,9 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
          case -1: {
             TCutG *gcut = (TCutG*)fExternalCuts.At(0);
             TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
+            if (fDidBooleanOptimization) {
+               fx->ResetLoading();
+            }
             return fx->EvalInstance<T>(instance);
          }
          default: return 0;
@@ -4240,6 +4247,10 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                   TCutG *gcut = (TCutG*)fExternalCuts.At(code);
                   TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
                   TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
+                  if (fDidBooleanOptimization) {
+                     fx->ResetLoading();
+                     fy->ResetLoading();
+                  }
                   T xcut = fx->EvalInstance<T>(instance);
                   T ycut = fy->EvalInstance<T>(instance);
                   tab[pos++] = gcut->IsInside(xcut,ycut);
@@ -4248,6 +4259,9 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                case -1: {
                   TCutG *gcut = (TCutG*)fExternalCuts.At(code);
                   TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
+                  if (fDidBooleanOptimization) {
+                     fx->ResetLoading();
+                  }
                   tab[pos++] = fx->EvalInstance<T>(instance);
                   continue;
                }
@@ -4943,6 +4957,13 @@ void TTreeFormula::ResetLoading()
       TTreeFormula *f = static_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
       if (f) {
          f->ResetLoading();
+      }
+   }
+   for (int i=0; i<fExternalCuts.GetSize(); i++) {
+      auto c = dynamic_cast<TCutG*>(fExternalCuts.At(i));
+      if (c) {
+         ((TTreeFormula *)(c->GetObjectX()))->ResetLoading();
+         ((TTreeFormula *)(c->GetObjectY()))->ResetLoading();
       }
    }
 }
