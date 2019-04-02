@@ -428,6 +428,9 @@ void RLoopManager::CleanUpTask(unsigned int slot)
 /// This method clears the `fToJitDeclare` member variable.
 void RLoopManager::JitDeclarations()
 {
+   if (fToJitDeclare.empty())
+      return;
+
    gInterpreter->Declare(fToJitDeclare.c_str());
    fToJitDeclare.clear();
 }
@@ -436,6 +439,9 @@ void RLoopManager::JitDeclarations()
 /// This method also invokes JitDeclarations() if needed, and clears the `fToJitExec` member variable.
 void RLoopManager::Jit()
 {
+   if (fToJitExec.empty())
+      return;
+
    JitDeclarations();
 
    auto error = TInterpreter::EErrorCode::kNoError;
@@ -473,8 +479,7 @@ unsigned int RLoopManager::GetNextID()
 /// Also perform a few setup and clean-up operations (jit actions if necessary, clear booked actions after the loop...).
 void RLoopManager::Run()
 {
-   if (!fToJitExec.empty())
-      Jit();
+   Jit();
 
    InitNodes();
 
