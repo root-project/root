@@ -9,6 +9,7 @@ sap.ui.define([
       },
       init: function() {
          UIComponent.prototype.init.apply(this, arguments);
+         console.log('COMPONENT', this.getId());
          this.getRouter().initialize();
       }
    });

@@ -42,16 +42,30 @@
 
         function InitUI(handle) {
 
-           sap.ui.require(["sap/ui/core/mvc/XMLView"], function(XMLView) {
-              XMLView.create({
-                 id: "TopEveId",
-                 viewName: "rootui5.eve7.view.GeomViewer",
-                 viewData: { conn_handle: handle }
-              }).then(function(oView) {
-                 oView.placeAt("GeomDiv");
-              });
+//           sap.ui.require(["sap/ui/core/mvc/XMLView"], function(XMLView) {
+//              XMLView.create({
+//                 id: "TopEveId",
+//                 viewName: "rootui5.eve7.view.GeomViewer",
+//                 viewData: { conn_handle: handle }
+//              }).then(function(oView) {
+//                 oView.placeAt("GeomDiv");
+//              });
+//           });
 
+           sap.ui.require(["sap/ui/core/ComponentContainer"], function(ComponentContainer) {
+              new ComponentContainer({
+                 name: "rootui5.geom",
+                 manifest: true,
+                 async: true,
+                 settings: {
+                    componentData: {
+                       conn_handle: handle
+                    }
+                 },
+                 height: "100%"
+              }).placeAt("GeomDiv")
            });
+
         }
 
         if (JSROOT.GetUrlOption('nogl')!==null) JSROOT.gStyle.NoWebGL = true;
