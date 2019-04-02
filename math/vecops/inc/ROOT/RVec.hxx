@@ -25,7 +25,6 @@
 #include <ROOT/TypeTraits.hxx>
 
 #include <algorithm>
-#define _USE_MATH_DEFINES // for M_PI on windows in cmath
 #include <cmath>
 #include <numeric> // for inner_product
 #include <sstream>
@@ -1810,7 +1809,5 @@ TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
 using ROOT::VecOps::RVec;
 
 } // namespace ROOT
-
-#undef _USE_MATH_DEFINES // for M_PI on windows in cmath
 
 #endif // ROOT_TVEC
