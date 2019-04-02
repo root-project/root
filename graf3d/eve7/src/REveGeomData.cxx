@@ -32,6 +32,126 @@
 
 #include <algorithm>
 
+
+/** Base class for iterating of hierarchical structure */
+
+namespace ROOT {
+namespace Experimental {
+
+
+class RGeomBrowserIter {
+
+   REveGeomDescription &fDesc;
+   int fParentId{-1};
+   unsigned fChild{0};
+   int fNodeId{0};
+   bool fFirstTime{true};
+
+   std::vector<int> fStackParents;
+   std::vector<int> fStackChilds;
+
+public:
+
+   RGeomBrowserIter(REveGeomDescription &desc, int nodeid = 0) : fDesc(desc), fNodeId(nodeid) {}
+
+   const std::string &GetName() const { return fDesc.fDesc[fNodeId].name; }
+
+   bool IsValid() const { return fNodeId >= 0; }
+
+   bool HasChilds() const { return fDesc.fDesc[fNodeId].chlds.size() > 0; }
+
+   int NumChilds() const { return fDesc.fDesc[fNodeId].chlds.size(); }
+
+   bool Enter()
+   {
+      auto &node = fDesc.fDesc[fNodeId];
+      if (node.chlds.size() == 0) return false;
+      fStackParents.emplace_back(fParentId);
+      fStackChilds.emplace_back(fChild);
+      fParentId = fNodeId;
+      fChild = 0;
+      fNodeId = node.chlds[fChild];
+      return true;
+   }
+
+   bool Leave()
+   {
+      if (fStackParents.size() == 0) {
+         fNodeId = -1;
+         return false;
+      }
+      fParentId = fStackParents.back();
+      fChild = fStackChilds.back();
+
+      fStackParents.pop_back();
+      fStackChilds.pop_back();
+
+      if (fParentId < 0) {
+         fNodeId = 0;
+      } else {
+         fNodeId = fDesc.fDesc[fParentId].chlds[fChild];
+      }
+      return true;
+   }
+
+   bool Next()
+   {
+      // does not have parents
+      if ((fNodeId <= 0) || (fParentId < 0)) {
+         fNodeId = -1;
+         return false;
+      }
+
+      auto &prnt = fDesc.fDesc[fParentId];
+      if (fChild+1 >= prnt.chlds.size()) return false;
+
+      fNodeId = prnt.chlds[++fChild];
+      return true;
+   }
+
+   bool Reset()
+   {
+      fFirstTime = true;
+
+      fParentId = -1;
+      fChild = 0;
+      fNodeId = 0;
+      fStackParents.clear();
+      fStackChilds.clear();
+
+      return true;
+   }
+
+   bool NextNode()
+   {
+      if (fFirstTime) {
+         if (!IsValid()) return false;
+         fFirstTime = false;
+         return true;
+      }
+
+      if (Enter()) return true;
+
+      if (Next()) return true;
+
+      while (Leave()) {
+         if (Next()) return true;
+      }
+
+      return false;
+   }
+
+   bool Navigate(const std::string &)
+   {
+      Reset(); // set to the top of element
+
+      return true;
+   }
+
+};
+} // namespace Experimental
+} // namespace ROOT
+
 /////////////////////////////////////////////////////////////////////
 /// Pack matrix into vector, which can be send to client
 /// Following sizes can be used for vector:
@@ -401,8 +521,67 @@ std::string ROOT::Experimental::REveGeomDescription::GetHierachyJson(const std::
 
    res.append(TBufferJSON::ToJSON(&vect,103).Data());
 
+   // try own iterator
+   RGeomBrowserIter iter(*this);
+
+   int nelements = 0;
+   while (iter.NextNode()) {
+      nelements++;
+   }
+
+   printf("Count nodes %d\n", nelements);
+
    return res;
 }
+
+/////////////////////////////////////////////////////////////////////
+/// Find description object for requested shape
+/// If not exists - will be created
+
+std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const std::string &msg)
+{
+   std::string res;
+
+   RBrowserRequest *request = nullptr;
+
+   printf("PROCESS BRREQ %s\n", msg.c_str());
+
+   if (TBufferJSON::FromJSON(request, msg.c_str())) {
+
+      printf("DECODE BRREQ %s\n", request->path.c_str());
+
+      RBrowserReply reply;
+      reply.path = request->path;
+      reply.first = request->first;
+
+      RGeomBrowserIter iter(*this);
+      if (iter.Navigate(request->path)) {
+
+         reply.nchilds = iter.NumChilds();
+         // scan childs of selected nodes
+         if (iter.Enter()) {
+
+            while ((request->first > 0) && iter.Next()) {
+               request->first--;
+            }
+
+            while (iter.IsValid() && (request->number > 0)) {
+               reply.nodes.emplace_back(iter.GetName(), iter.NumChilds());
+               request->number--;
+               iter.Next();
+            }
+         }
+      }
+
+      res = "BREPL:";
+      res.append(TBufferJSON::ToJSON(&reply, 103).Data());
+
+      delete request;
+   }
+
+   return res;
+}
+
 
 /////////////////////////////////////////////////////////////////////
 /// Find description object for requested shape

@@ -8,13 +8,13 @@ sap.ui.define(['sap/ui/core/Component',
                "sap/ui/core/ResizeHandler",
                "sap/ui/layout/HorizontalLayout",
                "sap/ui/table/Column",
-               "rootui5/eve7/model/BrowserModel"
+               "rootui5/geom/model/BrowserModel"
 ],function(Component, Controller, CoreControl, JSONModel, mText, mCheckBox, Splitter, ResizeHandler,
            HorizontalLayout, tableColumn, BrowserModel) {
 
    "use strict";
 
-   var geomColorBox = CoreControl.extend("rootui5.eve7.controller.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
+   var geomColorBox = CoreControl.extend("rootui5.geom.controller.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
 
       // the control API:
       metadata : {
@@ -111,7 +111,7 @@ sap.ui.define(['sap/ui/core/Component',
     *    - REveGeomDrawing object delivered from the server
     * Only after all this stages are completed, one could start to analyze  */
 
-   return Controller.extend("rootui5.eve7.controller.GeomViewer", {
+   return Controller.extend("rootui5.geom.controller.GeomViewer", {
       onInit: function () {
 
          // this.websocket = this.getView().getViewData().conn_handle;

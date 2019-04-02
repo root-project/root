@@ -1,6 +1,6 @@
 sap.ui.define([
     "sap/ui/model/json/JSONModel",
-    "rootui5/eve7/model/BrowserListBinding",
+    "rootui5/geom/model/BrowserListBinding",
     "sap/base/Log"
 ], function(JSONModel, BrowserListBinding, Log) {
    "use strict";
@@ -16,7 +16,7 @@ sap.ui.define([
 
             // this is true hierarchy, created on the client side and used for creation of flat list
             this.h = {
-               _name: "ROOT",
+               name: "ROOT",
                _expanded: true
             };
 
@@ -29,6 +29,9 @@ sap.ui.define([
 
         bindTree: function(sPath, oContext, aFilters, mParameters, aSorters) {
            Log.warning("root.model.hModel#bindTree() " + sPath);
+
+           console.log('BINDING TREE!!!!!!!!!!!!! ' + sPath);
+
            this.oBinding = new BrowserListBinding(this, sPath, oContext, aFilters, mParameters, aSorters);
            return this.oBinding;
         },
@@ -62,6 +65,7 @@ sap.ui.define([
 
 
         sendFirstRequest: function(websocket) {
+           console.log('SENDING FIRST REQUEST');
            this._websocket = websocket;
            // submit top-level request already when construct model
            this.submitRequest(this.h, "/");
@@ -71,7 +75,7 @@ sap.ui.define([
         // now using simple HTTP requests, in ROOT websocket communication will be used
         submitRequest: function(elem, path, first, number) {
 
-           if (elem._requested) return;
+           if (!this._websocket || elem._requested) return;
            elem._requested = true;
 
            this.loadDataCounter++;
@@ -207,14 +211,14 @@ sap.ui.define([
               // create elements with safety margin
               if ((nodes !== null) && !nodes[id] && (id >= args.begin - threshold2) && (id < args.end + threshold2) )
                  nodes[id] = {
-                    name: elem._name,
+                    name: elem.name,
                     level: lvl,
                     index: id,
                     _elem: elem,
 
                     // these are optional, should be eliminated in the future
-                    type: elem.type,
-                    isLeaf: elem.type === "file",
+                    type: elem.nchilds || (id == 0) ? "folder" : "file",
+                    isLeaf: !elem.nchilds,
                     expanded: !!elem._expanded
                  };
 
