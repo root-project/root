@@ -27,6 +27,22 @@ sap.ui.define([
             this.threshold = 100; // default threshold to prefetch items
         },
 
+        /* Method can be used when complete hierarchy is ready and can be used directly */
+        setFullModel: function(topnode) {
+           this.fullModel = this.h = topnode;
+           if (this.oBinding)
+              this.oBinding.checkUpdate(true);
+        },
+
+        clearFullModel: function() {
+           this.h = {
+              name: "ROOT",
+             _expanded: true
+           };
+           delete this.fullModel;
+        },
+
+
         bindTree: function(sPath, oContext, aFilters, mParameters, aSorters) {
            Log.warning("root.model.hModel#bindTree() " + sPath);
 
@@ -51,7 +67,7 @@ sap.ui.define([
               if (!name) continue;
 
               for (var k=0;k<curr._childs.length;++k) {
-                 if (curr._childs[k]._name == name) {
+                 if (curr._childs[k].name == name) {
                     curr = curr._childs[k];
                     find = true;
                     break;
@@ -75,7 +91,7 @@ sap.ui.define([
         // now using simple HTTP requests, in ROOT websocket communication will be used
         submitRequest: function(elem, path, first, number) {
 
-           if (!this._websocket || elem._requested) return;
+           if (!this._websocket || elem._requested || this.fullModel) return;
            elem._requested = true;
 
            this.loadDataCounter++;
@@ -88,7 +104,7 @@ sap.ui.define([
               sort: this.sortOrder || ""
            };
 
-           console.log('SEND BROWSER REQUEST ' + JSON.stringify(request));
+           console.log('SEND BROWSER REQUEST ' + path);
 
            this._websocket.Send("BRREQ:" + JSON.stringify(request));
         },
@@ -257,7 +273,7 @@ sap.ui.define([
               }
 
               for (var k=0;k<elem._childs.length;++k)
-                 scan(lvl+1, elem._childs[k], path + elem._childs[k]._name + "/");
+                 scan(lvl+1, elem._childs[k], path + elem._childs[k].name + "/");
 
               // check if more elements are required
 
@@ -285,7 +301,7 @@ sap.ui.define([
            scan(0, this.h, "/");
 
            if (this.getProperty("/length") != id) {
-              console.error('LENGTH MISMATCH', this.getProperty("/length"), id);
+              // console.error('LENGTH MISMATCH', this.getProperty("/length"), id);
               this.setProperty("/length", id); // update length property
            }
 
@@ -303,7 +319,7 @@ sap.ui.define([
            var elem = this.getElementByIndex(index);
            if (!elem) return;
 
-           console.log('Toggle element', elem._name)
+           console.log('Toggle element', elem.name)
 
            if (elem._expanded) {
               delete elem._expanded;
@@ -315,7 +331,7 @@ sap.ui.define([
 
               return true;
 
-           } else if (elem.type === "folder") {
+           } else if (elem.nchilds || (elem.index==0)) {
 
               elem._expanded = true;
               // structure is changing but not immediately
