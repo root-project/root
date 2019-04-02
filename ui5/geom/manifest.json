@@ -1,0 +1,25 @@
+{
+    "sap.app": {
+        "id": "rootui5.geom"
+    },
+    "sap.ui5": {
+        "rootView": {
+            "viewName": "rootui5.eve7.view.GeomViewer",
+            "type": "XML",
+            "async": true,
+            "id": "Geom"
+        },
+        "resources": {
+        },
+        "dependencies": {
+            "libs": {
+                "sap.ui.core": {},
+                "sap.ui.commons": {},
+                "sap.ui.layout": {},
+                "sap.m": {},
+                "sap.uxap": {},
+                "sap.ui.table": {}
+            }
+        }
+    }
+}
