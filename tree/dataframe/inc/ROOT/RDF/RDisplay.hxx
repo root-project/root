@@ -11,6 +11,7 @@
 #ifndef ROOT_RDFDISPLAYER
 #define ROOT_RDFDISPLAYER
 
+#include "ROOT/RDF/Utils.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "TClassEdit.h"
 
@@ -150,10 +151,6 @@ private:
    void MovePosition();
 
    ////////////////////////////////////////////////////////////////////////////
-   /// Feed a piece of code to cling and handle errors
-   void CallInterpreter(const std::string &code);
-
-   ////////////////////////////////////////////////////////////////////////////
    /// Get the number of columns that do NOT fit in the characters limit
    size_t GetNColumnsToShorten() const;
 
@@ -168,7 +165,7 @@ private:
       fIsCollection = {AddInterpreterString(calc, columns, columnIndex++)...};
 
       // Let cling::printValue handle the conversion. This can be done only through cling-compiled code.
-      CallInterpreter(calc.str());
+      ROOT::Internal::RDF::InterpreterCalc(calc.str());
 
       // Populate the fTable using the results of the JITted code.
       for (size_t i = 0; i < fNColumns; ++i) {
