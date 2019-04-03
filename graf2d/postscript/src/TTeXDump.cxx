@@ -422,12 +422,16 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       PrintFast(1,")");
    }
 
-   if (fMarkerStyle == 23 || fMarkerStyle == 32) {
-      PrintStr("}{\\draw[mark options={color=c,fill=c,rotate=180},mark size=");
-   } else {
-      PrintStr("}{\\draw[mark options={color=c,fill=c},mark size=");
+   PrintStr("}{\\draw[mark options={color=c,fill=c");
+
+   if (fCurrentAlpha != 1.) {
+      PrintStr(",opacity=");
+      WriteReal(fCurrentAlpha, kFALSE);
    }
-   PrintStr(Form("%fpt,mark=",8./3.33*fMarkerSize));
+
+   if (fMarkerStyle == 23 || fMarkerStyle == 32) PrintStr(",rotate=180");
+
+   PrintStr(Form("},mark size=%fpt,mark=",8./3.33*fMarkerSize));
    switch (fMarkerStyle) {
    case 1 :
       PrintStr("*");
@@ -553,6 +557,10 @@ void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       }
       PrintStr(",line width=");
       WriteReal(0.3*fLineScale*fLineWidth, kFALSE);
+      if (fCurrentAlpha != 1.) {
+         PrintStr(",opacity=");
+         WriteReal(fCurrentAlpha, kFALSE);
+      }
    } else {
       SetColor(fFillColor);
       if (fillis==1) {
@@ -809,7 +817,12 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    WriteReal(YtoTeX(y), kFALSE);
    PrintStr(") node[scale=");
    WriteReal(ftsize, kFALSE);
-   PrintStr(", color=c, rotate=");
+   PrintStr(", color=c");
+   if (fCurrentAlpha != 1.) {
+      PrintStr(",opacity=");
+      WriteReal(fCurrentAlpha, kFALSE);
+   }
+   PrintStr(", rotate=");
    WriteReal(fTextAngle, kFALSE);
    PrintFast(2,"]{");
    PrintStr(t.Data());

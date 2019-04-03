@@ -69,4 +69,23 @@ void transparency()
    tex->SetTextSize(0.125);
    tex->SetTextAngle(26.0);
    tex->Draw();
+
+   // Draw two transparent markers
+   TMarker *marker = new TMarker(0.03080229,0.998008,20);
+   marker->SetMarkerColorAlpha(2, .3);
+   marker->SetMarkerStyle(20);
+   marker->SetMarkerSize(1.7);
+   marker->Draw();
+   marker = new TMarker(0.1239255,0.8635458,20);
+   marker->SetMarkerColorAlpha(2, .2);
+   marker->SetMarkerStyle(20);
+   marker->SetMarkerSize(1.7);
+   marker->Draw();
+
+   // Draw an opaque marker
+   marker = new TMarker(0.3047994,0.6344622,20);
+   marker->SetMarkerColor(2);
+   marker->SetMarkerStyle(20);
+   marker->SetMarkerSize(1.7);
+   marker->Draw();
 }
