@@ -19,8 +19,8 @@
 \class RooSentinel
 \ingroup Roofitcore
 
-RooSentinel is a special purposes singleton class that terminates
-all other RooFit singleton services when the process exists. 
+RooSentinel is a special purpose singleton class that terminates
+all other RooFit singleton services when the process exits.
 
 All function RooFit singleton services are created on the heap with
 a static wrapper function to avoid the 'static initialization order fiasco'
@@ -52,10 +52,6 @@ static void CleanUpRooFitAtExit()
   // Clean up function called at program termination before global objects go out of scope.
   RooMinuit::cleanup() ;
   RooMsgService::cleanup() ;
-  RooNumIntConfig::cleanup() ;
-  RooNumGenConfig::cleanup() ;
-  RooNumIntFactory::cleanup() ;
-  RooNumGenFactory::cleanup() ;
   RooNameReg::cleanup() ;
   RooArgSet::cleanup() ;
   RooRealConstant::cleanup() ;

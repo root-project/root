@@ -38,8 +38,6 @@ public:
   const char* getDepIntegratorName(const char* name) ;
 
   RooAbsIntegrator* createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0, Bool_t isBinned=kFALSE) ;
-  
-  static void cleanup() ;
 
 
 protected:
@@ -50,8 +48,6 @@ protected:
 
   RooNumIntFactory(); 
   RooNumIntFactory(const RooNumIntFactory& other) ;
-
-  static RooNumIntFactory* _instance ;
 
 
   ClassDef(RooNumIntFactory,1) // Numeric Integrator factory

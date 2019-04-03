@@ -49,9 +49,6 @@ the preference of the caller as encoded in the configuration object.
 using namespace std ;
 
 ClassImp(RooNumGenFactory);
-;
-
-RooNumGenFactory* RooNumGenFactory::_instance = 0 ;
 
 
 
@@ -61,8 +58,6 @@ RooNumGenFactory* RooNumGenFactory::_instance = 0 ;
 
 RooNumGenFactory::RooNumGenFactory()
 {
-  _instance = this ;
-
   RooAcceptReject::registerSampler(*this) ;
   RooFoamGenerator::registerSampler(*this) ;
 
@@ -113,25 +108,9 @@ RooNumGenFactory::RooNumGenFactory(const RooNumGenFactory& other) : TObject(othe
 
 RooNumGenFactory& RooNumGenFactory::instance()
 {
-  if (_instance==0) {
-    new RooNumGenFactory ;
-    RooSentinel::activate() ;
-  } 
-  return *_instance ;
+  static RooNumGenFactory instance;
+  return instance;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Cleanup routine called by atexit() handler installed by RooSentinel
-
-void RooNumGenFactory::cleanup()
-{
-  if (_instance) {
-    delete _instance ;
-    _instance = 0 ;
-  }
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

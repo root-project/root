@@ -21,7 +21,7 @@
 
 RooNumIntConfig holds the configuration parameters of the various
 numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
-use this class in the (normalization) integral configuration interface
+use this class in the (normalization) integral configuration interface.
 **/
 
 #include "RooFit.h"
@@ -39,24 +39,7 @@ use this class in the (normalization) integral configuration interface
 
 using namespace std;
 
-ClassImp(RooNumIntConfig);
-;
-
-RooNumIntConfig* RooNumIntConfig::_default = 0 ;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Function called by atexit() handler installed by RooSentinel to
-/// cleanup global objects at end of job
-
-void RooNumIntConfig::cleanup()
-{
-  if (_default) {
-    delete _default ;
-    _default = 0 ;
-  }
-}
-
+ClassImp(RooNumIntConfig)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,12 +47,9 @@ void RooNumIntConfig::cleanup()
 
 RooNumIntConfig& RooNumIntConfig::defaultConfig() 
 {
+  static RooNumIntConfig defaultConfig;
   // Instantiate object if it doesn't exist yet
-  if (_default==0) {
-    _default = new RooNumIntConfig ;    
-    RooNumIntFactory::instance() ;
-  }
-  return *_default ;
+  return defaultConfig;
 }
 
 
