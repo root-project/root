@@ -61,9 +61,10 @@ itself remains fully opaque.
 histo->SetFillColorAlpha(kBlue, 0.35);
 ~~~
 
-The transparency is available on all platforms when the flag `OpenGL.CanvasPreferGL` is set to `1`
-in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
-it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
+The transparency for filled polygons is available on all platforms when the flag
+`OpenGL.CanvasPreferGL` is set to `1` in `$ROOTSYS/etc/system.rootrc`, or on Mac
+with the Cocoa backend.
+On the file output it is visible with PDF, PNG, Gif, JPEG, SVG, TeX... but not PostScript.
 
 ### The ROOT Color Wheel.
 The wheel contains the recommended 216 colors to be used in web applications.
