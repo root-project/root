@@ -15,6 +15,7 @@ The following people have contributed to this new version:
  Bertrand Bellenot, CERN/SFT,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
+ Javier Cervantes Villanueva, CERN/SFT \
  Olivier Couet, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
@@ -114,6 +115,7 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
   - Add the `Concatenate` helper to merge the content of two `RVec<T>` instances.
   - Generalise the `VecOps::Map` utility allowing to apply a callable on a set of RVecs and not only to one.
   - Add the `DeltaR2` and `DeltaR` helpers for RVec.
+  - Add the `Max`, `Min`, `ArgMax`, and `ArgMin` helpers for RVec.
 
 ## RooFit Libraries
 ### HistFactory
