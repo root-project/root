@@ -165,7 +165,7 @@ private:
       fIsCollection = {AddInterpreterString(calc, columns, columnIndex++)...};
 
       // Let cling::printValue handle the conversion. This can be done only through cling-compiled code.
-      ROOT::Internal::RDF::InterpreterCalc(calc.str());
+      ROOT::Internal::RDF::InterpreterCalc(calc.str(), "Display");
 
       // Populate the fTable using the results of the JITted code.
       for (size_t i = 0; i < fNColumns; ++i) {

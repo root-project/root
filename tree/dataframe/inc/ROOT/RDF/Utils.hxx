@@ -134,12 +134,10 @@ void Erase(const T &that, std::vector<T> &v)
 /// Declare code in the interpreter via the TInterpreter::Declare method, throw in case of errors
 void InterpreterDeclare(const std::string &code);
 
-// Jit code in the interpreter with TInterpreter::Calc and return
-// a pair containing the return value of Calc and the error code.
-// The error code is:
-//   - 0 if Calc resulted in TInterpreter::kNoError
-//   - 1 otherwise
-std::pair<Long64_t, int> InterpreterCalc(const std::string &code);
+/// Jit code in the interpreter with TInterpreter::Calc, throw in case of errors.
+/// The optional `context` parameter, if present, is mentioned in the error message.
+/// The pointer returned by the call to TInterpreter::Calc is returned in case of success.
+Long64_t InterpreterCalc(const std::string &code, const std::string &context = "");
 
 } // end NS RDF
 } // end NS Internal
