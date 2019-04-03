@@ -66,9 +66,6 @@ using namespace ROOT::RDF;
 namespace TTraits = ROOT::TypeTraits;
 namespace RDFInternal = ROOT::Internal::RDF;
 
-// Declare code in the interpreter via the TInterpreter::Declare method, throw in case of errors
-bool InterpreterDeclare(const std::string &code); // TODO implement me
-
 using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;
 HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
                             std::string_view treeName,
