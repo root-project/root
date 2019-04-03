@@ -131,6 +131,13 @@ void Erase(const T &that, std::vector<T> &v)
    v.erase(std::remove(v.begin(), v.end(), that), v.end());
 }
 
+// Jit code in the interpreter with TInterpreter::Calc and return
+// a pair containing the return value of Calc and the error code.
+// The error code is:
+//   - 0 if Calc resulted in TInterpreter::kNoError
+//   - 1 otherwise
+std::pair<Long64_t, int> InterpreterCalc(const std::string &code);
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
