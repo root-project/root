@@ -280,8 +280,10 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       }
    } else if (arg.compare(0,6, "BRREQ:") == 0) {
 
-      auto json = fDesc.ProcessBrowserRequest(arg.substr(6));
+      // for debug purposes - send complete model, can be configurable in the future
+      // SendHierarchy(connid);
 
+      auto json = fDesc.ProcessBrowserRequest(arg.substr(6));
       if (json.length() > 0) fWebWindow->Send(connid, json);
    }
 }

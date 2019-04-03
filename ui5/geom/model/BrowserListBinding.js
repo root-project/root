@@ -40,7 +40,7 @@ sap.ui.define([
                     // QUESTION: seems to be, this is required by JSONListBinding?
                     context: this.getModel().getContext(this.getPath() + "/" + i),
                     nodeState: {
-                       expanded: !!oNode._elem._expanded,
+                       expanded: !!oNode._elem.expanded,
                        selected: !!oNode._elem._selected,
                        sum: false // ????
                     }
@@ -71,7 +71,7 @@ sap.ui.define([
 
         isExpanded: function(iIndex) {
             var elem = this.getModel().getElementByIndex(iIndex);
-            var res = elem ? !!elem._expanded : false;
+            var res = elem ? !!elem.expanded : false;
 
             Log.warning("root.model.hListBinding#isExpanded(" + iIndex + ") res = " + res + "  iselem = " + (elem ? elem._name : "---"));
 

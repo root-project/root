@@ -16,8 +16,8 @@ sap.ui.define([
 
             // this is true hierarchy, created on the client side and used for creation of flat list
             this.h = {
-               name: "ROOT",
-               _expanded: true
+               name: "__Holder__",
+               expanded: true
             };
 
             this.loadDataCounter = 0; // counter of number of nodes
@@ -29,16 +29,16 @@ sap.ui.define([
 
         /* Method can be used when complete hierarchy is ready and can be used directly */
         setFullModel: function(topnode) {
-           this.fullModel = this.h = topnode;
+           this.fullModel = true;
+           this.h.nchilds = 1;
+           this.h.childs = [ topnode ];
            if (this.oBinding)
               this.oBinding.checkUpdate(true);
         },
 
         clearFullModel: function() {
-           this.h = {
-              name: "ROOT",
-             _expanded: true
-           };
+           delete this.h.childs;
+           delete this.h.nchilds;
            delete this.fullModel;
         },
 
@@ -167,15 +167,15 @@ sap.ui.define([
         // function used to calculate all ids shifts and total number of elements
         scanShifts: function() {
 
-           var id = 0;
+           var id = 0, full = this.fullModel;
 
            function scan(lvl, elem) {
 
-              id++;
+              if (lvl >= 0) id++;
 
               var before_id = id;
 
-              if (elem._expanded) {
+              if (elem.expanded) {
                  if (elem.childs === undefined) {
                     // do nothing, childs are not visible as long as we do not have any list
 
@@ -183,7 +183,7 @@ sap.ui.define([
                  } else {
 
                     // gap at the begin
-                    if (elem.first)
+                    if (!full && elem.first)
                        id += elem.first;
 
                     // jump over all childs
@@ -191,9 +191,11 @@ sap.ui.define([
                        scan(lvl+1, elem.childs[k]);
 
                     // gap at the end
-                    var _last = (elem.first || 0) + elem.childs.length;
-                    var _remains = elem.nchilds  - _last;
-                    if (_remains > 0) id += _remains;
+                    if (!full) {
+                       var _last = (elem.first || 0) + elem.childs.length;
+                       var _remains = elem.nchilds  - _last;
+                       if (_remains > 0) id += _remains;
+                    }
                  }
               }
 
@@ -201,7 +203,7 @@ sap.ui.define([
               elem._shift = id - before_id;
            }
 
-           scan(0, this.h);
+           scan(-1, this.h);
 
            this.setProperty("/length", id);
 
@@ -224,23 +226,23 @@ sap.ui.define([
 
            // main method to scan through all existing sub-folders
            function scan(lvl, elem, path) {
+
               // create elements with safety margin
-              if ((nodes !== null) && !nodes[id] && (id >= args.begin - threshold2) && (id < args.end + threshold2) )
+              if ((lvl >= 0) && (nodes !== null) && !nodes[id] && (id >= args.begin - threshold2) && (id < args.end + threshold2) )
                  nodes[id] = {
                     name: elem.name,
                     level: lvl,
                     index: id,
                     _elem: elem,
-
                     // these are optional, should be eliminated in the future
                     type: elem.nchilds || (id == 0) ? "folder" : "file",
                     isLeaf: !elem.nchilds,
-                    expanded: !!elem._expanded
+                    expanded: !!elem.expanded
                  };
 
-              id++;
+              if (lvl >= 0) id++;
 
-              if (!elem._expanded) return;
+              if (!elem.expanded) return;
 
               if (elem.childs === undefined) {
                  // add new request - can we check if only special part of childs is required?
@@ -258,7 +260,7 @@ sap.ui.define([
               }
 
               // when not all childs from very beginning is loaded, but may be required
-              if (elem.first) {
+              if (elem.first && !pthis.fullModel) {
 
                  // check if requests are needed to load part in the begin of the list
                  if (args.begin - id - threshold2 < elem.first) {
@@ -272,33 +274,37 @@ sap.ui.define([
                  id += elem.first;
               }
 
+
               for (var k=0;k<elem.childs.length;++k)
                  scan(lvl+1, elem.childs[k], path + elem.childs[k].name + "/");
 
               // check if more elements are required
 
-              var _last = (elem.first || 0) + elem.childs.length;
-              var _remains = elem.nchilds  - _last;
+              if (!pthis.fullModel) {
+                 var _last = (elem.first || 0) + elem.childs.length;
+                 var _remains = elem.nchilds  - _last;
 
-              if (_remains > 0) {
-                 if (args.end + threshold2 > id) {
+                 if (_remains > 0) {
+                    if (args.end + threshold2 > id) {
 
-                    var first = _last, number = args.end + threshold2 - id;
-                    if (number < threshold) number = threshold; // always request much
-                    if (number > _remains) number = _remains; // but not too much
-                    if (number > threshold) {
-                       first += (number - threshold);
-                       number = threshold;
+                       var first = _last, number = args.end + threshold2 - id;
+                       if (number < threshold) number = threshold; // always request much
+                       if (number > _remains) number = _remains; // but not too much
+                       if (number > threshold) {
+                          first += (number - threshold);
+                          number = threshold;
+                       }
+
+                       pthis.submitRequest(elem, path, first, number);
                     }
 
-                    pthis.submitRequest(elem, path, first, number);
+                    id += _remains;
                  }
-
-                 id += _remains;
               }
            }
 
-           scan(0, this.h, "/");
+           // start scan from very top
+           scan(-1, this.h, "/");
 
            if (this.getProperty("/length") != id) {
               // console.error('LENGTH MISMATCH', this.getProperty("/length"), id);
@@ -321,8 +327,8 @@ sap.ui.define([
 
            console.log('Toggle element', elem.name, elem.nchilds, elem)
 
-           if (elem._expanded) {
-              delete elem._expanded;
+           if (elem.expanded) {
+              delete elem.expanded;
               delete elem.childs; // TODO: for the future keep childs but make request if expand once again
 
               // close folder - reassign shifts
@@ -333,7 +339,7 @@ sap.ui.define([
 
            } else if (elem.nchilds || !elem.index) {
 
-              elem._expanded = true;
+              elem.expanded = true;
               // structure is changing but not immediately
 
               return true;

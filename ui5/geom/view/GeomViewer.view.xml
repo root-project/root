@@ -32,7 +32,7 @@
               selectionMode="Single"
               visibleRowCountMode="Auto"
               rows="{/nodes}">
-              <!--  rows="{ path:'/nodes',  parameters : { arrayNames: ['chlds']}}"> -->
+              <!--  rows="{ path:'/nodes',  parameters : { arrayNames: ['childs']}}">  -->
               <t:columns>
                  <t:Column label="Name" template="name"></t:Column>
               </t:columns>
