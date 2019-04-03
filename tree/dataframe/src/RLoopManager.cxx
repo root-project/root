@@ -431,7 +431,7 @@ void RLoopManager::JitDeclarations()
    if (fToJitDeclare.empty())
       return;
 
-   gInterpreter->Declare(fToJitDeclare.c_str());
+   RDFInternal::InterpreterDeclare(fToJitDeclare);
    fToJitDeclare.clear();
 }
 

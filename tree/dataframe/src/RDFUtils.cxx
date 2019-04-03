@@ -276,6 +276,14 @@ std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string>
    return newColNames;
 }
 
+void InterpreterDeclare(const std::string &code)
+{
+   if (!gInterpreter->Declare(code.c_str())) {
+      const auto msg = "An error occurred while jitting. The lines above might indicate the cause of the crash";
+      throw std::runtime_error(msg);
+   }
+}
+
 std::pair<Long64_t, int> InterpreterCalc(const std::string &code)
 {
    TInterpreter::EErrorCode errorCode(TInterpreter::kNoError);
