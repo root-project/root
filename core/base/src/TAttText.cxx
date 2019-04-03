@@ -133,7 +133,7 @@ text->SetTextColorAlpha(kBlue, 0.35);
 
 The transparency is available on all platforms when the flag `OpenGL.CanvasPreferGL` is set to `1`
 in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
-it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
+it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
 
 ## <a name="T4"></a> Text Size
 
