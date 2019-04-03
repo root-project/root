@@ -118,13 +118,6 @@ std::set<std::string> GetPotentialColumnNames(const std::string &expr)
 // the one in the vector
 class RActionBase;
 
-std::pair<Long64_t, int> InterpreterCalc(const std::string &code)
-{
-   TInterpreter::EErrorCode errorCode(TInterpreter::kNoError);
-   auto res = gInterpreter->Calc(code.c_str(), &errorCode);
-   return std::make_pair(res, errorCode);
-}
-
 HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
                             std::string_view treeName,
                             std::string_view fileName,

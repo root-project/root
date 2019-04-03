@@ -17,6 +17,7 @@
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TClassRef.h"
+#include "TInterpreter.h"
 #include "TLeaf.h"
 #include "TObjArray.h"
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
@@ -273,6 +274,13 @@ std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string>
    }
 
    return newColNames;
+}
+
+std::pair<Long64_t, int> InterpreterCalc(const std::string &code)
+{
+   TInterpreter::EErrorCode errorCode(TInterpreter::kNoError);
+   auto res = gInterpreter->Calc(code.c_str(), &errorCode);
+   return std::make_pair(res, errorCode);
 }
 
 } // end NS RDF
