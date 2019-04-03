@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TBulkBranchRead
-#define ROOT_TBulkBranchRead
+#ifndef ROOT_TBulkBranchRead_icc
+#define ROOT_TBulkBranchRead_icc
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -21,32 +21,21 @@
 // deserialization code path by default.                                //
 //////////////////////////////////////////////////////////////////////////
 
+#include "ROOT/TBulkBranchRead.hxx" ///< A helper class for bulk IO (multiple events per call) operations.
 #include "TBranch.h"
 
 namespace ROOT {
 namespace Experimental {
 namespace Internal {
 
-class TBulkBranchRead {
 
-   friend class ::TBranch;
-
-public:
-   Int_t  GetBulkEntries(Long64_t evt, TBuffer& user_buf);
-   Int_t  GetEntriesSerialized(Long64_t evt, TBuffer& user_buf);
-   Int_t  GetEntriesSerialized(Long64_t evt, TBuffer& user_buf, TBuffer* count_buf);
-   Bool_t SupportsBulkRead() const;
-
-private:
-   TBulkBranchRead(TBranch &parent)
-      : fParent(parent)
-   {}
-
-   TBranch &fParent;
-};
+inline Int_t  TBulkBranchRead::GetBulkEntries(Long64_t evt, TBuffer& user_buf) { return fParent.GetBulkEntries(evt, user_buf); }
+inline Int_t  TBulkBranchRead::GetEntriesSerialized(Long64_t evt, TBuffer& user_buf) { return fParent.GetEntriesSerialized(evt, user_buf); }
+inline Int_t  TBulkBranchRead::GetEntriesSerialized(Long64_t evt, TBuffer& user_buf, TBuffer* count_buf) { return fParent.GetEntriesSerialized(evt, user_buf, count_buf); }
+inline Bool_t TBulkBranchRead::SupportsBulkRead() const { return fParent.SupportsBulkRead(); }
 
 }  // Internal
 }  // Experimental
 }  // ROOT
 
-#endif  // ROOT_TBulkBranchRead
+#endif  // ROOT_TBulkBranchRead_icc
