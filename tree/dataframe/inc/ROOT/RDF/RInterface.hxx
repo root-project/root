@@ -526,12 +526,7 @@ public:
                << "*reinterpret_cast<ROOT::RDF::RSnapshotOptions*>(" << RDFInternal::PrettyPrintAddr(&options) << "));";
       // jit snapCall, return result
       fLoopManager->JitDeclarations(); // some type aliases might be needed by the code jitted in the next line
-      auto calcRes = RDFInternal::InterpreterCalc(snapCall.str());
-      if (0 != calcRes.second) {
-         std::string msg =
-            "Cannot jit Snapshot call. Interpreter error code is " + std::to_string(calcRes.second) + ".";
-         throw std::runtime_error(msg);
-      }
+      RDFInternal::InterpreterCalc(snapCall.str(), "Snapshot");
       return resPtr;
    }
 
@@ -646,11 +641,7 @@ public:
                 << RDFInternal::PrettyPrintAddr(&columnList) << "));";
       // jit cacheCall, return result
       fLoopManager->JitDeclarations(); // some type aliases might be needed by the code jitted in the next line
-      auto calcRes = RDFInternal::InterpreterCalc(cacheCall.str());
-      if (0 != calcRes.second) {
-         std::string msg = "Cannot jit Cache call. Interpreter error code is " + std::to_string(calcRes.second) + ".";
-         throw std::runtime_error(msg);
-      }
+      RDFInternal::InterpreterCalc(cacheCall.str(), "Cache");
       return resRDF;
    }
 
@@ -1577,8 +1568,8 @@ public:
          const auto call = "ROOT::Internal::RDF::TypeID2TypeName(typeid(__rdf" + std::to_string(fLoopManager->GetID()) +
                            "::" + std::string(column) + colID + "_type))";
          fLoopManager->JitDeclarations(); // some type aliases might be needed by the code jitted in the next line
-         const auto calcRes = RDFInternal::InterpreterCalc(call.c_str());
-         return *reinterpret_cast<std::string *>(calcRes.first); // copy result to stack
+         const auto calcRes = RDFInternal::InterpreterCalc(call);
+         return *reinterpret_cast<std::string *>(calcRes); // copy result to stack
       }
    }
 

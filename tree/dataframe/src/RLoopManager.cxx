@@ -443,7 +443,7 @@ void RLoopManager::Jit()
       return;
 
    JitDeclarations();
-   RDFInternal::InterpreterCalc(fToJitExec);
+   RDFInternal::InterpreterCalc(fToJitExec, "RLoopManager::Run");
    fToJitExec.clear();
 }
 
