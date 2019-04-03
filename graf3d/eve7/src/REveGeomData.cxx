@@ -45,25 +45,30 @@ class RGeomBrowserIter {
    int fParentId{-1};
    unsigned fChild{0};
    int fNodeId{0};
-   bool fFirstTime{true};
 
    std::vector<int> fStackParents;
    std::vector<int> fStackChilds;
 
 public:
 
-   RGeomBrowserIter(REveGeomDescription &desc, int nodeid = 0) : fDesc(desc), fNodeId(nodeid) {}
+   RGeomBrowserIter(REveGeomDescription &desc) : fDesc(desc) {}
 
    const std::string &GetName() const { return fDesc.fDesc[fNodeId].name; }
 
    bool IsValid() const { return fNodeId >= 0; }
 
-   bool HasChilds() const { return fDesc.fDesc[fNodeId].chlds.size() > 0; }
+   bool HasChilds() const { return (fNodeId < 0) ? true : fDesc.fDesc[fNodeId].chlds.size() > 0; }
 
-   int NumChilds() const { return fDesc.fDesc[fNodeId].chlds.size(); }
+   int NumChilds() const { return (fNodeId < 0) ? 1 : fDesc.fDesc[fNodeId].chlds.size(); }
 
    bool Enter()
    {
+      if (fNodeId < 0) {
+         Reset();
+         fNodeId = 0;
+         return true;
+      }
+
       auto &node = fDesc.fDesc[fNodeId];
       if (node.chlds.size() == 0) return false;
       fStackParents.emplace_back(fParentId);
@@ -98,7 +103,7 @@ public:
    {
       // does not have parents
       if ((fNodeId <= 0) || (fParentId < 0)) {
-         fNodeId = -1;
+         Reset();
          return false;
       }
 
@@ -111,11 +116,9 @@ public:
 
    bool Reset()
    {
-      fFirstTime = true;
-
       fParentId = -1;
+      fNodeId = -1;
       fChild = 0;
-      fNodeId = 0;
       fStackParents.clear();
       fStackChilds.clear();
 
@@ -124,12 +127,6 @@ public:
 
    bool NextNode()
    {
-      if (fFirstTime) {
-         if (!IsValid()) return false;
-         fFirstTime = false;
-         return true;
-      }
-
       if (Enter()) return true;
 
       if (Next()) return true;
@@ -574,6 +571,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
       RBrowserReply reply;
       reply.path = request->path;
       reply.first = request->first;
+      bool toplevel = (request->path.compare("/") == 0);
 
       RGeomBrowserIter iter(*this);
       if (iter.Navigate(request->path)) {
@@ -588,6 +586,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
 
             while (iter.IsValid() && (request->number > 0)) {
                reply.nodes.emplace_back(iter.GetName(), iter.NumChilds());
+               if (toplevel) reply.nodes.back().expanded = true;
                request->number--;
                iter.Next();
             }
