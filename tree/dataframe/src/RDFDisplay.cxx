@@ -156,16 +156,6 @@ void RDisplay::MovePosition()
    }
 }
 
-void RDisplay::CallInterpreter(const std::string &code)
-{
-   TInterpreter::EErrorCode errorCode;
-   gInterpreter->Calc(code.c_str(), &errorCode);
-   if (TInterpreter::EErrorCode::kNoError != errorCode) {
-      std::string msg = "Cannot jit during Display call. Interpreter error code is " + std::to_string(errorCode) + ".";
-      throw std::runtime_error(msg);
-   }
-}
-
 RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries)
    : fTypes(types), fWidths(columnNames.size(), 0), fRepresentations(columnNames.size()),
      fCollectionsRepresentations(columnNames.size()), fNColumns(columnNames.size()), fEntries(entries)
