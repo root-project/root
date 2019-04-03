@@ -279,16 +279,23 @@ std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string>
 void InterpreterDeclare(const std::string &code)
 {
    if (!gInterpreter->Declare(code.c_str())) {
-      const auto msg = "An error occurred while jitting. The lines above might indicate the cause of the crash";
+      const auto msg = "\nAn error occurred while jitting. The lines above might indicate the cause of the crash\n";
       throw std::runtime_error(msg);
    }
 }
 
-std::pair<Long64_t, int> InterpreterCalc(const std::string &code)
+Long64_t InterpreterCalc(const std::string &code, const std::string &context)
 {
    TInterpreter::EErrorCode errorCode(TInterpreter::kNoError);
    auto res = gInterpreter->Calc(code.c_str(), &errorCode);
-   return std::make_pair(res, errorCode);
+   if (errorCode != TInterpreter::EErrorCode::kNoError) {
+      std::string msg = "\nAn error occurred while jitting";
+      if (!context.empty())
+         msg += " in " + context;
+      msg += ". The lines above might indicate the cause of the crash\n";
+      throw std::runtime_error(msg);
+   }
+   return res;
 }
 
 } // end NS RDF
