@@ -51,8 +51,6 @@ static void CleanUpRooFitAtExit()
 {
   // Clean up function called at program termination before global objects go out of scope.
   RooMinuit::cleanup() ;
-  RooMsgService::cleanup() ;
-  RooNameReg::cleanup() ;
   RooArgSet::cleanup() ;
   RooRealConstant::cleanup() ;
   RooResolutionModel::cleanup() ;
