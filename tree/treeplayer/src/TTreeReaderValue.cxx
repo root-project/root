@@ -534,7 +534,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       }
    }
 
-   if (!myLeaf && !fStaticClassOffsets.size()) {
+   if (!myLeaf && !fHaveStaticClassOffsets) {
       // The following two lines cannot be swapped. The GetBranchDataType can
       // change the value of branchActualType
       const char* branchActualTypeName = GetBranchDataType(branch, branchActualType, fDict);
