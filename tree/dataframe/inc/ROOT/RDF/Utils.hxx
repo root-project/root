@@ -131,6 +131,9 @@ void Erase(const T &that, std::vector<T> &v)
    v.erase(std::remove(v.begin(), v.end(), that), v.end());
 }
 
+/// Declare code in the interpreter via the TInterpreter::Declare method, throw in case of errors
+void InterpreterDeclare(const std::string &code);
+
 // Jit code in the interpreter with TInterpreter::Calc and return
 // a pair containing the return value of Calc and the error code.
 // The error code is:
