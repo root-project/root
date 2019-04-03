@@ -443,14 +443,7 @@ void RLoopManager::Jit()
       return;
 
    JitDeclarations();
-
-   auto error = TInterpreter::EErrorCode::kNoError;
-   gInterpreter->Calc(fToJitExec.c_str(), &error);
-   if (TInterpreter::EErrorCode::kNoError != error) {
-      std::string exceptionText =
-         "An error occurred while jitting. The lines above might indicate the cause of the crash\n";
-      throw std::runtime_error(exceptionText.c_str());
-   }
+   RDFInternal::InterpreterCalc(fToJitExec);
    fToJitExec.clear();
 }
 
