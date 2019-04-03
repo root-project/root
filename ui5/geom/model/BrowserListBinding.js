@@ -10,10 +10,8 @@ sap.ui.define([
 
         // called by the TreeTable to know the amount of entries
         getLength: function() {
-           console.log('returning length', this.getModel().getLength());
-
-            // Log.warning("root.model.hListBinding#getLength()");
-            return this.getModel().getLength();
+           // Log.warning("root.model.hListBinding#getLength()");
+           return this.getModel().getLength();
         },
 
         // function is called by the TreeTable when requesting the data to display
