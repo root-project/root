@@ -138,7 +138,6 @@ sap.ui.define(['sap/ui/core/Component',
             console.log('USE PROVIDED MODEL', typeof this.model.sendFirstRequest)
          }
 
-
          // PART 2: instantiate Control and place it onto the page
 
          if (JSROOT.GetUrlOption('nobrowser') !== null) {
@@ -158,7 +157,7 @@ sap.ui.define(['sap/ui/core/Component',
                      content: [
                         new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}", select: vis_selected_handler }),
                         new geomColorBox({color:"{color}", visible: "{color_visible}" }),
-                        new mText({text:"{title}", wrapping: false })
+                        new mText({text:"{name}", wrapping: false })
                      ]
                   })
                 }));
@@ -256,7 +255,7 @@ sap.ui.define(['sap/ui/core/Component',
          var path = ctxt.getPath(), lastpos = 0, ids = [];
 
          while (lastpos>=0) {
-            lastpos = path.indexOf("/chlds", lastpos+1);
+            lastpos = path.indexOf("/childs", lastpos+1);
 
             var ttt = ctxt.getProperty(path.substr(0,lastpos));
 
@@ -514,12 +513,10 @@ sap.ui.define(['sap/ui/core/Component',
 
          switch (mhdr) {
          case "DESCR:":  // browser hierarchy
-            if (this.plainModel)
-               this.parseDescription(msg, true);
+            this.parseDescription(msg, true);
             break;
          case "FESCR:":  // searching hierarchy
-            if (this.plainModel)
-               this.parseDescription(msg, false);
+            this.parseDescription(msg, false);
             break;
          case "BREPL:":   // browser reply
             if (!this.plainModel)
@@ -601,6 +598,8 @@ sap.ui.define(['sap/ui/core/Component',
          } else {
             var topnode = this.buildTreeNode(descr, [], 0);
 
+            console.log('assign full model');
+
             this.model.setFullModel(topnode);
 
          }
@@ -655,7 +654,7 @@ sap.ui.define(['sap/ui/core/Component',
 
          var node = nodes[indx];
 
-         cache[indx] = tnode = { title: node.name, id: indx, color_visible: false, node_visible: node.vis != 0 };
+         cache[indx] = tnode = { name: node.name, id: indx, color_visible: false, node_visible: node.vis != 0 };
 
          if (node.color) {
             tnode.color = "rgb(" + node.color + ")";
@@ -663,10 +662,10 @@ sap.ui.define(['sap/ui/core/Component',
          }
 
          if (node.chlds && (node.chlds.length>0)) {
-            tnode.chlds = [];
+            tnode.childs = [];
             tnode.nchilds = node.chlds.length;
             for (var k=0;k<tnode.nchilds;++k)
-               tnode.chlds.push(this.buildTreeNode(nodes, cache, node.chlds[k]));
+               tnode.childs.push(this.buildTreeNode(nodes, cache, node.chlds[k]));
          } else {
             tnode.end_node = true; // TODO: no need for such flag
          }
@@ -746,12 +745,12 @@ sap.ui.define(['sap/ui/core/Component',
             node = this.geo_clones.nodes[indx];
             var tnode = tnodes[indx];
             if (!tnode)
-               tnodes[indx] = tnode = { title: node.name, id: indx, color_visible: false, node_visible: true };
+               tnodes[indx] = tnode = { name: node.name, id: indx, color_visible: false, node_visible: true };
 
             if (prnt) {
-               if (!prnt.chlds) prnt.chlds = [];
-               if (prnt.chlds.indexOf(tnode) < 0)
-                  prnt.chlds.push(tnode);
+               if (!prnt.childs) prnt.childs = [];
+               if (prnt.childs.indexOf(tnode) < 0)
+                  prnt.childs.push(tnode);
             }
             prnt = tnode;
          }
