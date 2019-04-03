@@ -66,9 +66,9 @@ sap.ui.define([
               var name = names.shift(), find = false;
               if (!name) continue;
 
-              for (var k=0;k<curr._childs.length;++k) {
-                 if (curr._childs[k].name == name) {
-                    curr = curr._childs[k];
+              for (var k=0;k<curr.childs.length;++k) {
+                 if (curr.childs[k].name == name) {
+                    curr = curr.childs[k];
                     find = true;
                     break;
                  }
@@ -126,21 +126,21 @@ sap.ui.define([
 
            var smart_merge = false;
 
-           if ((elem._nchilds === reply.nchilds) && elem._childs && reply.nodes) {
-              if (elem._first + elem._childs.length == reply.first) {
-                 elem._childs = elem._childs.concat(reply.nodes);
+           if ((elem.nchilds === reply.nchilds) && elem.childs && reply.nodes) {
+              if (elem.first + elem.childs.length == reply.first) {
+                 elem.childs = elem.childs.concat(reply.nodes);
                  smart_merge = true;
-              } else if (reply.first + reply.nodes.length == elem._first) {
-                 elem._first = reply.first;
-                 elem._childs = reply.nodes.concat(elem._childs);
+              } else if (reply.first + reply.nodes.length == elem.first) {
+                 elem.first = reply.first;
+                 elem.childs = reply.nodes.concat(elem.childs);
                  smart_merge = true;
               }
            }
 
            if (!smart_merge) {
-              elem._nchilds = reply.nchilds;
-              elem._childs = reply.nodes;
-              elem._first = reply.first || 0;
+              elem.nchilds = reply.nchilds;
+              elem.childs = reply.nodes;
+              elem.first = reply.first || 0;
            }
 
            this.scanShifts();
@@ -176,23 +176,23 @@ sap.ui.define([
               var before_id = id;
 
               if (elem._expanded) {
-                 if (elem._childs === undefined) {
+                 if (elem.childs === undefined) {
                     // do nothing, childs are not visible as long as we do not have any list
 
                     // id += 0;
                  } else {
 
                     // gap at the begin
-                    if (elem._first)
-                       id += elem._first;
+                    if (elem.first)
+                       id += elem.first;
 
                     // jump over all childs
-                    for (var k=0;k<elem._childs.length;++k)
-                       scan(lvl+1, elem._childs[k]);
+                    for (var k=0;k<elem.childs.length;++k)
+                       scan(lvl+1, elem.childs[k]);
 
                     // gap at the end
-                    var _last = (elem._first || 0) + elem._childs.length;
-                    var _remains = elem._nchilds  - _last;
+                    var _last = (elem.first || 0) + elem.childs.length;
+                    var _remains = elem.nchilds  - _last;
                     if (_remains > 0) id += _remains;
                  }
               }
@@ -242,7 +242,7 @@ sap.ui.define([
 
               if (!elem._expanded) return;
 
-              if (elem._childs === undefined) {
+              if (elem.childs === undefined) {
                  // add new request - can we check if only special part of childs is required?
 
                  // TODO: probably one could guess more precise request
@@ -258,27 +258,27 @@ sap.ui.define([
               }
 
               // when not all childs from very beginning is loaded, but may be required
-              if (elem._first) {
+              if (elem.first) {
 
                  // check if requests are needed to load part in the begin of the list
-                 if (args.begin - id - threshold2 < elem._first) {
+                 if (args.begin - id - threshold2 < elem.first) {
 
                     var first = Math.max(args.begin - id - threshold2, 0),
-                        number = Math.min(elem._first - first, threshold);
+                        number = Math.min(elem.first - first, threshold);
 
                     pthis.submitRequest(elem, path, first, number);
                  }
 
-                 id += elem._first;
+                 id += elem.first;
               }
 
-              for (var k=0;k<elem._childs.length;++k)
-                 scan(lvl+1, elem._childs[k], path + elem._childs[k].name + "/");
+              for (var k=0;k<elem.childs.length;++k)
+                 scan(lvl+1, elem.childs[k], path + elem.childs[k].name + "/");
 
               // check if more elements are required
 
-              var _last = (elem._first || 0) + elem._childs.length;
-              var _remains = elem._nchilds  - _last;
+              var _last = (elem.first || 0) + elem.childs.length;
+              var _remains = elem.nchilds  - _last;
 
               if (_remains > 0) {
                  if (args.end + threshold2 > id) {
@@ -319,11 +319,11 @@ sap.ui.define([
            var elem = this.getElementByIndex(index);
            if (!elem) return;
 
-           console.log('Toggle element', elem.name)
+           console.log('Toggle element', elem.name, elem.nchilds, elem)
 
            if (elem._expanded) {
               delete elem._expanded;
-              delete elem._childs; // TODO: for the future keep childs but make request if expand once again
+              delete elem.childs; // TODO: for the future keep childs but make request if expand once again
 
               // close folder - reassign shifts
               this.reset_nodes = true;
@@ -331,7 +331,7 @@ sap.ui.define([
 
               return true;
 
-           } else if (elem.nchilds || (elem.index==0)) {
+           } else if (elem.nchilds || !elem.index) {
 
               elem._expanded = true;
               // structure is changing but not immediately
