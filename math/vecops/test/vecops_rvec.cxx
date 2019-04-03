@@ -963,15 +963,15 @@ TEST(VecOps, DeltaPhi)
 TEST(VecOps, InvariantMass)
 {
    // Dummy particle collections
-   RVec<float> mass1 = {50,  50,  50,   50,   100};
-   RVec<float> pt1 =   {0,   5,   5,    10,   10};
-   RVec<float> eta1 =  {0.0, 0.0, -1.0, 0.5,  2.5};
-   RVec<float> phi1 =  {0.0, 0.0, 0.0,  -0.5, -2.4};
+   RVec<double> mass1 = {50,  50,  50,   50,   100};
+   RVec<double> pt1 =   {0,   5,   5,    10,   10};
+   RVec<double> eta1 =  {0.0, 0.0, -1.0, 0.5,  2.5};
+   RVec<double> phi1 =  {0.0, 0.0, 0.0,  -0.5, -2.4};
 
-   RVec<float> mass2 = {40,  40,  40,  40,  30};
-   RVec<float> pt2 =   {0,   5,   5,   10,  2};
-   RVec<float> eta2 =  {0.0, 0.0, 0.5, 0.4, 1.2};
-   RVec<float> phi2 =  {0.0, 0.0, 0.0, 0.5, 2.4};
+   RVec<double> mass2 = {40,  40,  40,  40,  30};
+   RVec<double> pt2 =   {0,   5,   5,   10,  2};
+   RVec<double> eta2 =  {0.0, 0.0, 0.5, 0.4, 1.2};
+   RVec<double> phi2 =  {0.0, 0.0, 0.0, 0.5, 2.4};
 
    // Compute invariant mass of two particle system using both collections
    const auto invMass = InvariantMass(pt1, eta1, phi1, mass1, pt2, eta2, phi2, mass2);
@@ -1013,10 +1013,10 @@ TEST(VecOps, InvariantMass)
 
 TEST(VecOps, DeltaR)
 {
-   RVec<float> eta1 =  {0.1, -1.0, -1.0, 0.5,  -2.5};
-   RVec<float> eta2 =  {0.0, 0.0, 0.5, 2.4, 1.2};
-   RVec<float> phi1 =  {1.0, 5.0, -1.0,  -0.5, -2.4};
-   RVec<float> phi2 =  {0.0, 3.0, 6.0, 1.5, 1.4};
+   RVec<double> eta1 =  {0.1, -1.0, -1.0, 0.5,  -2.5};
+   RVec<double> eta2 =  {0.0, 0.0, 0.5, 2.4, 1.2};
+   RVec<double> phi1 =  {1.0, 5.0, -1.0,  -0.5, -2.4};
+   RVec<double> phi2 =  {0.0, 3.0, 6.0, 1.5, 1.4};
 
    auto dr = DeltaR(eta1, eta2, phi1, phi2);
    auto dr2 = DeltaR(eta2, eta1, phi2, phi1);
@@ -1026,7 +1026,7 @@ TEST(VecOps, DeltaR)
       TLorentzVector p1, p2;
       p1.SetPtEtaPhiM(1.f, eta1[i], phi1[i], 1.f);
       p2.SetPtEtaPhiM(1.f, eta2[i], phi2[i], 1.f);
-      auto dr3 = float(p2.DeltaR(p1));
+      auto dr3 = p2.DeltaR(p1);
       EXPECT_NEAR(dr3, dr[i], 1e-6);
       EXPECT_NEAR(dr3, dr2[i], 1e-6);
 
