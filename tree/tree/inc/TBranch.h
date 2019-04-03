@@ -36,6 +36,7 @@
 #include "TDataType.h"
 
 #include "ROOT/TIOFeatures.hxx"
+#include "ROOT/TBulkBranchRead.hxx" ///< A helper class for bulk IO (multiple events per call) operations.
 
 #include "TBranchCacheInfo.h"
 
@@ -58,11 +59,6 @@ class TTreeCache;
 namespace ROOT {
   namespace Internal {
     class TBranchIMTHelper; ///< A helper class for managing IMT work during TTree:Fill operations.
-  }
-  namespace Experimental {
-    namespace Internal {
-      class TBulkBranchRead; ///< A helper class for bulk IO (multiple events per call) operations.
-    }
   }
 }
 
@@ -87,7 +83,7 @@ protected:
       kDoNotUseBufferMap = BIT(22) // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
    };
 
-   using BulkPtr = std::unique_ptr<ROOT::Experimental::Internal::TBulkBranchRead>;
+   using BulkObj = ROOT::Experimental::Internal::TBulkBranchRead;
    static Int_t fgCount;          ///<! branch counter
    Int_t       fCompress;         ///<  Compression level and algorithm
    Int_t       fBasketSize;       ///<  Initial Size of  Basket Buffer
@@ -125,7 +121,7 @@ protected:
    TBuffer    *fEntryBuffer;      ///<! Buffer used to directly pass the content without streaming
    TBuffer    *fTransientBuffer;  ///<! Pointer to the current transient buffer.
    TList      *fBrowsables;       ///<! List of TVirtualBranchBrowsables used for Browse()
-   BulkPtr     fBulk;             ///<! Helper for performing bulk IO
+   BulkObj     fBulk;             ///<! Helper for performing bulk IO
 
    Bool_t      fSkipZip;          ///<! After being read, the buffer will not be unzipped.
 
@@ -188,7 +184,7 @@ public:
            Long64_t *GetBasketEntry() const {return fBasketEntry;}
    virtual Long64_t  GetBasketSeek(Int_t basket) const;
    virtual Int_t     GetBasketSize() const {return fBasketSize;}
-           ROOT::Experimental::Internal::TBulkBranchRead &GetBulkRead() const { return *fBulk; }
+           ROOT::Experimental::Internal::TBulkBranchRead &GetBulkRead() { return fBulk; }
    virtual TList    *GetBrowsables();
    virtual const char* GetClassName() const;
            Int_t     GetCompressionAlgorithm() const;
@@ -284,5 +280,7 @@ inline Int_t TBranch::GetCompressionSettings() const
 {
    return (fCompress < 0) ? -1 : fCompress;
 }
+
+#include "ROOT/TBulkBranchRead.icc"
 
 #endif
