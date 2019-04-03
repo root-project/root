@@ -22,6 +22,7 @@
 #endif
 
 #include <ROOT/RAdoptAllocator.hxx>
+#include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/TypeTraits.hxx>
 
 #include <algorithm>
