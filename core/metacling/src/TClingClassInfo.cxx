@@ -642,20 +642,14 @@ std::vector<std::string> TClingClassInfo::GetUsingNamespaces()
    R__LOCKGUARD(gInterpreterMutex);
 
    cling::Interpreter::PushTransactionRAII RAII(fInterp);
-   const clang::DeclContext *DC = cast<DeclContext>(fDecl);
+   const auto DC = dyn_cast<DeclContext>(fDecl);
    if (!DC)
-       return res;
+      return res;
 
-   clang::DeclContext::decl_iterator iter = DC->noload_decls_begin();
-   while (iter != DC->noload_decls_end()) {
-      if (iter->getKind() == Decl::UsingDirective) {
-         UsingDirectiveDecl *udecl = llvm::cast<UsingDirectiveDecl>(*iter);
-         if (udecl) {
-             NamespaceDecl *target = udecl->getNominatedNamespace();
-             if (target) res.push_back(target->getName().str());
-         }
-      }
-      ++iter;
+   for (auto UD : DC->using_directives()) {
+      NamespaceDecl *NS = UD->getNominatedNamespace();
+      if (NS)
+         res.push_back(NS->getName().str());
    }
 
    return res;
