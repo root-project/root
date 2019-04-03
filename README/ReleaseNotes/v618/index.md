@@ -113,6 +113,7 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
   - Add `T RVec<T>::at>(size_t, T)` method to allow users to specify a default value to be returned in case the vector is shorter than the position specified. No exception is thrown.
   - Add the `Concatenate` helper to merge the content of two `RVec<T>` instances.
   - Generalise the `VecOps::Map` utility allowing to apply a callable on a set of RVecs and not only to one.
+  - Add the `DeltaR2` and `DeltaR` helpers for RVec.
 
 ## RooFit Libraries
 ### HistFactory
