@@ -89,7 +89,7 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
     Therefore the range and bits specifier has to be attached to the type character.
   - All functionalities of the other datatypes have been reimplemented.
   - The documentation of `TTree` and `TBuffer` has been updated accordingly.
-  - The following exmple shows how to use the new features:
+  - The following example shows how to use the new features:
 ~~~ {.cpp}
       {
          Float16_t  floatVal;
@@ -188,6 +188,7 @@ The legacy iterators have been flagged with a special deprecation macro that can
       }
 ~~~
   - `ChangeLabel` is now available for alphanumeric axis.
+  - Implement transparency for lines, texts and markers in the TeX output.
 
 ## 3D Graphics Libraries
 
