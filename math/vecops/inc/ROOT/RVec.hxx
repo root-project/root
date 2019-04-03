@@ -1581,6 +1581,20 @@ RVec<T> DeltaPhi(T v1, const RVec<T>& v2, const T c = M_PI)
    return r;
 }
 
+/// Return the square of the distance on the \f$\eta\f$-\f$\phi\f$ plane (\f$\Delta R\f$) from
+/// the collections eta1, eta2, phi1 and phi2.
+///
+/// The function computes \f$\Delta R^2 = (\eta_1 - \eta_2)^2 + (\phi_1 - \phi_2)^2\f$
+/// of the given collections eta1, eta2, phi1 and phi2. The angle \f$\phi\f$ can
+/// be set to radian or degrees using the optional argument c, see the documentation
+/// of the DeltaPhi helper.
+template <typename T>
+RVec<T> DeltaR2(const RVec<T>& eta1, const RVec<T>& eta2, const RVec<T>& phi1, const RVec<T>& phi2, const T c = M_PI)
+{
+   const auto dphi = DeltaPhi(phi1, phi2, c);
+   return (eta1 - eta2) * (eta1 - eta2) + dphi * dphi;
+}
+
 /// Return the distance on the \f$\eta\f$-\f$\phi\f$ plane (\f$\Delta R\f$) from
 /// the collections eta1, eta2, phi1 and phi2.
 ///
@@ -1591,8 +1605,7 @@ RVec<T> DeltaPhi(T v1, const RVec<T>& v2, const T c = M_PI)
 template <typename T>
 RVec<T> DeltaR(const RVec<T>& eta1, const RVec<T>& eta2, const RVec<T>& phi1, const RVec<T>& phi2, const T c = M_PI)
 {
-   const auto dphi = DeltaPhi(phi1, phi2, c);
-   return sqrt((eta1 - eta2) * (eta1 - eta2) + dphi * dphi);
+   return sqrt(DeltaR2(eta1, eta2, phi1, phi2, c));
 }
 
 /// Return the distance on the \f$\eta\f$-\f$\phi\f$ plane (\f$\Delta R\f$) from
