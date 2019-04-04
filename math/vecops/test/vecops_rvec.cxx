@@ -974,7 +974,7 @@ TEST(VecOps, InvariantMass)
    RVec<double> phi2 =  {0.0, 0.0, 0.0, 0.5, 2.4};
 
    // Compute invariant mass of two particle system using both collections
-   const auto invMass = InvariantMass(pt1, eta1, phi1, mass1, pt2, eta2, phi2, mass2);
+   const auto invMass = InvariantMasses(pt1, eta1, phi1, mass1, pt2, eta2, phi2, mass2);
 
    for(size_t i=0; i<mass1.size(); i++) {
       TLorentzVector p1, p2;
