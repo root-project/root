@@ -55,6 +55,32 @@ constexpr ClusterSize_t kInvalidClusterIndex(std::uint32_t(-1));
 using ColumnId_t = std::int64_t;
 constexpr ColumnId_t kInvalidColumnId = -1;
 
+/// 64 possible flags to apply to all versioned entities (so far unused).
+using ForestFlags_t = std::uint64_t;
+/// For forward and backward compatibility, attach version information to
+/// the consitituents of the file format (column, field, cluster, forest).
+class RForestVersion {
+private:
+   /// The version used to write an entity
+   std::uint32_t fVersionUse = 0;
+   /// The minimum required version necessary to read an entity
+   std::uint32_t fVersionMin = 0;
+   ForestFlags_t fFlags = 0;
+
+public:
+   RForestVersion() = default;
+   RForestVersion(std::uint32_t versionUse, std::uint32_t versionMin)
+     : fVersionUse(versionUse), fVersionMin(versionMin)
+   {}
+   RForestVersion(std::uint32_t versionUse, std::uint32_t versionMin, ForestFlags_t flags)
+     : fVersionUse(versionUse), fVersionMin(versionMin), fFlags(flags)
+   {}
+
+   std::uint32_t GetVersionUse() const { return fVersionUse; }
+   std::uint32_t GetVersionMin() const { return fVersionMin; }
+   ForestFlags_t GetFlags() const { return fFlags; }
+};
+
 } // namespace Experimental
 } // namespace ROOT
 
