@@ -31,26 +31,28 @@ class RooNumIntFactory : public TObject {
 public:
 
   static RooNumIntFactory& instance() ;
-  virtual ~RooNumIntFactory();
+  virtual ~RooNumIntFactory() = default;
 
   Bool_t storeProtoIntegrator(RooAbsIntegrator* proto, const RooArgSet& defConfig, const char* depName="") ;
-  const RooAbsIntegrator* getProtoIntegrator(const char* name) ;
-  const char* getDepIntegratorName(const char* name) ;
+  const RooAbsIntegrator* getProtoIntegrator(const char* name) const;
+  const char* getDepIntegratorName(const char* name) const;
 
-  RooAbsIntegrator* createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0, Bool_t isBinned=kFALSE) ;
+  RooAbsIntegrator* createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0, Bool_t isBinned=kFALSE) const;
 
 
-protected:
+private:
 	 
   friend class RooNumIntConfig ;
 
-  std::map<std::string,std::pair<RooAbsIntegrator*,std::string> > _map ;
+  std::map<std::string,std::pair<std::unique_ptr<RooAbsIntegrator>,std::string> > _map;
 
-  RooNumIntFactory(); 
-  RooNumIntFactory(const RooNumIntFactory& other) ;
+  RooNumIntFactory() = default;
+  RooNumIntFactory(const RooNumIntFactory& other) = delete;
+
+  void init();
 
 
-  ClassDef(RooNumIntFactory,1) // Numeric Integrator factory
+  ClassDef(RooNumIntFactory, 0) // Numeric Integrator factory
 };
 
 #endif

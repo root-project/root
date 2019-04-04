@@ -38,28 +38,10 @@ RooRealVar objects and will recycle them as appropriate.
 #include "RooRealConstant.h"
 #include "RooConstVar.h"
 #include "RooArgList.h"
-#include "RooSentinel.h"
 
 using namespace std;
 
 ClassImp(RooRealConstant);
-;
-
-
-RooArgList* RooRealConstant::_constDB = 0;
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Cleanup function register with RooSentinel for cleanup in atexit()
-
-void RooRealConstant::cleanup()
-{
-  if (_constDB) {
-    delete _constDB ;
-    _constDB = 0 ;
-  }
-}
 
 
 
@@ -71,8 +53,7 @@ void RooRealConstant::cleanup()
 RooConstVar& RooRealConstant::value(Double_t value)
 {
   // Lookup existing constant
-  init() ;
-  for (auto varArg : *_constDB) {
+  for (auto varArg : constDB()) {
     auto var = static_cast<RooConstVar*>(varArg);
     if ((var->getVal()==value) && (!var->getAttribute("REMOVAL_DUMMY"))) return *var ;
   }
@@ -83,7 +64,7 @@ RooConstVar& RooRealConstant::value(Double_t value)
 
   auto var = new RooConstVar(s.str().c_str(),s.str().c_str(),value) ;
   var->setAttribute("RooRealConstant_Factory_Object",kTRUE) ;
-  _constDB->addOwned(*var) ;
+  constDB().addOwned(*var) ;
 
   return *var ;
 }
@@ -97,7 +78,7 @@ RooConstVar& RooRealConstant::removalDummy()
   RooConstVar* var = new RooConstVar("REMOVAL_DUMMY","REMOVAL_DUMMY",1) ;
   var->setAttribute("RooRealConstant_Factory_Object",kTRUE) ;
   var->setAttribute("REMOVAL_DUMMY") ;
-  _constDB->addOwned(*var) ;
+  constDB().addOwned(*var) ;
 
   return *var ;
 }
@@ -107,10 +88,8 @@ RooConstVar& RooRealConstant::removalDummy()
 ////////////////////////////////////////////////////////////////////////////////
 /// One-time initialization of constants database
 
-void RooRealConstant::init()
+RooArgList& RooRealConstant::constDB()
 {
-  if (!_constDB) {
-    _constDB = new RooArgList("RooRealVar Constants Database") ;
-    RooSentinel::activate() ;
-  }
+  static RooArgList constDB("RooRealVar Constants Database");
+  return constDB;
 }

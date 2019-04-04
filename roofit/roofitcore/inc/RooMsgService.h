@@ -140,7 +140,7 @@ public:
   } ;
 
   // Access to instance
-  static RooMsgService& instance(bool reset = false);
+  static RooMsgService& instance();
   static Bool_t anyDebug() ;
 
   // User interface -- Add or delete reporting streams ;

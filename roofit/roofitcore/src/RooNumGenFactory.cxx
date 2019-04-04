@@ -41,7 +41,6 @@ the preference of the caller as encoded in the configuration object.
 
 #include "RooAcceptReject.h"
 #include "RooFoamGenerator.h"
-#include "RooSentinel.h"
 
 
 #include "RooMsgService.h"

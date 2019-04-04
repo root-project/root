@@ -21,7 +21,7 @@
 
 RooNumIntConfig holds the configuration parameters of the various
 numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
-use this class in the (normalization) integral configuration interface.
+use this class in the (normalization) integral configuration interface
 **/
 
 #include "RooFit.h"
@@ -47,9 +47,20 @@ ClassImp(RooNumIntConfig)
 
 RooNumIntConfig& RooNumIntConfig::defaultConfig() 
 {
-  static RooNumIntConfig defaultConfig;
-  // Instantiate object if it doesn't exist yet
-  return defaultConfig;
+  static RooNumIntConfig theConfig;
+  static bool initStarted = false;
+
+  if (!initStarted) {
+    // This is needed to break a deadlock. We need the RooNumIntFactory constructor
+    // to initialise us, but this constructor will call back to us again.
+    // Here, we ensure that we can return the instance to the factory constructor by
+    // flipping the bool, but we only return to the outside world when the factory
+    // is done constructing (i.e. we leave this block).
+    initStarted = true;
+    RooNumIntFactory::instance();
+  }
+
+  return theConfig;
 }
 
 

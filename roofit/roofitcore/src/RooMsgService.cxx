@@ -348,12 +348,9 @@ Bool_t RooMsgService::getStreamStatus(Int_t id) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return reference to singleton instance 
 
-RooMsgService& RooMsgService::instance(bool reset)
+RooMsgService& RooMsgService::instance()
 {
   static RooMsgService instance;
-  if (reset) {
-    instance = RooMsgService();
-  }
   return instance;
 }
 

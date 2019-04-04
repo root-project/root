@@ -31,14 +31,7 @@ installs an atexit() function that takes care of this
 #include "RooFit.h"
 
 #include "RooSentinel.h"
-#include "RooSentinel.h"
 #include "RooMinuit.h"
-#include "RooMsgService.h"
-#include "RooNumIntConfig.h"
-#include "RooNumIntFactory.h"
-#include "RooNumGenFactory.h"
-#include "RooNumGenConfig.h"
-#include "RooNameReg.h"
 #include "RooArgSet.h"
 #include "RooRealConstant.h"
 #include "RooResolutionModel.h"
@@ -52,9 +45,6 @@ static void CleanUpRooFitAtExit()
   // Clean up function called at program termination before global objects go out of scope.
   RooMinuit::cleanup() ;
   RooArgSet::cleanup() ;
-  RooRealConstant::cleanup() ;
-  RooResolutionModel::cleanup() ;
-  RooExpensiveObjectCache::cleanup() ;
   RooDataSet::cleanup();
 }
 
