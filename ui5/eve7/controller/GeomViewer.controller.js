@@ -229,17 +229,22 @@ sap.ui.define(['sap/ui/core/Component',
          var ctxt = row.getBindingContext(),
              prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
-         var ids = (is_enter && prop && prop.end_node) ? this.getRowIds(row) : null;
-
          if (!this.standalone) {
-            var req = ids ? JSON.stringify(ids) : "OFF";
+            console.log(is_enter ? 'HOVER' : "LEAVE", prop ? prop.fullpath : '--');
+
+            var req = is_enter && prop && prop.fullpath && prop.isLeaf ? prop.fullpath : "OFF";
             // avoid multiple time submitting same request
             if (this._last_hover_req === req) return;
             this._last_hover_req = req;
+            console.log('HOVER:' + req);
             return this.websocket.Send("HOVER:" + req);
          }
 
          if (this.geo_painter && this.geo_clones) {
+
+            // extract directly ids for given row
+            var ids = (is_enter && prop && prop.end_node) ? this.getRowIds(row) : null;
+
             // remember current element with hover stack
             this._hover_stack = this.geo_clones.MakeStackByIds(ids);
 
@@ -338,6 +343,27 @@ sap.ui.define(['sap/ui/core/Component',
 
          if (best_cmp > 0)
             rows[best_indx].$().css("background-color", best_cmp == hids.length ? "yellow" : "lightgrey");
+      },
+
+      highlighRowWithPath: function(path) {
+         var rows = this.getView().byId("treeTable").getRows(), best_cmp = 0, best_indx = 0;
+
+         for (var i=0;i<rows.length;++i) {
+            rows[i].$().css("background-color", "");
+            if (path !== "OFF") {
+               var ctxt = rows[i].getBindingContext(),
+                   prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
+                   cmp = 0;
+
+               if (prop.fullpath == path) cmp = 1000; else
+               if (path.indexOf(prop.fullpath) == 0) cmp = prop.fullpath.length;
+
+               if (cmp > best_cmp) { best_cmp = cmp; best_indx = i; }
+            }
+         }
+
+         if (best_cmp > 0)
+            rows[best_indx].$().css("background-color", best_cmp == 1000 ? "yellow" : "lightgrey");
       },
 
       createGeoPainter: function(drawopt) {
@@ -551,10 +577,7 @@ sap.ui.define(['sap/ui/core/Component',
                this.geo_painter.HighlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
             break;
          case "HIGHL:":
-            if (this.plainModel)
-               this.highlighRowWithIds((msg == "OFF") ? null : JSON.parse(msg));
-            else
-               console.warn("Not yet implemented!!!");
+            this.highlighRowWithPath(msg);
             break;
          default:
             console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
@@ -605,10 +628,7 @@ sap.ui.define(['sap/ui/core/Component',
          } else {
             var topnode = this.buildTreeNode(descr, [], 0);
 
-            console.log('assign full model');
-
             this.model.setFullModel(topnode);
-
          }
       },
 

@@ -4,8 +4,6 @@ sap.ui.define([
 ], function(Log, JSONListBinding) {
     "use strict";
 
-    var bLoading = false;
-
     var hRootListBinding = JSONListBinding.extend("rootui5.eve7.model.BrowserListBinding", {
 
         // called by the TreeTable to know the amount of entries
@@ -17,38 +15,11 @@ sap.ui.define([
         // function is called by the TreeTable when requesting the data to display
         getNodes: function(iStartIndex, iLength, iThreshold) {
 
-           var args = {
-              begin: iStartIndex,
-              end: iStartIndex + iLength,
-              threshold: iThreshold
-           };
+           var args = { begin: iStartIndex, end: iStartIndex + iLength, threshold: iThreshold },
+               nodes = this.getModel().buildFlatNodes(args), aNodes = [];
 
-           this.getModel().buildFlatNodes(args);
-
-           var aNodes = [];
-
-           var nodes = this.getModel().getProperty("/nodes");
-
-           for (var i = args.begin; i < args.end; i++) {
-              var oNode = nodes[i];
-              if (oNode) {
-                 aNodes.push({
-                    type: oNode.type,
-                    isLeaf: oNode.type === "file",
-                    level: oNode.level,
-
-                    // QUESTION: seems to be, this is required by JSONListBinding?
-                    context: this.getModel().getContext(this.getPath() + "/" + i),
-                    nodeState: {
-                       expanded: !!oNode._elem.expanded,
-                       selected: !!oNode._elem._selected,
-                       sum: false // ????
-                    }
-                 });
-              } else {
-                 aNodes.push(null); // dummy entry
-              }
-           }
+           for (var i = args.begin; i < args.end; i++)
+              aNodes.push(nodes[i] || null);
 
            console.log("root.model.hListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ") res = " + aNodes.length);
 
@@ -84,6 +55,14 @@ sap.ui.define([
 
         collapse: function(iIndex) {
             Log.warning("root.model.hListBinding#collapse(" + iIndex + ")");
+        },
+
+        collapseToLevel: function(lvl) {
+           console.log('root.model.hListBinding#collapseToLevel', lvl);
+        },
+
+        expandToLevel: function(lvl) {
+           console.log('root.model.hListBinding#expandToLevel', lvl);
         },
 
         // called by the TreeTable when a node is expanded/collapsed

@@ -248,7 +248,11 @@ public:
 
    std::vector<int> MakeStackByIds(const std::vector<int> &ids);
 
-   std::vector<int> MakeIdsByStack(const std::vector<int> &stack);
+   std::vector<int> MakeIdsByStack(const std::vector<int> &stack, bool ignore_found = false);
+
+   std::vector<int> MakeStackByPath(const std::string &path);
+
+   std::string MakePathByStack(const std::vector<int> &stack);
 
    bool ProduceDrawingFor(int nodeid, std::string &json, std::vector<char> &binary, bool check_volume = false);
 

@@ -173,6 +173,19 @@ public:
       return true;
    }
 
+   /// Returns array of ids to currently selected node
+   std::vector<int> CurrentIds() const
+   {
+      std::vector<int> res;
+      if (IsValid()) {
+         for (unsigned n=1;n<fStackParents.size();++n)
+            res.emplace_back(fStackParents[n]);
+         if (fParentId >= 0) res.emplace_back(fParentId);
+         res.emplace_back(fNodeId);
+      }
+      return res;
+   }
+
 };
 } // namespace Experimental
 } // namespace ROOT
@@ -1084,10 +1097,32 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByIds(const s
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Produce stack based on string path
+/// Used to highlight geo volumes by browser hover event
+
+std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByPath(const std::string &path)
+{
+   std::vector<int> res;
+
+   RGeomBrowserIter iter(*this);
+
+   if (iter.Navigate(path)) {
+//      auto ids = iter.CurrentIds();
+//      printf("path %s ", path.c_str());
+//      for (auto &id: ids)
+//         printf("%d ", id);
+//      printf("\n");
+      res = MakeStackByIds(iter.CurrentIds());
+   }
+
+   return res;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Produce list of node ids for given stack
 /// If found nodes preselected - use their ids
 
-std::vector<int> ROOT::Experimental::REveGeomDescription::MakeIdsByStack(const std::vector<int> &stack)
+std::vector<int> ROOT::Experimental::REveGeomDescription::MakeIdsByStack(const std::vector<int> &stack, bool ignore_found)
 {
    std::vector<int> ids;
 
@@ -1098,7 +1133,7 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeIdsByStack(const s
    for (auto s : stack) {
       auto &chlds = fDesc[nodeid].chlds;
       if (s >= (int) chlds.size()) { failure = true; break; }
-      if (fFound.size() == 0) {
+      if ((fFound.size() == 0) || ignore_found) {
          ids.emplace_back(chlds[s]);
       } else {
          // parent node in "found" structure
@@ -1125,6 +1160,25 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeIdsByStack(const s
    }
 
    return ids;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Returns path string for provided stack
+
+std::string ROOT::Experimental::REveGeomDescription::MakePathByStack(const std::vector<int> &stack)
+{
+   std::string path;
+
+   auto ids = MakeIdsByStack(stack, true);
+   if (ids.size() > 0) {
+      path = "/";
+      for (auto &id : ids) {
+         path.append(fDesc[id].name);
+         path.append("/");
+      }
+   }
+
+   return path;
 }
 
 
