@@ -12,8 +12,8 @@
   \defgroup vecops VecOps
 */
 
-#ifndef ROOT_TVEC
-#define ROOT_TVEC
+#ifndef ROOT_RVEC
+#define ROOT_RVEC
 
 #ifdef _WIN32
 #define _VECOPS_USE_EXTERN_TEMPLATES false
@@ -511,7 +511,7 @@ public:
 ///@name RVec Unary Arithmetic Operators
 ///@{
 
-#define TVEC_UNARY_OPERATOR(OP)          \
+#define RVEC_UNARY_OPERATOR(OP)          \
    template <typename T>                 \
    RVec<T> operator OP(const RVec<T> &v) \
    {                                     \
@@ -521,11 +521,11 @@ public:
       return ret;                        \
    }
 
-TVEC_UNARY_OPERATOR(+)
-TVEC_UNARY_OPERATOR(-)
-TVEC_UNARY_OPERATOR(~)
-TVEC_UNARY_OPERATOR(!)
-#undef TVEC_UNARY_OPERATOR
+RVEC_UNARY_OPERATOR(+)
+RVEC_UNARY_OPERATOR(-)
+RVEC_UNARY_OPERATOR(~)
+RVEC_UNARY_OPERATOR(!)
+#undef RVEC_UNARY_OPERATOR
 
 ///@}
 ///@name RVec Binary Arithmetic Operators
@@ -533,7 +533,7 @@ TVEC_UNARY_OPERATOR(!)
 
 #define ERROR_MESSAGE(OP) "Cannot call operator " #OP " on vectors of different sizes."
 
-#define TVEC_BINARY_OPERATOR(OP)                                                            \
+#define RVEC_BINARY_OPERATOR(OP)                                                            \
    template <typename T0, typename T1>                                                      \
    auto operator OP(const RVec<T0> &v, const T1 &y)->RVec<decltype(v[0] OP y)>              \
    {                                                                                        \
@@ -564,21 +564,21 @@ TVEC_UNARY_OPERATOR(!)
       return ret;                                                                           \
    }
 
-TVEC_BINARY_OPERATOR(+)
-TVEC_BINARY_OPERATOR(-)
-TVEC_BINARY_OPERATOR(*)
-TVEC_BINARY_OPERATOR(/)
-TVEC_BINARY_OPERATOR(%)
-TVEC_BINARY_OPERATOR (^)
-TVEC_BINARY_OPERATOR(|)
-TVEC_BINARY_OPERATOR(&)
-#undef TVEC_BINARY_OPERATOR
+RVEC_BINARY_OPERATOR(+)
+RVEC_BINARY_OPERATOR(-)
+RVEC_BINARY_OPERATOR(*)
+RVEC_BINARY_OPERATOR(/)
+RVEC_BINARY_OPERATOR(%)
+RVEC_BINARY_OPERATOR (^)
+RVEC_BINARY_OPERATOR(|)
+RVEC_BINARY_OPERATOR(&)
+#undef RVEC_BINARY_OPERATOR
 
 ///@}
 ///@name RVec Assignment Arithmetic Operators
 ///@{
 
-#define TVEC_ASSIGNMENT_OPERATOR(OP)                                    \
+#define RVEC_ASSIGNMENT_OPERATOR(OP)                                    \
    template <typename T0, typename T1>                                  \
    RVec<T0> &operator OP(RVec<T0> &v, const T1 &y)                      \
    {                                                                    \
@@ -598,23 +598,23 @@ TVEC_BINARY_OPERATOR(&)
       return v0;                                                        \
    }
 
-TVEC_ASSIGNMENT_OPERATOR(+=)
-TVEC_ASSIGNMENT_OPERATOR(-=)
-TVEC_ASSIGNMENT_OPERATOR(*=)
-TVEC_ASSIGNMENT_OPERATOR(/=)
-TVEC_ASSIGNMENT_OPERATOR(%=)
-TVEC_ASSIGNMENT_OPERATOR(^=)
-TVEC_ASSIGNMENT_OPERATOR(|=)
-TVEC_ASSIGNMENT_OPERATOR(&=)
-TVEC_ASSIGNMENT_OPERATOR(>>=)
-TVEC_ASSIGNMENT_OPERATOR(<<=)
-#undef TVEC_ASSIGNMENT_OPERATOR
+RVEC_ASSIGNMENT_OPERATOR(+=)
+RVEC_ASSIGNMENT_OPERATOR(-=)
+RVEC_ASSIGNMENT_OPERATOR(*=)
+RVEC_ASSIGNMENT_OPERATOR(/=)
+RVEC_ASSIGNMENT_OPERATOR(%=)
+RVEC_ASSIGNMENT_OPERATOR(^=)
+RVEC_ASSIGNMENT_OPERATOR(|=)
+RVEC_ASSIGNMENT_OPERATOR(&=)
+RVEC_ASSIGNMENT_OPERATOR(>>=)
+RVEC_ASSIGNMENT_OPERATOR(<<=)
+#undef RVEC_ASSIGNMENT_OPERATOR
 
 ///@}
 ///@name RVec Comparison and Logical Operators
 ///@{
 
-#define TVEC_LOGICAL_OPERATOR(OP)                                                                    \
+#define RVEC_LOGICAL_OPERATOR(OP)                                                                    \
    template <typename T0, typename T1>                                                               \
    auto operator OP(const RVec<T0> &v, const T1 &y)->RVec<int> /* avoid std::vector<bool> */         \
    {                                                                                                 \
@@ -645,15 +645,15 @@ TVEC_ASSIGNMENT_OPERATOR(<<=)
       return ret;                                                                                    \
    }
 
-TVEC_LOGICAL_OPERATOR(<)
-TVEC_LOGICAL_OPERATOR(>)
-TVEC_LOGICAL_OPERATOR(==)
-TVEC_LOGICAL_OPERATOR(!=)
-TVEC_LOGICAL_OPERATOR(<=)
-TVEC_LOGICAL_OPERATOR(>=)
-TVEC_LOGICAL_OPERATOR(&&)
-TVEC_LOGICAL_OPERATOR(||)
-#undef TVEC_LOGICAL_OPERATOR
+RVEC_LOGICAL_OPERATOR(<)
+RVEC_LOGICAL_OPERATOR(>)
+RVEC_LOGICAL_OPERATOR(==)
+RVEC_LOGICAL_OPERATOR(!=)
+RVEC_LOGICAL_OPERATOR(<=)
+RVEC_LOGICAL_OPERATOR(>=)
+RVEC_LOGICAL_OPERATOR(&&)
+RVEC_LOGICAL_OPERATOR(||)
+#undef RVEC_LOGICAL_OPERATOR
 
 ///@}
 ///@name RVec Standard Mathematical Functions
@@ -689,7 +689,7 @@ using PromoteTypes = decltype(PromoteType<U>() + PromoteType<V>());
 
 /// \endcond
 
-#define TVEC_UNARY_FUNCTION(NAME, FUNC)                   \
+#define RVEC_UNARY_FUNCTION(NAME, FUNC)                   \
    template <typename T>                                  \
    RVec<PromoteType<T>> NAME(const RVec<T> &v)            \
    {                                                      \
@@ -699,7 +699,7 @@ using PromoteTypes = decltype(PromoteType<U>() + PromoteType<V>());
       return ret;                                         \
    }
 
-#define TVEC_BINARY_FUNCTION(NAME, FUNC)                                   \
+#define RVEC_BINARY_FUNCTION(NAME, FUNC)                                   \
    template <typename T0, typename T1>                                     \
    RVec<PromoteTypes<T0, T1>> NAME(const T0 &x, const RVec<T1> &v)         \
    {                                                                       \
@@ -730,85 +730,85 @@ using PromoteTypes = decltype(PromoteType<U>() + PromoteType<V>());
       return ret;                                                          \
    }
 
-#define TVEC_STD_UNARY_FUNCTION(F) TVEC_UNARY_FUNCTION(F, std::F)
-#define TVEC_STD_BINARY_FUNCTION(F) TVEC_BINARY_FUNCTION(F, std::F)
+#define RVEC_STD_UNARY_FUNCTION(F) RVEC_UNARY_FUNCTION(F, std::F)
+#define RVEC_STD_BINARY_FUNCTION(F) RVEC_BINARY_FUNCTION(F, std::F)
 
-TVEC_STD_UNARY_FUNCTION(abs)
-TVEC_STD_BINARY_FUNCTION(fdim)
-TVEC_STD_BINARY_FUNCTION(fmod)
-TVEC_STD_BINARY_FUNCTION(remainder)
+RVEC_STD_UNARY_FUNCTION(abs)
+RVEC_STD_BINARY_FUNCTION(fdim)
+RVEC_STD_BINARY_FUNCTION(fmod)
+RVEC_STD_BINARY_FUNCTION(remainder)
 
-TVEC_STD_UNARY_FUNCTION(exp)
-TVEC_STD_UNARY_FUNCTION(exp2)
-TVEC_STD_UNARY_FUNCTION(expm1)
+RVEC_STD_UNARY_FUNCTION(exp)
+RVEC_STD_UNARY_FUNCTION(exp2)
+RVEC_STD_UNARY_FUNCTION(expm1)
 
-TVEC_STD_UNARY_FUNCTION(log)
-TVEC_STD_UNARY_FUNCTION(log10)
-TVEC_STD_UNARY_FUNCTION(log2)
-TVEC_STD_UNARY_FUNCTION(log1p)
+RVEC_STD_UNARY_FUNCTION(log)
+RVEC_STD_UNARY_FUNCTION(log10)
+RVEC_STD_UNARY_FUNCTION(log2)
+RVEC_STD_UNARY_FUNCTION(log1p)
 
-TVEC_STD_BINARY_FUNCTION(pow)
-TVEC_STD_UNARY_FUNCTION(sqrt)
-TVEC_STD_UNARY_FUNCTION(cbrt)
-TVEC_STD_BINARY_FUNCTION(hypot)
+RVEC_STD_BINARY_FUNCTION(pow)
+RVEC_STD_UNARY_FUNCTION(sqrt)
+RVEC_STD_UNARY_FUNCTION(cbrt)
+RVEC_STD_BINARY_FUNCTION(hypot)
 
-TVEC_STD_UNARY_FUNCTION(sin)
-TVEC_STD_UNARY_FUNCTION(cos)
-TVEC_STD_UNARY_FUNCTION(tan)
-TVEC_STD_UNARY_FUNCTION(asin)
-TVEC_STD_UNARY_FUNCTION(acos)
-TVEC_STD_UNARY_FUNCTION(atan)
-TVEC_STD_BINARY_FUNCTION(atan2)
+RVEC_STD_UNARY_FUNCTION(sin)
+RVEC_STD_UNARY_FUNCTION(cos)
+RVEC_STD_UNARY_FUNCTION(tan)
+RVEC_STD_UNARY_FUNCTION(asin)
+RVEC_STD_UNARY_FUNCTION(acos)
+RVEC_STD_UNARY_FUNCTION(atan)
+RVEC_STD_BINARY_FUNCTION(atan2)
 
-TVEC_STD_UNARY_FUNCTION(sinh)
-TVEC_STD_UNARY_FUNCTION(cosh)
-TVEC_STD_UNARY_FUNCTION(tanh)
-TVEC_STD_UNARY_FUNCTION(asinh)
-TVEC_STD_UNARY_FUNCTION(acosh)
-TVEC_STD_UNARY_FUNCTION(atanh)
+RVEC_STD_UNARY_FUNCTION(sinh)
+RVEC_STD_UNARY_FUNCTION(cosh)
+RVEC_STD_UNARY_FUNCTION(tanh)
+RVEC_STD_UNARY_FUNCTION(asinh)
+RVEC_STD_UNARY_FUNCTION(acosh)
+RVEC_STD_UNARY_FUNCTION(atanh)
 
-TVEC_STD_UNARY_FUNCTION(floor)
-TVEC_STD_UNARY_FUNCTION(ceil)
-TVEC_STD_UNARY_FUNCTION(trunc)
-TVEC_STD_UNARY_FUNCTION(round)
-TVEC_STD_UNARY_FUNCTION(lround)
-TVEC_STD_UNARY_FUNCTION(llround)
+RVEC_STD_UNARY_FUNCTION(floor)
+RVEC_STD_UNARY_FUNCTION(ceil)
+RVEC_STD_UNARY_FUNCTION(trunc)
+RVEC_STD_UNARY_FUNCTION(round)
+RVEC_STD_UNARY_FUNCTION(lround)
+RVEC_STD_UNARY_FUNCTION(llround)
 
-TVEC_STD_UNARY_FUNCTION(erf)
-TVEC_STD_UNARY_FUNCTION(erfc)
-TVEC_STD_UNARY_FUNCTION(lgamma)
-TVEC_STD_UNARY_FUNCTION(tgamma)
-#undef TVEC_STD_UNARY_FUNCTION
+RVEC_STD_UNARY_FUNCTION(erf)
+RVEC_STD_UNARY_FUNCTION(erfc)
+RVEC_STD_UNARY_FUNCTION(lgamma)
+RVEC_STD_UNARY_FUNCTION(tgamma)
+#undef RVEC_STD_UNARY_FUNCTION
 
 ///@}
 ///@name RVec Fast Mathematical Functions with Vdt
 ///@{
 
 #ifdef R__HAS_VDT
-#define TVEC_VDT_UNARY_FUNCTION(F) TVEC_UNARY_FUNCTION(F, vdt::F)
+#define RVEC_VDT_UNARY_FUNCTION(F) RVEC_UNARY_FUNCTION(F, vdt::F)
 
-TVEC_VDT_UNARY_FUNCTION(fast_expf)
-TVEC_VDT_UNARY_FUNCTION(fast_logf)
-TVEC_VDT_UNARY_FUNCTION(fast_sinf)
-TVEC_VDT_UNARY_FUNCTION(fast_cosf)
-TVEC_VDT_UNARY_FUNCTION(fast_tanf)
-TVEC_VDT_UNARY_FUNCTION(fast_asinf)
-TVEC_VDT_UNARY_FUNCTION(fast_acosf)
-TVEC_VDT_UNARY_FUNCTION(fast_atanf)
+RVEC_VDT_UNARY_FUNCTION(fast_expf)
+RVEC_VDT_UNARY_FUNCTION(fast_logf)
+RVEC_VDT_UNARY_FUNCTION(fast_sinf)
+RVEC_VDT_UNARY_FUNCTION(fast_cosf)
+RVEC_VDT_UNARY_FUNCTION(fast_tanf)
+RVEC_VDT_UNARY_FUNCTION(fast_asinf)
+RVEC_VDT_UNARY_FUNCTION(fast_acosf)
+RVEC_VDT_UNARY_FUNCTION(fast_atanf)
 
-TVEC_VDT_UNARY_FUNCTION(fast_exp)
-TVEC_VDT_UNARY_FUNCTION(fast_log)
-TVEC_VDT_UNARY_FUNCTION(fast_sin)
-TVEC_VDT_UNARY_FUNCTION(fast_cos)
-TVEC_VDT_UNARY_FUNCTION(fast_tan)
-TVEC_VDT_UNARY_FUNCTION(fast_asin)
-TVEC_VDT_UNARY_FUNCTION(fast_acos)
-TVEC_VDT_UNARY_FUNCTION(fast_atan)
-#undef TVEC_VDT_UNARY_FUNCTION
+RVEC_VDT_UNARY_FUNCTION(fast_exp)
+RVEC_VDT_UNARY_FUNCTION(fast_log)
+RVEC_VDT_UNARY_FUNCTION(fast_sin)
+RVEC_VDT_UNARY_FUNCTION(fast_cos)
+RVEC_VDT_UNARY_FUNCTION(fast_tan)
+RVEC_VDT_UNARY_FUNCTION(fast_asin)
+RVEC_VDT_UNARY_FUNCTION(fast_acos)
+RVEC_VDT_UNARY_FUNCTION(fast_atan)
+#undef RVEC_VDT_UNARY_FUNCTION
 
 #endif // R__HAS_VDT
 
-#undef TVEC_UNARY_FUNCTION
+#undef RVEC_UNARY_FUNCTION
 
 ///@}
 
@@ -1713,175 +1713,175 @@ std::ostream &operator<<(std::ostream &os, const RVec<T> &v)
 
 #if (_VECOPS_USE_EXTERN_TEMPLATES)
 
-#define TVEC_EXTERN_UNARY_OPERATOR(T, OP) extern template RVec<T> operator OP<T>(const RVec<T> &);
+#define RVEC_EXTERN_UNARY_OPERATOR(T, OP) extern template RVec<T> operator OP<T>(const RVec<T> &);
 
-#define TVEC_EXTERN_BINARY_OPERATOR(T, OP)                                                          \
+#define RVEC_EXTERN_BINARY_OPERATOR(T, OP)                                                          \
    extern template auto operator OP<T, T>(const T &x, const RVec<T> &v)->RVec<decltype(x OP v[0])>; \
    extern template auto operator OP<T, T>(const RVec<T> &v, const T &y)->RVec<decltype(v[0] OP y)>; \
    extern template auto operator OP<T, T>(const RVec<T> &v0, const RVec<T> &v1)->RVec<decltype(v0[0] OP v1[0])>;
 
-#define TVEC_EXTERN_ASSIGN_OPERATOR(T, OP)                           \
+#define RVEC_EXTERN_ASSIGN_OPERATOR(T, OP)                           \
    extern template RVec<T> &operator OP<T, T>(RVec<T> &, const T &); \
    extern template RVec<T> &operator OP<T, T>(RVec<T> &, const RVec<T> &);
 
-#define TVEC_EXTERN_LOGICAL_OPERATOR(T, OP)                                 \
+#define RVEC_EXTERN_LOGICAL_OPERATOR(T, OP)                                 \
    extern template RVec<int> operator OP<T, T>(const RVec<T> &, const T &); \
    extern template RVec<int> operator OP<T, T>(const T &, const RVec<T> &); \
    extern template RVec<int> operator OP<T, T>(const RVec<T> &, const RVec<T> &);
 
-#define TVEC_EXTERN_FLOAT_TEMPLATE(T)  \
+#define RVEC_EXTERN_FLOAT_TEMPLATE(T)  \
    extern template class RVec<T>;      \
-   TVEC_EXTERN_UNARY_OPERATOR(T, +)    \
-   TVEC_EXTERN_UNARY_OPERATOR(T, -)    \
-   TVEC_EXTERN_UNARY_OPERATOR(T, !)    \
-   TVEC_EXTERN_BINARY_OPERATOR(T, +)   \
-   TVEC_EXTERN_BINARY_OPERATOR(T, -)   \
-   TVEC_EXTERN_BINARY_OPERATOR(T, *)   \
-   TVEC_EXTERN_BINARY_OPERATOR(T, /)   \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, +=)  \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, -=)  \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, *=)  \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, /=)  \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, <)  \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, >)  \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, ==) \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, !=) \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, <=) \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, >=) \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, &&) \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, ||)
+   RVEC_EXTERN_UNARY_OPERATOR(T, +)    \
+   RVEC_EXTERN_UNARY_OPERATOR(T, -)    \
+   RVEC_EXTERN_UNARY_OPERATOR(T, !)    \
+   RVEC_EXTERN_BINARY_OPERATOR(T, +)   \
+   RVEC_EXTERN_BINARY_OPERATOR(T, -)   \
+   RVEC_EXTERN_BINARY_OPERATOR(T, *)   \
+   RVEC_EXTERN_BINARY_OPERATOR(T, /)   \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, +=)  \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, -=)  \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, *=)  \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, /=)  \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, <)  \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, >)  \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, ==) \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, !=) \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, <=) \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, >=) \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, &&) \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, ||)
 
-#define TVEC_EXTERN_INTEGER_TEMPLATE(T) \
+#define RVEC_EXTERN_INTEGER_TEMPLATE(T) \
    extern template class RVec<T>;       \
-   TVEC_EXTERN_UNARY_OPERATOR(T, +)     \
-   TVEC_EXTERN_UNARY_OPERATOR(T, -)     \
-   TVEC_EXTERN_UNARY_OPERATOR(T, ~)     \
-   TVEC_EXTERN_UNARY_OPERATOR(T, !)     \
-   TVEC_EXTERN_BINARY_OPERATOR(T, +)    \
-   TVEC_EXTERN_BINARY_OPERATOR(T, -)    \
-   TVEC_EXTERN_BINARY_OPERATOR(T, *)    \
-   TVEC_EXTERN_BINARY_OPERATOR(T, /)    \
-   TVEC_EXTERN_BINARY_OPERATOR(T, %)    \
-   TVEC_EXTERN_BINARY_OPERATOR(T, &)    \
-   TVEC_EXTERN_BINARY_OPERATOR(T, |)    \
-   TVEC_EXTERN_BINARY_OPERATOR(T, ^)    \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, +=)   \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, -=)   \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, *=)   \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, /=)   \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, %=)   \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, &=)   \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, |=)   \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, ^=)   \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, >>=)  \
-   TVEC_EXTERN_ASSIGN_OPERATOR(T, <<=)  \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, <)   \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, >)   \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, ==)  \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, !=)  \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, <=)  \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, >=)  \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, &&)  \
-   TVEC_EXTERN_LOGICAL_OPERATOR(T, ||)
+   RVEC_EXTERN_UNARY_OPERATOR(T, +)     \
+   RVEC_EXTERN_UNARY_OPERATOR(T, -)     \
+   RVEC_EXTERN_UNARY_OPERATOR(T, ~)     \
+   RVEC_EXTERN_UNARY_OPERATOR(T, !)     \
+   RVEC_EXTERN_BINARY_OPERATOR(T, +)    \
+   RVEC_EXTERN_BINARY_OPERATOR(T, -)    \
+   RVEC_EXTERN_BINARY_OPERATOR(T, *)    \
+   RVEC_EXTERN_BINARY_OPERATOR(T, /)    \
+   RVEC_EXTERN_BINARY_OPERATOR(T, %)    \
+   RVEC_EXTERN_BINARY_OPERATOR(T, &)    \
+   RVEC_EXTERN_BINARY_OPERATOR(T, |)    \
+   RVEC_EXTERN_BINARY_OPERATOR(T, ^)    \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, +=)   \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, -=)   \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, *=)   \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, /=)   \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, %=)   \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, &=)   \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, |=)   \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, ^=)   \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, >>=)  \
+   RVEC_EXTERN_ASSIGN_OPERATOR(T, <<=)  \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, <)   \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, >)   \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, ==)  \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, !=)  \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, <=)  \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, >=)  \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, &&)  \
+   RVEC_EXTERN_LOGICAL_OPERATOR(T, ||)
 
-TVEC_EXTERN_INTEGER_TEMPLATE(char)
-TVEC_EXTERN_INTEGER_TEMPLATE(short)
-TVEC_EXTERN_INTEGER_TEMPLATE(int)
-TVEC_EXTERN_INTEGER_TEMPLATE(long)
-// TVEC_EXTERN_INTEGER_TEMPLATE(long long)
+RVEC_EXTERN_INTEGER_TEMPLATE(char)
+RVEC_EXTERN_INTEGER_TEMPLATE(short)
+RVEC_EXTERN_INTEGER_TEMPLATE(int)
+RVEC_EXTERN_INTEGER_TEMPLATE(long)
+// RVEC_EXTERN_INTEGER_TEMPLATE(long long)
 
-TVEC_EXTERN_INTEGER_TEMPLATE(unsigned char)
-TVEC_EXTERN_INTEGER_TEMPLATE(unsigned short)
-TVEC_EXTERN_INTEGER_TEMPLATE(unsigned int)
-TVEC_EXTERN_INTEGER_TEMPLATE(unsigned long)
-// TVEC_EXTERN_INTEGER_TEMPLATE(unsigned long long)
+RVEC_EXTERN_INTEGER_TEMPLATE(unsigned char)
+RVEC_EXTERN_INTEGER_TEMPLATE(unsigned short)
+RVEC_EXTERN_INTEGER_TEMPLATE(unsigned int)
+RVEC_EXTERN_INTEGER_TEMPLATE(unsigned long)
+// RVEC_EXTERN_INTEGER_TEMPLATE(unsigned long long)
 
-TVEC_EXTERN_FLOAT_TEMPLATE(float)
-TVEC_EXTERN_FLOAT_TEMPLATE(double)
+RVEC_EXTERN_FLOAT_TEMPLATE(float)
+RVEC_EXTERN_FLOAT_TEMPLATE(double)
 
-#undef TVEC_EXTERN_UNARY_OPERATOR
-#undef TVEC_EXTERN_BINARY_OPERATOR
-#undef TVEC_EXTERN_ASSIGN_OPERATOR
-#undef TVEC_EXTERN_LOGICAL_OPERATOR
-#undef TVEC_EXTERN_INTEGER_TEMPLATE
-#undef TVEC_EXTERN_FLOAT_TEMPLATE
+#undef RVEC_EXTERN_UNARY_OPERATOR
+#undef RVEC_EXTERN_BINARY_OPERATOR
+#undef RVEC_EXTERN_ASSIGN_OPERATOR
+#undef RVEC_EXTERN_LOGICAL_OPERATOR
+#undef RVEC_EXTERN_INTEGER_TEMPLATE
+#undef RVEC_EXTERN_FLOAT_TEMPLATE
 
-#define TVEC_EXTERN_UNARY_FUNCTION(T, NAME, FUNC) extern template RVec<PromoteType<T>> NAME(const RVec<T> &);
+#define RVEC_EXTERN_UNARY_FUNCTION(T, NAME, FUNC) extern template RVec<PromoteType<T>> NAME(const RVec<T> &);
 
-#define TVEC_EXTERN_STD_UNARY_FUNCTION(T, F) TVEC_EXTERN_UNARY_FUNCTION(T, F, std::F)
+#define RVEC_EXTERN_STD_UNARY_FUNCTION(T, F) RVEC_EXTERN_UNARY_FUNCTION(T, F, std::F)
 
-#define TVEC_EXTERN_BINARY_FUNCTION(T0, T1, NAME, FUNC)                           \
+#define RVEC_EXTERN_BINARY_FUNCTION(T0, T1, NAME, FUNC)                           \
    extern template RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &, const T1 &); \
    extern template RVec<PromoteTypes<T0, T1>> NAME(const T0 &, const RVec<T1> &); \
    extern template RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &, const RVec<T1> &);
 
-#define TVEC_EXTERN_STD_BINARY_FUNCTION(T, F) TVEC_EXTERN_BINARY_FUNCTION(T, T, F, std::F)
+#define RVEC_EXTERN_STD_BINARY_FUNCTION(T, F) RVEC_EXTERN_BINARY_FUNCTION(T, T, F, std::F)
 
-#define TVEC_EXTERN_STD_FUNCTIONS(T)             \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, abs)        \
-   TVEC_EXTERN_STD_BINARY_FUNCTION(T, fdim)      \
-   TVEC_EXTERN_STD_BINARY_FUNCTION(T, fmod)      \
-   TVEC_EXTERN_STD_BINARY_FUNCTION(T, remainder) \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, exp)        \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, exp2)       \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, expm1)      \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, log)        \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, log10)      \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, log2)       \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, log1p)      \
-   TVEC_EXTERN_STD_BINARY_FUNCTION(T, pow)       \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, sqrt)       \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, cbrt)       \
-   TVEC_EXTERN_STD_BINARY_FUNCTION(T, hypot)     \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, sin)        \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, cos)        \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, tan)        \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, asin)       \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, acos)       \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, atan)       \
-   TVEC_EXTERN_STD_BINARY_FUNCTION(T, atan2)     \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, sinh)       \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, cosh)       \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, tanh)       \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, asinh)      \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, acosh)      \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, atanh)      \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, floor)      \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, ceil)       \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, trunc)      \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, round)      \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, erf)        \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, erfc)       \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, lgamma)     \
-   TVEC_EXTERN_STD_UNARY_FUNCTION(T, tgamma)
+#define RVEC_EXTERN_STD_FUNCTIONS(T)             \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, abs)        \
+   RVEC_EXTERN_STD_BINARY_FUNCTION(T, fdim)      \
+   RVEC_EXTERN_STD_BINARY_FUNCTION(T, fmod)      \
+   RVEC_EXTERN_STD_BINARY_FUNCTION(T, remainder) \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, exp)        \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, exp2)       \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, expm1)      \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, log)        \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, log10)      \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, log2)       \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, log1p)      \
+   RVEC_EXTERN_STD_BINARY_FUNCTION(T, pow)       \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, sqrt)       \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, cbrt)       \
+   RVEC_EXTERN_STD_BINARY_FUNCTION(T, hypot)     \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, sin)        \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, cos)        \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, tan)        \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, asin)       \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, acos)       \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, atan)       \
+   RVEC_EXTERN_STD_BINARY_FUNCTION(T, atan2)     \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, sinh)       \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, cosh)       \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, tanh)       \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, asinh)      \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, acosh)      \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, atanh)      \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, floor)      \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, ceil)       \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, trunc)      \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, round)      \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, erf)        \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, erfc)       \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, lgamma)     \
+   RVEC_EXTERN_STD_UNARY_FUNCTION(T, tgamma)
 
-TVEC_EXTERN_STD_FUNCTIONS(float)
-TVEC_EXTERN_STD_FUNCTIONS(double)
-#undef TVEC_EXTERN_STD_UNARY_FUNCTION
-#undef TVEC_EXTERN_STD_BINARY_FUNCTION
-#undef TVEC_EXTERN_STD_UNARY_FUNCTIONS
+RVEC_EXTERN_STD_FUNCTIONS(float)
+RVEC_EXTERN_STD_FUNCTIONS(double)
+#undef RVEC_EXTERN_STD_UNARY_FUNCTION
+#undef RVEC_EXTERN_STD_BINARY_FUNCTION
+#undef RVEC_EXTERN_STD_UNARY_FUNCTIONS
 
 #ifdef R__HAS_VDT
 
-#define TVEC_EXTERN_VDT_UNARY_FUNCTION(T, F) TVEC_EXTERN_UNARY_FUNCTION(T, F, vdt::F)
+#define RVEC_EXTERN_VDT_UNARY_FUNCTION(T, F) RVEC_EXTERN_UNARY_FUNCTION(T, F, vdt::F)
 
-TVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_expf)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_logf)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_sinf)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_cosf)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_tanf)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_asinf)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_acosf)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_atanf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_expf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_logf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_sinf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_cosf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_tanf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_asinf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_acosf)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_atanf)
 
-TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_exp)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_log)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_sin)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_cos)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_tan)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_asin)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_acos)
-TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_exp)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_log)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_sin)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_cos)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_tan)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_asin)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_acos)
+RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
 
 #endif // R__HAS_VDT
 
@@ -1894,4 +1894,4 @@ using ROOT::VecOps::RVec;
 
 } // namespace ROOT
 
-#endif // ROOT_TVEC
+#endif // ROOT_RVEC
