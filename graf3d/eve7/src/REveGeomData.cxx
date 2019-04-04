@@ -108,9 +108,12 @@ public:
       }
 
       auto &prnt = fDesc.fDesc[fParentId];
-      if (fChild+1 >= prnt.chlds.size()) return false;
+      if (++fChild >= prnt.chlds.size()) {
+         fNodeId = -1; // not valid node, only Leave can be called
+         return false;
+      }
 
-      fNodeId = prnt.chlds[++fChild];
+      fNodeId = prnt.chlds[fChild];
       return true;
    }
 
@@ -588,7 +591,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
                reply.nodes.emplace_back(iter.GetName(), iter.NumChilds());
                if (toplevel) reply.nodes.back().expanded = true;
                request->number--;
-               iter.Next();
+               if (!iter.Next()) break;
             }
          }
       }

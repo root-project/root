@@ -1,5 +1,5 @@
 <mvc:View height="100%" width="100%" class="sapUiSizeCompact"
-          controllerName="rootui5.geom.controller.GeomViewer"
+          controllerName="rootui5.eve7.controller.GeomViewer"
           xmlns="sap.m"
           xmlns:mvc="sap.ui.core.mvc"
           xmlns:t="sap.ui.table"

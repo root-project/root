@@ -1,6 +1,6 @@
 sap.ui.define([
     "sap/ui/model/json/JSONModel",
-    "rootui5/geom/model/BrowserListBinding",
+    "rootui5/eve7/model/BrowserListBinding",
     "sap/base/Log"
 ], function(JSONModel, BrowserListBinding, Log) {
    "use strict";
