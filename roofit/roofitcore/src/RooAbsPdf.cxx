@@ -181,6 +181,7 @@ called for each data event.
 #include "RooRealIntegral.h"
 #include "RooWorkspace.h"
 #include "Math/CholeskyDecomp.h"
+#include "RooHelpers.h"
 #include <string>
 #include "RooHelpers.h"
 
@@ -336,23 +337,19 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute batch of values for data in inputBatch, and normalise by integrating over
-/// the observables in `nset`. If 'nset' is `nullptr`, unnormalized values
+/// Compute batch of values for given range, and normalise by integrating over
+/// the observables in `nset`. If `nset` is `nullptr`, unnormalized values
 /// are returned. All elements of `nset` must be lvalues.
 ///
-/// \param[out] outputs Write results into the range indicated by this span.
-/// \param[in] inputBatch Spans with the input data.
-/// \param[in] inputVars  Variables that the spans in `inputBatch` represent.
+/// \param[in] begin Begin of the batch.
+/// \param[in] end   End of the batch (not included).
 /// \param[in] normSet    If not nullptr, normalise results by integrating over
 /// the variables in this set. The normalisation is only computed once, and applied
 /// to the full batch.
 ///
-void RooAbsPdf::getValBatch(RooSpan<double> outputs,
-    const std::vector<RooSpan<const double>>& inputBatch,
-    const RooArgSet& inputVars,
+RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t end,
     const RooArgSet* normSet) const
 {
-
   // Special handling of case without normalization set (used in numeric integration of pdfs)
   if (!normSet) {
     R__ASSERT(false); //TODO implement
@@ -364,7 +361,7 @@ void RooAbsPdf::getValBatch(RooSpan<double> outputs,
 
     if (error) {
 //       raiseEvalError() ;
-      return;
+      return RooSpan<const double>();
     }
 
     //TODO FIXME
@@ -378,27 +375,34 @@ void RooAbsPdf::getValBatch(RooSpan<double> outputs,
     nsetChanged = syncNormalization(normSet) ;
   }
 
-  evaluateBatch(outputs, inputBatch, inputVars);
-  bool error = traceEvalBatch(outputs) ; // Error checking and printing
+  //TODO wait if batch is computing
+  if (_batchData.status(begin, end) == BatchHelpers::BatchData::kDirtyOrUnknown
+      || nsetChanged || _norm->isValueDirty()) {
+    _batchData.setStatus(begin, end, BatchHelpers::BatchData::kWriting);
+
+    auto outputs = evaluateBatch(begin, end);
+    bool error = traceEvalBatch(outputs) ; // Error checking and printing
 
 
-  // Evaluate denominator
-  const double normDenom = _norm->getVal();
-  if (normDenom == 1.)
-    return;
+    // Evaluate denominator
+    const double normDenom = _norm->getVal();
+    if (normDenom <= 0.) {
+      error = true;
+      logEvalError(Form("p.d.f normalization integral is zero or negative."
+          "\n\tInt(%s) = %f", GetName(), normDenom));
+    }
 
-  if (normDenom <= 0.) {
-    error = true;
-    logEvalError(Form("p.d.f normalization integral is zero or negative."
-        "\n\tInt(%s) = %f", GetName(), normDenom));
-    return;
+    if (normDenom != 1. && normDenom > 0.) {
+      const double normVal = 1./normDenom;
+      for (double& val : outputs) {
+        val *= normVal;
+      }
+    }
+
+    _batchData.setStatus(begin, end, BatchHelpers::BatchData::kReady);
   }
 
-  const double normVal = 1./normDenom;
-  for (double& val : outputs) {
-    val *= normVal;
-  }
-
+  return _batchData.makeBatch(begin, end);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -558,14 +562,14 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Verify that the normalization integral cached with this PDF
-/// is valid for given set of normalization observables
+/// is valid for given set of normalization observables.
 ///
 /// If not, the cached normalization integral (if any) is deleted
-/// and a new integral is constructed for use with 'nset'
-/// Elements in 'nset' can be discrete and real, but must be lvalues
+/// and a new integral is constructed for use with 'nset'.
+/// Elements in 'nset' can be discrete and real, but must be lvalues.
 ///
 /// For functions that declare to be self-normalized by overloading the
-/// selfNormalized() function, a unit normalization is always constructed
+/// selfNormalized() function, a unit normalization is always constructed.
 
 Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies) const
 {
@@ -770,15 +774,18 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute the log-likelihoods for all events in the input batch.
-/// The arguments are passed over to getValBatch(), and outputs will be written to
-/// `outputs`.
-void RooAbsPdf::getLogValBatch(RooSpan<double> outputs,
-    const std::vector<RooSpan<const double>>& inputBatch,
-    const RooArgSet& inputVars,
+/// Compute the log-likelihoods for all events in the requested batch.
+/// The arguments are passed over to getValBatch().
+/// \param[in] batchIndex Index of the batch to computed.
+/// \param[in] batchSize  Size of the batch. Last batch might be smaller.
+/// \return    Returns a batch of doubles that contains the log probabilities.
+RooSpan<double> RooAbsPdf::getLogValBatch(std::size_t batchIndex, std::size_t batchSize,
     const RooArgSet* normSet) const
 {
-  getValBatch(outputs, inputBatch, inputVars, normSet);
+  auto pdfValues = getValBatch(batchIndex, batchSize, normSet);
+
+  //TODO avoid allocate&destroy?
+  std::vector<double> outputs(pdfValues.size());
 
   /* TODO
   if (fabs(prob)>1e6) {
@@ -806,14 +813,15 @@ void RooAbsPdf::getLogValBatch(RooSpan<double> outputs,
   }
   */
 
-  for (auto& item : outputs) {
+  for (unsigned int i = 0; i < batchSize; ++i) {
 #ifdef USE_VDT
-    item = vdt::fast_log(item);
+    outputs[i] = vdt::fast_log(pdfValues[i]);
 #else
-    item = log(item);
+    outputs[i] = log(pdfValues[i]);
 #endif
   }
 
+  return RooSpan<double>(std::move(outputs));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -918,6 +926,7 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
 ///   <tr><td> 3 = RooFit::Hybrid <td> Follow strategy 0 for all RooSimultaneous components, except those with less than
 ///                     30 dataset entries, for which strategy 2 is followed.
 ///   </table>
+/// <tr><td> `BatchMode(bool on)`              <td> Batch evaluation mode. See createNLL().
 /// <tr><td> `Optimize(Bool_t flag)`           <td> Activate constant term optimization (on by default)
 /// <tr><td> `SplitRange(Bool_t flag)`         <td> Use separate fit ranges in a simultaneous fit. Actual range name for each subsample is assumed to
 ///                                               be `rangeName_indexState`, where `indexState` is the state of the master index category of the simultaneous fit.
@@ -987,6 +996,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("constrAll","Constrained",0,0) ;
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
+  pc.defineInt("BatchMode", "BatchMode", 0, 0);
   pc.defineMutex("Range","RangeWithName") ;
   pc.defineMutex("Constrain","Constrained") ;
   pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
@@ -1064,9 +1074,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
    
     // Create range with name 'fit' with above limits on all observables
     RooArgSet* obs = getObservables(&data) ;
-    TIterator* iter = obs->createIterator() ;
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)iter->Next())) {
+    for (auto arg : *obs) {
       RooRealVar* rrv =  dynamic_cast<RooRealVar*>(arg) ;
       if (rrv) rrv->setRange("fit",rangeLo,rangeHi) ;
     }
@@ -1088,21 +1096,22 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     // Simple case: default range, or single restricted range
     //cout<<"FK: Data test 1: "<<data.sumEntries()<<endl;
 
-    nll = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps,ext,rangeName,addCoefRangeName,numcpu,interl,verbose,splitr,cloneData) ;
-
+    auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",
+        *this,data,projDeps,ext,rangeName,addCoefRangeName,numcpu,interl,
+        verbose,splitr,cloneData);
+    theNLL->batchMode(pc.getInt("BatchMode"));
+    nll = theNLL;
   } else {
     // Composite case: multiple ranges
     RooArgList nllList ;
-    const size_t bufSize = strlen(rangeName)+1;
-    char* buf = new char[bufSize] ;
-    strlcpy(buf,rangeName,bufSize) ;
-    char* token = strtok(buf,",") ;
-    while(token) {
-      RooAbsReal* nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token),"-log(likelihood)",*this,data,projDeps,ext,token,addCoefRangeName,numcpu,interl,verbose,splitr,cloneData) ;
+    auto tokens = RooHelpers::tokenise(rangeName, ",");
+    for (const auto& token : tokens) {
+      auto nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token.c_str()),"-log(likelihood)",
+          *this,data,projDeps,ext,token.c_str(),addCoefRangeName,numcpu,interl,
+          verbose,splitr,cloneData);
+      nllComp->batchMode(pc.getInt("BatchMode"));
       nllList.add(*nllComp) ;
-      token = strtok(0,",") ;
     }
-    delete[] buf ;
     nll = new RooAddition(baseName.c_str(),"-log(likelihood)",nllList,kTRUE) ;
   }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
@@ -1225,6 +1234,12 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td>  Include given external constraints to likelihood
 /// <tr><td> `Offset(Bool_t)`                           <td>  Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
 ///                                                         This can improve numeric stability in simultaneously fits with components with large likelihood values
+/// <tr><td> `BatchMode(bool on)`                       <td> **Experimental** batch evaluation mode. This computes a batch of likelihood values at a time,
+///                                                          uses faster math functions and possibly auto vectorisation (this depends on the compiler flags).
+///                                                          Depending on hardware capabilities, the compiler flags and whether a batch evaluation function was
+///                                                          implemented for the PDFs of the model, likelihood computations are 2x to 10x faster.
+///                                                          The relative difference of the single log-likelihoods w.r.t. the legacy mode is usually better than 1.E-12,
+///                                                          and fit parameters usually agree to better than 1.E-6.
 ///
 /// <tr><th><th> Options to control flow of fit procedure
 /// <tr><td> `Minimizer(type,algo)`   <td>  Choose minimization package and algorithm to use. Default is MINUIT/MIGRAD through the RooMinimizer interface,
@@ -1314,7 +1329,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
 
   RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData,GlobalObservables,GlobalObservablesTag,OffsetLikelihood") ;
+  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,"
+      "RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,"
+      "CloneData,GlobalObservables,GlobalObservablesTag,OffsetLikelihood,BatchMode");
 
   pc.defineDouble("prefit", "Prefit",0,0);
   pc.defineString("fitOpt","FitOptions",0,"") ;

@@ -49,6 +49,9 @@ public:
   
   // Parameter value and error accessors
   virtual Double_t getValV(const RooArgSet* nset=0) const ;
+  RooSpan<const double> getValBatch(std::size_t begin, std::size_t end,
+      const RooArgSet* = nullptr) const;
+
   virtual void setVal(Double_t value);
   inline Double_t getError() const { return _error>=0?_error:0. ; }
   inline Bool_t hasError(Bool_t allowZero=kTRUE) const { return allowZero ? (_error>=0) : (_error>0) ; }
@@ -98,7 +101,7 @@ public:
   // Force to be a leaf-node of any expression tree, even if we have (shape) servers
   virtual Bool_t isDerived() const { 
     // Does value or shape of this arg depend on any other arg?
-    return (!_serverList.empty() || _proxyList.GetEntries()>0)?kTRUE:kFALSE;
+    return !_serverList.empty() || _proxyList.GetEntries()>0;
   }
 
   // Printing interface (human readable)

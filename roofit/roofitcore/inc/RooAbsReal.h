@@ -23,6 +23,7 @@
 #include "RooArgList.h"
 #include "RooGlobalFunc.h"
 #include "RooSpan.h"
+#include "BatchData.h"
 
 class RooArgList ;
 class RooDataSet ;
@@ -84,7 +85,6 @@ public:
 #ifdef CHECK_CACHED_VALUES
   Double_t getVal(const RooArgSet* normalisationSet = nullptr) const;
 #else
-
   inline Double_t getVal(const RooArgSet* normalisationSet = nullptr) const {
 #ifndef _WIN32
     return (_fast && !_inhibitDirty) ? _value : getValV(normalisationSet) ;
@@ -99,6 +99,8 @@ public:
   inline  Double_t getVal(const RooArgSet& normalisationSet) const { return _fast ? _value : getValV(&normalisationSet) ; }
 
   virtual Double_t getValV(const RooArgSet* normalisationSet = nullptr) const ;
+
+  virtual RooSpan<const double> getValBatch(std::size_t begin, std::size_t end, const RooArgSet* normSet = nullptr) const;
 
   Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet());
 
@@ -393,15 +395,41 @@ protected:
 
   // Function evaluation and error tracing
   Double_t traceEval(const RooArgSet* set) const ;
-  virtual Bool_t traceEvalHook(Double_t /*value*/) const { 
-    // Hook function to add functionality to evaluation tracing in derived classes
-    return kFALSE ;
-  }
+//  virtual Bool_t traceEvalHook(Double_t /*value*/) const {
+//    // Hook function to add functionality to evaluation tracing in derived classes
+//    return kFALSE ;
+//  }
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
   virtual Double_t evaluate() const = 0;
-  virtual void evaluateBatch(RooSpan<double> output,
-      const std::vector<RooSpan<const double>>& inputs,
-      const RooArgSet& inputVars) const;
+  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t end) const;
+
+  //
+  friend class BatchInterfaceAccessor;
+  virtual void allocateBatchStorage(std::size_t nData, std::size_t batchSize) {
+    if (isDerived()) {
+      // We depend on something, and hence must allocate batch storage
+//      std::cout << "Allocating for " << GetName() << std::endl;
+      _batchData.allocateAndBatch(nData, batchSize);
+    }
+    //TODO have to go through proxies???
+    for (auto arg : _serverList) {
+      //TODO get rid of this cast?
+//      std::cout << "Trying to allocate for " << arg->GetName() << std::endl;
+      auto absReal = dynamic_cast<RooAbsReal*>(arg);
+      if (absReal)
+        absReal->allocateBatchStorage(nData, batchSize);
+    }
+
+  }
+  virtual void markBatchesStale() {
+    _batchData.markStale();
+    for (auto arg : _serverList) {
+      //TODO get rid of this cast?
+      auto absReal = dynamic_cast<RooAbsReal*>(arg);
+      if (absReal)
+        absReal->_batchData.markStale();
+    }
+  }
 
   // Hooks for RooDataSet interface
   friend class RooRealIntegral ;
@@ -418,6 +446,7 @@ protected:
   Double_t _plotMax ;       // Maximum of plot range
   Int_t    _plotBins ;      // Number of plot bins
   mutable Double_t _value ; // Cache for current value of object
+  mutable BatchHelpers::BatchData _batchData; //! Value storage for all data events
   TString  _unit ;          // Unit for objects value
   TString  _label ;         // Plot label for objects value
   Bool_t   _forceNumInt ;   // Force numerical integration if flag set

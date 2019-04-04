@@ -112,26 +112,33 @@ void compute(RooSpan<double> output, Tx x, Tc c) {
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the exponential without normalising it on the given batch.
+/// \param[in] batchIndex Index of the batch to be computed.
+/// \param[in] batchSize Size of each batch. The last batch may be smaller.
+/// \return A span with the computed values.
 
-void RooExponential::evaluateBatch(RooSpan<double> output,
-      const std::vector<RooSpan<const double>>& inputs,
-      const RooArgSet& inputVars) const {
-  BatchHelpers::LookupBatchData lu(inputs, inputVars, {x, c});
-  assert(!lu.testOverlap(output));
+RooSpan<double> RooExponential::evaluateBatch(std::size_t begin, std::size_t end) const {
+  auto output = _batchData.makeWritableBatch(begin, end);
 
   //Now explicitly write down all possible template instantiations of compute() above:
-  const bool batchX = lu.isBatch(x);
-  const bool batchC = lu.isBatch(c);
+  auto xData = x.getValBatch(begin, end);
+  auto cData = c.getValBatch(begin, end);
+
+  const bool batchX = !xData.empty();
+  const bool batchC = !cData.empty();
 
   if (batchX && !batchC) {
-    compute(output, lu.data(x), BatchHelpers::BracketAdapter<RooRealProxy>(c));
+    compute(output, xData, BatchHelpers::BracketAdapter<RooRealProxy>(c));
   } else if (!batchX && batchC) {
-    compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), lu.data(c));
+    compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), cData);
   } else if (!batchX && !batchC) {
     compute(output,
         BatchHelpers::BracketAdapter<RooRealProxy>(x),
         BatchHelpers::BracketAdapter<RooRealProxy>(c));
   } else {
-    compute(output, lu.data(x), lu.data(c));
+    compute(output, xData, cData);
   }
+
+  return output;
 }

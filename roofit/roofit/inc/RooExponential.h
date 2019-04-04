@@ -40,9 +40,7 @@ protected:
 
   Double_t evaluate() const override;
 
-  void evaluateBatch(RooSpan<double> output,
-    const std::vector<RooSpan<const double>>& inputs,
-    const RooArgSet& inputVars) const override;
+  RooSpan<double> evaluateBatch(std::size_t batchIndex, std::size_t batchSize) const override;
 
 private:
   ClassDefOverride(RooExponential,1) // Exponential PDF

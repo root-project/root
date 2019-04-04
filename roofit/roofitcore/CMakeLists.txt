@@ -231,6 +231,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooXYChi2Var.h
     RooHelpers.h
     RooSpan.h
+    BatchData.h
   SOURCES
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -449,6 +450,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooWorkspace.cxx
     src/RooXYChi2Var.cxx
     src/RooHelpers.cxx
+    src/BatchData.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES
@@ -470,6 +472,5 @@ elseif(vdt)
 #  target_link_libraries(RooFitCore PUBLIC ${VDT_LIBRARIES})
   target_include_directories(RooFitCore PUBLIC ${VDT_INCLUDE_DIRS})
 endif()
-
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

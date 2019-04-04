@@ -22,17 +22,21 @@
 ////////////////////////////////////////////////////////////////////////////
 /// A simple container to hold a batch of data values.
 /// It can operate in two modes:
-/// * Span: It holds only references to the storage held by another object
+/// * Span: It holds only a pointer to the storage held by another object
 /// like a std::span does.
 /// * Temp data: It holds its own data, and exposes the span.
 /// This mode is necessary to ship data that are not available in
 /// a contiguous storage like e.g. data from a TTree. This means, however, that
-/// data have to be copied, and follow the DataBatch.
+/// data have to be copied, and only live as long as the span.
 template<class T>
 class RooSpan {
 public:
   using iterator = typename std::span<T>::iterator;
   using value_type = typename std::remove_cv<T>::type;
+
+  constexpr RooSpan() :
+  _auxStorage{},
+  _span{} { }
 
   constexpr RooSpan(RooSpan&& other) :
   _auxStorage{std::move(other._auxStorage)},
@@ -42,6 +46,15 @@ public:
   constexpr RooSpan(const RooSpan& other) :
   _auxStorage{other._auxStorage},
   _span{other._span}
+  { }
+
+
+  /// Conversion constructor from <T> to <const T>
+  template<typename NON_CONST_T,
+      typename = std::enable_if<std::is_same<const NON_CONST_T, T>::value>>
+  constexpr RooSpan(const RooSpan<NON_CONST_T>& other) :
+  _auxStorage{},
+  _span{other.data(), other.size()}
   { }
 
   /// Construct from a range. Data held by foreign object.
@@ -62,7 +75,7 @@ public:
 
   /// Construct from start pointer and size.
   constexpr RooSpan(typename std::span<T>::pointer begin,
-      typename std::span<T>::size_type size) :
+      typename std::span<T>::index_type size) :
   _auxStorage{},
   _span{begin, size}
   { }
@@ -91,12 +104,20 @@ public:
     return _span.end();
   }
 
+  constexpr typename std::span<T>::pointer data() const {
+    return _span.data();
+  }
+
   constexpr typename std::span<T>::reference operator[](typename std::span<T>::index_type i) const noexcept {
     return *(static_cast<typename std::span<T>::pointer __restrict__>(_span.data())+i);
   }
 
   constexpr typename std::span<T>::index_type size() const noexcept {
     return _span.size();
+  }
+
+  constexpr bool empty() const noexcept {
+    return _span.empty();
   }
 
   ///Test if the span overlaps with `other`.

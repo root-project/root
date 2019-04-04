@@ -267,6 +267,10 @@ public:
       _vec.reserve(siz);
     }
 
+    const std::vector<double>& data() const {
+      return _vec;
+    }
+
   protected:
     std::vector<double> _vec;
 

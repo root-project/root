@@ -41,9 +41,7 @@ protected:
   Bool_t  _protectNegative ;
   
   Double_t evaluate() const override;
-  void evaluateBatch(RooSpan<double> output,
-          const std::vector<RooSpan<const double>>& inputs,
-          const RooArgSet& inputVars) const override;
+  RooSpan<double> evaluateBatch(std::size_t begin, std::size_t end) const override;
 
   ClassDefOverride(RooPoisson,3) // A Poisson PDF
 };

@@ -306,11 +306,11 @@ Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServer
 ////////////////////////////////////////////////////////////////////////////////
 /// Floating point error checking and tracing for given float value
 
-Bool_t RooResolutionModel::traceEvalHook(Double_t value) const 
-{
-  // check for a math error or negative value
-   return TMath::IsNaN(value) ;
-}
+//Bool_t RooResolutionModel::traceEvalHook(Double_t value) const
+//{
+//  // check for a math error or negative value
+//   return TMath::IsNaN(value) ;
+//}
 
 
 

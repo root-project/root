@@ -19,10 +19,10 @@
 \class RooRealVar
 \ingroup Roofitcore
 
-RooRealVar represents a fundamental (non-derived) real valued object
+RooRealVar represents a fundamental (non-derived) real-valued object.
 
 This class also holds an (asymmetic) error, a default range and
-a optionally series of alternate named ranges.
+optionally a series of alternate named ranges.
 **/
 
 
@@ -193,6 +193,23 @@ RooRealVar::~RooRealVar()
 Double_t RooRealVar::getValV(const RooArgSet*) const
 {
   return _value ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return batch of data between begin and end.
+/// This requires that this instance is attached to a data store.
+/// \param begin First event to return.
+/// \param end   End of the batch.
+/// \return Span with event data. May be empty if not attached to a data storage.
+RooSpan<const double> RooRealVar::getValBatch(std::size_t begin, std::size_t end,
+    const RooArgSet*) const {
+  if (!_batchData.isInit())
+    return RooSpan<const double>();
+
+  assert(_batchData.status(begin, end) == BatchHelpers::BatchData::kReadyAndConstant);
+  return _batchData.makeBatch(begin, end);
 }
 
 
@@ -995,7 +1012,9 @@ void RooRealVar::attachToVStore(RooVectorDataStore& vstore)
   if (getAttribute("StoreError") || getAttribute("StoreAsymError") || vstore.isFullReal(this) ) {
 
     RooVectorDataStore::RealFullVector* rfv = vstore.addRealFull(this) ;
-    rfv->setBuffer(this,&_value) ;
+    rfv->setBuffer(this,&_value);
+
+    _batchData.attachForeignStorage(rfv->data());
 
     // Attach/create additional branch for error
     if (getAttribute("StoreError") || vstore.hasError(this) ) {
