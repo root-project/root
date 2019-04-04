@@ -23,14 +23,17 @@ int df015_LazyDataSource()
 
    // Let's first create a RDF that will read from the CSV file.
    // See the tutorial relative to CSV data sources for more details!
-   auto fileName = "df014_CsvDataSource_MuRun2010B.csv";
-   auto csv_tdf = MakeCsvDataFrame(fileName);
+   auto fileNameUrl = "http://root.cern.ch/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
+   auto fileName = "df015_CsvDataSource_MuRun2010B.csv";
+   TFile::Cp(fileNameUrl, fileName);
+
+   auto csv_rdf = MakeCsvDataFrame(fileName);
 
    // Now we take out four columns: px and py of the first muon in the muon pair
    std::string px1Name = "px1";
-   auto px1 = csv_tdf.Take<double>(px1Name);
+   auto px1 = csv_rdf.Take<double>(px1Name);
    std::string py1Name = "py1";
-   auto py1 = csv_tdf.Take<double>(py1Name);
+   auto py1 = csv_rdf.Take<double>(py1Name);
 
    // Now we create a new dataframe built on top of the columns above. Note that up to now, no event loop
    // has been carried out!
