@@ -18,9 +18,14 @@
 ///
 /// \author Alexandra-Maria Dobrescu 08/2018
 
-void df027_SQlitePlatformDistribution() {
+void df029_SQlitePlatformDistribution() {
 
-   auto rdf = ROOT::RDF::MakeSqliteDataFrame( "https://root.cern.ch/download/root_download_stats.sqlite", "SELECT * FROM accesslog;" );
+   // Davix has an issue at the moment: we download the file
+   gEnv->SetValue("Davix.GSI.CACheck", "n");
+   auto sqliteURL =  "https://root.cern.ch/download/root_download_stats.sqlite";
+   TFile::Cp(sqliteURL, "root_download_stats_df029.sqlite");
+
+   auto rdf = ROOT::RDF::MakeSqliteDataFrame( "root_download_stats_df029.sqlite", "SELECT * FROM accesslog;" );
 
    TH1F hRootPlatform("hrootPlatform", "Platform Distribution", 7, 0, -1);
    TH1F hShortRootPlatform("hShortRootPlatform", "Short Platform Distribution", 7, 0, -1);
@@ -48,13 +53,13 @@ void df027_SQlitePlatformDistribution() {
 
    rdf.Foreach( fillRootPlatform, { "Platform" } );
 
-   TCanvas *PlatformDistributionHistogram = new TCanvas();
+   auto PlatformDistributionHistogram = new TCanvas();
 
    hRootPlatform.GetXaxis()->LabelsOption("a");
    hRootPlatform.LabelsDeflate("X");
    hRootPlatform.DrawClone();
 
-   TCanvas *shortPlatformDistributionHistogram = new TCanvas();
+   auto shortPlatformDistributionHistogram = new TCanvas();
 
    hShortRootPlatform.GetXaxis()->LabelsOption("a");
    hShortRootPlatform.LabelsDeflate("X");
