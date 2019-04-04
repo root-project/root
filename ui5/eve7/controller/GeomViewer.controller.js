@@ -8,13 +8,13 @@ sap.ui.define(['sap/ui/core/Component',
                "sap/ui/core/ResizeHandler",
                "sap/ui/layout/HorizontalLayout",
                "sap/ui/table/Column",
-               "rootui5/geom/model/BrowserModel"
+               "rootui5/eve7/model/BrowserModel"
 ],function(Component, Controller, CoreControl, JSONModel, mText, mCheckBox, Splitter, ResizeHandler,
            HorizontalLayout, tableColumn, BrowserModel) {
 
    "use strict";
 
-   var geomColorBox = CoreControl.extend("rootui5.geom.controller.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
+   var geomColorBox = CoreControl.extend("rootui5.eve7.controller.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
 
       // the control API:
       metadata : {
@@ -63,7 +63,7 @@ sap.ui.define(['sap/ui/core/Component',
 
    });
 
-   CoreControl.extend("eve.GeomDraw", {
+   var GeomDraw = CoreControl.extend("rootui5.eve7.controller.GeomDraw", {
 
       metadata : {
          properties : {           // setter and getter are created behind the scenes, incl. data binding and type validation
@@ -189,7 +189,7 @@ sap.ui.define(['sap/ui/core/Component',
          }
 
          // placeholder for geometry painter
-         this.geomControl = new eve.GeomDraw({color:"#f00"});
+         this.geomControl = new GeomDraw({color:"#f00"});
          this.getView().byId("mainSplitter").addContentArea(this.geomControl);
 
          JSROOT.AssertPrerequisites("geom", function() {
