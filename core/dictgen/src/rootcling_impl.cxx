@@ -2304,65 +2304,6 @@ bool HasPath(const std::string &name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// A set of rules are applied in order to transform the name for the rootmap
-/// file
-/// * "::" becomes "@@"
-/// * "{const,unsigned,signed} " become "{const,unsigned,signed}-"
-/// * "*const" becomes "*-const"
-/// * "short int" becomes "short"
-/// * "long int" becomes "long"
-/// * "long long" becomes "long-long"
-/// * "long double" becomes "long-double"
-/// * " " becomes ""
-/// * ">>" becomes ">->" except for "operator>>"
-
-void ManipForRootmap(std::string &name)
-{
-   using namespace ROOT::TMetaUtils;
-
-   // * "::" becomes "@@"
-   ReplaceAll(name, "::", "@@");
-
-
-   // * "{const,unsigned,signed} " become "{const,unsigned,signed}-"
-   // We do it in 2 steps: trim the spaces and replace
-   // 1
-   name.erase(name.find_last_not_of(" \n\r\t") + 1);
-   // 2
-   ReplaceAll(name, "const ", "const-");
-   ReplaceAll(name, "signed ", "signed-");
-
-   // * "*const" becomes "*-const"
-   ReplaceAll(name, "*const", "*-const");
-
-   // * "short int" becomes "short"
-   ReplaceAll(name, "short int", "short");
-
-   // * "long int" becomes "long"
-   ReplaceAll(name, "long int", "long");
-
-   // * "long long" becomes "long-long"
-   ReplaceAll(name, "long long", "long-long");
-
-   // * "long double" becomes "long-double"
-   ReplaceAll(name, "long double", "long-double");
-
-   // * " " becomes ""
-   ReplaceAll(name, " ", "");
-   // But this is could be more efficient
-   //name.erase(std::remove_if(name.begin(), name.end(), isspace), name.end());
-
-   // * ">>" becomes ">->" except for "operator>>"
-   // We replace blindly and recursively and then roll back for operator>->
-   // in other words "Better to Say Sorry than to Ask Permission"
-   while (name.find(">>") != std::string::npos) {
-      ReplaceAll(name, ">>", ">->");
-   }
-   ReplaceAll(name, "operator>->", "operator>>");
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 void AdjustRootMapNames(std::string &rootmapFileName,
                         std::string &rootmapLibName)
