@@ -4786,7 +4786,7 @@ void RooAbsReal::evaluateBatch(RooSpan<double> output,
   std::vector<std::pair<std::size_t, RooAbsRealLValue*>> serverVars;
   //First find out which values from the inputVars we need to set,
   //because we depend on them.
-  for (int i = 0; i < inputVars.size(); ++i) {
+  for (unsigned int i = 0; i < inputVars.size(); ++i) {
     const RooAbsArg* var = inputVars[i];
 //    std::cout << "\n\nVar #" << i << " coming in:\n";
 //    var->Print("v");
