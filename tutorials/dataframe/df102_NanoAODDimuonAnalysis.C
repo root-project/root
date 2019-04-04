@@ -45,16 +45,7 @@ void df102_NanoAODDimuonAnalysis()
    auto df_2mu = df.Filter("nMuon == 2", "Events with exactly two muons");
    auto df_os = df_2mu.Filter("Muon_charge[0] != Muon_charge[1]", "Muons with opposite charge");
 
-   // Compute invariant mass of the dimuon system
-   auto compute_mass = [](RVec<float> &pt, RVec<float> &eta, RVec<float> &phi, RVec<float> &mass) {
-      // Compose four-vectors of both muons
-      ROOT::Math::PtEtaPhiMVector p1(pt[0], eta[0], phi[0], mass[0]);
-      ROOT::Math::PtEtaPhiMVector p2(pt[1], eta[1], phi[1], mass[1]);
-
-      // Add four-vectors to build dimuon system and return the invariant mass
-      return (p1 + p2).M();
-   };
-   auto df_mass = df_os.Define("Dimuon_mass", compute_mass, {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass"});
+   auto df_mass = df_os.Define("Dimuon_mass", InvariantMass<float>, {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass"});
 
    // Make histogram of dimuon mass spectrum
    auto h = df_mass.Histo1D({"Dimuon_mass", "Dimuon_mass", 30000, 0.25, 300}, "Dimuon_mass");
