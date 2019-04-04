@@ -100,51 +100,52 @@ void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute \f$ \exp(-0.5 \cdot \frac{(x - \mu)^2}{\sigma^2} \f$ in batches.
-/// Data corresponding to the local proxies {x, mean, sigma} will be searched for
-/// in the input data, and if found, the computation will be batched over their
-/// values. If the data is not found for one of the proxies, it is assumed to
-/// be constant over the batch, and its value is retrieved once at the beginning
-/// of the computation.
-/// \param[out] output Write the results into this batch.
-/// \param[in] inputs Data columns to read from.
-/// \param[in] inputVars Variables that correspond to the data columns in `inputs`. If
-/// {x, mean, sigma} are found in here, the corresponding data will be used.
+/// The local proxies {x, mean, sigma} will be searched for batch input data,
+/// and if found, the computation will be batched over their
+/// values. If batch data are not found for one of the proxies, the proxies value is assumed to
+/// be constant over the batch.
+/// \param[in] batchIndex Index of the batch to be computed.
+/// \param[in] batchSize Size of each batch. The last batch may be smaller.
+/// \return A span with the computed values.
 
-void RooGaussian::evaluateBatch(RooSpan<double> output,
-      const std::vector<RooSpan<const double>>& inputs,
-      const RooArgSet& inputVars) const {
-  BatchHelpers::LookupBatchData lu(inputs, inputVars, {x, mean, sigma});
-  assert(!lu.testOverlap(output));
+RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t end) const {
+  assert(_batchData.status(begin, end) == BatchHelpers::BatchData::kWriting);
+  auto output = _batchData.makeWritableBatch(begin, end);
+
+  auto xData = x.getValBatch(begin, end);
+  auto meanData = mean.getValBatch(begin, end);
+  auto sigmaData = sigma.getValBatch(begin, end);
 
   //Now explicitly write down all possible template instantiations of compute() above:
-  const bool batchX = lu.isBatch(x);
-  const bool batchMean = lu.isBatch(mean);
-  const bool batchSigma = lu.isBatch(sigma);
+  const bool batchX = !xData.empty();
+  const bool batchMean = !meanData.empty();
+  const bool batchSigma = !sigmaData.empty();
 
   if (batchX && !batchMean && !batchSigma) {
-    compute(output, lu.data(x), BracketAdapter<RooRealProxy>(mean), BracketAdapter<RooRealProxy>(sigma));
+    compute(output, xData, BracketAdapter<RooRealProxy>(mean), BracketAdapter<RooRealProxy>(sigma));
   }
   else if (batchX && batchMean && !batchSigma) {
-    compute(output, lu.data(x), lu.data(mean), BracketAdapter<RooRealProxy>(sigma));
+    compute(output, xData, meanData, BracketAdapter<RooRealProxy>(sigma));
   }
   else if (batchX && !batchMean && batchSigma) {
-    compute(output, lu.data(x), BracketAdapter<RooRealProxy>(mean), lu.data(sigma));
+    compute(output, xData, BracketAdapter<RooRealProxy>(mean), sigmaData);
   }
   else if (batchX && batchMean && batchSigma) {
-    compute(output, lu.data(x), lu.data(mean), lu.data(sigma));
+    compute(output, xData, meanData, sigmaData);
   }
   else if (!batchX && batchMean && !batchSigma) {
-    compute(output, BracketAdapter<RooRealProxy>(x), lu.data(mean), BracketAdapter<RooRealProxy>(sigma));
+    compute(output, BracketAdapter<RooRealProxy>(x), meanData, BracketAdapter<RooRealProxy>(sigma));
   }
   else if (!batchX && !batchMean && batchSigma) {
-    compute(output, BracketAdapter<RooRealProxy>(x), BracketAdapter<RooRealProxy>(mean), lu.data(sigma));
+    compute(output, BracketAdapter<RooRealProxy>(x), BracketAdapter<RooRealProxy>(mean), sigmaData);
   }
   else if (!batchX && batchMean && batchSigma) {
-    compute(output, BracketAdapter<RooRealProxy>(x), lu.data(mean), lu.data(sigma));
+    compute(output, BracketAdapter<RooRealProxy>(x), meanData, sigmaData);
   } else {
     assert(false);
   }
 
+  return output;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
