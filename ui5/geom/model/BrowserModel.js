@@ -101,7 +101,7 @@ sap.ui.define([
               _typename: "ROOT::Experimental::RBrowserRequest",
               path: path,
               first: first || 0,
-              number: number || 0,
+              number: number || this.threshold || 100,
               sort: this.sortOrder || ""
            };
 
@@ -114,7 +114,7 @@ sap.ui.define([
 
            this.loadDataCounter--;
 
-           console.log('PROCESS BR RESPONSE', reply.path, reply);
+           // console.log('PROCESS BR RESPONSE', reply.path, reply);
 
            var elem = this.getNodeByPath(reply.path);
 
@@ -147,8 +147,6 @@ sap.ui.define([
            // reset existing nodes if reply does not match with expectation
            if (!smart_merge)
               this.reset_nodes = true;
-
-           console.log("this.loadDataCounter",this.loadDataCounter );
 
            if (this.loadDataCounter == 0)
               if (this.oBinding)
@@ -293,6 +291,8 @@ sap.ui.define([
                           first += (number - threshold);
                           number = threshold;
                        }
+
+                       console.log('submit request for last', path, first,number)
 
                        pthis.submitRequest(elem, path, first, number);
                     }

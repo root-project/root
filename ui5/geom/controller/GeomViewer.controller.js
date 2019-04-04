@@ -114,9 +114,10 @@ sap.ui.define(['sap/ui/core/Component',
    return Controller.extend("rootui5.geom.controller.GeomViewer", {
       onInit: function () {
 
-         // this.websocket = this.getView().getViewData().conn_handle;
+         this.websocket = this.getView().getViewData().conn_handle;
 
-         this.websocket = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
+         // this is code for the Components.js
+         // this.websocket = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
 
          this.websocket.SetReceiver(this);
          this.websocket.Connect();
@@ -134,8 +135,14 @@ sap.ui.define(['sap/ui/core/Component',
             this.model = new JSONModel(this.data);
             this.getView().setModel(this.model);
          } else {
-            this.model = this.getView().getModel();
-            console.log('USE PROVIDED MODEL', typeof this.model.sendFirstRequest)
+
+            this.model = new BrowserModel();
+            this.getView().setModel(this.model);
+            // this.getView().byId("treeTable").setModel(this.model);
+
+            // this is code for the Components.js
+            // this.model = this.getView().getModel();
+            // console.log('USE PROVIDED MODEL', typeof this.model.sendFirstRequest)
          }
 
          // PART 2: instantiate Control and place it onto the page
