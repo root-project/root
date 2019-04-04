@@ -354,5 +354,5 @@ endif()
 
 ROOTTEST_ADD_TEST(simple-lzma-compr-level9
                   PRECMD ${ROOT_hadd_CMD} -f209 hsimple209.root hsimple.root
-                  COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testSimpleFile.C(\"hsimple209.root\",25000,209,392608,5)"
+                  COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testSimpleFile.C(\"hsimple209.root\",25000,209,392601,12)"
                   DEPENDS hsimple-filemergerfile)
