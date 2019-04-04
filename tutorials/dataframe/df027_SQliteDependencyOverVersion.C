@@ -20,12 +20,7 @@
 
 void df027_SQliteDependencyOverVersion () {
 
-   // Davix has an issue at the moment: we download the file
-   gEnv->SetValue("Davix.GSI.CACheck", "n");
-   auto sqliteURL =  "http://root.cern.ch/download/root_download_stats.sqlite";
-   TFile::Cp(sqliteURL, "root_download_stats.sqlite");
-
-   auto rdfb = ROOT::RDF::MakeSqliteDataFrame("root_download_stats.sqlite", "SELECT * FROM accesslog;" );
+   auto rdfb = ROOT::RDF::MakeSqliteDataFrame("http://root.cern/files/root_download_stats.sqlite", "SELECT * FROM accesslog;" );
 
    auto minTimeStr = *rdfb.Reduce([](std::string a, std::string b) {return std::min(a, b);}, "Time", std::string("Z"));
    
