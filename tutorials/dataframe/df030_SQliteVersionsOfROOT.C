@@ -17,11 +17,17 @@
 ///
 /// \author Alexandra-Maria Dobrescu 08/2018
 
-void df028_SQliteVersionsOfROOT() {
+void df030_SQliteVersionsOfROOT() {
 
-   auto rdf = ROOT::RDF::MakeSqliteDataFrame("https://root.cern.ch/download/root_download_stats.sqlite", "SELECT Version FROM accesslog;");
+   // Davix has an issue at the moment: we download the file
+   gEnv->SetValue("Davix.GSI.CACheck", "n");
+   auto sqliteURL =  "https://root.cern.ch/download/root_download_stats.sqlite";
+   TFile::Cp(sqliteURL, "root_download_stats_df030.sqlite");
 
-   TH1F hVersionOfRoot("hVersionOfRoot", "Development Versions of ROOT", 7, 0, -1);
+
+   auto rdf = ROOT::RDF::MakeSqliteDataFrame("root_download_stats_df030.sqlite", "SELECT Version FROM accesslog;");
+
+   TH1F hVersionOfRoot("hVersionOfRoot", "Development Versions of ROOT", 8, 0, -1);
 
    auto fillVersionHisto = [&hVersionOfRoot] (const std::string &version) {
       TString copyVersion = version;
@@ -31,9 +37,10 @@ void df028_SQliteVersionsOfROOT() {
 
    rdf.Foreach( fillVersionHisto, { "Version" } );
 
-   TCanvas *VersionOfRootHistogram = new TCanvas();
+   auto VersionOfRootHistogram = new TCanvas();
 
+   gStyle->SetOptStat(0);
    hVersionOfRoot.GetXaxis()->LabelsOption("a");
    hVersionOfRoot.LabelsDeflate("X");
-   hVersionOfRoot.DrawClone();
+   hVersionOfRoot.DrawClone("");
 }
