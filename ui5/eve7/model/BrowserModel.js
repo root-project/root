@@ -33,6 +33,7 @@ sap.ui.define([
            this.h.nchilds = 1;
            this.h.childs = [ topnode ];
            topnode.expanded = true;
+           this.reset_nodes = true;
            this.scanShifts();
            if (this.oBinding)
               this.oBinding.checkUpdate(true);
@@ -42,6 +43,9 @@ sap.ui.define([
            delete this.h.childs;
            delete this.h.nchilds;
            delete this.fullModel;
+           this.reset_nodes = true;
+           if (this.oBinding)
+              this.oBinding.checkUpdate(true);
         },
 
 
@@ -212,7 +216,7 @@ sap.ui.define([
         //    args.begin     - first visisble element from flat list
         //    args.end       - first not-visisble element
         //    args.threshold - extra elements (before/after) which probably should be prefetched
-        // returns total number of nodes
+        // returns holder object with all existing nodes
         buildFlatNodes: function(args) {
 
            var pthis = this,
@@ -228,13 +232,19 @@ sap.ui.define([
               if ((lvl >= 0) && (nodes !== null) && !nodes[id] && (id >= args.begin - threshold2) && (id < args.end + threshold2) )
                  nodes[id] = {
                     name: elem.name,
-                    level: lvl,
+                    fullpath: path,
                     index: id,
                     _elem: elem,
-                    // these are optional, should be eliminated in the future
+                    // these are required by list binding, should be eliminated in the future
                     type: elem.nchilds || (id == 0) ? "folder" : "file",
                     isLeaf: !elem.nchilds,
-                    expanded: !!elem.expanded
+                    level: lvl,
+                    context: pthis.getContext("/nodes/" + id),
+                    nodeState: {
+                       expanded: !!elem.expanded,
+                       selected: !!elem.selected,
+                       sum: false // ????
+                    }
                  };
 
               if (lvl >= 0) id++;
@@ -315,7 +325,7 @@ sap.ui.define([
               delete this.reset_nodes;
            }
 
-           return id;
+           return nodes;
         },
 
         // toggle expand state of specified node
