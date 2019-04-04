@@ -68,7 +68,12 @@ class LookupBatchData {
 
     ///Get batch data associated with this proxy.
     RooSpan<const double> data(const RooRealProxy& proxy) const {
-      auto result = _lookupMap.find(&proxy.arg());
+      return data(proxy.arg());
+    }
+
+    ///Get batch data associated with this RooAbsReal.
+    RooSpan<const double> data(const RooAbsReal& real) const {
+      auto result = _lookupMap.find(&real);
       assert(result != _lookupMap.end() && 0 <= result->second && result->second < (int)_batchData.size());
       return _batchData[result->second];
     }
@@ -139,7 +144,6 @@ class BracketAdapter<RooRealProxy> {
   private:
     const double _payload;
 };
-
 
 }
 

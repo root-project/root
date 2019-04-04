@@ -143,10 +143,11 @@ RooCmdArg StoreError(const RooArgSet& aset) ;
 RooCmdArg StoreAsymError(const RooArgSet& aset) ; 
 RooCmdArg OwnLinked() ;
 
-// RooChi2Var::ctor arguments
+// RooChi2Var::ctor / RooNLLVar arguments
 RooCmdArg Extended(Bool_t flag=kTRUE) ;
 RooCmdArg DataError(Int_t) ;
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
+RooCmdArg BatchMode(bool flag=true);
 
 // RooAbsPdf::printLatex arguments
 RooCmdArg Columns(Int_t ncol) ;

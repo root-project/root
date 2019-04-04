@@ -264,6 +264,24 @@ Double_t RooAbsReal::getValV(const RooArgSet* nset) const
 }
 
 
+RooSpan<const double> RooAbsReal::getValBatch(std::size_t begin, std::size_t end,
+    const RooArgSet* normSet) const {
+  if (normSet && normSet != _lastNSet) {
+    const_cast<RooAbsReal*>(this)->setProxyNormSet(normSet);
+    _lastNSet = (RooArgSet*) normSet;
+  }
+
+  //TODO check and wait if computation is running
+  if (isValueDirty() || _batchData.status(begin, end) < BatchHelpers::BatchData::kReady) {
+    auto ret = evaluateBatch(begin, end);
+    _batchData.setStatus(begin, end, BatchHelpers::BatchData::kReady);
+    return ret;
+  }
+
+  return _batchData.makeBatch(begin, end);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooAbsReal::numEvalErrorItems()
@@ -426,8 +444,9 @@ void RooAbsReal::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TSt
   TString unit(_unit);
   if(!unit.IsNull()) unit.Prepend(' ');
   //os << indent << "  Value = " << getVal() << unit << endl;
-  os << endl << indent << "  Plot label is \"" << getPlotLabel() << "\"" << endl;
+  os << endl << indent << "  Plot label is \"" << getPlotLabel() << "\"" << "\n";
 
+  _batchData.print(os, indent.Data());
 }
 
 
@@ -3157,6 +3176,8 @@ void RooAbsReal::attachToVStore(RooVectorDataStore& vstore)
 {
   RooVectorDataStore::RealVector* rv = vstore.addReal(this) ;
   rv->setBuffer(this,&_value) ;
+
+  _batchData.attachForeignStorage(rv->data());
 }
 
 
@@ -4769,49 +4790,54 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate function for a batch of input data points. If not overridden by
 /// derived classes, this will call the slow, single-valued evaluate() in a loop.
-/// \param[out] output Write results to this span.
-/// \param[in]  inputs Spans with input variables.
-/// \param[in]  inputVars Variables corresponding to the span `inputs`.
-void RooAbsReal::evaluateBatch(RooSpan<double> output,
-    const std::vector<RooSpan<const double>>& inputs,
-    const RooArgSet& inputVars) const {
+/// \param[in]  begin First event of batch.
+/// \param[in]  end   First event not inside the batch.
+/// \return     Span pointing to the results. The memory is held by the object, on which this
+/// function is called.
+RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t end) const {
+  auto batchStatus = _batchData.status(begin, end);
+  assert(batchStatus != BatchHelpers::BatchData::kReadyAndConstant);
+
+  auto output = _batchData.makeWritableBatch(begin, end);
 
 //  std::cout << "evaluateBatch on\n";
 //  Print("V");
 
   RooArgSet allServers;
   leafNodeServerList(&allServers);
-//  allServers.Print("");
+  allServers.Print("");
+
+  assert(false);
 
   std::vector<std::pair<std::size_t, RooAbsRealLValue*>> serverVars;
   //First find out which values from the inputVars we need to set,
   //because we depend on them.
-  for (unsigned int i = 0; i < inputVars.size(); ++i) {
-    const RooAbsArg* var = inputVars[i];
-//    std::cout << "\n\nVar #" << i << " coming in:\n";
-//    var->Print("v");
-
-    RooAbsArg* server = allServers.find(*var);
-//    std::cout << "\nCorresponding server: " << server << std::endl;
-
-    if (server && dynamic_cast<RooAbsRealLValue*>(server)) {
-//      server->Print("");
-//      std::cout << "Saved." << std::endl;
-
-      auto lval = static_cast<RooAbsRealLValue*>(server);
-      serverVars.emplace_back(i, lval);
-    }
-  }
+//  for (unsigned int i = 0; i < inputVars.size(); ++i) {
+//    const RooAbsArg* var = inputVars[i];
+////    std::cout << "\n\nVar #" << i << " coming in:\n";
+////    var->Print("v");
+//
+//    RooAbsArg* server = allServers.find(*var);
+////    std::cout << "\nCorresponding server: " << server << std::endl;
+//
+//    if (server && dynamic_cast<RooAbsRealLValue*>(server)) {
+////      server->Print("");
+////      std::cout << "Saved." << std::endl;
+//
+//      auto lval = static_cast<RooAbsRealLValue*>(server);
+//      serverVars.emplace_back(i, lval);
+//    }
+//  }
 
   for (auto i = 0; i < output.size(); ++i) {
     for (auto indexLVal : serverVars) {
 //      std::cout << "Setting var to " << inputs[indexLVal.first][i] << std::endl;
-      indexLVal.second->setVal(inputs[indexLVal.first][i]);
+//      indexLVal.second->setVal(inputs[indexLVal.first][i]);
     }
 
     output[i] = evaluate();
   }
+
+  return output;
 }
-
-
 

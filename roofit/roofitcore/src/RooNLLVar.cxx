@@ -65,6 +65,7 @@ RooArgSet RooNLLVar::_emptySet ;
 ///  ConditionalObservables() | Define conditional observables
 ///  Verbose()                | Verbose output of GOF framework classes
 ///  CloneData()              | Clone input dataset for internal use (default is kTRUE)
+///  BatchMode()              | Evaluate batches of data events (faster if PDFs support it)
 
 RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& indata,
 		     const RooCmdArg& arg1, const RooCmdArg& arg2,const RooCmdArg& arg3,
@@ -84,12 +85,14 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
   RooCmdConfig pc("RooNLLVar::RooNLLVar") ;
   pc.allowUndefined() ;
   pc.defineInt("extended","Extended",0,kFALSE) ;
+  pc.defineInt("BatchMode", "BatchMode", 0, false);
 
   pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
   pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
 
   _extended = pc.getInt("extended") ;
+  _batchEvaluations = pc.getInt("BatchMode");
   _weightSq = kFALSE ;
   _first = kTRUE ;
   _offset = 0.;
@@ -111,6 +114,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 		     Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitRange, Bool_t cloneData, Bool_t binnedL) :
   RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData),
   _extended(extended),
+  _batchEvaluations(false),
   _weightSq(kFALSE),
   _first(kTRUE), _offsetSaveW2(0.), _offsetCarrySaveW2(0.)
 {
@@ -156,6 +160,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 		     Int_t nCPU,RooFit::MPSplit interleave,Bool_t verbose, Bool_t splitRange, Bool_t cloneData, Bool_t binnedL) :
   RooAbsOptTestStatistic(name,title,pdf,indata,projDeps,rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData),
   _extended(extended),
+  _batchEvaluations(false),
   _weightSq(kFALSE),
   _first(kTRUE), _offsetSaveW2(0.), _offsetCarrySaveW2(0.)
 {
@@ -195,6 +200,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) :
   RooAbsOptTestStatistic(other,name),
   _extended(other._extended),
+  _batchEvaluations(other._batchEvaluations),
   _weightSq(other._weightSq),
   _first(kTRUE), _offsetSaveW2(other._offsetSaveW2),
   _offsetCarrySaveW2(other._offsetCarrySaveW2),
@@ -235,14 +241,23 @@ void RooNLLVar::applyWeightSquared(Bool_t flag)
   }
 }
 
+class BatchInterfaceAccessor {
+  public:
+    static void allocateBatchStorage(RooAbsReal* theReal, std::size_t nEvent, std::size_t batchSize) {
+      theReal->allocateBatchStorage(nEvent, batchSize);
+    }
 
+    static void markBatchesStale(RooAbsReal* theReal) {
+      theReal->markBatchesStale();
+    }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return likelihood on subset of data.
 /// \param[in] firstEvent First event to be processed.
 /// \param[in] lastEvent  First event not to be processed, any more.
 /// \param[in] stepSize   Steps between events.
-/// \note For efficient batch computations, the step size **must** be one.
+/// \note For batch computations, the step size **must** be one.
 ///
 /// If this an extended likelihood, the extended term is added to the return likelihood
 /// in the batch that encounters the event with index 0.
@@ -260,11 +275,6 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
   // cout << "RooNLLVar::evaluatePartition(" << GetName() << ") projDeps = " << (_projDeps?*_projDeps:RooArgSet()) << endl ;
 
   _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?kFALSE:kTRUE) ) ;
-
-#ifdef BATCH_COMPUTATIONS
-  assert(stepSize == 1);
-  auto dataBatches = _dataClone->store()->getBatch(firstEvent, lastEvent);
-#endif
 
   Double_t sumWeight(0), sumWeightCarry(0);
 
@@ -287,136 +297,144 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 
       if (mu<=0 && N>0) {
 
-	// Catch error condition: data present where zero events are predicted
-	logEvalError(Form("Observed %f events in bin %lu with zero event yield",N,i)) ;
+        // Catch error condition: data present where zero events are predicted
+        logEvalError(Form("Observed %f events in bin %lu with zero event yield",N,i)) ;
 
       } else if (fabs(mu)<1e-10 && fabs(N)<1e-10) {
 
-	// Special handling of this case since log(Poisson(0,0)=0 but can't be calculated with usual log-formula
-	// since log(mu)=0. No update of result is required since term=0.
+        // Special handling of this case since log(Poisson(0,0)=0 but can't be calculated with usual log-formula
+        // since log(mu)=0. No update of result is required since term=0.
 
       } else {
 
-	Double_t term = -1*(-mu + N*log(mu) - TMath::LnGamma(N+1)) ;
+        Double_t term = -1*(-mu + N*log(mu) - TMath::LnGamma(N+1)) ;
 
-	// Kahan summation of sumWeight
-	Double_t y = eventWeight - sumWeightCarry;
-	Double_t t = sumWeight + y;
-	sumWeightCarry = (t - sumWeight) - y;
-	sumWeight = t;
+        // Kahan summation of sumWeight
+        Double_t y = eventWeight - sumWeightCarry;
+        Double_t t = sumWeight + y;
+        sumWeightCarry = (t - sumWeight) - y;
+        sumWeight = t;
 
-	// Kahan summation of result
-	y = term - carry;
-	t = result + y;
-	carry = (t - result) - y;
-	result = t;
+        // Kahan summation of result
+        y = term - carry;
+        t = result + y;
+        carry = (t - result) - y;
+        result = t;
       }
     }
 
 
   } else { //unbinned PDF
 
-#ifdef BATCH_COMPUTATIONS
-    auto eventWeightBatch = _dataClone->getWeightBatch(firstEvent, lastEvent);
+    if (_batchEvaluations) {
+      assert(stepSize == 1);
+      auto dataBatches = _dataClone->store()->getBatch(firstEvent, lastEvent);
+      auto eventWeightBatch = _dataClone->getWeightBatch(firstEvent, lastEvent);
 
-    //TODO eliminate the copying if _weightSq: Write lambda that squares on the fly?
-    std::vector<double> eventWeights(eventWeightBatch.begin(), eventWeightBatch.end());
+      //TODO eliminate the copying if _weightSq: Write lambda that squares on the fly?
+      std::vector<double> eventWeights(eventWeightBatch.begin(), eventWeightBatch.end());
 
-    static std::vector<double> results;
-    results.resize(lastEvent - firstEvent, 0.);
-    auto& vars = *_dataClone->get();
-    pdfClone->getLogValBatch(RooSpan<double>(results.begin(), results.end()),
-        dataBatches, vars, _normSet);
+      //TODO do properly. Not here, but in base.
+      //TODO don't redo for every partition, anyway
+      std::size_t batchSize = _nEvents / ((_nEvents % _numSets == 0) ?
+          _numSets :
+          (_numSets-1));
+      BatchInterfaceAccessor::allocateBatchStorage(pdfClone, _nEvents, batchSize);
 
-    if (_weightSq) {
-      for (auto& weight : eventWeights) {
-        weight *= weight;
+      auto results = pdfClone->getLogValBatch(firstEvent, lastEvent, _normSet);
+
+      if (_weightSq) {
+        for (auto& weight : eventWeights) {
+          weight *= weight;
+        }
       }
+
+      if (eventWeights.size() == 1) {
+
+        //Sum the event weights
+        sumWeight = (lastEvent - firstEvent) * eventWeights.front();
+        sumWeightCarry = 0.;
+
+        //Sum the probabilities
+        const double negWeight = -eventWeights.front();
+        double myCarry = 0.;
+        double myResult = 0.;
+
+        for (int i = 0; i < (int)results.size(); ++i) {
+          double y = negWeight * results[i] - myCarry;
+          double t = myResult + y;
+          myCarry = (t - myResult) - y;
+          myResult = t;
+        }
+
+        carry = myCarry;
+        result = myResult;
+
+      } else {
+
+        //Sum the weights
+        double mySumWeightCarry = 0.;
+        double mySumWeight = 0.;
+        for (int i = 0; i < (int)eventWeights.size(); ++i) {
+          double y = eventWeights[i] - mySumWeightCarry;
+          double t = mySumWeight + y;
+          mySumWeightCarry = (t - mySumWeight) - y;
+          mySumWeight = t;
+        }
+
+        //Sum the probabilities
+        double myCarry = 0.;
+        double myResult = 0.;
+
+        for (int i = 0; i < (int)results.size(); ++i) {
+          results[i] = -eventWeights[i] * results[i];
+
+          double y = results[i] - myCarry;
+          double t = myResult + y;
+          myCarry = (t - myResult) - y;
+          myResult = t;
+
+        }
+
+        carry = myCarry;
+        result = myResult;
+      }
+
+
+    } else { //scalar mode
+
+
+      for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
+
+        _dataClone->get(i) ;
+
+        if (!_dataClone->valid()) continue;
+
+        Double_t eventWeight = _dataClone->weight(); //FIXME
+        if (0. == eventWeight * eventWeight) continue ;
+        if (_weightSq) eventWeight = _dataClone->weightSquared() ;
+
+        Double_t term = -eventWeight * pdfClone->getLogVal(_normSet);
+
+
+        Double_t y = eventWeight - sumWeightCarry;
+        Double_t t = sumWeight + y;
+        sumWeightCarry = (t - sumWeight) - y;
+        sumWeight = t;
+
+        y = term - carry;
+        t = result + y;
+        carry = (t - result) - y;
+        result = t;
+      }
+
     }
-
-    if (eventWeights.size() == 1) {
-
-      //Sum the event weights
-      sumWeight = (lastEvent - firstEvent) * eventWeights.front();
-      sumWeightCarry = 0.;
-
-      //Sum the probabilities
-      const double negWeight = -eventWeights.front();
-      double myCarry = 0.;
-      double myResult = 0.;
-
-      for (int i = 0; i < (int)results.size(); ++i) {
-        double y = negWeight * results[i] - myCarry;
-        double t = myResult + y;
-        myCarry = (t - myResult) - y;
-        myResult = t;
-      }
-
-      carry = myCarry;
-      result = myResult;
-
-    } else {
-
-      //Sum the weights
-      double mySumWeightCarry = 0.;
-      double mySumWeight = 0.;
-      for (int i = 0; i < (int)eventWeights.size(); ++i) {
-        double y = eventWeights[i] - mySumWeightCarry;
-        double t = mySumWeight + y;
-        mySumWeightCarry = (t - mySumWeight) - y;
-        mySumWeight = t;
-      }
-
-      //Sum the probabilities
-      double myCarry = 0.;
-      double myResult = 0.;
-
-      for (int i = 0; i < (int)results.size(); ++i) {
-        results[i] = -eventWeights[i] * results[i];
-
-        double y = results[i] - myCarry;
-        double t = myResult + y;
-        myCarry = (t - myResult) - y;
-        myResult = t;
-
-      }
-
-      carry = myCarry;
-      result = myResult;
-    }
-#else
-
-    for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
-
-      _dataClone->get(i) ;
-
-      if (!_dataClone->valid()) continue;
-
-      Double_t eventWeight = _dataClone->weight(); //FIXME
-      if (0. == eventWeight * eventWeight) continue ;
-      if (_weightSq) eventWeight = _dataClone->weightSquared() ;
-
-      Double_t term = -eventWeight * pdfClone->getLogVal(_normSet);
-
-
-      Double_t y = eventWeight - sumWeightCarry;
-      Double_t t = sumWeight + y;
-      sumWeightCarry = (t - sumWeight) - y;
-      sumWeight = t;
-
-      y = term - carry;
-      t = result + y;
-      carry = (t - result) - y;
-      result = t;
-    }
-
-#endif
 
     // include the extended maximum likelihood term, if requested
     if(_extended && _setNum==_extSet) {
       if (_weightSq) {
 
-        //TODO
+        // TODO Batch this up
         // Calculate sum of weights-squared here for extended term
         Double_t sumW2(0), sumW2carry(0);
         for (decltype(_dataClone->numEntries()) i = 0; i < _dataClone->numEntries() ; i++) {
@@ -474,8 +492,6 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
     result = t;
   }
 
-  //timer.Stop() ;
-  //cout << "RooNLLVar::evalPart(" << GetName() << ") SET=" << _setNum << " first=" << firstEvent << ", last=" << lastEvent << ", step=" << stepSize << ") result = " << result << " CPU = " << timer.CpuTime() << endl ;
 
   // At the end of the first full calculation, wire the caches
   if (_first) {

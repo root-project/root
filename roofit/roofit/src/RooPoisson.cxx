@@ -124,24 +124,21 @@ void compute(RooSpan<double> output, Tx x, TMean mean, bool protectNegative) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Poisson values in batches.
-void RooPoisson::evaluateBatch(RooSpan<double> output,
-      const std::vector<RooSpan<const double>>& inputs,
-      const RooArgSet& inputVars) const {
+RooSpan<double> RooPoisson::evaluateBatch(std::size_t begin, std::size_t end) const {
+  auto output = _batchData.makeWritableBatch(begin, end);
+  auto xData = x.getValBatch(begin, end);
+  auto meanData = mean.getValBatch(begin, end);
 
-  BatchHelpers::LookupBatchData lu(inputs, inputVars, {x, mean});
-  assert(!lu.testOverlap(output));
-
-  const bool batchX = lu.isBatch(x);
-  const bool batchMean = lu.isBatch(mean);
-
+  const bool batchX = !xData.empty();
+  const bool batchMean = !meanData.empty();
 
   if (batchX && batchMean) {
-    compute(output, lu.data(x), lu.data(mean), _protectNegative);
+    compute(output, xData, meanData, _protectNegative);
   } else if (batchX && !batchMean) {
-    compute(output, lu.data(x), BatchHelpers::BracketAdapter<RooRealProxy>(mean), _protectNegative);
+    compute(output, xData, BatchHelpers::BracketAdapter<RooRealProxy>(mean), _protectNegative);
   }
   else if (!batchX && batchMean) {
-    compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), lu.data(mean), _protectNegative);
+    compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), meanData, _protectNegative);
   } else if (!batchX && !batchMean) {
     compute(output, BatchHelpers::BracketAdapter<RooRealProxy>(x), BatchHelpers::BracketAdapter<RooRealProxy>(mean), _protectNegative);
   } else {
@@ -149,6 +146,7 @@ void RooPoisson::evaluateBatch(RooSpan<double> output,
     assert(false);
   }
 
+  return output;
 }
 
 

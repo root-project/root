@@ -128,11 +128,14 @@ protected:
 
 
   Double_t evaluate() const;
+  virtual RooSpan<double> evaluateBatch(std::size_t batchIndex, std::size_t batchSize) const;
+
+
   mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes
 
   RooListProxy _pdfList ;   //  List of component PDFs
   RooListProxy _coefList ;  //  List of coefficients
-  mutable RooArgList* _snormList ;  //!  List of supplemental normalization factors
+  mutable RooArgList* _snormList{nullptr};  //!  List of supplemental normalization factors
   
   Bool_t _haveLastCoef ;    //  Flag indicating if last PDFs coefficient was supplied in the ctor
   Bool_t _allExtendable ;   //  Flag indicating if all PDF components are extendable
