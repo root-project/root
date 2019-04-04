@@ -5019,8 +5019,16 @@ int RootClingMain(int argc,
       CI->clearOutputFiles(CI->getDiagnostics().hasErrorOccurred());
    }
 
-   // Before returning, rename the files
-   rootclingRetCode += tmpCatalog.commit();
+   // Add the warnings
+   rootclingRetCode += ROOT::TMetaUtils::GetNumberOfErrors();
+
+   // Before returning, rename the files if no errors occurred
+   // otherwise clean them to avoid remnants (see ROOT-10015)
+   if(rootclingRetCode == 0) {
+      rootclingRetCode += tmpCatalog.commit();
+   } else {
+      tmpCatalog.clean();
+   }
 
    return rootclingRetCode;
 
