@@ -114,7 +114,7 @@ public:
 
 private:
 
-  /// If a class has does not own a contiguous block of memory, which
+  /// If a class does not own a contiguous block of memory, which
   /// could be used to create a span, the memory has to be kept alive
   /// until all referring spans are destroyed.
   std::shared_ptr<std::vector<value_type>> _auxStorage;

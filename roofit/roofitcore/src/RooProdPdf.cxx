@@ -2204,7 +2204,7 @@ void RooProdPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
 
     if (parg->canNodeBeCached()==Always) {
       trackNodes.add(*parg) ;
-      cout << "tracking node RooProdPdf component " << parg << " " << parg->IsA()->GetName() << "::" << parg->GetName() << endl ;
+//      cout << "tracking node RooProdPdf component " << parg << " " << parg->IsA()->GetName() << "::" << parg->GetName() << endl ;
 
       // Additional processing to fix normalization sets in case product defines conditional observables
       RooArgSet* pdf_nset = findPdfNSet((RooAbsPdf&)(*parg)) ;

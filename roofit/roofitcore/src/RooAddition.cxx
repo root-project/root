@@ -22,7 +22,7 @@
 RooAddition calculates the sum of a set of RooAbsReal terms, or
 when constructed with two sets, it sums the product of the terms
 in the two sets. This class does not (yet) do any smart handling of integrals, 
-i.e. all integrals of the product are handled numerically
+i.e. all integrals of the product are handled numerically.
 **/
 
 
@@ -51,7 +51,6 @@ ClassImp(RooAddition);
 ////////////////////////////////////////////////////////////////////////////////
 /// Empty constructor
 RooAddition::RooAddition()
-  : _setIter( _set.createIterator() )
 {
 }
 
@@ -67,12 +66,9 @@ RooAddition::RooAddition()
 RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet, Bool_t takeOwnership) 
   : RooAbsReal(name, title)
   , _set("!set","set of components",this)
-  , _setIter( _set.createIterator() ) // yes, _setIter is defined _after_ _set ;-)
   , _cacheMgr(this,10)
 {
-  std::unique_ptr<TIterator> inputIter( sumSet.createIterator() );
-  RooAbsArg* comp ;
-  while((comp = (RooAbsArg*)inputIter->Next())) {
+  for (const auto comp : sumSet) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
@@ -105,7 +101,6 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet1, const RooArgList& sumSet2, Bool_t takeOwnership) 
     : RooAbsReal(name, title)
     , _set("!set","set of components",this)
-    , _setIter( _set.createIterator() ) // yes, _setIter is defined _after_ _set ;-)
     , _cacheMgr(this,10)
 {
   if (sumSet1.getSize() != sumSet2.getSize()) {
@@ -153,7 +148,6 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 RooAddition::RooAddition(const RooAddition& other, const char* name) 
     : RooAbsReal(other, name)
     , _set("!set",this,other._set)
-    , _setIter( _set.createIterator() ) // yes, _setIter is defined _after_ _set ;-)
     , _cacheMgr(other._cacheMgr,this)
 {
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
@@ -164,7 +158,7 @@ RooAddition::RooAddition(const RooAddition& other, const char* name)
 
 RooAddition::~RooAddition() 
 { // Destructor
-  delete _setIter ;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -241,11 +235,8 @@ Double_t RooAddition::defaultErrorLevel() const
 
 void RooAddition::enableOffsetting(Bool_t flag) 
 {
-  _setIter->Reset() ;
-
-  RooAbsReal* arg;
-  while((arg=(RooAbsReal*)_setIter->Next())) {
-    arg->enableOffsetting(flag) ;
+  for (auto arg : _set) {
+    static_cast<RooAbsReal*>(arg)->enableOffsetting(flag) ;
   }  
 }
 
@@ -255,11 +246,8 @@ void RooAddition::enableOffsetting(Bool_t flag)
 
 Bool_t RooAddition::setData(RooAbsData& data, Bool_t cloneData) 
 {
-  _setIter->Reset() ;
-
-  RooAbsReal* arg;
-  while((arg=(RooAbsReal*)_setIter->Next())) {
-    arg->setData(data,cloneData) ;
+  for (const auto arg : _set) {
+    static_cast<RooAbsReal*>(arg)->setData(data,cloneData) ;
   }  
   return kTRUE ;
 }
@@ -270,13 +258,12 @@ Bool_t RooAddition::setData(RooAbsData& data, Bool_t cloneData)
 
 void RooAddition::printMetaArgs(ostream& os) const 
 {
-  _setIter->Reset() ;
-
   Bool_t first(kTRUE) ;
-  RooAbsArg* arg;
-  while((arg=(RooAbsArg*)_setIter->Next())) {
-    if (!first) { os << " + " ;
-    } else { first = kFALSE ; 
+  for (const auto arg : _set) {
+    if (!first) {
+      os << " + " ;
+    } else {
+      first = kFALSE ;
     }
     os << arg->GetName() ; 
   }  
@@ -300,10 +287,8 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
   // we don't, so we make it right here....
   cache = new CacheElem;
-  _setIter->Reset();
-  RooAbsReal *arg(0);
-  while( (arg=(RooAbsReal*)_setIter->Next())!=0 ) {  // checked in c'tor that this will work...
-      RooAbsReal *I = arg->createIntegral(analVars,rangeName);
+  for (const auto arg : _set) {// checked in c'tor that this will work...
+      RooAbsReal *I = static_cast<const RooAbsReal*>(arg)->createIntegral(analVars,rangeName);
       cache->_I.addOwned(*I);
   }
 
@@ -330,10 +315,10 @@ Double_t RooAddition::analyticalIntegral(Int_t code, const char* rangeName) cons
   assert(cache!=0);
 
   // loop over cache, and sum...
-  std::unique_ptr<TIterator> iter( cache->_I.createIterator() );
-  RooAbsReal *I;
   double result(0);
-  while ( ( I=(RooAbsReal*)iter->Next() ) != 0 ) result += I->getVal();
+  for (auto I : cache->_I) {
+    result += static_cast<const RooAbsReal*>(I)->getVal();
+  }
   return result;
 
 }

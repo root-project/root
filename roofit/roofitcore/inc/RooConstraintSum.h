@@ -40,7 +40,6 @@ protected:
 
   RooListProxy _set1 ;    // Set of constraint terms
   RooSetProxy _paramSet ; // Set of parameters to which constraints apply
-  TIterator* _setIter1 ;  //! do not persist
 
   Double_t evaluate() const;
 
