@@ -66,7 +66,7 @@ ROOT::Experimental::Detail::RPageSinkRoot::AddColumn(RColumn* column)
    }
    auto columnId = fForestHeader.fColumns.size();
    fForestHeader.fColumns.emplace_back(columnHeader);
-   printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
+   //printf("Added column %s type %d\n", columnHeader.fName.c_str(), (int)columnHeader.fType);
    return ColumnHandle_t(columnId, column);
 }
 
@@ -86,7 +86,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::Create(RForestModel *model)
       ROOT::Experimental::Internal::RFieldHeader fieldHeader;
       fieldHeader.fName = f.GetName();
       fieldHeader.fType = f.GetType();
-      printf("Added field %s type [%s]\n", f.GetName().c_str(), f.GetType().c_str());
+      //printf("Added field %s type [%s]\n", f.GetName().c_str(), f.GetType().c_str());
       if (f.GetParent()) fieldHeader.fParentName = f.GetParent()->GetName();
       fForestHeader.fFields.emplace_back(fieldHeader);
 
@@ -173,9 +173,9 @@ ROOT::Experimental::Detail::RPageSourceRoot::AddColumn(RColumn* column)
    auto& model = column->GetModel();
    auto columnId = fMapper.fColumnName2Id[model.GetName()];
    R__ASSERT(model == *fMapper.fId2ColumnModel[columnId]);
-   printf("Attaching column %s id %d type %d length %lu\n",
-      column->GetModel().GetName().c_str(), columnId, (int)(column->GetModel().GetType()),
-      fMapper.fColumnIndex[columnId].fNElements);
+   //printf("Attaching column %s id %d type %d length %lu\n",
+   //   column->GetModel().GetName().c_str(), columnId, (int)(column->GetModel().GetType()),
+   //   fMapper.fColumnIndex[columnId].fNElements);
    return ColumnHandle_t(columnId, column);
 }
 
@@ -185,7 +185,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
    fDirectory = fSettings.fFile->GetDirectory(fForestName.c_str());
    auto keyForestHeader = fDirectory->GetKey(RMapper::kKeyForestHeader);
    auto forestHeader = keyForestHeader->ReadObject<ROOT::Experimental::Internal::RForestHeader>();
-   printf("Number of fields %lu, of columns %lu\n", forestHeader->fFields.size(), forestHeader->fColumns.size());
+   //printf("Number of fields %lu, of columns %lu\n", forestHeader->fFields.size(), forestHeader->fColumns.size());
 
    for (auto &fieldHeader : forestHeader->fFields) {
       if (fieldHeader.fParentName.empty()) {
@@ -215,7 +215,7 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 
    auto keyForestFooter = fDirectory->GetKey(RMapper::kKeyForestFooter);
    auto forestFooter = keyForestFooter->ReadObject<ROOT::Experimental::Internal::RForestFooter>();
-   printf("Number of clusters: %d, entries %ld\n", forestFooter->fNClusters, forestFooter->fNEntries);
+   //printf("Number of clusters: %d, entries %ld\n", forestFooter->fNClusters, forestFooter->fNEntries);
 
    for (std::int32_t iCluster = 0; iCluster < forestFooter->fNClusters; ++iCluster) {
       auto keyClusterFooter = fDirectory->GetKey((RMapper::kKeyClusterFooter + std::to_string(iCluster)).c_str());
