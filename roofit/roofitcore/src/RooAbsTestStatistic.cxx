@@ -234,11 +234,11 @@ RooAbsTestStatistic::~RooAbsTestStatistic()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculates and return value of test statistic. If the test statistic
-/// is calculated from on a RooSimultaneous, the test statistic calculation
+/// Calculate and return value of test statistic. If the test statistic
+/// is calculated from a RooSimultaneous, the test statistic calculation
 /// is performed separately on each simultaneous p.d.f component and associated
-/// data and then combined. If the test statistic calculation is parallelized
-/// partitions are calculated in nCPU processes and a posteriori combined.
+/// data, and then combined. If the test statistic calculation is parallelized,
+/// partitions are calculated in nCPU processes and combined a posteriori.
 
 Double_t RooAbsTestStatistic::evaluate() const
 {
