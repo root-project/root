@@ -32,6 +32,8 @@ sap.ui.define([
            this.fullModel = true;
            this.h.nchilds = 1;
            this.h.childs = [ topnode ];
+           topnode.expanded = true;
+           this.scanShifts();
            if (this.oBinding)
               this.oBinding.checkUpdate(true);
         },
@@ -81,14 +83,13 @@ sap.ui.define([
 
 
         sendFirstRequest: function(websocket) {
-           console.log('SENDING FIRST REQUEST');
            this._websocket = websocket;
            // submit top-level request already when construct model
            this.submitRequest(this.h, "/");
         },
 
         // submit next request to the server
-        // now using simple HTTP requests, in ROOT websocket communication will be used
+        // directly use web socket, later can be dedicated channel
         submitRequest: function(elem, path, first, number) {
 
            if (!this._websocket || elem._requested || this.fullModel) return;
@@ -103,8 +104,6 @@ sap.ui.define([
               number: number || 0,
               sort: this.sortOrder || ""
            };
-
-           console.log('SEND BROWSER REQUEST ' + path);
 
            this._websocket.Send("BRREQ:" + JSON.stringify(request));
         },
@@ -325,11 +324,10 @@ sap.ui.define([
            var elem = this.getElementByIndex(index);
            if (!elem) return;
 
-           console.log('Toggle element', elem.name, elem.nchilds, elem)
-
            if (elem.expanded) {
               delete elem.expanded;
-              delete elem.childs; // TODO: for the future keep childs but make request if expand once again
+              if (!this.fullModel)
+                 delete elem.childs; // TODO: for the future keep childs but make request if expand once again
 
               // close folder - reassign shifts
               this.reset_nodes = true;
@@ -342,20 +340,14 @@ sap.ui.define([
               elem.expanded = true;
               // structure is changing but not immediately
 
+              if (this.fullModel) {
+                 this.reset_nodes = true;
+                 this.scanShifts();
+              }
+
               return true;
-
-           } else {
-              // nothing to do
-              return;
            }
-
-           // for now - reset all existing nodes and rebuild from the beginning
-           // all nodes should be created from scratch
-
-           // no need to update - this should be invoked from openui anyway
-           //   if (this.oBinding) this.oBinding.checkUpdate(true);
         },
-
 
         // change sorting method, for now server supports default, "direct" and "reverse"
         changeSortOrder: function(newValue) {
