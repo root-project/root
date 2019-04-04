@@ -22,12 +22,7 @@
 
 void df028_SQliteIPLocation() {
 
-   // Davix has an issue at the moment: we download the file
-   gEnv->SetValue("Davix.GSI.CACheck", "n");
-   auto sqliteURL =  "https://root.cern.ch/download/root_download_stats.sqlite";
-   TFile::Cp(sqliteURL, "root_download_stats_df028.sqlite");
-
-   auto rdf = ROOT::RDF::MakeSqliteDataFrame( "root_download_stats_df028.sqlite", "SELECT * FROM accesslog;" );
+   auto rdf = ROOT::RDF::MakeSqliteDataFrame( "http://root.cern/files/root_download_stats.sqlite", "SELECT * FROM accesslog;" );
 
    auto f = TFile::Open("http://root.cern.ch/files/WM.root");
    auto WM = f->Get<TH2Poly>("WMUSA");

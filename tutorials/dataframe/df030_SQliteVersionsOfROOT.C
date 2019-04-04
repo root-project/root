@@ -19,13 +19,7 @@
 
 void df030_SQliteVersionsOfROOT() {
 
-   // Davix has an issue at the moment: we download the file
-   gEnv->SetValue("Davix.GSI.CACheck", "n");
-   auto sqliteURL =  "https://root.cern.ch/download/root_download_stats.sqlite";
-   TFile::Cp(sqliteURL, "root_download_stats_df030.sqlite");
-
-
-   auto rdf = ROOT::RDF::MakeSqliteDataFrame("root_download_stats_df030.sqlite", "SELECT Version FROM accesslog;");
+   auto rdf = ROOT::RDF::MakeSqliteDataFrame("http://root.cern/files/root_download_stats.sqlite", "SELECT Version FROM accesslog;");
 
    TH1F hVersionOfRoot("hVersionOfRoot", "Development Versions of ROOT", 8, 0, -1);
 
