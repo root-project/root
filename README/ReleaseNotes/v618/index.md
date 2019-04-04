@@ -228,6 +228,7 @@ JSROOT sources were moved from `etc/http/` into `js/` subfolder in ROOT sources 
 
 ## Tutorials
   - Add `RSqliteDS` examples.
+  - Make RCsvDS and RLazyDS tutorials standalone, i.e. downloading input csv directly using `TFile::Cp` rather than relying on CMake.
 
 ## Class Reference Guide
 
