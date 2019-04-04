@@ -211,7 +211,7 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       std::string msg = arg.substr(6), json;
 
       if (msg.compare("OFF") != 0) {
-         auto stack = GetStackFromJson(msg, true);
+         auto stack = fDesc.MakeStackByPath(msg);
          if (stack.size() > 0)
             json = TBufferJSON::ToJSON(&stack, 103);
       }
@@ -227,10 +227,7 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       if (msg.compare("OFF") != 0) {
          auto stack = GetStackFromJson(msg);
 
-         auto ids = fDesc.MakeIdsByStack(stack);
-
-         if (ids.size() > 0)
-            json = TBufferJSON::ToJSON(&ids, 103);
+         json = fDesc.MakePathByStack(stack);
       }
 
       if (json.empty()) json = "OFF";
