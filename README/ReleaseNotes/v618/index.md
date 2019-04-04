@@ -13,6 +13,7 @@ For more information, see:
 The following people have contributed to this new version:
 
  Bertrand Bellenot, CERN/SFT,\
+ Brian Bockelman, Nebraska,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
  Javier Cervantes Villanueva, CERN/SFT \
@@ -28,10 +29,12 @@ The following people have contributed to this new version:
  Axel Naumann, CERN/SFT,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
+ Oksana Shadura, Nebraska,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
- Wouter Verkerke, NIKHEF/Atlas,
+ Wouter Verkerke, NIKHEF/Atlas,\
+ Zhe Zhang, Nebraska,
 
 ## Deprecation and Removal
 
@@ -106,6 +109,15 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
          tree->Branch("doubleArray", doubleArray, "doubleArray[5]/d[0,0,18]"); // Double32_t array without range and 18 bits
       }
 ~~~
+
+### Bulk I/O
+  - The new `TBulkBranchRead` class (inside the `ROOT::Experimental::Internal` namespace) provides
+    a mechanism for reading, in a single library call, many events' worth of simple data (primitive types,
+    arrays of primitives, split structures) stored in a `TTree`.  This allows for extremely fast delivery
+    of event data to the process.  This is meant as an internal interface that allows the ROOT team to
+    implement faster high-level interface.
+  - The `TTreeReaderFast ` class (inside the `ROOT::Experimental::Internal` namespace) provides a simple
+    mechanism for reading ntuples with the bulk IO interface.
 
 ## Histogram Libraries
 
