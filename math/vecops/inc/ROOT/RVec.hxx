@@ -1640,7 +1640,7 @@ T DeltaR(T eta1, T eta2, T phi1, T phi2, const T c = ROOT::Internal::VecOps::pi)
 /// The function computes the invariant mass of two particles with the four-vectors
 /// (pt1, eta2, phi1, mass1) and (pt2, eta2, phi2, mass2).
 template <typename T>
-RVec<T> InvariantMass(
+RVec<T> InvariantMasses(
         const RVec<T>& pt1, const RVec<T>& eta1, const RVec<T>& phi1, const RVec<T>& mass1,
         const RVec<T>& pt2, const RVec<T>& eta2, const RVec<T>& phi2, const RVec<T>& mass2)
 {

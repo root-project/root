@@ -47,7 +47,7 @@ void vo007_PhysicsHelpers()
              << "       phi2 = " << phi2 << ")\n"
              << " = " << dr << "\n";
 
-   // The InvariantMass helper computes the invariant mass of a two particle system
+   // The InvariantMasses helper computes the invariant mass of a two particle system
    // given the properties transverse momentum (pt), rapidity (eta), azimuth (phi)
    // and mass.
    RVec<float> pt3 = {40, 20, 30};
@@ -60,7 +60,7 @@ void vo007_PhysicsHelpers()
    RVec<float> phi4 = {0.0, 1.0, -1.0};
    RVec<float> mass4 = {2, 2, 2};
 
-   auto invMass = InvariantMass(pt3, eta3, phi3, mass3, pt4, eta4, phi4, mass4);
+   auto invMass = InvariantMasses(pt3, eta3, phi3, mass3, pt4, eta4, phi4, mass4);
 
    std::cout << "\nInvariantMass(pt1 = " << pt3 << ",\n"
              << "              eta1 = " << eta3 << ",\n"
@@ -72,7 +72,7 @@ void vo007_PhysicsHelpers()
              << "              mass2 = " << mass4 << ")\n"
              << " = " << invMass << "\n";
 
-   // The helper also accepts a single set of (pt, eta, phi, mass) vectors. Then,
+   // The InvariantMass helper also accepts a single set of (pt, eta, phi, mass) vectors. Then,
    // the invariant mass of all particles in the collection is computed.
 
    auto invMass2 = InvariantMass(pt3, eta3, phi3, mass3);
