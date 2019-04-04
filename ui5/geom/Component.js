@@ -10,8 +10,8 @@ sap.ui.define([
       init: function() {
          UIComponent.prototype.init.apply(this, arguments);
 
-         console.log('Creating browser model!!!');
-         this.setModel(new BrowserModel());
+        // console.log('Creating browser model!!!');
+         // this.setModel(new BrowserModel());
          // this.getRouter().initialize();
       }
    });
