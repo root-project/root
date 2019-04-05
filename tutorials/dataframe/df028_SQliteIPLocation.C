@@ -1,7 +1,6 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -js
-///
 /// This tutorial demonstrates how RDataFrame can be used to create a
 /// connection with a SQlite3 database. It accesses the Sqlite data base, and makes
 /// a query selecting the entire table.
