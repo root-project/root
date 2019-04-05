@@ -16,10 +16,12 @@ sap.ui.define([
         getNodes: function(iStartIndex, iLength, iThreshold) {
 
            var args = { begin: iStartIndex, end: iStartIndex + iLength, threshold: iThreshold },
-               nodes = this.getModel().buildFlatNodes(args), aNodes = [];
+               nodes = this.getModel().buildFlatNodes(args);
+
+           var aNodes = [];
 
            for (var i = args.begin; i < args.end; i++)
-              aNodes.push(nodes[i] || null);
+              aNodes.push(nodes && nodes[i] ? nodes[i] : null);
 
            console.log("root.model.hListBinding#getNodes(" + iStartIndex + ", " + iLength + ", " + iThreshold + ") res = " + aNodes.length);
 

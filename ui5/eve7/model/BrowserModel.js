@@ -27,6 +27,10 @@ sap.ui.define([
             this.threshold = 100; // default threshold to prefetch items
         },
 
+        assignTreeTable: function(t) {
+           this.treeTable = t;
+        },
+
         /* Method can be used when complete hierarchy is ready and can be used directly */
         setFullModel: function(topnode) {
            this.fullModel = true;
@@ -34,6 +38,7 @@ sap.ui.define([
            this.h.childs = [ topnode ];
            topnode.expanded = true;
            this.reset_nodes = true;
+           delete this.noData;
            this.scanShifts();
            if (this.oBinding)
               this.oBinding.checkUpdate(true);
@@ -43,11 +48,17 @@ sap.ui.define([
            delete this.h.childs;
            delete this.h.nchilds;
            delete this.fullModel;
+           delete this.noData;
            this.reset_nodes = true;
            if (this.oBinding)
               this.oBinding.checkUpdate(true);
         },
 
+        setNoData: function(on) {
+           this.noData = on;
+           if (this.oBinding)
+              this.oBinding.checkUpdate(true);
+        },
 
         bindTree: function(sPath, oContext, aFilters, mParameters, aSorters) {
            Log.warning("root.model.hModel#bindTree() " + sPath);
@@ -59,6 +70,7 @@ sap.ui.define([
         },
 
         getLength: function() {
+           if (this.noData) return 0;
            return this.getProperty("/length");
         },
 
@@ -70,7 +82,7 @@ sap.ui.define([
 
            while (names.length > 0) {
               var name = names.shift(), find = false;
-              if (!name) continue;
+              if (!name) continue; // ignore start or stop slash
 
               for (var k=0;k<curr.childs.length;++k) {
                  if (curr.childs[k].name == name) {
@@ -85,6 +97,46 @@ sap.ui.define([
            return curr;
         },
 
+        /** expand node by given path, when path not exists - try to send request */
+        expandNodeByPath: function(path) {
+           if (!path || (typeof path !== "string") || (path == "/")) return -1;
+
+           var names = path.split("/"), curr = this.h, currpath = "/";
+
+           while (names.length > 0) {
+              var name = names.shift(), find = false;
+              if (!name) continue; // ignore start or stop slash
+
+              if (!curr.childs) {
+                 // request childs for current element
+                 // TODO: we do not know child index, but simply can suply search child as argument
+                 if (!this.fullModel && curr.nchilds) {
+                    curr.expanded = true;
+                    this.reset_nodes = true;
+                    this._expanding_path = path;
+                    this.submitRequest(curr, currpath, "expanding");
+                    break;
+                 }
+                 return -1;
+              }
+
+              for (var k=0;k<curr.childs.length;++k) {
+                 if (curr.childs[k].name == name) {
+                    this.reset_nodes = true;
+                    curr.expanded = true;
+                    curr = curr.childs[k];
+                    find = true;
+                    break;
+                 }
+              }
+
+              if (!find) return -1;
+
+              currpath += curr.name + "/";
+           }
+
+           return this.scanShifts(curr);
+        },
 
         sendFirstRequest: function(websocket) {
            this._websocket = websocket;
@@ -95,6 +147,12 @@ sap.ui.define([
         // submit next request to the server
         // directly use web socket, later can be dedicated channel
         submitRequest: function(elem, path, first, number) {
+
+           if (first === "expanding") {
+              first = 0;
+           } else {
+              delete this._expanding_path;
+           }
 
            if (!this._websocket || elem._requested || this.fullModel) return;
            elem._requested = true;
@@ -155,6 +213,15 @@ sap.ui.define([
            if (this.loadDataCounter == 0)
               if (this.oBinding)
                  this.oBinding.checkUpdate(true);
+
+           if (this._expanding_path) {
+              var d = this._expanding_path;
+              delete this._expanding_path;
+              var index = this.expandNodeByPath(d);
+              if ((index > 0) && this.treeTable)
+                 this.treeTable.setFirstVisibleRow(Math.max(0, index - Math.round(this.treeTable.getVisibleRowCount()/2)));
+           }
+
         },
 
         // return element of hierarchical structure by TreeTable index
@@ -166,11 +233,14 @@ sap.ui.define([
         },
 
         // function used to calculate all ids shifts and total number of elements
-        scanShifts: function() {
+        // if element specified - returns index of that element
+        scanShifts: function(for_elem) {
 
-           var id = 0, full = this.fullModel;
+           var id = 0, full = this.fullModel, res = -1;
 
            function scan(lvl, elem) {
+
+              if (elem === for_elem) res = id;
 
               if (lvl >= 0) id++;
 
@@ -208,7 +278,7 @@ sap.ui.define([
 
            this.setProperty("/length", id);
 
-           return id;
+           return for_elem ? res : id;
         },
 
         // main  method to create flat list of nodes - only whose which are specified in selection
@@ -218,6 +288,8 @@ sap.ui.define([
         //    args.threshold - extra elements (before/after) which probably should be prefetched
         // returns holder object with all existing nodes
         buildFlatNodes: function(args) {
+
+           if (this.noData) return null;
 
            var pthis = this,
                id = 0,            // current id, at the same time number of items

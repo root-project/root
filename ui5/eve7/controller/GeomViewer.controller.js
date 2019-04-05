@@ -170,6 +170,9 @@ sap.ui.define(['sap/ui/core/Component',
                 }));
 
             } else {
+
+               this.model.assignTreeTable(t);
+
               /* t.addColumn(new tableColumn({
                   label: "Description",
                   template: new HorizontalLayout({
@@ -236,18 +239,17 @@ sap.ui.define(['sap/ui/core/Component',
             // avoid multiple time submitting same request
             if (this._last_hover_req === req) return;
             this._last_hover_req = req;
-            console.log('HOVER:' + req);
             return this.websocket.Send("HOVER:" + req);
          }
 
          if (this.geo_painter && this.geo_clones) {
+            var fullpath = "";
 
-            // extract directly ids for given row
-            var ids = (is_enter && prop && prop.end_node) ? this.getRowIds(row) : null;
+            if (prop && prop.fullpath && is_enter)
+               fullpath = prop.fullpath.substr(1, prop.fullpath.length-2);
 
             // remember current element with hover stack
-            this._hover_stack = this.geo_clones.MakeStackByIds(ids);
-
+            this._hover_stack = fullpath ? this.geo_clones.FindStackByName(fullpath) : null;
             this.geo_painter.HighlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
          }
       },
@@ -298,51 +300,14 @@ sap.ui.define(['sap/ui/core/Component',
             return this.websocket.Send("HIGHL:" + req);
          }
 
-         if (this.geo_clones) {
-            var ids = this.geo_clones.MakeIdsByStack(geo_stack);
-            return this.highlighRowWithIds(ids);
+         var hpath = "---";
+
+         if (this.geo_clones && geo_stack) {
+            var info = this.geo_clones.ResolveStack(geo_stack);
+            if (info && info.name) hpath = "/" + info.name + "/";
          }
 
-         // old code, can be removed soon
-
-         var rows = this.getView().byId("treeTable").getRows(), best_cmp = 0, best_indx = 0;
-
-         for (var i=0;i<rows.length;++i) {
-            rows[i].$().css("background-color", "");
-            if (geo_stack) {
-               var cmp = JSROOT.GEO.CompareStacks(geo_stack, this.getRowStack(rows[i]));
-               if (cmp > best_cmp) { best_cmp = cmp; best_indx = i; }
-            }
-         }
-
-         if (best_cmp > 0)
-            rows[best_indx].$().css("background-color", best_cmp == geo_stack.length ? "yellow" : "lightgrey");
-      },
-
-      /** compare row ids which id to be selected */
-      compareIds: function(rowids, hids) {
-         if (!rowids || !hids) return 0;
-         var len = Math.min(rowids.length, hids.length);
-         for (var k=0;k<len;++k)
-            if (rowids[k] !== hids[k])
-               return k-1;
-         return len;
-      },
-
-      highlighRowWithIds: function(hids) {
-         var rows = this.getView().byId("treeTable").getRows(), best_cmp = 0, best_indx = 0;
-
-         for (var i=0;i<rows.length;++i) {
-            rows[i].$().css("background-color", "");
-            if (hids) {
-               var rowids = this.getRowIds(rows[i]);
-               var cmp = this.compareIds(rowids, hids);
-               if (cmp > best_cmp) { best_cmp = cmp; best_indx = i; }
-            }
-         }
-
-         if (best_cmp > 0)
-            rows[best_indx].$().css("background-color", best_cmp == hids.length ? "yellow" : "lightgrey");
+         this.highlighRowWithPath(hpath);
       },
 
       highlighRowWithPath: function(path) {
@@ -355,10 +320,11 @@ sap.ui.define(['sap/ui/core/Component',
                    prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
                    cmp = 0;
 
-               if (prop.fullpath == path) cmp = 1000; else
-               if (path.indexOf(prop.fullpath) == 0) cmp = prop.fullpath.length;
-
-               if (cmp > best_cmp) { best_cmp = cmp; best_indx = i; }
+               if (prop && prop.fullpath) {
+                  if (prop.fullpath == path) cmp = 1000; else
+                  if (path.indexOf(prop.fullpath) == 0) cmp = prop.fullpath.length;
+                  if (cmp > best_cmp) { best_cmp = cmp; best_indx = i; }
+               }
             }
          }
 
@@ -620,13 +586,19 @@ sap.ui.define(['sap/ui/core/Component',
        * later should be done differently */
       parseDescription: function(msg, is_original) {
 
-         var descr = JSON.parse(msg);
+         var descr = JSON.parse(msg), br = this.byId("treeTable");
 
          if (this.plainModel) {
             this.buildTree(descr, is_original);
-            this.byId("treeTable").expandToLevel(is_original ? 1 : 99);
+            br.expandToLevel(is_original ? 1 : 99);
          } else {
-            var topnode = this.buildTreeNode(descr, [], 0);
+
+            br.setNoData("");
+            br.setShowNoData(false);
+
+            var topnode = this.buildTreeNode(descr, [], 0, is_original ? 1 : 999);
+            if (this.standalone)
+               this.fullModel = topnode;
 
             this.model.setFullModel(topnode);
          }
@@ -675,13 +647,16 @@ sap.ui.define(['sap/ui/core/Component',
 
       },
 
-      buildTreeNode: function(nodes, cache, indx) {
+      buildTreeNode: function(nodes, cache, indx, expand_lvl) {
          var tnode = cache[indx];
          if (tnode) return tnode;
+         if (!expand_lvl) expand_lvl = 0;
 
          var node = nodes[indx];
 
          cache[indx] = tnode = { name: node.name, id: indx, color_visible: false, node_visible: node.vis != 0 };
+
+         if (expand_lvl > 0) tnode.expanded = true;
 
          if (node.color) {
             tnode.color = "rgb(" + node.color + ")";
@@ -692,7 +667,7 @@ sap.ui.define(['sap/ui/core/Component',
             tnode.childs = [];
             tnode.nchilds = node.chlds.length;
             for (var k=0;k<tnode.nchilds;++k)
-               tnode.childs.push(this.buildTreeNode(nodes, cache, node.chlds[k]));
+               tnode.childs.push(this.buildTreeNode(nodes, cache, node.chlds[k], expand_lvl-1));
          } else {
             tnode.end_node = true; // TODO: no need for such flag
          }
@@ -739,45 +714,70 @@ sap.ui.define(['sap/ui/core/Component',
          var br = this.byId("treeTable");
          br.collapseAll();
          if (!text || (text === "RESET")) {
-            this.data.nodes = this.originalNodes || null;
+            br.setNoData("");
+            br.setShowNoData(false);
+
+            if (this.plainModel) {
+               this.data.nodes = this.originalNodes || null;
+               this.model.refresh();
+               br.expandToLevel(1);
+            } else {
+               this.model.setNoData(false);
+               this.model.refresh();
+            }
+
          } else {
-            this.data.nodes = [ { title: text } ];
+            br.setNoData(text);
+            br.setShowNoData(true);
+            if (this.plainModel) {
+               this.data.nodes = null;
+            } else {
+               this.model.setNoData(true);
+            }
+            this.model.refresh();
          }
-         this.model.refresh();
-         br.expandToLevel(1);
       },
 
-      /** Show found nodes in the browser */
+      /** Show found nodes in the browser, used for offline */
       showFoundNodes: function(matches) {
-         if (!matches)
-            return this.showTextInBrowser();
+
+         var br = this.byId("treeTable");
 
          var nodes = [];
          for (var k=0;k<matches.length;++k)
              this.appendStackToTree(nodes, matches[k].stack, matches[k].color);
-         this.data.nodes = [ nodes[0] ];
 
-         this.model.refresh();
-         if (matches.length < 100)
-            this.byId("treeTable").expandToLevel(99);
+         if (this.plainModel) {
+            this.data.nodes = [ nodes[0] ];
+            this.model.refresh();
+            if (matches.length < 100)
+               br.expandToLevel(99);
+         } else {
+            br.setNoData("");
+            br.setShowNoData(false);
+            this.model.setFullModel(nodes[0]);
+         }
       },
 
       /** Here one tries to append only given stack to the tree
         * used to build partial tree with visible objects
         * Used only in standalone mode */
       appendStackToTree: function(tnodes, stack, color) {
-         var prnt = null, node = null;
+         var prnt = null, node = null, path = "/";
          for (var i=-1;i<stack.length;++i) {
             var indx = (i<0) ? 0 : node.chlds[stack[i]];
             node = this.geo_clones.nodes[indx];
+            path += node.name + "/";
             var tnode = tnodes[indx];
             if (!tnode)
-               tnodes[indx] = tnode = { name: node.name, id: indx, color_visible: false, node_visible: true };
+               tnodes[indx] = tnode = { name: node.name, fullpath: path, id: indx, color_visible: false, node_visible: true };
 
             if (prnt) {
                if (!prnt.childs) prnt.childs = [];
                if (prnt.childs.indexOf(tnode) < 0)
                   prnt.childs.push(tnode);
+               prnt.nchilds = prnt.childs.length;
+               prnt.expanded = true;
             }
             prnt = tnode;
          }
@@ -852,56 +852,14 @@ sap.ui.define(['sap/ui/core/Component',
       /** method called from geom painter when specific node need to be activated in the browser
        * Due to complex indexing in TreeTable it is not trivial to select special node */
       activateInTreeTable: function(itemnames, force) {
-         if (!force || !itemnames) return;
 
-         var stack = this.geo_clones.FindStackByName(itemnames[0]);
-         if (!stack) return;
+         if (!force || !itemnames || !this.geo_clones || this.plainModel) return;
 
-         function test_match(st) {
-            if (!st || (st.length > stack.length)) return -1;
-            for (var k=0;k<stack.length;++k) {
-               if (k>=st.length) return k;
-               if (stack[k] !== st[k]) return -1; // either stack matches completely or not at all
-            }
-            return stack.length;
-         }
+         var index = this.model.expandNodeByPath(itemnames[0]),
+             tt = this.byId("treeTable");
 
-         // now start searching items
-
-         var tt = this.getView().byId("treeTable"),
-             rows = tt.getRows(), best_match = -1, best_row = 0;
-
-         for (var i=0;i<rows.length;++i) {
-
-            var rstack = this.getRowStack(rows[i]);
-            var match = test_match(rstack);
-
-            if (match > best_match) {
-               best_match = match;
-               best_row = rows[i].getIndex();
-            }
-         }
-
-         // start from very beginning
-         if (best_match < 0) {
-            tt.collapseAll();
-            best_match = 0;
-            best_row = 0;
-         }
-
-         if (best_match < stack.length) {
-            var ii = best_row;
-            // item should remain as is, but all childs can be below limit
-            tt.expand(ii);
-
-            while (best_match < stack.length) {
-               ii += stack[best_match++] + 1; // stack is index in child array, can use it here
-               if (ii > tt.getFirstVisibleRow() + tt.getVisibleRowCount()) {
-                  tt.setFirstVisibleRow(Math.max(0, ii - Math.round(tt.getVisibleRowCount()/2)));
-               }
-               tt.expand(ii);
-            }
-         }
+         if ((index > 0) && tt)
+            tt.setFirstVisibleRow(Math.max(0, index - Math.round(tt.getVisibleRowCount()/2)));
       },
 
       /** Submit node search query to server, ignore in offline case */
@@ -930,18 +888,29 @@ sap.ui.define(['sap/ui/core/Component',
                return node.name.indexOf(query)==0;
             });
 
-            this.showFoundNodes(lst);
-            this.paintFoundNodes(lst);
+            if (lst && lst.length) {
+               this.showFoundNodes(lst);
+               this.paintFoundNodes(lst);
+            } else {
+               this.showTextInBrowser("No found nodes");
+               this.paintFoundNodes(null);
+            }
 
          } else {
-            this.showTextInBrowser();
-            this.paintFoundNodes(null);
+            this.onRealoadPress();
          }
       },
 
       /** Reload geometry description and base drawing, normally not required */
       onRealoadPress: function (oEvent) {
-         this.websocket.Send("RELOAD");
+         if (this.standalone) {
+            this.showTextInBrowser();
+            this.paintFoundNodes(null);
+            if (!this.plainModel)
+               this.model.setFullModel(this.fullModel);
+         } else {
+            this.websocket.Send("RELOAD");
+         }
       },
 
       /** Quit ROOT session */
