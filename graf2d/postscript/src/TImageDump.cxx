@@ -316,6 +316,10 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       col = gROOT->GetColor(fMarkerColor);
       if (!col) return;
    }
+   if (col->GetAlpha()<1.) {
+      if (ms==8)  ms = 108;
+      if (ms==20) ms = 120;
+   }
 
    // Draw the marker according to the type
    Short_t ix,iy;
@@ -365,6 +369,11 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       case 8:
       case 20:
          fImage->DrawCircle(ix, iy, Int_t(msize/2), col->AsHexString(), -1);
+         break;
+      case 108:
+      case 120:
+         for (int i=Int_t(msize/2); i>0; i--) fImage->DrawCircle(ix, iy, i, col->AsHexString(), 1);
+         fImage->PutPixel((UInt_t)ix, (UInt_t)iy, col->AsHexString());
          break;
       // Square
       case 21:
