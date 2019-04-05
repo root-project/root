@@ -45,6 +45,7 @@ void df102_NanoAODDimuonAnalysis()
    auto df_2mu = df.Filter("nMuon == 2", "Events with exactly two muons");
    auto df_os = df_2mu.Filter("Muon_charge[0] != Muon_charge[1]", "Muons with opposite charge");
 
+   // Compute invariant mass of the dimuon system
    auto df_mass = df_os.Define("Dimuon_mass", InvariantMass<float>, {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass"});
 
    // Make histogram of dimuon mass spectrum
