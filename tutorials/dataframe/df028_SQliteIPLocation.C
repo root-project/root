@@ -25,21 +25,20 @@ void df028_SQliteIPLocation() {
    auto rdf = ROOT::RDF::MakeSqliteDataFrame( "http://root.cern/files/root_download_stats.sqlite", "SELECT * FROM accesslog;" );
 
    auto f = TFile::Open("http://root.cern.ch/files/WM.root");
-   auto WM = f->Get<TH2Poly>("WMUSA");
+   auto worldMap = f->Get<TH2Poly>("WMUSA");
 
-   auto fillIPLocation = [&WM] ( const std::string &sLongitude, const std::string &sLatitude ) {
+   auto fillIPLocation = [&worldMap] ( const std::string &sLongitude, const std::string &sLatitude ) {
       if (!( sLongitude == "" ) && !( sLatitude == "" )) {
          auto latitude = std::stof(sLatitude);
          auto longitude = std::stof(sLongitude);
-         WM->Fill(longitude, latitude);
+         worldMap->Fill(longitude, latitude);
       }
    };
 
    rdf.Foreach( fillIPLocation, { "IPLongitude", "IPLatitude" } );
 
-   auto locationHistogram = new TCanvas();
-
-   locationHistogram->SetLogz();
-   locationHistogram->ToggleEventStatus();
-   WM->DrawClone("colz");
+   auto worldMapCanvas = new TCanvas();
+   worldMapCanvas->SetLogz();
+   worldMap->SetTitle("ROOT Downloads per Location (GitHub exluded);Longitude;Latitude");
+   worldMap->DrawClone("colz");
 }
