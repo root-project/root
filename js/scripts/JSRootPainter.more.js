@@ -7,7 +7,7 @@
       define( ['JSRootPainter', 'd3', 'JSRootMath'], factory );
    } else
    if (typeof exports === 'object' && typeof module !== 'undefined') {
-       factory(require("./JSRootCore.js"), require("./d3.min.js"), require("./JSRootMath.js"));
+       factory(require("./JSRootCore.js"), require("d3"), require("./JSRootMath.js"));
    } else {
 
       if (typeof d3 != 'object')
@@ -938,10 +938,10 @@
       }
    }
 
-   TGraphPainter.prototype.CreateHistogram = function() {
+   TGraphPainter.prototype.CreateHistogram = function(only_set_ranges) {
       // bins should be created when calling this function
 
-      var xmin = this.xmin, xmax = this.xmax, ymin = this.ymin, ymax = this.ymax;
+      var xmin = this.xmin, xmax = this.xmax, ymin = this.ymin, ymax = this.ymax, set_x = true, set_y = true;
 
       if (xmin >= xmax) xmax = xmin+1;
       if (ymin >= ymax) ymax = ymin+1;
@@ -962,7 +962,10 @@
 
       var histo = graph.fHistogram;
 
-      if (histo) {
+      if (only_set_ranges) {
+         set_x = only_set_ranges.indexOf("x") >= 0;
+         set_y = only_set_ranges.indexOf("y") >= 0;
+      } else if (histo) {
          // make logic like in the TGraph::GetHistogram
          if (!graph.TestBit(kResetHisto)) return histo;
          graph.InvertBit(kResetHisto);
@@ -971,16 +974,43 @@
          histo.fName = graph.fName + "_h";
          histo.fTitle = graph.fTitle;
          histo.fBits = histo.fBits | JSROOT.TH1StatusBits.kNoStats;
+         this._own_histogram = true;
       }
 
-      histo.fXaxis.fXmin = uxmin;
-      histo.fXaxis.fXmax = uxmax;
-      histo.fYaxis.fXmin = minimum;
-      histo.fYaxis.fXmax = maximum;
-      histo.fMinimum = minimum;
-      histo.fMaximum = maximum;
+      if (set_x) {
+         histo.fXaxis.fXmin = uxmin;
+         histo.fXaxis.fXmax = uxmax;
+      }
+      if (set_y) {
+         histo.fYaxis.fXmin = minimum;
+         histo.fYaxis.fXmax = maximum;
+         histo.fMinimum = minimum;
+         histo.fMaximum = maximum;
+      }
 
       return histo;
+   }
+
+   /** @summary Check if user range can be unzommed
+    * @desc Used when graph points covers larger range than provided histogram
+    * @private*/
+   TGraphPainter.prototype.UnzoomUserRange = function(dox, doy, doz) {
+      var graph = this.GetObject();
+      if (this._own_histogram || !graph) return false;
+
+      var histo = graph.fHistogram;
+      if (!histo) return false;
+
+      var arg = "";
+      if (dox && (histo.fXaxis.fXmin > this.xmin) || (histo.fXaxis.fXmax < this.xmax)) arg += "x";
+      if (doy && (histo.fYaxis.fXmin > this.ymin) || (histo.fYaxis.fXmax < this.ymax)) arg += "y";
+      if (!arg) return false;
+
+      this.CreateHistogram(arg);
+      var hpainter = this.main_painter();
+      if (hpainter) hpainter.CreateAxisFuncs(false);
+
+      return true;
    }
 
    /** Returns true if graph drawing can be optimize */
@@ -1785,8 +1815,13 @@
 
       // if our own histogram was used as axis drawing, we need update histogram  as well
       if (this.axes_draw) {
-         var main = this.main_painter();
-         main.UpdateObject(obj.fHistogram || this.CreateHistogram());
+         var main = this.main_painter(),
+             fp = this.frame_painter();
+
+         // if zoom was changed - do not update histogram
+         if (!fp.zoom_changed_interactive)
+            main.UpdateObject(obj.fHistogram || this.CreateHistogram());
+
          main.GetObject().fTitle = graph.fTitle; // copy title
       }
 

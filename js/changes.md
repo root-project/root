@@ -1,21 +1,32 @@
 # JSROOT changelog
 
 ## Changes in dev
-1. Upgrade three.js 86 -> 97
+1. Upgrade three.js 86 -> 102, use SoftwareRenderer instead of CanvasRenderer
 2. Upgrade d3.js 4.4.4 -> 5.7.0
 3. Many adjustment with new TWebCanvas
 4. Implement update of TF2 drawings, see tutorials/graphics/anim.C
-5. Use gStyle attributes to draw histogram title 
+5. Use gStyle attributes to draw histogram title
 6. Add support of TProfile2Poly class
 7. Support eve7 geometry viewer - render data generated in ROOT itself
 8. Provide initial WebVR support (#176), thanks to Diego Marcos (@dmarcos)
-9. Improve windows handling in flex(ible) layout    
-10. Fix - support clipping for tracks and points in geo painter
-11. Fix - drawing of TGeoNode with finder   
-12. Fix - key press events processed only in actvie pad (ROOT-9128)  
-13. Move most of ui5-specific code into ROOT repository, where it will be maintained 
+9. Improve windows handling in flex(ible) layout
+10. Use requestAnimationFrame when do monitoring, improves performance
+11. Better position for text in TH2Poly drawings
+12. Use d3.js and three.js from npm when running with node.js
+13. Fix - support clipping for tracks and points in geo painter
+14. Fix - drawing of TGeoNode with finder
+15. Fix - key press events processed only in active pad (ROOT-9128)
+16. Fix - use X0/Y0 in xtru shape (#182), thanks to @altavir
+17. Move most of ui5-specific code into ROOT repository, where it will be maintained
 
- 
+
+## Changes in 5.6.3
+1. Fix - support clipping for tracks and points in geo painter
+2. Fix - geometry with TGeoNodeOffset was not correctly drawn
+3. Fix - use proper formatting for entries and integral (#179)
+4. Fix - TTree::Draw for 3d histogram was not properly performed
+
+
 ## Changes in 5.6.2
 1. Fix - correctly handle negative parameter values in TF1/TF2
 
@@ -29,15 +40,15 @@
 
 
 ## Changes in 5.6.0
-1. By drawing outline speed up (factor 10) canvas with many small sub-pads 
+1. By drawing outline speed up (factor 10) canvas with many small sub-pads
 2. Let configure user click and double-click handlers, extend tooltip.htm example
-3. Implement workaround for standard THREE.SVGRenderer - no need for patched version  
+3. Implement workaround for standard THREE.SVGRenderer - no need for patched version
 4. When producing 3D graphical images in batch, use normal THREE.CanvasRenderer
 5. Use WebGL renderer in Chrome headless mode for 3D images generation
 6. Provide possibility to create SVG files for canvas or frame (#172)
 7. Support text drawing with TH1 bar option
 8. Fix - when drawing text, reserve extra y range to show it correctly
-9. Migrate to Node.js 8, do not support older versions 
+9. Migrate to Node.js 8, do not support older versions
 
 
 ## Changes in 5.5.2
@@ -51,7 +62,7 @@
 2. Fix - show RCanvas title
 3. New - implement 'nocache' option for JSROOT scripts loading. When specified in URL with
    JSRootCore.js script, tries to avoid scripts caching problem by adding stamp parameter to all URLs
-4. New - provide simple drawing for TObjString (#164) 
+4. New - provide simple drawing for TObjString (#164)
 
 
 ## Changes in 5.5.0
@@ -130,7 +141,7 @@
    - let combine "L" or "C" TGraph draw option with others
    - correct positioning of custom axis labels
    - correctly toggle lin/log axes in lego plot
-   - let correctly change marker attributes interactively 
+   - let correctly change marker attributes interactively
 
 
 ## Changes in 5.3.5
@@ -147,7 +158,7 @@
 
 
 ## Changes in 5.3.3
-1. Use latest jsdom and mathjax-node packages (Node.js only) 
+1. Use latest jsdom and mathjax-node packages (Node.js only)
 
 
 ## Changes in 5.3.2

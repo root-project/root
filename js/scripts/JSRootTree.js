@@ -232,7 +232,8 @@
          }
       }
 
-      return false;
+      // unreachable code
+      // return false;
    }
 
    ArrayIterator.prototype.reset = function() {
