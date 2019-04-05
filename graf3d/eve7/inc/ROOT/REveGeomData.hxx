@@ -171,8 +171,6 @@ class REveGeomDescription {
    std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
    std::string fDrawOptions;        ///< default draw options for client
    std::vector<REveGeomNode> fDesc; ///< converted description, send to client
-   std::vector<REveGeomNodeBase> fFound; ///<! hierarchy of nodes, used for search
-   std::vector<int> fFoundMap;           ///<! mapping between nodeid - > foundid
 
    int fTopDrawNode{0};             ///<! selected top node
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
@@ -248,7 +246,7 @@ public:
 
    std::vector<int> MakeStackByIds(const std::vector<int> &ids);
 
-   std::vector<int> MakeIdsByStack(const std::vector<int> &stack, bool ignore_found = false);
+   std::vector<int> MakeIdsByStack(const std::vector<int> &stack);
 
    std::vector<int> MakeStackByPath(const std::string &path);
 

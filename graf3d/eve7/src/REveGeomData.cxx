@@ -868,10 +868,6 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    json.clear();
    binary.clear();
 
-   // structure of found items
-   fFound.clear();
-   fFoundMap.clear();
-
    if (find.empty()) {
       hjson = "FOUND:RESET";
       return 0;
@@ -948,15 +944,17 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    // finally we should create data for streaming to the client
    // it includes list of visible nodes and rawdata (if there is enough space)
 
-   // these are only selected nodes to produce hierarchy
-   fFoundMap.resize(fDesc.size(), -1);
 
-   fFound.emplace_back(0);
-   fFound[0].vis = fDesc[0].vis;
-   fFound[0].name = fDesc[0].name;
-   fFound[0].color = fDesc[0].color;
-   fFound[0].sortid = 0; // back-reference to original nodeid
-   fFoundMap[0] = 0;
+   std::vector<REveGeomNodeBase> found_desc; ///<! hierarchy of nodes, used for search
+   std::vector<int> found_map(fDesc.size(), -1);   ///<! mapping between nodeid - > foundid
+
+   // these are only selected nodes to produce hierarchy
+
+   found_desc.emplace_back(0);
+   found_desc[0].vis = fDesc[0].vis;
+   found_desc[0].name = fDesc[0].name;
+   found_desc[0].color = fDesc[0].color;
+   found_map[0] = 0;
 
    ResetRndrInfos();
 
@@ -971,22 +969,21 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
       int prntid = 0;
       for (auto &s : stack) {
          int chldid = fDesc[prntid].chlds[s];
-         if (fFoundMap[chldid] <= 0) {
-            int newid = fFound.size();
-            fFound.emplace_back(newid);
-            fFoundMap[chldid] = newid; // re-map into reduced hierarchy
+         if (found_map[chldid] <= 0) {
+            int newid = found_desc.size();
+            found_desc.emplace_back(newid); // potentially original id can be used here
+            found_map[chldid] = newid; // re-map into reduced hierarchy
 
-            fFound.back().vis = fDesc[chldid].vis;
-            fFound.back().name = fDesc[chldid].name;
-            fFound.back().color = fDesc[chldid].color;
-            fFound.back().sortid = chldid; // back-reference to original nodeid
+            found_desc.back().vis = fDesc[chldid].vis;
+            found_desc.back().name = fDesc[chldid].name;
+            found_desc.back().color = fDesc[chldid].color;
          }
 
-         auto pid = fFoundMap[prntid];
-         auto cid = fFoundMap[chldid];
+         auto pid = found_map[prntid];
+         auto cid = found_map[chldid];
 
          // now add entry into childs lists
-         auto &pchlds = fFound[pid].chlds;
+         auto &pchlds = found_desc[pid].chlds;
          if (std::find(pchlds.begin(), pchlds.end(), cid) == pchlds.end())
             pchlds.emplace_back(cid);
 
@@ -1018,7 +1015,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    });
 
    hjson = "FESCR:";
-   hjson.append(TBufferJSON::ToJSON(&fFound, 103).Data());
+   hjson.append(TBufferJSON::ToJSON(&found_desc, 103).Data());
 
    CollectNodes(drawing);
 
@@ -1068,15 +1065,6 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByIds(const s
       int prntid = nodeid;
       nodeid = ids[k];
 
-      if (fFound.size() > 0) {
-         if (nodeid >= (int) fFound.size()) {
-            printf("Wrong nodeid %d in found array\n", nodeid);
-            stack.clear();
-            return stack;
-         }
-         nodeid = fFound[nodeid].sortid; // extract reference to original node
-      }
-
       if (nodeid >= (int) fDesc.size()) {
          printf("Wrong node id %d\n", nodeid);
          stack.clear();
@@ -1122,7 +1110,7 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeStackByPath(const 
 /// Produce list of node ids for given stack
 /// If found nodes preselected - use their ids
 
-std::vector<int> ROOT::Experimental::REveGeomDescription::MakeIdsByStack(const std::vector<int> &stack, bool ignore_found)
+std::vector<int> ROOT::Experimental::REveGeomDescription::MakeIdsByStack(const std::vector<int> &stack)
 {
    std::vector<int> ids;
 
@@ -1133,23 +1121,8 @@ std::vector<int> ROOT::Experimental::REveGeomDescription::MakeIdsByStack(const s
    for (auto s : stack) {
       auto &chlds = fDesc[nodeid].chlds;
       if (s >= (int) chlds.size()) { failure = true; break; }
-      if ((fFound.size() == 0) || ignore_found) {
-         ids.emplace_back(chlds[s]);
-      } else {
-         // parent node in "found" structure
-         auto &prnt = fFound[fFoundMap[nodeid]];
-         failure = true;
-         // find if any child in reduced structure match with given id
-         for (auto ch : prnt.chlds) {
-            auto &chld = fFound[ch];
-            if (chld.sortid == chlds[s]) {
-               ids.emplace_back(chld.id);
-               failure = false;
-               break;
-            }
-         }
-         if (failure) break;
-      }
+
+      ids.emplace_back(chlds[s]);
 
       nodeid = chlds[s];
    }
@@ -1169,7 +1142,7 @@ std::string ROOT::Experimental::REveGeomDescription::MakePathByStack(const std::
 {
    std::string path;
 
-   auto ids = MakeIdsByStack(stack, true);
+   auto ids = MakeIdsByStack(stack);
    if (ids.size() > 0) {
       path = "/";
       for (auto &id : ids) {
