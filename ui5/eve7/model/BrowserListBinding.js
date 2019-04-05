@@ -69,7 +69,7 @@ sap.ui.define([
 
         // called by the TreeTable when a node is expanded/collapsed
         toggleIndex: function(iIndex) {
-            Log.warning("root.model.hListBinding#toggleIndex(" + iIndex + ")");
+            console.log("root.model.hListBinding#toggleIndex(" + iIndex + ")");
             if (this.getModel().toggleNode(iIndex))
                this.checkUpdate(true);
 
