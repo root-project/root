@@ -18,6 +18,7 @@
 #include <ROOT/REvePathMark.hxx>
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveLine.hxx>
+#include <ROOT/REveVSDStructs.hxx>
 
 #include "TPolyMarker3D.h"
 #include "TMarker.h"
@@ -70,9 +71,9 @@ public:
    REveTrack();
    REveTrack(TParticle *t, Int_t label, REveTrackPropagator *prop = nullptr);
    // VSD inputs
-   // REveTrack(REveMCTrack*  t, REveTrackPropagator* prop=0);
-   // REveTrack(REveRecTrack* t, REveTrackPropagator* prop=0);
-   // REveTrack(REveRecTrackD* t, REveTrackPropagator* prop=0);
+   REveTrack(REveMCTrack*  t, REveTrackPropagator* prop=0);
+   REveTrack(REveRecTrack* t, REveTrackPropagator* prop=0);
+   REveTrack(REveRecTrackD* t, REveTrackPropagator* prop=0);
    REveTrack(const REveTrack &t);
    virtual ~REveTrack();
 
