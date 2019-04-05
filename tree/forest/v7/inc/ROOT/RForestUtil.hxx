@@ -34,6 +34,21 @@ struct RForestTest {
   std::string s;
 };
 
+/**
+ * The fields in the data model tree can carry different structural information about the type system.
+ * Leaf fields contain just data, collection fields resolve to offset columns, record root fields have no
+ * materialization on the primitive column layer.
+ */
+enum EForestStructure {
+  kLeaf,
+  kCollection,
+  kRecord,
+  // unimplemented so far
+  kReference,
+  kOptional,
+  kVariant,
+};
+
 /// Integer type long enough to hold the maximum number of entries in a column
 using ForestSize_t = std::uint64_t;
 constexpr ForestSize_t kInvalidForestIndex = std::uint64_t(-1);
@@ -54,6 +69,11 @@ constexpr ClusterSize_t kInvalidClusterIndex(std::uint32_t(-1));
 /// Uniquely identifies a physical column within the scope of the current process, used to tag pages
 using ColumnId_t = std::int64_t;
 constexpr ColumnId_t kInvalidColumnId = -1;
+
+/// Distriniguishes elements of the same type within a descriptor, e.g. different fields
+using DescriptorId_t = std::uint64_t;
+constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);
+
 
 /// 64 possible flags to apply to all versioned entities (so far unused).
 using ForestFlags_t = std::uint64_t;

@@ -68,6 +68,8 @@ private:
    std::string fName;
    /// The C++ type captured by this field
    std::string fType;
+   /// The role of this field in the data model structure
+   EForestStructure fStructure;
    /// A field on a trivial type that maps as-is to a single column
    bool fIsSimple;
 
@@ -123,7 +125,7 @@ public:
    };
 
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
-   RFieldBase(std::string_view name, std::string_view type, bool isSimple);
+   RFieldBase(std::string_view name, std::string_view type, EForestStructure structure, bool isSimple);
    RFieldBase(const RFieldBase&) = delete;
    RFieldBase(RFieldBase&&) = default;
    RFieldBase& operator =(const RFieldBase&) = delete;
@@ -201,6 +203,7 @@ public:
 
    std::string GetName() const { return fName; }
    std::string GetType() const { return fType; }
+   EForestStructure GetStructure() const { return fStructure; }
    const RFieldBase* GetParent() const { return fParent; }
    bool IsSimple() const { return fIsSimple; }
 
@@ -218,7 +221,7 @@ public:
 /// The container field for a tree model, which itself has no physical representation
 class RFieldRoot : public Detail::RFieldBase {
 public:
-   RFieldRoot() : Detail::RFieldBase("", "", false /* isSimple */) {}
+   RFieldRoot() : Detail::RFieldBase("", "", EForestStructure::kRecord, false /* isSimple */) {}
    RFieldBase* Clone(std::string_view newName);
 
    void DoGenerateColumns() final {}
@@ -345,7 +348,8 @@ template <>
 class ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t> : public ROOT::Experimental::Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "ROOT::Experimental::ClusterSize_t"; }
-   explicit RField(std::string_view name) : Detail::RFieldBase(name, MyTypeName(), true /* isSimple */) {}
+   explicit RField(std::string_view name)
+     : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -392,7 +396,8 @@ template <>
 class ROOT::Experimental::RField<float> : public ROOT::Experimental::Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "float"; }
-   explicit RField(std::string_view name) : Detail::RFieldBase(name, MyTypeName(), true /* isSimple */) {}
+   explicit RField(std::string_view name)
+     : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -431,7 +436,8 @@ template <>
 class ROOT::Experimental::RField<double> : public ROOT::Experimental::Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "double"; }
-   explicit RField(std::string_view name) : Detail::RFieldBase(name, MyTypeName(), true /* isSimple */) {}
+   explicit RField(std::string_view name)
+     : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -469,7 +475,8 @@ template <>
 class ROOT::Experimental::RField<std::uint32_t> : public ROOT::Experimental::Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "std::uint32_t"; }
-   explicit RField(std::string_view name) : Detail::RFieldBase(name, MyTypeName(), true /* isSimple */) {}
+   explicit RField(std::string_view name)
+     : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, true /* isSimple */) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
@@ -516,7 +523,8 @@ private:
 public:
    static std::string MyTypeName() { return "std::string"; }
    explicit RField(std::string_view name)
-      : Detail::RFieldBase(name, MyTypeName(), false /* isSimple */), fIndex(0), fElemIndex(&fIndex) {}
+      : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, false /* isSimple */)
+      , fIndex(0), fElemIndex(&fIndex) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
