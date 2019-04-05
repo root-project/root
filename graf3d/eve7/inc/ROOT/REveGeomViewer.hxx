@@ -40,8 +40,6 @@ protected:
 
    std::vector<int> GetStackFromJson(const std::string &json, bool node_ids = false);
 
-   void SendHierarchy(unsigned connid);
-
    void SendGeometry(unsigned connid);
 
 public:
