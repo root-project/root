@@ -12,20 +12,28 @@ if(CMAKE_GENERATOR MATCHES Makefiles)
 endif()
 #-------------------------------------------------------------------------------
 #
-#  function ROOTTEST_ADD_TESTDIRS( )
+#  function ROOTTEST_ADD_TESTDIRS([EXCLUDED_DIRS] dir)
 #
 #  Scans all subdirectories for CMakeLists.txt files. Each subdirectory that
-#  contains a CMakeLists.txt file is then added as a subdirectory. 
+#  contains a CMakeLists.txt file is then added as a subdirectory.
 #-------------------------------------------------------------------------------
-function(ROOTTEST_ADD_TESTDIRS )
+function(ROOTTEST_ADD_TESTDIRS)
 
   set(dirs "")
-
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "EXCLUDED_DIRS" ${ARGN})
   set(curdir ${CMAKE_CURRENT_SOURCE_DIR})
 
-  file(GLOB found ${curdir} ${curdir}/*)
+  file(GLOB found_dirs ${curdir} ${curdir}/*)
 
-  foreach(f ${found})
+  # If there are excluded directories through EXCLUDED_DIRS,
+  # add_subdirectory() for them will not be applied
+  if(ARG_EXCLUDED_DIRS)
+    foreach(excluded_dir ${ARG_EXCLUDED_DIRS})
+      list(REMOVE_ITEM found_dirs "${CMAKE_CURRENT_SOURCE_DIR}/${excluded_dir}")
+    endforeach()
+  endif()
+
+  foreach(f ${found_dirs})
     if(IS_DIRECTORY ${f})
       if(EXISTS "${f}/CMakeLists.txt" AND NOT ${f} STREQUAL ${curdir})
         list(APPEND dirs ${f})
@@ -41,7 +49,7 @@ function(ROOTTEST_ADD_TESTDIRS )
     # create .rootrc in binary directory to avoid filling $HOME/.root_hist
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${d}/.rootrc "
 Rint.History:  .root_hist
-") 
+")
   endforeach()
 
 endfunction()
@@ -66,7 +74,7 @@ endfunction(ROOTTEST_SET_TESTOWNER)
 # Construct a target name for a given file <filename> and store its name into
 # <resultvar>. The target name is of the form:
 #
-#   roottest-<directorypath>-<filename_WE> 
+#   roottest-<directorypath>-<filename_WE>
 #
 #-------------------------------------------------------------------------------
 function(ROOTTEST_TARGETNAME_FROM_FILE resultvar filename)
@@ -105,7 +113,7 @@ function(ROOTTEST_ADD_AUTOMACROS)
       list(APPEND auto_depends ${dep})
     endif()
   endforeach()
-  
+
   foreach(am ${automacros})
     get_filename_component(auto_macro_filename ${am} NAME)
     get_filename_component(auto_macro_name  ${am} NAME_WE)
@@ -132,7 +140,7 @@ function(ROOTTEST_ADD_AUTOMACROS)
         set(arg_wf WILLFAIL)
       endif()
     endforeach()
-    
+
     set(selected 1)
     foreach(excl ${ARG_EXCLUDE})
       if(${auto_macro_name} MATCHES ${excl})
@@ -186,7 +194,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   set(root_compile_macro root.exe ${RootMacroBuildDefines} -q -l -b)
 
   get_filename_component(realfp ${filename} ABSOLUTE)
-  
+
   set(BuildScriptFile ${ROOTTEST_DIR}/scripts/build.C)
 
   set(BuildScriptArg \(\"${realfp}\",\"${ARG_BUILDLIB}\",\"${ARG_BUILDOBJ}\"\))
@@ -194,13 +202,13 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   set(compile_macro_command ${root_compile_macro}
                             ${BuildScriptFile}${BuildScriptArg}
                             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  
+
   if(ARG_DEPENDS)
     set(deps ${ARG_DEPENDS})
   endif()
 
   ROOTTEST_TARGETNAME_FROM_FILE(COMPILE_MACRO_TEST ${filename})
-  
+
   set(compile_target ${COMPILE_MACRO_TEST}-compile-macro)
 
   add_custom_target(${compile_target}
@@ -266,7 +274,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
                            LINKDEF ${ARG_LINKDEF}
                            OPTIONS ${ARG_OPTIONS}
                            DEPENDENCIES ${ARG_DEPENDS})
-  
+
   ROOTTEST_TARGETNAME_FROM_FILE(GENERATE_DICTIONARY_TEST ${dictname})
 
   set(GENERATE_DICTIONARY_TEST ${GENERATE_DICTIONARY_TEST}-build)
@@ -286,7 +294,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
                APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
 
   add_dependencies(${targetname_libgen} ${dictname})
-  
+
   add_test(NAME ${GENERATE_DICTIONARY_TEST}
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                                     --target  ${targetname_libgen}${fast}
@@ -380,7 +388,7 @@ endmacro(ROOTTEST_GENERATE_REFLEX_DICTIONARY)
 
 #-------------------------------------------------------------------------------
 #
-# macro ROOTTEST_GENERATE_EXECUTABLE(<executable> 
+# macro ROOTTEST_GENERATE_EXECUTABLE(<executable>
 #                                    [LIBRARIES lib1 lib2 ...]
 #                                    [COMPILE_FLAGS flag1 flag2 ...]
 #                                    [DEPENDS ...]  )
@@ -397,7 +405,7 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
       list(APPEND exec_sources ${exec_src_file})
     endif()
   endforeach()
-  
+
   add_executable(${executable} EXCLUDE_FROM_ALL ${exec_sources})
   set_target_properties(${executable} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
