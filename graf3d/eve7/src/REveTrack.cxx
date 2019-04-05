@@ -99,7 +99,6 @@ REveTrack::REveTrack(TParticle *t, Int_t label, REveTrackPropagator *prop):
    SetName(t->GetName());
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
 
 REveTrack::REveTrack(REveMCTrack* t, REveTrackPropagator* prop):
@@ -156,8 +155,6 @@ REveTrack::REveTrack(REveRecTrackD* t, REveTrackPropagator* prop) :
 {
    SetPropagator(prop);
    fMainColorPtr = &fLineColor;
-
-   SetName(t->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,10 +182,7 @@ REveTrack::REveTrack(REveRecTrack* t, REveTrackPropagator* prop) :
 {
    SetPropagator(prop);
    fMainColorPtr = &fLineColor;
-
-   SetName(t->GetName());
 }
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor. Track parameters are copied but the
