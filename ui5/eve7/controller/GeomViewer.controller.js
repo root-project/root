@@ -1,7 +1,6 @@
 sap.ui.define(['sap/ui/core/Component',
                'sap/ui/core/mvc/Controller',
                'sap/ui/core/Control',
-               'sap/ui/model/json/JSONModel',
                'sap/m/Text',
                'sap/m/CheckBox',
                'sap/ui/layout/Splitter',
@@ -9,7 +8,7 @@ sap.ui.define(['sap/ui/core/Component',
                "sap/ui/layout/HorizontalLayout",
                "sap/ui/table/Column",
                "rootui5/eve7/model/BrowserModel"
-],function(Component, Controller, CoreControl, JSONModel, mText, mCheckBox, Splitter, ResizeHandler,
+],function(Component, Controller, CoreControl, mText, mCheckBox, Splitter, ResizeHandler,
            HorizontalLayout, tableColumn, BrowserModel) {
 
    "use strict";
@@ -127,62 +126,32 @@ sap.ui.define(['sap/ui/core/Component',
          // if true, most operations are performed locally without involving server
          this.standalone = this.websocket.kind == "file";
 
-         this.data = { nodes: null };
-
-         this.plainModel = false;
-
-         if (this.plainModel) {
-            this.model = new JSONModel(this.data);
-            this.getView().setModel(this.model);
-         } else {
-
-            this.model = new BrowserModel();
-            this.getView().setModel(this.model);
-            // this.getView().byId("treeTable").setModel(this.model);
-
-            // this is code for the Components.js
-            // this.model = this.getView().getModel();
-            // console.log('USE PROVIDED MODEL', typeof this.model.sendFirstRequest)
-         }
-
-         // PART 2: instantiate Control and place it onto the page
-
          if (JSROOT.GetUrlOption('nobrowser') !== null) {
             // remove complete area - plain geometry drawing
             this.getView().byId("mainSplitter").removeAllContentAreas();
          } else {
 
+            // create model only for browser - no need for anybody else
+            this.model = new BrowserModel();
+
             var t = this.getView().byId("treeTable");
 
-            if (this.plainModel) {
+            t.setModel(this.model);
 
-               var vis_selected_handler = this.visibilitySelected.bind(this);
+            var vis_selected_handler = this.visibilitySelected.bind(this);
 
-               t.addColumn(new tableColumn({
-                  label: "Description",
-                  template: new HorizontalLayout({
-                     content: [
-                        new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}", select: vis_selected_handler }),
-                        new geomColorBox({color:"{color}", visible: "{color_visible}" }),
-                        new mText({text:"{name}", wrapping: false })
-                     ]
-                  })
-                }));
+            this.model.assignTreeTable(t);
 
-            } else {
-
-               this.model.assignTreeTable(t);
-
-              /* t.addColumn(new tableColumn({
-                  label: "Description",
-                  template: new HorizontalLayout({
-                     content: [
-                        new mText({text:"{name}", wrapping: false })
-                     ]
-                  })
-                }));
-                */
-            }
+            t.addColumn(new tableColumn({
+               label: "Description",
+               template: new HorizontalLayout({
+                  content: [
+                     //new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}", select: vis_selected_handler }),
+                     //new geomColorBox({color:"{color}", visible: "{color_visible}"}),
+                     new mText({text:"{name}", wrapping: false })
+                  ]
+               })
+            }));
 
             // catch re-rendering of the table to assign handlers
             t.addEventDelegate({
@@ -233,8 +202,6 @@ sap.ui.define(['sap/ui/core/Component',
              prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
          if (!this.standalone) {
-            console.log(is_enter ? 'HOVER' : "LEAVE", prop ? prop.fullpath : '--');
-
             var req = is_enter && prop && prop.fullpath && prop.isLeaf ? prop.fullpath : "OFF";
             // avoid multiple time submitting same request
             if (this._last_hover_req === req) return;
@@ -479,14 +446,13 @@ sap.ui.define(['sap/ui/core/Component',
       OnWebsocketOpened: function(handle) {
          this.isConnected = true;
 
+         if (this.model)
+            this.model.sendFirstRequest(this.websocket);
+
          // when connection established, checked if we can submit requested
          this.checkRequestMsg();
 
-         if (!this.plainModel) {
-            this.model.sendFirstRequest(this.websocket);
-         }
       },
-
 
       OnWebsocketClosed: function() {
          // when connection closed, close panel as well
@@ -508,7 +474,7 @@ sap.ui.define(['sap/ui/core/Component',
          var mhdr = msg.substr(0,6);
          msg = msg.substr(6);
 
-         console.log(mhdr, msg.length, msg.substr(0,70), "...");
+         // console.log(mhdr, msg.length, msg.substr(0,70), "...");
 
          switch (mhdr) {
          case "DESCR:":  // browser hierarchy
@@ -518,8 +484,7 @@ sap.ui.define(['sap/ui/core/Component',
             this.parseDescription(msg, false);
             break;
          case "BREPL:":   // browser reply
-            if (!this.plainModel)
-               this.model.processResponse(JSON.parse(msg));
+            this.model.processResponse(JSON.parse(msg));
             break;
          case "FOUND:":  // text message for found query
             this.showTextInBrowser(msg);
@@ -588,20 +553,14 @@ sap.ui.define(['sap/ui/core/Component',
 
          var descr = JSON.parse(msg), br = this.byId("treeTable");
 
-         if (this.plainModel) {
-            this.buildTree(descr, is_original);
-            br.expandToLevel(is_original ? 1 : 99);
-         } else {
+         br.setNoData("");
+         br.setShowNoData(false);
 
-            br.setNoData("");
-            br.setShowNoData(false);
+         var topnode = this.buildTreeNode(descr, [], 0, is_original ? 1 : 999);
+         if (this.standalone)
+            this.fullModel = topnode;
 
-            var topnode = this.buildTreeNode(descr, [], 0, is_original ? 1 : 999);
-            if (this.standalone)
-               this.fullModel = topnode;
-
-            this.model.setFullModel(topnode);
-         }
+         this.model.setFullModel(topnode);
       },
 
       /** TO BE CHANGED !!! When single node element is modified on the server side */
@@ -609,6 +568,10 @@ sap.ui.define(['sap/ui/core/Component',
          var arr = JSON.parse(msg), can_refresh = true;
 
          if (!arr || !this.geo_clones) return;
+
+         console.error('modifyDescription should be modified');
+
+         return;
 
          for (var k=0;k<arr.length;++k) {
             var moditem = arr[k];
@@ -642,7 +605,6 @@ sap.ui.define(['sap/ui/core/Component',
             this.model.refresh();
          } else {
             // rebuild complete tree for TreeBrowser
-            this.buildTree();
          }
 
       },
@@ -675,25 +637,6 @@ sap.ui.define(['sap/ui/core/Component',
          return tnode;
       },
 
-      /** Build complete tree of all existing nodes.
-       * Produced structure can be very large, therefore later
-       * one should move this functionality to the server */
-      buildTree: function(nodes, is_original) {
-
-         if (!nodes) return;
-
-         var cache = [];
-         this.data.nodes = [ this.buildTreeNode(nodes, cache, 0) ];
-
-         if (is_original) {
-            // remember nodes
-            this.originalCache = cache;
-            this.originalNodes = this.data.nodes;
-         }
-
-         this.model.refresh();
-      },
-
       /** search main drawn nodes for matches */
       findMatchesFromDraw: function(func) {
          var matches = [];
@@ -717,23 +660,13 @@ sap.ui.define(['sap/ui/core/Component',
             br.setNoData("");
             br.setShowNoData(false);
 
-            if (this.plainModel) {
-               this.data.nodes = this.originalNodes || null;
-               this.model.refresh();
-               br.expandToLevel(1);
-            } else {
-               this.model.setNoData(false);
-               this.model.refresh();
-            }
+            this.model.setNoData(false);
+            this.model.refresh();
 
          } else {
             br.setNoData(text);
             br.setShowNoData(true);
-            if (this.plainModel) {
-               this.data.nodes = null;
-            } else {
-               this.model.setNoData(true);
-            }
+            this.model.setNoData(true);
             this.model.refresh();
          }
       },
@@ -747,16 +680,9 @@ sap.ui.define(['sap/ui/core/Component',
          for (var k=0;k<matches.length;++k)
              this.appendStackToTree(nodes, matches[k].stack, matches[k].color);
 
-         if (this.plainModel) {
-            this.data.nodes = [ nodes[0] ];
-            this.model.refresh();
-            if (matches.length < 100)
-               br.expandToLevel(99);
-         } else {
-            br.setNoData("");
-            br.setShowNoData(false);
-            this.model.setFullModel(nodes[0]);
-         }
+         br.setNoData("");
+         br.setShowNoData(false);
+         this.model.setFullModel(nodes[0]);
       },
 
       /** Here one tries to append only given stack to the tree
@@ -834,14 +760,6 @@ sap.ui.define(['sap/ui/core/Component',
       checkRequestMsg: function() {
          if (this.isConnected && this.renderingDone) {
 
-            if (!this.ask_reload) {
-               this.ask_reload = true;
-
-               // THIS IS REQUIRED FOR RELOAD OF FULL HIERARCHY
-               if (this.plainModel)
-                  this.websocket.Send("RELOAD");
-            }
-
             if (this.creator && !this.ask_getdraw) {
                this.websocket.Send("GETDRAW");
                this.ask_getdraw = true;
@@ -853,7 +771,7 @@ sap.ui.define(['sap/ui/core/Component',
        * Due to complex indexing in TreeTable it is not trivial to select special node */
       activateInTreeTable: function(itemnames, force) {
 
-         if (!force || !itemnames || !this.geo_clones || this.plainModel) return;
+         if (!force || !itemnames || !this.model) return;
 
          var index = this.model.expandNodeByPath(itemnames[0]),
              tt = this.byId("treeTable");
@@ -881,9 +799,12 @@ sap.ui.define(['sap/ui/core/Component',
       /** when new query entered in the seach field */
       onSearch : function(oEvt) {
          var query = oEvt.getSource().getValue();
-         if (!this.standalone) {
+         if (!query) {
+            this.paintFoundNodes(null); // remove all search results
+            this.doReload(false);
+         } else if (!this.standalone) {
             this.submitSearchQuery(query);
-         } else if (query) {
+         } else {
             var lst = this.findMatchesFromDraw(function(node) {
                return node.name.indexOf(query)==0;
             });
@@ -895,21 +816,21 @@ sap.ui.define(['sap/ui/core/Component',
                this.showTextInBrowser("No found nodes");
                this.paintFoundNodes(null);
             }
-
-         } else {
-            this.onRealoadPress();
          }
       },
 
       /** Reload geometry description and base drawing, normally not required */
       onRealoadPress: function (oEvent) {
+         this.doReload(true);
+      },
+
+      doReload: function(force) {
          if (this.standalone) {
             this.showTextInBrowser();
             this.paintFoundNodes(null);
-            if (!this.plainModel)
-               this.model.setFullModel(this.fullModel);
+            this.model.setFullModel(this.fullModel);
          } else {
-            this.websocket.Send("RELOAD");
+            this.model.reloadMainModel(force);
          }
       },
 

@@ -36,6 +36,12 @@ sap.ui.define([
            this.fullModel = true;
            this.h.nchilds = 1;
            this.h.childs = [ topnode ];
+
+           if (!this.mainModel) {
+              this.mainModel = this.h.childs;
+              this.mainFullModel = true;
+           }
+
            topnode.expanded = true;
            this.reset_nodes = true;
            delete this.noData;
@@ -144,6 +150,24 @@ sap.ui.define([
            this.submitRequest(this.h, "/");
         },
 
+        reloadMainModel: function(force) {
+           if (this.mainModel && !force) {
+              this.h.nchilds = this.mainModel.length;
+              this.h.childs = this.mainModel;
+              this.h.expanded = true;
+              this.reset_nodes = true;
+              this.fullModel = this.mainFullModel;
+              delete this.noData;
+              this.scanShifts();
+              if (this.oBinding)
+                 this.oBinding.checkUpdate(true);
+           } else if (!this.fullModel) {
+              // send request, content will be reassigned
+              this.submitRequest(this.h, "/");
+           }
+
+        },
+
         // submit next request to the server
         // directly use web socket, later can be dedicated channel
         submitRequest: function(elem, path, first, number) {
@@ -204,6 +228,12 @@ sap.ui.define([
               elem.first = reply.first || 0;
            }
 
+           // remember main model
+           if ((reply.path === "/") && !this.mainModel) {
+              this.mainModel = elem.childs;
+              this.mainFullModel = false;
+           }
+
            this.scanShifts();
 
            // reset existing nodes if reply does not match with expectation
@@ -224,11 +254,14 @@ sap.ui.define([
 
         },
 
+        getNodeByIndex: function(indx) {
+           var nodes = this.getProperty("/nodes");
+           return nodes ? nodes[indx] : null;
+        },
+
         // return element of hierarchical structure by TreeTable index
         getElementByIndex: function(indx) {
-           var nodes = this.getProperty("/nodes"),
-               node = nodes ? nodes[indx] : null;
-
+           var node = this.getNodeByIndex(indx);
            return node ? node._elem : null;
         },
 
@@ -403,8 +436,10 @@ sap.ui.define([
         // toggle expand state of specified node
         toggleNode: function(index) {
 
-           var elem = this.getElementByIndex(index);
-           if (!elem) return;
+           var node = this.getNodeByIndex(index),
+               elem = node ? node._elem : null;
+
+           if (!node || !elem) return;
 
            if (elem.expanded) {
               delete elem.expanded;
