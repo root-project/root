@@ -544,35 +544,6 @@ void ROOT::Experimental::REveGeomDescription::CollectNodes(REveGeomDrawing &draw
 }
 
 /////////////////////////////////////////////////////////////////////
-/// Produce JSON for array of all existing nodes to build hierarchy
-
-std::string ROOT::Experimental::REveGeomDescription::GetHierachyJson(const std::string &prepend)
-{
-   /// use pointer on REveGeomNodeBase to convert only minimal required data
-   std::vector<REveGeomNodeBase *> vect(fDesc.size(), nullptr);
-
-   int cnt = 0;
-   for (auto &item : fDesc)
-      vect[cnt++]= &item;
-
-   auto res = prepend;
-
-   res.append(TBufferJSON::ToJSON(&vect,103).Data());
-
-   // try own iterator
-   RGeomBrowserIter iter(*this);
-
-   int nelements = 0;
-   while (iter.NextNode()) {
-      nelements++;
-   }
-
-   printf("Count nodes %d\n", nelements);
-
-   return res;
-}
-
-/////////////////////////////////////////////////////////////////////
 /// Find description object for requested shape
 /// If not exists - will be created
 
@@ -582,8 +553,35 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
 
    RBrowserRequest *request = nullptr;
 
-   if (TBufferJSON::FromJSON(request, msg.c_str())) {
+   if (msg.empty()) {
+      request = new RBrowserRequest;
+      request->path = "/";
+      request->first = 0;
+      request->number = 100;
+   } else if (!TBufferJSON::FromJSON(request, msg.c_str())) {
+      return res;
+   }
 
+   if ((request->path.compare("/") == 0) && (request->first == 0) && (GetNumNodes() < (IsPreferredOffline() ? 1000000 : 1000))) {
+
+      std::vector<REveGeomNodeBase *> vect(fDesc.size(), nullptr);
+
+      int cnt = 0;
+      for (auto &item : fDesc)
+         vect[cnt++]= &item;
+
+      res = "DESCR:";
+
+      res.append(TBufferJSON::ToJSON(&vect,103).Data());
+
+      // example how iterator can be used
+      RGeomBrowserIter iter(*this);
+      int nelements = 0;
+      while (iter.NextNode())
+         nelements++;
+      printf("Total number of valid nodes %d\n", nelements);
+
+   } else {
       RBrowserReply reply;
       reply.path = request->path;
       reply.first = request->first;
@@ -611,9 +609,9 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
 
       res = "BREPL:";
       res.append(TBufferJSON::ToJSON(&reply, 103).Data());
-
-      delete request;
    }
+
+   delete request;
 
    return res;
 }

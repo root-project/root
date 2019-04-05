@@ -16,6 +16,7 @@
 
 #include "TSystem.h"
 #include "TROOT.h"
+#include "TEnv.h"
 #include "THttpServer.h"
 #include "TBufferJSON.h"
 #include "TGeoManager.h"
@@ -35,6 +36,8 @@ ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr)
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
 
    if (mgr) SetGeometry(mgr);
+
+   fDesc.SetPreferredOffline(gEnv->GetValue("WebGui.PreferredOffline",0) != 0);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,16 +120,6 @@ std::vector<int> ROOT::Experimental::REveGeomViewer::GetStackFromJson(const std:
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Send hierarchical data
-
-void ROOT::Experimental::REveGeomViewer::SendHierarchy(unsigned connid)
-{
-   auto sbuf = fDesc.GetHierachyJson("DESCR:");
-   printf("Send description %d\n", (int) sbuf.length());
-   fWebWindow->Send(connid, sbuf);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
 /// Send data for principal geometry draw
 
 void ROOT::Experimental::REveGeomViewer::SendGeometry(unsigned connid)
@@ -153,11 +146,6 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
    printf("Recv %s\n", arg.c_str());
 
    if (arg == "CONN_READY") {
-
-   } else if (arg == "RELOAD") {
-
-      fDesc.Build(fGeoManager);
-      SendHierarchy(connid);
 
    } else if (arg == "GETDRAW") {
 
@@ -270,15 +258,17 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
             // TODO: one can improve here and send only nodes which are not exists on client
             // TODO: for that one should remember all information send to client
 
-            SendHierarchy(connid);
+            auto json = fDesc.ProcessBrowserRequest();
+            if (json.length() > 0) fWebWindow->Send(connid, json);
 
             SendGeometry(connid);
          }
       }
    } else if (arg.compare(0,6, "BRREQ:") == 0) {
 
-      // for debug purposes - send complete model, can be configurable in the future
-      // SendHierarchy(connid);
+      // central place for processing browser requests
+
+      if (!fDesc.IsBuild()) fDesc.Build(fGeoManager);
 
       auto json = fDesc.ProcessBrowserRequest(arg.substr(6));
       if (json.length() > 0) fWebWindow->Send(connid, json);

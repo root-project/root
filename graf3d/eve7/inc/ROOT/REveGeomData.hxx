@@ -184,6 +184,7 @@ class REveGeomDescription {
    int fDrawIdCut{0};               ///<! sortid used for selection of most-significant nodes
    int fFacesLimit{0};              ///<! maximal number of faces to be selected for drawing
    int fNodesLimit{0};              ///<! maximal number of nodes to be selected for drawing
+   bool fPreferredOffline{false};   ///<! indicates that full description should be provided to client
 
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 
@@ -213,6 +214,8 @@ public:
    /** Number of unique nodes in the geometry */
    int GetNumNodes() const { return fDesc.size(); }
 
+   bool IsBuild() const { return GetNumNodes() > 0; }
+
    /** Set maximal number of nodes which should be selected for drawing */
    void SetMaxVisNodes(int cnt) { fNodesLimit = cnt; }
 
@@ -225,13 +228,19 @@ public:
    /** Returns maximal visible number of faces, ignored when non-positive */
    int GetMaxVisFaces() const { return fFacesLimit; }
 
+   /** Set preference of offline operations.
+    * Server provides more info to client from the begin on to avoid communication */
+   void SetPreferredOffline(bool on) { fPreferredOffline = on; }
+
+   /** Is offline operations preferred.
+    * After get full description, client can do most operations without extra requests */
+   bool IsPreferredOffline() const { return fPreferredOffline; }
+
    bool CollectVisibles();
 
    bool IsPrincipalEndNode(int nodeid);
 
-   std::string GetHierachyJson(const std::string &prepend);
-
-   std::string ProcessBrowserRequest(const std::string &req);
+   std::string ProcessBrowserRequest(const std::string &req = "");
 
    bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawBinary.size() > 0) && (fDrawIdCut > 0); }
    const std::string &GetDrawJson() const { return fDrawJson; }
