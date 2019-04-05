@@ -16,7 +16,7 @@
 /// The transparency is available on all platforms when the flag
 /// `OpenGL.CanvasPreferGL` is set to `1` in `$ROOTSYS/etc/system.rootrc`, or
 /// on Mac with the Cocoa backend. X11 does not support transparency. On the file
-/// output it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
+/// output it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
 ///
 /// \macro_image
 /// \macro_code
