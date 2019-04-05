@@ -484,7 +484,8 @@ sap.ui.define(['sap/ui/core/Component',
             this.parseDescription(msg, false);
             break;
          case "BREPL:":   // browser reply
-            this.model.processResponse(JSON.parse(msg));
+            if (this.model)
+               this.model.processResponse(JSON.parse(msg));
             break;
          case "FOUND:":  // text message for found query
             this.showTextInBrowser(msg);
@@ -550,6 +551,8 @@ sap.ui.define(['sap/ui/core/Component',
        * Used only to initialize hierarchy browser with full Tree,
        * later should be done differently */
       parseDescription: function(msg, is_original) {
+
+         if (!this.model) return;
 
          var descr = JSON.parse(msg), br = this.byId("treeTable");
 
