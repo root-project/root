@@ -15,6 +15,7 @@ HEADERS
   ROOT/RField.hxx
   ROOT/RFieldValue.hxx
   ROOT/RForest.hxx
+  ROOT/RForestDescriptor.hxx
   ROOT/RForestEntry.hxx
   ROOT/RForestModel.hxx
   ROOT/RForestUtil.hxx
@@ -27,6 +28,7 @@ SOURCES
   v7/src/RColumn.cxx
   v7/src/RField.cxx
   v7/src/RForest.cxx
+  v7/src/RForestDescriptor.cxx
   v7/src/RForestEntry.cxx
   v7/src/RForestModel.cxx
   v7/src/RPage.cxx

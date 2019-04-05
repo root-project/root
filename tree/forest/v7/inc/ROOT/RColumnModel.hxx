@@ -73,6 +73,7 @@ private:
    bool fIsSorted;
 
 public:
+   RColumnModel() : fType(EColumnType::kUnknown), fIsSorted(false) {}
    RColumnModel(std::string_view name, EColumnType type, bool isSorted)
       : fName(name), fType(type), fIsSorted(isSorted) {}
 
