@@ -7,7 +7,7 @@
    } else
    if (typeof exports === 'object' && typeof module !== 'undefined') {
       var jsroot = require("./JSRootCore.js");
-      factory(jsroot, require("./d3.min.js"), require("./three.min.js"), require("./three.extra.min.js"),
+      factory(jsroot, require("d3"), require("three"), require("./three.extra.min.js"),
               jsroot.nodejs || (typeof document=='undefined') ? jsroot.nodejs_document : document);
    } else {
 
@@ -137,7 +137,7 @@
                args.canvas.style = {};
             }
 
-            res.renderer = res.usewebgl ? new THREE.WebGLRenderer(args) : new THREE.CanvasRenderer(args);
+            res.renderer = res.usewebgl ? new THREE.WebGLRenderer(args) : new THREE.SoftwareRenderer(args);
          } else {
             // this.renderer = new THREE.SVGRenderer({ precision: 0, astext: true });
             res.renderer = THREE.CreateSVGRenderer(false, 0, document);
@@ -154,7 +154,7 @@
             res.dom.setAttribute('jsroot_svg_workaround', res.renderer.workaround_id);
          }
       } else {
-         res.renderer = res.usewebgl ? new THREE.WebGLRenderer(args) : new THREE.CanvasRenderer(args);
+         res.renderer = res.usewebgl ? new THREE.WebGLRenderer(args) : new THREE.SoftwareRenderer(args);
       }
 
       //renderer.setClearColor(0xffffff, 1);
@@ -403,7 +403,10 @@
 
       control.GetMouseIntersects = function(mouse) {
          // domElement gives correct coordinate with canvas render, but isn't always right for webgl renderer
-         var sz = (this.renderer instanceof THREE.WebGLRenderer) ? this.renderer.getSize() : this.renderer.domElement;
+         var sz = (this.renderer instanceof THREE.WebGLRenderer) ?
+                     this.renderer.getSize(new THREE.Vector2()) :
+                     this.renderer.domElement;
+
          var pnt = { x: mouse.x / sz.width * 2 - 1, y: -mouse.y / sz.height * 2 + 1 };
 
          this.camera.updateMatrix();
@@ -463,10 +466,9 @@
          if (this.mouse_ctxt.on) {
             this.mouse_ctxt.on = false;
             this.ContextMenu(this.mouse_ctxt, this.GetMouseIntersects(this.mouse_ctxt));
-         } else
-         if (this.control_changed) {
+         } /* else if (this.control_changed) {
             // react on camera change when required
-         }
+         } */
          this.control_changed = false;
       }
 
@@ -914,7 +916,7 @@
    }
 
    PointsCreator.prototype.CreatePoints = function(mcolor) {
-      // only plain geometry and sprite material is supported by CanvasRenderer, but it cannot be scaled
+      // only plain geometry and sprite material is supported by SoftwareRenderer, but it cannot be scaled
 
       var material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale, color: mcolor || 'black' } );
       var pnts = new THREE.Points(this.geom, material);

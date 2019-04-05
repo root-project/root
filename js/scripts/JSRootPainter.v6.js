@@ -6,7 +6,7 @@
       define( ['JSRootPainter', 'd3'], factory );
    } else
    if (typeof exports === 'object' && typeof module !== 'undefined') {
-       factory(require("./JSRootCore.js"), require("./d3.min.js"));
+       factory(require("./JSRootCore.js"), require("d3"));
    } else {
 
       if (typeof d3 != 'object')
@@ -2231,14 +2231,13 @@
             this.zoom_zmin = this.zoom_zmax = 0;
          }
 
-         // first try to unzoom all overlapped objects
+      // than try to unzoom all overlapped objects
          if (!changed) {
-            // than try to unzoom all overlapped objects
             var pp = this.pad_painter();
             if (pp && pp.painters)
-               pp.painters.forEach(function(paint){
-                  if (paint && (typeof paint.UnzoomUserRange == 'function'))
-                     if (paint.UnzoomUserRange(unzoom_x, unzoom_y, unzoom_z)) changed = true;
+               pp.painters.forEach(function(painter){
+                  if (painter && (typeof painter.UnzoomUserRange == 'function'))
+                     if (painter.UnzoomUserRange(unzoom_x, unzoom_y, unzoom_z)) changed = true;
             });
          }
       }
@@ -2259,7 +2258,7 @@
 
       var last = this.zoom_changed_interactive;
 
-      if (dox || doy || doz) this.zoom_changed_interactive = 2;
+      if (dox || doy || doz) this.zoom_changed_interactive = 1;
 
       var changed = this.Zoom(dox ? 0 : undefined, dox ? 0 : undefined,
                               doy ? 0 : undefined, doy ? 0 : undefined,

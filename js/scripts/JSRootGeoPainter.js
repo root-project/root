@@ -8,7 +8,7 @@
    if (typeof exports === 'object' && typeof module !== 'undefined') {
       var jsroot = require("./JSRootCore.js");
       if (!jsroot.nodejs && (typeof window != 'undefined')) require("./dat.gui.min.js");
-      factory(jsroot, require("./d3.min.js"), require("./three.min.js"), require("./JSRoot3DPainter.js"), require("./JSRootGeoBase.js"),
+      factory(jsroot, require("d3"), require("three"), require("./JSRoot3DPainter.js"), require("./JSRootGeoBase.js"),
               jsroot.nodejs || (typeof document=='undefined') ? jsroot.nodejs_document : document);
    } else {
 
@@ -132,7 +132,9 @@
    };
 
    /**
-    * @class JSROOT.TGeoPainter Holder of different functions and classes for drawing geometries
+    * @class TGeoPainter
+    * @desc Holder of different functions and classes for drawing geometries
+    * @memberof JSROOT
     */
 
    function TGeoPainter(obj) {
@@ -408,7 +410,7 @@
                    project: '', is_main: false, tracks: false, ortho_camera: false,
                    clipx: false, clipy: false, clipz: false, ssao: false,
                    script_name: "", transparency: 0, autoRotate: false, background: '#FFFFFF',
-                   depthMethod: "box" };
+                   depthMethod: "ray" };
 
       var _opt = JSROOT.GetUrlOption('_grid');
       if (_opt !== null && _opt == "true") res._grid = true;
@@ -654,7 +656,7 @@
             node.material.transparent = node.material.opacity < 1;
          }
       });
-      if (!skip_render) this.Render3D(0);
+      if (!skip_render) this.Render3D(-1);
    }
 
    TGeoPainter.prototype.showControlOptions = function(on) {
@@ -683,6 +685,49 @@
                .style('top',0).style('right',0);
 
       main.node().appendChild(this._datgui.domElement);
+
+      function createSSAOgui(is_on) {
+         if (!is_on) {
+            if (painter._datgui._ssao) {
+               // there is no method to destroy folder - why?
+               var dom = painter._datgui._ssao.domElement;
+               dom.parentNode.removeChild(dom);
+               painter._datgui._ssao.destroy();
+               if (painter._datgui.__folders && painter._datgui.__folders['SSAO'])
+                  painter._datgui.__folders['SSAO'] = undefined;
+            }
+            delete painter._datgui._ssao;
+            return;
+         }
+
+         if (painter._datgui._ssao) return;
+
+         painter._datgui._ssao = painter._datgui.addFolder('SSAO');
+
+         painter._datgui._ssao.add( painter._ssaoPass, 'output', {
+             'Default': THREE.SSAOPass.OUTPUT.Default,
+             'SSAO Only': THREE.SSAOPass.OUTPUT.SSAO,
+             'SSAO Only + Blur': THREE.SSAOPass.OUTPUT.Blur,
+             'Beauty': THREE.SSAOPass.OUTPUT.Beauty,
+             'Depth': THREE.SSAOPass.OUTPUT.Depth,
+             'Normal': THREE.SSAOPass.OUTPUT.Normal
+         } ).onChange( function ( value ) {
+            painter._ssaoPass.output = parseInt( value );
+            painter.Render3D();
+         } );
+
+         painter._datgui._ssao.add( painter._ssaoPass, 'kernelRadius', 0, 32).listen().onChange(function() {
+            painter.Render3D();
+         });
+
+         painter._datgui._ssao.add( painter._ssaoPass, 'minDistance', 0.001, 0.02).listen().onChange(function() {
+            painter.Render3D();
+         });
+
+         painter._datgui._ssao.add( painter._ssaoPass, 'maxDistance', 0.01, 0.3).listen().onChange(function() {
+            painter.Render3D();
+         });
+      }
 
       if (this.options.project) {
 
@@ -713,7 +758,11 @@
             clipFolder.add(this, 'enable' + axisC).name('Enable '+axisC)
             .listen() // react if option changed outside
             .onChange( function (value) {
-               painter._enableSSAO = value ? false : painter._enableSSAO;
+               if (value) {
+                  createSSAOgui(false);
+                  painter._enableSSAO = false;
+                  painter._enableClipping = true;
+               }
                painter.updateClipping();
             });
 
@@ -728,26 +777,16 @@
 
             item.enbale_flag = "enable"+axisC;
          }
-
       }
+
 
       // Appearance Options
 
       var appearance = this._datgui.addFolder('Appearance');
 
-      if (this._webgl) {
-         appearance.add(this, '_enableSSAO').name('Smooth Lighting (SSAO)').onChange( function (value) {
-            painter._renderer.antialias = !painter._renderer.antialias;
-            painter.enableX = value ? false : painter.enableX;
-            painter.enableY = value ? false : painter.enableY;
-            painter.enableZ = value ? false : painter.enableZ;
-            painter.updateClipping();
-         }).listen();
-      }
-
       appearance.add(this.options, 'highlight').name('Highlight Selection').listen().onChange( function (value) {
          if (!value) painter.HighlightMesh(null);
-     });
+      });
 
       appearance.add(this.options, 'transparency', 0.0, 1.0, 0.001)
                      .listen().onChange(this.changeGlobalTransparency.bind(this));
@@ -770,24 +809,20 @@
       if (this._webgl) {
          var advanced = this._datgui.addFolder('Advanced');
 
-         advanced.add( this._advceOptions, 'aoClamp', 0.0, 1.0).listen().onChange( function (value) {
-            painter._ssaoPass.uniforms[ 'aoClamp' ].value = value;
-            painter._enableSSAO = true;
-            painter.Render3D(0);
-         });
+         advanced.add(this, '_enableSSAO').name('Smooth Lighting (SSAO)').onChange( function (value) {
+            if (painter._enableSSAO)
+               painter.createSSAO();
+            createSSAOgui(painter._enableSSAO);
 
-         advanced.add( this._advceOptions, 'lumInfluence', 0.0, 1.0).listen().onChange( function (value) {
-            painter._ssaoPass.uniforms[ 'lumInfluence' ].value = value;
-            painter._enableSSAO = true;
-            painter.Render3D(0);
-         });
+            painter._enableClipping = !painter._enableSSAO;
+            painter.updateClipping();
+         }).listen();
 
-         advanced.add( this._advceOptions, 'clipIntersection').listen().onChange( function (value) {
-            painter.clipIntersection = value;
+         advanced.add( this, '_clipIntersection').name("Clip intersection").listen().onChange( function (value) {
             painter.updateClipping();
          });
 
-         advanced.add(this._advceOptions, 'depthTest').onChange( function (value) {
+         advanced.add(this, '_depthTest').name("Depth test").onChange( function (value) {
             painter._toplevel.traverse( function (node) {
                if (node instanceof THREE.Mesh) {
                   node.material.depthTest = value;
@@ -796,10 +831,39 @@
             painter.Render3D(0);
          }).listen();
 
-         advanced.add(this, 'resetAdvanced').name('Reset');
+         advanced.add( this.options, 'depthMethod', {
+            'Default': "dflt",
+            'Raytraicing': "ray",
+            'Boundary box': "box",
+            'Mesh size': "size",
+            'Central point': "pnt"
+        } ).name("Rendering order").onChange( function ( value ) {
+           delete painter._last_camera_position; // used for testing depth
+           painter.Render3D();
+        } );
+
+        advanced.add(this, 'resetAdvanced').name('Reset');
       }
+
+      createSSAOgui(this._enableSSAO && this._ssaoPass);
    }
 
+   TGeoPainter.prototype.createSSAO = function() {
+      if (!this._webgl || this._ssaoPass) return;
+
+      // var renderPass = new THREE.RenderPass( this._scene, this._camera );
+
+      // this._depthRenderTarget = new THREE.WebGLRenderTarget( this._scene_width, this._scene_height, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter } );
+      // Setup SSAO pass
+      this._ssaoPass = new THREE.SSAOPass( this._scene, this._camera, this._scene_width, this._scene_height );
+      this._ssaoPass.kernelRadius = 16;
+      this._ssaoPass.renderToScreen = true;
+
+      // Add pass to effect composer
+      this._effectComposer = new THREE.EffectComposer( this._renderer );
+      //this._effectComposer.addPass( renderPass );
+      this._effectComposer.addPass( this._ssaoPass );
+   }
 
    TGeoPainter.prototype.OrbitContext = function(evnt, intersects) {
 
@@ -1784,7 +1848,7 @@
          this._renderer = webgl ?
                            new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: false,
                                                      preserveDrawingBuffer: true }) :
-                           new THREE.CanvasRenderer({ antialias: true });
+                           new THREE.SoftwareRenderer({ antialias: true });
          this._renderer.setPixelRatio(window.devicePixelRatio);
       }
       this._renderer.setSize(w, h, !this._fit_main_area);
@@ -1803,7 +1867,7 @@
 
       // Clipping Planes
 
-      this.clipIntersection = true;
+      this._clipIntersection = true;
       this.bothSides = false; // which material kind should be used
       this.enableX = this.enableY = this.enableZ = false;
       this.clipX = this.clipY = this.clipZ = 0.0;
@@ -1843,44 +1907,17 @@
 
       // Default Settings
 
-      this._defaultAdvanced = { aoClamp: 0.70,
-                                lumInfluence: 0.4,
-                              //  shininess: 100,
-                                clipIntersection: true,
-                                depthTest: true
-                              };
+      this._depthTest = true;
 
       // Smooth Lighting Shader (Screen Space Ambient Occlusion)
       // http://threejs.org/examples/webgl_postprocessing_ssao.html
 
+      // these two parameters are exclusive - either SSAO or clipping can work at same time
       this._enableSSAO = this.options.ssao;
+      this._enableClipping = !this._enableSSAO;
 
-      if (this._webgl) {
-         var renderPass = new THREE.RenderPass( this._scene, this._camera );
-         // Setup depth pass
-         this._depthMaterial = new THREE.MeshDepthMaterial( { side: THREE.DoubleSide });
-         this._depthMaterial.depthPacking = THREE.RGBADepthPacking;
-         this._depthMaterial.blending = THREE.NoBlending;
-         var pars = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
-         this._depthRenderTarget = new THREE.WebGLRenderTarget( w, h, pars );
-         // Setup SSAO pass
-         this._ssaoPass = new THREE.ShaderPass( THREE.SSAOShader );
-         this._ssaoPass.renderToScreen = true;
-         this._ssaoPass.uniforms[ "tDepth" ].value = this._depthRenderTarget.texture;
-         this._ssaoPass.uniforms[ 'size' ].value.set( w, h );
-         this._ssaoPass.uniforms[ 'cameraNear' ].value = this._camera.near;
-         this._ssaoPass.uniforms[ 'cameraFar' ].value = this._camera.far;
-         this._ssaoPass.uniforms[ 'onlyAO' ].value = false;//( postprocessing.renderMode == 1 );
-         this._ssaoPass.uniforms[ 'aoClamp' ].value = this._defaultAdvanced.aoClamp;
-         this._ssaoPass.uniforms[ 'lumInfluence' ].value = this._defaultAdvanced.lumInfluence;
-         // Add pass to effect composer
-         this._effectComposer = new THREE.EffectComposer( this._renderer );
-         this._effectComposer.addPass( renderPass );
-         this._effectComposer.addPass( this._ssaoPass );
-      }
-
-      this._advceOptions = {};
-      this.resetAdvanced();
+      if (this._enableSSAO)
+         this.createSSAO();
 
       if (this._fit_main_area && (this._usesvg || this._usesvgimg)) {
          // create top-most SVG for geomtery drawings
@@ -1934,22 +1971,19 @@
    }
 
    TGeoPainter.prototype.resetAdvanced = function() {
-      if (this._webgl) {
-         this._advceOptions.aoClamp = this._defaultAdvanced.aoClamp;
-         this._advceOptions.lumInfluence = this._defaultAdvanced.lumInfluence;
-
-         this._ssaoPass.uniforms[ 'aoClamp' ].value = this._defaultAdvanced.aoClamp;
-         this._ssaoPass.uniforms[ 'lumInfluence' ].value = this._defaultAdvanced.lumInfluence;
+      if (this._ssaoPass) {
+         this._ssaoPass.kernelRadius = 16;
+         this._ssaoPass.output = THREE.SSAOPass.OUTPUT.Default;
       }
 
-      this._advceOptions.depthTest = this._defaultAdvanced.depthTest;
-      this._advceOptions.clipIntersection = this._defaultAdvanced.clipIntersection;
-      this.clipIntersection = this._defaultAdvanced.clipIntersection;
+      this._depthTest = true;
+      this._clipIntersection = true;
+      this.options.depthMethod = "ray";
 
       var painter = this;
       this._toplevel.traverse( function (node) {
          if (node instanceof THREE.Mesh) {
-            node.material.depthTest = painter._defaultAdvanced.depthTest;
+            node.material.depthTest = painter._depthTest;
          }
       });
 
@@ -1966,12 +2000,14 @@
       this._clipPlanes[2].constant = this.options._yup ? -this.clipZ : this.clipZ;
 
       var panels = [];
-      if (this.enableX) panels.push(this._clipPlanes[0]);
-      if (this.enableY) panels.push(this._clipPlanes[1]);
-      if (this.enableZ) panels.push(this._clipPlanes[2]);
+      if (this._enableClipping) {
+         if (this.enableX) panels.push(this._clipPlanes[0]);
+         if (this.enableY) panels.push(this._clipPlanes[1]);
+         if (this.enableZ) panels.push(this._clipPlanes[2]);
+      }
       if (panels.length == 0) panels = null;
 
-      var any_clipping = !!panels, ci = this.clipIntersection,
+      var any_clipping = !!panels, ci = this._clipIntersection,
           material_side = any_clipping ? THREE.DoubleSide : THREE.FrontSide;
 
       this._scene.traverse( function (node) {
@@ -2030,12 +2066,6 @@
       this._camera.near = this._overall_size / 350;
       this._scene.fog.far = this._overall_size * 12;
       this._camera.far = this._overall_size * 12;
-
-
-      if (this._webgl) {
-         this._ssaoPass.uniforms[ 'cameraNear' ].value = this._camera.near;//*this._nFactor;
-         this._ssaoPass.uniforms[ 'cameraFar' ].value = this._camera.far;///this._nFactor;
-      }
 
       if (first_time) {
          this.clipX = midx;
@@ -2923,7 +2953,6 @@
             if (this._first_drawing && this._webgl && (this._num_meshes - this._last_render_meshes > 100) && (now - this._last_render_tm > 2.5*interval)) {
                this.adjustCameraPosition();
                this.Render3D(-1);
-               this._last_render_tm = new Date().getTime();
                this._last_render_meshes = this._num_meshes;
             }
             if (res !== 2) setTimeout(this.continueDraw.bind(this), (res === 1) ? 100 : 1);
@@ -2946,12 +2975,12 @@
       this.completeDraw(true);
    }
 
-   TGeoPainter.prototype.TestCameraPosition = function() {
+   TGeoPainter.prototype.TestCameraPosition = function(force) {
 
       this._camera.updateMatrixWorld();
       var origin = this._camera.position.clone();
 
-      if (this._last_camera_position) {
+      if (!force && this._last_camera_position) {
          // if camera position does not changed a lot, ignore such change
          var dist = this._last_camera_position.distanceTo(origin);
          if (dist < (this._overall_size || 1000)/1e4) return;
@@ -2959,18 +2988,19 @@
 
       this._last_camera_position = origin; // remember current camera position
 
-      if (this._webgl)
+      if (!this.options.project && this._webgl)
          JSROOT.GEO.produceRenderOrder(this._toplevel, origin, this.options.depthMethod, this._clones);
    }
 
+   /** @brief Call 3D rendering of the geometry
+     * @param tmout - specifies delay, after which actual rendering will be invoked
+     * Timeout used to avoid multiple rendering of the picture when several 3D drawings
+     * superimposed with each other. If tmeout<=0, rendering performed immediately
+     * Several special values are used:
+     *   -2222 - rendering performed only if there were previous calls, which causes timeout activation
+     *   -1    - force recheck of rendering order based on camera position */
+
    TGeoPainter.prototype.Render3D = function(tmout, measure) {
-      // call 3D rendering of the geometry drawing
-      // tmout specifies delay, after which actual rendering will be invoked
-      // Timeout used to avoid multiple rendering of the picture when several 3D drawings
-      // superimposed with each other.
-      // If tmeout<=0, rendering performed immediately
-      // Several special values are used:
-      //   -2222 - rendering performed only if there were previous calls, which causes timeout activation
 
       if (!this._renderer) {
          console.warn('renderer object not exists - check code');
@@ -2991,14 +3021,10 @@
          if (typeof this.TestAxisVisibility === 'function')
             this.TestAxisVisibility(this._camera, this._toplevel);
 
-         this.TestCameraPosition();
+         this.TestCameraPosition(tmout === -1);
 
          // do rendering, most consuming time
-         if (this._webgl && this._enableSSAO) {
-            this._scene.overrideMaterial = this._depthMaterial;
-        //    this._renderer.logarithmicDepthBuffer = false;
-            this._renderer.render(this._scene, this._camera, this._depthRenderTarget, true);
-            this._scene.overrideMaterial = null;
+         if (this._webgl && this._enableSSAO && this._ssaoPass) {
             this._effectComposer.render();
          } else {
        //     this._renderer.logarithmicDepthBuffer = true;
@@ -3007,18 +3033,16 @@
 
          var tm2 = new Date();
 
-         this.last_render_tm = tm2.getTime() - tm1.getTime();
+         this.last_render_tm = tm2.getTime();
 
          delete this.render_tmout;
 
          if ((this.first_render_tm === 0) && measure) {
-            this.first_render_tm = this.last_render_tm;
+            this.first_render_tm = tm2.getTime() - tm1.getTime();
             JSROOT.console('First render tm = ' + this.first_render_tm);
          }
 
-         JSROOT.Painter.AfterRender3D(this._renderer);
-
-         return;
+         return JSROOT.Painter.AfterRender3D(this._renderer);
       }
 
       // do not shoot timeout many times
@@ -3508,9 +3532,10 @@
       delete this._build_shapes;
       delete this._new_draw_nodes;
       delete this._new_append_nodes;
+      delete this._last_camera_position;
 
-      this.first_render_tm = 0;
-      this.last_render_tm = 2000;
+      this.first_render_tm = 0; // time needed for first rendering
+      this.last_render_tm = 0;
 
       this.drawing_stage = 0;
       delete this.drawing_log;
@@ -3549,6 +3574,7 @@
             this._camera.aspect = this._scene_width / this._scene_height;
          this._camera.updateProjectionMatrix();
          this._renderer.setSize( this._scene_width, this._scene_height, !this._fit_main_area );
+         if (this._ssaoPass) this._ssaoPass.setSize( this._scene_width, this._scene_height );
 
          if (!this.drawing_stage) this.Render3D();
       }

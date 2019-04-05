@@ -6,7 +6,7 @@
       define( ['JSRootCore', 'd3', 'JSRootPainter'], factory );
    } else
    if (typeof exports === 'object' && typeof module !== 'undefined') {
-       factory(require("./JSRootCore.js"), require("./d3.min.js"), require("./JSRootPainter.js"));
+       factory(require("./JSRootCore.js"), require("d3"), require("./JSRootPainter.js"));
    } else {
 
       if (typeof d3 != 'object')
@@ -678,6 +678,12 @@
 
       return folder;
    }
+
+   /** @summary Iterate over all items in hierarchy
+    * @param {function} callback - function called for every item
+    * @param {object} [top = null] - top item to start from
+    * @private
+    */
 
    HierarchyPainter.prototype.ForEach = function(callback, top) {
 
@@ -1919,39 +1925,71 @@
       this.RefreshHtml();
    }
 
-   HierarchyPainter.prototype.SetMonitoring = function(interval, flag) {
+   /** Configures monitoring interval
+    * @param interval - repetition interval in ms
+    * @param flag - initial monitoring state
+    * @private */
+   HierarchyPainter.prototype.SetMonitoring = function(interval, monitor_on) {
 
-      if (interval!==undefined) {
-         this._monitoring_on = false;
-         this._monitoring_interval = 3000;
+      this._runMonitoring("cleanup");
 
-         interval = !interval ? 0 : parseInt(interval);
-
-         if (!isNaN(interval) && (interval>0)) {
-            this._monitoring_on = true;
+      if (interval) {
+         interval = parseInt(interval);
+         if (!isNaN(interval) && (interval > 0)) {
             this._monitoring_interval = Math.max(100,interval);
+            monitor_on = true;
+         } else {
+            this._monitoring_interval = 3000;
          }
       }
 
-      if (flag !== undefined)
-         this._monitoring_on = flag;
+      this._monitoring_on = monitor_on;
 
-      // first clear old handle
-      if (this._monitoring_handle) clearInterval(this._monitoring_handle);
-
-      // now set new interval (if necessary)
-      this._monitoring_handle = setInterval(this.updateAll.bind(this, "monitoring"),  this._monitoring_interval);
+      if (this.IsMonitoring())
+         this._runMonitoring();
    }
 
+   /** Runs monitoring event loop, @private */
+   HierarchyPainter.prototype._runMonitoring = function(arg) {
+      if ((arg == "cleanup") || !this.IsMonitoring()) {
+         if (this._monitoring_handle) {
+            clearTimeout(this._monitoring_handle);
+            delete this._monitoring_handle;
+         }
+
+         if (this._monitoring_frame) {
+            cancelAnimationFrame(this._monitoring_frame);
+            delete this._monitoring_frame;
+         }
+         return;
+      }
+
+      if (arg == "frame") {
+         // process of timeout, request animation frame
+         delete this._monitoring_handle;
+         this._monitoring_frame = requestAnimationFrame(this._runMonitoring.bind(this,"draw"));
+         return;
+      }
+
+      if (arg == "draw") {
+         delete this._monitoring_frame;
+         this.updateAll("monitoring");
+      }
+
+      this._monitoring_handle = setTimeout(this._runMonitoring.bind(this,"frame"), this.MonitoringInterval());
+   }
+
+   /** Returns configured monitoring interval in ms */
    HierarchyPainter.prototype.MonitoringInterval = function(val) {
-      // returns interval
-      return ('_monitoring_interval' in this) ? this._monitoring_interval : 3000;
+      return this._monitoring_interval || 3000;
    }
 
+   /** Enable/disable monitoring */
    HierarchyPainter.prototype.EnableMonitoring = function(on) {
-      this._monitoring_on = on;
+      this.SetMonitoring(undefined, on);
    }
 
+   /** Returns true when monitoring is enabled */
    HierarchyPainter.prototype.IsMonitoring = function() {
       return this._monitoring_on;
    }
@@ -1998,12 +2036,8 @@
       });
 
       if (withbrowser) {
-
-         if (this._monitoring_handle) {
-            clearInterval(this._monitoring_handle);
-            delete this._monitoring_handle;
-         }
-
+         // cleanup all monitoring loops
+         this.EnableMonitoring(false);
          // simplify work for javascript and delete all (ok, most of) cross-references
          this.select_main().html("");
          plainarr.forEach(function(d) { delete d._parent; delete d._childs; delete d._obj; delete d._d3cont; });
@@ -2148,8 +2182,8 @@
           browser_configured = !!browser_kind,
           title = GetOption("title");
 
-      if (GetOption("float")!==null) { browser_kind='float'; browser_configured = true; } else
-      if (GetOption("fix")!==null) { browser_kind='fix'; browser_configured = true; }
+      if (GetOption("float")!==null) { browser_kind = 'float'; browser_configured = true; } else
+      if (GetOption("fix")!==null) { browser_kind = 'fix'; browser_configured = true; }
 
       this.no_select = GetOption("noselect");
 
@@ -2172,7 +2206,7 @@
       if ((jsonarr.length==1) && (itemsarr.length==0) && (expanditems.length==0)) itemsarr.push("");
 
       if (!this.disp_kind) {
-         if ((typeof layout == "string") && (layout.length>0))
+         if ((typeof layout == "string") && (layout.length > 0))
             this.disp_kind = layout;
          else
          switch (itemsarr.length) {
@@ -2231,16 +2265,14 @@
       function AfterOnlineOpened() {
          // check if server enables monitoring
 
-         if (('_browser' in hpainter.h) && !browser_configured) {
+         if (!hpainter.exclude_browser && !browser_configured && ('_browser' in hpainter.h)) {
             browser_kind = hpainter.h._browser;
+            if (browser_kind==="no") browser_kind = ""; else
             if (browser_kind==="off") { browser_kind = ""; status = null; hpainter.exclude_browser = true; }
          }
 
          if (('_monitoring' in hpainter.h) && !monitor)
             monitor = hpainter.h._monitoring;
-
-         if (('_layout' in hpainter.h) && !layout)
-            hpainter.disp_kind = hpainter.h._layout;
 
          if (('_loadfile' in hpainter.h) && (filesarr.length==0))
             filesarr = JSROOT.ParseAsArray(hpainter.h._loadfile);
@@ -2249,6 +2281,9 @@
             itemsarr = JSROOT.ParseAsArray(hpainter.h._drawitem);
             optionsarr = JSROOT.ParseAsArray(hpainter.h._drawopt);
          }
+
+         if (('_layout' in hpainter.h) && !layout && ((hpainter.is_online != "draw") || (itemsarr.length > 1)))
+            hpainter.disp_kind = hpainter.h._layout;
 
          if (('_toptitle' in hpainter.h) && hpainter.exclude_browser && document)
             document.title = hpainter.h._toptitle;
@@ -2265,7 +2300,7 @@
          if (typeof h0 !== 'object') h0 = "";
       }
 
-      if (h0!==null)
+      if (h0 !== null)
          return this.OpenOnline(h0, AfterOnlineOpened);
 
       if (gui_div)
@@ -2349,7 +2384,7 @@
 
       var hpainter = new JSROOT.HierarchyPainter('root', null);
 
-      hpainter.is_online = online;
+      if (online) hpainter.is_online = drawing ? "draw" : "online";
       if (drawing) hpainter.exclude_browser = true;
 
       hpainter.start_without_browser = true; // indicate that browser not required at the beginning
@@ -2779,19 +2814,17 @@
             this.CreateSeparator(handle, main, handle.groups[cnt]);
    }
 
-   GridDisplay.prototype.ForEachFrame = function(userfunc,  only_visible) {
-      var main = this.select_main();
-
+   GridDisplay.prototype.ForEachFrame = function(userfunc, only_visible) {
       if (this.simple_layout)
-         userfunc(main.node());
+         userfunc(this.GetFrame());
       else
-      main.selectAll('.jsroot_newgrid').each(function() {
+      this.select_main().selectAll('.jsroot_newgrid').each(function() {
          userfunc(d3.select(this).node());
       });
    }
 
    GridDisplay.prototype.GetActiveFrame = function() {
-      if (this.simple_layout) return this.select_main().node();
+      if (this.simple_layout) return this.GetFrame();
 
       var found = MDIDisplay.prototype.GetActiveFrame.call(this);
       if (found) return found;
@@ -2808,10 +2841,10 @@
    }
 
    GridDisplay.prototype.GetFrame = function(id) {
-      var main = this.select_main();
-      if (this.simple_layout) return main.node();
+      if (this.simple_layout)
+         return this.select_main('origin').node();
       var res = null;
-      main.selectAll('.jsroot_newgrid').each(function() {
+      this.select_main().selectAll('.jsroot_newgrid').each(function() {
          if (id-- === 0) res = this;
       });
       return res;

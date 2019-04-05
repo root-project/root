@@ -3,7 +3,7 @@
       define( [ 'threejs' ], factory );
    } else
    if (typeof exports === 'object' && typeof module !== 'undefined') {
-      factory(require("./three.min.js"), exports);
+      factory(require("three"), exports);
    } else {
 
       if (typeof THREE == 'undefined')
