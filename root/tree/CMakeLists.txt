@@ -1,1 +1,5 @@
-ROOTTEST_ADD_TESTDIRS()
+if(ROOT_runtime_cxxmodules_FOUND)
+  ROOTTEST_ADD_TESTDIRS(EXCLUDED_DIRS friend)
+else()
+  ROOTTEST_ADD_TESTDIRS()
+endif()
