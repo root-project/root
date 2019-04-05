@@ -6,7 +6,7 @@
       define( ['JSRootPainter', 'd3'], factory );
    } else
    if (typeof exports === 'object' && typeof module !== 'undefined') {
-       factory(require("./JSRootCore.js"), require("./d3.min.js"));
+       factory(require("./JSRootCore.js"), require("d3"));
    } else {
 
       if (typeof d3 != 'object')

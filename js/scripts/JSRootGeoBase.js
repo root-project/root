@@ -6,7 +6,7 @@
       define( [ 'JSRootCore', 'threejs', 'ThreeCSG' ], factory );
    } else
    if (typeof exports === 'object' && typeof module !== 'undefined') {
-      factory(require("./JSRootCore.js"), require("./three.min.js"), require("./ThreeCSG.js"));
+      factory(require("./JSRootCore.js"), require("three"), require("./ThreeCSG.js"));
    } else {
 
       if (typeof JSROOT == 'undefined')
@@ -1298,20 +1298,23 @@
 
       for (var layer = 0; layer < shape.fNz-1; ++layer) {
          var z1 = shape.fZ[layer], scale1 = shape.fScale[layer],
-             z2 = shape.fZ[layer+1], scale2 = shape.fScale[layer+1];
+             z2 = shape.fZ[layer+1], scale2 = shape.fScale[layer+1],
+             x01 = shape.fX0[layer], x02 = shape.fX0[layer+1],
+             y01 = shape.fY0[layer], y02 = shape.fY0[layer+1];
 
          for (var vert1 = 0; vert1 < shape.fNvert; ++vert1) {
             var vert2 = (vert1+1) % shape.fNvert;
-            creator.AddFace4(scale1 * shape.fX[vert1], scale1 * shape.fY[vert1], z1,
-                             scale2 * shape.fX[vert1], scale2 * shape.fY[vert1], z2,
-                             scale2 * shape.fX[vert2], scale2 * shape.fY[vert2], z2,
-                             scale1 * shape.fX[vert2], scale1 * shape.fY[vert2], z1);
+            creator.AddFace4(scale1 * shape.fX[vert1] + x01, scale1 * shape.fY[vert1] + y01, z1,
+                             scale2 * shape.fX[vert1] + x02, scale2 * shape.fY[vert1] + y02, z2,
+                             scale2 * shape.fX[vert2] + x02, scale2 * shape.fY[vert2] + y02, z2,
+                             scale1 * shape.fX[vert2] + x01, scale1 * shape.fY[vert2] + y01, z1);
             creator.CalcNormal();
          }
       }
 
       for (layer = 0; layer <= shape.fNz-1; layer+=(shape.fNz-1)) {
-         var z = shape.fZ[layer], scale = shape.fScale[layer];
+         var z = shape.fZ[layer], scale = shape.fScale[layer],
+             x0 = shape.fX0[layer], y0 = shape.fY0[layer];
 
          for (var n=0;n<faces.length;++n) {
             var face = faces[n],
@@ -1319,9 +1322,9 @@
                 pnt2 = pnts[face[(layer===0) ? 2 : 1]],
                 pnt3 = pnts[face[(layer===0) ? 1 : 2]];
 
-            creator.AddFace3(scale * pnt1.x, scale * pnt1.y, z,
-                             scale * pnt2.x, scale * pnt2.y, z,
-                             scale * pnt3.x, scale * pnt3.y, z);
+            creator.AddFace3(scale * pnt1.x + x0, scale * pnt1.y + y0, z,
+                             scale * pnt2.x + x0, scale * pnt2.y + y0, z,
+                             scale * pnt3.x + x0, scale * pnt3.y + y0, z);
             creator.SetNormal(0,0,layer===0 ? -1 : 1);
          }
       }
@@ -2062,6 +2065,12 @@
       if (clones) this.nodes = clones;
    }
 
+   /** Insert node into existing array */
+   JSROOT.GEO.ClonedNodes.prototype.updateNode = function(node) {
+      if (node && !isNaN(node.id) && (node.id < this.nodes.length))
+         this.nodes[node.id] = node;
+   }
+
    JSROOT.GEO.ClonedNodes.prototype.GetNodeShape = function(indx) {
       if (!this.origin || !this.nodes) return null;
       var obj = this.origin[indx], clone = this.nodes[indx];
@@ -2408,6 +2417,7 @@
    /** Create stack array based on nodes ids array.
     * Ids list should correspond to existing nodes hierarchy */
    JSROOT.GEO.ClonedNodes.prototype.MakeStackByIds = function(ids) {
+      if (!ids) return null;
 
       if (ids[0] !== 0) {
          console.error('wrong ids - first should be 0');
@@ -2418,6 +2428,7 @@
 
       for (var k=1;k<ids.length;++k) {
          var nodeid = ids[k];
+         if (!node) return null;
          var chindx = node.chlds.indexOf(nodeid);
          if (chindx < 0) {
             console.error('wrong nodes ids ' + ids[k] + ' is not child of ' + ids[k-1]);
@@ -2429,6 +2440,18 @@
       }
 
       return stack;
+   }
+
+   /** Retuns ids array which correspond to the stack */
+   JSROOT.GEO.ClonedNodes.prototype.MakeIdsByStack = function(stack) {
+      if (!stack) return null;
+      var node = this.nodes[0], ids = [0];
+      for (var k=0;k<stack.length;++k) {
+         var id = node.chlds[stack[k]];
+         ids.push(id);
+         node = this.nodes[id];
+      }
+      return ids;
    }
 
    /** Returns true if stack includes at any place provided nodeid */
@@ -2485,7 +2508,7 @@
          prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
                           opacity: _opacity, wireframe: false, color: prop.fillcolor,
                           side: THREE.FrontSide /* THREE.DoubleSide*/, vertexColors: THREE.NoColors /*THREE.VertexColors */,
-                          overdraw: 0., depthWrite: _opacity == 1 } );
+                          depthWrite: _opacity == 1 } );
          prop.material.inherentOpacity = _opacity;
 
          return prop;
@@ -2511,7 +2534,7 @@
             prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
                              opacity: _opacity, wireframe: false, color: prop.fillcolor,
                              side: THREE.FrontSide /* THREE.DoubleSide*/, vertexColors: THREE.NoColors /*THREE.VertexColors */,
-                             overdraw: 0., depthWrite: _opacity == 1 } );
+                             depthWrite: _opacity == 1 } );
             prop.material.inherentOpacity = _opacity;
          }
 
@@ -2548,7 +2571,7 @@
          prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
                               opacity: _opacity, wireframe: false, color: prop.fillcolor,
                               side: THREE.FrontSide /* THREE.DoubleSide */, vertexColors: THREE.NoColors /*THREE.VertexColors*/,
-                              overdraw: 0., depthWrite: _opacity == 1 } );
+                              depthWrite: _opacity == 1 } );
          prop.material.inherentOpacity = _opacity;
 
       }
@@ -3041,9 +3064,12 @@
       delete shape.geomZ;
    }
 
+   /** @brief Set rendering order for created hierarchy
+    * @desc depending from provided method sort differently objects
+    * @param toplevel - top element
+    * @param origin - camera position used to provide sorting
+    * @param method - name of sorting method like "pnt", "ray", "size", "dflt"  */
    JSROOT.GEO.produceRenderOrder = function(toplevel, origin, method, clones) {
-      // function scans throug hierarchy of objects and try to set renderOrder
-      // algorithm is not perfect, but better then nothing
 
       var raycast = new THREE.Raycaster();
 
@@ -3087,6 +3113,9 @@
             return false;
          }
 
+
+         var tmp_vect = new THREE.Vector3();
+
          // first calculate distance to the camera
          // it gives preliminary order of volumes
 
@@ -3103,7 +3132,7 @@
             }
 
             if (method === "pnt") {
-               mesh.$jsroot_distance = origin.distanceTo(box3.getCenter());
+               mesh.$jsroot_distance = origin.distanceTo(box3.getCenter(tmp_vect));
                continue;
             }
 
@@ -3141,7 +3170,7 @@
          for (var i=arr.length-1;i>=0;--i) {
             var mesh = arr[i],
                 box3 = mesh.$jsroot_box3,
-                direction = box3.getCenter();
+                direction = box3.getCenter(tmp_vect);
 
             for(var ntry=0; ntry<2;++ntry) {
 

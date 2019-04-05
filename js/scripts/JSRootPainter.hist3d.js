@@ -7,7 +7,7 @@
    } else
    if (typeof exports === 'object' && typeof module !== 'undefined') {
       var jsroot = require("./JSRootCore.js");
-      factory(jsroot, require("./d3.min.js"), require("./JSRootPainter.hist.js"), require("./three.min.js"), require("./three.extra.min.js"),
+      factory(jsroot, require("d3"), require("./JSRootPainter.hist.js"), require("three"), require("./three.extra.min.js"),
               jsroot.nodejs || (typeof document=='undefined') ? jsroot.nodejs_document : document);
    } else {
 
@@ -283,6 +283,10 @@
 
          // do rendering, most consuming time
          this.renderer.render(this.scene, this.camera);
+
+         // no idea why - SoftwareRenderer requires second call
+         if ((this.first_render_tm === 0) && (this.renderer instanceof THREE.SoftwareRenderer))
+             this.renderer.render(this.scene, this.camera);
 
          JSROOT.Painter.AfterRender3D(this.renderer);
 
@@ -1967,12 +1971,15 @@
 
          this.BuildContour(handle, levels, palette,
             function(colindx,xp,yp,iminus,iplus) {
+                // no need for duplicated point
+                if ((xp[iplus] === xp[iminus]) && (yp[iplus] === yp[iminus])) iplus--;
+
                 // ignore less than three points
                 if (iplus - iminus < 3) return;
 
                 var pnts = [];
 
-                for (var i = iminus; i<=iplus; ++i)
+                for (var i = iminus; i <= iplus; ++i)
                    if ((i === iminus) || (xp[i] !== xp[i-1]) || (yp[i] !== yp[i-1]))
                       pnts.push(new THREE.Vector2(xp[i], yp[i]));
 

@@ -6,7 +6,7 @@
       define( ['JSRootPainter', 'd3'], factory );
    } else
    if (typeof exports === 'object' && typeof module !== 'undefined') {
-       factory(require("./JSRootCore.js"), require("./d3.min.js"));
+       factory(require("./JSRootCore.js"), require("d3"));
    } else {
 
       if (typeof d3 != 'object')
@@ -2395,7 +2395,7 @@
       //if (typeof this.RecalculateRange == "function")
       //   this.RecalculateRange();
 
-      if (false /*this.histo.fXaxis.fTimeDisplay*/) {
+      if (this._xaxis_timedisplay) {
          this.x_kind = 'time';
          this.timeoffsetx = JSROOT.Painter.getTimeOffset(this.histo.fXaxis);
          this.ConvertX = function(x) { return new Date(this.timeoffsetx + x*1000); };
@@ -2443,7 +2443,7 @@
          this.scale_ymax = this.zoom_ymax;
       }
 
-      if (false /*this.histo.fYaxis.fTimeDisplay*/) {
+      if (this._yaxis_timedisplay) {
          this.y_kind = 'time';
          this.timeoffsety = JSROOT.Painter.getTimeOffset(this.histo.fYaxis);
          this.ConvertY = function(y) { return new Date(this.timeoffsety + y*1000); };
@@ -4267,7 +4267,7 @@
       if (nocanvas) {
          console.log("No canvas specified");
          return null;
-         can = JSROOT.Create("ROOT::Experimental::TCanvas");
+         // can = JSROOT.Create("ROOT::Experimental::TCanvas");
       }
 
       var painter = new TCanvasPainter(can);

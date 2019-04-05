@@ -4,7 +4,7 @@
    } else
    if (typeof exports === 'object' && typeof module !== 'undefined') {
       var jsroot = require("./JSRootCore.js");
-      factory(jsroot, require("./d3.min.js"));
+      factory(jsroot, require("d3"));
       if (jsroot.nodejs) jsroot.Painter.readStyleFromURL("?interactive=0&tooltip=0&nomenu&noprogress&notouch&toolbar=0&webgl=0");
    } else {
 
@@ -46,7 +46,7 @@
          d3.scaleLinear = d3.scale.linear;
          JSROOT._test_d3_ = 3;
       } else {
-         console.error('Fail to identify d3.js version '  + (d3 ? d3.version : "???"));
+         console.error('Fail to identify d3.js version ' + (d3 ? d3.version : "???"));
       }
    }
 
@@ -132,7 +132,7 @@
     * @constructor
     * @memberof JSROOT
     */
-   var DrawOptions = function(opt) {
+   function DrawOptions(opt) {
       this.opt = opt && (typeof opt=="string") ? opt.toUpperCase().trim() : "";
       this.part = "";
    }
@@ -982,7 +982,7 @@
    }
 
    /**
-    * Create sample element inside primitive SVG - used in context menu
+    * @summary Create sample element inside primitive SVG - used in context menu
     * @private
     */
 
@@ -2079,7 +2079,7 @@
 
    /** @summary Method used to initialize connection to web window.
     *
-    * @param {object} arg - arguemnts
+    * @param {object} arg - arguments
     * @param {string} [arg.prereq] - prerequicities, which should be loaded
     * @param {string} [arg.openui5src] - source of openui5, either URL like "https://openui5.hana.ondemand.com" or "jsroot" which provides its own reduced openui5 package
     * @param {string} [arg.openui5libs] - list of openui5 libraries loaded, default is "sap.m, sap.ui.layout, sap.ui.unified"
@@ -2261,26 +2261,23 @@
    }
 
    /** @summary Returns drawn object
-    *
-    * @abstract
-    */
+    * @abstract */
    TBasePainter.prototype.GetObject = function() {
-      return null;
    }
 
    /** @summary Returns true if type match with drawn object type
+    * @param {string} typename - type name to check with
+    * @returns {boolean} true if draw objects matches with provided type name
     * @abstract
-    * @private
-    */
-   TBasePainter.prototype.MatchObjectType = function(typ) {
-      return false;
+    * @private */
+   TBasePainter.prototype.MatchObjectType = function(typename) {
    }
 
    /** @summary Called to update drawn object content
+    * @returns {boolean} true if update can be performed
     * @abstract
     * @private */
    TBasePainter.prototype.UpdateObject = function(obj) {
-      return false;
    }
 
    /** @summary Redraw all objects in current pad
@@ -2302,24 +2299,23 @@
    }
 
    /** @summary Checks if draw elements were resized and drawing should be updated
+    * @returns {boolean} true if resize was detected
     * @abstract
     * @private */
    TBasePainter.prototype.CheckResize = function(arg) {
-      return false;
    }
 
    /** @summary Method called when interactively changes attribute in given class
     * @abstract
     * @private */
    TBasePainter.prototype.AttributeChange = function(class_name, member_name, new_value) {
-      // function called when user interactively changes attribute in given class
-
       // console.log("Changed attribute", class_name, member_name, new_value);
    }
 
-   /** @summary Returns d3.select for main element for drawing, defined with this.divid.
-    *
-    * @desc if main element was layouted, returns main element inside layout */
+   /** @summary access to main HTML element used for drawing - typically <div> element
+     * @desc if main element was layouted, returns main element inside layout
+    * @param {string} is_direct - if 'origin' specified, returns original element even if actual drawing moved to some other place
+    * @returns {object} d3.select for main element for drawing, defined with this.divid. */
    TBasePainter.prototype.select_main = function(is_direct) {
 
       if (!this.divid) return d3.select(null);
@@ -2591,7 +2587,6 @@
    }
 
    /** @summary Check if it makes sense to zoom inside specified axis range
-    *
     * @param {string} axis - name of axis like 'x', 'y', 'z'
     * @param {number} left - left axis range
     * @param {number} right - right axis range
@@ -2600,7 +2595,6 @@
     * @private
     */
    TBasePainter.prototype.CanZoomIn = function(axis,left,right) {
-      return false;
    }
 
    // ==============================================================================
@@ -2917,12 +2911,14 @@
       if (!pad_name || c.empty()) return c;
 
       var cp = c.property('pad_painter');
-      if (cp.pads_cache && cp.pads_cache[pad_name])
+      if (cp && cp.pads_cache && cp.pads_cache[pad_name])
          return d3.select(cp.pads_cache[pad_name]);
 
       c = c.select(".primitives_layer .__root_pad_" + pad_name);
-      if (!cp.pads_cache) cp.pads_cache = {};
-      cp.pads_cache[pad_name] = c.node();
+      if (cp) {
+         if (!cp.pads_cache) cp.pads_cache = {};
+         cp.pads_cache[pad_name] = c.node();
+      }
       return c;
    }
 
@@ -4288,7 +4284,7 @@
   }
 
    /** @summary Check if user-defined tooltip callback is configured
-    * @returns {Boolean}
+    * @returns {boolean}
     * @private */
    TObjectPainter.prototype.IsUserTooltipCallback = function() {
       return typeof this.UserTooltipCallback == 'function';
@@ -5496,7 +5492,7 @@
          if (!hint) continue;
 
          if (hint.painter && (hint.user_info!==undefined))
-            if (hint.painter.ProvideUserTooltip(hint.user_info));
+            if (hint.painter.ProvideUserTooltip(hint.user_info)) {};
 
          if (!hint.lines || (hint.lines.length===0)) {
             hints[n] = null; continue;
@@ -5884,10 +5880,10 @@
    JSROOT.addDrawFunc({ name: "TText", icon: "img_text", prereq: "more2d", func: "JSROOT.Painter.drawText", direct: true });
    JSROOT.addDrawFunc({ name: /^TH1/, icon: "img_histo1d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram1D", opt:";hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;B;B1;A;TEXT;LEGO;same", ctrl: "l" });
    JSROOT.addDrawFunc({ name: "TProfile", icon: "img_profile", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram1D", opt:";E0;E1;E2;p;AH;hist"});
-   JSROOT.addDrawFunc({ name: "TH2Poly", icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;same", expand_item: "fBins", theonly: true });
+   JSROOT.addDrawFunc({ name: "TH2Poly", icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same", expand_item: "fBins", theonly: true });
    JSROOT.addDrawFunc({ name: "TProfile2Poly", sameas: "TH2Poly" });
    JSROOT.addDrawFunc({ name: "TH2PolyBin", icon: "img_histo2d", draw_field: "fPoly" });
-   JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;SCAT;TEXT;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same", ctrl: "colz" });
+   JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same", ctrl: "colz" });
    JSROOT.addDrawFunc({ name: "TProfile2D", sameas: "TH2" });
    JSROOT.addDrawFunc({ name: /^TH3/, icon: 'img_histo3d', prereq: "v6;hist3d", func: "JSROOT.Painter.drawHistogram3D", opt:";SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL" });
    JSROOT.addDrawFunc({ name: "THStack", icon: "img_histo1d", prereq: "v6;hist", func: "JSROOT.Painter.drawHStack", expand_item: "fHists", opt: "NOSTACK;HIST;E;PFC;PLC" });
@@ -6426,24 +6422,18 @@
    JSROOT.CheckElementResize = JSROOT.resize;
 
    /** @summary Returns main painter object for specified HTML element
-    * @param {string|object} divid - id or DOM element
-    */
-
+     * @param {string|object} divid - id or DOM element */
    JSROOT.GetMainPainter = function(divid) {
       var dummy = new JSROOT.TObjectPainter();
       dummy.SetDivId(divid, -1);
       return dummy.main_painter(true);
    }
 
-   /**
-    * @summary Safely remove all JSROOT objects from specified element
-    *
-    * @param {string|object} divid - id or DOM element
-    *
-    * @example
-    * JSROOT.cleanup("drawing");
-    * JSROOT.cleanup(document.querySelector("#drawing"));
-    */
+   /** @summary Safely remove all JSROOT objects from specified element
+     * @param {string|object} divid - id or DOM element
+     * @example
+     * JSROOT.cleanup("drawing");
+     * JSROOT.cleanup(document.querySelector("#drawing")); */
    JSROOT.cleanup = function(divid) {
       var dummy = new TObjectPainter(), lst = [];
       dummy.SetDivId(divid, -1);
@@ -6455,9 +6445,8 @@
       return lst;
    }
 
-   /** Display progress message in the left bottom corner.
-    *
-    * Previous message will be overwritten
+   /** @summary Display progress message in the left bottom corner.
+    *  @desc Previous message will be overwritten
     * if no argument specified, any shown messages will be removed
     * @param {string} msg - message to display
     * @param {number} tmout - optional timeout in milliseconds, after message will disappear
@@ -6497,11 +6486,9 @@
       }
    }
 
-   /** Tries to close current browser tab
-   *
-   * Many browsers do not allow simple window.close() call,
-   * therefore try several workarounds
-   */
+   /** @summary Tries to close current browser tab
+     * @desc Many browsers do not allow simple window.close() call,
+     * therefore try several workarounds */
 
    JSROOT.CloseCurrentWindow = function() {
       if (!window) return;

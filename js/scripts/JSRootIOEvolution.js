@@ -2926,9 +2926,9 @@
 
          if (n===0) return []; // for empty vector no need to search split streamers
 
-         if (n>1000000) {
+         if (n > 1000000) {
             throw new Error('member-wise streaming of ' + this.conttype + " num " + n + ' member ' + this.name);
-            return [];
+            // return [];
          }
 
          if ((ver.val === this.member_ver) && (ver.checksum === this.member_checksum)) {

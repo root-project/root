@@ -6,7 +6,7 @@
       define( ['JSRootPainter', 'd3'], factory );
    } else
    if (typeof exports === 'object' && typeof module !== 'undefined') {
-       factory(require("./JSRootCore.js"), require("./d3.min.js"));
+       factory(require("./JSRootCore.js"), require("d3"));
    } else {
 
       if (typeof d3 != 'object')
@@ -2156,6 +2156,7 @@
                histo.fZaxis.fNbins = obj.fZaxis.fNbins;
             }
          }
+
          histo.fArray = obj.fArray;
          histo.fNcells = obj.fNcells;
          histo.fTitle = obj.fTitle;
@@ -2198,10 +2199,11 @@
 
          if (this.IsTProfile()) {
             histo.fBinEntries = obj.fBinEntries;
-         }
-         if (this.IsTH1K()) {
+         } else if (this.IsTH1K()) {
             histo.fNIn = obj.fNIn;
             histo.fReady = false;
+         } else if (this.IsTH2Poly()) {
+            histo.fBins = obj.fBins;
          }
 
          this.DecomposeTitle();
@@ -2282,10 +2284,10 @@
       AssignFuncs(histo.fZaxis);
    }
 
+   /** @summary Create x,y objects which maps user coordinates into pixels
+    *  @desc Now moved into TFramePainter
+    *  @private */
    THistPainter.prototype.CreateXY = function() {
-      // Create x,y objects which maps user coordinates into pixels
-      // Now moved into TFramePainter
-
       if (!this.is_main_painter()) return;
 
       var histo = this.GetHisto(),
@@ -2889,6 +2891,7 @@
          case "ToggleZoom":
             if ((fp.zoom_xmin !== fp.zoom_xmax) || (fp.zoom_ymin !== fp.zoom_ymax) || (fp.zoom_zmin !== fp.zoom_zmax)) {
                fp.Unzoom();
+               fp.zoom_changed_interactive = 0;
                return true;
             }
             if (this.draw_content && (typeof this.AutoZoom === 'function')) {
@@ -2995,7 +2998,7 @@
 
       var main = this.main_painter(),
           fp = this.frame_painter();
-      if ((main !== this) && main.fContour) {
+      if (main && (main !== this) && main.fContour) {
          this.fContour = main.fContour;
          this.fCustomContour = main.fCustomContour;
          this.colzmin = main.colzmin;
@@ -3154,9 +3157,10 @@
 
          var zaxis = this.GetHisto().fZaxis;
 
-         JSROOT.extend(pal.fAxis, { fTitle: zaxis.fTitle, fTitleSize: zaxis.fTitleSize, fTextColor: zaxis.fTitleColor, fChopt: "+",
+         JSROOT.extend(pal.fAxis, { fTitle: zaxis.fTitle, fTitleSize: zaxis.fTitleSize, fChopt: "+",
                                     fLineColor: zaxis.fAxisColor, fLineSyle: 1, fLineWidth: 1,
-                                    fTextAngle: 0, fTextSize: zaxis.fLabelSize, fTextAlign: 11, fTextColor: zaxis.fLabelColor, fTextFont: zaxis.fLabelFont });
+                                    fTextAngle: 0, fTextSize: zaxis.fLabelSize, fTextAlign: 11,
+                                    fTextColor: zaxis.fLabelColor, fTextFont: zaxis.fLabelFont });
 
          // place colz in the beginning, that stat box is always drawn on the top
          this.AddFunction(pal, true);
@@ -3397,12 +3401,9 @@
       histo.fReady = true;
    }
 
-   /** Scan content of 1-D histogram
-    *
-    * Detect min/max values for x and y axis
-    * @param when_axis_changed - true when only zooming was changed, some checks may be skipped
-    */
-
+   /** @summary Scan content of 1-D histogram
+    * @desc Detect min/max values for x and y axis
+    * @param when_axis_changed - true when only zooming was changed, some checks may be skipped */
    TH1Painter.prototype.ScanContent = function(when_axis_changed) {
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
 
@@ -4515,7 +4516,7 @@
 
    TH2Painter.prototype.ToggleProjection = function(kind, width) {
 
-      if (kind=="Projections") kind = "";
+      if ((kind=="Projections") || (kind=="Off")) kind = "";
 
       if ((typeof kind == 'string') && (kind.length>1)) {
           width = parseInt(kind.substr(1));
@@ -4610,15 +4611,18 @@
    TH2Painter.prototype.FillHistContextMenu = function(menu) {
       // painter automatically bind to menu callbacks
 
-      menu.add("sub:Projections", this.ToggleProjection);
-      var kind = this.is_projection || "";
-      if (kind) kind += this.projection_width;
-      var kinds = ["X1", "X2", "X3", "X5", "X10", "Y1", "Y2", "Y3", "Y5", "Y10"];
-      for (var k=0;k<kinds.length;++k)
-         menu.addchk(kind==kinds[k], kinds[k], kinds[k], this.ToggleProjection);
-      menu.add("endsub:");
+      if (!this.IsTH2Poly()) {
+         menu.add("sub:Projections", this.ToggleProjection);
+         var kind = this.is_projection || "";
+         if (kind) kind += this.projection_width;
+         var kinds = ["X1", "X2", "X3", "X5", "X10", "Y1", "Y2", "Y3", "Y5", "Y10"];
+         if (this.is_projection) kinds.push("Off");
+         for (var k=0;k<kinds.length;++k)
+            menu.addchk(kind==kinds[k], kinds[k], kinds[k], this.ToggleProjection);
+         menu.add("endsub:");
 
-      menu.add("Auto zoom-in", this.AutoZoom);
+         menu.add("Auto zoom-in", this.AutoZoom);
+      }
 
       var sett = JSROOT.getDrawSettings("ROOT." + this.GetObject()._typename, 'nosame');
 
@@ -5321,13 +5325,23 @@
       return handle;
    }
 
-   TH2Painter.prototype.CreatePolyBin = function(pmain, bin) {
+   TH2Painter.prototype.CreatePolyBin = function(pmain, bin, text_pos) {
       var cmd = "", ngr, ngraphs = 1, gr = null;
 
       if (bin.fPoly._typename=='TMultiGraph')
          ngraphs = bin.fPoly.fGraphs.arr.length;
       else
          gr = bin.fPoly;
+
+      if (text_pos)
+         bin._sumx = bin._sumy = bin._suml = 0;
+
+      function AddPoint(x1,y1,x2,y2) {
+         var len = Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+         bin._sumx += (x1+x2)*len/2;
+         bin._sumy += (y1+y2)*len/2;
+         bin._suml += len;
+      }
 
       for (ngr = 0; ngr < ngraphs; ++ ngr) {
          if (!gr || (ngr>0)) gr = bin.fPoly.fGraphs.arr[ngr];
@@ -5345,6 +5359,7 @@
          for (n=1;n<npnts;++n) {
             nextx = Math.round(pmain.grx(x[n]));
             nexty = Math.round(pmain.gry(y[n]));
+            if (text_pos) AddPoint(grx,gry, nextx, nexty);
             if ((grx!==nextx) || (gry!==nexty)) {
                if (grx===nextx) cmd += "v" + (nexty - gry); else
                   if (gry===nexty) cmd += "h" + (nextx - grx); else
@@ -5353,7 +5368,18 @@
             grx = nextx; gry = nexty;
          }
 
+         if (text_pos) AddPoint(grx, gry, Math.round(pmain.grx(x[0])), Math.round(pmain.gry(y[0])));
          cmd += "z";
+      }
+
+      if (text_pos) {
+         if (bin._suml > 0) {
+            bin._midx = Math.round(bin._sumx / bin._suml);
+            bin._midy = Math.round(bin._sumy / bin._suml);
+         } else {
+            bin._midx = Math.round(pmain.grx((bin.fXmin + bin.fXmax)/2));
+            bin._midy = Math.round(pmain.gry((bin.fYmin + bin.fYmax)/2));
+         }
       }
 
       return cmd;
@@ -5388,7 +5414,7 @@
          if ((bin.fXmin > pmain.scale_xmax) || (bin.fXmax < pmain.scale_xmin) ||
              (bin.fYmin > pmain.scale_ymax) || (bin.fYmax < pmain.scale_ymin)) continue;
 
-         cmd = this.CreatePolyBin(pmain, bin);
+         cmd = this.CreatePolyBin(pmain, bin, this.options.Text && bin.fContent);
 
          if (colPaths[colindx] === undefined)
             colPaths[colindx] = cmd;
@@ -5423,9 +5449,7 @@
          for (i = 0; i < textbins.length; ++ i) {
             bin = textbins[i];
 
-            var posx = Math.round(pmain.x((bin.fXmin + bin.fXmax)/2)),
-                posy = Math.round(pmain.y((bin.fYmin + bin.fYmax)/2)),
-                lbl = "";
+            var lbl = "";
 
             if (!this.options.TextKind) {
                lbl = (Math.round(bin.fContent) === bin.fContent) ? bin.fContent.toString() :
@@ -5436,7 +5460,7 @@
                if (!lbl) lbl = bin.fNumber;
             }
 
-            this.DrawText({ align: 22, x: posx, y: posy, rotate: text_angle, text: lbl, color: text_col, latex: 0, draw_g: text_g });
+            this.DrawText({ align: 22, x: bin._midx, y: bin._midy, rotate: text_angle, text: lbl, color: text_col, latex: 0, draw_g: text_g });
          }
 
          this.FinishTextDrawing(text_g, null);
@@ -5941,26 +5965,28 @@
           h = this.frame_height(),
           handle = null;
 
-      if (this.IsTH2Poly())
+      if (this.IsTH2Poly()) {
          handle = this.DrawPolyBinsColor(w, h);
-      else if (this.options.Scat)
-         handle = this.DrawBinsScatter(w, h);
-      else if (this.options.Color)
-         handle = this.DrawBinsColor(w, h);
-      else if (this.options.Box)
-         handle = this.DrawBinsBox(w, h);
-      else if (this.options.Arrow)
-         handle = this.DrawBinsArrow(w, h);
-      else if (this.options.Contour)
-         handle = this.DrawBinsContour(w, h);
-      else if (this.options.Candle)
-         handle = this.DrawCandle(w, h);
+      } else {
+         if (this.options.Scat)
+            handle = this.DrawBinsScatter(w, h);
+         else if (this.options.Color)
+            handle = this.DrawBinsColor(w, h);
+         else if (this.options.Box)
+            handle = this.DrawBinsBox(w, h);
+         else if (this.options.Arrow)
+            handle = this.DrawBinsArrow(w, h);
+         else if (this.options.Contour)
+            handle = this.DrawBinsContour(w, h);
+         else if (this.options.Candle)
+            handle = this.DrawCandle(w, h);
 
-      if (this.options.Text)
-         handle = this.DrawBinsText(w, h, handle);
+         if (this.options.Text)
+            handle = this.DrawBinsText(w, h, handle);
 
-      if (!handle)
-         handle = this.DrawBinsScatter(w, h);
+         if (!handle)
+            handle = this.DrawBinsScatter(w, h);
+      }
 
       this.tt_handle = handle;
    }
