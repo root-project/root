@@ -46,10 +46,11 @@ void df027_SQliteDependencyOverVersion () {
    auto canvases = new std::vector<TCanvas*>(histoList.size());
 
    gStyle->SetTimeOffset(0);
-
+   gStyle->SetOptStat(0);
    auto histoIdx = 0U;
    for (auto histo : histoList) {
       canvases->at(histoIdx) = new TCanvas();
+      histo->LabelsOption("v");
       histo->GetXaxis()->SetTimeDisplay(1);
       histo->GetXaxis()->SetLabelSize(0.02);
       histo->GetXaxis()->SetNdivisions(512, kFALSE);
