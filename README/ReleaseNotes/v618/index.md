@@ -131,6 +131,21 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
   - Add the `Max`, `Min`, `ArgMax`, and `ArgMin` helpers for RVec.
   - Add the `Construct` helper to build an `RVec<T>` starting from N `RVec<P_i>`, where a constructor `T::T(P_0, P_1, ..., P_Nm1)` exists.
 
+### [Clad](https://github.com/vgvassilev/clad)
+  - Upgrade Clad to 0.5 The new release includes some improvements in both
+    Forward and Reverse mode:
+    * Extend the way to specify a dependent variables. Consider function,
+      `double f(double x, double y, double z) {...}`, `clad::differentiate(f, "z")`
+      is equivalent to `clad::differentiate(f, 2)`. `clad::gradient(f, "x, y")`
+      differentiates with respect to `x` and `y` but not `z`. The gradient results
+      are stored in a `_result` parameter in the same order as `x` and `y` were
+      specified. Namely, the result of `x` is stored in `_result[0]` and the result
+      of `y` in `_result[1]`. If we invert the arguments specified in the string to
+      `clad::gradient(f, "y, x")` the results will be stored inversely.
+    * Enable recursive differentiation.
+    * Support single- and multi-dimensional arrays -- works for arrays with constant
+      size like `double A[] = {1, 2, 3};`, `double A[3];` or `double A[1][2][3][4];`
+
 ## RooFit Libraries
 ### HistFactory
 hist2workspace performance optimisations. For a large, ATLAS-style Higgs-->bb workspace with > 100 systematic uncertainties and more than 10 channels, the run time decreases by a factor 11 to 12.
