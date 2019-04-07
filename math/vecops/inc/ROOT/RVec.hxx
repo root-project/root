@@ -60,8 +60,8 @@ namespace VecOps {
 template<typename T>
 using RVec = ROOT::VecOps::RVec<T>;
 
-template <typename F, typename... T>
-auto MapImpl(F &&f, const RVec<T> &... vs) -> RVec<decltype(f(vs[0]...))>
+template <typename... T>
+std::size_t GetVectorsSize(std::string_view id, const RVec<T> &... vs)
 {
    constexpr const auto nArgs = sizeof...(T);
    const std::size_t sizes[] = {vs.size()...};
@@ -69,12 +69,21 @@ auto MapImpl(F &&f, const RVec<T> &... vs) -> RVec<decltype(f(vs[0]...))>
       for (auto i = 1UL; i < nArgs; i++) {
          if (sizes[0] == sizes[i])
             continue;
-         throw std::runtime_error("Map: input RVec instances have different lengths!");
+         std::string msg(id);
+         msg += ": input RVec instances have different lengths!";
+         throw std::runtime_error(msg);
       }
    }
-   RVec<decltype(f(vs[0]...))> ret(sizes[0]);
+   return sizes[0];
+}
 
-   for (auto i = 0UL; i < sizes[0]; i++)
+template <typename F, typename... T>
+auto MapImpl(F &&f, const RVec<T> &... vs) -> RVec<decltype(f(vs[0]...))>
+{
+   const auto size = GetVectorsSize("Map", vs...);
+   RVec<decltype(f(vs[0]...))> ret(size);
+
+   for (auto i = 0UL; i < size; i++)
       ret[i] = f(vs[i]...);
 
    return ret;
@@ -1687,6 +1696,35 @@ T InvariantMass(const RVec<T>& pt, const RVec<T>& eta, const RVec<T>& phi, const
 
    // Return invariant mass with (+, -, -, -) metric
    return std::sqrt(es * es - xs * xs - ys * ys - zs * zs);
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Build an RVec of objects starting from RVecs of input to their constructors.
+/// \tparam T Type of the objects contained in the created RVec.
+/// \tparam Args_t Pack of types templating the input RVecs.
+/// \param[in] args The RVecs containing the values used to initialise the output objects.
+/// \return The RVec of objects initialised with the input parameters.
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// RVec<float> etas {.3f, 2.2f, 1.32f};
+/// RVec<float> phis {.1f, 3.02f, 2.2f};
+/// RVec<float> pts {15.5f, 34.32f, 12.95f};
+/// RVec<float> masses {105.65f, 105.65f, 105.65f};
+/// Construct<ROOT::Math::PtEtaPhiMVector> fourVects(etas, phis, pts, masses);
+/// cout << fourVects << endl;
+/// // { (15.5,0.3,0.1,105.65), (34.32,2.2,3.02,105.65), (12.95,1.32,2.2,105.65) }
+template <typename T, typename... Args_t>
+RVec<T> Construct(const RVec<Args_t> &... args)
+{
+   const auto size = ::ROOT::Detail::VecOps::GetVectorsSize("Construct", args...);
+   RVec<T> ret;
+   ret.reserve(size);
+   for (auto i = 0UL; i < size; ++i) {
+      ret.emplace_back(args[i]...);
+   }
+   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
