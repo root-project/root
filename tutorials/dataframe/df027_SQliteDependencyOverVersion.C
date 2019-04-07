@@ -50,7 +50,7 @@ void df027_SQliteDependencyOverVersion () {
    auto histoIdx = 0U;
    for (auto histo : histoList) {
       canvases->at(histoIdx) = new TCanvas();
-      histo->LabelsOption("v");
+      histo->GetXaxis()->LabelsOption("v");
       histo->GetXaxis()->SetTimeDisplay(1);
       histo->GetXaxis()->SetLabelSize(0.02);
       histo->GetXaxis()->SetNdivisions(512, kFALSE);
