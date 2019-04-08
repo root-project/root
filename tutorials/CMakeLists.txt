@@ -404,6 +404,10 @@ if(ROOT_python_FOUND)
     list(APPEND pyveto math/tStudent.py)
   endif()
 
+ if(NOT XROOTD_FOUND)
+   list(APPEND pyveto dataframe/df102_NanoAODDimuonAnalysis.py)
+ endif()
+
   list(REMOVE_ITEM pytutorials ${pyveto})
 
   if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
@@ -434,6 +438,7 @@ if(ROOT_python_FOUND)
                  tutorial-dataframe-df016_vecOps-py
                  tutorial-dataframe-df017_vecOpsHEP-py
                  tutorial-dataframe-df026_AsNumpyArrays-py
+                 tutorial-dataframe-df102_NanoAODDimuonAnalysis-py
                  tutorial-hist-fillrandom-py
                  tutorial-math-Legendre-py
                  tutorial-math-tStudent-py
