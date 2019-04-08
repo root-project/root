@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -js
-/// This tutorial demonstrates how RDataFrame can be used to create a
-/// connection with a SQlite3 database. It accesses the Sqlite data base, and makes
-/// a query selecting the entire table.
+/// Plot the location of ROOT downloads reading a remote sqlite3 file with RSqliteDS.
 /// The world map is hold by a TH2Poly histogram which, after filling, will show
 /// the world wide dispersion of ROOT's users.
 /// To histogram filling, is done thanks to a lambda expression having as input parameters

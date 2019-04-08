@@ -1,15 +1,11 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -js
-/// This tutorial demonstrates how RDataFrame can be used to create a
-/// connection with a SQlite3 database. It accesses the Sqlite data base, and makes
-/// a query selecting the entire table.
+/// Plot the downloads of different ROOT versions reading a remote sqlite3 file with RSqliteDS.
 /// Then a TH1F histogram is created and filled
 /// using a lambda expression which receives the recorded
 /// values in the “version” column of the sqlite3 database.
 /// The histogram shows the usage of the ROOT development version.
-/// This product includes GeoLite2 data created by MaxMind, available from
-/// <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
 ///
 /// \macro_code
 /// \macro_image

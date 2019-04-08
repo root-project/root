@@ -1,16 +1,12 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -js
-/// This tutorial demonstrates how RDataFrame can be used to create a
-/// connection with a SQlite3 database. It accesses the Sqlite data base, and makes
-/// a query selecting the entire table.
+
 /// In order to display the Platform Distribution of ROOT, we choose to create two TH1F
 /// histograms: one that includes all types of platforms, other filtering and classifying them.
 /// This procedure is using a lambda expression taking as parameter the values
 /// stored in the "Platform" column from the database. At the end, the histograms are filled
 /// with their specific demand regarding the platform's type.
-/// This product includes GeoLite2 data created by MaxMind, available from
-/// <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
 ///
 /// \macro_code
 /// \macro_image
