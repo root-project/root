@@ -67,6 +67,8 @@ static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunc
                                         (char *)"Get class to wrap Python callable as C++ callable"},
                                        {(char *)"AsRVec", (PyCFunction)PyROOT::AsRVec, METH_O,
                                         (char *)"Get object with array interface as RVec"},
+                                       {(char *)"MakeNumpyDataFrame", (PyCFunction)PyROOT::MakeNumpyDataFrame, METH_O,
+                                        (char *)"Make RDataFrame from dictionary of numpy arrays"},
                                        {NULL, NULL, 0, NULL}};
 
 #if PY_VERSION_HEX >= 0x03000000
