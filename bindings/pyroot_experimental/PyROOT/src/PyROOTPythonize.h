@@ -39,6 +39,8 @@ PyObject *GetEndianess(PyObject *self, PyObject *args);
 PyObject *GetVectorDataPointer(PyObject *self, PyObject *args);
 PyObject *GetSizeOfType(PyObject *self, PyObject *args);
 
+PyObject *MakeNumpyDataFrame(PyObject *self, PyObject *obj);
+
 } // namespace PyROOT
 
 #endif // !PYROOT_PYTHONIZE_H

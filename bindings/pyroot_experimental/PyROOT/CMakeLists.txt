@@ -36,6 +36,7 @@ set(sources
   src/PyROOTStrings.cxx
   src/PyROOTWrapper.cxx
   src/GenericPyz.cxx
+  src/RDataFramePyz.cxx
   src/RVecPyz.cxx
   src/TClassPyz.cxx
   src/TClonesArrayPyz.cxx
@@ -56,5 +57,6 @@ foreach(py_source ${py_sources})
 endforeach()
 
 ROOT_LINKER_LIBRARY(ROOTPython ${sources} LIBRARIES Core Tree cppyy)
+ROOT_INSTALL_HEADERS(inc)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

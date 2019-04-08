@@ -9,6 +9,7 @@
 ################################################################################
 
 from ROOT import pythonization
+from libROOTPython import MakeNumpyDataFrame
 
 
 def RDataFrameAsNumpy(df, columns=None, exclude=None):
@@ -96,3 +97,7 @@ def pythonize_rdataframe(klass, name):
         klass.AsNumpy = RDataFrameAsNumpy
 
     return True
+
+# Add MakeNumpyDataFrame feature as free function to the ROOT module
+import cppyy
+cppyy.gbl.ROOT.RDF.MakeNumpyDataFrame = MakeNumpyDataFrame
