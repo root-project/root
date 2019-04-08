@@ -43,6 +43,7 @@ class TWebObjectOptions {
 public:
    std::string snapid; ///< id of the object
    std::string opt;    ///< drawing options
+   std::vector<double> fopt; ///< float array for custom options
 };
 
 /// Class used to transport ranges from JSROOT canvas
