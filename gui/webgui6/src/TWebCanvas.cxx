@@ -18,6 +18,9 @@
 #include "TSystem.h"
 #include "TStyle.h"
 #include "TCanvas.h"
+#include "TFrame.h"
+#include "TPaveText.h"
+#include "TText.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TColor.h"
@@ -288,8 +291,53 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    TWebPS masterps;
    bool usemaster = primitives->GetSize() > fPrimitivesMerge;
 
+
    TIter iter(primitives);
    TObject *obj = nullptr;
+   TFrame *frame = nullptr;
+   TPaveText *title = nullptr;
+   bool need_frame = false;
+   TString need_title;
+
+   while ((obj = iter()) != nullptr) {
+      if (obj->InheritsFrom(TFrame::Class())) {
+         frame = static_cast<TFrame *>(obj);
+      } else if (obj->InheritsFrom(TH1::Class())) {
+         need_frame = true;
+         if (!obj->TestBit(TH1::kNoTitle) && (strlen(obj->GetTitle())>0)) need_title = obj->GetTitle();
+      } else if (obj->InheritsFrom(TGraph::Class())) {
+         need_frame = true;
+         if (strlen(obj->GetTitle())>0) need_title = obj->GetTitle();
+      } else if (obj->InheritsFrom(TPaveText::Class())) {
+         if (strcmp(obj->GetName(),"title") == 0)
+            title = static_cast<TPaveText *>(obj);
+      }
+   }
+
+   if (need_frame && !frame) {
+      frame = pad->GetFrame();
+      primitives->AddFirst(frame);
+   }
+
+   if (need_title.Length() > 0) {
+      if (title) {
+         TText *t0 = (TText*)title->GetLine(0);
+         if (t0) t0->SetTitle(need_title.Data());
+      } else {
+         title = new TPaveText(0, 0, 0, 0, "blNDC");
+         title->SetFillColor(gStyle->GetTitleFillColor());
+         title->SetFillStyle(gStyle->GetTitleStyle());
+         title->SetName("title");
+         title->SetBorderSize(gStyle->GetTitleBorderSize());
+         title->SetTextColor(gStyle->GetTitleTextColor());
+         title->SetTextFont(gStyle->GetTitleFont(""));
+         if (gStyle->GetTitleFont("")%10 > 2)
+            title->SetTextSize(gStyle->GetTitleFontSize());
+         title->AddText(need_title.Data());
+         title->SetBit(kCanDelete);
+         primitives->Add(title);
+      }
+   }
 
    auto flush_master = [&]() {
       if (!usemaster || masterps.IsEmptyPainting()) return;
@@ -301,6 +349,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    auto add_object = [&]() {
       paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
    };
+
+   iter.Reset();
 
    while ((obj = iter()) != nullptr) {
       if (obj->InheritsFrom(TPad::Class())) {
