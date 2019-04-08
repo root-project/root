@@ -372,7 +372,7 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          break;
       case 108:
       case 120:
-         for (int i=Int_t(msize/2); i>0; i--) fImage->DrawCircle(ix, iy, i, col->AsHexString(), 1);
+         for (int idx=Int_t(msize/2); idx>0; idx--) fImage->DrawCircle(ix, iy, idx, col->AsHexString(), 1);
          fImage->PutPixel((UInt_t)ix, (UInt_t)iy, col->AsHexString());
          break;
       // Square
