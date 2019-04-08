@@ -1,4 +1,7 @@
 #include <gtest/gtest.h>
+#include <Math/LorentzVector.h>
+#include <Math/PtEtaPhiM4D.h>
+#include <Math/Vector4Dfwd.h>
 #include <ROOT/RVec.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TFile.h>
@@ -1048,5 +1051,20 @@ TEST(VecOps, Map)
 
    ROOT::VecOps::RVec<double> ref{9.9498743710661994, 11.489125293076057, 13.076696830622021};
    CheckEqual(res, ref);
+}
+
+TEST(VecOps, Construct)
+{
+   RVec<float> pts {15.5f, 34.32f, 12.95f};
+   RVec<float> etas {.3f, 2.2f, 1.32f};
+   RVec<float> phis {.1f, 3.02f, 2.2f};
+   RVec<float> masses {105.65f, 105.65f, 105.65f};
+   auto fourVects = Construct<ROOT::Math::PtEtaPhiMVector>(pts, etas, phis, masses);
+   const ROOT::Math::PtEtaPhiMVector ref0 {15.5f, .3f, .1f, 105.65f};
+   const ROOT::Math::PtEtaPhiMVector ref1 {34.32f, 2.2f, 3.02f, 105.65f};
+   const ROOT::Math::PtEtaPhiMVector ref2 {12.95f, 1.32f, 2.2f, 105.65f};
+   EXPECT_TRUE(fourVects[0] == ref0);
+   EXPECT_TRUE(fourVects[1] == ref1);
+   EXPECT_TRUE(fourVects[2] == ref2);
 }
 
