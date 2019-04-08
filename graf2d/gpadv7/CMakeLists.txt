@@ -14,7 +14,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RDrawingAttr.hxx
     ROOT/RDrawingOptsBase.hxx
     ROOT/RPalette.hxx
-    ROOT/RStringEnumAttr.hxx
     ROOT/RStyle.hxx
     ROOT/RPadDisplayItem.hxx
     ROOT/RPadExtent.hxx
@@ -34,7 +33,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     v7/src/RDrawingAttr.cxx
     v7/src/RDrawingOptsBase.cxx
     v7/src/RPalette.cxx
-    v7/src/RStringEnumAttr.cxx
     v7/src/RStyle.cxx
     v7/src/RStyleReader.cxx
     v7/src/RPad.cxx

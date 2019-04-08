@@ -25,10 +25,22 @@
 /// user or normal coordinates. Spaces between any part is allowed.
 /// Example: `100 px + 0.1 user, 0.5 normal` is a `RPadExtent{100_px + 0.1_user, 0.5_normal}`.
 
-void ROOT::Experimental::InitializeAttrFromString(const std::string &name, const std::string &attrStrVal,
-                                                  ROOT::Experimental::RPadExtent &val)
+ROOT::Experimental::RPadExtent ROOT::Experimental::ExtentFromString(const std::string &name, const std::string &attrStrVal)
 {
-   val.SetFromAttrString(name, attrStrVal);
+   RPadExtent ret;
+   ret.SetFromAttrString(name, attrStrVal);
+   return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a RPadExtent to a style string, matching what ExtentFromString can parse.
+
+std::string ROOT::Experimental::ExtentToString(const RPadExtent &extent)
+{
+   std::string ret = PadLengthToString(extent.fHoriz);
+   ret += ", ";
+   ret += PadLengthToString(extent.fVert);
+   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

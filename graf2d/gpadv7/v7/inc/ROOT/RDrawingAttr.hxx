@@ -16,137 +16,132 @@
 #ifndef ROOT7_RDrawingAttr
 #define ROOT7_RDrawingAttr
 
-#include <ROOT/RStyle.hxx>
-
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace ROOT {
 namespace Experimental {
 
-class RDrawingOptsBase;
+class RDrawingAttrHolderBase;
 
-///\{
-/// Initialize an attribute `val` from a string value.
-///
-///\param[in] name - the attribute name, for diagnostic purposes.
-///\param[in] strval - the attribute value as a string.
-///\param[out] val - the value to be initialized.
-void InitializeAttrFromString(const std::string &name, const std::string &strval, int& val);
-void InitializeAttrFromString(const std::string &name, const std::string &strval, long long& val);
-void InitializeAttrFromString(const std::string &name, const std::string &strval, float& val);
-void InitializeAttrFromString(const std::string &name, const std::string &strval, std::string& val);
-///\}
-
+/** \class ROOT::Experimental::RDrawingAttrBase
+ A collection of graphics attributes, for instance everything describing a line:
+ color, width, opacity and style.
+ It has a name, so it can be found in the style.
+ */
 class RDrawingAttrBase {
-   /// The attribute name, as used in style files.
-   std::string fName;
+public:
+   /// Name parts: for "hist1d.box.line.width", name parts are "hist1d", "box",
+   /// border", and "width".
+   using NamePart_t = std::string;
+
+   /// Combination of names, e.g. "hist", "box", "line", "width".
+   using Name_t = std::vector<NamePart_t>;
+
+   /// Names of available attribute values if any, e.g. "color", "width".
+   /// These must be string literals.
+   std::unique_ptr<std::vector<NamePart_t>> fValueNames;
 
 protected:
-   const std::string &GetStyleClass(const RDrawingOptsBase& opts) const;
+   /// The final element of the attribute name, as used in style files.
+   /// I.e. for "hist1D.hist.box.line", this will be "line".
+   NamePart_t fNamePart;  ///<!
+
+   /// The container of the attribute values.
+   RDrawingAttrHolderBase *fHolder{nullptr};
+
+   /// The attribute that this attribute belongs to, if any.
+   const RDrawingAttrBase *fParent{nullptr};
+
+   /// Contained attributes, if any.
+   std::unique_ptr<std::vector<const RDrawingAttrBase*>> fChildren;
+
+protected:
+   /// Register a child `subAttr` with the parent `*this`.
+   void Register(const RDrawingAttrBase &subAttr);
+
+   /// Build the name for the attribute value at index `valueIndex`.
+   Name_t BuildNameForVal(std::size_t valueIndex) const;
+
+   /// Insert or update the attribute value identified by the valueIndex (in fValueNames)
+   /// to the value `strVal`.
+   void Set(std::size_t valueIndex, const std::string &strVal);
+
+   /// Get the attribute value as string, for a given index (in fValueNames).
+   /// `second` is `true` if it comes from our `RDrawingAttrHolderBase` (i.e. was
+   /// explicitly set through `Set()`) and `false` if it was determined from the
+   /// styles, i.e. through `RDrawingAttrHolderBase::GetAttrFromStyle()`.
+   std::pair<std::string, bool> Get(std::size_t valueIndex) const;
+
+   /// Get the available value names.
+   const std::vector<NamePart_t> *GetValueNames() const { return fValueNames.get(); }
 
 public:
+   /// Construct a default, unnamed, unconnected attribute.
    RDrawingAttrBase() = default;
-   RDrawingAttrBase(const char* name): fName(name) {}
 
-   const std::string& GetName() const { return fName; }
-   virtual void Snapshot() = 0;
-   virtual ~RDrawingAttrBase();
+   /// Construct a named attribute that does not have a parent; e.g.
+   /// because it's the top-most attribute in a drawing option object.
+   RDrawingAttrBase(const char* namePart): fNamePart(namePart) {}
+
+   /// Construct a named attribute that has a parent, e.g.
+   /// because it's some line attribute of the histogram attributes.
+   /// Registers `*this` with the parent.
+   RDrawingAttrBase(const char* namePart, RDrawingAttrHolderBase *holder, RDrawingAttrBase *parent);
+
+   /// Construct a named attribute that has a parent, e.g.
+   /// because it's some line attribute of the histogram attributes.
+   /// Registers `*this` with the parent.
+   /// Also provide the names of available values.
+   RDrawingAttrBase(const char* namePart, RDrawingAttrHolderBase *holder, RDrawingAttrBase *parent,
+      const std::vector<NamePart_t> &valueNames);
+
+   /// Get the (partial, i.e. without parent context) name of this attribute.
+   std::string GetNamePart() const { return fNamePart; }
+
+   /// Collect the attribute names that lead to this attribute, starting
+   /// with the topmost attribute, i.e. the parent that does not have a parent
+   /// itself, down to the name of *this (the last entry in the vector).
+   void GetName(Name_t &name) const;
+
+   /// Convert a Name_t to "hist.box.line.color", for diagnostic purposes.
+   static std::string NameToDottedDiagName(const Name_t &name);
+
+   /// Assemble all attribute names below *this.
+   void CollectChildNames(std::vector<Name_t> &names) const;
+
+   /// Actual attribute holder.
+   RDrawingAttrHolderBase* GetHolder() const { return fHolder; }
 };
 
-/** \class ROOT::Experimental::RDrawingAttrOrRef
- A wrapper for a graphics attribute, for instance a `RColor`.
- The `TTopmostPad` keeps track of shared attributes used by multiple drawing options by means of
- `weak_ptr`s; `RDrawingAttrOrRef`s hold `shared_ptr`s to these.
- The reference into the table of the shared attributes is wrapped into the reference of the `RDrawingAttrOrRef`
- to make them type-safe (i.e. distinct for `RColor`, `long long` and `double`).
+
+/** \class ROOT::Experimental::RDrawingAttrHolderBase
+ A container of attributes for which values have been provided;
+ top-most attribute edge. Provides an interface to the RStyle world.
  */
-
-template <class ATTR>
-class RDrawingAttr: public RDrawingAttrBase {
+class RDrawingAttrHolderBase {
+public:
+   using Name_t = RDrawingAttrBase::Name_t;
 private:
-   /// The shared_ptr, shared with the relevant attribute table of `TTopmostPad`.
-   std::shared_ptr<ATTR> fPtr; //!
+   struct StringVecHash {
+      std::size_t operator()(const Name_t &vec) const;
+   };
 
-   /// The attribute value. It is authoritative if `!fPtr && !fIsDefault`, otherwise it gets
-   /// updated by `Snapshot()`.
-   ATTR fAttr;
-
-   /// Whether this attribute is shared (through `TTopmostPad`'s attribute table) with other `RDrawingAttrOrRef`
-   /// objects.
-   bool IsShared() const { return (bool) fPtr; }
-
-   /// Share the attribute, potentially transforming this into a shared attribute.
-   std::shared_ptr<ATTR> GetSharedPtr() {
-      if (!IsShared())
-         fPtr = std::make_shared<ATTR>(std::move(fAttr));
-      return fPtr;
-   }
+   /// Map attribute names to their values.
+   std::unordered_map<Name_t, std::string, StringVecHash> fAttrNameVals;
 
 public:
-   /// Construct a default, non-shared attribute. The default value gets read from the default style,
-   /// given the attribute's name.
-   RDrawingAttr(RDrawingOptsBase& opts, const char *name): RDrawingAttrBase(name) {
-      InitializeAttrFromString(name, RStyle::GetCurrent().GetAttribute(name, GetStyleClass(opts)), fAttr);
-   }
+   virtual ~RDrawingAttrHolderBase();
+   /// Get an attribute value as string, given its name path.
+   std::string &At(const Name_t &attrName) { return fAttrNameVals[attrName]; }
 
-   /// Construct a default, non-shared attribute. The default value gets read from the default style,
-   /// given the attribute's name and arguments for the default attribute constructor, should no
-   /// style entry be found.
-   template <class...ARGS>
-   RDrawingAttr(RDrawingOptsBase& opts, const char *name, ARGS... args): RDrawingAttrBase(name), fAttr(args...) {
-      InitializeAttrFromString(name, RStyle::GetCurrent().GetAttribute(name, GetStyleClass(opts)), fAttr);
-   }
+   /// Get an attribute value as pointer to string, given its name path, or
+   /// `nullptr` if the attribute does not exist.
+   const std::string *AtIf(const Name_t &attrName) const;
 
-   /// Construct a *non-shared* attribute, copying the attribute's value.
-   RDrawingAttr(const RDrawingAttr &other): RDrawingAttrBase(other), fAttr(other.Get()) {}
-
-   /// Move an attribute.
-   RDrawingAttr(RDrawingAttr &&other) = default;
-
-   /// Create a shared attribute.
-   RDrawingAttr Share() {
-      return GetSharedPtr();
-   }
-
-   /// Update fAttr from the value of the shared state
-   void Snapshot() override {
-      if (IsShared())
-         fAttr = Get();
-   }
-
-   /// Get the const attribute, whether it's shared or not.
-   const ATTR &Get() const {
-      if (IsShared())
-         return *fPtr;
-      return fAttr;
-   }
-
-   /// Get the non-const attribute, whether it's shared or not.
-   ATTR &Get() {
-      if (IsShared())
-         return *fPtr;
-      return fAttr;
-   }
-
-   /// Convert to an ATTR (const).
-   explicit operator const ATTR& () const{ return Get(); }
-   /// Convert to an ATTR (non-const).
-   explicit operator ATTR& () { return Get(); }
-
-   /// Assign an ATTR.
-   RDrawingAttr& operator=(const ATTR& attr) {
-      fPtr.reset();
-      fAttr = attr;
-      return *this;
-   }
-   /// Move-assign an ATTR.
-   RDrawingAttr& operator=(ATTR&& attr) {
-      fPtr.reset();
-      fAttr = attr;
-      return *this;
-   }
+   virtual std::string GetAttrFromStyle(const Name_t &attrName) = 0;
 };
 
 } // namespace Experimental
