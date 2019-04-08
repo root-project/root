@@ -58,7 +58,7 @@ The methods could be replaced by equivalent methods with other signature:
 
 
 ## Core Libraries
-
+  - Prevent usage of non integer class id in `ClassDef(Inline)` macros with an error prompted at dictionary generation or compile time.
 
 ## I/O Libraries
 
