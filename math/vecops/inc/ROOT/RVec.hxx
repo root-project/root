@@ -23,6 +23,7 @@
 
 #include <ROOT/RAdoptAllocator.hxx>
 #include <ROOT/RIntegerSequence.hxx>
+#include <ROOT/RStringView.hxx>
 #include <ROOT/TypeTraits.hxx>
 
 #include <algorithm>
