@@ -212,6 +212,8 @@ inline RPadLength::User operator"" _user(unsigned long long int val)
    return RPadLength::User{(double)val};
 }
 
+std::string PadLengthToString(const RPadLength& len);
+
 } // namespace Experimental
 } // namespace ROOT
 

@@ -16,32 +16,28 @@
 #ifndef ROOT7_RDrawingOptsBase
 #define ROOT7_RDrawingOptsBase
 
-#include <functional>
+#include <ROOT/RDrawingAttr.hxx>
+
 #include <string>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
-class RDrawingAttrBase;
 
-class RDrawingOptsBase {
-   /// Attribute style class of these options.
-   std::string fStyleClass;
+class RDrawingOptsBase: public RDrawingAttrHolderBase {
+   /// Attribute style classes of these options.
+   std::vector<std::string> fStyleClasses;
 
 public:
-   /// Initialize the options with a (possibly empty) style class.
-   RDrawingOptsBase(const std::string &styleClass = {}): fStyleClass(styleClass) {}
+   RDrawingOptsBase() = default;
 
-   using VisitFunc_t = std::function<void(RDrawingAttrBase&)>;
-   virtual ~RDrawingOptsBase();
+   /// Initialize the options with a (possibly empty) set of style classes.
+   RDrawingOptsBase(std::vector<std::string> &styleClasses): fStyleClasses(styleClasses) {}
 
-   /// Get the attribute style class of these options.
-   const std::string &GetStyleClass() const { return fStyleClass; }
+   /// Get the attribute style classes of these options.
+   const std::vector<std::string> &GetStyleClasses() const { return fStyleClasses; }
 
-   /// Invoke func with each attribute as argument.
-   void VisitAttributes(const VisitFunc_t &func);
-
-   /// Synchronize all shared attributes into their local copy.
-   void Snapshot();
+   std::string GetAttrFromStyle(const Name_t &attrName) override;
 };
 
 } // namespace Experimental

@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -18,87 +18,107 @@
 #include "ROOT/RDrawingOptsBase.hxx"
 #include "ROOT/TLogger.hxx"
 
+#include <algorithm>
+#include <iterator>
+
+ROOT::Experimental::RDrawingAttrBase::RDrawingAttrBase(const char* namePart, RDrawingAttrHolderBase *holder,
+   RDrawingAttrBase *parent):
+   fNamePart(namePart), fHolder(holder), fParent(parent)
+{
+   parent->Register(*this);
+}
+
+ROOT::Experimental::RDrawingAttrBase::RDrawingAttrBase(const char* namePart, RDrawingAttrHolderBase *holder,
+   RDrawingAttrBase *parent, const std::vector<NamePart_t> &valueNames):
+   RDrawingAttrBase(namePart, holder, parent)
+{
+   fValueNames = std::make_unique<std::vector<NamePart_t>>(valueNames);
+}
+
+void ROOT::Experimental::RDrawingAttrBase::GetName(Name_t &name) const
+{
+   if (fParent)
+      fParent->GetName(name);
+   name.emplace_back(fNamePart);
+}
+
+std::string ROOT::Experimental::RDrawingAttrBase::NameToDottedDiagName(const Name_t &name)
+{
+   std::stringstream strm;
+   std::copy(name.begin(), name.end(),
+      std::ostream_iterator<Name_t::value_type>(strm, "."));
+   return strm.str();
+}
+
+void ROOT::Experimental::RDrawingAttrBase::CollectChildNames(std::vector<Name_t> &names) const
+{
+   if (fValueNames)
+      std::transform(fValueNames->begin(), fValueNames->end(), names.end(),
+         [](NamePart_t name) { return Name_t{name}; } );
+   if (fChildren) {
+      for (auto &&ch: *fChildren)
+         ch->CollectChildNames(names);
+   }
+   // Prepend our name to each child:
+   for (auto &name: names)
+      name.insert(name.begin(), fNamePart);
+}
+
+void ROOT::Experimental::RDrawingAttrBase::Register(const RDrawingAttrBase &subAttr)
+{
+   if (!fChildren)
+      fChildren.reset(new decltype(fChildren)::element_type);
+   fChildren->push_back(&subAttr);
+}
+
+
+ROOT::Experimental::RDrawingAttrBase::Name_t ROOT::Experimental::RDrawingAttrBase::BuildNameForVal(std::size_t valueIndex) const
+{
+   Name_t name;
+   GetName(name);
+   if (!fValueNames) {
+      R__ERROR_HERE("Graf2d") << "attribute " << NameToDottedDiagName(name) << "has no attribute values";
+      return {};
+   }
+   name.emplace_back((*fValueNames)[valueIndex]);
+   return name;
+}
+
+void ROOT::Experimental::RDrawingAttrBase::Set(std::size_t valueIndex, const std::string &strVal)
+{
+   GetHolder()->At(BuildNameForVal(valueIndex)) = strVal;
+}
+
+std::pair<std::string, bool> ROOT::Experimental::RDrawingAttrBase::Get(std::size_t valueIndex) const
+{
+   Name_t name = BuildNameForVal(valueIndex);
+   if (const std::string *pStr = GetHolder()->AtIf(name))
+      return {*pStr, true};
+   return {GetHolder()->GetAttrFromStyle(name), false};
+}
+
 
 // pin vtable.
-ROOT::Experimental::RDrawingAttrBase::~RDrawingAttrBase() = default;
+ROOT::Experimental::RDrawingAttrHolderBase::~RDrawingAttrHolderBase() = default;
 
-/// Get the style class currently active in the RDrawingOptsBase.
-const std::string &ROOT::Experimental::RDrawingAttrBase::GetStyleClass(const RDrawingOptsBase& opts) const
+namespace {
+static void HashCombine(std::size_t& seed, const std::string& v)
 {
-   return opts.GetStyleClass();
+   seed ^= std::hash<std::string>()(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+}
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Initialize an attribute `val` from a string value.
-///
-///\param[in] name - the attribute name (for diagnostic purposes).
-///\param[in] strval - the attribute value as a string.
-///\param[out] val - the value to be initialized.
-
-void ROOT::Experimental::InitializeAttrFromString(const std::string &name, const std::string &strval, int& val)
-{
-   if (strval.empty())
-      return;
-
-   std::size_t pos;
-   val = std::stoi(strval, &pos, /*base*/ 0);
-   if (pos != strval.length()) {
-      R__WARNING_HERE("Graf2d") << "Leftover characters while parsing default style value for " << name
-         << " with value \"" << strval << "\", remainder: \"" << strval.substr(pos) << "\"";
-   }
+std::size_t ROOT::Experimental::RDrawingAttrHolderBase::StringVecHash::operator()(const Name_t &vec) const {
+   std::size_t hash = std::hash<std::size_t>()(vec.size());
+   for (auto &&el: vec)
+      HashCombine(hash, el);
+   return hash;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Initialize an attribute `val` from a string value.
-///
-///\param[in] name - the attribute name (for diagnostic purposes).
-///\param[in] strval - the attribute value as a string.
-///\param[out] val - the value to be initialized.
-
-void ROOT::Experimental::InitializeAttrFromString(const std::string &name, const std::string &strval, long long& val)
+const std::string *ROOT::Experimental::RDrawingAttrHolderBase::AtIf(const Name_t &attrName) const
 {
-   if (strval.empty())
-      return;
-
-   std::size_t pos;
-   val = std::stoll(strval, &pos, /*base*/ 0);
-   if (pos != strval.length()) {
-      R__WARNING_HERE("Graf2d") << "Leftover characters while parsing default style value for " << name
-         << " with value \"" << strval << "\", remainder: \"" << strval.substr(pos) << "\"";
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Initialize an attribute `val` from a string value.
-///
-///\param[in] name - the attribute name (for diagnostic purposes).
-///\param[in] strval - the attribute value as a string.
-///\param[out] val - the value to be initialized.
-
-void ROOT::Experimental::InitializeAttrFromString(const std::string &name, const std::string &strval, float& val)
-{
-   if (strval.empty())
-      return;
-
-   std::size_t pos;
-   val = std::stof(strval, &pos);
-   if (pos != strval.length()) {
-      R__WARNING_HERE("Graf2d") << "Leftover characters while parsing default style value for " << name
-         << " with value \"" << strval << "\", remainder: \"" << strval.substr(pos) << "\"";
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Initialize an attribute `val` from a string value.
-///
-///\param[in] name - the attribute name (for diagnostic purposes).
-///\param[in] strval - the attribute value as a string.
-///\param[out] val - the value to be initialized.
-
-void ROOT::Experimental::InitializeAttrFromString(const std::string & /*name*/, const std::string &strval, std::string& val)
-{
-   if (strval.empty())
-      return;
-   val = strval;
+   auto it = fAttrNameVals.find(attrName);
+   if (it != fAttrNameVals.end())
+      return &it->second;
+   return nullptr;
 }

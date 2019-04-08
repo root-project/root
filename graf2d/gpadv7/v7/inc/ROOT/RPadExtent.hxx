@@ -100,7 +100,9 @@ struct RPadExtent: Internal::RPadHorizVert {
 /// any part is allowed.
 /// Example: `100 px + 0.1 user, 0.5 normal` is a `RPadExtent{100_px + 0.1_user, 0.5_normal}`.
 
-void InitializeAttrFromString(const std::string &name, const std::string &attrStrVal, RPadExtent& val);
+RPadExtent ExtentFromString(const std::string &name, const std::string &attrStrVal);
+
+std::string ExtentToString(const RPadExtent &extent);
 
 } // namespace Experimental
 } // namespace ROOT

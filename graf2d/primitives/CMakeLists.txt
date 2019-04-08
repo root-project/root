@@ -5,6 +5,10 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGraphicsPrimitives
   HEADERS
+    ROOT/RAttrBox.hxx
+    ROOT/RAttrLine.hxx
+    ROOT/RAttrMarker.hxx
+    ROOT/RAttrText.hxx
     ROOT/RBox.hxx
     ROOT/RLine.hxx
     ROOT/RMarker.hxx

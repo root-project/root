@@ -17,7 +17,7 @@
 #define ROOT7_RText
 
 #include <ROOT/RDrawable.hxx>
-#include <ROOT/RDrawingAttr.hxx>
+#include <ROOT/RAttrText.hxx>
 #include <ROOT/RDrawingOptsBase.hxx>
 #include <ROOT/RPadPos.hxx>
 #include <ROOT/RPadPainter.hxx>
@@ -40,42 +40,10 @@ public:
  Drawing options for RText.
  */
 
-class DrawingOpts: public RDrawingOptsBase {
-   RDrawingAttr<RColor> fTextColor{*this, "Text.Color", RColor::kBlack}; ///< The text color.
-   RDrawingAttr<float>  fTextSize{*this, "Text.Size", 10.};              ///< The text size.
-   RDrawingAttr<float>  fTextAngle{*this, "Text.Angle", 0.};             ///< The text angle.
-   RDrawingAttr<int>    fTextAlign{*this, "Text.Align", 13.};            ///< The text align.
-   RDrawingAttr<int>    fTextFont{*this, "Text.Font", 42.};              ///< The text font.
-
-
+class DrawingOpts: public RDrawingOptsBase, public RAttrText {
 public:
-   /// The color of the text.
-   void SetTextColor(const RColor &col) { fTextColor = col; }
-   RDrawingAttr<RColor> &GetTextColor() { return fTextColor; }
-   const RColor &GetTextColor() const   { return fTextColor.Get(); }
-
-   /// The text size.
-   void SetTextSize(float size) { fTextSize = size; }
-   RDrawingAttr<float> &GetTextSize() { return fTextSize; }
-   float GetTextSize() const { return (float)fTextSize; }
-
-   /// The text angle in degrees.
-   void SetTextAngle(float angle) { fTextAngle = angle; }
-   RDrawingAttr<float> &GetTextAngle() { return fTextAngle; }
-   float GetTextAngle() const { return (float)fTextAngle; }
-
-   ///The text align.
-   void SetTextAlign(int align) { fTextAlign = align; }
-   RDrawingAttr<int> &GetTextAlign() {return fTextAlign; }
-   int GetTextAlign() const {return (int) fTextAlign; }
-
-   ///The text font.
-   void SetTextFont(int font) {fTextFont = font; }
-   RDrawingAttr<int> &GetTextFont() {return fTextFont; }
-   int GetTextFont() const {return (int) fTextFont; }
-
+   DrawingOpts(): RAttrText("text", this) {}
 };
-
 
 private:
 

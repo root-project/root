@@ -196,3 +196,10 @@ void ROOT::Experimental::RPadLength::SetFromAttrString(const std::string &name, 
       return;
    }
 }
+
+std::string ROOT::Experimental::RPadLength::PadLengthToString(const RPadLength& len)
+{
+   std::stringstream strm;
+   strm << len.fNormal << " normal + " << len.fPixel << " px + " << len.fUser << " user";
+   return strm.str();
+}
