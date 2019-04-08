@@ -664,13 +664,26 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
       pad->SetBottomMargin(r.mbottom);
 
       for (unsigned k = 0; k < r.primitives.size(); ++k) {
+         auto &item = r.primitives[k];
          TObjLink *lnk = nullptr;
-         TObject *obj = FindPrimitive(r.primitives[k].snapid.c_str(), pad, &lnk);
-         if (obj && lnk) {
+         TObject *obj = FindPrimitive(item.snapid.c_str(), pad, &lnk);
+
+         if (r.primitives[k].opt == "$frame$") {
+            if (obj && obj->InheritsFrom(TFrame::Class())) {
+               TFrame *frame = static_cast<TFrame *>(obj);
+               if (item.fopt.size() >= 4) {
+                  frame->SetX1(item.fopt[0]);
+                  frame->SetY1(item.fopt[1]);
+                  frame->SetX2(item.fopt[2]);
+                  frame->SetY2(item.fopt[3]);
+               }
+
+            }
+         } else if (obj && lnk) {
             if (gDebug > 1)
-               Info("DecodeAllRanges", "Set draw option \"%s\" for object %s %s", r.primitives[k].opt.c_str(),
+               Info("DecodeAllRanges", "Set draw option \"%s\" for object %s %s", item.opt.c_str(),
                     obj->ClassName(), obj->GetName());
-            lnk->SetOption(r.primitives[k].opt.c_str());
+            lnk->SetOption(item.opt.c_str());
          }
       }
 
