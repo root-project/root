@@ -267,7 +267,8 @@ class ClassDefGenerateInitInstanceLocalInjector:
 // DeclFileLine() is not part of it since CINT uses that as trigger for
 // the class comment string.
 #define _ClassDefBase_(name, id, virtual_keyword, overrd)                                                       \
-private:                                                                                                        \
+private:          \
+   static_assert(std::is_integral<decltype(id)>::value, "ClassDef(Inline) macro: the specified ID is not an integer.");                                                        \
    virtual_keyword Bool_t CheckTObjectHashConsistency() const overrd                                            \
    {                                                                                                            \
       static std::atomic<UChar_t> recurseBlocker(0);                                                            \
