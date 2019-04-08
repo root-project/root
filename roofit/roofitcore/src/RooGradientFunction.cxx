@@ -70,7 +70,8 @@ RooGradientFunction::RooGradientFunction(const RooGradientFunction& other) :
     _gradf(other._gradf, _grad, &_function),
     _grad_params(other._grad_params),
     _parameter_settings(other._parameter_settings),
-    has_been_calculated(other.has_been_calculated) {}
+    has_been_calculated(other.has_been_calculated),
+    none_have_been_calculated(other.none_have_been_calculated) {}
 
 
 RooGradientFunction::Function::Function(RooAbsReal *funct, bool verbose) : _funct(funct), _verbose(verbose) {
@@ -589,8 +590,11 @@ bool RooGradientFunction::sync_parameter(double x, std::size_t ix) const {
     SetPdfParamVal(ix, x);
 
     // reset the has_been_calculated flags
-    for (auto it = has_been_calculated.begin(); it != has_been_calculated.end(); ++it) {
-      *it = false;
+    if (!none_have_been_calculated) {
+      for (auto it = has_been_calculated.begin(); it != has_been_calculated.end(); ++it) {
+        *it = false;
+      }
+      none_have_been_calculated = true;
     }
   }
 
@@ -619,6 +623,7 @@ bool RooGradientFunction::sync_parameters(const double *x) const {
     for (auto it = has_been_calculated.begin(); it != has_been_calculated.end(); ++it) {
       *it = false;
     }
+    none_have_been_calculated = true;
   }
 
   return has_been_synced;
@@ -636,6 +641,7 @@ void RooGradientFunction::run_derivator(unsigned int i_component) const {
              mutable_g2()(i_component),
              mutable_gstep()(i_component)) = _gradf.partial_derivative(_grad_params.data(), parameter_settings(), i_component);
     has_been_calculated[i_component] = true;
+    none_have_been_calculated = false;
   }
 //#ifndef NDEBUG
 //  _evalCounter_derivator += evalCounter() - evalCounter_now;

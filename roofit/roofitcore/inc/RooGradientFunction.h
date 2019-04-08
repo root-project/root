@@ -123,6 +123,7 @@ protected:
 private:
   mutable std::vector<ROOT::Fit::ParameterSettings> _parameter_settings;
   mutable std::vector<bool> has_been_calculated;
+  mutable bool none_have_been_calculated = false;
 
   double DoEval(const double *x) const override;
   double DoDerivative(const double *x, unsigned int icoord) const override;
