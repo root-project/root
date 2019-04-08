@@ -117,6 +117,7 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
   - Generalise the `VecOps::Map` utility allowing to apply a callable on a set of RVecs and not only to one.
   - Add the `DeltaR2` and `DeltaR` helpers for RVec.
   - Add the `Max`, `Min`, `ArgMax`, and `ArgMin` helpers for RVec.
+  - Add the `Construct` helper to build an `RVec<T>` starting from N `RVec<P_i>`, where a constructor `T::T(P_0, P_1, ..., P_Nm1)` exists.
 
 ## RooFit Libraries
 ### HistFactory
