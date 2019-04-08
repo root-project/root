@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <typeinfo>
+#include <type_traits>
 
 #ifndef __CLING__
 // __attribute__ is not supported on Windows, but it is internally needed by Cling
@@ -268,7 +269,7 @@ class ClassDefGenerateInitInstanceLocalInjector:
 // the class comment string.
 #define _ClassDefBase_(name, id, virtual_keyword, overrd)                                                       \
 private:          \
-   static_assert(std::is_integral<decltype(id)>::value, "ClassDef(Inline) macro: the specified ID is not an integer.");                                                        \
+   static_assert(std::is_integral<decltype(id)>::value, "ClassDef(Inline) macro: the specified class version number is not an integer.");                                                        \
    virtual_keyword Bool_t CheckTObjectHashConsistency() const overrd                                            \
    {                                                                                                            \
       static std::atomic<UChar_t> recurseBlocker(0);                                                            \
