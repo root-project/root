@@ -749,6 +749,13 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
             return;
          }
       }
+
+      if (0 == strcmp("string",fClass->GetName())) {
+         // We know we do not need any offset check for a string
+         SetBit(kCanDelete);
+         return;
+      }
+
       const TObjArray *array = fClass->GetStreamerInfos();
       TStreamerInfo* info = 0;
 
