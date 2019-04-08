@@ -263,7 +263,8 @@ public:
 // TODO: see also imagemagick's C++ interface for RColor operations!
 // https://www.imagemagick.org/api/magick++-classes.php
 
-void InitializeAttrFromString(const std::string &name, const std::string &strval, RColor& val);
+RColor ColorFromString(const std::string &name, const std::string &str);
+std::string ColorToString(const RColor& val);
 
 } // namespace Experimental
 } // namespace ROOT

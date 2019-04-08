@@ -26,8 +26,21 @@
 /// user or normal coordinates. Spaces between any part is allowed.
 /// Example: `100 px + 0.1 user, 0.5 normal` is a `RPadPos{100_px + 0.1_user, 0.5_normal}`.
 
-void ROOT::Experimental::InitializeAttrFromString(const std::string &name,
-                                                  const std::string &attrStrVal, RPadPos &val)
+ROOT::Experimental::RPadPos ROOT::Experimental::PosFromString(const std::string &name, const std::string &attrStrVal)
 {
-   val.SetFromAttrString(name, attrStrVal);
+   RPadPos ret;
+   ret.SetFromAttrString(name, attrStrVal);
+   return ret;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a RPadPos to a style string, matching what PosFromString can parse.
+
+std::string ROOT::Experimental::PosToString(const RPadPos &pos)
+{
+   std::string ret = PadLengthToString(pos.fHoriz);
+   ret += ", ";
+   ret += PadLengthToString(pos.fVert);
+   return ret;
+}
+

@@ -17,12 +17,11 @@
 #define ROOT7_RLine
 
 #include <ROOT/RDrawable.hxx>
-#include <ROOT/RDrawingAttr.hxx>
+#include <ROOT/RAttrLine.hxx>
 #include <ROOT/RDrawingOptsBase.hxx>
 #include <ROOT/RPadPos.hxx>
 #include <ROOT/RPadPainter.hxx>
 
-#include <initializer_list>
 #include <memory>
 
 namespace ROOT {
@@ -35,36 +34,12 @@ namespace Experimental {
 class RLine : public RDrawableBase<RLine> {
 public:
 
-/** class ROOT::Experimental::RLine::DrawingOpts
+/** \class ROOT::Experimental::RLine::DrawingOpts
  Drawing options for RLine.
  */
-
-class DrawingOpts: public RDrawingOptsBase {
-   RDrawingAttr<RColor> fColor{*this, "Line.Color", RColor::kBlack}; ///< The line color.
-   RDrawingAttr<int> fWidth{*this, "Line.Width", 1};                 ///< The line width.
-   RDrawingAttr<int> fStyle{*this, "Line.Style", 1};                 ///< The line style.
-   RDrawingAttr<float> fOpacity{*this, "Line.Opacity", 1.};          ///< The line opacity.
-
+class DrawingOpts: public RDrawingOptsBase, public RAttrLine {
 public:
-   /// The color of the line.
-   void SetLineColor(const RColor &col) { fColor = col; }
-   RDrawingAttr<RColor> &GetLineColor() { return fColor; }
-   const RColor &GetLineColor() const   { return fColor.Get(); }
-
-   ///The width of the line.
-   void SetLineWidth(int width) { fWidth = width; }
-   RDrawingAttr<int> &GetLineWidth() { return fWidth; }
-   int GetLineWidth() const   { return (int)fWidth; }
-
-   ///The style of the line.
-   void SetLineStyle(int style) { fStyle = style; }
-   RDrawingAttr<int> &GetLineStyle() { return fStyle; }
-   int GetLineStyle() const { return (int)fStyle; }
-
-   ///The opacity of the line.
-   void SetLineColorAlpha(float opacity) { fOpacity = opacity; }
-   RDrawingAttr<float> &GetLineColorAlpha() { return fOpacity; }
-   float GetLineColorAlpha() const { return (float)fOpacity; }
+   DrawingOpts(): RAttrLine("line", this) {}
 };
 
 

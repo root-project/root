@@ -16,10 +16,8 @@
 #ifndef ROOT7_RFrame
 #define ROOT7_RFrame
 
-#include "ROOT/RDrawingAttr.hxx"
+#include "ROOT/RAttrBox.hxx"
 #include "ROOT/RDrawingOptsBase.hxx"
-#include "ROOT/RPadExtent.hxx"
-#include "ROOT/RPadPos.hxx"
 #include "ROOT/RPadUserAxis.hxx"
 #include "ROOT/RPalette.hxx"
 
@@ -34,12 +32,11 @@ namespace Experimental {
 
 class RFrame {
 public:
-   class DrawingOpts: public RDrawingOptsBase {
+   class DrawingOpts: public RDrawingOptsBase, public RAttrBox {
    public:
-      /// Position of the frame in parent RPad coordinates.
-      RDrawingAttr<RPadPos> fPos{*this, "frame.pos", 0.1_normal, 0.1_normal};
-      /// Size of the frame in parent RPad coordinates.
-      RDrawingAttr<RPadExtent> fSize{*this, "frame.size", 0.8_normal, 0.8_normal};
+      DrawingOpts():
+         RAttrBox("frame", this)
+      {}
    };
 
 private:
@@ -49,17 +46,11 @@ private:
    /// Palette used to visualize user coordinates.
    RPalette fPalette;
 
-   /// Offset with respect to parent RPad.
-   RPadPos fPos;
-
-   /// Size of the frame, in parent RPad coordinates.
-   RPadExtent fSize;
-
 public:
    // Default constructor
    RFrame()
    {
-         GrowToDimensions(2);
+      GrowToDimensions(2);
    }
 
    /// Constructor taking user coordinate system, position and extent.

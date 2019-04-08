@@ -17,7 +17,7 @@
 #define ROOT7_RMarker
 
 #include <ROOT/RDrawable.hxx>
-#include <ROOT/RDrawingAttr.hxx>
+#include <ROOT/RAttrMarker.hxx>
 #include <ROOT/RDrawingOptsBase.hxx>
 #include <ROOT/RPadPos.hxx>
 #include <ROOT/RPadPainter.hxx>
@@ -39,32 +39,9 @@ public:
  Drawing options for RMarker.
  */
 
-class DrawingOpts: public RDrawingOptsBase {
-   RDrawingAttr<RColor> fColor{*this, "Marker.Color", RColor::kBlack}; ///< The marker color.
-   RDrawingAttr<float> fSize{*this, "Marker.Size", 1.};                ///< The marker size.
-   RDrawingAttr<int> fStyle{*this, "Marker.Style", 1};                 ///< The marker style.
-   RDrawingAttr<float> fOpacity{*this, "Marker.Opacity", 1.};          ///< The marker opacity.
-
+class DrawingOpts: public RDrawingOptsBase, public RAttrMarker {
 public:
-   /// The color of the marker.
-   void SetMarkerColor(const RColor &col) { fColor = col; }
-   RDrawingAttr<RColor> &GetMarkerColor() { return fColor; }
-   const RColor &GetMarkerColor() const   { return fColor.Get(); }
-
-   ///The size of the marker.
-   void SetMarkerSize(float size) { fSize = size; }
-   RDrawingAttr<float> &GetMarkerSize() { return fSize; }
-   int GetMarkerSize() const   { return (float)fSize; }
-
-   ///The style of the marker.
-   void SetMarkerStyle(int style) { fStyle = style; }
-   RDrawingAttr<int> &GetMarkerStyle() { return fStyle; }
-   int GetMarkerStyle() const { return (int)fStyle; }
-
-   ///The opacity of the marker.
-   void SetMarkerColorAlpha(float opacity) { fOpacity = opacity; }
-   RDrawingAttr<float> &GetMarkerColorAlpha() { return fOpacity; }
-   float GetMarkerColorAlpha() const { return (float)fOpacity; }
+   DrawingOpts(): RAttrMarker("marker", this) {}
 };
 
 
