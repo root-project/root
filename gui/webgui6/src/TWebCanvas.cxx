@@ -768,6 +768,20 @@ void TWebCanvas::ProcessObjectData(TWebObjectOptions &item, TPad *pad)
    TPad *objpad = nullptr;
    TObject *obj = FindPrimitive(item.snapid.c_str(), pad, &lnk, &objpad);
 
+   if (item.fcust.compare("exec") == 0) {
+      auto pos = item.opt.find("(");
+      if (obj && (pos != std::string::npos) && obj->IsA()->GetMethodAllAny(item.opt.substr(0,pos).c_str())) {
+         std::stringstream exec;
+         exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase
+                      << (size_t)obj << ")->" << item.opt << ";";
+         Info("ProcessObjectData", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
+         gROOT->ProcessLine(exec.str().c_str());
+      } else {
+         Error("ProcessObjectData", "Fail to execute %s for object %p %s", item.opt.c_str(), obj, obj ? obj->ClassName() : "---");
+      }
+      return;
+   }
+
    if (obj && lnk) {
       if (gDebug > 1)
          Info("DecodeAllRanges", "Set draw option \"%s\" for object %s %s", item.opt.c_str(),
@@ -935,7 +949,7 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             std::stringstream exec;
             exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj
                  << ")->" << buf.Data() << ";";
-            Info("ProcessWS", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
+            Info("ProcessData", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
             gROOT->ProcessLine(exec.str().c_str());
 
             // PerformUpdate(); // check that canvas was changed
@@ -1008,7 +1022,7 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          }
          ofs.close();
 
-         Info("ProcessWS", "File %s has been created", filename.Data());
+         Info("ProcessData", "File %s has been created", filename.Data());
       }
       CheckDataToSend();
 
@@ -1030,7 +1044,7 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
          TPad *pad = dynamic_cast<TPad*> (FindPrimitive(click->padid.c_str()));
          if (pad && (pad != gPad)) {
-            Info("ProcessWS", "Activate pad %s", pad->GetName());
+            Info("ProcessData", "Activate pad %s", pad->GetName());
             gPad = pad;
             Canvas()->SetClickSelectedPad(pad);
             if (fActivePadChangedSignal) fActivePadChangedSignal(pad);
@@ -1053,7 +1067,7 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       }
 
    } else {
-      Error("ProcessWS", "GET unknown request %d %30s", (int)arg.length(), cdata);
+      Error("ProcessData", "GET unknown request %d %30s", (int)arg.length(), cdata);
    }
 }
 
