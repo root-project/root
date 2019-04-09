@@ -12,7 +12,7 @@ def makeimage(MacroName, ImageName, OutDir, cp, py, batch):
     if batch:
         ROOT.gROOT.SetBatch(1)
 
-    if py: execfile(MacroName)
+    if py: exec(compile(open(MacroName, "rb").read(), MacroName, 'exec'))
     else: ROOT.gInterpreter.ProcessLine(".x " + MacroName)
 
     if cp:

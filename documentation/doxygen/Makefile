@@ -1,6 +1,9 @@
 
 .PHONY: filter folders mathjax images doxygen
 
+PYTHON_EXECUTABLE ?= /usr/bin/python
+export PYTHON_EXECUTABLE
+
 DOXYGEN_OUTPUT_DIRECTORY ?= $(HOME)/rootdoc
 export DOXYGEN_OUTPUT_DIRECTORY
 export DOXYGEN_SOURCE_DIRECTORY := ../..
