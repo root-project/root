@@ -34,7 +34,9 @@ The following people have contributed to this new version:
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
- Zhe Zhang, Nebraska,
+ Zhe Zhang, Nebraska, \
+ Stefan Wunsch, CERN/SFT
+
 
 ## Deprecation and Removal
 
@@ -121,6 +123,18 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
 
 ## Histogram Libraries
 
+### TH1
+  - Add a search range to the `TH1::FindFirstBinAbove(..)` and `TH1::FindLastBinAvove(..)` functions 
+
+### TH2Poly
+  - Add implementation of SetBinError and fix a bug in GetBinError in case of weighted events.
+
+### TF1
+  - The implementation of TF1::GetX has been improved. In case of the presence of multiple roots, the function will return the root with the lower x value. In case of no-roots a NaN will be returned instead of returning a random incorrect value.
+
+### TKDE
+  - Add support for I/O
+
 
 ## Math Libraries
   - Add to the documentation of TLorentzVector a link to ROOT::Math::LorentzVector, which is a superior tool.
@@ -187,7 +201,25 @@ The legacy iterators have been flagged with a special deprecation macro that can
 ```
 
 
+## TMVA
 
+This release provoids a consolidation and several fixes of the new machine leanring tools provided in TMVA such as the Deep Learning module.
+The method `TMVA::Types::kDL` should be used now for building Deep Learning architecture in TMVA, while `TMVA::Types::kDNN` is now deprecated. `TMVA::Types::kDL` provides all the functionality of `TMVA::Types::kDNN`, i.e building fully connected dense layer, but in addition supports building convolutional and recurrent neural network architectures.
+These release contains improvements in the `MethodDL` such as:
+  - fix droput support for dense layer
+  - add protection to avoid returning NaN in the cross-entropy loss function
+
+In addition we have :
+
+  - New `TMVA::Executor` class to control the multi-thread running of TMVA. By default now MT running will be enabled only when `ROOT::EnabledImplicitMT()` is called. But we can take the control of the threads by using `TMVA::gConfig().EnableMT(...)` and `TMVA::gConfig().DisableMT()`
+
+
+### PyMVA 
+  - add support when using the Tensorflow backend in Keras to control the number of threads
+  - add possibility to control options for configuring GPU running. FOr example we can now set the mode to allocate memory only as needed. This is required when using the new RTX gaming cards from NVIDIA
+
+
+  
 
 ## 2D Graphics Libraries
 
