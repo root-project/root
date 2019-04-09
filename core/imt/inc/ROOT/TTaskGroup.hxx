@@ -29,7 +29,6 @@ class TTaskGroup {
    */
 private:
    void *fTaskContainer{nullptr};
-   void *fTaskArena{nullptr};
    std::atomic<bool> fCanRun{true};
    void ExecuteInIsolation(const std::function<void(void)> &operation);
 
