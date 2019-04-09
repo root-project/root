@@ -56,9 +56,16 @@ namespace {
     }
 
   public:
-    PointerCheck() : FD(::open("/dev/random", O_WRONLY)) {
+// write() is extremely slow on 32bit VMs - the most common use case.
+// Disable it.
+#if defined(__i386)
+    PointerCheck() : FD(-1) {}
+#else
+    PointerCheck() : FD(::open("/dev/random", O_WRONLY))
+    {
       if (FD == -1) ::perror("open('/dev/random')");
     }
+#endif
     ~PointerCheck() {
       if (FD != -1) ::close(FD);
     }
