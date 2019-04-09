@@ -137,8 +137,10 @@ protected:
    void CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
    void CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t func);
 
-   TObject *FindPrimitive(const char *id, TPad *pad = nullptr, TObjLink **padlnk = nullptr);
+   TObject *FindPrimitive(const char *id, TPad *pad = nullptr, TObjLink **padlnk = nullptr, TPad **objpad = nullptr);
+   void ProcessObjectData(TWebObjectOptions &item, TPad *pad);
    Bool_t DecodeAllRanges(const char *arg);
+   Bool_t DecodeObjectData(const char *arg);
 
    Bool_t IsAnyPadModified(TPad *pad);
 
