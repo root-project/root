@@ -125,7 +125,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
 /// Also if object is in list of primitives, one could ask for entry link for such object,
 /// This can allow to change draw option
 
-TObject *TWebCanvas::FindPrimitive(const char *sid, TPad *pad, TObjLink **padlnk)
+TObject *TWebCanvas::FindPrimitive(const char *sid, TPad *pad, TObjLink **padlnk, TPad **objpad)
 {
 
    if (!pad)
@@ -154,6 +154,8 @@ TObject *TWebCanvas::FindPrimitive(const char *sid, TPad *pad, TObjLink **padlnk
       }
       TH1 *h1 = obj->InheritsFrom(TH1::Class()) ? (TH1 *)obj : nullptr;
       if (TString::Hash(&obj, sizeof(obj)) == id) {
+         if (objpad)
+            *objpad = pad;
          if (h1 && (*kind == 'x'))
             return h1->GetXaxis();
          if (h1 && (*kind == 'y'))
@@ -168,10 +170,15 @@ TObject *TWebCanvas::FindPrimitive(const char *sid, TPad *pad, TObjLink **padlnk
          TIter fiter(h1->GetListOfFunctions());
          TObject *fobj = nullptr;
          while ((fobj = fiter()) != nullptr)
-            if (TString::Hash(&fobj, sizeof(fobj)) == id)
+            if (TString::Hash(&fobj, sizeof(fobj)) == id) {
+               if (objpad)
+                  *objpad = pad;
                return fobj;
+            }
       } else if (obj->InheritsFrom(TPad::Class())) {
-         obj = FindPrimitive(sid, (TPad *)obj);
+         obj = FindPrimitive(sid, (TPad *)obj, padlnk, objpad);
+         if (objpad && !*objpad)
+            *objpad = pad;
          if (obj)
             return obj;
       }
@@ -737,50 +744,8 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
          }
       }
 
-       for (auto &item : r.primitives) {
-          TObjLink *lnk = nullptr;
-          TObject *obj = FindPrimitive(item.snapid.c_str(), pad, &lnk);
-
-          if (obj && lnk) {
-             if (gDebug > 1)
-                Info("DecodeAllRanges", "Set draw option \"%s\" for object %s %s", item.opt.c_str(),
-                      obj->ClassName(), obj->GetName());
-             lnk->SetOption(item.opt.c_str());
-          }
-
-          if (item.fcust.compare("frame") == 0) {
-             if (obj && obj->InheritsFrom(TFrame::Class())) {
-                TFrame *frame = static_cast<TFrame *>(obj);
-                if (item.fopt.size() >= 4) {
-                   frame->SetX1(item.fopt[0]);
-                   frame->SetY1(item.fopt[1]);
-                   frame->SetX2(item.fopt[2]);
-                   frame->SetY2(item.fopt[3]);
-                }
-             }
-          } else if (item.fcust.compare("pave") == 0) {
-             if (obj && obj->InheritsFrom(TPave::Class())) {
-                TPave *pave = static_cast<TPave *>(obj);
-                if (item.fopt.size() >= 4) {
-                   auto *save = gPad;
-                   gPad = pad;
-
-                   // first time need to overcome init problem
-                   pave->ConvertNDCtoPad();
-
-                   pave->SetX1NDC(item.fopt[0]);
-                   pave->SetY1NDC(item.fopt[1]);
-                   pave->SetX2NDC(item.fopt[2]);
-                   pave->SetY2NDC(item.fopt[3]);
-
-                   // printf("Setting %s %s %f %f %f %f\n", pave->GetName(), pave->ClassName(), item.fopt[0], item.fopt[1], item.fopt[2], item.fopt[3]);
-
-                   pave->ConvertNDCtoPad();
-                   gPad = save;
-                }
-             }
-          }
-       }
+      for (auto &item : r.primitives)
+         ProcessObjectData(item, pad);
 
       // without special objects no need for explicit update of the pad
       if (fHasSpecials)
@@ -793,6 +758,77 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
 
    return kTRUE;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Process data for single primitive
+
+void TWebCanvas::ProcessObjectData(TWebObjectOptions &item, TPad *pad)
+{
+   TObjLink *lnk = nullptr;
+   TPad *objpad = nullptr;
+   TObject *obj = FindPrimitive(item.snapid.c_str(), pad, &lnk, &objpad);
+
+   if (obj && lnk) {
+      if (gDebug > 1)
+         Info("DecodeAllRanges", "Set draw option \"%s\" for object %s %s", item.opt.c_str(),
+               obj->ClassName(), obj->GetName());
+      lnk->SetOption(item.opt.c_str());
+   }
+
+   if (item.fcust.compare("frame") == 0) {
+      if (obj && obj->InheritsFrom(TFrame::Class())) {
+         TFrame *frame = static_cast<TFrame *>(obj);
+         if (item.fopt.size() >= 4) {
+            frame->SetX1(item.fopt[0]);
+            frame->SetY1(item.fopt[1]);
+            frame->SetX2(item.fopt[2]);
+            frame->SetY2(item.fopt[3]);
+         }
+      }
+   } else if (item.fcust.compare("pave") == 0) {
+      if (obj && obj->InheritsFrom(TPave::Class())) {
+         TPave *pave = static_cast<TPave *>(obj);
+         if ((item.fopt.size() >= 4) && objpad) {
+            auto *save = gPad;
+            gPad = objpad;
+
+            // first time need to overcome init problem
+            pave->ConvertNDCtoPad();
+
+            pave->SetX1NDC(item.fopt[0]);
+            pave->SetY1NDC(item.fopt[1]);
+            pave->SetX2NDC(item.fopt[2]);
+            pave->SetY2NDC(item.fopt[3]);
+
+            // printf("Setting %s %s %f %f %f %f\n", pave->GetName(), pave->ClassName(), item.fopt[0], item.fopt[1], item.fopt[2], item.fopt[3]);
+
+            pave->ConvertNDCtoPad();
+            gPad = save;
+         }
+      }
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Process data for single object from list of primitives
+
+Bool_t TWebCanvas::DecodeObjectData(const char *arg)
+{
+   if (!arg || !*arg)
+      return kFALSE;
+
+   TWebObjectOptions *opt = nullptr;
+
+   TBufferJSON::FromJSON(opt, arg);
+
+   if (opt) {
+      ProcessObjectData(*opt, nullptr);
+      delete opt;
+   }
+
+   return opt != nullptr;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Handle data from web browser
@@ -855,10 +891,11 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       } else {
          conn->fDrawVersion = TString(cdata, separ - cdata).Atoll();
          cdata = separ + 1;
-         if ((gDebug > 1) && is_first)
-            Info("ProcessData", "RANGES %s", cdata);
-         if (is_first)
+         if (is_first) {
+            if (gDebug > 1)
+               Info("ProcessData", "RANGES %s", cdata);
             DecodeAllRanges(cdata); // only first connection can set ranges
+         }
       }
       CheckDataToSend();
 
@@ -866,6 +903,11 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       if (is_first) // only first connection can set ranges
          DecodeAllRanges(cdata + 8);
+
+   } else if (strncmp(cdata, "PRIMIT6:", 8) == 0) {
+
+      if (is_first) // only first connection can set ranges
+         DecodeObjectData(cdata + 8);
 
    } else if (strncmp(cdata, "STATUSBITS:", 11) == 0) {
 
