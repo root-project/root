@@ -40,11 +40,6 @@ tbb::task_group *CastToTG(void* p) {
    return (tbb::task_group *) p;
 }
 
-tbb::task_arena *CastToTA(void *p)
-{
-   return (tbb::task_arena *)p;
-}
-
 #endif
 
 } // namespace Internal
@@ -64,7 +59,6 @@ TTaskGroup::TTaskGroup()
       throw std::runtime_error("Implicit parallelism not enabled. Cannot instantiate a TTaskGroup.");
    }
    fTaskContainer = ((void *)new tbb::task_group());
-   fTaskArena = ((void *)new tbb::task_arena(ROOT::GetImplicitMTPoolSize()));
 #endif
 }
 
@@ -77,8 +71,6 @@ TTaskGroup &TTaskGroup::operator=(TTaskGroup &&other)
 {
    fTaskContainer = other.fTaskContainer;
    other.fTaskContainer = nullptr;
-   fTaskArena = other.fTaskArena;
-   fTaskArena = nullptr;
    fCanRun.store(other.fCanRun);
    return *this;
 }
@@ -90,19 +82,6 @@ TTaskGroup::~TTaskGroup()
       return;
    Wait();
    delete CastToTG(fTaskContainer);
-   delete CastToTA(fTaskArena);
-#endif
-}
-
-/////////////////////////////////////////////////////////////////////////////
-/// Run operation in the internal task arena to implement work isolation, i.e.
-/// prevent stealing of work items spawned by ancestors.
-void TTaskGroup::ExecuteInIsolation(const std::function<void(void)> &operation)
-{
-#ifdef R__USE_IMT
-   CastToTA(fTaskArena)->execute([&] { operation(); });
-#else
-   operation();
 #endif
 }
 
@@ -112,7 +91,7 @@ void TTaskGroup::Cancel()
 {
 #ifdef R__USE_IMT
    fCanRun = false;
-   ExecuteInIsolation([&] { CastToTG(fTaskContainer)->cancel(); });
+   CastToTG(fTaskContainer)->cancel();
    fCanRun = true;
 #endif
 }
@@ -131,7 +110,7 @@ void TTaskGroup::Run(const std::function<void(void)> &closure)
    while (!fCanRun)
       /* empty */;
 
-   ExecuteInIsolation([&] { CastToTG(fTaskContainer)->run(closure); });
+   CastToTG(fTaskContainer)->run(closure);
 #else
    closure();
 #endif
@@ -144,7 +123,7 @@ void TTaskGroup::Wait()
 {
 #ifdef R__USE_IMT
    fCanRun = false;
-   ExecuteInIsolation([&] { CastToTG(fTaskContainer)->wait(); });
+   CastToTG(fTaskContainer)->wait();
    fCanRun = true;
 #endif
 }
