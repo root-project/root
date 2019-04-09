@@ -97,14 +97,14 @@ TEST_F(BulkApiVariableTest, stdRead)
       }         
       if (R__unlikely(myF.GetSize() != static_cast<size_t>(ev % 10))) {
          printf("Incorrect number of entries on float branch: %lu, expected %lld (event %lld)\n",
-                myF.GetSize(),
+                static_cast<unsigned long int>(myF.GetSize()),
                 ev % 10,
                 ev);
          ASSERT_TRUE(false);
       }
       if (R__unlikely(myD.GetSize() != static_cast<size_t>(ev % 10))) {
          printf("Incorrect number of entries on double branch: %lu, expected %lld (event %lld)\n",
-                myD.GetSize(),
+                static_cast<unsigned long int>(myD.GetSize()),
                 ev % 10,
                 ev);
          ASSERT_TRUE(false);
