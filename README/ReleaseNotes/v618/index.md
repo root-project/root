@@ -40,6 +40,10 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+### I/O Libraries
+
+* The deprecrated `I/O` plugins for  `HDFS`, `Castor` and `RFIO` have been removed.
+
 ### THttpServer classes
 
 The following methods were deprecated and removed:
@@ -66,6 +70,13 @@ The methods could be replaced by equivalent methods with other signature:
   - Prevent usage of non integer class id in `ClassDef(Inline)` macros with an error prompted at dictionary generation or compile time.
 
 ## I/O Libraries
+
+* Added simpler way to retrieve object from `TDirectory` and `TFile`:
+~~~ {.cpp}
+   auto obj = directory->Get<MyClass>("some object");
+~~~
+
+* Added support for read-only `TMemFile`s.
 
 ### TNetXNGFile
 Added necessary changes to allow [XRootD local redirection](https://github.com/xrootd/xrootd/blob/8c9d0a9cc7f00cbb2db35be275c35126f3e091c0/docs/ReleaseNotes.txt#L14)
