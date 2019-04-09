@@ -106,6 +106,7 @@ string gImageWidth;    // Width of image
 string gCwd;           // Current working directory
 string gOutDir;        // Output directory
 string gSourceDir;     // Source directory
+string gPythonExec;    // Python executable
 string gOutputName;    // File containing a macro std::out
 bool   gHeader;        // True if the input file is a header
 bool   gSource;        // True if the input file is a source file
@@ -149,6 +150,10 @@ int main(int argc, char *argv[])
    // Retrieve the source directory
    gSourceDir = getenv("DOXYGEN_SOURCE_DIRECTORY");
    ReplaceAll(gSourceDir,"\"","");
+
+   // Retrieve the python executable
+   gPythonExec = getenv("PYTHON_EXECUTABLE");
+   ReplaceAll(gPythonExec,"\"","");
 
    // Open the input file name.
    f = fopen(gFileName.c_str(),"r");
@@ -331,10 +336,12 @@ void FilterTutorial()
          } else {
             if (gPython) {
                if (nobatch) {
-                  ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 0",
+                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 0",
+                                             gPythonExec.c_str(),
                                              gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
                } else {
-                  ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 1",
+                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 1",
+                                             gPythonExec.c_str(),
                                              gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
                }
             } else {
@@ -360,9 +367,9 @@ void FilterTutorial()
 
       // notebook found
       if (gLineString.find("\\notebook") != string::npos) {
-         ExecuteCommand(StringFormat("python converttonotebook.py %s %s/notebooks/",
+         ExecuteCommand(StringFormat("%s converttonotebook.py %s %s/notebooks/",
+                                          gPythonExec.c_str(),
                                           gFileName.c_str(), gOutDir.c_str()));
-
          if (gPython){
              gLineString = "## ";
          }
@@ -370,13 +377,13 @@ void FilterTutorial()
              gLineString = "/// ";
          }
          gLineString += StringFormat( "\\htmlonly <a href=\"http://nbviewer.jupyter.org/url/root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src= notebook.gif alt=\"View in nbviewer\" style=\"height:1em\" ></a> <a href=\"https://cern.ch/swanserver/cgi-bin/go?projurl=https://root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src=\"http://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png\"  alt=\"Open in SWAN\" style=\"height:1em\" ></a> \\endhtmlonly \n", gMacroName.c_str() , gMacroName.c_str());
-
       }
+
       // \macro_output found
       if (gLineString.find("\\macro_output") != string::npos) {
          remove(gOutputName.c_str());
          if (!gPython) ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()).c_str());
-         else          ExecuteCommand(StringFormat("python %s", gFileName.c_str()).c_str());
+         else          ExecuteCommand(StringFormat("%s %s", gPythonExec.c_str(), gFileName.c_str()).c_str());
          ExecuteCommand(StringFormat("sed -i '/Processing/d' %s", gOutputName.c_str()).c_str());
          rename(gOutputName.c_str(), StringFormat("%s/macros/%s",gOutDir.c_str(), gOutputName.c_str()).c_str());
          ReplaceAll(gLineString, "\\macro_output", StringFormat("\\include %s",gOutputName.c_str()));
