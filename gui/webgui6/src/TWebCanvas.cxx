@@ -400,6 +400,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
              hist->GetListOfFunctions()->Add(stats);
          }
 
+         if (title && first_obj) hopt.Append(";;use_pad_title");
+
          if (stats) hopt.Append(";;use_pad_stats");
 
          if (!palette && (hist->GetDimension()>1) && (hopt.Index("colz", 0, TString::kIgnoreCase) != kNPOS)) {
@@ -716,48 +718,71 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
       pad->SetTopMargin(r.mtop);
       pad->SetBottomMargin(r.mbottom);
 
-      for (unsigned k = 0; k < r.primitives.size(); ++k) {
-         auto &item = r.primitives[k];
-         TObjLink *lnk = nullptr;
-         TObject *obj = FindPrimitive(item.snapid.c_str(), pad, &lnk);
+      if (r.ranges) {
 
-         if (r.primitives[k].opt == "$frame$") {
-            if (obj && obj->InheritsFrom(TFrame::Class())) {
-               TFrame *frame = static_cast<TFrame *>(obj);
-               if (item.fopt.size() >= 4) {
-                  frame->SetX1(item.fopt[0]);
-                  frame->SetY1(item.fopt[1]);
-                  frame->SetX2(item.fopt[2]);
-                  frame->SetY2(item.fopt[3]);
-               }
+         Double_t ux1_, ux2_, uy1_, uy2_, px1_, px2_, py1_, py2_;
 
-            }
-         } else if (obj && lnk) {
+         pad->GetRange(px1_, py1_, px2_, py2_);
+         pad->GetRangeAxis(ux1_, uy1_, ux2_, uy2_);
+
+         bool same_range = (r.ux1 == ux1_) && (r.ux2 == ux2_) && (r.uy1 == uy1_) && (r.uy2 == uy2_) &&
+                           (r.px1 == px1_) && (r.px2 == px2_) && (r.py1 == py1_) && (r.py2 == py2_);
+
+         if (!same_range) {
+            pad->Range(r.px1, r.py1, r.px2, r.py2);
+            pad->RangeAxis(r.ux1, r.uy1, r.ux2, r.uy2);
+
             if (gDebug > 1)
-               Info("DecodeAllRanges", "Set draw option \"%s\" for object %s %s", item.opt.c_str(),
-                    obj->ClassName(), obj->GetName());
-            lnk->SetOption(item.opt.c_str());
+               Info("DecodeAllRanges", "Change ranges for pad %s", pad->GetName());
          }
       }
 
-      if (!r.ranges) continue;
+       for (auto &item : r.primitives) {
+          TObjLink *lnk = nullptr;
+          TObject *obj = FindPrimitive(item.snapid.c_str(), pad, &lnk);
 
-      Double_t ux1_, ux2_, uy1_, uy2_, px1_, px2_, py1_, py2_;
+          if (obj && lnk) {
+             if (gDebug > 1)
+                Info("DecodeAllRanges", "Set draw option \"%s\" for object %s %s", item.opt.c_str(),
+                      obj->ClassName(), obj->GetName());
+             lnk->SetOption(item.opt.c_str());
+          }
 
-      pad->GetRange(px1_, py1_, px2_, py2_);
-      pad->GetRangeAxis(ux1_, uy1_, ux2_, uy2_);
+          if (item.fcust.compare("frame") == 0) {
+             if (obj && obj->InheritsFrom(TFrame::Class())) {
+                TFrame *frame = static_cast<TFrame *>(obj);
+                if (item.fopt.size() >= 4) {
+                   frame->SetX1(item.fopt[0]);
+                   frame->SetY1(item.fopt[1]);
+                   frame->SetX2(item.fopt[2]);
+                   frame->SetY2(item.fopt[3]);
+                }
+             }
+          } else if (item.fcust.compare("pave") == 0) {
+             if (obj && obj->InheritsFrom(TPave::Class())) {
+                TPave *pave = static_cast<TPave *>(obj);
+                if (item.fopt.size() >= 4) {
+                   auto *save = gPad;
+                   gPad = pad;
 
-      if ((r.ux1 == ux1_) && (r.ux2 == ux2_) && (r.uy1 == uy1_) && (r.uy2 == uy2_) && (r.px1 == px1_) &&
-          (r.px2 == px2_) && (r.py1 == py1_) && (r.py2 == py2_))
-         continue; // no changes
+                   // first time need to overcome init problem
+                   pave->ConvertNDCtoPad();
 
-      pad->Range(r.px1, r.py1, r.px2, r.py2);
-      pad->RangeAxis(r.ux1, r.uy1, r.ux2, r.uy2);
+                   pave->SetX1NDC(item.fopt[0]);
+                   pave->SetY1NDC(item.fopt[1]);
+                   pave->SetX2NDC(item.fopt[2]);
+                   pave->SetY2NDC(item.fopt[3]);
 
-      if (gDebug > 1)
-         Info("DecodeAllRanges", "Change ranges for pad %s", pad->GetName());
+                   // printf("Setting %s %s %f %f %f %f\n", pave->GetName(), pave->ClassName(), item.fopt[0], item.fopt[1], item.fopt[2], item.fopt[3]);
 
-      // without special objects no need for explicit update of the canvas
+                   pave->ConvertNDCtoPad();
+                   gPad = save;
+                }
+             }
+          }
+       }
+
+      // without special objects no need for explicit update of the pad
       if (fHasSpecials)
          pad->Modified(kTRUE);
    }
