@@ -1028,7 +1028,7 @@ Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
 {
   // Setup RooFormulaVar for cutSpec if it is present
   RooFormula* select = 0 ;
-  if (cutSpec) {
+  if (cutSpec && strlen(cutSpec) > 0) {
     select = new RooFormula("select",cutSpec,*get()) ;
   }
   
