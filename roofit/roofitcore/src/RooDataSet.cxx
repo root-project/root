@@ -1102,8 +1102,11 @@ const RooArgSet* RooDataSet::get() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a data point, with its coordinates specified in the 'data' argset, to the data set. 
-/// Any variables present in 'data' but not in the dataset will be silently ignored
-///
+/// Any variables present in 'data' but not in the dataset will be silently ignored.
+/// \param[in] data Data point.
+/// \param[in] wgt Event weight. Defaults to 1, and ignores the actual value of the
+/// weight variable. To obtain weighted events, a weight variable must be defined in the constructor.
+/// \param[in] wgtError Optional weight error.
 
 void RooDataSet::add(const RooArgSet& data, Double_t wgt, Double_t wgtError) 
 {
@@ -1114,6 +1117,9 @@ void RooDataSet::add(const RooArgSet& data, Double_t wgt, Double_t wgtError)
     if (wgtError!=0.) {
       _wgtVar->setError(wgtError) ;
     }
+  } else if (wgt != 1.) {
+    coutE(DataHandling) << "An event weight was given but no weight variable was defined"
+        << " in the dataset '" << GetName() << "'. The weight will be ignored." << std::endl;
   }
   fill();
 }
@@ -1123,7 +1129,12 @@ void RooDataSet::add(const RooArgSet& data, Double_t wgt, Double_t wgtError)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a data point, with its coordinates specified in the 'data' argset, to the data set. 
-/// Any variables present in 'data' but not in the dataset will be silently ignored
+/// Any variables present in 'data' but not in the dataset will be silently ignored.
+/// \param[in] data Data point.
+/// \param[in] wgt Event weight. The actual value of the weight variable is ignored.
+/// To obtain weighted events, a weight variable must be defined in the constructor.
+/// \param[in] wgtErrorLo Asymmetric weight error.
+/// \param[in] wgtErrorHi Asymmetric weight error.
 ///
 
 void RooDataSet::add(const RooArgSet& indata, Double_t inweight, Double_t weightErrorLo, Double_t weightErrorHi) 
@@ -1134,6 +1145,9 @@ void RooDataSet::add(const RooArgSet& indata, Double_t inweight, Double_t weight
   if (_wgtVar) {
     _wgtVar->setVal(inweight) ;
     _wgtVar->setAsymError(weightErrorLo,weightErrorHi) ;
+  } else if (inweight != 1.) {
+    coutE(DataHandling) << "An event weight was given but no weight variable was defined"
+        << " in the dataset '" << GetName() << "'. The weight will be ignored." << std::endl;
   }
   fill();
 }
@@ -1145,8 +1159,11 @@ void RooDataSet::add(const RooArgSet& indata, Double_t inweight, Double_t weight
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a data point, with its coordinates specified in the 'data' argset, to the data set. 
 /// Layout and size of input argument data is ASSUMED to be the same as RooArgSet returned
-/// RooDataSet::get()
-///
+/// RooDataSet::get().
+/// \param[in] data Data point.
+/// \param[in] wgt Event weight. Defaults to 1, and ignores the actual value of the
+/// weight variable. To obtain weighted events, a weight variable must be defined in the constructor.
+/// \param[in] wgtError Optional weight error.
 
 void RooDataSet::addFast(const RooArgSet& data, Double_t wgt, Double_t wgtError) 
 {
@@ -1157,6 +1174,9 @@ void RooDataSet::addFast(const RooArgSet& data, Double_t wgt, Double_t wgtError)
     if (wgtError!=0.) {
       _wgtVar->setError(wgtError) ;
     }
+  } else if (wgt != 1.) {
+    coutE(DataHandling) << "An event weight was given but no weight variable was defined"
+        << " in the dataset '" << GetName() << "'. The weight will be ignored." << std::endl;
   }
   fill();
 }
