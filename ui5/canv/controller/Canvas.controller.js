@@ -78,7 +78,7 @@ sap.ui.define([
          }
          
          if ((method.fName == "DrawPanel") || (method.fName == "SetLineAttributes") ||
-             (method.fName == "SetFillAttributes") || (method.fName == "SetMarkerAttributes")) {
+             (method.fName == "SetFillAttributes") || (method.fName == "SetMarkerAttributes") || (method.fName == "SetTextAttributes")) {
             this.openuiActivateGed(painter);
             return true;
          }
