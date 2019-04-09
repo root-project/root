@@ -646,10 +646,18 @@ std::vector<std::string> TClingClassInfo::GetUsingNamespaces()
    if (!DC)
       return res;
 
+   clang::PrintingPolicy policy(fDecl->getASTContext().getPrintingPolicy());
    for (auto UD : DC->using_directives()) {
       NamespaceDecl *NS = UD->getNominatedNamespace();
-      if (NS)
-         res.push_back(NS->getName().str());
+      if (NS) {
+         std::string nsName;
+         llvm::raw_string_ostream stream(nsName);
+
+         NS->getNameForDiagnostic(stream, policy, /*Qualified=*/true);
+
+         stream.flush();
+         res.push_back(nsName);
+      }
    }
 
    return res;
