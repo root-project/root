@@ -178,7 +178,7 @@ The old RooFit collections could be modified while iterating. The STL-like itera
 - **But not** inserting/deleting before/at the current iterator position. With a debug build (with assertions), the legacy iterators will check that the collection is not mutated. In a release build, elements might be skipped or be iterated twice.
 
 #### Moving away from the slower iterators
-The legacy iterators have been flagged with a special deprecation macro that can be used help the user use the recommended ROOT interface. Defining `R__SUGGEST_NEW_INTERFACE`, (either in a single translation unit or in the build system), all uses of the legacy iterators will trigger a compiler warning like:
+The legacy iterators have been flagged with a special deprecation macro that can be used help the user use the recommended ROOT interface. Defining `R__SUGGEST_ALTERNATIVE`, (either in a single translation unit or in the build system), creating a legacy iterator will trigger a compiler warning such as:
 ```
 <path>/RooChebychev.cxx:66:34: warning: 'createIterator' is deprecated: There is a superior alternative: begin(), end() and range-based for loops. [-Wdeprecated-declarations]
   TIterator* coefIter = coefList.createIterator() ;
