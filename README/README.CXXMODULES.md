@@ -439,6 +439,28 @@ the performance of the technology preview with respect to 'standard' ROOT[[9]].
 
 ## How to use
   Compile ROOT with `-Druntime_cxxmodules=On`. Enjoy.
+
+## Citing ROOT's C++ Modules
+```latex
+% Peer-Reviewed Publication
+%
+% 22nd International Conference on Computing in High Energy and Nuclear Physics (CHEP)
+% 8-14 October, 2016, San Francisco, USA
+%
+@inproceedings{Vassilev_ROOTModules,
+  author = {Vassilev,V.},
+  title = {{Optimizing ROOT's Performance Using C++ Modules}},
+  journal = {Journal of Physics: Conference Series},
+  year = 2017,
+  month = {oct},
+  volume = {898},
+  number = {7},
+  pages = {072023},
+  doi = {10.1088/1742-6596/898/7/072023},
+  url = {https://iopscience.iop.org/article/10.1088/1742-6596/898/7/072023/pdf},
+  publisher = {{IOP} Publishing}
+}
+```
   
 # Acknowledgement
 
