@@ -362,11 +362,15 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          TIter fiter(hist->GetListOfFunctions());
          TObject *fobj = nullptr;
          TPaveStats *stats = nullptr;
+         TObject *palette = nullptr;
          TString hopt = iter.GetOption();
 
-         while ((fobj = fiter()) != nullptr)
+         while ((fobj = fiter()) != nullptr) {
            if (fobj->InheritsFrom(TPaveStats::Class()))
                stats = dynamic_cast<TPaveStats *> (fobj);
+           else if (fobj->InheritsFrom("TPaletteAxis"))
+              palette = fobj;
+         }
 
          if (!stats && first_obj) {
             stats  = new TPaveStats(
@@ -394,15 +398,24 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
              stats->SetBit(kMustCleanup);
 
              hist->GetListOfFunctions()->Add(stats);
-             hopt.Append(";use_pad_stats");
          }
+
+         if (stats) hopt.Append(";;use_pad_stats");
+
+         if (!palette && (hist->GetDimension()>1) && (hopt.Index("colz", 0, TString::kIgnoreCase) != kNPOS)) {
+            std::stringstream exec;
+            exec << "new TPaletteAxis(0,0,0,0, (TH1*)" << std::hex << std::showbase << (size_t)hist << ");";
+            palette = (TObject *) gROOT->ProcessLine(exec.str().c_str());
+            if (palette) hist->GetListOfFunctions()->AddFirst(palette);
+         }
+
+         if (palette) hopt.Append(";;use_pad_palette");
 
          paddata.NewPrimitive(obj, hopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
 
          fiter.Reset();
          while ((fobj = fiter()) != nullptr)
-            if (!fobj->InheritsFrom("TPaletteAxis"))
-               CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
+            CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
 
          fPrimitivesLists.Add(hist->GetListOfFunctions());
          first_obj = false;
