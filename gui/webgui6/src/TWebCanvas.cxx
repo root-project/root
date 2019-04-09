@@ -20,6 +20,7 @@
 #include "TCanvas.h"
 #include "TFrame.h"
 #include "TPaveText.h"
+#include "TPaveStats.h"
 #include "TText.h"
 #include "TROOT.h"
 #include "TClass.h"
@@ -134,7 +135,7 @@ TObject *TWebCanvas::FindPrimitive(const char *sid, TPad *pad, TObjLink **padlnk
    const char *separ = strchr(sid, '#');
    UInt_t id = 0;
 
-   if (separ == 0) {
+   if (separ == nullptr) {
       id = (UInt_t)TString(sid).Atoll();
    } else {
       kind = separ + 1;
@@ -346,11 +347,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       masterps.CreatePainting(); // create for next operations
    };
 
-   auto add_object = [&]() {
-      paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
-   };
-
    iter.Reset();
+
+   bool first_obj = true;
 
    while ((obj = iter()) != nullptr) {
       if (obj->InheritsFrom(TPad::Class())) {
@@ -358,19 +357,59 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          CreatePadSnapshot(paddata.NewSubPad(), (TPad *)obj, version, nullptr);
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
-         add_object();
 
          TH1 *hist = (TH1 *)obj;
          TIter fiter(hist->GetListOfFunctions());
          TObject *fobj = nullptr;
+         TPaveStats *stats = nullptr;
+         TString hopt = iter.GetOption();
+
          while ((fobj = fiter()) != nullptr)
-            if (!fobj->InheritsFrom("TPaveStats") && !fobj->InheritsFrom("TPaletteAxis"))
+           if (fobj->InheritsFrom(TPaveStats::Class()))
+               stats = dynamic_cast<TPaveStats *> (fobj);
+
+         if (!stats && first_obj) {
+            stats  = new TPaveStats(
+                           gStyle->GetStatX() - gStyle->GetStatW(),
+                           gStyle->GetStatY() - gStyle->GetStatH(),
+                           gStyle->GetStatX(),
+                           gStyle->GetStatY(), "brNDC");
+
+             stats->SetParent(hist);
+             stats->SetOptFit(gStyle->GetOptFit());
+             stats->SetOptStat(gStyle->GetOptStat());
+             stats->SetFillColor(gStyle->GetStatColor());
+             stats->SetFillStyle(gStyle->GetStatStyle());
+             stats->SetBorderSize(gStyle->GetStatBorderSize());
+             stats->SetTextFont(gStyle->GetStatFont());
+             if (gStyle->GetStatFont()%10 > 2)
+                stats->SetTextSize(gStyle->GetStatFontSize());
+             stats->SetFitFormat(gStyle->GetFitFormat());
+             stats->SetStatFormat(gStyle->GetStatFormat());
+             stats->SetName("stats");
+
+             stats->SetTextColor(gStyle->GetStatTextColor());
+             stats->SetTextAlign(12);
+             stats->SetBit(kCanDelete);
+             stats->SetBit(kMustCleanup);
+
+             hist->GetListOfFunctions()->Add(stats);
+             hopt.Append(";use_pad_stats");
+         }
+
+         paddata.NewPrimitive(obj, hopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
+
+         fiter.Reset();
+         while ((fobj = fiter()) != nullptr)
+            if (!fobj->InheritsFrom("TPaletteAxis"))
                CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
 
          fPrimitivesLists.Add(hist->GetListOfFunctions());
+         first_obj = false;
       } else if (obj->InheritsFrom(TGraph::Class())) {
          flush_master();
-         add_object();
+
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
 
          TGraph *gr = (TGraph *)obj;
 
@@ -381,9 +420,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
                CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
 
          fPrimitivesLists.Add(gr->GetListOfFunctions());
+         first_obj = false;
       } else if (IsJSSupportedClass(obj)) {
          flush_master();
-         add_object();
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
       } else {
          CreateObjectSnapshot(paddata, pad, obj, iter.GetOption(), usemaster ? &masterps : nullptr);
       }
