@@ -41,9 +41,10 @@ class TWebPS;
 /// Class used to transport drawing options from the client
 class TWebObjectOptions {
 public:
-   std::string snapid; ///< id of the object
-   std::string opt;    ///< drawing options
-   std::vector<double> fopt; ///< float array for custom options
+   std::string snapid;       ///< id of the object
+   std::string opt;          ///< drawing options
+   std::string fcust;        ///< custom string
+   std::vector<double> fopt; ///< custom float array
 };
 
 /// Class used to transport ranges from JSROOT canvas
