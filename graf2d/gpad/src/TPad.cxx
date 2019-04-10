@@ -986,6 +986,7 @@ void TPad::Close(Option_t *)
 {
    if (!TestBit(kNotDeleted)) return;
    if (!fMother) return;
+   if (!fMother->TestBit(kNotDeleted)) return;
 
    if (fPrimitives)
       fPrimitives->Clear();
@@ -1288,7 +1289,7 @@ void TPad::Draw(Option_t *option)
    // pad cannot be in itself and it can only be in one other pad at a time
    if (!fPrimitives) fPrimitives = new TList;
    if (gPad != this) {
-      if (fMother) fMother->GetListOfPrimitives()->Remove(this);
+      if (fMother && fMother->TestBit(kNotDeleted)) fMother->GetListOfPrimitives()->Remove(this);
       TPad *oldMother = fMother;
       fCanvas = gPad->GetCanvas();
       //
@@ -4612,6 +4613,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 void TPad::Pop()
 {
    if (!fMother) return;
+   if (!fMother->TestBit(kNotDeleted)) return;
    if (!fPrimitives) fPrimitives = new TList;
    if (this == fMother->GetListOfPrimitives()->Last()) return;
 
