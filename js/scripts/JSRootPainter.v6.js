@@ -1482,9 +1482,10 @@
          this.createAttLine({ attr: tframe, color: 'black' });
    }
 
+   /** Function called at the end of resize of frame
+     * One should apply changes to the pad
+     * @private */
    TFramePainter.prototype.SizeChanged = function() {
-      // function called at the end of resize of frame
-      // One should apply changes to the pad
 
       var pad = this.root_pad();
 
@@ -1496,7 +1497,7 @@
          this.SetRootPadRange(pad);
       }
 
-      this.RedrawPad();
+      this.InteractiveRedraw("pad", "frame");
    }
 
    TFramePainter.prototype.CleanXY = function() {
@@ -1739,10 +1740,7 @@
       // directly change attribute in the pad
       pad["fLog" + axis] = pad["fLog" + axis] ? 0 : 1;
 
-      this.RedrawPad();
-
-      var canp = this.canv_painter();
-      if (canp) canp.ProcessChanges("log"+axis, this.pad_painter());
+      this.InteractiveRedraw("pad", "log"+axis);
    }
 
    TFramePainter.prototype.FillContextMenu = function(menu, kind, obj) {
@@ -1838,12 +1836,18 @@
       menu.addchk(this.IsTooltipAllowed(), "Show tooltips", function() {
          this.SetTooltipAllowed("toggle");
       });
-      this.FillAttContextMenu(menu,alone ? "" : "Frame ");
+      this.FillAttContextMenu(menu, alone ? "" : "Frame ");
       menu.add("separator");
       menu.add("Save as frame.png", function() { this.pad_painter().SaveAs("png", 'frame', 'frame.png'); });
       menu.add("Save as frame.svg", function() { this.pad_painter().SaveAs("svg", 'frame', 'frame.svg'); });
 
       return true;
+   }
+
+   TFramePainter.prototype.FillWebObjectOptions = function(res) {
+      res.fcust = "frame",
+      res.fopt = [this.scale_xmin || 0, this.scale_ymin || 0, this.scale_xmax || 0, this.scale_ymax || 0];
+      return res;
    }
 
    TFramePainter.prototype.GetFrameRect = function() {
@@ -2557,6 +2561,7 @@
    }
 
    TFramePainter.prototype.ShowContextMenu = function(kind, evnt, obj) {
+
       // ignore context menu when touches zooming is ongoing
       if (('zoom_kind' in this) && (this.zoom_kind > 100)) return;
 
@@ -3243,7 +3248,7 @@
             delete this._current_primitive_indx;
             if (this._start_tm) {
                var spenttm = new Date().getTime() - this._start_tm;
-               if (spenttm > 200) console.log("Canvas drawing took " + (spenttm*1e-3).toFixed(2) + "s");
+               if (spenttm > 1000) console.log("Canvas drawing took " + (spenttm*1e-3).toFixed(2) + "s");
                delete this._start_tm;
                delete this._lasttm_tm;
             }
@@ -3308,10 +3313,7 @@
 
          function SetPadField(arg) {
             this.pad[arg.substr(1)] = parseInt(arg[0]);
-            var main = this.svg_pad(this.this_pad_name).property('mainpainter');
-            if (main && (typeof main.DrawAxes == 'function')) main.DrawAxes();
-            var canp = this.canv_painter();
-            if (canp) canp.ProcessChanges(arg.substr(1), this.pad_painter());
+            this.InteractiveRedraw("axes", arg.substr(1));
          }
 
          menu.addchk(this.pad.fGridx, 'Grid x', (this.pad.fGridx ? '0' : '1') + 'fGridx', SetPadField);
@@ -3800,8 +3802,10 @@
       }
    }
 
-   TPadPainter.prototype.GetAllRanges = function(arg) {
-      var is_top = (arg === undefined), elem = null;
+   /** Collects pad information for TWebCanvas, need to update different states */
+   TPadPainter.prototype.GetWebPadInfo = function(arg) {
+      var is_top = (arg === undefined), elem = null, scan_subpads = true;
+      if (arg === "only_this") { is_top = true; scan_subpads = false; }
       if (is_top) arg = [];
 
       if (this.snapid) {
@@ -3822,12 +3826,16 @@
             console.log('fail to get ranges for pad ' +  this.pad.fName);
       }
 
-      for (var k=0;k<this.painters.length;++k) {
+      for (var k=0; k<this.painters.length; ++k) {
          var sub = this.painters[k];
-         if (typeof sub.GetAllRanges == "function")
-            sub.GetAllRanges(arg);
-         else if (sub.snapid)
-            elem.primitives.push({ _typename: "TWebObjectOptions", snapid: sub.snapid.toString(), opt: sub.OptionsAsString() });
+         if (typeof sub.GetWebPadInfo == "function") {
+            if (scan_subpads) sub.GetWebPadInfo(arg);
+         } else if (sub.snapid) {
+            var opt = { _typename: "TWebObjectOptions", snapid: sub.snapid.toString(), opt: sub.OptionsAsString(), fcust: "", fopt: [] };
+            if (typeof sub.FillWebObjectOptions == "function")
+               opt = sub.FillWebObjectOptions(opt);
+            elem.primitives.push(opt);
+         }
       }
 
       if (is_top) return JSROOT.toJSON(arg);
@@ -4593,11 +4601,8 @@
 
          this.RedrawPadSnap(snap, function() {
             pthis.CompeteCanvasSnapDrawing();
-            var ranges = pthis.GetAllRanges();
-            if (ranges) {
-               // console.log("ranges: " + ranges);
-               ranges = ":" + ranges;
-            }
+            var ranges = pthis.GetWebPadInfo(); // all data, including subpads
+            if (ranges) ranges = ":" + ranges;
             handle.Send("READY6:" + snapid + ranges); // send ready message back when drawing completed
          });
       } else if (msg.substr(0,5)=='MENU:') {
@@ -4779,15 +4784,51 @@
       this.ShowSection("ToolTips", this.pad.TestBit(JSROOT.TCanvasStatusBits.kShowToolTips));
    }
 
-   /// method informs that something was changed in the canvas
-   /// used to update information on the server (when used with web6gui)
-   TCanvasPainter.prototype.ProcessChanges = function(kind, source_pad) {
+   /** Method informs that something was changed in the canvas
+     * used to update information on the server (when used with web6gui)
+     * @private */
+   TCanvasPainter.prototype.ProcessChanges = function(kind, painter) {
       // check if we could send at least one message more - for some meaningful actions
-      if (!this._websocket || !this._websocket.CanSend(2)) return;
+      if (!this._websocket || !this._websocket.CanSend(2) || (typeof kind !== "string")) return;
 
-      var msg = (kind == "sbits") ? "STATUSBITS:" + this.GetStatusBits() : "RANGES6:" + this.GetAllRanges();
+      var msg = "";
+      if (!painter) painter = this;
+      switch (kind) {
+         case "sbits":
+            msg = "STATUSBITS:" + this.GetStatusBits();
+            break;
+         case "frame": // when moving frame
+         case "zoom":  // when changing zoom inside frame
+            if (!painter.GetWebPadInfo)
+               painter = painter.pad_painter();
+            if (typeof painter.GetWebPadInfo == "function")
+               msg = "RANGES6:" + painter.GetWebPadInfo("only_this");
+            break;
+         case "pave_moved":
+            if (painter.FillWebObjectOptions) {
+               var info = painter.FillWebObjectOptions();
+               if (info) msg = "PRIMIT6:" + JSROOT.toJSON(info);
+            }
+            break;
+         default:
+            if ((kind.substr(0,5) == "exec:") && painter && painter.snapid) {
+               msg = "PRIMIT6:" + JSROOT.toJSON({
+                  _typename: "TWebObjectOptions",
+                  snapid: painter.snapid.toString(),
+                  opt: kind.substr(5),
+                  fcust: "exec",
+                  fopt: []
+               });
+            } else {
+               console.log("UNPROCESSED CHANGES", kind);
+            }
+      }
 
-      this._websocket.Send(msg);
+      if (msg) {
+         console.log("Sending " + msg.length + "  " + msg.substr(0,40));
+         this._websocket.Send(msg);
+      }
+
    }
 
    TCanvasPainter.prototype.SelectActivePad = function(pad_painter, obj_painter, click_pos) {

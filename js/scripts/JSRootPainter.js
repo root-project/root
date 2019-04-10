@@ -2693,7 +2693,10 @@
     * @private */
    TObjectPainter.prototype.OptionsStore = function(original) {
       if (!this.options) return;
-      this.options.original = original || "";
+      if (!original) original = "";
+      var pp = original.indexOf(";;");
+      if (pp>=0) original = original.substr(0,pp);
+      this.options.original = original;
       this.options_store = JSROOT.extend({}, this.options);
    }
 
@@ -3536,23 +3539,32 @@
       if (pp) pp.ForEachPainterInPad(userfunc, kind);
    }
 
-   /** @summary indicate that redraw was invoked via interactive action (like context menu)
-    * desc  use to catch such action by GED
+   /** @summary indicate that redraw was invoked via interactive action (like context menu or zooming)
+    * @desc Use to catch such action by GED
     * @private */
    TObjectPainter.prototype.InteractiveRedraw = function(arg, info) {
 
-      if (arg == "pad") this.RedrawPad(); else
-      if (arg !== true) this.Redraw();
+      if (arg == "pad") {
+         this.RedrawPad();
+      } else if (arg == "axes") {
+         var main = this.main_painter(true, this.this_pad_name); // works for pad and any object drawn in the pad
+         if (main && (typeof main.DrawAxes == 'function'))
+            main.DrawAxes();
+         else
+            this.RedrawPad();
+      } else if (arg !== false) {
+         this.Redraw();
+      }
 
       // inform GED that something changes
-      var pad_painter = this.pad_painter();
-      if (pad_painter && pad_painter.InteractiveObjectRedraw)
-         pad_painter.InteractiveObjectRedraw(this);
+      var pp = this.pad_painter();
+      if (pp && pp.InteractiveObjectRedraw)
+         pp.InteractiveObjectRedraw(this);
 
       // inform server that drawopt changes
       var canp = this.canv_painter();
       if (canp && canp.ProcessChanges)
-         canp.ProcessChanges(info, this.pad_painter());
+         canp.ProcessChanges(info, this);
    }
 
    /** @summary Redraw all objects in correspondent pad */
@@ -3997,6 +4009,24 @@
       delete this.markeratt;
    }
 
+   /** @summary Produce exec string for WebCanas to set color value
+    * @desc Color can be id or string, but should belong to list of known colors
+    * @private */
+   TObjectPainter.prototype.GetColorExec = function(col, method) {
+      var id = -1;
+      if (typeof col == "string") {
+         if (!col || (col == "none")) id = 0; else
+         for (var k=1;k<JSROOT.Painter.root_colors.length;++k)
+            if (JSROOT.Painter.root_colors[k] == col) {
+               id = k; break
+            }
+      } else if (!isNaN(col) && JSROOT.Painter.root_colors[col]) {
+         id = col;
+      }
+
+      return id < 0 ? "" : "exec:" + method + "(" + id + ")";
+   }
+
    /** @summary Fill context menu for graphical attributes
     * @private */
    TObjectPainter.prototype.FillAttContextMenu = function(menu, preffix) {
@@ -4009,16 +4039,16 @@
       if (this.lineatt && this.lineatt.used) {
          menu.add("sub:"+preffix+"Line att");
          this.AddSizeMenuEntry(menu, "width", 1, 10, 1, this.lineatt.width,
-                               function(arg) { this.lineatt.Change(undefined, parseInt(arg)); this.InteractiveRedraw(); }.bind(this));
+                               function(arg) { this.lineatt.Change(undefined, parseInt(arg)); this.InteractiveRedraw(true, "exec:SetLineWidth(" + arg + ")"); }.bind(this));
          this.AddColorMenuEntry(menu, "color", this.lineatt.color,
-                          function(arg) { this.lineatt.Change(arg); this.InteractiveRedraw(); }.bind(this));
+                          function(arg) { this.lineatt.Change(arg); this.InteractiveRedraw(true, this.GetColorExec(arg, "SetLineColor")); }.bind(this));
          menu.add("sub:style", function() {
             var id = prompt("Enter line style id (1-solid)", 1);
             if (id == null) return;
             id = parseInt(id);
             if (isNaN(id) || !JSROOT.Painter.root_line_styles[id]) return;
             this.lineatt.Change(undefined, undefined, id);
-            this.InteractiveRedraw();
+            this.InteractiveRedraw(true, "exec:SetLineStyle(" + id + ")");
          }.bind(this));
          for (var n=1;n<11;++n) {
 
@@ -4026,7 +4056,7 @@
 
             var svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + n + "</text><line x1='30' y1='8' x2='100' y2='8' stroke='black' stroke-width='3' stroke-dasharray='" + dash + "'></line></svg>";
 
-            menu.addchk((this.lineatt.style==n), svg, n, function(arg) { this.lineatt.Change(undefined, undefined, parseInt(arg)); this.InteractiveRedraw(); }.bind(this));
+            menu.addchk((this.lineatt.style==n), svg, n, function(arg) { this.lineatt.Change(undefined, undefined, parseInt(arg)); this.InteractiveRedraw(true, "exec:SetLineStyle(" + arg + ")"); }.bind(this));
          }
          menu.add("endsub:");
          menu.add("endsub:");
@@ -4051,14 +4081,14 @@
       if (this.fillatt && this.fillatt.used) {
          menu.add("sub:"+preffix+"Fill att");
          this.AddColorMenuEntry(menu, "color", this.fillatt.colorindx,
-               function(arg) { this.fillatt.Change(parseInt(arg), undefined, this.svg_canvas()); this.InteractiveRedraw(); }.bind(this), this.fillatt.kind);
+               function(arg) { this.fillatt.Change(parseInt(arg), undefined, this.svg_canvas()); this.InteractiveRedraw(true, this.GetColorExec(parseInt(arg), "SetFillColor")); }.bind(this), this.fillatt.kind);
          menu.add("sub:style", function() {
             var id = prompt("Enter fill style id (1001-solid, 3000..3010)", this.fillatt.pattern);
             if (id == null) return;
             id = parseInt(id);
             if (isNaN(id)) return;
             this.fillatt.Change(undefined, id, this.svg_canvas());
-            this.InteractiveRedraw();
+            this.InteractiveRedraw(true, "exec:SetFillStyle(" + id + ")");
          }.bind(this));
 
          var supported = [1, 1001, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3010, 3021, 3022];
@@ -4070,7 +4100,7 @@
 
             menu.addchk(this.fillatt.pattern == supported[n], svg, supported[n], function(arg) {
                this.fillatt.Change(undefined, parseInt(arg), this.svg_canvas());
-               this.InteractiveRedraw();
+               this.InteractiveRedraw(true, "exec:SetFillStyle(" + arg + ")");
             }.bind(this));
          }
          menu.add("endsub:");
@@ -4080,9 +4110,9 @@
       if (this.markeratt && this.markeratt.used) {
          menu.add("sub:"+preffix+"Marker att");
          this.AddColorMenuEntry(menu, "color", this.markeratt.color,
-                   function(arg) { this.markeratt.Change(arg); this.InteractiveRedraw(); }.bind(this));
+                   function(arg) { this.markeratt.Change(arg); this.InteractiveRedraw(true, this.GetColorExec(arg, "SetMarkerColor")); }.bind(this));
          this.AddSizeMenuEntry(menu, "size", 0.5, 6, 0.5, this.markeratt.size,
-               function(arg) { this.markeratt.Change(undefined, undefined, parseFloat(arg)); this.InteractiveRedraw(); }.bind(this));
+               function(arg) { this.markeratt.Change(undefined, undefined, parseFloat(arg)); this.InteractiveRedraw(true, "exec:SetMarkerSize(" + parseInt(arg) + ")"); }.bind(this));
 
          menu.add("sub:style");
          var supported = [1,2,3,4,5,6,7,8,21,22,23,24,25,26,27,28,29,30,31,32,33,34];
@@ -4093,7 +4123,7 @@
                 svg = "<svg width='60' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><path stroke='black' fill='" + (clone.fill ? "black" : "none") + "' d='" + clone.create(40,8) + "'></path></svg>";
 
             menu.addchk(this.markeratt.style == supported[n], svg, supported[n],
-                     function(arg) { this.markeratt.Change(undefined, parseInt(arg)); this.InteractiveRedraw(); }.bind(this));
+                     function(arg) { this.markeratt.Change(undefined, parseInt(arg)); this.InteractiveRedraw(true, "exec:SetMarkerStyle(" + parseInt(arg) + ")"); }.bind(this));
          }
          menu.add("endsub:");
          menu.add("endsub:");
@@ -4143,7 +4173,6 @@
    /** @symmary Fill context menu for the object
     * @private */
    TObjectPainter.prototype.FillContextMenu = function(menu) {
-
       var title = this.GetTipName();
       if (this.GetObject() && ('_typename' in this.GetObject()))
          title = this.GetObject()._typename + "::" + title;

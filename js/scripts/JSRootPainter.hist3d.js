@@ -3040,8 +3040,8 @@
             return JSROOT.draw(this.divid, this.GetObject(),arg);
 
          this.DecodeOptions(arg);
-         this.Redraw();
-         this.InteractiveRedraw(true,"drawopt");
+
+         this.InteractiveRedraw(true, "drawopt");
       });
    }
 
