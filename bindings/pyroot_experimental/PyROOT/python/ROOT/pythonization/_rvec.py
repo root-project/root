@@ -11,23 +11,22 @@
 from ROOT import pythonization
 from libROOTPython import GetEndianess, GetVectorDataPointer, GetSizeOfType, AsRVec
 
-_array_interface_dtypes = [
-    "float", "double", "int", "long", "unsigned int", "unsigned long"
-]
 
 _array_interface_dtype_map = {
     "float": "f",
     "double": "f",
     "int": "i",
     "long": "i",
+    "Long64_t": "i",
     "unsigned int": "u",
-    "unsigned long": "u"
+    "unsigned long": "u",
+    "ULong64_t": "u",
 }
 
 
 def get_array_interface(self):
     cppname = type(self).__cppname__
-    for dtype in _array_interface_dtypes:
+    for dtype in _array_interface_dtype_map:
         if cppname.endswith("<{}>".format(dtype)):
             dtype_numpy = _array_interface_dtype_map[dtype]
             dtype_size = GetSizeOfType(dtype)
@@ -49,7 +48,7 @@ def get_array_interface(self):
 
 def add_array_interface_property(klass, name):
     if True in [
-            name.endswith("<{}>".format(dtype)) for dtype in _array_interface_dtypes
+            name.endswith("<{}>".format(dtype)) for dtype in _array_interface_dtype_map
     ]:
         klass.__array_interface__ = property(get_array_interface)
 
