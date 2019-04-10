@@ -154,8 +154,8 @@ TTreeReaderValue<A_t> a(reader, "A");
 TTreeReaderValue<B_t> b(reader, "B");
 TTreeReaderValue<C_t> c(reader, "C");
 while(reader.Next()) {
-   if(IsGoodEvent(a, b, c))
-      DoStuff(a, b, c);
+   if(IsGoodEvent(*a, *b, *c))
+      DoStuff(*a, *b, *c);
 }
 ~~~
    </td>
