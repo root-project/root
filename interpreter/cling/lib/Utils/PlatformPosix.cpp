@@ -72,7 +72,7 @@ namespace {
 
     bool operator () (const void* P) {
       if (FD == -1)
-        return false;
+        return true;
       // std::find is considerably slower, do manual search instead.
       if (P == lines[0] || P == lines[1] || P == lines[2] || P == lines[3]
           || P == lines[4] || P == lines[5] || P == lines[6] || P == lines[7])
