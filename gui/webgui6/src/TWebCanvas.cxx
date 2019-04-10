@@ -761,8 +761,9 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Process data for single primitive
+/// Returns object pad if object was modified
 
-void TWebCanvas::ProcessObjectData(TWebObjectOptions &item, TPad *pad)
+TPad *TWebCanvas::ProcessObjectData(TWebObjectOptions &item, TPad *pad)
 {
    TObjLink *lnk = nullptr;
    TPad *objpad = nullptr;
@@ -778,15 +779,19 @@ void TWebCanvas::ProcessObjectData(TWebObjectOptions &item, TPad *pad)
          gROOT->ProcessLine(exec.str().c_str());
       } else {
          Error("ProcessObjectData", "Fail to execute %s for object %p %s", item.opt.c_str(), obj, obj ? obj->ClassName() : "---");
+         objpad = nullptr;
       }
-      return;
+      return objpad;
    }
+
+   bool modified = false;
 
    if (obj && lnk) {
       if (gDebug > 1)
          Info("DecodeAllRanges", "Set draw option \"%s\" for object %s %s", item.opt.c_str(),
                obj->ClassName(), obj->GetName());
       lnk->SetOption(item.opt.c_str());
+      modified = true;
    }
 
    if (item.fcust.compare("frame") == 0) {
@@ -797,6 +802,7 @@ void TWebCanvas::ProcessObjectData(TWebObjectOptions &item, TPad *pad)
             frame->SetY1(item.fopt[1]);
             frame->SetX2(item.fopt[2]);
             frame->SetY2(item.fopt[3]);
+            modified = true;
          }
       }
    } else if (item.fcust.compare("pave") == 0) {
@@ -815,12 +821,15 @@ void TWebCanvas::ProcessObjectData(TWebObjectOptions &item, TPad *pad)
             pave->SetY2NDC(item.fopt[3]);
 
             // printf("Setting %s %s %f %f %f %f\n", pave->GetName(), pave->ClassName(), item.fopt[0], item.fopt[1], item.fopt[2], item.fopt[3]);
+            modified = true;
 
             pave->ConvertNDCtoPad();
             gPad = save;
          }
       }
    }
+
+   return modified ? objpad : nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -836,7 +845,12 @@ Bool_t TWebCanvas::DecodeObjectData(const char *arg)
    TBufferJSON::FromJSON(opt, arg);
 
    if (opt) {
-      ProcessObjectData(*opt, nullptr);
+      TPad *modpad = ProcessObjectData(*opt, nullptr);
+
+      // indicate that pad was modified
+      if (modpad)
+         modpad->Modified();
+
       delete opt;
    }
 
