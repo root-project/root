@@ -26,13 +26,11 @@
 #include <vector>
 
 namespace ROOT {
-
 namespace Experimental {
+
 class RInputForest;
 class RForestEntry;
-}
 
-namespace RDF {
 
 class RForestDS final : public ROOT::RDF::RDataSource {
    ROOT::Experimental::RInputForest* fForest;
@@ -60,8 +58,7 @@ protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
-} // ns RDF
-
+} // ns Experimental
 } // ns ROOT
 
 #endif

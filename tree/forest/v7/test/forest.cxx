@@ -416,7 +416,7 @@ TEST(RForest, RDF)
    }
 
    auto forest = RInputForest::Create("f", "test.root");
-   auto rdf = std::make_unique<ROOT::RDataFrame>(std::make_unique<ROOT::RDF::RForestDS>(forest.get()));
+   auto rdf = std::make_unique<ROOT::RDataFrame>(std::make_unique<ROOT::Experimental::RForestDS>(forest.get()));
 
    EXPECT_EQ(42.0, *rdf->Min("pt"));
 }
