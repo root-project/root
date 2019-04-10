@@ -16,6 +16,8 @@
 #include "TString.h"
 
 #include <deque>
+#include <memory>
+#include <string>
 
 class TVirtualStreamerInfo;
 class TStreamerInfo;
@@ -60,6 +62,13 @@ public:
          return kFALSE;
       obj = (T *)ConvertFromJSONChecked(json, TClass::GetClass<T>());
       return obj != nullptr;
+   }
+
+   template <class T>
+   static std::unique_ptr<T> FromJSON(const std::string &json)
+   {
+      T *obj = (T *)ConvertFromJSONChecked(json.c_str(), TClass::GetClass<T>());
+      return std::unique_ptr<T>(obj);
    }
 
    // suppress class writing/reading
