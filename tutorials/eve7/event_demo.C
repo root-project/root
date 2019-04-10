@@ -57,7 +57,7 @@ REX::REvePointSet *getPointSet(int npoints = 2, float s=2, int color=28)
        ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
 
    ps->SetMarkerColor(color);
-   ps->SetMarkerSize(3+r.Uniform(1, 2));
+   ps->SetMarkerSize(3+r.Uniform(1, 7));
    ps->SetMarkerStyle(4);
    return ps;
 }
@@ -71,11 +71,11 @@ void addPoints()
    auto ps1 = getPointSet(20, 100);
    ps1->SetName("Points_1");
    pntHolder->AddElement(ps1);
-   /*
+
    auto ps2 = getPointSet(10, 200, 4);
-   ps2->SetElementName("Points_2");
+   ps2->SetName("Points_2");
    pntHolder->AddElement(ps2);
-   */
+
    event->AddElement(pntHolder);
 }
 
