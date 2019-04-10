@@ -851,8 +851,6 @@
    TGeoPainter.prototype.createSSAO = function() {
       if (!this._webgl || this._ssaoPass) return;
 
-      // var renderPass = new THREE.RenderPass( this._scene, this._camera );
-
       // this._depthRenderTarget = new THREE.WebGLRenderTarget( this._scene_width, this._scene_height, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter } );
       // Setup SSAO pass
       this._ssaoPass = new THREE.SSAOPass( this._scene, this._camera, this._scene_width, this._scene_height );
@@ -860,8 +858,6 @@
       this._ssaoPass.renderToScreen = true;
 
       // Add pass to effect composer
-      this._effectComposer = new THREE.EffectComposer( this._renderer );
-      //this._effectComposer.addPass( renderPass );
       this._effectComposer.addPass( this._ssaoPass );
    }
 
@@ -1921,6 +1917,9 @@
       // these two parameters are exclusive - either SSAO or clipping can work at same time
       this._enableSSAO = this.options.ssao;
       this._enableClipping = !this._enableSSAO;
+
+      this._effectComposer = new THREE.EffectComposer( this._renderer );
+      this._effectComposer.addPass( new THREE.RenderPass( this._scene, this._camera ) );
 
       if (this._enableSSAO)
          this.createSSAO();
@@ -3058,8 +3057,8 @@
 
          this.TestCameraPosition(tmout === -1);
 
-         // do rendering, most consuming time
-         if (this._webgl && this._enableSSAO && this._ssaoPass) {
+         // its needed for outlinePass - do rendering, most consuming time
+         if (this._effectComposer.passes.length > 1 || this._webgl && this._enableSSAO && this._ssaoPass) {
             this._effectComposer.render();
          } else {
        //     this._renderer.logarithmicDepthBuffer = true;
@@ -3609,7 +3608,7 @@
             this._camera.aspect = this._scene_width / this._scene_height;
          this._camera.updateProjectionMatrix();
          this._renderer.setSize( this._scene_width, this._scene_height, !this._fit_main_area );
-         if (this._ssaoPass) this._ssaoPass.setSize( this._scene_width, this._scene_height );
+         this._effectComposer.setSize( this._scene_width, this._scene_height );
 
          if (!this.drawing_stage) this.Render3D();
       }
