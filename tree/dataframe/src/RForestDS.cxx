@@ -25,8 +25,7 @@
 #include <utility>
 
 namespace ROOT {
-
-namespace RDF {
+namespace Experimental {
 
 RForestDS::RForestDS(ROOT::Experimental::RInputForest* forest)
   : fForest(forest), fEntry(fForest->GetModel()->CreateEntry()), fNSlots(1), fHasSeenAllRanges(false)
@@ -53,7 +52,7 @@ const std::vector<std::string>& RForestDS::GetColumnNames() const
 }
 
 
-RDataSource::Record_t RForestDS::GetColumnReadersImpl(std::string_view name, const std::type_info& /* ti */)
+RDF::RDataSource::Record_t RForestDS::GetColumnReadersImpl(std::string_view name, const std::type_info& /* ti */)
 {
    const auto index = std::distance(
       fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
@@ -119,6 +118,5 @@ void RForestDS::SetNSlots(unsigned int nSlots)
 }
 
 
-} // ns RDF
-
+} // ns Experimental
 } // ns ROOT
