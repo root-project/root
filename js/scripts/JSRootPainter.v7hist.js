@@ -688,7 +688,7 @@
       }
 
       this.CopyOptionsToOthers();
-      this.InteractiveRedraw("pad","drawopt");
+      this.InteractiveRedraw("pad", "drawopt");
    }
 
    THistPainter.prototype.PrepareColorDraw = function(args) {
