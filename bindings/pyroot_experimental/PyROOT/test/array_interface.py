@@ -11,7 +11,8 @@ class ArrayInterface(unittest.TestCase):
 
     # Helpers
     dtypes = [
-        "int", "unsigned int", "long", "unsigned long", "float", "double"
+        "int", "unsigned int", "long", "long long", "Long64_t", "unsigned long",
+        "unsigned long long", "ULong64_t", "float", "double"
     ]
 
     def get_maximum_for_dtype(self, dtype):
