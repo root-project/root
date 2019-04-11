@@ -1254,7 +1254,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
       stack->fValues.clear();
       AppendOutput(fValue.Data());
       fValue.Clear();
-   } else if ((special_kind > 0) && (special_kind <= TClassEdit::kBitSet)) {
+   } else if ((special_kind > 0) && (special_kind < ROOT::kSTLend)) {
       // here make STL container processing
 
       if (stack->fValues.empty()) {
