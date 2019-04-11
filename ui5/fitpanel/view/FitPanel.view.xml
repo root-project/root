@@ -1,29 +1,375 @@
-<mvc:View 
-   controllerName="rootui5.fitpanel.controller.FitPanel"
-   class="sapUiSizeCompact" height="100%" 
-   xmlns:mvc="sap.ui.core.mvc" 
-   xmlns:core="sap.ui.core"  
-   xmlns="sap.m">
-   <Page id="fitpanel_page" title="Fit Panel" showHeader="true">
-       <content>
-         <VBox>
-            <Text text="Data"/>
-            <ComboBox id="FitData" selectedKey="{/fSelectDataId}" items="{ path: '/fDataNames', sorter: { path: 'fName' } }">
-               <core:Item key="{fId}" text="{fName}" />
-            </ComboBox>
-            <Text text="Models"/>
-            <ComboBox id="FitModel" selectedKey="{/fSelectModelId}" items="{ path: '/fModelNames', sorter: { path: 'fName' } }">
-               <core:Item key="{fId}" text="{fName}" />
-            </ComboBox>
-         </VBox>
-      </content>
-      <footer>
-         <Bar>
-            <contentRight>
-               <Button id="fitpanel_Fit" text="Fit" press="handleFitPress" />
-               <Button id="fitpanel_Close" text="Close" press="closePanel" />
-            </contentRight>
-         </Bar>
-      </footer>
-   </Page>
+<mvc:View
+ 	class="sapUiSizeCompact"
+	height="100%"
+	width="450px"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core"
+	xmlns="sap.m"
+	xmlns:l="sap.ui.layout"
+	controllerName="rootui5.fitpanel.controller.FitPanel">
+	<Page id="simplefitpanel_page" title="Simple Fit Panel" showHeader="false">
+		<VBox class="sapUiSizeCompact sapUiBody fitPanelStyle">
+			<!-- What kind of form? -->
+			<l:Grid
+				class="sapUiSizeCompact"
+				vSpacing="0"
+				defaultSpan="L4 M6 S10">
+				<l:content>
+					<Label text="Data Set:" labelFor="DataSet">
+						<layoutData>
+							<l:GridData span="L4 M6 S3" />
+						</layoutData>
+					</Label>
+					<ComboBox id="DataSet" selectedKey="{/fSelectDataId}" items="{ path: '/fDataSet', sorter: { path: 'fSet' } }">
+	       				<core:Item key="{fId}" text="{fSet}" />
+	       				<layoutData>
+							<l:GridData span="L4 M6 S6" />
+						</layoutData>
+					</ComboBox>	
+					<Title level="H4" text="Fit Function"/>
+					<Label text="Type:" labelFor="TypeFunc">
+						<layoutData>
+							<l:GridData span="L4 M3 S3" />
+						</layoutData>
+					</Label>
+					<ComboBox id="TypeFunc" selectedKey="{/fSelectTypeId}" items="{ path: '/fTypeFunc', sorter: { path: 'fFunc' } }" change="selectTypeFunc">
+	       				<core:Item key="{fId}" text="{fSet}" />
+	       				<layoutData>
+							<l:GridData span="L4 M3 S3" />
+						</layoutData>
+			        </ComboBox>  
+			        <ComboBox id="TypeXY" selectedKey="{/fSelectXYId}" items="{ path: '/fTypeXY', sorter: { path: 'fXY' } }" change="onTypeXYChange">
+		               <core:Item key="{fId}" text="{fSet}" />
+			             <layoutData>
+							<l:GridData span="L4 M3 S3" />
+						</layoutData> 
+			        </ComboBox>
+					<TextArea id="OperationText" width="100%" height="30px" value=" " valueLiveUpdate="{/fOpTextUpdate}" liveChange="operationTextChange">
+						<layoutData>
+							<l:GridData span="L4 M6 S10"/>
+						</layoutData>
+					</TextArea>
+					<!-- Label and Text for Selected Function --> 
+					<Label text="Selected " labelFor="OperationText">
+						<layoutData>
+							<l:GridData span="L4 M6 S3" />
+						</layoutData>
+					</Label>
+					<Text id="selectedOpText" text="gaus">
+						<layoutData>
+							<l:GridData span="L4 M6 S6"/>
+						</layoutData>
+					</Text>
+					<Button text="Set Parameters" press="setParametersDialog" />
+					<!-- <Panel expandable="true" expanded="false" headerText="Set Parameters" width="auto" class="sapUiNoMargin fitPanelStyle">
+						<content>
+							<l:Grid
+				            class="sapUiSizeCompact"
+				            vSpacing="0"
+				            defaultSpan="XL3 L3 M3 S3">
+					            <l:content>
+					                <Title text=""/>
+					                <Title level="H5" text="p0">
+					                </Title>
+					                <Title level="H5" text="p1">
+					                </Title>
+					                 <Title level="H5" text="p2">
+					                </Title>
+					                 <Title level="H5" text="Constant">
+					                </Title>
+					                 <Title level="H5" text="Constant">
+					                </Title>
+					                 <Title level="H5" text="Constant">
+					                </Title>
+					                 <Title level="H5" text="Constant">
+					                </Title>
+
+					                <Title level="H5" text="Fix"/>
+					                <CheckBox id="FixC" selected="{/fFixC}"/>
+					                <CheckBox id="FixM" selected="{/fFixM}"/>
+					                <CheckBox id="FixS" selected="{/fFixS}"/>
+
+					                <Title level="H5" text="Bound"/>
+					                <CheckBox id="BoundC" selected="{/fBoundC}" enabled="{= ${/fFixC} !== true}"/>
+					                <CheckBox id="BoundM" selected="{/fBoundM}" enabled="{= ${/fFixM} !== true}"/>
+					                <CheckBox id="BoundS" selected="{/fBoundS}" enabled="{= ${/fFixS} !== true}"/>
+
+					                <Title level="H5" text="Value"/>
+					                <Input id="ValueC" type="Number" enabled="{= ${/fFixC} !== true}"/>
+					                <Input id="ValueM" type="Number" enabled="{= ${/fFixM} !== true}"/>
+					                <Input id="ValueS" type="Number" enabled="{= ${/fFixS} !== true}"/>
+
+					                <Title level="H5" text="Min"/>
+					                <Input id="MinC" type="Number" enabled="{= ${/fFixC} !== true}" value="{/fMinC}"/>
+					                <Input id="MinM" type="Number" enabled="{= ${/fFixM} !== true}" value="{/fMinM}"/>
+					                <Input id="MinS" type="Number" enabled="{= ${/fFixS} !== true}" value="{/fMinS}"/>
+
+					                <Title level="H5" text="Set Range"/>
+					                <RangeSlider id="setRangeC" showAdvancedTooltip="true" range="0,1" min="0" max="1" step="0.1" width="100%" showHandleTooltip="false" inputsAsTooltips="true" class="sapUiNoMarginBottom"/>
+					                <RangeSlider id="setRangeM" showAdvancedTooltip="true" range="0,1" min="0" max="1" step="0.1" width="100%" showHandleTooltip="false" inputsAsTooltips="true" class="sapUiLargeNoBottom" enabled="{= ${/fFixM} !== true}"/>
+					                <RangeSlider id="setRangeS" showAdvancedTooltip="true" range="0,1" min="0" max="1" step="0.1" width="100%" showHandleTooltip="false" inputsAsTooltips="true" class="sapUiNoMarginBottom" enabled="{= ${/fFixS} !== true}"/>
+
+
+
+					                <Title level="H5" text="Max"/>
+					                <Input id="MaxC" type="Number" enabled="{= ${/fFixC} !== true}" value="{/fMaxC}"/>
+					                <Input id="MaxM" type="Number" enabled="{= ${/fFixM} !== true}" value="{/fMaxM}"/>
+					                <Input id="MaxS" type="Number" enabled="{= ${/fFixS} !== true}" value="{/fMaxS}"/>
+
+					                <Title level="H5" text="Step"/>
+					                <StepInput id="stepC" value="10" step="1" enabled="{= ${/fFixC} !== true}"/>
+					                <StepInput id="stepM" value="0.1" step="0.1" displayValuePrecision="1" enabled="{= ${/fFixM} !== true}"/>
+					                <StepInput id="stepS" value="0.1" step="0.1" displayValuePrecision="1" enabled="{= ${/fFixS} !== true}"/>    
+					            </l:content>
+				        	</l:Grid>
+				    	</content>
+					</Panel> -->
+				</l:content>
+			</l:Grid>
+			<!-- Tabs -->
+			<IconTabBar id="Gen-Min">
+		    <!-- General Item (Compact)-->
+		    	<items>
+		    		<IconTabFilter text="General">
+						<!-- ComboBox for Method -->
+						<l:Grid
+							class="sapUiSizeCompact"
+							vSpacing="0"
+							defaultSpan="L4 M6 S10">
+							<l:content>
+								<Title level="H4" text="Method">
+								</Title>
+								<ComboBox id="MethodCombo" selectedKey="{/fSelectMethodId}" items="{ path: '/fMethod', sorter: { path: 'fMethod' } }">
+				       				<core:Item key="{fId}" text="{fSet}" />
+								</ComboBox>
+							</l:content>
+						</l:Grid>
+						<l:Grid
+							class="sapUiSizeCompact"
+							vSpacing="0"
+							defaultSpan="L3 M4 S3">
+							<l:content>
+								<CheckBox id="robust" text="Robust" enabled="{= ${/fSelectMethodId} === '3'}" selected="{/fRobust}" tooltip="Perform Linear Robust fitter if selected">
+								</CheckBox>
+								<StepInput
+									id="RobustStep"
+									value="0.95"
+									min="0.01"
+									max="0.99"
+									step="0.01"
+									displayValuePrecision = "2"
+									enabled="{= ${/fRobust} === true}"
+									tooltip="Available only for graphs">
+									<layoutData>
+										<l:GridData span="L3 M4 S4"/>
+									</layoutData>
+								</StepInput>
+							</l:content>
+						</l:Grid>
+						<l:Grid
+							class="sapUiSizeCompact"
+							vSpacing="0"
+							defaultSpan="L4 M6 S6">
+							<l:content>
+								<Title level="H4" text="Fit Options">
+									<layoutData>
+										<l:GridData span="L3 M4 S10"/>
+									</layoutData>
+								</Title>
+								<CheckBox name="test" id="Integral" text="Integral" selected="{/fIntegral}" tooltip="'I'-use integral of function instead of value in bin center"/>
+								<CheckBox text="Minus Errors" selected="{/fMinusErrors}" tooltip="'E'-better errors estimation using Minos technique"/>
+								<CheckBox text="All weights = 1" selected="{/fWeights}" enabled="{= ${/fBins} === false}" tooltip="'W'-all weights=1 for non-empty bins; eroors bars ignored" />
+					    		<CheckBox text="Add to list" selected="{/fAddList}" tooltip="'+'-add function to the list without deleting the previous"/>
+					    		<CheckBox text="Empty bins, weights=1" selected="{/fBins}" enabled = "{= ${/fWeights} === false}" tooltip="'WW'-all weights=1 including empty bins; errors bars ignored"/>
+							</l:content>
+						</l:Grid>
+						<l:Grid
+							class="sapUiSizeCompact"
+							vSpacing="0"
+							defaultSpan="L3 M4 S10">
+							<l:content>
+								<Title level="H4" text="Draw Options"/>
+								<CheckBox text="SAME" selected="{/fSame}" tooltip="Super impose on previous picture in the same pad"/>	
+								<CheckBox text="No Drawing" selected ="{/fNoDrawing}" tooltip="'0'-do not draw function graphics"/>
+								<RangeSlider id="Slider" showAdvancedTooltip="true" range="{/fRange}" min="{/fMinRange}" max="{/fMaxRange}" step="{/fStep}" width="100%" showHandleTooltip="false" inputsAsTooltips="true" class="sapUiSmallMarginBottom">
+									<layoutData>
+										<l:GridData span="L3 M4 S8"/>
+									</layoutData>
+								</RangeSlider>
+								<Button text="Update" press="updateRange" tooltip="Update the fitting range">
+									<layoutData>
+										<l:GridData span="L3 M4 S2"/>
+									</layoutData>
+								</Button>
+							</l:content>
+						</l:Grid>
+		    		</IconTabFilter>
+		    		<IconTabFilter text="Minimization">
+		    		<!-- Minimization Item -->
+			    		<l:Grid
+			    			class="sapUiSizeCompact"
+							vSpacing="0"
+							defaultSpan="L3 M4 S10">
+							<l:content>
+								<Title level="H4" text="Library"/>
+								<RadioButtonGroup id="LibraryRB" columns="3" width="100%"  selectedIndex="{/fLibrary}" select="selectRB">
+										<buttons>
+											<RadioButton id="RB2-1" text="Minuit"/>
+											<RadioButton id="RB2-2" text="Minuit2"/>
+											<RadioButton id="RB2-3" text="Fumili"/>
+											<RadioButton id="RB2-4" text="GSL" enabled="false"/>
+											<RadioButton id="RB2-5" text="Genetics"/>
+										</buttons>
+									</RadioButtonGroup>
+								<Title level="H4" text="Library"/>
+								<ComboBox id="MethodMin" selectedKey="{/fSelectMethodMinId}" items="{ path: '/fMethodMin', sorter: { path: 'fMethodMin' } }">
+			               			<core:Item key="{fId}" text="{fSet}" />
+			        			</ComboBox>
+			        			<Text text="Use ENTER key to validate a new value or click on Reset button to set the defaults."/>
+			        			<Label text="Error Definition (default = 1):" labelFor="testError">
+			        				<layoutData>
+										<l:GridData span="L4 M6 S6"/>
+									</layoutData>
+								</Label>
+								<Input
+									id="testError"
+									type="Text"
+									placeholder="1.00">
+									<layoutData>
+										<l:GridData span="L4 M6 S6"/>
+									</layoutData>
+								</Input>
+								<Label text="Max tolerance (precision):" labelFor="maxTolerance">
+									<layoutData>
+										<l:GridData span="L4 M6 S6"/>
+									</layoutData>
+								</Label>
+								<Input
+									id="maxTolerance"
+									type="Text"
+									placeholder="0.01">
+									<layoutData>
+										<l:GridData span="L4 M6 S6"/>
+									</layoutData>
+								</Input>
+								<Label text="Max number of interations:" labelFor="maxInterations">
+									<layoutData>
+										<l:GridData span="L4 M6 S6"/>
+									</layoutData>
+								</Label>
+								<Input
+									id="maxInterations"
+									type="Text"
+									placeholder="0">
+									<layoutData>
+										<l:GridData span="L4 M6 S6"/>
+									</layoutData>
+								</Input>
+								<CheckBox text="Use gradient" selected="{/fUseGradient}">
+									<layoutData>
+										<l:GridData span="L4 M6 S6"/>
+									</layoutData>
+								</CheckBox>
+								<Title level="H4" text="Print Options"/>
+								<RadioButtonGroup id="Print" columns="3" width="100%"  selectedIndex="{/fPrint}">
+									<buttons>
+										<RadioButton id="Print-1" text="Default"/>
+										<RadioButton id="Print-2" text="Verbose"/>
+										<RadioButton id="Print-3" text="Quiet"/>
+									</buttons>
+								</RadioButtonGroup>
+								<Panel expandable="true" expanded="false" headerText="Advanced Options" width="auto" class="sapUiBody">
+									<content>
+										<IconTabBar id="AdvancedOptions">
+											<items>
+												<IconTabFilter text="Contour">
+													<l:Grid
+														class="sapUiSizeCompact"
+														vSpacing="0"
+														defaultSpan="L2 M4 S6">
+														<l:content>
+															<Text text="Number of Points:"/>
+															<StepInput value="40" min="0" max="100" step="1" editable="true"/>
+															<Text text="Parameter 1:"/>
+															<ComboBox id="ContourParA" selectedKey="{/fContourPar1Id}" items="{ path: '/fContourPar1', sorter: { path: 'fSet' } }">
+																<core:Item key="{fId}" text="{fSet}" />
+															</ComboBox>	
+															<Text text="Parameter 2"/>
+															<ComboBox id="ContourParBG" selectedKey="{/fContourPar2Id}" items="{ path: '/fContourPar2', sorter: { path: 'fSet' } }">
+																<core:Item key="{fId}" text="{fSet}" />
+															</ComboBox>
+															<Text text="Confidence Level:"/>
+															<StepInput value="0.683" min="0.000" max="100.000" step="0.001" editable="true" displayValuePrecision="3"/>
+															<Text text="Fill Colour:">
+																<layoutData>
+																	<l:GridData span="L2 M2 S3"/>
+																</layoutData>
+															</Text>
+															<Button press="colorPicker" id="colorContour">
+																<layoutData>
+																	<l:GridData span="L2 M2 S3"/>
+																</layoutData>
+															</Button>
+															<CheckBox text="Super impose">
+																<layoutData>
+																	<l:GridData span="L2 M2 S3"/>
+																</layoutData>
+															</CheckBox>
+														</l:content>
+													</l:Grid>
+												</IconTabFilter>
+												<IconTabFilter text="Scan">
+													<l:Grid
+														class="sapUiSizeCompact"
+														vSpacing="0"
+														defaultSpan="L2 M4 S6">
+														<l:content>
+															<Text text="Number of Points:"/>
+															<StepInput value="40" min="0" max="100" step="1" editable="true"/>
+															<Text text="Parameter 1:"/>
+															<ComboBox id="ScanPar1" selectedKey="{/fScanParId}" items="{ path: '/fScanPar', sorter: { path: 'fSet' } }">
+																<core:Item key="{fId}" text="{fSet}" />
+															</ComboBox>
+															<Text text="Min:">
+															</Text>
+															<StepInput value="0.0001" min="0.0001" max="100.0000" step="0.0001" editable="true" displayValuePrecision="4">
+															</StepInput>
+															<Text text="Max:">
+															</Text>
+															<StepInput value="0.0001" min="0.0001" max="100.0000" step="0.0001" editable="true" displayValuePrecision="4">
+															</StepInput>
+														</l:content>
+													</l:Grid>
+												</IconTabFilter>
+												<IconTabFilter text="Conf Intervals">
+													<l:Grid
+														class="sapUiSizeCompact"
+														vSpacing="0"
+														defaultSpan="L2 M4 S6">
+														<l:content>
+															<Text text="Confidence Level:"/>
+															<StepInput value="0.95" min="0.01" max="100" step="0.01" editable="true" displayValuePrecision="2"/>
+															<Text text="Fill Colour:"/>
+															<Button press="colorPicker" id="colorConf"/>
+														</l:content>
+													</l:Grid>
+												</IconTabFilter>
+											</items>
+										</IconTabBar>
+									</content>
+								</Panel>
+							</l:content>
+						</l:Grid>
+		    		</IconTabFilter>
+		    	</items>
+		    </IconTabBar>
+		    <Toolbar>
+		    	<Button text="Fit" press="doFit" tooltip="Fit the histogram"/>
+		    	<Button text="Reset" press="resetPanel" tooltip="Reset to initial state"/>
+		    	<Button text="Back" press="backPanel" tooltip="Go to the previous fitting"/>
+		    	<Button text="Close" press="closePanel" tooltip="Close the Fit Panel"/>
+	    	</Toolbar>
+		</VBox>
+	</Page>
 </mvc:View>
+
