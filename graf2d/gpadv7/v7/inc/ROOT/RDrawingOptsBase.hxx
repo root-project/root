@@ -24,20 +24,26 @@
 namespace ROOT {
 namespace Experimental {
 
-class RDrawingOptsBase: public RDrawingAttrHolderBase {
-   /// Attribute style classes of these options.
-   std::vector<std::string> fStyleClasses;
+class RDrawingOptsBase {
+public:
+   using Name_t = RDrawingAttrBase::Name_t;
+
+   /// The RDrawingAttrHolder of the attribute values.
+   std::shared_ptr<RDrawingAttrHolder> fHolder;
 
 public:
    RDrawingOptsBase() = default;
 
    /// Initialize the options with a (possibly empty) set of style classes.
-   RDrawingOptsBase(std::vector<std::string> &styleClasses): fStyleClasses(styleClasses) {}
+   RDrawingOptsBase(const std::vector<std::string> &styleClasses);
 
    /// Get the attribute style classes of these options.
-   const std::vector<std::string> &GetStyleClasses() const { return fStyleClasses; }
+   const std::vector<std::string> &GetStyleClasses() const;
 
-   std::string GetAttrFromStyle(const Name_t &attrName) override;
+   /// Get the attribute style classes of these options.
+   void SetStyleClasses(const std::vector<std::string> &styles);
+
+   std::shared_ptr<RDrawingAttrHolder> &GetHolder();
 };
 
 } // namespace Experimental

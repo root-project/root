@@ -24,6 +24,8 @@
 namespace ROOT {
 namespace Experimental {
 
+class RDrawingAttrBase;
+
 namespace Internal {
 /** \class ROOT::Experimental::Internal::RPadHorizVert
    A 2D (horizontal and vertical) combination of `RPadLength`s.
@@ -37,7 +39,7 @@ struct RPadHorizVert {
    RPadHorizVert(const std::array<RPadLength, 2> &hv): fHoriz(hv[0]), fVert(hv[1]) {}
    RPadHorizVert(const RPadLength &horiz, const RPadLength &vert): fHoriz(horiz), fVert(vert) {}
 
-   void SetFromAttrString(const std::string &name, const std::string &attrStrVal);
+   void SetFromAttrString(const std::string &val, const RDrawingAttrBase& attr, const std::string &name);
 };
 }; // namespace Internal
 
@@ -100,9 +102,9 @@ struct RPadExtent: Internal::RPadHorizVert {
 /// any part is allowed.
 /// Example: `100 px + 0.1 user, 0.5 normal` is a `RPadExtent{100_px + 0.1_user, 0.5_normal}`.
 
-RPadExtent ExtentFromString(const std::string &name, const std::string &attrStrVal);
+RPadExtent FromAttributeString(const std::string &val, const RDrawingAttrBase& attr, const std::string &name, RPadExtent*);
 
-std::string ExtentToString(const RPadExtent &extent);
+std::string ToAttributeString(const RPadExtent &extent);
 
 } // namespace Experimental
 } // namespace ROOT

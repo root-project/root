@@ -16,6 +16,8 @@
 #include "ROOT/RPadExtent.hxx"
 
 #include <ROOT/TLogger.hxx>
+#include <ROOT/RDrawingAttr.hxx>
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize a RPadExtent from a style string.
@@ -25,21 +27,21 @@
 /// user or normal coordinates. Spaces between any part is allowed.
 /// Example: `100 px + 0.1 user, 0.5 normal` is a `RPadExtent{100_px + 0.1_user, 0.5_normal}`.
 
-ROOT::Experimental::RPadExtent ROOT::Experimental::ExtentFromString(const std::string &name, const std::string &attrStrVal)
+ROOT::Experimental::RPadExtent ROOT::Experimental::FromAttributeString(const std::string &val, const RDrawingAttrBase& attr, const std::string &name, RPadExtent*)
 {
    RPadExtent ret;
-   ret.SetFromAttrString(name, attrStrVal);
+   ret.SetFromAttrString(val, attr, name);
    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert a RPadExtent to a style string, matching what ExtentFromString can parse.
 
-std::string ROOT::Experimental::ExtentToString(const RPadExtent &extent)
+std::string ROOT::Experimental::ToAttributeString(const RPadExtent &extent)
 {
-   std::string ret = PadLengthToString(extent.fHoriz);
+   std::string ret = ToAttributeString(extent.fHoriz);
    ret += ", ";
-   ret += PadLengthToString(extent.fVert);
+   ret += ToAttributeString(extent.fVert);
    return ret;
 }
 
@@ -51,24 +53,30 @@ std::string ROOT::Experimental::ExtentToString(const RPadExtent &extent)
 /// user or normal coordinates. Spaces between any part is allowed.
 /// Example: `100 px + 0.1 user, 0.5 normal` is a `RPadExtent{100_px + 0.1_user, 0.5_normal}`.
 
-void ROOT::Experimental::Internal::RPadHorizVert::SetFromAttrString(const std::string &name,
-                                                                    const std::string &attrStrVal)
+void ROOT::Experimental::Internal::RPadHorizVert::SetFromAttrString(const std::string &val, const RDrawingAttrBase& attr, const std::string &name)
 {
-   if (attrStrVal.empty()) {
+   if (val.empty()) {
       // Leave it at its default value.
       return;
    }
-   auto posComma = attrStrVal.find(',');
+
+   auto buildName = [&]() {
+      RDrawingAttrBase::Name_t fullName(attr.GetName());
+      fullName.emplace_back(name);
+      return RDrawingAttrBase::NameToDottedDiagName(fullName);
+   };
+
+   auto posComma = val.find(',');
    if (posComma == std::string::npos) {
-      R__ERROR_HERE("Gpad") << "Parsing attribute for " << name << ": "
-         << "expected two coordinate dimensions but found only one in " << attrStrVal;
+      R__ERROR_HERE("Gpad") << "Parsing attribute for " << buildName() << ": "
+         << "expected two coordinate dimensions but found only one in " << val;
       return;
    }
-   if (attrStrVal.find(',', posComma + 1) != std::string::npos) {
-      R__ERROR_HERE("Gpad") << "Parsing attribute for " << name << ": "
-         << "found more than the expected two coordinate dimensions in " << attrStrVal;
+   if (val.find(',', posComma + 1) != std::string::npos) {
+      R__ERROR_HERE("Gpad") << "Parsing attribute for " << buildName() << ": "
+         << "found more than the expected two coordinate dimensions in " << val;
       return;
    }
-   fHoriz.SetFromAttrString(name, attrStrVal.substr(0, posComma));
-   fVert.SetFromAttrString(name, attrStrVal.substr(posComma + 1));
+   fHoriz.SetFromAttrString(val.substr(0, posComma), attr, name);
+   fVert.SetFromAttrString(val.substr(posComma + 1), attr, name);
 }

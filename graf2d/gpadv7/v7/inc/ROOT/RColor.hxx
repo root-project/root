@@ -17,6 +17,7 @@
 #define ROOT7_RColor
 
 #include <array>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
@@ -263,8 +264,10 @@ public:
 // TODO: see also imagemagick's C++ interface for RColor operations!
 // https://www.imagemagick.org/api/magick++-classes.php
 
-RColor ColorFromString(const std::string &name, const std::string &str);
-std::string ColorToString(const RColor& val);
+class RDrawingAttrBase;
+
+RColor FromAttributeString(const std::string &str, const RDrawingAttrBase& attr, const std::string &name, RColor*);
+std::string ToAttributeString(const RColor& val);
 
 } // namespace Experimental
 } // namespace ROOT

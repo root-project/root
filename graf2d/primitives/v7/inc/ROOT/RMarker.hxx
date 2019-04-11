@@ -41,7 +41,7 @@ public:
 
 class DrawingOpts: public RDrawingOptsBase, public RAttrMarker {
 public:
-   DrawingOpts(): RAttrMarker("marker", this) {}
+   DrawingOpts(): RAttrMarker(AsOption, "marker", *this) {}
 };
 
 

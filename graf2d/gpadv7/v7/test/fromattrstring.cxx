@@ -11,29 +11,32 @@
 
  #include "gtest/gtest.h"
 
+#include "ROOT/RAttrLine.hxx"
 #include "ROOT/RPadExtent.hxx"
 #include "ROOT/RPadPos.hxx"
 
 // Test reading of Extent from empty string.
 TEST(ExtentFromAttrString, Empty) {
    using namespace ROOT::Experimental;
+   RAttrLine l;
    
    RPadExtent cn{0.3_normal, 40_px};
-   InitializeAttrFromString("FromEmpty", "", cn);
-   EXPECT_DOUBLE_EQ(0.3, cn.fHoriz.fNormal.fVal);
+   cn = FromAttributeString("", l, "FromEmpty", &cn);
+   EXPECT_DOUBLE_EQ(0., cn.fHoriz.fNormal.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fHoriz.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fHoriz.fUser.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fVert.fNormal.fVal);
-   EXPECT_DOUBLE_EQ(40., cn.fVert.fPixel.fVal);
+   EXPECT_DOUBLE_EQ(0., cn.fVert.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fVert.fUser.fVal);
 }
 
 // Test reading of Pos from string.
 TEST(PosFromAttrString, String) {
    using namespace ROOT::Experimental;
+   RAttrLine l;
    
    RPadPos cn{0.3_normal, 40_px}; // NOTE: initial values are intentionally overwritten!
-   InitializeAttrFromString("One", "  -10   px    +0.1user, 0.12 normal -    -0.2  user + 22pixel - 12px", cn);
+   cn = FromAttributeString("  -10   px    +0.1user, 0.12 normal -    -0.2  user + 22pixel - 12px", l, "One", &cn);
    EXPECT_DOUBLE_EQ(0., cn.fHoriz.fNormal.fVal);
    EXPECT_DOUBLE_EQ(-10., cn.fHoriz.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0.1, cn.fHoriz.fUser.fVal);

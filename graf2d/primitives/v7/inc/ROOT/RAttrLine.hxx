@@ -27,34 +27,19 @@ namespace Experimental {
  */
 class RAttrLine: public RDrawingAttrBase {
 public:
-   RAttrLine() = default;
-
-   RAttrLine(const char* name, RDrawingAttrHolderBase* holder, RDrawingAttrBase *parent = nullptr):
-      RDrawingAttrBase(name, holder, parent, {"color", "width", "style"})
-   {}
+   using RDrawingAttrBase::RDrawingAttrBase;
 
    /// The color of the line.
-   void SetColor(const RColor& col) { Set(0, ColorToString(col)); }
-   std::pair<RColor, bool> GetColor() const
-   {
-      auto ret = Get(0);
-      return {ColorFromString("line color", ret.first), ret.second};
-   }
+   void SetColor(const RColor& col) { Set("color", col); }
+   RColor GetColor() const { return Get<RColor>("color"); }
 
    ///The width of the line.
-   void SetWidth(float width) { Set(1, std::to_string(width)); }
-   std::pair<float, bool> GetWidth() const {
-      auto ret = Get(1);
-      return {std::stof(ret.first), ret.second};
-   }
+   void SetWidth(float width) { Set("width", width); }
+   float GetWidth() const { return Get<float>("width"); }
 
    ///The style of the line.
-   void SetStyle(int style) { Set(2, std::to_string(style)); }
-   std::pair<int, bool> GetStyle() const {
-      auto ret = Get(2);
-      return {std::stoi(ret.first), ret.second};
-   }
-
+   void SetStyle(int style) { Set("style", style); }
+   int GetStyle() const { return Get<int>("style"); }
 };
 
 } // namespace Experimental
