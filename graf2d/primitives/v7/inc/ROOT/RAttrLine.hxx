@@ -30,15 +30,15 @@ public:
    using RDrawingAttrBase::RDrawingAttrBase;
 
    /// The color of the line.
-   void SetColor(const RColor& col) { Set("color", col); }
+   RAttrLine &SetColor(const RColor& col) { Set("color", col); return *this; }
    RColor GetColor() const { return Get<RColor>("color"); }
 
    ///The width of the line.
-   void SetWidth(float width) { Set("width", width); }
+   RAttrLine &SetWidth(float width) { Set("width", width); return *this; }
    float GetWidth() const { return Get<float>("width"); }
 
    ///The style of the line.
-   void SetStyle(int style) { Set("style", style); }
+   RAttrLine &SetStyle(int style) { Set("style", style); return *this; }
    int GetStyle() const { return Get<int>("style"); }
 };
 

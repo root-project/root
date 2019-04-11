@@ -34,23 +34,23 @@ public:
    using RDrawingAttrBase::RDrawingAttrBase;
 
    /// The color of the text.
-   void SetColor(const RColor &col) { Set("color", col); }
+   RAttrText &SetColor(const RColor &col) { Set("color", col); return *this; }
    RColor GetColor() const { return Get<RColor>("color"); }
 
    /// The size of the text.
-   void SetSize(float size) { Set("size", size); }
+   RAttrText &SetSize(float size) { Set("size", size); return *this; }
    float GetSize() const { return Get<float>("size"); }
 
    /// The angle of the text.
-   void SetAngle(float angle) { Set("angle", angle); }
+   RAttrText &SetAngle(float angle) { Set("angle", angle); return *this; }
    float GetAngle() const { return Get<float>("angle"); }
 
    /// The alignment of the text.
-   void SetAlign(int style) { Set("align", style); }
+   RAttrText &SetAlign(int style) { Set("align", style); return *this; }
    int GetAlign() const { return Get<int>("align"); }
 
    /// The font of the text.
-   void SetFont(int font) { Set("font", font); }
+   RAttrText &SetFont(int font) { Set("font", font); return *this; }
    int GetFont() const { return Get<int>("font"); }
 };
 
