@@ -18,9 +18,9 @@ sap.ui.define([
 
          //function called from GuiPanelController
       onPanelInit : function() {
-         
+
          JSROOT.loadScript('rootui5sys/fitpanel/style/style.css');
-         
+
          var id = this.getView().getId();
          this.inputId = "";
          var opText = this.getView().byId("OperationText");
@@ -36,8 +36,6 @@ sap.ui.define([
          this.getView().setModel(new JSONModel(data));
          this._data = data; 
       },
-
-
 
       // Assign the new JSONModel to data      
       OnWebsocketMsg: function(handle, msg){
@@ -116,9 +114,9 @@ sap.ui.define([
          return;
       },
 
-     //Change the input text field. When a function is seleced, it appears on the text input field and
-     //on the text area.
-       onTypeXYChange: function(){
+      //Change the input text field. When a function is seleced, it appears on the text input field and
+      //on the text area.
+      onTypeXYChange: function(){
          var data = this.getView().getModel().getData();
          var linear = this.getView().getModel().getData().fSelectXYId;
          data.fFuncChange = linear;
@@ -129,29 +127,29 @@ sap.ui.define([
          this.byId("OperationText").setValueLiveUpdate();
          this.byId("OperationText").setValue(func);
          this.byId("selectedOpText").setText(func);
-       },
+      },
 
-        operationTextChange: function(oEvent) {
+      operationTextChange: function(oEvent) {
          var newValue = oEvent.getParameter("value");
          this.byId("selectedOpText").setText(newValue);
-       },
+      },
 
 
       //change the combo box in Minimization Tab --- Method depending on Radio Buttons values
       selectRB: function(){
-         
+
          var data = this.getView().getModel().getData();
          var lib = this.getView().getModel().getData().fLibrary;
-         
+
          // same code as initialization
          data.fMethodMin = data.fMethodMinAll[parseInt(lib)];
-         
-         
+
+
          // refresh all UI elements
          this.getView().getModel().refresh();
          console.log("Method = ", data.fMethodMinAll[parseInt(lib)]);
-         
-    },
+
+      },
       //Change the combobox in Type Function
       //When the Type (TypeFunc) is changed (Predef etc) then the combobox with the funtions (TypeXY), 
       //is also changed 
@@ -184,11 +182,11 @@ sap.ui.define([
          this.parsDialog.close();
          this.parsDialog.destroy();
          delete this.parsDialog;
-         
+
       },
-      
+
       setParametersDialog: function(){
-         
+
          var items = [];
 
          for (var n=0;n<5;++n) {
@@ -198,20 +196,20 @@ sap.ui.define([
             });
             items.push(item);
          }
-         
+
          this.parsDialog = new Dialog({
             title: "Prarameters",
             content: new List({
-                items: items
-             }),
-             beginButton: new Button({
+               items: items
+            }),
+            beginButton: new Button({
                text: 'Cancel',
                press: this.closeParametersDialog.bind(this)
-             }),
-             endButton: new Button({
+            }),
+            endButton: new Button({
                text: 'Ok',
                press: this.closeParametersDialog.bind(this, true)
-             })
+            })
          });
 
          // this.getView().getModel().setProperty("/Method", method);
@@ -223,6 +221,9 @@ sap.ui.define([
          this.parsDialog.open();
       },
 
+      startExtraParametersDialog: function() {
+         // placeholder for triggering new window with parameters editor only
+      },
 
       //Cancel Button on Set Parameters Dialog Box
       onCancel: function(oEvent){
@@ -257,7 +258,7 @@ sap.ui.define([
          data.fUpdateRange[0] = range[0];
          data.fUpdateRange[1] = range[1];
       },
-      
+
    });
 
    return 
