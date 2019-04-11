@@ -60,7 +60,8 @@
 							<l:GridData span="L4 M6 S6"/>
 						</layoutData>
 					</Text>
-					<Button text="Set Parameters" press="setParametersDialog" />
+					<Button text="Set parameters" press="setParametersDialog"/>
+					<!-- Button text="Pars2" press="startExtraParametersDialog"/ -->
 					<!-- <Panel expandable="true" expanded="false" headerText="Set Parameters" width="auto" class="sapUiNoMargin fitPanelStyle">
 						<content>
 							<l:Grid
