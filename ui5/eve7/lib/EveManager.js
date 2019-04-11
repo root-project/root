@@ -582,9 +582,53 @@ sap.ui.define([], function() {
 
       console.log("And now process the bloody selection.")
 
-      //for (el["sel_list"]
-      //el.
+      // Outline of optimized selection update (to avoid recreating selected
+      // representations).
+      /*
+      all_new_selected = generate_full_selection_set(el['sel_list']);
 
+      for (xx in el['prev_all_selected'] and not in all_new_selected)
+      {
+         deselect(xx);
+      }
+      for (xx in all_new_selected)
+      {
+         if (xx not in el['prev_all_selected'])
+         {
+            select(xx);
+         }
+         else
+         {
+            // implied selected set or secondary indices can change.
+            check_if_select_records_are_the_same_and_update_if_needed();
+         }
+      }
+      el['prev_all_selected'] = all_new_selected;
+      */
+
+      // Dummy update --- unselect all, select all.
+
+      for (srec in el['prev_sel_list'])
+      {
+         this->UnselectElement(srec['primary'], srec['sec_idcs']);
+
+         for (sel in srec['primary'], srec['implied'])
+         {
+            this->UnselectElement(sel, srec['sec_idcs']);
+         }
+      }
+
+      for (srec in el['sel_list'])
+      {
+         this->SelectElement(srec['primary'], srec['sec_idcs'], el->['fMainColor']);
+
+         for (sel in srec['primary'], srec['implied'])
+         {
+            this->SelectElement(sel, srec['sec_idcs'], el->['fMainColor']);
+         }
+      }
+
+      el['prev_sel_list'] = el['sel_list'];
 
       // XXXX Oh, blimy, on first arrival, if selection is set, the selected
       // elements have not yet been received and so this will fail. Also true
@@ -592,6 +636,22 @@ sap.ui.define([], function() {
       // So, we need something like reapply selections after new scenes arrive.
    }
 
+   EveManager.prototype.SelectElement = function(selection_obj, element_id, sec_idcs)
+   {
+      var element = this.GetElement(element_id);
+      var scene   = this.GetElement(element.fSceneId);
+
+      scene->SelectElement(selection_obj, element_id, sec_idcs);
+   }
+
+   EveManager.prototype.UnselectElement = function(selection_obj, element_id)
+   {
+      var element = this.GetElement(element_id);
+      var scene   = this.GetElement(element.fSceneId);
+
+      scene->UnselectElement(selection_obj, element_id, sec_idcs);
+
+   }
 
    //==============================================================================
    // END protoype functions
