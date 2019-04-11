@@ -13,4 +13,9 @@
 #pragma link C++ struct ROOT::Experimental::RFitPanelModel+;
 #pragma link C++ class ROOT::Experimental::RFitPanel+;
 
+#pragma link C++ struct ROOT::Experimental::RComboBoxItem+;
+#pragma link C++ class std::vector<ROOT::Experimental::RComboBoxItem>+;
+#pragma link C++ struct ROOT::Experimental::RFitPanelModel6+;
+#pragma link C++ class ROOT::Experimental::RFitPanel6+;
+
 #endif
