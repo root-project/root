@@ -42,7 +42,7 @@ public:
 
 class DrawingOpts: public RDrawingOptsBase, public RAttrText {
 public:
-   DrawingOpts(): RAttrText(AsOption, "text", *this) {}
+   DrawingOpts(): RAttrText(FromOption, "text", *this) {}
 };
 
 private:

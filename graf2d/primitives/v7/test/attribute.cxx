@@ -9,9 +9,9 @@ using namespace ROOT::Experimental;
 
 class Opts: public RDrawingOptsBase, public RAttrBox {
 public:
-   Opts(): RDrawingOptsBase(), RAttrBox(AsOption, "box", *this) {}
+   Opts(): RDrawingOptsBase(), RAttrBox(FromOption, "box", *this) {}
 
-   RAttrText Text() { return {AsOption, "text", *this}; }
+   RAttrText Text() { return {FromOption, "text", *this}; }
 };
 
 TEST(OptsTest, AttribVsHolder) {
@@ -47,23 +47,26 @@ TEST(OptsTest, AttribStrings) {
    Opts opts;
 
    opts.Bottom().SetWidth(42.);
+   opts.Text().SetSize(1.7);
 
    ASSERT_TRUE(opts.GetHolder());
    auto holder = opts.GetHolder();
-   EXPECT_FALSE(holder->AtIf({"DOES_NOT_EXIST"}));
+   using Path = RDrawingAttrBase::Path;
+
+   EXPECT_FALSE(holder->AtIf(Path{"DOES_NOT_EXIST"}));
 
    {
-      ASSERT_TRUE(holder->AtIf({"box", "bottom", "width"}));
-      auto pVal = holder->AtIf({"box", "bottom", "width"});
+      ASSERT_TRUE(holder->AtIf(Path{"box.bottom.width"}));
+      auto pVal = holder->AtIf(Path{"box.bottom.width"});
       float val = std::stof(*pVal);
       ASSERT_FLOAT_EQ(val, 42.f);
    }
 
    {
-      ASSERT_TRUE(holder->AtIf({"box", "bottom", "width"}));
-      auto pVal = holder->AtIf({"box", "bottom", "width"});
+      ASSERT_TRUE(holder->AtIf(Path{"text.size"}));
+      auto pVal = holder->AtIf(Path{"text.size"});
       float val = std::stof(*pVal);
-      ASSERT_FLOAT_EQ(val, 42.f);
+      ASSERT_FLOAT_EQ(val, 1.7f);
    }
 }
 
