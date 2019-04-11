@@ -74,13 +74,17 @@ public:
    const std::array<RPadLength::Pixel, 2> &GetSize() const { return fSize; }
 
    /// Set canvas pixel size as array with two elements - width and height
-   void SetSize(const std::array<RPadLength::Pixel, 2> &sz) { fSize = sz; }
+   RCanvas &SetSize(const std::array<RPadLength::Pixel, 2> &sz) {
+      fSize = sz;
+      return *this;
+   }
 
    /// Set canvas pixel size - width and height
-   void SetSize(const RPadLength::Pixel &width, const RPadLength::Pixel &height)
+   RCanvas &SetSize(const RPadLength::Pixel &width, const RPadLength::Pixel &height)
    {
       fSize[0] = width;
       fSize[1] = height;
+      return *this;
    }
 
    /// Display the canvas.
@@ -118,7 +122,10 @@ public:
    const std::string &GetTitle() const { return fTitle; }
 
    /// Set the canvas's title.
-   void SetTitle(const std::string &title) { fTitle = title; }
+   RCanvas &SetTitle(const std::string &title) {
+      fTitle = title;
+      return *this;
+   }
 
    /// Convert a `Pixel` position to Canvas-normalized positions.
    std::array<RPadLength::Normal, 2> PixelsToNormal(const std::array<RPadLength::Pixel, 2> &pos) const final
