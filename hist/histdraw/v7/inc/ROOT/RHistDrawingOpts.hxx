@@ -40,16 +40,16 @@ public:
    enum class EStyle { kHist, kBar, kText };
 
    RHistDrawingOpts():
-      RDrawingAttrBase(AsOption, "hist1D", *this)
+      RDrawingAttrBase(FromOption, "hist1D", *this)
    {}
 
    /// The drawing style.
    void SetStyle(EStyle style) { Set("style", style); }
    EStyle GetStyle() const { return Get<EStyle>("style"); }
 
-   RAttrLine Line() { return {AsOption, "contentLine", *this}; }
-   RAttrLine BarLine() { return {AsOption, "barLine", *this}; }
-   RAttrLine UncertaintyLine() { return {AsOption, "uncertaintyLine", *this}; }
+   RAttrLine Line() { return {FromOption, "contentLine", *this}; }
+   RAttrLine BarLine() { return {FromOption, "barLine", *this}; }
+   RAttrLine UncertaintyLine() { return {FromOption, "uncertaintyLine", *this}; }
 };
 
 /** \class RHistDrawingOpts<2>
@@ -61,14 +61,14 @@ public:
    enum class EStyle { kBox, kSurf, kText };
 
    RHistDrawingOpts():
-      RDrawingAttrBase(AsOption, "hist2D", *this)
+      RDrawingAttrBase(FromOption, "hist2D", *this)
    {}
 
    /// The drawing style.
    void SetStyle(EStyle style) { Set("style", style); }
    EStyle GetStyle() const { return Get<EStyle>("style"); }
 
-   RAttrLine BoxLine() { return {AsOption, "boxLine", *this}; }
+   RAttrLine BoxLine() { return {FromOption, "boxLine", *this}; }
 };
 
 /** \class RHistDrawingOpts<3>
@@ -81,15 +81,15 @@ public:
 
 public:
    RHistDrawingOpts():
-      RDrawingAttrBase(AsOption, "hist3D", *this)
+      RDrawingAttrBase(FromOption, "hist3D", *this)
    {}
 
    /// The drawing style.
    void SetStyle(EStyle style) { Set("style", style); }
    EStyle GetStyle() const { return Get<EStyle>("style"); }
 
-   RAttrLine BoxLine() { return {AsOption, "boxLine", *this}; }
-   RAttrLine IsoLine() { return {AsOption, "isoLine", *this}; }
+   RAttrLine BoxLine() { return {FromOption, "boxLine", *this}; }
+   RAttrLine IsoLine() { return {FromOption, "isoLine", *this}; }
 };
 
 } // namespace Experimental

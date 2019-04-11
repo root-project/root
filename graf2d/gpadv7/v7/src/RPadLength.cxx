@@ -16,7 +16,6 @@
 #include "ROOT/RPadLength.hxx"
 
 #include <ROOT/TLogger.hxx>
-#include <ROOT/RDrawingAttr.hxx>
 
 #include <algorithm> // std::transform
 #include <cctype> // std::tolower
@@ -161,25 +160,19 @@ namespace {
 /// user or normal coordinates. Spaces between any part is allowed.
 /// Example: `100 px + 0.1 user, 0.5 normal` is a `RPadExtent{100_px + 0.1_user, 0.5_normal}`.
 
-void ROOT::Experimental::RPadLength::SetFromAttrString(const std::string &val, const RDrawingAttrBase& attr, const std::string &name)
+void ROOT::Experimental::RPadLength::SetFromAttrString(const std::string &val, const std::string &name)
 {
    *this = {}; // Value-initialize this.
    std::string tok;
    RLengthParseElements parse;
    
-   auto buildName = [&]() {
-      RDrawingAttrBase::Name_t fullName(attr.GetName());
-      fullName.emplace_back(name);
-      return RDrawingAttrBase::NameToDottedDiagName(fullName);
-   };
-
    for (const char c: val) {
       if (c == ' ') {
          if (!tok.empty()) {
             std::string err = HandleToken(tok, parse, *this);
             if (!err.empty()) {
                R__ERROR_HERE("Gpad") << "Invalid syntax in '" << val
-                  << "' while parsing pad length for " << buildName() << ": " << err;
+                  << "' while parsing pad length for " << name << ": " << err;
                return;
             }
          }
@@ -192,22 +185,22 @@ void ROOT::Experimental::RPadLength::SetFromAttrString(const std::string &val, c
       std::string err = HandleToken(tok, parse, *this);
       if (!err.empty()) {
          R__ERROR_HERE("Gpad") << "Invalid syntax in '" << val
-            << "' while parsing pad length for " << buildName() << ": " << err;
+            << "' while parsing pad length for " << name << ": " << err;
          return;
       }
    }
    if (parse.fIndex != 0) {
       R__ERROR_HERE("Gpad") << "Invalid syntax in '" << val
-         << "' while parsing pad length for " << buildName()
+         << "' while parsing pad length for " << name
          << ": missing elements, expect [+-] number (normal|px|user)";
       return;
    }
 }
 
-ROOT::Experimental::RPadLength ROOT::Experimental::FromAttributeString(const std::string &val, const RDrawingAttrBase& attr, const std::string &name, RPadLength*)
+ROOT::Experimental::RPadLength ROOT::Experimental::FromAttributeString(const std::string &val, const std::string &name, RPadLength*)
 {
    RPadLength ret;
-   ret.SetFromAttrString(val, attr, name);
+   ret.SetFromAttrString(val, name);
    return ret;
 }
 

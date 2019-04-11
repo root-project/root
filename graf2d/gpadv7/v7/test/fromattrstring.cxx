@@ -18,10 +18,9 @@
 // Test reading of Extent from empty string.
 TEST(ExtentFromAttrString, Empty) {
    using namespace ROOT::Experimental;
-   RAttrLine l;
    
    RPadExtent cn{0.3_normal, 40_px};
-   cn = FromAttributeString("", l, "FromEmpty", &cn);
+   cn = FromAttributeString("", "FromEmpty", &cn);
    EXPECT_DOUBLE_EQ(0., cn.fHoriz.fNormal.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fHoriz.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fHoriz.fUser.fVal);
@@ -33,10 +32,9 @@ TEST(ExtentFromAttrString, Empty) {
 // Test reading of Pos from string.
 TEST(PosFromAttrString, String) {
    using namespace ROOT::Experimental;
-   RAttrLine l;
    
    RPadPos cn{0.3_normal, 40_px}; // NOTE: initial values are intentionally overwritten!
-   cn = FromAttributeString("  -10   px    +0.1user, 0.12 normal -    -0.2  user + 22pixel - 12px", l, "One", &cn);
+   cn = FromAttributeString("  -10   px    +0.1user, 0.12 normal -    -0.2  user + 22pixel - 12px", "One", &cn);
    EXPECT_DOUBLE_EQ(0., cn.fHoriz.fNormal.fVal);
    EXPECT_DOUBLE_EQ(-10., cn.fHoriz.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0.1, cn.fHoriz.fUser.fVal);

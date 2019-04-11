@@ -46,7 +46,7 @@ void draw()
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
-   auto pOpts = canvas->Draw(pHist)
+   auto pOpts = canvas->Draw(pHist);
    pOpts->Line().SetColor(RColor::kRed);
 
    RH2D other = *pHist;

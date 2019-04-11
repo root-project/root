@@ -196,7 +196,7 @@ public:
          SetSize(size);
       }
 
-      RAttrBox Border() { return {AsOption, "border", *this}; }
+      RAttrBox Border() { return {FromOption, "border", *this}; }
       
       /// The position (offset) of the pad.
       void SetPos(const RPadPos &pos) { Set("pos", pos); }

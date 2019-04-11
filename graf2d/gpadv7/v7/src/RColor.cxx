@@ -16,7 +16,6 @@
 #include "ROOT/RColor.hxx"
 
 #include <ROOT/TLogger.hxx>
-#include <ROOT/RDrawingAttr.hxx>
 
 #include <algorithm>
 #include <cmath>
@@ -56,17 +55,11 @@ bool RColor::AssertNotPalettePos() const
 }
 
 namespace {
-   static RColor ParseRGBToColor(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name)
+   static RColor ParseRGBToColor(const std::string &strval, const std::string &name)
    {
-      auto buildName = [&]() {
-         RDrawingAttrBase::Name_t fullName(attr.GetName());
-         fullName.emplace_back(name);
-         return RDrawingAttrBase::NameToDottedDiagName(fullName);
-      };
-
       auto rgbalen = strval.length() - 1;
       if (rgbalen != 3 && rgbalen != 4 && rgbalen != 6 && rgbalen != 8) {
-         R__ERROR_HERE("Graf2d") << "Invalid value for RColor default style " << buildName()
+         R__ERROR_HERE("Graf2d") << "Invalid value for RColor default style " << name
             << " with value \"" << strval
             << "\": expect '#' followed by 3, 4, 6 or 8 hex digits (#rgb, #rgba, #rrggbbaa or #rrggbb).";
          return RColor::kBlack;
@@ -74,13 +67,13 @@ namespace {
       std::size_t pos;
       long long rgbaLL = std::stoll(strval.substr(1), &pos, /*base*/ 16);
       if (pos != 3 && pos != 4 && pos != 6 && pos != 8) {
-         R__ERROR_HERE("Graf2d") << "Invalid value while parsing default style value for RColor " << buildName()
+         R__ERROR_HERE("Graf2d") << "Invalid value while parsing default style value for RColor " << name
             << " with value \"" << strval
             << "\": expect '#' followed by 3, 4, 6 or 8 hex digits (#rgb, #rgba, #rrggbbaa or #rrggbb).";
          return RColor::kBlack;
       }
       if (pos != rgbalen) {
-         R__WARNING_HERE("Graf2d") << "Leftover characters while parsing default style value for RColor " << buildName()
+         R__WARNING_HERE("Graf2d") << "Leftover characters while parsing default style value for RColor " << name
             << " with value \"" << strval << "\", remainder: \"" << strval.substr(pos - 1) << "\"";
          return RColor::kBlack;
       }
@@ -97,7 +90,7 @@ namespace {
       return RColor(rgba);
    }
 
-   RColor ParseColorNameToColor(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name)
+   RColor ParseColorNameToColor(const std::string &strval, const std::string &name)
    {
       std::string nameLow = strval;
       std::transform(nameLow.begin(), nameLow.end(), nameLow.begin(),
@@ -116,13 +109,7 @@ namespace {
       };
       auto itMap = mapNamesToColor.find(nameLow);
       if (itMap == mapNamesToColor.end()) {
-         auto buildName = [&]() {
-            RDrawingAttrBase::Name_t fullName(attr.GetName());
-            fullName.emplace_back(name);
-            return RDrawingAttrBase::NameToDottedDiagName(fullName);
-         };
-
-         R__WARNING_HERE("Graf2d") << "Cannot parse RColor " << buildName()
+         R__WARNING_HERE("Graf2d") << "Cannot parse RColor " << name
             << " with value \"" << strval << "\": unknown color name.";
          return RColor::kBlack;
       }
@@ -141,12 +128,12 @@ namespace {
 ///
 ///\param name - the attribute name (for diagnostic purposes).
 ///\param strval - the attribute value as a string.
-ROOT::Experimental::RColor ROOT::Experimental::FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, RColor*)
+ROOT::Experimental::RColor ROOT::Experimental::FromAttributeString(const std::string &strval, const std::string &name, RColor*)
 {
    if (strval[0] == '#') {
-      return ParseRGBToColor(strval, attr, name);
+      return ParseRGBToColor(strval, name);
    }
-   return ParseColorNameToColor(strval, attr, name);
+   return ParseColorNameToColor(strval, name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

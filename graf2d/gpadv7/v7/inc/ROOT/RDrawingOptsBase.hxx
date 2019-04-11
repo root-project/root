@@ -26,8 +26,6 @@ namespace Experimental {
 
 class RDrawingOptsBase {
 public:
-   using Name_t = RDrawingAttrBase::Name_t;
-
    /// The RDrawingAttrHolder of the attribute values.
    std::shared_ptr<RDrawingAttrHolder> fHolder;
 
