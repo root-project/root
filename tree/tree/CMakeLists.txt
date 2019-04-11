@@ -115,6 +115,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
     Imt
     Net
     RIO
+    Core
+  LIBRARIES
+  #FIXME: we don't need this dependency explicitly
+    ZSTD::ZSTD
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
