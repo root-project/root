@@ -304,11 +304,11 @@ ROOT_APPLY_OPTIONS()
 
 if(root7)
   if(NOT CMAKE_CXX_STANDARD)
-      set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++14 standard used with root7")
-      message(STATUS "Enabling C++14 for compilation of root7 components")
+    set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++14 standard used with root7")
+    message(STATUS "Enabling C++14 for compilation of root7 components")
   elseif(NOT CMAKE_CXX_STANDARD GREATER 11)
-      message(FATAL_ERROR ">>> At least C++14 standard required with root7")
-   endif()
+    message(FATAL_ERROR ">>> At least C++14 standard required with root7, please enable it using CMake option: -DCMAKE_CXX_STANDARD=14")
+  endif()
 endif()
 
 #---check if webui can be build-------------------------------
