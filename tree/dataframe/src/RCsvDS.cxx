@@ -353,6 +353,14 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
       FillRecord(line, fRecords.back());
    }
 
+   if (gDebug > 0) {
+      if (fLinesChunkSize == -1LL) {
+         Info("GetEntryRanges", "Attempted to read entire CSV file into memory, %lu lines read", fRecords.size());
+      } else {
+         Info("GetEntryRanges", "Attempted to read chunk of %lld lines of CSV file into memory, %lu lines read", fLinesChunkSize, fRecords.size());
+      }
+   }
+
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
    const auto nRecords = fRecords.size();
    if (0 == nRecords)
