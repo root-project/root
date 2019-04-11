@@ -199,11 +199,11 @@ public:
       RAttrBox Border() { return {FromOption, "border", *this}; }
       
       /// The position (offset) of the pad.
-      void SetPos(const RPadPos &pos) { Set("pos", pos); }
+      DrawingOpts &SetPos(const RPadPos &pos) { Set("pos", pos); return *this; }
       RPadPos GetPos() const { return Get<RPadPos>("pos"); }
 
       /// The size of the pad.
-      void SetSize(const RPadExtent &size) { Set("size", size); }
+      DrawingOpts &SetSize(const RPadExtent &size) { Set("size", size); return *this; }
       RPadExtent GetSize() const { return Get<RPadExtent>("size"); }
    };
 

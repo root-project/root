@@ -31,15 +31,15 @@ public:
    using RDrawingAttrBase::RDrawingAttrBase;
 
    /// The color of the marker.
-   void SetColor(const RColor &col) { Set("color", col); }
+   RAttrMarker &SetColor(const RColor &col) { Set("color", col); return *this; }
    RColor GetColor() const { return Get<RColor>("color"); }
 
    /// The size of the marker.
-   void SetSize(float size) { Set("size", size); }
+   RAttrMarker &SetSize(float size) { Set("size", size); return *this; }
    float GetSize() const { return Get<float>("size"); }
 
    /// The style of the marker.
-   void SetStyle(int style) { Set("style", style); }
+   RAttrMarker &SetStyle(int style) { Set("style", style); return *this; }
    int GetStyle() const { return Get<int>("style"); }
 };
 
