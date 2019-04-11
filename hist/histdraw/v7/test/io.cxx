@@ -31,7 +31,7 @@ TEST(IOTest, OneDOpts)
    auto h = std::make_unique<RH1D>(xaxis);
    RCanvas canv;
    auto optsPtr = canv.Draw(std::move(h));
-   optsPtr->SetLineColor(RColor::kRed);
+   optsPtr->Line().SetColor(RColor::kRed);
 
    auto file = TFile::Recreate("IOTestOneDOpts.root");
    file->Write("canv", canv);

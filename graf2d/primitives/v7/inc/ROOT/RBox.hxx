@@ -16,8 +16,8 @@
 #ifndef ROOT7_RBox
 #define ROOT7_RBox
 
+#include <ROOT/RAttrBox.hxx>
 #include <ROOT/RDrawable.hxx>
-#include <ROOT/RDrawingAttr.hxx>
 #include <ROOT/RDrawingOptsBase.hxx>
 #include <ROOT/RPadPos.hxx>
 #include <ROOT/RPadPainter.hxx>
@@ -39,62 +39,13 @@ public:
  Drawing options for RBox.
  */
 
-class DrawingOpts: public RDrawingOptsBase {
-   RDrawingAttr<RColor> fLineColor  {*this, "Line.Color"  , RColor::kBlack}; ///< The box line color.
-   RDrawingAttr<int>    fLineWidth  {*this, "Line.Width"  , 1};              ///< The box line width.
-   RDrawingAttr<int>    fLineStyle  {*this, "Line.Style"  , 1};              ///< The box line style.
-   RDrawingAttr<float>  fLineOpacity{*this, "Line.Opacity", 1.};             ///< The box line opacity.
-   RDrawingAttr<RColor> fFillColor  {*this, "Fill.Color"  , RColor::kBlack}; ///< The box fill color.
-   RDrawingAttr<int>    fFillStyle  {*this, "Fill.Style"  , 1};              ///< The box line style.
-   RDrawingAttr<float>  fFillOpacity{*this, "Fill.Opacity", 1.};             ///< The box fill opacity.
-   RDrawingAttr<int>    fRoundWidth {*this, "Round.Width" , 0};              ///< Determines how wide the corners'rounding is.
-   RDrawingAttr<int>    fRoundHeight{*this, "Round.Height", 0};              ///< Determines how high the corners'rounding is.
-
+class DrawingOpts: public RDrawingOptsBase, public RAttrBox {
 public:
-   /// The color of the box line.
-   void SetLineColor(const RColor &col) { fLineColor = col; }
-   RDrawingAttr<RColor> &GetLineColor() { return fLineColor; }
-   const RColor &GetLineColor() const   { return fLineColor.Get(); }
+      DrawingOpts():
+         RAttrBox(AsOption, "box", *this)
+      {}
 
-   /// The width of the box line.
-   void SetLineWidth(int width) { fLineWidth = width; }
-   RDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
-   int GetLineWidth() const   { return (int)fLineWidth; }
-
-   /// The style of the box line.
-   void SetLineStyle(int style) { fLineStyle = style; }
-   RDrawingAttr<int> &GetLineStyle() { return fLineStyle; }
-   int GetLineStyle() const { return (int)fLineStyle; }
-
-   /// The opacity of the box line.
-   void SetLineColorAlpha(float opacity) { fLineOpacity = opacity; }
-   RDrawingAttr<float> &GetLineColorAlpha() { return fLineOpacity; }
-   float GetLineColorAlpha() const { return (float)fLineOpacity; }
-
-   /// The color of the box fill.
-   void SetFillColor(const RColor &col) { fFillColor = col; }
-   RDrawingAttr<RColor> &GetFillColor() { return fFillColor; }
-   const RColor &GetFillColor() const   { return fFillColor.Get(); }
-
-   /// The style of the box fill.
-   void SetFillStyle(int style) { fFillStyle = style; }
-   RDrawingAttr<int> &GetFillStyle() { return fFillStyle; }
-   int GetFillStyle() const { return (int)fFillStyle; }
-
-   /// How wide the corners'rounding is.
-   void SetRoundWidth(int width) { fRoundWidth = width; }
-   RDrawingAttr<int> &GetRoundWidth() { return fRoundWidth; }
-   int GetRoundWidth() const { return (int)fRoundWidth; }
-
-   /// How high the corners'rounding is.
-   void SetRoundHeight(int height) { fRoundHeight = height; }
-   RDrawingAttr<int> &GetRoundHeight() { return fRoundHeight; }
-   int GetRoundHeight() const { return (int)fRoundHeight; }
-
-   /// The opacity of the box fill.
-   void SetFillColorAlpha(float opacity) { fFillOpacity = opacity; }
-   RDrawingAttr<float> &GetFillColorAlpha() { return fFillOpacity; }
-   float GetFillColorAlpha() const { return (float)fFillOpacity; }
+      using RAttrBox::RAttrBox;
 };
 
 

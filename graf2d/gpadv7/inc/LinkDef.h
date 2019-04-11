@@ -30,10 +30,9 @@
 #pragma link C++ struct ROOT::Experimental::Internal::RPadHorizVert+;
 #pragma link C++ struct ROOT::Experimental::RPadExtent+;
 #pragma link C++ struct ROOT::Experimental::RPadPos+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttr<ROOT::Experimental::RPadPos>+;
 #pragma link C++ class std::vector<std::unique_ptr<ROOT::Experimental::RDrawable>>+;
 #pragma link C++ class ROOT::Experimental::RPadBase+;
-#pragma link C++ class ROOT::Experimental::RPadDrawingOpts+;
+#pragma link C++ class ROOT::Experimental::RPad::DrawingOpts+;
 #pragma link C++ class ROOT::Experimental::RPad+;
 #pragma link C++ class ROOT::Experimental::RPadDrawable+;
 #pragma link C++ class ROOT::Experimental::RCanvas+;
@@ -48,11 +47,7 @@
 #pragma link C++ class ROOT::Experimental::RDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RPalette+;
 #pragma link C++ class ROOT::Experimental::RColor+;
-#pragma link C++ class ROOT::Experimental::RStringEnumAttrBase+;
 #pragma link C++ class ROOT::Experimental::RDrawingAttrBase+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttr<ROOT::Experimental::RColor>+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttr<int>+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttr<float>+;
 #pragma link C++ class ROOT::Experimental::RDrawingOptsBase+;
 #pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RCanvas>+;
 #pragma link C++ class ROOT::Experimental::RStyle+;

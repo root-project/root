@@ -31,47 +31,27 @@ namespace Experimental {
 class RAttrText: public RDrawingAttrBase {
 public:
 
-   RAttrText() = default;
-   RAttrText(const char* name, RDrawingAttrHolderBase* holder, RDrawingAttrBase *parent = nullptr):
-      RDrawingAttrBase(name, holder, parent, {"color", "size", "angle", "align", "font"})
-   {}
+   using RDrawingAttrBase::RDrawingAttrBase;
 
-public:
    /// The color of the text.
-   void SetColor(const RColor &col) { Set(0, ColorToString(col)); }
-   std::pair<RColor, bool> GetColor() const {
-      auto ret = Get(0);
-      return {ColorFromString("text color", ret.first), ret.second};
-   }
+   void SetColor(const RColor &col) { Set("color", col); }
+   RColor GetColor() const { return Get<RColor>("color"); }
 
    /// The size of the text.
-   void SetSize(float size) { Set(1, std::to_string(size)); }
-   std::pair<float, bool> GetSize() const {
-      auto ret = Get(1);
-      return {std::stof(ret.first), ret.second};
-   }
+   void SetSize(float size) { Set("size", size); }
+   float GetSize() const { return Get<float>("size"); }
 
    /// The angle of the text.
-   void SetAngle(float angle) { Set(2, std::to_string(angle)); }
-   std::pair<float, bool> GetAngle() const {
-      auto ret = Get(2);
-      return {std::stof(ret.first), ret.second};
-   }
+   void SetAngle(float angle) { Set("angle", angle); }
+   float GetAngle() const { return Get<float>("angle"); }
 
    /// The alignment of the text.
-   void SetAlign(int style) { Set(3, std::to_string(style)); }
-   std::pair<int, bool> GetAlign() const {
-      auto ret = Get(3);
-      return {std::stoi(ret.first), ret.second};
-   }
+   void SetAlign(int style) { Set("align", style); }
+   int GetAlign() const { return Get<int>("align"); }
 
    /// The font of the text.
-   void SetFont(int font) { Set(4, std::to_string(font)); }
-   std::pair<int, bool> GetFont() const {
-      auto ret = Get(4);
-      return {std::stoi(ret.first), ret.second};
-   }
-
+   void SetFont(int font) { Set("font", font); }
+   int GetFont() const { return Get<int>("font"); }
 };
 
 } // namespace Experimental

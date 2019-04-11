@@ -35,7 +35,7 @@ public:
 
 protected:
    const RFrame *fFrame{nullptr};             ///< temporary pointer on frame object
-   const RPadDrawingOpts *fDrawOpts{nullptr}; ///< temporary pointer on pad drawing options
+   const RPad::DrawingOpts *fDrawOpts{nullptr}; ///< temporary pointer on pad drawing options
    const RPadExtent *fSize{nullptr};          ///< temporary pointer on pad size attributes
    std::string fTitle;                        ///< title of the pad (used for canvas)
    std::array<RPadLength::Pixel, 2> fWinSize; ///< window size (used for canvas)
@@ -44,7 +44,7 @@ public:
    RPadDisplayItem() = default;
    virtual ~RPadDisplayItem() {}
    void SetFrame(const RFrame *f) { fFrame = f; }
-   void SetDrawOpts(const RPadDrawingOpts *opts) { fDrawOpts = opts; }
+   void SetDrawOpts(const RPad::DrawingOpts *opts) { fDrawOpts = opts; }
    void SetSize(const RPadExtent *sz) { fSize = sz; }
    void SetTitle(const std::string &title) { fTitle = title; }
    void SetWindowSize(const std::array<RPadLength::Pixel, 2> &win) { fWinSize = win; }

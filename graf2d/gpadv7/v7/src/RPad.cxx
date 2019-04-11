@@ -89,7 +89,7 @@ ROOT::Experimental::RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &pa
          subPos *= {1. * iHoriz, 1. * iVert};
          auto uniqPad = std::make_unique<RPad>(*this, size);
          ret[iHoriz][iVert] = uniqPad.get();
-         Draw(std::move(uniqPad), subPos);
+         Draw(std::move(uniqPad), subPos, size);
 
          printf("Create subpad pos %5.2f %5.2f\n", subPos.fHoriz.fNormal.fVal, subPos.fVert.fNormal.fVal);
       }
@@ -210,9 +210,11 @@ ROOT::Experimental::RPad::~RPad() = default;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::RPadDrawable::RPadDrawable(std::shared_ptr<RPad> pPad, const RPadDrawingOpts &opts /*= {}*/)
-   : fPad(std::move(pPad)), fOpts(opts)
+ROOT::Experimental::RPadDrawable::RPadDrawable(const std::shared_ptr<RPad> &pPad, const RPad::DrawingOpts &opts /*= {}*/)
+   : fPad(std::move(pPad))
 {
+   if (fPad)
+      fPad->GetDrawingOpts() = opts;
 }
 
 /// Paint the pad.
