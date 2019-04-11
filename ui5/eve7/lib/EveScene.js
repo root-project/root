@@ -267,7 +267,7 @@ sap.ui.define([
                          "class":      "REX::REveSelection"
                        });
 
-      // return true;
+      return true;
 
       // MT END -- Sergey's code below
 
@@ -452,6 +452,33 @@ sap.ui.define([
       }
 
       return did_change;
+   }
+
+   EveScene.prototype.SelectElement(selection_obj, element_id, sec_idcs) = function()
+   {
+      var obj3d = this.getObj3D( element_id );
+      var dest  = this.viewer.outlinePass.id2obj_map[selection_obj.fElementId];
+
+      // XXXX where do i pass in color ???
+
+      if( ! sec_idcs)
+      {
+         dest[element_id] = obj3d;
+      }
+      else
+      {
+         var dest_list = dest[element_id] = [];
+         var ctrl      = obj3d.get_ctrl();
+
+         ctrl->DrawForSelection(sec_idcs, dest_list);
+      }
+   }
+
+   EveScene.prototype.UnselectElement(selection_obj, element_id) = function()
+   {
+      var dest = this.viewer.outlinePass.id2obj_map[selection_obj.fElementId];
+
+      delete dest[element_id];
    }
 
    EveScene.prototype.elementRemoved = function()
