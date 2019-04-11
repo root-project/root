@@ -21,6 +21,7 @@
 #include "TString.h"
 #include "TROOT.h"
 #include "TPad.h"
+#include "TDirectory.h"
 #include "TBufferJSON.h"
 #include <sstream>
 #include <iostream>
@@ -82,10 +83,24 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 
        //ComboBox for Data Set
        //model.fDataSet.push_back(ROOT::Experimental::RComboBoxItem("1", "No Selection"));
-       model.fDataSet.emplace_back("1", "TH1F::hpx");
-       model.fDataSet.push_back(ROOT::Experimental::RComboBoxItem("2", "TH2F::hpxhpy"));
-       model.fDataSet.push_back(ROOT::Experimental::RComboBoxItem("3", "TProfile::hprof"));
-       model.fDataSet.push_back(ROOT::Experimental::RComboBoxItem("4", "TNtuple::ntuple"));
+      if (fHist) {
+         model.fDataSet.emplace_back("0", Form("%s::%s", fHist->ClassName(), fHist->GetName()));
+         model.fSelectDataId = "0";
+      }
+
+      if (gDirectory) {
+         TIter iter(gDirectory->GetList());
+         TObject *item = nullptr;
+
+         while ((item = iter()) != nullptr)
+            if (item->InheritsFrom(TH1::Class()))
+               model.fDataSet.emplace_back(item->GetName(), Form("%s::%s", item->ClassName(), item->GetName()));
+      }
+
+       model.fDataSet.emplace_back("1", "*TH1F::hpx");
+       model.fDataSet.emplace_back("2", "*TH2F::hpxhpy");
+       model.fDataSet.emplace_back("3", "*TProfile::hprof");
+       model.fDataSet.emplace_back("4", "*TNtuple::ntuple");
        model.fSelectDataId = "2";
 
        //ComboBox for Fit Function --- Type
@@ -175,7 +190,7 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 
        // corresponds to library == 3
        model.fMethodMinAll.emplace_back();
-       std::vector<ROOT::Experimental::RComboBoxItem> &vect3 = model.fMethodMinAll.back();
+       // std::vector<ROOT::Experimental::RComboBoxItem> &vect3 = model.fMethodMinAll.back();
        // vect3.push_back(ROOT::Experimental::RComboBoxItem("1", "Lib3_1"));
        // vect3.push_back(ROOT::Experimental::RComboBoxItem("2", "Lib3_2"));
 
@@ -331,7 +346,7 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
       }
 
       //Assign the options to Fitting function
-      if (fHist) {
+      if (fHist && (obj->fSelectDataId == "0")) {
          fHist->Fit(obj->fRealFunc.c_str(), obj->fOption.c_str(), "*", obj->fUpdateRange[0], obj->fUpdateRange[1]);
          gPad->Update();
       }

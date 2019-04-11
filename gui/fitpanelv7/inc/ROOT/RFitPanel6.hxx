@@ -94,9 +94,7 @@ struct RFitPanelModel6 {
    bool fSame {false};
    bool fNoDrawing {};
    bool fNoStore {false};
-
 };
-
 
 class RFitPanel6 {
 
