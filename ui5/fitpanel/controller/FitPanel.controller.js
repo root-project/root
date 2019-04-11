@@ -3,8 +3,14 @@ sap.ui.define([
    'sap/ui/model/json/JSONModel',
    'sap/ui/unified/ColorPickerPopover',
    'sap/m/Button',
-   'sap/m/Table'
-], function (GuiPanelController, JSONModel, ColorPickerPopover, Button, Table) {
+   'sap/m/Table',
+   'sap/m/Dialog',
+   'sap/m/List',
+   'sap/m/InputListItem',
+   'sap/m/Input',
+   'sap/m/Label'
+], function (GuiPanelController, JSONModel, ColorPickerPopover, Button, Table,
+             Dialog, List, InputListItem, Input, Label) {
 
    "use strict";
    var count = 0;
@@ -174,93 +180,47 @@ sap.ui.define([
          console.log("fNoDrawing ", data.fNoStore);
       },
 
+      closeParametersDialog: function(is_ok) {
+         this.parsDialog.close();
+         this.parsDialog.destroy();
+         delete this.parsDialog;
+         
+      },
+      
       setParametersDialog: function(){
-         var aColumnData = [{
-            columnId: "Name"
-         },
-         {
-            columnId: "Fix"
-         },
-         {
-            columnId: "Bound"
-         },
-         {
-            columnId: "Value"
-         },
-         {
-            columnId: "Min"
-         },
-         {
-            columnId: "Range"
-         },
-         {
-            columnId: "Max"
-         },
-         {
-            columnId: "Steps"
-         },
-         {
-            columnId: "Errors"
-         }];
+         
+         var items = [];
 
-         var colModel = new sap.ui.model.json.JSONModel();
-         colModel.setData({
-            columns: aColumnData
-         });
-
-         var oPersonalizationDialog = sap.ui.xmlfragment("localapp.view.SetParameters", this);
-         this.getView().addDependent(oPersonalizationDialog);
-         oPersonalizationDialog.open();
-         var func = this.getView().byId("selectedOpText").getText();
-         var oTable = new sap.m.Table({});
-         oTable.setModel(colModel);
-
-         oTable.bindAggregation("columns", "/columns", function(index, context) {
-            return new sap.m.Column({
-               header: new sap.m.Label({
-                  text: context.getObject().columnId
-               }),
+         for (var n=0;n<5;++n) {
+            var item = new InputListItem({
+               label: "Name" + n,
+               content: new Input({ placeholder: "Name"+n, value: n })
             });
+            items.push(item);
+         }
+         
+         this.parsDialog = new Dialog({
+            title: "Prarameters",
+            content: new List({
+                items: items
+             }),
+             beginButton: new Button({
+               text: 'Cancel',
+               press: this.closeParametersDialog.bind(this)
+             }),
+             endButton: new Button({
+               text: 'Ok',
+               press: this.closeParametersDialog.bind(this, true)
+             })
          });
 
-         oTable.bindItems("/rows", function(index, context) {
-            var obj = context.getObject();
-            var row = new sap.m.ColumnListItem();
+         // this.getView().getModel().setProperty("/Method", method);
+         //to get access to the global model
+         // this.getView().addDependent(this.methodDialog);
 
-            for(var k in obj) {
-               row.addCell(new sap.m.Text({
-                  text: obj[k]
-               }));
-            }
+         this.parsDialog.addStyleClass("sapUiSizeCompact");
 
-            return row;
-         });
-
-         oTable.placeAt("content");
-
-         // if (func == "gaus"){
-         //    var par = 3;
-         //    for (var i=0; i<par; i++){
-         //       for (var j=0; j<8; j++){
-
-         //       }
-         //       //oPersonalizationDialog.addContent(new sap.m.Title)
-         //    }
-         // }
-         // for (var i=0; i<5; i++){
-         //    oTable.addContent(new sap.m.Label({
-         //       text: "label",
-         //       columns: [ new sap.m.Column({
-         //          header: new sap.m.Text
-         //       })
-
-         //       ]
-         //    }));
-         //    oPersonalizationDialog.addContent(new sap.m.Text({
-         //       text: "text"
-         //    }));
-         // }
-
+         this.parsDialog.open();
       },
 
 
