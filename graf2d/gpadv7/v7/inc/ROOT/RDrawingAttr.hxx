@@ -128,7 +128,7 @@ protected:
    Path fPath;
 
    /// The container of the attribute values.
-   std::weak_ptr<RDrawingAttrHolder> fHolder;
+   std::weak_ptr<RDrawingAttrHolder> fHolder;   ///<!   I/O not working anyway
 
 protected:
    /// Get the attribute value as string, for a given attribute name.

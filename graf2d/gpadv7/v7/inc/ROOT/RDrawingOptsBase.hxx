@@ -27,7 +27,8 @@ namespace Experimental {
 class RDrawingOptsBase {
 public:
    /// The RDrawingAttrHolder of the attribute values.
-   std::shared_ptr<RDrawingAttrHolder> fHolder;
+   std::shared_ptr<RDrawingAttrHolder> fHolder;    ///<!  I/O does not work
+   RDrawingAttrHolder    *fHolderIO{nullptr};      ///<   only for I/O, should be fixed in the fututre
 
 public:
    RDrawingOptsBase() = default;

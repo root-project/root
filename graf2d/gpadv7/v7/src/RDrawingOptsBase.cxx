@@ -28,16 +28,19 @@
 std::shared_ptr<ROOT::Experimental::RDrawingAttrHolder> &
 ROOT::Experimental::RDrawingOptsBase::GetHolder()
 {
-   if (!fHolder)
+   if (!fHolder) {
       fHolder = std::make_shared<RDrawingAttrHolder>();
+      fHolderIO = fHolder.get();
+   }
    return fHolder;
 }
 
 void ROOT::Experimental::RDrawingOptsBase::SetStyleClasses(const std::vector<std::string> &styles)
 {
-   if (!fHolder)
+   if (!fHolder) {
       fHolder = std::make_shared<RDrawingAttrHolder>(styles);
-   else
+      fHolderIO = fHolder.get();
+   } else
       fHolder->SetStyleClasses(styles);
 }
 

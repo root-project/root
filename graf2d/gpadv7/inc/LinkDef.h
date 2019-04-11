@@ -48,6 +48,8 @@
 #pragma link C++ class ROOT::Experimental::RPalette+;
 #pragma link C++ class ROOT::Experimental::RColor+;
 #pragma link C++ class ROOT::Experimental::RDrawingAttrBase+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttrBase::Path+;
+#pragma link C++ class ROOT::Experimental::RDrawingAttrHolder+;
 #pragma link C++ class ROOT::Experimental::RDrawingOptsBase+;
 #pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RCanvas>+;
 #pragma link C++ class ROOT::Experimental::RStyle+;
