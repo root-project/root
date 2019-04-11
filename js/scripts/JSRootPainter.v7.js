@@ -905,7 +905,7 @@
 
          var fillcolor = 'white';
          if (tframe && tframe.fFillColor)
-            fillcolor = this.canv_painter().GetNewColor(tframe.fFillColor, true);
+            fillcolor = this.canv_painter().GetOldColor(tframe.fFillColor, true);
 
          this.fillatt.SetSolidColor(fillcolor);
       }
@@ -4251,7 +4251,7 @@
 /// Otherwise the `fRedOrPalettePos` member of RGBa contains the color index in
 /// the current palette
 
-   TCanvasPainter.prototype.GetNewColor = function(attr, direct) {
+   TCanvasPainter.prototype.GetOldColor = function(attr, direct) {
       if (!attr) return;
 
       var tcol = direct ? attr : attr.fAttr; // this is TColor instance
@@ -4260,6 +4260,23 @@
                          Math.round(tcol.fGreen*255) + "," +
                          Math.round(tcol.fBlue*255) + ")";
       return col;
+   }
+
+   TCanvasPainter.prototype.GetNewOpt = function(opts, name) {
+      if (!opts || !opts.fHolderIO || !name) return;
+
+      var map = opts.fHolderIO.fAttrNameVals;
+      if (!map || !map.length) return;
+
+      for (var i=0; i<map.length; ++i)
+         if (map[i].first === name)
+            return map[i].second;
+   }
+
+   TCanvasPainter.prototype.GetNewColor = function(opts, name) {
+      var val = this.GetNewOpt(opts,name);
+      // can convert color, but also can be used as is
+      return val;
    }
 
    function drawCanvas(divid, can, opt) {

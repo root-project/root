@@ -39,7 +39,7 @@
           text_size    = opts.fTextSize.fAttr,
           text_angle   = -opts.fTextAngle.fAttr,
           text_align   = opts.fTextAlign.fAttr,
-          text_color   = pp.GetNewColor(opts.fTextColor),
+          text_color   = pp.GetOldColor(opts.fTextColor),
           text_font    = opts.fTextFont.fAttr,
           p            = this.GetCoordinate(text.fP);
 
@@ -67,7 +67,7 @@
            line_width   = opts.fWidth.fAttr,
            line_opacity = opts.fOpacity.fAttr,
            line_style   = opts.fStyle.fAttr,
-           line_color   = pp.GetNewColor(opts.fColor),
+           line_color   = pp.GetOldColor(opts.fColor),
            p1           = this.GetCoordinate(line.fP1),
            p2           = this.GetCoordinate(line.fP2);
 
@@ -94,9 +94,9 @@
            line_width   = opts.fLineWidth.fAttr,
            line_opacity = opts.fLineOpacity.fAttr,
            line_style   = opts.fLineStyle.fAttr,
-           line_color   = pp.GetNewColor(opts.fLineColor),
+           line_color   = pp.GetOldColor(opts.fLineColor),
            fill_opacity = opts.fFillOpacity.fAttr,
-           fill_color   = pp.GetNewColor(opts.fFillColor),
+           fill_color   = pp.GetOldColor(opts.fFillColor),
            fill_style   = opts.fFillStyle.fAttr,
            round_width  = opts.fRoundWidth.fAttr,
            round_height = opts.fRoundHeight.fAttr,
@@ -131,7 +131,7 @@
            marker_size    = opts.fSize.fAttr,
            marker_opacity = opts.fOpacity.fAttr,
            marker_style   = opts.fStyle.fAttr,
-           marker_color   = pp.GetNewColor(opts.fColor),
+           marker_color   = pp.GetOldColor(opts.fColor),
            p              = this.GetCoordinate(marker.fP);
 
            var att = new JSROOT.TAttMarkerHandler({ style: marker_style, color: marker_color, size: marker_size });
