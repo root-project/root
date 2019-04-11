@@ -187,21 +187,72 @@ sap.ui.define([
 
       setParametersDialog: function(){
 
-         var items = [];
+         //var items = [];
 
-         for (var n=0;n<5;++n) {
-            var item = new InputListItem({
-               label: "Name" + n,
-               content: new Input({ placeholder: "Name"+n, value: n })
-            });
-            items.push(item);
-         }
+         var aData = {Data:[
+         	{Name:"Constant", Fix:false, Bound:false, Value:805, Min:-195, SetRange:805, Max:1805, Step:10, Errors:"-" },
+         	{Name:"Mean", Fix:false, Bound:false, Value:-0.039, Min:-10.39, SetRange:-0.039, Max:9.96, Step:0.1, Errors:"-" },
+         	{Name:"Sigma", Fix:false, Bound:false, Value:0.998, Min:0, SetRange:0.99, Max:9.9826, Step:0.1, Errors:"-" }
+         	]};
+
+         var oModel = new sap.ui.model.json.JSONModel(aData);
+         sap.ui.getCore().setModel(oModel, "aDataData");
+
+         var oColName = new sap.m.Column({ header: new sap.m.Label({text: "Name"})});
+         var oColFix = new sap.m.Column({ header: new sap.m.Label({text: "Fix"})});
+         var oColBound = new sap.m.Column({ header: new sap.m.Label({text: "Bound"})});
+         var oColValue = new sap.m.Column({ header: new sap.m.Label({text: "Value"})});
+         var oColMin = new sap.m.Column({ header: new sap.m.Label({text: "Min"})});
+         var oColSetRange = new sap.m.Column({ header: new sap.m.Label({text: "Set Range"})});
+         var oColMax = new sap.m.Column({ header: new sap.m.Label({text: "Max"})});
+         var oColStep = new sap.m.Column({ header: new sap.m.Label({text: "Step"})});
+         var oColErrors = new sap.m.Column({ header: new sap.m.Label({text: "Errors"})});
+
+         var oNameTxt = new sap.m.Text({text: "{/Name}"});
+         var oFixTxt = new sap.m.CheckBox({selected: "{/Fix}"});
+         var oBoundTxt = new sap.m.CheckBox({selected: "{/Bound}"});
+         var oValueTxt = new sap.m.StepInput({min:"{/Min}", max:"{/Max}", value:"{/Value}" });
+         var oMinTxt = new sap.m.Text({ text:"{/Min}"});
+         var oSetRangeTxt = new sap.m.RangeSlider({min:"{/Min}", max:"{/Max}", value:"{/Value}"});
+         var oMaxTxt = new sap.m.Text({ text:"{/Max}"});
+         var oStepTxt = new sap.m.StepInput({min:"{/Min}", max:"{/Max}", value:"{/Step}" });
+         var oErrorTxt = new sap.m.Text({text:"{/Errors}"});
+
+         var oTableItems = new sap.m.ColumnListItem({vAlign:"Middle",cells:[oNameTxt,oFixTxt,oBoundTxt,
+         											oValueTxt,oMinTxt,oSetRangeTxt,oMaxTxt,oStepTxt,oErrorTxt]});
+
+         var oTable = new sap.m.Table({
+         	id:"PrmsTable",
+         	fixedLayout:false,
+         	mode: sap.m.ListMode.SingleSelectMaster,
+         	includeItemInSelection:true
+         });
+
+         oTable.addColumn(oColName);
+         oTable.addColumn(oColFix);
+         oTable.addColumn(oColBound);
+         oTable.addColumn(oColValue);
+         oTable.addColumn(oColMin);
+         oTable.addColumn(oColSetRange);
+         oTable.addColumn(oColMax);
+         oTable.addColumn(oColStep);
+         oTable.addColumn(oColErrors);
+
+         oTable.bindAggregation("items","/Data",oTableItems,null);
+         oTable.setModel(oModel);
+
+        
+
+         // for (var n=0;n<5;++n) {
+         //    var item = new InputListItem({
+         //       label: "Name" + n,
+         //       content: new Input({ placeholder: "Name"+n, value: n })
+         //    });
+         //    items.push(item);
+         // }
 
          this.parsDialog = new Dialog({
             title: "Prarameters",
-            content: new List({
-               items: items
-            }),
             beginButton: new Button({
                text: 'Cancel',
                press: this.closeParametersDialog.bind(this)
@@ -212,11 +263,12 @@ sap.ui.define([
             })
          });
 
+         this.parsDialog.addContent(oTable);
          // this.getView().getModel().setProperty("/Method", method);
          //to get access to the global model
          // this.getView().addDependent(this.methodDialog);
 
-         this.parsDialog.addStyleClass("sapUiSizeCompact");
+         //this.parsDialog.addStyleClass("sapUiSizeCompact");
 
          this.parsDialog.open();
       },
