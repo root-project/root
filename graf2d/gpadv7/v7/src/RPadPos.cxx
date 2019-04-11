@@ -16,7 +16,6 @@
 #include "ROOT/RPadPos.hxx"
 
 #include <ROOT/RPadExtent.hxx>
-#include <ROOT/RDrawingAttr.hxx>
 #include <ROOT/TLogger.hxx>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -27,10 +26,10 @@
 /// user or normal coordinates. Spaces between any part is allowed.
 /// Example: `100 px + 0.1 user, 0.5 normal` is a `RPadPos{100_px + 0.1_user, 0.5_normal}`.
 
-ROOT::Experimental::RPadPos ROOT::Experimental::FromAttributeString(const std::string &val, const RDrawingAttrBase& attr, const std::string &name, RPadPos*)
+ROOT::Experimental::RPadPos ROOT::Experimental::FromAttributeString(const std::string &val, const std::string &name, RPadPos*)
 {
    RPadPos ret;
-   ret.SetFromAttrString(val, attr, name);
+   ret.SetFromAttrString(val, name);
    return ret;
 }
 

@@ -42,7 +42,7 @@ public:
 class DrawingOpts: public RDrawingOptsBase, public RAttrBox {
 public:
       DrawingOpts():
-         RAttrBox(AsOption, "box", *this)
+         RAttrBox(FromOption, "box", *this)
       {}
 
       using RAttrBox::RAttrBox;

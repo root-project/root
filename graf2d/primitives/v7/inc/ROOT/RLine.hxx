@@ -39,7 +39,7 @@ public:
  */
 class DrawingOpts: public RDrawingOptsBase, public RAttrLine {
 public:
-   DrawingOpts(): RAttrLine(AsOption, "line", *this) {}
+   DrawingOpts(): RAttrLine(FromOption, "line", *this) {}
 };
 
 
