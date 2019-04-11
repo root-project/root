@@ -1,0 +1,18 @@
+.sapMITBHead {
+	margin: 0 !important;
+}
+
+.sapMPanelHdr {
+	font-size: 1rem !important;
+	height: 1.8rem !important;
+	line-height: 1.8rem !important;
+}
+
+.sapMPanelExpandableIcon {
+	font-size: 0.9rem !important;
+}
+
+.sapUiLargeMarginBottom {
+	margin-bottom: 1.3rem !important;
+}
+
