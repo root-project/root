@@ -12,7 +12,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHistDraw
     ROOT/RHistDrawingOpts.hxx
   SOURCES
     v7/src/RHistDrawable.cxx
-    v7/src/RHistDrawingOpts.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES

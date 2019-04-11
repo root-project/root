@@ -25,10 +25,26 @@
 #include <algorithm>
 #include <sstream>
 
-std::string ROOT::Experimental::RDrawingOptsBase::GetAttrFromStyle(const Name_t &attrName)
+std::shared_ptr<ROOT::Experimental::RDrawingAttrHolder> &
+ROOT::Experimental::RDrawingOptsBase::GetHolder()
 {
-    
-   R__WARNING_HERE("Graf2d") << "Failed to get attribute for "
-      << RDrawingAttrBase::NameToDottedDiagName(attrName) << ": not yet implemented!";
-   return "";
+   if (!fHolder)
+      fHolder = std::make_shared<RDrawingAttrHolder>();
+   return fHolder;
+}
+
+void ROOT::Experimental::RDrawingOptsBase::SetStyleClasses(const std::vector<std::string> &styles)
+{
+   if (!fHolder)
+      fHolder = std::make_shared<RDrawingAttrHolder>(styles);
+   else
+      fHolder->SetStyleClasses(styles);
+}
+
+const std::vector<std::string> &ROOT::Experimental::RDrawingOptsBase::GetStyleClasses() const
+{
+   static const std::vector<std::string> sEmpty;
+   if (!fHolder)
+      return sEmpty;
+   return fHolder->GetStyleClasses();
 }

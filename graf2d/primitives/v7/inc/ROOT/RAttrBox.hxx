@@ -30,29 +30,19 @@ namespace Experimental {
  */
 class RAttrBox: public RDrawingAttrBase {
 public:
-   RAttrBox() = default;
+   using RDrawingAttrBase::RDrawingAttrBase;
 
-   RAttrBox(const char* name, RDrawingAttrHolderBase* holder, RDrawingAttrBase *parent = nullptr):
-      RDrawingAttrBase(name, holder, parent, {"pos", "size"})
-   {}
-
-   RAttrLine border{"border", GetHolder(), this};
-
-   /// The position of the box.
-   void SetPos(const RPadPos& pos) { Set(0, PosToString(pos)); }
-   std::pair<RPadPos, bool> GetPos() const
-   {
-      auto ret = Get(0);
-      return {PosFromString("box position", ret.first), ret.second};
-   }
-
-   ///The size of the box.
-   void SetSize(const RPadExtent& size) { Set(1, ExtentToString(size)); }
-   std::pair<RPadExtent, bool> GetSize() const
-   {
-      auto ret = Get(1);
-      return {ExtentFromString("box size", ret.first), ret.second};
-   }
+   RAttrLine Border() const { return  {"border", *this}; }
+   /// Overrides Border() for the top line..
+   RAttrLine Top() const { return  {"top", *this}; }
+   /// Overrides Border() for the right line.
+   RAttrLine Right() const { return  {"right", *this}; }
+   /// Overrides Border() for the bottom line.
+   RAttrLine Bottom() const { return  {"bottom", *this}; }
+   /// Overrides Border() for the left line.
+   RAttrLine Left() const { return  {"left", *this}; }
+   
+   // TODO: Add Fill()!
 };
 
 } // namespace Experimental

@@ -16,6 +16,7 @@
 #include "ROOT/RPadLength.hxx"
 
 #include <ROOT/TLogger.hxx>
+#include <ROOT/RDrawingAttr.hxx>
 
 #include <algorithm> // std::transform
 #include <cctype> // std::tolower
@@ -160,19 +161,25 @@ namespace {
 /// user or normal coordinates. Spaces between any part is allowed.
 /// Example: `100 px + 0.1 user, 0.5 normal` is a `RPadExtent{100_px + 0.1_user, 0.5_normal}`.
 
-void ROOT::Experimental::RPadLength::SetFromAttrString(const std::string &name, const std::string &attrStrVal)
+void ROOT::Experimental::RPadLength::SetFromAttrString(const std::string &val, const RDrawingAttrBase& attr, const std::string &name)
 {
    *this = {}; // Value-initialize this.
    std::string tok;
    RLengthParseElements parse;
    
-   for (const char c: attrStrVal) {
+   auto buildName = [&]() {
+      RDrawingAttrBase::Name_t fullName(attr.GetName());
+      fullName.emplace_back(name);
+      return RDrawingAttrBase::NameToDottedDiagName(fullName);
+   };
+
+   for (const char c: val) {
       if (c == ' ') {
          if (!tok.empty()) {
             std::string err = HandleToken(tok, parse, *this);
             if (!err.empty()) {
-               R__ERROR_HERE("Gpad") << "Invalid syntax in '" << attrStrVal
-                  << "' while parsing pad length for " << name << ": " << err;
+               R__ERROR_HERE("Gpad") << "Invalid syntax in '" << val
+                  << "' while parsing pad length for " << buildName() << ": " << err;
                return;
             }
          }
@@ -184,22 +191,31 @@ void ROOT::Experimental::RPadLength::SetFromAttrString(const std::string &name, 
    if (!tok.empty()) {
       std::string err = HandleToken(tok, parse, *this);
       if (!err.empty()) {
-         R__ERROR_HERE("Gpad") << "Invalid syntax in '" << attrStrVal
-            << "' while parsing pad length for " << name << ": " << err;
+         R__ERROR_HERE("Gpad") << "Invalid syntax in '" << val
+            << "' while parsing pad length for " << buildName() << ": " << err;
          return;
       }
    }
    if (parse.fIndex != 0) {
-      R__ERROR_HERE("Gpad") << "Invalid syntax in '" << attrStrVal
-         << "' while parsing pad length for " << name
+      R__ERROR_HERE("Gpad") << "Invalid syntax in '" << val
+         << "' while parsing pad length for " << buildName()
          << ": missing elements, expect [+-] number (normal|px|user)";
       return;
    }
 }
 
-std::string ROOT::Experimental::RPadLength::PadLengthToString(const RPadLength& len)
+ROOT::Experimental::RPadLength ROOT::Experimental::FromAttributeString(const std::string &val, const RDrawingAttrBase& attr, const std::string &name, RPadLength*)
+{
+   RPadLength ret;
+   ret.SetFromAttrString(val, attr, name);
+   return ret;
+}
+
+std::string ROOT::Experimental::ToAttributeString(const RPadLength& len)
 {
    std::stringstream strm;
-   strm << len.fNormal << " normal + " << len.fPixel << " px + " << len.fUser << " user";
+   strm << len.fNormal.fVal << " normal + " << len.fPixel.fVal << " px + " << len.fUser.fVal << " user";
    return strm.str();
 }
+
+

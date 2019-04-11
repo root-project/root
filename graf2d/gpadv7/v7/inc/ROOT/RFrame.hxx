@@ -32,11 +32,9 @@ namespace Experimental {
 
 class RFrame {
 public:
-   class DrawingOpts: public RDrawingOptsBase, public RAttrBox {
+   class DrawingOpts: public RDrawingOptsBase {
    public:
-      DrawingOpts():
-         RAttrBox("frame", this)
-      {}
+      RAttrBox Frame() { return {"frame", *this}; }
    };
 
 private:
@@ -45,6 +43,9 @@ private:
 
    /// Palette used to visualize user coordinates.
    RPalette fPalette;
+
+   /// Drawing options.
+   DrawingOpts fOpts;
 
 public:
    // Default constructor
@@ -60,6 +61,8 @@ public:
    explicit RFrame(const DrawingOpts &opts)
       : RFrame({}, opts)
    {}
+
+   DrawingOpts &GetDrawingOpts() { return fOpts; }
 
    /// Create `nDimensions` default axes for the user coordinate system.
    void GrowToDimensions(size_t nDimensions);

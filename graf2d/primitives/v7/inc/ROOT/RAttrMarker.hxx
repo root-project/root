@@ -28,32 +28,19 @@ namespace Experimental {
 
 class RAttrMarker : public RDrawingAttrBase {
 public:
-   RAttrMarker() = default;
-   RAttrMarker(const char* name, RDrawingAttrHolderBase* holder, RDrawingAttrBase *parent = nullptr):
-      RDrawingAttrBase(name, holder, parent, {"color", "size", "style"})
-   {}
+   using RDrawingAttrBase::RDrawingAttrBase;
 
-public:
    /// The color of the marker.
-   void SetColor(const RColor &col) { Set(0, ColorToString(col)); }
-   std::pair<RColor, bool> GetColor() const {
-      auto ret = Get(0);
-      return {ColorFromString("marker color", ret.first), ret.second};
-   }
+   void SetColor(const RColor &col) { Set("color", col); }
+   RColor GetColor() const { return Get<RColor>("color"); }
 
    /// The size of the marker.
-   void SetSize(float size) { Set(1, std::to_string(size)); }
-   std::pair<float, bool> GetSize() const {
-      auto ret = Get(1);
-      return {std::stof(ret.first), ret.second};
-   }
+   void SetSize(float size) { Set("size", size); }
+   float GetSize() const { return Get<float>("size"); }
 
    /// The style of the marker.
-   void SetStyle(int style) { Set(2, std::to_string(style)); }
-   std::pair<int, bool> GetStyle() const {
-      auto ret = Get(2);
-      return {std::stoi(ret.first), ret.second};
-   }
+   void SetStyle(int style) { Set("style", style); }
+   int GetStyle() const { return Get<int>("style"); }
 };
 
 } // namespace Experimental

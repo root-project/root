@@ -46,7 +46,19 @@ void draw()
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
-   canvas->Draw(pHist)->SetLineColor(RColor::kRed);
+   auto pOpts = canvas->Draw(pHist)
+   pOpts->Line().SetColor(RColor::kRed);
+
+   RH2D other = *pHist;
+   auto pOptsOther = canvas->Draw(other);
+   *pOptsOther = *pOpts;
+   pOptsOther->Line().SetColor(RColor::kBlue);
+   auto lineAttrs = pOptsOther->Line();
+   lineAttrs.SetWidth(12);
+   pOpts->Line() = lineAttrs;
+
+   TH3D third = *pHist;
+   canvas->Draw(third, *pOpts);
 
    canvas->Show();
 }

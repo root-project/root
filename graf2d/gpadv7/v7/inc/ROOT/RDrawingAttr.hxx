@@ -18,13 +18,62 @@
 
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
 namespace ROOT {
 namespace Experimental {
 
-class RDrawingAttrHolderBase;
+class RDrawingAttrBase;
+class RDrawingOptsBase;
+
+/// \[ \name Attribute Stringification
+float FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, float *);
+double FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, double *);
+char FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, char *);
+short FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, short *);
+int FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, int *);
+long FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, long *);
+long long FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, long long *);
+unsigned char FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, unsigned char *);
+unsigned short FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, unsigned short *);
+unsigned int FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, unsigned int *);
+unsigned long FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, unsigned long *);
+unsigned long long FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, unsigned long long *);
+
+/// Decode an enum value from its integer representation.
+template <typename ENUM, class = typename std::enable_if<std::is_enum<ENUM>::value>::type>
+ENUM FromAttributeString(const std::string &strval, const RDrawingAttrBase& attr, const std::string &name, ENUM *)
+{
+   return static_cast<ENUM>(FromAttributeString(strval, attr, name, (typename std::underlying_type<ENUM>::type*)nullptr));
+}
+
+
+std::string ToAttributeString(float val);
+std::string ToAttributeString(double val);
+std::string ToAttributeString(char val);
+std::string ToAttributeString(short val);
+std::string ToAttributeString(int val);
+std::string ToAttributeString(long val);
+std::string ToAttributeString(long long val);
+std::string ToAttributeString(unsigned char val);
+std::string ToAttributeString(unsigned short val);
+std::string ToAttributeString(unsigned int val);
+std::string ToAttributeString(unsigned long val);
+std::string ToAttributeString(unsigned long long val);
+
+/// Stringify an enum value through its integer representation.
+template <typename ENUM, class = typename std::enable_if<std::is_enum<ENUM>::value>::type>
+std::string ToAttributeString(ENUM val)
+{
+   return ToAttributeString(static_cast<typename std::underlying_type<ENUM>::type>(val));
+}
+
+/// \]
+
+
+class RDrawingAttrHolder;
 
 /** \class ROOT::Experimental::RDrawingAttrBase
  A collection of graphics attributes, for instance everything describing a line:
@@ -33,95 +82,84 @@ class RDrawingAttrHolderBase;
  */
 class RDrawingAttrBase {
 public:
-   /// Name parts: for "hist1d.box.line.width", name parts are "hist1d", "box",
-   /// border", and "width".
-   using NamePart_t = std::string;
-
    /// Combination of names, e.g. "hist", "box", "line", "width".
-   using Name_t = std::vector<NamePart_t>;
-
-   /// Names of available attribute values if any, e.g. "color", "width".
-   /// These must be string literals.
-   std::unique_ptr<std::vector<NamePart_t>> fValueNames;
+   using Name_t = std::vector<std::string>;
 
 protected:
-   /// The final element of the attribute name, as used in style files.
-   /// I.e. for "hist1D.hist.box.line", this will be "line".
-   NamePart_t fNamePart;  ///<!
+   /// The chain of attribute names, as used in style files.
+   /// E.g. "hist1D.hist.box.line".
+   Name_t fName;
 
    /// The container of the attribute values.
-   RDrawingAttrHolderBase *fHolder{nullptr};
-
-   /// The attribute that this attribute belongs to, if any.
-   const RDrawingAttrBase *fParent{nullptr};
-
-   /// Contained attributes, if any.
-   std::unique_ptr<std::vector<const RDrawingAttrBase*>> fChildren;
+   std::weak_ptr<RDrawingAttrHolder> fHolder;
 
 protected:
-   /// Register a child `subAttr` with the parent `*this`.
-   void Register(const RDrawingAttrBase &subAttr);
-
-   /// Build the name for the attribute value at index `valueIndex`.
-   Name_t BuildNameForVal(std::size_t valueIndex) const;
+   /// Get the attribute value as string, for a given attribute name.
+   std::string GetValueString(const std::string& name) const;
 
    /// Insert or update the attribute value identified by the valueIndex (in fValueNames)
    /// to the value `strVal`.
-   void Set(std::size_t valueIndex, const std::string &strVal);
+   void SetValueString(const std::string &name, const std::string &strVal);
 
-   /// Get the attribute value as string, for a given index (in fValueNames).
-   /// `second` is `true` if it comes from our `RDrawingAttrHolderBase` (i.e. was
-   /// explicitly set through `Set()`) and `false` if it was determined from the
-   /// styles, i.e. through `RDrawingAttrHolderBase::GetAttrFromStyle()`.
-   std::pair<std::string, bool> Get(std::size_t valueIndex) const;
-
-   /// Get the available value names.
-   const std::vector<NamePart_t> *GetValueNames() const { return fValueNames.get(); }
-
-public:
    /// Construct a default, unnamed, unconnected attribute.
    RDrawingAttrBase() = default;
 
+public:
    /// Construct a named attribute that does not have a parent; e.g.
    /// because it's the top-most attribute in a drawing option object.
-   RDrawingAttrBase(const char* namePart): fNamePart(namePart) {}
+   RDrawingAttrBase(const std::string &namePart): fName{namePart} {}
 
    /// Construct a named attribute that has a parent, e.g.
    /// because it's some line attribute of the histogram attributes.
-   /// Registers `*this` with the parent.
-   RDrawingAttrBase(const char* namePart, RDrawingAttrHolderBase *holder, RDrawingAttrBase *parent);
+   RDrawingAttrBase(const std::string &namePart, const RDrawingAttrBase &parent);
 
-   /// Construct a named attribute that has a parent, e.g.
-   /// because it's some line attribute of the histogram attributes.
-   /// Registers `*this` with the parent.
-   /// Also provide the names of available values.
-   RDrawingAttrBase(const char* namePart, RDrawingAttrHolderBase *holder, RDrawingAttrBase *parent,
-      const std::vector<NamePart_t> &valueNames);
+   /// Tag type to disambiguate construction from options.
+   struct AsOption_t {};
+   static constexpr const AsOption_t AsOption{};
+   /// Construct a top-most attribute from its holder.
+   RDrawingAttrBase(AsOption_t, const std::string &namePart, RDrawingOptsBase &opts);
 
-   /// Get the (partial, i.e. without parent context) name of this attribute.
-   std::string GetNamePart() const { return fNamePart; }
+   /// Construct a top-most attribute from its holder.
+   RDrawingAttrBase(const std::string &namePart, RDrawingOptsBase &opts):
+      RDrawingAttrBase(AsOption, namePart, opts) {}
 
-   /// Collect the attribute names that lead to this attribute, starting
+   /// Return `true` if the attribute's value comes from the
+   /// styles, i.e. through `RDrawingAttrHolder::GetAttrFromStyle()`, instead
+   /// if from our `RDrawingAttrHolder` (i.e. explicitly set through `Set()`).
+   bool IsFromStyle(const std::string& name) const;
+
+   /// Get the attribute value for an attribute value of type `T`.
+   template <class T>
+   T Get(const std::string& name) const
+   {
+      auto strVal = GetValueString(name);
+      return FromAttributeString(strVal, *this, name, (T*)nullptr);
+   }
+
+   /// Insert or update the attribute value identified by `name` to the given value.
+   template <class T>
+   void Set(const std::string& name, const T &val)
+   {
+      SetValueString(name, ToAttributeString(val));
+   }
+
+   /// Return the attribute names that lead to this attribute, starting
    /// with the topmost attribute, i.e. the parent that does not have a parent
    /// itself, down to the name of *this (the last entry in the vector).
-   void GetName(Name_t &name) const;
+   const Name_t &GetName() const { return fName; }
 
    /// Convert a Name_t to "hist.box.line.color", for diagnostic purposes.
    static std::string NameToDottedDiagName(const Name_t &name);
 
-   /// Assemble all attribute names below *this.
-   void CollectChildNames(std::vector<Name_t> &names) const;
-
    /// Actual attribute holder.
-   RDrawingAttrHolderBase* GetHolder() const { return fHolder; }
+   const std::weak_ptr<RDrawingAttrHolder> &GetHolderPtr() const { return fHolder; }
 };
 
 
-/** \class ROOT::Experimental::RDrawingAttrHolderBase
- A container of attributes for which values have been provided;
- top-most attribute edge. Provides an interface to the RStyle world.
+/** \class ROOT::Experimental::RDrawingAttrHolder
+ A container of (stringified) attributes for which values have been provided.
  */
-class RDrawingAttrHolderBase {
+class RDrawingAttrHolder {
 public:
    using Name_t = RDrawingAttrBase::Name_t;
 private:
@@ -132,8 +170,19 @@ private:
    /// Map attribute names to their values.
    std::unordered_map<Name_t, std::string, StringVecHash> fAttrNameVals;
 
+   /// Attribute style classes of these options that will be "summed" in order,
+   /// e.g. {"trigger", "efficiency"} will look attributes up in the `RDrawingAttrHolderBase` base class,
+   /// if not found using the "trigger" style class, and if not found in the "efficiency" style class.
+   /// Implicitly and as final resort, the attributes from the "default" style class will be used.
+   std::vector<std::string> fStyleClasses;
+
 public:
-   virtual ~RDrawingAttrHolderBase();
+   /// RDrawingAttrHolder using only the default style.
+   RDrawingAttrHolder() = default;
+
+   /// RDrawingAttrHolder with an ordered collection of styles taking precedence before the default style.
+   RDrawingAttrHolder(const std::vector<std::string> &styleClasses): fStyleClasses(styleClasses) {}
+
    /// Get an attribute value as string, given its name path.
    std::string &At(const Name_t &attrName) { return fAttrNameVals[attrName]; }
 
@@ -141,7 +190,16 @@ public:
    /// `nullptr` if the attribute does not exist.
    const std::string *AtIf(const Name_t &attrName) const;
 
-   virtual std::string GetAttrFromStyle(const Name_t &attrName) = 0;
+   /// Get the (stringified) value of the names attribute from the Style.
+   /// Return the empty string if no such value exists - which means that the attribute
+   /// name is unknown even for the (implicit) default style!
+   std::string GetAttrFromStyle(const Name_t &attrName);
+
+   /// Get the attribute style classes of these options.
+   const std::vector<std::string> &GetStyleClasses() const { return fStyleClasses; }
+
+   /// Set the attribute style classes of these options.
+   void SetStyleClasses(const std::vector<std::string> &styles) { fStyleClasses = styles; }
 };
 
 } // namespace Experimental

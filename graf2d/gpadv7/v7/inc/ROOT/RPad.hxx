@@ -185,21 +185,37 @@ public:
       Drawing options for a RPad
    */
 
-   class DrawingOpts: public RDrawingOptsBase {
+   class DrawingOpts: public RDrawingOptsBase, public RDrawingAttrBase {
    public:
       DrawingOpts() = default;
-      RAttrBox box{"box", this};
+
+      DrawingOpts(const RPadPos &pos, const RPadExtent &size):
+         DrawingOpts()
+      {
+         SetPos(pos);
+         SetSize(size);
+      }
+
+      RAttrBox Border() { return {AsOption, "border", *this}; }
+      
+      /// The position (offset) of the pad.
+      void SetPos(const RPadPos &pos) { Set("pos", pos); }
+      RPadPos GetPos() const { return Get<RPadPos>("pos"); }
+
+      /// The size of the pad.
+      void SetSize(const RPadExtent &size) { Set("size", size); }
+      RPadExtent GetSize() const { return Get<RPadExtent>("size"); }
    };
 
 private:
    /// Pad containing this pad as a sub-pad.
    RPadBase *fParent = nullptr; /// The parent pad, if this pad has one.
 
-   /// Drawing options, containing the size (in parent cooredinates!)
+   /// Drawing options, containing the size (in parent coordinates!)
    DrawingOpts fOpts;
 
    /// Size of the pad in the parent's (!) coordinate system.
-   RPadExtent fSize = fOpts.box.GetSize().first; // {640_px, 400_px};
+   RPadExtent fSize = fOpts.GetSize(); // {640_px, 400_px};
 
 public:
    friend std::unique_ptr<RPadDrawable> GetDrawable(std::unique_ptr<RPad> &&pad);
@@ -264,7 +280,7 @@ private:
 
 public:
    /// Move a sub-pad into this (i.e. parent's) list of drawables.
-   RPadDrawable(std::shared_ptr<RPad> pPad, const RPad::DrawingOpts& opts = {});
+   RPadDrawable(const std::shared_ptr<RPad> &pPad, const RPad::DrawingOpts& opts = {});
 
    /// Paint primitives from the pad.
    void Paint(Internal::RPadPainter &) final;

@@ -46,7 +46,7 @@ TEST(DrawOptTest, OneD)
    auto h = std::make_shared<RH1D>(xaxis);
    RCanvas canv;
    auto optsPtr = canv.Draw(h);
-   optsPtr->SetLineColor(RColor::kRed);
-   RColor shouldBeRed = (RColor)optsPtr->GetLineColor();
+   optsPtr->Line().SetColor(RColor::kRed);
+   RColor shouldBeRed = optsPtr->Line().GetColor();
    EXPECT_EQ(shouldBeRed, RColor::kRed);
 }

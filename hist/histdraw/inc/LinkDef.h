@@ -36,12 +36,5 @@
 #pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<1> >+;
 #pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<2>>+;
 #pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<3>>+;
-#pragma link C++ class ROOT::Experimental::RStringEnumAttr<ROOT::Experimental::RHistDrawingOpts<1>::EStyle>+;
-#pragma link C++ class ROOT::Experimental::RStringEnumAttr<ROOT::Experimental::RHistDrawingOpts<2>::EStyle>+;
-#pragma link C++ class ROOT::Experimental::RStringEnumAttr<ROOT::Experimental::RHistDrawingOpts<3>::EStyle>+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttr<ROOT::Experimental::RStringEnumAttr<ROOT::Experimental::RHistDrawingOpts<1>::EStyle>>+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttr<ROOT::Experimental::RStringEnumAttr<ROOT::Experimental::RHistDrawingOpts<2>::EStyle>>+;
-#pragma link C++ class ROOT::Experimental::RDrawingAttr<ROOT::Experimental::RStringEnumAttr<ROOT::Experimental::RHistDrawingOpts<3>::EStyle>>+;
-
 
 #endif

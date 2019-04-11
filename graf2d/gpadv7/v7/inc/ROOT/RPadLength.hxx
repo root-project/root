@@ -21,6 +21,8 @@
 namespace ROOT {
 namespace Experimental {
 
+class RDrawingAttrBase;
+
 /** \class ROOT::Experimental::RPadLength
   A coordinate in a `RPad`.
   */
@@ -161,7 +163,7 @@ public:
       return *this;
    }
 
-   void SetFromAttrString(const std::string &name, const std::string &attrStrVal);
+   void SetFromAttrString(const std::string &val, const RDrawingAttrBase& attr, const std::string &name);
 };
 
 /// User-defined literal for `RPadLength::Normal`
@@ -212,7 +214,8 @@ inline RPadLength::User operator"" _user(unsigned long long int val)
    return RPadLength::User{(double)val};
 }
 
-std::string PadLengthToString(const RPadLength& len);
+RPadLength FromAttributeString(const std::string &val, const RDrawingAttrBase& attr, const std::string &name, RPadLength*);
+std::string ToAttributeString(const RPadLength &len);
 
 } // namespace Experimental
 } // namespace ROOT

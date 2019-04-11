@@ -90,9 +90,10 @@ struct RPadPos: Internal::RPadHorizVert {
 };
 
 /// Initialize a RPadPos from a style string.
-RPadPos PosFromString(const std::string &name, const std::string &attrStrVal);
+class RDrawingAttrBase;
+RPadPos FromAttributeString(const std::string &val, const RDrawingAttrBase& attr, const std::string &name, RPadPos*);
 /// Convert a RPadPos to a std::string, suitable for PosFromString().
-std::string PosToString(const RPadPos &pos);
+std::string ToAttributeString(const RPadPos &pos);
 
 } // namespace Experimental
 } // namespace ROOT
