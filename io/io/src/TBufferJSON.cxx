@@ -1297,7 +1297,10 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
                   pairtype.Replace(0, 4, "pair<");
                else
                   pairtype = "TPair";
-               pairtype = TString("\"") + pairtype + TString("\"");
+               if (fTypeNameTag.Length() == 0)
+                  pairtype = "1";
+               else
+                  pairtype = TString("\"") + pairtype + TString("\"");
                for (Int_t k = 1; k < (int) stack->fValues.size() - 1; k += 2) {
                   fValue.Append(separ);
                   separ = fArraySepar.Data();
