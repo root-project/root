@@ -1287,7 +1287,11 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
                // Create entries like { '$pair': 'typename' , 'first' : key, 'second' : value }
 
                TString pairtype = cl->GetName();
-               if (pairtype.Index("multimap<") == 0)
+               if (pairtype.Index("unordered_map<") == 0)
+                  pairtype.Replace(0, 14, "pair<");
+               else if (pairtype.Index("unordered_multimap<") == 0)
+                  pairtype.Replace(0, 19, "pair<");
+               else if (pairtype.Index("multimap<") == 0)
                   pairtype.Replace(0, 9, "pair<");
                else if (pairtype.Index("map<") == 0)
                   pairtype.Replace(0, 4, "pair<");
