@@ -12,6 +12,9 @@ sap.ui.define([
 
          //function called from GuiPanelController
       onPanelInit : function() {
+         
+         JSROOT.loadScript('rootui5sys/fitpanel/style/style.css');
+         
          var id = this.getView().getId();
          this.inputId = "";
          var opText = this.getView().byId("OperationText");
