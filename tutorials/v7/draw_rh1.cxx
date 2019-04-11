@@ -45,8 +45,8 @@ void draw_rh1() {
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
-   canvas->Draw(pHist)->SetLineColor(RColor::kRed);
-   canvas->Draw(pHist2)->SetLineColor(RColor::kBlue);
+   canvas->Draw(pHist)->Line().SetColor(RColor::kRed);
+   canvas->Draw(pHist2)->Line().SetColor(RColor::kBlue);
 
    canvas->Show();
 }
