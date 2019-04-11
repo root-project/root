@@ -178,9 +178,11 @@
 
       this.createAttFill( { pattern: 0, color: 0 });
 
-      var lcol = pp.GetNewColor(opts.fLineColor);
+      var lcol = pp.GetNewColor(opts, "contentLine.color");
+      var lwidth = pp.GetNewOpt(opts, "contentLine.width");
+      console.log("new color lcol", lcol, lwidth);
 
-      this.createAttLine({ color: lcol || 'black' });
+      this.createAttLine({ color: lcol || 'black', width : parseInt(lwidth) || 1 });
    }
 
    THistPainter.prototype.UpdateObject = function(obj, opt) {
