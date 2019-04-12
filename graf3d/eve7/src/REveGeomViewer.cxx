@@ -38,6 +38,8 @@ ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr)
    if (mgr) SetGeometry(mgr);
 
    fDesc.SetPreferredOffline(gEnv->GetValue("WebGui.PreferredOffline",0) != 0);
+   auto comp = gEnv->GetValue("WebGui.JsonComp", -1);
+   if (comp >= 0) fDesc.SetJsonComp(comp);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -201,7 +203,7 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       if (msg.compare("OFF") != 0) {
          auto stack = fDesc.MakeStackByPath(msg);
          if (stack.size() > 0)
-            json = TBufferJSON::ToJSON(&stack, 103);
+            json = TBufferJSON::ToJSON(&stack, fDesc.GetJsonComp());
       }
 
       if (json.empty()) json = "OFF";
