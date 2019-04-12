@@ -29,12 +29,14 @@ TEST(OptsTest, AttribVsHolder) {
       EXPECT_EQ(opts.GetHolder(), opts.GetHolderPtr().lock());
       EXPECT_EQ(opts.GetHolder(), opts.Text().GetHolderPtr().lock());
 
+/* TODO: assignment to stand-alone attrs
       differentLifetimeText = opts.Text();
       differentLifetimeBox = opts;
 
       // The weak holder pointer must point to opts.
       EXPECT_TRUE(differentLifetimeText.GetHolderPtr().lock());
       EXPECT_TRUE(differentLifetimeBox.GetHolderPtr().lock());
+*/
 
    }
    // The weak holder pointer must point to opts.
@@ -74,6 +76,7 @@ TEST(OptsTest, AttribVals) {
    Opts opts;
 
    opts.Text().SetColor(RColor::kBlue);
+   auto bottom = opts.Bottom();
    opts.Bottom().SetWidth(42.);
 
    ASSERT_TRUE(opts.GetHolder());
@@ -83,6 +86,7 @@ TEST(OptsTest, AttribVals) {
       // Value was set on this attr, not coming from style:
       EXPECT_FALSE(opts.Bottom().IsFromStyle("width"));
       EXPECT_FLOAT_EQ(opts.Bottom().GetWidth(), 42.f);
+      EXPECT_FLOAT_EQ(bottom.GetWidth(), 42.f);
    }
 
    {
@@ -96,20 +100,20 @@ TEST(OptsTest, AttribVals) {
 TEST(OptsTest, NullAttribCompare) {
    RAttrLine al1;
    RAttrLine al2;
-   EXPECT_TRUE(al1 == al2);
-   EXPECT_TRUE(al2 == al1);
+   EXPECT_EQ(al1, al2);
+   EXPECT_EQ(al2, al1);
 }
 
 TEST(OptsTest, AttribEqual) {
    Opts opts;
    auto al1 = opts.Left();
    auto al2 = opts.Left();
-   EXPECT_TRUE(al1 == al2);
-   EXPECT_TRUE(al2 == al1);
+   EXPECT_EQ(al1, al2);
+   EXPECT_EQ(al2, al1);
 
    al1.SetColor(RColor::kRed);
-   EXPECT_TRUE(al1 == al2);
-   EXPECT_TRUE(al2 == al1);
+   EXPECT_EQ(al1, al2);
+   EXPECT_EQ(al2, al1);
 }
 
 TEST(OptsTest, AttribDiffer) {
@@ -121,18 +125,18 @@ TEST(OptsTest, AttribDiffer) {
    auto al3 = opts3.Left();
 
    al1.SetWidth(7.);
-   EXPECT_FALSE(al1 == al2);
-   EXPECT_FALSE(al2 == al1);
-   EXPECT_FALSE(al1 == al3);
-   EXPECT_TRUE(al2 == al3);
-   EXPECT_TRUE(al3 == al2);
+   EXPECT_NE(al1, al2);
+   EXPECT_NE(al2, al1);
+   EXPECT_NE(al1, al3);
+   EXPECT_EQ(al2, al3);
+   EXPECT_EQ(al3, al2);
 
    al2.SetColor(RColor::kRed);
-   EXPECT_FALSE(al1 == al2);
-   EXPECT_FALSE(al2 == al1);
-   EXPECT_FALSE(al1 == al3);
-   EXPECT_FALSE(al2 == al3);
-   EXPECT_FALSE(al3 == al2);
+   EXPECT_NE(al1, al2);
+   EXPECT_NE(al2, al1);
+   EXPECT_NE(al1, al3);
+   EXPECT_NE(al2, al3);
+   EXPECT_NE(al3, al2);
 }
 
 
@@ -143,13 +147,30 @@ TEST(OptsTest, AttribAssign) {
    auto attrBox1 = opts1.Border();
    auto attrBox2 = opts2.Border();
 
-   EXPECT_TRUE(attrBox2 == attrBox1);
-   EXPECT_TRUE(attrBox1 == attrBox2);
+   EXPECT_EQ(attrBox2, attrBox1);
+   EXPECT_EQ(attrBox1, attrBox2);
 
    attrBox1.SetWidth(42.);
-   EXPECT_FALSE(attrBox2 == attrBox1);
+   EXPECT_NE(attrBox2, attrBox1);
 
    attrBox2 = attrBox1;
-   EXPECT_TRUE(attrBox2 == attrBox1);
-   EXPECT_TRUE(attrBox1 == attrBox2);
+   EXPECT_EQ(attrBox2, attrBox1);
+   EXPECT_EQ(attrBox1, attrBox2);
+
+   // But make sure that the attributes still use their options!
+   EXPECT_EQ(opts1.Border(), attrBox1);
+   EXPECT_EQ(opts2.Border(), attrBox2);
+
+   EXPECT_FLOAT_EQ(attrBox1.GetWidth(), 42.);
+   EXPECT_FLOAT_EQ(attrBox2.GetWidth(), 42.);
+   EXPECT_FLOAT_EQ(opts1.Border().GetWidth(), 42.);
+   EXPECT_FLOAT_EQ(opts2.Border().GetWidth(), 42.);
+
+   // Are the two attributes disconnected?
+   attrBox2.SetWidth(3.);
+   EXPECT_NE(opts1.Border(), opts2.Border());
+   EXPECT_FLOAT_EQ(attrBox1.GetWidth(), 42.);
+   EXPECT_FLOAT_EQ(attrBox2.GetWidth(), 3.);
+   EXPECT_FLOAT_EQ(opts1.Border().GetWidth(), 42.);
+   EXPECT_FLOAT_EQ(opts2.Border().GetWidth(), 3.);
 }
