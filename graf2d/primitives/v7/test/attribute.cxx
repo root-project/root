@@ -56,17 +56,17 @@ TEST(OptsTest, AttribStrings) {
    EXPECT_FALSE(holder->AtIf(Path{"DOES_NOT_EXIST"}));
 
    {
-      ASSERT_TRUE(holder->AtIf(Path{"box.bottom.width"}));
+      EXPECT_TRUE(holder->AtIf(Path{"box.bottom.width"}));
       auto pVal = holder->AtIf(Path{"box.bottom.width"});
       float val = std::stof(*pVal);
-      ASSERT_FLOAT_EQ(val, 42.f);
+      EXPECT_FLOAT_EQ(val, 42.f);
    }
 
    {
       ASSERT_TRUE(holder->AtIf(Path{"text.size"}));
       auto pVal = holder->AtIf(Path{"text.size"});
       float val = std::stof(*pVal);
-      ASSERT_FLOAT_EQ(val, 1.7f);
+      EXPECT_FLOAT_EQ(val, 1.7f);
    }
 }
 
@@ -81,14 +81,75 @@ TEST(OptsTest, AttribVals) {
 
    {
       // Value was set on this attr, not coming from style:
-      ASSERT_FALSE(opts.Bottom().IsFromStyle("width"));
-      ASSERT_FLOAT_EQ(opts.Bottom().GetWidth(), 42.f);
+      EXPECT_FALSE(opts.Bottom().IsFromStyle("width"));
+      EXPECT_FLOAT_EQ(opts.Bottom().GetWidth(), 42.f);
    }
 
    {
       // Value was set on this attr, not coming from style:
-      ASSERT_FALSE(opts.Text().IsFromStyle("color"));
-      ASSERT_EQ(opts.Text().GetColor(), RColor::kBlue);
+      EXPECT_FALSE(opts.Text().IsFromStyle("color"));
+      EXPECT_EQ(opts.Text().GetColor(), RColor::kBlue);
    }
 
+}
+
+TEST(OptsTest, NullAttribCompare) {
+   RAttrLine al1;
+   RAttrLine al2;
+   EXPECT_TRUE(al1 == al2);
+   EXPECT_TRUE(al2 == al1);
+}
+
+TEST(OptsTest, AttribEqual) {
+   Opts opts;
+   auto al1 = opts.Left();
+   auto al2 = opts.Left();
+   EXPECT_TRUE(al1 == al2);
+   EXPECT_TRUE(al2 == al1);
+
+   al1.SetColor(RColor::kRed);
+   EXPECT_TRUE(al1 == al2);
+   EXPECT_TRUE(al2 == al1);
+}
+
+TEST(OptsTest, AttribDiffer) {
+   Opts opts1;
+   Opts opts2;
+   Opts opts3;
+   auto al1 = opts1.Left();
+   auto al2 = opts2.Left();
+   auto al3 = opts3.Left();
+
+   al1.SetWidth(7.);
+   EXPECT_FALSE(al1 == al2);
+   EXPECT_FALSE(al2 == al1);
+   EXPECT_FALSE(al1 == al3);
+   EXPECT_TRUE(al2 == al3);
+   EXPECT_TRUE(al3 == al2);
+
+   al2.SetColor(RColor::kRed);
+   EXPECT_FALSE(al1 == al2);
+   EXPECT_FALSE(al2 == al1);
+   EXPECT_FALSE(al1 == al3);
+   EXPECT_FALSE(al2 == al3);
+   EXPECT_FALSE(al3 == al2);
+}
+
+
+TEST(OptsTest, AttribAssign) {
+   Opts opts1;
+   Opts opts2;
+
+   auto attrBox1 = opts1.Border();
+   auto attrBox2 = opts2.Border();
+
+   EXPECT_TRUE(attrBox2 == attrBox1);
+   EXPECT_TRUE(attrBox1 == attrBox2);
+
+   attrBox1.SetWidth(42.);
+   EXPECT_FALSE(attrBox2 == attrBox1);
+
+   attrBox2 = attrBox1;
+   EXPECT_TRUE(attrBox2 == attrBox1);
+   EXPECT_TRUE(attrBox1 == attrBox2);
 }
