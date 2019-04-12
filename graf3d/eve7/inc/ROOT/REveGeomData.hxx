@@ -186,6 +186,8 @@ class REveGeomDescription {
    int fNodesLimit{0};              ///<! maximal number of nodes to be selected for drawing
    bool fPreferredOffline{false};   ///<! indicates that full description should be provided to client
 
+   int fJsonComp{103};              ///<! default JSON compression - all class info can be removed
+
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 
    void ScanNode(TGeoNode *node, std::vector<int> &numbers, int offset);
@@ -271,6 +273,9 @@ public:
 
    void SetNSegments(int n = 0) { fNSegments = n; }
    int GetNSegments() const { return fNSegments; }
+
+   void SetJsonComp(int comp = 103) { fJsonComp = comp; }
+   int GetJsonComp() const  { return fJsonComp; }
 
    void SetDrawOptions(const std::string &opt = "") { fDrawOptions = opt; }
 
