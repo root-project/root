@@ -550,6 +550,63 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       return true; // means index is different
    }
 
+   StraightLineSetControl.prototype.DrawForSelection = function(sec_idcs, dest)
+   {
+      console.log("traightLineSetControl.prototype.DrawForSelection");
+      var m     = this.mesh;
+      var index = sec_idcs;
+
+      var geom = new THREE.BufferGeometry();
+
+      geom.addAttribute( 'position', m.children[0].geometry.getAttribute("position") );
+      if (index.length == 1)
+      {
+         geom.setDrawRange(index[0]*2, 2);
+      } else if (index.length > 1)
+      {
+         var idcs = [];
+         for (var i = 0; i < index.length; ++i)
+            idcs.push(index[i]*2, index[i]*2+1);
+         geom.setIndex( idcs );
+      }
+
+      var color = JSROOT.Painter.root_colors[m.eve_el.fMainColor];
+      var lineMaterial = new THREE.LineBasicMaterial({ color: color, linewidth: 4 });
+      var line         = new THREE.LineSegments(geom, lineMaterial);
+      dest.add(line);
+
+      var el = m.eve_el, mindx = []
+
+      for (var i = 0; i < index.length; ++i)
+      {
+         if (index[i] < el.fLinePlexSize)
+         {
+            var lineid = m.eve_indx[index[i]];
+
+            for (var k = 0; k < el.fMarkerPlexSize; ++k )
+            {
+               if (m.eve_indx[ k + el.fLinePlexSize] == lineid) mindx.push(k);
+            }
+         }
+      }
+
+      if (mindx.length > 0)
+      {
+         var pnts = new JSROOT.Painter.PointsCreator(mindx.length, true, 5);
+
+         var arr = m.children[1].geometry.getAttribute("position").array;
+
+         for (var i = 0; i < mindx.length; ++i)
+         {
+            var p = mindx[i]*3;
+            pnts.AddPoint(arr[p], arr[p+1], arr[p+2] );
+         }
+         var mark = pnts.CreatePoints(color);
+         dest.add(mark);
+      }
+
+   }
+
    StraightLineSetControl.prototype.drawSpecial = function(color, index, prefix)
    {
       if ( ! prefix) prefix = "s";
