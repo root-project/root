@@ -28,6 +28,9 @@ sap.ui.define([
 
       // register ourself for scene events
       this.mgr.RegisterSceneReceiver(scene.fSceneId, this);
+
+      // AMT temporary solution ... resolve with callSceneReceivers in EveManager.js
+      scene.eve_scene = this;
    }
 
    EveScene.prototype.hasRenderData = function(elem)
@@ -454,31 +457,44 @@ sap.ui.define([
       return did_change;
    }
 
-   EveScene.prototype.SelectElement(selection_obj, element_id, sec_idcs) = function()
+   EveScene.prototype.SelectElement = function(selection_obj, element_id, sec_idcs)
    {
       var obj3d = this.getObj3D( element_id );
+
+      if ( ! (selection_obj.fElementId in this.viewer.outlinePass.id2obj_map))
+	 this.viewer.outlinePass.id2obj_map[selection_obj.fElementId] = [];
+
       var dest  = this.viewer.outlinePass.id2obj_map[selection_obj.fElementId];
 
       // XXXX where do i pass in color ???
 
-      if( ! sec_idcs)
+      if(sec_idcs === undefined || sec_idcs.length == 0)
       {
          dest[element_id] = obj3d;
       }
       else
       {
-         var dest_list = dest[element_id] = [];
-         var ctrl      = obj3d.get_ctrl();
-
-         ctrl->DrawForSelection(sec_idcs, dest_list);
+         var ctrl = obj3d.get_ctrl();
+	 // AMT todo check for memory leaks
+	 var x = new THREE.Object3D();
+         ctrl.DrawForSelection(sec_idcs, x);
+	 console.log("draw for selection exit ", x);
+	 // AMT for debugging purposes take only first child
+	 var fe  = x.children[0];
+         dest[element_id] = fe;
       }
+
+      this.viewer.render();
    }
 
-   EveScene.prototype.UnselectElement(selection_obj, element_id) = function()
+   EveScene.prototype.UnselectElement = function(selection_obj, element_id)
    {
-      var dest = this.viewer.outlinePass.id2obj_map[selection_obj.fElementId];
+      if (selection_obj.fElementId in this.viewer.outlinePass.id2obj_map)
+      {
+	 delete this.viewer.outlinePass.id2obj_map[selection_obj.fElementId][element_id];
 
-      delete dest[element_id];
+	 this.viewer.render();
+      }
    }
 
    EveScene.prototype.elementRemoved = function()

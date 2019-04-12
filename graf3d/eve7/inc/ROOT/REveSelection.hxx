@@ -48,7 +48,8 @@ public:
          f_primary (el),
          f_is_sec  (false)
       {
-         el->FillImpliedSelectedSet(f_implied);
+         // Apparently done in DoElementSelect
+         // el->FillImpliedSelectedSet(f_implied);
       }
 
       Record(REveElement *el, const std::set<int>& secondary_idcs) :
@@ -56,7 +57,8 @@ public:
          f_sec_idcs (secondary_idcs),
          f_is_sec   (true)
       {
-         el->FillImpliedSelectedSet(f_implied);
+         // Apparently done in DoElementSelect
+         // el->FillImpliedSelectedSet(f_implied);
       }
 
       bool is_secondary() const { return f_is_sec; }

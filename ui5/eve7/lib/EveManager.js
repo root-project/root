@@ -40,7 +40,11 @@ sap.ui.define([], function() {
    /** Returns element with given ID */
    EveManager.prototype.GetElement = function(id)
    {
-      return this.map[id];
+      // AMT todo ... I think this check should be optional
+      if (id in this.map)
+	 return this.map[id];
+      else
+	 return undefined;
    }
 
    EveManager.prototype.addSceneHandler = function(handler)
@@ -402,9 +406,12 @@ sap.ui.define([], function() {
 
             if (em.changeBit & this.EChangeBits.kCBObjProps) {
                delete obj.render_data;
+	       // AMT note ... the REveSelection changes fall here
+	       // I think this should be a separate change bit
+               delete obj.sel_list;
                jQuery.extend(obj, em);
 
-               this.ParseUpdateTriggersAndProcessPostStream(em);
+               this.ParseUpdateTriggersAndProcessPostStream(obj);
 
                tag = "replaceElement";
             }
@@ -575,12 +582,13 @@ sap.ui.define([], function() {
          if (el.fName == "Global Selection") this.global_selection_id = el.fElementId;
          if (el.fName == "Global Highlight") this.global_highlight_id = el.fElementId;
 
-         el._selection_set = new Set;
+         // el._selection_set = new Set;
 
          el._is_registered = true;
+	 el.prev_sel_list  = [];
       }
 
-      console.log("And now process the bloody selection.")
+      console.log("And now process the bloody selection.", el.prev_sel_list, el.sel_list)
 
       // Outline of optimized selection update (to avoid recreating selected
       // representations).
@@ -608,27 +616,28 @@ sap.ui.define([], function() {
 
       // Dummy update --- unselect all, select all.
 
-      for (srec in el['prev_sel_list'])
+      for (var srec of el.prev_sel_list)
       {
-         this->UnselectElement(srec['primary'], srec['sec_idcs']);
+         this.UnselectElement(el, srec.primary);
 
-         for (sel in srec['primary'], srec['implied'])
+         for (var sel of srec.implied)
          {
-            this->UnselectElement(sel, srec['sec_idcs']);
+            this.UnselectElement(el, sel);
          }
       }
 
-      for (srec in el['sel_list'])
+      for (var srec of el.sel_list)
       {
-         this->SelectElement(srec['primary'], srec['sec_idcs'], el->['fMainColor']);
+         this.SelectElement(el, srec.primary, srec.sec_idcs);
 
-         for (sel in srec['primary'], srec['implied'])
+         for (sel of srec.implied)
          {
-            this->SelectElement(sel, srec['sec_idcs'], el->['fMainColor']);
+            this.SelectElement(el, sel, srec.sec_idcs);
          }
       }
 
-      el['prev_sel_list'] = el['sel_list'];
+      el.prev_sel_list = el.sel_list;
+      el.sel_list      = [];
 
       // XXXX Oh, blimy, on first arrival, if selection is set, the selected
       // elements have not yet been received and so this will fail. Also true
@@ -639,19 +648,28 @@ sap.ui.define([], function() {
    EveManager.prototype.SelectElement = function(selection_obj, element_id, sec_idcs)
    {
       var element = this.GetElement(element_id);
+      if ( ! element) return;
       var scene   = this.GetElement(element.fSceneId);
 
-      scene->SelectElement(selection_obj, element_id, sec_idcs);
+      // XXXXX call on all receivers, assuming they are all actually EveScenes.
+      // Also, what is the $ there?
+      // And we should really really standardize member names, with _, capitalizations etc.
+      // And also for members coming from REve side.
+      scene.$receivers[0].SelectElement(selection_obj, element_id, sec_idcs);
+
+      console.log("EveManager.SelectElement", element, scene.$receivers[0].viewer.outlinePass.id2obj_map);
    }
 
    EveManager.prototype.UnselectElement = function(selection_obj, element_id)
    {
       var element = this.GetElement(element_id);
+      if ( ! element) return;
       var scene   = this.GetElement(element.fSceneId);
 
-      scene->UnselectElement(selection_obj, element_id, sec_idcs);
+      scene.$receivers[0].UnselectElement(selection_obj, element_id);
 
-   }
+      console.log("EveManager.UnselectElement", element, scene.$receivers[0].viewer.outlinePass.id2obj_map);
+}
 
    //==============================================================================
    // END protoype functions
