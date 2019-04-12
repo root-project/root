@@ -468,21 +468,30 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
       {
          if (rec)
          {
-            if (secondary || rec->is_secondary()) // ??? should actually be && ???
+            if (secondary)
             {
+               // Could check rec->is_secondary() and compare indices.
                // if sets are identical, issue SelectionRepeated()
                // else modify record for the new one, issue Repeated
+
+               rec->f_is_sec   = true;
+               rec->f_sec_idcs = secondary_idcs;
             }
             else
             {
-               // clear selection
-               // ??? should keep the newly clicked?
+               RemoveNiece(el);
             }
          }
          else
          {
             if (HasNieces()) RemoveNieces();
             AddNiece(el);
+            if (secondary)
+            {
+               rec = find_record(el);
+               rec->f_is_sec   = true;
+               rec->f_sec_idcs = secondary_idcs;
+            }
          }
       }
       else // Single selection with zero element --> clear selection.
