@@ -141,6 +141,11 @@ protected:
    /// Construct a default, unnamed, unconnected attribute.
    RDrawingAttrBase() = default;
 
+   /// Return `true` if the attribute's value comes from the
+   /// styles, i.e. through `RDrawingAttrHolder::GetAttrFromStyle()`, instead
+   /// if from our `RDrawingAttrHolder` (i.e. explicitly set through `Set()`).
+   bool IsFromStyle(const Path &path) const;
+
 public:
    /// Construct a named attribute that does not have a parent; e.g.
    /// because it's the top-most attribute in a drawing option object.
@@ -189,6 +194,19 @@ public:
 
    /// Actual attribute holder.
    const std::weak_ptr<RDrawingAttrHolder> &GetHolderPtr() const { return fHolder; }
+
+   /// Equality compare to other RDrawingAttrBase.
+   /// They are equal if
+   /// - the same set of attributes are custom set (versus are determined from the style), and
+   /// - the values of all the custom set ones compare equal.
+   /// The set of styles to be taken into account is not compared.
+   bool operator==(const RDrawingAttrBase &other) const;
+
+   /// Compare unequal to other RDrawingAttrBase. Returns the negated `operator==`.
+   bool operator!=(const RDrawingAttrBase &other) const
+   {
+      return !(*this == other);
+   }
 };
 
 
@@ -199,8 +217,9 @@ class RDrawingAttrHolder {
 public:
    using Name_t = RDrawingAttrBase::Path;
 private:
+   using Map_t = std::unordered_map<std::string, std::string>;
    /// Map attribute names to their values.
-   std::unordered_map<std::string, std::string> fAttrNameVals;
+   Map_t fAttrNameVals;
 
    /// Attribute style classes of these options that will be "summed" in order,
    /// e.g. {"trigger", "efficiency"} will look attributes up in the `RDrawingAttrHolderBase` base class,
@@ -226,6 +245,11 @@ public:
    /// Return the empty string if no such value exists - which means that the attribute
    /// name is unknown even for the (implicit) default style!
    std::string GetAttrFromStyle(const Name_t &attrName);
+
+   /// Equality compare the attributes starting with `name` to those of `other` starting wityh `otherName`.
+   /// Takes all sub-attributes (i.e. those starting with that name) into account.
+   /// They compare equal if their set of (sub-)attributes and their respective values are equal.
+   bool Equal(const RDrawingAttrHolder &other, const Name_t &thisName, const Name_t &otherName);
 
    /// Get the attribute style classes of these options.
    const std::vector<std::string> &GetStyleClasses() const { return fStyleClasses; }
