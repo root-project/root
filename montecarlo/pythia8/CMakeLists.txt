@@ -17,7 +17,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EGPythia8
     EG
     Graf
     Physics
-    VMC
 )
 
 ROOT_ADD_CXX_FLAG(_EGPythia8_FLAGS -Wno-delete-non-virtual-dtor)

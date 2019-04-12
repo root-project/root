@@ -9,6 +9,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EG
     TDatabasePDG.h
     TDecayChannel.h
     TGenerator.h
+    TPDGCode.h
     TParticleClassPDG.h
     TParticle.h
     TParticlePDG.h

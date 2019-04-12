@@ -7,7 +7,6 @@
 
 //#pragma link C++ global gMC;
 
-#pragma link C++ enum PDG_t;
 #pragma link C++ enum TMCProcess;
 #pragma link C++ enum TMCParticleType;
 #pragma link C++ enum EMCOpSurfaceModel;

@@ -12,7 +12,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(VMC
     TMCProcess.h
     TMCtls.h
     TMCVerbose.h
-    TPDGCode.h
     TVirtualMCApplication.h
     TVirtualMCGeometry.h
     TVirtualMC.h

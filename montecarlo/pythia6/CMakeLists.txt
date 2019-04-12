@@ -34,5 +34,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EGPythia6
     EG
     Graf
     Physics
-    VMC
 )
