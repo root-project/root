@@ -1,55 +1,53 @@
-# The Virtual Monte Carlo (VMC) Package
+# Virtual Monte Carlo
 
-## Overview
+The Virtual Monte Carlo (VMC) allows to run different simulation Monte Carlo without changing the user code and therefore the input and output format as well as the geometry and detector response definition.
 
-The VMC package provides an abstract interface for Monte Carlo transport engines. Interfaces are implemented for
-* [GEANT3](https://github.com/vmc-project/geant3)
-* [GEANT4](https://github.com/vmc-project/geant4_vmc)
+The core of the VMC is the category of classes [**vmc**](https://root.cern.ch/doc/master/group__vmc.html). It provides a set of interfaces which completely decouple the dependencies between the user code and the concrete Monte Carlo:
 
-each deriving from `TVirtualMC` implementing all necessary methods.
+- [TVirtualMC](https://root.cern.ch/doc/master/classTVirtualMC.html): Interface to the concrete Monte Carlo program
+- [TVirtualMCApplication](https://root.cern.ch/doc/master/classTVirtualMCApplication.html): Interface to the user's Monte Carlo application
+- [TVirtualMCStack](https://root.cern.ch/doc/master/classTVirtualMCStack.html): Interface to the particle stack
+- [TVirtualMCDecayer](https://root.cern.ch/doc/master/classTVirtualMCDecayer.html): Interface to the external decayer
+- [TVirtualMCSensitiveDetector](https://root.cern.ch/doc/master/classTVirtualMCSensitiveDetector.html): Interface to the user's sensitive detector
 
-Before a user can instantiate an engine, an object deriving from `TVirtualMCApplication` needs to be present which has to be implemented by the user. It contains necessary hooks called from the `TVirtualMC`s depending on their internal state. At the same time it provides the bridge between the user code and VMC. For instance, the user code can contain the geometry construction routines somewhere which should be called from the implemented `UserApplication::ConstructGeometry()`.
+The implementation of the TVirtualMC interface is provided for two Monte Carlo transport codes, GEANT3 and [Geant4](http://geant4.web.cern.ch/geant4/), with the VMC packages listed below. The implementation for the third Monte Carlo transport code, FLUKA, has been discontinued by the FLUKA team in 2010.
 
-Further general information on the VMC project can be found [here](https://root.cern.ch/vmc)
+The other three interfaces are implemented in the user application.The user has to implement two mandatory classes: the **MC application** (derived from TVirtualMCApplication) and the **MC stack** (derived from TVirtualMCStack), optionally an external decayer (derived from TVirtualMCDecayer) can be introduced. The user VMC application is independent from concrete transport codes (GEANT3, Geant4, FLUKA). The transport code which will be used for simulation is selected at run time - when processing a ROOT macro where the concrete Monte Carlo is instantiated.
 
-## Running multiple different engines
+The relationships between the interfaces and their implementations are illustrated in the class diagrams: User MC application , Virtual MC , demonstarting the decoupling between the user code and the concrete transport code.
 
-The simulation of an event can be shared among multiple different engines deriving from `TVirtualMC` which are handled by a singleton `TMCManager` object. In such a scenario the user has to call `TVirtualMCApplication::RequestMCManager()` in the constructor of the user application. A pointer to the manager object is then available via the protected `TVirtualMCApplication::fMCManager` but can also be obtained using the static method `TMCManager *TMCManager::Instance()`.
+## VMC and TGeo
 
-`TMCManager` provides the following interfaces:
+The VMC is fully integrated with the Root geometry package, [TGeo](http://root.cern.ch/root/htmldoc/GEOM_GEOM_Index.html), and users can easily define their VMC application with TGeo geometry and this way of geometry definition is recommended for new users.
 
-* `void SetUserStack(TVirtualMCStack* userStack)` notifies the manager on the user stack such that it will be kept up-to-date during the simulation. Running without having set the user stack is not possible and the `TMCManager` will abort in that case.
-* `void ForwardTrack(Int_t toBeDone, Int_t trackId, Int_t parentId, TParticle* userParticle)`: The user is still the owner of all track objects (aka `TParticle`) being created. Hence, all engine calls to `TVirtualMCStack::PushTrack(...)` are forwarded to the user stack. This can then invoke the `ForwardTrack(..)` method of the manager to pass the pointer to the constructed `TParticle` object. If a particle should be pushed to an engine other than the one currently running the engine's id has to be provided as the last argument.
-* `void TransferTrack(Int_t targetEngineId)`: E.g. during `TVirtualMCApplication::Stepping()` the user might decide that the current track should be transferred to another engine, for instance, if a certain volume is entered. Specifying the ID of the target engine the manager will take care of interrupting the track in the current engine, extracting the kinematics and geometry state and it will push this to the stack of the target engine.
-* `template <typename F> void Apply(F f)` assumes `f` to implement the `()` operator and taking a `TVirtualMC` pointer as an arument. `f` will be then called for all engines.
-* `template <typename F> void Init(F f)` works as `TMCManager::Apply` during the initialization of the engines. It can also be called without an argument such that no additional user routine is included.
-* `void Run(Int_t nEvents)` steers a run for the specified number of events.
-* `void ConnectEnginePointers(TVirtualMC *&mc)` gives the possibility for a user to pass a pointer which will always be set to point to the currently running engine.
-* `TVirtualMC *GetCurrentEngine()` provides the user with the currently running engine.
+It is also possible to define geometry via Geant3-like functions defined in the VMC interface, however this way is kept only for backward compatibility and should not be used by new VMC users.
 
-An example of how the `TMCManager` is utilized in a multi-run can be found in `examples/EME` of the [GEANT4_VMC repository](https://github.com/vmc-project/geant4_vmc).
+## Available VMCs
 
-### Workflow
+### For GEANT3 - geant3
+Geant3 VMC (C++) is provided within a single package together with GEANT3 (Fortran) - geant3 .
 
-**Implementation**
-1. Implement your application as you have done before. Request the `TMCManager` in your constructor if needed via `TVirtualMCApplication::RequestMCManager()`
-2. Implement your user stack as you have done before. At an appropriate stage (e.g. in `UserStack::PushTrack(...)`) you should call `TMCManager::ForwardTrack(...)` to forward the pointers to your newly constructed `TParticle` objects.
-3. Set your stack using `TMCManager::SetUserStack(...)`.
+### For Geant4 - geant4_vmc
+[Geant4 VMC](http://root.cern.ch/drupal/content/geant4-vmc) is provided within a package geant4_vmc , that, in difference from geant3, naturally does not include Geant4 itself and you will need the Geant4 installation to run your VMC application with Geant4 VMC.
 
-**Usage**
-1. Instantiate your application
-2. Instantiate the engines you want to use.
-3. Call `TMCManager::Init(...)`.
-4. Call `TMCManager::Run(...)`
+## Multiple VMCs
 
-**Further comments**
+Since the development version the simulation can be shared among multiple different engines deriving from [TVirtualMC](https://root.cern.ch/doc/master/classTVirtualMC.html) which are handled by a singleton [TMCManager](https://root.cern.ch/doc/master/classTMCManager.html) object.
 
-The geometry is built once centrally via the `TMCManager` calling
+See more detailed description in [the dedicated README](README.multiple.md).
 
-1. `TVirtualMCApplication::ConstructGeometry()`
-2. `TVirtualMCApplication::MisalignGeometry()`
-2. `TVirtualMCApplication::ConstructOpGeometry()`
+## Documentation
 
-so it is expected that these methods do not depend on any engine.
+[https://root.cern.ch/vmc](https://root.cern.ch/vmc)
 
-If multiple engines have been instantiated, never call `TVirtualMC::ProcessRun(...)` or other steering methods on the engine since that would bypass the `TMCManager`
+## Authors
+
+The concept of Virtual MonteCarlo has been developed by the [ALICE Software Project](http://aliceinfo.cern.ch/Offline/).<br>
+Authors: R.Brun<sup>1</sup>, F.Carminati<sup>1</sup>, A. Gheata<sup>1</sup>, I.Hrivnacova<sup>2</sup>, A.Morsch<sup>1</sup>, B.Volkel<sup>1</sup>;<br>
+<sup>1</sup>European Organization for Nuclear Research (CERN), Geneva, Switzerland;<br>
+<sup>2</sup>Institut de Physique Nucléaire dʼOrsay (IPNO), Université Paris-Sud, CNRS-IN2P3, Orsay, France 
+
+Contact: root-vmc@root.cern.ch
+
+VMC pages maintained by: Ivana Hrivnacova <br>
+*Last update: 12/04/2019*
