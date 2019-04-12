@@ -50,12 +50,19 @@ ROOTTEST_ADD_TEST(datagen-hadd-mlz4file34
                      COMMAND ${ROOT_hadd_CMD} -f404 mlz4file3-4.root mfile3.root mfile4.root
                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                      DEPENDS execMergeMulti)
-
-ROOTTEST_ADD_TEST(merged-zlib
-                  PRECMD  ${ROOT_hadd_CMD} -f101 mzlibfile1-4.root mzlibfile1-2.root mzlibfile3-4.root
-                  COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mzlibfile1-4.root\",101,5014,20)"
-                  DEPENDS datagen-hadd-mzlibfile12
-                  DEPENDS datagen-hadd-mzlibfile34)
+if(ZLIB_CF)
+  ROOTTEST_ADD_TEST(merged-zlib
+                    PRECMD  ${ROOT_hadd_CMD} -f101 mzlibfile1-4.root mzlibfile1-2.root mzlibfile3-4.root
+                    COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mzlibfile1-4.root\",101,4804,20)"
+                    DEPENDS datagen-hadd-mzlibfile12
+                    DEPENDS datagen-hadd-mzlibfile34)
+else()
+  ROOTTEST_ADD_TEST(merged-zlib
+                    PRECMD  ${ROOT_hadd_CMD} -f101 mzlibfile1-4.root mzlibfile1-2.root mzlibfile3-4.root
+                    COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mzlibfile1-4.root\",101,5014,20)"
+                    DEPENDS datagen-hadd-mzlibfile12
+                    DEPENDS datagen-hadd-mzlibfile34)
+endif()
 
 ROOTTEST_ADD_TEST(merged-lzma
                   PRECMD ${ROOT_hadd_CMD} -f207 mzfile1-4.root mzfile1-2.root mzfile3-4.root
