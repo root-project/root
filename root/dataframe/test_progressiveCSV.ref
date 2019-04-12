@@ -1,0 +1,8 @@
+Total num lines: 5000
+Total num lines: 5000
+Info in <GetEntryRanges>: Attempted to read chunk of 2000 lines of CSV file into memory, 2000 lines read
+Info in <GetEntryRanges>: Attempted to read chunk of 2000 lines of CSV file into memory, 2000 lines read
+Info in <GetEntryRanges>: Attempted to read chunk of 2000 lines of CSV file into memory, 1000 lines read
+Info in <GetEntryRanges>: Attempted to read chunk of 2000 lines of CSV file into memory, 0 lines read
+Info in <GetEntryRanges>: Attempted to read entire CSV file into memory, 5000 lines read
+Info in <GetEntryRanges>: Attempted to read entire CSV file into memory, 0 lines read
