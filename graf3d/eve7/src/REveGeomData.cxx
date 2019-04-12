@@ -572,7 +572,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
 
       res = "DESCR:";
 
-      res.append(TBufferJSON::ToJSON(&vect,103).Data());
+      res.append(TBufferJSON::ToJSON(&vect,GetJsonComp()).Data());
 
       // example how iterator can be used
       RGeomBrowserIter iter(*this);
@@ -608,7 +608,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
       }
 
       res = "BREPL:";
-      res.append(TBufferJSON::ToJSON(&reply, 103).Data());
+      res.append(TBufferJSON::ToJSON(&reply, GetJsonComp()).Data());
    }
 
    delete request;
@@ -826,7 +826,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
    drawing.binlen = fDrawBinary.size();
 
    fDrawJson = "GDRAW:";
-   fDrawJson.append(TBufferJSON::ToJSON(&drawing, 103).Data());
+   fDrawJson.append(TBufferJSON::ToJSON(&drawing, GetJsonComp()).Data());
 
    return true;
 }
@@ -1013,7 +1013,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    });
 
    hjson = "FESCR:";
-   hjson.append(TBufferJSON::ToJSON(&found_desc, 103).Data());
+   hjson.append(TBufferJSON::ToJSON(&found_desc, GetJsonComp()).Data());
 
    CollectNodes(drawing);
 
@@ -1023,7 +1023,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
    drawing.binlen = binary.size();
 
    json = "FDRAW:";
-   json.append(TBufferJSON::ToJSON(&drawing, 103).Data());
+   json.append(TBufferJSON::ToJSON(&drawing, GetJsonComp()).Data());
 
    return nmatches;
 }
@@ -1171,7 +1171,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProduceModifyReply(int node
          nodes.emplace_back(&desc);
 
    std::string res = "MODIF:";
-   res.append(TBufferJSON::ToJSON(&nodes,103).Data());
+   res.append(TBufferJSON::ToJSON(&nodes, GetJsonComp()).Data());
    return res;
 }
 
@@ -1232,7 +1232,7 @@ bool ROOT::Experimental::REveGeomDescription::ProduceDrawingFor(int nodeid, std:
    drawing.drawopt = fDrawOptions;
    drawing.binlen = binary.size();
 
-   json.append(TBufferJSON::ToJSON(&drawing, 103).Data());
+   json.append(TBufferJSON::ToJSON(&drawing, GetJsonComp()).Data());
 
    return true;
 }
