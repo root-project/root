@@ -14,6 +14,8 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ enum PDG_t;
+
 #pragma link C++ class TParticle-;
 #pragma link C++ class TAttParticle+;
 #pragma link C++ class TPrimary+;
