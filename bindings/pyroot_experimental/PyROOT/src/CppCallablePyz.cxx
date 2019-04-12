@@ -634,48 +634,13 @@ PyObject* NumbaCallableImpl_call(PyObject * /*self*/, PyObject *args)
 
 bool GetKeyword(PyObject* obj, const char* name, bool defaultVal)
 {
-   auto attr = PyObject_GetAttrString(obj, name);
    bool prop = defaultVal;
-   if (attr != NULL) {
+   if (PyObject_HasAttrString(obj, name)) {
+      auto attr = PyObject_GetAttrString(obj, name);
       prop = PyObject_IsTrue(attr);
       Py_DECREF(attr);
    }
    return prop;
-}
-
-
-// Emit a RuntimeWarning using the warnings module
-// Note that this function returns silently if something goes wrong.
-void EmitRuntimeWarning(const std::string message)
-{
-   // Load warnings.warn
-   auto warnings = PyImport_ImportModule("warnings");
-   if (warnings == NULL) return;
-   auto warn = PyObject_GetAttrString(warnings, "warn");
-   Py_DECREF(warnings);
-   if (warn == NULL) return;
-
-   // Load RuntimeWarning class
-#if PY_MAJOR_VERSION < 3
-   auto builtins = PyImport_ImportModule("__builtin__");
-#else
-   auto builtins = PyImport_ImportModule("builtins");
-#endif
-   if (builtins == NULL) {
-      Py_DECREF(warn);
-      return;
-   }
-   auto runtimeWarning = PyObject_GetAttrString(builtins, "RuntimeWarning");
-   Py_DECREF(builtins);
-   if (runtimeWarning == NULL) {
-      Py_DECREF(warn);
-      return;
-   }
-
-   // Call warn(message, RuntimeWarning)
-   PyObject_CallFunction(warn, "(sO)", message.c_str(), runtimeWarning);
-   Py_DECREF(warn);
-   Py_DECREF(runtimeWarning);
 }
 
 
@@ -711,8 +676,10 @@ PyObject* ProxyCallableImpl_call(PyObject * /*self*/, PyObject *args)
       if (pyfunc) {
          return pyfunc;
       } else {
+         PyErr_Clear();
          if (verbose) {
-            EmitRuntimeWarning("Failed to compile Python callable using numba, fall back to generic implementation. Note that the generic implementation is potentially slow.");
+            PyErr_WarnEx(PyExc_RuntimeWarning,
+                    "Failed to compile Python callable using numba, fall back to generic implementation. Note that the generic implementation is potentially slow and does not allow multi-threading.", 1);
          }
          return GenericCallableImpl_call(NULL, args);
       }
@@ -739,18 +706,26 @@ PyObject *PyROOT::GetCppCallableClass(PyObject * /*self*/, PyObject * args) {
 
    // Create wrapper class for decorator
    auto classDict = PyDict_New();
-   auto className = PyString_FromString("CppCallableImpl");
-   auto callableClass = PyClass_New(NULL, classDict, className);
-   Py_DECREF(className);
+   auto className = CPyCppyy_PyUnicode_FromString("CppCallableImpl");
+   auto classBases = PyTuple_New(0);
 
    // Add methods
    for (auto def = CallableImplMethods; def->ml_name != NULL; def++) {
-      PyObject *func = PyCFunction_New(def, NULL);
-      PyObject *method = PyMethod_New(func, NULL, callableClass);
+      auto func = PyCFunction_New(def, NULL);
+#if PY_VERSION_HEX < 0x03000000
+      auto method = PyMethod_New(func, NULL, NULL);
+#else
+      auto method = PyInstanceMethod_New(func);
+#endif
 	  PyDict_SetItemString(classDict, def->ml_name, method);
 	  Py_DECREF(func);
 	  Py_DECREF(method);
    }
+
+   auto callableClass = PyObject_CallFunctionObjArgs(
+           (PyObject*)&PyType_Type, className, classBases, classDict, NULL);
+   Py_DECREF(className);
+   Py_DECREF(classBases);
    Py_DECREF(classDict);
 
    // Return implementation class
