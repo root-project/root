@@ -369,9 +369,10 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 ///   WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
 ///   WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
 ///   WebGui.RecordData: if specified enables data recording for each web window 0 - off, 1 - on
+///   WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values
 ///   WebGui.ForceHttp: 0 - off (default), 1 - always create real http server to run web window
 ///
-///   Http-server related parameters documented in RWebWindowsManager::CreateServer() method
+///   HTTP-server related parameters documented in RWebWindowsManager::CreateServer() method
 
 unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(ROOT::Experimental::RWebWindow &win, bool batch_mode, const RWebDisplayArgs &user_args)
 {
