@@ -2,6 +2,10 @@ import unittest
 import ROOT
 import sys
 
+# long does not exist anymore on Python 3, map it to int
+if sys.version_info[0] > 2:
+    long = int
+
 
 default_test_inputs = [-1.0, 0.0, 100.0]
 
