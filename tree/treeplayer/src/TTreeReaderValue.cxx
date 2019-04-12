@@ -307,7 +307,7 @@ TBranch *ROOT::Internal::TTreeReaderValueBase::SearchBranchWithCompositeName(TLe
 
       while (!branch && branchName.Contains(".")){
          leafName = branchName(leafNameExpression);
-         branchName = branchName(0, fBranchName.Length() - leafName.Length());
+         branchName = branchName(0, branchName.Length() - leafName.Length());
          branch = fTreeReader->GetTree()->GetBranch(branchName);
          if (!branch) branch = fTreeReader->GetTree()->GetBranch(branchName + ".");
          nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
