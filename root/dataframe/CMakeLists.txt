@@ -206,8 +206,9 @@ ROOTTEST_ADD_TEST(test_readTotemNtuple
 
 ROOTTEST_GENERATE_EXECUTABLE(test_progressiveCSV test_progressiveCSV.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_progressiveCSV
-                  EXEC ./test_progressiveCSV
+                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/test_progressiveCSV.sh
                   COPY_TO_BUILDDIR test_progressiveCSV.csv
+                  OUTREF test_progressiveCSV.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 endif() # CMAKE_SIZEOF_VOID_P EQUAL 4
