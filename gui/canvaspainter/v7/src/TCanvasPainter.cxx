@@ -33,6 +33,7 @@
 #include <algorithm>
 
 #include "TList.h"
+#include "TEnv.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBufferJSON.h"
@@ -107,6 +108,7 @@ private:
    std::list<WebUpdate> fUpdatesLst; ///<! list of callbacks for canvas update
 
    std::string fNextDumpName;     ///<! next filename for dumping JSON
+   int fJsonComp{23};             ///<! json compression for data send to client
 
    /// Disable copy construction.
    TCanvasPainter(const TCanvasPainter &) = delete;
@@ -133,7 +135,7 @@ private:
    void FrontCommandReplied(const std::string &reply);
 
 public:
-   TCanvasPainter(const RCanvas &canv) : fCanvas(canv) {}
+   TCanvasPainter(const RCanvas &canv);
 
    virtual ~TCanvasPainter();
 
@@ -195,6 +197,16 @@ struct TNewCanvasPainterReg {
 
 } // namespace Experimental
 } // namespace ROOT
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
+ROOT::Experimental::TCanvasPainter::TCanvasPainter(const RCanvas &canv) : fCanvas(canv)
+{
+   auto comp = gEnv->GetValue("WebGui.JsonComp", -1);
+   if (comp >= 0) fJsonComp = comp;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// destructor
@@ -610,7 +622,7 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
    fPadDisplayItem->SetTitle(can.GetTitle());
    fPadDisplayItem->SetWindowSize(can.GetSize());
 
-   TString res = TBufferJSON::ToJSON(fPadDisplayItem.get(), 23);
+   TString res = TBufferJSON::ToJSON(fPadDisplayItem.get(), fJsonComp);
 
    if (!fNextDumpName.empty()) {
       TBufferJSON::ExportToFile(fNextDumpName.c_str(), fPadDisplayItem.get(),
