@@ -3513,7 +3513,7 @@ const std::string GenerateStringFromHeadersForClasses(const HeadersDeclsMap_t &h
 
    if (genreflex::verbose)
       std::cout << "Class-headers Mapping:\n";
-   std::string headersClassesMapString = "static const char* classesHeaders[]={\n";
+   std::string headersClassesMapString = "";
    for (auto const & classHeaders : headersClassesMap) {
       if (genreflex::verbose)
          std::cout << " o " << classHeaders.first << " --> ";
@@ -3531,7 +3531,7 @@ const std::string GenerateStringFromHeadersForClasses(const HeadersDeclsMap_t &h
          std::cout << std::endl;
       headersClassesMapString += ", \"@\",\n";
    }
-   headersClassesMapString += "nullptr};\n";
+   headersClassesMapString += "nullptr";
    return headersClassesMapString;
 }
 
