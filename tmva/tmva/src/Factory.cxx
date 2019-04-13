@@ -97,7 +97,7 @@ evaluation phases.
 #include "TCanvas.h"
 
 const Int_t MinNoTrainingEvents = 10;
-// const Int_t  MinNoTestEvents     = 1;
+// const Int_t  MinNoTestEvents = 1;
 
 ClassImp(TMVA::Factory);
 
@@ -105,6 +105,20 @@ ClassImp(TMVA::Factory);
 
 // number of bits for bitset
 #define VIBITS 32
+
+// private helper classes
+namespace {
+
+// Class to keep information about regression test & training
+class RegressionMethodResult {
+public:
+   RegressionMethodResult(TMVA::MethodBase *aMethod) : method{aMethod} {}
+   TMVA::MethodBase *method;
+   TMVA::RegressionKeyFigures test;
+   TMVA::RegressionKeyFigures train;
+};
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Standard constructor.
@@ -1360,7 +1374,7 @@ void TMVA::Factory::EvaluateAllVariables(DataLoader *loader, TString options)
 ////////////////////////////////////////////////////////////////////////////////
 /// Iterates over all MVAs that have been booked, and calls their evaluation methods.
 
-void TMVA::Factory::EvaluateAllMethods(void)
+void TMVA::Factory::EvaluateAllMethods()
 {
    Log() << kHEADER << gTools().Color("bold") << "Evaluate all methods" << gTools().Color("reset") << Endl;
 
@@ -1369,10 +1383,9 @@ void TMVA::Factory::EvaluateAllMethods(void)
       Log() << kINFO << "...nothing found to evaluate" << Endl;
       return;
    }
-   std::map<TString, MVector *>::iterator itrMap;
 
-   for (itrMap = fMethodsMap.begin(); itrMap != fMethodsMap.end(); ++itrMap) {
-      MVector *methods = itrMap->second;
+   for (const auto &datasetMethodsPair : fMethodsMap) {
+      MVector *methods = datasetMethodsPair.second;
 
       // -----------------------------------------------------------------------
       // First part of evaluation process
@@ -1403,26 +1416,7 @@ void TMVA::Factory::EvaluateAllMethods(void)
       std::vector<TMatrixD> multiclass_testConfusionEffB10;
       std::vector<TMatrixD> multiclass_testConfusionEffB30;
 
-      std::vector<std::vector<Double_t>> biastrain(1); // "bias" of the regression on the training data
-      std::vector<std::vector<Double_t>> biastest(1);  // "bias" of the regression on test data
-      std::vector<std::vector<Double_t>> devtrain(1);  // "dev" of the regression on the training data
-      std::vector<std::vector<Double_t>> devtest(1);   // "dev" of the regression on test data
-      std::vector<std::vector<Double_t>> rmstrain(1);  // "rms" of the regression on the training data
-      std::vector<std::vector<Double_t>> rmstest(1);   // "rms" of the regression on test data
-      std::vector<std::vector<Double_t>> minftrain(1); // "minf" of the regression on the training data
-      std::vector<std::vector<Double_t>> minftest(1);  // "minf" of the regression on test data
-      std::vector<std::vector<Double_t>> rhotrain(1);  // correlation of the regression on the training data
-      std::vector<std::vector<Double_t>> rhotest(1);   // correlation of the regression on test data
-
-      // same as above but for 'truncated' quantities (computed for events within 2sigma of RMS)
-      std::vector<std::vector<Double_t>> biastrainT(1);
-      std::vector<std::vector<Double_t>> biastestT(1);
-      std::vector<std::vector<Double_t>> devtrainT(1);
-      std::vector<std::vector<Double_t>> devtestT(1);
-      std::vector<std::vector<Double_t>> rmstrainT(1);
-      std::vector<std::vector<Double_t>> rmstestT(1);
-      std::vector<std::vector<Double_t>> minftrainT(1);
-      std::vector<std::vector<Double_t>> minftestT(1);
+      std::vector<RegressionMethodResult> regressionResults;
 
       // following vector contains all methods - with the exception of Cuts, which are special
       MVector methodsNoCuts;
@@ -1445,33 +1439,12 @@ void TMVA::Factory::EvaluateAllMethods(void)
             doRegression = kTRUE;
 
             Log() << kINFO << "Evaluate regression method: " << theMethod->GetMethodName() << Endl;
-            Double_t bias, dev, rms, mInf;
-            Double_t biasT, devT, rmsT, mInfT;
-            Double_t rho;
-
             Log() << kINFO << "TestRegression (testing)" << Endl;
-            theMethod->TestRegression(bias, biasT, dev, devT, rms, rmsT, mInf, mInfT, rho, TMVA::Types::kTesting);
-            biastest[0].push_back(bias);
-            devtest[0].push_back(dev);
-            rmstest[0].push_back(rms);
-            minftest[0].push_back(mInf);
-            rhotest[0].push_back(rho);
-            biastestT[0].push_back(biasT);
-            devtestT[0].push_back(devT);
-            rmstestT[0].push_back(rmsT);
-            minftestT[0].push_back(mInfT);
-
+            RegressionMethodResult rr(theMethod);
+            rr.test = theMethod->TestRegression(TMVA::Types::kTesting);
             Log() << kINFO << "TestRegression (training)" << Endl;
-            theMethod->TestRegression(bias, biasT, dev, devT, rms, rmsT, mInf, mInfT, rho, TMVA::Types::kTraining);
-            biastrain[0].push_back(bias);
-            devtrain[0].push_back(dev);
-            rmstrain[0].push_back(rms);
-            minftrain[0].push_back(mInf);
-            rhotrain[0].push_back(rho);
-            biastrainT[0].push_back(biasT);
-            devtrainT[0].push_back(devT);
-            rmstrainT[0].push_back(rmsT);
-            minftrainT[0].push_back(mInfT);
+            rr.train = theMethod->TestRegression(TMVA::Types::kTraining);
+            regressionResults.push_back(rr);
 
             mname[0].push_back(theMethod->GetMethodName());
             nmeth_used[0]++;
@@ -1550,47 +1523,12 @@ void TMVA::Factory::EvaluateAllMethods(void)
          }
       }
       if (doRegression) {
-
-         std::vector<TString> vtemps = mname[0];
-         std::vector<std::vector<Double_t>> vtmp;
-         vtmp.push_back(devtest[0]); // this is the vector that is ranked
-         vtmp.push_back(devtrain[0]);
-         vtmp.push_back(biastest[0]);
-         vtmp.push_back(biastrain[0]);
-         vtmp.push_back(rmstest[0]);
-         vtmp.push_back(rmstrain[0]);
-         vtmp.push_back(minftest[0]);
-         vtmp.push_back(minftrain[0]);
-         vtmp.push_back(rhotest[0]);
-         vtmp.push_back(rhotrain[0]);
-         vtmp.push_back(devtestT[0]); // this is the vector that is ranked
-         vtmp.push_back(devtrainT[0]);
-         vtmp.push_back(biastestT[0]);
-         vtmp.push_back(biastrainT[0]);
-         vtmp.push_back(rmstestT[0]);
-         vtmp.push_back(rmstrainT[0]);
-         vtmp.push_back(minftestT[0]);
-         vtmp.push_back(minftrainT[0]);
-         gTools().UsefulSortAscending(vtmp, &vtemps);
-         mname[0] = vtemps;
-         devtest[0] = vtmp[0];
-         devtrain[0] = vtmp[1];
-         biastest[0] = vtmp[2];
-         biastrain[0] = vtmp[3];
-         rmstest[0] = vtmp[4];
-         rmstrain[0] = vtmp[5];
-         minftest[0] = vtmp[6];
-         minftrain[0] = vtmp[7];
-         rhotest[0] = vtmp[8];
-         rhotrain[0] = vtmp[9];
-         devtestT[0] = vtmp[10];
-         devtrainT[0] = vtmp[11];
-         biastestT[0] = vtmp[12];
-         biastrainT[0] = vtmp[13];
-         rmstestT[0] = vtmp[14];
-         rmstrainT[0] = vtmp[15];
-         minftestT[0] = vtmp[16];
-         minftrainT[0] = vtmp[17];
+         // order by minimum RMS (testing)
+         std::sort(begin(regressionResults), end(regressionResults),
+                   [](const RegressionMethodResult &a, const RegressionMethodResult &b) {
+                      // used to be ranked by "dev", altough Log() output said "rms"
+                      return a.test.rms < b.test.rms;
+                   });
       } else if (doMulticlass) {
          // TODO: fill in something meaningful
          // If there is some ranking of methods to be done it should be done here.
@@ -1826,7 +1764,14 @@ void TMVA::Factory::EvaluateAllMethods(void)
       // -----------------------------------------------------------------------
 
       if (doRegression) {
-
+         const char *keyFigureHeader =
+            "DataSet Name:        MVA Method:        <Bias>   <Bias_T>    RMS    RMS_T  |  MutInf MutInf_T";
+         auto kf_to_str = [](const MethodBase *method, const RegressionKeyFigures &kf) {
+            // little helper to output regression results, needs to align with the header.
+            return Form("%-20s %-15s:%#9.3g%#9.3g%#9.3g%#9.3g  |  %#5.3f  %#5.3f", //
+                        method->DataInfo().GetName(), method->GetName(),           //
+                        kf.bias, kf.biasT, kf.rms, kf.rmsT, kf.mInf, kf.mInfT);
+         };
          Log() << kINFO << Endl;
          TString hLine =
             "--------------------------------------------------------------------------------------------------";
@@ -1836,40 +1781,21 @@ void TMVA::Factory::EvaluateAllMethods(void)
          Log() << kINFO << " Indicated by \"_T\" are the corresponding \"truncated\" quantities ob-" << Endl;
          Log() << kINFO << " tained when removing events deviating more than 2sigma from average.)" << Endl;
          Log() << kINFO << hLine << Endl;
-         // Log() << kINFO << "DataSet Name:        MVA Method:        <Bias>   <Bias_T>    RMS    RMS_T  |  MutInf
-         // MutInf_T" << Endl;
+         Log() << kINFO << keyFigureHeader << Endl;
          Log() << kINFO << hLine << Endl;
-
-         for (Int_t i = 0; i < nmeth_used[0]; i++) {
-            MethodBase *theMethod = dynamic_cast<MethodBase *>((*methods)[i]);
-            if (theMethod == 0)
-               continue;
-
-            Log() << kINFO
-                  << Form("%-20s %-15s:%#9.3g%#9.3g%#9.3g%#9.3g  |  %#5.3f  %#5.3f", theMethod->fDataSetInfo.GetName(),
-                          (const char *)mname[0][i], biastest[0][i], biastestT[0][i], rmstest[0][i], rmstestT[0][i],
-                          minftest[0][i], minftestT[0][i])
-                  << Endl;
+         for (const auto &rr : regressionResults) {
+            Log() << kINFO << kf_to_str(rr.method, rr.test) << Endl;
          }
+
          Log() << kINFO << hLine << Endl;
          Log() << kINFO << Endl;
          Log() << kINFO << "Evaluation results ranked by smallest RMS on training sample:" << Endl;
          Log() << kINFO << "(overtraining check)" << Endl;
          Log() << kINFO << hLine << Endl;
-         Log() << kINFO
-               << "DataSet Name:         MVA Method:        <Bias>   <Bias_T>    RMS    RMS_T  |  MutInf MutInf_T"
-               << Endl;
+         Log() << kINFO << keyFigureHeader << Endl;
          Log() << kINFO << hLine << Endl;
-
-         for (Int_t i = 0; i < nmeth_used[0]; i++) {
-            MethodBase *theMethod = dynamic_cast<MethodBase *>((*methods)[i]);
-            if (theMethod == 0)
-               continue;
-            Log() << kINFO
-                  << Form("%-20s %-15s:%#9.3g%#9.3g%#9.3g%#9.3g  |  %#5.3f  %#5.3f", theMethod->fDataSetInfo.GetName(),
-                          (const char *)mname[0][i], biastrain[0][i], biastrainT[0][i], rmstrain[0][i], rmstrainT[0][i],
-                          minftrain[0][i], minftrainT[0][i])
-                  << Endl;
+         for (const auto &rr : regressionResults) {
+            Log() << kINFO << kf_to_str(rr.method, rr.train) << Endl;
          }
          Log() << kINFO << hLine << Endl;
          Log() << kINFO << Endl;
@@ -1940,7 +1866,7 @@ void TMVA::Factory::EvaluateAllMethods(void)
                   mname[k][i].ReplaceAll("Variable_", "");
                }
 
-               const TString datasetName = itrMap->first;
+               const TString datasetName = datasetMethodsPair.first;
                const TString mvaName = mname[k][i];
 
                MethodBase *theMethod = dynamic_cast<MethodBase *>(GetMethod(datasetName, mvaName));
@@ -2088,7 +2014,7 @@ void TMVA::Factory::EvaluateAllMethods(void)
                   Log() << kINFO << "Input Variables: " << Endl << hLine << Endl;
                }
                for (Int_t i = 0; i < nmeth_used[k]; i++) {
-                  TString datasetName = itrMap->first;
+                  TString datasetName = datasetMethodsPair.first;
                   TString methodName = mname[k][i];
 
                   if (k == 1) {

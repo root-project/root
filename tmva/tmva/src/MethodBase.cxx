@@ -981,25 +981,19 @@ void TMVA::MethodBase::AddClassifierOutputProb(Types::ETreeType type)
 ///  - dev  = average absolute deviation
 ///  - rms  = rms of deviation
 
-void TMVA::MethodBase::TestRegression(Double_t &bias, Double_t &biasT, Double_t &dev, Double_t &devT, Double_t &rms,
-                                      Double_t &rmsT, Double_t &mInf, Double_t &mInfT, Double_t &corr,
-                                      Types::ETreeType type)
+TMVA::RegressionKeyFigures TMVA::MethodBase::TestRegression(Types::ETreeType type)
 {
    Types::ETreeType savedType = Data()->GetCurrentType();
    Data()->SetCurrentType(type);
 
-   bias = 0;
-   biasT = 0;
-   dev = 0;
-   devT = 0;
-   rms = 0;
-   rmsT = 0;
+   TMVA::RegressionKeyFigures result;
    Double_t sumw = 0;
    Double_t m1 = 0, m2 = 0, s1 = 0, s2 = 0, s12 = 0; // for correlation
    const Int_t nevt = GetNEvents();
-   Float_t *rV = new Float_t[nevt];
-   Float_t *tV = new Float_t[nevt];
-   Float_t *wV = new Float_t[nevt];
+   // RMakeUnique's std::make_unique isn't working correctly in C++11 mode
+   auto rV = std::unique_ptr<Float_t[]>(new Float_t[nevt]);
+   auto tV = std::unique_ptr<Float_t[]>(new Float_t[nevt]);
+   auto wV = std::unique_ptr<Float_t[]>(new Float_t[nevt]);
    Float_t xmin = 1e30, xmax = -1e30;
    Log() << kINFO << "Calculate regression for all events" << Endl;
    Timer timer(nevt, GetName(), kTRUE);
@@ -1022,9 +1016,9 @@ void TMVA::MethodBase::TestRegression(Double_t &bias, Double_t &biasT, Double_t 
 
       // compute deviation-squared
       sumw += w;
-      bias += w * d;
-      dev += w * TMath::Abs(d);
-      rms += w * d * d;
+      result.bias += w * d;
+      result.dev += w * TMath::Abs(d);
+      result.rms += w * d * d;
 
       // compute correlation between target and regression estimate
       m1 += t * w;
@@ -1040,24 +1034,24 @@ void TMVA::MethodBase::TestRegression(Double_t &bias, Double_t &biasT, Double_t 
          << Endl;
 
    // standard quantities
-   bias /= sumw;
-   dev /= sumw;
-   rms /= sumw;
-   rms = TMath::Sqrt(rms - bias * bias);
+   result.bias /= sumw;
+   result.dev /= sumw;
+   result.rms /= sumw;
+   result.rms = TMath::Sqrt(result.rms - result.bias * result.bias);
 
    // correlation
    m1 /= sumw;
    m2 /= sumw;
-   corr = s12 / sumw - m1 * m2;
-   corr /= TMath::Sqrt((s1 / sumw - m1 * m1) * (s2 / sumw - m2 * m2));
+   result.corr = s12 / sumw - m1 * m2;
+   result.corr /= TMath::Sqrt((s1 / sumw - m1 * m1) * (s2 / sumw - m2 * m2));
 
    // create histogram required for computation of mutual information
    TH2F *hist = new TH2F("hist", "hist", 150, xmin, xmax, 100, xmin, xmax);
    TH2F *histT = new TH2F("histT", "histT", 150, xmin, xmax, 100, xmin, xmax);
 
    // compute truncated RMS and fill histogram
-   Double_t devMax = bias + 2 * rms;
-   Double_t devMin = bias - 2 * rms;
+   Double_t devMax = result.bias + 2 * result.rms;
+   Double_t devMin = result.bias - 2 * result.rms;
    sumw = 0;
    int ic = 0;
    for (Long64_t ievt = 0; ievt < nevt; ievt++) {
@@ -1065,28 +1059,25 @@ void TMVA::MethodBase::TestRegression(Double_t &bias, Double_t &biasT, Double_t 
       hist->Fill(rV[ievt], tV[ievt], wV[ievt]);
       if (d >= devMin && d <= devMax) {
          sumw += wV[ievt];
-         biasT += wV[ievt] * d;
-         devT += wV[ievt] * TMath::Abs(d);
-         rmsT += wV[ievt] * d * d;
+         result.biasT += wV[ievt] * d;
+         result.devT += wV[ievt] * TMath::Abs(d);
+         result.rmsT += wV[ievt] * d * d;
          histT->Fill(rV[ievt], tV[ievt], wV[ievt]);
          ic++;
       }
    }
-   biasT /= sumw;
-   devT /= sumw;
-   rmsT /= sumw;
-   rmsT = TMath::Sqrt(rmsT - biasT * biasT);
-   mInf = gTools().GetMutualInformation(*hist);
-   mInfT = gTools().GetMutualInformation(*histT);
+   result.biasT /= sumw;
+   result.devT /= sumw;
+   result.rmsT /= sumw;
+   result.rmsT = TMath::Sqrt(result.rmsT - result.biasT * result.biasT);
+   result.mInf = gTools().GetMutualInformation(*hist);
+   result.mInfT = gTools().GetMutualInformation(*histT);
 
    delete hist;
    delete histT;
 
-   delete[] rV;
-   delete[] tV;
-   delete[] wV;
-
    Data()->SetCurrentType(savedType);
+   return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
