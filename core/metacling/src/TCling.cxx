@@ -1071,12 +1071,33 @@ std::string TCling::ToString(const char* type, void* obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+///\returns true if the module map was loaded, false on error or if the map was
+///         already loaded.
+static bool LoadWorkingDirModuleMap(clang::Preprocessor& PP) {
+   FileManager& FM = PP.getFileManager();
+   // FIXME: In a ROOT session we can add an include path (through .I /inc/path)
+   // We should look for modulemap files there too.
+   const DirectoryEntry *DE = FM.getDirectory(gSystem->WorkingDirectory());
+   if (DE) {
+      HeaderSearch& HS = PP.getHeaderSearchInfo();
+      const FileEntry *FE = HS.lookupModuleMapFile(DE, /*IsFramework*/ false);
+      std::string modulemapInCurrentDir =
+         std::string(gSystem->WorkingDirectory()) + "./module.modulemap";
+      // FIXME: Calling IsLoaded is slow! Replace this with the appropriate
+      // call to the clang::ModuleMap class.
+      if (FE && !gCling->IsLoaded(FE->getName().data())) {
+         if (!HS.loadModuleMapFile(FE, /*IsSystem*/ false))
+            return true;
+         Error("TCling::LoadModule", "Could not load modulemap in the current directory");
+      }
+   }
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ///\returns true if the module was loaded.
 static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp, bool Complain = true)
 {
-   if (interp.loadModule(ModuleName, Complain))
-      return true;
-
    // When starting up ROOT, cling would load all modulemap files on the include
    // paths. However, in a ROOT session, it is very common to run aclic which
    // will invoke rootcling and possibly produce a modulemap and a module in
@@ -1084,25 +1105,8 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
    //
    // Before failing, try loading the modulemap in the current folder and try
    // loading the requested module from it.
-   Preprocessor &PP = interp.getCI()->getPreprocessor();
-   FileManager& FM = PP.getFileManager();
-   // FIXME: In a ROOT session we can add an include path (through .I /inc/path)
-   // We should look for modulemap files there too.
-   const DirectoryEntry *DE = FM.getDirectory(".");
-   if (DE) {
-      HeaderSearch& HS = PP.getHeaderSearchInfo();
-      const FileEntry *FE = HS.lookupModuleMapFile(DE, /*IsFramework*/ false);
-      if (FE && !gCling->IsLoaded("./module.modulemap")) {
-         if (!HS.loadModuleMapFile(FE, /*IsSystem*/ false))
-            return LoadModule(ModuleName, interp, Complain);
-         Error("TCling::LoadModule", "Could not load modulemap in the current directory");
-      }
-   }
-
-   if (Complain)
-      Error("TCling::LoadModule", "Module %s not found!", ModuleName.c_str());
-
-   return false;
+   LoadWorkingDirModuleMap(interp.getCI()->getPreprocessor());
+   return interp.loadModule(ModuleName, Complain);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
