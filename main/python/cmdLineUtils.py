@@ -303,7 +303,7 @@ def joinPathSplit(pathSplit):
     """
     return "/".join(pathSplit)
 
-MANY_OCCURENCE_WARNING = "Same name objects aren't supported: '{0}' of '{1}' won't be processed"
+MANY_OCCURENCE_WARNING = "Several versions of '{0}' are present in '{1}'. Only the most recent will be considered."
 
 def manyOccurenceRemove(pathSplitList,fileName):
     """
@@ -495,8 +495,7 @@ def getSourceDestListOptDict(parser, wildcards = True):
 # Several functions shared by rootcp, rootmv and rootrm
 
 TARGET_ERROR = "target '{0}' is not a directory"
-OMITTING_FILE_ERROR = "omitting file '{0}'"
-OMITTING_DIRECTORY_ERROR = "omitting directory '{0}'"
+OMITTING_ERROR = "omitting {0} '{1}'. Did you forget to specify the -r option for a recursive copy?"
 OVERWRITE_ERROR = "cannot overwrite non-directory '{0}' with directory '{1}'"
 
 def copyRootObject(sourceFile,sourcePathSplit,destFile,destPathSplit,oneSource,recursive,replace):
@@ -517,12 +516,12 @@ def copyRootObject(sourceFile,sourcePathSplit,destFile,destPathSplit,oneSource,r
     # OMITTING_FILE_ERROR or OMITTING_DIRECTORY_ERROR
     if not recursiveOption:
         if sourcePathSplit == []:
-            logging.warning(OMITTING_FILE_ERROR.format( \
-                sourceFile.GetName()))
+            logging.warning(OMITTING_ERROR.format( \
+                "file", sourceFile.GetName()))
             retcode += 1
         elif isDirectory(sourceFile,sourcePathSplit):
             logging.warning(OMITTING_DIRECTORY_ERROR.format( \
-                sourcePathSplit[-1]))
+                "directory", sourcePathSplit[-1]))
             retcode += 1
     # Run copyRootObjectRecursive function with the wish
     # to follow the unix copy behaviour
