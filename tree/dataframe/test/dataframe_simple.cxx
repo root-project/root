@@ -966,6 +966,22 @@ TEST_P(RDFSimpleTests, ManyRangesPerWorker)
    ROOT::RDataFrame("t",filename).Mean<int>("i");
    gSystem->Unlink(filename);
 }
+
+// ROOT-9736
+TEST(RDFSimpleTests, NonExistingFile)
+{
+   ROOT::RDataFrame r("myTree", "nonexistingfile.root");
+   
+   // We try to use the tree for jitting: an exception is thrown
+   int ret = 1;
+   try {
+      auto r2 = r.Filter("inventedVar > 0");
+   } catch (const std::runtime_error &) {
+      ret = 0;
+   }
+   EXPECT_EQ(0, ret);
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
