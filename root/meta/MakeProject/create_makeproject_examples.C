@@ -1,6 +1,6 @@
 R__LOAD_LIBRARY(stl_makeproject_test)
 
-#include "stl_makeproject_test.h"
+#include <stl_makeproject_test.h>
 
 int create_makeproject_examples()
 {
