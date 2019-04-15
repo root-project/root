@@ -1182,9 +1182,9 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
       Info("JsonWriteObject", "Object %p class %s check_map %s", obj, cl ? cl->GetName() : "null",
            check_map ? "true" : "false");
 
-   Int_t special_kind = JsonSpecialClass(cl);
+   Int_t special_kind = JsonSpecialClass(cl), map_convert{0};
 
-   TString fObjectOutput, *fPrevOutput(nullptr);
+   TString fObjectOutput, *fPrevOutput{nullptr};
 
    TJSONStackObj *stack = Stack();
 
@@ -1200,6 +1200,13 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    } else if ((special_kind <= 0) || (special_kind > json_TArray)) {
       // FIXME: later post processing should be active for all special classes, while they all keep output in the value
       JsonDisablePostprocessing();
+   } else if ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
+              (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap)) {
+
+      if (stack && stack->fElem && strstr(stack->fElem->GetTitle(), "JSONmap"))
+         map_convert = 2; // mapped into normal object
+      else
+         map_convert = 1;
    }
 
    if (!obj) {
@@ -1224,6 +1231,21 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
       fJsonrCnt++; // object counts required in dereferencing part
 
       stack = JsonStartObjectWrite(cl);
+
+   } else if (map_convert == 2) {
+      // special handling of map - it is object, but stored in the fValue
+
+      if (check_map) {
+         Long64_t refid = GetObjectTag(obj);
+         if (refid > 0) {
+            fValue.Form("{\"$ref\":%u}", (unsigned)(refid - 1));
+            goto post_process;
+         }
+         MapObject(obj, cl, fJsonrCnt + 1); // +1 used
+      }
+
+      fJsonrCnt++; // object counts required in dereferencing part
+      stack = PushStack(0);
 
    } else {
       // for array, string and STL collections different handling -
@@ -1274,18 +1296,45 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
                fValue = "[]";
             }
 
+         } else if (map_convert == 2) {
+            // converting map into object
+            if (fValue.Length() > 0)
+               stack->PushValue(fValue);
+
+            const char *separ = (fCompact < 2) ? ", " : ",";
+            const char *semi = (fCompact < 2) ? ": " : ":";
+            bool first = true;
+
+            fValue = "{";
+            if (fTypeNameTag.Length() > 0) {
+               fValue.Append("\"");
+               fValue.Append(fTypeNameTag);
+               fValue.Append("\"");
+               fValue.Append(semi);
+               fValue.Append("\"");
+               fValue.Append(cl->GetName());
+               fValue.Append("\"");
+               first = false;
+            }
+            for (Int_t k = 1; k < (int) stack->fValues.size() - 1; k += 2) {
+               if (!first)
+                  fValue.Append(separ);
+               first = false;
+               fValue.Append(stack->fValues[k].c_str());
+               fValue.Append(semi);
+               fValue.Append(stack->fValues[k + 1].c_str());
+            }
+            fValue.Append("}");
+            stack->fValues.clear();
          } else {
             const char *separ = "[";
 
             if (fValue.Length() > 0)
                stack->PushValue(fValue);
 
-            if ((size * 2 == (int) stack->fValues.size() - 1) &&
-                ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
-                 (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap))) {
+            if ((size * 2 == (int) stack->fValues.size() - 1) && (map_convert > 0)) {
                // special handling for std::map.
                // Create entries like { '$pair': 'typename' , 'first' : key, 'second' : value }
-
                TString pairtype = cl->GetName();
                if (pairtype.Index("unordered_map<") == 0)
                   pairtype.Replace(0, 14, "pair<");
@@ -1365,7 +1414,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
 
    PopStack();
 
-   if (special_kind <= 0)
+   if ((special_kind <= 0))
       AppendOutput(nullptr, "}");
 
 post_process:
