@@ -31,6 +31,7 @@ std::unique_ptr<TTree> MakeTree() {
    tree->Branch("str", &str);
    tree->Branch("d32", &Double32);
    tree->Branch("f16", &Float16);
+   tree->Branch("0.2.0.energy", &z);
 
    x[1] = 42.;
    yData.ny = 42;
@@ -324,4 +325,13 @@ TEST(TTreeReaderBasic, Values) {
    EXPECT_STREQ("first", str->c_str());
    EXPECT_FLOAT_EQ(12, *d32);
    EXPECT_FLOAT_EQ(-12, *f16);
+}
+
+// #PR 3692
+TEST(TTreeReaderBasic, InfLoop)
+{
+   auto tree = MakeTree();
+   TTreeReader tr(tree.get());
+   TTreeReaderArray<float> x(tr, "0.2.0.energy");
+   tr.Next();
 }
