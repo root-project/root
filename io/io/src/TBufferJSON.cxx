@@ -125,6 +125,7 @@ Will produce JSON output:
 #include "TClonesArray.h"
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
+#include "TEmulatedCollectionProxy.h"
 
 #include "json.hpp"
 
@@ -666,6 +667,15 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t comp
       return TBufferJSON::ConvertToJSON(ptr, member, compact, arraylen);
    }
 
+   if (cl && cl->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(cl->GetCollectionProxy())) {
+      ::Error("TBufferJSON::ConvertToJSON",
+            "The class requested (%s)"
+            " is an instance of an stl collection and does not have a compiled CollectionProxy."
+            " Please generate the dictionary for this collection (%s). No data will be written.",
+            cl->GetName(), cl->GetName());
+      return TString();
+   }
+
    TBufferJSON buf;
 
    buf.SetCompact(compact);
@@ -904,6 +914,15 @@ void *TBufferJSON::ConvertFromJSONAny(const char *str, TClass **cl)
    if (cl) {
       objClass = *cl; // this is class which suppose to created when reading JSON
       *cl = nullptr;
+   }
+
+   if (objClass && objClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(objClass->GetCollectionProxy())) {
+      ::Error("TBufferJSON::ConvertToJSON",
+            "The class requested (%s)"
+            " is an instance of an stl collection and does not have a compiled CollectionProxy."
+            " Please generate the dictionary for this collection (%s). No data will be written.",
+            objClass->GetName(), objClass->GetName());
+      return nullptr;
    }
 
    nlohmann::json docu = nlohmann::json::parse(str);
