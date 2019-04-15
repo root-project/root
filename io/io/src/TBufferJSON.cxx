@@ -271,6 +271,9 @@ public:
    nlohmann::json *fNode{nullptr};      //! JSON node, used for reading
    Int_t fStlIndx{-1};                  //! index of object in STL container
    Int_t fStlMap{-1};                   //! special iterator over STL map::key members
+   nlohmann::json::iterator fMapIter;   //! iterator for std::map stored as JSON object
+   const char *fMapTypeTag{nullptr};    //! type tag used for std::map stored as JSON object
+   nlohmann::json fMapValue;            //! temporary value reading std::map as JSON
    Version_t fClVersion{0};             //! keep actual class version, workaround for ReadVersion in custom streamer
 
    TJSONStackObj() = default;
@@ -305,10 +308,20 @@ public:
    ////////////////////////////////////////////////////////////////////////
    /// checks if specified JSON node is array (compressed or not compressed)
    /// returns length of array (or -1 if failure)
-   Int_t IsJsonArray(nlohmann::json *json = nullptr)
+   Int_t IsJsonArray(nlohmann::json *json = nullptr, const char *map_convert_type = nullptr)
    {
       if (!json)
          json = fNode;
+
+      if (map_convert_type) {
+         if (!json->is_object()) return -1;
+         int sz = 0;
+         // count size of object, excluding _typename tag
+         for (auto it = json->begin(); it != json->end(); ++it) {
+            if ((strlen(map_convert_type)==0) || (it.key().compare(map_convert_type) != 0)) sz++;
+         }
+         return sz;
+      }
 
       // normal uncompressed array
       if (json->is_array())
@@ -345,10 +358,34 @@ public:
 
    Bool_t IsStl() const { return fStlIndx >= 0; }
 
+   void ResetStlMap(Int_t kind, const char *typename_tag)
+   {
+      if (kind == 1) {
+         fStlMap = 0; // stl map was streamed as array of pairs
+      } else {
+         fStlMap = 2; // stl map was converted as array of objects
+         fMapIter = fNode->begin();
+         fMapTypeTag = typename_tag && (strlen(typename_tag) > 0) ? typename_tag : nullptr;
+      }
+   }
+
    nlohmann::json *GetStlNode()
    {
       if (fStlIndx < 0)
          return fNode;
+      if (fStlMap == 2) {
+         if ((fStlIndx==0) && fMapTypeTag && (fMapIter.key().compare(fMapTypeTag) == 0)) ++fMapIter;
+         if (fStlIndx == 0) {
+            fMapValue = fMapIter.key();
+            fStlIndx++;
+         } else {
+            fMapValue = fMapIter.value();
+            ++fMapIter;
+            fStlIndx = 0;
+         }
+         return &fMapValue;
+      }
+
       nlohmann::json *json = &(fNode->at(fStlIndx++));
       if (fStlMap < 0)
          return json;
@@ -1670,6 +1707,15 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       return obj;
    }
 
+   Int_t map_convert = 0;
+   if ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
+       (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap)) {
+      if (stack && stack->fElem && strstr(stack->fElem->GetTitle(), "JSONmap"))
+         map_convert = 2; // mapped into normal object
+      else
+         map_convert = 1;
+   }
+
    // from now all operations performed with sub-element,
    // stack should be repaired at the end
    if (process_stl)
@@ -1685,7 +1731,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       if (!obj)
          obj = jsonClass->New();
 
-      Int_t len = stack->IsJsonArray(json);
+      Int_t len = stack->IsJsonArray(json, map_convert == 2 ? fTypeNameTag.Data() : nullptr);
 
       stack->PushIntValue(len > 0 ? len : 0);
 
@@ -1757,9 +1803,8 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       // special handling of STL which coded into arrays
       if ((special_kind > 0) && (special_kind < ROOT::kSTLend)) {
          stack->fStlIndx = 0;
-         if ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
-             (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap))
-            stack->fStlMap = 0;
+         if (map_convert > 0)
+            stack->ResetStlMap(map_convert, fTypeNameTag.Data());
       }
 
       // if provided - use class version from JSON
