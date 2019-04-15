@@ -7,6 +7,11 @@
 ROOTTEST_ADD_OLDTEST()
 ROOTTEST_ADD_TESTDIRS()
 
+# ROOT-10046
+ROOTTEST_ADD_TEST(test_oddName
+                  COPY_TO_BUILDDIR root-10046.root
+                  MACRO oddName.C)
+
 # ROOT-9757
 ROOTTEST_ADD_TEST(test_numberBranchesRead
                   MACRO  test_numberBranchesRead.C
