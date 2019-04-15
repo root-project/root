@@ -99,6 +99,14 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
    }
 
    const auto branches = t.GetListOfBranches();
+   // Getting the branches here triggered the read of the first file of the chain if t is a chain.
+   // We check if a tree has been successfully read, otherwise we throw (see ROOT-9984) to avoid further
+   // operations
+   if (!t.GetTree()) {
+      std::string err("GetBranchNames: error in opening the tree ");
+      err += t.GetName();
+      throw std::runtime_error(err);
+   }
    if (branches) {
       for (auto b : *branches) {
          TBranch *branch = static_cast<TBranch *>(b);
