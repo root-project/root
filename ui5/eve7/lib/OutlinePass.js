@@ -128,6 +128,52 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 	constructor: THREE.OutlinePass,
 
+	parseAtts: function(object, groups){
+		// treat Mesh, Line and LineSegments as the same
+		if(object.type === "Mesh" || object.type === "Line" || object.type === "LineSegments" )
+		{
+			groups[0].push(object);
+		}
+		else if(object.type === "Points")
+		{
+			let found = false;
+			// loop over groups
+			for (let z = 1; z < groups.length; ++z){
+				// loop over all the elements of a group
+				for (let w = 0; w < z.length; ++w){
+					// if the objects have the same attributes
+					if(
+						this.selectedObjects[z][w].type			 === object.type			&&
+						this.selectedObjects[z][w].material.size === object.material.size	&&
+						this.selectedObjects[z][w]["vertShader"] === object["vertShader"]	&&
+						this.selectedObjects[z][w]["fragShader"] === object["fragShader"]
+					){
+						groups[z].push(object);
+						found = true;
+						break; 
+					}
+				}
+				if(found)
+					break;
+			}
+
+			if(!found){
+				groups.push([object]);
+			}
+		}
+		else if(object.type === "Group" || object.type === "Object3D")
+		{
+			for (const child of object.children){
+				this.parseAtts(child, groups);
+			}
+		}
+		else 
+		{
+			console.error("unknown type of geometry! fallback to 0");
+			groups[0].push(object);
+		}
+	},
+
 	checkForCustomAtts: function(){
 		/*
 		this.atts = {
@@ -150,54 +196,62 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 		}
 		*/
 
-		let groups = [];
-		for (let i = 0; i < this.selectedObjects.length; ++i){
-			const object = this.selectedObjects[i];
+		let groups = [[]];
+		
+		for (const obj of this.selectedObjects)
+			this.parseAtts(obj, groups);
+	
+		// for (let i = 0; i < this.selectedObjects.length; ++i){
+		// 	const object = this.selectedObjects[i];
 
-			// treat Mesh and LineSegments as the same
-			if(object.type === "Mesh" || object.type === "LineSegments" )
-			{
-				groups[0] = groups[0] || [];
-				groups[0].push(object);
-			}
-			else if(object.type === "Points")
-			{
-				let found = false;
-				// loop over groups
-				for (let z = 1; z < groups.length; ++z){
-					// loop over all the elements of a group
-					for (let w = 0; w < z.length; ++w){
-						// if the objects have the same attributes
-						if(
-							this.selectedObjects[z][w].type			 === object.type			&&
-							this.selectedObjects[z][w].material.size === object.material.size	&&
-							this.selectedObjects[z][w]["vertShader"] === object["vertShader"]	&&
-							this.selectedObjects[z][w]["fragShader"] === object["fragShader"]
-						){
-							groups[z] = groups[z] || [];
-							groups[z].push(object);
-							found = true;
-							break; 
-						}
-					}
-					if(found)
-						break;
-				}
+		// 	// treat Mesh and LineSegments as the same
+		// 	if(object.type === "Mesh" || object.type === "LineSegments" )
+		// 	{
+		// 		groups[0] = groups[0] || [];
+		// 		groups[0].push(object);
+		// 	}
+		// 	else if(object.type === "Points")
+		// 	{
+		// 		let found = false;
+		// 		// loop over groups
+		// 		for (let z = 1; z < groups.length; ++z){
+		// 			// loop over all the elements of a group
+		// 			for (let w = 0; w < z.length; ++w){
+		// 				// if the objects have the same attributes
+		// 				if(
+		// 					this.selectedObjects[z][w].type			 === object.type			&&
+		// 					this.selectedObjects[z][w].material.size === object.material.size	&&
+		// 					this.selectedObjects[z][w]["vertShader"] === object["vertShader"]	&&
+		// 					this.selectedObjects[z][w]["fragShader"] === object["fragShader"]
+		// 				){
+		// 					groups[z].push(object);
+		// 					found = true;
+		// 					break; 
+		// 				}
+		// 			}
+		// 			if(found)
+		// 				break;
+		// 		}
 
-				if(!found){
-					groups[i+1] = groups[i+1] || [];
-					groups[i+1].push(object);
-				}
-			} 
-			else 
-			{
-				console.error("unknown type of geometry! fallback to 0");
-				groups[0] = groups[0] || [];
-				groups[0].push(object);
-			}
-		}
-		this.groups = groups/*.filter(Array)*/;
-		// console.log(groups);
+		// 		if(!found){
+		// 			groups.push([object]);
+		// 		}
+		// 	}
+		// 	else if(object.type === "Group")
+		// 	{
+		// 		for (const child of object.children){
+					
+		// 		}
+		// 	}
+		// 	else 
+		// 	{
+		// 		console.error("unknown type of geometry! fallback to 0");
+		// 		groups[0] = groups[0] || [];
+		// 		groups[0].push(object);
+		// 	}
+		// }
+		this.groups = groups.filter(Array);
+		console.log(this.groups);
 	},
 
 	dispose: function () {
@@ -340,8 +394,8 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 	},
 
 	render: function ( renderer, writeBuffer, readBuffer, deltaTime, maskActive ) {
-	        this.selectedObjects = Object.values(this.id2obj_map).flat();
-	        console.log(this.selectedObjects);
+		this.selectedObjects = Object.values(this.id2obj_map).flat();
+		// console.log(this.selectedObjects);
 		// debugger;
 
 		if ( this.selectedObjects.length > 0 ) {
