@@ -112,7 +112,9 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* br
 /// the "path" to branch.
 static std::string GetFriendBranchName(TTree* directorTree, TBranch* branch, const char* fullBranchName)
 {
-   if (directorTree == branch->GetTree())
+   // ROOT-10046: Here we need to ask for the tree with GetTree otherwise, if directorTree
+   // is a chain, this check is bogus and a bug can occour (ROOT-10046)
+   if (directorTree->GetTree() == branch->GetTree())
       return branch->GetName();
 
    // Friend case:
