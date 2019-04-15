@@ -255,6 +255,40 @@ public:
 // stored in subnodes, but initial object node will be kept.
 
 class TJSONStackObj : public TObject {
+   struct StlRead {
+      Int_t fIndx{0};                   //! index of object in STL container
+      Int_t fMap{-1};                   //! special iterator over STL map::key members
+      nlohmann::json::iterator fIter;   //! iterator for std::map stored as JSON object
+      const char *fTypeTag{nullptr};    //! type tag used for std::map stored as JSON object
+      nlohmann::json fValue;            //! temporary value reading std::map as JSON
+      nlohmann::json *GetStlNode(nlohmann::json *prnt)
+      {
+         if (fMap == 2) {
+            if ((fIndx==0) && fTypeTag && (fIter.key().compare(fTypeTag) == 0)) ++fIter;
+            if (fIndx == 0) {
+               fValue = fIter.key();
+               fIndx++;
+            } else {
+               fValue = fIter.value();
+               ++fIter;
+               fIndx = 0;
+            }
+            return &fValue;
+         }
+
+         nlohmann::json *json = &(prnt->at(fIndx++));
+         if (fMap < 0)
+            return json;
+         if (fMap > 0) {
+            fMap = 0;
+            return &(json->at("second"));
+         }
+         --fIndx; // return counter back to read second element from same node
+         ++fMap;
+         return &(json->at("first"));
+      }
+   };
+
 public:
    TStreamerInfo *fInfo{nullptr};       //!
    TStreamerElement *fElem{nullptr};    //! element in streamer info
@@ -269,11 +303,7 @@ public:
    Int_t fLevel{0};                     //! indent level
    std::unique_ptr<TArrayIndexProducer> fIndx; //! producer of ndim indexes
    nlohmann::json *fNode{nullptr};      //! JSON node, used for reading
-   Int_t fStlIndx{-1};                  //! index of object in STL container
-   Int_t fStlMap{-1};                   //! special iterator over STL map::key members
-   nlohmann::json::iterator fMapIter;   //! iterator for std::map stored as JSON object
-   const char *fMapTypeTag{nullptr};    //! type tag used for std::map stored as JSON object
-   nlohmann::json fMapValue;            //! temporary value reading std::map as JSON
+   std::unique_ptr<StlRead> fStlRead;   //! custom structure for stl container reading
    Version_t fClVersion{0};             //! keep actual class version, workaround for ReadVersion in custom streamer
 
    TJSONStackObj() = default;
@@ -356,46 +386,28 @@ public:
       return indx;
    }
 
-   Bool_t IsStl() const { return fStlIndx >= 0; }
+   Bool_t IsStl() const { return fStlRead.get() != nullptr; }
 
-   void ResetStlMap(Int_t kind, const char *typename_tag)
+   void AssignStl(Int_t map_convert, const char *typename_tag)
    {
-      if (kind == 1) {
-         fStlMap = 0; // stl map was streamed as array of pairs
-      } else {
-         fStlMap = 2; // stl map was converted as array of objects
-         fMapIter = fNode->begin();
-         fMapTypeTag = typename_tag && (strlen(typename_tag) > 0) ? typename_tag : nullptr;
+      fStlRead = std::make_unique<StlRead>();
+      if (map_convert == 1) {
+         fStlRead->fMap = 0; // stl map was streamed as array of pairs
+      } else if (map_convert == 2) {
+         fStlRead->fMap = 2; // stl map was converted as array of objects
+         fStlRead->fIter = fNode->begin();
+         fStlRead->fTypeTag = typename_tag && (strlen(typename_tag) > 0) ? typename_tag : nullptr;
       }
    }
 
    nlohmann::json *GetStlNode()
    {
-      if (fStlIndx < 0)
-         return fNode;
-      if (fStlMap == 2) {
-         if ((fStlIndx==0) && fMapTypeTag && (fMapIter.key().compare(fMapTypeTag) == 0)) ++fMapIter;
-         if (fStlIndx == 0) {
-            fMapValue = fMapIter.key();
-            fStlIndx++;
-         } else {
-            fMapValue = fMapIter.value();
-            ++fMapIter;
-            fStlIndx = 0;
-         }
-         return &fMapValue;
-      }
+      return fStlRead ? fStlRead->GetStlNode(fNode) : fNode;
+   }
 
-      nlohmann::json *json = &(fNode->at(fStlIndx++));
-      if (fStlMap < 0)
-         return json;
-      if (fStlMap > 0) {
-         fStlMap = 0;
-         return &(json->at("second"));
-      }
-      --fStlIndx; // return counter back to read second element from same node
-      ++fStlMap;
-      return &(json->at("first"));
+   void ClearStl()
+   {
+      fStlRead.reset(nullptr);
    }
 };
 
@@ -1801,11 +1813,8 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    } else {
 
       // special handling of STL which coded into arrays
-      if ((special_kind > 0) && (special_kind < ROOT::kSTLend)) {
-         stack->fStlIndx = 0;
-         if (map_convert > 0)
-            stack->ResetStlMap(map_convert, fTypeNameTag.Data());
-      }
+      if ((special_kind > 0) && (special_kind < ROOT::kSTLend))
+         stack->AssignStl(map_convert, fTypeNameTag.Data());
 
       // if provided - use class version from JSON
       stack->fClVersion = jsonClassVersion ? jsonClassVersion : jsonClass->GetClassVersion();
@@ -1820,8 +1829,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
       stack->fClVersion = 0;
 
-      stack->fStlIndx = -1; // reset STL index for itself to prevent looping
-      stack->fStlMap = -1;
+      stack->ClearStl(); // reset STL index for itself to prevent looping
    }
 
    // return back stack position
