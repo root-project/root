@@ -33,6 +33,26 @@ struct RComboBoxItem {
    RComboBoxItem(const std::string &id, const std::string &set) : fId(id), fSet(set) {}
 };
 
+struct RFitFuncParameter {
+   int ipar{0};
+   std::string name;
+   double value{0.};
+   double error{0.};
+   double min{0.}, max{0.};
+   RFitFuncParameter() = default;
+   RFitFuncParameter(int _ipar, const std::string &_name, double _value, double _error, double _min, double _max) :
+      ipar(_ipar), name(_name), value(_value), error(_error), min(_min), max(_max) {}
+};
+
+struct RFitFunc {
+   std::string name;
+   double value{0.};
+   double min{0.};
+   double max{0.};
+   double error{0.};
+   std::vector<RFitFuncParameter> pars;
+};
+
 //Structure for the main fit panel model
 struct RFitPanelModel6 {
    std::vector<RComboBoxItem> fDataSet;

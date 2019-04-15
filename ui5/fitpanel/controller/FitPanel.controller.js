@@ -50,8 +50,9 @@ sap.ui.define([
 
                this.copyModel = JSROOT.extend({},data);
             }
-         }
-         else {
+         } else if (msg.startsWith("PARS:")) {
+         	var data = JSROOT.parse(msg.substr(5));
+         	this.showParametersDialog(data);
          }
 
       },
@@ -89,17 +90,6 @@ sap.ui.define([
          this.getView().getModel().updateBindings();
          this.byId("selectedOpText").setText("gaus");
          this.byId("OperationText").setValue("");
-         return;
-      },
-
-      backPanel: function() {
-         //Each time we click the button, we go one step back
-         count--;
-         if(count < 0) return;
-         if(!this.copyModel[count]) return;
-
-         JSROOT.extend(this._data, this.copyModel[count]);
-         this.getView().getModel().updateBindings();
          return;
       },
 
@@ -179,6 +169,12 @@ sap.ui.define([
       },
 
       closeParametersDialog: function(is_ok) {
+         if (is_ok && this.parData) {
+         	var json = JSROOT.toJSON(this.parData);
+         	if (this.websocket)
+               this.websocket.Send("SETPARS:" + json);
+         }
+
          this.parsDialog.close();
          this.parsDialog.destroy();
          delete this.parsDialog;
@@ -186,14 +182,19 @@ sap.ui.define([
       },
 
       setParametersDialog: function(){
+      	var func = this.getView().byId("TypeXY").getValue();
+      	var msg = "GETPARS:" + func;
+        if (this.websocket)
+            this.websocket.Send(msg);
+      },
 
-         //var items = [];
+      showParametersDialog: function(data){
 
-         var aData = {Data:[
-         	{Name:"Constant", Fix:false, Bound:false, Value:805, Min:-195, SetRange:805, Max:1805, Step:10, Errors:"-" },
-         	{Name:"Mean", Fix:false, Bound:false, Value:-0.039, Min:-10.39, SetRange:-0.039, Max:9.96, Step:0.1, Errors:"-" },
-         	{Name:"Sigma", Fix:false, Bound:false, Value:0.998, Min:0, SetRange:0.99, Max:9.9826, Step:0.1, Errors:"-" }
-         	]};
+         var aData = { Data: data.pars };
+
+         this.parData = data;
+
+         console.log("GOT PARAMETERS", data.pars.length, data.name, data.min);
 
          var oModel = new sap.ui.model.json.JSONModel(aData);
          sap.ui.getCore().setModel(oModel, "aDataData");
@@ -201,58 +202,51 @@ sap.ui.define([
          var oColName = new sap.m.Column({ header: new sap.m.Label({text: "Name"})});
          var oColFix = new sap.m.Column({ header: new sap.m.Label({text: "Fix"})});
          var oColBound = new sap.m.Column({ header: new sap.m.Label({text: "Bound"})});
-         var oColValue = new sap.m.Column({ header: new sap.m.Label({text: "Value"})});
+         //var oColValue = new sap.m.Column({ header: new sap.m.Label({text: "Value"})});
          var oColMin = new sap.m.Column({ header: new sap.m.Label({text: "Min"})});
-         var oColSetRange = new sap.m.Column({ header: new sap.m.Label({text: "Set Range"})});
+         //var oColSetRange = new sap.m.Column({ header: new sap.m.Label({text: "Set Range"})});
          var oColMax = new sap.m.Column({ header: new sap.m.Label({text: "Max"})});
-         var oColStep = new sap.m.Column({ header: new sap.m.Label({text: "Step"})});
-         var oColErrors = new sap.m.Column({ header: new sap.m.Label({text: "Errors"})});
+         //var oColStep = new sap.m.Column({ header: new sap.m.Label({text: "Step"})});
+         //var oColErrors = new sap.m.Column({ header: new sap.m.Label({text: "Errors"})});
 
-         var oNameTxt = new sap.m.Text({text: "{/Name}"});
-         var oFixTxt = new sap.m.CheckBox({selected: "{/Fix}"});
-         var oBoundTxt = new sap.m.CheckBox({selected: "{/Bound}"});
-         var oValueTxt = new sap.m.StepInput({min:"{/Min}", max:"{/Max}", value:"{/Value}" });
-         var oMinTxt = new sap.m.Text({ text:"{/Min}"});
-         var oSetRangeTxt = new sap.m.RangeSlider({min:"{/Min}", max:"{/Max}", value:"{/Value}"});
-         var oMaxTxt = new sap.m.Text({ text:"{/Max}"});
-         var oStepTxt = new sap.m.StepInput({min:"{/Min}", max:"{/Max}", value:"{/Step}" });
-         var oErrorTxt = new sap.m.Text({text:"{/Errors}"});
+         var oNameTxt = new sap.m.TextArea({value: "{name}", height: "30px"});
+         var oFixTxt = new sap.m.CheckBox({selected: "{Fix}"});
+         var oBoundTxt = new sap.m.CheckBox({selected: "{Bound}"});
+         //var oValueTxt = new sap.m.StepInput({min:"{min}", max:"{max}", value:"{value}", displayValuePrecision: 3, width: "120%" });
+         //var oMinTxt = new sap.m.TextArea({ value:"{min}", height: "30px"});
+         var oMinTxt = new sap.m.TextArea({value: "{min}", height: "30px"});
+         //var oSetRangeTxt = new sap.m.RangeSlider({min:"{Min}", max:"{Max}", value:"{Value}"});
+         //var oMaxTxt = new sap.m.TextArea({ value:"{max}", height: "30px"});
+         var oMaxTxt = new sap.m.TextArea({value: "{max}", height: "30px"});
+         //var oStepTxt = new sap.m.StepInput({min:"{min}", max:"{max}", value:"{Step}", displayValuePrecision: 3 });
+         //var oErrorTxt = new sap.m.TextArea({value:"{error}", height: "30px", enabled:false});
 
          var oTableItems = new sap.m.ColumnListItem({vAlign:"Middle",cells:[oNameTxt,oFixTxt,oBoundTxt,
-         											oValueTxt,oMinTxt,oSetRangeTxt,oMaxTxt,oStepTxt,oErrorTxt]});
+         										oMinTxt,oMaxTxt]});
 
          var oTable = new sap.m.Table({
          	id:"PrmsTable",
          	fixedLayout:false,
          	mode: sap.m.ListMode.SingleSelectMaster,
-         	includeItemInSelection:true
+         	includeItemInSelection:true,
+         	growing: true
          });
 
          oTable.addColumn(oColName);
          oTable.addColumn(oColFix);
          oTable.addColumn(oColBound);
-         oTable.addColumn(oColValue);
+         //oTable.addColumn(oColValue);
          oTable.addColumn(oColMin);
-         oTable.addColumn(oColSetRange);
+         //oTable.addColumn(oColSetRange);
          oTable.addColumn(oColMax);
-         oTable.addColumn(oColStep);
-         oTable.addColumn(oColErrors);
+         // oTable.addColumn(oColStep);
+         // oTable.addColumn(oColErrors);
 
          oTable.bindAggregation("items","/Data",oTableItems,null);
          oTable.setModel(oModel);
 
-        
-
-         // for (var n=0;n<5;++n) {
-         //    var item = new InputListItem({
-         //       label: "Name" + n,
-         //       content: new Input({ placeholder: "Name"+n, value: n })
-         //    });
-         //    items.push(item);
-         // }
-
          this.parsDialog = new Dialog({
-            title: "Prarameters",
+            title: "Set Prarameters",
             beginButton: new Button({
                text: 'Cancel',
                press: this.closeParametersDialog.bind(this)
@@ -264,11 +258,8 @@ sap.ui.define([
          });
 
          this.parsDialog.addContent(oTable);
-         // this.getView().getModel().setProperty("/Method", method);
-         //to get access to the global model
-         // this.getView().addDependent(this.methodDialog);
 
-         //this.parsDialog.addStyleClass("sapUiSizeCompact");
+         this.parsDialog.addStyleClass("sapUiSizeCompact sapUiResponsiveMargin");
 
          this.parsDialog.open();
       },

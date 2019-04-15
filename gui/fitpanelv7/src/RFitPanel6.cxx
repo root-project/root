@@ -20,6 +20,8 @@
 
 #include "TString.h"
 #include "TROOT.h"
+#include "TF1.h"
+#include "TList.h"
 #include "TPad.h"
 #include "TDirectory.h"
 #include "TBufferJSON.h"
@@ -292,6 +294,49 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       arg1.erase(0,6);
       DoFit(arg1);
       return;
+   }
+
+   if (arg.find("GETPARS:") == 0) {
+      auto name = arg.substr(8);
+      TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(name.c_str()));
+
+      printf("Found func %s %p\n", name.c_str(), func);
+
+      RFitFunc info;
+      if (func) {
+        info.name = name;
+        for (int n=0;n<func->GetNpar();++n) {
+          Double_t min{0}, max{0};
+          func->GetParLimits(n, min, max);
+          info.pars.emplace_back(n, func->GetParName(n), func->GetParameter(n), func->GetParError(n), min, max);   
+         
+        }
+      } else {
+        info.name = "<not exists>";
+      }
+      TString json = TBufferJSON::ToJSON(&info);
+
+      fWindow->Send(fConnId, std::string("PARS:") + json.Data());
+      return;
+   }
+
+   if (arg.find("SETPARS:") == 0) {
+      auto json = arg.substr(8);
+      auto info = TBufferJSON::FromJSON<RFitFunc>(json);
+      if (info) {
+         TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info->name.c_str()));
+
+
+         if (func) {
+            printf("Found func %s %p %d %d\n", info->name.c_str(), func, func->GetNpar(), (int) info->pars.size());
+            // copy all parameters back to the function
+            for (int n=0;n<func->GetNpar();++n) {
+              Double_t min{0}, max{0};
+              func->SetParLimits(n, min, max);   
+            }
+          }
+
+      }
    }
 }
 
