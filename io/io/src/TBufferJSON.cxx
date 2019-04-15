@@ -36,9 +36,19 @@ To reconstruct object from the JSON string, one should do:
    TBufferJSON::FromJSON(hnew, json);
    if (hnew) hnew->Draw("hist");
 ~~~
-JSON data does not include stored class version, therefore schema evolution
+JSON does not include stored class version, therefore schema evolution
 (reading of older class versions) is not supported. JSON should not be used as
 persistent storage for object data - only for live applications.
+
+All STL containers by default converted into JSON Array. Vector of integers:
+~~~{.cpp}
+   std::vector<int> vect = {1,4,7};
+   auto json = TBufferJSON::ToJSON(&vect);
+   // result is [1,2,3]
+~~~
+Will produce JSON code
+Data member like
+`std::vector<int>` will be represented as `[1,2,3]`
 
 */
 
@@ -257,35 +267,36 @@ public:
 class TJSONStackObj : public TObject {
    struct StlRead {
       Int_t fIndx{0};                   //! index of object in STL container
-      Int_t fMap{-1};                   //! special iterator over STL map::key members
+      Int_t fMap{0};                    //! special iterator over STL map::key members
+      Bool_t fFirst{kTRUE};             //! is first or second element is used in the pair
       nlohmann::json::iterator fIter;   //! iterator for std::map stored as JSON object
       const char *fTypeTag{nullptr};    //! type tag used for std::map stored as JSON object
       nlohmann::json fValue;            //! temporary value reading std::map as JSON
       nlohmann::json *GetStlNode(nlohmann::json *prnt)
       {
-         if (fMap == 2) {
-            if ((fIndx==0) && fTypeTag && (fIter.key().compare(fTypeTag) == 0)) ++fIter;
-            if (fIndx == 0) {
-               fValue = fIter.key();
-               fIndx++;
-            } else {
-               fValue = fIter.value();
-               ++fIter;
-               fIndx = 0;
-            }
-            return &fValue;
+         if (fMap <= 0)
+            return &(prnt->at(fIndx++));
+
+         if (fMap == 1) {
+            nlohmann::json *json = &(prnt->at(fIndx));
+            if (!fFirst) fIndx++;
+            json = &(json->at(fFirst ? "first" : "second"));
+            fFirst = !fFirst;
+            return  json;
          }
 
-         nlohmann::json *json = &(prnt->at(fIndx++));
-         if (fMap < 0)
-            return json;
-         if (fMap > 0) {
-            fMap = 0;
-            return &(json->at("second"));
+         if (fIndx == 0) {
+            // skip _typename if appears
+            if (fTypeTag && (fIter.key().compare(fTypeTag) == 0))
+               ++fIter;
+            fValue = fIter.key();
+            fIndx++;
+         } else {
+            fValue = fIter.value();
+             ++fIter;
+            fIndx = 0;
          }
-         --fIndx; // return counter back to read second element from same node
-         ++fMap;
-         return &(json->at("first"));
+         return &fValue;
       }
    };
 
@@ -391,10 +402,8 @@ public:
    void AssignStl(Int_t map_convert, const char *typename_tag)
    {
       fStlRead = std::make_unique<StlRead>();
-      if (map_convert == 1) {
-         fStlRead->fMap = 0; // stl map was streamed as array of pairs
-      } else if (map_convert == 2) {
-         fStlRead->fMap = 2; // stl map was converted as array of objects
+      fStlRead->fMap = map_convert;
+      if (map_convert == 2) {
          fStlRead->fIter = fNode->begin();
          fStlRead->fTypeTag = typename_tag && (strlen(typename_tag) > 0) ? typename_tag : nullptr;
       }
