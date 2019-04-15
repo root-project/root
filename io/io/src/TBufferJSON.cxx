@@ -44,11 +44,49 @@ All STL containers by default converted into JSON Array. Vector of integers:
 ~~~{.cpp}
    std::vector<int> vect = {1,4,7};
    auto json = TBufferJSON::ToJSON(&vect);
-   // result is [1,2,3]
 ~~~
-Will produce JSON code
-Data member like
-`std::vector<int>` will be represented as `[1,2,3]`
+Will produce JSON code "[1, 4, 7]". There are special handling for map classes like `map` and `multimap`.
+They will create Array of pair objects with "fisrt" and "second" as data members. Code:
+~~~{.cpp}
+   std::map<int,string> m;
+   m[1] = "number 1";
+   m[2] = "number 2";
+   auto json = TBufferJSON::ToJSON(&m);
+~~~
+Will generate json string:
+~~~{.json}
+[
+  {"$pair" : "pair<int,string>", "first" : 1, "second" : "number 1"},
+  {"$pair" : "pair<int,string>", "first" : 2, "second" : "number 2"}
+]
+~~~
+In special cases map objects can be converted into JSON object. It is required, that type of key
+should be `std::string` and data member marked with "JSON_object" in the comment. Like object:
+~~~{.cpp}
+struct Container {
+   std::map<std::string,int> data;  ///< JSON_object
+};
+
+Container obj;
+obj.data["name1"] = 11;
+obj.data["name2"] = 22;
+
+auto json = TBufferJSON::ToJSON(&obj);
+~~~
+Will produce JSON output:
+~~~
+{
+  "_typename" : "Container",
+  "data" : {
+     "_typename": "map<string,int>",
+     "name1": 11,
+     "name2": 22
+  }
+}
+~~~
+
+
+
 
 */
 
@@ -1261,7 +1299,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    } else if ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
               (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap)) {
 
-      if (stack && stack->fElem && strstr(stack->fElem->GetTitle(), "JSONmap"))
+      if (stack && stack->fElem && strstr(stack->fElem->GetTitle(), "JSON_object"))
          map_convert = 2; // mapped into normal object
       else
          map_convert = 1;
@@ -1731,7 +1769,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    Int_t map_convert = 0;
    if ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
        (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap)) {
-      if (stack && stack->fElem && strstr(stack->fElem->GetTitle(), "JSONmap"))
+      if (stack && stack->fElem && strstr(stack->fElem->GetTitle(), "JSON_object"))
          map_convert = 2; // mapped into normal object
       else
          map_convert = 1;
