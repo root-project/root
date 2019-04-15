@@ -188,6 +188,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
         -e "#define CMakeBuildDir \"${CMAKE_CURRENT_BINARY_DIR}\""
         -e "gSystem->AddDynamicPath(\"${CMAKE_CURRENT_BINARY_DIR}\")"
         -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_SOURCE_DIR}\")"
+        -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
         -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
         ${RootMacroDirDefines})
 
