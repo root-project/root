@@ -4049,6 +4049,9 @@ void TSystem::SetMakeSharedLib(const char *directives)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add includePath to the already set include path.
+/// Note: This interface is mostly relevant for ACLiC and it does *not* inform
+/// gInterpreter for this include path. If the TInterpreter needs to know about
+/// the include path please use \c gInterpreter->AddIncludePath.
 
 void TSystem::AddIncludePath(const char *includePath)
 {
