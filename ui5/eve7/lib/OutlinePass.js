@@ -132,48 +132,35 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 	constructor: THREE.OutlinePass,
 
 	parseAtts: function(object, groups){
-		// treat Mesh, Line and LineSegments as the same
-		if(object.type === "Mesh" || object.type === "Line" || object.type === "LineSegments" )
-		{
-			groups[0].push(object);
-		}
-		else if(object.type === "Points")
-		{
-			let found = false;
-			// loop over groups
-			for (let z = 1; z < groups.length; ++z){
-				// loop over all the elements of a group
-				for (let w = 0; w < z.length; ++w){
-					// if the objects have the same attributes
-					if(
-						this.selectedObjects[z][w].type			 === object.type			&&
-						this.selectedObjects[z][w].material.size === object.material.size	&&
-						this.selectedObjects[z][w]["vertShader"] === object["vertShader"]	&&
-						this.selectedObjects[z][w]["fragShader"] === object["fragShader"]
-					){
+		let found = false;
+		// loop over groups
+		for (let z = 0; z < groups.length; ++z){
+			// loop over all the elements of a group
+			//for (let w = 0; w < groups[z].length; ++w)
+
+			const w = 0; // check only the first element of the group!
+			{
+				let pass = (object.type === "Points") ? (groups[z][w].material.size === object.material.size) : true;
+				
+				if( pass ){
+					// final check
+					if( groups[z][w]["vertShader"] === object["vertShader"]	&&
+						groups[z][w]["fragShader"] === object["fragShader"] &&
+						groups[z][w].visibleEdgeColor === object.visibleEdgeColor &&
+						groups[z][w].hiddenEdgeColor === object.hiddenEdgeColor
+					) { 
 						groups[z].push(object);
 						found = true;
 						break; 
 					}
 				}
-				if(found)
-					break;
 			}
+			if(found)
+				break;
+		}
 
-			if(!found){
-				groups.push([object]);
-			}
-		}
-		else if(object.type === "Group" || object.type === "Object3D")
-		{
-			for (const child of object.children){
-				this.parseAtts(child, groups);
-			}
-		}
-		else 
-		{
-			console.error("unknown type of geometry! fallback to 0");
-			groups[0].push(object);
+		if(!found){
+			groups.push([object]);
 		}
 	},
 
@@ -199,7 +186,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 		}
 		*/
 
-		let groups = [[]];
+		let groups = [];
 		
 		for (const obj of this.selectedObjects)
 			this.parseAtts(obj, groups);
