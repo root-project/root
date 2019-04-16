@@ -7,8 +7,11 @@ THREE.OutlinePass = function ( resolution, scene, camera ) {
 	// [{ "index": number, "isPoints": boolean, "pointSize": number, "vertShader": string, "fragShader":string },......]
 	this.renderScene = scene;
 	this.renderCamera = camera;
+
 	this.selectedObjects = [];
 	this.id2obj_map = {};
+	this.sec_sel = [];
+
 	this.visibleEdgeColor = new THREE.Color( 1, 1, 1 );
 	this.hiddenEdgeColor = new THREE.Color( 0.1, 0.04, 0.02 );
 	this.edgeGlow = 0.0;
@@ -251,7 +254,6 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 		// 	}
 		// }
 		this.groups = groups.filter(Array);
-		console.log(this.groups);
 	},
 
 	dispose: function () {
@@ -309,7 +311,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 		}
 
-		for(const obj of ((Array.isArray(object) ? object : (object && [object])) || this.selectedObjects)){
+		for(const obj of (object || this.selectedObjects)){
 			obj.traverse( gatherSelectedMeshesCallBack );
 		}
 
@@ -394,11 +396,15 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 	},
 
 	render: function ( renderer, writeBuffer, readBuffer, deltaTime, maskActive ) {
-		this.selectedObjects = Object.values(this.id2obj_map).flat();
+		this.selectedObjects = Object.values(this.id2obj_map).flat().flat();
 		// console.log(this.selectedObjects);
 		// debugger;
 
 		if ( this.selectedObjects.length > 0 ) {
+			// add sec_sel elements in renderScene
+			for(const obj of this.sec_sel)
+				this.renderScene.add(obj);
+
 			this.oldClearColor.copy( renderer.getClearColor() );
 			this.oldClearAlpha = renderer.getClearAlpha();
 			var oldAutoClear = renderer.autoClear;
@@ -436,6 +442,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 			renderer.clear();
 
 			this.checkForCustomAtts();
+			//console.log(this.groups);
 			
 			for(const group of this.groups){
 				if(group.length > 0)
@@ -543,6 +550,10 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 			renderer.setClearColor( this.oldClearColor, this.oldClearAlpha );
 			renderer.autoClear = oldAutoClear;
+			
+			// remove sec_sel elements from renderScene
+			for(const obj of this.sec_sel)
+				this.renderScene.remove(obj);
 		} else {
 			this.quad.material = this.materialCopy;
 			this.copyUniforms[ "tDiffuse" ].value = readBuffer.texture;
