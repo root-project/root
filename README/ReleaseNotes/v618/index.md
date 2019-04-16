@@ -84,7 +84,7 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
   - Adds a new constructor with a const char *lurl to TNetXNGFile and passes it to TFile, if set. This allows redirection to files that have a different name in the local file system and is important to allow derivation (for example to TAlien and TJAlienFile) while still keeping functionality via TArchiveFile when the file name in the local file system does not match `*.zip`
 
 ### TBufferJSON
-Add possibility to convert STL `std::map`, `std::multimap`, `std::unordered_map`, `std::unordered_map`,
+Add possibility to convert STL `std::map`, `std::multimap`, `std::unordered_map`,
 `std::unordered_multimap` classes into JSON object. This only possible when key typename
 is `std::string` (or compatible) and contains only valid JSON identifiers. By default these classes converted
 into JSON array of `std::pair` objects. To enable new feature, compact parameter should be 5:
