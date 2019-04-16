@@ -2,7 +2,7 @@
 // Author: Sergey Linev  4.03.2014
 
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -45,8 +45,10 @@ All STL containers by default converted into JSON Array. Vector of integers:
    std::vector<int> vect = {1,4,7};
    auto json = TBufferJSON::ToJSON(&vect);
 ~~~
-Will produce JSON code "[1, 4, 7]". There are special handling for map classes like `map` and `multimap`.
-They will create Array of pair objects with "fisrt" and "second" as data members. Code:
+Will produce JSON code "[1, 4, 7]".
+
+There are special handling for map classes like `map` and `multimap`.
+They will create Array of pair objects with "first" and "second" as data members. Code:
 ~~~{.cpp}
    std::map<int,string> m;
    m[1] = "number 1";
@@ -60,32 +62,31 @@ Will generate json string:
   {"$pair" : "pair<int,string>", "first" : 2, "second" : "number 2"}
 ]
 ~~~
-In special cases map objects can be converted into JSON object. It is required, that type of key
-should be `std::string` and data member marked with "JSON_object" in the comment. Like object:
+In special cases map container can be converted into JSON object. For that key parameter
+must be `std::string` and compact parameter should be 5.
+Like in example:
 ~~~{.cpp}
-struct Container {
-   std::map<std::string,int> data;  ///< JSON_object
-};
+std::map<std::string,int> data;
+data["name1"] = 11;
+data["name2"] = 22;
 
-Container obj;
-obj.data["name1"] = 11;
-obj.data["name2"] = 22;
-
-auto json = TBufferJSON::ToJSON(&obj);
+auto json = TBufferJSON::ToJSON(&data,5);
 ~~~
 Will produce JSON output:
 ~~~
 {
-  "_typename" : "Container",
-  "data" : {
-     "_typename": "map<string,int>",
-     "name1": 11,
-     "name2": 22
-  }
+  "_typename": "map<string,int>",
+  "name1": 11,
+  "name2": 22
 }
 ~~~
-
-
+Another possibility to enforce such conversion - add "JSON_object" into comment line of correspondent
+data member like:
+~~~{.cpp}
+class Container {
+   std::map<std::string,int> data;  ///<  JSON_object
+};
+~~~
 
 
 */
@@ -438,14 +439,24 @@ public:
 
    Bool_t IsStl() const { return fStlRead.get() != nullptr; }
 
-   void AssignStl(Int_t map_convert, const char *typename_tag)
+   Bool_t AssignStl(TClass *cl, Int_t map_convert, const char *typename_tag)
    {
       fStlRead = std::make_unique<StlRead>();
       fStlRead->fMap = map_convert;
       if (map_convert == 2) {
+         if (!fNode->is_object()) {
+            ::Error("TJSONStackObj::AssignStl", "when reading %s expecting JSON object", cl->GetName());
+            return kFALSE;
+         }
          fStlRead->fIter = fNode->begin();
          fStlRead->fTypeTag = typename_tag && (strlen(typename_tag) > 0) ? typename_tag : nullptr;
+      } else {
+         if (!fNode->is_array()) {
+            ::Error("TJSONStackObj::AssignStl", "when reading %s expecting JSON array", cl->GetName());
+            return kFALSE;
+         }
       }
+      return kTRUE;
    }
 
    nlohmann::json *GetStlNode()
@@ -547,6 +558,10 @@ void TBufferJSON::SetCompact(int level)
    if (level < 0)
       level = 0;
    fCompact = level % 10;
+   if (fCompact >= 5) {
+      fMapAsObject = kTRUE;
+      fCompact = fCompact % 5;
+   }
    fSemicolon = (fCompact > 2) ? ":" : " : ";
    fArraySepar = (fCompact > 2) ? "," : ", ";
    fArrayCompact = (level / 10) % 10;
@@ -917,7 +932,7 @@ void *TBufferJSON::ConvertFromJSONAny(const char *str, TClass **cl)
    }
 
    if (objClass && objClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(objClass->GetCollectionProxy())) {
-      ::Error("TBufferJSON::ConvertToJSON",
+      ::Error("TBufferJSON::ConvertFromJSONAny",
             "The class requested (%s)"
             " is an instance of an stl collection and does not have a compiled CollectionProxy."
             " Please generate the dictionary for this collection (%s). No data will be written.",
@@ -1318,7 +1333,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    } else if ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
               (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap)) {
 
-      if (stack && stack->fElem && strstr(stack->fElem->GetTitle(), "JSON_object"))
+      if ((fMapAsObject && (fStack.size()==1)) || (stack && stack->fElem && strstr(stack->fElem->GetTitle(), "JSON_object")))
          map_convert = 2; // mapped into normal object
       else
          map_convert = 1;
@@ -1788,10 +1803,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    Int_t map_convert = 0;
    if ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
        (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap)) {
-      if (stack && stack->fElem && strstr(stack->fElem->GetTitle(), "JSON_object"))
-         map_convert = 2; // mapped into normal object
-      else
-         map_convert = 1;
+      map_convert = json->is_object() ? 2 : 1; // check if map was written as array or as object
    }
 
    // from now all operations performed with sub-element,
@@ -1878,9 +1890,11 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
    } else {
 
+      Bool_t do_read = kTRUE;
+
       // special handling of STL which coded into arrays
       if ((special_kind > 0) && (special_kind < ROOT::kSTLend))
-         stack->AssignStl(map_convert, fTypeNameTag.Data());
+         do_read = stack->AssignStl(jsonClass, map_convert, fTypeNameTag.Data());
 
       // if provided - use class version from JSON
       stack->fClVersion = jsonClassVersion ? jsonClassVersion : jsonClass->GetClassVersion();
@@ -1891,7 +1905,8 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       if (isBase && (special_kind == 0))
          Error("JsonReadObject", "Should not be used for reading of base class %s", jsonClass->GetName());
 
-      jsonClass->Streamer((void *)obj, *this);
+      if (do_read)
+         jsonClass->Streamer((void *)obj, *this);
 
       stack->fClVersion = 0;
 
