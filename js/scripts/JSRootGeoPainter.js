@@ -1921,22 +1921,20 @@
       this._effectComposer = new THREE.EffectComposer( this._renderer );
       this._effectComposer.addPass( new THREE.RenderPass( this._scene, this._camera ) );
 
-      this.outlinePass = new THREE.OutlinePass( new THREE.Vector2( w, h ), this._scene, this._camera );
-      this.outlinePass.edgeStrength = 7.5;
-      this.outlinePass.edgeGlow = 0.5;
-      this.outlinePass.edgeThickness = 1.0;
-      this.outlinePass.usePatternTexture = false;
-      this.outlinePass.downSampleRatio = 2;
-      this.outlinePass.visibleEdgeColor.set('#dd1111');
-      this.outlinePass.hiddenEdgeColor.set('#1111dd');
-      this._effectComposer.addPass( this.outlinePass );
+      this._outlinePass = new THREE.OutlinePass( new THREE.Vector2( w, h ), this._scene, this._camera );
+      this._outlinePass.edgeStrength = 7.5;
+      this._outlinePass.edgeGlow = 0.5;
+      this._outlinePass.edgeThickness = 1.0;
+      this._outlinePass.usePatternTexture = false;
+      this._outlinePass.downSampleRatio = 2;
+      this._outlinePass.visibleEdgeColor.set('#dd1111');
+      this._outlinePass.hiddenEdgeColor.set('#1111dd');
+      this._effectComposer.addPass( this._outlinePass );
 
-      this.effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
-      this.effectFXAA.uniforms[ 'resolution' ].value.set( 1 / w, 1 / h );
-      this.effectFXAA.renderToScreen = true;
-      this._effectComposer.addPass( this.effectFXAA );
-
-      // this.composer.addPass( new THREE.ShaderPass( THREE.CopyShader ) );
+      this._effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
+      this._effectFXAA.uniforms[ 'resolution' ].value.set( 1 / w, 1 / h );
+      this._effectFXAA.renderToScreen = true;
+      this._effectComposer.addPass( this._effectFXAA );
 
       if (this._enableSSAO)
          this.createSSAO();
@@ -3626,7 +3624,7 @@
          this._camera.updateProjectionMatrix();
          this._renderer.setSize( this._scene_width, this._scene_height, !this._fit_main_area );
          this._effectComposer.setSize( this._scene_width, this._scene_height );
-         this.effectFXAA.uniforms[ 'resolution' ].value.set( 1 / this._scene_width, 1 / this._scene_height );
+         this._effectFXAA.uniforms[ 'resolution' ].value.set( 1 / this._scene_width, 1 / this._scene_height );
 
          if (!this.drawing_stage) this.Render3D();
       }

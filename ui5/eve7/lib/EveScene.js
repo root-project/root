@@ -481,8 +481,7 @@ sap.ui.define([
          console.log("draw for selection exit ", x);
          // AMT for debugging purposes take only first child
          // this.viewer.getThreejsContainer("scene" + this.element_id).add(x[0]);
-         this.viewer.outlinePass.sec_sel = x;
-         dest[element_id] = x;
+         this.viewer.outlinePass.sec_sel = (dest[element_id] = x);
       }
 
       this.viewer.render();

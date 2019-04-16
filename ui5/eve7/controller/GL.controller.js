@@ -326,7 +326,7 @@ sap.ui.define([
          this.last_highlight = null;
 
          // outlinePass passthrough
-         this.outlinePass = this.geo_painter.outlinePass;
+         this.outlinePass = this.geo_painter._outlinePass;
 
          // create only when geo painter is ready
          this.createScenes();
