@@ -462,7 +462,7 @@ sap.ui.define([
       var obj3d = this.getObj3D( element_id );
 
       if ( ! (selection_obj.fElementId in this.viewer.outlinePass.id2obj_map))
-	 this.viewer.outlinePass.id2obj_map[selection_obj.fElementId] = [];
+	      this.viewer.outlinePass.id2obj_map[selection_obj.fElementId] = [];
 
       var dest  = this.viewer.outlinePass.id2obj_map[selection_obj.fElementId];
 
@@ -475,13 +475,14 @@ sap.ui.define([
       else
       {
          var ctrl = obj3d.get_ctrl();
-	 // AMT todo check for memory leaks
-	 var x = new THREE.Object3D();
+         // AMT todo check for memory leaks
+         var x = [];
          ctrl.DrawForSelection(sec_idcs, x);
-	 console.log("draw for selection exit ", x);
-	 // AMT for debugging purposes take only first child
-	 var fe  = x.children[0];
-         dest[element_id] = fe;
+         console.log("draw for selection exit ", x);
+         // AMT for debugging purposes take only first child
+         // this.viewer.getThreejsContainer("scene" + this.element_id).add(x[0]);
+         this.viewer.outlinePass.sec_sel = x;
+         dest[element_id] = x;
       }
 
       this.viewer.render();
