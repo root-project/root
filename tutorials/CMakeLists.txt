@@ -469,6 +469,7 @@ if(ROOT_python_FOUND)
     # These tests only fail in Py3 with PyROOT experimental
     list(APPEND pyexp_fail tutorial-pyroot-surfaces-py)
     list(APPEND pyexp_fail tutorial-pyroot-zdemo-py)
+    list(APPEND pyexp_fail tutorial-pyroot-first-py)
   endif()
 
   foreach(t ${pytutorials})
