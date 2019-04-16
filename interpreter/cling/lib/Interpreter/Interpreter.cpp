@@ -1653,10 +1653,16 @@ namespace cling {
     // For some unknown reason, Clang 5.0 adds a special symbol ('\01') in front
     // of the mangled names on Windows, making them impossible to find
     // TODO: remove this piece of code and try again when updating Clang
-    if (mangledName.size() > 2 && mangledName[1] == '?' &&
-        mangledName.compare(1, 14, std::string("?__cling_Un1Qu"))) {
-      mangledName.erase(0, 1);
+    std::string mncp = mangledName;
+    // use corrected symbol for "external" lookup
+    if (mncp.size() > 2 && mncp[1] == '?' &&
+        mncp.compare(1, 14, std::string("?__cling_Un1Qu"))) {
+      mncp.erase(0, 1);
     }
+    void *addr = getAddressOfGlobal(mncp, fromJIT);
+    if (addr)
+      return addr;
+    // if failed, proceed with original symbol for lookups in JIT tables
 #endif
     return getAddressOfGlobal(mangledName, fromJIT);
   }
