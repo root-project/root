@@ -1,12 +1,12 @@
 /// \file ROOT/RAttrBox.hxx
-/// \ingroup Graf ROOT7
+/// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2018-10-17
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -16,9 +16,9 @@
 #ifndef ROOT7_RAttrBox
 #define ROOT7_RAttrBox
 
+#include <ROOT/RDrawingAttr.hxx>
 #include <ROOT/RAttrLine.hxx>
 #include <ROOT/RColor.hxx>
-#include <ROOT/RDrawingAttr.hxx>
 #include <ROOT/RPadExtent.hxx>
 #include <ROOT/RPadPos.hxx>
 
@@ -41,7 +41,7 @@ public:
    RAttrLine Bottom() const { return  {"bottom", *this}; }
    /// Overrides Border() for the left line.
    RAttrLine Left() const { return  {"left", *this}; }
-   
+
    // TODO: Add Fill()!
 };
 
