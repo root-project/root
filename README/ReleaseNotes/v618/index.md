@@ -83,6 +83,36 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
   - Uses standard VectorReadLimits and does not query a XRootD data server (which is unknown in local redirection), when it is redirected to a local file
   - Adds a new constructor with a const char *lurl to TNetXNGFile and passes it to TFile, if set. This allows redirection to files that have a different name in the local file system and is important to allow derivation (for example to TAlien and TJAlienFile) while still keeping functionality via TArchiveFile when the file name in the local file system does not match `*.zip`
 
+### TBufferJSON
+Add possibility to convert STL std::map, std::multimap, std::unordered_map, std::unordered_map,
+std::unordered_multimap classes into JSON object. This only possible when key typename
+is std::string (or compatible) and containes only valid JSON identifiers. To enable such feature,
+compact parameter should be 5:
+
+~~~ {.cpp}
+   std::map<std::string,int> obj;
+   obj["name1"] = 11;
+   obj["name1"] = 22;
+   auto json = TBufferJSON::ToJSON(&obj, 5);
+   // {"_typename": "map<string,int>", "name1": 11, "name2": 22}
+~~~
+Also one could put "JSON_object" string in class-member commnets to enable such feature:
+~~~ {.cpp}
+class Container {
+   int field{5};
+   std::unordered_map<std::string,double> data;  ///< JSON_object indicate conversion
+};
+~~~
+
+Also now one could disable storage of type information - "_typename" field. For that compact parameter
+has to include value 100. Be aware that such JSON representation may not be recognized by JSROOT.
+Maximal compression of JSON can be achieved now with compact parameter 128 = 100 + 20 + 5 + 3:
+   3 - remove all spaces and new lines
+   5 - convert map->object (when applicable)
+   20 - special compression of large arrays (auto-detected in JSROOT)
+   100 - suppressing _typename for all classes
+
+
 ## TTree Libraries
 
 ### RDataFrame
@@ -135,7 +165,7 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
 ## Histogram Libraries
 
 ### TH1
-  - Add a search range to the `TH1::FindFirstBinAbove(..)` and `TH1::FindLastBinAvove(..)` functions 
+  - Add a search range to the `TH1::FindFirstBinAbove(..)` and `TH1::FindLastBinAvove(..)` functions
 
 ### TH2Poly
   - Add implementation of SetBinError and fix a bug in GetBinError in case of weighted events.
@@ -225,12 +255,12 @@ In addition we have :
   - New `TMVA::Executor` class to control the multi-thread running of TMVA. By default now MT running will be enabled only when `ROOT::EnabledImplicitMT()` is called. But we can take the control of the threads by using `TMVA::gConfig().EnableMT(...)` and `TMVA::gConfig().DisableMT()`
 
 
-### PyMVA 
+### PyMVA
   - add support when using the Tensorflow backend in Keras to control the number of threads
   - add possibility to control options for configuring GPU running. FOr example we can now set the mode to allocate memory only as needed. This is required when using the new RTX gaming cards from NVIDIA
 
 
-  
+
 
 ## 2D Graphics Libraries
 
