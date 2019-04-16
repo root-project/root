@@ -172,7 +172,7 @@ endif()
 #---Populate the configure arguments returned by 'root-config --config'-------------------------
 get_cmake_property(variables CACHE_VARIABLES)
 foreach(var ${variables})
-  if((var MATCHES "_(LIBRARIES|LIBRARY|INCLUDE)") AND
+  if((var MATCHES "_(LIBRARIES|LIBRARY|INCLUDE|VERSION)") AND
      (NOT ${${var}} STREQUAL "") AND
      (NOT ${var} MATCHES "NOTFOUND"))
     if (var MATCHES "^QT_")
