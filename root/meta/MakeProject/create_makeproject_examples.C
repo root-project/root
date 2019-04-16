@@ -14,5 +14,6 @@ int create_makeproject_examples()
    tree.Write();
    _file0.Close();
    gSystem->Unlink("./stl_makeproject_test.rootmap");
+   gSystem->Unlink("./module.modulemap");
    return 0;
 }
