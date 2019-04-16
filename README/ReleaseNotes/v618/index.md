@@ -309,7 +309,7 @@ JSROOT sources were moved from `etc/http/` into `js/` subfolder in ROOT sources 
 ### Header location and `ROOT_GENERATE_DICTIONARY` / `ROOT_STANDARD_LIBRARY_PACKAGE`
 
 A change in the argument handling of `ROOT_GENERATE_DICTIONARY` and `ROOT_STANDARD_LIBRARY_PACKAGE` might need your attention:
-these macros now respect whether a header file was passed with its fulla relative path (the common case), or with a full path.
+these macros now respect whether a header file was passed with its full relative path (the common case), or with a full path.
 The latter allows to find headers at runtime - at the cost of a loss of relocatability: you cannot move the library containing
 that dictionary to a different directory, because the header location is stored in the dictionary. This case is used by roottest
 but should likely not be used by anything but test suites.
