@@ -171,6 +171,14 @@ static std::string GetTreeFullPath(const TTree &tree)
 
    // Case 2: this is a TTree: we get the full path of it
    if (auto motherDir = tree.GetDirectory()) {
+      // We have 2 subcases (ROOT-9948):
+      // - 1. motherDir is a TFile
+      // - 2. motherDir is a directory
+      // If 1. we just return the name of the tree, if 2. we reconstruct the path
+      // to the file.
+      if (motherDir->InheritsFrom("TFile")) {
+         return tree.GetName();
+      }
       std::string fullPath(motherDir->GetPath());
       fullPath += "/";
       fullPath += tree.GetName();
