@@ -12,11 +12,11 @@ if(TARGET onepcm)
       set(EventDependencies "onepcm")
 endif()
 
-ROOT_GENERATE_DICTIONARY(EventDict ${ROOT_EVENT_DIR}/Event.h
-                  LINKDEF ${ROOT_EVENT_DIR}/EventLinkDef.h)
+#ROOT_GENERATE_DICTIONARY(EventDict ${ROOT_EVENT_DIR}/Event.h
+#                  LINKDEF ${ROOT_EVENT_DIR}/EventLinkDef.h)
 
-ROOT_LINKER_LIBRARY(Event TEST ${ROOT_EVENT_DIR}/Event.cxx EventDict.cxx
-                  LIBRARIES Core Tree Hist MathCore)
+#ROOT_LINKER_LIBRARY(Event TEST ${ROOT_EVENT_DIR}/Event.cxx EventDict.cxx
+#                  LIBRARIES Core Tree Hist MathCore)
 
 ROOTTEST_GENERATE_EXECUTABLE(EventGeneration ${ROOT_EVENT_DIR}/MainEvent.cxx
                   LIBRARIES Core RIO Net Tree Hist MathCore Event)
