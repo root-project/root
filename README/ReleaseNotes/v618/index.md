@@ -322,9 +322,24 @@ In addition we have :
 
 ## JavaScript ROOT
 
+### New funcitonality
+
+   - Add support of TProfile2Poly class
+   - Add support of TGeoOverlap class
+   - Implement update of TF2 drawings, see tutorials/graphics/anim.C
+   - Improve windows handling in flex(ible) layout
+   - Use requestAnimationFrame when do monitoring, improves performance
+   - Better position for text in TH2Poly drawings
+   - Upgrade three.js 86 -> 102, use SoftwareRenderer instead of CanvasRenderer
+   - Support eve7 geometry viewer - render data generated in ROOT itself
+   - Provide initial WebVR support, thanks to Diego Marcos
+   - Use gStyle attributes to draw histogram title
+
 ### New files location
 
-JSROOT sources were moved from `etc/http/` into `js/` subfolder in ROOT sources tree. After ROOT compilation  procedure JSROOT can be found in `$ROOTSYS/js/` subfolder.
+JSROOT sources were moved from `etc/http/` into `js/` subfolder in ROOT sources tree. After ROOT compilation files can be found in `$ROOTSYS/js/` subfolder.
+All ROOT-specific OpenUI5 files now moved into ROOT repository into `ui5` subfolder.
+After compilation these files can be found in `$ROOTSYS/ui5/` subfolder.
 
 
 ## Tutorials
