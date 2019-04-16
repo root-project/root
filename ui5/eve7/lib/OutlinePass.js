@@ -186,10 +186,9 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 		}
 		*/
 
-		let groups = [];
-		
+		this.groups = [];
 		for (const obj of this.selectedObjects)
-			this.parseAtts(obj, groups);
+			this.parseAtts(obj, this.groups);
 	
 		// for (let i = 0; i < this.selectedObjects.length; ++i){
 		// 	const object = this.selectedObjects[i];
@@ -240,7 +239,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 		// 		groups[0].push(object);
 		// 	}
 		// }
-		this.groups = groups.filter(Array);
+		// this.groups = groups.filter(Array);
 	},
 
 	dispose: function () {
