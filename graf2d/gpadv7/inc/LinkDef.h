@@ -53,5 +53,9 @@
 #pragma link C++ class ROOT::Experimental::RDrawingOptsBase+;
 #pragma link C++ class ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RCanvas>+;
 #pragma link C++ class ROOT::Experimental::RStyle+;
+#pragma link C++ class ROOT::Experimental::RAttrBox+;
+#pragma link C++ class ROOT::Experimental::RAttrLine+;
+#pragma link C++ class ROOT::Experimental::RAttrMarker+;
+#pragma link C++ class ROOT::Experimental::RAttrText+;
 
 #endif
