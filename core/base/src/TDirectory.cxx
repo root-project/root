@@ -1350,7 +1350,6 @@ void TDirectory::Streamer(TBuffer &R__b)
       R__b >> fList;
       fList->UseRWLock();
       fUUID.Streamer(R__b);
-      R__b.StreamObject(&(fSpinLock),typeid(fSpinLock));
       R__b.CheckByteCount(R__s, R__c, TDirectory::IsA());
    } else {
       R__c = R__b.WriteVersion(TDirectory::IsA(), kTRUE);
@@ -1358,7 +1357,6 @@ void TDirectory::Streamer(TBuffer &R__b)
       R__b << fMother;
       R__b << fList;
       fUUID.Streamer(R__b);
-      R__b.StreamObject(&(fSpinLock),typeid(fSpinLock));
       R__b.SetByteCount(R__c, kTRUE);
    }
 }
