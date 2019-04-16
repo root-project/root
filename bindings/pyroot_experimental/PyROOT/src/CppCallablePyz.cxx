@@ -401,7 +401,7 @@ PyObject* GenericCallableImpl_call(PyObject * /*self*/, PyObject *args)
       return NULL;
    }
 
-   err = gInterpreter->Declare("#include \"TPython.h\"");
+   err = gInterpreter->Declare("#include \"CPyCppyy/TPython.h\"");
    if (!err) {
       PyErr_SetString(PyExc_RuntimeError, "Failed to compile C++ wrapper: Failed to include TPython.h.");
       return NULL;
