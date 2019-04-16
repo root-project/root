@@ -84,10 +84,10 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
   - Adds a new constructor with a const char *lurl to TNetXNGFile and passes it to TFile, if set. This allows redirection to files that have a different name in the local file system and is important to allow derivation (for example to TAlien and TJAlienFile) while still keeping functionality via TArchiveFile when the file name in the local file system does not match `*.zip`
 
 ### TBufferJSON
-Add possibility to convert STL std::map, std::multimap, std::unordered_map, std::unordered_map,
-std::unordered_multimap classes into JSON object. This only possible when key typename
-is std::string (or compatible) and containes only valid JSON identifiers. To enable such feature,
-compact parameter should be 5:
+Add possibility to convert STL `std::map`, `std::multimap`, `std::unordered_map`, `std::unordered_map`,
+`std::unordered_multimap` classes into JSON object. This only possible when key typename
+is `std::string` (or compatible) and contains only valid JSON identifiers. By default these classes converted
+into JSON array of `std::pair` objects. To enable new feature, compact parameter should be 5:
 
 ~~~ {.cpp}
    std::map<std::string,int> obj;
@@ -95,16 +95,20 @@ compact parameter should be 5:
    obj["name1"] = 22;
    auto json = TBufferJSON::ToJSON(&obj, 5);
    // {"_typename": "map<string,int>", "name1": 11, "name2": 22}
+   auto dflt_json = TBufferJSON::ToJSON(&obj);
+   // [{"$pair" : "pair<string,int>", "first" : "name1", "second" : 11}, {"$pair" : "pair<string,int>", "first" : "name2", "second" : 22}]
 ~~~
-Also one could put "JSON_object" string in class-member commnets to enable such feature:
+
+Also one could put "JSON_object" string in class-member comments to enable this feature:
+
 ~~~ {.cpp}
 class Container {
    int field{5};
-   std::unordered_map<std::string,double> data;  ///< JSON_object indicate conversion
+   std::unordered_map<std::string,double> data;  ///< JSON_object indicates conversion
 };
 ~~~
 
-Also now one could disable storage of type information - "_typename" field. For that compact parameter
+Now one could disable storage of type information - "_typename" field. For that compact parameter
 has to include value 100. Be aware that such JSON representation may not be recognized by JSROOT.
 Maximal compression of JSON can be achieved now with compact parameter 128 = 100 + 20 + 5 + 3:
    3 - remove all spaces and new lines
@@ -322,7 +326,7 @@ In addition we have :
 
 ## JavaScript ROOT
 
-### New funcitonality
+### New functionality
 
    - Add support of TProfile2Poly class
    - Add support of TGeoOverlap class
@@ -337,9 +341,9 @@ In addition we have :
 
 ### New files location
 
-JSROOT sources were moved from `etc/http/` into `js/` subfolder in ROOT sources tree. After ROOT compilation files can be found in `$ROOTSYS/js/` subfolder.
-All ROOT-specific OpenUI5 files now moved into ROOT repository into `ui5` subfolder.
-After compilation these files can be found in `$ROOTSYS/ui5/` subfolder.
+JSROOT sources were moved from `etc/http/` into `js/` subfolder in ROOT sources tree.
+OpenUI5 files were moved to `ui5/` subfolder. After ROOT compilation they can be found in
+`$ROOTSYS/js/` and `$ROOTSYS/ui5/` subfolders respectively.
 
 
 ## Tutorials
