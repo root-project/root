@@ -18,6 +18,7 @@
 #include <ROOT/TLogger.hxx>
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <exception>
 #include <iomanip>
