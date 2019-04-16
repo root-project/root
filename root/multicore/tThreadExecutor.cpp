@@ -46,11 +46,11 @@ int PoolTest() {
       return 20;
 
    std::vector<int> vec{1,1,1,1};
-   pool.Foreach([&](int &i){i=2;}, vec);
+   pool.Foreach([&](int &j){j=2;}, vec);
    if(redfunc(vec) != 8)
       return 21;
 
-   pool.Foreach([&](int &i){i=1;}, vec, 4);
+   pool.Foreach([&](int &j){j=1;}, vec, 4);
    if(redfunc(vec) != 4)
       return 22;
 
