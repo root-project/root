@@ -14,5 +14,6 @@ ROOTTEST_ADD_TEST(scopeTest
 ROOTTEST_ADD_TEST(scopeTest2
                   MACRO rungood.C
                   OUTREF output.ref-cling
+                  OUTCNV scopeTest_conversion.sh
                   DEPENDS ${depends}
                   LABELS roottest regression cling)
