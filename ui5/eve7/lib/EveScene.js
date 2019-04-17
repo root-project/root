@@ -252,7 +252,6 @@ sap.ui.define([
    EveScene.prototype.processElementSelected = function(obj3d, col, indx, evnt)
    {
       // MT BEGIN
-
       console.log("EveScene.prototype.processElementSelected", obj3d, col, indx, evnt);
 
       var is_multi  = evnt && evnt.ctrlKey;
@@ -344,17 +343,23 @@ sap.ui.define([
    /** interactive handler */
    EveScene.prototype.processElementHighlighted = function(obj3d, col, indx, evnt)
    {
-      var id = obj3d.mstrId;
-      // id = obj3d.eveId;
+      console.log("EveScene.prototype.processElementHighlighted", obj3d, col, indx, evnt);
 
-      // MT XXXX
-    //  console.log("EveScene.prototype.processElementHighlighted", obj3d, col, indx, evnt);
+      var is_multi  = false;
+      var is_secsel = indx !== undefined;
 
-      this.setElementHighlighted(id, col, indx, true);
+      var fcall = "NewElementPicked(" + obj3d.eveId + `, ${is_multi}, ${is_secsel}`;
+      if (is_secsel)
+      {
+         fcall += ", { " + (Array.isArray(indx) ? indx.join(", ") : indx) + " }";
+      }
+      fcall += ")";
 
-      this.mgr.invokeInOtherScenes(this, "setElementHighlighted", id, col, indx);
+      this.mgr.SendMIR({ "mir":        fcall,
+                         "fElementId": this.mgr.global_highlight_id,
+                         "class":      "REX::REveSelection"
+                       });
 
-      // when true returns, controller will not try to render itself
       return true;
    }
 
@@ -459,9 +464,11 @@ sap.ui.define([
 
    EveScene.prototype.SelectElement = function(selection_obj, element_id, sec_idcs)
    {
+      var stype = selection_obj.fName.endsWith("Selection") ? "select" : "highlight";
+      var estype = THREE.OutlinePass.selection_enum[stype];
+      
       let res = { 
-         "sel_type": THREE.OutlinePass.selection_enum["select"],
-         // "sel_type": THREE.OutlinePass.selection_enum["highlight"],
+         "sel_type": estype,
          "sec_sel": false,
          "geom": []
       };
