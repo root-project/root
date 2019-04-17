@@ -27,7 +27,7 @@
 #include "TBufferJSON.h"
 #include <sstream>
 #include <iostream>
-
+#include <iomanip> 
 /** \class ROOT::Experimental::RFitPanel
 \ingroup webdisplay
 
@@ -90,20 +90,20 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
          model.fSelectDataId = "0";
       }
 
-      if (gDirectory) {
-         TIter iter(gDirectory->GetList());
-         TObject *item = nullptr;
+      // if (gDirectory) {
+      //    TIter iter(gDirectory->GetList());
+      //    TObject *item = nullptr;
 
-         while ((item = iter()) != nullptr)
-            if (item->InheritsFrom(TH1::Class()))
-               model.fDataSet.emplace_back(item->GetName(), Form("%s::%s", item->ClassName(), item->GetName()));
-      }
+      //    while ((item = iter()) != nullptr)
+      //       if (item->InheritsFrom(TH1::Class()))
+      //          model.fDataSet.emplace_back(item->GetName(), Form("%s::%s", item->ClassName(), item->GetName()));
+      // }
 
-       model.fDataSet.emplace_back("1", "*TH1F::hpx");
-       model.fDataSet.emplace_back("2", "*TH2F::hpxhpy");
-       model.fDataSet.emplace_back("3", "*TProfile::hprof");
-       model.fDataSet.emplace_back("4", "*TNtuple::ntuple");
-       model.fSelectDataId = "2";
+       // model.fDataSet.emplace_back("1", "*TH1F::hpx");
+       // model.fDataSet.emplace_back("2", "*TH2F::hpxhpy");
+       // model.fDataSet.emplace_back("3", "*TProfile::hprof");
+       // model.fDataSet.emplace_back("4", "*TNtuple::ntuple");
+       // model.fSelectDataId = "2";
 
        //ComboBox for Fit Function --- Type
        model.fTypeFunc.push_back(ROOT::Experimental::RComboBoxItem("0", "Predef-1D"));
@@ -222,11 +222,10 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
        model.fScanPar.push_back(ROOT::Experimental::RComboBoxItem("3","Coeff3"));
        model.fScanParId = "1";
 
-       model.fUpdateMinRange = -4;
-       model.fUpdateMaxRange = 4;
-       model.fMinRange = -4;
-       model.fMaxRange = 4;
        if (fHist) {
+          model.fMinRange = fHist->GetXaxis()->GetXmin();
+          model.fMaxRange = fHist->GetXaxis()->GetXmax();
+
           model.fUpdateMinRange = fHist->GetXaxis()->GetXmin();
           model.fUpdateMaxRange = fHist->GetXaxis()->GetXmax();
        }
@@ -304,12 +303,13 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 
       RFitFunc info;
       if (func) {
-        info.name = name;
+        //info.name = name;
         for (int n=0;n<func->GetNpar();++n) {
-          Double_t min{0}, max{0};
+          Double_t min{0}, max{0}; 
+          Double_t value{0.};
+          value = func->GetParameter(n);
           func->GetParLimits(n, min, max);
-          info.pars.emplace_back(n, func->GetParName(n), func->GetParameter(n), func->GetParError(n), min, max);   
-         
+          info.pars.emplace_back(n, func->GetParName(n), (roundf(value * 1000)) / 1000.0000, func->GetParError(n), min, max);
         }
       } else {
         info.name = "<not exists>";
@@ -330,10 +330,10 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
          if (func) {
             printf("Found func %s %p %d %d\n", info->name.c_str(), func, func->GetNpar(), (int) info->pars.size());
             // copy all parameters back to the function
-            for (int n=0;n<func->GetNpar();++n) {
-              Double_t min{0}, max{0};
-              func->SetParLimits(n, min, max);   
-            }
+            // for (int n=0;n<func->GetNpar();++n) {
+            //   Double_t min{0}, max{0};
+            //   func->SetParLimits(n, min, max);   
+            // }
           }
 
       }
@@ -349,7 +349,9 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
    auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
    //Fitting Options
    if (obj) {
+
       printf("DOFIT: range %f %f select %s function %s\n ", obj->fUpdateRange[0], obj->fUpdateRange[1], obj->fSelectDataId.c_str(), obj->fSelectXYId.c_str());
+
 
       if (!obj->fRealFunc.empty()) {
          printf("GOT fRealFunc: %s\n", obj->fRealFunc.c_str());
