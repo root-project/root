@@ -37,7 +37,7 @@
 class TSQLServer;
 class TSQLRow;
 class TBasketSQL;
-class TSQLTableInfo; 
+class TSQLTableInfo;
 
 class TTreeSQL : public TTree {
 
@@ -51,7 +51,7 @@ protected:
    TSQLRow               *fRow;
    TSQLServer            *fServer;
    Bool_t                 fBranchChecked;
-   TSQLTableInfo         *fTableInfo; 
+   TSQLTableInfo         *fTableInfo;
 
    void                   CheckBasket(TBranch * tb);
    Bool_t                 CheckBranch(TBranch * tb);
@@ -90,7 +90,7 @@ public:
    virtual Long64_t       PrepEntry(Long64_t entry);
            void           Refresh();
 
-   virtual ~TTreeSQL(); 
+   virtual ~TTreeSQL();
    ClassDef(TTreeSQL,2);  // TTree Implementation read and write to a SQL database.
 };
 
