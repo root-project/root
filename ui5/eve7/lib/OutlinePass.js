@@ -802,16 +802,18 @@ THREE.OutlinePass.selection_enum = {
 
 THREE.OutlinePass.selection_atts = [
 	{
-		visibleEdgeColor: new THREE.Color( 1, 0, 0 ),
-		hiddenEdgeColor: new THREE.Color( 0.1, 0.04, 0.02 )
+		visibleEdgeColor: new THREE.Color( 1, 0, 1 ),
+	        hiddenEdgeColor: new THREE.Color( 1, 0, 1 )
+                // hiddenEdgeColoe: new THREE.Color( 0.1, 0.04, 0.02 )
 		// edgeGlow: 0.0,
 		// usePatternTexture: false,
 		// edgeThickness: 1.0,
 		// edgeStrength: 3.0,
 	},
 	{
-		visibleEdgeColor: new THREE.Color( 0, 0, 1 ),
-		hiddenEdgeColor: new THREE.Color( 0.1, 0.04, 0.02 )
+		visibleEdgeColor: new THREE.Color( 0, 1, 1 ),
+	        hiddenEdgeColor: new THREE.Color( 0, 1, 1 )
+		// hiddenEdgeColor: new THREE.Color( 0.1, 0.04, 0.02 )
 		// edgeGlow: 0.0,
 		// usePatternTexture: false,
 		// edgeThickness: 1.0,
