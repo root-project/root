@@ -503,6 +503,27 @@
       }
 
       control.MainProcessMouseMove = function(evnt) {
+         // check timeout
+         var toutval = 100;
+
+         // first time
+         var dt = new Date();
+         if (!this.mouse_tmout) {
+            this.mouse_tmout = setTimeout(this.MainProcessMouseMove.bind(this,evnt), toutval);
+            this.tt = dt.getTime();
+            return;
+         }
+         else {
+            var tdiff = dt.getTime() - this.tt;
+            if (tdiff < toutval) {
+               clearTimeout(this.mouse_tmout);
+               this.mouse_tmout = setTimeout(this.MainProcessMouseMove.bind(this,evnt), tdiff);
+               return;
+            }
+         }
+         this.tt = dt.getTime();
+         //console.log("control.MainProcessMouseMove");
+
          if (this.control_active && evnt.buttons && (evnt.buttons & 2))
             this.block_ctxt = true; // if right button in control was active, block next context menu
 
