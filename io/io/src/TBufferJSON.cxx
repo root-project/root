@@ -70,7 +70,7 @@ std::map<std::string,int> data;
 data["name1"] = 11;
 data["name2"] = 22;
 
-auto json = TBufferJSON::ToJSON(&data,5);
+auto json = TBufferJSON::ToJSON(&data, TBufferJSON::kMapAsObject);
 ~~~
 Will produce JSON output:
 ~~~
@@ -87,7 +87,6 @@ class Container {
    std::map<std::string,int> data;  ///<  JSON_object
 };
 ~~~
-
 
 */
 
