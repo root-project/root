@@ -323,17 +323,21 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
    if (arg.find("SETPARS:") == 0) {
       auto json = arg.substr(8);
       auto info = TBufferJSON::FromJSON<RFitFunc>(json);
+      
       if (info) {
          TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info->name.c_str()));
 
 
          if (func) {
-            printf("Found func %s %p %d %d\n", info->name.c_str(), func, func->GetNpar(), (int) info->pars.size());
+            printf("Found func1 %s %p %d %d\n", info->name.c_str(), func, func->GetNpar(), (int) info->pars.size());
             // copy all parameters back to the function
-            // for (int n=0;n<func->GetNpar();++n) {
-            //   Double_t min{0}, max{0};
-            //   func->SetParLimits(n, min, max);   
-            // }
+            for (int n=0;n<func->GetNpar();++n) {
+              //func->SetParLimits(n, info->pars.min, info->pars.max);
+              // func->SetParameter(n, info->pars.value);
+              //func->SetParName(n, info->pars.name.c_str());
+              // func->SetParError(n, info->pars.error);
+
+             }
           }
 
       }
