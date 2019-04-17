@@ -8,17 +8,20 @@ THREE.OutlinePass = function ( resolution, scene, camera ) {
 	this.renderScene = scene;
 	this.renderCamera = camera;
 
+	// R: Primitives
 	this.selectedObjects = [];
+	// [fElementId][elementId] -> { "sel_type": THREE.OutlinePass.selection_enum, "sec_sel": boolean, "geom": Primitive<> }
 	this.id2obj_map = {};
+	// [C]: Selection Types - [R]: Primitives
+	this.sel = [];
+	// [C]: Attributes(color, size, etc...) - [C]: Primitives
+	this.groups = [];
 
-	this.visibleEdgeColor = new THREE.Color( 1, 1, 1 );
-	this.hiddenEdgeColor = new THREE.Color( 0.1, 0.04, 0.02 );
 	this.edgeGlow = 0.0;
 	this.usePatternTexture = false;
 	this.edgeThickness = 1.0;
 	this.edgeStrength = 3.0;
 	this.downSampleRatio = 2;
-	this.pulsePeriod = 0;
 
 	THREE.Pass.call( this );
 
@@ -805,8 +808,6 @@ THREE.OutlinePass.selection_atts = [
 		// usePatternTexture: false,
 		// edgeThickness: 1.0,
 		// edgeStrength: 3.0,
-		// downSampleRatio: 2,
-		// pulsePeriod: 0
 	},
 	{
 		visibleEdgeColor: new THREE.Color( 0, 0, 1 ),
@@ -815,7 +816,5 @@ THREE.OutlinePass.selection_atts = [
 		// usePatternTexture: false,
 		// edgeThickness: 1.0,
 		// edgeStrength: 3.0,
-		// downSampleRatio: 2,
-		// pulsePeriod: 0
 	}
 ];
