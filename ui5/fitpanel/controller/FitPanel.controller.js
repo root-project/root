@@ -202,16 +202,17 @@ sap.ui.define([
          var oColName = new sap.m.Column({ header: new sap.m.Label({text: "Name"})});
          var oColFix = new sap.m.Column({ header: new sap.m.Label({text: "Fix"})});
          var oColBound = new sap.m.Column({ header: new sap.m.Label({text: "Bound"})});
-         //var oColValue = new sap.m.Column({ header: new sap.m.Label({text: "Value"})});
+         var oColValue = new sap.m.Column({ header: new sap.m.Label({text: "Value"})});
          var oColMin = new sap.m.Column({ header: new sap.m.Label({text: "Min"})});
          //var oColSetRange = new sap.m.Column({ header: new sap.m.Label({text: "Set Range"})});
          var oColMax = new sap.m.Column({ header: new sap.m.Label({text: "Max"})});
          //var oColStep = new sap.m.Column({ header: new sap.m.Label({text: "Step"})});
-         //var oColErrors = new sap.m.Column({ header: new sap.m.Label({text: "Errors"})});
+         var oColErrors = new sap.m.Column({ header: new sap.m.Label({text: "Errors"})});
 
          var oNameTxt = new sap.m.TextArea({value: "{name}", height: "30px"});
          var oFixTxt = new sap.m.CheckBox({selected: "{Fix}"});
          var oBoundTxt = new sap.m.CheckBox({selected: "{Bound}"});
+         var oValueTxt = new sap.m.TextArea({value: "{valuePar}", height: "30px"});
          //var oValueTxt = new sap.m.StepInput({min:"{min}", max:"{max}", value:"{value}", displayValuePrecision: 3, width: "120%" });
          //var oMinTxt = new sap.m.TextArea({ value:"{min}", height: "30px"});
          var oMinTxt = new sap.m.TextArea({value: "{min}", height: "30px"});
@@ -219,10 +220,10 @@ sap.ui.define([
          //var oMaxTxt = new sap.m.TextArea({ value:"{max}", height: "30px"});
          var oMaxTxt = new sap.m.TextArea({value: "{max}", height: "30px"});
          //var oStepTxt = new sap.m.StepInput({min:"{min}", max:"{max}", value:"{Step}", displayValuePrecision: 3 });
-         //var oErrorTxt = new sap.m.TextArea({value:"{error}", height: "30px", enabled:false});
+         var oErrorTxt = new sap.m.TextArea({value:"{error}", height: "30px", enabled:false});
 
-         var oTableItems = new sap.m.ColumnListItem({vAlign:"Middle",cells:[oNameTxt,oFixTxt,oBoundTxt,
-         										oMinTxt,oMaxTxt]});
+         var oTableItems = new sap.m.ColumnListItem({vAlign:"Middle",cells:[oNameTxt,oFixTxt,oBoundTxt, oValueTxt,
+         										oMinTxt,oMaxTxt, oErrorTxt]});
 
          var oTable = new sap.m.Table({
          	id:"PrmsTable",
@@ -235,12 +236,12 @@ sap.ui.define([
          oTable.addColumn(oColName);
          oTable.addColumn(oColFix);
          oTable.addColumn(oColBound);
-         //oTable.addColumn(oColValue);
+         oTable.addColumn(oColValue);
          oTable.addColumn(oColMin);
          //oTable.addColumn(oColSetRange);
          oTable.addColumn(oColMax);
          // oTable.addColumn(oColStep);
-         // oTable.addColumn(oColErrors);
+         oTable.addColumn(oColErrors);
 
          oTable.bindAggregation("items","/Data",oTableItems,null);
          oTable.setModel(oModel);
