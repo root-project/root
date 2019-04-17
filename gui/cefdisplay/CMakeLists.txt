@@ -10,6 +10,9 @@ set(CEF_sources src/simple_app.cxx src/base_handler.cxx src/osr_handler.cxx src/
 
 set(CEF_root $ENV{CEF_ROOT})
 
+# ensure bin directory is exists where CEF files should be copied
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 if(ROOT_ARCHITECTURE MATCHES macosx)
    set(CEF_platform src/gui_handler_mac.mm)
    set(CEF_RESOURCES $ENV{CEF_ROOT}/Release/Chromium\ Embedded\ Framework.framework/Resources)
@@ -50,7 +53,6 @@ file(GLOB_RECURSE cef_resources RELATIVE ${CEF_RESOURCES} ${CEF_RESOURCES}/*)
 foreach(cef_r ${cef_resources})
   configure_file(${CEF_RESOURCES}/${cef_r} ${CMAKE_BINARY_DIR}/bin/${cef_r} COPYONLY)
 endforeach()
-
 
 
 ROOT_LINKER_LIBRARY(${libname} ${CEF_sources} ${CEF_platform}
