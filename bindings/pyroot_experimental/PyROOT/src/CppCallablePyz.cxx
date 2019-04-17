@@ -298,8 +298,9 @@ PyObject* GenericCallableImpl_call(PyObject * /*self*/, PyObject *args)
 
    // Acquire lock to protect multi-threaded scenarios
    code << ") {\n"
-        << "   // Acquire lock to protect multi-threaded scenarios\n"
-        << "   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);\n\n";
+        << "   // Acquire the GIL to protect multi-threaded scenarios\n"
+        << "   PyGILState_STATE gstate;\n"
+        << "   gstate = PyGILState_Ensure();\n\n";
 
    // Get pointer to Python callable
    code << "   // Get Python callable from pointer\n"
@@ -351,14 +352,17 @@ PyObject* GenericCallableImpl_call(PyObject * /*self*/, PyObject *args)
    // Convert result to C++ type
    code << "   // Convert result to C++ type\n";
    if (returnTypeStr.compare("void") == 0) {
-      code << "   Py_DECREF(pyresult);\n\n"
+      code << "   Py_DECREF(pyresult);\n"
+           << "   PyGILState_Release(gstate);\n\n"
            << "   return;\n";
    } else if (returnTypeStr.compare("bool") == 0) {
       code << "   if (pyresult == Py_True) {\n"
            << "      Py_DECREF(pyresult);\n"
+           << "      PyGILState_Release(gstate);\n"
            << "      return true;\n"
            << "   } else if (pyresult == Py_False) {\n"
            << "      Py_DECREF(pyresult);\n"
+           << "      PyGILState_Release(gstate);\n"
            << "      return false;\n"
            << "   } else {\n"
            << "      PyErr_Print();\n"
@@ -382,7 +386,8 @@ PyObject* GenericCallableImpl_call(PyObject * /*self*/, PyObject *args)
          code << "   auto result = *reinterpret_cast<" << returnTypeStr << "*>(TPython::CPPInstance_AsVoidPtr(pyresult));\n";
       }
 
-      code << "   Py_DECREF(pyresult);\n\n"
+      code << "   Py_DECREF(pyresult);\n"
+           << "   PyGILState_Release(gstate);\n\n"
            << "   return result;\n";
    }
    code << "}\n}";
