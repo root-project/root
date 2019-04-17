@@ -29,6 +29,23 @@ class TJSONStackObj;
 class TBufferJSON : public TBufferText {
 
 public:
+
+   enum {
+     // values 0..3 are exclusive, define text formating, JSON data are same
+     kNoCompress    = 0,             ///< no any compression, maximal size of JSON (default)
+     kNoIndent      = 1,             ///< remove spaces in the beginning showing JSON indentation level
+     kNoNewLine     = 2,             ///< no indent plus skip newline symbols
+     kNoSpaces      = 3,             ///< no new lines plus remove all spaces around "," and ":" symbols
+
+     kMapAsObject   = 5,             ///< store std::map, std::unodered_map as JSON object
+
+     // algorithms for array compression
+     kZeroSuppression = 10,          ///< if array has much zeros in begin and/or end, they will be removed
+     kSameSuppression = 20,          ///< zero suppression plus compress many similar values together
+
+     kSkipTypeInfo  = 100            // do not store typenames in JSON
+   };
+
    TBufferJSON(TBuffer::EMode mode = TBuffer::kWrite);
    virtual ~TBufferJSON();
 

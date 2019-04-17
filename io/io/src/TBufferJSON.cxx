@@ -541,31 +541,32 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
 ////////////////////////////////////////////////////////////////////////////////
 /// Set level of space/newline/array compression
 /// Lower digit of compact parameter define formatting rules
-///  - 0 - no any compression, human-readable form
-///  - 1 - exclude spaces in the begin
-///  - 2 - remove newlines
-///  - 3 - exclude spaces as much as possible
+///  - kNoCompress = 0  - no any compression, human-readable form
+///  - kNoIndent = 1    - remove indentation spaces in the begin of each line
+///  - kNoNewLine = 2   - remove also newlines
+///  - kNoSpaces = 3    - exclude all spaces and new lines
 ///
 /// Second digit of compact parameter defines algorithm for arrays compression
 ///  - 0 - no compression, standard JSON array
-///  - 1 - exclude leading and trailing zeros
-///  - 2 - check values repetition and empty gaps
+///  - kZeroSuppression = 10  - exclude leading and trailing zeros
+///  - kSameSuppression = 20 - check values repetition and empty gaps
 ///
-/// If third digit of compact parameter is 1, "_typename" will be skipped
+/// Third digit defines usage of typeinfo
+///  - kSkipTypeInfo = 100   - "_typename" field will be skipped, reading by ROOT or JSROOT may be impossible
 
 void TBufferJSON::SetCompact(int level)
 {
    if (level < 0)
       level = 0;
    fCompact = level % 10;
-   if (fCompact >= 5) {
+   if (fCompact >= kMapAsObject) {
       fMapAsObject = kTRUE;
-      fCompact = fCompact % 5;
+      fCompact = fCompact % kMapAsObject;
    }
-   fSemicolon = (fCompact > 2) ? ":" : " : ";
-   fArraySepar = (fCompact > 2) ? "," : ", ";
-   fArrayCompact = (level / 10) % 10;
-   if (((level / 100) % 10) == 1)
+   fSemicolon = (fCompact >= kNoSpaces) ? ":" : " : ";
+   fArraySepar = (fCompact >= kNoSpaces) ? "," : ", ";
+   fArrayCompact = ((level / 10) % 10) * 10;
+   if ((((level / 100) % 10) * 100) == kSkipTypeInfo)
       fTypeNameTag.Clear();
    else if (fTypeNameTag.Length() == 0)
       fTypeNameTag = "_typename";
@@ -587,7 +588,7 @@ void TBufferJSON::SetTypenameTag(const char *tag)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Configures _typeversion tag in JSON
-/// One can specify name of the JSON tag like "_typeversion" ot "$tv" which will be used to store class version
+/// One can specify name of the JSON tag like "_typeversion" or "$tv" which will be used to store class version
 /// Such tag can be used to correctly recover objects from JSON
 /// If empty string is provided (default), class version will not be stored
 
@@ -2967,7 +2968,7 @@ R__ALWAYS_INLINE void TBufferJSON::JsonWriteArrayCompress(const T *vname, Int_t 
                continue;
             }
             Int_t p0(p++), pp(0), nsame(1);
-            if (fArrayCompact < 2) {
+            if (fArrayCompact != kSameSuppression) {
                pp = bindx;
                p = bindx + 1;
                nsame = 0;
