@@ -173,6 +173,7 @@ sap.ui.define([
          	var json = JSROOT.toJSON(this.parData);
          	if (this.websocket)
                this.websocket.Send("SETPARS:" + json);
+           	   console.log("JSON " + json)
          }
 
          this.parsDialog.close();
