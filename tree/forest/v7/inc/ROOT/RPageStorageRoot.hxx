@@ -18,6 +18,7 @@
 
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RColumnModel.hxx>
+#include <ROOT/RForestDescriptor.hxx>
 #include <ROOT/RForestUtil.hxx>
 
 #include <TDirectory.h>
@@ -184,6 +185,7 @@ private:
    RSettings fSettings;
 
    RMapper fMapper;
+   RForestDescriptor fDescriptor;
 
 public:
    RPageSourceRoot(std::string_view forestName, RSettings settings);
@@ -197,6 +199,7 @@ public:
    ForestSize_t GetNEntries() final;
    ForestSize_t GetNElements(ColumnHandle_t columnHandle) final;
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle) final;
+   const RForestDescriptor& GetDescriptor() const final { return fDescriptor; }
 };
 
 } // namespace Detail

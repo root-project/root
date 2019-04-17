@@ -14,6 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RField.hxx>
+#include <ROOT/RForestDescriptor.hxx>
 #include <ROOT/RForestModel.hxx>
 #include <ROOT/RPageStorageRoot.hxx>
 #include <ROOT/RPage.hxx>
@@ -255,6 +256,11 @@ void ROOT::Experimental::Detail::RPageSourceRoot::Attach()
 
    delete forestFooter;
    delete forestHeader;
+
+   // TODO(jblomer): replace RMapper by a forest descriptor
+   RForestDescriptorBuilder descBuilder;
+   descBuilder.SetForest(fForestName, RForestVersion());
+   fDescriptor = descBuilder.GetDescriptor();
 }
 
 

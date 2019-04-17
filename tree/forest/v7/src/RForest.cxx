@@ -19,6 +19,9 @@
 #include "ROOT/RPageStorage.hxx"
 #include "ROOT/RPageStorageRoot.hxx"
 
+#include <iomanip>
+#include <sstream>
+#include <string>
 #include <utility>
 
 ROOT::Experimental::Detail::RForest::RForest(std::unique_ptr<ROOT::Experimental::RForestModel> model)
@@ -58,6 +61,10 @@ ROOT::Experimental::RInputForest::RInputForest(std::unique_ptr<ROOT::Experimenta
    fNEntries = fSource->GetNEntries();
 }
 
+ROOT::Experimental::RInputForest::~RInputForest()
+{
+}
+
 std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputForest::Create(
    std::unique_ptr<RForestModel> model,
    std::string_view forestName,
@@ -75,8 +82,14 @@ std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputFore
    return std::make_unique<RInputForest>(std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
 }
 
-ROOT::Experimental::RInputForest::~RInputForest()
-{
+std::string ROOT::Experimental::RInputForest::Print() {
+   std::ostringstream os;
+   auto name = fSource->GetDescriptor().GetName();
+   os << "****************************** FOREST ******************************"  << std::endl
+      << "* Name:    " << name << std::setw(57 - name.length())           << "*" << std::endl
+      << "* Entries: " << std::setw(10) << fNEntries << std::setw(47)     << "*" << std::endl
+      << "********************************************************************"  << std::endl;
+   return os.str();
 }
 
 //------------------------------------------------------------------------------

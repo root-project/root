@@ -132,6 +132,7 @@ public:
    const RClusterDescriptor& GetClusterDescriptor(DescriptorId_t clusterId) const {
       return fClusterDescriptors.at(clusterId);
    }
+   std::string GetName() const { return fName; }
 };
 
 
