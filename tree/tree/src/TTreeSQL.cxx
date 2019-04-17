@@ -32,8 +32,8 @@ Implement TTree for a SQL backend
 #include "TSQLRow.h"
 #include "TSQLResult.h"
 #include "TSQLServer.h"
-#include "TSQLTableInfo.h" 
-#include "TSQLColumnInfo.h" 
+#include "TSQLTableInfo.h"
+#include "TSQLColumnInfo.h"
 
 #include "TTreeSQL.h"
 #include "TBasketSQL.h"
@@ -48,7 +48,7 @@ TTreeSQL::TTreeSQL(TSQLServer *server, TString DB, const TString& table) :
    fTable(table.Data()),
    fResult(0), fRow(0),
    fServer(server),
-   fBranchChecked(kFALSE), 
+   fBranchChecked(kFALSE),
    fTableInfo(0)
 {
    fCurrentEntry = -1;
@@ -120,7 +120,7 @@ TBranch* TTreeSQL::Bronch(const char *, const char *, void *,
                           Int_t, Int_t)
 {
    Fatal("Bronch","Not implemented yet");
-   return 0; 
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +140,7 @@ TBranch *TTreeSQL::Branch(const char *, const char *, void *,
                           Int_t, Int_t)
 {
    Fatal("Branch","Not implemented yet");
-   return 0; 
+   return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -162,7 +162,7 @@ TBranch * TTreeSQL::Branch(const char *name, void *address,
          // So if you want to allow duplicate branch, just comment Fatal() line and uncomment commented
          // below Fatal() line
 
-         Fatal("Branch()", "Duplicate branch!!!"); 
+         Fatal("Branch()", "Duplicate branch!!!");
 
          /* Commented. If uncommented, should comment Fatal line.
          // this is a duplicate branch. So reset data structure memory address and return.
@@ -330,7 +330,7 @@ TString TTreeSQL::ConvertTypeName(const TString& typeName )
    else if( typeName == "TString") {
       tn = "TEXT";
    }
- 
+
    else {
       Error("ConvertTypeName","TypeName (%s) not found",typeName.Data());
       return "";
@@ -384,23 +384,23 @@ void TTreeSQL::CreateBranch(const TString &branchName, const TString &typeName)
 
 void TTreeSQL::CreateBranches()
 {
-   TList * columns = fTableInfo->GetColumns(); 
+   TList * columns = fTableInfo->GetColumns();
    if(!columns) return;
 
-   TIter next(columns); 
+   TIter next(columns);
 
    TString branchName;
-   TString type; 
+   TString type;
    TString leafName;
    TBranch * br = 0;
-   TSQLColumnInfo * info; 
+   TSQLColumnInfo * info;
    while ( (info = ((TSQLColumnInfo*) next()) ))
    {
-      type = info->GetTypeName(); 
-      branchName = info->GetName(); 
+      type = info->GetTypeName();
+      branchName = info->GetName();
 
 
-      Int_t pos; 
+      Int_t pos;
       if ((pos=branchName.Index("__"))!=kNPOS) {
           leafName = branchName(pos+2,branchName.Length());
           branchName.Remove(pos);
@@ -408,61 +408,61 @@ void TTreeSQL::CreateBranches()
           leafName = branchName;
       }
 
-      TString str; 
-      int i; 
-      unsigned ui; 
+      TString str;
+      int i;
+      unsigned ui;
       double d;
-      float f; 
+      float f;
 
-      br = 0; 
+      br = 0;
 
-      if(type.CompareTo("varchar",TString::kIgnoreCase)==0 || 
-         type.CompareTo("varchar2",TString::kIgnoreCase)==0 || 
+      if(type.CompareTo("varchar",TString::kIgnoreCase)==0 ||
+         type.CompareTo("varchar2",TString::kIgnoreCase)==0 ||
          type.CompareTo("char",TString::kIgnoreCase)==0 ||
          type.CompareTo("longvarchar",TString::kIgnoreCase)==0 ||
          type.CompareTo("longvarbinary",TString::kIgnoreCase)==0 ||
          type.CompareTo("varbinary",TString::kIgnoreCase)==0 ||
          type.CompareTo("text",TString::kIgnoreCase )==0 ) {
-          br = TTree::Branch(leafName,&str); 
+         br = TTree::Branch(leafName,&str);
 
       }
       else if(type.CompareTo("int",TString::kIgnoreCase)==0 ){
-          br = TTree::Branch(leafName,&i); 
+         br = TTree::Branch(leafName,&i);
       }
 
       //Somehow it should be possible to special-case the time classes
-      //but I think we'd need to create a new TSQLTime or something like that... 
+      //but I think we'd need to create a new TSQLTime or something like that...
       else if( type.CompareTo("date",TString::kIgnoreCase)==0 ||
                type.CompareTo("time",TString::kIgnoreCase)==0 ||
-              type.CompareTo("timestamp",TString::kIgnoreCase)==0 ||
+               type.CompareTo("timestamp",TString::kIgnoreCase)==0 ||
                type.CompareTo("datetime",TString::kIgnoreCase)==0 ) {
-          br = TTree::Branch(leafName,&str);  
+         br = TTree::Branch(leafName,&str);
 
       }
 
       else if(type.CompareTo("bit",TString::kIgnoreCase)==0 ||
               type.CompareTo("tinyint",TString::kIgnoreCase)==0 ||
               type.CompareTo("smallint",TString::kIgnoreCase)==0 ) {
-          br = TTree::Branch(leafName,&ui); 
+         br = TTree::Branch(leafName,&ui);
       }
 
-      else if( type.CompareTo("decimal",TString::kIgnoreCase)==0 || 
-               type.CompareTo("numeric",TString::kIgnoreCase)==0 || 
+      else if( type.CompareTo("decimal",TString::kIgnoreCase)==0 ||
+               type.CompareTo("numeric",TString::kIgnoreCase)==0 ||
                type.CompareTo("double",TString::kIgnoreCase)==0 ||
                type.CompareTo("float",TString::kIgnoreCase)==0 )
       {
-          br = TTree::Branch(leafName,&f); 
+         br = TTree::Branch(leafName,&f);
       }
       else if( type.CompareTo("bigint",TString::kIgnoreCase)==0 ||
-               type.CompareTo("real",TString::kIgnoreCase) == 0) 
+               type.CompareTo("real",TString::kIgnoreCase) == 0)
       {
-          br = TTree::Branch(leafName,&d); 
+         br = TTree::Branch(leafName,&d);
       }
-         
+
       if (br == 0)
       {
-        Error("Skipped %s",branchName); 
-        continue; 
+         Error("Skipped %s",branchName);
+         continue;
       }
 
       br->ResetAddress();
@@ -551,11 +551,10 @@ void TTreeSQL::Init()
    fResult = fServer->Query(fQuery.Data());
    if(!fResult) return;
 
-   if (fDB != "") 
-   {
-     fServer->SelectDataBase(fDB); 
+   if (fDB != "") {
+      fServer->SelectDataBase(fDB);
    }
-   fTableInfo = fServer->GetTableInfo(fTable); 
+   fTableInfo = fServer->GetTableInfo(fTable);
    CreateBranches();
 }
 
@@ -625,17 +624,19 @@ std::vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
    std::vector<TString> names;
 
    TList *col_list = fTableInfo->GetColumns();
-   if (col_list==0) { delete columns; return 0; }
+   if (col_list==0) {
+      delete columns;
+      return 0;
+   }
 
    std::pair<TString,Int_t> value;
 
-   TIter next(col_list); 
+   TIter next(col_list);
    TSQLColumnInfo * cinfo;
-   int rows = 0; 
-   while ((cinfo = (TSQLColumnInfo*) next()))
-   {
+   int rows = 0;
+   while ((cinfo = (TSQLColumnInfo*) next())) {
       names.push_back( cinfo->GetName() );
-      rows++; 
+      rows++;
    }
 
    for(int j=0;j<nl;j++) {
@@ -669,7 +670,8 @@ std::vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
       } else Error("GetColumnIndice","Error finding column %d %s",j,str.Data());
    }
    if (columns->empty()) {
-      delete columns; return 0;
+      delete columns;
+      return 0;
    } else
       return columns;
 }
@@ -808,7 +810,7 @@ void TTreeSQL::ResetQuery()
 
 TTreeSQL::~TTreeSQL()
 {
-  delete fTableInfo; 
-  delete fResult; 
-  delete fRow; 
+   delete fTableInfo;
+   delete fResult;
+   delete fRow;
 }
