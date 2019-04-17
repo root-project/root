@@ -37,10 +37,10 @@ void runMap()
       data[key] = n*7;
    }
 
-   testJson(data, 0, "DEFAULT: ");
+   testJson(data, TBufferJSON::kNoCompress, "DEFAULT: ");
 
-   testJson(data, 5, "OBJECT: ");
+   testJson(data, TBufferJSON::kMapAsObject, "OBJECT: ");
 
-   testJson(data, 108, "MINIMAL: ");
+   testJson(data, TBufferJSON::kSkipTypeInfo + TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces, "MINIMAL: ");
 
 }
