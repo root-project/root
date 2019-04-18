@@ -70,21 +70,11 @@ CPPYY_IMPL_GILCALL(double,        D)
 CPPYY_IMPL_GILCALL(LongDouble_t,  LD)
 CPPYY_IMPL_GILCALL(void*,         R)
 
-/*
-// TODO: CallS may not have a use here; CallO is used instead for std::string
-static inline char* GILCallS(
-    Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CPyCppyy::CallContext* ctxt)
-{
-    GILControl gc(ctxt);
-// TODO: make use of getting the string length returned ...
-    size_t len;
-    return Cppyy::CallS(method, self, ctxt->GetSize(), ctxt->GetArgs(), &len);
-}
-*/
-
 static inline Cppyy::TCppObject_t GILCallO(Cppyy::TCppMethod_t method,
     Cppyy::TCppObject_t self, CPyCppyy::CallContext* ctxt, Cppyy::TCppType_t klass)
 {
+    if (!ReleasesGIL(ctxt))
+        return Cppyy::CallO(method, self, ctxt->GetSize(), ctxt->GetArgs(), klass);
     GILControl gc(ctxt);
     return Cppyy::CallO(method, self, ctxt->GetSize(), ctxt->GetArgs(), klass);
 }
@@ -92,6 +82,8 @@ static inline Cppyy::TCppObject_t GILCallO(Cppyy::TCppMethod_t method,
 static inline Cppyy::TCppObject_t GILCallConstructor(
     Cppyy::TCppMethod_t method, Cppyy::TCppType_t klass, CPyCppyy::CallContext* ctxt)
 {
+    if (!ReleasesGIL(ctxt))
+        return Cppyy::CallConstructor(method, klass, ctxt->GetSize(), ctxt->GetArgs());
     GILControl gc(ctxt);
     return Cppyy::CallConstructor(method, klass, ctxt->GetSize(), ctxt->GetArgs());
 }
