@@ -12,7 +12,6 @@
 
 #include "TWebSnapshot.h"
 #include "TWebPadPainter.h"
-#include "TWebMenuItem.h"
 #include "TWebPS.h"
 
 #include "TSystem.h"
@@ -941,22 +940,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
       }
 
-   } else if (strncmp(cdata, "GETMENU:", 8) == 0) {
-
-      TObject *obj = FindPrimitive(cdata + 8);
-      if (!obj)
-         obj = Canvas();
-
-      TWebMenuItems items;
-      items.PopulateObjectMenu(obj, obj->IsA());
-      std::string buf = "MENU:";
-      buf.append(cdata+8);
-      buf.append(":");
-      buf.append(items.ProduceJSON().Data());
-
-      AddToSendQueue(connid, buf);
-
-   } else if (strncmp(cdata, "OBJEXEC:", 8) == 0) {
+    } else if (strncmp(cdata, "OBJEXEC:", 8) == 0) {
 
       TString buf(cdata + 8);
       Int_t pos = buf.First(':');
