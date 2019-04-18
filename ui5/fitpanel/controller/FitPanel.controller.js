@@ -10,9 +10,10 @@ sap.ui.define([
    'sap/m/Input',
    'sap/m/Label',
    'sap/m/CheckBox',
+   'sap/m/Column',
    'sap/m/ColumnListItem'
 ], function (GuiPanelController, JSONModel, ColorPickerPopover, Button, mTable,
-             Dialog, List, InputListItem, mInput, mLabel, mCheckBox, mColumnListItem) {
+             Dialog, List, InputListItem, mInput, mLabel, mCheckBox, mColumn, mColumnListItem) {
 
    "use strict";
    var count = 0;
@@ -197,33 +198,23 @@ sap.ui.define([
 
          this.parData = data;
 
-         console.log("GOT PARAMETERS", data.pars.length);
+         // prepare text formatting
          for (var i=0;i<data.pars.length;++i) {
             var par = data.pars[i];
-            console.log(par.name, par.valuePar, par.error, par.min, par.max);
+            console.log(par.name, par.value, par.error, par.min, par.max);
          }
 
          var oModel = new sap.ui.model.json.JSONModel(aData);
          // sap.ui.getCore().setModel(oModel, "aDataData");
 
-         var oColName = new sap.m.Column({ header: new mLabel({text: "Name"})});
-         var oColFix = new sap.m.Column({ header: new mLabel({text: "Fix"})});
-         var oColBound = new sap.m.Column({ header: new mLabel({text: "Bound"})});
-         var oColValue = new sap.m.Column({ header: new mLabel({text: "Value"})});
-         var oColMin = new sap.m.Column({ header: new mLabel({text: "Min"})});
-         //var oColSetRange = new sap.m.Column({ header: new mLabel({text: "Set Range"})});
-         var oColMax = new sap.m.Column({ header: new mLabel({text: "Max"})});
-         //var oColStep = new sap.m.Column({ header: new mLabel({text: "Step"})});
-         var oColErrors = new sap.m.Column({ header: new mLabel({text: "Errors"})});
-
          var oTableItems = new mColumnListItem({ vAlign:"Middle", cells:[
               new mLabel({ text: "{name}" }),
-              new mCheckBox({ selected: "{Fix}" }),
+              new mCheckBox({ selected: "{fixed}" }),
               new mCheckBox({ selected: "{Bound}" }),
-              new mInput({ value: "{valuePar}", type: "Number", width: "50px" }),
+              new mInput({ value: "{value}", type: "Number", width: "50px" }),
               new mInput({ value: "{min}", type: "Number", width: "50px" }),
               new mInput({ value: "{max}", type: "Number", width: "50px" }),
-              new mLabel({ text: "{error}" })
+              new mInput({ value: "{error}" })
          ]});
 
          var oTable = new mTable({
@@ -231,18 +222,17 @@ sap.ui.define([
             fixedLayout: false,
             mode: sap.m.ListMode.SingleSelectMaster,
             includeItemInSelection: true,
-            growing: true
+            growing: true,
+            columns: [
+                new mColumn({ header: new mLabel({text: "Name"})}),
+                new mColumn({ header: new mLabel({text: "Fix"})}),
+                new mColumn({ header: new mLabel({text: "Bound"})}),
+                new mColumn({ header: new mLabel({text: "Value"})}),
+                new mColumn({ header: new mLabel({text: "Min"})}),
+                new mColumn({ header: new mLabel({text: "Max"})}),
+                new mColumn({ header: new mLabel({text: "Errors"})})
+            ]
          });
-
-         oTable.addColumn(oColName);
-         oTable.addColumn(oColFix);
-         oTable.addColumn(oColBound);
-         oTable.addColumn(oColValue);
-         oTable.addColumn(oColMin);
-         //oTable.addColumn(oColSetRange);
-         oTable.addColumn(oColMax);
-         // oTable.addColumn(oColStep);
-         oTable.addColumn(oColErrors);
 
          oTable.bindAggregation("items","/Data",oTableItems,null);
          oTable.setModel(oModel);

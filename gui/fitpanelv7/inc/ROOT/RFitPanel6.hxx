@@ -36,12 +36,13 @@ struct RComboBoxItem {
 struct RFitFuncParameter {
    int ipar{0};
    std::string name;
-   double valuePar{0.};
+   double value{0.};
+   bool fixed{false};
    double error{0.};
    double min{0.}, max{0.};
    RFitFuncParameter() = default;
-   RFitFuncParameter(int _ipar, const std::string &_name, double _value, double _error, double _min, double _max) :
-      ipar(_ipar), name(_name), valuePar(_value), error(_error), min(_min), max(_max) {}
+   RFitFuncParameter(int _ipar, const std::string &_name) :
+      ipar(_ipar), name(_name) {}
 };
 
 struct RFitFunc {
