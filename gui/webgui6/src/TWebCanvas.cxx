@@ -684,179 +684,6 @@ void TWebCanvas::AssignStatusBits(UInt_t bits)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Extract information for current visible range and set to correspondent pad object
-
-Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
-{
-   if (!arg || !*arg)
-      return kFALSE;
-
-   std::vector<TWebPadRange> *arr = nullptr;
-
-   TBufferJSON::FromJSON(arr, arg);
-
-   if (!arr)
-      return kFALSE;
-
-   for (unsigned n = 0; n < arr->size(); ++n) {
-      TWebPadRange &r = arr->at(n);
-      TPad *pad = dynamic_cast<TPad *>(FindPrimitive(r.snapid.c_str()));
-
-      if (!pad)
-         continue;
-
-      if (pad == Canvas()) AssignStatusBits(r.bits);
-
-      if (r.active && (pad != gPad)) gPad = pad;
-
-      pad->SetTicks(r.tickx, r.ticky);
-      pad->SetGrid(r.gridx, r.gridy);
-      if (r.logx != pad->GetLogx())
-         pad->SetLogx(r.logx);
-      if (r.logy != pad->GetLogy())
-         pad->SetLogy(r.logy);
-      if (r.logz != pad->GetLogz())
-         pad->SetLogz(r.logz);
-
-      pad->SetLeftMargin(r.mleft);
-      pad->SetRightMargin(r.mright);
-      pad->SetTopMargin(r.mtop);
-      pad->SetBottomMargin(r.mbottom);
-
-      if (r.ranges) {
-
-         Double_t ux1_, ux2_, uy1_, uy2_, px1_, px2_, py1_, py2_;
-
-         pad->GetRange(px1_, py1_, px2_, py2_);
-         pad->GetRangeAxis(ux1_, uy1_, ux2_, uy2_);
-
-         bool same_range = (r.ux1 == ux1_) && (r.ux2 == ux2_) && (r.uy1 == uy1_) && (r.uy2 == uy2_) &&
-                           (r.px1 == px1_) && (r.px2 == px2_) && (r.py1 == py1_) && (r.py2 == py2_);
-
-         if (!same_range) {
-            pad->Range(r.px1, r.py1, r.px2, r.py2);
-            pad->RangeAxis(r.ux1, r.uy1, r.ux2, r.uy2);
-
-            if (gDebug > 1)
-               Info("DecodeAllRanges", "Change ranges for pad %s", pad->GetName());
-         }
-      }
-
-      for (auto &item : r.primitives)
-         ProcessObjectData(item, pad);
-
-      // without special objects no need for explicit update of the pad
-      if (fHasSpecials)
-         pad->Modified(kTRUE);
-   }
-
-   delete arr;
-
-   if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
-
-   return kTRUE;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Process data for single primitive
-/// Returns object pad if object was modified
-
-TPad *TWebCanvas::ProcessObjectData(TWebObjectOptions &item, TPad *pad)
-{
-   TObjLink *lnk = nullptr;
-   TPad *objpad = nullptr;
-   TObject *obj = FindPrimitive(item.snapid.c_str(), pad, &lnk, &objpad);
-
-   if (item.fcust.compare("exec") == 0) {
-      auto pos = item.opt.find("(");
-      if (obj && (pos != std::string::npos) && obj->IsA()->GetMethodAllAny(item.opt.substr(0,pos).c_str())) {
-         std::stringstream exec;
-         exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase
-                      << (size_t)obj << ")->" << item.opt << ";";
-         Info("ProcessObjectData", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
-         gROOT->ProcessLine(exec.str().c_str());
-      } else {
-         Error("ProcessObjectData", "Fail to execute %s for object %p %s", item.opt.c_str(), obj, obj ? obj->ClassName() : "---");
-         objpad = nullptr;
-      }
-      return objpad;
-   }
-
-   bool modified = false;
-
-   if (obj && lnk) {
-      if (gDebug > 1)
-         Info("DecodeAllRanges", "Set draw option \"%s\" for object %s %s", item.opt.c_str(),
-               obj->ClassName(), obj->GetName());
-      lnk->SetOption(item.opt.c_str());
-      modified = true;
-   }
-
-   if (item.fcust.compare("frame") == 0) {
-      if (obj && obj->InheritsFrom(TFrame::Class())) {
-         TFrame *frame = static_cast<TFrame *>(obj);
-         if (item.fopt.size() >= 4) {
-            frame->SetX1(item.fopt[0]);
-            frame->SetY1(item.fopt[1]);
-            frame->SetX2(item.fopt[2]);
-            frame->SetY2(item.fopt[3]);
-            modified = true;
-         }
-      }
-   } else if (item.fcust.compare("pave") == 0) {
-      if (obj && obj->InheritsFrom(TPave::Class())) {
-         TPave *pave = static_cast<TPave *>(obj);
-         if ((item.fopt.size() >= 4) && objpad) {
-            auto *save = gPad;
-            gPad = objpad;
-
-            // first time need to overcome init problem
-            pave->ConvertNDCtoPad();
-
-            pave->SetX1NDC(item.fopt[0]);
-            pave->SetY1NDC(item.fopt[1]);
-            pave->SetX2NDC(item.fopt[2]);
-            pave->SetY2NDC(item.fopt[3]);
-
-            // printf("Setting %s %s %f %f %f %f\n", pave->GetName(), pave->ClassName(), item.fopt[0], item.fopt[1], item.fopt[2], item.fopt[3]);
-            modified = true;
-
-            pave->ConvertNDCtoPad();
-            gPad = save;
-         }
-      }
-   }
-
-   return modified ? objpad : nullptr;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Process data for single object from list of primitives
-
-Bool_t TWebCanvas::DecodeObjectData(const char *arg)
-{
-   if (!arg || !*arg)
-      return kFALSE;
-
-   TWebObjectOptions *opt = nullptr;
-
-   TBufferJSON::FromJSON(opt, arg);
-
-   if (opt) {
-      TPad *modpad = ProcessObjectData(*opt, nullptr);
-
-      // indicate that pad was modified
-      if (modpad)
-         modpad->Modified();
-
-      delete opt;
-   }
-
-   return opt != nullptr;
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////////////
 /// Handle data from web browser
 /// Returns kFALSE if message was not processed
 
@@ -904,7 +731,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       // use window manager to correctly terminate http server
       ROOT::Experimental::RWebWindowsManager::Instance()->Terminate();
 
-   } else if (strncmp(cdata, "READY6:", 7) == 0) {
+   } else if (arg.compare(0, 7, "READY6:") == 0) {
 
       // this is reply on drawing of ROOT6 snapshot
       // it confirms when drawing of specific canvas version is completed
@@ -916,31 +743,54 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       } else {
          conn->fDrawVersion = TString(cdata, separ - cdata).Atoll();
          cdata = separ + 1;
-         if (is_first) {
-            if (gDebug > 1)
-               Info("ProcessData", "RANGES %s", cdata);
-            DecodeAllRanges(cdata); // only first connection can set ranges
-         }
+         if (is_first && !IsReadOnly())
+            DecodePadOptions(cdata); // only first connection can set ranges
       }
 
-   } else if (strncmp(cdata, "RANGES6:", 8) == 0) {
+   } else if (arg == "RELOAD") {
 
-      if (is_first) // only first connection can set ranges
-         DecodeAllRanges(cdata + 8);
+      conn->fDrawVersion = 0;
 
-   } else if (strncmp(cdata, "PRIMIT6:", 8) == 0) {
+   } else if (arg.compare(0, 5, "SAVE:") == 0) {
 
-      if (is_first) // only first connection can set ranges
-         DecodeObjectData(cdata + 8);
+      const char *img = cdata + 5;
 
-   } else if (strncmp(cdata, "STATUSBITS:", 11) == 0) {
+      const char *separ = strchr(img, ':');
+      if (separ) {
+         TString filename(img, separ - img);
+         img = separ + 1;
+
+         std::ofstream ofs(filename.Data());
+
+         if (filename.Index(".svg") != kNPOS) {
+            // ofs << "<?xml version=\"1.0\" standalone=\"no\"?>";
+            ofs << img;
+         } else {
+            TString binary = TBase64::Decode(img);
+            ofs.write(binary.Data(), binary.Length());
+         }
+         ofs.close();
+
+         Info("ProcessData", "File %s has been created", filename.Data());
+      }
+
+   } else if (arg.compare(0, 8, "PRODUCE:") == 0) {
+
+      Canvas()->Print(cdata+8);
+
+   } else if (arg.compare(0, 8, "OPTIONS6:") == 0) {
+
+      if (is_first && !IsReadOnly()) // only first connection can set ranges
+         DecodePadOptions(cdata + 8);
+
+   } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
 
       if (is_first) { // only first connection can set ranges
          AssignStatusBits((unsigned) TString(cdata + 11).Atoi());
          if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
       }
 
-    } else if (strncmp(cdata, "OBJEXEC:", 8) == 0) {
+    } else if (arg.compare(0, 8, "OBJEXEC:") == 0) {
 
       TString buf(cdata + 8);
       Int_t pos = buf.First(':');
@@ -963,7 +813,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          }
       }
 
-   } else if (strncmp(cdata, "EXECANDSEND:", 12) == 0) {
+   } else if (arg.compare(0, 12, "EXECANDSEND:") == 0) {
 
       TString buf(cdata + 12), reply;
       TObject *obj = nullptr;
@@ -999,71 +849,6 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
                delete resobj; // delete object if first symbol in reply is D
          }
 
-      }
-
-   } else if (strncmp(cdata, "RELOAD", 6) == 0) {
-
-      conn->fDrawVersion = 0;
-
-   } else if (strncmp(cdata, "SAVE:", 5) == 0) {
-
-      const char *img = cdata + 5;
-
-      const char *separ = strchr(img, ':');
-      if (separ) {
-         TString filename(img, separ - img);
-         img = separ + 1;
-
-         std::ofstream ofs(filename.Data());
-
-         if (filename.Index(".svg") != kNPOS) {
-            // ofs << "<?xml version=\"1.0\" standalone=\"no\"?>";
-            ofs << img;
-         } else {
-            TString binary = TBase64::Decode(img);
-            ofs.write(binary.Data(), binary.Length());
-         }
-         ofs.close();
-
-         Info("ProcessData", "File %s has been created", filename.Data());
-      }
-
-   } else if (strncmp(cdata, "PRODUCE:", 8) == 0) {
-
-      Canvas()->Print(cdata+8);
-
-   } else if (strncmp(cdata, "PADCLICKED:", 11) == 0) {
-
-      TWebPadClick *click = nullptr;
-
-      // only from the first client analyze pad click events
-      if (is_first)
-         TBufferJSON::FromJSON(click, cdata + 11);
-
-      if (click) {
-
-         TPad *pad = dynamic_cast<TPad*> (FindPrimitive(click->padid.c_str()));
-         if (pad && (pad != gPad)) {
-            Info("ProcessData", "Activate pad %s", pad->GetName());
-            gPad = pad;
-            Canvas()->SetClickSelectedPad(pad);
-            if (fActivePadChangedSignal) fActivePadChangedSignal(pad);
-         }
-
-         if (!click->objid.empty()) {
-            TObject *selobj = FindPrimitive(click->objid.c_str());
-            Canvas()->SetClickSelected(selobj);
-            if (pad && selobj && fObjSelectSignal) fObjSelectSignal(pad, selobj);
-         }
-
-         if ((click->x >= 0) && (click->y >= 0)) {
-            if (click->dbl && fPadDblClickedSignal)
-               fPadDblClickedSignal(pad, click->x, click->y);
-            else if (fPadClickedSignal)
-               fPadClickedSignal(pad, click->x, click->y);
-         }
-
-         delete click; // do not forget to destroy
       }
 
    } else {
