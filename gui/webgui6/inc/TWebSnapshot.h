@@ -68,11 +68,14 @@ public:
 class TPadWebSnapshot : public TWebSnapshot {
 protected:
    bool fActive{false};                                    ///< true when pad is active
+   bool fReadOnly{true};                                   ///< when canvas or pad are in readonly mode
    std::vector<std::unique_ptr<TWebSnapshot>> fPrimitives; ///< list of all primitives, drawn in the pad
 public:
    TPadWebSnapshot() { SetKind(kSubPad); }
 
    void SetActive(bool on = true) { fActive = on; }
+
+   void SetReadOnly(bool on = true) { fReadOnly = on; }
 
    TWebSnapshot &NewPrimitive(TObject *obj = nullptr, const std::string &opt = "");
 
