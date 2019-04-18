@@ -426,7 +426,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 			// add sec_sel elements in renderScene
 			for(const obj of sec_sel)
-				this.renderScene.add(obj);
+				if(obj) this.renderScene.add(obj);
 
 			this.oldClearColor.copy( renderer.getClearColor() );
 			this.oldClearAlpha = renderer.getClearAlpha();
@@ -604,7 +604,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 			
 			// remove sec_sel elements from renderScene
 			for(const obj of sec_sel)
-				this.renderScene.remove(obj);
+				if(obj) this.renderScene.remove(obj);
 		} else {
 			this.quad.material = this.materialCopy;
 			this.copyUniforms[ "tDiffuse" ].value = readBuffer.texture;
