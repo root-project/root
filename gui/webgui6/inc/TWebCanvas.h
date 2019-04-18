@@ -28,6 +28,7 @@
 
 #include <vector>
 #include <string>
+#include <queue>
 #include <functional>
 
 class TVirtualPad;
@@ -99,10 +100,9 @@ protected:
    using PadPaintingReady_t = std::function<void(TPadWebSnapshot *)>;
 
    struct WebConn {
-      unsigned fConnId{0};       ///<! connection id
-      std::string fGetMenu;      ///<! object id for menu request
-      Long64_t fDrawVersion{0};  ///<! canvas version drawn by client
-      std::string fSend;         ///<! extra data which should be send to the client
+      unsigned fConnId{0};             ///<! connection id
+      Long64_t fDrawVersion{0};        ///<! canvas version drawn by client
+      std::queue<std::string> fSend;   ///<! send queue, processed after sending draw data
       WebConn(unsigned id) : fConnId(id) {}
    };
 
@@ -144,6 +144,8 @@ protected:
 
    Bool_t IsAnyPadModified(TPad *pad);
 
+   Bool_t AddToSendQueue(unsigned connid, const std::string &msg);
+
    void CheckDataToSend();
 
    Bool_t WaitWhenCanvasPainted(Long64_t ver);
@@ -153,6 +155,8 @@ protected:
    void ShowCmd(const char *arg, Bool_t show);
 
    void AssignStatusBits(UInt_t bits);
+
+   virtual Bool_t ProcessData(unsigned connid, const std::string &arg);
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
@@ -165,8 +169,6 @@ public:
    virtual Int_t InitWindow();
    virtual void Close();
    virtual void Show();
-
-   void ProcessData(unsigned connid, const std::string &arg);
 
    virtual UInt_t GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
 
