@@ -504,12 +504,33 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    fPrimitivesLists.Clear("nodelete");
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Add message to send queue for specified connection
+/// If connid == 0, message will be add to all connections
+/// Return kFALSE if queue is full or connection is not exists
+
+Bool_t TWebCanvas::AddToSendQueue(unsigned connid, const std::string &msg)
+{
+   Bool_t res = false;
+   for (auto &conn : fWebConn) {
+      if ((conn.fConnId == connid) || (connid == 0)) {
+         conn.fSend.emplace(msg);
+         res = kTRUE;
+      }
+   }
+   return res;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Create snapshot for pad and all primitives
+
 void TWebCanvas::CheckDataToSend()
 {
    if (!Canvas())
       return;
 
-   for (auto &&conn: fWebConn) {
+   for (auto &conn : fWebConn) {
 
       // check if direct data sending is possible
       if (!fWindow->CanSend(conn.fConnId, true))
@@ -517,21 +538,7 @@ void TWebCanvas::CheckDataToSend()
 
       std::string buf;
 
-      if (conn.fGetMenu.length() > 0) {
-
-         TObject *obj = FindPrimitive(conn.fGetMenu.c_str());
-         if (!obj)
-            obj = Canvas();
-
-         TWebMenuItems items;
-         items.PopulateObjectMenu(obj, obj->IsA());
-         buf = "MENU:";
-         buf.append(conn.fGetMenu);
-         buf.append(":");
-         buf.append(items.ProduceJSON().Data());
-
-         conn.fGetMenu.clear();
-      } else if (conn.fDrawVersion < fCanvVersion) {
+      if (conn.fDrawVersion < fCanvVersion) {
          buf = "SNAP6:";
          buf.append(std::to_string(fCanvVersion));
          buf.append(":");
@@ -544,7 +551,8 @@ void TWebCanvas::CheckDataToSend()
          buf.append(res.Data());
 
       } else if (!conn.fSend.empty()) {
-         std::swap(buf, conn.fSend);
+         std::swap(buf, conn.fSend.front());
+         conn.fSend.pop();
       }
 
       if (!buf.empty())
@@ -621,17 +629,8 @@ void TWebCanvas::Show()
 
 void TWebCanvas::ShowCmd(const char *arg, Bool_t show)
 {
-   for (auto &&conn : fWebConn) {
-      if (!conn.fConnId)
-         continue;
-
-      if (!conn.fSend.empty())
-         Warning("ShowCmd", "Send operation not empty when try show %s", arg);
-
-      conn.fSend = Form("SHOW:%s:%d", arg, show ? 1 : 0);
-   }
-
-   CheckDataToSend();
+   if (AddToSendQueue(0, Form("SHOW:%s:%d", arg, show ? 1 : 0)))
+      CheckDataToSend();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -641,19 +640,10 @@ void TWebCanvas::ActivateInEditor(TPad *pad, TObject *obj)
 {
    if (!pad || !obj) return;
 
-   for (auto &&conn: fWebConn) {
-      if (!conn.fConnId)
-         continue;
+   UInt_t hash = TString::Hash(&obj, sizeof(obj));
 
-      if (!conn.fSend.empty())
-         Warning("ActivateInEditor", "Send operation not empty");
-
-      UInt_t hash = TString::Hash(&obj, sizeof(obj));
-
-      conn.fSend = Form("EDIT:%u", (unsigned) hash);
-   }
-
-   CheckDataToSend();
+   if (AddToSendQueue(0, Form("EDIT:%u", (unsigned) hash)))
+      CheckDataToSend();
 }
 
 Bool_t TWebCanvas::HasEditor() const
@@ -860,11 +850,12 @@ Bool_t TWebCanvas::DecodeObjectData(const char *arg)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Handle data from web browser
+/// Returns kFALSE if message was not processed
 
-void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
+Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 {
    if (arg.empty())
-      return;
+      return kTRUE;
 
    if (arg == "CONN_READY") {
 
@@ -874,7 +865,7 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       fWaitNewConnection = kFALSE; // established, can be reset
 
-      return;
+      return kTRUE;
    }
 
    // try to identify connection for given WS request
@@ -891,7 +882,7 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    }
 
    if (!conn)
-      return;
+      return kTRUE;
 
    const char *cdata = arg.c_str();
 
@@ -946,7 +937,19 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
    } else if (strncmp(cdata, "GETMENU:", 8) == 0) {
 
-      conn->fGetMenu = cdata + 8;
+      TObject *obj = FindPrimitive(cdata + 8);
+      if (!obj)
+         obj = Canvas();
+
+      TWebMenuItems items;
+      items.PopulateObjectMenu(obj, obj->IsA());
+      std::string buf = "MENU:";
+      buf.append(cdata+8);
+      buf.append(":");
+      buf.append(items.ProduceJSON().Data());
+
+      AddToSendQueue(connid, buf);
+
       CheckDataToSend();
 
    } else if (strncmp(cdata, "OBJEXEC:", 8) == 0) {
@@ -1001,9 +1004,10 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          Long_t res = gROOT->ProcessLine(exec.str().c_str());
          TObject *resobj = (TObject *)res;
          if (resobj) {
-            conn->fSend = reply.Data();
-            conn->fSend.append(":");
-            conn->fSend.append(TBufferJSON::ConvertToJSON(resobj, 23).Data());
+            std::string send = reply.Data();
+            send.append(":");
+            send.append(TBufferJSON::ToJSON(resobj, 23).Data());
+            AddToSendQueue(connid, send);
             if (reply[0] == 'D')
                delete resobj; // delete object if first symbol in reply is D
          }
@@ -1081,8 +1085,13 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       }
 
    } else {
-      Error("ProcessData", "GET unknown request %d %30s", (int)arg.length(), cdata);
+
+      // unknown message, probably should be processed by other implementation
+      return kFALSE;
+      //Error("ProcessData", "GET unknown request %d %30s", (int)arg.length(), cdata);
    }
+
+   return kTRUE;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
