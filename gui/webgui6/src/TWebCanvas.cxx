@@ -523,14 +523,17 @@ Bool_t TWebCanvas::AddToSendQueue(unsigned connid, const std::string &msg)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-/// Create snapshot for pad and all primitives
+/// Check if any data should be send to client
+/// If connid != 0, only selected connection will be checked
 
-void TWebCanvas::CheckDataToSend()
+void TWebCanvas::CheckDataToSend(unsigned connid)
 {
    if (!Canvas())
       return;
 
    for (auto &conn : fWebConn) {
+      if (connid && (conn.fConnId != connid))
+         continue;
 
       // check if direct data sending is possible
       if (!fWindow->CanSend(conn.fConnId, true))
@@ -580,7 +583,10 @@ TString TWebCanvas::CreateWebWindow(int limit)
 
       fWindow->SetDefaultPage("file:rootui5sys/canv/canvas6.html");
 
-      fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
+      fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) {
+         ProcessData(connid, arg);
+         CheckDataToSend(connid);
+      });
    }
 
    std::string url = fWindow->GetUrl(false);
@@ -861,8 +867,6 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       fWebConn.emplace_back(connid);
 
-      CheckDataToSend();
-
       fWaitNewConnection = kFALSE; // established, can be reset
 
       return kTRUE;
@@ -916,7 +920,6 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             DecodeAllRanges(cdata); // only first connection can set ranges
          }
       }
-      CheckDataToSend();
 
    } else if (strncmp(cdata, "RANGES6:", 8) == 0) {
 
@@ -950,8 +953,6 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       AddToSendQueue(connid, buf);
 
-      CheckDataToSend();
-
    } else if (strncmp(cdata, "OBJEXEC:", 8) == 0) {
 
       TString buf(cdata + 8);
@@ -972,7 +973,6 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             // PerformUpdate(); // check that canvas was changed
             if (IsAnyPadModified(Canvas()))
                fCanvVersion++;
-            CheckDataToSend();
          }
       }
 
@@ -1012,13 +1012,11 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
                delete resobj; // delete object if first symbol in reply is D
          }
 
-         CheckDataToSend(); // check if data should be send
       }
 
    } else if (strncmp(cdata, "RELOAD", 6) == 0) {
 
       conn->fDrawVersion = 0;
-      CheckDataToSend();
 
    } else if (strncmp(cdata, "SAVE:", 5) == 0) {
 
@@ -1042,13 +1040,10 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
          Info("ProcessData", "File %s has been created", filename.Data());
       }
-      CheckDataToSend();
 
    } else if (strncmp(cdata, "PRODUCE:", 8) == 0) {
 
       Canvas()->Print(cdata+8);
-
-      CheckDataToSend();
 
    } else if (strncmp(cdata, "PADCLICKED:", 11) == 0) {
 

@@ -146,7 +146,7 @@ protected:
 
    Bool_t AddToSendQueue(unsigned connid, const std::string &msg);
 
-   void CheckDataToSend();
+   void CheckDataToSend(unsigned connid = 0);
 
    Bool_t WaitWhenCanvasPainted(Long64_t ver);
 
