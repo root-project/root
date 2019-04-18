@@ -58,4 +58,12 @@ endforeach()
 ROOT_LINKER_LIBRARY(ROOTPython ${sources} LIBRARIES Core Tree cppyy)
 ROOT_INSTALL_HEADERS(inc)
 
+# Disables warnings originating from deprecated register keyword in Python
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
+    target_compile_options(ROOTPython PRIVATE -Wno-register)
+endif()
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
+    target_compile_options(ROOTPython PRIVATE -Wno-deprecated-register)
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
