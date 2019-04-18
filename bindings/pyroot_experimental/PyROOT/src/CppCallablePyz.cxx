@@ -22,16 +22,16 @@
 
 
 // Parse positional arguments of the decorator
-long ParsePositionalArgs(PyObject* args)
+bool ParsePositionalArgs(PyObject* args)
 {
    if (!PyTuple_Check(args)) {
       PyErr_SetString(PyExc_RuntimeError, "Failed to parse positional arguments: Invalid tuple.");
-      return NULL;
+      return false;
    }
 
    if (PyTuple_Size(args) != 3) {
       PyErr_SetString(PyExc_RuntimeError, "Failed to parse positional arguments: Expect exactly two positional arguments (list of input types, return type).");
-      return NULL;
+      return false;
    }
 
    auto instance = PyTuple_GetItem(args, 0);
@@ -42,12 +42,12 @@ long ParsePositionalArgs(PyObject* args)
    PyObject_SetAttrString(instance, "input_types", inputTypes);
    PyObject_SetAttrString(instance, "return_type", returnType);
 
-   return 1l;
+   return true;
 }
 
 
 // Attach keyword to instance
-long AttachKeyword(PyObject* kwargs, PyObject* instance, const char* name)
+bool AttachKeyword(PyObject* kwargs, PyObject* instance, const char* name)
 {
    PyObject* p;
    if ((p = PyDict_GetItemString(kwargs, name))) {
@@ -57,19 +57,19 @@ long AttachKeyword(PyObject* kwargs, PyObject* instance, const char* name)
       } else if (status == 0) {
          PyObject_SetAttrString(instance, name, Py_False);
       } else {
-         return NULL;
+         return false;
       }
    }
-   return 1l;
+   return true;
 }
 
 
 // Parse keyword arguments of the decorator
-long ParseKeywordArguments(PyObject* args, PyObject* kwargs)
+bool ParseKeywordArguments(PyObject* args, PyObject* kwargs)
 {
    if (!PyDict_Check(kwargs)) {
       PyErr_SetString(PyExc_RuntimeError, "Failed to parse keyword arguments: Invalid dictionary.");
-      return NULL;
+      return false;
    }
 
    // Attach optional name to instance
@@ -79,33 +79,33 @@ long ParseKeywordArguments(PyObject* args, PyObject* kwargs)
       if (!CPyCppyy_PyUnicode_Check(p)) {
          PyErr_SetString(PyExc_RuntimeError,
                  "Failed to parse arguments: Given name is not a valid string.");
-         return NULL;
+         return false;
       }
       PyObject_SetAttrString(instance, "name", p);
    }
 
    // Attach optional numpy_only flag to instance
-   if ((AttachKeyword(kwargs, instance, "numba_only") == NULL)) {
+   if (!AttachKeyword(kwargs, instance, "numba_only")) {
       PyErr_SetString(PyExc_RuntimeError,
               "Failed to parse arguments: Given object for numba_only cannot be evaluated as a boolean.");
-      return NULL;
+      return false;
    }
 
    // Attach optional generic_only flag to instance
-   if ((AttachKeyword(kwargs, instance, "generic_only") == NULL)) {
+   if (!AttachKeyword(kwargs, instance, "generic_only")) {
       PyErr_SetString(PyExc_RuntimeError,
               "Failed to parse arguments: Given object for generic_only cannot be evaluated as a boolean.");
-      return NULL;
+      return false;
    }
 
    // Attach optional verbose flag
-   if ((AttachKeyword(kwargs, instance, "verbose") == NULL)) {
+   if (!AttachKeyword(kwargs, instance, "verbose")) {
       PyErr_SetString(PyExc_RuntimeError,
               "Failed to parse arguments: Given object for verbose flag cannot be evaluated as a boolean.");
-      return NULL;
+      return false;
    }
 
-   return 1l;
+   return true;
 }
 
 
@@ -113,10 +113,10 @@ long ParseKeywordArguments(PyObject* args, PyObject* kwargs)
 // The init parses the arguments passed to the decorator.
 PyObject* GenericCallableImpl_init(PyObject * /*self*/, PyObject *args, PyObject *kwargs)
 {
-   if(ParsePositionalArgs(args) == NULL) return NULL;
+   if(!ParsePositionalArgs(args)) return NULL;
 
    if(kwargs != 0) {
-      if(ParseKeywordArguments(args, kwargs) == NULL) return NULL;
+      if(!ParseKeywordArguments(args, kwargs)) return NULL;
    }
 
    Py_RETURN_NONE;
@@ -124,47 +124,47 @@ PyObject* GenericCallableImpl_init(PyObject * /*self*/, PyObject *args, PyObject
 
 
 // Check arguments given to call operator of the decorator
-long CheckCallArgs(PyObject* args)
+bool CheckCallArgs(PyObject* args)
 {
    if (!PyTuple_Check(args)) {
       PyErr_SetString(PyExc_RuntimeError, "Failed to parse arguments: Invalid tuple.");
-      return NULL;
+      return false;
    }
 
    if (!(PyTuple_Size(args) == 2)) {
       PyErr_SetString(PyExc_RuntimeError, "Failed to parse arguments: Expect exactly one argument (Python callable).");
-      return NULL;
+      return false;
    }
 
-   return 1l;
+   return true;
 }
 
 
 // Check instance passed from init to call operator of the decorator
-long CheckInstance(PyObject* instance)
+bool CheckInstance(PyObject* instance)
 {
    if (!PyObject_HasAttrString(instance, "input_types")) {
       PyErr_SetString(PyExc_RuntimeError, "Failed to create C++ callable: No input_types attribute found.");
-      return NULL;
+      return false;
    }
 
    if (!PyObject_HasAttrString(instance, "return_type")) {
       PyErr_SetString(PyExc_RuntimeError, "Failed to create C++ callable: No return_type attribute found.");
-      return NULL;
+      return false;
    }
 
-   return 1l;
+   return true;
 }
 
 
 // Check callable passed to decorator
-long CheckCallable(PyObject* callable)
+bool CheckCallable(PyObject* callable)
 {
    if (!PyCallable_Check(callable)) {
       PyErr_SetString(PyExc_RuntimeError, "Failed to create C++ callable: Given PyObject is not callable.");
-      return NULL;
+      return false;
    }
-   return 1l;
+   return true;
 }
 
 
@@ -195,12 +195,12 @@ std::string ExtractName(PyObject* instance, PyObject* pyfunc)
 PyObject* GenericCallableImpl_call(PyObject * /*self*/, PyObject *args)
 {
    // Parse arguments
-   if(CheckCallArgs(args) == NULL) return NULL;
+   if(!CheckCallArgs(args)) return NULL;
    auto instance = PyTuple_GetItem(args, 0);
    auto pyfunc = PyTuple_GetItem(args, 1);
-   if(CheckCallable(pyfunc) == NULL) return NULL;
+   if(!CheckCallable(pyfunc)) return NULL;
    Py_INCREF(pyfunc);
-   if(CheckInstance(instance) == NULL) return NULL;
+   if(!CheckInstance(instance)) return NULL;
 
    auto inputTypes = PyObject_GetAttrString(instance, "input_types");
    auto returnType = PyObject_GetAttrString(instance, "return_type");
@@ -425,12 +425,12 @@ PyObject* GenericCallableImpl_call(PyObject * /*self*/, PyObject *args)
 PyObject* NumbaCallableImpl_call(PyObject * /*self*/, PyObject *args)
 {
    // Parse arguments
-   if(CheckCallArgs(args) == NULL) return NULL;
+   if(!CheckCallArgs(args)) return NULL;
    auto instance = PyTuple_GetItem(args, 0);
    auto pyfunc = PyTuple_GetItem(args, 1);
-   if(CheckCallable(pyfunc) == NULL) return NULL;
+   if(!CheckCallable(pyfunc)) return NULL;
    Py_INCREF(pyfunc);
-   if(CheckInstance(instance) == NULL) return NULL;
+   if(!CheckInstance(instance)) return NULL;
 
    auto inputTypes = PyObject_GetAttrString(instance, "input_types");
    auto returnType = PyObject_GetAttrString(instance, "return_type");
