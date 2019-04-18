@@ -49,10 +49,13 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
 {
    std::string normalizedType(typeName);
    normalizedType.erase(remove_if(normalizedType.begin(), normalizedType.end(), isspace), normalizedType.end());
+   if (normalizedType == "Double_t") normalizedType = "double";
+   if (normalizedType == "Int_t") normalizedType = "std::int32_t";
    if (normalizedType == "string") normalizedType = "std::string";
    if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
 
    if (normalizedType == "ROOT::Experimental::ClusterSize_t") return new RField<ClusterSize_t>(fieldName);
+   if (normalizedType == "std::int32_t") return new RField<std::int32_t>(fieldName);
    if (normalizedType == "std::uint32_t") return new RField<std::uint32_t>(fieldName);
    if (normalizedType == "float") return new RField<float>(fieldName);
    if (normalizedType == "double") return new RField<double>(fieldName);
@@ -234,6 +237,15 @@ void ROOT::Experimental::RField<double>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+
+//------------------------------------------------------------------------------
+
+void ROOT::Experimental::RField<std::int32_t>::DoGenerateColumns()
+{
+   RColumnModel model(GetName(), EColumnType::kInt32, false /* isSorted*/);
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
+   fPrincipalColumn = fColumns[0].get();
+}
 
 //------------------------------------------------------------------------------
 
