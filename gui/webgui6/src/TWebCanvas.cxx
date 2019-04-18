@@ -285,6 +285,7 @@ void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
 
 void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t resfunc)
 {
+   paddata.SetReadOnly(IsReadOnly());
    paddata.SetActive(pad == gPad);
    paddata.SetObjectIDAsPtr(pad);
    paddata.SetSnapshot(TWebSnapshot::kSubPad, pad); // add ref to the pad
