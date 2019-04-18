@@ -44,8 +44,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(cppyy
 
 target_compile_options(cppyy PRIVATE
   -Wno-shadow -Wno-strict-aliasing -Wno-unused-but-set-parameter)
+
+# Disables warnings coming from PyCFunction casts
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 8)
   target_compile_options(cppyy PRIVATE -Wno-cast-function-type)
+endif()
+
+# Disables warnings originating from deprecated register keyword in Python
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
+    target_compile_options(cppyy PRIVATE -Wno-register)
+endif()
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
+    target_compile_options(cppyy PRIVATE -Wno-deprecated-register)
 endif()
 
 target_include_directories(cppyy PRIVATE ${CMAKE_BINARY_DIR}/include) # needed for string_view backport
