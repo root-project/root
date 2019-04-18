@@ -334,14 +334,13 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
             printf("Found func1 %s %p %d %d\n", info->name.c_str(), func, func->GetNpar(), (int) info->pars.size());
             // copy all parameters back to the function
             for (int n=0;n<func->GetNpar();++n) {
-              //func->SetParLimits(n, info->pars.min, info->pars.max);
-              // func->SetParameter(n, info->pars.value);
-              //func->SetParName(n, info->pars.name.c_str());
-              // func->SetParError(n, info->pars.error);
-
+               func->SetParameter(n, info->pars[n].value);
+               func->SetParError(n, info->pars[n].error);
+               func->SetParLimits(n, info->pars[n].min, info->pars[n].max);
+               if (info->pars[n].fixed)
+                  func->FixParameter(n, info->pars[n].value);
              }
           }
-
       }
    }
 }

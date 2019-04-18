@@ -173,6 +173,17 @@ sap.ui.define([
 
       closeParametersDialog: function(is_ok) {
          if (is_ok && this.parData) {
+            // first convert back to float values
+
+            for (var i=0;i<this.parData.pars.length;++i) {
+               var par = this.parData.pars[i];
+               // convert value into floats back
+               this.toFloat(par, "value");
+               this.toFloat(par, "error");
+               this.toFloat(par, "min");
+               this.toFloat(par, "max");
+            }
+
             var json = JSROOT.toJSON(this.parData);
             if (this.websocket)
                this.websocket.Send("SETPARS:" + json);
@@ -192,6 +203,20 @@ sap.ui.define([
             this.websocket.Send(msg);
       },
 
+      toString: function(par, field, digits) {
+         if (par[field] == Math.round(par[field])) digits = 0;
+         par[field+"Txt"] = par[field+"Txt0"] = par[field].toFixed(digits);
+      },
+
+      toFloat: function(par, field) {
+         if (par[field+"Txt"] !== par[field+"Txt0"]) {
+            var res = parseFloat(par[field+"Txt"]);
+            if (!isNaN(res)) par[field] = res;
+         }
+         delete par[field+"Txt"];
+         delete par[field+"Txt0"];
+      },
+
       showParametersDialog: function(data){
 
          var aData = { Data: data.pars };
@@ -201,7 +226,11 @@ sap.ui.define([
          // prepare text formatting
          for (var i=0;i<data.pars.length;++i) {
             var par = data.pars[i];
-            console.log(par.name, par.value, par.error, par.min, par.max);
+            // convert value into strings, requird by sap.m.Input
+            this.toString(par, "value", 3);
+            this.toString(par, "error", 3);
+            this.toString(par, "min", 3);
+            this.toString(par, "max", 3);
          }
 
          var oModel = new sap.ui.model.json.JSONModel(aData);
@@ -211,10 +240,10 @@ sap.ui.define([
               new mLabel({ text: "{name}" }),
               new mCheckBox({ selected: "{fixed}" }),
               new mCheckBox({ selected: "{Bound}" }),
-              new mInput({ value: "{value}", type: "Number", width: "50px" }),
-              new mInput({ value: "{min}", type: "Number", width: "50px" }),
-              new mInput({ value: "{max}", type: "Number", width: "50px" }),
-              new mInput({ value: "{error}" })
+              new mInput({ value: "{valueTxt}", type: "Number", width: "75px" }),
+              new mInput({ value: "{minTxt}", type: "Number", width: "75px" }),
+              new mInput({ value: "{maxTxt}", type: "Number", width: "75px" }),
+              new mInput({ value: "{errorTxt}", type: "Number", width: "75px" })
          ]});
 
          var oTable = new mTable({
