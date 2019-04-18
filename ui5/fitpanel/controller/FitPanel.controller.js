@@ -8,9 +8,11 @@ sap.ui.define([
    'sap/m/List',
    'sap/m/InputListItem',
    'sap/m/Input',
-   'sap/m/Label'
-], function (GuiPanelController, JSONModel, ColorPickerPopover, Button, Table,
-             Dialog, List, InputListItem, Input, Label) {
+   'sap/m/Label',
+   'sap/m/CheckBox',
+   'sap/m/ColumnListItem'
+], function (GuiPanelController, JSONModel, ColorPickerPopover, Button, mTable,
+             Dialog, List, InputListItem, mInput, mLabel, mCheckBox, mColumnListItem) {
 
    "use strict";
    var count = 0;
@@ -34,10 +36,10 @@ sap.ui.define([
                fUpdateRange: [-4,4]
          };
          this.getView().setModel(new JSONModel(data));
-         this._data = data; 
+         this._data = data;
       },
 
-      // Assign the new JSONModel to data      
+      // Assign the new JSONModel to data
       OnWebsocketMsg: function(handle, msg){
 
          if(msg.startsWith("MODEL:")){
@@ -51,8 +53,8 @@ sap.ui.define([
                this.copyModel = JSROOT.extend({},data);
             }
          } else if (msg.startsWith("PARS:")) {
-         	var data = JSROOT.parse(msg.substr(5));
-         	this.showParametersDialog(data);
+            var data = JSROOT.parse(msg.substr(5));
+            this.showParametersDialog(data);
          }
 
       },
@@ -141,8 +143,8 @@ sap.ui.define([
 
       },
       //Change the combobox in Type Function
-      //When the Type (TypeFunc) is changed (Predef etc) then the combobox with the funtions (TypeXY), 
-      //is also changed 
+      //When the Type (TypeFunc) is changed (Predef etc) then the combobox with the funtions (TypeXY),
+      //is also changed
       selectTypeFunc: function(){
 
          var data = this.getView().getModel().getData();
@@ -157,7 +159,7 @@ sap.ui.define([
          console.log("Type = ", data.fTypeXYAll[parseInt(typeXY)]);
       },
 
-      //Change the selected checkbox of Draw Options 
+      //Change the selected checkbox of Draw Options
       //if Do not Store is selected then No Drawing is also selected
       storeChange: function(){
          var data = this.getView().getModel().getData();
@@ -170,10 +172,10 @@ sap.ui.define([
 
       closeParametersDialog: function(is_ok) {
          if (is_ok && this.parData) {
-         	var json = JSROOT.toJSON(this.parData);
-         	if (this.websocket)
+            var json = JSROOT.toJSON(this.parData);
+            if (this.websocket)
                this.websocket.Send("SETPARS:" + json);
-           	   console.log("JSON " + json)
+                 console.log("JSON " + json)
          }
 
          this.parsDialog.close();
@@ -183,8 +185,8 @@ sap.ui.define([
       },
 
       setParametersDialog: function(){
-      	var func = this.getView().byId("TypeXY").getValue();
-      	var msg = "GETPARS:" + func;
+         var func = this.getView().byId("TypeXY").getValue();
+         var msg = "GETPARS:" + func;
         if (this.websocket)
             this.websocket.Send(msg);
       },
@@ -195,43 +197,41 @@ sap.ui.define([
 
          this.parData = data;
 
-         console.log("GOT PARAMETERS", data.pars.length, data.name, data.min);
+         console.log("GOT PARAMETERS", data.pars.length);
+         for (var i=0;i<data.pars.length;++i) {
+            var par = data.pars[i];
+            console.log(par.name, par.valuePar, par.error, par.min, par.max);
+         }
 
          var oModel = new sap.ui.model.json.JSONModel(aData);
-         sap.ui.getCore().setModel(oModel, "aDataData");
+         // sap.ui.getCore().setModel(oModel, "aDataData");
 
-         var oColName = new sap.m.Column({ header: new sap.m.Label({text: "Name"})});
-         var oColFix = new sap.m.Column({ header: new sap.m.Label({text: "Fix"})});
-         var oColBound = new sap.m.Column({ header: new sap.m.Label({text: "Bound"})});
-         var oColValue = new sap.m.Column({ header: new sap.m.Label({text: "Value"})});
-         var oColMin = new sap.m.Column({ header: new sap.m.Label({text: "Min"})});
-         //var oColSetRange = new sap.m.Column({ header: new sap.m.Label({text: "Set Range"})});
-         var oColMax = new sap.m.Column({ header: new sap.m.Label({text: "Max"})});
-         //var oColStep = new sap.m.Column({ header: new sap.m.Label({text: "Step"})});
-         var oColErrors = new sap.m.Column({ header: new sap.m.Label({text: "Errors"})});
+         var oColName = new sap.m.Column({ header: new mLabel({text: "Name"})});
+         var oColFix = new sap.m.Column({ header: new mLabel({text: "Fix"})});
+         var oColBound = new sap.m.Column({ header: new mLabel({text: "Bound"})});
+         var oColValue = new sap.m.Column({ header: new mLabel({text: "Value"})});
+         var oColMin = new sap.m.Column({ header: new mLabel({text: "Min"})});
+         //var oColSetRange = new sap.m.Column({ header: new mLabel({text: "Set Range"})});
+         var oColMax = new sap.m.Column({ header: new mLabel({text: "Max"})});
+         //var oColStep = new sap.m.Column({ header: new mLabel({text: "Step"})});
+         var oColErrors = new sap.m.Column({ header: new mLabel({text: "Errors"})});
 
-         var oNameTxt = new sap.m.TextArea({value: "{name}", height: "30px"});
-         var oFixTxt = new sap.m.CheckBox({selected: "{Fix}"});
-         var oBoundTxt = new sap.m.CheckBox({selected: "{Bound}"});
-         var oValueTxt = new sap.m.TextArea({value: "{valuePar}", height: "30px"});
-         //var oValueTxt = new sap.m.StepInput({min:"{min}", max:"{max}", value:"{value}", displayValuePrecision: 3, width: "120%" });
-         //var oMinTxt = new sap.m.TextArea({ value:"{min}", height: "30px"});
-         var oMinTxt = new sap.m.TextArea({value: "{min}", height: "30px"});
-         //var oSetRangeTxt = new sap.m.RangeSlider({min:"{Min}", max:"{Max}", value:"{Value}"});
-         //var oMaxTxt = new sap.m.TextArea({ value:"{max}", height: "30px"});
-         var oMaxTxt = new sap.m.TextArea({value: "{max}", height: "30px"});
-         //var oStepTxt = new sap.m.StepInput({min:"{min}", max:"{max}", value:"{Step}", displayValuePrecision: 3 });
-         var oErrorTxt = new sap.m.TextArea({value:"{error}", height: "30px", enabled:false});
+         var oTableItems = new mColumnListItem({ vAlign:"Middle", cells:[
+              new mLabel({ text: "{name}" }),
+              new mCheckBox({ selected: "{Fix}" }),
+              new mCheckBox({ selected: "{Bound}" }),
+              new mInput({ value: "{valuePar}", type: "Number", width: "50px" }),
+              new mInput({ value: "{min}", type: "Number", width: "50px" }),
+              new mInput({ value: "{max}", type: "Number", width: "50px" }),
+              new mLabel({ text: "{error}" })
+         ]});
 
-         var oTableItems = new sap.m.ColumnListItem({vAlign:"Middle",cells:[oNameTxt,oFixTxt,oBoundTxt, oValueTxt,
-         										oMinTxt,oMaxTxt, oErrorTxt]});
-
-         var oTable = new sap.m.Table({
-         	id:"PrmsTable",
-         	fixedLayout:false,
-         	mode: sap.m.ListMode.SingleSelectMaster,
-         	includeItemInSelection:true,
-         	growing: true
+         var oTable = new mTable({
+            id: "PrmsTable",
+            fixedLayout: false,
+            mode: sap.m.ListMode.SingleSelectMaster,
+            includeItemInSelection: true,
+            growing: true
          });
 
          oTable.addColumn(oColName);
@@ -306,5 +306,5 @@ sap.ui.define([
 
    });
 
-   return 
+   return
 });
