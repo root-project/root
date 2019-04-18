@@ -27,7 +27,7 @@
 #include "TBufferJSON.h"
 #include <sstream>
 #include <iostream>
-#include <iomanip> 
+#include <iomanip>
 /** \class ROOT::Experimental::RFitPanel
 \ingroup webdisplay
 
@@ -296,23 +296,27 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
    }
 
    if (arg.find("GETPARS:") == 0) {
-      auto name = arg.substr(8);
-      TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(name.c_str()));
-
-      printf("Found func %s %p\n", name.c_str(), func);
 
       RFitFunc info;
+
+      info.name = arg.substr(8);
+      TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info.name.c_str()));
+
+      printf("Found func %s %p\n", info.name.c_str(), func);
+
       if (func) {
-        //info.name = name;
-        for (int n=0;n<func->GetNpar();++n) {
-          Double_t min{0}, max{0}; 
-          Double_t value{0.};
-          value = func->GetParameter(n);
-          func->GetParLimits(n, min, max);
-          info.pars.emplace_back(n, func->GetParName(n), (roundf(value * 1000)) / 1000.0000, func->GetParError(n), min, max);
-        }
+         for (int n = 0; n < func->GetNpar(); ++n) {
+            info.pars.emplace_back(n, func->GetParName(n));
+            auto &par = info.pars.back();
+
+            par.value = func->GetParameter(n);
+            par.error = func->GetParError(n);
+            func->GetParLimits(n, par.min, par.max);
+            if ((par.min >= par.max) && ((par.min!=0) || (par.max != 0)))
+               par.fixed = true;
+         }
       } else {
-        info.name = "<not exists>";
+         info.name = "<not exists>";
       }
       TString json = TBufferJSON::ToJSON(&info);
 
@@ -321,12 +325,10 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
    }
 
    if (arg.find("SETPARS:") == 0) {
-      auto json = arg.substr(8);
-      auto info = TBufferJSON::FromJSON<RFitFunc>(json);
-      
+      auto info = TBufferJSON::FromJSON<RFitFunc>(arg.substr(8));
+
       if (info) {
          TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info->name.c_str()));
-
 
          if (func) {
             printf("Found func1 %s %p %d %d\n", info->name.c_str(), func, func->GetNpar(), (int) info->pars.size());
