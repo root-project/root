@@ -46,10 +46,6 @@ struct RFitFuncParameter {
 
 struct RFitFunc {
    std::string name;
-   double value{0.};
-   double min{0.};
-   double max{0.};
-   double error{0.};
    std::vector<RFitFuncParameter> pars;
 };
 
