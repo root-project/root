@@ -472,6 +472,45 @@ public:
 };
 
 template <>
+class ROOT::Experimental::RField<std::int32_t> : public ROOT::Experimental::Detail::RFieldBase {
+public:
+   static std::string MyTypeName() { return "std::int32_t"; }
+   explicit RField(std::string_view name)
+     : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, true /* isSimple */) {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+
+   void DoGenerateColumns() final;
+   unsigned int GetNColumns() const final { return 1; }
+
+   std::int32_t* Map(ForestSize_t index) {
+      static_assert(Detail::RColumnElement<std::int32_t, EColumnType::kInt32>::kIsMappable,
+                    "(std::int32_t, EColumnType::kInt32) is not identical on this platform");
+      return fPrincipalColumn->Map<std::int32_t, EColumnType::kInt32>(index, nullptr);
+   }
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where, ArgsT&&... args)
+   {
+      ROOT::Experimental::RFieldValue<std::int32_t> v(
+         Detail::RColumnElement<std::int32_t, EColumnType::kInt32>(static_cast<std::int32_t*>(where)),
+         this, static_cast<std::int32_t*>(where), std::forward<ArgsT>(args)...);
+      return v;
+   }
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final { return GenerateValue(where, 0); }
+   Detail::RFieldValueBase CaptureValue(void *where) final {
+      ROOT::Experimental::RFieldValue<std::int32_t> v(true,
+         Detail::RColumnElement<std::int32_t, EColumnType::kInt32>(static_cast<std::int32_t*>(where)),
+         this, static_cast<std::int32_t*>(where));
+      return v;
+   }
+   size_t GetValueSize() const final { return sizeof(std::int32_t); }
+};
+
+template <>
 class ROOT::Experimental::RField<std::uint32_t> : public ROOT::Experimental::Detail::RFieldBase {
 public:
    static std::string MyTypeName() { return "std::uint32_t"; }

@@ -134,6 +134,15 @@ public:
 };
 
 template <>
+class ROOT::Experimental::Detail::RColumnElement<std::int32_t, ROOT::Experimental::EColumnType::kInt32>
+   : public ROOT::Experimental::Detail::RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = true;
+   static constexpr size_t kSize = sizeof(std::int32_t);
+   explicit RColumnElement(std::int32_t* value) : RColumnElementBase(value, kSize, kIsMappable) {}
+};
+
+template <>
 class ROOT::Experimental::Detail::RColumnElement<std::uint32_t, ROOT::Experimental::EColumnType::kInt32>
    : public ROOT::Experimental::Detail::RColumnElementBase {
 public:
