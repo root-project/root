@@ -32,7 +32,7 @@ namespace {
 
     class GILControl {
     public:
-        GILControl(CPyCppyy::CallContext* ctxt) : fSave(nullptr) {
+        GILControl(CPyCppyy::CallContext* /*ctxt*/) : fSave(nullptr) {
 #ifdef WITH_THREAD
             fSave = PyEval_SaveThread();
 #endif
