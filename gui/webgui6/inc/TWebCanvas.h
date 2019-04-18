@@ -15,7 +15,9 @@
 //                                                                      //
 // TWebCanvas                                                           //
 //                                                                      //
-// TCanvasImp ABI implementation for Web-based GUI                      //
+// Basic TCanvasImp ABI implementation for Web-based GUI                //
+// Provides painting of main ROOT6 classes in web browsers              //
+// Major interactive features implemented in TWebCanvasFull class       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -39,45 +41,6 @@ class TPadWebSnapshot;
 class THttpServer;
 class TWebPS;
 
-/// Class used to transport drawing options from the client
-class TWebObjectOptions {
-public:
-   std::string snapid;       ///< id of the object
-   std::string opt;          ///< drawing options
-   std::string fcust;        ///< custom string
-   std::vector<double> fopt; ///< custom float array
-};
-
-/// Class used to transport ranges from JSROOT canvas
-class TWebPadRange {
-public:
-   std::string snapid;                        ///< id of pad
-   bool active{false};                        ///< if pad selected as active
-   int logx{0}, logy{0}, logz{0};             ///< pad log properties
-   int gridx{0}, gridy{0};                    ///< pad grid properties
-   int tickx{0}, ticky{0};                    ///< pad ticks properties
-   Float_t mleft{0}, mright{0}, mtop{0}, mbottom{0}; ///< frame margins
-   bool ranges{false};                        ///< if true, pad has ranges
-   Double_t px1{0}, py1{0}, px2{0}, py2{0};   ///< pad range
-   Double_t ux1{0}, uy1{0}, ux2{0}, uy2{0};   ///< pad axis range
-   unsigned bits{0};                          ///< canvas status bits like tool editor
-   std::vector<TWebObjectOptions> primitives; ///< drawing options for primitives
-};
-
-
-/////////////////////////////////////////////////////////
-
-/// Class used to transport pad click events
-class TWebPadClick {
-public:
-   std::string padid;                         ///< id of pad
-   std::string objid;                         ///< id of clicked object, "null" when not defined
-   int x{-1};                                 ///< x coordinate of click event
-   int y{-1};                                 ///< y coordinate of click event
-   bool dbl{false};                           ///< when double-click was performed
-};
-
-/////////////////////////////////////////////////////////
 
 class TWebCanvas : public TCanvasImp {
 
@@ -138,9 +101,6 @@ protected:
    void CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t func);
 
    TObject *FindPrimitive(const char *id, TPad *pad = nullptr, TObjLink **padlnk = nullptr, TPad **objpad = nullptr);
-   TPad *ProcessObjectData(TWebObjectOptions &item, TPad *pad);
-   Bool_t DecodeAllRanges(const char *arg);
-   Bool_t DecodeObjectData(const char *arg);
 
    Bool_t IsAnyPadModified(TPad *pad);
 
@@ -150,13 +110,17 @@ protected:
 
    Bool_t WaitWhenCanvasPainted(Long64_t ver);
 
-   Bool_t IsJSSupportedClass(TObject *obj);
+   virtual Bool_t IsJSSupportedClass(TObject *obj);
+
+   Bool_t IsFirstConn(unsigned connid) const { return (connid!=0) && (fWebConn.size()>0) && (fWebConn[0].fConnId == connid) ;}
 
    void ShowCmd(const char *arg, Bool_t show);
 
    void AssignStatusBits(UInt_t bits);
 
    virtual Bool_t ProcessData(unsigned connid, const std::string &arg);
+
+   virtual Bool_t DecodePadOptions(const char *) { return kFALSE; }
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
@@ -183,16 +147,6 @@ public:
 
    // web-canvas specific methods
 
-   void SetUpdatedHandler(UpdatedSignal_t func) { fUpdatedSignal = func; }
-
-   void SetActivePadChangedHandler(PadSignal_t func) { fActivePadChangedSignal = func; }
-
-   void SetObjSelectHandler(ObjectSelectSignal_t func) { fObjSelectSignal = func; }
-
-   void SetPadClickedHandler(PadClickedSignal_t func) { fPadClickedSignal = func; }
-
-   void SetPadDblClickedHandler(PadClickedSignal_t func) { fPadDblClickedSignal = func; }
-
    void ActivateInEditor(TPad *pad, TObject *obj);
 
    /*
@@ -212,6 +166,17 @@ public:
    virtual Bool_t HasStatusBar() const;
    virtual Bool_t HasToolBar() const { return kFALSE; }
    virtual Bool_t HasToolTips() const;
+
+   void SetUpdatedHandler(UpdatedSignal_t func) { fUpdatedSignal = func; }
+
+   void SetActivePadChangedHandler(PadSignal_t func) { fActivePadChangedSignal = func; }
+
+   void SetObjSelectHandler(ObjectSelectSignal_t func) { fObjSelectSignal = func; }
+
+   void SetPadClickedHandler(PadClickedSignal_t func) { fPadClickedSignal = func; }
+
+   void SetPadDblClickedHandler(PadClickedSignal_t func) { fPadDblClickedSignal = func; }
+
 
    void SetStyleDelivery(Int_t val) { fStyleDelivery = val; }
    Int_t GetStyleDelivery() const { return fStyleDelivery; }
