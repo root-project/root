@@ -166,6 +166,8 @@ public:
    THttpServer *GetServer();
    void ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &user_args = "");
 
+   virtual Bool_t IsReadOnly() const { return kTRUE; }
+
    virtual Int_t InitWindow();
    virtual void Close();
    virtual void Show();
