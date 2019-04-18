@@ -692,7 +692,7 @@ static PyMethodDef CallableImplMethods[] =
 {
     {"__init__", (PyCFunction)GenericCallableImpl_init, METH_VARARGS|METH_KEYWORDS, "Parse decorator arguments"},
     {"__call__", ProxyCallableImpl_call, METH_VARARGS, "Create C++ wrapper function"},
-    {NULL},
+    {NULL, NULL, 0, NULL}
 };
 
 
