@@ -282,10 +282,12 @@ void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create snapshot for pad and all primitives
+/// Callback function is used to create JSON in the middle of data processing -
+/// when all misc objects removed from canvas list of primitives or histogram list of functions
+/// After that objects are moved back to their places
 
 void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t resfunc)
 {
-   paddata.SetReadOnly(IsReadOnly());
    paddata.SetActive(pad == gPad);
    paddata.SetObjectIDAsPtr(pad);
    paddata.SetSnapshot(TWebSnapshot::kSubPad, pad); // add ref to the pad
@@ -548,7 +550,7 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
          buf.append(":");
 
          TString res;
-         TPadWebSnapshot holder;
+         TPadWebSnapshot holder(IsReadOnly());
          CreatePadSnapshot(holder, Canvas(), conn.fDrawVersion, [&res](TPadWebSnapshot *snap) {
             res = TBufferJSON::ConvertToJSON(snap, 23);
          });
@@ -1196,7 +1198,7 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
 
    {
       auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
-      TPadWebSnapshot holder;
+      TPadWebSnapshot holder(true); // always readonly
       imp->CreatePadSnapshot(holder, c, 0, [&res, json_compression](TPadWebSnapshot *snap) {
          res = TBufferJSON::ConvertToJSON(snap, json_compression);
       });
@@ -1223,7 +1225,7 @@ Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *
    {
       auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
 
-      TPadWebSnapshot holder;
+      TPadWebSnapshot holder(true); // always readonly
 
       imp->CreatePadSnapshot(holder, c, 0, [&res, filename, option](TPadWebSnapshot *snap) {
          res = TBufferJSON::ExportToFile(filename, snap, option);
