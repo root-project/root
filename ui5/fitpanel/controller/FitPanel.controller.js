@@ -1,19 +1,17 @@
 sap.ui.define([
    'rootui5/panel/Controller',
    'sap/ui/model/json/JSONModel',
-   'sap/ui/unified/ColorPickerPopover',
    'sap/m/Button',
    'sap/m/Table',
    'sap/m/Dialog',
    'sap/m/List',
-   'sap/m/InputListItem',
    'sap/m/Input',
    'sap/m/Label',
    'sap/m/CheckBox',
    'sap/m/Column',
    'sap/m/ColumnListItem'
-], function (GuiPanelController, JSONModel, ColorPickerPopover, Button, mTable,
-             Dialog, List, InputListItem, mInput, mLabel, mCheckBox, mColumn, mColumnListItem) {
+], function (GuiPanelController, JSONModel, mButton, mTable,
+             mDialog, mList, mInput, mLabel, mCheckBox, mColumn, mColumnListItem) {
 
    "use strict";
    var count = 0;
@@ -143,6 +141,7 @@ sap.ui.define([
          console.log("Method = ", data.fMethodMinAll[parseInt(lib)]);
 
       },
+
       //Change the combobox in Type Function
       //When the Type (TypeFunc) is changed (Predef etc) then the combobox with the funtions (TypeXY),
       //is also changed
@@ -239,7 +238,7 @@ sap.ui.define([
          var oTableItems = new mColumnListItem({ vAlign:"Middle", cells:[
               new mLabel({ text: "{name}" }),
               new mCheckBox({ selected: "{fixed}" }),
-              new mCheckBox({ selected: "{Bound}" }),
+              // new mCheckBox({ selected: "{Bound}" }),
               new mInput({ value: "{valueTxt}", type: "Number", width: "75px" }),
               new mInput({ value: "{minTxt}", type: "Number", width: "75px" }),
               new mInput({ value: "{maxTxt}", type: "Number", width: "75px" }),
@@ -255,7 +254,7 @@ sap.ui.define([
             columns: [
                 new mColumn({ header: new mLabel({text: "Name"})}),
                 new mColumn({ header: new mLabel({text: "Fix"})}),
-                new mColumn({ header: new mLabel({text: "Bound"})}),
+                // new mColumn({ header: new mLabel({text: "Bound"})}),
                 new mColumn({ header: new mLabel({text: "Value"})}),
                 new mColumn({ header: new mLabel({text: "Min"})}),
                 new mColumn({ header: new mLabel({text: "Max"})}),
@@ -266,13 +265,13 @@ sap.ui.define([
          oTable.bindAggregation("items","/Data",oTableItems,null);
          oTable.setModel(oModel);
 
-         this.parsDialog = new Dialog({
+         this.parsDialog = new mDialog({
             title: "Set Prarameters",
-            beginButton: new Button({
+            beginButton: new mButton({
                text: 'Cancel',
                press: this.closeParametersDialog.bind(this)
             }),
-            endButton: new Button({
+            endButton: new mButton({
                text: 'Ok',
                press: this.closeParametersDialog.bind(this, true)
             })
@@ -292,25 +291,6 @@ sap.ui.define([
       //Cancel Button on Set Parameters Dialog Box
       onCancel: function(oEvent){
          oEvent.getSource().close();
-      },
-
-      colorPicker: function (oEvent) {
-         this.inputId = oEvent.getSource().getId();
-         if (!this.oColorPickerPopover) {
-            this.oColorPickerPopover = new sap.ui.unified.ColorPickerPopover({
-               colorString: "blue",
-               mode: sap.ui.unified.ColorPickerMode.HSL,
-               change: this.handleChange.bind(this)
-            });
-         }
-         this.oColorPickerPopover.openBy(oEvent.getSource());
-      },
-
-      handleChange: function (oEvent) {
-         var oView = this.getView();
-         //oView.byId(this.inputId).setValue(oEvent.getParameter("colorString"));
-         this.inputId = "";
-         var color = oEvent.getParameter("colorString");
       },
 
       updateRange: function() {
