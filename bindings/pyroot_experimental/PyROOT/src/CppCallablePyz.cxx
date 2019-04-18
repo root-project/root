@@ -690,7 +690,7 @@ PyObject* ProxyCallableImpl_call(PyObject * /*self*/, PyObject *args)
 // Method definition for class used as decorator to create C++ wrapper
 static PyMethodDef CallableImplMethods[] =
 {
-    {"__init__", (PyCFunction)GenericCallableImpl_init, METH_VARARGS|METH_KEYWORDS, "Parse decorator arguments"},
+    {"__init__", (PyCFunction)(void(*)(void))(GenericCallableImpl_init), METH_VARARGS|METH_KEYWORDS, "Parse decorator arguments"},
     {"__call__", ProxyCallableImpl_call, METH_VARARGS, "Create C++ wrapper function"},
     {NULL, NULL, 0, NULL}
 };
