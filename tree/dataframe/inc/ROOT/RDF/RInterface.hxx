@@ -30,6 +30,7 @@
 #include "TH3.h"        // For Histo actions
 #include "TProfile.h"
 #include "TProfile2D.h"
+#include "TStatistic.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -1370,6 +1371,34 @@ public:
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
       return CreateAction<RDFInternal::ActionTags::Fill, RDFDetail::RInferredType>(bl, h, bl.size());
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Return a TStatistic object, filled once per event (*lazy action*)
+   ///
+   /// \param[in] Column with the values to fill the statistics with.
+   /// \return the filled TStatistic object wrapped in a `RResultPtr`.
+   RResultPtr<TStatistic> Stats(std::string_view value = "")
+   {
+      ColumnNames_t columns;
+      if (!value.empty()) {
+         columns.emplace_back(std::string(value));
+      }
+      const auto validColumnNames = GetValidatedColumnNames(1, columns);
+      return Fill(TStatistic(), validColumnNames);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Return a TStatistic object, filled once per event (*lazy action*)
+   ///
+   /// \param[in] Column with the values to fill the statistics with.
+   /// \param[in] Column with the weights to fill the statistics with.
+   /// \return the filled TStatistic object wrapped in a `RResultPtr`.
+   RResultPtr<TStatistic> Stats(std::string_view value, std::string_view weight)
+   {
+      ColumnNames_t columns {std::string(value), std::string(weight)};
+      const auto validColumnNames = GetValidatedColumnNames(2, columns);
+      return Fill(TStatistic(), validColumnNames);
    }
 
    ////////////////////////////////////////////////////////////////////////////
