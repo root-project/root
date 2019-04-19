@@ -1266,9 +1266,9 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 void TFormula::HandleParamRanges(TString &formula)
 {
    TRegexp rangePattern("\\[[0-9]+\\.\\.[0-9]+\\]");
-   Ssiz_t *len = new Ssiz_t();
+   Ssiz_t len;
    int matchIdx = 0;
-   while ((matchIdx = rangePattern.Index(formula, len, matchIdx)) != -1) {
+   while ((matchIdx = rangePattern.Index(formula, &len, matchIdx)) != -1) {
       int startIdx = matchIdx + 1;
       int endIdx = formula.Index("..", startIdx) + 2; // +2 for ".."
       int startCnt = TString(formula(startIdx, formula.Length())).Atoi();
