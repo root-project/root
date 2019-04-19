@@ -993,9 +993,13 @@ TEST_P(RDFSimpleTests, Stats)
               .Define("ones", [](){return std::vector<double>({1.,1.,1.});});
    
    auto s0 = rr.Stats("v");
+   auto m0 = rr.Mean<ULong64_t>("v");
+   auto v0 = rr.StdDev<ULong64_t>("v");
    auto s0prime = rr.Stats("v", "one");
    auto s0w = rr.Stats("v", "w");
    auto s1 = rr.Stats("vec_v");
+   auto m1 = rr.Mean<std::vector<ULong64_t>>("vec_v");
+   auto v1 = rr.StdDev<std::vector<ULong64_t>>("vec_v");
    auto s1w = rr.Stats("vec_v", "vec_w");
    auto s1prime0 = rr.Stats("vec_v", "one");
    auto s1prime1 = rr.Stats("vec_v", "ones");
@@ -1004,8 +1008,12 @@ TEST_P(RDFSimpleTests, Stats)
    EXPECT_FLOAT_EQ(s0->GetMean(), 127.5);
    EXPECT_FLOAT_EQ(s0w->GetMean(), 40.800388);
    EXPECT_FLOAT_EQ(s0->GetMean(), s0prime->GetMean());
+   EXPECT_FLOAT_EQ(s0->GetMean(), *m0);
+   EXPECT_FLOAT_EQ(s0->GetRMS(), *v0);
    EXPECT_FLOAT_EQ(s1->GetMean(), 128.5);
    EXPECT_FLOAT_EQ(s1w->GetMean(), 127.12541);
+   EXPECT_FLOAT_EQ(s1->GetMean(), *m1);
+   EXPECT_FLOAT_EQ(s1->GetRMS(), *v1);
    EXPECT_FLOAT_EQ(s1->GetMean(), s1prime0->GetMean());
    EXPECT_FLOAT_EQ(s1->GetMean(), s1prime1->GetMean());
 }
