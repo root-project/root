@@ -111,20 +111,7 @@ struct Display{};
 }
 // clang-format on
 
-template <int D, typename P, template <int, typename, template <typename> class> class... S>
-class THist;
-
-/// Check whether a histogram type is a classic or v7 histogram.
-template <typename T>
-struct IsV7Hist : public std::false_type {
-   static_assert(std::is_base_of<TH1, T>::value, "not implemented for this type");
-};
-
-template <int D, typename P, template <int, typename, template <typename> class> class... S>
-struct IsV7Hist<THist<D, P, S...>> : public std::true_type {
-};
-
-template <typename T, bool ISV7HISTO = IsV7Hist<T>::value>
+template <typename T, bool ISV6HISTO = std::is_base_of<TH1, T>::value>
 struct HistoUtils {
    static void SetCanExtendAllAxes(T &h) { h.SetCanExtend(::TH1::kAllAxes); }
    static bool HasAxisLimits(T &h)
@@ -135,7 +122,7 @@ struct HistoUtils {
 };
 
 template <typename T>
-struct HistoUtils<T, true> {
+struct HistoUtils<T, false> {
    static void SetCanExtendAllAxes(T &) {}
    static bool HasAxisLimits(T &) { return true; }
 };
