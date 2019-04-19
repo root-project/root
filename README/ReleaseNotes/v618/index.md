@@ -98,6 +98,7 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
   - Add `HasColumn` method to check whether a column is available to a given RDF node
   - PyROOT: add `AsRNode` helper function to convert RDF nodes to the common RNode type
   - PyROOT: add `AsNumpy` method to export contents of a RDataFrame as a dictionary of numpy arrays
+  - The `Stats` method has been added, allowing to retrieve a `TStatistic` object filled with the values of a column and, optionally, the values of a second column to be used as weights.
 
 ### TLeafF16 and TLeafD32
   - New leaf classes allowing to store `Float16_t` and `Double32_t` values using the truncation methods from `TBuffer`
@@ -149,6 +150,7 @@ Added necessary changes to allow [XRootD local redirection](https://github.com/x
 
 ## Math Libraries
   - Add to the documentation of TLorentzVector a link to ROOT::Math::LorentzVector, which is a superior tool.
+  - Add new implementation of `TStatistic::Merge` able to deal silently with empty TStatistic objects. This implementation is useful when filling TStatistics with one of ROOT's implicitly parallelised utilities such as `RDataFrame` or `TThreadExecutor`.
   - Add `T RVec<T>::at>(size_t, T)` method to allow users to specify a default value to be returned in case the vector is shorter than the position specified. No exception is thrown.
   - Add the `Concatenate` helper to merge the content of two `RVec<T>` instances.
   - Generalise the `VecOps::Map` utility allowing to apply a callable on a set of RVecs and not only to one.
