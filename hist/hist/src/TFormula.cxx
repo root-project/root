@@ -1368,7 +1368,7 @@ void TFormula::HandleFunctionArguments(TString &formula)
          // The other possibility we need to consider is that this is a
          // parametrized function (else case below)
 
-         bool nameRecognized = (f != NULL);
+         bool nameRecognized = (f != nullptr);
 
          // Get ndim, npar, and replacementFormula of function
          int ndim = 0;
