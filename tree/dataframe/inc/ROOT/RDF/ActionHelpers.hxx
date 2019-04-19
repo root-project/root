@@ -245,6 +245,14 @@ extern template void FillHelper::Exec(unsigned int, const std::vector<int> &, co
 extern template void
 FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
+template<typename T>
+void SetDirZero(T &){}
+
+inline void SetDirZero(TH1 &h)
+{
+   h.SetDirectory(nullptr);
+}
+
 template <typename HIST = Hist_t>
 class FillParHelper : public RActionImpl<FillParHelper<HIST>> {
    std::vector<HIST *> fObjects;
@@ -259,7 +267,7 @@ public:
       // Initialise all other slots
       for (unsigned int i = 1; i < nSlots; ++i) {
          fObjects[i] = new HIST(*fObjects[0]);
-         fObjects[i]->SetDirectory(nullptr);
+         SetDirZero(fObjects[i]);
       }
    }
 
