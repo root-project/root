@@ -1302,8 +1302,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
          "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"};
       // These modules contain global variables which conflict with users' code such as "PI".
       // FIXME: Reducing those will let us be less dependent on rootmap files
-      static constexpr std::array<const char*, 4> ExcludeModules =
-         { { "Rtools", "RSQLite", "RInterface", "RMVA"} };
+      static constexpr std::array<const char*, 3> ExcludeModules =
+         { { "Rtools", "RSQLite", "RInterface"} };
 
       LoadModules(CoreModules, *fInterpreter);
 
@@ -1342,6 +1342,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // core modules have defined it:
       // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
       fInterpreter->declare("#ifdef I\n #undef I\n #endif\n");
+      fInterpreter->declare("#ifdef PI\n #undef PI\n #endif\n");
+      fInterpreter->declare("#ifdef ERROR\n #undef ERROR\n #endif\n");
    }
 
    // For the list to also include string, we have to include it now.
