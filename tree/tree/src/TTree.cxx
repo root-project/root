@@ -228,12 +228,6 @@ Adding a branch is often not possible because the tree is in a read-only
 file and you do not have permission to save the modified tree with the
 new branch. Even if you do have the permission, you risk losing the
 original tree with an unsuccessful attempt to save  the modification.
-Since trees are usually large, adding a branch could extend it over the
-2GB limit. In this case, the attempt to write the tree fails, and the
-original data is erased.
-In addition, adding a branch to a tree enlarges the tree and increases
-the amount of memory needed to read an entry, and therefore decreases
-the performance.
 
 For these reasons, ROOT offers the concept of friends for trees (and chains).
 We encourage you to use TTree::AddFriend rather than adding a branch manually.
