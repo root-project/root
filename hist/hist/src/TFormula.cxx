@@ -9,10 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#if __cplusplus >= 201103L
-#define ROOT_CPLUSPLUS11 1
-#endif
-
 #include "TROOT.h"
 #include "TClass.h"
 #include "TMethod.h"
@@ -846,8 +842,6 @@ void TFormula::InputFormulaIntoCling()
 
 void TFormula::FillDefaults()
 {
-   //#ifdef ROOT_CPLUSPLUS11
-
    const TString defvars[] = { "x","y","z","t"};
    const pair<TString, Double_t> defconsts[] = {{"pi", TMath::Pi()},
                                                 {"sqrt2", TMath::Sqrt2()},
