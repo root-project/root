@@ -1081,8 +1081,6 @@ static bool LoadWorkingDirModuleMap(clang::Preprocessor& PP) {
    if (DE) {
       HeaderSearch& HS = PP.getHeaderSearchInfo();
       const FileEntry *FE = HS.lookupModuleMapFile(DE, /*IsFramework*/ false);
-      std::string modulemapInCurrentDir =
-         std::string(gSystem->WorkingDirectory()) + "./module.modulemap";
       // FIXME: Calling IsLoaded is slow! Replace this with the appropriate
       // call to the clang::ModuleMap class.
       if (FE && !gCling->IsLoaded(FE->getName().data())) {
