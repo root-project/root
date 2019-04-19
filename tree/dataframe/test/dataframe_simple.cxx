@@ -982,6 +982,34 @@ TEST(RDFSimpleTests, NonExistingFile)
    EXPECT_EQ(0, ret);
 }
 
+TEST_P(RDFSimpleTests, Stats)
+{
+   ROOT::RDataFrame r(256);
+   auto rr = r.Define("v", [](ULong64_t e){return e;}, {"rdfentry_"})
+              .Define("vec_v", [](ULong64_t e){return std::vector<ULong64_t>({e, e+1, e+2});}, {"v"})
+              .Define("w", [](ULong64_t e){return 1./(e+1);}, {"v"})
+              .Define("vec_w", [](double w){return std::vector<double>({w, w+1, w+2});}, {"w"})
+              .Define("one", [](){return 1.;})
+              .Define("ones", [](){return std::vector<double>({1.,1.,1.});});
+   
+   auto s0 = rr.Stats("v");
+   auto s0prime = rr.Stats("v", "one");
+   auto s0w = rr.Stats("v", "w");
+   auto s1 = rr.Stats("vec_v");
+   auto s1w = rr.Stats("vec_v", "vec_w");
+   auto s1prime0 = rr.Stats("vec_v", "one");
+   auto s1prime1 = rr.Stats("vec_v", "ones");
+
+   // Checks
+   EXPECT_FLOAT_EQ(s0->GetMean(), 127.5);
+   EXPECT_FLOAT_EQ(s0w->GetMean(), 40.800388);
+   EXPECT_FLOAT_EQ(s0->GetMean(), s0prime->GetMean());
+   EXPECT_FLOAT_EQ(s1->GetMean(), 128.5);
+   EXPECT_FLOAT_EQ(s1w->GetMean(), 127.12541);
+   EXPECT_FLOAT_EQ(s1->GetMean(), s1prime0->GetMean());
+   EXPECT_FLOAT_EQ(s1->GetMean(), s1prime1->GetMean());
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
