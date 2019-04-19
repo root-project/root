@@ -92,25 +92,48 @@ void TStatistic::Print(Option_t *) const {
 
 // Implementation of Merge
 Int_t TStatistic::Merge(TCollection *in) {
-   // Merge objects in the list.
-   // Returns the number of objects that were in the list.
-   TIter nxo(in);
-   Int_t n = 0;
-   while (TObject *o = nxo()) {
-      TStatistic *c = dynamic_cast<TStatistic *>(o);
-      if (c) {
-         if (fW == 0 || c->fW == 0 || ((fW + c->fW) == 0) ) {
-            Error("Merge","Zero sum of weights - cannot merge data from %s",c->GetName() );
-            continue;
-         }
-         double temp = (c->fW)/(fW) * fM - c->fM; 
-         fM2 += c->fM2 + fW/(c->fW*(c->fW + fW) ) * temp * temp;  
-         fM  += c->fM;
-         fW  += c->fW;
-         fW2 += c->fW2;
-         fN  += c->fN;
-         n++;
+
+   // Let's organise the list of objects to merge excluding the empty ones
+   std::vector<TStatistic*> statPtrs;
+   if (this->fN != 0LL) statPtrs.push_back(this);
+   TStatistic *statPtr;
+   for (auto o : *in) {
+      if ((statPtr = dynamic_cast<TStatistic *>(o)) && statPtr->fN != 0LL) {
+         statPtrs.push_back(statPtr);
       }
    }
-   return n;
+
+   // No object included this has entries
+   const auto nStatsPtrs = statPtrs.size();
+
+   // Early return possible in case nothing has been filled
+   if (nStatsPtrs == 0) return 0;
+
+   // Merge the statistic quantities into local variables to then 
+   // update the data members of this object
+   auto firstStatPtr = statPtrs[0];
+   auto N = firstStatPtr->fN;
+   auto M = firstStatPtr->fM;
+   auto M2 = firstStatPtr->fM2;
+   auto W = firstStatPtr->fW;
+   auto W2 = firstStatPtr->fW2;
+   for (auto i = 1U; i < nStatsPtrs; ++i) {
+      auto c = statPtrs[i];
+      double temp = (c->fW) / (W)*M - c->fM;
+      M2 += c->fM2 + W / (c->fW * (c->fW + W)) * temp * temp;
+      M += c->fM;
+      W += c->fW;
+      W2 += c->fW2;
+      N += c->fN;
+   }
+
+   // Now update the data members of this object
+   fN = N;
+   fW = W;
+   fW2 = W2;
+   fM = M;
+   fM2 = M2;
+
+   return nStatsPtrs;
+
 }
