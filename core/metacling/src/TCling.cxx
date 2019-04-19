@@ -1502,27 +1502,16 @@ static bool R__InitStreamerInfoFactory()
 ////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a PCM; returns true on success.
 
-bool TCling::LoadPCM(TString pcmFileName,
-                     const char** headers,
-                     const std::string& libraryFullPath) const {
-   // pcmFileName is an intentional copy; updated by FindFile() below.
+bool TCling::LoadPCM(const std::string& pcmFileNameFullPath) const {
 
-   assert(libraryFullPath.empty());
-   assert(llvm::sys::path::is_absolute(libraryFullPath));
-   TString searchPath;
+   assert(!pcmFileNameFullPath.empty());
+   assert(llvm::sys::path::is_absolute(pcmFileNameFullPath));
+   if (!llvm::sys::fs::exists(pcmFileNameFullPath)) {
+     return false;
+   }
 
-   searchPath = llvm::sys::path::parent_path(libraryFullPath);
-#ifdef R__WIN32
-   searchPath += ";";
-#else
-   searchPath += ":";
-#endif
-   // Note: if we know where the library is, we probably shouldn't even
-   // look in other places.
-   searchPath.Append( gSystem->GetDynamicPath() );
-
-   if (!gSystem->FindFile(searchPath, pcmFileName))
-      return kFALSE;
+   // Easier to work with the ROOT interfaces.
+   TString pcmFileName = pcmFileNameFullPath;
 
    // Prevent the ROOT-PCMs hitting this during auto-load during
    // JITting - which will cause recursive compilation.
@@ -1987,8 +1976,18 @@ void TCling::RegisterModule(const char* modulename,
    }
 
    if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
-      TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
-      if (!LoadPCM(pcmFileName, headers, dyLibName)) {
+      std::string pcmFileNameFullPath;
+      if (dyLibName)
+         pcmFileNameFullPath = dyLibName;
+      else {
+         // if we were in the case of late registration
+         assert(lateRegistration);
+         pcmFileNameFullPath = FindLibraryName(triggerFunc);
+      }
+      pcmFileNameFullPath =
+         llvm::sys::path::parent_path(pcmFileNameFullPath).str() + "/";
+      pcmFileNameFullPath += ROOT::TMetaUtils::GetModuleFileName(modulename);
+      if (!LoadPCM(pcmFileNameFullPath)) {
          ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
                  ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
       }
