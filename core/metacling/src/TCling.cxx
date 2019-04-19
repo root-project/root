@@ -1073,19 +1073,25 @@ std::string TCling::ToString(const char* type, void* obj)
 ////////////////////////////////////////////////////////////////////////////////
 ///\returns true if the module map was loaded, false on error or if the map was
 ///         already loaded.
-static bool LoadWorkingDirModuleMap(clang::Preprocessor& PP) {
+static bool RegisterPrebuiltModulePath(clang::Preprocessor& PP,
+                                       const std::string& FullPath) {
+   assert(llvm::sys::path::is_absolute(FullPath));
    FileManager& FM = PP.getFileManager();
    // FIXME: In a ROOT session we can add an include path (through .I /inc/path)
    // We should look for modulemap files there too.
-   const DirectoryEntry *DE = FM.getDirectory(gSystem->WorkingDirectory());
+   const DirectoryEntry *DE = FM.getDirectory(FullPath);
    if (DE) {
       HeaderSearch& HS = PP.getHeaderSearchInfo();
       const FileEntry *FE = HS.lookupModuleMapFile(DE, /*IsFramework*/ false);
       // FIXME: Calling IsLoaded is slow! Replace this with the appropriate
       // call to the clang::ModuleMap class.
       if (FE && !gCling->IsLoaded(FE->getName().data())) {
-         if (!HS.loadModuleMapFile(FE, /*IsSystem*/ false))
+         if (!HS.loadModuleMapFile(FE, /*IsSystem*/ false)) {
+            // We have loaded successfully the modulemap. Add the path to the
+            // prebuilt module paths.
+            HS.getHeaderSearchOpts().AddPrebuiltModulePath(FullPath);
             return true;
+         }
          Error("TCling::LoadModule", "Could not load modulemap in the current directory");
       }
    }
@@ -1103,7 +1109,10 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
    //
    // Before failing, try loading the modulemap in the current folder and try
    // loading the requested module from it.
-   LoadWorkingDirModuleMap(interp.getCI()->getPreprocessor());
+   clang::Preprocessor& PP = interp.getCI()->getPreprocessor();
+   std::string currentDir = gSystem->WorkingDirectory();
+   assert(!currentDir.empty());
+   RegisterPrebuiltModulePath(PP, currentDir);
    return interp.loadModule(ModuleName, Complain);
 }
 
@@ -2000,12 +2009,19 @@ void TCling::RegisterModule(const char* modulename,
       if (llvm::StringRef(modulename).startswith("lib"))
          ModuleName = llvm::StringRef(modulename).substr(3).str();
 
+      // In case we are directly loading the library via gSystem->Load() without
+      // specifying the relevant include paths we should try loading the
+      // modulemap next to the library location.
+      clang::Preprocessor &PP = TheSema.getPreprocessor();
+      // Can be nullptr in case of libCore.
+      if (dyLibName)
+         RegisterPrebuiltModulePath(PP, llvm::sys::path::parent_path(dyLibName));
+
       // FIXME: We should only complain for modules which we know to exist. For example, we should not complain about
       // modules such as GenVector32 because it needs to fall back to GenVector.
       ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter, /*Complain=*/ !isACLiC);
       if (!ModuleWasSuccessfullyLoaded) {
          // Only report if we found the module in the modulemap.
-         clang::Preprocessor &PP = TheSema.getPreprocessor();
          clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
          clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
          if (moduleMap.findModule(ModuleName))
