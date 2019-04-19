@@ -461,7 +461,7 @@ void TTreeSQL::CreateBranches()
 
       if (br == 0)
       {
-         Error("Skipped %s",branchName);
+         Error("CreateBranches", "Skipped %s", branchName);
          continue;
       }
 
