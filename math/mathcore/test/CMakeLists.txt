@@ -84,6 +84,9 @@ ROOT_ADD_GTEST(VectorizedTMathUnit testVectorizedTMath.cxx
 
 ROOT_ADD_GTEST(testRootFinder testRootFinder.cxx  LIBRARIES ${Libraries} )
 
+ROOT_ADD_GTEST(TRandomUnit testTRandom.cxx
+      LIBRARIES Core MathCore)
+
 
 
 if(ROOT_clad_FOUND)
