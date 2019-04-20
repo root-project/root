@@ -1376,7 +1376,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return a TStatistic object, filled once per event (*lazy action*)
    ///
-   /// \param[in] Column with the values to fill the statistics with.
+   /// \param[in] value The name of the column with the values to fill the statistics with.
    /// \return the filled TStatistic object wrapped in a `RResultPtr`.
    RResultPtr<TStatistic> Stats(std::string_view value = "")
    {
@@ -1391,8 +1391,8 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return a TStatistic object, filled once per event (*lazy action*)
    ///
-   /// \param[in] Column with the values to fill the statistics with.
-   /// \param[in] Column with the weights to fill the statistics with.
+   /// \param[in] value The name of the column with the values to fill the statistics with.
+   /// \param[in] weight The name of the column with the weights to fill the statistics with.
    /// \return the filled TStatistic object wrapped in a `RResultPtr`.
    RResultPtr<TStatistic> Stats(std::string_view value, std::string_view weight)
    {
