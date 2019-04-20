@@ -24,6 +24,19 @@
 
 #include "TRandom.h"
 
+#include <array>
+
+class TRandom3;
+
+class TRandom3State {
+   friend TRandom3;
+   std::array<UInt_t,624> fMt;
+   Int_t fCount624;
+   TRandom3State(const UInt_t *mt, Int_t count624) : fCount624(count624) {
+      std::copy_n(mt, 624, fMt.begin());
+   }
+};
+
 class TRandom3 : public TRandom {
 
 private:
@@ -35,6 +48,8 @@ public:
    virtual ~TRandom3();
    // get the current seed (only first element of the seed table)
    virtual  UInt_t    GetSeed() const { return fMt[0];}
+   TRandom3State      GetState() const { return TRandom3State(fMt, fCount624);}
+   void               SetState(const TRandom3State &state);
    using TRandom::Rndm;
    virtual  Double_t  Rndm( );
    virtual  void      RndmArray(Int_t n, Float_t *array);
