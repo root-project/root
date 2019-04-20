@@ -316,40 +316,6 @@ R__EXTERN int optind;
 // The functions are used to bridge cling/clang/llvm compiled with no-rtti and
 // ROOT (which uses rtti)
 
-//______________________________________________________________________________
-
-// Class extracting recursively every Enum type defined for a class.
-class EnumVisitor : public RecursiveASTVisitor<EnumVisitor> {
-private:
-   llvm::SmallVector<EnumDecl*,128> &fClassEnums;
-public:
-   EnumVisitor(llvm::SmallVector<EnumDecl*,128> &enums) : fClassEnums(enums)
-   {}
-
-   bool TraverseStmt(Stmt*) {
-      // Don't descend into function bodies.
-      return true;
-   }
-
-   bool shouldVisitTemplateInstantiations() const { return true; }
-
-   bool TraverseClassTemplateDecl(ClassTemplateDecl*) {
-      // Don't descend into templates (but only instances thereof).
-      return true; // returning false will abort the in-depth traversal.
-   }
-
-   bool TraverseClassTemplatePartialSpecializationDecl(ClassTemplatePartialSpecializationDecl*) {
-      // Don't descend into templates partial specialization (but only instances thereof).
-      return true; // returning false will abort the in-depth traversal.
-   }
-
-   bool VisitEnumDecl(EnumDecl *TEnumD) {
-      if (!TEnumD->getDeclContext()->isDependentContext())
-         fClassEnums.push_back(TEnumD);
-      return true; // returning false will abort the in-depth traversal.
-   }
-};
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a StackTrace!
 
