@@ -791,67 +791,6 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
       }
 
-    } else if (arg.compare(0, 8, "OBJEXEC:") == 0) {
-
-      TString buf(cdata + 8);
-      Int_t pos = buf.First(':');
-
-      if ((pos > 0) && is_first) { // only first client can execute commands
-         TString sid(buf, pos);
-         buf.Remove(0, pos + 1);
-
-         TObject *obj = FindPrimitive(sid.Data());
-         if (obj && (buf.Length() > 0)) {
-            std::stringstream exec;
-            exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj
-                 << ")->" << buf.Data() << ";";
-            Info("ProcessData", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
-            gROOT->ProcessLine(exec.str().c_str());
-
-            // PerformUpdate(); // check that canvas was changed
-            if (IsAnyPadModified(Canvas()))
-               fCanvVersion++;
-         }
-      }
-
-   } else if (arg.compare(0, 12, "EXECANDSEND:") == 0) {
-
-      TString buf(cdata + 12), reply;
-      TObject *obj = nullptr;
-
-      Int_t pos = buf.First(':');
-
-      if ((pos > 0) && is_first) { // only first client can execute commands
-         reply.Append(buf, pos);
-         buf.Remove(0, pos + 1);
-         pos = buf.First(':');
-         if (pos > 0) {
-            TString sid(buf, pos);
-            buf.Remove(0, pos + 1);
-            obj = FindPrimitive(sid.Data());
-         }
-      }
-
-      if (obj && (buf.Length() > 0) && (reply.Length() > 0)) {
-         std::stringstream exec;
-         exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj
-              << ")->" << buf.Data() << ";";
-         if (gDebug > 1)
-            Info("ProcessData", "Obj %s Exec %s", obj->GetName(), exec.str().c_str());
-
-         Long_t res = gROOT->ProcessLine(exec.str().c_str());
-         TObject *resobj = (TObject *)res;
-         if (resobj) {
-            std::string send = reply.Data();
-            send.append(":");
-            send.append(TBufferJSON::ToJSON(resobj, 23).Data());
-            AddToSendQueue(connid, send);
-            if (reply[0] == 'D')
-               delete resobj; // delete object if first symbol in reply is D
-         }
-
-      }
-
    } else {
 
       // unknown message, probably should be processed by other implementation
