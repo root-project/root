@@ -35,12 +35,10 @@
 
 class TVirtualPad;
 class TPad;
-class TObjLink;
 class TWebSnapshot;
 class TPadWebSnapshot;
 class THttpServer;
 class TWebPS;
-
 
 class TWebCanvas : public TCanvasImp {
 
@@ -86,8 +84,6 @@ protected:
    void AddColorsPalette(TPadWebSnapshot &master);
    void CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
    void CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t func);
-
-   TObject *FindPrimitive(const char *id, TPad *pad = nullptr, TObjLink **padlnk = nullptr, TPad **objpad = nullptr);
 
    Bool_t CheckPadModified(TPad *pad, Bool_t inc_version = kTRUE);
 
