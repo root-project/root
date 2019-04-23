@@ -1,7 +1,7 @@
 // Author: Sergey Linev, GSI   7/12/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -33,9 +33,7 @@
 #include <queue>
 #include <functional>
 
-class TVirtualPad;
 class TPad;
-class TWebSnapshot;
 class TPadWebSnapshot;
 class TWebPS;
 
@@ -71,13 +69,13 @@ protected:
 
    UpdatedSignal_t fUpdatedSignal;          ///<! signal emitted when canvas updated or state is changed
 
-   virtual void Lock() {}
-   virtual void Unlock() {}
-   virtual Bool_t IsLocked() { return kFALSE; }
+   void Lock() override {}
+   void Unlock() override {}
+   Bool_t IsLocked() override { return kFALSE; }
 
-   virtual Bool_t IsWeb() const { return kTRUE; }
-   virtual Bool_t PerformUpdate();
-   virtual TVirtualPadPainter *CreatePadPainter();
+   Bool_t IsWeb() const override { return kTRUE; }
+   Bool_t PerformUpdate() override;
+   TVirtualPadPainter *CreatePadPainter() override;
 
    void AddColorsPalette(TPadWebSnapshot &master);
    void CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
@@ -111,17 +109,17 @@ public:
 
    virtual Bool_t IsReadOnly() const { return kTRUE; }
 
-   virtual Int_t InitWindow();
-   virtual void Close();
-   virtual void Show();
+   Int_t InitWindow() override;
+   void Close() override;
+   void Show() override;
 
-   virtual UInt_t GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
+   UInt_t GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h) override;
 
-   virtual void ShowMenuBar(Bool_t show = kTRUE) { ShowCmd("Menu", show); }
-   virtual void ShowStatusBar(Bool_t show = kTRUE) { ShowCmd("StatusBar", show); }
-   virtual void ShowEditor(Bool_t show = kTRUE) { ShowCmd("Editor", show); }
-   virtual void ShowToolBar(Bool_t show = kTRUE) { ShowCmd("ToolBar", show); }
-   virtual void ShowToolTips(Bool_t show = kTRUE) { ShowCmd("ToolTips", show); }
+   void ShowMenuBar(Bool_t show = kTRUE) override { ShowCmd("Menu", show); }
+   void ShowStatusBar(Bool_t show = kTRUE) override { ShowCmd("StatusBar", show); }
+   void ShowEditor(Bool_t show = kTRUE) override { ShowCmd("Editor", show); }
+   void ShowToolBar(Bool_t show = kTRUE) override { ShowCmd("ToolBar", show); }
+   void ShowToolTips(Bool_t show = kTRUE) override { ShowCmd("ToolTips", show); }
 
 
    // web-canvas specific methods
@@ -140,11 +138,11 @@ public:
       virtual void   ReallyDelete();
     */
 
-   virtual Bool_t HasEditor() const;
-   virtual Bool_t HasMenuBar() const;
-   virtual Bool_t HasStatusBar() const;
-   virtual Bool_t HasToolBar() const { return kFALSE; }
-   virtual Bool_t HasToolTips() const;
+   Bool_t HasEditor() const override;
+   Bool_t HasMenuBar() const override;
+   Bool_t HasStatusBar() const override;
+   Bool_t HasToolBar() const override { return kFALSE; }
+   Bool_t HasToolTips() const override;
 
    void SetUpdatedHandler(UpdatedSignal_t func) { fUpdatedSignal = func; }
 
@@ -160,7 +158,7 @@ public:
    static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
    static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");
 
-   ClassDef(TWebCanvas, 0) // Web-based implementation for TCanvasImp, read-only mode
+   ClassDefOverride(TWebCanvas, 0) // Web-based implementation for TCanvasImp, read-only mode
 };
 
 #endif
