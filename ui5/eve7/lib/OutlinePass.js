@@ -508,9 +508,9 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 			// clear stuff
 			renderer.setRenderTarget( this.renderTargetEdgeBuffer1 );
-			renderer.clear(0x000000);
-
-			let temp_backbuffer = this.renderTargetEdgeBuffer1.clone();
+			renderer.setClearColor( 0x000000, 0 )
+			renderer.clear();
+			renderer.setClearColor( 0xffffff, 1 );
 
 			for(let i = 0; i < THREE.OutlinePass.selection_enum.total; ++i){
 				let group = this._groups[i];
@@ -525,7 +525,6 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 					this.quad.material = this.edgeDetectionMaterial;
 					this.edgeDetectionMaterial.uniforms[ "maskTexture" ].value = this.renderTargetMaskDownSampleBuffer.texture;
 					this.edgeDetectionMaterial.uniforms[ "texSize" ].value = new THREE.Vector2( this.renderTargetMaskDownSampleBuffer.width, this.renderTargetMaskDownSampleBuffer.height );
-					this.edgeDetectionMaterial.uniforms[ "backbuffer" ].value = temp_backbuffer;
 	
 					const att = THREE.OutlinePass.selection_atts[i];
 					this.edgeDetectionMaterial.uniforms[ "visibleEdgeColor" ].value = att.visibleEdgeColor;
@@ -533,12 +532,6 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 					
 					renderer.setRenderTarget( this.renderTargetEdgeBuffer1 );
 					renderer.render( this.scene, this.camera );
-
-					if(i < THREE.OutlinePass.selection_enum.total - 1){
-						let temp = temp_backbuffer;
-						temp_backbuffer = this.renderTargetEdgeBuffer1;
-						this.renderTargetEdgeBuffer1 = temp;	
-					}
 				}
 			}
 
@@ -665,7 +658,6 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 			uniforms: {
 				"maskTexture": { value: null },
-				"backbuffer": { value: null },
 				"texSize": { value: new THREE.Vector2( 0.5, 0.5 ) },
 				"visibleEdgeColor": { value: new THREE.Vector3( 1.0, 1.0, 1.0 ) },
 				"hiddenEdgeColor": { value: new THREE.Vector3( 1.0, 1.0, 1.0 ) },
@@ -684,7 +676,6 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 			fragmentShader:
 				`varying vec2 vUv;\
 				uniform sampler2D maskTexture;\
-				uniform sampler2D backbuffer;\
 				uniform vec2 texSize;\
 				uniform vec3 visibleEdgeColor;\
 				uniform vec3 hiddenEdgeColor;\
@@ -692,10 +683,9 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 				void main() {
 				#if 1
 					vec4 edge = texture2D( maskTexture, vUv);
-					vec4 backbuffer = texture2D( backbuffer, vUv);
 					
 					vec3 edgeColor = mix(visibleEdgeColor, hiddenEdgeColor, edge.g);
-					gl_FragColor = mix(backbuffer, vec4( edgeColor, 1.0 ), (1.0-edge.r));
+					gl_FragColor = vec4( edgeColor, 1.0 ) * (1.0-edge.r);
 				#else
 					vec2 invSize = 1.0 / texSize;
 					vec4 uvOffset = vec4(1.0, 0.0, 0.0, 1.0) * vec4(invSize, invSize);
@@ -712,7 +702,14 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 					vec3 edgeColor = 1.0 - visibilityFactor > 0.001 ? visibleEdgeColor : hiddenEdgeColor;
 					gl_FragColor = vec4(edgeColor, 1.0) * vec4(d);
 				#endif
-				}`
+				}`,
+				blending: THREE.CustomBlending,
+				blendEquation: THREE.AddEquation,
+				blendSrc: THREE.OneMinusDstAlphaFactor,
+				blendDst: THREE.DstAlphaFactor,
+				depthTest: false,
+				depthWrite: false,
+				transparent: false
 		} );
 
 	},
