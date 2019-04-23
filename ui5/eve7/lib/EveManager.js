@@ -301,11 +301,11 @@ sap.ui.define([], function() {
       var mother = this.GetElement(motherId);
       var mc = mother.childs;
       for (var i = 0; i < mc.length; ++i) {
-      
+
          if (mc[i].fElementId === elId) {
             mc.splice(i, 1);
          }
-      }    
+      }
 
       delete this.map[elId];
       delSet.delete(elId);
@@ -315,7 +315,7 @@ sap.ui.define([], function() {
    }
 
    //______________________________________________________________________________
-   
+
    EveManager.prototype.ImportSceneChangeJson = function(msg)
    {
       var arr = msg.arr;
@@ -329,12 +329,12 @@ sap.ui.define([], function() {
       // notify for element removal
       var removedIds = msg.header["removedElements"];
 
-      // do we need this? -- AMT this is intended to freeze redraws 
+      // do we need this? -- AMT this is intended to freeze redraws
       this.callSceneReceivers(scene, "beginChanges");
 
       // notify controllers
       this.callSceneReceivers(scene, "elementsRemoved", removedIds);
-      
+
       var delSet = new Set();
       for (var r = 0; r < removedIds.length; ++r) {
          var id  = removedIds[r];
@@ -347,8 +347,8 @@ sap.ui.define([], function() {
          console.log("going to call RecursiveRemove .... ", this.map[id]);
          this.RecursiveRemove(this.GetElement(id), delSet);
          console.log("complete RecursiveREmove ", delSet);
-      }      
-      
+      }
+
       // wait for binary if needed
       if (msg.header.fTotalBinarySize)
       {
@@ -440,7 +440,7 @@ sap.ui.define([], function() {
 
       var treeRebuild = header.removedElements.length || (arr.length != nModified );
       if (treeRebuild) this.InvokeReceivers("update", null, 0, this);
-      
+
       this.callSceneReceivers(scene, "endChanges", treeRebuild);
    },
 
@@ -581,63 +581,92 @@ sap.ui.define([], function() {
       {
          if (el.fName == "Global Selection") this.global_selection_id = el.fElementId;
          if (el.fName == "Global Highlight") this.global_highlight_id = el.fElementId;
-
-         // el._selection_set = new Set;
-
          el._is_registered = true;
 	 el.prev_sel_list  = [];
       }
 
-      console.log("And now process the bloody selection.", el.prev_sel_list, el.sel_list)
+      console.log("==============================And now process the bloody selection.", el.prev_sel_list, el.sel_list);
 
-      // Outline of optimized selection update (to avoid recreating selected
-      // representations).
-      /*
-      all_new_selected = generate_full_selection_set(el['sel_list']);
+      var oldMap = new Map();
+      el.prev_sel_list.forEach(function(rec) {
+         var iset = new Set(rec.sec_idcs);
+         var x = {"valid" : true, "implied" : rec.implied, "set":iset };
+         oldMap.set(rec.primary, x);
+      });
+      console.log("-- oldMap", oldMap);
 
-      for (xx in el['prev_all_selected'] and not in all_new_selected)
-      {
-         deselect(xx);
-      }
-      for (xx in all_new_selected)
-      {
-         if (xx not in el['prev_all_selected'])
-         {
-            select(xx);
+      var newMap = new Map ;
+      el.sel_list.forEach(function(rec) {
+         console.log("add new primary ", rec.primary);
+         var iset = new Set(rec.sec_idcs);
+         var x = {"valid" : true, "implied" : rec.implied, "set":iset };
+         newMap.set(rec.primary, x);
+      });
+      console.log("-- newMap --", newMap);
+
+
+      // remove identicals from old and new map
+      for ( var id in oldMap ) {
+         if (id in newMap) {
+            var oldSet = oldMap[id].set;
+            var newSet = newMap[id].set;
+
+            var nm = 0;
+            for (var elem of oldSet) {
+               if (newSet.delete(elem)) {
+                  nm++;
+               }
+            }
+
+            // invalidate if sets are empty or identical
+            if (nm == oldSet.length && newSet.length == 0) {
+               oldMap[id].valid = false;
+               newMap[id].valid = false;
+               // console.log("EveManager.prototype.UT_Selection_Refresh_State identical sets for primary", id);
+            }
          }
-         else
-         {
-            // implied selected set or secondary indices can change.
-            check_if_select_records_are_the_same_and_update_if_needed();
-         }
       }
-      el['prev_all_selected'] = all_new_selected;
-      */
 
-      // Dummy update --- unselect all, select all.
-
-      for (var srec of el.prev_sel_list)
-      {
-         this.UnselectElement(el, srec.primary);
-
-         for (var sel of srec.implied)
+      var pthis = this;
+      var changedSet = new Set();
+      for (var [id, value] of oldMap.entries()) {
+         console.log("unselect ", el.fName, " id == ", id);
+         this.UnselectElement(el, id);
+         var iel = pthis.GetElement(id);
+         changedSet.add(iel.fSceneId);
+         for (var imp of value.implied)
          {
-            this.UnselectElement(el, sel);
+            this.UnselectElement(el, imp);
+            changedSet.add(pthis.GetElement(imp).fSceneId);
          }
       }
 
-      for (var srec of el.sel_list)
-      {
-         this.SelectElement(el, srec.primary, srec.sec_idcs);
+      for (var [id, value] of newMap.entries()) {
+         var secIdcs = Array.from(value.set);
+         var iel = pthis.GetElement(id);
+         if (!iel) {
+            // console.log("EveManager.prototype.UT_Selection_Refresh_State this should not happen ", iel);
+            continue;
+         }
+         changedSet.add(iel.fSceneId);
+         this.SelectElement(el, id, secIdcs);
 
-         for (sel of srec.implied)
+         for (var imp of value.implied)
          {
-            this.SelectElement(el, sel, srec.sec_idcs);
+            this.SelectElement(el, imp, secIdcs);
+            changedSet.add(pthis.GetElement(imp).fSceneId);
          }
       }
 
       el.prev_sel_list = el.sel_list;
       el.sel_list      = [];
+
+      // redraw
+      for (let item of changedSet) {
+         console.log(item);
+         var scene = this.GetElement(item);
+         this.callSceneReceivers(scene, "endChanges");
+      }
 
       // XXXX Oh, blimy, on first arrival, if selection is set, the selected
       // elements have not yet been received and so this will fail. Also true
