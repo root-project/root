@@ -45,6 +45,9 @@
 #include <sstream>
 #include <iostream>
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
    : TCanvasImp(c, name, x, y, width, height)
 {
@@ -53,9 +56,12 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
    fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize window for the web canvas
+/// At this place canvas is not yet register to the list of canvases - one cannot call RWebWindow::Show()
+
 Int_t TWebCanvas::InitWindow()
 {
-   // at this place canvas is not yet register to the list of canvases - we cannot start browser
    return 111222333; // should not be used at all
 }
 
@@ -419,9 +425,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    // invoke callback for master painting
    resfunc(&paddata);
 
-   // static int filecnt = 0;
-   // TBufferJSON::ExportToFile(TString::Format("snapshot_%d.json", (filecnt++) % 10).Data(), curr);
-
    TIter siter(&save_lst);
    diter.Reset();
    while ((dlst = (TList *)diter()) != nullptr) {
@@ -497,22 +500,23 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Close canvas (not implemented?)
+/// Close web canvas - not implemented
 
 void TWebCanvas::Close()
 {
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Create instance of RWebWindow to handle all kind of web connections
-/// Returns URL string which can be used to access canvas locally
 
-TString TWebCanvas::CreateWebWindow(int limit)
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Show canvas in specified place.
+/// If parameter args not specified, default ROOT web display will be used
+
+void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
 {
    if (!fWindow) {
       fWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
 
-      fWindow->SetConnLimit(limit); // allow any number of connections
+      fWindow->SetConnLimit(0); // configure connections limit
 
       fWindow->SetDefaultPage("file:rootui5sys/canv/canvas6.html");
 
@@ -522,33 +526,12 @@ TString TWebCanvas::CreateWebWindow(int limit)
       });
    }
 
-   std::string url = fWindow->GetUrl(false);
+   auto w = Canvas()->GetWw(), h = Canvas()->GetWh();
 
-   return TString(url.c_str());
-}
+   if ((w > 10) && (w < 50000) && (h > 10) && (h < 30000))
+      fWindow->SetGeometry(w + 6, h + 22);
 
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Returns THttpServer instance, serving requests to the canvas
-
-THttpServer *TWebCanvas::GetServer()
-{
-   if (!fWindow)
-      return nullptr;
-
-   return fWindow->GetServer();
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Show canvas in specified place.
-/// If parameter args not specified, default ROOT web display will be used
-
-void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
-{
-   if (fWindow) {
-      if ((Canvas()->GetWw()>0) && (Canvas()->GetWw()<50000) && (Canvas()->GetWh()>0) && (Canvas()->GetWh()<30000))
-         fWindow->SetGeometry(Canvas()->GetWw()+6, Canvas()->GetWh()+22);
-      fWindow->Show(args);
-   }
+   fWindow->Show(args);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -556,10 +539,6 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
 
 void TWebCanvas::Show()
 {
-   CreateWebWindow();
-
-   fWaitNewConnection = kTRUE;
-
    ShowWebWindow();
 }
 
@@ -585,25 +564,40 @@ void TWebCanvas::ActivateInEditor(TPad *pad, TObject *obj)
       CheckDataToSend();
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if web canvas has graphical editor
+
 Bool_t TWebCanvas::HasEditor() const
 {
    return (fClientBits & TCanvas::kShowEditor) != 0;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if web canvas has menu bar
 
 Bool_t TWebCanvas::HasMenuBar() const
 {
    return (fClientBits & TCanvas::kMenuBar) != 0;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if web canvas has status bar
+
 Bool_t TWebCanvas::HasStatusBar() const
 {
    return (fClientBits & TCanvas::kShowEventStatus) != 0;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if tooltips are activated in web canvas
+
 Bool_t TWebCanvas::HasToolTips() const
 {
    return (fClientBits & TCanvas::kShowToolTips) != 0;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Assign clients bits
 
 void TWebCanvas::AssignStatusBits(UInt_t bits)
 {
@@ -624,11 +618,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       return kTRUE;
 
    if (arg == "CONN_READY") {
-
       fWebConn.emplace_back(connid);
-
-      fWaitNewConnection = kFALSE; // established, can be reset
-
       return kTRUE;
    }
 
@@ -708,7 +698,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
    } else if (arg.compare(0, 8, "PRODUCE:") == 0) {
 
-      Canvas()->Print(cdata+8);
+      Canvas()->Print(cdata + 8);
 
    } else if (arg.compare(0, 8, "OPTIONS6:") == 0) {
 
