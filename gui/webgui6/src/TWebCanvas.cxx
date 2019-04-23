@@ -752,6 +752,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       conn->fDrawVersion = 0;
 
    } else if (arg.compare(0, 5, "SAVE:") == 0) {
+      // save image produced by the client side - like png or svg
 
       const char *img = cdata + 5;
 
@@ -786,7 +787,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
 
       if (is_first) { // only first connection can set ranges
-         AssignStatusBits((unsigned) TString(cdata + 11).Atoi());
+         AssignStatusBits(std::stoul(arg.substr(11)));
          if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
       }
 
