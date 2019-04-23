@@ -405,7 +405,6 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 		renderer.render( this.renderScene, this.renderCamera );
 
 		renderer.setRenderTarget( this.renderTargetMaskBuffer[selection_type] );
-		renderer.clear();
 		renderer.render( this.renderScene, this.renderCamera );
 
 		this.changeVisibilityOfSelectedObjects(false, group);	
@@ -464,6 +463,11 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 			renderer.setRenderTarget( this.renderTargetMaskBufferMain );
 			renderer.clear();
 
+			for(const maskBuffer of this.renderTargetMaskBuffer){
+				renderer.setRenderTarget( maskBuffer );
+				renderer.clear();
+			}
+
 			this.checkForCustomAtts();
 			//console.log(this._groups);
 			
@@ -504,7 +508,9 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 			// clear stuff
 			renderer.setRenderTarget( this.renderTargetEdgeBuffer1 );
-			renderer.clear();
+			renderer.clear(0x000000);
+
+			let temp_backbuffer = this.renderTargetEdgeBuffer1.clone();
 
 			for(let i = 0; i < THREE.OutlinePass.selection_enum.total; ++i){
 				let group = this._groups[i];
@@ -515,25 +521,25 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 					renderer.clear();
 					renderer.render( this.scene, this.camera );
 	
-					// this.changeVisibilityOfSelectedObjects(false);
-
-					// this.changeVisibilityOfSelectedObjects(true, group);
-
 					// 3. Apply Edge Detection Pass
 					this.quad.material = this.edgeDetectionMaterial;
 					this.edgeDetectionMaterial.uniforms[ "maskTexture" ].value = this.renderTargetMaskDownSampleBuffer.texture;
 					this.edgeDetectionMaterial.uniforms[ "texSize" ].value = new THREE.Vector2( this.renderTargetMaskDownSampleBuffer.width, this.renderTargetMaskDownSampleBuffer.height );
-					renderer.setRenderTarget( this.renderTargetEdgeBuffer1 );
+					this.edgeDetectionMaterial.uniforms[ "backbuffer" ].value = temp_backbuffer;
 	
 					const att = THREE.OutlinePass.selection_atts[i];
 					this.edgeDetectionMaterial.uniforms[ "visibleEdgeColor" ].value = att.visibleEdgeColor;
 					this.edgeDetectionMaterial.uniforms[ "hiddenEdgeColor" ].value = att.hiddenEdgeColor;
+					
+					renderer.setRenderTarget( this.renderTargetEdgeBuffer1 );
 					renderer.render( this.scene, this.camera );
 
-					// this.changeVisibilityOfSelectedObjects(false, group);
+					if(i < THREE.OutlinePass.selection_enum.total - 1){
+						let temp = temp_backbuffer;
+						temp_backbuffer = this.renderTargetEdgeBuffer1;
+						this.renderTargetEdgeBuffer1 = temp;	
+					}
 				}
-
-				// this.changeVisibilityOfSelectedObjects(true);
 			}
 
 
@@ -659,6 +665,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 			uniforms: {
 				"maskTexture": { value: null },
+				"backbuffer": { value: null },
 				"texSize": { value: new THREE.Vector2( 0.5, 0.5 ) },
 				"visibleEdgeColor": { value: new THREE.Vector3( 1.0, 1.0, 1.0 ) },
 				"hiddenEdgeColor": { value: new THREE.Vector3( 1.0, 1.0, 1.0 ) },
@@ -677,14 +684,34 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 			fragmentShader:
 				`varying vec2 vUv;\
 				uniform sampler2D maskTexture;\
+				uniform sampler2D backbuffer;\
 				uniform vec2 texSize;\
 				uniform vec3 visibleEdgeColor;\
 				uniform vec3 hiddenEdgeColor;\
 				\
 				void main() {
+				#if 1
 					vec4 edge = texture2D( maskTexture, vUv);
-					vec3 edgeColor = (1.0 - edge.g) > 0.001 ? visibleEdgeColor : hiddenEdgeColor;
-					gl_FragColor = vec4( edgeColor, 1.0) * (1.0-edge.r);
+					vec4 backbuffer = texture2D( backbuffer, vUv);
+					
+					vec3 edgeColor = mix(visibleEdgeColor, hiddenEdgeColor, edge.g);
+					gl_FragColor = mix(backbuffer, vec4( edgeColor, 1.0 ), (1.0-edge.r));
+				#else
+					vec2 invSize = 1.0 / texSize;
+					vec4 uvOffset = vec4(1.0, 0.0, 0.0, 1.0) * vec4(invSize, invSize);
+					vec4 c1 = texture2D( maskTexture, vUv + uvOffset.xy);
+					vec4 c2 = texture2D( maskTexture, vUv - uvOffset.xy);
+					vec4 c3 = texture2D( maskTexture, vUv + uvOffset.yw);
+					vec4 c4 = texture2D( maskTexture, vUv - uvOffset.yw);
+					float diff1 = (c1.r - c2.r)*0.5;
+					float diff2 = (c3.r - c4.r)*0.5;
+					float d = length( vec2(diff1, diff2) );
+					float a1 = min(c1.g, c2.g);
+					float a2 = min(c3.g, c4.g);
+					float visibilityFactor = min(a1, a2);
+					vec3 edgeColor = 1.0 - visibilityFactor > 0.001 ? visibleEdgeColor : hiddenEdgeColor;
+					gl_FragColor = vec4(edgeColor, 1.0) * vec4(d);
+				#endif
 				}`
 		} );
 
