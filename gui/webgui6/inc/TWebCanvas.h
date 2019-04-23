@@ -37,7 +37,6 @@ class TVirtualPad;
 class TPad;
 class TWebSnapshot;
 class TPadWebSnapshot;
-class THttpServer;
 class TWebPS;
 
 class TWebCanvas : public TCanvasImp {
@@ -64,7 +63,6 @@ protected:
 
    bool fHasSpecials{false};       ///<! has special objects which may require pad ranges
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
-   bool fWaitNewConnection{false}; ///<! when true, Update() will wait for a new connection
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
    TList fPrimitivesLists;         ///<! list of lists of primitives, temporary collected during painting
    Int_t fStyleDelivery{0};        ///<! gStyle delivery to clients: 0:never, 1:once, 2:always
@@ -109,8 +107,6 @@ public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TWebCanvas() = default;
 
-   TString CreateWebWindow(int limit = 0);
-   THttpServer *GetServer();
    void ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &user_args = "");
 
    virtual Bool_t IsReadOnly() const { return kTRUE; }
