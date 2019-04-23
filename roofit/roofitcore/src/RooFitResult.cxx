@@ -91,7 +91,8 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   _Lt(0),
   _CM(0),
   _VM(0),
-  _GC(0)
+  _GC(0),
+  _statusHistory(other._statusHistory)
 {
   _constPars = (RooArgList*) other._constPars->snapshot() ;
   _initPars = (RooArgList*) other._initPars->snapshot() ;
