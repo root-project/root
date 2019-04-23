@@ -42,7 +42,7 @@ PyObject *PyROOT::GetSizeOfType(PyObject * /*self*/, PyObject *args)
    std::string dtype = CPyCppyy_PyUnicode_AsString(pydtype);
 
    // Call interpreter to get size of data-type using `sizeof`
-   long size;
+   long size = 0;
    std::stringstream code;
    code << "*((long*)" << &size << ") = (long)sizeof(" << dtype << ")";
    gInterpreter->Calc(code.str().c_str());
@@ -72,7 +72,7 @@ PyObject *PyROOT::GetVectorDataPointer(PyObject * /*self*/, PyObject *args)
    std::string cppname = CPyCppyy_PyUnicode_AsString(pycppname);
 
    // Call interpreter to get pointer to data (using `data` method)
-   unsigned long long pointer;
+   unsigned long long pointer = 0;
    std::stringstream code;
    code << "*((long*)" << &pointer << ") = reinterpret_cast<long>(reinterpret_cast<" << cppname << "*>(" << cppobj
         << ")->data())";
