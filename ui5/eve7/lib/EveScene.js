@@ -343,17 +343,41 @@ sap.ui.define([
    /** interactive handler */
    EveScene.prototype.processElementHighlighted = function(obj3d, col, indx, evnt)
    {
-      console.log("EveScene.prototype.processElementHighlighted", obj3d, col, indx, evnt);
-
+      // Need check for duplicates before call server, else server will un-higlight highlighted element
+      // console.log("EveScene.prototype.processElementHighlighted", obj3d, col, indx, evnt);
       var is_multi  = false;
       var is_secsel = indx !== undefined;
 
+      var so = this.mgr.GetElement(this.mgr.global_highlight_id);
+      var a = so.prev_sel_list;
+      
+      // AMT presume there is no multiple highlight and multiple secondary selections
+      // if that is the case in the futre write data in set and comapre sets
+      
+      // console.log("EveScene.prototype.processElementHighlighted compare Reveselection ", a[0], "incoming ", obj3d.eveId,indx);
+      if (a.length == 1 ) {
+         var h = a[0];
+         if (h.primary == obj3d.eveId || h.primary == obj3d.mstrId ) {
+            if (indx) {
+               if (h.sec_idcs && h.sec_idcs[0] == indx) {
+                  // console.log("EveScene.prototype.processElementHighlighted processElementHighlighted same index ");
+                  return true;
+               }
+            }
+            if (!indx && !h.sec_idcs.length) {
+               // console.log("processElementHighlighted primARY SElection not changed ");
+               return true;
+            }
+         }
+      }
+      
       var fcall = "NewElementPicked(" + obj3d.eveId + `, ${is_multi}, ${is_secsel}`;
       if (is_secsel)
       {
          fcall += ", { " + (Array.isArray(indx) ? indx.join(", ") : indx) + " }";
       }
       fcall += ")";
+
 
       this.mgr.SendMIR({ "mir":        fcall,
                          "fElementId": this.mgr.global_highlight_id,
@@ -492,8 +516,6 @@ sap.ui.define([
          res.sec_sel = true;
       }
       dest[element_id] = res;
-      
-      this.viewer.render();
    }
 
    EveScene.prototype.UnselectElement = function(selection_obj, element_id)
@@ -501,8 +523,6 @@ sap.ui.define([
       if (selection_obj.fElementId in this.viewer.outlinePass.id2obj_map)
       {
 	 delete this.viewer.outlinePass.id2obj_map[selection_obj.fElementId][element_id];
-
-	 this.viewer.render();
       }
    }
 
