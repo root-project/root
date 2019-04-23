@@ -89,7 +89,7 @@ protected:
 
    TObject *FindPrimitive(const char *id, TPad *pad = nullptr, TObjLink **padlnk = nullptr, TPad **objpad = nullptr);
 
-   Bool_t IsAnyPadModified(TPad *pad);
+   Bool_t CheckPadModified(TPad *pad, Bool_t inc_version = kTRUE);
 
    Bool_t AddToSendQueue(unsigned connid, const std::string &msg);
 
@@ -168,7 +168,7 @@ public:
    static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
    static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");
 
-   ClassDef(TWebCanvas, 0) // ABC describing main window protocol
+   ClassDef(TWebCanvas, 0) // Web-based implementation for TCanvasImp, read-only mode
 };
 
 #endif

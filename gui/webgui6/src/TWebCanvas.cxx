@@ -802,26 +802,29 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// returns true when any pad or sub pad modified
-/// reset modified flags
+/// Returns true if any pad in the canvas were modified
+/// Reset modified flags, increment canvas version (if inc_version is true)
 
-Bool_t TWebCanvas::IsAnyPadModified(TPad *pad)
+Bool_t TWebCanvas::CheckPadModified(TPad *pad, Bool_t inc_version)
 {
-   Bool_t res = kFALSE;
+   Bool_t modified = kFALSE;
 
    if (pad->IsModified()) {
       pad->Modified(kFALSE);
-      res = kTRUE;
+      modified = kTRUE;
    }
 
    TIter iter(pad->GetListOfPrimitives());
    TObject *obj = nullptr;
    while ((obj = iter()) != nullptr) {
-      if (obj->InheritsFrom(TPad::Class()) && IsAnyPadModified(static_cast<TPad *>(obj)))
-         res = kTRUE;
+      if (obj->InheritsFrom(TPad::Class()) && CheckPadModified(static_cast<TPad *>(obj), kFALSE))
+         modified = kTRUE;
    }
 
-   return res;
+   if (inc_version && modified)
+      fCanvVersion++;
+
+   return modified;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -843,8 +846,7 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
 Bool_t TWebCanvas::PerformUpdate()
 {
-   if (IsAnyPadModified(Canvas()))
-      fCanvVersion++;
+   CheckPadModified(Canvas());
 
    CheckDataToSend();
 
