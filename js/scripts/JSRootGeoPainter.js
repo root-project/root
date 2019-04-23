@@ -1928,9 +1928,9 @@
       this._outlinePass.usePatternTexture = false;
       this._outlinePass.downSampleRatio = 2;
 
-      const sh = THREE.OutlinePass.selection_enum["select"]; // doesnt stand for spherical harmonics :P
-      THREE.OutlinePass.selection_atts[sh].visibleEdgeColor.set('#dd1111');
-      THREE.OutlinePass.selection_atts[sh].hiddenEdgeColor.set('#1111dd');
+      // const sh = THREE.OutlinePass.selection_enum["select"]; // doesnt stand for spherical harmonics :P
+      // THREE.OutlinePass.selection_atts[sh].visibleEdgeColor.set('#dd1111');
+      // THREE.OutlinePass.selection_atts[sh].hiddenEdgeColor.set('#1111dd');
 
       this._effectComposer.addPass( this._outlinePass );
 
