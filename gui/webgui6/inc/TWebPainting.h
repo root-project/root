@@ -17,19 +17,18 @@
 #include "TAttText.h"
 #include "TAttMarker.h"
 #include "TArrayF.h"
-#include "TColor.h"
 
-#include <vector>
+class TColor;
+
 #include <string>
 
 /** Object used to store paint operations and deliver them to JSROOT */
 class TWebPainting : public TObject {
 
    protected:
-      std::string fOper; /// list of operations, separated by semicolons
-      Int_t fSize{0};    ///<! filled buffer size
-      TArrayF fBuf;      /// array of points for all operations
-
+      std::string fOper;      /// list of operations, separated by semicolons
+      Int_t fSize{0};         ///<! filled buffer size
+      TArrayF fBuf;           /// array of points for all operations
       TAttLine fLastLine;     ///<! last line attributes
       TAttFill fLastFill;     ///<! last fill attributes
       TAttMarker fLastMarker; ///<! last marker attributes
