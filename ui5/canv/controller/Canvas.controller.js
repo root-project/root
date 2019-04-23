@@ -167,9 +167,9 @@ sap.ui.define([
          this.methodDialog.close();
          this.methodDialog.destroy();
 
-        if (painter && method && args) {
+         if (painter && method && args) {
 
-           if (painter.ExecuteMenuCommand(method, args)) return;
+            if (painter.ExecuteMenuCommand(method, args)) return;
             var exec = method.fExec;
             if (args) exec = exec.substr(0,exec.length-1) + args + ')';
             // invoked only when user press Ok button
@@ -288,7 +288,6 @@ sap.ui.define([
 
       showGeEditor : function(new_state) {
          this.showLeftArea(new_state ? "Ged" : "");
-         this.getView().getModel().setProperty("/GedIcon", new_state ? "sap-icon://accept" : "");
       },
 
       cleanupIfGed: function() {
@@ -331,11 +330,10 @@ sap.ui.define([
             size      : "250px"
          });
 
-         var panelid = "LeftPanelId", viewName = panel_name;
+         var viewName = panel_name;
          if (viewName.indexOf(".") < 0) viewName = "rootui5.canv.view." + panel_name;
 
          XMLView.create({
-            id: panelid,
             viewName: viewName,
             viewData: { handle: panel_handle, masterPanel: this },
             layoutData: oLd,
@@ -351,7 +349,8 @@ sap.ui.define([
       showLeftArea: function(panel_name, call_back) {
          var split = this.getView().byId("MainAreaSplitter");
          var curr = this.getView().getModel().getProperty("/LeftArea");
-         if (!split || (curr === panel_name)) return JSROOT.CallBack(call_back, null);
+         if (!split || (curr === panel_name))
+            return JSROOT.CallBack(call_back, null);
 
          // first need to remove existing
          if (curr) {

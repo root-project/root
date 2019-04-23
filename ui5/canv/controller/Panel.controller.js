@@ -20,7 +20,7 @@ sap.ui.define([
          if (call_back) this.get_callbacks.push(call_back);
 
          if (!this.rendering_perfromed) {
-            this.panel_data = { object: obj, opt: opt };
+            this.panel_data = { object: obj, opt: options };
             return;
          }
 
