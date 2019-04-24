@@ -70,8 +70,13 @@ protected:
    bool fActive{false};                                    ///< true when pad is active
    bool fReadOnly{true};                                   ///< when canvas or pad are in readonly mode
    std::vector<std::unique_ptr<TWebSnapshot>> fPrimitives; ///< list of all primitives, drawn in the pad
+
 public:
-   TPadWebSnapshot(bool readonly = true) { SetKind(kSubPad); fReadOnly = readonly; }
+   TPadWebSnapshot(bool readonly = true)
+   {
+      SetKind(kSubPad);
+      fReadOnly = readonly;
+   }
 
    void SetActive(bool on = true) { fActive = on; }
 
@@ -83,7 +88,22 @@ public:
 
    TWebSnapshot &NewSpecials();
 
-   ClassDef(TPadWebSnapshot,1)  // Pad painting snapshot, used for JSROOT
+   ClassDef(TPadWebSnapshot, 1) // Pad painting snapshot, used for JSROOT
 };
+
+// =================================================================================
+
+class TCanvasWebSnapshot : public TPadWebSnapshot {
+protected:
+   Long64_t fVersion{0};           ///< actual canvas version
+public:
+   TCanvasWebSnapshot() = default;
+   TCanvasWebSnapshot(bool readonly, Long64_t v) : TPadWebSnapshot(readonly), fVersion(v) {}
+
+   Long64_t GetVersion() const { return fVersion; }
+
+   ClassDef(TCanvasWebSnapshot, 1) // Canvas painting snapshot, used for JSROOT
+};
+
 
 #endif

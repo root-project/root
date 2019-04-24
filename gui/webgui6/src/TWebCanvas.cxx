@@ -244,7 +244,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    TFrame *frame = nullptr;
    TPaveText *title = nullptr;
    bool need_frame = false;
-   TString need_title;
+   std::string need_title;
 
    while ((obj = iter()) != nullptr) {
       if (obj->InheritsFrom(TFrame::Class())) {
@@ -266,10 +266,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       primitives->AddFirst(frame);
    }
 
-   if (need_title.Length() > 0) {
+   if (!need_title.empty()) {
       if (title) {
-         TText *t0 = (TText*)title->GetLine(0);
-         if (t0) t0->SetTitle(need_title.Data());
+         auto line0 = title->GetLine(0);
+         if (line0) line0->SetTitle(need_title.c_str());
       } else {
          title = new TPaveText(0, 0, 0, 0, "blNDC");
          title->SetFillColor(gStyle->GetTitleFillColor());
@@ -278,9 +278,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          title->SetBorderSize(gStyle->GetTitleBorderSize());
          title->SetTextColor(gStyle->GetTitleTextColor());
          title->SetTextFont(gStyle->GetTitleFont(""));
-         if (gStyle->GetTitleFont("")%10 > 2)
+         if (gStyle->GetTitleFont("") % 10 > 2)
             title->SetTextSize(gStyle->GetTitleFontSize());
-         title->AddText(need_title.Data());
+         title->AddText(need_title.c_str());
          title->SetBit(kCanDelete);
          primitives->Add(title);
       }
@@ -477,17 +477,16 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
 
       std::string buf;
 
-      if (conn.fDrawVersion < fCanvVersion) {
+      if ((conn.fSendVersion < fCanvVersion) && (conn.fSendVersion == conn.fDrawVersion)) {
          buf = "SNAP6:";
-         buf.append(std::to_string(fCanvVersion));
-         buf.append(":");
 
-         TString res;
-         TPadWebSnapshot holder(IsReadOnly());
-         CreatePadSnapshot(holder, Canvas(), conn.fDrawVersion, [&res](TPadWebSnapshot *snap) {
-            res = TBufferJSON::ConvertToJSON(snap, 23);
+         TCanvasWebSnapshot holder(IsReadOnly(), fCanvVersion);
+
+         CreatePadSnapshot(holder, Canvas(), conn.fSendVersion, [&buf](TPadWebSnapshot *snap) {
+            buf.append(TBufferJSON::ToJSON(snap, 23).Data());
          });
-         buf.append(res.Data());
+
+         conn.fSendVersion = fCanvVersion;
 
       } else if (!conn.fSend.empty()) {
          std::swap(buf, conn.fSend.front());
@@ -505,7 +504,6 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
 void TWebCanvas::Close()
 {
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Show canvas in specified place.
@@ -670,7 +668,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
    } else if (arg == "RELOAD") {
 
-      conn->fDrawVersion = 0;
+      conn->fSendVersion = conn->fDrawVersion = 0;
 
    } else if (arg.compare(0, 5, "SAVE:") == 0) {
       // save image produced by the client side - like png or svg
@@ -771,7 +769,7 @@ Bool_t TWebCanvas::PerformUpdate()
 
    CheckDataToSend();
 
-   // block in canvas update, can it be optional
+   // block in canvas update, can it be optional?
    WaitWhenCanvasPainted(fCanvVersion);
 
    return kTRUE;
@@ -830,9 +828,11 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
 
    {
       auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
-      TPadWebSnapshot holder(true); // always readonly
+
+      TCanvasWebSnapshot holder(true, 1); // always readonly
+
       imp->CreatePadSnapshot(holder, c, 0, [&res, json_compression](TPadWebSnapshot *snap) {
-         res = TBufferJSON::ConvertToJSON(snap, json_compression);
+         res = TBufferJSON::ToJSON(snap, json_compression);
       });
    }
 
@@ -857,7 +857,7 @@ Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *
    {
       auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
 
-      TPadWebSnapshot holder(true); // always readonly
+      TCanvasWebSnapshot holder(true, 1); // always readonly
 
       imp->CreatePadSnapshot(holder, c, 0, [&res, filename, option](TPadWebSnapshot *snap) {
          res = TBufferJSON::ExportToFile(filename, snap, option);

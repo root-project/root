@@ -42,7 +42,6 @@ void TWebSnapshot::SetObjectIDAsPtr(void *ptr)
    SetObjectID(std::to_string(hash));
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Create new entry in list of primitives
 
@@ -73,5 +72,4 @@ TWebSnapshot &TPadWebSnapshot::NewSpecials()
 {
    fPrimitives.emplace(fPrimitives.begin(), std::make_unique<TWebSnapshot>());
    return *(fPrimitives.front());
-
 }
