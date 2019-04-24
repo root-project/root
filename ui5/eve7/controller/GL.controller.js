@@ -322,6 +322,8 @@ sap.ui.define([
             this.geo_painter._camera.bottom = -this.getView().$().height();
             this.geo_painter._camera.updateProjectionMatrix();
          }
+
+         painter.eveGLcontroller = this;
          painter._controls.ProcessMouseMove = function(intersects) {
             var active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index;
 
@@ -350,8 +352,16 @@ sap.ui.define([
                }
             }
 
-            //painter.HighlightMesh(active_mesh, undefined, geo_object, geo_index); AMT override
-            if (active_mesh && active_mesh.get_ctrl()) active_mesh.get_ctrl().setHighlight( 0xffaa33, geo_index);
+            // painter.HighlightMesh(active_mesh, undefined, geo_object, geo_index); AMT override
+            if (active_mesh && active_mesh.get_ctrl()){
+               active_mesh.get_ctrl().setHighlight( 0xffaa33, geo_index);
+            }
+            else {
+               var sl = painter.eveGLcontroller.created_scenes;
+               for (var k=0; k < sl.length; ++k)
+                   sl[k].clearHighlight();
+            }
+            
             
             if (painter.options.update_browser) {
                if (painter.options.highlight && tooltip) names = [ tooltip ];
@@ -393,8 +403,7 @@ sap.ui.define([
          if (this.geo_painter){
             this.geo_painter.CheckResize();
          }
-      }
-
+      },
    });
 
 });
