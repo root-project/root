@@ -67,6 +67,7 @@ protected:
    Int_t fStyleDelivery{0};        ///<! gStyle delivery to clients: 0:never, 1:once, 2:always
    Int_t fPaletteDelivery{1};      ///<! colors palette delivery 0:never, 1:once, 2:always, 3:per subpad
    Int_t fPrimitivesMerge{100};    ///<! number of PS primitives, which will be merged together
+   Int_t fJsonComp{0};             ///<! compression factor for messages send to the client
 
    UpdatedSignal_t fUpdatedSignal;          ///<! signal emitted when canvas updated or state is changed
 
