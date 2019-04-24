@@ -582,7 +582,7 @@ sap.ui.define([], function() {
          if (el.fName == "Global Selection") this.global_selection_id = el.fElementId;
          if (el.fName == "Global Highlight") this.global_highlight_id = el.fElementId;
          el._is_registered = true;
-	 el.prev_sel_list  = [];
+         el.prev_sel_list  = [];
       }
 
       console.log("==============================And now process the bloody selection.", el.prev_sel_list, el.sel_list);
@@ -595,7 +595,7 @@ sap.ui.define([], function() {
       });
       console.log("-- oldMap", oldMap);
 
-      var newMap = new Map ;
+      var newMap = new Map();
       el.sel_list.forEach(function(rec) {
          console.log("add new primary ", rec.primary);
          var iset = new Set(rec.sec_idcs);
