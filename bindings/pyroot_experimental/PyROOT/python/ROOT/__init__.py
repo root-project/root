@@ -54,6 +54,10 @@ def pythonization(lazy = True):
 for _, module_name, _ in  pkgutil.walk_packages(pyz.__path__):
     module = importlib.import_module(pyz.__name__ + '.' + module_name)
 
+# Setup interactive usage from Python
+from ._application import create_application
+create_application()
+
 # Configure ROOT facade module
 import sys
 from ._facade import ROOTFacade

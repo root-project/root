@@ -4,6 +4,7 @@
 
 set(py_sources
   ROOT/__init__.py
+  ROOT/_application.py
   ROOT/_facade.py
   ROOT/pythonization/__init__.py
   ROOT/pythonization/_generic.py
@@ -34,6 +35,7 @@ set(sources
   src/PyROOTModule.cxx
   src/PyROOTStrings.cxx
   src/PyROOTWrapper.cxx
+  src/RPyROOTApplication.cxx
   src/GenericPyz.cxx
   src/RDataFramePyz.cxx
   src/RVecPyz.cxx
