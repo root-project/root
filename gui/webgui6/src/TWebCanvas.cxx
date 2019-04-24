@@ -54,6 +54,7 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
    fStyleDelivery = gEnv->GetValue("WebGui.StyleDelivery", 0);
    fPaletteDelivery = gEnv->GetValue("WebGui.PaletteDelivery", 1);
    fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
+   fJsonComp = gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSameSuppression + TBufferJSON::kNoSpaces);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -482,8 +483,8 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
 
          TCanvasWebSnapshot holder(IsReadOnly(), fCanvVersion);
 
-         CreatePadSnapshot(holder, Canvas(), conn.fSendVersion, [&buf](TPadWebSnapshot *snap) {
-            buf.append(TBufferJSON::ToJSON(snap, 23).Data());
+         CreatePadSnapshot(holder, Canvas(), conn.fSendVersion, [&buf,this](TPadWebSnapshot *snap) {
+            buf.append(TBufferJSON::ToJSON(snap, fJsonComp).Data());
          });
 
          conn.fSendVersion = fCanvVersion;
