@@ -190,6 +190,28 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
 endmacro()
 
 #---------------------------------------------------------------------------------------------------
+#---ROOT_GENERATE_DICTIONARY( result_var )
+# Returns the path to the .so file or .dll file. In the latter case Windows defines the dll files as
+# executables and puts them in the $ROOTSYS/bin folder.
+function(ROOT_GET_LIBRARY_OUTPUT_DIR result)
+  set(library_output_dir)
+  if(MSVC)
+    if(DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY AND NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY STREQUAL "")
+      set(library_output_dir ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    else()
+      set(library_output_dir ${CMAKE_CURRENT_BINARY_DIR})
+    endif()
+  else()
+    if(DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY AND NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY STREQUAL "")
+      set(library_output_dir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    else()
+      set(library_output_dir ${CMAKE_CURRENT_BINARY_DIR})
+    endif()
+  endif()
+  SET(${result} "${library_output_dir}" PARENT_SCOPE)
+endfunction(ROOT_GET_LIBRARY_OUTPUT_DIR)
+
+#---------------------------------------------------------------------------------------------------
 #---ROOT_GENERATE_DICTIONARY( dictionary headerfiles NODEPHEADERS ghdr1 ghdr2 ...
 #                                                    MODULE module DEPENDENCIES dep1 dep2
 #                                                    BUILTINS dep1 dep2
@@ -320,12 +342,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   #---Set the library output directory-----------------------
-  if(DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY AND NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY STREQUAL "")
-    set(library_output_dir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-  else()
-    set(library_output_dir ${CMAKE_CURRENT_BINARY_DIR})
-  endif()
-
+  ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
   if(ARG_MODULE)
     set(library_name ${libprefix}${ARG_MODULE}${libsuffix})
     if(ARG_MULTIDICT)
@@ -777,11 +794,7 @@ function(ROOT_GENERATE_ROOTMAP library)
   get_filename_component(path ${library} PATH)
 
   #---Set the library output directory-----------------------
-  if(DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-    set(library_output_dir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-  else()
-    set(library_output_dir ${CMAKE_CURRENT_BINARY_DIR})
-  endif()
+  ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
 
   set(outfile ${library_output_dir}/${libprefix}${libname}.rootmap)
   foreach( f ${ARG_LINKDEF})
@@ -812,7 +825,7 @@ function(ROOT_GENERATE_ROOTMAP library)
   set_target_properties(${libprefix}${library}.rootmap PROPERTIES FOLDER RootMaps )
   #---Install the rootmap file------------------------------------
   install(FILES ${outfile} DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
-endfunction()
+endfunction(ROOT_GENERATE_ROOTMAP)
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_FIND_DIRS_WITH_HEADERS([dir1 dir2 ...] OPTIONS [options])
