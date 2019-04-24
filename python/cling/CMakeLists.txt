@@ -24,6 +24,5 @@ if(ROOT_python_FOUND)
   ROOTTEST_ADD_TEST(cling
                     MACRO PyROOT_clingtests.py
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                    OUTREF PyROOT_clingtests.ref
-                    ${PYTESTS_WILLFAIL})
+                    OUTREF PyROOT_clingtests.ref)
 endif()
