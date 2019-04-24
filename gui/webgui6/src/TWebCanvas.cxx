@@ -239,7 +239,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    TWebPS masterps;
    bool usemaster = primitives->GetSize() > fPrimitivesMerge;
 
-
    TIter iter(primitives);
    TObject *obj = nullptr;
    TFrame *frame = nullptr;
@@ -262,7 +261,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       }
    }
 
-   if (need_frame && !frame) {
+   if (need_frame && !frame && CanCreateObject("TFrame")) {
       frame = pad->GetFrame();
       primitives->AddFirst(frame);
    }
@@ -270,8 +269,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    if (!need_title.empty()) {
       if (title) {
          auto line0 = title->GetLine(0);
-         if (line0) line0->SetTitle(need_title.c_str());
-      } else {
+         if (line0 && !IsReadOnly()) line0->SetTitle(need_title.c_str());
+      } else if (CanCreateObject("TPaveText")) {
          title = new TPaveText(0, 0, 0, 0, "blNDC");
          title->SetFillColor(gStyle->GetTitleFillColor());
          title->SetFillStyle(gStyle->GetTitleStyle());
@@ -319,7 +318,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
               palette = fobj;
          }
 
-         if (!stats && first_obj) {
+         if (!stats && first_obj && CanCreateObject("TPaveStats")) {
             stats  = new TPaveStats(
                            gStyle->GetStatX() - gStyle->GetStatW(),
                            gStyle->GetStatY() - gStyle->GetStatH(),
@@ -351,11 +350,13 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          if (stats) hopt.Append(";;use_pad_stats");
 
-         if (!palette && (hist->GetDimension()>1) && (hopt.Index("colz", 0, TString::kIgnoreCase) != kNPOS)) {
+         if (!palette && CanCreateObject("TPaletteAxis") && (hist->GetDimension() > 1) &&
+             (hopt.Index("colz", 0, TString::kIgnoreCase) != kNPOS)) {
             std::stringstream exec;
             exec << "new TPaletteAxis(0,0,0,0, (TH1*)" << std::hex << std::showbase << (size_t)hist << ");";
-            palette = (TObject *) gROOT->ProcessLine(exec.str().c_str());
-            if (palette) hist->GetListOfFunctions()->AddFirst(palette);
+            palette = (TObject *)gROOT->ProcessLine(exec.str().c_str());
+            if (palette)
+               hist->GetListOfFunctions()->AddFirst(palette);
          }
 
          if (palette) hopt.Append(";;use_pad_palette");
