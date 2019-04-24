@@ -700,10 +700,10 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       Canvas()->Print(cdata + 8);
 
-   } else if (arg.compare(0, 8, "OPTIONS6:") == 0) {
+   } else if (arg.compare(0, 9, "OPTIONS6:") == 0) {
 
       if (is_first && !IsReadOnly()) // only first connection can set ranges
-         DecodePadOptions(cdata + 8);
+         DecodePadOptions(cdata + 9);
 
    } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
 
