@@ -1922,11 +1922,12 @@
       this._effectComposer.addPass( new THREE.RenderPass( this._scene, this._camera ) );
 
       this._outlinePass = new THREE.OutlinePass( new THREE.Vector2( w, h ), this._scene, this._camera );
-      this._outlinePass.edgeStrength = 7.5;
-      this._outlinePass.edgeGlow = 0.5;
-      this._outlinePass.edgeThickness = 1.0;
+      this._outlinePass.edgeStrength = 5.5;
+      this._outlinePass.edgeGlow = 0.7;
+      this._outlinePass.edgeThickness = 1.5;
       this._outlinePass.usePatternTexture = false;
-      this._outlinePass.downSampleRatio = 2;
+      this._outlinePass.downSampleRatio = 1;
+      this._outlinePass.glowDownSampleRatio = 3;
 
       // const sh = THREE.OutlinePass.selection_enum["select"]; // doesnt stand for spherical harmonics :P
       // THREE.OutlinePass.selection_atts[sh].visibleEdgeColor.set('#dd1111');

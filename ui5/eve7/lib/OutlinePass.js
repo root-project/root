@@ -20,6 +20,7 @@ THREE.OutlinePass = function ( resolution, scene, camera ) {
 	this.edgeThickness = 1.0;
 	this.edgeStrength = 3.0;
 	this.downSampleRatio = 2;
+	this.glowDownSampleRatio = 2;
 
 	THREE.Pass.call( this );
 
@@ -67,7 +68,7 @@ THREE.OutlinePass = function ( resolution, scene, camera ) {
 	this.renderTargetBlurBuffer1 = new THREE.WebGLRenderTarget( resx, resy, pars );
 	this.renderTargetBlurBuffer1.texture.name = "OutlinePass.blur1";
 	this.renderTargetBlurBuffer1.texture.generateMipmaps = false;
-	this.renderTargetBlurBuffer2 = new THREE.WebGLRenderTarget( Math.round( resx / 2 ), Math.round( resy / 2 ), pars );
+	this.renderTargetBlurBuffer2 = new THREE.WebGLRenderTarget( Math.round( resx / this.glowDownSampleRatio ), Math.round( resy / this.glowDownSampleRatio ), pars );
 	this.renderTargetBlurBuffer2.texture.name = "OutlinePass.blur2";
 	this.renderTargetBlurBuffer2.texture.generateMipmaps = false;
 
@@ -75,7 +76,7 @@ THREE.OutlinePass = function ( resolution, scene, camera ) {
 	this.renderTargetEdgeBuffer1 = new THREE.WebGLRenderTarget( resx, resy, pars );
 	this.renderTargetEdgeBuffer1.texture.name = "OutlinePass.edge1";
 	this.renderTargetEdgeBuffer1.texture.generateMipmaps = false;
-	this.renderTargetEdgeBuffer2 = new THREE.WebGLRenderTarget( Math.round( resx / 2 ), Math.round( resy / 2 ), pars );
+	this.renderTargetEdgeBuffer2 = new THREE.WebGLRenderTarget( Math.round( resx / this.glowDownSampleRatio ), Math.round( resy / this.glowDownSampleRatio ), pars );
 	this.renderTargetEdgeBuffer2.texture.name = "OutlinePass.edge2";
 	this.renderTargetEdgeBuffer2.texture.generateMipmaps = false;
 
@@ -86,7 +87,7 @@ THREE.OutlinePass = function ( resolution, scene, camera ) {
 	this.separableBlurMaterial1.uniforms[ "texSize" ].value = new THREE.Vector2( resx, resy );
 	this.separableBlurMaterial1.uniforms[ "kernelRadius" ].value = 1;
 	this.separableBlurMaterial2 = this.getSeperableBlurMaterial( MAX_EDGE_GLOW );
-	this.separableBlurMaterial2.uniforms[ "texSize" ].value = new THREE.Vector2( Math.round( resx / 2 ), Math.round( resy / 2 ) );
+	this.separableBlurMaterial2.uniforms[ "texSize" ].value = new THREE.Vector2( Math.round( resx / this.glowDownSampleRatio ), Math.round( resy / this.glowDownSampleRatio ) );
 	this.separableBlurMaterial2.uniforms[ "kernelRadius" ].value = MAX_EDGE_GLOW;
 
 	// Overlay material
@@ -287,8 +288,8 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 		this.renderTargetEdgeBuffer1.setSize( resx, resy );
 		this.separableBlurMaterial1.uniforms[ "texSize" ].value = new THREE.Vector2( resx, resy );
 
-		resx = Math.round( resx / 2 );
-		resy = Math.round( resy / 2 );
+		resx = Math.round( resx / this.glowDownSampleRatio );
+		resy = Math.round( resy / this.glowDownSampleRatio );
 
 		this.renderTargetBlurBuffer2.setSize( resx, resy );
 		this.renderTargetEdgeBuffer2.setSize( resx, resy );
@@ -504,7 +505,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 			this.renderScene.background = currentBackground;
 	
-			// 2. Downsample to Half resolution
+			// 2. Downsample to "downSampleRatio" res
 
 			// clear stuff
 			renderer.setRenderTarget( this.renderTargetEdgeBuffer1 );
@@ -554,7 +555,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 			// }
 			// this.changeVisibilityOfSelectedObjects(true);
 	
-			// 4. Apply Blur on Half res
+			// 4. Apply Blur on "glowDownSampleRatio" res
 			this.quad.material = this.separableBlurMaterial1;
 			this.separableBlurMaterial1.uniforms[ "colorTexture" ].value = this.renderTargetEdgeBuffer1.texture;
 			this.separableBlurMaterial1.uniforms[ "direction" ].value = THREE.OutlinePass.BlurDirectionX;
@@ -568,7 +569,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 			renderer.clear();
 			renderer.render( this.scene, this.camera );
 	
-			// Apply Blur on quarter res
+			// Apply Blur on "downSampleRatio*glowDownSampleRatio" res
 			this.quad.material = this.separableBlurMaterial2;
 			this.separableBlurMaterial2.uniforms[ "colorTexture" ].value = this.renderTargetEdgeBuffer1.texture;
 			this.separableBlurMaterial2.uniforms[ "direction" ].value = THREE.OutlinePass.BlurDirectionX;
