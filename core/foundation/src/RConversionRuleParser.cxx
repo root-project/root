@@ -661,8 +661,8 @@ namespace ROOT
       output << "      " << className << "* newObj = (" << className;
       output << "*)target;" << std::endl;
       output << "      // Supress warning message.\n";
-      output << "      " << "if (oldObj) {}\n\n";
-      output << "      " << "if (newObj) {}\n\n";
+      output << "      " << "(void)oldObj;\n\n";
+      output << "      " << "(void)newObj;\n\n";
 
       //-----------------------------------------------------------------------
       // Write the user's code
