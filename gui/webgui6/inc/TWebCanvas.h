@@ -103,6 +103,8 @@ protected:
 
    virtual Bool_t DecodePadOptions(const char *) { return kFALSE; }
 
+   virtual Bool_t CanCreateObject(const char *) { return !IsReadOnly(); }
+
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TWebCanvas() = default;
