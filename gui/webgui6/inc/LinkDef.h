@@ -21,5 +21,6 @@
 #pragma link C++ class TWebPainting+;
 #pragma link C++ class TWebSnapshot+;
 #pragma link C++ class TPadWebSnapshot+;
+#pragma link C++ class TCanvasWebSnapshot+;
 
 #endif
