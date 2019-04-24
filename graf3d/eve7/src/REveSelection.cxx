@@ -259,6 +259,8 @@ void REveSelection::SelectionCleared()
 {
    // XXXX
    // Emit("SelectionCleared()");
+   fMap.clear();
+   StampObjProps();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
