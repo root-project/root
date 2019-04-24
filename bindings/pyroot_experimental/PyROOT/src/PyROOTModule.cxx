@@ -13,6 +13,7 @@
 #include "PyROOTPythonize.h"
 #include "PyROOTStrings.h"
 #include "PyROOTWrapper.h"
+#include "RPyROOTApplication.h"
 
 // Cppyy
 #include "CPyCppyy.h"
@@ -67,6 +68,8 @@ static PyMethodDef gPyROOTMethods[] = {{(char *)"AddDirectoryWritePyz", (PyCFunc
                                         (char *)"Get object with array interface as RVec"},
                                        {(char *)"MakeNumpyDataFrame", (PyCFunction)PyROOT::MakeNumpyDataFrame, METH_O,
                                         (char *)"Make RDataFrame from dictionary of numpy arrays"},
+                                       {(char *)"InitApplication", (PyCFunction)PyROOT::RPyROOTApplication::InitApplication, METH_NOARGS,
+                                        (char *)"Initialize interactive ROOT use from Python"},
                                        {NULL, NULL, 0, NULL}};
 
 #if PY_VERSION_HEX >= 0x03000000
