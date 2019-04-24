@@ -11,6 +11,8 @@ if(ROOT_python_FOUND)
                     ENVIRONMENT CLING_STANDARD_PCH=none
                                 CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
 
+  # TPython::LoadMacro and TPython::Import are broken in the new Cppyy
+  # https://bitbucket.org/wlav/cppyy/issues/65 
   ROOTTEST_ADD_TEST(class MACRO
                     runPyClassTest.C
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
