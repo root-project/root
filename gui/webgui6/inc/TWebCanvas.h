@@ -50,7 +50,8 @@ protected:
 
    struct WebConn {
       unsigned fConnId{0};             ///<! connection id
-      Long64_t fDrawVersion{0};        ///<! canvas version drawn by client
+      Long64_t fSendVersion{0};        ///<! canvas version send to the client
+      Long64_t fDrawVersion{0};        ///<! canvas version drawn (confirmed) by client
       std::queue<std::string> fSend;   ///<! send queue, processed after sending draw data
       WebConn(unsigned id) : fConnId(id) {}
    };
