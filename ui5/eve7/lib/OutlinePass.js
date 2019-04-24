@@ -112,7 +112,7 @@ THREE.OutlinePass = function ( resolution, scene, camera ) {
 	} );
 
 	this.enabled = true;
-	this.needsSwap = true;
+	this.needsSwap = false;
 
 	this.oldClearColor = new THREE.Color();
 	this.oldClearAlpha = 1;
@@ -587,15 +587,13 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 			this.overlayMaterial.uniforms[ "edgeTexture1" ].value = this.renderTargetEdgeBuffer1.texture;
 			this.overlayMaterial.uniforms[ "edgeTexture2" ].value = this.renderTargetEdgeBuffer2.texture;
 			this.overlayMaterial.uniforms[ "patternTexture" ].value = this.patternTexture;
-			this.overlayMaterial.uniforms[ "backbuffer" ].value = readBuffer.texture;
 			this.overlayMaterial.uniforms[ "edgeStrength" ].value = this.edgeStrength;
 			this.overlayMaterial.uniforms[ "edgeGlow" ].value = this.edgeGlow;
 			this.overlayMaterial.uniforms[ "usePatternTexture" ].value = this.usePatternTexture;
 	
 			if ( maskActive ) renderer.context.enable( renderer.context.STENCIL_TEST );
 	
-			renderer.setRenderTarget( writeBuffer );
-			renderer.clear();
+			renderer.setRenderTarget( readBuffer );
 			renderer.render( this.scene, this.camera );
 
 			renderer.setClearColor( this.oldClearColor, this.oldClearAlpha );
@@ -604,12 +602,6 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 			// remove sec_sel elements from renderScene
 			for(const obj of sec_sel)
 				if(obj) this.renderScene.remove(obj);
-		} else {
-			this.quad.material = this.materialCopy;
-			this.copyUniforms[ "tDiffuse" ].value = readBuffer.texture;
-			renderer.setRenderTarget( writeBuffer );
-			renderer.clear();
-			renderer.render( this.scene, this.camera );
 		}
 	},
 
@@ -779,7 +771,6 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 				"edgeTexture1": { value: null },
 				"edgeTexture2": { value: null },
 				"patternTexture": { value: null },
-				"backbuffer": { value: null },
 				"edgeStrength": { value: 1.0 },
 				"edgeGlow": { value: 1.0 },
 				"usePatternTexture": { value: 0.0 },
@@ -802,31 +793,28 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 				uniform sampler2D edgeTexture1;
 				uniform sampler2D edgeTexture2;
 				uniform sampler2D patternTexture;
-				uniform sampler2D backbuffer;
 				uniform float edgeStrength;
 				uniform float edgeGlow;
 				uniform bool usePatternTexture;
 
 				void main() {
-					vec4 backbuffer = texture2D(backbuffer, vUv);
-					vec4 edgeValue1 = texture2D(edgeTexture1, vUv);
-					vec4 edgeValue2 = texture2D(edgeTexture2, vUv);
+					vec3 edgeValue1 = texture2D(edgeTexture1, vUv).rgb;
+					vec3 edgeValue2 = texture2D(edgeTexture2, vUv).rgb;
 					vec4 maskColor = texture2D(maskTexture, vUv);
-					vec4 patternColor = texture2D(patternTexture, 6.0 * vUv);
 					float visibilityFactor = 1.0 - maskColor.g > 0.0 ? 1.0 : 0.5;
-					vec4 edgeValue = edgeValue1 + edgeValue2 * edgeGlow;
-					vec4 finalColor = edgeStrength * edgeValue;
+					vec3 edgeValue = edgeValue1 + edgeValue2 * edgeGlow;
+					vec3 finalColor = edgeStrength * edgeValue;
+				#if 0
+					vec4 patternColor = texture2D(patternTexture, 6.0 * vUv);
 					if(usePatternTexture)
 						finalColor += + visibilityFactor * (1.0 - maskColor.r) * (1.0 - patternColor.r);
-
-					#define col finalColor.rgb
-
-					// col = edgeValue1.rgb;
-					col = mix(backbuffer.rgb, col,  maskColor.r * dot(col, vec3(0.33333)));
-
-					gl_FragColor = vec4(col, 1.0);
-					#undef col
+				#endif
+					gl_FragColor = vec4(finalColor, maskColor.r * dot(finalColor.rgb, vec3(0.33333)));
 				}`,
+				blending: THREE.CustomBlending,
+				blendEquation: THREE.AddEquation,
+				blendSrc: THREE.SrcAlphaFactor,
+				blendDst: THREE.OneMinusSrcAlphaFactor,
 				depthTest: false,
 				depthWrite: false,
 				transparent: false
