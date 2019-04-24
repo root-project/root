@@ -1515,7 +1515,7 @@ Double_t TGeoTrap::DistFromOutside(const Double_t *point, const Double_t *dir, I
    Double_t xnew, ynew, znew;
    Int_t i,j;
    if (point[2]<-fDz+TGeoShape::Tolerance()) {
-      if (dir[2]<=0) return TGeoShape::Big();
+      if (dir[2] < TGeoShape::Tolerance()) return TGeoShape::Big();
       in = kFALSE;
       snxt = -(fDz+point[2])/dir[2];
       xnew = point[0] + snxt*dir[0];
@@ -1527,7 +1527,7 @@ Double_t TGeoTrap::DistFromOutside(const Double_t *point, const Double_t *dir, I
       }
       if (InsidePolygon(xnew,ynew,pts)) return snxt;
    } else if (point[2]>fDz-TGeoShape::Tolerance()) {
-      if (dir[2]>=0) return TGeoShape::Big();
+      if (dir[2] > -TGeoShape::Tolerance()) return TGeoShape::Big();
       in = kFALSE;
       snxt = (fDz-point[2])/dir[2];
       xnew = point[0] + snxt*dir[0];
