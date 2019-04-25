@@ -372,15 +372,18 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       } else if (obj->InheritsFrom(TGraph::Class())) {
          flush_master();
 
-         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
-
          TGraph *gr = (TGraph *)obj;
+
+         // ensure histogram exists on server to draw it properly on clients side
+         if (!IsReadOnly() && first_obj)
+            gr->GetHistogram();
+
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
 
          TIter fiter(gr->GetListOfFunctions());
          TObject *fobj = nullptr;
          while ((fobj = fiter()) != nullptr)
-            if (!fobj->InheritsFrom("TPaveStats"))  // stats should be created on the client side
-               CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
+            CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
 
          fPrimitivesLists.Add(gr->GetListOfFunctions());
          first_obj = false;
