@@ -258,8 +258,8 @@ void TSystem::SetErrorStr(const char *errstr)
 
 const char *TSystem::GetError()
 {
-   if (GetErrno() == 0 && GetLastErrorString() != "")
-      return GetLastErrorString();
+   if (GetErrno() == 0 && !GetLastErrorString().IsNull())
+      return GetLastErrorString().Data();
    return Form("errno: %d", GetErrno());
 }
 
@@ -1083,7 +1083,7 @@ const char *TSystem::ExpandFileName(const char *fname)
    TTHREAD_TLS_ARRAY(char, kBufSize, xname);
 
    Bool_t res = ExpandFileName(fname, xname, kBufSize);
-   if (res) 
+   if (res)
       return nullptr;
    else
       return xname;
@@ -2119,7 +2119,7 @@ const TString &TSystem::GetLastErrorString() const
 
 const char *TSystem::GetLinkedLibraries()
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2315,7 +2315,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
    }
 #endif
 
-   return fListLibs;
+   return fListLibs.Data();
 }
 
 //---- RPC ---------------------------------------------------------------------
