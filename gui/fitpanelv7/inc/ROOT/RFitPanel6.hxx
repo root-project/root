@@ -67,6 +67,7 @@ struct RFitPanelModel6 {
    std::string fRealFunc;
    std::string fOption;
    std::string fFuncChange;
+   std::string fMinLibrary;
 
    // all combo items for all methods
 
