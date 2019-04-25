@@ -69,6 +69,7 @@ struct RFitPanelModel6 {
    std::string fFuncChange;
    std::string fMinLibrary;
 
+
    // all combo items for all methods
 
    //Minimization Tab
@@ -95,6 +96,9 @@ struct RFitPanelModel6 {
    bool fRobust{false};
    int fLibrary{0};
    int fPrint{0};
+   float fErrorDef{1.00};
+   float fMaxTol{0.01};
+   int fMaxInter{0};
 
    //convert fSelectTypeID from string to int
    int fTypeId = atoi(fSelectTypeId.c_str());

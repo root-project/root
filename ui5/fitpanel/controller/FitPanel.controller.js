@@ -71,6 +71,15 @@ sap.ui.define([
 
          var libMin = this.getView().byId("MethodMin").getValue();
          data.fMinLibrary = libMin;
+
+         var errorDefinition = parseFloat(this.getView().byId("errorDef").getValue());
+         data.fErrorDef = errorDefinition;
+         var maxTolerance = parseFloat(this.getView().byId("maxTolerance").getValue());
+         data.fMaxTol = maxTolerance;
+         var maxInterations = Number(this.getView().byId("maxInterations").getValue());
+         data.fMaxInter = maxInterations;
+         
+
          console.log("Method Min " + libMin);
 
          //Refresh the model
@@ -95,6 +104,9 @@ sap.ui.define([
          this.getView().getModel().updateBindings();
          this.byId("selectedOpText").setText("gaus");
          this.byId("OperationText").setValue("");
+         this.byId("errorDef").setValue("");
+         this.gbyId("maxTolerance").setValue("");
+         this.byId("maxInterations").setValue("");
          return;
       },
 
