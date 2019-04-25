@@ -25,6 +25,7 @@
 #include "TPad.h"
 #include "TDirectory.h"
 #include "TBufferJSON.h"
+#include "TMath.h"
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -299,6 +300,7 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 
       RFitFunc info;
 
+
       info.name = arg.substr(8);
       TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info.name.c_str()));
 
@@ -345,6 +347,10 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
    }
 }
 
+// void ROOT::Math::MinimizerOptions::SetMinimizerAlgorithm (const char *    type) {
+//   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
+//   printf("Min Tab: %s\n", obj->fMinLibrary.c_str());
+// }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Dummy function, called when "Fit" button pressed in UI
 
@@ -360,10 +366,18 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
 
       if (!obj->fRealFunc.empty()) {
          printf("GOT fRealFunc: %s\n", obj->fRealFunc.c_str());
+        
       }
       else {
          obj->fRealFunc = "gaus";
          printf("%s\n", obj->fRealFunc.c_str());
+      }
+
+      if(!obj->fMinLibrary.empty()){
+        printf("Min Tab: %s\n", obj->fMinLibrary.c_str());
+        //ROOT::Math::MinimizerOptions::DefaultMinimizerType() == "Fumili";
+        //Math::MinimizerOptions::SetMinimizerAlgorithm(obj->fMinLibrary.c_str());
+
       }
 
       if(obj->fIntegral){
@@ -399,6 +413,7 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
 
       //Assign the options to Fitting function
       if (fHist && (obj->fSelectDataId == "0")) {
+
          fHist->Fit(obj->fRealFunc.c_str(), obj->fOption.c_str(), "*", obj->fUpdateRange[0], obj->fUpdateRange[1]);
          gPad->Update();
       }
