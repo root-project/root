@@ -270,7 +270,7 @@ sap.ui.define([
                        });
 
       return true;
-
+/*
       // MT END -- Sergey's code below
 
       // first decide if element selected or not
@@ -338,6 +338,7 @@ sap.ui.define([
 
       // when true returns, controller will not try to render itself
       return true;
+*/
    }
 
    /** interactive handler */
@@ -402,8 +403,52 @@ sap.ui.define([
       return true;
    }
 
+   EveScene.prototype.SelectElement = function(selection_obj, element_id, sec_idcs)
+   {
+      var container = this.viewer.getThreejsContainer("scene" + this.id);
+      console.log("EveScene.SelectElement ", selection_obj.fName , element_id, container);
+      var stype = selection_obj.fName.endsWith("Selection") ? "select" : "highlight";
+      var estype = THREE.OutlinePass.selection_enum[stype];
+
+      let res = {
+         "sel_type": estype,
+         "sec_sel": false,
+         "geom": []
+      };
+      var obj3d = this.getObj3D( element_id );
+
+      if ( ! (selection_obj.fElementId in this.viewer.outlinePass.id2obj_map))
+	      this.viewer.outlinePass.id2obj_map[selection_obj.fElementId] = [];
+
+      var dest  = this.viewer.outlinePass.id2obj_map[selection_obj.fElementId];
+
+      // XXXX where do i pass in color ???
+
+      if(sec_idcs === undefined || sec_idcs.length == 0)
+      {
+         res.geom.push(obj3d);
+      }
+      else
+      {
+         var ctrl = obj3d.get_ctrl();
+         ctrl.DrawForSelection(sec_idcs, res.geom);
+         res.sec_sel = true;
+      }
+      dest[element_id] = res;
+   }
+
+   EveScene.prototype.UnselectElement = function(selection_obj, element_id)
+   {
+      var container = this.viewer.getThreejsContainer("scene" + this.id);
+      console.log("EveScene.UnselectElement ", selection_obj.fName, element_id, container);
+      if (selection_obj.fElementId in this.viewer.outlinePass.id2obj_map)
+      {
+	 delete this.viewer.outlinePass.id2obj_map[selection_obj.fElementId][element_id];
+         
+      }
+   }
    /** returns true if highlight index is differs from current */
-   EveScene.prototype.processCheckHighlight = function(obj3d, indx)
+/*   EveScene.prototype.processCheckHighlight = function(obj3d, indx)
    {
       var id = obj3d.mstrId;
       // id = obj3d.eveId;
@@ -413,17 +458,18 @@ sap.ui.define([
       // TODO: make precise checks with all combinations
       return (indx !== this.highlight.indx);
    }
-
+*/
    /** function called by changes from server or by changes from other scenes */
-   EveScene.prototype.setElementSelected = function(mstrid, col, indx, from_interactive)
+  /* EveScene.prototype.setElementSelected = function(mstrid, col, indx, from_interactive)
    {
       if ( ! from_interactive)
          this.selected[mstrid] = { id: mstrid, col: col, indx: indx };
 
       this.drawSpecial(mstrid);
-   }
+   }*/
 
    /** Called when processing changes from server or from interactive handler */
+   /*
    EveScene.prototype.setElementHighlighted = function(mstrid, col, indx, from_interactive)
    {
       // check if other element was highlighted at same time - redraw it
@@ -438,7 +484,7 @@ sap.ui.define([
          this.highlight = { id: mstrid, col: col, indx: indx };
 
       this.drawSpecial(mstrid, true);
-   }
+   }*/
 /*
    EveScene.prototype.drawSpecial = function(mstrid, prefer_highlight)
    {
@@ -501,45 +547,6 @@ sap.ui.define([
       return did_change;
    }
 */
-   EveScene.prototype.SelectElement = function(selection_obj, element_id, sec_idcs)
-   {
-      var stype = selection_obj.fName.endsWith("Selection") ? "select" : "highlight";
-      var estype = THREE.OutlinePass.selection_enum[stype];
-
-      let res = {
-         "sel_type": estype,
-         "sec_sel": false,
-         "geom": []
-      };
-      var obj3d = this.getObj3D( element_id );
-
-      if ( ! (selection_obj.fElementId in this.viewer.outlinePass.id2obj_map))
-	      this.viewer.outlinePass.id2obj_map[selection_obj.fElementId] = [];
-
-      var dest  = this.viewer.outlinePass.id2obj_map[selection_obj.fElementId];
-
-      // XXXX where do i pass in color ???
-
-      if(sec_idcs === undefined || sec_idcs.length == 0)
-      {
-         res.geom.push(obj3d);
-      }
-      else
-      {
-         var ctrl = obj3d.get_ctrl();
-         ctrl.DrawForSelection(sec_idcs, res.geom);
-         res.sec_sel = true;
-      }
-      dest[element_id] = res;
-   }
-
-   EveScene.prototype.UnselectElement = function(selection_obj, element_id)
-   {
-      if (selection_obj.fElementId in this.viewer.outlinePass.id2obj_map)
-      {
-	 delete this.viewer.outlinePass.id2obj_map[selection_obj.fElementId][element_id];
-      }
-   }
 
    EveScene.prototype.elementRemoved = function()
    {
@@ -578,7 +585,6 @@ sap.ui.define([
          var container = this.viewer.getThreejsContainer("scene" + this.id);
          container.remove(obj3d);
 
-         // console.log("EveScene elementRemoved AFTER ",  container);
          delete this.id2obj_map[elId];
       }
    }

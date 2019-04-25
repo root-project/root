@@ -84,7 +84,7 @@ sap.ui.define([], function() {
          return;
       }
 
-      console.log("msg len=", msg.length, " txt:", msg.substr(0,120), "...");
+      // console.log("msg len=", msg.length, " txt:", msg.substr(0,120), "...");
 
       var resp = JSON.parse(msg);
 
@@ -323,7 +323,7 @@ sap.ui.define([], function() {
       this.scene_changes = msg;
 
       var scene = this.GetElement(msg.header.fSceneId);
-      console.log("ImportSceneChange", scene.fName, msg);
+      //console.log("ImportSceneChange", scene.fName, msg);
 
       // notify scenes for beginning of changes and
       // notify for element removal
@@ -340,13 +340,13 @@ sap.ui.define([], function() {
          var id  = removedIds[r];
          delSet.add(id);
       }
-      console.log("start with delSet ", delSet);
+     // console.log("start with delSet ", delSet);
       while (delSet.size != 0) {
          var it = delSet.values();
          var id = it.next().value;
-         console.log("going to call RecursiveRemove .... ", this.map[id]);
+         // console.log("going to call RecursiveRemove .... ", this.map[id]);
          this.RecursiveRemove(this.GetElement(id), delSet);
-         console.log("complete RecursiveREmove ", delSet);
+         // console.log("complete RecursiveREmove ", delSet);
       }
 
       // wait for binary if needed
@@ -567,7 +567,7 @@ sap.ui.define([], function() {
    {
       // el - rep of a REveSelection object.
 
-      console.log("UpdateTrigger UT_Selection_Refresh_State called for ", el.fName);
+     // console.log("UpdateTrigger UT_Selection_Refresh_State called for ", el.fName);
 
       // XXXX Hack to assign global selection / highlight ids.
       // This would be more properly done by having REveWorld : public REveScene and store
@@ -585,7 +585,7 @@ sap.ui.define([], function() {
          el.prev_sel_list  = [];
       }
 
-      console.log("==============================And now process the bloody selection.", el.prev_sel_list, el.sel_list);
+      console.log("==============================And now process the bloody selection.", el.fName, el.prev_sel_list, el.sel_list);
 
       var oldMap = new Map();
       el.prev_sel_list.forEach(function(rec) {
@@ -593,16 +593,15 @@ sap.ui.define([], function() {
          var x = {"valid" : true, "implied" : rec.implied, "set":iset };
          oldMap.set(rec.primary, x);
       });
-      console.log("-- oldMap", oldMap);
+     // console.log("-- oldMap", oldMap);
 
       var newMap = new Map();
       el.sel_list.forEach(function(rec) {
-         console.log("add new primary ", rec.primary);
          var iset = new Set(rec.sec_idcs);
          var x = {"valid" : true, "implied" : rec.implied, "set":iset };
          newMap.set(rec.primary, x);
       });
-      console.log("-- newMap --", newMap);
+      // console.log("-- newMap --", newMap);
 
 
       // remove identicals from old and new map
@@ -630,7 +629,6 @@ sap.ui.define([], function() {
       var pthis = this;
       var changedSet = new Set();
       for (var [id, value] of oldMap.entries()) {
-         console.log("unselect ", el.fName, " id == ", id);
          this.UnselectElement(el, id);
          var iel = pthis.GetElement(id);
          changedSet.add(iel.fSceneId);
@@ -645,7 +643,7 @@ sap.ui.define([], function() {
          var secIdcs = Array.from(value.set);
          var iel = pthis.GetElement(id);
          if (!iel) {
-            // console.log("EveManager.prototype.UT_Selection_Refresh_State this should not happen ", iel);
+            console.log("EveManager.prototype.UT_Selection_Refresh_State this should not happen ", iel);
             continue;
          }
          changedSet.add(iel.fSceneId);
@@ -663,7 +661,6 @@ sap.ui.define([], function() {
 
       // redraw
       for (let item of changedSet) {
-         console.log(item);
          var scene = this.GetElement(item);
          this.callSceneReceivers(scene, "endChanges");
       }
