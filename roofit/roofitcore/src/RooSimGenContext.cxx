@@ -22,6 +22,12 @@
 RooSimGenContext is an efficient implementation of the generator context
 specific for RooSimultaneous PDFs when generating more than one of the
 component pdfs.
+It runs in two modes:
+- Proto data with category entries are given: An event from the same category as
+in the proto data is created.
+- No proto data: A category is chosen randomly.
+\note This requires that the PDFs are extended, to determine the relative probabilities
+that an event originates from a certain category.
 **/
 
 #include "RooFit.h"
@@ -283,10 +289,11 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
     Int_t i=0 ;
     for (i=0 ; i<_numPdf ; i++) {
       if (rand>_fracThresh[i] && rand<_fracThresh[i+1]) {
-	RooAbsGenContext* gen=_gcList[i] ;	  
-	gen->generateEvent(theEvent,remaining) ;
-	_idxCat->setIndexFast(_gcIndex[i]) ;
-	return ;
+        RooAbsGenContext* gen=_gcList[i] ;
+        gen->generateEvent(theEvent,remaining) ;
+        //Write through to sub-categories because they might be written to dataset:
+        _idxCat->setIndex(_gcIndex[i]);
+        return ;
       }
     }
 
