@@ -1504,19 +1504,22 @@ static bool R__InitStreamerInfoFactory()
 
 bool TCling::LoadPCM(TString pcmFileName,
                      const char** headers,
-                     const std::string& libraryFullPath) const {
+                     void (*triggerFunc)()) const {
    // pcmFileName is an intentional copy; updated by FindFile() below.
 
-   assert(libraryFullPath.empty());
-   assert(llvm::sys::path::is_absolute(libraryFullPath));
    TString searchPath;
 
-   searchPath = llvm::sys::path::parent_path(libraryFullPath);
+   if (triggerFunc) {
+      const char *libraryName = FindLibraryName(triggerFunc);
+      if (libraryName) {
+         searchPath = llvm::sys::path::parent_path(libraryName);
 #ifdef R__WIN32
-   searchPath += ";";
+         searchPath += ";";
 #else
-   searchPath += ":";
+         searchPath += ":";
 #endif
+      }
+   }
    // Note: if we know where the library is, we probably shouldn't even
    // look in other places.
    searchPath.Append( gSystem->GetDynamicPath() );
@@ -1988,7 +1991,7 @@ void TCling::RegisterModule(const char* modulename,
 
    if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
       TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
-      if (!LoadPCM(pcmFileName, headers, dyLibName)) {
+      if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
          ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
                  ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
       }
