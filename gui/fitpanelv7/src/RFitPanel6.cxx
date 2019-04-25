@@ -26,6 +26,7 @@
 #include "TDirectory.h"
 #include "TBufferJSON.h"
 #include "TMath.h"
+#include "Math/Minimizer.h"
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -84,6 +85,7 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       fWindow->Send(fConnId, "INITDONE");
       ROOT::Experimental::RFitPanelModel6 model;
 
+      
        //ComboBox for Data Set
        //model.fDataSet.push_back(ROOT::Experimental::RComboBoxItem("1", "No Selection"));
       if (fHist) {
@@ -358,6 +360,8 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
 {
    // printf("DoFit %s\n", model.c_str());
    auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
+   ROOT::Math::MinimizerOptions minOption;
+
    //Fitting Options
    if (obj) {
 
@@ -366,6 +370,7 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
 
       if (!obj->fRealFunc.empty()) {
          printf("GOT fRealFunc: %s\n", obj->fRealFunc.c_str());
+
         
       }
       else {
@@ -375,9 +380,35 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
 
       if(!obj->fMinLibrary.empty()){
         printf("Min Tab: %s\n", obj->fMinLibrary.c_str());
-        //ROOT::Math::MinimizerOptions::DefaultMinimizerType() == "Fumili";
-        //Math::MinimizerOptions::SetMinimizerAlgorithm(obj->fMinLibrary.c_str());
+        minOption.SetMinimizerAlgorithm(obj->fMinLibrary.c_str());
+      }
+      // else {
+      //   // minOption.DefaultMinimizerType("Minuit");
+      //   // minOption.DefaultMinimizerAlgo("MIGRAD");
+      // }
 
+      if(!obj->fErrorDef == 0) {
+        minOption.SetErrorDef(obj->fErrorDef);
+        printf("Error Def %d\n", obj->fErrorDef);
+      }
+      else {
+        minOption.SetErrorDef(1.00);
+      }
+
+      if(!obj->fMaxTol == 0) {
+        minOption.SetTolerance(obj->fMaxTol);
+        printf("Tolerance %d\n", obj->fMaxTol );
+      }
+      else {
+        minOption.SetTolerance(0.01);
+      }
+
+      if(!obj->fMaxInter == 0) {
+        minOption.SetMaxIterations(obj->fMaxInter);
+        printf("Max Inte %d\n", obj->fMaxInter );
+      }
+      else {
+        minOption.SetMaxIterations(0);
       }
 
       if(obj->fIntegral){

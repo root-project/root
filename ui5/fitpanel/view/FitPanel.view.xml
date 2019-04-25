@@ -233,8 +233,8 @@
 									</layoutData>
 								</Label>
 								<Input
-									id="testError"
-									type="Text"
+									id="errorDef"
+									type="Number"
 									placeholder="1.00">
 									<layoutData>
 										<l:GridData span="L4 M6 S6"/>
@@ -247,7 +247,7 @@
 								</Label>
 								<Input
 									id="maxTolerance"
-									type="Text"
+									type="Number"
 									placeholder="0.01">
 									<layoutData>
 										<l:GridData span="L4 M6 S6"/>
@@ -260,7 +260,7 @@
 								</Label>
 								<Input
 									id="maxInterations"
-									type="Text"
+									type="Number"
 									placeholder="0">
 									<layoutData>
 										<l:GridData span="L4 M6 S6"/>
