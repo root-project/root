@@ -19,15 +19,15 @@
 \class RooSuperCategory
 \ingroup Roofitcore
 
-RooSuperCategory consolidates several RooAbsCategoryLValue objects into
+RooSuperCategory can join several RooAbsCategoryLValue objects into
 a single category. The states of the super category consist of all the permutations
 of the input categories. The super category is an lvalue and requires that
-all input categories are lvalues as well as modification
+all input categories are lvalues as well. This is because a modification
 of its state will back propagate into a modification of its input categories.
-To define a consolidated category of multiple non-lvalye categories
-use class RooMultiCategory
-RooSuperCategory state are automatically defined and updated whenever an input
-category modifies its list of states
+To define a joined category of multiple non-lvalue categories,
+use the class RooMultiCategory.
+RooSuperCategory states are automatically defined and updated whenever an input
+category modifies its list of states.
 **/
 
 #include "RooFit.h"

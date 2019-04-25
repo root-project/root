@@ -20,7 +20,7 @@
 \ingroup Roofitcore
 
 RooBinnedGenContext is an efficient implementation of the
-generator context specific for binned pdfs
+generator context specific for binned pdfs.
 **/
 
 

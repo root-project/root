@@ -21,8 +21,8 @@
 
 RooSimultaneous facilitates simultaneous fitting of multiple PDFs
 to subsets of a given dataset.
-The class takes an index category, which is interpreted as
-the data subset indicator, and a list of PDFs, each associated
+The class takes an index category, which is used as a selector
+for PDFs, and a list of PDFs, each associated
 with a state of the index category. RooSimultaneous always returns
 the value of the PDF that is associated with the current value
 of the index category.
@@ -30,6 +30,20 @@ of the index category.
 Extended likelihood fitting is supported if all components support
 extended likelihood mode. The expected number of events by a RooSimultaneous
 is that of the component p.d.f. selected by the index category.
+
+The index category can be accessed using indexCategory().
+
+###Generating events
+When generating events from a RooSimultaneous, the index category has to be added to
+the dataset. Further, the PDF needs to know the relative probabilities of each category, i.e.,
+how many events are in which category. This can be achieved in two ways:
+- Generating with proto data that have category entries: An event from the same category as
+in the proto data is created for each event in the proto data.
+See RooAbsPdf::generate(const RooArgSet&,const RooDataSet&,Int_t,Bool_t,Bool_t,Bool_t) const.
+- No proto data: A category is chosen randomly.
+\note This requires that the PDFs building the simultaneous are extended. In this way,
+the relative probability of each category can be calculated from the number of events
+in each category.
 **/
 
 #include "RooFit.h"
@@ -91,7 +105,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from index category and full list of PDFs. 
 /// In this constructor form, a PDF must be supplied for each indexCat state
-/// to avoid ambiguities. The PDFS are associated in order with the state of the
+/// to avoid ambiguities. The PDFs are associated in order with the state of the
 /// index category as listed by the index categories type iterator.
 ///
 /// PDFs may not overlap (i.e. share any variables) with the index category (function)
@@ -351,14 +365,14 @@ RooAbsPdf* RooSimultaneous::getPdf(const char* catName) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Associate given PDF with index category state label 'catLabel'.
-/// The names state must be already defined in the index category
+/// The name state must be already defined in the index category.
 ///
 /// RooSimultaneous can function without having a PDF associated
 /// with every single state. The normalization in such cases is taken
 /// from the number of registered PDFs, but getVal() will assert if
 /// when called for an unregistered index state.
 ///
-/// PDFs may not overlap (i.e. share any variables) with the index category (function)
+/// PDFs may not overlap (i.e. share any variables) with the index category (function).
 
 Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 {

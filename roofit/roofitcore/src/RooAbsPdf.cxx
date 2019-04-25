@@ -1708,7 +1708,7 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
   }
 
   RooAbsGenContext *context(0) ;
-  if ( (autoBinned & isBinnedDistribution(vars)) || ( binnedTag && strlen(binnedTag) && (getAttribute(binnedTag)||string(binnedTag)=="*"))) {
+  if ( (autoBinned && isBinnedDistribution(vars)) || ( binnedTag && strlen(binnedTag) && (getAttribute(binnedTag)||string(binnedTag)=="*"))) {
     context = binnedGenContext(vars,verbose) ;
   } else {
     context= genContext(vars,0,0,verbose);
@@ -1723,7 +1723,7 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
 /// Generate the specified number of events or expectedEvents() if not specified.
 /// \param[in] whatVars Choose variables in which to generate events. Variables not listed here will remain
 /// constant and not be used for event generation.
-/// \param[in] argxx Optional RooCmdArg() to change behaviour of generate
+/// \param[in] argxx Optional RooCmdArg() to change behaviour of generate().
 /// \return RooDataSet *, owned by caller.
 ///
 /// Any variables of this PDF that are not in whatVars will use their
@@ -1740,7 +1740,9 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
 /// <tr><td> `GenBinned(const char* tag)`        <td> Use binned generation for all component pdfs that have 'setAttribute(tag)' set
 /// <tr><td> `AutoBinned(Bool_t flag)`           <td> Automatically deploy binned generation for binned distributions (e.g. RooHistPdf, sums and products of
 ///                                                 RooHistPdfs etc)
-///                                                 \note Datasets that are generated in binned mode are returned as weighted unbinned datasets
+/// \note Datasets that are generated in binned mode are returned as weighted unbinned datasets. This means that
+/// for each bin, there will be one event in the dataset with a weight corresponding to the (possibly randomised) bin content.
+///
 ///
 /// <tr><td> `AllBinned()`                       <td> As above, but for all components.
 ///       \note The notion of components is only meaningful for simultaneous PDFs
@@ -1923,11 +1925,21 @@ RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate a new dataset containing the specified variables with
-/// events sampled from our distribution. Generate the specified
-/// number of events or else try to use expectedEvents() if nEvents <= 0.
-/// Any variables of this PDF that are not in whatVars will use their
-/// current values and be treated as fixed parameters. Returns zero
-/// in case of an error. The caller takes ownership of the returned
+/// events sampled from our distribution.
+///
+/// \param[in] whatVars Generate a dataset with the variables (and categories) in this set.
+/// Any variables of this PDF that are not in `whatVars` will use their
+/// current values and be treated as fixed parameters.
+/// \param[in] nEvents Generate the specified number of events or else try to use
+/// expectedEvents() if nEvents <= 0 (default).
+/// \param[in] verbose Show which generator strategies are being used.
+/// \param[in] autoBinned If original distribution is binned, return bin centers and randomise weights
+/// instead of generating single events.
+/// \param[in] binnedTag
+/// \param[in] expectedData Call setExpectedData on the genContext.
+/// \param[in] extended Randomise number of events generated according to Poisson(nEvents). Only useful
+/// if PDF is extended.
+/// \return New dataset. Returns zero in case of an error. The caller takes ownership of the returned
 /// dataset.
 
 RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Double_t nEvents, Bool_t verbose, Bool_t autoBinned, const char* binnedTag, Bool_t expectedData, Bool_t extended) const 
@@ -1994,8 +2006,11 @@ RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &what
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generate a new dataset with values of the whatVars variables
-/// sampled from our distribution. Use the specified existing dataset
+/// Generate a new dataset using a prototype dataset as a model,
+/// with values of the variables in `whatVars` sampled from our distribution.
+///
+/// \param[in] whatVars Generate for these variables.
+/// \param[in] prototype Use this dataset
 /// as a prototype: the new dataset will contain the same number of
 /// events as the prototype (by default), and any prototype variables not in
 /// whatVars will be copied into the new dataset for each generated
@@ -2003,8 +2018,13 @@ RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &what
 /// number of events to generate that will override the default. The result is a
 /// copy of the prototype dataset with only variables in whatVars
 /// randomized. Variables in whatVars that are not in the prototype
-/// will be added as new columns to the generated dataset.  Returns
-/// zero in case of an error. The caller takes ownership of the
+/// will be added as new columns to the generated dataset.
+/// \param[in] nEvents Number of events to generate. Defaults to 0, which means number
+/// of event in prototype dataset.
+/// \param[in] verbose Show which generator strategies are being used.
+/// \param[in] randProtoOrder Randomise order of retrieval of events from proto dataset.
+/// \param[in] resampleProto Resample from the proto dataset.
+/// \return The new dataset. Returns zero in case of an error. The caller takes ownership of the
 /// returned dataset.
 
 RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet& prototype,
