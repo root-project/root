@@ -618,35 +618,35 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
 
    //==============Save object as a C, ROOT independant, file===================
    if (filename && strstr(filename,".cc")) {
-      char *fname = 0;
+      TString fname;
       if (filename && strlen(filename) > 0) {
-         fname = (char*)filename;
+         fname = filename;
       } else {
-         fname = Form("%s.cc", GetName());
+         fname.Form("%s.cc", GetName());
       }
       std::ofstream out;
-      out.open(fname, std::ios::out);
+      out.open(fname.Data(), std::ios::out);
       if (!out.good ()) {
-         Error("SaveAs", "cannot open file: %s", fname);
+         Error("SaveAs", "cannot open file: %s", fname.Data());
          return;
       }
       ((TObject*)this)->SavePrimitive(out,"cc");
       out.close();
-      Info("SaveAs", "cc file: %s has been generated", fname);
+      Info("SaveAs", "cc file: %s has been generated", fname.Data());
       return;
    }
 
    //==============Save as a C++ CINT file======================================
-   char *fname = 0;
+   TString fname;
    if (filename && strlen(filename) > 0) {
-      fname = (char*)filename;
+      fname = filename;
    } else {
-      fname = Form("%s.C", GetName());
+      fname.Form("%s.C", GetName());
    }
    std::ofstream out;
-   out.open(fname, std::ios::out);
+   out.open(fname.Data(), std::ios::out);
    if (!out.good ()) {
-      Error("SaveAs", "cannot open file: %s", fname);
+      Error("SaveAs", "cannot open file: %s", fname.Data());
       return;
    }
    out <<"{"<<std::endl;
@@ -655,7 +655,7 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
    ((TObject*)this)->SavePrimitive(out,option);
    out <<"}"<<std::endl;
    out.close();
-   Info("SaveAs", "C++ Macro file: %s has been generated", fname);
+   Info("SaveAs", "C++ Macro file: %s has been generated", fname.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
