@@ -8,7 +8,73 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from libROOTPython import InitApplication
+import sys
+import time
 
-def create_application():
-    InitApplication()
+from cppyy.gbl import gSystem, gInterpreter
+
+from libROOTPython import InitApplication, InstallGUIEventInputHook
+
+
+class PyROOTApplication(object):
+    """
+    Application class for PyROOT.
+    Configures the interactive usage of ROOT from Python.
+    """
+
+    def __init__(self):
+        # Construct a TApplication for PyROOT
+        InitApplication()
+
+    @staticmethod
+    def _ipython_config():
+        # Integrate IPython >= 5 with ROOT's event loop
+        # Check for new GUI events until there is some user input to process
+
+        from IPython.terminal import pt_inputhooks
+
+        def inputhook(context):
+            while not context.input_is_ready():
+                gSystem.ProcessEvents()
+                time.sleep(0.01)
+
+        pt_inputhooks.register('ROOT', inputhook)
+
+        ipy = get_ipython()
+        if ipy:
+            get_ipython().run_line_magic('gui', 'ROOT')
+
+    @staticmethod
+    def _inputhook_config():
+        # PyOS_InputHook-based mechanism
+        # Point to a function which will be called when Python's interpreter prompt
+        # is about to become idle and wait for user input from the terminal
+        InstallGUIEventInputHook()
+
+    @staticmethod
+    def _set_display_hook():
+        # Set the display hook
+
+        orig_dhook = sys.displayhook
+
+        def displayhook(v):
+            # sys.displayhook is called on the result of evaluating an expression entered
+            # in an interactive Python session.
+            # Therefore, this function will call EndOfLineAction after each interactive
+            # command (to update display etc.)
+            gInterpreter.EndOfLineAction()
+            return orig_dhook(v)
+
+        sys.displayhook = displayhook
+
+    def init_graphics(self):
+        """Configure ROOT graphics to be used interactively"""
+
+        is_ipython = hasattr(__builtins__, '__IPYTHON__') or 'IPython' in sys.modules
+
+        if is_ipython and 'IPython' in sys.modules and sys.modules['IPython'].version_info[0] >= 5:
+            self._ipython_config()
+        else:
+            self._inputhook_config()
+
+        self._set_display_hook()

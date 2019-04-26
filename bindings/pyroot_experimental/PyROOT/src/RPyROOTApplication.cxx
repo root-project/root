@@ -21,9 +21,7 @@
 #include "TError.h"
 #include "Getline.h"
 #include "TVirtualMutex.h"
-#ifdef R__WIN32
-#include "TVirtualX.h"
-#endif
+
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Create an RPyROOTApplication.
@@ -133,12 +131,6 @@ PyObject *PyROOT::RPyROOTApplication::InitApplication()
 /// \param[in] argv Arguments.
 PyROOT::RPyROOTApplication::RPyROOTApplication(const char *acn, int *argc, char **argv) : TApplication(acn, argc, argv)
 {
-#ifdef WIN32
-   // Switch win32 proxy main thread id
-   if (gVirtualX)
-      ProcessLine("((TGWin32 *)gVirtualX)->SetUserThreadId(0);", true);
-#endif
-
    // Save current interpreter context
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
@@ -148,4 +140,38 @@ PyROOT::RPyROOTApplication::RPyROOTApplication(const char *acn, int *argc, char 
 
    // Prevent ROOT from exiting python
    SetReturnFromRun(true);
+}
+
+namespace {
+static int (*sOldInputHook)() = nullptr;
+static PyThreadState *sInputHookEventThreadState = nullptr;
+
+static int EventInputHook()
+{
+   // This method is supposed to be called from CPython's command line and
+   // drives the GUI
+   PyEval_RestoreThread(sInputHookEventThreadState);
+   gSystem->ProcessEvents();
+   PyEval_SaveThread();
+
+   if (sOldInputHook)
+      return sOldInputHook();
+
+   return 0;
+}
+
+} // unnamed namespace
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Install a method hook for sending events to the GUI.
+PyObject *PyROOT::RPyROOTApplication::InstallGUIEventInputHook()
+{
+   if (PyOS_InputHook && PyOS_InputHook != &EventInputHook)
+      sOldInputHook = PyOS_InputHook;
+
+   sInputHookEventThreadState = PyThreadState_Get();
+
+   PyOS_InputHook = (int (*)()) & EventInputHook;
+
+   Py_RETURN_NONE;
 }
