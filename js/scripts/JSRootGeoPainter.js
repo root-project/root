@@ -888,11 +888,12 @@
 
                if (obj.geo_name) {
                   itemname = obj.geo_name;
+                  if (itemname.indexOf("<prnt>") == 0)
+                     itemname = (this.GetItemName() || "top") + itemname.substr(6);
                   name = itemname.substr(itemname.lastIndexOf("/")+1);
                   if (!name) name = itemname;
                   hdr = name;
-               } else
-               if (obj.stack) {
+               } else if (obj.stack) {
                   name = menu.painter._clones.ResolveStack(obj.stack).name;
                   itemname = menu.painter.GetStackFullName(obj.stack);
                   hdr = menu.painter.GetItemName();
@@ -902,7 +903,6 @@
 
                } else
                   continue;
-
 
                menu.add((many ? "sub:" : "header:") + hdr, itemname, function(arg) { this.ActivateInBrowser([arg], true); });
 
@@ -1232,7 +1232,7 @@
             if (!obj) continue;
             if (obj.geo_object) info = obj.geo_name; else
             if (obj.stack) info = painter.GetStackFullName(obj.stack);
-            if (info===null) continue;
+            if (!info) continue;
 
             if (info.indexOf("<prnt>")==0)
                info = painter.GetItemName() + info.substr(6);
@@ -1612,6 +1612,12 @@
          return false;
       }
 
+      // workaround for the TGeoOverlap, where two branches should get predefined color
+      if (this._splitColors && entry.stack) {
+         if (entry.stack[0]===0) entry.custom_color = "green"; else
+         if (entry.stack[0]===1) entry.custom_color = "blue";
+      }
+
       var prop = this._clones.getDrawEntryProperties(entry);
 
       var obj3d = this._clones.CreateObject3D(entry.stack, toplevel, this.options);
@@ -1657,7 +1663,7 @@
    }
 
    /** function used by geometry viewer to show more nodes
-    * These nodes excluded from selecton logic and always inserted into the model
+    * These nodes excluded from selection logic and always inserted into the model
     * Shape already should be created and assigned to the node
     * @private */
    TGeoPainter.prototype.appendMoreNodes = function(nodes, from_drawing) {
@@ -1701,7 +1707,7 @@
    }
 
    /** Returns hierarchy of 3D objects used to produce projection.
-    * Typically external master painter is used, but also intenral data can be used
+    * Typically external master painter is used, but also internal data can be used
     * @private */
 
    TGeoPainter.prototype.getProjectionSource = function() {
@@ -2044,6 +2050,23 @@
       return box;
    }
 
+   TGeoPainter.prototype.getOverallSize = function(force) {
+      if (!this._overall_size || force) {
+         var box = this.getGeomBoundingBox(this._toplevel);
+
+         // if detect of coordinates fails - ignore
+         if (isNaN(box.min.x)) return 1000;
+
+         var sizex = box.max.x - box.min.x,
+             sizey = box.max.y - box.min.y,
+             sizez = box.max.z - box.min.z;
+
+         this._overall_size = 2 * Math.max(sizex, sizey, sizez);
+      }
+
+      return this._overall_size;
+   }
+
    TGeoPainter.prototype.adjustCameraPosition = function(first_time) {
 
       if (!this._toplevel) return;
@@ -2301,6 +2324,13 @@
 
             nshapes += JSROOT.GEO.CountNumShapes(painter._clones.GetNodeShape(node.id));
 
+            // for debugginf - search if there some TGeoHalfSpace
+            //if (JSROOT.GEO.HalfSpace) {
+            //    var entry = this.CopyStack();
+            //    var res = painter._clones.ResolveStack(entry.stack);
+            //    console.log('SAW HALF SPACE', res.name);
+            //    JSROOT.GEO.HalfSpace = false;
+            //}
             return true;
          }
       };
@@ -2392,11 +2422,10 @@
       this.Render3D();
    }
 
+   /** Register extra objects like tracks or hits
+    * @desc Rendered after main geometry volumes are created
+    * Check if object already exists to prevent duplication */
    TGeoPainter.prototype.addExtra = function(obj, itemname) {
-
-      // register extra objects like tracks or hits
-      // Check if object already exists to prevent duplication
-
       if (this._extraObjects === undefined)
          this._extraObjects = JSROOT.Create("TList");
 
@@ -2460,8 +2489,8 @@
       if ((obj._typename === "TList") || (obj._typename === "TObjArray")) {
          if (!obj.arr) return false;
          for (var n=0;n<obj.arr.length;++n) {
-            var sobj = obj.arr[n];
-            var sname = (itemname === undefined) ? obj.opt[n] : (itemname + "/[" + n + "]");
+            var sobj = obj.arr[n], sname = obj.opt[n];
+            if (!sname) sname = (itemname || "<prnt>") + "/[" + n + "]";
             if (this.drawExtras(sobj, sname, add_objects)) isany = true;
          }
       } else if (obj._typename === 'THREE.Mesh') {
@@ -2596,11 +2625,17 @@
       return true;
    }
 
+   /** Drawing different hits types like TPolyMarker3d
+    * @private */
    TGeoPainter.prototype.drawHit = function(hit, itemname) {
       if (!hit || !hit.fN || (hit.fN < 0)) return false;
 
-      var hit_size = 8*hit.fMarkerSize,
-          size = hit.fN,
+      // make hit size scaling factor of overall geometry size
+      // otherwise it is not possible to correctly see hits at all
+      var hit_size = hit.fMarkerSize * this.getOverallSize() * 0.005;
+      if (hit_size <= 0) hit_size = 1;
+
+      var size = hit.fN,
           projv = this.options.projectPos,
           projx = (this.options.project === "x"),
           projy = (this.options.project === "y"),
@@ -3651,7 +3686,7 @@
    JSROOT.Painter.drawGeoObject = function(divid, obj, opt) {
       if (!obj) return null;
 
-      var shape = null;
+      var shape = null, extras = null, extras_path = "";
 
       if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
          shape = obj; obj = null;
@@ -3662,6 +3697,10 @@
       } else if (obj._typename === 'TGeoManager') {
          JSROOT.GEO.SetBit(obj.fMasterVolume, JSROOT.GEO.BITS.kVisThis, false);
          shape = obj.fMasterVolume.fShape;
+      } else if (obj._typename === 'TGeoOverlap') {
+         extras = obj.fMarker; extras_path = "<prnt>/Marker";
+         obj = JSROOT.GEO.buildOverlapVolume(obj);
+         if (!opt) opt = "wire";
       } else if ('fVolume' in obj) {
          if (obj.fVolume) shape = obj.fVolume.fShape;
       } else {
@@ -3689,6 +3728,11 @@
          painter._main_painter._slave_painters.push(painter);
       }
 
+      if (extras) {
+         painter._splitColors = true;
+         painter.addExtra(extras, extras_path);
+      }
+
       // this.options.script_name = 'https://root.cern/js/files/geom/geomAlice.C'
 
       painter.checkScript(painter.options.script_name, painter.prepareObjectDraw.bind(painter));
@@ -3701,8 +3745,9 @@
 
    // ===============================================================================
 
+   /** Function used to build hierarchy of elements of composite shapes
+    * @private */
    JSROOT.GEO.buildCompositeVolume = function(comp, side) {
-      // function used to build hierarchy of elements of composite shapes
 
       var vol = JSROOT.Create("TGeoVolume");
       if (side && (comp._typename!=='TGeoCompositeShape')) {
@@ -3726,6 +3771,35 @@
       node2.fName = "Right";
       node2.fMatrix = comp.fNode.fRightMat;
       node2.fVolume = JSROOT.GEO.buildCompositeVolume(comp.fNode.fRight, "Right");
+
+      vol.fNodes = JSROOT.Create("TList");
+      vol.fNodes.Add(node1);
+      vol.fNodes.Add(node2);
+
+      return vol;
+   }
+
+   /** Function used to build hierarchy of elements of overlap object
+    * @private */
+   JSROOT.GEO.buildOverlapVolume = function(overlap) {
+
+      var vol = JSROOT.Create("TGeoVolume");
+
+      JSROOT.GEO.SetBit(vol, JSROOT.GEO.BITS.kVisDaughters, true);
+      vol.$geoh = true; // workaround, let know browser that we are in volumes hierarchy
+      vol.fName = "";
+
+      var node1 = JSROOT.Create("TGeoNodeMatrix");
+      node1.fName = overlap.fVolume1.fName || "Overlap1";
+      node1.fMatrix = overlap.fMatrix1;
+      node1.fVolume = overlap.fVolume1;
+      // node1.fVolume.fLineColor = 2; // color assigned with _splitColors
+
+      var node2 = JSROOT.Create("TGeoNodeMatrix");
+      node2.fName = overlap.fVolume2.fName || "Overlap2";
+      node2.fMatrix = overlap.fMatrix2;
+      node2.fVolume = overlap.fVolume2;
+      // node2.fVolume.fLineColor = 3;  // color assigned with _splitColors
 
       vol.fNodes = JSROOT.Create("TList");
       vol.fNodes.Add(node1);
@@ -4092,9 +4166,10 @@
       var isnode = (obj._typename.indexOf('TGeoNode') === 0),
           isvolume = (obj._typename.indexOf('TGeoVolume') === 0),
           ismanager = (obj._typename === 'TGeoManager'),
-          iseve = ((obj._typename === 'TEveGeoShapeExtract')||(obj._typename === 'ROOT::Experimental::TEveGeoShapeExtract'));
+          iseve = ((obj._typename === 'TEveGeoShapeExtract') || (obj._typename === 'ROOT::Experimental::TEveGeoShapeExtract')),
+          isoverlap = (obj._typename === 'TGeoOverlap');
 
-      if (!isnode && !isvolume && !ismanager && !iseve) return false;
+      if (!isnode && !isvolume && !ismanager && !iseve && !isoverlap) return false;
 
       if (parent._childs) return true;
 
@@ -4102,9 +4177,17 @@
          JSROOT.GEO.createList(parent, obj.fMaterials, "Materials", "list of materials");
          JSROOT.GEO.createList(parent, obj.fMedia, "Media", "list of media");
          JSROOT.GEO.createList(parent, obj.fTracks, "Tracks", "list of tracks");
+         JSROOT.GEO.createList(parent, obj.fOverlaps, "Overlaps", "list of detected overlaps");
 
          JSROOT.GEO.SetBit(obj.fMasterVolume, JSROOT.GEO.BITS.kVisThis, false);
          JSROOT.GEO.createItem(parent, obj.fMasterVolume);
+         return true;
+      }
+
+      if (isoverlap) {
+         JSROOT.GEO.createItem(parent, obj.fVolume1);
+         JSROOT.GEO.createItem(parent, obj.fVolume2);
+         JSROOT.GEO.createItem(parent, obj.fMarker, 'Marker');
          return true;
       }
 

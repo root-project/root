@@ -560,7 +560,7 @@
 
    // ============================================================
 
-   // base class for all objects, derived from TPave
+   // painter class for objects, derived from TPave
    function TPavePainter(pave) {
       JSROOT.TObjectPainter.call(this, pave);
       this.Enabled = true;
@@ -754,10 +754,12 @@
       }
 
       var pave = this.GetObject();
+
       if (pave && pave.fInit) {
          res.fcust = "pave";
          res.fopt = [pave.fX1NDC,pave.fY1NDC,pave.fX2NDC,pave.fY2NDC];
       }
+
       return res;
    }
 
@@ -773,9 +775,9 @@
       this.FinishTextDrawing(null, this.FinishPave);
    }
 
-   TPavePainter.prototype.DrawPaveStats = function(width, height, refill) {
+   TPavePainter.prototype.DrawPaveStats = function(width, height) {
 
-      if (refill && this.IsStats()) this.FillStatistic();
+      if (this.IsStats()) this.FillStatistic();
 
       var pt = this.GetObject(), lines = [],
           tcolor = this.get_color(pt.fTextColor),
@@ -1155,6 +1157,171 @@
       this.FinishTextDrawing(this.draw_g, this.FinishPave);
    }
 
+   TPavePainter.prototype.DrawPaletteAxis = function(s_width, s_height, arg) {
+
+      var pthis = this,
+          palette = this.GetObject(),
+          axis = palette.fAxis,
+          can_move = (typeof arg == "string") && (arg.indexOf('can_move') > 0),
+          postpone_draw = (typeof arg == "string") && (arg.indexOf('postpone') > 0),
+          nbr1 = axis.fNdiv % 100,
+          pos_x = parseInt(this.draw_g.attr("x")), // pave position
+          pos_y = parseInt(this.draw_g.attr("y")),
+          width = this.pad_width(),
+          height = this.pad_height(),
+          axisOffset = axis.fLabelOffset * width,
+          main = this.main_painter(),
+          framep = this.frame_painter(),
+          zmin = 0, zmax = 100,
+          contour = main.fContour;
+
+      if (nbr1<=0) nbr1 = 8;
+      axis.fTickSize = 0.6 * s_width / width; // adjust axis ticks size
+
+      if (contour && framep) {
+         zmin = Math.min(contour[0], framep.zmin);
+         zmax = Math.max(contour[contour.length-1], framep.zmax);
+      } else if ((main.gmaxbin!==undefined) && (main.gminbin!==undefined)) {
+         // this is case of TH2 (needs only for size adjustment)
+         zmin = main.gminbin; zmax = main.gmaxbin;
+      } else if ((main.hmin!==undefined) && (main.hmax!==undefined)) {
+         // this is case of TH1
+         zmin = main.hmin; zmax = main.hmax;
+      }
+
+      var z = null, z_kind = "normal";
+
+      if (this.root_pad().fLogz) {
+         z = d3.scaleLog();
+         z_kind = "log";
+      } else {
+         z = d3.scaleLinear();
+      }
+      z.domain([zmin, zmax]).range([s_height,0]);
+
+      this.draw_g.selectAll("rect").style("fill", 'white');
+
+      if (!contour || postpone_draw)
+         // we need such rect to correctly calculate size
+         this.draw_g.append("svg:rect")
+                    .attr("x", 0)
+                    .attr("y",  0)
+                    .attr("width", s_width)
+                    .attr("height", s_height)
+                    .style("fill", 'white');
+      else
+         for (var i=0;i<contour.length-1;++i) {
+            var z0 = z(contour[i]),
+                z1 = z(contour[i+1]),
+                col = main.getContourColor((contour[i]+contour[i+1])/2);
+
+            var r = this.draw_g.append("svg:rect")
+                       .attr("x", 0)
+                       .attr("y",  Math.round(z1))
+                       .attr("width", s_width)
+                       .attr("height", Math.round(z0) - Math.round(z1))
+                       .style("fill", col)
+                       .style("stroke", col)
+                       .property("fill0", col)
+                       .property("fill1", d3.rgb(col).darker(0.5).toString())
+
+            if (this.IsTooltipAllowed())
+               r.on('mouseover', function() {
+                  d3.select(this).transition().duration(100).style("fill", d3.select(this).property('fill1'));
+               }).on('mouseout', function() {
+                  d3.select(this).transition().duration(100).style("fill", d3.select(this).property('fill0'));
+               }).append("svg:title").text(contour[i].toFixed(2) + " - " + contour[i+1].toFixed(2));
+
+            if (JSROOT.gStyle.Zooming)
+               r.on("dblclick", function() { pthis.frame_painter().Unzoom("z"); });
+         }
+
+
+      this.z_handle.SetAxisConfig("zaxis", z_kind, z, zmin, zmax, zmin, zmax);
+
+      this.z_handle.max_tick_size = Math.round(s_width*0.7);
+
+      this.z_handle.DrawAxis(true, this.draw_g, s_width, s_height, "translate(" + s_width + ", 0)");
+
+      if (can_move && ('getBoundingClientRect' in this.draw_g.node())) {
+         var rect = this.draw_g.node().getBoundingClientRect();
+
+         var shift = (pos_x + parseInt(rect.width)) - Math.round(0.995*width) + 3;
+
+         if (shift > 0) {
+            this.draw_g.attr("x", pos_x - shift).attr("y", pos_y)
+                       .attr("transform", "translate(" + (pos_x-shift) + ", " + pos_y + ")");
+            palette.fX1NDC -= shift/width;
+            palette.fX2NDC -= shift/width;
+         }
+      }
+
+      var evnt = null, doing_zoom = false, sel1 = 0, sel2 = 0, zoom_rect = null;
+
+      function moveRectSel() {
+
+         if (!doing_zoom) return;
+
+         d3.event.preventDefault();
+         var m = d3.mouse(evnt);
+
+         if (m[1] < sel1) sel1 = m[1]; else sel2 = m[1];
+
+         zoom_rect.attr("y", sel1)
+                  .attr("height", Math.abs(sel2-sel1));
+      }
+
+      function endRectSel() {
+         if (!doing_zoom) return;
+
+         d3.event.preventDefault();
+         d3.select(window).on("mousemove.colzoomRect", null)
+                          .on("mouseup.colzoomRect", null);
+         zoom_rect.remove();
+         zoom_rect = null;
+         doing_zoom = false;
+
+         var zmin = Math.min(z.invert(sel1), z.invert(sel2)),
+             zmax = Math.max(z.invert(sel1), z.invert(sel2));
+
+         pthis.frame_painter().Zoom("z", zmin, zmax);
+      }
+
+      function startRectSel() {
+         // ignore when touch selection is activated
+         if (doing_zoom) return;
+         doing_zoom = true;
+
+         d3.event.preventDefault();
+
+         evnt = this;
+         var origin = d3.mouse(evnt);
+
+         sel1 = sel2 = origin[1];
+
+         zoom_rect = pthis.draw_g
+                .append("svg:rect")
+                .attr("class", "zoom")
+                .attr("id", "colzoomRect")
+                .attr("x", "0")
+                .attr("width", s_width)
+                .attr("y", sel1)
+                .attr("height", 5);
+
+         d3.select(window).on("mousemove.colzoomRect", moveRectSel)
+                          .on("mouseup.colzoomRect", endRectSel, true);
+
+         d3.event.stopPropagation();
+      }
+
+      if (JSROOT.gStyle.Zooming)
+         this.draw_g.select(".axis_zoom")
+                    .on("mousedown", startRectSel)
+                    .on("dblclick", function() { pthis.frame_painter().Unzoom("z"); });
+
+      if (this.FinishPave) this.FinishPave();
+   }
+
    TPavePainter.prototype.FillContextMenu = function(menu) {
       var pave = this.GetObject();
 
@@ -1244,6 +1411,11 @@
    }
 
    TPavePainter.prototype.ShowContextMenu = function(evnt) {
+
+      // for color palette
+      if (this.z_handle)
+         return this.frame_painter().ShowContextMenu("z", evnt, this.GetObject().fAxis);
+
       if (!evnt) {
          d3.event.stopPropagation(); // disable main context menu
          d3.event.preventDefault();  // disable browser context menu
@@ -1335,12 +1507,18 @@
       return true;
    }
 
+   TPavePainter.prototype.IsDummyPos = function(p) {
+      if (!p) return true;
+
+      return !p.fInit && !p.fX1 && !p.fX2 && !p.fY1 && !p.fY2 && !p.fX1NDC && !p.fX2NDC && !p.fY1NDC && !p.fY2NDC;
+   }
+
    TPavePainter.prototype.UpdateObject = function(obj) {
       if (!this.MatchObjectType(obj)) return false;
 
       var pave = this.GetObject();
 
-      if (!pave.modified_NDC) {
+      if (!pave.modified_NDC && !this.IsDummyPos(obj)) {
          // if position was not modified interactively, update from source object
 
          if (this.stored && !obj.fInit && (this.stored.fX1 == obj.fX1)
@@ -1395,27 +1573,45 @@
                }
             }
             return true;
+         case 'TPaletteAxis':
+            pave.fBorderSize = 1;
+            pave.fShadowColor = 0;
+            return true;
       }
 
       return false;
    }
 
    TPavePainter.prototype.Redraw = function() {
-      // if pavetext artificially disabled, do not redraw it
+      this.DrawPave();
+   }
 
-      this.DrawPave(true);
+   TPavePainter.prototype.Cleanup = function() {
+      if (this.z_handle) {
+         this.z_handle.Cleanup();
+         delete this.z_handle;
+      }
+
+      JSROOT.TObjectPainter.prototype.Cleanup.call(this);
    }
 
    function drawPave(divid, pave, opt) {
       // one could force drawing of PaveText on specific sub-pad
+      var onpad;
+      if ((typeof opt == 'string') && (opt.indexOf("onpad:")==0)) {
+         onpad = opt.substr(6);
+         opt = "";
+      }
+
       var painter = new JSROOT.TPavePainter(pave);
-      painter.SetDivId(divid, 2, ((typeof opt == 'string') && (opt.indexOf("onpad:")==0)) ? opt.substr(6) : undefined);
+
+      painter.SetDivId(divid, 2, onpad);
 
       if ((pave.fName === "title") && (pave._typename === "TPaveText")) {
          var tpainter = painter.FindPainterFor(null, "title");
-         if (tpainter && (tpainter !== painter))
+         if (tpainter && (tpainter !== painter)) {
             tpainter.DeleteThis();
-         else if ((opt == "postitle") || (!pave.fInit && !pave.fX1 && !pave.fX2 && !pave.fY1 && !pave.fY2)) {
+         } else if ((opt == "postitle") || painter.IsDummyPos(pave)) {
             var st = JSROOT.gStyle, fp = painter.frame_painter();
             if (st && fp) {
                var midx = st.fTitleX, y2 = st.fTitleY, w = st.fTitleW, h = st.fTitleH;
@@ -1430,6 +1626,21 @@
                pave.fInit = 1;
             }
          }
+      } else if (pave._typename === "TPaletteAxis") {
+         pave.fBorderSize = 1;
+         pave.fShadowColor = 0;
+
+         // check some default values of TGaxis object, otherwise axis will not be drawn
+         if (pave.fAxis) {
+            if (!pave.fAxis.fChopt) pave.fAxis.fChopt = "+";
+            if (!pave.fAxis.fNdiv) pave.fAxis.fNdiv = 12;
+            if (!pave.fAxis.fLabelOffset) pave.fAxis.fLabelOffset = 0.005;
+         }
+
+         painter.z_handle = new JSROOT.TAxisPainter(pave.fAxis, true);
+         painter.z_handle.SetDivId(divid, -1);
+
+         painter.UseContextMenu = true;
       }
 
       switch (pave._typename) {
@@ -1448,211 +1659,15 @@
          case "TLegend":
             painter.PaveDrawFunc = painter.DrawPaveLegend;
             break;
+         case "TPaletteAxis":
+            painter.PaveDrawFunc = painter.DrawPaletteAxis;
+            break;
       }
-
-      painter.Redraw();
-
-      // drawing ready handled in special painters, if not exists - drawing is done
-      return painter.PaveDrawFunc ? painter : painter.DrawingReady();
-   }
-
-   function drawPaletteAxis(divid, palette, opt) {
-
-      // disable draw of shadow element of TPave
-      palette.fBorderSize = 1;
-      palette.fShadowColor = 0;
-
-      var painter = new JSROOT.TPavePainter(palette);
-
-      painter.SetDivId(divid);
-
-      painter.z_handle = new JSROOT.TAxisPainter(palette.fAxis, true);
-      painter.z_handle.SetDivId(divid, -1);
-
-      painter.Cleanup = function() {
-         if (this.z_handle) {
-            this.z_handle.Cleanup();
-            delete this.z_handle;
-         }
-
-         JSROOT.TObjectPainter.prototype.Cleanup.call(this);
-      }
-
-      painter.PaveDrawFunc = function(s_width, s_height, arg) {
-
-         var pthis = this,
-             palette = this.GetObject(),
-             axis = palette.fAxis,
-             can_move = (typeof arg == 'string') && (arg.indexOf('can_move')>0),
-             postpone_draw = (typeof arg == 'string') && (arg.indexOf('postpone')>0),
-             nbr1 = axis.fNdiv % 100,
-             pos_x = parseInt(this.draw_g.attr("x")), // pave position
-             pos_y = parseInt(this.draw_g.attr("y")),
-             width = this.pad_width(),
-             height = this.pad_height(),
-             axisOffset = axis.fLabelOffset * width,
-             main = this.main_painter(),
-             framep = this.frame_painter(),
-             zmin = 0, zmax = 100,
-             contour = main.fContour;
-
-         if (nbr1<=0) nbr1 = 8;
-         axis.fTickSize = 0.6 * s_width / width; // adjust axis ticks size
-
-         if (contour && framep) {
-            zmin = Math.min(contour[0], framep.zmin);
-            zmax = Math.max(contour[contour.length-1], framep.zmax);
-         } else
-         if ((main.gmaxbin!==undefined) && (main.gminbin!==undefined)) {
-            // this is case of TH2 (needs only for size adjustment)
-            zmin = main.gminbin; zmax = main.gmaxbin;
-         } else
-         if ((main.hmin!==undefined) && (main.hmax!==undefined)) {
-            // this is case of TH1
-            zmin = main.hmin; zmax = main.hmax;
-         }
-
-         var z = null, z_kind = "normal";
-
-         if (this.root_pad().fLogz) {
-            z = d3.scaleLog();
-            z_kind = "log";
-         } else {
-            z = d3.scaleLinear();
-         }
-         z.domain([zmin, zmax]).range([s_height,0]);
-
-         this.draw_g.selectAll("rect").style("fill", 'white');
-
-         if (!contour || postpone_draw)
-            // we need such rect to correctly calculate size
-            this.draw_g.append("svg:rect")
-                       .attr("x", 0)
-                       .attr("y",  0)
-                       .attr("width", s_width)
-                       .attr("height", s_height)
-                       .style("fill", 'white');
-         else
-            for (var i=0;i<contour.length-1;++i) {
-               var z0 = z(contour[i]),
-                   z1 = z(contour[i+1]),
-                   col = main.getContourColor((contour[i]+contour[i+1])/2);
-
-               var r = this.draw_g.append("svg:rect")
-                          .attr("x", 0)
-                          .attr("y",  Math.round(z1))
-                          .attr("width", s_width)
-                          .attr("height", Math.round(z0) - Math.round(z1))
-                          .style("fill", col)
-                          .style("stroke", col)
-                          .property("fill0", col)
-                          .property("fill1", d3.rgb(col).darker(0.5).toString())
-
-               if (this.IsTooltipAllowed())
-                  r.on('mouseover', function() {
-                     d3.select(this).transition().duration(100).style("fill", d3.select(this).property('fill1'));
-                  }).on('mouseout', function() {
-                     d3.select(this).transition().duration(100).style("fill", d3.select(this).property('fill0'));
-                  }).append("svg:title").text(contour[i].toFixed(2) + " - " + contour[i+1].toFixed(2));
-
-               if (JSROOT.gStyle.Zooming)
-                  r.on("dblclick", function() { pthis.frame_painter().Unzoom("z"); });
-            }
-
-
-         this.z_handle.SetAxisConfig("zaxis", z_kind, z, zmin, zmax, zmin, zmax);
-
-         this.z_handle.max_tick_size = Math.round(s_width*0.7);
-
-         this.z_handle.DrawAxis(true, this.draw_g, s_width, s_height, "translate(" + s_width + ", 0)");
-
-         if (can_move && ('getBoundingClientRect' in this.draw_g.node())) {
-            var rect = this.draw_g.node().getBoundingClientRect();
-
-            var shift = (pos_x + parseInt(rect.width)) - Math.round(0.995*width) + 3;
-
-            if (shift>0) {
-               this.draw_g.attr("x", pos_x - shift).attr("y", pos_y)
-                          .attr("transform", "translate(" + (pos_x-shift) + ", " + pos_y + ")");
-               palette.fX1NDC -= shift/width;
-               palette.fX2NDC -= shift/width;
-            }
-         }
-
-         if (!JSROOT.gStyle.Zooming) return;
-
-         var evnt = null, doing_zoom = false, sel1 = 0, sel2 = 0, zoom_rect = null;
-
-         function moveRectSel() {
-
-            if (!doing_zoom) return;
-
-            d3.event.preventDefault();
-            var m = d3.mouse(evnt);
-
-            if (m[1] < sel1) sel1 = m[1]; else sel2 = m[1];
-
-            zoom_rect.attr("y", sel1)
-                     .attr("height", Math.abs(sel2-sel1));
-         }
-
-         function endRectSel() {
-            if (!doing_zoom) return;
-
-            d3.event.preventDefault();
-            d3.select(window).on("mousemove.colzoomRect", null)
-                             .on("mouseup.colzoomRect", null);
-            zoom_rect.remove();
-            zoom_rect = null;
-            doing_zoom = false;
-
-            var zmin = Math.min(z.invert(sel1), z.invert(sel2)),
-                zmax = Math.max(z.invert(sel1), z.invert(sel2));
-
-            pthis.frame_painter().Zoom("z", zmin, zmax);
-         }
-
-         function startRectSel() {
-            // ignore when touch selection is activated
-            if (doing_zoom) return;
-            doing_zoom = true;
-
-            d3.event.preventDefault();
-
-            evnt = this;
-            var origin = d3.mouse(evnt);
-
-            sel1 = sel2 = origin[1];
-
-            zoom_rect = pthis.draw_g
-                   .append("svg:rect")
-                   .attr("class", "zoom")
-                   .attr("id", "colzoomRect")
-                   .attr("x", "0")
-                   .attr("width", s_width)
-                   .attr("y", sel1)
-                   .attr("height", 5);
-
-            d3.select(window).on("mousemove.colzoomRect", moveRectSel)
-                             .on("mouseup.colzoomRect", endRectSel, true);
-
-            d3.event.stopPropagation();
-         }
-
-         this.draw_g.select(".axis_zoom")
-                    .on("mousedown", startRectSel)
-                    .on("dblclick", function() { pthis.frame_painter().Unzoom("z"); });
-      }
-
-      painter.ShowContextMenu = function(evnt) {
-         this.frame_painter().ShowContextMenu("z", evnt, this.GetObject().fAxis);
-      }
-
-      painter.UseContextMenu = true;
 
       painter.DrawPave(opt);
 
-      return painter.DrawingReady();
+      // drawing ready handled in special painters, if not exists - drawing is done
+      return painter.PaveDrawFunc ? painter : painter.DrawingReady();
    }
 
    /** @summary Produce and draw TLegend object for the specified divid
@@ -1743,9 +1758,9 @@
 
       this.ndim = hdim || 1; // keep dimensions, used for now in GED
 
-      if (d.check("USE_PAD_STATS")) this.PadStats = true;
-      if (d.check("USE_PAD_PALETTE")) this.PadPalette = true;
-      if (d.check("USE_PAD_TITLE")) this.PadTitle = true;
+      this.PadStats = d.check("USE_PAD_STATS");
+      this.PadPalette = d.check("USE_PAD_PALETTE");
+      this.PadTitle = d.check("USE_PAD_TITLE");
 
       if (d.check('PAL', true)) this.Palette = d.partAsInt();
       if (d.check('MINIMUM:', true)) this.minimum = parseFloat(d.part); else this.minimum = histo.fMinimum;
@@ -3238,11 +3253,6 @@
          this.AddFunction(pal, true);
 
          can_move = true;
-      } else if (pal.fAxis) {
-         // check some default values of TGaxis object
-         if (!pal.fAxis.fChopt) pal.fAxis.fChopt = "+";
-         if (!pal.fAxis.fNdiv) pal.fAxis.fNdiv = 12;
-         if (!pal.fAxis.fLabelOffset) pal.fAxis.fLabelOffset = 0.005;
       }
 
       var frame_painter = this.frame_painter();
@@ -4609,15 +4619,19 @@
 
       delete this.proj_hist;
 
-      this.is_projection = (this.is_projection === kind) ? "" : kind;
+      var new_proj = (this.is_projection === kind) ? "" : kind;
+      this.is_projection = ""; // disable projection redraw until callback
       this.projection_width = width;
 
       var canp = this.canv_painter();
-      if (canp) canp.ToggleProjection(this.is_projection, this.RedrawProjection.bind(this));
+      if (canp) canp.ToggleProjection(new_proj, this.RedrawProjection.bind(this, "toggling", new_proj));
    }
 
    TH2Painter.prototype.RedrawProjection = function(ii1, ii2, jj1, jj2) {
-
+      if (ii1 === "toggling") {
+         this.is_projection = ii2;
+         ii1 = ii2 = undefined;
+      }
       if (!this.is_projection) return;
 
       if (jj2 == undefined) {
@@ -4628,7 +4642,7 @@
 
       var canp = this.canv_painter();
 
-      if (canp && (this.snapid !== undefined)) {
+      if (canp && !canp._readonly && (this.snapid !== undefined)) {
          // this is when projection should be created on the server side
          var exec = "EXECANDSEND:D" + this.is_projection + "PROJ:" + this.snapid + ":";
          if (this.is_projection == "X")
@@ -6964,7 +6978,6 @@
 
    JSROOT.Painter.drawPave = drawPave;
    JSROOT.Painter.produceLegend = produceLegend;
-   JSROOT.Painter.drawPaletteAxis = drawPaletteAxis;
    JSROOT.Painter.drawHistogram1D = drawHistogram1D;
    JSROOT.Painter.drawHistogram2D = drawHistogram2D;
    JSROOT.Painter.drawTF2 = drawTF2;

@@ -93,20 +93,22 @@
       console.warn(msg);
    }
 
-   /** @memberOf JSROOT.GEO */
+   /** @brief Returns kind of the geo node
+    *  @desc  0 - TGeoNode
+    *         1 - TEveGeoNode
+    *        -1 - unsupported
+    * @memberOf JSROOT.GEO */
    JSROOT.GEO.NodeKind = function(obj) {
-      // return kind of the geo nodes
-      // 0 - TGeoNode
-      // 1 - TEveGeoNode
-      // -1 - unsupported type
-
       if ((obj === undefined) || (obj === null) || (typeof obj !== 'object')) return -1;
-
       return ('fShape' in obj) && ('fTrans' in obj) ? 1 : 0;
    }
 
+   /** @brief Returns number of shapes
+    *  @desc Used to count total shapes number in composites
+    * @memberOf JSROOT.GEO */
    JSROOT.GEO.CountNumShapes = function(shape) {
       if (!shape) return 0;
+      // if (shape._typename=="TGeoHalfSpace") JSROOT.GEO.HalfSpace = true;
       if (shape._typename!=='TGeoCompositeShape') return 1;
       return JSROOT.GEO.CountNumShapes(shape.fNode.fLeft) + JSROOT.GEO.CountNumShapes(shape.fNode.fRight);
    }
@@ -1634,7 +1636,6 @@
 
    /** @memberOf JSROOT.GEO */
    JSROOT.GEO.createComposite = function ( shape, faces_limit ) {
-
       /*
       if ((faces_limit === -1) || (faces_limit === 0))  {
          var cnt = JSROOT.GEO.CountNumShapes(shape);
@@ -1662,7 +1663,7 @@
           matrix1 = JSROOT.GEO.createMatrix(shape.fNode.fLeftMat),
           matrix2 = JSROOT.GEO.createMatrix(shape.fNode.fRightMat);
 
-      // seems to be, IE has smaller stack for functions calls and ThreeCSG fails with large shapes
+      // seems to be, IE has smaller stack for functions calls and ThreeCSG fails with larger shapes
       if (faces_limit === 0) faces_limit = (JSROOT.browser && JSROOT.browser.isIE) ? 2000 : 4000;
                         else return_bsp = true;
 
@@ -1672,14 +1673,25 @@
       if (matrix2 && (matrix2.determinant() < -0.9))
          JSROOT.GEO.warn('Axis reflections in right composite shape - not supported');
 
-      geom1 = JSROOT.GEO.createGeometry(shape.fNode.fLeft, faces_limit);
+      if (shape.fNode.fLeft._typename == "TGeoHalfSpace") {
+         geom1 = JSROOT.GEO.createHalfSpace(shape.fNode.fLeft);
+      } else {
+         geom1 = JSROOT.GEO.createGeometry(shape.fNode.fLeft, faces_limit);
+      }
+
       if (!geom1) return null;
 
       var n1 = JSROOT.GEO.numGeometryFaces(geom1), n2 = 0;
       if (geom1._exceed_limit) n1 += faces_limit;
 
       if (n1 < faces_limit) {
-         geom2 = JSROOT.GEO.createGeometry(shape.fNode.fRight, faces_limit);
+
+         if (shape.fNode.fRight._typename == "TGeoHalfSpace") {
+            geom2 = JSROOT.GEO.createHalfSpace(shape.fNode.fRight, geom1);
+         } else {
+            geom2 = JSROOT.GEO.createGeometry(shape.fNode.fRight, faces_limit);
+         }
+
          n2 = JSROOT.GEO.numGeometryFaces(geom2);
       }
 
@@ -1755,8 +1767,7 @@
       return bsp2.toBufferGeometry();
    }
 
-   /**
-    * Creates geometry model for the provided shape
+   /** Creates geometry model for the provided shape
     * @memberOf JSROOT.GEO
     *
     * If @par limit === 0 (or undefined) returns THREE.BufferGeometry
@@ -1796,6 +1807,9 @@
                   res.scale(shape.fScale.fScale[0],shape.fScale.fScale[1],shape.fScale.fScale[2]);
                return res;
             }
+            case "TGeoHalfSpace":
+               if (limit < 0) return 1; // half space if just plane used in composite
+               // no break here - warning should appear
             default: JSROOT.GEO.warn('unsupported shape type ' + shape._typename);
          }
       } catch(e) {
@@ -1809,6 +1823,74 @@
       }
 
       return limit < 0 ? 0 : null;
+   }
+
+   /** Creates half-space geometry for given shape
+    * Just big-enough triangle to make BSP calculations
+    * @memberOf JSROOT.GEO */
+
+   JSROOT.GEO.createHalfSpace = function(shape, geom) {
+      if (!shape || !shape.fN || !shape.fP) return null;
+
+      // shape.fP = [0,0,15]; shape.fN = [0,1,1];
+
+      var vertex = new THREE.Vector3(shape.fP[0], shape.fP[1], shape.fP[2]);
+
+      var normal = new THREE.Vector3(shape.fN[0], shape.fN[1], shape.fN[2]);
+      normal.normalize();
+
+      var sz = 1e10;
+      if (geom) {
+         // using real size of other geometry, we probably improve precision
+         var box = JSROOT.GEO.geomBoundingBox(geom);
+         if (box) sz = box.getSize(new THREE.Vector3()).length() * 1000;
+      }
+
+      // console.log('normal', normal, 'vertex', vertex, 'size', sz);
+
+      var v1 = new THREE.Vector3(-sz, -sz/2, 0),
+          v2 = new THREE.Vector3(0, sz, 0),
+          v3 = new THREE.Vector3(sz, -sz/2, 0),
+          v4 = new THREE.Vector3(0, 0, -sz);
+
+      var geometry = new THREE.Geometry();
+
+      geometry.vertices.push(v1, v2, v3, v4);
+
+      geometry.faces.push( new THREE.Face3( 0, 2, 1 ) );
+      geometry.faces.push( new THREE.Face3( 0, 1, 3 ) );
+      geometry.faces.push( new THREE.Face3( 1, 2, 3 ) );
+      geometry.faces.push( new THREE.Face3( 2, 0, 3 ) );
+
+      geometry.lookAt(normal);
+      geometry.computeFaceNormals();
+
+      v1.add(vertex);
+      v2.add(vertex);
+      v3.add(vertex);
+      v4.add(vertex);
+
+      /*
+      // it suppose to be top corner of tetrahedron
+      var v0 = vertex.clone().addScaledVector(normal, sz);
+
+      // plane to verify our calculations
+      var plane = new THREE.Plane(normal);
+
+      // translate all vertices and plane
+      plane.translate(vertex);
+
+      console.log('Distance plane to fP', plane.distanceToPoint(vertex), "expect 0");
+      console.log('Distance plane to v0', plane.distanceToPoint(v0), "expect", sz);
+      console.log('Distance plane to v1', plane.distanceToPoint(v1), "expect 0");
+      console.log('Distance plane to v2', plane.distanceToPoint(v2), "expect 0");
+      console.log('Distance plane to v3', plane.distanceToPoint(v3), "expect 0");
+      console.log('Distance plane to v4', plane.distanceToPoint(v4), "expect", sz);
+      console.log('Distoance v0 to v4', v0.distanceTo(v4), "expect 0");
+      */
+
+      // return null;
+      return geometry;
    }
 
    /** Provides info about geo object, used for tooltip info */
@@ -1989,7 +2071,9 @@
       return false;
    }
 
-   /** @memberOf JSROOT.GEO */
+   /** Returns number of faces for provided geometry
+    * @param geom  - can be THREE.Geometry, THREE.BufferGeometry, ThreeBSP.Geometry or interim array of polygons
+    * @memberOf JSROOT.GEO */
    JSROOT.GEO.numGeometryFaces = function(geom) {
       if (!geom) return 0;
 
@@ -2002,12 +2086,15 @@
       }
 
       // special array of polygons
-      if (geom && geom.polygons) return geom.polygons.length;
+      if (geom.polygons)
+         return geom.polygons.length;
 
       return geom.faces.length;
    }
 
-   /** @memberOf JSROOT.GEO */
+   /** Returns number of faces for provided geometry
+    * @param geom  - can be THREE.Geometry, THREE.BufferGeometry, ThreeBSP.Geometry or interim array of polygons
+    * @memberOf JSROOT.GEO */
    JSROOT.GEO.numGeometryVertices = function(geom) {
       if (!geom) return 0;
 
@@ -2019,9 +2106,37 @@
          return attr ? attr.count : 0;
       }
 
-      if (geom && geom.polygons) return geom.polygons.length * 4;
+      if (geom.polygons)
+         return geom.polygons.length * 4;
 
       return geom.vertices.length;
+   }
+
+   /** Returns bounding box
+    * @memberOf JSROOT.GEO */
+   JSROOT.GEO.geomBoundingBox = function(geom) {
+      if (!geom) return null;
+
+      var polygons = null;
+
+      if (geom instanceof ThreeBSP.Geometry)
+         polygons = geom.tree.collectPolygons([]);
+      else if (geom.polygons)
+         polygons = geom.polygons;
+
+      if (polygons!==null) {
+         var box = new THREE.Box3();
+         for (var n=0;n<polygons.length;++n) {
+            var polygon = polygons[n], nvert = polygon.vertices.length;
+            for (var k=0;k<nvert;++k)
+               box.expandByPoint(polygon.vertices[k]);
+         }
+         return box;
+      }
+
+      if (!geom.boundingBox) geom.computeBoundingBox();
+
+      return geom.boundingBox.clone();
    }
 
    /** Compares two stacks. Returns length where stacks are the same
@@ -2551,15 +2666,16 @@
 
       if (visible) {
          var _opacity = 1.0;
-         if ((volume.fFillColor > 1) && (volume.fLineColor == 1))
+         if (entry.custom_color)
+            prop.fillcolor = entry.custom_color;
+         else if ((volume.fFillColor > 1) && (volume.fLineColor == 1))
             prop.fillcolor = JSROOT.Painter.root_colors[volume.fFillColor];
-         else
-         if (volume.fLineColor >= 0)
+         else if (volume.fLineColor >= 0)
             prop.fillcolor = JSROOT.Painter.root_colors[volume.fLineColor];
 
          if (volume.fMedium && volume.fMedium.fMaterial) {
-            var fillstyle = volume.fMedium.fMaterial.fFillStyle;
-            var transparency = (fillstyle < 3000 || fillstyle > 3100) ? 0 : fillstyle - 3000;
+            var fillstyle = volume.fMedium.fMaterial.fFillStyle,
+                transparency = (fillstyle < 3000 || fillstyle > 3100) ? 0 : fillstyle - 3000;
             if (transparency > 0)
                _opacity = (100.0 - transparency) / 100.0;
             if (prop.fillcolor === undefined)
@@ -2766,11 +2882,10 @@
       arg.func = function(node) {
          if (node.sortid < sortidcut) {
             this.items.push(this.CopyStack());
-         } else
-         if ((camVol >= 0) && (node.vol > camVol))
-            if (this.frustum.CheckShape(this.getmatrix(), node)) {
+         } else if ((camVol >= 0) && (node.vol > camVol)) {
+            if (this.frustum.CheckShape(this.getmatrix(), node))
                this.items.push(this.CopyStack(camFact));
-            }
+         }
          return true;
       }
 

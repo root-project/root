@@ -1832,16 +1832,23 @@
 
       delete this.proj_hist;
 
-      this.is_projection = (this.is_projection === kind) ? "" : kind;
+      var new_proj = (this.is_projection === kind) ? "" : kind;
+      this.is_projection = ""; // disable projection redraw until callback
       this.projection_width = width;
 
       var canp = this.canv_painter();
-      if (canp) canp.ToggleProjection(this.is_projection, this.RedrawProjection.bind(this));
+      if (canp) canp.ToggleProjection(this.is_projection, this.RedrawProjection.bind(this, "toggling", new_proj));
    }
 
    TH2Painter.prototype.RedrawProjection = function(ii1, ii2, jj1, jj2) {
       // do nothing for the moment
 
+      if (ii1 === "toggling") {
+         this.is_projection = ii2;
+         ii1 = ii2 = undefined;
+      }
+
+      if (!this.is_projection) return;
    }
 
    TH2Painter.prototype.ExecuteMenuCommand = function(method, args) {

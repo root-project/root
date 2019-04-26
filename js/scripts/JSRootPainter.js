@@ -1903,7 +1903,7 @@
 
       var prefix = this.ackn + ":" + this.cansend + ":" + chid + ":";
       this.ackn = 0;
-      this.cansend--; // decrease number of allowed sebd packets
+      this.cansend--; // decrease number of allowed send packets
 
       this._websocket.send(prefix + msg);
       if (this.kind === "websocket") {
@@ -3370,7 +3370,7 @@
          delete this._selected_main;
       }
 
-      if (!is_main) is_main = 0;
+      if (!is_main || isNaN(is_main)) is_main = 0;
 
       // check if element really exists
       if ((is_main >= 0) && this.select_main(true).empty()) {
@@ -3415,7 +3415,7 @@
 
       var pp = svg_p.property('pad_painter');
       if (pp && (pp !== this))
-          pp.painters.push(this);
+         pp.painters.push(this);
 
       if (((is_main === 1) || (is_main === 4) || (is_main === 5)) && !svg_p.property('mainpainter'))
          // when this is first main painter in the pad
@@ -3930,42 +3930,51 @@
 
       var canvp = this.canv_painter();
 
-      if (!this.snapid || !canvp || !canvp._websocket || canvp._getmenu_callback)
+      if (!this.snapid || !canvp || canvp._readonly || !canvp._websocket || canvp._getmenu_callback)
          return JSROOT.CallBack(call_back);
 
       function DoExecMenu(arg) {
          var execp = this.exec_painter || this,
-             canvp = execp.canv_painter(),
+             cp = execp.canv_painter(),
              item = execp.args_menu_items[parseInt(arg)];
 
          if (!item || !item.fName) return;
 
-         if (typeof canvp.executeObjectMethod == 'function')
-            if (canvp.executeObjectMethod(execp, item, execp.args_menu_id)) return;
+         // this is special entry, produced by TWebMenuItem, which recognizes editor entries itself
+         if (item.fExec == "Show:Editor") {
+            if (cp && (typeof cp.ActivateGed == 'function'))
+               cp.ActivateGed(execp);
+            return;
+         }
+
+         if (cp && (typeof cp.executeObjectMethod == 'function'))
+            if (cp.executeObjectMethod(execp, item, execp.args_menu_id)) return;
 
          if (execp.ExecuteMenuCommand(item)) return;
 
-         if (canvp._websocket && execp.args_menu_id) {
+         if (cp._websocket && execp.args_menu_id && !cp._readonly) {
             console.log('execute method ' + item.fExec + ' for object ' + execp.args_menu_id);
-            canvp.SendWebsocket('OBJEXEC:' + execp.args_menu_id + ":" + item.fExec);
+            cp.SendWebsocket('OBJEXEC:' + execp.args_menu_id + ":" + item.fExec);
          }
       }
 
-      function DoFillMenu(_menu, _reqid, _call_back, items, replyid) {
+      function DoFillMenu(_menu, _reqid, _call_back, reply) {
 
          // avoid multiple call of the callback after timeout
          if (!canvp._getmenu_callback) return;
          delete canvp._getmenu_callback;
 
-         if (_reqid !== replyid)
-            console.error('missmatch between request ' + _reqid + ' and reply ' + replyid + ' identifiers');
+         if (reply && (_reqid !== reply.fId))
+            console.error('missmatch between request ' + _reqid + ' and reply ' + reply.fId + ' identifiers');
+
+         var items = reply ? reply.fItems : null;
 
          if (items && items.length) {
             _menu.add("separator");
             _menu.add("sub:Online");
 
             this.args_menu_items = items;
-            this.args_menu_id = replyid;
+            this.args_menu_id = reply.fId;
 
             var lastclname;
 
@@ -5934,9 +5943,10 @@
    JSROOT.addDrawFunc({ name: "RooPlot", icon: "img_canvas", prereq: "more2d", func: "JSROOT.Painter.drawRooPlot" });
    JSROOT.addDrawFunc({ name: "TMultiGraph", icon: "img_mgraph", prereq: "more2d", func: "JSROOT.Painter.drawMultiGraph", expand_item: "fGraphs" });
    JSROOT.addDrawFunc({ name: "TStreamerInfoList", icon: 'img_question', prereq: "hierarchy",  func: "JSROOT.Painter.drawStreamerInfo" });
-   JSROOT.addDrawFunc({ name: "TPaletteAxis", icon: "img_colz", prereq: "v6;hist", func: "JSROOT.Painter.drawPaletteAxis" });
+   JSROOT.addDrawFunc({ name: "TPaletteAxis", icon: "img_colz", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
    JSROOT.addDrawFunc({ name: "TWebPainting", icon: "img_graph", prereq: "more2d", func: "JSROOT.Painter.drawWebPainting" });
-   JSROOT.addDrawFunc({ name: "TPadWebSnapshot", icon: "img_canvas", prereq: "v6", func: "JSROOT.Painter.drawPadSnapshot" });
+   JSROOT.addDrawFunc({ name: "TCanvasWebSnapshot", icon: "img_canvas", prereq: "v6", func: "JSROOT.Painter.drawPadSnapshot" });
+   JSROOT.addDrawFunc({ name: "TPadWebSnapshot", sameas: "TCanvasWebSnapshot" });
    JSROOT.addDrawFunc({ name: "kind:Text", icon: "img_text", func: JSROOT.Painter.drawRawText });
    JSROOT.addDrawFunc({ name: "TObjString", icon: "img_text", func: JSROOT.Painter.drawRawText });
    JSROOT.addDrawFunc({ name: "TF1", icon: "img_tf1", prereq: "math;more2d", func: "JSROOT.Painter.drawFunction" });
@@ -5962,11 +5972,12 @@
    JSROOT.addDrawFunc({ name: "TPolyMarker", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawPolyMarker", direct: true });
    JSROOT.addDrawFunc({ name: "TASImage", icon: 'img_mgraph', prereq: "more2d", func: "JSROOT.Painter.drawASImage" });
    JSROOT.addDrawFunc({ name: "TJSImage", icon: 'img_mgraph', prereq: "more2d", func: "JSROOT.Painter.drawJSImage", opt: ";scale;center" });
-   JSROOT.addDrawFunc({ name: "TGeoVolume", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt:";more;all;count;projx;projz;dflt", ctrl: "dflt" });
-   JSROOT.addDrawFunc({ name: "TEveGeoShapeExtract", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt: ";more;all;count;projx;projz;dflt", ctrl: "dflt"  });
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::TEveGeoShapeExtract", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt: ";more;all;count;projx;projz;dflt", ctrl: "dflt"  });
-   JSROOT.addDrawFunc({ name: "TGeoManager", icon: 'img_histo3d', prereq: "geom", expand: "JSROOT.GEO.expandObject", func: "JSROOT.Painter.drawGeoObject", opt: ";more;all;count;projx;projz;dflt", dflt: "expand", ctrl: "dflt" });
-   JSROOT.addDrawFunc({ name: /^TGeo/, icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", opt: ";more;all;axis;compa;count;projx;projz;dflt", ctrl: "dflt" });
+   JSROOT.addDrawFunc({ name: "TGeoVolume", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt:";more;all;count;projx;projz;wire;dflt", ctrl: "dflt" });
+   JSROOT.addDrawFunc({ name: "TEveGeoShapeExtract", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt: ";more;all;count;projx;projz;wire;dflt", ctrl: "dflt"  });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::TEveGeoShapeExtract", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt: ";more;all;count;projx;projz;wire;dflt", ctrl: "dflt" });
+   JSROOT.addDrawFunc({ name: "TGeoOverlap", icon: 'img_histo3d', prereq: "geom", expand: "JSROOT.GEO.expandObject", func: "JSROOT.Painter.drawGeoObject", opt: ";more;all;count;projx;projz;wire;dflt", dflt: "dflt", ctrl: "expand" });
+   JSROOT.addDrawFunc({ name: "TGeoManager", icon: 'img_histo3d', prereq: "geom", expand: "JSROOT.GEO.expandObject", func: "JSROOT.Painter.drawGeoObject", opt: ";more;all;count;projx;projz;wire;dflt", dflt: "expand", ctrl: "dflt" });
+   JSROOT.addDrawFunc({ name: /^TGeo/, icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", opt: ";more;all;axis;compa;count;projx;projz;wire;dflt", ctrl: "dflt" });
    // these are not draw functions, but provide extra info about correspondent classes
    JSROOT.addDrawFunc({ name: "kind:Command", icon: "img_execute", execute: true });
    JSROOT.addDrawFunc({ name: "TFolder", icon: "img_folder", icon2: "img_folderopen", noinspect: true, prereq: "hierarchy", expand: "JSROOT.Painter.FolderHierarchy" });
