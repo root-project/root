@@ -7,6 +7,13 @@ from libROOTPython import gROOT
 from ._application import PyROOTApplication
 
 
+class PyROOTConfiguration(object):
+    """Class for configuring PyROOT"""
+
+    def __init__(self):
+        self.IgnoreCommandLineOptions = False
+
+
 class ROOTFacade(types.ModuleType):
     """Facade class for ROOT module"""
 
@@ -27,15 +34,19 @@ class ROOTFacade(types.ModuleType):
         for name in cppyy_exports:
             setattr(self, name, getattr(cppyy_backend, name))
 
+        # Initialize configuration
+        self.PyConfig = PyROOTConfiguration()
+
         # Redirect lookups to temporary helper methods
         # This lets the user do some actions before all the machinery is in place:
         # - Set batch mode in gROOT
+        # - Set options in PyConfig
         self.__class__.__getattr__ = self._getattr
         self.__class__.__setattr__ = self._setattr
 
     def _finalSetup(self):
         # Setup interactive usage from Python
-        self.__dict__['app'] = PyROOTApplication()
+        self.__dict__['app'] = PyROOTApplication(self.PyConfig)
         if not self.gROOT.IsBatch():
             self.app.init_graphics()
 
