@@ -309,7 +309,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          TObject *fobj = nullptr;
          TPaveStats *stats = nullptr;
          TObject *palette = nullptr;
-         TString hopt = iter.GetOption();
 
          while ((fobj = fiter()) != nullptr) {
            if (fobj->InheritsFrom(TPaveStats::Class()))
@@ -346,9 +345,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
              hist->GetListOfFunctions()->Add(stats);
          }
 
-         if (title && first_obj) hopt.Append(";;use_pad_title");
-
-         if (stats) hopt.Append(";;use_pad_stats");
+         TString hopt = iter.GetOption();
 
          if (!palette && CanCreateObject("TPaletteAxis") && (hist->GetDimension() > 1) &&
              (hopt.Index("colz", 0, TString::kIgnoreCase) != kNPOS)) {
@@ -359,6 +356,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
                hist->GetListOfFunctions()->AddFirst(palette);
          }
 
+         if (title && first_obj) hopt.Append(";;use_pad_title");
+         if (stats) hopt.Append(";;use_pad_stats");
          if (palette) hopt.Append(";;use_pad_palette");
 
          paddata.NewPrimitive(obj, hopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
@@ -374,14 +373,26 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          TGraph *gr = (TGraph *)obj;
 
+         TIter fiter(gr->GetListOfFunctions());
+         TObject *fobj = nullptr;
+         TPaveStats *stats = nullptr;
+
+         while ((fobj = fiter()) != nullptr) {
+           if (fobj->InheritsFrom(TPaveStats::Class()))
+               stats = dynamic_cast<TPaveStats *> (fobj);
+         }
+
          // ensure histogram exists on server to draw it properly on clients side
          if (!IsReadOnly() && first_obj)
             gr->GetHistogram();
 
-         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+         TString gropt = iter.GetOption();
+         if (title && first_obj) gropt.Append(";;use_pad_title");
+         if (stats) gropt.Append(";;use_pad_stats");
 
-         TIter fiter(gr->GetListOfFunctions());
-         TObject *fobj = nullptr;
+         paddata.NewPrimitive(obj, gropt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
+
+         fiter.Reset();
          while ((fobj = fiter()) != nullptr)
             CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
 
@@ -399,7 +410,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
    bool provide_colors = GetPaletteDelivery() > 0;
    if (GetPaletteDelivery() == 1)
-      provide_colors = !!resfunc && (version<=0);
+      provide_colors = !!resfunc && (version <= 0);
    else if (GetPaletteDelivery() == 2)
       provide_colors = !!resfunc;
 
@@ -483,6 +494,7 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
       std::string buf;
 
       if ((conn.fSendVersion < fCanvVersion) && (conn.fSendVersion == conn.fDrawVersion)) {
+
          buf = "SNAP6:";
 
          TCanvasWebSnapshot holder(IsReadOnly(), fCanvVersion);
@@ -494,8 +506,10 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
          conn.fSendVersion = fCanvVersion;
 
       } else if (!conn.fSend.empty()) {
+
          std::swap(buf, conn.fSend.front());
          conn.fSend.pop();
+
       }
 
       if (!buf.empty())
