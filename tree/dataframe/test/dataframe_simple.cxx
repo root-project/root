@@ -1040,6 +1040,24 @@ TEST_P(RDFSimpleTests, Stats)
    EXPECT_EQ(0, ret);
 }
 
+// ROOT-10092
+TEST(RDFSimpleTests, ScalarValuesCollectionWeights)
+{
+   ROOT::RDataFrame r(1);
+   auto h = r.Define("x", [](){return 10;})
+             .Define("y", [](){return ROOT::RVec<int>{1,2,3}; })
+             .Histo1D<int, ROOT::RVec<int>>("x","y");
+   
+   // Check that the exception is thrown
+   auto ret = 1;
+   try {
+      *h;
+   } catch (const std::runtime_error &) {
+      ret = 0;
+   }
+   EXPECT_EQ(0, ret);
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
