@@ -1564,7 +1564,10 @@ public:
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
-   /// auto stats = myDf.Stats("values");
+   /// // Deduce column type (this invocation needs jitting internally)
+   /// auto stats0 = myDf.Stats("values");
+   /// // Explicit column type
+   /// auto stats1 = myDf.Stats<float>("values");
    /// ~~~
    ///
    template<typename V = RDFDetail::RInferredType>
@@ -1594,7 +1597,10 @@ public:
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
-   /// auto stats = myDf.Stats("values", "weights");
+   /// // Deduce column types (this invocation needs jitting internally)
+   /// auto stats0 = myDf.Stats("values", "weights");
+   /// // Explicit column types
+   /// auto stats1 = myDf.Stats<int, float>("values", "weights");
    /// ~~~
    ///
    template<typename V = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
