@@ -14,4 +14,5 @@ if(ROOT_roofit_FOUND)
                     MACROARG "true, \"./ASCII-in-out_result.txt\""
                     POSTCMD diff ${CMAKE_CURRENT_SOURCE_DIR}/ASCII-in-out_data.txt ./ASCII-in-out_result.txt)
 
+  add_subdirectory(vectorisedPDFs) 
 endif()
