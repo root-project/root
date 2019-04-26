@@ -53,6 +53,7 @@ if(DEFINED ROOT_SOURCE_DIR)
   set(ROOT_rootcling_CMD rootcling)
 else()# testing using an installation
   find_package(ROOT REQUIRED COMPONENTS RIO Net Hist Gpad Tree Rint Matrix MathCore)
+  include(${ROOT_USE_FILE})
   # Recover LZ4 version used in ROOT
   exec_program(root-config ARGS "--config" OUTPUT_VARIABLE ROOT_CONFIG_VARIABLES RETURN_VALUE RETVAR)
   separate_arguments(ROOT_CONFIG_VARIABLES)
