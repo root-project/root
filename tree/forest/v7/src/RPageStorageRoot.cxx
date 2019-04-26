@@ -19,6 +19,7 @@
 #include <ROOT/RPageStorageRoot.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPagePool.hxx>
+#include <ROOT/TLogger.hxx>
 
 #include <TKey.h>
 
@@ -41,6 +42,8 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forest
    , fForestName(forestName)
    , fDirectory(nullptr)
 {
+   R__WARNING_HERE("Forest") << "The RForest file format will change. " <<
+      "Do not store real data with this version of RForest!";
    TFile *file = TFile::Open(path.to_string().c_str(), "UPDATE");
    file->SetCompressionSettings(0);
    fSettings.fFile = file;
