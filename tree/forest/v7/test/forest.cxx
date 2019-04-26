@@ -24,17 +24,38 @@ using RPageSinkRoot = ROOT::Experimental::Detail::RPageSinkRoot;
 using RPageSourceRoot = ROOT::Experimental::Detail::RPageSourceRoot;
 using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
 
+namespace {
+
+/**
+ * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object
+ * goes out of scope.
+ */
+class FileRaii {
+private:
+   std::string fPath;
+public:
+   FileRaii(const std::string &path) : fPath(path)
+   {
+   }
+   FileRaii(const FileRaii&) = delete;
+   FileRaii& operator=(const FileRaii&) = delete;
+   ~FileRaii() {
+      std::remove(fPath.c_str());
+   }
+};
+
+} // anonymous namespace
+
+
 TEST(RForest, Basics)
 {
    auto model = RForestModel::Create();
    auto fieldPt = model->MakeField<float>("pt");
-
-   //RInputTree tree(model, std::make_unique<RPageSource>("T"));
-   //RInputTree tree2(std::make_unique<RPageSource>("T"));
 }
 
 TEST(RForest, ReconstructModel)
 {
+   FileRaii fileGuard("test.root");
    auto model = RForestModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
    auto fieldNnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
@@ -59,6 +80,7 @@ TEST(RForest, ReconstructModel)
 TEST(RForest, StorageRoot)
 {
    TFile *file = TFile::Open("test.root", "RECREATE");
+   FileRaii fileGuard("test.root");
    RPageSinkRoot::RSettings settingsWrite;
    settingsWrite.fFile = file;
    RPageSinkRoot sinkRoot("myTree", settingsWrite);
@@ -87,6 +109,8 @@ TEST(RForest, StorageRoot)
 
 TEST(RForest, WriteRead)
 {
+   FileRaii fileGuard("test.root");
+
    auto modelWrite = RForestModel::Create();
    auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
    auto wrEnergy = modelWrite->MakeField<float>("energy", 7.0);
@@ -142,6 +166,8 @@ TEST(RForest, WriteRead)
 
 TEST(RForest, Clusters)
 {
+   FileRaii fileGuard("test.root");
+
    auto modelWrite = RForestModel::Create();
    auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
    auto wrTag = modelWrite->MakeField<std::string>("tag", "xyz");
@@ -202,6 +228,8 @@ TEST(RForest, Clusters)
 
 TEST(RForest, View)
 {
+   FileRaii fileGuard("test.root");
+
    auto model = RForestModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
    auto fieldTag = model->MakeField<std::string>("tag", "xyz");
@@ -249,6 +277,8 @@ TEST(RForest, Capture) {
 
 TEST(RForest, Composable)
 {
+   FileRaii fileGuard("test.root");
+
    auto eventModel = RForestModel::Create();
    auto fldPt = eventModel->MakeField<float>("pt", 0.0);
 
@@ -332,12 +362,15 @@ TEST(RForest, TClass) {
    auto model = RForestModel::Create();
    auto ptrKlass = model->MakeField<ROOT::Experimental::RForestTest>("klass");
 
+   FileRaii fileGuard("test.root");
    ROutputForest forest(std::move(model), std::make_unique<RPageSinkRoot>("f", "test.root"));
 }
 
 
 TEST(RForest, RealWorld1)
 {
+   FileRaii fileGuard("test.root");
+
    // See https://github.com/olifre/root-io-bench/blob/master/benchmark.cpp
    auto modelWrite = RForestModel::Create();
    auto& wrEvent   = *modelWrite->MakeField<std::uint32_t>("event");
@@ -396,6 +429,8 @@ TEST(RForest, RealWorld1)
 
 TEST(RForest, RDF)
 {
+   FileRaii fileGuard("test.root");
+
    auto modelWrite = RForestModel::Create();
    auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
    auto wrEnergy = modelWrite->MakeField<float>("energy", 7.0);

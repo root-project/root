@@ -41,7 +41,7 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forest
    , fForestName(forestName)
    , fDirectory(nullptr)
 {
-   TFile *file = TFile::Open(path.to_string().c_str(), "RECREATE");
+   TFile *file = TFile::Open(path.to_string().c_str(), "UPDATE");
    file->SetCompressionSettings(0);
    fSettings.fFile = file;
    fSettings.fTakeOwnership = true;
