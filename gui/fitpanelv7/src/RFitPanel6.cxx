@@ -208,17 +208,6 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
        model.fMethodMin = model.fMethodMinAll[model.fLibrary];
        model.fTypeXY = model.fTypeXYAll[model.fTypeId];
 
-       //Contour ComboBoxes
-       model.fContourPar1.push_back(ROOT::Experimental::RComboBoxItem("1","Coeff0"));
-       model.fContourPar1.push_back(ROOT::Experimental::RComboBoxItem("2","Coeff1"));
-       model.fContourPar1.push_back(ROOT::Experimental::RComboBoxItem("3","Coeff3"));
-       model.fContourPar1Id = "1";
-
-       model.fContourPar2.push_back(ROOT::Experimental::RComboBoxItem("1","Coeff0"));
-       model.fContourPar2.push_back(ROOT::Experimental::RComboBoxItem("2","Coeff1"));
-       model.fContourPar2.push_back(ROOT::Experimental::RComboBoxItem("3","Coeff3"));
-       model.fContourPar2Id = "2";
-
        //Scan ComboBox
        model.fScanPar.push_back(ROOT::Experimental::RComboBoxItem("1","Coeff0"));
        model.fScanPar.push_back(ROOT::Experimental::RComboBoxItem("2","Coeff1"));
@@ -301,7 +290,7 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
    if (arg.find("GETPARS:") == 0) {
 
       RFitFunc info;
-
+      ROOT::Experimental::RFitPanelModel6 model;
 
       info.name = arg.substr(8);
       TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info.name.c_str()));
@@ -310,6 +299,8 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 
       if (func) {
          for (int n = 0; n < func->GetNpar(); ++n) {
+          model.fContourPar1.emplace_back("0", Form("%s", func->GetParName(n)));
+          model.fContourPar1Id = "0";
             info.pars.emplace_back(n, func->GetParName(n));
             auto &par = info.pars.back();
 
@@ -347,6 +338,36 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
           }
       }
    }
+
+
+   if (arg.find("ADVANCED:") == 0) {
+
+    RFitFunc info;
+    ROOT::Experimental::RFitPanelModel6 modelAdv;
+
+    info.name = arg.substr(9);
+    TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info.name.c_str()));
+
+    //printf("Found func1 %s %p\n", info.name.c_str(), func);
+
+    if (func) {
+     for (int n = 0; n < func->GetNpar(); ++n) {
+      modelAdv.fContourPar1.emplace_back("0", Form("%s", func->GetParName(n)));
+      modelAdv.fContourPar1Id = "0";
+      modelAdv.fContourPar2.emplace_back("0", Form("%s", func->GetParName(n)));
+      modelAdv.fContourPar2Id = "0";
+      modelAdv.fScanPar.emplace_back("0", Form("%s", func->GetParName(n)));
+      modelAdv.fScanParId = "0";
+        
+     }
+    } else {
+     info.name = "<not exists>";
+    }
+    TString jsonModel = TBufferJSON::ToJSON(&modelAdv);
+
+    fWindow->Send(fConnId, std::string("ADVANCED:") + jsonModel.Data());
+    return;
+  }
 }
 
 // void ROOT::Math::MinimizerOptions::SetMinimizerAlgorithm (const char *    type) {
@@ -382,14 +403,10 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
         printf("Min Tab: %s\n", obj->fMinLibrary.c_str());
         minOption.SetMinimizerAlgorithm(obj->fMinLibrary.c_str());
       }
-      // else {
-      //   // minOption.DefaultMinimizerType("Minuit");
-      //   // minOption.DefaultMinimizerAlgo("MIGRAD");
-      // }
 
       if(!obj->fErrorDef == 0) {
         minOption.SetErrorDef(obj->fErrorDef);
-        printf("Error Def %d\n", obj->fErrorDef);
+        //printf("Error Def %d\n", obj->fErrorDef);
       }
       else {
         minOption.SetErrorDef(1.00);
@@ -397,7 +414,7 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
 
       if(!obj->fMaxTol == 0) {
         minOption.SetTolerance(obj->fMaxTol);
-        printf("Tolerance %d\n", obj->fMaxTol );
+        //printf("Tolerance %d\n", obj->fMaxTol );
       }
       else {
         minOption.SetTolerance(0.01);
@@ -405,7 +422,7 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
 
       if(!obj->fMaxInter == 0) {
         minOption.SetMaxIterations(obj->fMaxInter);
-        printf("Max Inte %d\n", obj->fMaxInter );
+        //printf("Max Inte %d\n", obj->fMaxInter );
       }
       else {
         minOption.SetMaxIterations(0);
