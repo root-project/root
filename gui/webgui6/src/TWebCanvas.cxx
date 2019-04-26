@@ -643,26 +643,19 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    }
 
    // try to identify connection for given WS request
-   WebConn *conn(nullptr);
-   bool is_first = true;
-   auto iter = fWebConn.begin();
-   while (iter != fWebConn.end()) {
-      if (iter->fConnId == connid) {
-         conn = &(*iter);
-         break;
-      }
-      ++iter;
-      is_first = false;
+   unsigned indx = 0;
+   for (auto &c : fWebConn) {
+      if (c.fConnId == connid) break;
+      indx++;
    }
-
-   if (!conn)
+   if (indx >= fWebConn.size())
       return kTRUE;
 
    const char *cdata = arg.c_str();
 
    if (arg == "CONN_CLOSED") {
 
-      fWebConn.erase(iter);
+      fWebConn.erase(fWebConn.begin() + indx);
 
    } else if (arg == "KEEPALIVE") {
       // do nothing
@@ -676,24 +669,26 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       // this is reply on drawing of ROOT6 snapshot
       // it confirms when drawing of specific canvas version is completed
+
       cdata += 7;
 
       const char *separ = strchr(cdata, ':');
       if (!separ) {
-         conn->fDrawVersion = std::stoll(cdata);
+         fWebConn[indx].fDrawVersion = std::stoll(cdata);
       } else {
-         conn->fDrawVersion = std::stoll(std::string(cdata, separ - cdata));
-         if (is_first && !IsReadOnly())
-            DecodePadOptions(separ+1); // only first connection can set ranges
+         fWebConn[indx].fDrawVersion = std::stoll(std::string(cdata, separ - cdata));
+         if ((indx == 0) && !IsReadOnly())
+            DecodePadOptions(separ+1);
       }
 
    } else if (arg == "RELOAD") {
 
-      conn->fSendVersion = conn->fDrawVersion = 0;
+      // trigger reload of canvas data
+      fWebConn[indx].fSendVersion = fWebConn[indx].fDrawVersion = 0;
 
    } else if (arg.compare(0, 5, "SAVE:") == 0) {
-      // save image produced by the client side - like png or svg
 
+      // save image produced by the client side - like png or svg
       const char *img = cdata + 5;
 
       const char *separ = strchr(img, ':');
@@ -717,16 +712,17 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
    } else if (arg.compare(0, 8, "PRODUCE:") == 0) {
 
+      // create ROOT, PDF, ... files using native ROOT functionality
       Canvas()->Print(arg.c_str() + 8);
 
    } else if (arg.compare(0, 9, "OPTIONS6:") == 0) {
 
-      if (is_first && !IsReadOnly()) // only first connection can set ranges
+      if ((indx == 0) && !IsReadOnly())
          DecodePadOptions(arg.substr(9));
 
    } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
 
-      if (is_first) { // only first connection can set ranges
+      if (indx == 0) {
          AssignStatusBits(std::stoul(arg.substr(11)));
          if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
       }
@@ -735,7 +731,6 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       // unknown message, probably should be processed by other implementation
       return kFALSE;
-      //Error("ProcessData", "GET unknown request %d %30s", (int)arg.length(), cdata);
    }
 
    return kTRUE;
