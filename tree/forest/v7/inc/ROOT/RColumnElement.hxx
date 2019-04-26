@@ -152,6 +152,24 @@ public:
 };
 
 template <>
+class ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental::EColumnType::kInt64>
+   : public ROOT::Experimental::Detail::RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = true;
+   static constexpr size_t kSize = sizeof(std::int64_t);
+   explicit RColumnElement(std::int64_t* value) : RColumnElementBase(value, kSize, kIsMappable) {}
+};
+
+template <>
+class ROOT::Experimental::Detail::RColumnElement<std::uint64_t, ROOT::Experimental::EColumnType::kInt64>
+   : public ROOT::Experimental::Detail::RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = true;
+   static constexpr size_t kSize = sizeof(std::uint64_t);
+   explicit RColumnElement(std::uint64_t* value) : RColumnElementBase(value, kSize, kIsMappable) {}
+};
+
+template <>
 class ROOT::Experimental::Detail::RColumnElement<
    ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex>
    : public ROOT::Experimental::Detail::RColumnElementBase {
