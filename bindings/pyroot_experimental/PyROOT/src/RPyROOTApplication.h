@@ -30,14 +30,14 @@ namespace PyROOT {
 
 class RPyROOTApplication : public TApplication {
 public:
-   static PyObject *InitApplication();
+   static PyObject *InitApplication(PyObject *self, PyObject *args);
    static PyObject *InstallGUIEventInputHook();
 
    RPyROOTApplication(const char *acn, int *argc, char **argv);
    virtual ~RPyROOTApplication() {}
 
 private:
-   static bool CreateApplication();
+   static bool CreateApplication(int ignoreCmdLineOpts);
    static void InitROOTGlobals();
    static void InitROOTMessageCallback();
 };
