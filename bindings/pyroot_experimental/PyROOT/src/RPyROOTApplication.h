@@ -24,14 +24,14 @@ namespace PyROOT {
 
  The RPyROOTApplication sets up the nuts and bolts for interactive ROOT use
  from Python, closely following TRint. Note that not everything is done here,
- some bits (such as e.g. the use of exception hook for shell escapes) are more
- easily done in Python.
+ some bits are more easily done in Python and can be found in _application.py.
 */
 // clang-format on
 
 class RPyROOTApplication : public TApplication {
 public:
    static PyObject *InitApplication();
+   static PyObject *InstallGUIEventInputHook();
 
    RPyROOTApplication(const char *acn, int *argc, char **argv);
    virtual ~RPyROOTApplication() {}
