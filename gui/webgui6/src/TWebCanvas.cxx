@@ -562,9 +562,12 @@ void TWebCanvas::Show()
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Function used to send command to browser to toggle menu, toolbar, editors, ...
 
-void TWebCanvas::ShowCmd(const char *arg, Bool_t show)
+void TWebCanvas::ShowCmd(const std::string &arg, Bool_t show)
 {
-   if (AddToSendQueue(0, Form("SHOW:%s:%d", arg, show ? 1 : 0)))
+   std::string cmd = "SHOW:";
+   cmd.append(arg);
+   cmd.append(show ? ":1" : ":0");
+   if (AddToSendQueue(0, cmd))
       CheckDataToSend();
 }
 
@@ -677,12 +680,11 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       const char *separ = strchr(cdata, ':');
       if (!separ) {
-         conn->fDrawVersion = TString(cdata).Atoll();
+         conn->fDrawVersion = std::stoll(cdata);
       } else {
-         conn->fDrawVersion = TString(cdata, separ - cdata).Atoll();
-         cdata = separ + 1;
+         conn->fDrawVersion = std::stoll(std::string(cdata, separ - cdata));
          if (is_first && !IsReadOnly())
-            DecodePadOptions(cdata); // only first connection can set ranges
+            DecodePadOptions(separ+1); // only first connection can set ranges
       }
 
    } else if (arg == "RELOAD") {
@@ -715,12 +717,12 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
    } else if (arg.compare(0, 8, "PRODUCE:") == 0) {
 
-      Canvas()->Print(cdata + 8);
+      Canvas()->Print(arg.c_str() + 8);
 
    } else if (arg.compare(0, 9, "OPTIONS6:") == 0) {
 
       if (is_first && !IsReadOnly()) // only first connection can set ranges
-         DecodePadOptions(cdata + 9);
+         DecodePadOptions(arg.substr(9));
 
    } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
 

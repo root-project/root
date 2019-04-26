@@ -56,7 +56,7 @@ protected:
       WebConn(unsigned id) : fConnId(id) {}
    };
 
-   std::vector<WebConn> fWebConn; ///<! connections
+   std::vector<WebConn> fWebConn;  ///<! connections
 
    std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
 
@@ -69,7 +69,7 @@ protected:
    Int_t fPrimitivesMerge{100};    ///<! number of PS primitives, which will be merged together
    Int_t fJsonComp{0};             ///<! compression factor for messages send to the client
 
-   UpdatedSignal_t fUpdatedSignal;          ///<! signal emitted when canvas updated or state is changed
+   UpdatedSignal_t fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
 
    void Lock() override {}
    void Unlock() override {}
@@ -95,15 +95,15 @@ protected:
 
    Bool_t IsFirstConn(unsigned connid) const { return (connid!=0) && (fWebConn.size()>0) && (fWebConn[0].fConnId == connid) ;}
 
-   void ShowCmd(const char *arg, Bool_t show);
+   void ShowCmd(const std::string &arg, Bool_t show);
 
    void AssignStatusBits(UInt_t bits);
 
    virtual Bool_t ProcessData(unsigned connid, const std::string &arg);
 
-   virtual Bool_t DecodePadOptions(const char *) { return kFALSE; }
+   virtual Bool_t DecodePadOptions(const std::string &) { return kFALSE; }
 
-   virtual Bool_t CanCreateObject(const char *) { return !IsReadOnly(); }
+   virtual Bool_t CanCreateObject(const std::string &) { return !IsReadOnly(); }
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
