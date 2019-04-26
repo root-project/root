@@ -993,29 +993,51 @@ TEST_P(RDFSimpleTests, Stats)
               .Define("ones", [](){return std::vector<double>({1.,1.,1.});});
    
    auto s0 = rr.Stats("v");
+   auto s0c = rr.Stats<ULong64_t>("v");
    auto m0 = rr.Mean<ULong64_t>("v");
    auto v0 = rr.StdDev<ULong64_t>("v");
    auto s0prime = rr.Stats("v", "one");
+   auto s0primec = rr.Stats<ULong64_t, double>("v", "one");
    auto s0w = rr.Stats("v", "w");
+   auto s0wc = rr.Stats<ULong64_t, double>("v", "w");
    auto s1 = rr.Stats("vec_v");
+   auto s1c = rr.Stats<std::vector<ULong64_t>>("vec_v");
    auto m1 = rr.Mean<std::vector<ULong64_t>>("vec_v");
    auto v1 = rr.StdDev<std::vector<ULong64_t>>("vec_v");
    auto s1w = rr.Stats("vec_v", "vec_w");
+   auto s1wc = rr.Stats<std::vector<ULong64_t>, std::vector<double>>("vec_v", "vec_w");
    auto s1prime0 = rr.Stats("vec_v", "one");
    auto s1prime1 = rr.Stats("vec_v", "ones");
+   auto s1prime0c = rr.Stats<std::vector<ULong64_t>, double>("vec_v", "one");
+   auto s1prime1c = rr.Stats<std::vector<ULong64_t>, std::vector<double>>("vec_v", "ones");
 
    // Checks
    EXPECT_FLOAT_EQ(s0->GetMean(), 127.5);
+   EXPECT_FLOAT_EQ(s0->GetMean(), s0c->GetMean());
    EXPECT_FLOAT_EQ(s0w->GetMean(), 40.800388);
+   EXPECT_FLOAT_EQ(s0w->GetMean(), s0wc->GetMean());
    EXPECT_FLOAT_EQ(s0->GetMean(), s0prime->GetMean());
    EXPECT_FLOAT_EQ(s0->GetMean(), *m0);
    EXPECT_FLOAT_EQ(s0->GetRMS(), *v0);
    EXPECT_FLOAT_EQ(s1->GetMean(), 128.5);
+   EXPECT_FLOAT_EQ(s1->GetMean(), s1c->GetMean());
    EXPECT_FLOAT_EQ(s1w->GetMean(), 127.12541);
+   EXPECT_FLOAT_EQ(s1w->GetMean(), s1wc->GetMean());
    EXPECT_FLOAT_EQ(s1->GetMean(), *m1);
    EXPECT_FLOAT_EQ(s1->GetRMS(), *v1);
    EXPECT_FLOAT_EQ(s1->GetMean(), s1prime0->GetMean());
    EXPECT_FLOAT_EQ(s1->GetMean(), s1prime1->GetMean());
+   EXPECT_FLOAT_EQ(s1->GetMean(), s1prime0c->GetMean());
+   EXPECT_FLOAT_EQ(s1->GetMean(), s1prime1c->GetMean());
+
+   // Check for the unsupported case
+   auto ret = 1;
+   try {
+      rr.Stats<ULong64_t>("v", "one");
+   } catch (const std::runtime_error &) {
+      ret = 0;
+   }
+   EXPECT_EQ(0, ret);
 }
 
 // run single-thread tests
