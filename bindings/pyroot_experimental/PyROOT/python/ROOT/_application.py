@@ -22,9 +22,9 @@ class PyROOTApplication(object):
     Configures the interactive usage of ROOT from Python.
     """
 
-    def __init__(self):
+    def __init__(self, config):
         # Construct a TApplication for PyROOT
-        InitApplication()
+        InitApplication(config.IgnoreCommandLineOptions)
 
     @staticmethod
     def _ipython_config():
