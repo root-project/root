@@ -61,70 +61,6 @@
 						</layoutData>
 					</Text>
 					<Button text="Set parameters" press="setParametersDialog"/>
-					<!-- Button text="Pars2" press="startExtraParametersDialog"/ -->
-					<!-- <Panel expandable="true" expanded="false" headerText="Set Parameters" width="auto" class="sapUiNoMargin fitPanelStyle">
-						<content>
-							<l:Grid
-				            class="sapUiSizeCompact"
-				            vSpacing="0"
-				            defaultSpan="XL3 L3 M3 S3">
-					            <l:content>
-					                <Title text=""/>
-					                <Title level="H5" text="p0">
-					                </Title>
-					                <Title level="H5" text="p1">
-					                </Title>
-					                 <Title level="H5" text="p2">
-					                </Title>
-					                 <Title level="H5" text="Constant">
-					                </Title>
-					                 <Title level="H5" text="Constant">
-					                </Title>
-					                 <Title level="H5" text="Constant">
-					                </Title>
-					                 <Title level="H5" text="Constant">
-					                </Title>
-
-					                <Title level="H5" text="Fix"/>
-					                <CheckBox id="FixC" selected="{/fFixC}"/>
-					                <CheckBox id="FixM" selected="{/fFixM}"/>
-					                <CheckBox id="FixS" selected="{/fFixS}"/>
-
-					                <Title level="H5" text="Bound"/>
-					                <CheckBox id="BoundC" selected="{/fBoundC}" enabled="{= ${/fFixC} !== true}"/>
-					                <CheckBox id="BoundM" selected="{/fBoundM}" enabled="{= ${/fFixM} !== true}"/>
-					                <CheckBox id="BoundS" selected="{/fBoundS}" enabled="{= ${/fFixS} !== true}"/>
-
-					                <Title level="H5" text="Value"/>
-					                <Input id="ValueC" type="Number" enabled="{= ${/fFixC} !== true}"/>
-					                <Input id="ValueM" type="Number" enabled="{= ${/fFixM} !== true}"/>
-					                <Input id="ValueS" type="Number" enabled="{= ${/fFixS} !== true}"/>
-
-					                <Title level="H5" text="Min"/>
-					                <Input id="MinC" type="Number" enabled="{= ${/fFixC} !== true}" value="{/fMinC}"/>
-					                <Input id="MinM" type="Number" enabled="{= ${/fFixM} !== true}" value="{/fMinM}"/>
-					                <Input id="MinS" type="Number" enabled="{= ${/fFixS} !== true}" value="{/fMinS}"/>
-
-					                <Title level="H5" text="Set Range"/>
-					                <RangeSlider id="setRangeC" showAdvancedTooltip="true" range="0,1" min="0" max="1" step="0.1" width="100%" showHandleTooltip="false" inputsAsTooltips="true" class="sapUiNoMarginBottom"/>
-					                <RangeSlider id="setRangeM" showAdvancedTooltip="true" range="0,1" min="0" max="1" step="0.1" width="100%" showHandleTooltip="false" inputsAsTooltips="true" class="sapUiLargeNoBottom" enabled="{= ${/fFixM} !== true}"/>
-					                <RangeSlider id="setRangeS" showAdvancedTooltip="true" range="0,1" min="0" max="1" step="0.1" width="100%" showHandleTooltip="false" inputsAsTooltips="true" class="sapUiNoMarginBottom" enabled="{= ${/fFixS} !== true}"/>
-
-
-
-					                <Title level="H5" text="Max"/>
-					                <Input id="MaxC" type="Number" enabled="{= ${/fFixC} !== true}" value="{/fMaxC}"/>
-					                <Input id="MaxM" type="Number" enabled="{= ${/fFixM} !== true}" value="{/fMaxM}"/>
-					                <Input id="MaxS" type="Number" enabled="{= ${/fFixS} !== true}" value="{/fMaxS}"/>
-
-					                <Title level="H5" text="Step"/>
-					                <StepInput id="stepC" value="10" step="1" enabled="{= ${/fFixC} !== true}"/>
-					                <StepInput id="stepM" value="0.1" step="0.1" displayValuePrecision="1" enabled="{= ${/fFixM} !== true}"/>
-					                <StepInput id="stepS" value="0.1" step="0.1" displayValuePrecision="1" enabled="{= ${/fFixS} !== true}"/>    
-					            </l:content>
-				        	</l:Grid>
-				    	</content>
-					</Panel> -->
 				</l:content>
 			</l:Grid>
 			<!-- Tabs -->
@@ -279,7 +215,8 @@
 										<RadioButton id="Print-3" text="Quiet"/>
 									</buttons>
 								</RadioButtonGroup>
-								<Panel expandable="true" expanded="false" headerText="Advanced Options" width="auto" class="sapUiBody">
+								<!-- <Button text="Advanced Options" press="advancedOptionsDialog"/> -->
+								<Panel expandable="true" expanded="false" headerText="Advanced Options" width="auto" class="sapUiBody" expand="advancedOptionsDialog">
 									<content>
 										<IconTabBar id="AdvancedOptions">
 											<items>
@@ -357,6 +294,8 @@
 												</IconTabFilter>
 											</items>
 										</IconTabBar>
+										<Button text="Draw" press="advDraw"/>
+										<Button text="Close" press="advClose"/>
 									</content>
 								</Panel>
 							</l:content>
