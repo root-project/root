@@ -17,6 +17,7 @@ if(webui)
    add_subdirectory(webgui6)
    
    if(root7)
+      add_subdirectory(browserv7)
       add_subdirectory(canvaspainter)
       add_subdirectory(fitpanelv7)
    endif()

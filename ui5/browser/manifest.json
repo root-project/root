@@ -1,0 +1,52 @@
+{
+	"_version": "1.8.0",
+	"sap.app": {
+		"id": "rootui5.browser",
+	},
+
+	"sap.ui5": {
+		"rootView": {
+			"viewName": "rootui5.browser.view.Browser",
+			"type": "XML",
+         "async": true,
+         "id": "Browser"
+		},
+		"dependencies": {
+			"minUI5Version": "1.30.0",
+			"libs": {
+				"sap.ui.layout": {},
+				"sap.ui.core": {},
+				"sap.m": {},
+				"sap.ui.table": {}
+			}
+		},
+		"contentDensities": {
+			"compact": true,
+			"cozy": true
+		},
+		"routing": {
+			"config": {
+				"routerClass": "sap.m.routing.Router",
+				"viewType": "XML",
+				"async": true,
+				"viewPath": "rootui5.browser.view",
+				"controlAggregation": "pages",
+				"controlId": "idAppControl",
+				"clearControlAggregation": false
+			},
+			"routes": [{
+				"name": "RouteMain",
+				"pattern": "RouteMain",
+				"target": ["TargetMain"]
+			}],
+			"targets": {
+				"TargetMain": {
+					"viewType": "XML",
+					"transition": "slide",
+					"clearControlAggregation": false,
+					"viewName": "Browser"
+				}
+			}
+		}
+	}
+}

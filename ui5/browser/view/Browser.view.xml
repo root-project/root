@@ -1,0 +1,76 @@
+<mvc:View height="100%" width="100%" class="sapUiSizeCompact"
+          controllerName="rootui5.browser.controller.Browser"
+          xmlns="sap.m"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns:t="sap.ui.table"
+          xmlns:l="sap.ui.layout"
+          xmlns:u="sap.ui.unified"
+          xmlns:e="sap.ui.codeeditor">
+   <Page title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
+      <!-- headerContent>
+      </headerContent-->
+      <!-- subHeader>
+      </subHeader-->
+      <content>
+        <l:Splitter id="mainSplitter">
+          <l:Splitter orientation="Vertical">
+            <l:layoutData><l:SplitterLayoutData size="310px" resizable="true"/></l:layoutData>
+            <Toolbar>
+               <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
+               <Button icon="sap-icon://synchronize" type="Transparent"
+                    tooltip="Refresh" press="onRealoadPress"/>
+               <Button icon="sap-icon://log" type="Transparent"
+                    tooltip="Quit ROOT session" press="onQuitRootPress"/>
+               <ToolbarSpacer/>
+               <SearchField liveChange="onSearch"/>
+            </Toolbar>
+            <t:TreeTable
+              id="treeTable"
+              columnHeaderVisible="true"
+              editable="false"
+              enableSelectAll="false"
+              selectionBehavior="RowOnly"
+              selectionMode="Single"
+              visibleRowCountMode="Auto"
+              showColumnVisibilityMenu="true"
+              rows="{/nodes}">
+            </t:TreeTable>
+          </l:Splitter>
+          <!-- here place for Geom drawing, custom controller append in initializer -->
+          <!--l:Splitter orientation="Vertical"-->
+            <TabContainer id="myTabContainer"
+              showAddNewButton="true"
+              addNewButtonPress="addNewButtonPressHandler"
+              itemClose="tabCloseHandler">
+              <items >
+                <TabContainerItem name="Editor" icon="sap-icon://write-new-document" additionalText="Code Editor" >
+                  <content>
+                    <l:Splitter orientation="Vertical">
+                    <Toolbar>
+                      <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
+                      <u:FileUploader change="onChangeFile"/>
+                    </Toolbar>
+                    <e:CodeEditor
+                      id="aCodeEditor"
+                      height="100%"
+                      colorTheme="default"
+                      type="c_cpp"
+                      value="{/code}" />
+                  </l:Splitter>
+                  </content>
+                </TabContainerItem>
+                <TabContainerItem name="Canvas" icon="sap-icon://column-chart-dual-axis" additionalText="ROOT Canvas" >
+                  <content>
+                        
+                  </content>
+                </TabContainerItem>
+              </items>
+            </TabContainer>
+          <!--/l:Splitter-->
+        </l:Splitter>
+      </content>
+    </Page>
+</mvc:View>
+
+
+
