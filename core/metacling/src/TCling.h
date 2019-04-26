@@ -567,8 +567,7 @@ private: // Private Utility Functions and Classes
    void RegisterLoadedSharedLibrary(const char* name);
    void AddFriendToClass(clang::FunctionDecl*, clang::CXXRecordDecl*) const;
 
-   bool LoadPCM(TString pcmFileName, const char** headers,
-                const std::string& libraryFullPath) const;
+   bool LoadPCM(const std::string& pcmFileNameFullPath) const;
    void InitRootmapFile(const char *name);
    int  ReadRootmapFile(const char *rootmapfile, TUniqueString* uniqueString = nullptr);
    Bool_t HandleNewTransaction(const cling::Transaction &T);
