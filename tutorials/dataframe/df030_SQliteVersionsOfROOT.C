@@ -10,7 +10,8 @@
 /// \macro_code
 /// \macro_image
 ///
-/// \author Alexandra-Maria Dobrescu 08/2018
+/// \date August 2018
+/// \author Alexandra-Maria Dobrescu
 
 void df030_SQliteVersionsOfROOT() {
 
