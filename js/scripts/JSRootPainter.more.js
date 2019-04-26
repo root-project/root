@@ -827,10 +827,15 @@
 
       if (!this.options) this.options = {};
 
-      JSROOT.extend(this.options, { Line: 0, Curve: 0, Rect: 0, Mark: 0, Bar: 0, OutRange: 0,  EF:0, Fill: 0, NoOpt: 0,
-                                   MainError: 1, Ends: 1, Axis: "", original: opt });
+      JSROOT.extend(this.options, {
+         Line: 0, Curve: 0, Rect: 0, Mark: 0, Bar: 0, OutRange: 0,  EF:0, Fill: 0, NoOpt: 0,
+         MainError: 1, Ends: 1, Axis: "", PadStats: false, PadTitle: false, original: opt
+       });
 
       var res = this.options;
+
+      res.PadStats = d.check("USE_PAD_STATS");
+      res.PadTitle = d.check("USE_PAD_TITLE");
 
       res._pfc = d.check("PFC");
       res._plc = d.check("PLC");
@@ -888,6 +893,8 @@
       } else if (res.Axis.indexOf("A")<0) {
          res.Axis = "AXIS," + res.Axis;
       }
+
+      if (res.PadTitle) res.Axis += ";USE_PAD_TITLE";
    }
 
    TGraphPainter.prototype.CreateBins = function() {
@@ -1736,7 +1743,8 @@
       if (this.snapid && this.interactive_bin) {
          var exec = "SetPoint(" + this.interactive_bin.indx + "," + this.interactive_bin.x + "," + this.interactive_bin.y + ")";
          var canp = this.canv_painter();
-         if (canp) canp.SendWebsocket("OBJEXEC:" + this.snapid + ":" + exec);
+         if (canp && !canp._readonly)
+            canp.SendWebsocket("OBJEXEC:" + this.snapid + ":" + exec);
       }
 
       delete this.interactive_bin;
@@ -1776,7 +1784,7 @@
       if ((method.fName == 'RemovePoint') || (method.fName == 'InsertPoint')) {
          var pnt = fp ? fp.GetLastEventPos() : null;
 
-         if (!canp || !fp || !pnt) return true; // ignore function
+         if (!canp || canp._readonly || !fp || !pnt) return true; // ignore function
 
          var hint = this.ExtractTooltip(pnt);
 
@@ -1785,8 +1793,7 @@
                 userx = main && main.RevertX ? main.RevertX(pnt.x) : 0,
                 usery = main && main.RevertY ? main.RevertY(pnt.y) : 0;
             canp.ShowMessage('InsertPoint(' + userx.toFixed(3) + ',' + usery.toFixed(3) + ') not yet implemented');
-         } else
-         if (this.args_menu_id && hint && (hint.binindx !== undefined)) {
+         } else if (this.args_menu_id && hint && (hint.binindx !== undefined)) {
             var exec = "RemovePoint(" + hint.binindx + ")";
             console.log('execute ' + exec + ' for object ' + this.args_menu_id);
             canp.SendWebsocket('OBJEXEC:' + this.args_menu_id + ":" + exec);
@@ -1813,7 +1820,7 @@
       graph.fNpoints = obj.fNpoints;
       this.CreateBins();
 
-      // if our own histogram was used as axis drawing, we need update histogram  as well
+      // if our own histogram was used as axis drawing, we need update histogram as well
       if (this.axes_draw) {
          var main = this.main_painter(),
              fp = this.frame_painter();
@@ -1847,7 +1854,7 @@
       var main = this.frame_painter();
       if (!main) return false;
 
-      if ((this.xmin===this.xmax) && (this.ymin = this.ymax)) return false;
+      if ((this.xmin===this.xmax) && (this.ymin===this.ymax)) return false;
 
       main.Zoom(this.xmin, this.xmax, this.ymin, this.ymax);
 
@@ -1885,6 +1892,8 @@
       // do not create stats box when drawing canvas
       var pp = this.canv_painter();
       if (pp && pp.normal_canvas) return null;
+
+      if (this.options.PadStats) return null;
 
       this.create_stats = true;
 
@@ -1950,7 +1959,11 @@
    }
 
    TGraphPainter.prototype.PerformDrawing = function(divid, hpainter) {
-      if (hpainter) { this.axes_draw = true; hpainter.$secondary = true; }
+      if (hpainter) {
+         this.axes_draw = true;
+         if (!this._own_histogram) this.$primary = true;
+         hpainter.$secondary = true;
+      }
       this.SetDivId(divid);
       this.DrawBins();
       this.DrawNextFunction(0, this.DrawingReady.bind(this));

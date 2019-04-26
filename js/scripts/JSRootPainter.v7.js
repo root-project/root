@@ -2540,7 +2540,8 @@
 
       var pp = this.pad_painter(), canp = this.canv_painter();
       if (pp && pp.snapid && canp && canp._websocket) {
-         canp.SendWebsocket("OBJEXEC:" + pp.snapid + ":SetLog" + axis + (curr ? "(0)" : "(1)"));
+         console.warn('Change log scale on server here!!!!');
+         // canp.SendWebsocket("OBJEXEC:" + pp.snapid + ":SetLog" + axis + (curr ? "(0)" : "(1)"));
       } else {
          pad["fLog" + axis] = curr ? 0 : 1;
          painter.RedrawPad();
@@ -3947,7 +3948,7 @@
          for (var k=0;k<lst.length;++k)
             main.node().appendChild(lst[k]);
          this.set_layout_kind(layout_kind);
-         // JSROOT.resize(main.node());
+         JSROOT.resize(main.node());
          return JSROOT.CallBack(call_back, true);
       }
 
@@ -3973,6 +3974,12 @@
             main.node().appendChild(lst[k]);
 
          pthis.set_layout_kind(layout_kind, ".central_panel");
+
+         // remove reference to MDIDisplay, solves resize problem
+         origin.property('mdi', null);
+
+         // resize main drawing and let draw extras
+         JSROOT.resize(main.node());
 
          JSROOT.CallBack(call_back, true);
       });
@@ -4120,14 +4127,11 @@
          this.RedrawObject(obj);
 
       } else if (msg.substr(0,5)=='MENU:') {
-         // this is menu with exact identifier for object
-         msg = msg.substr(5);
-         var p1 = msg.indexOf(":"),
-             menuid = msg.substr(0,p1),
-             lst = JSROOT.parse(msg.substr(p1+1));
+         // this is container with object id and list of menu items
+         var lst = JSROOT.parse(msg.substr(5));
          // console.log("get MENUS ", typeof lst, 'nitems', lst.length, msg.length-4);
          if (typeof this._getmenu_callback == 'function')
-            this._getmenu_callback(lst, menuid);
+            this._getmenu_callback(lst);
       } else if (msg.substr(0,4)=='CMD:') {
          msg = msg.substr(4);
          var p1 = msg.indexOf(":"),
@@ -4262,19 +4266,20 @@
       return col;
    }
 
-   TCanvasPainter.prototype.GetNewOpt = function(opts, name) {
-      if (!opts || !opts.fHolderIO || !name) return;
+   TCanvasPainter.prototype.GetNewOpt = function(opts, name, dflt) {
+      if (!opts || !opts.fHolderIO || !name) return dflt;
 
       var map = opts.fHolderIO.fAttrNameVals;
-      if (!map || !map.length) return;
+      if (!map || !map.length) return dflt;
 
       for (var i=0; i<map.length; ++i)
          if (map[i].first === name)
             return map[i].second;
+      return dflt;
    }
 
-   TCanvasPainter.prototype.GetNewColor = function(opts, name) {
-      var val = this.GetNewOpt(opts,name);
+   TCanvasPainter.prototype.GetNewColor = function(opts, name, dflt) {
+      var val = this.GetNewOpt(opts,name,dflt);
       // can convert color, but also can be used as is
       return val;
    }
