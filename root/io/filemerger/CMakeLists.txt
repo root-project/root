@@ -88,7 +88,7 @@ endif()
 if(NOT TARGET hsimple)
       add_custom_target(hsimple-filemergerfile ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root)
       add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root
-                  COMMAND ${ROOT_root_CMD} -q -l -b ${ROOT_DIR}/tutorials/hsimple.C -e "{ TFile f(\"hsimple.root\"); TTree *ntuple; f.GetObject(\"ntuple\",ntuple); return ntuple ? 0 : 1; }" > hsimple.log
+                  COMMAND ${ROOT_root_CMD} -q -l -b ${ROOTSYS}/tutorials/hsimple.C -e "{ TFile f(\"hsimple.root\"); TTree *ntuple; f.GetObject(\"ntuple\",ntuple); return ntuple ? 0 : 1; }" > hsimple.log
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   DEPENDS ${HSimpleDependencies}
                   VERBATIM)
