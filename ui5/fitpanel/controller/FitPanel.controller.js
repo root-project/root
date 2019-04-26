@@ -54,6 +54,12 @@ sap.ui.define([
          } else if (msg.startsWith("PARS:")) {
             var data = JSROOT.parse(msg.substr(5));
             this.showParametersDialog(data);
+         } else if (msg.startsWith("ADVANCED:")) {
+         	var data = JSROOT.parse(msg.substr(9));
+         	if(data) {
+               this.getView().setModel(new JSONModel(data));
+               this._data = data;
+            }
          }
 
       },
@@ -348,7 +354,14 @@ sap.ui.define([
          oButtonInnerConf.css('background',color);
          oButtonInnerConf.css('color','#FFFFFF');
          oButtonInnerConf.css('text-shadow','1px 1px 2px #333333');
-},
+	  },
+
+	  advancedOptionsDialog: function() {
+	  	var func = this.getView().byId("TypeXY").getValue();
+        var msg = "ADVANCED:" + func;
+        if (this.websocket)
+            this.websocket.Send(msg);
+	  },
 
    });
 
