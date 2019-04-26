@@ -549,6 +549,44 @@ public:
    size_t GetValueSize() const final { return sizeof(std::uint32_t); }
 };
 
+template <>
+class ROOT::Experimental::RField<std::uint64_t> : public ROOT::Experimental::Detail::RFieldBase {
+public:
+   static std::string MyTypeName() { return "std::uint64_t"; }
+   explicit RField(std::string_view name)
+     : Detail::RFieldBase(name, MyTypeName(), EForestStructure::kLeaf, true /* isSimple */) {}
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+
+   void DoGenerateColumns() final;
+   unsigned int GetNColumns() const final { return 1; }
+
+   std::uint64_t* Map(ForestSize_t index) {
+      static_assert(Detail::RColumnElement<std::uint64_t, EColumnType::kInt64>::kIsMappable,
+                    "(std::uint64_t, EColumnType::kInt64) is not identical on this platform");
+      return fPrincipalColumn->Map<std::uint64_t, EColumnType::kInt64>(index, nullptr);
+   }
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where, ArgsT&&... args)
+   {
+      ROOT::Experimental::RFieldValue<std::uint64_t> v(
+         Detail::RColumnElement<std::uint64_t, EColumnType::kInt64>(static_cast<std::uint64_t*>(where)),
+         this, static_cast<std::uint64_t*>(where), std::forward<ArgsT>(args)...);
+      return v;
+   }
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final { return GenerateValue(where, 0); }
+   Detail::RFieldValueBase CaptureValue(void *where) final {
+      ROOT::Experimental::RFieldValue<std::uint64_t> v(true,
+         Detail::RColumnElement<std::uint64_t, EColumnType::kInt64>(static_cast<std::uint64_t*>(where)),
+         this, static_cast<std::uint64_t*>(where));
+      return v;
+   }
+   size_t GetValueSize() const final { return sizeof(std::uint64_t); }
+};
 
 template <>
 class ROOT::Experimental::RField<std::string> : public ROOT::Experimental::Detail::RFieldBase {

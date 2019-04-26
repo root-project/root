@@ -49,14 +49,19 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
 {
    std::string normalizedType(typeName);
    normalizedType.erase(remove_if(normalizedType.begin(), normalizedType.end(), isspace), normalizedType.end());
+   if (normalizedType == "Float_t") normalizedType = "float";
    if (normalizedType == "Double_t") normalizedType = "double";
    if (normalizedType == "Int_t") normalizedType = "std::int32_t";
+   if (normalizedType == "int") normalizedType = "std::int32_t";
+   if (normalizedType == "UInt_t") normalizedType = "std::uint32_t";
+   if (normalizedType == "ULong64_t") normalizedType = "std::uint64_t";
    if (normalizedType == "string") normalizedType = "std::string";
    if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
 
    if (normalizedType == "ROOT::Experimental::ClusterSize_t") return new RField<ClusterSize_t>(fieldName);
    if (normalizedType == "std::int32_t") return new RField<std::int32_t>(fieldName);
    if (normalizedType == "std::uint32_t") return new RField<std::uint32_t>(fieldName);
+   if (normalizedType == "std::uint64_t") return new RField<std::uint64_t>(fieldName);
    if (normalizedType == "float") return new RField<float>(fieldName);
    if (normalizedType == "double") return new RField<double>(fieldName);
    if (normalizedType == "std::string") return new RField<std::string>(fieldName);
@@ -256,6 +261,14 @@ void ROOT::Experimental::RField<std::uint32_t>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+//------------------------------------------------------------------------------
+
+void ROOT::Experimental::RField<std::uint64_t>::DoGenerateColumns()
+{
+   RColumnModel model(GetName(), EColumnType::kInt64, false /* isSorted*/);
+   fColumns.emplace_back(std::make_unique<Detail::RColumn>(model));
+   fPrincipalColumn = fColumns[0].get();
+}
 
 //------------------------------------------------------------------------------
 
