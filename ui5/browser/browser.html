@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <title>ROOT Browser</title>
+      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
+      <style>
+         html { height: 100%; }
+         body { min-height: 100%; margin: 0; overflow: hidden }
+         #BrowserDiv {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            padding: 1
+         }
+
+       </style>
+
+   </head>
+
+   <body>
+      <div id="BrowserDiv">
+         loading scripts...
+      </div>
+
+      <script type='text/javascript'>
+
+        function InitUI(handle) {
+
+           sap.ui.require(["sap/ui/core/mvc/XMLView"], function(XMLView) {
+              XMLView.create({
+                 id: "TopEveId",
+                 viewName: "rootui5.browser.view.Browser",
+                 viewData: { conn_handle: handle }
+              }).then(function(oView) {
+                 oView.placeAt("BrowserDiv");
+              });
+           });
+
+        }
+
+        if (JSROOT.GetUrlOption('libs')!==null) JSROOT.use_full_libs = true;
+
+        JSROOT.ConnectWebWindow({
+           prereq: "openui5",
+//           openui5src: "jsroot",    // use JSROOT provided package, experimental
+           openui5src: "https://openui5.hana.ondemand.com/",
+           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table, sap.ui.codeeditor", // customize openui5 libs later
+           prereq_logdiv: "BrowserDiv",
+           callback: InitUI
+        });
+
+      </script>
+
+   </body>
+
+</html>
