@@ -88,53 +88,65 @@
 
       var polygons = [],
           nfaces = geometry.faces.length,
-          face, polygon, vertex;
+          face, polygon, vertex, normal, useVertexNormals;
 
       for (var i = 0; i < nfaces; ++i ) {
          face = geometry.faces[i];
+         normal = face.normal;
          // faceVertexUvs = geometry.faceVertexUvs[0][i];
          polygon = new ThreeBSP.Polygon;
 
          if ( face instanceof THREE.Face3 ) {
+            useVertexNormals = face.vertexNormals && (face.vertexNormals.length==3);
+
             vertex = geometry.vertices[ face.a ];
+            if (useVertexNormals) normal = face.vertexNormals[0];
             // uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[0].x, faceVertexUvs[0].y ) : null;
-            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[0].x, face.vertexNormals[0].y, face.vertexNormals[0].z /*face.normal , uvs */ );
+            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /*face.normal , uvs */ );
             if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
             polygon.vertices.push( vertex );
 
             vertex = geometry.vertices[ face.b ];
+            if (useVertexNormals) normal = face.vertexNormals[1];
             //uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[1].x, faceVertexUvs[1].y ) : null;
-            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[1].x, face.vertexNormals[1].y, face.vertexNormals[1].z/*face.normal , uvs */ );
+            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /*face.normal , uvs */ );
             if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
             polygon.vertices.push( vertex );
 
             vertex = geometry.vertices[ face.c ];
+            if (useVertexNormals) normal = face.vertexNormals[2];
             // uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[2].x, faceVertexUvs[2].y ) : null;
-            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[2].x, face.vertexNormals[2].y, face.vertexNormals[2].z /*face.normal, uvs */ );
+            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /*face.normal, uvs */ );
             if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
             polygon.vertices.push( vertex );
          } else if ( typeof THREE.Face4 ) {
+            useVertexNormals = face.vertexNormals && (face.vertexNormals.length==4);
+
             vertex = geometry.vertices[ face.a ];
+            if (useVertexNormals) normal = face.vertexNormals[0];
             // uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[0].x, faceVertexUvs[0].y ) : null;
-            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[0].x, face.vertexNormals[0].y, face.vertexNormals[0].z /*, uvs */ );
+            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /*, uvs */ );
             if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
             polygon.vertices.push( vertex );
 
             vertex = geometry.vertices[ face.b ];
+            if (useVertexNormals) normal = face.vertexNormals[1];
             // uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[1].x, faceVertexUvs[1].y ) : null;
-            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[1].x, face.vertexNormals[1].y, face.vertexNormals[1].z /*, uvs */ );
+            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /*, uvs */ );
             if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
             polygon.vertices.push( vertex );
 
             vertex = geometry.vertices[ face.c ];
+            if (useVertexNormals) normal = face.vertexNormals[2];
             // uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[2].x, faceVertexUvs[2].y ) : null;
-            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[2].x, face.vertexNormals[2].y, face.vertexNormals[2].z /*, uvs */ );
+            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /*, uvs */ );
             if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
             polygon.vertices.push( vertex );
 
             vertex = geometry.vertices[ face.d ];
+            if (useVertexNormals) normal = face.vertexNormals[3];
             // uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[3].x, faceVertexUvs[3].y ) : null;
-            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[3].x, face.vertexNormals[3].y, face.vertexNormals[3].z /*, uvs */ );
+            vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /*, uvs */ );
             if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
             polygon.vertices.push( vertex );
          } else {

@@ -1302,47 +1302,49 @@
       var pad = this.root_pad(),
           h = this.frame_height(),
           w = this.frame_width(),
-          grid, grid_style = JSROOT.gStyle.fGridStyle;
+          grid_style = JSROOT.gStyle.fGridStyle;
 
       if ((grid_style < 0) || (grid_style >= JSROOT.Painter.root_line_styles.length)) grid_style = 11;
 
       // add a grid on x axis, if the option is set
       if (pad && pad.fGridx && this.x_handle) {
-         grid = "";
+         var gridx = "";
          for (var n=0;n<this.x_handle.ticks.length;++n)
             if (this.swap_xy)
-               grid += "M0,"+this.x_handle.ticks[n]+"h"+w;
+               gridx += "M0,"+this.x_handle.ticks[n]+"h"+w;
             else
-               grid += "M"+this.x_handle.ticks[n]+",0v"+h;
+               gridx += "M"+this.x_handle.ticks[n]+",0v"+h;
 
          var colid = (JSROOT.gStyle.fGridColor > 0) ? JSROOT.gStyle.fGridColor : (this.GetAxis("x") ? this.GetAxis("x").fAxisColor : 1),
              grid_color = this.get_color(colid) || "black";
 
-         if (grid.length > 0)
+         if (gridx.length > 0)
            layer.append("svg:path")
                 .attr("class", "xgrid")
-                .attr("d", grid)
-                .style('stroke',grid_color).style("stroke-width",JSROOT.gStyle.fGridWidth)
+                .attr("d", gridx)
+                .style('stroke', grid_color)
+                .style("stroke-width", JSROOT.gStyle.fGridWidth)
                 .style("stroke-dasharray", JSROOT.Painter.root_line_styles[grid_style]);
       }
 
       // add a grid on y axis, if the option is set
       if (pad && pad.fGridy && this.y_handle) {
-         grid = "";
+         var gridy = "";
          for (var n=0;n<this.y_handle.ticks.length;++n)
             if (this.swap_xy)
-               grid += "M"+this.y_handle.ticks[n]+",0v"+h;
+               gridy += "M"+this.y_handle.ticks[n]+",0v"+h;
             else
-               grid += "M0,"+this.y_handle.ticks[n]+"h"+w;
+               gridy += "M0,"+this.y_handle.ticks[n]+"h"+w;
 
          var colid = (JSROOT.gStyle.fGridColor > 0) ? JSROOT.gStyle.fGridColor : (this.GetAxis("y") ? this.GetAxis("y").fAxisColor : 1),
              grid_color = this.get_color(colid) || "black";
 
-         if (grid.length > 0)
+         if (gridy.length > 0)
            layer.append("svg:path")
                 .attr("class", "ygrid")
-                .attr("d", grid)
-                .style('stroke',grid_color).style("stroke-width",JSROOT.gStyle.fGridWidth)
+                .attr("d", gridy)
+                .style('stroke',grid_color)
+                .style("stroke-width",JSROOT.gStyle.fGridWidth)
                 .style("stroke-dasharray", JSROOT.Painter.root_line_styles[grid_style]);
       }
    }
@@ -1845,7 +1847,7 @@
    }
 
    TFramePainter.prototype.FillWebObjectOptions = function(res) {
-      res.fcust = "frame",
+      res.fcust = "frame";
       res.fopt = [this.scale_xmin || 0, this.scale_ymin || 0, this.scale_xmax || 0, this.scale_ymax || 0];
       return res;
    }
@@ -3377,7 +3379,8 @@
    TPadPainter.prototype.Redraw = function(resize) {
 
       // prevent redrawing
-      if (this._doing_pad_draw) return console.log('Prevent redrawing', this.pad.fName);
+      if (this._doing_pad_draw)
+         return console.log('Prevent redrawing', this.pad.fName);
 
       var showsubitems = true;
 
@@ -3511,15 +3514,20 @@
 
          if (objpainter && lst && lst[indx] && (objpainter.snapid === undefined)) {
             // keep snap id in painter, will be used for the
-            if (this.painters.indexOf(objpainter)<0) this.painters.push(objpainter);
+            var pi = this.painters.indexOf(objpainter);
+            if (pi<0) this.painters.push(objpainter);
             objpainter.snapid = lst[indx].fObjectID;
+            if (objpainter.$primary && (pi>0) && this.painters[pi-1].$secondary) {
+               this.painters[pi-1].snapid = objpainter.snapid + "#hist";
+               console.log('ASSIGN SECONDARY HIST ID', this.painters[pi-1].snapid);
+            }
          }
 
          objpainter = null;
 
          ++indx; // change to the next snap
 
-         if (!lst || indx >= lst.length) {
+         if (!lst || (indx >= lst.length)) {
             delete this._doing_pad_draw;
             delete this._snaps_map;
             delete this._current_primitive_indx;
@@ -3687,6 +3695,7 @@
       if (!snap || !snap.fPrimitives) return;
 
       this.is_active_pad = !!snap.fActive; // enforce boolean flag
+      this._readonly = (snap.fReadOnly === undefined) ? true : snap.fReadOnly; // readonly flag
 
       var first = snap.fSnapshot;
       first.fPrimitives = null; // primitives are not interesting, they are disabled in IO
@@ -3739,16 +3748,45 @@
 
       var isanyfound = false, isanyremove = false;
 
+      // check if frame or title was recreated, we could reassign handlers for them directly
+
+      function MatchPrimitive(painters, primitives, class_name, obj_name) {
+         var painter, primitive;
+         for (var k=0;k<painters.length;++k) {
+            if (painters[k].snapid === undefined) continue;
+            if (!painters[k].MatchObjectType(class_name)) continue;
+            if (obj_name && (!painters[k].GetObject() || (painters[k].GetObject().fName !== obj_name))) continue;
+            painter = painters[k];
+            break;
+         }
+         if (!painter) return;
+         for (var k=0;k<primitives.length;++k) {
+            if ((primitives[k].fKind !== 1) || !primitives[k].fSnapshot || (primitives[k].fSnapshot._typename !== class_name)) continue;
+            if (obj_name && (primitives[k].fSnapshot.fName !== obj_name)) continue;
+            primitive = primitives[k];
+            break;
+         }
+         if (!primitive) return;
+
+         // force painter to use new object id
+         if (painter.snapid !== primitive.fObjectID)
+            painter.snapid = primitive.fObjectID;
+      }
+
+      // while this is temporary objects, which can be recreated very often, try to catch such situation ourselfs
+      MatchPrimitive(this.painters, snap.fPrimitives, "TFrame");
+      MatchPrimitive(this.painters, snap.fPrimitives, "TPaveText", "title");
+
       // find and remove painters which no longer exists in the list
       for (var k=0;k<this.painters.length;++k) {
          var sub = this.painters[k];
-         if (sub.snapid===undefined) continue; // look only for painters with snapid
+         if ((sub.snapid===undefined) || sub.$secondary) continue; // look only for painters with snapid
 
          for (var i=0;i<snap.fPrimitives.length;++i)
             if (snap.fPrimitives[i].fObjectID === sub.snapid) { sub = null; isanyfound = true; break; }
 
          if (sub) {
-            // console.log('Remove painter' + k + ' from ' + this.painters.length + ' ' + sub.GetObject()._typename);
+            console.log('Remove painter' + k + ' from ' + this.painters.length + ' ' + sub.GetObject()._typename);
             // remove painter which does not found in the list of snaps
             this.painters.splice(k--,1);
             sub.Cleanup(); // cleanup such painter
@@ -3803,20 +3841,23 @@
    }
 
    /** Collects pad information for TWebCanvas, need to update different states */
-   TPadPainter.prototype.GetWebPadInfo = function(arg) {
+   TPadPainter.prototype.GetWebPadOptions = function(arg) {
       var is_top = (arg === undefined), elem = null, scan_subpads = true;
+      // no any options need to be collected in readonly mode
+      if (is_top && this._readonly) return "";
       if (arg === "only_this") { is_top = true; scan_subpads = false; }
       if (is_top) arg = [];
 
       if (this.snapid) {
-         elem = { _typename: "TWebPadRange", snapid: this.snapid.toString(),
+         elem = { _typename: "TWebPadOptions", snapid: this.snapid.toString(),
                   active: !!this.is_active_pad,
                   bits: 0, primitives: [],
                   logx: this.pad.fLogx, logy: this.pad.fLogy, logz: this.pad.fLogz,
                   gridx: this.pad.fGridx, gridy: this.pad.fGridy,
                   tickx: this.pad.fTickx, ticky: this.pad.fTicky,
                   mleft: this.pad.fLeftMargin, mright: this.pad.fRightMargin,
-                  mtop: this.pad.fTopMargin, mbottom: this.pad.fBottomMargin };
+                  mtop: this.pad.fTopMargin, mbottom: this.pad.fBottomMargin,
+                  zx1:0, zx2:0, zy1:0, zy2:0, zz1:0, zz2:0 };
 
          if (this.iscan) elem.bits = this.GetStatusBits();
 
@@ -3828,8 +3869,8 @@
 
       for (var k=0; k<this.painters.length; ++k) {
          var sub = this.painters[k];
-         if (typeof sub.GetWebPadInfo == "function") {
-            if (scan_subpads) sub.GetWebPadInfo(arg);
+         if (typeof sub.GetWebPadOptions == "function") {
+            if (scan_subpads) sub.GetWebPadOptions(arg);
          } else if (sub.snapid) {
             var opt = { _typename: "TWebObjectOptions", snapid: sub.snapid.toString(), opt: sub.OptionsAsString(), fcust: "", fopt: [] };
             if (typeof sub.FillWebObjectOptions == "function")
@@ -3855,6 +3896,18 @@
       r.uy1 = r.py1 = r.ranges ? main.scale_ymin : 0;
       r.ux2 = r.px2 = r.ranges ? main.scale_xmax : 0;
       r.uy2 = r.py2 = r.ranges ? main.scale_ymax : 0;
+
+      if (main.zoom_xmin !== main.zoom_xmax) {
+         r.zx1 = main.zoom_xmin; r.zx2 = main.zoom_xmax;
+      }
+
+      if (main.zoom_ymin !== main.zoom_ymax) {
+         r.zy1 = main.zoom_ymin; r.zy2 = main.zoom_ymax;
+      }
+
+      if (main.zoom_zmin !== main.zoom_zmax) {
+         r.zz1 = main.zoom_zmin; r.zz2 = main.zoom_zmax;
+      }
 
       if (!r.ranges || p.empty()) return true;
 
@@ -4426,7 +4479,7 @@
          for (var k=0;k<lst.length;++k)
             main.node().appendChild(lst[k]);
          this.set_layout_kind(layout_kind);
-         // JSROOT.resize(main.node());
+         JSROOT.resize(main.node());
          return JSROOT.CallBack(call_back, true);
       }
 
@@ -4453,6 +4506,12 @@
 
          pthis.set_layout_kind(layout_kind, ".central_panel");
 
+         // remove reference to MDIDisplay, solves resize problem
+         origin.property('mdi', null);
+
+         // resize main drawing and let draw extras
+         JSROOT.resize(main.node());
+
          JSROOT.CallBack(call_back, true);
       });
    }
@@ -4474,6 +4533,7 @@
    }
 
    TCanvasPainter.prototype.DrawProjection = function(kind,hist) {
+
       if (!this.proj_painter) return; // ignore drawing if projection not configured
 
       if (this.proj_painter === 1) {
@@ -4593,27 +4653,19 @@
       } else if (msg.substr(0,6)=='SNAP6:') {
          // This is snapshot, produced with ROOT6
 
-         msg = msg.substr(6);
-         var p1 = msg.indexOf(":"),
-             snapid = msg.substr(0,p1),
-             snap = JSROOT.parse(msg.substr(p1+1)),
-             pthis = this;
+         var snap = JSROOT.parse(msg.substr(6)), pthis = this;
 
          this.RedrawPadSnap(snap, function() {
             pthis.CompeteCanvasSnapDrawing();
-            var ranges = pthis.GetWebPadInfo(); // all data, including subpads
+            var ranges = pthis.GetWebPadOptions(); // all data, including subpads
             if (ranges) ranges = ":" + ranges;
-            handle.Send("READY6:" + snapid + ranges); // send ready message back when drawing completed
+            handle.Send("READY6:" + snap.fVersion + ranges); // send ready message back when drawing completed
          });
       } else if (msg.substr(0,5)=='MENU:') {
          // this is menu with exact identifier for object
-         msg = msg.substr(5);
-         var p1 = msg.indexOf(":"),
-             menuid = msg.substr(0,p1),
-             lst = JSROOT.parse(msg.substr(p1+1));
-         // console.log("get MENUS ", typeof lst, 'nitems', lst.length, msg.length-4);
+         var lst = JSROOT.parse(msg.substr(5));
          if (typeof this._getmenu_callback == 'function')
-            this._getmenu_callback(lst, menuid);
+            this._getmenu_callback(lst);
       } else if (msg.substr(0,4)=='CMD:') {
          msg = msg.substr(4);
          var p1 = msg.indexOf(":"),
@@ -4685,9 +4737,10 @@
 
       this.RegisterForPadEvents(null);
 
-      if (this.ged_panelid) {
-         sap.ui.getCore().byId(this.ged_panelid).getController().cleanupGed();
-         delete this.ged_panelid;
+      if (this.ged_view) {
+         this.ged_view.getController().cleanupGed();
+         this.ged_view.destroy();
+         delete this.ged_view;
       }
       if (this.brlayout)
          this.brlayout.DeleteContent();
@@ -4732,18 +4785,17 @@
          sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/core/mvc/XMLView"],
                        function(JSONModel,XMLView) {
 
-            pthis.ged_panelid = "CanvasGedId";
-
             var oModel = new JSONModel({ handle: null });
 
-            sap.ui.getCore().setModel(oModel, pthis.ged_panelid);
-
             XMLView.create({
-               id: pthis.ged_panelid,
                viewName : "rootui5.canv.view.Ged"
             }).then(function(oGed) {
 
+               oGed.setModel(oModel);
+
                oGed.placeAt("ged_placeholder");
+
+               pthis.ged_view = oGed;
 
                // TODO: should be moved into Ged controller - it must be able to detect canvas painter itself
                pthis.RegisterForPadEvents(oGed.getController().padEventsReceiver.bind(oGed.getController()));
@@ -4789,7 +4841,7 @@
      * @private */
    TCanvasPainter.prototype.ProcessChanges = function(kind, painter) {
       // check if we could send at least one message more - for some meaningful actions
-      if (!this._websocket || !this._websocket.CanSend(2) || (typeof kind !== "string")) return;
+      if (!this._websocket || this._readonly || !this._websocket.CanSend(2) || (typeof kind !== "string")) return;
 
       var msg = "";
       if (!painter) painter = this;
@@ -4799,10 +4851,10 @@
             break;
          case "frame": // when moving frame
          case "zoom":  // when changing zoom inside frame
-            if (!painter.GetWebPadInfo)
+            if (!painter.GetWebPadOptions)
                painter = painter.pad_painter();
-            if (typeof painter.GetWebPadInfo == "function")
-               msg = "RANGES6:" + painter.GetWebPadInfo("only_this");
+            if (typeof painter.GetWebPadOptions == "function")
+               msg = "OPTIONS6:" + painter.GetWebPadOptions("only_this");
             break;
          case "pave_moved":
             if (painter.FillWebObjectOptions) {

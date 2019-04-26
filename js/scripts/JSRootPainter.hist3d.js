@@ -170,8 +170,9 @@
             if (intersects[i].object.tooltip) {
                tip = intersects[i].object.tooltip(intersects[i]);
                if (tip) { mesh = intersects[i].object; break; }
-            } else
-            if (intersects[i].object.zoom && !zoom_mesh) zoom_mesh = intersects[i].object;
+            } else if (intersects[i].object.zoom && !zoom_mesh) {
+               zoom_mesh = intersects[i].object;
+            }
          }
 
          if (tip && !tip.use_itself) {
@@ -410,6 +411,9 @@
       }
 
       if (changed) this.Render3D();
+
+      if (changed && tip.$painter && (typeof tip.$painter.RedrawProjection == 'function'))
+         tip.$painter.RedrawProjection(tip.ix-1, tip.ix, tip.iy-1, tip.iy);
 
       if (this.GetObject())
          this.ProvideUserTooltip({ obj: this.GetObject(),  name: this.GetObject().fName,
@@ -1324,6 +1328,8 @@
             tip.z2 = main.grz(Math.min(this.zmax,binz2));
 
             tip.color = this.tip_color;
+
+            if (p.is_projection && (p.Dimension()==2)) tip.$painter = p; // used only for projections
 
             return tip;
          }
