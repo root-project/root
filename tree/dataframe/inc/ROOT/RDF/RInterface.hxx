@@ -591,6 +591,23 @@ public:
    ///
    /// Use `Cache` if you know you will only need a subset of the (`Filter`ed) data that
    /// fits in memory and that will be accessed many times.
+   ///
+   /// ### Example usage:
+   ///
+   /// #### Types and columns specified:
+   /// ~~~{.cpp}
+   /// auto cache_some_cols_df = df.Cache<double, MyClass, int>({"col0", "col1", "col2"});
+   /// ~~~
+   ///
+   /// #### Types inferred and columns specified (this invocation relies on jitting):
+   /// ~~~{.cpp}
+   /// auto cache_some_cols_df = df.Cache({"col0", "col1", "col2"});
+   /// ~~~
+   ///
+   /// #### Types inferred and columns selected with a regexp (this invocation relies on jitting):
+   /// ~~~{.cpp}
+   /// auto cache_all_cols_df = df.Cache(myRegexp);
+   /// ~~~
    template <typename... ColumnTypes>
    RInterface<RLoopManager> Cache(const ColumnNames_t &columnList)
    {
@@ -683,6 +700,13 @@ public:
    ///
    /// Note that in case of previous Ranges and Filters the selected range refers to the transformed dataset.
    /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto d_0_30 = d.Range(0, 30); // Pick the first 30 entries
+   /// auto d_15_end = d.Range(15, 0); // Pick all entries from 15 onwards
+   /// auto d_15_end_3 = d.Range(15, 0, 3); // Stride: from event 15, pick an event every 3
+   /// ~~~
    // clang-format on
    RInterface<RDFDetail::RRange<Proxied>, DS_t> Range(unsigned int begin, unsigned int end, unsigned int stride = 1)
    {
@@ -719,6 +743,11 @@ public:
    /// is triggered.
    /// Users are responsible for the thread-safety of this callable when executing
    /// with implicit multi-threading enabled (i.e. ROOT::EnableImplicitMT).
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// myDf.Foreach([](int i){ std::cout << i << std::endl;}, {"myIntColumn"});
+   /// ~~~
    // clang-format on
    template <typename F>
    void Foreach(F f, const ColumnNames_t &columns = {})
@@ -744,6 +773,11 @@ public:
    /// *streams of processing* indexed by the first parameter.
    /// `ForeachSlot` works just as well with single-thread execution: in that
    /// case `slot` will always be `0`.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// myDf.ForeachSlot([](unsigned int s, int i){ std::cout << "Slot " << s << ": "<< i << std::endl;}, {"myIntColumn"});
+   /// ~~~
    // clang-format on
    template <typename F>
    void ForeachSlot(F f, const ColumnNames_t &columns = {})
@@ -787,6 +821,11 @@ public:
    /// requirement, users should explicitly specify an initialization value for T by calling the appropriate `Reduce`
    /// overload.
    ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto sumOfIntCol = d.Reduce([](int x, int y) { return x + y; }, "intCol");
+   /// ~~~
+   ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    // clang-format on
@@ -808,6 +847,10 @@ public:
    /// \param[in] redIdentity The reduced object of each thread is initialised to this value.
    /// \return the reduced quantity wrapped in a `RResultPtr`.
    ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto sumOfIntColWithOffset = d.Reduce([](int x, int y) { return x + y; }, "intCol", 42);
+   /// ~~~
    /// See the description of the first Reduce overload for more information.
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
    RResultPtr<T> Reduce(F f, std::string_view columnName, const T &redIdentity)
@@ -822,6 +865,12 @@ public:
    /// Useful e.g. for counting the number of entries passing a certain filter (see also `Report`).
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto nEntriesAfterCuts = myFilteredDf.Count();
+   /// ~~~
+   ///
    RResultPtr<ULong64_t> Count()
    {
       const auto nSlots = fLoopManager->GetNSlots();
@@ -887,7 +936,15 @@ public:
    /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   /// The user gives up ownership of the model histogram.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column type (this invocation needs jitting internally)
+   /// auto myHist1 = myDf.Histo1D({"histName", "histTitle", 64u, 0., 128.}, "myColumn");
+   /// // Explicit column type
+   /// auto myHist2 = myDf.Histo1D<float>({"histName", "histTitle", 64u, 0., 128.}, "myColumn");
+   /// ~~~
+   ///
    template <typename V = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.}, std::string_view vName = "")
    {
@@ -916,6 +973,15 @@ public:
    /// This overload uses a default model histogram TH1D(name, title, 128u, 0., 0.).
    /// The "name" and "title" strings are built starting from the input column name.
    /// See the description of the first Histo1D overload for more details.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column type (this invocation needs jitting internally)
+   /// auto myHist1 = myDf.Histo1D("myColumn");
+   /// // Explicit column type
+   /// auto myHist2 = myDf.Histo1D<float>("myColumn");
+   /// ~~~
+   ///
    template <typename V = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(std::string_view vName)
    {
@@ -934,6 +1000,15 @@ public:
    /// \return the monodimensional histogram wrapped in a `RResultPtr`.
    ///
    /// See the description of the first Histo1D overload for more details.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column type (this invocation needs jitting internally)
+   /// auto myHist1 = myDf.Histo1D({"histName", "histTitle", 64u, 0., 128.}, "myValue", "myweight");
+   /// // Explicit column type
+   /// auto myHist2 = myDf.Histo1D<float, int>({"histName", "histTitle", 64u, 0., 128.}, "myValue", "myweight");
+   /// ~~~
+   ///
    template <typename V = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(const TH1DModel &model, std::string_view vName, std::string_view wName)
    {
@@ -960,6 +1035,15 @@ public:
    /// This overload uses a default model histogram TH1D(name, title, 128u, 0., 0.).
    /// The "name" and "title" strings are built starting from the input column names.
    /// See the description of the first Histo1D overload for more details.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column types (this invocation needs jitting internally)
+   /// auto myHist1 = myDf.Histo1D("myValue", "myweight");
+   /// // Explicit column types
+   /// auto myHist2 = myDf.Histo1D<float, int>("myValue", "myweight");
+   /// ~~~
+   ///
    template <typename V = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(std::string_view vName, std::string_view wName)
    {
@@ -999,7 +1083,15 @@ public:
    /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   /// The user gives up ownership of the model histogram.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column types (this invocation needs jitting internally)
+   /// auto myHist1 = myDf.Histo2D({"histName", "histTitle", 64u, 0., 128., 32u, -4., 4.}, "myValueX", "myValueY");
+   /// // Explicit column types
+   /// auto myHist2 = myDf.Histo2D<float, float>({"histName", "histTitle", 64u, 0., 128., 32u, -4., 4.}, "myValueX", "myValueY");
+   /// ~~~
+   ///
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
    RResultPtr<::TH2D> Histo2D(const TH2DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
@@ -1032,6 +1124,15 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    /// The user gives up ownership of the model histogram.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column types (this invocation needs jitting internally)
+   /// auto myHist1 = myDf.Histo2D({"histName", "histTitle", 64u, 0., 128., 32u, -4., 4.}, "myValueX", "myValueY", "myWeight");
+   /// // Explicit column types
+   /// auto myHist2 = myDf.Histo2D<float, float, double>({"histName", "histTitle", 64u, 0., 128., 32u, -4., 4.}, "myValueX", "myValueY", "myWeight");
+   /// ~~~
+   ///
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename W = RDFDetail::RInferredType>
    RResultPtr<::TH2D>
@@ -1071,7 +1172,17 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   /// The user gives up ownership of the model histogram.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column types (this invocation needs jitting internally)
+   /// auto myHist1 = myDf.Histo3D({"name", "title", 64u, 0., 128., 32u, -4., 4., 8u, -2., 2.},
+   ///                             "myValueX", "myValueY", "myValueZ");
+   /// // Explicit column types
+   /// auto myHist2 = myDf.Histo3D<double, double, float>({"name", "title", 64u, 0., 128., 32u, -4., 4., 8u, -2., 2.},
+   ///                                                    "myValueX", "myValueY", "myValueZ");
+   /// ~~~
+   ///
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename V3 = RDFDetail::RInferredType>
    RResultPtr<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name = "", std::string_view v2Name = "",
@@ -1107,7 +1218,18 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   /// The user gives up ownership of the model histogram.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column types (this invocation needs jitting internally)
+   /// auto myHist1 = myDf.Histo3D({"name", "title", 64u, 0., 128., 32u, -4., 4., 8u, -2., 2.},
+   ///                             "myValueX", "myValueY", "myValueZ", "myWeight");
+   /// // Explicit column types
+   /// using d_t = double;
+   /// auto myHist2 = myDf.Histo3D<d_t, d_t, float, d_t>({"name", "title", 64u, 0., 128., 32u, -4., 4., 8u, -2., 2.},
+   ///                                                    "myValueX", "myValueY", "myValueZ", "myWeight");
+   /// ~~~
+   ///
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename V3 = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name, std::string_view v2Name,
@@ -1150,6 +1272,15 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column types (this invocation needs jitting internally)
+   /// auto myGraph1 = myDf.Graph("xValues", "yValues");
+   /// // Explicit column types
+   /// auto myGraph2 = myDf.Graph<int, float>("xValues", "yValues");
+   /// ~~~
+   ///
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
    RResultPtr<::TGraph> Graph(std::string_view v1Name = "", std::string_view v2Name = "")
    {
@@ -1184,7 +1315,15 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   /// The user gives up ownership of the model profile object.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column types (this invocation needs jitting internally)
+   /// auto myProf1 = myDf.Profile1D({"profName", "profTitle", 64u, -4., 4.}, "xValues", "yValues");
+   /// // Explicit column types
+   /// auto myProf2 = myDf.Graph<int, float>({"profName", "profTitle", 64u, -4., 4.}, "xValues", "yValues");
+   /// ~~~
+   ///
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
    RResultPtr<::TProfile>
    Profile1D(const TProfile1DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
@@ -1218,7 +1357,16 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   /// The user gives up ownership of the model profile object.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column types (this invocation needs jitting internally)
+   /// auto myProf1 = myDf.Profile1D({"profName", "profTitle", 64u, -4., 4.}, "xValues", "yValues", "weight");
+   /// // Explicit column types
+   /// auto myProf2 = myDf.Profile1D<int, float, double>({"profName", "profTitle", 64u, -4., 4.},
+   ///                                                   "xValues", "yValues", "weight");
+   /// ~~~
+   ///
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename W = RDFDetail::RInferredType>
    RResultPtr<::TProfile>
@@ -1259,7 +1407,17 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   /// The user gives up ownership of the model profile.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column types (this invocation needs jitting internally)
+   /// auto myProf1 = myDf.Profile2D({"profName", "profTitle", 40, -4, 4, 40, -4, 4, 0, 20},
+   ///                               "xValues", "yValues", "zValues");
+   /// // Explicit column types
+   /// auto myProf2 = myDf.Profile2D<int, float, double>({"profName", "profTitle", 40, -4, 4, 40, -4, 4, 0, 20},
+   ///                                                   "xValues", "yValues", "zValues");
+   /// ~~~
+   ///
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename V3 = RDFDetail::RInferredType>
    RResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name = "",
@@ -1296,7 +1454,17 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   /// The user gives up ownership of the model profile.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column types (this invocation needs jitting internally)
+   /// auto myProf1 = myDf.Profile2D({"profName", "profTitle", 40, -4, 4, 40, -4, 4, 0, 20},
+   ///                               "xValues", "yValues", "zValues", "weight");
+   /// // Explicit column types
+   /// auto myProf2 = myDf.Profile2D<int, float, double, int>({"profName", "profTitle", 40, -4, 4, 40, -4, 4, 0, 20},
+   ///                                                        "xValues", "yValues", "zValues", "weight");
+   /// ~~~
+   ///
    template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
              typename V3 = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name, std::string_view v2Name,
@@ -1341,6 +1509,13 @@ public:
    /// The list of column names to be used for filling must always be specified.
    /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed.
    /// See RResultPtr documentation.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// MyClass obj;
+   /// auto myFilledObj = myDf.Fill<float>(obj, {"col0", "col1"});
+   /// ~~~
+   ///
    template <typename FirstColumn, typename... OtherColumns, typename T> // need FirstColumn to disambiguate overloads
    RResultPtr<T> Fill(T &&model, const ColumnNames_t &columnList)
    {
@@ -1363,6 +1538,13 @@ public:
    ///
    /// This overload of `Fill` infers the type of the specified columns at runtime and just-in-time compiles the
    /// previous overload. Check the previous overload for more details on `Fill`.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// MyClass obj;
+   /// auto myFilledObj = myDf.Fill(obj, {"col0", "col1"});
+   /// ~~~
+   ///
    template <typename T>
    RResultPtr<T> Fill(T &&model, const ColumnNames_t &bl)
    {
@@ -1378,6 +1560,12 @@ public:
    ///
    /// \param[in] value The name of the column with the values to fill the statistics with.
    /// \return the filled TStatistic object wrapped in a `RResultPtr`.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto stats = myDf.Stats("values");
+   /// ~~~
+   ///
    RResultPtr<TStatistic> Stats(std::string_view value = "")
    {
       ColumnNames_t columns;
@@ -1394,6 +1582,12 @@ public:
    /// \param[in] value The name of the column with the values to fill the statistics with.
    /// \param[in] weight The name of the column with the weights to fill the statistics with.
    /// \return the filled TStatistic object wrapped in a `RResultPtr`.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto stats = myDf.Stats("values", "weights");
+   /// ~~~
+   ///
    RResultPtr<TStatistic> Stats(std::string_view value, std::string_view weight)
    {
       ColumnNames_t columns {std::string(value), std::string(weight)};
@@ -1413,6 +1607,15 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column type (this invocation needs jitting internally)
+   /// auto minVal0 = myDf.Min("values");
+   /// // Explicit column type
+   /// auto minVal1 = myDf.Min<double>("values");
+   /// ~~~
+   ///
    template <typename T = RDFDetail::RInferredType>
    RResultPtr<RDFDetail::MinReturnType_t<T>> Min(std::string_view columnName = "")
    {
@@ -1434,6 +1637,15 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column type (this invocation needs jitting internally)
+   /// auto maxVal0 = myDf.Max("values");
+   /// // Explicit column type
+   /// auto maxVal1 = myDf.Max<double>("values");
+   /// ~~~
+   ///
    template <typename T = RDFDetail::RInferredType>
    RResultPtr<RDFDetail::MaxReturnType_t<T>> Max(std::string_view columnName = "")
    {
@@ -1454,6 +1666,15 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column type (this invocation needs jitting internally)
+   /// auto meanVal0 = myDf.Mean("values");
+   /// // Explicit column type
+   /// auto meanVal1 = myDf.Mean<double>("values");
+   /// ~~~
+   ///
    template <typename T = RDFDetail::RInferredType>
    RResultPtr<double> Mean(std::string_view columnName = "")
    {
@@ -1473,6 +1694,15 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column type (this invocation needs jitting internally)
+   /// auto stdDev0 = myDf.StdDev("values");
+   /// // Explicit column type
+   /// auto stdDev1 = myDf.StdDev<double>("values");
+   /// ~~~
+   ///
    template <typename T = RDFDetail::RInferredType>
    RResultPtr<double> StdDev(std::string_view columnName = "")
    {
@@ -1495,6 +1725,15 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column type (this invocation needs jitting internally)
+   /// auto sum0 = myDf.Sum("values");
+   /// // Explicit column type
+   /// auto sum1 = myDf.Sum<double>("values");
+   /// ~~~
+   ///
    template <typename T = RDFDetail::RInferredType>
    RResultPtr<RDFDetail::SumReturnType_t<T>>
    Sum(std::string_view columnName = "",
@@ -1522,7 +1761,14 @@ public:
    /// This action is *lazy*: upon invocation of
    /// this method the calculation is booked but not executed. See RResultPtr
    /// documentation.
-
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto filtered = d.Filter(cut1, {"b1"}, "Cut1").Filter(cut2, {"b2"}, "Cut2");
+   /// auto cutReport = filtered3.Report();
+   /// cutReport->Print();
+   /// ~~~
+   ///
    RResultPtr<RCutFlowReport> Report()
    {
       bool returnEmptyReport = false;
@@ -1550,6 +1796,14 @@ public:
    /// \return the container of column names.
    ///
    /// This is not an action nor a transformation, just a query to the RDataFrame object.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto colNames = d.GetColumnNames();
+   /// // Print columns' names
+   /// for (auto &&colName : colNames) std::cout << colName << std::endl;
+   /// ~~~
+   ///
    ColumnNames_t GetColumnNames()
    {
       ColumnNames_t allColumns;
@@ -1582,6 +1836,14 @@ public:
    /// \return the type of the required column.
    ///
    /// This is not an action nor a transformation, just a query to the RDataFrame object.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto colType = d.GetColumnType("columnName");
+   /// // Print column type
+   /// std::cout << "Column " << colType << " has type " << colType << std::endl;
+   /// ~~~
+   ///
    std::string GetColumnType(std::string_view column)
    {
       const auto &customCols = fCustomColumns.GetNames();
@@ -1609,6 +1871,13 @@ public:
    /// be printed. For any other node, only the filters upstream of that node.
    /// Filters without a name are printed as "Unnamed Filter"
    /// This is not an action nor a transformation, just a query to the RDataFrame object.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto filtNames = d.GetFilterNames();
+   /// for (auto &&filtName : filtNames) std::cout << filtName << std::endl;
+   /// ~~~
+   ///
    std::vector<std::string> GetFilterNames() { return RDFInternal::GetFilterNames(fProxiedPtr); }
 
    /// \brief Returns the names of the defined columns
@@ -1617,7 +1886,15 @@ public:
    /// This is not an action nor a transformation, just a simple utility to
    /// get the columns names that have been defined up to the node.
    /// If no custom column has been defined, e.g. on a root node, it returns an
-   /// empty array.
+   /// empty collection.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto defColNames = d.GetDefinedColumnNames();
+   /// // Print defined columns' names
+   /// for (auto &&defColName : defColNames) std::cout << defColName << std::endl;
+   /// ~~~
+   ///
    ColumnNames_t GetDefinedColumnNames()
    {
       ColumnNames_t definedColumns;
@@ -1702,6 +1979,26 @@ public:
    /// If its signature is `void(std::vector<U>& a)` it is assumed that it merges all aggregators in a[0].
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See RResultPtr documentation.
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// auto aggregator = [](double acc, double x) { return acc * x; };
+   /// ROOT::EnableImplicitMT();
+   /// // If multithread is enabled, the aggregator function will be called by more threads
+   /// // and will produce a vector of partial accumulators.
+   /// // The merger function performs the final aggregation of these partial results.
+   /// auto merger = [](std::vector<double> &accumulators) {
+   ///    for (auto i : ROOT::TSeqU(1u, accumulators.size())) {
+   ///       accumulators[0] *= accumulators[i];
+   ///    }
+   /// };
+   ///
+   /// // The accumulator is initialized at this value by every thread.
+   /// double initValue = 1.;
+   ///
+   /// // Multiplies all elements of the column "x"
+   /// auto result = d.Aggregate(aggregator, merger, columnName, initValue);
+   /// ~~~
    // clang-format on
    template <typename AccFun, typename MergeFun, typename R = typename TTraits::CallableTraits<AccFun>::ret_type,
              typename ArgTypes = typename TTraits::CallableTraits<AccFun>::arg_types,
@@ -1784,7 +2081,8 @@ public:
    /// * std::shared_ptr<Result_t> GetResultPtr() const: return a shared_ptr to the result of this action (of type
    ///   Result_t). The RResultPtr returned by Book will point to this object.
    ///
-   /// See $ROOTSYS/tree/treeplayer/inc/ROOT/RDF/ActionHelpers.hxx for the helpers used by standard RDF actions.
+   /// See ActionHelpers.hxx for the helpers used by standard RDF actions.
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See RResultPtr documentation.
    // clang-format on
    template <typename... ColumnTypes, typename Helper>
    RResultPtr<typename Helper::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})
@@ -1821,6 +2119,19 @@ public:
    /// This function returns a `RResultPtr<RDisplay>` containing all the entries to be displayed, organized in a tabular
    /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
    /// complete version through `AsString()`.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See RResultPtr documentation.
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// // Preparing the RResultPtr<RDisplay> object with all columns and default number of entries
+   /// auto d1 = rdf.Display("");
+   /// // Preparing the RResultPtr<RDisplay> object with two columns and 128 entries
+   /// auto d2 = d.Display({"x", "y"}, 128);
+   /// // Printing the short representations, the event loop will run
+   /// d1->Print();
+   /// d2->Print();
+   /// ~~~
    template <typename... ColumnTypes>
    RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, const int &nRows = 5)
    {
