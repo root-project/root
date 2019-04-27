@@ -1269,6 +1269,7 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 ///       the TTree is missing from the file.
 ///   * -5: Internal error, please report the circumstance when this happen
 ///       as a ROOT issue.
+///   * -6: An error occurred within the notify callback.
 ///
 /// Note: This is the only routine which sets the value of fTree to
 ///       a non-zero pointer.
@@ -1403,7 +1404,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
             }
             // Notify user if requested.
             if (fNotify) {
-               fNotify->Notify();
+               if(!fNotify->Notify()) return -6;
             }
          }
       }
@@ -1556,7 +1557,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
             // to properly account for the number of files/trees even if they
             // have no entries.
             if (fNotify) {
-               fNotify->Notify();
+               if(!fNotify->Notify()) return -6;
             }
 
             // Load the next TTree.
@@ -1679,7 +1680,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    // Notify user we have switched trees if requested.
    if (fNotify) {
-      fNotify->Notify();
+      if(!fNotify->Notify()) return -6;
    }
 
    // Return the new local entry number.

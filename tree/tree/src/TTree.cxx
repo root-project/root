@@ -6217,6 +6217,7 @@ Int_t TTree::LoadBaskets(Long64_t maxmemory)
 /// Set current entry.
 ///
 /// Returns -2 if entry does not exist (just as TChain::LoadTree()).
+/// Returns -6 if an error occours in the notification callback (just as TChain::LoadTree()).
 ///
 /// Note: This function is overloaded in TChain.
 ///
@@ -6291,7 +6292,7 @@ Long64_t TTree::LoadTree(Long64_t entry)
          }
          //Notify user if requested
          if (fNotify) {
-            fNotify->Notify();
+            if(!fNotify->Notify()) return -6;
          }
       }
    }
