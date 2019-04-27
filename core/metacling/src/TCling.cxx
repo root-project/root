@@ -1942,18 +1942,31 @@ void TCling::RegisterModule(const char* modulename,
    }
 
    if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
-      std::string pcmFileNameFullPath;
+      llvm::SmallString<256> pcmFileNameFullPath;
       if (dyLibName)
          pcmFileNameFullPath = dyLibName;
       else {
          // if we were in the case of late registration
          assert(lateRegistration);
          pcmFileNameFullPath = FindLibraryName(triggerFunc);
+         // FIXME: A horrible workaround for ctest. ROOT_ADD_TEST adds a test by
+         // invoking ${CMAKE_COMMAND} -DCMD=blah. This does not work well with
+         // statically linked executables such as stress* (referencing libEvent)
+         // because FindLibraryName relies on dladdr which gets confused by the
+         // outer executable. Explicitly add the current working directory to
+         // the library.
+         // Note, we do not take this branch outside of ctest.
+         if (!llvm::sys::path::is_absolute(pcmFileNameFullPath)) {
+            llvm::SmallString<128> curr_path;
+            llvm::sys::fs::current_path(curr_path);
+            llvm::sys::fs::make_absolute(curr_path, pcmFileNameFullPath);
+         }
       }
-      pcmFileNameFullPath =
-         llvm::sys::path::parent_path(pcmFileNameFullPath).str() + "/";
-      pcmFileNameFullPath += ROOT::TMetaUtils::GetModuleFileName(modulename);
-      if (!LoadPCM(pcmFileNameFullPath)) {
+      llvm::sys::path::remove_filename(pcmFileNameFullPath);
+
+      llvm::sys::path::append(pcmFileNameFullPath,
+                              ROOT::TMetaUtils::GetModuleFileName(modulename));
+      if (!LoadPCM(pcmFileNameFullPath.str().str())) {
          ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
                  ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
       }
