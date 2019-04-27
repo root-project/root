@@ -1,12 +1,15 @@
 #include "ROOT/RMakeUnique.hxx"
 #include "TEntryListArray.h"
 
+#include "TChain.h"
+#include "TFile.h"
 #include "TLeaf.h"
 #include "TROOT.h"
 #include "TTree.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 #include "TTreeReaderArray.h"
+#include "TSystem.h"
 
 #include "gtest/gtest.h"
 #include <stdlib.h>
@@ -334,4 +337,37 @@ TEST(TTreeReaderBasic, InfLoop)
    TTreeReader tr(tree.get());
    TTreeReaderArray<float> x(tr, "0.2.0.energy");
    tr.Next();
+}
+
+// ROOT-10019
+TEST(TTreeReaderBasic, DisappearingBranch)
+{
+
+   auto createFile = [](const char *fileName, int ncols) {
+      // auto r = ROOT::RDataFrame(1).Define("col0",[](){return 0;}).Snapshot<int>("t","f1.root",{"col0"});
+      // r->Define("col1",[](){return 0;}).Snapshot<int,int>("t","f0.root",{"col0","col1"});
+      TFile f(fileName, "RECREATE");
+      TTree t("t", "t");
+      int i = 42;
+      t.Branch("col0", &i);
+      if (ncols == 2)
+         t.Branch("col1", &i);
+      t.Fill();
+      t.Write();
+      f.Close();
+   };
+   createFile("DisappearingBranch0.root", 2);
+   createFile("DisappearingBranch1.root", 1);
+
+   TChain c("t");
+   c.Add("DisappearingBranch*.root");
+   TTreeReader r(&c);
+   TTreeReaderValue<int> rv(r, "col1");
+   r.Next();
+   EXPECT_EQ(*rv,42);
+   EXPECT_FALSE(r.Next());
+   
+
+   gSystem->Unlink("DisappearingBranch0.root");
+   gSystem->Unlink("DisappearingBranch1.root");
 }
