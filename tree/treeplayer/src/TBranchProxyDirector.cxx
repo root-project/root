@@ -136,17 +136,20 @@ namespace Internal {
 
       TTree* oldtree = fTree;
       fTree = newtree;
-      Notify();
+      if(!Notify()) return nullptr;
       return oldtree;
    }
 
    Bool_t TBranchProxyDirector::Notify() {
       fEntry = -1;
-
+      bool retVal = true;
       for_each(fDirected.begin(),fDirected.end(),NotifyDirected);
+      for (auto brProxy : fDirected) {
+         retVal = retVal && brProxy->Notify();
+      }
       Update update(fTree);
       for_each(fFriends.begin(),fFriends.end(),update);
-      return kTRUE;
+      return retVal;
    }
 
 } // namespace Internal
