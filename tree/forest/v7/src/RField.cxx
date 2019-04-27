@@ -49,10 +49,13 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
 {
    std::string normalizedType(typeName);
    normalizedType.erase(remove_if(normalizedType.begin(), normalizedType.end(), isspace), normalizedType.end());
+   // TODO(jblomer): use a type translation map
    if (normalizedType == "Float_t") normalizedType = "float";
    if (normalizedType == "Double_t") normalizedType = "double";
    if (normalizedType == "Int_t") normalizedType = "std::int32_t";
    if (normalizedType == "int") normalizedType = "std::int32_t";
+   if (normalizedType == "unsigned") normalizedType = "std::uint32_t";
+   if (normalizedType == "unsigned int") normalizedType = "std::uint32_t";
    if (normalizedType == "UInt_t") normalizedType = "std::uint32_t";
    if (normalizedType == "ULong64_t") normalizedType = "std::uint64_t";
    if (normalizedType == "string") normalizedType = "std::string";
@@ -67,6 +70,12 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType == "std::string") return new RField<std::string>(fieldName);
    if (normalizedType.substr(0, 12) == "std::vector<") {
       std::string itemTypeName = normalizedType.substr(12, normalizedType.length() - 13);
+      auto itemField = Create(GetCollectionName(fieldName), itemTypeName);
+      return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
+   }
+   // For the time being, we silently read RVec fields as std::vector
+   if (normalizedType.substr(0, 19) == "ROOT::VecOps::RVec<") {
+      std::string itemTypeName = normalizedType.substr(19, normalizedType.length() - 20);
       auto itemField = Create(GetCollectionName(fieldName), itemTypeName);
       return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
    }
