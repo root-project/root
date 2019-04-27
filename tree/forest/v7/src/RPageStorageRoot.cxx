@@ -136,7 +136,8 @@ void ROOT::Experimental::Detail::RPageSinkRoot::CommitCluster(ROOT::Experimental
 
 void ROOT::Experimental::Detail::RPageSinkRoot::CommitDataset()
 {
-   fDirectory->WriteObject(&fForestFooter, RMapper::kKeyForestFooter);
+   if (fDirectory)
+      fDirectory->WriteObject(&fForestFooter, RMapper::kKeyForestFooter);
 }
 
 

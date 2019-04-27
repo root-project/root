@@ -1,9 +1,10 @@
-#include "ROOT/RDataFrame.hxx"
-#include "ROOT/RForest.hxx"
-#include "ROOT/RForestDS.hxx"
-#include "ROOT/RForestModel.hxx"
-#include "ROOT/RPageStorage.hxx"
-#include "ROOT/RPageStorageRoot.hxx"
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RForest.hxx>
+#include <ROOT/RForestDS.hxx>
+#include <ROOT/RForestModel.hxx>
+#include <ROOT/RPageStorage.hxx>
+#include <ROOT/RPageStorageRoot.hxx>
+#include <ROOT/RVec.hxx>
 
 #include <TClass.h>
 #include <TFile.h>
@@ -162,6 +163,54 @@ TEST(RForest, WriteRead)
    EXPECT_EQ(8.0, (*rdNnlo)[2][3]);
 
    EXPECT_STREQ("abc", rdKlass->s.c_str());
+}
+
+TEST(RForest, RVec)
+{
+   FileRaii fileGuard("test.root");
+
+   auto modelWrite = RForestModel::Create();
+   auto wrJets = modelWrite->MakeField<ROOT::VecOps::RVec<float>>("jets");
+   wrJets->push_back(42.0);
+   wrJets->push_back(7.0);
+
+   {
+      ROutputForest forest(std::move(modelWrite), std::make_unique<RPageSinkRoot>("f", "test.root"));
+      forest.Fill();
+      wrJets->clear();
+      wrJets->push_back(1.0);
+      forest.Fill();
+   }
+
+   auto modelReadAsRVec = RForestModel::Create();
+   auto rdJetsAsRVec = modelReadAsRVec->MakeField<ROOT::VecOps::RVec<float>>("jets");
+
+   RInputForest forestRVec(std::move(modelReadAsRVec), std::make_unique<RPageSourceRoot>("f", "test.root"));
+   EXPECT_EQ(2U, forestRVec.GetNEntries());
+
+   forestRVec.SetEntry(0);
+   EXPECT_EQ(2U, rdJetsAsRVec->size());
+   EXPECT_EQ(42.0, (*rdJetsAsRVec)[0]);
+   EXPECT_EQ(7.0, (*rdJetsAsRVec)[1]);
+
+   forestRVec.SetEntry(1);
+   EXPECT_EQ(1U, rdJetsAsRVec->size());
+   EXPECT_EQ(1.0, (*rdJetsAsRVec)[0]);
+
+   auto modelReadAsStdVector = RForestModel::Create();
+   auto rdJetsAsStdVector = modelReadAsStdVector->MakeField<std::vector<float>>("jets");
+
+   RInputForest forestStdVector(std::move(modelReadAsStdVector), std::make_unique<RPageSourceRoot>("f", "test.root"));
+   EXPECT_EQ(2U, forestRVec.GetNEntries());
+
+   forestStdVector.SetEntry(0);
+   EXPECT_EQ(2U, rdJetsAsStdVector->size());
+   EXPECT_EQ(42.0, (*rdJetsAsStdVector)[0]);
+   EXPECT_EQ(7.0, (*rdJetsAsStdVector)[1]);
+
+   forestStdVector.SetEntry(1);
+   EXPECT_EQ(1U, rdJetsAsStdVector->size());
+   EXPECT_EQ(1.0, (*rdJetsAsStdVector)[0]);
 }
 
 TEST(RForest, Clusters)

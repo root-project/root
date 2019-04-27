@@ -18,15 +18,18 @@
 
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RColumnElement.hxx>
+#include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RForestUtil.hxx>
 #include <ROOT/RStringView.hxx>
+#include <ROOT/RVec.hxx>
 #include <ROOT/TypeTraits.hxx>
 
 #include <TGenericClassInfo.h>
 #include <TError.h>
 
 #include <algorithm>
+#include <iostream>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -258,7 +261,7 @@ public:
    size_t GetValueSize() const override;
 };
 
-/// The generic field for a (nested) vector
+/// The generic field for a (nested) std::vector<Type>
 class RFieldVector : public Detail::RFieldBase {
 private:
    size_t fItemSize;
@@ -588,6 +591,7 @@ public:
    size_t GetValueSize() const final { return sizeof(std::uint64_t); }
 };
 
+
 template <>
 class ROOT::Experimental::RField<std::string> : public ROOT::Experimental::Detail::RFieldBase {
 private:
@@ -643,6 +647,99 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where, ArgsT&&... args)
+   {
+      return ROOT::Experimental::RFieldValue<ContainerT>(
+         this, static_cast<ContainerT*>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValueBase GenerateValue(void* where) final {
+      return GenerateValue(where, ContainerT());
+   }
+   Detail::RFieldValueBase CaptureValue(void *where) final {
+      return ROOT::Experimental::RFieldValue<ContainerT>(true, this, static_cast<ContainerT*>(where));
+   }
+   size_t GetValueSize() const final { return sizeof(ContainerT); }
+};
+
+
+/**
+ * The RVec type has different layouts depending on the item type, therefore we cannot go with a generic
+ * RVec implementation as we can with std::vector
+ */
+template <typename ItemT>
+class ROOT::Experimental::RField<ROOT::VecOps::RVec<ItemT>> : public Detail::RFieldBase {
+   using ContainerT = typename ROOT::VecOps::RVec<ItemT>;
+private:
+   size_t fItemSize;
+   ClusterSize_t fNWritten;
+
+protected:
+   void DoAppend(const Detail::RFieldValueBase& value) final {
+      auto typedValue = reinterpret_cast<ContainerT*>(value.GetRawPtr());
+      auto count = typedValue->size();
+      for (unsigned i = 0; i < count; ++i) {
+         auto itemValue = fSubFields[0]->CaptureValue(&typedValue->data()[i]);
+         fSubFields[0]->Append(itemValue);
+      }
+      Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
+      fNWritten += count;
+      fColumns[0]->Append(elemIndex);
+   }
+   void DoRead(ForestSize_t index, Detail::RFieldValueBase* value) final {
+      auto typedValue = reinterpret_cast<ContainerT*>(value->GetRawPtr());
+      ClusterSize_t nItems;
+      ForestSize_t idxStart;
+      fPrincipalColumn->GetCollectionInfo(index, &idxStart, &nItems);
+      typedValue->resize(nItems);
+      for (unsigned i = 0; i < nItems; ++i) {
+         auto itemValue = fSubFields[0]->GenerateValue(&typedValue->data()[i]);
+         fSubFields[0]->Read(idxStart + i, &itemValue);
+      }
+   }
+
+public:
+   RField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField)
+      : ROOT::Experimental::Detail::RFieldBase(
+           fieldName, "ROOT::VecOps::RVec<" + itemField->GetType() + ">", EForestStructure::kCollection, false)
+      , fItemSize(itemField->GetValueSize()), fNWritten(0)
+   {
+      Attach(std::move(itemField));
+   }
+   explicit RField(std::string_view name)
+      : RField(name, std::make_unique<RField<ItemT>>(GetCollectionName(name.to_string())))
+   {
+   }
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+   RFieldBase* Clone(std::string_view newName) final {
+      auto newItemField = fSubFields[0]->Clone(GetCollectionName(newName.to_string()));
+      return new RField<ROOT::VecOps::RVec<ItemT>>(newName, std::unique_ptr<Detail::RFieldBase>(newItemField));
+   }
+
+   void DoGenerateColumns() final {
+      RColumnModel modelIndex(GetName(), EColumnType::kIndex, true /* isSorted*/);
+      fColumns.emplace_back(std::make_unique<Detail::RColumn>(modelIndex));
+      fPrincipalColumn = fColumns[0].get();
+   }
+   unsigned int GetNColumns() const final { return 1; }
+   void DestroyValue(const Detail::RFieldValueBase& value, bool dtorOnly = false) final {
+      auto vec = reinterpret_cast<ContainerT*>(value.GetRawPtr());
+      auto nItems = vec->size();
+      for (unsigned i = 0; i < nItems; ++i) {
+         auto itemValue = fSubFields[0]->CaptureValue(vec->data() + (i * fItemSize));
+         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+      }
+      vec->~RVec();
+      if (!dtorOnly)
+         free(vec);
+   }
+   void CommitCluster() final { fNWritten = 0; }
+
+   static std::string MyTypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::MyTypeName() + ">"; }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
