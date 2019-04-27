@@ -256,7 +256,11 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
       // This does not allow (yet) to precede the branch name with
       // its mother's name
       fBranch = fDirector->GetTree()->GetBranch(fBranchName.Data());
-      if (!fBranch) return false;
+      if (!fBranch) {
+         auto treeName = fDirector->GetTree()->GetName();
+         ::Error("TBranchProxy::Setup", "%s", Form("Unable to find branch %s in tree %s.\n",fBranchName.Data(), treeName));
+         return false;
+      }
 
       {
          // Calculate fBranchCount for a leaf.

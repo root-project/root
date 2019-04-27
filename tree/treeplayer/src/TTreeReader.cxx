@@ -301,7 +301,10 @@ Bool_t TTreeReader::Notify()
       SetBit(kBitHaveWarnedAboutEntryListAttachedToTTree);
    }
 
-   fDirector->Notify();
+   if (!fDirector->Notify()) {
+      Error("SetEntryBase()", "There was an error while notifying the proxies.");
+      return false;
+   }
 
    if (fProxiesSet) {
       for (auto value: fValues) {
