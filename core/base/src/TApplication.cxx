@@ -496,6 +496,8 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          char *arg = strchr(argv[i], '(');
          if (arg) *arg = '\0';
          char *dir = gSystem->ExpandPathName(argv[i]);
+         // ROOT-9959: we do not continue if we could not expand the path
+         if (!dir) continue;
          TUrl udir(dir, kTRUE);
          // remove options and anchor to check the path
          TString sfx = udir.GetFileAndOptions();
