@@ -367,11 +367,17 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 				if ( ! bFound ) {
 
-					var visibility = object.visible;
+					if ( bVisible ) {
 
-					if ( ! bVisible || object.bVisible ) object.visible = bVisible;
+						object.visible = object.userData.oldVisible;
+						delete object.userData.oldVisible;
+	
+					} else {
+	
+						object.userData.oldVisible = object.visible;
+						object.visible = bVisible;
 
-					object.bVisible = visibility;
+					}
 
 				}
 
@@ -381,6 +387,10 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 		this.renderScene.traverse( VisibilityChangeCallBack );
 
+	},
+
+	changeVisibilityAllObjects: function(bVisible){
+		this.renderScene.traverse( function(object){ object.visible = bVisible; } );
 	},
 
 	updateTextureMatrix: function () {
@@ -417,6 +427,9 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 		// debugger;
 
 		if ( this._selectedObjects.length > 0 ) {
+			// for(const obj of this._selectedObjects)
+			// 	if(obj.sel_type === 0) console.log("$", obj.geom[0].fRnrSelf);
+
 			// fetch objects that were created after secondary selection
 			let sec_sel = this._selectedObjects.map(function(v){ 
 				if(v.sec_sel) return v.geom;
@@ -472,6 +485,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 			this.checkForCustomAtts();
 			//console.log(this._groups);
 			
+			//console.log("$", this._groups[0]);
 			for(let i = 0; i < THREE.OutlinePass.selection_enum.total; ++i){
 				for(const group of this._groups[i])
 					if(group.length > 0)
