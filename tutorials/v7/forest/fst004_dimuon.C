@@ -172,6 +172,9 @@ void Convert() {
 
 
 void fst004_dimuon() {
+   // Support for multi-threading comes at a later point, for the time being do not enable
+   // ROOT::EnableImplicitMT();
+
    if (gSystem->AccessPathName(gForestFile))
       Convert();
 
