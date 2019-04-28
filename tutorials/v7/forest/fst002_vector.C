@@ -19,7 +19,6 @@ R__LOAD_LIBRARY(libROOTForest)
 
 #include <ROOT/RForest.hxx>
 #include <ROOT/RForestModel.hxx>
-#include <ROOT/RPageStorageRoot.hxx>
 
 #include <TCanvas.h>
 #include <TH1F.h>
@@ -52,13 +51,12 @@ void Write()
    // We create a unique pointer to an empty data model
    auto model = RForestModel::Create();
 
-   // Creating fields of std::vector is the same as creating fields of simple types.
-   // model->MakeField returns a shared pointer; we want to use the fld... variables with value semantics and
-   // and therefore we use ampersand and star in auto& = *model-> ...
-   auto& fldVpx = *model->MakeField<std::vector<float>>("vpx");
-   auto& fldVpy = *model->MakeField<std::vector<float>>("vpy");
-   auto& fldVpz = *model->MakeField<std::vector<float>>("vpz");
-   auto& fldVrand = *model->MakeField<std::vector<float>>("vrand");
+   // Creating fields of std::vector is the same as creating fields of simple types.  As a result, we get
+   // shared pointers of the given type
+   auto fldVpx = model->MakeField<std::vector<float>>("vpx");
+   auto fldVpy = model->MakeField<std::vector<float>>("vpy");
+   auto fldVpz = model->MakeField<std::vector<float>>("vpz");
+   auto fldVrand = model->MakeField<std::vector<float>>("vrand");
 
    // Ensure any previously created files from this tutorial are removed
    std::remove(kForestFile);
@@ -76,10 +74,10 @@ void Write()
    for (int i = 0; i < kNEvents; i++) {
       int npx = static_cast<int>(gRandom->Rndm(1) * 15);
 
-      fldVpx.clear();
-      fldVpy.clear();
-      fldVpz.clear();
-      fldVrand.clear();
+      fldVpx->clear();
+      fldVpy->clear();
+      fldVpz->clear();
+      fldVrand->clear();
 
       // Set the field data for the current event
       for (int j = 0; j < npx; ++j) {
@@ -90,10 +88,10 @@ void Write()
 
          hpx->Fill(px);
 
-         fldVpx.emplace_back(px);
-         fldVpy.emplace_back(py);
-         fldVpz.emplace_back(pz);
-         fldVrand.emplace_back(random);
+         fldVpx->emplace_back(px);
+         fldVpy->emplace_back(py);
+         fldVpz->emplace_back(pz);
+         fldVrand->emplace_back(random);
       }
 
       // Gui updates

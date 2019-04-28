@@ -108,7 +108,7 @@ void fst003_lhcbOpenData()
    TH1F *h = new TH1F("h", "B Flight Distance", 200, 0, 140);
    h->SetFillColor(48);
 
-   for (unsigned i = 0; i < forest->GetNEntries(); ++i) {
+   for (unsigned int i = 0; i < forest->GetNEntries(); ++i) {
       // Populate the created field for every entry...
       forest->SetEntry(i);
       // ...and use it to fill the histogram
