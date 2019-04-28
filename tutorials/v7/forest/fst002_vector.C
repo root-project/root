@@ -27,6 +27,7 @@ R__LOAD_LIBRARY(libROOTForest)
 #include <TSystem.h>
 
 #include <cstdio>
+#include <iostream>
 #include <memory>
 #include <vector>
 #include <utility>
@@ -120,7 +121,7 @@ void Read()
    auto forest = RInputForest::Create("F", kForestFile);
 
    // Quick overview of the forest's key meta-data
-   forest->Print();
+   std::cout << forest->Print();
 
    // Generate a handle to a specific field.  If the field type does not match the field in the forest, a runtime
    // error is thrown.
