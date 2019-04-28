@@ -21,7 +21,9 @@ R__LOAD_LIBRARY(libROOTForest)
 #include <ROOT/RForestModel.hxx>
 
 #include <TBranch.h>
+#include <TCanvas.h>
 #include <TFile.h>
+#include <TH1F.h>
 #include <TLeaf.h>
 #include <TSystem.h>
 #include <TTree.h>
