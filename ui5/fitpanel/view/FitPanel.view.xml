@@ -227,17 +227,17 @@
 														defaultSpan="L2 M4 S6">
 														<l:content>
 															<Text text="Number of Points:"/>
-															<StepInput value="40" min="0" max="100" step="1" editable="true"/>
+															<StepInput id="contourPoints" value="40" min="0" max="100" step="1" editable="true"/>
 															<Text text="Parameter 1:"/>
-															<ComboBox id="ContourParA" selectedKey="{/fContourPar1Id}" items="{ path: '/fContourPar1', sorter: { path: 'fSet' } }">
+															<ComboBox id="ContourPar1" selectedKey="{/fContourPar1Id}" items="{ path: '/fContour1', sorter: { path: 'fSet' } }">
 																<core:Item key="{fId}" text="{fSet}" />
 															</ComboBox>	
 															<Text text="Parameter 2"/>
-															<ComboBox id="ContourParBG" selectedKey="{/fContourPar2Id}" items="{ path: '/fContourPar2', sorter: { path: 'fSet' } }">
+															<ComboBox id="ContourPar2" selectedKey="{/fContourPar2Id}" items="{ path: '/fContour2', sorter: { path: 'fSet' } }">
 																<core:Item key="{fId}" text="{fSet}" />
 															</ComboBox>
 															<Text text="Confidence Level:"/>
-															<StepInput value="0.683" min="0.000" max="100.000" step="0.001" editable="true" displayValuePrecision="3"/>
+															<StepInput id="ConfLevel" value="0.683" min="0.000" max="100.000" step="0.001" editable="true" displayValuePrecision="3"/>
 															<Text text="Fill Colour:">
 																<layoutData>
 																	<l:GridData span="L2 M2 S3"/>
@@ -254,6 +254,11 @@
 																</layoutData>
 															</CheckBox>
 														</l:content>
+														<Button text="Draw" press="advContourDraw">
+															<layoutData>
+																<l:GridData span="L2 M2 S3"/>
+															</layoutData>
+														</Button>
 													</l:Grid>
 												</IconTabFilter>
 												<IconTabFilter text="Scan">
@@ -294,8 +299,6 @@
 												</IconTabFilter>
 											</items>
 										</IconTabBar>
-										<Button text="Draw" press="advDraw"/>
-										<Button text="Close" press="advClose"/>
 									</content>
 								</Panel>
 							</l:content>

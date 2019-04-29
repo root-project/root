@@ -58,9 +58,9 @@ struct RFitPanelModel6 {
    std::string fSelectXYId;
    std::vector<RComboBoxItem> fMethod;
    std::string fSelectMethodId;
-   std::vector<RComboBoxItem> fContourPar1;
+   std::vector<RComboBoxItem> fContour1;
    std::string fContourPar1Id;
-   std::vector<RComboBoxItem> fContourPar2;
+   std::vector<RComboBoxItem> fContour2;
    std::string fContourPar2Id;
    std::vector<RComboBoxItem> fScanPar;
    std::string fScanParId;
@@ -116,6 +116,12 @@ struct RFitPanelModel6 {
    bool fSame {false};
    bool fNoDrawing {};
    bool fNoStore {false};
+
+   //Advanced Options
+   int fContourPar1{0};
+   int fContourPar2{0};
+   int fContourPoints{0};
+   double fConfLevel{0.};
 };
 
 class RFitPanel6 {

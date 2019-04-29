@@ -56,6 +56,7 @@ sap.ui.define([
             this.showParametersDialog(data);
          } else if (msg.startsWith("ADVANCED:")) {
          	var data = JSROOT.parse(msg.substr(9));
+         	//this.getAdvanced();
          	if(data) {
                this.getView().setModel(new JSONModel(data));
                this._data = data;
@@ -86,12 +87,13 @@ sap.ui.define([
          data.fMaxInter = maxInterations;
          
 
-         console.log("Method Min " + libMin);
+         //console.log("Method Min " + data);
 
          //Refresh the model
          this.getView().getModel().refresh();
          //Each time we click the button, we keep the current state of the model
          this.copyModel[count] = JSROOT.extend({},data);
+         //console.log("DOFIT " + this.getView().getModel().getJSON());
 
          if (this.websocket)
             this.websocket.Send('DOFIT:'+this.getView().getModel().getJSON());
@@ -217,6 +219,25 @@ sap.ui.define([
 
       },
 
+      advContourDraw: function() {
+
+      	var data = this.getView().getModel().getData();
+      	var fContourPoints = this.byId("contourPoints").getValue();
+      	var fContourPar1 = this.byId("ContourPar1").getSelectedItemId();
+      	var fContourPar2 = this.byId("ContourPar2").getSelectedItemId();
+      	var fConfLevel = this.byId("ConfLevel").getValue();
+      	// var fContourColor = this.byId("colorPicker").getColorString();
+      	//console.log("Contour Points " + fContourPar1)
+	  	//this.getView().getModel().refresh();
+         
+
+        //Each time we click the button, we keep the current state of the model
+        if (this.websocket)
+            this.websocket.Send('SETCONTOUR:'+this.getView().getModel().getJSON());
+
+
+      },
+
       setParametersDialog: function(){
          var func = this.getView().byId("TypeXY").getValue();
          var msg = "GETPARS:" + func;
@@ -286,6 +307,7 @@ sap.ui.define([
 
          oTable.bindAggregation("items","/Data",oTableItems,null);
          oTable.setModel(oModel);
+         console.log("oModel " + oModel);
 
          this.parsDialog = new mDialog({
             title: "Set Prarameters",
@@ -340,7 +362,6 @@ sap.ui.define([
 
       handleChange: function (oEvent) {
          var oView = this.getView();
-         //oView.byId(this.inputId).setValue(oEvent.getParameter("colorString"));
          this.inputId = "";
          var color = oEvent.getParameter("colorString");
          var oButtonContour = this.getView().byId("colorContour");
@@ -358,10 +379,22 @@ sap.ui.define([
 
 	  advancedOptionsDialog: function() {
 	  	var func = this.getView().byId("TypeXY").getValue();
-        var msg = "ADVANCED:" + func;
+        var msg = "GETADVANCED:" + func;
         if (this.websocket)
             this.websocket.Send(msg);
 	  },
+
+	  // getAdvanced: function() {
+
+	  // 	var data = this.getView().getModel().getData();
+	  // 	this.getView().getModel().refresh();
+	  // 	console.log("data " + this.getView().getModel().getJSON())
+   //       //Each time we click the button, we keep the current state of the model
+   //       if (this.websocket)
+   //          this.websocket.Send('SETADVANCED:'+this.getView().getModel().getJSON());
+
+
+	  // },
 
    });
 
