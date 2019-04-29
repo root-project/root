@@ -23,7 +23,8 @@ It uses 4 bytes to store the string length (1 byte only for TString).
 #include "TBuffer.h"
 #include "Bytes.h"
 
-ClassImp(TStringLong);
+// Remove to avoid deprecation warnings during root build
+//ClassImp(TStringLong);
 
 
 ////////////////////////////////////////////////////////////////////////////////
