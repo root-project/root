@@ -120,6 +120,7 @@ void Read()
 
    // Quick overview of the forest's key meta-data
    std::cout << forest->Print();
+   // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
 
    // Generate a handle to a specific field.  If the field type does not match the field in the forest, a runtime
    // error is thrown.
