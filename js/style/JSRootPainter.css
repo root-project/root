@@ -341,7 +341,7 @@
     display: inline-block;
     height: 16px;
     width: 16px;
-    background-image:  url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAADFBMVEX/////AP8A/wD////pL6WoAAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAHdElNRQfgCw4PNgzGaW1jAAAARUlEQVQI12NgEGDQZAASKkBigQKQ6GhgYBDiYgASIiAigIGBS8iBgUFhEpCnoAEkUkNDQxkagUIMrUDMMAVETAARQI0MAD5GCJ7tAr1aAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE2LTExLTE0VDE2OjUxOjUzKzAxOjAwi1Gz3gAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNi0xMS0xNFQxNjo1MTozNiswMTowMG5bLUIAAAAASUVORK5CYII='); 
+    background-image:  url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAADFBMVEX/////AP8A/wD////pL6WoAAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAHdElNRQfgCw4PNgzGaW1jAAAARUlEQVQI12NgEGDQZAASKkBigQKQ6GhgYBDiYgASIiAigIGBS8iBgUFhEpCnoAEkUkNDQxkagUIMrUDMMAVETAARQI0MAD5GCJ7tAr1aAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE2LTExLTE0VDE2OjUxOjUzKzAxOjAwi1Gz3gAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNi0xMS0xNFQxNjo1MTozNiswMTowMG5bLUIAAAAASUVORK5CYII=');
 }
 
 /*--------------------------------------------------
@@ -540,7 +540,7 @@
 }
 
 /* stylesheet for embedded toolbar buttons */
- 
+
 .jsroot .svg_toolbar_btn {
     fill: steelblue;
     cursor: pointer;
@@ -622,8 +622,8 @@
    pointer-events: all;
 }
 
-.jsroot_browser_area p { 
-   margin-top: 5px; 
+.jsroot_browser_area p {
+   margin-top: 5px;
    margin-bottom: 5px;
    white-space: nowrap;
 }
@@ -644,9 +644,14 @@
    border: 0;
 }
 
-/* separator style, used for browser and new grid layout 
-*/
+.jsroot_inspector {
+    border: 1px solid black;
+    box-shadow: 1px 1px 2px 2px #aaa;
+    opacity: 0.95;
+    background-color: white;
+}
 
+/* separator style, used for browser and new grid layout */
 
 .jsroot_separator {
    pointer-events: all;
@@ -676,7 +681,7 @@
 .jsroot_h_separator {
 	cursor: ns-resize;
    background-color: azure;
-} 
+}
 
 .jsroot_v_separator {
 	cursor: ew-resize;

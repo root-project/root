@@ -895,13 +895,15 @@
       }
 
       if (res.PadTitle) res.Axis += ";USE_PAD_TITLE";
+
+      res.HOptions = res.Axis;
    }
 
    TGraphPainter.prototype.CreateBins = function() {
       var gr = this.GetObject();
       if (!gr) return;
 
-      var p, kind = 0, npoints = gr.fNpoints;
+      var kind = 0, npoints = gr.fNpoints;
       if ((gr._typename==="TCutG") && (npoints>3)) npoints--;
 
       if (gr._typename == 'TGraphErrors') kind = 1; else
@@ -910,7 +912,7 @@
 
       this.bins = [];
 
-      for (p=0;p<npoints;++p) {
+      for (var p=0; p<npoints; ++p) {
          var bin = { x: gr.fX[p], y: gr.fY[p], indx: p };
          switch(kind) {
             case 1:
@@ -955,6 +957,9 @@
       var dx = (xmax-xmin)*0.1, dy = (ymax-ymin)*0.1,
           uxmin = xmin - dx, uxmax = xmax + dx,
           minimum = ymin - dy, maximum = ymax + dy;
+
+      // this is draw options with maximal axis range which could be unzoomed
+      this.options.HOptions = this.options.Axis + ";ymin:" + minimum + ";ymax:" + maximum;
 
       if ((uxmin<0) && (xmin>=0)) uxmin = xmin*0.9;
       if ((uxmax>0) && (xmax<=0)) uxmax = 0;
@@ -1982,8 +1987,8 @@
 
       painter.CreateStat();
 
-      if (!painter.main_painter() && painter.options.Axis) {
-         JSROOT.draw(divid, painter.CreateHistogram(), painter.options.Axis, painter.PerformDrawing.bind(painter, divid));
+      if (!painter.main_painter() && painter.options.HOptions) {
+         JSROOT.draw(divid, painter.CreateHistogram(), painter.options.HOptions, painter.PerformDrawing.bind(painter, divid));
       } else {
          painter.PerformDrawing(divid);
       }
