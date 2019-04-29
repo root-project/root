@@ -1,5 +1,6 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/RSlotStack.hxx>
+#include <TStatistic.h> // To check reading of columns with types which are mothers of the column type
 #include <TSystem.h>
 
 #include <mutex>
@@ -88,12 +89,24 @@ TEST(RDataFrameNodes, DoubleEvtLoop)
 }
 
 // ROOT-9736
-TEST(RDataFrameNodes, InheritanceOfCustomColumns) 
+TEST(RDataFrameNodes, InheritanceOfCustomColumns)
 {
    ROOT::RDataFrame df(1);
    int nBins = -1;
    const auto nBinsExpected = 42;
-   df.Define("b", [](){return TH1F("b","b",nBinsExpected,0,1);})
-      .Foreach([&nBins](TH1& h){nBins = h.GetNbinsX();}, {"b"});
+   df.Define("b", []() { return TH1F("b", "b", nBinsExpected, 0, 1); })
+      .Foreach([&nBins](TH1 &h) { nBins = h.GetNbinsX(); }, {"b"});
    EXPECT_EQ(nBins, nBinsExpected);
+
+   const auto ofileName = "InheritanceOfCustomColumns.root";
+
+   const auto val = 42.;
+   auto createStat = [&val]() {
+      TStatistic t;
+      t.Fill(val);
+      return t;
+   };
+   auto checkStat = [&val](TObject &o) { EXPECT_EQ(val, ((TStatistic *)&o)->GetMean()); };
+   ROOT::RDataFrame(1).Define("x", createStat).Snapshot<TStatistic>("t", ofileName, {"x"})->Foreach(checkStat, {"x"});
+   gSystem->Unlink(ofileName);
 }
