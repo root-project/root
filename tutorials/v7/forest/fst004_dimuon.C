@@ -64,6 +64,7 @@ private:
    ColumnValues_t fColumnValues;
    static constexpr const auto fNColumns = std::tuple_size<ColumnValues_t>::value;
    std::shared_ptr<ROutputForest> fForest;
+   int counter;
 
    template<std::size_t... S>
    void InitializeImpl(std::index_sequence<S...>) {
@@ -89,7 +90,10 @@ public:
    RForestHelper(const RForestHelper&) = delete;
    std::shared_ptr<ROutputForest> GetResultPtr() const { return fForest; }
 
-   void Initialize() {}
+   void Initialize()
+   {
+      counter = 0;
+   }
 
    void InitTask(TTreeReader *, unsigned int) {}
 
@@ -98,6 +102,8 @@ public:
    {
       ExecImpl(std::make_index_sequence<fNColumns>(), values...);
       fForest->Fill();
+      if (++counter % 100000 == 0)
+         std::cout << "Wrote " << counter << " entries" << std::endl;
    }
 
    void Finalize()
@@ -109,33 +115,19 @@ public:
 };
 
 
-/// Return the invariant mass of multiple particles given the collections of the
-/// quantities transverse momentum (pt), rapidity (eta), azimuth (phi) and mass.
-///
-/// The function computes the invariant mass of multiple particles with the
-/// four-vectors (pt, eta, phi, mass).
-///
-/// In contrast to ROOT's built-in version, this version works on std::vector instead of RVec.
+/// A wrapper for ROOT's InvariantMass function that takes std::vector instead of RVecs
 template <typename T>
 T InvariantMassStdVector(
    const std::vector<T>& pt, const std::vector<T>& eta, const std::vector<T>& phi, const std::vector<T>& mass)
 {
    assert(pt.size() == eta.size() == phi.size() == mass.size() == 2);
-   // Conversion from (mass, pt, eta, phi) to (e, x, y, z) coordinate system
-   const auto x0 = pt[0] * cos(phi[0]);   const auto x1 = pt[1] * cos(phi[1]);
-   const auto y0 = pt[0] * sin(phi[0]);   const auto y1 = pt[1] * sin(phi[1]);
-   const auto z0 = pt[0] * sinh(eta[0]);  const auto z1 = pt[1] * sinh(eta[1]);
-   const auto e0 = sqrt(x0 * x0 + y0 * y0 + z0 * z0 + mass[0] * mass[0]);
-   const auto e1 = sqrt(x1 * x1 + y1 * y1 + z1 * z1 + mass[1] * mass[1]);
 
-   // Addition of particle four-vectors
-   const auto xs = x0 + x1;
-   const auto ys = y0 + y1;
-   const auto zs = z0 + z1;
-   const auto es = e0 + e1;
+   ROOT::VecOps::RVec<float> rvPt(pt);
+   ROOT::VecOps::RVec<float> rvEta(eta);
+   ROOT::VecOps::RVec<float> rvPhi(phi);
+   ROOT::VecOps::RVec<float> rvMass(mass);
 
-   // Return invariant mass with (+, -, -, -) metric
-   return sqrt(es * es - xs * xs - ys * ys - zs * zs);
+   return InvariantMass(rvPt, rvEta, rvPhi, rvMass);
 }
 
 // We use an RDataFrame custom snapshotter to convert between TTree and RForest.
@@ -185,7 +177,7 @@ void fst004_dimuon() {
    // Create a data frame from the input forest
    auto df = std::make_unique<ROOT::RDataFrame>(std::make_unique<RForestDS>(forest.get()));
 
-   // As of this point, the tutorial is identical to df102_NanoAODDimuonAnalysis expect the use of
+   // As of this point, the tutorial is identical to df102_NanoAODDimuonAnalysis except the use of
    // InvariantMassStdVector instead of InvariantMass
 
    // For simplicity, select only events with exactly two muons and require opposite charge
