@@ -233,7 +233,7 @@ ROOT::Experimental::RBrowser::RBrowser()
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->WebWindowCallback(connid, arg); });
-   fWebWindow->SetGeometry(900, 700); // configure predefined window geometry
+   fWebWindow->SetGeometry(1200, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
    Show();
