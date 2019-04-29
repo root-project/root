@@ -129,9 +129,9 @@ sap.ui.define(['sap/ui/core/Component',
 		  }
 		  var file = oEvent.getParameter("files")[0];
 		  var filename = file.name;
-		  if (filename.endsWith(".c") || filename.endsWith(".cc") || filename.endsWith(".cpp") ||
-				filename.endsWith(".cxx") || filename.endsWith(".h") || filename.endsWith(".hh") ||
-				filename.endsWith(".hxx"))
+		  if (filename.endsWith(".C") || filename.endsWith(".c") || filename.endsWith(".cc") ||
+		      filename.endsWith(".cpp") || filename.endsWith(".cxx") || filename.endsWith(".h") ||
+		      filename.endsWith(".hh") || filename.endsWith(".hxx"))
           this.getView().byId("aCodeEditor").setType('c_cpp');
         else if (filename.endsWith(".py"))
           this.getView().byId("aCodeEditor").setType('python');
