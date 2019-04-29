@@ -342,13 +342,13 @@ In addition we have :
    - Provide initial WebVR support, thanks to Diego Marcos
    - Use gStyle attributes to draw histogram title
    - Enable projections drawing also with TH2 lego plots
-   - Many adjustment with new TWebCanvas - interactivity, attributes/position updates
+   - Many adjustment with new TWebCanvas - interactivity, attributes/position updates, context menus
    - Upgrade three.js 86 -> 102, use SoftwareRenderer instead of CanvasRenderer
    - Upgrade d3.js 4.4.4 -> 5.7.0
    - Fix - support clipping for tracks and points in geo painter
    - Fix - drawing of TGeoNode with finder
    - Fix - key press events processed only in active pad (ROOT-9128)
-   - Fix - use X0/Y0 in xtru shape (#182), thanks to @altavir
+   - Fix - use X0/Y0 in xtru shape, thanks to @altavir
 
 
 ### New files location
