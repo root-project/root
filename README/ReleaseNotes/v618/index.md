@@ -328,18 +328,28 @@ In addition we have :
 
 ## JavaScript ROOT
 
-### New functionality
+### New functionality from 5.7.0 release
 
    - Add support of TProfile2Poly class
    - Add support of TGeoOverlap class
+   - Add support of TGeoHalfSpace for composites
    - Implement update of TF2 drawings, see tutorials/graphics/anim.C
    - Improve windows handling in flex(ible) layout
+   - Provide special widget for object inspector
    - Use requestAnimationFrame when do monitoring, improves performance
    - Better position for text in TH2Poly drawings
-   - Upgrade three.js 86 -> 102, use SoftwareRenderer instead of CanvasRenderer
    - Support eve7 geometry viewer - render data generated in ROOT itself
    - Provide initial WebVR support, thanks to Diego Marcos
    - Use gStyle attributes to draw histogram title
+   - Enable projections drawing also with TH2 lego plots
+   - Many adjustment with new TWebCanvas - interactivity, attributes/position updates
+   - Upgrade three.js 86 -> 102, use SoftwareRenderer instead of CanvasRenderer
+   - Upgrade d3.js 4.4.4 -> 5.7.0
+   - Fix - support clipping for tracks and points in geo painter
+   - Fix - drawing of TGeoNode with finder
+   - Fix - key press events processed only in active pad (ROOT-9128)
+   - Fix - use X0/Y0 in xtru shape (#182), thanks to @altavir
+
 
 ### New files location
 
