@@ -140,6 +140,7 @@ private:
    TString          ExtractSolid(TGeoShape* volShape);     //adds <shape> to <solids>
    void             ExtractVolumes(TGeoVolume* volume);    //result <volume> node...  + corresp. shape
    void             ExtractMatrices(TObjArray *matrices);  //adds <matrix> to <define>
+   void             ExtractConstants(TGeoManager *geom);   //adds <constant> to <define>
    void             ExtractOpticalSurfaces(TObjArray *surfaces); //adds <opticalsurface> to <solids>
    void             ExtractSkinSurfaces(TObjArray *surfaces);    //adds <skinsurface> to <structure>
    void             ExtractBorderSurfaces(TObjArray *surfaces);  //adds <bordersurface> to <structure>
@@ -206,6 +207,7 @@ private:
    XMLNodePointer_t CreatePositionN(const char * name, Xyz position, const char * type = "position", const char * unit = "cm");
    XMLNodePointer_t CreateRotationN(const char * name, Xyz rotation, const char * type = "rotation", const char * unit = "deg");
    XMLNodePointer_t CreateMatrixN(TGDMLMatrix const *matrix);
+   XMLNodePointer_t CreateConstantN(const char *name, Double_t value);
    TGeoCompositeShape* CreateFakeCtub(TGeoCtub * geoShape);  //create fake cut tube as intersection
 
    //check name (2nd parameter) whether it is in the list (1st parameter)
