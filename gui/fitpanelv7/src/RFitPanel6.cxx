@@ -371,10 +371,6 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 
 }
 
-// void ROOT::Math::MinimizerOptions::SetMinimizerAlgorithm (const char *    type) {
-//   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
-//   printf("Min Tab: %s\n", obj->fMinLibrary.c_str());
-// }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Dummy function, called when "Fit" button pressed in UI
 void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
