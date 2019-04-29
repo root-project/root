@@ -69,6 +69,7 @@ private:
    template<std::size_t... S>
    void InitializeImpl(std::index_sequence<S...>) {
       auto eventModel = ROOT::Experimental::RForestModel::Create();
+      // Create the fields and the shared pointers to the connected values
       std::initializer_list<int> expander{
          (std::get<S>(fColumnValues) = eventModel->MakeField<ColumnTypes_t>(fColNames[S]), 0)...};
       fForest = std::move(ROutputForest::Create(std::move(eventModel), fForestName, fRootFile));
@@ -76,6 +77,8 @@ private:
 
    template<std::size_t... S>
    void ExecImpl(std::index_sequence<S...>, ColumnTypes_t... values) {
+      // For every entry, set the destination of the forest's default entry's shared pointers to the given values,
+      // which are provided by RDataFrame
       std::initializer_list<int> expander{(*std::get<S>(fColumnValues) = values, 0)...};
    }
 
@@ -100,6 +103,7 @@ public:
    /// This is a method executed at every entry
    void Exec(unsigned int slot, ColumnTypes_t... values)
    {
+      // Populate the forest's fields data locations with the provided values, then write to disk
       ExecImpl(std::make_index_sequence<fNColumns>(), values...);
       fForest->Fill();
       if (++counter % 100000 == 0)
