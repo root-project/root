@@ -387,18 +387,6 @@ sap.ui.define([
             this.websocket.Send(msg);
 	  },
 
-	  // getAdvanced: function() {
-
-	  // 	var data = this.getView().getModel().getData();
-	  // 	this.getView().getModel().refresh();
-	  // 	console.log("data " + this.getView().getModel().getJSON())
-   //       //Each time we click the button, we keep the current state of the model
-   //       if (this.websocket)
-   //          this.websocket.Send('SETADVANCED:'+this.getView().getModel().getJSON());
-
-
-	  // },
-
    });
 
    return
