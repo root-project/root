@@ -56,6 +56,8 @@ RDF::RDataSource::Record_t RForestDS::GetColumnReadersImpl(std::string_view name
 {
    const auto index = std::distance(
       fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
+   // TODO(jblomer): check expected type info like in, e.g., RRootDS.cxx
+   // There is a problem extracting the type info for std::int32_t and company though
 
    std::vector<void*> ptrs;
    R__ASSERT(fNSlots == 1);
