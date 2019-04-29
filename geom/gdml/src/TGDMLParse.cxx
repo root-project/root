@@ -471,7 +471,9 @@ XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    // name = TString::Format("%s_%s", name.Data(), fCurrentFile);
    //}
 
-   fconsts[name.Data()] = Value(value);
+   Double_t val = Value(value);
+   fconsts[name.Data()] = val;
+   gGeoManager->AddProperty(name.Data(), val);
 
    return node;
 }
@@ -1275,8 +1277,9 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 
    TGeoManager* mgr = gGeoManager;
    TGeoElementTable* tab_ele = mgr->GetElementTable();
-   TList properties;
+   TList properties, constproperties;
    properties.SetOwner();
+   constproperties.SetOwner();
    // We have to assume the media are monotonic increasing starting with 1
    static int medid = mgr->GetListOfMedia()->GetSize()+1;
    XMLNodePointer_t child = gdml->GetChild(node);
@@ -1314,9 +1317,15 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
                else if(tempattr == "ref") {
                   property->SetTitle(gdml->GetAttrValue(attr));
                   TGDMLMatrix *matrix = fmatrices[property->GetTitle()];
-                  if (!matrix)
-                     Error("MatProcess", "Reference matrix %s for material %s not found", property->GetTitle(), name.Data());
-                  properties.Add(property);
+                  if (matrix) properties.Add(property);
+                  else {
+                     Bool_t error = 0;
+                     gGeoManager->GetProperty(property->GetTitle(), &error);
+                     if (error)
+                        Error("MatProcess", "Reference %s for material %s not found", property->GetTitle(), name.Data());
+                     else
+                        constproperties.Add(property);
+                  }
                }
                attr = gdml->GetNextAttr(attr);
             }
@@ -1373,6 +1382,12 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
          while ((property = (TNamed*)next()))
             mat->AddProperty(property->GetName(), property->GetTitle());
       }
+      if (constproperties.GetSize()) {
+         TNamed *property;
+         TIter next(&constproperties);
+         while ((property = (TNamed*)next()))
+            mat->AddConstProperty(property->GetName(), property->GetTitle());
+      }
       mixflag = 0;
       //Note: Object(name, title) corresponds to Element(formula, name)
       TGeoElement* mat_ele = tab_ele->FindElement(mat_name);
@@ -1405,9 +1420,15 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
                else if(tempattr == "ref") {
                   property->SetTitle(gdml->GetAttrValue(attr));
                   TGDMLMatrix *matrix = fmatrices[property->GetTitle()];
-                  if (!matrix)
-                     Error("MatProcess", "Reference matrix %s for material %s not found", property->GetTitle(), name.Data());
-                  properties.Add(property);
+                  if (matrix) properties.Add(property);
+                  else {
+                     Bool_t error = 0;
+                     gGeoManager->GetProperty(property->GetTitle(), &error);
+                     if (error)
+                        Error("MatProcess", "Reference %s for material %s not found", property->GetTitle(), name.Data());
+                     else
+                        constproperties.Add(property);
+                  }
                }
                attr = gdml->GetNextAttr(attr);
             }
@@ -1494,6 +1515,12 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
          TIter next(&properties);
          while ((property = (TNamed*)next()))
             mix->AddProperty(property->GetName(), property->GetTitle());
+      }
+      if (constproperties.GetSize()) {
+         TNamed *property;
+         TIter next(&constproperties);
+         while ((property = (TNamed*)next()))
+            mix->AddConstProperty(property->GetName(), property->GetTitle());
       }
       Int_t natoms;
       Double_t weight;
