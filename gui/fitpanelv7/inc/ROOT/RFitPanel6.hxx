@@ -118,10 +118,10 @@ struct RFitPanelModel6 {
    bool fNoStore {false};
 
    //Advanced Options
-   int fContourPar1{0};
-   int fContourPar2{0};
+   std::string fContourPar1;
+   std::string fContourPar2;
    int fContourPoints{0};
-   double fConfLevel{0.};
+   float fConfLevel{0.};
 };
 
 class RFitPanel6 {
@@ -136,6 +136,8 @@ class RFitPanel6 {
    void ProcessData(unsigned connid, const std::string &arg);
 
    void DoFit(const std::string &model);
+
+   void DrawContour(const std::string &model);
 
 public:
    /// normal constructor

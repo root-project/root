@@ -279,6 +279,15 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       return;
    }
 
+    if (arg.find("SETCONTOUR:") == 0) {
+
+      std::string argC = arg;
+      argC.erase(0,11);
+      DrawContour(argC);
+      return;
+   }
+
+
    if (arg.find("GETPARS:") == 0) {
 
       RFitFunc info;
@@ -360,32 +369,6 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
     return;
   }
 
- if (arg.find("SETCONTOUR:") == 0) {
-      auto info = TBufferJSON::FromJSON<RFitFunc>(arg.substr(11));
-      ROOT::Experimental::RFitPanelModel6 model;
-      // auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
-
-      // printf("TEST!@ %d\n", obj->fConfidenceLevel);
-
-
-      if (info) {
-         TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info->name.c_str()));
-
-         if (func) {
-          //printf("PAR1: %s\n", obj->fContourPar1Id);
-            // printf("Found func1 %s %p %d %d\n", info->name.c_str(), func, func->GetNpar(), (int) info->pars.size());
-            // // copy all parameters back to the function
-            // for (int n=0;n<func->GetNpar();++n) {
-            //    func->SetParameter(n, info->pars[n].value);
-            //    func->SetParError(n, info->pars[n].error);
-            //    func->SetParLimits(n, info->pars[n].min, info->pars[n].max);
-            //    if (info->pars[n].fixed)
-            //       func->FixParameter(n, info->pars[n].value);
-            //  }
-          }
-      }
-   }
-
 }
 
 // void ROOT::Math::MinimizerOptions::SetMinimizerAlgorithm (const char *    type) {
@@ -394,6 +377,12 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 // }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Dummy function, called when "Fit" button pressed in UI
+void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
+{
+  auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
+  //printf("DOFIT: range %f %f select %s function %s\n ", obj->);
+  printf("Points %d Contour1 %s Contour2 %s Points %f\n", obj->fContourPoints, obj->fContourPar1.c_str(), obj->fContourPar2.c_str(), obj->fConfLevel);
+}
 
 void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
 {

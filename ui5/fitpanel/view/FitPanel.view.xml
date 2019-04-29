@@ -254,7 +254,7 @@
 																</layoutData>
 															</CheckBox>
 														</l:content>
-														<Button text="Draw" press="advContourDraw">
+														<Button text="Draw" press="drawContour">
 															<layoutData>
 																<l:GridData span="L2 M2 S3"/>
 															</layoutData>
