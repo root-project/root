@@ -84,10 +84,8 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       printf("FitPanel connection established %u\n", fConnId);
       fWindow->Send(fConnId, "INITDONE");
       ROOT::Experimental::RFitPanelModel6 model;
-
-      
-       //ComboBox for Data Set
-       //model.fDataSet.push_back(ROOT::Experimental::RComboBoxItem("1", "No Selection"));
+         
+      //ComboBox for Data Set
       if (fHist) {
          model.fDataSet.emplace_back("0", Form("%s::%s", fHist->ClassName(), fHist->GetName()));
          model.fSelectDataId = "0";
@@ -101,12 +99,6 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       //       if (item->InheritsFrom(TH1::Class()))
       //          model.fDataSet.emplace_back(item->GetName(), Form("%s::%s", item->ClassName(), item->GetName()));
       // }
-
-       // model.fDataSet.emplace_back("1", "*TH1F::hpx");
-       // model.fDataSet.emplace_back("2", "*TH2F::hpxhpy");
-       // model.fDataSet.emplace_back("3", "*TProfile::hprof");
-       // model.fDataSet.emplace_back("4", "*TNtuple::ntuple");
-       // model.fSelectDataId = "2";
 
        //ComboBox for Fit Function --- Type
        model.fTypeFunc.push_back(ROOT::Experimental::RComboBoxItem("0", "Predef-1D"));
@@ -290,7 +282,7 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
    if (arg.find("GETPARS:") == 0) {
 
       RFitFunc info;
-      ROOT::Experimental::RFitPanelModel6 model;
+      //ROOT::Experimental::RFitPanelModel6 model;
 
       info.name = arg.substr(8);
       TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info.name.c_str()));
@@ -299,8 +291,6 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 
       if (func) {
          for (int n = 0; n < func->GetNpar(); ++n) {
-          model.fContourPar1.emplace_back("0", Form("%s", func->GetParName(n)));
-          model.fContourPar1Id = "0";
             info.pars.emplace_back(n, func->GetParName(n));
             auto &par = info.pars.back();
 
@@ -340,21 +330,22 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
    }
 
 
-   if (arg.find("ADVANCED:") == 0) {
+   if (arg.find("GETADVANCED:") == 0) {
 
     RFitFunc info;
     ROOT::Experimental::RFitPanelModel6 modelAdv;
 
-    info.name = arg.substr(9);
+    info.name = arg.substr(12);
     TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info.name.c_str()));
 
     //printf("Found func1 %s %p\n", info.name.c_str(), func);
 
     if (func) {
      for (int n = 0; n < func->GetNpar(); ++n) {
-      modelAdv.fContourPar1.emplace_back("0", Form("%s", func->GetParName(n)));
+
+      modelAdv.fContour1.emplace_back("0", Form("%s", func->GetParName(n)));
       modelAdv.fContourPar1Id = "0";
-      modelAdv.fContourPar2.emplace_back("0", Form("%s", func->GetParName(n)));
+      modelAdv.fContour2.emplace_back("0", Form("%s", func->GetParName(n)));
       modelAdv.fContourPar2Id = "0";
       modelAdv.fScanPar.emplace_back("0", Form("%s", func->GetParName(n)));
       modelAdv.fScanParId = "0";
@@ -368,6 +359,33 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
     fWindow->Send(fConnId, std::string("ADVANCED:") + jsonModel.Data());
     return;
   }
+
+ if (arg.find("SETCONTOUR:") == 0) {
+      auto info = TBufferJSON::FromJSON<RFitFunc>(arg.substr(11));
+      ROOT::Experimental::RFitPanelModel6 model;
+      // auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
+
+      // printf("TEST!@ %d\n", obj->fConfidenceLevel);
+
+
+      if (info) {
+         TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info->name.c_str()));
+
+         if (func) {
+          //printf("PAR1: %s\n", obj->fContourPar1Id);
+            // printf("Found func1 %s %p %d %d\n", info->name.c_str(), func, func->GetNpar(), (int) info->pars.size());
+            // // copy all parameters back to the function
+            // for (int n=0;n<func->GetNpar();++n) {
+            //    func->SetParameter(n, info->pars[n].value);
+            //    func->SetParError(n, info->pars[n].error);
+            //    func->SetParLimits(n, info->pars[n].min, info->pars[n].max);
+            //    if (info->pars[n].fixed)
+            //       func->FixParameter(n, info->pars[n].value);
+            //  }
+          }
+      }
+   }
+
 }
 
 // void ROOT::Math::MinimizerOptions::SetMinimizerAlgorithm (const char *    type) {
