@@ -64,7 +64,7 @@ private:
    ColumnValues_t fColumnValues;
    static constexpr const auto fNColumns = std::tuple_size<ColumnValues_t>::value;
    std::shared_ptr<ROutputForest> fForest;
-   int counter;
+   int fCounter;
 
    template<std::size_t... S>
    void InitializeImpl(std::index_sequence<S...>) {
@@ -95,7 +95,7 @@ public:
 
    void Initialize()
    {
-      counter = 0;
+      fCounter = 0;
    }
 
    void InitTask(TTreeReader *, unsigned int) {}
@@ -106,8 +106,8 @@ public:
       // Populate the forest's fields data locations with the provided values, then write to disk
       ExecImpl(std::make_index_sequence<fNColumns>(), values...);
       fForest->Fill();
-      if (++counter % 100000 == 0)
-         std::cout << "Wrote " << counter << " entries" << std::endl;
+      if (++fCounter % 100000 == 0)
+         std::cout << "Wrote " << fCounter << " entries" << std::endl;
    }
 
    void Finalize()
@@ -177,6 +177,7 @@ void fst004_dimuon() {
    // Create an input forest unique pointer
    auto forest = RInputForest::Create("Events", gForestFile);
    std::cout << forest->Print();
+   // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
 
    // Create a data frame from the input forest
    auto df = std::make_unique<ROOT::RDataFrame>(std::make_unique<RForestDS>(forest.get()));
