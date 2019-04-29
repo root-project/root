@@ -286,11 +286,43 @@ void TGeoMaterial::SetUserExtension(TGeoExtension *ext)
 }
 
 //_____________________________________________________________________________
-const char *TGeoMaterial::GetPropertyRef(const char *property)
+const char *TGeoMaterial::GetPropertyRef(const char *property) const
 {
    // Find reference for a given property
    TNamed *prop = (TNamed*)fProperties.FindObject(property);
    return (prop) ? prop->GetTitle() : nullptr;
+}
+
+//_____________________________________________________________________________
+const char *TGeoMaterial::GetConstPropertyRef(const char *property) const
+{
+   // Find reference for a given constant property
+   TNamed *prop = (TNamed*)fConstProperties.FindObject(property);
+   return (prop) ? prop->GetTitle() : nullptr;
+}
+
+//_____________________________________________________________________________
+Double_t TGeoMaterial::GetConstProperty(const char *property, Bool_t *err) const
+{
+   // Find reference for a given constant property
+   TNamed *prop = (TNamed*)fConstProperties.FindObject(property);
+   if (!prop) {
+      if (err) *err = kTRUE;
+      return 0.;
+   }
+   return gGeoManager->GetProperty(prop->GetTitle(), err);
+}
+
+//_____________________________________________________________________________
+Double_t TGeoMaterial::GetConstProperty(Int_t i, Bool_t *err) const
+{
+   // Find reference for a given constant property
+   TNamed *prop = (TNamed*)fConstProperties.At(i);
+   if (!prop) {
+      if (err) *err = kTRUE;
+      return 0.;
+   }
+   return gGeoManager->GetProperty(prop->GetTitle(), err);
 }
 
 //_____________________________________________________________________________
@@ -303,6 +335,19 @@ bool TGeoMaterial::AddProperty(const char *property, const char *ref)
       return false;
    }
    fProperties.Add(new TNamed(property, ref));
+   return true;
+}
+
+//_____________________________________________________________________________
+bool TGeoMaterial::AddConstProperty(const char *property, const char *ref)
+{
+   fConstProperties.SetOwner();
+   if (GetConstPropertyRef(property)) {
+      Error("AddConstProperty", "Constant property %s already added to material %s",
+         property, GetName());
+      return false;
+   }
+   fConstProperties.Add(new TNamed(property, ref));
    return true;
 }
 

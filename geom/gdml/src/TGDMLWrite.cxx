@@ -354,6 +354,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
    time_t startT, endT;
    startT = time(NULL);
    ExtractMatrices(geomanager->GetListOfGDMLMatrices());
+   ExtractConstants(geomanager);
    fMaterialsNode = ExtractMaterials(materialsLst);
 
    Info("WriteGDMLfile", "Extracting volumes");
@@ -399,6 +400,22 @@ void TGDMLWrite::ExtractMatrices(TObjArray* matrixList)
    while ((matrix = (TGDMLMatrix*)next())) {
       matrixN = CreateMatrixN(matrix);
       fGdmlE->AddChild(fDefineNode, matrixN);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Method exporting GDML matrices
+
+void TGDMLWrite::ExtractConstants(TGeoManager *geom)
+{
+   if (!geom->GetNproperties()) return;
+   XMLNodePointer_t constantN;
+   TString property;
+   Double_t value;
+   for (Int_t i = 0; i < geom->GetNproperties(); ++i) {
+      value = geom->GetProperty(i, property);
+      constantN = CreateConstantN(property.Data(), value);
+      fGdmlE->AddChild(fDefineNode, constantN);
    }
 }
 
@@ -1801,6 +1818,18 @@ XMLNodePointer_t TGDMLWrite::CreateMatrixN(TGDMLMatrix const *matrix)
    fGdmlE->NewAttr(mainN, 0, "name", matrix->GetName());
    fGdmlE->NewAttr(mainN, 0, "coldim", TString::Format("%zu", matrix->GetCols()));
    fGdmlE->NewAttr(mainN, 0, "values", matrix->GetMatrixAsString());
+   return mainN;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "constant" kind of node for GDML
+
+XMLNodePointer_t TGDMLWrite::CreateConstantN(const char *name, Double_t value)
+{
+   XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "constant", 0);
+   const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
+   fGdmlE->NewAttr(mainN, 0, "name", name);
+   fGdmlE->NewAttr(mainN, 0, "value", TString::Format(fltPrecision.Data(), value));
    return mainN;
 }
 

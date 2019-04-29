@@ -54,6 +54,7 @@ protected:
    TObject                 *fCerenkov;   // pointer to class with Cerenkov properties
    TGeoElement             *fElement;    // pointer to element composing the material
    TList                    fProperties; // user-defined properties
+   TList                    fConstProperties; // user-defined constant properties
    TGeoExtension           *fUserExtension;  //! Transient user-defined extension to materials
    TGeoExtension           *fFWExtension;    //! Transient framework-defined extension to materials
 
@@ -81,8 +82,17 @@ public:
    virtual void             FillMaterialEvolution(TObjArray *population, Double_t precision=0.001);
    // getters & setters
    bool                     AddProperty(const char *property, const char *ref);
-   const char              *GetPropertyRef(const char *property);
+   bool                     AddConstProperty(const char *property, const char *ref);
+   Int_t                    GetNproperties() const { return fProperties.GetSize(); }
+   Int_t                    GetNconstProperties() const { return fConstProperties.GetSize(); }
+   const char              *GetPropertyRef(const char *property) const;
+   const char              *GetPropertyRef(Int_t i) const { return (fProperties.At(i) ? fProperties.At(i)->GetTitle() : nullptr); }
+   Double_t                 GetConstProperty(const char *property, Bool_t *error = nullptr) const;
+   Double_t                 GetConstProperty(Int_t i, Bool_t *error = nullptr) const;
+   const char              *GetConstPropertyRef(const char *property) const;
+   const char              *GetConstPropertyRef(Int_t i) const { return (fConstProperties.At(i) ? fConstProperties.At(i)->GetTitle() : nullptr); }
    TList const             &GetProperties() const { return fProperties; }
+   TList const             &GetConstProperties() const { return fConstProperties; }
    virtual Int_t            GetByteCount() const {return sizeof(*this);}
    virtual Double_t         GetA() const       {return fA;}
    virtual Double_t         GetZ()  const      {return fZ;}
@@ -128,7 +138,7 @@ public:
 
 
 
-   ClassDef(TGeoMaterial, 6)              // base material class
+   ClassDef(TGeoMaterial, 7)              // base material class
 
 //***** Need to add classes and globals to LinkDef.h *****
 };

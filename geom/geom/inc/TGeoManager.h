@@ -177,6 +177,7 @@ public:
    TGeoNavigator         *AddNavigator();
    Bool_t                 AddProperty(const char *property, Double_t value);
    Double_t               GetProperty(const char *name, Bool_t *error = nullptr) const;
+   Double_t               GetProperty(size_t i, TString &name, Bool_t *error = nullptr) const;
    Int_t                  GetNproperties() const { return fProperties.size(); }
    void                   ClearOverlaps();
    void                   RegisterMatrix(const TGeoMatrix *matrix);

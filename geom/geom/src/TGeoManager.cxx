@@ -777,6 +777,24 @@ Double_t TGeoManager::GetProperty(const char *property, Bool_t *error) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get a user-defined property from a given index
+
+Double_t TGeoManager::GetProperty(size_t i, TString &name, Bool_t *error) const
+{
+   // This is a quite inefficient way to access map elements, but needed for the GDML writer to 
+   if (i >= fProperties.size()) {
+      if (error) *error = kTRUE;
+      return 0.;
+   }
+   size_t pos = 0;
+   auto it = fProperties.begin();
+   while (pos < i) { ++it; ++pos; }
+   if (error) *error = kFALSE;
+   name = (*it).first;
+   return (*it).second;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add a matrix to the list. Returns index of the matrix in list.
 
 Int_t TGeoManager::AddTransformation(const TGeoMatrix *matrix)
