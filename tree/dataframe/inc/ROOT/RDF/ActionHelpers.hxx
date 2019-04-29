@@ -224,14 +224,13 @@ public:
       thisWBuf.insert(thisWBuf.end(), vs.size(), w);
    }
 
-   // ROOT-10092: no scalar value and array weights
+   // ROOT-10092: Filling with a scalar as first column and a collection as second is not supported
    template <typename T, typename W,
              typename std::enable_if<IsContainer<W>::value && !IsContainer<T>::value, int>::type = 0>
    void Exec(unsigned int, const T &, const W &)
    {
       throw std::runtime_error(
-        "Cannot fill object if the type of the first column is a scalar and the one of the second a container. "
-        "Did you try to fill a histogram with scalar values and weights stored in containers?");
+        "Cannot fill object if the type of the first column is a scalar and the one of the second a container.");
    }
 
    Hist_t &PartialUpdate(unsigned int);
@@ -306,14 +305,13 @@ public:
       }
    }
 
-   // ROOT-10092: no scalar value and array weights
+   // ROOT-10092: Filling with a scalar as first column and a collection as second is not supported
    template <typename X0, typename X1,
              typename std::enable_if<IsContainer<X1>::value && !IsContainer<X0>::value, int>::type = 0>
    void Exec(unsigned int , const X0 &, const X1 &)
    {
       throw std::runtime_error(
-        "Cannot fill object if the type of the first column is a scalar and the one of the second a container."
-        "Did you try to fill an object with scalar values and weights stored in containers?");
+        "Cannot fill object if the type of the first column is a scalar and the one of the second a container.");
    }
 
    template <typename X0, typename X1,
