@@ -462,7 +462,7 @@
 
 /*---- deprecation -----------------------------------------------------------*/
 #if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
-# if __GNUC__ == 5 && (__GNUC_MINOR__ == 1 || __GNUC_MINOR__ == 2)
+# if (__GNUC__ == 5 && (__GNUC_MINOR__ == 1 || __GNUC_MINOR__ == 2))
 /* GCC 5.1, 5.2: false positives due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=15269 */
 #   define _R__DEPRECATED_LATER(REASON)
 # else
@@ -521,13 +521,17 @@
 #define R__DEPRECATED(MAJOR, MINOR, REASON) \
   _R__JOIN3_(_R__DEPRECATED_,MAJOR,MINOR)("will be removed in ROOT v" #MAJOR "." #MINOR ": " REASON)
 
-/* Mechanism to advise users to avoid legacy functions that will not be removed */
-#if defined R__SUGGEST_NEW_INTERFACE || defined R__SUGGEST_NEW_INTERFACE_LOCAL
+/* Mechanisms to advise users to avoid legacy functions and classes that will not be removed */
+#if defined R__SUGGEST_NEW_INTERFACE
 #  define R__SUGGEST_ALTERNATIVE(ALTERNATIVE) \
       _R__DEPRECATED_LATER("There is a superior alternative: " ALTERNATIVE)
 #else
 #  define R__SUGGEST_ALTERNATIVE(ALTERNATIVE)
 #endif
+
+#define R__ALWAYS_SUGGEST_ALTERNATIVE(ALTERNATIVE) \
+    _R__DEPRECATED_LATER("There is a superior alternative: " ALTERNATIVE)
+
 
 
 /*---- misc ------------------------------------------------------------------*/
