@@ -47,17 +47,15 @@ The following people have contributed to this new version:
 class DoNotUseClass {
 } R__SUGGEST_ALTERNATIVE("Use ... instead.");
 ```
-It is activated by the preprocessor defines `R__SUGGEST_NEW_INTERFACE` and `R__SUGGEST_NEW_INTERFACE_LOCAL`. The former is useful when deprecation warnings should be activated/deactivated at global level, for example for an entire project. This could be done by defining `R__SUGGEST_NEW_INTERFACE` in the build system. The latter macro can be defined and undefined locally as necessary, e.g. in a single translation unit before including the ROOT headers or in a header to produce just a single warning:
+It is activated by the preprocessor defines `R__SUGGEST_NEW_INTERFACE`. The former is useful when deprecation warnings should be activated/deactivated at global level, for example for an entire project. This could be done by defining `R__SUGGEST_NEW_INTERFACE` in the build system. 
+If the warning needs to be confined within single translation units, irrespective of the definition of `R__SUGGEST_NEW_INTERFACE`, the `R__ALWAYS_SUGGEST_ALTERNATIVE` macro can be used:
 ```
 #ifndef DONOTUSECLASS_H
 #define DONOTUSECLASS_H
 
-#define R__SUGGEST_NEW_INTERFACE_LOCAL
-
 class DoNotUseClass {
-} R__SUGGEST_ALTERNATIVE("Use ... instead.");
+} R__ALWAYS_SUGGEST_ALTERNATIVE("Use ... instead.");
 
-#undef R__SUGGEST_NEW_INTERFACE_LOCAL
 #endif
 ```
 ### Deprecated Functions
