@@ -92,6 +92,7 @@ void Analyze() {
 
    // Quick overview of the forest's key meta-data
    std::cout << forest->Print();
+   // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
 
    // We resurrect the model from the forest on disk
    RForestModel* model = forest->GetModel();
