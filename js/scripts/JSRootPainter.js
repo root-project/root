@@ -3542,7 +3542,7 @@
    /** @summary indicate that redraw was invoked via interactive action (like context menu or zooming)
     * @desc Use to catch such action by GED
     * @private */
-   TObjectPainter.prototype.InteractiveRedraw = function(arg, info) {
+   TObjectPainter.prototype.InteractiveRedraw = function(arg, info, subelem) {
 
       if (arg == "pad") {
          this.RedrawPad();
@@ -3558,13 +3558,13 @@
 
       // inform GED that something changes
       var pp = this.pad_painter();
-      if (pp && pp.InteractiveObjectRedraw)
+      if (pp && (typeof pp.InteractiveObjectRedraw == 'function'))
          pp.InteractiveObjectRedraw(this);
 
       // inform server that drawopt changes
       var canp = this.canv_painter();
-      if (canp && canp.ProcessChanges)
-         canp.ProcessChanges(info, this);
+      if (canp && (typeof canp.ProcessChanges == 'function'))
+         canp.ProcessChanges(info, this, subelem);
    }
 
    /** @summary Redraw all objects in correspondent pad */
@@ -3914,7 +3914,7 @@
 
       if (method.fName == "Inspect") {
          // primitve inspector, keep it here
-         this.ShowInpsector();
+         this.ShowInspector();
          return true;
       }
 
@@ -4020,20 +4020,27 @@
 
    /** @summary Produce exec string for WebCanas to set color value
     * @desc Color can be id or string, but should belong to list of known colors
+    * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
     * @private */
    TObjectPainter.prototype.GetColorExec = function(col, method) {
-      var id = -1;
+      var id = -1, arr = JSROOT.Painter.root_colors;
       if (typeof col == "string") {
          if (!col || (col == "none")) id = 0; else
-         for (var k=1;k<JSROOT.Painter.root_colors.length;++k)
-            if (JSROOT.Painter.root_colors[k] == col) {
-               id = k; break
-            }
-      } else if (!isNaN(col) && JSROOT.Painter.root_colors[col]) {
+         for (var k=1;k<arr.length;++k)
+            if (arr[k] == col) { id = k; break; }
+      } else if (!isNaN(col) && arr[col]) {
          id = col;
       }
 
-      return id < 0 ? "" : "exec:" + method + "(" + id + ")";
+      if (id < 0) return "";
+
+      if (id >= 50) {
+         // for higher color numbers ensure that such color exists
+         var c = d3.color(arr[id]);
+         id = "TColor::GetColor(" + c.r + "," + c.g + "," + c.b + ")";
+      }
+
+      return "exec:" + method + "(" + id + ")";
    }
 
    /** @summary Fill context menu for graphical attributes
@@ -4132,7 +4139,7 @@
                 svg = "<svg width='60' height='18'><text x='1' y='12' style='font-size:12px'>" + supported[n].toString() + "</text><path stroke='black' fill='" + (clone.fill ? "black" : "none") + "' d='" + clone.create(40,8) + "'></path></svg>";
 
             menu.addchk(this.markeratt.style == supported[n], svg, supported[n],
-                     function(arg) { this.markeratt.Change(undefined, parseInt(arg)); this.InteractiveRedraw(true, "exec:SetMarkerStyle(" + parseInt(arg) + ")"); }.bind(this));
+                     function(arg) { this.markeratt.Change(undefined, parseInt(arg)); this.InteractiveRedraw(true, "exec:SetMarkerStyle(" + arg + ")"); }.bind(this));
          }
          menu.add("endsub:");
          menu.add("endsub:");
@@ -4149,7 +4156,7 @@
 
       menu.add("sub:" + (prefix ? prefix : "Text"));
       this.AddColorMenuEntry(menu, "color", obj.fTextColor,
-            function(arg) { this.GetObject().fTextColor = parseInt(arg); this.InteractiveRedraw(); }.bind(this));
+            function(arg) { this.GetObject().fTextColor = parseInt(arg); this.InteractiveRedraw(true, this.GetColorExec(parseInt(arg), "SetTextColor")); }.bind(this));
 
       var align = [11, 12, 13, 21, 22, 23, 31, 32, 33],
           hnames = ['left', 'centered' , 'right'],
@@ -4160,26 +4167,43 @@
          menu.addchk(align[n] == obj.fTextAlign,
                   align[n], align[n],
                   // align[n].toString() + "_h:" + hnames[Math.floor(align[n]/10) - 1] + "_v:" + vnames[align[n]%10-1], align[n],
-                  function(arg) { this.GetObject().fTextAlign = parseInt(arg); this.InteractiveRedraw(); }.bind(this));
+                  function(arg) { this.GetObject().fTextAlign = parseInt(arg); this.InteractiveRedraw(true, "exec:SetTextAlign("+arg+")"); }.bind(this));
       }
       menu.add("endsub:");
 
       menu.add("sub:font");
       for (var n=1; n<16; ++n) {
          menu.addchk(n == Math.floor(obj.fTextFont/10), n, n,
-                  function(arg) { this.GetObject().fTextFont = parseInt(arg)*10+2; this.InteractiveRedraw(); }.bind(this));
+                  function(arg) { this.GetObject().fTextFont = parseInt(arg)*10+2; this.InteractiveRedraw(true, "exec:SetTextFont("+this.GetObject().fTextFont+")"); }.bind(this));
       }
       menu.add("endsub:");
 
       menu.add("endsub:");
    }
 
-   /** @symmary Show object in inspector */
-   TObjectPainter.prototype.ShowInpsector = function() {
-      JSROOT.draw(this.divid, this.GetObject(), 'inspect');
+   /** @summary Show object in inspector */
+   TObjectPainter.prototype.ShowInspector = function(obj) {
+      var main = this.select_main(),
+          rect = this.get_visible_rect(main),
+          w = Math.round(rect.width*0.05) + "px",
+          h = Math.round(rect.height*0.05) + "px",
+          id = "root_inspector_" + JSROOT.id_counter++,
+          cont = main.append("div")
+                     .attr("id", id)
+                     .attr("class", "jsroot_inspector")
+                     .style('position', 'absolute')
+                     .style('top', h)
+                     .style('bottom', h)
+                     .style('left', w)
+                     .style('right', w);
+
+      if (!obj || (typeof obj !== 'object') || !obj._typename)
+         obj = this.GetObject();
+
+      JSROOT.draw(id, obj, 'inspect');
    }
 
-   /** @symmary Fill context menu for the object
+   /** @summary Fill context menu for the object
     * @private */
    TObjectPainter.prototype.FillContextMenu = function(menu) {
       var title = this.GetTipName();
@@ -4190,12 +4214,13 @@
 
       this.FillAttContextMenu(menu);
 
-      if (menu.size()>0) menu.add('Inspect', this.ShowInpsector);
+      if (menu.size() > 0)
+         menu.add('Inspect', this.ShowInspector);
 
       return menu.size() > 0;
    }
 
-   /** @symmary returns function used to display object status
+   /** @summary returns function used to display object status
     * @private */
    TObjectPainter.prototype.GetShowStatusFunc = function() {
       // return function used to display object status
@@ -4210,7 +4235,7 @@
       return res;
    }
 
-   /** @symmary shows objects status
+   /** @summary shows objects status
     * @private */
    TObjectPainter.prototype.ShowObjectStatus = function() {
       // method called normally when mouse enter main object element
