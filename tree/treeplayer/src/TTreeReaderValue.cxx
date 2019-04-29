@@ -545,7 +545,13 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
          return;
       }
 
-      if (fDict != branchActualType) {
+      // Check if the dictionaries are TClass instances and if there is inheritance
+      // because in this case, we can read the values.
+      auto dictAsClass = dynamic_cast<TClass*>(fDict);
+      auto branchActualTypeAsClass = dynamic_cast<TClass*>(branchActualType);
+      auto inheritance = dictAsClass && branchActualTypeAsClass && branchActualTypeAsClass->InheritsFrom(dictAsClass);
+
+      if (fDict != branchActualType && !inheritance) {
          TDataType *dictdt = dynamic_cast<TDataType*>(fDict);
          TDataType *actualdt = dynamic_cast<TDataType*>(branchActualType);
          bool complainAboutMismatch = true;
