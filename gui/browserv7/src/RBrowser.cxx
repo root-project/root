@@ -30,7 +30,7 @@
 #include <mutex>
 #include <thread>
 
-ROOT::Experimental::RFileItem::RFileItem(int _id, const char *_name, FileStat_t &stat) : RBaseItem(_id, _name)
+ROOT::Experimental::RFileItem::RFileItem(int _id, const std::string &_name, FileStat_t &stat) : RBaseItem(_id, _name)
 {
    char tmp[256];
    Long64_t _fsize, bsize;
