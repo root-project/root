@@ -1,6 +1,0 @@
-<core:View
-   class="sapUiSizeCompact"
-   xmlns="sap.m"
-   xmlns:core="sap.ui.core"
-   controllerName="rootui5.canv.controller.Inspector">
-</core:View>
