@@ -76,7 +76,7 @@ public:
    std::vector<int> chlds;  ///< list of childs id
 
    RBaseItem(int _id = 0) : id(_id) {}
-   RBaseItem(int _id, const char *_name) : id(_id), name(_name) {}
+   RBaseItem(int _id, const std::string &_name) : id(_id), name(_name) {}
 };
 
 /** class ROOT::Experimental::RFileItem
@@ -99,7 +99,7 @@ public:
    std::string fuid;        ///< user id
    std::string fgid;        ///< group id
 
-   RFileItem(int _id, const char *_name, FileStat_t &stat);
+   RFileItem(int _id, const std::string &_name, FileStat_t &stat);
 };
 
 class RBrowserFSDescription {
