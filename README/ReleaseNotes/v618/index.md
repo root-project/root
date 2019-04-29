@@ -41,7 +41,34 @@ The following people have contributed to this new version:
 ## Deprecation and Removal
 
 ## Preprocessor deprecation macros
-  * `R__SUGGEST_ALTERNATIVE("Suggestion text")` macro allows to suggest alternatives to classes. It must be used after the class definition and before the final semicolon. It is activated by the preprocessor defines `R__SUGGEST_NEW_INTERFACE` and `R__SUGGEST_NEW_INTERFACE_LOCAL`. The former variable is useful when deprecation needs to be activated at global level, for example for an entire project, while the latter is useful when defined and undefined immediately before and after an individual class.
+### Deprecated Classes
+  * `R__SUGGEST_ALTERNATIVE("Suggestion text")` macro allows to suggest alternatives to classes. It must be used after the class definition and before the final semicolon:
+```
+class DoNotUseClass {
+} R__SUGGEST_ALTERNATIVE("Use ... instead.");
+```
+It is activated by the preprocessor defines `R__SUGGEST_NEW_INTERFACE` and `R__SUGGEST_NEW_INTERFACE_LOCAL`. The former is useful when deprecation warnings should be activated/deactivated at global level, for example for an entire project. This could be done by defining `R__SUGGEST_NEW_INTERFACE` in the build system. The latter macro can be defined and undefined locally as necessary, e.g. in a single translation unit before including the ROOT headers or in a header to produce just a single warning:
+```
+#ifndef DONOTUSECLASS_H
+#define DONOTUSECLASS_H
+
+#define R__SUGGEST_NEW_INTERFACE_LOCAL
+
+class DoNotUseClass {
+} R__SUGGEST_ALTERNATIVE("Use ... instead.");
+
+#undef R__SUGGEST_NEW_INTERFACE_LOCAL
+#endif
+```
+### Deprecated Functions
+The same macro as for classes can be used for functions:
+```
+TIterator* createIterator() const
+R__SUGGEST_ALTERNATIVE("begin(), end() and range-based for loops.") {
+ return makeLegacyIterator();
+}
+```
+
 
 ### I/O Libraries
 
@@ -245,7 +272,7 @@ The old RooFit collections could be modified while iterating. The STL-like itera
 - **But not** inserting/deleting before/at the current iterator position. With a debug build (with assertions), the legacy iterators will check that the collection is not mutated. In a release build, elements might be skipped or be iterated twice.
 
 #### Moving away from the slower iterators
-The legacy iterators have been flagged with a special deprecation macro that can be used help the user use the recommended ROOT interface. Defining `R__SUGGEST_ALTERNATIVE`, (either in a single translation unit or in the build system), creating a legacy iterator will trigger a compiler warning such as:
+The legacy iterators have been flagged with a special deprecation macro that can be used help the user use the recommended ROOT interface. Defining one of the [deprecation macros](#preprocessor-deprecation-macros) (either in a single translation unit or in the build system), and creating a legacy iterator will trigger a compiler warning such as:
 ```
 <path>/RooChebychev.cxx:66:34: warning: 'createIterator' is deprecated: There is a superior alternative: begin(), end() and range-based for loops. [-Wdeprecated-declarations]
   TIterator* coefIter = coefList.createIterator() ;
