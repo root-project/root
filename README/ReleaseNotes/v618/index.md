@@ -40,6 +40,9 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+## Preprocessor deprecation macros
+  * `R__SUGGEST_ALTERNATIVE("Suggestion text")` macro allows to suggest alternatives to classes. It must be used after the class definition and before the final semicolon. It is activated by the preprocessor defines `R__SUGGEST_NEW_INTERFACE` and `R__SUGGEST_NEW_INTERFACE_LOCAL`. The former variable is useful when deprecation needs to be activated at global level, for example for an entire project, while the latter is useful when defined and undefined immediately before and after an individual class.
+
 ### I/O Libraries
 
 * The deprecrated `I/O` plugins for  `HDFS`, `Castor` and `RFIO` have been removed.
@@ -64,7 +67,6 @@ The methods could be replaced by equivalent methods with other signature:
    * Long_t THttpCallArg::GetPostDataLength() const;
    * std::string THttpCallArg::FillHttpHeader(const char *header = nullptr);
    * void THttpCallArg::SetContent(std::string &&cont);
-
 
 ## Core Libraries
   - Prevent usage of non integer class id in `ClassDef(Inline)` macros with an error prompted at dictionary generation or compile time.
