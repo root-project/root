@@ -2474,10 +2474,15 @@
       if ((typeof obj.fTitle === 'string') && (obj.fTitle.length>0))
          painter.h._title = obj.fTitle;
 
+      if (painter.select_main().classed("jsroot_inspector"))
+         painter.removeInspector = function() {
+            this.select_main().remove();
+         }
+
       if (obj._typename)
          painter.h._title += "  type:" + obj._typename;
 
-      if ((typeof obj.fName === 'string') && (obj.fName.length>0))
+      if ((typeof obj.fName === 'string') && (obj.fName.length > 0))
          painter.h._name = obj.fName;
 
       // painter.select_main().style('overflow','auto');
@@ -2487,7 +2492,13 @@
          if (sett.opts)
             menu.addDrawMenu("nosub:Draw", sett.opts, function(arg) {
                if (!hitem || !hitem._obj) return;
-               var obj = hitem._obj, divid = this.divid; // need to remember while many references will be removed (including _obj)
+               var obj = hitem._obj, divid = this.divid;
+               if (this.removeInspector) {
+                  divid = this.select_main().node().parentNode;
+                  this.removeInspector();
+                  if (arg == "inspect")
+                     return this.ShowInspector(obj);
+               }
                JSROOT.cleanup(divid);
                JSROOT.draw(divid, obj, arg);
             });

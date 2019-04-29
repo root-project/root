@@ -807,6 +807,12 @@
       d3btns.append("a").attr("class", "h_button").text("close all")
             .attr("title","close all items in the browser").on("click", h.toggleOpenState.bind(h,false));
 
+      if (typeof h.removeInspector == 'function') {
+         d3btns.append("text").text(" | ");
+         d3btns.append("a").attr("class", "h_button").text("remove")
+               .attr("title","remove inspector").on("click", h.removeInspector.bind(h));
+      }
+
       if ('_online' in this.h) {
          d3btns.append("text").text(" | ");
          d3btns.append("a").attr("class", "h_button").text("reload")

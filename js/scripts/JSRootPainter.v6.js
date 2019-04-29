@@ -1771,10 +1771,10 @@
             menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kLabelsVert), "Rotate",
                   function() { faxis.InvertBit(JSROOT.EAxisBits.kLabelsVert); this.RedrawPad(); });
             this.AddColorMenuEntry(menu, "Color", faxis.fLabelColor,
-                  function(arg) { faxis.fLabelColor = parseInt(arg); this.RedrawPad(); });
-            this.AddSizeMenuEntry(menu,"Offset", 0, 0.1, 0.01, faxis.fLabelOffset,
+                  function(arg) { faxis.fLabelColor = parseInt(arg); this.InteractiveRedraw("pad", this.GetColorExec(parseInt(arg), "SetLabelColor"), kind); }.bind(main || this));
+            this.AddSizeMenuEntry(menu, "Offset", 0, 0.1, 0.01, faxis.fLabelOffset,
                   function(arg) { faxis.fLabelOffset = parseFloat(arg); this.RedrawPad(); } );
-            this.AddSizeMenuEntry(menu,"Size", 0.02, 0.11, 0.01, faxis.fLabelSize,
+            this.AddSizeMenuEntry(menu, "Size", 0.02, 0.11, 0.01, faxis.fLabelSize,
                   function(arg) { faxis.fLabelSize = parseFloat(arg); this.RedrawPad(); } );
             menu.add("endsub:");
             menu.add("sub:Title");
@@ -1787,10 +1787,10 @@
             menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kRotateTitle), "Rotate",
                   function() { faxis.InvertBit(JSROOT.EAxisBits.kRotateTitle); this.RedrawPad(); });
             this.AddColorMenuEntry(menu, "Color", faxis.fTitleColor,
-                  function(arg) { faxis.fTitleColor = parseInt(arg); this.RedrawPad(); });
-            this.AddSizeMenuEntry(menu,"Offset", 0, 3, 0.2, faxis.fTitleOffset,
+                  function(arg) { faxis.fTitleColor = parseInt(arg); this.InteractiveRedraw("pad", this.GetColorExec(parseInt(arg), "SetTitleColor"), kind); }.bind(main || this));
+            this.AddSizeMenuEntry(menu, "Offset", 0, 3, 0.2, faxis.fTitleOffset,
                                   function(arg) { faxis.fTitleOffset = parseFloat(arg); this.RedrawPad(); } );
-            this.AddSizeMenuEntry(menu,"Size", 0.02, 0.11, 0.01, faxis.fTitleSize,
+            this.AddSizeMenuEntry(menu, "Size", 0.02, 0.11, 0.01, faxis.fTitleSize,
                   function(arg) { faxis.fTitleSize = parseFloat(arg); this.RedrawPad(); } );
             menu.add("endsub:");
             menu.add("sub:Ticks");
@@ -1801,7 +1801,7 @@
                         function(arg) { faxis.fTickSize = parseFloat(arg); this.RedrawPad(); } );
             } else {
                this.AddColorMenuEntry(menu, "Color", faxis.fAxisColor,
-                           function(arg) { faxis.fAxisColor = parseInt(arg); this.RedrawPad(); });
+                           function(arg) { faxis.fAxisColor = parseInt(arg); this.InteractiveRedraw("pad", this.GetColorExec(parseInt(arg), "SetAxisColor"), kind); }.bind(main || this));
                this.AddSizeMenuEntry(menu,"Size", -0.05, 0.055, 0.01, faxis.fTickLength,
                         function(arg) { faxis.fTickLength = parseFloat(arg); this.RedrawPad(); } );
             }
@@ -4839,7 +4839,7 @@
    /** Method informs that something was changed in the canvas
      * used to update information on the server (when used with web6gui)
      * @private */
-   TCanvasPainter.prototype.ProcessChanges = function(kind, painter) {
+   TCanvasPainter.prototype.ProcessChanges = function(kind, painter, subelem) {
       // check if we could send at least one message more - for some meaningful actions
       if (!this._websocket || this._readonly || !this._websocket.CanSend(2) || (typeof kind !== "string")) return;
 
@@ -4866,7 +4866,7 @@
             if ((kind.substr(0,5) == "exec:") && painter && painter.snapid) {
                msg = "PRIMIT6:" + JSROOT.toJSON({
                   _typename: "TWebObjectOptions",
-                  snapid: painter.snapid.toString(),
+                  snapid: painter.snapid.toString() + (subelem ? "#"+subelem : ""),
                   opt: kind.substr(5),
                   fcust: "exec",
                   fopt: []
