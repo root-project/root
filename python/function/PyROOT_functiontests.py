@@ -63,7 +63,12 @@ def fcn( npar, gin, f, par, iflag ):
       delta  = (z[i]-func(x[i],y[i],par))/errorz[i]
       chisq += delta*delta
 
-   f[0] = chisq
+   if os.environ.get('EXP_PYROOT') == 'True':
+      # In the new Cppyy, f is a ctypes.c_double (see ROOT-10029).
+      # Thus, the assignment needs to be done to its value attribute
+      f.value = chisq
+   else:
+      f[0] = chisq
    ncount += 1
 
 def func( x, y, par ):
