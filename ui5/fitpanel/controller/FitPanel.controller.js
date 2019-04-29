@@ -219,18 +219,21 @@ sap.ui.define([
 
       },
 
-      advContourDraw: function() {
+      drawContour: function() {
 
       	var data = this.getView().getModel().getData();
-      	var fContourPoints = this.byId("contourPoints").getValue();
-      	var fContourPar1 = this.byId("ContourPar1").getSelectedItemId();
-      	var fContourPar2 = this.byId("ContourPar2").getSelectedItemId();
-      	var fConfLevel = this.byId("ConfLevel").getValue();
-      	// var fContourColor = this.byId("colorPicker").getColorString();
+      	var contourPoints = this.byId("contourPoints").getValue();
+      	data.fContourPoints = contourPoints;
+      	var contourPar1 = this.byId("ContourPar1").getSelectedItemId();
+      	data.fContourPar1 = contourPar1;
+      	var contourPar2 = this.byId("ContourPar2").getSelectedItemId();
+      	data.fContourPar2 = contourPar2;
+      	var confLevel = this.byId("ConfLevel").getValue();
+      	data.fConfLevel = confLevel;
+      	//var fContourColor = this.byId("colorPicker").getColorString();
       	//console.log("Contour Points " + fContourPar1)
-	  	//this.getView().getModel().refresh();
          
-
+	  	this.getView().getModel().refresh();
         //Each time we click the button, we keep the current state of the model
         if (this.websocket)
             this.websocket.Send('SETCONTOUR:'+this.getView().getModel().getJSON());
