@@ -75,13 +75,11 @@ def stderrRedirected():
 
 ##
 # redirect output (escape characters during ROOT importation...)
-# The gymnastic with sys argv  is necessary to workaround for ROOT-7577
-argvTmp = sys.argv[:]
-sys.argv = []
 with stdoutRedirected():
     import ROOT
+# Silence Davix warning (see ROOT-7577)
+ROOT.PyConfig.IgnoreCommandLineOptions = True
 ROOT.gROOT.GetVersion()
-sys.argv = argvTmp
 
 import argparse
 import glob
