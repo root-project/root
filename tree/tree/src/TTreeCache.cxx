@@ -11,6 +11,7 @@
 
 /** \class TTreeCache
 \ingroup tree
+\brief A cache to speed-up the reading of ROOT datasets
 
 # A cache to speed-up the reading of ROOT datasets
 
