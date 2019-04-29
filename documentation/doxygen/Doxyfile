@@ -977,7 +977,8 @@ EXCLUDE_PATTERNS       = */G__* \
                          makeimage.py \
                          parallelNotebooks.py \
                          LinkDef.h \
-                         */io/io/res/*
+                         */io/io/res/* \
+                         */src/lexertk.hpp
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
