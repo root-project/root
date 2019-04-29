@@ -3971,7 +3971,6 @@
 
          if (items && items.length) {
             _menu.add("separator");
-            _menu.add("sub:Online");
 
             this.args_menu_items = items;
             this.args_menu_id = reply.fId;
@@ -3981,8 +3980,14 @@
             for (var n=0;n<items.length;++n) {
                var item = items[n];
 
-               if (item.fClassName && lastclname && (lastclname!=item.fClassName)) _menu.add("separator");
-               lastclname = item.fClassName;
+               if (item.fClassName && lastclname && (lastclname!=item.fClassName)) {
+                  _menu.add("endsub:");
+                  lastclname = "";
+               }
+               if (lastclname != item.fClassName) {
+                  lastclname = item.fClassName;
+                  _menu.add("sub:" + lastclname, undefined, null, "Context menu for class " + lastclname);
+               }
 
                if ((item.fChecked === undefined) || (item.fChecked < 0))
                   _menu.add(item.fName, n, DoExecMenu);
@@ -3990,7 +3995,7 @@
                   _menu.addchk(item.fChecked, item.fName, n, DoExecMenu);
             }
 
-            _menu.add("endsub:");
+            if (lastclname) _menu.add("endsub:");
          }
 
          JSROOT.CallBack(_call_back);
