@@ -92,11 +92,9 @@ TEST(RDataFrameNodes, DoubleEvtLoop)
 TEST(RDataFrameNodes, InheritanceOfCustomColumns)
 {
    ROOT::RDataFrame df(1);
-   int nBins = -1;
    const auto nBinsExpected = 42;
-   df.Define("b", []() { return TH1F("b", "b", nBinsExpected, 0, 1); })
-      .Foreach([&nBins](TH1 &h) { nBins = h.GetNbinsX(); }, {"b"});
-   EXPECT_EQ(nBins, nBinsExpected);
+   df.Define("b", [&nBinsExpected]() { return TH1F("b", "b", nBinsExpected, 0, 1); })
+      .Foreach([&nBinsExpected](TH1 &h) { EXPECT_EQ(h.GetNbinsX(), nBinsExpected);}, {"b"});
 
    const auto ofileName = "InheritanceOfCustomColumns.root";
 
