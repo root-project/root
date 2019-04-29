@@ -30,12 +30,12 @@
 #include <mutex>
 #include <thread>
 
-ROOT::Experimental::RFileItem::RFileItem(int _id, const char *name, FileStat_t &stat) : RBaseItem(_id, name)
+ROOT::Experimental::RFileItem::RFileItem(int _id, const char *_name, FileStat_t &stat) : RBaseItem(_id, _name)
 {
    char tmp[256];
    Long64_t _fsize, bsize;
 
-   int type = stat.fMode;
+   type     = stat.fMode;
    size     = stat.fSize;
    uid      = stat.fUid;
    gid      = stat.fGid;
@@ -212,7 +212,7 @@ std::string ROOT::Experimental::RBrowserFSDescription::ProcessBrowserRequest(con
       res = "BREPL:";
       res.append(TBufferJSON::ToJSON(&reply, 103).Data());
    }
-   
+
    delete request;
    return res;
 }

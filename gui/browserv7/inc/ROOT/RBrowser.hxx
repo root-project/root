@@ -99,7 +99,7 @@ public:
    std::string fuid;        ///< user id
    std::string fgid;        ///< group id
 
-   RFileItem(int _id, const char *name, FileStat_t &stat);
+   RFileItem(int _id, const char *_name, FileStat_t &stat);
 };
 
 class RBrowserFSDescription {
