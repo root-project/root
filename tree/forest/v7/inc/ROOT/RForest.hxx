@@ -21,6 +21,7 @@
 #include <ROOT/RForestView.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <iterator>
 #include <memory>
 #include <utility>
 
@@ -87,6 +88,25 @@ private:
    std::unique_ptr<Detail::RPageSource> fSource;
 
 public:
+   // Browse through the entries
+   class RIterator : public std::iterator<std::forward_iterator_tag, ForestSize_t> {
+   private:
+      using iterator = RIterator;
+      ForestSize_t fIndex = kInvalidForestIndex;
+   public:
+      RIterator() = default;
+      explicit RIterator(ForestSize_t index) : fIndex(index) {}
+      ~RIterator() = default;
+
+      iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
+      iterator& operator++()    /* prefix */         { fIndex++; return *this; }
+      reference operator* ()                         { return fIndex; }
+      pointer   operator->()                         { return &fIndex; }
+      bool      operator==(const iterator& rh) const { return fIndex == rh.fIndex; }
+      bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
+   };
+
+
    static std::unique_ptr<RInputForest> Open(std::unique_ptr<RForestModel> model,
                                              std::string_view forestName,
                                              std::string_view storage);
@@ -122,6 +142,9 @@ public:
    RForestViewCollection GetViewCollection(std::string_view fieldName) {
       return RForestViewCollection(fieldName, fSource.get());
    }
+
+   RIterator begin() { return RIterator(0); }
+   RIterator end() { return RIterator(fNEntries); }
 };
 
 // clang-format off
