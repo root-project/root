@@ -18,6 +18,8 @@
 
 #include <ROOT/RWebWindow.hxx>
 
+#include <ROOT/RBrowserItem.hxx>
+
 #include <TSystem.h>
 
 #include <vector>
@@ -29,47 +31,42 @@ namespace Experimental {
 
 /** Base description of browser item, required only to build hierarchy */
 
-class RBaseItem {
+/** Representation of single item in the file browser */
+class RRootFileItem : public RRootBrowserItem {
 public:
-   int id{0};               ///< node id, index in array
-   std::string name;        ///< node name
-   std::vector<int> chlds;  ///< list of childs id
-
-   RBaseItem(int _id = 0) : id(_id) {}
-   RBaseItem(int _id, const std::string &_name) : id(_id), name(_name) {}
-};
-
-/** class ROOT::Experimental::RFileItem
- * \ingroup webdisplay
- * Descriptor for the openui5 File Browser Item, used in RBrowser
- */
-
-class RFileItem : public RBaseItem  {
-public:
+   // internal data, used for generate directory list
    int type{0};             ///<! file type
    int uid{0};              ///<! file uid
    int gid{0};              ///<! file gid
    bool islink{false};      ///<! true if symbolic link
    bool isdir{false};       ///<! true if directory
-   long modtime;            ///<! modification time
-   int64_t size;            ///<! file size
-   std::string fsize;       ///< file size
-   std::string mtime;       ///< file attributes
-   std::string ftype;       ///< file attributes
-   std::string fuid;        ///< user id
-   std::string fgid;        ///< group id
+   long modtime{0};         ///<! modification time
+   int64_t size{0};         ///<! file size
 
-   RFileItem(int _id, const std::string &_name, FileStat_t &stat);
+   // this is part for browser, visisble for I/O
+   std::string fsize;    ///< file size
+   std::string mtime;    ///< modification time
+   std::string ftype;    ///< file attributes
+   std::string fuid;     ///< user id
+   std::string fgid;     ///< group id
+
+   RRootFileItem() = default;
+
+   RRootFileItem(const std::string &_name, int _nchilds, FileStat_t &stat);
+
+   // should be here, one needs virtual table for correct streaming of RRootBrowserReply
+   virtual ~RRootFileItem() = default;
 };
+
 
 class RBrowserFSDescription {
 
-   std::vector<RFileItem> fDesc;    ///< converted description, send to client
+   std::vector<RRootFileItem> fDesc;  ///< current description
 
-   int fTopNode{0};                 ///<! selected top node
+   int fTopNode{0};                  ///<! selected top node
 
-   std::string fDrawJson;           ///<! JSON with main nodes drawn by client
-   bool fPreferredOffline{false};   ///<! indicates that full description should be provided to client
+   std::string fDrawJson;            ///<! JSON with main nodes drawn by client
+   bool fPreferredOffline{false};    ///<! indicates that full description should be provided to client
 
    void ResetRndrInfos();
 
