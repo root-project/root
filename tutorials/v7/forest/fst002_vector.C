@@ -37,7 +37,7 @@ using RInputForest = ROOT::Experimental::RInputForest;
 using ROutputForest = ROOT::Experimental::ROutputForest;
 
 // Where to store the forest of this example
-constexpr char const* kForestFile = "fst002_vector.root";
+constexpr char const* kForestFileName = "fst002_vector.root";
 
 // Update the histogram GUI every so many fills
 constexpr int kUpdateGuiFreq = 1000;
@@ -45,7 +45,7 @@ constexpr int kUpdateGuiFreq = 1000;
 // Number of events to generate
 constexpr int kNEvents = 25000;
 
-// Generate kNEvents with vectors in kForestFile
+// Generate kNEvents with vectors in kForestFileName
 void Write()
 {
    // We create a unique pointer to an empty data model
@@ -59,9 +59,9 @@ void Write()
    auto fldVpz = model->MakeField<std::vector<float>>("vpz");
    auto fldVrand = model->MakeField<std::vector<float>>("vrand");
 
-   // We hand-over the data model to a newly created forest of name "F", stored in kForestFile
+   // We hand-over the data model to a newly created forest of name "F", stored in kForestFileName
    // In return, we get a unique pointer to a forest that we can fill
-   auto forest = ROutputForest::Recreate(std::move(model), "F", kForestFile);
+   auto forest = ROutputForest::Recreate(std::move(model), "F", kForestFileName);
 
    TH1F *hpx = new TH1F("hpx", "This is the px distribution", 100, -4, 4);
    hpx->SetFillColor(48);
@@ -116,7 +116,7 @@ void Read()
 {
    // Create a forest without imposing a specific data model.  We could generate the data model from the forest
    // but here we prefer the view because we only want to access a single field
-   auto forest = RInputForest::Open("F", kForestFile);
+   auto forest = RInputForest::Open("F", kForestFileName);
 
    // Quick overview of the forest's key meta-data
    std::cout << forest->Print();
