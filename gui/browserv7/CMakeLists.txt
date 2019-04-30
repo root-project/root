@@ -8,6 +8,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   SOURCES
     src/RBrowser.cxx
   DEPENDENCIES
-    ROOTGpadv7
     ROOTWebDisplay
 )

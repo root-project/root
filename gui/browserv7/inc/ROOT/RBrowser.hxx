@@ -19,8 +19,6 @@
 #include <TSystem.h>
 #include <ROOT/RWebWindow.hxx>
 
-#include <ROOT/RCanvas.hxx>
-
 #include <vector>
 #include <sstream>
 #include <iostream>
