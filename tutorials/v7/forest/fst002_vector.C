@@ -53,6 +53,7 @@ void Write()
 
    // Creating fields of std::vector is the same as creating fields of simple types.  As a result, we get
    // shared pointers of the given type
+   //std::shared_ptr<std::vector<float>> fldVpx
    auto fldVpx = model->MakeField<std::vector<float>>("vpx");
    auto fldVpy = model->MakeField<std::vector<float>>("vpy");
    auto fldVpz = model->MakeField<std::vector<float>>("vpz");
@@ -125,6 +126,8 @@ void Read()
    // Generate a handle to a specific field.  If the field type does not match the field in the forest, a runtime
    // error is thrown.
    auto viewVpx = forest->GetView<std::vector<float>>("vpx");
+
+   // --> Move to sub models
 
    TCanvas *c2 = new TCanvas("c2", "Dynamic Filling Example", 200, 10, 700, 500);
    TH1F *h = new TH1F("h", "This is the px distribution", 100, -4, 4);

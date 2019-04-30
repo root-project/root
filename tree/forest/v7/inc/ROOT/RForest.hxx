@@ -104,9 +104,9 @@ public:
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the forest.
    /// On I/O errors, raises an expection.
-   void SetEntry(ForestSize_t index) { SetEntry(index, fModel->GetDefaultEntry()); }
+   void LoadEntry(ForestSize_t index) { LoadEntry(index, fModel->GetDefaultEntry()); }
    /// Fills a user provided entry after checking that the entry has been instantiated from the forest model
-   void SetEntry(ForestSize_t index, RForestEntry* entry) {
+   void LoadEntry(ForestSize_t index, RForestEntry* entry) {
       for (auto& value : *entry) {
          value.GetField()->Read(index, &value);
       }

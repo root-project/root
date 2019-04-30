@@ -55,6 +55,7 @@ void Convert() {
    auto branchIter = tree->GetListOfBranches()->MakeIterator();
    TBranch *b;
    std::vector<TBranch*> branches;
+   // --> use begin, end
    while ((b = static_cast<TBranch*>(branchIter->Next())) != nullptr) {
       // We assume every branch has a single leaf
       TLeaf *l = static_cast<TLeaf*>(b->GetListOfLeaves()->First());
@@ -110,7 +111,7 @@ void fst003_lhcbOpenData()
 
    for (unsigned int i = 0; i < forest->GetNEntries(); ++i) {
       // Populate the created field for every entry...
-      forest->SetEntry(i);
+      forest->LoadEntry(i);
       // ...and use it to fill the histogram
       h->Fill(*fldDist);
    }
