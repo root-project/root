@@ -15,6 +15,8 @@
 #pragma link C++ class ROOT::Experimental::RRootBrowserRequest+;
 #pragma link C++ class ROOT::Experimental::RRootBrowserItem+;
 #pragma link C++ class ROOT::Experimental::RRootBrowserReply+;
+
+#pragma link C++ class ROOT::Experimental::RRootFileItem+;
 #pragma link C++ class ROOT::Experimental::RBrowser+;
 
 #endif
