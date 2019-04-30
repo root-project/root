@@ -117,7 +117,7 @@ void Read()
 {
    // Create a forest without imposing a specific data model.  We could generate the data model from the forest
    // but here we prefer the view because we only want to access a single field
-   auto forest = RInputForest::Create("F", kForestFile);
+   auto forest = RInputForest::Open("F", kForestFile);
 
    // Quick overview of the forest's key meta-data
    std::cout << forest->Print();
