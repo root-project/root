@@ -100,7 +100,7 @@ public:
 
    ForestSize_t GetNEntries() { return fNEntries; }
 
-   std::string Print();
+   std::string GetInfo();
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the forest.
    /// On I/O errors, raises an expection.
