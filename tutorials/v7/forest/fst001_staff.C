@@ -83,8 +83,7 @@ void Analyze() {
    auto forest = RInputForest::Open("Staff", kForestFileName);
 
    // Quick overview of the forest's key meta-data
-   /// --> GetDescription()
-   std::cout << forest->Print();
+   std::cout << forest->GetInfo();
    // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
 
    // We resurrect the model from the forest on disk.

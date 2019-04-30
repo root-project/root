@@ -178,7 +178,7 @@ void fst004_dimuon() {
 
    // Create an input forest unique pointer
    auto forest = RInputForest::Open("Events", kForestFileName);
-   std::cout << forest->Print();
+   std::cout << forest->GetInfo();
    // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
 
    // Create a data frame from the input forest
