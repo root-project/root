@@ -16,7 +16,7 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-R__LOAD_LIBRARY(libROOTForest)
+R__LOAD_LIBRARY(libROOTForest)  // --> don't depend on this
 
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RForest.hxx>
@@ -47,6 +47,8 @@ constexpr char const* gForestFile = "naod_dimuon_forest.root";
 
 
 using ColNames_t = std::vector<std::string>;
+
+// --> Helper Function? root -l 'tree2forest.C("", "") --> exe'
 
 // This is a custom action for RDataFrame. It does not support parallelism!
 // This action writes data from an RDataFrame entry into a forest. It is templated on the
@@ -180,6 +182,7 @@ void fst004_dimuon() {
    // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
 
    // Create a data frame from the input forest
+   // --> Factory function
    auto df = std::make_unique<ROOT::RDataFrame>(std::make_unique<RForestDS>(forest.get()));
 
    // As of this point, the tutorial is identical to df102_NanoAODDimuonAnalysis except the use of
