@@ -34,7 +34,7 @@
 /////////////////////////////////////////////////////////////////////
 /// Item representing file in RBrowser
 
-ROOT::Experimental::RFileItem::RFileItem(int _id, const std::string &_name, FileStat_t &stat) : RBaseItem(_id, _name)
+ROOT::Experimental::RRootFileItem::RRootFileItem(const std::string &_name, int _nchilds, FileStat_t &stat) : RRootBrowserItem(_name, _nchilds)
 {
    char tmp[256];
    Long64_t _fsize, bsize;
@@ -118,7 +118,6 @@ ROOT::Experimental::RFileItem::RFileItem(int _id, const std::string &_name, File
 void ROOT::Experimental::RBrowserFSDescription::AddFolder(const char *name)
 {
    FileStat_t sbuf;
-   int cnt = 0;
 
    if (gSystem->GetPathInfo(name, sbuf)) {
       if (sbuf.fIsLink) {
@@ -129,8 +128,9 @@ void ROOT::Experimental::RBrowserFSDescription::AddFolder(const char *name)
       return;
    }
 
+   // TODO: to mark folder, nchilds set to 1 but this is should be improved in the future
    if (R_ISDIR(sbuf.fMode))
-      fDesc.emplace_back(cnt++, name, sbuf);
+      fDesc.emplace_back(name, 1, sbuf);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -139,7 +139,6 @@ void ROOT::Experimental::RBrowserFSDescription::AddFolder(const char *name)
 void ROOT::Experimental::RBrowserFSDescription::AddFile(const char *name)
 {
    FileStat_t sbuf;
-   int cnt = 0;
 
    if (gSystem->GetPathInfo(name, sbuf)) {
       if (sbuf.fIsLink) {
@@ -151,7 +150,7 @@ void ROOT::Experimental::RBrowserFSDescription::AddFile(const char *name)
    }
 
    if (!R_ISDIR(sbuf.fMode))
-      fDesc.emplace_back(cnt++, name, sbuf);
+      fDesc.emplace_back(name, 0, sbuf);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -203,28 +202,34 @@ std::string ROOT::Experimental::RBrowserFSDescription::ProcessBrowserRequest(con
 
    auto request = TBufferJSON::FromJSON<RRootBrowserRequest>(msg);
 
-   if (msg.empty()) {
+   if (msg.empty() && !request) {
       request = std::make_unique<RRootBrowserRequest>();
       request->path = "/";
       request->first = 0;
       request->number = 100;
-   } else if (!request) {
-      return res;
    }
 
+   if (!request)
+      return res;
+
+   // TODO: one could rebuild information only when other directory is requested
    if (1) { //((request->path.compare("/") == 0) && (request->first == 0)) {
       Build(request->path);
-      RRootBrowserReply reply;
-      reply.path = request->path;
-      reply.first = request->first;
-      reply.nchilds = fDesc.size();
-
-      for (auto &node : fDesc) {
-         reply.nodes.emplace_back(node.name, node.fsize, node.mtime, node.ftype, node.fuid, node.fgid, node.isdir);
-      }
-      res = "BREPL:";
-      res.append(TBufferJSON::ToJSON(&reply, 103).Data());
    }
+
+   RRootBrowserReply reply;
+   reply.path = request->path;
+   reply.first = request->first;
+   reply.nchilds = fDesc.size();
+
+   // TODO: return only requested number of nodes, to be done later
+
+   // no items ownership, RRootBrowserReply must be always temporary object
+   for (auto &node : fDesc)
+      reply.nodes.emplace_back(&node);
+
+   res = "BREPL:";
+   res.append(TBufferJSON::ToJSON(&reply, 103).Data());
 
    return res;
 }
