@@ -138,6 +138,8 @@ sap.ui.define([
       for (var k = 0; k < res3d.length; ++k)
          cont.add(res3d[k]);
 
+      this.applySelectionOnSceneCreate(this.mgr.global_selection_id);
+      this.applySelectionOnSceneCreate(this.mgr.global_highlight_id);
       this.viewer.render();
       this.first_time = false;
    }
@@ -403,6 +405,28 @@ sap.ui.define([
       return true;
    }
 
+   EveScene.prototype.applySelectionOnSceneCreate =  function(selection_id)
+   {
+      var selection_obj = this.mgr.GetElement(selection_id);
+      var pthis = this;
+      selection_obj.prev_sel_list.forEach(function(rec) {
+         var prl = pthis.mgr.GetElement(rec.primary);
+         if (prl && prl.fSceneId == pthis.id) {
+            pthis.SelectElement(selection_obj, rec.primary, rec.sec_idcs);
+         }
+         else {
+            for (var impId of rec.implied)
+            {
+               var eli =  pthis.mgr.GetElement(impId);
+               if (eli && eli.fSceneId == pthis.id) {
+               console.log("CHECK select IMPLIED", pthis);
+                  pthis.SelectElement(selection_obj, impId, rec.sec_idcs);
+               }
+            }
+         }
+      });
+   }
+
    EveScene.prototype.SelectElement = function(selection_obj, element_id, sec_idcs)
    {
       var container = this.viewer.getThreejsContainer("scene" + this.id);
@@ -444,7 +468,7 @@ sap.ui.define([
       if (selection_obj.fElementId in this.viewer.outlinePass.id2obj_map)
       {
 	 delete this.viewer.outlinePass.id2obj_map[selection_obj.fElementId][element_id];
-         
+
       }
    }
    /** returns true if highlight index is differs from current */
