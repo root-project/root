@@ -33,7 +33,7 @@ class RForestEntry;
 
 
 class RForestDS final : public ROOT::RDF::RDataSource {
-   ROOT::Experimental::RInputForest* fForest;
+   std::unique_ptr<ROOT::Experimental::RInputForest> fForest;
    std::unique_ptr<ROOT::Experimental::RForestEntry> fEntry;
    unsigned fNSlots;
    bool fHasSeenAllRanges;
@@ -42,7 +42,7 @@ class RForestDS final : public ROOT::RDF::RDataSource {
    std::vector<void*> fValuePtrs;
 
 public:
-   RForestDS(ROOT::Experimental::RInputForest* forest);
+   RForestDS(std::unique_ptr<ROOT::Experimental::RInputForest> forest);
    ~RForestDS();
    void SetNSlots(unsigned int nSlots) final;
    const std::vector<std::string> &GetColumnNames() const final;
@@ -57,6 +57,8 @@ public:
 protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
+
+RDataFrame MakeForestDataFrame(std::string_view forestName, std::string_view fileName);
 
 } // ns Experimental
 } // ns ROOT

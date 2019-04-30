@@ -172,20 +172,13 @@ void fst004_dimuon() {
    if (gSystem->AccessPathName(kForestFileName))
       Convert();
 
-   // Create an input forest unique pointer
-   auto forest = RInputForest::Open("Events", kForestFileName);
-   std::cout << forest->GetInfo();
-   // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
-
-   // Create a data frame from the input forest
-   // --> Factory function
-   auto df = std::make_unique<ROOT::RDataFrame>(std::make_unique<RForestDS>(forest.get()));
+   auto df = ROOT::Experimental::MakeForestDataFrame("Events", kForestFileName);
 
    // As of this point, the tutorial is identical to df102_NanoAODDimuonAnalysis except the use of
    // InvariantMassStdVector instead of InvariantMass
 
    // For simplicity, select only events with exactly two muons and require opposite charge
-   auto df_2mu = df->Filter("nMuon == 2", "Events with exactly two muons");
+   auto df_2mu = df.Filter("nMuon == 2", "Events with exactly two muons");
    auto df_os = df_2mu.Filter("Muon_charge[0] != Muon_charge[1]", "Muons with opposite charge");
 
    // Compute invariant mass of the dimuon system
