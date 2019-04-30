@@ -592,8 +592,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       if (mindx.length > 0)
       {
-         let mark_size = 5;
-         var pnts = new JSROOT.Painter.PointsCreator(mindx.length, true, mark_size);
+         var pnts = new JSROOT.Painter.PointsCreator(mindx.length, true, 5);
 
          var arr = m.children[1].geometry.getAttribute("position").array;
 
@@ -603,7 +602,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
             pnts.AddPoint(arr[p], arr[p+1], arr[p+2] );
          }
          var mark = pnts.CreatePoints(color);
-         mark.material.size = mark_size;
+         mark.material.size = m.children[1].material.size;
          dest.push(mark);
       }
 
@@ -725,6 +724,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          pnts.AddPoint(rnr_data.vtxBuff[i], rnr_data.vtxBuff[i+1], rnr_data.vtxBuff[i+2] );
       }
       var marker_mesh = pnts.CreatePoints(mainColor);
+
+      // marker_mesh.material.size = Math.random()*20;
+      marker_mesh.material.sizeAttenuation = false;
 
       obj3d.add(marker_mesh);
 
