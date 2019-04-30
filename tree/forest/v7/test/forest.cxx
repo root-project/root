@@ -342,7 +342,7 @@ TEST(RForest, Composable)
    auto fldTracks = eventModel->MakeCollection("tracks", std::move(trackModel));
 
    {
-      auto forest = ROutputForest::Create(std::move(eventModel), "f", "test.root");
+      auto forest = ROutputForest::Recreate(std::move(eventModel), "f", "test.root");
 
       for (unsigned i = 0; i < 8; ++i) {
          for (unsigned t = 0; t < 3; ++t) {
@@ -430,7 +430,7 @@ TEST(RForest, RealWorld1)
    TRandom3 rnd(42);
    double chksumWrite = 0.0;
    {
-      auto forest = ROutputForest::Create(std::move(modelWrite), "f", "test.root");
+      auto forest = ROutputForest::Recreate(std::move(modelWrite), "f", "test.root");
       constexpr unsigned int nEvents = 60000;
       for (unsigned int i = 0; i < nEvents; ++i) {
          wrEvent = i;

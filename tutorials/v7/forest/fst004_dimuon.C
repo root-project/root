@@ -74,7 +74,7 @@ private:
       // Create the fields and the shared pointers to the connected values
       std::initializer_list<int> expander{
          (std::get<S>(fColumnValues) = eventModel->MakeField<ColumnTypes_t>(fColNames[S]), 0)...};
-      fForest = std::move(ROutputForest::Create(std::move(eventModel), fForestName, fRootFile));
+      fForest = std::move(ROutputForest::Recreate(std::move(eventModel), fForestName, fRootFile));
    }
 
    template<std::size_t... S>

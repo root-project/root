@@ -78,7 +78,7 @@ void Convert() {
    }
 
    // The new forest takes ownership of the model
-   auto forest = ROutputForest::Create(std::move(model), "DecayTree", kForestFile);
+   auto forest = ROutputForest::Recreate(std::move(model), "DecayTree", kForestFile);
 
    auto nEntries = tree->GetEntries();
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {

@@ -61,13 +61,9 @@ void Ingest() {
    auto fldDivision = model->MakeField<std::string>("Division");
    auto fldNation   = model->MakeField<std::string>("Nation");
 
-   // Ensure any previously created files from this tutorial are removed
-   std::remove(kForestFile);
-
    // We hand-over the data model to a newly created forest of name "Staff", stored in kForestFile
    // In return, we get a unique pointer to a forest that we can fill
-     // --> Recreate
-   auto forest = ROutputForest::Create(std::move(model), "Staff", kForestFile);
+   auto forest = ROutputForest::Recreate(std::move(model), "Staff", kForestFile);
 
    std::string record;
    while (std::getline(fin, record)) {

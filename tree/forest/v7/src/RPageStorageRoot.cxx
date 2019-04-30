@@ -35,6 +35,8 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forest
    , fSettings(settings)
    , fPrevClusterNEntries(0)
 {
+   R__WARNING_HERE("Forest") << "The RForest file format will change. " <<
+      "Do not store real data with this version of RForest!";
 }
 
 ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forestName, std::string_view path)
@@ -45,7 +47,6 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forest
    R__WARNING_HERE("Forest") << "The RForest file format will change. " <<
       "Do not store real data with this version of RForest!";
    TFile *file = TFile::Open(path.to_string().c_str(), "UPDATE");
-   file->SetCompressionSettings(0);
    fSettings.fFile = file;
    fSettings.fTakeOwnership = true;
 }
