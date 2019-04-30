@@ -24,6 +24,7 @@
 #include "TString.h"
 #include "TROOT.h"
 #include "TBufferJSON.h"
+
 #include <sstream>
 #include <iostream>
 #include <algorithm>
@@ -115,7 +116,7 @@ ROOT::Experimental::RRootFileItem::RRootFileItem(const std::string &_name, int _
 /////////////////////////////////////////////////////////////////////
 /// Add folder
 
-void ROOT::Experimental::RBrowserFSDescription::AddFolder(const char *name)
+void ROOT::Experimental::RBrowser::AddFolder(const char *name)
 {
    FileStat_t sbuf;
 
@@ -136,7 +137,7 @@ void ROOT::Experimental::RBrowserFSDescription::AddFolder(const char *name)
 /////////////////////////////////////////////////////////////////////
 /// Add file
 
-void ROOT::Experimental::RBrowserFSDescription::AddFile(const char *name)
+void ROOT::Experimental::RBrowser::AddFile(const char *name)
 {
    FileStat_t sbuf;
 
@@ -156,8 +157,10 @@ void ROOT::Experimental::RBrowserFSDescription::AddFile(const char *name)
 /////////////////////////////////////////////////////////////////////
 /// Collect information for provided directory
 
-void ROOT::Experimental::RBrowserFSDescription::Build(const std::string &path)
+void ROOT::Experimental::RBrowser::Build(const std::string &path)
 {
+   fDescPath = path;
+
    void *dirp;
    const char *name;
    std::string spath = path;
@@ -196,7 +199,7 @@ void ROOT::Experimental::RBrowserFSDescription::Build(const std::string &path)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-std::string ROOT::Experimental::RBrowserFSDescription::ProcessBrowserRequest(const std::string &msg)
+std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::string &msg)
 {
    std::string res;
 
@@ -212,8 +215,9 @@ std::string ROOT::Experimental::RBrowserFSDescription::ProcessBrowserRequest(con
    if (!request)
       return res;
 
-   // TODO: one could rebuild information only when other directory is requested
-   if (1) { //((request->path.compare("/") == 0) && (request->first == 0)) {
+   // rebuild list only when selected directory changed
+   if (!IsBuild() || (request->path != fDescPath)) {
+      fDescPath = request->path;
       Build(request->path);
    }
 
@@ -222,11 +226,15 @@ std::string ROOT::Experimental::RBrowserFSDescription::ProcessBrowserRequest(con
    reply.first = request->first;
    reply.nchilds = fDesc.size();
 
-   // TODO: return only requested number of nodes, to be done later
-
+   // return only requested number of nodes
    // no items ownership, RRootBrowserReply must be always temporary object
-   for (auto &node : fDesc)
-      reply.nodes.emplace_back(&node);
+   // TODO: implement sorting
+   int seq = 0;
+   for (auto &node : fDesc) {
+      if ((seq >= request->first) && ((seq < request->first + request->number) || (request->number == 0)))
+         reply.nodes.emplace_back(&node);
+      seq++;
+   }
 
    res = "BREPL:";
    res.append(TBufferJSON::ToJSON(&reply, 103).Data());
@@ -261,7 +269,6 @@ ROOT::Experimental::RBrowser::RBrowser()
 
 ROOT::Experimental::RBrowser::~RBrowser()
 {
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -301,19 +308,16 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
 
    if (arg == "CONN_READY") {
 
-   } else if (arg == "GETDRAW") {
+      fConnId = connid;
 
    } else if (arg == "QUIT_ROOT") {
 
       RWebWindowsManager::Instance()->Terminate();
 
-   } else if ((arg.compare(0, 7, "SETVI0:") == 0) || (arg.compare(0, 7, "SETVI1:") == 0)) {
-      // change visibility for specified nodeid
-
    } else if (arg.compare(0,6, "BRREQ:") == 0) {
       // central place for processing browser requests
       //if (!fDesc.IsBuild()) fDesc.Build();
-      auto json = fDesc.ProcessBrowserRequest(arg.substr(6));
+      auto json = ProcessBrowserRequest(arg.substr(6));
       if (json.length() > 0) fWebWindow->Send(connid, json);
    }
 }
