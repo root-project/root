@@ -21,11 +21,10 @@
 #include <ROOT/RBrowserItem.hxx>
 
 #include <vector>
+#include <stdint.h>
 
 namespace ROOT {
 namespace Experimental {
-
-/** Base description of browser item, required only to build hierarchy */
 
 /** Representation of single item in the file browser */
 class RRootFileItem : public RBrowserItem {
@@ -81,9 +80,6 @@ protected:
 public:
    RBrowser();
    virtual ~RBrowser();
-
-   // method required when any panel want to be inserted into the RCanvas
-   std::shared_ptr<RWebWindow> GetWindow();
 
    /// show Browser in specified place
    void Show(const RWebDisplayArgs &args = "", bool always_start_new_browser = false);

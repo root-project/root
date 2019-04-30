@@ -34,6 +34,35 @@
 #include <thread>
 
 
+/** \class ROOT::Experimental::RBrowser
+\ingroup webdisplay
+
+web-based ROOT Browser prototype.
+*/
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
+ROOT::Experimental::RBrowser::RBrowser()
+{
+   fWebWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
+   fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
+
+   // this is call-back, invoked when message received via websocket
+   fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->WebWindowCallback(connid, arg); });
+   fWebWindow->SetGeometry(1200, 700); // configure predefined window geometry
+   fWebWindow->SetConnLimit(1); // the only connection is allowed
+   fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
+   Show();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
+ROOT::Experimental::RBrowser::~RBrowser()
+{
+}
+
 /////////////////////////////////////////////////////////////////////
 /// Collect information for provided directory
 
@@ -213,35 +242,6 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
    res.append(TBufferJSON::ToJSON(&reply, 103).Data());
 
    return res;
-}
-
-/** \class ROOT::Experimental::RBrowser
-\ingroup webdisplay
-
-web-based ROOT Browser prototype.
-*/
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-/// constructor
-
-ROOT::Experimental::RBrowser::RBrowser()
-{
-   fWebWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
-   fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
-
-   // this is call-back, invoked when message received via websocket
-   fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->WebWindowCallback(connid, arg); });
-   fWebWindow->SetGeometry(1200, 700); // configure predefined window geometry
-   fWebWindow->SetConnLimit(1); // the only connection is allowed
-   fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
-   Show();
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
-ROOT::Experimental::RBrowser::~RBrowser()
-{
 }
 
 /////////////////////////////////////////////////////////////////////////////////
