@@ -112,14 +112,18 @@ ROOT::Experimental::ROutputForest::~ROutputForest()
 }
 
 
-std::unique_ptr<ROOT::Experimental::ROutputForest> ROOT::Experimental::ROutputForest::Create(
+std::unique_ptr<ROOT::Experimental::ROutputForest> ROOT::Experimental::ROutputForest::Recreate(
    std::unique_ptr<RForestModel> model,
    std::string_view forestName,
    std::string_view storage)
 {
    // TODO(jblomer): heuristics based on storage
+   TFile *file = TFile::Open(storage.to_string().c_str(), "RECREATE");
+   Detail::RPageSinkRoot::RSettings settings;
+   settings.fFile = file;
+   settings.fTakeOwnership = true;
    return std::make_unique<ROutputForest>(
-      std::move(model), std::make_unique<Detail::RPageSinkRoot>(forestName, storage));
+      std::move(model), std::make_unique<Detail::RPageSinkRoot>(forestName, settings));
 }
 
 

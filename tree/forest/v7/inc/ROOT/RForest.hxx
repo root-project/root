@@ -144,9 +144,9 @@ private:
    ForestSize_t fLastCommitted;
 
 public:
-   static std::unique_ptr<ROutputForest> Create(std::unique_ptr<RForestModel> model,
-                                                std::string_view forestName,
-                                                std::string_view storage);
+   static std::unique_ptr<ROutputForest> Recreate(std::unique_ptr<RForestModel> model,
+                                                  std::string_view forestName,
+                                                  std::string_view storage);
    ROutputForest(std::unique_ptr<RForestModel> model, std::unique_ptr<Detail::RPageSink> sink);
    ROutputForest(const ROutputForest&) = delete;
    ROutputForest& operator=(const ROutputForest&) = delete;
