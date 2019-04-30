@@ -13,6 +13,12 @@
 // LinkDef.h - REve objects and services.
 //==============================================================================
 
+#ifdef __CINT__
+
+#pragma link off all globals;
+#pragma link off all classes;
+#pragma link off all functions;
+
 // REveVector
 #pragma link C++ class   ROOT::Experimental::REveVectorT<Float_t>+;
 #pragma link C++ class   ROOT::Experimental::REveVectorT<Double_t>+;
@@ -214,9 +220,8 @@
 #pragma link C++ class ROOT::Experimental::REveShapeRenderInfo+;
 #pragma link C++ class ROOT::Experimental::REveGeomDescription+;
 #pragma link C++ class ROOT::Experimental::REveGeomDrawing+;
-#pragma link C++ class ROOT::Experimental::RBrowserRequest+;
-#pragma link C++ class ROOT::Experimental::RBrowserItem+;
-#pragma link C++ class ROOT::Experimental::RBrowserReply+;
 
 // Tables
 #pragma link C++ class ROOT::Experimental::REveTableViewInfo;
+
+#endif
