@@ -499,8 +499,6 @@ TEST(RForest, RDF)
       forest.Fill();
    }
 
-   auto forest = RInputForest::Open("f", "test.root");
-   auto rdf = std::make_unique<ROOT::RDataFrame>(std::make_unique<ROOT::Experimental::RForestDS>(forest.get()));
-
-   EXPECT_EQ(42.0, *rdf->Min("pt"));
+   auto rdf = ROOT::Experimental::MakeForestDataFrame("f", "test.root");
+   EXPECT_EQ(42.0, *rdf.Min("pt"));
 }

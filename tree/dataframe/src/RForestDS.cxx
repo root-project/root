@@ -27,8 +27,8 @@
 namespace ROOT {
 namespace Experimental {
 
-RForestDS::RForestDS(ROOT::Experimental::RInputForest* forest)
-  : fForest(forest), fEntry(fForest->GetModel()->CreateEntry()), fNSlots(1), fHasSeenAllRanges(false)
+RForestDS::RForestDS(std::unique_ptr<ROOT::Experimental::RInputForest> forest)
+  : fForest(std::move(forest)), fEntry(fForest->GetModel()->CreateEntry()), fNSlots(1), fHasSeenAllRanges(false)
 {
    auto rootField = fForest->GetModel()->GetRootField();
    for (auto& f : *rootField) {
@@ -119,6 +119,12 @@ void RForestDS::SetNSlots(unsigned int nSlots)
    fNSlots = nSlots;
 }
 
+
+RDataFrame MakeForestDataFrame(std::string_view forestName, std::string_view fileName) {
+   auto forest = RInputForest::Open(forestName, fileName);
+   ROOT::RDataFrame rdf(std::make_unique<RForestDS>(std::move(forest)));
+   return rdf;
+}
 
 } // ns Experimental
 } // ns ROOT
