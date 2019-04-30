@@ -22,12 +22,15 @@ R__LOAD_LIBRARY(libROOTForest)
 
 #include <TCanvas.h>
 #include <TH1I.h>
+#include <TROOT.h>
 #include <TString.h>
 
 #include <cassert>
 #include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <string>
+#include <sstream>
 
 // Import classes from experimental namespace for the time being
 using RForestModel = ROOT::Experimental::RForestModel;
@@ -38,11 +41,8 @@ constexpr char const* kForestFile = "fst001_staff.root";
 
 void Ingest() {
    // The input file cernstaff.dat is a copy of the CERN staff data base from 1988
-   TString dir = gROOT->GetTutorialDir();
-   dir.Append("/tree/");
-   dir.ReplaceAll("/./","/");
-   FILE *fp = fopen(Form("%scernstaff.dat", dir.Data()), "r");
-   assert(fp != nullptr);
+   ifstream fin(gROOT->GetTutorialDir() + "/tree/cernstaff.dat");
+   assert(fin.is_open());
 
    // We create a unique pointer to an empty data model
    auto model = RForestModel::Create();
@@ -69,20 +69,14 @@ void Ingest() {
      // --> Recreate
    auto forest = ROutputForest::Create(std::move(model), "Staff", kForestFile);
 
-   char line[80];
-   while (fgets(line,80,fp)) {
-      // --> cin
-      char division[32];
-      char nation[32];
-      sscanf(&line[0],"%d %d %d %d %d %d %d  %d %d %s %s",
-         fldCategory.get(), fldFlag.get(), fldAge.get(), fldService.get(), fldChildren.get(), fldGrade.get(),
-         fldStep.get(), fldHrweek.get(), fldCost.get(), division, nation);
-      *fldDivision = std::string(division);
-      *fldNation = std::string(nation);
+   std::string record;
+   while (std::getline(fin, record)) {
+      std::istringstream iss(record);
+      iss >> *fldCategory >> *fldFlag >> *fldAge >> *fldService >> *fldChildren >> *fldGrade >> *fldStep >> *fldHrweek
+          >> *fldCost >> *fldDivision >> *fldNation;
       forest->Fill();
    }
 
-   fclose(fp);
    // The forest unique pointer goes out of scope here.  On destruction, the forest flushes unwritten data to disk
    // and closes the attached ROOT file.
 }
