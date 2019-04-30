@@ -429,10 +429,14 @@ sap.ui.define([
 
    EveScene.prototype.SelectElement = function(selection_obj, element_id, sec_idcs)
    {
-      var container = this.viewer.getThreejsContainer("scene" + this.id);
-      console.log("EveScene.SelectElement ", selection_obj.fName , element_id, container);
+      this.viewer.outlinePass.id2obj_map[element_id] = this.viewer.outlinePass.id2obj_map[element_id] || [];
+
+      // if(this.viewer.outlinePass.id2obj_map[element_id][selection_obj.fElementId] !== undefined) return;
+
       var stype = selection_obj.fName.endsWith("Selection") ? "select" : "highlight";
       var estype = THREE.OutlinePass.selection_enum[stype];
+
+      console.log("EveScene.SelectElement ", selection_obj.fName, element_id, selection_obj.fElementId, this.viewer.outlinePass.id2obj_map);
 
       let res = {
          "sel_type": estype,
@@ -441,15 +445,14 @@ sap.ui.define([
       };
       var obj3d = this.getObj3D( element_id );
 
-      if ( ! (selection_obj.fElementId in this.viewer.outlinePass.id2obj_map))
-	      this.viewer.outlinePass.id2obj_map[selection_obj.fElementId] = [];
-
-      var dest  = this.viewer.outlinePass.id2obj_map[selection_obj.fElementId];
-
-      // XXXX where do i pass in color ???
-
       if(sec_idcs === undefined || sec_idcs.length == 0)
       {
+         // exit if you try to highlight an object that has already been selected
+         if(estype == THREE.OutlinePass.selection_enum["highlight"] && 
+            this.viewer.outlinePass.id2obj_map[element_id][this.mgr.global_selection_id] !== undefined
+         ) return;
+
+         this.viewer.outlinePass.id2obj_map[element_id] = [];
          res.geom.push(obj3d);
       }
       else
@@ -458,17 +461,15 @@ sap.ui.define([
          ctrl.DrawForSelection(sec_idcs, res.geom);
          res.sec_sel = true;
       }
-      dest[element_id] = res;
+      this.viewer.outlinePass.id2obj_map[element_id][selection_obj.fElementId] = res;
    }
 
    EveScene.prototype.UnselectElement = function(selection_obj, element_id)
    {
-      var container = this.viewer.getThreejsContainer("scene" + this.id);
-      console.log("EveScene.UnselectElement ", selection_obj.fName, element_id, container);
-      if (selection_obj.fElementId in this.viewer.outlinePass.id2obj_map)
+      console.log("EveScene.UnselectElement ", selection_obj.fName, element_id, selection_obj.fElementId, this.viewer.outlinePass.id2obj_map);
+      if (this.viewer.outlinePass.id2obj_map[element_id] !== undefined)
       {
-	 delete this.viewer.outlinePass.id2obj_map[selection_obj.fElementId][element_id];
-
+	      delete this.viewer.outlinePass.id2obj_map[element_id][selection_obj.fElementId];
       }
    }
    /** returns true if highlight index is differs from current */
