@@ -59,12 +59,9 @@ void Write()
    auto fldVpz = model->MakeField<std::vector<float>>("vpz");
    auto fldVrand = model->MakeField<std::vector<float>>("vrand");
 
-   // Ensure any previously created files from this tutorial are removed
-   std::remove(kForestFile);
-
    // We hand-over the data model to a newly created forest of name "F", stored in kForestFile
    // In return, we get a unique pointer to a forest that we can fill
-   auto forest = ROutputForest::Create(std::move(model), "F", kForestFile);
+   auto forest = ROutputForest::Recreate(std::move(model), "F", kForestFile);
 
    TH1F *hpx = new TH1F("hpx", "This is the px distribution", 100, -4, 4);
    hpx->SetFillColor(48);
@@ -106,6 +103,8 @@ void Write()
 
       forest->Fill();
    }
+
+   hpx->DrawCopy();
 
    // The forest unique pointer goes out of scope here.  On destruction, the forest flushes unwritten data to disk
    // and closes the attached ROOT file.
