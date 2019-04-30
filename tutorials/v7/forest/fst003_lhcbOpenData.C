@@ -38,12 +38,12 @@ using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
 using RInputForest = ROOT::Experimental::RInputForest;
 using ROutputForest = ROOT::Experimental::ROutputForest;
 
-constexpr char const* kTreeFile = "http://root.cern.ch/files/LHCb/lhcb_B2HHH_MagnetUp.root";
-constexpr char const* kForestFile = "fst003_lhcbOpenData.root";
+constexpr char const* kTreeFileName = "http://root.cern.ch/files/LHCb/lhcb_B2HHH_MagnetUp.root";
+constexpr char const* kForestFileName = "fst003_lhcbOpenData.root";
 
 
 void Convert() {
-   std::unique_ptr<TFile> f(TFile::Open(kTreeFile));
+   std::unique_ptr<TFile> f(TFile::Open(kTreeFileName));
    assert(f.is_valid());
 
    // Get a unique pointer to an empty RForest model
@@ -78,7 +78,7 @@ void Convert() {
    }
 
    // The new forest takes ownership of the model
-   auto forest = ROutputForest::Recreate(std::move(model), "DecayTree", kForestFile);
+   auto forest = ROutputForest::Recreate(std::move(model), "DecayTree", kForestFileName);
 
    auto nEntries = tree->GetEntries();
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {
@@ -93,7 +93,7 @@ void Convert() {
 
 void fst003_lhcbOpenData()
 {
-   if (gSystem->AccessPathName(kForestFile))
+   if (gSystem->AccessPathName(kForestFileName))
       Convert();
 
    // Create histogram of the flight distance
@@ -103,7 +103,7 @@ void fst003_lhcbOpenData()
    auto fldDist = model->MakeField<double>("B_FlightDistance");
 
    // We use the reduced model to open the forest file
-   auto forest = RInputForest::Open(std::move(model), "DecayTree", kForestFile);
+   auto forest = RInputForest::Open(std::move(model), "DecayTree", kForestFileName);
 
    TCanvas *c = new TCanvas("c", "B Flight Distance", 200, 10, 700, 500);
    TH1F *h = new TH1F("h", "B Flight Distance", 200, 0, 140);

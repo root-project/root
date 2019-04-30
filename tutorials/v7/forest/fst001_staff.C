@@ -37,7 +37,7 @@ using RForestModel = ROOT::Experimental::RForestModel;
 using RInputForest = ROOT::Experimental::RInputForest;
 using ROutputForest = ROOT::Experimental::ROutputForest;
 
-constexpr char const* kForestFile = "fst001_staff.root";
+constexpr char const* kForestFileName = "fst001_staff.root";
 
 void Ingest() {
    // The input file cernstaff.dat is a copy of the CERN staff data base from 1988
@@ -61,9 +61,9 @@ void Ingest() {
    auto fldDivision = model->MakeField<std::string>("Division");
    auto fldNation   = model->MakeField<std::string>("Nation");
 
-   // We hand-over the data model to a newly created forest of name "Staff", stored in kForestFile
+   // We hand-over the data model to a newly created forest of name "Staff", stored in kForestFileName
    // In return, we get a unique pointer to a forest that we can fill
-   auto forest = ROutputForest::Recreate(std::move(model), "Staff", kForestFile);
+   auto forest = ROutputForest::Recreate(std::move(model), "Staff", kForestFileName);
 
    std::string record;
    while (std::getline(fin, record)) {
@@ -80,7 +80,7 @@ void Ingest() {
 void Analyze() {
    // Create a forest without imposing a specific data model.  We could generate the data model from the forest
    // but here we prefer the view because we only want to access a single field
-   auto forest = RInputForest::Open("Staff", kForestFile);
+   auto forest = RInputForest::Open("Staff", kForestFileName);
 
    // Quick overview of the forest's key meta-data
    /// --> GetDescription()
