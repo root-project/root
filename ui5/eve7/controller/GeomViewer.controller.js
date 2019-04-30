@@ -7,7 +7,7 @@ sap.ui.define(['sap/ui/core/Component',
                "sap/ui/core/ResizeHandler",
                "sap/ui/layout/HorizontalLayout",
                "sap/ui/table/Column",
-               "rootui5/eve7/model/BrowserModel"
+               "rootui5/browser/model/BrowserModel"
 ],function(Component, Controller, CoreControl, mText, mCheckBox, Splitter, ResizeHandler,
            HorizontalLayout, tableColumn, BrowserModel) {
 

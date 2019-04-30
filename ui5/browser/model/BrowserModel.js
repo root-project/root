@@ -45,6 +45,7 @@ sap.ui.define([
            topnode.expanded = true;
            this.reset_nodes = true;
            delete this.noData;
+           this.scanShifts();
            if (this.oBinding)
               this.oBinding.checkUpdate(true);
         },
@@ -140,6 +141,7 @@ sap.ui.define([
               currpath += curr.name + "/";
            }
 
+           return this.scanShifts(curr);
         },
 
         sendFirstRequest: function(websocket) {
@@ -156,6 +158,7 @@ sap.ui.define([
               this.reset_nodes = true;
               this.fullModel = this.mainFullModel;
               delete this.noData;
+              this.scanShifts();
               if (this.oBinding)
                  this.oBinding.checkUpdate(true);
            } else if (!this.fullModel) {
@@ -228,8 +231,10 @@ sap.ui.define([
            // remember main model
            if ((reply.path === "/") && !this.mainModel) {
               this.mainModel = elem.childs;
-              this.mainFullModel = true;
+              this.mainFullModel = false;
            }
+
+           this.scanShifts();
 
            // reset existing nodes if reply does not match with expectation
            if (!smart_merge)
@@ -246,6 +251,7 @@ sap.ui.define([
               if ((index > 0) && this.treeTable)
                  this.treeTable.setFirstVisibleRow(Math.max(0, index - Math.round(this.treeTable.getVisibleRowCount()/2)));
            }
+
         },
 
         getNodeByIndex: function(indx) {
@@ -257,6 +263,55 @@ sap.ui.define([
         getElementByIndex: function(indx) {
            var node = this.getNodeByIndex(indx);
            return node ? node._elem : null;
+        },
+
+        // function used to calculate all ids shifts and total number of elements
+        // if element specified - returns index of that element
+        scanShifts: function(for_elem) {
+
+           var id = 0, full = this.fullModel, res = -1;
+
+           function scan(lvl, elem) {
+
+              if (elem === for_elem) res = id;
+
+              if (lvl >= 0) id++;
+
+              var before_id = id;
+
+              if (elem.expanded) {
+                 if (elem.childs === undefined) {
+                    // do nothing, childs are not visible as long as we do not have any list
+
+                    // id += 0;
+                 } else {
+
+                    // gap at the begin
+                    if (!full && elem.first)
+                       id += elem.first;
+
+                    // jump over all childs
+                    for (var k=0;k<elem.childs.length;++k)
+                       scan(lvl+1, elem.childs[k]);
+
+                    // gap at the end
+                    if (!full) {
+                       var _last = (elem.first || 0) + elem.childs.length;
+                       var _remains = elem.nchilds  - _last;
+                       if (_remains > 0) id += _remains;
+                    }
+                 }
+              }
+
+              // this shift can be later applied to jump over all elements
+              elem._shift = id - before_id;
+           }
+
+           scan(-1, this.h);
+
+           this.setProperty("/length", id);
+
+           return for_elem ? res : id;
         },
 
         // main  method to create flat list of nodes - only whose which are specified in selection
@@ -396,6 +451,7 @@ sap.ui.define([
 
               // close folder - reassign shifts
               this.reset_nodes = true;
+              this.scanShifts();
 
               return true;
 
@@ -406,11 +462,35 @@ sap.ui.define([
 
               if (this.fullModel) {
                  this.reset_nodes = true;
+                 this.scanShifts();
               }
 
               return true;
            }
         },
+
+        // change sorting method, for now server supports default, "direct" and "reverse"
+        changeSortOrder: function(newValue) {
+           if (newValue === undefined)
+               newValue = this.getProperty("/sortOrder") || "";
+
+           if ((newValue !== "") && (newValue !=="direct") && (newValue !== "reverse")) {
+              console.error('WRONG sorting order ', newValue, 'use default');
+              newValue = "";
+           }
+
+           // ignore same value
+           if (newValue === this.sortOrder)
+              return;
+
+
+           this.sortOrder = newValue;
+
+           // now we should request values once again
+
+           this.submitRequest(this.h, "/");
+
+        }
 
     });
 
