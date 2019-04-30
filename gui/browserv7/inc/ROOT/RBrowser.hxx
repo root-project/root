@@ -16,8 +16,9 @@
 #ifndef ROOT7_RBrowser
 #define ROOT7_RBrowser
 
-#include <TSystem.h>
 #include <ROOT/RWebWindow.hxx>
+
+#include <TSystem.h>
 
 #include <vector>
 #include <sstream>
@@ -25,45 +26,6 @@
 
 namespace ROOT {
 namespace Experimental {
-
-/** Request send from client to get content of path element */
-class RRootBrowserRequest {
-public:
-   std::string path;   ///< requested path
-   int first{0};       ///< first child to request
-   int number{0};      ///< number of childs to request, 0 - all childs
-   std::string sort;   ///< kind of sorting
-};
-
-/** Representation of single item in the browser */
-class RRootBrowserItem {
-public:
-   std::string name;     ///< file name
-   std::string fsize;    ///< file size
-   std::string mtime;    ///< modification time
-   std::string ftype;    ///< file attributes
-   std::string fuid;     ///< user id
-   std::string fgid;     ///< group id
-   int nchilds{0};       ///< number of childs
-   bool checked{false};  ///< is checked
-   bool expanded{false}; ///< is expanded
-   RRootBrowserItem() = default;
-   RRootBrowserItem(const std::string &_name, const std::string &_fsize, const std::string &_mtime,
-                    const std::string &_ftype, const std::string &_fuid, const std::string &_fgid,
-                    int _nchilds = 0) : name(_name), fsize(_fsize), mtime(_mtime), ftype(_ftype),
-                    fuid(_fuid), fgid(_fgid), nchilds(_nchilds) {}
-};
-
-/** Reply on browser request */
-class RRootBrowserReply {
-public:
-   std::string path;     ///< reply path
-   int nchilds{0};       ///< total number of childs in the node
-   int first{0};         ///< first node in returned list
-   std::vector<RRootBrowserItem> nodes; ///< list of nodes
-};
-
-class RWebWindow;
 
 /** Base description of browser item, required only to build hierarchy */
 
