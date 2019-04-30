@@ -42,8 +42,8 @@ using RInputForest = ROOT::Experimental::RInputForest;
 using ROutputForest = ROOT::Experimental::ROutputForest;
 using RForestDS = ROOT::Experimental::RForestDS;
 
-constexpr char const* gTreeFile = "http://root.cern.ch/files/NanoAOD_DoubleMuon_CMS2011OpenData.root";
-constexpr char const* gForestFile = "naod_dimuon_forest.root";
+constexpr char const* kTreeFile = "http://root.cern.ch/files/NanoAOD_DoubleMuon_CMS2011OpenData.root";
+constexpr char const* kForestFile = "naod_dimuon_forest.root";
 
 
 using ColNames_t = std::vector<std::string>;
@@ -140,7 +140,7 @@ T InvariantMassStdVector(
 // The snapshotter is templated; we construct the conversion C++ code as a string and hand it over to Cling
 void Convert() {
    // Use df to list the branch types and names of the input tree
-   ROOT::RDataFrame df("Events", gTreeFile);
+   ROOT::RDataFrame df("Events", kTreeFile);
 
    // Construct the types for the template instantiation and the column names from the dataframe
    std::string typeList = "<";
@@ -158,10 +158,10 @@ void Convert() {
 
    std::string code = "{";
    // Convert the first 4 million events
-   code += "auto df = std::make_unique<ROOT::RDataFrame>(\"Events\", \"" + std::string(gTreeFile)
+   code += "auto df = std::make_unique<ROOT::RDataFrame>(\"Events\", \"" + std::string(kTreeFile)
          + "\")->Range(0, 4000000);";
    code += "ColNames_t colNames = " + columnList + ";";
-   code += "RForestHelper" + typeList + " helper{\"Events\", \"" + std::string(gForestFile) + "\", colNames};";
+   code += "RForestHelper" + typeList + " helper{\"Events\", \"" + std::string(kForestFile) + "\", colNames};";
    code += "*df.Book" + typeList + "(std::move(helper), colNames);";
    code += "}";
 
@@ -173,11 +173,11 @@ void fst004_dimuon() {
    // Support for multi-threading comes at a later point, for the time being do not enable
    // ROOT::EnableImplicitMT();
 
-   if (gSystem->AccessPathName(gForestFile))
+   if (gSystem->AccessPathName(kForestFile))
       Convert();
 
    // Create an input forest unique pointer
-   auto forest = RInputForest::Open("Events", gForestFile);
+   auto forest = RInputForest::Open("Events", kForestFile);
    std::cout << forest->Print();
    // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
 
