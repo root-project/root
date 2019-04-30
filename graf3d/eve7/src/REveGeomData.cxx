@@ -11,6 +11,7 @@
 
 #include <ROOT/REveGeomData.hxx>
 
+#include <ROOT/RBrowserItem.hxx>
 #include <ROOT/REveGeoPolyShape.hxx>
 #include <ROOT/REveUtil.hxx>
 #include <ROOT/TLogger.hxx>
@@ -551,16 +552,17 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
 {
    std::string res;
 
-   RBrowserRequest *request = nullptr;
+   auto request = TBufferJSON::FromJSON<RBrowserRequest>(msg);
 
    if (msg.empty()) {
-      request = new RBrowserRequest;
+      request = std::make_unique<RBrowserRequest>();
       request->path = "/";
       request->first = 0;
       request->number = 100;
-   } else if (!TBufferJSON::FromJSON(request, msg.c_str())) {
-      return res;
    }
+
+   if (!request)
+      return res;
 
    if ((request->path.compare("/") == 0) && (request->first == 0) && (GetNumNodes() < (IsPreferredOffline() ? 1000000 : 1000))) {
 
@@ -582,10 +584,13 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
       printf("Total number of valid nodes %d\n", nelements);
 
    } else {
+      std::vector<RBrowserItem> temp_nodes;
+      bool toplevel = (request->path.compare("/") == 0);
+
+      // create temporary object for the short time
       RBrowserReply reply;
       reply.path = request->path;
       reply.first = request->first;
-      bool toplevel = (request->path.compare("/") == 0);
 
       RGeomBrowserIter iter(*this);
       if (iter.Navigate(request->path)) {
@@ -599,23 +604,23 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
             }
 
             while (iter.IsValid() && (request->number > 0)) {
-               reply.nodes.emplace_back(iter.GetName(), iter.NumChilds());
-               if (toplevel) reply.nodes.back().expanded = true;
+               temp_nodes.emplace_back(iter.GetName(), iter.NumChilds());
+               if (toplevel) temp_nodes.back().SetExpanded(true);
                request->number--;
                if (!iter.Next()) break;
             }
          }
       }
 
+      for (auto &n : temp_nodes)
+         reply.nodes.emplace_back(&n);
+
       res = "BREPL:";
       res.append(TBufferJSON::ToJSON(&reply, GetJsonComp()).Data());
    }
 
-   delete request;
-
    return res;
 }
-
 
 /////////////////////////////////////////////////////////////////////
 /// Find description object for requested shape

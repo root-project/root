@@ -32,7 +32,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOT/REveShape.hxx
     ROOT/REveStraightLineSet.hxx
     ROOT/REveTableInfo.hxx
-    ROOT/REveTableProxyBuilder.hxx     
+    ROOT/REveTableProxyBuilder.hxx
     ROOT/REveTrack.hxx
     ROOT/REveTrackProjected.hxx
     ROOT/REveTrackPropagator.hxx
@@ -98,14 +98,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     src/REveViewer.cxx
     src/REveVSD.cxx
     src/REveVSDStructs.cxx
-  DEPENDENCIES 
-    Core 
-    Geom 
-    Physics 
-    EG 
+  DEPENDENCIES
+    Core
+    Geom
+    Physics
+    EG
     TreePlayer
-    RCsg 
+    RCsg
     ROOTWebDisplay
+    ROOTBrowserv7
 )
 
 target_include_directories(ROOTEve
