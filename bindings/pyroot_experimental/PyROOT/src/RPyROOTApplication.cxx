@@ -211,7 +211,9 @@ static int EventInputHook()
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Install a method hook for sending events to the GUI.
-PyObject *PyROOT::RPyROOTApplication::InstallGUIEventInputHook()
+/// \param[in] self Always null, since this is a module function.
+/// \param[in] args Pointer to an empty Python tuple.
+PyObject *PyROOT::RPyROOTApplication::InstallGUIEventInputHook(PyObject * /* self */, PyObject * /* args */)
 {
    if (PyOS_InputHook && PyOS_InputHook != &EventInputHook)
       sOldInputHook = PyOS_InputHook;
