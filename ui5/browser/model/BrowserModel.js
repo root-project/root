@@ -246,14 +246,6 @@ sap.ui.define([
               if ((index > 0) && this.treeTable)
                  this.treeTable.setFirstVisibleRow(Math.max(0, index - Math.round(this.treeTable.getVisibleRowCount()/2)));
            }
-           if (reply.path === '/') {
-              var cols = this.treeTable.getColumns();
-              this.treeTable.autoResizeColumn(2);
-              this.treeTable.autoResizeColumn(1);
-//              for (var k=0;k<cols.length;++k) {
-//                 table.autoResizeColumn(k);
-//              }
-           }
         },
 
         getNodeByIndex: function(indx) {
@@ -287,19 +279,14 @@ sap.ui.define([
            function scan(lvl, elem, path) {
 
               // create elements with safety margin
-              if ((lvl >= 0) && (nodes !== null) && !nodes[id] && (id >= args.begin - threshold2) && (id < args.end + threshold2) )
+              if ((lvl >= 0) && (nodes !== null) && !nodes[id] && (id >= args.begin - threshold2) && (id < args.end + threshold2)) {
                  nodes[id] = {
                     name: elem.name,
-                    fsize: elem.fsize,
-                    mtime: elem.mtime,
-                    ftype: elem.ftype,
-                    fuid: elem.fuid,
-                    fgid: elem.fgid,
                     fullpath: path,
                     index: id,
                     _elem: elem,
                     // these are required by list binding, should be eliminated in the future
-                    type: elem.nchilds || (id == 0) ? "folder" : "file",
+                    type: elem.nchilds ? "folder" : "file",
                     isLeaf: !elem.nchilds,
                     level: lvl,
                     context: pthis.getContext("/nodes/" + id),
@@ -309,6 +296,9 @@ sap.ui.define([
                        sum: false // ????
                     }
                  };
+                 if (typeof pthis.addNodeAttributes == 'function')
+                    pthis.addNodeAttributes(nodes[id], elem);
+              }
 
               if (lvl >= 0) id++;
 

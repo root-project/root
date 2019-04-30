@@ -334,14 +334,14 @@ sap.ui.define([
            function scan(lvl, elem, path) {
 
               // create elements with safety margin
-              if ((lvl >= 0) && (nodes !== null) && !nodes[id] && (id >= args.begin - threshold2) && (id < args.end + threshold2) )
+              if ((lvl >= 0) && (nodes !== null) && !nodes[id] && (id >= args.begin - threshold2) && (id < args.end + threshold2)) {
                  nodes[id] = {
                     name: elem.name,
                     fullpath: path,
                     index: id,
                     _elem: elem,
                     // these are required by list binding, should be eliminated in the future
-                    type: elem.nchilds || (id == 0) ? "folder" : "file",
+                    type: elem.nchilds ? "folder" : "file",
                     isLeaf: !elem.nchilds,
                     level: lvl,
                     context: pthis.getContext("/nodes/" + id),
@@ -351,6 +351,9 @@ sap.ui.define([
                        sum: false // ????
                     }
                  };
+                 if (typeof pthis.addNodeAttributes == 'function')
+                    pthis.addNodeAttributes(nodes[id], elem);
+              }
 
               if (lvl >= 0) id++;
 
