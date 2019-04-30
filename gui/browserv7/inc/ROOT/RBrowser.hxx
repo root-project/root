@@ -20,8 +20,6 @@
 
 #include <ROOT/RBrowserItem.hxx>
 
-#include <TSystem.h>
-
 #include <vector>
 
 namespace ROOT {
@@ -50,7 +48,7 @@ public:
 
    RRootFileItem() = default;
 
-   RRootFileItem(const std::string &_name, int _nchilds, FileStat_t &stat);
+   RRootFileItem(const std::string &_name, int _nchilds) : RBrowserItem(_name, _nchilds) {}
 
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
    virtual ~RRootFileItem() = default;
@@ -65,8 +63,9 @@ protected:
    std::string fTitle;  ///<! title
    unsigned fConnId{0}; ///<! connection id
 
-   std::string fDescPath;             ///<! last scanned directory
-   std::vector<RRootFileItem> fDesc;  ///<! current items list
+   std::string fDescPath;                ///<! last scanned directory
+   std::vector<RRootFileItem> fDesc;     ///<! plain list of current directory
+   std::vector<RRootFileItem*> fSorted;  ///<! current sorted list (no ownership)
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to show geometry
 
