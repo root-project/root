@@ -16,9 +16,9 @@
 #include <ROOT/RBrowser.hxx>
 
 #include <ROOT/RWebWindowsManager.hxx>
-#include <ROOT/RHistDrawable.hxx>
 #include <ROOT/TLogger.hxx>
 #include "ROOT/TDirectory.hxx"
+#include "ROOT/RMakeUnique.hxx"
 
 #include "TString.h"
 #include "TROOT.h"
@@ -29,6 +29,9 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+
+/////////////////////////////////////////////////////////////////////
+/// Item representing file in RBrowser
 
 ROOT::Experimental::RFileItem::RFileItem(int _id, const std::string &_name, FileStat_t &stat) : RBaseItem(_id, _name)
 {
@@ -59,17 +62,16 @@ ROOT::Experimental::RFileItem::RFileItem(int _id, const std::string &_name, File
    fsize = tmp;
 
    // modification time
-   struct tm *newtime;
    time_t loctime = (time_t) modtime;
-   newtime = localtime(&loctime);
+   struct tm *newtime = localtime(&loctime);
    if (newtime) {
       snprintf(tmp, sizeof(tmp), "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
                newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
                newtime->tm_min);
       mtime = tmp;
-   }
-   else
+   } else {
       mtime = "1901-01-01 00:00";
+   }
 
    // file type
    snprintf(tmp, sizeof(tmp), "%c%c%c%c%c%c%c%c%c%c",
@@ -97,20 +99,20 @@ ROOT::Experimental::RFileItem::RFileItem(int _id, const std::string &_name, File
             ((type & kS_IWOTH) ? 'w' : '-'),
             ((type & kS_ISVTX) ? 't' : ((type & kS_IXOTH) ? 'x' : '-')));
    ftype = tmp;
-   {
-      struct UserGroup_t *user_group;
 
-      user_group = gSystem->GetUserInfo(uid);
-      if (user_group) {
-         fuid = user_group->fUser;
-         fgid = user_group->fGroup;
-         delete user_group;
-      } else {
-         fuid = std::to_string(uid);
-         fgid = std::to_string(gid);
-      }
+   struct UserGroup_t *user_group = gSystem->GetUserInfo(uid);
+   if (user_group) {
+      fuid = user_group->fUser;
+      fgid = user_group->fGroup;
+      delete user_group;
+   } else {
+      fuid = std::to_string(uid);
+      fgid = std::to_string(gid);
    }
 }
+
+/////////////////////////////////////////////////////////////////////
+/// Add folder
 
 void ROOT::Experimental::RBrowserFSDescription::AddFolder(const char *name)
 {
@@ -125,9 +127,13 @@ void ROOT::Experimental::RBrowserFSDescription::AddFolder(const char *name)
       }
       return;
    }
+
    if (R_ISDIR(sbuf.fMode))
       fDesc.emplace_back(cnt++, name, sbuf);
 }
+
+/////////////////////////////////////////////////////////////////////
+/// Add file
 
 void ROOT::Experimental::RBrowserFSDescription::AddFile(const char *name)
 {
@@ -142,12 +148,13 @@ void ROOT::Experimental::RBrowserFSDescription::AddFile(const char *name)
       }
       return;
    }
+
    if (!R_ISDIR(sbuf.fMode))
       fDesc.emplace_back(cnt++, name, sbuf);
 }
 
 /////////////////////////////////////////////////////////////////////
-/// Collect information about file system hierarchy into flat list
+/// Collect information for provided directory
 
 void ROOT::Experimental::RBrowserFSDescription::Build(const std::string &path)
 {
@@ -160,23 +167,24 @@ void ROOT::Experimental::RBrowserFSDescription::Build(const std::string &path)
    std::string savdir = gSystem->WorkingDirectory();
    if (!gSystem->ChangeDirectory(spath.c_str())) return;
 
-   if ((dirp = gSystem->OpenDirectory(".")) == 0) {
-      gSystem->FreeDirectory(dirp);
+   if ((dirp = gSystem->OpenDirectory(".")) == nullptr) {
+      gSystem->FreeDirectory(dirp); // probably, not needed
       gSystem->ChangeDirectory(savdir.c_str());
       return;
    }
-   while ((name = gSystem->GetDirEntry(dirp)) != 0) {
+   while ((name = gSystem->GetDirEntry(dirp)) != nullptr) {
       if (strncmp(name, ".", 1) && strncmp(name, "..", 2))
          AddFolder(name);
       gSystem->ProcessEvents();
    }
    gSystem->FreeDirectory(dirp);
-   if ((dirp = gSystem->OpenDirectory(".")) == 0) {
-      gSystem->FreeDirectory(dirp);
+
+   if ((dirp = gSystem->OpenDirectory(".")) == nullptr) {
+      gSystem->FreeDirectory(dirp); // probably, not needed
       gSystem->ChangeDirectory(savdir.c_str());
       return;
    }
-   while ((name = gSystem->GetDirEntry(dirp)) != 0) {
+   while ((name = gSystem->GetDirEntry(dirp)) != nullptr) {
       if (strncmp(name, ".", 1) && strncmp(name, "..", 2))
          AddFile(name);
       gSystem->ProcessEvents();
@@ -185,17 +193,21 @@ void ROOT::Experimental::RBrowserFSDescription::Build(const std::string &path)
    gSystem->ChangeDirectory(savdir.c_str());
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 std::string ROOT::Experimental::RBrowserFSDescription::ProcessBrowserRequest(const std::string &msg)
 {
    std::string res;
-   RRootBrowserRequest *request = nullptr;
+
+   auto request = TBufferJSON::FromJSON<RRootBrowserRequest>(msg);
 
    if (msg.empty()) {
-      request = new RRootBrowserRequest;
+      request = std::make_unique<RRootBrowserRequest>();
       request->path = "/";
       request->first = 0;
       request->number = 100;
-   } else if (!TBufferJSON::FromJSON(request, msg.c_str())) {
+   } else if (!request) {
       return res;
    }
 
@@ -213,7 +225,6 @@ std::string ROOT::Experimental::RBrowserFSDescription::ProcessBrowserRequest(con
       res.append(TBufferJSON::ToJSON(&reply, 103).Data());
    }
 
-   delete request;
    return res;
 }
 
@@ -248,8 +259,8 @@ ROOT::Experimental::RBrowser::~RBrowser()
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-/// Show or update geometry in web window
-/// If web browser already started - just refresh drawing like "reload" button does
+/// Show or update RBrowser in web window
+/// If web window already started - just refresh it like "reload" button does
 /// If no web window exists or \param always_start_new_browser configured, starts new window
 
 void ROOT::Experimental::RBrowser::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
