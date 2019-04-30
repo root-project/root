@@ -462,13 +462,14 @@
 
 /*---- deprecation -----------------------------------------------------------*/
 #if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
-# if (__GNUC__ == 5 && (__GNUC_MINOR__ == 1 || __GNUC_MINOR__ == 2))
-/* GCC 5.1, 5.2: false positives due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=15269 */
+# if (__GNUC__ == 5 && (__GNUC_MINOR__ == 1 || __GNUC_MINOR__ == 2)) || defined(R__NO_DEPRECATION)
+/* GCC 5.1, 5.2: false positives due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=15269 
+   or deprecation turned off */
 #   define _R__DEPRECATED_LATER(REASON)
 # else
 #   define _R__DEPRECATED_LATER(REASON) __attribute__((deprecated(REASON)))
 # endif
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) || !defined(R__NO_DEPRECATION)
 #   define _R__DEPRECATED_LATER(REASON) __pragma(deprecated(REASON))
 #else
 /* Deprecation not supported for this compiler. */
