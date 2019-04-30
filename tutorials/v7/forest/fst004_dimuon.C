@@ -16,8 +16,6 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-R__LOAD_LIBRARY(libROOTForest)  // --> don't depend on this
-
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RForest.hxx>
 #include <ROOT/RForestDS.hxx>
@@ -47,8 +45,6 @@ constexpr char const* kForestFileName = "naod_dimuon_forest.root";
 
 
 using ColNames_t = std::vector<std::string>;
-
-// --> Helper Function? root -l 'tree2forest.C("", "") --> exe'
 
 // This is a custom action for RDataFrame. It does not support parallelism!
 // This action writes data from an RDataFrame entry into a forest. It is templated on the

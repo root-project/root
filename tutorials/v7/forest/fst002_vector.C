@@ -2,8 +2,6 @@
 /// \ingroup tutorial_forest
 /// \notebook
 /// Write and read STL vectors with RForest.  Adapted from the hvector tree tutorial.
-/// For reading, the tutorial shows the use of a Forest View, which selectively accesses specific fields.
-/// If a view is used for reading, there is no need to define the data model as an RForestModel first.
 ///
 /// \macro_image
 /// \macro_code
@@ -14,8 +12,6 @@
 // NOTE: The RForest classes are experimental at this point.
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
-
-R__LOAD_LIBRARY(libROOTForest)
 
 #include <ROOT/RForest.hxx>
 #include <ROOT/RForestModel.hxx>
@@ -53,10 +49,9 @@ void Write()
 
    // Creating fields of std::vector is the same as creating fields of simple types.  As a result, we get
    // shared pointers of the given type
-   //std::shared_ptr<std::vector<float>> fldVpx
-   auto fldVpx = model->MakeField<std::vector<float>>("vpx");
-   auto fldVpy = model->MakeField<std::vector<float>>("vpy");
-   auto fldVpz = model->MakeField<std::vector<float>>("vpz");
+   std::shared_ptr<std::vector<float>> fldVpx = model->MakeField<std::vector<float>>("vpx");
+   auto fldVpy   = model->MakeField<std::vector<float>>("vpy");
+   auto fldVpz   = model->MakeField<std::vector<float>>("vpz");
    auto fldVrand = model->MakeField<std::vector<float>>("vrand");
 
    // We hand-over the data model to a newly created forest of name "F", stored in kForestFileName
@@ -114,36 +109,34 @@ void Write()
 // For all of the events, histogram only one of the written vectors
 void Read()
 {
+   // Get a unique pointer to an empty RForest model
+   auto model = RForestModel::Create();
+
+   // We only define the fields that are needed for reading
+   auto fldVpx = model->MakeField<std::vector<float>>("vpx");
+
    // Create a forest without imposing a specific data model.  We could generate the data model from the forest
    // but here we prefer the view because we only want to access a single field
-   auto forest = RInputForest::Open("F", kForestFileName);
+   auto forest = RInputForest::Open(std::move(model), "F", kForestFileName);
 
    // Quick overview of the forest's key meta-data
    std::cout << forest->GetInfo();
    // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
-
-   // Generate a handle to a specific field.  If the field type does not match the field in the forest, a runtime
-   // error is thrown.
-   auto viewVpx = forest->GetView<std::vector<float>>("vpx");
-
-   // --> Move to sub models
 
    TCanvas *c2 = new TCanvas("c2", "Dynamic Filling Example", 200, 10, 700, 500);
    TH1F *h = new TH1F("h", "This is the px distribution", 100, -4, 4);
    h->SetFillColor(48);
 
    // Iterate through all the events using i as event number and as an index for accessing the view
-   for (auto i : forest->GetViewRange()) {
-      // We want to lookup and load the vector px of event i only once, hence we keep the result in the
-      // const reference vpx
-      auto vpx = viewVpx(i);
+   for (auto entryId : *forest) {
+      forest->LoadEntry(entryId);
 
-      for (unsigned int j = 0; j < vpx.size(); ++j) {
-         h->Fill(vpx.at(j));
+      for (unsigned int j = 0; j < fldVpx->size(); ++j) {
+         h->Fill(fldVpx->at(j));
       }
 
-      if (i && (i % kUpdateGuiFreq) == 0) {
-         if (i == kUpdateGuiFreq) h->Draw();
+      if (entryId && (entryId % kUpdateGuiFreq) == 0) {
+         if (entryId == kUpdateGuiFreq) h->Draw();
          c2->Modified();
          c2->Update();
          if (gSystem->ProcessEvents())

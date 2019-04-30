@@ -3,6 +3,10 @@
 /// \notebook
 /// Convert LHCb run 1 open data from a TTree to RForest.
 /// This tutorial illustrates data conversion for a simple, tabular data model.
+/// For reading, the tutorial shows the use of a Forest View, which selectively accesses specific fields.
+/// If a view is used for reading, there is no need to define the data model as an RForestModel first.
+/// The advantage of a view is that it directly accesses RForest's data buffers without making an additional
+/// memory copy.
 ///
 /// \macro_image
 /// \macro_code
@@ -13,8 +17,6 @@
 // NOTE: The RForest classes are experimental at this point.
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
-
-R__LOAD_LIBRARY(libROOTForest)
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RForest.hxx>
@@ -52,11 +54,9 @@ void Convert() {
    // We create RForest fields based on the types found in the TTree
    // This simple approach only works for trees with simple branches and only one leaf per branch
    auto tree = f->Get<TTree>("DecayTree");
-   auto branchIter = tree->GetListOfBranches()->MakeIterator();
-   TBranch *b;
    std::vector<TBranch*> branches;
-   // --> use begin, end
-   while ((b = static_cast<TBranch*>(branchIter->Next())) != nullptr) {
+   for (TObject *obj : *(tree->GetListOfBranches())) {
+      auto b = static_cast<TBranch*>(obj);
       // We assume every branch has a single leaf
       TLeaf *l = static_cast<TLeaf*>(b->GetListOfLeaves()->First());
 
@@ -97,23 +97,22 @@ void fst003_lhcbOpenData()
       Convert();
 
    // Create histogram of the flight distance
-   auto model = RForestModel::Create();
-   // We only add the one necessary field to the model, which results in a model that is compatible with the
-   // data on disk
-   auto fldDist = model->MakeField<double>("B_FlightDistance");
 
-   // We use the reduced model to open the forest file
-   auto forest = RInputForest::Open(std::move(model), "DecayTree", kForestFileName);
+   // We open the forest without specifiying an explicit model first, but instead use a view on the field we are
+   // interested in
+   auto forest = RInputForest::Open("DecayTree", kForestFileName);
+
+   // The view wraps a read-only double value and accesses directly the forest's data buffers
+   auto viewFlightDistance = forest->GetView<double>("B_FlightDistance");
 
    TCanvas *c = new TCanvas("c", "B Flight Distance", 200, 10, 700, 500);
    TH1F *h = new TH1F("h", "B Flight Distance", 200, 0, 140);
    h->SetFillColor(48);
 
-   for (unsigned int i = 0; i < forest->GetNEntries(); ++i) {
-      // Populate the created field for every entry...
-      forest->LoadEntry(i);
-      // ...and use it to fill the histogram
-      h->Fill(*fldDist);
+   for (auto i : forest->GetViewRange()) {
+      // Note that we do not load an entry in this loop, i.e. we avoid the memory copy of loading the data into
+      // the memory location given by the entry
+      h->Fill(viewFlightDistance(i));
    }
 
    h->DrawCopy();
