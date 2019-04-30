@@ -82,7 +82,7 @@ std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputFore
    return std::make_unique<RInputForest>(std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
 }
 
-std::string ROOT::Experimental::RInputForest::Print() {
+std::string ROOT::Experimental::RInputForest::GetInfo() {
    std::ostringstream os;
    auto name = fSource->GetDescriptor().GetName();
    os << "****************************** FOREST ******************************"  << std::endl
