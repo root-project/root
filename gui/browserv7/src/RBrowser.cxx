@@ -16,6 +16,7 @@
 #include <ROOT/RBrowser.hxx>
 
 #include <ROOT/RWebWindowsManager.hxx>
+#include <ROOT/RBrowserItem.hxx>
 #include <ROOT/TLogger.hxx>
 #include "ROOT/TDirectory.hxx"
 #include "ROOT/RMakeUnique.hxx"

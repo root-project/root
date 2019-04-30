@@ -8,8 +8,13 @@
 
 #ifdef __CINT__
 
-#pragma link C++ class ROOT::Experimental::RBrowser+;
-#pragma link C++ class ROOT::Experimental::RRootBrowserReply+;
+#pragma link off all globals;
+#pragma link off all classes;
+#pragma link off all functions;
+
+#pragma link C++ class ROOT::Experimental::RRootBrowserRequest+;
 #pragma link C++ class ROOT::Experimental::RRootBrowserItem+;
+#pragma link C++ class ROOT::Experimental::RRootBrowserReply+;
+#pragma link C++ class ROOT::Experimental::RBrowser+;
 
 #endif
