@@ -281,7 +281,7 @@ The legacy iterators have been flagged with a special deprecation macro that can
 
 ## TMVA
 
-This release provides a consolidation and several fixes of the new machine leanring tools provided in TMVA such as the Deep Learning module.
+This release provides a consolidation and several fixes of the new machine learning tools provided in TMVA such as the Deep Learning module.
 The method `TMVA::Types::kDL` should be used now for building Deep Learning architecture in TMVA, while `TMVA::Types::kDNN` is now deprecated. `TMVA::Types::kDL` provides all the functionality of `TMVA::Types::kDNN`, i.e building fully connected dense layer, but in addition supports building convolutional and recurrent neural network architectures.
 These release contains improvements in the `MethodDL` such as:
   - fix droput support for dense layer
