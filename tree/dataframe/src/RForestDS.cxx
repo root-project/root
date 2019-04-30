@@ -67,7 +67,7 @@ RDF::RDataSource::Record_t RForestDS::GetColumnReadersImpl(std::string_view name
 }
 
 bool RForestDS::SetEntry(unsigned int /*slot*/, ULong64_t entryIndex) {
-   fForest->SetEntry(entryIndex, fEntry.get());
+   fForest->LoadEntry(entryIndex, fEntry.get());
    return true;
 }
 

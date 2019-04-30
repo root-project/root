@@ -142,7 +142,7 @@ TEST(RForest, WriteRead)
 
    RInputForest forest(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", "test.root"));
    EXPECT_EQ(1U, forest.GetNEntries());
-   forest.SetEntry(0);
+   forest.LoadEntry(0);
 
    EXPECT_EQ(42.0, *rdPt);
    EXPECT_EQ(7.0, *rdEnergy);
@@ -188,12 +188,12 @@ TEST(RForest, RVec)
    RInputForest forestRVec(std::move(modelReadAsRVec), std::make_unique<RPageSourceRoot>("f", "test.root"));
    EXPECT_EQ(2U, forestRVec.GetNEntries());
 
-   forestRVec.SetEntry(0);
+   forestRVec.LoadEntry(0);
    EXPECT_EQ(2U, rdJetsAsRVec->size());
    EXPECT_EQ(42.0, (*rdJetsAsRVec)[0]);
    EXPECT_EQ(7.0, (*rdJetsAsRVec)[1]);
 
-   forestRVec.SetEntry(1);
+   forestRVec.LoadEntry(1);
    EXPECT_EQ(1U, rdJetsAsRVec->size());
    EXPECT_EQ(1.0, (*rdJetsAsRVec)[0]);
 
@@ -203,12 +203,12 @@ TEST(RForest, RVec)
    RInputForest forestStdVector(std::move(modelReadAsStdVector), std::make_unique<RPageSourceRoot>("f", "test.root"));
    EXPECT_EQ(2U, forestRVec.GetNEntries());
 
-   forestStdVector.SetEntry(0);
+   forestStdVector.LoadEntry(0);
    EXPECT_EQ(2U, rdJetsAsStdVector->size());
    EXPECT_EQ(42.0, (*rdJetsAsStdVector)[0]);
    EXPECT_EQ(7.0, (*rdJetsAsStdVector)[1]);
 
-   forestStdVector.SetEntry(1);
+   forestStdVector.LoadEntry(1);
    EXPECT_EQ(1U, rdJetsAsStdVector->size());
    EXPECT_EQ(1.0, (*rdJetsAsStdVector)[0]);
 }
@@ -248,7 +248,7 @@ TEST(RForest, Clusters)
    RInputForest forest(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", "test.root"));
    EXPECT_EQ(3U, forest.GetNEntries());
 
-   forest.SetEntry(0);
+   forest.LoadEntry(0);
    EXPECT_EQ(42.0, *rdPt);
    EXPECT_STREQ("xyz", rdTag->c_str());
    EXPECT_EQ(3U, rdNnlo->size());
@@ -261,12 +261,12 @@ TEST(RForest, Clusters)
    EXPECT_EQ(4.0, (*rdNnlo)[2][2]);
    EXPECT_EQ(8.0, (*rdNnlo)[2][3]);
 
-   forest.SetEntry(1);
+   forest.LoadEntry(1);
    EXPECT_EQ(24.0, *rdPt);
    EXPECT_STREQ("", rdTag->c_str());
    EXPECT_TRUE(rdNnlo->empty());
 
-   forest.SetEntry(2);
+   forest.LoadEntry(2);
    EXPECT_EQ(12.0, *rdPt);
    EXPECT_STREQ("12345", rdTag->c_str());
    EXPECT_EQ(1U, rdNnlo->size());
@@ -466,7 +466,7 @@ TEST(RForest, RealWorld1)
    double chksumRead = 0.0;
    auto forest = RInputForest::Create(std::move(modelRead), "f", "test.root");
    for (unsigned int i = 0; i < forest->GetNEntries(); ++i) {
-      forest->SetEntry(i);
+      forest->LoadEntry(i);
       chksumRead += double(rdEvent) + rdEnergy;
       for (auto t : rdTimes) chksumRead += t;
       for (auto ind : rdIndices) chksumRead += double(ind);
