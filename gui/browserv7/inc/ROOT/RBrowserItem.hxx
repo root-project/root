@@ -21,7 +21,7 @@ namespace ROOT {
 namespace Experimental {
 
 /** Request send from client to get content of path element */
-class RRootBrowserRequest {
+class RBrowserRequest {
 public:
    std::string path;   ///< requested path
    int first{0};       ///< first child to request
@@ -31,29 +31,30 @@ public:
 
 
 /** Representation of single item in the browser */
-class RRootBrowserItem {
-public:
+class RBrowserItem {
+protected:
    std::string name;     ///< item name
    int nchilds{0};       ///< number of childs
    bool checked{false};  ///< is checked
    bool expanded{false}; ///< is expanded
-   RRootBrowserItem() = default;
-   RRootBrowserItem(const std::string &_name, int _nchilds = 0) : name(_name), nchilds(_nchilds) {}
+public:
+   RBrowserItem() = default;
+   RBrowserItem(const std::string &_name, int _nchilds = 0) : name(_name), nchilds(_nchilds) {}
 
-   void SetNumChilds(int _nchilds = 0) { nchilds = _nchilds; }
+   void SetChecked(bool on = true) { checked = on; }
+   void SetExpanded(bool on = true) { expanded = on; }
 
-   // should be here, one needs virtual table for correct streaming of RRootBrowserReply
-   virtual ~RRootBrowserItem() = default;
+   // must be here, one needs virtual table for correct streaming of RBrowserReply
+   virtual ~RBrowserItem() = default;
 };
 
-
 /** Reply on browser request */
-class RRootBrowserReply {
+class RBrowserReply {
 public:
    std::string path;         ///< reply path
-   int nchilds{0};          ///< total number of childs in the node
-   int first{0};            ///< first node in returned list
-   std::vector<RRootBrowserItem*> nodes; ///< list of pointers, no ownership
+   int nchilds{0};           ///< total number of childs in the node
+   int first{0};             ///< first node in returned list
+   std::vector<RBrowserItem*> nodes; ///< list of pointers, no ownership!
 };
 
 

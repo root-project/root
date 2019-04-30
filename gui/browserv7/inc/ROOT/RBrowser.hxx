@@ -32,7 +32,7 @@ namespace Experimental {
 /** Base description of browser item, required only to build hierarchy */
 
 /** Representation of single item in the file browser */
-class RRootFileItem : public RRootBrowserItem {
+class RRootFileItem : public RBrowserItem {
 public:
    // internal data, used for generate directory list
    int type{0};             ///<! file type

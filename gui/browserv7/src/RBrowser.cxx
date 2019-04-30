@@ -34,7 +34,7 @@
 /////////////////////////////////////////////////////////////////////
 /// Item representing file in RBrowser
 
-ROOT::Experimental::RRootFileItem::RRootFileItem(const std::string &_name, int _nchilds, FileStat_t &stat) : RRootBrowserItem(_name, _nchilds)
+ROOT::Experimental::RRootFileItem::RRootFileItem(const std::string &_name, int _nchilds, FileStat_t &stat) : RBrowserItem(_name, _nchilds)
 {
    char tmp[256];
    Long64_t _fsize, bsize;
@@ -200,10 +200,10 @@ std::string ROOT::Experimental::RBrowserFSDescription::ProcessBrowserRequest(con
 {
    std::string res;
 
-   auto request = TBufferJSON::FromJSON<RRootBrowserRequest>(msg);
+   auto request = TBufferJSON::FromJSON<RBrowserRequest>(msg);
 
    if (msg.empty() && !request) {
-      request = std::make_unique<RRootBrowserRequest>();
+      request = std::make_unique<RBrowserRequest>();
       request->path = "/";
       request->first = 0;
       request->number = 100;
@@ -217,7 +217,7 @@ std::string ROOT::Experimental::RBrowserFSDescription::ProcessBrowserRequest(con
       Build(request->path);
    }
 
-   RRootBrowserReply reply;
+   RBrowserReply reply;
    reply.path = request->path;
    reply.first = request->first;
    reply.nchilds = fDesc.size();
