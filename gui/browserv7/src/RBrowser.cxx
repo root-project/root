@@ -22,6 +22,7 @@
 #include "ROOT/RMakeUnique.hxx"
 
 #include "TString.h"
+#include "TSystem.h"
 #include "TROOT.h"
 #include "TBufferJSON.h"
 
@@ -32,127 +33,6 @@
 #include <mutex>
 #include <thread>
 
-/////////////////////////////////////////////////////////////////////
-/// Item representing file in RBrowser
-
-ROOT::Experimental::RRootFileItem::RRootFileItem(const std::string &_name, int _nchilds, FileStat_t &stat) : RBrowserItem(_name, _nchilds)
-{
-   char tmp[256];
-   Long64_t _fsize, bsize;
-
-   type     = stat.fMode;
-   size     = stat.fSize;
-   uid      = stat.fUid;
-   gid      = stat.fGid;
-   modtime  = stat.fMtime;
-   islink   = stat.fIsLink;
-   isdir    = R_ISDIR(type);
-
-   // file size
-   _fsize = bsize = size;
-   if (_fsize > 1024) {
-      _fsize /= 1024;
-      if (_fsize > 1024) {
-         // 3.7MB is more informative than just 3MB
-         snprintf(tmp, sizeof(tmp), "%lld.%lldM", _fsize/1024, (_fsize%1024)/103);
-      } else {
-         snprintf(tmp, sizeof(tmp), "%lld.%lldK", bsize/1024, (bsize%1024)/103);
-      }
-   } else {
-      snprintf(tmp, sizeof(tmp), "%lld", bsize);
-   }
-   fsize = tmp;
-
-   // modification time
-   time_t loctime = (time_t) modtime;
-   struct tm *newtime = localtime(&loctime);
-   if (newtime) {
-      snprintf(tmp, sizeof(tmp), "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
-               newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
-               newtime->tm_min);
-      mtime = tmp;
-   } else {
-      mtime = "1901-01-01 00:00";
-   }
-
-   // file type
-   snprintf(tmp, sizeof(tmp), "%c%c%c%c%c%c%c%c%c%c",
-            (islink ?
-             'l' :
-             R_ISREG(type) ?
-             '-' :
-             (R_ISDIR(type) ?
-              'd' :
-              (R_ISCHR(type) ?
-               'c' :
-               (R_ISBLK(type) ?
-                'b' :
-                (R_ISFIFO(type) ?
-                 'p' :
-                 (R_ISSOCK(type) ?
-                  's' : '?' )))))),
-            ((type & kS_IRUSR) ? 'r' : '-'),
-            ((type & kS_IWUSR) ? 'w' : '-'),
-            ((type & kS_ISUID) ? 's' : ((type & kS_IXUSR) ? 'x' : '-')),
-            ((type & kS_IRGRP) ? 'r' : '-'),
-            ((type & kS_IWGRP) ? 'w' : '-'),
-            ((type & kS_ISGID) ? 's' : ((type & kS_IXGRP) ? 'x' : '-')),
-            ((type & kS_IROTH) ? 'r' : '-'),
-            ((type & kS_IWOTH) ? 'w' : '-'),
-            ((type & kS_ISVTX) ? 't' : ((type & kS_IXOTH) ? 'x' : '-')));
-   ftype = tmp;
-
-   struct UserGroup_t *user_group = gSystem->GetUserInfo(uid);
-   if (user_group) {
-      fuid = user_group->fUser;
-      fgid = user_group->fGroup;
-      delete user_group;
-   } else {
-      fuid = std::to_string(uid);
-      fgid = std::to_string(gid);
-   }
-}
-
-/////////////////////////////////////////////////////////////////////
-/// Add folder
-
-void ROOT::Experimental::RBrowser::AddFolder(const char *name)
-{
-   FileStat_t sbuf;
-
-   if (gSystem->GetPathInfo(name, sbuf)) {
-      if (sbuf.fIsLink) {
-         std::cout << "AddFile : Broken symlink of " << name << std::endl;
-      } else {
-         std::cerr << "Can't read file attributes of \"" <<  name << "\": " << gSystem->GetError() << std::endl;;
-      }
-      return;
-   }
-
-   // TODO: to mark folder, nchilds set to 1 but this is should be improved in the future
-   if (R_ISDIR(sbuf.fMode))
-      fDesc.emplace_back(name, 1, sbuf);
-}
-
-/////////////////////////////////////////////////////////////////////
-/// Add file
-
-void ROOT::Experimental::RBrowser::AddFile(const char *name)
-{
-   FileStat_t sbuf;
-
-   if (gSystem->GetPathInfo(name, sbuf)) {
-      if (sbuf.fIsLink) {
-         std::cout << "AddFile : Broken symlink of " << name << std::endl;
-      } else {
-         std::cerr << "Can't read file attributes of \"" <<  name << "\": " << gSystem->GetError() << std::endl;;
-      }
-      return;
-   }
-
-   if (!R_ISDIR(sbuf.fMode))
-      fDesc.emplace_back(name, 0, sbuf);
-}
 
 /////////////////////////////////////////////////////////////////////
 /// Collect information for provided directory
@@ -166,34 +46,127 @@ void ROOT::Experimental::RBrowser::Build(const std::string &path)
    std::string spath = path;
    spath.insert(0, ".");
    fDesc.clear();
+   fSorted.clear();
 
    std::string savdir = gSystem->WorkingDirectory();
    if (!gSystem->ChangeDirectory(spath.c_str())) return;
 
-   if ((dirp = gSystem->OpenDirectory(".")) == nullptr) {
-      gSystem->FreeDirectory(dirp); // probably, not needed
-      gSystem->ChangeDirectory(savdir.c_str());
-      return;
-   }
-   while ((name = gSystem->GetDirEntry(dirp)) != nullptr) {
-      if (strncmp(name, ".", 1) && strncmp(name, "..", 2))
-         AddFolder(name);
-      gSystem->ProcessEvents();
-   }
-   gSystem->FreeDirectory(dirp);
+   if ((dirp = gSystem->OpenDirectory(".")) != nullptr) {
+      while ((name = gSystem->GetDirEntry(dirp)) != nullptr) {
+         if ((strncmp(name, ".", 1)==0) || (strncmp(name, "..", 2)==0)) continue;
 
-   if ((dirp = gSystem->OpenDirectory(".")) == nullptr) {
-      gSystem->FreeDirectory(dirp); // probably, not needed
-      gSystem->ChangeDirectory(savdir.c_str());
-      return;
+         FileStat_t stat;
+
+         if (gSystem->GetPathInfo(name, stat)) {
+            if (stat.fIsLink) {
+               std::cout << "AddFile : Broken symlink of " << name << std::endl;
+            } else {
+               std::cerr << "Can't read file attributes of \"" <<  name << "\": " << gSystem->GetError() << std::endl;;
+            }
+            continue;
+         }
+
+         int nchilds = R_ISDIR(stat.fMode) ? 1 : 0;
+
+         fDesc.emplace_back(name, nchilds);
+
+         auto &item = fDesc.back();
+
+         // this is construction of current item
+
+         char tmp[256];
+         Long64_t _fsize, bsize;
+
+         item.type     = stat.fMode;
+         item.size     = stat.fSize;
+         item.uid      = stat.fUid;
+         item.gid      = stat.fGid;
+         item.modtime  = stat.fMtime;
+         item.islink   = stat.fIsLink;
+         item.isdir    = R_ISDIR(stat.fMode);
+
+         // file size
+         _fsize = bsize = item.size;
+         if (_fsize > 1024) {
+            _fsize /= 1024;
+            if (_fsize > 1024) {
+               // 3.7MB is more informative than just 3MB
+               snprintf(tmp, sizeof(tmp), "%lld.%lldM", _fsize/1024, (_fsize%1024)/103);
+            } else {
+               snprintf(tmp, sizeof(tmp), "%lld.%lldK", bsize/1024, (bsize%1024)/103);
+            }
+         } else {
+            snprintf(tmp, sizeof(tmp), "%lld", bsize);
+         }
+         item.fsize = tmp;
+
+         // modification time
+         time_t loctime = (time_t) item.modtime;
+         struct tm *newtime = localtime(&loctime);
+         if (newtime) {
+            snprintf(tmp, sizeof(tmp), "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
+                     newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
+                     newtime->tm_min);
+            item.mtime = tmp;
+         } else {
+            item.mtime = "1901-01-01 00:00";
+         }
+
+         // file type
+         snprintf(tmp, sizeof(tmp), "%c%c%c%c%c%c%c%c%c%c",
+                  (item.islink ?
+                   'l' :
+                   R_ISREG(item.type) ?
+                   '-' :
+                   (R_ISDIR(item.type) ?
+                    'd' :
+                    (R_ISCHR(item.type) ?
+                     'c' :
+                     (R_ISBLK(item.type) ?
+                      'b' :
+                      (R_ISFIFO(item.type) ?
+                       'p' :
+                       (R_ISSOCK(item.type) ?
+                        's' : '?' )))))),
+                  ((item.type & kS_IRUSR) ? 'r' : '-'),
+                  ((item.type & kS_IWUSR) ? 'w' : '-'),
+                  ((item.type & kS_ISUID) ? 's' : ((item.type & kS_IXUSR) ? 'x' : '-')),
+                  ((item.type & kS_IRGRP) ? 'r' : '-'),
+                  ((item.type & kS_IWGRP) ? 'w' : '-'),
+                  ((item.type & kS_ISGID) ? 's' : ((item.type & kS_IXGRP) ? 'x' : '-')),
+                  ((item.type & kS_IROTH) ? 'r' : '-'),
+                  ((item.type & kS_IWOTH) ? 'w' : '-'),
+                  ((item.type & kS_ISVTX) ? 't' : ((item.type & kS_IXOTH) ? 'x' : '-')));
+         item.ftype = tmp;
+
+         struct UserGroup_t *user_group = gSystem->GetUserInfo(item.uid);
+         if (user_group) {
+            item.fuid = user_group->fUser;
+            item.fgid = user_group->fGroup;
+            delete user_group;
+         } else {
+            item.fuid = std::to_string(item.uid);
+            item.fgid = std::to_string(item.gid);
+         }
+
+         gSystem->ProcessEvents();
+      }
+
+      gSystem->FreeDirectory(dirp);
    }
-   while ((name = gSystem->GetDirEntry(dirp)) != nullptr) {
-      if (strncmp(name, ".", 1) && strncmp(name, "..", 2))
-         AddFile(name);
-      gSystem->ProcessEvents();
-   }
-   gSystem->FreeDirectory(dirp);
+
    gSystem->ChangeDirectory(savdir.c_str());
+
+   // now build sorted list - first folders, then files
+   // later more complex sorting rules can be applied
+
+   for (auto &item : fDesc)
+      if (item.isdir)
+         fSorted.emplace_back(&item);
+
+   for (auto &item : fDesc)
+      if (!item.isdir)
+         fSorted.emplace_back(&item);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -228,11 +201,11 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 
    // return only requested number of nodes
    // no items ownership, RRootBrowserReply must be always temporary object
-   // TODO: implement sorting
+   // TODO: implement different sorting
    int seq = 0;
-   for (auto &node : fDesc) {
+   for (auto &node : fSorted) {
       if ((seq >= request->first) && ((seq < request->first + request->number) || (request->number == 0)))
-         reply.nodes.emplace_back(&node);
+         reply.nodes.emplace_back(node);
       seq++;
    }
 
