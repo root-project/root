@@ -103,7 +103,7 @@ void fst003_lhcbOpenData()
    auto fldDist = model->MakeField<double>("B_FlightDistance");
 
    // We use the reduced model to open the forest file
-   auto forest = RInputForest::Create(std::move(model), "DecayTree", gForestFile);
+   auto forest = RInputForest::Open(std::move(model), "DecayTree", gForestFile);
 
    TCanvas *c = new TCanvas("c", "B Flight Distance", 200, 10, 700, 500);
    TH1F *h = new TH1F("h", "B Flight Distance", 200, 0, 140);

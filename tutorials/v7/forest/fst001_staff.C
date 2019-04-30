@@ -90,8 +90,7 @@ void Ingest() {
 void Analyze() {
    // Create a forest without imposing a specific data model.  We could generate the data model from the forest
    // but here we prefer the view because we only want to access a single field
-   // --> Materialize(...), -->Open()
-   auto forest = RInputForest::Create("Staff", kForestFile);
+   auto forest = RInputForest::Open("Staff", kForestFile);
 
    // Quick overview of the forest's key meta-data
    /// --> GetDescription()

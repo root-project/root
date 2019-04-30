@@ -464,7 +464,7 @@ TEST(RForest, RealWorld1)
    auto& rdIndices = *modelRead->MakeField<std::vector<std::uint32_t>>("indices");
 
    double chksumRead = 0.0;
-   auto forest = RInputForest::Create(std::move(modelRead), "f", "test.root");
+   auto forest = RInputForest::Open(std::move(modelRead), "f", "test.root");
    for (unsigned int i = 0; i < forest->GetNEntries(); ++i) {
       forest->LoadEntry(i);
       chksumRead += double(rdEvent) + rdEnergy;
@@ -499,7 +499,7 @@ TEST(RForest, RDF)
       forest.Fill();
    }
 
-   auto forest = RInputForest::Create("f", "test.root");
+   auto forest = RInputForest::Open("f", "test.root");
    auto rdf = std::make_unique<ROOT::RDataFrame>(std::make_unique<ROOT::Experimental::RForestDS>(forest.get()));
 
    EXPECT_EQ(42.0, *rdf->Min("pt"));

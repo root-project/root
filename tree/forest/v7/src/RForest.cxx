@@ -65,7 +65,7 @@ ROOT::Experimental::RInputForest::~RInputForest()
 {
 }
 
-std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputForest::Create(
+std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputForest::Open(
    std::unique_ptr<RForestModel> model,
    std::string_view forestName,
    std::string_view storage)
@@ -75,7 +75,7 @@ std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputFore
       std::move(model), std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
 }
 
-std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputForest::Create(
+std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputForest::Open(
    std::string_view forestName,
    std::string_view storage)
 {
