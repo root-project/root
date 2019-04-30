@@ -87,10 +87,10 @@ private:
    std::unique_ptr<Detail::RPageSource> fSource;
 
 public:
-   static std::unique_ptr<RInputForest> Create(std::unique_ptr<RForestModel> model,
-                                               std::string_view forestName,
-                                               std::string_view storage);
-   static std::unique_ptr<RInputForest> Create(std::string_view forestName, std::string_view storage);
+   static std::unique_ptr<RInputForest> Open(std::unique_ptr<RForestModel> model,
+                                             std::string_view forestName,
+                                             std::string_view storage);
+   static std::unique_ptr<RInputForest> Open(std::string_view forestName, std::string_view storage);
 
    /// The user imposes a forest model, which must be compatible with the model found in the data on storage
    RInputForest(std::unique_ptr<RForestModel> model, std::unique_ptr<Detail::RPageSource> source);
