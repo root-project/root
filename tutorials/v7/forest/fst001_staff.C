@@ -15,8 +15,6 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-R__LOAD_LIBRARY(libROOTForest)
-
 #include <ROOT/RForest.hxx>
 #include <ROOT/RForestModel.hxx>
 
@@ -29,8 +27,10 @@ R__LOAD_LIBRARY(libROOTForest)
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <sstream>
+#include <utility>
 
 // Import classes from experimental namespace for the time being
 using RForestModel = ROOT::Experimental::RForestModel;
@@ -78,31 +78,27 @@ void Ingest() {
 }
 
 void Analyze() {
-   // Create a forest without imposing a specific data model.  We could generate the data model from the forest
-   // but here we prefer the view because we only want to access a single field
-   auto forest = RInputForest::Open("Staff", kForestFileName);
+   // Get a unique pointer to an empty RForest model
+   auto model = RForestModel::Create();
+
+   // We only define the fields that are needed for reading
+   std::shared_ptr<int> fldAge = model->MakeField<int>("Age");
+
+   // Create a forest and attach the read model to it
+   auto forest = RInputForest::Open(std::move(model), "Staff", kForestFileName);
 
    // Quick overview of the forest's key meta-data
    std::cout << forest->GetInfo();
    // In a future version of RForest, there will be support for forest->Show() and forest->Scan()
 
-   // We resurrect the model from the forest on disk.
-   // NB: performance-wise, this is not ideal because all the fields of the original model are populated as entries
-   // are read.  See fst003_lhcbOpenData.C for an example with a slimmed down model for reading.
-   // -> const
-   RForestModel* model = forest->GetModel();
-   // We get the memory location of the model's default entry, which is populated by forest->SetEntry()
-   auto ptrAge = model->Get<int>("Age");
-
-   TCanvas *c = new TCanvas("c", "Age Distribution CERN, 1988", 200, 10, 700, 500);
+   TCanvas *c = new TCanvas("c", "", 200, 10, 700, 500);
    TH1I *h = new TH1I("h", "Age Distribution CERN, 1988", 100, 0, 100);
    h->SetFillColor(48);
 
-   // --> for (auto _ : *forest) ? what about the unused variable warning
-   for (unsigned int i = 0; i < forest->GetNEntries(); ++i) {
-      // --> LoadEntry()
-      forest->LoadEntry(i);
-      h->Fill(*ptrAge);
+   for (auto entryId : *forest) {
+      // Populate fldAge
+      forest->LoadEntry(entryId);
+      h->Fill(*fldAge);
    }
 
    h->DrawCopy();

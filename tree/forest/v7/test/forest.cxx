@@ -465,8 +465,8 @@ TEST(RForest, RealWorld1)
 
    double chksumRead = 0.0;
    auto forest = RInputForest::Open(std::move(modelRead), "f", "test.root");
-   for (unsigned int i = 0; i < forest->GetNEntries(); ++i) {
-      forest->LoadEntry(i);
+   for (auto entryId : *forest) {
+      forest->LoadEntry(entryId);
       chksumRead += double(rdEvent) + rdEnergy;
       for (auto t : rdTimes) chksumRead += t;
       for (auto ind : rdIndices) chksumRead += double(ind);
