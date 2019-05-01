@@ -608,6 +608,13 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch* branch, TLeaf* myLea
             if (element->GetClass() == TClonesArray::Class()){
                fImpl = std::make_unique<TClonesReader>();
             }
+            else if (branchElement->GetType() == TBranchElement::kSTLMemberNode){
+               fImpl = std::make_unique<TBasicTypeArrayReader>();
+            }
+            else if (branchElement->GetType() == TBranchElement::kClonesMemberNode){
+               // TBasicTypeClonesReader should work for object
+               fImpl = std::make_unique<TBasicTypeClonesReader>(element->GetOffset());
+            }
             else {
                fImpl = std::make_unique<TArrayFixedSizeReader>(element->GetArrayLength());
             }
