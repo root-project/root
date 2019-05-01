@@ -6727,6 +6727,16 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
 
          void VisitDecl(const Decl *D)
          {
+            // FIXME: Such case is described ROOT-7765 where
+            // ROOT_GENERATE_DICTIONARY does not contain the list of headers.
+            // They are specified as #includes in the LinkDef file. This leads to
+            // generation of incomplete modulemap files and this logic fails to
+            // compute the corresponding module of D.
+            // FIXME: If we want to support such a case, we should not rely on
+            // the contents of the modulemap but mangle D and look it up in the
+            // .so files.
+            if (!D->hasOwningModule())
+               return;
             if (Module *M = D->getOwningModule()->getTopLevelModule())
                m_TopLevelModules.insert(M);
          }
