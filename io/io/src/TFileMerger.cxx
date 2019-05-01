@@ -50,7 +50,9 @@ to be merged, like the standalone hadd program.
 #include <sys/resource.h>
 #endif
 
-ClassImp(TFileMerger)
+#include <cstring>
+
+ClassImp(TFileMerger);
 
 TClassRef R__TH1_Class("TH1");
 TClassRef R__TTree_Class("TTree");
@@ -377,7 +379,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    // Get the dir name
    TString path(target->GetPath());
    // coverity[unchecked_value] 'target' is from a file so GetPath always returns path starting with filename:
-   path.Remove(0, path.Last(':') + 2);
+   path.Remove(0, std::strlen(target->GetFile()->GetPath()));
 
    Int_t nguess = sourcelist->GetSize()+1000;
    THashList allNames(nguess);
