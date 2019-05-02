@@ -296,6 +296,7 @@ void InterpreterDeclare(const std::string &code)
 
 Long64_t InterpreterCalc(const std::string &code, const std::string &context)
 {
+   TInterpreter::SuspendAutoParsing SAPRAII(gInterpreter);
    TInterpreter::EErrorCode errorCode(TInterpreter::kNoError);
    auto res = gInterpreter->Calc(code.c_str(), &errorCode);
    if (errorCode != TInterpreter::EErrorCode::kNoError) {
