@@ -224,14 +224,13 @@ sap.ui.define([
       	var data = this.getView().getModel().getData();
       	var contourPoints = this.byId("contourPoints").getValue();
       	data.fContourPoints = contourPoints;
-      	var contourPar1 = this.byId("ContourPar1").getSelectedItemId();
+      	var contourPar1 = parseInt(this.byId("ContourPar1").getSelectedKey());
       	data.fContourPar1 = contourPar1;
-      	var contourPar2 = this.byId("ContourPar2").getSelectedItemId();
+      	var contourPar2 = parseInt(this.byId("ContourPar2").getSelectedKey());
       	data.fContourPar2 = contourPar2;
       	var confLevel = this.byId("ConfLevel").getValue();
       	data.fConfLevel = confLevel;
-      	//var fContourColor = this.byId("colorPicker").getColorString();
-      	//console.log("Contour Points " + fContourPar1)
+
          
 	  	this.getView().getModel().refresh();
         //Each time we click the button, we keep the current state of the model
@@ -350,34 +349,56 @@ sap.ui.define([
          data.fUpdateRange[1] = range[1];
       },
 
-      colorPicker: function (oEvent) {
+      colorPickerContour: function (oEvent) {
          this.inputId = oEvent.getSource().getId();
          if (!this.oColorPickerPopover) {
             this.oColorPickerPopover = new sap.ui.unified.ColorPickerPopover({
                colorString: "blue",
                mode: sap.ui.unified.ColorPickerMode.HSL,
-               change: this.handleChange.bind(this)
+               change: this.handleChangeContour.bind(this)
             });
          }
          this.oColorPickerPopover.openBy(oEvent.getSource());
       },
 
 
-      handleChange: function (oEvent) {
+      handleChangeContour: function (oEvent) {
          var oView = this.getView();
          this.inputId = "";
-         var color = oEvent.getParameter("colorString");
+         var colorContour = oEvent.getParameter("colorString");
+         var oButtonContour = this.getView().byId("colorContour");
+         var oButtonInnerContour = oButtonContour.$().find('.sapMBtnInner');
+         oButtonInnerContour.css('background',colorContour);
+         oButtonInnerContour.css('color','#FFFFFF');
+         oButtonInnerContour.css('text-shadow','1px 1px 2px #333333');
+
+         return colorContour;
+	  },
+
+	  colorPickerConf: function (oEvent) {
+         this.inputId = oEvent.getSource().getId();
+         if (!this.oColorPickerPopover) {
+            this.oColorPickerPopover = new sap.ui.unified.ColorPickerPopover({
+               colorString: "blue",
+               mode: sap.ui.unified.ColorPickerMode.HSL,
+               change: this.handleChangeConf.bind(this)
+            });
+         }
+         this.oColorPickerPopover.openBy(oEvent.getSource());
+      },
+
+
+      handleChangeConf: function (oEvent) {
+         var oView = this.getView();
+         this.inputId = "";
+         var colorConf = oEvent.getParameter("colorString");
          var oButtonContour = this.getView().byId("colorContour");
          var oButtonInnerContour = oButtonContour.$().find('.sapMBtnInner');
          oButtonInnerContour.css('background',color);
          oButtonInnerContour.css('color','#FFFFFF');
          oButtonInnerContour.css('text-shadow','1px 1px 2px #333333');
 
-         var oButtonConf = this.getView().byId("colorConf");
-         var oButtonInnerConf = oButtonConf.$().find('.sapMBtnInner');
-         oButtonInnerConf.css('background',color);
-         oButtonInnerConf.css('color','#FFFFFF');
-         oButtonInnerConf.css('text-shadow','1px 1px 2px #333333');
+         return colorConf;
 	  },
 
 	  advancedOptionsDialog: function() {

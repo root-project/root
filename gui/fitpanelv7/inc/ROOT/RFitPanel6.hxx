@@ -118,10 +118,11 @@ struct RFitPanelModel6 {
    bool fNoStore {false};
 
    //Advanced Options
-   std::string fContourPar1;
-   std::string fContourPar2;
+   int fContourPar1{0};
+   int fContourPar2{0};
    int fContourPoints{0};
    float fConfLevel{0.};
+   bool fContourImpose{false};
 };
 
 class RFitPanel6 {

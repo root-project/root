@@ -243,12 +243,12 @@
 																	<l:GridData span="L2 M2 S3"/>
 																</layoutData>
 															</Text>
-															<Button press="colorPicker" id="colorContour">
+															<Button press="colorPickerContour" id="colorContour">
 																<layoutData>
 																	<l:GridData span="L2 M2 S3"/>
 																</layoutData>
 															</Button>
-															<CheckBox text="Super impose">
+															<CheckBox id="contourImpose" text="Super impose" selected="{/fContourImpose}">
 																<layoutData>
 																	<l:GridData span="L2 M2 S3"/>
 																</layoutData>
