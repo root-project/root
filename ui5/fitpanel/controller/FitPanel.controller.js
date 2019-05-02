@@ -15,6 +15,8 @@ sap.ui.define([
 
    "use strict";
    var count = 0;
+   var colorContour;
+   var colorConf;
    return GuiPanelController.extend("rootui5.fitpanel.controller.FitPanel", {
 
          //function called from GuiPanelController
@@ -86,8 +88,6 @@ sap.ui.define([
          var maxInterations = Number(this.getView().byId("maxInterations").getValue());
          data.fMaxInter = maxInterations;
          
-
-         //console.log("Method Min " + data);
 
          //Refresh the model
          this.getView().getModel().refresh();
@@ -231,12 +231,32 @@ sap.ui.define([
       	var confLevel = this.byId("ConfLevel").getValue();
       	data.fConfLevel = confLevel;
 
-         
+
 	  	this.getView().getModel().refresh();
         //Each time we click the button, we keep the current state of the model
         if (this.websocket)
             this.websocket.Send('SETCONTOUR:'+this.getView().getModel().getJSON());
 
+
+      },
+
+      drawScan: function() {
+
+      	var data = this.getView().getModel().getData();
+      	var scanPoints = this.byId("scanPoints").getValue();
+      	data.fScanPoints = scanPoints;
+      	var scanPar = parseInt(this.byId("ScanPar").getSelectedKey());
+      	data.fScanPar = scanPar;
+      	var scanMin = this.byId("scanMin").getValue();
+      	data.fScanMin = scanMin;
+      	var scanMax = this.byId("scanMax").getValue();
+      	data.fScanMax = scanMax;
+
+
+      	this.getView().getModel().refresh();
+        //Each time we click the button, we keep the current state of the model
+        if (this.websocket)
+            this.websocket.Send('SETSCAN:'+this.getView().getModel().getJSON());
 
       },
 
@@ -365,13 +385,14 @@ sap.ui.define([
       handleChangeContour: function (oEvent) {
          var oView = this.getView();
          this.inputId = "";
-         var colorContour = oEvent.getParameter("colorString");
+         var color = oEvent.getParameter("colorString");
          var oButtonContour = this.getView().byId("colorContour");
          var oButtonInnerContour = oButtonContour.$().find('.sapMBtnInner');
          oButtonInnerContour.css('background',colorContour);
          oButtonInnerContour.css('color','#FFFFFF');
          oButtonInnerContour.css('text-shadow','1px 1px 2px #333333');
 
+         colorContour = color;
          return colorContour;
 	  },
 
@@ -391,13 +412,14 @@ sap.ui.define([
       handleChangeConf: function (oEvent) {
          var oView = this.getView();
          this.inputId = "";
-         var colorConf = oEvent.getParameter("colorString");
+         var color = oEvent.getParameter("colorString");
          var oButtonContour = this.getView().byId("colorContour");
          var oButtonInnerContour = oButtonContour.$().find('.sapMBtnInner');
          oButtonInnerContour.css('background',color);
          oButtonInnerContour.css('color','#FFFFFF');
          oButtonInnerContour.css('text-shadow','1px 1px 2px #333333');
 
+         colorConf = color;
          return colorConf;
 	  },
 
