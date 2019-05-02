@@ -196,23 +196,6 @@ else()
     "Known values are zlib, lzma, lz4 (case-insensitive).")
 endif()
 
-#--- Minor chnages in defaults due to platform--------------------------------------------------
-if(WIN32)
-  set(x11_defvalue OFF)
-  set(memstat_defvalue OFF)
-  set(davix_defvalue OFF)
-  set(imt_defvalue OFF)
-  set(builtin_tbb_defvalue OFF)
-  set(tmva_defvalue OFF)
-  set(roofit_defvalue OFF)
-  set(roottest_defvalue OFF)
-  set(testing_defvalue OFF)
-  set(vdt_defvalue OFF)
-elseif(APPLE)
-  set(x11_defvalue OFF)
-  set(cocoa_defvalue ON)
-endif()
-
 #--- The 'all' option swithes ON major options---------------------------------------------------
 if(all)
  set(alien_defvalue ON)
@@ -299,6 +282,24 @@ endif()
 
 #---webui always build together with root7----------------------------------------------------
 set(webui_defvalue ${root7})
+
+#---Changes in defaults due to platform-------------------------------------------------------
+if(WIN32)
+  set(builtin_tbb_defvalue OFF)
+  set(davix_defvalue OFF)
+  set(imt_defvalue OFF)
+  set(memstat_defvalue OFF)
+  set(roofit_defvalue OFF)
+  set(roottest_defvalue OFF)
+  set(testing_defvalue OFF)
+  set(tmva_defvalue OFF)
+  set(vdt_defvalue OFF)
+  set(x11_defvalue OFF)
+elseif(APPLE)
+  set(cocoa_defvalue ON)
+  set(x11_defvalue OFF)
+  set(xft_defvalue OFF)
+endif()
 
 #---Vc supports only x86_64 architecture-------------------------------------------------------
 if (NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
