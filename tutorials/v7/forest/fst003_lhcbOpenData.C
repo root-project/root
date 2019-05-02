@@ -46,7 +46,7 @@ constexpr char const* kForestFileName = "fst003_lhcbOpenData.root";
 
 void Convert() {
    std::unique_ptr<TFile> f(TFile::Open(kTreeFileName));
-   assert(f.is_valid());
+   assert(f.is_valid() && ! f->IsZombie());
 
    // Get a unique pointer to an empty RForest model
    auto model = RForestModel::Create();
