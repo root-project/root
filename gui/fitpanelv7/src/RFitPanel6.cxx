@@ -380,7 +380,7 @@ void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
 {
   static TGraph * graph = 0;
   std::string options;
-  TBackCompFitter *fFitter;
+  TBackCompFitter *fFitter = 0;
   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
 
   if(!(obj->fContourImpose)) {
@@ -399,9 +399,9 @@ void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
     return;
   }
 
-  //fFitter->Contour(obj->fContourPar1, obj->fContourPar2, graph, obj->fConfLevel);
-  // graph->GetXaxis()->SetTitle( fFitter->GetParName(obj->fContourPar1) );
-  // graph->GetYaxis()->SetTitle( fFitter->GetParName(obj->fContourPar2) );
+  fFitter->Contour(obj->fContourPar1, obj->fContourPar2, graph, obj->fConfLevel);
+  graph->GetXaxis()->SetTitle( fFitter->GetParName(obj->fContourPar1) );
+  graph->GetYaxis()->SetTitle( fFitter->GetParName(obj->fContourPar2) );
   graph->Draw( options.c_str() );
   gPad->Update();
 
@@ -414,15 +414,16 @@ void ROOT::Experimental::RFitPanel6::DrawScan(const std::string &model)
 
   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
   static TGraph * graph = 0;
+  TBackCompFitter *fFitter = 0;
   if(graph){
     delete graph;
   }
   graph = new TGraph(static_cast<int>(obj->fScanPoints));
-  //fFitter->Scan(obj->fScanPar, graph, obj->fScanMin, obj->fScanMax);
+  fFitter->Scan(obj->fScanPar, graph, obj->fScanMin, obj->fScanMax);
 
   graph->SetLineColor(kBlue);
   graph->SetLineWidth(2);
-  // graph->GetXaxis()->SetTitle(fFitter->GetParName(obj->fScanPar)); ///???????????
+  graph->GetXaxis()->SetTitle(fFitter->GetParName(obj->fScanPar)); ///???????????
   graph->GetYaxis()->SetTitle("FCN");
   graph->Draw("APL");
   gPad->Update();
