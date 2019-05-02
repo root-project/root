@@ -268,20 +268,30 @@
 														defaultSpan="L2 M4 S6">
 														<l:content>
 															<Text text="Number of Points:"/>
-															<StepInput value="40" min="0" max="100" step="1" editable="true"/>
+															<StepInput id="scanPoints" value="40" min="0" max="100" step="1" editable="true"/>
 															<Text text="Parameter 1:"/>
-															<ComboBox id="ScanPar1" selectedKey="{/fScanParId}" items="{ path: '/fScanPar', sorter: { path: 'fSet' } }">
+															<ComboBox id="ScanPar" selectedKey="{/fScanId}" items="{ path: '/fScan', sorter: { path: 'fSet' } }">
 																<core:Item key="{fId}" text="{fSet}" />
 															</ComboBox>
 															<Text text="Min:">
 															</Text>
-															<StepInput value="0.0001" min="0.0001" max="100.0000" step="0.0001" editable="true" displayValuePrecision="4">
+															<StepInput id="scanMin" value="0.0001" min="0.0001" max="100.0000" step="0.0001" editable="true" displayValuePrecision="4">
 															</StepInput>
 															<Text text="Max:">
 															</Text>
-															<StepInput value="0.0001" min="0.0001" max="100.0000" step="0.0001" editable="true" displayValuePrecision="4">
+															<StepInput id="scanMax" value="0.0001" min="0.0001" max="100.0000" step="0.0001" editable="true" displayValuePrecision="4">
 															</StepInput>
 														</l:content>
+														<Button text="Draw" press="drawScan">
+															<layoutData>
+																<l:GridData span="L2 M2 S3"/>
+															</layoutData>
+														</Button>
+														<Button text="Close">
+															<layoutData>
+																<l:GridData span="L2 M2 S3"/>
+															</layoutData>
+														</Button>
 													</l:Grid>
 												</IconTabFilter>
 												<IconTabFilter text="Conf Intervals">

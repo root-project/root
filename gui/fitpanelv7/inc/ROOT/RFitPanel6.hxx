@@ -62,8 +62,8 @@ struct RFitPanelModel6 {
    std::string fContourPar1Id;
    std::vector<RComboBoxItem> fContour2;
    std::string fContourPar2Id;
-   std::vector<RComboBoxItem> fScanPar;
-   std::string fScanParId;
+   std::vector<RComboBoxItem> fScan;
+   std::string fScanId;
    std::string fRealFunc;
    std::string fOption;
    std::string fFuncChange;
@@ -117,12 +117,20 @@ struct RFitPanelModel6 {
    bool fNoDrawing {};
    bool fNoStore {false};
 
-   //Advanced Options
+   /////////Advanced Options
+
+   //Contour Tab
    int fContourPar1{0};
    int fContourPar2{0};
    int fContourPoints{0};
    float fConfLevel{0.};
    bool fContourImpose{false};
+
+   //Scan Tab
+   int fScanPoints{0};
+   int fScanPar{0};
+   int fScanMin{0};
+   int fScanMax{0};
 };
 
 class RFitPanel6 {
@@ -139,6 +147,8 @@ class RFitPanel6 {
    void DoFit(const std::string &model);
 
    void DrawContour(const std::string &model);
+
+   void DrawScan(const std::string &model);
 
 public:
    /// normal constructor
