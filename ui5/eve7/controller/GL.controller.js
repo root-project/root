@@ -381,6 +381,9 @@ sap.ui.define([
 
          // outlinePass passthrough
          this.outlinePass = this.geo_painter._outlinePass;
+         var sz = this.geo_painter.size_for_3d();
+         this.geo_painter._effectComposer.setSize( sz.width, sz.height);
+         this.geo_painter._effectFXAA.uniforms[ 'resolution' ].value.set( 1 / sz.width, 1 / sz.height );
 
          // create only when geo painter is ready
          this.createScenes();
