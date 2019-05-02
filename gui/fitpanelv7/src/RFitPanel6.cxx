@@ -19,6 +19,8 @@
 #include <ROOT/RWebWindowsManager.hxx>
 
 #include "TString.h"
+#include "TBackCompFitter.h"
+#include "TGraph.h"
 #include "TROOT.h"
 #include "TF1.h"
 #include "TList.h"
@@ -352,11 +354,11 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
     if (func) {
      for (int n = 0; n < func->GetNpar(); ++n) {
 
-      modelAdv.fContour1.emplace_back("0", Form("%s", func->GetParName(n)));
+      modelAdv.fContour1.emplace_back(Form("%d", n), Form("%s", func->GetParName(n)));
       modelAdv.fContourPar1Id = "0";
-      modelAdv.fContour2.emplace_back("0", Form("%s", func->GetParName(n)));
+      modelAdv.fContour2.emplace_back(Form("%d", n), Form("%s", func->GetParName(n)));
       modelAdv.fContourPar2Id = "0";
-      modelAdv.fScanPar.emplace_back("0", Form("%s", func->GetParName(n)));
+      modelAdv.fScanPar.emplace_back(Form("%d", n), Form("%s", func->GetParName(n)));
       modelAdv.fScanParId = "0";
         
      }
@@ -375,9 +377,35 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 /// Dummy function, called when "Fit" button pressed in UI
 void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
 {
+  static TGraph * graph = 0;
+  std::string options;
+  TBackCompFitter *fFitter;
   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
-  //printf("DOFIT: range %f %f select %s function %s\n ", obj->);
-  printf("Points %d Contour1 %s Contour2 %s Points %f\n", obj->fContourPoints, obj->fContourPar1.c_str(), obj->fContourPar2.c_str(), obj->fConfLevel);
+
+  if(!(obj->fContourImpose)) {
+    if(graph){
+      delete graph;
+      options = "ALF";
+    }
+  } 
+  else {
+    options = "LF";
+  }
+  graph = new TGraph(static_cast<int>(obj->fContourPoints));
+
+  if(obj->fContourPar1 == obj->fContourPar2) {
+    Error("DrawContour", "Parameters cannot be the same");
+    return;
+  }
+
+  //fFitter->Contour(obj->fContourPar1, obj->fContourPar2, graph, obj->fConfLevel);
+  // graph->GetXaxis()->SetTitle( fFitter->GetParName(obj->fContourPar1) );
+  // graph->GetYaxis()->SetTitle( fFitter->GetParName(obj->fContourPar2) );
+  graph->Draw( options.c_str() );
+  gPad->Update();
+
+
+ //printf("Points %d Contour1 %d Contour2 %d ConfLevel %f\n", obj->fContourPoints, obj->fContourPar1, obj->fContourPar2, obj->fConfLevel);
 }
 
 void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
