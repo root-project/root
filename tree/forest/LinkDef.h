@@ -17,8 +17,6 @@
 #pragma link C++ nestedtypedefs;
 #pragma link C++ nestedclasses;
 
-#pragma link C++ class ROOT::Experimental::RForestTest+;
-
 // Support for auto-loading in the RForest tutorials
 #pragma link C++ class ROOT::Experimental::Detail::RFieldBase-;
 #pragma link C++ class ROOT::Experimental::Detail::RFieldBase::RIterator-;

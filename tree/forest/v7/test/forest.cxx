@@ -12,6 +12,8 @@
 
 #include "gtest/gtest.h"
 
+#include "CustomStruct.hxx"
+
 #include <exception>
 #include <memory>
 #include <string>
@@ -60,7 +62,7 @@ TEST(RForest, ReconstructModel)
    auto model = RForestModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
    auto fieldNnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
-   auto fieldKlass = model->MakeField<ROOT::Experimental::RForestTest>("klass");
+   auto fieldKlass = model->MakeField<CustomStruct>("klass");
    {
       RPageSinkRoot sinkRoot("myTree", "test.root");
       sinkRoot.Create(model.get());
@@ -123,7 +125,7 @@ TEST(RForest, WriteRead)
    wrNnlo->push_back(std::vector<float>());
    wrNnlo->push_back(std::vector<float>{1.0});
    wrNnlo->push_back(std::vector<float>{1.0, 2.0, 4.0, 8.0});
-   auto wrKlass = modelWrite->MakeField<ROOT::Experimental::RForestTest>("klass");
+   auto wrKlass = modelWrite->MakeField<CustomStruct>("klass");
    wrKlass->s = "abc";
 
    auto modelRead = std::unique_ptr<RForestModel>(modelWrite->Clone());
@@ -138,7 +140,7 @@ TEST(RForest, WriteRead)
    auto rdTag = modelRead->Get<std::string>("tag");
    auto rdJets = modelRead->Get<std::vector<float>>("jets");
    auto rdNnlo = modelRead->Get<std::vector<std::vector<float>>>("nnlo");
-   auto rdKlass = modelRead->Get<ROOT::Experimental::RForestTest>("klass");
+   auto rdKlass = modelRead->Get<CustomStruct>("klass");
 
    RInputForest forest(std::move(modelRead), std::make_unique<RPageSourceRoot>("f", "test.root"));
    EXPECT_EQ(1U, forest.GetNEntries());
@@ -396,8 +398,8 @@ TEST(RForest, TypeName) {
    EXPECT_STREQ("float", ROOT::Experimental::RField<float>::MyTypeName().c_str());
    EXPECT_STREQ("std::vector<std::string>",
                 ROOT::Experimental::RField<std::vector<std::string>>::MyTypeName().c_str());
-   EXPECT_STREQ("ROOT::Experimental::RForestTest",
-                ROOT::Experimental::RField<ROOT::Experimental::RForestTest>::MyTypeName().c_str());
+   EXPECT_STREQ("CustomStruct",
+                ROOT::Experimental::RField<CustomStruct>::MyTypeName().c_str());
 }
 
 namespace {
@@ -409,7 +411,7 @@ TEST(RForest, TClass) {
    EXPECT_THROW(modelFail->MakeField<RNoDictionary>("nodict"), std::runtime_error);
 
    auto model = RForestModel::Create();
-   auto ptrKlass = model->MakeField<ROOT::Experimental::RForestTest>("klass");
+   auto ptrKlass = model->MakeField<CustomStruct>("klass");
 
    FileRaii fileGuard("test.root");
    ROutputForest forest(std::move(model), std::make_unique<RPageSinkRoot>("f", "test.root"));
@@ -491,7 +493,7 @@ TEST(RForest, RDF)
    wrNnlo->push_back(std::vector<float>());
    wrNnlo->push_back(std::vector<float>{1.0});
    wrNnlo->push_back(std::vector<float>{1.0, 2.0, 4.0, 8.0});
-   auto wrKlass = modelWrite->MakeField<ROOT::Experimental::RForestTest>("klass");
+   auto wrKlass = modelWrite->MakeField<CustomStruct>("klass");
    wrKlass->s = "abc";
 
    {

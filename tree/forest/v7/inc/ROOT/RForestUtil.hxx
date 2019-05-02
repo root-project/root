@@ -24,15 +24,6 @@
 namespace ROOT {
 namespace Experimental {
 
-/**
- * Used in unit tests to serialize and deserialize classes with TClass
- */
-struct RForestTest {
-  float a = 0.0;
-  std::vector<float> v1;
-  std::vector<std::vector<float>> v2;
-  std::string s;
-};
 
 /**
  * The fields in the data model tree can carry different structural information about the type system.
