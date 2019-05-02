@@ -202,12 +202,6 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
        model.fMethodMin = model.fMethodMinAll[model.fLibrary];
        model.fTypeXY = model.fTypeXYAll[model.fTypeId];
 
-       //Scan ComboBox
-       model.fScanPar.push_back(ROOT::Experimental::RComboBoxItem("1","Coeff0"));
-       model.fScanPar.push_back(ROOT::Experimental::RComboBoxItem("2","Coeff1"));
-       model.fScanPar.push_back(ROOT::Experimental::RComboBoxItem("3","Coeff3"));
-       model.fScanParId = "1";
-
        if (fHist) {
           model.fMinRange = fHist->GetXaxis()->GetXmin();
           model.fMaxRange = fHist->GetXaxis()->GetXmax();
@@ -289,6 +283,14 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       return;
    }
 
+   if(arg.find("SETSCAN:") == 0) {
+
+    std::string argS = arg;
+    argS.erase(0,8);
+    DrawScan(argS);
+    return;
+   }
+
 
    if (arg.find("GETPARS:") == 0) {
 
@@ -342,7 +344,6 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 
 
    if (arg.find("GETADVANCED:") == 0) {
-
     RFitFunc info;
     ROOT::Experimental::RFitPanelModel6 modelAdv;
 
@@ -358,9 +359,9 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       modelAdv.fContourPar1Id = "0";
       modelAdv.fContour2.emplace_back(Form("%d", n), Form("%s", func->GetParName(n)));
       modelAdv.fContourPar2Id = "0";
-      modelAdv.fScanPar.emplace_back(Form("%d", n), Form("%s", func->GetParName(n)));
-      modelAdv.fScanParId = "0";
-        
+      modelAdv.fScan.emplace_back(Form("%d", n), Form("%s", func->GetParName(n)));
+      modelAdv.fScanId = "0";
+
      }
     } else {
      info.name = "<not exists>";
@@ -406,6 +407,27 @@ void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
 
 
  //printf("Points %d Contour1 %d Contour2 %d ConfLevel %f\n", obj->fContourPoints, obj->fContourPar1, obj->fContourPar2, obj->fConfLevel);
+}
+
+void ROOT::Experimental::RFitPanel6::DrawScan(const std::string &model)
+{ 
+
+  auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
+  static TGraph * graph = 0;
+  if(graph){
+    delete graph;
+  }
+  graph = new TGraph(static_cast<int>(obj->fScanPoints));
+  //fFitter->Scan(obj->fScanPar, graph, obj->fScanMin, obj->fScanMax);
+
+  graph->SetLineColor(kBlue);
+  graph->SetLineWidth(2);
+  // graph->GetXaxis()->SetTitle(fFitter->GetParName(obj->fScanPar)); ///???????????
+  graph->GetYaxis()->SetTitle("FCN");
+  graph->Draw("APL");
+  gPad->Update();
+
+  //printf("SCAN Points %d, Par %d, Min %d, Max %d\n", obj->fScanPoints, obj->fScanPar, obj->fScanMin, obj->fScanMax);
 }
 
 void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
