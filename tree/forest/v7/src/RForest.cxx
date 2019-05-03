@@ -82,14 +82,23 @@ std::unique_ptr<ROOT::Experimental::RInputForest> ROOT::Experimental::RInputFore
    return std::make_unique<RInputForest>(std::make_unique<Detail::RPageSourceRoot>(forestName, storage));
 }
 
-std::string ROOT::Experimental::RInputForest::GetInfo() {
+std::string ROOT::Experimental::RInputForest::GetInfo(const EForestInfo what) {
    std::ostringstream os;
    auto name = fSource->GetDescriptor().GetName();
-   os << "****************************** FOREST ******************************"  << std::endl
-      << "* Name:    " << name << std::setw(57 - name.length())           << "*" << std::endl
-      << "* Entries: " << std::setw(10) << fNEntries << std::setw(47)     << "*" << std::endl
-      << "********************************************************************"  << std::endl;
-   return os.str();
+
+   switch (what) {
+   case EForestInfo::kSummary:
+      os << "****************************** FOREST ******************************"  << std::endl
+         << "* Name:    " << name << std::setw(57 - name.length())           << "*" << std::endl
+         << "* Entries: " << std::setw(10) << fNEntries << std::setw(47)     << "*" << std::endl
+         << "********************************************************************"  << std::endl;
+      return os.str();
+   default:
+      // Unhandled case, internal error
+      assert(false);
+   }
+   // Never here
+   return "";
 }
 
 //------------------------------------------------------------------------------

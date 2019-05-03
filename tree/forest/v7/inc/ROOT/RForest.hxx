@@ -71,6 +71,14 @@ public:
 } // namespace Detail
 
 
+/**
+ * Listing of the different options that can be returned by RInputForest::GetInfo()
+ */
+enum class EForestInfo {
+   kSummary,  // Forest name, description, number of entries
+};
+
+
 // clang-format off
 /**
 \class ROOT::Experimental::RInputForest
@@ -120,7 +128,7 @@ public:
 
    ForestSize_t GetNEntries() { return fNEntries; }
 
-   std::string GetInfo();
+   std::string GetInfo(const EForestInfo what = EForestInfo::kSummary);
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the forest.
    /// On I/O errors, raises an expection.
