@@ -125,6 +125,8 @@ struct RFitPanelModel6 {
    int fContourPoints{0};
    float fConfLevel{0.};
    bool fContourImpose{false};
+   std::string fColorContour[3];
+   int colorC[3];
 
    //Scan Tab
    int fScanPoints{0};

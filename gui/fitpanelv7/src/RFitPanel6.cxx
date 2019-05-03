@@ -29,6 +29,7 @@
 #include "TBufferJSON.h"
 #include "TMath.h"
 #include "Math/Minimizer.h"
+#include "TColor.h"
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -379,9 +380,15 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
 {
   static TGraph * graph = 0;
+  int colorC[3];
   std::string options;
   TBackCompFitter *fFitter = 0;
   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
+  for(int i=0; i<3; i++){
+    colorC[i] = std::stoi(obj->fColorContour[i]);
+  }
+  TColor *color = new TColor(1234, colorC[0], colorC[1], colorC[2]);
+  
 
   if(!(obj->fContourImpose)) {
     if(graph){
@@ -399,12 +406,12 @@ void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
     return;
   }
 
-  fFitter->Contour(obj->fContourPar1, obj->fContourPar2, graph, obj->fConfLevel);
-  graph->GetXaxis()->SetTitle( fFitter->GetParName(obj->fContourPar1) );
-  graph->GetYaxis()->SetTitle( fFitter->GetParName(obj->fContourPar2) );
-  graph->Draw( options.c_str() );
-  gPad->Update();
 
+  //fFitter->Contour(obj->fContourPar1, obj->fContourPar2, graph, obj->fConfLevel);
+  //graph->GetXaxis()->SetTitle( fFitter->GetParName(obj->fContourPar1) );
+  //graph->GetYaxis()->SetTitle( fFitter->GetParName(obj->fContourPar2) );
+  //graph->Draw( options.c_str() );
+  gPad->Update();
 
  //printf("Points %d Contour1 %d Contour2 %d ConfLevel %f\n", obj->fContourPoints, obj->fContourPar1, obj->fContourPar2, obj->fConfLevel);
 }
@@ -415,18 +422,20 @@ void ROOT::Experimental::RFitPanel6::DrawScan(const std::string &model)
   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
   static TGraph * graph = 0;
   TBackCompFitter *fFitter = 0;
+
   if(graph){
     delete graph;
   }
   graph = new TGraph(static_cast<int>(obj->fScanPoints));
-  fFitter->Scan(obj->fScanPar, graph, obj->fScanMin, obj->fScanMax);
+  //fFitter->Scan(obj->fScanPar, graph, obj->fScanMin, obj->fScanMax);
 
   graph->SetLineColor(kBlue);
   graph->SetLineWidth(2);
-  graph->GetXaxis()->SetTitle(fFitter->GetParName(obj->fScanPar)); ///???????????
+ // graph->GetXaxis()->SetTitle(fFitter->GetParName(obj->fScanPar)); ///???????????
   graph->GetYaxis()->SetTitle("FCN");
   graph->Draw("APL");
   gPad->Update();
+
 
   //printf("SCAN Points %d, Par %d, Min %d, Max %d\n", obj->fScanPoints, obj->fScanPar, obj->fScanMin, obj->fScanMax);
 }
