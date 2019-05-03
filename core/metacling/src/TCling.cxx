@@ -6712,7 +6712,8 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
       return {};
 
    using namespace clang;
-   if (const Decl *D = LH.findScope(cls, cling::LookupHelper::NoDiagnostics)) {
+   if (const Decl *D = LH.findScope(cls, cling::LookupHelper::NoDiagnostics,
+                                    /*type*/ nullptr, /*instantiate*/ false)) {
       if (!D->isFromASTFile()) {
          if (gDebug > 5)
             Warning("GetClassSharedLibsForModule", "Decl found for %s is not part of a module", cls);
