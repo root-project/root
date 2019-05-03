@@ -303,7 +303,7 @@
 															<Text text="Confidence Level:"/>
 															<StepInput value="0.95" min="0.01" max="100" step="0.01" editable="true" displayValuePrecision="2"/>
 															<Text text="Fill Colour:"/>
-															<Button press="colorPicker" id="colorConf"/>
+															<Button press="colorPickerConf" id="colorConf"/>
 														</l:content>
 													</l:Grid>
 												</IconTabFilter>
