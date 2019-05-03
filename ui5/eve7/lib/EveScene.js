@@ -268,7 +268,7 @@ sap.ui.define([
 
       this.mgr.SendMIR({ "mir":        fcall,
                          "fElementId": this.mgr.global_selection_id,
-                         "class":      "REX::REveSelection"
+                         "class":      "ROOT::Experimental::REveSelection"
                        });
 
       return true;
@@ -384,7 +384,7 @@ sap.ui.define([
 
       this.mgr.SendMIR({ "mir":        fcall,
                          "fElementId": this.mgr.global_highlight_id,
-                         "class":      "REX::REveSelection"
+                         "class":      "ROOT::Experimental::REveSelection"
                        });
 
       return true;
@@ -398,7 +398,7 @@ sap.ui.define([
          console.log("clearHighlight", this);
          this.mgr.SendMIR({ "mir":        "SelectionCleared()",
                             "fElementId": this.mgr.global_highlight_id,
-                            "class":      "REX::REveSelection"
+                            "class":      "ROOT::Experimental::REveSelection"
                           });
       }
 
