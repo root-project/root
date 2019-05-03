@@ -2,18 +2,23 @@
 
 HTMLPATH=$DOXYGEN_OUTPUT_DIRECTORY/html
 
+# Find the libraries for the class $1
+root -l -b -q "libs.C(\"$1\")"
+
+# No dot file, the class was not found. Remove the collaboration graph
+if [[ ! -f libslist.dot ]] ; then
+   sed -i'.back' -e 's/^Collaboration diagram for.*$/<\/div>/g'  $HTMLPATH/class$1.html
+   sed -i'.back' '/__coll__graph.svg/I,+2 d'  $HTMLPATH/class$1.html
+   sed -i'.back' -e 's/<hr\/>The documentation for/<\/div><hr\/>The documentation for/g'  $HTMLPATH/class$1.html
+   rm $HTMLPATH/class$1.html.back
+   exit
+fi
+
 sed -i'.back' -e 's/Collaboration diagram for /Libraries for /g'  $HTMLPATH/class$1.html
 rm $HTMLPATH/class$1.html.back
 
 # Picture name containing the "coll graph"
 PICNAME=$HTMLPATH/"class"$1"__coll__graph.svg"
-
-# Find the libraries for the class $1
-root -l -b -q "libs.C(\"$1\")"
-
-if [[ ! -f libslist.dot ]] ; then
-   exit
-fi
 
 sed -i'.back' -e "s/\.so.*$/\";/" libslist.dot
 rm libslist.dot.back
