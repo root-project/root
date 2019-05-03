@@ -54,7 +54,12 @@ if(DEFINED ROOT_SOURCE_DIR)
 else()# testing using an installation
   find_package(ROOT REQUIRED COMPONENTS RIO Net Hist Gpad Tree Rint Matrix MathCore)
   include(${ROOT_USE_FILE})
-  # Recover LZ4 version used in ROOT
+  # Some roottest.git tests are checking LZ4, which has different references depends on its version.
+  # We recover LZ4 version used in ROOT, stored in root-config --config output.
+  # Also we need to know, where is located RootNewMacros.cmake, stored in
+  # `root-config --src`/cmake/modules output or in case of installed ROOT in
+  # ${ROOTSYS}/cmake/modules.
+  exec_program(root-config ARGS "--srcdir" OUTPUT_VARIABLE ROOT_SOURCE_DIR)
   exec_program(root-config ARGS "--config" OUTPUT_VARIABLE ROOT_CONFIG_VARIABLES RETURN_VALUE RETVAR)
   separate_arguments(ROOT_CONFIG_VARIABLES)
   foreach(item ${ROOT_CONFIG_VARIABLES})
@@ -68,7 +73,7 @@ else()# testing using an installation
   find_program(ROOT_genreflex_CMD genreflex PATHS ${ROOTSYS}/bin)
   find_program(ROOT_rootcint_CMD rootcint PATHS ${ROOTSYS}/bin)
   find_program(ROOT_rootcling_CMD rootcling PATHS ${ROOTSYS}/bin)
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ROOTSYS}/cmake/modules)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ROOTSYS}/cmake/modules ${ROOT_SOURCE_DIR}/cmake/modules)
   include(RootNewMacros)
   enable_testing()
 endif()
