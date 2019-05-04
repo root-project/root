@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup Tutorials
+/// \ingroup tutorial_heritage
 /// Defines aliases:
 ///   - `ls(path)`
 ///   - `edit(filename)`
