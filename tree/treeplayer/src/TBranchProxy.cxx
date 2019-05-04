@@ -258,7 +258,7 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
       fBranch = fDirector->GetTree()->GetBranch(fBranchName.Data());
       if (!fBranch) {
          auto treeName = fDirector->GetTree()->GetName();
-         ::Error("TBranchProxy::Setup", "%s", Form("Unable to find branch %s in tree %s.\n",fBranchName.Data(), treeName));
+         ::Error("TBranchProxy::Setup", "%s", Form("Unable to find branch %s in tree %s.",fBranchName.Data(), treeName));
          return false;
       }
 
