@@ -1,3 +1,3 @@
 \defgroup tutorial_thread Thread tutorials
-\ingroup Tutorials
+\ingroup tutorial_heritage
 \brief Thread examples.
