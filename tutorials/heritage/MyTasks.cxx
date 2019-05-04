@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup Tutorials
+/// \ingroup tutorial_heritage
 /// A set of classes deriving from TTask.
 /// See macro tasks.C to see an example of use
 /// The Exec function of each class prints one line when it is called.
