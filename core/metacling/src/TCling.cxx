@@ -5657,13 +5657,12 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
            "Trying to autoload for %s", cls);
    }
 
-   Int_t status = 0;
    if (!gROOT || !gInterpreter || gROOT->TestBit(TObject::kInvalidObject)) {
       if (gDebug > 2) {
          Info("TCling::AutoLoad",
               "Disabled due to gROOT or gInterpreter being invalid/not ready (the class name is %s)", cls);
       }
-      return status;
+      return 0;
    }
    // Prevent the recursion when the library dictionary are loaded.
    SuspendAutoloadingRAII autoLoadOff(this);
@@ -5674,6 +5673,7 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
          return success;
    }
    // lookup class to find list of dependent libraries
+   Int_t status = 0;
    TString deplibs = GetClassSharedLibs(cls);
    if (!deplibs.IsNull()) {
       TString delim(" ");
