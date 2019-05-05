@@ -1354,7 +1354,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    fRootmapFiles = 0;
    fLockProcessLine = kTRUE;
 
-   fAllowLibLoad = !fromRootCling;
    // Disallow auto-parsing in rootcling
    fIsAutoParsingSuspended = fromRootCling;
    // Disable the autoloader until it is explicitly enabled.
@@ -2773,10 +2772,11 @@ bool TCling::Declare(const char* code)
 
 void TCling::EnableAutoLoading()
 {
-   if (fAllowLibLoad) {
-      LoadLibraryMap();
-      SetClassAutoloading(true);
-   }
+   if (IsFromRootCling())
+      return;
+
+   LoadLibraryMap();
+   SetClassAutoloading(true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3084,10 +3084,7 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
 
 Int_t TCling::Load(const char* filename, Bool_t system)
 {
-   if (!fAllowLibLoad) {
-      Error("Load","Trying to load library (%s) from rootcling.",filename);
-      return -1;
-   }
+   assert(!IsFromRootCling() && "Trying to load library from rootcling!");
 
    // Used to return 0 on success, 1 on duplicate, -1 on failure, -2 on "fatal".
    R__LOCKGUARD_CLING(gInterpreterMutex);
@@ -5595,6 +5592,8 @@ TClass *TCling::GetClass(const std::type_info& typeinfo, Bool_t load) const
 
 Int_t TCling::AutoLoad(const std::type_info& typeinfo, Bool_t knowDictNotLoaded /* = kFALSE */)
 {
+   assert(IsClassAutoloadingEnabled() && "Calling when autoloading is off!");
+
    int err = 0;
    char* demangled_name_c = TClassEdit::DemangleTypeIdName(typeinfo, err);
    if (err) {
@@ -5627,6 +5626,20 @@ Int_t TCling::AutoLoad(const std::type_info& typeinfo, Bool_t knowDictNotLoaded 
 
 Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
 {
+   // TClass::GetClass explicitly calls gInterpreter->AutoLoad. When called from
+   // rootcling (in *_rdict.pcm file generation) it is a no op.
+   // FIXME: We should avoid calling autoload when we know we are not supposed
+   // to and transform this check into an assert.
+   if (!IsClassAutoloadingEnabled()) {
+      // Never load any library from rootcling/genreflex.
+      if (gDebug > 2) {
+         Info("TCling::AutoLoad", "Explicitly disabled (the class name is %s)", cls);
+      }
+      return 0;
+   }
+
+   assert(IsClassAutoloadingEnabled() && "Calling when autoloading is off!");
+
    R__LOCKGUARD(gInterpreterMutex);
 
    if (!knowDictNotLoaded && gClassTable->GetDictNorm(cls)) {
@@ -5651,14 +5664,6 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
               "Disabled due to gROOT or gInterpreter being invalid/not ready (the class name is %s)", cls);
       }
       return status;
-   }
-   if (!fAllowLibLoad) {
-      // Never load any library from rootcling/genreflex.
-      if (gDebug > 2) {
-         Info("TCling::AutoLoad",
-              "Explicitly disabled (the class name is %s)", cls);
-      }
-      return 0;
    }
    // Prevent the recursion when the library dictionary are loaded.
    SuspendAutoloadingRAII autoLoadOff(this);
@@ -6965,16 +6970,31 @@ void TCling::SetAllocunlockfunc(void (* /* p */ )()) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns if class autoloading is currently enabled.
+
+bool TCling::IsClassAutoloadingEnabled() const
+{
+   if (IsFromRootCling())
+      return false;
+   if (!fClingCallbacks)
+      return false;
+   return fClingCallbacks->IsAutoloadingEnabled();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Enable/Disable the Autoloading of libraries.
 /// Returns the old value, i.e whether it was enabled or not.
 
 int TCling::SetClassAutoloading(int autoload) const
 {
-   if (!autoload && !fClingCallbacks) return false;
-   if (!fAllowLibLoad) return false;
+   // If no state change is required, exit early.
+   // FIXME: In future we probably want to complain if we made a request which
+   // was with the same state as before in order to catch programming errors.
+   if (autoload == IsClassAutoloadingEnabled())
+      return autoload;
 
    assert(fClingCallbacks && "We must have callbacks!");
-   bool oldVal =  fClingCallbacks->IsAutoloadingEnabled();
+   bool oldVal = fClingCallbacks->IsAutoloadingEnabled();
    fClingCallbacks->SetAutoloadingEnabled(autoload);
    return oldVal;
 }
