@@ -16,3 +16,17 @@
 	margin-bottom: 1.3rem !important;
 }
 
+.sapUiFormResGridCont {
+	padding-bottom: 0.5rem !important;
+}
+
+.sapUiFormResGrid>div {
+	padding: 0.2rem !important;
+}
+
+.sapMText {
+	padding: 0.5rem !important;
+}
+/*.sapUiFormEdit {
+	line-height: 0.5rem !important;
+}*/
