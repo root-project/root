@@ -116,6 +116,18 @@ public:
    };
    virtual Bool_t IsAutoParsingSuspended() const = 0;
 
+   class SuspendAutoloadingRAII {
+      TInterpreter *fInterp = nullptr;
+      bool fOldValue;
+
+   public:
+      SuspendAutoloadingRAII(TInterpreter *interp) : fInterp(interp)
+      {
+         fOldValue = fInterp->SetClassAutoloading(false);
+      }
+      ~SuspendAutoloadingRAII() { fInterp->SetClassAutoloading(fOldValue); }
+   };
+
    typedef int (*AutoLoadCallBack_t)(const char*);
    typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;
 
