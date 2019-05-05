@@ -5664,14 +5664,12 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
       return 0;
    }
    // Prevent the recursion when the library dictionary are loaded.
-   Int_t oldvalue = SetClassAutoloading(false);
+   SuspendAutoloadingRAII autoLoadOff(this);
    // Try using externally provided callback first.
    if (fAutoLoadCallBack) {
       int success = (*(AutoLoadCallBack_t)fAutoLoadCallBack)(cls);
-      if (success) {
-         SetClassAutoloading(oldvalue);
+      if (success)
          return success;
-      }
    }
    // lookup class to find list of dependent libraries
    TString deplibs = GetClassSharedLibs(cls);
@@ -5709,7 +5707,6 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
       delete tokens;
    }
 
-   SetClassAutoloading(oldvalue);
    return status;
 }
 
