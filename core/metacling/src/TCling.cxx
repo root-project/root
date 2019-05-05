@@ -6805,7 +6805,18 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
 const char* TCling::GetClassSharedLibs(const char* cls)
 {
    if (fCxxModulesEnabled) {
-      std::string libs = GetClassSharedLibsForModule(cls, fInterpreter->getLookupHelper());
+      llvm::StringRef className = cls;
+      // If we get a class name containing lambda, we cannot parse it and we
+      // can exit early.
+      // FIXME: This works around a bug when we are instantiating a template
+      // make_unique and the substitution fails. Seen in most of the dataframe
+      // tests.
+      if (className.contains("(lambda)"))
+         return nullptr;
+      // Limit the recursion which can be induced by GetClassSharedLibsForModule.
+      SuspendAutoloadingRAII AutoloadingDisabled(this);
+      cling::LookupHelper &LH = fInterpreter->getLookupHelper();
+      std::string libs = GetClassSharedLibsForModule(cls, LH);
       if (!libs.empty()) {
          fAutoLoadLibStorage.push_back(libs);
          return fAutoLoadLibStorage.back().c_str();
