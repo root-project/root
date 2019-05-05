@@ -5931,7 +5931,7 @@ Int_t TCling::AutoParse(const char *cls)
    }
 
    // Prevent the recursion when the library dictionary are loaded.
-   Int_t oldAutoloadValue = SetClassAutoloading(false);
+   SuspendAutoloadingRAII autoLoadOff(this);
 
    // No recursive header parsing on demand; we require headers to be standalone.
    SuspendAutoParsing autoParseRAII(this);
@@ -5954,8 +5954,6 @@ Int_t TCling::AutoParse(const char *cls)
          }
       }
    }
-
-   SetClassAutoloading(oldAutoloadValue);
 
    return nHheadersParsed > 0 ? 1 : 0;
 }
