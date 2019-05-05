@@ -4013,8 +4013,7 @@ void TClass::ReplaceWith(TClass *newcl) const
    // Since we are in the process of replacing a TClass by a TClass
    // coming from a dictionary, there is no point in loading any
    // libraries during this search.
-   Bool_t autoload = gInterpreter->SetClassAutoloading(kFALSE);
-
+   TInterpreter::SuspendAutoloadingRAII autoloadOff(gInterpreter);
    while ((acl = (TClass*)nextClass())) {
       if (acl == newcl) continue;
 
@@ -4035,8 +4034,6 @@ void TClass::ReplaceWith(TClass *newcl) const
       delete acl;
    }
    gInterpreter->UnRegisterTClassUpdate(this);
-
-   gInterpreter->SetClassAutoloading(autoload);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
