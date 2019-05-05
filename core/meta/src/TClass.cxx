@@ -6056,12 +6056,9 @@ void TClass::SetUnloaded()
    // Disable the autoloader while calling SetClassInfo, to prevent
    // the library from being reloaded!
    {
-      int autoload_old = gCling->SetClassAutoloading(0);
+      TInterpreter::SuspendAutoloadingRAII autoloadOff(gInterpreter);
       TInterpreter::SuspendAutoParsing autoParseRaii(gCling);
-
       gInterpreter->SetClassInfo(this,kTRUE);
-
-      gCling->SetClassAutoloading(autoload_old);
    }
    fDeclFileName = 0;
    fDeclFileLine = 0;
