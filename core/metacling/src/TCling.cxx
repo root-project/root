@@ -6327,7 +6327,7 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
    // Supposedly we are being called while something is being
    // loaded ... let's now tell the autoloader to do the work
    // yet another time.
-   int storedAutoloading = SetClassAutoloading(false);
+   SuspendAutoloadingRAII autoLoadOff(this);
    // FIXME: There can be more than one TClass for a single decl.
    // for example vector<double> and vector<Double32_t>
    TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name.c_str());
@@ -6361,7 +6361,6 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
          TClass::AddClassToDeclIdMap(((TClingClassInfo*)(cl->fClassInfo))->GetDeclId(), cl);
       }
    }
-   SetClassAutoloading(storedAutoloading);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
