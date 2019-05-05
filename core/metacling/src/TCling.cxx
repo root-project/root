@@ -2753,7 +2753,7 @@ bool TCling::Declare(const char* code)
 {
    R__LOCKGUARD_CLING(gInterpreterMutex);
 
-   int oldload = SetClassAutoloading(0);
+   SuspendAutoloadingRAII autoLoadOff(this);
    SuspendAutoParsing autoParseRaii(this);
 
    bool oldDynLookup = fInterpreter->isDynamicLookupEnabled();
@@ -2765,7 +2765,6 @@ bool TCling::Declare(const char* code)
 
    fInterpreter->enableRawInput(oldRawInput);
    fInterpreter->enableDynamicLookup(oldDynLookup);
-   SetClassAutoloading(oldload);
    return ret;
 }
 

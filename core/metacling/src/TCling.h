@@ -541,6 +541,14 @@ public: // Public Interface
    void LibraryUnloaded(const void* dyLibHandle, const char* canonicalName);
 
 private: // Private Utility Functions and Classes
+   class SuspendAutoloadingRAII {
+      TCling *fTCling = nullptr;
+      bool fOldValue;
+
+   public:
+      SuspendAutoloadingRAII(TCling *tcling) : fTCling(tcling) { fOldValue = fTCling->SetClassAutoloading(false); }
+      ~SuspendAutoloadingRAII() { fTCling->SetClassAutoloading(fOldValue); }
+   };
 
    class TUniqueString {
    public:
