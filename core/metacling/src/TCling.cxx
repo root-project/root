@@ -1732,7 +1732,7 @@ void TCling::RegisterModule(const char* modulename,
 
    // Make sure we do not set off autoloading or autoparsing during the
    // module registration!
-   Int_t oldAutoloadValue = SetClassAutoloading(false);
+   SuspendAutoloadingRAII autoLoadOff(this);
 
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
       TCling::AddIncludePath(*inclPath);
@@ -1972,10 +1972,6 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
-   bool oldValue = false;
-   if (fClingCallbacks)
-     oldValue = SetClassAutoloading(false);
-
    clang::Sema &TheSema = fInterpreter->getSema();
 
    bool ModuleWasSuccessfullyLoaded = false;
@@ -2063,9 +2059,6 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
-   if (fClingCallbacks)
-     SetClassAutoloading(oldValue);
-
    if (!ModuleWasSuccessfullyLoaded && !hasHeaderParsingOnDemand) {
       // __ROOTCLING__ might be pulled in through PCH
       fInterpreter->declare("#ifdef __ROOTCLING__\n"
@@ -2079,8 +2072,6 @@ void TCling::RegisterModule(const char* modulename,
       fRegisterModuleDyLibs.pop_back();
       dlclose(dyLibHandle);
    }
-
-   SetClassAutoloading(oldAutoloadValue);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
