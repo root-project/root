@@ -2143,9 +2143,6 @@ void TROOT::InitInterpreter()
    // load the libraries for the classes concerned even-though the user is
    // *not* using them.
    TClass::ReadRules(); // Read the default customization rules ...
-
-   // Enable autoloading
-   fInterpreter->EnableAutoLoading();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

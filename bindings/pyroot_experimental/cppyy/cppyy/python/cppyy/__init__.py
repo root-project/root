@@ -74,11 +74,6 @@ sys.modules['cppyy.gbl'] = gbl
 sys.modules['cppyy.gbl.std'] = gbl.std
 
 
-#- enable auto-loading -------------------------------------------------------
-try:    gbl.gInterpreter.EnableAutoLoading()
-except: pass
-
-
 #- external typemap ----------------------------------------------------------
 from . import _typemap
 _typemap.initialize(_backend)

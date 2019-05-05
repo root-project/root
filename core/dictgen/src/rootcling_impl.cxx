@@ -1280,8 +1280,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
 
    // Trigger autoloading if dictionary is split
    if (autoLoad)
-      dictStream << "   gInterpreter->EnableAutoLoading();\n"
-                 << "   gInterpreter->AutoLoad(\"" << fullname << "\");\n";
+      dictStream << "   gInterpreter->AutoLoad(\"" << fullname << "\");\n";
    dictStream    << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
                  << "*)0x0)->GetClass();" << std::endl
                  << "   return fgIsA;\n"

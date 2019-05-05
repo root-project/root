@@ -66,9 +66,6 @@ TGApplication::TGApplication(const char *appClassName,
    // Tell TSystem the TApplication has been created
    gSystem->NotifyApplicationCreated();
 
-   // Enable autoloading
-   gInterpreter->EnableAutoLoading();
-
    LoadGraphicsLibs();
 
    if (!fDisplay) gSystem->SetDisplay();
