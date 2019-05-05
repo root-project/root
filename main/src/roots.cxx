@@ -82,9 +82,6 @@ int main(int argc, char **argv)
    // Like in batch mode
    gROOT->SetBatch();
 
-   // Enable autoloading
-   gInterpreter->EnableAutoLoading();
-
    // Instantiate the TApplication object to be run
    TPluginHandler *h = 0;
    TApplication *theApp = 0;

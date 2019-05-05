@@ -1356,8 +1356,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
    // Disallow auto-parsing in rootcling
    fIsAutoParsingSuspended = fromRootCling;
-   // Disable the autoloader until it is explicitly enabled.
-   SetClassAutoloading(false);
 
    ResetAll();
 #ifndef R__WIN32
@@ -1378,6 +1376,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    fClingCallbacks->SetAutoParsingSuspended(fIsAutoParsingSuspended);
    fInterpreter->setCallbacks(std::move(clingCallbacks));
 
+   // We are set up.
+   EnableAutoLoading();
 }
 
 
