@@ -1468,8 +1468,11 @@ static bool R__InitStreamerInfoFactory()
 ////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a PCM; returns true on success.
 
-bool TCling::LoadPCM(const std::string& pcmFileNameFullPath) const {
+bool TCling::LoadPCM(const std::string &pcmFileNameFullPath)
+{
 
+   SuspendAutoloadingRAII autoloadOff(this);
+   SuspendAutoParsing autoparseOff(this);
    assert(!pcmFileNameFullPath.empty());
    assert(llvm::sys::path::is_absolute(pcmFileNameFullPath));
    if (!llvm::sys::fs::exists(pcmFileNameFullPath)) {
