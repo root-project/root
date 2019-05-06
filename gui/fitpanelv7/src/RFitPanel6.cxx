@@ -203,7 +203,7 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 
        // select items list for initial display
        model.fMethodMin = model.fMethodMinAll[model.fLibrary];
-       model.fTypeXY = model.fTypeXYAll[model.fTypeId];
+       // model.fTypeXY = model.fTypeXYAll[model.fTypeId];
 
        if (fHist) {
           model.fMinRange = fHist->GetXaxis()->GetXmin();

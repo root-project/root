@@ -78,7 +78,7 @@ struct RFitPanelModel6 {
    std::vector<std::vector<RComboBoxItem>> fTypeXYAll;
 
    std::vector<RComboBoxItem> fMethodMin;
-   std::vector<RComboBoxItem> fTypeXY;
+   // std::vector<RComboBoxItem> fTypeXY;
 
    std::string fSelectTypeId;
    std::string fSelectMethodMinId;
@@ -101,8 +101,8 @@ struct RFitPanelModel6 {
    int fMaxInter{0};
 
    //convert fSelectTypeID from string to int
-   int fTypeId = atoi(fSelectTypeId.c_str());
-   int fFuncChangeInt = atoi(fFuncChange.c_str());
+   int fTypeId{0};
+   int fFuncChangeInt{0};
 
    //Checkboxes Options
    bool fIntegral{false};
@@ -114,7 +114,7 @@ struct RFitPanelModel6 {
    bool fAddList {false};
    bool fUseGradient {false};
    bool fSame {false};
-   bool fNoDrawing {};
+   bool fNoDrawing {false};
    bool fNoStore {false};
 
    /////////Advanced Options
