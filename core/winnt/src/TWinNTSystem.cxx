@@ -3867,6 +3867,7 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
 {
    // Insures that the files and sockets are closed before any library is unloaded
    // and before emptying CINT.
+   // FIXME: Unify with TROOT::ShutDown.
    if (gROOT) {
       gROOT->CloseFiles();
       if (gROOT->GetListOfBrowsers()) {
@@ -3888,7 +3889,7 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
       gROOT->EndOfProcessCleanups();
    }
    if (gInterpreter) {
-      gInterpreter->ResetGlobals();
+      gInterpreter->ShutDown();
    }
    gVirtualX->CloseDisplay();
 
