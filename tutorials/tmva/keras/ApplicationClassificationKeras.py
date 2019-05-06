@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+## \file
+## \ingroup tutorial_tmva
+## \notebook -nodraw
+## This tutorial shows how to apply a trained model to new data.
+##
+## \macro_code
+##
+## \date 2017
+## \author TMVA Team
 
 from ROOT import TMVA, TFile, TString
 from array import array
