@@ -1414,6 +1414,11 @@ void TCling::Initialize()
    fClingCallbacks->Initialize();
 }
 
+void TCling::ShutDown()
+{
+   ResetGlobals();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Wrapper around dladdr (and friends)
 
