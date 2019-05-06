@@ -48,6 +48,9 @@ sap.ui.define([
             var data = JSROOT.parse(json);
 
             if(data) {
+
+               data.fTypeXY = data.fTypeXYAll[parseInt(data.fSelectTypeId)];
+
                this.getView().setModel(new JSONModel(data));
                this._data = data;
 
@@ -173,14 +176,11 @@ sap.ui.define([
 
          var data = this.getView().getModel().getData();
 
-         var typeXY = this.getView().getModel().getData().fSelectTypeId;
-         var dataSet = this.getView().getModel().getData().fSelectDataId;
-         console.log("typeXY = " + dataSet);
+         // console.log("typeXY = " + data.fSelectTypeId);
 
-         data.fTypeXY = data.fTypeXYAll[parseInt(typeXY)];
+         data.fTypeXY = data.fTypeXYAll[parseInt(data.fSelectTypeId)];
 
          this.getView().getModel().refresh();
-         console.log("Type = ", data.fTypeXYAll[parseInt(typeXY)]);
       },
 
       //Change the selected checkbox of Draw Options
