@@ -808,8 +808,9 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
       fScenes->AcceptChanges(true);
 
       // MIR
-      nlohmann::json cj =  nlohmann::json::parse(arg.c_str());
-      printf("MIR test %s \n", cj.dump().c_str());
+      nlohmann::json cj =  nlohmann::json::parse(arg);
+      if (gDebug > 0)
+         ::Info("REveManager::HttpServerCallback", "MIR test %s", cj.dump().c_str());
       std::string mir =  cj["mir"];
       std::string ctype =  cj["class"];
       int id = cj["fElementId"];
@@ -817,7 +818,8 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
       auto el =  FindElementById(id);
       std::stringstream cmd;
       cmd << "((" << ctype << "*)" << std::hex << std::showbase << (size_t)el << ")->" << mir << ";";
-      std::cout << "MIR cmd " << cmd.str() << std::endl;
+      if (gDebug > 0)
+         ::Info("REveManager::HttpServerCallback", "MIR cmd %s", cmd.str().c_str());
       gROOT->ProcessLine(cmd.str().c_str());
 
       fScenes->AcceptChanges(false);
