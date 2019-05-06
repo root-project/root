@@ -304,6 +304,28 @@ sap.ui.define([
 
          this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), null, options);
 
+         // function used by TGeoPainter to create OutlineShader - for the moment remove from JSROOT
+         this.geo_painter.createOutline = function(w,h) {
+            this._outlinePass = new THREE.OutlinePass( new THREE.Vector2( w, h ), this._scene, this._camera );
+            this._outlinePass.edgeStrength = 5.5;
+            this._outlinePass.edgeGlow = 0.7;
+            this._outlinePass.edgeThickness = 1.5;
+            this._outlinePass.usePatternTexture = false;
+            this._outlinePass.downSampleRatio = 1;
+            this._outlinePass.glowDownSampleRatio = 3;
+
+            // const sh = THREE.OutlinePass.selection_enum["select"]; // doesnt stand for spherical harmonics :P
+            // THREE.OutlinePass.selection_atts[sh].visibleEdgeColor.set('#dd1111');
+            // THREE.OutlinePass.selection_atts[sh].hiddenEdgeColor.set('#1111dd');
+
+            this._effectComposer.addPass( this._outlinePass );
+
+            this._effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
+            this._effectFXAA.uniforms[ 'resolution' ].value.set( 1 / w, 1 / h );
+            this._effectFXAA.renderToScreen = true;
+            this._effectComposer.addPass( this._effectFXAA );
+         }
+
          // assign callback function - when needed
          this.geo_painter.WhenReady(this.onGeoPainterReady.bind(this));
 
@@ -381,6 +403,19 @@ sap.ui.define([
 
          // outlinePass passthrough
          this.outlinePass = this.geo_painter._outlinePass;
+
+         // this is try to remap standard THREE.js OutlinePass with specialized
+         /* if (this.outlinePass) {
+            this.outlinePass.id2obj_map = {}; // FIXME:!!!!!!!!
+
+            this.outlinePass.oldRender = this.outlinePass.render;
+
+            this.outlinePass.render = function() {
+               this._selectedObjects = Object.values(this.id2obj_map).flat();
+               this.oldRender.apply(this, arguments);
+            }
+         }
+         */
          var sz = this.geo_painter.size_for_3d();
          this.geo_painter._effectComposer.setSize( sz.width, sz.height);
          this.geo_painter._effectFXAA.uniforms[ 'resolution' ].value.set( 1 / sz.width, 1 / sz.height );
@@ -403,8 +438,11 @@ sap.ui.define([
 
          // TODO: should be specified somehow in XML file
          this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
+
          if (this.geo_painter){
             this.geo_painter.CheckResize();
+            if (this.geo_painter._effectFXAA)
+               this.geo_painter._effectFXAA.uniforms[ 'resolution' ].value.set( 1 / this.geo_painter._scene_width, 1 / this.geo_painter._scene_height );
          }
       },
    });
