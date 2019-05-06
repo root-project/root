@@ -87,7 +87,7 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       printf("FitPanel connection established %u\n", fConnId);
       fWindow->Send(fConnId, "INITDONE");
       ROOT::Experimental::RFitPanelModel6 model;
-         
+
       //ComboBox for Data Set
       if (fHist) {
          model.fDataSet.emplace_back("0", Form("%s::%s", fHist->ClassName(), fHist->GetName()));
@@ -104,8 +104,8 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
       // }
 
        //ComboBox for Fit Function --- Type
-       model.fTypeFunc.push_back(ROOT::Experimental::RComboBoxItem("0", "Predef-1D"));
-       model.fTypeFunc.push_back(ROOT::Experimental::RComboBoxItem("1", "User Func"));
+       model.fTypeFunc.emplace_back("0", "Predef-1D");
+       model.fTypeFunc.emplace_back("1", "User Func");
        model.fSelectTypeId = "0";
 
        //Sub ComboBox for Type Function
@@ -115,53 +115,53 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
        //corresponds when Type == Predef-1D (fSelectedTypeID == 0)
        model.fTypeXYAll.emplace_back();
        std::vector<ROOT::Experimental::RComboBoxItem> &vec0 = model.fTypeXYAll.back();
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("1", "gaus"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("2", "gausn"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("3", "expo"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("4", "landau"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("5", "landaun"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("6", "pol0"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("7", "pol1"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("8", "pol2"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("9", "pol3"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("10", "pol4"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("11", "pol5"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("12", "pol6"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("13", "pol7"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("14", "pol8"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("15", "pol9"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("16", "cheb0"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("17", "cheb1"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("18", "cheb2"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("19", "cheb3"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("20", "cheb4"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("21", "cheb5"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("22", "cheb6"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("23", "cheb7"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("24", "cheb8"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("25", "cheb9"));
-       vec0.push_back(ROOT::Experimental::RComboBoxItem("26", "user"));
+       vec0.emplace_back("1", "gaus");
+       vec0.emplace_back("2", "gausn");
+       vec0.emplace_back("3", "expo");
+       vec0.emplace_back("4", "landau");
+       vec0.emplace_back("5", "landaun");
+       vec0.emplace_back("6", "pol0");
+       vec0.emplace_back("7", "pol1");
+       vec0.emplace_back("8", "pol2");
+       vec0.emplace_back("9", "pol3");
+       vec0.emplace_back("10", "pol4");
+       vec0.emplace_back("11", "pol5");
+       vec0.emplace_back("12", "pol6");
+       vec0.emplace_back("13", "pol7");
+       vec0.emplace_back("14", "pol8");
+       vec0.emplace_back("15", "pol9");
+       vec0.emplace_back("16", "cheb0");
+       vec0.emplace_back("17", "cheb1");
+       vec0.emplace_back("18", "cheb2");
+       vec0.emplace_back("19", "cheb3");
+       vec0.emplace_back("20", "cheb4");
+       vec0.emplace_back("21", "cheb5");
+       vec0.emplace_back("22", "cheb6");
+       vec0.emplace_back("23", "cheb7");
+       vec0.emplace_back("24", "cheb8");
+       vec0.emplace_back("25", "cheb9");
+       vec0.emplace_back("26", "user");
 
 
        //corresponds when Type == User Func (fSelectedTypeID == 1)
        model.fTypeXYAll.emplace_back();
        std::vector<ROOT::Experimental::RComboBoxItem> &vec1 = model.fTypeXYAll.back();
-       vec1.push_back(ROOT::Experimental::RComboBoxItem("1", "chebyshev0"));
-       vec1.push_back(ROOT::Experimental::RComboBoxItem("2", "chebyshev1"));
-       vec1.push_back(ROOT::Experimental::RComboBoxItem("3", "chebyshev2"));
-       vec1.push_back(ROOT::Experimental::RComboBoxItem("4", "chebyshev3"));
-       vec1.push_back(ROOT::Experimental::RComboBoxItem("5", "chebyshev4"));
-       vec1.push_back(ROOT::Experimental::RComboBoxItem("6", "chebyshev5"));
-       vec1.push_back(ROOT::Experimental::RComboBoxItem("7", "chebyshev6"));
-       vec1.push_back(ROOT::Experimental::RComboBoxItem("8", "chebyshev7"));
-       vec1.push_back(ROOT::Experimental::RComboBoxItem("9", "chebyshev8"));
-       vec1.push_back(ROOT::Experimental::RComboBoxItem("10", "chebyshev9"));
+       vec1.emplace_back("1", "chebyshev0");
+       vec1.emplace_back("2", "chebyshev1");
+       vec1.emplace_back("3", "chebyshev2");
+       vec1.emplace_back("4", "chebyshev3");
+       vec1.emplace_back("5", "chebyshev4");
+       vec1.emplace_back("6", "chebyshev5");
+       vec1.emplace_back("7", "chebyshev6");
+       vec1.emplace_back("8", "chebyshev7");
+       vec1.emplace_back("9", "chebyshev8");
+       vec1.emplace_back("10", "chebyshev9");
 
        //ComboBox for General Tab --- Method
-       model.fMethod.push_back(ROOT::Experimental::RComboBoxItem("1", "Linear Chi-square"));
-       model.fMethod.push_back(ROOT::Experimental::RComboBoxItem("2", "Non-Linear Chi-square"));
-       model.fMethod.push_back(ROOT::Experimental::RComboBoxItem("3", "Linear Chi-square with Robust"));
-       model.fMethod.push_back(ROOT::Experimental::RComboBoxItem("4", "Binned Likelihood"));
+       model.fMethod.emplace_back("1", "Linear Chi-square");
+       model.fMethod.emplace_back("2", "Non-Linear Chi-square");
+       model.fMethod.emplace_back("3", "Linear Chi-square with Robust");
+       model.fMethod.emplace_back("4", "Binned Likelihood");
        model.fSelectMethodId = "1";
 
        //Sub ComboBox for Minimization Tab --- Method
@@ -170,34 +170,34 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
        // corresponds to library == 0
        model.fMethodMinAll.emplace_back();
        std::vector<ROOT::Experimental::RComboBoxItem> &vect0 = model.fMethodMinAll.back();
-       vect0.push_back(ROOT::Experimental::RComboBoxItem("1", "MIGRAD"));
-       vect0.push_back(ROOT::Experimental::RComboBoxItem("2", "SIMPLEX"));
-       vect0.push_back(ROOT::Experimental::RComboBoxItem("3", "SCAN"));
-       vect0.push_back(ROOT::Experimental::RComboBoxItem("4", "Combination"));
+       vect0.emplace_back("1", "MIGRAD");
+       vect0.emplace_back("2", "SIMPLEX");
+       vect0.emplace_back("3", "SCAN");
+       vect0.emplace_back("4", "Combination");
 
        // corresponds to library == 1
        model.fMethodMinAll.emplace_back();
        std::vector<ROOT::Experimental::RComboBoxItem> &vect1 = model.fMethodMinAll.back();
-       vect1.push_back(ROOT::Experimental::RComboBoxItem("1", "MIGRAD"));
-       vect1.push_back(ROOT::Experimental::RComboBoxItem("2", "SIMPLEX"));
-       vect1.push_back(ROOT::Experimental::RComboBoxItem("3", "SCAN"));
-       vect1.push_back(ROOT::Experimental::RComboBoxItem("4", "Combination"));
+       vect1.emplace_back("1", "MIGRAD");
+       vect1.emplace_back("2", "SIMPLEX");
+       vect1.emplace_back("3", "SCAN");
+       vect1.emplace_back("4", "Combination");
 
        // corresponds to library == 2
        model.fMethodMinAll.emplace_back();
        std::vector<ROOT::Experimental::RComboBoxItem> &vect2 = model.fMethodMinAll.back();
-       vect2.push_back(ROOT::Experimental::RComboBoxItem("1", "FUMILI"));
+       vect2.emplace_back("1", "FUMILI");
 
        // corresponds to library == 3
        model.fMethodMinAll.emplace_back();
        // std::vector<ROOT::Experimental::RComboBoxItem> &vect3 = model.fMethodMinAll.back();
-       // vect3.push_back(ROOT::Experimental::RComboBoxItem("1", "Lib3_1"));
-       // vect3.push_back(ROOT::Experimental::RComboBoxItem("2", "Lib3_2"));
+       // vect3.emplace_back("1", "Lib3_1");
+       // vect3.emplace_back("2", "Lib3_2");
 
        // corresponds to library == 4
        model.fMethodMinAll.emplace_back();
        std::vector<ROOT::Experimental::RComboBoxItem> &vect4 = model.fMethodMinAll.back();
-       vect4.push_back(ROOT::Experimental::RComboBoxItem("1", "TMVA Genetic Algorithm"));
+       vect4.emplace_back("1", "TMVA Genetic Algorithm");
 
        // select items list for initial display
        model.fMethodMin = model.fMethodMinAll[model.fLibrary];
@@ -388,14 +388,13 @@ void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
     colorC[i] = std::stoi(obj->fColorContour[i]);
   }
   TColor *color = new TColor(1234, colorC[0], colorC[1], colorC[2]);
-  
 
   if(!(obj->fContourImpose)) {
     if(graph){
       delete graph;
       options = "ALF";
     }
-  } 
+  }
   else {
     options = "LF";
   }
@@ -417,7 +416,7 @@ void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
 }
 
 void ROOT::Experimental::RFitPanel6::DrawScan(const std::string &model)
-{ 
+{
 
   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
   static TGraph * graph = 0;
@@ -455,7 +454,7 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
       if (!obj->fRealFunc.empty()) {
          printf("GOT fRealFunc: %s\n", obj->fRealFunc.c_str());
 
-        
+
       }
       else {
          obj->fRealFunc = "gaus";
