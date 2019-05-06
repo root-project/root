@@ -235,11 +235,7 @@ TApplication::~TApplication()
    // end of 'main' (or more exactly before the library start being
    // unloaded).
    if (fgApplications == 0 || fgApplications->FirstLink() == 0 ) {
-      if (gROOT) {
-         gROOT->EndOfProcessCleanups();
-      } else if (gInterpreter) {
-         gInterpreter->ResetGlobals();
-      }
+      TROOT::ShutDown();
    }
 
    // Now that all the canvases and files have been closed we can
