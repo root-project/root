@@ -1,7 +1,7 @@
 // \file ROOT/RFitPanel6.hxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <S.Linev@gsi.de>
-/// \author Iliana Bessou <Iliana.Bessou@cern.ch>
+/// \author Iliana Betsou <Iliana.Betsou@cern.ch>
 /// \date 2019-04-11
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
