@@ -217,33 +217,43 @@
          }
       }
 
-      this.pos = function(e) {
-         // method used to define position of next tooltip
-         // event is delivered from canvas,
-         // but position should be calculated relative to the element where tooltip is placed
-
-         if (this.tt === null) return;
-         var u,l;
+      // extract position from event - can be used to process it later when event is gone
+      this.extract_pos = function(e) {
+         if (typeof e == 'object' && (e.u !== undefined) && (e.l !== undefined)) return e;
+         var res = { u: 0, l: 0 };
          if (this.abspos) {
-            l = JSROOT.browser.isIE ? (e.clientX + document.documentElement.scrollLeft) : e.pageX;
-            u = JSROOT.browser.isIE ? (e.clientY + document.documentElement.scrollTop) : e.pageY;
+            res.l = JSROOT.browser.isIE ? (e.clientX + document.documentElement.scrollLeft) : e.pageX;
+            res.u = JSROOT.browser.isIE ? (e.clientY + document.documentElement.scrollTop) : e.pageY;
          } else {
+            res.l = e.offsetX;
+            res.u = e.offsetY;
+         }
 
-            l = e.offsetX;
-            u = e.offsetY;
+         return res;
+      }
 
+      // method used to define position of next tooltip
+      // event is delivered from canvas,
+      // but position should be calculated relative to the element where tooltip is placed
+
+      this.pos = function(e) {
+
+         if (!this.tt) return;
+
+         var pos = this.extract_pos(e);
+         if (!this.abspos) {
             var rect1 = this.parent.getBoundingClientRect(),
                 rect2 = this.canvas.getBoundingClientRect();
 
-            if ((rect1.left !== undefined) && (rect2.left!== undefined)) l += (rect2.left-rect1.left);
+            if ((rect1.left !== undefined) && (rect2.left!== undefined)) pos.l += (rect2.left-rect1.left);
 
-            if ((rect1.top !== undefined) && (rect2.top!== undefined)) u += rect2.top-rect1.top;
+            if ((rect1.top !== undefined) && (rect2.top!== undefined)) pos.u += rect2.top-rect1.top;
 
-            if (l + this.tt.offsetWidth + 3 >= this.parent.offsetWidth)
-               l = this.parent.offsetWidth - this.tt.offsetWidth - 3;
+            if (pos.l + this.tt.offsetWidth + 3 >= this.parent.offsetWidth)
+               pos.l = this.parent.offsetWidth - this.tt.offsetWidth - 3;
 
-            if (u + this.tt.offsetHeight + 15 >= this.parent.offsetHeight)
-               u = this.parent.offsetHeight - this.tt.offsetHeight - 15;
+            if (pos.u + this.tt.offsetHeight + 15 >= this.parent.offsetHeight)
+               pos.u = this.parent.offsetHeight - this.tt.offsetHeight - 15;
 
             // one should find parent with non-static position,
             // all absolute coordinates calculated relative to such node
@@ -257,14 +267,13 @@
 
             if (abs_parent && (abs_parent !== this.parent)) {
                var rect0 = abs_parent.getBoundingClientRect();
-               l+=(rect1.left - rect0.left);
-               u+=(rect1.top - rect0.top);
+               pos.l += (rect1.left - rect0.left);
+               pos.u += (rect1.top - rect0.top);
             }
-
          }
 
-         this.tt.style.top = (u + 15) + 'px';
-         this.tt.style.left = (l + 3) + 'px';
+         this.tt.style.top = (pos.u + 15) + 'px';
+         this.tt.style.left = (pos.l + 3) + 'px';
       };
 
       this.show = function(v, mouse_pos, status_func) {
@@ -313,6 +322,7 @@
    }
 
 
+   /** @brief Create OrbitControl for painter */
    JSROOT.Painter.CreateOrbitControl = function(painter, camera, scene, renderer, lookat) {
 
       if (JSROOT.gStyle.Zooming && JSROOT.gStyle.ZoomWheel)
@@ -503,18 +513,6 @@
       }
 
       control.MainProcessMouseMove = function(evnt) {
-
-         // code from Moritz - cannot be done for all cases, one should do it somewhere else
-         // https://radiatingstar.com/blog/the-fastest-way-to-get-time-stamps-in-javascript/
-         /*
-         var cT = Date.now();
-         if (this.tt !== undefined && (cT - this.tt) < 100) {
-            return;
-         } else {
-            this.tt = cT;
-         }
-         */
-
          if (this.control_active && evnt.buttons && (evnt.buttons & 2))
             this.block_ctxt = true; // if right button in control was active, block next context menu
 
@@ -543,7 +541,27 @@
 
          evnt.preventDefault();
 
-         var mouse = this.GetMousePos(evnt, {}),
+         // extract mouse position
+         this.tmout_mouse = this.GetMousePos(evnt, {});
+         this.tmout_ttpos =  this.tooltip ? this.tooltip.extract_pos(evnt) : null;
+
+         if (this.tmout_handle) {
+            clearTimeout(this.tmout_handle);
+            delete this.tmout_handle;
+         }
+
+         if (!this.mouse_tmout)
+            this.DelayedProcessMouseMove();
+         else
+            this.tmout_handle = setTimeout(this.DelayedProcessMouseMove.bind(this), this.mouse_tmout);
+      }
+
+
+      control.DelayedProcessMouseMove = function() {
+         // remove handle - allow to trigger new timeout
+         delete this.tmout_handle;
+
+         var mouse = this.tmout_mouse,
              intersects = this.GetMouseIntersects(mouse),
              tip = this.ProcessMouseMove(intersects),
              status_func = this.painter.GetShowStatusFunc();
@@ -566,7 +584,7 @@
             this.tooltip.check_parent(this.painter.select_main().node());
 
             this.tooltip.show(tip, mouse);
-            this.tooltip.pos(evnt);
+            this.tooltip.pos(this.tmout_ttpos);
          } else {
             this.tooltip.hide();
             if (intersects)
@@ -578,8 +596,14 @@
       };
 
       control.MainProcessMouseLeave = function() {
+         // do not enter main event at all
+         if (this.tmout_handle) {
+            clearTimeout(this.tmout_handle);
+            delete this.tmout_handle;
+         }
          this.tooltip.hide();
-         if (typeof this.ProcessMouseLeave === 'function') this.ProcessMouseLeave();
+         if (typeof this.ProcessMouseLeave === 'function')
+            this.ProcessMouseLeave();
          if (this.cursor_changed) {
             document.body.style.cursor = 'auto';
             this.cursor_changed = false;
