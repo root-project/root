@@ -379,32 +379,33 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
 /// Dummy function, called when "Fit" button pressed in UI
 void ROOT::Experimental::RFitPanel6::DrawContour(const std::string &model)
 {
-  static TGraph * graph = 0;
-  int colorC[3];
+   // FIXME: do not use static!!!
+  static TGraph * graph = nullptr;
   std::string options;
-  TBackCompFitter *fFitter = 0;
+  // TBackCompFitter *fFitter = nullptr;
   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
-  for(int i=0; i<3; i++){
-    colorC[i] = std::stoi(obj->fColorContour[i]);
-  }
-  TColor *color = new TColor(1234, colorC[0], colorC[1], colorC[2]);
 
-  if(!(obj->fContourImpose)) {
+  if(!obj->fContourImpose) {
     if(graph){
       delete graph;
       options = "ALF";
+      graph= nullptr;
     }
-  }
-  else {
+  } else {
     options = "LF";
   }
-  graph = new TGraph(static_cast<int>(obj->fContourPoints));
+
+
+  if (!graph)
+     graph = new TGraph(static_cast<int>(obj->fContourPoints));
+
+  auto colorid = TColor::GetColor(std::stoi(obj->fColorContour[0]), std::stoi(obj->fColorContour[1]), std::stoi(obj->fColorContour[2]));
+  graph->SetLineColor(colorid);
 
   if(obj->fContourPar1 == obj->fContourPar2) {
     Error("DrawContour", "Parameters cannot be the same");
     return;
   }
-
 
   //fFitter->Contour(obj->fContourPar1, obj->fContourPar2, graph, obj->fConfLevel);
   //graph->GetXaxis()->SetTitle( fFitter->GetParName(obj->fContourPar1) );
@@ -419,11 +420,12 @@ void ROOT::Experimental::RFitPanel6::DrawScan(const std::string &model)
 {
 
   auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
-  static TGraph * graph = 0;
-  TBackCompFitter *fFitter = 0;
+  static TGraph * graph = nullptr;
+  // TBackCompFitter *fFitter = nullptr;
 
-  if(graph){
-    delete graph;
+  // FIXME: do not use static!!!
+  if(graph) {
+     delete graph;
   }
   graph = new TGraph(static_cast<int>(obj->fScanPoints));
   //fFitter->Scan(obj->fScanPar, graph, obj->fScanMin, obj->fScanMax);
