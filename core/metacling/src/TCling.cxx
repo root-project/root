@@ -1416,6 +1416,7 @@ void TCling::Initialize()
 
 void TCling::ShutDown()
 {
+   fIsShuttingDown = true;
    ResetGlobals();
 }
 
@@ -3577,6 +3578,11 @@ std::string AlternateTuple(const char *classname)
 
 void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 {
+   // We are shutting down, there is no point in reloading, it only triggers
+   // redundant deserializations.
+   if (fCxxModulesEnabled && reload && fIsShuttingDown)
+      return;
+
    R__LOCKGUARD(gInterpreterMutex);
    if (cl->fClassInfo && !reload) {
       return;
