@@ -16,7 +16,6 @@ sap.ui.define([
 
    "use strict";
    var count = 0;
-   var colorContour = "rgb(0,0,0)";
    var colorConf = "rgb(0,0,0)";
    return GuiPanelController.extend("rootui5.fitpanel.controller.FitPanel", {
 
@@ -88,7 +87,7 @@ sap.ui.define([
          data.fMaxTol = maxTolerance;
          var maxInterations = Number(this.getView().byId("maxInterations").getValue());
          data.fMaxInter = maxInterations;
-         
+
 
          //Refresh the model
          this.getView().getModel().refresh();
@@ -230,14 +229,14 @@ sap.ui.define([
       	var contourPar2 = parseInt(this.byId("ContourPar2").getSelectedKey());
       	data.fContourPar2 = contourPar2;
       	var confLevel = this.byId("ConfLevel").getValue();
-         var colorContourNum = (String((colorContour.replace( /^\D+/g, '')).replace(/[()]/g, ''))).split(',');
+         var colorContourNum = (String((this.colorContour.replace( /^\D+/g, '')).replace(/[()]/g, ''))).split(',');
          data.fColorContour = colorContourNum;
 
-         console.log("COLOR " + colorContourNum)
+         console.log("COLOR ", colorContourNum, typeof colorContourNum, " origin ", this.colorContour);
        //   var colConfN = colorConf.replace( /^\D+/g, '');
        //   var colorConfNum = colConfN.replace(/[()]/g, '');
       	// data.fConfLevel = colorConfNum;
-      	
+
 	  	  this.getView().getModel().refresh();
         //Each time we click the button, we keep the current state of the model
         if (this.websocket)
@@ -406,8 +405,8 @@ sap.ui.define([
          oButtonInnerContour.css('color','#FFFFFF');
          oButtonInnerContour.css('text-shadow','1px 1px 2px #333333');
 
-         colorContour = color1;
-         return colorContour;
+         this.colorContour = color1;
+         return this.colorContour;
 	  },
 
 	  colorPickerConf: function (oEvent) {
