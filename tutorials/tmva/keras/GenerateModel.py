@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 ## \file
-## \ingroup tutorial_tmva
+## \ingroup tutorial_tmva_keras
 ## \notebook -nodraw
 ## This tutorial shows how to define and generate a keras model for use with
 ## TMVA.
