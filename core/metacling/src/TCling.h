@@ -201,6 +201,7 @@ public: // Public Interface
    TObjArray*  GetRootMapFiles() const { return fRootmapFiles; }
    unsigned long long GetInterpreterStateMarker() const { return fTransactionCount;}
    virtual void Initialize();
+   virtual void ShutDown();
    void    InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient);
    Bool_t  IsLoaded(const char* filename) const;
    Bool_t  IsLibraryLoaded(const char* libname) const;

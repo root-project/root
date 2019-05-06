@@ -161,6 +161,7 @@ public:
    virtual const char *GetSTLIncludePath() const { return ""; }
    virtual TObjArray  *GetRootMapFiles() const = 0;
    virtual void     Initialize() = 0;
+   virtual void     ShutDown() = 0;
    virtual void     InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient) = 0;
    virtual Bool_t   IsLoaded(const char *filename) const = 0;
    virtual Bool_t   IsLibraryLoaded(const char *libname) const = 0;
