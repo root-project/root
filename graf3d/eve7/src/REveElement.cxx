@@ -1460,9 +1460,10 @@ void REveElement::RecheckImpliedSelections()
 
 void REveElement::AddStamp(UChar_t bits)
 {
-  if (fDestructing == kNone && fScene && fScene->IsAcceptingChanges())
-   {
-      printf("%s AddStamp %d + (%d) -> %d \n", GetCName(), fChangeBits, bits, fChangeBits|bits);
+   if (fDestructing == kNone && fScene && fScene->IsAcceptingChanges()) {
+
+      if (gDebug > 0)
+         ::Info(Form("%s::AddStamp", GetCName()), "%d + (%d) -> %d", fChangeBits, bits, fChangeBits | bits);
       fChangeBits |= bits;
       fScene->SceneElementChanged(this);
    }
