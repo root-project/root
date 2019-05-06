@@ -15,8 +15,10 @@ sap.ui.define([
              mDialog, mList, mInput, mLabel, mCheckBox, mColumn, mColumnListItem, ColorPalettePopover) {
 
    "use strict";
+
    var count = 0;
    var colorConf = "rgb(0,0,0)";
+
    return GuiPanelController.extend("rootui5.fitpanel.controller.FitPanel", {
 
          //function called from GuiPanelController
@@ -37,24 +39,23 @@ sap.ui.define([
                fUpdateRange: [-4,4]
          };
          this.getView().setModel(new JSONModel(data));
-         this._data = data;
+         this._data = data; // current data object
+         this.copyModel = []; // array to keep version on the model
+         this.modelCount = 0;
       },
 
       // Assign the new JSONModel to data
       OnWebsocketMsg: function(handle, msg){
 
          if(msg.startsWith("MODEL:")){
-            var json = msg.substr(6);
-            var data = JSROOT.parse(json);
-
+            var data = JSROOT.parse(msg.substr(6));
             if(data) {
-
                data.fTypeXY = data.fTypeXYAll[parseInt(data.fSelectTypeId)];
-
                this.getView().setModel(new JSONModel(data));
                this._data = data;
 
-               this.copyModel = JSROOT.extend({},data);
+               this.copyModel = [ JSROOT.extend({},data) ];
+               this.modelCount = 0;
             }
          } else if (msg.startsWith("PARS:")) {
             var data = JSROOT.parse(msg.substr(5));
@@ -73,7 +74,6 @@ sap.ui.define([
       //Fitting Button
       doFit: function() {
          //Keep the #times the button is clicked
-         count++;
          //Data is a new model. With getValue() we select the value of the parameter specified from id
          var data = this.getView().getModel().getData();
          //var func = this.getView().byId("TypeXY").getValue();
@@ -95,7 +95,7 @@ sap.ui.define([
          //Refresh the model
          this.getView().getModel().refresh();
          //Each time we click the button, we keep the current state of the model
-         this.copyModel[count] = JSROOT.extend({},data);
+         this.copyModel[++this.modelCount] = JSROOT.extend({},data);
          //console.log("DOFIT " + this.getView().getModel().getJSON());
 
          if (this.websocket)
@@ -109,27 +109,28 @@ sap.ui.define([
 
       resetPanel: function(oEvent){
 
-         if(!this.copyModel) return;
+         if(!this.copyModel[0]) return;
 
-         JSROOT.extend(this._data, this.copyModel);
+         JSROOT.extend(this._data, this.copyModel[0]);
+
          this.getView().getModel().updateBindings();
+
          this.byId("selectedOpText").setText("gaus");
          this.byId("OperationText").setValue("");
          this.byId("errorDef").setValue("");
          this.gbyId("maxTolerance").setValue("");
          this.byId("maxInterations").setValue("");
-         return;
       },
 
       backPanel: function() {
          //Each time we click the button, we go one step back
-         count--;
-         if(count < 0) return;
-         if(!this.copyModel[count]) return;
+         if (this.modelCount <= 0) return;
+         this.modelCount--;
 
-         JSROOT.extend(this._data, this.copyModel[count]);
+         if(!this.copyModel[this.modelCount]) return;
+
+         JSROOT.extend(this._data, this.copyModel[this.modelCount]);
          this.getView().getModel().updateBindings();
-         return;
       },
 
       //Change the input text field. When a function is seleced, it appears on the text input field and
