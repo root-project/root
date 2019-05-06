@@ -1,5 +1,5 @@
 <mvc:View
- 	class="sapUiSizeCompact"
+	class="sapUiSizeCompact"
 	height="100%"
 	width="450px"
 	xmlns:mvc="sap.ui.core.mvc"
@@ -31,7 +31,7 @@
 						singleContainerFullSize="false"/>
 				</form:layout>
 				<form:formContainers>
-					<form:FormContainer ariaLabelledBy="dataset">						
+					<form:FormContainer ariaLabelledBy="dataset">
 						<form:FormElement>
 							<Label text="Data Set:" labelFor="DataSet">
 								<layoutData>
@@ -40,11 +40,11 @@
 							</Label>
 							<form:fields >
 								<ComboBox id="DataSet" selectedKey="{/fSelectDataId}" items="{ path: '/fDataSet', sorter: { path: 'fSet' } }">
-		               				<core:Item key="{fId}" text="{fSet}" />
-		               				<layoutData>
+									<core:Item key="{fId}" text="{fSet}" />
+									<layoutData>
 										<l:GridData span="XL1 L4 M3 S7" />
 									</layoutData>
-		        				</ComboBox>	
+								</ComboBox>
 							</form:fields>
 							<Title level="H3" text="Fit Function">
 								<layoutData>
@@ -58,19 +58,19 @@
 									</layoutData>
 								</Label>
 								<ComboBox id="TypeFunc" selectedKey="{/fSelectTypeId}" items="{ path: '/fTypeFunc', sorter: { path: 'fFunc' } }" change="selectTypeFunc">
-		               				<core:Item key="{fId}" text="{fSet}" />
-		               				<layoutData>
-										<l:GridData span="XL1 L4 M3 S4" />
+									<core:Item key="{fId}" text="{fSet}"/>
+									<layoutData>
+										<l:GridData span="XL1 L4 M3 S4"/>
 									</layoutData>
-						        </ComboBox>    
-						    </form:fields>
-						   	<form:fields>
-						        <ComboBox id="TypeXY" selectedKey="{/fSelectXYId}" items="{ path: '/fTypeXY', sorter: { path: 'fXY' } }" change="onTypeXYChange">
-					               <core:Item key="{fId}" text="{fSet}" />
-						             <layoutData>
+								</ComboBox>
+							</form:fields>
+							<form:fields>
+								<ComboBox id="TypeXY" selectedKey="{/fSelectXYId}" items="{ path: '/fTypeXY', sorter: { path: 'fXY' } }" change="onTypeXYChange">
+									<core:Item key="{fId}" text="{fSet}" />
+									<layoutData>
 										<l:GridData span="XL2 L1 M2 S4" />
-									</layoutData> 
-						        </ComboBox>      
+									</layoutData>
+								</ComboBox>
 							</form:fields>
 						</form:FormElement>
 					</form:FormContainer>
@@ -85,7 +85,7 @@
 								<Label text="Selected " labelFor="OperationText">
 									<layoutData>
 										<l:GridData span="XL1 L4 M3 S3" />
-									</layoutData> 
+									</layoutData>
 								</Label>
 								<Text id="selectedOpText" text="gaus">
 									<layoutData>
@@ -104,19 +104,19 @@
 						<form:FormElement>
 							<form:fields>
 								<IconTabBar id="Gen-Min">
-							    	<items>
-							    		<IconTabFilter text="General">
-							    			<l:VerticalLayout class="sapUiSizeCompact" >
+									<items>
+										<IconTabFilter text="General">
+											<l:VerticalLayout class="sapUiSizeCompact" >
 												<Title level="H3" text="Method"/>
 												<ComboBox id="MethodCombo" selectedKey="{/fSelectMethodId}" items="{ path: '/fMethod', sorter: { path: 'fMethod' } }">
-							               			<core:Item key="{fId}" text="{fSet}" />
-							        			</ComboBox>
+													<core:Item key="{fId}" text="{fSet}" />
+												</ComboBox>
 												<l:HorizontalLayout class="sapUiSizeCompact">
 													<l:VerticalLayout class="sapUiMediumMarginEnd">
 														<CheckBox id="robust123" text="Robust"  enabled="{= ${/fSelectMethodId} === '3'}" selected="{/fRobust}" tooltip="Perform Linear Robust fitter if selected"/>
 													</l:VerticalLayout>
 													<l:VerticalLayout>
-									    				<StepInput
+														<StepInput
 															value="0.95"
 															min="0.01"
 															max="1"
@@ -132,32 +132,32 @@
 													<VBox>
 														<CheckBox id="Integral" text="Integral" selected="{/fIntegral}" tooltip="'I'-use integral of function instead of value in bin center"/>
 														<CheckBox text="All weights = 1" selected="{/fWeights}" enabled="{= ${/fBins} === false}" tooltip="'W'-all weights=1 for non-empty bins; eroors bars ignored" />
-														<CheckBox text="Empty bins, weights=1" selected="{/fBins}" enabled = "{= ${/fWeights} === false}" tooltip="'WW'-all weights=1 including empty bins; errors bars ignored"/>			
+														<CheckBox text="Empty bins, weights=1" selected="{/fBins}" enabled = "{= ${/fWeights} === false}" tooltip="'WW'-all weights=1 including empty bins; errors bars ignored"/>
 													</VBox>
 													<VBox>
 														<CheckBox text="Minus Errors" selected="{/fMinusErrors}" tooltip="'E'-better errors estimation using Minos technique"/>
-														<CheckBox text="Add to list" selected="{/fAddList}" tooltip="'+'-add function to the list without deleting the previous"/>	
+														<CheckBox text="Add to list" selected="{/fAddList}" tooltip="'+'-add function to the list without deleting the previous"/>
 													</VBox>
 												</l:HorizontalLayout>
 												<Title level="H3" text="Draw Options"/>
-							    				<l:HorizontalLayout class="sapUiSizeCompact">
-								    				<VBox>
+												<l:HorizontalLayout class="sapUiSizeCompact">
+													<VBox>
 														<CheckBox text="SAME" selected="{/fSame}"/>
 														<CheckBox text="No Drawing" selected ="{/fNoDrawing}"/>
 													</VBox>
 												</l:HorizontalLayout>
 												<RangeSlider id="Slider" showAdvancedTooltip="true" range="{/fRange}" min="{/fMinRange}" max="{/fMaxRange}" step="{/fStep}" width="100%" showHandleTooltip="false" inputsAsTooltips="true" class="sapUiSmallMarginBottom"/>
-						    					<FlexBox
-						    						alignItems="Start"
-						    						justifyContent="End">
-						    					<Button text="Update Range" press="updateRange" tooltip="Update the fitting range"/>
-						    					</FlexBox>
+												<FlexBox
+													alignItems="Start"
+													justifyContent="End">
+												<Button text="Update Range" press="updateRange" tooltip="Update the fitting range"/>
+												</FlexBox>
 											</l:VerticalLayout>
-							    		</IconTabFilter>
-							    		<IconTabFilter text="Minimization">
-							    			<l:VerticalLayout id="libraryContainer" class="sapUiSizeCompact">
-							    				<Title level="H3" text="Library"/>
-							    				<RadioButtonGroup id="libraryRB" columns="3" width="100%"  selectedIndex="{/fLibrary}" select="selectRB">
+										</IconTabFilter>
+										<IconTabFilter text="Minimization">
+											<l:VerticalLayout id="libraryContainer" class="sapUiSizeCompact">
+												<Title level="H3" text="Library"/>
+												<RadioButtonGroup id="libraryRB" columns="3" width="100%"  selectedIndex="{/fLibrary}" select="selectRB">
 													<buttons>
 														<RadioButton id="RB2-1" text="Minuit"/>
 														<RadioButton id="RB2-2" text="Minuit2"/>
@@ -165,13 +165,13 @@
 														<RadioButton id="RB2-4" text="GSL" enabled="false"/>
 														<RadioButton id="RB2-5" text="Genetics"/>
 													</buttons>
-												</RadioButtonGroup>	
+												</RadioButtonGroup>
 												<Title level="H3" text="Method"/>
 												<ComboBox id="MethodMin" selectedKey="{/fSelectMethodMinId}" items="{ path: '/fMethodMin', sorter: { path: 'fMethodMin' } }">
-							               			<core:Item key="{fId}" text="{fSet}" />
-							        			</ComboBox>
-							        			<Title level="H3" text="Settings"/>
-							        			<Text text="Use ENTER key to validate a new value or click on Reset button to set the defaults."/>
+													<core:Item key="{fId}" text="{fSet}" />
+												</ComboBox>
+												<Title level="H3" text="Settings"/>
+												<Text text="Use ENTER key to validate a new value or click on Reset button to set the defaults."/>
 												<form:Form id="FormMin"
 													editable="true"
 													ariaLabelledBy="Title1">
@@ -193,7 +193,7 @@
 															singleContainerFullSize="false"/>
 													</form:layout>
 													<form:formContainers>
-														<form:FormContainer ariaLabelledBy="Minimization">			
+														<form:FormContainer ariaLabelledBy="Minimization">
 															<form:FormElement>
 																<Label text="Error Definition (default = 1)" labelFor="errorDef">
 																	<layoutData>
@@ -243,14 +243,14 @@
 														</form:FormContainer>
 													</form:formContainers>
 												</form:Form>
-												<Title level="H3" text="Print Options"/>	
+												<Title level="H3" text="Print Options"/>
 												<RadioButtonGroup columns="3" width="100%"  selectedIndex="{/fPrint}">
 													<buttons>
 														<RadioButton id="Print-1" text="Default"/>
 														<RadioButton id="Print-2" text="Verbose"/>
 														<RadioButton id="Print-3" text="Quiet"/>
 													</buttons>
-												</RadioButtonGroup>					
+												</RadioButtonGroup>
 												<Panel expandable="true" expanded="false" headerText="Advanced Options" width="auto" class="sapUiBody" expand="advancedOptionsDialog">
 													<content>
 														<IconTabBar id="AdvancedOptions">
@@ -277,7 +277,7 @@
 																				singleContainerFullSize="false"/>
 																		</form:layout>
 																		<form:formContainers>
-																			<form:FormContainer ariaLabelledBy="Minimization">			
+																			<form:FormContainer ariaLabelledBy="Minimization">
 																				<form:FormElement>
 																					<Label text="Number of Points:" labelFor="contourPoints">
 																						<layoutData>
@@ -299,7 +299,7 @@
 																						<layoutData>
 																							<l:GridData span="XL1 L4 M3 S7" />
 																						</layoutData>
-																					</ComboBox>	
+																					</ComboBox>
 																					<Label text="Parameter 2:" labelFor="ContourPar2">
 																						<layoutData>
 																							<l:GridData span="XL1 L4 M3 S4" />
@@ -373,7 +373,7 @@
 																				singleContainerFullSize="false"/>
 																		</form:layout>
 																		<form:formContainers>
-																			<form:FormContainer ariaLabelledBy="Minimization">			
+																			<form:FormContainer ariaLabelledBy="Minimization">
 																				<form:FormElement>
 																					<Label text="Number of Points:" labelFor="scanPoints">
 																						<layoutData>
@@ -453,7 +453,7 @@
 																				singleContainerFullSize="false"/>
 																		</form:layout>
 																		<form:formContainers>
-																			<form:FormContainer ariaLabelledBy="Minimization">			
+																			<form:FormContainer ariaLabelledBy="Minimization">
 																				<form:FormElement>
 																					<Label text="Confidence Level:" labelFor="ConfLevelInt">
 																						<layoutData>
@@ -494,21 +494,21 @@
 														</IconTabBar>
 													</content>
 												</Panel>
-							    			</l:VerticalLayout>
-							    		</IconTabFilter>
-							    	</items>
-							    </IconTabBar>
-			    			</form:fields>
-		    			</form:FormElement>
-		    		</form:FormContainer>		
+											</l:VerticalLayout>
+										</IconTabFilter>
+									</items>
+								</IconTabBar>
+							</form:fields>
+						</form:FormElement>
+					</form:FormContainer>
 				</form:formContainers>
 			</form:Form>
 			<Toolbar>
-		    	<Button text="Fit" press="doFit" tooltip="Fit the histogram"/>
-		    	<Button text="Reset" press="resetPanel" tooltip="Reset to initial state"/>
-		    	<Button text="Back" press="backPanel" tooltip="Go to the previous fitting"/>
-		    	<Button text="Close" press="closePanel" tooltip="Close the Fit Panel"/>
-    		</Toolbar>
-		</VBox>	    
+				<Button text="Fit" press="doFit" tooltip="Fit the histogram"/>
+				<Button text="Reset" press="resetPanel" tooltip="Reset to initial state"/>
+				<Button text="Back" press="backPanel" tooltip="Go to the previous fitting"/>
+				<Button text="Close" press="closePanel" tooltip="Close the Fit Panel"/>
+			</Toolbar>
+		</VBox>
 	</Page>
 </mvc:View>
