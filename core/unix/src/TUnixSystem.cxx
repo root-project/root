@@ -2137,11 +2137,7 @@ void TUnixSystem::Exit(int code, Bool_t mode)
 {
    // Insures that the files and sockets are closed before any library is unloaded
    // and before emptying CINT.
-   if (gROOT) {
-      gROOT->EndOfProcessCleanups();
-   } else if (gInterpreter) {
-      gInterpreter->ResetGlobals();
-   }
+   TROOT::ShutDown();
 
    if (mode)
       ::exit(code);
