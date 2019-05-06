@@ -1,4 +1,14 @@
 #!/usr/bin/env python
+## \file
+## \ingroup tutorial_tmva
+## \notebook -nodraw
+## This tutorial shows how to define and generate a keras model for use with
+## TMVA.
+##
+## \macro_code
+##
+## \date 2017
+## \author TMVA Team
 
 from keras.models import Sequential
 from keras.layers.core import Dense, Activation
