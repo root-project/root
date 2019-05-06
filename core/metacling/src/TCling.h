@@ -162,6 +162,8 @@ private: // Data Members
    UInt_t AutoParseImplRecurse(const char *cls, bool topLevel);
    constexpr static const char* kNullArgv[] = {nullptr};
 
+   bool fIsShuttingDown = false;
+
 protected:
    Bool_t SetSuspendAutoParsing(Bool_t value);
 
