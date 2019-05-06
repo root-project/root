@@ -2989,7 +2989,7 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                << "/*******************************************************************/\n\n"
                << "#include \"TDataMember.h\"\n\n"; // To set their transiency
 #ifndef R__SOLARIS
-   dictStream  << "// Since CINT ignores the std namespace, we need to do so in this file.\n"
+   dictStream  << "// The generated code does not explicitly qualifies STL entities\n"
                << "namespace std {} using namespace std;\n\n";
 #endif
 }
