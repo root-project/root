@@ -421,18 +421,22 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
 
    REveElement *pel = REX::gEve->FindElementById(id);
 
-   if ( ! pel) throw eh + "picked element id=" + id + " not found.";
+   if (!pel) throw eh + "picked element id=" + id + " not found.";
 
    REveElement *el  = MapPickedToSelected(pel);
 
-   printf("REveSelection::NewElementPicked %p -> %p, multi: %d, secondary: %d", pel, el, multi, secondary);
-   if (secondary)
-   {
-      printf(" { ");
-      for (auto si : secondary_idcs) printf("%d ", si);
-      printf("}");
+   if (gDebug > 0) {
+      std::string debug_secondary;
+      if (secondary) {
+         debug_secondary = " {";
+         for (auto si : secondary_idcs) {
+            debug_secondary.append(" ");
+            debug_secondary.append(std::to_string(si));
+         }
+         debug_secondary.append(" }");
+      }
+      ::Info("REveSelection::NewElementPicked", "%p -> %p, multi: %d, secondary: %d  %s", pel, el, multi, secondary, debug_secondary.c_str());
    }
-   printf("\n");
 
    Record *rec = find_record(el);
 

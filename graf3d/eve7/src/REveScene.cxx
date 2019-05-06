@@ -280,8 +280,6 @@ void REveScene::StreamRepresentationChanges()
 
       if (bits & kCBObjProps)
       {
-         printf("total element change %s \n", el->GetCName());
-
          Int_t rd_size = el->WriteCoreJson(jobj, fTotalBinarySize);
          if (rd_size) {
             assert (rd_size % 4 == 0);
@@ -295,9 +293,12 @@ void REveScene::StreamRepresentationChanges()
       el->ClearStamps();
    }
 
-   for (auto el : fAddedElements) {
+   for (auto &el : fAddedElements) {
+
+      if (gDebug > 0)
+         Info("REveScene::StreamRepresentationChanges", "new element change %s", el->GetCName());
+
       nlohmann::json jobj = {};
-      printf("scene representation change new element change %s \n", el->GetCName());
       Int_t rd_size = el->WriteCoreJson(jobj, fTotalBinarySize);
       jarr.push_back(jobj);
       if (rd_size) {
@@ -327,16 +328,19 @@ void REveScene::StreamRepresentationChanges()
    nlohmann::json msg = { {"header", jhdr}, {"arr", jarr}};
    fOutputJson = msg.dump();
 
-   printf("[%s] Stream representation changes %s ...\n", GetCName(), fOutputJson.substr(0,30).c_str() );
+   if (gDebug > 0)
+      Info("REveScene::StreamRepresentationChanges", "class: %s  changes %s ...", GetCName(), fOutputJson.substr(0,30).c_str() );
 }
 
 void REveScene::SendChangesToSubscribers()
 {
    for (auto && client : fSubscribers) {
-      printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
+      if (gDebug > 0)
+         printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
       client->fWebWindow->Send(client->fId, fOutputJson);
       if (fTotalBinarySize) {
-         printf("   sending binary, len = %d --> to conn_id = %d\n", fTotalBinarySize, client->fId);
+         if (gDebug > 0)
+            printf("   sending binary, len = %d --> to conn_id = %d\n", fTotalBinarySize, client->fId);
          client->fWebWindow->SendBinary(client->fId, &fOutputBinary[0], fTotalBinarySize);
       }
    }
@@ -344,7 +348,8 @@ void REveScene::SendChangesToSubscribers()
 
 Bool_t REveScene::IsChanged() const
 {
-   printf("REveScene::IsChanged %s (changed=%d, added=%d, removed=%d)\n", GetCName(),
+   if (gDebug > 0)
+     ::Info("REveScene::IsChanged","%s (changed=%d, added=%d, removed=%d)", GetCName(),
           (int) fChangedElements.size(), (int) fAddedElements.size(), (int) fRemovedElements.size());
 
    return ! (fChangedElements.empty() && fAddedElements.empty() && fRemovedElements.empty());
@@ -565,7 +570,8 @@ void REveSceneList::DestroyElementRenderers(REveElement* element)
 
 void REveSceneList::ProcessSceneChanges()
 {
-   printf("REveSceneList::ProcessSceneChanges\n");
+   if (gDebug > 0)
+      ::Info("REveSceneList::ProcessSceneChanges","processing");
 
    for (auto &el : fChildren)
    {
