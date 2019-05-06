@@ -1,7 +1,7 @@
 /// \file ROOT/RFitPanel.cxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <S.Linev@gsi.de>
-/// \author Iliana Bessou <Iliana.Bessou@cern.ch>
+/// \author Iliana Betsou <Iliana.Betsou@cern.ch>
 /// \date 2019-04-11
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -33,6 +33,8 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
+
+
 /** \class ROOT::Experimental::RFitPanel
 \ingroup webdisplay
 
@@ -292,11 +294,10 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
     return;
    }
 
-
    if (arg.find("GETPARS:") == 0) {
 
       RFitFunc info;
-      //ROOT::Experimental::RFitPanelModel6 model;
+      // ROOT::Experimental::RFitPanelModel6 model;
 
       info.name = arg.substr(8);
       TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info.name.c_str()));
@@ -311,7 +312,7 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
             par.value = func->GetParameter(n);
             par.error = func->GetParError(n);
             func->GetParLimits(n, par.min, par.max);
-            if ((par.min >= par.max) && ((par.min!=0) || (par.max != 0)))
+            if ((par.min >= par.max) && ((par.min != 0) || (par.max != 0)))
                par.fixed = true;
          }
       } else {
@@ -341,38 +342,35 @@ void ROOT::Experimental::RFitPanel6::ProcessData(unsigned connid, const std::str
              }
           }
       }
+      return;
    }
 
-
    if (arg.find("GETADVANCED:") == 0) {
-    RFitFunc info;
-    ROOT::Experimental::RFitPanelModel6 modelAdv;
+      RFitFunc info;
+      ROOT::Experimental::RFitPanelModel6 modelAdv;
 
-    info.name = arg.substr(12);
-    TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info.name.c_str()));
+      info.name = arg.substr(12);
+      TF1 *func = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(info.name.c_str()));
 
-    //printf("Found func1 %s %p\n", info.name.c_str(), func);
+      // printf("Found func1 %s %p\n", info.name.c_str(), func);
 
-    if (func) {
-     for (int n = 0; n < func->GetNpar(); ++n) {
+      if (func) {
+         for (int n = 0; n < func->GetNpar(); ++n) {
+            modelAdv.fContour1.emplace_back(std::to_string(n), func->GetParName(n));
+            modelAdv.fContourPar1Id = "0";
+            modelAdv.fContour2.emplace_back(std::to_string(n), func->GetParName(n));
+            modelAdv.fContourPar2Id = "0";
+            modelAdv.fScan.emplace_back(std::to_string(n), func->GetParName(n));
+            modelAdv.fScanId = "0";
+         }
+      } else {
+         info.name = "<not exists>";
+      }
+      TString jsonModel = TBufferJSON::ToJSON(&modelAdv);
 
-      modelAdv.fContour1.emplace_back(Form("%d", n), Form("%s", func->GetParName(n)));
-      modelAdv.fContourPar1Id = "0";
-      modelAdv.fContour2.emplace_back(Form("%d", n), Form("%s", func->GetParName(n)));
-      modelAdv.fContourPar2Id = "0";
-      modelAdv.fScan.emplace_back(Form("%d", n), Form("%s", func->GetParName(n)));
-      modelAdv.fScanId = "0";
-
-     }
-    } else {
-     info.name = "<not exists>";
-    }
-    TString jsonModel = TBufferJSON::ToJSON(&modelAdv);
-
-    fWindow->Send(fConnId, std::string("ADVANCED:") + jsonModel.Data());
-    return;
-  }
-
+      fWindow->Send(fConnId, std::string("ADVANCED:") + jsonModel.Data());
+      return;
+   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -445,40 +443,31 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
 {
    // printf("DoFit %s\n", model.c_str());
    auto obj = TBufferJSON::FromJSON<ROOT::Experimental::RFitPanelModel6>(model);
+
    ROOT::Math::MinimizerOptions minOption;
 
    //Fitting Options
    if (obj) {
 
-      printf("DOFIT: range %f %f select %s function %s\n ", obj->fUpdateRange[0], obj->fUpdateRange[1], obj->fSelectDataId.c_str(), obj->fSelectXYId.c_str());
+      if (gDebug > 0)
+         ::Info("RFitPanel6::DoFit", "range %f %f select %s function %s", obj->fUpdateRange[0], obj->fUpdateRange[1], obj->fSelectDataId.c_str(), obj->fSelectXYId.c_str());
 
-
-      if (!obj->fRealFunc.empty()) {
-         printf("GOT fRealFunc: %s\n", obj->fRealFunc.c_str());
-
-
-      }
-      else {
+      if (obj->fRealFunc.empty()) {
          obj->fRealFunc = "gaus";
-         printf("%s\n", obj->fRealFunc.c_str());
       }
 
       if(!obj->fMinLibrary.empty()){
-        printf("Min Tab: %s\n", obj->fMinLibrary.c_str());
         minOption.SetMinimizerAlgorithm(obj->fMinLibrary.c_str());
       }
 
       if(!obj->fErrorDef == 0) {
         minOption.SetErrorDef(obj->fErrorDef);
-        //printf("Error Def %d\n", obj->fErrorDef);
-      }
-      else {
+      } else {
         minOption.SetErrorDef(1.00);
       }
 
       if(!obj->fMaxTol == 0) {
         minOption.SetTolerance(obj->fMaxTol);
-        //printf("Tolerance %d\n", obj->fMaxTol );
       }
       else {
         minOption.SetTolerance(0.01);
@@ -486,40 +475,29 @@ void ROOT::Experimental::RFitPanel6::DoFit(const std::string &model)
 
       if(!obj->fMaxInter == 0) {
         minOption.SetMaxIterations(obj->fMaxInter);
-        //printf("Max Inte %d\n", obj->fMaxInter );
-      }
-      else {
+      }  else {
         minOption.SetMaxIterations(0);
       }
 
-      if(obj->fIntegral){
+      if (obj->fIntegral) {
          obj->fOption = "I";
-      }
-      else if(obj->fMinusErrors){
+      } else if (obj->fMinusErrors) {
          obj->fOption = "E";
-      }
-      else if(obj->fWeights){
+      } else if (obj->fWeights) {
          obj->fOption = "W";
-      }
-      else if(obj->fUseRange){
+      } else if (obj->fUseRange) {
          obj->fOption = "R";
-      }
-      else if(obj->fNoDrawing){
+      } else if (obj->fNoDrawing) {
          obj->fOption = "O";
-      }
-      else if((obj->fWeights) && (obj->fBins)){
+      } else if ((obj->fWeights) && (obj->fBins)) {
          obj->fOption = "WW";
-      }
-      else if(obj->fAddList){
+      } else if (obj->fAddList) {
          obj->fOption = "+";
-      }
-      else if(obj->fSelectMethodId == "1"){
+      } else if (obj->fSelectMethodId == "1") {
          obj->fOption = "P";
-      }
-      else if(obj->fSelectMethodId == "2"){
+      } else if (obj->fSelectMethodId == "2") {
          obj->fOption = "L";
-      }
-      else {
+      } else {
          obj->fOption = "";
       }
 
