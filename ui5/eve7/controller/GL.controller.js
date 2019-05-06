@@ -9,9 +9,9 @@ sap.ui.define([
 
    "use strict";
 
-   // for debug purposes - do not create geometry painter, just three.js renderer 
+   // for debug purposes - do not create geometry painter, just three.js renderer
    var direct_threejs = false;
-   
+
    var EveScene = null;
 
    return Controller.extend("rootui5.eve7.controller.GL", {
@@ -37,24 +37,24 @@ sap.ui.define([
 
          JSROOT.AssertPrerequisites("geom", this.onLoadScripts.bind(this));
       },
-      
+
       onLoadScripts: function()
       {
          var pthis = this;
-         
-         // one only can load EveScene after geometry painter 
+
+         // one only can load EveScene after geometry painter
          sap.ui.define(['rootui5/eve7/lib/EveScene', 'rootui5/eve7/lib/OutlinePass', 'rootui5/eve7/lib/FXAAShader'], function (_EveScene) {
             EveScene = _EveScene;
             pthis._load_scripts = true;
             pthis.checkViewReady();
          });
       },
-      
+
       _onObjectMatched: function(oEvent) {
          var args = oEvent.getParameter("arguments");
-         
+
          this.createXXX(Component.getOwnerComponentFor(this.getView()).getComponentData(), args.viewName, JSROOT.$eve7tmp);
-         
+
          delete JSROOT.$eve7tmp;
       },
 
@@ -72,9 +72,9 @@ sap.ui.define([
             this.elementid = moredata.elementid;
             this.kind = moredata.kind;
             this.standalone = viewName;
-            
+
             this.checkViewReady();
-            
+
          } else if (data.standalone && data.conn_handle) {
             this.mgr = new EveManager();
             this.mgr.UseConnection(data.conn_handle);
@@ -294,9 +294,9 @@ sap.ui.define([
          }
 
 
-         var options = "";
+         var options = "outline";
          // options += " black, ";
-         if (this.kind != "3D") options += "ortho_camera";
+         if (this.kind != "3D") options += ", ortho_camera";
 
 
          // TODO: should be specified somehow in XML file
@@ -361,8 +361,8 @@ sap.ui.define([
                for (var k=0; k < sl.length; ++k)
                    sl[k].clearHighlight();
             }
-            
-            
+
+
             if (painter.options.update_browser) {
                if (painter.options.highlight && tooltip) names = [ tooltip ];
                painter.ActivateInBrowser(names);
