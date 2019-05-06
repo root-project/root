@@ -84,7 +84,7 @@ extern "C" {
                                 const char* canonicalName);
 }
 
-class TCling : public TInterpreter {
+class TCling final : public TInterpreter {
 private: // Static Data Members
 
    static void* fgSetOfSpecials; // set of TObjects used in CINT variables
