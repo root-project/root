@@ -3416,6 +3416,20 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    TAxis *yaxis    = fH->GetYaxis();
    Int_t dimension = fH->GetDimension();
 
+   // In case of option SAME the axis must be the ones of the first drawn histogram
+   TString IsSame = fH->GetDrawOption();
+   IsSame.ToLower();
+   if (IsSame.Index("same")>=0) {
+      TH1 *h1;
+      TIter next(gPad->GetListOfPrimitives());
+      while ((h1 = (TH1 *)next())) {
+         if (!h1->InheritsFrom(TH1::Class())) continue;
+         xaxis    = h1->GetXaxis();
+         yaxis    = h1->GetYaxis();
+         break;
+      }
+   }
+
    Double_t factor = 1;
    if (fH->GetNormFactor() != 0) {
       factor = fH->GetNormFactor()/fH->GetSumOfWeights();
