@@ -1,7 +1,7 @@
 <mvc:View
 	class="sapUiSizeCompact"
 	height="100%"
-	width="450px"
+	width="100%"
 	xmlns:mvc="sap.ui.core.mvc"
 	xmlns:core="sap.ui.core"
 	xmlns="sap.m"
@@ -9,7 +9,7 @@
 	xmlns:form="sap.ui.layout.form"
 	controllerName="rootui5.fitpanel.controller.FitPanel">
 	<Page id="simplefitpanel_page" title="Simple Fit Panel" showHeader="false">
-	<VBox class="sapUiSizeCompact sapUiBody fitPanelStyle sapUiSmallMarginStart">
+		<VBox class="sapUiSizeCompact sapUiBody fitPanelStyle sapUiSmallMarginStart">
 			<form:Form id="FormToolbar"
 				editable="true"
 				ariaLabelledBy="Title1">
