@@ -11,76 +11,79 @@
    <Page id="simplefitpanel_page" title="Simple Fit Panel" showHeader="false">
       <VBox class="sapUiSizeCompact sapUiSmallMarginStart" width="100%">
          <HBox alignItems="Center">
-            <Label text="Data Set:" labelFor="DataSet"/>
-            <ComboBox id="DataSet" selectedKey="{/fSelectDataId}" items="{ path: '/fDataSet', sorter: { path: 'fSet' } }">
-                <core:Item key="{fId}" text="{fSet}" />
+            <Label text="Data Set:" labelFor="DataSet" class="sapUiSmallMarginBeginEnd"/>
+            <ComboBox id="DataSet" selectedKey="{/fSelectDataId}" items="{ path: '/fDataSet', sorter: { path: 'fSet' } }" class="sapUiSmallMarginBeginEnd">
+                <core:Item key="{fId}" text="{fSet}"/>
             </ComboBox>
          </HBox>
          <HBox alignItems="Center">
-           <Label text="Func:" labelFor="TypeFunc"/>
-           <ComboBox id="TypeFunc" selectedKey="{/fSelectTypeFunc}" items="{ path: '/fTypeFunc', sorter: { path: 'fFunc' } }" change="selectTypeFunc">
+           <Label text="Func:" labelFor="TypeFunc" class="sapUiSmallMarginBeginEnd"/>
+           <ComboBox id="TypeFunc" class="sapUiSmallMarginBeginEnd"
+                     selectedKey="{/fSelectTypeFunc}" items="{ path: '/fTypeFunc', sorter: { path: 'fFunc' } }" change="selectTypeFunc">
               <core:Item key="{fId}" text="{fSet}"/>
            </ComboBox>
-           <ComboBox id="selectedFuncCombo" selectedKey="{/fSelectedFunc}" items="{ path: '/fFuncList', sorter: { path: 'name' } }" change="onSelectedFuncChange">
+           <ComboBox id="selectedFuncCombo" class="sapUiSmallMarginBeginEnd"
+                     selectedKey="{/fSelectedFunc}" items="{ path: '/fFuncList', sorter: { path: 'name' } }" change="onSelectedFuncChange">
               <core:Item key="{name}" text="{name}" />
            </ComboBox>
            <Button text="Pars" press="setParametersDialog"/>
          </HBox>
          <HBox alignItems="Center">
-            <Label text="Selected " labelFor="OperationText"/>
-            <TextArea id="OperationText" height="30px" value=" " valueLiveUpdate="{/fOpTextUpdate}" liveChange="operationTextChange"/>
-            <Text id="selectedOpText" text="gaus"/>
+            <Label text="Selected " labelFor="OperationText" class="sapUiSmallMarginBeginEnd"/>
+            <Input id="OperationText" value="" valueLiveUpdate="{/fOpTextUpdate}" liveChange="operationTextChange" class="sapUiSmallMarginBeginEnd"/>
+            <Label id="selectedOpText" text="gaus" class="sapUiSmallMarginBeginEnd"/>
          </HBox>
                         <IconTabBar id="Gen-Min">
                            <items>
                               <IconTabFilter text="General">
-                                 <l:VerticalLayout class="sapUiSizeCompact" >
+                                 <VBox>
                                     <Title level="H3" text="Method"/>
-                                    <ComboBox id="MethodCombo" selectedKey="{/fSelectMethodId}" items="{ path: '/fMethod', sorter: { path: 'fMethod' } }">
-                                       <core:Item key="{fId}" text="{fSet}" />
-                                    </ComboBox>
-                                    <l:HorizontalLayout class="sapUiSizeCompact">
-                                       <l:VerticalLayout class="sapUiMediumMarginEnd">
-                                          <CheckBox id="robust123" text="Robust"  enabled="{= ${/fSelectMethodId} === '3'}" selected="{/fRobust}" tooltip="Perform Linear Robust fitter if selected"/>
-                                       </l:VerticalLayout>
-                                       <l:VerticalLayout>
-                                          <StepInput
-                                             value="0.95"
-                                             min="0.01"
-                                             max="1"
-                                             step="0.01"
-                                             width="95px"
-                                             displayValuePrecision = "2"
-                                             enabled="{= ${/fRobust} === true}"
-                                             tooltip="Available only for graphs"/>
-                                       </l:VerticalLayout>
-                                    </l:HorizontalLayout>
+                                    <l:Grid defaultSpan="XL6 L6 M6 S6" class="sapUiSizeCompact" hSpacing="0.5" vSpacing="0">
+                                       <ComboBox id="MethodCombo" selectedKey="{/fSelectMethodId}" items="{ path: '/fMethod', sorter: { path: 'fMethod' } }">
+                                         <core:Item key="{fId}" text="{fSet}" />
+                                       </ComboBox>
+                                       <Button text="User-Defined..." press="pressUserDefined"/>
+                                       <CheckBox text="Linear fit" selected="{/fLinear}"/>
+                                       <HBox>
+                                           <CheckBox id="robust123" text="Robust"  enabled="{= ${/fSelectMethodId} === '3'}"
+                                                     selected="{/fRobust}" tooltip="Perform Linear Robust fitter if selected"/>
+                                           <StepInput
+                                              value="0.95"
+                                              min="0.01"
+                                              max="1"
+                                              step="0.01"
+                                              displayValuePrecision = "2"
+                                              enabled="{= ${/fRobust} === true}"
+                                              tooltip="Available only for graphs"/>
+                                       </HBox>
+                                    </l:Grid>
                                     <Title level="H3" text="Fit Options"/>
-                                    <l:HorizontalLayout class="sapUiSizeCompact">
-                                       <VBox>
-                                          <CheckBox id="Integral" text="Integral" selected="{/fIntegral}" tooltip="'I'-use integral of function instead of value in bin center"/>
-                                          <CheckBox text="All weights = 1" selected="{/fWeights}" enabled="{= ${/fBins} === false}" tooltip="'W'-all weights=1 for non-empty bins; eroors bars ignored" />
-                                          <CheckBox text="Empty bins, weights=1" selected="{/fBins}" enabled = "{= ${/fWeights} === false}" tooltip="'WW'-all weights=1 including empty bins; errors bars ignored"/>
-                                       </VBox>
-                                       <VBox>
-                                          <CheckBox text="Minus Errors" selected="{/fMinusErrors}" tooltip="'E'-better errors estimation using Minos technique"/>
-                                          <CheckBox text="Add to list" selected="{/fAddList}" tooltip="'+'-add function to the list without deleting the previous"/>
-                                       </VBox>
-                                    </l:HorizontalLayout>
+                                    <l:Grid defaultSpan="XL6 L6 M6 S6" class="sapUiSizeCompact" hSpacing="0.5" vSpacing="0">
+                                       <CheckBox id="Integral" text="Integral" selected="{/fIntegral}" tooltip="'I'-use integral of function instead of value in bin center"/>
+                                       <CheckBox text="Use range" selected="{/fUseRange}" tooltip="'R'-fit only data..."/>
+                                       <CheckBox text="Best errors" selected="{/fBestErrors}" tooltip="'E'-better ..."/>
+                                       <CheckBox text="Improve fit results" selected="{/fImproveFitResults}" tooltip="'M'-after medium is found ..."/>
+                                       <CheckBox text="All weights = 1" selected="{/fWeights}" enabled="{= ${/fBins} === false}" tooltip="'W'-all weights=1 for non-empty bins; eroors bars ignored" />
+                                       <CheckBox text="Add to list" selected="{/fAddList}" tooltip="'+'-add function to the list without deleting the previous"/>
+                                       <CheckBox text="Empty bins, weights=1" selected="{/fBins}" enabled = "{= ${/fWeights} === false}" tooltip="'WW'-all weights=1 including empty bins; errors bars ignored"/>
+                                       <CheckBox text="Use Gradient" selected="{/fUseGradient}" tooltip="'G'-Use gradient"/>
+                                    </l:Grid>
                                     <Title level="H3" text="Draw Options"/>
-                                    <l:HorizontalLayout class="sapUiSizeCompact">
-                                       <VBox>
-                                          <CheckBox text="SAME" selected="{/fSame}"/>
-                                          <CheckBox text="No Drawing" selected ="{/fNoDrawing}"/>
-                                       </VBox>
-                                    </l:HorizontalLayout>
+                                    <l:Grid defaultSpan="XL6 L6 M6 S6" class="sapUiSizeCompact" hSpacing="0.5" vSpacing="0">
+                                       <CheckBox text="SAME" selected="{/fSame}"/>
+                                       <CheckBox text="dummy" enabled="false"/>
+                                       <CheckBox text="No Drawing" selected ="{/fNoDrawing}"/>
+                                       <CheckBox text="dummy" enabled="false"/>
+                                       <CheckBox text="Do not store/draw" selected="{/fNoStoreDraw}"/>
+                                       <Button text="Advanced..." press="pressAdvanced" enabled="false"/>
+                                    </l:Grid>
                                     <RangeSlider id="Slider" showAdvancedTooltip="true" range="{/fRange}" min="{/fMinRange}" max="{/fMaxRange}" step="{/fStep}" width="100%" showHandleTooltip="false" inputsAsTooltips="true" class="sapUiSmallMarginBottom"/>
                                     <FlexBox
                                        alignItems="Start"
                                        justifyContent="End">
-                                    <Button text="Update Range" press="updateRange" tooltip="Update the fitting range"/>
+                                       <Button text="Update Range" press="updateRange" tooltip="Update the fitting range"/>
                                     </FlexBox>
-                                 </l:VerticalLayout>
+                                 </VBox>
                               </IconTabFilter>
                               <IconTabFilter text="Minimization">
                                  <l:VerticalLayout id="libraryContainer" class="sapUiSizeCompact">
