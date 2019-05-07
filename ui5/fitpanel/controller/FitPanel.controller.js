@@ -50,7 +50,7 @@ sap.ui.define([
          if(msg.startsWith("MODEL:")){
             var data = JSROOT.parse(msg.substr(6));
             if(data) {
-               data.fTypeXY = data.fTypeXYAll[parseInt(data.fSelectTypeId)];
+               data.fFuncList = data.fFuncListAll[parseInt(data.fSelectTypeFunc)];
                data.fMethodMin = data.fMethodMinAll[parseInt(data.fLibrary)];
                this.getView().setModel(new JSONModel(data));
                this._data = data;
@@ -77,10 +77,6 @@ sap.ui.define([
          //Keep the #times the button is clicked
          //Data is a new model. With getValue() we select the value of the parameter specified from id
          var data = this.getView().getModel().getData();
-         //var func = this.getView().byId("TypeXY").getValue();
-         var func = this.getView().byId("selectedOpText").getText();
-         //We pass the value from func to C++ fRealFunc
-         data.fRealFunc = func;
 
          var libMin = this.getView().byId("MethodMin").getValue();
          data.fMinLibrary = libMin;
@@ -98,7 +94,7 @@ sap.ui.define([
          this.copyModel[++this.modelCount] = JSROOT.extend({},data);
          //console.log("DOFIT " + this.getView().getModel().getJSON());
 
-         // TODO: skip "fMethodMin" and "fTypeXY" from output object
+         // TODO: skip "fMethodMin" and "fFuncList" from output object
          // Requires changes in JSROOT.toJSON(), can be done after REVE-selection commit
 
          if (this.websocket)
@@ -136,16 +132,23 @@ sap.ui.define([
          this.getView().getModel().updateBindings();
       },
 
+      /** Returns selected function name */
+      getSelectedFunc: function() {
+         var data = this.getView().getModel().getData();
+         return data.fSelectedFunc;
+      },
+
       //Change the input text field. When a function is seleced, it appears on the text input field and
       //on the text area.
-      onTypeXYChange: function(){
+      onSelectedFuncChange: function(){
+
+         var func = this.getSelectedFunc();
+
          var data = this.getView().getModel().getData();
-         var linear = this.getView().getModel().getData().fSelectXYId;
-         data.fFuncChange = linear;
+         data.fFuncChange = func;
          this.getView().getModel().refresh();
 
          //updates the text area and text in selected tab, depending on the choice in TypeXY ComboBox
-         var func = this.getView().byId("TypeXY").getValue();
          this.byId("OperationText").setValueLiveUpdate();
          this.byId("OperationText").setValue(func);
          this.byId("selectedOpText").setText(func);
@@ -176,9 +179,9 @@ sap.ui.define([
 
          var data = this.getView().getModel().getData();
 
-         // console.log("typeXY = " + data.fSelectTypeId);
+         // console.log("Func Type = " + data.fSelectTypeFunc);
 
-         data.fTypeXY = data.fTypeXYAll[parseInt(data.fSelectTypeId)];
+         data.fFuncList = data.fFuncListAll[parseInt(data.fSelectTypeFunc)];
 
          this.getView().getModel().refresh();
       },
@@ -266,9 +269,8 @@ sap.ui.define([
       },
 
       setParametersDialog: function(){
-         var func = this.getView().byId("TypeXY").getValue();
-         var msg = "GETPARS:" + func;
-        if (this.websocket)
+         var msg = "GETPARS:" + this.getSelectedFunc();
+         if (this.websocket)
             this.websocket.Send(msg);
       },
 
@@ -437,11 +439,10 @@ sap.ui.define([
 	  },
 
 	  advancedOptionsDialog: function() {
-	  	var func = this.getView().byId("TypeXY").getValue();
-        var msg = "GETADVANCED:" + func;
+        var msg = "GETADVANCED:" + this.getSelectedFunc();
         if (this.websocket)
             this.websocket.Send(msg);
-	  },
+	  }
 
    });
 
