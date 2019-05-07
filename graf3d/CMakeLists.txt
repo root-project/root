@@ -24,6 +24,6 @@ if (opengl)
    endif()
 endif()
 
-if(webui AND root7)
+if(webgui AND root7)
   add_subdirectory(eve7) # special CMakeLists.txt
 endif()
