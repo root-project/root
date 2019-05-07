@@ -23,12 +23,15 @@
 
 #include "TH1.h"
 
+#include <memory>
 #include <vector>
 
 namespace ROOT {
 namespace Experimental {
 
 class RFitPanel6 {
+
+   std::unique_ptr<RFitPanel6Model> fModel;
 
    std::string fTitle;  ///<! title
    unsigned fConnId{0}; ///<! connection id
@@ -48,9 +51,6 @@ class RFitPanel6 {
 public:
    /// normal constructor
    RFitPanel6(const std::string &title = "Fit panel") : fTitle(title) {}
-
-   /// destructor
-   virtual ~RFitPanel6() {}
 
    // method required when any panel want to be inserted into the RCanvas
    std::shared_ptr<RWebWindow> GetWindow();
